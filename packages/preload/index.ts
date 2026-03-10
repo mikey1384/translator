@@ -155,6 +155,24 @@ const electronAPI = {
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),
+  saveStoredSubtitleArtifact: (options: any) =>
+    ipcRenderer.invoke('save-stored-subtitle-artifact', options),
+  findStoredSubtitleForVideo: (options: any) =>
+    ipcRenderer.invoke('find-stored-subtitle-for-video', options),
+  syncStoredSubtitleVideoPath: (previousPath: string, savedPath: string) =>
+    ipcRenderer.invoke(
+      'sync-stored-subtitle-video-path',
+      previousPath,
+      savedPath
+    ),
+  rememberStoredSubtitleVideoPath: (entryId: string, sourceVideoPath: string) =>
+    ipcRenderer.invoke(
+      'remember-stored-subtitle-video-path',
+      entryId,
+      sourceVideoPath
+    ),
+  deleteStoredSubtitleEntry: (entryId: string) =>
+    ipcRenderer.invoke('delete-stored-subtitle-entry', entryId),
   deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),
 
   // ---------------------- Video Processing & Screenshots ----------------------
@@ -596,18 +614,6 @@ const electronAPI = {
     value: string
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-video-suggestion-preference-topic', value),
-  getVideoSuggestionPreferenceCreator: (): Promise<string> =>
-    ipcRenderer.invoke('get-video-suggestion-preference-creator'),
-  setVideoSuggestionPreferenceCreator: (
-    value: string
-  ): Promise<{ success: boolean; error?: string }> =>
-    ipcRenderer.invoke('set-video-suggestion-preference-creator', value),
-  getVideoSuggestionPreferenceSubtopic: (): Promise<string> =>
-    ipcRenderer.invoke('get-video-suggestion-preference-subtopic'),
-  setVideoSuggestionPreferenceSubtopic: (
-    value: string
-  ): Promise<{ success: boolean; error?: string }> =>
-    ipcRenderer.invoke('set-video-suggestion-preference-subtopic', value),
 
   // Transcription provider preference
   getPreferredTranscriptionProvider: (): Promise<

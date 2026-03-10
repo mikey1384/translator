@@ -1,4 +1,10 @@
-import { useEffect, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import { cx } from '@emotion/css';
 import type { TFunction } from 'i18next';
 import Button from '../../../../components/Button.js';
@@ -22,6 +28,11 @@ import {
   suggestedFollowUpsHeaderStyles,
   suggestedFollowUpsStyles,
   inputWrapStyles,
+  loadingProgressFillStyles,
+  loadingProgressHeaderStyles,
+  loadingProgressLabelStyles,
+  loadingProgressPercentStyles,
+  loadingProgressTrackStyles,
   loadingMetaStyles,
   messagesStyles,
   messagesCompactStyles,
@@ -32,6 +43,14 @@ import type {
   PipelineStageProgress,
 } from './VideoSuggestionPanel.types.js';
 import type { VideoSuggestionMessage } from '@shared-types/app';
+import {
+  calculateOverallPipelineProgress,
+  clampPercent,
+  inferRetrievalStageProgressFromMessage,
+  runningStageTargetPercent,
+  STAGE_PROGRESS_TICK_MS,
+  type StageProgressMap,
+} from './video-suggestion-helpers.js';
 
 type VideoSuggestionChatColumnProps = {
   cancelling: boolean;
@@ -42,6 +61,7 @@ type VideoSuggestionChatColumnProps = {
   messages: VideoSuggestionMessage[];
   loadingElapsedSec: number;
   loadingMessage: string;
+  pipelineStages: PipelineStageProgress[];
   runningStage: PipelineStageProgress | null;
   suggestedFollowUpPrompts: string[];
   streamingPreview: string;
@@ -70,6 +90,7 @@ export default function VideoSuggestionChatColumn({
   messages,
   loadingElapsedSec,
   loadingMessage,
+  pipelineStages,
   runningStage,
   suggestedFollowUpPrompts,
   streamingPreview,
@@ -89,13 +110,84 @@ export default function VideoSuggestionChatColumn({
   pipelineStageLabel,
 }: VideoSuggestionChatColumnProps) {
   const [showSuggestedFollowUps, setShowSuggestedFollowUps] = useState(false);
+  const [stageProgress, setStageProgress] = useState<StageProgressMap>({});
   const canShowSuggestedFollowUps = suggestedFollowUpPrompts.length > 0;
+  const stageRunStartedAtRef = useRef<
+    Partial<Record<PipelineStageKey, number>>
+  >({});
+  const pipelineStagesRef = useRef<PipelineStageProgress[]>(pipelineStages);
+
+  const updateStageProgress = useCallback(
+    (stages: PipelineStageProgress[], nowMs: number) => {
+      setStageProgress(prev => {
+        const next: StageProgressMap = { ...prev };
+        for (const stage of stages) {
+          if (stage.state === 'cleared') {
+            next[stage.key] = 100;
+            delete stageRunStartedAtRef.current[stage.key];
+            continue;
+          }
+
+          if (stage.state === 'running') {
+            const startedAt = stageRunStartedAtRef.current[stage.key] || nowMs;
+            stageRunStartedAtRef.current[stage.key] = startedAt;
+            const elapsedSec = Math.max(0, (nowMs - startedAt) / 1000);
+            const target = runningStageTargetPercent(elapsedSec);
+            const current = clampPercent(next[stage.key] ?? 0);
+            next[stage.key] = clampPercent(Math.max(current, target));
+            continue;
+          }
+
+          next[stage.key] = 0;
+          delete stageRunStartedAtRef.current[stage.key];
+        }
+        return next;
+      });
+    },
+    []
+  );
 
   useEffect(() => {
     if (!canShowSuggestedFollowUps || loading) {
       setShowSuggestedFollowUps(false);
     }
   }, [canShowSuggestedFollowUps, loading]);
+
+  useEffect(() => {
+    pipelineStagesRef.current = pipelineStages;
+    updateStageProgress(pipelineStages, Date.now());
+  }, [pipelineStages, updateStageProgress]);
+
+  useEffect(() => {
+    if (!loading) return;
+    const timer = window.setInterval(() => {
+      updateStageProgress(pipelineStagesRef.current, Date.now());
+    }, STAGE_PROGRESS_TICK_MS);
+    return () => window.clearInterval(timer);
+  }, [loading, updateStageProgress]);
+
+  const retrievalStage = pipelineStages.find(stage => stage.key === 'retrieval');
+  const hintedRetrievalProgress =
+    retrievalStage?.state === 'running'
+      ? inferRetrievalStageProgressFromMessage(loadingMessage)
+      : null;
+  const effectiveStageProgress: StageProgressMap =
+    hintedRetrievalProgress == null
+      ? stageProgress
+      : {
+          ...stageProgress,
+          retrieval: Math.max(
+            stageProgress.retrieval ?? 0,
+            hintedRetrievalProgress
+          ),
+        };
+  const rawOverallProgressPercent = Math.round(
+    calculateOverallPipelineProgress(pipelineStages, effectiveStageProgress)
+  );
+  const overallProgressPercent =
+    loading && rawOverallProgressPercent >= 100
+      ? 99
+      : rawOverallProgressPercent;
 
   return (
     <div className={cx(chatColumnStyles, compact && chatColumnCompactStyles)}>
@@ -117,7 +209,7 @@ export default function VideoSuggestionChatColumn({
             <div className={chatEmptyCopyStyles}>
               {t(
                 'input.videoSuggestion.emptyCopy',
-                'Mention a topic, audience, creator style, or mood. Add country or recency only when it matters.'
+                'Mention a topic, audience, or mood. Add country or recency only when it matters.'
               )}
             </div>
           </div>
@@ -137,6 +229,20 @@ export default function VideoSuggestionChatColumn({
         {loading ? (
           <div className={assistantBubbleStyles}>
             <div>{loadingMessage}</div>
+            <div className={loadingProgressHeaderStyles}>
+              <span className={loadingProgressLabelStyles}>
+                {t('input.videoSuggestion.searchProgress', 'Search progress')}
+              </span>
+              <span className={loadingProgressPercentStyles}>
+                {overallProgressPercent}%
+              </span>
+            </div>
+            <div className={loadingProgressTrackStyles} aria-hidden="true">
+              <div
+                className={loadingProgressFillStyles}
+                style={{ width: `${overallProgressPercent}%` }}
+              />
+            </div>
             {runningStage ? (
               <div className={loadingMetaStyles}>
                 {t('input.videoSuggestion.currentStep', 'Current step')}:{' '}
@@ -216,7 +322,7 @@ export default function VideoSuggestionChatColumn({
               ) : null}
               <Button
                 onClick={() => onSend()}
-                disabled={!input.trim() || loading}
+                disabled={disabled || loading}
                 size="sm"
                 variant="primary"
               >

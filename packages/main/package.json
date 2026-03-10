@@ -11,7 +11,7 @@
     "build:watch": "npx chokidar \"index.ts\" \"**/*.ts\" -c \"npm run build\" --initial",
     "dev": "npm run build:dev && (npm run build:watch & npx electron .)",
     "start": "npx electron .",
-    "test": "node --test --import tsx tests/active-processes.test.ts tests/url-download-flow.test.ts tests/shared-pricing.test.ts tests/payment-entitlements.test.ts tests/review-model-config.test.ts tests/summary-model-config.test.ts tests/video-suggestion-model-preference.test.ts tests/video-suggestion-pagination.test.ts tests/byo-runtime.test.ts tests/stage5-client.test.ts tests/video-suggestion-history.test.ts"
+    "test": "node --test --import tsx tests/active-processes.test.ts tests/url-download-flow.test.ts tests/shared-pricing.test.ts tests/payment-entitlements.test.ts tests/review-model-config.test.ts tests/summary-model-config.test.ts tests/video-suggestion-model-preference.test.ts tests/video-suggestion-pagination.test.ts tests/video-suggestion-country-bias.test.ts tests/byo-runtime.test.ts tests/stage5-client.test.ts tests/video-suggestion-history.test.ts"
   },
   "dependencies": {
     "electron": "35.7.5"

@@ -19,6 +19,10 @@ import {
   shouldSurfaceTranslationFailure,
 } from '../../../utils/translationFailure';
 import { logError } from '../../../utils/logger';
+import {
+  storeGeneratedSubtitleArtifact,
+  unmountCurrentSubtitles,
+} from '../../../utils/subtitle-library';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -31,6 +35,28 @@ export interface GenerateSubtitlesResult {
   success: boolean;
   cancelled?: boolean;
   subtitles?: string;
+}
+
+function resolveTranslationSourceAssociation(): {
+  sourceVideoPath: string | null;
+  sourceUrl: string | null;
+  titleHint: string | null;
+} {
+  const subtitleState = useSubStore.getState();
+  const videoState = useVideoStore.getState();
+  const mountedVideoPath = videoState.originalPath ?? videoState.path ?? null;
+  const subtitlesBelongToCurrentVideo =
+    Boolean(subtitleState.sourceVideoPath) &&
+    Boolean(mountedVideoPath) &&
+    subtitleState.sourceVideoPath === mountedVideoPath;
+
+  return {
+    sourceVideoPath: subtitleState.sourceVideoPath ?? null,
+    sourceUrl: subtitlesBelongToCurrentVideo
+      ? videoState.sourceUrl
+      : null,
+    titleHint: videoState.file?.name ?? null,
+  };
 }
 
 export async function executeSrtTranslation({
@@ -80,12 +106,39 @@ export async function executeSrtTranslation({
     });
     if (res?.success && res?.translatedSubtitles) {
       const finalSegments = parseSrt(res.translatedSubtitles);
+      const {
+        sourceVideoPath,
+        sourceUrl,
+        titleHint,
+      } = resolveTranslationSourceAssociation();
+      let libraryMeta = null;
+      try {
+        libraryMeta = await storeGeneratedSubtitleArtifact({
+          content: res.translatedSubtitles,
+          kind: 'translation',
+          targetLanguage,
+          sourceVideoPath: sourceVideoPath ?? null,
+          sourceUrl,
+          titleHint,
+        });
+      } catch (storeErr) {
+        console.error(
+          '[subtitleGeneration] Failed to store translated subtitle history:',
+          storeErr
+        );
+      }
       // Preserve linkage to the source video, but translated documents should
       // not retain transcription-review provenance from the source transcript.
-      const { sourceVideoPath } = useSubStore.getState();
       useSubStore
         .getState()
-        .load(finalSegments, null, 'fresh', sourceVideoPath ?? null, null);
+        .load(
+          finalSegments,
+          null,
+          'fresh',
+          sourceVideoPath ?? null,
+          null,
+          libraryMeta
+        );
       useUrlStore.getState().clearError();
       useTaskStore.getState().setTranslation({
         stage: i18n.t('generateSubtitles.status.completed'),
@@ -348,7 +401,23 @@ export async function executeSubtitleGeneration({
       // Success: Parse and load subtitles
       const finalSegments = parseSrt(result.subtitles);
       // Mark as freshly generated for the current video
-      const vpath = videoFilePath ?? useVideoStore.getState().path ?? null;
+      const { originalPath, path, sourceUrl, file } = useVideoStore.getState();
+      const vpath = originalPath ?? path ?? videoFilePath ?? null;
+      let libraryMeta = null;
+      try {
+        libraryMeta = await storeGeneratedSubtitleArtifact({
+          content: result.subtitles,
+          kind: 'transcription',
+          sourceVideoPath: vpath,
+          sourceUrl,
+          titleHint: file?.name ?? null,
+        });
+      } catch (storeErr) {
+        console.error(
+          '[subtitleGeneration] Failed to store transcription history:',
+          storeErr
+        );
+      }
       useSubStore
         .getState()
         .load(
@@ -356,7 +425,8 @@ export async function executeSubtitleGeneration({
           null,
           'fresh',
           vpath,
-          result.transcriptionEngine ?? null
+          result.transcriptionEngine ?? null,
+          libraryMeta
         );
 
       setTranscription({
@@ -504,13 +574,7 @@ export async function startTranscriptionFlow({
 // Removed old inline save; centralized in utils/saveSubtitles.ts
 
 function clearMountedSrtShared() {
-  useSubStore.setState({
-    segments: {},
-    order: [],
-    activeId: null,
-    playingId: null,
-    originalPath: null,
-  } as any);
+  unmountCurrentSubtitles();
   useTaskStore.getState().setTranslation({
     id: null,
     stage: '',

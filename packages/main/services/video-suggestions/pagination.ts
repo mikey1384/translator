@@ -59,3 +59,33 @@ export function splitContinuationPageResults({
     pendingResults: bufferedResults.slice(safePageSize),
   };
 }
+
+export function consumeContinuationPage({
+  items,
+  pageSize,
+  excludeUrls,
+}: {
+  items: VideoSuggestionResultItem[];
+  pageSize: number;
+  excludeUrls?: Iterable<string>;
+}): {
+  pageResults: VideoSuggestionResultItem[];
+  pendingResults: VideoSuggestionResultItem[];
+} {
+  const excluded = new Set<string>();
+  for (const rawUrl of excludeUrls || []) {
+    const url = String(rawUrl || '').trim();
+    if (!url) continue;
+    excluded.add(url);
+  }
+
+  const freshItems = items.filter(item => {
+    const url = String(item?.url || '').trim();
+    return Boolean(url) && !excluded.has(url);
+  });
+
+  return splitContinuationPageResults({
+    items: freshItems,
+    pageSize,
+  });
+}

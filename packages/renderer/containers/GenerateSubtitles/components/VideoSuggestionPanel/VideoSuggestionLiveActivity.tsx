@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { TFunction } from 'i18next';
 import {
+  calculateOverallPipelineProgress,
+  clampPercent,
+  inferRetrievalStageProgressFromMessage,
+  runningStageTargetPercent,
+  STAGE_PROGRESS_TICK_MS,
+  type StageProgressMap,
+} from './video-suggestion-helpers.js';
+import {
   detailsSummaryStyles,
   liveActivityDetailsBodyStyles,
   liveActivityDetailsStyles,
@@ -8,9 +16,12 @@ import {
   liveActivityHeaderStyles,
   liveActivityMetaStyles,
   liveActivityPanelStyles,
+  liveActivityTraceBadgeStyles,
+  liveActivityTraceLabelStyles,
   liveActivityToggleButtonStyles,
   liveActivityTitleStyles,
   liveActivityTraceLineStyles,
+  liveActivityTraceMessageStyles,
   liveActivityTraceStyles,
   stageOutcomeStyles,
   stagePercentStyles,
@@ -44,27 +55,49 @@ type VideoSuggestionLiveActivityProps = {
   pipelineStageLabel: (key: PipelineStageKey) => string;
 };
 
-const STAGE_PROGRESS_TICK_MS = 450;
-const STAGE_PROGRESS_RUNNING_MIN = 7;
-const STAGE_PROGRESS_RUNNING_MAX = 95;
-const STAGE_PROGRESS_EASE_SEC = 28;
+type ParsedTraceLine = {
+  elapsedLabel: string | null;
+  phaseLabel: string | null;
+  message: string;
+};
 
-type StageProgressMap = Partial<Record<PipelineStageKey, number>>;
-
-function clampPercent(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  if (value <= 0) return 0;
-  if (value >= 100) return 100;
-  return value;
+function truncateTraceMessage(value: string, maxLength = 140): string {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
 }
 
-function runningStageTargetPercent(elapsedSec: number): number {
-  const safeElapsed = Math.max(0, elapsedSec);
-  const eased = 1 - Math.exp(-safeElapsed / STAGE_PROGRESS_EASE_SEC);
-  return (
-    STAGE_PROGRESS_RUNNING_MIN +
-    (STAGE_PROGRESS_RUNNING_MAX - STAGE_PROGRESS_RUNNING_MIN) * eased
-  );
+function parseTraceLine(line: string): ParsedTraceLine {
+  const fallback = truncateTraceMessage(line);
+  let remaining = String(line ?? '').trim();
+  if (!remaining) {
+    return {
+      elapsedLabel: null,
+      phaseLabel: null,
+      message: fallback,
+    };
+  }
+
+  let elapsedLabel: string | null = null;
+  let phaseLabel: string | null = null;
+
+  const elapsedMatch = remaining.match(/^(\d+s)\s*·\s*/);
+  if (elapsedMatch) {
+    elapsedLabel = elapsedMatch[1];
+    remaining = remaining.slice(elapsedMatch[0].length).trim();
+  }
+
+  const phaseMatch = remaining.match(/^\[([^\]]+)\]\s*/);
+  if (phaseMatch) {
+    phaseLabel = phaseMatch[1];
+    remaining = remaining.slice(phaseMatch[0].length).trim();
+  }
+
+  return {
+    elapsedLabel,
+    phaseLabel,
+    message: truncateTraceMessage(remaining || fallback),
+  };
 }
 
 export default function VideoSuggestionLiveActivity({
@@ -172,6 +205,30 @@ export default function VideoSuggestionLiveActivity({
     shouldAutoScrollRef.current = distanceFromBottom <= 28;
   };
 
+  const compactTraceLines = activeTraceLines.slice(-6).map(parseTraceLine);
+  const retrievalStage = pipelineStages.find(stage => stage.key === 'retrieval');
+  const hintedRetrievalProgress =
+    retrievalStage?.state === 'running'
+      ? inferRetrievalStageProgressFromMessage(loadingMessage)
+      : null;
+  const effectiveStageProgress: StageProgressMap =
+    hintedRetrievalProgress == null
+      ? stageProgress
+      : {
+          ...stageProgress,
+          retrieval: Math.max(
+            stageProgress.retrieval ?? 0,
+            hintedRetrievalProgress
+          ),
+        };
+  const rawOverallProgressPercent = Math.round(
+    calculateOverallPipelineProgress(pipelineStages, effectiveStageProgress)
+  );
+  const overallProgressPercent =
+    loading && rawOverallProgressPercent >= 100
+      ? 99
+      : rawOverallProgressPercent;
+
   return (
     <div
       className={liveActivityPanelStyles}
@@ -194,17 +251,19 @@ export default function VideoSuggestionLiveActivity({
             {loading
               ? t(
                   'input.videoSuggestion.liveActivityProgress',
-                  '{{cleared}}/4 stages cleared • {{seconds}}s',
+                  '{{cleared}}/3 stages cleared • {{seconds}}s • {{progress}}%',
                   {
                     cleared: clearedStageCount,
+                    progress: overallProgressPercent,
                     seconds: loadingElapsedSec,
                   }
                 )
               : t(
                   'input.videoSuggestion.lastActivityProgress',
-                  '{{cleared}}/4 stages cleared • completed in {{seconds}}s',
+                  '{{cleared}}/3 stages cleared • completed in {{seconds}}s • {{progress}}%',
                   {
                     cleared: clearedStageCount,
+                    progress: overallProgressPercent,
                     seconds: loadingElapsedSec,
                   }
                 )}
@@ -228,13 +287,6 @@ export default function VideoSuggestionLiveActivity({
             <div className={liveActivityMetaStyles}>
               {t('input.videoSuggestion.currentStep', 'Current step')}:{' '}
               {runningStage.index}. {pipelineStageLabel(runningStage.key)}
-            </div>
-          ) : null}
-
-          {searchQuery.trim() ? (
-            <div className={liveActivityMetaStyles}>
-              {t('input.videoSuggestion.searchQueryLabel', 'Search query')}
-              :&nbsp; &quot;{searchQuery.trim()}&quot;
             </div>
           ) : null}
 
@@ -272,7 +324,7 @@ export default function VideoSuggestionLiveActivity({
                         : t('input.videoSuggestion.stagePending', 'Pending');
                   const progressPct = Math.round(
                     clampPercent(
-                      stageProgress[stage.key] ??
+                      effectiveStageProgress[stage.key] ??
                         (stage.state === 'cleared' ? 100 : 0)
                     )
                   );
@@ -317,14 +369,29 @@ export default function VideoSuggestionLiveActivity({
                 })}
               </div>
 
-              {activeTraceLines.length > 0 ? (
+              {compactTraceLines.length > 0 ? (
                 <div className={liveActivityTraceStyles}>
-                  {activeTraceLines.map((line, index) => (
+                  <div className={liveActivityTraceLabelStyles}>
+                    {t('input.videoSuggestion.recentEvents', 'Recent events')}
+                  </div>
+                  {compactTraceLines.map((line, index) => (
                     <div
-                      key={`trace-${index}-${line.slice(0, 24)}`}
+                      key={`trace-${index}-${line.message.slice(0, 24)}`}
                       className={liveActivityTraceLineStyles}
                     >
-                      {line}
+                      {line.elapsedLabel ? (
+                        <span className={liveActivityTraceBadgeStyles}>
+                          {line.elapsedLabel}
+                        </span>
+                      ) : null}
+                      {line.phaseLabel ? (
+                        <span className={liveActivityTraceBadgeStyles}>
+                          {line.phaseLabel}
+                        </span>
+                      ) : null}
+                      <span className={liveActivityTraceMessageStyles}>
+                        {line.message}
+                      </span>
                     </div>
                   ))}
                 </div>

@@ -14,13 +14,20 @@ import type {
 import { isVideoSuggestionRecency } from '../../../../../shared/helpers/video-suggestion-sanitize.js';
 
 export const NO_PRESET_VALUE = '__none__';
+export const STAGE_PROGRESS_TICK_MS = 450;
+export const STAGE_PROGRESS_RUNNING_MIN = 7;
+export const STAGE_PROGRESS_RUNNING_MAX = 95;
+export const STAGE_PROGRESS_EASE_SEC = 28;
+const RETRIEVAL_SEED_PROGRESS_BASE = 35;
+const RETRIEVAL_SEED_PROGRESS_RANGE = 60;
 
 const PIPELINE_STAGE_KEYS: PipelineStageKey[] = [
-  'strategist',
-  'discovery',
-  'curator',
+  'answerer',
+  'planner',
   'retrieval',
 ];
+
+export type StageProgressMap = Partial<Record<PipelineStageKey, number>>;
 
 export function resolveI18n(text: string, t: TFunction): string {
   if (text.startsWith('__i18n__:')) {
@@ -48,7 +55,7 @@ export function resolveErrorText(
     if (reason === 'no-scored-results') {
       return t(
         'input.videoSuggestion.lowConfidenceNoScoredResults',
-        'No reliable matches survived ranking. Try a broader topic, add a creator hint, or switch recency.'
+        'No reliable matches survived retrieval. Try a broader topic, add one more detail, or switch recency.'
       );
     }
     return t(
@@ -122,13 +129,64 @@ export function isPipelineStageKey(value: unknown): value is PipelineStageKey {
 export function inferStageFromMessage(
   message: string
 ): { key: PipelineStageKey; state: PipelineStageState } | null {
-  const match = message.match(/step\s*([1-4])\s*\/\s*4/i);
+  const match = message.match(/step\s*([1-3])\s*\/\s*3/i);
   if (!match) return null;
   const idx = Number(match[1]);
-  if (!Number.isFinite(idx) || idx < 1 || idx > 4) return null;
+  if (!Number.isFinite(idx) || idx < 1 || idx > 3) return null;
   const key = PIPELINE_STAGE_KEYS[idx - 1];
   const state = /cleared/i.test(message) ? 'cleared' : 'running';
   return { key, state };
+}
+
+export function clampPercent(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  if (value <= 0) return 0;
+  if (value >= 100) return 100;
+  return value;
+}
+
+export function runningStageTargetPercent(elapsedSec: number): number {
+  const safeElapsed = Math.max(0, elapsedSec);
+  const eased = 1 - Math.exp(-safeElapsed / STAGE_PROGRESS_EASE_SEC);
+  return (
+    STAGE_PROGRESS_RUNNING_MIN +
+    (STAGE_PROGRESS_RUNNING_MAX - STAGE_PROGRESS_RUNNING_MIN) * eased
+  );
+}
+
+export function inferRetrievalStageProgressFromMessage(
+  message: string
+): number | null {
+  const match = String(message || '').match(/Search seed\s+(\d+)\s*\/\s*(\d+)/i);
+  if (!match) return null;
+  const current = Number(match[1]);
+  const total = Number(match[2]);
+  if (!Number.isFinite(current) || !Number.isFinite(total) || total <= 0) {
+    return null;
+  }
+  const completion = Math.min(1, Math.max(0, current / total));
+  return clampPercent(
+    RETRIEVAL_SEED_PROGRESS_BASE +
+      completion * RETRIEVAL_SEED_PROGRESS_RANGE
+  );
+}
+
+export function calculateOverallPipelineProgress(
+  pipelineStages: PipelineStageProgress[],
+  stageProgress: StageProgressMap
+): number {
+  if (pipelineStages.length === 0) return 0;
+  const total = pipelineStages.reduce((sum, stage) => {
+    const current = stageProgress[stage.key];
+    if (typeof current === 'number') {
+      return sum + clampPercent(current);
+    }
+    if (stage.state === 'cleared') {
+      return sum + 100;
+    }
+    return sum;
+  }, 0);
+  return clampPercent(total / pipelineStages.length);
 }
 
 export function pipelineStageLabel(
@@ -136,12 +194,10 @@ export function pipelineStageLabel(
   t: TFunction
 ): string {
   switch (key) {
-    case 'strategist':
-      return t('input.videoSuggestion.stage.strategist', 'Plan search');
-    case 'discovery':
-      return t('input.videoSuggestion.stage.discovery', 'Search candidates');
-    case 'curator':
-      return t('input.videoSuggestion.stage.curator', 'Rank matches');
+    case 'answerer':
+      return t('input.videoSuggestion.stage.answerer', 'Process query');
+    case 'planner':
+      return t('input.videoSuggestion.stage.planner', 'Form search');
     case 'retrieval':
       return t('input.videoSuggestion.stage.retrieval', 'Load results');
     default:
@@ -293,13 +349,25 @@ export function buildSuggestedFollowUpPrompts(
   searchQuery: string,
   savedPreferences: VideoSuggestionPreferenceSlots,
   results: VideoSuggestionResultItem[],
-  t: TFunction
+  t: TFunction,
+  context?: {
+    includeDownloadHistory?: boolean;
+    includeWatchedChannels?: boolean;
+    recentDownloadTitles?: string[];
+    recentChannelNames?: string[];
+  }
 ): string[] {
   const normalizedQuery = compactSuggestionText(searchQuery);
   const topic = compactSuggestionText(savedPreferences.topic);
-  const creator = compactSuggestionText(savedPreferences.creator);
-  const subtopic = compactSuggestionText(savedPreferences.subtopic);
   const topChannel = compactSuggestionText(results[0]?.channel);
+  const recentDownloadTitle =
+    context?.includeDownloadHistory && Array.isArray(context.recentDownloadTitles)
+      ? compactSuggestionText(context.recentDownloadTitles[0])
+      : '';
+  const recentChannel =
+    context?.includeWatchedChannels && Array.isArray(context.recentChannelNames)
+      ? compactSuggestionText(context.recentChannelNames[0])
+      : '';
   const prompts: string[] = [];
   const seen = new Set<string>();
 
@@ -318,7 +386,7 @@ export function buildSuggestedFollowUpPrompts(
       seen,
       t(
         'input.videoSuggestion.followUp.differentCreator',
-        '"{{query}}" from a different creator or channel',
+        '"{{query}}" from a different name or channel',
         { query: normalizedQuery }
       )
     );
@@ -348,27 +416,6 @@ export function buildSuggestedFollowUpPrompts(
     }
   }
 
-  if (creator) {
-    pushUniqueSuggestion(
-      prompts,
-      seen,
-      t(
-        'input.videoSuggestion.followUp.creatorAppearances',
-        '{{creator}} interviews, TV appearances, or live clips',
-        { creator }
-      )
-    );
-    pushUniqueSuggestion(
-      prompts,
-      seen,
-      t(
-        'input.videoSuggestion.followUp.similarCreators',
-        'Creators or artists similar to {{creator}}',
-        { creator }
-      )
-    );
-  }
-
   if (topic) {
     pushUniqueSuggestion(
       prompts,
@@ -381,30 +428,6 @@ export function buildSuggestedFollowUpPrompts(
     );
   }
 
-  if (topic && subtopic) {
-    pushUniqueSuggestion(
-      prompts,
-      seen,
-      t(
-        'input.videoSuggestion.followUp.topicSubtopic',
-        'More {{subtopic}} videos about {{topic}}',
-        { subtopic, topic }
-      )
-    );
-  }
-
-  if (topic && creator) {
-    pushUniqueSuggestion(
-      prompts,
-      seen,
-      t(
-        'input.videoSuggestion.followUp.topicCreator',
-        '{{creator}} and related {{topic}} videos',
-        { creator, topic }
-      )
-    );
-  }
-
   if (topChannel) {
     pushUniqueSuggestion(
       prompts,
@@ -413,6 +436,30 @@ export function buildSuggestedFollowUpPrompts(
         'input.videoSuggestion.followUp.channelStyle',
         'Videos with a similar feel to {{channel}}',
         { channel: topChannel }
+      )
+    );
+  }
+
+  if (!normalizedQuery && recentDownloadTitle) {
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.moreFromHistory',
+        'More videos like "{{title}}"',
+        { title: recentDownloadTitle }
+      )
+    );
+  }
+
+  if (recentChannel) {
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.channelFromHistory',
+        'Videos from channels like {{channel}}',
+        { channel: recentChannel }
       )
     );
   }

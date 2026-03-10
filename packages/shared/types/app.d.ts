@@ -122,6 +122,19 @@ declare module '@shared-types/app' {
     error?: string;
   }
 
+  export type StoredSubtitleKind = 'transcription' | 'translation';
+
+  export interface StoredSubtitleEntry {
+    id: string;
+    kind: StoredSubtitleKind;
+    targetLanguage: string | null;
+    filePath: string;
+    sourceVideoPaths: string[];
+    sourceUrls: string[];
+    createdAt: string;
+    updatedAt: string;
+  }
+
   export interface FileData {
     name: string;
     path: string;
@@ -244,11 +257,7 @@ declare module '@shared-types/app' {
     | 'month'
     | 'year';
 
-  export type VideoSuggestionStageKey =
-    | 'strategist'
-    | 'discovery'
-    | 'curator'
-    | 'retrieval';
+  export type VideoSuggestionStageKey = 'answerer' | 'planner' | 'retrieval';
 
   export type VideoSuggestionStageState = 'pending' | 'running' | 'cleared';
 
@@ -272,8 +281,11 @@ declare module '@shared-types/app' {
 
   export interface VideoSuggestionPreferenceSlots {
     topic?: string;
-    creator?: string;
-    subtopic?: string;
+  }
+
+  export interface VideoSuggestionContextToggles {
+    includeDownloadHistory?: boolean;
+    includeWatchedChannels?: boolean;
   }
 
   export interface VideoSuggestionChatRequest {
@@ -287,13 +299,15 @@ declare module '@shared-types/app' {
     continuationId?: string;
     searchQueryOverride?: string;
     excludeUrls?: string[];
+    contextToggles?: VideoSuggestionContextToggles;
+    recentDownloadTitles?: string[];
+    recentChannelNames?: string[];
     operationId?: string;
   }
 
   export interface VideoSuggestionChatResult {
     success: boolean;
     assistantMessage: string;
-    needsMoreContext: boolean;
     searchQuery?: string;
     results?: VideoSuggestionResultItem[];
     capturedPreferences?: VideoSuggestionPreferenceSlots;
@@ -318,6 +332,7 @@ declare module '@shared-types/app' {
     searchQuery?: string;
     assistantPreview?: string;
     resultCount?: number;
+    partialResults?: VideoSuggestionResultItem[];
     stageKey?: VideoSuggestionStageKey;
     stageIndex?: number;
     stageTotal?: number;
@@ -767,6 +782,39 @@ declare module '@shared-types/app' {
       totalBytes?: number;
       error?: string;
     }>;
+    saveStoredSubtitleArtifact: (options: {
+      content: string;
+      kind: StoredSubtitleKind;
+      targetLanguage?: string | null;
+      sourceVideoPath?: string | null;
+      sourceUrl?: string | null;
+      titleHint?: string | null;
+    }) => Promise<{
+      success: boolean;
+      entry?: StoredSubtitleEntry;
+      error?: string;
+    }>;
+    findStoredSubtitleForVideo: (options: {
+      sourceVideoPath?: string | null;
+      sourceUrl?: string | null;
+      targetLanguage?: string | null;
+    }) => Promise<{
+      success: boolean;
+      entry?: StoredSubtitleEntry | null;
+      content?: string;
+      error?: string;
+    }>;
+    syncStoredSubtitleVideoPath: (
+      previousPath: string,
+      savedPath: string
+    ) => Promise<{ success: boolean; updated?: boolean; error?: string }>;
+    rememberStoredSubtitleVideoPath: (
+      entryId: string,
+      sourceVideoPath: string
+    ) => Promise<{ success: boolean; updated?: boolean; error?: string }>;
+    deleteStoredSubtitleEntry: (
+      entryId: string
+    ) => Promise<{ success: boolean; removed?: boolean; error?: string }>;
 
     hasVideoTrack: (filePath: string) => Promise<boolean>;
     getVideoMetadata: (filePath: string) => Promise<VideoMetadataResult>;
@@ -995,14 +1043,6 @@ declare module '@shared-types/app' {
     ) => Promise<{ success: boolean; error?: string }>;
     getVideoSuggestionPreferenceTopic: () => Promise<string>;
     setVideoSuggestionPreferenceTopic: (
-      value: string
-    ) => Promise<{ success: boolean; error?: string }>;
-    getVideoSuggestionPreferenceCreator: () => Promise<string>;
-    setVideoSuggestionPreferenceCreator: (
-      value: string
-    ) => Promise<{ success: boolean; error?: string }>;
-    getVideoSuggestionPreferenceSubtopic: () => Promise<string>;
-    setVideoSuggestionPreferenceSubtopic: (
       value: string
     ) => Promise<{ success: boolean; error?: string }>;
 

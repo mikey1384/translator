@@ -14,8 +14,9 @@ import {
 } from './progress.js';
 import { terminateProcess } from '../../utils/process-killer.js';
 import {
-  type CreatorSearchOutcome,
+  type SeedSearchOutcome,
   VIDEO_SUGGESTION_SOURCE_LABEL,
+  buildYoutubeSearchPageUrl,
   clampTraceMessage,
   compactText,
   fallbackYoutubeThumbnailUrl,
@@ -23,9 +24,11 @@ import {
   normalizeYoutubeChannelUrl,
   normalizeYoutubeWatchUrl,
   isYoutubeVideoSuggestionUrl,
+  normalizeCountryCode,
   quotedStatusValue,
   isSuggestionAbortError,
   sanitizeRetrievalSearchQuery,
+  sanitizeLanguageToken,
   sanitizeSearchKeywords,
   summarizeValues,
   throwIfSuggestionAborted,
@@ -33,7 +36,13 @@ import {
 } from './shared.js';
 
 type YtDlpEntry = Record<string, unknown>;
-const YT_DLP_NATIVE_SEARCH_PREFIX = 'ytsearch';
+
+type YoutubeSearchSeed = {
+  query: string;
+  url: string;
+};
+
+const YOUTUBE_ROOT_URL = 'https://www.youtube.com';
 
 function buildYoutubeScopedQueries(query: string): string[] {
   const normalized =
@@ -180,8 +189,6 @@ function extractThumbnail(entry: YtDlpEntry): string | undefined {
   }
   return undefined;
 }
-
-const YOUTUBE_ROOT_URL = 'https://www.youtube.com';
 
 function normalizeAbsoluteHttpUrl(value: string): string {
   const normalized = compactText(value);
@@ -348,25 +355,45 @@ function applyRecencyPreference(
   };
 }
 
-function buildYoutubeSearchPageUrl(query: string): string {
-  const encoded = encodeURIComponent(query);
-  return `${YOUTUBE_ROOT_URL}/results?search_query=${encoded}`;
-}
-
-function buildYoutubeSeedUrls({
+function buildYoutubeSearchSeeds({
   seedUrls,
   fallbackQueries,
+  countryCode,
+  searchLocale,
 }: {
   seedUrls: string[];
   fallbackQueries: string[];
-}): string[] {
+  countryCode?: string;
+  searchLocale?: string;
+}): YoutubeSearchSeed[] {
   const explicitUrls = uniqueTexts(
     seedUrls.map(value => compactText(value)).filter(Boolean)
-  ).filter(isYoutubeVideoSuggestionUrl);
+  )
+    .filter(isYoutubeVideoSuggestionUrl)
+    .map(url => ({
+      query: fallbackQueries[0] || '',
+      url,
+    }));
   const fallbackSearchPages = fallbackQueries
-    .map(buildYoutubeSearchPageUrl)
-    .filter(isYoutubeVideoSuggestionUrl);
-  return uniqueTexts([...explicitUrls, ...fallbackSearchPages]).slice(0, 24);
+    .map(query => ({
+      query,
+      url: buildYoutubeSearchPageUrl({
+        query,
+        countryCode,
+        searchLocale,
+      }),
+    }))
+    .filter(seed => isYoutubeVideoSuggestionUrl(seed.url));
+
+  const deduped: YoutubeSearchSeed[] = [];
+  const seenUrls = new Set<string>();
+  for (const seed of [...explicitUrls, ...fallbackSearchPages]) {
+    if (!seed.url || seenUrls.has(seed.url)) continue;
+    seenUrls.add(seed.url);
+    deduped.push(seed);
+    if (deduped.length >= 24) break;
+  }
+  return deduped;
 }
 
 async function runAbortableYtDlpCommand({
@@ -430,44 +457,6 @@ async function runAbortableYtDlpCommand({
   }
 }
 
-async function runYtDlpKeywordSearch({
-  ytDlpPath,
-  env,
-  searchPrefix,
-  query,
-  limit,
-  dateAfter,
-  signal,
-}: {
-  ytDlpPath: string;
-  env: NodeJS.ProcessEnv;
-  searchPrefix: string;
-  query: string;
-  limit: number;
-  dateAfter?: string;
-  signal?: AbortSignal;
-}): Promise<string> {
-  const args = [
-    `${searchPrefix}${limit}:${query}`,
-    '--skip-download',
-    '--dump-json',
-    '--no-warnings',
-    '--no-progress',
-    '--ignore-errors',
-  ];
-  if (dateAfter) {
-    args.push('--dateafter', dateAfter);
-  }
-  return runAbortableYtDlpCommand({
-    ytDlpPath,
-    args,
-    env,
-    signal,
-    logPrefix: 'video-suggestions-yt-dlp-query',
-    fallbackMessage: 'yt-dlp search failed.',
-  });
-}
-
 async function runYtDlpUrlSeedSearch({
   ytDlpPath,
   env,
@@ -515,6 +504,8 @@ async function runYtDlpUrlSeedSearch({
 export async function runYoutubeYtDlpSearch({
   baseQuery,
   queries,
+  countryCode,
+  searchLocale,
   recency,
   operationId,
   maxResults,
@@ -527,6 +518,8 @@ export async function runYoutubeYtDlpSearch({
   baseQuery: string;
   queries?: string[];
   countryHint: string;
+  countryCode?: string;
+  searchLocale?: string;
   recency: VideoSuggestionRecency;
   translationPhase: 'draft' | 'review';
   model: string;
@@ -537,30 +530,28 @@ export async function runYoutubeYtDlpSearch({
   continuationDepth?: number;
   onProgress?: SuggestionProgressCallback;
   signal?: AbortSignal;
-}): Promise<CreatorSearchOutcome> {
+}): Promise<SeedSearchOutcome> {
   const startedAt = Date.now();
   const platformLabel = VIDEO_SUGGESTION_SOURCE_LABEL;
   throwIfSuggestionAborted(signal);
   const effectiveQuery =
     sanitizeRetrievalSearchQuery(baseQuery) ||
     sanitizeSearchKeywords(baseQuery);
-  const candidateLimit = Math.min(
-    240,
-    Math.max(
-      24,
-      maxResults * 2,
-      excludeUrls.size + maxResults * (2 + Math.max(0, continuationDepth))
-    )
-  );
   const youtubeQueries = buildYoutubeQueryPool({
     baseQuery: effectiveQuery,
     queries,
   });
   const queriesToTry =
     youtubeQueries.length > 0 ? youtubeQueries : [effectiveQuery];
-  const seedUrlPool = buildYoutubeSeedUrls({
+  const validatedCountryCode = normalizeCountryCode(countryCode);
+  const validatedSearchLocale = sanitizeLanguageToken(searchLocale)
+    .toLowerCase()
+    .slice(0, 10);
+  const searchSeeds = buildYoutubeSearchSeeds({
     seedUrls,
     fallbackQueries: queriesToTry,
+    countryCode: validatedCountryCode,
+    searchLocale: validatedSearchLocale,
   });
   const previewQuery = queriesToTry[0] || effectiveQuery;
   const perSeedLimit = Math.min(
@@ -568,7 +559,8 @@ export async function runYoutubeYtDlpSearch({
     Math.max(
       8,
       Math.ceil(
-        candidateLimit / Math.max(2, Math.min(seedUrlPool.length || 2, 6))
+        Math.max(maxResults, 18) /
+          Math.max(2, Math.min(searchSeeds.length || 2, 6))
       )
     )
   );
@@ -577,14 +569,16 @@ export async function runYoutubeYtDlpSearch({
   emitSuggestionProgress(onProgress, {
     operationId,
     phase: 'searching',
-    message: `Searching ${platformLabel} via yt-dlp for ${quotedStatusValue(effectiveQuery)}.`,
+    message: `Searching ${platformLabel} for ${quotedStatusValue(effectiveQuery)}.`,
     searchQuery: previewQuery,
     elapsedMs: Date.now() - startedAt,
   });
   emitSuggestionProgress(onProgress, {
     operationId,
     phase: 'searching',
-    message: `yt-dlp mode: native-search (${YT_DLP_NATIVE_SEARCH_PREFIX}); limit=${candidateLimit}.`,
+    message: validatedCountryCode
+      ? `Search mode: YouTube search-page retrieval with regional bias ${validatedCountryCode}${validatedSearchLocale ? ` / ${validatedSearchLocale}` : ''}; seeds=${searchSeeds.length}.`
+      : `Search mode: YouTube search-page retrieval; seeds=${searchSeeds.length}.`,
     searchQuery: previewQuery,
     elapsedMs: Date.now() - startedAt,
   });
@@ -609,32 +603,34 @@ export async function runYoutubeYtDlpSearch({
     elapsedMs: Date.now() - startedAt,
   });
 
-  const parsedRows: YtDlpEntry[] = [];
-  const triedQueries: string[] = [];
   const triedSeedUrls: string[] = [];
+  const seenUrls = new Set<string>(excludeUrls);
+  const normalizedCandidates: VideoSuggestionResultItem[] = [];
+  let normalizedIndex = 0;
 
   const runUrlSeedLoop = async (seedIntroMessage?: string) => {
     throwIfSuggestionAborted(signal);
-    if (seedUrlPool.length === 0) return;
+    if (searchSeeds.length === 0) return;
     if (seedIntroMessage) {
       emitSuggestionProgress(onProgress, {
         operationId,
         phase: 'searching',
         message: seedIntroMessage,
-        searchQuery: seedUrlPool[0],
+        searchQuery: previewQuery,
         elapsedMs: Date.now() - startedAt,
       });
     }
-    for (let i = 0; i < seedUrlPool.length; i++) {
+    for (let i = 0; i < searchSeeds.length; i++) {
       throwIfSuggestionAborted(signal);
-      if (parsedRows.length >= candidateLimit) break;
-      const seedUrl = seedUrlPool[i];
+      const seed = searchSeeds[i];
+      const seedUrl = seed.url;
+      const seedQuery = seed.query || previewQuery;
       triedSeedUrls.push(seedUrl);
       emitSuggestionProgress(onProgress, {
         operationId,
         phase: 'searching',
-        message: `yt-dlp seed ${i + 1}/${seedUrlPool.length}: collecting candidates.`,
-        searchQuery: seedUrl,
+        message: `Search seed ${i + 1}/${searchSeeds.length}: collecting candidates.`,
+        searchQuery: seedQuery,
         elapsedMs: Date.now() - startedAt,
       });
       let raw = '';
@@ -656,91 +652,47 @@ export async function runYoutubeYtDlpSearch({
         }
         parsed = [];
       }
-      if (parsed.length > 0) {
-        parsedRows.push(...parsed);
+      const freshCandidates: VideoSuggestionResultItem[] = [];
+      for (const row of parsed) {
+        const normalized = normalizeYoutubeYtDlpResult(row, normalizedIndex++);
+        if (!normalized) continue;
+        if (!isYoutubeVideoSuggestionUrl(normalized.url)) continue;
+        if (seenUrls.has(normalized.url)) continue;
+        seenUrls.add(normalized.url);
+        normalizedCandidates.push(normalized);
+        freshCandidates.push(normalized);
       }
+      const visibleFreshCandidates = applyRecencyPreference(
+        freshCandidates,
+        recency
+      ).items;
+      const visibleTotalCount = applyRecencyPreference(
+        normalizedCandidates,
+        recency
+      ).items.length;
       emitSuggestionProgress(onProgress, {
         operationId,
         phase: 'searching',
-        message: `yt-dlp seed ${i + 1}/${seedUrlPool.length}: ${parsed.length} rows (total ${parsedRows.length}).`,
-        searchQuery: seedUrl,
+        message: `Search seed ${i + 1}/${searchSeeds.length}: ${visibleFreshCandidates.length} fresh videos (total ${visibleTotalCount}).`,
+        searchQuery: seedQuery,
         elapsedMs: Date.now() - startedAt,
+        resultCount: visibleTotalCount,
+        partialResults: visibleFreshCandidates,
       });
     }
   };
 
-  for (let i = 0; i < queriesToTry.length; i++) {
-    throwIfSuggestionAborted(signal);
-    if (parsedRows.length >= candidateLimit) break;
-    const scopedQuery = queriesToTry[i];
-    triedQueries.push(scopedQuery);
-    emitSuggestionProgress(onProgress, {
-      operationId,
-      phase: 'searching',
-      message: `yt-dlp query ${i + 1}/${queriesToTry.length}: running native search.`,
-      searchQuery: scopedQuery,
-      elapsedMs: Date.now() - startedAt,
-    });
-    let raw = '';
-    let parsed: YtDlpEntry[] = [];
-    try {
-      raw = await runYtDlpKeywordSearch({
-        ytDlpPath,
-        env,
-        searchPrefix: YT_DLP_NATIVE_SEARCH_PREFIX,
-        query: scopedQuery,
-        limit: candidateLimit,
-        dateAfter,
-        signal,
-      });
-      parsed = parseYtDlpJsonLines(raw);
-    } catch (error) {
-      if (isSuggestionAbortError(error, signal)) {
-        throw error;
-      }
-      parsed = [];
-    }
-
-    if (parsed.length > 0) {
-      parsedRows.push(...parsed);
-    }
-    emitSuggestionProgress(onProgress, {
-      operationId,
-      phase: 'searching',
-      message: `yt-dlp query ${i + 1}/${queriesToTry.length}: ${parsed.length} rows (total ${parsedRows.length}).`,
-      searchQuery: scopedQuery,
-      elapsedMs: Date.now() - startedAt,
-    });
-  }
-
-  if (parsedRows.length === 0) {
-    await runUrlSeedLoop(
-      `Native search returned no candidates; trying discovered ${platformLabel} URLs.`
-    );
-  }
+  await runUrlSeedLoop(
+    `Using formulated ${platformLabel} search-page URLs to gather candidates.`
+  );
 
   emitSuggestionProgress(onProgress, {
     operationId,
     phase: 'searching',
-    message: `Normalizing and de-duplicating ${parsedRows.length} raw candidates.`,
-    searchQuery: triedQueries[0] || triedSeedUrls[0] || effectiveQuery,
+    message: `Collected ${normalizedCandidates.length} distinct raw candidates.`,
+    searchQuery: previewQuery,
     elapsedMs: Date.now() - startedAt,
   });
-
-  const seenUrls = new Set<string>(excludeUrls);
-  const normalizedCandidates: VideoSuggestionResultItem[] = [];
-  for (let i = 0; i < parsedRows.length; i++) {
-    throwIfSuggestionAborted(signal);
-    const normalized = normalizeYoutubeYtDlpResult(parsedRows[i], i);
-    if (!normalized) continue;
-    if (!isYoutubeVideoSuggestionUrl(normalized.url)) {
-      continue;
-    }
-    if (seenUrls.has(normalized.url)) continue;
-    seenUrls.add(normalized.url);
-    normalizedCandidates.push(normalized);
-    if (normalizedCandidates.length >= candidateLimit) break;
-  }
 
   emitSuggestionProgress(onProgress, {
     operationId,
@@ -749,19 +701,14 @@ export async function runYoutubeYtDlpSearch({
       recency === 'any'
         ? 'Recency is any time: keeping older and newer uploads.'
         : 'Applying strict recency filter to candidates.',
-    searchQuery: triedQueries[0] || triedSeedUrls[0] || effectiveQuery,
+    searchQuery: previewQuery,
     elapsedMs: Date.now() - startedAt,
   });
 
   const recencyOutcome = applyRecencyPreference(normalizedCandidates, recency);
-  const rankingCandidateLimit = Math.min(
-    60,
-    Math.max(maxResults, maxResults * 3)
-  );
-  const results = recencyOutcome.items.slice(0, rankingCandidateLimit);
+  const results = recencyOutcome.items;
   const visibleResultCount = Math.min(results.length, maxResults);
-
-  const creators = uniqueTexts(
+  const channels = uniqueTexts(
     results.map(item => compactText(item.channel || '')).filter(Boolean)
   ).slice(0, 6);
   const confidence =
@@ -774,13 +721,13 @@ export async function runYoutubeYtDlpSearch({
 
   emitSuggestionProgress(onProgress, {
     operationId,
-    phase: 'ranking',
-    message: `yt-dlp ${platformLabel} candidates: ${summarizeValues(creators, 4)}. Prepared ${results.length}/${normalizedCandidates.length} for ranking.`,
-    searchQuery: triedQueries[0] || triedSeedUrls[0] || effectiveQuery,
+    phase: 'searching',
+    message: `${platformLabel} search collected ${results.length} usable videos.`,
+    searchQuery: previewQuery,
     assistantPreview: clampTraceMessage(
       recencyOutcome.strictApplied
-        ? `Mode=native-search; recency=${recency} strict kept=${recencyOutcome.recentCount}/${normalizedCandidates.length} (unknown=${recencyOutcome.unknownCount}, old=${recencyOutcome.oldCount}); source=${platformLabel}.`
-        : `Mode=native-search; candidate limit=${candidateLimit}; ${recencyStatusForTrace}; source=${platformLabel}.`,
+        ? `Mode=url-seed-search; recency=${recency} strict kept=${recencyOutcome.recentCount}/${normalizedCandidates.length} (unknown=${recencyOutcome.unknownCount}, old=${recencyOutcome.oldCount}); source=${platformLabel}.`
+        : `Mode=url-seed-search; ${recencyStatusForTrace}; source=${platformLabel}${validatedCountryCode ? `; regionalBias=${validatedCountryCode}${validatedSearchLocale ? `/${validatedSearchLocale}` : ''}` : ''}.`,
       220
     ),
     elapsedMs: Date.now() - startedAt,
@@ -796,10 +743,10 @@ export async function runYoutubeYtDlpSearch({
 
   return {
     results,
-    searchQuery: triedQueries[0] || triedSeedUrls[0] || effectiveQuery,
-    creators,
-    queriesTried: uniqueTexts([...triedQueries, ...triedSeedUrls]),
+    searchQuery: previewQuery,
+    channels,
     confidence,
+    queriesTried: uniqueTexts([...queriesToTry, ...triedSeedUrls]),
     candidateCount: normalizedCandidates.length,
     lowConfidenceReason,
   };

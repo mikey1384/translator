@@ -8,6 +8,7 @@ import {
 } from '../../../../../shared/helpers/video-suggestion-sanitize.js';
 import {
   createDefaultVideoSuggestionLocalPrefs,
+  VIDEO_SUGGESTION_DEFAULT_CONTEXT_TOGGLES,
   VIDEO_SUGGESTION_DEFAULT_RECENCY,
 } from '../../../../../shared/helpers/video-suggestion-defaults.js';
 import type {
@@ -16,7 +17,11 @@ import type {
   VideoSuggestionDownloadHistoryItem,
 } from './VideoSuggestionPanel.types.js';
 
-const LOCAL_VIDEO_SUGGESTION_PREFS_KEY = 'video-suggestion-prefs-v1';
+const LOCAL_VIDEO_SUGGESTION_PREFS_KEY = 'video-suggestion-prefs-v3';
+const LEGACY_LOCAL_VIDEO_SUGGESTION_PREFS_KEYS = [
+  'video-suggestion-prefs-v2',
+  'video-suggestion-prefs-v1',
+] as const;
 const LOCAL_VIDEO_SUGGESTION_HISTORY_KEY = 'video-suggestion-downloads-v1';
 const LOCAL_VIDEO_SUGGESTION_HIDDEN_CHANNELS_KEY =
   'video-suggestion-hidden-channels-v1';
@@ -32,6 +37,38 @@ const GENERATE_SUBTITLES_WORKSPACE_TABS: GenerateSubtitlesWorkspaceTab[] = [
 ];
 const VIDEO_SUGGESTION_HISTORY_SYNC_EVENT =
   'video-suggestion-history-sync-needed';
+const MAX_PREFERENCE_HISTORY_ITEMS = 8;
+
+function sanitizePreferenceHistoryList(value: unknown): string[] {
+  const rawList = Array.isArray(value) ? value : [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const rawItem of rawList) {
+    const sanitized = sanitizeVideoSuggestionPreference(rawItem);
+    if (!sanitized) continue;
+    const key = sanitized.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(sanitized);
+    if (out.length >= MAX_PREFERENCE_HISTORY_ITEMS) break;
+  }
+  return out;
+}
+
+function mergePreferenceHistoryList(
+  current: string[],
+  patch: unknown,
+  fallbackActive: string
+): string[] {
+  const explicit =
+    patch !== undefined
+      ? sanitizePreferenceHistoryList(patch)
+      : sanitizePreferenceHistoryList(current);
+  if (explicit.length > 0) {
+    return explicit;
+  }
+  return fallbackActive ? [fallbackActive] : [];
+}
 
 function normalizeHistoryPath(value: unknown): string {
   return sanitizeVideoSuggestionHistoryPath(value)
@@ -57,32 +94,101 @@ export function getVideoSuggestionHistoryStorageKind(
   return isLikelyManagedTempHistoryPath(value) ? 'temp' : 'saved';
 }
 
+function parseLocalVideoSuggestionPrefs(
+  raw: string
+): LocalVideoSuggestionPrefs | null {
+  const parsed = JSON.parse(raw) as {
+    country?: unknown;
+    recency?: unknown;
+    preferences?: unknown;
+    preferenceHistory?: unknown;
+    contextToggles?: unknown;
+    topic?: unknown;
+  };
+  const prefSource =
+    parsed?.preferences && typeof parsed.preferences === 'object'
+      ? (parsed.preferences as Record<string, unknown>)
+      : {};
+  const preferenceHistorySource =
+    parsed?.preferenceHistory && typeof parsed.preferenceHistory === 'object'
+      ? (parsed.preferenceHistory as Record<string, unknown>)
+      : {};
+  const contextSource =
+    parsed?.contextToggles && typeof parsed.contextToggles === 'object'
+      ? (parsed.contextToggles as Record<string, unknown>)
+      : {};
+  const topic = sanitizeVideoSuggestionPreference(
+    prefSource?.topic ?? prefSource?.contentTopic ?? prefSource?.intentTopic ?? parsed?.topic
+  );
+
+  return {
+    country: sanitizeVideoSuggestionCountry(parsed?.country),
+    recency: isVideoSuggestionRecency(parsed?.recency)
+      ? parsed.recency
+      : VIDEO_SUGGESTION_DEFAULT_RECENCY,
+    preferences: {
+      topic,
+    },
+    preferenceHistory: {
+      topic: mergePreferenceHistoryList(
+        createDefaultVideoSuggestionLocalPrefs().preferenceHistory.topic,
+        preferenceHistorySource.topic ??
+          preferenceHistorySource.contentTopic ??
+          preferenceHistorySource.intentTopic,
+        topic
+      ),
+    },
+    contextToggles: {
+      includeDownloadHistory:
+        typeof contextSource.includeDownloadHistory === 'boolean'
+          ? contextSource.includeDownloadHistory
+          : VIDEO_SUGGESTION_DEFAULT_CONTEXT_TOGGLES.includeDownloadHistory,
+      includeWatchedChannels:
+        typeof contextSource.includeWatchedChannels === 'boolean'
+          ? contextSource.includeWatchedChannels
+          : VIDEO_SUGGESTION_DEFAULT_CONTEXT_TOGGLES.includeWatchedChannels,
+    },
+  };
+}
+
+function readPersistedLocalVideoSuggestionPrefs(): {
+  key: string;
+  prefs: LocalVideoSuggestionPrefs;
+} | null {
+  const keys = [
+    LOCAL_VIDEO_SUGGESTION_PREFS_KEY,
+    ...LEGACY_LOCAL_VIDEO_SUGGESTION_PREFS_KEYS,
+  ];
+
+  for (const key of keys) {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const prefs = parseLocalVideoSuggestionPrefs(raw);
+      if (prefs) {
+        return { key, prefs };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 export function readLocalVideoSuggestionPrefs(): LocalVideoSuggestionPrefs {
   try {
-    const raw = window.localStorage.getItem(LOCAL_VIDEO_SUGGESTION_PREFS_KEY);
-    if (!raw) {
+    const persisted = readPersistedLocalVideoSuggestionPrefs();
+    if (!persisted) {
       return createDefaultVideoSuggestionLocalPrefs();
     }
-    const parsed = JSON.parse(raw) as {
-      country?: unknown;
-      recency?: unknown;
-      preferences?: unknown;
-    };
-    const prefSource =
-      parsed?.preferences && typeof parsed.preferences === 'object'
-        ? (parsed.preferences as Record<string, unknown>)
-        : {};
-    return {
-      country: sanitizeVideoSuggestionCountry(parsed?.country),
-      recency: isVideoSuggestionRecency(parsed?.recency)
-        ? parsed.recency
-        : VIDEO_SUGGESTION_DEFAULT_RECENCY,
-      preferences: {
-        topic: sanitizeVideoSuggestionPreference(prefSource?.topic),
-        creator: sanitizeVideoSuggestionPreference(prefSource?.creator),
-        subtopic: sanitizeVideoSuggestionPreference(prefSource?.subtopic),
-      },
-    };
+    if (persisted.key !== LOCAL_VIDEO_SUGGESTION_PREFS_KEY) {
+      window.localStorage.setItem(
+        LOCAL_VIDEO_SUGGESTION_PREFS_KEY,
+        JSON.stringify(persisted.prefs)
+      );
+    }
+    return persisted.prefs;
   } catch {
     return createDefaultVideoSuggestionLocalPrefs();
   }
@@ -97,6 +203,20 @@ export function writeLocalVideoSuggestionPrefs(
       patch.preferences && typeof patch.preferences === 'object'
         ? patch.preferences
         : ({} as VideoSuggestionPreferenceSlots);
+    const nextPreferenceHistoryPatch: Partial<
+      LocalVideoSuggestionPrefs['preferenceHistory']
+    > =
+      patch.preferenceHistory && typeof patch.preferenceHistory === 'object'
+        ? patch.preferenceHistory
+        : {};
+    const nextContextTogglesPatch =
+      patch.contextToggles && typeof patch.contextToggles === 'object'
+        ? patch.contextToggles
+        : {};
+    const topic =
+      nextPreferencesPatch.topic != null
+        ? sanitizeVideoSuggestionPreference(nextPreferencesPatch.topic)
+        : sanitizeVideoSuggestionPreference(current.preferences.topic);
     const next: LocalVideoSuggestionPrefs = {
       country:
         patch.country != null
@@ -107,18 +227,24 @@ export function writeLocalVideoSuggestionPrefs(
           ? patch.recency
           : current.recency,
       preferences: {
-        topic:
-          nextPreferencesPatch.topic != null
-            ? sanitizeVideoSuggestionPreference(nextPreferencesPatch.topic)
-            : sanitizeVideoSuggestionPreference(current.preferences.topic),
-        creator:
-          nextPreferencesPatch.creator != null
-            ? sanitizeVideoSuggestionPreference(nextPreferencesPatch.creator)
-            : sanitizeVideoSuggestionPreference(current.preferences.creator),
-        subtopic:
-          nextPreferencesPatch.subtopic != null
-            ? sanitizeVideoSuggestionPreference(nextPreferencesPatch.subtopic)
-            : sanitizeVideoSuggestionPreference(current.preferences.subtopic),
+        topic,
+      },
+      preferenceHistory: {
+        topic: mergePreferenceHistoryList(
+          current.preferenceHistory.topic,
+          nextPreferenceHistoryPatch.topic,
+          topic
+        ),
+      },
+      contextToggles: {
+        includeDownloadHistory:
+          typeof nextContextTogglesPatch.includeDownloadHistory === 'boolean'
+            ? nextContextTogglesPatch.includeDownloadHistory
+            : Boolean(current.contextToggles.includeDownloadHistory),
+        includeWatchedChannels:
+          typeof nextContextTogglesPatch.includeWatchedChannels === 'boolean'
+            ? nextContextTogglesPatch.includeWatchedChannels
+            : Boolean(current.contextToggles.includeWatchedChannels),
       },
     };
     window.localStorage.setItem(

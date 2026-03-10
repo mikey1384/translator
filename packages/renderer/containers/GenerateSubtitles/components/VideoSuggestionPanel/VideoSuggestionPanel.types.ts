@@ -1,4 +1,5 @@
 import type {
+  VideoSuggestionContextToggles,
   VideoSuggestionMessage,
   VideoSuggestionPreferenceSlots,
   VideoSuggestionRecency,
@@ -24,6 +25,10 @@ export type LocalVideoSuggestionPrefs = {
   country: string;
   recency: VideoSuggestionRecency;
   preferences: VideoSuggestionPreferenceSlots;
+  preferenceHistory: {
+    topic: string[];
+  };
+  contextToggles: VideoSuggestionContextToggles;
 };
 
 export type VideoSuggestionDownloadHistoryItem = {

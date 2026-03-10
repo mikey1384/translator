@@ -42,7 +42,8 @@ function getLocalProgressPercent(
 }
 
 type VideoSuggestionResultsTabProps = {
-  disabled: boolean;
+  continuationId: string | null;
+  disablePrimaryActions: boolean;
   loadingElapsedSec: number;
   loadingMessage: string;
   primaryActionLabel: string;
@@ -61,7 +62,8 @@ type VideoSuggestionResultsTabProps = {
 };
 
 export default function VideoSuggestionResultsTab({
-  disabled,
+  continuationId,
+  disablePrimaryActions,
   loadingElapsedSec,
   loadingMessage,
   primaryActionLabel,
@@ -79,6 +81,9 @@ export default function VideoSuggestionResultsTab({
   onSearchMore,
 }: VideoSuggestionResultsTabProps) {
   const showInlineSearchMoreProgress = loading && loadingMode === 'more';
+  const canSearchMore = Boolean(continuationId || searchQuery.trim());
+  const showSearchMoreButton = canSearchMore && (!loading || loadingMode === 'more');
+  const showMoreActions = showInlineSearchMoreProgress || showSearchMoreButton;
   const localProgressPercent = getLocalProgressPercent(
     loadingElapsedSec,
     Boolean(runningStage)
@@ -86,13 +91,6 @@ export default function VideoSuggestionResultsTab({
 
   return (
     <>
-      {searchQuery ? (
-        <div className={resultsHeaderStyles}>
-          {t('input.videoSuggestion.searchQueryLabel', 'Search query')}:&nbsp;
-          &quot;{searchQuery}&quot;
-        </div>
-      ) : null}
-
       {results.length > 0 ? (
         <>
           <div className={resultsHeaderStyles}>
@@ -135,7 +133,9 @@ export default function VideoSuggestionResultsTab({
                     <div className={cardActionsStyles}>
                       <Button
                         onClick={() => onDownloadFromSuggestion(item)}
-                        disabled={disabled || isDownloadInProgress}
+                        disabled={
+                          disablePrimaryActions || isDownloadInProgress
+                        }
                         size="sm"
                         variant="primary"
                         fullWidth
@@ -188,43 +188,47 @@ export default function VideoSuggestionResultsTab({
               );
             })}
           </div>
-          <div className={moreActionsStyles}>
-            {showInlineSearchMoreProgress ? (
-              <div className={moreActionsProgressStyles}>
-                <div className={moreActionsProgressMetaStyles}>
-                  <span className={liveActivityMetaStyles}>
-                    {loadingMessage ||
-                      t(
+          {showMoreActions ? (
+            <div className={moreActionsStyles}>
+              {showInlineSearchMoreProgress ? (
+                <div className={moreActionsProgressStyles}>
+                  <div className={moreActionsProgressMetaStyles}>
+                    <span className={liveActivityMetaStyles}>
+                      {loadingMessage ||
+                        t(
+                          'input.videoSuggestion.searchMoreLoading',
+                          'Searching more...'
+                        )}
+                    </span>
+                    <span className={liveActivityMetaStyles}>
+                      {loadingElapsedSec}s
+                    </span>
+                  </div>
+                  <div className={stageProgressTrackStyles} aria-hidden="true">
+                    <div
+                      className={stageProgressFillStyles}
+                      style={{ width: `${localProgressPercent}%` }}
+                    />
+                  </div>
+                </div>
+              ) : null}
+              {showSearchMoreButton ? (
+                <Button
+                  onClick={() => onSearchMore()}
+                  disabled={loading}
+                  size="sm"
+                  variant="secondary"
+                >
+                  {loadingMode === 'more'
+                    ? t(
                         'input.videoSuggestion.searchMoreLoading',
                         'Searching more...'
-                      )}
-                  </span>
-                  <span className={liveActivityMetaStyles}>
-                    {loadingElapsedSec}s
-                  </span>
-                </div>
-                <div className={stageProgressTrackStyles} aria-hidden="true">
-                  <div
-                    className={stageProgressFillStyles}
-                    style={{ width: `${localProgressPercent}%` }}
-                  />
-                </div>
-              </div>
-            ) : null}
-            <Button
-              onClick={() => onSearchMore()}
-              disabled={loading || !searchQuery.trim()}
-              size="sm"
-              variant="secondary"
-            >
-              {loadingMode === 'more'
-                ? t(
-                    'input.videoSuggestion.searchMoreLoading',
-                    'Searching more...'
-                  )
-                : t('input.videoSuggestion.searchMore', 'Search more')}
-            </Button>
-          </div>
+                      )
+                    : t('input.videoSuggestion.searchMore', 'Search more')}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </>
       ) : (
         <div className={resultsEmptyTabStateStyles}>

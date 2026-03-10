@@ -47,7 +47,10 @@ export async function terminateProcess({
   childProcess: {
     pid?: number;
     killed?: boolean;
-    kill: (signal?: string) => boolean;
+    kill: (
+      signal?: number | NodeJS.Signals,
+      error?: Error
+    ) => boolean;
   };
   logPrefix?: string;
 }): Promise<void> {

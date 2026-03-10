@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
 import type { TFunction } from 'i18next';
 import type { VideoSuggestionRecency } from '@shared-types/app';
 import {
+  contextToggleCheckboxStyles,
+  contextToggleGridStyles,
+  contextToggleHintStyles,
+  contextToggleLabelStyles,
+  contextToggleTextBlockStyles,
+  contextToggleTitleStyles,
   countryControlStyles,
   countryHintStyles,
   countryLabelStyles,
-  detailsBlockStyles,
-  detailsBodyStyles,
-  detailsSummaryStyles,
   inputStyles,
   preferenceFieldStyles,
   preferenceLabelRowStyles,
@@ -26,26 +28,20 @@ type RecencyOption = {
 };
 
 type VideoSuggestionPreferencesFormProps = {
-  creatorSelectOptions: Option[];
   disabled: boolean;
   loading: boolean;
-  onCreatorChange: (value: string) => void;
-  onRemoveSavedCreator: () => void;
   onCountryBlur: (value: string) => void;
   onCountryChange: (value: string) => void;
   onRecencyChange: (value: VideoSuggestionRecency) => void;
-  onRemoveSavedSubtopic: () => void;
+  onIncludeDownloadHistoryChange: (value: boolean) => void;
+  onIncludeWatchedChannelsChange: (value: boolean) => void;
   onRemoveSavedTopic: () => void;
-  onSubtopicChange: (value: string) => void;
   onTopicChange: (value: string) => void;
-  canRemoveSavedCreator: boolean;
-  canRemoveSavedSubtopic: boolean;
   canRemoveSavedTopic: boolean;
   recencyOptions: RecencyOption[];
-  sanitizedCreator: string;
-  sanitizedSubtopic: string;
+  includeDownloadHistory: boolean;
+  includeWatchedChannels: boolean;
   sanitizedTopic: string;
-  subtopicSelectOptions: Option[];
   t: TFunction;
   targetCountry: string;
   targetRecency: VideoSuggestionRecency;
@@ -53,44 +49,26 @@ type VideoSuggestionPreferencesFormProps = {
 };
 
 export default function VideoSuggestionPreferencesForm({
-  creatorSelectOptions,
   disabled,
   loading,
-  onCreatorChange,
-  onRemoveSavedCreator,
   onCountryBlur,
   onCountryChange,
   onRecencyChange,
-  onRemoveSavedSubtopic,
+  onIncludeDownloadHistoryChange,
+  onIncludeWatchedChannelsChange,
   onRemoveSavedTopic,
-  onSubtopicChange,
   onTopicChange,
-  canRemoveSavedCreator,
-  canRemoveSavedSubtopic,
   canRemoveSavedTopic,
   recencyOptions,
-  sanitizedCreator,
-  sanitizedSubtopic,
+  includeDownloadHistory,
+  includeWatchedChannels,
   sanitizedTopic,
-  subtopicSelectOptions,
   t,
   targetCountry,
   targetRecency,
   topicSelectOptions,
 }: VideoSuggestionPreferencesFormProps) {
   const showTopicPreference = topicSelectOptions.length > 0;
-  const showCreatorPreference = creatorSelectOptions.length > 0;
-  const showSubtopicPreference = subtopicSelectOptions.length > 0;
-  const hasPreferenceDetails = Boolean(
-    showTopicPreference || showCreatorPreference || showSubtopicPreference
-  );
-  const [detailsOpen, setDetailsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!hasPreferenceDetails) {
-      setDetailsOpen(false);
-    }
-  }, [hasPreferenceDetails]);
 
   return (
     <div className={countryControlStyles}>
@@ -100,7 +78,7 @@ export default function VideoSuggestionPreferencesForm({
             htmlFor="video-suggestion-country"
             className={countryLabelStyles}
           >
-            {t('input.videoSuggestion.countryLabel', 'Target country / region')}
+            {t('input.videoSuggestion.countryBiasLabel', 'Regional bias')}
           </label>
           <input
             id="video-suggestion-country"
@@ -118,8 +96,8 @@ export default function VideoSuggestionPreferencesForm({
           />
           <div className={countryHintStyles}>
             {t(
-              'input.videoSuggestion.countryHint',
-              'Leave blank for global results.'
+              'input.videoSuggestion.countryBiasHint',
+              'Leave blank for no regional bias.'
             )}
           </div>
         </div>
@@ -155,149 +133,95 @@ export default function VideoSuggestionPreferencesForm({
         </div>
       </div>
 
-      {hasPreferenceDetails ? (
-        <details
-          className={detailsBlockStyles}
-          open={detailsOpen}
-          onToggle={event => {
-            setDetailsOpen(event.currentTarget.open);
-          }}
-        >
-          <summary className={detailsSummaryStyles}>
-            {t(
-              'input.videoSuggestion.preference.detailsToggle',
-              'Preference details (optional)'
-            )}
-          </summary>
-          <div className={detailsBodyStyles}>
-            {showTopicPreference ? (
-              <div className={preferenceFieldStyles}>
-                <div className={preferenceLabelRowStyles}>
-                  <label
-                    htmlFor="video-suggestion-topic"
-                    className={countryLabelStyles}
-                  >
-                    {t(
-                      'input.videoSuggestion.preference.topicLabel',
-                      'Preferred topic'
-                    )}
-                  </label>
-                  {canRemoveSavedTopic ? (
-                    <button
-                      type="button"
-                      className={preferenceRemoveButtonStyles}
-                      onClick={() => onRemoveSavedTopic()}
-                      disabled={disabled || loading}
-                    >
-                      {t(
-                        'input.videoSuggestion.preference.removeSaved',
-                        'Remove saved'
-                      )}
-                    </button>
-                  ) : null}
-                </div>
-                <select
-                  id="video-suggestion-topic"
-                  value={sanitizedTopic || ''}
-                  onChange={event => onTopicChange(event.target.value)}
-                  className={inputStyles}
-                  disabled={disabled || loading}
-                >
-                  {topicSelectOptions.map(option => (
-                    <option key={option.value || 'none'} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-
-            {showCreatorPreference ? (
-              <div className={preferenceFieldStyles}>
-                <div className={preferenceLabelRowStyles}>
-                  <label
-                    htmlFor="video-suggestion-creator"
-                    className={countryLabelStyles}
-                  >
-                    {t(
-                      'input.videoSuggestion.preference.creatorLabel',
-                      'Preferred creator style'
-                    )}
-                  </label>
-                  {canRemoveSavedCreator ? (
-                    <button
-                      type="button"
-                      className={preferenceRemoveButtonStyles}
-                      onClick={() => onRemoveSavedCreator()}
-                      disabled={disabled || loading}
-                    >
-                      {t(
-                        'input.videoSuggestion.preference.removeSaved',
-                        'Remove saved'
-                      )}
-                    </button>
-                  ) : null}
-                </div>
-                <select
-                  id="video-suggestion-creator"
-                  value={sanitizedCreator || ''}
-                  onChange={event => onCreatorChange(event.target.value)}
-                  className={inputStyles}
-                  disabled={disabled || loading}
-                >
-                  {creatorSelectOptions.map(option => (
-                    <option key={option.value || 'none'} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-
-            {showSubtopicPreference ? (
-              <div className={preferenceFieldStyles}>
-                <div className={preferenceLabelRowStyles}>
-                  <label
-                    htmlFor="video-suggestion-subtopic"
-                    className={countryLabelStyles}
-                  >
-                    {t(
-                      'input.videoSuggestion.preference.subtopicLabel',
-                      'Preferred subtopic / genre'
-                    )}
-                  </label>
-                  {canRemoveSavedSubtopic ? (
-                    <button
-                      type="button"
-                      className={preferenceRemoveButtonStyles}
-                      onClick={() => onRemoveSavedSubtopic()}
-                      disabled={disabled || loading}
-                    >
-                      {t(
-                        'input.videoSuggestion.preference.removeSaved',
-                        'Remove saved'
-                      )}
-                    </button>
-                  ) : null}
-                </div>
-                <select
-                  id="video-suggestion-subtopic"
-                  value={sanitizedSubtopic || ''}
-                  onChange={event => onSubtopicChange(event.target.value)}
-                  className={inputStyles}
-                  disabled={disabled || loading}
-                >
-                  {subtopicSelectOptions.map(option => (
-                    <option key={option.value || 'none'} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      {showTopicPreference ? (
+        <div className={preferenceFieldStyles}>
+          <div className={preferenceLabelRowStyles}>
+            <label
+              htmlFor="video-suggestion-topic"
+              className={countryLabelStyles}
+            >
+              {t('input.videoSuggestion.preference.topicLabel', 'Preferred topic')}
+            </label>
+            {canRemoveSavedTopic ? (
+              <button
+                type="button"
+                className={preferenceRemoveButtonStyles}
+                onClick={() => onRemoveSavedTopic()}
+                disabled={disabled || loading}
+              >
+                {t('input.videoSuggestion.preference.removeSaved', 'Remove saved')}
+              </button>
             ) : null}
           </div>
-        </details>
+          <select
+            id="video-suggestion-topic"
+            value={sanitizedTopic || ''}
+            onChange={event => onTopicChange(event.target.value)}
+            className={inputStyles}
+            disabled={disabled || loading}
+          >
+            {topicSelectOptions.map(option => (
+              <option key={option.value || 'none'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       ) : null}
+
+      <div className={contextToggleGridStyles}>
+        <label className={contextToggleLabelStyles}>
+          <input
+            type="checkbox"
+            className={contextToggleCheckboxStyles}
+            checked={includeDownloadHistory}
+            onChange={event =>
+              onIncludeDownloadHistoryChange(event.target.checked)
+            }
+            disabled={disabled || loading}
+          />
+          <div className={contextToggleTextBlockStyles}>
+            <div className={contextToggleTitleStyles}>
+              {t(
+                'input.videoSuggestion.includeDownloadHistoryLabel',
+                'Include my download history'
+              )}
+            </div>
+            <div className={contextToggleHintStyles}>
+              {t(
+                'input.videoSuggestion.includeDownloadHistoryHint',
+                'Let AI use your recent downloaded video titles as soft context.'
+              )}
+            </div>
+          </div>
+        </label>
+
+        <label className={contextToggleLabelStyles}>
+          <input
+            type="checkbox"
+            className={contextToggleCheckboxStyles}
+            checked={includeWatchedChannels}
+            onChange={event =>
+              onIncludeWatchedChannelsChange(event.target.checked)
+            }
+            disabled={disabled || loading}
+          />
+          <div className={contextToggleTextBlockStyles}>
+            <div className={contextToggleTitleStyles}>
+              {t(
+                'input.videoSuggestion.includeWatchedChannelsLabel',
+                'Include my watched channels'
+              )}
+            </div>
+            <div className={contextToggleHintStyles}>
+              {t(
+                'input.videoSuggestion.includeWatchedChannelsHint',
+                'Let AI use your recent channel history as soft context.'
+              )}
+            </div>
+          </div>
+        </label>
+      </div>
     </div>
   );
 }

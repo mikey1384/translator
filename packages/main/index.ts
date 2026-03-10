@@ -63,6 +63,13 @@ import {
   validateAnthropicApiKey,
 } from './services/ai-provider.js';
 import { getErrorReportContext } from './services/error-report.js';
+import {
+  deleteStoredSubtitleEntry,
+  findStoredSubtitleForVideo,
+  rememberStoredSubtitleVideoPath,
+  saveStoredSubtitleArtifact,
+  syncStoredSubtitleVideoPath,
+} from './services/subtitle-library.js';
 import type {
   VideoSuggestionModelPreference,
   VideoSuggestionRecency,
@@ -257,6 +264,67 @@ try {
   ipcMain.handle('getFileSize', fileHandlers.handleGetFileSize);
   ipcMain.handle('getDiskSpace', fileHandlers.handleGetDiskSpace);
   ipcMain.handle('getTempDiskSpace', fileHandlers.handleGetTempDiskSpace);
+  ipcMain.handle(
+    'save-stored-subtitle-artifact',
+    async (_event, options) => {
+      try {
+        const entry = await saveStoredSubtitleArtifact(options || {});
+        return { success: true, entry };
+      } catch (error: any) {
+        return { success: false, error: error?.message || String(error) };
+      }
+    }
+  );
+  ipcMain.handle(
+    'find-stored-subtitle-for-video',
+    async (_event, options) => {
+      try {
+        const result = await findStoredSubtitleForVideo(options || {});
+        return { success: true, ...result };
+      } catch (error: any) {
+        return { success: false, error: error?.message || String(error) };
+      }
+    }
+  );
+  ipcMain.handle(
+    'sync-stored-subtitle-video-path',
+    async (_event, previousPath: string, savedPath: string) => {
+      try {
+        const updated = await syncStoredSubtitleVideoPath({
+          previousPath,
+          savedPath,
+        });
+        return { success: true, updated };
+      } catch (error: any) {
+        return { success: false, error: error?.message || String(error) };
+      }
+    }
+  );
+  ipcMain.handle(
+    'remember-stored-subtitle-video-path',
+    async (_event, entryId: string, sourceVideoPath: string) => {
+      try {
+        const updated = await rememberStoredSubtitleVideoPath({
+          entryId,
+          sourceVideoPath,
+        });
+        return { success: true, updated };
+      } catch (error: any) {
+        return { success: false, error: error?.message || String(error) };
+      }
+    }
+  );
+  ipcMain.handle(
+    'delete-stored-subtitle-entry',
+    async (_event, entryId: string) => {
+      try {
+        const removed = await deleteStoredSubtitleEntry(entryId);
+        return { success: true, removed };
+      } catch (error: any) {
+        return { success: false, error: error?.message || String(error) };
+      }
+    }
+  );
 
   ipcMain.handle('generate-subtitles', async (event, options) => {
     const operationId =
@@ -836,22 +904,6 @@ try {
     'set-video-suggestion-preference-topic',
     (_event, value: string) =>
       settingsHandlers.setVideoSuggestionPreferenceTopic(value)
-  );
-  ipcMain.handle('get-video-suggestion-preference-creator', () =>
-    settingsHandlers.getVideoSuggestionPreferenceCreator()
-  );
-  ipcMain.handle(
-    'set-video-suggestion-preference-creator',
-    (_event, value: string) =>
-      settingsHandlers.setVideoSuggestionPreferenceCreator(value)
-  );
-  ipcMain.handle('get-video-suggestion-preference-subtopic', () =>
-    settingsHandlers.getVideoSuggestionPreferenceSubtopic()
-  );
-  ipcMain.handle(
-    'set-video-suggestion-preference-subtopic',
-    (_event, value: string) =>
-      settingsHandlers.setVideoSuggestionPreferenceSubtopic(value)
   );
 
   // Transcription provider preference handlers

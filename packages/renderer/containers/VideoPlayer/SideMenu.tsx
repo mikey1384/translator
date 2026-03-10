@@ -1,4 +1,5 @@
 import Button from '../../components/Button';
+import IconButton from '../../components/IconButton';
 import {
   AudioLines,
   CircleAlert,
@@ -8,7 +9,9 @@ import {
   LocateFixed,
   Mic,
   Save,
+  Trash2,
   Video,
+  X,
 } from 'lucide-react';
 import {
   useSubStore,
@@ -16,7 +19,7 @@ import {
   useUIStore,
   useVideoStore,
 } from '../../state';
-import { openChangeVideo } from '../../state/modal-store';
+import { openChangeVideo, openUnsavedSrtConfirm } from '../../state/modal-store';
 import { logButton, logVideo, logError } from '../../utils/logger';
 import { useTranslation } from 'react-i18next';
 import { openSubtitleWithElectron } from '../../../shared/helpers';
@@ -36,8 +39,14 @@ import {
   saveOriginalVideoFile,
 } from '../../utils/saveVideo';
 import {
+  deleteMountedStoredSubtitle,
+  unmountCurrentSubtitles,
+} from '../../utils/subtitle-library';
+import { saveCurrentSubtitles } from '../../utils/saveSubtitles';
+import {
   sidePanelButtonContentStyles,
   sidePanelButtonRowStyles,
+  sidePanelButtonWithIconsRowStyles,
   sidePanelDividerStyles,
   sidePanelFieldStackStyles,
   sidePanelLabelStyles,
@@ -58,6 +67,7 @@ export default function SideMenu({
   const order = useSubStore(s => s.order);
   const segments = useSubStore(s => s.segments);
   const originalSrtPath = useSubStore(s => s.originalPath);
+  const libraryEntryId = useSubStore(s => s.libraryEntryId);
   const scrollToCurrent = useSubStore(s => s.scrollToCurrent);
   const hasSubs = order.length > 0;
   const setTranslation = useTaskStore(s => s.setTranslation);
@@ -151,10 +161,16 @@ export default function SideMenu({
     logButton('mount_or_change_srt');
     const res = await openSubtitleWithElectron();
     if (res?.segments) {
+      const associatedVideoPath = originalVideoPath ?? videoFilePath ?? null;
       // SRT loaded from disk; mark origin accordingly
       useSubStore
         .getState()
-        .load(res.segments, res.filePath ?? null, 'disk', null);
+        .load(
+          res.segments,
+          res.filePath ?? null,
+          'disk',
+          associatedVideoPath
+        );
       // Reset transcription completion state so Generate panel doesn't show stale 'Transcription Complete'
       try {
         useTaskStore.getState().setTranscription({
@@ -240,6 +256,51 @@ export default function SideMenu({
     });
   }
 
+  function resetSubtitleWorkflowState() {
+    useTaskStore.getState().setTranscription({
+      id: null,
+      stage: '',
+      percent: 0,
+      inProgress: false,
+      isCompleted: false,
+    });
+    useTaskStore.getState().setTranslation({
+      id: null,
+      stage: '',
+      percent: 0,
+      inProgress: false,
+      isCompleted: false,
+    });
+  }
+
+  async function handleUnmountSubtitles() {
+    if (hasSubs) {
+      const choice = await openUnsavedSrtConfirm();
+      if (choice === 'cancel') {
+        return;
+      }
+      if (choice === 'save') {
+        const saved = await saveCurrentSubtitles();
+        if (!saved) {
+          return;
+        }
+      }
+    }
+    unmountCurrentSubtitles();
+    resetSubtitleWorkflowState();
+  }
+
+  async function handleDeleteStoredSubtitles() {
+    try {
+      const removed = await deleteMountedStoredSubtitle();
+      if (removed) {
+        resetSubtitleWorkflowState();
+      }
+    } catch (err) {
+      console.error('[SideMenu] Failed to delete stored subtitles:', err);
+    }
+  }
+
   // Hide completely in fullscreen mode
   if (isFullScreen) return null;
   // Render as a dedicated column next to the video (grid area); not overlayed
@@ -294,24 +355,48 @@ export default function SideMenu({
             </Button>
           )}
 
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleMountOrChangeSrt}
-            disabled={isTranscribing || translationInProgress || isMerging}
-            title={
-              originalSrtPath
-                ? t('videoPlayer.changeSrt', 'Change SRT')
-                : t('videoPlayer.mountSrt', 'Mount SRT')
-            }
-          >
-            <span className={sidePanelButtonContentStyles}>
-              <FileText size={15} strokeWidth={2.2} />
-              {originalSrtPath
-                ? t('videoPlayer.changeSrt', 'Change SRT')
-                : t('videoPlayer.mountSrt', 'Mount SRT')}
-            </span>
-          </Button>
+          <div className={sidePanelButtonWithIconsRowStyles}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleMountOrChangeSrt}
+              disabled={isTranscribing || translationInProgress || isMerging}
+              title={
+                originalSrtPath
+                  ? t('videoPlayer.changeSrt', 'Change SRT')
+                  : t('videoPlayer.mountSrt', 'Mount SRT')
+              }
+            >
+              <span className={sidePanelButtonContentStyles}>
+                <FileText size={15} strokeWidth={2.2} />
+                {originalSrtPath
+                  ? t('videoPlayer.changeSrt', 'Change SRT')
+                  : t('videoPlayer.mountSrt', 'Mount SRT')}
+              </span>
+            </Button>
+            {hasSubs ? (
+              <IconButton
+                size="sm"
+                variant="secondary"
+                icon={<X size={15} strokeWidth={2.2} />}
+                title={t('common.close', 'Close')}
+                aria-label={t('common.close', 'Close')}
+                onClick={handleUnmountSubtitles}
+                disabled={isTranscribing || translationInProgress || isMerging}
+              />
+            ) : null}
+            {hasSubs && libraryEntryId ? (
+              <IconButton
+                size="sm"
+                variant="secondary"
+                icon={<Trash2 size={15} strokeWidth={2.2} />}
+                title={t('common.delete', 'Delete')}
+                aria-label={t('common.delete', 'Delete')}
+                onClick={handleDeleteStoredSubtitles}
+                disabled={isTranscribing || translationInProgress || isMerging}
+              />
+            ) : null}
+          </div>
 
           {hasSubs && (
             <Button

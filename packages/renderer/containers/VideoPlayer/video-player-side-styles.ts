@@ -173,6 +173,13 @@ export const sidePanelButtonRowStyles = css`
   gap: ${spacing.sm};
 `;
 
+export const sidePanelButtonWithIconsRowStyles = css`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: ${spacing.sm};
+  align-items: center;
+`;
+
 export const sidePanelActionRowStyles = css`
   display: flex;
   flex-direction: column;

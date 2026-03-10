@@ -2,6 +2,10 @@ import * as FileIPC from '../ipc/file';
 import * as SystemIPC from '../ipc/system';
 import { i18n } from '../i18n';
 import { syncSavedVideoSuggestionHistoryPath } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
+import { syncStoredSubtitleVideoAssociationPath } from './subtitle-library';
+import { useSubStore } from '../state/subtitle-store';
+import { useVideoStore } from '../state/video-store';
+import { getNativePlayerInstance } from '../native-player';
 
 const VIDEO_FILE_EXTENSIONS = ['mp4', 'mkv', 'webm', 'mov', 'avi'];
 
@@ -90,6 +94,19 @@ export function isManagedTempOriginalVideoPath(
   return isManagedTempDir && isManagedDownloadName;
 }
 
+function toFileUrl(path: string): string {
+  if (!path) return path;
+  if (path.startsWith('file://')) return path;
+  const normalized = path.replace(/\\/g, '/');
+  if (/^[a-zA-Z]:\//.test(normalized)) {
+    return `file:///${encodeURI(normalized)}`;
+  }
+  if (normalized.startsWith('/')) {
+    return `file://${encodeURI(normalized)}`;
+  }
+  return `file://${encodeURI(`/${normalized}`)}`;
+}
+
 export async function saveOriginalVideoFile(
   originalVideoPath: string | null
 ): Promise<boolean> {
@@ -114,6 +131,62 @@ export async function saveOriginalVideoFile(
     previousPath: originalVideoPath,
     savedPath,
   });
+  try {
+    await syncStoredSubtitleVideoAssociationPath({
+      previousPath: originalVideoPath,
+      savedPath,
+    });
+  } catch (err) {
+    console.error('[save-video] subtitle history sync failed:', err);
+  }
+
+  const currentVideo = useVideoStore.getState();
+  if (pathsMatch(currentVideo.originalPath, originalVideoPath)) {
+    const savedUrl = toFileUrl(savedPath);
+    const shouldRefreshPositionSaver = currentVideo.activeTrack === 'original';
+    const resumeAt = shouldRefreshPositionSaver
+      ? getNativePlayerInstance()?.currentTime ?? currentVideo.resumeAt ?? null
+      : currentVideo.resumeAt ?? null;
+    if (typeof window !== 'undefined' && typeof resumeAt === 'number') {
+      (window as any)._videoLastValidTime = resumeAt;
+    }
+    useVideoStore.setState(state => {
+      const nextFile =
+        state.file &&
+        typeof state.file === 'object' &&
+        'path' in state.file &&
+        pathsMatch((state.file as any).path ?? null, originalVideoPath)
+          ? {
+              ...(state.file as any),
+              path: savedPath,
+              name:
+                savedPath.split(/[\\/]/).pop() ||
+                (state.file as any).name ||
+                'video',
+            }
+          : state.file;
+
+      return {
+        file: nextFile,
+        originalPath: savedPath,
+        originalUrl: savedUrl,
+        path: state.activeTrack === 'original' ? savedPath : state.path,
+        url: state.activeTrack === 'original' ? savedUrl : state.url,
+        resumeAt,
+      };
+    });
+    if (shouldRefreshPositionSaver) {
+      useVideoStore.getState().stopPositionSaving();
+      useVideoStore.getState().startPositionSaving();
+    }
+  }
+
+  const currentSubtitles = useSubStore.getState();
+  if (pathsMatch(currentSubtitles.sourceVideoPath, originalVideoPath)) {
+    useSubStore.setState({
+      sourceVideoPath: savedPath,
+    });
+  }
   return true;
 }
 

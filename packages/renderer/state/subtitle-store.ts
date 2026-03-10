@@ -1,7 +1,7 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { SrtSegment } from '@shared-types/app';
+import { SrtSegment, StoredSubtitleKind } from '@shared-types/app';
 import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
 import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
@@ -25,6 +25,8 @@ interface State {
   // When origin is 'fresh', record the video file path this set of subtitles was generated for
   sourceVideoPath: string | null;
   transcriptionEngine: 'elevenlabs' | 'whisper' | null;
+  libraryEntryId: string | null;
+  libraryKind: StoredSubtitleKind | null;
   gapsCache: Array<{
     start: number;
     end: number;
@@ -46,7 +48,11 @@ interface Actions {
     srcPath?: string | null,
     origin?: 'fresh' | 'disk' | null,
     videoPathRef?: string | null,
-    transcriptionEngine?: 'elevenlabs' | 'whisper' | null
+    transcriptionEngine?: 'elevenlabs' | 'whisper' | null,
+    libraryMeta?: {
+      entryId?: string | null;
+      kind?: StoredSubtitleKind | null;
+    } | null
   ) => void;
   // Clear Whisper review state when it is no longer valid for the current source
   clearConfidence: () => void;
@@ -100,6 +106,8 @@ const initialState: State = {
   origin: null,
   sourceVideoPath: null,
   transcriptionEngine: null,
+  libraryEntryId: null,
+  libraryKind: null,
   gapsCache: [],
   lcRangesCache: [],
 };
@@ -141,21 +149,51 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         srcPath = null,
         loadOrigin = null,
         videoPathRef = null,
-        transcriptionEngine
+        transcriptionEngine,
+        libraryMeta = null
       ) => {
         set(s => {
           const isDiskBackedLoad =
             loadOrigin === 'disk' || (typeof srcPath === 'string' && srcPath.length > 0);
+          const isEquivalentDocument = areEquivalentSubtitleDocs(
+            s.order,
+            s.segments,
+            segs
+          );
           const preserveExistingEngine =
             transcriptionEngine === undefined &&
             !isDiskBackedLoad &&
-            areEquivalentSubtitleDocs(s.order, s.segments, segs);
+            isEquivalentDocument;
           const nextTranscriptionEngine =
             transcriptionEngine !== undefined
               ? transcriptionEngine ?? null
               : preserveExistingEngine
                 ? s.transcriptionEngine
                 : null;
+          const preserveExistingLibraryMeta =
+            !isDiskBackedLoad &&
+            libraryMeta == null &&
+            isEquivalentDocument;
+          const nextLibraryEntryId =
+            libraryMeta && 'entryId' in libraryMeta
+              ? libraryMeta.entryId ?? null
+              : preserveExistingLibraryMeta
+                ? s.libraryEntryId
+                : null;
+          const nextLibraryKind =
+            libraryMeta && 'kind' in libraryMeta
+              ? libraryMeta.kind ?? null
+              : preserveExistingLibraryMeta
+                ? s.libraryKind
+                : null;
+          const nextSourceVideoPath =
+            typeof videoPathRef === 'string'
+              ? videoPathRef
+              : isDiskBackedLoad && isEquivalentDocument
+                ? s.sourceVideoPath ?? null
+                : isDiskBackedLoad
+                ? null
+                : s.sourceVideoPath ?? null;
 
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
             acc[cue.id] = { ...cue, index: i + 1 };
@@ -166,14 +204,14 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.originalPath = srcPath;
           // Preserve previous origin if not explicitly provided and no srcPath indicates disk
           s.origin = loadOrigin ?? (srcPath ? 'disk' : (s.origin ?? null));
-          // Preserve previous sourceVideoPath unless explicitly overridden
-          s.sourceVideoPath =
-            (typeof videoPathRef === 'string' ? videoPathRef : null) ??
-            s.sourceVideoPath ??
-            null;
+          // Disk-backed subtitle loads should not inherit a stale video
+          // association unless the caller explicitly provides one.
+          s.sourceVideoPath = nextSourceVideoPath;
           // Replacing the subtitle set should clear engine-specific UI state
           // unless the caller explicitly carries the engine forward.
           s.transcriptionEngine = nextTranscriptionEngine;
+          s.libraryEntryId = nextLibraryEntryId;
+          s.libraryKind = nextLibraryKind;
           // Do not auto-regenerate caches here; generated during transcription flows
           s.gapsCache = [];
           s.lcRangesCache = [];

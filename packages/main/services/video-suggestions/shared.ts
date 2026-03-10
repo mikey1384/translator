@@ -9,24 +9,56 @@ import {
   sanitizeVideoSuggestionSearchKeywords,
 } from '../../../shared/helpers/video-suggestion-sanitize.js';
 
-export type PlannerPayload = {
-  assistantMessage: string;
-  needsMoreContext: boolean;
-  searchQuery?: string;
+export type IntentResolverPayload = {
+  assistantMessage?: string;
+  needsMoreContext?: boolean;
+  answerToUserQuestion?: string;
+  resolvedIntent?: string;
   intentSummary?: string;
   strategy?: string;
+  candidates?: IntentCandidate[];
+  descriptorPhrases?: string[];
+  canonicalEntities?: string[];
+  impliedLocale?: string;
+  impliedSearchLanguage?: string;
   primarySearchLanguage?: string;
   searchLanguages?: string[];
+  searchQuery?: string;
   discoveryQueries?: string[];
   retrievalMode?: DiscoveryRetrievalMode;
+  retrievalQueries?: string[];
+  impliedConstraints?: {
+    country?: string;
+    recency?: string;
+  };
+  ambiguities?: string[];
+  recommendedInterpretation?: string;
+  confidence?: 'low' | 'medium' | 'high';
+  capturedPreferences?: VideoSuggestionPreferenceSlots;
+};
+
+export type IntentCandidate = {
+  name: string;
+  confidence?: 'low' | 'medium' | 'high';
+};
+
+export type QueryFormulatorPayload = {
+  assistantMessage?: string;
+  needsMoreContext?: boolean;
+  intentSummary?: string;
+  strategy?: string;
+  countryCode?: string;
+  primarySearchLanguage?: string;
+  searchLanguages?: string[];
+  searchQuery?: string;
   retrievalQueries?: string[];
   capturedPreferences?: VideoSuggestionPreferenceSlots;
 };
 
-export type CreatorSearchOutcome = {
+export type SeedSearchOutcome = {
   results: VideoSuggestionResultItem[];
   searchQuery: string;
-  creators: string[];
+  channels: string[];
   queriesTried: string[];
   confidence: number;
   candidateCount?: number;
@@ -49,14 +81,6 @@ export type DiscoveryRetrievalMode = 'channel' | 'topic';
 export type DiscoveryOutcome = {
   channels: DiscoveryChannelCandidate[];
   queriesUsed: string[];
-  assistantMessage: string;
-  retrievalMode: DiscoveryRetrievalMode;
-  retrievalModeReason: string;
-};
-
-export type CuratorOutcome = {
-  selectedChannels: string[];
-  videoQueries: string[];
   assistantMessage: string;
 };
 
@@ -82,6 +106,7 @@ export type LlmYoutubeSearchPayload = {
 
 export const VIDEO_SUGGESTION_SOURCE_LABEL = 'YouTube';
 export const VIDEO_SUGGESTION_HOST_SUFFIXES = ['youtube.com', 'youtu.be'];
+const YOUTUBE_ROOT_URL = 'https://www.youtube.com';
 
 export function throwIfSuggestionAborted(signal?: AbortSignal): void {
   if (signal?.aborted) {
@@ -226,6 +251,68 @@ export const COUNTRY_LOCALE_RULES: Array<{
   { locale: 'tl', aliases: ['philippines', 'ph'] },
 ];
 
+const COUNTRY_CODE_RULES: Array<{
+  code: string;
+  aliases: string[];
+}> = [
+  { code: 'JP', aliases: ['japan', 'jp', '日本'] },
+  { code: 'KR', aliases: ['south korea', 'korea', 'kr', '한국', '대한민국', '韓国'] },
+  { code: 'CN', aliases: ['china', 'cn', '中国', '중국', 'mainland china', 'prc'] },
+  { code: 'TW', aliases: ['taiwan', 'tw', '台灣', '台湾'] },
+  { code: 'HK', aliases: ['hong kong', 'hk', '香港'] },
+  { code: 'IN', aliases: ['india', 'in', 'bharat', 'भारत'] },
+  { code: 'BD', aliases: ['bangladesh', 'bd', 'বাংলাদেশ'] },
+  { code: 'PK', aliases: ['pakistan', 'pk', 'پاکستان'] },
+  { code: 'LK', aliases: ['sri lanka', 'lk', 'இலங்கை'] },
+  { code: 'ES', aliases: ['spain', 'es', 'españa'] },
+  { code: 'MX', aliases: ['mexico', 'mx', 'méxico'] },
+  { code: 'AR', aliases: ['argentina', 'ar'] },
+  { code: 'CO', aliases: ['colombia', 'co'] },
+  { code: 'PE', aliases: ['peru', 'pe', 'perú'] },
+  { code: 'CL', aliases: ['chile', 'cl'] },
+  { code: 'BR', aliases: ['brazil', 'br', 'brasil'] },
+  { code: 'PT', aliases: ['portugal', 'pt'] },
+  { code: 'FR', aliases: ['france', 'fr'] },
+  { code: 'BE', aliases: ['belgium', 'be', 'belgique'] },
+  { code: 'DE', aliases: ['germany', 'de', 'deutschland'] },
+  { code: 'AT', aliases: ['austria', 'at', 'österreich'] },
+  { code: 'IT', aliases: ['italy', 'it', 'italia'] },
+  { code: 'RU', aliases: ['russia', 'ru', 'россия'] },
+  { code: 'TR', aliases: ['turkey', 'tr', 'türkiye'] },
+  { code: 'ID', aliases: ['indonesia', 'id'] },
+  { code: 'VN', aliases: ['vietnam', 'vn', 'việt nam'] },
+  { code: 'TH', aliases: ['thailand', 'th'] },
+  { code: 'MY', aliases: ['malaysia', 'my'] },
+  { code: 'SA', aliases: ['saudi arabia', 'saudi', 'sa'] },
+  { code: 'AE', aliases: ['uae', 'united arab emirates', 'ae'] },
+  { code: 'EG', aliases: ['egypt', 'eg', 'مصر'] },
+  { code: 'QA', aliases: ['qatar', 'qa'] },
+  { code: 'KW', aliases: ['kuwait', 'kw'] },
+  { code: 'MA', aliases: ['morocco', 'ma'] },
+  { code: 'IL', aliases: ['israel', 'il', 'ישראל', 'עברית'] },
+  { code: 'IR', aliases: ['iran', 'ir', 'ایران', 'فارسی'] },
+  { code: 'NL', aliases: ['netherlands', 'nl', 'holland'] },
+  { code: 'PL', aliases: ['poland', 'pl'] },
+  { code: 'SE', aliases: ['sweden', 'se'] },
+  { code: 'NO', aliases: ['norway', 'no'] },
+  { code: 'DK', aliases: ['denmark', 'dk'] },
+  { code: 'FI', aliases: ['finland', 'fi'] },
+  { code: 'GR', aliases: ['greece', 'gr'] },
+  { code: 'CZ', aliases: ['czechia', 'czech republic', 'czech', 'cz'] },
+  { code: 'HU', aliases: ['hungary', 'hu'] },
+  { code: 'RO', aliases: ['romania', 'ro'] },
+  { code: 'UA', aliases: ['ukraine', 'ua'] },
+  { code: 'KE', aliases: ['kenya', 'ke'] },
+  { code: 'TZ', aliases: ['tanzania', 'tz'] },
+  { code: 'ZA', aliases: ['south africa', 'za'] },
+  { code: 'PH', aliases: ['philippines', 'ph', 'pilipinas'] },
+  { code: 'US', aliases: ['united states', 'us', 'usa', 'america'] },
+  { code: 'GB', aliases: ['united kingdom', 'uk', 'gb', 'britain', 'england'] },
+  { code: 'CA', aliases: ['canada', 'ca'] },
+  { code: 'AU', aliases: ['australia', 'au'] },
+  { code: 'SG', aliases: ['singapore', 'sg'] },
+];
+
 export function compactText(value: unknown): string {
   if (typeof value !== 'string') return '';
   return value.replace(/\s+/g, ' ').trim();
@@ -267,16 +354,8 @@ export function normalizePreferenceSlots(
   const topic = sanitizeVideoSuggestionPreferenceValue(
     source?.topic ?? source?.contentTopic ?? source?.intentTopic
   );
-  const creator = sanitizeVideoSuggestionPreferenceValue(
-    source?.creator ?? source?.creatorPreference ?? source?.streamerPreference
-  );
-  const subtopic = sanitizeVideoSuggestionPreferenceValue(
-    source?.subtopic ?? source?.genreOrSubtopic ?? source?.genre
-  );
   const out: VideoSuggestionPreferenceSlots = {};
   if (topic) out.topic = topic;
-  if (creator) out.creator = creator;
-  if (subtopic) out.subtopic = subtopic;
   return out;
 }
 
@@ -336,6 +415,47 @@ export function resolveSearchLocale(
     }
   }
   return normalizeLocaleCode(languageTag);
+}
+
+const REGION_DISPLAY_NAMES = new Intl.DisplayNames(['en'], {
+  type: 'region',
+});
+
+export function normalizeCountryCode(input: unknown): string {
+  const normalized = sanitizeLanguageToken(input).toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) return '';
+  try {
+    const display = compactText(REGION_DISPLAY_NAMES.of(normalized));
+    if (!display || /^unknown region$/i.test(display)) {
+      return '';
+    }
+    return normalized;
+  } catch {
+    return '';
+  }
+}
+
+export function inferCountryCodeFromCountryHint(countryHint?: string): string {
+  const country = compactText(countryHint).toLowerCase();
+  if (!country) return '';
+
+  for (const rule of COUNTRY_CODE_RULES) {
+    if (rule.aliases.some(alias => countryTextMatchesAlias(country, alias))) {
+      return rule.code;
+    }
+  }
+
+  return '';
+}
+
+export function resolveCountryCode(
+  countryHint?: string,
+  fallbackCode?: string
+): string {
+  return (
+    inferCountryCodeFromCountryHint(countryHint) ||
+    normalizeCountryCode(fallbackCode)
+  );
 }
 
 export function localeToLanguageInstruction(locale: string): string {
@@ -425,6 +545,34 @@ export function applyCountryHint(query: string, countryHint: string): string {
   return `${normalizedQuery} ${localizedCountry}`;
 }
 
+export function buildYoutubeSearchPageUrl({
+  query,
+  countryCode,
+  searchLocale,
+}: {
+  query: string;
+  countryCode?: string;
+  searchLocale?: string;
+}): string {
+  const url = new URL(`${YOUTUBE_ROOT_URL}/results`);
+  url.searchParams.set('search_query', compactText(query));
+
+  const normalizedCountryCode = normalizeCountryCode(countryCode);
+  const normalizedSearchLocale = sanitizeLanguageToken(searchLocale)
+    .toLowerCase()
+    .slice(0, 10);
+
+  if (normalizedCountryCode) {
+    url.searchParams.set('gl', normalizedCountryCode);
+    url.searchParams.set('persist_gl', '1');
+  }
+  if (normalizedSearchLocale) {
+    url.searchParams.set('hl', normalizedSearchLocale);
+  }
+
+  return url.toString();
+}
+
 export function truncateStatusValue(value: string, max = 90): string {
   const normalized = compactText(value);
   if (!normalized) return '';
@@ -468,7 +616,7 @@ export function describeLowConfidenceReason(
   const normalized = compactText(reason).toLowerCase();
   if (!normalized) return 'Search confidence was too low.';
   if (normalized === 'no-scored-results') {
-    return 'No verified videos remained after retrieval and ranking.';
+    return 'No verified videos remained after retrieval.';
   }
   if (normalized === 'no-recency-matches') {
     return 'No videos matched the selected recency window with verifiable upload dates.';
@@ -550,6 +698,149 @@ export function sanitizeRetrievalSearchQuery(value: unknown): string {
   }
   normalized = sanitizeSearchKeywords(normalized);
   return normalized;
+}
+
+function normalizeCandidateConfidence(
+  value: unknown
+): IntentCandidate['confidence'] | undefined {
+  const normalized = compactText(value).toLowerCase();
+  if (
+    normalized === 'low' ||
+    normalized === 'medium' ||
+    normalized === 'high'
+  ) {
+    return normalized;
+  }
+  return undefined;
+}
+
+export function normalizeIntentCandidates(
+  input: unknown
+): IntentCandidate[] {
+  const rawItems = Array.isArray(input) ? input : [];
+  const out: IntentCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const rawItem of rawItems) {
+    const source =
+      rawItem && typeof rawItem === 'object'
+        ? (rawItem as Record<string, unknown>)
+        : null;
+    const name = clampMessage(
+      compactText(source ? source.name ?? source.channel : rawItem)
+    );
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      name,
+      confidence: normalizeCandidateConfidence(source?.confidence),
+    });
+    if (out.length >= 12) break;
+  }
+
+  return out;
+}
+
+export function normalizeDescriptorPhrases(input: unknown): string[] {
+  const rawItems = Array.isArray(input) ? input : [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+
+  for (const rawItem of rawItems) {
+    const phrase = sanitizeRetrievalSearchQuery(rawItem);
+    if (!phrase) continue;
+    const key = phrase.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(phrase);
+    if (out.length >= 8) break;
+  }
+
+  return out;
+}
+
+function candidateConfidenceWeight(
+  confidence: IntentCandidate['confidence']
+): number {
+  switch (confidence) {
+    case 'high':
+      return 3;
+    case 'medium':
+      return 2;
+    case 'low':
+      return 1;
+    default:
+      return 2;
+  }
+}
+
+export function buildOrderedIntentSeedQueries({
+  candidates,
+  descriptorPhrases,
+  resolvedIntent,
+  latestUserQuery,
+  maxQueries = 18,
+}: {
+  candidates?: IntentCandidate[];
+  descriptorPhrases?: string[];
+  resolvedIntent?: string;
+  latestUserQuery?: string;
+  maxQueries?: number;
+}): string[] {
+  const sortedCandidates = [...(candidates || [])]
+    .filter(candidate => compactText(candidate?.name))
+    .sort((a, b) => {
+      const weightDiff =
+        candidateConfidenceWeight(b.confidence) -
+        candidateConfidenceWeight(a.confidence);
+      if (weightDiff !== 0) return weightDiff;
+      return 0;
+    });
+
+  const candidateNames = uniqueTexts(
+    sortedCandidates.map(candidate =>
+      sanitizeRetrievalSearchQuery(candidate.name)
+    )
+  ).slice(0, 8);
+
+  const descriptors = normalizeDescriptorPhrases(descriptorPhrases).slice(0, 4);
+  const queries: string[] = [];
+
+  for (const candidateName of candidateNames) {
+    queries.push(candidateName);
+  }
+
+  let comboCount = 0;
+  for (const descriptor of descriptors.slice(0, 2)) {
+    for (const candidateName of candidateNames.slice(0, 4)) {
+      const normalizedCandidate = candidateName.toLowerCase();
+      const normalizedDescriptor = descriptor.toLowerCase();
+      if (
+        normalizedDescriptor.includes(normalizedCandidate) ||
+        normalizedCandidate.includes(normalizedDescriptor)
+      ) {
+        continue;
+      }
+      queries.push(`${candidateName} ${descriptor}`);
+      comboCount += 1;
+      if (comboCount >= 4) break;
+    }
+    if (comboCount >= 4) break;
+  }
+
+  queries.push(...descriptors);
+
+  for (const fallback of [resolvedIntent, latestUserQuery]) {
+    const normalized = sanitizeRetrievalSearchQuery(fallback);
+    if (!normalized) continue;
+    queries.push(normalized);
+  }
+
+  return uniqueTexts(
+    queries.map(query => sanitizeRetrievalSearchQuery(query)).filter(Boolean)
+  ).slice(0, Math.max(1, Math.floor(maxQueries)));
 }
 
 export function enrichIntentKeywords(

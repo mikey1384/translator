@@ -671,70 +671,6 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
-  function getVideoSuggestionPreferenceCreator(): string {
-    try {
-      const value = store.get(
-        'videoSuggestionPreferenceCreator',
-        APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceCreator
-      );
-      return sanitizeVideoSuggestionPreference(value);
-    } catch (err) {
-      log.error('[settings] Failed to read video suggestion creator:', err);
-      return APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceCreator;
-    }
-  }
-
-  function setVideoSuggestionPreferenceCreator(value: string): {
-    success: boolean;
-    error?: string;
-  } {
-    try {
-      store.set(
-        'videoSuggestionPreferenceCreator',
-        sanitizeVideoSuggestionPreference(value)
-      );
-      return { success: true };
-    } catch (err: any) {
-      log.error('[settings] Failed to persist video suggestion creator:', err);
-      return {
-        success: false,
-        error: err?.message || 'Failed to save preference',
-      };
-    }
-  }
-
-  function getVideoSuggestionPreferenceSubtopic(): string {
-    try {
-      const value = store.get(
-        'videoSuggestionPreferenceSubtopic',
-        APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceSubtopic
-      );
-      return sanitizeVideoSuggestionPreference(value);
-    } catch (err) {
-      log.error('[settings] Failed to read video suggestion subtopic:', err);
-      return APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceSubtopic;
-    }
-  }
-
-  function setVideoSuggestionPreferenceSubtopic(value: string): {
-    success: boolean;
-    error?: string;
-  } {
-    try {
-      store.set(
-        'videoSuggestionPreferenceSubtopic',
-        sanitizeVideoSuggestionPreference(value)
-      );
-      return { success: true };
-    } catch (err: any) {
-      log.error('[settings] Failed to persist video suggestion subtopic:', err);
-      return {
-        success: false,
-        error: err?.message || 'Failed to save preference',
-      };
-    }
-  }
-
   /* ─────────── Transcription provider preference ─────────── */
   function getPreferredTranscriptionProvider(): TranscriptionProviderPreference {
     try {
@@ -1006,10 +942,6 @@ export function buildSettingsHandlers(opts: {
     setVideoSuggestionRecency,
     getVideoSuggestionPreferenceTopic,
     setVideoSuggestionPreferenceTopic,
-    getVideoSuggestionPreferenceCreator,
-    setVideoSuggestionPreferenceCreator,
-    getVideoSuggestionPreferenceSubtopic,
-    setVideoSuggestionPreferenceSubtopic,
     getPreferredTranscriptionProvider,
     setPreferredTranscriptionProvider,
     getPreferredDubbingProvider,

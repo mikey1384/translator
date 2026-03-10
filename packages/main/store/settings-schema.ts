@@ -5,9 +5,7 @@ import {
 import { isVideoSuggestionRecency } from '../../shared/helpers/video-suggestion-sanitize.js';
 import {
   VIDEO_SUGGESTION_DEFAULT_COUNTRY,
-  VIDEO_SUGGESTION_DEFAULT_CREATOR,
   VIDEO_SUGGESTION_DEFAULT_RECENCY,
-  VIDEO_SUGGESTION_DEFAULT_SUBTOPIC,
   VIDEO_SUGGESTION_DEFAULT_TOPIC,
 } from '../../shared/helpers/video-suggestion-defaults.js';
 import type { VideoSuggestionRecency } from '@shared-types/app';
@@ -51,8 +49,6 @@ export type AppSettingsSchema = {
   videoSuggestionTargetCountry: string;
   videoSuggestionRecency: VideoSuggestionRecency;
   videoSuggestionPreferenceTopic: string;
-  videoSuggestionPreferenceCreator: string;
-  videoSuggestionPreferenceSubtopic: string;
   preferredTranscriptionProvider: TranscriptionProviderPreference;
   preferredDubbingProvider: DubbingProviderPreference;
   stage5DubbingTtsProvider: Stage5DubbingTtsProviderPreference;
@@ -80,8 +76,6 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   videoSuggestionTargetCountry: VIDEO_SUGGESTION_DEFAULT_COUNTRY,
   videoSuggestionRecency: VIDEO_SUGGESTION_DEFAULT_RECENCY,
   videoSuggestionPreferenceTopic: VIDEO_SUGGESTION_DEFAULT_TOPIC,
-  videoSuggestionPreferenceCreator: VIDEO_SUGGESTION_DEFAULT_CREATOR,
-  videoSuggestionPreferenceSubtopic: VIDEO_SUGGESTION_DEFAULT_SUBTOPIC,
   preferredTranscriptionProvider: 'elevenlabs',
   preferredDubbingProvider: 'openai',
   stage5DubbingTtsProvider: 'openai',

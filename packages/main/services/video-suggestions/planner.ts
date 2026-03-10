@@ -1,125 +1,22 @@
-import type {
-  VideoSuggestionMessage,
-  VideoSuggestionPreferenceSlots,
-  VideoSuggestionRecency,
-} from '@shared-types/app';
+import type { VideoSuggestionMessage } from '@shared-types/app';
 import {
   type DiscoveryRetrievalMode,
-  type PlannerPayload,
+  type IntentResolverPayload,
+  type QueryFormulatorPayload,
+  buildOrderedIntentSeedQueries,
   clampMessage,
   compactText,
+  normalizeCountryCode,
+  normalizeDescriptorPhrases,
+  normalizeIntentCandidates,
   parseBooleanLike,
-  recencyLabel,
   sanitizeCountryHint,
   sanitizeLanguageToken,
   sanitizeRetrievalSearchQuery,
   sanitizeSearchKeywords,
-  sanitizeVideoSuggestionPreferenceValue,
-  VIDEO_SUGGESTION_SOURCE_LABEL,
   uniqueTexts,
   normalizePreferenceSlots,
 } from './shared.js';
-
-export function buildPlannerPrompt(
-  languageTag?: string,
-  languageName?: string,
-  countryHint?: string,
-  recency: VideoSuggestionRecency = 'any',
-  savedPreferences?: VideoSuggestionPreferenceSlots
-): string {
-  const safeTag = sanitizeLanguageToken(languageTag);
-  const safeName = compactText(languageName).slice(0, 50);
-  const safeCountry = sanitizeCountryHint(countryHint);
-  const languageRule = safeName
-    ? `Always write assistantMessage in ${safeName}${safeTag ? ` (${safeTag})` : ''}.`
-    : safeTag
-      ? `Always write assistantMessage in the language locale "${safeTag}".`
-      : 'Always match the user selected app language.';
-  const countryRule = safeCountry
-    ? `Target country/region is "${safeCountry}". Keep results focused there unless the user overrides it.`
-    : 'Never assume country/region from locale, account location, or prior defaults.';
-  const countryQuestionRule = safeCountry
-    ? 'If the user later asks for another country/region, switch to it immediately.'
-    : 'If user intent is clear but country/region is missing, ask a short follow-up for country/region before searching.';
-  const recencyRule =
-    recency === 'any'
-      ? 'No time restriction unless the user asks for one. Older videos are valid and should not be deprioritized by date.'
-      : `Apply a strict recency filter of ${recencyLabel(recency)}.`;
-  const queryLanguageRule = safeCountry
-    ? 'searchQuery language must match the target country/region market language when clear (e.g., Japan -> Japanese keywords).'
-    : 'searchQuery can use English keywords unless user requests another language.';
-  const safeSavedTopic = sanitizeVideoSuggestionPreferenceValue(
-    savedPreferences?.topic
-  );
-  const safeSavedCreator = sanitizeVideoSuggestionPreferenceValue(
-    savedPreferences?.creator
-  );
-  const safeSavedSubtopic = sanitizeVideoSuggestionPreferenceValue(
-    savedPreferences?.subtopic
-  );
-  const savedPreferenceRule =
-    safeSavedTopic || safeSavedCreator || safeSavedSubtopic
-      ? `Saved user preferences from previous sessions: topic="${safeSavedTopic || '(none)'}", creator="${safeSavedCreator || '(none)'}", subtopic="${safeSavedSubtopic || '(none)'}". Use these as defaults and avoid re-asking unless user overrides.`
-      : 'No saved preference slots yet.';
-  const platformLabel = VIDEO_SUGGESTION_SOURCE_LABEL;
-
-  return `You are the strategist for a video recommender.
-You do NOT run web search here.
-Reply with JSON only. No markdown.
-
-Schema:
-{
-  "assistantMessage": "short response, max 120 chars, user-facing",
-  "needsMoreContext": true or false,
-  "intentSummary": "one short sentence",
-  "strategy": "short internal plan",
-  "primarySearchLanguage": "language code like ja/en/ko",
-  "searchLanguages": ["preferred language codes in order"],
-  "retrievalMode": "channel or topic",
-  "retrievalQueries": ["up to 10 concrete retrieval queries"],
-  "searchQuery": "single fallback query",
-  "discoveryQueries": ["exactly 5 channel-discovery queries when context is enough; [] otherwise"],
-  "capturedPreferences": {
-    "topic": "short topic keyword or empty",
-    "creator": "short creator/streamer preference or empty",
-    "subtopic": "short subtopic/genre keyword or empty"
-  }
-}
-
-Rules:
-- ${languageRule}
-- ${countryRule}
-- ${countryQuestionRule}
-- ${recencyRule}
-- ${savedPreferenceRule}
-- Search source is fixed to ${platformLabel}. Never change it.
-- Never ask the user to choose a source.
-- Never suggest a different source in assistantMessage.
-- Ask concise follow-up questions when context is vague.
-- Do not overwhelm the user.
-- If the user says broad acceptance (e.g., "any", "anything", "whatever", "no preference", "아무거나", "상관없어요"), treat it as sufficient preference and proceed.
-- Do not repeat the same narrowing question after a broad-acceptance reply.
-- Set needsMoreContext=true until the intent is clear enough for channel discovery.
-- When ready, produce EXACTLY 5 discoveryQueries optimized for finding creator/channel candidates.
-- discoveryQueries are for creator discovery only (channel-centric), not final video retrieval.
-- ${queryLanguageRule}
-- Keep searchQuery natural in the search language; do NOT force country tokens when intent is already clear.
-- searchQuery should be the single best summary query (used for UI visibility).
-- retrievalMode is required when ready:
-  - "channel" when user intent is creator-specific (artist/creator/channel).
-  - "topic" when user intent is broad category/topic exploration.
-- retrievalQueries are required when ready (3-10 concise queries) and will be used downstream with high priority.
-- retrievalQueries must target ${platformLabel} content only.
-- For music-artist intent, include concrete artist + song/work title queries whenever confidently known.
-- Never use filler query phrases like "official channel", "latest", or "newest" unless explicitly requested by user.
-- Respect recency via filtering, not by adding explicit years/months/dates in searchQuery.
-- Also respect recency for discoveryQueries: avoid explicit dates unless user asked for exact dates.
-- Prefer creator/channel/topic keywords over generic words to avoid irrelevant music results.
-- Never output explicit date tokens like "2024", "March", "3월", "3月" unless the user explicitly asked for a specific date.
-- Keep capturedPreferences compact (max ~40 chars each) and update them whenever user gives explicit preference signals.
-- If user says broad acceptance ("any"/"whatever"), preserve existing capturedPreferences instead of clearing them.
-- If ready, assistantMessage should briefly confirm what the system will search for next.`;
-}
 
 function normalizePlannerRetrievalMode(
   value: unknown
@@ -139,7 +36,9 @@ function normalizePlannerRetrievalMode(
   return undefined;
 }
 
-export function parsePlannerPayload(raw: string): PlannerPayload | null {
+export function parseIntentResolverPayload(
+  raw: string
+): IntentResolverPayload | null {
   const input = String(raw || '').trim();
   if (!input) return null;
 
@@ -160,10 +59,26 @@ export function parsePlannerPayload(raw: string): PlannerPayload | null {
   for (const candidate of attempts) {
     try {
       const obj = JSON.parse(candidate);
-      const message = clampMessage(obj?.assistantMessage);
-      const searchQuery = compactText(obj?.searchQuery);
+      const answerToUserQuestion = clampMessage(
+        compactText(obj?.answerToUserQuestion)
+      );
+      const assistantMessage = clampMessage(compactText(obj?.assistantMessage));
+      const resolvedIntent = clampMessage(compactText(obj?.resolvedIntent));
       const intentSummary = clampMessage(compactText(obj?.intentSummary));
       const strategy = clampMessage(compactText(obj?.strategy));
+      const candidates = normalizeIntentCandidates(obj?.candidates);
+      const descriptorPhrases = normalizeDescriptorPhrases(
+        obj?.descriptorPhrases
+      );
+      const canonicalEntities = uniqueTexts(
+        Array.isArray(obj?.canonicalEntities)
+          ? obj.canonicalEntities.map((value: unknown) => compactText(value))
+          : []
+      ).slice(0, 6);
+      const impliedLocale = compactText(obj?.impliedLocale).slice(0, 30);
+      const impliedSearchLanguage = sanitizeLanguageToken(
+        obj?.impliedSearchLanguage
+      ).toLowerCase();
       const primarySearchLanguage = sanitizeLanguageToken(
         obj?.primarySearchLanguage
       ).toLowerCase();
@@ -174,6 +89,7 @@ export function parsePlannerPayload(raw: string): PlannerPayload | null {
             )
           : []
       ).slice(0, 3);
+      const searchQuery = compactText(obj?.searchQuery);
       const discoveryQueries = uniqueTexts(
         Array.isArray(obj?.discoveryQueries)
           ? obj.discoveryQueries.map((value: unknown) =>
@@ -189,33 +105,167 @@ export function parsePlannerPayload(raw: string): PlannerPayload | null {
             )
           : []
       ).slice(0, 10);
+      const impliedConstraintsRaw =
+        obj?.impliedConstraints && typeof obj.impliedConstraints === 'object'
+          ? (obj.impliedConstraints as Record<string, unknown>)
+          : {};
+      const ambiguities = uniqueTexts(
+        Array.isArray(obj?.ambiguities)
+          ? obj.ambiguities.map((value: unknown) => compactText(value))
+          : []
+      ).slice(0, 4);
+      const recommendedInterpretation = clampMessage(
+        compactText(obj?.recommendedInterpretation)
+      );
+      const confidenceRaw = compactText(obj?.confidence).toLowerCase();
+      const confidence =
+        confidenceRaw === 'low' ||
+        confidenceRaw === 'medium' ||
+        confidenceRaw === 'high'
+          ? confidenceRaw
+          : undefined;
       const capturedPreferenceSource = {
-        ...(obj && typeof obj === 'object' ? (obj as Record<string, unknown>) : {}),
+        ...(obj && typeof obj === 'object'
+          ? (obj as Record<string, unknown>)
+          : {}),
         ...(obj?.preferences && typeof obj.preferences === 'object'
           ? (obj.preferences as Record<string, unknown>)
           : {}),
-        ...(obj?.capturedPreferences && typeof obj.capturedPreferences === 'object'
+        ...(obj?.capturedPreferences &&
+        typeof obj.capturedPreferences === 'object'
           ? (obj.capturedPreferences as Record<string, unknown>)
           : {}),
       };
-      const capturedPreferences =
-        normalizePreferenceSlots(capturedPreferenceSource);
+      const capturedPreferences = normalizePreferenceSlots(
+        capturedPreferenceSource
+      );
       const parsedNeedsMoreContext = parseBooleanLike(obj?.needsMoreContext);
+      const fallbackQueries = buildOrderedIntentSeedQueries({
+        candidates,
+        descriptorPhrases,
+        resolvedIntent,
+      });
       const inferredReady = Boolean(
-        searchQuery || discoveryQueries.length > 0 || retrievalQueries.length > 0
+        searchQuery ||
+        discoveryQueries.length > 0 ||
+        retrievalQueries.length > 0 ||
+        candidates.length > 0 ||
+        descriptorPhrases.length > 0 ||
+        fallbackQueries.length > 0
       );
       const needsMoreContext =
         parsedNeedsMoreContext ?? (inferredReady ? false : true);
+
       return {
-        assistantMessage: message,
+        assistantMessage,
         needsMoreContext,
-        searchQuery,
+        answerToUserQuestion,
+        resolvedIntent,
         intentSummary,
         strategy,
+        candidates,
+        descriptorPhrases,
+        canonicalEntities,
+        impliedLocale,
+        impliedSearchLanguage,
         primarySearchLanguage,
         searchLanguages,
+        searchQuery,
         discoveryQueries,
         retrievalMode,
+        retrievalQueries:
+          retrievalQueries.length > 0 ? retrievalQueries : fallbackQueries,
+        impliedConstraints: {
+          country: sanitizeCountryHint(impliedConstraintsRaw.country),
+          recency: compactText(impliedConstraintsRaw.recency).toLowerCase(),
+        },
+        ambiguities,
+        recommendedInterpretation,
+        confidence,
+        capturedPreferences,
+      };
+    } catch {
+      // Continue trying fallback parsers.
+    }
+  }
+
+  return null;
+}
+
+export function parseQueryFormulatorPayload(
+  raw: string
+): QueryFormulatorPayload | null {
+  const input = String(raw || '').trim();
+  if (!input) return null;
+
+  const attempts = [input];
+  const fenced = input
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+  if (fenced && fenced !== input) attempts.push(fenced);
+
+  const firstBrace = input.indexOf('{');
+  const lastBrace = input.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    attempts.push(input.slice(firstBrace, lastBrace + 1));
+  }
+
+  for (const candidate of attempts) {
+    try {
+      const obj = JSON.parse(candidate);
+      const assistantMessage = clampMessage(compactText(obj?.assistantMessage));
+      const intentSummary = clampMessage(compactText(obj?.intentSummary));
+      const strategy = clampMessage(compactText(obj?.strategy));
+      const countryCode = normalizeCountryCode(obj?.countryCode);
+      const primarySearchLanguage = sanitizeLanguageToken(
+        obj?.primarySearchLanguage
+      ).toLowerCase();
+      const searchLanguages = uniqueTexts(
+        Array.isArray(obj?.searchLanguages)
+          ? obj.searchLanguages.map((value: unknown) =>
+              sanitizeLanguageToken(value).toLowerCase()
+            )
+          : []
+      ).slice(0, 3);
+      const searchQuery = compactText(obj?.searchQuery);
+      const retrievalQueries = uniqueTexts(
+        Array.isArray(obj?.retrievalQueries)
+          ? obj.retrievalQueries.map((value: unknown) =>
+              sanitizeRetrievalSearchQuery(String(value || ''))
+            )
+          : []
+      ).slice(0, 10);
+      const capturedPreferenceSource = {
+        ...(obj && typeof obj === 'object'
+          ? (obj as Record<string, unknown>)
+          : {}),
+        ...(obj?.preferences && typeof obj.preferences === 'object'
+          ? (obj.preferences as Record<string, unknown>)
+          : {}),
+        ...(obj?.capturedPreferences &&
+        typeof obj.capturedPreferences === 'object'
+          ? (obj.capturedPreferences as Record<string, unknown>)
+          : {}),
+      };
+      const capturedPreferences = normalizePreferenceSlots(
+        capturedPreferenceSource
+      );
+      const parsedNeedsMoreContext = parseBooleanLike(obj?.needsMoreContext);
+      const inferredReady = Boolean(searchQuery || retrievalQueries.length > 0);
+      const needsMoreContext =
+        parsedNeedsMoreContext ?? (inferredReady ? false : true);
+
+      return {
+        assistantMessage,
+        needsMoreContext,
+        intentSummary,
+        strategy,
+        countryCode,
+        primarySearchLanguage,
+        searchLanguages,
+        searchQuery,
         retrievalQueries,
         capturedPreferences,
       };
@@ -223,6 +273,7 @@ export function parsePlannerPayload(raw: string): PlannerPayload | null {
       // Continue trying fallback parsers.
     }
   }
+
   return null;
 }
 

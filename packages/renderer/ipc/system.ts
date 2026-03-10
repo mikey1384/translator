@@ -352,26 +352,6 @@ export function setVideoSuggestionPreferenceTopic(
   return window.electron.setVideoSuggestionPreferenceTopic(value);
 }
 
-export function getVideoSuggestionPreferenceCreator(): Promise<string> {
-  return window.electron.getVideoSuggestionPreferenceCreator();
-}
-
-export function setVideoSuggestionPreferenceCreator(
-  value: string
-): Promise<{ success: boolean; error?: string }> {
-  return window.electron.setVideoSuggestionPreferenceCreator(value);
-}
-
-export function getVideoSuggestionPreferenceSubtopic(): Promise<string> {
-  return window.electron.getVideoSuggestionPreferenceSubtopic();
-}
-
-export function setVideoSuggestionPreferenceSubtopic(
-  value: string
-): Promise<{ success: boolean; error?: string }> {
-  return window.electron.setVideoSuggestionPreferenceSubtopic(value);
-}
-
 // Transcription provider preference
 export type TranscriptionProvider = 'elevenlabs' | 'openai' | 'stage5';
 

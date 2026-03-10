@@ -9,6 +9,7 @@ import {
 } from '../../../../state/video-suggestion-store.js';
 import type { PipelineStageProgress } from './VideoSuggestionPanel.types.js';
 import type {
+  VideoSuggestionContextToggles,
   VideoSuggestionMessage,
   VideoSuggestionModelPreference,
   VideoSuggestionPreferenceSlots,
@@ -34,8 +35,11 @@ type UseVideoSuggestionFlowParams = {
   preferredLanguageName: string;
   preferredRecency: VideoSuggestionRecency;
   prefsLoaded: boolean;
+  recentChannelNames: string[];
+  recentDownloadTitles: string[];
   requestPreferences: VideoSuggestionPreferenceSlots;
   savedPreferences: VideoSuggestionPreferenceSlots;
+  contextToggles: VideoSuggestionContextToggles;
   t: TFunction;
 };
 
@@ -44,6 +48,7 @@ type UseVideoSuggestionFlowResult = {
   cancelSearch: () => Promise<void>;
   cancelling: boolean;
   clearedStageCount: number;
+  continuationId: string | null;
   error: string | null;
   input: string;
   loading: boolean;
@@ -84,11 +89,7 @@ function buildSavedPreferenceSummary(
 ): string {
   const seen = new Set<string>();
   const values: string[] = [];
-  for (const raw of [
-    savedPreferences.topic,
-    savedPreferences.creator,
-    savedPreferences.subtopic,
-  ]) {
+  for (const raw of [savedPreferences.topic]) {
     const text = compactText(raw);
     if (!text) continue;
     const key = text.toLowerCase();
@@ -97,6 +98,23 @@ function buildSavedPreferenceSummary(
     values.push(text);
   }
   return values.slice(0, 3).join(', ');
+}
+
+function buildImplicitSearchPrompt(
+  preferenceSummary: string,
+  t: TFunction
+): string {
+  if (preferenceSummary) {
+    return t(
+      'input.videoSuggestion.defaultSearchUserMessageWithSummary',
+      'Find videos for me now using {{summary}} as guidance.',
+      { summary: preferenceSummary }
+    );
+  }
+  return t(
+    'input.videoSuggestion.defaultSearchUserMessage',
+    'Find videos for me now.'
+  );
 }
 
 export default function useVideoSuggestionFlow({
@@ -109,14 +127,18 @@ export default function useVideoSuggestionFlow({
   preferredLanguageName,
   preferredRecency,
   prefsLoaded,
+  recentChannelNames,
+  recentDownloadTitles,
   requestPreferences,
   savedPreferences,
+  contextToggles,
   t,
 }: UseVideoSuggestionFlowParams): UseVideoSuggestionFlowResult {
   const mountedRef = useRef(true);
   const {
     activeTraceLines,
     cancelling,
+    continuationId,
     error,
     input,
     loading,
@@ -147,6 +169,7 @@ export default function useVideoSuggestionFlow({
     state => ({
       activeTraceLines: state.loadingTrace.slice(-10),
       cancelling: state.cancelling,
+      continuationId: state.continuationId,
       error: state.error,
       input: state.input,
       loading: state.loading,
@@ -194,7 +217,7 @@ export default function useVideoSuggestionFlow({
     if (loadingElapsedSec < 120) {
       return t(
         'input.videoSuggestion.searchingLong',
-        'Still searching and ranking videos...'
+        'Still searching videos...'
       );
     }
     return t(
@@ -217,10 +240,38 @@ export default function useVideoSuggestionFlow({
     () => buildSavedPreferenceSummary(savedPreferences),
     [savedPreferences]
   );
+  const requestPreferenceSummary = useMemo(
+    () => buildSavedPreferenceSummary(requestPreferences),
+    [requestPreferences]
+  );
   const suggestedFollowUpPrompts = useMemo(
     () =>
-      buildSuggestedFollowUpPrompts(searchQuery, savedPreferences, results, t),
-    [results, savedPreferences, searchQuery, t]
+      buildSuggestedFollowUpPrompts(
+        searchQuery,
+        savedPreferences,
+        results,
+        t,
+        {
+          includeDownloadHistory: Boolean(
+            contextToggles.includeDownloadHistory
+          ),
+          includeWatchedChannels: Boolean(
+            contextToggles.includeWatchedChannels
+          ),
+          recentDownloadTitles,
+          recentChannelNames,
+        }
+      ),
+    [
+      contextToggles.includeDownloadHistory,
+      contextToggles.includeWatchedChannels,
+      recentChannelNames,
+      recentDownloadTitles,
+      results,
+      savedPreferences,
+      searchQuery,
+      t,
+    ]
   );
 
   const starterQuestionDefault = useMemo(
@@ -285,6 +336,7 @@ export default function useVideoSuggestionFlow({
     ) => {
       const id = useVideoSuggestionStore.getState().nextRequestId();
       const operationId = `video-suggest-chat-${Date.now()}`;
+      const startingResultCount = useVideoSuggestionStore.getState().results.length;
 
       setMessages(history);
       setShowQuickStartAction(false);
@@ -302,6 +354,9 @@ export default function useVideoSuggestionFlow({
           preferredCountry,
           preferredRecency,
           savedPreferences: preferencesForRequest,
+          contextToggles,
+          recentDownloadTitles,
+          recentChannelNames,
           operationId,
         });
 
@@ -325,11 +380,11 @@ export default function useVideoSuggestionFlow({
           defaultFollowUp,
           t
         );
-        const nextResults = res?.results || [];
+        const nextResults = Array.isArray(res?.results) ? res.results : [];
         const hideGenericFollowUp =
-          nextResults.length > 0 &&
-          !res?.needsMoreContext &&
-          assistantText === defaultFollowUp;
+          nextResults.length > 0 && assistantText === defaultFollowUp;
+        const latestResults = useVideoSuggestionStore.getState().results;
+        const streamedGrowth = latestResults.length > startingResultCount;
 
         setMessages(prev => [
           ...normalizeMessagesForPlanner(prev, t),
@@ -338,9 +393,8 @@ export default function useVideoSuggestionFlow({
             : [{ role: 'assistant' as const, content: assistantText }]),
         ]);
 
-        setResults(nextResults);
         setSearchQuery((res?.searchQuery || '').trim());
-        if (nextResults.length > 0) {
+        if (streamedGrowth || nextResults.length > 0) {
           markPipelineClearedThroughRetrieval();
           onResultsReady();
         }
@@ -413,6 +467,9 @@ export default function useVideoSuggestionFlow({
       setSearchQuery,
       setShowQuickStartAction,
       startOperation,
+      contextToggles,
+      recentChannelNames,
+      recentDownloadTitles,
       t,
     ]
   );
@@ -420,16 +477,29 @@ export default function useVideoSuggestionFlow({
   const sendMessage = useCallback(async () => {
     const currentState = useVideoSuggestionStore.getState();
     const trimmed = currentState.input.trim();
-    if (!trimmed || currentState.loading) return;
+    if (currentState.loading) return;
+
+    const implicitPrompt = buildImplicitSearchPrompt(
+      requestPreferenceSummary || savedPreferenceSummary,
+      t
+    );
+    const userPrompt = trimmed || implicitPrompt;
 
     setInput('');
     const nextHistory: VideoSuggestionMessage[] = [
       ...normalizeMessagesForPlanner(currentState.messages, t),
-      { role: 'user', content: trimmed },
+      { role: 'user', content: userPrompt },
     ];
 
     await runSearch(nextHistory, requestPreferences);
-  }, [requestPreferences, runSearch, setInput, t]);
+  }, [
+    requestPreferenceSummary,
+    requestPreferences,
+    runSearch,
+    savedPreferenceSummary,
+    setInput,
+    t,
+  ]);
 
   const runQuickStartSearch = useCallback(async () => {
     if (!savedPreferenceSummary || useVideoSuggestionStore.getState().loading) {
@@ -463,10 +533,9 @@ export default function useVideoSuggestionFlow({
 
     const id = currentState.nextRequestId();
     const operationId = `video-suggest-more-${Date.now()}`;
+    const startingResultCount = currentState.results.length;
     const continuationPreferences =
-      currentState.lastRequestPreferences.topic ||
-      currentState.lastRequestPreferences.creator ||
-      currentState.lastRequestPreferences.subtopic
+      currentState.lastRequestPreferences.topic
         ? currentState.lastRequestPreferences
         : requestPreferences;
 
@@ -483,6 +552,9 @@ export default function useVideoSuggestionFlow({
         preferredCountry,
         preferredRecency,
         savedPreferences: continuationPreferences,
+        contextToggles,
+        recentDownloadTitles,
+        recentChannelNames,
         continuationId: currentState.continuationId || undefined,
         searchQueryOverride: currentState.searchQuery,
         excludeUrls: currentState.results.map(item => item.url),
@@ -507,6 +579,7 @@ export default function useVideoSuggestionFlow({
 
       const incoming = Array.isArray(res?.results) ? res.results : [];
       const latestResults = useVideoSuggestionStore.getState().results;
+      const streamedGrowth = latestResults.length > startingResultCount;
       const seen = new Set(latestResults.map(item => item.url));
       const fresh: VideoSuggestionResultItem[] = [];
       for (const item of incoming) {
@@ -515,8 +588,10 @@ export default function useVideoSuggestionFlow({
         fresh.push(item);
       }
 
-      if (res?.success !== false && fresh.length > 0) {
-        setResults([...latestResults, ...fresh]);
+      if (res?.success !== false && (fresh.length > 0 || streamedGrowth)) {
+        if (fresh.length > 0) {
+          setResults([...latestResults, ...fresh]);
+        }
         markPipelineClearedThroughRetrieval();
         onResultsReady();
       } else if (res?.success !== false) {
@@ -572,12 +647,15 @@ export default function useVideoSuggestionFlow({
     modelPreference,
     onCapturePreferences,
     onResultsReady,
-    preferredCountry,
-    preferredLanguage,
-    preferredLanguageName,
-    preferredRecency,
-    requestPreferences,
-    setContinuationId,
+      preferredCountry,
+      preferredLanguage,
+      preferredLanguageName,
+      preferredRecency,
+      contextToggles,
+      recentChannelNames,
+      recentDownloadTitles,
+      requestPreferences,
+      setContinuationId,
     setError,
     setMessages,
     setResolvedModelRuntime,
@@ -638,6 +716,7 @@ export default function useVideoSuggestionFlow({
     cancelSearch,
     cancelling,
     clearedStageCount,
+    continuationId,
     error,
     input,
     loading,

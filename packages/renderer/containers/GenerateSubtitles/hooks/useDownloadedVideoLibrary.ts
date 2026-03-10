@@ -27,6 +27,18 @@ type RecentDownloadedChannel = {
   downloadedAtIso: string;
 };
 
+function sortHistoryByDownloadedAt(
+  items: VideoSuggestionDownloadHistoryItem[]
+): VideoSuggestionDownloadHistoryItem[] {
+  return [...items].sort((a, b) => {
+    const aTs = Date.parse(String(a.downloadedAtIso || ''));
+    const bTs = Date.parse(String(b.downloadedAtIso || ''));
+    const aSafe = Number.isFinite(aTs) ? aTs : 0;
+    const bSafe = Number.isFinite(bTs) ? bTs : 0;
+    return bSafe - aSafe;
+  });
+}
+
 export default function useDownloadedVideoLibrary(
   preferredLanguage: string
 ) {
@@ -34,7 +46,7 @@ export default function useDownloadedVideoLibrary(
   const [error, setError] = useState<string | null>(null);
   const [downloadHistory, setDownloadHistory] = useState<
     VideoSuggestionDownloadHistoryItem[]
-  >(() => readLocalVideoSuggestionHistory());
+  >(() => sortHistoryByDownloadedAt(readLocalVideoSuggestionHistory()));
   const [hiddenChannelKeys, setHiddenChannelKeys] = useState<string[]>(() =>
     readLocalVideoSuggestionHiddenChannels()
   );
@@ -52,7 +64,7 @@ export default function useDownloadedVideoLibrary(
 
   useEffect(() => {
     return subscribeToVideoSuggestionHistorySync(() => {
-      setDownloadHistory(readLocalVideoSuggestionHistory());
+      setDownloadHistory(sortHistoryByDownloadedAt(readLocalVideoSuggestionHistory()));
     });
   }, []);
 
@@ -212,6 +224,7 @@ export default function useDownloadedVideoLibrary(
         await useVideoStore.getState().setFile({
           name: fallbackName,
           path: filePath,
+          sourceUrl: item.sourceUrl,
         });
         useUIStore.getState().setInputMode('file');
       } catch (err: any) {

@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { splitContinuationPageResults } from '../services/video-suggestions/pagination.ts';
+import {
+  consumeContinuationPage,
+  splitContinuationPageResults,
+} from '../services/video-suggestions/pagination.ts';
 import type { VideoSuggestionResultItem } from '@shared-types/app';
 
 function buildResult(index: number): VideoSuggestionResultItem {
@@ -48,6 +51,50 @@ test('splitContinuationPageResults de-duplicates buffered results by URL', () =>
   assert.deepEqual(
     pageResults.map(item => item.url),
     [buildResult(1).url, buildResult(2).url]
+  );
+  assert.deepEqual(pendingResults.map(item => item.url), [buildResult(4).url]);
+});
+
+test('consumeContinuationPage skips already-returned URLs and serves the next fresh page', () => {
+  const items = [
+    buildResult(1),
+    buildResult(2),
+    buildResult(3),
+    buildResult(4),
+    buildResult(5),
+  ];
+
+  const { pageResults, pendingResults } = consumeContinuationPage({
+    items,
+    pageSize: 2,
+    excludeUrls: [buildResult(1).url, buildResult(2).url],
+  });
+
+  assert.deepEqual(
+    pageResults.map(item => item.url),
+    [buildResult(3).url, buildResult(4).url]
+  );
+  assert.deepEqual(pendingResults.map(item => item.url), [buildResult(5).url]);
+});
+
+test('consumeContinuationPage drops excluded duplicates before buffering the remainder', () => {
+  const items = [
+    buildResult(1),
+    buildResult(2),
+    buildResult(2),
+    buildResult(3),
+    buildResult(4),
+  ];
+
+  const { pageResults, pendingResults } = consumeContinuationPage({
+    items,
+    pageSize: 2,
+    excludeUrls: [buildResult(2).url],
+  });
+
+  assert.deepEqual(
+    pageResults.map(item => item.url),
+    [buildResult(1).url, buildResult(3).url]
   );
   assert.deepEqual(pendingResults.map(item => item.url), [buildResult(4).url]);
 });

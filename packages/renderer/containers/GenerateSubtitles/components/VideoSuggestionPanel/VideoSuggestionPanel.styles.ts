@@ -579,6 +579,53 @@ export const preferenceFieldStyles = css`
   gap: ${spacing.xs};
 `;
 
+export const contextToggleGridStyles = css`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: ${spacing.md};
+
+  @media (max-width: ${breakpoints.tabletMaxWidth}) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const contextToggleLabelStyles = css`
+  display: flex;
+  align-items: flex-start;
+  gap: ${spacing.sm};
+  padding: ${spacing.sm} ${spacing.md};
+  border: 1px solid ${colors.border};
+  border-radius: ${borderRadius.lg};
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+`;
+
+export const contextToggleCheckboxStyles = css`
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: ${colors.primary};
+  flex: 0 0 auto;
+`;
+
+export const contextToggleTextBlockStyles = css`
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+`;
+
+export const contextToggleTitleStyles = css`
+  font-size: ${fontSize.sm};
+  color: ${colors.text};
+  font-weight: ${fontWeight.semibold};
+`;
+
+export const contextToggleHintStyles = css`
+  font-size: ${fontSize.xs};
+  color: ${colors.textDim};
+  line-height: ${lineHeight.relaxed};
+`;
+
 export const countryLabelStyles = css`
   font-size: ${fontSize.xs};
   color: ${colors.textDim};
@@ -669,6 +716,47 @@ export const loadingMetaStyles = css`
   color: ${colors.textDim};
 `;
 
+export const loadingProgressHeaderStyles = css`
+  margin-top: ${spacing.sm};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${spacing.sm};
+`;
+
+export const loadingProgressLabelStyles = css`
+  font-size: ${fontSize.xs};
+  font-weight: ${fontWeight.semibold};
+  color: ${colors.textDim};
+`;
+
+export const loadingProgressPercentStyles = css`
+  font-size: ${fontSize.xs};
+  font-weight: ${fontWeight.semibold};
+  color: ${colors.primaryLight};
+  font-variant-numeric: tabular-nums;
+`;
+
+export const loadingProgressTrackStyles = css`
+  margin-top: ${spacing.xs};
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+`;
+
+export const loadingProgressFillStyles = css`
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    ${colors.primaryLight} 0%,
+    ${colors.primary} 55%,
+    ${colors.primaryDark} 100%
+  );
+  transition: width 0.45s ease;
+`;
+
 export const stageTimelineStyles = css`
   margin-top: 8px;
   display: grid;
@@ -740,6 +828,8 @@ export const stageOutcomeStyles = css`
   font-size: ${fontSize.xs};
   color: ${colors.textDim};
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 `;
 
 export const liveActivityPanelStyles = css`
@@ -775,6 +865,8 @@ export const liveActivityTitleStyles = css`
 export const liveActivityMetaStyles = css`
   font-size: ${fontSize.xs};
   color: ${colors.textDim};
+  overflow-wrap: anywhere;
+  word-break: break-word;
 `;
 
 export const liveActivityToggleButtonStyles = css`
@@ -795,17 +887,44 @@ export const liveActivityToggleButtonStyles = css`
 
 export const liveActivityTraceStyles = css`
   display: grid;
-  gap: 4px;
+  gap: 6px;
+`;
+
+export const liveActivityTraceLabelStyles = css`
+  font-size: ${fontSize.xs};
+  font-weight: ${fontWeight.semibold};
+  color: ${colors.textDim};
+  letter-spacing: 0.02em;
 `;
 
 export const liveActivityTraceLineStyles = css`
-  border: 1px solid ${colors.border};
-  border-radius: ${borderRadius.md};
-  background: ${colors.bg};
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  min-width: 0;
+`;
+
+export const liveActivityTraceBadgeStyles = css`
+  flex: 0 0 auto;
+  border: 1px solid rgba(125, 167, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(125, 167, 255, 0.1);
   font-size: ${fontSize.xs};
   color: ${colors.textDim};
-  white-space: pre-wrap;
-  padding: ${spacing.xs} ${spacing.sm};
+  line-height: 1;
+  padding: 4px 8px;
+`;
+
+export const liveActivityTraceMessageStyles = css`
+  flex: 1 1 180px;
+  min-width: 0;
+  font-size: ${fontSize.xs};
+  color: ${colors.textDim};
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 `;
 
 export const liveActivityDetailsStyles = css`

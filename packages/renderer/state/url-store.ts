@@ -291,9 +291,15 @@ async function downloadMediaInternal(
       localPath: finalPath,
     });
 
-    const { order: existingSubs, origin: subsOrigin } = useSubStore.getState();
+    const {
+      order: existingSubs,
+      origin: subsOrigin,
+      libraryEntryId,
+    } = useSubStore.getState();
     const preserveMountedDiskSubs =
-      existingSubs.length > 0 && subsOrigin === 'disk';
+      existingSubs.length > 0 &&
+      subsOrigin === 'disk' &&
+      !libraryEntryId;
     const hasMountedSource = Boolean(getMountedSourcePath());
     const shouldSwitchToDownloaded =
       !hasMountedSource || (await openDownloadSwitchConfirm());
@@ -302,16 +308,29 @@ async function downloadMediaInternal(
       if (preserveSubtitles) {
         await useVideoStore
           .getState()
-          .mountFilePreserveSubs({ path: finalPath!, name: filename! });
+          .mountFilePreserveSubs({
+            path: finalPath!,
+            name: filename!,
+            sourceUrl: requestedUrl,
+          });
       } else {
         await useVideoStore.getState().setFile({
           path: finalPath!,
           name: filename!,
+          sourceUrl: requestedUrl,
+        }, {
+          skipStoredSubtitleAutoMount: preserveMountedDiskSubs,
         });
       }
 
       if (!preserveSubtitles && !preserveMountedDiskSubs) {
-        useSubStore.getState().load([]);
+        const subState = useSubStore.getState();
+        const autoMountedForCurrentVideo =
+          Boolean(subState.libraryEntryId) &&
+          subState.sourceVideoPath === finalPath;
+        if (!autoMountedForCurrentVideo) {
+          useSubStore.getState().load([]);
+        }
       }
 
       useUIStore.getState().setInputMode('file');

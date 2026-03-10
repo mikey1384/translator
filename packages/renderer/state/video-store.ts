@@ -7,6 +7,10 @@ import { useTaskStore } from './task-store';
 import { useUIStore } from './ui-store';
 import { useSubStore } from './subtitle-store';
 import {
+  maybeAutoMountStoredSubtitleForVideo,
+  rememberStoredSubtitleSourcePath,
+} from '../utils/subtitle-library';
+import {
   basename as recentMediaBasename,
   filterExistingRecentLocalMedia,
   readRecentLocalMedia,
@@ -43,6 +47,7 @@ type Meta = {
 interface State {
   file: File | null;
   path: string | null;
+  sourceUrl: string | null;
   url: string | null;
   originalPath: string | null;
   originalUrl: string | null;
@@ -73,12 +78,18 @@ interface Actions {
   removeRecentLocalMedia(path: string): void;
   refreshRecentLocalMedia(): Promise<void>;
   setFile(
-    file: File | { name: string | undefined; path: string } | null
+    file:
+      | File
+      | { name: string | undefined; path: string; sourceUrl?: string | null }
+      | null,
+    options?: {
+      skipStoredSubtitleAutoMount?: boolean;
+    }
   ): Promise<void>;
   togglePlay(): Promise<void>;
   handleTogglePlay(): void;
   mountFilePreserveSubs(
-    file: File | { name: string | undefined; path: string }
+    file: File | { name: string | undefined; path: string; sourceUrl?: string | null }
   ): Promise<void>;
   markReady(): void;
   reset(): void;
@@ -96,6 +107,7 @@ interface Actions {
 const initial: State = {
   file: null,
   path: null,
+  sourceUrl: null,
   url: null,
   originalPath: null,
   originalUrl: null,
@@ -242,7 +254,13 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       set({ recentLocalMedia });
     },
 
-    async setFile(fd: File | { name: string; path: string } | null) {
+    async setFile(
+      fd: File | { name: string; path: string; sourceUrl?: string | null } | null,
+      options
+    ) {
+      const skipStoredSubtitleAutoMount = Boolean(
+        options?.skipStoredSubtitleAutoMount
+      );
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       if (prev.path) {
@@ -271,9 +289,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
 
       if ('path' in fd) {
         const url = toFileUrl(fd.path);
+        const sourceUrl = String(fd.sourceUrl || '').trim() || null;
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
+          s.sourceUrl = sourceUrl;
           s.url = url;
           s.originalPath = fd.path;
           s.originalUrl = url;
@@ -301,6 +321,19 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           get().stopPositionSaving();
           get().startPositionSaving();
         }
+        if (!skipStoredSubtitleAutoMount) {
+          try {
+            await maybeAutoMountStoredSubtitleForVideo({
+              sourceVideoPath: fd.path,
+              sourceUrl,
+            });
+          } catch (err) {
+            console.error(
+              '[video-store] Failed to auto-mount stored subtitles:',
+              err
+            );
+          }
+        }
         return;
       }
 
@@ -309,6 +342,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         set(s => {
           s.file = b;
           s.path = b._originalPath ?? null;
+          s.sourceUrl = null;
           s.url = b._blobUrl;
           s.originalPath = b._originalPath ?? null;
           s.originalUrl = b._blobUrl;
@@ -338,12 +372,30 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
             get().startPositionSaving();
           }
         }
+        if (!skipStoredSubtitleAutoMount) {
+          try {
+            await maybeAutoMountStoredSubtitleForVideo({
+              sourceVideoPath: b._originalPath ?? null,
+              sourceUrl: null,
+            });
+          } catch (err) {
+            console.error(
+              '[video-store] Failed to auto-mount stored subtitles:',
+              err
+            );
+          }
+        }
         return;
       }
 
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       const blobUrl = URL.createObjectURL(fd as File);
-      set({ file: fd as File, url: blobUrl, path: (fd as any).path ?? null });
+      set({
+        file: fd as File,
+        url: blobUrl,
+        path: (fd as any).path ?? null,
+        sourceUrl: null,
+      });
       set(s => {
         s.originalUrl = blobUrl;
         s.originalPath = (fd as any).path ?? null;
@@ -374,6 +426,19 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           get().startPositionSaving();
         }
       }
+      if (!skipStoredSubtitleAutoMount) {
+        try {
+          await maybeAutoMountStoredSubtitleForVideo({
+            sourceVideoPath: (fd as any).path ?? null,
+            sourceUrl: null,
+          });
+        } catch (err) {
+          console.error(
+            '[video-store] Failed to auto-mount stored subtitles:',
+            err
+          );
+        }
+      }
     },
 
     async togglePlay() {
@@ -390,8 +455,14 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       else np.pause();
     },
 
-    async mountFilePreserveSubs(fd: File | { name: string; path: string }) {
+    async mountFilePreserveSubs(
+      fd: File | { name: string; path: string; sourceUrl?: string | null }
+    ) {
       const prev = get();
+      const subtitleState = useSubStore.getState();
+      const hadMountedSubtitles = subtitleState.order.length > 0;
+      const previousSubtitleVideoPath = subtitleState.sourceVideoPath;
+      const previousLibraryEntryId = subtitleState.libraryEntryId;
       // Clean up previous blob URL if any
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
 
@@ -418,11 +489,62 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         id: null,
       });
 
+      const updatePreservedSubtitleAssociation = async (
+        nextSourceVideoPath: string | null,
+        nextSourceUrl: string | null
+      ) => {
+        if (!hadMountedSubtitles) return;
+
+        const sameVideoByPath =
+          Boolean(previousSubtitleVideoPath) &&
+          Boolean(nextSourceVideoPath) &&
+          previousSubtitleVideoPath === nextSourceVideoPath;
+        const sameVideoByUrl =
+          Boolean(previousLibraryEntryId) &&
+          Boolean(prev.sourceUrl) &&
+          Boolean(nextSourceUrl) &&
+          prev.sourceUrl === nextSourceUrl;
+        const shouldKeepLibraryLink =
+          Boolean(previousLibraryEntryId) &&
+          (sameVideoByPath || sameVideoByUrl);
+
+        if (
+          shouldKeepLibraryLink &&
+          previousLibraryEntryId &&
+          nextSourceVideoPath &&
+          previousSubtitleVideoPath !== nextSourceVideoPath
+        ) {
+          try {
+            await rememberStoredSubtitleSourcePath({
+              entryId: previousLibraryEntryId,
+              sourceVideoPath: nextSourceVideoPath,
+            });
+          } catch (err) {
+            console.error(
+              '[video-store] Failed to remember preserved subtitle path:',
+              err
+            );
+          }
+        }
+
+        useSubStore.setState({
+          sourceVideoPath: nextSourceVideoPath,
+          libraryEntryId: shouldKeepLibraryLink
+            ? previousLibraryEntryId
+            : null,
+          libraryKind: shouldKeepLibraryLink
+            ? subtitleState.libraryKind
+            : null,
+        });
+      };
+
       if ('path' in fd) {
         const url = toFileUrl(fd.path);
+        const sourceUrl = String(fd.sourceUrl || '').trim() || null;
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
+          s.sourceUrl = sourceUrl;
           s.url = url;
           s.originalPath = fd.path;
           s.originalUrl = url;
@@ -443,6 +565,21 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           attachSaver(fd.path);
           get().startPositionSaving();
         }
+        if (hadMountedSubtitles) {
+          await updatePreservedSubtitleAssociation(fd.path, sourceUrl);
+        } else {
+          try {
+            await maybeAutoMountStoredSubtitleForVideo({
+              sourceVideoPath: fd.path,
+              sourceUrl,
+            });
+          } catch (err) {
+            console.error(
+              '[video-store] Failed to auto-mount stored subtitles:',
+              err
+            );
+          }
+        }
         return;
       }
 
@@ -452,6 +589,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         set(s => {
           s.file = b;
           s.path = b._originalPath ?? null;
+          s.sourceUrl = null;
           s.url = b._blobUrl;
           s.originalPath = b._originalPath ?? null;
           s.originalUrl = b._blobUrl;
@@ -472,6 +610,24 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           attachSaver(b._originalPath);
           get().startPositionSaving();
         }
+        if (hadMountedSubtitles) {
+          await updatePreservedSubtitleAssociation(
+            b._originalPath ?? null,
+            null
+          );
+        } else {
+          try {
+            await maybeAutoMountStoredSubtitleForVideo({
+              sourceVideoPath: b._originalPath ?? null,
+              sourceUrl: null,
+            });
+          } catch (err) {
+            console.error(
+              '[video-store] Failed to auto-mount stored subtitles:',
+              err
+            );
+          }
+        }
         return;
       }
 
@@ -480,6 +636,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         file: fd as File,
         url: blobUrl,
         path: (fd as any).path ?? null,
+        sourceUrl: null,
         resumeAt: null,
       });
       if ((fd as any).path) {
@@ -492,6 +649,24 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         }
         attachSaver((fd as any).path);
         get().startPositionSaving();
+      }
+      if (hadMountedSubtitles) {
+        await updatePreservedSubtitleAssociation(
+          (fd as any).path ?? null,
+          null
+        );
+      } else {
+        try {
+          await maybeAutoMountStoredSubtitleForVideo({
+            sourceVideoPath: (fd as any).path ?? null,
+            sourceUrl: null,
+          });
+        } catch (err) {
+          console.error(
+            '[video-store] Failed to auto-mount stored subtitles:',
+            err
+          );
+        }
       }
     },
 
@@ -528,6 +703,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         }
         return;
       }
+      attachSaver(state.path);
       const onTimeUpdate = () => {
         if (currentSaver) {
           currentSaver(np.currentTime);

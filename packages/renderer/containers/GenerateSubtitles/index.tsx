@@ -112,6 +112,7 @@ export default function GenerateSubtitles() {
   // Task state
   const translationInProgress = useTaskStore(s => s.translation.inProgress);
   const transcriptionInProgress = useTaskStore(s => s.transcription.inProgress);
+  const mergeInProgress = useTaskStore(s => s.merge.inProgress);
   const transcriptionId = useTaskStore(s => s.transcription.id);
   const transcriptionCompleted = useTaskStore(s =>
     Boolean(s.transcription.isCompleted)
@@ -131,6 +132,11 @@ export default function GenerateSubtitles() {
   const isTranslating = !!translationInProgress;
   const isDubbing =
     !!dubbingInProgress && (dubbingId?.startsWith('dub-') ?? false);
+  const isSourceChangeBlocked =
+    !!translationInProgress ||
+    !!transcriptionInProgress ||
+    !!dubbingInProgress ||
+    !!mergeInProgress;
   const hasSourceSelection = Boolean(
     videoFile || videoFilePath || download.inProgress
   );
@@ -267,9 +273,18 @@ export default function GenerateSubtitles() {
               ) : null}
 
               <VideoSuggestionPanel
-                disabled={translationInProgress || download.inProgress}
+                disabled={false}
+                disablePrimaryActions={isSourceChangeBlocked}
                 isDownloadInProgress={download.inProgress}
                 onDownload={handleSuggestedVideoDownload}
+                recentDownloadTitles={downloadedVideoLibrary.downloadHistory
+                  .map(item => String(item.title || '').trim())
+                  .filter(Boolean)
+                  .slice(0, 8)}
+                recentChannelNames={downloadedVideoLibrary.recentDownloadedChannels
+                  .map(item => String(item.name || '').trim())
+                  .filter(Boolean)
+                  .slice(0, 8)}
               />
             </div>
           </div>
@@ -337,10 +352,10 @@ export default function GenerateSubtitles() {
               />
             ) : null}
             <VideoSuggestionHistoryTab
-              disabled={translationInProgress}
+              disabled={isSourceChangeBlocked}
               downloadHistory={downloadedVideoLibrary.downloadHistory}
               isDownloadInProgress={download.inProgress}
-              isTranslationInProgress={translationInProgress}
+              isTranslationInProgress={isSourceChangeBlocked}
               localPrimaryActionLabel={
                 downloadedVideoLibrary.localPrimaryActionLabel
               }

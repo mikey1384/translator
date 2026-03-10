@@ -122,6 +122,20 @@ function resetLiveActivityState(state: VideoSuggestionState) {
   state.pipelineStages = createInitialPipelineStages();
 }
 
+function mergeSuggestionResults(
+  current: VideoSuggestionResultItem[],
+  incoming: VideoSuggestionResultItem[]
+): VideoSuggestionResultItem[] {
+  if (incoming.length === 0) return current;
+  const seen = new Set(current.map(item => item.url));
+  const fresh = incoming.filter(item => {
+    if (!item?.url || seen.has(item.url)) return false;
+    seen.add(item.url);
+    return true;
+  });
+  return fresh.length > 0 ? [...current, ...fresh] : current;
+}
+
 export const useVideoSuggestionStore =
   createWithEqualityFn<VideoSuggestionStore>()(
     immer(set => ({
@@ -403,6 +417,13 @@ export const useVideoSuggestionStore =
               ].slice(-MAX_LOADING_TRACE_BUFFER);
             }
             state.streamingPreview = normalizedPreview;
+          }
+
+          if (Array.isArray(progress?.partialResults)) {
+            state.results = mergeSuggestionResults(
+              state.results,
+              progress.partialResults
+            );
           }
         }),
 

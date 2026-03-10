@@ -739,9 +739,18 @@ export default function EditSubtitles({
       return;
     }
     if (res.segments) {
+      const associatedVideoPath =
+        useVideoStore.getState().originalPath ??
+        useVideoStore.getState().path ??
+        null;
       useSubStore
         .getState()
-        .load(res.segments, res.filePath ?? null, 'disk', null);
+        .load(
+          res.segments,
+          res.filePath ?? null,
+          'disk',
+          associatedVideoPath
+        );
       // Reset the 'Transcription Complete' state when user mounts a different SRT from disk
       try {
         useTaskStore.getState().setTranscription({
