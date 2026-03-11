@@ -30,7 +30,7 @@ type UseVideoSuggestionFlowParams = {
   ) => void;
   onResultsReady: () => void;
   open: boolean;
-  preferredCountry: string;
+  targetCountry: string;
   preferredLanguage: string;
   preferredLanguageName: string;
   preferredRecency: VideoSuggestionRecency;
@@ -122,7 +122,7 @@ export default function useVideoSuggestionFlow({
   onCapturePreferences,
   onResultsReady,
   open,
-  preferredCountry,
+  targetCountry,
   preferredLanguage,
   preferredLanguageName,
   preferredRecency,
@@ -163,6 +163,8 @@ export default function useVideoSuggestionFlow({
     setResults,
     setSearchQuery,
     setShowQuickStartAction,
+    setYoutubeRegionCode,
+    setYoutubeSearchLanguage,
     startOperation,
     finishOperation,
   } = useVideoSuggestionStore(
@@ -195,6 +197,8 @@ export default function useVideoSuggestionFlow({
       setResults: state.setResults,
       setSearchQuery: state.setSearchQuery,
       setShowQuickStartAction: state.setShowQuickStartAction,
+      setYoutubeRegionCode: state.setYoutubeRegionCode,
+      setYoutubeSearchLanguage: state.setYoutubeSearchLanguage,
       startOperation: state.startOperation,
       finishOperation: state.finishOperation,
     }),
@@ -246,22 +250,12 @@ export default function useVideoSuggestionFlow({
   );
   const suggestedFollowUpPrompts = useMemo(
     () =>
-      buildSuggestedFollowUpPrompts(
-        searchQuery,
-        savedPreferences,
-        results,
-        t,
-        {
-          includeDownloadHistory: Boolean(
-            contextToggles.includeDownloadHistory
-          ),
-          includeWatchedChannels: Boolean(
-            contextToggles.includeWatchedChannels
-          ),
-          recentDownloadTitles,
-          recentChannelNames,
-        }
-      ),
+      buildSuggestedFollowUpPrompts(searchQuery, savedPreferences, results, t, {
+        includeDownloadHistory: Boolean(contextToggles.includeDownloadHistory),
+        includeWatchedChannels: Boolean(contextToggles.includeWatchedChannels),
+        recentDownloadTitles,
+        recentChannelNames,
+      }),
     [
       contextToggles.includeDownloadHistory,
       contextToggles.includeWatchedChannels,
@@ -336,12 +330,15 @@ export default function useVideoSuggestionFlow({
     ) => {
       const id = useVideoSuggestionStore.getState().nextRequestId();
       const operationId = `video-suggest-chat-${Date.now()}`;
-      const startingResultCount = useVideoSuggestionStore.getState().results.length;
+      const startingResultCount =
+        useVideoSuggestionStore.getState().results.length;
 
       setMessages(history);
       setShowQuickStartAction(false);
       setError(null);
       setContinuationId(null);
+      setYoutubeRegionCode(null);
+      setYoutubeSearchLanguage(null);
       setLastRequestPreferences(preferencesForRequest);
       startOperation(operationId, 'chat');
 
@@ -351,7 +348,7 @@ export default function useVideoSuggestionFlow({
           modelPreference,
           preferredLanguage,
           preferredLanguageName,
-          preferredCountry,
+          targetCountry,
           preferredRecency,
           savedPreferences: preferencesForRequest,
           contextToggles,
@@ -366,10 +363,17 @@ export default function useVideoSuggestionFlow({
           onCapturePreferences(res?.capturedPreferences);
         }
 
-        if (typeof res?.resolvedModel === 'string' && res.resolvedModel.trim()) {
+        if (
+          typeof res?.resolvedModel === 'string' &&
+          res.resolvedModel.trim()
+        ) {
           setResolvedModelRuntime(res.resolvedModel.trim());
         }
         setContinuationId(normalizeContinuationId(res?.continuationId));
+        setYoutubeRegionCode(compactText(res?.youtubeRegionCode) || null);
+        setYoutubeSearchLanguage(
+          compactText(res?.youtubeSearchLanguage).toLowerCase() || null
+        );
 
         const defaultFollowUp = t(
           'input.videoSuggestion.defaultFollowUp',
@@ -413,7 +417,8 @@ export default function useVideoSuggestionFlow({
         }
       } catch (err: any) {
         if (
-          useVideoSuggestionStore.getState().cancellingOperationId === operationId
+          useVideoSuggestionStore.getState().cancellingOperationId ===
+          operationId
         ) {
           return;
         }
@@ -441,7 +446,8 @@ export default function useVideoSuggestionFlow({
         );
       } finally {
         const cancelledOperation =
-          useVideoSuggestionStore.getState().cancellingOperationId === operationId;
+          useVideoSuggestionStore.getState().cancellingOperationId ===
+          operationId;
         if (!cancelledOperation && isLatestRequest(id)) {
           finishOperation(operationId);
         }
@@ -454,7 +460,7 @@ export default function useVideoSuggestionFlow({
       modelPreference,
       onCapturePreferences,
       onResultsReady,
-      preferredCountry,
+      targetCountry,
       preferredLanguage,
       preferredLanguageName,
       preferredRecency,
@@ -466,6 +472,8 @@ export default function useVideoSuggestionFlow({
       setResults,
       setSearchQuery,
       setShowQuickStartAction,
+      setYoutubeRegionCode,
+      setYoutubeSearchLanguage,
       startOperation,
       contextToggles,
       recentChannelNames,
@@ -534,10 +542,9 @@ export default function useVideoSuggestionFlow({
     const id = currentState.nextRequestId();
     const operationId = `video-suggest-more-${Date.now()}`;
     const startingResultCount = currentState.results.length;
-    const continuationPreferences =
-      currentState.lastRequestPreferences.topic
-        ? currentState.lastRequestPreferences
-        : requestPreferences;
+    const continuationPreferences = currentState.lastRequestPreferences.topic
+      ? currentState.lastRequestPreferences
+      : requestPreferences;
 
     setShowQuickStartAction(false);
     setError(null);
@@ -549,7 +556,7 @@ export default function useVideoSuggestionFlow({
         modelPreference,
         preferredLanguage,
         preferredLanguageName,
-        preferredCountry,
+        targetCountry,
         preferredRecency,
         savedPreferences: continuationPreferences,
         contextToggles,
@@ -557,6 +564,9 @@ export default function useVideoSuggestionFlow({
         recentChannelNames,
         continuationId: currentState.continuationId || undefined,
         searchQueryOverride: currentState.searchQuery,
+        youtubeRegionCode: currentState.youtubeRegionCode || undefined,
+        youtubeSearchLanguage:
+          currentState.youtubeSearchLanguage || undefined,
         excludeUrls: currentState.results.map(item => item.url),
         operationId,
       });
@@ -571,7 +581,17 @@ export default function useVideoSuggestionFlow({
         setResolvedModelRuntime(res.resolvedModel.trim());
       }
       setContinuationId(
-        normalizeContinuationId(res?.continuationId) || currentState.continuationId
+        normalizeContinuationId(res?.continuationId) ||
+          currentState.continuationId
+      );
+      setYoutubeRegionCode(
+        compactText(res?.youtubeRegionCode || currentState.youtubeRegionCode) ||
+          null
+      );
+      setYoutubeSearchLanguage(
+        compactText(
+          res?.youtubeSearchLanguage || currentState.youtubeSearchLanguage
+        ).toLowerCase() || null
       );
       if (typeof res?.searchQuery === 'string' && res.searchQuery.trim()) {
         setSearchQuery(res.searchQuery.trim());
@@ -635,7 +655,8 @@ export default function useVideoSuggestionFlow({
       );
     } finally {
       const cancelledOperation =
-        useVideoSuggestionStore.getState().cancellingOperationId === operationId;
+        useVideoSuggestionStore.getState().cancellingOperationId ===
+        operationId;
       if (!cancelledOperation && isLatestRequest(id)) {
         finishOperation(operationId);
       }
@@ -647,20 +668,22 @@ export default function useVideoSuggestionFlow({
     modelPreference,
     onCapturePreferences,
     onResultsReady,
-      preferredCountry,
-      preferredLanguage,
-      preferredLanguageName,
-      preferredRecency,
-      contextToggles,
-      recentChannelNames,
-      recentDownloadTitles,
-      requestPreferences,
-      setContinuationId,
+    targetCountry,
+    preferredLanguage,
+    preferredLanguageName,
+    preferredRecency,
+    contextToggles,
+    recentChannelNames,
+    recentDownloadTitles,
+    requestPreferences,
+    setContinuationId,
     setError,
     setMessages,
     setResolvedModelRuntime,
     setResults,
     setShowQuickStartAction,
+    setYoutubeRegionCode,
+    setYoutubeSearchLanguage,
     startOperation,
     t,
   ]);

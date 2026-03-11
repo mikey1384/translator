@@ -10,18 +10,14 @@ import {
 import { runYoutubeYtDlpSearch } from './retrieval.js';
 import {
   type SeedSearchOutcome,
-  VIDEO_SUGGESTION_SOURCE_LABEL,
   clampTraceLines,
   clampTraceMessage,
   compactText,
-  describeLowConfidenceReason,
   isYoutubeVideoSuggestionUrl,
-  normalizeCountryCode,
   quotedStatusValue,
-  sanitizeRetrievalSearchQuery,
   sanitizeLanguageToken,
   sanitizeSearchKeywords,
-  summarizeTopTitles,
+  sanitizeYoutubeRegionCode,
   summarizeValues,
   throwIfSuggestionAborted,
   uniqueTexts,
@@ -29,14 +25,13 @@ import {
 import { emitSuggestionProgress } from './progress.js';
 
 export type VideoSearchContinuation = {
-  countryHint: string;
-  countryCode?: string;
-  searchLocale?: string;
   recency: VideoSuggestionRecency;
   translationPhase: 'draft' | 'review';
   model: string;
   maxResults: number;
   intentQuery: string;
+  youtubeRegionCode?: string;
+  youtubeSearchLanguage?: string;
   retrievalQueries: string[];
   retrievalSeedUrls: string[];
   selectedChannels: string[];
@@ -49,25 +44,22 @@ export type VideoSearchRunOutcome = SeedSearchOutcome & {
 };
 
 export function createVideoSearchContinuation({
-  countryHint,
-  countryCode,
-  searchLocale,
   recency,
   translationPhase,
   model,
   maxResults,
   intentQuery,
+  youtubeRegionCode,
+  youtubeSearchLanguage,
   retrievalQueries,
   retrievalSeedUrls,
   selectedChannels,
   iteration,
   pendingResults,
 }: VideoSearchContinuation): VideoSearchContinuation {
-  const sanitizedIntentQuery =
-    sanitizeRetrievalSearchQuery(intentQuery) ||
-    sanitizeSearchKeywords(intentQuery);
+  const sanitizedIntentQuery = sanitizeSearchKeywords(intentQuery);
   const sanitizedQueries = uniqueTexts(
-    retrievalQueries.map(query => sanitizeRetrievalSearchQuery(query))
+    retrievalQueries.map(query => sanitizeSearchKeywords(query))
   ).slice(0, 10);
   const sanitizedSeedUrls = uniqueTexts(
     retrievalSeedUrls.map(url => compactText(url))
@@ -85,15 +77,15 @@ export function createVideoSearchContinuation({
   });
 
   return {
-    countryHint: compactText(countryHint),
-    countryCode: normalizeCountryCode(countryCode),
-    searchLocale:
-      sanitizeLanguageToken(searchLocale).toLowerCase() || undefined,
     recency,
     translationPhase,
     model,
     maxResults,
     intentQuery: sanitizedIntentQuery || compactText(intentQuery),
+    youtubeRegionCode: sanitizeYoutubeRegionCode(youtubeRegionCode),
+    youtubeSearchLanguage: sanitizeLanguageToken(
+      youtubeSearchLanguage
+    ).toLowerCase(),
     retrievalQueries:
       sanitizedQueries.length > 0
         ? sanitizedQueries
@@ -145,7 +137,6 @@ function emitContinuationReuseStages({
       [
         `Continuation iteration: ${nextIteration}.`,
         `Reused intent query: ${quotedStatusValue(continuation.intentQuery, 120)}.`,
-        `Country hint carried forward: ${quotedStatusValue(continuation.countryHint || 'global results', 120)}.`,
         `Recency carried forward: ${quotedStatusValue(continuation.recency, 120)}.`,
       ],
       620
@@ -297,20 +288,17 @@ export async function runVideoSearch({
   }
 
   const retrievalOutcome = await runYoutubeYtDlpSearch({
-    baseQuery: continuation.intentQuery || initialQuery,
-    queries: retrievalQueries,
-    countryHint: continuation.countryHint,
-    countryCode: continuation.countryCode,
-    searchLocale: continuation.searchLocale,
+    searchQuery: initialQuery,
+    retrievalQueries,
+    retrievalSeedUrls: effectiveSeedUrls,
+    youtubeRegionCode: continuation.youtubeRegionCode,
+    youtubeSearchLanguage: continuation.youtubeSearchLanguage,
     recency: continuation.recency,
-    translationPhase: continuation.translationPhase,
-    model: continuation.model,
-    operationId,
     maxResults: continuation.maxResults,
     excludeUrls,
-    seedUrls: effectiveSeedUrls,
-    continuationDepth: continuation.iteration,
+    operationId,
     onProgress,
+    startedAt,
     signal,
   });
 

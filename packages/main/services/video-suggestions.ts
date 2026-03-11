@@ -33,10 +33,10 @@ import {
   type VideoSearchContinuation,
 } from './video-suggestions/search.js';
 import {
-  buildOrderedIntentSeedQueries,
   type IntentResolverPayload,
   type QueryFormulatorPayload,
   VIDEO_SUGGESTION_SOURCE_LABEL,
+  buildOrderedIntentSeedQueries,
   clampMessage,
   clampTraceLines,
   clampTraceMessage,
@@ -47,14 +47,12 @@ import {
   normalizeExcludeUrls,
   normalizeIntentCandidates,
   normalizePreferenceSlots,
-  inferSearchLanguageFromCountry,
-  localeToLanguageInstruction,
   quotedStatusValue,
   recencyLabel,
-  resolveCountryCode,
   sanitizeCountryHint,
   sanitizeLanguageToken,
   sanitizeSearchKeywords,
+  sanitizeYoutubeRegionCode,
   summarizeValues,
   summarizeSearchError,
   throwIfSuggestionAborted,
@@ -172,8 +170,65 @@ function buildThreadContext(
   return recent.map(item => `${item.role}: ${item.content}`).join('\n');
 }
 
+function buildTargetCountryLanguageInstruction(
+  targetCountry?: string
+): string {
+  const normalizedTargetCountry = compactText(targetCountry);
+  if (!normalizedTargetCountry) {
+    return 'Use English for searchQuery and retrievalQueries.';
+  }
+  return `Use whatever language ${JSON.stringify(
+    normalizedTargetCountry
+  )} speaks for searchQuery and retrievalQueries. If that is unclear, default to English.`;
+}
+
+function normalizeBiasMetadata({
+  youtubeRegionCode,
+  youtubeSearchLanguage,
+  primarySearchLanguage,
+  searchLanguages,
+  fallbackYoutubeRegionCode,
+  fallbackYoutubeSearchLanguage,
+}: {
+  youtubeRegionCode?: string;
+  youtubeSearchLanguage?: string;
+  primarySearchLanguage?: string;
+  searchLanguages?: string[];
+  fallbackYoutubeRegionCode?: string;
+  fallbackYoutubeSearchLanguage?: string;
+}): {
+  youtubeRegionCode: string;
+  youtubeSearchLanguage: string;
+  primarySearchLanguage: string;
+  searchLanguages: string[];
+} {
+  const normalizedSearchLanguage =
+    sanitizeLanguageToken(youtubeSearchLanguage).toLowerCase() ||
+    sanitizeLanguageToken(primarySearchLanguage).toLowerCase() ||
+    sanitizeLanguageToken(fallbackYoutubeSearchLanguage).toLowerCase() ||
+    'en';
+  const normalizedSearchLanguages = uniqueTexts(
+    [
+      normalizedSearchLanguage,
+      ...(searchLanguages || []),
+      sanitizeLanguageToken(fallbackYoutubeSearchLanguage).toLowerCase(),
+    ].map(value => sanitizeLanguageToken(value).toLowerCase())
+  )
+    .filter(Boolean)
+    .slice(0, 3);
+
+  return {
+    youtubeRegionCode:
+      sanitizeYoutubeRegionCode(youtubeRegionCode) ||
+      sanitizeYoutubeRegionCode(fallbackYoutubeRegionCode),
+    youtubeSearchLanguage: normalizedSearchLanguage,
+    primarySearchLanguage: normalizedSearchLanguage,
+    searchLanguages: normalizedSearchLanguages,
+  };
+}
+
 function buildAnswererContextBlock({
-  preferredCountry,
+  targetCountry,
   preferredRecency,
   modelPreference,
   includeDownloadHistory,
@@ -181,7 +236,7 @@ function buildAnswererContextBlock({
   recentDownloadTitles,
   recentChannelNames,
 }: {
-  preferredCountry?: string;
+  targetCountry?: string;
   preferredRecency: VideoSuggestionRecency;
   modelPreference?: string;
   includeDownloadHistory: boolean;
@@ -194,10 +249,10 @@ function buildAnswererContextBlock({
   if (compactText(modelPreference)) {
     lines.push(`Quality preference: ${compactText(modelPreference)}.`);
   }
-  if (compactText(preferredCountry)) {
-    lines.push(`Regional bias: ${compactText(preferredCountry)}.`);
+  if (compactText(targetCountry)) {
+    lines.push(`Target country: ${compactText(targetCountry)}.`);
   } else {
-    lines.push('Regional bias: none.');
+    lines.push('Target country: none. Default search language: English.');
   }
 
   lines.push(
@@ -235,7 +290,7 @@ async function runIntentResolver({
   translationPhase,
   signal,
   history,
-  preferredCountry,
+  targetCountry,
   preferredRecency,
   includeDownloadHistory,
   includeWatchedChannels,
@@ -252,7 +307,7 @@ async function runIntentResolver({
   translationPhase: 'draft' | 'review';
   signal?: AbortSignal;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
-  preferredCountry?: string;
+  targetCountry?: string;
   preferredRecency: VideoSuggestionRecency;
   includeDownloadHistory: boolean;
   includeWatchedChannels: boolean;
@@ -268,7 +323,7 @@ async function runIntentResolver({
     'Find the best YouTube video match for this request.';
   const threadContext = buildThreadContext(history);
   const settingsContext = buildAnswererContextBlock({
-    preferredCountry,
+    targetCountry,
     preferredRecency,
     modelPreference,
     includeDownloadHistory,
@@ -322,6 +377,8 @@ Schema:
   "answerToUserQuestion": "short direct answer or recommendation",
   "resolvedIntent": "short canonical intent",
   "intentSummary": "short summary",
+  "youtubeRegionCode": "2-letter YouTube region code like US/JP/BR or empty string if unclear",
+  "youtubeSearchLanguage": "language code like en/ja/es",
   "candidates": [
     {
       "name": "direct answer to user's query",
@@ -348,7 +405,7 @@ Schema:
     "retrieval-friendly descriptor phrase",
     "broader descriptor phrase"
   ],
-  "primarySearchLanguage": "language code like es/ja/en",
+  "primarySearchLanguage": "same language code as youtubeSearchLanguage",
   "searchLanguages": ["preferred language codes in order"],
     "capturedPreferences": {
       "topic": "short topic keyword or empty"
@@ -359,6 +416,9 @@ Schema:
 Rules:
 - Search source is YouTube only.
 - Always use websearch first.
+- If Target country is present, you MUST output youtubeRegionCode and youtubeSearchLanguage for it. Do not omit them.
+- If the target country is unclear or not a real place, set youtubeRegionCode="" and youtubeSearchLanguage="en".
+- primarySearchLanguage must equal youtubeSearchLanguage.
 - Treat candidates as a wide pool of likely targets, not a single winner.
 - Return at least 10 likely candidates whenever the request is broad enough to support that many plausible targets. Return fewer only when the space is genuinely narrow.
 - Prefer grounded specific names when available, but if a likely fit is obvious you may still propose it even when this run does not fully verify it.
@@ -386,6 +446,12 @@ Rules:
     stopIntentPulse();
     const parsed = parseIntentResolverPayload(raw);
     if (parsed) {
+      const normalizedBias = normalizeBiasMetadata({
+        youtubeRegionCode: parsed.youtubeRegionCode,
+        youtubeSearchLanguage: parsed.youtubeSearchLanguage,
+        primarySearchLanguage: parsed.primarySearchLanguage,
+        searchLanguages: parsed.searchLanguages,
+      });
       const normalizedCandidates = normalizeIntentCandidates(parsed.candidates);
       const normalizedDescriptorPhrases = normalizeDescriptorPhrases(
         parsed.descriptorPhrases
@@ -410,6 +476,10 @@ Rules:
             : savedPreferences,
         candidates: normalizedCandidates,
         descriptorPhrases: normalizedDescriptorPhrases,
+        youtubeRegionCode: normalizedBias.youtubeRegionCode,
+        youtubeSearchLanguage: normalizedBias.youtubeSearchLanguage,
+        primarySearchLanguage: normalizedBias.primarySearchLanguage,
+        searchLanguages: normalizedBias.searchLanguages,
       };
 
       emitSuggestionProgress(onProgress, {
@@ -477,6 +547,7 @@ Rules:
         answerToUserQuestion: answerText,
         resolvedIntent: resolvedAnchor || answerText,
         intentSummary: answerText,
+        ...normalizeBiasMetadata({}),
         capturedPreferences: savedPreferences,
       };
       emitSuggestionProgress(onProgress, {
@@ -514,7 +585,7 @@ async function runQueryFormulator({
   signal,
   history,
   answerer,
-  preferredCountry,
+  targetCountry,
   onProgress,
   startedAt,
   onResolvedModel,
@@ -525,27 +596,17 @@ async function runQueryFormulator({
   signal?: AbortSignal;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   answerer?: IntentResolverPayload | null;
-  preferredCountry?: string;
+  targetCountry?: string;
   onProgress?: (progress: VideoSuggestionProgress) => void;
   startedAt: number;
   onResolvedModel?: (model: string) => void;
 }): Promise<QueryFormulatorPayload | null> {
   const answererText = compactText(answerer?.answerToUserQuestion || '');
   const latestUserQuery = compactText(getLastUserQuery(history));
-  const forcedSearchLanguage = preferredCountry
-    ? inferSearchLanguageFromCountry(
-        preferredCountry,
-        answerer?.primarySearchLanguage || ''
-      )
-    : '';
-  const forcedCountryCode = resolveCountryCode(preferredCountry);
-  const forcedSearchLanguageLabel = forcedSearchLanguage
-    ? localeToLanguageInstruction(forcedSearchLanguage)
-    : '';
   const answererSeedQueries = buildOrderedIntentSeedQueries({
-    candidates: normalizeIntentCandidates(answerer?.candidates),
-    descriptorPhrases: normalizeDescriptorPhrases(answerer?.descriptorPhrases),
-    resolvedIntent: answerer?.resolvedIntent,
+    candidates: answerer?.candidates,
+    descriptorPhrases: answerer?.descriptorPhrases,
+    resolvedIntent: answerer?.resolvedIntent || answerer?.intentSummary,
     latestUserQuery,
   });
   const answererAnchor =
@@ -553,6 +614,8 @@ async function runQueryFormulator({
     sanitizeSearchKeywords(answerer?.resolvedIntent || '') ||
     sanitizeSearchKeywords(answererText);
   const threadContext = buildThreadContext(history);
+  const targetCountryLanguageInstruction =
+    buildTargetCountryLanguageInstruction(targetCountry);
   emitSuggestionProgress(onProgress, {
     operationId,
     phase: 'planning',
@@ -594,8 +657,9 @@ Reply with JSON only. No markdown.
 
 Schema:
 {
-  "countryCode": "ISO 3166-1 alpha-2 country code like JP/CN/BR or empty",
-  "primarySearchLanguage": "language code like zh/ja/ko/en",
+  "youtubeRegionCode": "2-letter YouTube region code like US/JP/BR or empty string if unclear",
+  "youtubeSearchLanguage": "language code like en/ja/es",
+  "primarySearchLanguage": "same language code as youtubeSearchLanguage",
   "searchLanguages": ["preferred language codes in order"],
   "searchQuery": "must equal the first retrieval query",
   "retrievalQueries": ["ordered from most precise/high-confidence to broader fallback"],
@@ -606,15 +670,18 @@ Schema:
 
 Rules:
 - Search source is YouTube only.
-- If the app already provides a country/region preference, normalize it to a best-effort ISO 3166-1 alpha-2 countryCode. If the country is unclear, return an empty string.
-- If the app provides a country/region preference that implies a search language, speak in that language for searchQuery and the primary retrievalQueries.
 - Use only names from candidates for name-based queries.
 - Use only descriptor phrases from descriptorPhrases or explicit user wording.
 - You may reorder terms, combine candidate names with descriptor phrases, normalize wording, and selectively relax constraints as the plan broadens.
 - Order retrievalQueries from most likely/high-confidence specific seeds to less specific fallback seeds.
 - searchQuery must equal retrievalQueries[0].
+- If App target country is present, you MUST output youtubeRegionCode and youtubeSearchLanguage for it. Do not omit them.
+- If the target country is unclear or not a real place, set youtubeRegionCode="" and youtubeSearchLanguage="en".
+- primarySearchLanguage must equal youtubeSearchLanguage.
 - When a local-language search is clearly best, keep most queries in that language and only include English if it adds real retrieval value.
-- Never use operators like site:, inurl:, intitle:, channel:, or quoted boolean syntax.`,
+- Never use operators like site:, inurl:, intitle:, channel:, or quoted boolean syntax.
+- ${targetCountryLanguageInstruction}
+`,
         },
         {
           role: 'user',
@@ -624,16 +691,18 @@ Rules:
               latestUserQuery
                 ? `Current user request:\n${latestUserQuery}`
                 : '',
-              preferredCountry
-                ? `App target country/region setting:\n${preferredCountry}`
-                : '',
-              forcedSearchLanguage
-                ? `Country bias requires the search plan to be written primarily in ${forcedSearchLanguageLabel} (${forcedSearchLanguage}).`
+              targetCountry
+                ? `App target country:\n${targetCountry}`
                 : '',
               answerer
                 ? `Structured step 1 output:\n${JSON.stringify({
                     answerToUserQuestion: answerer.answerToUserQuestion || '',
                     resolvedIntent: answerer.resolvedIntent || '',
+                    youtubeRegionCode: answerer.youtubeRegionCode || '',
+                    youtubeSearchLanguage:
+                      answerer.youtubeSearchLanguage ||
+                      answerer.primarySearchLanguage ||
+                      '',
                     candidates: answerer.candidates || [],
                     descriptorPhrases: answerer.descriptorPhrases || [],
                     primarySearchLanguage: answerer.primarySearchLanguage || '',
@@ -668,25 +737,26 @@ Rules:
         parsed.retrievalQueries && parsed.retrievalQueries.length > 0
           ? parsed.retrievalQueries
           : answererSeedQueries;
-      const normalizedPrimarySearchLanguage =
-        forcedSearchLanguage ||
-        sanitizeLanguageToken(parsed.primarySearchLanguage).toLowerCase() ||
-        sanitizeLanguageToken(answerer?.primarySearchLanguage).toLowerCase() ||
-        '';
-      const normalizedSearchLanguages = uniqueTexts(
-        [
-          normalizedPrimarySearchLanguage,
+      const normalizedBias = normalizeBiasMetadata({
+        youtubeRegionCode: parsed.youtubeRegionCode,
+        youtubeSearchLanguage: parsed.youtubeSearchLanguage,
+        primarySearchLanguage: parsed.primarySearchLanguage,
+        searchLanguages: [
           ...(parsed.searchLanguages || []),
           ...(answerer?.searchLanguages || []),
-        ].map(value => sanitizeLanguageToken(value).toLowerCase())
-      )
-        .filter(Boolean)
-        .slice(0, 3);
+        ],
+        fallbackYoutubeRegionCode: answerer?.youtubeRegionCode,
+        fallbackYoutubeSearchLanguage:
+          answerer?.youtubeSearchLanguage ||
+          answerer?.primarySearchLanguage ||
+          'en',
+      });
       const normalizedParsed: QueryFormulatorPayload = {
         ...parsed,
-        countryCode: resolveCountryCode(preferredCountry, parsed.countryCode),
-        primarySearchLanguage: normalizedPrimarySearchLanguage,
-        searchLanguages: normalizedSearchLanguages,
+        youtubeRegionCode: normalizedBias.youtubeRegionCode,
+        youtubeSearchLanguage: normalizedBias.youtubeSearchLanguage,
+        primarySearchLanguage: normalizedBias.primarySearchLanguage,
+        searchLanguages: normalizedBias.searchLanguages,
         searchQuery:
           parsed.searchQuery ||
           retrievalQueries[0] ||
@@ -756,16 +826,14 @@ Rules:
       strategy: fallbackQuery
         ? 'Use the structured candidates/descriptors output as the search plan.'
         : '',
-      countryCode: forcedCountryCode,
-      primarySearchLanguage:
-        forcedSearchLanguage ||
-        sanitizeLanguageToken(answerer?.primarySearchLanguage).toLowerCase() ||
-        '',
-      searchLanguages: uniqueTexts([
-        forcedSearchLanguage,
-        sanitizeLanguageToken(answerer?.primarySearchLanguage).toLowerCase(),
-        ...(answerer?.searchLanguages || []),
-      ]).slice(0, 3),
+      ...normalizeBiasMetadata({
+        youtubeRegionCode: answerer?.youtubeRegionCode,
+        youtubeSearchLanguage:
+          answerer?.youtubeSearchLanguage ||
+          answerer?.primarySearchLanguage,
+        primarySearchLanguage: answerer?.primarySearchLanguage,
+        searchLanguages: answerer?.searchLanguages,
+      }),
       searchQuery: fallbackQuery,
       retrievalQueries: fallbackQueries,
       capturedPreferences: answerer?.capturedPreferences,
@@ -813,16 +881,14 @@ Rules:
       strategy: fallbackQuery
         ? 'Use the structured candidates/descriptors output as the search plan.'
         : '',
-      countryCode: forcedCountryCode,
-      primarySearchLanguage:
-        forcedSearchLanguage ||
-        sanitizeLanguageToken(answerer?.primarySearchLanguage).toLowerCase() ||
-        '',
-      searchLanguages: uniqueTexts([
-        forcedSearchLanguage,
-        sanitizeLanguageToken(answerer?.primarySearchLanguage).toLowerCase(),
-        ...(answerer?.searchLanguages || []),
-      ]).slice(0, 3),
+      ...normalizeBiasMetadata({
+        youtubeRegionCode: answerer?.youtubeRegionCode,
+        youtubeSearchLanguage:
+          answerer?.youtubeSearchLanguage ||
+          answerer?.primarySearchLanguage,
+        primarySearchLanguage: answerer?.primarySearchLanguage,
+        searchLanguages: answerer?.searchLanguages,
+      }),
       searchQuery: fallbackQuery,
       retrievalQueries: fallbackQueries,
       capturedPreferences: answerer?.capturedPreferences,
@@ -908,8 +974,7 @@ async function runClarifyingFollowUp({
       messages: [
         {
           role: 'system',
-          content:
-            'Write a helpful follow-up message for an AI video recommender after search completes. If the request was clear enough, suggest a smart next lookup closely related to the current results. If the request is still too broad or unclear, ask a thoughtful clarifying question instead. When the search space is broad or confusing, teach the user a bit about it by naming example creators, categories, or directions they could choose from so they can make a more informed choice. Always write the follow-up in the user interface language requested below, not the language of the search results unless they are the same.',
+          content: `Write a helpful follow-up message for an AI video recommender after search completes. If the request was clear enough, suggest a smart next lookup closely related to the current results. If the request is still too broad or unclear, ask a thoughtful clarifying question instead. When the search space is broad or confusing, teach the user a bit about it by naming example creators, categories, or directions they could choose from so they can make a more informed choice. Always write the follow-up in the user interface language requested below, not the language of the search results unless they are the same.`,
         },
         {
           role: 'user',
@@ -984,12 +1049,13 @@ export async function suggestVideosViaChat(
       observedResolvedModel = normalized;
     }
   };
-  const preferredCountry = sanitizeCountryHint(request.preferredCountry);
-  const preferredCountryCode = resolveCountryCode(preferredCountry);
-  const preferredSearchLanguage = preferredCountry
-    ? inferSearchLanguageFromCountry(preferredCountry)
-    : '';
   const sourceLabel = VIDEO_SUGGESTION_SOURCE_LABEL;
+  const targetCountry = sanitizeCountryHint(request.targetCountry);
+  const requestYoutubeRegionCode = sanitizeYoutubeRegionCode(
+    request.youtubeRegionCode
+  );
+  const requestYoutubeSearchLanguage =
+    sanitizeLanguageToken(request.youtubeSearchLanguage).toLowerCase() || 'en';
   const preferredRecency = normalizeRecency(request.preferredRecency);
   const savedPreferences = normalizePreferenceSlots(request.savedPreferences);
   const includeDownloadHistory = Boolean(
@@ -1080,6 +1146,8 @@ export async function suggestVideosViaChat(
         success: true,
         assistantMessage: compactText(nextAssistantMessage),
         searchQuery: outcome.searchQuery,
+        youtubeRegionCode: outcome.continuation.youtubeRegionCode,
+        youtubeSearchLanguage: outcome.continuation.youtubeSearchLanguage,
         results: outcome.results,
         continuationId: nextContinuationId,
         resolvedModel: observedResolvedModel,
@@ -1121,32 +1189,113 @@ export async function suggestVideosViaChat(
   }
 
   if (queryOverride) {
-    const directContinuation = createVideoSearchContinuation({
-      countryHint: preferredCountry,
-      countryCode: preferredCountryCode,
-      searchLocale: preferredSearchLanguage,
-      recency: preferredRecency,
-      translationPhase: suggestionTranslationPhase,
-      model: resolvedModel,
-      maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
-      intentQuery: queryOverride,
-      retrievalQueries: [queryOverride],
-      retrievalSeedUrls: [],
-      selectedChannels: [],
-      iteration: 0,
-    });
-    return runIncrementalSearch({
-      continuation: directContinuation,
-      assistantMessage: '__i18n__:input.videoSuggestion.defaultFollowUp',
-    });
+    try {
+      const outcome = await runVideoSearch({
+        continuation: createVideoSearchContinuation({
+          recency: preferredRecency,
+          translationPhase: suggestionTranslationPhase,
+          model: resolvedModel,
+          maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
+          intentQuery: queryOverride,
+          youtubeRegionCode: requestYoutubeRegionCode,
+          youtubeSearchLanguage: requestYoutubeSearchLanguage,
+          retrievalQueries: [queryOverride],
+          retrievalSeedUrls: [],
+          selectedChannels: [],
+          iteration: 0,
+        }),
+        excludeUrls,
+        operationId,
+        onProgress,
+        startedAt,
+        signal,
+      });
+      const nextContinuationId = persistVideoSearchContinuation(
+        outcome.continuation,
+        activeContinuationId
+      );
+      activeContinuationId = nextContinuationId;
+      const assistantMessage =
+        (await runClarifyingFollowUp({
+          operationId,
+          model: resolvedModel,
+          translationPhase: suggestionTranslationPhase,
+          signal,
+          history: [
+            {
+              role: 'user',
+              content: `Intent: ${queryOverride}`,
+            },
+          ],
+          results: outcome.results,
+          searchQuery: outcome.searchQuery,
+          preferredLanguage: request.preferredLanguage,
+          preferredLanguageName: request.preferredLanguageName,
+          onResolvedModel: observeResolvedModel,
+        })) || '__i18n__:input.videoSuggestion.defaultFollowUp';
+
+      emitSuggestionProgress(onProgress, {
+        operationId,
+        phase: 'finalizing',
+        message:
+          outcome.results.length === 0
+            ? 'No additional matches found.'
+            : `Found ${outcome.results.length} additional result${outcome.results.length === 1 ? '' : 's'}.`,
+        searchQuery: outcome.searchQuery,
+        resultCount: outcome.results.length,
+        elapsedMs: Date.now() - startedAt,
+      });
+      emitSuggestionProgress(onProgress, {
+        operationId,
+        phase: 'done',
+        message: 'Suggestions ready.',
+        searchQuery: outcome.searchQuery,
+        resultCount: outcome.results.length,
+        elapsedMs: Date.now() - startedAt,
+      });
+
+      return {
+        success: true,
+        assistantMessage: compactText(assistantMessage),
+        searchQuery: outcome.searchQuery,
+        youtubeRegionCode: outcome.continuation.youtubeRegionCode,
+        youtubeSearchLanguage: outcome.continuation.youtubeSearchLanguage,
+        results: outcome.results,
+        continuationId: nextContinuationId,
+        resolvedModel: observedResolvedModel,
+      };
+    } catch (error: any) {
+      if (isSuggestionAbortError(error, signal)) {
+        throw error;
+      }
+      const detail = summarizeSearchError(error);
+      log.error(
+        `[video-suggestions] Search-more failed (${operationId}):`,
+        detail
+      );
+      emitSuggestionProgress(onProgress, {
+        operationId,
+        phase: 'error',
+        message: detail,
+        elapsedMs: Date.now() - startedAt,
+      });
+      return {
+        success: false,
+        assistantMessage: '__i18n__:input.videoSuggestion.searchFailed',
+        searchQuery: queryOverride,
+        youtubeRegionCode: requestYoutubeRegionCode,
+        youtubeSearchLanguage: requestYoutubeSearchLanguage,
+        results: [],
+        resolvedModel: observedResolvedModel,
+        error: detail,
+      };
+    }
   }
 
-  if (forcedSearchQueryRaw) {
+  if (broadAcceptanceQuery) {
     let results: VideoSuggestionResultItem[] = [];
     let searchQuery = '';
-    let assistantMessage = queryOverride
-      ? '__i18n__:input.videoSuggestion.defaultFollowUp'
-      : 'Searching now.';
+    let assistantMessage = 'Searching now.';
 
     try {
       const forcedIntent = await runIntentResolver({
@@ -1160,7 +1309,7 @@ export async function suggestVideosViaChat(
             content: `Intent: ${forcedSearchQueryRaw}`,
           },
         ],
-        preferredCountry,
+        targetCountry,
         preferredRecency,
         includeDownloadHistory,
         includeWatchedChannels,
@@ -1183,25 +1332,22 @@ export async function suggestVideosViaChat(
           },
         ],
         answerer: forcedIntent,
-        preferredCountry,
+        targetCountry,
         onProgress,
         startedAt,
         onResolvedModel: observeResolvedModel,
       });
-        const outcome = await runVideoSearch({
-          continuation: createVideoSearchContinuation({
-            countryHint: preferredCountry,
-            countryCode: resolveCountryCode(
-              preferredCountry,
-              forcedPlan?.countryCode
-            ),
-            searchLocale:
-              forcedPlan?.primarySearchLanguage || preferredSearchLanguage,
-            recency: preferredRecency,
-            translationPhase: suggestionTranslationPhase,
-            model: resolvedModel,
+      const outcome = await runVideoSearch({
+        continuation: createVideoSearchContinuation({
+          recency: preferredRecency,
+          translationPhase: suggestionTranslationPhase,
+          model: resolvedModel,
           maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
           intentQuery: forcedSearchQueryRaw,
+          youtubeRegionCode: forcedPlan?.youtubeRegionCode,
+          youtubeSearchLanguage:
+            forcedPlan?.youtubeSearchLanguage ||
+            forcedPlan?.primarySearchLanguage,
           retrievalQueries: forcedPlan?.retrievalQueries?.length
             ? forcedPlan.retrievalQueries
             : [forcedSearchQueryRaw],
@@ -1281,6 +1427,8 @@ export async function suggestVideosViaChat(
         success: true,
         assistantMessage: compactText(assistantMessage),
         searchQuery,
+        youtubeRegionCode: outcome.continuation.youtubeRegionCode,
+        youtubeSearchLanguage: outcome.continuation.youtubeSearchLanguage,
         results,
         capturedPreferences:
           forcedPlan?.capturedPreferences || forcedIntent?.capturedPreferences,
@@ -1306,6 +1454,8 @@ export async function suggestVideosViaChat(
         success: false,
         assistantMessage: '__i18n__:input.videoSuggestion.searchFailed',
         searchQuery: forcedSearchQueryRaw,
+        youtubeRegionCode: requestYoutubeRegionCode,
+        youtubeSearchLanguage: requestYoutubeSearchLanguage,
         results: [],
         resolvedModel: observedResolvedModel,
         error: detail,
@@ -1318,9 +1468,8 @@ export async function suggestVideosViaChat(
     : [
         {
           role: 'user' as const,
-          content: preferredCountry
-            ? 'Start the chat with one short question to learn what kind of video I want.'
-            : 'Start the chat with one short question asking what kind of video I want and which country or region to bias toward.',
+          content:
+            'Start the chat with one short question asking what kind of video I want and which target country to use.',
         },
       ];
 
@@ -1330,7 +1479,7 @@ export async function suggestVideosViaChat(
     translationPhase: suggestionTranslationPhase,
     signal,
     history: plannerHistory,
-    preferredCountry,
+    targetCountry,
     preferredRecency,
     includeDownloadHistory,
     includeWatchedChannels,
@@ -1348,7 +1497,7 @@ export async function suggestVideosViaChat(
     signal,
     history: plannerHistory,
     answerer,
-    preferredCountry,
+    targetCountry,
     onProgress,
     startedAt,
     onResolvedModel: observeResolvedModel,
@@ -1405,18 +1554,15 @@ export async function suggestVideosViaChat(
       try {
         const outcome = await runVideoSearch({
           continuation: createVideoSearchContinuation({
-            countryHint: preferredCountry,
-            countryCode: resolveCountryCode(
-              preferredCountry,
-              queryPlanner?.countryCode
-            ),
-            searchLocale:
-              queryPlanner?.primarySearchLanguage || preferredSearchLanguage,
             recency: preferredRecency,
             translationPhase: suggestionTranslationPhase,
             model: resolvedModel,
             maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
             intentQuery: effectiveBaseQuery,
+            youtubeRegionCode: queryPlanner?.youtubeRegionCode,
+            youtubeSearchLanguage:
+              queryPlanner?.youtubeSearchLanguage ||
+              queryPlanner?.primarySearchLanguage,
             retrievalQueries:
               plannerRetrievalQueries.length > 0
                 ? plannerRetrievalQueries
@@ -1535,6 +1681,12 @@ export async function suggestVideosViaChat(
       success: true,
       assistantMessage: compactText(assistantMessage),
       searchQuery,
+      youtubeRegionCode:
+        getVideoSearchContinuation(activeContinuationId)?.youtubeRegionCode ||
+        undefined,
+      youtubeSearchLanguage:
+        getVideoSearchContinuation(activeContinuationId)
+          ?.youtubeSearchLanguage || undefined,
       results,
       capturedPreferences:
         queryPlanner?.capturedPreferences || answerer?.capturedPreferences,

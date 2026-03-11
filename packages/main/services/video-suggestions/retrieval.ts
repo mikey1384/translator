@@ -24,13 +24,9 @@ import {
   normalizeYoutubeChannelUrl,
   normalizeYoutubeWatchUrl,
   isYoutubeVideoSuggestionUrl,
-  normalizeCountryCode,
   quotedStatusValue,
   isSuggestionAbortError,
-  sanitizeRetrievalSearchQuery,
-  sanitizeLanguageToken,
   sanitizeSearchKeywords,
-  summarizeValues,
   throwIfSuggestionAborted,
   uniqueTexts,
 } from './shared.js';
@@ -43,32 +39,6 @@ type YoutubeSearchSeed = {
 };
 
 const YOUTUBE_ROOT_URL = 'https://www.youtube.com';
-
-function buildYoutubeScopedQueries(query: string): string[] {
-  const normalized =
-    sanitizeRetrievalSearchQuery(query) || sanitizeSearchKeywords(query);
-  if (!normalized) return [];
-  return [normalized];
-}
-
-function buildYoutubeQueryPool({
-  baseQuery,
-  queries,
-}: {
-  baseQuery: string;
-  queries?: string[];
-}): string[] {
-  const seedQueries = uniqueTexts([
-    ...(queries || []).map(value => sanitizeRetrievalSearchQuery(value)),
-    sanitizeRetrievalSearchQuery(baseQuery) ||
-      sanitizeSearchKeywords(baseQuery),
-  ]);
-  return uniqueTexts(seedQueries.flatMap(buildYoutubeScopedQueries)).slice(
-    0,
-    12
-  );
-}
-
 function buildChildEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env };
   for (const key of [
@@ -355,47 +325,6 @@ function applyRecencyPreference(
   };
 }
 
-function buildYoutubeSearchSeeds({
-  seedUrls,
-  fallbackQueries,
-  countryCode,
-  searchLocale,
-}: {
-  seedUrls: string[];
-  fallbackQueries: string[];
-  countryCode?: string;
-  searchLocale?: string;
-}): YoutubeSearchSeed[] {
-  const explicitUrls = uniqueTexts(
-    seedUrls.map(value => compactText(value)).filter(Boolean)
-  )
-    .filter(isYoutubeVideoSuggestionUrl)
-    .map(url => ({
-      query: fallbackQueries[0] || '',
-      url,
-    }));
-  const fallbackSearchPages = fallbackQueries
-    .map(query => ({
-      query,
-      url: buildYoutubeSearchPageUrl({
-        query,
-        countryCode,
-        searchLocale,
-      }),
-    }))
-    .filter(seed => isYoutubeVideoSuggestionUrl(seed.url));
-
-  const deduped: YoutubeSearchSeed[] = [];
-  const seenUrls = new Set<string>();
-  for (const seed of [...explicitUrls, ...fallbackSearchPages]) {
-    if (!seed.url || seenUrls.has(seed.url)) continue;
-    seenUrls.add(seed.url);
-    deduped.push(seed);
-    if (deduped.length >= 24) break;
-  }
-  return deduped;
-}
-
 async function runAbortableYtDlpCommand({
   ytDlpPath,
   args,
@@ -502,252 +431,169 @@ async function runYtDlpUrlSeedSearch({
 }
 
 export async function runYoutubeYtDlpSearch({
-  baseQuery,
-  queries,
-  countryCode,
-  searchLocale,
+  searchQuery,
+  retrievalQueries,
+  retrievalSeedUrls,
+  youtubeRegionCode,
+  youtubeSearchLanguage,
   recency,
-  operationId,
   maxResults,
   excludeUrls,
-  seedUrls = [],
-  continuationDepth = 0,
+  operationId,
   onProgress,
+  startedAt,
   signal,
 }: {
-  baseQuery: string;
-  queries?: string[];
-  countryHint: string;
-  countryCode?: string;
-  searchLocale?: string;
+  searchQuery: string;
+  retrievalQueries: string[];
+  retrievalSeedUrls: string[];
+  youtubeRegionCode?: string;
+  youtubeSearchLanguage?: string;
   recency: VideoSuggestionRecency;
-  translationPhase: 'draft' | 'review';
-  model: string;
-  operationId: string;
   maxResults: number;
   excludeUrls: Set<string>;
-  seedUrls?: string[];
-  continuationDepth?: number;
+  operationId: string;
   onProgress?: SuggestionProgressCallback;
+  startedAt: number;
   signal?: AbortSignal;
 }): Promise<SeedSearchOutcome> {
-  const startedAt = Date.now();
-  const platformLabel = VIDEO_SUGGESTION_SOURCE_LABEL;
   throwIfSuggestionAborted(signal);
-  const effectiveQuery =
-    sanitizeRetrievalSearchQuery(baseQuery) ||
-    sanitizeSearchKeywords(baseQuery);
-  const youtubeQueries = buildYoutubeQueryPool({
-    baseQuery: effectiveQuery,
-    queries,
-  });
-  const queriesToTry =
-    youtubeQueries.length > 0 ? youtubeQueries : [effectiveQuery];
-  const validatedCountryCode = normalizeCountryCode(countryCode);
-  const validatedSearchLocale = sanitizeLanguageToken(searchLocale)
-    .toLowerCase()
-    .slice(0, 10);
-  const searchSeeds = buildYoutubeSearchSeeds({
-    seedUrls,
-    fallbackQueries: queriesToTry,
-    countryCode: validatedCountryCode,
-    searchLocale: validatedSearchLocale,
-  });
-  const previewQuery = queriesToTry[0] || effectiveQuery;
-  const perSeedLimit = Math.min(
-    24,
-    Math.max(
-      8,
-      Math.ceil(
-        Math.max(maxResults, 18) /
-          Math.max(2, Math.min(searchSeeds.length || 2, 6))
-      )
-    )
-  );
-  const useFlatPlaylist = true;
 
-  emitSuggestionProgress(onProgress, {
-    operationId,
-    phase: 'searching',
-    message: `Searching ${platformLabel} for ${quotedStatusValue(effectiveQuery)}.`,
-    searchQuery: previewQuery,
-    elapsedMs: Date.now() - startedAt,
-  });
-  emitSuggestionProgress(onProgress, {
-    operationId,
-    phase: 'searching',
-    message: validatedCountryCode
-      ? `Search mode: YouTube search-page retrieval with regional bias ${validatedCountryCode}${validatedSearchLocale ? ` / ${validatedSearchLocale}` : ''}; seeds=${searchSeeds.length}.`
-      : `Search mode: YouTube search-page retrieval; seeds=${searchSeeds.length}.`,
-    searchQuery: previewQuery,
-    elapsedMs: Date.now() - startedAt,
-  });
+  const normalizedSearchQuery = sanitizeSearchKeywords(searchQuery);
+  const normalizedQueries = uniqueTexts(
+    retrievalQueries.map(query => sanitizeSearchKeywords(query))
+  ).slice(0, 10);
+  const normalizedSeedUrls = uniqueTexts(
+    retrievalSeedUrls
+      .map(url => compactText(url))
+      .filter(isYoutubeVideoSuggestionUrl)
+  ).slice(0, 24);
+  const seeds: YoutubeSearchSeed[] = uniqueTexts([
+    ...normalizedQueries.map(query =>
+      buildYoutubeSearchPageUrl({
+        query,
+        youtubeRegionCode,
+        youtubeSearchLanguage,
+      })
+    ),
+    ...normalizedSeedUrls,
+  ])
+    .map((url, index) => ({
+      query: normalizedQueries[index] || normalizedSearchQuery || url,
+      url,
+    }))
+    .slice(0, 10);
+
+  if (seeds.length === 0) {
+    return {
+      results: [],
+      searchQuery: normalizedSearchQuery,
+      channels: [],
+      queriesTried: normalizedQueries,
+      confidence: 0,
+      candidateCount: 0,
+      lowConfidenceReason: 'no-scored-results',
+    };
+  }
 
   const ytDlpPath = await ensureYtDlpBinary();
-  throwIfSuggestionAborted(signal);
   const jsRuntime = await ensureJsRuntime();
-  throwIfSuggestionAborted(signal);
   const env = buildYtDlpEnv(jsRuntime);
   const dateAfter = dateAfterForRecency(recency);
-  const recencyStatusForTrace = dateAfter
-    ? `recency=${recency}; dateAfter=${dateAfter}`
-    : 'recency=any; date filter=off (old videos allowed)';
-
-  emitSuggestionProgress(onProgress, {
-    operationId,
-    phase: 'searching',
-    message: dateAfter
-      ? `Recency filter enabled: ${quotedStatusValue(dateAfter)} and newer.`
-      : 'Recency filter disabled: any upload date is allowed.',
-    searchQuery: previewQuery,
-    elapsedMs: Date.now() - startedAt,
-  });
-
-  const triedSeedUrls: string[] = [];
-  const seenUrls = new Set<string>(excludeUrls);
-  const normalizedCandidates: VideoSuggestionResultItem[] = [];
-  let normalizedIndex = 0;
-
-  const runUrlSeedLoop = async (seedIntroMessage?: string) => {
-    throwIfSuggestionAborted(signal);
-    if (searchSeeds.length === 0) return;
-    if (seedIntroMessage) {
-      emitSuggestionProgress(onProgress, {
-        operationId,
-        phase: 'searching',
-        message: seedIntroMessage,
-        searchQuery: previewQuery,
-        elapsedMs: Date.now() - startedAt,
-      });
-    }
-    for (let i = 0; i < searchSeeds.length; i++) {
-      throwIfSuggestionAborted(signal);
-      const seed = searchSeeds[i];
-      const seedUrl = seed.url;
-      const seedQuery = seed.query || previewQuery;
-      triedSeedUrls.push(seedUrl);
-      emitSuggestionProgress(onProgress, {
-        operationId,
-        phase: 'searching',
-        message: `Search seed ${i + 1}/${searchSeeds.length}: collecting candidates.`,
-        searchQuery: seedQuery,
-        elapsedMs: Date.now() - startedAt,
-      });
-      let raw = '';
-      let parsed: YtDlpEntry[] = [];
-      try {
-        raw = await runYtDlpUrlSeedSearch({
-          ytDlpPath,
-          env,
-          targetUrl: seedUrl,
-          limit: perSeedLimit,
-          flatPlaylist: useFlatPlaylist,
-          dateAfter,
-          signal,
-        });
-        parsed = parseYtDlpJsonLines(raw);
-      } catch (error) {
-        if (isSuggestionAbortError(error, signal)) {
-          throw error;
-        }
-        parsed = [];
-      }
-      const freshCandidates: VideoSuggestionResultItem[] = [];
-      for (const row of parsed) {
-        const normalized = normalizeYoutubeYtDlpResult(row, normalizedIndex++);
-        if (!normalized) continue;
-        if (!isYoutubeVideoSuggestionUrl(normalized.url)) continue;
-        if (seenUrls.has(normalized.url)) continue;
-        seenUrls.add(normalized.url);
-        normalizedCandidates.push(normalized);
-        freshCandidates.push(normalized);
-      }
-      const visibleFreshCandidates = applyRecencyPreference(
-        freshCandidates,
-        recency
-      ).items;
-      const visibleTotalCount = applyRecencyPreference(
-        normalizedCandidates,
-        recency
-      ).items.length;
-      emitSuggestionProgress(onProgress, {
-        operationId,
-        phase: 'searching',
-        message: `Search seed ${i + 1}/${searchSeeds.length}: ${visibleFreshCandidates.length} fresh videos (total ${visibleTotalCount}).`,
-        searchQuery: seedQuery,
-        elapsedMs: Date.now() - startedAt,
-        resultCount: visibleTotalCount,
-        partialResults: visibleFreshCandidates,
-      });
-    }
-  };
-
-  await runUrlSeedLoop(
-    `Using formulated ${platformLabel} search-page URLs to gather candidates.`
+  const perSeedLimit = Math.max(
+    6,
+    Math.min(12, Math.ceil((maxResults * 2) / seeds.length))
   );
+  const seenUrls = new Set<string>(excludeUrls);
+  const collectedResults: VideoSuggestionResultItem[] = [];
 
-  emitSuggestionProgress(onProgress, {
-    operationId,
-    phase: 'searching',
-    message: `Collected ${normalizedCandidates.length} distinct raw candidates.`,
-    searchQuery: previewQuery,
-    elapsedMs: Date.now() - startedAt,
-  });
+  for (let index = 0; index < seeds.length; index += 1) {
+    throwIfSuggestionAborted(signal);
 
-  emitSuggestionProgress(onProgress, {
-    operationId,
-    phase: 'searching',
-    message:
-      recency === 'any'
-        ? 'Recency is any time: keeping older and newer uploads.'
-        : 'Applying strict recency filter to candidates.',
-    searchQuery: previewQuery,
-    elapsedMs: Date.now() - startedAt,
-  });
+    const seed = seeds[index];
+    emitSuggestionProgress(onProgress, {
+      operationId,
+      phase: 'searching',
+      message: `Search seed ${index + 1}/${seeds.length}: collecting candidates.`,
+      searchQuery: seed.query || normalizedSearchQuery,
+      stageKey: 'retrieval',
+      stageIndex: 3,
+      stageTotal: 3,
+      stageState: 'running',
+      elapsedMs: Date.now() - startedAt,
+    });
 
-  const recencyOutcome = applyRecencyPreference(normalizedCandidates, recency);
-  const results = recencyOutcome.items;
-  const visibleResultCount = Math.min(results.length, maxResults);
+    let stdout = '';
+    try {
+      stdout = await runYtDlpUrlSeedSearch({
+        ytDlpPath,
+        env,
+        targetUrl: seed.url,
+        limit: perSeedLimit,
+        flatPlaylist: false,
+        dateAfter,
+        signal,
+      });
+    } catch (error) {
+      log.warn(
+        '[video-suggestions] yt-dlp seed failed:',
+        compactText((error as Error)?.message || String(error || ''))
+      );
+      continue;
+    }
+
+    const parsedRows = parseYtDlpJsonLines(stdout);
+    const freshResults: VideoSuggestionResultItem[] = [];
+
+    for (const row of parsedRows) {
+      const item = normalizeYoutubeYtDlpResult(row, collectedResults.length);
+      if (!item?.url || seenUrls.has(item.url)) continue;
+      seenUrls.add(item.url);
+      collectedResults.push(item);
+      freshResults.push(item);
+    }
+
+    if (freshResults.length > 0) {
+      emitSuggestionProgress(onProgress, {
+        operationId,
+        phase: 'searching',
+        message: `Search seed ${index + 1}/${seeds.length}: loaded ${freshResults.length} result${freshResults.length === 1 ? '' : 's'}.`,
+        searchQuery: seed.query || normalizedSearchQuery,
+        resultCount: collectedResults.length,
+        partialResults: freshResults,
+        assistantPreview: clampTraceMessage(
+          `Loaded ${freshResults.length} result${freshResults.length === 1 ? '' : 's'} from ${quotedStatusValue(
+            seed.query || normalizedSearchQuery,
+            120
+          )}.`
+        ),
+        stageKey: 'retrieval',
+        stageIndex: 3,
+        stageTotal: 3,
+        stageState: 'running',
+        elapsedMs: Date.now() - startedAt,
+      });
+    }
+  }
+
+  const recencyApplied = applyRecencyPreference(collectedResults, recency);
+  const finalResults = recencyApplied.items;
   const channels = uniqueTexts(
-    results.map(item => compactText(item.channel || '')).filter(Boolean)
+    finalResults.map(item => compactText(item.channel || '')).filter(Boolean)
   ).slice(0, 6);
-  const confidence =
-    visibleResultCount === 0
-      ? 0
-      : Math.min(
-          100,
-          55 + Math.round((visibleResultCount / Math.max(1, maxResults)) * 45)
-        );
-
-  emitSuggestionProgress(onProgress, {
-    operationId,
-    phase: 'searching',
-    message: `${platformLabel} search collected ${results.length} usable videos.`,
-    searchQuery: previewQuery,
-    assistantPreview: clampTraceMessage(
-      recencyOutcome.strictApplied
-        ? `Mode=url-seed-search; recency=${recency} strict kept=${recencyOutcome.recentCount}/${normalizedCandidates.length} (unknown=${recencyOutcome.unknownCount}, old=${recencyOutcome.oldCount}); source=${platformLabel}.`
-        : `Mode=url-seed-search; ${recencyStatusForTrace}; source=${platformLabel}${validatedCountryCode ? `; regionalBias=${validatedCountryCode}${validatedSearchLocale ? `/${validatedSearchLocale}` : ''}` : ''}.`,
-      220
-    ),
-    elapsedMs: Date.now() - startedAt,
-    resultCount: results.length,
-  });
-
-  const lowConfidenceReason =
-    results.length === 0
-      ? recencyOutcome.strictApplied && normalizedCandidates.length > 0
-        ? 'no-recency-matches'
-        : 'no-scored-results'
-      : undefined;
 
   return {
-    results,
-    searchQuery: previewQuery,
+    results: finalResults,
+    searchQuery: normalizedSearchQuery || normalizedQueries[0] || '',
     channels,
-    confidence,
-    queriesTried: uniqueTexts([...queriesToTry, ...triedSeedUrls]),
-    candidateCount: normalizedCandidates.length,
-    lowConfidenceReason,
+    queriesTried: normalizedQueries,
+    confidence: finalResults.length > 0 ? 100 : 0,
+    candidateCount: collectedResults.length,
+    lowConfidenceReason:
+      finalResults.length > 0
+        ? undefined
+        : recency !== 'any' && collectedResults.length > 0
+          ? 'no-recency-matches'
+          : 'no-scored-results',
   };
 }

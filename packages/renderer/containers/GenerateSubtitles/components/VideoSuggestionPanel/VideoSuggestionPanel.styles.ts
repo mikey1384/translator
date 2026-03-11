@@ -375,6 +375,41 @@ export const assistantBubbleStyles = css`
   border: 1px solid ${colors.borderStrong};
 `;
 
+export const assistantRichTextStyles = css`
+  white-space: normal;
+
+  p {
+    margin: 0;
+  }
+
+  p + p,
+  p + ul,
+  p + ol,
+  ul + p,
+  ol + p,
+  ul + ul,
+  ol + ol,
+  ul + ol,
+  ol + ul {
+    margin-top: ${spacing.sm};
+  }
+
+  ul,
+  ol {
+    margin: 0;
+    padding-left: ${spacing.xl};
+  }
+
+  li + li {
+    margin-top: ${spacing.xs};
+  }
+
+  strong {
+    font-weight: ${fontWeight.semibold};
+    color: ${colors.text};
+  }
+`;
+
 export const userBubbleStyles = css`
   ${bubbleStyles};
   align-self: flex-end;

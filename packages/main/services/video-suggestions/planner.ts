@@ -1,40 +1,17 @@
 import type { VideoSuggestionMessage } from '@shared-types/app';
 import {
-  type DiscoveryRetrievalMode,
   type IntentResolverPayload,
   type QueryFormulatorPayload,
-  buildOrderedIntentSeedQueries,
   clampMessage,
   compactText,
-  normalizeCountryCode,
-  normalizeDescriptorPhrases,
   normalizeIntentCandidates,
   parseBooleanLike,
-  sanitizeCountryHint,
   sanitizeLanguageToken,
-  sanitizeRetrievalSearchQuery,
+  sanitizeYoutubeRegionCode,
   sanitizeSearchKeywords,
   uniqueTexts,
   normalizePreferenceSlots,
 } from './shared.js';
-
-function normalizePlannerRetrievalMode(
-  value: unknown
-): DiscoveryRetrievalMode | undefined {
-  const normalized = compactText(value).toLowerCase();
-  if (!normalized) return undefined;
-  if (normalized === 'channel' || normalized === 'channel-first') {
-    return 'channel';
-  }
-  if (
-    normalized === 'topic' ||
-    normalized === 'topic-wide' ||
-    normalized === 'broad'
-  ) {
-    return 'topic';
-  }
-  return undefined;
-}
 
 export function parseIntentResolverPayload(
   raw: string
@@ -67,9 +44,13 @@ export function parseIntentResolverPayload(
       const intentSummary = clampMessage(compactText(obj?.intentSummary));
       const strategy = clampMessage(compactText(obj?.strategy));
       const candidates = normalizeIntentCandidates(obj?.candidates);
-      const descriptorPhrases = normalizeDescriptorPhrases(
-        obj?.descriptorPhrases
-      );
+      const descriptorPhrases = uniqueTexts(
+        Array.isArray(obj?.descriptorPhrases)
+          ? obj.descriptorPhrases.map((value: unknown) =>
+              sanitizeSearchKeywords(String(value || ''))
+            )
+          : []
+      ).slice(0, 8);
       const canonicalEntities = uniqueTexts(
         Array.isArray(obj?.canonicalEntities)
           ? obj.canonicalEntities.map((value: unknown) => compactText(value))
@@ -78,6 +59,12 @@ export function parseIntentResolverPayload(
       const impliedLocale = compactText(obj?.impliedLocale).slice(0, 30);
       const impliedSearchLanguage = sanitizeLanguageToken(
         obj?.impliedSearchLanguage
+      ).toLowerCase();
+      const youtubeRegionCode = sanitizeYoutubeRegionCode(
+        obj?.youtubeRegionCode
+      );
+      const youtubeSearchLanguage = sanitizeLanguageToken(
+        obj?.youtubeSearchLanguage
       ).toLowerCase();
       const primarySearchLanguage = sanitizeLanguageToken(
         obj?.primarySearchLanguage
@@ -97,14 +84,6 @@ export function parseIntentResolverPayload(
             )
           : []
       ).slice(0, 5);
-      const retrievalMode = normalizePlannerRetrievalMode(obj?.retrievalMode);
-      const retrievalQueries = uniqueTexts(
-        Array.isArray(obj?.retrievalQueries)
-          ? obj.retrievalQueries.map((value: unknown) =>
-              sanitizeRetrievalSearchQuery(String(value || ''))
-            )
-          : []
-      ).slice(0, 10);
       const impliedConstraintsRaw =
         obj?.impliedConstraints && typeof obj.impliedConstraints === 'object'
           ? (obj.impliedConstraints as Record<string, unknown>)
@@ -124,6 +103,7 @@ export function parseIntentResolverPayload(
         confidenceRaw === 'high'
           ? confidenceRaw
           : undefined;
+      const parsedNeedsMoreContext = parseBooleanLike(obj?.needsMoreContext);
       const capturedPreferenceSource = {
         ...(obj && typeof obj === 'object'
           ? (obj as Record<string, unknown>)
@@ -139,44 +119,26 @@ export function parseIntentResolverPayload(
       const capturedPreferences = normalizePreferenceSlots(
         capturedPreferenceSource
       );
-      const parsedNeedsMoreContext = parseBooleanLike(obj?.needsMoreContext);
-      const fallbackQueries = buildOrderedIntentSeedQueries({
-        candidates,
-        descriptorPhrases,
-        resolvedIntent,
-      });
-      const inferredReady = Boolean(
-        searchQuery ||
-        discoveryQueries.length > 0 ||
-        retrievalQueries.length > 0 ||
-        candidates.length > 0 ||
-        descriptorPhrases.length > 0 ||
-        fallbackQueries.length > 0
-      );
-      const needsMoreContext =
-        parsedNeedsMoreContext ?? (inferredReady ? false : true);
 
       return {
         assistantMessage,
-        needsMoreContext,
         answerToUserQuestion,
         resolvedIntent,
         intentSummary,
         strategy,
+        needsMoreContext: parsedNeedsMoreContext ?? undefined,
         candidates,
         descriptorPhrases,
         canonicalEntities,
         impliedLocale,
         impliedSearchLanguage,
+        youtubeRegionCode,
+        youtubeSearchLanguage,
         primarySearchLanguage,
         searchLanguages,
         searchQuery,
         discoveryQueries,
-        retrievalMode,
-        retrievalQueries:
-          retrievalQueries.length > 0 ? retrievalQueries : fallbackQueries,
         impliedConstraints: {
-          country: sanitizeCountryHint(impliedConstraintsRaw.country),
           recency: compactText(impliedConstraintsRaw.recency).toLowerCase(),
         },
         ambiguities,
@@ -218,7 +180,12 @@ export function parseQueryFormulatorPayload(
       const assistantMessage = clampMessage(compactText(obj?.assistantMessage));
       const intentSummary = clampMessage(compactText(obj?.intentSummary));
       const strategy = clampMessage(compactText(obj?.strategy));
-      const countryCode = normalizeCountryCode(obj?.countryCode);
+      const youtubeRegionCode = sanitizeYoutubeRegionCode(
+        obj?.youtubeRegionCode
+      );
+      const youtubeSearchLanguage = sanitizeLanguageToken(
+        obj?.youtubeSearchLanguage
+      ).toLowerCase();
       const primarySearchLanguage = sanitizeLanguageToken(
         obj?.primarySearchLanguage
       ).toLowerCase();
@@ -229,11 +196,13 @@ export function parseQueryFormulatorPayload(
             )
           : []
       ).slice(0, 3);
-      const searchQuery = compactText(obj?.searchQuery);
+      const searchQuery = sanitizeSearchKeywords(
+        String(obj?.searchQuery || '')
+      );
       const retrievalQueries = uniqueTexts(
         Array.isArray(obj?.retrievalQueries)
           ? obj.retrievalQueries.map((value: unknown) =>
-              sanitizeRetrievalSearchQuery(String(value || ''))
+              sanitizeSearchKeywords(String(value || ''))
             )
           : []
       ).slice(0, 10);
@@ -253,16 +222,14 @@ export function parseQueryFormulatorPayload(
         capturedPreferenceSource
       );
       const parsedNeedsMoreContext = parseBooleanLike(obj?.needsMoreContext);
-      const inferredReady = Boolean(searchQuery || retrievalQueries.length > 0);
-      const needsMoreContext =
-        parsedNeedsMoreContext ?? (inferredReady ? false : true);
 
       return {
         assistantMessage,
-        needsMoreContext,
         intentSummary,
         strategy,
-        countryCode,
+        needsMoreContext: parsedNeedsMoreContext ?? undefined,
+        youtubeRegionCode,
+        youtubeSearchLanguage,
         primarySearchLanguage,
         searchLanguages,
         searchQuery,

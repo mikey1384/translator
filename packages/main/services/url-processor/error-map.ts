@@ -21,8 +21,12 @@ export function mapErrorToUserFriendly({
   } else if (combinedErrorText.includes('invalid url')) {
     return 'The URL format appears invalid.';
   } else if (
+    combinedErrorText.includes('failed to resolve') ||
     combinedErrorText.includes('name or service not known') ||
     combinedErrorText.includes('temporary failure in name resolution') ||
+    combinedErrorText.includes('nodename nor servname provided') ||
+    combinedErrorText.includes('could not resolve host') ||
+    combinedErrorText.includes('getaddrinfo') ||
     combinedErrorText.includes('network is unreachable')
   ) {
     return 'Network error. Please check your internet connection.';

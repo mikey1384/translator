@@ -125,6 +125,17 @@ async function warmupFfmpeg(ffmpegPath: string): Promise<void> {
   }
 }
 
+function looksLikeDnsResolutionFailure(errorText: string): boolean {
+  return (
+    /failed to resolve/i.test(errorText) ||
+    /name or service not known/i.test(errorText) ||
+    /temporary failure in name resolution/i.test(errorText) ||
+    /nodename nor servname provided/i.test(errorText) ||
+    /could not resolve host/i.test(errorText) ||
+    /getaddrinfo/i.test(errorText)
+  );
+}
+
 function hardKill(proc: any): void {
   if (process.platform !== 'win32' && proc?.pid) {
     // If yt-dlp was spawned detached, this kills the whole process group,
@@ -604,6 +615,12 @@ export async function downloadVideoFromPlatform(
   let diagnosticLog = '';
   let finalFilepath: string | null = null;
   let downloadInfo: Record<string, unknown> | null = null;
+  const extractFinalFilename = (
+    info: Record<string, unknown> | null
+  ): string | null => {
+    if (!info) return null;
+    return typeof info._filename === 'string' ? info._filename : null;
+  };
 
   let subprocess: DownloadProcessType | null = null;
   let lastPct = 0; // Track last reported percentage outside subprocess
@@ -843,7 +860,7 @@ export async function downloadVideoFromPlatform(
                 // Try parsing immediately to validate
                 try {
                   downloadInfo = JSON.parse(finalJsonOutput);
-                  finalFilepath = downloadInfo?._filename;
+                  finalFilepath = extractFinalFilename(downloadInfo);
                   log.info(
                     `[URLprocessor] Parsed final filename from JSON: ${finalFilepath}`
                   );
@@ -1025,7 +1042,7 @@ export async function downloadVideoFromPlatform(
           log.info('[URLprocessor] Processing remaining buffer as JSON.');
           try {
             downloadInfo = JSON.parse(finalJsonOutput);
-            finalFilepath = downloadInfo?._filename;
+            finalFilepath = extractFinalFilename(downloadInfo);
             log.info(
               `[URLprocessor] Parsed filename from final buffer: ${finalFilepath}`
             );
@@ -1148,6 +1165,7 @@ export async function downloadVideoFromPlatform(
         const looksLikeTLSError = /SSL|CERTIFICATE|TLS|handshake/i.test(
           errorBlob
         );
+        const looksLikeDnsFailure = looksLikeDnsResolutionFailure(errorBlob);
         if (looksLikeTLSError) {
           addNoCheckCertificates = true;
         }
@@ -1257,6 +1275,13 @@ export async function downloadVideoFromPlatform(
           ipMode = ipMode === 'auto' ? 'v6' : ipMode === 'v6' ? 'v4' : 'v4';
           log.warn(
             `[URLprocessor] Startup stall; retrying with IP mode: ${ipMode} (attempt ${attempt + 1}/${maxAttempts})`
+          );
+          attempt += 1;
+          continue;
+        }
+        if (looksLikeDnsFailure && attempt < maxAttempts) {
+          log.warn(
+            `[URLprocessor] DNS resolution failure detected; retrying download (attempt ${attempt + 1}/${maxAttempts}).`
           );
           attempt += 1;
           continue;

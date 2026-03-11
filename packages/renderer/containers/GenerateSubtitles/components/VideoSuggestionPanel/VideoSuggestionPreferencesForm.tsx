@@ -78,7 +78,7 @@ export default function VideoSuggestionPreferencesForm({
             htmlFor="video-suggestion-country"
             className={countryLabelStyles}
           >
-            {t('input.videoSuggestion.countryBiasLabel', 'Regional bias')}
+            {t('input.videoSuggestion.countryLabel', 'Target country')}
           </label>
           <input
             id="video-suggestion-country"
@@ -96,8 +96,8 @@ export default function VideoSuggestionPreferencesForm({
           />
           <div className={countryHintStyles}>
             {t(
-              'input.videoSuggestion.countryBiasHint',
-              'Leave blank for no regional bias.'
+              'input.videoSuggestion.countryHintDefaultEnglish',
+              'Leave blank to default search language to English.'
             )}
           </div>
         </div>
@@ -140,7 +140,10 @@ export default function VideoSuggestionPreferencesForm({
               htmlFor="video-suggestion-topic"
               className={countryLabelStyles}
             >
-              {t('input.videoSuggestion.preference.topicLabel', 'Preferred topic')}
+              {t(
+                'input.videoSuggestion.preference.topicLabel',
+                'Preferred topic'
+              )}
             </label>
             {canRemoveSavedTopic ? (
               <button
@@ -149,7 +152,10 @@ export default function VideoSuggestionPreferencesForm({
                 onClick={() => onRemoveSavedTopic()}
                 disabled={disabled || loading}
               >
-                {t('input.videoSuggestion.preference.removeSaved', 'Remove saved')}
+                {t(
+                  'input.videoSuggestion.preference.removeSaved',
+                  'Remove saved'
+                )}
               </button>
             ) : null}
           </div>

@@ -1,15 +1,18 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
 } from 'react';
 import { cx } from '@emotion/css';
 import type { TFunction } from 'i18next';
 import Button from '../../../../components/Button.js';
 import {
   assistantBubbleStyles,
+  assistantRichTextStyles,
   chatColumnStyles,
   chatColumnCompactStyles,
   chatEmptyCopyStyles,
@@ -80,6 +83,123 @@ type VideoSuggestionChatColumnProps = {
   resolveI18n: (text: string) => string;
   pipelineStageLabel: (key: PipelineStageKey) => string;
 };
+
+function renderAssistantInline(text: string, keyPrefix: string): ReactNode[] {
+  return String(text || '')
+    .split(/(\*\*[\s\S]+?\*\*)/g)
+    .filter(Boolean)
+    .map((segment, index) => {
+      const boldMatch = segment.match(/^\*\*([\s\S]+)\*\*$/);
+      if (boldMatch) {
+        return (
+          <strong key={`${keyPrefix}-strong-${index}`}>{boldMatch[1]}</strong>
+        );
+      }
+
+      return (
+        <Fragment key={`${keyPrefix}-text-${index}`}>{segment}</Fragment>
+      );
+    });
+}
+
+function renderAssistantParagraph(lines: string[], keyPrefix: string): ReactNode {
+  return (
+    <p key={`${keyPrefix}-paragraph`}>
+      {lines.map((line, index) => (
+        <Fragment key={`${keyPrefix}-line-${index}`}>
+          {renderAssistantInline(line, `${keyPrefix}-inline-${index}`)}
+          {index < lines.length - 1 ? <br /> : null}
+        </Fragment>
+      ))}
+    </p>
+  );
+}
+
+function renderAssistantMessage(content: string): ReactNode {
+  const lines = String(content || '').replace(/\r/g, '').split('\n');
+  const blocks: ReactNode[] = [];
+  let paragraphLines: string[] = [];
+  let bulletItems: string[] = [];
+  let orderedItems: string[] = [];
+
+  const flushParagraph = () => {
+    if (paragraphLines.length === 0) return;
+    blocks.push(
+      renderAssistantParagraph(paragraphLines, `assistant-block-${blocks.length}`)
+    );
+    paragraphLines = [];
+  };
+
+  const flushBulletItems = () => {
+    if (bulletItems.length === 0) return;
+    const keyPrefix = `assistant-block-${blocks.length}`;
+    blocks.push(
+      <ul key={`${keyPrefix}-ul`}>
+        {bulletItems.map((item, index) => (
+          <li key={`${keyPrefix}-li-${index}`}>
+            {renderAssistantInline(item, `${keyPrefix}-inline-${index}`)}
+          </li>
+        ))}
+      </ul>
+    );
+    bulletItems = [];
+  };
+
+  const flushOrderedItems = () => {
+    if (orderedItems.length === 0) return;
+    const keyPrefix = `assistant-block-${blocks.length}`;
+    blocks.push(
+      <ol key={`${keyPrefix}-ol`}>
+        {orderedItems.map((item, index) => (
+          <li key={`${keyPrefix}-li-${index}`}>
+            {renderAssistantInline(item, `${keyPrefix}-inline-${index}`)}
+          </li>
+        ))}
+      </ol>
+    );
+    orderedItems = [];
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushParagraph();
+      flushBulletItems();
+      flushOrderedItems();
+      continue;
+    }
+
+    const bulletMatch = line.match(/^[-*]\s+(.+)$/);
+    if (bulletMatch) {
+      flushParagraph();
+      flushOrderedItems();
+      bulletItems.push(bulletMatch[1]);
+      continue;
+    }
+
+    const orderedMatch = line.match(/^\d+\.\s+(.+)$/);
+    if (orderedMatch) {
+      flushParagraph();
+      flushBulletItems();
+      orderedItems.push(orderedMatch[1]);
+      continue;
+    }
+
+    flushBulletItems();
+    flushOrderedItems();
+    paragraphLines.push(line);
+  }
+
+  flushParagraph();
+  flushBulletItems();
+  flushOrderedItems();
+
+  if (blocks.length === 0) {
+    return content;
+  }
+
+  return <div className={assistantRichTextStyles}>{blocks}</div>;
+}
 
 export default function VideoSuggestionChatColumn({
   cancelling,
@@ -215,16 +335,23 @@ export default function VideoSuggestionChatColumn({
           </div>
         ) : null}
         {messages.map((msg, idx) => (
-          <div
-            key={`${msg.role}-${idx}-${msg.content.slice(0, 12)}`}
-            className={
-              msg.role === 'assistant'
-                ? assistantBubbleStyles
-                : userBubbleStyles
-            }
-          >
-            {resolveI18n(msg.content)}
-          </div>
+          (() => {
+            const resolvedContent = resolveI18n(msg.content);
+            return (
+              <div
+                key={`${msg.role}-${idx}-${msg.content.slice(0, 12)}`}
+                className={
+                  msg.role === 'assistant'
+                    ? assistantBubbleStyles
+                    : userBubbleStyles
+                }
+              >
+                {msg.role === 'assistant'
+                  ? renderAssistantMessage(resolvedContent)
+                  : resolvedContent}
+              </div>
+            );
+          })()
         ))}
         {loading ? (
           <div className={assistantBubbleStyles}>

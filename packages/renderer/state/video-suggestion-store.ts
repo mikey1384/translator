@@ -41,6 +41,8 @@ type VideoSuggestionState = {
   showQuickStartAction: boolean;
   resolvedModelRuntime: string | null;
   continuationId: string | null;
+  youtubeRegionCode: string | null;
+  youtubeSearchLanguage: string | null;
   requestId: number;
   activeOperationId: string | null;
   cancellingOperationId: string | null;
@@ -57,6 +59,8 @@ type VideoSuggestionActions = {
   setShowQuickStartAction: (value: boolean) => void;
   setResolvedModelRuntime: (value: string | null) => void;
   setContinuationId: (value: string | null) => void;
+  setYoutubeRegionCode: (value: string | null) => void;
+  setYoutubeSearchLanguage: (value: string | null) => void;
   setLastRequestPreferences: (value: VideoSuggestionPreferenceSlots) => void;
   setCancellingOperation: (value: string | null) => void;
   nextRequestId: () => number;
@@ -97,6 +101,8 @@ const initialState: VideoSuggestionState = {
   showQuickStartAction: false,
   resolvedModelRuntime: null,
   continuationId: null,
+  youtubeRegionCode: null,
+  youtubeSearchLanguage: null,
   requestId: 0,
   activeOperationId: null,
   cancellingOperationId: null,
@@ -179,6 +185,16 @@ export const useVideoSuggestionStore =
       setContinuationId: value =>
         set(state => {
           state.continuationId = value;
+        }),
+
+      setYoutubeRegionCode: value =>
+        set(state => {
+          state.youtubeRegionCode = value;
+        }),
+
+      setYoutubeSearchLanguage: value =>
+        set(state => {
+          state.youtubeSearchLanguage = value;
         }),
 
       setLastRequestPreferences: value =>
@@ -280,6 +296,8 @@ export const useVideoSuggestionStore =
           ];
           state.searchQuery = '';
           state.continuationId = null;
+          state.youtubeRegionCode = null;
+          state.youtubeSearchLanguage = null;
           state.resolvedModelRuntime = null;
           state.results = [];
           state.showQuickStartAction = showQuickStartAction;

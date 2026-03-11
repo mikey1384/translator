@@ -14,69 +14,11 @@ import {
   compactText,
   isYoutubeVideoSuggestionUrl,
   recencyLabel,
-  sanitizeCountryHint,
-  sanitizeLanguageToken,
   sanitizeSearchKeywords,
   summarizeValues,
   throwIfSuggestionAborted,
   uniqueTexts,
 } from './shared.js';
-
-function looksStreamerIntent(query: string): boolean {
-  const normalized = sanitizeSearchKeywords(query);
-  if (!normalized) return false;
-  const lower = normalized.toLowerCase();
-  return (
-    /\b(streamer|stream|livestream|live stream|twitch|vtuber|gaming|game)\b/i.test(
-      lower
-    ) ||
-    /配信|配信者|実況|ストリーマー|ゲーム/.test(normalized) ||
-    /스트리머|방송|게임|라이브/.test(normalized)
-  );
-}
-
-function localizedDiscoveryHintTerms(
-  locale: string,
-  streamerIntent: boolean
-): string[] {
-  const normalizedLocale = sanitizeLanguageToken(locale)
-    .toLowerCase()
-    .split(/[-_]/)[0];
-
-  if (normalizedLocale === 'ja') {
-    return streamerIntent
-      ? ['配信者', 'チャンネル', '配信 アーカイブ', '切り抜き', '動画']
-      : ['チャンネル', '動画', '投稿者', 'コミュニティ', '作品'];
-  }
-
-  if (normalizedLocale === 'ko') {
-    return streamerIntent
-      ? ['스트리머', '채널', '방송 다시보기', '클립', '영상']
-      : ['채널', '영상', '제작자', '커뮤니티', '콘텐츠'];
-  }
-
-  return streamerIntent
-    ? ['streamer', 'channel', 'stream archive', 'clips', 'videos']
-    : ['channel', 'videos', 'clips', 'community', 'uploads'];
-}
-
-export function buildDefaultDiscoveryQueries({
-  videoQuery,
-  locale,
-}: {
-  videoQuery: string;
-  locale: string;
-}): string[] {
-  const topic = sanitizeSearchKeywords(videoQuery);
-  if (!topic) return [];
-
-  return uniqueTexts([
-    topic,
-    ...localizedDiscoveryHintTerms(locale, looksStreamerIntent(topic)).map(
-      suffix => `${topic} ${suffix}`.trim()
-    ),
-  ]).slice(0, 5);
-}
 
 type DiscoveryWebSearchPayload = {
   assistantMessage?: unknown;
@@ -128,7 +70,6 @@ function normalizeDiscoveryCandidate(
     /^https?:\/\//i.test(rawUrl) && isYoutubeVideoSuggestionUrl(rawUrl)
       ? rawUrl
       : undefined;
-  const localeHint = sanitizeLanguageToken(input?.localeHint).toLowerCase();
   const categoryHint = compactText(input?.categoryHint).slice(0, 80);
   const evidenceUrls = uniqueTexts(
     Array.isArray(input?.evidenceUrls)
@@ -162,8 +103,6 @@ function normalizeDiscoveryCandidate(
   return {
     name: name || `channel-${index + 1}`,
     url,
-    localeHint: localeHint || undefined,
-    categoryHint: categoryHint || undefined,
     evidenceCount,
     evidenceUrls,
     score,
@@ -173,18 +112,15 @@ function normalizeDiscoveryCandidate(
 function buildDiscoveryWebSearchPrompt({
   intentQuery,
   discoveryQueries,
-  countryHint,
   recency,
   primarySearchLanguage,
 }: {
   intentQuery: string;
   discoveryQueries: string[];
-  countryHint: string;
   recency: VideoSuggestionRecency;
   primarySearchLanguage: string;
 }): string {
   const safeIntent = sanitizeSearchKeywords(intentQuery);
-  const safeCountry = sanitizeCountryHint(countryHint);
   const platformLabel = VIDEO_SUGGESTION_SOURCE_LABEL;
   const platformDomains = VIDEO_SUGGESTION_HOST_SUFFIXES;
   const queries = discoveryQueries.slice(0, 5);
@@ -203,7 +139,6 @@ Schema:
     {
       "name": "channel display name",
       "url": "https://...",
-      "localeHint": "ja",
       "categoryHint": "gaming streamer",
       "evidenceCount": 3,
       "evidenceUrls": ["https://..."],
@@ -216,7 +151,6 @@ Rules:
 - Use web search tool calls grounded in this run.
 - Search source is strictly ${platformLabel}.
 - Intent: "${safeIntent}".
-- Country/region focus: ${safeCountry ? `"${safeCountry}"` : '(none)'}.
 - ${recencyRule}
 - Primary search language: ${primarySearchLanguage || 'en'}.
 - Use plain keyword web queries in the target language. Avoid advanced operators like site:, inurl:, intitle:, channel:, or boolean quote syntax.
@@ -232,7 +166,6 @@ ${queries.map((query, index) => `${index + 1}. ${query}`).join('\n')}
 export async function runDiscoveryWebSearch({
   intentQuery,
   discoveryQueries,
-  countryHint,
   recency,
   primarySearchLanguage,
   translationPhase,
@@ -244,7 +177,6 @@ export async function runDiscoveryWebSearch({
 }: {
   intentQuery: string;
   discoveryQueries: string[];
-  countryHint: string;
   recency: VideoSuggestionRecency;
   primarySearchLanguage: string;
   translationPhase: 'draft' | 'review';
@@ -314,7 +246,6 @@ export async function runDiscoveryWebSearch({
         content: buildDiscoveryWebSearchPrompt({
           intentQuery,
           discoveryQueries: queries,
-          countryHint,
           recency,
           primarySearchLanguage,
         }),
@@ -324,7 +255,6 @@ export async function runDiscoveryWebSearch({
         content: JSON.stringify({
           intentQuery,
           discoveryQueries: queries,
-          countryHint: countryHint || null,
           recency,
           primarySearchLanguage,
         }),

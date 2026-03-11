@@ -21,6 +21,8 @@ export type IntentResolverPayload = {
   canonicalEntities?: string[];
   impliedLocale?: string;
   impliedSearchLanguage?: string;
+  youtubeRegionCode?: string;
+  youtubeSearchLanguage?: string;
   primarySearchLanguage?: string;
   searchLanguages?: string[];
   searchQuery?: string;
@@ -47,7 +49,8 @@ export type QueryFormulatorPayload = {
   needsMoreContext?: boolean;
   intentSummary?: string;
   strategy?: string;
-  countryCode?: string;
+  youtubeRegionCode?: string;
+  youtubeSearchLanguage?: string;
   primarySearchLanguage?: string;
   searchLanguages?: string[];
   searchQuery?: string;
@@ -69,7 +72,6 @@ export type SeedSearchOutcome = {
 export type DiscoveryChannelCandidate = {
   name: string;
   url?: string;
-  localeHint?: string;
   categoryHint?: string;
   evidenceCount: number;
   evidenceUrls: string[];
@@ -145,174 +147,6 @@ export function isYoutubeVideoSuggestionUrl(url: string): boolean {
   }
 }
 
-export const SUPPORTED_SEARCH_LOCALES = new Set([
-  'en',
-  'es',
-  'fr',
-  'de',
-  'it',
-  'ja',
-  'ko',
-  'zh',
-  'ru',
-  'pt',
-  'ar',
-  'hi',
-  'id',
-  'vi',
-  'tr',
-  'nl',
-  'pl',
-  'sv',
-  'no',
-  'da',
-  'fi',
-  'el',
-  'cs',
-  'hu',
-  'ro',
-  'uk',
-  'he',
-  'fa',
-  'th',
-  'ms',
-  'sw',
-  'af',
-  'bn',
-  'ta',
-  'te',
-  'mr',
-  'tl',
-  'ur',
-]);
-
-export const COUNTRY_LOCALE_RULES: Array<{
-  locale: string;
-  aliases: string[];
-}> = [
-  { locale: 'ja', aliases: ['japan', 'jp', '日本'] },
-  { locale: 'ko', aliases: ['korea', 'kr', '한국', '대한민국', '韓国'] },
-  {
-    locale: 'zh',
-    aliases: ['china', 'cn', '中国', 'taiwan', 'tw', '香港', 'hong kong'],
-  },
-  { locale: 'hi', aliases: ['india', 'in', 'bharat', 'भारत'] },
-  { locale: 'bn', aliases: ['bangladesh', 'bd', 'বাংলাদেশ'] },
-  { locale: 'ur', aliases: ['pakistan', 'pk', 'پاکستان'] },
-  { locale: 'ta', aliases: ['tamil nadu', 'sri lanka', 'இலங்கை'] },
-  { locale: 'te', aliases: ['andhra', 'telangana'] },
-  { locale: 'mr', aliases: ['maharashtra'] },
-  {
-    locale: 'es',
-    aliases: [
-      'spain',
-      'es',
-      'mexico',
-      'mx',
-      'argentina',
-      'ar',
-      'colombia',
-      'co',
-      'peru',
-      'pe',
-      'chile',
-      'cl',
-    ],
-  },
-  { locale: 'pt', aliases: ['brazil', 'br', 'portugal', 'pt'] },
-  { locale: 'fr', aliases: ['france', 'fr', 'belgium', 'be'] },
-  { locale: 'de', aliases: ['germany', 'de', 'austria', 'at'] },
-  { locale: 'it', aliases: ['italy', 'it'] },
-  { locale: 'ru', aliases: ['russia', 'ru'] },
-  { locale: 'tr', aliases: ['turkey', 'tr', 'türkiye'] },
-  { locale: 'id', aliases: ['indonesia', 'id'] },
-  { locale: 'vi', aliases: ['vietnam', 'vn', 'việt nam'] },
-  { locale: 'th', aliases: ['thailand', 'th'] },
-  { locale: 'ms', aliases: ['malaysia', 'my'] },
-  {
-    locale: 'ar',
-    aliases: ['saudi', 'uae', 'egypt', 'qatar', 'kuwait', 'morocco', 'العربية'],
-  },
-  { locale: 'he', aliases: ['israel', 'il', 'עברית'] },
-  { locale: 'fa', aliases: ['iran', 'ir', 'فارسی'] },
-  { locale: 'nl', aliases: ['netherlands', 'nl'] },
-  { locale: 'pl', aliases: ['poland', 'pl'] },
-  { locale: 'sv', aliases: ['sweden', 'se'] },
-  { locale: 'no', aliases: ['norway', 'no'] },
-  { locale: 'da', aliases: ['denmark', 'dk'] },
-  { locale: 'fi', aliases: ['finland', 'fi'] },
-  { locale: 'el', aliases: ['greece', 'gr'] },
-  { locale: 'cs', aliases: ['czech', 'cz'] },
-  { locale: 'hu', aliases: ['hungary', 'hu'] },
-  { locale: 'ro', aliases: ['romania', 'ro'] },
-  { locale: 'uk', aliases: ['ukraine', 'ua'] },
-  { locale: 'sw', aliases: ['kenya', 'ke', 'tanzania', 'tz'] },
-  { locale: 'af', aliases: ['south africa', 'za'] },
-  { locale: 'tl', aliases: ['philippines', 'ph'] },
-];
-
-const COUNTRY_CODE_RULES: Array<{
-  code: string;
-  aliases: string[];
-}> = [
-  { code: 'JP', aliases: ['japan', 'jp', '日本'] },
-  { code: 'KR', aliases: ['south korea', 'korea', 'kr', '한국', '대한민국', '韓国'] },
-  { code: 'CN', aliases: ['china', 'cn', '中国', '중국', 'mainland china', 'prc'] },
-  { code: 'TW', aliases: ['taiwan', 'tw', '台灣', '台湾'] },
-  { code: 'HK', aliases: ['hong kong', 'hk', '香港'] },
-  { code: 'IN', aliases: ['india', 'in', 'bharat', 'भारत'] },
-  { code: 'BD', aliases: ['bangladesh', 'bd', 'বাংলাদেশ'] },
-  { code: 'PK', aliases: ['pakistan', 'pk', 'پاکستان'] },
-  { code: 'LK', aliases: ['sri lanka', 'lk', 'இலங்கை'] },
-  { code: 'ES', aliases: ['spain', 'es', 'españa'] },
-  { code: 'MX', aliases: ['mexico', 'mx', 'méxico'] },
-  { code: 'AR', aliases: ['argentina', 'ar'] },
-  { code: 'CO', aliases: ['colombia', 'co'] },
-  { code: 'PE', aliases: ['peru', 'pe', 'perú'] },
-  { code: 'CL', aliases: ['chile', 'cl'] },
-  { code: 'BR', aliases: ['brazil', 'br', 'brasil'] },
-  { code: 'PT', aliases: ['portugal', 'pt'] },
-  { code: 'FR', aliases: ['france', 'fr'] },
-  { code: 'BE', aliases: ['belgium', 'be', 'belgique'] },
-  { code: 'DE', aliases: ['germany', 'de', 'deutschland'] },
-  { code: 'AT', aliases: ['austria', 'at', 'österreich'] },
-  { code: 'IT', aliases: ['italy', 'it', 'italia'] },
-  { code: 'RU', aliases: ['russia', 'ru', 'россия'] },
-  { code: 'TR', aliases: ['turkey', 'tr', 'türkiye'] },
-  { code: 'ID', aliases: ['indonesia', 'id'] },
-  { code: 'VN', aliases: ['vietnam', 'vn', 'việt nam'] },
-  { code: 'TH', aliases: ['thailand', 'th'] },
-  { code: 'MY', aliases: ['malaysia', 'my'] },
-  { code: 'SA', aliases: ['saudi arabia', 'saudi', 'sa'] },
-  { code: 'AE', aliases: ['uae', 'united arab emirates', 'ae'] },
-  { code: 'EG', aliases: ['egypt', 'eg', 'مصر'] },
-  { code: 'QA', aliases: ['qatar', 'qa'] },
-  { code: 'KW', aliases: ['kuwait', 'kw'] },
-  { code: 'MA', aliases: ['morocco', 'ma'] },
-  { code: 'IL', aliases: ['israel', 'il', 'ישראל', 'עברית'] },
-  { code: 'IR', aliases: ['iran', 'ir', 'ایران', 'فارسی'] },
-  { code: 'NL', aliases: ['netherlands', 'nl', 'holland'] },
-  { code: 'PL', aliases: ['poland', 'pl'] },
-  { code: 'SE', aliases: ['sweden', 'se'] },
-  { code: 'NO', aliases: ['norway', 'no'] },
-  { code: 'DK', aliases: ['denmark', 'dk'] },
-  { code: 'FI', aliases: ['finland', 'fi'] },
-  { code: 'GR', aliases: ['greece', 'gr'] },
-  { code: 'CZ', aliases: ['czechia', 'czech republic', 'czech', 'cz'] },
-  { code: 'HU', aliases: ['hungary', 'hu'] },
-  { code: 'RO', aliases: ['romania', 'ro'] },
-  { code: 'UA', aliases: ['ukraine', 'ua'] },
-  { code: 'KE', aliases: ['kenya', 'ke'] },
-  { code: 'TZ', aliases: ['tanzania', 'tz'] },
-  { code: 'ZA', aliases: ['south africa', 'za'] },
-  { code: 'PH', aliases: ['philippines', 'ph', 'pilipinas'] },
-  { code: 'US', aliases: ['united states', 'us', 'usa', 'america'] },
-  { code: 'GB', aliases: ['united kingdom', 'uk', 'gb', 'britain', 'england'] },
-  { code: 'CA', aliases: ['canada', 'ca'] },
-  { code: 'AU', aliases: ['australia', 'au'] },
-  { code: 'SG', aliases: ['singapore', 'sg'] },
-];
-
 export function compactText(value: unknown): string {
   if (typeof value !== 'string') return '';
   return value.replace(/\s+/g, ' ').trim();
@@ -337,6 +171,11 @@ export function sanitizeLanguageToken(input: unknown): string {
   const text = compactText(input);
   if (!text) return '';
   return text.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 40);
+}
+
+export function sanitizeYoutubeRegionCode(input: unknown): string {
+  const text = compactText(input).toUpperCase();
+  return /^[A-Z]{2}$/.test(text) ? text : '';
 }
 
 export function sanitizeCountryHint(input: unknown): string {
@@ -376,198 +215,30 @@ export function countryTextMatchesAlias(
   return country.includes(needle);
 }
 
-export function inferCountryAliases(countryHint: string): string[] {
-  const normalized = sanitizeCountryHint(countryHint).toLowerCase();
-  if (!normalized) return [];
-
-  for (const rule of COUNTRY_LOCALE_RULES) {
-    if (
-      rule.aliases.some(alias => countryTextMatchesAlias(normalized, alias))
-    ) {
-      return uniqueTexts([
-        normalized,
-        ...rule.aliases.map(alias => alias.toLowerCase()),
-      ]);
-    }
-  }
-
-  return [normalized];
-}
-
-export function normalizeLocaleCode(tag?: string): string {
-  const normalized = sanitizeLanguageToken(tag || '').toLowerCase();
-  if (!normalized) return 'en';
-  const base = normalized.split(/[-_]/)[0];
-  if (SUPPORTED_SEARCH_LOCALES.has(base)) return base;
-  return 'en';
-}
-
-export function resolveSearchLocale(
-  countryHint?: string,
-  languageTag?: string
-): string {
-  const country = compactText(countryHint).toLowerCase();
-  if (country) {
-    for (const rule of COUNTRY_LOCALE_RULES) {
-      if (rule.aliases.some(alias => countryTextMatchesAlias(country, alias))) {
-        return rule.locale;
-      }
-    }
-  }
-  return normalizeLocaleCode(languageTag);
-}
-
 const REGION_DISPLAY_NAMES = new Intl.DisplayNames(['en'], {
   type: 'region',
 });
 
-export function normalizeCountryCode(input: unknown): string {
-  const normalized = sanitizeLanguageToken(input).toUpperCase();
-  if (!/^[A-Z]{2}$/.test(normalized)) return '';
-  try {
-    const display = compactText(REGION_DISPLAY_NAMES.of(normalized));
-    if (!display || /^unknown region$/i.test(display)) {
-      return '';
-    }
-    return normalized;
-  } catch {
-    return '';
-  }
-}
-
-export function inferCountryCodeFromCountryHint(countryHint?: string): string {
-  const country = compactText(countryHint).toLowerCase();
-  if (!country) return '';
-
-  for (const rule of COUNTRY_CODE_RULES) {
-    if (rule.aliases.some(alias => countryTextMatchesAlias(country, alias))) {
-      return rule.code;
-    }
-  }
-
-  return '';
-}
-
-export function resolveCountryCode(
-  countryHint?: string,
-  fallbackCode?: string
-): string {
-  return (
-    inferCountryCodeFromCountryHint(countryHint) ||
-    normalizeCountryCode(fallbackCode)
-  );
-}
-
-export function localeToLanguageInstruction(locale: string): string {
-  const base = normalizeLocaleCode(locale);
-  const nameMap: Record<string, string> = {
-    en: 'English',
-    es: 'Spanish',
-    fr: 'French',
-    de: 'German',
-    it: 'Italian',
-    ja: 'Japanese',
-    ko: 'Korean',
-    zh: 'Chinese',
-    ru: 'Russian',
-    pt: 'Portuguese',
-    ar: 'Arabic',
-    hi: 'Hindi',
-    id: 'Indonesian',
-    vi: 'Vietnamese',
-    tr: 'Turkish',
-    nl: 'Dutch',
-    pl: 'Polish',
-    sv: 'Swedish',
-    no: 'Norwegian',
-    da: 'Danish',
-    fi: 'Finnish',
-    el: 'Greek',
-    cs: 'Czech',
-    hu: 'Hungarian',
-    ro: 'Romanian',
-    uk: 'Ukrainian',
-    he: 'Hebrew',
-    fa: 'Persian',
-    th: 'Thai',
-    ms: 'Malay',
-    sw: 'Swahili',
-    af: 'Afrikaans',
-    bn: 'Bengali',
-    ta: 'Tamil',
-    te: 'Telugu',
-    mr: 'Marathi',
-    tl: 'Tagalog',
-    ur: 'Urdu',
-  };
-  return nameMap[base] || 'English';
-}
-
-export function inferSearchLanguageFromCountry(
-  countryHint?: string,
-  languageTag?: string
-): string {
-  return resolveSearchLocale(countryHint, languageTag);
-}
-
-export function localizeCountryToken(
-  countryHint: string,
-  targetLang: string
-): string {
-  const locale = normalizeLocaleCode(targetLang);
-  const aliases = inferCountryAliases(countryHint);
-  if (aliases.includes('japan')) {
-    if (locale === 'ja') return '日本';
-    if (locale === 'ko') return '일본';
-    return 'Japan';
-  }
-  if (aliases.includes('korea')) {
-    if (locale === 'ja') return '韓国';
-    if (locale === 'ko') return '한국';
-    return 'Korea';
-  }
-  return sanitizeCountryHint(countryHint);
-}
-
-export function applyCountryHint(query: string, countryHint: string): string {
-  const normalizedQuery = compactText(query);
-  const normalizedCountry = sanitizeCountryHint(countryHint);
-  if (!normalizedQuery || !normalizedCountry) return normalizedQuery;
-  const aliases = inferCountryAliases(normalizedCountry);
-  const hasAlias = aliases.some(alias =>
-    countryTextMatchesAlias(normalizedQuery, alias)
-  );
-  if (hasAlias) {
-    return normalizedQuery;
-  }
-  const targetLang = inferSearchLanguageFromCountry(countryHint);
-  const localizedCountry = localizeCountryToken(normalizedCountry, targetLang);
-  return `${normalizedQuery} ${localizedCountry}`;
-}
-
 export function buildYoutubeSearchPageUrl({
   query,
-  countryCode,
-  searchLocale,
+  youtubeRegionCode,
+  youtubeSearchLanguage,
 }: {
   query: string;
-  countryCode?: string;
-  searchLocale?: string;
+  youtubeRegionCode?: string;
+  youtubeSearchLanguage?: string;
 }): string {
   const url = new URL(`${YOUTUBE_ROOT_URL}/results`);
   url.searchParams.set('search_query', compactText(query));
-
-  const normalizedCountryCode = normalizeCountryCode(countryCode);
-  const normalizedSearchLocale = sanitizeLanguageToken(searchLocale)
-    .toLowerCase()
-    .slice(0, 10);
-
-  if (normalizedCountryCode) {
-    url.searchParams.set('gl', normalizedCountryCode);
-    url.searchParams.set('persist_gl', '1');
+  const regionCode = sanitizeYoutubeRegionCode(youtubeRegionCode);
+  const searchLanguage = sanitizeLanguageToken(
+    youtubeSearchLanguage
+  ).toLowerCase();
+  if (regionCode) {
+    url.searchParams.set('gl', regionCode);
   }
-  if (normalizedSearchLocale) {
-    url.searchParams.set('hl', normalizedSearchLocale);
+  if (searchLanguage) {
+    url.searchParams.set('hl', searchLanguage);
   }
 
   return url.toString();
@@ -670,36 +341,6 @@ export function containsCjkOrKana(text: string): boolean {
 
 export const sanitizeSearchKeywords = sanitizeVideoSuggestionSearchKeywords;
 
-const NOISY_RETRIEVAL_PATTERNS: RegExp[] = [
-  /\bofficial\s+youtube\s+channel\b/gi,
-  /\byoutube\s+official\s+channel\b/gi,
-  /\bofficial\s+channel\b/gi,
-  /\byoutube\b/gi,
-  /\bchannel\b/gi,
-  /公式\s*YouTube\s*チャンネル/gi,
-  /YouTube\s*公式(?:チャンネル)?/gi,
-  /公式チャンネル/gi,
-  /유튜브\s*공식\s*채널/g,
-  /공식\s*유튜브\s*채널/g,
-  /官方\s*YouTube\s*频道/gi,
-  /官方频道/gi,
-  /\blatest\s+videos?\b/gi,
-  /\blatest\b/gi,
-  /\bnewest\b/gi,
-  /(?:^|\s)最新(?:$|\s)/g,
-  /(?:^|\s)최신(?:$|\s)/g,
-];
-
-export function sanitizeRetrievalSearchQuery(value: unknown): string {
-  let normalized = sanitizeSearchKeywords(value);
-  if (!normalized) return '';
-  for (const pattern of NOISY_RETRIEVAL_PATTERNS) {
-    normalized = normalized.replace(pattern, ' ');
-  }
-  normalized = sanitizeSearchKeywords(normalized);
-  return normalized;
-}
-
 function normalizeCandidateConfidence(
   value: unknown
 ): IntentCandidate['confidence'] | undefined {
@@ -714,9 +355,7 @@ function normalizeCandidateConfidence(
   return undefined;
 }
 
-export function normalizeIntentCandidates(
-  input: unknown
-): IntentCandidate[] {
+export function normalizeIntentCandidates(input: unknown): IntentCandidate[] {
   const rawItems = Array.isArray(input) ? input : [];
   const out: IntentCandidate[] = [];
   const seen = new Set<string>();
@@ -727,7 +366,7 @@ export function normalizeIntentCandidates(
         ? (rawItem as Record<string, unknown>)
         : null;
     const name = clampMessage(
-      compactText(source ? source.name ?? source.channel : rawItem)
+      compactText(source ? (source.name ?? source.channel) : rawItem)
     );
     if (!name) continue;
     const key = name.toLowerCase();
@@ -745,20 +384,11 @@ export function normalizeIntentCandidates(
 
 export function normalizeDescriptorPhrases(input: unknown): string[] {
   const rawItems = Array.isArray(input) ? input : [];
-  const out: string[] = [];
-  const seen = new Set<string>();
-
-  for (const rawItem of rawItems) {
-    const phrase = sanitizeRetrievalSearchQuery(rawItem);
-    if (!phrase) continue;
-    const key = phrase.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(phrase);
-    if (out.length >= 8) break;
-  }
-
-  return out;
+  return uniqueTexts(
+    rawItems
+      .map(value => sanitizeSearchKeywords(String(value || '')))
+      .filter(Boolean)
+  ).slice(0, 8);
 }
 
 function candidateConfidenceWeight(
@@ -781,93 +411,48 @@ export function buildOrderedIntentSeedQueries({
   descriptorPhrases,
   resolvedIntent,
   latestUserQuery,
-  maxQueries = 18,
 }: {
-  candidates?: IntentCandidate[];
-  descriptorPhrases?: string[];
+  candidates?: unknown;
+  descriptorPhrases?: unknown;
   resolvedIntent?: string;
   latestUserQuery?: string;
-  maxQueries?: number;
 }): string[] {
-  const sortedCandidates = [...(candidates || [])]
-    .filter(candidate => compactText(candidate?.name))
+  const rankedCandidates = normalizeIntentCandidates(candidates)
+    .map((item, index) => ({ ...item, index }))
     .sort((a, b) => {
-      const weightDiff =
+      const weightDelta =
         candidateConfidenceWeight(b.confidence) -
         candidateConfidenceWeight(a.confidence);
-      if (weightDiff !== 0) return weightDiff;
-      return 0;
+      return weightDelta !== 0 ? weightDelta : a.index - b.index;
     });
+  const candidateNames = rankedCandidates
+    .map(item => sanitizeSearchKeywords(item.name))
+    .filter(Boolean)
+    .slice(0, 8);
+  const cleanedDescriptors = normalizeDescriptorPhrases(descriptorPhrases).slice(
+    0,
+    4
+  );
+  const combinedQueries: string[] = [];
 
-  const candidateNames = uniqueTexts(
-    sortedCandidates.map(candidate =>
-      sanitizeRetrievalSearchQuery(candidate.name)
-    )
-  ).slice(0, 8);
-
-  const descriptors = normalizeDescriptorPhrases(descriptorPhrases).slice(0, 4);
-  const queries: string[] = [];
-
-  for (const candidateName of candidateNames) {
-    queries.push(candidateName);
-  }
-
-  let comboCount = 0;
-  for (const descriptor of descriptors.slice(0, 2)) {
-    for (const candidateName of candidateNames.slice(0, 4)) {
-      const normalizedCandidate = candidateName.toLowerCase();
-      const normalizedDescriptor = descriptor.toLowerCase();
-      if (
-        normalizedDescriptor.includes(normalizedCandidate) ||
-        normalizedCandidate.includes(normalizedDescriptor)
-      ) {
-        continue;
+  for (const candidateName of candidateNames.slice(0, 4)) {
+    for (const descriptor of cleanedDescriptors.slice(0, 2)) {
+      const combined = sanitizeSearchKeywords(`${candidateName} ${descriptor}`);
+      if (combined) {
+        combinedQueries.push(combined);
       }
-      queries.push(`${candidateName} ${descriptor}`);
-      comboCount += 1;
-      if (comboCount >= 4) break;
     }
-    if (comboCount >= 4) break;
-  }
-
-  queries.push(...descriptors);
-
-  for (const fallback of [resolvedIntent, latestUserQuery]) {
-    const normalized = sanitizeRetrievalSearchQuery(fallback);
-    if (!normalized) continue;
-    queries.push(normalized);
   }
 
   return uniqueTexts(
-    queries.map(query => sanitizeRetrievalSearchQuery(query)).filter(Boolean)
-  ).slice(0, Math.max(1, Math.floor(maxQueries)));
-}
-
-export function enrichIntentKeywords(
-  query: string,
-  targetLang: string
-): string {
-  const normalized = sanitizeSearchKeywords(query);
-  if (!normalized) return normalized;
-  const lower = normalized.toLowerCase();
-  const isStreamerIntent =
-    /\b(streamer|stream|livestream|live stream|twitch|vtuber|gaming|game)\b/i.test(
-      lower
-    ) ||
-    /配信|配信者|実況|ストリーマー|ゲーム/.test(normalized) ||
-    /스트리머|방송|게임|라이브/.test(normalized);
-  if (!isStreamerIntent) return normalized;
-  const hasStreamWord =
-    /\b(stream|livestream|archive|vod)\b/i.test(lower) ||
-    /配信|アーカイブ|実況|생방|다시보기/.test(normalized);
-  if (hasStreamWord) return normalized;
-  if (targetLang === 'ja') {
-    return `${normalized} 配信 アーカイブ`;
-  }
-  if (targetLang === 'ko') {
-    return `${normalized} 방송 다시보기`;
-  }
-  return `${normalized} stream archive`;
+    [
+      ...candidateNames,
+      ...combinedQueries,
+      ...cleanedDescriptors,
+      sanitizeSearchKeywords(resolvedIntent || ''),
+      sanitizeSearchKeywords(latestUserQuery || ''),
+    ].filter(Boolean)
+  ).slice(0, 12);
 }
 
 export function normalizeExcludeUrls(input: unknown): Set<string> {

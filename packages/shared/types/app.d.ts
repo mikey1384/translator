@@ -293,7 +293,9 @@ declare module '@shared-types/app' {
     modelPreference?: VideoSuggestionModelPreference;
     preferredLanguage?: string;
     preferredLanguageName?: string;
-    preferredCountry?: string;
+    targetCountry?: string;
+    youtubeRegionCode?: string;
+    youtubeSearchLanguage?: string;
     preferredRecency?: VideoSuggestionRecency;
     savedPreferences?: VideoSuggestionPreferenceSlots;
     continuationId?: string;
@@ -309,6 +311,8 @@ declare module '@shared-types/app' {
     success: boolean;
     assistantMessage: string;
     searchQuery?: string;
+    youtubeRegionCode?: string;
+    youtubeSearchLanguage?: string;
     results?: VideoSuggestionResultItem[];
     capturedPreferences?: VideoSuggestionPreferenceSlots;
     continuationId?: string;

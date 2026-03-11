@@ -156,7 +156,7 @@ export default function VideoSuggestionPanel({
     }
   }, [modelPreference, t]);
 
-  const preferredCountry = useMemo(
+  const targetCountryValue = useMemo(
     () => sanitizeVideoSuggestionCountry(targetCountry),
     [targetCountry]
   );
@@ -176,43 +176,32 @@ export default function VideoSuggestionPanel({
     }),
     [activePrefTopic]
   );
-  const normalizePreferenceList = useCallback(
-    (values: string[]): string[] => {
-      const seen = new Set<string>();
-      const out: string[] = [];
-      for (const value of values) {
-        const sanitized = sanitizeVideoSuggestionPreference(value);
-        if (!sanitized) continue;
-        const key = sanitized.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        out.push(sanitized);
-      }
-      return out.slice(0, 8);
-    },
-    []
-  );
+  const normalizePreferenceList = useCallback((values: string[]): string[] => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const value of values) {
+      const sanitized = sanitizeVideoSuggestionPreference(value);
+      if (!sanitized) continue;
+      const key = sanitized.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(sanitized);
+    }
+    return out.slice(0, 8);
+  }, []);
 
   const addSavedPreferenceValue = useCallback(
-    (
-      setter: Dispatch<SetStateAction<string[]>>,
-      value: string
-    ): string => {
+    (setter: Dispatch<SetStateAction<string[]>>, value: string): string => {
       const sanitized = sanitizeVideoSuggestionPreference(value);
       if (!sanitized) return '';
-      setter(current =>
-        normalizePreferenceList([sanitized, ...current])
-      );
+      setter(current => normalizePreferenceList([sanitized, ...current]));
       return sanitized;
     },
     [normalizePreferenceList]
   );
 
   const removeSavedPreferenceValue = useCallback(
-    (
-      setter: Dispatch<SetStateAction<string[]>>,
-      value: string
-    ) => {
+    (setter: Dispatch<SetStateAction<string[]>>, value: string) => {
       const sanitized = sanitizeVideoSuggestionPreference(value);
       setter(current =>
         current.filter(item => item.toLowerCase() !== sanitized.toLowerCase())
@@ -296,7 +285,7 @@ export default function VideoSuggestionPanel({
     onCapturePreferences: applyCapturedPreferences,
     onResultsReady: () => {},
     open,
-    preferredCountry,
+    targetCountry: targetCountryValue,
     preferredLanguage,
     preferredLanguageName,
     preferredRecency: targetRecency,
@@ -405,19 +394,19 @@ export default function VideoSuggestionPanel({
   );
   const countryScopeLabel = useMemo(
     () =>
-      preferredCountry
+      targetCountryValue
         ? t(
-            'input.videoSuggestion.countryBiasScope',
-            'Regional bias: {{country}}',
+            'input.videoSuggestion.countryScope',
+            'Target country: {{country}}',
             {
-              country: preferredCountry,
+              country: targetCountryValue,
             }
           )
         : t(
-            'input.videoSuggestion.countryBiasGlobal',
-            'No regional bias'
+            'input.videoSuggestion.countryDefaultEnglish',
+            'Target country: English default'
           ),
-    [preferredCountry, t]
+    [t, targetCountryValue]
   );
   const savedPreferenceCount = useMemo(
     () => savedPrefTopics.length,
@@ -464,8 +453,12 @@ export default function VideoSuggestionPanel({
         localPrefs.contextToggles.includeWatchedChannels
       ),
     });
-    const localTopic = sanitizeVideoSuggestionPreference(localPrefs.preferences.topic);
-    setSavedPrefTopics(normalizePreferenceList(localPrefs.preferenceHistory.topic));
+    const localTopic = sanitizeVideoSuggestionPreference(
+      localPrefs.preferences.topic
+    );
+    setSavedPrefTopics(
+      normalizePreferenceList(localPrefs.preferenceHistory.topic)
+    );
     setActivePrefTopic(localTopic);
 
     Promise.all([
@@ -683,7 +676,14 @@ export default function VideoSuggestionPanel({
     if (hasRestorableSession) {
       setOpen(true);
     }
-  }, [hideToggle, loading, messages.length, pipelineStages, results.length, searchQuery]);
+  }, [
+    hideToggle,
+    loading,
+    messages.length,
+    pipelineStages,
+    results.length,
+    searchQuery,
+  ]);
 
   return (
     <div className={wrapperStyles}>
@@ -818,10 +818,7 @@ export default function VideoSuggestionPanel({
             }}
             onRemoveSavedTopic={() => {
               markHydrationDirty('topic');
-              removeSavedPreferenceValue(
-                setSavedPrefTopics,
-                activePrefTopic
-              );
+              removeSavedPreferenceValue(setSavedPrefTopics, activePrefTopic);
               setActivePrefTopic('');
             }}
             onTopicChange={value => {
