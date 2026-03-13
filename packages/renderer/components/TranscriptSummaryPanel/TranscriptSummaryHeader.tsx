@@ -54,7 +54,9 @@ export default function TranscriptSummaryHeader({
   tabs,
   t,
 }: TranscriptSummaryHeaderProps) {
-  const generateHighlightsLabel = `${t('common.generate')} ${t('summary.tab.highlights')}`;
+  const generateHighlightsLabel = summary.trim()
+    ? t('summary.regenerate', 'Regenerate highlights')
+    : t('summary.generate', 'Generate highlights');
 
   return (
     <div className={headerRowStyles}>

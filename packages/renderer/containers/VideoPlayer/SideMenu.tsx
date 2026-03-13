@@ -19,7 +19,11 @@ import {
   useUIStore,
   useVideoStore,
 } from '../../state';
-import { openChangeVideo, openUnsavedSrtConfirm } from '../../state/modal-store';
+import { useUrlStore } from '../../state/url-store';
+import {
+  openChangeVideo,
+  openUnsavedSrtConfirm,
+} from '../../state/modal-store';
 import { logButton, logVideo, logError } from '../../utils/logger';
 import { useTranslation } from 'react-i18next';
 import { openSubtitleWithElectron } from '../../../shared/helpers';
@@ -136,12 +140,22 @@ export default function SideMenu({
         return (seg.original || '').trim() && !(seg.translation || '').trim();
       })
     : false;
-  const canSaveOriginalVideo = isManagedTempOriginalVideoPath(originalVideoPath);
+  const hasDubbableText = hasSubs
+    ? order.some(id => {
+        const seg = segments[id];
+        return (seg?.translation || seg?.original || '').trim();
+      })
+    : false;
+  const canSaveOriginalVideo =
+    isManagedTempOriginalVideoPath(originalVideoPath);
   const canSaveDubbedVideo = Boolean(dubbedVideoPath);
-  const showTranscribeButton = !transcriptionIsCompleted && !translationInProgress;
+  const showTranscribeButton =
+    !transcriptionIsCompleted && !translationInProgress;
   const showPreserveActions = canSaveOriginalVideo || canSaveDubbedVideo;
   const showProcessingActions = showTranscribeButton || showPreserveActions;
-  const showDubAction = activeTrack !== 'dubbed';
+  const showTranslateAction = hasUntranslated;
+  const showDubAction = hasDubbableText && activeTrack !== 'dubbed';
+  const showSubtitleActions = showTranslateAction || showDubAction;
 
   async function handleTranslateAll() {
     try {
@@ -165,12 +179,7 @@ export default function SideMenu({
       // SRT loaded from disk; mark origin accordingly
       useSubStore
         .getState()
-        .load(
-          res.segments,
-          res.filePath ?? null,
-          'disk',
-          associatedVideoPath
-        );
+        .load(res.segments, res.filePath ?? null, 'disk', associatedVideoPath);
       // Reset transcription completion state so Generate panel doesn't show stale 'Transcription Complete'
       try {
         useTaskStore.getState().setTranscription({
@@ -233,8 +242,16 @@ export default function SideMenu({
 
   async function handleDub() {
     const subtitleState = useSubStore.getState();
-    const currentSegments = subtitleState.order.map(id => subtitleState.segments[id]);
-    if (currentSegments.length === 0) {
+    const currentSegments = subtitleState.order.map(
+      id => subtitleState.segments[id]
+    );
+    const hasSubtitleText = currentSegments.some(seg =>
+      String(seg?.translation || seg?.original || '').trim()
+    );
+    if (currentSegments.length === 0 || !hasSubtitleText) {
+      useUrlStore
+        .getState()
+        .setValidationError('No subtitles available for dubbing');
       return;
     }
 
@@ -337,7 +354,10 @@ export default function SideMenu({
                     activeTrack === 'dubbed' ? 'original' : 'dubbed'
                   );
                 } catch (err) {
-                  console.error('[SideMenu] Failed to switch audio track:', err);
+                  console.error(
+                    '[SideMenu] Failed to switch audio track:',
+                    err
+                  );
                 }
               }}
               title={
@@ -444,15 +464,18 @@ export default function SideMenu({
               metadataStatusMessage &&
               metadataErrorCode !== 'icloud-placeholder' &&
               !isTranscribing && (
-              <div className={sidePanelWarningStyles} role="alert">
-                <div className={sidePanelWarningIconStyles} aria-hidden="true">
-                  <CircleAlert size={12} strokeWidth={2.2} />
+                <div className={sidePanelWarningStyles} role="alert">
+                  <div
+                    className={sidePanelWarningIconStyles}
+                    aria-hidden="true"
+                  >
+                    <CircleAlert size={12} strokeWidth={2.2} />
+                  </div>
+                  <div className={sidePanelWarningTextStyles}>
+                    {metadataStatusMessage}
+                  </div>
                 </div>
-                <div className={sidePanelWarningTextStyles}>
-                  {metadataStatusMessage}
-                </div>
-              </div>
-            )}
+              )}
 
             {canSaveOriginalVideo && (
               <Button
@@ -485,61 +508,76 @@ export default function SideMenu({
           </div>
         )}
 
-        {hasUntranslated && (
+        {showSubtitleActions && (
           <div className={sidePanelSectionStyles}>
-            <div className={sidePanelFieldStackStyles}>
-              <div className={sidePanelLabelStyles}>
-                {t('subtitles.outputLanguage', 'Output language')}
+            {showTranslateAction && (
+              <div className={sidePanelFieldStackStyles}>
+                <div className={sidePanelLabelStyles}>
+                  {t('subtitles.outputLanguage', 'Output language')}
+                </div>
+                <select
+                  className={sidePanelSelectStyles}
+                  value={targetLanguage}
+                  onChange={e => setTargetLanguage(e.target.value)}
+                >
+                  {TRANSLATION_LANGUAGES_BASE.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
+                    </option>
+                  ))}
+                  {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+                    <optgroup key={group.labelKey} label={t(group.labelKey)}>
+                      {group.options.map(opt => (
+                        <option key={opt.value} value={opt.value}>
+                          {t(opt.labelKey)}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
               </div>
-              <select
-                className={sidePanelSelectStyles}
-                value={targetLanguage}
-                onChange={e => setTargetLanguage(e.target.value)}
-              >
-                {TRANSLATION_LANGUAGES_BASE.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(opt.labelKey)}
-                  </option>
-                ))}
-                {TRANSLATION_LANGUAGE_GROUPS.map(group => (
-                  <optgroup key={group.labelKey} label={t(group.labelKey)}>
-                    {group.options.map(opt => (
-                      <option key={opt.value} value={opt.value}>
-                        {t(opt.labelKey)}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
+            )}
             <div
               className={
-                showDubAction ? sidePanelButtonRowStyles : sidePanelFieldStackStyles
+                showTranslateAction && showDubAction
+                  ? sidePanelButtonRowStyles
+                  : sidePanelFieldStackStyles
               }
             >
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={handleTranslateAll}
-                disabled={isTranscribing || translationInProgress || isMerging}
-                title={t('subtitles.translate', 'Translate')}
-              >
-                <span className={sidePanelButtonContentStyles}>
-                  <Languages size={15} strokeWidth={2.2} />
-                  {t('subtitles.translate', 'Translate')}
-                </span>
-              </Button>
+              {showTranslateAction && (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={handleTranslateAll}
+                  disabled={
+                    isTranscribing || translationInProgress || isMerging
+                  }
+                  title={t('subtitles.translate', 'Translate')}
+                >
+                  <span className={sidePanelButtonContentStyles}>
+                    <Languages size={15} strokeWidth={2.2} />
+                    {t('subtitles.translate', 'Translate')}
+                  </span>
+                </Button>
+              )}
               {showDubAction ? (
                 <Button
                   size="sm"
                   variant="secondary"
                   onClick={handleDub}
-                  disabled={isDubbing || isTranscribing || translationInProgress || isMerging}
+                  disabled={
+                    isDubbing ||
+                    isTranscribing ||
+                    translationInProgress ||
+                    isMerging
+                  }
                   isLoading={isDubbing}
                   title={t('subtitles.dub', 'Dub Voice')}
                 >
                   <span className={sidePanelButtonContentStyles}>
-                    {!isDubbing ? <AudioLines size={15} strokeWidth={2.2} /> : null}
+                    {!isDubbing ? (
+                      <AudioLines size={15} strokeWidth={2.2} />
+                    ) : null}
                     {t('subtitles.dub', 'Dub Voice')}
                   </span>
                 </Button>

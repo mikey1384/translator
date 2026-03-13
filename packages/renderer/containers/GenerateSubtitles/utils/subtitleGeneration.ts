@@ -37,6 +37,40 @@ export interface GenerateSubtitlesResult {
   subtitles?: string;
 }
 
+function buildGenerateSubtitlesDurableRecoverySeed({
+  videoFile,
+  sourceUrl,
+}: {
+  videoFile: File | null;
+  sourceUrl: string | null;
+}): string | null {
+  const normalizedSourceUrl = String(sourceUrl || '').trim();
+  if (normalizedSourceUrl) {
+    return ['generate-subtitles-source-url-v1', normalizedSourceUrl].join('\n');
+  }
+
+  if (!videoFile) {
+    return null;
+  }
+
+  return [
+    'generate-subtitles-file-v1',
+    String(videoFile.name || '').trim(),
+    String(
+      typeof videoFile.size === 'number' && Number.isFinite(videoFile.size)
+        ? videoFile.size
+        : ''
+    ),
+    String(
+      typeof videoFile.lastModified === 'number' &&
+        Number.isFinite(videoFile.lastModified)
+        ? videoFile.lastModified
+        : ''
+    ),
+    String(videoFile.type || '').trim(),
+  ].join('\n');
+}
+
 function resolveTranslationSourceAssociation(): {
   sourceVideoPath: string | null;
   sourceUrl: string | null;
@@ -381,6 +415,22 @@ export async function executeSubtitleGeneration({
   try {
     // Prepare options for subtitle generation
     const opts: any = { targetLanguage, streamResults: true };
+    const videoState = useVideoStore.getState();
+    const sourceMediaPath =
+      videoState.originalPath ??
+      videoState.path ??
+      videoFilePath ??
+      ((videoFile as any)?.path ?? (videoFile as any)?._originalPath ?? null);
+    const durableRecoverySeed = buildGenerateSubtitlesDurableRecoverySeed({
+      videoFile,
+      sourceUrl: videoState.sourceUrl ?? null,
+    });
+    if (sourceMediaPath) {
+      opts.sourceMediaPath = sourceMediaPath;
+    }
+    if (durableRecoverySeed && (videoState.sourceUrl || !opts.sourceMediaPath)) {
+      opts.durableRecoverySeed = durableRecoverySeed;
+    }
     if (videoFilePath) {
       opts.videoPath = videoFilePath;
     } else if (videoFile) {

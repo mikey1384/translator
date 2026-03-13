@@ -1,7 +1,7 @@
 import {
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
   STAGE5_TRANSCRIPTION_MODEL_PRICING,
-  STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL,
+  STAGE5_TTS_MODEL_ELEVEN_V3,
   STAGE5_TTS_MODEL_PRICING,
   STAGE5_TTS_MODEL_STANDARD,
   type Stage5TranscriptionModelId,
@@ -60,7 +60,7 @@ export const TTS_CREDITS_PER_MINUTE = {
     getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD) *
     SPOKEN_CHARS_PER_MINUTE,
   elevenlabs:
-    getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL) *
+    getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V3) *
     SPOKEN_CHARS_PER_MINUTE,
 } as const;
 
@@ -71,6 +71,6 @@ export const PREVIEW_TTS_CREDITS = {
   }),
   elevenlabs: estimateTtsCredits({
     characters: PREVIEW_TTS_SAMPLE_CHARS,
-    model: STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL,
+    model: STAGE5_TTS_MODEL_ELEVEN_V3,
   }),
 } as const;

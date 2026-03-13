@@ -1376,7 +1376,7 @@ var STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
 var STAGE5_ELEVENLABS_SCRIBE_MODEL = "elevenlabs-scribe";
 var STAGE5_TTS_MODEL_STANDARD = "tts-1";
 var STAGE5_TTS_MODEL_HD = "tts-1-hd";
-var STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL = "eleven_multilingual_v2";
+var STAGE5_TTS_MODEL_ELEVEN_V3 = "eleven_v3";
 var STAGE5_TTS_MODEL_ELEVEN_TURBO = "eleven_turbo_v2_5";
 var AI_MODEL_ALIASES = {
   "claude-sonnet-4-5-20250929": AI_MODELS.CLAUDE_SONNET,
@@ -1413,7 +1413,7 @@ var STAGE5_TTS_MODEL_PRICING = {
   [STAGE5_TTS_MODEL_HD]: {
     perChar: 30 / 1e6
   },
-  [STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL]: {
+  [STAGE5_TTS_MODEL_ELEVEN_V3]: {
     perChar: 180 / 1e6
   },
   [STAGE5_TTS_MODEL_ELEVEN_TURBO]: {
@@ -1442,7 +1442,7 @@ function estimateTtsCredits({
 var CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = getTranscriptionCreditsPerSecond(STAGE5_ELEVENLABS_SCRIBE_MODEL) * 3600;
 var TTS_CREDITS_PER_MINUTE = {
   openai: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD) * SPOKEN_CHARS_PER_MINUTE,
-  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL) * SPOKEN_CHARS_PER_MINUTE
+  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V3) * SPOKEN_CHARS_PER_MINUTE
 };
 var PREVIEW_TTS_CREDITS = {
   openai: estimateTtsCredits({
@@ -1451,7 +1451,7 @@ var PREVIEW_TTS_CREDITS = {
   }),
   elevenlabs: estimateTtsCredits({
     characters: PREVIEW_TTS_SAMPLE_CHARS,
-    model: STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL
+    model: STAGE5_TTS_MODEL_ELEVEN_V3
   })
 };
 
@@ -1477,7 +1477,7 @@ var VENDOR_TRANSCRIPTION_MODEL_PRICING = {
 };
 var VENDOR_TTS_MODEL_PRICING = {
   [STAGE5_TTS_MODEL_STANDARD]: STAGE5_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD],
-  [STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL]: {
+  [STAGE5_TTS_MODEL_ELEVEN_V3]: {
     creator: 300 / 1e6,
     pro: 180 / 1e6,
     scaleBusiness: 120 / 1e6
@@ -1493,7 +1493,8 @@ var AI_MODEL_DISPLAY_NAMES = {
   [STAGE5_REVIEW_TRANSLATION_MODEL]: "GPT-5.4",
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet",
   [AI_MODELS.CLAUDE_OPUS]: "Claude Opus",
-  [AI_MODELS.WHISPER]: "Whisper"
+  [AI_MODELS.WHISPER]: "Whisper",
+  [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3"
 };
 var GPT5_1_USD_PER_TOKEN_IN = STAGE5_TRANSLATION_MODEL_PRICING["gpt-5.1"].in;
 var GPT5_1_USD_PER_TOKEN_OUT = STAGE5_TRANSLATION_MODEL_PRICING["gpt-5.1"].out;
@@ -1544,6 +1545,118 @@ var CREDIT_PACKS = {
 };
 
 // ../shared/helpers/subtitle-style-util.ts
+var DEFAULT_FONT_STACK = [
+  "Noto Sans",
+  "Inter",
+  "-apple-system",
+  "BlinkMacSystemFont",
+  "Segoe UI",
+  "Roboto",
+  "PingFang SC",
+  "Microsoft YaHei",
+  "Noto Sans SC",
+  "sans-serif"
+].join(", ");
+var SHORT_FORM_FONT_STACK = [
+  "'Pretendard Variable'",
+  "'Pretendard'",
+  "'SUIT Variable'",
+  "'SUIT'",
+  "'Apple SD Gothic Neo'",
+  "'Malgun Gothic'",
+  "'Noto Sans KR'",
+  "'Noto Sans'",
+  "'Inter'",
+  "-apple-system",
+  "BlinkMacSystemFont",
+  "'Segoe UI'",
+  "'Roboto'",
+  "'PingFang SC'",
+  "'Microsoft YaHei'",
+  "'Noto Sans SC'",
+  "sans-serif"
+].join(", ");
+var SHORT_FORM_TUNING = {
+  Default: {
+    borderRadiusPx: 10,
+    bottomMultiLine: "29.5%",
+    bottomSingleLine: "23.5%",
+    containerPadding: "10px 22px",
+    fontScale: 1.08,
+    fontWeight: 800,
+    horizontalInset: "5.5%",
+    letterSpacing: "0",
+    lineBoxBorderRadiusPx: 0,
+    lineBoxBoxShadow: "none",
+    lineBoxPadding: "1px 6px",
+    lineHeight: 1.22,
+    maxWidth: "89%",
+    outlineMultiplier: 2.05,
+    softShadowBlurPx: 18,
+    softShadowColor: "rgba(0, 0, 0, 0.62)",
+    softShadowOffsetYPx: 6
+  },
+  Classic: {
+    borderRadiusPx: 10,
+    bottomMultiLine: "29.5%",
+    bottomSingleLine: "23.5%",
+    containerPadding: "10px 22px",
+    fontScale: 1.08,
+    fontWeight: 900,
+    horizontalInset: "5.5%",
+    letterSpacing: "-0.01em",
+    lineBoxBorderRadiusPx: 0,
+    lineBoxBoxShadow: "none",
+    lineBoxPadding: "1px 6px",
+    lineHeight: 1.2,
+    maxWidth: "89%",
+    outlineMultiplier: 2.25,
+    softShadowBlurPx: 20,
+    softShadowColor: "rgba(0, 0, 0, 0.68)",
+    softShadowOffsetYPx: 7
+  },
+  Boxed: {
+    backgroundColor: "rgba(8, 8, 10, 0.72)",
+    borderRadiusPx: 18,
+    bottomMultiLine: "30.5%",
+    bottomSingleLine: "24.5%",
+    boxShadow: "0 16px 32px rgba(0, 0, 0, 0.28)",
+    containerPadding: "12px 22px",
+    fontScale: 1.06,
+    fontWeight: 800,
+    horizontalInset: "7%",
+    letterSpacing: "0",
+    lineBoxBorderRadiusPx: 0,
+    lineBoxBoxShadow: "none",
+    lineBoxPadding: "1px 6px",
+    lineHeight: 1.18,
+    maxWidth: "86%",
+    outlineMultiplier: 1.4,
+    softShadowBlurPx: 14,
+    softShadowColor: "rgba(0, 0, 0, 0.22)",
+    softShadowOffsetYPx: 4
+  },
+  LineBox: {
+    borderRadiusPx: 0,
+    bottomMultiLine: "31%",
+    bottomSingleLine: "25%",
+    containerPadding: "0 14px 12px 14px",
+    fontScale: 1.06,
+    fontWeight: 800,
+    horizontalInset: "6%",
+    letterSpacing: "0",
+    lineBoxBackgroundColor: "rgba(10, 10, 12, 0.82)",
+    lineBoxBorderRadiusPx: 14,
+    lineBoxBoxShadow: "0 10px 24px rgba(0, 0, 0, 0.24)",
+    lineBoxPadding: "4px 12px 5px 12px",
+    lineHeight: 1.24,
+    maxWidth: "88%",
+    outlineMultiplier: 1,
+    softShadowBlurPx: 8,
+    softShadowColor: "rgba(0, 0, 0, 0.28)",
+    softShadowOffsetYPx: 2
+  }
+};
 function assColorToRgba(ass) {
   if (!ass?.startsWith("&H")) return "rgba(255,255,255,1)";
   const hex = ass.substring(2).padStart(8, "0");
@@ -1553,7 +1666,19 @@ function assColorToRgba(ass) {
   const r = parseInt(hex.slice(6, 8), 16);
   return `rgba(${r},${g},${b},${(a / 255).toFixed(2)})`;
 }
-function getSubtitleStyles(opts) {
+function isShortFormPortraitCanvas(videoWidthPx, videoHeightPx) {
+  const SHORTS_RATIO_CUTOFF = 0.68;
+  const canvasWidth = videoWidthPx ?? (typeof window !== "undefined" ? window.innerWidth || void 0 : void 0);
+  const canvasHeight = videoHeightPx ?? (typeof window !== "undefined" ? window.innerHeight || void 0 : void 0);
+  return !!canvasWidth && !!canvasHeight && canvasWidth < canvasHeight && canvasWidth / canvasHeight <= SHORTS_RATIO_CUTOFF;
+}
+function buildSoftShadow(softShadowColor, softShadowOffsetYPx, softShadowBlurPx) {
+  if (!softShadowColor || typeof softShadowOffsetYPx !== "number" || typeof softShadowBlurPx !== "number") {
+    return "none";
+  }
+  return `0 ${softShadowOffsetYPx}px ${softShadowBlurPx}px ${softShadowColor}`;
+}
+function resolveSubtitleRenderTheme(opts) {
   const {
     displayFontSize = BASELINE_FONT_SIZE,
     isFullScreen = false,
@@ -1563,54 +1688,101 @@ function getSubtitleStyles(opts) {
     videoHeightPx
   } = opts;
   const style = SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
-  const finalFontSize = Math.max(10, displayFontSize);
-  const primaryRgba = assColorToRgba(style.primaryColor);
+  const isShortFormPortrait = isShortFormPortraitCanvas(
+    videoWidthPx,
+    videoHeightPx
+  );
+  const shortFormTuning = isShortFormPortrait ? SHORT_FORM_TUNING[stylePreset] : null;
+  const finalFontSize = Math.max(
+    10,
+    displayFontSize * (shortFormTuning?.fontScale ?? 1)
+  );
   const outlineRgba = assColorToRgba(style.outlineColor);
   const shadowRgba = assColorToRgba(style.backColor);
-  const position2 = isFullScreen ? "fixed" : "absolute";
-  const SHORTS_RATIO_CUTOFF = 0.68;
-  const canvasWidth = videoWidthPx ?? (typeof window !== "undefined" ? window.innerWidth || void 0 : void 0);
-  const canvasHeight = videoHeightPx ?? (typeof window !== "undefined" ? window.innerHeight || void 0 : void 0);
-  const isShortFormPortrait = !!canvasWidth && !!canvasHeight && canvasWidth < canvasHeight && canvasWidth / canvasHeight <= SHORTS_RATIO_CUTOFF;
   let bottomValue;
   if (isShortFormPortrait) {
-    bottomValue = isMultiLine ? "30%" : "24%";
+    bottomValue = isMultiLine ? shortFormTuning?.bottomMultiLine || "30%" : shortFormTuning?.bottomSingleLine || "24%";
   } else if (isMultiLine) {
     bottomValue = isFullScreen ? "5%" : "2.5%";
   } else {
     bottomValue = isFullScreen ? "10%" : "5%";
   }
-  const maxWidth = isFullScreen ? "100%" : "100%";
   let textShadow = "none";
+  let textStrokeColor = "transparent";
+  let textStrokeWidthPx = 0;
   let backgroundColor = "transparent";
   let boxShadowValue = "none";
-  let containerPadding = "10px 20px";
+  let containerPadding = shortFormTuning?.containerPadding || "10px 20px";
   if (stylePreset === "LineBox") {
     backgroundColor = "transparent";
     boxShadowValue = "none";
-    containerPadding = "0 12px 10px 12px";
-    textShadow = "none";
+    containerPadding = shortFormTuning?.containerPadding || "0 12px 10px 12px";
+    textShadow = isShortFormPortrait ? `0 ${shortFormTuning?.softShadowOffsetYPx || 2}px ${shortFormTuning?.softShadowBlurPx || 8}px ${shortFormTuning?.softShadowColor || "rgba(0, 0, 0, 0.28)"}` : "none";
   } else if (style.borderStyle === 1) {
     backgroundColor = "transparent";
     boxShadowValue = "none";
-    const outlineSize = Math.max(0.1, style.outlineSize);
-    textShadow = `
-      ${outlineSize}px ${outlineSize}px 0 ${outlineRgba},
-      -${outlineSize}px ${outlineSize}px 0 ${outlineRgba},
-      ${outlineSize}px -${outlineSize}px 0 ${outlineRgba},
-      -${outlineSize}px -${outlineSize}px 0 ${outlineRgba},
-      ${outlineSize}px 0px 0 ${outlineRgba},
-      -${outlineSize}px 0px 0 ${outlineRgba},
-      0px ${outlineSize}px 0 ${outlineRgba},
-      0px -${outlineSize}px 0 ${outlineRgba}
-    `;
+    const outlineSize = Math.max(
+      0.1,
+      style.outlineSize * (shortFormTuning?.outlineMultiplier ?? 1)
+    );
+    textStrokeColor = outlineRgba;
+    textStrokeWidthPx = outlineSize;
+    textShadow = buildSoftShadow(
+      shortFormTuning?.softShadowColor || shadowRgba,
+      shortFormTuning?.softShadowOffsetYPx ?? Math.max(1, style.shadowDepth),
+      shortFormTuning?.softShadowBlurPx ?? Math.max(2, Math.round(style.shadowDepth * 3))
+    );
   } else if (style.borderStyle === 3 || style.borderStyle === 4) {
-    backgroundColor = shadowRgba;
-    boxShadowValue = "0 4px 16px rgba(0, 0, 0, 0.4)";
+    backgroundColor = shortFormTuning?.backgroundColor || shadowRgba;
+    boxShadowValue = shortFormTuning?.boxShadow || "0 4px 16px rgba(0, 0, 0, 0.4)";
     if (style.borderStyle === 4 && style.outlineSize > 0) {
-      textShadow = `0 0 ${style.outlineSize}px ${outlineRgba}`;
+      const outlineSize = style.outlineSize * (shortFormTuning?.outlineMultiplier ?? 1);
+      textStrokeColor = outlineRgba;
+      textStrokeWidthPx = outlineSize;
+      textShadow = buildSoftShadow(
+        shortFormTuning?.softShadowColor || shadowRgba,
+        shortFormTuning?.softShadowOffsetYPx ?? Math.max(1, style.shadowDepth),
+        shortFormTuning?.softShadowBlurPx ?? Math.max(2, Math.round(style.shadowDepth * 3))
+      );
     }
   }
+  const horizontalInset = isShortFormPortrait ? shortFormTuning?.horizontalInset || "5.5%" : isFullScreen ? "5%" : "0";
+  const width = isShortFormPortrait || isFullScreen ? "auto" : "100%";
+  const maxWidth = isShortFormPortrait ? shortFormTuning?.maxWidth || "89%" : "100%";
+  const margin = isShortFormPortrait || isFullScreen ? "0 auto" : "0";
+  return {
+    backgroundColor,
+    borderRadiusPx: shortFormTuning?.borderRadiusPx ?? 5,
+    bottom: bottomValue,
+    boxShadow: boxShadowValue,
+    containerPadding,
+    fontFamily: isShortFormPortrait ? SHORT_FORM_FONT_STACK : DEFAULT_FONT_STACK,
+    fontSizePx: finalFontSize,
+    fontWeight: shortFormTuning?.fontWeight ?? (style.isBold ? 700 : 500),
+    horizontalInset,
+    isShortFormPortrait,
+    letterSpacing: shortFormTuning?.letterSpacing ?? "0.01em",
+    lineBoxBackgroundColor: shortFormTuning?.lineBoxBackgroundColor || shadowRgba,
+    lineBoxBorderRadiusPx: shortFormTuning?.lineBoxBorderRadiusPx ?? 0,
+    lineBoxBoxShadow: shortFormTuning?.lineBoxBoxShadow ?? "none",
+    lineBoxPadding: shortFormTuning?.lineBoxPadding ?? "1px 6px",
+    lineHeight: shortFormTuning?.lineHeight ?? 1.35,
+    margin,
+    maxWidth,
+    textShadow,
+    textStrokeColor,
+    textStrokeWidthPx,
+    width
+  };
+}
+function getSubtitleStyles(opts) {
+  const {
+    isFullScreen = false,
+    stylePreset = "Default"
+  } = opts;
+  const style = SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
+  const textColor = assColorToRgba(style.primaryColor);
+  const theme = resolveSubtitleRenderTheme(opts);
   let transitionValue = `
     opacity 0.2s ease-in-out,
     font-size 0.1s linear,
@@ -1634,48 +1806,43 @@ function getSubtitleStyles(opts) {
   }
   return css`
     box-sizing: border-box;
-    position: ${position2};
-    bottom: ${bottomValue};
-    ${isFullScreen ? "left: 5%; right: 5%;" : "left: 0; right: 0;"}
-    padding: ${containerPadding};
-    background-color: ${backgroundColor};
-    color: ${primaryRgba};
-    font-family:
-      'Noto Sans',
-      'Inter',
-      -apple-system,
-      BlinkMacSystemFont,
-      'Segoe UI',
-      Roboto,
-      'PingFang SC',
-      'Microsoft YaHei',
-      'Noto Sans SC',
-      sans-serif;
-    font-size: ${finalFontSize}px;
-    font-weight: ${style.isBold ? "bold" : "500"};
-    text-shadow: ${textShadow};
+    position: ${isFullScreen ? "fixed" : "absolute"};
+    bottom: ${theme.bottom};
+    left: ${theme.horizontalInset};
+    right: ${theme.horizontalInset};
+    padding: ${theme.containerPadding};
+    background-color: ${theme.backgroundColor};
+    color: ${textColor};
+    font-family: ${theme.fontFamily};
+    font-size: ${theme.fontSizePx}px;
+    font-weight: ${theme.fontWeight};
+    text-shadow: ${theme.textShadow};
+    -webkit-text-stroke: ${theme.textStrokeWidthPx}px ${theme.textStrokeColor};
+    paint-order: stroke fill;
     text-align: center;
-    border-radius: 5px;
+    border-radius: ${theme.borderRadiusPx}px;
     opacity: 0;
     transition: ${transitionValue};
-    max-width: ${maxWidth};
-    width: ${isFullScreen ? "auto" : "100%"};
+    max-width: ${theme.maxWidth};
+    width: ${theme.width};
     /* Prevent long, unbroken words from overflowing and getting clipped */
     overflow-wrap: anywhere;
     word-break: break-word;
     pointer-events: none;
     white-space: pre-wrap;
     z-index: 1000;
-    ${isFullScreen ? "margin: 0 auto;" : ""}
+    margin: ${theme.margin};
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
 
     &.visible {
       opacity: 1;
     }
 
-    line-height: 1.35;
-    letter-spacing: 0.01em;
+    line-height: ${theme.lineHeight};
+    letter-spacing: ${theme.letterSpacing};
     user-select: none;
-    box-shadow: ${boxShadowValue};
+    box-shadow: ${theme.boxShadow};
     border: none;
   `;
 }
@@ -1693,6 +1860,14 @@ function applyPresetStyles(el, {
   videoHeightPx = renderTarget.height
 } = {}) {
   if (!el) return;
+  const theme = resolveSubtitleRenderTheme({
+    displayFontSize: fontSizePx,
+    isFullScreen: false,
+    stylePreset,
+    isMultiLine,
+    videoWidthPx,
+    videoHeightPx
+  });
   const dynamicClass = getSubtitleStyles({
     displayFontSize: fontSizePx,
     isFullScreen: false,
@@ -1703,7 +1878,7 @@ function applyPresetStyles(el, {
     videoHeightPx
   });
   el.className = dynamicClass;
-  el.style.fontSize = fontSizePx + "px";
+  el.style.fontSize = theme.fontSizePx + "px";
 }
 function applySubtitlePreset(preset) {
   console.log("[applySubtitlePreset] Applying preset:", preset);
@@ -1759,14 +1934,19 @@ function initializeSubtitleDisplay() {
       videoHeightPx
     } = opts;
     const isMultiLine = text.includes("\n");
+    const renderTheme = resolveSubtitleRenderTheme({
+      displayFontSize: fontSizePx,
+      isFullScreen: false,
+      stylePreset,
+      isMultiLine,
+      videoWidthPx,
+      videoHeightPx
+    });
     if (stylePreset === "LineBox") {
-      const bg = assColorToRgba(
-        SUBTITLE_STYLE_PRESETS.LineBox.backColor || "&H00000000"
-      );
       const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
       if (text.trim()) {
         const html = text.split("\n").map(
-          (line2) => `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${esc(line2)}</span>`
+          (line2) => `<span style="background-color:${renderTheme.lineBoxBackgroundColor};padding:${renderTheme.lineBoxPadding};display:inline;line-height:${renderTheme.lineHeight};white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;border-radius:${renderTheme.lineBoxBorderRadiusPx}px;box-shadow:${renderTheme.lineBoxBoxShadow};box-decoration-break:clone;-webkit-box-decoration-break:clone;">${esc(line2)}</span>`
         ).join("<br/>");
         el.innerHTML = html;
       } else {

@@ -10,7 +10,7 @@ import {
   SUMMARY_OUTPUT_TOKENS_PER_AUDIO_HOUR,
   SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER,
   SUMMARY_QUALITY_MULTIPLIER,
-  STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL,
+  STAGE5_TTS_MODEL_ELEVEN_V3,
   STAGE5_TTS_MODEL_STANDARD,
   TTS_CREDITS_PER_MINUTE,
   TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
@@ -26,7 +26,7 @@ export type TtsProvider = 'openai' | 'elevenlabs';
 
 export const TTS_CREDITS_PER_CHAR: Record<TtsProvider, number> = {
   openai: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD),
-  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL),
+  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V3),
 };
 
 function normalizeKnownCredits(credits: number | null): number | null {
@@ -137,7 +137,7 @@ export function estimateDubbingCreditsFromChars(
     characters: safeCharCount,
     model:
       provider === 'elevenlabs'
-        ? STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL
+        ? STAGE5_TTS_MODEL_ELEVEN_V3
         : STAGE5_TTS_MODEL_STANDARD,
   });
 }

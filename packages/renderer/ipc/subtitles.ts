@@ -168,6 +168,7 @@ export function translateOneLine(options: {
 
 export function transcribeOneLine(options: {
   videoPath: string;
+  sourceUrl?: string | null;
   segment: { start: number; end: number };
   promptContext?: string;
   operationId?: string;
@@ -177,6 +178,7 @@ export function transcribeOneLine(options: {
 
 export function transcribeRemaining(options: {
   videoPath: string;
+  sourceUrl?: string | null;
   start: number;
   end?: number;
   operationId?: string;

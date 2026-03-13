@@ -1,12 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
-  assColorToRgba,
   getSubtitleStyles,
+  resolveSubtitleRenderTheme,
 } from '../../shared/helpers/subtitle-style-util.js';
-import {
-  SUBTITLE_STYLE_PRESETS,
-  SubtitleStylePresetKey,
-} from '../../shared/constants/subtitle-styles.js';
+import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles.js';
 
 interface BaseSubtitleDisplayProps {
   text: string;
@@ -74,7 +71,14 @@ export default function BaseSubtitleDisplay({
     } else if (!text) {
       setIsMultiLine(false);
     }
-  }, [text, displayFontSize, isFullScreen, stylePreset]);
+  }, [
+    text,
+    displayFontSize,
+    isFullScreen,
+    stylePreset,
+    videoWidthPx,
+    videoHeightPx,
+  ]);
 
   const dynamicStyles = getSubtitleStyles({
     displayFontSize,
@@ -86,10 +90,14 @@ export default function BaseSubtitleDisplay({
   });
   const combinedClassName = `${dynamicStyles} ${isVisible ? 'visible' : ''}`;
 
-  const style =
-    SUBTITLE_STYLE_PRESETS[stylePreset || 'Default'] ||
-    SUBTITLE_STYLE_PRESETS.Default;
-  const lineBoxBgColor = assColorToRgba(style.backColor);
+  const renderTheme = resolveSubtitleRenderTheme({
+    displayFontSize,
+    isFullScreen,
+    stylePreset: (stylePreset as SubtitleStylePresetKey) || 'Default',
+    isMultiLine,
+    videoWidthPx,
+    videoHeightPx,
+  });
 
   if (!text && !isVisible) {
     return <></>;
@@ -102,12 +110,14 @@ export default function BaseSubtitleDisplay({
             <React.Fragment key={index}>
               <span
                 style={{
-                  backgroundColor: lineBoxBgColor,
-                  padding: '1px 6px',
+                  backgroundColor: renderTheme.lineBoxBackgroundColor,
+                  padding: renderTheme.lineBoxPadding,
                   display: 'inline',
                   boxDecorationBreak: 'clone',
                   WebkitBoxDecorationBreak: 'clone',
-                  lineHeight: '1.35',
+                  borderRadius: `${renderTheme.lineBoxBorderRadiusPx}px`,
+                  boxShadow: renderTheme.lineBoxBoxShadow,
+                  lineHeight: String(renderTheme.lineHeight),
                   overflowWrap: 'anywhere',
                   wordBreak: 'break-word',
                 }}

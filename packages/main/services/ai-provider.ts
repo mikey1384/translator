@@ -4,6 +4,7 @@ import { decryptString } from './secure-storage.js';
 import * as stage5Client from './stage5-client.js';
 import {
   transcribeViaDirect,
+  transcribeViaR2,
   translateViaDirect,
   dubViaDirect,
 } from './stage5-client.js';
@@ -778,11 +779,7 @@ export async function transcribe(
 }
 
 /**
- * Transcribe a large file via direct relay endpoint.
- * Simplified flow: app sends file to relay, relay handles auth/credits/transcription.
- * No R2 uploads, no polling, no webhooks - just send and receive.
- * TODO(stage5-cleanup): rename/remove this legacy-named shim once older call sites
- * no longer reference the "ViaR2" API shape.
+ * Transcribe a large file via the durable R2 upload + worker processing flow.
  */
 export async function transcribeLargeFileViaR2(options: {
   filePath: string;
@@ -793,14 +790,17 @@ export async function transcribeLargeFileViaR2(options: {
   onProgress?: (stage: string, percent?: number) => void;
   /** Prevent double-charges on client retries / disconnects. */
   idempotencyKey?: string;
+  /** Stable identifier used to reconnect to an already-started durable job. */
+  recoverySeed?: string;
+  /** Stable source path used to reconnect to an already-started durable job. */
+  recoverySourcePath?: string;
 }): Promise<any> {
   if (isStrictByoModeEnabled()) {
     throw new Error(
       'Using your API keys does not allow Stage5 relay transcription for large files.'
     );
   }
-  // Use the new simplified direct relay flow
-  return transcribeViaDirect(options);
+  return transcribeViaR2(options);
 }
 
 export async function translate(options: Stage5TranslateOptions): Promise<any> {

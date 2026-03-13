@@ -355,8 +355,8 @@
       "sections": "상세 노트",
       "highlights": "하이라이트"
     },
-    "generate": "요약 생성",
-    "regenerate": "요약 다시 생성",
+    "generate": "하이라이트 생성",
+    "regenerate": "하이라이트 다시 생성",
     "estimateCredits": "{{credits}} 크레딧",
     "estimateByo": "BYO 키",
     "highEffortBadge": "(정밀)",

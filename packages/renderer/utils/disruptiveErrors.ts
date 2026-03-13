@@ -5,8 +5,8 @@ const CANCEL_OR_ABORT_RE =
 const FAILURE_STAGE_RE = /\b(error|failed|failure|fatal|exception)\b/i;
 const DISRUPTIVE_TEXT_RE =
   /\b(error|failed|failure|fatal|exception|crash|panic|timeout|timed out)\b/i;
-const RECOVERABLE_OPERATION_RE =
-  /\b(insufficient[-_\s]?credits?|not enough credits?|insufficient[-_\s]?quota|rate[-\s]?limit|too many requests|invalid api key|api key|missing api key|unauthorized|forbidden|payment required|update required|unsupported app version|needcookies|captcha|human check|invalid url|url format|no srt file|no subtitles|network error|internet connection|connection reset|connection refused|connection failed|socket|timed out|timeout|insufficient disk space|disk space)\b/i;
+const EXPECTED_USER_STATE_RE =
+  /\b(insufficient[-_\s]?credits?|not enough credits?|insufficient[-_\s]?quota|rate[-\s]?limit|too many requests|invalid api key|missing api key|api key (?:is )?(?:invalid|required|missing|expired)|unauthorized|forbidden|payment required|update required|unsupported app version|needcookies|captcha|human check|invalid url|url format|no srt file|no subtitles|network error|internet connection|connection reset|connection refused|connection failed|socket|timed out|timeout|insufficient disk space|disk space)\b/i;
 const EXPECTED_DOWNLOAD_CONTENT_RE =
   /\b(this video is unavailable|video unavailable|this video is private|website or url is not supported|unsupported url|video not found|404 error|region-locked|not available in your country|not available in your region|require login|requires login|members-only|members only|age-restricted|confirm your age|removed by the uploader|removed by uploader|copyright|geo(?:-|\s)?blocked)\b/i;
 const DISRUPTIVE_DOWNLOAD_INFRA_RE =
@@ -33,9 +33,16 @@ function normalizeText(value: string | null | undefined): string {
   return String(value || '').trim();
 }
 
-function isRecoverableOrBenignErrorText(text: string): boolean {
+function combineText(...values: Array<string | null | undefined>): string {
+  return values.map(normalizeText).filter(Boolean).join(' ');
+}
+
+export function isExpectedUserFacingFailure(
+  error: string | null | undefined
+): boolean {
+  const text = normalizeText(error);
   if (!text) return false;
-  const containsRecoverableCode =
+  const containsExpectedCode =
     text.includes(ERROR_CODES.INSUFFICIENT_CREDITS) ||
     text.includes(ERROR_CODES.UPDATE_REQUIRED) ||
     text.includes(ERROR_CODES.OPENAI_KEY_INVALID) ||
@@ -47,9 +54,9 @@ function isRecoverableOrBenignErrorText(text: string): boolean {
     text.includes(ERROR_CODES.ELEVENLABS_KEY_INVALID) ||
     text.includes(ERROR_CODES.ELEVENLABS_RATE_LIMIT) ||
     text.includes(ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA);
-  if (containsRecoverableCode) return true;
+  if (containsExpectedCode) return true;
   if (BENIGN_VALIDATION_RE.some(re => re.test(text))) return true;
-  if (RECOVERABLE_OPERATION_RE.test(text)) return true;
+  if (EXPECTED_USER_STATE_RE.test(text)) return true;
   return false;
 }
 
@@ -73,8 +80,23 @@ export function isDisruptiveGlobalError(
   if (!text) return false;
   if (kind === 'validation') return false;
   if (CANCEL_OR_ABORT_RE.test(text)) return false;
-  if (isRecoverableOrBenignErrorText(text)) return false;
+  if (isExpectedUserFacingFailure(text)) return false;
   return DISRUPTIVE_TEXT_RE.test(text);
+}
+
+export function isDisruptiveTaskFailure({
+  stage,
+  error,
+}: {
+  stage: string | null | undefined;
+  error?: string | null | undefined;
+}): boolean {
+  const normalizedStage = normalizeText(stage);
+  const combined = combineText(stage, error);
+  if (!normalizedStage) return false;
+  if (CANCEL_OR_ABORT_RE.test(combined)) return false;
+  if (isExpectedUserFacingFailure(combined)) return false;
+  return FAILURE_STAGE_RE.test(normalizedStage);
 }
 
 export function isDisruptiveDownloadFailure({
@@ -102,7 +124,7 @@ export function isDisruptiveDownloadFailure({
   if (CANCEL_OR_ABORT_RE.test(normalizedError)) {
     return false;
   }
-  if (isRecoverableOrBenignErrorText(normalizedError)) {
+  if (isExpectedUserFacingFailure(normalizedError)) {
     return false;
   }
   if (isExpectedDownloadContentFailure(normalizedError)) {

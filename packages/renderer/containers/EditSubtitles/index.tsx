@@ -417,6 +417,7 @@ export default function EditSubtitles({
     try {
       logButton('continue_transcribing');
       const videoPath = useVideoStore.getState().path;
+      const sourceUrl = useVideoStore.getState().sourceUrl;
       if (!videoPath || subtitles.length === 0) return;
       const start = subtitles[subtitles.length - 1].end;
       const operationId = `transcribe-${Date.now()}-tail`;
@@ -441,6 +442,7 @@ export default function EditSubtitles({
         await import('../../ipc/subtitles')
       ).transcribeRemaining({
         videoPath,
+        sourceUrl,
         start,
         operationId,
         qualityTranscription: useUIStore.getState().qualityTranscription,

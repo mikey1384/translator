@@ -39,7 +39,7 @@ import {
   isAbortLikeReason,
   isDisruptiveDownloadFailure,
   isDisruptiveGlobalError,
-  isDisruptiveStage,
+  isDisruptiveTaskFailure,
   shouldIgnoreGlobalBrowserError,
 } from '../utils/disruptiveErrors';
 import { useRef } from 'react';
@@ -291,15 +291,29 @@ export default function AppContent() {
 
   useEffect(() => {
     if (
-      isDisruptiveStage(transcriptionStage) ||
-      isDisruptiveStage(translationStage) ||
-      isDisruptiveStage(dubbingStage) ||
-      isDisruptiveStage(mergeStage) ||
-      isDisruptiveStage(summaryStage)
+      isDisruptiveTaskFailure({
+        stage: transcriptionStage,
+        error: globalError,
+      }) ||
+      isDisruptiveTaskFailure({
+        stage: translationStage,
+        error: globalError,
+      }) ||
+      isDisruptiveTaskFailure({
+        stage: dubbingStage,
+        error: globalError,
+      }) ||
+      isDisruptiveTaskFailure({
+        stage: mergeStage,
+      }) ||
+      isDisruptiveTaskFailure({
+        stage: summaryStage,
+      })
     ) {
       openErrorReportPrompt();
     }
   }, [
+    globalError,
     transcriptionStage,
     translationStage,
     dubbingStage,

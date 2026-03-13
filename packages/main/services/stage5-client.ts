@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { BrowserWindow } from 'electron';
+import Store from 'electron-store';
+import crypto from 'crypto';
 import fs from 'fs';
 import FormData from 'form-data';
+import path from 'path';
 import {
   AI_MODELS,
   ERROR_CODES,
@@ -22,7 +25,6 @@ import {
 import {
   getRelayErrorMessage,
   getRelayStatus,
-  isRetryableDubDirectError,
   shouldRetryDubDirectRequest,
 } from './stage5-client-retry.js';
 
@@ -31,6 +33,164 @@ export {
   isRetryableDubDirectError,
   shouldRetryDubDirectRequest,
 } from './stage5-client-retry.js';
+
+type DurableTranscriptionResumeRecord = {
+  jobId: string;
+  recoveryKey: string;
+  createdAt?: string;
+  updatedAt: string;
+};
+
+// Match the current stage5-api durable job cleanup window.
+const DURABLE_TRANSCRIPTION_RESUME_TTL_MS = 24 * 60 * 60 * 1_000;
+const DURABLE_TRANSCRIPTION_DETACHED_CODE = 'DURABLE_TRANSCRIPTION_DETACHED';
+const DURABLE_TRANSCRIPTION_RESTART_REQUIRED_CODE =
+  'DURABLE_TRANSCRIPTION_RESTART_REQUIRED';
+const DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_STATUSES = new Set([
+  408, 425, 429, 500, 502, 503, 504, 522, 524,
+]);
+const DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_CODES = new Set([
+  'ECONNABORTED',
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'EHOSTUNREACH',
+  'ENETUNREACH',
+  'ERR_NETWORK',
+  'ETIMEDOUT',
+]);
+const DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_MESSAGE_PATTERN =
+  /(timeout|timed out|temporarily unavailable|connection reset|fetch failed|gateway|rate limit|socket hang up|network)/i;
+
+const durableTranscriptionStore = new Store<{
+  jobs: Record<string, DurableTranscriptionResumeRecord>;
+}>({
+  name: 'durable-transcription-jobs',
+  defaults: {
+    jobs: {},
+  },
+});
+
+class DurableTranscriptionDetachedError extends Error {
+  readonly code = DURABLE_TRANSCRIPTION_DETACHED_CODE;
+  readonly jobId: string;
+
+  constructor(jobId: string, message: string) {
+    super(message);
+    this.name = 'DurableTranscriptionDetachedError';
+    this.jobId = jobId;
+  }
+}
+
+class DurableTranscriptionRestartRequiredError extends Error {
+  readonly code = DURABLE_TRANSCRIPTION_RESTART_REQUIRED_CODE;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'DurableTranscriptionRestartRequiredError';
+  }
+}
+
+function pruneDurableTranscriptionResumeJobs(): Record<
+  string,
+  DurableTranscriptionResumeRecord
+> {
+  const now = Date.now();
+  const jobs = durableTranscriptionStore.get('jobs', {});
+  const nextJobs = Object.fromEntries(
+    Object.entries(jobs).filter(([, job]) => {
+      const anchorMs = Date.parse(
+        String(job?.createdAt || job?.updatedAt || '')
+      );
+      return Number.isFinite(anchorMs)
+        ? now - anchorMs <= DURABLE_TRANSCRIPTION_RESUME_TTL_MS
+        : false;
+    })
+  );
+
+  if (Object.keys(nextJobs).length !== Object.keys(jobs).length) {
+    durableTranscriptionStore.set('jobs', nextJobs);
+  }
+
+  return nextJobs;
+}
+
+function getDurableTranscriptionResumeJob(
+  recoveryKey?: string
+): DurableTranscriptionResumeRecord | null {
+  const normalizedKey = String(recoveryKey || '').trim();
+  if (!normalizedKey) return null;
+  const jobs = pruneDurableTranscriptionResumeJobs();
+  return jobs[normalizedKey] ?? null;
+}
+
+function setDurableTranscriptionResumeJob({
+  recoveryKey,
+  jobId,
+}: {
+  recoveryKey?: string;
+  jobId: string;
+}): void {
+  const normalizedKey = String(recoveryKey || '').trim();
+  const normalizedJobId = String(jobId || '').trim();
+  if (!normalizedKey || !normalizedJobId) return;
+  const jobs = pruneDurableTranscriptionResumeJobs();
+  const existingJob = jobs[normalizedKey];
+  const nowIso = new Date().toISOString();
+  const createdAt =
+    typeof existingJob?.createdAt === 'string' && existingJob.createdAt.trim()
+      ? existingJob.createdAt
+      : typeof existingJob?.updatedAt === 'string' &&
+          existingJob.updatedAt.trim()
+        ? existingJob.updatedAt
+        : nowIso;
+  durableTranscriptionStore.set('jobs', {
+    ...jobs,
+    [normalizedKey]: {
+      recoveryKey: normalizedKey,
+      jobId: normalizedJobId,
+      createdAt,
+      updatedAt: nowIso,
+    },
+  });
+}
+
+function clearDurableTranscriptionResumeJob(recoveryKey?: string): void {
+  const normalizedKey = String(recoveryKey || '').trim();
+  if (!normalizedKey) return;
+  const jobs = pruneDurableTranscriptionResumeJobs();
+  if (!(normalizedKey in jobs)) return;
+  const nextJobs = { ...jobs };
+  delete nextJobs[normalizedKey];
+  durableTranscriptionStore.set('jobs', nextJobs);
+}
+
+function buildDetachedDurableTranscriptionMessage(jobId: string): string {
+  return `Durable transcription is still running on Stage5 (job ${jobId}). Start the same file again to reconnect.`;
+}
+
+function shouldDetachDurableTranscriptionForTransientError(error: any): boolean {
+  const status = getRelayStatus(error);
+  if (status != null) {
+    if (status >= 200 && status < 400) {
+      return false;
+    }
+    if (DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_STATUSES.has(status)) {
+      return true;
+    }
+  }
+
+  const code = String(error?.code ?? '').toUpperCase();
+  if (code && DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_CODES.has(code)) {
+    return true;
+  }
+
+  const message = getRelayErrorMessage(error) || String(error?.message ?? '');
+  if (DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_MESSAGE_PATTERN.test(message)) {
+    return true;
+  }
+
+  return Boolean(error?.request) && !error?.response;
+}
 
 function sendNetLog(
   level: 'info' | 'warn' | 'error',
@@ -47,7 +207,7 @@ function sendNetLog(
   }
 }
 
-async function waitForDubDirectRetry(
+async function waitForAbortableDelay(
   delayMs: number,
   signal?: AbortSignal
 ): Promise<void> {
@@ -70,6 +230,407 @@ async function waitForDubDirectRetry(
 
     signal?.addEventListener('abort', onAbort, { once: true });
   });
+}
+
+async function waitForDubDirectRetry(
+  delayMs: number,
+  signal?: AbortSignal
+): Promise<void> {
+  await waitForAbortableDelay(delayMs, signal);
+}
+
+function resolveTranscriptionUploadContentType(filePath: string): string {
+  switch (path.extname(filePath).toLowerCase()) {
+    case '.mp3':
+      return 'audio/mpeg';
+    case '.wav':
+      return 'audio/wav';
+    case '.m4a':
+      return 'audio/mp4';
+    case '.mp4':
+      return 'video/mp4';
+    case '.flac':
+      return 'audio/flac';
+    case '.ogg':
+      return 'audio/ogg';
+    case '.opus':
+      return 'audio/ogg';
+    case '.aac':
+      return 'audio/aac';
+    case '.webm':
+      return 'audio/webm';
+    default:
+      return 'application/octet-stream';
+  }
+}
+
+function getR2TranscriptionMaxWaitMs(
+  estimatedTranscriptionSec: number
+): number {
+  return Math.max(
+    API_TIMEOUTS.TRANSCRIPTION_MAX_WAIT,
+    15 * 60 * 1_000,
+    Math.ceil(Math.max(estimatedTranscriptionSec, 0) * 4 * 1_000)
+  );
+}
+
+function buildDurableTranscriptionRecoveryKey({
+  recoverySeed,
+  sourcePath,
+  language,
+  durationSec,
+}: {
+  recoverySeed?: string;
+  sourcePath?: string;
+  language?: string;
+  durationSec?: number;
+}): string | undefined {
+  const normalizedRecoverySeed = String(recoverySeed || '').trim();
+  const normalizedSourcePath = String(sourcePath || '').trim();
+  let sourcePathIdentity = '';
+  if (normalizedSourcePath) {
+    const resolvedSourcePath = path.resolve(normalizedSourcePath);
+    try {
+      const sourceStats = fs.statSync(resolvedSourcePath);
+      sourcePathIdentity = [
+        resolvedSourcePath,
+        String(sourceStats.size),
+        String(Math.round(sourceStats.mtimeMs)),
+      ].join('\n');
+    } catch {
+      sourcePathIdentity = resolvedSourcePath;
+    }
+  }
+  const recoveryIdentity = normalizedRecoverySeed
+    ? normalizedRecoverySeed
+    : sourcePathIdentity
+      ? sourcePathIdentity
+      : '';
+  if (!recoveryIdentity) return undefined;
+  return crypto
+    .createHash('sha256')
+    .update(
+      `durable-transcription-recovery-v1\n${recoveryIdentity}\n${language || ''}\n${
+        typeof durationSec === 'number' && Number.isFinite(durationSec)
+          ? Math.round(durationSec)
+          : ''
+      }`
+    )
+    .digest('hex');
+}
+
+function buildDurableTranscriptionRequestIdempotencyKey({
+  recoveryKey,
+  fallbackIdempotencyKey,
+}: {
+  recoveryKey?: string;
+  fallbackIdempotencyKey?: string;
+}): string | undefined {
+  const normalizedRecoveryKey = String(recoveryKey || '').trim();
+  if (normalizedRecoveryKey) {
+    return `durable-transcription-request-v1:${normalizedRecoveryKey}`;
+  }
+  const normalizedFallback = String(fallbackIdempotencyKey || '').trim();
+  return normalizedFallback || undefined;
+}
+
+async function fetchDurableTranscriptionStatus({
+  jobId,
+  signal,
+}: {
+  jobId: string;
+  signal?: AbortSignal;
+}) {
+  const statusResponse = await withStage5AuthRetryOnResponse(authHeaders =>
+    axios.get(`${STAGE5_API_URL}/transcribe/status/${jobId}`, {
+      headers: authHeaders,
+      signal,
+      validateStatus: () => true,
+    })
+  );
+  throwIfStage5UpdateRequiredResponse({
+    response: statusResponse,
+    source: 'stage5-api',
+  });
+
+  sendNetLog('info', `GET /transcribe/status/${jobId} -> ${statusResponse.status}`, {
+    url: `${STAGE5_API_URL}/transcribe/status/${jobId}`,
+    method: 'GET',
+    status: statusResponse.status,
+  });
+
+  return statusResponse;
+}
+
+async function startDurableTranscriptionJob({
+  jobId,
+  idempotencyKey,
+  signal,
+}: {
+  jobId: string;
+  idempotencyKey?: string;
+  signal?: AbortSignal;
+}): Promise<{ httpStatus: number; durableStatus: string }> {
+  const processResponse = await withStage5AuthRetryOnResponse(authHeaders =>
+    axios.post(
+      `${STAGE5_API_URL}/transcribe/process/${jobId}`,
+      {},
+      {
+        headers: {
+          ...authHeaders,
+          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+        },
+        signal,
+        validateStatus: () => true,
+      }
+    )
+  );
+  throwIfStage5UpdateRequiredResponse({
+    response: processResponse,
+    source: 'stage5-api',
+  });
+
+  sendNetLog('info', `POST /transcribe/process/${jobId} -> ${processResponse.status}`, {
+    url: `${STAGE5_API_URL}/transcribe/process/${jobId}`,
+    method: 'POST',
+    status: processResponse.status,
+  });
+
+  if (processResponse.status === 402) {
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+  }
+
+  const processStatus = processResponse.data?.status;
+  const processAccepted =
+    processResponse.status === 200 ||
+    ((processResponse.status === 400 || processResponse.status === 409) &&
+      (processStatus === 'processing' || processStatus === 'completed'));
+  if (!processAccepted) {
+    throw new Error(
+      processResponse.data?.message || 'Failed to start durable transcription'
+    );
+  }
+
+  return {
+    httpStatus: processResponse.status,
+    durableStatus: String(processStatus || ''),
+  };
+}
+
+async function resumeDurableTranscriptionJob({
+  jobId,
+  idempotencyKey,
+  signal,
+  onProgress,
+  estimatedTranscriptionSec,
+  maxWaitMs,
+  recoveryKey,
+}: {
+  jobId: string;
+  idempotencyKey?: string;
+  signal?: AbortSignal;
+  onProgress?: (stage: string, percent?: number) => void;
+  estimatedTranscriptionSec: number;
+  maxWaitMs: number;
+  recoveryKey?: string;
+}): Promise<any> {
+  const statusResponse = await fetchDurableTranscriptionStatus({
+    jobId,
+    signal,
+  });
+
+  if (statusResponse.status === 404) {
+    clearDurableTranscriptionResumeJob(recoveryKey);
+    throw new Error('transcription-job-not-found');
+  }
+
+  if (statusResponse.status !== 200) {
+    throw new Error(
+      statusResponse.data?.message ||
+        `Failed to read durable transcription status (${statusResponse.status})`
+    );
+  }
+
+  const jobStatus = String(statusResponse.data?.status || '');
+  if (jobStatus === 'completed') {
+    clearDurableTranscriptionResumeJob(recoveryKey);
+    onProgress?.('Transcription complete!', 100);
+    return statusResponse.data?.result;
+  }
+
+  if (jobStatus === 'failed') {
+    clearDurableTranscriptionResumeJob(recoveryKey);
+    throw new DurableTranscriptionRestartRequiredError(
+      statusResponse.data?.error || 'Transcription failed'
+    );
+  }
+
+  if (jobStatus === 'pending_upload') {
+    onProgress?.('Restarting durable transcription...', 35);
+    const startResult = await startDurableTranscriptionJob({
+      jobId,
+      idempotencyKey,
+      signal,
+    });
+    if (
+      startResult.httpStatus !== 200 &&
+      startResult.durableStatus === 'processing'
+    ) {
+      const confirmedStatusResponse = await fetchDurableTranscriptionStatus({
+        jobId,
+        signal,
+      });
+
+      if (confirmedStatusResponse.status === 404) {
+        clearDurableTranscriptionResumeJob(recoveryKey);
+        throw new Error('transcription-job-not-found');
+      }
+      if (confirmedStatusResponse.status !== 200) {
+        throw new Error(
+          confirmedStatusResponse.data?.message ||
+            `Failed to read durable transcription status (${confirmedStatusResponse.status})`
+        );
+      }
+
+      const confirmedStatus = String(
+        confirmedStatusResponse.data?.status || ''
+      );
+      if (confirmedStatus === 'completed') {
+        clearDurableTranscriptionResumeJob(recoveryKey);
+        onProgress?.('Transcription complete!', 100);
+        return confirmedStatusResponse.data?.result;
+      }
+      if (confirmedStatus === 'failed') {
+        clearDurableTranscriptionResumeJob(recoveryKey);
+        throw new DurableTranscriptionRestartRequiredError(
+          confirmedStatusResponse.data?.error || 'Transcription failed'
+        );
+      }
+      if (confirmedStatus !== 'processing') {
+        clearDurableTranscriptionResumeJob(recoveryKey);
+        throw new DurableTranscriptionRestartRequiredError(
+          'Durable transcription did not resume cleanly'
+        );
+      }
+    }
+    setDurableTranscriptionResumeJob({ recoveryKey, jobId });
+  }
+
+  return pollDurableTranscriptionJob({
+    jobId,
+    signal,
+    onProgress,
+    estimatedTranscriptionSec,
+    maxWaitMs,
+    recoveryKey,
+  });
+}
+
+async function pollDurableTranscriptionJob({
+  jobId,
+  signal,
+  onProgress,
+  estimatedTranscriptionSec,
+  maxWaitMs,
+  recoveryKey,
+}: {
+  jobId: string;
+  signal?: AbortSignal;
+  onProgress?: (stage: string, percent?: number) => void;
+  estimatedTranscriptionSec: number;
+  maxWaitMs: number;
+  recoveryKey?: string;
+}): Promise<any> {
+  const pollStartedAt = Date.now();
+
+  while (Date.now() - pollStartedAt < maxWaitMs) {
+    if (signal?.aborted) {
+      throw new DurableTranscriptionDetachedError(
+        jobId,
+        buildDetachedDurableTranscriptionMessage(jobId)
+      );
+    }
+
+    let statusResponse;
+    try {
+      statusResponse = await fetchDurableTranscriptionStatus({
+        jobId,
+        signal,
+      });
+    } catch (error: any) {
+      if (
+        error?.name === 'AbortError' ||
+        error?.code === 'ERR_CANCELED' ||
+        signal?.aborted
+      ) {
+        throw new DurableTranscriptionDetachedError(
+          jobId,
+          buildDetachedDurableTranscriptionMessage(jobId)
+        );
+      }
+      throw error;
+    }
+
+    if (statusResponse.status === 404) {
+      clearDurableTranscriptionResumeJob(recoveryKey);
+      throw new Error('transcription-job-not-found');
+    }
+    if (statusResponse.status !== 200) {
+      throw new Error(
+        statusResponse.data?.message ||
+          `Failed to read durable transcription status (${statusResponse.status})`
+      );
+    }
+
+    const resultData = statusResponse.data;
+    if (resultData?.status === 'completed') {
+      clearDurableTranscriptionResumeJob(recoveryKey);
+      onProgress?.('Transcription complete!', 100);
+      return resultData.result;
+    }
+
+    if (resultData?.status === 'failed') {
+      clearDurableTranscriptionResumeJob(recoveryKey);
+      throw new Error(resultData.error || 'Transcription failed');
+    }
+
+    const { stage, percent } = getTranscriptionProgress(
+      pollStartedAt,
+      estimatedTranscriptionSec,
+      40,
+      95
+    );
+    onProgress?.(
+      resultData?.status === 'processing'
+        ? stage
+        : 'Waiting for durable transcription...',
+      percent
+    );
+
+    try {
+      await waitForAbortableDelay(
+        API_TIMEOUTS.TRANSCRIPTION_POLL_INTERVAL,
+        signal
+      );
+    } catch (error: any) {
+      if (
+        error?.name === 'AbortError' ||
+        error?.code === 'ERR_CANCELED' ||
+        signal?.aborted
+      ) {
+        throw new DurableTranscriptionDetachedError(
+          jobId,
+          buildDetachedDurableTranscriptionMessage(jobId)
+        );
+      }
+      throw error;
+    }
+  }
+
+  throw new DurableTranscriptionDetachedError(
+    jobId,
+    buildDetachedDurableTranscriptionMessage(jobId)
+  );
 }
 
 export async function transcribe({
@@ -596,6 +1157,290 @@ export async function synthesizeDub({
   }
 }
 
+/**
+ * Transcribe a large file via the durable R2 job flow.
+ * Upload to storage first, then let stage5-api + relay finish asynchronously
+ * while the desktop app polls job status.
+ */
+export async function transcribeViaR2({
+  filePath,
+  language,
+  durationSec,
+  idempotencyKey,
+  recoverySeed,
+  recoverySourcePath,
+  signal,
+  onProgress,
+}: {
+  filePath: string;
+  language?: string;
+  durationSec?: number;
+  /** Prevent double-charges on client retries / disconnects. */
+  idempotencyKey?: string;
+  /** Stable identifier used to reconnect to a detached durable job. */
+  recoverySeed?: string;
+  /** Stable source path used to reconnect to a detached durable job. */
+  recoverySourcePath?: string;
+  signal?: AbortSignal;
+  onProgress?: (stage: string, percent?: number) => void;
+}): Promise<any> {
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+  }
+
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  const stats = fs.statSync(filePath);
+  const fileSizeMB = stats.size / (1024 * 1024);
+  const contentType = resolveTranscriptionUploadContentType(filePath);
+  const estimatedTranscriptionSec = estimateTranscriptionTime(
+    durationSec,
+    fileSizeMB
+  );
+  const maxWaitMs = getR2TranscriptionMaxWaitMs(estimatedTranscriptionSec);
+  const recoveryKey = buildDurableTranscriptionRecoveryKey({
+    recoverySeed,
+    sourcePath: recoverySourcePath,
+    language,
+    durationSec,
+  });
+  const durableRequestIdempotencyKey =
+    buildDurableTranscriptionRequestIdempotencyKey({
+      recoveryKey,
+      fallbackIdempotencyKey: idempotencyKey,
+    });
+  const existingResumeJob = getDurableTranscriptionResumeJob(recoveryKey);
+  let durableJobIdForDetach: string | null = null;
+
+  onProgress?.('Preparing durable transcription...', 5);
+
+  try {
+    if (existingResumeJob?.jobId) {
+      onProgress?.('Reconnecting to durable transcription...', 35);
+      try {
+        durableJobIdForDetach = existingResumeJob.jobId;
+        return await resumeDurableTranscriptionJob({
+          jobId: existingResumeJob.jobId,
+          idempotencyKey: durableRequestIdempotencyKey,
+          signal,
+          onProgress,
+          estimatedTranscriptionSec,
+          maxWaitMs,
+          recoveryKey,
+        });
+      } catch (error: any) {
+        if (
+          error?.message !== 'transcription-job-not-found' &&
+          error?.code !== DURABLE_TRANSCRIPTION_RESTART_REQUIRED_CODE
+        ) {
+          throw error;
+        }
+      }
+    }
+
+    const uploadUrlResponse = await withStage5AuthRetryOnResponse(authHeaders =>
+      axios.post(
+        `${STAGE5_API_URL}/transcribe/upload-url`,
+        {
+          language,
+          contentType,
+          fileSizeMB,
+          durationSec,
+        },
+        {
+          headers: {
+            ...authHeaders,
+            'Content-Type': 'application/json',
+            ...(durableRequestIdempotencyKey
+              ? { 'Idempotency-Key': durableRequestIdempotencyKey }
+              : {}),
+          },
+          signal,
+          validateStatus: () => true,
+        }
+      )
+    );
+    throwIfStage5UpdateRequiredResponse({
+      response: uploadUrlResponse,
+      source: 'stage5-api',
+    });
+
+    sendNetLog(
+      'info',
+      `POST /transcribe/upload-url -> ${uploadUrlResponse.status}`,
+      {
+        url: `${STAGE5_API_URL}/transcribe/upload-url`,
+        method: 'POST',
+        status: uploadUrlResponse.status,
+      }
+    );
+
+    if (uploadUrlResponse.status === 402) {
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+    }
+    if (uploadUrlResponse.status !== 200) {
+      throw new Error(
+        uploadUrlResponse.data?.message || 'Failed to prepare durable upload'
+      );
+    }
+
+    const jobId =
+      typeof uploadUrlResponse.data?.jobId === 'string'
+        ? uploadUrlResponse.data.jobId
+        : '';
+    const uploadRequired = uploadUrlResponse.data?.uploadRequired !== false;
+    const uploadUrl =
+      typeof uploadUrlResponse.data?.uploadUrl === 'string'
+        ? uploadUrlResponse.data.uploadUrl
+        : '';
+    const jobStatus =
+      typeof uploadUrlResponse.data?.status === 'string'
+        ? uploadUrlResponse.data.status
+        : 'pending_upload';
+    if (!jobId) {
+      throw new Error(
+        'Durable transcription upload URL response was incomplete'
+      );
+    }
+    if (uploadRequired && !uploadUrl) {
+      throw new Error(
+        'Durable transcription upload URL response was incomplete'
+      );
+    }
+
+    if (uploadRequired) {
+      onProgress?.('Uploading audio to secure storage...', 10);
+
+      let uploadStatus = 0;
+      const { stream, cleanup } = createAbortableReadStream(filePath, signal);
+      try {
+        const uploadResponse = await axios.put(uploadUrl, stream, {
+          headers: {
+            'Content-Type': contentType,
+            'Content-Length': String(stats.size),
+          },
+          signal,
+          timeout: 0,
+          maxBodyLength: Infinity,
+          maxContentLength: Infinity,
+          validateStatus: () => true,
+          onUploadProgress: progressEvent => {
+            if (!progressEvent.total) return;
+            const uploadPercent = Math.round(
+              (progressEvent.loaded / progressEvent.total) * 25
+            );
+            onProgress?.('Uploading...', 10 + uploadPercent);
+          },
+        });
+        uploadStatus = uploadResponse.status;
+
+        if (uploadResponse.status < 200 || uploadResponse.status >= 300) {
+          throw new Error(
+            `R2 upload failed with status ${uploadResponse.status}`
+          );
+        }
+      } finally {
+        cleanup();
+      }
+
+      sendNetLog('info', `PUT durable transcription upload -> ${uploadStatus}`, {
+        url: 'presigned-r2-upload',
+        method: 'PUT',
+        status: uploadStatus,
+        jobId,
+      });
+
+      onProgress?.('Starting durable transcription...', 35);
+      durableJobIdForDetach = jobId;
+      setDurableTranscriptionResumeJob({ recoveryKey, jobId });
+      await startDurableTranscriptionJob({
+        jobId,
+        idempotencyKey: durableRequestIdempotencyKey,
+        signal,
+      });
+    } else if (jobStatus === 'processing' || jobStatus === 'completed') {
+      durableJobIdForDetach = jobId;
+      setDurableTranscriptionResumeJob({ recoveryKey, jobId });
+      onProgress?.('Reconnecting to durable transcription...', 35);
+    }
+
+    return await pollDurableTranscriptionJob({
+      jobId,
+      signal,
+      onProgress,
+      estimatedTranscriptionSec,
+      maxWaitMs,
+      recoveryKey,
+    });
+  } catch (error: any) {
+    if (error?.code === DURABLE_TRANSCRIPTION_DETACHED_CODE) {
+      throw error;
+    }
+    if (
+      error?.name === 'AbortError' ||
+      error?.code === 'ERR_CANCELED' ||
+      signal?.aborted
+    ) {
+      if (durableJobIdForDetach) {
+        throw new DurableTranscriptionDetachedError(
+          durableJobIdForDetach,
+          buildDetachedDurableTranscriptionMessage(durableJobIdForDetach)
+        );
+      }
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    if (
+      durableJobIdForDetach &&
+      shouldDetachDurableTranscriptionForTransientError(error)
+    ) {
+      setDurableTranscriptionResumeJob({
+        recoveryKey,
+        jobId: durableJobIdForDetach,
+      });
+      throw new DurableTranscriptionDetachedError(
+        durableJobIdForDetach,
+        buildDetachedDurableTranscriptionMessage(durableJobIdForDetach)
+      );
+    }
+
+    throwIfStage5UpdateRequiredError({ error, source: 'stage5-api' });
+
+    if (error?.response?.status === 402) {
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+    }
+
+    if (error?.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${error.response.status} ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        {
+          status: error.response.status,
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.response.data,
+        }
+      );
+    } else if (error?.request) {
+      sendNetLog(
+        'error',
+        `HTTP NO_RESPONSE ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        { url: error.config?.url, method: error.config?.method }
+      );
+    } else {
+      sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
+    }
+
+    if (error?.message === 'transcription-job-not-found') {
+      clearDurableTranscriptionResumeJob(recoveryKey);
+    }
+
+    throw error;
+  }
+}
+
 // ============================================================================
 // Direct Relay Endpoints (Simplified Flow)
 // ============================================================================
@@ -721,7 +1566,10 @@ export async function transcribeViaDirect({
               );
               onProgress?.('Uploading...', 10 + uploadPercent);
 
-              if (progressEvent.loaded >= progressEvent.total && !uploadComplete) {
+              if (
+                progressEvent.loaded >= progressEvent.total &&
+                !uploadComplete
+              ) {
                 uploadComplete = true;
                 transcriptionStartTime = Date.now();
 
@@ -1057,12 +1905,16 @@ export async function dubViaDirect({
       });
 
       if (retryable) {
-        sendNetLog('warn', 'Retrying POST /dub-direct after transient failure', {
-          attempt,
-          maxAttempts,
-          status: getRelayStatus(error),
-          data: error?.response?.data,
-        });
+        sendNetLog(
+          'warn',
+          'Retrying POST /dub-direct after transient failure',
+          {
+            attempt,
+            maxAttempts,
+            status: getRelayStatus(error),
+            data: error?.response?.data,
+          }
+        );
         await waitForDubDirectRetry(750 * attempt, signal);
         continue;
       }
@@ -1077,11 +1929,10 @@ export async function dubViaDirect({
           }
         );
       } else if (error.request) {
-        sendNetLog(
-          'error',
-          `HTTP NO_RESPONSE POST ${RELAY_URL}/dub-direct`,
-          { url: `${RELAY_URL}/dub-direct`, method: 'POST' }
-        );
+        sendNetLog('error', `HTTP NO_RESPONSE POST ${RELAY_URL}/dub-direct`, {
+          url: `${RELAY_URL}/dub-direct`,
+          method: 'POST',
+        });
       } else {
         sendNetLog('error', `HTTP ERROR: ${relayMessage}`);
       }

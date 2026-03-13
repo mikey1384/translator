@@ -5,6 +5,8 @@ import type { DubSegmentPayload } from '@shared-types/app';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
 const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
+const ELEVENLABS_TTS_MODEL_ID = 'eleven_v3';
+const ELEVENLABS_TTS_MAX_TEXT_CHARACTERS = 5_000;
 
 // Popular ElevenLabs voices for dubbing
 export const ELEVENLABS_VOICES = {
@@ -128,7 +130,9 @@ function resolveElevenLabsDubFormat(format?: string): {
   apiOutputFormat: string;
   wrapPcmAsWav?: boolean;
 } {
-  const normalized = String(format || 'mp3').trim().toLowerCase();
+  const normalized = String(format || 'mp3')
+    .trim()
+    .toLowerCase();
   switch (normalized) {
     case 'mp3':
       return {
@@ -156,6 +160,24 @@ function resolveElevenLabsDubFormat(format?: string): {
         `ElevenLabs does not support requested output format "${normalized}"`
       );
   }
+}
+
+function usesElevenV3(modelId?: string): boolean {
+  return (
+    String(modelId || '')
+      .trim()
+      .toLowerCase() === ELEVENLABS_TTS_MODEL_ID
+  );
+}
+
+function assertElevenLabsTtsTextLength(text: string): void {
+  if (text.length <= ELEVENLABS_TTS_MAX_TEXT_CHARACTERS) {
+    return;
+  }
+
+  throw new Error(
+    `ElevenLabs accepts at most ${ELEVENLABS_TTS_MAX_TEXT_CHARACTERS} characters per segment`
+  );
 }
 
 function wrapPcm16LeAsWav(
@@ -230,7 +252,7 @@ export async function transcribeWithElevenLabs({
 export async function synthesizeDubWithElevenLabs({
   segments,
   voice = 'adam',
-  modelId = 'eleven_v3',
+  modelId = ELEVENLABS_TTS_MODEL_ID,
   format = 'mp3',
   apiKey,
   signal,
@@ -284,23 +306,29 @@ export async function synthesizeDubWithElevenLabs({
         return;
       }
 
+      assertElevenLabsTtsTextLength(text);
+
       active += 1;
+      const requestBody: Record<string, unknown> = {
+        text,
+        model_id: modelId,
+      };
+
+      if (!usesElevenV3(modelId)) {
+        requestBody.voice_settings = {
+          stability: 0.5,
+          similarity_boost: 0.75,
+          style: 0.0,
+          use_speaker_boost: true,
+        };
+      }
 
       axios
         .post(
           `${ELEVENLABS_BASE_URL}/text-to-speech/${voiceId}?output_format=${encodeURIComponent(
             outputSpec.apiOutputFormat
           )}`,
-          {
-            text,
-            model_id: modelId,
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.0,
-              use_speaker_boost: true,
-            },
-          },
+          requestBody,
           {
             responseType: 'arraybuffer',
             headers: {

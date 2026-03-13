@@ -331,9 +331,9 @@ export default function useTranscriptSummaryFlow({
           ? t('summary.insufficientCredits')
           : t('summary.error', { message });
       setError(friendlyMessage);
-      setProgressLabel(t('summary.status.error'));
+      setProgressLabel(friendlyMessage);
       useTaskStore.getState().setSummary({
-        stage: t('summary.status.error'),
+        stage: friendlyMessage,
         percent: progressPercent,
         inProgress: false,
         id: null,

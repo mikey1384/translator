@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent, shell } from 'electron';
+import { createHash } from 'crypto';
 import {
   AllByoSettings,
   ExposedRenderResult,
@@ -29,6 +30,12 @@ const electronAPI = {
         });
         processedOptions.videoFileData = fileData;
         processedOptions.videoFileName = options.videoFile.name;
+        processedOptions.durableRecoverySeed = [
+          'generate-subtitles-file-sha256-v1',
+          createHash('sha256')
+            .update(Buffer.from(fileData))
+            .digest('hex'),
+        ].join('\n');
       } catch (error) {
         console.error('[preload] Error reading video file:', error);
         throw new Error('Failed to read video file');

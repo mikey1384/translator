@@ -68,12 +68,14 @@ export async function extractSubtitlesFromMedia({
 
     const { segments, speechIntervals, transcriptionEngine } =
       await transcribePass({
-      audioPath: audioPath,
-      services: { ffmpeg },
-      progressCallback: adaptedProgress ?? progressCallback,
-      operationId,
-      signal,
-      qualityTranscription: options?.qualityTranscription ?? false,
+        audioPath: audioPath,
+        sourceMediaPath: options.sourceMediaPath ?? options.videoPath,
+        durableRecoverySeed: options.durableRecoverySeed,
+        services: { ffmpeg },
+        progressCallback: adaptedProgress ?? progressCallback,
+        operationId,
+        signal,
+        qualityTranscription: options?.qualityTranscription ?? false,
       });
 
     const finalized = await finalizePass({

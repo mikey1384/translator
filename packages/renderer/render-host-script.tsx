@@ -1,6 +1,6 @@
 import {
   getSubtitleStyles,
-  assColorToRgba,
+  resolveSubtitleRenderTheme,
 } from '../shared/helpers/subtitle-style-util.js';
 import {
   SUBTITLE_STYLE_PRESETS,
@@ -29,6 +29,14 @@ function applyPresetStyles(
   } = {}
 ) {
   if (!el) return;
+  const theme = resolveSubtitleRenderTheme({
+    displayFontSize: fontSizePx,
+    isFullScreen: false,
+    stylePreset,
+    isMultiLine,
+    videoWidthPx,
+    videoHeightPx,
+  });
   const dynamicClass = getSubtitleStyles({
     displayFontSize: fontSizePx,
     isFullScreen: false, // your headless renderer might treat the canvas as always full-screen
@@ -38,7 +46,7 @@ function applyPresetStyles(
     videoHeightPx,
   });
   el.className = dynamicClass;
-  el.style.fontSize = fontSizePx + 'px';
+  el.style.fontSize = theme.fontSizePx + 'px';
 }
 
 export function applySubtitlePreset(preset: SubtitleStylePresetKey) {
@@ -111,13 +119,18 @@ function initializeSubtitleDisplay() {
       videoHeightPx,
     } = opts;
     const isMultiLine = text.includes('\n');
+    const renderTheme = resolveSubtitleRenderTheme({
+      displayFontSize: fontSizePx,
+      isFullScreen: false,
+      stylePreset,
+      isMultiLine,
+      videoWidthPx,
+      videoHeightPx,
+    });
 
     /* ---------- render text ---------- */
     if (stylePreset === 'LineBox') {
       // replicate the editor's per-line <span> backgrounds
-      const bg = assColorToRgba(
-        SUBTITLE_STYLE_PRESETS.LineBox.backColor || '&H00000000'
-      );
       const esc = (s: string) =>
         s
           .replace(/&/g, '&amp;')
@@ -130,8 +143,9 @@ function initializeSubtitleDisplay() {
           .split('\n')
           .map(
             line =>
-              `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;` +
+              `<span style="background-color:${renderTheme.lineBoxBackgroundColor};padding:${renderTheme.lineBoxPadding};display:inline;line-height:${renderTheme.lineHeight};white-space:pre-wrap;` +
               `overflow-wrap:anywhere;word-break:break-word;` +
+              `border-radius:${renderTheme.lineBoxBorderRadiusPx}px;box-shadow:${renderTheme.lineBoxBoxShadow};` +
               `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
               `${esc(line)}` +
               `</span>`

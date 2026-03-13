@@ -11,10 +11,9 @@ import {
   VIDEO_SUGGESTION_WEB_SEARCH_CALLS_PER_SEARCH,
 } from './estimate-heuristics';
 import {
-  AI_MODELS,
   normalizeAiModelId,
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
-  STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL,
+  STAGE5_TTS_MODEL_ELEVEN_V3,
   STAGE5_TTS_MODEL_STANDARD,
   STAGE5_WHISPER_MODEL,
 } from './model-catalog';
@@ -84,11 +83,15 @@ export function estimateTranscriptionUsdPerHour(
   provider: 'openai' | 'elevenlabs'
 ): number | UsdRange {
   if (provider === 'openai') {
-    return VENDOR_TRANSCRIPTION_MODEL_PRICING[STAGE5_WHISPER_MODEL].perSecond * 3600;
+    return (
+      VENDOR_TRANSCRIPTION_MODEL_PRICING[STAGE5_WHISPER_MODEL].perSecond * 3600
+    );
   }
 
   const hourlyValues = ELEVENLABS_PLAN_TIERS.map(
-    tier => VENDOR_TRANSCRIPTION_MODEL_PRICING[STAGE5_ELEVENLABS_SCRIBE_MODEL][tier] * 3600
+    tier =>
+      VENDOR_TRANSCRIPTION_MODEL_PRICING[STAGE5_ELEVENLABS_SCRIBE_MODEL][tier] *
+      3600
   );
   return toUsdRange(hourlyValues);
 }
@@ -99,13 +102,14 @@ export function estimateDubbingUsdPerHour(
   const charsPerHour = SPOKEN_CHARS_PER_MINUTE * 60;
 
   if (provider === 'openai') {
-    return VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD].perChar * charsPerHour;
+    return (
+      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD].perChar * charsPerHour
+    );
   }
 
   const hourlyValues = ELEVENLABS_PLAN_TIERS.map(
     tier =>
-      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL][tier] *
-      charsPerHour
+      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_V3][tier] * charsPerHour
   );
   return toUsdRange(hourlyValues);
 }
@@ -119,12 +123,15 @@ export function estimatePreviewUsd({
 }): number | UsdRange {
   const safeCharacters = Math.max(0, Math.ceil(Number(characters) || 0));
   if (provider === 'openai') {
-    return VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD].perChar * safeCharacters;
+    return (
+      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD].perChar *
+      safeCharacters
+    );
   }
 
   const values = ELEVENLABS_PLAN_TIERS.map(
     tier =>
-      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL][tier] *
+      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_V3][tier] *
       safeCharacters
   );
   return toUsdRange(values);
@@ -138,14 +145,11 @@ export function estimateVideoSuggestionUsdPerSearch(model: string): number {
     model: normalized,
   });
 
-  const webSearchUsd =
-    normalized.startsWith('claude-')
-      ? ANTHROPIC_WEB_SEARCH_USD_PER_CALL
-      : OPENAI_WEB_SEARCH_USD_PER_CALL;
+  const webSearchUsd = normalized.startsWith('claude-')
+    ? ANTHROPIC_WEB_SEARCH_USD_PER_CALL
+    : OPENAI_WEB_SEARCH_USD_PER_CALL;
 
-  return (
-    modelUsd + VIDEO_SUGGESTION_WEB_SEARCH_CALLS_PER_SEARCH * webSearchUsd
-  );
+  return modelUsd + VIDEO_SUGGESTION_WEB_SEARCH_CALLS_PER_SEARCH * webSearchUsd;
 }
 
 export function estimateTranscriptCharsToTokens(charCount: number): number {

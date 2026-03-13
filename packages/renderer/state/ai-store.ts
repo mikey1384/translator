@@ -248,6 +248,73 @@ async function coerceStage5ProviderPreferencesForStrictByo(
   }
 }
 
+type HiddenByoProvider = 'openai' | 'anthropic' | 'elevenlabs';
+
+async function enableConfiguredByoToggles(
+  get: () => AiStoreState,
+  set: (partial: Partial<AiStoreState>) => void,
+  providers: HiddenByoProvider[] = ['openai', 'anthropic', 'elevenlabs']
+): Promise<void> {
+  const state = get();
+  const enabledProviders = new Set(providers);
+  let changed = false;
+
+  if (
+    enabledProviders.has('openai') &&
+    state.byoUnlocked &&
+    state.keyPresent &&
+    !state.useByo
+  ) {
+    try {
+      const result = await SystemIPC.setByoProviderEnabled(true);
+      if (result.success) {
+        set({ useByo: true });
+        changed = true;
+      }
+    } catch (err) {
+      console.error('[AiStore] Failed to auto-enable OpenAI BYO:', err);
+    }
+  }
+
+  if (
+    enabledProviders.has('anthropic') &&
+    state.byoAnthropicUnlocked &&
+    state.anthropicKeyPresent &&
+    !state.useByoAnthropic
+  ) {
+    try {
+      const result = await SystemIPC.setByoAnthropicEnabled(true);
+      if (result.success) {
+        set({ useByoAnthropic: true });
+        changed = true;
+      }
+    } catch (err) {
+      console.error('[AiStore] Failed to auto-enable Anthropic BYO:', err);
+    }
+  }
+
+  if (
+    enabledProviders.has('elevenlabs') &&
+    state.byoElevenLabsUnlocked &&
+    state.elevenLabsKeyPresent &&
+    !state.useByoElevenLabs
+  ) {
+    try {
+      const result = await SystemIPC.setByoElevenLabsEnabled(true);
+      if (result.success) {
+        set({ useByoElevenLabs: true });
+        changed = true;
+      }
+    } catch (err) {
+      console.error('[AiStore] Failed to auto-enable ElevenLabs BYO:', err);
+    }
+  }
+
+  if (changed && get().useStrictByoMode) {
+    await coerceStage5ProviderPreferencesForStrictByo(get, set);
+  }
+}
+
 const unsubscribers: Array<() => void> = [];
 
 function ensureSubscriptions(
@@ -268,6 +335,7 @@ function ensureSubscriptions(
         unlockPending: false,
         lastFetched: snapshot?.fetchedAt,
       });
+      void enableConfiguredByoToggles(get, set);
     })
   );
 
@@ -300,6 +368,7 @@ function ensureSubscriptions(
         entitlementsError: undefined,
         lastFetched: snapshot?.fetchedAt,
       });
+      void enableConfiguredByoToggles(get, set);
     })
   );
 
@@ -338,6 +407,7 @@ function ensureSubscriptions(
       try {
         const key = await SystemIPC.getOpenAiApiKey();
         set({ keyPresent: Boolean(key), keyValue: key ?? '' });
+        await enableConfiguredByoToggles(get, set, ['openai']);
       } catch {
         set({ keyPresent: true });
       }
@@ -369,6 +439,7 @@ function ensureSubscriptions(
           anthropicKeyPresent: Boolean(key),
           anthropicKeyValue: key ?? '',
         });
+        await enableConfiguredByoToggles(get, set, ['anthropic']);
       } catch {
         set({ anthropicKeyPresent: true });
       }
@@ -400,6 +471,7 @@ function ensureSubscriptions(
           elevenLabsKeyPresent: Boolean(key),
           elevenLabsKeyValue: key ?? '',
         });
+        await enableConfiguredByoToggles(get, set, ['elevenlabs']);
       } catch {
         set({ elevenLabsKeyPresent: true });
       }
@@ -530,22 +602,24 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             stage5DubbingTtsProvider: settings.stage5DubbingTtsProvider,
           });
 
+          await enableConfiguredByoToggles(get, set);
+
           // If strict BYO mode is ON but no valid full-stack coverage exists
           // (for example, keys were cleared during migration), auto-disable it so
           // the user sees the Stage5 credits UI again.
           if (settings.useStrictByoMode && get().entitlementsHydrated) {
-            const entitlements = get();
+            const currentState = get();
             const hasValidCombo = hasStrictByoActiveCoverage({
-              useStrictByoMode: settings.useStrictByoMode,
-              byoUnlocked: entitlements.byoUnlocked,
-              byoAnthropicUnlocked: entitlements.byoAnthropicUnlocked,
-              byoElevenLabsUnlocked: entitlements.byoElevenLabsUnlocked,
-              useByo: settings.useByoOpenAi,
-              useByoAnthropic: settings.useByoAnthropic,
-              useByoElevenLabs: settings.useByoElevenLabs,
-              keyPresent: settings.openAiKeyPresent,
-              anthropicKeyPresent: settings.anthropicKeyPresent,
-              elevenLabsKeyPresent: settings.elevenLabsKeyPresent,
+              useStrictByoMode: currentState.useStrictByoMode,
+              byoUnlocked: currentState.byoUnlocked,
+              byoAnthropicUnlocked: currentState.byoAnthropicUnlocked,
+              byoElevenLabsUnlocked: currentState.byoElevenLabsUnlocked,
+              useByo: currentState.useByo,
+              useByoAnthropic: currentState.useByoAnthropic,
+              useByoElevenLabs: currentState.useByoElevenLabs,
+              keyPresent: currentState.keyPresent,
+              anthropicKeyPresent: currentState.anthropicKeyPresent,
+              elevenLabsKeyPresent: currentState.elevenLabsKeyPresent,
             });
             if (!hasValidCombo) {
               // Silently disable strict BYO mode so the user sees Stage5 credits.
@@ -592,6 +666,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           entitlementsError: undefined,
           lastFetched: snapshot?.fetchedAt,
         });
+        await enableConfiguredByoToggles(get, set);
       } catch (err: any) {
         set({
           entitlementsLoading: false,
@@ -613,6 +688,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           entitlementsError: undefined,
           lastFetched: snapshot?.fetchedAt,
         });
+        await enableConfiguredByoToggles(get, set);
       } catch (err: any) {
         set({
           entitlementsLoading: false,
@@ -662,6 +738,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         const result = await SystemIPC.setOpenAiApiKey(value);
         if (result.success) {
           set({ keyPresent: Boolean(value.trim()) });
+          await enableConfiguredByoToggles(get, set, ['openai']);
         }
         return result;
       } finally {
@@ -783,6 +860,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         const result = await SystemIPC.setAnthropicApiKey(value);
         if (result.success) {
           set({ anthropicKeyPresent: Boolean(value.trim()) });
+          await enableConfiguredByoToggles(get, set, ['anthropic']);
         }
         return result;
       } finally {
@@ -916,6 +994,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         const result = await SystemIPC.setElevenLabsApiKey(value);
         if (result.success) {
           set({ elevenLabsKeyPresent: Boolean(value.trim()) });
+          await enableConfiguredByoToggles(get, set, ['elevenlabs']);
         }
         return result;
       } finally {
@@ -1230,6 +1309,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         const result = await SystemIPC.setPreferredTranscriptionProvider(value);
         if (result.success) {
           set({ preferredTranscriptionProvider: value });
+          if (value === 'openai' || value === 'elevenlabs') {
+            await enableConfiguredByoToggles(get, set, [value]);
+          }
         }
         return result;
       } catch (err: any) {
@@ -1261,6 +1343,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         const result = await SystemIPC.setPreferredDubbingProvider(value);
         if (result.success) {
           set({ preferredDubbingProvider: value });
+          if (value === 'openai' || value === 'elevenlabs') {
+            await enableConfiguredByoToggles(get, set, [value]);
+          }
         }
         return result;
       } catch (err: any) {

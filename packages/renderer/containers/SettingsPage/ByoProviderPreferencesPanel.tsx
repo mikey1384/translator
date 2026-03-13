@@ -12,24 +12,18 @@ import { colors } from '../../styles';
 import { useAiStore } from '../../state';
 import { useUIStore } from '../../state/ui-store';
 import {
-  hasAnthropicByoAvailable,
   hasAnthropicByoConfigured,
-  hasElevenLabsByoAvailable,
   hasElevenLabsByoConfigured,
-  hasOpenAiByoAvailable,
   hasOpenAiByoConfigured,
   resolveDubbingProvider,
-  resolveSummaryProvider,
   resolveTranscriptionProvider,
   resolveTranslationDraftModel,
   resolveTranslationDraftProvider,
   resolveTranslationReviewModel,
-  resolveTranslationReviewProvider,
   type ByoRuntimeState,
   type RuntimeProvider,
 } from '../../state/byo-runtime';
 import { BYO_PROVIDERS } from './byo-provider-config';
-import Switch from '../../components/Switch';
 import {
   byoSidebarCardStyles,
   settingsCardTitleStyles,
@@ -119,18 +113,6 @@ const panelRelaxedGapStyles = css`
   gap: 16px;
 `;
 
-const toggleRowStyles = css`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-`;
-
-const toggleRowCopyStyles = css`
-  min-width: 0;
-`;
-
 interface PreferenceRowProps {
   title: string;
   hasChoice: boolean;
@@ -212,37 +194,6 @@ function PreferenceRow({
         )
       )}
       {footer ? <div className={infoText}>{footer}</div> : null}
-    </div>
-  );
-}
-
-interface TogglePreferenceRowProps {
-  title: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  enabledLabel: string;
-  disabledLabel: string;
-  footer?: ReactNode;
-}
-
-function TogglePreferenceRow({
-  title,
-  checked,
-  onChange,
-  enabledLabel,
-  disabledLabel,
-  footer,
-}: TogglePreferenceRowProps) {
-  return (
-    <div className={toggleRowStyles}>
-      <div className={toggleRowCopyStyles}>
-        <div className={cx(sectionTitle, sectionTitleStaticStyles)}>
-          {title}
-        </div>
-        <div className={infoText}>{checked ? enabledLabel : disabledLabel}</div>
-        {footer ? <div className={infoText}>{footer}</div> : null}
-      </div>
-      <Switch checked={checked} onChange={onChange} ariaLabel={title} />
     </div>
   );
 }
@@ -384,9 +335,6 @@ export default function ByoProviderPreferencesPanel() {
   const hasOpenAiConfigured = hasOpenAiByoConfigured(runtimeState);
   const hasAnthropicConfigured = hasAnthropicByoConfigured(runtimeState);
   const hasElevenLabsConfigured = hasElevenLabsByoConfigured(runtimeState);
-  const hasOpenAiAvailable = hasOpenAiByoAvailable(runtimeState);
-  const hasAnthropicAvailable = hasAnthropicByoAvailable(runtimeState);
-  const hasElevenLabsAvailable = hasElevenLabsByoAvailable(runtimeState);
 
   const showStackPanel =
     hasOpenAiConfigured || hasAnthropicConfigured || hasElevenLabsConfigured;
@@ -394,13 +342,13 @@ export default function ByoProviderPreferencesPanel() {
   const showTranslationRows = hasOpenAiConfigured || hasAnthropicConfigured;
   const showDubbingRow = hasOpenAiConfigured || hasElevenLabsConfigured;
   const showVideoSuggestionRow = hasOpenAiConfigured || hasAnthropicConfigured;
-  const hasTranscriptionChoice = hasOpenAiAvailable && hasElevenLabsAvailable;
-  const hasTranslationChoice = hasOpenAiAvailable && hasAnthropicAvailable;
-  const hasReviewChoice = hasTranslationChoice;
-  const hasSummaryChoice = hasTranslationChoice;
-  const hasDubbingChoice = hasOpenAiAvailable && hasElevenLabsAvailable;
-  const canUseOpenAiVideoSuggestionModel = hasOpenAiAvailable;
-  const canUseAnthropicVideoSuggestionModel = hasAnthropicAvailable;
+  const hasTranscriptionChoice = hasOpenAiConfigured && hasElevenLabsConfigured;
+  const hasTranslationChoice = hasOpenAiConfigured && hasAnthropicConfigured;
+  const hasReviewChoice = showTranslationRows;
+  const hasSummaryChoice = showTranslationRows;
+  const hasDubbingChoice = hasOpenAiConfigured && hasElevenLabsConfigured;
+  const canUseOpenAiVideoSuggestionModel = hasOpenAiConfigured;
+  const canUseAnthropicVideoSuggestionModel = hasAnthropicConfigured;
   const hasVideoSuggestionChoice =
     canUseOpenAiVideoSuggestionModel || canUseAnthropicVideoSuggestionModel;
   const hasProviderChoice =
@@ -417,12 +365,6 @@ export default function ByoProviderPreferencesPanel() {
     resolveTranslationDraftProvider(runtimeState);
   const translationReviewModel =
     resolveTranslationReviewModel(runtimeState).model;
-  const reviewProvider = resolveTranslationReviewProvider(runtimeState);
-  const summaryProvider = resolveSummaryProvider(runtimeState);
-  const activeSummaryProviderOptions =
-    summaryEffortLevel === 'high'
-      ? BYO_PROVIDERS.summary.high
-      : BYO_PROVIDERS.summary.standard;
   const dubbingProvider = resolveDubbingProvider(runtimeState);
   const resolvedVideoSuggestionModel = useMemo(
     () =>
@@ -449,14 +391,19 @@ export default function ByoProviderPreferencesPanel() {
       videoSuggestionModelPreference,
     ]
   );
+  const selectedVideoSuggestionModel =
+    videoSuggestionModelPreference === 'default' ||
+    videoSuggestionModelPreference === 'quality'
+      ? resolvedVideoSuggestionModel
+      : videoSuggestionModelPreference;
   const videoSuggestionUsesDirectGpt =
-    videoSuggestionModelPreference === AI_MODELS.GPT;
+    selectedVideoSuggestionModel === AI_MODELS.GPT;
   const videoSuggestionUsesDirectGpt54 =
-    videoSuggestionModelPreference === STAGE5_REVIEW_TRANSLATION_MODEL;
+    selectedVideoSuggestionModel === STAGE5_REVIEW_TRANSLATION_MODEL;
   const videoSuggestionUsesSonnet =
-    videoSuggestionModelPreference === AI_MODELS.CLAUDE_SONNET;
+    selectedVideoSuggestionModel === AI_MODELS.CLAUDE_SONNET;
   const videoSuggestionUsesOpus =
-    videoSuggestionModelPreference === AI_MODELS.CLAUDE_OPUS;
+    selectedVideoSuggestionModel === AI_MODELS.CLAUDE_OPUS;
   const showVideoSuggestionRuntimeHint =
     !useStrictByoMode &&
     videoSuggestionModelPreference !== resolvedVideoSuggestionModel;
@@ -501,11 +448,31 @@ export default function ByoProviderPreferencesPanel() {
     }
   };
 
+  const handleReviewModeChange = async (
+    value: 'off' | 'openai' | 'anthropic'
+  ) => {
+    if (value === 'off') {
+      setQualityTranslation(false);
+      return;
+    }
+
+    setQualityTranslation(true);
+    await handleReviewProviderChange(value === 'anthropic');
+  };
+
   const handleSummaryProviderChange = async (value: boolean) => {
     const result = await setPreferClaudeSummary(value);
     if (!result.success) {
       console.error('Failed to update summary provider:', result.error);
     }
+  };
+
+  const handleSummaryModeChange = async (
+    provider: 'openai' | 'anthropic',
+    effort: 'standard' | 'high'
+  ) => {
+    setSummaryEffortLevel(effort);
+    await handleSummaryProviderChange(provider === 'anthropic');
   };
 
   const handleVideoSuggestionModelChange = async (
@@ -641,24 +608,17 @@ export default function ByoProviderPreferencesPanel() {
       )}
 
       {showTranslationRows && (
-        <TogglePreferenceRow
-          title={t('settings.byoPreferences.reviewPass', 'Review Pass')}
-          checked={qualityTranslation}
-          onChange={setQualityTranslation}
-          enabledLabel={t('settings.byoPreferences.on', 'On')}
-          disabledLabel={t('settings.byoPreferences.off', 'Off')}
-        />
-      )}
-
-      {showTranslationRows && qualityTranslation && (
         <PreferenceRow
-          title={t(
-            'settings.byoPreferences.translationReview',
-            'Translation (Review)'
-          )}
+          title={t('settings.byoPreferences.reviewPass', 'Review Pass')}
           hasChoice={hasReviewChoice}
-          radioName="reviewProvider"
+          radioName="reviewPass"
           options={[
+            {
+              value: 'off',
+              label: t('settings.byoPreferences.off', 'Off'),
+              selected: !qualityTranslation,
+              onSelect: () => void handleReviewModeChange('off'),
+            },
             {
               value: 'openai',
               label: t(
@@ -666,8 +626,13 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.review.openai.fallback
               ),
               price: BYO_PROVIDERS.review.openai.price,
-              selected: !preferClaudeReview,
-              onSelect: () => handleReviewProviderChange(false),
+              selected: qualityTranslation && !preferClaudeReview,
+              disabled: !hasOpenAiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.reviewRequiresOpenAi',
+                'Requires OpenAI BYO unlock and key.'
+              ),
+              onSelect: () => void handleReviewModeChange('openai'),
             },
             {
               value: 'anthropic',
@@ -676,29 +641,15 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.review.anthropic.fallback
               ),
               price: BYO_PROVIDERS.review.anthropic.price,
-              selected: preferClaudeReview,
-              onSelect: () => handleReviewProviderChange(true),
+              selected: qualityTranslation && preferClaudeReview,
+              disabled: !hasAnthropicConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.reviewRequiresAnthropic',
+                'Requires Anthropic BYO unlock and key.'
+              ),
+              onSelect: () => void handleReviewModeChange('anthropic'),
             },
           ]}
-          infoProvider={getProviderInfo(t, reviewProvider, {
-            openai: BYO_PROVIDERS.review.openai,
-            anthropic: BYO_PROVIDERS.review.anthropic,
-          })}
-        />
-      )}
-
-      {showTranslationRows && (
-        <TogglePreferenceRow
-          title={t(
-            'settings.performanceQuality.qualitySummary.label',
-            'Quality Summary'
-          )}
-          checked={summaryEffortLevel === 'high'}
-          onChange={checked =>
-            setSummaryEffortLevel(checked ? 'high' : 'standard')
-          }
-          enabledLabel={t('settings.byoPreferences.qualityMode', 'Quality')}
-          disabledLabel={t('settings.byoPreferences.defaultMode', 'Default')}
         />
       )}
 
@@ -706,33 +657,71 @@ export default function ByoProviderPreferencesPanel() {
         <PreferenceRow
           title={t('settings.byoPreferences.summary', 'Summary')}
           hasChoice={hasSummaryChoice}
-          radioName="summaryProvider"
+          radioName="summaryMode"
           options={[
             {
-              value: 'openai',
+              value: 'openai-standard',
               label: t(
-                activeSummaryProviderOptions.openai.labelKey,
-                activeSummaryProviderOptions.openai.fallback
+                BYO_PROVIDERS.summary.standard.openai.labelKey,
+                BYO_PROVIDERS.summary.standard.openai.fallback
               ),
-              price: activeSummaryProviderOptions.openai.price,
-              selected: !preferClaudeSummary,
-              onSelect: () => handleSummaryProviderChange(false),
+              price: BYO_PROVIDERS.summary.standard.openai.price,
+              selected: summaryEffortLevel !== 'high' && !preferClaudeSummary,
+              disabled: !hasOpenAiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.summaryRequiresOpenAi',
+                'Requires OpenAI BYO unlock and key.'
+              ),
+              onSelect: () =>
+                void handleSummaryModeChange('openai', 'standard'),
             },
             {
-              value: 'anthropic',
+              value: 'anthropic-standard',
               label: t(
-                activeSummaryProviderOptions.anthropic.labelKey,
-                activeSummaryProviderOptions.anthropic.fallback
+                BYO_PROVIDERS.summary.standard.anthropic.labelKey,
+                BYO_PROVIDERS.summary.standard.anthropic.fallback
               ),
-              price: activeSummaryProviderOptions.anthropic.price,
-              selected: preferClaudeSummary,
-              onSelect: () => handleSummaryProviderChange(true),
+              price: BYO_PROVIDERS.summary.standard.anthropic.price,
+              selected: summaryEffortLevel !== 'high' && preferClaudeSummary,
+              disabled: !hasAnthropicConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.summaryRequiresAnthropic',
+                'Requires Anthropic BYO unlock and key.'
+              ),
+              onSelect: () =>
+                void handleSummaryModeChange('anthropic', 'standard'),
+            },
+            {
+              value: 'openai-high',
+              label: t(
+                BYO_PROVIDERS.summary.high.openai.labelKey,
+                BYO_PROVIDERS.summary.high.openai.fallback
+              ),
+              price: BYO_PROVIDERS.summary.high.openai.price,
+              selected: summaryEffortLevel === 'high' && !preferClaudeSummary,
+              disabled: !hasOpenAiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.summaryRequiresOpenAi',
+                'Requires OpenAI BYO unlock and key.'
+              ),
+              onSelect: () => void handleSummaryModeChange('openai', 'high'),
+            },
+            {
+              value: 'anthropic-high',
+              label: t(
+                BYO_PROVIDERS.summary.high.anthropic.labelKey,
+                BYO_PROVIDERS.summary.high.anthropic.fallback
+              ),
+              price: BYO_PROVIDERS.summary.high.anthropic.price,
+              selected: summaryEffortLevel === 'high' && preferClaudeSummary,
+              disabled: !hasAnthropicConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.summaryRequiresAnthropic',
+                'Requires Anthropic BYO unlock and key.'
+              ),
+              onSelect: () => void handleSummaryModeChange('anthropic', 'high'),
             },
           ]}
-          infoProvider={getProviderInfo(t, summaryProvider, {
-            openai: activeSummaryProviderOptions.openai,
-            anthropic: activeSummaryProviderOptions.anthropic,
-          })}
         />
       )}
 

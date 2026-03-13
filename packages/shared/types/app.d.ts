@@ -513,6 +513,10 @@ declare module '@shared-types/app' {
   export interface GenerateSubtitlesOptions {
     videoPath?: string;
     videoFile?: File;
+    /** Stable original source path used for durable transcription recovery. */
+    sourceMediaPath?: string;
+    /** Stable fallback identity used when the source has no reusable filesystem path. */
+    durableRecoverySeed?: string;
     targetLanguage: string;
     streamResults?: boolean;
     filters?: { name: string; extensions: string[] }[];
@@ -566,6 +570,7 @@ declare module '@shared-types/app' {
   // Single-line transcription with context and precise audio segment
   export interface TranscribeOneLineOptions {
     videoPath: string;
+    sourceUrl?: string | null;
     segment: { start: number; end: number };
     promptContext?: string;
     operationId?: string;
@@ -580,6 +585,7 @@ declare module '@shared-types/app' {
   // Transcribe remaining portion of a video (append-mode)
   export interface TranscribeRemainingOptions {
     videoPath: string;
+    sourceUrl?: string | null;
     start: number;
     end?: number;
     operationId?: string;

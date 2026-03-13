@@ -147,7 +147,9 @@ async function promptForTranscriptionFallback({
   throwIfAborted(signal);
 
   const secondaryActionLabel =
-    payload.reason === 'insufficient-credits' ? 'Recharge First' : 'Retry Later';
+    payload.reason === 'insufficient-credits'
+      ? 'Recharge First'
+      : 'Retry Later';
   const detailLines = [
     payload.message,
     '',
@@ -185,6 +187,8 @@ async function promptForTranscriptionFallback({
 
 export async function transcribePass({
   audioPath,
+  sourceMediaPath,
+  durableRecoverySeed,
   services,
   progressCallback,
   operationId,
@@ -193,6 +197,8 @@ export async function transcribePass({
   qualityTranscription,
 }: {
   audioPath: string;
+  sourceMediaPath?: string;
+  durableRecoverySeed?: string;
   services: { ffmpeg: FFmpegContext };
   progressCallback?: GenerateProgressCallback;
   operationId: string;
@@ -250,7 +256,7 @@ export async function transcribePass({
     // Determine transcription strategy:
     // - BYO ElevenLabs: Always try direct ElevenLabs
     // - Stage5 + quality mode + short audio (< 2.7 min) + small file (< 95MB): direct relay
-    // - Stage5 + quality mode + long audio OR large file (95-500MB): direct relay large-file path
+    // - Stage5 + quality mode + long audio OR large file (95-500MB): durable R2 job flow
     // - Stage5 + non-quality mode (or quality fallback): Whisper chunked
     const canTryDirectElevenLabs =
       useByoElevenLabs ||
@@ -261,12 +267,17 @@ export async function transcribePass({
     const canTryR2ElevenLabs =
       useStage5 &&
       wantsHighQuality &&
-      fileSizeMB < MAX_R2_FILE_SIZE_MB &&
+      fileSizeMB <= MAX_R2_FILE_SIZE_MB &&
       (fileSizeMB >= MAX_DIRECT_FILE_SIZE_MB || exceedsDurationThreshold);
     let chunkedQualityMode = qualityTranscription;
     let userConfirmedWhisperFallback = false;
 
-    if (useStage5 && wantsHighQuality && !canTryDirectElevenLabs && !canTryR2ElevenLabs) {
+    if (
+      useStage5 &&
+      wantsHighQuality &&
+      !canTryDirectElevenLabs &&
+      !canTryR2ElevenLabs
+    ) {
       // High-quality route is unavailable (e.g., very large files), so force
       // Whisper for chunked fallback to avoid repeatedly selecting ElevenLabs.
       chunkedQualityMode = false;
@@ -279,7 +290,7 @@ export async function transcribePass({
       fileSizeMB < MAX_DIRECT_FILE_SIZE_MB
     ) {
       log.info(
-        `[${operationId}] Audio duration (${(duration / 60).toFixed(1)} min) exceeds CF Worker threshold, using direct relay flow`
+        `[${operationId}] Audio duration (${(duration / 60).toFixed(1)} min) exceeds the direct relay threshold, using durable R2 flow`
       );
     }
 
@@ -296,7 +307,8 @@ export async function transcribePass({
 
       if (
         preferredEngine === 'elevenlabs' &&
-        (resolvedModel.includes('whisper') || fallbackTarget.includes('whisper'))
+        (resolvedModel.includes('whisper') ||
+          fallbackTarget.includes('whisper'))
       ) {
         return 'whisper';
       }
@@ -350,7 +362,9 @@ export async function transcribePass({
         'utf8'
       );
 
-      log.info(`[${operationId}] ✏️ ${completionLogLabel}: ${cleaned.length} segments`);
+      log.info(
+        `[${operationId}] ✏️ ${completionLogLabel}: ${cleaned.length} segments`
+      );
 
       progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
       return {
@@ -363,6 +377,7 @@ export async function transcribePass({
     const runConfirmedWhisperFallback = async (): Promise<{
       segments: SrtSegment[];
       speechIntervals: Array<{ start: number; end: number }>;
+      transcriptionEngine: 'elevenlabs' | 'whisper';
     }> => {
       log.info(
         `[${operationId}] Retrying transcription with explicit Whisper after user confirmation`
@@ -394,6 +409,7 @@ export async function transcribePass({
     const tryElevenLabsTranscription = async (): Promise<{
       segments: SrtSegment[];
       speechIntervals: Array<{ start: number; end: number }>;
+      transcriptionEngine: 'elevenlabs' | 'whisper';
     } | null> => {
       log.info(
         `[${operationId}] Trying ElevenLabs Scribe (${fileSizeMB.toFixed(1)}MB) - best quality mode`
@@ -452,16 +468,16 @@ export async function transcribePass({
           result,
           'elevenlabs'
         );
-        const fallbackAttempts = Number((result as any)?.fallback?.attempts || 0);
+        const fallbackAttempts = Number(
+          (result as any)?.fallback?.attempts || 0
+        );
         const fellBackToWhisper = transcriptionEngine === 'whisper';
-        if (
-          useStage5 &&
-          wantsHighQuality &&
-          fellBackToWhisper
-        ) {
+        if (useStage5 && wantsHighQuality && fellBackToWhisper) {
           log.warn(
             `[${operationId}] Stage5 high-quality transcription fell back to Whisper${
-              fallbackAttempts > 0 ? ` after ${fallbackAttempts} ElevenLabs attempts` : ''
+              fallbackAttempts > 0
+                ? ` after ${fallbackAttempts} ElevenLabs attempts`
+                : ''
             }.`
           );
           progressCallback?.({
@@ -607,10 +623,10 @@ export async function transcribePass({
       }
     }
 
-    // Try direct relay flow for large Stage5 files (95-500MB or long duration)
+    // Try the durable R2 flow for large Stage5 files (95-500MB or long duration)
     if (canTryR2ElevenLabs) {
       log.info(
-        `[${operationId}] Using direct relay flow for large file (${fileSizeMB.toFixed(1)}MB)`
+        `[${operationId}] Using durable R2 transcription flow for large file (${fileSizeMB.toFixed(1)}MB)`
       );
 
       // Retry loop for transient network errors
@@ -627,8 +643,11 @@ export async function transcribePass({
           const result = await transcribeLargeFileViaR2({
             filePath: audioPath,
             qualityMode: true,
-            // Use operationId as an idempotency key so retries can't double-bill.
+            // The durable client derives the server upload key from stable
+            // recovery identity; operationId is only a per-run fallback.
             idempotencyKey: operationId,
+            recoverySeed: durableRecoverySeed,
+            recoverySourcePath: sourceMediaPath || audioPath,
             signal,
             durationSec: duration,
             onProgress: (stage, percent) => {
@@ -646,14 +665,16 @@ export async function transcribePass({
             result,
             'elevenlabs'
           );
-          const fallbackAttempts = Number((result as any)?.fallback?.attempts || 0);
+          const fallbackAttempts = Number(
+            (result as any)?.fallback?.attempts || 0
+          );
           if (
             useStage5 &&
             wantsHighQuality &&
             transcriptionEngine === 'whisper'
           ) {
             log.warn(
-              `[${operationId}] Direct relay transcription fell back to Whisper${
+              `[${operationId}] Durable R2 transcription fell back to Whisper${
                 fallbackAttempts > 0
                   ? ` after ${fallbackAttempts} ElevenLabs attempts`
                   : ''
@@ -670,11 +691,17 @@ export async function transcribePass({
             result,
             completionLogLabel:
               transcriptionEngine === 'whisper'
-                ? 'Direct relay Whisper fallback transcription complete'
-                : 'Direct relay transcription complete',
+                ? 'Durable R2 Whisper fallback transcription complete'
+                : 'Durable R2 transcription complete',
             transcriptionEngine,
           });
         } catch (error: any) {
+          if (error?.code === 'DURABLE_TRANSCRIPTION_DETACHED') {
+            throw error;
+          }
+          if (error?.code === 'DURABLE_TRANSCRIPTION_RESTART_REQUIRED') {
+            throw error;
+          }
           if (
             error?.name === 'AbortError' ||
             error?.message === 'Cancelled' ||
@@ -684,6 +711,9 @@ export async function transcribePass({
           }
 
           const errorMsg = error?.message || String(error);
+          log.warn(
+            `[${operationId}] Durable R2 transcription failed: ${errorMsg}`
+          );
           const fallbackConfirmation =
             getTranscriptionFallbackConfirmationPayload(error);
 
@@ -714,7 +744,7 @@ export async function transcribePass({
               ELEVENLABS_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1)
             );
             log.warn(
-              `[${operationId}] Direct relay attempt ${attempt}/${ELEVENLABS_MAX_RETRIES} failed (${errorMsg}), retrying in ${delay}ms...`
+              `[${operationId}] Durable R2 attempt ${attempt}/${ELEVENLABS_MAX_RETRIES} failed (${errorMsg}), retrying in ${delay}ms...`
             );
             progressCallback?.({
               percent: Stage.TRANSCRIBE,
@@ -726,7 +756,7 @@ export async function transcribePass({
 
           // Non-transient error or final attempt - log and break to fallback
           log.warn(
-            `[${operationId}] Direct relay transcription failed: ${errorMsg}`
+            `[${operationId}] Durable R2 transcription failed: ${errorMsg}`
           );
           break;
         }

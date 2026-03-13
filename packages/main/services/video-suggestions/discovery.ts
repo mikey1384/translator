@@ -70,7 +70,6 @@ function normalizeDiscoveryCandidate(
     /^https?:\/\//i.test(rawUrl) && isYoutubeVideoSuggestionUrl(rawUrl)
       ? rawUrl
       : undefined;
-  const categoryHint = compactText(input?.categoryHint).slice(0, 80);
   const evidenceUrls = uniqueTexts(
     Array.isArray(input?.evidenceUrls)
       ? input.evidenceUrls.map((value: unknown) => compactText(value))

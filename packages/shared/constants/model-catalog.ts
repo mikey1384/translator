@@ -10,7 +10,7 @@ export const STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
 export const STAGE5_ELEVENLABS_SCRIBE_MODEL = 'elevenlabs-scribe';
 export const STAGE5_TTS_MODEL_STANDARD = 'tts-1';
 export const STAGE5_TTS_MODEL_HD = 'tts-1-hd';
-export const STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL = 'eleven_multilingual_v2';
+export const STAGE5_TTS_MODEL_ELEVEN_V3 = 'eleven_v3';
 export const STAGE5_TTS_MODEL_ELEVEN_TURBO = 'eleven_turbo_v2_5';
 
 export const AI_MODEL_ALIASES: Record<string, string> = {
@@ -51,7 +51,7 @@ export const STAGE5_TTS_MODEL_PRICING = {
   [STAGE5_TTS_MODEL_HD]: {
     perChar: 30 / 1_000_000,
   },
-  [STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL]: {
+  [STAGE5_TTS_MODEL_ELEVEN_V3]: {
     perChar: 180 / 1_000_000,
   },
   [STAGE5_TTS_MODEL_ELEVEN_TURBO]: {

@@ -42,6 +42,10 @@ import { generateTranscriptSummary } from '../services/subtitle-processing/summa
 import { generateDubbedMedia } from '../services/dubber.js';
 import { synthesizeDub as synthesizeDubAi } from '../services/ai-provider.js';
 import {
+  buildVerticalReframeFilter,
+  createVerticalReframePlan,
+} from '../services/highlight-smart-reframe.js';
+import {
   detectSpeechIntervals,
   normalizeSpeechIntervals,
   mergeAdjacentIntervals,
@@ -96,6 +100,55 @@ async function safeDeleteTempFile(
   }
 }
 
+function buildDurableTranscriptionRecoverySeed({
+  sourceIdentity,
+  start,
+  end,
+  mode,
+}: {
+  sourceIdentity: string;
+  start: number;
+  end: number;
+  mode: 'slice-fill' | 'remaining';
+}): string {
+  return [
+    'durable-transcription-range-v1',
+    sourceIdentity,
+    mode,
+    start.toFixed(3),
+    end.toFixed(3),
+  ].join('\n');
+}
+
+async function resolveDurableTranscriptionSourceIdentity({
+  videoPath,
+  sourceUrl,
+}: {
+  videoPath: string;
+  sourceUrl?: string | null;
+}): Promise<string> {
+  const normalizedSourceUrl = String(sourceUrl || '').trim();
+  if (normalizedSourceUrl) {
+    return ['durable-transcription-source-url-v1', normalizedSourceUrl].join(
+      '\n'
+    );
+  }
+  const resolvedVideoPath = path.resolve(videoPath);
+  try {
+    const videoStats = await fs.stat(resolvedVideoPath);
+    return [
+      'durable-transcription-source-path-v2',
+      resolvedVideoPath,
+      String(videoStats.size),
+      String(Math.round(videoStats.mtimeMs)),
+    ].join('\n');
+  } catch {
+    return ['durable-transcription-source-path-v1', resolvedVideoPath].join(
+      '\n'
+    );
+  }
+}
+
 function checkServicesInitialized(): {
   ffmpeg: FFmpegContext;
   fileManager: FileManager;
@@ -118,6 +171,41 @@ function isVideoAlreadyVertical(meta: VideoMeta | null): boolean {
   if (!meta || !meta.width || !meta.height) return false;
   const ratio = meta.height / Math.max(meta.width, 1);
   return ratio >= 1.2;
+}
+
+function buildLegacyVerticalPadFilter(): string {
+  return `scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease:flags=fast_bilinear,pad=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black,setsar=1`;
+}
+
+function isOperationCancelledError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.name === 'AbortError' || error.message === 'Operation cancelled')
+  );
+}
+
+async function createVerticalReframePlanOrNull({
+  operationId,
+  contextLabel,
+  ...options
+}: {
+  operationId: string;
+  contextLabel: string;
+} & Parameters<typeof createVerticalReframePlan>[0]): Promise<
+  Awaited<ReturnType<typeof createVerticalReframePlan>>
+> {
+  try {
+    return await createVerticalReframePlan(options);
+  } catch (error) {
+    if (isOperationCancelledError(error)) {
+      throw error;
+    }
+    log.warn(
+      `[${operationId}] ${contextLabel} smart vertical reframe failed, falling back to padded portrait filter`,
+      error
+    );
+    return null;
+  }
 }
 
 export async function handleGenerateSubtitles(
@@ -145,6 +233,13 @@ export async function handleGenerateSubtitles(
   addSubtitle(operationId, controller);
 
   try {
+    const requestedSourceMediaPath = String(
+      finalOptions.sourceMediaPath || finalOptions.videoPath || ''
+    ).trim();
+    if (requestedSourceMediaPath) {
+      finalOptions.sourceMediaPath = path.normalize(requestedSourceMediaPath);
+    }
+
     tempVideoPath = await maybeWriteTempVideo({
       finalOptions,
     });
@@ -152,6 +247,9 @@ export async function handleGenerateSubtitles(
       throw new Error('Video path is required');
     }
     finalOptions.videoPath = path.normalize(finalOptions.videoPath);
+    if (!finalOptions.sourceMediaPath && !tempVideoPath) {
+      finalOptions.sourceMediaPath = finalOptions.videoPath;
+    }
     await fs.access(finalOptions.videoPath);
 
     const progressCallback: GenerateProgressCallback = progress => {
@@ -217,6 +315,27 @@ export async function handleGenerateSubtitles(
   }: {
     finalOptions: GenerateSubtitlesOptions;
   }): Promise<string | null> {
+    const inlineVideoFileData = (finalOptions as any).videoFileData;
+    const inlineVideoFileName = String(
+      (finalOptions as any).videoFileName || 'uploaded_video'
+    ).trim();
+    if (inlineVideoFileData) {
+      const safeName = inlineVideoFileName.replace(/[^a-zA-Z0-9_.-]/g, '_');
+      const tempVideoPath = path.join(
+        ffmpegCtx!.tempDir,
+        `temp_generate_${Date.now()}_${safeName}`
+      );
+
+      const buffer = Buffer.from(inlineVideoFileData as ArrayBuffer);
+      await fs.writeFile(tempVideoPath, buffer);
+
+      finalOptions.videoPath = tempVideoPath;
+      delete (finalOptions as any).videoFileData;
+      delete (finalOptions as any).videoFileName;
+
+      return tempVideoPath;
+    }
+
     if (finalOptions.videoFile) {
       const safeName = finalOptions.videoFile.name.replace(
         /[^a-zA-Z0-9_.-]/g,
@@ -886,7 +1005,8 @@ export async function handleCutHighlightClip(
       log.warn(`[${operationId}] Video metadata probe failed`, err);
     }
 
-    // Only apply vertical cropping if aspectMode is 'vertical' (default) and video is not already vertical
+    // Only apply portrait reframing if aspectMode is 'vertical' (default)
+    // and the source is not already portrait-oriented.
     const aspectMode = options.aspectMode ?? 'vertical';
     const enforceVertical =
       aspectMode === 'vertical' && !isVideoAlreadyVertical(videoMeta);
@@ -948,7 +1068,6 @@ export async function handleCutHighlightClip(
       `highlight-${operationId}-${Math.round(safeStart)}-${Math.round(safeEnd)}.mp4`
     );
 
-    emitHighlightProgress(lastProgressPercent, 'Cutting highlight clip');
     const handleFfmpegProgress = (pct: number) => {
       if (!Number.isFinite(pct)) return;
       const clamped =
@@ -984,11 +1103,44 @@ export async function handleCutHighlightClip(
     const nextLabel = (prefix: string) => `${prefix}${++filterLabelCounter}`;
 
     if (enforceVertical) {
-      const paddedLabel = nextLabel('pad');
+      emitHighlightProgress(12, 'Analyzing subject framing');
+      const verticalPlan = await createVerticalReframePlanOrNull({
+        operationId,
+        contextLabel: 'Highlight clip',
+        videoPath,
+        clipStartSeconds: safeStart,
+        clipEndSeconds: safeEnd,
+        videoMeta: videoMeta ?? {
+          duration,
+          width: 0,
+          height: 0,
+          frameRate: 0,
+        },
+        ffmpeg,
+        signal: controller.signal,
+        onSampleProgress: (completed, total) => {
+          const percent = 12 + Math.round((completed / Math.max(1, total)) * 8);
+          emitHighlightProgress(percent, 'Analyzing subject framing');
+        },
+      });
+      const verticalFilter = verticalPlan
+        ? buildVerticalReframeFilter(verticalPlan)
+        : buildLegacyVerticalPadFilter();
+      if (verticalPlan) {
+        log.info(
+          `[${operationId}] Smart vertical reframe: ${verticalPlan.detectedSamples}/${verticalPlan.sampleCount} detections (${verticalPlan.strategy})`
+        );
+      } else {
+        log.warn(
+          `[${operationId}] Smart vertical reframe unavailable, falling back to padded portrait filter`
+        );
+      }
+
+      const reframedLabel = nextLabel('reframe');
       filterParts.push(
-        `[${currentLabel}]scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease:flags=fast_bilinear,pad=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black[${paddedLabel}]`
+        `[${currentLabel}]${verticalFilter}[${reframedLabel}]`
       );
-      currentLabel = paddedLabel;
+      currentLabel = reframedLabel;
     }
 
     const cleanup: string[] = [];
@@ -1012,6 +1164,9 @@ export async function handleCutHighlightClip(
         2
       )},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`;
     }
+
+    lastProgressPercent = Math.max(lastProgressPercent, 20);
+    emitHighlightProgress(lastProgressPercent, 'Cutting highlight clip');
 
     const requiresVideoFilter = filterParts.length > 0;
     if (requiresVideoFilter) {
@@ -1246,7 +1401,58 @@ export async function handleCutCombinedHighlights(
       `[${operationId}] Combined highlights: ${highlights.length} highlights → ${segments.length} segments`
     );
 
-    emitProgress(10, 'Building combined clip');
+    const verticalSegmentFilters: string[] = [];
+    if (enforceVertical) {
+      emitProgress(10, 'Analyzing subject framing');
+      for (let i = 0; i < segments.length; i += 1) {
+        const seg = segments[i];
+        const safeStart = Math.max(0, seg.start);
+        const safeEnd = durationKnown ? Math.min(totalDur, seg.end) : seg.end;
+        const segmentProgressBase = i / Math.max(1, segments.length);
+
+        const verticalPlan = await createVerticalReframePlanOrNull({
+          operationId,
+          contextLabel: `Segment ${i + 1}/${segments.length}`,
+          videoPath,
+          clipStartSeconds: safeStart,
+          clipEndSeconds: safeEnd,
+          videoMeta: videoMeta ?? {
+            duration: totalDur,
+            width: 0,
+            height: 0,
+            frameRate: 0,
+          },
+          ffmpeg,
+          signal: controller.signal,
+          onSampleProgress: (completed, total) => {
+            const segmentProgress =
+              segmentProgressBase +
+              (completed / Math.max(1, total)) / Math.max(1, segments.length);
+            emitProgress(
+              10 + Math.round(segmentProgress * 20),
+              'Analyzing subject framing'
+            );
+          },
+        });
+
+        const verticalFilter = verticalPlan
+          ? buildVerticalReframeFilter(verticalPlan)
+          : buildLegacyVerticalPadFilter();
+        verticalSegmentFilters.push(verticalFilter);
+
+        if (verticalPlan) {
+          log.info(
+            `[${operationId}] Segment ${i + 1}/${segments.length} smart vertical reframe: ${verticalPlan.detectedSamples}/${verticalPlan.sampleCount} detections (${verticalPlan.strategy})`
+          );
+        } else {
+          log.warn(
+            `[${operationId}] Segment ${i + 1}/${segments.length} smart vertical reframe unavailable, falling back to padded portrait filter`
+          );
+        }
+      }
+    }
+
+    emitProgress(30, 'Building combined clip');
 
     // Calculate total combined duration for progress
     let totalCombinedDuration = 0;
@@ -1265,10 +1471,10 @@ export async function handleCutCombinedHighlights(
       const safeStart = Math.max(0, seg.start);
       const safeEnd = durationKnown ? Math.min(totalDur, seg.end) : seg.end;
 
-      // Video trim + scale/pad
+      // Video trim + portrait reframe
       let vFilter = `[0:v]trim=start=${safeStart.toFixed(3)}:end=${safeEnd.toFixed(3)},setpts=PTS-STARTPTS`;
       if (enforceVertical) {
-        vFilter += `,scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease:flags=fast_bilinear,pad=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black`;
+        vFilter += `,${verticalSegmentFilters[i] ?? buildLegacyVerticalPadFilter()}`;
       }
       vFilter += `[v${i}]`;
       videoFilters.push(vFilter);
@@ -1317,14 +1523,14 @@ export async function handleCutCombinedHighlights(
     ];
 
     const progressThrottleMs = 250;
-    let lastProgressPercent = 10;
+    let lastProgressPercent = 30;
     let lastProgressAt = Date.now();
 
     const handleFfmpegProgress = (pct: number) => {
       if (!Number.isFinite(pct)) return;
-      // Map FFmpeg progress (0-100) to our range (10-99)
-      const mapped = 10 + pct * 0.89;
-      const clamped = Math.max(10, Math.min(99, Math.round(mapped)));
+      // Map FFmpeg progress (0-100) to our range (30-99)
+      const mapped = 30 + pct * 0.69;
+      const clamped = Math.max(30, Math.min(99, Math.round(mapped)));
       const now = Date.now();
       if (clamped <= lastProgressPercent) return;
       if (now - lastProgressAt < progressThrottleMs) return;
@@ -1333,7 +1539,7 @@ export async function handleCutCombinedHighlights(
       emitProgress(clamped, 'Cutting combined highlights');
     };
 
-    emitProgress(10, 'Cutting combined highlights');
+    emitProgress(30, 'Cutting combined highlights');
 
     await ffmpeg.run(args, {
       operationId,
@@ -1544,6 +1750,7 @@ export async function handleTranscribeOneLine(
   event: IpcMainInvokeEvent,
   options: {
     videoPath: string;
+    sourceUrl?: string | null;
     segment: { start: number; end: number };
     promptContext?: string;
   },
@@ -1564,10 +1771,14 @@ export async function handleTranscribeOneLine(
 
   let tempAudioPath: string | null = null;
   try {
-    const { videoPath, segment, promptContext } = options;
+    const { videoPath, sourceUrl, segment, promptContext } = options;
     if (!videoPath || !segment || segment.end <= segment.start) {
       throw new Error('Invalid transcribe-one-line options');
     }
+    const sourceIdentity = await resolveDurableTranscriptionSourceIdentity({
+      videoPath,
+      sourceUrl,
+    });
     const baseStart = Math.max(0, segment.start);
     const baseDur = Math.max(0.05, segment.end - segment.start);
     const pad = 0.2;
@@ -1601,6 +1812,13 @@ export async function handleTranscribeOneLine(
 
     const res = await transcribePass({
       audioPath: tempAudioPath,
+      sourceMediaPath: videoPath,
+      durableRecoverySeed: buildDurableTranscriptionRecoverySeed({
+        sourceIdentity,
+        start,
+        end: start + duration,
+        mode: 'slice-fill',
+      }),
       services: { ffmpeg },
       progressCallback: p => {
         const mapped = Math.min(95, Math.max(35, p.percent));
@@ -1682,6 +1900,7 @@ export async function handleTranscribeRemaining(
   event: IpcMainInvokeEvent,
   options: {
     videoPath: string;
+    sourceUrl?: string | null;
     start: number;
     end?: number;
     qualityTranscription?: boolean;
@@ -1702,10 +1921,14 @@ export async function handleTranscribeRemaining(
 
   let tempAudioPath: string | null = null;
   try {
-    const { videoPath, start, end } = options;
+    const { videoPath, sourceUrl, start, end } = options;
     if (!videoPath || typeof start !== 'number') {
       throw new Error('Invalid transcribe-remaining options');
     }
+    const sourceIdentity = await resolveDurableTranscriptionSourceIdentity({
+      videoPath,
+      sourceUrl,
+    });
     const durationFull = await ffmpeg.getMediaDuration(
       videoPath,
       controller.signal
@@ -1745,6 +1968,13 @@ export async function handleTranscribeRemaining(
 
     const res = await transcribePass({
       audioPath: tempAudioPath,
+      sourceMediaPath: videoPath,
+      durableRecoverySeed: buildDurableTranscriptionRecoverySeed({
+        sourceIdentity,
+        start: sliceStart,
+        end: sliceEnd,
+        mode: 'remaining',
+      }),
       services: { ffmpeg },
       progressCallback: p => {
         const mapped = Math.min(95, Math.max(35, p.percent));

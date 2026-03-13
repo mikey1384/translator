@@ -68,6 +68,7 @@ export default function SubtitleEditor({
   const isTranslatingGlobal = useTaskStore(s => !!s.translation.inProgress);
   const isMerging = useTaskStore(s => !!s.merge.inProgress);
   const videoPath = useVideoStore(s => s.path);
+  const sourceUrl = useVideoStore(s => s.sourceUrl);
   const [isTranscribingOne, setIsTranscribingOne] = useState(false);
   const editingLocked = isTranscribing || isTranslatingGlobal;
   // No manual language selection for transcription
@@ -157,6 +158,7 @@ export default function SubtitleEditor({
 
       const res = await transcribeOneLine({
         videoPath,
+        sourceUrl,
         segment: { start: segStart, end: segEnd },
         promptContext: `${prompt}`,
         operationId,

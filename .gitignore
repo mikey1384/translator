@@ -24,7 +24,10 @@ build/
 
 # Electron packaging files
 out/
-vendor/
+vendor/*
+!vendor/vision/
+vendor/vision/*
+!vendor/vision/version-RFB-320.onnx
 scripts/.secrets/
 
 # Testing

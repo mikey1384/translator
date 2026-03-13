@@ -21,6 +21,7 @@
   "asarUnpack": [
     "node_modules/webrtcvad/**",
     "node_modules/ffmpeg-ffprobe-static/**",
+    "node_modules/onnxruntime-node/**",
     "node_modules/youtube-dl-exec/**",
     "render-host.html",
     "render-host-script.js"
@@ -34,7 +35,8 @@
 
   "extraResources": [
     { "from": "vendor/headless-arm64", "to": "headless-arm64" },
-    { "from": "vendor/headless-x64", "to": "headless-x64" }
+    { "from": "vendor/headless-x64", "to": "headless-x64" },
+    { "from": "vendor/vision", "to": "vision-models" }
   ],
 
   "files": [

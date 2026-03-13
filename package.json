@@ -1,7 +1,7 @@
 {
   "name": "translator",
   "private": true,
-  "version": "1.13.9",
+  "version": "1.13.10",
   "type": "module",
   "description": "Translator - AI-powered video translation tool",
   "author": "Mikey Lee",
@@ -100,6 +100,7 @@
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "node-machine-id": "^1.1.12",
+    "onnxruntime-node": "^1.24.3",
     "proxy-from-env": "^1.1.0",
     "puppeteer-core": "^24.10.0",
     "react-i18next": "^15.5.1",
@@ -123,6 +124,7 @@
     "es5-ext",
     "esbuild",
     "ffmpeg-ffprobe-static",
+    "onnxruntime-node",
     "puppeteer",
     "webrtcvad",
     "youtube-dl-exec"
