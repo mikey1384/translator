@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI-provider"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Mijn API-sleutels gebruiken",
       "activeKeys": "Sleutels klaar: {{count}}",
       "noKeys": "Geen sleutels geconfigureerd",
       "requirement": "Vereist vertaling + audio",
-      "strictActive": "Stage5-credits uit",
+      "usingApiKeys": "Stage5-credits uit",
       "usingCredits": "Stage5-credits aan",
       "toggleOn": "Gebruikt nu je API-sleutels.",
       "toggleOff": "Gebruikt nu Stage5-credits.",

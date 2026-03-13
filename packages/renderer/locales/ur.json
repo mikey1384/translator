@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI فراہم کنندہ"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "میری API کلیدیں استعمال کریں",
       "activeKeys": "تیار کلیدیں: {{count}}",
       "noKeys": "کوئی کلید ترتیب نہیں دی گئی",
       "requirement": "ترجمہ + آڈیو کوریج درکار ہے",
-      "strictActive": "Stage5 کریڈٹس بند",
+      "usingApiKeys": "Stage5 کریڈٹس بند",
       "usingCredits": "Stage5 کریڈٹس استعمال ہو رہے ہیں",
       "toggleOn": "اب آپ کی API کلیدیں استعمال ہو رہی ہیں۔",
       "toggleOff": "اب Stage5 کریڈٹس استعمال ہو رہے ہیں۔",

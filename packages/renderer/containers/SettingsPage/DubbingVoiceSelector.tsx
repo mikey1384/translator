@@ -35,7 +35,7 @@ export default function DubbingVoiceSelector() {
   const { t } = useTranslation();
   const dubVoice = useUIStore(s => s.dubVoice);
   const setDubVoice = useUIStore(s => s.setDubVoice);
-  const useStrictByoMode = useAiStore(state => state.useStrictByoMode);
+  const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
   const byoOpenAiUnlocked = useAiStore(state => state.byoUnlocked);
   const openAiKeyPresent = useAiStore(state => state.keyPresent);
   const useByoOpenAi = useAiStore(state => state.useByo);
@@ -57,17 +57,17 @@ export default function DubbingVoiceSelector() {
   const previewTokenRef = useRef(0);
 
   const hasOpenAiByo =
-    useStrictByoMode &&
+    useApiKeysMode &&
     byoOpenAiUnlocked &&
     openAiKeyPresent &&
     useByoOpenAi;
   const hasElevenLabsByo =
-    useStrictByoMode &&
+    useApiKeysMode &&
     byoElevenLabsUnlocked &&
     elevenLabsKeyPresent &&
     useByoElevenLabs;
 
-  const activeDubbingProvider: 'stage5' | 'openai' | 'elevenlabs' = useStrictByoMode
+  const activeDubbingProvider: 'stage5' | 'openai' | 'elevenlabs' = useApiKeysMode
     ? (() => {
         if (preferredDubbingProvider === 'stage5') {
           if (hasOpenAiByo) return 'openai';
@@ -138,7 +138,7 @@ export default function DubbingVoiceSelector() {
       });
       if (previewTokenRef.current !== token) return;
       if (result?.success && result.audioBase64) {
-        if (!useStrictByoMode || activeDubbingProvider === 'stage5') {
+        if (!useApiKeysMode || activeDubbingProvider === 'stage5') {
           refreshCredits();
         }
         try {
@@ -254,7 +254,7 @@ export default function DubbingVoiceSelector() {
         >
           {isPreviewing
             ? t('settings.dubbing.previewing', 'Playing...')
-            : useStrictByoMode && activeDubbingProvider !== 'stage5'
+            : useApiKeysMode && activeDubbingProvider !== 'stage5'
               ? t('settings.dubbing.previewFree', 'Preview')
               : t('settings.dubbing.previewWithCost', 'Preview ({{cost}} credits)', {
                   cost: previewCost,

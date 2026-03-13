@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Yapay Zeka Sağlayıcısı"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Kendi API anahtarlarımı kullan",
       "activeKeys": "Anahtarlar hazır: {{count}}",
       "noKeys": "Yapılandırılmış anahtar yok",
       "requirement": "Çeviri + ses kapsamı gerekir",
-      "strictActive": "Stage5 kredileri kapalı",
+      "usingApiKeys": "Stage5 kredileri kapalı",
       "usingCredits": "Stage5 kredileri kullanımda",
       "toggleOn": "Artık API anahtarlarınızı kullanıyor.",
       "toggleOff": "Artık Stage5 kredilerini kullanıyor.",

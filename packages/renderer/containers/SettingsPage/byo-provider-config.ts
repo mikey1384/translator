@@ -71,16 +71,16 @@ export const BYO_PROVIDERS = {
   },
   review: {
     openai: {
-      labelKey: 'settings.byoPreferences.gptHigh',
-      fallback: 'GPT-5.4',
+      labelKey: 'settings.byoPreferences.openAiHighEnd',
+      fallback: 'OpenAI high-end model',
       price: formatUsdEstimate(
         estimateTranslationUsdPerHour(STAGE5_REVIEW_TRANSLATION_MODEL),
         '/hr'
       ),
     },
     anthropic: {
-      labelKey: 'settings.byoPreferences.claudeOpus',
-      fallback: 'Claude Opus',
+      labelKey: 'settings.byoPreferences.anthropicHighEnd',
+      fallback: 'Anthropic high-end model',
       price: formatUsdEstimate(
         estimateTranslationUsdPerHour(AI_MODELS.CLAUDE_OPUS),
         '/hr'

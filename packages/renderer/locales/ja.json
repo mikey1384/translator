@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AIプロバイダー"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "自分のAPIキーを使用",
       "activeKeys": "準備できたキー {{count}} 個",
       "noKeys": "キーが設定されていません",
       "requirement": "翻訳＋音声のカバレッジが必要です",
-      "strictActive": "Stage5クレジットオフ",
+      "usingApiKeys": "Stage5クレジットオフ",
       "usingCredits": "Stage5クレジット使用中",
       "toggleOn": "APIキーを使用中です。",
       "toggleOff": "Stage5クレジットを使用中です。",

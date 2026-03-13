@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Furnizor AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Folosește cheile mele API",
       "activeKeys": "Chei pregătite: {{count}}",
       "noKeys": "Nicio cheie configurată",
       "requirement": "Necesită traducere + audio",
-      "strictActive": "Creditele Stage5 oprite",
+      "usingApiKeys": "Creditele Stage5 oprite",
       "usingCredits": "Creditele Stage5 pornite",
       "toggleOn": "Acum folosește cheile tale API.",
       "toggleOff": "Acum folosește creditele Stage5.",

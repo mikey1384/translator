@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI 服務提供商"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "使用我的 API 金鑰",
       "activeKeys": "已準備 {{count}} 個金鑰",
       "noKeys": "尚未設定金鑰",
       "requirement": "需要翻譯與音訊涵蓋",
-      "strictActive": "Stage5 點數已關閉",
+      "usingApiKeys": "Stage5 點數已關閉",
       "usingCredits": "正在使用 Stage5 點數",
       "toggleOn": "現在正在使用您的 API 金鑰。",
       "toggleOff": "現在正在使用 Stage5 點數。",

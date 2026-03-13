@@ -14,7 +14,7 @@ import QualityToggles from './QualityToggles';
 import DubbingVoiceSelector from './DubbingVoiceSelector';
 import DubbingMixSlider from './DubbingMixSlider';
 import ByoUnlockCard from './ByoUnlockCard';
-import StrictByoModeToggle from './StrictByoModeToggle';
+import ApiKeyModeToggle from './ApiKeyModeToggle';
 import ByoOpenAiSection from './ByoOpenAiSection';
 import SiteConnectionSection from './SiteConnectionSection';
 import { hasAnyByoEntitlementUnlocked } from '../../state/byo-runtime';
@@ -31,7 +31,7 @@ export default function SettingsPage() {
     state => state.byoElevenLabsUnlocked
   );
   const adminByoPreviewMode = useAiStore(state => state.adminByoPreviewMode);
-  const useStrictByoMode = useAiStore(state => state.useStrictByoMode);
+  const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Effective BYO unlocked state (respects admin preview mode)
@@ -71,7 +71,7 @@ export default function SettingsPage() {
   // Show Stage5 credits section when:
   // - BYO is not unlocked (default flow)
   // - OR BYO is unlocked but API-key mode is OFF (using credits)
-  const showStage5Section = !effectiveByoUnlocked || !useStrictByoMode;
+  const showStage5Section = !effectiveByoUnlocked || !useApiKeysMode;
 
   return (
     <div
@@ -85,7 +85,7 @@ export default function SettingsPage() {
       <ByoUnlockCard />
 
       {/* —————————————————  BYO MODE TOGGLE (if unlocked)  ————————————————— */}
-      <StrictByoModeToggle />
+      <ApiKeyModeToggle />
 
       {/* —————————————————  STAGE5 CREDITS SECTION  ————————————————— */}
       {showStage5Section && (

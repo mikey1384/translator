@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Pembekal AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Gunakan kunci API saya",
       "activeKeys": "Kunci sedia: {{count}}",
       "noKeys": "Tiada kunci dikonfigurasikan",
       "requirement": "Perlu liputan terjemahan + audio",
-      "strictActive": "Kredit Stage5 dimatikan",
+      "usingApiKeys": "Kredit Stage5 dimatikan",
       "usingCredits": "Kredit Stage5 digunakan",
       "toggleOn": "Kini menggunakan kunci API anda.",
       "toggleOff": "Kini menggunakan kredit Stage5.",

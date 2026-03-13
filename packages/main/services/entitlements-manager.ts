@@ -15,6 +15,7 @@ export interface EntitlementsSnapshot {
   byoOpenAi: boolean;
   byoAnthropic: boolean;
   byoElevenLabs: boolean;
+  stage5AnthropicReviewAvailable: boolean;
   fetchedAt?: string;
 }
 
@@ -28,10 +29,13 @@ export function getCachedEntitlements(): EntitlementsSnapshot {
   const byoOpenAi = storeRef?.get('byoOpenAiUnlocked', false) ?? false;
   const byoAnthropic = storeRef?.get('byoAnthropicUnlocked', false) ?? false;
   const byoElevenLabs = storeRef?.get('byoElevenLabsUnlocked', false) ?? false;
+  const stage5AnthropicReviewAvailable =
+    storeRef?.get('stage5AnthropicReviewAvailable', false) ?? false;
   return {
     byoOpenAi: Boolean(byoOpenAi),
     byoAnthropic: Boolean(byoAnthropic),
     byoElevenLabs: Boolean(byoElevenLabs),
+    stage5AnthropicReviewAvailable: Boolean(stage5AnthropicReviewAvailable),
     fetchedAt: undefined,
   };
 }
@@ -41,6 +45,7 @@ export function setByoUnlocked(
     byoOpenAi?: boolean;
     byoAnthropic?: boolean;
     byoElevenLabs?: boolean;
+    stage5AnthropicReviewAvailable?: boolean;
   },
   opts: { notify?: boolean; window?: BrowserWindow | null } = {}
 ): EntitlementsSnapshot {
@@ -59,6 +64,12 @@ export function setByoUnlocked(
         Boolean(entitlements.byoElevenLabs)
       );
     }
+    if (entitlements.stage5AnthropicReviewAvailable !== undefined) {
+      storeRef.set(
+        'stage5AnthropicReviewAvailable',
+        Boolean(entitlements.stage5AnthropicReviewAvailable)
+      );
+    }
   }
 
   const snapshot: EntitlementsSnapshot = {
@@ -71,6 +82,10 @@ export function setByoUnlocked(
     byoElevenLabs: Boolean(
       entitlements.byoElevenLabs ??
       storeRef?.get('byoElevenLabsUnlocked', false)
+    ),
+    stage5AnthropicReviewAvailable: Boolean(
+      entitlements.stage5AnthropicReviewAvailable ??
+        storeRef?.get('stage5AnthropicReviewAvailable', false)
     ),
     fetchedAt: new Date().toISOString(),
   };
@@ -110,9 +125,17 @@ export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapsho
     const byoElevenLabs = Boolean(
       data?.entitlements?.byoElevenLabs ?? data?.byoElevenLabs ?? false
     );
+    const stage5AnthropicReviewAvailable = Boolean(
+      data?.capabilities?.stage5AnthropicReviewAvailable ?? false
+    );
 
     return setByoUnlocked(
-      { byoOpenAi, byoAnthropic, byoElevenLabs },
+      {
+        byoOpenAi,
+        byoAnthropic,
+        byoElevenLabs,
+        stage5AnthropicReviewAvailable,
+      },
       { notify: false }
     );
   } catch (error: any) {
@@ -133,6 +156,8 @@ export async function syncEntitlements(
           byoOpenAi: snapshot.byoOpenAi,
           byoAnthropic: snapshot.byoAnthropic,
           byoElevenLabs: snapshot.byoElevenLabs,
+          stage5AnthropicReviewAvailable:
+            snapshot.stage5AnthropicReviewAvailable,
         },
         {
           notify: true,
@@ -145,6 +170,8 @@ export async function syncEntitlements(
           byoOpenAi: snapshot.byoOpenAi,
           byoAnthropic: snapshot.byoAnthropic,
           byoElevenLabs: snapshot.byoElevenLabs,
+          stage5AnthropicReviewAvailable:
+            snapshot.stage5AnthropicReviewAvailable,
         },
         {
           notify: false,

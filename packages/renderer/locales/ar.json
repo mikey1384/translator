@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "مزود الذكاء الاصطناعي"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "استخدام مفاتيح API الخاصة بي",
       "activeKeys": "المفاتيح الجاهزة: {{count}}",
       "noKeys": "لا توجد مفاتيح مُعدّة",
       "requirement": "يلزم توفر الترجمة والصوت",
-      "strictActive": "أرصدة Stage5 متوقفة",
+      "usingApiKeys": "أرصدة Stage5 متوقفة",
       "usingCredits": "أرصدة Stage5 قيد الاستخدام",
       "toggleOn": "يتم الآن استخدام مفاتيح API الخاصة بك.",
       "toggleOff": "يتم الآن استخدام أرصدة Stage5.",

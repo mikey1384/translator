@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "KI-Anbieter"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Meine API-Schlüssel verwenden",
       "activeKeys": "{{count}} Schlüssel bereit",
       "noKeys": "Keine Schlüssel konfiguriert",
       "requirement": "Benötigt Übersetzung + Audio",
-      "strictActive": "Stage5-Credits aus",
+      "usingApiKeys": "Stage5-Credits aus",
       "usingCredits": "Stage5-Credits an",
       "toggleOn": "Verwendet jetzt deine API-Schlüssel.",
       "toggleOff": "Verwendet jetzt Stage5-Credits.",

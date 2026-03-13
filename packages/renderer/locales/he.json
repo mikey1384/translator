@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "ספק AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "השתמש במפתחות ה-API שלי",
       "activeKeys": "מפתחות מוכנים: {{count}}",
       "noKeys": "לא הוגדרו מפתחות",
       "requirement": "נדרש כיסוי לתרגום ולאודיו",
-      "strictActive": "קרדיטי Stage5 כבויים",
+      "usingApiKeys": "קרדיטי Stage5 כבויים",
       "usingCredits": "קרדיטי Stage5 פעילים",
       "toggleOn": "כעת נעשה שימוש במפתחות ה-API שלך.",
       "toggleOff": "כעת נעשה שימוש בקרדיטי Stage5.",

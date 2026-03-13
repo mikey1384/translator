@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useCreditStore } from '../../../state';
 import { useAiStore } from '../../../state';
-import { hasStrictByoActiveCoverage } from '../../../state/byo-runtime';
+import { hasApiKeyModeActiveCoverage } from '../../../state/byo-runtime';
 
 export function useCreditSystem() {
   const hours = useCreditStore(s => s.hours);
   const creditLoading = useCreditStore(s => s.loading);
   const refresh = useCreditStore(s => s.refresh);
-  const useStrictByoMode = useAiStore(s => s.useStrictByoMode);
+  const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
   const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
@@ -18,8 +18,8 @@ export function useCreditSystem() {
   const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
   const aiInitialized = useAiStore(s => s.initialized);
-  const usingApiKey = hasStrictByoActiveCoverage({
-    useStrictByoMode,
+  const usingApiKey = hasApiKeyModeActiveCoverage({
+    useApiKeysMode,
     byoUnlocked,
     byoAnthropicUnlocked,
     byoElevenLabsUnlocked,

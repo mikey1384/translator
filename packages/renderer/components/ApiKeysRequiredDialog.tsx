@@ -274,8 +274,8 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
 
   const handleDone = async () => {
     if (!conditionsMet) return;
-    const setUseStrictByoMode = useAiStore.getState().setUseStrictByoMode;
-    const result = await setUseStrictByoMode(true);
+    const setUseApiKeysMode = useAiStore.getState().setUseApiKeysMode;
+    const result = await setUseApiKeysMode(true);
     if (result.success) {
       onClose();
     }

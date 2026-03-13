@@ -3,44 +3,44 @@ import * as SystemIPC from '@ipc/system';
 import type { VideoSuggestionModelPreference } from '@shared-types/app';
 import { openApiKeysRequired } from './modal-store';
 import {
-  hasStrictByoActiveCoverage,
-  hasStrictByoConfiguredCoverage,
+  hasApiKeyModeActiveCoverage,
+  hasApiKeyModeConfiguredCoverage,
 } from './byo-runtime';
 
 /**
  * Simple mutex to prevent race conditions in cascading state updates.
- * Used by checkAndDisableStrictByoModeIfNeeded to ensure only one check runs at a time.
+ * Used by checkAndDisableApiKeyModeIfNeeded to ensure only one check runs at a time.
  */
-let strictByoModeCheckInProgress = false;
+let apiKeyModeCheckInProgress = false;
 
 /**
- * Check and disable strict BYO mode if no full BYO coverage exists.
+ * Check and disable API key mode if no full BYO coverage exists.
  * Shows modal to inform user they need to enter API keys.
  * Uses mutex to prevent race conditions from rapid key operations.
  */
-async function checkAndDisableStrictByoModeIfNeeded(
+async function checkAndDisableApiKeyModeIfNeeded(
   get: () => AiStoreState,
   set: (partial: Partial<AiStoreState>) => void
 ): Promise<void> {
   // Mutex: skip if another check is already in progress
-  if (strictByoModeCheckInProgress) return;
+  if (apiKeyModeCheckInProgress) return;
   // Set flag immediately to prevent race conditions
-  strictByoModeCheckInProgress = true;
+  apiKeyModeCheckInProgress = true;
 
   try {
     const state = get();
-    if (!state.useStrictByoMode) return;
+    if (!state.useApiKeysMode) return;
     if (!state.entitlementsHydrated) return;
 
-    if (!hasStrictByoActiveCoverage(state)) {
-      await SystemIPC.setStrictByoModeEnabled(false);
-      set({ useStrictByoMode: false });
+    if (!hasApiKeyModeActiveCoverage(state)) {
+      await SystemIPC.setApiKeyModeEnabled(false);
+      set({ useApiKeysMode: false });
       openApiKeysRequired();
     }
   } catch (err) {
-    console.error('[AiStore] Failed to disable strict BYO mode:', err);
+    console.error('[AiStore] Failed to disable API key mode:', err);
   } finally {
-    strictByoModeCheckInProgress = false;
+    apiKeyModeCheckInProgress = false;
   }
 }
 
@@ -51,6 +51,7 @@ interface AiStoreState {
   byoUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
   byoElevenLabsUnlocked: boolean;
+  stage5AnthropicReviewAvailable: boolean;
   entitlementsHydrated: boolean;
   // Admin preview mode: when true, pretend BYO is not unlocked (for UI testing)
   adminByoPreviewMode: boolean;
@@ -59,11 +60,11 @@ interface AiStoreState {
   unlockPending: boolean;
   unlockError?: string;
   lastFetched?: string;
-  // Strict global BYO mode (never spend Stage5 credits)
-  useStrictByoMode: boolean;
+  // Global API-key mode (never spend Stage5 credits)
+  useApiKeysMode: boolean;
   // Claude translation preference (use Sonnet for draft instead of GPT)
   preferClaudeTranslation: boolean;
-  // Claude review preference (use Opus for review instead of GPT-5.4)
+  // High-end review preference (Anthropic uses Opus, OpenAI uses GPT-5.4)
   preferClaudeReview: boolean;
   // Claude summary preference (use Claude on BYO summary paths instead of GPT)
   preferClaudeSummary: boolean;
@@ -105,9 +106,9 @@ interface AiStoreState {
   startUnlock: () => Promise<void>;
   // Admin preview mode action
   setAdminByoPreviewMode: (value: boolean) => void;
-  // Strict BYO mode actions
-  syncStrictByoMode: () => Promise<void>;
-  setUseStrictByoMode: (
+  // API key mode actions
+  syncApiKeyMode: () => Promise<void>;
+  setUseApiKeysMode: (
     value: boolean
   ) => Promise<{ success: boolean; error?: string }>;
   // Claude translation preference actions
@@ -175,7 +176,7 @@ interface AiStoreState {
   ) => Promise<{ success: boolean; error?: string }>;
 }
 
-function getStrictByoTranscriptionFallback(
+function getApiKeyModeTranscriptionFallback(
   state: Pick<
     AiStoreState,
     | 'byoUnlocked'
@@ -193,7 +194,7 @@ function getStrictByoTranscriptionFallback(
   return 'stage5';
 }
 
-function getStrictByoDubbingFallback(
+function getApiKeyModeDubbingFallback(
   state: Pick<
     AiStoreState,
     | 'byoUnlocked'
@@ -211,21 +212,21 @@ function getStrictByoDubbingFallback(
   return 'stage5';
 }
 
-async function coerceStage5ProviderPreferencesForStrictByo(
+async function coerceStage5ProviderPreferencesForApiKeyMode(
   get: () => AiStoreState,
   set: (partial: Partial<AiStoreState>) => void
 ): Promise<void> {
   const state = get();
 
   if (state.preferredTranscriptionProvider === 'stage5') {
-    const fallback = getStrictByoTranscriptionFallback(state);
+    const fallback = getApiKeyModeTranscriptionFallback(state);
     if (fallback !== 'stage5') {
       try {
         await SystemIPC.setPreferredTranscriptionProvider(fallback);
         set({ preferredTranscriptionProvider: fallback });
       } catch (err) {
         console.error(
-          '[AiStore] Failed to coerce transcription provider for strict BYO mode:',
+          '[AiStore] Failed to coerce transcription provider for API key mode:',
           err
         );
       }
@@ -233,14 +234,14 @@ async function coerceStage5ProviderPreferencesForStrictByo(
   }
 
   if (state.preferredDubbingProvider === 'stage5') {
-    const fallback = getStrictByoDubbingFallback(state);
+    const fallback = getApiKeyModeDubbingFallback(state);
     if (fallback !== 'stage5') {
       try {
         await SystemIPC.setPreferredDubbingProvider(fallback);
         set({ preferredDubbingProvider: fallback });
       } catch (err) {
         console.error(
-          '[AiStore] Failed to coerce dubbing provider for strict BYO mode:',
+          '[AiStore] Failed to coerce dubbing provider for API key mode:',
           err
         );
       }
@@ -310,8 +311,8 @@ async function enableConfiguredByoToggles(
     }
   }
 
-  if (changed && get().useStrictByoMode) {
-    await coerceStage5ProviderPreferencesForStrictByo(get, set);
+  if (changed && get().useApiKeysMode) {
+    await coerceStage5ProviderPreferencesForApiKeyMode(get, set);
   }
 }
 
@@ -329,6 +330,9 @@ function ensureSubscriptions(
         byoUnlocked: Boolean(snapshot?.byoOpenAi),
         byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
         byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
+        stage5AnthropicReviewAvailable: Boolean(
+          snapshot?.stage5AnthropicReviewAvailable
+        ),
         entitlementsHydrated: true,
         entitlementsLoading: false,
         entitlementsError: undefined,
@@ -363,6 +367,9 @@ function ensureSubscriptions(
         byoUnlocked: Boolean(snapshot?.byoOpenAi),
         byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
         byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
+        stage5AnthropicReviewAvailable: Boolean(
+          snapshot?.stage5AnthropicReviewAvailable
+        ),
         entitlementsHydrated: true,
         entitlementsLoading: false,
         entitlementsError: undefined,
@@ -401,7 +408,7 @@ function ensureSubscriptions(
             err
           );
         }
-        await checkAndDisableStrictByoModeIfNeeded(get, set);
+        await checkAndDisableApiKeyModeIfNeeded(get, set);
         return;
       }
       try {
@@ -430,7 +437,7 @@ function ensureSubscriptions(
             err
           );
         }
-        await checkAndDisableStrictByoModeIfNeeded(get, set);
+        await checkAndDisableApiKeyModeIfNeeded(get, set);
         return;
       }
       try {
@@ -462,7 +469,7 @@ function ensureSubscriptions(
             err
           );
         }
-        await checkAndDisableStrictByoModeIfNeeded(get, set);
+        await checkAndDisableApiKeyModeIfNeeded(get, set);
         return;
       }
       try {
@@ -505,6 +512,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     byoUnlocked: false,
     byoAnthropicUnlocked: false,
     byoElevenLabsUnlocked: false,
+    stage5AnthropicReviewAvailable: false,
     entitlementsHydrated: false,
     adminByoPreviewMode: false,
     entitlementsLoading: true,
@@ -512,12 +520,12 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     unlockPending: false,
     unlockError: undefined,
     lastFetched: undefined,
-    // Strict BYO mode (defaults to false - user must explicitly enable it)
-    useStrictByoMode: false,
+    // API key mode (defaults to false - user must explicitly enable it)
+    useApiKeysMode: false,
     // Claude translation preference (defaults to false - use GPT which is cheaper)
     preferClaudeTranslation: false,
-    // Claude review preference (defaults to true - use Claude Opus for higher quality)
-    preferClaudeReview: true,
+    // Review preference defaults to OpenAI high-end review on fresh installs.
+    preferClaudeReview: false,
     // Claude summary preference (defaults to true - prefer Claude on BYO summary paths)
     preferClaudeSummary: true,
     // Video suggestion model preference
@@ -587,8 +595,8 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             useByo: settings.useByoOpenAi,
             useByoAnthropic: settings.useByoAnthropic,
             useByoElevenLabs: settings.useByoElevenLabs,
-            // Strict BYO mode
-            useStrictByoMode: settings.useStrictByoMode,
+            // API key mode
+            useApiKeysMode: settings.useApiKeysMode,
             // Claude preferences
             preferClaudeTranslation: settings.preferClaudeTranslation,
             preferClaudeReview: settings.preferClaudeReview,
@@ -604,13 +612,13 @@ export const useAiStore = create<AiStoreState>((set, get) => {
 
           await enableConfiguredByoToggles(get, set);
 
-          // If strict BYO mode is ON but no valid full-stack coverage exists
+          // If API key mode is ON but no valid full-stack coverage exists
           // (for example, keys were cleared during migration), auto-disable it so
           // the user sees the Stage5 credits UI again.
-          if (settings.useStrictByoMode && get().entitlementsHydrated) {
+          if (settings.useApiKeysMode && get().entitlementsHydrated) {
             const currentState = get();
-            const hasValidCombo = hasStrictByoActiveCoverage({
-              useStrictByoMode: currentState.useStrictByoMode,
+            const hasValidCombo = hasApiKeyModeActiveCoverage({
+              useApiKeysMode: currentState.useApiKeysMode,
               byoUnlocked: currentState.byoUnlocked,
               byoAnthropicUnlocked: currentState.byoAnthropicUnlocked,
               byoElevenLabsUnlocked: currentState.byoElevenLabsUnlocked,
@@ -622,18 +630,18 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               elevenLabsKeyPresent: currentState.elevenLabsKeyPresent,
             });
             if (!hasValidCombo) {
-              // Silently disable strict BYO mode so the user sees Stage5 credits.
+              // Silently disable API key mode so the user sees Stage5 credits.
               try {
-                await SystemIPC.setStrictByoModeEnabled(false);
-                set({ useStrictByoMode: false });
+                await SystemIPC.setApiKeyModeEnabled(false);
+                set({ useApiKeysMode: false });
               } catch (err) {
                 console.error(
-                  '[AiStore] Failed to auto-disable strict BYO mode:',
+                  '[AiStore] Failed to auto-disable API key mode:',
                   err
                 );
               }
             } else {
-              await coerceStage5ProviderPreferencesForStrictByo(get, set);
+              await coerceStage5ProviderPreferencesForApiKeyMode(get, set);
             }
           }
         } else {
@@ -661,6 +669,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           byoUnlocked: Boolean(snapshot?.byoOpenAi),
           byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
           byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
+          stage5AnthropicReviewAvailable: Boolean(
+            snapshot?.stage5AnthropicReviewAvailable
+          ),
           entitlementsHydrated: true,
           entitlementsLoading: false,
           entitlementsError: undefined,
@@ -683,6 +694,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           byoUnlocked: Boolean(snapshot?.byoOpenAi),
           byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
           byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
+          stage5AnthropicReviewAvailable: Boolean(
+            snapshot?.stage5AnthropicReviewAvailable
+          ),
           entitlementsHydrated: true,
           entitlementsLoading: false,
           entitlementsError: undefined,
@@ -786,7 +800,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               console.error('[AiStore] Failed to reset dubbing provider:', err);
             }
           }
-          await checkAndDisableStrictByoModeIfNeeded(get, set);
+          await checkAndDisableApiKeyModeIfNeeded(get, set);
         }
         return result;
       } finally {
@@ -821,7 +835,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           set({ useByo: Boolean(value) });
           // When turning OFF, check if valid combo still exists
           if (!value) {
-            await checkAndDisableStrictByoModeIfNeeded(get, set);
+            await checkAndDisableApiKeyModeIfNeeded(get, set);
           }
         }
         return result;
@@ -883,7 +897,8 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               err
             );
           }
-          // Reset Anthropic-dependent preferences (Claude translation/review/summary)
+          // Reset Anthropic-dependent preferences that truly require Anthropic BYO.
+          // Review preference is shared with the Stage5 credit path, so keep it.
           const state = get();
           if (state.preferClaudeTranslation) {
             try {
@@ -892,17 +907,6 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             } catch (err) {
               console.error(
                 '[AiStore] Failed to reset Claude translation preference:',
-                err
-              );
-            }
-          }
-          if (state.preferClaudeReview) {
-            try {
-              await SystemIPC.setPreferClaudeReview(false);
-              set({ preferClaudeReview: false });
-            } catch (err) {
-              console.error(
-                '[AiStore] Failed to reset Claude review preference:',
                 err
               );
             }
@@ -918,7 +922,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               );
             }
           }
-          await checkAndDisableStrictByoModeIfNeeded(get, set);
+          await checkAndDisableApiKeyModeIfNeeded(get, set);
         }
         return result;
       } finally {
@@ -955,7 +959,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           set({ useByoAnthropic: Boolean(value) });
           // When turning OFF, check if valid combo still exists
           if (!value) {
-            await checkAndDisableStrictByoModeIfNeeded(get, set);
+            await checkAndDisableApiKeyModeIfNeeded(get, set);
           }
         }
         return result;
@@ -1040,7 +1044,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               console.error('[AiStore] Failed to reset dubbing provider:', err);
             }
           }
-          await checkAndDisableStrictByoModeIfNeeded(get, set);
+          await checkAndDisableApiKeyModeIfNeeded(get, set);
         }
         return result;
       } finally {
@@ -1077,7 +1081,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           set({ useByoElevenLabs: Boolean(value) });
           // When turning OFF, check if valid combo still exists
           if (!value) {
-            await checkAndDisableStrictByoModeIfNeeded(get, set);
+            await checkAndDisableApiKeyModeIfNeeded(get, set);
           }
         }
         return result;
@@ -1090,27 +1094,27 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       }
     },
 
-    // Strict BYO mode actions
-    syncStrictByoMode: async () => {
+    // API key mode actions
+    syncApiKeyMode: async () => {
       try {
-        const enabled = await SystemIPC.getStrictByoModeEnabled();
-        set({ useStrictByoMode: Boolean(enabled) });
+        const enabled = await SystemIPC.getApiKeyModeEnabled();
+        set({ useApiKeysMode: Boolean(enabled) });
       } catch (err) {
-        console.error('[AiStore] Failed to sync strict BYO mode:', err);
+        console.error('[AiStore] Failed to sync API key mode:', err);
       }
     },
 
-    setUseStrictByoMode: async (value: boolean) => {
+    setUseApiKeysMode: async (value: boolean) => {
       try {
-        if (value && !hasStrictByoConfiguredCoverage(get())) {
+        if (value && !hasApiKeyModeConfiguredCoverage(get())) {
           return {
             success: false,
             error: 'Full API-key coverage is required to enable this mode.',
           };
         }
-        const result = await SystemIPC.setStrictByoModeEnabled(value);
+        const result = await SystemIPC.setApiKeyModeEnabled(value);
         if (result.success) {
-          set({ useStrictByoMode: Boolean(value) });
+          set({ useApiKeysMode: Boolean(value) });
 
           // When turning ON, auto-enable all providers that have keys and
           // move any legacy Stage5 provider prefs onto a BYO provider.
@@ -1146,12 +1150,12 @@ export const useAiStore = create<AiStoreState>((set, get) => {
                 );
               }
             }
-            await coerceStage5ProviderPreferencesForStrictByo(get, set);
+            await coerceStage5ProviderPreferencesForApiKeyMode(get, set);
           }
         }
         return result;
       } catch (err: any) {
-        console.error('[AiStore] Failed to update strict BYO mode:', err);
+        console.error('[AiStore] Failed to update API key mode:', err);
         return {
           success: false,
           error: err?.message || 'Failed to save toggle',

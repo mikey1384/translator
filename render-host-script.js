@@ -1378,6 +1378,18 @@ var STAGE5_TTS_MODEL_STANDARD = "tts-1";
 var STAGE5_TTS_MODEL_HD = "tts-1-hd";
 var STAGE5_TTS_MODEL_ELEVEN_V3 = "eleven_v3";
 var STAGE5_TTS_MODEL_ELEVEN_TURBO = "eleven_turbo_v2_5";
+var STAGE5_REVIEW_PROVIDER_OPTIONS = {
+  openai: {
+    provider: "openai",
+    model: STAGE5_REVIEW_TRANSLATION_MODEL,
+    exactModelLabel: "GPT-5.4"
+  },
+  anthropic: {
+    provider: "anthropic",
+    model: AI_MODELS.CLAUDE_OPUS,
+    exactModelLabel: "Claude Opus 4.6"
+  }
+};
 var AI_MODEL_ALIASES = {
   "claude-sonnet-4-5-20250929": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4-5": AI_MODELS.CLAUDE_SONNET,
@@ -1493,6 +1505,14 @@ var AI_MODEL_DISPLAY_NAMES = {
   [STAGE5_REVIEW_TRANSLATION_MODEL]: "GPT-5.4",
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet",
   [AI_MODELS.CLAUDE_OPUS]: "Claude Opus",
+  [AI_MODELS.WHISPER]: "Whisper",
+  [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3"
+};
+var AI_MODEL_EXACT_DISPLAY_NAMES = {
+  [AI_MODELS.GPT]: "GPT-5.1",
+  [STAGE5_REVIEW_TRANSLATION_MODEL]: STAGE5_REVIEW_PROVIDER_OPTIONS.openai.exactModelLabel,
+  [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet 4.6",
+  [AI_MODELS.CLAUDE_OPUS]: STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
   [AI_MODELS.WHISPER]: "Whisper",
   [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3"
 };

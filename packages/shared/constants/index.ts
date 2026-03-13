@@ -16,7 +16,11 @@ import {
 } from './estimate-heuristics';
 import {
   AI_MODELS,
+  getStage5ReviewOption,
+  getStage5ReviewOptionForPreference,
+  getStage5ReviewProvider,
   normalizeAiModelId,
+  STAGE5_REVIEW_PROVIDER_OPTIONS,
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
   STAGE5_REVIEW_TRANSLATION_MODEL,
   STAGE5_TTS_MODEL_ELEVEN_V3,
@@ -61,7 +65,11 @@ import {
 
 export {
   AI_MODELS,
+  getStage5ReviewOption,
+  getStage5ReviewOptionForPreference,
+  getStage5ReviewProvider,
   normalizeAiModelId,
+  STAGE5_REVIEW_PROVIDER_OPTIONS,
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
   STAGE5_REVIEW_TRANSLATION_MODEL,
   STAGE5_TTS_MODEL_ELEVEN_V3,
@@ -125,6 +133,27 @@ export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
   [AI_MODELS.WHISPER]: 'Whisper',
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
 };
+
+/** Exact runtime labels for places where the concrete model matters. */
+export const AI_MODEL_EXACT_DISPLAY_NAMES: Record<string, string> = {
+  [AI_MODELS.GPT]: 'GPT-5.1',
+  [STAGE5_REVIEW_TRANSLATION_MODEL]:
+    STAGE5_REVIEW_PROVIDER_OPTIONS.openai.exactModelLabel,
+  [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet 4.6',
+  [AI_MODELS.CLAUDE_OPUS]:
+    STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
+  [AI_MODELS.WHISPER]: 'Whisper',
+  [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
+};
+
+export function getExactAiModelDisplayName(model: string): string {
+  const normalizedModel = normalizeAiModelId(model);
+  return (
+    AI_MODEL_EXACT_DISPLAY_NAMES[normalizedModel] ||
+    AI_MODEL_DISPLAY_NAMES[normalizedModel] ||
+    normalizedModel
+  );
+}
 
 // Error codes used across the application
 export const ERROR_CODES = {

@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Tekoälytarjoaja"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Käytä omia API-avaimiani",
       "activeKeys": "Valmiit avaimet: {{count}}",
       "noKeys": "Avaimia ei ole määritetty",
       "requirement": "Vaatii käännös- ja äänikattavuuden",
-      "strictActive": "Stage5-krediitit pois",
+      "usingApiKeys": "Stage5-krediitit pois",
       "usingCredits": "Stage5-krediitit käytössä",
       "toggleOn": "Käyttää nyt API-avaimiasi.",
       "toggleOff": "Käyttää nyt Stage5-krediittejä.",

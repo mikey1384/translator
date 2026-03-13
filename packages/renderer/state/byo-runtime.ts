@@ -4,10 +4,11 @@ export type ByoPreferenceProvider = 'elevenlabs' | 'openai' | 'stage5';
 export type RuntimeProvider = 'stage5' | 'openai' | 'anthropic' | 'elevenlabs';
 
 export type ByoRuntimeState = {
-  useStrictByoMode: boolean;
+  useApiKeysMode: boolean;
   byoUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
   byoElevenLabsUnlocked: boolean;
+  stage5AnthropicReviewAvailable: boolean;
   useByo: boolean;
   useByoAnthropic: boolean;
   useByoElevenLabs: boolean;
@@ -92,7 +93,7 @@ export function hasByoAudioConfiguredCoverage(
   );
 }
 
-export function hasStrictByoConfiguredCoverage(
+export function hasApiKeyModeConfiguredCoverage(
   state: Pick<
     ByoRuntimeState,
     | 'byoUnlocked'
@@ -112,25 +113,25 @@ export function hasStrictByoConfiguredCoverage(
 export function hasOpenAiByoAvailable(
   state: Pick<
     ByoRuntimeState,
-    'useStrictByoMode' | 'useByo' | 'byoUnlocked' | 'keyPresent'
+    'useApiKeysMode' | 'useByo' | 'byoUnlocked' | 'keyPresent'
   >
 ): boolean {
   return Boolean(
-    state.useStrictByoMode && state.useByo && hasOpenAiByoConfigured(state)
+    state.useApiKeysMode && state.useByo && hasOpenAiByoConfigured(state)
   );
 }
 
 export function hasAnthropicByoAvailable(
   state: Pick<
     ByoRuntimeState,
-    | 'useStrictByoMode'
+    | 'useApiKeysMode'
     | 'useByoAnthropic'
     | 'byoAnthropicUnlocked'
     | 'anthropicKeyPresent'
   >
 ): boolean {
   return Boolean(
-    state.useStrictByoMode &&
+    state.useApiKeysMode &&
     state.useByoAnthropic &&
     hasAnthropicByoConfigured(state)
   );
@@ -139,23 +140,23 @@ export function hasAnthropicByoAvailable(
 export function hasElevenLabsByoAvailable(
   state: Pick<
     ByoRuntimeState,
-    | 'useStrictByoMode'
+    | 'useApiKeysMode'
     | 'useByoElevenLabs'
     | 'byoElevenLabsUnlocked'
     | 'elevenLabsKeyPresent'
   >
 ): boolean {
   return Boolean(
-    state.useStrictByoMode &&
+    state.useApiKeysMode &&
     state.useByoElevenLabs &&
     hasElevenLabsByoConfigured(state)
   );
 }
 
-export function hasStrictByoActiveCoverage(
+export function hasApiKeyModeActiveCoverage(
   state: Pick<
     ByoRuntimeState,
-    | 'useStrictByoMode'
+    | 'useApiKeysMode'
     | 'byoUnlocked'
     | 'byoAnthropicUnlocked'
     | 'byoElevenLabsUnlocked'
@@ -182,7 +183,7 @@ function resolveProviderByPreference(
   const hasElevenLabs = hasElevenLabsByoAvailable(state);
 
   if (preference === 'stage5') {
-    if (!state.useStrictByoMode) {
+    if (!state.useApiKeysMode) {
       return 'stage5';
     }
   }
@@ -249,6 +250,29 @@ export function resolveTranslationDraftModel(state: ByoRuntimeState): string {
 export function resolveTranslationReviewProvider(
   state: ByoRuntimeState
 ): RuntimeProvider {
+  if (!state.useApiKeysMode) {
+    return resolveStage5TranslationReviewProvider(state);
+  }
+
+  return resolveByoTranslationReviewProvider(state);
+}
+
+function resolveStage5TranslationReviewProvider(
+  state: ByoRuntimeState
+): RuntimeProvider {
+  const hasOpenAi = hasOpenAiByoAvailable(state);
+  const hasAnthropic = hasAnthropicByoAvailable(state);
+
+  if (state.preferClaudeReview) {
+    return hasAnthropic ? 'anthropic' : 'stage5';
+  }
+
+  return hasOpenAi ? 'openai' : 'stage5';
+}
+
+function resolveByoTranslationReviewProvider(
+  state: ByoRuntimeState
+): RuntimeProvider {
   const hasOpenAi = hasOpenAiByoAvailable(state);
   const hasAnthropic = hasAnthropicByoAvailable(state);
 
@@ -271,7 +295,30 @@ export function resolveTranslationReviewModel(state: ByoRuntimeState): {
   model: string;
   reasoning?: { effort: 'high' };
 } {
-  return resolveTranslationReviewProvider(state) === 'anthropic'
+  const provider = resolveTranslationReviewProvider(state);
+
+  if (provider === 'anthropic') {
+    return { model: AI_MODELS.CLAUDE_OPUS };
+  }
+
+  if (provider === 'openai') {
+    return { model: STAGE5_REVIEW_TRANSLATION_MODEL };
+  }
+
+  return resolveStage5TranslationReviewModel(state);
+}
+
+export function resolveEffectiveTranslationReviewModel(
+  state: ByoRuntimeState
+): string {
+  return resolveTranslationReviewModel(state).model;
+}
+
+function resolveStage5TranslationReviewModel(state: ByoRuntimeState): {
+  model: string;
+  reasoning?: { effort: 'high' };
+} {
+  return state.preferClaudeReview && state.stage5AnthropicReviewAvailable
     ? { model: AI_MODELS.CLAUDE_OPUS }
     : { model: STAGE5_REVIEW_TRANSLATION_MODEL };
 }
@@ -279,7 +326,7 @@ export function resolveTranslationReviewModel(state: ByoRuntimeState): {
 export function resolveSummaryProvider(
   state: Pick<
     ByoRuntimeState,
-    | 'useStrictByoMode'
+    | 'useApiKeysMode'
     | 'byoUnlocked'
     | 'byoAnthropicUnlocked'
     | 'useByo'
@@ -310,7 +357,7 @@ export function resolveSummaryProvider(
 export function isSummaryByo(
   state: Pick<
     ByoRuntimeState,
-    | 'useStrictByoMode'
+    | 'useApiKeysMode'
     | 'byoUnlocked'
     | 'byoAnthropicUnlocked'
     | 'useByo'

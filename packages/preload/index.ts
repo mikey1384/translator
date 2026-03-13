@@ -475,12 +475,14 @@ const electronAPI = {
     byoOpenAi: boolean;
     byoAnthropic: boolean;
     byoElevenLabs: boolean;
+    stage5AnthropicReviewAvailable: boolean;
     fetchedAt?: string;
   }> => ipcRenderer.invoke('get-entitlements'),
   refreshEntitlements: (): Promise<{
     byoOpenAi: boolean;
     byoAnthropic: boolean;
     byoElevenLabs: boolean;
+    stage5AnthropicReviewAvailable: boolean;
     fetchedAt?: string;
   }> => ipcRenderer.invoke('refresh-entitlements'),
   onEntitlementsUpdated: (
@@ -488,6 +490,7 @@ const electronAPI = {
       byoOpenAi: boolean;
       byoAnthropic: boolean;
       byoElevenLabs: boolean;
+      stage5AnthropicReviewAvailable: boolean;
       fetchedAt?: string;
     }) => void
   ) => {
@@ -510,6 +513,7 @@ const electronAPI = {
       byoOpenAi: boolean;
       byoAnthropic: boolean;
       byoElevenLabs: boolean;
+      stage5AnthropicReviewAvailable: boolean;
       fetchedAt?: string;
     }) => void
   ) => {
@@ -565,13 +569,13 @@ const electronAPI = {
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-byo-elevenlabs-enabled', enabled),
 
-  // Strict BYO mode
-  getStrictByoModeEnabled: (): Promise<boolean> =>
-    ipcRenderer.invoke('get-strict-byo-mode-enabled'),
-  setStrictByoModeEnabled: (
+  // API key mode
+  getApiKeyModeEnabled: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-api-key-mode-enabled'),
+  setApiKeyModeEnabled: (
     enabled: boolean
   ): Promise<{ success: boolean; error?: string }> =>
-    ipcRenderer.invoke('set-strict-byo-mode-enabled', enabled),
+    ipcRenderer.invoke('set-api-key-mode-enabled', enabled),
 
   // Claude translation preference
   getPreferClaudeTranslation: (): Promise<boolean> =>

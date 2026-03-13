@@ -11,6 +11,7 @@ import {
   translateSubtitlesFromSrt,
 } from '../services/subtitle-processing/index.js';
 import {
+  getReviewModel,
   translateBatch,
   reviewTranslationBatch,
 } from '../services/subtitle-processing/translator.js';
@@ -31,7 +32,10 @@ import {
   registerAutoCancel,
   finish as registryFinish,
 } from '../active-processes.js';
-import { ERROR_CODES } from '../../shared/constants/index.js';
+import {
+  ERROR_CODES,
+  getExactAiModelDisplayName,
+} from '../../shared/constants/index.js';
 import type { FFmpegContext, VideoMeta } from '../services/ffmpeg-runner.js';
 import {
   extractAudioSegment,
@@ -1686,6 +1690,8 @@ export async function handleTranslateOneLine(
       percent: 60,
       stage: '__i18n__:reviewing_range:1:1:1',
       operationId,
+      phaseKey: 'review',
+      model: getExactAiModelDisplayName(getReviewModel().model),
     });
 
     // 2) Review with context to improve quality

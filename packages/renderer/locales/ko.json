@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI 제공업체"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "내 API 키 사용",
       "activeKeys": "준비된 키 {{count}}개",
       "noKeys": "설정된 키 없음",
       "requirement": "번역 + 오디오 커버리지 필요",
-      "strictActive": "Stage5 크레딧 꺼짐",
+      "usingApiKeys": "Stage5 크레딧 꺼짐",
       "usingCredits": "Stage5 크레딧 사용 중",
       "toggleOn": "이제 API 키를 사용합니다.",
       "toggleOff": "이제 Stage5 크레딧을 사용합니다.",

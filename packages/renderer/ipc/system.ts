@@ -109,6 +109,7 @@ export function getEntitlements(): Promise<{
   byoOpenAi: boolean;
   byoAnthropic: boolean;
   byoElevenLabs: boolean;
+  stage5AnthropicReviewAvailable: boolean;
   fetchedAt?: string;
 }> {
   return window.electron.getEntitlements();
@@ -118,6 +119,7 @@ export function refreshEntitlements(): Promise<{
   byoOpenAi: boolean;
   byoAnthropic: boolean;
   byoElevenLabs: boolean;
+  stage5AnthropicReviewAvailable: boolean;
   fetchedAt?: string;
 }> {
   return window.electron.refreshEntitlements();
@@ -128,6 +130,7 @@ export function onEntitlementsUpdated(
     byoOpenAi: boolean;
     byoAnthropic: boolean;
     byoElevenLabs: boolean;
+    stage5AnthropicReviewAvailable: boolean;
     fetchedAt?: string;
   }) => void
 ): () => void {
@@ -149,6 +152,7 @@ export function onByoUnlockConfirmed(
     byoOpenAi: boolean;
     byoAnthropic: boolean;
     byoElevenLabs: boolean;
+    stage5AnthropicReviewAvailable: boolean;
     fetchedAt?: string;
   }) => void
 ): () => void {
@@ -268,15 +272,15 @@ export function setByoElevenLabsEnabled(
   return window.electron.setByoElevenLabsEnabled(enabled);
 }
 
-// Strict BYO mode
-export function getStrictByoModeEnabled(): Promise<boolean> {
-  return window.electron.getStrictByoModeEnabled();
+// API key mode
+export function getApiKeyModeEnabled(): Promise<boolean> {
+  return window.electron.getApiKeyModeEnabled();
 }
 
-export function setStrictByoModeEnabled(
+export function setApiKeyModeEnabled(
   enabled: boolean
 ): Promise<{ success: boolean; error?: string }> {
-  return window.electron.setStrictByoModeEnabled(enabled);
+  return window.electron.setApiKeyModeEnabled(enabled);
 }
 
 // Claude translation preference

@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI प्रदाता"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "मेरी API कुंजियाँ उपयोग करें",
       "activeKeys": "तैयार कुंजियां: {{count}}",
       "noKeys": "कोई कुंजी कॉन्फ़िगर नहीं है",
       "requirement": "अनुवाद + ऑडियो कवरेज चाहिए",
-      "strictActive": "Stage5 क्रेडिट बंद",
+      "usingApiKeys": "Stage5 क्रेडिट बंद",
       "usingCredits": "Stage5 क्रेडिट चालू",
       "toggleOn": "अब आपकी API कुंजियां उपयोग में हैं।",
       "toggleOff": "अब Stage5 क्रेडिट उपयोग में हैं।",

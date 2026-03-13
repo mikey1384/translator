@@ -23,6 +23,7 @@ import {
   isDubbingByo,
   isTranslationByo,
   resolveDubbingCreditProvider,
+  resolveEffectiveTranslationReviewModel,
   type ByoRuntimeState,
 } from '../../../state/byo-runtime';
 import {
@@ -101,12 +102,15 @@ export default function SrtMountedPanel({
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
   const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
+  const stage5AnthropicReviewAvailable = useAiStore(
+    s => s.stage5AnthropicReviewAvailable
+  );
   const preferredTranscriptionProvider = useAiStore(
     s => s.preferredTranscriptionProvider
   );
   const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
   const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
-  const useStrictByoMode = useAiStore(s => s.useStrictByoMode);
+  const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const useByo = useAiStore(s => s.useByo);
   const keyPresent = useAiStore(s => s.keyPresent);
   const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
@@ -119,10 +123,11 @@ export default function SrtMountedPanel({
 
   const runtimeState = useMemo<ByoRuntimeState>(
     () => ({
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
+      stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
       useByoElevenLabs,
@@ -137,10 +142,11 @@ export default function SrtMountedPanel({
       stage5DubbingTtsProvider,
     }),
     [
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
+      stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
       useByoElevenLabs,
@@ -200,10 +206,12 @@ export default function SrtMountedPanel({
     if (charCount === 0) return null;
 
     const isByo = isTranslationByo(runtimeState);
+    const reviewModel = resolveEffectiveTranslationReviewModel(runtimeState);
 
     const estimatedCredits = estimateTranslationCreditsFromChars(
       charCount,
-      qualityTranslation
+      qualityTranslation,
+      reviewModel
     );
     return {
       charCount,

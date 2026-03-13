@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI প্রোভাইডার"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "আমার API কী ব্যবহার করুন",
       "activeKeys": "প্রস্তুত কী: {{count}}",
       "noKeys": "কোনো কী কনফিগার করা হয়নি",
       "requirement": "অনুবাদ + অডিও কভারেজ দরকার",
-      "strictActive": "Stage5 ক্রেডিট বন্ধ",
+      "usingApiKeys": "Stage5 ক্রেডিট বন্ধ",
       "usingCredits": "Stage5 ক্রেডিট ব্যবহার হচ্ছে",
       "toggleOn": "এখন আপনার API কী ব্যবহার করা হচ্ছে।",
       "toggleOff": "এখন Stage5 ক্রেডিট ব্যবহার করা হচ্ছে।",

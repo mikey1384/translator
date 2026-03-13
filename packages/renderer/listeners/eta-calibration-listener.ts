@@ -58,10 +58,11 @@ const trackers = new Map<string, Tracker>();
 function buildRuntimeState(): ByoRuntimeState {
   const ai = useAiStore.getState();
   return {
-    useStrictByoMode: ai.useStrictByoMode,
+    useApiKeysMode: ai.useApiKeysMode,
     byoUnlocked: ai.byoUnlocked,
     byoAnthropicUnlocked: ai.byoAnthropicUnlocked,
     byoElevenLabsUnlocked: ai.byoElevenLabsUnlocked,
+    stage5AnthropicReviewAvailable: ai.stage5AnthropicReviewAvailable,
     useByo: ai.useByo,
     useByoAnthropic: ai.useByoAnthropic,
     useByoElevenLabs: ai.useByoElevenLabs,

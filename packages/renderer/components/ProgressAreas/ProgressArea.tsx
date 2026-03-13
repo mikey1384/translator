@@ -13,6 +13,7 @@ import {
 import {
   resolveDubbingCreditProvider,
   resolveDubbingProvider,
+  resolveEffectiveTranslationReviewModel,
   resolveTranscriptionProvider,
   resolveTranslationDraftProvider,
   resolveTranslationReviewProvider,
@@ -79,12 +80,15 @@ export default function ProgressArea({
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
   const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
+  const stage5AnthropicReviewAvailable = useAiStore(
+    s => s.stage5AnthropicReviewAvailable
+  );
   const preferredTranscriptionProvider = useAiStore(
     s => s.preferredTranscriptionProvider
   );
   const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
   const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
-  const useStrictByoMode = useAiStore(s => s.useStrictByoMode);
+  const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const useByo = useAiStore(s => s.useByo);
   const keyPresent = useAiStore(s => s.keyPresent);
   const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
@@ -97,10 +101,11 @@ export default function ProgressArea({
 
   const runtimeState = useMemo<ByoRuntimeState>(
     () => ({
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
+      stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
       useByoElevenLabs,
@@ -115,10 +120,11 @@ export default function ProgressArea({
       stage5DubbingTtsProvider,
     }),
     [
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
+      stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
       useByoElevenLabs,
@@ -175,7 +181,12 @@ export default function ProgressArea({
       ) {
         return undefined;
       }
-      const hours = estimateTranslatableHours(credits, qualityTranslation);
+      const reviewModel = resolveEffectiveTranslationReviewModel(runtimeState);
+      const hours = estimateTranslatableHours(
+        credits,
+        qualityTranslation,
+        reviewModel
+      );
       if (hours == null) return undefined;
       const time = formatHours(hours);
       return qualityTranslation ? `(hq mode: ~${time})` : `(~${time})`;

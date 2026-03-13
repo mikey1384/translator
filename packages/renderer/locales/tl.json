@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Tagabigay ng AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Gamitin ang aking mga API key",
       "activeKeys": "Handang key: {{count}}",
       "noKeys": "Walang naka-configure na key",
       "requirement": "Kailangan ang translation + audio coverage",
-      "strictActive": "Naka-off ang Stage5 credits",
+      "usingApiKeys": "Naka-off ang Stage5 credits",
       "usingCredits": "Gumagamit ng Stage5 credits",
       "toggleOn": "Ginagamit na ngayon ang iyong API key.",
       "toggleOff": "Ginagamit na ngayon ang Stage5 credits.",

@@ -1,6 +1,5 @@
 import {
-  AI_MODELS,
-  STAGE5_REVIEW_TRANSLATION_MODEL,
+  getStage5ReviewOption,
 } from '../../shared/constants/index.js';
 
 export type ReviewModelConfig = {
@@ -12,7 +11,22 @@ export type TranslationReasoning = {
   effort?: 'low' | 'medium' | 'high';
 };
 
-export function resolveTranslationReviewModelConfig({
+export function resolveStage5TranslationReviewModelConfig({
+  prefersClaude,
+  stage5AnthropicReviewAvailable,
+}: {
+  prefersClaude: boolean;
+  stage5AnthropicReviewAvailable: boolean;
+}): ReviewModelConfig {
+  const openAiReview = getStage5ReviewOption('openai');
+  const anthropicReview = getStage5ReviewOption('anthropic');
+
+  return prefersClaude && stage5AnthropicReviewAvailable
+    ? { model: anthropicReview.model }
+    : { model: openAiReview.model };
+}
+
+export function resolveByoTranslationReviewModelConfig({
   prefersClaude,
   canUseAnthropicByo,
   canUseOpenAiByo,
@@ -21,23 +35,28 @@ export function resolveTranslationReviewModelConfig({
   canUseAnthropicByo: boolean;
   canUseOpenAiByo: boolean;
 }): ReviewModelConfig {
-  if (!canUseAnthropicByo && !canUseOpenAiByo) {
-    return { model: STAGE5_REVIEW_TRANSLATION_MODEL };
-  }
+  const openAiReview = getStage5ReviewOption('openai');
+  const anthropicReview = getStage5ReviewOption('anthropic');
 
   if (prefersClaude && canUseAnthropicByo) {
-    return { model: AI_MODELS.CLAUDE_OPUS };
+    return { model: anthropicReview.model };
   }
 
   if (!prefersClaude && canUseOpenAiByo) {
-    return { model: STAGE5_REVIEW_TRANSLATION_MODEL };
+    return { model: openAiReview.model };
+  }
+
+  if (canUseOpenAiByo) {
+    return { model: openAiReview.model };
   }
 
   if (canUseAnthropicByo) {
-    return { model: AI_MODELS.CLAUDE_OPUS };
+    return { model: anthropicReview.model };
   }
 
-  return { model: STAGE5_REVIEW_TRANSLATION_MODEL };
+  return prefersClaude
+    ? { model: anthropicReview.model }
+    : { model: openAiReview.model };
 }
 
 export function getStage5TranslationReasoning({

@@ -15,7 +15,7 @@ import { parseSrt } from '../../../shared/helpers/index.js';
 import { buildSrt } from '../../../shared/helpers/index.js';
 import {
   ERROR_CODES,
-  AI_MODEL_DISPLAY_NAMES,
+  getExactAiModelDisplayName,
 } from '../../../shared/constants/index.js';
 import { scaleProgress, Stage } from './pipeline/progress.js';
 import { reviewTranslationBatch, getReviewModel } from './translator.js';
@@ -182,7 +182,7 @@ export async function translateSubtitlesFromSrt({
       // Determine which model will be used for review and get display name.
       // This may be updated at runtime if we need to fall back (e.g., Anthropic unavailable).
       const formatReviewModelName = (model: string) =>
-        AI_MODEL_DISPLAY_NAMES[model] ?? model;
+        getExactAiModelDisplayName(model);
       const reviewConfig = getReviewModel();
       let reviewModelName = formatReviewModelName(reviewConfig.model);
       let reviewConfigOverride: ReturnType<typeof getReviewModel> | null = null;

@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI வழங்குநர்"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "எனது API விசைகளைப் பயன்படுத்து",
       "activeKeys": "தயார் விசைகள்: {{count}}",
       "noKeys": "எந்த விசைகளும் அமைக்கப்படவில்லை",
       "requirement": "மொழிபெயர்ப்பு + ஆடியோ கவரேஜ் தேவை",
-      "strictActive": "Stage5 கிரெடிட்கள் ஆஃப்",
+      "usingApiKeys": "Stage5 கிரெடிட்கள் ஆஃப்",
       "usingCredits": "Stage5 கிரெடிட்கள் பயன்பாட்டில்",
       "toggleOn": "இப்போது உங்கள் API விசைகள் பயன்படுத்தப்படுகின்றன.",
       "toggleOff": "இப்போது Stage5 கிரெடிட்கள் பயன்படுத்தப்படுகின்றன.",

@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Поставщик ИИ"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Использовать мои API-ключи",
       "activeKeys": "Готовые ключи: {{count}}",
       "noKeys": "Ключи не настроены",
       "requirement": "Нужно покрытие для перевода и аудио",
-      "strictActive": "Кредиты Stage5 выключены",
+      "usingApiKeys": "Кредиты Stage5 выключены",
       "usingCredits": "Кредиты Stage5 включены",
       "toggleOn": "Теперь используются ваши API-ключи.",
       "toggleOff": "Теперь используются кредиты Stage5.",

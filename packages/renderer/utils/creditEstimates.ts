@@ -1,4 +1,5 @@
 import {
+  AI_MODELS,
   CHARS_PER_TOKEN,
   CREDITS_PER_1K_TOKENS_COMPLETION,
   CREDITS_PER_1K_TOKENS_PROMPT,
@@ -10,11 +11,13 @@ import {
   SUMMARY_OUTPUT_TOKENS_PER_AUDIO_HOUR,
   SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER,
   SUMMARY_QUALITY_MULTIPLIER,
+  STAGE5_REVIEW_TRANSLATION_MODEL,
   STAGE5_TTS_MODEL_ELEVEN_V3,
   STAGE5_TTS_MODEL_STANDARD,
   TTS_CREDITS_PER_MINUTE,
   TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
   TRANSLATION_QUALITY_MULTIPLIER,
+  estimateTranslationUsdPerHour,
   estimateTtsCredits,
   getTtsCreditsPerCharacter,
 } from '../../shared/constants';
@@ -23,11 +26,54 @@ export { PREVIEW_TTS_CREDITS };
 
 export type SummaryEffortLevel = 'standard' | 'high';
 export type TtsProvider = 'openai' | 'elevenlabs';
+export type TranslationReviewModel =
+  | typeof STAGE5_REVIEW_TRANSLATION_MODEL
+  | typeof AI_MODELS.CLAUDE_OPUS;
 
 export const TTS_CREDITS_PER_CHAR: Record<TtsProvider, number> = {
   openai: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD),
   elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V3),
 };
+
+const OPENAI_HIGH_END_REVIEW_USD_PER_HOUR = estimateTranslationUsdPerHour(
+  STAGE5_REVIEW_TRANSLATION_MODEL
+);
+
+function scaleTranslationReviewPremium(
+  premiumCredits: number,
+  reviewModel: string
+): number {
+  if (premiumCredits <= 0) return 0;
+  if (reviewModel === STAGE5_REVIEW_TRANSLATION_MODEL) {
+    return Math.ceil(premiumCredits);
+  }
+
+  try {
+    const scaledUsd = estimateTranslationUsdPerHour(reviewModel);
+    return Math.ceil(
+      premiumCredits * (scaledUsd / OPENAI_HIGH_END_REVIEW_USD_PER_HOUR)
+    );
+  } catch {
+    return Math.ceil(premiumCredits);
+  }
+}
+
+export function estimateTranslationCreditsPerHour(
+  qualityEnabled: boolean,
+  reviewModel: string = STAGE5_REVIEW_TRANSLATION_MODEL
+): number {
+  if (!qualityEnabled) {
+    return CREDITS_PER_TRANSLATION_AUDIO_HOUR;
+  }
+
+  const openAiReviewPremium =
+    CREDITS_PER_TRANSLATION_AUDIO_HOUR * (TRANSLATION_QUALITY_MULTIPLIER - 1);
+
+  return (
+    CREDITS_PER_TRANSLATION_AUDIO_HOUR +
+    scaleTranslationReviewPremium(openAiReviewPremium, reviewModel)
+  );
+}
 
 function normalizeKnownCredits(credits: number | null): number | null {
   if (typeof credits !== 'number' || !Number.isFinite(credits)) return null;
@@ -39,12 +85,14 @@ function normalizeKnownCredits(credits: number | null): number | null {
  */
 export function estimateTranslatableHours(
   credits: number | null,
-  qualityEnabled: boolean
+  qualityEnabled: boolean,
+  reviewModel: string = STAGE5_REVIEW_TRANSLATION_MODEL
 ): number | null {
   const safeCredits = normalizeKnownCredits(credits);
   if (safeCredits === null) return null;
-  const multiplier = qualityEnabled ? TRANSLATION_QUALITY_MULTIPLIER : 1;
-  return safeCredits / (CREDITS_PER_TRANSLATION_AUDIO_HOUR * multiplier);
+  return (
+    safeCredits / estimateTranslationCreditsPerHour(qualityEnabled, reviewModel)
+  );
 }
 
 export function estimateTranscriptionHours(
@@ -79,7 +127,8 @@ export function estimateSummaryHours(
 
 export function estimateTranslationCreditsFromChars(
   charCount: number,
-  qualityEnabled: boolean
+  qualityEnabled: boolean,
+  reviewModel: string = STAGE5_REVIEW_TRANSLATION_MODEL
 ): number {
   const safeCharCount = Math.max(0, Math.ceil(charCount || 0));
   if (safeCharCount === 0) return 0;
@@ -92,9 +141,17 @@ export function estimateTranslationCreditsFromChars(
   const withReviewOverhead = Math.ceil(
     baseCredits * TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
   );
-  return qualityEnabled
-    ? Math.ceil(withReviewOverhead * TRANSLATION_QUALITY_MULTIPLIER)
-    : withReviewOverhead;
+  if (!qualityEnabled) {
+    return withReviewOverhead;
+  }
+
+  const openAiReviewPremium =
+    withReviewOverhead * (TRANSLATION_QUALITY_MULTIPLIER - 1);
+
+  return (
+    withReviewOverhead +
+    scaleTranslationReviewPremium(openAiReviewPremium, reviewModel)
+  );
 }
 
 const BASE_CREDITS_PER_SUMMARY_AUDIO_HOUR = Math.ceil(

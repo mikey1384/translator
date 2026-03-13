@@ -122,7 +122,7 @@ export default function useTranscriptSummaryFlow({
   );
 
   const credits = useCreditStore(state => state.credits);
-  const useStrictByoMode = useAiStore(state => state.useStrictByoMode);
+  const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
   const useByo = useAiStore(state => state.useByo);
@@ -132,7 +132,7 @@ export default function useTranscriptSummaryFlow({
   const preferClaudeSummary = useAiStore(state => state.preferClaudeSummary);
   const summaryByoState = useMemo(
     () => ({
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       useByo,
@@ -142,7 +142,7 @@ export default function useTranscriptSummaryFlow({
       preferClaudeSummary,
     }),
     [
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       useByo,

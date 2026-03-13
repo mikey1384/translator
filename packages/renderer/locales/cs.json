@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Poskytovatel AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Použít mé API klíče",
       "activeKeys": "Připravené klíče: {{count}}",
       "noKeys": "Nejsou nastaveny žádné klíče",
       "requirement": "Vyžaduje překlad + audio",
-      "strictActive": "Kredity Stage5 vypnuté",
+      "usingApiKeys": "Kredity Stage5 vypnuté",
       "usingCredits": "Kredity Stage5 zapnuté",
       "toggleOn": "Nyní používá vaše API klíče.",
       "toggleOff": "Nyní používá kredity Stage5.",

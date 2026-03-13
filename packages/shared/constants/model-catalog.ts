@@ -13,6 +13,42 @@ export const STAGE5_TTS_MODEL_HD = 'tts-1-hd';
 export const STAGE5_TTS_MODEL_ELEVEN_V3 = 'eleven_v3';
 export const STAGE5_TTS_MODEL_ELEVEN_TURBO = 'eleven_turbo_v2_5';
 
+export type Stage5ReviewProvider = 'openai' | 'anthropic';
+
+export const STAGE5_REVIEW_PROVIDER_OPTIONS = {
+  openai: {
+    provider: 'openai',
+    model: STAGE5_REVIEW_TRANSLATION_MODEL,
+    exactModelLabel: 'GPT-5.4',
+  },
+  anthropic: {
+    provider: 'anthropic',
+    model: AI_MODELS.CLAUDE_OPUS,
+    exactModelLabel: 'Claude Opus 4.6',
+  },
+} as const;
+
+export type Stage5ReviewOption =
+  (typeof STAGE5_REVIEW_PROVIDER_OPTIONS)[Stage5ReviewProvider];
+
+export function getStage5ReviewProvider(
+  prefersClaude: boolean
+): Stage5ReviewProvider {
+  return prefersClaude ? 'anthropic' : 'openai';
+}
+
+export function getStage5ReviewOption(
+  provider: Stage5ReviewProvider
+): Stage5ReviewOption {
+  return STAGE5_REVIEW_PROVIDER_OPTIONS[provider];
+}
+
+export function getStage5ReviewOptionForPreference(
+  prefersClaude: boolean
+): Stage5ReviewOption {
+  return getStage5ReviewOption(getStage5ReviewProvider(prefersClaude));
+}
+
 export const AI_MODEL_ALIASES: Record<string, string> = {
   'claude-sonnet-4-5-20250929': AI_MODELS.CLAUDE_SONNET,
   'claude-sonnet-4-5': AI_MODELS.CLAUDE_SONNET,

@@ -39,7 +39,8 @@ import {
 } from './video-suggestion-model-preference.js';
 import {
   getStage5TranslationReasoning,
-  resolveTranslationReviewModelConfig,
+  resolveByoTranslationReviewModelConfig,
+  resolveStage5TranslationReviewModelConfig,
 } from '../utils/review-model-routing.js';
 import {
   resolveSummaryModelConfig,
@@ -106,11 +107,11 @@ function createApiKeyGetter(
   };
 }
 
-// Generic helper to check if a BYO toggle is enabled (respects strict BYO mode)
+// Generic helper to check if a BYO toggle is enabled (respects API key mode)
 function createByoToggleChecker(
   toggleKey: string,
   providerName: string,
-  requiresStrictByoMode = true
+  requiresApiKeyMode = true
 ): () => boolean {
   return () => {
     const fallback =
@@ -120,7 +121,7 @@ function createByoToggleChecker(
           ? APP_SETTINGS_DEFAULTS.useByoElevenLabs
           : false;
     if (!settingsStoreRef) return fallback;
-    if (requiresStrictByoMode && !isStrictByoModeEnabled()) return false;
+    if (requiresApiKeyMode && !isApiKeyModeEnabled()) return false;
     try {
       return Boolean(settingsStoreRef.get(toggleKey as any, fallback));
     } catch (err) {
@@ -152,14 +153,14 @@ const isByoElevenLabsToggleEnabled = createByoToggleChecker(
   'ElevenLabs'
 );
 
-function isStrictByoModeEnabled(): boolean {
+function isApiKeyModeEnabled(): boolean {
   if (!settingsStoreRef) return APP_SETTINGS_DEFAULTS.useByoMaster;
   try {
     return Boolean(
       settingsStoreRef.get('useByoMaster', APP_SETTINGS_DEFAULTS.useByoMaster)
     );
   } catch (err) {
-    log.error('[ai-provider] Failed to load strict BYO mode state:', err);
+    log.error('[ai-provider] Failed to load API key mode state:', err);
     return APP_SETTINGS_DEFAULTS.useByoMaster;
   }
 }
@@ -212,6 +213,25 @@ export function prefersClaudeSummary(): boolean {
   }
 }
 
+function resolveTranslationModelFamilyHint({
+  translationPhase,
+  model,
+}: {
+  translationPhase?: 'draft' | 'review';
+  model?: string;
+}): 'gpt' | 'claude' | undefined {
+  if (translationPhase === 'review') {
+    return prefersClaudeReview() ? 'claude' : 'gpt';
+  }
+  if (translationPhase === 'draft') {
+    return prefersClaudeTranslation() ? 'claude' : 'gpt';
+  }
+  if (typeof model !== 'string' || model.trim().length === 0) {
+    return undefined;
+  }
+  return isClaudeModel(model) ? 'claude' : 'gpt';
+}
+
 export function resolveTranslationDraftModel(): string {
   const prefersClaude = prefersClaudeTranslation();
   const canUseAnthropicByo =
@@ -238,11 +258,28 @@ export function resolveTranslationReviewModel(): {
     getActiveProviderForModel(AI_MODELS.CLAUDE_OPUS) === 'anthropic';
   const canUseOpenAiByo = getActiveProviderForModel(AI_MODELS.GPT) === 'openai';
   const prefersClaude = prefersClaudeReview();
+  const stage5AnthropicReviewAvailable =
+    getCachedEntitlements().stage5AnthropicReviewAvailable;
 
-  return resolveTranslationReviewModelConfig({
+  if (prefersClaude && canUseAnthropicByo) {
+    return { model: AI_MODELS.CLAUDE_OPUS };
+  }
+
+  if (!prefersClaude && canUseOpenAiByo) {
+    return { model: STAGE5_REVIEW_TRANSLATION_MODEL };
+  }
+
+  if (isApiKeyModeEnabled()) {
+    return resolveByoTranslationReviewModelConfig({
+      prefersClaude,
+      canUseAnthropicByo,
+      canUseOpenAiByo,
+    });
+  }
+
+  return resolveStage5TranslationReviewModelConfig({
     prefersClaude,
-    canUseAnthropicByo,
-    canUseOpenAiByo,
+    stage5AnthropicReviewAvailable,
   });
 }
 
@@ -289,7 +326,7 @@ export function resolveVideoSuggestionModel(
     preference: normalizeVideoSuggestionModelPreference(
       preference || getVideoSuggestionModelPreference()
     ),
-    strictByoModeEnabled: isStrictByoModeEnabled(),
+    apiKeyModeEnabled: isApiKeyModeEnabled(),
     translationDraftModel: resolveTranslationDraftModel(),
     translationReviewModel: resolveTranslationReviewModel().model,
     availableByoModels: getAvailableByoVideoSuggestionModels(),
@@ -369,8 +406,8 @@ export function getStage5DubbingTtsProvider(): Stage5TtsProviderPref {
 
 function isByoToggleEnabled(): boolean {
   if (!settingsStoreRef) return APP_SETTINGS_DEFAULTS.useByoOpenAi;
-  // Strict BYO mode overrides individual toggles.
-  if (!isStrictByoModeEnabled()) return false;
+  // API key mode overrides individual toggles.
+  if (!isApiKeyModeEnabled()) return false;
   try {
     return Boolean(
       settingsStoreRef.get('useByoOpenAi', APP_SETTINGS_DEFAULTS.useByoOpenAi)
@@ -528,7 +565,7 @@ function resolveProviderByPreference(
 
   // User explicitly wants Stage5
   if (preference === 'stage5') {
-    if (!isStrictByoModeEnabled()) {
+    if (!isApiKeyModeEnabled()) {
       return 'stage5';
     }
   }
@@ -586,13 +623,13 @@ export async function transcribe(
   options: Stage5TranscribeOptions
 ): Promise<any> {
   const audioProvider = getActiveProviderForAudio();
-  const strictByoModeEnabled = isStrictByoModeEnabled();
+  const apiKeyModeEnabled = isApiKeyModeEnabled();
 
   // Use ElevenLabs Scribe for highest quality transcription
   if (audioProvider === 'elevenlabs') {
     const elevenLabsKey = getStoredElevenLabsApiKey();
     if (!elevenLabsKey) {
-      if (strictByoModeEnabled) {
+      if (apiKeyModeEnabled) {
         throw new Error(ERROR_CODES.ELEVENLABS_KEY_INVALID);
       }
       log.warn(
@@ -704,7 +741,7 @@ export async function transcribe(
   if (audioProvider === 'openai') {
     const apiKey = getStoredApiKey();
     if (!apiKey) {
-      if (strictByoModeEnabled) {
+      if (apiKeyModeEnabled) {
         throw new Error(ERROR_CODES.OPENAI_KEY_INVALID);
       }
       log.warn(
@@ -729,7 +766,7 @@ export async function transcribe(
     }
   }
 
-  if (strictByoModeEnabled) {
+  if (apiKeyModeEnabled) {
     const entitlements = getCachedEntitlements();
     const preferredProvider = getPreferredTranscriptionProvider();
 
@@ -795,7 +832,7 @@ export async function transcribeLargeFileViaR2(options: {
   /** Stable source path used to reconnect to an already-started durable job. */
   recoverySourcePath?: string;
 }): Promise<any> {
-  if (isStrictByoModeEnabled()) {
+  if (isApiKeyModeEnabled()) {
     throw new Error(
       'Using your API keys does not allow Stage5 relay transcription for large files.'
     );
@@ -808,15 +845,13 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
     options as Stage5TranslateOptions;
   const normalizedModel = normalizeAiModelId(model);
   const provider = getActiveProviderForModel(normalizedModel);
-  const strictByoModeEnabled = isStrictByoModeEnabled();
+  const apiKeyModeEnabled = isApiKeyModeEnabled();
   const useServerModelAuthority =
     translationPhase === 'draft' || translationPhase === 'review';
-  const modelFamilyHint =
-    typeof model === 'string' && model.trim().length > 0
-      ? isClaudeModel(model)
-        ? 'claude'
-        : 'gpt'
-      : undefined;
+  const modelFamilyHint = resolveTranslationModelFamilyHint({
+    translationPhase,
+    model: normalizedModel,
+  });
   const effectiveReasoning = getStage5TranslationReasoning({
     translationPhase,
     reasoning,
@@ -834,7 +869,7 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
   if (provider === 'anthropic') {
     const anthropicKey = getStoredAnthropicApiKey();
     if (!anthropicKey) {
-      if (strictByoModeEnabled) {
+      if (apiKeyModeEnabled) {
         throw new Error(ERROR_CODES.ANTHROPIC_KEY_INVALID);
       }
       log.warn(
@@ -863,7 +898,7 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
   if (provider === 'openai') {
     const apiKey = getStoredApiKey();
     if (!apiKey) {
-      if (strictByoModeEnabled) {
+      if (apiKeyModeEnabled) {
         throw new Error(ERROR_CODES.OPENAI_KEY_INVALID);
       }
       log.warn(
@@ -886,7 +921,7 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
     }
   }
 
-  if (strictByoModeEnabled) {
+  if (apiKeyModeEnabled) {
     const entitlements = getCachedEntitlements();
     if (isClaudeModel(normalizedModel)) {
       if (!entitlements.byoAnthropic) {
@@ -945,22 +980,20 @@ export async function translateWithWebSearch(
   const normalizedModel = normalizeAiModelId(model);
   const preferredModel = normalizedModel || AI_MODELS.GPT;
   const provider = getActiveProviderForModel(preferredModel);
-  const strictByoModeEnabled = isStrictByoModeEnabled();
+  const apiKeyModeEnabled = isApiKeyModeEnabled();
   const useServerModelAuthority =
     translationPhase === 'draft' || translationPhase === 'review';
-  const modelFamilyHint =
-    typeof model === 'string' && model.trim().length > 0
-      ? isClaudeModel(model)
-        ? 'claude'
-        : 'gpt'
-      : undefined;
+  const modelFamilyHint = resolveTranslationModelFamilyHint({
+    translationPhase,
+    model: normalizedModel,
+  });
   const effectiveReasoning = getStage5TranslationReasoning({
     translationPhase,
     reasoning,
   });
 
   // Respect active BYO provider and surface BYO budget/auth/rate errors directly.
-  // Do not silently spend Stage5 credits when strict BYO mode is active.
+  // Do not silently spend Stage5 credits when API key mode is active.
   if (provider === 'openai') {
     const apiKey = getStoredApiKey();
     if (!apiKey) {
@@ -1005,8 +1038,8 @@ export async function translateWithWebSearch(
     }
   }
 
-  // In strict BYO mode, never silently spend Stage5 credits.
-  if (strictByoModeEnabled) {
+  // In API key mode, never silently spend Stage5 credits.
+  if (apiKeyModeEnabled) {
     const entitlements = getCachedEntitlements();
     if (isClaudeModel(preferredModel)) {
       if (!entitlements.byoAnthropic) {
@@ -1063,13 +1096,13 @@ export async function translateWithWebSearch(
 
 export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
   const audioProvider = getActiveProviderForDubbing();
-  const strictByoModeEnabled = isStrictByoModeEnabled();
+  const apiKeyModeEnabled = isApiKeyModeEnabled();
 
   // Use ElevenLabs TTS for highest quality dubbing
   if (audioProvider === 'elevenlabs') {
     const elevenLabsKey = getStoredElevenLabsApiKey();
     if (!elevenLabsKey) {
-      if (strictByoModeEnabled) {
+      if (apiKeyModeEnabled) {
         throw new Error(ERROR_CODES.ELEVENLABS_KEY_INVALID);
       }
       log.warn(
@@ -1116,7 +1149,7 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
   if (audioProvider === 'openai') {
     const apiKey = getStoredApiKey();
     if (!apiKey) {
-      if (strictByoModeEnabled) {
+      if (apiKeyModeEnabled) {
         throw new Error(ERROR_CODES.OPENAI_KEY_INVALID);
       }
       log.warn(
@@ -1144,7 +1177,7 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
     }
   }
 
-  if (strictByoModeEnabled) {
+  if (apiKeyModeEnabled) {
     const entitlements = getCachedEntitlements();
     const preferredProvider = getPreferredDubbingProvider();
 

@@ -39,7 +39,7 @@ export default function ByoOpenAiSection() {
     state => state.byoElevenLabsUnlocked
   );
   const adminByoPreviewMode = useAiStore(state => state.adminByoPreviewMode);
-  const useStrictByoMode = useAiStore(state => state.useStrictByoMode);
+  const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
   const lastFetched = useAiStore(state => state.lastFetched);
   const encryptionAvailable = useAiStore(state => state.encryptionAvailable);
 
@@ -68,7 +68,7 @@ export default function ByoOpenAiSection() {
     loadElevenLabsKey();
   }, [loadKey, loadAnthropicKey, loadElevenLabsKey]);
 
-  if (!effectiveByoUnlocked || !useStrictByoMode) {
+  if (!effectiveByoUnlocked || !useApiKeysMode) {
     return null;
   }
 

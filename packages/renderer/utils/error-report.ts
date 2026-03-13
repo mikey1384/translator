@@ -227,7 +227,7 @@ function buildOperationSnapshot(): Record<string, unknown> {
       dubAmbientMix: uiState.dubAmbientMix,
     },
     ai: {
-      useStrictByoMode: aiState.useStrictByoMode,
+      useApiKeysMode: aiState.useApiKeysMode,
       preferredTranscriptionProvider: aiState.preferredTranscriptionProvider,
       preferredDubbingProvider: aiState.preferredDubbingProvider,
       stage5DubbingTtsProvider: aiState.stage5DubbingTtsProvider,

@@ -105,6 +105,7 @@ type TranslationSlice = {
   stage: string;
   id?: string;
   model?: string;
+  phaseKey?: string;
 };
 
 export default function TranslationProgressArea({
@@ -113,7 +114,7 @@ export default function TranslationProgressArea({
   const { t } = useTranslation();
   const translation = useTaskStore(s => s.translation) as TranslationSlice;
   const patchTranslation = useTaskStore(s => s.setTranslation);
-  const { inProgress, percent, stage, id, model } = translation;
+  const { inProgress, percent, stage, id, model, phaseKey } = translation;
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [showSlowProgressBanner, setShowSlowProgressBanner] = useState(false);
@@ -197,12 +198,11 @@ export default function TranslationProgressArea({
   // Combine stage message with model name when available (during review phase)
   const displayStage = useMemo(() => {
     const translatedStage = translateBackendMessage(stage, t);
-    // Only append model during review phase (when model is provided)
-    if (model && stage.includes('reviewing')) {
+    if (model && phaseKey === 'review') {
       return `${translatedStage} (${model})`;
     }
     return translatedStage;
-  }, [stage, model, t]);
+  }, [stage, model, phaseKey, t]);
 
   if (!inProgress) return null;
 

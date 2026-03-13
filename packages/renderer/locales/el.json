@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Πάροχος AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Χρήση των κλειδιών API μου",
       "activeKeys": "Έτοιμα κλειδιά: {{count}}",
       "noKeys": "Δεν έχουν ρυθμιστεί κλειδιά",
       "requirement": "Απαιτεί μετάφραση + ήχο",
-      "strictActive": "Πιστώσεις Stage5 εκτός",
+      "usingApiKeys": "Πιστώσεις Stage5 εκτός",
       "usingCredits": "Πιστώσεις Stage5 ενεργές",
       "toggleOn": "Τώρα χρησιμοποιούνται τα API κλειδιά σας.",
       "toggleOff": "Τώρα χρησιμοποιούνται οι πιστώσεις Stage5.",

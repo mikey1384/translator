@@ -484,12 +484,12 @@
     "aiProvider": {
       "title": "AI Provider"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Use my API keys",
       "activeKeys": "{{count}} key(s) ready",
       "noKeys": "No keys configured",
       "requirement": "Needs translation + audio coverage",
-      "strictActive": "Stage5 credits off",
+      "usingApiKeys": "Stage5 credits off",
       "usingCredits": "Stage5 credits on",
       "toggleOn": "Now using your API keys.",
       "toggleOff": "Now using Stage5 credits.",
@@ -505,14 +505,18 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "modelOn": "GPT-5.1 draft + GPT-5.4 review",
-        "modelOff": "GPT-5.1 draft only",
+        "modelOn": "Standard draft + OpenAI high-end review",
+        "modelOnAnthropic": "Standard draft + Anthropic high-end review",
+        "modelOff": "Standard draft only",
+        "reviewProvider": "Review Provider",
+        "openAiHighEnd": "OpenAI high-end review",
+        "anthropicHighEnd": "Anthropic high-end review",
         "help": "<b>5× credits</b> • Adds review phase for higher quality",
         "helpWithEstimate": "<b>5× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>5× credits</b> • GPT-5.1 draft + GPT-5.4 review",
-        "helpOff": "<b>1× credits</b> • GPT-5.1 draft only",
-        "helpWithEstimateOn": "<b>5× credits</b> • GPT-5.1 draft + GPT-5.4 review • Balance: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× credits</b> • GPT-5.1 draft only • Balance: ~{{time}}"
+        "helpOn": "<b>5× credits</b> • Standard draft + OpenAI high-end review",
+        "helpOff": "<b>1× credits</b> • Standard draft only",
+        "helpWithEstimateOn": "<b>5× credits</b> • Standard draft + OpenAI high-end review • Balance: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× credits</b> • Standard draft only • Balance: ~{{time}}"
       },
       "qualitySummary": {
         "label": "Quality Summary",
@@ -631,10 +635,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Translation (Draft)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI high-end model",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic high-end model",
       "claudeSummaryStack": "Claude Sonnet / Opus",
       "reviewPass": "Review Pass",
       "off": "Off",
@@ -700,7 +706,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API Key (Optional)",
-      "description": "Add your Anthropic API key to use Claude models directly for the translation review phase. Without this key, GPT-5.4 handles the review pass instead.",
+      "description": "Add your Anthropic API key to use Anthropic's high-end reviewer directly for the translation review phase. Without this key, the OpenAI high-end reviewer handles the review pass instead.",
       "apiKeyLabel": "Anthropic API Key",
       "hide": "Hide",
       "show": "Show",

@@ -18,7 +18,7 @@ export type EffectiveVideoSuggestionModelId = DirectVideoSuggestionModelId;
 
 type ResolveVideoSuggestionModelOptions = {
   preference?: VideoSuggestionModelPreferenceValue | null;
-  strictByoModeEnabled?: boolean;
+  apiKeyModeEnabled?: boolean;
   translationDraftModel?: string | null;
   translationReviewModel?: string | null;
   availableByoModels?: Array<string | null | undefined>;
@@ -101,7 +101,7 @@ export function normalizeVideoSuggestionModelPreference(
   return fallback;
 }
 
-function resolveStrictByoVideoSuggestionFallback(
+function resolveApiKeyModeVideoSuggestionFallback(
   candidateModels: Array<string | null | undefined>,
   availableByoModels: DirectVideoSuggestionModelId[]
 ): DirectVideoSuggestionModelId {
@@ -119,7 +119,7 @@ function resolveStrictByoVideoSuggestionFallback(
 
 export function resolveEffectiveVideoSuggestionModel({
   preference,
-  strictByoModeEnabled = false,
+  apiKeyModeEnabled = false,
   translationDraftModel,
   translationReviewModel,
   availableByoModels = [],
@@ -138,8 +138,8 @@ export function resolveEffectiveVideoSuggestionModel({
     selected === AI_MODELS.CLAUDE_SONNET ||
     selected === AI_MODELS.CLAUDE_OPUS
   ) {
-    if (strictByoModeEnabled) {
-      return resolveStrictByoVideoSuggestionFallback(
+    if (apiKeyModeEnabled) {
+      return resolveApiKeyModeVideoSuggestionFallback(
         selected === STAGE5_REVIEW_TRANSLATION_MODEL ||
           selected === AI_MODELS.CLAUDE_OPUS
           ? [selected, normalizedReviewModel, normalizedDraftModel]
@@ -154,8 +154,8 @@ export function resolveEffectiveVideoSuggestionModel({
   }
 
   if (selected === 'quality') {
-    if (strictByoModeEnabled) {
-      return resolveStrictByoVideoSuggestionFallback(
+    if (apiKeyModeEnabled) {
+      return resolveApiKeyModeVideoSuggestionFallback(
         [normalizedReviewModel, normalizedDraftModel],
         normalizedAvailableByoModels
       );
@@ -163,8 +163,8 @@ export function resolveEffectiveVideoSuggestionModel({
     return normalizedReviewModel;
   }
 
-  if (strictByoModeEnabled) {
-    return resolveStrictByoVideoSuggestionFallback(
+  if (apiKeyModeEnabled) {
+    return resolveApiKeyModeVideoSuggestionFallback(
       [normalizedDraftModel, normalizedReviewModel],
       normalizedAvailableByoModels
     );

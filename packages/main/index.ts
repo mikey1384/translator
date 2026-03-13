@@ -842,12 +842,12 @@ try {
     settingsHandlers.setUseByoElevenLabs(Boolean(value))
   );
 
-  // Strict BYO mode handlers
-  ipcMain.handle('get-strict-byo-mode-enabled', () =>
-    settingsHandlers.getStrictByoModeEnabled()
+  // API key mode handlers
+  ipcMain.handle('get-api-key-mode-enabled', () =>
+    settingsHandlers.getApiKeyModeEnabled()
   );
-  ipcMain.handle('set-strict-byo-mode-enabled', (_event, value: boolean) =>
-    settingsHandlers.setStrictByoModeEnabled(Boolean(value))
+  ipcMain.handle('set-api-key-mode-enabled', (_event, value: boolean) =>
+    settingsHandlers.setApiKeyModeEnabled(Boolean(value))
   );
 
   // Claude translation preference handlers

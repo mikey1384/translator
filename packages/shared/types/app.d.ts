@@ -740,7 +740,7 @@ declare module '@shared-types/app' {
     useByoOpenAi: boolean;
     useByoAnthropic: boolean;
     useByoElevenLabs: boolean;
-    useStrictByoMode: boolean;
+    useApiKeysMode: boolean;
     preferClaudeTranslation: boolean;
     preferClaudeReview: boolean;
     preferClaudeSummary: boolean;
@@ -748,6 +748,14 @@ declare module '@shared-types/app' {
     preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
     preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
     stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+  }
+
+  export interface EntitlementsSnapshot {
+    byoOpenAi: boolean;
+    byoAnthropic: boolean;
+    byoElevenLabs: boolean;
+    stage5AnthropicReviewAvailable: boolean;
+    fetchedAt?: string;
   }
 
   export interface PostInstallUpdateNotice {
@@ -946,37 +954,17 @@ declare module '@shared-types/app' {
     onCheckoutPending: (callback: () => void) => () => void;
     onCheckoutConfirmed: (callback: () => void) => () => void;
     onCheckoutCancelled: (callback: () => void) => () => void;
-    getEntitlements: () => Promise<{
-      byoOpenAi: boolean;
-      byoAnthropic: boolean;
-      byoElevenLabs: boolean;
-      fetchedAt?: string;
-    }>;
-    refreshEntitlements: () => Promise<{
-      byoOpenAi: boolean;
-      byoAnthropic: boolean;
-      byoElevenLabs: boolean;
-      fetchedAt?: string;
-    }>;
+    getEntitlements: () => Promise<EntitlementsSnapshot>;
+    refreshEntitlements: () => Promise<EntitlementsSnapshot>;
     onEntitlementsUpdated: (
-      callback: (snapshot: {
-        byoOpenAi: boolean;
-        byoAnthropic: boolean;
-        byoElevenLabs: boolean;
-        fetchedAt?: string;
-      }) => void
+      callback: (snapshot: EntitlementsSnapshot) => void
     ) => () => void;
     onEntitlementsError: (
       callback: (payload: { message: string }) => void
     ) => () => void;
     onByoUnlockPending: (callback: () => void) => () => void;
     onByoUnlockConfirmed: (
-      callback: (snapshot: {
-        byoOpenAi: boolean;
-        byoAnthropic: boolean;
-        byoElevenLabs: boolean;
-        fetchedAt?: string;
-      }) => void
+      callback: (snapshot: EntitlementsSnapshot) => void
     ) => () => void;
     onByoUnlockCancelled: (callback: () => void) => () => void;
     onByoUnlockError: (
@@ -1020,9 +1008,9 @@ declare module '@shared-types/app' {
       callback: (payload: { hasKey: boolean }) => void
     ) => () => void;
 
-    // Strict global BYO mode
-    getStrictByoModeEnabled: () => Promise<boolean>;
-    setStrictByoModeEnabled: (
+    // Global API-key mode
+    getApiKeyModeEnabled: () => Promise<boolean>;
+    setApiKeyModeEnabled: (
       enabled: boolean
     ) => Promise<{ success: boolean; error?: string }>;
 

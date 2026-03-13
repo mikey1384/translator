@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "ผู้ให้บริการ AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "ใช้คีย์ API ของฉัน",
       "activeKeys": "คีย์พร้อมใช้ {{count}} รายการ",
       "noKeys": "ยังไม่ได้ตั้งค่าคีย์",
       "requirement": "ต้องมีการครอบคลุมด้านแปล + เสียง",
-      "strictActive": "ปิดเครดิต Stage5",
+      "usingApiKeys": "ปิดเครดิต Stage5",
       "usingCredits": "กำลังใช้เครดิต Stage5",
       "toggleOn": "ตอนนี้ใช้ API key ของคุณแล้ว",
       "toggleOff": "ตอนนี้ใช้เครดิต Stage5 แล้ว",

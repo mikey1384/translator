@@ -9,18 +9,18 @@ import {
   settingsMetaTextStyles,
   settingsStatusErrorStyles,
   settingsStatusMessageStyles,
-  strictByoToggleCardActiveStyles,
-  strictByoToggleCardStyles,
-  strictByoToggleDetailsStyles,
-  strictByoToggleLabelStyles,
+  apiKeyModeToggleCardActiveStyles,
+  apiKeyModeToggleCardStyles,
+  apiKeyModeToggleDetailsStyles,
+  apiKeyModeToggleLabelStyles,
 } from './styles';
 import { openApiKeysRequired } from '../../state/modal-store';
 import {
   hasAnyByoEntitlementUnlocked,
-  hasStrictByoConfiguredCoverage,
+  hasApiKeyModeConfiguredCoverage,
 } from '../../state/byo-runtime';
 
-export default function StrictByoModeToggle() {
+export default function ApiKeyModeToggle() {
   const { t } = useTranslation();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -31,8 +31,8 @@ export default function StrictByoModeToggle() {
     state => state.byoElevenLabsUnlocked
   );
   const adminByoPreviewMode = useAiStore(state => state.adminByoPreviewMode);
-  const useStrictByoMode = useAiStore(state => state.useStrictByoMode);
-  const setUseStrictByoMode = useAiStore(state => state.setUseStrictByoMode);
+  const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
+  const setUseApiKeysMode = useAiStore(state => state.setUseApiKeysMode);
   const keyPresent = useAiStore(state => state.keyPresent);
   const anthropicKeyPresent = useAiStore(state => state.anthropicKeyPresent);
   const elevenLabsKeyPresent = useAiStore(state => state.elevenLabsKeyPresent);
@@ -55,7 +55,7 @@ export default function StrictByoModeToggle() {
     anthropicKeyPresent,
     elevenLabsKeyPresent,
   ].filter(Boolean).length;
-  const coverageReady = hasStrictByoConfiguredCoverage({
+  const coverageReady = hasApiKeyModeConfiguredCoverage({
     byoUnlocked,
     byoAnthropicUnlocked,
     byoElevenLabsUnlocked,
@@ -71,7 +71,7 @@ export default function StrictByoModeToggle() {
     // When turning ON, validate that required keys are present
     if (value) {
       if (
-        !hasStrictByoConfiguredCoverage({
+        !hasApiKeyModeConfiguredCoverage({
           byoUnlocked,
           byoAnthropicUnlocked,
           byoElevenLabsUnlocked,
@@ -86,12 +86,12 @@ export default function StrictByoModeToggle() {
       }
     }
 
-    const result = await setUseStrictByoMode(value);
+    const result = await setUseApiKeysMode(value);
     if (!result.success) {
       setStatusError(
         result.error ||
           t(
-            'settings.strictByoMode.toggleError',
+            'settings.apiKeyMode.toggleError',
             'Failed to update preference.'
           )
       );
@@ -100,11 +100,11 @@ export default function StrictByoModeToggle() {
     setStatusMessage(
       value
         ? t(
-            'settings.strictByoMode.toggleOn',
+            'settings.apiKeyMode.toggleOn',
             'Using your API keys for all AI operations. Stage5 credits will not be used.'
           )
         : t(
-            'settings.strictByoMode.toggleOff',
+            'settings.apiKeyMode.toggleOff',
             'Using Stage5 credits for all AI operations.'
           )
     );
@@ -118,45 +118,45 @@ export default function StrictByoModeToggle() {
 
       <div
         className={cx(
-          strictByoToggleCardStyles,
-          useStrictByoMode && strictByoToggleCardActiveStyles
+          apiKeyModeToggleCardStyles,
+          useApiKeysMode && apiKeyModeToggleCardActiveStyles
         )}
       >
-        <div className={strictByoToggleDetailsStyles}>
-          <span className={strictByoToggleLabelStyles}>
-            {t('settings.strictByoMode.toggleLabel', 'Use my API keys')}
+        <div className={apiKeyModeToggleDetailsStyles}>
+          <span className={apiKeyModeToggleLabelStyles}>
+            {t('settings.apiKeyMode.toggleLabel', 'Use my API keys')}
           </span>
           <span className={settingsMetaTextStyles}>
-            {useStrictByoMode || coverageReady
+            {useApiKeysMode || coverageReady
               ? savedKeysCount > 0
                 ? t(
-                    'settings.strictByoMode.activeKeys',
+                    'settings.apiKeyMode.activeKeys',
                     '{{count}} key(s) ready',
                     { count: savedKeysCount }
                   )
-                : t('settings.strictByoMode.noKeys', 'No keys configured')
+                : t('settings.apiKeyMode.noKeys', 'No keys configured')
               : t(
-                  'settings.strictByoMode.requirement',
+                  'settings.apiKeyMode.requirement',
                   'Needs translation + audio coverage'
                 )}
           </span>
           <span className={settingsMetaTextStyles}>
-            {useStrictByoMode
+            {useApiKeysMode
               ? t(
-                  'settings.strictByoMode.strictActive',
+                  'settings.apiKeyMode.usingApiKeys',
                   'Stage5 credits off'
                 )
               : t(
-                  'settings.strictByoMode.usingCredits',
+                  'settings.apiKeyMode.usingCredits',
                   'Stage5 credits on'
                 )}
           </span>
         </div>
         <Switch
-          checked={useStrictByoMode}
+          checked={useApiKeysMode}
           onChange={handleToggle}
           aria-label={t(
-            'settings.strictByoMode.toggleAria',
+            'settings.apiKeyMode.toggleAria',
             'Use my API keys'
           )}
         />

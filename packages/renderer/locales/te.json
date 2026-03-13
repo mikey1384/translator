@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI ప్రొవైడర్"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "నా API కీలను ఉపయోగించండి",
       "activeKeys": "సిద్ధమైన కీలు: {{count}}",
       "noKeys": "ఏ కీలూ కాన్ఫిగర్ చేయలేదు",
       "requirement": "అనువాదం + ఆడియో కవరేజ్ అవసరం",
-      "strictActive": "Stage5 క్రెడిట్లు ఆఫ్",
+      "usingApiKeys": "Stage5 క్రెడిట్లు ఆఫ్",
       "usingCredits": "Stage5 క్రెడిట్లు ఉపయోగంలో ఉన్నాయి",
       "toggleOn": "ఇప్పుడు మీ API కీలు ఉపయోగంలో ఉన్నాయి.",
       "toggleOff": "ఇప్పుడు Stage5 క్రెడిట్లు ఉపయోగంలో ఉన్నాయి.",

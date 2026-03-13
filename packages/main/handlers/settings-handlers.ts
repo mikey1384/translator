@@ -46,8 +46,8 @@ export interface AllByoSettings {
   useByoOpenAi: boolean;
   useByoAnthropic: boolean;
   useByoElevenLabs: boolean;
-  // Strict global BYO toggle
-  useStrictByoMode: boolean;
+  // Global API-key toggle
+  useApiKeysMode: boolean;
   // Claude preferences
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
@@ -407,19 +407,19 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
-  /* ─────────── Strict BYO mode ─────────── */
-  function getStrictByoModeEnabled(): boolean {
+  /* ─────────── API key mode ─────────── */
+  function getApiKeyModeEnabled(): boolean {
     try {
       return Boolean(
         store.get('useByoMaster', APP_SETTINGS_DEFAULTS.useByoMaster)
       );
     } catch (err) {
-      log.error('[settings] Failed to read strict BYO mode:', err);
+      log.error('[settings] Failed to read API key mode:', err);
       return APP_SETTINGS_DEFAULTS.useByoMaster;
     }
   }
 
-  function setStrictByoModeEnabled(value: boolean): {
+  function setApiKeyModeEnabled(value: boolean): {
     success: boolean;
     error?: string;
   } {
@@ -427,7 +427,7 @@ export function buildSettingsHandlers(opts: {
       store.set('useByoMaster', Boolean(value));
       return { success: true };
     } catch (err: any) {
-      log.error('[settings] Failed to persist strict BYO mode:', err);
+      log.error('[settings] Failed to persist API key mode:', err);
       return { success: false, error: err?.message || 'Failed to save toggle' };
     }
   }
@@ -845,8 +845,8 @@ export function buildSettingsHandlers(opts: {
       useByoOpenAi: getUseByoOpenAi(),
       useByoAnthropic: getUseByoAnthropic(),
       useByoElevenLabs: getUseByoElevenLabs(),
-      // Strict global BYO toggle
-      useStrictByoMode: getStrictByoModeEnabled(),
+      // Global API-key toggle
+      useApiKeysMode: getApiKeyModeEnabled(),
       // Claude preferences
       preferClaudeTranslation: getPreferClaudeTranslation(),
       preferClaudeReview: getPreferClaudeReview(),
@@ -926,8 +926,8 @@ export function buildSettingsHandlers(opts: {
     clearElevenLabsApiKey,
     getUseByoElevenLabs,
     setUseByoElevenLabs,
-    getStrictByoModeEnabled,
-    setStrictByoModeEnabled,
+    getApiKeyModeEnabled,
+    setApiKeyModeEnabled,
     getPreferClaudeTranslation,
     setPreferClaudeTranslation,
     getPreferClaudeReview,

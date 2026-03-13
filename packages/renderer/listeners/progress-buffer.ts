@@ -9,7 +9,7 @@ import { useAiStore } from '../state/ai-store';
 import { i18n } from '../i18n';
 import { logTask, logPhase } from '../utils/logger';
 import { openCreditRanOut } from '../state/modal-store';
-import { hasStrictByoActiveCoverage } from '../state/byo-runtime';
+import { hasApiKeyModeActiveCoverage } from '../state/byo-runtime';
 
 type ProgressPayload = Parameters<
   Parameters<typeof SubtitlesIPC.onGenerateProgress>[0]
@@ -54,7 +54,7 @@ function flush() {
     ) {
       try {
         const s = useAiStore.getState();
-        const usingApiKey = hasStrictByoActiveCoverage(s);
+        const usingApiKey = hasApiKeyModeActiveCoverage(s);
         if (!usingApiKey) openCreditRanOut();
       } catch {
         // Do nothing

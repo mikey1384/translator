@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Провайдер ШІ"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Використовувати мої API-ключі",
       "activeKeys": "Ключі готові: {{count}}",
       "noKeys": "Ключі не налаштовано",
       "requirement": "Потрібне покриття для перекладу й аудіо",
-      "strictActive": "Кредити Stage5 вимкнено",
+      "usingApiKeys": "Кредити Stage5 вимкнено",
       "usingCredits": "Кредити Stage5 увімкнено",
       "toggleOn": "Тепер використовуються ваші API-ключі.",
       "toggleOff": "Тепер використовуються кредити Stage5.",

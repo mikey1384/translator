@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "ارائه‌دهنده هوش مصنوعی"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "استفاده از کلیدهای API خودم",
       "activeKeys": "کلیدهای آماده: {{count}}",
       "noKeys": "هیچ کلیدی پیکربندی نشده است",
       "requirement": "پوشش ترجمه + صوت لازم است",
-      "strictActive": "اعتبارهای Stage5 خاموش",
+      "usingApiKeys": "اعتبارهای Stage5 خاموش",
       "usingCredits": "اعتبارهای Stage5 روشن",
       "toggleOn": "اکنون از کلیدهای API شما استفاده می‌شود.",
       "toggleOff": "اکنون از اعتبارهای Stage5 استفاده می‌شود.",

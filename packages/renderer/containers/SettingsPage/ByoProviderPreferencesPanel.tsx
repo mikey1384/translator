@@ -16,10 +16,10 @@ import {
   hasElevenLabsByoConfigured,
   hasOpenAiByoConfigured,
   resolveDubbingProvider,
+  resolveEffectiveTranslationReviewModel,
   resolveTranscriptionProvider,
   resolveTranslationDraftModel,
   resolveTranslationDraftProvider,
-  resolveTranslationReviewModel,
   type ByoRuntimeState,
   type RuntimeProvider,
 } from '../../state/byo-runtime';
@@ -244,7 +244,10 @@ export default function ByoProviderPreferencesPanel() {
   const byoElevenLabsUnlocked = useAiStore(
     state => state.byoElevenLabsUnlocked
   );
-  const useStrictByoMode = useAiStore(state => state.useStrictByoMode);
+  const stage5AnthropicReviewAvailable = useAiStore(
+    state => state.stage5AnthropicReviewAvailable
+  );
+  const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
   const useByo = useAiStore(state => state.useByo);
   const useByoAnthropic = useAiStore(state => state.useByoAnthropic);
   const useByoElevenLabs = useAiStore(state => state.useByoElevenLabs);
@@ -295,10 +298,11 @@ export default function ByoProviderPreferencesPanel() {
 
   const runtimeState = useMemo<ByoRuntimeState>(
     () => ({
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
+      stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
       useByoElevenLabs,
@@ -313,10 +317,11 @@ export default function ByoProviderPreferencesPanel() {
       stage5DubbingTtsProvider,
     }),
     [
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
+      stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
       useByoElevenLabs,
@@ -364,13 +369,15 @@ export default function ByoProviderPreferencesPanel() {
   const translationDraftProvider =
     resolveTranslationDraftProvider(runtimeState);
   const translationReviewModel =
-    resolveTranslationReviewModel(runtimeState).model;
+    resolveEffectiveTranslationReviewModel(runtimeState);
+  const effectiveReviewProvider =
+    translationReviewModel === AI_MODELS.CLAUDE_OPUS ? 'anthropic' : 'openai';
   const dubbingProvider = resolveDubbingProvider(runtimeState);
   const resolvedVideoSuggestionModel = useMemo(
     () =>
       resolveEffectiveVideoSuggestionModel({
         preference: videoSuggestionModelPreference,
-        strictByoModeEnabled: useStrictByoMode,
+        apiKeyModeEnabled: useApiKeysMode,
         translationDraftModel,
         translationReviewModel,
         availableByoModels: [
@@ -387,7 +394,7 @@ export default function ByoProviderPreferencesPanel() {
       canUseOpenAiVideoSuggestionModel,
       translationDraftModel,
       translationReviewModel,
-      useStrictByoMode,
+      useApiKeysMode,
       videoSuggestionModelPreference,
     ]
   );
@@ -405,7 +412,7 @@ export default function ByoProviderPreferencesPanel() {
   const videoSuggestionUsesOpus =
     selectedVideoSuggestionModel === AI_MODELS.CLAUDE_OPUS;
   const showVideoSuggestionRuntimeHint =
-    !useStrictByoMode &&
+    !useApiKeysMode &&
     videoSuggestionModelPreference !== resolvedVideoSuggestionModel;
   const videoSuggestionRuntimeHint = showVideoSuggestionRuntimeHint
     ? `${String(
@@ -488,7 +495,7 @@ export default function ByoProviderPreferencesPanel() {
   };
 
   useEffect(() => {
-    if (!useStrictByoMode) return;
+    if (!useApiKeysMode) return;
     if (
       videoSuggestionModelPreference === 'default' ||
       videoSuggestionModelPreference === 'quality'
@@ -511,7 +518,7 @@ export default function ByoProviderPreferencesPanel() {
   }, [
     resolvedVideoSuggestionModel,
     setVideoSuggestionModelPreference,
-    useStrictByoMode,
+    useApiKeysMode,
     videoSuggestionModelPreference,
   ]);
 
@@ -626,7 +633,8 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.review.openai.fallback
               ),
               price: BYO_PROVIDERS.review.openai.price,
-              selected: qualityTranslation && !preferClaudeReview,
+              selected:
+                qualityTranslation && effectiveReviewProvider === 'openai',
               disabled: !hasOpenAiConfigured,
               disabledReason: t(
                 'settings.byoPreferences.reviewRequiresOpenAi',
@@ -641,7 +649,8 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.review.anthropic.fallback
               ),
               price: BYO_PROVIDERS.review.anthropic.price,
-              selected: qualityTranslation && preferClaudeReview,
+              selected:
+                qualityTranslation && effectiveReviewProvider === 'anthropic',
               disabled: !hasAnthropicConfigured,
               disabledReason: t(
                 'settings.byoPreferences.reviewRequiresAnthropic',

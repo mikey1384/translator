@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI szolgáltató"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Saját API kulcsaim használata",
       "activeKeys": "Kulcsok készen: {{count}}",
       "noKeys": "Nincs beállított kulcs",
       "requirement": "Fordítás + hang lefedettség kell",
-      "strictActive": "Stage5 kreditek ki",
+      "usingApiKeys": "Stage5 kreditek ki",
       "usingCredits": "Stage5 kreditek be",
       "toggleOn": "Most az API-kulcsaidat használja.",
       "toggleOff": "Most Stage5 krediteket használ.",

@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Mtoa Huduma wa AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Tumia funguo zangu za API",
       "activeKeys": "Funguo tayari: {{count}}",
       "noKeys": "Hakuna funguo zilizowekwa",
       "requirement": "Inahitaji tafsiri + sauti",
-      "strictActive": "Krediti za Stage5 zimezimwa",
+      "usingApiKeys": "Krediti za Stage5 zimezimwa",
       "usingCredits": "Krediti za Stage5 zinatumika",
       "toggleOn": "Sasa inatumia funguo zako za API.",
       "toggleOff": "Sasa inatumia krediti za Stage5.",

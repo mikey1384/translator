@@ -75,10 +75,13 @@ interface CreditBalanceProps {
 function useActiveProvider(
   operationType: OperationType
 ): 'credits' | 'openai' | 'anthropic' | 'elevenlabs' | 'mixed' {
-  const useStrictByoMode = useAiStore(s => s.useStrictByoMode);
+  const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
   const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
+  const stage5AnthropicReviewAvailable = useAiStore(
+    s => s.stage5AnthropicReviewAvailable
+  );
   const useByo = useAiStore(s => s.useByo);
   const keyPresent = useAiStore(s => s.keyPresent);
   const useByoAnthropic = useAiStore(s => s.useByoAnthropic);
@@ -96,10 +99,11 @@ function useActiveProvider(
 
   const runtimeState = useMemo<ByoRuntimeState>(
     () => ({
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
+      stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
       useByoElevenLabs,
@@ -114,10 +118,11 @@ function useActiveProvider(
       stage5DubbingTtsProvider,
     }),
     [
-      useStrictByoMode,
+      useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
+      stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
       useByoElevenLabs,

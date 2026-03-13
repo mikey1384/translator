@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Nhà cung cấp AI"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Dùng API key của tôi",
       "activeKeys": "Khóa sẵn sàng: {{count}}",
       "noKeys": "Chưa cấu hình khóa nào",
       "requirement": "Cần bao phủ cho dịch + âm thanh",
-      "strictActive": "Tắt tín dụng Stage5",
+      "usingApiKeys": "Tắt tín dụng Stage5",
       "usingCredits": "Đang dùng tín dụng Stage5",
       "toggleOn": "Đang dùng API key của bạn.",
       "toggleOff": "Đang dùng tín dụng Stage5.",

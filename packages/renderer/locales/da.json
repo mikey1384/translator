@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "AI-udbyder"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Brug mine API-nøgler",
       "activeKeys": "Klarte nøgler: {{count}}",
       "noKeys": "Ingen nøgler konfigureret",
       "requirement": "Kræver oversættelse + lyd",
-      "strictActive": "Stage5-kreditter slået fra",
+      "usingApiKeys": "Stage5-kreditter slået fra",
       "usingCredits": "Stage5-kreditter slået til",
       "toggleOn": "Bruger nu dine API-nøgler.",
       "toggleOff": "Bruger nu Stage5-kreditter.",

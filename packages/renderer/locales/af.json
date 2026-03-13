@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "KI-verskaffer"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Gebruik my API-sleutels",
       "activeKeys": "Sleutels gereed: {{count}}",
       "noKeys": "Geen sleutels opgestel nie",
       "requirement": "Benodig vertaal- en klankdekking",
-      "strictActive": "Stage5-krediete af",
+      "usingApiKeys": "Stage5-krediete af",
       "usingCredits": "Stage5-krediete aan",
       "toggleOn": "Gebruik nou jou API-sleutels.",
       "toggleOff": "Gebruik nou Stage5-krediete.",

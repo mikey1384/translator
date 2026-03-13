@@ -185,7 +185,7 @@ export const byoVoiceSectionStyles = css`
   margin-top: ${spacing.sm};
 `;
 
-export const strictByoToggleCardStyles = css`
+export const apiKeyModeToggleCardStyles = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -201,19 +201,19 @@ export const strictByoToggleCardStyles = css`
   }
 `;
 
-export const strictByoToggleCardActiveStyles = css`
+export const apiKeyModeToggleCardActiveStyles = css`
   background: rgba(125, 167, 255, 0.08);
   border-color: ${colors.borderStrong};
 `;
 
-export const strictByoToggleDetailsStyles = css`
+export const apiKeyModeToggleDetailsStyles = css`
   display: flex;
   flex-direction: column;
   gap: ${spacing.xs};
   min-width: 0;
 `;
 
-export const strictByoToggleLabelStyles = css`
+export const apiKeyModeToggleLabelStyles = css`
   color: ${colors.text};
   font-size: ${fontSize.md};
   font-weight: ${fontWeight.semibold};

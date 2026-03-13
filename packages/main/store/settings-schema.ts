@@ -36,10 +36,11 @@ export type AppSettingsSchema = {
   byoOpenAiUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
   byoElevenLabsUnlocked: boolean;
+  stage5AnthropicReviewAvailable: boolean;
   useByoOpenAi: boolean;
   useByoAnthropic: boolean;
   useByoElevenLabs: boolean;
-  // Legacy persisted key for strict BYO mode. Keep the storage key stable to
+  // Legacy persisted key for API key mode. Keep the storage key stable to
   // preserve existing user profiles without a migration.
   useByoMaster: boolean;
   preferClaudeTranslation: boolean;
@@ -65,12 +66,13 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   byoOpenAiUnlocked: false,
   byoAnthropicUnlocked: false,
   byoElevenLabsUnlocked: false,
+  stage5AnthropicReviewAvailable: false,
   useByoOpenAi: false,
   useByoAnthropic: false,
   useByoElevenLabs: false,
   useByoMaster: false,
   preferClaudeTranslation: false,
-  preferClaudeReview: true,
+  preferClaudeReview: false,
   preferClaudeSummary: true,
   videoSuggestionModelPreference: 'default',
   videoSuggestionTargetCountry: VIDEO_SUGGESTION_DEFAULT_COUNTRY,

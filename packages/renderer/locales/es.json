@@ -478,12 +478,12 @@
     "aiProvider": {
       "title": "Proveedor de IA"
     },
-    "strictByoMode": {
+    "apiKeyMode": {
       "toggleLabel": "Usar mis claves API",
       "activeKeys": "Claves listas: {{count}}",
       "noKeys": "No hay claves configuradas",
       "requirement": "Requiere traducción + audio",
-      "strictActive": "Créditos de Stage5 desactivados",
+      "usingApiKeys": "Créditos de Stage5 desactivados",
       "usingCredits": "Créditos de Stage5 activados",
       "toggleOn": "Ahora se usan tus claves API.",
       "toggleOff": "Ahora se usan créditos de Stage5.",
