@@ -78,9 +78,6 @@ export default function QualityToggles() {
   const setSummaryEffortLevel = useUIStore(s => s.setSummaryEffortLevel);
   const credits = useCreditStore(s => s.credits);
   const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
-  const stage5AnthropicReviewAvailable = useAiStore(
-    s => s.stage5AnthropicReviewAvailable
-  );
   const setPreferClaudeReview = useAiStore(s => s.setPreferClaudeReview);
   const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
   const setStage5DubbingTtsProvider = useAiStore(
@@ -92,8 +89,7 @@ export default function QualityToggles() {
   const setVideoSuggestionModelPreference = useAiStore(
     s => s.setVideoSuggestionModelPreference
   );
-  const effectivePreferClaudeReview =
-    preferClaudeReview && stage5AnthropicReviewAvailable;
+  const effectivePreferClaudeReview = preferClaudeReview;
   const videoSuggestionQualityEnabled =
     videoSuggestionModelPreference === 'quality' ||
     videoSuggestionModelPreference === getStage5ReviewOption('anthropic').model ||
@@ -128,11 +124,8 @@ export default function QualityToggles() {
         'settings.performanceQuality.qualityTranslation.anthropicHighEnd',
         'Anthropic high-end review'
       ),
-      onChange: () => {
-        if (!stage5AnthropicReviewAvailable) return;
-        void setPreferClaudeReview(true);
-      },
-      disabled: !stage5AnthropicReviewAvailable,
+      onChange: () => void setPreferClaudeReview(true),
+      disabled: false,
     },
   ].map(option => ({
     ...option,
@@ -326,12 +319,7 @@ export default function QualityToggles() {
                 <span className={reviewProviderOptionCopyStyles}>
                   <span>{option.label}</span>
                   <span className={reviewProviderOptionMetaStyles}>
-                    {option.disabled
-                      ? t(
-                          'settings.performanceQuality.qualityTranslation.backendUnavailable',
-                          'Unavailable on this backend'
-                        )
-                      : formatRate(option.creditsPerHour, 'perHour')}
+                    {formatRate(option.creditsPerHour, 'perHour')}
                   </span>
                 </span>
               </label>

@@ -6,7 +6,7 @@ import {
   resolveStage5TranslationReviewModelConfig,
 } from '../utils/review-model-routing.js';
 
-test('Stage5 review model config preserves the selected Anthropic family when backend support is available', () => {
+test('Stage5 review model config preserves the selected Anthropic family when Claude review is preferred', () => {
   assert.equal(
     resolveStage5TranslationReviewModelConfig({
       prefersClaude: true,
@@ -16,13 +16,13 @@ test('Stage5 review model config preserves the selected Anthropic family when ba
   );
 });
 
-test('Stage5 review model config falls back to OpenAI when backend Anthropic support is unavailable', () => {
+test('Stage5 review model config keeps the selected Anthropic family even if cached capability is false', () => {
   assert.equal(
     resolveStage5TranslationReviewModelConfig({
       prefersClaude: true,
       stage5AnthropicReviewAvailable: false,
     }).model,
-    'gpt-5.4'
+    'claude-opus-4-6'
   );
 });
 

@@ -13,15 +13,14 @@ export type TranslationReasoning = {
 
 export function resolveStage5TranslationReviewModelConfig({
   prefersClaude,
-  stage5AnthropicReviewAvailable,
 }: {
   prefersClaude: boolean;
-  stage5AnthropicReviewAvailable: boolean;
+  stage5AnthropicReviewAvailable?: boolean;
 }): ReviewModelConfig {
   const openAiReview = getStage5ReviewOption('openai');
   const anthropicReview = getStage5ReviewOption('anthropic');
 
-  return prefersClaude && stage5AnthropicReviewAvailable
+  return prefersClaude
     ? { model: anthropicReview.model }
     : { model: openAiReview.model };
 }

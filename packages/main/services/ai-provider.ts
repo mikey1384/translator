@@ -258,8 +258,6 @@ export function resolveTranslationReviewModel(): {
     getActiveProviderForModel(AI_MODELS.CLAUDE_OPUS) === 'anthropic';
   const canUseOpenAiByo = getActiveProviderForModel(AI_MODELS.GPT) === 'openai';
   const prefersClaude = prefersClaudeReview();
-  const stage5AnthropicReviewAvailable =
-    getCachedEntitlements().stage5AnthropicReviewAvailable;
 
   if (prefersClaude && canUseAnthropicByo) {
     return { model: AI_MODELS.CLAUDE_OPUS };
@@ -279,7 +277,6 @@ export function resolveTranslationReviewModel(): {
 
   return resolveStage5TranslationReviewModelConfig({
     prefersClaude,
-    stage5AnthropicReviewAvailable,
   });
 }
 

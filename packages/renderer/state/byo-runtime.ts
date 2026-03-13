@@ -318,7 +318,7 @@ function resolveStage5TranslationReviewModel(state: ByoRuntimeState): {
   model: string;
   reasoning?: { effort: 'high' };
 } {
-  return state.preferClaudeReview && state.stage5AnthropicReviewAvailable
+  return state.preferClaudeReview
     ? { model: AI_MODELS.CLAUDE_OPUS }
     : { model: STAGE5_REVIEW_TRANSLATION_MODEL };
 }
