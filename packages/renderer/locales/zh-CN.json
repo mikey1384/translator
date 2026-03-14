@@ -176,6 +176,8 @@
       "sourceHint": "搜索来源",
       "searchDetails": "搜索详情",
       "introTitle": "请描述你想要的视频类型。",
+      "introCopy": "先从主题、氛围、创作者或受众开始。只有在确实重要时再加上国家或时间范围。",
+      "starterQuestion": "你想找什么类型的视频？",
       "defaultFollowUp": "再多告诉我一些，我会优化搜索结果。",
       "errorMessage": "出了点问题，请重试。",
       "composerTitle": "告诉 AI 要找什么",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "暂时无法搜索，请稍后重试。",
+      "noMatches": "暂无匹配结果。添加主题、风格或创作者，我会重新搜索。",
+      "lowConfidenceNoScoredResults": "排序后没有保留下可靠的匹配结果。请尝试更宽泛的主题、加入创作者提示，或切换时间范围。",
       "lowConfidenceGeneric": "搜索置信度较低。请再补充一个细节后重试。",
       "genericError": "出了点问题，请重试。",
       "platformLabel": "搜索平台",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "先选一个起点，想改的话再编辑。",
       "starterQuestionWithMemory": "你上次搜索的是 {{summary}}。这次要按同样偏好继续吗？",
       "quickStartUserMessage": "用我上次保存的偏好，现在就找视频：{{summary}}",
+      "defaultSearchUserMessage": "现在帮我找视频。",
       "followUp": {
         "moreLikeQuery": "查找更多像 \"{{query}}\" 这样的视频",
         "differentCreator": "来自其他创作者或频道的 \"{{query}}\"",
@@ -287,12 +292,16 @@
       "stillRunning": "仍在运行",
       "liveDetailsToggle": "查看实时详情",
       "moreActions": "更多操作",
+      "recentEvents": "近期事件",
       "cancelFailed": "取消当前搜索失败。",
       "countryGlobal": "全球结果",
       "countryHint": "留空即可查看全球结果。",
+      "countryHintDefaultEnglish": "留空则默认以英语搜索.",
       "countryLabel": "目标国家 / 地区",
       "countryPlaceholder": "例如：美国、日本、西班牙、巴西",
       "countryScope": "国家/地区：{{country}}",
+      "countryDefaultEnglish": "目标国家: 默认为英语",
+      "emptyCopy": "说说你想找的视频主题、受众、创作者风格或氛围。只有在必要时再加国家或时效。",
       "emptyEyebrow": "助手引导式探索",
       "emptyTitle": "描述你想找来作为素材的视频",
       "languageHint": "输出语言",
@@ -318,9 +327,8 @@
       "stillWorking": "仍在处理中...",
       "toggleCopy": "无需离开当前流程，直接在 YouTube 搜索来源视频。",
       "stage": {
-        "strategist": "规划搜索",
-        "discovery": "搜索候选项",
-        "curator": "匹配结果排序",
+        "answerer": "处理查询",
+        "planner": "构建搜索",
         "retrieval": "加载结果"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "高质量翻译",
         "modelOn": "GPT-5.1 草稿 + GPT-5.4 复审",
+        "modelOnAnthropic": "标准草稿 + Anthropic 高阶复审",
         "modelOff": "仅 GPT-5.1 草稿",
+        "reviewProvider": "复审提供方",
+        "openAiHighEnd": "OpenAI 高阶复审",
+        "anthropicHighEnd": "Anthropic 高阶复审",
         "help": "开启：包含复审阶段（约5×积分/时间）。关闭：跳过复审。",
         "helpWithEstimate": "复审使用约5×积分。您的积分可翻译：~{{normalTime}}普通，~{{hqTime}}高质量。",
         "helpOn": "<b>5×积分</b> • 包含复审流程",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "翻译（初稿）",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI 高阶模型",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic 高阶模型",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "审核",
       "off": "关闭",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "当前没有可用的 BYO 视频推荐模型。请启用 OpenAI 或 Anthropic BYO 以使用此功能。",
       "videoSuggestionModelRequiresOpenAi": "需要 OpenAI BYO 解锁、密钥和开关。",
       "videoSuggestionModelRequiresAnthropic": "需要 Anthropic BYO 解锁、密钥和开关。",
+      "summaryRequiresOpenAi": "需要 OpenAI BYO 访问权限和 API 密钥。",
+      "summaryRequiresAnthropic": "需要 Anthropic BYO 访问权限和 API 密钥。",
       "translationReview": "翻译（审核）"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "附加信息",
     "optionalMessagePlaceholder": "你当时在做什么？",
     "sendReport": "发送报告",
-    "reportPrompt": "出了点问题。请向开发者报告以便快速修复。"
+    "reportPrompt": "出了点问题。请向开发者报告以便快速修复。",
+    "preparingReport": "正在准备诊断包...",
+    "reportContextWarning": "部分诊断上下文无法加载。报告仍将包含此应用中的详细信息。"
   }
 }

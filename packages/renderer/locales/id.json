@@ -176,6 +176,8 @@
       "sourceHint": "Sumber pencarian",
       "searchDetails": "Detail pencarian",
       "introTitle": "Jelaskan jenis video yang Anda inginkan.",
+      "introCopy": "Mulailah dengan topik, suasana, kreator, atau audiens. Tambahkan negara atau rentang waktu hanya jika memang penting.",
+      "starterQuestion": "Video seperti apa yang Anda cari?",
       "defaultFollowUp": "Ceritakan lebih detail dan saya akan mempersempit pencarian.",
       "errorMessage": "Terjadi kesalahan. Silakan coba lagi.",
       "composerTitle": "Beri tahu AI apa yang harus dicari",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Tidak bisa mencari sekarang. Coba lagi sebentar.",
+      "noMatches": "Belum ada kecocokan yang kuat. Tambahkan topik, suasana, atau kreator dan saya akan coba lagi.",
+      "lowConfidenceNoScoredResults": "Tidak ada kecocokan tepercaya yang tersisa setelah pemeringkatan. Coba topik yang lebih luas, tambahkan petunjuk kreator, atau ganti rentang waktu.",
       "lowConfidenceGeneric": "Tingkat keyakinan pencarian rendah. Tambahkan satu detail lagi lalu coba lagi.",
       "genericError": "Terjadi kesalahan. Coba lagi.",
       "platformLabel": "Platform pencarian",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Pilih titik awal, lalu edit jika mau.",
       "starterQuestionWithMemory": "Terakhir kali Anda mencari {{summary}}. Mau saya mulai dari sana lagi?",
       "quickStartUserMessage": "Gunakan preferensi terakhir yang saya simpan untuk mencari video sekarang: {{summary}}",
+      "defaultSearchUserMessage": "Cari video untuk saya sekarang.",
       "followUp": {
         "moreLikeQuery": "Temukan lebih banyak video seperti \"{{query}}\"",
         "differentCreator": "\"{{query}}\" dari kreator atau channel lain",
@@ -287,12 +292,16 @@
       "stillRunning": "Masih berjalan",
       "liveDetailsToggle": "Detail langsung",
       "moreActions": "Tindakan lainnya",
+      "recentEvents": "Peristiwa terkini",
       "cancelFailed": "Gagal membatalkan pencarian saat ini.",
       "countryGlobal": "Hasil global",
       "countryHint": "Biarkan kosong untuk hasil global.",
+      "countryHintDefaultEnglish": "Biarkan kosong agar bahasa pencarian default ke bahasa Inggris.",
       "countryLabel": "Negara / wilayah target",
       "countryPlaceholder": "mis. AS, Jepang, Spanyol, Brasil",
       "countryScope": "Negara: {{country}}",
+      "countryDefaultEnglish": "Negara target: default ke bahasa Inggris",
+      "emptyCopy": "Sebutkan topik, audiens, gaya kreator, atau suasana video yang Anda cari. Tambahkan negara atau rentang waktu hanya saat perlu.",
       "emptyEyebrow": "Penelusuran dengan bantuan asisten",
       "emptyTitle": "Jelaskan video yang ingin Anda cari sebagai sumber",
       "languageHint": "Bahasa output",
@@ -318,9 +327,8 @@
       "stillWorking": "Masih bekerja...",
       "toggleCopy": "Cari video sumber di YouTube tanpa keluar dari alur ini.",
       "stage": {
-        "strategist": "Rencanakan pencarian",
-        "discovery": "Cari kandidat",
-        "curator": "Urutkan kecocokan",
+        "answerer": "Proses kueri",
+        "planner": "Susun pencarian",
         "retrieval": "Muat hasil"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Terjemahan Berkualitas",
         "modelOn": "Draf GPT-5.1 + ulasan GPT-5.4",
+        "modelOnAnthropic": "Draf standar + review premium dari Anthropic",
         "modelOff": "Hanya draf GPT-5.1",
+        "reviewProvider": "Penyedia review",
+        "openAiHighEnd": "Review premium dari OpenAI",
+        "anthropicHighEnd": "Review premium dari Anthropic",
         "help": "<b>5× kredit</b> • Menambahkan fase peninjauan untuk kualitas lebih tinggi",
         "helpWithEstimate": "<b>5× kredit</b> • Saldo Anda: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× kredit</b> • Termasuk tahap review",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Terjemahan (Draf)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Model premium dari OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Model premium dari Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Peninjauan",
       "off": "Nonaktif",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Saat ini tidak ada model rekomendasi video BYO yang tersedia. Aktifkan OpenAI atau Anthropic BYO untuk fitur ini.",
       "videoSuggestionModelRequiresOpenAi": "Memerlukan unlock OpenAI BYO, key, dan toggle.",
       "videoSuggestionModelRequiresAnthropic": "Memerlukan unlock Anthropic BYO, key, dan toggle.",
+      "summaryRequiresOpenAi": "Memerlukan akses OpenAI BYO dan kunci API.",
+      "summaryRequiresAnthropic": "Memerlukan akses Anthropic BYO dan kunci API.",
       "translationReview": "Terjemahan (Peninjauan)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Pesan opsional",
     "optionalMessagePlaceholder": "Apa yang sedang Anda coba lakukan?",
     "sendReport": "Kirim laporan",
-    "reportPrompt": "Terjadi kesalahan. Laporkan ini ke pembuat untuk perbaikan cepat."
+    "reportPrompt": "Terjadi kesalahan. Laporkan ini ke pembuat untuk perbaikan cepat.",
+    "preparingReport": "Menyiapkan paket diagnostik...",
+    "reportContextWarning": "Beberapa konteks diagnostik tidak dapat dimuat. Laporan tetap akan menyertakan detail dari aplikasi ini."
   }
 }

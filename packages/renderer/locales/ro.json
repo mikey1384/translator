@@ -176,6 +176,8 @@
       "sourceHint": "Sursa căutării",
       "searchDetails": "Detalii căutare",
       "introTitle": "Descrie ce fel de videoclip vrei.",
+      "introCopy": "Începe cu un subiect, o stare, un creator sau un public. Adaugă țara sau perioada doar dacă este important.",
+      "starterQuestion": "Ce fel de videoclipuri cauți?",
       "defaultFollowUp": "Spune-mi mai multe și voi rafina căutarea.",
       "errorMessage": "Ceva nu a funcționat. Te rugăm să încerci din nou.",
       "composerTitle": "Spune AI ce să găsească",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Nu am putut căuta acum. Încearcă din nou într-un moment.",
+      "noMatches": "Nicio potrivire clară încă. Adaugă subiect, dispoziție sau creator și voi reîncerca.",
+      "lowConfidenceNoScoredResults": "Nicio potrivire de încredere nu a rămas după clasificare. Încearcă un subiect mai larg, adaugă un indiciu despre creator sau schimbă perioada.",
       "lowConfidenceGeneric": "Încrederea căutării a fost scăzută. Adaugă încă un detaliu și încearcă din nou.",
       "genericError": "Ceva nu a funcționat. Încearcă din nou.",
       "platformLabel": "Platformă de căutare",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Alege un punct de pornire, apoi editează-l dacă vrei.",
       "starterQuestionWithMemory": "Data trecută ai căutat {{summary}}. Vrei să pornesc de acolo din nou?",
       "quickStartUserMessage": "Folosește ultimele mele preferințe salvate pentru a găsi videoclipuri acum: {{summary}}",
+      "defaultSearchUserMessage": "Găsește-mi videoclipuri acum.",
       "followUp": {
         "moreLikeQuery": "Găsește mai multe videoclipuri ca \"{{query}}\"",
         "differentCreator": "\"{{query}}\" de la un alt creator sau canal",
@@ -287,12 +292,16 @@
       "stillRunning": "Încă rulează",
       "liveDetailsToggle": "Detalii live",
       "moreActions": "Mai multe acțiuni",
+      "recentEvents": "Evenimente recente",
       "cancelFailed": "Nu s-a putut anula căutarea curentă.",
       "countryGlobal": "Rezultate globale",
       "countryHint": "Lasă gol pentru rezultate globale.",
+      "countryHintDefaultEnglish": "Lasă necompletat pentru ca limba de căutare să fie implicit engleza.",
       "countryLabel": "Țară / regiune țintă",
       "countryPlaceholder": "ex. SUA, Japonia, Spania, Brazilia",
       "countryScope": "Țară: {{country}}",
+      "countryDefaultEnglish": "Țara țintă: engleză implicită",
+      "emptyCopy": "Menționează subiectul, publicul, stilul creatorului sau atmosfera videoclipului pe care vrei să-l găsești. Adaugă țara sau recența doar când contează.",
       "emptyEyebrow": "Căutare ghidată de asistent",
       "emptyTitle": "Descrie videoclipul pe care vrei să-l găsești",
       "languageHint": "Limba de ieșire",
@@ -318,9 +327,8 @@
       "stillWorking": "Încă lucrează...",
       "toggleCopy": "Caută un videoclip sursă pe YouTube fără să părăsești fluxul.",
       "stage": {
-        "strategist": "Planifică căutarea",
-        "discovery": "Caută candidați",
-        "curator": "Clasează potrivirile",
+        "answerer": "Procesare",
+        "planner": "Căutare",
         "retrieval": "Încarcă rezultatele"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Traducere de Calitate",
         "modelOn": "Schiță GPT-5.1 + revizuire GPT-5.4",
+        "modelOnAnthropic": "Ciornă standard + revizie avansată Anthropic",
         "modelOff": "Doar schiță GPT-5.1",
+        "reviewProvider": "Furnizor de revizie",
+        "openAiHighEnd": "Revizie avansată OpenAI",
+        "anthropicHighEnd": "Revizie avansată Anthropic",
         "help": "<b>5× credite</b> • Adaugă fază de revizuire pentru calitate superioară",
         "helpWithEstimate": "<b>5× credite</b> • Soldul tău: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× credite</b> • Include etapa de revizuire",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Traducere (Ciornă)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Model avansat OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Model avansat Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Revizuire",
       "off": "Dezactivat",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Niciun model BYO de recomandare video nu este disponibil acum. Activează OpenAI sau Anthropic BYO pentru această funcție.",
       "videoSuggestionModelRequiresOpenAi": "Necesită deblocarea OpenAI BYO, cheia și comutatorul activat.",
       "videoSuggestionModelRequiresAnthropic": "Necesită deblocarea Anthropic BYO, cheia și comutatorul activat.",
+      "summaryRequiresOpenAi": "Necesită acces la OpenAI BYO și cheie API.",
+      "summaryRequiresAnthropic": "Necesită acces la Anthropic BYO și cheie API.",
       "translationReview": "Traducere (Revizuire)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Mesaj opțional",
     "optionalMessagePlaceholder": "Ce încercai să faci?",
     "sendReport": "Trimite raportul",
-    "reportPrompt": "Ceva nu a funcționat. Raportează acest lucru creatorului pentru o rezolvare rapidă."
+    "reportPrompt": "Ceva nu a funcționat. Raportează acest lucru creatorului pentru o rezolvare rapidă.",
+    "preparingReport": "Se pregătește pachetul de diagnostic...",
+    "reportContextWarning": "O parte din contextul de diagnostic nu a putut fi încărcată. Raportul va include în continuare detalii din această aplicație."
   }
 }

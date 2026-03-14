@@ -1,13 +1,15 @@
 import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { VideoSuggestionModelPreference } from '@shared-types/app';
 import {
   AI_MODEL_DISPLAY_NAMES,
   AI_MODELS,
   STAGE5_REVIEW_TRANSLATION_MODEL,
 } from '../../../shared/constants';
-import { resolveEffectiveVideoSuggestionModel } from '../../../shared/helpers/video-suggestion-model-preference';
+import {
+  resolveEffectiveVideoSuggestionModel,
+} from '../../../shared/helpers/video-suggestion-model-preference';
 import { colors } from '../../styles';
 import { useAiStore } from '../../state';
 import { useUIStore } from '../../state/ui-store';
@@ -29,6 +31,7 @@ import {
   settingsCardTitleStyles,
   settingsMetaTextStyles,
 } from './styles';
+import { getReviewPassLabel, getReviewProviderLabel } from './utils';
 
 type DirectVideoSuggestionModelPreference = Exclude<
   VideoSuggestionModelPreference,
@@ -234,7 +237,7 @@ function getProviderInfo(
 }
 
 export default function ByoProviderPreferencesPanel() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const keyPresent = useAiStore(state => state.keyPresent);
   const anthropicKeyPresent = useAiStore(state => state.anthropicKeyPresent);
@@ -286,11 +289,11 @@ export default function ByoProviderPreferencesPanel() {
   const setSummaryEffortLevel = useUIStore(
     state => state.setSummaryEffortLevel
   );
-  const videoSuggestionModelPreference = useAiStore(
-    state => state.videoSuggestionModelPreference
+  const byoVideoSuggestionModel = useAiStore(
+    state => state.byoVideoSuggestionModel
   );
-  const setVideoSuggestionModelPreference = useAiStore(
-    state => state.setVideoSuggestionModelPreference
+  const setByoVideoSuggestionModel = useAiStore(
+    state => state.setByoVideoSuggestionModel
   );
   const stage5DubbingTtsProvider = useAiStore(
     state => state.stage5DubbingTtsProvider
@@ -376,8 +379,9 @@ export default function ByoProviderPreferencesPanel() {
   const resolvedVideoSuggestionModel = useMemo(
     () =>
       resolveEffectiveVideoSuggestionModel({
-        preference: videoSuggestionModelPreference,
-        apiKeyModeEnabled: useApiKeysMode,
+        // This panel configures BYO behavior, independent of current mode.
+        apiKeyModeEnabled: true,
+        byoModel: byoVideoSuggestionModel,
         translationDraftModel,
         translationReviewModel,
         availableByoModels: [
@@ -392,17 +396,16 @@ export default function ByoProviderPreferencesPanel() {
     [
       canUseAnthropicVideoSuggestionModel,
       canUseOpenAiVideoSuggestionModel,
+      byoVideoSuggestionModel,
       translationDraftModel,
       translationReviewModel,
-      useApiKeysMode,
-      videoSuggestionModelPreference,
     ]
   );
-  const selectedVideoSuggestionModel =
-    videoSuggestionModelPreference === 'default' ||
-    videoSuggestionModelPreference === 'quality'
+  const selectedVideoSuggestionModel: DirectVideoSuggestionModelPreference =
+    byoVideoSuggestionModel === 'follow-draft' ||
+    byoVideoSuggestionModel === 'follow-review'
       ? resolvedVideoSuggestionModel
-      : videoSuggestionModelPreference;
+      : byoVideoSuggestionModel;
   const videoSuggestionUsesDirectGpt =
     selectedVideoSuggestionModel === AI_MODELS.GPT;
   const videoSuggestionUsesDirectGpt54 =
@@ -412,16 +415,124 @@ export default function ByoProviderPreferencesPanel() {
   const videoSuggestionUsesOpus =
     selectedVideoSuggestionModel === AI_MODELS.CLAUDE_OPUS;
   const showVideoSuggestionRuntimeHint =
-    !useApiKeysMode &&
-    videoSuggestionModelPreference !== resolvedVideoSuggestionModel;
+    useApiKeysMode && selectedVideoSuggestionModel !== resolvedVideoSuggestionModel;
+  const videoSuggestionLegacyFollowHint =
+    byoVideoSuggestionModel === 'follow-draft'
+      ? String(
+          t(
+            'settings.byoPreferences.videoSuggestionLegacyFollowDraft',
+            'Legacy BYO setting preserved: follows your draft translation model until you choose a direct model.'
+          )
+        )
+      : byoVideoSuggestionModel === 'follow-review'
+        ? String(
+            t(
+              'settings.byoPreferences.videoSuggestionLegacyFollowReview',
+              'Legacy BYO setting preserved: follows your review translation model until you choose a direct model.'
+            )
+          )
+        : null;
   const videoSuggestionRuntimeHint = showVideoSuggestionRuntimeHint
     ? `${String(
-        t('settings.byoPreferences.stage5Credits', 'Stage5 credits')
+        t(
+          'settings.byoPreferences.runtimeFallback',
+          'Runtime fallback in API key mode'
+        )
       )} • ${
         AI_MODEL_DISPLAY_NAMES[resolvedVideoSuggestionModel] ??
         resolvedVideoSuggestionModel
       }`
     : null;
+  const videoSuggestionFooter = [videoSuggestionLegacyFollowHint, videoSuggestionRuntimeHint]
+    .filter((value): value is string => Boolean(value && value.trim()))
+    .join(' • ');
+  const handleVideoSuggestionModelChange = async (
+    value: DirectVideoSuggestionModelPreference
+  ) => {
+    const result = await setByoVideoSuggestionModel(value);
+    if (!result.success) {
+      console.error(
+        'Failed to update BYO video suggestion model:',
+        result.error
+      );
+    }
+  };
+  const videoSuggestionOptions = useMemo<PreferenceRowProps['options']>(() => {
+    const options: PreferenceRowProps['options'] = [
+      {
+        value: AI_MODELS.GPT,
+        label: t(
+          BYO_PROVIDERS.videoSuggestion.gpt.labelKey,
+          BYO_PROVIDERS.videoSuggestion.gpt.fallback
+        ),
+        price: BYO_PROVIDERS.videoSuggestion.gpt.price,
+        selected: videoSuggestionUsesDirectGpt,
+        disabled: !canUseOpenAiVideoSuggestionModel,
+        disabledReason: t(
+          'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
+          'Requires OpenAI BYO unlock, key, and toggle.'
+        ),
+        onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.GPT),
+      },
+      {
+        value: STAGE5_REVIEW_TRANSLATION_MODEL,
+        label: t(
+          BYO_PROVIDERS.videoSuggestion.gptHigh.labelKey,
+          BYO_PROVIDERS.videoSuggestion.gptHigh.fallback
+        ),
+        price: BYO_PROVIDERS.videoSuggestion.gptHigh.price,
+        selected: videoSuggestionUsesDirectGpt54,
+        disabled: !canUseOpenAiVideoSuggestionModel,
+        disabledReason: t(
+          'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
+          'Requires OpenAI BYO unlock, key, and toggle.'
+        ),
+        onSelect: () =>
+          handleVideoSuggestionModelChange(STAGE5_REVIEW_TRANSLATION_MODEL),
+      },
+      {
+        value: AI_MODELS.CLAUDE_SONNET,
+        label: t(
+          BYO_PROVIDERS.videoSuggestion.sonnet.labelKey,
+          BYO_PROVIDERS.videoSuggestion.sonnet.fallback
+        ),
+        price: BYO_PROVIDERS.videoSuggestion.sonnet.price,
+        selected: videoSuggestionUsesSonnet,
+        disabled: !canUseAnthropicVideoSuggestionModel,
+        disabledReason: t(
+          'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
+          'Requires Anthropic BYO unlock, key, and toggle.'
+        ),
+        onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_SONNET),
+      },
+      {
+        value: AI_MODELS.CLAUDE_OPUS,
+        label: t(
+          BYO_PROVIDERS.videoSuggestion.opus.labelKey,
+          BYO_PROVIDERS.videoSuggestion.opus.fallback
+        ),
+        price: BYO_PROVIDERS.videoSuggestion.opus.price,
+        selected: videoSuggestionUsesOpus,
+        disabled: !canUseAnthropicVideoSuggestionModel,
+        disabledReason: t(
+          'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
+          'Requires Anthropic BYO unlock, key, and toggle.'
+        ),
+        onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_OPUS),
+      },
+    ];
+
+    return options;
+  }, [
+    canUseAnthropicVideoSuggestionModel,
+    canUseOpenAiVideoSuggestionModel,
+    handleVideoSuggestionModelChange,
+    t,
+    videoSuggestionUsesDirectGpt,
+    videoSuggestionUsesDirectGpt54,
+    videoSuggestionUsesOpus,
+    videoSuggestionUsesSonnet,
+  ]);
 
   const handleTranscriptionProviderChange = async (
     provider: 'elevenlabs' | 'openai'
@@ -481,46 +592,6 @@ export default function ByoProviderPreferencesPanel() {
     setSummaryEffortLevel(effort);
     await handleSummaryProviderChange(provider === 'anthropic');
   };
-
-  const handleVideoSuggestionModelChange = async (
-    value: DirectVideoSuggestionModelPreference
-  ) => {
-    const result = await setVideoSuggestionModelPreference(value);
-    if (!result.success) {
-      console.error(
-        'Failed to update video suggestion model preference:',
-        result.error
-      );
-    }
-  };
-
-  useEffect(() => {
-    if (!useApiKeysMode) return;
-    if (
-      videoSuggestionModelPreference === 'default' ||
-      videoSuggestionModelPreference === 'quality'
-    ) {
-      return;
-    }
-    if (videoSuggestionModelPreference === resolvedVideoSuggestionModel) return;
-
-    void (async () => {
-      const result = await setVideoSuggestionModelPreference(
-        resolvedVideoSuggestionModel
-      );
-      if (!result.success) {
-        console.error(
-          'Failed to coerce unsupported video suggestion model preference:',
-          result.error
-        );
-      }
-    })();
-  }, [
-    resolvedVideoSuggestionModel,
-    setVideoSuggestionModelPreference,
-    useApiKeysMode,
-    videoSuggestionModelPreference,
-  ]);
 
   if (!showStackPanel) return null;
 
@@ -616,7 +687,7 @@ export default function ByoProviderPreferencesPanel() {
 
       {showTranslationRows && (
         <PreferenceRow
-          title={t('settings.byoPreferences.reviewPass', 'Review Pass')}
+          title={getReviewPassLabel(t, i18n)}
           hasChoice={hasReviewChoice}
           radioName="reviewPass"
           options={[
@@ -628,33 +699,27 @@ export default function ByoProviderPreferencesPanel() {
             },
             {
               value: 'openai',
-              label: t(
-                BYO_PROVIDERS.review.openai.labelKey,
-                BYO_PROVIDERS.review.openai.fallback
-              ),
+              label: getReviewProviderLabel(t, i18n, 'openai'),
               price: BYO_PROVIDERS.review.openai.price,
               selected:
                 qualityTranslation && effectiveReviewProvider === 'openai',
               disabled: !hasOpenAiConfigured,
               disabledReason: t(
-                'settings.byoPreferences.reviewRequiresOpenAi',
-                'Requires OpenAI BYO unlock and key.'
+                'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
+                'Requires OpenAI BYO unlock, key, and toggle.'
               ),
               onSelect: () => void handleReviewModeChange('openai'),
             },
             {
               value: 'anthropic',
-              label: t(
-                BYO_PROVIDERS.review.anthropic.labelKey,
-                BYO_PROVIDERS.review.anthropic.fallback
-              ),
+              label: getReviewProviderLabel(t, i18n, 'anthropic'),
               price: BYO_PROVIDERS.review.anthropic.price,
               selected:
                 qualityTranslation && effectiveReviewProvider === 'anthropic',
               disabled: !hasAnthropicConfigured,
               disabledReason: t(
-                'settings.byoPreferences.reviewRequiresAnthropic',
-                'Requires Anthropic BYO unlock and key.'
+                'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
+                'Requires Anthropic BYO unlock, key, and toggle.'
               ),
               onSelect: () => void handleReviewModeChange('anthropic'),
             },
@@ -776,73 +841,7 @@ export default function ByoProviderPreferencesPanel() {
           )}
           hasChoice={hasVideoSuggestionChoice}
           radioName="videoSuggestionModel"
-          options={[
-            {
-              value: AI_MODELS.GPT,
-              label: t(
-                BYO_PROVIDERS.videoSuggestion.gpt.labelKey,
-                BYO_PROVIDERS.videoSuggestion.gpt.fallback
-              ),
-              price: BYO_PROVIDERS.videoSuggestion.gpt.price,
-              selected: videoSuggestionUsesDirectGpt,
-              disabled: !canUseOpenAiVideoSuggestionModel,
-              disabledReason: t(
-                'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
-                'Requires OpenAI BYO unlock, key, and toggle.'
-              ),
-              onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.GPT),
-            },
-            {
-              value: STAGE5_REVIEW_TRANSLATION_MODEL,
-              label: t(
-                BYO_PROVIDERS.videoSuggestion.gptHigh.labelKey,
-                BYO_PROVIDERS.videoSuggestion.gptHigh.fallback
-              ),
-              price: BYO_PROVIDERS.videoSuggestion.gptHigh.price,
-              selected: videoSuggestionUsesDirectGpt54,
-              disabled: !canUseOpenAiVideoSuggestionModel,
-              disabledReason: t(
-                'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
-                'Requires OpenAI BYO unlock, key, and toggle.'
-              ),
-              onSelect: () =>
-                handleVideoSuggestionModelChange(
-                  STAGE5_REVIEW_TRANSLATION_MODEL
-                ),
-            },
-            {
-              value: AI_MODELS.CLAUDE_SONNET,
-              label: t(
-                BYO_PROVIDERS.videoSuggestion.sonnet.labelKey,
-                BYO_PROVIDERS.videoSuggestion.sonnet.fallback
-              ),
-              price: BYO_PROVIDERS.videoSuggestion.sonnet.price,
-              selected: videoSuggestionUsesSonnet,
-              disabled: !canUseAnthropicVideoSuggestionModel,
-              disabledReason: t(
-                'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
-                'Requires Anthropic BYO unlock, key, and toggle.'
-              ),
-              onSelect: () =>
-                handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_SONNET),
-            },
-            {
-              value: AI_MODELS.CLAUDE_OPUS,
-              label: t(
-                BYO_PROVIDERS.videoSuggestion.opus.labelKey,
-                BYO_PROVIDERS.videoSuggestion.opus.fallback
-              ),
-              price: BYO_PROVIDERS.videoSuggestion.opus.price,
-              selected: videoSuggestionUsesOpus,
-              disabled: !canUseAnthropicVideoSuggestionModel,
-              disabledReason: t(
-                'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
-                'Requires Anthropic BYO unlock, key, and toggle.'
-              ),
-              onSelect: () =>
-                handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_OPUS),
-            },
-          ]}
+          options={videoSuggestionOptions}
           infoProvider={{
             label: t(
               'settings.byoPreferences.videoSuggestionModelUnavailable',
@@ -850,7 +849,7 @@ export default function ByoProviderPreferencesPanel() {
             ),
             price: '',
           }}
-          footer={videoSuggestionRuntimeHint}
+          footer={videoSuggestionFooter || null}
         />
       )}
     </div>

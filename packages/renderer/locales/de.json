@@ -176,6 +176,8 @@
       "sourceHint": "Suchquelle",
       "searchDetails": "Suchdetails",
       "introTitle": "Beschreibe die Art von Video, die du möchtest.",
+      "introCopy": "Starte mit einem Thema, einer Stimmung, einem Creator oder einer Zielgruppe. Füge ein Land oder wie aktuell es sein soll nur hinzu, wenn es wichtig ist.",
+      "starterQuestion": "Nach welchen Videos suchst du?",
       "defaultFollowUp": "Erzähl mir etwas mehr und ich verfeinere die Suche.",
       "errorMessage": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
       "composerTitle": "Der KI sagen, was sie finden soll",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Suche momentan nicht möglich. Versuche es gleich nochmal.",
+      "noMatches": "Noch keine passenden Ergebnisse. Füge Thema, Stimmung oder Creator hinzu und ich suche erneut.",
+      "lowConfidenceNoScoredResults": "Keine verlässlichen Treffer haben das Ranking überstanden. Versuche ein breiteres Thema, füge einen Hinweis zum Creator hinzu oder ändere den Aktualitätsfilter.",
       "lowConfidenceGeneric": "Die Suche war wenig treffsicher. Füge noch ein Detail hinzu und versuche es erneut.",
       "genericError": "Etwas ist schiefgelaufen. Versuche es erneut.",
       "platformLabel": "Suchplattform",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Wähle einen Einstieg und passe ihn bei Bedarf an.",
       "starterQuestionWithMemory": "Zuletzt hast du nach {{summary}} gesucht. Soll ich dort wieder anfangen?",
       "quickStartUserMessage": "Nutze meine zuletzt gespeicherten Einstellungen, um jetzt Videos zu finden: {{summary}}",
+      "defaultSearchUserMessage": "Finde jetzt Videos für mich.",
       "followUp": {
         "moreLikeQuery": "Finde mehr Videos wie \"{{query}}\"",
         "differentCreator": "\"{{query}}\" von einem anderen Creator oder Kanal",
@@ -287,12 +292,16 @@
       "stillRunning": "Läuft noch",
       "liveDetailsToggle": "Live-Details",
       "moreActions": "Weitere Aktionen",
+      "recentEvents": "Aktuelle Ereignisse",
       "cancelFailed": "Die aktuelle Suche konnte nicht abgebrochen werden.",
       "countryGlobal": "Globale Ergebnisse",
       "countryHint": "Leer lassen für globale Ergebnisse.",
+      "countryHintDefaultEnglish": "Leer lassen, um Englisch als Standardsprache für die Suche zu verwenden.",
       "countryLabel": "Zielland / Zielregion",
       "countryPlaceholder": "z. B. USA, Japan, Spanien, Brasilien",
       "countryScope": "Land: {{country}}",
+      "countryDefaultEnglish": "Zielland: Englisch als Standard",
+      "emptyCopy": "Nenne Thema, Zielgruppe, Creator-Stil oder Stimmung des gesuchten Videos. Land oder Aktualität nur angeben, wenn es wichtig ist.",
       "emptyEyebrow": "Assistentengestützte Suche",
       "emptyTitle": "Beschreibe das Video, das du finden möchtest",
       "languageHint": "Ausgabesprache",
@@ -318,9 +327,8 @@
       "stillWorking": "Noch in Arbeit...",
       "toggleCopy": "Durchsuche YouTube nach einem Quellvideo, ohne den Workflow zu verlassen.",
       "stage": {
-        "strategist": "Suche planen",
-        "discovery": "Kandidaten suchen",
-        "curator": "Treffer bewerten",
+        "answerer": "Anfrage verarbeiten",
+        "planner": "Suche erstellen",
         "retrieval": "Ergebnisse laden"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Hochwertige Übersetzung",
         "modelOn": "GPT-5.1-Entwurf + GPT-5.4-Review",
+        "modelOnAnthropic": "Standardentwurf + erweiterte Prüfung mit Anthropic",
         "modelOff": "Nur GPT-5.1-Entwurf",
+        "reviewProvider": "Prüfungsanbieter",
+        "openAiHighEnd": "Erweiterte Prüfung mit OpenAI",
+        "anthropicHighEnd": "Erweiterte Prüfung mit Anthropic",
         "help": "Ein: umfasst eine Prüfphase (~5× mehr Credits/Zeit). Aus: überspringt die Prüfung.",
         "helpWithEstimate": "Prüfung verwendet ~5× mehr Credits. Ihre Credits: ~{{normalTime}} normal, ~{{hqTime}} HQ.",
         "helpOn": "<b>5× Credits</b> • Mit Review-Durchgang",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Übersetzung (Entwurf)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Erweitertes OpenAI-Modell",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Erweitertes Anthropic-Modell",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Übersetzung (Prüfung)",
       "off": "Aus",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Derzeit ist kein BYO-Modell für Videoempfehlungen verfügbar. Aktiviere OpenAI oder Anthropic BYO für diese Funktion.",
       "videoSuggestionModelRequiresOpenAi": "Erfordert OpenAI-BYO-Freischaltung, Schlüssel und Aktivierung.",
       "videoSuggestionModelRequiresAnthropic": "Erfordert Anthropic-BYO-Freischaltung, Schlüssel und Aktivierung.",
+      "summaryRequiresOpenAi": "Erfordert OpenAI-BYO-Zugang und einen API-Schlüssel.",
+      "summaryRequiresAnthropic": "Erfordert Anthropic-BYO-Zugang und einen API-Schlüssel.",
       "translationReview": "Übersetzung (Prüfung)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Optionale Nachricht",
     "optionalMessagePlaceholder": "Was hast du versucht zu tun?",
     "sendReport": "Bericht senden",
-    "reportPrompt": "Etwas ist schiefgelaufen. Melde dies dem Entwickler für eine schnelle Behebung."
+    "reportPrompt": "Etwas ist schiefgelaufen. Melde dies dem Entwickler für eine schnelle Behebung.",
+    "preparingReport": "Diagnosepaket wird vorbereitet...",
+    "reportContextWarning": "Ein Teil des Diagnosekontexts konnte nicht geladen werden. Der Bericht enthält weiterhin Details aus dieser App."
   }
 }

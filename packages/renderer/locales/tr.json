@@ -176,6 +176,8 @@
       "sourceHint": "Arama kaynağı",
       "searchDetails": "Arama ayrıntıları",
       "introTitle": "İstediğin video türünü açıkla.",
+      "introCopy": "Bir konu, ruh hali, içerik üreticisi veya kitleyle başla. Ülke bilgisini ya da ne kadar güncel olması gerektiğini yalnızca önemliyse ekle.",
+      "starterQuestion": "Ne tür videolar arıyorsun?",
       "defaultFollowUp": "Biraz daha anlat, aramayı daraltayım.",
       "errorMessage": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
       "composerTitle": "AI'ya ne bulacağını söyle",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Şu anda arama yapamıyorum. Biraz sonra tekrar deneyin.",
+      "noMatches": "Henüz iyi eşleşme yok. Konu, ruh hali veya içerik üretici ekleyin, tekrar deneyeyim.",
+      "lowConfidenceNoScoredResults": "Hiçbir güvenilir eşleşme sıralamayı geçemedi. Daha geniş bir konu dene, içerik üreticisiyle ilgili bir ipucu ekle ya da ne kadar güncel olması gerektiğini değiştir.",
       "lowConfidenceGeneric": "Arama güveni düşüktü. Bir ayrıntı daha ekleyip yeniden dene.",
       "genericError": "Bir şeyler ters gitti. Tekrar deneyin.",
       "platformLabel": "Arama platformu",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Bir başlangıç noktası seç, sonra istersen düzenle.",
       "starterQuestionWithMemory": "Geçen sefer {{summary}} için arama yaptın. Oradan yeniden başlamamı ister misin?",
       "quickStartUserMessage": "Son kaydettiğim ayarları kullanarak şimdi video bul: {{summary}}",
+      "defaultSearchUserMessage": "Benim için şimdi videolar bul.",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\" gibi daha fazla video bul",
         "differentCreator": "\"{{query}}\" için başka bir üretici veya kanaldan sonuçlar",
@@ -287,12 +292,16 @@
       "stillRunning": "Hâlâ çalışıyor",
       "liveDetailsToggle": "Canlı ayrıntılar",
       "moreActions": "Daha fazla işlem",
+      "recentEvents": "Son olaylar",
       "cancelFailed": "Geçerli arama iptal edilemedi.",
       "countryGlobal": "Küresel sonuçlar",
       "countryHint": "Küresel sonuçlar için boş bırakın.",
+      "countryHintDefaultEnglish": "Boş bırakırsanız arama dili varsayılan olarak İngilizce olur.",
       "countryLabel": "Hedef ülke / bölge",
       "countryPlaceholder": "ör. ABD, Japonya, İspanya, Brezilya",
       "countryScope": "Ülke: {{country}}",
+      "countryDefaultEnglish": "Hedef ülke: varsayılan İngilizce",
+      "emptyCopy": "Aradığınız videonun konusunu, hedef kitlesini, içerik üreticisinin tarzını veya ruh halini belirtin. Ülke ya da zaman filtresini yalnızca önemliyse ekleyin.",
       "emptyEyebrow": "Asistan yardımıyla arama",
       "emptyTitle": "Bulmak istediğiniz videoyu tarif edin",
       "languageHint": "Çıkış dili",
@@ -318,9 +327,8 @@
       "stillWorking": "Hâlâ çalışıyor...",
       "toggleCopy": "İş akışından çıkmadan YouTube'da kaynak video arayın.",
       "stage": {
-        "strategist": "Aramayı planla",
-        "discovery": "Adayları ara",
-        "curator": "Eşleşmeleri sırala",
+        "answerer": "İşleme",
+        "planner": "Arama",
         "retrieval": "Sonuçları yükle"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Kaliteli Çeviri",
         "modelOn": "GPT-5.1 taslak + GPT-5.4 inceleme",
+        "modelOnAnthropic": "Standart taslak + Anthropic üst düzey inceleme",
         "modelOff": "Yalnızca GPT-5.1 taslak",
+        "reviewProvider": "İnceleme sağlayıcısı",
+        "openAiHighEnd": "OpenAI üst düzey inceleme",
+        "anthropicHighEnd": "Anthropic üst düzey inceleme",
         "help": "<b>5× kredi</b> • Daha yüksek kalite için inceleme aşaması ekler",
         "helpWithEstimate": "<b>5× kredi</b> • Bakiyeniz: ~{{normalTime}} (normal) / ~{{hqTime}} (yk)",
         "helpOn": "<b>5× kredi</b> • İnceleme aşaması dahil",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Çeviri (Taslak)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI üst düzey model",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic üst düzey model",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "İnceleme",
       "off": "Kapalı",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Şu anda kullanılabilir bir BYO video öneri modeli yok. Bu özellik için OpenAI veya Anthropic BYO'yu etkinleştirin.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO kilidi, anahtar ve açık geçiş gerekir.",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO kilidi, anahtar ve açık geçiş gerekir.",
+      "summaryRequiresOpenAi": "OpenAI BYO erişimi ve API anahtarı gerekir.",
+      "summaryRequiresAnthropic": "Anthropic BYO erişimi ve API anahtarı gerekir.",
       "translationReview": "Çeviri (İnceleme)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "İsteğe bağlı mesaj",
     "optionalMessagePlaceholder": "Ne yapmaya çalışıyordunuz?",
     "sendReport": "Rapor gönder",
-    "reportPrompt": "Bir şeyler ters gitti. Hızlı düzeltme için bunu geliştiriciye bildirin."
+    "reportPrompt": "Bir şeyler ters gitti. Hızlı düzeltme için bunu geliştiriciye bildirin.",
+    "preparingReport": "Tanılama paketi hazırlanıyor...",
+    "reportContextWarning": "Tanılama bağlamının bir kısmı yüklenemedi. Rapor yine de bu uygulamaya ait ayrıntıları içerecek."
   }
 }

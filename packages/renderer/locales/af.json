@@ -176,6 +176,8 @@
       "sourceHint": "Soekbron",
       "searchDetails": "Soekbesonderhede",
       "introTitle": "Beskryf watter soort video jy wil hê.",
+      "introCopy": "Begin met 'n onderwerp, stemming, skepper of gehoor. Voeg land of tydperk net by as dit saak maak.",
+      "starterQuestion": "Watter tipe video's soek jy?",
       "defaultFollowUp": "Vertel my bietjie meer en ek sal die soektog verfyn.",
       "errorMessage": "Iets het fout gegaan. Probeer asseblief weer.",
       "composerTitle": "Sê vir AI wat om te vind",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Kon nie nou soek nie. Probeer oor 'n oomblik weer.",
+      "noMatches": "Nog geen sterk resultate nie. Voeg onderwerp, stemming of skepper by en ek sal weer probeer.",
+      "lowConfidenceNoScoredResults": "Geen betroubare treffers het die rangorde oorleef nie. Probeer 'n breër onderwerp, voeg 'n skepperwenk by, of verander die tydperk.",
       "lowConfidenceGeneric": "Soekvertroue was laag. Voeg nog een detail by en probeer weer.",
       "genericError": "Iets het fout gegaan. Probeer weer.",
       "platformLabel": "Soekplatform",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Kies 'n beginpunt en wysig dit as jy wil.",
       "starterQuestionWithMemory": "Laas het jy vir {{summary}} gesoek. Wil jy hê ek moet weer daar begin?",
       "quickStartUserMessage": "Gebruik my laaste gestoorde instellings om nou video's te vind: {{summary}}",
+      "defaultSearchUserMessage": "Soek nou vir my video's.",
       "followUp": {
         "moreLikeQuery": "Vind meer video's soos \"{{query}}\"",
         "differentCreator": "\"{{query}}\" van 'n ander skepper of kanaal",
@@ -287,12 +292,16 @@
       "stillRunning": "Nog besig",
       "liveDetailsToggle": "Regstreekse besonderhede",
       "moreActions": "Meer aksies",
+      "recentEvents": "Onlangse gebeure",
       "cancelFailed": "Kon nie die huidige soektog kanselleer nie.",
       "countryGlobal": "Globale resultate",
       "countryHint": "Laat leeg vir globale resultate.",
+      "countryHintDefaultEnglish": "Laat leeg om die soektaal by verstek Engels te maak.",
       "countryLabel": "Teikenland / streek",
       "countryPlaceholder": "bv. US, Japan, Spain, Brazil",
       "countryScope": "Land: {{country}}",
+      "countryDefaultEnglish": "Teikenland: Engels by verstek",
+      "emptyCopy": "Noem die onderwerp, gehoor, skepperstyl of stemming van die video wat jy soek. Voeg land of tyd net by wanneer dit saak maak.",
       "emptyEyebrow": "Soek met hulp van die assistent",
       "emptyTitle": "Beskryf die video wat jy wil vind",
       "languageHint": "Uitsettaal",
@@ -318,9 +327,8 @@
       "stillWorking": "Werk nog...",
       "toggleCopy": "Soek YouTube vir 'n bronvideo sonder om die werkvloei te verlaat.",
       "stage": {
-        "strategist": "Beplan soektog",
-        "discovery": "Soek kandidate",
-        "curator": "Rangskik treffers",
+        "answerer": "Verwerk navraag",
+        "planner": "Bou soektog",
         "retrieval": "Laai resultate"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Kwaliteit-vertaling",
         "modelOn": "GPT-5.1 konsep + GPT-5.4 hersiening",
+        "modelOnAnthropic": "Standaard konsep + gevorderde hersiening deur Anthropic",
         "modelOff": "Slegs GPT-5.1-konsep",
+        "reviewProvider": "Hersieningsverskaffer",
+        "openAiHighEnd": "Gevorderde hersiening deur OpenAI",
+        "anthropicHighEnd": "Gevorderde hersiening deur Anthropic",
         "help": "<b>5× krediete</b> • Voeg hersienfase by vir hoër kwaliteit",
         "helpWithEstimate": "<b>5× krediete</b> • Jou balans: ~{{normalTime}} (normaal) / ~{{hqTime}} (hk)",
         "helpOn": "<b>5× krediete</b> • Sluit hersieningspas in",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Vertaling (Konsep)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Gevorderde model van OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Gevorderde model van Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Vertaling (Hersiening)",
       "off": "Af",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Geen BYO-video-aanbevelingsmodel is tans beskikbaar nie. Aktiveer OpenAI of Anthropic BYO vir hierdie funksie.",
       "videoSuggestionModelRequiresOpenAi": "Vereis OpenAI BYO-ontsluiting, sleutel en skakelaar.",
       "videoSuggestionModelRequiresAnthropic": "Vereis Anthropic BYO-ontsluiting, sleutel en skakelaar.",
+      "summaryRequiresOpenAi": "Vereis toegang tot OpenAI BYO en 'n API key.",
+      "summaryRequiresAnthropic": "Vereis toegang tot Anthropic BYO en 'n API key.",
       "translationReview": "Vertaling (Hersiening)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Opsionele boodskap",
     "optionalMessagePlaceholder": "Wat het jy probeer doen?",
     "sendReport": "Stuur verslag",
-    "reportPrompt": "Iets het fout gegaan. Rapporteer dit aan die skepper vir 'n vinnige regstelling."
+    "reportPrompt": "Iets het fout gegaan. Rapporteer dit aan die skepper vir 'n vinnige regstelling.",
+    "preparingReport": "Diagnostiese bondel word voorberei...",
+    "reportContextWarning": "Sommige diagnostiese konteks kon nie gelaai word nie. Die verslag sal steeds besonderhede uit hierdie toepassing insluit."
   }
 }

@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
-import type { VideoSuggestionModelPreference } from '@shared-types/app';
+import type {
+  ByoVideoSuggestionModel,
+  Stage5VideoSuggestionMode,
+  VideoSuggestionModelPreference,
+} from '@shared-types/app';
+import {
+  normalizeByoVideoSuggestionModel,
+  normalizeStage5VideoSuggestionMode,
+  resolveVideoSuggestionPreferenceForMode,
+} from '../../shared/helpers/video-suggestion-model-preference';
 import { openApiKeysRequired } from './modal-store';
 import {
   hasApiKeyModeActiveCoverage,
@@ -12,6 +21,19 @@ import {
  * Used by checkAndDisableApiKeyModeIfNeeded to ensure only one check runs at a time.
  */
 let apiKeyModeCheckInProgress = false;
+
+function resolveActiveVideoSuggestionPreference(
+  state: Pick<
+    AiStoreState,
+    'useApiKeysMode' | 'stage5VideoSuggestionMode' | 'byoVideoSuggestionModel'
+  >
+): VideoSuggestionModelPreference {
+  return resolveVideoSuggestionPreferenceForMode({
+    apiKeyModeEnabled: state.useApiKeysMode,
+    stage5Mode: state.stage5VideoSuggestionMode,
+    byoModel: state.byoVideoSuggestionModel,
+  });
+}
 
 /**
  * Check and disable API key mode if no full BYO coverage exists.
@@ -34,7 +56,15 @@ async function checkAndDisableApiKeyModeIfNeeded(
 
     if (!hasApiKeyModeActiveCoverage(state)) {
       await SystemIPC.setApiKeyModeEnabled(false);
-      set({ useApiKeysMode: false });
+      set({
+        useApiKeysMode: false,
+        videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference(
+          {
+            ...state,
+            useApiKeysMode: false,
+          }
+        ),
+      });
       openApiKeysRequired();
     }
   } catch (err) {
@@ -68,8 +98,12 @@ interface AiStoreState {
   preferClaudeReview: boolean;
   // Claude summary preference (use Claude on BYO summary paths instead of GPT)
   preferClaudeSummary: boolean;
-  // Video suggestion model preference
+  // Active preference currently used by runtime (derived from mode + split settings).
   videoSuggestionModelPreference: VideoSuggestionModelPreference;
+  // Stage5 credits preference (standard/high).
+  stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
+  // BYO model preference (direct model + migration-only legacy follow states).
+  byoVideoSuggestionModel: ByoVideoSuggestionModel;
   // Transcription provider preference
   preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
   // Dubbing provider preference
@@ -127,6 +161,15 @@ interface AiStoreState {
     value: boolean
   ) => Promise<{ success: boolean; error?: string }>;
   // Video suggestion model preference actions
+  syncStage5VideoSuggestionMode: () => Promise<void>;
+  setStage5VideoSuggestionMode: (
+    value: Stage5VideoSuggestionMode
+  ) => Promise<{ success: boolean; error?: string }>;
+  syncByoVideoSuggestionModel: () => Promise<void>;
+  setByoVideoSuggestionModel: (
+    value: ByoVideoSuggestionModel
+  ) => Promise<{ success: boolean; error?: string }>;
+  // Legacy compatibility wrappers.
   syncVideoSuggestionModelPreference: () => Promise<void>;
   setVideoSuggestionModelPreference: (
     value: VideoSuggestionModelPreference
@@ -528,8 +571,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     preferClaudeReview: false,
     // Claude summary preference (defaults to true - prefer Claude on BYO summary paths)
     preferClaudeSummary: true,
-    // Video suggestion model preference
-    videoSuggestionModelPreference: 'default',
+    // Video suggestion model settings (split by mode)
+    stage5VideoSuggestionMode: 'standard',
+    byoVideoSuggestionModel: 'gpt-5.1',
+    videoSuggestionModelPreference: 'gpt-5.1',
     // Transcription provider preference (defaults to ElevenLabs for highest quality)
     preferredTranscriptionProvider: 'elevenlabs',
     // Dubbing provider preference (defaults to OpenAI TTS for cost efficiency)
@@ -581,6 +626,18 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         // Apply all BYO settings from the batched call
         if (settingsResult.status === 'fulfilled') {
           const settings = settingsResult.value;
+          const stage5VideoSuggestionMode = normalizeStage5VideoSuggestionMode(
+            settings.stage5VideoSuggestionMode ?? settings.videoSuggestionModelPreference
+          );
+          const byoVideoSuggestionModel = normalizeByoVideoSuggestionModel(
+            settings.byoVideoSuggestionModel ?? settings.videoSuggestionModelPreference
+          );
+          const videoSuggestionModelPreference =
+            resolveVideoSuggestionPreferenceForMode({
+              apiKeyModeEnabled: settings.useApiKeysMode,
+              stage5Mode: stage5VideoSuggestionMode,
+              byoModel: byoVideoSuggestionModel,
+            });
           set({
             keyValue: '',
             keyPresent: settings.openAiKeyPresent,
@@ -601,8 +658,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             preferClaudeTranslation: settings.preferClaudeTranslation,
             preferClaudeReview: settings.preferClaudeReview,
             preferClaudeSummary: settings.preferClaudeSummary,
-            videoSuggestionModelPreference:
-              settings.videoSuggestionModelPreference,
+            stage5VideoSuggestionMode,
+            byoVideoSuggestionModel,
+            videoSuggestionModelPreference,
             // Provider preferences
             preferredTranscriptionProvider:
               settings.preferredTranscriptionProvider,
@@ -633,7 +691,15 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               // Silently disable API key mode so the user sees Stage5 credits.
               try {
                 await SystemIPC.setApiKeyModeEnabled(false);
-                set({ useApiKeysMode: false });
+                const refreshedState = get();
+                set({
+                  useApiKeysMode: false,
+                  videoSuggestionModelPreference:
+                    resolveActiveVideoSuggestionPreference({
+                      ...refreshedState,
+                      useApiKeysMode: false,
+                    }),
+                });
               } catch (err) {
                 console.error(
                   '[AiStore] Failed to auto-disable API key mode:',
@@ -1098,7 +1164,16 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     syncApiKeyMode: async () => {
       try {
         const enabled = await SystemIPC.getApiKeyModeEnabled();
-        set({ useApiKeysMode: Boolean(enabled) });
+        set(state => {
+          const useApiKeysMode = Boolean(enabled);
+          return {
+            useApiKeysMode,
+            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
+              ...state,
+              useApiKeysMode,
+            }),
+          };
+        });
       } catch (err) {
         console.error('[AiStore] Failed to sync API key mode:', err);
       }
@@ -1114,7 +1189,16 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         }
         const result = await SystemIPC.setApiKeyModeEnabled(value);
         if (result.success) {
-          set({ useApiKeysMode: Boolean(value) });
+          set(state => {
+            const useApiKeysMode = Boolean(value);
+            return {
+              useApiKeysMode,
+              videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
+                ...state,
+                useApiKeysMode,
+              }),
+            };
+          });
 
           // When turning ON, auto-enable all providers that have keys and
           // move any legacy Stage5 provider prefs onto a BYO provider.
@@ -1253,11 +1337,119 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       }
     },
 
-    // Video suggestion model preference actions
+    // Video suggestion model settings (split by mode)
+    syncStage5VideoSuggestionMode: async () => {
+      try {
+        const mode = await SystemIPC.getStage5VideoSuggestionMode();
+        set(state => {
+          const stage5VideoSuggestionMode = normalizeStage5VideoSuggestionMode(mode);
+          return {
+            stage5VideoSuggestionMode,
+            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
+              ...state,
+              stage5VideoSuggestionMode,
+            }),
+          };
+        });
+      } catch (err) {
+        console.error(
+          '[AiStore] Failed to sync Stage5 video suggestion mode:',
+          err
+        );
+      }
+    },
+
+    setStage5VideoSuggestionMode: async (value: Stage5VideoSuggestionMode) => {
+      try {
+        const mode = normalizeStage5VideoSuggestionMode(value);
+        const result = await SystemIPC.setStage5VideoSuggestionMode(mode);
+        if (result.success) {
+          set(state => ({
+            stage5VideoSuggestionMode: mode,
+            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
+              ...state,
+              stage5VideoSuggestionMode: mode,
+            }),
+          }));
+        }
+        return result;
+      } catch (err: any) {
+        console.error(
+          '[AiStore] Failed to update Stage5 video suggestion mode:',
+          err
+        );
+        return {
+          success: false,
+          error: err?.message || 'Failed to save preference',
+        };
+      }
+    },
+
+    syncByoVideoSuggestionModel: async () => {
+      try {
+        const model = await SystemIPC.getByoVideoSuggestionModel();
+        set(state => {
+          const byoVideoSuggestionModel = normalizeByoVideoSuggestionModel(model);
+          return {
+            byoVideoSuggestionModel,
+            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
+              ...state,
+              byoVideoSuggestionModel,
+            }),
+          };
+        });
+      } catch (err) {
+        console.error('[AiStore] Failed to sync BYO video suggestion model:', err);
+      }
+    },
+
+    setByoVideoSuggestionModel: async (value: ByoVideoSuggestionModel) => {
+      try {
+        const model = normalizeByoVideoSuggestionModel(value);
+        const result = await SystemIPC.setByoVideoSuggestionModel(model);
+        if (result.success) {
+          set(state => ({
+            byoVideoSuggestionModel: model,
+            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
+              ...state,
+              byoVideoSuggestionModel: model,
+            }),
+          }));
+        }
+        return result;
+      } catch (err: any) {
+        console.error('[AiStore] Failed to update BYO video suggestion model:', err);
+        return {
+          success: false,
+          error: err?.message || 'Failed to save preference',
+        };
+      }
+    },
+
+    // Legacy compatibility wrappers
     syncVideoSuggestionModelPreference: async () => {
       try {
-        const model = await SystemIPC.getVideoSuggestionModelPreference();
-        set({ videoSuggestionModelPreference: model });
+        const [stage5VideoSuggestionMode, byoVideoSuggestionModel] =
+          await Promise.all([
+            SystemIPC.getStage5VideoSuggestionMode(),
+            SystemIPC.getByoVideoSuggestionModel(),
+          ]);
+        set(state => {
+          const normalizedStage5 = normalizeStage5VideoSuggestionMode(
+            stage5VideoSuggestionMode
+          );
+          const normalizedByo =
+            normalizeByoVideoSuggestionModel(byoVideoSuggestionModel);
+          return {
+            stage5VideoSuggestionMode: normalizedStage5,
+            byoVideoSuggestionModel: normalizedByo,
+            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
+              ...state,
+              stage5VideoSuggestionMode: normalizedStage5,
+              byoVideoSuggestionModel: normalizedByo,
+            }),
+          };
+        });
       } catch (err) {
         console.error(
           '[AiStore] Failed to sync video suggestion model preference:',
@@ -1270,17 +1462,14 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       value: VideoSuggestionModelPreference
     ) => {
       try {
-        const result = await SystemIPC.setVideoSuggestionModelPreference(value);
-        if (result.success) {
-          try {
-            const persisted =
-              await SystemIPC.getVideoSuggestionModelPreference();
-            set({ videoSuggestionModelPreference: persisted });
-          } catch {
-            set({ videoSuggestionModelPreference: value });
-          }
+        if (value === 'default' || value === 'quality') {
+          return await get().setStage5VideoSuggestionMode(
+            value === 'quality' ? 'high' : 'standard'
+          );
         }
-        return result;
+        return await get().setByoVideoSuggestionModel(
+          normalizeByoVideoSuggestionModel(value)
+        );
       } catch (err: any) {
         console.error(
           '[AiStore] Failed to update video suggestion model preference:',

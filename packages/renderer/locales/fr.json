@@ -176,6 +176,8 @@
       "sourceHint": "Source de recherche",
       "searchDetails": "Détails de la recherche",
       "introTitle": "Décris le type de vidéo que tu veux.",
+      "introCopy": "Commence par un sujet, une ambiance, un créateur ou un public. Ajoute le pays ou le fait que ce soit récent seulement si c'est important.",
+      "starterQuestion": "Quel type de vidéos cherchez-vous ?",
       "defaultFollowUp": "Dites-m'en un peu plus et j'affinerai la recherche.",
       "errorMessage": "Une erreur est survenue. Veuillez réessayer.",
       "composerTitle": "Dites à l'IA quoi trouver",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Recherche impossible pour le moment. Réessayez dans un instant.",
+      "noMatches": "Pas encore de résultats pertinents. Ajoutez un sujet, une ambiance ou un créateur et je relancerai.",
+      "lowConfidenceNoScoredResults": "Aucune correspondance fiable n'a passé le classement. Essaie un sujet plus large, ajoute un indice sur le créateur ou change le critère de récence.",
       "lowConfidenceGeneric": "Le niveau de confiance de la recherche était faible. Ajoute un détail de plus et réessaie.",
       "genericError": "Une erreur est survenue. Réessayez.",
       "platformLabel": "Plateforme de recherche",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Choisissez un point de départ, puis modifiez-le si vous voulez.",
       "starterQuestionWithMemory": "La dernière fois, tu as recherché {{summary}}. Tu veux que je reparte de là ?",
       "quickStartUserMessage": "Utilise mes dernières préférences enregistrées pour trouver des vidéos maintenant : {{summary}}",
+      "defaultSearchUserMessage": "Trouve des vidéos pour moi maintenant.",
       "followUp": {
         "moreLikeQuery": "Trouvez plus de vidéos comme \"{{query}}\"",
         "differentCreator": "\"{{query}}\" par un autre créateur ou une autre chaîne",
@@ -287,12 +292,16 @@
       "stillRunning": "Toujours en cours",
       "liveDetailsToggle": "Détails en direct",
       "moreActions": "Plus d'actions",
+      "recentEvents": "Événements récents",
       "cancelFailed": "Échec de l'annulation de la recherche en cours.",
       "countryGlobal": "Résultats globaux",
       "countryHint": "Laissez vide pour des résultats globaux.",
+      "countryHintDefaultEnglish": "Laissez vide pour utiliser l'anglais comme langue de recherche par défaut.",
       "countryLabel": "Pays / région cible",
       "countryPlaceholder": "ex. États-Unis, Japon, Espagne, Brésil",
       "countryScope": "Pays : {{country}}",
+      "countryDefaultEnglish": "Pays cible: anglais par défaut",
+      "emptyCopy": "Indiquez le sujet, le public, le style du créateur ou l’ambiance de la vidéo recherchée. Ajoutez le pays ou la récence seulement si nécessaire.",
       "emptyEyebrow": "Recherche guidée par l’assistant",
       "emptyTitle": "Décrivez la vidéo que vous voulez trouver",
       "languageHint": "Langue de sortie",
@@ -318,9 +327,8 @@
       "stillWorking": "Toujours en cours...",
       "toggleCopy": "Recherchez une vidéo source sur YouTube sans quitter le flux.",
       "stage": {
-        "strategist": "Planifier la recherche",
-        "discovery": "Chercher des candidats",
-        "curator": "Classer les correspondances",
+        "answerer": "Traiter la requête",
+        "planner": "Préparer la recherche",
         "retrieval": "Charger les résultats"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Traduction de qualité",
         "modelOn": "Brouillon GPT-5.1 + révision GPT-5.4",
+        "modelOnAnthropic": "Brouillon standard + révision avancée d'Anthropic",
         "modelOff": "Brouillon GPT-5.1 seulement",
+        "reviewProvider": "Fournisseur de révision",
+        "openAiHighEnd": "Révision avancée d'OpenAI",
+        "anthropicHighEnd": "Révision avancée d'Anthropic",
         "help": "Activé : inclut une phase de relecture (~5× plus de crédits/temps). Désactivé : saute la relecture.",
         "helpWithEstimate": "La relecture utilise ~5× plus de crédits. Vos crédits : ~{{normalTime}} normal, ~{{hqTime}} HQ.",
         "helpOn": "<b>5× crédits</b> • Inclut la passe de révision",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Traduction (Brouillon)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Modèle avancé d'OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Modèle avancé d'Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Traduction (Révision)",
       "off": "Désactivé",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Aucun modèle BYO de recommandation vidéo n'est actuellement disponible. Activez OpenAI ou Anthropic BYO pour cette fonctionnalité.",
       "videoSuggestionModelRequiresOpenAi": "Nécessite le déverrouillage BYO OpenAI, une clé et l'activation.",
       "videoSuggestionModelRequiresAnthropic": "Nécessite le déverrouillage BYO Anthropic, une clé et l'activation.",
+      "summaryRequiresOpenAi": "Nécessite l'accès BYO d'OpenAI et une clé API.",
+      "summaryRequiresAnthropic": "Nécessite l'accès BYO d'Anthropic et une clé API.",
       "translationReview": "Traduction (Révision)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Message facultatif",
     "optionalMessagePlaceholder": "Que tentiez-vous de faire ?",
     "sendReport": "Envoyer le rapport",
-    "reportPrompt": "Une erreur est survenue. Signalez-la au créateur pour une correction rapide."
+    "reportPrompt": "Une erreur est survenue. Signalez-la au créateur pour une correction rapide.",
+    "preparingReport": "Préparation du paquet de diagnostic...",
+    "reportContextWarning": "Une partie du contexte de diagnostic n'a pas pu être chargée. Le rapport inclura quand même des détails de cette application."
   }
 }

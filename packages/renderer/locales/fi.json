@@ -176,6 +176,8 @@
       "sourceHint": "Haun lähde",
       "searchDetails": "Haun tiedot",
       "introTitle": "Kuvaile, millaisen videon haluat.",
+      "introCopy": "Aloita aiheesta, tunnelmasta, tekijästä tai yleisöstä. Lisää maa tai ajankohtaisuus vain, jos sillä on merkitystä.",
+      "starterQuestion": "Millaisia videoita etsit?",
       "defaultFollowUp": "Kerro hieman lisää, niin tarkennan hakua.",
       "errorMessage": "Jokin meni pieleen. Yritä uudelleen.",
       "composerTitle": "Kerro AI:lle, mitä etsiä",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "En voi hakea juuri nyt. Yritä hetken kuluttua uudelleen.",
+      "noMatches": "Ei hyviä osumia vielä. Lisää aihe, tunnelma tai tekijä, niin yritän uudelleen.",
+      "lowConfidenceNoScoredResults": "Luotettavia osumia ei jäänyt pisteytyksen jälkeen. Kokeile laajempaa aihetta, lisää vihje tekijästä tai vaihda ajankohtaisuutta.",
       "lowConfidenceGeneric": "Haun varmuus oli heikko. Lisää vielä yksi yksityiskohta ja yritä uudelleen.",
       "genericError": "Jokin meni pieleen. Yritä uudelleen.",
       "platformLabel": "Hakualusta",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Valitse lähtökohta ja muokkaa sitä halutessasi.",
       "starterQuestionWithMemory": "Viimeksi etsit {{summary}}. Haluatko, että aloitan siitä uudelleen?",
       "quickStartUserMessage": "Käytä viimeksi tallentamiani asetuksia ja etsi videoita heti: {{summary}}",
+      "defaultSearchUserMessage": "Etsi minulle videoita nyt.",
       "followUp": {
         "moreLikeQuery": "Löydä lisää videoita kuten \"{{query}}\"",
         "differentCreator": "\"{{query}}\" toiselta tekijältä tai kanavalta",
@@ -287,12 +292,16 @@
       "stillRunning": "Yhä käynnissä",
       "liveDetailsToggle": "Live-yksityiskohdat",
       "moreActions": "Lisää toimintoja",
+      "recentEvents": "Viimeaikaiset tapahtumat",
       "cancelFailed": "Nykyistä hakua ei voitu perua.",
       "countryGlobal": "Globaalit tulokset",
       "countryHint": "Jätä tyhjäksi globaaleja tuloksia varten.",
+      "countryHintDefaultEnglish": "Jätä tyhjäksi, niin haun oletuskieli on englanti.",
       "countryLabel": "Kohdemaa / alue",
       "countryPlaceholder": "esim. USA, Japani, Espanja, Brasilia",
       "countryScope": "Maa: {{country}}",
+      "countryDefaultEnglish": "Kohdemaa: oletuksena englanti",
+      "emptyCopy": "Kerro etsimäsi videon aihe, yleisö, tekijän tyyli tai tunnelma. Lisää maa tai ajankohtaisuus vain tarvittaessa.",
       "emptyEyebrow": "Hae avustajan avulla",
       "emptyTitle": "Kuvaile video, jonka haluat löytää",
       "languageHint": "Kohdekieli",
@@ -318,9 +327,8 @@
       "stillWorking": "Työstetään edelleen...",
       "toggleCopy": "Hae lähdevideo YouTubesta poistumatta työnkulusta.",
       "stage": {
-        "strategist": "Suunnittele haku",
-        "discovery": "Etsi ehdokkaita",
-        "curator": "Järjestä osumat",
+        "answerer": "Käsittele kysely",
+        "planner": "Muodosta haku",
         "retrieval": "Lataa tulokset"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Laadukas käännös",
         "modelOn": "GPT-5.1-luonnos + GPT-5.4-tarkistus",
+        "modelOnAnthropic": "Vakioluonnos + Anthropicin edistynyt tarkistus",
         "modelOff": "Vain GPT-5.1-luonnos",
+        "reviewProvider": "Tarkistuksen tarjoaja",
+        "openAiHighEnd": "OpenAI:n edistynyt tarkistus",
+        "anthropicHighEnd": "Anthropicin edistynyt tarkistus",
         "help": "<b>5× krediittiä</b> • Lisää tarkistusvaiheen paremman laadun saavuttamiseksi",
         "helpWithEstimate": "<b>5× krediittiä</b> • Saldosi: ~{{normalTime}} (normaali) / ~{{hqTime}} (kl)",
         "helpOn": "<b>5× krediittiä</b> • Sisältää tarkistusvaiheen",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Käännös (luonnos)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI:n edistynyt malli",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropicin edistynyt malli",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Käännös (tarkistus)",
       "off": "Pois",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "BYO-videosuositusmallia ei ole tällä hetkellä saatavilla. Ota OpenAI tai Anthropic BYO käyttöön tätä ominaisuutta varten.",
       "videoSuggestionModelRequiresOpenAi": "Vaatii OpenAI BYO -avauksen, avaimen ja aktivoinnin.",
       "videoSuggestionModelRequiresAnthropic": "Vaatii Anthropic BYO -avauksen, avaimen ja aktivoinnin.",
+      "summaryRequiresOpenAi": "Vaatii OpenAI BYO-käytön ja API-avaimen.",
+      "summaryRequiresAnthropic": "Vaatii Anthropic BYO-käytön ja API-avaimen.",
       "translationReview": "Käännös (tarkistus)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Valinnainen viesti",
     "optionalMessagePlaceholder": "Mitä yritit tehdä?",
     "sendReport": "Lähetä raportti",
-    "reportPrompt": "Jokin meni pieleen. Ilmoita tästä kehittäjälle nopeaa korjausta varten."
+    "reportPrompt": "Jokin meni pieleen. Ilmoita tästä kehittäjälle nopeaa korjausta varten.",
+    "preparingReport": "Valmistellaan diagnostiikkapakettia...",
+    "reportContextWarning": "Osaa diagnostiikkakontekstista ei voitu ladata. Raportti sisältää silti tämän sovelluksen tiedot."
   }
 }

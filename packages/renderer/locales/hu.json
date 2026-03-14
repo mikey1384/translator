@@ -176,6 +176,8 @@
       "sourceHint": "Keresési forrás",
       "searchDetails": "Keresési részletek",
       "introTitle": "Írd le, milyen videót szeretnél.",
+      "introCopy": "Kezdd egy témával, hangulattal, alkotóval vagy közönséggel. Országot vagy időszakot csak akkor adj meg, ha fontos.",
+      "starterQuestion": "Milyen videókat keresel?",
       "defaultFollowUp": "Mondj egy kicsit többet, és finomítom a keresést.",
       "errorMessage": "Valami hiba történt. Kérjük, próbáld újra.",
       "composerTitle": "Mondja meg az AI-nak, mit keressen",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Most nem tudok keresni. Próbáld újra egy pillanat múlva.",
+      "noMatches": "Még nincs jó találat. Adj meg témát, hangulatot vagy készítőt, és újrapróbálom.",
+      "lowConfidenceNoScoredResults": "A rangsorolás után nem maradt megbízható találat. Próbálj tágabb témát, adj meg alkotói tippet, vagy válts időszakot.",
       "lowConfidenceGeneric": "A keresés bizonyossága alacsony volt. Adj hozzá még egy részletet, és próbáld újra.",
       "genericError": "Valami hiba történt. Próbáld újra.",
       "platformLabel": "Keresési platform",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Válassz egy kiindulópontot, és szerkeszd át, ha akarod.",
       "starterQuestionWithMemory": "Legutóbb erre kerestél: {{summary}}. Szeretnéd, hogy innen induljak újra?",
       "quickStartUserMessage": "Használd a legutóbb mentett beállításaimat, hogy most rögtön videókat keress: {{summary}}",
+      "defaultSearchUserMessage": "Keress nekem videókat most.",
       "followUp": {
         "moreLikeQuery": "Keress több videót ehhez: \"{{query}}\"",
         "differentCreator": "\"{{query}}\" másik alkotótól vagy csatornától",
@@ -287,12 +292,16 @@
       "stillRunning": "Még fut",
       "liveDetailsToggle": "Élő részletek",
       "moreActions": "További műveletek",
+      "recentEvents": "Legutóbbi események",
       "cancelFailed": "A jelenlegi keresést nem sikerült megszakítani.",
       "countryGlobal": "Globális találatok",
       "countryHint": "Hagyja üresen a globális találatokhoz.",
+      "countryHintDefaultEnglish": "Hagyd üresen, és a keresés nyelve alapértelmezetten angol lesz.",
       "countryLabel": "Célország / régió",
       "countryPlaceholder": "pl. USA, Japán, Spanyolország, Brazília",
       "countryScope": "Ország: {{country}}",
+      "countryDefaultEnglish": "Célország: alapértelmezett az angol",
+      "emptyCopy": "Írd le a keresett videó témáját, közönségét, alkotói stílusát vagy hangulatát. Országot vagy időbeliséget csak akkor adj meg, ha számít.",
       "emptyEyebrow": "Keresés asszisztenssel",
       "emptyTitle": "Írja le, milyen videót keres",
       "languageHint": "Kimeneti nyelv",
@@ -318,9 +327,8 @@
       "stillWorking": "Még dolgozik...",
       "toggleCopy": "Keressen forrásvideót a YouTube-on a folyamat elhagyása nélkül.",
       "stage": {
-        "strategist": "Keresés megtervezése",
-        "discovery": "Jelöltek keresése",
-        "curator": "Találatok rangsorolása",
+        "answerer": "Feldolgozás",
+        "planner": "Keresés",
         "retrieval": "Eredmények betöltése"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Minőségi fordítás",
         "modelOn": "GPT-5.1-vázlat + GPT-5.4-ellenőrzés",
+        "modelOnAnthropic": "Normál vázlat + Anthropic fejlett ellenőrzés",
         "modelOff": "Csak GPT-5.1-vázlat",
+        "reviewProvider": "Ellenőrzési szolgáltató",
+        "openAiHighEnd": "OpenAI fejlett ellenőrzés",
+        "anthropicHighEnd": "Anthropic fejlett ellenőrzés",
         "help": "<b>5× kredit</b> • Ellenőrzési fázist ad hozzá a jobb minőség érdekében",
         "helpWithEstimate": "<b>5× kredit</b> • Egyenleged: ~{{normalTime}} (normál) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× kredit</b> • Tartalmazza az ellenőrzési kört",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Fordítás (vázlat)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI fejlett modell",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic fejlett modell",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Ellenőrzés",
       "off": "Kikapcsolva",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Jelenleg nem érhető el BYO videóajánló modell. Engedélyezze az OpenAI vagy Anthropic BYO-t ehhez a funkcióhoz.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO feloldás, kulcs és bekapcsolt kapcsoló szükséges.",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO feloldás, kulcs és bekapcsolt kapcsoló szükséges.",
+      "summaryRequiresOpenAi": "OpenAI BYO hozzáférést és API-kulcsot igényel.",
+      "summaryRequiresAnthropic": "Anthropic BYO hozzáférést és API-kulcsot igényel.",
       "translationReview": "Fordítás (ellenőrzés)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Opcionális üzenet",
     "optionalMessagePlaceholder": "Mit próbáltál csinálni?",
     "sendReport": "Jelentés küldése",
-    "reportPrompt": "Valami hiba történt. Jelentsd a fejlesztőnek a gyors javításért."
+    "reportPrompt": "Valami hiba történt. Jelentsd a fejlesztőnek a gyors javításért.",
+    "preparingReport": "Diagnosztikai csomag előkészítése...",
+    "reportContextWarning": "A diagnosztikai környezet egy részét nem sikerült betölteni. A jelentés így is tartalmazni fogja ennek az alkalmazásnak a részleteit."
   }
 }

@@ -176,6 +176,8 @@
       "sourceHint": "مصدر البحث",
       "searchDetails": "تفاصيل البحث",
       "introTitle": "صف نوع الفيديو الذي تريده.",
+      "introCopy": "ابدأ بموضوع أو مزاج أو منشئ محتوى أو جمهور. أضف البلد أو حداثة النتائج فقط إذا كان ذلك مهمًا.",
+      "starterQuestion": "ما نوع الفيديوهات التي تبحث عنها؟",
       "defaultFollowUp": "أخبرني بالمزيد وسأحسّن البحث.",
       "errorMessage": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
       "composerTitle": "أخبر AI بما يجب العثور عليه",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "تعذّر البحث الآن. حاول مرة أخرى بعد قليل.",
+      "noMatches": "لا توجد نتائج قوية بعد. أضف الموضوع أو المزاج أو صانع المحتوى وسأعيد المحاولة.",
+      "lowConfidenceNoScoredResults": "لم تنجُ أي نتائج موثوقة من الترتيب. جرّب موضوعًا أوسع، أو أضف إشارة إلى منشئ المحتوى، أو غيّر حداثة النتائج.",
       "lowConfidenceGeneric": "كانت ثقة البحث منخفضة. أضف تفصيلًا آخر وأعد المحاولة.",
       "genericError": "حدث خطأ ما. حاول مرة أخرى.",
       "platformLabel": "منصة البحث",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "اختر نقطة بداية، ثم عدّلها إذا أردت.",
       "starterQuestionWithMemory": "في آخر مرة بحثت عن {{summary}}. هل تريد أن أبدأ من هناك مرة أخرى؟",
       "quickStartUserMessage": "استخدم آخر إعداداتي المحفوظة للعثور على فيديوهات الآن: {{summary}}",
+      "defaultSearchUserMessage": "ابحث لي عن فيديوهات الآن.",
       "followUp": {
         "moreLikeQuery": "اعثر على المزيد من الفيديوهات المشابهة لـ \"{{query}}\"",
         "differentCreator": "\"{{query}}\" من صانع محتوى أو قناة أخرى",
@@ -287,12 +292,16 @@
       "stillRunning": "ما زال جارياً",
       "liveDetailsToggle": "تفاصيل مباشرة",
       "moreActions": "إجراءات إضافية",
+      "recentEvents": "الأحداث الأخيرة",
       "cancelFailed": "تعذّر إلغاء البحث الحالي.",
       "countryGlobal": "نتائج عالمية",
       "countryHint": "اتركه فارغًا للحصول على نتائج عالمية.",
+      "countryHintDefaultEnglish": "اتركه فارغا لتكون لغة البحث الإنجليزية افتراضيا.",
       "countryLabel": "البلد / المنطقة المستهدفة",
       "countryPlaceholder": "مثل: الولايات المتحدة، اليابان، إسبانيا، البرازيل",
       "countryScope": "البلد: {{country}}",
+      "countryDefaultEnglish": "البلد المستهدف: الإنجليزية افتراضيا",
+      "emptyCopy": "اذكر موضوع الفيديو الذي تبحث عنه، أو جمهوره، أو أسلوب صانعه، أو أجواءه. أضف البلد أو حداثة المحتوى فقط عند الحاجة.",
       "emptyEyebrow": "بحث بمساعدة المساعد",
       "emptyTitle": "صف الفيديو الذي تريد العثور عليه",
       "languageHint": "لغة الإخراج",
@@ -318,9 +327,8 @@
       "stillWorking": "ما زال يعمل...",
       "toggleCopy": "ابحث عن فيديو مصدر على YouTube دون مغادرة سير العمل.",
       "stage": {
-        "strategist": "تخطيط البحث",
-        "discovery": "البحث عن المرشحين",
-        "curator": "ترتيب النتائج",
+        "answerer": "معالجة الاستعلام",
+        "planner": "صياغة البحث",
         "retrieval": "تحميل النتائج"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "ترجمة عالية الجودة",
         "modelOn": "مسودة GPT-5.1 + مراجعة GPT-5.4",
+        "modelOnAnthropic": "مسودة قياسية + مراجعة متقدمة من Anthropic",
         "modelOff": "مسودة GPT-5.1 فقط",
+        "reviewProvider": "موفر المراجعة",
+        "openAiHighEnd": "مراجعة متقدمة من OpenAI",
+        "anthropicHighEnd": "مراجعة متقدمة من Anthropic",
         "help": "<b>5× نقاط</b> • يضيف مرحلة مراجعة لجودة أعلى",
         "helpWithEstimate": "<b>5× نقاط</b> • رصيدك: ~{{normalTime}} (عادي) / ~{{hqTime}} (جودة عالية)",
         "helpOn": "<b>5× أرصدة</b> • يتضمن مرحلة المراجعة",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "الترجمة (مسودة)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "نموذج متقدم من OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "نموذج متقدم من Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "مرحلة المراجعة",
       "off": "إيقاف",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "لا يتوفر حاليًا نموذج BYO لتوصيات الفيديو. فعّل OpenAI أو Anthropic BYO لهذه الميزة.",
       "videoSuggestionModelRequiresOpenAi": "يتطلب فتح OpenAI BYO ومفتاحًا وتفعيل المفتاح.",
       "videoSuggestionModelRequiresAnthropic": "يتطلب فتح Anthropic BYO ومفتاحًا وتفعيل المفتاح.",
+      "summaryRequiresOpenAi": "يتطلب الوصول إلى OpenAI BYO ومفتاح API.",
+      "summaryRequiresAnthropic": "يتطلب الوصول إلى Anthropic BYO ومفتاح API.",
       "translationReview": "الترجمة (مراجعة)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "رسالة اختيارية",
     "optionalMessagePlaceholder": "ماذا كنت تحاول أن تفعل؟",
     "sendReport": "إرسال تقرير",
-    "reportPrompt": "حدث خطأ ما. أبلغ المطوّر لإصلاح سريع."
+    "reportPrompt": "حدث خطأ ما. أبلغ المطوّر لإصلاح سريع.",
+    "preparingReport": "جارٍ إعداد حزمة التشخيص...",
+    "reportContextWarning": "تعذر تحميل بعض سياق التشخيص. سيظل التقرير يتضمن تفاصيل من هذا التطبيق."
   }
 }

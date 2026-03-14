@@ -176,6 +176,8 @@
       "sourceHint": "Πηγή αναζήτησης",
       "searchDetails": "Λεπτομέρειες αναζήτησης",
       "introTitle": "Περιγράψτε τι είδους βίντεο θέλετε.",
+      "introCopy": "Ξεκινήστε με θέμα, ύφος, δημιουργό ή κοινό. Προσθέστε χώρα ή χρονικό διάστημα μόνο αν έχει σημασία.",
+      "starterQuestion": "Τι είδους βίντεο αναζητάτε;",
       "defaultFollowUp": "Πείτε μου λίγα παραπάνω και θα βελτιώσω την αναζήτηση.",
       "errorMessage": "Κάτι πήγε στραβά. Παρακαλώ δοκιμάστε ξανά.",
       "composerTitle": "Πείτε στο AI τι να βρει",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Δεν μπορώ να αναζητήσω αυτή τη στιγμή. Δοκιμάστε ξανά σε λίγο.",
+      "noMatches": "Δεν υπάρχουν καλά αποτελέσματα ακόμα. Προσθέστε θέμα, διάθεση ή δημιουργό και θα ξαναδοκιμάσω.",
+      "lowConfidenceNoScoredResults": "Δεν απέμειναν αξιόπιστες αντιστοιχίες μετά την κατάταξη. Δοκιμάστε ευρύτερο θέμα, προσθέστε μια ένδειξη δημιουργού ή αλλάξτε χρονικό διάστημα.",
       "lowConfidenceGeneric": "Η βεβαιότητα της αναζήτησης ήταν χαμηλή. Προσθέστε μία ακόμη λεπτομέρεια και δοκιμάστε ξανά.",
       "genericError": "Κάτι πήγε στραβά. Δοκιμάστε ξανά.",
       "platformLabel": "Πλατφόρμα αναζήτησης",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Διάλεξε ένα σημείο εκκίνησης και επεξεργάσου το αν θέλεις.",
       "starterQuestionWithMemory": "Την τελευταία φορά αναζητήσατε {{summary}}. Θέλετε να ξεκινήσω πάλι από εκεί;",
       "quickStartUserMessage": "Χρησιμοποίησε τις τελευταίες αποθηκευμένες ρυθμίσεις μου για να βρεις βίντεο τώρα: {{summary}}",
+      "defaultSearchUserMessage": "Βρες μου βίντεο τώρα.",
       "followUp": {
         "moreLikeQuery": "Βρες περισσότερα βίντεο σαν το \"{{query}}\"",
         "differentCreator": "\"{{query}}\" από άλλον δημιουργό ή κανάλι",
@@ -287,12 +292,16 @@
       "stillRunning": "Ακόμα εκτελείται",
       "liveDetailsToggle": "Ζωντανές λεπτομέρειες",
       "moreActions": "Περισσότερες ενέργειες",
+      "recentEvents": "Πρόσφατα γεγονότα",
       "cancelFailed": "Αποτυχία ακύρωσης της τρέχουσας αναζήτησης.",
       "countryGlobal": "Παγκόσμια αποτελέσματα",
       "countryHint": "Αφήστε κενό για παγκόσμια αποτελέσματα.",
+      "countryHintDefaultEnglish": "Αφήστε το κενό για προεπιλεγμένη γλώσσα αναζήτησης τα Αγγλικά.",
       "countryLabel": "Χώρα / περιοχή στόχος",
       "countryPlaceholder": "π.χ. ΗΠΑ, Ιαπωνία, Ισπανία, Βραζιλία",
       "countryScope": "Χώρα: {{country}}",
+      "countryDefaultEnglish": "Χώρα στόχος: προεπιλογή τα Αγγλικά",
+      "emptyCopy": "Ανάφερε το θέμα, το κοινό, το ύφος του δημιουργού ή την ατμόσφαιρα του βίντεο που θέλεις να βρεις. Πρόσθεσε χώρα ή χρονικότητα μόνο όταν έχει σημασία.",
       "emptyEyebrow": "Αναζήτηση με τη βοήθεια του βοηθού",
       "emptyTitle": "Περιέγραψε το βίντεο που θέλεις να βρεις",
       "languageHint": "Γλώσσα εξόδου",
@@ -318,9 +327,8 @@
       "stillWorking": "Εξακολουθεί να λειτουργεί...",
       "toggleCopy": "Αναζητήστε βίντεο πηγής στο YouTube χωρίς να φύγετε από τη ροή εργασίας.",
       "stage": {
-        "strategist": "Σχεδίαση αναζήτησης",
-        "discovery": "Αναζήτηση υποψηφίων",
-        "curator": "Κατάταξη αντιστοιχιών",
+        "answerer": "Επεξεργασία",
+        "planner": "Αναζήτηση",
         "retrieval": "Φόρτωση αποτελεσμάτων"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Ποιοτική Μετάφραση",
         "modelOn": "Πρόχειρο GPT-5.1 + έλεγχος GPT-5.4",
+        "modelOnAnthropic": "Τυπικό προσχέδιο + προηγμένος έλεγχος Anthropic",
         "modelOff": "Μόνο πρόχειρο GPT-5.1",
+        "reviewProvider": "Πάροχος ελέγχου",
+        "openAiHighEnd": "Προηγμένος έλεγχος OpenAI",
+        "anthropicHighEnd": "Προηγμένος έλεγχος Anthropic",
         "help": "<b>5× πιστώσεις</b> • Προσθέτει φάση αξιολόγησης για υψηλότερη ποιότητα",
         "helpWithEstimate": "<b>5× πιστώσεις</b> • Το υπόλοιπό σας: ~{{normalTime}} (κανονική) / ~{{hqTime}} (υψ)",
         "helpOn": "<b>5× πιστώσεις</b> • Περιλαμβάνει στάδιο ελέγχου",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Μετάφραση (Πρόχειρη)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Προηγμένο μοντέλο OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Προηγμένο μοντέλο Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Αξιολόγηση",
       "off": "Ανενεργό",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Δεν υπάρχει διαθέσιμο μοντέλο BYO για προτάσεις βίντεο αυτή τη στιγμή. Ενεργοποιήστε OpenAI ή Anthropic BYO για αυτή τη δυνατότητα.",
       "videoSuggestionModelRequiresOpenAi": "Απαιτεί ξεκλείδωμα OpenAI BYO, κλειδί και ενεργοποιημένο διακόπτη.",
       "videoSuggestionModelRequiresAnthropic": "Απαιτεί ξεκλείδωμα Anthropic BYO, κλειδί και ενεργοποιημένο διακόπτη.",
+      "summaryRequiresOpenAi": "Απαιτεί πρόσβαση στο OpenAI BYO και κλειδί API.",
+      "summaryRequiresAnthropic": "Απαιτεί πρόσβαση στο Anthropic BYO και κλειδί API.",
       "translationReview": "Μετάφραση (Αξιολόγηση)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Προαιρετικό μήνυμα",
     "optionalMessagePlaceholder": "Τι προσπαθούσατε να κάνετε;",
     "sendReport": "Αποστολή αναφοράς",
-    "reportPrompt": "Κάτι πήγε στραβά. Αναφέρετέ το στον δημιουργό για γρήγορη επιδιόρθωση."
+    "reportPrompt": "Κάτι πήγε στραβά. Αναφέρετέ το στον δημιουργό για γρήγορη επιδιόρθωση.",
+    "preparingReport": "Προετοιμασία διαγνωστικού πακέτου...",
+    "reportContextWarning": "Δεν ήταν δυνατή η φόρτωση μέρους του διαγνωστικού πλαισίου. Η αναφορά θα περιλαμβάνει και πάλι λεπτομέρειες από αυτή την εφαρμογή."
   }
 }

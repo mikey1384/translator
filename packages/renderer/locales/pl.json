@@ -176,6 +176,8 @@
       "sourceHint": "Źródło wyszukiwania",
       "searchDetails": "Szczegóły wyszukiwania",
       "introTitle": "Opisz, jakiego rodzaju wideo chcesz.",
+      "introCopy": "Zacznij od tematu, nastroju, twórcy lub odbiorców. Dodaj kraj albo to, jak aktualne mają być wyniki, tylko jeśli to ma znaczenie.",
+      "starterQuestion": "Jakich filmów szukasz?",
       "defaultFollowUp": "Powiedz mi trochę więcej, a zawężę wyszukiwanie.",
       "errorMessage": "Coś poszło nie tak. Spróbuj ponownie.",
       "composerTitle": "Powiedz AI, czego szukać",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Nie mogę teraz wyszukiwać. Spróbuj za chwilę.",
+      "noMatches": "Brak dobrych wyników. Dodaj temat, nastrój lub twórcę, a spróbuję ponownie.",
+      "lowConfidenceNoScoredResults": "Żadne wiarygodne dopasowania nie przeszły rankingu. Spróbuj szerszego tematu, dodaj wskazówkę o twórcy albo zmień, jak aktualne mają być wyniki.",
       "lowConfidenceGeneric": "Pewność wyszukiwania była niska. Dodaj jeszcze jeden szczegół i spróbuj ponownie.",
       "genericError": "Coś poszło nie tak. Spróbuj ponownie.",
       "platformLabel": "Platforma wyszukiwania",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Wybierz punkt wyjścia i edytuj go, jeśli chcesz.",
       "starterQuestionWithMemory": "Ostatnio szukano {{summary}}. Chcesz, żebym zaczął od tego ponownie?",
       "quickStartUserMessage": "Użyj moich ostatnio zapisanych preferencji, aby teraz znaleźć filmy: {{summary}}",
+      "defaultSearchUserMessage": "Znajdź mi teraz filmy.",
       "followUp": {
         "moreLikeQuery": "Znajdź więcej filmów podobnych do \"{{query}}\"",
         "differentCreator": "\"{{query}}\" od innego twórcy lub kanału",
@@ -287,12 +292,16 @@
       "stillRunning": "Nadal trwa",
       "liveDetailsToggle": "Szczegóły na żywo",
       "moreActions": "Więcej działań",
+      "recentEvents": "Ostatnie wydarzenia",
       "cancelFailed": "Nie udało się anulować bieżącego wyszukiwania.",
       "countryGlobal": "Wyniki globalne",
       "countryHint": "Pozostaw puste, aby uzyskać wyniki globalne.",
+      "countryHintDefaultEnglish": "Pozostaw puste, aby domyślnym językiem wyszukiwania był angielski.",
       "countryLabel": "Kraj / region docelowy",
       "countryPlaceholder": "np. USA, Japonia, Hiszpania, Brazylia",
       "countryScope": "Kraj: {{country}}",
+      "countryDefaultEnglish": "Kraj docelowy: domyślnie angielski",
+      "emptyCopy": "Wspomnij temat, odbiorców, styl twórcy lub nastrój filmu, którego szukasz. Dodaj kraj albo aktualność tylko wtedy, gdy to ważne.",
       "emptyEyebrow": "Wyszukiwanie z pomocą asystenta",
       "emptyTitle": "Opisz film, którego szukasz",
       "languageHint": "Język wyjściowy",
@@ -318,9 +327,8 @@
       "stillWorking": "Nadal działa...",
       "toggleCopy": "Wyszukaj film źródłowy na YouTube bez opuszczania tego procesu.",
       "stage": {
-        "strategist": "Zaplanuj wyszukiwanie",
-        "discovery": "Szukaj kandydatów",
-        "curator": "Oceń dopasowania",
+        "answerer": "Przetwarzanie",
+        "planner": "Wyszukiwanie",
         "retrieval": "Załaduj wyniki"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Jakościowe tłumaczenie",
         "modelOn": "Szkic GPT-5.1 + przegląd GPT-5.4",
+        "modelOnAnthropic": "Standardowy szkic + zaawansowana weryfikacja Anthropic",
         "modelOff": "Tylko szkic GPT-5.1",
+        "reviewProvider": "Dostawca weryfikacji",
+        "openAiHighEnd": "Zaawansowana weryfikacja OpenAI",
+        "anthropicHighEnd": "Zaawansowana weryfikacja Anthropic",
         "help": "<b>5× kredytów</b> • Dodaje fazę weryfikacji dla wyższej jakości",
         "helpWithEstimate": "<b>5× kredytów</b> • Twoje saldo: ~{{normalTime}} (normalne) / ~{{hqTime}} (wj)",
         "helpOn": "<b>5× kredytów</b> • Zawiera etap przeglądu",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Tłumaczenie (wersja robocza)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Zaawansowany model OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Zaawansowany model Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Weryfikacja",
       "off": "Wyłączone",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Żaden model rekomendacji wideo BYO nie jest obecnie dostępny. Włącz OpenAI lub Anthropic BYO, aby korzystać z tej funkcji.",
       "videoSuggestionModelRequiresOpenAi": "Wymaga odblokowania OpenAI BYO, klucza i włącznika.",
       "videoSuggestionModelRequiresAnthropic": "Wymaga odblokowania Anthropic BYO, klucza i włącznika.",
+      "summaryRequiresOpenAi": "Wymaga dostępu do OpenAI BYO i klucza API.",
+      "summaryRequiresAnthropic": "Wymaga dostępu do Anthropic BYO i klucza API.",
       "translationReview": "Tłumaczenie (weryfikacja)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Opcjonalna wiadomość",
     "optionalMessagePlaceholder": "Co próbowałeś zrobić?",
     "sendReport": "Wyślij zgłoszenie",
-    "reportPrompt": "Coś poszło nie tak. Zgłoś to twórcy, aby szybko naprawić problem."
+    "reportPrompt": "Coś poszło nie tak. Zgłoś to twórcy, aby szybko naprawić problem.",
+    "preparingReport": "Przygotowywanie pakietu diagnostycznego...",
+    "reportContextWarning": "Nie udało się wczytać części kontekstu diagnostycznego. Raport nadal będzie zawierał szczegóły z tej aplikacji."
   }
 }

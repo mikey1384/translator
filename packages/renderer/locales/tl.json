@@ -176,6 +176,8 @@
       "sourceHint": "Pinagmulan ng paghahanap",
       "searchDetails": "Mga detalye ng paghahanap",
       "introTitle": "Ilarawan ang uri ng video na gusto mo.",
+      "introCopy": "Magsimula sa paksa, mood, creator, o audience. Idagdag lang ang bansa o saklaw ng panahon kung mahalaga talaga.",
+      "starterQuestion": "Anong uri ng mga video ang hinahanap mo?",
       "defaultFollowUp": "Magbigay pa ng detalye at papagandahin ko ang paghahanap.",
       "errorMessage": "May nangyaring mali. Pakisubukan muli.",
       "composerTitle": "Sabihin sa AI kung ano ang hahanapin",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Hindi makapaghanap ngayon. Subukan muli mamaya.",
+      "noMatches": "Wala pang magandang tugma. Magdagdag ng paksa, mood, o creator at susubukan ko ulit.",
+      "lowConfidenceNoScoredResults": "Walang maaasahang tugma na natira pagkatapos ng pagraranggo. Subukan ang mas malawak na paksa, magdagdag ng pahiwatig tungkol sa creator, o palitan ang saklaw ng panahon.",
       "lowConfidenceGeneric": "Mababa ang kumpiyansa ng paghahanap. Magdagdag ng isa pang detalye at subukang muli.",
       "genericError": "May nangyaring mali. Subukan muli.",
       "platformLabel": "Platform ng paghahanap",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Pumili ng panimulang punto, tapos i-edit mo kung gusto mo.",
       "starterQuestionWithMemory": "Noong huli, naghanap ka ng {{summary}}. Gusto mo bang doon ulit ako magsimula?",
       "quickStartUserMessage": "Gamitin ang huli kong naka-save na setting para maghanap ng video ngayon: {{summary}}",
+      "defaultSearchUserMessage": "Maghanap ka ng mga video para sa akin ngayon.",
       "followUp": {
         "moreLikeQuery": "Maghanap ng higit pang video na tulad ng \"{{query}}\"",
         "differentCreator": "\"{{query}}\" mula sa ibang creator o channel",
@@ -287,12 +292,16 @@
       "stillRunning": "Tumatakbo pa",
       "liveDetailsToggle": "Live na detalye",
       "moreActions": "Higit pang aksyon",
+      "recentEvents": "Mga kamakailang pangyayari",
       "cancelFailed": "Nabigong kanselahin ang kasalukuyang paghahanap.",
       "countryGlobal": "Global na mga resulta",
       "countryHint": "Iwanang blangko para sa global na mga resulta.",
+      "countryHintDefaultEnglish": "Iwanang blangko para English ang default na wika ng paghahanap.",
       "countryLabel": "Target na bansa / rehiyon",
       "countryPlaceholder": "hal. US, Japan, Spain, Brazil",
       "countryScope": "Bansa: {{country}}",
+      "countryDefaultEnglish": "Target na bansa: English ang default",
+      "emptyCopy": "Banggitin ang paksa, audience, istilo ng creator, o mood ng video na gusto mo. Idagdag lang ang bansa o kung gaano kabago kapag kailangan.",
       "emptyEyebrow": "Pagtuklas na may gabay ng assistant",
       "emptyTitle": "Ilarawan ang video na gusto mong hanapin",
       "languageHint": "Wika ng output",
@@ -318,9 +327,8 @@
       "stillWorking": "Gumagana pa rin...",
       "toggleCopy": "Maghanap ng source video sa YouTube nang hindi umaalis sa workflow.",
       "stage": {
-        "strategist": "Planuhin ang paghahanap",
-        "discovery": "Maghanap ng mga kandidato",
-        "curator": "I-ranggo ang mga tugma",
+        "answerer": "Iproseso ang query",
+        "planner": "Bumuo ng paghahanap",
         "retrieval": "I-load ang mga resulta"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Kalidad na Pagsasalin",
         "modelOn": "Burador ng GPT-5.1 + rebyu ng GPT-5.4",
+        "modelOnAnthropic": "Standard na draft + premium review ng Anthropic",
         "modelOff": "Burador ng GPT-5.1 lang",
+        "reviewProvider": "Provider ng review",
+        "openAiHighEnd": "Premium review ng OpenAI",
+        "anthropicHighEnd": "Premium review ng Anthropic",
         "help": "<b>5× credits</b> • Nagdadagdag ng yugto ng rebisyon para sa mas mataas na kalidad",
         "helpWithEstimate": "<b>5× credits</b> • Iyong balanse: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× credits</b> • Kasama ang review pass",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Translation (Draft)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Premium model ng OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Premium model ng Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Yugto ng Review",
       "off": "Patay",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Walang available na BYO video recommendation model sa ngayon. I-enable ang OpenAI o Anthropic BYO para sa feature na ito.",
       "videoSuggestionModelRequiresOpenAi": "Kailangan ang OpenAI BYO unlock, key, at toggle.",
       "videoSuggestionModelRequiresAnthropic": "Kailangan ang Anthropic BYO unlock, key, at toggle.",
+      "summaryRequiresOpenAi": "Kailangan ang pag-access sa OpenAI BYO at API key.",
+      "summaryRequiresAnthropic": "Kailangan ang pag-access sa Anthropic BYO at API key.",
       "translationReview": "Translation (Review)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Opsyonal na mensahe",
     "optionalMessagePlaceholder": "Ano ang sinusubukan mong gawin?",
     "sendReport": "Ipadala ang ulat",
-    "reportPrompt": "May nangyaring mali. Iulat ito sa developer para sa mabilis na ayos."
+    "reportPrompt": "May nangyaring mali. Iulat ito sa developer para sa mabilis na ayos.",
+    "preparingReport": "Inihahanda ang diagnostic bundle...",
+    "reportContextWarning": "May ilang konteksto ng pagsusuri na hindi na-load. Isasama pa rin sa ulat ang mga detalye mula sa app na ito."
   }
 }

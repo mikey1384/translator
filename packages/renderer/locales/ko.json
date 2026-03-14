@@ -176,6 +176,8 @@
       "sourceHint": "검색 소스",
       "searchDetails": "검색 세부정보",
       "introTitle": "원하는 동영상 유형을 설명해 주세요.",
+      "introCopy": "주제, 분위기, 크리에이터, 또는 시청자부터 시작하세요. 국가나 기간은 필요할 때만 추가하세요.",
+      "starterQuestion": "어떤 영상을 찾고 계신가요?",
       "defaultFollowUp": "조금 더 알려주시면 검색을 정교하게 해드릴게요.",
       "errorMessage": "문제가 발생했습니다. 다시 시도해 주세요.",
       "composerTitle": "AI에게 찾을 영상을 말해보세요",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "지금은 검색할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "noMatches": "아직 적절한 결과가 없습니다. 주제, 분위기 또는 크리에이터를 추가하면 다시 검색할게요.",
+      "lowConfidenceNoScoredResults": "순위 매기기 후 신뢰할 만한 일치 항목이 남지 않았습니다. 더 넓은 주제를 시도하거나, 크리에이터 힌트를 추가하거나, 기간 설정을 바꿔 보세요.",
       "lowConfidenceGeneric": "검색 신뢰도가 낮았습니다. 세부 정보를 하나 더 추가한 뒤 다시 시도하세요.",
       "genericError": "문제가 발생했습니다. 다시 시도해 주세요.",
       "platformLabel": "검색 플랫폼",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "시작점 하나를 고른 뒤, 원하면 내용을 다듬어 보세요.",
       "starterQuestionWithMemory": "지난번에 {{summary}}(으)로 찾으셨어요. 이번에도 그대로 검색할까요?",
       "quickStartUserMessage": "마지막으로 저장한 설정으로 지금 바로 영상을 찾아줘: {{summary}}",
+      "defaultSearchUserMessage": "지금 동영상을 찾아줘.",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\"와 비슷한 영상을 더 찾아보기",
         "differentCreator": "\"{{query}}\"를 다른 크리에이터나 채널로 찾아보기",
@@ -287,12 +292,16 @@
       "stillRunning": "계속 진행 중",
       "liveDetailsToggle": "실시간 상세 정보",
       "moreActions": "추가 작업",
+      "recentEvents": "최근 소식",
       "cancelFailed": "현재 검색을 취소하지 못했습니다.",
       "countryGlobal": "전체 결과",
       "countryHint": "전체 결과를 보려면 비워 두세요.",
+      "countryHintDefaultEnglish": "비워 두면 검색 언어는 기본적으로 영어가 됩니다.",
       "countryLabel": "대상 국가 / 지역",
       "countryPlaceholder": "예: 미국, 일본, 스페인, 브라질",
       "countryScope": "국가: {{country}}",
+      "countryDefaultEnglish": "대상 국가: 기본은 영어",
+      "emptyCopy": "찾고 싶은 영상의 주제, 대상, 크리에이터 스타일이나 분위기를 적어보세요. 국가나 최신성은 필요할 때만 추가하세요.",
       "emptyEyebrow": "어시스턴트 안내 탐색",
       "emptyTitle": "찾고 싶은 영상을 설명하세요",
       "languageHint": "출력 언어",
@@ -318,9 +327,8 @@
       "stillWorking": "계속 작업 중...",
       "toggleCopy": "내 언어로 말하면 AI가 맞는 YouTube 영상을 찾아드려요.",
       "stage": {
-        "strategist": "검색 계획",
-        "discovery": "후보 검색",
-        "curator": "일치 항목 순위 매기기",
+        "answerer": "요청 처리",
+        "planner": "검색 구성",
         "retrieval": "결과 불러오기"
       }
     }
@@ -499,14 +507,18 @@
       },
       "qualityTranslation": {
         "label": "고품질 번역",
-        "modelOn": "GPT-5.1 초안 + GPT-5.4 검토",
-        "modelOff": "GPT-5.1 초안 전용",
+        "modelOn": "표준 초안 + OpenAI 고급 검토",
+        "modelOnAnthropic": "표준 초안 + Anthropic 고급 검토",
+        "modelOff": "표준 초안만",
+        "reviewProvider": "검토 제공업체",
+        "openAiHighEnd": "OpenAI 고급 검토",
+        "anthropicHighEnd": "Anthropic 고급 검토",
         "help": "켜짐: 검토 단계 포함(~5× 크레딧/시간). 꺼짐: 검토 건너뜀.",
         "helpWithEstimate": "검토는 ~5× 크레딧을 사용합니다. 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질.",
-        "helpOn": "<b>5× 크레딧</b> • GPT-5.1 초안 + GPT-5.4 검토",
-        "helpOff": "<b>1× 크레딧</b> • GPT-5.1 초안만 사용",
-        "helpWithEstimateOn": "<b>5× 크레딧</b> • GPT-5.1 초안 + GPT-5.4 검토 • 보유 크레딧: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× 크레딧</b> • GPT-5.1 초안만 사용 • 보유 크레딧: ~{{time}}"
+        "helpOn": "<b>5× 크레딧</b> • 표준 초안 + OpenAI 고급 검토",
+        "helpOff": "<b>1× 크레딧</b> • 표준 초안만",
+        "helpWithEstimateOn": "<b>5× 크레딧</b> • 표준 초안 + OpenAI 고급 검토 • 보유 크레딧: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× 크레딧</b> • 표준 초안만 • 보유 크레딧: ~{{time}}"
       },
       "qualitySummary": {
         "label": "고품질 요약",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "번역 (초안)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI 고급 모델",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic 고급 모델",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "검토 패스",
       "off": "끔",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "현재 사용 가능한 BYO 동영상 추천 모델이 없습니다. 이 기능을 사용하려면 OpenAI 또는 Anthropic BYO를 활성화하세요.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO 잠금 해제, 키, 토글이 필요합니다.",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO 잠금 해제, 키, 토글이 필요합니다.",
+      "summaryRequiresOpenAi": "OpenAI BYO 이용 권한과 API 키가 필요합니다.",
+      "summaryRequiresAnthropic": "Anthropic BYO 이용 권한과 API 키가 필요합니다.",
       "translationReview": "번역 (검토)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "추가 메시지",
     "optionalMessagePlaceholder": "무엇을 하려고 하셨나요?",
     "sendReport": "보고서 보내기",
-    "reportPrompt": "문제가 발생했습니다. 빠른 수정을 위해 개발자에게 보고해 주세요."
+    "reportPrompt": "문제가 발생했습니다. 빠른 수정을 위해 개발자에게 보고해 주세요.",
+    "preparingReport": "진단 번들을 준비하는 중...",
+    "reportContextWarning": "일부 진단 컨텍스트를 불러올 수 없습니다. 보고서에는 이 앱의 세부 정보가 계속 포함됩니다."
   }
 }

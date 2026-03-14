@@ -176,6 +176,8 @@
       "sourceHint": "Chanzo cha utafutaji",
       "searchDetails": "Maelezo ya utafutaji",
       "introTitle": "Eleza aina ya video unayotaka.",
+      "introCopy": "Anza na mada, hisia, mtayarishaji, au hadhira. Ongeza nchi au muda wa karibuni tu ikiwa ni muhimu.",
+      "starterQuestion": "Unatafuta aina gani ya video?",
       "defaultFollowUp": "Niambie zaidi nami nitaboresha utafutaji.",
       "errorMessage": "Kuna tatizo. Tafadhali jaribu tena.",
       "composerTitle": "Iambie AI itafute nini",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Siwezi kutafuta sasa hivi. Jaribu tena baadaye.",
+      "noMatches": "Hakuna matokeo mazuri bado. Ongeza mada, hali, au muundaji nami nitajaribu tena.",
+      "lowConfidenceNoScoredResults": "Hakuna mechi za kuaminika zilizosalia baada ya kupanga kwa ubora. Jaribu mada pana zaidi, ongeza dokezo la mtayarishaji, au badilisha muda wa karibuni.",
       "lowConfidenceGeneric": "Uhakika wa utafutaji ulikuwa mdogo. Ongeza maelezo mengine moja kisha ujaribu tena.",
       "genericError": "Kuna tatizo. Jaribu tena.",
       "platformLabel": "Jukwaa la utafutaji",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Chagua pa kuanzia, kisha uihariri ukitaka.",
       "starterQuestionWithMemory": "Mara ya mwisho ulitafuta {{summary}}. Unataka nianzie hapo tena?",
       "quickStartUserMessage": "Tumia mipangilio yangu ya mwisho niliyohifadhi kutafuta video sasa hivi: {{summary}}",
+      "defaultSearchUserMessage": "Nitafutie video sasa.",
       "followUp": {
         "moreLikeQuery": "Tafuta video zaidi kama \"{{query}}\"",
         "differentCreator": "\"{{query}}\" kutoka kwa mtayarishi au chaneli nyingine",
@@ -287,12 +292,16 @@
       "stillRunning": "Bado inaendelea",
       "liveDetailsToggle": "Maelezo ya moja kwa moja",
       "moreActions": "Vitendo zaidi",
+      "recentEvents": "Matukio ya hivi karibuni",
       "cancelFailed": "Imeshindikana kughairi utafutaji wa sasa.",
       "countryGlobal": "Matokeo ya kimataifa",
       "countryHint": "Acha wazi kwa matokeo ya kimataifa.",
+      "countryHintDefaultEnglish": "Acha wazi ili lugha ya utafutaji iwe Kiingereza kwa chaguo-msingi.",
       "countryLabel": "Nchi / eneo lengwa",
       "countryPlaceholder": "kwa mfano Marekani, Japan, Spain, Brazil",
       "countryScope": "Nchi: {{country}}",
+      "countryDefaultEnglish": "Nchi lengwa: Kiingereza kwa chaguo-msingi",
+      "emptyCopy": "Taja mada, hadhira, mtindo wa mtayarishaji au hali ya video unayotaka kupata. Ongeza nchi au muda wa karibuni tu inapohitajika.",
       "emptyEyebrow": "Utafutaji kwa msaada wa msaidizi",
       "emptyTitle": "Eleza video unayotaka kupata",
       "languageHint": "Lugha ya output",
@@ -318,9 +327,8 @@
       "stillWorking": "Bado inafanya kazi...",
       "toggleCopy": "Tafuta video ya chanzo kwenye YouTube bila kuondoka kwenye mtiririko huu.",
       "stage": {
-        "strategist": "Panga utafutaji",
-        "discovery": "Tafuta chaguo",
-        "curator": "Panga mechi",
+        "answerer": "Chakata swali",
+        "planner": "Unda utafutaji",
         "retrieval": "Pakia matokeo"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Tafsiri ya Ubora",
         "modelOn": "Rasimu ya GPT-5.1 + mapitio ya GPT-5.4",
+        "modelOnAnthropic": "Rasimu ya kawaida + uhakiki wa hali ya juu wa Anthropic",
         "modelOff": "Rasimu ya GPT-5.1 pekee",
+        "reviewProvider": "Mtoa uhakiki",
+        "openAiHighEnd": "Uhakiki wa hali ya juu wa OpenAI",
+        "anthropicHighEnd": "Uhakiki wa hali ya juu wa Anthropic",
         "help": "<b>5× mikopo</b> • Inaongeza awamu ya uhakiki kwa ubora wa juu",
         "helpWithEstimate": "<b>5× mikopo</b> • Salio lako: ~{{normalTime}} (kawaida) / ~{{hqTime}} (ubora)",
         "helpOn": "<b>5× krediti</b> • Inajumuisha hatua ya ukaguzi",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Tafsiri (Rasimu)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Modeli ya hali ya juu ya OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Modeli ya hali ya juu ya Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Hatua ya Uhakiki",
       "off": "Zima",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Kwa sasa hakuna model ya mapendekezo ya video ya BYO inayopatikana. Washa OpenAI au Anthropic BYO kwa kipengele hiki.",
       "videoSuggestionModelRequiresOpenAi": "Inahitaji OpenAI BYO unlock, key, na toggle.",
       "videoSuggestionModelRequiresAnthropic": "Inahitaji Anthropic BYO unlock, key, na toggle.",
+      "summaryRequiresOpenAi": "Inahitaji ufikiaji wa OpenAI BYO na API key.",
+      "summaryRequiresAnthropic": "Inahitaji ufikiaji wa Anthropic BYO na API key.",
       "translationReview": "Tafsiri (Uhakiki)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Ujumbe wa hiari",
     "optionalMessagePlaceholder": "Ulikuwa unajaribu kufanya nini?",
     "sendReport": "Tuma ripoti",
-    "reportPrompt": "Kuna tatizo. Ripoti kwa muundaji kwa marekebisho ya haraka."
+    "reportPrompt": "Kuna tatizo. Ripoti kwa muundaji kwa marekebisho ya haraka.",
+    "preparingReport": "Kifurushi cha uchunguzi kinaandaliwa...",
+    "reportContextWarning": "Baadhi ya muktadha wa uchunguzi haukuweza kupakiwa. Ripoti bado itajumuisha maelezo kutoka kwenye programu hii."
   }
 }

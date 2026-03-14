@@ -176,6 +176,8 @@
       "sourceHint": "Zdroj vyhledávání",
       "searchDetails": "Detaily vyhledávání",
       "introTitle": "Popište, jaké video chcete.",
+      "introCopy": "Začněte tématem, náladou, tvůrcem nebo publikem. Zemi nebo časové omezení přidejte jen tehdy, když na tom záleží.",
+      "starterQuestion": "Jaký typ videí hledáte?",
       "defaultFollowUp": "Řekněte mi víc a zpřesním vyhledávání.",
       "errorMessage": "Něco se pokazilo. Zkuste to prosím znovu.",
       "composerTitle": "Řekněte AI, co má najít",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Momentálně nemohu vyhledávat. Zkuste to za chvíli znovu.",
+      "noMatches": "Zatím žádné dobré shody. Přidejte téma, náladu nebo tvůrce a zkusím to znovu.",
+      "lowConfidenceNoScoredResults": "Po seřazení nezůstaly žádné spolehlivé shody. Zkuste širší téma, přidejte nápovědu k tvůrci nebo změňte časové omezení.",
       "lowConfidenceGeneric": "Jistota vyhledávání byla nízká. Přidejte ještě jeden detail a zkuste to znovu.",
       "genericError": "Něco se pokazilo. Zkuste to znovu.",
       "platformLabel": "Platforma vyhledávání",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Vyber výchozí bod a uprav ho, pokud chceš.",
       "starterQuestionWithMemory": "Minule jste hledali {{summary}}. Chcete, abych tam začal znovu?",
       "quickStartUserMessage": "Použij moje naposledy uložené preference, abys hned našel videa: {{summary}}",
+      "defaultSearchUserMessage": "Najdi mi teď videa.",
       "followUp": {
         "moreLikeQuery": "Najít další videa jako \"{{query}}\"",
         "differentCreator": "\"{{query}}\" od jiného tvůrce nebo kanálu",
@@ -287,12 +292,16 @@
       "stillRunning": "Stále běží",
       "liveDetailsToggle": "Živé detaily",
       "moreActions": "Další akce",
+      "recentEvents": "Nedávné události",
       "cancelFailed": "Nepodařilo se zrušit aktuální hledání.",
       "countryGlobal": "Globální výsledky",
       "countryHint": "Nechte prázdné pro globální výsledky.",
+      "countryHintDefaultEnglish": "Nechte prázdné, výchozím jazykem vyhledávání bude angličtina.",
       "countryLabel": "Cílová země / oblast",
       "countryPlaceholder": "např. USA, Japonsko, Španělsko, Brazílie",
       "countryScope": "Země: {{country}}",
+      "countryDefaultEnglish": "Cílová země: výchozí angličtina",
+      "emptyCopy": "Uveďte téma, publikum, styl tvůrce nebo náladu videa, které chcete najít. Zemi či časové omezení přidejte jen tehdy, když na tom záleží.",
       "emptyEyebrow": "Vyhledávání s pomocí asistenta",
       "emptyTitle": "Popište video, které chcete najít",
       "languageHint": "Výstupní jazyk",
@@ -318,9 +327,8 @@
       "stillWorking": "Stále pracuje...",
       "toggleCopy": "Vyhledejte zdrojové video na YouTube bez opuštění tohoto postupu.",
       "stage": {
-        "strategist": "Naplánovat vyhledávání",
-        "discovery": "Hledat kandidáty",
-        "curator": "Seřadit shody",
+        "answerer": "Zpracování",
+        "planner": "Hledání",
         "retrieval": "Načíst výsledky"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Kvalitní překlad",
         "modelOn": "Návrh GPT-5.1 + kontrola GPT-5.4",
+        "modelOnAnthropic": "Standardní návrh + pokročilá revize Anthropic",
         "modelOff": "Pouze návrh GPT-5.1",
+        "reviewProvider": "Poskytovatel revize",
+        "openAiHighEnd": "Pokročilá revize OpenAI",
+        "anthropicHighEnd": "Pokročilá revize Anthropic",
         "help": "<b>5× kreditů</b> • Přidá fázi kontroly pro vyšší kvalitu",
         "helpWithEstimate": "<b>5× kreditů</b> • Váš zůstatek: ~{{normalTime}} (normální) / ~{{hqTime}} (vk)",
         "helpOn": "<b>5× kredity</b> • Zahrnuje kontrolní průchod",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Překlad (koncept)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Pokročilý model OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Pokročilý model Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Revize",
       "off": "Vypnuto",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Momentálně není k dispozici žádný model BYO pro doporučování videí. Pro tuto funkci povolte OpenAI nebo Anthropic BYO.",
       "videoSuggestionModelRequiresOpenAi": "Vyžaduje odemčení OpenAI BYO, klíč a zapnutý přepínač.",
       "videoSuggestionModelRequiresAnthropic": "Vyžaduje odemčení Anthropic BYO, klíč a zapnutý přepínač.",
+      "summaryRequiresOpenAi": "Vyžaduje přístup k OpenAI BYO a klíč API.",
+      "summaryRequiresAnthropic": "Vyžaduje přístup k Anthropic BYO a klíč API.",
       "translationReview": "Překlad (revize)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Volitelná zpráva",
     "optionalMessagePlaceholder": "Co jste se pokoušeli udělat?",
     "sendReport": "Odeslat hlášení",
-    "reportPrompt": "Něco se pokazilo. Nahlaste to vývojáři pro rychlou opravu."
+    "reportPrompt": "Něco se pokazilo. Nahlaste to vývojáři pro rychlou opravu.",
+    "preparingReport": "Příprava diagnostického balíčku...",
+    "reportContextWarning": "Část diagnostického kontextu se nepodařilo načíst. Zpráva bude stále obsahovat podrobnosti z této aplikace."
   }
 }

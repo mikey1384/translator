@@ -176,6 +176,8 @@
       "sourceHint": "Fonte di ricerca",
       "searchDetails": "Dettagli della ricerca",
       "introTitle": "Descrivi il tipo di video che vuoi.",
+      "introCopy": "Inizia con un argomento, un tono, un creator o un pubblico. Aggiungi il paese o quanto deve essere recente solo se conta.",
+      "starterQuestion": "Che tipo di video stai cercando?",
       "defaultFollowUp": "Dimmi qualcosa in più e affinerò la ricerca.",
       "errorMessage": "Qualcosa è andato storto. Riprova.",
       "composerTitle": "Dì all'AI cosa trovare",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Impossibile cercare al momento. Riprova tra poco.",
+      "noMatches": "Ancora nessun risultato pertinente. Aggiungi argomento, stile o creatore e riproverò.",
+      "lowConfidenceNoScoredResults": "Nessuna corrispondenza affidabile ha superato il ranking. Prova con un argomento più ampio, aggiungi un indizio sul creator o cambia quanto deve essere recente.",
       "lowConfidenceGeneric": "L'affidabilità della ricerca era bassa. Aggiungi un altro dettaglio e riprova.",
       "genericError": "Qualcosa è andato storto. Riprova.",
       "platformLabel": "Piattaforma di ricerca",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Scegli un punto di partenza e modificalo se vuoi.",
       "starterQuestionWithMemory": "L'ultima volta hai cercato {{summary}}. Vuoi che riparta da lì?",
       "quickStartUserMessage": "Usa le ultime preferenze che ho salvato per trovare video adesso: {{summary}}",
+      "defaultSearchUserMessage": "Trova video per me adesso.",
       "followUp": {
         "moreLikeQuery": "Trova altri video come \"{{query}}\"",
         "differentCreator": "\"{{query}}\" da un altro creator o canale",
@@ -287,12 +292,16 @@
       "stillRunning": "Ancora in esecuzione",
       "liveDetailsToggle": "Dettagli live",
       "moreActions": "Altre azioni",
+      "recentEvents": "Eventi recenti",
       "cancelFailed": "Impossibile annullare la ricerca corrente.",
       "countryGlobal": "Risultati globali",
       "countryHint": "Lascia vuoto per i risultati globali.",
+      "countryHintDefaultEnglish": "Lascia vuoto per usare l'inglese come lingua di ricerca predefinita.",
       "countryLabel": "Paese / regione di destinazione",
       "countryPlaceholder": "es. USA, Giappone, Spagna, Brasile",
       "countryScope": "Paese: {{country}}",
+      "countryDefaultEnglish": "Paese di destinazione: inglese predefinito",
+      "emptyCopy": "Indica il tema, il pubblico, lo stile del creator o l'atmosfera del video che vuoi trovare. Aggiungi paese o recenza solo se serve.",
       "emptyEyebrow": "Ricerca guidata dall'assistente",
       "emptyTitle": "Descrivi il video che vuoi trovare",
       "languageHint": "Lingua di output",
@@ -318,9 +327,8 @@
       "stillWorking": "Ancora in corso...",
       "toggleCopy": "Cerca su YouTube un video sorgente senza uscire dal flusso.",
       "stage": {
-        "strategist": "Pianifica ricerca",
-        "discovery": "Cerca candidati",
-        "curator": "Classifica corrispondenze",
+        "answerer": "Elabora richiesta",
+        "planner": "Crea ricerca",
         "retrieval": "Carica risultati"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Traduzione di qualità",
         "modelOn": "Bozza GPT-5.1 + revisione GPT-5.4",
+        "modelOnAnthropic": "Bozza standard + revisione avanzata di Anthropic",
         "modelOff": "Solo bozza GPT-5.1",
+        "reviewProvider": "Fornitore di revisione",
+        "openAiHighEnd": "Revisione avanzata di OpenAI",
+        "anthropicHighEnd": "Revisione avanzata di Anthropic",
         "help": "<b>5× crediti</b> • Aggiunge fase di revisione per qualità superiore",
         "helpWithEstimate": "<b>5× crediti</b> • Il tuo saldo: ~{{normalTime}} (normale) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× crediti</b> • Include il passaggio di revisione",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Traduzione (Bozza)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Modello avanzato di OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Modello avanzato di Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Traduzione (Revisione)",
       "off": "Disattivato",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Al momento non è disponibile alcun modello BYO per i consigli video. Abilita OpenAI o Anthropic BYO per questa funzione.",
       "videoSuggestionModelRequiresOpenAi": "Richiede sblocco BYO OpenAI, chiave e attivazione.",
       "videoSuggestionModelRequiresAnthropic": "Richiede sblocco BYO Anthropic, chiave e attivazione.",
+      "summaryRequiresOpenAi": "Richiede accesso BYO di OpenAI e una chiave API.",
+      "summaryRequiresAnthropic": "Richiede accesso BYO di Anthropic e una chiave API.",
       "translationReview": "Traduzione (Revisione)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Messaggio facoltativo",
     "optionalMessagePlaceholder": "Cosa stavi cercando di fare?",
     "sendReport": "Invia segnalazione",
-    "reportPrompt": "Qualcosa è andato storto. Segnalalo allo sviluppatore per una correzione rapida."
+    "reportPrompt": "Qualcosa è andato storto. Segnalalo allo sviluppatore per una correzione rapida.",
+    "preparingReport": "Preparazione del pacchetto diagnostico...",
+    "reportContextWarning": "Impossibile caricare parte del contesto diagnostico. Il report includerà comunque i dettagli di questa app."
   }
 }

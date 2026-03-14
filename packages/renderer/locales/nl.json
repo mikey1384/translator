@@ -176,6 +176,8 @@
       "sourceHint": "Zoekbron",
       "searchDetails": "Zoekdetails",
       "introTitle": "Beschrijf het soort video dat je wilt.",
+      "introCopy": "Begin met een onderwerp, sfeer, maker of doelgroep. Voeg land of hoe recent het moet zijn alleen toe als dat belangrijk is.",
+      "starterQuestion": "Wat voor soort video's zoek je?",
       "defaultFollowUp": "Vertel me wat meer en ik verfijn de zoekopdracht.",
       "errorMessage": "Er is iets misgegaan. Probeer het opnieuw.",
       "composerTitle": "Vertel AI wat het moet vinden",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Ik kan momenteel niet zoeken. Probeer het zo opnieuw.",
+      "noMatches": "Nog geen goede resultaten. Voeg onderwerp, sfeer of maker toe en ik probeer opnieuw.",
+      "lowConfidenceNoScoredResults": "Geen betrouwbare treffers kwamen door de rangschikking. Probeer een breder onderwerp, voeg een hint over de maker toe of wijzig hoe recent het moet zijn.",
       "lowConfidenceGeneric": "Het vertrouwen in de zoekopdracht was laag. Voeg nog een detail toe en probeer het opnieuw.",
       "genericError": "Er is iets misgegaan. Probeer het opnieuw.",
       "platformLabel": "Zoekplatform",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Kies een startpunt en pas het aan als je wilt.",
       "starterQuestionWithMemory": "De vorige keer zocht je naar {{summary}}. Wil je dat ik daar weer begin?",
       "quickStartUserMessage": "Gebruik mijn laatst opgeslagen voorkeuren om nu video's te vinden: {{summary}}",
+      "defaultSearchUserMessage": "Zoek nu video's voor me.",
       "followUp": {
         "moreLikeQuery": "Vind meer video's zoals \"{{query}}\"",
         "differentCreator": "\"{{query}}\" van een andere maker of kanaal",
@@ -287,12 +292,16 @@
       "stillRunning": "Nog bezig",
       "liveDetailsToggle": "Live-details",
       "moreActions": "Meer acties",
+      "recentEvents": "Recente gebeurtenissen",
       "cancelFailed": "Kan de huidige zoekopdracht niet annuleren.",
       "countryGlobal": "Wereldwijde resultaten",
       "countryHint": "Laat leeg voor wereldwijde resultaten.",
+      "countryHintDefaultEnglish": "Laat leeg om Engels als standaardzoektaal te gebruiken.",
       "countryLabel": "Doelland / regio",
       "countryPlaceholder": "bijv. VS, Japan, Spanje, Brazilië",
       "countryScope": "Land: {{country}}",
+      "countryDefaultEnglish": "Doelland: Engels als standaard",
+      "emptyCopy": "Noem het onderwerp, de doelgroep, de stijl van de maker of de sfeer van de video die je zoekt. Voeg land of recentheid alleen toe als het belangrijk is.",
       "emptyEyebrow": "Zoeken met hulp van de assistent",
       "emptyTitle": "Beschrijf de video die je wilt vinden",
       "languageHint": "Uitvoertaal",
@@ -318,9 +327,8 @@
       "stillWorking": "Nog bezig...",
       "toggleCopy": "Zoek op YouTube naar een bronvideo zonder de workflow te verlaten.",
       "stage": {
-        "strategist": "Zoekopdracht plannen",
-        "discovery": "Kandidaten zoeken",
-        "curator": "Matches rangschikken",
+        "answerer": "Zoekvraag verwerken",
+        "planner": "Zoekopdracht maken",
         "retrieval": "Resultaten laden"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Kwaliteitsvertaling",
         "modelOn": "GPT-5.1-concept + GPT-5.4-review",
+        "modelOnAnthropic": "Standaardconcept + geavanceerde review met Anthropic",
         "modelOff": "Alleen GPT-5.1-concept",
+        "reviewProvider": "Reviewprovider",
+        "openAiHighEnd": "Geavanceerde review met OpenAI",
+        "anthropicHighEnd": "Geavanceerde review met Anthropic",
         "help": "<b>5× credits</b> • Voegt beoordelingsfase toe voor hogere kwaliteit",
         "helpWithEstimate": "<b>5× credits</b> • Je saldo: ~{{normalTime}} (normaal) / ~{{hqTime}} (hk)",
         "helpOn": "<b>5× credits</b> • Inclusief review-pass",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Vertaling (Concept)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Geavanceerd OpenAI-model",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Geavanceerd Anthropic-model",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Vertaling (Beoordeling)",
       "off": "Uit",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Er is momenteel geen BYO-model voor videoaanbevelingen beschikbaar. Schakel OpenAI of Anthropic BYO in voor deze functie.",
       "videoSuggestionModelRequiresOpenAi": "Vereist OpenAI BYO-ontgrendeling, sleutel en inschakeling.",
       "videoSuggestionModelRequiresAnthropic": "Vereist Anthropic BYO-ontgrendeling, sleutel en inschakeling.",
+      "summaryRequiresOpenAi": "Vereist OpenAI BYO-toegang en een API-sleutel.",
+      "summaryRequiresAnthropic": "Vereist Anthropic BYO-toegang en een API-sleutel.",
       "translationReview": "Vertaling (Beoordeling)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Optioneel bericht",
     "optionalMessagePlaceholder": "Wat probeerde je te doen?",
     "sendReport": "Rapport versturen",
-    "reportPrompt": "Er is iets misgegaan. Meld dit aan de maker voor een snelle oplossing."
+    "reportPrompt": "Er is iets misgegaan. Meld dit aan de maker voor een snelle oplossing.",
+    "preparingReport": "Diagnosebundel wordt voorbereid...",
+    "reportContextWarning": "Een deel van de diagnostische context kon niet worden geladen. Het rapport bevat nog steeds details van deze app."
   }
 }

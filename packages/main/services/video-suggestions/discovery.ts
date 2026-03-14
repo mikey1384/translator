@@ -233,6 +233,7 @@ export async function runDiscoveryWebSearch({
     operationId: `${operationId}-discovery-web-search`,
     model,
     translationPhase,
+    modelFamilyHintSource: 'model',
     onResolvedModel,
     reasoning: { effort: 'low' },
     webSearch: true,

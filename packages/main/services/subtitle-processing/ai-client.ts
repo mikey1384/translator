@@ -6,6 +6,7 @@ import {
   translateWithWebSearch as translateAiWithWebSearch,
   getActiveProvider,
 } from '../ai-provider.js';
+import type { TranslationModelFamilyHintSource } from '../../utils/translation-model-family-hint.js';
 import log from 'electron-log';
 import {
   AI_MODELS,
@@ -136,6 +137,7 @@ function buildTranslationIdempotencyKey({
   model,
   reasoning,
   translationPhase,
+  modelFamilyHintSource,
   qualityMode,
   webSearch,
   messages,
@@ -144,6 +146,7 @@ function buildTranslationIdempotencyKey({
   model: string;
   reasoning?: { effort?: 'low' | 'medium' | 'high' };
   translationPhase?: 'draft' | 'review';
+  modelFamilyHintSource?: TranslationModelFamilyHintSource;
   qualityMode?: boolean;
   webSearch?: boolean;
   messages: any[];
@@ -152,6 +155,7 @@ function buildTranslationIdempotencyKey({
     model,
     reasoning: reasoning ?? null,
     translationPhase: translationPhase ?? null,
+    modelFamilyHintSource: modelFamilyHintSource ?? 'preference',
     qualityMode: typeof qualityMode === 'boolean' ? qualityMode : null,
     webSearch: webSearch === true,
     messages,
@@ -165,6 +169,7 @@ export async function callAIModel({
   model = AI_MODELS.GPT,
   reasoning,
   translationPhase,
+  modelFamilyHintSource = 'preference',
   qualityMode,
   webSearch = false,
   onTextDelta,
@@ -179,6 +184,7 @@ export async function callAIModel({
     effort?: 'low' | 'medium' | 'high';
   };
   translationPhase?: 'draft' | 'review';
+  modelFamilyHintSource?: TranslationModelFamilyHintSource;
   qualityMode?: boolean;
   webSearch?: boolean;
   onTextDelta?: (delta: string) => void;
@@ -199,6 +205,7 @@ export async function callAIModel({
     model,
     reasoning,
     translationPhase,
+    modelFamilyHintSource,
     qualityMode,
     webSearch,
     messages,
@@ -220,6 +227,7 @@ export async function callAIModel({
             model,
             reasoning,
             translationPhase,
+            modelFamilyHintSource,
             qualityMode,
             idempotencyKey: requestIdempotencyKey,
             onTextDelta,
@@ -230,6 +238,7 @@ export async function callAIModel({
             model,
             reasoning,
             translationPhase,
+            modelFamilyHintSource,
             qualityMode,
             idempotencyKey: requestIdempotencyKey,
             signal,

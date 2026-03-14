@@ -176,6 +176,8 @@
       "sourceHint": "மூலத்தை தேடுக",
       "searchDetails": "தேடல் விவரங்கள்",
       "introTitle": "நீங்கள் விரும்பும் வீடியோ வகையை விவரிக்கவும்.",
+      "introCopy": "ஒரு தலைப்பு, மனநிலை, கிரியேட்டர் அல்லது பார்வையாளர்களுடன் தொடங்குங்கள். நாடு அல்லது சமீபத்தியதைக் முக்கியமானால் மட்டும் சேர்க்கவும்.",
+      "starterQuestion": "எந்த வகையான வீடியோக்களைத் தேடுகிறீர்கள்?",
       "defaultFollowUp": "இன்னும் கொஞ்சம் சொல்லுங்கள், தேடலை மேம்படுத்துகிறேன்.",
       "errorMessage": "ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்.",
       "composerTitle": "AI என்ன தேட வேண்டும் என்று சொல்லுங்கள்",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "இப்போது தேட முடியவில்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.",
+      "noMatches": "இன்னும் பொருத்தங்கள் கிடைக்கவில்லை. தலைப்பு, மனநிலை அல்லது படைப்பாளரைச் சேர்க்கவும், மீண்டும் முயற்சிக்கிறேன்.",
+      "lowConfidenceNoScoredResults": "தரவரிசைக்குப் பிறகு நம்பகமான பொருத்தங்கள் எதுவும் மீதமில்லை. கொஞ்சம் பரந்த தலைப்பை முயற்சிக்கவும், கிரியேட்டர் குறிப்பு சேர்க்கவும் அல்லது சமீபத்தியதை மாற்றவும்.",
       "lowConfidenceGeneric": "தேடல் நம்பிக்கை குறைவாக இருந்தது. இன்னும் ஒரு விவரத்தைச் சேர்த்து மீண்டும் முயற்சிக்கவும்.",
       "genericError": "ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்.",
       "platformLabel": "தேடல் தளம்",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "ஒரு தொடக்கப் புள்ளியை தேர்வு செய்து, வேண்டுமெனில் அதைத் திருத்துங்கள்.",
       "starterQuestionWithMemory": "கடந்த முறை நீங்கள் {{summary}} என்று தேடினீர்கள். அதிலிருந்தே மீண்டும் தொடங்கவா?",
       "quickStartUserMessage": "நான் கடைசியாக சேமித்த அமைப்புகளைப் பயன்படுத்தி இப்போது வீடியோக்களை கண்டுபிடி: {{summary}}",
+      "defaultSearchUserMessage": "இப்போது எனக்காக வீடியோக்களைத் தேடுங்கள்.",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\" போன்ற மேலும் வீடியோக்களை கண்டுபிடி",
         "differentCreator": "\"{{query}}\" மற்றொரு உருவாக்குனர் அல்லது சேனலில் இருந்து",
@@ -287,12 +292,16 @@
       "stillRunning": "இன்னும் இயங்குகிறது",
       "liveDetailsToggle": "நேரடி விவரங்கள்",
       "moreActions": "மேலும் செயல்கள்",
+      "recentEvents": "சமீபத்திய நிகழ்வுகள்",
       "cancelFailed": "தற்போதைய தேடலை ரத்து செய்ய முடியவில்லை.",
       "countryGlobal": "உலகளாவிய முடிவுகள்",
       "countryHint": "உலகளாவிய முடிவுகளுக்கு காலியாக விடுங்கள்.",
+      "countryHintDefaultEnglish": "காலியாக விடுங்கள், தேடல் மொழி இயல்பாக ஆங்கிலமாகும்.",
       "countryLabel": "இலக்கு நாடு / பகுதி",
       "countryPlaceholder": "எ.கா. US, Japan, Spain, Brazil",
       "countryScope": "நாடு: {{country}}",
+      "countryDefaultEnglish": "இலக்கு நாடு: ஆங்கிலம் இயல்புநிலை",
+      "emptyCopy": "நீங்கள் தேடும் வீடியோவின் தலைப்பு, பார்வையாளர், உருவாக்குபவர் பாணி அல்லது மனநிலையைச் சொல்லுங்கள். தேவைப்பட்டால் மட்டுமே நாடு அல்லது காலத்தைச் சேர்க்கவும்.",
       "emptyEyebrow": "அசிஸ்டன்ட் உதவியுடன் தேடல்",
       "emptyTitle": "நீங்கள் தேட விரும்பும் வீடியோவை விவரிக்கவும்",
       "languageHint": "வெளியீட்டு மொழி",
@@ -318,9 +327,8 @@
       "stillWorking": "இன்னும் செயல்படுகிறது...",
       "toggleCopy": "workflow-ஐ விட்டு வெளியேறாமல் source video-க்காக YouTube-ல் தேடுங்கள்.",
       "stage": {
-        "strategist": "தேடலை திட்டமிடு",
-        "discovery": "விருப்பங்களை தேடு",
-        "curator": "பொருத்தங்களை வரிசைப்படுத்து",
+        "answerer": "கேள்வி செயலாக்கம்",
+        "planner": "தேடல் அமை",
         "retrieval": "முடிவுகளை ஏற்று"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "தர மொழிபெயர்ப்பு",
         "modelOn": "GPT-5.1 வரைவு + GPT-5.4 மதிப்பாய்வு",
+        "modelOnAnthropic": "தரநிலை வரைவு + Anthropic பிரீமியம் மதிப்பாய்வு",
         "modelOff": "GPT-5.1 வரைவு மட்டும்",
+        "reviewProvider": "மதிப்பாய்வு வழங்குநர்",
+        "openAiHighEnd": "OpenAI பிரீமியம் மதிப்பாய்வு",
+        "anthropicHighEnd": "Anthropic பிரீமியம் மதிப்பாய்வு",
         "help": "<b>5× கிரெடிட்கள்</b> • உயர் தரத்திற்கு மதிப்பாய்வு கட்டம் சேர்க்கிறது",
         "helpWithEstimate": "<b>5× கிரெடிட்கள்</b> • உங்கள் இருப்பு: ~{{normalTime}} (சாதாரண) / ~{{hqTime}} (உயர்தரம்)",
         "helpOn": "<b>5× கிரெடிட்ஸ்</b> • மதிப்பாய்வு பாஸ் சேர்க்கப்பட்டுள்ளது",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "மொழிபெயர்ப்பு (வரைவு)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI பிரீமியம் மாடல்",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic பிரீமியம் மாடல்",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "மதிப்பாய்வு கட்டம்",
       "off": "அணை",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "தற்போது எந்த BYO video recommendation model-மும் இல்லை. இந்த அம்சத்திற்காக OpenAI அல்லது Anthropic BYO-ஐ செயல்படுத்துங்கள்.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key மற்றும் toggle தேவை.",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO unlock, key மற்றும் toggle தேவை.",
+      "summaryRequiresOpenAi": "OpenAI BYO அணுகலும் API key-வும் தேவை.",
+      "summaryRequiresAnthropic": "Anthropic BYO அணுகலும் API key-வும் தேவை.",
       "translationReview": "மொழிபெயர்ப்பு (மதிப்பாய்வு)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "விருப்பத் தகவல்",
     "optionalMessagePlaceholder": "நீங்கள் என்ன செய்ய முயற்சித்தீர்கள்?",
     "sendReport": "அறிக்கை அனுப்பு",
-    "reportPrompt": "ஏதோ தவறு நடந்தது. விரைவான தீர்வுக்கு உருவாக்குநரிடம் புகாரளிக்கவும்."
+    "reportPrompt": "ஏதோ தவறு நடந்தது. விரைவான தீர்வுக்கு உருவாக்குநரிடம் புகாரளிக்கவும்.",
+    "preparingReport": "டயக்னோஸ்டிக் பண்டில் தயாராகிறது...",
+    "reportContextWarning": "சில டயக்னோஸ்டிக் சூழல் தகவலை ஏற்ற முடியவில்லை. அறிக்கையில் இருந்தாலும் இந்த பயன்பாட்டின் விவரங்கள் சேர்க்கப்படும்."
   }
 }

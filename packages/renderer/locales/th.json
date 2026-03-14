@@ -176,6 +176,8 @@
       "sourceHint": "แหล่งค้นหา",
       "searchDetails": "รายละเอียดการค้นหา",
       "introTitle": "อธิบายลักษณะวิดีโอที่คุณต้องการ",
+      "introCopy": "เริ่มจากหัวข้อ อารมณ์ ครีเอเตอร์ หรือกลุ่มผู้ชมก่อน เพิ่มประเทศหรือช่วงเวลาเมื่อจำเป็นจริง ๆ เท่านั้น",
+      "starterQuestion": "คุณกำลังมองหาวิดีโอแบบไหน?",
       "defaultFollowUp": "บอกรายละเอียดเพิ่มเติม แล้วฉันจะปรับการค้นหาให้",
       "errorMessage": "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง",
       "composerTitle": "บอก AI ว่าจะหาอะไร",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "ไม่สามารถค้นหาได้ในขณะนี้ ลองอีกครั้งในอีกสักครู่",
+      "noMatches": "ยังไม่พบผลลัพธ์ที่ตรงกัน เพิ่มหัวข้อ อารมณ์ หรือครีเอเตอร์ แล้วฉันจะลองใหม่",
+      "lowConfidenceNoScoredResults": "ไม่มีผลลัพธ์ที่เชื่อถือได้เหลือหลังการจัดอันดับ ลองใช้หัวข้อที่กว้างขึ้น เพิ่มคำใบ้เกี่ยวกับครีเอเตอร์ หรือเปลี่ยนช่วงเวลา",
       "lowConfidenceGeneric": "ความมั่นใจของการค้นหาต่ำ ลองเพิ่มรายละเอียดอีกหนึ่งอย่างแล้วค้นหาใหม่",
       "genericError": "เกิดข้อผิดพลาด ลองอีกครั้ง",
       "platformLabel": "แพลตฟอร์มค้นหา",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "เลือกจุดเริ่มต้นก่อน แล้วค่อยแก้ไขถ้าต้องการ",
       "starterQuestionWithMemory": "ครั้งล่าสุดคุณค้นหา {{summary}} ต้องการให้ฉันเริ่มจากตรงนั้นอีกครั้งไหม?",
       "quickStartUserMessage": "ใช้ค่าที่บันทึกล่าสุดของฉันเพื่อค้นหาวิดีโอตอนนี้: {{summary}}",
+      "defaultSearchUserMessage": "ช่วยหาวิดีโอให้ฉันตอนนี้",
       "followUp": {
         "moreLikeQuery": "ค้นหาวิดีโอเพิ่มเติมแบบ \"{{query}}\"",
         "differentCreator": "\"{{query}}\" จากครีเอเตอร์หรือช่องอื่น",
@@ -287,12 +292,16 @@
       "stillRunning": "ยังคงทำงานอยู่",
       "liveDetailsToggle": "รายละเอียดแบบสด",
       "moreActions": "การดำเนินการเพิ่มเติม",
+      "recentEvents": "เหตุการณ์ล่าสุด",
       "cancelFailed": "ยกเลิกการค้นหาปัจจุบันไม่สำเร็จ",
       "countryGlobal": "ผลลัพธ์ทั่วโลก",
       "countryHint": "เว้นว่างไว้เพื่อดูผลลัพธ์ทั่วโลก",
+      "countryHintDefaultEnglish": "เว้นว่างไว้เพื่อใช้ภาษาอังกฤษเป็นภาษาเริ่มต้นของการค้นหา.",
       "countryLabel": "ประเทศ / ภูมิภาคเป้าหมาย",
       "countryPlaceholder": "เช่น สหรัฐฯ ญี่ปุ่น สเปน บราซิล",
       "countryScope": "ประเทศ: {{country}}",
+      "countryDefaultEnglish": "ประเทศเป้าหมาย: ค่าเริ่มต้นเป็นภาษาอังกฤษ",
+      "emptyCopy": "บอกหัวข้อ กลุ่มเป้าหมาย สไตล์ครีเอเตอร์ หรืออารมณ์ของวิดีโอที่คุณต้องการ เพิ่มประเทศหรือช่วงเวลาเฉพาะเมื่อจำเป็นเท่านั้น",
       "emptyEyebrow": "สำรวจด้วยผู้ช่วย",
       "emptyTitle": "อธิบายวิดีโอที่คุณอยากหาเพื่อใช้เป็นต้นฉบับ",
       "languageHint": "ภาษาผลลัพธ์",
@@ -318,9 +327,8 @@
       "stillWorking": "กำลังทำงานอยู่...",
       "toggleCopy": "ค้นหาวิดีโอต้นฉบับบน YouTube โดยไม่ต้องออกจากขั้นตอนนี้",
       "stage": {
-        "strategist": "วางแผนการค้นหา",
-        "discovery": "ค้นหาตัวเลือก",
-        "curator": "จัดอันดับผลลัพธ์",
+        "answerer": "ประมวลคำค้น",
+        "planner": "ร่างการค้นหา",
         "retrieval": "โหลดผลลัพธ์"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "การแปลคุณภาพสูง",
         "modelOn": "GPT-5.1 ฉบับร่าง + GPT-5.4 รีวิว",
+        "modelOnAnthropic": "ฉบับร่างมาตรฐาน + ตรวจทานขั้นสูงของ Anthropic",
         "modelOff": "GPT-5.1 ฉบับร่างเท่านั้น",
+        "reviewProvider": "ผู้ให้บริการตรวจทาน",
+        "openAiHighEnd": "ตรวจทานขั้นสูงของ OpenAI",
+        "anthropicHighEnd": "ตรวจทานขั้นสูงของ Anthropic",
         "help": "<b>5× เครดิต</b> • เพิ่มขั้นตอนตรวจทานเพื่อคุณภาพที่สูงขึ้น",
         "helpWithEstimate": "<b>5× เครดิต</b> • ยอดคงเหลือของคุณ: ~{{normalTime}} (ปกติ) / ~{{hqTime}} (คุณภาพสูง)",
         "helpOn": "<b>5× เครดิต</b> • รวมรอบรีวิว",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "การแปล (ร่าง)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "โมเดลขั้นสูงของ OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "โมเดลขั้นสูงของ Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "ตรวจทาน",
       "off": "ปิด",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "ขณะนี้ยังไม่มีโมเดลแนะนำวิดีโอ BYO ให้ใช้งาน เปิด OpenAI หรือ Anthropic BYO เพื่อใช้ฟีเจอร์นี้",
       "videoSuggestionModelRequiresOpenAi": "ต้องปลดล็อก OpenAI BYO พร้อมใส่คีย์และเปิดสวิตช์",
       "videoSuggestionModelRequiresAnthropic": "ต้องปลดล็อก Anthropic BYO พร้อมใส่คีย์และเปิดสวิตช์",
+      "summaryRequiresOpenAi": "ต้องมีสิทธิ์เข้าถึง OpenAI BYO และคีย์ API",
+      "summaryRequiresAnthropic": "ต้องมีสิทธิ์เข้าถึง Anthropic BYO และคีย์ API",
       "translationReview": "การแปล (ตรวจทาน)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "ข้อความเพิ่มเติม",
     "optionalMessagePlaceholder": "คุณกำลังพยายามทำอะไร?",
     "sendReport": "ส่งรายงาน",
-    "reportPrompt": "เกิดข้อผิดพลาด แจ้งผู้พัฒนาเพื่อแก้ไขอย่างรวดเร็ว"
+    "reportPrompt": "เกิดข้อผิดพลาด แจ้งผู้พัฒนาเพื่อแก้ไขอย่างรวดเร็ว",
+    "preparingReport": "กำลังเตรียมชุดข้อมูลวินิจฉัย...",
+    "reportContextWarning": "บริบทการวินิจฉัยบางส่วนไม่สามารถโหลดได้ รายงานจะยังคงรวมรายละเอียดจากแอปนี้"
   }
 }

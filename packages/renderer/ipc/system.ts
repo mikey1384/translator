@@ -1,7 +1,9 @@
 import type {
   AllByoSettings,
+  ByoVideoSuggestionModel,
   CreditBalanceResult,
   ErrorReportContext,
+  Stage5VideoSuggestionMode,
   VideoSuggestionModelPreference,
   VideoSuggestionRecency,
   VideoMetadataResult,
@@ -314,6 +316,26 @@ export function setPreferClaudeSummary(
   prefer: boolean
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.setPreferClaudeSummary(prefer);
+}
+
+export function getStage5VideoSuggestionMode(): Promise<Stage5VideoSuggestionMode> {
+  return window.electron.getStage5VideoSuggestionMode();
+}
+
+export function setStage5VideoSuggestionMode(
+  mode: Stage5VideoSuggestionMode
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setStage5VideoSuggestionMode(mode);
+}
+
+export function getByoVideoSuggestionModel(): Promise<ByoVideoSuggestionModel> {
+  return window.electron.getByoVideoSuggestionModel();
+}
+
+export function setByoVideoSuggestionModel(
+  model: ByoVideoSuggestionModel
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoVideoSuggestionModel(model);
 }
 
 export function getVideoSuggestionModelPreference(): Promise<VideoSuggestionModelPreference> {

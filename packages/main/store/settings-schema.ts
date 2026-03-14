@@ -1,5 +1,9 @@
 import {
+  normalizeByoVideoSuggestionModel,
+  normalizeStage5VideoSuggestionMode,
   normalizeVideoSuggestionModelPreference,
+  type ByoVideoSuggestionModel,
+  type Stage5VideoSuggestionMode,
   type VideoSuggestionModelPreferenceValue,
 } from '../services/video-suggestion-model-preference.js';
 import { isVideoSuggestionRecency } from '../../shared/helpers/video-suggestion-sanitize.js';
@@ -46,7 +50,12 @@ export type AppSettingsSchema = {
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
   preferClaudeSummary: boolean;
+  // Legacy unified preference kept for backward-compat migration only.
   videoSuggestionModelPreference: VideoSuggestionModelPreferenceValue;
+  // Stage5 credits path: standard vs high (GPT-5.1 vs GPT-5.4).
+  stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
+  // BYO path: explicit direct model selection (+ migration-only legacy follow states).
+  byoVideoSuggestionModel: ByoVideoSuggestionModel;
   videoSuggestionTargetCountry: string;
   videoSuggestionRecency: VideoSuggestionRecency;
   videoSuggestionPreferenceTopic: string;
@@ -75,6 +84,8 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   preferClaudeReview: false,
   preferClaudeSummary: true,
   videoSuggestionModelPreference: 'default',
+  stage5VideoSuggestionMode: 'standard',
+  byoVideoSuggestionModel: 'gpt-5.1',
   videoSuggestionTargetCountry: VIDEO_SUGGESTION_DEFAULT_COUNTRY,
   videoSuggestionRecency: VIDEO_SUGGESTION_DEFAULT_RECENCY,
   videoSuggestionPreferenceTopic: VIDEO_SUGGESTION_DEFAULT_TOPIC,
@@ -88,6 +99,20 @@ export function normalizeVideoSuggestionModelPreferenceSetting(
   fallback: VideoSuggestionModelPreferenceValue = APP_SETTINGS_DEFAULTS.videoSuggestionModelPreference
 ): VideoSuggestionModelPreferenceValue {
   return normalizeVideoSuggestionModelPreference(value, fallback);
+}
+
+export function normalizeStage5VideoSuggestionModeSetting(
+  value: unknown,
+  fallback: Stage5VideoSuggestionMode = APP_SETTINGS_DEFAULTS.stage5VideoSuggestionMode
+): Stage5VideoSuggestionMode {
+  return normalizeStage5VideoSuggestionMode(value, fallback);
+}
+
+export function normalizeByoVideoSuggestionModelSetting(
+  value: unknown,
+  fallback: ByoVideoSuggestionModel = APP_SETTINGS_DEFAULTS.byoVideoSuggestionModel
+): ByoVideoSuggestionModel {
+  return normalizeByoVideoSuggestionModel(value, fallback);
 }
 
 export function normalizeVideoSuggestionRecencySetting(
@@ -123,5 +148,7 @@ export function normalizeStage5DubbingTtsProviderSetting(
   return value === 'openai' || value === 'elevenlabs' ? value : fallback;
 }
 
+export type { ByoVideoSuggestionModel };
+export type { Stage5VideoSuggestionMode };
 export type { VideoSuggestionModelPreferenceValue };
 export type { VideoSuggestionRecency };

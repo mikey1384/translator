@@ -29,6 +29,11 @@ import {
   formatCredits,
   formatHours,
 } from '../../utils/creditEstimates';
+import {
+  getQualityTranslationOnLabel,
+  getReviewProviderHeading,
+  getReviewProviderLabel,
+} from './utils';
 
 const reviewProviderCardStyles = css`
   margin-top: -2px;
@@ -71,59 +76,47 @@ const reviewProviderOptionMetaStyles = css`
 `;
 
 export default function QualityToggles() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qualityTranslation = useUIStore(s => s.qualityTranslation);
   const setQualityTranslation = useUIStore(s => s.setQualityTranslation);
   const summaryEffortLevel = useUIStore(s => s.summaryEffortLevel);
   const setSummaryEffortLevel = useUIStore(s => s.setSummaryEffortLevel);
   const credits = useCreditStore(s => s.credits);
   const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
+  const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const setPreferClaudeReview = useAiStore(s => s.setPreferClaudeReview);
   const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
   const setStage5DubbingTtsProvider = useAiStore(
     s => s.setStage5DubbingTtsProvider
   );
-  const videoSuggestionModelPreference = useAiStore(
-    s => s.videoSuggestionModelPreference
+  const stage5VideoSuggestionMode = useAiStore(
+    s => s.stage5VideoSuggestionMode
   );
-  const setVideoSuggestionModelPreference = useAiStore(
-    s => s.setVideoSuggestionModelPreference
+  const setStage5VideoSuggestionMode = useAiStore(
+    s => s.setStage5VideoSuggestionMode
   );
   const effectivePreferClaudeReview = preferClaudeReview;
-  const videoSuggestionQualityEnabled =
-    videoSuggestionModelPreference === 'quality' ||
-    videoSuggestionModelPreference === getStage5ReviewOption('anthropic').model ||
-    videoSuggestionModelPreference === STAGE5_REVIEW_TRANSLATION_MODEL;
-  const selectedReviewOption =
-    getStage5ReviewOptionForPreference(effectivePreferClaudeReview);
-  const qualityTranslationModelOn =
-    selectedReviewOption.provider === 'anthropic'
-    ? t(
-        'settings.performanceQuality.qualityTranslation.modelOnAnthropic',
-        'Standard draft + Anthropic high-end review'
-      )
-    : t(
-        'settings.performanceQuality.qualityTranslation.modelOn',
-        'Standard draft + OpenAI high-end review'
-      );
+  const videoSuggestionQualityEnabled = stage5VideoSuggestionMode === 'high';
+  const selectedReviewOption = getStage5ReviewOptionForPreference(
+    effectivePreferClaudeReview
+  );
+  const qualityTranslationModelOn = getQualityTranslationOnLabel(
+    t,
+    i18n,
+    selectedReviewOption.provider
+  );
   const reviewProviderOptions = [
     {
       ...getStage5ReviewOption('openai'),
       checked: !effectivePreferClaudeReview,
-      label: t(
-        'settings.performanceQuality.qualityTranslation.openAiHighEnd',
-        'OpenAI high-end review'
-      ),
+      label: getReviewProviderLabel(t, i18n, 'openai'),
       onChange: () => void setPreferClaudeReview(false),
       disabled: false,
     },
     {
       ...getStage5ReviewOption('anthropic'),
       checked: effectivePreferClaudeReview,
-      label: t(
-        'settings.performanceQuality.qualityTranslation.anthropicHighEnd',
-        'Anthropic high-end review'
-      ),
+      label: getReviewProviderLabel(t, i18n, 'anthropic'),
       onChange: () => void setPreferClaudeReview(true),
       disabled: false,
     },
@@ -162,7 +155,9 @@ export default function QualityToggles() {
     (estimateVideoSuggestionUsdPerSearch(AI_MODELS.GPT) * PRICE_MARGIN) /
       USD_PER_CREDIT
   );
-  const qualityVideoSuggestionModel = selectedReviewOption.model;
+  const qualityVideoSuggestionModel = useApiKeysMode
+    ? selectedReviewOption.model
+    : STAGE5_REVIEW_TRANSLATION_MODEL;
   const qualityVideoSuggestionCredits = Math.ceil(
     (estimateVideoSuggestionUsdPerSearch(qualityVideoSuggestionModel) *
       PRICE_MARGIN) /
@@ -298,10 +293,7 @@ export default function QualityToggles() {
       {qualityTranslation ? (
         <div className={reviewProviderCardStyles}>
           <div className={reviewProviderLabelStyles}>
-            {t(
-              'settings.performanceQuality.qualityTranslation.reviewProvider',
-              'Review Provider'
-            )}
+            {getReviewProviderHeading(t, i18n)}
           </div>
           <div className={reviewProviderOptionsStyles}>
             {reviewProviderOptions.map(option => (
@@ -309,13 +301,13 @@ export default function QualityToggles() {
                 key={option.provider}
                 className={reviewProviderOptionStyles}
               >
-                  <input
-                    type="radio"
-                    name="stage5-review-provider"
-                    checked={option.checked}
-                    disabled={option.disabled}
-                    onChange={option.onChange}
-                  />
+                <input
+                  type="radio"
+                  name="stage5-review-provider"
+                  checked={option.checked}
+                  disabled={option.disabled}
+                  onChange={option.onChange}
+                />
                 <span className={reviewProviderOptionCopyStyles}>
                   <span>{option.label}</span>
                   <span className={reviewProviderOptionMetaStyles}>
@@ -387,7 +379,7 @@ export default function QualityToggles() {
           'Video Recommendation Quality'
         ),
         videoSuggestionQualityEnabled,
-        v => setVideoSuggestionModelPreference(v ? 'quality' : 'default'),
+        v => void setStage5VideoSuggestionMode(v ? 'high' : 'standard'),
         videoSuggestionQualityEnabled
           ? renderHelp({
               rate: qualityVideoSuggestionCredits,

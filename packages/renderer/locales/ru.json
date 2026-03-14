@@ -176,6 +176,8 @@
       "sourceHint": "Источник поиска",
       "searchDetails": "Детали поиска",
       "introTitle": "Опишите, какое видео вы хотите.",
+      "introCopy": "Начните с темы, настроения, автора или аудитории. Указывайте страну или период только если это важно.",
+      "starterQuestion": "Какие видео вы ищете?",
       "defaultFollowUp": "Расскажите подробнее, и я уточню поиск.",
       "errorMessage": "Что-то пошло не так. Попробуйте снова.",
       "composerTitle": "Скажите ИИ, что искать",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Сейчас не удаётся выполнить поиск. Попробуйте через минуту.",
+      "noMatches": "Пока нет подходящих результатов. Добавьте тему, настроение или автора, и я повторю поиск.",
+      "lowConfidenceNoScoredResults": "После ранжирования не осталось надежных совпадений. Попробуйте более широкую тему, добавьте подсказку по автору или измените период.",
       "lowConfidenceGeneric": "Уверенность поиска была низкой. Добавьте еще одну деталь и попробуйте снова.",
       "genericError": "Что-то пошло не так. Попробуйте снова.",
       "platformLabel": "Платформа поиска",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Выберите отправную точку и при желании отредактируйте ее.",
       "starterQuestionWithMemory": "В прошлый раз вы искали {{summary}}. Хотите снова начать с этого?",
       "quickStartUserMessage": "Используй мои последние сохранённые настройки, чтобы найти видео прямо сейчас: {{summary}}",
+      "defaultSearchUserMessage": "Найди мне видео сейчас.",
       "followUp": {
         "moreLikeQuery": "Найти больше видео, похожих на \"{{query}}\"",
         "differentCreator": "\"{{query}}\" от другого автора или канала",
@@ -287,12 +292,16 @@
       "stillRunning": "Все еще выполняется",
       "liveDetailsToggle": "Детали в реальном времени",
       "moreActions": "Больше действий",
+      "recentEvents": "Недавние события",
       "cancelFailed": "Не удалось отменить текущий поиск.",
       "countryGlobal": "Глобальные результаты",
       "countryHint": "Оставьте пустым для глобальных результатов.",
+      "countryHintDefaultEnglish": "Оставьте пустым, чтобы языком поиска по умолчанию был английский.",
       "countryLabel": "Целевая страна / регион",
       "countryPlaceholder": "напр. США, Япония, Испания, Бразилия",
       "countryScope": "Страна: {{country}}",
+      "countryDefaultEnglish": "Целевая страна: английский по умолчанию",
+      "emptyCopy": "Укажите тему, аудиторию, стиль автора или настроение видео, которое хотите найти. Страну или актуальность добавляйте только если это важно.",
       "emptyEyebrow": "Поиск с помощью ассистента",
       "emptyTitle": "Опишите видео, которое хотите найти",
       "languageHint": "Язык вывода",
@@ -318,9 +327,8 @@
       "stillWorking": "Всё ещё работает...",
       "toggleCopy": "Ищите исходное видео на YouTube, не покидая этот процесс.",
       "stage": {
-        "strategist": "Спланировать поиск",
-        "discovery": "Найти кандидатов",
-        "curator": "Оценить совпадения",
+        "answerer": "Обработка",
+        "planner": "Поиск",
         "retrieval": "Загрузить результаты"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Качественный перевод",
         "modelOn": "Черновик GPT-5.1 + проверка GPT-5.4",
+        "modelOnAnthropic": "Стандартный черновик + продвинутая проверка Anthropic",
         "modelOff": "Только черновик GPT-5.1",
+        "reviewProvider": "Провайдер проверки",
+        "openAiHighEnd": "Продвинутая проверка OpenAI",
+        "anthropicHighEnd": "Продвинутая проверка Anthropic",
         "help": "<b>5× кредитов</b> • Добавляет этап проверки для повышения качества",
         "helpWithEstimate": "<b>5× кредитов</b> • Ваш баланс: ~{{normalTime}} (обычный) / ~{{hqTime}} (выс.)",
         "helpOn": "<b>5× кредитов</b> • Включает этап проверки",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Перевод (Черновик)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Продвинутая модель OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Продвинутая модель Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Проверка",
       "off": "Выключено",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Сейчас нет доступной BYO-модели для видеорекомендаций. Включите OpenAI или Anthropic BYO для этой функции.",
       "videoSuggestionModelRequiresOpenAi": "Требуются разблокировка OpenAI BYO, ключ и включённый переключатель.",
       "videoSuggestionModelRequiresAnthropic": "Требуются разблокировка Anthropic BYO, ключ и включённый переключатель.",
+      "summaryRequiresOpenAi": "Требует доступа к OpenAI BYO и наличия ключа API.",
+      "summaryRequiresAnthropic": "Требует доступа к Anthropic BYO и наличия ключа API.",
       "translationReview": "Перевод (Проверка)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Сообщение (необязательно)",
     "optionalMessagePlaceholder": "Что вы пытались сделать?",
     "sendReport": "Отправить отчёт",
-    "reportPrompt": "Что-то пошло не так. Сообщите разработчику для быстрого исправления."
+    "reportPrompt": "Что-то пошло не так. Сообщите разработчику для быстрого исправления.",
+    "preparingReport": "Подготовка диагностического пакета...",
+    "reportContextWarning": "Часть диагностического контекста не удалось загрузить. Отчёт всё равно будет содержать сведения из этого приложения."
   }
 }

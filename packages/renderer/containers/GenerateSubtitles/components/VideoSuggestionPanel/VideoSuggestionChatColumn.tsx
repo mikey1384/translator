@@ -96,13 +96,14 @@ function renderAssistantInline(text: string, keyPrefix: string): ReactNode[] {
         );
       }
 
-      return (
-        <Fragment key={`${keyPrefix}-text-${index}`}>{segment}</Fragment>
-      );
+      return <Fragment key={`${keyPrefix}-text-${index}`}>{segment}</Fragment>;
     });
 }
 
-function renderAssistantParagraph(lines: string[], keyPrefix: string): ReactNode {
+function renderAssistantParagraph(
+  lines: string[],
+  keyPrefix: string
+): ReactNode {
   return (
     <p key={`${keyPrefix}-paragraph`}>
       {lines.map((line, index) => (
@@ -116,7 +117,9 @@ function renderAssistantParagraph(lines: string[], keyPrefix: string): ReactNode
 }
 
 function renderAssistantMessage(content: string): ReactNode {
-  const lines = String(content || '').replace(/\r/g, '').split('\n');
+  const lines = String(content || '')
+    .replace(/\r/g, '')
+    .split('\n');
   const blocks: ReactNode[] = [];
   let paragraphLines: string[] = [];
   let bulletItems: string[] = [];
@@ -125,7 +128,10 @@ function renderAssistantMessage(content: string): ReactNode {
   const flushParagraph = () => {
     if (paragraphLines.length === 0) return;
     blocks.push(
-      renderAssistantParagraph(paragraphLines, `assistant-block-${blocks.length}`)
+      renderAssistantParagraph(
+        paragraphLines,
+        `assistant-block-${blocks.length}`
+      )
     );
     paragraphLines = [];
   };
@@ -286,7 +292,9 @@ export default function VideoSuggestionChatColumn({
     return () => window.clearInterval(timer);
   }, [loading, updateStageProgress]);
 
-  const retrievalStage = pipelineStages.find(stage => stage.key === 'retrieval');
+  const retrievalStage = pipelineStages.find(
+    stage => stage.key === 'retrieval'
+  );
   const hintedRetrievalProgress =
     retrievalStage?.state === 'running'
       ? inferRetrievalStageProgressFromMessage(loadingMessage)
@@ -334,7 +342,7 @@ export default function VideoSuggestionChatColumn({
             </div>
           </div>
         ) : null}
-        {messages.map((msg, idx) => (
+        {messages.map((msg, idx) =>
           (() => {
             const resolvedContent = resolveI18n(msg.content);
             return (
@@ -352,13 +360,16 @@ export default function VideoSuggestionChatColumn({
               </div>
             );
           })()
-        ))}
+        )}
         {loading ? (
           <div className={assistantBubbleStyles}>
             <div>{loadingMessage}</div>
             <div className={loadingProgressHeaderStyles}>
               <span className={loadingProgressLabelStyles}>
-                {t('input.videoSuggestion.searchProgress', 'Search progress')}
+                {t(
+                  'input.videoSuggestion.liveActivityTitle',
+                  'Search progress'
+                )}
               </span>
               <span className={loadingProgressPercentStyles}>
                 {overallProgressPercent}%
@@ -429,9 +440,7 @@ export default function VideoSuggestionChatColumn({
               ) : null}
               {canShowSuggestedFollowUps ? (
                 <Button
-                  onClick={() =>
-                    setShowSuggestedFollowUps(current => !current)
-                  }
+                  onClick={() => setShowSuggestedFollowUps(current => !current)}
                   disabled={loading}
                   size="sm"
                   variant="secondary"
@@ -460,9 +469,7 @@ export default function VideoSuggestionChatColumn({
                   if (loading) onCancelSearch();
                   else onResetChat();
                 }}
-                disabled={
-                  loading ? cancelling : resetDisabled
-                }
+                disabled={loading ? cancelling : resetDisabled}
                 size="sm"
                 variant="text"
               >

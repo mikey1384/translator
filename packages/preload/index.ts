@@ -5,6 +5,8 @@ import {
   ExposedRenderResult,
   RenderSubtitlesOptions,
   CreditBalanceResult,
+  ByoVideoSuggestionModel,
+  Stage5VideoSuggestionMode,
   VideoSuggestionModelPreference,
   VideoSuggestionRecency,
 } from '@shared-types/app';
@@ -600,6 +602,18 @@ const electronAPI = {
     prefer: boolean
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-prefer-claude-summary', prefer),
+  getStage5VideoSuggestionMode: (): Promise<Stage5VideoSuggestionMode> =>
+    ipcRenderer.invoke('get-stage5-video-suggestion-mode'),
+  setStage5VideoSuggestionMode: (
+    mode: Stage5VideoSuggestionMode
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-stage5-video-suggestion-mode', mode),
+  getByoVideoSuggestionModel: (): Promise<ByoVideoSuggestionModel> =>
+    ipcRenderer.invoke('get-byo-video-suggestion-model'),
+  setByoVideoSuggestionModel: (
+    model: ByoVideoSuggestionModel
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-video-suggestion-model', model),
   getVideoSuggestionModelPreference:
     (): Promise<VideoSuggestionModelPreference> =>
       ipcRenderer.invoke('get-video-suggestion-model-preference'),

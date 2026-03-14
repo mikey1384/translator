@@ -7,12 +7,16 @@ export type { SettingsStoreType } from '../store/settings-store.js';
 import type { SettingsStoreType } from '../store/settings-store.js';
 import {
   APP_SETTINGS_DEFAULTS,
+  normalizeByoVideoSuggestionModelSetting,
   normalizeDubbingProviderSetting,
+  normalizeStage5VideoSuggestionModeSetting,
   normalizeStage5DubbingTtsProviderSetting,
   normalizeTranscriptionProviderSetting,
   normalizeVideoSuggestionModelPreferenceSetting,
   normalizeVideoSuggestionRecencySetting,
+  type ByoVideoSuggestionModel,
   type DubbingProviderPreference,
+  type Stage5VideoSuggestionMode,
   type Stage5DubbingTtsProviderPreference,
   type TranscriptionProviderPreference,
   type VideoSuggestionModelPreferenceValue,
@@ -29,6 +33,7 @@ import {
   sanitizeVideoSuggestionCountry,
   sanitizeVideoSuggestionPreference,
 } from '../../shared/helpers/video-suggestion-sanitize.js';
+import { resolveVideoSuggestionPreferenceForMode } from '../services/video-suggestion-model-preference.js';
 
 /* ----------------------------------------------------------
  * Types
@@ -52,7 +57,10 @@ export interface AllByoSettings {
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
   preferClaudeSummary: boolean;
+  // Active model preference derived from mode-specific settings.
   videoSuggestionModelPreference: VideoSuggestionModelPreferenceValue;
+  stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
+  byoVideoSuggestionModel: ByoVideoSuggestionModel;
   // Provider preferences
   preferredTranscriptionProvider: TranscriptionProviderPreference;
   preferredDubbingProvider: DubbingProviderPreference;
@@ -531,8 +539,8 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
-  /* ─────────── Video suggestion model preference ─────────── */
-  function getVideoSuggestionModelPreference(): VideoSuggestionModelPreferenceValue {
+  /* ─────────── Video suggestion model settings ─────────── */
+  function getLegacyVideoSuggestionModelPreference(): VideoSuggestionModelPreferenceValue {
     try {
       const rawValue = store.get(
         'videoSuggestionModelPreference',
@@ -541,26 +549,125 @@ export function buildSettingsHandlers(opts: {
       return normalizeVideoSuggestionModelPreferenceSetting(rawValue);
     } catch (err) {
       log.error(
-        '[settings] Failed to read video suggestion model preference:',
+        '[settings] Failed to read legacy video suggestion model preference:',
         err
       );
       return APP_SETTINGS_DEFAULTS.videoSuggestionModelPreference;
     }
   }
 
-  function setVideoSuggestionModelPreference(value: string): {
+  function getStage5VideoSuggestionMode(): Stage5VideoSuggestionMode {
+    try {
+      const rawValue = store.get(
+        'stage5VideoSuggestionMode',
+        getLegacyVideoSuggestionModelPreference()
+      );
+      return normalizeStage5VideoSuggestionModeSetting(rawValue);
+    } catch (err) {
+      log.error('[settings] Failed to read Stage5 video suggestion mode:', err);
+      return APP_SETTINGS_DEFAULTS.stage5VideoSuggestionMode;
+    }
+  }
+
+  function setStage5VideoSuggestionMode(value: string): {
     success: boolean;
     error?: string;
   } {
     try {
       store.set(
-        'videoSuggestionModelPreference',
-        normalizeVideoSuggestionModelPreferenceSetting(value)
+        'stage5VideoSuggestionMode',
+        normalizeStage5VideoSuggestionModeSetting(value)
       );
       return { success: true };
     } catch (err: any) {
+      log.error('[settings] Failed to persist Stage5 video suggestion mode:', err);
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  function getByoVideoSuggestionModel(): ByoVideoSuggestionModel {
+    try {
+      const rawValue = store.get(
+        'byoVideoSuggestionModel',
+        getLegacyVideoSuggestionModelPreference()
+      );
+      return normalizeByoVideoSuggestionModelSetting(rawValue);
+    } catch (err) {
+      log.error('[settings] Failed to read BYO video suggestion model:', err);
+      return APP_SETTINGS_DEFAULTS.byoVideoSuggestionModel;
+    }
+  }
+
+  function setByoVideoSuggestionModel(value: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set(
+        'byoVideoSuggestionModel',
+        normalizeByoVideoSuggestionModelSetting(value)
+      );
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist BYO video suggestion model:', err);
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  // Compatibility wrapper for older renderer builds.
+  function getVideoSuggestionModelPreference(): VideoSuggestionModelPreferenceValue {
+    try {
+      return resolveVideoSuggestionPreferenceForMode({
+        apiKeyModeEnabled: getApiKeyModeEnabled(),
+        stage5Mode: getStage5VideoSuggestionMode(),
+        byoModel: getByoVideoSuggestionModel(),
+      });
+    } catch (err) {
       log.error(
-        '[settings] Failed to persist video suggestion model preference:',
+        '[settings] Failed to resolve active video suggestion model preference:',
+        err
+      );
+      return APP_SETTINGS_DEFAULTS.videoSuggestionModelPreference;
+    }
+  }
+
+  // Compatibility wrapper for older renderer builds.
+  function setVideoSuggestionModelPreference(value: string): {
+    success: boolean;
+    error?: string;
+  } {
+    const normalized = normalizeVideoSuggestionModelPreferenceSetting(value);
+
+    const updateResult = (() => {
+      if (normalized === 'default' || normalized === 'quality') {
+        if (getApiKeyModeEnabled()) {
+          // Legacy unified BYO semantics: default/quality map to
+          // follow-draft/follow-review on the BYO setting.
+          return setByoVideoSuggestionModel(normalized);
+        }
+        return setStage5VideoSuggestionMode(
+          normalized === 'quality' ? 'high' : 'standard'
+        );
+      }
+      return setByoVideoSuggestionModel(normalized);
+    })();
+
+    if (!updateResult.success) {
+      return updateResult;
+    }
+
+    try {
+      store.set('videoSuggestionModelPreference', normalized);
+      return { success: true };
+    } catch (err: any) {
+      log.error(
+        '[settings] Failed to persist legacy video suggestion model preference:',
         err
       );
       return {
@@ -852,6 +959,8 @@ export function buildSettingsHandlers(opts: {
       preferClaudeReview: getPreferClaudeReview(),
       preferClaudeSummary: getPreferClaudeSummary(),
       videoSuggestionModelPreference: getVideoSuggestionModelPreference(),
+      stage5VideoSuggestionMode: getStage5VideoSuggestionMode(),
+      byoVideoSuggestionModel: getByoVideoSuggestionModel(),
       // Provider preferences
       preferredTranscriptionProvider: getPreferredTranscriptionProvider(),
       preferredDubbingProvider: getPreferredDubbingProvider(),
@@ -934,6 +1043,10 @@ export function buildSettingsHandlers(opts: {
     setPreferClaudeReview,
     getPreferClaudeSummary,
     setPreferClaudeSummary,
+    getStage5VideoSuggestionMode,
+    setStage5VideoSuggestionMode,
+    getByoVideoSuggestionModel,
+    setByoVideoSuggestionModel,
     getVideoSuggestionModelPreference,
     setVideoSuggestionModelPreference,
     getVideoSuggestionTargetCountry,

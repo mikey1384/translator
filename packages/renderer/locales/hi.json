@@ -176,6 +176,8 @@
       "sourceHint": "स्रोत खोजें",
       "searchDetails": "खोज विवरण",
       "introTitle": "आप जिस तरह का वीडियो चाहते हैं, उसका वर्णन करें.",
+      "introCopy": "किसी विषय, मूड, क्रिएटर या दर्शक से शुरू करें. देश या हाल की अवधि तभी जोड़ें जब वह मायने रखता हो.",
+      "starterQuestion": "आप किस तरह के वीडियो खोज रहे हैं?",
       "defaultFollowUp": "थोड़ा और बताएँ, मैं खोज को बेहतर करूँगा।",
       "errorMessage": "कुछ गलत हो गया। कृपया फिर से प्रयास करें।",
       "composerTitle": "AI को बताएं क्या ढूंढना है",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "अभी खोज नहीं हो पाई। कुछ देर बाद फिर प्रयास करें।",
+      "noMatches": "अभी कोई अच्छा मिलान नहीं मिला। विषय, मूड या क्रिएटर जोड़ें, मैं फिर कोशिश करूँगा।",
+      "lowConfidenceNoScoredResults": "रैंकिंग के बाद कोई भरोसेमंद मैच नहीं बचा. थोड़ा व्यापक विषय आज़माएं, क्रिएटर का संकेत जोड़ें, या हाल की अवधि बदलें.",
       "lowConfidenceGeneric": "खोज का भरोसा कम था. एक और विवरण जोड़ें और फिर से कोशिश करें.",
       "genericError": "कुछ गलत हो गया। फिर से प्रयास करें।",
       "platformLabel": "खोज प्लेटफ़ॉर्म",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "एक शुरुआती बिंदु चुनें, फिर चाहें तो उसे संपादित करें।",
       "starterQuestionWithMemory": "पिछली बार आपने {{summary}} खोजा था. क्या मैं वहीं से फिर शुरू करूं?",
       "quickStartUserMessage": "मेरी पिछली सहेजी गई सेटिंग्स का इस्तेमाल करके अभी वीडियो खोजें: {{summary}}",
+      "defaultSearchUserMessage": "मेरे लिए अभी वीडियो खोजें।",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\" जैसे और वीडियो ढूंढें",
         "differentCreator": "\"{{query}}\" किसी दूसरे क्रिएटर या चैनल से",
@@ -287,12 +292,16 @@
       "stillRunning": "अभी भी चल रहा है",
       "liveDetailsToggle": "लाइव विवरण",
       "moreActions": "और कार्रवाइयाँ",
+      "recentEvents": "हाल की घटनाएँ",
       "cancelFailed": "मौजूदा खोज रद्द नहीं हो सकी।",
       "countryGlobal": "ग्लोबल परिणाम",
       "countryHint": "ग्लोबल परिणामों के लिए खाली छोड़ें।",
+      "countryHintDefaultEnglish": "खाली छोड़ें, खोज भाषा डिफ़ॉल्ट रूप से अंग्रेज़ी होगी.",
       "countryLabel": "लक्षित देश / क्षेत्र",
       "countryPlaceholder": "जैसे US, Japan, Spain, Brazil",
       "countryScope": "देश: {{country}}",
+      "countryDefaultEnglish": "लक्षित देश: अंग्रेज़ी डिफ़ॉल्ट",
+      "emptyCopy": "जिस वीडियो को आप ढूंढना चाहते हैं, उसका विषय, दर्शक, क्रिएटर स्टाइल या मूड बताएं। देश या समय सीमा तभी जोड़ें जब ज़रूरी हो।",
       "emptyEyebrow": "असिस्टेंट की मदद से खोज",
       "emptyTitle": "जिस वीडियो को आप ढूंढना चाहते हैं, उसका वर्णन करें",
       "languageHint": "आउटपुट भाषा",
@@ -318,9 +327,8 @@
       "stillWorking": "अभी भी काम चल रहा है...",
       "toggleCopy": "वर्कफ़्लो छोड़े बिना स्रोत वीडियो के लिए YouTube खोजें।",
       "stage": {
-        "strategist": "खोज की योजना",
-        "discovery": "उम्मीदवार खोजें",
-        "curator": "मैच रैंक करें",
+        "answerer": "क्वेरी संसाधित करें",
+        "planner": "खोज बनाएँ",
         "retrieval": "नतीजे लोड करें"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "गुणवत्ता अनुवाद",
         "modelOn": "GPT-5.1 ड्राफ्ट + GPT-5.4 समीक्षा",
+        "modelOnAnthropic": "मानक ड्राफ्ट + Anthropic प्रीमियम समीक्षा",
         "modelOff": "सिर्फ GPT-5.1 ड्राफ्ट",
+        "reviewProvider": "समीक्षा प्रदाता",
+        "openAiHighEnd": "OpenAI प्रीमियम समीक्षा",
+        "anthropicHighEnd": "Anthropic प्रीमियम समीक्षा",
         "help": "<b>5× क्रेडिट</b> • उच्च गुणवत्ता के लिए समीक्षा चरण जोड़ता है",
         "helpWithEstimate": "<b>5× क्रेडिट</b> • आपका बैलेंस: ~{{normalTime}} (सामान्य) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× क्रेडिट</b> • रिव्यू पास शामिल",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "अनुवाद (ड्राफ्ट)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI प्रीमियम मॉडल",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic प्रीमियम मॉडल",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "समीक्षा चरण",
       "off": "बंद",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "अभी कोई BYO वीडियो सिफारिश मॉडल उपलब्ध नहीं है। इस फीचर के लिए OpenAI या Anthropic BYO सक्षम करें।",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key और toggle चाहिए।",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO unlock, key और toggle चाहिए।",
+      "summaryRequiresOpenAi": "OpenAI BYO तक पहुंच और API key आवश्यक हैं।",
+      "summaryRequiresAnthropic": "Anthropic BYO तक पहुंच और API key आवश्यक हैं।",
       "translationReview": "अनुवाद (समीक्षा)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "वैकल्पिक संदेश",
     "optionalMessagePlaceholder": "आप क्या करने की कोशिश कर रहे थे?",
     "sendReport": "रिपोर्ट भेजें",
-    "reportPrompt": "कुछ गलत हो गया। जल्दी समाधान के लिए इसे निर्माता को रिपोर्ट करें।"
+    "reportPrompt": "कुछ गलत हो गया। जल्दी समाधान के लिए इसे निर्माता को रिपोर्ट करें।",
+    "preparingReport": "डायग्नोस्टिक बंडल तैयार किया जा रहा है...",
+    "reportContextWarning": "कुछ डायग्नोस्टिक संदर्भ लोड नहीं हो सका। रिपोर्ट में फिर भी इस ऐप के विवरण शामिल होंगे।"
   }
 }

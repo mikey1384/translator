@@ -176,6 +176,8 @@
       "sourceHint": "検索元",
       "searchDetails": "検索の詳細",
       "introTitle": "欲しい動画の内容を説明してください。",
+      "introCopy": "トピック、雰囲気、クリエイター、または対象視聴者から始めてください。国や期間は必要な場合だけ追加してください。",
+      "starterQuestion": "どんな動画をお探しですか？",
       "defaultFollowUp": "もう少し教えていただければ、検索を絞り込みます。",
       "errorMessage": "エラーが発生しました。もう一度お試しください。",
       "composerTitle": "AIに探したい内容を伝えてください",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "現在検索できません。しばらくしてからもう一度お試しください。",
+      "noMatches": "まだ適切な結果がありません。トピック、雰囲気、クリエイター名を追加すると再検索します。",
+      "lowConfidenceNoScoredResults": "信頼できる一致候補がランキング後に残りませんでした。より広いトピックにするか、クリエイターのヒントを追加するか、期間設定を切り替えてください。",
       "lowConfidenceGeneric": "検索の確度が低めでした。詳細をもう1つ追加して再試行してください。",
       "genericError": "エラーが発生しました。もう一度お試しください。",
       "platformLabel": "検索プラットフォーム",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "出発点を選んで、必要なら編集してください。",
       "starterQuestionWithMemory": "前回は「{{summary}}」で検索しました。今回も同じ条件で検索しますか？",
       "quickStartUserMessage": "前回保存した設定を使って、今すぐ動画を探して: {{summary}}",
+      "defaultSearchUserMessage": "今すぐ動画を探して。",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\" のような動画をもっと探す",
         "differentCreator": "\"{{query}}\" を別のクリエイターやチャンネルで探す",
@@ -287,12 +292,16 @@
       "stillRunning": "処理継続中",
       "liveDetailsToggle": "進行状況の詳細",
       "moreActions": "その他の操作",
+      "recentEvents": "最近の出来事",
       "cancelFailed": "現在の検索をキャンセルできませんでした。",
       "countryGlobal": "グローバル結果",
       "countryHint": "グローバル結果にするには空欄のままにしてください。",
+      "countryHintDefaultEnglish": "空欄のままにすると検索言語は英語が既定です.",
       "countryLabel": "対象の国 / 地域",
       "countryPlaceholder": "例: 米国、日本、スペイン、ブラジル",
       "countryScope": "国: {{country}}",
+      "countryDefaultEnglish": "対象国: 既定は英語",
+      "emptyCopy": "探したい動画のテーマ、対象、クリエイターのスタイル、または雰囲気を入力してください。国や新しさは必要なときだけ追加してください。",
       "emptyEyebrow": "アシスタントと探す",
       "emptyTitle": "探したい動画を説明してください",
       "languageHint": "出力言語",
@@ -318,9 +327,8 @@
       "stillWorking": "まだ処理中...",
       "toggleCopy": "ワークフローを離れずにYouTubeでソース動画を検索します。",
       "stage": {
-        "strategist": "検索を計画",
-        "discovery": "候補を検索",
-        "curator": "一致候補を順位付け",
+        "answerer": "要望を整理",
+        "planner": "検索を作成",
         "retrieval": "結果を読み込む"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "高品質の翻訳",
         "modelOn": "GPT-5.1ドラフト + GPT-5.4レビュー",
+        "modelOnAnthropic": "標準ドラフト + Anthropic 上位レビュー",
         "modelOff": "GPT-5.1ドラフトのみ",
+        "reviewProvider": "レビュー提供元",
+        "openAiHighEnd": "OpenAI 上位レビュー",
+        "anthropicHighEnd": "Anthropic 上位レビュー",
         "help": "オン: レビュー工程を含みます（約5×のクレジット/時間）。オフ: レビューを省略します。",
         "helpWithEstimate": "レビューは約5×のクレジットを使用。あなたのクレジット：~{{normalTime}}通常、~{{hqTime}}高品質。",
         "helpOn": "<b>5×クレジット</b> • レビューパスを含む",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "翻訳（下書き）",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI 上位モデル",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic 上位モデル",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "レビュー",
       "off": "オフ",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "利用可能なBYO動画推薦モデルは現在ありません。この機能を使うにはOpenAIまたはAnthropic BYOを有効にしてください。",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYOのアンロック、キー、トグルが必要です。",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYOのアンロック、キー、トグルが必要です。",
+      "summaryRequiresOpenAi": "OpenAI BYO の利用権限とAPIキーが必要です。",
+      "summaryRequiresAnthropic": "Anthropic BYO の利用権限とAPIキーが必要です。",
       "translationReview": "翻訳（レビュー）"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "任意のメッセージ",
     "optionalMessagePlaceholder": "何をしようとしていましたか？",
     "sendReport": "レポートを送信",
-    "reportPrompt": "問題が発生しました。迅速な修正のために開発者に報告してください。"
+    "reportPrompt": "問題が発生しました。迅速な修正のために開発者に報告してください。",
+    "preparingReport": "診断バンドルを準備しています...",
+    "reportContextWarning": "一部の診断コンテキストを読み込めませんでした。レポートには引き続きこのアプリの詳細が含まれます。"
   }
 }

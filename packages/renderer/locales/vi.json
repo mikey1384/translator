@@ -176,6 +176,8 @@
       "sourceHint": "Nguồn tìm kiếm",
       "searchDetails": "Chi tiết tìm kiếm",
       "introTitle": "Hãy mô tả loại video bạn muốn.",
+      "introCopy": "Bắt đầu với chủ đề, tâm trạng, nhà sáng tạo hoặc đối tượng xem. Chỉ thêm quốc gia hoặc khoảng thời gian khi thật sự cần.",
+      "starterQuestion": "Bạn đang tìm loại video nào?",
       "defaultFollowUp": "Cho tôi biết thêm và tôi sẽ cải thiện kết quả tìm kiếm.",
       "errorMessage": "Đã xảy ra lỗi. Vui lòng thử lại.",
       "composerTitle": "Nói AI cần tìm gì",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Không thể tìm kiếm lúc này. Hãy thử lại sau giây lát.",
+      "noMatches": "Chưa có kết quả phù hợp. Thêm chủ đề, phong cách hoặc nhà sáng tạo và tôi sẽ thử lại.",
+      "lowConfidenceNoScoredResults": "Không còn kết quả khớp đáng tin cậy nào sau khi xếp hạng. Hãy thử chủ đề rộng hơn, thêm gợi ý về nhà sáng tạo hoặc đổi khoảng thời gian.",
       "lowConfidenceGeneric": "Độ tin cậy tìm kiếm thấp. Hãy thêm một chi tiết nữa rồi thử lại.",
       "genericError": "Đã xảy ra lỗi. Thử lại.",
       "platformLabel": "Nền tảng tìm kiếm",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Chọn một điểm bắt đầu rồi chỉnh lại nếu muốn.",
       "starterQuestionWithMemory": "Lần trước bạn đã tìm {{summary}}. Muốn tôi bắt đầu lại từ đó không?",
       "quickStartUserMessage": "Dùng tùy chọn tôi đã lưu gần nhất để tìm video ngay: {{summary}}",
+      "defaultSearchUserMessage": "Tìm video cho tôi ngay bây giờ.",
       "followUp": {
         "moreLikeQuery": "Tìm thêm video giống \"{{query}}\"",
         "differentCreator": "\"{{query}}\" từ một nhà sáng tạo hoặc kênh khác",
@@ -287,12 +292,16 @@
       "stillRunning": "Vẫn đang chạy",
       "liveDetailsToggle": "Chi tiết trực tiếp",
       "moreActions": "Thao tác khác",
+      "recentEvents": "Sự kiện gần đây",
       "cancelFailed": "Không thể hủy lần tìm kiếm hiện tại.",
       "countryGlobal": "Kết quả toàn cầu",
       "countryHint": "Để trống để xem kết quả toàn cầu.",
+      "countryHintDefaultEnglish": "Để trống để mặc định ngôn ngữ tìm kiếm là tiếng Anh.",
       "countryLabel": "Quốc gia / khu vực mục tiêu",
       "countryPlaceholder": "ví dụ: Mỹ, Nhật Bản, Tây Ban Nha, Brazil",
       "countryScope": "Quốc gia: {{country}}",
+      "countryDefaultEnglish": "Quốc gia mục tiêu: mặc định là tiếng Anh",
+      "emptyCopy": "Nêu chủ đề, đối tượng, phong cách nhà sáng tạo hoặc sắc thái của video bạn muốn tìm. Chỉ thêm quốc gia hay thời gian khi thật sự cần.",
       "emptyEyebrow": "Khám phá có trợ lý dẫn dắt",
       "emptyTitle": "Mô tả video bạn muốn tìm làm nguồn",
       "languageHint": "Ngôn ngữ đầu ra",
@@ -318,9 +327,8 @@
       "stillWorking": "Vẫn đang xử lý...",
       "toggleCopy": "Tìm video nguồn trên YouTube mà không rời khỏi quy trình này.",
       "stage": {
-        "strategist": "Lập kế hoạch tìm kiếm",
-        "discovery": "Tìm ứng viên",
-        "curator": "Xếp hạng kết quả khớp",
+        "answerer": "Xử lý truy vấn",
+        "planner": "Tạo truy vấn",
         "retrieval": "Tải kết quả"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Dịch chất lượng cao",
         "modelOn": "Bản nháp GPT-5.1 + rà soát GPT-5.4",
+        "modelOnAnthropic": "Bản nháp chuẩn + rà soát cao cấp của Anthropic",
         "modelOff": "Chỉ bản nháp GPT-5.1",
+        "reviewProvider": "Nhà cung cấp rà soát",
+        "openAiHighEnd": "Rà soát cao cấp của OpenAI",
+        "anthropicHighEnd": "Rà soát cao cấp của Anthropic",
         "help": "<b>5× tín dụng</b> • Thêm giai đoạn rà soát để chất lượng cao hơn",
         "helpWithEstimate": "<b>5× tín dụng</b> • Số dư của bạn: ~{{normalTime}} (thường) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× tín dụng</b> • Bao gồm lượt rà soát",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Dịch (Bản nháp)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Mô hình cao cấp của OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Mô hình cao cấp của Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Giai đoạn rà soát",
       "off": "Tắt",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Hiện chưa có mô hình đề xuất video BYO nào khả dụng. Hãy bật OpenAI hoặc Anthropic BYO để dùng tính năng này.",
       "videoSuggestionModelRequiresOpenAi": "Cần mở khóa OpenAI BYO, thêm key và bật công tắc.",
       "videoSuggestionModelRequiresAnthropic": "Cần mở khóa Anthropic BYO, thêm key và bật công tắc.",
+      "summaryRequiresOpenAi": "Yêu cầu quyền truy cập OpenAI BYO và khóa API.",
+      "summaryRequiresAnthropic": "Yêu cầu quyền truy cập Anthropic BYO và khóa API.",
       "translationReview": "Dịch (Rà soát)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Tin nhắn tùy chọn",
     "optionalMessagePlaceholder": "Bạn đang cố làm gì?",
     "sendReport": "Gửi báo cáo",
-    "reportPrompt": "Đã xảy ra lỗi. Báo cáo cho nhà phát triển để sửa nhanh."
+    "reportPrompt": "Đã xảy ra lỗi. Báo cáo cho nhà phát triển để sửa nhanh.",
+    "preparingReport": "Đang chuẩn bị gói chẩn đoán...",
+    "reportContextWarning": "Không thể tải một phần ngữ cảnh chẩn đoán. Báo cáo vẫn sẽ bao gồm chi tiết từ ứng dụng này."
   }
 }

@@ -35,6 +35,7 @@ import {
 import {
   normalizeVideoSuggestionModelPreference,
   resolveEffectiveVideoSuggestionModel,
+  resolveVideoSuggestionPreferenceForMode,
   type VideoSuggestionModelPreferenceValue,
 } from './video-suggestion-model-preference.js';
 import {
@@ -43,12 +44,18 @@ import {
   resolveStage5TranslationReviewModelConfig,
 } from '../utils/review-model-routing.js';
 import {
+  resolveTranslationModelFamilyHint,
+  type TranslationModelFamilyHintSource,
+} from '../utils/translation-model-family-hint.js';
+import {
   resolveSummaryModelConfig,
   type SummaryModelConfig,
 } from '../utils/summary-model-routing.js';
 import {
   APP_SETTINGS_DEFAULTS,
+  normalizeByoVideoSuggestionModelSetting,
   normalizeDubbingProviderSetting,
+  normalizeStage5VideoSuggestionModeSetting,
   normalizeStage5DubbingTtsProviderSetting,
   normalizeTranscriptionProviderSetting,
   normalizeVideoSuggestionModelPreferenceSetting,
@@ -213,25 +220,6 @@ export function prefersClaudeSummary(): boolean {
   }
 }
 
-function resolveTranslationModelFamilyHint({
-  translationPhase,
-  model,
-}: {
-  translationPhase?: 'draft' | 'review';
-  model?: string;
-}): 'gpt' | 'claude' | undefined {
-  if (translationPhase === 'review') {
-    return prefersClaudeReview() ? 'claude' : 'gpt';
-  }
-  if (translationPhase === 'draft') {
-    return prefersClaudeTranslation() ? 'claude' : 'gpt';
-  }
-  if (typeof model !== 'string' || model.trim().length === 0) {
-    return undefined;
-  }
-  return isClaudeModel(model) ? 'claude' : 'gpt';
-}
-
 export function resolveTranslationDraftModel(): string {
   const prefersClaude = prefersClaudeTranslation();
   const canUseAnthropicByo =
@@ -280,7 +268,7 @@ export function resolveTranslationReviewModel(): {
   });
 }
 
-export function getVideoSuggestionModelPreference(): VideoSuggestionModelPreference {
+function getLegacyVideoSuggestionModelPreferenceSetting(): VideoSuggestionModelPreference {
   if (!settingsStoreRef) {
     return APP_SETTINGS_DEFAULTS.videoSuggestionModelPreference;
   }
@@ -292,11 +280,57 @@ export function getVideoSuggestionModelPreference(): VideoSuggestionModelPrefere
     return normalizeVideoSuggestionModelPreferenceSetting(rawValue);
   } catch (err) {
     log.error(
-      '[ai-provider] Failed to load video suggestion model preference:',
+      '[ai-provider] Failed to load legacy video suggestion model preference:',
       err
     );
     return APP_SETTINGS_DEFAULTS.videoSuggestionModelPreference;
   }
+}
+
+function getStage5VideoSuggestionModeSetting() {
+  if (!settingsStoreRef) {
+    return APP_SETTINGS_DEFAULTS.stage5VideoSuggestionMode;
+  }
+  try {
+    const rawValue = settingsStoreRef.get(
+      'stage5VideoSuggestionMode',
+      getLegacyVideoSuggestionModelPreferenceSetting()
+    );
+    return normalizeStage5VideoSuggestionModeSetting(rawValue);
+  } catch (err) {
+    log.error(
+      '[ai-provider] Failed to load Stage5 video suggestion mode setting:',
+      err
+    );
+    return APP_SETTINGS_DEFAULTS.stage5VideoSuggestionMode;
+  }
+}
+
+function getByoVideoSuggestionModelSetting() {
+  if (!settingsStoreRef) {
+    return APP_SETTINGS_DEFAULTS.byoVideoSuggestionModel;
+  }
+  try {
+    const rawValue = settingsStoreRef.get(
+      'byoVideoSuggestionModel',
+      getLegacyVideoSuggestionModelPreferenceSetting()
+    );
+    return normalizeByoVideoSuggestionModelSetting(rawValue);
+  } catch (err) {
+    log.error(
+      '[ai-provider] Failed to load BYO video suggestion model setting:',
+      err
+    );
+    return APP_SETTINGS_DEFAULTS.byoVideoSuggestionModel;
+  }
+}
+
+export function getVideoSuggestionModelPreference(): VideoSuggestionModelPreference {
+  return resolveVideoSuggestionPreferenceForMode({
+    apiKeyModeEnabled: isApiKeyModeEnabled(),
+    stage5Mode: getStage5VideoSuggestionModeSetting(),
+    byoModel: getByoVideoSuggestionModelSetting(),
+  });
 }
 
 function getAvailableByoVideoSuggestionModels(): string[] {
@@ -321,7 +355,7 @@ export function resolveVideoSuggestionModel(
 ): string {
   return resolveEffectiveVideoSuggestionModel({
     preference: normalizeVideoSuggestionModelPreference(
-      preference || getVideoSuggestionModelPreference()
+      preference ?? getVideoSuggestionModelPreference()
     ),
     apiKeyModeEnabled: isApiKeyModeEnabled(),
     translationDraftModel: resolveTranslationDraftModel(),
@@ -334,7 +368,7 @@ export function resolveVideoSuggestionTranslationPhase(
   preference?: VideoSuggestionModelPreference
 ): 'draft' | 'review' {
   const selected = normalizeVideoSuggestionModelPreference(
-    preference || getVideoSuggestionModelPreference()
+    preference ?? getVideoSuggestionModelPreference()
   );
   return selected === 'quality' ||
     selected === STAGE5_REVIEW_TRANSLATION_MODEL ||
@@ -837,9 +871,20 @@ export async function transcribeLargeFileViaR2(options: {
   return transcribeViaR2(options);
 }
 
-export async function translate(options: Stage5TranslateOptions): Promise<any> {
-  const { messages, model, signal, reasoning, translationPhase } =
-    options as Stage5TranslateOptions;
+export async function translate(
+  options: Stage5TranslateOptions & {
+    modelFamilyHintSource?: TranslationModelFamilyHintSource;
+  }
+): Promise<any> {
+  const {
+    messages,
+    model,
+    signal,
+    reasoning,
+    translationPhase,
+    modelFamilyHintSource = 'preference',
+    ...stage5RestOptions
+  } = options;
   const normalizedModel = normalizeAiModelId(model);
   const provider = getActiveProviderForModel(normalizedModel);
   const apiKeyModeEnabled = isApiKeyModeEnabled();
@@ -848,13 +893,19 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
   const modelFamilyHint = resolveTranslationModelFamilyHint({
     translationPhase,
     model: normalizedModel,
+    hintSource: modelFamilyHintSource,
+    prefersClaudeDraft: prefersClaudeTranslation(),
+    prefersClaudeReview: prefersClaudeReview(),
   });
   const effectiveReasoning = getStage5TranslationReasoning({
     translationPhase,
     reasoning,
   });
   const stage5Options: Stage5TranslateOptions = {
-    ...options,
+    ...stage5RestOptions,
+    messages,
+    signal,
+    translationPhase,
     reasoning: effectiveReasoning,
     // Subtitle translation phases use backend-authoritative model routing in Stage5 mode.
     model: useServerModelAuthority ? undefined : normalizedModel,
@@ -963,7 +1014,10 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
 }
 
 export async function translateWithWebSearch(
-  options: Stage5TranslateOptions & { onTextDelta?: (delta: string) => void }
+  options: Stage5TranslateOptions & {
+    onTextDelta?: (delta: string) => void;
+    modelFamilyHintSource?: TranslationModelFamilyHintSource;
+  }
 ): Promise<any> {
   const {
     messages,
@@ -972,6 +1026,7 @@ export async function translateWithWebSearch(
     reasoning,
     translationPhase,
     onTextDelta,
+    modelFamilyHintSource = 'preference',
     ...stage5Options
   } = options;
   const normalizedModel = normalizeAiModelId(model);
@@ -983,6 +1038,9 @@ export async function translateWithWebSearch(
   const modelFamilyHint = resolveTranslationModelFamilyHint({
     translationPhase,
     model: normalizedModel,
+    hintSource: modelFamilyHintSource,
+    prefersClaudeDraft: prefersClaudeTranslation(),
+    prefersClaudeReview: prefersClaudeReview(),
   });
   const effectiveReasoning = getStage5TranslationReasoning({
     translationPhase,

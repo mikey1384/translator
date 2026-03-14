@@ -176,6 +176,8 @@
       "sourceHint": "ماخذ تلاش کریں",
       "searchDetails": "تلاش کی تفصیلات",
       "introTitle": "آپ جس قسم کی ویڈیو چاہتے ہیں، اسے بیان کریں۔",
+      "introCopy": "کسی موضوع، موڈ، تخلیق کار یا ناظرین سے شروع کریں۔ ملک یا تازگی صرف تب شامل کریں جب وہ واقعی اہم ہو۔",
+      "starterQuestion": "آپ کس قسم کی ویڈیوز تلاش کر رہے ہیں؟",
       "defaultFollowUp": "تھوڑا اور بتائیں، میں تلاش بہتر کروں گا۔",
       "errorMessage": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔",
       "composerTitle": "AI کو بتائیں کیا تلاش کرنا ہے",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "ابھی تلاش نہیں ہو سکی۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔",
+      "noMatches": "ابھی تک اچھے نتائج نہیں ملے۔ موضوع، ماحول، یا تخلیق کار شامل کریں، میں دوبارہ کوشش کروں گا۔",
+      "lowConfidenceNoScoredResults": "درجہ بندی کے بعد کوئی قابلِ اعتماد نتیجہ باقی نہیں رہا۔ زیادہ وسیع موضوع آزمائیں، تخلیق کار کا اشارہ شامل کریں، یا تازگی بدلیں۔",
       "lowConfidenceGeneric": "تلاش کا اعتماد کم تھا۔ ایک اور تفصیل شامل کریں اور دوبارہ کوشش کریں۔",
       "genericError": "کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔",
       "platformLabel": "تلاش کا پلیٹ فارم",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "ایک نقطہ آغاز چنیں، پھر چاہیں تو اسے ایڈٹ کر لیں۔",
       "starterQuestionWithMemory": "پچھلی بار آپ نے {{summary}} تلاش کیا تھا۔ کیا میں دوبارہ وہیں سے شروع کروں؟",
       "quickStartUserMessage": "میری آخری محفوظ کردہ سیٹنگز استعمال کرکے ابھی ویڈیوز تلاش کریں: {{summary}}",
+      "defaultSearchUserMessage": "میرے لیے ابھی ویڈیوز تلاش کریں۔",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\" جیسی مزید ویڈیوز تلاش کریں",
         "differentCreator": "\"{{query}}\" کسی اور تخلیق کار یا چینل سے",
@@ -287,12 +292,16 @@
       "stillRunning": "ابھی بھی چل رہا ہے",
       "liveDetailsToggle": "لائیو تفصیلات",
       "moreActions": "مزید کارروائیاں",
+      "recentEvents": "حالیہ واقعات",
       "cancelFailed": "موجودہ تلاش منسوخ نہ ہو سکی۔",
       "countryGlobal": "عالمی نتائج",
       "countryHint": "عالمی نتائج کے لیے خالی چھوڑ دیں۔",
+      "countryHintDefaultEnglish": "خالی چھوڑیں، تلاش کی زبان بطور ڈیفالٹ انگریزی ہوگی.",
       "countryLabel": "ہدف ملک / خطہ",
       "countryPlaceholder": "مثلاً US, Japan, Spain, Brazil",
       "countryScope": "ملک: {{country}}",
+      "countryDefaultEnglish": "ہدف ملک: انگریزی بطور ڈیفالٹ",
+      "emptyCopy": "جس ویڈیو کو آپ تلاش کرنا چاہتے ہیں، اس کا موضوع، سامعین، تخلیق کار کا انداز یا مزاج بتائیں۔ ملک یا وقت صرف ضرورت ہو تو شامل کریں۔",
       "emptyEyebrow": "اسسٹنٹ کی مدد سے تلاش",
       "emptyTitle": "جس ویڈیو کو آپ تلاش کرنا چاہتے ہیں اسے بیان کریں",
       "languageHint": "آؤٹ پٹ زبان",
@@ -318,9 +327,8 @@
       "stillWorking": "ابھی بھی کام جاری ہے...",
       "toggleCopy": "workflow چھوڑے بغیر source video کے لیے YouTube پر تلاش کریں۔",
       "stage": {
-        "strategist": "تلاش کی منصوبہ بندی",
-        "discovery": "امیدوار تلاش کریں",
-        "curator": "مطابقتوں کی درجہ بندی",
+        "answerer": "کوئری پراسیس",
+        "planner": "تلاش بنائیں",
         "retrieval": "نتائج لوڈ کریں"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "معیاری ترجمہ",
         "modelOn": "GPT-5.1 مسودہ + GPT-5.4 جائزہ",
+        "modelOnAnthropic": "معیاری ڈرافٹ + Anthropic پریمیم ریویو",
         "modelOff": "صرف GPT-5.1 مسودہ",
+        "reviewProvider": "ریویو فراہم کنندہ",
+        "openAiHighEnd": "OpenAI پریمیم ریویو",
+        "anthropicHighEnd": "Anthropic پریمیم ریویو",
         "help": "<b>5× کریڈٹس</b> • اعلیٰ معیار کے لیے جائزہ مرحلہ شامل کرتا ہے",
         "helpWithEstimate": "<b>5× کریڈٹس</b> • آپ کا بیلنس: ~{{normalTime}} (عام) / ~{{hqTime}} (اعلیٰ معیار)",
         "helpOn": "<b>5× کریڈٹس</b> • جائزہ پاس شامل ہے",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "ترجمہ (ڈرافٹ)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI پریمیم ماڈل",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic پریمیم ماڈل",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "جائزہ مرحلہ",
       "off": "آف",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "فی الحال کوئی BYO video recommendation model دستیاب نہیں ہے۔ اس فیچر کے لیے OpenAI یا Anthropic BYO فعال کریں۔",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key اور toggle درکار ہیں۔",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO unlock, key اور toggle درکار ہیں۔",
+      "summaryRequiresOpenAi": "OpenAI BYO تک رسائی اور API key درکار ہیں۔",
+      "summaryRequiresAnthropic": "Anthropic BYO تک رسائی اور API key درکار ہیں۔",
       "translationReview": "ترجمہ (جائزہ)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "اختیاری پیغام",
     "optionalMessagePlaceholder": "آپ کیا کرنے کی کوشش کر رہے تھے؟",
     "sendReport": "رپورٹ بھیجیں",
-    "reportPrompt": "کچھ غلط ہو گیا۔ فوری حل کے لیے تخلیق کار کو اطلاع دیں۔"
+    "reportPrompt": "کچھ غلط ہو گیا۔ فوری حل کے لیے تخلیق کار کو اطلاع دیں۔",
+    "preparingReport": "تشخیصی بنڈل تیار کیا جا رہا ہے...",
+    "reportContextWarning": "کچھ تشخیصی تناظر لوڈ نہیں ہو سکا۔ رپورٹ میں پھر بھی اس ایپ کی تفصیلات شامل ہوں گی۔"
   }
 }

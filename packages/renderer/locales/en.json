@@ -275,6 +275,7 @@
       "followUpChooserLabel": "Pick a starting point, then edit it if you want.",
       "starterQuestionWithMemory": "Last time you searched for {{summary}}. Want me to start there again?",
       "quickStartUserMessage": "Use my last saved preferences and find videos now: {{summary}}",
+      "defaultSearchUserMessage": "Find videos for me now.",
       "followUp": {
         "moreLikeQuery": "Find more videos like \"{{query}}\"",
         "differentCreator": "\"{{query}}\" from a different name or channel",
@@ -291,6 +292,7 @@
       "stillRunning": "Still running",
       "liveDetailsToggle": "Progress details",
       "moreActions": "More actions",
+      "recentEvents": "Recent events",
       "cancelFailed": "Failed to cancel the current search.",
       "countryGlobal": "Target country: English default",
       "countryHint": "Leave blank to default search language to English.",
@@ -654,6 +656,8 @@
       "videoSuggestionModelUnavailable": "No BYO video recommendation model is currently available. Enable OpenAI or Anthropic BYO for this feature.",
       "videoSuggestionModelRequiresOpenAi": "Requires OpenAI BYO unlock, key, and toggle.",
       "videoSuggestionModelRequiresAnthropic": "Requires Anthropic BYO unlock, key, and toggle.",
+      "summaryRequiresOpenAi": "Requires OpenAI BYO access and API key.",
+      "summaryRequiresAnthropic": "Requires Anthropic BYO access and API key.",
       "translationReview": "Translation (Review)"
     },
     "apiKeyGuide": {
@@ -1020,6 +1024,8 @@
     "optionalMessage": "Optional message",
     "optionalMessagePlaceholder": "What were you trying to do?",
     "sendReport": "Send report",
-    "reportPrompt": "Something went wrong. Report this to the creator for a quick fix."
+    "reportPrompt": "Something went wrong. Report this to the creator for a quick fix.",
+    "preparingReport": "Preparing diagnostic bundle...",
+    "reportContextWarning": "Some diagnostic context could not be loaded. The report will still include details from this app."
   }
 }

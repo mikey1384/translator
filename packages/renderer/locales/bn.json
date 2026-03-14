@@ -176,6 +176,8 @@
       "sourceHint": "উৎস খুঁজুন",
       "searchDetails": "খোঁজের বিস্তারিত",
       "introTitle": "আপনি কেমন ভিডিও চান, তা বর্ণনা করুন।",
+      "introCopy": "একটি বিষয়, মুড, নির্মাতা বা দর্শক দিয়ে শুরু করুন। দেশ বা সাম্প্রতিকতা শুধু দরকার হলে যোগ করুন।",
+      "starterQuestion": "আপনি কী ধরনের ভিডিও খুঁজছেন?",
       "defaultFollowUp": "আরেকটু বিস্তারিত বলুন, আমি সার্চ আরও ভালো করব।",
       "errorMessage": "কিছু একটা সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
       "composerTitle": "AI-কে কী খুঁজতে হবে বলুন",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "এখন সার্চ করা যাচ্ছে না। কিছুক্ষণ পর আবার চেষ্টা করুন।",
+      "noMatches": "এখনও ভালো মিল পাওয়া যায়নি। বিষয়, মেজাজ বা ক্রিয়েটর যোগ করুন, আমি আবার চেষ্টা করব।",
+      "lowConfidenceNoScoredResults": "র‌্যাঙ্কিংয়ের পরে কোনো নির্ভরযোগ্য মিল টিকে থাকেনি। আরও বিস্তৃত বিষয় চেষ্টা করুন, নির্মাতার ইঙ্গিত যোগ করুন, বা সাম্প্রতিকতা বদলান।",
       "lowConfidenceGeneric": "খোঁজের নির্ভরযোগ্যতা কম ছিল। আরেকটি বিস্তারিত যোগ করে আবার চেষ্টা করুন।",
       "genericError": "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।",
       "platformLabel": "খোঁজের প্ল্যাটফর্ম",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "একটি শুরুর দিক বেছে নিন, তারপর চাইলে সেটি সম্পাদনা করুন।",
       "starterQuestionWithMemory": "গতবার আপনি {{summary}} খুঁজেছিলেন। আমি কি আবার সেখান থেকেই শুরু করব?",
       "quickStartUserMessage": "আমার শেষ সংরক্ষিত সেটিংস ব্যবহার করে এখনই ভিডিও খুঁজুন: {{summary}}",
+      "defaultSearchUserMessage": "এখনই আমার জন্য ভিডিও খুঁজুন।",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\"-এর মতো আরও ভিডিও খুঁজুন",
         "differentCreator": "\"{{query}}\" অন্য কোনো নির্মাতা বা চ্যানেল থেকে",
@@ -287,12 +292,16 @@
       "stillRunning": "এখনও চলছে",
       "liveDetailsToggle": "লাইভ বিবরণ",
       "moreActions": "আরও অ্যাকশন",
+      "recentEvents": "সাম্প্রতিক ঘটনাবলি",
       "cancelFailed": "বর্তমান অনুসন্ধান বাতিল করা যায়নি।",
       "countryGlobal": "গ্লোবাল ফলাফল",
       "countryHint": "গ্লোবাল ফলাফলের জন্য ফাঁকা রাখুন।",
+      "countryHintDefaultEnglish": "ফাঁকা রাখুন, সার্চ ভাষা ডিফল্টভাবে ইংরেজি হবে.",
       "countryLabel": "লক্ষ্য দেশ / অঞ্চল",
       "countryPlaceholder": "যেমন US, Japan, Spain, Brazil",
       "countryScope": "দেশ: {{country}}",
+      "countryDefaultEnglish": "লক্ষ্য দেশ: ইংরেজি ডিফল্ট",
+      "emptyCopy": "যে ভিডিওটি খুঁজতে চান, তার বিষয়, দর্শক, নির্মাতার স্টাইল বা মুড উল্লেখ করুন। দরকার হলে তবেই দেশ বা সময়সীমা যোগ করুন।",
       "emptyEyebrow": "অ্যাসিস্ট্যান্টের সাহায্যে অনুসন্ধান",
       "emptyTitle": "যে ভিডিওটি খুঁজতে চান তা বর্ণনা করুন",
       "languageHint": "আউটপুট ভাষা",
@@ -318,9 +327,8 @@
       "stillWorking": "এখনও কাজ চলছে...",
       "toggleCopy": "ওয়ার্কফ্লো ছাড়াই সোর্স ভিডিও খুঁজতে YouTube-এ অনুসন্ধান করুন।",
       "stage": {
-        "strategist": "খোঁজের পরিকল্পনা",
-        "discovery": "সম্ভাব্য ফল খোঁজা",
-        "curator": "মিলগুলো র‌্যাঙ্ক করুন",
+        "answerer": "কোয়েরি চালান",
+        "planner": "সার্চ তৈরি",
         "retrieval": "ফল লোড করুন"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "কোয়ালিটি অনুবাদ",
         "modelOn": "GPT-5.1 খসড়া + GPT-5.4 রিভিউ",
+        "modelOnAnthropic": "স্ট্যান্ডার্ড খসড়া + Anthropic প্রিমিয়াম রিভিউ",
         "modelOff": "শুধু GPT-5.1 খসড়া",
+        "reviewProvider": "রিভিউ প্রদানকারী",
+        "openAiHighEnd": "OpenAI প্রিমিয়াম রিভিউ",
+        "anthropicHighEnd": "Anthropic প্রিমিয়াম রিভিউ",
         "help": "<b>5× ক্রেডিট</b> • উচ্চ মানের জন্য রিভিউ পর্যায় যোগ করে",
         "helpWithEstimate": "<b>5× ক্রেডিট</b> • আপনার ব্যালেন্স: ~{{normalTime}} (সাধারণ) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× ক্রেডিট</b> • রিভিউ পাস অন্তর্ভুক্ত",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "অনুবাদ (ড্রাফট)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI প্রিমিয়াম মডেল",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic প্রিমিয়াম মডেল",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "রিভিউ ধাপ",
       "off": "বন্ধ",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "এখন কোনো BYO ভিডিও recommendation model উপলভ্য নয়। এই ফিচারের জন্য OpenAI বা Anthropic BYO সক্রিয় করুন।",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key এবং toggle দরকার।",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO unlock, key এবং toggle দরকার।",
+      "summaryRequiresOpenAi": "OpenAI BYO-তে প্রবেশাধিকার এবং API key প্রয়োজন।",
+      "summaryRequiresAnthropic": "Anthropic BYO-তে প্রবেশাধিকার এবং API key প্রয়োজন।",
       "translationReview": "অনুবাদ (রিভিউ)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "ঐচ্ছিক বার্তা",
     "optionalMessagePlaceholder": "আপনি কী করার চেষ্টা করছিলেন?",
     "sendReport": "রিপোর্ট পাঠান",
-    "reportPrompt": "কিছু একটা সমস্যা হয়েছে। দ্রুত সমাধানের জন্য ডেভেলপারকে রিপোর্ট করুন।"
+    "reportPrompt": "কিছু একটা সমস্যা হয়েছে। দ্রুত সমাধানের জন্য ডেভেলপারকে রিপোর্ট করুন।",
+    "preparingReport": "ডায়াগনস্টিক বান্ডেল প্রস্তুত করা হচ্ছে...",
+    "reportContextWarning": "কিছু ডায়াগনস্টিক প্রেক্ষাপট লোড করা যায়নি। রিপোর্টে তবুও এই অ্যাপের বিবরণ থাকবে।"
   }
 }

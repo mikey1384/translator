@@ -106,8 +106,8 @@ function buildImplicitSearchPrompt(
 ): string {
   if (preferenceSummary) {
     return t(
-      'input.videoSuggestion.defaultSearchUserMessageWithSummary',
-      'Find videos for me now using {{summary}} as guidance.',
+      'input.videoSuggestion.quickStartUserMessage',
+      'Use my last saved preferences and find videos now: {{summary}}',
       { summary: preferenceSummary }
     );
   }
@@ -469,7 +469,6 @@ export default function useVideoSuggestionFlow({
       setLastRequestPreferences,
       setMessages,
       setResolvedModelRuntime,
-      setResults,
       setSearchQuery,
       setShowQuickStartAction,
       setYoutubeRegionCode,
@@ -565,8 +564,7 @@ export default function useVideoSuggestionFlow({
         continuationId: currentState.continuationId || undefined,
         searchQueryOverride: currentState.searchQuery,
         youtubeRegionCode: currentState.youtubeRegionCode || undefined,
-        youtubeSearchLanguage:
-          currentState.youtubeSearchLanguage || undefined,
+        youtubeSearchLanguage: currentState.youtubeSearchLanguage || undefined,
         excludeUrls: currentState.results.map(item => item.url),
         operationId,
       });
@@ -681,6 +679,7 @@ export default function useVideoSuggestionFlow({
     setMessages,
     setResolvedModelRuntime,
     setResults,
+    setSearchQuery,
     setShowQuickStartAction,
     setYoutubeRegionCode,
     setYoutubeSearchLanguage,

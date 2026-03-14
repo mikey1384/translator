@@ -249,6 +249,15 @@ declare module '@shared-types/app' {
     | 'gpt-5.4'
     | 'claude-sonnet-4-6'
     | 'claude-opus-4-6';
+  export type Stage5VideoSuggestionMode = 'standard' | 'high';
+  export type ByoVideoSuggestionModel =
+    | 'gpt-5.1'
+    | 'gpt-5.4'
+    | 'claude-sonnet-4-6'
+    | 'claude-opus-4-6'
+    // Migration-only compatibility states for legacy unified preferences.
+    | 'follow-draft'
+    | 'follow-review';
 
   export type VideoSuggestionRecency =
     | 'any'
@@ -745,6 +754,8 @@ declare module '@shared-types/app' {
     preferClaudeReview: boolean;
     preferClaudeSummary: boolean;
     videoSuggestionModelPreference: VideoSuggestionModelPreference;
+    stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
+    byoVideoSuggestionModel: ByoVideoSuggestionModel;
     preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
     preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
     stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
@@ -1026,6 +1037,14 @@ declare module '@shared-types/app' {
     getPreferClaudeSummary: () => Promise<boolean>;
     setPreferClaudeSummary: (
       prefer: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+    getStage5VideoSuggestionMode: () => Promise<Stage5VideoSuggestionMode>;
+    setStage5VideoSuggestionMode: (
+      mode: Stage5VideoSuggestionMode
+    ) => Promise<{ success: boolean; error?: string }>;
+    getByoVideoSuggestionModel: () => Promise<ByoVideoSuggestionModel>;
+    setByoVideoSuggestionModel: (
+      model: ByoVideoSuggestionModel
     ) => Promise<{ success: boolean; error?: string }>;
     getVideoSuggestionModelPreference: () => Promise<VideoSuggestionModelPreference>;
     setVideoSuggestionModelPreference: (

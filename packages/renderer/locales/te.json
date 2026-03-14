@@ -176,6 +176,8 @@
       "sourceHint": "మూలాన్ని శోధించండి",
       "searchDetails": "శోధన వివరాలు",
       "introTitle": "మీకు కావలసిన వీడియో రకాన్ని వివరించండి.",
+      "introCopy": "ఒక అంశం, మూడ్, సృష్టికర్త లేదా ప్రేక్షకులతో ప్రారంభించండి. అవసరమైతే మాత్రమే దేశం లేదా తాజాదనాన్ని జోడించండి.",
+      "starterQuestion": "మీరు ఎలాంటి వీడియోలు వెతుకుతున్నారు?",
       "defaultFollowUp": "మరికొంచెం చెప్పండి, నేను శోధనను మెరుగుపరుస్తాను.",
       "errorMessage": "ఏదో తప్పు జరిగింది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
       "composerTitle": "AI ఏమి కనుగొనాలో చెప్పండి",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "ఇప్పుడు శోధించలేకపోయాను. కాసేపటి తర్వాత మళ్ళీ ప్రయత్నించండి.",
+      "noMatches": "ఇంకా సరైన ఫలితాలు దొరకలేదు. అంశం, మూడ్ లేదా క్రియేటర్ జోడించండి, నేను మళ్ళీ ప్రయత్నిస్తాను.",
+      "lowConfidenceNoScoredResults": "ర్యాంకింగ్ తర్వాత నమ్మదగిన మ్యాచ్‌లు ఏవీ మిగలలేదు. మరింత విస్తృతమైన అంశాన్ని ప్రయత్నించండి, సృష్టికర్త సంకేతాన్ని జోడించండి లేదా తాజాదనాన్ని మార్చండి.",
       "lowConfidenceGeneric": "శోధన నమ్మకం తక్కువగా ఉంది. మరో వివరాన్ని జోడించి మళ్లీ ప్రయత్నించండి.",
       "genericError": "ఏదో తప్పు జరిగింది. మళ్ళీ ప్రయత్నించండి.",
       "platformLabel": "శోధన వేదిక",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "ఒక ప్రారంభ బిందువును ఎంచుకుని, కావాలంటే దాన్ని సవరించండి.",
       "starterQuestionWithMemory": "గతసారి మీరు {{summary}} కోసం శోధించారు. మళ్లీ అక్కడి నుంచే ప్రారంభించాలా?",
       "quickStartUserMessage": "నేను చివరిసారిగా సేవ్ చేసిన సెట్టింగ్స్‌ను ఉపయోగించి ఇప్పుడే వీడియోలను కనుగొను: {{summary}}",
+      "defaultSearchUserMessage": "ఇప్పుడే నా కోసం వీడియోలను వెతకండి.",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\" లాంటి మరిన్ని వీడియోలు కనుగొనండి",
         "differentCreator": "\"{{query}}\" మరో క్రియేటర్ లేదా ఛానల్ నుండి",
@@ -287,12 +292,16 @@
       "stillRunning": "ఇంకా నడుస్తోంది",
       "liveDetailsToggle": "లైవ్ వివరాలు",
       "moreActions": "మరిన్ని చర్యలు",
+      "recentEvents": "ఇటీవలి సంఘటనలు",
       "cancelFailed": "ప్రస్తుత సెర్చ్‌ను రద్దు చేయలేకపోయాం.",
       "countryGlobal": "గ్లోబల్ ఫలితాలు",
       "countryHint": "గ్లోబల్ ఫలితాల కోసం ఖాళీగా వదిలేయండి.",
+      "countryHintDefaultEnglish": "ఖాళీగా వదిలేయండి, శోధన భాష డిఫాల్ట్‌గా ఇంగ్లీష్ అవుతుంది.",
       "countryLabel": "లక్ష్య దేశం / ప్రాంతం",
       "countryPlaceholder": "ఉదా. US, Japan, Spain, Brazil",
       "countryScope": "దేశం: {{country}}",
+      "countryDefaultEnglish": "లక్ష్య దేశం: ఇంగ్లీష్ డిఫాల్ట్",
+      "emptyCopy": "మీరు వెతుకుతున్న వీడియో యొక్క విషయం, ప్రేక్షకులు, క్రియేటర్ శైలి లేదా మూడ్ చెప్పండి. అవసరమైనప్పుడు మాత్రమే దేశం లేదా సమయాన్ని జోడించండి.",
       "emptyEyebrow": "అసిస్టెంట్ సహాయంతో శోధన",
       "emptyTitle": "మీరు వెతుకుతున్న వీడియోను వివరించండి",
       "languageHint": "అవుట్‌పుట్ భాష",
@@ -318,9 +327,8 @@
       "stillWorking": "ఇంకా పని చేస్తోంది...",
       "toggleCopy": "workflow‌ను వదిలిపెట్టకుండా source video కోసం YouTube‌లో వెతకండి.",
       "stage": {
-        "strategist": "శోధనను ప్రణాళిక చేయి",
-        "discovery": "అభ్యర్థులను శోధించు",
-        "curator": "మ్యాచ్‌లను ర్యాంక్ చేయి",
+        "answerer": "క్వెరీ ప్రాసెస్",
+        "planner": "శోధన రూపొందించు",
         "retrieval": "ఫలితాలను లోడ్ చేయి"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "నాణ్యత అనువాదం",
         "modelOn": "GPT-5.1 డ్రాఫ్ట్ + GPT-5.4 సమీక్ష",
+        "modelOnAnthropic": "స్టాండర్డ్ డ్రాఫ్ట్ + Anthropic ప్రీమియం సమీక్ష",
         "modelOff": "GPT-5.1 డ్రాఫ్ట్ మాత్రమే",
+        "reviewProvider": "సమీక్ష ప్రొవైడర్",
+        "openAiHighEnd": "OpenAI ప్రీమియం సమీక్ష",
+        "anthropicHighEnd": "Anthropic ప్రీమియం సమీక్ష",
         "help": "<b>5× క్రెడిట్‌లు</b> • అధిక నాణ్యత కోసం సమీక్ష దశను జోడిస్తుంది",
         "helpWithEstimate": "<b>5× క్రెడిట్‌లు</b> • మీ బ్యాలెన్స్: ~{{normalTime}} (సాధారణ) / ~{{hqTime}} (hq)",
         "helpOn": "<b>5× క్రెడిట్లు</b> • రివ్యూ పాస్ కలిగి ఉంటుంది",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "అనువాదం (డ్రాఫ్ట్)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "OpenAI ప్రీమియం మోడల్",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Anthropic ప్రీమియం మోడల్",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "సమీక్ష దశ",
       "off": "ఆఫ్",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "ప్రస్తుతం BYO వీడియో సిఫారసు మోడల్ ఏదీ అందుబాటులో లేదు. ఈ ఫీచర్ కోసం OpenAI లేదా Anthropic BYOని ఎనేబుల్ చేయండి.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key మరియు toggle అవసరం.",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO unlock, key మరియు toggle అవసరం.",
+      "summaryRequiresOpenAi": "OpenAI BYO కు ప్రాప్యత మరియు API key అవసరం.",
+      "summaryRequiresAnthropic": "Anthropic BYO కు ప్రాప్యత మరియు API key అవసరం.",
       "translationReview": "అనువాదం (సమీక్ష)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "ఐచ్ఛిక సందేశం",
     "optionalMessagePlaceholder": "మీరు ఏమి చేయడానికి ప్రయత్నిస్తున్నారు?",
     "sendReport": "నివేదిక పంపు",
-    "reportPrompt": "ఏదో తప్పు జరిగింది. త్వరిత పరిష్కారం కోసం డెవలపర్‌కు నివేదించండి."
+    "reportPrompt": "ఏదో తప్పు జరిగింది. త్వరిత పరిష్కారం కోసం డెవలపర్‌కు నివేదించండి.",
+    "preparingReport": "డయాగ్నస్టిక్ బండిల్ సిద్ధం అవుతోంది...",
+    "reportContextWarning": "కొంత డయాగ్నస్టిక్ సందర్భ సమాచారం లోడ్ కాలేదు. అయినప్పటికీ రిపోర్ట్‌లో ఈ యాప్ వివరాలు ఉంటాయి."
   }
 }

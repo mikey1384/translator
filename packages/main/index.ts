@@ -873,6 +873,20 @@ try {
   ipcMain.handle('set-prefer-claude-summary', (_event, value: boolean) =>
     settingsHandlers.setPreferClaudeSummary(Boolean(value))
   );
+  ipcMain.handle('get-stage5-video-suggestion-mode', () =>
+    settingsHandlers.getStage5VideoSuggestionMode()
+  );
+  ipcMain.handle(
+    'set-stage5-video-suggestion-mode',
+    (_event, value: 'standard' | 'high') =>
+      settingsHandlers.setStage5VideoSuggestionMode(value)
+  );
+  ipcMain.handle('get-byo-video-suggestion-model', () =>
+    settingsHandlers.getByoVideoSuggestionModel()
+  );
+  ipcMain.handle('set-byo-video-suggestion-model', (_event, value: string) =>
+    settingsHandlers.setByoVideoSuggestionModel(value)
+  );
   ipcMain.handle('get-video-suggestion-model-preference', () =>
     settingsHandlers.getVideoSuggestionModelPreference()
   );

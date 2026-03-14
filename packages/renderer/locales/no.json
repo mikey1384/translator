@@ -176,6 +176,8 @@
       "sourceHint": "Søkekilde",
       "searchDetails": "Søkedetaljer",
       "introTitle": "Beskriv hva slags video du vil ha.",
+      "introCopy": "Start med et tema, en stemning, en skaper eller et publikum. Legg bare til land eller tidsperiode hvis det er viktig.",
+      "starterQuestion": "Hva slags videoer ser du etter?",
       "defaultFollowUp": "Fortell meg litt mer, så finjusterer jeg søket.",
       "errorMessage": "Noe gikk galt. Vennligst prøv igjen.",
       "composerTitle": "Fortell AI hva den skal finne",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Jeg kan ikke søke akkurat nå. Prøv igjen om et øyeblikk.",
+      "noMatches": "Ingen gode treff ennå. Legg til emne, stemning eller skaper, så prøver jeg igjen.",
+      "lowConfidenceNoScoredResults": "Ingen pålitelige treff kom gjennom rangeringen. Prøv et bredere tema, legg til et hint om skaperen eller bytt tidsperiode.",
       "lowConfidenceGeneric": "Søket hadde lav treffsikkerhet. Legg til én detalj til og prøv igjen.",
       "genericError": "Noe gikk galt. Prøv igjen.",
       "platformLabel": "Søkeplattform",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Velg et utgangspunkt og rediger det hvis du vil.",
       "starterQuestionWithMemory": "Sist søkte du etter {{summary}}. Vil du at jeg skal starte der igjen?",
       "quickStartUserMessage": "Bruk de sist lagrede preferansene mine for å finne videoer nå: {{summary}}",
+      "defaultSearchUserMessage": "Finn videoer for meg nå.",
       "followUp": {
         "moreLikeQuery": "Finn flere videoer som \"{{query}}\"",
         "differentCreator": "\"{{query}}\" fra en annen skaper eller kanal",
@@ -287,12 +292,16 @@
       "stillRunning": "Kjører fortsatt",
       "liveDetailsToggle": "Direktedetaljer",
       "moreActions": "Flere handlinger",
+      "recentEvents": "Nylige hendelser",
       "cancelFailed": "Kunne ikke avbryte det gjeldende søket.",
       "countryGlobal": "Globale resultater",
       "countryHint": "La stå tomt for globale resultater.",
+      "countryHintDefaultEnglish": "La stå tomt for å bruke engelsk som standardspråk for søk.",
       "countryLabel": "Målland / region",
       "countryPlaceholder": "f.eks. USA, Japan, Spania, Brasil",
       "countryScope": "Land: {{country}}",
+      "countryDefaultEnglish": "Målland: engelsk som standard",
+      "emptyCopy": "Nevn temaet, målgruppen, skaperstilen eller stemningen i videoen du vil finne. Legg til land eller aktualitet bare når det er viktig.",
       "emptyEyebrow": "Søk med hjelp fra assistenten",
       "emptyTitle": "Beskriv videoen du vil finne",
       "languageHint": "Utdataspråk",
@@ -318,9 +327,8 @@
       "stillWorking": "Jobber fortsatt...",
       "toggleCopy": "Søk på YouTube etter en kildevideo uten å forlate arbeidsflyten.",
       "stage": {
-        "strategist": "Planlegg søk",
-        "discovery": "Finn kandidater",
-        "curator": "Ranger treff",
+        "answerer": "Behandle forespørsel",
+        "planner": "Lag søk",
         "retrieval": "Last inn resultater"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Kvalitetsoversettelse",
         "modelOn": "GPT-5.1-utkast + GPT-5.4-gjennomgang",
+        "modelOnAnthropic": "Standardutkast + avansert gjennomgang med Anthropic",
         "modelOff": "Kun GPT-5.1-utkast",
+        "reviewProvider": "Gjennomgangsleverandør",
+        "openAiHighEnd": "Avansert gjennomgang med OpenAI",
+        "anthropicHighEnd": "Avansert gjennomgang med Anthropic",
         "help": "<b>5× kreditter</b> • Legger til gjennomgangsfase for høyere kvalitet",
         "helpWithEstimate": "<b>5× kreditter</b> • Din saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hk)",
         "helpOn": "<b>5× credits</b> • Inkluderer gjennomgangspass",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Oversettelse (utkast)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Avansert OpenAI-modell",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Avansert Anthropic-modell",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Oversettelse (gjennomgang)",
       "off": "Av",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Ingen BYO-modell for videoanbefaling er tilgjengelig akkurat nå. Aktiver OpenAI eller Anthropic BYO for denne funksjonen.",
       "videoSuggestionModelRequiresOpenAi": "Krever OpenAI BYO-opplåsing, nøkkel og aktivering.",
       "videoSuggestionModelRequiresAnthropic": "Krever Anthropic BYO-opplåsing, nøkkel og aktivering.",
+      "summaryRequiresOpenAi": "Krever OpenAI BYO-tilgang og en API-nøkkel.",
+      "summaryRequiresAnthropic": "Krever Anthropic BYO-tilgang og en API-nøkkel.",
       "translationReview": "Oversettelse (gjennomgang)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Valgfri melding",
     "optionalMessagePlaceholder": "Hva prøvde du å gjøre?",
     "sendReport": "Send rapport",
-    "reportPrompt": "Noe gikk galt. Rapporter dette til utvikleren for en rask løsning."
+    "reportPrompt": "Noe gikk galt. Rapporter dette til utvikleren for en rask løsning.",
+    "preparingReport": "Forbereder diagnostikkpakke...",
+    "reportContextWarning": "Noe diagnostikkontekst kunne ikke lastes inn. Rapporten vil fortsatt inneholde detaljer fra denne appen."
   }
 }

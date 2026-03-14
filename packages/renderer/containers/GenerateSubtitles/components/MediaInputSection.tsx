@@ -387,8 +387,14 @@ export default function MediaInputSection({
                     <button
                       type="button"
                       className={recentItemRemoveButtonStyles}
-                      aria-label={t('common.remove', 'Remove')}
-                      title={t('common.remove', 'Remove')}
+                      aria-label={t(
+                        'input.videoSuggestion.removeHistoryItem',
+                        'Remove'
+                      )}
+                      title={t(
+                        'input.videoSuggestion.removeHistoryItem',
+                        'Remove'
+                      )}
                       onClick={event => {
                         event.preventDefault();
                         event.stopPropagation();

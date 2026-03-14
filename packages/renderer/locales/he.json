@@ -176,6 +176,8 @@
       "sourceHint": "מקור החיפוש",
       "searchDetails": "פרטי החיפוש",
       "introTitle": "תארו את סוג הווידאו שתרצו.",
+      "introCopy": "התחילו בנושא, אווירה, יוצר או קהל. הוסיפו מדינה או עדכניות רק אם זה חשוב.",
+      "starterQuestion": "איזה סוג סרטונים אתה מחפש?",
       "defaultFollowUp": "ספר לי עוד קצת ואשפר את החיפוש.",
       "errorMessage": "משהו השתבש. נסה שוב.",
       "composerTitle": "ספר ל-AI מה למצוא",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "לא הצלחתי לחפש כרגע. נסה שוב בעוד רגע.",
+      "noMatches": "אין התאמות חזקות עדיין. הוסף נושא, אווירה או יוצר ואנסה שוב.",
+      "lowConfidenceNoScoredResults": "לא נשארו התאמות אמינות אחרי הדירוג. נסו נושא רחב יותר, הוסיפו רמז ליוצר או שנו את העדכניות.",
       "lowConfidenceGeneric": "רמת הביטחון בחיפוש הייתה נמוכה. הוסיפו עוד פרט אחד ונסו שוב.",
       "genericError": "משהו השתבש. נסה שוב.",
       "platformLabel": "פלטפורמת החיפוש",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "בחר נקודת פתיחה ואז ערוך אותה אם תרצה.",
       "starterQuestionWithMemory": "בפעם הקודמת חיפשתם את {{summary}}. להתחיל שוב משם?",
       "quickStartUserMessage": "השתמש בהגדרות האחרונות ששמרתי כדי למצוא סרטונים עכשיו: {{summary}}",
+      "defaultSearchUserMessage": "חפש לי סרטונים עכשיו.",
       "followUp": {
         "moreLikeQuery": "מצא עוד סרטונים כמו \"{{query}}\"",
         "differentCreator": "\"{{query}}\" מיוצר אחר או ערוץ אחר",
@@ -287,12 +292,16 @@
       "stillRunning": "עדיין פועל",
       "liveDetailsToggle": "פרטים חיים",
       "moreActions": "פעולות נוספות",
+      "recentEvents": "אירועים אחרונים",
       "cancelFailed": "לא ניתן היה לבטל את החיפוש הנוכחי.",
       "countryGlobal": "תוצאות גלובליות",
       "countryHint": "השאר ריק לתוצאות גלובליות.",
+      "countryHintDefaultEnglish": "השאר ריק כדי ששפת החיפוש תהיה אנגלית כברירת מחדל.",
       "countryLabel": "מדינת / אזור יעד",
       "countryPlaceholder": "לדוגמה: ארה״ב, יפן, ספרד, ברזיל",
       "countryScope": "מדינה: {{country}}",
+      "countryDefaultEnglish": "מדינת יעד: אנגלית כברירת מחדל",
+      "emptyCopy": "ציין את הנושא, הקהל, סגנון היוצר או האווירה של הווידאו שברצונך למצוא. הוסף מדינה או עדכניות רק כשזה חשוב.",
       "emptyEyebrow": "חיפוש בעזרת העוזר",
       "emptyTitle": "תאר את הווידאו שברצונך למצוא",
       "languageHint": "שפת פלט",
@@ -318,9 +327,8 @@
       "stillWorking": "עדיין עובד...",
       "toggleCopy": "חפש סרטון מקור ב-YouTube בלי לצאת מתהליך העבודה.",
       "stage": {
-        "strategist": "תכנון החיפוש",
-        "discovery": "חיפוש מועמדים",
-        "curator": "דירוג התאמות",
+        "answerer": "עיבוד שאילתה",
+        "planner": "בניית חיפוש",
         "retrieval": "טעינת תוצאות"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "תרגום באיכות גבוהה",
         "modelOn": "טיוטת GPT-5.1 + סקירת GPT-5.4",
+        "modelOnAnthropic": "טיוטה רגילה + סקירה מתקדמת של Anthropic",
         "modelOff": "טיוטת GPT-5.1 בלבד",
+        "reviewProvider": "ספק הסקירה",
+        "openAiHighEnd": "סקירה מתקדמת של OpenAI",
+        "anthropicHighEnd": "סקירה מתקדמת של Anthropic",
         "help": "<b>5× קרדיטים</b> • מוסיף שלב ביקורת לאיכות גבוהה יותר",
         "helpWithEstimate": "<b>5× קרדיטים</b> • היתרה שלך: ~{{normalTime}} (רגיל) / ~{{hqTime}} (איכות גבוהה)",
         "helpOn": "<b>5× קרדיטים</b> • כולל מעבר ביקורת",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "תרגום (טיוטה)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "מודל מתקדם של OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "מודל מתקדם של Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "שלב ביקורת",
       "off": "כבוי",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "כרגע אין מודל המלצות וידאו BYO זמין. הפעל OpenAI או Anthropic BYO עבור תכונה זו.",
       "videoSuggestionModelRequiresOpenAi": "נדרשים פתיחת OpenAI BYO, מפתח והפעלה.",
       "videoSuggestionModelRequiresAnthropic": "נדרשים פתיחת Anthropic BYO, מפתח והפעלה.",
+      "summaryRequiresOpenAi": "נדרשים גישה ל-OpenAI BYO ומפתח API.",
+      "summaryRequiresAnthropic": "נדרשים גישה ל-Anthropic BYO ומפתח API.",
       "translationReview": "תרגום (ביקורת)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "הודעה אופציונלית",
     "optionalMessagePlaceholder": "מה ניסית לעשות?",
     "sendReport": "שלח דוח",
-    "reportPrompt": "משהו השתבש. דווח ליוצר לתיקון מהיר."
+    "reportPrompt": "משהו השתבש. דווח ליוצר לתיקון מהיר.",
+    "preparingReport": "חבילת האבחון בהכנה...",
+    "reportContextWarning": "לא ניתן היה לטעון חלק מהקשר האבחון. הדוח עדיין יכלול פרטים מהיישום הזה."
   }
 }

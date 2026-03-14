@@ -176,6 +176,8 @@
       "sourceHint": "Sökkälla",
       "searchDetails": "Sökdetaljer",
       "introTitle": "Beskriv vilken typ av video du vill ha.",
+      "introCopy": "Börja med ett ämne, en stämning, en skapare eller en målgrupp. Lägg till land eller hur nytt det ska vara bara om det spelar roll.",
+      "starterQuestion": "Vilken typ av videor letar du efter?",
       "defaultFollowUp": "Berätta lite mer så förfinar jag sökningen.",
       "errorMessage": "Något gick fel. Försök igen.",
       "composerTitle": "Berätta för AI vad den ska hitta",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Jag kan inte söka just nu. Försök igen om en stund.",
+      "noMatches": "Inga bra träffar ännu. Lägg till ämne, stämning eller skapare så försöker jag igen.",
+      "lowConfidenceNoScoredResults": "Inga tillförlitliga träffar klarade rankningen. Prova ett bredare ämne, lägg till en ledtråd om skaparen eller ändra hur nytt det ska vara.",
       "lowConfidenceGeneric": "Sökningen hade låg träffsäkerhet. Lägg till en detalj till och försök igen.",
       "genericError": "Något gick fel. Försök igen.",
       "platformLabel": "Sökplattform",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Välj en startpunkt och redigera den om du vill.",
       "starterQuestionWithMemory": "Förra gången sökte du efter {{summary}}. Vill du att jag börjar där igen?",
       "quickStartUserMessage": "Använd mina senast sparade inställningar för att hitta videor nu: {{summary}}",
+      "defaultSearchUserMessage": "Hitta videor åt mig nu.",
       "followUp": {
         "moreLikeQuery": "Hitta fler videor som \"{{query}}\"",
         "differentCreator": "\"{{query}}\" från en annan skapare eller kanal",
@@ -287,12 +292,16 @@
       "stillRunning": "Kör fortfarande",
       "liveDetailsToggle": "Live-detaljer",
       "moreActions": "Fler åtgärder",
+      "recentEvents": "Nyliga händelser",
       "cancelFailed": "Det gick inte att avbryta den aktuella sökningen.",
       "countryGlobal": "Globala resultat",
       "countryHint": "Lämna tomt för globala resultat.",
+      "countryHintDefaultEnglish": "Lämna tomt för att använda engelska som standardspråk för sökning.",
       "countryLabel": "Målland / region",
       "countryPlaceholder": "t.ex. USA, Japan, Spanien, Brasilien",
       "countryScope": "Land: {{country}}",
+      "countryDefaultEnglish": "Målland: engelska som standard",
+      "emptyCopy": "Nämn ämnet, målgruppen, kreatörens stil eller känslan i videon du vill hitta. Lägg till land eller aktualitet bara när det spelar roll.",
       "emptyEyebrow": "Sök med hjälp av assistenten",
       "emptyTitle": "Beskriv videon du vill hitta",
       "languageHint": "Utdataspråk",
@@ -318,9 +327,8 @@
       "stillWorking": "Jobbar fortfarande...",
       "toggleCopy": "Sök på YouTube efter en källvideo utan att lämna arbetsflödet.",
       "stage": {
-        "strategist": "Planera sökning",
-        "discovery": "Sök kandidater",
-        "curator": "Rangordna träffar",
+        "answerer": "Bearbeta sökfråga",
+        "planner": "Skapa sökning",
         "retrieval": "Ladda resultat"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Kvalitetsöversättning",
         "modelOn": "GPT-5.1-utkast + GPT-5.4-granskning",
+        "modelOnAnthropic": "Standardutkast + avancerad granskning med Anthropic",
         "modelOff": "Endast GPT-5.1-utkast",
+        "reviewProvider": "Granskningsleverantör",
+        "openAiHighEnd": "Avancerad granskning med OpenAI",
+        "anthropicHighEnd": "Avancerad granskning med Anthropic",
         "help": "<b>5x krediter</b> - Lägger till granskningsfas för högre kvalitet",
         "helpWithEstimate": "<b>5x krediter</b> - Ditt saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hk)",
         "helpOn": "<b>5× credits</b> • Inkluderar granskningspass",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Översättning (utkast)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Avancerad OpenAI-modell",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Avancerad Anthropic-modell",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Översättning (granskning)",
       "off": "Av",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Ingen BYO-modell för videorekommendationer är tillgänglig just nu. Aktivera OpenAI eller Anthropic BYO för den här funktionen.",
       "videoSuggestionModelRequiresOpenAi": "Kräver OpenAI BYO-upplåsning, nyckel och aktivering.",
       "videoSuggestionModelRequiresAnthropic": "Kräver Anthropic BYO-upplåsning, nyckel och aktivering.",
+      "summaryRequiresOpenAi": "Kräver OpenAI BYO-åtkomst och en API-nyckel.",
+      "summaryRequiresAnthropic": "Kräver Anthropic BYO-åtkomst och en API-nyckel.",
       "translationReview": "Översättning (granskning)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Valfritt meddelande",
     "optionalMessagePlaceholder": "Vad försökte du göra?",
     "sendReport": "Skicka rapport",
-    "reportPrompt": "Något gick fel. Rapportera detta till skaparen för en snabb fix."
+    "reportPrompt": "Något gick fel. Rapportera detta till skaparen för en snabb fix.",
+    "preparingReport": "Förbereder diagnostikpaket...",
+    "reportContextWarning": "Viss diagnostisk kontext kunde inte läsas in. Rapporten kommer fortfarande att innehålla detaljer från den här appen."
   }
 }

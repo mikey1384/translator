@@ -176,6 +176,8 @@
       "sourceHint": "Джерело пошуку",
       "searchDetails": "Деталі пошуку",
       "introTitle": "Опишіть, яке відео ви хочете.",
+      "introCopy": "Почніть із теми, настрою, автора або аудиторії. Додавайте країну чи період лише якщо це важливо.",
+      "starterQuestion": "Які відео ви шукаєте?",
       "defaultFollowUp": "Розкажіть більше, і я уточню пошук.",
       "errorMessage": "Щось пішло не так. Спробуйте ще раз.",
       "composerTitle": "Скажіть ШІ, що знайти",
@@ -231,6 +233,8 @@
         }
       },
       "searchFailed": "Не вдалося виконати пошук зараз. Спробуйте за мить.",
+      "noMatches": "Точних збігів поки немає. Додайте тему, настрій або автора, і я спробую знову.",
+      "lowConfidenceNoScoredResults": "Після ранжування не залишилося надійних збігів. Спробуйте ширшу тему, додайте підказку про автора або змініть період.",
       "lowConfidenceGeneric": "Упевненість пошуку була низькою. Додайте ще одну деталь і спробуйте знову.",
       "genericError": "Щось пішло не так. Спробуйте ще раз.",
       "platformLabel": "Платформа пошуку",
@@ -271,6 +275,7 @@
       "followUpChooserLabel": "Виберіть відправну точку й за бажанням відредагуйте її.",
       "starterQuestionWithMemory": "Минулого разу ви шукали {{summary}}. Хочете знову почати з цього?",
       "quickStartUserMessage": "Використай мої останні збережені налаштування, щоб знайти відео просто зараз: {{summary}}",
+      "defaultSearchUserMessage": "Знайди мені відео зараз.",
       "followUp": {
         "moreLikeQuery": "Знайти більше відео, схожих на \"{{query}}\"",
         "differentCreator": "\"{{query}}\" від іншого автора або каналу",
@@ -287,12 +292,16 @@
       "stillRunning": "Ще виконується",
       "liveDetailsToggle": "Деталі в реальному часі",
       "moreActions": "Більше дій",
+      "recentEvents": "Останні події",
       "cancelFailed": "Не вдалося скасувати поточний пошук.",
       "countryGlobal": "Глобальні результати",
       "countryHint": "Залиште порожнім для глобальних результатів.",
+      "countryHintDefaultEnglish": "Залиште порожнім, щоб мовою пошуку за замовчуванням була англійська.",
       "countryLabel": "Цільова країна / регіон",
       "countryPlaceholder": "напр. США, Японія, Іспанія, Бразилія",
       "countryScope": "Країна: {{country}}",
+      "countryDefaultEnglish": "Цільова країна: англійська за замовчуванням",
+      "emptyCopy": "Вкажіть тему, аудиторію, стиль автора або настрій відео, яке хочете знайти. Країну чи актуальність додавайте лише тоді, коли це важливо.",
       "emptyEyebrow": "Пошук з допомогою асистента",
       "emptyTitle": "Опишіть відео, яке хочете знайти",
       "languageHint": "Мова виводу",
@@ -318,9 +327,8 @@
       "stillWorking": "Ще працює...",
       "toggleCopy": "Знайдіть вихідне відео на YouTube, не виходячи з цього процесу.",
       "stage": {
-        "strategist": "Спланувати пошук",
-        "discovery": "Знайти кандидатів",
-        "curator": "Оцінити збіги",
+        "answerer": "Обробка",
+        "planner": "Пошук",
         "retrieval": "Завантажити результати"
       }
     }
@@ -500,7 +508,11 @@
       "qualityTranslation": {
         "label": "Якісний переклад",
         "modelOn": "Чернетка GPT-5.1 + перевірка GPT-5.4",
+        "modelOnAnthropic": "Стандартна чернетка + просунута перевірка Anthropic",
         "modelOff": "Лише чернетка GPT-5.1",
+        "reviewProvider": "Провайдер перевірки",
+        "openAiHighEnd": "Просунута перевірка OpenAI",
+        "anthropicHighEnd": "Просунута перевірка Anthropic",
         "help": "<b>5× кредитів</b> • Додає фазу перевірки для вищої якості",
         "helpWithEstimate": "<b>5× кредитів</b> • Ваш баланс: ~{{normalTime}} (звичайно) / ~{{hqTime}} (вк)",
         "helpOn": "<b>5× кредитів</b> • Містить етап перевірки",
@@ -625,10 +637,12 @@
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Переклад (чернетка)",
       "gptHigh": "GPT-5.4",
+      "openAiHighEnd": "Просунута модель OpenAI",
       "gpt": "GPT-5.1",
       "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "anthropicHighEnd": "Просунута модель Anthropic",
       "claudeSummaryStack": "Claude Sonnet / Claude Opus",
       "reviewPass": "Перевірка",
       "off": "Вимкнено",
@@ -642,6 +656,8 @@
       "videoSuggestionModelUnavailable": "Наразі немає доступної моделі BYO для відеорекомендацій. Увімкніть OpenAI або Anthropic BYO для цієї функції.",
       "videoSuggestionModelRequiresOpenAi": "Потрібні розблокування OpenAI BYO, ключ і ввімкнений перемикач.",
       "videoSuggestionModelRequiresAnthropic": "Потрібні розблокування Anthropic BYO, ключ і ввімкнений перемикач.",
+      "summaryRequiresOpenAi": "Потребує доступу до OpenAI BYO і ключа API.",
+      "summaryRequiresAnthropic": "Потребує доступу до Anthropic BYO і ключа API.",
       "translationReview": "Переклад (перевірка)"
     },
     "apiKeyGuide": {
@@ -1008,6 +1024,8 @@
     "optionalMessage": "Додаткове повідомлення",
     "optionalMessagePlaceholder": "Що ви намагалися зробити?",
     "sendReport": "Надіслати звіт",
-    "reportPrompt": "Щось пішло не так. Повідомте про це розробнику для швидкого виправлення."
+    "reportPrompt": "Щось пішло не так. Повідомте про це розробнику для швидкого виправлення.",
+    "preparingReport": "Підготовка діагностичного пакета...",
+    "reportContextWarning": "Частину діагностичного контексту не вдалося завантажити. Звіт усе одно міститиме деталі з цього застосунку."
   }
 }
