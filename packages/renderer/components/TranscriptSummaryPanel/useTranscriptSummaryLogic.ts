@@ -10,6 +10,7 @@ import type {
   SrtSegment,
   SummaryEffortLevel,
   TranscriptHighlight,
+  TranscriptHighlightStatus,
   TranscriptSummarySection,
 } from '@shared-types/app';
 import type { TFunction } from 'i18next';
@@ -59,6 +60,8 @@ type UseTranscriptSummaryLogicResult = {
   ) => void;
   hasSummaryResult: boolean;
   hasTranscript: boolean;
+  highlightWarningMessage: string | null;
+  highlightStatus: TranscriptHighlightStatus;
   highlightAspectMode: HighlightAspectMode;
   highlights: TranscriptHighlight[];
   highlightCutState: Record<string, HighlightClipCutState>;
@@ -87,22 +90,37 @@ export default function useTranscriptSummaryLogic({
   const [error, setError] = useState<string | null>(null);
 
   const originalVideoPath = useVideoStore(state => state.originalPath);
+  const sourceAssetIdentity = useVideoStore(state => state.sourceAssetIdentity);
+  const sourceUrl = useVideoStore(state => state.sourceUrl);
   const fallbackVideoPath = useSubStore(state => state.sourceVideoPath);
+  const fallbackVideoAssetIdentity = useSubStore(
+    state => state.sourceVideoAssetIdentity
+  );
+  const libraryEntryId = useSubStore(state => state.libraryEntryId);
 
   const highlightsFlow = useTranscriptHighlightsFlow({
+    fallbackVideoAssetIdentity,
     fallbackVideoPath,
+    libraryEntryId,
     originalVideoPath,
+    sourceAssetIdentity,
+    sourceUrl,
     setError,
     t,
   });
 
   const summaryFlow = useTranscriptSummaryFlow({
+    fallbackVideoAssetIdentity,
     fallbackVideoPath,
+    libraryEntryId,
     originalVideoPath,
     onMergeHighlightUpdates: highlightsFlow.mergeHighlightUpdates,
+    onReplaceHighlights: highlightsFlow.replaceHighlights,
     onResetHighlightsState: highlightsFlow.resetHighlightsState,
     segments,
     setError,
+    sourceAssetIdentity,
+    sourceUrl,
     summaryEffortLevel,
     summaryLanguage,
     t,
@@ -143,6 +161,8 @@ export default function useTranscriptSummaryLogic({
     handleToggleHighlightSelect: highlightsFlow.handleToggleHighlightSelect,
     hasSummaryResult: summaryFlow.hasSummaryResult,
     hasTranscript: summaryFlow.hasTranscript,
+    highlightWarningMessage: summaryFlow.highlightWarningMessage,
+    highlightStatus: summaryFlow.highlightStatus,
     highlightAspectMode: highlightsFlow.highlightAspectMode,
     highlights: highlightsFlow.highlights,
     highlightCutState: highlightsFlow.highlightCutState,

@@ -54,6 +54,8 @@ export function TranscriptSummaryPanel({
     handleToggleHighlightSelect,
     hasSummaryResult,
     hasTranscript,
+    highlightWarningMessage,
+    highlightStatus,
     highlightAspectMode,
     highlights,
     highlightCutState,
@@ -145,6 +147,8 @@ export function TranscriptSummaryPanel({
           combineMode={combineMode}
           downloadStatus={downloadStatus}
           hasSummaryResult={hasSummaryResult}
+          highlightWarningMessage={highlightWarningMessage}
+          highlightStatus={highlightStatus}
           highlightAspectMode={highlightAspectMode}
           highlightCutState={highlightCutState}
           highlights={highlights}

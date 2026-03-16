@@ -29,6 +29,7 @@ import {
 } from '@shared-types/app';
 import {
   addSubtitle,
+  consumeCancelMarker,
   registerAutoCancel,
   finish as registryFinish,
 } from '../active-processes.js';
@@ -877,6 +878,7 @@ export async function handleGenerateTranscriptSummary(
   summary?: string;
   highlights?: import('@shared-types/app').TranscriptHighlight[];
   sections?: import('@shared-types/app').TranscriptSummarySection[];
+  highlightStatus?: import('@shared-types/app').TranscriptHighlightStatus;
   error?: string;
   cancelled?: boolean;
   operationId: string;
@@ -887,26 +889,36 @@ export async function handleGenerateTranscriptSummary(
   addSubtitle(operationId, controller);
 
   try {
-    const { summary, sections, highlights } = await generateTranscriptSummary({
-      segments: options.segments,
-      targetLanguage: options.targetLanguage,
-      signal: controller.signal,
-      operationId,
-      includeHighlights: options.includeHighlights !== false,
-      effortLevel: options.effortLevel,
-      progressCallback: progress => {
-        event.sender.send('transcript-summary-progress', {
-          ...progress,
-          operationId,
-        });
-      },
-    });
+    if (consumeCancelMarker(operationId)) {
+      log.info(
+        `[${operationId}] Summary operation cancelled before handler startup`
+      );
+      controller.abort();
+      return { success: false, cancelled: true, operationId };
+    }
+
+    const { summary, sections, highlights, highlightStatus } =
+      await generateTranscriptSummary({
+        segments: options.segments,
+        targetLanguage: options.targetLanguage,
+        signal: controller.signal,
+        operationId,
+        includeHighlights: options.includeHighlights !== false,
+        effortLevel: options.effortLevel,
+        progressCallback: progress => {
+          event.sender.send('transcript-summary-progress', {
+            ...progress,
+            operationId,
+          });
+        },
+      });
 
     return {
       success: true,
       summary,
       sections,
       highlights,
+      highlightStatus,
       operationId,
     };
   } catch (error: any) {
@@ -1141,9 +1153,7 @@ export async function handleCutHighlightClip(
       }
 
       const reframedLabel = nextLabel('reframe');
-      filterParts.push(
-        `[${currentLabel}]${verticalFilter}[${reframedLabel}]`
-      );
+      filterParts.push(`[${currentLabel}]${verticalFilter}[${reframedLabel}]`);
       currentLabel = reframedLabel;
     }
 
@@ -1431,7 +1441,7 @@ export async function handleCutCombinedHighlights(
           onSampleProgress: (completed, total) => {
             const segmentProgress =
               segmentProgressBase +
-              (completed / Math.max(1, total)) / Math.max(1, segments.length);
+              completed / Math.max(1, total) / Math.max(1, segments.length);
             emitProgress(
               10 + Math.round(segmentProgress * 20),
               'Analyzing subject framing'

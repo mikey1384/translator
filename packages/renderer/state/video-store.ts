@@ -34,6 +34,41 @@ function toFileUrl(p: string): string {
   return `file://${encodeURI(`/${normalized}`)}`;
 }
 
+function normalizeSourceAssetPath(
+  pathValue: string | null | undefined
+): string {
+  return String(pathValue || '')
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/\/+$/g, '');
+}
+
+function createUnverifiedSourceAssetIdentity(
+  pathValue: string | null | undefined
+): string {
+  const normalizedPath = normalizeSourceAssetPath(pathValue) || 'unknown-path';
+  return `unverified:${normalizedPath}`;
+}
+
+async function resolveSourceAssetIdentity(
+  pathValue: string | null | undefined
+): Promise<string | null> {
+  const normalizedPath = normalizeSourceAssetPath(pathValue);
+  if (!normalizedPath) return null;
+  try {
+    const identity = await FileIPC.getFileIdentity(normalizedPath);
+    if (identity?.success && identity.identity) {
+      return `file:${identity.identity}`;
+    }
+  } catch (error) {
+    console.warn(
+      '[video-store] Failed to resolve source asset identity, using unverified fallback:',
+      error
+    );
+  }
+  return createUnverifiedSourceAssetIdentity(normalizedPath);
+}
+
 type Meta = {
   duration: number;
   width: number;
@@ -48,6 +83,7 @@ interface State {
   file: File | null;
   path: string | null;
   sourceUrl: string | null;
+  sourceAssetIdentity: string | null;
   url: string | null;
   originalPath: string | null;
   originalUrl: string | null;
@@ -89,7 +125,9 @@ interface Actions {
   togglePlay(): Promise<void>;
   handleTogglePlay(): void;
   mountFilePreserveSubs(
-    file: File | { name: string | undefined; path: string; sourceUrl?: string | null }
+    file:
+      | File
+      | { name: string | undefined; path: string; sourceUrl?: string | null }
   ): Promise<void>;
   markReady(): void;
   reset(): void;
@@ -108,6 +146,7 @@ const initial: State = {
   file: null,
   path: null,
   sourceUrl: null,
+  sourceAssetIdentity: null,
   url: null,
   originalPath: null,
   originalUrl: null,
@@ -126,6 +165,16 @@ const initial: State = {
 
 let currentSaver: ReturnType<typeof throttle> | null = null;
 const metadataRetryTimers = new Map<string, ReturnType<typeof setTimeout>>();
+let latestMountRequestId = 0;
+
+function beginMountRequest(): number {
+  latestMountRequestId += 1;
+  return latestMountRequestId;
+}
+
+function isCurrentMountRequest(requestId: number): boolean {
+  return latestMountRequestId === requestId;
+}
 
 function attachSaver(path: string) {
   currentSaver?.cancel();
@@ -152,7 +201,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       const preserveSubtitles = Boolean(options?.preserveSubtitles);
       try {
         logButton(
-          preserveSubtitles ? 'open_file_dialog_preserve_subs' : 'open_file_dialog'
+          preserveSubtitles
+            ? 'open_file_dialog_preserve_subs'
+            : 'open_file_dialog'
         );
       } catch {
         // Do nothing
@@ -255,9 +306,14 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     },
 
     async setFile(
-      fd: File | { name: string; path: string; sourceUrl?: string | null } | null,
+      fd:
+        | File
+        | { name: string; path: string; sourceUrl?: string | null }
+        | null,
       options
     ) {
+      const mountRequestId = beginMountRequest();
+      const isCurrentMount = () => isCurrentMountRequest(mountRequestId);
       const skipStoredSubtitleAutoMount = Boolean(
         options?.skipStoredSubtitleAutoMount
       );
@@ -285,15 +341,19 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         id: null,
       });
 
+      if (!isCurrentMount()) return;
       if (!fd) return;
 
       if ('path' in fd) {
         const url = toFileUrl(fd.path);
         const sourceUrl = String(fd.sourceUrl || '').trim() || null;
+        const sourceAssetIdentity = await resolveSourceAssetIdentity(fd.path);
+        if (!isCurrentMount()) return;
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
           s.sourceUrl = sourceUrl;
+          s.sourceAssetIdentity = sourceAssetIdentity;
           s.url = url;
           s.originalPath = fd.path;
           s.originalUrl = url;
@@ -303,6 +363,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.activeTrack = 'original';
         });
         await analyse(fd.path);
+        if (!isCurrentMount()) return;
         try {
           logVideo('video_mounted', { path: fd.path });
         } catch {
@@ -311,6 +372,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         if (fd.path) {
           try {
             const saved = await VideoIPC.getPlaybackPosition(fd.path);
+            if (!isCurrentMount()) return;
             if (saved != null) {
               set({ resumeAt: saved });
             }
@@ -322,6 +384,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           get().startPositionSaving();
         }
         if (!skipStoredSubtitleAutoMount) {
+          if (!isCurrentMount()) return;
           try {
             await maybeAutoMountStoredSubtitleForVideo({
               sourceVideoPath: fd.path,
@@ -339,10 +402,15 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
 
       if ((fd as any)._blobUrl) {
         const b = fd as any;
+        const sourceAssetIdentity = b._originalPath
+          ? await resolveSourceAssetIdentity(b._originalPath)
+          : null;
+        if (!isCurrentMount()) return;
         set(s => {
           s.file = b;
           s.path = b._originalPath ?? null;
           s.sourceUrl = null;
+          s.sourceAssetIdentity = sourceAssetIdentity;
           s.url = b._blobUrl;
           s.originalPath = b._originalPath ?? null;
           s.originalUrl = b._blobUrl;
@@ -358,8 +426,10 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         }
         if (b._originalPath) {
           await analyse(b._originalPath);
+          if (!isCurrentMount()) return;
           try {
             const saved = await VideoIPC.getPlaybackPosition(b._originalPath);
+            if (!isCurrentMount()) return;
             if (saved != null) {
               set({ resumeAt: saved });
             }
@@ -373,6 +443,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           }
         }
         if (!skipStoredSubtitleAutoMount) {
+          if (!isCurrentMount()) return;
           try {
             await maybeAutoMountStoredSubtitleForVideo({
               sourceVideoPath: b._originalPath ?? null,
@@ -388,55 +459,72 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         return;
       }
 
+      const sourcePath = ((fd as any).path as string | undefined) ?? null;
+      const sourceAssetIdentity = sourcePath
+        ? await resolveSourceAssetIdentity(sourcePath)
+        : null;
+      if (!isCurrentMount()) return;
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
-      const blobUrl = URL.createObjectURL(fd as File);
-      set({
-        file: fd as File,
-        url: blobUrl,
-        path: (fd as any).path ?? null,
-        sourceUrl: null,
-      });
-      set(s => {
-        s.originalUrl = blobUrl;
-        s.originalPath = (fd as any).path ?? null;
-        s.dubbedVideoPath = null;
-        s.dubbedAudioPath = null;
-        s.dubbedUrl = null;
-        s.activeTrack = 'original';
-      });
+      let blobUrl: string | null = null;
+      let blobUrlCommitted = false;
       try {
-        const p = (fd as any).path ?? '(blob)';
-        logVideo('video_mounted', { path: p });
-      } catch {
-        // Do nothing
-      }
-      if ((fd as any).path) {
-        await analyse((fd as any).path);
+        blobUrl = URL.createObjectURL(fd as File);
+        if (!isCurrentMount()) return;
+        set({
+          file: fd as File,
+          url: blobUrl,
+          path: sourcePath,
+          sourceUrl: null,
+          sourceAssetIdentity,
+        });
+        set(s => {
+          s.originalUrl = blobUrl!;
+          s.originalPath = sourcePath;
+          s.dubbedVideoPath = null;
+          s.dubbedAudioPath = null;
+          s.dubbedUrl = null;
+          s.activeTrack = 'original';
+        });
+        blobUrlCommitted = true;
         try {
-          const saved = await VideoIPC.getPlaybackPosition((fd as any).path);
-          if (saved != null) {
-            set({ resumeAt: saved });
-          }
-        } catch (err) {
-          console.error('[video-store] Failed to load saved position:', err);
+          const p = sourcePath ?? '(blob)';
+          logVideo('video_mounted', { path: p });
+        } catch {
+          // Do nothing
         }
-        if ((fd as any).path) {
-          attachSaver((fd as any).path);
+        if (sourcePath) {
+          await analyse(sourcePath);
+          if (!isCurrentMount()) return;
+          try {
+            const saved = await VideoIPC.getPlaybackPosition(sourcePath);
+            if (!isCurrentMount()) return;
+            if (saved != null) {
+              set({ resumeAt: saved });
+            }
+          } catch (err) {
+            console.error('[video-store] Failed to load saved position:', err);
+          }
+          attachSaver(sourcePath);
           get().stopPositionSaving();
           get().startPositionSaving();
         }
-      }
-      if (!skipStoredSubtitleAutoMount) {
-        try {
-          await maybeAutoMountStoredSubtitleForVideo({
-            sourceVideoPath: (fd as any).path ?? null,
-            sourceUrl: null,
-          });
-        } catch (err) {
-          console.error(
-            '[video-store] Failed to auto-mount stored subtitles:',
-            err
-          );
+        if (!skipStoredSubtitleAutoMount) {
+          if (!isCurrentMount()) return;
+          try {
+            await maybeAutoMountStoredSubtitleForVideo({
+              sourceVideoPath: sourcePath,
+              sourceUrl: null,
+            });
+          } catch (err) {
+            console.error(
+              '[video-store] Failed to auto-mount stored subtitles:',
+              err
+            );
+          }
+        }
+      } finally {
+        if (!blobUrlCommitted && blobUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(blobUrl);
         }
       }
     },
@@ -458,6 +546,8 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     async mountFilePreserveSubs(
       fd: File | { name: string; path: string; sourceUrl?: string | null }
     ) {
+      const mountRequestId = beginMountRequest();
+      const isCurrentMount = () => isCurrentMountRequest(mountRequestId);
       const prev = get();
       const subtitleState = useSubStore.getState();
       const hadMountedSubtitles = subtitleState.order.length > 0;
@@ -488,12 +578,19 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         isCompleted: false,
         id: null,
       });
+      if (!isCurrentMount()) return;
 
       const updatePreservedSubtitleAssociation = async (
         nextSourceVideoPath: string | null,
         nextSourceUrl: string | null
       ) => {
+        if (!isCurrentMount()) return;
         if (!hadMountedSubtitles) return;
+
+        const nextSourceVideoAssetIdentity = nextSourceVideoPath
+          ? await resolveSourceAssetIdentity(nextSourceVideoPath)
+          : null;
+        if (!isCurrentMount()) return;
 
         const sameVideoByPath =
           Boolean(previousSubtitleVideoPath) &&
@@ -519,6 +616,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
               entryId: previousLibraryEntryId,
               sourceVideoPath: nextSourceVideoPath,
             });
+            if (!isCurrentMount()) return;
           } catch (err) {
             console.error(
               '[video-store] Failed to remember preserved subtitle path:',
@@ -527,24 +625,25 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           }
         }
 
+        if (!isCurrentMount()) return;
         useSubStore.setState({
           sourceVideoPath: nextSourceVideoPath,
-          libraryEntryId: shouldKeepLibraryLink
-            ? previousLibraryEntryId
-            : null,
-          libraryKind: shouldKeepLibraryLink
-            ? subtitleState.libraryKind
-            : null,
+          sourceVideoAssetIdentity: nextSourceVideoAssetIdentity,
+          libraryEntryId: shouldKeepLibraryLink ? previousLibraryEntryId : null,
+          libraryKind: shouldKeepLibraryLink ? subtitleState.libraryKind : null,
         });
       };
 
       if ('path' in fd) {
         const url = toFileUrl(fd.path);
         const sourceUrl = String(fd.sourceUrl || '').trim() || null;
+        const sourceAssetIdentity = await resolveSourceAssetIdentity(fd.path);
+        if (!isCurrentMount()) return;
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
           s.sourceUrl = sourceUrl;
+          s.sourceAssetIdentity = sourceAssetIdentity;
           s.url = url;
           s.originalPath = fd.path;
           s.originalUrl = url;
@@ -555,9 +654,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.resumeAt = null;
         });
         await analyse(fd.path);
+        if (!isCurrentMount()) return;
         if (fd.path) {
           try {
             const saved = await VideoIPC.getPlaybackPosition(fd.path);
+            if (!isCurrentMount()) return;
             if (saved != null) set({ resumeAt: saved });
           } catch (err) {
             console.error('[video-store] Failed to load saved position:', err);
@@ -566,8 +667,10 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           get().startPositionSaving();
         }
         if (hadMountedSubtitles) {
+          if (!isCurrentMount()) return;
           await updatePreservedSubtitleAssociation(fd.path, sourceUrl);
         } else {
+          if (!isCurrentMount()) return;
           try {
             await maybeAutoMountStoredSubtitleForVideo({
               sourceVideoPath: fd.path,
@@ -586,10 +689,15 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       // Fallback: support File object mounting
       if ((fd as any)._blobUrl) {
         const b = fd as any;
+        const sourceAssetIdentity = b._originalPath
+          ? await resolveSourceAssetIdentity(b._originalPath)
+          : null;
+        if (!isCurrentMount()) return;
         set(s => {
           s.file = b;
           s.path = b._originalPath ?? null;
           s.sourceUrl = null;
+          s.sourceAssetIdentity = sourceAssetIdentity;
           s.url = b._blobUrl;
           s.originalPath = b._originalPath ?? null;
           s.originalUrl = b._blobUrl;
@@ -601,8 +709,10 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         });
         if (b._originalPath) {
           await analyse(b._originalPath);
+          if (!isCurrentMount()) return;
           try {
             const saved = await VideoIPC.getPlaybackPosition(b._originalPath);
+            if (!isCurrentMount()) return;
             if (saved != null) set({ resumeAt: saved });
           } catch (err) {
             console.error('[video-store] Failed to load saved position:', err);
@@ -611,11 +721,13 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           get().startPositionSaving();
         }
         if (hadMountedSubtitles) {
+          if (!isCurrentMount()) return;
           await updatePreservedSubtitleAssociation(
             b._originalPath ?? null,
             null
           );
         } else {
+          if (!isCurrentMount()) return;
           try {
             await maybeAutoMountStoredSubtitleForVideo({
               sourceVideoPath: b._originalPath ?? null,
@@ -631,41 +743,64 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         return;
       }
 
-      const blobUrl = URL.createObjectURL(fd as File);
-      set({
-        file: fd as File,
-        url: blobUrl,
-        path: (fd as any).path ?? null,
-        sourceUrl: null,
-        resumeAt: null,
-      });
-      if ((fd as any).path) {
-        await analyse((fd as any).path);
-        try {
-          const saved = await VideoIPC.getPlaybackPosition((fd as any).path);
-          if (saved != null) set({ resumeAt: saved });
-        } catch (err) {
-          console.error('[video-store] Failed to load saved position:', err);
+      const sourcePath = ((fd as any).path as string | undefined) ?? null;
+      const sourceAssetIdentity = sourcePath
+        ? await resolveSourceAssetIdentity(sourcePath)
+        : null;
+      if (!isCurrentMount()) return;
+      let blobUrl: string | null = null;
+      let blobUrlCommitted = false;
+      try {
+        blobUrl = URL.createObjectURL(fd as File);
+        if (!isCurrentMount()) return;
+        set({
+          file: fd as File,
+          url: blobUrl,
+          path: sourcePath,
+          sourceUrl: null,
+          sourceAssetIdentity,
+          originalPath: sourcePath,
+          originalUrl: blobUrl,
+          dubbedVideoPath: null,
+          dubbedAudioPath: null,
+          dubbedUrl: null,
+          activeTrack: 'original',
+          resumeAt: null,
+        });
+        blobUrlCommitted = true;
+        if (sourcePath) {
+          await analyse(sourcePath);
+          if (!isCurrentMount()) return;
+          try {
+            const saved = await VideoIPC.getPlaybackPosition(sourcePath);
+            if (!isCurrentMount()) return;
+            if (saved != null) set({ resumeAt: saved });
+          } catch (err) {
+            console.error('[video-store] Failed to load saved position:', err);
+          }
+          attachSaver(sourcePath);
+          get().startPositionSaving();
         }
-        attachSaver((fd as any).path);
-        get().startPositionSaving();
-      }
-      if (hadMountedSubtitles) {
-        await updatePreservedSubtitleAssociation(
-          (fd as any).path ?? null,
-          null
-        );
-      } else {
-        try {
-          await maybeAutoMountStoredSubtitleForVideo({
-            sourceVideoPath: (fd as any).path ?? null,
-            sourceUrl: null,
-          });
-        } catch (err) {
-          console.error(
-            '[video-store] Failed to auto-mount stored subtitles:',
-            err
-          );
+        if (hadMountedSubtitles) {
+          if (!isCurrentMount()) return;
+          await updatePreservedSubtitleAssociation(sourcePath, null);
+        } else {
+          if (!isCurrentMount()) return;
+          try {
+            await maybeAutoMountStoredSubtitleForVideo({
+              sourceVideoPath: sourcePath,
+              sourceUrl: null,
+            });
+          } catch (err) {
+            console.error(
+              '[video-store] Failed to auto-mount stored subtitles:',
+              err
+            );
+          }
+        }
+      } finally {
+        if (!blobUrlCommitted && blobUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(blobUrl);
         }
       }
     },
@@ -675,6 +810,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     },
 
     reset() {
+      beginMountRequest();
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       if (prev.path) {

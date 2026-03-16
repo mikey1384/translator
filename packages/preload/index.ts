@@ -34,9 +34,7 @@ const electronAPI = {
         processedOptions.videoFileName = options.videoFile.name;
         processedOptions.durableRecoverySeed = [
           'generate-subtitles-file-sha256-v1',
-          createHash('sha256')
-            .update(Buffer.from(fileData))
-            .digest('hex'),
+          createHash('sha256').update(Buffer.from(fileData)).digest('hex'),
         ].join('\n');
       } catch (error) {
         console.error('[preload] Error reading video file:', error);
@@ -168,6 +166,10 @@ const electronAPI = {
     ipcRenderer.invoke('save-stored-subtitle-artifact', options),
   findStoredSubtitleForVideo: (options: any) =>
     ipcRenderer.invoke('find-stored-subtitle-for-video', options),
+  saveStoredTranscriptAnalysis: (options: any) =>
+    ipcRenderer.invoke('save-stored-transcript-analysis', options),
+  findStoredTranscriptAnalysis: (options: any) =>
+    ipcRenderer.invoke('find-stored-transcript-analysis', options),
   syncStoredSubtitleVideoPath: (previousPath: string, savedPath: string) =>
     ipcRenderer.invoke(
       'sync-stored-subtitle-video-path',
@@ -277,6 +279,8 @@ const electronAPI = {
   // ---------------------- Get File Size ----------------------
   getFileSize: (filePath: string) =>
     ipcRenderer.invoke('getFileSize', filePath),
+  getFileIdentity: (filePath: string) =>
+    ipcRenderer.invoke('getFileIdentity', filePath),
 
   // ---------------------- Disk Space ----------------------
   getDiskSpace: (filePath: string) =>

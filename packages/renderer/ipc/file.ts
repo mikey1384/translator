@@ -32,6 +32,19 @@ export function getFileSize(
   return window.electron.getFileSize(filePath);
 }
 
+export function getFileIdentity(filePath: string): Promise<{
+  success: boolean;
+  identity?: string;
+  sizeBytes?: number;
+  mtimeMs?: number;
+  birthtimeMs?: number;
+  dev?: number;
+  ino?: number;
+  error?: string;
+}> {
+  return window.electron.getFileIdentity(filePath);
+}
+
 export function getDiskSpace(filePath: string): Promise<{
   success: boolean;
   freeBytes?: number;

@@ -70,6 +70,10 @@ import {
   saveStoredSubtitleArtifact,
   syncStoredSubtitleVideoPath,
 } from './services/subtitle-library.js';
+import {
+  findStoredTranscriptAnalysis,
+  saveStoredTranscriptAnalysis,
+} from './services/transcript-analysis-library.js';
 import type {
   VideoSuggestionModelPreference,
   VideoSuggestionRecency,
@@ -262,30 +266,41 @@ try {
   ipcMain.handle('delete-file', fileHandlers.handleDeleteFile);
   ipcMain.handle('readFileContent', fileHandlers.handleReadFileContent);
   ipcMain.handle('getFileSize', fileHandlers.handleGetFileSize);
+  ipcMain.handle('getFileIdentity', fileHandlers.handleGetFileIdentity);
   ipcMain.handle('getDiskSpace', fileHandlers.handleGetDiskSpace);
   ipcMain.handle('getTempDiskSpace', fileHandlers.handleGetTempDiskSpace);
-  ipcMain.handle(
-    'save-stored-subtitle-artifact',
-    async (_event, options) => {
-      try {
-        const entry = await saveStoredSubtitleArtifact(options || {});
-        return { success: true, entry };
-      } catch (error: any) {
-        return { success: false, error: error?.message || String(error) };
-      }
+  ipcMain.handle('save-stored-subtitle-artifact', async (_event, options) => {
+    try {
+      const entry = await saveStoredSubtitleArtifact(options || {});
+      return { success: true, entry };
+    } catch (error: any) {
+      return { success: false, error: error?.message || String(error) };
     }
-  );
-  ipcMain.handle(
-    'find-stored-subtitle-for-video',
-    async (_event, options) => {
-      try {
-        const result = await findStoredSubtitleForVideo(options || {});
-        return { success: true, ...result };
-      } catch (error: any) {
-        return { success: false, error: error?.message || String(error) };
-      }
+  });
+  ipcMain.handle('find-stored-subtitle-for-video', async (_event, options) => {
+    try {
+      const result = await findStoredSubtitleForVideo(options || {});
+      return { success: true, ...result };
+    } catch (error: any) {
+      return { success: false, error: error?.message || String(error) };
     }
-  );
+  });
+  ipcMain.handle('save-stored-transcript-analysis', async (_event, options) => {
+    try {
+      const entry = await saveStoredTranscriptAnalysis(options || {});
+      return { success: true, entry };
+    } catch (error: any) {
+      return { success: false, error: error?.message || String(error) };
+    }
+  });
+  ipcMain.handle('find-stored-transcript-analysis', async (_event, options) => {
+    try {
+      const result = await findStoredTranscriptAnalysis(options || {});
+      return { success: true, ...result };
+    } catch (error: any) {
+      return { success: false, error: error?.message || String(error) };
+    }
+  });
   ipcMain.handle(
     'sync-stored-subtitle-video-path',
     async (_event, previousPath: string, savedPath: string) => {

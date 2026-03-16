@@ -15,7 +15,9 @@ type StoredSubtitleLibraryMeta = {
   kind: StoredSubtitleKind | null;
 };
 
-function normalizeComparablePath(value: string | null | undefined): string | null {
+function normalizeComparablePath(
+  value: string | null | undefined
+): string | null {
   const normalized = String(value || '')
     .trim()
     .replace(/\\/g, '/')
@@ -24,7 +26,10 @@ function normalizeComparablePath(value: string | null | undefined): string | nul
   return normalized || null;
 }
 
-function pathsMatch(a: string | null | undefined, b: string | null | undefined): boolean {
+function pathsMatch(
+  a: string | null | undefined,
+  b: string | null | undefined
+): boolean {
   const left = normalizeComparablePath(a);
   const right = normalizeComparablePath(b);
   return Boolean(left && right && left === right);
@@ -111,9 +116,18 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
     typeof args.sourceVideoPath === 'string' && args.sourceVideoPath.trim()
       ? args.sourceVideoPath
       : null;
+  const currentVideoState = useVideoStore.getState();
+  const sourceVideoAssetIdentity =
+    sourceVideoPath &&
+    (pathsMatch(currentVideoState.path, sourceVideoPath) ||
+      pathsMatch(currentVideoState.originalPath, sourceVideoPath))
+      ? currentVideoState.sourceAssetIdentity
+      : null;
   if (
     sourceVideoPath &&
-    !result.entry.sourceVideoPaths.some(path => pathsMatch(path, sourceVideoPath))
+    !result.entry.sourceVideoPaths.some(path =>
+      pathsMatch(path, sourceVideoPath)
+    )
   ) {
     try {
       await SubtitleLibraryIPC.rememberStoredSubtitleVideoPath(
@@ -137,7 +151,8 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
     {
       entryId: result.entry.id,
       kind: result.entry.kind,
-    }
+    },
+    sourceVideoAssetIdentity
   );
   return result.entry;
 }
@@ -185,6 +200,7 @@ export function unmountCurrentSubtitles(): void {
     originalPath: null,
     origin: null,
     sourceVideoPath: null,
+    sourceVideoAssetIdentity: null,
     transcriptionEngine: null,
     gapsCache: [],
     lcRangesCache: [],
@@ -210,9 +226,8 @@ export async function deleteMountedStoredSubtitle(): Promise<boolean> {
       }
     }
   }
-  const result = await SubtitleLibraryIPC.deleteStoredSubtitleEntry(
-    libraryEntryId
-  );
+  const result =
+    await SubtitleLibraryIPC.deleteStoredSubtitleEntry(libraryEntryId);
   if (!result.success) {
     throw new Error(result.error || 'Failed to delete stored subtitle.');
   }

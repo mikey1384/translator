@@ -135,6 +135,26 @@ declare module '@shared-types/app' {
     updatedAt: string;
   }
 
+  export interface StoredTranscriptAnalysisEntry {
+    id: string;
+    transcriptHash: string;
+    summaryLanguage: string;
+    effortLevel: SummaryEffortLevel;
+    filePath: string;
+    sourceVideoPaths: string[];
+    sourceUrls: string[];
+    libraryEntryIds: string[];
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  export interface StoredTranscriptAnalysisArtifact {
+    summary: string;
+    sections: TranscriptSummarySection[];
+    highlights: TranscriptHighlight[];
+    highlightStatus: TranscriptHighlightStatus;
+  }
+
   export interface FileData {
     name: string;
     path: string;
@@ -404,6 +424,10 @@ declare module '@shared-types/app' {
   }
 
   export type SummaryEffortLevel = 'standard' | 'high';
+  export type TranscriptHighlightStatus =
+    | 'complete'
+    | 'degraded'
+    | 'not_requested';
 
   export interface TranscriptSummaryRequest {
     segments: TranscriptSummarySegment[];
@@ -419,6 +443,7 @@ declare module '@shared-types/app' {
     summary?: string;
     sections?: TranscriptSummarySection[];
     highlights?: TranscriptHighlight[];
+    highlightStatus?: TranscriptHighlightStatus;
     error?: string;
     cancelled?: boolean;
     operationId: string;
@@ -799,6 +824,16 @@ declare module '@shared-types/app' {
     getFileSize: (
       filePath: string
     ) => Promise<{ success: boolean; sizeBytes?: number; error?: string }>;
+    getFileIdentity: (filePath: string) => Promise<{
+      success: boolean;
+      identity?: string;
+      sizeBytes?: number;
+      mtimeMs?: number;
+      birthtimeMs?: number;
+      dev?: number;
+      ino?: number;
+      error?: string;
+    }>;
     getDiskSpace: (filePath: string) => Promise<{
       success: boolean;
       freeBytes?: number;
@@ -844,6 +879,35 @@ declare module '@shared-types/app' {
     deleteStoredSubtitleEntry: (
       entryId: string
     ) => Promise<{ success: boolean; removed?: boolean; error?: string }>;
+    saveStoredTranscriptAnalysis: (options: {
+      transcriptHash: string;
+      summaryLanguage: string;
+      effortLevel: SummaryEffortLevel;
+      summary: string;
+      sections?: TranscriptSummarySection[] | null;
+      highlights?: TranscriptHighlight[] | null;
+      highlightStatus?: TranscriptHighlightStatus | null;
+      sourceVideoPath?: string | null;
+      sourceUrl?: string | null;
+      libraryEntryId?: string | null;
+    }) => Promise<{
+      success: boolean;
+      entry?: StoredTranscriptAnalysisEntry;
+      error?: string;
+    }>;
+    findStoredTranscriptAnalysis: (options: {
+      transcriptHash: string;
+      summaryLanguage: string;
+      effortLevel: SummaryEffortLevel;
+      sourceVideoPath?: string | null;
+      sourceUrl?: string | null;
+      libraryEntryId?: string | null;
+    }) => Promise<{
+      success: boolean;
+      entry?: StoredTranscriptAnalysisEntry | null;
+      analysis?: StoredTranscriptAnalysisArtifact;
+      error?: string;
+    }>;
 
     hasVideoTrack: (filePath: string) => Promise<boolean>;
     getVideoMetadata: (filePath: string) => Promise<VideoMetadataResult>;

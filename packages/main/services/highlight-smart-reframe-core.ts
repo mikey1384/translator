@@ -20,8 +20,34 @@ const MIN_SAMPLE_COUNT = 4;
 const MAX_SAMPLE_COUNT = 12;
 const SAMPLE_INTERVAL_SECONDS = 0.65;
 const EDGE_SAMPLE_PADDING_SECONDS = 0.18;
-const MAX_PAN_SPEED_MULTIPLIER = 0.9;
-const SMOOTHING_ALPHA = 0.72;
+const MIN_TRACK_CONFIDENCE = 0.74;
+const STRONG_TRACK_CONFIDENCE = 0.9;
+const MAX_CENTER_JUMP_RATIO = 0.32;
+const LARGE_JUMP_CONFIRM_SAMPLES = 2;
+const LARGE_JUMP_STABILITY_RATIO = 0.06;
+const LARGE_JUMP_STABILITY_MIN_PX = 36;
+const MEDIAN_FILTER_RADIUS = 1;
+const MOVE_DWELL_SAMPLES = 2;
+const CAMERA_QUANTIZE_PX = 8;
+const LOCK_DEADZONE_RATIO = 0.09;
+const LOCK_DEADZONE_MIN_PX = 40;
+const IMMEDIATE_MOVE_MULTIPLIER = 2.4;
+const STATIC_LOCK_RANGE_RATIO = 0.035;
+const STATIC_LOCK_RANGE_MIN_PX = 16;
+const CANDIDATE_TRACK_LIMIT = 4;
+const TWO_FACE_FIT_MARGIN_RATIO = 0.92;
+const SUBJECT_SWITCH_DISTANCE_RATIO = 0.18;
+const SUBJECT_SWITCH_DISTANCE_MIN_PX = 42;
+const SUBJECT_SWITCH_SCORE_MARGIN = 0.08;
+const SUBJECT_SWITCH_DWELL_SAMPLES = 2;
+const CANDIDATE_SCORE_WINDOW = 0.12;
+const TRANSITION_HOLD_DELTA_RATIO = 0.03;
+const TRANSITION_HOLD_DELTA_MIN_PX = 14;
+const TRANSITION_INTERPOLATE_DELTA_RATIO = 0.34;
+const TRANSITION_INTERPOLATE_DELTA_MIN_PX = 200;
+const TRANSITION_SNAP_DELTA_RATIO = 0.58;
+const TRANSITION_SNAP_DELTA_MIN_PX = 280;
+const MOVE_DWELL_SECONDS = MOVE_DWELL_SAMPLES * SAMPLE_INTERVAL_SECONDS;
 
 const ULTRAFACE_PRIORS = buildUltraFacePriors();
 
@@ -37,12 +63,21 @@ export interface FaceTrackSample {
   timeSeconds: number;
   centerX: number | null;
   confidence: number;
+  candidates?: FaceCandidate[];
 }
 
 export interface ReframeKeyframe {
   timeSeconds: number;
   x: number;
 }
+
+type ReframeTransitionMode = 'hold' | 'interpolate' | 'snap';
+type SubjectFramingMode = 'missing' | 'single' | 'midpoint';
+type SubjectAwareSample = FaceTrackSample & {
+  framingMode: SubjectFramingMode;
+  committedSubjectSwitch: boolean;
+  reacquiredAfterGap: boolean;
+};
 
 export interface VerticalReframePlan {
   cropWidth: number;
@@ -143,46 +178,305 @@ export function decodeUltraFaceDetections(
   return hardNms(candidates, ULTRAFACE_IOU_THRESHOLD, MAX_FACE_CANDIDATES);
 }
 
+type RankedFaceCandidate = FaceCandidate & {
+  centerX: number;
+  rank: number;
+};
+
+function rankFaceCandidates(
+  candidates: FaceCandidate[],
+  sourceWidth: number,
+  sourceHeight: number,
+  previousCenterX: number | null
+): RankedFaceCandidate[] {
+  if (!Array.isArray(candidates) || candidates.length === 0) {
+    return [];
+  }
+
+  const ranked = candidates
+    .map(candidate => {
+      const width = Math.max(1, candidate.x2 - candidate.x1);
+      const height = Math.max(1, candidate.y2 - candidate.y1);
+      const centerX = candidate.x1 + width / 2;
+      const centerBias =
+        1 -
+        Math.min(1, Math.abs(centerX - sourceWidth / 2) / (sourceWidth / 2));
+      const areaShare =
+        (width * height) / Math.max(1, sourceWidth * sourceHeight);
+      const continuityBias =
+        previousCenterX == null
+          ? centerBias
+          : 1 -
+            Math.min(
+              1,
+              Math.abs(centerX - previousCenterX) / Math.max(1, sourceWidth)
+            );
+      const rank =
+        candidate.score *
+        (1 + Math.min(areaShare * 12, 2.4)) *
+        (0.7 + centerBias * 0.3) *
+        (0.65 + continuityBias * 0.55);
+
+      return {
+        ...candidate,
+        centerX,
+        rank,
+      };
+    })
+    .sort((a, b) => b.rank - a.rank);
+
+  return ranked;
+}
+
 export function pickPrimaryFaceCenterX(
   candidates: FaceCandidate[],
   sourceWidth: number,
   sourceHeight: number,
   previousCenterX: number | null
 ): { centerX: number; confidence: number } | null {
-  if (!Array.isArray(candidates) || candidates.length === 0) {
+  const ranked = rankFaceCandidates(
+    candidates,
+    sourceWidth,
+    sourceHeight,
+    previousCenterX
+  );
+  if (ranked.length === 0) {
     return null;
   }
+  return {
+    centerX: ranked[0].centerX,
+    confidence: ranked[0].score,
+  };
+}
 
-  let best: { centerX: number; confidence: number; rank: number } | null = null;
-
-  for (const candidate of candidates) {
-    const width = Math.max(1, candidate.x2 - candidate.x1);
-    const height = Math.max(1, candidate.y2 - candidate.y1);
-    const centerX = candidate.x1 + width / 2;
-    const centerBias =
-      1 - Math.min(1, Math.abs(centerX - sourceWidth / 2) / (sourceWidth / 2));
-    const areaShare =
-      (width * height) / Math.max(1, sourceWidth * sourceHeight);
-    const continuityBias =
-      previousCenterX == null
-        ? centerBias
-        : 1 -
-          Math.min(
-            1,
-            Math.abs(centerX - previousCenterX) / Math.max(1, sourceWidth)
-          );
-    const rank =
-      candidate.score *
-      (1 + Math.min(areaShare * 12, 2.4)) *
-      (0.7 + centerBias * 0.3) *
-      (0.65 + continuityBias * 0.55);
-
-    if (!best || rank > best.rank) {
-      best = { centerX, confidence: candidate.score, rank };
+function toTrackFaceCandidates(
+  sample: FaceTrackSample,
+  sourceWidth: number,
+  sourceHeight: number,
+  previousCenterX: number | null
+): RankedFaceCandidate[] {
+  const rawCandidates = Array.isArray(sample.candidates)
+    ? sample.candidates
+    : [];
+  if (rawCandidates.length > 0) {
+    const ranked = rankFaceCandidates(
+      rawCandidates,
+      sourceWidth,
+      sourceHeight,
+      previousCenterX
+    );
+    if (ranked.length === 0) {
+      return [];
     }
+    const scoreFloor = Math.max(
+      MIN_TRACK_CONFIDENCE,
+      ranked[0].score - CANDIDATE_SCORE_WINDOW
+    );
+    return ranked
+      .filter(candidate => candidate.score >= scoreFloor)
+      .slice(0, CANDIDATE_TRACK_LIMIT);
   }
 
-  return best ? { centerX: best.centerX, confidence: best.confidence } : null;
+  if (
+    sample.centerX == null ||
+    !Number.isFinite(sample.centerX) ||
+    !Number.isFinite(sample.confidence) ||
+    sample.confidence < MIN_TRACK_CONFIDENCE
+  ) {
+    return [];
+  }
+
+  const syntheticWidth = Math.max(80, sourceWidth * 0.16);
+  const syntheticHeight = Math.max(100, sourceHeight * 0.2);
+  const safeCenterX = clamp(sample.centerX, 0, sourceWidth);
+  const x1 = clamp(safeCenterX - syntheticWidth / 2, 0, sourceWidth);
+  const x2 = clamp(safeCenterX + syntheticWidth / 2, 0, sourceWidth);
+  const y1 = clamp(sourceHeight * 0.2, 0, sourceHeight);
+  const y2 = clamp(y1 + syntheticHeight, 0, sourceHeight);
+  return rankFaceCandidates(
+    [{ x1, y1, x2, y2, score: clamp(sample.confidence, 0, 1) }],
+    sourceWidth,
+    sourceHeight,
+    previousCenterX
+  );
+}
+
+function canFitTwoFacesInCrop(
+  a: FaceCandidate,
+  b: FaceCandidate,
+  cropWidth: number
+): boolean {
+  const combinedWidth = Math.max(a.x2, b.x2) - Math.min(a.x1, b.x1);
+  return combinedWidth <= cropWidth * TWO_FACE_FIT_MARGIN_RATIO;
+}
+
+function pickClosestCandidate(
+  candidates: RankedFaceCandidate[],
+  centerX: number
+): RankedFaceCandidate {
+  let closest = candidates[0];
+  let smallestDistance = Math.abs(candidates[0].centerX - centerX);
+  for (let index = 1; index < candidates.length; index += 1) {
+    const distance = Math.abs(candidates[index].centerX - centerX);
+    if (distance < smallestDistance) {
+      closest = candidates[index];
+      smallestDistance = distance;
+    }
+  }
+  return closest;
+}
+
+function shouldSwitchCommittedSubject({
+  currentCenterX,
+  currentScore,
+  targetCenterX,
+  targetScore,
+  cropWidth,
+}: {
+  currentCenterX: number;
+  currentScore: number;
+  targetCenterX: number;
+  targetScore: number;
+  cropWidth: number;
+}): boolean {
+  const distanceThreshold = Math.max(
+    SUBJECT_SWITCH_DISTANCE_MIN_PX,
+    cropWidth * SUBJECT_SWITCH_DISTANCE_RATIO
+  );
+  const distance = Math.abs(targetCenterX - currentCenterX);
+  return (
+    distance >= distanceThreshold &&
+    targetScore >= currentScore + SUBJECT_SWITCH_SCORE_MARGIN
+  );
+}
+
+function buildSubjectAwareSamples({
+  samples,
+  sourceWidth,
+  sourceHeight,
+  cropWidth,
+}: {
+  samples: FaceTrackSample[];
+  sourceWidth: number;
+  sourceHeight: number;
+  cropWidth: number;
+}): SubjectAwareSample[] {
+  let committedCenterX: number | null = null;
+  let pendingSwitchCenterX: number | null = null;
+  let pendingSwitchCount = 0;
+  let hadMissingSample = false;
+
+  return samples.map(sample => {
+    const rankedCandidates = toTrackFaceCandidates(
+      sample,
+      sourceWidth,
+      sourceHeight,
+      committedCenterX
+    );
+    if (rankedCandidates.length === 0) {
+      hadMissingSample = true;
+      pendingSwitchCenterX = null;
+      pendingSwitchCount = 0;
+      return {
+        ...sample,
+        centerX: null,
+        confidence: 0,
+        candidates: [],
+        framingMode: 'missing',
+        committedSubjectSwitch: false,
+        reacquiredAfterGap: false,
+      };
+    }
+
+    const reacquiredAfterGap = hadMissingSample;
+    hadMissingSample = false;
+    const strongest = rankedCandidates[0];
+    const secondary = rankedCandidates[1] ?? null;
+    const twoStrongFaces =
+      secondary != null &&
+      strongest.score >= MIN_TRACK_CONFIDENCE &&
+      secondary.score >= MIN_TRACK_CONFIDENCE;
+    const twoFaceMidpointAllowed =
+      twoStrongFaces && canFitTwoFacesInCrop(strongest, secondary, cropWidth);
+
+    if (twoFaceMidpointAllowed && secondary) {
+      const midpointCenter = clamp(
+        roundTo((strongest.centerX + secondary.centerX) / 2, 3),
+        0,
+        sourceWidth
+      );
+      committedCenterX = midpointCenter;
+      pendingSwitchCenterX = null;
+      pendingSwitchCount = 0;
+      return {
+        ...sample,
+        centerX: midpointCenter,
+        confidence: Math.max(strongest.score, secondary.score),
+        candidates: rankedCandidates,
+        framingMode: 'midpoint',
+        committedSubjectSwitch: false,
+        reacquiredAfterGap,
+      };
+    }
+
+    let chosen = strongest;
+    let committedSubjectSwitch = false;
+    if (twoStrongFaces && committedCenterX != null) {
+      const stayCandidate = pickClosestCandidate(
+        rankedCandidates,
+        committedCenterX
+      );
+      const switchCandidate = strongest;
+      if (
+        stayCandidate !== switchCandidate &&
+        shouldSwitchCommittedSubject({
+          currentCenterX: stayCandidate.centerX,
+          currentScore: stayCandidate.score,
+          targetCenterX: switchCandidate.centerX,
+          targetScore: switchCandidate.score,
+          cropWidth,
+        })
+      ) {
+        const switchPendingThreshold = Math.max(24, cropWidth * 0.06);
+        if (
+          pendingSwitchCenterX != null &&
+          Math.abs(pendingSwitchCenterX - switchCandidate.centerX) <=
+            switchPendingThreshold
+        ) {
+          pendingSwitchCount += 1;
+        } else {
+          pendingSwitchCenterX = switchCandidate.centerX;
+          pendingSwitchCount = 1;
+        }
+        if (pendingSwitchCount >= SUBJECT_SWITCH_DWELL_SAMPLES) {
+          chosen = switchCandidate;
+          committedSubjectSwitch = true;
+          pendingSwitchCenterX = null;
+          pendingSwitchCount = 0;
+        } else {
+          chosen = stayCandidate;
+        }
+      } else {
+        chosen = stayCandidate;
+        pendingSwitchCenterX = null;
+        pendingSwitchCount = 0;
+      }
+    } else {
+      pendingSwitchCenterX = null;
+      pendingSwitchCount = 0;
+    }
+
+    committedCenterX = clamp(chosen.centerX, 0, sourceWidth);
+    return {
+      ...sample,
+      centerX: committedCenterX,
+      confidence: chosen.score,
+      candidates: rankedCandidates,
+      framingMode: 'single',
+      committedSubjectSwitch,
+      reacquiredAfterGap,
+    };
+  });
 }
 
 export function buildVerticalReframePlan({
@@ -212,25 +506,49 @@ export function buildVerticalReframePlan({
           centerX: null,
           confidence: 0,
         }));
-
-  const rawTrack = normalizedSamples.map(sample =>
-    sample.centerX == null
-      ? null
-      : clamp(sample.centerX - cropWidth / 2, 0, maxX)
-  );
-  const filledTrack = interpolateMissingTrack(rawTrack, fallbackX);
-  const smoothedTrack = smoothTrack(
-    normalizedSamples.map(sample => sample.timeSeconds),
-    filledTrack,
+  const subjectAwareSamples = buildSubjectAwareSamples({
+    samples: normalizedSamples,
+    sourceWidth,
+    sourceHeight,
     cropWidth,
-    maxX
-  );
+  });
 
-  const keyframes = normalizedSamples.map((sample, index) => ({
+  const filteredCenterTrack = filterFaceCenterTrack(
+    subjectAwareSamples,
+    sourceWidth
+  );
+  const rawTrack = filteredCenterTrack.map(centerX =>
+    centerX == null ? null : clamp(centerX - cropWidth / 2, 0, maxX)
+  );
+  const denoisedTrack = medianFilterNullable(rawTrack, MEDIAN_FILTER_RADIUS);
+  const filledTrack = fillMissingTrackWithHold(denoisedTrack, fallbackX);
+  const quantizedTrack = quantizeTrack(filledTrack, CAMERA_QUANTIZE_PX, maxX);
+  const staticLockRange = Math.max(
+    STATIC_LOCK_RANGE_MIN_PX,
+    cropWidth * STATIC_LOCK_RANGE_RATIO
+  );
+  const staticLockPosition = pickStaticLockPosition(quantizedTrack, maxX);
+  const sampleTimeTrack = subjectAwareSamples.map(sample => sample.timeSeconds);
+  const cameraTrack =
+    computeRange(quantizedTrack) <= staticLockRange
+      ? Array.from({ length: quantizedTrack.length }, () => staticLockPosition)
+      : buildCameraTrackWithHysteresis({
+          targetTrack: quantizedTrack,
+          timeTrack: sampleTimeTrack,
+          cropWidth,
+          maxX,
+        });
+
+  const keyframes = subjectAwareSamples.map((sample, index) => ({
     timeSeconds: roundTo(sample.timeSeconds, 3),
-    x: roundTo(smoothedTrack[index], 3),
+    x: roundTo(cameraTrack[index], 3),
   }));
-  const detectedSamples = normalizedSamples.filter(
+  const transitionModes = buildReframeTransitionModes({
+    keyframes,
+    cropWidth,
+    samples: subjectAwareSamples,
+  });
+  const detectedSamples = subjectAwareSamples.filter(
     sample => sample.centerX != null
   ).length;
 
@@ -238,15 +556,106 @@ export function buildVerticalReframePlan({
     cropWidth,
     cropHeight,
     keyframes,
-    xExpression: buildPiecewiseLinearExpression(keyframes),
+    xExpression: buildPiecewiseLinearExpression(keyframes, transitionModes),
     strategy: detectedSamples > 0 ? 'tracked-face' : 'center',
-    sampleCount: normalizedSamples.length,
+    sampleCount: subjectAwareSamples.length,
     detectedSamples,
   };
 }
 
+function buildReframeTransitionModes({
+  keyframes,
+  cropWidth,
+  samples,
+}: {
+  keyframes: ReadonlyArray<ReframeKeyframe>;
+  cropWidth: number;
+  samples?: ReadonlyArray<SubjectAwareSample>;
+}): ReframeTransitionMode[] {
+  if (keyframes.length < 2) return [];
+  const holdDeltaThreshold = Math.max(
+    TRANSITION_HOLD_DELTA_MIN_PX,
+    cropWidth * TRANSITION_HOLD_DELTA_RATIO
+  );
+  const interpolateDeltaThreshold = Math.max(
+    TRANSITION_INTERPOLATE_DELTA_MIN_PX,
+    cropWidth * TRANSITION_INTERPOLATE_DELTA_RATIO
+  );
+  const snapDeltaThreshold = Math.max(
+    TRANSITION_SNAP_DELTA_MIN_PX,
+    cropWidth * TRANSITION_SNAP_DELTA_RATIO
+  );
+
+  const modes: ReframeTransitionMode[] = [];
+  for (let index = 0; index < keyframes.length - 1; index += 1) {
+    const current = keyframes[index];
+    const next = keyframes[index + 1];
+    const currentSample = samples?.[index];
+    const nextSample = samples?.[index + 1];
+    const delta = Math.abs(next.x - current.x);
+    const duration = next.timeSeconds - current.timeSeconds;
+    if (
+      !Number.isFinite(delta) ||
+      !Number.isFinite(duration) ||
+      duration <= 0
+    ) {
+      modes.push('snap');
+      continue;
+    }
+    if (delta <= holdDeltaThreshold) {
+      modes.push('hold');
+      continue;
+    }
+    const framingChanged =
+      currentSample != null &&
+      nextSample != null &&
+      currentSample.framingMode !== nextSample.framingMode &&
+      currentSample.framingMode !== 'missing' &&
+      nextSample.framingMode !== 'missing';
+    const hardTransition =
+      Boolean(nextSample?.committedSubjectSwitch) ||
+      Boolean(nextSample?.reacquiredAfterGap) ||
+      framingChanged;
+
+    if (
+      hardTransition ||
+      ((currentSample == null || nextSample == null) &&
+        delta >= snapDeltaThreshold)
+    ) {
+      modes.push('snap');
+      continue;
+    }
+    if (delta < interpolateDeltaThreshold) {
+      modes.push('hold');
+      continue;
+    }
+    modes.push('interpolate');
+  }
+  return modes;
+}
+
+function buildInterpolatedSegmentExpression(
+  current: ReframeKeyframe,
+  next: ReframeKeyframe
+): string {
+  const duration = next.timeSeconds - current.timeSeconds;
+  if (!Number.isFinite(duration) || duration <= 0) {
+    return formatNumber(current.x);
+  }
+  const slope = (next.x - current.x) / duration;
+  if (!Number.isFinite(slope) || Math.abs(slope) < 0.0001) {
+    return formatNumber(current.x);
+  }
+  const currentX = formatNumber(current.x);
+  const currentTime = formatNumber(current.timeSeconds);
+  const slopeText = formatNumber(slope);
+  const interpolated = `${currentX}+(${slopeText})*(t-${currentTime})`;
+  return `if(lt(t,${currentTime}),${currentX},${interpolated})`;
+}
+
 export function buildPiecewiseLinearExpression(
-  keyframes: ReadonlyArray<ReframeKeyframe>
+  keyframes: ReadonlyArray<ReframeKeyframe>,
+  transitionModes?: ReadonlyArray<ReframeTransitionMode>
 ): string {
   if (keyframes.length === 0) {
     return '0';
@@ -259,12 +668,11 @@ export function buildPiecewiseLinearExpression(
   for (let index = keyframes.length - 2; index >= 0; index -= 1) {
     const current = keyframes[index];
     const next = keyframes[index + 1];
-    const duration = Math.max(0.001, next.timeSeconds - current.timeSeconds);
-    const delta = next.x - current.x;
+    const mode = transitionModes?.[index] ?? 'interpolate';
     const segmentExpression =
-      Math.abs(delta) < 0.001
-        ? formatNumber(current.x)
-        : `(${formatNumber(current.x)}+(${formatNumber(delta / duration)}*(t-${formatNumber(current.timeSeconds)})))`;
+      mode === 'interpolate'
+        ? buildInterpolatedSegmentExpression(current, next)
+        : formatNumber(current.x);
     expression = `if(lt(t,${formatNumber(next.timeSeconds)}),${segmentExpression},${expression})`;
   }
   return expression;
@@ -382,7 +790,101 @@ function intersectionOverUnion(a: FaceCandidate, b: FaceCandidate): number {
   return overlapArea / Math.max(1e-6, areaA + areaB - overlapArea);
 }
 
-function interpolateMissingTrack(
+function filterFaceCenterTrack(
+  samples: FaceTrackSample[],
+  sourceWidth: number
+): Array<number | null> {
+  const maxCenterJumpPx = Math.max(80, sourceWidth * MAX_CENTER_JUMP_RATIO);
+  const jumpStabilityThreshold = Math.max(
+    LARGE_JUMP_STABILITY_MIN_PX,
+    sourceWidth * LARGE_JUMP_STABILITY_RATIO
+  );
+  let previousAcceptedCenter: number | null = null;
+  let pendingJumpCenter: number | null = null;
+  let pendingJumpCount = 0;
+
+  return samples.map(sample => {
+    if (sample.centerX == null || !Number.isFinite(sample.centerX)) {
+      pendingJumpCenter = null;
+      pendingJumpCount = 0;
+      return null;
+    }
+
+    const confidence = Number(sample.confidence ?? 0);
+    if (confidence < MIN_TRACK_CONFIDENCE) {
+      pendingJumpCenter = null;
+      pendingJumpCount = 0;
+      return null;
+    }
+
+    const normalizedCenter = clamp(sample.centerX, 0, sourceWidth);
+    if (
+      previousAcceptedCenter != null &&
+      Math.abs(normalizedCenter - previousAcceptedCenter) > maxCenterJumpPx &&
+      confidence < STRONG_TRACK_CONFIDENCE
+    ) {
+      if (
+        pendingJumpCenter != null &&
+        Math.abs(normalizedCenter - pendingJumpCenter) <= jumpStabilityThreshold
+      ) {
+        pendingJumpCount += 1;
+      } else {
+        pendingJumpCenter = normalizedCenter;
+        pendingJumpCount = 1;
+      }
+
+      if (pendingJumpCount >= LARGE_JUMP_CONFIRM_SAMPLES) {
+        previousAcceptedCenter = normalizedCenter;
+        pendingJumpCenter = null;
+        pendingJumpCount = 0;
+        return normalizedCenter;
+      }
+      return null;
+    }
+
+    pendingJumpCenter = null;
+    pendingJumpCount = 0;
+    previousAcceptedCenter = normalizedCenter;
+    return normalizedCenter;
+  });
+}
+
+function medianFilterNullable(
+  values: Array<number | null>,
+  radius: number
+): Array<number | null> {
+  if (values.length === 0 || radius <= 0) {
+    return [...values];
+  }
+
+  const lastIndex = values.length - 1;
+  return values.map((value, index) => {
+    if (value == null) {
+      return null;
+    }
+
+    const windowValues: number[] = [];
+    const start = Math.max(0, index - radius);
+    const end = Math.min(lastIndex, index + radius);
+    for (let cursor = start; cursor <= end; cursor += 1) {
+      const candidate = values[cursor];
+      if (candidate == null) continue;
+      windowValues.push(candidate);
+    }
+
+    if (windowValues.length === 0) {
+      return value;
+    }
+
+    windowValues.sort((a, b) => a - b);
+    const midpoint = Math.floor(windowValues.length / 2);
+    return windowValues.length % 2 === 1
+      ? windowValues[midpoint]
+      : (windowValues[midpoint - 1] + windowValues[midpoint]) / 2;
+  });
+}
+
+function fillMissingTrackWithHold(
   values: Array<number | null>,
   fallback: number
 ): number[] {
@@ -400,59 +902,130 @@ function interpolateMissingTrack(
     resolved[index] = resolved[firstDefinedIndex];
   }
 
-  let lastDefinedIndex = firstDefinedIndex;
   for (let index = firstDefinedIndex + 1; index < resolved.length; index += 1) {
     if (resolved[index] == null) {
-      continue;
+      resolved[index] = resolved[index - 1];
     }
-
-    const previousValue = Number(resolved[lastDefinedIndex]);
-    const nextValue = Number(resolved[index]);
-    const gap = index - lastDefinedIndex;
-    for (let cursor = 1; cursor < gap; cursor += 1) {
-      const progress = cursor / gap;
-      resolved[lastDefinedIndex + cursor] =
-        previousValue + (nextValue - previousValue) * progress;
-    }
-    lastDefinedIndex = index;
-  }
-
-  for (let index = lastDefinedIndex + 1; index < resolved.length; index += 1) {
-    resolved[index] = resolved[lastDefinedIndex];
   }
 
   return resolved.map(value => roundTo(Number(value ?? fallback), 3));
 }
 
-function smoothTrack(
-  timeSeconds: number[],
-  track: number[],
-  cropWidth: number,
+function quantizeTrack(
+  values: number[],
+  stepPx: number,
   maxX: number
 ): number[] {
-  if (track.length <= 1) {
-    return track.map(value => clamp(value, 0, maxX));
+  return values.map(value => quantizeValue(value, stepPx, maxX));
+}
+
+function quantizeValue(value: number, stepPx: number, maxX: number): number {
+  const clamped = clamp(value, 0, maxX);
+  if (stepPx <= 1) {
+    return roundTo(clamped, 3);
+  }
+  return roundTo(clamp(Math.round(clamped / stepPx) * stepPx, 0, maxX), 3);
+}
+
+function computeRange(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
   }
 
-  const smoothed = [clamp(track[0], 0, maxX)];
+  let min = values[0];
+  let max = values[0];
+  for (const value of values) {
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
+  return max - min;
+}
 
-  for (let index = 1; index < track.length; index += 1) {
-    const previous = smoothed[index - 1];
-    const target = clamp(track[index], 0, maxX);
-    const deltaTime = Math.max(
-      0.001,
-      timeSeconds[index] - timeSeconds[index - 1]
-    );
-    const maxDelta = Math.max(
-      18,
-      cropWidth * MAX_PAN_SPEED_MULTIPLIER * deltaTime
-    );
-    const blended = previous + (target - previous) * SMOOTHING_ALPHA;
-    const limited = clamp(blended, previous - maxDelta, previous + maxDelta);
-    smoothed.push(roundTo(clamp(limited, 0, maxX), 3));
+function pickStaticLockPosition(track: number[], maxX: number): number {
+  if (track.length === 0) {
+    return 0;
   }
 
-  return smoothed;
+  const sorted = [...track].sort((a, b) => a - b);
+  const midpoint = Math.floor(sorted.length / 2);
+  const centerValue =
+    sorted.length % 2 === 1
+      ? sorted[midpoint]
+      : (sorted[midpoint - 1] + sorted[midpoint]) / 2;
+  return quantizeValue(centerValue, CAMERA_QUANTIZE_PX, maxX);
+}
+
+function buildCameraTrackWithHysteresis({
+  targetTrack,
+  timeTrack,
+  cropWidth,
+  maxX,
+}: {
+  targetTrack: number[];
+  timeTrack: number[];
+  cropWidth: number;
+  maxX: number;
+}): number[] {
+  if (targetTrack.length <= 1) {
+    return targetTrack.map(value =>
+      quantizeValue(value, CAMERA_QUANTIZE_PX, maxX)
+    );
+  }
+
+  const deadzone = Math.max(
+    LOCK_DEADZONE_MIN_PX,
+    cropWidth * LOCK_DEADZONE_RATIO
+  );
+  const immediateMoveThreshold = deadzone * IMMEDIATE_MOVE_MULTIPLIER;
+  const cameraTrack = [quantizeValue(targetTrack[0], CAMERA_QUANTIZE_PX, maxX)];
+  let pendingDirection: -1 | 0 | 1 = 0;
+  let pendingElapsedSeconds = 0;
+
+  for (let index = 1; index < targetTrack.length; index += 1) {
+    const previous = cameraTrack[index - 1];
+    const target = quantizeValue(targetTrack[index], CAMERA_QUANTIZE_PX, maxX);
+    const delta = target - previous;
+    const absDelta = Math.abs(delta);
+    const rawStepSeconds = timeTrack[index] - timeTrack[index - 1];
+    const stepSeconds =
+      Number.isFinite(rawStepSeconds) && rawStepSeconds > 0
+        ? rawStepSeconds
+        : SAMPLE_INTERVAL_SECONDS;
+
+    if (absDelta <= deadzone) {
+      pendingDirection = 0;
+      pendingElapsedSeconds = 0;
+      cameraTrack.push(previous);
+      continue;
+    }
+
+    const direction: -1 | 1 = delta > 0 ? 1 : -1;
+    if (absDelta >= immediateMoveThreshold) {
+      cameraTrack.push(target);
+      pendingDirection = 0;
+      pendingElapsedSeconds = 0;
+      continue;
+    }
+
+    if (pendingDirection !== direction) {
+      pendingDirection = direction;
+      pendingElapsedSeconds = stepSeconds;
+    } else {
+      pendingElapsedSeconds += stepSeconds;
+    }
+
+    const isLastSample = index === targetTrack.length - 1;
+    if (pendingElapsedSeconds < MOVE_DWELL_SECONDS && !isLastSample) {
+      cameraTrack.push(previous);
+      continue;
+    }
+
+    cameraTrack.push(target);
+    pendingDirection = 0;
+    pendingElapsedSeconds = 0;
+  }
+
+  return cameraTrack;
 }
 
 function clamp(value: number, min: number, max: number): number {

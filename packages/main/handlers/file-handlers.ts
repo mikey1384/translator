@@ -185,6 +185,61 @@ export async function handleGetFileSize(
   }
 }
 
+export async function handleGetFileIdentity(
+  _event: IpcMainInvokeEvent,
+  filePath: string
+): Promise<{
+  success: boolean;
+  identity?: string;
+  sizeBytes?: number;
+  mtimeMs?: number;
+  birthtimeMs?: number;
+  dev?: number;
+  ino?: number;
+  error?: string;
+}> {
+  if (!filePath || typeof filePath !== 'string') {
+    return { success: false, error: 'Invalid file path provided.' };
+  }
+  try {
+    const normalizedPath = path.normalize(filePath);
+    const stats = await fs.stat(normalizedPath);
+    const sizeBytes = Number.isFinite(stats.size) ? stats.size : 0;
+    const mtimeMs = Number.isFinite(stats.mtimeMs)
+      ? Math.round(stats.mtimeMs)
+      : 0;
+    const birthtimeMs = Number.isFinite(stats.birthtimeMs)
+      ? Math.round(stats.birthtimeMs)
+      : 0;
+    const dev = Number.isFinite(Number((stats as any).dev))
+      ? Number((stats as any).dev)
+      : 0;
+    const ino = Number.isFinite(Number((stats as any).ino))
+      ? Number((stats as any).ino)
+      : 0;
+    const identity = `${dev}:${ino}:${sizeBytes}:${mtimeMs}:${birthtimeMs}`;
+
+    return {
+      success: true,
+      identity,
+      sizeBytes,
+      mtimeMs,
+      birthtimeMs,
+      dev,
+      ino,
+    };
+  } catch (error: any) {
+    console.error(
+      `[handleGetFileIdentity] Error getting identity for ${filePath}:`,
+      error
+    );
+    return {
+      success: false,
+      error: error.message || 'Failed to get file identity.',
+    };
+  }
+}
+
 export async function handleGetDiskSpace(
   _event: IpcMainInvokeEvent,
   filePath: string

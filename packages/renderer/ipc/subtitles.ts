@@ -117,6 +117,7 @@ export function generateTranscriptSummary(options: {
   summary?: string;
   sections?: import('@shared-types/app').TranscriptSummarySection[];
   highlights?: import('@shared-types/app').TranscriptHighlight[];
+  highlightStatus?: import('@shared-types/app').TranscriptHighlightStatus;
   success?: boolean;
   error?: string;
   cancelled?: boolean;

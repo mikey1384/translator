@@ -12,6 +12,7 @@ import {
   buildVerticalReframePlan,
   decodeUltraFaceDetections,
   pickPrimaryFaceCenterX,
+  type FaceCandidate,
   type FaceTrackSample,
   type VerticalReframePlan,
 } from './highlight-smart-reframe-core.js';
@@ -25,6 +26,11 @@ let sessionPromise: Promise<ort.InferenceSession> | null = null;
 type DetectedPrimaryFace = {
   centerX: number;
   confidence: number;
+};
+
+type DetectedFaceSample = {
+  primaryFace: DetectedPrimaryFace | null;
+  candidates: FaceCandidate[];
 };
 
 export async function createVerticalReframePlan({
@@ -69,8 +75,8 @@ export async function createVerticalReframePlan({
         timeSeconds: absoluteTime,
         signal,
       });
-      const primaryFace: DetectedPrimaryFace | null = frame
-        ? await detectPrimaryFace({
+      const detectedFaces: DetectedFaceSample | null = frame
+        ? await detectFaceSample({
             frame,
             sourceWidth,
             sourceHeight,
@@ -78,14 +84,15 @@ export async function createVerticalReframePlan({
           })
         : null;
 
-      if (primaryFace) {
-        previousCenterX = primaryFace.centerX;
+      if (detectedFaces?.primaryFace) {
+        previousCenterX = detectedFaces.primaryFace.centerX;
       }
 
       trackSamples.push({
         timeSeconds: relativeTime,
-        centerX: primaryFace?.centerX ?? null,
-        confidence: primaryFace?.confidence ?? 0,
+        centerX: detectedFaces?.primaryFace?.centerX ?? null,
+        confidence: detectedFaces?.primaryFace?.confidence ?? 0,
+        candidates: detectedFaces?.candidates ?? [],
       });
     } catch (error) {
       if (isAbortError(error)) {
@@ -99,6 +106,7 @@ export async function createVerticalReframePlan({
         timeSeconds: relativeTime,
         centerX: null,
         confidence: 0,
+        candidates: [],
       });
     } finally {
       completedSamples += 1;
@@ -118,7 +126,7 @@ export function buildVerticalReframeFilter(plan: VerticalReframePlan): string {
   return `crop=${plan.cropWidth}:${plan.cropHeight}:'${plan.xExpression}':0,scale=${VERTICAL_OUTPUT_WIDTH}:${VERTICAL_OUTPUT_HEIGHT}:flags=lanczos,setsar=1`;
 }
 
-async function detectPrimaryFace({
+async function detectFaceSample({
   frame,
   sourceWidth,
   sourceHeight,
@@ -128,7 +136,7 @@ async function detectPrimaryFace({
   sourceWidth: number;
   sourceHeight: number;
   previousCenterX: number | null;
-}): Promise<DetectedPrimaryFace | null> {
+}): Promise<DetectedFaceSample | null> {
   const session = await getSession();
   const inputTensor = frameToTensor(frame);
   const outputs = await session.run({ input: inputTensor });
@@ -142,12 +150,16 @@ async function detectPrimaryFace({
     sourceHeight
   );
 
-  return pickPrimaryFaceCenterX(
+  const primaryFace = pickPrimaryFaceCenterX(
     candidates,
     sourceWidth,
     sourceHeight,
     previousCenterX
   );
+  return {
+    primaryFace,
+    candidates,
+  };
 }
 
 async function getSession(): Promise<ort.InferenceSession> {

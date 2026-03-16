@@ -53,7 +53,9 @@ async function saveVideoCopy(options: {
       throw new Error(copyRes.error);
     }
 
-    await SystemIPC.showMessage(options.successMessage.replace('{{path}}', filePath));
+    await SystemIPC.showMessage(
+      options.successMessage.replace('{{path}}', filePath)
+    );
     return filePath;
   } catch (err) {
     console.error(`[save-video] ${options.errorLabel}:`, err);
@@ -114,8 +116,7 @@ export async function saveOriginalVideoFile(
     return false;
   }
 
-  const filename =
-    originalVideoPath.split(/[\\/]/).pop() || 'downloaded_video';
+  const filename = originalVideoPath.split(/[\\/]/).pop() || 'downloaded_video';
 
   const savedPath = await saveVideoCopy({
     sourcePath: originalVideoPath,
@@ -145,8 +146,10 @@ export async function saveOriginalVideoFile(
     const savedUrl = toFileUrl(savedPath);
     const shouldRefreshPositionSaver = currentVideo.activeTrack === 'original';
     const resumeAt = shouldRefreshPositionSaver
-      ? getNativePlayerInstance()?.currentTime ?? currentVideo.resumeAt ?? null
-      : currentVideo.resumeAt ?? null;
+      ? (getNativePlayerInstance()?.currentTime ??
+        currentVideo.resumeAt ??
+        null)
+      : (currentVideo.resumeAt ?? null);
     if (typeof window !== 'undefined' && typeof resumeAt === 'number') {
       (window as any)._videoLastValidTime = resumeAt;
     }
@@ -183,8 +186,14 @@ export async function saveOriginalVideoFile(
 
   const currentSubtitles = useSubStore.getState();
   if (pathsMatch(currentSubtitles.sourceVideoPath, originalVideoPath)) {
+    const preservedSourceVideoAssetIdentity =
+      currentSubtitles.sourceVideoAssetIdentity ??
+      (pathsMatch(currentVideo.originalPath, originalVideoPath)
+        ? currentVideo.sourceAssetIdentity
+        : null);
     useSubStore.setState({
       sourceVideoPath: savedPath,
+      sourceVideoAssetIdentity: preservedSourceVideoAssetIdentity,
     });
   }
   return true;

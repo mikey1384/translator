@@ -24,6 +24,7 @@ interface State {
   origin: 'fresh' | 'disk' | null;
   // When origin is 'fresh', record the video file path this set of subtitles was generated for
   sourceVideoPath: string | null;
+  sourceVideoAssetIdentity: string | null;
   transcriptionEngine: 'elevenlabs' | 'whisper' | null;
   libraryEntryId: string | null;
   libraryKind: StoredSubtitleKind | null;
@@ -52,7 +53,8 @@ interface Actions {
     libraryMeta?: {
       entryId?: string | null;
       kind?: StoredSubtitleKind | null;
-    } | null
+    } | null,
+    videoAssetIdentityRef?: string | null
   ) => void;
   // Clear Whisper review state when it is no longer valid for the current source
   clearConfidence: () => void;
@@ -105,6 +107,7 @@ const initialState: State = {
   originalPath: null,
   origin: null,
   sourceVideoPath: null,
+  sourceVideoAssetIdentity: null,
   transcriptionEngine: null,
   libraryEntryId: null,
   libraryKind: null,
@@ -150,11 +153,13 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         loadOrigin = null,
         videoPathRef = null,
         transcriptionEngine,
-        libraryMeta = null
+        libraryMeta = null,
+        videoAssetIdentityRef
       ) => {
         set(s => {
           const isDiskBackedLoad =
-            loadOrigin === 'disk' || (typeof srcPath === 'string' && srcPath.length > 0);
+            loadOrigin === 'disk' ||
+            (typeof srcPath === 'string' && srcPath.length > 0);
           const isEquivalentDocument = areEquivalentSubtitleDocs(
             s.order,
             s.segments,
@@ -166,23 +171,21 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             isEquivalentDocument;
           const nextTranscriptionEngine =
             transcriptionEngine !== undefined
-              ? transcriptionEngine ?? null
+              ? (transcriptionEngine ?? null)
               : preserveExistingEngine
                 ? s.transcriptionEngine
                 : null;
           const preserveExistingLibraryMeta =
-            !isDiskBackedLoad &&
-            libraryMeta == null &&
-            isEquivalentDocument;
+            !isDiskBackedLoad && libraryMeta == null && isEquivalentDocument;
           const nextLibraryEntryId =
             libraryMeta && 'entryId' in libraryMeta
-              ? libraryMeta.entryId ?? null
+              ? (libraryMeta.entryId ?? null)
               : preserveExistingLibraryMeta
                 ? s.libraryEntryId
                 : null;
           const nextLibraryKind =
             libraryMeta && 'kind' in libraryMeta
-              ? libraryMeta.kind ?? null
+              ? (libraryMeta.kind ?? null)
               : preserveExistingLibraryMeta
                 ? s.libraryKind
                 : null;
@@ -190,10 +193,20 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             typeof videoPathRef === 'string'
               ? videoPathRef
               : isDiskBackedLoad && isEquivalentDocument
-                ? s.sourceVideoPath ?? null
+                ? (s.sourceVideoPath ?? null)
                 : isDiskBackedLoad
-                ? null
-                : s.sourceVideoPath ?? null;
+                  ? null
+                  : (s.sourceVideoPath ?? null);
+          const shouldPreserveExistingVideoAssetIdentity =
+            typeof videoPathRef === 'string'
+              ? s.sourceVideoPath === videoPathRef
+              : !isDiskBackedLoad || isEquivalentDocument;
+          const nextSourceVideoAssetIdentity =
+            videoAssetIdentityRef !== undefined
+              ? (videoAssetIdentityRef ?? null)
+              : shouldPreserveExistingVideoAssetIdentity
+                ? (s.sourceVideoAssetIdentity ?? null)
+                : null;
 
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
             acc[cue.id] = { ...cue, index: i + 1 };
@@ -207,6 +220,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           // Disk-backed subtitle loads should not inherit a stale video
           // association unless the caller explicitly provides one.
           s.sourceVideoPath = nextSourceVideoPath;
+          s.sourceVideoAssetIdentity = nextSourceVideoAssetIdentity;
           // Replacing the subtitle set should clear engine-specific UI state
           // unless the caller explicitly carries the engine forward.
           s.transcriptionEngine = nextTranscriptionEngine;
@@ -297,9 +311,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             }
           }
           s.gapsCache = gaps;
-          s.lcRangesCache = shouldUseWhisperReviewHints(
-            s.transcriptionEngine
-          )
+          s.lcRangesCache = shouldUseWhisperReviewHints(s.transcriptionEngine)
             ? groupWhisperReviewRanges(order, segments as any)
             : [];
         }),
@@ -586,9 +598,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             }
           }
           s.gapsCache = gaps;
-          s.lcRangesCache = shouldUseWhisperReviewHints(
-            s.transcriptionEngine
-          )
+          s.lcRangesCache = shouldUseWhisperReviewHints(s.transcriptionEngine)
             ? groupWhisperReviewRanges(order, segments as any)
             : [];
         }),

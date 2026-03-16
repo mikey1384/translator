@@ -3,6 +3,7 @@ import type { TFunction } from 'i18next';
 import type {
   HighlightAspectMode,
   TranscriptHighlight,
+  TranscriptHighlightStatus,
 } from '@shared-types/app';
 import Button from '../Button';
 import {
@@ -61,6 +62,8 @@ type TranscriptSummaryHighlightsTabProps = {
   combineMode: boolean;
   downloadStatus: Record<string, 'idle' | 'saving' | 'saved' | 'error'>;
   hasSummaryResult: boolean;
+  highlightWarningMessage: string | null;
+  highlightStatus: TranscriptHighlightStatus;
   highlightAspectMode: HighlightAspectMode;
   highlightCutState: Record<string, HighlightClipCutState>;
   highlights: TranscriptHighlight[];
@@ -89,6 +92,8 @@ export default function TranscriptSummaryHighlightsTab({
   combineMode,
   downloadStatus,
   hasSummaryResult,
+  highlightWarningMessage,
+  highlightStatus,
   highlightAspectMode,
   highlightCutState,
   highlights,
@@ -233,6 +238,27 @@ export default function TranscriptSummaryHighlightsTab({
           >
             {t('summary.downloadCombined', 'Download Combined Clip')}
           </Button>
+        </div>
+      ) : null}
+
+      {hasSummaryResult && highlightWarningMessage ? (
+        <div className={noHighlightsStyles}>
+          <span className={highlightStatusError}>
+            {highlightWarningMessage}
+          </span>
+        </div>
+      ) : null}
+
+      {hasSummaryResult &&
+      highlightStatus === 'degraded' &&
+      !highlightWarningMessage ? (
+        <div className={noHighlightsStyles}>
+          <span className={highlightStatusError}>
+            {t(
+              'summary.highlightsPartialWarning',
+              'Highlight extraction was partial. These highlights may be incomplete. Regenerate to refresh.'
+            )}
+          </span>
         </div>
       ) : null}
 

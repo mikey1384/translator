@@ -5,6 +5,7 @@ import type {
   TranscriptHighlight,
   TranscriptSummarySection,
   SummaryEffortLevel,
+  TranscriptHighlightStatus,
 } from '@shared-types/app';
 import { getSummaryModelConfig } from '../ai-provider.js';
 import { AI_MODELS } from '@shared/constants';
@@ -23,6 +24,7 @@ interface GenerateTranscriptSummaryResult {
   summary: string;
   sections: TranscriptSummarySection[];
   highlights: TranscriptHighlight[];
+  highlightStatus: TranscriptHighlightStatus;
 }
 
 interface SelectTranscriptHighlightsOptions {
@@ -212,6 +214,9 @@ export async function generateTranscriptSummary({
   }
 
   let highlightPhaseAborted = false;
+  let highlightStatus: TranscriptHighlightStatus = highlightTracker
+    ? 'complete'
+    : 'not_requested';
   if (highlightTracker) {
     const highlightStartPercent = 90;
     const highlightEndPercent = 92;
@@ -280,6 +285,7 @@ export async function generateTranscriptSummary({
           stage: 'highlight-selection-error',
           error: message,
         });
+        highlightStatus = 'degraded';
         continue;
       }
 
@@ -294,6 +300,10 @@ export async function generateTranscriptSummary({
         partialHighlights: latestHighlights,
       });
     }
+  }
+
+  if (highlightPhaseAborted || signal.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
   }
 
   const sectionSummaries = createSectionSummaries(chunkSummaries);
@@ -324,6 +334,7 @@ export async function generateTranscriptSummary({
         partialHighlights: highlights,
       });
     } catch (highlightError) {
+      highlightStatus = 'degraded';
       progressCallback?.({
         percent: 96,
         stage: 'highlight-selection-error',
@@ -343,7 +354,12 @@ export async function generateTranscriptSummary({
     partialHighlights: highlights,
   });
 
-  return { summary: finalSummary, sections: sectionSummaries, highlights };
+  return {
+    summary: finalSummary,
+    sections: sectionSummaries,
+    highlights,
+    highlightStatus,
+  };
 }
 
 export async function selectTranscriptHighlights({
