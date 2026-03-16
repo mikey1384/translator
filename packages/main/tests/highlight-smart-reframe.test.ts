@@ -91,17 +91,17 @@ test('buildVerticalReframePlan scales medium-move dwell by elapsed sample time',
     durationSeconds: 30,
     samples: [
       { timeSeconds: 0, centerX: 700, confidence: 0.95 },
-      { timeSeconds: 2.7, centerX: 820, confidence: 0.95 },
-      { timeSeconds: 5.4, centerX: 940, confidence: 0.95 },
-      { timeSeconds: 8.1, centerX: 1060, confidence: 0.95 },
-      { timeSeconds: 10.8, centerX: 1180, confidence: 0.95 },
+      { timeSeconds: 2.7, centerX: 860, confidence: 0.95 },
+      { timeSeconds: 5.4, centerX: 1020, confidence: 0.95 },
+      { timeSeconds: 8.1, centerX: 1180, confidence: 0.95 },
+      { timeSeconds: 10.8, centerX: 1340, confidence: 0.95 },
     ],
   });
 
   assert.ok(plan);
   const xValues = plan?.keyframes.map(keyframe => keyframe.x) ?? [];
   assert.ok(xValues.length >= 3);
-  assert.ok(xValues[1] > xValues[0]);
+  assert.ok(xValues[2] > xValues[1]);
 });
 
 test('buildVerticalReframePlan still holds medium moves on dense samples', () => {
@@ -111,18 +111,19 @@ test('buildVerticalReframePlan still holds medium moves on dense samples', () =>
     durationSeconds: 2.6,
     samples: [
       { timeSeconds: 0, centerX: 700, confidence: 0.95 },
-      { timeSeconds: 0.65, centerX: 820, confidence: 0.95 },
-      { timeSeconds: 1.3, centerX: 940, confidence: 0.95 },
-      { timeSeconds: 1.95, centerX: 1060, confidence: 0.95 },
-      { timeSeconds: 2.6, centerX: 1180, confidence: 0.95 },
+      { timeSeconds: 0.65, centerX: 860, confidence: 0.95 },
+      { timeSeconds: 1.3, centerX: 1020, confidence: 0.95 },
+      { timeSeconds: 1.95, centerX: 1180, confidence: 0.95 },
+      { timeSeconds: 2.6, centerX: 1340, confidence: 0.95 },
     ],
   });
 
   assert.ok(plan);
   const xValues = plan?.keyframes.map(keyframe => keyframe.x) ?? [];
-  assert.ok(xValues.length >= 3);
+  assert.ok(xValues.length >= 4);
   assert.equal(xValues[1], xValues[0]);
-  assert.ok(xValues[2] > xValues[1]);
+  assert.equal(xValues[2], xValues[1]);
+  assert.ok(xValues[3] > xValues[2]);
 });
 
 test('buildVerticalReframePlan ignores slight speaker head movement', () => {
@@ -149,13 +150,11 @@ test('buildVerticalReframePlan keeps dwell-sized corrections as held transitions
   const plan = buildVerticalReframePlan({
     sourceWidth: 1920,
     sourceHeight: 1080,
-    durationSeconds: 2.6,
+    durationSeconds: 1.3,
     samples: [
-      { timeSeconds: 0, centerX: 700, confidence: 0.95 },
-      { timeSeconds: 0.65, centerX: 820, confidence: 0.95 },
-      { timeSeconds: 1.3, centerX: 940, confidence: 0.95 },
-      { timeSeconds: 1.95, centerX: 1060, confidence: 0.95 },
-      { timeSeconds: 2.6, centerX: 1180, confidence: 0.95 },
+      { timeSeconds: 0, centerX: 960, confidence: 0.95 },
+      { timeSeconds: 0.65, centerX: 1280, confidence: 0.95 },
+      { timeSeconds: 1.3, centerX: 1280, confidence: 0.95 },
     ],
   });
 
@@ -171,7 +170,7 @@ test('buildVerticalReframePlan applies pending medium move on final sample', () 
     samples: [
       { timeSeconds: 0, centerX: 960, confidence: 0.95 },
       { timeSeconds: 0.65, centerX: 960, confidence: 0.95 },
-      { timeSeconds: 1.3, centerX: 1120, confidence: 0.95 },
+      { timeSeconds: 1.3, centerX: 1280, confidence: 0.95 },
     ],
   });
 
@@ -180,7 +179,7 @@ test('buildVerticalReframePlan applies pending medium move on final sample', () 
   assert.equal(xValues.length, 3);
   assert.equal(xValues[0], 656);
   assert.equal(xValues[1], 656);
-  assert.equal(xValues[2], 736);
+  assert.equal(xValues[2], 816);
 });
 
 test('buildVerticalReframePlan avoids midpoint framing when two far faces cannot fit in one crop', () => {
