@@ -5,6 +5,7 @@ import {
   buildSampleTimes,
   buildVerticalReframePlan,
   computeVerticalCropWidth,
+  pickPrimaryFaceCenterX,
 } from '../services/highlight-smart-reframe-core.js';
 
 test('computeVerticalCropWidth uses a filled 9:16 crop', () => {
@@ -308,4 +309,99 @@ test('buildVerticalReframePlan accepts repeated normal-confidence large moves', 
   const xValues = plan?.keyframes.map(keyframe => keyframe.x) ?? [];
   assert.ok(xValues.some(value => value > 700));
   assert.ok((xValues[xValues.length - 1] ?? 0) > 700);
+});
+
+test('buildVerticalReframePlan ignores a lone opening outlier before stable framing settles', () => {
+  const plan = buildVerticalReframePlan({
+    sourceWidth: 1920,
+    sourceHeight: 1080,
+    durationSeconds: 2.6,
+    samples: [
+      { timeSeconds: 0, centerX: 1560, confidence: 0.95 },
+      { timeSeconds: 0.65, centerX: 540, confidence: 0.95 },
+      { timeSeconds: 1.3, centerX: 552, confidence: 0.95 },
+      { timeSeconds: 1.95, centerX: 548, confidence: 0.95 },
+      { timeSeconds: 2.6, centerX: 556, confidence: 0.95 },
+    ],
+  });
+
+  assert.ok(plan);
+  const xValues = plan?.keyframes.map(keyframe => keyframe.x) ?? [];
+  assert.equal(xValues[0], 248);
+  assert.equal(xValues[1], 248);
+  assert.equal(xValues[2], 248);
+});
+
+test('buildVerticalReframePlan keeps a genuine stable opening subject lock', () => {
+  const plan = buildVerticalReframePlan({
+    sourceWidth: 1920,
+    sourceHeight: 1080,
+    durationSeconds: 2.6,
+    samples: [
+      { timeSeconds: 0, centerX: 1560, confidence: 0.95 },
+      { timeSeconds: 0.65, centerX: 1552, confidence: 0.95 },
+      { timeSeconds: 1.3, centerX: 1556, confidence: 0.95 },
+      { timeSeconds: 1.95, centerX: 1548, confidence: 0.95 },
+      { timeSeconds: 2.6, centerX: 1556, confidence: 0.95 },
+    ],
+  });
+
+  assert.ok(plan);
+  const xValues = plan?.keyframes.map(keyframe => keyframe.x) ?? [];
+  assert.equal(xValues[0], 1256);
+  assert.equal(xValues[1], 1256);
+});
+
+test('pickPrimaryFaceCenterX prefers a stronger off-center subject over a weaker centered candidate on initial lock', () => {
+  const picked = pickPrimaryFaceCenterX(
+    [
+      { x1: 1450, y1: 150, x2: 1700, y2: 690, score: 0.93 },
+      { x1: 870, y1: 260, x2: 1050, y2: 540, score: 0.91 },
+    ],
+    1920,
+    1080,
+    null
+  );
+
+  assert.deepEqual(picked, {
+    centerX: 1575,
+    confidence: 0.93,
+  });
+});
+
+test('buildVerticalReframePlan keeps the opening crop on the stable right-side speaker instead of a weaker center candidate', () => {
+  const plan = buildVerticalReframePlan({
+    sourceWidth: 1920,
+    sourceHeight: 1080,
+    durationSeconds: 2,
+    samples: [
+      {
+        timeSeconds: 0,
+        centerX: 960,
+        confidence: 0.91,
+        candidates: [
+          { x1: 1450, y1: 150, x2: 1700, y2: 690, score: 0.93 },
+          { x1: 870, y1: 260, x2: 1050, y2: 540, score: 0.91 },
+        ],
+      },
+      {
+        timeSeconds: 1,
+        centerX: 1575,
+        confidence: 0.93,
+        candidates: [{ x1: 1450, y1: 150, x2: 1700, y2: 690, score: 0.93 }],
+      },
+      {
+        timeSeconds: 2,
+        centerX: 1575,
+        confidence: 0.93,
+        candidates: [{ x1: 1450, y1: 150, x2: 1700, y2: 690, score: 0.93 }],
+      },
+    ],
+  });
+
+  assert.ok(plan);
+  const xValues = plan?.keyframes.map(keyframe => keyframe.x) ?? [];
+  assert.equal(xValues[0], 1272);
+  assert.equal(xValues[1], 1272);
+  assert.equal(xValues[2], 1272);
 });

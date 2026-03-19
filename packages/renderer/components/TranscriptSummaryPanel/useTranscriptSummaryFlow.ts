@@ -17,8 +17,14 @@ import type {
   TranscriptSummarySection,
 } from '@shared-types/app';
 import { ERROR_CODES } from '../../../shared/constants';
-import { useAiStore, useCreditStore, useTaskStore } from '../../state';
+import {
+  useAiStore,
+  useCreditStore,
+  useHighlightGenerationRequestStore,
+  useTaskStore,
+} from '../../state';
 import { isSummaryByo } from '../../state/byo-runtime';
+import type { HighlightGenerationRequest } from '../../state/highlight-generation-request-store';
 import {
   generateTranscriptSummary,
   onTranscriptSummaryProgress,
@@ -33,6 +39,14 @@ import {
   estimateSummaryCredits,
   translateStageLabel,
 } from './TranscriptSummaryPanel.helpers';
+import {
+  buildCanonicalTranscriptText,
+  buildSemanticSummarySourceIdentity,
+  buildSummaryInputSignature,
+  normalizeSourcePathSignature,
+  normalizeSourceValueSignature,
+  toUsableTranscriptSegments,
+} from './transcript-usable-segments.js';
 import type { SummaryEstimate } from './TranscriptSummaryLogic.types';
 
 type UseTranscriptSummaryFlowParams = {
@@ -57,11 +71,14 @@ type UseTranscriptSummaryFlowResult = {
   copyStatus: 'idle' | 'copied';
   handleCancel: () => Promise<void>;
   handleCopy: () => Promise<void>;
-  handleGenerate: () => Promise<void>;
+  handleGenerate: (
+    claimedRequest?: HighlightGenerationRequest | null
+  ) => Promise<void>;
   hasSummaryResult: boolean;
   hasTranscript: boolean;
   highlightWarningMessage: string | null;
   highlightStatus: TranscriptHighlightStatus;
+  isRestoreSettledForCurrentSignature: boolean;
   isCancelling: boolean;
   isGenerating: boolean;
   progressLabel: string;
@@ -72,31 +89,15 @@ type UseTranscriptSummaryFlowResult = {
   summaryEstimate: SummaryEstimate | null;
 };
 
-type SummaryInputSegment = {
-  start: number;
-  end: number;
-  text: string;
-};
-
 type ActiveSummaryRun = {
   operationId: string;
   settled: Promise<void>;
 };
 
-function normalizeSegmentTimestamp(value: number): string {
-  if (!Number.isFinite(value)) return '0.000';
-  return value.toFixed(3);
-}
-
 async function buildTranscriptHash(
-  segments: SummaryInputSegment[]
+  segments: ReturnType<typeof toUsableTranscriptSegments>
 ): Promise<string> {
-  const canonical = segments
-    .map(
-      segment =>
-        `${normalizeSegmentTimestamp(segment.start)}\t${normalizeSegmentTimestamp(segment.end)}\t${segment.text}`
-    )
-    .join('\n');
+  const canonical = buildCanonicalTranscriptText(segments);
   if (!window.crypto?.subtle) {
     throw new Error('Secure transcript hashing unavailable');
   }
@@ -117,70 +118,6 @@ function buildRestoreLookupKey({
   effortLevel: SummaryEffortLevel;
 }): string {
   return `${transcriptHash}|${summaryLanguage.toLowerCase()}|${effortLevel}`;
-}
-
-function buildInputSignature({
-  segments,
-  summaryLanguage,
-  effortLevel,
-}: {
-  segments: SummaryInputSegment[];
-  summaryLanguage: string;
-  effortLevel: SummaryEffortLevel;
-}): string {
-  const canonicalTranscript = segments
-    .map(
-      segment =>
-        `${normalizeSegmentTimestamp(segment.start)}\t${normalizeSegmentTimestamp(segment.end)}\t${segment.text}`
-    )
-    .join('\n');
-  return `${summaryLanguage.toLowerCase()}|${effortLevel}|${canonicalTranscript}`;
-}
-
-function normalizeSourcePathSignature(
-  value: string | null | undefined
-): string {
-  return String(value || '')
-    .trim()
-    .replace(/\\/g, '/')
-    .replace(/\/+$/g, '')
-    .toLowerCase();
-}
-
-function normalizeSourceValueSignature(
-  value: string | null | undefined
-): string {
-  return String(value || '')
-    .trim()
-    .toLowerCase();
-}
-
-function buildSemanticSummarySourceIdentity({
-  fallbackVideoAssetIdentity,
-  fallbackVideoPath,
-  originalVideoPath,
-  sourceAssetIdentity,
-  sourceUrl,
-}: {
-  fallbackVideoAssetIdentity: string | null;
-  fallbackVideoPath: string | null;
-  originalVideoPath: string | null;
-  sourceAssetIdentity: string | null;
-  sourceUrl: string | null;
-}): string {
-  const sourceAsset = normalizeSourceValueSignature(sourceAssetIdentity);
-  if (sourceAsset) return `asset:${sourceAsset}`;
-  const original = normalizeSourcePathSignature(originalVideoPath);
-  if (original) return `original:${original}`;
-  const normalizedUrl = normalizeSourceValueSignature(sourceUrl);
-  if (normalizedUrl) return `url:${normalizedUrl}`;
-  const fallbackAsset = normalizeSourceValueSignature(
-    fallbackVideoAssetIdentity
-  );
-  if (fallbackAsset) return `fallback-asset:${fallbackAsset}`;
-  const fallback = normalizeSourcePathSignature(fallbackVideoPath);
-  if (fallback) return `fallback:${fallback}`;
-  return 'none';
 }
 
 function buildSummaryRequestSignature({
@@ -268,6 +205,10 @@ export default function useTranscriptSummaryFlow({
   );
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
   const [persistCompletionTick, setPersistCompletionTick] = useState(0);
+  const [
+    isRestoreSettledForCurrentSignature,
+    setIsRestoreSettledForCurrentSignature,
+  ] = useState(false);
 
   const restoreKeyRef = useRef<string | null>(null);
   const runEpochRef = useRef(0);
@@ -356,14 +297,7 @@ export default function useTranscriptSummaryFlow({
   );
 
   const usableSegments = useMemo(
-    () =>
-      segments
-        .map(segment => ({
-          start: segment.start,
-          end: segment.end,
-          text: (segment.original ?? '').trim(),
-        }))
-        .filter(segment => segment.text.length > 0),
+    () => toUsableTranscriptSegments(segments),
     [segments]
   );
 
@@ -374,7 +308,7 @@ export default function useTranscriptSummaryFlow({
   );
   const inputSignature = useMemo(
     () =>
-      buildInputSignature({
+      buildSummaryInputSignature({
         segments: usableSegments,
         summaryLanguage,
         effortLevel: summaryEffortLevel,
@@ -589,297 +523,328 @@ export default function useTranscriptSummaryFlow({
     };
   }, [activeOperationId, onMergeHighlightUpdates, setError, t]);
 
-  const handleGenerate = useCallback(async () => {
-    const requestedGenerateRequestSignature = summaryRequestSignature;
-    const pendingTeardown = pendingTeardownRef.current;
-    if (pendingTeardown) {
+  const handleGenerate = useCallback(
+    async (claimedRequest?: HighlightGenerationRequest | null) => {
+      const claimedRequestId = claimedRequest?.id ?? null;
+      const isClaimedRequestActive = () =>
+        claimedRequestId == null ||
+        useHighlightGenerationRequestStore
+          .getState()
+          .isRequestActive(claimedRequestId);
+
       try {
-        await pendingTeardown;
-      } catch {
-        // Ignore stale teardown errors and continue with fresh generation.
-      }
-    }
-    if (
-      latestGenerateRequestSignatureRef.current !==
-      requestedGenerateRequestSignature
-    ) {
-      return;
-    }
+        if (!isClaimedRequestActive()) return;
 
-    if (!hasTranscript) return;
+        const requestedGenerateRequestSignature = summaryRequestSignature;
+        const pendingTeardown = pendingTeardownRef.current;
+        if (pendingTeardown) {
+          try {
+            await pendingTeardown;
+          } catch {
+            // Ignore stale teardown errors and continue with fresh generation.
+          }
+        }
+        if (!isClaimedRequestActive()) return;
+        if (
+          latestGenerateRequestSignatureRef.current !==
+          requestedGenerateRequestSignature
+        ) {
+          return;
+        }
 
-    const requestedSegments = usableSegments.map(segment => ({ ...segment }));
-    const requestedSummaryLanguage = summaryLanguage;
-    const requestedEffortLevel = summaryEffortLevel;
-    const requestedVideoPath = originalVideoPath || fallbackVideoPath || null;
-    const requestedSourceUrl = sourceUrl;
-    const requestedLibraryEntryId = libraryEntryId;
+        if (!hasTranscript) return;
 
-    const operationId = `summary-${Date.now()}`;
+        const requestedSegments = usableSegments.map(segment => ({
+          ...segment,
+        }));
+        const requestedSummaryLanguage = summaryLanguage;
+        const requestedEffortLevel = summaryEffortLevel;
+        const requestedVideoPath =
+          originalVideoPath || fallbackVideoPath || null;
+        const requestedSourceUrl = sourceUrl;
+        const requestedLibraryEntryId = libraryEntryId;
 
-    const started = useTaskStore
-      .getState()
-      .tryStartSummary(operationId, t('summary.status.preparing'));
-    if (!started) return;
+        const operationId = `summary-${Date.now()}`;
 
-    const runEpoch = beginRunEpoch();
-    setIsGenerating(true);
-    activeOperationIdRef.current = operationId;
-    activeRunRequestSignatureRef.current = requestedGenerateRequestSignature;
-    setActiveOperationId(operationId);
-    setError(null);
-    setHighlightWarningMessage(null);
-    preserveErrorOnRestoreRef.current = false;
-    pendingRestoreRetryRef.current = true;
-    restoreKeyRef.current = null;
-    onResetHighlightsState();
-    setSummary('');
-    setSections([]);
-    setHighlightStatus('not_requested');
-    setCopyStatus('idle');
-    setProgressLabel(t('summary.status.preparing'));
-    setProgressPercent(0);
+        if (!isClaimedRequestActive()) return;
+        const started = useTaskStore
+          .getState()
+          .tryStartSummary(operationId, t('summary.status.preparing'));
+        if (!started) return;
+        if (claimedRequestId != null) {
+          useHighlightGenerationRequestStore
+            .getState()
+            .attachSummaryOperation(claimedRequestId, operationId);
+        }
 
-    try {
-      if (!isRunEpochActive(runEpoch)) return;
-
-      const summaryPromise = generateTranscriptSummary({
-        segments: requestedSegments,
-        targetLanguage: requestedSummaryLanguage,
-        operationId,
-        videoPath: requestedVideoPath,
-        includeHighlights: true,
-        effortLevel: requestedEffortLevel,
-      });
-      activeRunRef.current = {
-        operationId,
-        settled: summaryPromise.then(
-          () => undefined,
-          () => undefined
-        ),
-      };
-      const transcriptHashPromise = buildTranscriptHash(
-        requestedSegments
-      ).catch(hashError => {
-        console.error(
-          '[TranscriptSummaryPanel] failed to build transcript hash for persistence',
-          hashError
-        );
-        return '';
-      });
-
-      const result = await summaryPromise;
-
-      if (!isRunEpochActive(runEpoch)) return;
-      if (
-        latestGenerateRequestSignatureRef.current !==
-        requestedGenerateRequestSignature
-      ) {
-        return;
-      }
-
-      if (result?.error) {
-        throw new Error(result.error);
-      }
-
-      if (result?.cancelled || result?.success === false) {
+        const runEpoch = beginRunEpoch();
+        setIsGenerating(true);
+        activeOperationIdRef.current = operationId;
+        activeRunRequestSignatureRef.current =
+          requestedGenerateRequestSignature;
+        setActiveOperationId(operationId);
+        setError(null);
+        setHighlightWarningMessage(null);
         preserveErrorOnRestoreRef.current = false;
         pendingRestoreRetryRef.current = true;
         restoreKeyRef.current = null;
-        setProgressLabel(t('summary.status.cancelled'));
-        setProgressPercent(prev => Math.max(0, prev));
-        useTaskStore.getState().setSummary({
-          stage: t('summary.status.cancelled'),
-          percent: 0,
-          inProgress: false,
-          id: null,
-        });
-        return;
-      }
+        onResetHighlightsState();
+        setSummary('');
+        setSections([]);
+        setHighlightStatus('not_requested');
+        setCopyStatus('idle');
+        setProgressLabel(t('summary.status.preparing'));
+        setProgressPercent(0);
 
-      if (result?.summary) {
-        setSummary(result.summary.trim());
-      }
-      if (Array.isArray(result?.sections)) {
-        setSections(result.sections as TranscriptSummarySection[]);
-      }
-
-      const persistedSections = Array.isArray(result?.sections)
-        ? (result.sections as TranscriptSummarySection[])
-        : [];
-      const generatedHighlights = sanitizeHighlightsForStorage(
-        result?.highlights
-      );
-
-      const transcriptHash = await transcriptHashPromise;
-      if (!isRunEpochActive(runEpoch)) return;
-      if (
-        latestGenerateRequestSignatureRef.current !==
-        requestedGenerateRequestSignature
-      ) {
-        return;
-      }
-
-      const rawHighlightStatus = normalizeHighlightStatus(
-        result?.highlightStatus
-      );
-      let displayHighlights = generatedHighlights;
-      let persistedHighlights = generatedHighlights;
-      let persistedHighlightStatus: TranscriptHighlightStatus =
-        rawHighlightStatus;
-      let displayHighlightStatus: TranscriptHighlightStatus =
-        rawHighlightStatus;
-      if (rawHighlightStatus === 'degraded') {
         try {
+          if (!isRunEpochActive(runEpoch)) return;
+
+          const summaryPromise = generateTranscriptSummary({
+            segments: requestedSegments,
+            targetLanguage: requestedSummaryLanguage,
+            operationId,
+            videoPath: requestedVideoPath,
+            includeHighlights: true,
+            effortLevel: requestedEffortLevel,
+          });
+          activeRunRef.current = {
+            operationId,
+            settled: summaryPromise.then(
+              () => undefined,
+              () => undefined
+            ),
+          };
+          const transcriptHashPromise = buildTranscriptHash(
+            requestedSegments
+          ).catch(hashError => {
+            console.error(
+              '[TranscriptSummaryPanel] failed to build transcript hash for persistence',
+              hashError
+            );
+            return '';
+          });
+
+          const result = await summaryPromise;
+
+          if (!isRunEpochActive(runEpoch)) return;
+          if (
+            latestGenerateRequestSignatureRef.current !==
+            requestedGenerateRequestSignature
+          ) {
+            return;
+          }
+
+          if (result?.error) {
+            throw new Error(result.error);
+          }
+
+          if (result?.cancelled || result?.success === false) {
+            preserveErrorOnRestoreRef.current = false;
+            pendingRestoreRetryRef.current = true;
+            restoreKeyRef.current = null;
+            setProgressLabel(t('summary.status.cancelled'));
+            setProgressPercent(prev => Math.max(0, prev));
+            useTaskStore.getState().setSummary({
+              stage: t('summary.status.cancelled'),
+              percent: 0,
+              inProgress: false,
+              id: null,
+            });
+            return;
+          }
+
+          if (result?.summary) {
+            setSummary(result.summary.trim());
+          }
+          if (Array.isArray(result?.sections)) {
+            setSections(result.sections as TranscriptSummarySection[]);
+          }
+
+          const persistedSections = Array.isArray(result?.sections)
+            ? (result.sections as TranscriptSummarySection[])
+            : [];
+          const generatedHighlights = sanitizeHighlightsForStorage(
+            result?.highlights
+          );
+
+          const transcriptHash = await transcriptHashPromise;
+          if (!isRunEpochActive(runEpoch)) return;
+          if (
+            latestGenerateRequestSignatureRef.current !==
+            requestedGenerateRequestSignature
+          ) {
+            return;
+          }
+
+          const rawHighlightStatus = normalizeHighlightStatus(
+            result?.highlightStatus
+          );
+          let displayHighlights = generatedHighlights;
+          let persistedHighlights = generatedHighlights;
+          let persistedHighlightStatus: TranscriptHighlightStatus =
+            rawHighlightStatus;
+          let displayHighlightStatus: TranscriptHighlightStatus =
+            rawHighlightStatus;
+          if (rawHighlightStatus === 'degraded') {
+            try {
+              if (transcriptHash) {
+                const existingStored = await findStoredTranscriptAnalysis({
+                  transcriptHash,
+                  summaryLanguage: requestedSummaryLanguage,
+                  effortLevel: requestedEffortLevel,
+                  sourceVideoPath: requestedVideoPath,
+                  sourceUrl: requestedSourceUrl,
+                  libraryEntryId: requestedLibraryEntryId,
+                });
+                if (!isRunEpochActive(runEpoch)) return;
+                if (
+                  latestGenerateRequestSignatureRef.current !==
+                  requestedGenerateRequestSignature
+                ) {
+                  return;
+                }
+                const existingAnalysis = existingStored?.analysis;
+                const existingHighlightStatus = existingAnalysis
+                  ? normalizeHighlightStatus(existingAnalysis.highlightStatus)
+                  : null;
+                const existingHighlights =
+                  existingHighlightStatus === 'complete'
+                    ? sanitizeHighlightsForStorage(existingAnalysis?.highlights)
+                    : [];
+                if (existingHighlightStatus === 'complete') {
+                  displayHighlights = existingHighlights;
+                  persistedHighlights = existingHighlights;
+                  displayHighlightStatus = 'complete';
+                  persistedHighlightStatus = 'complete';
+                }
+              }
+            } catch (existingLookupError) {
+              console.error(
+                '[TranscriptSummaryPanel] failed to load existing highlights for degraded summary',
+                existingLookupError
+              );
+            }
+          }
+
+          setHighlightStatus(displayHighlightStatus);
+          onReplaceHighlights(displayHighlights);
+          setError(null);
+          if (displayHighlightStatus === 'complete') {
+            setHighlightWarningMessage(null);
+          }
+          preserveErrorOnRestoreRef.current = false;
+          pendingRestoreRetryRef.current = false;
+
           if (transcriptHash) {
-            const existingStored = await findStoredTranscriptAnalysis({
+            const restoreLookupKey = buildRestoreLookupKey({
               transcriptHash,
               summaryLanguage: requestedSummaryLanguage,
               effortLevel: requestedEffortLevel,
+            });
+            restoreKeyRef.current = restoreLookupKey;
+            const pendingPersistCounts = pendingPersistByLookupKeyRef.current;
+            pendingPersistCounts.set(
+              restoreLookupKey,
+              (pendingPersistCounts.get(restoreLookupKey) || 0) + 1
+            );
+            void saveStoredTranscriptAnalysis({
+              transcriptHash,
+              summaryLanguage: requestedSummaryLanguage,
+              effortLevel: requestedEffortLevel,
+              summary: result?.summary ?? '',
+              sections: persistedSections,
+              highlights: persistedHighlights,
+              highlightStatus: persistedHighlightStatus,
               sourceVideoPath: requestedVideoPath,
               sourceUrl: requestedSourceUrl,
               libraryEntryId: requestedLibraryEntryId,
-            });
-            if (!isRunEpochActive(runEpoch)) return;
-            if (
-              latestGenerateRequestSignatureRef.current !==
-              requestedGenerateRequestSignature
-            ) {
-              return;
-            }
-            const existingAnalysis = existingStored?.analysis;
-            const existingHighlightStatus = existingAnalysis
-              ? normalizeHighlightStatus(existingAnalysis.highlightStatus)
-              : null;
-            const existingHighlights =
-              existingHighlightStatus === 'complete'
-                ? sanitizeHighlightsForStorage(existingAnalysis.highlights)
-                : [];
-            if (existingHighlightStatus === 'complete') {
-              displayHighlights = existingHighlights;
-              persistedHighlights = existingHighlights;
-              displayHighlightStatus = 'complete';
-              persistedHighlightStatus = 'complete';
-            }
+            })
+              .catch(storeError => {
+                console.error(
+                  '[TranscriptSummaryPanel] failed to persist transcript analysis',
+                  storeError
+                );
+              })
+              .finally(() => {
+                const currentCount =
+                  pendingPersistCounts.get(restoreLookupKey) || 0;
+                if (currentCount <= 1) {
+                  pendingPersistCounts.delete(restoreLookupKey);
+                } else {
+                  pendingPersistCounts.set(restoreLookupKey, currentCount - 1);
+                }
+                setPersistCompletionTick(previous => previous + 1);
+              });
           }
-        } catch (existingLookupError) {
-          console.error(
-            '[TranscriptSummaryPanel] failed to load existing highlights for degraded summary',
-            existingLookupError
-          );
+
+          setProgressLabel(t('summary.status.ready'));
+          setProgressPercent(100);
+          useTaskStore.getState().setSummary({
+            stage: t('summary.status.ready'),
+            percent: 100,
+            inProgress: false,
+            id: null,
+          });
+        } catch (err: any) {
+          if (!isRunEpochActive(runEpoch)) return;
+          preserveErrorOnRestoreRef.current = true;
+          pendingRestoreRetryRef.current = true;
+          restoreKeyRef.current = null;
+          const message = String(err?.message || err);
+          const friendlyMessage = isByoError(message)
+            ? getByoErrorMessage(message)
+            : message === ERROR_CODES.INSUFFICIENT_CREDITS
+              ? t('summary.insufficientCredits')
+              : t('summary.error', { message });
+          setError(friendlyMessage);
+          setHighlightWarningMessage(null);
+          setProgressLabel(friendlyMessage);
+          useTaskStore.getState().setSummary({
+            stage: friendlyMessage,
+            percent: progressPercent,
+            inProgress: false,
+            id: null,
+          });
+        } finally {
+          if (activeRunRef.current?.operationId === operationId) {
+            activeRunRef.current = null;
+          }
+          if (isRunEpochActive(runEpoch)) {
+            setIsGenerating(false);
+            setIsCancelling(false);
+            activeOperationIdRef.current = null;
+            activeRunRequestSignatureRef.current = null;
+            setActiveOperationId(null);
+            setCopyStatus('idle');
+          }
+        }
+      } finally {
+        if (claimedRequestId != null) {
+          useHighlightGenerationRequestStore
+            .getState()
+            .completeClaimedRequest(claimedRequestId);
         }
       }
-
-      setHighlightStatus(displayHighlightStatus);
-      onReplaceHighlights(displayHighlights);
-      setError(null);
-      if (displayHighlightStatus === 'complete') {
-        setHighlightWarningMessage(null);
-      }
-      preserveErrorOnRestoreRef.current = false;
-      pendingRestoreRetryRef.current = false;
-
-      if (transcriptHash) {
-        const restoreLookupKey = buildRestoreLookupKey({
-          transcriptHash,
-          summaryLanguage: requestedSummaryLanguage,
-          effortLevel: requestedEffortLevel,
-        });
-        restoreKeyRef.current = restoreLookupKey;
-        const pendingPersistCounts = pendingPersistByLookupKeyRef.current;
-        pendingPersistCounts.set(
-          restoreLookupKey,
-          (pendingPersistCounts.get(restoreLookupKey) || 0) + 1
-        );
-        void saveStoredTranscriptAnalysis({
-          transcriptHash,
-          summaryLanguage: requestedSummaryLanguage,
-          effortLevel: requestedEffortLevel,
-          summary: result?.summary ?? '',
-          sections: persistedSections,
-          highlights: persistedHighlights,
-          highlightStatus: persistedHighlightStatus,
-          sourceVideoPath: requestedVideoPath,
-          sourceUrl: requestedSourceUrl,
-          libraryEntryId: requestedLibraryEntryId,
-        })
-          .catch(storeError => {
-            console.error(
-              '[TranscriptSummaryPanel] failed to persist transcript analysis',
-              storeError
-            );
-          })
-          .finally(() => {
-            const currentCount =
-              pendingPersistCounts.get(restoreLookupKey) || 0;
-            if (currentCount <= 1) {
-              pendingPersistCounts.delete(restoreLookupKey);
-            } else {
-              pendingPersistCounts.set(restoreLookupKey, currentCount - 1);
-            }
-            setPersistCompletionTick(previous => previous + 1);
-          });
-      }
-
-      setProgressLabel(t('summary.status.ready'));
-      setProgressPercent(100);
-      useTaskStore.getState().setSummary({
-        stage: t('summary.status.ready'),
-        percent: 100,
-        inProgress: false,
-        id: null,
-      });
-    } catch (err: any) {
-      if (!isRunEpochActive(runEpoch)) return;
-      preserveErrorOnRestoreRef.current = true;
-      pendingRestoreRetryRef.current = true;
-      restoreKeyRef.current = null;
-      const message = String(err?.message || err);
-      const friendlyMessage = isByoError(message)
-        ? getByoErrorMessage(message)
-        : message === ERROR_CODES.INSUFFICIENT_CREDITS
-          ? t('summary.insufficientCredits')
-          : t('summary.error', { message });
-      setError(friendlyMessage);
-      setHighlightWarningMessage(null);
-      setProgressLabel(friendlyMessage);
-      useTaskStore.getState().setSummary({
-        stage: friendlyMessage,
-        percent: progressPercent,
-        inProgress: false,
-        id: null,
-      });
-    } finally {
-      if (activeRunRef.current?.operationId === operationId) {
-        activeRunRef.current = null;
-      }
-      if (isRunEpochActive(runEpoch)) {
-        setIsGenerating(false);
-        setIsCancelling(false);
-        activeOperationIdRef.current = null;
-        activeRunRequestSignatureRef.current = null;
-        setActiveOperationId(null);
-        setCopyStatus('idle');
-      }
-    }
-  }, [
-    beginRunEpoch,
-    fallbackVideoPath,
-    hasTranscript,
-    isRunEpochActive,
-    libraryEntryId,
-    onReplaceHighlights,
-    onResetHighlightsState,
-    originalVideoPath,
-    progressPercent,
-    setError,
-    sourceUrl,
-    summaryEffortLevel,
-    summaryLanguage,
-    t,
-    summaryRequestSignature,
-    usableSegments,
-  ]);
+    },
+    [
+      beginRunEpoch,
+      fallbackVideoPath,
+      hasTranscript,
+      isRunEpochActive,
+      libraryEntryId,
+      onReplaceHighlights,
+      onResetHighlightsState,
+      originalVideoPath,
+      progressPercent,
+      setError,
+      sourceUrl,
+      summaryEffortLevel,
+      summaryLanguage,
+      t,
+      summaryRequestSignature,
+      usableSegments,
+    ]
+  );
 
   const handleCancel = useCallback(async () => {
     const operationIdToCancel =
@@ -970,10 +935,23 @@ export default function useTranscriptSummaryFlow({
     invalidateSummaryRun({ cancelActiveOperation: true });
   }, [summaryRequestSignature, invalidateSummaryRun]);
 
+  useLayoutEffect(() => {
+    if (!hasTranscript) {
+      setIsRestoreSettledForCurrentSignature(true);
+      return;
+    }
+    if (hasSummaryResult && !pendingRestoreRetryRef.current) {
+      setIsRestoreSettledForCurrentSignature(true);
+      return;
+    }
+    setIsRestoreSettledForCurrentSignature(false);
+  }, [hasSummaryResult, hasTranscript, summaryRequestSignature]);
+
   useEffect(() => {
     if (!hasTranscript) {
       preserveErrorOnRestoreRef.current = false;
       pendingRestoreRetryRef.current = false;
+      setIsRestoreSettledForCurrentSignature(true);
       return;
     }
 
@@ -983,6 +961,7 @@ export default function useTranscriptSummaryFlow({
     }
 
     if (!pendingRestoreRetryRef.current && hasSummaryResult) {
+      setIsRestoreSettledForCurrentSignature(true);
       return;
     }
 
@@ -1007,6 +986,7 @@ export default function useTranscriptSummaryFlow({
           preserveErrorOnRestoreRef.current = false;
           pendingRestoreRetryRef.current = false;
           restoreKeyRef.current = null;
+          setIsRestoreSettledForCurrentSignature(true);
           return;
         }
 
@@ -1018,6 +998,7 @@ export default function useTranscriptSummaryFlow({
         if (restoreKeyRef.current === restoreLookupKey && hasSummaryResult) {
           preserveErrorOnRestoreRef.current = false;
           pendingRestoreRetryRef.current = false;
+          setIsRestoreSettledForCurrentSignature(true);
           return;
         }
 
@@ -1049,6 +1030,7 @@ export default function useTranscriptSummaryFlow({
           preserveErrorOnRestoreRef.current = false;
           pendingRestoreRetryRef.current = pendingPersistCount > 0;
           restoreKeyRef.current = null;
+          setIsRestoreSettledForCurrentSignature(pendingPersistCount <= 0);
           return;
         }
 
@@ -1074,6 +1056,7 @@ export default function useTranscriptSummaryFlow({
         setHighlightWarningMessage(null);
         preserveErrorOnRestoreRef.current = false;
         pendingRestoreRetryRef.current = false;
+        setIsRestoreSettledForCurrentSignature(true);
       } catch (restoreError) {
         if (disposed) return;
         if (
@@ -1084,6 +1067,7 @@ export default function useTranscriptSummaryFlow({
         preserveErrorOnRestoreRef.current = false;
         pendingRestoreRetryRef.current = false;
         restoreKeyRef.current = null;
+        setIsRestoreSettledForCurrentSignature(true);
         console.error(
           '[TranscriptSummaryPanel] failed to restore transcript analysis',
           restoreError
@@ -1125,6 +1109,7 @@ export default function useTranscriptSummaryFlow({
     hasTranscript,
     highlightWarningMessage,
     highlightStatus,
+    isRestoreSettledForCurrentSignature,
     isCancelling,
     isGenerating,
     progressLabel,

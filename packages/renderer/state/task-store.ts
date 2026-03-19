@@ -7,6 +7,7 @@ export interface TranslationTask {
   stage: string;
   percent: number;
   inProgress: boolean;
+  workflowOwner?: 'default' | 'highlight';
   batchStartIndex?: number;
   isCompleted?: boolean;
   /** AI model being used (e.g., "Claude Opus", "GPT-5.1") */
@@ -82,6 +83,19 @@ function clearRuntime(task: TranslationTask) {
   task.etaSeconds = undefined;
   task.phaseKey = undefined;
   task.model = undefined;
+  task.workflowOwner = undefined;
+  task.startedAt = null;
+  task.phaseStartedAt = null;
+  task.lastUpdatedAt = null;
+}
+
+function clearRuntimePreservingWorkflowOwner(task: TranslationTask) {
+  task.current = undefined;
+  task.total = undefined;
+  task.unit = undefined;
+  task.etaSeconds = undefined;
+  task.phaseKey = undefined;
+  task.model = undefined;
   task.startedAt = null;
   task.phaseStartedAt = null;
   task.lastUpdatedAt = null;
@@ -148,9 +162,11 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
         const same =
           (!has('stage') || p.stage === t.stage) &&
           (!has('percent') ||
+            p.percent == null ||
             Math.round(p.percent) === Math.round(t.percent)) &&
           (!has('id') || p.id === t.id) &&
           (!has('inProgress') || p.inProgress === t.inProgress) &&
+          (!has('workflowOwner') || p.workflowOwner === t.workflowOwner) &&
           (!has('model') || p.model === t.model) &&
           (!has('phaseKey') || p.phaseKey === t.phaseKey) &&
           (!has('current') || p.current === t.current) &&
@@ -208,9 +224,11 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
         const same =
           (!has('stage') || p.stage === task.stage) &&
           (!has('percent') ||
+            p.percent == null ||
             Math.round(p.percent) === Math.round(task.percent)) &&
           (!has('id') || p.id === task.id) &&
           (!has('inProgress') || p.inProgress === task.inProgress) &&
+          (!has('workflowOwner') || p.workflowOwner === task.workflowOwner) &&
           (!has('model') || p.model === task.model) &&
           (!has('phaseKey') || p.phaseKey === task.phaseKey) &&
           (!has('current') || p.current === task.current) &&
@@ -255,9 +273,11 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
         const same =
           (!has('stage') || p.stage === t.stage) &&
           (!has('percent') ||
+            p.percent == null ||
             Math.round(p.percent) === Math.round(t.percent)) &&
           (!has('id') || p.id === t.id) &&
           (!has('inProgress') || p.inProgress === t.inProgress) &&
+          (!has('workflowOwner') || p.workflowOwner === t.workflowOwner) &&
           (!has('model') || p.model === t.model) &&
           (!has('phaseKey') || p.phaseKey === t.phaseKey) &&
           (!has('current') || p.current === t.current) &&
@@ -284,10 +304,21 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
               /processing complete|complete|done/i.test(stageNow));
         }
         if (p.inProgress === false) {
-          // Mark not in progress, but preserve final percent/stage and completion flag
+          // Preserve the finished operation identity until an explicit reset or
+          // replacement operation arrives so buffered completion packets still
+          // know which workflow owns them.
           s.transcription.inProgress = false;
-          s.transcription.id = null;
-          clearRuntime(s.transcription);
+          const isExplicitReset =
+            has('id') &&
+            p.id === null &&
+            (p.stage === '' || p.stage === undefined) &&
+            (p.percent === 0 || p.percent === undefined);
+          if (isExplicitReset) {
+            s.transcription.id = null;
+            clearRuntime(s.transcription);
+          } else {
+            clearRuntimePreservingWorkflowOwner(s.transcription);
+          }
         }
       }),
     setSummary: p =>
@@ -322,8 +353,49 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
       }),
     setMerge: p =>
       set(s => {
-        Object.assign(s.merge, p);
-        if (p.percent !== undefined) s.merge.inProgress = p.percent < 100;
+        const task = s.merge;
+        const has = (key: keyof TranslationTask) =>
+          Object.prototype.hasOwnProperty.call(p, key);
+        const same =
+          (!has('stage') || p.stage === task.stage) &&
+          (!has('percent') ||
+            p.percent == null ||
+            Math.round(p.percent) === Math.round(task.percent)) &&
+          (!has('id') || p.id === task.id) &&
+          (!has('inProgress') || p.inProgress === task.inProgress) &&
+          (!has('workflowOwner') || p.workflowOwner === task.workflowOwner) &&
+          (!has('model') || p.model === task.model) &&
+          (!has('phaseKey') || p.phaseKey === task.phaseKey) &&
+          (!has('current') || p.current === task.current) &&
+          (!has('total') || p.total === task.total) &&
+          (!has('unit') || p.unit === task.unit) &&
+          (!has('etaSeconds') || p.etaSeconds === task.etaSeconds);
+        if (same) return;
+
+        applyRuntimePatch(task, p);
+
+        const stageNow = (p.stage ?? task.stage ?? '').toLowerCase();
+        const pctNow = p.percent ?? task.percent ?? 0;
+        const isCancelled = /cancel/.test(stageNow);
+
+        if (p.inProgress !== undefined) {
+          task.inProgress = p.inProgress;
+        } else if (isCancelled) {
+          task.inProgress = false;
+        } else if (p.percent !== undefined) {
+          task.inProgress = pctNow < 100;
+        }
+
+        if (p.percent !== undefined || p.stage !== undefined) {
+          task.isCompleted =
+            !isCancelled && (pctNow >= 100 || /complete|done/.test(stageNow));
+        }
+
+        if (p.inProgress === false) {
+          task.inProgress = false;
+          task.id = null;
+          clearRuntime(task);
+        }
       }),
     startMerge: () =>
       set(s => {

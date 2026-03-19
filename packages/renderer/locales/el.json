@@ -387,6 +387,8 @@
     "originalFormatDesc": "Διατήρηση αρχικών διαστάσεων βίντεο",
     "verticalFormat": "9:16 Κάθετο",
     "verticalFormatDesc": "Βελτιστοποιημένο για YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Προσαρμογή για Shorts",
+    "verticalFitFormatDesc": "Προσαρμόζει το αρχικό καρέ μέσα σε καμβά 9:16",
     "downloadHighlight": "Λήψη κλιπ",
     "downloadingHighlight": "Αποθήκευση…",
     "highlightSaved": "Αποθηκεύτηκε!",

@@ -9,7 +9,12 @@ import {
 } from '../../../../../../shared/helpers/index.js';
 import { useRowActions } from '../../../../../hooks/useRowActions.js';
 import * as SubtitlesIPC from '../../../../../ipc/subtitles';
-import { useUIStore, useTaskStore, useVideoStore } from '../../../../../state';
+import {
+  useUIStore,
+  useTaskStore,
+  useVideoStore,
+  useHighlightWorkflowStore,
+} from '../../../../../state';
 import { transcribeOneLine } from '../../../../../ipc/subtitles';
 import { useSubStore } from '../../../../../state/subtitle-store';
 import {
@@ -67,10 +72,14 @@ export default function SubtitleEditor({
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isTranslatingGlobal = useTaskStore(s => !!s.translation.inProgress);
   const isMerging = useTaskStore(s => !!s.merge.inProgress);
+  const isHighlightWorkflowLocked = useHighlightWorkflowStore(
+    s => s.running || s.isCancelling
+  );
   const videoPath = useVideoStore(s => s.path);
   const sourceUrl = useVideoStore(s => s.sourceUrl);
   const [isTranscribingOne, setIsTranscribingOne] = useState(false);
-  const editingLocked = isTranscribing || isTranslatingGlobal;
+  const editingLocked =
+    isTranscribing || isTranslatingGlobal || isHighlightWorkflowLocked;
   // No manual language selection for transcription
 
   useEffect(() => {
@@ -85,6 +94,7 @@ export default function SubtitleEditor({
   }
 
   const commitTimeChange = (field: 'start' | 'end', value: string) => {
+    if (editingLocked) return;
     const trimmedValue = value.trim();
     if (TIMECODE_RX.test(trimmedValue)) {
       const seconds = srtStringToSeconds(trimmedValue);
@@ -98,6 +108,7 @@ export default function SubtitleEditor({
   };
 
   const handleApplyShift = () => {
+    if (editingLocked) return;
     const secs = Number(shiftAmount);
     if (Number.isFinite(secs) && secs !== 0) {
       actions.shift(secs);
@@ -106,14 +117,20 @@ export default function SubtitleEditor({
   };
 
   const handleRemove = () => {
+    if (editingLocked) return;
     const msg = t('editSubtitles.item.confirmRemove');
     if (window.confirm(msg)) {
       actions.remove();
     }
   };
 
+  const handleInsertAfter = () => {
+    if (editingLocked) return;
+    actions.insertAfter();
+  };
+
   async function handleTranscribeThisLine(gapThresholdSec: number = 3) {
-    if (!videoPath || !subtitle) return;
+    if (!videoPath || !subtitle || editingLocked || isMerging) return;
     try {
       setIsTranscribingOne(true);
       const operationId = `transcribe-${Date.now()}-${id}`;
@@ -200,7 +217,7 @@ export default function SubtitleEditor({
   // Improve transcription by expanding this cue to bridge between its
   // neighbors, clearing existing text, then running the same transcribe flow.
   async function handleImproveTranscription() {
-    if (!videoPath || !subtitle) return;
+    if (!videoPath || !subtitle || editingLocked || isMerging) return;
     // Determine neighbor-aware window
     const store = useSubStore.getState();
     const order = store.order;
@@ -233,6 +250,7 @@ export default function SubtitleEditor({
   }
 
   async function handleTranslateOneLine() {
+    if (editingLocked || isMerging) return;
     if (!subtitle?.original?.trim()) return;
     if (useTaskStore.getState().transcription.inProgress) return;
     try {
@@ -315,6 +333,7 @@ export default function SubtitleEditor({
   }
 
   async function handleImproveTranslation() {
+    if (editingLocked || isMerging) return;
     if (!subtitle?.original?.trim()) return;
     if (useTaskStore.getState().transcription.inProgress) return;
     try {
@@ -375,8 +394,9 @@ export default function SubtitleEditor({
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => actions.insertAfter()}
+            onClick={handleInsertAfter}
             title={t('editSubtitles.item.insertTitle')}
+            disabled={editingLocked}
           >
             <svg
               width="14"
@@ -398,6 +418,7 @@ export default function SubtitleEditor({
             size="sm"
             onClick={handleRemove}
             title={t('editSubtitles.item.removeTitle')}
+            disabled={editingLocked}
           >
             <svg
               width="14"
@@ -442,10 +463,9 @@ export default function SubtitleEditor({
               size="lg"
               onClick={() => handleTranscribeThisLine()}
               disabled={
-                isTranscribing ||
+                editingLocked ||
                 isTranslatingOne ||
                 isTranscribingOne ||
-                isTranslatingGlobal ||
                 isMerging
               }
               isLoading={isTranscribingOne}
@@ -465,10 +485,9 @@ export default function SubtitleEditor({
               size="md"
               onClick={handleImproveTranscription}
               disabled={
-                isTranscribing ||
+                editingLocked ||
                 isTranslatingOne ||
                 isTranscribingOne ||
-                isTranslatingGlobal ||
                 isMerging
               }
               isLoading={isTranscribingOne}
@@ -521,9 +540,8 @@ export default function SubtitleEditor({
               size="md"
               onClick={handleImproveTranslation}
               disabled={
-                isTranscribing ||
+                editingLocked ||
                 isTranslatingOne ||
-                isTranslatingGlobal ||
                 isMerging
               }
               isLoading={isTranslatingOne}
@@ -557,6 +575,7 @@ export default function SubtitleEditor({
             className={subtitleRowTimeInputStyles}
             aria-label={`Start time for subtitle ${id}`}
             data-testid={`subtitle-start-${id}`}
+            disabled={editingLocked}
           />
           <span className={subtitleRowDividerStyles}>→</span>
           <input
@@ -573,6 +592,7 @@ export default function SubtitleEditor({
             className={subtitleRowTimeInputStyles}
             aria-label={`End time for subtitle ${id}`}
             data-testid={`subtitle-end-${id}`}
+            disabled={editingLocked}
           />
           <span className={subtitleRowDividerStyles}>|</span>
           <input
@@ -584,12 +604,13 @@ export default function SubtitleEditor({
             placeholder="0.5"
             title={t('editSubtitles.item.shiftTitle')}
             data-testid={`subtitle-shift-input-${id}`}
+            disabled={editingLocked}
           />
           <Button
             variant="secondary"
             size="sm"
             onClick={handleApplyShift}
-            disabled={Number(shiftAmount) === 0}
+            disabled={editingLocked || Number(shiftAmount) === 0}
             data-testid={`subtitle-shift-button-${id}`}
           >
             {t('editSubtitles.item.applyShift')}

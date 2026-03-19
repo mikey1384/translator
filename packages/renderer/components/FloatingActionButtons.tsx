@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { css, cx } from '@emotion/css';
-import { colors } from '../styles';
 import IconButton from './IconButton.js';
 import { useTranslation } from 'react-i18next';
 import { useTaskStore, useUpdateStore } from '../state';
-import * as SubtitleIPC from '@ipc/subtitles';
 import { openLogs } from '../state/modal-store';
 import { logButton } from '../utils/logger';
+import subtitleRendererClient from '../clients/subtitle-renderer-client.js';
+import { useUrlStore } from '../state/url-store';
 
 interface FloatingActionButtonsProps {
   scrollThreshold?: number;
@@ -267,6 +267,60 @@ export default function FloatingActionButtons({
   };
 
   const handleReloadClick = async () => {
+    const blockSavePhaseReload = () => {
+      useUrlStore
+        .getState()
+        .setValidationError(
+          t(
+            'progress.mergeFinishSaveBeforeReload',
+            'Finish saving the merged video before reloading.'
+          )
+        );
+      return true;
+    };
+
+    const blockCancellingMergeReload = () => {
+      useUrlStore
+        .getState()
+        .setValidationError(
+          t(
+            'progress.mergeWaitForCancelBeforeReload',
+            'Wait for merge cancellation to finish before reloading.'
+          )
+        );
+      return true;
+    };
+
+    const prepareForReload = async (): Promise<boolean> => {
+      const opId = useTaskStore.getState().merge.id;
+      if (!opId) return true;
+
+      const result = await subtitleRendererClient.cancelMerge(opId);
+      if (!result.accepted) {
+        if (result.reason === 'save_phase') {
+          blockSavePhaseReload();
+          return false;
+        }
+        if (result.reason === 'cancel_pending') {
+          const settled =
+            await subtitleRendererClient.waitForMergeSettlement(opId);
+          if (!settled) {
+            blockCancellingMergeReload();
+            return false;
+          }
+          return true;
+        }
+        return true;
+      }
+
+      const settled = await subtitleRendererClient.waitForMergeSettlement(opId);
+      if (!settled) {
+        blockCancellingMergeReload();
+        return false;
+      }
+      return true;
+    };
+
     // If update is downloaded, install it immediately
     if (downloaded) {
       if (
@@ -275,6 +329,7 @@ export default function FloatingActionButtons({
         )
       )
         return;
+      if (!(await prepareForReload())) return;
       await install();
       return;
     }
@@ -297,11 +352,7 @@ export default function FloatingActionButtons({
     // Otherwise, regular reload
     if (!window.confirm(t('common.confirmReload'))) return;
 
-    const opId = useTaskStore.getState().merge.id;
-    if (opId) {
-      SubtitleIPC.cancelPngRender(opId);
-      await new Promise(r => setTimeout(r, 200));
-    }
+    if (!(await prepareForReload())) return;
 
     window.location.reload();
   };
@@ -400,7 +451,7 @@ export default function FloatingActionButtons({
       }
 
       return {
-      title: t('common.downloadUpdate', 'Click to download update'),
+        title: t('common.downloadUpdate', 'Click to download update'),
         'aria-label': t('common.downloadUpdateNow', 'Download Update'),
         kind: 'update' as const,
         className: updatePillAvailableStyles,
@@ -545,10 +596,7 @@ export default function FloatingActionButtons({
             aria-live={buttonProps['aria-live'] ?? undefined}
             aria-busy={buttonProps['aria-busy'] ?? undefined}
             disabled={downloading}
-            className={cx(
-              updatePillBaseStyles,
-              buttonProps.className
-            )}
+            className={cx(updatePillBaseStyles, buttonProps.className)}
           >
             <div className={iconContainerStyles}>
               {buttonProps.icon}

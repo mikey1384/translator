@@ -387,6 +387,8 @@
     "originalFormatDesc": "Kekalkan dimensi video asal",
     "verticalFormat": "Menegak 9:16",
     "verticalFormatDesc": "Dioptimumkan untuk YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Muat Shorts",
+    "verticalFitFormatDesc": "Muatkan bingkai asal dalam kanvas 9:16",
     "downloadHighlight": "Muat turun klip",
     "downloadingHighlight": "Menyimpan…",
     "highlightSaved": "Disimpan!",

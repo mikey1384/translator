@@ -194,7 +194,16 @@ function flush() {
       }
     } else if (isTranscribe) {
       const active = useTaskStore.getState().transcription.id;
-      if (active && operationId && operationId !== active) {
+      const inProgress = useTaskStore.getState().transcription.inProgress;
+      if (inProgress && active && operationId && operationId !== active) {
+        queued = null;
+        return;
+      }
+      const isNewIdleTranscriptionOperation = Boolean(
+        !inProgress && operationId && operationId !== active
+      );
+      // Ignore stale non-final packets after transcription has been finalized.
+      if (!inProgress && !isComplete && !isNewIdleTranscriptionOperation) {
         queued = null;
         return;
       }
@@ -237,8 +246,12 @@ function flush() {
       // Surface progress to the user by opening the Edit panel automatically
       // when transcription is underway so the incremental results are visible.
       try {
-        const { showEditPanel, setEditPanelOpen } = useUIStore.getState();
-        if (!showEditPanel) setEditPanelOpen(true);
+        const workflowOwner =
+          useTaskStore.getState().transcription.workflowOwner;
+        if (workflowOwner !== 'highlight') {
+          const { showEditPanel, setEditPanelOpen } = useUIStore.getState();
+          if (!showEditPanel) setEditPanelOpen(true);
+        }
       } catch {
         // Do nothing
       }

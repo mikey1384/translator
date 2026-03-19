@@ -387,6 +387,8 @@
     "originalFormatDesc": "Orijinal video boyutlarını koru",
     "verticalFormat": "9:16 Dikey",
     "verticalFormatDesc": "YouTube Shorts, TikTok, Reels için optimize edildi (9:16)",
+    "verticalFitFormat": "Shorts'a sığdırma",
+    "verticalFitFormatDesc": "Orijinal çerçeveyi 9:16 tuvale sığdırır",
     "downloadHighlight": "Klibi indir",
     "downloadingHighlight": "Kaydediliyor…",
     "highlightSaved": "Kaydedildi!",

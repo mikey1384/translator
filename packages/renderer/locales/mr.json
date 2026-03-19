@@ -387,6 +387,8 @@
     "originalFormatDesc": "व्हिडिओचे मूळ परिमाण ठेवा",
     "verticalFormat": "9:16 उभा",
     "verticalFormatDesc": "YouTube Shorts, TikTok, Reels (9:16) साठी ऑप्टिमाइझ केलेले",
+    "verticalFitFormat": "शॉर्ट्स फिट",
+    "verticalFitFormatDesc": "मूळ फ्रेम 9:16 कॅनव्हासमध्ये बसवा",
     "downloadHighlight": "क्लिप डाउनलोड करा",
     "downloadingHighlight": "सेव्ह करत आहे…",
     "highlightSaved": "सेव्ह केले!",

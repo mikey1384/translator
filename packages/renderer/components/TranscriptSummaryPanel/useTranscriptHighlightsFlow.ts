@@ -30,6 +30,8 @@ import {
 } from './TranscriptSummaryPanel.helpers';
 import type { CombineCutState } from './TranscriptSummaryLogic.types';
 
+type HighlightClipAspectMode = Exclude<HighlightAspectMode, 'vertical'>;
+
 type UseTranscriptHighlightsFlowParams = {
   fallbackVideoAssetIdentity: string | null;
   fallbackVideoPath: string | null;
@@ -42,9 +44,14 @@ type UseTranscriptHighlightsFlowParams = {
 };
 
 type UseTranscriptHighlightsFlowResult = {
+  combineAspectMode: HighlightAspectMode;
   combineCutState: CombineCutState;
   combineMode: boolean;
   downloadStatus: Record<string, 'idle' | 'saving' | 'saved' | 'error'>;
+  getHighlightAspectMode: (
+    highlight: TranscriptHighlight
+  ) => HighlightAspectMode;
+  getHighlightStateKey: (highlight: TranscriptHighlight) => string;
   handleCutCombined: () => Promise<void>;
   handleCutHighlightClip: (highlight: TranscriptHighlight) => Promise<void>;
   handleDownloadCombined: (outputPath: string) => Promise<void>;
@@ -58,29 +65,59 @@ type UseTranscriptHighlightsFlowResult = {
     highlight: TranscriptHighlight,
     checked: boolean
   ) => void;
-  highlightAspectMode: HighlightAspectMode;
   highlights: TranscriptHighlight[];
   highlightCutState: Record<string, HighlightClipCutState>;
   mergeHighlightUpdates: (incoming?: TranscriptHighlight[] | null) => void;
-  replaceHighlights: (incoming?: TranscriptHighlight[] | null) => void;
   orderedSelection: TranscriptHighlight[];
+  replaceHighlights: (incoming?: TranscriptHighlight[] | null) => void;
   resetHighlightsState: () => void;
+  isHighlightCutting: (highlight: TranscriptHighlight) => boolean;
   selectedHighlights: Set<string>;
+  setCombineAspectMode: (mode: HighlightAspectMode) => void;
   setCombineMode: Dispatch<SetStateAction<boolean>>;
-  setHighlightAspectMode: Dispatch<SetStateAction<HighlightAspectMode>>;
+  setHighlightAspectModeForHighlight: (
+    highlight: TranscriptHighlight,
+    mode: HighlightAspectMode
+  ) => void;
   videoAvailableForHighlights: boolean;
 };
 
+type CombinedRuntimeArtifact = {
+  outputPath: string | null;
+  selectionSignature: string | null;
+};
+
 type SourceRuntimeArtifacts = {
-  combinedOutputPath: string | null;
-  combinedSelectionSignature: string | null;
-  highlightVideoPaths: Record<string, string>;
+  combinedOutputsByMode: Partial<
+    Record<HighlightClipAspectMode, CombinedRuntimeArtifact>
+  >;
+  highlightPreferredModesByArtifactKey: Record<string, HighlightClipAspectMode>;
+  highlightVideoPaths: Record<
+    string,
+    Partial<Record<HighlightClipAspectMode, string>>
+  >;
 };
 
 type HighlightCutOperationMeta = {
+  aspectMode: HighlightClipAspectMode;
   generation: number;
   sourceIdentity: string;
+  stateKey: string;
 };
+
+type CombinedCutOperationMeta = {
+  aspectMode: HighlightClipAspectMode;
+  selectionSignature: string;
+  sourceIdentity: string;
+};
+
+const DEFAULT_HIGHLIGHT_ASPECT_MODE: HighlightClipAspectMode =
+  'vertical_reframe';
+const HIGHLIGHT_ASPECT_MODES: HighlightClipAspectMode[] = [
+  'vertical_reframe',
+  'vertical_fit',
+  'original',
+];
 
 function normalizeSourcePathIdentity(value: string | null | undefined): string {
   return String(value || '')
@@ -92,6 +129,14 @@ function normalizeSourcePathIdentity(value: string | null | undefined): string {
 
 function normalizeSourceValue(value: string | null | undefined): string {
   return String(value || '').trim();
+}
+
+function resolveHighlightAspectMode(
+  value: HighlightAspectMode | null | undefined
+): HighlightClipAspectMode {
+  if (value === 'original') return 'original';
+  if (value === 'vertical_fit') return 'vertical_fit';
+  return 'vertical_reframe';
 }
 
 function buildHighlightViewSourceIdentity({
@@ -115,35 +160,42 @@ function buildHighlightViewSourceIdentity({
 function buildHighlightArtifactSourceIdentity({
   fallbackVideoAssetIdentity,
   fallbackVideoPath,
+  originalVideoPath,
   sourceAssetIdentity,
   sourceUrl,
   libraryEntryId,
-  aspectMode,
 }: {
   fallbackVideoAssetIdentity: string | null;
   fallbackVideoPath: string | null;
+  originalVideoPath: string | null;
   sourceAssetIdentity: string | null;
   sourceUrl: string | null;
   libraryEntryId: string | null;
-  aspectMode: HighlightAspectMode;
 }): string {
-  const assetIdentity = normalizeSourceValue(
-    sourceAssetIdentity || fallbackVideoAssetIdentity
+  const currentAssetIdentity = normalizeSourceValue(sourceAssetIdentity);
+  if (currentAssetIdentity) {
+    return `asset:${currentAssetIdentity}`;
+  }
+  const currentVideoPath = normalizeSourcePathIdentity(originalVideoPath);
+  if (currentVideoPath) {
+    return `path:${currentVideoPath}`;
+  }
+  const fallbackAssetIdentity = normalizeSourceValue(
+    fallbackVideoAssetIdentity
   );
-  const mode = normalizeSourceValue(aspectMode);
-  if (assetIdentity) {
-    return `asset:${assetIdentity}|mode:${mode}`;
+  if (fallbackAssetIdentity) {
+    return `asset:${fallbackAssetIdentity}`;
+  }
+  const fallbackPath = normalizeSourcePathIdentity(fallbackVideoPath);
+  if (fallbackPath) {
+    return `path:${fallbackPath}`;
   }
   const url = normalizeSourceValue(sourceUrl);
   const library = normalizeSourceValue(libraryEntryId);
   if (url || library) {
-    return `meta:${url}|${library}|mode:${mode}`;
+    return `meta:${url}|${library}`;
   }
-  const fallbackPath = normalizeSourcePathIdentity(fallbackVideoPath);
-  if (fallbackPath) {
-    return `path:${fallbackPath}|mode:${mode}`;
-  }
-  return `meta:||mode:${mode}`;
+  return 'meta:|';
 }
 
 function withoutVideoPath(highlight: TranscriptHighlight): TranscriptHighlight {
@@ -152,9 +204,6 @@ function withoutVideoPath(highlight: TranscriptHighlight): TranscriptHighlight {
 }
 
 function buildHighlightArtifactKey(highlight: TranscriptHighlight): string {
-  // Artifact identity is the cut media window; keep this range-based so clips
-  // remain reusable across regenerations where highlight ids can change. Aspect
-  // partitioning happens at the source-identity bucket level.
   const start = Number.isFinite(highlight.start)
     ? Math.round(highlight.start * 1000)
     : 0;
@@ -164,13 +213,132 @@ function buildHighlightArtifactKey(highlight: TranscriptHighlight): string {
   return `${start}-${end}`;
 }
 
+function buildHighlightUiKey(highlight: TranscriptHighlight): string {
+  return getHighlightKey(withoutVideoPath(highlight));
+}
+
+function buildHighlightArtifactQueueMap(
+  highlights: TranscriptHighlight[],
+  excludedUiKeys: Set<string> = new Set()
+): Map<string, TranscriptHighlight[]> {
+  return highlights.reduce<Map<string, TranscriptHighlight[]>>(
+    (accumulator, highlight) => {
+      const uiKey = buildHighlightUiKey(highlight);
+      if (excludedUiKeys.has(uiKey)) return accumulator;
+      const artifactKey = buildHighlightArtifactKey(
+        withoutVideoPath(highlight)
+      );
+      const existing = accumulator.get(artifactKey) ?? [];
+      existing.push(highlight);
+      accumulator.set(artifactKey, existing);
+      return accumulator;
+    },
+    new Map()
+  );
+}
+
+function shiftHighlightArtifactMatch(
+  queueMap: Map<string, TranscriptHighlight[]>,
+  artifactKey: string
+): TranscriptHighlight | null {
+  const queue = queueMap.get(artifactKey);
+  if (!queue || queue.length === 0) {
+    return null;
+  }
+
+  const next = queue.shift() ?? null;
+  if (queue.length === 0) {
+    queueMap.delete(artifactKey);
+  }
+  return next;
+}
+
+function buildHighlightModeStateKeyFromUiKey(
+  uiKey: string,
+  aspectMode: HighlightClipAspectMode
+): string {
+  return `${uiKey}|${aspectMode}`;
+}
+
+function buildHighlightModeStateKey(
+  highlight: TranscriptHighlight,
+  aspectMode: HighlightClipAspectMode
+): string {
+  return buildHighlightModeStateKeyFromUiKey(
+    buildHighlightUiKey(highlight),
+    aspectMode
+  );
+}
+
+function extractUiKeyFromModeStateKey(stateKey: string): string {
+  const separatorIndex = stateKey.lastIndexOf('|');
+  if (separatorIndex <= 0) return stateKey;
+  return stateKey.slice(0, separatorIndex);
+}
+
+function getHighlightPreferredMode(
+  highlight: TranscriptHighlight,
+  preferredModesByUiKey: Record<string, HighlightClipAspectMode>,
+  preferredModesByArtifactKey: Record<string, HighlightClipAspectMode> = {}
+): HighlightClipAspectMode {
+  const uiKey = buildHighlightUiKey(highlight);
+  if (preferredModesByUiKey[uiKey]) {
+    return preferredModesByUiKey[uiKey];
+  }
+  const artifactKey = buildHighlightArtifactKey(withoutVideoPath(highlight));
+  return (
+    preferredModesByArtifactKey[artifactKey] || DEFAULT_HIGHLIGHT_ASPECT_MODE
+  );
+}
+
+function buildVisibleHighlightAspectModes(
+  highlights: TranscriptHighlight[],
+  preferredModesByUiKey: Record<string, HighlightClipAspectMode>,
+  preferredModesByArtifactKey: Record<string, HighlightClipAspectMode>
+): Record<string, HighlightClipAspectMode> {
+  const nextModes: Record<string, HighlightClipAspectMode> = {};
+  for (const highlight of highlights) {
+    const cleaned = withoutVideoPath(highlight);
+    nextModes[buildHighlightUiKey(cleaned)] = getHighlightPreferredMode(
+      cleaned,
+      preferredModesByUiKey,
+      preferredModesByArtifactKey
+    );
+  }
+  return nextModes;
+}
+
+function appendHighlightModeSuffix(
+  filename: string,
+  aspectMode: HighlightClipAspectMode
+): string {
+  if (aspectMode === 'original') return filename;
+  const suffix =
+    aspectMode === 'vertical_fit' ? '-shorts-fit' : '-shorts-reframe';
+  return filename.replace(/\.mp4$/i, `${suffix}.mp4`);
+}
+
 function extractHighlightVideoPaths(
-  highlights: TranscriptHighlight[]
-): Record<string, string> {
-  const result: Record<string, string> = {};
+  highlights: TranscriptHighlight[],
+  preferredModesByUiKey: Record<string, HighlightClipAspectMode>,
+  preferredModesByArtifactKey: Record<string, HighlightClipAspectMode>
+): Record<string, Partial<Record<HighlightClipAspectMode, string>>> {
+  const result: Record<
+    string,
+    Partial<Record<HighlightClipAspectMode, string>>
+  > = {};
   for (const highlight of highlights) {
     if (!highlight.videoPath) continue;
-    result[buildHighlightArtifactKey(highlight)] = highlight.videoPath;
+    const artifactKey = buildHighlightArtifactKey(withoutVideoPath(highlight));
+    const aspectMode = getHighlightPreferredMode(
+      highlight,
+      preferredModesByUiKey,
+      preferredModesByArtifactKey
+    );
+    result[artifactKey] = {
+      ...(result[artifactKey] || {}),
+      [aspectMode]: highlight.videoPath,
+    };
   }
   return result;
 }
@@ -212,8 +380,11 @@ export default function useTranscriptHighlightsFlow({
   const [highlightCutState, setHighlightCutState] = useState<
     Record<string, HighlightClipCutState>
   >({});
-  const [highlightAspectMode, setHighlightAspectMode] =
-    useState<HighlightAspectMode>('vertical');
+  const [highlightAspectModes, setHighlightAspectModes] = useState<
+    Record<string, HighlightClipAspectMode>
+  >({});
+  const [combineAspectMode, setCombineAspectModeState] =
+    useState<HighlightClipAspectMode>(DEFAULT_HIGHLIGHT_ASPECT_MODE);
   const [combineMode, setCombineMode] = useState(false);
   const [selectedHighlights, setSelectedHighlights] = useState<Set<string>>(
     new Set()
@@ -232,10 +403,16 @@ export default function useTranscriptHighlightsFlow({
   const runtimeArtifactsBySourceRef = useRef<
     Record<string, SourceRuntimeArtifacts>
   >({});
-  const currentViewSourceIdentityRef = useRef<string>('');
-  const currentArtifactSourceIdentityRef = useRef<string>('');
+  const currentViewSourceIdentityRef = useRef('');
+  const currentArtifactSourceIdentityRef = useRef('');
   const highlightsRef = useRef<TranscriptHighlight[]>([]);
   const orderedSelectionRef = useRef<TranscriptHighlight[]>([]);
+  const highlightAspectModesRef = useRef<
+    Record<string, HighlightClipAspectMode>
+  >({});
+  const combineAspectModeRef = useRef<HighlightClipAspectMode>(
+    DEFAULT_HIGHLIGHT_ASPECT_MODE
+  );
   const combineCutStateRef = useRef<CombineCutState>({
     status: 'idle',
     percent: 0,
@@ -244,7 +421,9 @@ export default function useTranscriptHighlightsFlow({
   const highlightCutSourceByOperationRef = useRef<
     Record<string, HighlightCutOperationMeta>
   >({});
-  const combinedCutSourceByOperationRef = useRef<Record<string, string>>({});
+  const combinedCutSourceByOperationRef = useRef<
+    Record<string, CombinedCutOperationMeta>
+  >({});
   const highlightDisplayGenerationRef = useRef(0);
 
   const viewSourceIdentity = useMemo(
@@ -262,16 +441,16 @@ export default function useTranscriptHighlightsFlow({
       buildHighlightArtifactSourceIdentity({
         fallbackVideoAssetIdentity,
         fallbackVideoPath,
+        originalVideoPath,
         sourceAssetIdentity,
         sourceUrl,
         libraryEntryId,
-        aspectMode: highlightAspectMode,
       }),
     [
       fallbackVideoAssetIdentity,
       fallbackVideoPath,
-      highlightAspectMode,
       libraryEntryId,
+      originalVideoPath,
       sourceAssetIdentity,
       sourceUrl,
     ]
@@ -282,8 +461,8 @@ export default function useTranscriptHighlightsFlow({
       const existing = runtimeArtifactsBySourceRef.current[identity];
       if (existing) return existing;
       const created: SourceRuntimeArtifacts = {
-        combinedOutputPath: null,
-        combinedSelectionSignature: null,
+        combinedOutputsByMode: {},
+        highlightPreferredModesByArtifactKey: {},
         highlightVideoPaths: {},
       };
       runtimeArtifactsBySourceRef.current[identity] = created;
@@ -292,16 +471,43 @@ export default function useTranscriptHighlightsFlow({
     []
   );
 
+  const ensureCombinedArtifact = useCallback(
+    (
+      sourceArtifacts: SourceRuntimeArtifacts,
+      aspectMode: HighlightClipAspectMode
+    ): CombinedRuntimeArtifact => {
+      const existing = sourceArtifacts.combinedOutputsByMode[aspectMode];
+      if (existing) return existing;
+      const created: CombinedRuntimeArtifact = {
+        outputPath: null,
+        selectionSignature: null,
+      };
+      sourceArtifacts.combinedOutputsByMode[aspectMode] = created;
+      return created;
+    },
+    []
+  );
+
   const applySourceArtifacts = useCallback(
     (
       identity: string,
-      entries: TranscriptHighlight[]
+      entries: TranscriptHighlight[],
+      preferredModes: Record<
+        string,
+        HighlightClipAspectMode
+      > = highlightAspectModesRef.current
     ): TranscriptHighlight[] => {
       const sourceArtifacts = ensureSourceArtifacts(identity);
       return entries.map(entry => {
         const cleaned = withoutVideoPath(entry);
-        const key = buildHighlightArtifactKey(cleaned);
-        const sourceVideoPath = sourceArtifacts.highlightVideoPaths[key];
+        const artifactKey = buildHighlightArtifactKey(cleaned);
+        const aspectMode = getHighlightPreferredMode(
+          cleaned,
+          preferredModes,
+          sourceArtifacts.highlightPreferredModesByArtifactKey
+        );
+        const sourceVideoPath =
+          sourceArtifacts.highlightVideoPaths[artifactKey]?.[aspectMode];
         if (!sourceVideoPath) return cleaned;
         return { ...cleaned, videoPath: sourceVideoPath };
       });
@@ -311,18 +517,25 @@ export default function useTranscriptHighlightsFlow({
 
   const setHighlightVideoPathForSource = useCallback(
     ({
-      identity,
+      aspectMode,
       highlight,
+      identity,
       videoPath,
     }: {
-      identity: string;
+      aspectMode: HighlightClipAspectMode;
       highlight: TranscriptHighlight;
+      identity: string;
       videoPath: string;
     }) => {
       if (!identity || !videoPath) return;
       const sourceArtifacts = ensureSourceArtifacts(identity);
-      const key = buildHighlightArtifactKey(withoutVideoPath(highlight));
-      sourceArtifacts.highlightVideoPaths[key] = videoPath;
+      const artifactKey = buildHighlightArtifactKey(
+        withoutVideoPath(highlight)
+      );
+      sourceArtifacts.highlightVideoPaths[artifactKey] = {
+        ...(sourceArtifacts.highlightVideoPaths[artifactKey] || {}),
+        [aspectMode]: videoPath,
+      };
     },
     [ensureSourceArtifacts]
   );
@@ -332,12 +545,16 @@ export default function useTranscriptHighlightsFlow({
       if (!identity) return;
       const sourceArtifacts = ensureSourceArtifacts(identity);
       const visibleVideoPaths = extractHighlightVideoPaths(
-        highlightsRef.current
+        highlightsRef.current,
+        highlightAspectModesRef.current,
+        sourceArtifacts.highlightPreferredModesByArtifactKey
       );
-      if (Object.keys(visibleVideoPaths).length > 0) {
-        sourceArtifacts.highlightVideoPaths = {
-          ...sourceArtifacts.highlightVideoPaths,
-          ...visibleVideoPaths,
+      for (const [artifactKey, modePaths] of Object.entries(
+        visibleVideoPaths
+      )) {
+        sourceArtifacts.highlightVideoPaths[artifactKey] = {
+          ...(sourceArtifacts.highlightVideoPaths[artifactKey] || {}),
+          ...modePaths,
         };
       }
       if (
@@ -345,13 +562,16 @@ export default function useTranscriptHighlightsFlow({
         combineCutStateRef.current.outputPath &&
         combinedSelectionSignatureRef.current
       ) {
-        sourceArtifacts.combinedOutputPath =
-          combineCutStateRef.current.outputPath;
-        sourceArtifacts.combinedSelectionSignature =
+        const combinedArtifact = ensureCombinedArtifact(
+          sourceArtifacts,
+          combineAspectModeRef.current
+        );
+        combinedArtifact.outputPath = combineCutStateRef.current.outputPath;
+        combinedArtifact.selectionSignature =
           combinedSelectionSignatureRef.current;
       }
     },
-    [ensureSourceArtifacts]
+    [ensureCombinedArtifact, ensureSourceArtifacts]
   );
 
   const resolveCurrentArtifactSourceIdentity = useCallback((): string => {
@@ -361,6 +581,85 @@ export default function useTranscriptHighlightsFlow({
     ensureSourceArtifacts(artifactSourceIdentity);
     return artifactSourceIdentity;
   }, [artifactSourceIdentity, ensureSourceArtifacts]);
+
+  const buildCombinedCutStateForSource = useCallback(
+    ({
+      aspectMode,
+      identity,
+      orderedSelection,
+    }: {
+      aspectMode: HighlightClipAspectMode;
+      identity: string;
+      orderedSelection: TranscriptHighlight[];
+    }): {
+      nextCombineCutState: CombineCutState;
+      nextSelectionSignature: string | null;
+    } => {
+      const sourceArtifacts = ensureSourceArtifacts(identity);
+      const combinedArtifact = ensureCombinedArtifact(
+        sourceArtifacts,
+        aspectMode
+      );
+      const nextSelectionSignature =
+        buildOrderedSelectionSignature(orderedSelection);
+      const activeCombinedOperationId = combineCutStateRef.current.operationId;
+      const activeCombinedOperationMeta =
+        activeCombinedOperationId &&
+        combinedCutSourceByOperationRef.current[activeCombinedOperationId]
+          ? combinedCutSourceByOperationRef.current[activeCombinedOperationId]
+          : null;
+      const shouldPreserveInFlightCombinedCut = Boolean(
+        combineCutStateRef.current.status === 'cutting' &&
+        activeCombinedOperationMeta &&
+        activeCombinedOperationMeta.sourceIdentity === identity &&
+        activeCombinedOperationMeta.aspectMode === aspectMode
+      );
+      const canReuseCombinedArtifact = Boolean(
+        nextSelectionSignature &&
+        combinedArtifact.outputPath &&
+        combinedArtifact.selectionSignature === nextSelectionSignature
+      );
+      const nextCombineCutState: CombineCutState =
+        shouldPreserveInFlightCombinedCut
+          ? combineCutStateRef.current
+          : canReuseCombinedArtifact
+            ? {
+                status: 'ready',
+                percent: 100,
+                outputPath: combinedArtifact.outputPath!,
+              }
+            : { status: 'idle', percent: 0 };
+
+      return {
+        nextCombineCutState,
+        nextSelectionSignature: shouldPreserveInFlightCombinedCut
+          ? combinedSelectionSignatureRef.current
+          : canReuseCombinedArtifact
+            ? combinedArtifact.selectionSignature
+            : null,
+      };
+    },
+    [ensureCombinedArtifact, ensureSourceArtifacts]
+  );
+
+  const syncCombinedCutStateForSource = useCallback(
+    (
+      identity: string,
+      nextOrderedSelection: TranscriptHighlight[] = orderedSelectionRef.current,
+      nextAspectMode: HighlightClipAspectMode = combineAspectModeRef.current
+    ) => {
+      const { nextCombineCutState, nextSelectionSignature } =
+        buildCombinedCutStateForSource({
+          aspectMode: nextAspectMode,
+          identity,
+          orderedSelection: nextOrderedSelection,
+        });
+      combineCutStateRef.current = nextCombineCutState;
+      combinedSelectionSignatureRef.current = nextSelectionSignature;
+      setCombineCutState(nextCombineCutState);
+    },
+    [buildCombinedCutStateForSource]
+  );
 
   const videoAvailableForHighlights = Boolean(
     originalVideoPath || fallbackVideoPath
@@ -375,6 +674,14 @@ export default function useTranscriptHighlightsFlow({
   }, [orderedSelection]);
 
   useEffect(() => {
+    highlightAspectModesRef.current = highlightAspectModes;
+  }, [highlightAspectModes]);
+
+  useEffect(() => {
+    combineAspectModeRef.current = combineAspectMode;
+  }, [combineAspectMode]);
+
+  useEffect(() => {
     combineCutStateRef.current = combineCutState;
   }, [combineCutState]);
 
@@ -382,12 +689,26 @@ export default function useTranscriptHighlightsFlow({
     const previousViewSourceIdentity = currentViewSourceIdentityRef.current;
     const previousArtifactSourceIdentity =
       currentArtifactSourceIdentityRef.current;
+    const sourceArtifacts = ensureSourceArtifacts(artifactSourceIdentity);
+    const nextHighlightAspectModes = buildVisibleHighlightAspectModes(
+      highlightsRef.current.map(highlight => withoutVideoPath(highlight)),
+      {},
+      sourceArtifacts.highlightPreferredModesByArtifactKey
+    );
+
     if (!previousViewSourceIdentity) {
       currentViewSourceIdentityRef.current = viewSourceIdentity;
       currentArtifactSourceIdentityRef.current = artifactSourceIdentity;
-      ensureSourceArtifacts(artifactSourceIdentity);
+      highlightAspectModesRef.current = nextHighlightAspectModes;
+      setHighlightAspectModes(nextHighlightAspectModes);
+      syncCombinedCutStateForSource(
+        artifactSourceIdentity,
+        orderedSelectionRef.current,
+        combineAspectModeRef.current
+      );
       return;
     }
+
     if (
       previousViewSourceIdentity === viewSourceIdentity &&
       previousArtifactSourceIdentity === artifactSourceIdentity
@@ -399,57 +720,31 @@ export default function useTranscriptHighlightsFlow({
 
     currentViewSourceIdentityRef.current = viewSourceIdentity;
     currentArtifactSourceIdentityRef.current = artifactSourceIdentity;
-    ensureSourceArtifacts(artifactSourceIdentity);
 
     const nextHighlights = applySourceArtifacts(
       artifactSourceIdentity,
-      highlightsRef.current.map(highlight => withoutVideoPath(highlight))
+      highlightsRef.current.map(highlight => withoutVideoPath(highlight)),
+      nextHighlightAspectModes
     );
     const nextOrderedSelection = applySourceArtifacts(
       artifactSourceIdentity,
-      orderedSelectionRef.current.map(highlight => withoutVideoPath(highlight))
+      orderedSelectionRef.current.map(highlight => withoutVideoPath(highlight)),
+      nextHighlightAspectModes
     );
-    const nextSelectionSignature =
-      buildOrderedSelectionSignature(nextOrderedSelection);
-    const sourceArtifacts = ensureSourceArtifacts(artifactSourceIdentity);
-    const activeCombinedOperationId = combineCutStateRef.current.operationId;
-    const activeCombinedOperationSourceIdentity =
-      activeCombinedOperationId &&
-      combinedCutSourceByOperationRef.current[activeCombinedOperationId]
-        ? combinedCutSourceByOperationRef.current[activeCombinedOperationId]
-        : null;
-    const shouldPreserveInFlightCombinedCut = Boolean(
-      combineCutStateRef.current.status === 'cutting' &&
-      activeCombinedOperationId &&
-      activeCombinedOperationSourceIdentity === artifactSourceIdentity
-    );
-    const canReuseCombinedArtifact = Boolean(
-      sourceArtifacts.combinedOutputPath &&
-      sourceArtifacts.combinedSelectionSignature &&
-      sourceArtifacts.combinedSelectionSignature === nextSelectionSignature &&
-      nextSelectionSignature
-    );
-    const nextCombineCutState: CombineCutState = canReuseCombinedArtifact
-      ? shouldPreserveInFlightCombinedCut
-        ? combineCutStateRef.current
-        : {
-            status: 'ready',
-            percent: 100,
-            outputPath: sourceArtifacts.combinedOutputPath!,
-          }
-      : shouldPreserveInFlightCombinedCut
-        ? combineCutStateRef.current
-        : { status: 'idle', percent: 0 };
+    const { nextCombineCutState, nextSelectionSignature } =
+      buildCombinedCutStateForSource({
+        aspectMode: combineAspectModeRef.current,
+        identity: artifactSourceIdentity,
+        orderedSelection: nextOrderedSelection,
+      });
 
     highlightsRef.current = nextHighlights;
     orderedSelectionRef.current = nextOrderedSelection;
+    highlightAspectModesRef.current = nextHighlightAspectModes;
     combineCutStateRef.current = nextCombineCutState;
-    combinedSelectionSignatureRef.current = shouldPreserveInFlightCombinedCut
-      ? combinedSelectionSignatureRef.current
-      : canReuseCombinedArtifact
-        ? sourceArtifacts.combinedSelectionSignature
-        : null;
+    combinedSelectionSignatureRef.current = nextSelectionSignature;
 
+    setHighlightAspectModes(nextHighlightAspectModes);
     setHighlights(nextHighlights);
     setOrderedSelection(nextOrderedSelection);
     setSelectedHighlights(
@@ -461,8 +756,10 @@ export default function useTranscriptHighlightsFlow({
   }, [
     applySourceArtifacts,
     artifactSourceIdentity,
+    buildCombinedCutStateForSource,
     ensureSourceArtifacts,
     persistVisibleArtifactsForSource,
+    syncCombinedCutStateForSource,
     viewSourceIdentity,
   ]);
 
@@ -470,6 +767,8 @@ export default function useTranscriptHighlightsFlow({
     (incoming?: TranscriptHighlight[] | null) => {
       if (!Array.isArray(incoming) || incoming.length === 0) return;
       const activeSourceIdentity = resolveCurrentArtifactSourceIdentity();
+      const sourceArtifacts = ensureSourceArtifacts(activeSourceIdentity);
+      let nextHighlightAspectModes = highlightAspectModesRef.current;
       setHighlights(prev => {
         const map = new Map<string, TranscriptHighlight>();
         prev.forEach(highlight => {
@@ -488,15 +787,31 @@ export default function useTranscriptHighlightsFlow({
         const merged = Array.from(map.values()).sort(
           (a, b) => a.start - b.start
         );
-        return applySourceArtifacts(activeSourceIdentity, merged);
+        nextHighlightAspectModes = buildVisibleHighlightAspectModes(
+          merged,
+          highlightAspectModesRef.current,
+          sourceArtifacts.highlightPreferredModesByArtifactKey
+        );
+        return applySourceArtifacts(
+          activeSourceIdentity,
+          merged,
+          nextHighlightAspectModes
+        );
       });
+      highlightAspectModesRef.current = nextHighlightAspectModes;
+      setHighlightAspectModes(nextHighlightAspectModes);
     },
-    [applySourceArtifacts, resolveCurrentArtifactSourceIdentity]
+    [
+      applySourceArtifacts,
+      ensureSourceArtifacts,
+      resolveCurrentArtifactSourceIdentity,
+    ]
   );
 
   const replaceHighlights = useCallback(
     (incoming?: TranscriptHighlight[] | null) => {
       const activeSourceIdentity = resolveCurrentArtifactSourceIdentity();
+      const sourceArtifacts = ensureSourceArtifacts(activeSourceIdentity);
       const normalizedIncoming = Array.isArray(incoming)
         ? incoming
             .reduce<Map<string, TranscriptHighlight>>(
@@ -509,18 +824,36 @@ export default function useTranscriptHighlightsFlow({
             )
             .values()
         : [];
+      const normalizedEntries = Array.from(normalizedIncoming).sort(
+        (a, b) => a.start - b.start
+      );
+      const nextHighlightAspectModes = buildVisibleHighlightAspectModes(
+        normalizedEntries,
+        highlightAspectModesRef.current,
+        sourceArtifacts.highlightPreferredModesByArtifactKey
+      );
       const normalizedList = applySourceArtifacts(
         activeSourceIdentity,
-        Array.from(normalizedIncoming).sort((a, b) => a.start - b.start)
+        normalizedEntries,
+        nextHighlightAspectModes
       );
       const nextUiKeySet = new Set(
         normalizedList.map(highlight => getHighlightKey(highlight))
       );
-      const normalizedArtifactMap = new Map(
+      const normalizedUiMap = new Map(
         normalizedList.map(highlight => [
-          buildHighlightArtifactKey(highlight),
+          buildHighlightUiKey(highlight),
           highlight,
         ])
+      );
+      const reservedSelectionUiKeys = new Set(
+        orderedSelectionRef.current
+          .map(highlight => buildHighlightUiKey(highlight))
+          .filter(uiKey => normalizedUiMap.has(uiKey))
+      );
+      const normalizedArtifactQueueMap = buildHighlightArtifactQueueMap(
+        normalizedList,
+        reservedSelectionUiKeys
       );
 
       setHighlights(previousHighlights => {
@@ -536,26 +869,41 @@ export default function useTranscriptHighlightsFlow({
           const existing = previousByKey.get(key);
           return existing ? { ...existing, ...cleaned } : cleaned;
         });
-        return applySourceArtifacts(activeSourceIdentity, merged);
+        return applySourceArtifacts(
+          activeSourceIdentity,
+          merged,
+          nextHighlightAspectModes
+        );
       });
+      highlightAspectModesRef.current = nextHighlightAspectModes;
+      setHighlightAspectModes(nextHighlightAspectModes);
 
       setDownloadStatus(previous =>
         Object.fromEntries(
-          Object.entries(previous).filter(([key]) => nextUiKeySet.has(key))
+          Object.entries(previous).filter(([stateKey]) =>
+            nextUiKeySet.has(extractUiKeyFromModeStateKey(stateKey))
+          )
         )
       );
       setHighlightCutState(previous =>
         Object.fromEntries(
-          Object.entries(previous).filter(([key]) => nextUiKeySet.has(key))
+          Object.entries(previous).filter(([stateKey]) =>
+            nextUiKeySet.has(extractUiKeyFromModeStateKey(stateKey))
+          )
         )
       );
+
       const nextOrderedSelection = applySourceArtifacts(
         activeSourceIdentity,
         orderedSelectionRef.current
           .map(highlight => {
-            const replacement = normalizedArtifactMap.get(
-              buildHighlightArtifactKey(withoutVideoPath(highlight))
-            );
+            const uiKey = buildHighlightUiKey(highlight);
+            const replacement =
+              normalizedUiMap.get(uiKey) ??
+              shiftHighlightArtifactMatch(
+                normalizedArtifactQueueMap,
+                buildHighlightArtifactKey(withoutVideoPath(highlight))
+              );
             if (!replacement) return null;
             return {
               ...withoutVideoPath(highlight),
@@ -564,7 +912,8 @@ export default function useTranscriptHighlightsFlow({
           })
           .filter((highlight): highlight is TranscriptHighlight =>
             Boolean(highlight)
-          )
+          ),
+        nextHighlightAspectModes
       );
       setOrderedSelection(nextOrderedSelection);
       setSelectedHighlights(
@@ -573,31 +922,15 @@ export default function useTranscriptHighlightsFlow({
         )
       );
 
-      const nextSelectionSignature =
-        buildOrderedSelectionSignature(nextOrderedSelection);
-      const sourceArtifacts = ensureSourceArtifacts(activeSourceIdentity);
-      const canReuseCombinedArtifact = Boolean(
-        sourceArtifacts.combinedOutputPath &&
-        sourceArtifacts.combinedSelectionSignature &&
-        sourceArtifacts.combinedSelectionSignature === nextSelectionSignature &&
-        nextSelectionSignature
-      );
-
-      setCombineCutState(
-        canReuseCombinedArtifact
-          ? {
-              status: 'ready',
-              percent: 100,
-              outputPath: sourceArtifacts.combinedOutputPath!,
-            }
-          : { status: 'idle', percent: 0 }
-      );
-      if (canReuseCombinedArtifact) {
-        combinedSelectionSignatureRef.current =
-          sourceArtifacts.combinedSelectionSignature;
-      } else {
-        combinedSelectionSignatureRef.current = null;
-      }
+      const { nextCombineCutState, nextSelectionSignature } =
+        buildCombinedCutStateForSource({
+          aspectMode: combineAspectModeRef.current,
+          identity: activeSourceIdentity,
+          orderedSelection: nextOrderedSelection,
+        });
+      combineCutStateRef.current = nextCombineCutState;
+      combinedSelectionSignatureRef.current = nextSelectionSignature;
+      setCombineCutState(nextCombineCutState);
 
       if (nextUiKeySet.size === 0) {
         setCombineMode(false);
@@ -605,6 +938,7 @@ export default function useTranscriptHighlightsFlow({
     },
     [
       applySourceArtifacts,
+      buildCombinedCutStateForSource,
       ensureSourceArtifacts,
       resolveCurrentArtifactSourceIdentity,
     ]
@@ -618,11 +952,12 @@ export default function useTranscriptHighlightsFlow({
     downloadTimers.current = {};
     currentViewSourceIdentityRef.current = viewSourceIdentity;
     currentArtifactSourceIdentityRef.current = artifactSourceIdentity;
-    ensureSourceArtifacts(artifactSourceIdentity);
+    highlightAspectModesRef.current = {};
     highlightsRef.current = [];
     orderedSelectionRef.current = [];
     combineCutStateRef.current = { status: 'idle', percent: 0 };
     combinedSelectionSignatureRef.current = null;
+    setHighlightAspectModes({});
     setHighlights([]);
     setDownloadStatus({});
     setHighlightCutState({});
@@ -631,7 +966,6 @@ export default function useTranscriptHighlightsFlow({
     setCombineCutState({ status: 'idle', percent: 0 });
   }, [
     artifactSourceIdentity,
-    ensureSourceArtifacts,
     persistVisibleArtifactsForSource,
     resolveCurrentArtifactSourceIdentity,
     viewSourceIdentity,
@@ -649,8 +983,6 @@ export default function useTranscriptHighlightsFlow({
   useEffect(() => {
     const unsubscribe = onHighlightCutProgress(progress => {
       const highlight = progress.highlight as TranscriptHighlight | undefined;
-      const highlightId =
-        progress.highlightId || (highlight ? getHighlightKey(highlight) : null);
       const operationId = progress.operationId;
       const hasOperationId = Boolean(operationId);
       const operationMeta =
@@ -671,12 +1003,27 @@ export default function useTranscriptHighlightsFlow({
       const artifactSourceIdentity =
         operationSourceIdentity ||
         (!hasOperationId ? activeSourceIdentity : null);
+      const sourceArtifacts = ensureSourceArtifacts(activeSourceIdentity);
+      const effectiveAspectMode =
+        operationMeta?.aspectMode ||
+        (highlight
+          ? getHighlightPreferredMode(
+              highlight,
+              highlightAspectModesRef.current,
+              sourceArtifacts.highlightPreferredModesByArtifactKey
+            )
+          : DEFAULT_HIGHLIGHT_ASPECT_MODE);
+      const stateKey =
+        operationMeta?.stateKey ||
+        (highlight
+          ? buildHighlightModeStateKey(highlight, effectiveAspectMode)
+          : progress.highlightId || null);
       const pct = typeof progress.percent === 'number' ? progress.percent : 0;
       const clampedPercent = Math.min(100, Math.max(0, pct));
 
-      if (highlightId && shouldApplyVisibleUpdates) {
+      if (stateKey && shouldApplyVisibleUpdates) {
         setHighlightCutState(prev => {
-          const prevState = prev[highlightId] || {
+          const prevState = prev[stateKey] || {
             status: 'idle',
             percent: 0,
           };
@@ -692,16 +1039,14 @@ export default function useTranscriptHighlightsFlow({
             status = 'cutting';
           }
 
-          const nextState: HighlightClipCutState = {
-            status,
-            percent: status === 'ready' ? 100 : clampedPercent,
-            error: progress.error || undefined,
-            operationId: progress.operationId,
-          };
-
           return {
             ...prev,
-            [highlightId]: nextState,
+            [stateKey]: {
+              status,
+              percent: status === 'ready' ? 100 : clampedPercent,
+              error: progress.error || undefined,
+              operationId: progress.operationId,
+            },
           };
         });
       }
@@ -709,21 +1054,23 @@ export default function useTranscriptHighlightsFlow({
       if (highlight) {
         if (highlight.videoPath && artifactSourceIdentity) {
           setHighlightVideoPathForSource({
-            identity: artifactSourceIdentity,
+            aspectMode: effectiveAspectMode,
             highlight,
+            identity: artifactSourceIdentity,
             videoPath: highlight.videoPath,
           });
         }
 
         if (shouldApplyVisibleUpdates) {
           mergeHighlightUpdates([highlight]);
-          const key = getHighlightKey(highlight);
-          setDownloadStatus(prev => {
-            if (!prev[key]) return prev;
-            const next = { ...prev };
-            delete next[key];
-            return next;
-          });
+          if (stateKey) {
+            setDownloadStatus(prev => {
+              if (!prev[stateKey]) return prev;
+              const next = { ...prev };
+              delete next[stateKey];
+              return next;
+            });
+          }
         }
       }
 
@@ -752,6 +1099,7 @@ export default function useTranscriptHighlightsFlow({
       if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, [
+    ensureSourceArtifacts,
     mergeHighlightUpdates,
     resolveCurrentArtifactSourceIdentity,
     setError,
@@ -762,12 +1110,22 @@ export default function useTranscriptHighlightsFlow({
   const handleDownloadHighlight = useCallback(
     async (highlight: TranscriptHighlight, index: number) => {
       if (!highlight?.videoPath) return;
-      const key = getHighlightKey(highlight);
+      const activeSourceIdentity = resolveCurrentArtifactSourceIdentity();
+      const sourceArtifacts = ensureSourceArtifacts(activeSourceIdentity);
+      const aspectMode = getHighlightPreferredMode(
+        highlight,
+        highlightAspectModesRef.current,
+        sourceArtifacts.highlightPreferredModesByArtifactKey
+      );
+      const stateKey = buildHighlightModeStateKey(highlight, aspectMode);
 
-      setDownloadStatus(prev => ({ ...prev, [key]: 'saving' }));
+      setDownloadStatus(prev => ({ ...prev, [stateKey]: 'saving' }));
 
       try {
-        const defaultName = buildHighlightFilename(highlight, index);
+        const defaultName = appendHighlightModeSuffix(
+          buildHighlightFilename(highlight, index),
+          aspectMode
+        );
         const result = await saveFile({
           sourcePath: highlight.videoPath,
           defaultPath: defaultName,
@@ -779,31 +1137,31 @@ export default function useTranscriptHighlightsFlow({
           throw new Error(result?.error || 'Unknown error');
         }
 
-        setDownloadStatus(prev => ({ ...prev, [key]: 'saved' }));
-        if (downloadTimers.current[key]) {
-          clearTimeout(downloadTimers.current[key]);
+        setDownloadStatus(prev => ({ ...prev, [stateKey]: 'saved' }));
+        if (downloadTimers.current[stateKey]) {
+          clearTimeout(downloadTimers.current[stateKey]);
         }
-        downloadTimers.current[key] = setTimeout(() => {
+        downloadTimers.current[stateKey] = setTimeout(() => {
           setDownloadStatus(prev => {
             const next = { ...prev };
-            delete next[key];
+            delete next[stateKey];
             return next;
           });
-          delete downloadTimers.current[key];
+          delete downloadTimers.current[stateKey];
         }, 4000);
       } catch (err: any) {
         console.error('[TranscriptSummaryPanel] save highlight failed', err);
-        setDownloadStatus(prev => ({ ...prev, [key]: 'error' }));
-        if (downloadTimers.current[key]) {
-          clearTimeout(downloadTimers.current[key]);
+        setDownloadStatus(prev => ({ ...prev, [stateKey]: 'error' }));
+        if (downloadTimers.current[stateKey]) {
+          clearTimeout(downloadTimers.current[stateKey]);
         }
-        downloadTimers.current[key] = setTimeout(() => {
+        downloadTimers.current[stateKey] = setTimeout(() => {
           setDownloadStatus(prev => {
             const next = { ...prev };
-            delete next[key];
+            delete next[stateKey];
             return next;
           });
-          delete downloadTimers.current[key];
+          delete downloadTimers.current[stateKey];
         }, 5000);
 
         setError(
@@ -813,7 +1171,7 @@ export default function useTranscriptHighlightsFlow({
         );
       }
     },
-    [setError, t]
+    [ensureSourceArtifacts, resolveCurrentArtifactSourceIdentity, setError, t]
   );
 
   const handleCutHighlightClip = useCallback(
@@ -829,8 +1187,15 @@ export default function useTranscriptHighlightsFlow({
         return;
       }
 
-      const key = getHighlightKey(highlight);
-      const existingState = highlightCutState[key];
+      const activeSourceIdentity = resolveCurrentArtifactSourceIdentity();
+      const sourceArtifacts = ensureSourceArtifacts(activeSourceIdentity);
+      const aspectMode = getHighlightPreferredMode(
+        highlight,
+        highlightAspectModesRef.current,
+        sourceArtifacts.highlightPreferredModesByArtifactKey
+      );
+      const stateKey = buildHighlightModeStateKey(highlight, aspectMode);
+      const existingState = highlightCutState[stateKey];
       if (existingState?.status === 'cutting') {
         return;
       }
@@ -838,15 +1203,17 @@ export default function useTranscriptHighlightsFlow({
       const operationId = `highlight-${Date.now()}-${Math.random()
         .toString(36)
         .slice(2, 8)}`;
-      const operationSourceIdentity = resolveCurrentArtifactSourceIdentity();
+      const operationSourceIdentity = activeSourceIdentity;
       highlightCutSourceByOperationRef.current[operationId] = {
-        sourceIdentity: operationSourceIdentity,
+        aspectMode,
         generation: highlightDisplayGenerationRef.current,
+        sourceIdentity: operationSourceIdentity,
+        stateKey,
       };
 
       setHighlightCutState(prev => ({
         ...prev,
-        [key]: { status: 'cutting', percent: 0, operationId },
+        [stateKey]: { status: 'cutting', percent: 0, operationId },
       }));
       setError(null);
 
@@ -855,7 +1222,7 @@ export default function useTranscriptHighlightsFlow({
           videoPath,
           highlight,
           operationId,
-          aspectMode: highlightAspectMode,
+          aspectMode,
         });
 
         if (result?.error) {
@@ -868,7 +1235,7 @@ export default function useTranscriptHighlightsFlow({
           ) {
             setHighlightCutState(prev => ({
               ...prev,
-              [key]: { status: 'cancelled', percent: 0 },
+              [stateKey]: { status: 'cancelled', percent: 0 },
             }));
           }
           return;
@@ -878,8 +1245,9 @@ export default function useTranscriptHighlightsFlow({
           const updated = result.highlight as TranscriptHighlight;
           if (updated.videoPath) {
             setHighlightVideoPathForSource({
-              identity: operationSourceIdentity,
+              aspectMode,
               highlight: updated,
+              identity: operationSourceIdentity,
               videoPath: updated.videoPath,
             });
           }
@@ -895,7 +1263,7 @@ export default function useTranscriptHighlightsFlow({
         ) {
           setHighlightCutState(prev => ({
             ...prev,
-            [key]: { status: 'ready', percent: 100 },
+            [stateKey]: { status: 'ready', percent: 100 },
           }));
         }
       } catch (err: any) {
@@ -906,7 +1274,7 @@ export default function useTranscriptHighlightsFlow({
         ) {
           setHighlightCutState(prev => ({
             ...prev,
-            [key]: { status: 'error', percent: 0, error: message },
+            [stateKey]: { status: 'error', percent: 0, error: message },
           }));
           setError(
             t('summary.downloadHighlightFailed', {
@@ -920,7 +1288,7 @@ export default function useTranscriptHighlightsFlow({
     },
     [
       fallbackVideoPath,
-      highlightAspectMode,
+      ensureSourceArtifacts,
       highlightCutState,
       mergeHighlightUpdates,
       originalVideoPath,
@@ -931,6 +1299,60 @@ export default function useTranscriptHighlightsFlow({
     ]
   );
 
+  const setHighlightAspectModeForHighlight = useCallback(
+    (highlight: TranscriptHighlight, mode: HighlightAspectMode) => {
+      const normalizedMode = resolveHighlightAspectMode(mode);
+      const uiKey = buildHighlightUiKey(highlight);
+      const activeSourceIdentity = resolveCurrentArtifactSourceIdentity();
+      const sourceArtifacts = ensureSourceArtifacts(activeSourceIdentity);
+      const currentMode = getHighlightPreferredMode(
+        highlight,
+        highlightAspectModesRef.current,
+        sourceArtifacts.highlightPreferredModesByArtifactKey
+      );
+      if (currentMode === normalizedMode) return;
+
+      const artifactKey = buildHighlightArtifactKey(
+        withoutVideoPath(highlight)
+      );
+      const nextHighlightAspectModes = {
+        ...highlightAspectModesRef.current,
+        [uiKey]: normalizedMode,
+      };
+      sourceArtifacts.highlightPreferredModesByArtifactKey = {
+        ...sourceArtifacts.highlightPreferredModesByArtifactKey,
+        [artifactKey]: normalizedMode,
+      };
+      highlightAspectModesRef.current = nextHighlightAspectModes;
+      setHighlightAspectModes(nextHighlightAspectModes);
+      setHighlights(prev =>
+        applySourceArtifacts(
+          activeSourceIdentity,
+          prev.map(entry => withoutVideoPath(entry)),
+          nextHighlightAspectModes
+        )
+      );
+      setOrderedSelection(prev =>
+        applySourceArtifacts(
+          activeSourceIdentity,
+          prev.map(entry => withoutVideoPath(entry)),
+          nextHighlightAspectModes
+        )
+      );
+    },
+    [
+      applySourceArtifacts,
+      ensureSourceArtifacts,
+      resolveCurrentArtifactSourceIdentity,
+    ]
+  );
+
+  const setCombineAspectMode = useCallback((mode: HighlightAspectMode) => {
+    const normalizedMode = resolveHighlightAspectMode(mode);
+    combineAspectModeRef.current = normalizedMode;
+    setCombineAspectModeState(normalizedMode);
+  }, []);
+
   const handleDragStart = useCallback((event: DragEvent, index: number) => {
     event.dataTransfer.setData('text/plain', String(index));
     event.dataTransfer.effectAllowed = 'move';
@@ -939,7 +1361,7 @@ export default function useTranscriptHighlightsFlow({
   const handleDrop = useCallback((event: DragEvent, targetIndex: number) => {
     event.preventDefault();
     const sourceIndex = parseInt(event.dataTransfer.getData('text/plain'), 10);
-    if (sourceIndex === targetIndex || isNaN(sourceIndex)) return;
+    if (sourceIndex === targetIndex || Number.isNaN(sourceIndex)) return;
 
     setOrderedSelection(prev => {
       const nextOrder = [...prev];
@@ -987,23 +1409,25 @@ export default function useTranscriptHighlightsFlow({
       return;
     }
 
+    const aspectMode = combineAspectModeRef.current;
+    const selectionSignature = buildOrderedSelectionSignature(orderedSelection);
     const operationId = `combined-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 8)}`;
     const operationSourceIdentity = resolveCurrentArtifactSourceIdentity();
-    combinedCutSourceByOperationRef.current[operationId] =
-      operationSourceIdentity;
+    combinedCutSourceByOperationRef.current[operationId] = {
+      aspectMode,
+      selectionSignature,
+      sourceIdentity: operationSourceIdentity,
+    };
 
-    setCombineCutState({
-      status: 'cutting',
-      percent: 0,
-      operationId,
-    });
-    combineCutStateRef.current = {
+    const nextCombineCutState: CombineCutState = {
       status: 'cutting',
       percent: 0,
       operationId,
     };
+    setCombineCutState(nextCombineCutState);
+    combineCutStateRef.current = nextCombineCutState;
     combinedSelectionSignatureRef.current = null;
     setError(null);
 
@@ -1012,7 +1436,7 @@ export default function useTranscriptHighlightsFlow({
         videoPath,
         highlights: orderedSelection,
         operationId,
-        aspectMode: highlightAspectMode,
+        aspectMode,
       });
 
       if (result?.error) throw new Error(result.error);
@@ -1030,21 +1454,22 @@ export default function useTranscriptHighlightsFlow({
 
       if (result?.videoPath) {
         const sourceArtifacts = ensureSourceArtifacts(operationSourceIdentity);
-        const combinedSelectionSignature =
-          buildOrderedSelectionSignature(orderedSelection);
-        if (combinedSelectionSignature) {
-          sourceArtifacts.combinedOutputPath = result.videoPath;
-          sourceArtifacts.combinedSelectionSignature =
-            combinedSelectionSignature;
+        const combinedArtifact = ensureCombinedArtifact(
+          sourceArtifacts,
+          aspectMode
+        );
+        if (selectionSignature) {
+          combinedArtifact.outputPath = result.videoPath;
+          combinedArtifact.selectionSignature = selectionSignature;
           if (
             combineCutStateRef.current.operationId === operationId &&
             currentArtifactSourceIdentityRef.current === operationSourceIdentity
           ) {
-            combinedSelectionSignatureRef.current = combinedSelectionSignature;
+            combinedSelectionSignatureRef.current = selectionSignature;
           }
         } else {
-          sourceArtifacts.combinedOutputPath = null;
-          sourceArtifacts.combinedSelectionSignature = null;
+          combinedArtifact.outputPath = null;
+          combinedArtifact.selectionSignature = null;
           if (
             combineCutStateRef.current.operationId === operationId &&
             currentArtifactSourceIdentityRef.current === operationSourceIdentity
@@ -1058,16 +1483,13 @@ export default function useTranscriptHighlightsFlow({
         combineCutStateRef.current.operationId === operationId &&
         currentArtifactSourceIdentityRef.current === operationSourceIdentity
       ) {
-        setCombineCutState({
-          status: 'ready',
-          percent: 100,
-          outputPath: result.videoPath,
-        });
-        combineCutStateRef.current = {
+        const readyState: CombineCutState = {
           status: 'ready',
           percent: 100,
           outputPath: result.videoPath,
         };
+        setCombineCutState(readyState);
+        combineCutStateRef.current = readyState;
       }
     } catch (err: any) {
       console.error('[TranscriptSummaryPanel] cut combined failed', err);
@@ -1075,16 +1497,13 @@ export default function useTranscriptHighlightsFlow({
         combineCutStateRef.current.operationId === operationId &&
         currentArtifactSourceIdentityRef.current === operationSourceIdentity
       ) {
-        setCombineCutState({
-          status: 'error',
-          percent: 0,
-          error: err?.message,
-        });
-        combineCutStateRef.current = {
+        const nextErrorState: CombineCutState = {
           status: 'error',
           percent: 0,
           error: err?.message,
         };
+        setCombineCutState(nextErrorState);
+        combineCutStateRef.current = nextErrorState;
         combinedSelectionSignatureRef.current = null;
         setError(
           t('summary.combinedCutFailed', {
@@ -1097,9 +1516,9 @@ export default function useTranscriptHighlightsFlow({
       delete combinedCutSourceByOperationRef.current[operationId];
     }
   }, [
+    ensureCombinedArtifact,
     ensureSourceArtifacts,
     fallbackVideoPath,
-    highlightAspectMode,
     orderedSelection,
     originalVideoPath,
     resolveCurrentArtifactSourceIdentity,
@@ -1110,7 +1529,10 @@ export default function useTranscriptHighlightsFlow({
   const handleDownloadCombined = useCallback(
     async (outputPath: string) => {
       try {
-        const defaultName = `combined-highlights-${Date.now()}.mp4`;
+        const defaultName = appendHighlightModeSuffix(
+          `combined-highlights-${Date.now()}.mp4`,
+          combineAspectModeRef.current
+        );
         const result = await saveFile({
           sourcePath: outputPath,
           defaultPath: defaultName,
@@ -1139,7 +1561,7 @@ export default function useTranscriptHighlightsFlow({
   useEffect(() => {
     const unsubscribe = onCombinedHighlightCutProgress(progress => {
       const operationId = progress.operationId;
-      const trackedSourceIdentity =
+      const trackedOperationMeta =
         operationId && combinedCutSourceByOperationRef.current[operationId]
           ? combinedCutSourceByOperationRef.current[operationId]
           : null;
@@ -1149,10 +1571,8 @@ export default function useTranscriptHighlightsFlow({
       const isTerminal = isTerminalProgressStage(stageText);
 
       if (!activeCombineOperationId) {
-        if (isTerminal) {
-          if (operationId) {
-            delete combinedCutSourceByOperationRef.current[operationId];
-          }
+        if (isTerminal && operationId) {
+          delete combinedCutSourceByOperationRef.current[operationId];
         }
         return;
       }
@@ -1164,15 +1584,17 @@ export default function useTranscriptHighlightsFlow({
         return;
       }
 
-      const operationSourceIdentity = trackedSourceIdentity;
-      if (!operationSourceIdentity) {
+      if (!trackedOperationMeta) {
         if (isTerminal) {
           delete combinedCutSourceByOperationRef.current[operationId];
         }
         return;
       }
 
-      if (operationSourceIdentity !== activeSourceIdentity) {
+      if (
+        trackedOperationMeta.sourceIdentity !== activeSourceIdentity ||
+        trackedOperationMeta.aspectMode !== combineAspectModeRef.current
+      ) {
         if (isTerminal) {
           delete combinedCutSourceByOperationRef.current[operationId];
         }
@@ -1215,6 +1637,20 @@ export default function useTranscriptHighlightsFlow({
   }, [resolveCurrentArtifactSourceIdentity, setError, t]);
 
   useEffect(() => {
+    const activeSourceIdentity = resolveCurrentArtifactSourceIdentity();
+    syncCombinedCutStateForSource(
+      activeSourceIdentity,
+      orderedSelection,
+      combineAspectMode
+    );
+  }, [
+    combineAspectMode,
+    orderedSelection,
+    resolveCurrentArtifactSourceIdentity,
+    syncCombinedCutStateForSource,
+  ]);
+
+  useEffect(() => {
     if (!combineMode) {
       setSelectedHighlights(new Set());
       setOrderedSelection([]);
@@ -1226,9 +1662,27 @@ export default function useTranscriptHighlightsFlow({
   }, [combineMode]);
 
   return {
+    combineAspectMode,
     combineCutState,
     combineMode,
     downloadStatus,
+    getHighlightAspectMode: highlight =>
+      getHighlightPreferredMode(
+        highlight,
+        highlightAspectModes,
+        ensureSourceArtifacts(resolveCurrentArtifactSourceIdentity())
+          .highlightPreferredModesByArtifactKey
+      ),
+    getHighlightStateKey: highlight =>
+      buildHighlightModeStateKey(
+        highlight,
+        getHighlightPreferredMode(
+          highlight,
+          highlightAspectModes,
+          ensureSourceArtifacts(resolveCurrentArtifactSourceIdentity())
+            .highlightPreferredModesByArtifactKey
+        )
+      ),
     handleCutCombined,
     handleCutHighlightClip,
     handleDownloadCombined,
@@ -1236,16 +1690,25 @@ export default function useTranscriptHighlightsFlow({
     handleDragStart,
     handleDrop,
     handleToggleHighlightSelect,
-    highlightAspectMode,
     highlights,
     highlightCutState,
     mergeHighlightUpdates,
-    replaceHighlights,
     orderedSelection,
+    replaceHighlights,
     resetHighlightsState,
+    isHighlightCutting: highlight => {
+      const uiKey = buildHighlightUiKey(highlight);
+      return HIGHLIGHT_ASPECT_MODES.some(
+        aspectMode =>
+          highlightCutState[
+            buildHighlightModeStateKeyFromUiKey(uiKey, aspectMode)
+          ]?.status === 'cutting'
+      );
+    },
     selectedHighlights,
+    setCombineAspectMode,
     setCombineMode,
-    setHighlightAspectMode,
+    setHighlightAspectModeForHighlight,
     videoAvailableForHighlights,
   };
 }

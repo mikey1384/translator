@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  useHighlightGenerationRequestStore,
+  useHighlightWorkflowStore,
   useUIStore,
   useVideoStore,
   useTaskStore,
@@ -49,14 +51,6 @@ import {
   openUpdateNotes,
 } from '../state/modal-store';
 
-const settingsPageWrapper = css`
-  position: fixed;
-  inset: 0;
-  background-color: ${colors.bg};
-  overflow-y: auto;
-  z-index: 50;
-`;
-
 const settingsHeader = css`
   position: sticky;
   top: 0;
@@ -64,6 +58,14 @@ const settingsHeader = css`
   background-color: ${colors.bg};
   padding: 1.5rem;
   border-bottom: 1px solid ${colors.border};
+`;
+
+const settingsPageWrapper = css`
+  position: fixed;
+  inset: 0;
+  background-color: ${colors.bg};
+  overflow-y: auto;
+  z-index: 50;
 `;
 
 export default function AppContent() {
@@ -154,6 +156,17 @@ export default function AppContent() {
   const dubbingStage = useTaskStore(s => s.dubbing.stage);
   const mergeStage = useTaskStore(s => s.merge.stage);
   const summaryStage = useTaskStore(s => s.summary.stage);
+  const transcriptionTask = useTaskStore(s => s.transcription);
+  const summaryTask = useTaskStore(s => s.summary);
+  const pendingHighlightRequests = useHighlightGenerationRequestStore(
+    s => s.pendingRequests
+  );
+  const claimedHighlightRequests = useHighlightGenerationRequestStore(
+    s => s.claimedRequests
+  );
+  const reconcileHighlightWorkflowRuntime = useHighlightWorkflowStore(
+    s => s.reconcileRuntime
+  );
   const download = useUrlStore(s => s.download);
   const { showCreditWarning } = useCreditSystem();
 
@@ -269,6 +282,16 @@ export default function AppContent() {
     }
   }, [mergeInProgress]);
 
+  useEffect(() => {
+    reconcileHighlightWorkflowRuntime();
+  }, [
+    claimedHighlightRequests,
+    pendingHighlightRequests,
+    reconcileHighlightWorkflowRuntime,
+    summaryTask,
+    transcriptionTask,
+  ]);
+
   // Auto-surface a report flow for disruptive failures.
   useEffect(() => {
     if (isDisruptiveGlobalError(globalError, globalErrorKind)) {
@@ -364,7 +387,6 @@ export default function AppContent() {
     OperationIPC.cancel(download.id!);
   };
 
-  // Settings page rendered as its own scroll container for proper sticky header
   if (showSettings) {
     return (
       <>

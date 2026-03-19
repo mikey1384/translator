@@ -387,6 +387,8 @@
     "originalFormatDesc": "வீடியோவின் அசல் அளவுகளை வைத்திரு",
     "verticalFormat": "9:16 செங்குத்து",
     "verticalFormatDesc": "YouTube Shorts, TikTok, Reels (9:16) க்கு உகந்தது",
+    "verticalFitFormat": "Shorts Fit",
+    "verticalFitFormatDesc": "அசல் பிரேமை 9:16 கேன்வாஸ் உள்ளே பொருத்தவும்",
     "downloadHighlight": "கிளிப்பைப் பதிவிறக்கு",
     "downloadingHighlight": "சேமிக்கிறது…",
     "highlightSaved": "சேமிக்கப்பட்டது!",

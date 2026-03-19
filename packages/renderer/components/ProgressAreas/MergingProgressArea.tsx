@@ -25,6 +25,16 @@ type MergeSlice = {
   id?: string;
 };
 
+function isProtectedSavePhaseStage(stage: string): boolean {
+  const normalized = stage.trim().toLowerCase();
+  return (
+    normalized.includes('waiting for save location') ||
+    normalized.includes('choose where to save') ||
+    normalized.includes('saving') ||
+    normalized.includes('copying to destination')
+  );
+}
+
 export default function MergingProgressArea({
   autoCloseDelay = 4_000,
 }: { autoCloseDelay?: number } = {}) {
@@ -34,6 +44,25 @@ export default function MergingProgressArea({
   const { inProgress, percent, stage, id } = merge;
 
   const [isCancelling, setIsCancelling] = useState(false);
+  const [savePhaseNotice, setSavePhaseNotice] = useState<string | null>(null);
+
+  const cancelDisabled = useMemo(
+    () => isProtectedSavePhaseStage(stage) || savePhaseNotice != null,
+    [savePhaseNotice, stage]
+  );
+
+  useEffect(() => {
+    if (!inProgress) {
+      setIsCancelling(false);
+      setSavePhaseNotice(null);
+    }
+  }, [inProgress]);
+
+  useEffect(() => {
+    if (!isProtectedSavePhaseStage(stage)) {
+      setSavePhaseNotice(null);
+    }
+  }, [stage, t]);
 
   useEffect(() => {
     devLog('[MergePA] op id →', id);
@@ -42,20 +71,28 @@ export default function MergingProgressArea({
   const handleCancel = useCallback(async () => {
     if (!id) {
       console.warn('[MergePA] no operation id – nothing to cancel');
-      patchMerge({ inProgress: false });
       return;
     }
-    setIsCancelling(true);
     try {
       devLog('[MergePA] cancelling', id);
-      await subtitleRendererClient.cancelMerge(id);
+      const result = await subtitleRendererClient.cancelMerge(id);
+      if (!result.accepted) {
+        if (result.reason === 'save_phase') {
+          setSavePhaseNotice(
+            t(
+              'progress.mergeSavePhaseNoCancel',
+              'This save step can’t be cancelled now.'
+            )
+          );
+        }
+        return;
+      }
+      setIsCancelling(true);
+      patchMerge({ stage: 'Cancelling...', inProgress: true });
     } catch (err: any) {
       devError('[MergePA] cancel failed', err);
-    } finally {
-      setIsCancelling(false);
-      patchMerge({ inProgress: false });
     }
-  }, [id, patchMerge]);
+  }, [id, patchMerge, t]);
 
   const handleClose = useCallback(() => {
     patchMerge({ inProgress: false, percent: 0, stage: '' });
@@ -79,9 +116,11 @@ export default function MergingProgressArea({
       stage={stage}
       progressBarColor={progressBarColor}
       isCancelling={isCancelling}
+      cancelDisabled={cancelDisabled}
       operationId={id ?? null}
       onCancel={handleCancel}
       onClose={handleClose}
+      subLabel={savePhaseNotice ?? undefined}
       autoCloseDelay={
         percent >= 100 && !stage.toLowerCase().includes('error')
           ? autoCloseDelay

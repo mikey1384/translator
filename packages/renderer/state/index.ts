@@ -6,3 +6,5 @@ export * from './credit-store';
 export * from './update-store';
 export * from './ai-store';
 export * from './video-suggestion-store';
+export * from './highlight-generation-request-store';
+export * from './highlight-workflow-store';

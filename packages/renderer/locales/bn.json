@@ -387,6 +387,8 @@
     "originalFormatDesc": "ভিডিওর মূল মাত্রা রাখুন",
     "verticalFormat": "9:16 উল্লম্ব",
     "verticalFormatDesc": "YouTube Shorts, TikTok, Reels (9:16)-এর জন্য অপ্টিমাইজড",
+    "verticalFitFormat": "শর্টস ফিট",
+    "verticalFitFormatDesc": "মূল ফ্রেমটি 9:16 ক্যানভাসের মধ্যে ফিট করুন",
     "downloadHighlight": "ক্লিপ ডাউনলোড করুন",
     "downloadingHighlight": "সংরক্ষণ হচ্ছে…",
     "highlightSaved": "সংরক্ষিত!",

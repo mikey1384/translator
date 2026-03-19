@@ -14,6 +14,7 @@ import {
 } from './TranscriptSummaryPanel.helpers';
 import {
   aspectModeButtonStyles,
+  aspectModeIconStyles,
   aspectModeLabelStyles,
   aspectModeRowStyles,
   aspectModeToggleStyles,
@@ -28,6 +29,7 @@ import {
   highlightCutProgressFill,
   highlightCutProgressTrack,
   highlightDesc,
+  highlightFormatRowStyles,
   highlightHeader,
   highlightPlaceholder,
   highlightPlaceholderText,
@@ -58,23 +60,32 @@ type CombineCutState = {
 
 type TranscriptSummaryHighlightsTabProps = {
   activeOperationId: string | null;
+  combineAspectMode: HighlightAspectMode;
   combineCutState: CombineCutState;
   combineMode: boolean;
   downloadStatus: Record<string, 'idle' | 'saving' | 'saved' | 'error'>;
+  getHighlightAspectMode: (
+    highlight: TranscriptHighlight
+  ) => HighlightAspectMode;
+  getHighlightStateKey: (highlight: TranscriptHighlight) => string;
   hasSummaryResult: boolean;
   highlightWarningMessage: string | null;
   highlightStatus: TranscriptHighlightStatus;
-  highlightAspectMode: HighlightAspectMode;
   highlightCutState: Record<string, HighlightClipCutState>;
   highlights: TranscriptHighlight[];
   isGenerating: boolean;
+  isHighlightCutting: (highlight: TranscriptHighlight) => boolean;
   onCutCombined: () => void;
   onCutHighlightClip: (highlight: TranscriptHighlight) => void;
   onDownloadCombined: (outputPath: string) => void;
   onDownloadHighlight: (highlight: TranscriptHighlight, index: number) => void;
   onDragStart: (event: DragEvent, index: number) => void;
   onDrop: (event: DragEvent, targetIndex: number) => void;
-  onSetHighlightAspectMode: (mode: HighlightAspectMode) => void;
+  onSetCombineAspectMode: (mode: HighlightAspectMode) => void;
+  onSetHighlightAspectMode: (
+    highlight: TranscriptHighlight,
+    mode: HighlightAspectMode
+  ) => void;
   onToggleCombineMode: () => void;
   onToggleHighlightSelect: (
     highlight: TranscriptHighlight,
@@ -86,24 +97,173 @@ type TranscriptSummaryHighlightsTabProps = {
   videoAvailableForHighlights: boolean;
 };
 
+const CLIP_MODE_OPTIONS: HighlightAspectMode[] = [
+  'vertical_reframe',
+  'vertical_fit',
+  'original',
+];
+
+function getAspectModeLabel(mode: HighlightAspectMode, t: TFunction): string {
+  if (mode === 'original') {
+    return t('summary.originalFormat', 'Original');
+  }
+  if (mode === 'vertical_fit') {
+    return t('summary.verticalFitFormat', 'Shorts Fit');
+  }
+  return t('summary.verticalFormat', 'Shorts Reframe');
+}
+
+function getAspectModeDescription(
+  mode: HighlightAspectMode,
+  t: TFunction
+): string {
+  if (mode === 'original') {
+    return t('summary.originalFormatDesc', 'Keep original video dimensions');
+  }
+  if (mode === 'vertical_fit') {
+    return t(
+      'summary.verticalFitFormatDesc',
+      'Fit the original frame inside a 9:16 canvas'
+    );
+  }
+  return t(
+    'summary.verticalFormatDesc',
+    'Crop and reframe for YouTube Shorts, TikTok, Reels (9:16)'
+  );
+}
+
+function AspectModeIcon({ mode }: { mode: HighlightAspectMode }) {
+  if (mode === 'original') {
+    return (
+      <svg
+        aria-hidden="true"
+        className={aspectModeIconStyles}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          x="3.5"
+          y="6.5"
+          width="17"
+          height="11"
+          rx="2.5"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
+  }
+
+  if (mode === 'vertical_fit') {
+    return (
+      <svg
+        aria-hidden="true"
+        className={aspectModeIconStyles}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          x="7.5"
+          y="2.5"
+          width="9"
+          height="19"
+          rx="2.5"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        />
+        <rect
+          x="8.5"
+          y="9"
+          width="7"
+          height="5"
+          rx="1.5"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      aria-hidden="true"
+      className={aspectModeIconStyles}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="7.5"
+        y="2.5"
+        width="9"
+        height="19"
+        rx="2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M5.5 9.5h4M5.5 14.5h4M14.5 9.5h4M14.5 14.5h4"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function AspectModeToggle({
+  activeMode,
+  disabled,
+  onSelectMode,
+  t,
+}: {
+  activeMode: HighlightAspectMode;
+  disabled?: boolean;
+  onSelectMode: (mode: HighlightAspectMode) => void;
+  t: TFunction;
+}) {
+  return (
+    <div className={aspectModeToggleStyles}>
+      {CLIP_MODE_OPTIONS.map(mode => (
+        <button
+          key={mode}
+          className={aspectModeButtonStyles(activeMode === mode)}
+          disabled={disabled}
+          onClick={() => onSelectMode(mode)}
+          title={getAspectModeDescription(mode, t)}
+        >
+          <AspectModeIcon mode={mode} />
+          {getAspectModeLabel(mode, t)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function TranscriptSummaryHighlightsTab({
   activeOperationId,
+  combineAspectMode,
   combineCutState,
   combineMode,
   downloadStatus,
+  getHighlightAspectMode,
+  getHighlightStateKey,
   hasSummaryResult,
   highlightWarningMessage,
   highlightStatus,
-  highlightAspectMode,
   highlightCutState,
   highlights,
   isGenerating,
+  isHighlightCutting,
   onCutCombined,
   onCutHighlightClip,
   onDownloadCombined,
   onDownloadHighlight,
   onDragStart,
   onDrop,
+  onSetCombineAspectMode,
   onSetHighlightAspectMode,
   onToggleCombineMode,
   onToggleHighlightSelect,
@@ -112,56 +272,39 @@ export default function TranscriptSummaryHighlightsTab({
   t,
   videoAvailableForHighlights,
 }: TranscriptSummaryHighlightsTabProps) {
+  const combineSelectionLocked = combineCutState.status === 'cutting';
+
   return (
     <div className={highlightsTabStyles}>
-      {hasSummaryResult && highlights.length > 0 ? (
+      {hasSummaryResult && highlights.length > 1 ? (
         <div className={aspectModeRowStyles}>
-          <span className={aspectModeLabelStyles}>
-            {t('summary.clipFormat', 'Clip format:')}
-          </span>
-          <div className={aspectModeToggleStyles}>
-            <button
-              className={aspectModeButtonStyles(
-                highlightAspectMode === 'vertical'
-              )}
-              onClick={() => onSetHighlightAspectMode('vertical')}
-              title={t(
-                'summary.verticalFormatDesc',
-                'Optimized for YouTube Shorts, TikTok, Reels (9:16)'
-              )}
-            >
-              {t('summary.verticalFormat', '9:16 Vertical')}
-            </button>
-            <button
-              className={aspectModeButtonStyles(
-                highlightAspectMode === 'original'
-              )}
-              onClick={() => onSetHighlightAspectMode('original')}
-              title={t(
-                'summary.originalFormatDesc',
-                'Keep original video dimensions'
-              )}
-            >
-              {t('summary.originalFormat', 'Original')}
-            </button>
-          </div>
-          {highlights.length > 1 ? (
-            <Button
-              variant={combineMode ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={onToggleCombineMode}
-              disabled={combineCutState.status === 'cutting'}
-            >
-              {combineMode
-                ? t('summary.exitCombineMode', 'Exit Combine')
-                : t('summary.combineMode', 'Combine')}
-            </Button>
-          ) : null}
+          <Button
+            variant={combineMode ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={onToggleCombineMode}
+            disabled={combineSelectionLocked}
+          >
+            {combineMode
+              ? t('summary.exitCombineMode', 'Exit Combine')
+              : t('summary.combineMode', 'Combine')}
+          </Button>
         </div>
       ) : null}
 
       {combineMode && orderedSelection.length > 0 ? (
         <div className={combineControlsStyles}>
+          <div className={highlightFormatRowStyles}>
+            <span className={aspectModeLabelStyles}>
+              {t('summary.clipFormat', 'Clip format:')}
+            </span>
+            <AspectModeToggle
+              activeMode={combineAspectMode}
+              disabled={combineSelectionLocked}
+              onSelectMode={onSetCombineAspectMode}
+              t={t}
+            />
+          </div>
+
           <div className={reorderListStyles}>
             <span className={reorderLabelStyles}>
               {t('summary.reorderHint', 'Drag to reorder:')}
@@ -170,10 +313,19 @@ export default function TranscriptSummaryHighlightsTab({
               {orderedSelection.map((highlight, index) => (
                 <div
                   key={getHighlightKey(highlight)}
-                  draggable
-                  onDragStart={event => onDragStart(event, index)}
-                  onDragOver={event => event.preventDefault()}
-                  onDrop={event => onDrop(event, index)}
+                  draggable={!combineSelectionLocked}
+                  onDragStart={event => {
+                    if (combineSelectionLocked) return;
+                    onDragStart(event, index);
+                  }}
+                  onDragOver={event => {
+                    if (combineSelectionLocked) return;
+                    event.preventDefault();
+                  }}
+                  onDrop={event => {
+                    if (combineSelectionLocked) return;
+                    onDrop(event, index);
+                  }}
                   className={reorderItemStyles}
                 >
                   <span className={reorderIndexStyles}>{index + 1}.</span>
@@ -279,9 +431,10 @@ export default function TranscriptSummaryHighlightsTab({
       ) : (
         <div className={highlightsGridStyles}>
           {highlights.map((highlight, index) => {
-            const statusKey = getHighlightKey(highlight);
-            const downloadState = downloadStatus[statusKey] || 'idle';
-            const cutState = highlightCutState[statusKey];
+            const stateKey = getHighlightStateKey(highlight);
+            const activeMode = getHighlightAspectMode(highlight);
+            const downloadState = downloadStatus[stateKey] || 'idle';
+            const cutState = highlightCutState[stateKey];
             const cutStatus =
               cutState?.status || (highlight.videoPath ? 'ready' : 'idle');
             const cutPercent =
@@ -291,19 +444,23 @@ export default function TranscriptSummaryHighlightsTab({
                   ? 100
                   : 0;
             const cutError = cutState?.error;
+            const clipCutting = isHighlightCutting(highlight);
             const cutDisabled =
-              cutStatus === 'cutting' ||
+              clipCutting ||
               !videoAvailableForHighlights ||
               isGenerating ||
               Boolean(activeOperationId);
 
             return (
-              <div key={statusKey} className={highlightCard}>
+              <div key={getHighlightKey(highlight)} className={highlightCard}>
                 <div className={highlightHeader}>
                   {combineMode ? (
                     <input
                       type="checkbox"
-                      checked={selectedHighlights.has(statusKey)}
+                      checked={selectedHighlights.has(
+                        getHighlightKey(highlight)
+                      )}
+                      disabled={combineSelectionLocked}
                       onChange={event =>
                         onToggleHighlightSelect(highlight, event.target.checked)
                       }
@@ -316,6 +473,20 @@ export default function TranscriptSummaryHighlightsTab({
                   <div className={highlightTime}>
                     {formatRange(highlight.start, highlight.end)}
                   </div>
+                </div>
+
+                <div className={highlightFormatRowStyles}>
+                  <span className={aspectModeLabelStyles}>
+                    {t('summary.clipFormat', 'Clip format:')}
+                  </span>
+                  <AspectModeToggle
+                    activeMode={activeMode}
+                    disabled={clipCutting}
+                    onSelectMode={mode =>
+                      onSetHighlightAspectMode(highlight, mode)
+                    }
+                    t={t}
+                  />
                 </div>
 
                 {highlight.videoPath ? (

@@ -387,6 +387,8 @@
     "originalFormatDesc": "Az eredeti videóméretek megtartása",
     "verticalFormat": "9:16 álló",
     "verticalFormatDesc": "YouTube Shorts, TikTok, Reels formátumra optimalizálva (9:16)",
+    "verticalFitFormat": "Shorts illesztés",
+    "verticalFitFormatDesc": "Az eredeti képkockát egy 9:16-os vászonba illeszti",
     "downloadHighlight": "Klip letöltése",
     "downloadingHighlight": "Mentés…",
     "highlightSaved": "Mentve!",

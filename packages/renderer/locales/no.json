@@ -387,6 +387,8 @@
     "originalFormatDesc": "Behold originale videodimensjoner",
     "verticalFormat": "9:16 vertikal",
     "verticalFormatDesc": "Optimalisert for YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Shorts-tilpasning",
+    "verticalFitFormatDesc": "Tilpass det opprinnelige bildet i et 9:16-lerret",
     "downloadHighlight": "Last ned klipp",
     "downloadingHighlight": "Lagrer…",
     "highlightSaved": "Lagret!",

@@ -387,6 +387,8 @@
     "originalFormatDesc": "ویڈیو کے اصل ابعاد برقرار رکھیں",
     "verticalFormat": "9:16 عمودی",
     "verticalFormatDesc": "YouTube Shorts, TikTok, Reels (9:16) کے لیے موزوں",
+    "verticalFitFormat": "شارٹس فٹ",
+    "verticalFitFormatDesc": "اصل فریم کو 9:16 کینوس کے اندر فٹ کریں",
     "downloadHighlight": "کلپ ڈاؤن لوڈ کریں",
     "downloadingHighlight": "محفوظ ہو رہا ہے…",
     "highlightSaved": "محفوظ ہو گیا!",

@@ -387,6 +387,8 @@
     "originalFormatDesc": "元の動画サイズを維持",
     "verticalFormat": "9:16 縦型",
     "verticalFormatDesc": "YouTube Shorts、TikTok、Reels（9:16）向けに最適化",
+    "verticalFitFormat": "ショーツ向けフィット",
+    "verticalFitFormatDesc": "元のフレームを9:16のキャンバス内に収める",
     "downloadHighlight": "クリップをダウンロード",
     "downloadingHighlight": "保存中…",
     "highlightSaved": "保存しました",

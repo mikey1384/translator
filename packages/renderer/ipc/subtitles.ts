@@ -15,6 +15,16 @@ type PngRenderResult = {
   error?: string;
 };
 
+export type RenderCancelRequestResult = {
+  accepted: boolean;
+  reason: 'accepted' | 'save_phase' | 'cancel_pending' | 'not_found';
+};
+
+export type RenderOperationStatusResult = {
+  active: boolean;
+  savePhase: boolean;
+};
+
 export function onPngRenderResult(
   callback: (result: PngRenderResult) => void
 ): () => void {
@@ -190,4 +200,16 @@ export function transcribeRemaining(options: {
 
 export const cancelPngRender = (operationId: string): void => {
   window.electron.cancelPngRender(operationId);
+};
+
+export const requestPngRenderCancel = (
+  operationId: string
+): Promise<RenderCancelRequestResult> => {
+  return window.electron.requestPngRenderCancel(operationId);
+};
+
+export const requestPngRenderStatus = (
+  operationId: string
+): Promise<RenderOperationStatusResult> => {
+  return window.electron.requestPngRenderStatus(operationId);
 };

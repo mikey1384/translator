@@ -387,6 +387,8 @@
     "originalFormatDesc": "वीडियो के मूल आयाम रखें",
     "verticalFormat": "9:16 वर्टिकल",
     "verticalFormatDesc": "YouTube Shorts, TikTok, Reels (9:16) के लिए अनुकूलित",
+    "verticalFitFormat": "शॉर्ट्स फ़िट",
+    "verticalFitFormatDesc": "मूल फ़्रेम को 9:16 कैनवस में फिट करें",
     "downloadHighlight": "क्लिप डाउनलोड करें",
     "downloadingHighlight": "सहेज रहा है…",
     "highlightSaved": "सहेजा गया!",

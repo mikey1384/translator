@@ -387,6 +387,8 @@
     "originalFormatDesc": "คงขนาดวิดีโอต้นฉบับ",
     "verticalFormat": "แนวตั้ง 9:16",
     "verticalFormatDesc": "ปรับให้เหมาะกับ YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "พอดีกับ Shorts",
+    "verticalFitFormatDesc": "วางเฟรมต้นฉบับให้พอดีภายในแคนวาส 9:16",
     "downloadHighlight": "ดาวน์โหลดคลิป",
     "downloadingHighlight": "กำลังบันทึก…",
     "highlightSaved": "บันทึกแล้ว!",

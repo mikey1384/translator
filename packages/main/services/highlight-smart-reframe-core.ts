@@ -47,6 +47,11 @@ const TRANSITION_INTERPOLATE_DELTA_RATIO = 0.34;
 const TRANSITION_INTERPOLATE_DELTA_MIN_PX = 200;
 const TRANSITION_SNAP_DELTA_RATIO = 0.58;
 const TRANSITION_SNAP_DELTA_MIN_PX = 280;
+const OPENING_STABLE_RANGE_RATIO = 0.045;
+const OPENING_STABLE_RANGE_MIN_PX = 24;
+const OPENING_OUTLIER_DELTA_RATIO = 0.2;
+const OPENING_OUTLIER_DELTA_MIN_PX = 96;
+const OPENING_CONFIRMATION_SAMPLE_COUNT = 3;
 const MOVE_DWELL_SECONDS = MOVE_DWELL_SAMPLES * SAMPLE_INTERVAL_SECONDS;
 
 const ULTRAFACE_PRIORS = buildUltraFacePriors();
@@ -205,7 +210,7 @@ function rankFaceCandidates(
         (width * height) / Math.max(1, sourceWidth * sourceHeight);
       const continuityBias =
         previousCenterX == null
-          ? centerBias
+          ? 1
           : 1 -
             Math.min(
               1,
@@ -523,17 +528,28 @@ export function buildVerticalReframePlan({
   const denoisedTrack = medianFilterNullable(rawTrack, MEDIAN_FILTER_RADIUS);
   const filledTrack = fillMissingTrackWithHold(denoisedTrack, fallbackX);
   const quantizedTrack = quantizeTrack(filledTrack, CAMERA_QUANTIZE_PX, maxX);
+  const openingStabilizedTrack = stabilizeOpeningTrack({
+    track: quantizedTrack,
+    cropWidth,
+    maxX,
+  });
   const staticLockRange = Math.max(
     STATIC_LOCK_RANGE_MIN_PX,
     cropWidth * STATIC_LOCK_RANGE_RATIO
   );
-  const staticLockPosition = pickStaticLockPosition(quantizedTrack, maxX);
+  const staticLockPosition = pickStaticLockPosition(
+    openingStabilizedTrack,
+    maxX
+  );
   const sampleTimeTrack = subjectAwareSamples.map(sample => sample.timeSeconds);
   const cameraTrack =
-    computeRange(quantizedTrack) <= staticLockRange
-      ? Array.from({ length: quantizedTrack.length }, () => staticLockPosition)
+    computeRange(openingStabilizedTrack) <= staticLockRange
+      ? Array.from(
+          { length: openingStabilizedTrack.length },
+          () => staticLockPosition
+        )
       : buildCameraTrackWithHysteresis({
-          targetTrack: quantizedTrack,
+          targetTrack: openingStabilizedTrack,
           timeTrack: sampleTimeTrack,
           cropWidth,
           maxX,
@@ -953,6 +969,43 @@ function pickStaticLockPosition(track: number[], maxX: number): number {
       ? sorted[midpoint]
       : (sorted[midpoint - 1] + sorted[midpoint]) / 2;
   return quantizeValue(centerValue, CAMERA_QUANTIZE_PX, maxX);
+}
+
+function stabilizeOpeningTrack({
+  track,
+  cropWidth,
+  maxX,
+}: {
+  track: number[];
+  cropWidth: number;
+  maxX: number;
+}): number[] {
+  if (track.length < OPENING_CONFIRMATION_SAMPLE_COUNT + 1) {
+    return track;
+  }
+
+  const confirmationSlice = track.slice(
+    1,
+    OPENING_CONFIRMATION_SAMPLE_COUNT + 1
+  );
+  const stableRangeThreshold = Math.max(
+    OPENING_STABLE_RANGE_MIN_PX,
+    cropWidth * OPENING_STABLE_RANGE_RATIO
+  );
+  if (computeRange(confirmationSlice) > stableRangeThreshold) {
+    return track;
+  }
+
+  const confirmedOpening = pickStaticLockPosition(confirmationSlice, maxX);
+  const openingOutlierThreshold = Math.max(
+    OPENING_OUTLIER_DELTA_MIN_PX,
+    cropWidth * OPENING_OUTLIER_DELTA_RATIO
+  );
+  if (Math.abs(track[0] - confirmedOpening) < openingOutlierThreshold) {
+    return track;
+  }
+
+  return [confirmedOpening, ...track.slice(1)];
 }
 
 function buildCameraTrackWithHysteresis({

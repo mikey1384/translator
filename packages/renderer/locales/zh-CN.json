@@ -387,6 +387,8 @@
     "originalFormatDesc": "保持原始视频尺寸",
     "verticalFormat": "9:16 竖版",
     "verticalFormatDesc": "已针对 YouTube Shorts、TikTok、Reels（9:16）优化",
+    "verticalFitFormat": "Shorts 适配",
+    "verticalFitFormatDesc": "将原始画面适配到 9:16 画布中",
     "downloadHighlight": "下载剪辑",
     "downloadingHighlight": "保存中…",
     "highlightSaved": "已保存！",

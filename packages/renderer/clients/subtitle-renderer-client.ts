@@ -1,5 +1,6 @@
 import { RenderSubtitlesOptions } from '@shared-types/app'; // Import types
 import * as SubtitleIPC from '@ipc/subtitles';
+import type { RenderCancelRequestResult } from '@ipc/subtitles';
 import { useTaskStore } from '../state';
 import { SUBTITLE_RENDER_TIMEOUT } from '../../shared/constants/runtime-config';
 
@@ -8,6 +9,7 @@ type PngRenderResult = {
   success: boolean;
   outputPath?: string;
   error?: string;
+  cancelled?: boolean;
 };
 
 export const WINDOW_CHANNELS = {
@@ -31,6 +33,81 @@ class SubtitleRendererClient {
       reject: (error: Error) => void;
     }
   >();
+  private cancelRequestedOperations = new Set<string>();
+  private cancelDeadlines = new Map<string, number>();
+  private operationTimeouts = new Map<string, number>();
+
+  private rejectPendingOperation(operationId: string, error: Error): boolean {
+    const pending = this.renderPromises.get(operationId);
+    if (!pending) return false;
+    this.renderPromises.delete(operationId);
+    pending.reject(error);
+    return true;
+  }
+
+  private markCancelRequested(operationId: string): void {
+    if (this.cancelRequestedOperations.has(operationId)) return;
+    this.cancelRequestedOperations.add(operationId);
+    const timeoutMs =
+      this.operationTimeouts.get(operationId) ?? SUBTITLE_RENDER_TIMEOUT;
+    this.cancelDeadlines.set(operationId, Date.now() + timeoutMs);
+  }
+
+  private clearOperationTracking(operationId: string): void {
+    this.cancelRequestedOperations.delete(operationId);
+    this.cancelDeadlines.delete(operationId);
+    this.operationTimeouts.delete(operationId);
+  }
+
+  private isCurrentMergeOperation(operationId: string): boolean {
+    return useTaskStore.getState().merge.id === operationId;
+  }
+
+  private isOperationPending(operationId: string): boolean {
+    return this.renderPromises.has(operationId);
+  }
+
+  private async getOperationStatus(operationId: string): Promise<{
+    active: boolean;
+    savePhase: boolean;
+  } | null> {
+    try {
+      return await SubtitleIPC.requestPngRenderStatus(operationId);
+    } catch (error) {
+      console.warn(
+        `[SubtitleRendererClient ${operationId}] Failed to query render status:`,
+        error
+      );
+      return null;
+    }
+  }
+
+  async waitForMergeSettlement(
+    operationId: string,
+    timeoutMs = 5_000
+  ): Promise<boolean> {
+    const deadlineAt = Date.now() + timeoutMs;
+
+    return new Promise(resolve => {
+      const poll = async () => {
+        const status = await this.getOperationStatus(operationId);
+        if (status && !status.active) {
+          this.clearOperationTracking(operationId);
+          resolve(true);
+          return;
+        }
+        if (Date.now() >= deadlineAt) {
+          resolve(false);
+          return;
+        }
+        window.setTimeout(() => {
+          void poll();
+        }, 100);
+      };
+
+      void poll();
+    });
+  }
 
   constructor() {
     console.log(
@@ -51,7 +128,7 @@ class SubtitleRendererClient {
 
       this.removeResultListener = SubtitleIPC.onPngRenderResult(
         (result: PngRenderResult) => {
-          const { operationId, success, error, outputPath } = result;
+          const { operationId, success, error, outputPath, cancelled } = result;
           console.info(`[Preload] Received PngRenderResult:`, result);
 
           const promiseCallbacks = this.renderPromises.get(operationId);
@@ -67,11 +144,10 @@ class SubtitleRendererClient {
                 `[SubtitleRendererClient ${operationId}] Received FAILURE result from main:`,
                 error
               );
-              promiseCallbacks.reject(
-                new Error(
-                  String(error || 'Unknown rendering error from main process')
-                )
-              );
+              const reason = cancelled
+                ? 'Cancelled'
+                : String(error || 'Unknown rendering error from main process');
+              promiseCallbacks.reject(new Error(reason));
             }
             this.renderPromises.delete(operationId);
           } else {
@@ -79,6 +155,7 @@ class SubtitleRendererClient {
               `[SubtitleRendererClient] Received result for unknown or already completed operation ID: ${operationId}`
             );
           }
+          this.clearOperationTracking(operationId);
         }
       );
     } catch (error) {
@@ -94,6 +171,8 @@ class SubtitleRendererClient {
   ): Promise<PngRenderResult> {
     const DEFAULT_TIMEOUT_MS = SUBTITLE_RENDER_TIMEOUT;
     const { operationId, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
+    this.clearOperationTracking(operationId);
+    this.operationTimeouts.set(operationId, timeoutMs);
     console.log(
       `[SubtitleRendererClient ${operationId}] Starting overlay render process via bridge:`,
       options
@@ -105,20 +184,42 @@ class SubtitleRendererClient {
     return new Promise<PngRenderResult>((resolve, reject) => {
       const arm = () => {
         clearTimeout(timer);
+        const cancelDeadline = this.cancelDeadlines.get(operationId);
+        const delayMs =
+          cancelDeadline != null
+            ? Math.max(50, Math.min(timeoutMs, cancelDeadline - Date.now()))
+            : timeoutMs;
         timer = setTimeout(() => {
-          if (offProgress) offProgress();
+          const cancelDeadlineAt = this.cancelDeadlines.get(operationId);
+          if (cancelDeadlineAt != null) {
+            if (Date.now() < cancelDeadlineAt) {
+              // Cancellation was requested; wait only until the hard deadline.
+              arm();
+              return;
+            }
+            this.clearOperationTracking(operationId);
+            this.rejectPendingOperation(
+              operationId,
+              new Error(
+                `Render ${operationId} did not settle within ${timeoutMs} ms after cancellation was requested`
+              )
+            );
+            return;
+          }
+          this.markCancelRequested(operationId);
           try {
             SubtitleIPC.cancelPngRender(operationId);
           } catch {
             // ignore; best-effort cancellation
           }
-          this.renderPromises.delete(operationId);
-          reject(
+          this.clearOperationTracking(operationId);
+          this.rejectPendingOperation(
+            operationId,
             new Error(
               `Render ${operationId} stalled or timed out after ${timeoutMs} ms`
             )
           );
-        }, timeoutMs);
+        }, delayMs);
       };
 
       arm();
@@ -127,11 +228,13 @@ class SubtitleRendererClient {
         resolve: result => {
           clearTimeout(timer);
           if (offProgress) offProgress();
+          this.clearOperationTracking(operationId);
           resolve(result);
         },
         reject: (error: Error) => {
           clearTimeout(timer);
           if (offProgress) offProgress();
+          this.clearOperationTracking(operationId);
           reject(error);
         },
       });
@@ -139,6 +242,7 @@ class SubtitleRendererClient {
       offProgress = SubtitleIPC.onMergeProgress(
         (p: { operationId: string; [key: string]: any }) => {
           if (p.operationId !== operationId) return;
+          if (!this.isCurrentMergeOperation(operationId)) return;
 
           arm();
           const { percent = 0, stage = '' } = p ?? {};
@@ -158,14 +262,42 @@ class SubtitleRendererClient {
         );
         clearTimeout(timer);
         if (offProgress) offProgress();
+        this.clearOperationTracking(operationId);
         this.renderPromises.delete(operationId);
         reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
 
-  cancelMerge(operationId: string): void {
-    SubtitleIPC.cancelPngRender(operationId);
+  async cancelMerge(operationId: string): Promise<RenderCancelRequestResult> {
+    if (this.cancelRequestedOperations.has(operationId)) {
+      const status = await this.getOperationStatus(operationId);
+      if (status == null) {
+        return {
+          accepted: false,
+          reason: 'cancel_pending',
+        };
+      }
+      if (status?.active) {
+        return {
+          accepted: false,
+          reason: 'cancel_pending',
+        };
+      }
+      if (status && !status.active) {
+        this.clearOperationTracking(operationId);
+      }
+      return {
+        accepted: false,
+        reason: 'not_found',
+      };
+    }
+    const result = await SubtitleIPC.requestPngRenderCancel(operationId);
+    if (!result.accepted) {
+      return result;
+    }
+    this.markCancelRequested(operationId);
+    return result;
   }
 }
 

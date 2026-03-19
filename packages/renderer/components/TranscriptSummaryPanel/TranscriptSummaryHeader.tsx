@@ -28,6 +28,7 @@ type SummaryEstimate = {
 };
 
 type TranscriptSummaryHeaderProps = {
+  generationLocked?: boolean;
   isGenerating: boolean;
   isMergeInProgress: boolean;
   isTranslationInProgress: boolean;
@@ -42,6 +43,7 @@ type TranscriptSummaryHeaderProps = {
 };
 
 export default function TranscriptSummaryHeader({
+  generationLocked = false,
   isGenerating,
   isMergeInProgress,
   isTranslationInProgress,
@@ -57,6 +59,11 @@ export default function TranscriptSummaryHeader({
   const generateHighlightsLabel = summary.trim()
     ? t('summary.regenerate', 'Regenerate highlights')
     : t('summary.generate', 'Generate highlights');
+  const areControlsLocked =
+    generationLocked ||
+    isGenerating ||
+    isMergeInProgress ||
+    isTranslationInProgress;
 
   return (
     <div className={headerRowStyles}>
@@ -70,9 +77,7 @@ export default function TranscriptSummaryHeader({
           className={summarySelectStyles}
           value={summaryLanguage}
           onChange={event => onSummaryLanguageChange(event.target.value)}
-          disabled={
-            isGenerating || isMergeInProgress || isTranslationInProgress
-          }
+          disabled={areControlsLocked}
         >
           {TRANSLATION_LANGUAGES_BASE.map(option => (
             <option key={option.value} value={option.value}>
@@ -94,9 +99,7 @@ export default function TranscriptSummaryHeader({
             variant="primary"
             size="sm"
             onClick={onGenerate}
-            disabled={
-              isGenerating || isMergeInProgress || isTranslationInProgress
-            }
+            disabled={areControlsLocked}
             isLoading={isGenerating}
           >
             {generateHighlightsLabel}

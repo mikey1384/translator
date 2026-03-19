@@ -387,6 +387,8 @@
     "originalFormatDesc": "Giữ nguyên kích thước video gốc",
     "verticalFormat": "Dọc 9:16",
     "verticalFormatDesc": "Tối ưu cho YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Vừa Shorts",
+    "verticalFitFormatDesc": "Đặt khung hình gốc vừa trong khung 9:16",
     "downloadHighlight": "Tải clip",
     "downloadingHighlight": "Đang lưu…",
     "highlightSaved": "Đã lưu!",

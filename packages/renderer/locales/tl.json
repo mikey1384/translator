@@ -387,6 +387,8 @@
     "originalFormatDesc": "Panatilihin ang orihinal na sukat ng video",
     "verticalFormat": "9:16 Patayo",
     "verticalFormatDesc": "Na-optimize para sa YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Fit sa Shorts",
+    "verticalFitFormatDesc": "I-fit ang orihinal na frame sa loob ng 9:16 na canvas",
     "downloadHighlight": "I-download ang clip",
     "downloadingHighlight": "Sine-save…",
     "highlightSaved": "Na-save na!",

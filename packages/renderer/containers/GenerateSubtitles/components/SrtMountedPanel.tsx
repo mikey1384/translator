@@ -311,16 +311,18 @@ export default function SrtMountedPanel({
           >
             {t('subtitles.translate', 'Translate')}
           </Button>
-          {translationEstimate && !isTranslating && !translationEstimate.isByo && (
-            <span className={translationCostClassName}>
-              {formatCredits(translationEstimate.estimatedCredits)} cr
-              {translationEstimate.qualityEnabled && (
-                <span className={workflowPanelBadgeStyles}>
-                  {t('subtitles.qualityBadge', '(hq)')}
-                </span>
-              )}
-            </span>
-          )}
+          {translationEstimate &&
+            !isTranslating &&
+            !translationEstimate.isByo && (
+              <span className={translationCostClassName}>
+                {formatCredits(translationEstimate.estimatedCredits)} cr
+                {translationEstimate.qualityEnabled && (
+                  <span className={workflowPanelBadgeStyles}>
+                    {t('subtitles.qualityBadge', '(hq)')}
+                  </span>
+                )}
+              </span>
+            )}
         </div>
 
         <div className={workflowPanelActionGroupStyles}>

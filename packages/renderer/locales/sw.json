@@ -387,6 +387,8 @@
     "originalFormatDesc": "Dumisha vipimo vya video ya asili",
     "verticalFormat": "Wima 9:16",
     "verticalFormatDesc": "Imeboreshwa kwa YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Fit ya Shorts",
+    "verticalFitFormatDesc": "Weka fremu ya asili ndani ya turuba ya 9:16",
     "downloadHighlight": "Pakua klipu",
     "downloadingHighlight": "Inahifadhi…",
     "highlightSaved": "Imehifadhiwa!",

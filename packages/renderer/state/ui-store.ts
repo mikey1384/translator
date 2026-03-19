@@ -6,6 +6,11 @@ import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 import { sameArray } from '../utils/array';
 import type { SummaryEffortLevel } from '@shared-types/app';
+import type { GenerateSubtitlesWorkspaceTab } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
+import {
+  readGenerateSubtitlesWorkspaceTab,
+  writeGenerateSubtitlesWorkspaceTab,
+} from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 
 interface State {
   showSettings: boolean;
@@ -29,6 +34,8 @@ interface State {
   // Panel open states (session-only; not persisted)
   showGeneratePanel: boolean;
   showEditPanel: boolean;
+  // Generate workspace tab (persisted)
+  generateSubtitlesWorkspaceTab: GenerateSubtitlesWorkspaceTab;
   // Exclamation seen state (session-only; reset on video change)
   seenGaps: Set<string>;
   seenLC: Set<string>;
@@ -65,6 +72,7 @@ interface Actions {
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
   setEditPanelOpen(open: boolean): void;
+  setGenerateSubtitlesWorkspaceTab(tab: GenerateSubtitlesWorkspaceTab): void;
   // Exclamation helpers (session-only)
   markGapSeen(key: string): void;
   markLCSeen(key: string): void;
@@ -161,6 +169,7 @@ const initial: State = {
     'Default',
   showGeneratePanel: false,
   showEditPanel: false,
+  generateSubtitlesWorkspaceTab: readGenerateSubtitlesWorkspaceTab(),
   seenGaps: new Set<string>(),
   seenLC: new Set<string>(),
   transcriptionLanguage: 'auto',
@@ -321,6 +330,11 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setEditPanelOpen(open) {
           set({ showEditPanel: open });
+        },
+
+        setGenerateSubtitlesWorkspaceTab(tab) {
+          writeGenerateSubtitlesWorkspaceTab(tab);
+          set({ generateSubtitlesWorkspaceTab: tab });
         },
 
         // Exclamation helpers

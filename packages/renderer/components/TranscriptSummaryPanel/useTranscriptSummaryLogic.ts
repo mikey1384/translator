@@ -1,8 +1,8 @@
 import {
   useCallback,
   useState,
-  type DragEvent,
   type Dispatch,
+  type DragEvent,
   type SetStateAction,
 } from 'react';
 import type {
@@ -15,6 +15,7 @@ import type {
 } from '@shared-types/app';
 import type { TFunction } from 'i18next';
 import { useSubStore, useVideoStore } from '../../state';
+import type { HighlightGenerationRequest } from '../../state/highlight-generation-request-store';
 import type { HighlightClipCutState } from './TranscriptSummaryPanel.helpers';
 import type {
   CombineCutState,
@@ -37,11 +38,16 @@ type UseTranscriptSummaryLogicParams = {
 
 type UseTranscriptSummaryLogicResult = {
   activeOperationId: string | null;
+  combineAspectMode: HighlightAspectMode;
   combineCutState: CombineCutState;
   combineMode: boolean;
   copyStatus: 'idle' | 'copied';
   downloadStatus: Record<string, 'idle' | 'saving' | 'saved' | 'error'>;
   error: string | null;
+  getHighlightAspectMode: (
+    highlight: TranscriptHighlight
+  ) => HighlightAspectMode;
+  getHighlightStateKey: (highlight: TranscriptHighlight) => string;
   handleCancel: () => Promise<void>;
   handleCopy: () => Promise<void>;
   handleCutCombined: () => Promise<void>;
@@ -53,7 +59,9 @@ type UseTranscriptSummaryLogicResult = {
   ) => Promise<void>;
   handleDragStart: (event: DragEvent, index: number) => void;
   handleDrop: (event: DragEvent, targetIndex: number) => void;
-  handleGenerate: () => Promise<void>;
+  handleGenerate: (
+    claimedRequest?: HighlightGenerationRequest | null
+  ) => Promise<void>;
   handleToggleHighlightSelect: (
     highlight: TranscriptHighlight,
     checked: boolean
@@ -62,19 +70,24 @@ type UseTranscriptSummaryLogicResult = {
   hasTranscript: boolean;
   highlightWarningMessage: string | null;
   highlightStatus: TranscriptHighlightStatus;
-  highlightAspectMode: HighlightAspectMode;
   highlights: TranscriptHighlight[];
   highlightCutState: Record<string, HighlightClipCutState>;
+  isRestoreSettledForCurrentSignature: boolean;
   isCancelling: boolean;
   isGenerating: boolean;
+  isHighlightCutting: (highlight: TranscriptHighlight) => boolean;
   orderedSelection: TranscriptHighlight[];
   progressLabel: string;
   progressPercent: number;
   sections: TranscriptSummarySection[];
   selectedHighlights: Set<string>;
+  setCombineAspectMode: (mode: HighlightAspectMode) => void;
   setCombineMode: Dispatch<SetStateAction<boolean>>;
   setError: (error: string | null) => void;
-  setHighlightAspectMode: Dispatch<SetStateAction<HighlightAspectMode>>;
+  setHighlightAspectModeForHighlight: (
+    highlight: TranscriptHighlight,
+    mode: HighlightAspectMode
+  ) => void;
   showProgressBar: boolean;
   summary: string;
   summaryEstimate: SummaryEstimate | null;
@@ -144,11 +157,14 @@ export default function useTranscriptSummaryLogic({
 
   return {
     activeOperationId: summaryFlow.activeOperationId,
+    combineAspectMode: highlightsFlow.combineAspectMode,
     combineCutState: highlightsFlow.combineCutState,
     combineMode: highlightsFlow.combineMode,
     copyStatus: summaryFlow.copyStatus,
     downloadStatus: highlightsFlow.downloadStatus,
     error,
+    getHighlightAspectMode: highlightsFlow.getHighlightAspectMode,
+    getHighlightStateKey: highlightsFlow.getHighlightStateKey,
     handleCancel: summaryFlow.handleCancel,
     handleCopy: summaryFlow.handleCopy,
     handleCutCombined: highlightsFlow.handleCutCombined,
@@ -163,19 +179,23 @@ export default function useTranscriptSummaryLogic({
     hasTranscript: summaryFlow.hasTranscript,
     highlightWarningMessage: summaryFlow.highlightWarningMessage,
     highlightStatus: summaryFlow.highlightStatus,
-    highlightAspectMode: highlightsFlow.highlightAspectMode,
     highlights: highlightsFlow.highlights,
     highlightCutState: highlightsFlow.highlightCutState,
+    isRestoreSettledForCurrentSignature:
+      summaryFlow.isRestoreSettledForCurrentSignature,
     isCancelling: summaryFlow.isCancelling,
     isGenerating: summaryFlow.isGenerating,
+    isHighlightCutting: highlightsFlow.isHighlightCutting,
     orderedSelection: highlightsFlow.orderedSelection,
     progressLabel: summaryFlow.progressLabel,
     progressPercent: summaryFlow.progressPercent,
     sections: summaryFlow.sections,
     selectedHighlights: highlightsFlow.selectedHighlights,
+    setCombineAspectMode: highlightsFlow.setCombineAspectMode,
     setCombineMode: highlightsFlow.setCombineMode,
     setError,
-    setHighlightAspectMode: highlightsFlow.setHighlightAspectMode,
+    setHighlightAspectModeForHighlight:
+      highlightsFlow.setHighlightAspectModeForHighlight,
     showProgressBar: summaryFlow.showProgressBar,
     summary: summaryFlow.summary,
     summaryEstimate: summaryFlow.summaryEstimate,

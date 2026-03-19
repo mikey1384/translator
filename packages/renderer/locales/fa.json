@@ -387,6 +387,8 @@
     "originalFormatDesc": "ابعاد اصلی ویدیو حفظ شود",
     "verticalFormat": "9:16 عمودی",
     "verticalFormatDesc": "بهینه‌شده برای YouTube Shorts، TikTok، Reels (9:16)",
+    "verticalFitFormat": "متناسب با Shorts",
+    "verticalFitFormatDesc": "فریم اصلی را داخل یک بوم 9:16 جا بدهید",
     "downloadHighlight": "دانلود کلیپ",
     "downloadingHighlight": "در حال ذخیره…",
     "highlightSaved": "ذخیره شد!",

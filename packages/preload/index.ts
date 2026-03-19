@@ -342,6 +342,16 @@ const electronAPI = {
     console.log('[Preload] Cancelling render job:', operationId);
     ipcRenderer.send('render-subtitles-cancel', { operationId });
   },
+  requestPngRenderCancel: async (operationId: string) => {
+    return ipcRenderer.invoke('request-render-subtitles-cancel', {
+      operationId,
+    });
+  },
+  requestPngRenderStatus: async (operationId: string) => {
+    return ipcRenderer.invoke('request-render-subtitles-status', {
+      operationId,
+    });
+  },
   onPngRenderResult: (
     callback: (result: ExposedRenderResult) => void
   ): (() => void) => {

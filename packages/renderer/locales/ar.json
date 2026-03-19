@@ -387,6 +387,8 @@
     "originalFormatDesc": "الاحتفاظ بأبعاد الفيديو الأصلية",
     "verticalFormat": "9:16 عمودي",
     "verticalFormatDesc": "مُحسَّن لـ YouTube Shorts وTikTok وReels ‏(9:16)",
+    "verticalFitFormat": "ملاءمة الشورتات",
+    "verticalFitFormatDesc": "احتواء الإطار الأصلي داخل لوحة 9:16",
     "downloadHighlight": "تنزيل المقطع",
     "downloadingHighlight": "جارٍ الحفظ…",
     "highlightSaved": "تم الحفظ!",

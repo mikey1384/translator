@@ -387,6 +387,8 @@
     "originalFormatDesc": "שמור על ממדי הווידאו המקוריים",
     "verticalFormat": "9:16 אנכי",
     "verticalFormatDesc": "מותאם ל-YouTube Shorts, TikTok, Reels ‏(9:16)",
+    "verticalFitFormat": "התאמה לשורטס",
+    "verticalFitFormatDesc": "התאם את הפריים המקורי בתוך קנבס 9:16",
     "downloadHighlight": "הורד קליפ",
     "downloadingHighlight": "שומר...",
     "highlightSaved": "נשמר!",

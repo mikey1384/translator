@@ -35,6 +35,17 @@ const activeRenderJobs = new Map<
 export const getActiveRenderJob = (id: string) => activeRenderJobs.get(id);
 
 const jobControllers = new Map<string, AbortController>();
+const savePhaseOperations = new Set<string>();
+
+type RenderCancelRequestResult = {
+  accepted: boolean;
+  reason: 'accepted' | 'save_phase' | 'not_found';
+};
+
+type RenderOperationStatusResult = {
+  active: boolean;
+  savePhase: boolean;
+};
 
 const fontRegular = pathToFileURL(getAssetsPath('NotoSans-Regular.ttf')).href;
 
@@ -134,6 +145,34 @@ async function renameExistingFileToBackup(
     `[${operationId}] Destination already existed; moved previous file to: ${backupPath}`
   );
   return backupPath;
+}
+
+async function restoreDestinationFromBackup({
+  destinationPath,
+  backupPath,
+  operationId,
+  context,
+}: {
+  destinationPath: string;
+  backupPath: string | null;
+  operationId: string;
+  context: string;
+}): Promise<void> {
+  if (!backupPath) return;
+  try {
+    const [destExists, backupExists] = await Promise.all([
+      fileExists(destinationPath),
+      fileExists(backupPath),
+    ]);
+    if (!destExists && backupExists) {
+      await fs.rename(backupPath, destinationPath);
+    }
+  } catch (restoreErr) {
+    log.warn(
+      `[${operationId}] Failed to restore existing destination after ${context}`,
+      restoreErr
+    );
+  }
 }
 
 function normalizeRenderFailure(
@@ -416,6 +455,8 @@ export function initializeRenderWindowHandlers({
         );
         const suggestedName = `${baseName}-merged-${formatTimestampForFilename()}.mp4`;
 
+        savePhaseOperations.add(operationId);
+
         let heartbeatPercent = 96;
         let heartbeatStage = 'Waiting for save location…';
         const saveHeartbeat = setInterval(() => {
@@ -436,14 +477,12 @@ export function initializeRenderWindowHandlers({
 
           // eslint-disable-next-line no-constant-condition
           while (true) {
-            ({ canceled, filePath: userPath } = await dialog.showSaveDialog(
-              win,
-              {
-                title: 'Save Merged Video As',
-                defaultPath: suggestedName,
-                filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
-              }
-            ));
+            const saveDialogResult = await dialog.showSaveDialog(win, {
+              title: 'Save Merged Video As',
+              defaultPath: suggestedName,
+              filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
+            });
+            ({ canceled, filePath: userPath } = saveDialogResult);
 
             if (canceled || !userPath) {
               log.warn(`[${operationId}] User cancelled "save" dialog`);
@@ -480,22 +519,12 @@ export function initializeRenderWindowHandlers({
                 await fs.rename(tempMerged, userPath);
                 break;
               } catch (saveErr: any) {
-                if (backupPath) {
-                  try {
-                    const [destExists, backupExists] = await Promise.all([
-                      fileExists(userPath),
-                      fileExists(backupPath),
-                    ]);
-                    if (!destExists && backupExists) {
-                      await fs.rename(backupPath, userPath);
-                    }
-                  } catch (restoreErr) {
-                    log.warn(
-                      `[${operationId}] Failed to restore existing destination after save error`,
-                      restoreErr
-                    );
-                  }
-                }
+                await restoreDestinationFromBackup({
+                  destinationPath: userPath,
+                  backupPath,
+                  operationId,
+                  context: 'save error',
+                });
                 log.warn(
                   `[${operationId}] Failed to save merged video to ${userPath}`,
                   saveErr
@@ -604,23 +633,12 @@ export function initializeRenderWindowHandlers({
               break;
             } catch (copyErr: any) {
               await fs.unlink(tempDest).catch(() => void 0);
-
-              if (backupPath) {
-                try {
-                  const [destExists, backupExists] = await Promise.all([
-                    fileExists(userPath),
-                    fileExists(backupPath),
-                  ]);
-                  if (!destExists && backupExists) {
-                    await fs.rename(backupPath, userPath);
-                  }
-                } catch (restoreErr) {
-                  log.warn(
-                    `[${operationId}] Failed to restore existing destination after copy error`,
-                    restoreErr
-                  );
-                }
-              }
+              await restoreDestinationFromBackup({
+                destinationPath: userPath,
+                backupPath,
+                operationId,
+                context: 'copy error',
+              });
 
               log.warn(
                 `[${operationId}] Failed to copy merged video to ${userPath}`,
@@ -664,6 +682,7 @@ export function initializeRenderWindowHandlers({
         await cleanupTempDir({ tempDirPath, operationId });
         activeRenderJobs.delete(operationId);
         jobControllers.delete(operationId);
+        savePhaseOperations.delete(operationId);
       }
     }
   );
@@ -672,10 +691,50 @@ export function initializeRenderWindowHandlers({
     cancelRenderJob(operationId);
   });
 
+  ipcMain.handle(
+    'request-render-subtitles-cancel',
+    (_event, { operationId }): RenderCancelRequestResult => {
+      if (savePhaseOperations.has(operationId)) {
+        log.warn(
+          `[render-cancel] rejecting cancel for ${operationId} during save phase`
+        );
+        return { accepted: false, reason: 'save_phase' };
+      }
+
+      if (
+        !jobControllers.has(operationId) &&
+        !activeRenderJobs.has(operationId)
+      ) {
+        return { accepted: false, reason: 'not_found' };
+      }
+
+      cancelRenderJob(operationId);
+      return { accepted: true, reason: 'accepted' };
+    }
+  );
+
+  ipcMain.handle(
+    'request-render-subtitles-status',
+    (_event, { operationId }): RenderOperationStatusResult => {
+      const savePhase = savePhaseOperations.has(operationId);
+      const active =
+        savePhase ||
+        activeRenderJobs.has(operationId) ||
+        jobControllers.has(operationId);
+      return { active, savePhase };
+    }
+  );
+
   log.info('[RenderWindowHandlers] IPC handlers ready');
 }
 
 function cancelRenderJob(operationId: string) {
+  if (savePhaseOperations.has(operationId)) {
+    log.warn(
+      `[render-cancel] ignoring cancel for ${operationId} during save phase`
+    );
+    return;
+  }
   log.warn(`[render-cancel] cancelling ${operationId}`);
   jobControllers.get(operationId)?.abort();
   jobControllers.delete(operationId);

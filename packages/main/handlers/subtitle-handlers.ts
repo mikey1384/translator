@@ -22,6 +22,7 @@ import {
   DubSegmentPayload,
   DubSubtitlesOptions,
   TranscriptHighlight,
+  HighlightAspectMode,
   HighlightCutProgress,
   CombinedHighlightCutProgress,
   CutCombinedHighlightsRequest,
@@ -171,11 +172,32 @@ const SHORT_CLIP_WIDTH = 1080;
 const SHORT_CLIP_HEIGHT = 1920;
 const HIGHLIGHT_VIDEO_PRESET = 'superfast';
 const HIGHLIGHT_VIDEO_CRF = 23;
+type ResolvedHighlightAspectMode =
+  | 'original'
+  | 'vertical_reframe'
+  | 'vertical_fit';
 
 function isVideoAlreadyVertical(meta: VideoMeta | null): boolean {
   if (!meta || !meta.width || !meta.height) return false;
   const ratio = meta.height / Math.max(meta.width, 1);
   return ratio >= 1.2;
+}
+
+function resolveHighlightAspectMode(
+  aspectMode: HighlightAspectMode | null | undefined
+): ResolvedHighlightAspectMode {
+  if (aspectMode === 'original') return 'original';
+  if (aspectMode === 'vertical_fit') return 'vertical_fit';
+  return 'vertical_reframe';
+}
+
+function shouldApplyVerticalHighlightTransform(
+  aspectMode: ResolvedHighlightAspectMode,
+  videoMeta: VideoMeta | null
+): boolean {
+  if (aspectMode === 'original') return false;
+  if (aspectMode === 'vertical_fit') return true;
+  return !isVideoAlreadyVertical(videoMeta);
 }
 
 function buildLegacyVerticalPadFilter(): string {
@@ -1021,11 +1043,11 @@ export async function handleCutHighlightClip(
       log.warn(`[${operationId}] Video metadata probe failed`, err);
     }
 
-    // Only apply portrait reframing if aspectMode is 'vertical' (default)
-    // and the source is not already portrait-oriented.
-    const aspectMode = options.aspectMode ?? 'vertical';
-    const enforceVertical =
-      aspectMode === 'vertical' && !isVideoAlreadyVertical(videoMeta);
+    const aspectMode = resolveHighlightAspectMode(options.aspectMode);
+    const enforceVertical = shouldApplyVerticalHighlightTransform(
+      aspectMode,
+      videoMeta
+    );
 
     const sanitizedHighlight: TranscriptHighlight = {
       id: highlight.id,
@@ -1119,36 +1141,45 @@ export async function handleCutHighlightClip(
     const nextLabel = (prefix: string) => `${prefix}${++filterLabelCounter}`;
 
     if (enforceVertical) {
-      emitHighlightProgress(12, 'Analyzing subject framing');
-      const verticalPlan = await createVerticalReframePlanOrNull({
-        operationId,
-        contextLabel: 'Highlight clip',
-        videoPath,
-        clipStartSeconds: safeStart,
-        clipEndSeconds: safeEnd,
-        videoMeta: videoMeta ?? {
-          duration,
-          width: 0,
-          height: 0,
-          frameRate: 0,
-        },
-        ffmpeg,
-        signal: controller.signal,
-        onSampleProgress: (completed, total) => {
-          const percent = 12 + Math.round((completed / Math.max(1, total)) * 8);
-          emitHighlightProgress(percent, 'Analyzing subject framing');
-        },
-      });
-      const verticalFilter = verticalPlan
-        ? buildVerticalReframeFilter(verticalPlan)
-        : buildLegacyVerticalPadFilter();
-      if (verticalPlan) {
-        log.info(
-          `[${operationId}] Smart vertical reframe: ${verticalPlan.detectedSamples}/${verticalPlan.sampleCount} detections (${verticalPlan.strategy})`
-        );
+      let verticalFilter = buildLegacyVerticalPadFilter();
+      if (aspectMode === 'vertical_reframe') {
+        emitHighlightProgress(12, 'Analyzing subject framing');
+        const verticalPlan = await createVerticalReframePlanOrNull({
+          operationId,
+          contextLabel: 'Highlight clip',
+          videoPath,
+          clipStartSeconds: safeStart,
+          clipEndSeconds: safeEnd,
+          videoMeta: videoMeta ?? {
+            duration,
+            width: 0,
+            height: 0,
+            frameRate: 0,
+          },
+          ffmpeg,
+          signal: controller.signal,
+          onSampleProgress: (completed, total) => {
+            const percent =
+              12 + Math.round((completed / Math.max(1, total)) * 8);
+            emitHighlightProgress(percent, 'Analyzing subject framing');
+          },
+        });
+        verticalFilter = verticalPlan
+          ? buildVerticalReframeFilter(verticalPlan)
+          : buildLegacyVerticalPadFilter();
+        if (verticalPlan) {
+          log.info(
+            `[${operationId}] Smart vertical reframe: ${verticalPlan.detectedSamples}/${verticalPlan.sampleCount} detections (${verticalPlan.strategy})`
+          );
+        } else {
+          log.warn(
+            `[${operationId}] Smart vertical reframe unavailable, falling back to padded portrait filter`
+          );
+        }
       } else {
-        log.warn(
-          `[${operationId}] Smart vertical reframe unavailable, falling back to padded portrait filter`
+        emitHighlightProgress(
+          20,
+          'Fitting original frame into vertical canvas'
         );
       }
 
@@ -1398,9 +1429,11 @@ export async function handleCutCombinedHighlights(
       log.warn(`[${operationId}] Video metadata probe failed`, err);
     }
 
-    const aspectMode = options.aspectMode ?? 'vertical';
-    const enforceVertical =
-      aspectMode === 'vertical' && !isVideoAlreadyVertical(videoMeta);
+    const aspectMode = resolveHighlightAspectMode(options.aspectMode);
+    const enforceVertical = shouldApplyVerticalHighlightTransform(
+      aspectMode,
+      videoMeta
+    );
 
     // Check if video has audio stream
     const hasAudio = await hasAudioStream(videoPath, ffmpeg.ffprobePath);
@@ -1417,51 +1450,58 @@ export async function handleCutCombinedHighlights(
 
     const verticalSegmentFilters: string[] = [];
     if (enforceVertical) {
-      emitProgress(10, 'Analyzing subject framing');
-      for (let i = 0; i < segments.length; i += 1) {
-        const seg = segments[i];
-        const safeStart = Math.max(0, seg.start);
-        const safeEnd = durationKnown ? Math.min(totalDur, seg.end) : seg.end;
-        const segmentProgressBase = i / Math.max(1, segments.length);
+      if (aspectMode === 'vertical_reframe') {
+        emitProgress(10, 'Analyzing subject framing');
+        for (let i = 0; i < segments.length; i += 1) {
+          const seg = segments[i];
+          const safeStart = Math.max(0, seg.start);
+          const safeEnd = durationKnown ? Math.min(totalDur, seg.end) : seg.end;
+          const segmentProgressBase = i / Math.max(1, segments.length);
 
-        const verticalPlan = await createVerticalReframePlanOrNull({
-          operationId,
-          contextLabel: `Segment ${i + 1}/${segments.length}`,
-          videoPath,
-          clipStartSeconds: safeStart,
-          clipEndSeconds: safeEnd,
-          videoMeta: videoMeta ?? {
-            duration: totalDur,
-            width: 0,
-            height: 0,
-            frameRate: 0,
-          },
-          ffmpeg,
-          signal: controller.signal,
-          onSampleProgress: (completed, total) => {
-            const segmentProgress =
-              segmentProgressBase +
-              completed / Math.max(1, total) / Math.max(1, segments.length);
-            emitProgress(
-              10 + Math.round(segmentProgress * 20),
-              'Analyzing subject framing'
+          const verticalPlan = await createVerticalReframePlanOrNull({
+            operationId,
+            contextLabel: `Segment ${i + 1}/${segments.length}`,
+            videoPath,
+            clipStartSeconds: safeStart,
+            clipEndSeconds: safeEnd,
+            videoMeta: videoMeta ?? {
+              duration: totalDur,
+              width: 0,
+              height: 0,
+              frameRate: 0,
+            },
+            ffmpeg,
+            signal: controller.signal,
+            onSampleProgress: (completed, total) => {
+              const segmentProgress =
+                segmentProgressBase +
+                completed / Math.max(1, total) / Math.max(1, segments.length);
+              emitProgress(
+                10 + Math.round(segmentProgress * 20),
+                'Analyzing subject framing'
+              );
+            },
+          });
+
+          const verticalFilter = verticalPlan
+            ? buildVerticalReframeFilter(verticalPlan)
+            : buildLegacyVerticalPadFilter();
+          verticalSegmentFilters.push(verticalFilter);
+
+          if (verticalPlan) {
+            log.info(
+              `[${operationId}] Segment ${i + 1}/${segments.length} smart vertical reframe: ${verticalPlan.detectedSamples}/${verticalPlan.sampleCount} detections (${verticalPlan.strategy})`
             );
-          },
-        });
-
-        const verticalFilter = verticalPlan
-          ? buildVerticalReframeFilter(verticalPlan)
-          : buildLegacyVerticalPadFilter();
-        verticalSegmentFilters.push(verticalFilter);
-
-        if (verticalPlan) {
-          log.info(
-            `[${operationId}] Segment ${i + 1}/${segments.length} smart vertical reframe: ${verticalPlan.detectedSamples}/${verticalPlan.sampleCount} detections (${verticalPlan.strategy})`
-          );
-        } else {
-          log.warn(
-            `[${operationId}] Segment ${i + 1}/${segments.length} smart vertical reframe unavailable, falling back to padded portrait filter`
-          );
+          } else {
+            log.warn(
+              `[${operationId}] Segment ${i + 1}/${segments.length} smart vertical reframe unavailable, falling back to padded portrait filter`
+            );
+          }
+        }
+      } else {
+        emitProgress(20, 'Fitting original frame into vertical canvas');
+        for (let i = 0; i < segments.length; i += 1) {
+          verticalSegmentFilters.push(buildLegacyVerticalPadFilter());
         }
       }
     }

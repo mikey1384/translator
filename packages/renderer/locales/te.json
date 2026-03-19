@@ -387,6 +387,8 @@
     "originalFormatDesc": "వీడియో యొక్క అసలు పరిమాణాలను అలాగే ఉంచు",
     "verticalFormat": "9:16 నిలువు",
     "verticalFormatDesc": "YouTube Shorts, TikTok, Reels (9:16) కోసం ఆప్టిమైజ్ చేయబడింది",
+    "verticalFitFormat": "షార్ట్స్ ఫిట్",
+    "verticalFitFormatDesc": "అసలు ఫ్రేమ్‌ను 9:16 కాన్వాస్‌లో సరిపోనివ్వండి",
     "downloadHighlight": "క్లిప్ డౌన్‌లోడ్ చేయండి",
     "downloadingHighlight": "సేవ్ చేస్తోంది…",
     "highlightSaved": "సేవ్ అయింది!",

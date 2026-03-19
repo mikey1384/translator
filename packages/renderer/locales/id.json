@@ -387,6 +387,8 @@
     "originalFormatDesc": "Pertahankan dimensi video asli",
     "verticalFormat": "Vertikal 9:16",
     "verticalFormatDesc": "Dioptimalkan untuk YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Pas Shorts",
+    "verticalFitFormatDesc": "Pasang bingkai asli di dalam kanvas 9:16",
     "downloadHighlight": "Unduh klip",
     "downloadingHighlight": "Menyimpan…",
     "highlightSaved": "Tersimpan!",

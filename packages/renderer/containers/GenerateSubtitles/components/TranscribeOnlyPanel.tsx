@@ -18,16 +18,22 @@ import {
 
 interface TranscribeOnlyPanelProps {
   onTranscribe: () => void;
+  onCreateHighlight?: () => void;
   isTranscribing: boolean;
+  isCreatingHighlight?: boolean;
   disabled?: boolean;
+  createHighlightDisabled?: boolean;
   statusMessage?: string | null;
   className?: string;
 }
 
 export default function TranscribeOnlyPanel({
   onTranscribe,
+  onCreateHighlight,
   isTranscribing,
+  isCreatingHighlight = false,
   disabled = false,
+  createHighlightDisabled = false,
   statusMessage = null,
   className,
 }: TranscribeOnlyPanelProps) {
@@ -53,7 +59,10 @@ export default function TranscribeOnlyPanel({
           </p>
           {statusMessage && (
             <div className={workflowPanelWarningBoxStyles} role="alert">
-              <div className={workflowPanelWarningIconStyles} aria-hidden="true">
+              <div
+                className={workflowPanelWarningIconStyles}
+                aria-hidden="true"
+              >
                 <CircleAlert size={14} strokeWidth={2.2} />
               </div>
               <div className={workflowPanelWarningContentStyles}>
@@ -66,7 +75,7 @@ export default function TranscribeOnlyPanel({
       <div className={workflowPanelControlsStyles}>
         <Button
           onClick={onTranscribe}
-          disabled={disabled || isTranscribing}
+          disabled={disabled || isTranscribing || isCreatingHighlight}
           size="lg"
           variant="primary"
           isLoading={isTranscribing}
@@ -75,6 +84,17 @@ export default function TranscribeOnlyPanel({
             ? t('subtitles.generating')
             : t('input.transcribeOnly')}
         </Button>
+        {onCreateHighlight ? (
+          <Button
+            onClick={onCreateHighlight}
+            disabled={createHighlightDisabled || isCreatingHighlight}
+            size="lg"
+            variant="secondary"
+            isLoading={isCreatingHighlight}
+          >
+            {t('summary.generate', 'Generate highlights')}
+          </Button>
+        ) : null}
       </div>
     </div>
   );

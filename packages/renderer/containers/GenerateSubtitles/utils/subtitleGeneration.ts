@@ -29,6 +29,7 @@ export interface GenerateSubtitlesParams {
   videoFilePath: string | null;
   targetLanguage: string;
   operationId: string;
+  workflowOwner?: 'default' | 'highlight';
 }
 
 export interface GenerateSubtitlesResult {
@@ -86,9 +87,7 @@ function resolveTranslationSourceAssociation(): {
 
   return {
     sourceVideoPath: subtitleState.sourceVideoPath ?? null,
-    sourceUrl: subtitlesBelongToCurrentVideo
-      ? videoState.sourceUrl
-      : null,
+    sourceUrl: subtitlesBelongToCurrentVideo ? videoState.sourceUrl : null,
     titleHint: videoState.file?.name ?? null,
   };
 }
@@ -140,11 +139,8 @@ export async function executeSrtTranslation({
     });
     if (res?.success && res?.translatedSubtitles) {
       const finalSegments = parseSrt(res.translatedSubtitles);
-      const {
-        sourceVideoPath,
-        sourceUrl,
-        titleHint,
-      } = resolveTranslationSourceAssociation();
+      const { sourceVideoPath, sourceUrl, titleHint } =
+        resolveTranslationSourceAssociation();
       let libraryMeta = null;
       try {
         libraryMeta = await storeGeneratedSubtitleArtifact({
@@ -398,6 +394,7 @@ export async function executeSubtitleGeneration({
   videoFilePath,
   targetLanguage,
   operationId,
+  workflowOwner = 'default',
 }: GenerateSubtitlesParams): Promise<GenerateSubtitlesResult> {
   const { setTranscription } = useTaskStore.getState();
   // Ensure translation slice is not considered active during transcription-only
@@ -410,6 +407,7 @@ export async function executeSubtitleGeneration({
     stage: i18n.t('generateSubtitles.status.starting'),
     percent: 0,
     inProgress: true,
+    workflowOwner,
   });
 
   try {
@@ -420,7 +418,9 @@ export async function executeSubtitleGeneration({
       videoState.originalPath ??
       videoState.path ??
       videoFilePath ??
-      ((videoFile as any)?.path ?? (videoFile as any)?._originalPath ?? null);
+      (videoFile as any)?.path ??
+      (videoFile as any)?._originalPath ??
+      null;
     const durableRecoverySeed = buildGenerateSubtitlesDurableRecoverySeed({
       videoFile,
       sourceUrl: videoState.sourceUrl ?? null,
@@ -428,7 +428,10 @@ export async function executeSubtitleGeneration({
     if (sourceMediaPath) {
       opts.sourceMediaPath = sourceMediaPath;
     }
-    if (durableRecoverySeed && (videoState.sourceUrl || !opts.sourceMediaPath)) {
+    if (
+      durableRecoverySeed &&
+      (videoState.sourceUrl || !opts.sourceMediaPath)
+    ) {
       opts.durableRecoverySeed = durableRecoverySeed;
     }
     if (videoFilePath) {
@@ -484,6 +487,7 @@ export async function executeSubtitleGeneration({
         stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
         inProgress: false,
+        workflowOwner,
       });
 
       return { success: true, subtitles: result.subtitles };
@@ -519,6 +523,7 @@ export async function executeSubtitleGeneration({
         stage,
         percent,
         inProgress: false,
+        workflowOwner,
       });
 
       return { success: false, cancelled };
@@ -547,6 +552,7 @@ export async function executeSubtitleGeneration({
       stage: friendlyError,
       percent: cancelled ? 0 : 100,
       inProgress: false,
+      workflowOwner,
     });
 
     return { success: false, cancelled };
@@ -560,6 +566,8 @@ export async function startTranscriptionFlow({
   hoursNeeded,
   operationId,
   metadataStatus,
+  workflowOwner = 'default',
+  openEditPanelOnStart = true,
 }: {
   videoFile: File | null;
   videoFilePath: string | null;
@@ -571,13 +579,17 @@ export async function startTranscriptionFlow({
     code?: string;
     message?: string;
   };
+  workflowOwner?: 'default' | 'highlight';
+  openEditPanelOnStart?: boolean;
 }): Promise<GenerateSubtitlesResult> {
   // Ensure the Edit panel is visible so users can see live updates
-  try {
-    const { setEditPanelOpen } = useUIStore.getState();
-    setEditPanelOpen(true);
-  } catch {
-    // Do nothing
+  if (openEditPanelOnStart) {
+    try {
+      const { setEditPanelOpen } = useUIStore.getState();
+      setEditPanelOpen(true);
+    } catch {
+      // Do nothing
+    }
   }
 
   // If there are mounted subtitles, prompt to save/discard before proceeding
@@ -618,6 +630,7 @@ export async function startTranscriptionFlow({
     videoFilePath,
     targetLanguage: 'original',
     operationId,
+    workflowOwner,
   });
 }
 

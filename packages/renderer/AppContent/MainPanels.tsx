@@ -1,11 +1,9 @@
 import EditSubtitles from '../containers/EditSubtitles';
 import GenerateSubtitles from '../containers/GenerateSubtitles';
-import TranscriptSummaryPanel from '../components/TranscriptSummaryPanel';
-import { useTaskStore, useUIStore, useSubStore } from '../state';
-import type { SrtSegment } from '@shared-types/app';
+import { useTaskStore, useUIStore } from '../state';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import type { RenderSubtitlesOptions } from '@shared-types/app';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { i18n } from '../i18n';
 import { css } from '@emotion/css';
 import {
@@ -34,16 +32,6 @@ export default function MainPanels() {
   const setMergeStage = useTaskStore(s => s.setMerge);
   const setMergeOperationId = (id: string | null) =>
     useTaskStore.getState().setMerge({ id });
-  const subtitleOrder = useSubStore(s => s.order);
-  const subtitleSegments = useSubStore(s => s.segments);
-  const summarySegments = useMemo(
-    () =>
-      subtitleOrder
-        .map(id => subtitleSegments[id])
-        .filter((seg): seg is SrtSegment => !!seg),
-    [subtitleOrder, subtitleSegments]
-  );
-  const hasTranscript = summarySegments.length > 0;
 
   const handleRenderRequest = useCallback((options: unknown) => {
     if (!isRenderOpts(options)) {
@@ -111,12 +99,6 @@ export default function MainPanels() {
           </div>
         )}
       </div>
-
-      {hasTranscript && (
-        <div className={panelBlockStyles}>
-          <TranscriptSummaryPanel segments={summarySegments} />
-        </div>
-      )}
 
       {/* Edit Subtitles transforming container */}
       <div className={panelBlockStyles}>

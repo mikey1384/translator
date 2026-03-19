@@ -387,6 +387,8 @@
     "originalFormatDesc": "Zachovat původní rozměry videa",
     "verticalFormat": "9:16 na výšku",
     "verticalFormatDesc": "Optimalizováno pro YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Shorts na míru",
+    "verticalFitFormatDesc": "Přizpůsobí původní snímek do plátna 9:16",
     "downloadHighlight": "Stáhnout klip",
     "downloadingHighlight": "Ukládání…",
     "highlightSaved": "Uloženo!",

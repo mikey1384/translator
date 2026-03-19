@@ -50,6 +50,7 @@ interface ProgressAreaProps {
   onCancel: (operationId: string) => Promise<void> | void;
   autoCloseDelay?: number;
   isCancelling?: boolean;
+  cancelDisabled?: boolean;
   onClose: () => void;
   subLabel?: string;
   notice?: ReactNode;
@@ -68,6 +69,7 @@ export default function ProgressArea({
   operationId,
   onCancel,
   isCancelling,
+  cancelDisabled,
   onClose,
   autoCloseDelay = 4000,
   subLabel,
@@ -284,7 +286,7 @@ export default function ProgressArea({
             <button
               className={workflowStatusIconButtonStyles}
               onClick={handleCloseOrCancelClick}
-              disabled={isCancelling}
+              disabled={isCancelling || (progress < 100 && cancelDisabled)}
               aria-label={t(
                 'common.closeOrCancelProcess',
                 'Close or cancel process'

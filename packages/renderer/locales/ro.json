@@ -387,6 +387,8 @@
     "originalFormatDesc": "Păstrează dimensiunile originale ale videoclipului",
     "verticalFormat": "9:16 vertical",
     "verticalFormatDesc": "Optimizat pentru YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Potrivire pentru Shorts",
+    "verticalFitFormatDesc": "Potrivește cadrul original într-un canvas 9:16",
     "downloadHighlight": "Descarcă clip",
     "downloadingHighlight": "Se salvează…",
     "highlightSaved": "Salvat!",

@@ -387,6 +387,8 @@
     "originalFormatDesc": "Behoud originele videoafmetingen",
     "verticalFormat": "9:16 verticaal",
     "verticalFormatDesc": "Geoptimaliseerd voor YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Shorts-pasvorm",
+    "verticalFitFormatDesc": "Pas het oorspronkelijke kader in een 9:16-canvas",
     "downloadHighlight": "Clip downloaden",
     "downloadingHighlight": "Opslaan…",
     "highlightSaved": "Opgeslagen!",

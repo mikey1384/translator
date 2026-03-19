@@ -461,7 +461,11 @@ declare module '@shared-types/app' {
     operationId?: string;
   }
 
-  export type HighlightAspectMode = 'vertical' | 'original';
+  export type HighlightAspectMode =
+    | 'vertical'
+    | 'vertical_reframe'
+    | 'vertical_fit'
+    | 'original';
 
   export interface CutHighlightClipRequest {
     videoPath: string;
@@ -807,6 +811,14 @@ declare module '@shared-types/app' {
 
   interface ElectronAPI {
     cancelPngRender: (operationId: string) => void;
+    requestPngRenderCancel: (operationId: string) => Promise<{
+      accepted: boolean;
+      reason: 'accepted' | 'save_phase' | 'cancel_pending' | 'not_found';
+    }>;
+    requestPngRenderStatus: (operationId: string) => Promise<{
+      active: boolean;
+      savePhase: boolean;
+    }>;
     saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
     openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;
     moveFile: (

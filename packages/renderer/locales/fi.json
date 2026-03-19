@@ -387,6 +387,8 @@
     "originalFormatDesc": "Säilytä videon alkuperäiset mitat",
     "verticalFormat": "9:16 pysty",
     "verticalFormatDesc": "Optimoitu YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFitFormat": "Shorts-sovitus",
+    "verticalFitFormatDesc": "Sovita alkuperäinen kehys 9:16-kanvaasiin",
     "downloadHighlight": "Lataa leike",
     "downloadingHighlight": "Tallennetaan…",
     "highlightSaved": "Tallennettu!",

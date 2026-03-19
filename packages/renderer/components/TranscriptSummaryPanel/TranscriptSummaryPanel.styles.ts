@@ -37,10 +37,10 @@ export const tabsRowStyles = css`
 export const tabButtonStyles = (active: boolean) => css`
   ${metaPillStyles}
   cursor: pointer;
-  border-color: ${active
-    ? 'rgba(125, 167, 255, 0.24)'
-    : colors.border};
-  background: ${active ? 'rgba(125, 167, 255, 0.12)' : 'rgba(255, 255, 255, 0.03)'};
+  border-color: ${active ? 'rgba(125, 167, 255, 0.24)' : colors.border};
+  background: ${active
+    ? 'rgba(125, 167, 255, 0.12)'
+    : 'rgba(255, 255, 255, 0.03)'};
   color: ${active ? colors.text : colors.textDim};
 `;
 
@@ -360,6 +360,7 @@ export const aspectModeRowStyles = css`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: ${spacing.sm};
 `;
 
@@ -372,8 +373,13 @@ export const aspectModeLabelStyles = css`
 `;
 
 export const aspectModeToggleStyles = css`
-  display: flex;
+  display: inline-flex;
+  flex-wrap: wrap;
   gap: 0;
+  align-self: center;
+  margin-inline: auto;
+  width: fit-content;
+  max-width: 100%;
   border-radius: ${borderRadius.full};
   overflow: hidden;
   border: 1px solid ${colors.border};
@@ -386,17 +392,41 @@ export const aspectModeButtonStyles = (active: boolean) => css`
   color: ${active ? colors.text : colors.textDim};
   padding: ${spacing.sm} ${spacing.md};
   font-size: ${fontSize.xs};
+  white-space: nowrap;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${spacing.xs};
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${active
       ? 'rgba(125, 167, 255, 0.18)'
       : 'rgba(255, 255, 255, 0.05)'};
   }
 
-  &:first-of-type {
-    border-right: 1px solid ${colors.border};
+  & + & {
+    border-left: 1px solid ${colors.border};
   }
+
+  &:disabled {
+    opacity: 0.56;
+    cursor: not-allowed;
+  }
+`;
+
+export const highlightFormatRowStyles = css`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: ${spacing.xs};
+`;
+
+export const aspectModeIconStyles = css`
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: block;
 `;
 
 export const highlightCheckboxStyles = css`
