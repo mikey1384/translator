@@ -243,8 +243,9 @@ function flush() {
         lastTranscribe.stage = stage;
       }
 
-      // Surface progress to the user by opening the Edit panel automatically
-      // when transcription is underway so the incremental results are visible.
+      // Default transcription flows can open Edit immediately so users can
+      // watch incremental results. Highlight-owned runs intentionally skip
+      // this pre-mount open; MainPanels will surface Edit once subtitles exist.
       try {
         const workflowOwner =
           useTaskStore.getState().transcription.workflowOwner;

@@ -44,6 +44,14 @@ export function rememberStoredSubtitleVideoPath(
   );
 }
 
+export function detachStoredSubtitleSource(options: {
+  entryId: string;
+  sourceVideoPath?: string | null;
+  sourceUrl?: string | null;
+}): Promise<{ success: boolean; updated?: boolean; error?: string }> {
+  return window.electron.detachStoredSubtitleSource(options);
+}
+
 export function deleteStoredSubtitleEntry(
   entryId: string
 ): Promise<{ success: boolean; removed?: boolean; error?: string }> {

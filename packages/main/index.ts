@@ -65,6 +65,7 @@ import {
 import { getErrorReportContext } from './services/error-report.js';
 import {
   deleteStoredSubtitleEntry,
+  detachStoredSubtitleSource,
   findStoredSubtitleForVideo,
   rememberStoredSubtitleVideoPath,
   saveStoredSubtitleArtifact,
@@ -329,6 +330,14 @@ try {
       }
     }
   );
+  ipcMain.handle('detach-stored-subtitle-source', async (_event, options) => {
+    try {
+      const updated = await detachStoredSubtitleSource(options || {});
+      return { success: true, updated };
+    } catch (error: any) {
+      return { success: false, error: error?.message || String(error) };
+    }
+  });
   ipcMain.handle(
     'delete-stored-subtitle-entry',
     async (_event, entryId: string) => {

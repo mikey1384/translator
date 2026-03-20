@@ -791,6 +791,8 @@ export default function GenerateSubtitles() {
           hoursNeeded,
           operationId: transcriptionOperationId,
           workflowOwner: 'highlight',
+          // Defer the initial open so highlight starts in Generate, then let
+          // mounted subtitles surface Edit through the shared MainPanels rule.
           openEditPanelOnStart: false,
           metadataStatus: {
             status: metadataStatus,

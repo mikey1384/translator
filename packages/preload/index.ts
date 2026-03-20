@@ -182,6 +182,8 @@ const electronAPI = {
       entryId,
       sourceVideoPath
     ),
+  detachStoredSubtitleSource: (options: any) =>
+    ipcRenderer.invoke('detach-stored-subtitle-source', options),
   deleteStoredSubtitleEntry: (entryId: string) =>
     ipcRenderer.invoke('delete-stored-subtitle-entry', entryId),
   deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),

@@ -79,7 +79,10 @@ export default function SubtitleEditor({
   const sourceUrl = useVideoStore(s => s.sourceUrl);
   const [isTranscribingOne, setIsTranscribingOne] = useState(false);
   const editingLocked =
-    isTranscribing || isTranslatingGlobal || isHighlightWorkflowLocked;
+    isTranscribing ||
+    isTranslatingGlobal ||
+    isMerging ||
+    isHighlightWorkflowLocked;
   // No manual language selection for transcription
 
   useEffect(() => {
@@ -348,9 +351,7 @@ export default function SubtitleEditor({
   return (
     <div className={subtitleRowCardStyles}>
       <div className={subtitleRowHeaderStyles}>
-        <span className={subtitleRowIndexStyles}>
-          #{subtitle.index}
-        </span>
+        <span className={subtitleRowIndexStyles}>#{subtitle.index}</span>
         <div className={subtitleRowHeaderActionsStyles}>
           <Button
             variant="secondary"
@@ -442,181 +443,177 @@ export default function SubtitleEditor({
       </div>
 
       <div className={subtitleRowContentStyles}>
-      <div className={subtitleRowFieldShellStyles}>
-        <div className={subtitleRowFieldStackStyles}>
-          <div className={subtitleRowFieldLabelStyles}>
-            {t('editSubtitles.workspace.originalLabel', 'Original')}
-          </div>
-          <SubtitleEditTextarea
-            value={subtitle.original}
-            searchTerm={searchText || ''}
-            onChange={v => actions.update({ original: v })}
-            rows={4}
-            placeholder={t('editSubtitles.item.subtitlePlaceholder')}
-            readOnly={editingLocked}
-          />
-        </div>
-        {(!subtitle.original || !subtitle.original.trim()) && videoPath && (
-          <div className={subtitleRowSideActionStyles}>
-            <Button
-              variant="success"
-              size="lg"
-              onClick={() => handleTranscribeThisLine()}
-              disabled={
-                editingLocked ||
-                isTranslatingOne ||
-                isTranscribingOne ||
-                isMerging
-              }
-              isLoading={isTranscribingOne}
-              title={t('input.transcribeOnly', 'Transcribe Audio')}
-            >
-              {t('input.transcribeOnly', 'Transcribe Audio')}
-            </Button>
-
-            {/* Language selection removed */}
-          </div>
-        )}
-
-        {subtitle.original && subtitle.original.trim() && videoPath && (
-          <div className={subtitleRowSideActionStyles}>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleImproveTranscription}
-              disabled={
-                editingLocked ||
-                isTranslatingOne ||
-                isTranscribingOne ||
-                isMerging
-              }
-              isLoading={isTranscribingOne}
-              title={t(
-                'subtitles.improveTranscription',
-                'Improve Transcription'
-              )}
-            >
-              {t('subtitles.improveTranscription', 'Improve Transcription')}
-            </Button>
-
-            {/* Language selection removed */}
-          </div>
-        )}
-      </div>
-
-      {temporaryAffectedText && (
-        <div className={subtitleRowOldTextStyles}>
-          <span
-            className="strike-fade"
-            onAnimationEnd={() => {
-              requestAnimationFrame(() =>
-                actions.update({ _oldText: undefined })
-              );
-            }}
-          >
-            {temporaryAffectedText}
-          </span>
-        </div>
-      )}
-
-      {subtitle.original && subtitle.original.trim() ? (
         <div className={subtitleRowFieldShellStyles}>
           <div className={subtitleRowFieldStackStyles}>
             <div className={subtitleRowFieldLabelStyles}>
-              {t('editSubtitles.workspace.translationLabel', 'Translation')}
+              {t('editSubtitles.workspace.originalLabel', 'Original')}
             </div>
             <SubtitleEditTextarea
-              value={subtitle.translation ?? ''}
+              value={subtitle.original}
               searchTerm={searchText || ''}
-              onChange={v => actions.update({ translation: v })}
+              onChange={v => actions.update({ original: v })}
               rows={4}
               placeholder={t('editSubtitles.item.subtitlePlaceholder')}
               readOnly={editingLocked}
             />
           </div>
-          <div className={subtitleRowSideActionStyles}>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleImproveTranslation}
-              disabled={
-                editingLocked ||
-                isTranslatingOne ||
-                isMerging
-              }
-              isLoading={isTranslatingOne}
-              title={
-                (subtitle.translation ?? '').trim()
-                  ? t('subtitles.improveTranslation', 'Improve Translation')
-                  : t('subtitles.translate', 'Translate')
-              }
+          {(!subtitle.original || !subtitle.original.trim()) && videoPath && (
+            <div className={subtitleRowSideActionStyles}>
+              <Button
+                variant="success"
+                size="lg"
+                onClick={() => handleTranscribeThisLine()}
+                disabled={
+                  editingLocked ||
+                  isTranslatingOne ||
+                  isTranscribingOne ||
+                  isMerging
+                }
+                isLoading={isTranscribingOne}
+                title={t('input.transcribeOnly', 'Transcribe Audio')}
+              >
+                {t('input.transcribeOnly', 'Transcribe Audio')}
+              </Button>
+
+              {/* Language selection removed */}
+            </div>
+          )}
+
+          {subtitle.original && subtitle.original.trim() && videoPath && (
+            <div className={subtitleRowSideActionStyles}>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleImproveTranscription}
+                disabled={
+                  editingLocked ||
+                  isTranslatingOne ||
+                  isTranscribingOne ||
+                  isMerging
+                }
+                isLoading={isTranscribingOne}
+                title={t(
+                  'subtitles.improveTranscription',
+                  'Improve Transcription'
+                )}
+              >
+                {t('subtitles.improveTranscription', 'Improve Transcription')}
+              </Button>
+
+              {/* Language selection removed */}
+            </div>
+          )}
+        </div>
+
+        {temporaryAffectedText && (
+          <div className={subtitleRowOldTextStyles}>
+            <span
+              className="strike-fade"
+              onAnimationEnd={() => {
+                requestAnimationFrame(() =>
+                  actions.update({ _oldText: undefined })
+                );
+              }}
             >
-              {(subtitle.translation ?? '').trim()
-                ? t('subtitles.improveTranslation', 'Improve Translation')
-                : t('subtitles.translate', 'Translate')}
+              {temporaryAffectedText}
+            </span>
+          </div>
+        )}
+
+        {subtitle.original && subtitle.original.trim() ? (
+          <div className={subtitleRowFieldShellStyles}>
+            <div className={subtitleRowFieldStackStyles}>
+              <div className={subtitleRowFieldLabelStyles}>
+                {t('editSubtitles.workspace.translationLabel', 'Translation')}
+              </div>
+              <SubtitleEditTextarea
+                value={subtitle.translation ?? ''}
+                searchTerm={searchText || ''}
+                onChange={v => actions.update({ translation: v })}
+                rows={4}
+                placeholder={t('editSubtitles.item.subtitlePlaceholder')}
+                readOnly={editingLocked}
+              />
+            </div>
+            <div className={subtitleRowSideActionStyles}>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleImproveTranslation}
+                disabled={editingLocked || isTranslatingOne || isMerging}
+                isLoading={isTranslatingOne}
+                title={
+                  (subtitle.translation ?? '').trim()
+                    ? t('subtitles.improveTranslation', 'Improve Translation')
+                    : t('subtitles.translate', 'Translate')
+                }
+              >
+                {(subtitle.translation ?? '').trim()
+                  ? t('subtitles.improveTranslation', 'Improve Translation')
+                  : t('subtitles.translate', 'Translate')}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        <div className={subtitleRowFooterStyles}>
+          <div className={subtitleRowTimeGroupStyles}>
+            <input
+              type="text"
+              value={localStart}
+              onChange={e => {
+                const val = e.target.value;
+                if (PARTIAL_RX.test(val)) setLocalStart(val);
+              }}
+              onBlur={e => commitTimeChange('start', e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') commitTimeChange('start', localStart);
+              }}
+              className={subtitleRowTimeInputStyles}
+              aria-label={`Start time for subtitle ${id}`}
+              data-testid={`subtitle-start-${id}`}
+              disabled={editingLocked}
+            />
+            <span className={subtitleRowDividerStyles}>→</span>
+            <input
+              type="text"
+              value={localEnd}
+              onChange={e => {
+                const val = e.target.value;
+                if (PARTIAL_RX.test(val)) setLocalEnd(val);
+              }}
+              onBlur={e => commitTimeChange('end', e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') commitTimeChange('end', localEnd);
+              }}
+              className={subtitleRowTimeInputStyles}
+              aria-label={`End time for subtitle ${id}`}
+              data-testid={`subtitle-end-${id}`}
+              disabled={editingLocked}
+            />
+            <span className={subtitleRowDividerStyles}>|</span>
+            <input
+              type="number"
+              step="0.1"
+              value={shiftAmount}
+              onChange={e => setShiftAmount(e.target.value)}
+              className={subtitleRowTimeInputStyles}
+              placeholder="0.5"
+              title={t('editSubtitles.item.shiftTitle')}
+              data-testid={`subtitle-shift-input-${id}`}
+              disabled={editingLocked}
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleApplyShift}
+              disabled={editingLocked || Number(shiftAmount) === 0}
+              data-testid={`subtitle-shift-button-${id}`}
+            >
+              {t('editSubtitles.item.applyShift')}
             </Button>
           </div>
         </div>
-      ) : null}
-
-      <div className={subtitleRowFooterStyles}>
-        <div className={subtitleRowTimeGroupStyles}>
-          <input
-            type="text"
-            value={localStart}
-            onChange={e => {
-              const val = e.target.value;
-              if (PARTIAL_RX.test(val)) setLocalStart(val);
-            }}
-            onBlur={e => commitTimeChange('start', e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') commitTimeChange('start', localStart);
-            }}
-            className={subtitleRowTimeInputStyles}
-            aria-label={`Start time for subtitle ${id}`}
-            data-testid={`subtitle-start-${id}`}
-            disabled={editingLocked}
-          />
-          <span className={subtitleRowDividerStyles}>→</span>
-          <input
-            type="text"
-            value={localEnd}
-            onChange={e => {
-              const val = e.target.value;
-              if (PARTIAL_RX.test(val)) setLocalEnd(val);
-            }}
-            onBlur={e => commitTimeChange('end', e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') commitTimeChange('end', localEnd);
-            }}
-            className={subtitleRowTimeInputStyles}
-            aria-label={`End time for subtitle ${id}`}
-            data-testid={`subtitle-end-${id}`}
-            disabled={editingLocked}
-          />
-          <span className={subtitleRowDividerStyles}>|</span>
-          <input
-            type="number"
-            step="0.1"
-            value={shiftAmount}
-            onChange={e => setShiftAmount(e.target.value)}
-            className={subtitleRowTimeInputStyles}
-            placeholder="0.5"
-            title={t('editSubtitles.item.shiftTitle')}
-            data-testid={`subtitle-shift-input-${id}`}
-            disabled={editingLocked}
-          />
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleApplyShift}
-            disabled={editingLocked || Number(shiftAmount) === 0}
-            data-testid={`subtitle-shift-button-${id}`}
-          >
-            {t('editSubtitles.item.applyShift')}
-          </Button>
-        </div>
-      </div>
       </div>
     </div>
   );

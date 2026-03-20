@@ -52,6 +52,7 @@ import {
   useVideoStore,
   useTaskStore,
   useSubStore,
+  useHighlightWorkflowStore,
 } from '../../state';
 import { useUrlStore } from '../../state/url-store';
 
@@ -91,6 +92,10 @@ export default function EditSubtitles({
   const { t } = useTranslation();
   const translationInProgress = useTaskStore(s => !!s.translation.inProgress);
   const mergeInProgress = useTaskStore(s => !!s.merge.inProgress);
+  const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
+  const isHighlightWorkflowLocked = useHighlightWorkflowStore(
+    s => s.running || s.isCancelling
+  );
   const subtitleOrder = useSubStore(s => s.order);
   const subtitleSegments = useSubStore(s => s.segments);
   const subtitles = useMemo(
@@ -113,6 +118,19 @@ export default function EditSubtitles({
   const [affectedRows, setAffectedRows] = useState<number[]>([]);
   const [mergePreflightInProgress, setMergePreflightInProgress] =
     useState(false);
+  // Highlight workflows own transcript mutation for their full run, but
+  // export is allowed once the subtitle document is no longer changing.
+  const isSubtitleMutationLocked =
+    isHighlightWorkflowLocked ||
+    isTranscribing ||
+    translationInProgress ||
+    mergeInProgress;
+  const isSourceContextLocked = isSubtitleMutationLocked;
+  const isExportLocked =
+    isTranscribing ||
+    translationInProgress ||
+    mergeInProgress ||
+    mergePreflightInProgress;
   const mergeStartLockRef = useRef(false);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const prevSubsRef = useRef<SrtSegment[]>([]);
@@ -141,6 +159,7 @@ export default function EditSubtitles({
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
+        if (isExportLocked) return;
         if (canSaveDirectly) void handleSaveSrt();
         else void handleSaveEditedSrtAs();
       }
@@ -148,7 +167,7 @@ export default function EditSubtitles({
     window.addEventListener('keydown', onKeyDown as any);
     return () => window.removeEventListener('keydown', onKeyDown as any);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canSaveDirectly, originalPath, subtitles]);
+  }, [canSaveDirectly, isExportLocked, originalPath, subtitles]);
 
   useEffect(() => {
     if (editorRef?.current) {
@@ -203,6 +222,7 @@ export default function EditSubtitles({
   // Removed post-translation display-mode popup; user controls this via the bottom toggle.
 
   async function handleTranslateAll() {
+    if (isSubtitleMutationLocked) return;
     try {
       logButton('translate_full');
       await runFullSrtTranslation();
@@ -219,8 +239,6 @@ export default function EditSubtitles({
       ),
     [subtitles]
   );
-
-  const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
 
   const isFreshForThisVideo =
     origin === 'fresh' &&
@@ -246,7 +264,7 @@ export default function EditSubtitles({
   const headerRight =
     hasUntranslated && !isFreshForThisVideo ? (
       <EditHeaderTranslateBar
-        disabled={translationInProgress || isTranscribing}
+        disabled={isSubtitleMutationLocked}
         onTranslate={handleTranslateAll}
       />
     ) : null;
@@ -271,9 +289,7 @@ export default function EditSubtitles({
               className={editorEmptyPrimaryButtonStyles}
               onClick={handleLoadSrtLocal}
               title={t('subtitles.chooseSrtFile')}
-              disabled={
-                isTranscribing || translationInProgress || mergeInProgress
-              }
+              disabled={isSourceContextLocked}
             >
               {t('subtitles.chooseSrtFile')}
             </Button>
@@ -298,6 +314,14 @@ export default function EditSubtitles({
               <span className={editorStatusPillStyles}>
                 {previewStatusLabel}
               </span>
+              {isHighlightWorkflowLocked ? (
+                <span className={editorStatusPillStyles}>
+                  {t(
+                    'editSubtitles.workspace.highlightEditingLocked',
+                    'Highlight generation active, editing locked'
+                  )}
+                </span>
+              ) : null}
             </div>
 
             {subtitleFileName || mountedVideoName ? (
@@ -320,9 +344,7 @@ export default function EditSubtitles({
                 variant="secondary"
                 size="md"
                 onClick={handleLoadSrtLocal}
-                disabled={
-                  isTranscribing || translationInProgress || mergeInProgress
-                }
+                disabled={isSourceContextLocked}
               >
                 {t(
                   'editSubtitles.workspace.loadAnotherSrt',
@@ -335,6 +357,7 @@ export default function EditSubtitles({
                   size="md"
                   onClick={handleMountVideoForSubs}
                   title={t('input.selectVideoAudioFile')}
+                  disabled={isSourceContextLocked}
                 >
                   {t('input.selectVideoAudioFile')}
                 </Button>
@@ -344,9 +367,7 @@ export default function EditSubtitles({
                   variant="primary"
                   size="md"
                   onClick={handleContinueTranscribing}
-                  disabled={
-                    isTranscribing || translationInProgress || mergeInProgress
-                  }
+                  disabled={isSubtitleMutationLocked}
                   title={t(
                     'subtitles.continueTranscribing',
                     'Continue transcribing'
@@ -394,6 +415,7 @@ export default function EditSubtitles({
               canSaveDirectly={canSaveDirectly}
               subtitlesExist={subtitles.length > 0}
               videoFileExists={!!videoPath}
+              isExportLocked={isExportLocked}
               isMergingInProgress={mergeInProgress || mergePreflightInProgress}
               isTranslationInProgress={translationInProgress}
             />
@@ -404,6 +426,7 @@ export default function EditSubtitles({
   );
 
   async function handleSaveSrt() {
+    if (isExportLocked) return;
     if (!originalPath) return handleSaveEditedSrtAs();
     try {
       logButton('save_srt');
@@ -414,6 +437,7 @@ export default function EditSubtitles({
   }
 
   async function handleContinueTranscribing() {
+    if (isSubtitleMutationLocked) return;
     try {
       logButton('continue_transcribing');
       const videoPath = useVideoStore.getState().path;
@@ -481,6 +505,7 @@ export default function EditSubtitles({
   }
 
   async function handleSaveEditedSrtAs() {
+    if (isExportLocked) return;
     try {
       logButton('save_srt_as');
     } catch {
@@ -509,6 +534,7 @@ export default function EditSubtitles({
   }
 
   async function writeSrt(path: string) {
+    if (isExportLocked) return;
     const result = await FileIPC.save({
       filePath: path,
       // Preserve exactly what the user sees (do not auto-wrap lines)
@@ -526,6 +552,7 @@ export default function EditSubtitles({
   }
 
   async function handleMerge() {
+    if (isExportLocked) return;
     // Guard against double-clicks / re-entrancy. The merge button is disabled
     // using merge state, but we also do an async disk-space preflight before
     // `startMerge()` runs, so we need a synchronous lock too.
@@ -724,6 +751,7 @@ export default function EditSubtitles({
   }
 
   async function handleLoadSrtLocal() {
+    if (isSourceContextLocked) return;
     try {
       logButton('choose_srt_from_device');
     } catch {
@@ -747,12 +775,7 @@ export default function EditSubtitles({
         null;
       useSubStore
         .getState()
-        .load(
-          res.segments,
-          res.filePath ?? null,
-          'disk',
-          associatedVideoPath
-        );
+        .load(res.segments, res.filePath ?? null, 'disk', associatedVideoPath);
       // Reset the 'Transcription Complete' state when user mounts a different SRT from disk
       try {
         useTaskStore.getState().setTranscription({
@@ -769,6 +792,7 @@ export default function EditSubtitles({
   }
 
   async function handleMountVideoForSubs() {
+    if (isSourceContextLocked) return;
     try {
       await useVideoStore
         .getState()

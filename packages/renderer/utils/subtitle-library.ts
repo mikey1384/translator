@@ -187,6 +187,20 @@ export async function rememberStoredSubtitleSourcePath(args: {
   return Boolean(result.updated);
 }
 
+export async function detachStoredSubtitleSourceAssociation(args: {
+  entryId: string;
+  sourceVideoPath?: string | null;
+  sourceUrl?: string | null;
+}): Promise<boolean> {
+  const result = await SubtitleLibraryIPC.detachStoredSubtitleSource(args);
+  if (!result.success) {
+    throw new Error(
+      result.error || 'Failed to detach stored subtitle source association.'
+    );
+  }
+  return Boolean(result.updated);
+}
+
 export function unmountCurrentSubtitles(): void {
   const current = useSubStore.getState();
   current._abortPlayListener?.();

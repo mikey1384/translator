@@ -130,6 +130,7 @@ declare module '@shared-types/app' {
     targetLanguage: string | null;
     filePath: string;
     sourceVideoPaths: string[];
+    sourceVideoAssetIdentities: string[];
     sourceUrls: string[];
     createdAt: string;
     updatedAt: string;
@@ -888,6 +889,11 @@ declare module '@shared-types/app' {
       entryId: string,
       sourceVideoPath: string
     ) => Promise<{ success: boolean; updated?: boolean; error?: string }>;
+    detachStoredSubtitleSource: (options: {
+      entryId: string;
+      sourceVideoPath?: string | null;
+      sourceUrl?: string | null;
+    }) => Promise<{ success: boolean; updated?: boolean; error?: string }>;
     deleteStoredSubtitleEntry: (
       entryId: string
     ) => Promise<{ success: boolean; removed?: boolean; error?: string }>;

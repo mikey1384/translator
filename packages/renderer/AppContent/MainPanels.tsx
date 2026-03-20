@@ -1,9 +1,9 @@
 import EditSubtitles from '../containers/EditSubtitles';
 import GenerateSubtitles from '../containers/GenerateSubtitles';
-import { useTaskStore, useUIStore } from '../state';
+import { useSubStore, useTaskStore, useUIStore } from '../state';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import type { RenderSubtitlesOptions } from '@shared-types/app';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { i18n } from '../i18n';
 import { css } from '@emotion/css';
 import {
@@ -22,9 +22,11 @@ import {
 
 export default function MainPanels() {
   const { t } = useTranslation();
-  // Keep both sections mounted; panel open states are persisted in global UI store
+  // Keep both sections mounted; panel open states live in the global UI store.
   const isGenerateOpen = useUIStore(s => s.showGeneratePanel);
   const isEditOpen = useUIStore(s => s.showEditPanel);
+  const hasMountedSubtitles = useSubStore(s => s.order.length > 0);
+  const subtitleSourceId = useSubStore(s => s.sourceId);
   const setGenerateOpen = (v: boolean) =>
     useUIStore.getState().setGeneratePanelOpen(v);
   const setEditOpen = (v: boolean) => useUIStore.getState().setEditPanelOpen(v);
@@ -54,6 +56,14 @@ export default function MainPanels() {
       open();
     }
   };
+
+  useEffect(() => {
+    if (!hasMountedSubtitles) return;
+    // Product rule: once subtitles are mounted, the editor should surface,
+    // including highlight-owned transcription flows.
+    // Highlight workflows keep the editor read-only rather than collapsed.
+    useUIStore.getState().setEditPanelOpen(true);
+  }, [hasMountedSubtitles, subtitleSourceId]);
 
   return (
     <>

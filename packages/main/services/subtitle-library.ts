@@ -11,13 +11,14 @@ export interface StoredSubtitleEntry {
   targetLanguage: string | null;
   filePath: string;
   sourceVideoPaths: string[];
+  sourceVideoAssetIdentities: string[];
   sourceUrls: string[];
   createdAt: string;
   updatedAt: string;
 }
 
 interface StoredSubtitleIndex {
-  version: 1;
+  version: 2;
   entries: StoredSubtitleEntry[];
 }
 
@@ -36,7 +37,7 @@ interface FindStoredSubtitleArgs {
   targetLanguage?: string | null;
 }
 
-const INDEX_VERSION = 1 as const;
+const INDEX_VERSION = 2 as const;
 const LIBRARY_DIR_NAME = 'subtitle-history';
 const ENTRIES_DIR_NAME = 'entries';
 const INDEX_FILE_NAME = 'index.json';
@@ -86,11 +87,146 @@ function normalizeSourceUrl(value: string | null | undefined): string {
   }
 }
 
-function normalizeTargetLanguage(value: string | null | undefined): string | null {
+function normalizeSourceAssetIdentity(
+  value: string | null | undefined
+): string {
+  return String(value || '').trim();
+}
+
+function normalizeTargetLanguage(
+  value: string | null | undefined
+): string | null {
   const normalized = String(value || '')
     .trim()
     .toLowerCase();
   return normalized || null;
+}
+
+type StoredSourceStats = Awaited<ReturnType<typeof fs.stat>>;
+
+function buildStoredSourceAssetIdentity(stats: StoredSourceStats): string {
+  const sizeBytes = Number.isFinite(stats.size) ? stats.size : 0;
+  const mtimeMs = Number.isFinite(stats.mtimeMs)
+    ? Math.round(stats.mtimeMs)
+    : 0;
+  const birthtimeMs = Number.isFinite(stats.birthtimeMs)
+    ? Math.round(stats.birthtimeMs)
+    : 0;
+  const dev = Number.isFinite(Number((stats as any).dev))
+    ? Number((stats as any).dev)
+    : 0;
+  const ino = Number.isFinite(Number((stats as any).ino))
+    ? Number((stats as any).ino)
+    : 0;
+  return `file:${dev}:${ino}:${sizeBytes}:${mtimeMs}:${birthtimeMs}`;
+}
+
+async function statStoredSourcePath(
+  filePath: string
+): Promise<StoredSourceStats | null> {
+  try {
+    return await fs.stat(filePath);
+  } catch {
+    return null;
+  }
+}
+
+function selectStoredSourcePathSegment(
+  entries: string[],
+  segment: string
+): string | null {
+  const exactMatch = entries.find(entry => entry === segment);
+  if (exactMatch) return exactMatch;
+
+  const foldedSegment = segment.toLowerCase();
+  const caseInsensitiveMatches = entries.filter(
+    entry => entry.toLowerCase() === foldedSegment
+  );
+  if (caseInsensitiveMatches.length !== 1) {
+    return null;
+  }
+  return caseInsensitiveMatches[0];
+}
+
+async function resolveStoredSourcePathForStat(
+  value: string | null | undefined
+): Promise<string | null> {
+  const rawPath = String(value || '').trim();
+  if (!rawPath) return null;
+
+  const normalizedPath = path.normalize(rawPath);
+  if (!normalizedPath) return null;
+
+  if (await statStoredSourcePath(normalizedPath)) {
+    return normalizedPath;
+  }
+
+  if (!path.isAbsolute(normalizedPath)) {
+    return null;
+  }
+
+  const { root } = path.parse(normalizedPath);
+  if (!root) {
+    return null;
+  }
+
+  const segments = normalizedPath
+    .slice(root.length)
+    .split(path.sep)
+    .filter(Boolean);
+  let currentPath = root;
+
+  for (const segment of segments) {
+    let directoryEntries: string[];
+    try {
+      directoryEntries = await fs.readdir(currentPath);
+    } catch {
+      return null;
+    }
+
+    const matchedSegment = selectStoredSourcePathSegment(
+      directoryEntries,
+      segment
+    );
+    if (!matchedSegment) {
+      return null;
+    }
+    currentPath = path.join(currentPath, matchedSegment);
+  }
+
+  return currentPath;
+}
+
+async function resolveStoredSourceAssetIdentity(
+  value: string | null | undefined
+): Promise<string> {
+  const resolvedPath = await resolveStoredSourcePathForStat(value);
+  if (!resolvedPath) return '';
+
+  const stats = await statStoredSourcePath(resolvedPath);
+  if (!stats) {
+    return '';
+  }
+
+  return buildStoredSourceAssetIdentity(stats);
+}
+
+async function collectStoredSourceAssetIdentities(
+  sourceVideoPaths: string[]
+): Promise<string[]> {
+  const identities: string[] = [];
+
+  for (const sourceVideoPath of sourceVideoPaths) {
+    const identity = normalizeSourceAssetIdentity(
+      await resolveStoredSourceAssetIdentity(sourceVideoPath)
+    );
+    if (!identity || identities.includes(identity)) {
+      continue;
+    }
+    identities.push(identity);
+  }
+
+  return identities;
 }
 
 function sanitizeEntry(input: unknown): StoredSubtitleEntry | null {
@@ -110,6 +246,15 @@ function sanitizeEntry(input: unknown): StoredSubtitleEntry | null {
         .map((value: unknown) => normalizeVideoPath(String(value || '')))
         .filter(Boolean)
     : [];
+  const sourceVideoAssetIdentities = Array.isArray(
+    raw.sourceVideoAssetIdentities
+  )
+    ? raw.sourceVideoAssetIdentities
+        .map((value: unknown) =>
+          normalizeSourceAssetIdentity(String(value || ''))
+        )
+        .filter(Boolean)
+    : [];
   const sourceUrls = Array.isArray(raw.sourceUrls)
     ? raw.sourceUrls
         .map((value: unknown) => normalizeSourceUrl(String(value || '')))
@@ -126,6 +271,7 @@ function sanitizeEntry(input: unknown): StoredSubtitleEntry | null {
     targetLanguage,
     filePath,
     sourceVideoPaths: Array.from(new Set(sourceVideoPaths)),
+    sourceVideoAssetIdentities: Array.from(new Set(sourceVideoAssetIdentities)),
     sourceUrls: Array.from(new Set(sourceUrls)),
     createdAt,
     updatedAt,
@@ -193,7 +339,10 @@ function slugifyTitleHint(value: string | null | undefined): string {
   );
 }
 
-function buildEntryFilePath(entry: StoredSubtitleEntry, titleHint?: string | null) {
+function buildEntryFilePath(
+  entry: StoredSubtitleEntry,
+  titleHint?: string | null
+) {
   const baseName = slugifyTitleHint(titleHint);
   const languageSuffix =
     entry.kind === 'translation' && entry.targetLanguage
@@ -211,15 +360,131 @@ function mergeAliases(values: string[], nextValue: string): string[] {
   return [...values, nextValue];
 }
 
-function entryMatchesSource(
+type SourceMatch = {
+  bySourceUrl: boolean;
+  bySourceVideoPath: boolean;
+  bySourceVideoAssetIdentity: boolean;
+};
+
+function getSourceMatch(
   entry: StoredSubtitleEntry,
   sourceVideoPath: string,
-  sourceUrl: string
-): boolean {
-  return Boolean(
-    (sourceUrl && entry.sourceUrls.includes(sourceUrl)) ||
-      (sourceVideoPath && entry.sourceVideoPaths.includes(sourceVideoPath))
-  );
+  sourceUrl: string,
+  sourceVideoAssetIdentity: string
+): SourceMatch {
+  return {
+    bySourceUrl: Boolean(sourceUrl && entry.sourceUrls.includes(sourceUrl)),
+    bySourceVideoPath: Boolean(
+      sourceVideoPath && entry.sourceVideoPaths.includes(sourceVideoPath)
+    ),
+    bySourceVideoAssetIdentity: Boolean(
+      sourceVideoAssetIdentity &&
+      entry.sourceVideoAssetIdentities.includes(sourceVideoAssetIdentity)
+    ),
+  };
+}
+
+function getSaveSourceBucket(
+  entry: StoredSubtitleEntry,
+  match: SourceMatch
+): number | null {
+  if (match.bySourceUrl) return 0;
+  if (match.bySourceVideoAssetIdentity) return 1;
+  if (
+    match.bySourceVideoPath &&
+    entry.sourceVideoAssetIdentities.length === 0
+  ) {
+    return 2;
+  }
+  return null;
+}
+
+function getFindSourceBucket(
+  entry: StoredSubtitleEntry,
+  match: SourceMatch,
+  requestedSourceVideoAssetIdentity: string
+): number | null {
+  if (match.bySourceUrl) return 0;
+  if (match.bySourceVideoAssetIdentity) return 1;
+  if (
+    match.bySourceVideoPath &&
+    entry.sourceVideoAssetIdentities.length === 0
+  ) {
+    return 2;
+  }
+  if (match.bySourceVideoPath && !requestedSourceVideoAssetIdentity) {
+    return 3;
+  }
+  return null;
+}
+
+function rankEntryForTargetLanguage(
+  entry: StoredSubtitleEntry,
+  normalizedTargetLanguage: string | null
+): number {
+  if (
+    entry.kind === 'translation' &&
+    entry.targetLanguage &&
+    normalizedTargetLanguage &&
+    entry.targetLanguage === normalizedTargetLanguage
+  ) {
+    return 0;
+  }
+  if (entry.kind === 'transcription') {
+    return 1;
+  }
+  if (entry.kind === 'translation') {
+    return 2;
+  }
+  return 3;
+}
+
+function detachCompetingPathOwners(args: {
+  index: StoredSubtitleIndex;
+  chosenEntry: StoredSubtitleEntry;
+  sourceVideoPath: string;
+  sourceVideoAssetIdentity: string;
+  sourceUrl: string;
+}): boolean {
+  const {
+    index,
+    chosenEntry,
+    sourceVideoPath,
+    sourceVideoAssetIdentity,
+    sourceUrl,
+  } = args;
+  if (!sourceVideoPath) return false;
+
+  let changed = false;
+
+  for (const candidate of index.entries) {
+    if (candidate.id === chosenEntry.id) continue;
+    if (candidate.kind !== chosenEntry.kind) continue;
+    if (candidate.targetLanguage !== chosenEntry.targetLanguage) continue;
+    if (!candidate.sourceVideoPaths.includes(sourceVideoPath)) continue;
+
+    const candidateMatchesSameIdentity =
+      Boolean(sourceVideoAssetIdentity) &&
+      candidate.sourceVideoAssetIdentities.includes(sourceVideoAssetIdentity);
+    const candidateMatchesSameSourceUrl =
+      Boolean(sourceUrl) && candidate.sourceUrls.includes(sourceUrl);
+    if (candidateMatchesSameIdentity || candidateMatchesSameSourceUrl) {
+      continue;
+    }
+
+    const nextSourceVideoPaths = candidate.sourceVideoPaths.filter(
+      value => value !== sourceVideoPath
+    );
+    if (nextSourceVideoPaths.length === candidate.sourceVideoPaths.length) {
+      continue;
+    }
+
+    candidate.sourceVideoPaths = nextSourceVideoPaths;
+    candidate.updatedAt = new Date().toISOString();
+    changed = true;
+  }
+
+  return changed;
 }
 
 export async function saveStoredSubtitleArtifact(
@@ -232,28 +497,56 @@ export async function saveStoredSubtitleArtifact(
 
   const normalizedVideoPath = normalizeVideoPath(args.sourceVideoPath);
   const normalizedSourceUrl = normalizeSourceUrl(args.sourceUrl);
+  const normalizedSourceVideoAssetIdentity = normalizeSourceAssetIdentity(
+    await resolveStoredSourceAssetIdentity(args.sourceVideoPath)
+  );
   const normalizedTargetLanguage =
     args.kind === 'translation'
       ? normalizeTargetLanguage(args.targetLanguage)
       : null;
   if (!normalizedVideoPath && !normalizedSourceUrl) {
-    throw new Error('Cannot store subtitle history without a source identifier.');
+    throw new Error(
+      'Cannot store subtitle history without a source identifier.'
+    );
   }
   const index = await readIndex();
   const now = new Date().toISOString();
 
-  let entry =
-    index.entries.find(
+  const matchingEntries = index.entries
+    .filter(
       candidate =>
         candidate.kind === args.kind &&
         (args.kind !== 'translation' ||
-          candidate.targetLanguage === normalizedTargetLanguage) &&
-        entryMatchesSource(
+          candidate.targetLanguage === normalizedTargetLanguage)
+    )
+    .map(candidate => ({
+      entry: candidate,
+      bucket: getSaveSourceBucket(
+        candidate,
+        getSourceMatch(
           candidate,
           normalizedVideoPath,
-          normalizedSourceUrl
+          normalizedSourceUrl,
+          normalizedSourceVideoAssetIdentity
         )
-    ) ?? null;
+      ),
+    }))
+    .filter(
+      (
+        candidate
+      ): candidate is { entry: StoredSubtitleEntry; bucket: number } =>
+        candidate.bucket != null
+    )
+    .sort((left, right) => {
+      if (left.bucket !== right.bucket) {
+        return left.bucket - right.bucket;
+      }
+      return (
+        Date.parse(right.entry.updatedAt) - Date.parse(left.entry.updatedAt)
+      );
+    });
+
+  let entry = matchingEntries[0]?.entry ?? null;
 
   if (!entry) {
     entry = {
@@ -262,6 +555,7 @@ export async function saveStoredSubtitleArtifact(
       targetLanguage: normalizedTargetLanguage,
       filePath: '',
       sourceVideoPaths: [],
+      sourceVideoAssetIdentities: [],
       sourceUrls: [],
       createdAt: now,
       updatedAt: now,
@@ -274,8 +568,19 @@ export async function saveStoredSubtitleArtifact(
     entry.sourceVideoPaths,
     normalizedVideoPath
   );
+  entry.sourceVideoAssetIdentities = mergeAliases(
+    entry.sourceVideoAssetIdentities,
+    normalizedSourceVideoAssetIdentity
+  );
   entry.sourceUrls = mergeAliases(entry.sourceUrls, normalizedSourceUrl);
   entry.updatedAt = now;
+  detachCompetingPathOwners({
+    index,
+    chosenEntry: entry,
+    sourceVideoPath: normalizedVideoPath,
+    sourceVideoAssetIdentity: normalizedSourceVideoAssetIdentity,
+    sourceUrl: normalizedSourceUrl,
+  });
   if (!entry.filePath) {
     entry.filePath = buildEntryFilePath(entry, args.titleHint);
   }
@@ -291,41 +596,59 @@ export async function findStoredSubtitleForVideo(
 ): Promise<{ entry: StoredSubtitleEntry | null; content?: string }> {
   const normalizedVideoPath = normalizeVideoPath(args.sourceVideoPath);
   const normalizedSourceUrl = normalizeSourceUrl(args.sourceUrl);
+  const normalizedSourceVideoAssetIdentity = normalizeSourceAssetIdentity(
+    await resolveStoredSourceAssetIdentity(args.sourceVideoPath)
+  );
   const normalizedTargetLanguage = normalizeTargetLanguage(args.targetLanguage);
   if (!normalizedVideoPath && !normalizedSourceUrl) {
     return { entry: null };
   }
 
   const index = await readIndex();
-  const availableEntries: StoredSubtitleEntry[] = [];
+  const matchedEntryIds = new Set<string>();
+  const availableEntries: Array<{
+    entry: StoredSubtitleEntry;
+    bucket: number;
+  }> = [];
   let pruned = false;
 
   for (const entry of index.entries) {
-    if (
-      !entryMatchesSource(entry, normalizedVideoPath, normalizedSourceUrl)
-    ) {
+    const match = getSourceMatch(
+      entry,
+      normalizedVideoPath,
+      normalizedSourceUrl,
+      normalizedSourceVideoAssetIdentity
+    );
+    const bucket = getFindSourceBucket(
+      entry,
+      match,
+      normalizedSourceVideoAssetIdentity
+    );
+    if (bucket == null) {
       continue;
     }
+    matchedEntryIds.add(entry.id);
     if (!(await fileExists(entry.filePath))) {
       pruned = true;
       continue;
     }
-    availableEntries.push(entry);
+    availableEntries.push({ entry, bucket });
   }
 
   if (pruned) {
     index.entries = index.entries.filter(
-      entry => !entryMatchesSource(entry, normalizedVideoPath, normalizedSourceUrl)
-        || availableEntries.some(candidate => candidate.id === entry.id)
+      entry =>
+        !matchedEntryIds.has(entry.id) ||
+        availableEntries.some(candidate => candidate.entry.id === entry.id)
     );
     await writeIndex(index);
   }
 
   const compatibleEntries = normalizedTargetLanguage
     ? availableEntries.filter(
-        entry =>
-          entry.kind !== 'translation' ||
-          entry.targetLanguage === normalizedTargetLanguage
+        candidate =>
+          candidate.entry.kind !== 'translation' ||
+          candidate.entry.targetLanguage === normalizedTargetLanguage
       )
     : availableEntries;
 
@@ -333,30 +656,20 @@ export async function findStoredSubtitleForVideo(
     return { entry: null };
   }
 
-  compatibleEntries.sort((a, b) => {
-    const rankEntry = (entry: StoredSubtitleEntry): number => {
-      if (
-        entry.kind === 'translation' &&
-        entry.targetLanguage &&
-        normalizedTargetLanguage &&
-        entry.targetLanguage === normalizedTargetLanguage
-      ) {
-        return 0;
-      }
-      if (entry.kind === 'transcription') {
-        return 1;
-      }
-      if (entry.kind === 'translation') {
-        return 2;
-      }
-      return 3;
-    };
-    const rankDiff = rankEntry(a) - rankEntry(b);
+  compatibleEntries.sort((left, right) => {
+    if (left.bucket !== right.bucket) {
+      return left.bucket - right.bucket;
+    }
+
+    const rankDiff =
+      rankEntryForTargetLanguage(left.entry, normalizedTargetLanguage) -
+      rankEntryForTargetLanguage(right.entry, normalizedTargetLanguage);
     if (rankDiff !== 0) return rankDiff;
-    return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
+
+    return Date.parse(right.entry.updatedAt) - Date.parse(left.entry.updatedAt);
   });
 
-  const winner = compatibleEntries[0];
+  const winner = compatibleEntries[0].entry;
   const content = await fs.readFile(winner.filePath, 'utf8');
   return { entry: winner, content };
 }
@@ -367,6 +680,9 @@ export async function syncStoredSubtitleVideoPath(args: {
 }): Promise<boolean> {
   const previousPath = normalizeVideoPath(args.previousPath);
   const savedPath = normalizeVideoPath(args.savedPath);
+  const savedSourceVideoAssetIdentity = normalizeSourceAssetIdentity(
+    await resolveStoredSourceAssetIdentity(args.savedPath)
+  );
   if (!previousPath || !savedPath) return false;
 
   const index = await readIndex();
@@ -377,6 +693,10 @@ export async function syncStoredSubtitleVideoPath(args: {
       continue;
     }
     entry.sourceVideoPaths = mergeAliases(entry.sourceVideoPaths, savedPath);
+    entry.sourceVideoAssetIdentities = mergeAliases(
+      entry.sourceVideoAssetIdentities,
+      savedSourceVideoAssetIdentity
+    );
     changed = true;
   }
 
@@ -391,14 +711,93 @@ export async function rememberStoredSubtitleVideoPath(args: {
 }): Promise<boolean> {
   const entryId = String(args.entryId || '').trim();
   const sourceVideoPath = normalizeVideoPath(args.sourceVideoPath);
+  const sourceVideoAssetIdentity = normalizeSourceAssetIdentity(
+    await resolveStoredSourceAssetIdentity(args.sourceVideoPath)
+  );
   if (!entryId || !sourceVideoPath) return false;
 
   const index = await readIndex();
-  const entry = index.entries.find(candidate => candidate.id === entryId) ?? null;
+  const entry =
+    index.entries.find(candidate => candidate.id === entryId) ?? null;
   if (!entry) return false;
-  if (entry.sourceVideoPaths.includes(sourceVideoPath)) return false;
+  const nextSourceVideoPaths = mergeAliases(
+    entry.sourceVideoPaths,
+    sourceVideoPath
+  );
+  const nextSourceVideoAssetIdentities = mergeAliases(
+    entry.sourceVideoAssetIdentities,
+    sourceVideoAssetIdentity
+  );
+  const changed =
+    nextSourceVideoPaths.length !== entry.sourceVideoPaths.length ||
+    nextSourceVideoAssetIdentities.length !==
+      entry.sourceVideoAssetIdentities.length;
+  if (!changed) return false;
 
-  entry.sourceVideoPaths = mergeAliases(entry.sourceVideoPaths, sourceVideoPath);
+  entry.sourceVideoPaths = nextSourceVideoPaths;
+  entry.sourceVideoAssetIdentities = nextSourceVideoAssetIdentities;
+  entry.updatedAt = new Date().toISOString();
+  await writeIndex(index);
+  return true;
+}
+
+export async function detachStoredSubtitleSource(args: {
+  entryId: string;
+  sourceVideoPath?: string | null;
+  sourceUrl?: string | null;
+}): Promise<boolean> {
+  const entryId = String(args.entryId || '').trim();
+  const rawSourceVideoPath = String(args.sourceVideoPath || '').trim();
+  const sourceVideoPath = normalizeVideoPath(rawSourceVideoPath);
+  const sourceUrl = normalizeSourceUrl(args.sourceUrl);
+  if (!entryId || (!sourceVideoPath && !sourceUrl)) return false;
+
+  const index = await readIndex();
+  const entry =
+    index.entries.find(candidate => candidate.id === entryId) ?? null;
+  if (!entry) return false;
+
+  const nextSourceVideoPaths = sourceVideoPath
+    ? entry.sourceVideoPaths.filter(value => value !== sourceVideoPath)
+    : entry.sourceVideoPaths;
+  const nextSourceUrls = sourceUrl
+    ? entry.sourceUrls.filter(value => value !== sourceUrl)
+    : entry.sourceUrls;
+  const changed =
+    nextSourceVideoPaths.length !== entry.sourceVideoPaths.length ||
+    nextSourceUrls.length !== entry.sourceUrls.length;
+  if (!changed) return false;
+
+  if (nextSourceVideoPaths.length === 0 && nextSourceUrls.length === 0) {
+    index.entries = index.entries.filter(
+      candidate => candidate.id !== entry.id
+    );
+    await writeIndex(index);
+    try {
+      await fs.rm(entry.filePath, { force: true });
+    } catch {
+      // Do nothing
+    }
+    return true;
+  }
+
+  const detachedSourceVideoAssetIdentity = normalizeSourceAssetIdentity(
+    await resolveStoredSourceAssetIdentity(rawSourceVideoPath)
+  );
+  const nextSourceVideoAssetIdentities =
+    await collectStoredSourceAssetIdentities(nextSourceVideoPaths);
+  const fallbackSourceVideoAssetIdentities = detachedSourceVideoAssetIdentity
+    ? entry.sourceVideoAssetIdentities.filter(
+        value => value !== detachedSourceVideoAssetIdentity
+      )
+    : [...entry.sourceVideoAssetIdentities];
+
+  entry.sourceVideoPaths = nextSourceVideoPaths;
+  entry.sourceUrls = nextSourceUrls;
+  entry.sourceVideoAssetIdentities =
+    nextSourceVideoAssetIdentities.length > 0
+      ? nextSourceVideoAssetIdentities
+      : fallbackSourceVideoAssetIdentities;
   entry.updatedAt = new Date().toISOString();
   await writeIndex(index);
   return true;

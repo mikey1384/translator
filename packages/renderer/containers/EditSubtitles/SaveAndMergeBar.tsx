@@ -26,6 +26,7 @@ interface SaveAndMergeBarProps {
   canSaveDirectly: boolean;
   subtitlesExist: boolean;
   videoFileExists: boolean;
+  isExportLocked?: boolean;
   isMergingInProgress: boolean;
   isTranslationInProgress?: boolean;
 }
@@ -37,6 +38,7 @@ export default function SaveAndMergeBar({
   canSaveDirectly,
   subtitlesExist,
   videoFileExists,
+  isExportLocked = false,
   isMergingInProgress,
   isTranslationInProgress,
 }: SaveAndMergeBarProps) {
@@ -60,7 +62,7 @@ export default function SaveAndMergeBar({
             onClick={onSave}
             variant="primary"
             size="sm"
-            disabled={!canSaveDirectly}
+            disabled={!canSaveDirectly || isExportLocked}
             className={editorSaveButtonStyles}
             title={
               !canSaveDirectly
@@ -91,6 +93,7 @@ export default function SaveAndMergeBar({
             onClick={onSaveAs}
             variant="success"
             size="sm"
+            disabled={isExportLocked}
             className={editorSaveButtonStyles}
           >
             <div className={editorButtonContentStyles}>
@@ -115,6 +118,7 @@ export default function SaveAndMergeBar({
           <Button
             onClick={onMerge}
             disabled={
+              isExportLocked ||
               !videoFileExists ||
               !subtitlesExist ||
               isMergingInProgress ||
@@ -232,7 +236,6 @@ export default function SaveAndMergeBar({
           </div>
         </div>
       </div>
-
     </div>
   );
 }

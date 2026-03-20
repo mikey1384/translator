@@ -20,9 +20,16 @@ import {
 } from '../../../utils/translationFailure';
 import { logError } from '../../../utils/logger';
 import {
+  detachStoredSubtitleSourceAssociation,
   storeGeneratedSubtitleArtifact,
   unmountCurrentSubtitles,
 } from '../../../utils/subtitle-library';
+
+type PendingStoredSubtitleReplacement = {
+  entryId: string;
+  sourceVideoPath: string | null;
+  sourceUrl: string | null;
+};
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -30,6 +37,7 @@ export interface GenerateSubtitlesParams {
   targetLanguage: string;
   operationId: string;
   workflowOwner?: 'default' | 'highlight';
+  pendingReplacementTarget?: PendingStoredSubtitleReplacement | null;
 }
 
 export interface GenerateSubtitlesResult {
@@ -395,6 +403,7 @@ export async function executeSubtitleGeneration({
   targetLanguage,
   operationId,
   workflowOwner = 'default',
+  pendingReplacementTarget = null,
 }: GenerateSubtitlesParams): Promise<GenerateSubtitlesResult> {
   const { setTranscription } = useTaskStore.getState();
   // Ensure translation slice is not considered active during transcription-only
@@ -470,6 +479,27 @@ export async function executeSubtitleGeneration({
           '[subtitleGeneration] Failed to store transcription history:',
           storeErr
         );
+      }
+      if (
+        libraryMeta?.entryId &&
+        pendingReplacementTarget?.entryId &&
+        libraryMeta.entryId !== pendingReplacementTarget.entryId
+      ) {
+        // Replacement detaches whichever stored subtitle was mounted when the
+        // user chose to retranscribe. That is intentional for auto-mounted
+        // translations too: the new transcription becomes the source owner.
+        try {
+          await detachStoredSubtitleSourceAssociation({
+            entryId: pendingReplacementTarget.entryId,
+            sourceVideoPath: pendingReplacementTarget.sourceVideoPath,
+            sourceUrl: pendingReplacementTarget.sourceUrl,
+          });
+        } catch (detachErr) {
+          console.error(
+            '[subtitleGeneration] Failed to detach replaced stored subtitle source:',
+            detachErr
+          );
+        }
       }
       useSubStore
         .getState()
@@ -582,34 +612,7 @@ export async function startTranscriptionFlow({
   workflowOwner?: 'default' | 'highlight';
   openEditPanelOnStart?: boolean;
 }): Promise<GenerateSubtitlesResult> {
-  // Ensure the Edit panel is visible so users can see live updates
-  if (openEditPanelOnStart) {
-    try {
-      const { setEditPanelOpen } = useUIStore.getState();
-      setEditPanelOpen(true);
-    } catch {
-      // Do nothing
-    }
-  }
-
-  // If there are mounted subtitles, prompt to save/discard before proceeding
-  const hasMounted = useSubStore.getState().order.length > 0;
-  if (hasMounted) {
-    const choice = await openUnsavedSrtConfirm();
-    if (choice === 'cancel') return { success: false };
-    if (choice === 'save') {
-      const saved = await saveCurrentSubtitles();
-      if (!saved) return { success: false };
-    }
-    clearMountedSrtShared();
-    try {
-      useVideoStore.getState().clearDubbedMedia();
-    } catch {
-      // Ignore inability to clear dubbed media
-    }
-  }
-
-  // Validate inputs
+  // Validate inputs before prompting to replace the currently mounted subtitle.
   const validation = validateGenerationInputs(
     videoFile,
     videoFilePath,
@@ -625,12 +628,61 @@ export async function startTranscriptionFlow({
     return { success: false };
   }
 
+  // Some workflows want Edit visible immediately, even before any subtitles
+  // have mounted. Highlight passes false so the blank editor stays hidden
+  // until mounted subtitles trigger the shared auto-open rule.
+  if (openEditPanelOnStart) {
+    try {
+      const { setEditPanelOpen } = useUIStore.getState();
+      setEditPanelOpen(true);
+    } catch {
+      // Do nothing
+    }
+  }
+
+  // If there are mounted subtitles, prompt to save/discard before proceeding
+  const hasMounted = useSubStore.getState().order.length > 0;
+  let pendingReplacementTarget: PendingStoredSubtitleReplacement | null = null;
+  if (hasMounted) {
+    const subtitleState = useSubStore.getState();
+    const videoState = useVideoStore.getState();
+    if (subtitleState.libraryEntryId) {
+      // Capture the current stored-owner before Save As or unmounting mutates
+      // the mounted subtitle metadata. This intentionally includes stored
+      // translations: retranscribing while any subtitle is mounted means the
+      // current stored document should stop owning this source after the fresh
+      // transcription has been stored successfully.
+      pendingReplacementTarget = {
+        entryId: subtitleState.libraryEntryId,
+        sourceVideoPath:
+          videoState.originalPath ??
+          videoState.path ??
+          subtitleState.sourceVideoPath ??
+          null,
+        sourceUrl: videoState.sourceUrl ?? null,
+      };
+    }
+    const choice = await openUnsavedSrtConfirm();
+    if (choice === 'cancel') return { success: false };
+    if (choice === 'save') {
+      const saved = await saveCurrentSubtitles();
+      if (!saved) return { success: false };
+    }
+    clearMountedSrtShared();
+    try {
+      useVideoStore.getState().clearDubbedMedia();
+    } catch {
+      // Ignore inability to clear dubbed media
+    }
+  }
+
   return executeSubtitleGeneration({
     videoFile,
     videoFilePath,
     targetLanguage: 'original',
     operationId,
     workflowOwner,
+    pendingReplacementTarget,
   });
 }
 
