@@ -107,6 +107,7 @@
     "invalidRenderOptions": "잘못된 렌더링 옵션이 제공되었습니다",
     "missingVideoMetadata": "비디오 메타데이터 누락 ({{missing}})",
     "noSourceVideo": "소스 비디오 없음",
+    "sourceVideoUnavailable": "원본 비디오가 삭제되었거나 더 이상 접근할 수 없습니다. 다시 열고 다시 시도하세요.",
     "noSubtitlesLoaded": "자막이 로드되지 않았습니다",
     "failedToLoadSRT": "SRT 파일을 로드하지 못했습니다",
     "cancelTranslationFailed": "번역 취소 실패: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "일부 진단 컨텍스트를 불러올 수 없습니다. 보고서에는 이 앱의 세부 정보가 계속 포함됩니다."
   }
 }
+
+

@@ -107,6 +107,7 @@
     "invalidRenderOptions": "گزینه‌های رندر نامعتبر ارائه شده",
     "missingVideoMetadata": "متاداده ویدیو موجود نیست ({{missing}})",
     "noSourceVideo": "ویدیو منبع موجود نیست",
+    "sourceVideoUnavailable": "ویدیوی اصلی حذف شده یا دیگر در دسترس نیست. دوباره آن را باز کنید و دوباره تلاش کنید.",
     "noSubtitlesLoaded": "زیرنویس بارگذاری نشده",
     "failedToLoadSRT": "بارگذاری فایل SRT ناموفق بود",
     "cancelTranslationFailed": "لغو ترجمه انجام نشد: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "بارگیری بخشی از زمینهٔ عیب‌یابی ممکن نشد. گزارش همچنان جزئیات این برنامه را شامل می‌شود."
   }
 }
+
+

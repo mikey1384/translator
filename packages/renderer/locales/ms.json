@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Pilihan paparan tidak sah disediakan",
     "missingVideoMetadata": "Metadata video hilang ({{missing}})",
     "noSourceVideo": "Tiada video sumber",
+    "sourceVideoUnavailable": "Video asal telah dipadam atau tidak lagi boleh diakses. Buka semula dan cuba lagi.",
     "noSubtitlesLoaded": "Tiada sarikata dimuatkan",
     "failedToLoadSRT": "Gagal memuatkan fail SRT",
     "cancelTranslationFailed": "Gagal membatalkan terjemahan: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Sesetengah konteks diagnostik tidak dapat dimuatkan. Laporan masih akan menyertakan butiran daripada aplikasi ini."
   }
 }
+
+

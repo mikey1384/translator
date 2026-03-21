@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Ongeldige renderopties opgegeven",
     "missingVideoMetadata": "Ontbrekende videometadata ({{missing}})",
     "noSourceVideo": "Geen bronvideo",
+    "sourceVideoUnavailable": "De originele video is verwijderd of niet meer toegankelijk. Open hem opnieuw en probeer het opnieuw.",
     "noSubtitlesLoaded": "Geen ondertitels geladen",
     "failedToLoadSRT": "Laden van SRT-bestand mislukt",
     "cancelTranslationFailed": "Vertaling annuleren mislukt: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Een deel van de diagnostische context kon niet worden geladen. Het rapport bevat nog steeds details van deze app."
   }
 }
+
+

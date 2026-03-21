@@ -107,6 +107,7 @@
     "invalidRenderOptions": "無効なレンダリングオプションが指定されました",
     "missingVideoMetadata": "動画メタデータがありません（{{missing}}）",
     "noSourceVideo": "ソース動画がありません",
+    "sourceVideoUnavailable": "元の動画は削除されたか、アクセスできなくなっています。もう一度開いて再試行してください。",
     "noSubtitlesLoaded": "字幕が読み込まれていません",
     "failedToLoadSRT": "SRTファイルの読み込みに失敗しました",
     "cancelTranslationFailed": "翻訳のキャンセルに失敗しました: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "一部の診断コンテキストを読み込めませんでした。レポートには引き続きこのアプリの詳細が含まれます。"
   }
 }
+
+

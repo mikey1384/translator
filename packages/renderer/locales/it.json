@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Opzioni di rendering non valide fornite",
     "missingVideoMetadata": "Metadati video mancanti ({{missing}})",
     "noSourceVideo": "Nessun video sorgente",
+    "sourceVideoUnavailable": "Il video originale è stato rimosso o non è più accessibile. Aprilo di nuovo e riprova.",
     "noSubtitlesLoaded": "Nessun sottotitolo caricato",
     "failedToLoadSRT": "Impossibile caricare il file SRT",
     "cancelTranslationFailed": "Impossibile annullare la traduzione: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Impossibile caricare parte del contesto diagnostico. Il report includerà comunque i dettagli di questa app."
   }
 }
+
+

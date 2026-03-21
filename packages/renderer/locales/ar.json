@@ -107,6 +107,7 @@
     "invalidRenderOptions": "تم توفير خيارات عرض غير صالحة",
     "missingVideoMetadata": "بيانات الفيديو الوصفية مفقودة ({{missing}})",
     "noSourceVideo": "لا يوجد فيديو مصدر",
+    "sourceVideoUnavailable": "تمت إزالة الفيديو الأصلي أو لم يعد متاحًا. افتحه مرة أخرى وحاول مجددًا.",
     "noSubtitlesLoaded": "لم يتم تحميل ترجمات",
     "failedToLoadSRT": "فشل في تحميل ملف SRT",
     "cancelTranslationFailed": "تعذر إلغاء الترجمة: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "تعذر تحميل بعض سياق التشخيص. سيظل التقرير يتضمن تفاصيل من هذا التطبيق."
   }
 }
+
+

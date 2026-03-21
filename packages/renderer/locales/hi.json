@@ -107,6 +107,7 @@
     "invalidRenderOptions": "अमान्य रेंडर विकल्प प्रदान किए गए",
     "missingVideoMetadata": "वीडियो मेटाडेटा गुम ({{missing}})",
     "noSourceVideo": "कोई स्रोत वीडियो नहीं",
+    "sourceVideoUnavailable": "मूल वीडियो हटा दिया गया है या अब उपलब्ध नहीं है। इसे फिर से खोलें और फिर से कोशिश करें।",
     "noSubtitlesLoaded": "कोई सबटाइटल लोड नहीं",
     "failedToLoadSRT": "SRT फ़ाइल लोड करने में असफल",
     "cancelTranslationFailed": "अनुवाद रद्द नहीं हो सका: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "कुछ डायग्नोस्टिक संदर्भ लोड नहीं हो सका। रिपोर्ट में फिर भी इस ऐप के विवरण शामिल होंगे।"
   }
 }
+
+

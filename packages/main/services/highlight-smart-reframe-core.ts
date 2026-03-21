@@ -17,17 +17,19 @@ const ULTRAFACE_FEATURE_MAP_W_H = [
 
 const MAX_FACE_CANDIDATES = 200;
 const MIN_SAMPLE_COUNT = 4;
-const MAX_SAMPLE_COUNT = 12;
-const SAMPLE_INTERVAL_SECONDS = 0.65;
+const SAMPLE_INTERVAL_SECONDS = 0.2;
 const EDGE_SAMPLE_PADDING_SECONDS = 0.18;
 const MIN_TRACK_CONFIDENCE = 0.74;
+const WEAK_VISIBLE_ANCHOR_CONFIDENCE = 0.72;
 const STRONG_TRACK_CONFIDENCE = 0.9;
 const MAX_CENTER_JUMP_RATIO = 0.32;
 const LARGE_JUMP_CONFIRM_SAMPLES = 2;
 const LARGE_JUMP_STABILITY_RATIO = 0.06;
 const LARGE_JUMP_STABILITY_MIN_PX = 36;
 const MEDIAN_FILTER_RADIUS = 1;
-const MOVE_DWELL_SAMPLES = 2;
+const MEDIAN_HARD_BOUNDARY_RATIO = 0.58;
+const MEDIAN_HARD_BOUNDARY_MIN_PX = 280;
+const DESTINATION_LOOKAHEAD_SECONDS = 1.4;
 const CAMERA_QUANTIZE_PX = 8;
 const LOCK_DEADZONE_RATIO = 0.18;
 const LOCK_DEADZONE_MIN_PX = 80;
@@ -41,18 +43,24 @@ const SUBJECT_SWITCH_DISTANCE_MIN_PX = 42;
 const SUBJECT_SWITCH_SCORE_MARGIN = 0.08;
 const SUBJECT_SWITCH_DWELL_SAMPLES = 2;
 const CANDIDATE_SCORE_WINDOW = 0.12;
-const TRANSITION_HOLD_DELTA_RATIO = 0.03;
-const TRANSITION_HOLD_DELTA_MIN_PX = 14;
-const TRANSITION_INTERPOLATE_DELTA_RATIO = 0.34;
-const TRANSITION_INTERPOLATE_DELTA_MIN_PX = 200;
-const TRANSITION_SNAP_DELTA_RATIO = 0.58;
-const TRANSITION_SNAP_DELTA_MIN_PX = 280;
+const MIDPOINT_BALANCE_SCORE_MARGIN = 0.03;
+const MIDPOINT_BALANCE_AREA_RATIO = 1.35;
+const MIDPOINT_BALANCE_SCORE_MARGIN_PERSIST = 0.05;
+const MIDPOINT_BALANCE_AREA_RATIO_PERSIST = 1.5;
 const OPENING_STABLE_RANGE_RATIO = 0.045;
 const OPENING_STABLE_RANGE_MIN_PX = 24;
 const OPENING_OUTLIER_DELTA_RATIO = 0.2;
 const OPENING_OUTLIER_DELTA_MIN_PX = 96;
 const OPENING_CONFIRMATION_SAMPLE_COUNT = 3;
-const MOVE_DWELL_SECONDS = MOVE_DWELL_SAMPLES * SAMPLE_INTERVAL_SECONDS;
+const TRANSIENT_MIDPOINT_CONFIRMATION_SAMPLE_COUNT = 2;
+const TRANSIENT_MISSING_CONFIRMATION_SAMPLE_COUNT = 2;
+const TRANSIENT_MISSING_MAX_SECONDS = 1.4;
+const TRANSIENT_LOCK_MAX_SECONDS = 1.4;
+const TRANSIENT_LOCK_VICINITY_RATIO = 0.33;
+const TRANSIENT_LOCK_VICINITY_MIN_PX = 120;
+const SHOT_START_CONFIRMATION_SAMPLE_COUNT = 2;
+const SHOT_START_BACKFILL_MAX_SECONDS = 0.6;
+const MOVE_DWELL_SECONDS = 1.3;
 
 const ULTRAFACE_PRIORS = buildUltraFacePriors();
 
@@ -69,6 +77,7 @@ export interface FaceTrackSample {
   centerX: number | null;
   confidence: number;
   candidates?: FaceCandidate[];
+  shotId?: number;
 }
 
 export interface ReframeKeyframe {
@@ -76,12 +85,31 @@ export interface ReframeKeyframe {
   x: number;
 }
 
-type ReframeTransitionMode = 'hold' | 'interpolate' | 'snap';
+export interface VerticalReframeDecisionSample {
+  timeSeconds: number;
+  shotId: number | null;
+  startsNewShot: boolean;
+  framingMode: SubjectFramingMode;
+  detectedCenterX: number | null;
+  confidence: number;
+  candidateCenters: number[];
+  targetX: number;
+  rawCameraX: number;
+  finalCameraX: number;
+  decision: string;
+  committedSubjectSwitch: boolean;
+  reacquiredAfterGap: boolean;
+  usesWeakVisibleAnchor: boolean;
+  cleanupAdjusted: boolean;
+}
+
 type SubjectFramingMode = 'missing' | 'single' | 'midpoint';
 type SubjectAwareSample = FaceTrackSample & {
   framingMode: SubjectFramingMode;
   committedSubjectSwitch: boolean;
   reacquiredAfterGap: boolean;
+  usesWeakVisibleAnchor: boolean;
+  startsNewShot: boolean;
 };
 
 export interface VerticalReframePlan {
@@ -92,6 +120,7 @@ export interface VerticalReframePlan {
   strategy: 'tracked-face' | 'center';
   sampleCount: number;
   detectedSamples: number;
+  debugTrace: VerticalReframeDecisionSample[];
 }
 
 export function computeVerticalCropWidth(
@@ -118,10 +147,9 @@ export function buildSampleTimes(durationSeconds: number): number[] {
     return [0];
   }
 
-  const sampleCount = clamp(
-    Math.round(durationSeconds / SAMPLE_INTERVAL_SECONDS) + 1,
+  const sampleCount = Math.max(
     MIN_SAMPLE_COUNT,
-    MAX_SAMPLE_COUNT
+    Math.round(durationSeconds / SAMPLE_INTERVAL_SECONDS) + 1
   );
   if (sampleCount <= 1) {
     return [0];
@@ -306,6 +334,33 @@ function toTrackFaceCandidates(
   );
 }
 
+function pickWeakVisibleAnchorCandidate(
+  sample: FaceTrackSample,
+  sourceWidth: number,
+  sourceHeight: number,
+  previousCenterX: number | null
+): RankedFaceCandidate | null {
+  const rawCandidates = Array.isArray(sample.candidates)
+    ? sample.candidates
+    : [];
+  if (rawCandidates.length === 0) {
+    return null;
+  }
+
+  const ranked = rankFaceCandidates(
+    rawCandidates,
+    sourceWidth,
+    sourceHeight,
+    previousCenterX
+  );
+  const strongest = ranked[0];
+  if (!strongest || strongest.score < WEAK_VISIBLE_ANCHOR_CONFIDENCE) {
+    return null;
+  }
+
+  return strongest;
+}
+
 function canFitTwoFacesInCrop(
   a: FaceCandidate,
   b: FaceCandidate,
@@ -313,6 +368,43 @@ function canFitTwoFacesInCrop(
 ): boolean {
   const combinedWidth = Math.max(a.x2, b.x2) - Math.min(a.x1, b.x1);
   return combinedWidth <= cropWidth * TWO_FACE_FIT_MARGIN_RATIO;
+}
+
+function computeFaceArea(candidate: FaceCandidate): number {
+  return (
+    Math.max(1, candidate.x2 - candidate.x1) *
+    Math.max(1, candidate.y2 - candidate.y1)
+  );
+}
+
+function shouldUseMidpointFraming({
+  strongest,
+  secondary,
+  previousFramingMode,
+}: {
+  strongest: RankedFaceCandidate;
+  secondary: RankedFaceCandidate;
+  previousFramingMode: SubjectFramingMode;
+}): boolean {
+  const scoreMargin =
+    previousFramingMode === 'midpoint'
+      ? MIDPOINT_BALANCE_SCORE_MARGIN_PERSIST
+      : MIDPOINT_BALANCE_SCORE_MARGIN;
+  const areaRatioLimit =
+    previousFramingMode === 'midpoint'
+      ? MIDPOINT_BALANCE_AREA_RATIO_PERSIST
+      : MIDPOINT_BALANCE_AREA_RATIO;
+  const scoreGap = Math.max(0, strongest.score - secondary.score);
+  if (scoreGap > scoreMargin) {
+    return false;
+  }
+
+  const strongestArea = computeFaceArea(strongest);
+  const secondaryArea = computeFaceArea(secondary);
+  const areaRatio =
+    Math.max(strongestArea, secondaryArea) /
+    Math.max(1, Math.min(strongestArea, secondaryArea));
+  return areaRatio <= areaRatioLimit;
 }
 
 function pickClosestCandidate(
@@ -355,6 +447,31 @@ function shouldSwitchCommittedSubject({
   );
 }
 
+function shouldAdoptWeakVisibleAnchor({
+  committedCenterX,
+  candidateCenterX,
+  cropWidth,
+  reacquiredAfterGap,
+}: {
+  committedCenterX: number | null;
+  candidateCenterX: number;
+  cropWidth: number;
+  reacquiredAfterGap: boolean;
+}): boolean {
+  if (reacquiredAfterGap) {
+    return true;
+  }
+  if (committedCenterX == null) {
+    return false;
+  }
+
+  const distanceThreshold = Math.max(
+    SUBJECT_SWITCH_DISTANCE_MIN_PX,
+    cropWidth * SUBJECT_SWITCH_DISTANCE_RATIO
+  );
+  return Math.abs(candidateCenterX - committedCenterX) >= distanceThreshold;
+}
+
 function buildSubjectAwareSamples({
   samples,
   sourceWidth,
@@ -367,19 +484,78 @@ function buildSubjectAwareSamples({
   cropWidth: number;
 }): SubjectAwareSample[] {
   let committedCenterX: number | null = null;
+  let committedFramingMode: SubjectFramingMode = 'missing';
   let pendingSwitchCenterX: number | null = null;
   let pendingSwitchCount = 0;
   let hadMissingSample = false;
+  let previousShotId: number | null = null;
 
-  return samples.map(sample => {
+  return samples.map((sample, index) => {
+    const startsNewShot =
+      index === 0 ||
+      (sample.shotId != null &&
+        previousShotId != null &&
+        sample.shotId !== previousShotId);
+    if (startsNewShot) {
+      committedCenterX = null;
+      committedFramingMode = 'missing';
+      pendingSwitchCenterX = null;
+      pendingSwitchCount = 0;
+      hadMissingSample = false;
+    }
+    const rankingPreviousCenter = startsNewShot ? null : committedCenterX;
+    previousShotId = sample.shotId ?? previousShotId;
+    const reacquiredAfterGap = hadMissingSample;
     const rankedCandidates = toTrackFaceCandidates(
       sample,
       sourceWidth,
       sourceHeight,
-      committedCenterX
+      rankingPreviousCenter
+    );
+    const weakVisibleAnchor = pickWeakVisibleAnchorCandidate(
+      sample,
+      sourceWidth,
+      sourceHeight,
+      rankingPreviousCenter
     );
     if (rankedCandidates.length === 0) {
+      if (
+        weakVisibleAnchor &&
+        shouldAdoptWeakVisibleAnchor({
+          committedCenterX,
+          candidateCenterX: weakVisibleAnchor.centerX,
+          cropWidth,
+          reacquiredAfterGap,
+        })
+      ) {
+        const distanceThreshold = Math.max(
+          SUBJECT_SWITCH_DISTANCE_MIN_PX,
+          cropWidth * SUBJECT_SWITCH_DISTANCE_RATIO
+        );
+        const committedSubjectSwitch =
+          committedCenterX != null &&
+          Math.abs(weakVisibleAnchor.centerX - committedCenterX) >=
+            distanceThreshold;
+        committedCenterX = clamp(weakVisibleAnchor.centerX, 0, sourceWidth);
+        committedFramingMode = 'single';
+        pendingSwitchCenterX = null;
+        pendingSwitchCount = 0;
+        hadMissingSample = false;
+        return {
+          ...sample,
+          centerX: committedCenterX,
+          confidence: weakVisibleAnchor.score,
+          candidates: [weakVisibleAnchor],
+          framingMode: 'single',
+          committedSubjectSwitch,
+          reacquiredAfterGap,
+          usesWeakVisibleAnchor: true,
+          startsNewShot,
+        };
+      }
+
       hadMissingSample = true;
+      committedFramingMode = 'missing';
       pendingSwitchCenterX = null;
       pendingSwitchCount = 0;
       return {
@@ -390,10 +566,11 @@ function buildSubjectAwareSamples({
         framingMode: 'missing',
         committedSubjectSwitch: false,
         reacquiredAfterGap: false,
+        usesWeakVisibleAnchor: false,
+        startsNewShot,
       };
     }
 
-    const reacquiredAfterGap = hadMissingSample;
     hadMissingSample = false;
     const strongest = rankedCandidates[0];
     const secondary = rankedCandidates[1] ?? null;
@@ -402,7 +579,13 @@ function buildSubjectAwareSamples({
       strongest.score >= MIN_TRACK_CONFIDENCE &&
       secondary.score >= MIN_TRACK_CONFIDENCE;
     const twoFaceMidpointAllowed =
-      twoStrongFaces && canFitTwoFacesInCrop(strongest, secondary, cropWidth);
+      twoStrongFaces &&
+      canFitTwoFacesInCrop(strongest, secondary, cropWidth) &&
+      shouldUseMidpointFraming({
+        strongest,
+        secondary,
+        previousFramingMode: committedFramingMode,
+      });
 
     if (twoFaceMidpointAllowed && secondary) {
       const midpointCenter = clamp(
@@ -411,6 +594,7 @@ function buildSubjectAwareSamples({
         sourceWidth
       );
       committedCenterX = midpointCenter;
+      committedFramingMode = 'midpoint';
       pendingSwitchCenterX = null;
       pendingSwitchCount = 0;
       return {
@@ -421,6 +605,8 @@ function buildSubjectAwareSamples({
         framingMode: 'midpoint',
         committedSubjectSwitch: false,
         reacquiredAfterGap,
+        usesWeakVisibleAnchor: false,
+        startsNewShot,
       };
     }
 
@@ -472,6 +658,7 @@ function buildSubjectAwareSamples({
     }
 
     committedCenterX = clamp(chosen.centerX, 0, sourceWidth);
+    committedFramingMode = 'single';
     return {
       ...sample,
       centerX: committedCenterX,
@@ -480,6 +667,8 @@ function buildSubjectAwareSamples({
       framingMode: 'single',
       committedSubjectSwitch,
       reacquiredAfterGap,
+      usesWeakVisibleAnchor: false,
+      startsNewShot,
     };
   });
 }
@@ -489,11 +678,13 @@ export function buildVerticalReframePlan({
   sourceHeight,
   durationSeconds,
   samples,
+  includeDebugTrace = false,
 }: {
   sourceWidth: number;
   sourceHeight: number;
   durationSeconds: number;
   samples: FaceTrackSample[];
+  includeDebugTrace?: boolean;
 }): VerticalReframePlan | null {
   const cropWidth = computeVerticalCropWidth(sourceWidth, sourceHeight);
   if (!cropWidth) {
@@ -517,6 +708,7 @@ export function buildVerticalReframePlan({
     sourceHeight,
     cropWidth,
   });
+  const shotSegmentIds = buildShotSegmentIds(subjectAwareSamples);
 
   const filteredCenterTrack = filterFaceCenterTrack(
     subjectAwareSamples,
@@ -525,11 +717,40 @@ export function buildVerticalReframePlan({
   const rawTrack = filteredCenterTrack.map(centerX =>
     centerX == null ? null : clamp(centerX - cropWidth / 2, 0, maxX)
   );
-  const denoisedTrack = medianFilterNullable(rawTrack, MEDIAN_FILTER_RADIUS);
+  const medianFilterSegments = buildMedianFilterSegments({
+    track: rawTrack,
+    cropWidth,
+    samples: subjectAwareSamples,
+  });
+  const denoisedTrack = medianFilterNullable(
+    rawTrack,
+    MEDIAN_FILTER_RADIUS,
+    medianFilterSegments
+  );
   const filledTrack = fillMissingTrackWithHold(denoisedTrack, fallbackX);
   const quantizedTrack = quantizeTrack(filledTrack, CAMERA_QUANTIZE_PX, maxX);
-  const openingStabilizedTrack = stabilizeOpeningTrack({
+  const missingResolvedTrack = resolveTransientMissingRuns({
     track: quantizedTrack,
+    samples: subjectAwareSamples,
+    cropWidth,
+    maxX,
+  });
+  const midpointResolvedTrack = resolveTransientMidpointRuns({
+    track: missingResolvedTrack,
+    samples: subjectAwareSamples,
+    cropWidth,
+    maxX,
+  });
+  const openingStabilizedTrack = stabilizeOpeningTrack({
+    track: midpointResolvedTrack,
+    cropWidth,
+    maxX,
+  });
+  const sampleTimeTrack = subjectAwareSamples.map(sample => sample.timeSeconds);
+  const shotStartResolvedTrack = resolveShotStartTrack({
+    track: openingStabilizedTrack,
+    timeTrack: sampleTimeTrack,
+    samples: subjectAwareSamples,
     cropWidth,
     maxX,
   });
@@ -538,32 +759,40 @@ export function buildVerticalReframePlan({
     cropWidth * STATIC_LOCK_RANGE_RATIO
   );
   const staticLockPosition = pickStaticLockPosition(
-    openingStabilizedTrack,
+    shotStartResolvedTrack,
     maxX
   );
-  const sampleTimeTrack = subjectAwareSamples.map(sample => sample.timeSeconds);
-  const cameraTrack =
-    computeRange(openingStabilizedTrack) <= staticLockRange
-      ? Array.from(
-          { length: openingStabilizedTrack.length },
-          () => staticLockPosition
-        )
+  const rawCameraTrackResult =
+    computeRange(shotStartResolvedTrack) <= staticLockRange
+      ? {
+          track: Array.from(
+            { length: shotStartResolvedTrack.length },
+            () => staticLockPosition
+          ),
+          decisionReasons: Array.from(
+            { length: shotStartResolvedTrack.length },
+            (_, index) =>
+              index === 0 ? 'start-static-lock' : 'hold-static-lock'
+          ),
+        }
       : buildCameraTrackWithHysteresis({
-          targetTrack: openingStabilizedTrack,
+          targetTrack: shotStartResolvedTrack,
           timeTrack: sampleTimeTrack,
           cropWidth,
           maxX,
+          segmentIds: medianFilterSegments,
         });
+  const cameraTrack = resolveTransientLockRuns({
+    track: rawCameraTrackResult.track,
+    timeTrack: sampleTimeTrack,
+    cropWidth,
+    segmentIds: shotSegmentIds,
+  });
 
   const keyframes = subjectAwareSamples.map((sample, index) => ({
     timeSeconds: roundTo(sample.timeSeconds, 3),
     x: roundTo(cameraTrack[index], 3),
   }));
-  const transitionModes = buildReframeTransitionModes({
-    keyframes,
-    cropWidth,
-    samples: subjectAwareSamples,
-  });
   const detectedSamples = subjectAwareSamples.filter(
     sample => sample.centerX != null
   ).length;
@@ -572,124 +801,58 @@ export function buildVerticalReframePlan({
     cropWidth,
     cropHeight,
     keyframes,
-    xExpression: buildPiecewiseLinearExpression(keyframes, transitionModes),
+    xExpression: buildPiecewiseLinearExpression(keyframes),
     strategy: detectedSamples > 0 ? 'tracked-face' : 'center',
     sampleCount: subjectAwareSamples.length,
     detectedSamples,
+    debugTrace: includeDebugTrace
+      ? subjectAwareSamples.map((sample, index) => ({
+          timeSeconds: roundTo(sample.timeSeconds, 3),
+          shotId: sample.shotId ?? null,
+          startsNewShot: sample.startsNewShot,
+          framingMode: sample.framingMode,
+          detectedCenterX:
+            sample.centerX == null ? null : roundTo(sample.centerX, 3),
+          confidence: roundTo(sample.confidence, 3),
+          candidateCenters: (sample.candidates ?? [])
+            .map(candidate => roundTo((candidate.x1 + candidate.x2) / 2, 3))
+            .slice(0, CANDIDATE_TRACK_LIMIT),
+          targetX: roundTo(shotStartResolvedTrack[index], 3),
+          rawCameraX: roundTo(rawCameraTrackResult.track[index], 3),
+          finalCameraX: roundTo(cameraTrack[index], 3),
+          decision:
+            rawCameraTrackResult.decisionReasons[index] ??
+            (index === 0 ? 'start' : 'hold'),
+          committedSubjectSwitch: sample.committedSubjectSwitch,
+          reacquiredAfterGap: sample.reacquiredAfterGap,
+          usesWeakVisibleAnchor: sample.usesWeakVisibleAnchor,
+          cleanupAdjusted:
+            rawCameraTrackResult.track[index] !== cameraTrack[index],
+        }))
+      : [],
   };
 }
 
-function buildReframeTransitionModes({
-  keyframes,
-  cropWidth,
-  samples,
-}: {
-  keyframes: ReadonlyArray<ReframeKeyframe>;
-  cropWidth: number;
-  samples?: ReadonlyArray<SubjectAwareSample>;
-}): ReframeTransitionMode[] {
-  if (keyframes.length < 2) return [];
-  const holdDeltaThreshold = Math.max(
-    TRANSITION_HOLD_DELTA_MIN_PX,
-    cropWidth * TRANSITION_HOLD_DELTA_RATIO
-  );
-  const interpolateDeltaThreshold = Math.max(
-    TRANSITION_INTERPOLATE_DELTA_MIN_PX,
-    cropWidth * TRANSITION_INTERPOLATE_DELTA_RATIO
-  );
-  const snapDeltaThreshold = Math.max(
-    TRANSITION_SNAP_DELTA_MIN_PX,
-    cropWidth * TRANSITION_SNAP_DELTA_RATIO
-  );
-
-  const modes: ReframeTransitionMode[] = [];
-  for (let index = 0; index < keyframes.length - 1; index += 1) {
-    const current = keyframes[index];
-    const next = keyframes[index + 1];
-    const currentSample = samples?.[index];
-    const nextSample = samples?.[index + 1];
-    const delta = Math.abs(next.x - current.x);
-    const duration = next.timeSeconds - current.timeSeconds;
-    if (
-      !Number.isFinite(delta) ||
-      !Number.isFinite(duration) ||
-      duration <= 0
-    ) {
-      modes.push('snap');
-      continue;
-    }
-    if (delta <= holdDeltaThreshold) {
-      modes.push('hold');
-      continue;
-    }
-    const framingChanged =
-      currentSample != null &&
-      nextSample != null &&
-      currentSample.framingMode !== nextSample.framingMode &&
-      currentSample.framingMode !== 'missing' &&
-      nextSample.framingMode !== 'missing';
-    const hardTransition =
-      Boolean(nextSample?.committedSubjectSwitch) ||
-      Boolean(nextSample?.reacquiredAfterGap) ||
-      framingChanged;
-
-    if (
-      hardTransition ||
-      ((currentSample == null || nextSample == null) &&
-        delta >= snapDeltaThreshold)
-    ) {
-      modes.push('snap');
-      continue;
-    }
-    if (delta < interpolateDeltaThreshold) {
-      modes.push('hold');
-      continue;
-    }
-    modes.push('interpolate');
-  }
-  return modes;
-}
-
-function buildInterpolatedSegmentExpression(
-  current: ReframeKeyframe,
-  next: ReframeKeyframe
-): string {
-  const duration = next.timeSeconds - current.timeSeconds;
-  if (!Number.isFinite(duration) || duration <= 0) {
-    return formatNumber(current.x);
-  }
-  const slope = (next.x - current.x) / duration;
-  if (!Number.isFinite(slope) || Math.abs(slope) < 0.0001) {
-    return formatNumber(current.x);
-  }
-  const currentX = formatNumber(current.x);
-  const currentTime = formatNumber(current.timeSeconds);
-  const slopeText = formatNumber(slope);
-  const interpolated = `${currentX}+(${slopeText})*(t-${currentTime})`;
-  return `if(lt(t,${currentTime}),${currentX},${interpolated})`;
-}
-
 export function buildPiecewiseLinearExpression(
-  keyframes: ReadonlyArray<ReframeKeyframe>,
-  transitionModes?: ReadonlyArray<ReframeTransitionMode>
+  keyframes: ReadonlyArray<ReframeKeyframe>
 ): string {
   if (keyframes.length === 0) {
     return '0';
   }
-  if (keyframes.length === 1) {
-    return formatNumber(keyframes[0].x);
+  const compactKeyframes = keyframes.filter(
+    (keyframe, index) => index === 0 || keyframe.x !== keyframes[index - 1].x
+  );
+
+  if (compactKeyframes.length === 1) {
+    return formatNumber(compactKeyframes[0].x);
   }
 
-  let expression = formatNumber(keyframes[keyframes.length - 1].x);
-  for (let index = keyframes.length - 2; index >= 0; index -= 1) {
-    const current = keyframes[index];
-    const next = keyframes[index + 1];
-    const mode = transitionModes?.[index] ?? 'interpolate';
-    const segmentExpression =
-      mode === 'interpolate'
-        ? buildInterpolatedSegmentExpression(current, next)
-        : formatNumber(current.x);
-    expression = `if(lt(t,${formatNumber(next.timeSeconds)}),${segmentExpression},${expression})`;
+  let expression = formatNumber(
+    compactKeyframes[compactKeyframes.length - 1].x
+  );
+  for (let index = compactKeyframes.length - 2; index >= 0; index -= 1) {
+    const next = compactKeyframes[index + 1];
+    expression = `if(lt(t,${formatNumber(next.timeSeconds)}),${formatNumber(compactKeyframes[index].x)},${expression})`;
   }
   return expression;
 }
@@ -827,7 +990,18 @@ function filterFaceCenterTrack(
     }
 
     const confidence = Number(sample.confidence ?? 0);
-    if (confidence < MIN_TRACK_CONFIDENCE) {
+    const usesWeakVisibleAnchor =
+      'usesWeakVisibleAnchor' in sample &&
+      sample.usesWeakVisibleAnchor === true;
+    const committedSubjectSwitch =
+      'committedSubjectSwitch' in sample &&
+      sample.committedSubjectSwitch === true;
+    const reacquiredAfterGap =
+      'reacquiredAfterGap' in sample && sample.reacquiredAfterGap === true;
+    const meetsTrackConfidence =
+      confidence >= MIN_TRACK_CONFIDENCE ||
+      (usesWeakVisibleAnchor && confidence >= WEAK_VISIBLE_ANCHOR_CONFIDENCE);
+    if (!meetsTrackConfidence) {
       pendingJumpCenter = null;
       pendingJumpCount = 0;
       return null;
@@ -837,7 +1011,10 @@ function filterFaceCenterTrack(
     if (
       previousAcceptedCenter != null &&
       Math.abs(normalizedCenter - previousAcceptedCenter) > maxCenterJumpPx &&
-      confidence < STRONG_TRACK_CONFIDENCE
+      confidence < STRONG_TRACK_CONFIDENCE &&
+      !committedSubjectSwitch &&
+      !reacquiredAfterGap &&
+      !usesWeakVisibleAnchor
     ) {
       if (
         pendingJumpCenter != null &&
@@ -867,7 +1044,8 @@ function filterFaceCenterTrack(
 
 function medianFilterNullable(
   values: Array<number | null>,
-  radius: number
+  radius: number,
+  segmentIds?: ReadonlyArray<number>
 ): Array<number | null> {
   if (values.length === 0 || radius <= 0) {
     return [...values];
@@ -879,10 +1057,14 @@ function medianFilterNullable(
       return null;
     }
 
+    const segmentId = segmentIds?.[index] ?? 0;
     const windowValues: number[] = [];
     const start = Math.max(0, index - radius);
     const end = Math.min(lastIndex, index + radius);
     for (let cursor = start; cursor <= end; cursor += 1) {
+      if ((segmentIds?.[cursor] ?? 0) !== segmentId) {
+        continue;
+      }
       const candidate = values[cursor];
       if (candidate == null) continue;
       windowValues.push(candidate);
@@ -898,6 +1080,53 @@ function medianFilterNullable(
       ? windowValues[midpoint]
       : (windowValues[midpoint - 1] + windowValues[midpoint]) / 2;
   });
+}
+
+function buildMedianFilterSegments({
+  track,
+  cropWidth,
+  samples,
+}: {
+  track: ReadonlyArray<number | null>;
+  cropWidth: number;
+  samples: ReadonlyArray<SubjectAwareSample>;
+}): number[] {
+  if (track.length === 0) {
+    return [];
+  }
+
+  const hardBoundaryThreshold = Math.max(
+    MEDIAN_HARD_BOUNDARY_MIN_PX,
+    cropWidth * MEDIAN_HARD_BOUNDARY_RATIO
+  );
+  const segmentIds = Array.from({ length: track.length }, () => 0);
+  let currentSegmentId = 0;
+
+  for (let index = 1; index < track.length; index += 1) {
+    const previousTrack = track[index - 1];
+    const currentTrack = track[index];
+    const currentSample = samples[index];
+    const crossedGap =
+      previousTrack == null ||
+      currentTrack == null ||
+      currentSample?.reacquiredAfterGap;
+    const largeJump =
+      previousTrack != null &&
+      currentTrack != null &&
+      Math.abs(currentTrack - previousTrack) >= hardBoundaryThreshold;
+    const startsHardCut =
+      crossedGap ||
+      currentSample?.startsNewShot ||
+      currentSample?.committedSubjectSwitch ||
+      largeJump;
+
+    if (startsHardCut) {
+      currentSegmentId += 1;
+    }
+    segmentIds[index] = currentSegmentId;
+  }
+
+  return segmentIds;
 }
 
 function fillMissingTrackWithHold(
@@ -971,6 +1200,164 @@ function pickStaticLockPosition(track: number[], maxX: number): number {
   return quantizeValue(centerValue, CAMERA_QUANTIZE_PX, maxX);
 }
 
+function resolveTransientMidpointRuns({
+  track,
+  samples,
+  cropWidth,
+  maxX,
+}: {
+  track: number[];
+  samples: ReadonlyArray<SubjectAwareSample>;
+  cropWidth: number;
+  maxX: number;
+}): number[] {
+  if (track.length === 0 || samples.length !== track.length) {
+    return track;
+  }
+
+  const stableRangeThreshold = Math.max(
+    OPENING_STABLE_RANGE_MIN_PX,
+    cropWidth * OPENING_STABLE_RANGE_RATIO
+  );
+  const resolvedTrack = [...track];
+
+  for (let index = 0; index < samples.length; index += 1) {
+    if (samples[index].framingMode !== 'midpoint') {
+      continue;
+    }
+
+    const runStart = index;
+    let runEnd = index;
+    while (
+      runEnd + 1 < samples.length &&
+      samples[runEnd + 1].framingMode === 'midpoint'
+    ) {
+      runEnd += 1;
+    }
+
+    const nextIndex = runEnd + 1;
+    if (nextIndex >= samples.length) {
+      index = runEnd;
+      continue;
+    }
+
+    const stableSingleTrack: number[] = [];
+    for (
+      let cursor = nextIndex;
+      cursor < samples.length &&
+      stableSingleTrack.length < TRANSIENT_MIDPOINT_CONFIRMATION_SAMPLE_COUNT;
+      cursor += 1
+    ) {
+      const sample = samples[cursor];
+      if (sample.framingMode !== 'single' || sample.reacquiredAfterGap) {
+        break;
+      }
+      stableSingleTrack.push(track[cursor]);
+    }
+
+    if (
+      stableSingleTrack.length >=
+        TRANSIENT_MIDPOINT_CONFIRMATION_SAMPLE_COUNT &&
+      computeRange(stableSingleTrack) <= stableRangeThreshold
+    ) {
+      const resolvedLock = pickStaticLockPosition(stableSingleTrack, maxX);
+      for (let cursor = runStart; cursor <= runEnd; cursor += 1) {
+        resolvedTrack[cursor] = resolvedLock;
+      }
+    }
+
+    index = runEnd;
+  }
+
+  return resolvedTrack;
+}
+
+function resolveTransientMissingRuns({
+  track,
+  samples,
+  cropWidth,
+  maxX,
+}: {
+  track: number[];
+  samples: ReadonlyArray<SubjectAwareSample>;
+  cropWidth: number;
+  maxX: number;
+}): number[] {
+  if (track.length === 0 || samples.length !== track.length) {
+    return track;
+  }
+
+  const stableRangeThreshold = Math.max(
+    OPENING_STABLE_RANGE_MIN_PX,
+    cropWidth * OPENING_STABLE_RANGE_RATIO
+  );
+  const resolvedTrack = [...track];
+
+  for (let index = 0; index < samples.length; index += 1) {
+    if (samples[index].framingMode !== 'missing') {
+      continue;
+    }
+
+    const runStart = index;
+    let runEnd = index;
+    while (
+      runEnd + 1 < samples.length &&
+      samples[runEnd + 1].framingMode === 'missing'
+    ) {
+      runEnd += 1;
+    }
+
+    const previousIndex = runStart - 1;
+    const nextIndex = runEnd + 1;
+    if (previousIndex < 0 || nextIndex >= samples.length) {
+      index = runEnd;
+      continue;
+    }
+
+    const runDuration =
+      samples[runEnd].timeSeconds - samples[runStart].timeSeconds;
+    if (
+      runDuration > TRANSIENT_MISSING_MAX_SECONDS ||
+      !samples[nextIndex].reacquiredAfterGap
+    ) {
+      index = runEnd;
+      continue;
+    }
+
+    const stableSingleTrack: number[] = [];
+    for (
+      let cursor = nextIndex;
+      cursor < samples.length &&
+      stableSingleTrack.length < TRANSIENT_MISSING_CONFIRMATION_SAMPLE_COUNT;
+      cursor += 1
+    ) {
+      const sample = samples[cursor];
+      if (sample.framingMode !== 'single') {
+        break;
+      }
+      stableSingleTrack.push(track[cursor]);
+    }
+
+    if (
+      stableSingleTrack.length >= TRANSIENT_MISSING_CONFIRMATION_SAMPLE_COUNT &&
+      computeRange(stableSingleTrack) <= stableRangeThreshold
+    ) {
+      const resolvedLock = pickStaticLockPosition(stableSingleTrack, maxX);
+      if (
+        Math.abs(resolvedLock - track[previousIndex]) > stableRangeThreshold
+      ) {
+        for (let cursor = runStart; cursor <= runEnd; cursor += 1) {
+          resolvedTrack[cursor] = resolvedLock;
+        }
+      }
+    }
+
+    index = runEnd;
+  }
+
+  return resolvedTrack;
+}
+
 function stabilizeOpeningTrack({
   track,
   cropWidth,
@@ -1008,21 +1395,167 @@ function stabilizeOpeningTrack({
   return [confirmedOpening, ...track.slice(1)];
 }
 
+function buildShotSegmentIds(
+  samples: ReadonlyArray<SubjectAwareSample>
+): number[] {
+  if (samples.length === 0) {
+    return [];
+  }
+
+  const segmentIds = Array.from({ length: samples.length }, () => 0);
+  let currentSegmentId = 0;
+
+  for (let index = 1; index < samples.length; index += 1) {
+    if (samples[index].startsNewShot) {
+      currentSegmentId += 1;
+    }
+    segmentIds[index] = currentSegmentId;
+  }
+
+  return segmentIds;
+}
+
+function resolveShotStartTrack({
+  track,
+  timeTrack,
+  samples,
+  cropWidth,
+  maxX,
+}: {
+  track: number[];
+  timeTrack: ReadonlyArray<number>;
+  samples: ReadonlyArray<SubjectAwareSample>;
+  cropWidth: number;
+  maxX: number;
+}): number[] {
+  if (
+    track.length === 0 ||
+    track.length !== timeTrack.length ||
+    track.length !== samples.length
+  ) {
+    return track;
+  }
+
+  const stableRangeThreshold = Math.max(
+    OPENING_STABLE_RANGE_MIN_PX,
+    cropWidth * OPENING_STABLE_RANGE_RATIO
+  );
+  const resolvedTrack = [...track];
+
+  for (let shotStart = 0; shotStart < samples.length; ) {
+    let shotEnd = shotStart;
+    while (
+      shotEnd + 1 < samples.length &&
+      !samples[shotEnd + 1].startsNewShot
+    ) {
+      shotEnd += 1;
+    }
+
+    const stableWindow = findEarliestStableSingleWindow({
+      startIndex: shotStart,
+      endIndex: shotEnd,
+      track: resolvedTrack,
+      samples,
+      stableRangeThreshold,
+      requiredSampleCount: SHOT_START_CONFIRMATION_SAMPLE_COUNT,
+    });
+
+    if (stableWindow) {
+      const leadInDuration = Math.max(
+        0,
+        timeTrack[stableWindow.startIndex] - timeTrack[shotStart]
+      );
+      if (
+        leadInDuration > 0 &&
+        leadInDuration <= SHOT_START_BACKFILL_MAX_SECONDS
+      ) {
+        const resolvedLock = pickStaticLockPosition(stableWindow.values, maxX);
+        for (
+          let index = shotStart;
+          index < stableWindow.startIndex;
+          index += 1
+        ) {
+          resolvedTrack[index] = resolvedLock;
+        }
+      }
+    }
+
+    shotStart = shotEnd + 1;
+  }
+
+  return resolvedTrack;
+}
+
+function findEarliestStableSingleWindow({
+  startIndex,
+  endIndex,
+  track,
+  samples,
+  stableRangeThreshold,
+  requiredSampleCount,
+}: {
+  startIndex: number;
+  endIndex: number;
+  track: ReadonlyArray<number>;
+  samples: ReadonlyArray<SubjectAwareSample>;
+  stableRangeThreshold: number;
+  requiredSampleCount: number;
+}): { startIndex: number; values: number[] } | null {
+  let singleRunStart: number | null = null;
+  const recentValues: number[] = [];
+
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    if (samples[index].framingMode !== 'single') {
+      singleRunStart = null;
+      recentValues.length = 0;
+      continue;
+    }
+
+    if (singleRunStart == null) {
+      singleRunStart = index;
+    }
+    recentValues.push(track[index]);
+    if (recentValues.length > requiredSampleCount) {
+      recentValues.shift();
+      singleRunStart = index - recentValues.length + 1;
+    }
+
+    if (
+      recentValues.length >= requiredSampleCount &&
+      computeRange(recentValues) <= stableRangeThreshold
+    ) {
+      return {
+        startIndex: singleRunStart,
+        values: [...recentValues],
+      };
+    }
+  }
+
+  return null;
+}
+
 function buildCameraTrackWithHysteresis({
   targetTrack,
   timeTrack,
   cropWidth,
   maxX,
+  segmentIds,
 }: {
   targetTrack: number[];
   timeTrack: number[];
   cropWidth: number;
   maxX: number;
-}): number[] {
+  segmentIds?: ReadonlyArray<number>;
+}): CameraTrackBuildResult {
   if (targetTrack.length <= 1) {
-    return targetTrack.map(value =>
-      quantizeValue(value, CAMERA_QUANTIZE_PX, maxX)
-    );
+    return {
+      track: targetTrack.map(value =>
+        quantizeValue(value, CAMERA_QUANTIZE_PX, maxX)
+      ),
+      decisionReasons: targetTrack.map((_, index) =>
+        index === 0 ? 'start' : 'hold'
+      ),
+    };
   }
 
   const deadzone = Math.max(
@@ -1031,6 +1564,7 @@ function buildCameraTrackWithHysteresis({
   );
   const immediateMoveThreshold = deadzone * IMMEDIATE_MOVE_MULTIPLIER;
   const cameraTrack = [quantizeValue(targetTrack[0], CAMERA_QUANTIZE_PX, maxX)];
+  const decisionReasons = ['start'];
   let pendingDirection: -1 | 0 | 1 = 0;
   let pendingElapsedSeconds = 0;
 
@@ -1044,17 +1578,49 @@ function buildCameraTrackWithHysteresis({
       Number.isFinite(rawStepSeconds) && rawStepSeconds > 0
         ? rawStepSeconds
         : SAMPLE_INTERVAL_SECONDS;
+    const startsNewSegment =
+      (segmentIds?.[index] ?? 0) !== (segmentIds?.[index - 1] ?? 0);
+
+    if (startsNewSegment) {
+      cameraTrack.push(
+        resolveCutDestination({
+          startIndex: index,
+          currentTarget: target,
+          targetTrack,
+          timeTrack,
+          maxX,
+          deadzone,
+          segmentIds,
+        })
+      );
+      decisionReasons.push('cut-shot-boundary');
+      pendingDirection = 0;
+      pendingElapsedSeconds = 0;
+      continue;
+    }
 
     if (absDelta <= deadzone) {
       pendingDirection = 0;
       pendingElapsedSeconds = 0;
       cameraTrack.push(previous);
+      decisionReasons.push('hold-deadzone');
       continue;
     }
 
     const direction: -1 | 1 = delta > 0 ? 1 : -1;
     if (absDelta >= immediateMoveThreshold) {
-      cameraTrack.push(target);
+      cameraTrack.push(
+        resolveCutDestination({
+          startIndex: index,
+          currentTarget: target,
+          targetTrack,
+          timeTrack,
+          maxX,
+          deadzone,
+          segmentIds,
+        })
+      );
+      decisionReasons.push('cut-large-move');
       pendingDirection = 0;
       pendingElapsedSeconds = 0;
       continue;
@@ -1070,15 +1636,265 @@ function buildCameraTrackWithHysteresis({
     const isLastSample = index === targetTrack.length - 1;
     if (pendingElapsedSeconds < MOVE_DWELL_SECONDS && !isLastSample) {
       cameraTrack.push(previous);
+      decisionReasons.push('hold-dwell');
       continue;
     }
 
-    cameraTrack.push(target);
+    cameraTrack.push(
+      resolveCutDestination({
+        startIndex: index,
+        currentTarget: target,
+        targetTrack,
+        timeTrack,
+        maxX,
+        deadzone,
+        segmentIds,
+      })
+    );
+    decisionReasons.push(isLastSample ? 'cut-final-dwell' : 'cut-dwell');
     pendingDirection = 0;
     pendingElapsedSeconds = 0;
   }
 
-  return cameraTrack;
+  return {
+    track: cameraTrack,
+    decisionReasons,
+  };
+}
+
+function resolveTransientLockRuns({
+  track,
+  timeTrack,
+  cropWidth,
+  segmentIds,
+}: {
+  track: number[];
+  timeTrack: ReadonlyArray<number>;
+  cropWidth: number;
+  segmentIds?: ReadonlyArray<number>;
+}): number[] {
+  if (track.length <= 2 || track.length !== timeTrack.length) {
+    return track;
+  }
+
+  const vicinityThreshold = Math.max(
+    TRANSIENT_LOCK_VICINITY_MIN_PX,
+    cropWidth * TRANSIENT_LOCK_VICINITY_RATIO
+  );
+  const resolvedTrack = [...track];
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    const runs = buildTrackRuns(resolvedTrack);
+    for (let runIndex = runs.length - 2; runIndex >= 0; runIndex -= 1) {
+      const currentRun = runs[runIndex];
+      const nextRun = runs[runIndex + 1];
+      const currentDuration = computeTrackRunDurationSeconds(
+        currentRun,
+        timeTrack
+      );
+      const nextDuration = computeTrackRunDurationSeconds(nextRun, timeTrack);
+      const currentSegmentId = segmentIds?.[currentRun.startIndex] ?? 0;
+      const nextSegmentId =
+        segmentIds?.[nextRun.startIndex] ?? currentSegmentId;
+      if (currentSegmentId !== nextSegmentId) {
+        continue;
+      }
+      if (currentDuration > TRANSIENT_LOCK_MAX_SECONDS) {
+        continue;
+      }
+      if (nextDuration <= currentDuration) {
+        continue;
+      }
+      if (Math.abs(currentRun.value - nextRun.value) > vicinityThreshold) {
+        continue;
+      }
+
+      for (
+        let index = currentRun.startIndex;
+        index <= currentRun.endIndex;
+        index += 1
+      ) {
+        resolvedTrack[index] = nextRun.value;
+      }
+      changed = true;
+      break;
+    }
+  }
+
+  return resolvedTrack;
+}
+
+function resolveCutDestination({
+  startIndex,
+  currentTarget,
+  targetTrack,
+  timeTrack,
+  maxX,
+  deadzone,
+  segmentIds,
+}: {
+  startIndex: number;
+  currentTarget: number;
+  targetTrack: ReadonlyArray<number>;
+  timeTrack: ReadonlyArray<number>;
+  maxX: number;
+  deadzone: number;
+  segmentIds?: ReadonlyArray<number>;
+}): number {
+  const stableWindow = findStableDestinationWindow({
+    startIndex,
+    targetTrack,
+    timeTrack,
+    deadzone,
+    segmentIds,
+  });
+  if (!stableWindow) {
+    return currentTarget;
+  }
+
+  const destination = pickStaticLockPosition(stableWindow, maxX);
+  return Math.abs(destination - currentTarget) <= deadzone
+    ? destination
+    : currentTarget;
+}
+
+function findStableDestinationWindow({
+  startIndex,
+  targetTrack,
+  timeTrack,
+  deadzone,
+  segmentIds,
+}: {
+  startIndex: number;
+  targetTrack: ReadonlyArray<number>;
+  timeTrack: ReadonlyArray<number>;
+  deadzone: number;
+  segmentIds?: ReadonlyArray<number>;
+}): number[] | null {
+  if (startIndex >= targetTrack.length - 1) {
+    return null;
+  }
+
+  const segmentId = segmentIds?.[startIndex] ?? 0;
+  let lookaheadEnd = startIndex;
+  while (lookaheadEnd + 1 < targetTrack.length) {
+    const nextIndex = lookaheadEnd + 1;
+    if ((segmentIds?.[nextIndex] ?? 0) !== segmentId) {
+      break;
+    }
+    const elapsed = timeTrack[nextIndex] - timeTrack[startIndex];
+    if (
+      Number.isFinite(elapsed) &&
+      elapsed > DESTINATION_LOOKAHEAD_SECONDS &&
+      lookaheadEnd > startIndex
+    ) {
+      break;
+    }
+    lookaheadEnd = nextIndex;
+  }
+
+  for (
+    let windowStart = startIndex + 1;
+    windowStart < lookaheadEnd;
+    windowStart += 1
+  ) {
+    const window = targetTrack.slice(windowStart, lookaheadEnd + 1);
+    if (window.length < 2) {
+      continue;
+    }
+    if (computeRange(window) <= deadzone) {
+      return window;
+    }
+  }
+
+  return null;
+}
+
+type TrackRun = {
+  startIndex: number;
+  endIndex: number;
+  value: number;
+};
+
+type CameraTrackBuildResult = {
+  track: number[];
+  decisionReasons: string[];
+};
+
+function buildTrackRuns(track: ReadonlyArray<number>): TrackRun[] {
+  if (track.length === 0) {
+    return [];
+  }
+
+  const runs: TrackRun[] = [];
+  let startIndex = 0;
+  for (let index = 1; index <= track.length; index += 1) {
+    if (index < track.length && track[index] === track[startIndex]) {
+      continue;
+    }
+    runs.push({
+      startIndex,
+      endIndex: index - 1,
+      value: track[startIndex],
+    });
+    startIndex = index;
+  }
+
+  return runs;
+}
+
+function computeTrackRunDurationSeconds(
+  run: TrackRun,
+  timeTrack: ReadonlyArray<number>
+): number {
+  const startTime = timeTrack[run.startIndex];
+  if (!Number.isFinite(startTime)) {
+    return 0;
+  }
+
+  const nextStartTime = timeTrack[run.endIndex + 1];
+  if (Number.isFinite(nextStartTime)) {
+    return Math.max(0, nextStartTime - startTime);
+  }
+
+  const endTime = timeTrack[run.endIndex];
+  if (!Number.isFinite(endTime)) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    endTime - startTime + inferTrailingRunStepSeconds(run, timeTrack)
+  );
+}
+
+function inferTrailingRunStepSeconds(
+  run: TrackRun,
+  timeTrack: ReadonlyArray<number>
+): number {
+  const endTime = timeTrack[run.endIndex];
+  if (!Number.isFinite(endTime)) {
+    return SAMPLE_INTERVAL_SECONDS;
+  }
+
+  const previousInRunTime = timeTrack[run.endIndex - 1];
+  if (Number.isFinite(previousInRunTime) && previousInRunTime < endTime) {
+    return endTime - previousInRunTime;
+  }
+
+  const previousTrackTime = timeTrack[run.startIndex - 1];
+  const startTime = timeTrack[run.startIndex];
+  if (
+    Number.isFinite(previousTrackTime) &&
+    Number.isFinite(startTime) &&
+    previousTrackTime < startTime
+  ) {
+    return startTime - previousTrackTime;
+  }
+
+  return SAMPLE_INTERVAL_SECONDS;
 }
 
 function clamp(value: number, min: number, max: number): number {

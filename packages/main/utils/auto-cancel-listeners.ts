@@ -6,8 +6,13 @@ type AutoCancelTarget = {
   ) => unknown;
 };
 
-type AutoCancelLogger = {
+export type AutoCancelBoundEntry = {
+  autoCancelCleanup?: () => void;
+};
+
+export type AutoCancelLogger = {
   info?: (...args: any[]) => void;
+  warn?: (...args: any[]) => void;
 };
 
 export function attachAutoCancelListeners(
@@ -47,4 +52,34 @@ export function attachAutoCancelListeners(
     target.removeListener('will-navigate', cancelOnce);
     target.removeListener('did-start-navigation', handleNavigation);
   };
+}
+
+export function clearAutoCancelListeners(
+  entry: AutoCancelBoundEntry | undefined,
+  logger?: AutoCancelLogger
+): void {
+  if (!entry?.autoCancelCleanup) return;
+  try {
+    entry.autoCancelCleanup();
+  } catch (error) {
+    logger?.warn?.('[registry] Failed to remove auto-cancel listeners:', error);
+  } finally {
+    entry.autoCancelCleanup = undefined;
+  }
+}
+
+export function rebindAutoCancelListeners(
+  entry: AutoCancelBoundEntry,
+  target: AutoCancelTarget,
+  operationId: string,
+  cancel: () => void,
+  logger?: AutoCancelLogger
+): void {
+  clearAutoCancelListeners(entry, logger);
+  entry.autoCancelCleanup = attachAutoCancelListeners(
+    target,
+    operationId,
+    cancel,
+    logger
+  );
 }

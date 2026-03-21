@@ -80,6 +80,21 @@ export function initializeSubtitleHandlers(
   log.info('[handlers/subtitle-handlers.ts] Initialized!');
 }
 
+async function assertSourceVideoAccessible(
+  videoPath: string,
+  operationId: string
+): Promise<void> {
+  try {
+    await fs.access(videoPath);
+  } catch (error) {
+    log.warn(
+      `[${operationId}] Source video is unavailable: ${videoPath}`,
+      error
+    );
+    throw new Error(ERROR_CODES.SOURCE_VIDEO_UNAVAILABLE);
+  }
+}
+
 /**
  * Delete a temp file with retry logic for locked files (common on Windows).
  * Silently succeeds if file doesn't exist.
@@ -222,7 +237,10 @@ async function createVerticalReframePlanOrNull({
   Awaited<ReturnType<typeof createVerticalReframePlan>>
 > {
   try {
-    return await createVerticalReframePlan(options);
+    return await createVerticalReframePlan({
+      ...options,
+      operationId,
+    });
   } catch (error) {
     if (isOperationCancelledError(error)) {
       throw error;
@@ -277,7 +295,7 @@ export async function handleGenerateSubtitles(
     if (!finalOptions.sourceMediaPath && !tempVideoPath) {
       finalOptions.sourceMediaPath = finalOptions.videoPath;
     }
-    await fs.access(finalOptions.videoPath);
+    await assertSourceVideoAccessible(finalOptions.videoPath, operationId);
 
     const progressCallback: GenerateProgressCallback = progress => {
       event.sender.send('generate-subtitles-progress', {
@@ -466,7 +484,7 @@ export async function handleTranslateSubtitles(
       );
     }
     return {
-      success: !isCancel,
+      success: false,
       cancelled: isCancel,
       error: isCancel ? undefined : error?.message || String(error),
       operationId,
@@ -506,7 +524,7 @@ export async function handleDubSubtitles(
   if (normalizedVideoPath) {
     normalizedVideoPath = path.normalize(normalizedVideoPath);
     try {
-      await fs.access(normalizedVideoPath);
+      await assertSourceVideoAccessible(normalizedVideoPath, operationId);
     } catch (err) {
       log.warn(
         `[${operationId}] Provided video path is not accessible: ${normalizedVideoPath}`,
@@ -519,8 +537,7 @@ export async function handleDubSubtitles(
   if (!normalizedVideoPath) {
     return {
       success: false,
-      error:
-        'Video source is unavailable for dubbing. Please re-open the media.',
+      error: ERROR_CODES.SOURCE_VIDEO_UNAVAILABLE,
       operationId,
     };
   }
@@ -1014,7 +1031,7 @@ export async function handleCutHighlightClip(
       throw new Error('highlight-missing');
     }
 
-    await fs.access(videoPath);
+    await assertSourceVideoAccessible(videoPath, operationId);
 
     let totalDur = 0;
     let durationKnown = false;
@@ -1396,7 +1413,7 @@ export async function handleCutCombinedHighlights(
       throw new Error('at-least-two-highlights-required');
     }
 
-    await fs.access(videoPath);
+    await assertSourceVideoAccessible(videoPath, operationId);
 
     emitProgress(5, 'Preparing combined clip');
 
@@ -1831,6 +1848,7 @@ export async function handleTranscribeOneLine(
     if (!videoPath || !segment || segment.end <= segment.start) {
       throw new Error('Invalid transcribe-one-line options');
     }
+    await assertSourceVideoAccessible(videoPath, operationId);
     const sourceIdentity = await resolveDurableTranscriptionSourceIdentity({
       videoPath,
       sourceUrl,
@@ -1939,7 +1957,7 @@ export async function handleTranscribeOneLine(
       );
     }
     return {
-      success: !isCancel,
+      success: false,
       cancelled: isCancel,
       error: isCancel ? undefined : error?.message || String(error),
       operationId,
@@ -1981,6 +1999,7 @@ export async function handleTranscribeRemaining(
     if (!videoPath || typeof start !== 'number') {
       throw new Error('Invalid transcribe-remaining options');
     }
+    await assertSourceVideoAccessible(videoPath, operationId);
     const sourceIdentity = await resolveDurableTranscriptionSourceIdentity({
       videoPath,
       sourceUrl,
@@ -2089,7 +2108,7 @@ export async function handleTranscribeRemaining(
       );
     }
     return {
-      success: !isCancel,
+      success: false,
       cancelled: isCancel,
       error: isCancel ? undefined : error?.message || String(error),
       operationId,

@@ -6,6 +6,10 @@ import type {
   GenerateSubtitlesResult,
   DubSubtitlesOptions,
   DubSubtitlesResult,
+  TranscribeOneLineOptions,
+  TranscribeOneLineResult,
+  TranscribeRemainingOptions,
+  TranscribeRemainingResult,
 } from '@shared-types/app';
 
 type PngRenderResult = {
@@ -177,24 +181,15 @@ export function translateOneLine(options: {
   return (window.electron as any).translateOneLine(options);
 }
 
-export function transcribeOneLine(options: {
-  videoPath: string;
-  sourceUrl?: string | null;
-  segment: { start: number; end: number };
-  promptContext?: string;
-  operationId?: string;
-}): Promise<{ transcript: string; error?: string }> {
+export function transcribeOneLine(
+  options: TranscribeOneLineOptions
+): Promise<TranscribeOneLineResult> {
   return (window.electron as any).transcribeOneLine(options);
 }
 
-export function transcribeRemaining(options: {
-  videoPath: string;
-  sourceUrl?: string | null;
-  start: number;
-  end?: number;
-  operationId?: string;
-  qualityTranscription?: boolean;
-}): Promise<{ segments: any[]; error?: string }> {
+export function transcribeRemaining(
+  options: TranscribeRemainingOptions
+): Promise<TranscribeRemainingResult> {
   return (window.electron as any).transcribeRemaining(options);
 }
 

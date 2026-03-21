@@ -102,12 +102,18 @@ export async function handleCopyFile(
 
 interface DeleteFileArgs {
   filePathToDelete: string;
+  filePath?: string;
 }
 
 export async function handleDeleteFile(
   _event: IpcMainInvokeEvent,
-  { filePathToDelete }: DeleteFileArgs
+  args: DeleteFileArgs | string
 ): Promise<{ success: boolean; message?: string; error?: string }> {
+  const filePathToDelete =
+    typeof args === 'string'
+      ? args
+      : String(args?.filePathToDelete || args?.filePath || '').trim();
+
   if (!filePathToDelete) {
     return { success: false, error: 'No file path provided for deletion' };
   }

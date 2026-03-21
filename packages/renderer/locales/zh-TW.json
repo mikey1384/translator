@@ -107,6 +107,7 @@
     "invalidRenderOptions": "提供的渲染選項無效",
     "missingVideoMetadata": "缺少影片元數據（{{missing}}）",
     "noSourceVideo": "沒有來源影片",
+    "sourceVideoUnavailable": "原始影片已被刪除或已無法存取。請重新開啟後再試一次。",
     "noSubtitlesLoaded": "沒有載入字幕",
     "failedToLoadSRT": "載入SRT檔案失敗",
     "cancelTranslationFailed": "取消翻譯失敗：{{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "部分診斷內容無法載入。報告仍會包含此應用程式的詳細資訊。"
   }
 }
+
+

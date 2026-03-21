@@ -107,6 +107,7 @@
     "invalidRenderOptions": "אפשרויות עיבוד לא תקינות סופקו",
     "missingVideoMetadata": "נתוני וידאו חסרים ({{missing}})",
     "noSourceVideo": "אין וידאו מקור",
+    "sourceVideoUnavailable": "הווידאו המקורי הוסר או שאינו זמין עוד. פתח אותו שוב ונסה שוב.",
     "noSubtitlesLoaded": "לא נטענו כתוביות",
     "failedToLoadSRT": "נכשל בטעינת קובץ SRT",
     "cancelTranslationFailed": "ביטול התרגום נכשל: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "לא ניתן היה לטעון חלק מהקשר האבחון. הדוח עדיין יכלול פרטים מהיישום הזה."
   }
 }
+
+

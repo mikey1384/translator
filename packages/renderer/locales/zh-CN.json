@@ -107,6 +107,7 @@
     "invalidRenderOptions": "提供的渲染选项无效",
     "missingVideoMetadata": "缺少视频元数据（{{missing}}）",
     "noSourceVideo": "没有源视频",
+    "sourceVideoUnavailable": "原始视频已被删除或已无法访问。请重新打开后再试一次。",
     "noSubtitlesLoaded": "没有加载字幕",
     "failedToLoadSRT": "加载SRT文件失败",
     "cancelTranslationFailed": "取消翻译失败：{{message}}",

@@ -33,6 +33,9 @@ import { settingsStore } from './store/settings-store.js';
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
 import {
+  handleAcceptProcessedUrl,
+  handleCleanupAcceptedProcessedUrl,
+  handleDiscardProcessedUrl,
   handleProcessUrl,
   initializeUrlHandler,
 } from './handlers/url-handlers.js';
@@ -629,6 +632,12 @@ try {
   });
 
   ipcMain.handle('process-url', handleProcessUrl);
+  ipcMain.handle('process-url:accept', handleAcceptProcessedUrl);
+  ipcMain.handle('process-url:discard', handleDiscardProcessedUrl);
+  ipcMain.handle(
+    'process-url:cleanup-accepted',
+    handleCleanupAcceptedProcessedUrl
+  );
   ipcMain.handle('suggest-videos', async (event, request) => {
     const operationId =
       request?.operationId ||

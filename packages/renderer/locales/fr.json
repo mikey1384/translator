@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Options de rendu non valides",
     "missingVideoMetadata": "Métadonnées vidéo manquantes ({{missing}})",
     "noSourceVideo": "Pas de vidéo source",
+    "sourceVideoUnavailable": "La vidéo originale a été supprimée ou n'est plus accessible. Rouvrez-la et réessayez.",
     "noSubtitlesLoaded": "Aucun sous-titre chargé",
     "failedToLoadSRT": "Échec du chargement du fichier SRT",
     "cancelTranslationFailed": "Échec de l’annulation de la traduction : {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Une partie du contexte de diagnostic n'a pas pu être chargée. Le rapport inclura quand même des détails de cette application."
   }
 }
+
+

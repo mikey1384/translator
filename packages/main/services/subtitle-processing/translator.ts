@@ -645,7 +645,9 @@ OUTPUT ${batch.segments.length} lines:
   let attempt = 0;
   let networkRetries = 0;
   let reviewConfig = initialReviewConfig ?? getReviewModel();
-  for (;;) {
+  let shouldRetry = true;
+  while (shouldRetry) {
+    shouldRetry = false;
     if (signal?.aborted) {
       throw new DOMException('Operation cancelled', 'AbortError');
     }
@@ -754,6 +756,7 @@ OUTPUT ${batch.segments.length} lines:
         );
         reviewConfig = { model: STAGE5_REVIEW_TRANSLATION_MODEL };
         onModelFallback?.(reviewConfig.model);
+        shouldRetry = true;
         continue;
       }
       if (isLikelyNetworkError(error)) {
@@ -764,6 +767,7 @@ OUTPUT ${batch.segments.length} lines:
           );
         } else {
           await waitForNetworkRetry(networkRetries, signal);
+          shouldRetry = true;
           continue;
         }
       }
@@ -775,4 +779,6 @@ OUTPUT ${batch.segments.length} lines:
       return batch.segments;
     }
   }
+
+  return batch.segments;
 }

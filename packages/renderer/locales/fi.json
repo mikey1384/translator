@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Virheelliset renderöintiasetukset annettu",
     "missingVideoMetadata": "Puuttuvat videometadatat ({{missing}})",
     "noSourceVideo": "Ei lähdettä videota",
+    "sourceVideoUnavailable": "Alkuperäinen video on poistettu tai ei ole enää käytettävissä. Avaa se uudelleen ja yritä uudelleen.",
     "noSubtitlesLoaded": "Ei ladattuja tekstityksiä",
     "failedToLoadSRT": "SRT-tiedoston lataaminen epäonnistui",
     "cancelTranslationFailed": "Käännöksen peruminen epäonnistui: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Osaa diagnostiikkakontekstista ei voitu ladata. Raportti sisältää silti tämän sovelluksen tiedot."
   }
 }
+
+

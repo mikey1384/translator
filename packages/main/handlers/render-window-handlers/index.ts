@@ -116,6 +116,21 @@ async function fileExists(p: string): Promise<boolean> {
   }
 }
 
+async function assertOriginalVideoAccessible(
+  videoPath: string,
+  operationId: string
+): Promise<void> {
+  try {
+    await fs.access(videoPath);
+  } catch (error) {
+    log.warn(
+      `[${operationId}] Source video is unavailable: ${videoPath}`,
+      error
+    );
+    throw new Error(ERROR_CODES.SOURCE_VIDEO_UNAVAILABLE);
+  }
+}
+
 async function renameExistingFileToBackup(
   existingPath: string,
   operationId: string
@@ -316,6 +331,16 @@ export function initializeRenderWindowHandlers({
         if (!options.videoHeight || options.videoHeight <= 0)
           options.videoHeight = 720;
 
+        if (!options.originalVideoPath) {
+          throw new Error(
+            'Original video path is required but was not provided.'
+          );
+        }
+        await assertOriginalVideoAccessible(
+          options.originalVideoPath,
+          operationId
+        );
+
         const { browser: br, page } = await initPuppeteer({
           operationId,
           videoWidth: options.videoWidth,
@@ -327,12 +352,6 @@ export function initializeRenderWindowHandlers({
         browser = br;
         activeRenderJobs.get(operationId)!.browser = browser;
         renderHandle.browser = browser;
-
-        if (!options.originalVideoPath) {
-          throw new Error(
-            'Original video path is required but was not provided.'
-          );
-        }
 
         log.info(
           `[RenderWindowHandlers ${operationId}] Probing FPS for ${options.originalVideoPath}...`
@@ -463,8 +482,7 @@ export function initializeRenderWindowHandlers({
           sendProgress({ percent: heartbeatPercent, stage: heartbeatStage });
         }, HEARTBEAT_INTERVAL_MS);
 
-        let canceled = false;
-        let userPath: string | undefined;
+        let savedPath: string | null = null;
         try {
           const srcStat = await fs.stat(tempMerged);
           const mergedSizeBytes = srcStat.size;
@@ -475,16 +493,15 @@ export function initializeRenderWindowHandlers({
             stage: 'Choose where to save the video…',
           });
 
-          // eslint-disable-next-line no-constant-condition
-          while (true) {
+          while (!savedPath) {
             const saveDialogResult = await dialog.showSaveDialog(win, {
               title: 'Save Merged Video As',
               defaultPath: suggestedName,
               filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
             });
-            ({ canceled, filePath: userPath } = saveDialogResult);
+            const selectedPath = saveDialogResult.filePath;
 
-            if (canceled || !userPath) {
+            if (saveDialogResult.canceled || !selectedPath) {
               log.warn(`[${operationId}] User cancelled "save" dialog`);
               await fs.unlink(tempMerged).catch(() => void 0);
               event.reply('render-subtitles-result', {
@@ -499,7 +516,7 @@ export function initializeRenderWindowHandlers({
             sendProgress({ percent: 98, stage: 'Saving…' });
             heartbeatPercent = 98;
             heartbeatStage = 'Saving…';
-            const destDir = path.dirname(userPath);
+            const destDir = path.dirname(selectedPath);
             let sameDevice = false;
             try {
               sameDevice = (await fs.stat(destDir)).dev === srcDev;
@@ -513,20 +530,21 @@ export function initializeRenderWindowHandlers({
               try {
                 // Avoid overwriting existing files (which can create `.fuse_hidden*` on FUSE mounts).
                 backupPath = await renameExistingFileToBackup(
-                  userPath,
+                  selectedPath,
                   operationId
                 );
-                await fs.rename(tempMerged, userPath);
-                break;
+                await fs.rename(tempMerged, selectedPath);
+                savedPath = selectedPath;
+                continue;
               } catch (saveErr: any) {
                 await restoreDestinationFromBackup({
-                  destinationPath: userPath,
+                  destinationPath: selectedPath,
                   backupPath,
                   operationId,
                   context: 'save error',
                 });
                 log.warn(
-                  `[${operationId}] Failed to save merged video to ${userPath}`,
+                  `[${operationId}] Failed to save merged video to ${selectedPath}`,
                   saveErr
                 );
                 heartbeatPercent = 96;
@@ -621,27 +639,27 @@ export function initializeRenderWindowHandlers({
             try {
               // Same rationale as above: avoid truncating/replacing an existing file in-place.
               backupPath = await renameExistingFileToBackup(
-                userPath,
+                selectedPath,
                 operationId
               );
 
               heartbeatStage = 'Copying to destination…';
               sendProgress({ percent: 98, stage: heartbeatStage });
               await fs.copyFile(tempMerged, tempDest);
-              await fs.rename(tempDest, userPath);
+              await fs.rename(tempDest, selectedPath);
               await fs.unlink(tempMerged).catch(() => void 0);
-              break;
+              savedPath = selectedPath;
             } catch (copyErr: any) {
               await fs.unlink(tempDest).catch(() => void 0);
               await restoreDestinationFromBackup({
-                destinationPath: userPath,
+                destinationPath: selectedPath,
                 backupPath,
                 operationId,
                 context: 'copy error',
               });
 
               log.warn(
-                `[${operationId}] Failed to copy merged video to ${userPath}`,
+                `[${operationId}] Failed to copy merged video to ${selectedPath}`,
                 copyErr
               );
               heartbeatPercent = 96;
@@ -656,16 +674,26 @@ export function initializeRenderWindowHandlers({
         } finally {
           clearInterval(saveHeartbeat);
         }
+        if (!savedPath) {
+          throw new Error('Merged video save did not produce an output path.');
+        }
         sendProgress({ percent: 100, stage: 'Merge complete!' });
         event.reply('render-subtitles-result', {
           operationId,
           success: true,
-          outputPath: userPath,
+          outputPath: savedPath,
         });
       } catch (err: any) {
         log.error(`[RenderWindowHandlers ${operationId}]`, err);
         if (!event.sender.isDestroyed()) {
-          const normalized = normalizeRenderFailure(err, controller.signal);
+          let normalized = normalizeRenderFailure(err, controller.signal);
+          if (
+            !normalized.cancelled &&
+            options.originalVideoPath &&
+            !(await fileExists(options.originalVideoPath))
+          ) {
+            normalized = { error: ERROR_CODES.SOURCE_VIDEO_UNAVAILABLE };
+          }
           event.reply('render-subtitles-result', {
             operationId,
             success: false,

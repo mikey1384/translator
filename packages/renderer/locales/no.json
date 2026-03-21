@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Ugyldige renderingsalternativer oppgitt",
     "missingVideoMetadata": "Manglende videometadata ({{missing}})",
     "noSourceVideo": "Ingen kildevideo",
+    "sourceVideoUnavailable": "Originalvideoen ble fjernet eller er ikke lenger tilgjengelig. Åpne den igjen og prøv på nytt.",
     "noSubtitlesLoaded": "Ingen undertekster lastet",
     "failedToLoadSRT": "Kunne ikke laste SRT-fil",
     "cancelTranslationFailed": "Kunne ikke avbryte oversettelsen: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Noe diagnostikkontekst kunne ikke lastes inn. Rapporten vil fortsatt inneholde detaljer fra denne appen."
   }
 }
+
+

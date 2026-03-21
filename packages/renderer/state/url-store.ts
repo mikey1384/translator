@@ -158,6 +158,64 @@ async function downloadMediaInternal(
   const { urlInput, downloadQuality } = get();
   const requestedUrl = String(options?.url ?? urlInput ?? '').trim();
   const preserveSubtitles = Boolean(options?.preserveSubtitles);
+  const opId = `download-${Date.now()}`;
+  let shouldDiscardPendingResult = false;
+  const cancelledResult = (): ProcessUrlResult => ({
+    success: false,
+    cancelled: true,
+    operationId: opId,
+  });
+  const discardProcessedUrl = async (): Promise<void> => {
+    try {
+      await UrlIPC.discardProcessedUrl(opId);
+    } catch (error) {
+      console.warn(
+        `[url-store] Failed to discard processed URL result for ${opId}:`,
+        error
+      );
+    }
+  };
+  const acceptProcessedUrl = async (): Promise<boolean> => {
+    try {
+      const result = await UrlIPC.acceptProcessedUrl(opId);
+      if (!result.success) {
+        console.warn(
+          `[url-store] Processed URL result for ${opId} could not be accepted: ${result.error || 'unknown error'}`
+        );
+      }
+      return result.success;
+    } catch (error) {
+      console.warn(
+        `[url-store] Failed to accept processed URL result for ${opId}:`,
+        error
+      );
+      return false;
+    }
+  };
+  const cleanupAcceptedProcessedUrl = async (
+    filePath: string
+  ): Promise<void> => {
+    try {
+      const result = await UrlIPC.cleanupAcceptedProcessedUrl({
+        operationId: opId,
+        filePath,
+      });
+      if (!result.success) {
+        console.warn(
+          `[url-store] Accepted processed URL result for ${opId} could not be scheduled for cleanup: ${result.error || 'unknown error'}`
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `[url-store] Failed to schedule cleanup for accepted processed URL result ${opId}:`,
+        error
+      );
+    }
+  };
+  const isCurrentDownloadCancelledOrStale = (): boolean => {
+    const current = get().download;
+    return current.id !== opId || current.stage === 'Cancelled';
+  };
   const getMountedSourcePath = () => {
     const { originalPath, path } = useVideoStore.getState();
     const normalized = String(originalPath || path || '').trim();
@@ -170,8 +228,6 @@ async function downloadMediaInternal(
     });
     return;
   }
-
-  const opId = `download-${Date.now()}`;
   set((state: UrlState) => {
     state.download = {
       ...state.download,
@@ -237,9 +293,11 @@ async function downloadMediaInternal(
 
     // User cancellation should always win, even if the backend eventually
     // resolves as NeedCookies (race between cancel and captcha detection).
-    const current = get().download;
-    if (current.id !== opId || current.stage === 'Cancelled') {
-      return res;
+    if (isCurrentDownloadCancelledOrStale()) {
+      if (res.success && (res.videoPath || res.filePath)) {
+        await discardProcessedUrl();
+      }
+      return cancelledResult();
     }
 
     const finalPath = res.videoPath ?? res.filePath;
@@ -269,6 +327,42 @@ async function downloadMediaInternal(
       return res;
     }
 
+    const {
+      order: existingSubs,
+      origin: subsOrigin,
+      libraryEntryId,
+    } = useSubStore.getState();
+    const preserveMountedDiskSubs =
+      existingSubs.length > 0 && subsOrigin === 'disk' && !libraryEntryId;
+    const hasMountedSource = Boolean(getMountedSourcePath());
+    const shouldSwitchToDownloaded =
+      !hasMountedSource || (await openDownloadSwitchConfirm());
+
+    if (isCurrentDownloadCancelledOrStale()) {
+      await discardProcessedUrl();
+      return cancelledResult();
+    }
+
+    shouldDiscardPendingResult = true;
+    const accepted = await acceptProcessedUrl();
+    if (!accepted) {
+      set((state: UrlState) => {
+        state.needCookies = false;
+        state.download.inProgress = false;
+        state.download.stage = 'Cancelled';
+        state.download.percent = 100;
+        state.error = null;
+        state.errorKind = null;
+      });
+      return cancelledResult();
+    }
+    shouldDiscardPendingResult = false;
+
+    if (isCurrentDownloadCancelledOrStale()) {
+      await cleanupAcceptedProcessedUrl(finalPath);
+      return cancelledResult();
+    }
+
     const derivedTitle =
       String(res.title || '').trim() ||
       String(filename || '')
@@ -291,50 +385,7 @@ async function downloadMediaInternal(
       localPath: finalPath,
     });
 
-    const {
-      order: existingSubs,
-      origin: subsOrigin,
-      libraryEntryId,
-    } = useSubStore.getState();
-    const preserveMountedDiskSubs =
-      existingSubs.length > 0 &&
-      subsOrigin === 'disk' &&
-      !libraryEntryId;
-    const hasMountedSource = Boolean(getMountedSourcePath());
-    const shouldSwitchToDownloaded =
-      !hasMountedSource || (await openDownloadSwitchConfirm());
-
-    if (shouldSwitchToDownloaded) {
-      if (preserveSubtitles) {
-        await useVideoStore
-          .getState()
-          .mountFilePreserveSubs({
-            path: finalPath!,
-            name: filename!,
-            sourceUrl: requestedUrl,
-          });
-      } else {
-        await useVideoStore.getState().setFile({
-          path: finalPath!,
-          name: filename!,
-          sourceUrl: requestedUrl,
-        }, {
-          skipStoredSubtitleAutoMount: preserveMountedDiskSubs,
-        });
-      }
-
-      if (!preserveSubtitles && !preserveMountedDiskSubs) {
-        const subState = useSubStore.getState();
-        const autoMountedForCurrentVideo =
-          Boolean(subState.libraryEntryId) &&
-          subState.sourceVideoPath === finalPath;
-        if (!autoMountedForCurrentVideo) {
-          useSubStore.getState().load([]);
-        }
-      }
-
-      useUIStore.getState().setInputMode('file');
-    }
+    let mountErrorMessage: string | null = null;
 
     set((state: UrlState) => {
       state.needCookies = false;
@@ -342,15 +393,62 @@ async function downloadMediaInternal(
       state.download.percent = 100;
       state.download.inProgress = false;
       state.download.completedFilePath = finalPath;
+      state.error = null;
       state.errorKind = null;
-    });
-    set((state: UrlState) => {
       state.urlInput = '';
     });
+
+    if (shouldSwitchToDownloaded) {
+      try {
+        if (preserveSubtitles) {
+          await useVideoStore.getState().mountFilePreserveSubs({
+            path: finalPath,
+            name: filename,
+            sourceUrl: requestedUrl,
+          });
+        } else {
+          await useVideoStore.getState().setFile(
+            {
+              path: finalPath,
+              name: filename,
+              sourceUrl: requestedUrl,
+            },
+            {
+              skipStoredSubtitleAutoMount: preserveMountedDiskSubs,
+            }
+          );
+        }
+
+        if (!preserveSubtitles && !preserveMountedDiskSubs) {
+          const subState = useSubStore.getState();
+          const autoMountedForCurrentVideo =
+            Boolean(subState.libraryEntryId) &&
+            subState.sourceVideoPath === finalPath;
+          if (!autoMountedForCurrentVideo) {
+            useSubStore.getState().load([]);
+          }
+        }
+        useUIStore.getState().setInputMode('file');
+      } catch (err: any) {
+        mountErrorMessage =
+          err?.message ||
+          'Downloaded file was saved but could not be opened automatically.';
+      }
+    }
+
+    if (mountErrorMessage && get().download.id === opId) {
+      set((state: UrlState) => {
+        state.error = mountErrorMessage;
+        state.errorKind = inferErrorKind(mountErrorMessage);
+      });
+    }
+
     return res;
   } catch (err: any) {
-    const current = get().download;
-    if (current.id !== opId || current.stage === 'Cancelled') {
+    if (shouldDiscardPendingResult) {
+      await discardProcessedUrl();
+    }
+    if (isCurrentDownloadCancelledOrStale()) {
       return;
     }
 

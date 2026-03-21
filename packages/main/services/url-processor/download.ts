@@ -7,7 +7,6 @@ import type { FFmpegContext } from '../ffmpeg-runner.js';
 import {
   registerDownloadProcess,
   finish as removeDownloadProcess,
-  consumeCancelMarker,
 } from '../../active-processes.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
 import { CancelledError } from '../../../shared/cancelled-error.js';
@@ -27,6 +26,22 @@ import {
   applyPrintedYtDlpMetadataLine,
   buildYtDlpMetadataPrintArgs,
 } from './download-metadata.js';
+import {
+  raceOperationCancellation,
+  sleepWithOperationCancellation,
+  throwIfOperationCancelled,
+} from '../../utils/operation-cancellation.js';
+import { terminateProcess } from '../../utils/process-killer.js';
+
+type DownloadVideoFromPlatformDependencies = {
+  ensureYtDlpBinaryImpl?: typeof ensureYtDlpBinary;
+  ensureJsRuntimeImpl?: typeof ensureJsRuntime;
+  findFfmpegImpl?: typeof findFfmpeg;
+  exportCookiesToFileForUrlImpl?: typeof exportCookiesToFileForUrl;
+  execaImpl?: typeof execa;
+  warmupYtDlpImpl?: typeof warmupYtDlp;
+  warmupFfmpegImpl?: typeof warmupFfmpeg;
+};
 
 /**
  * Clean up partial/incomplete download files matching a timestamp pattern.
@@ -35,12 +50,22 @@ import {
 async function cleanupPartialDownloads(
   outputDir: string,
   timestamp: number,
-  operationId: string
+  operationId: string,
+  options: {
+    preserveFilepaths?: string[];
+  } = {}
 ): Promise<void> {
   const prefix = `download_${timestamp}_`;
+  const preservedFilepaths = new Set(
+    (options.preserveFilepaths || []).map(filePath => normalize(filePath))
+  );
   try {
     const files = await fsp.readdir(outputDir);
-    const matchingFiles = files.filter(f => f.startsWith(prefix));
+    const matchingFiles = files.filter(f => {
+      if (!f.startsWith(prefix)) return false;
+      const fullPath = normalize(join(outputDir, f));
+      return !preservedFilepaths.has(fullPath);
+    });
     if (matchingFiles.length === 0) {
       log.debug(
         `[URLprocessor ${operationId}] No partial download files to clean up for timestamp ${timestamp}`
@@ -93,15 +118,39 @@ async function unblockIfMarked(filePath: string): Promise<void> {
   }
 }
 
-async function warmupYtDlp(ytDlpPath: string): Promise<void> {
+async function warmupYtDlp(
+  ytDlpPath: string,
+  signal?: AbortSignal,
+  operationId?: string
+): Promise<void> {
   try {
     await unblockIfMarked(ytDlpPath);
-    await execa(ytDlpPath, ['--version'], {
+    throwIfOperationCancelled({
+      signal,
+      operationId,
+      context: 'before yt-dlp warmup',
+      log,
+    });
+    const proc = execa(ytDlpPath, ['--version'], {
       windowsHide: true,
       timeout: 120_000,
     });
+    await raceOperationCancellation(proc, {
+      signal,
+      operationId,
+      context: 'during yt-dlp warmup',
+      log,
+      onCancel: () =>
+        terminateProcess({
+          childProcess: proc,
+          logPrefix: `url-warmup-yt-dlp-${operationId ?? 'unknown'}`,
+        }),
+    });
     log.info('[URLprocessor] yt-dlp warmup complete');
   } catch (e: any) {
+    if (e instanceof CancelledError) {
+      throw e;
+    }
     log.warn(
       '[URLprocessor] yt-dlp warmup failed (continuing):',
       e?.message || e
@@ -109,15 +158,39 @@ async function warmupYtDlp(ytDlpPath: string): Promise<void> {
   }
 }
 
-async function warmupFfmpeg(ffmpegPath: string): Promise<void> {
+async function warmupFfmpeg(
+  ffmpegPath: string,
+  signal?: AbortSignal,
+  operationId?: string
+): Promise<void> {
   try {
     await unblockIfMarked(ffmpegPath);
-    await execa(ffmpegPath, ['-version'], {
+    throwIfOperationCancelled({
+      signal,
+      operationId,
+      context: 'before ffmpeg warmup',
+      log,
+    });
+    const proc = execa(ffmpegPath, ['-version'], {
       windowsHide: true,
       timeout: 60_000,
     });
+    await raceOperationCancellation(proc, {
+      signal,
+      operationId,
+      context: 'during ffmpeg warmup',
+      log,
+      onCancel: () =>
+        terminateProcess({
+          childProcess: proc,
+          logPrefix: `url-warmup-ffmpeg-${operationId ?? 'unknown'}`,
+        }),
+    });
     log.info('[URLprocessor] ffmpeg warmup complete');
   } catch (e: any) {
+    if (e instanceof CancelledError) {
+      throw e;
+    }
     log.warn(
       '[URLprocessor] ffmpeg warmup failed (continuing):',
       e?.message || e
@@ -203,13 +276,32 @@ export async function downloadVideoFromPlatform(
   services?: {
     ffmpeg: FFmpegContext;
   },
-  extraArgs: string[] = []
+  extraArgs: string[] = [],
+  signal?: AbortSignal,
+  dependencies: DownloadVideoFromPlatformDependencies = {}
 ): Promise<{
   filepath: string;
   info: any;
   proc: DownloadProcessType;
 }> {
   log.info(`[URLprocessor] Starting download: ${url} (Op ID: ${operationId})`);
+  const ensureYtDlpBinaryFn =
+    dependencies.ensureYtDlpBinaryImpl ?? ensureYtDlpBinary;
+  const ensureJsRuntimeFn = dependencies.ensureJsRuntimeImpl ?? ensureJsRuntime;
+  const findFfmpegFn = dependencies.findFfmpegImpl ?? findFfmpeg;
+  const exportCookiesToFileForUrlFn =
+    dependencies.exportCookiesToFileForUrlImpl ?? exportCookiesToFileForUrl;
+  const execaImpl = dependencies.execaImpl ?? execa;
+  const warmupYtDlpFn = dependencies.warmupYtDlpImpl ?? warmupYtDlp;
+  const warmupFfmpegFn = dependencies.warmupFfmpegImpl ?? warmupFfmpeg;
+  const throwIfCancelled = (context: string, onCancel?: () => void) =>
+    throwIfOperationCancelled({
+      signal,
+      operationId,
+      context,
+      log,
+      onCancel,
+    });
 
   if (!services?.ffmpeg) {
     throw new Error('FFmpegContext is required for downloadVideoFromPlatform');
@@ -241,11 +333,17 @@ export async function downloadVideoFromPlatform(
     process.env.YTDLP_SKIP_UPDATE === '1';
   let ytDlpPath: string;
   try {
-    ytDlpPath = await ensureYtDlpBinary({
+    throwIfCancelled('before ensuring yt-dlp binary');
+    ytDlpPath = await ensureYtDlpBinaryFn({
       skipUpdate: skipUpdateEnv,
       onProgress: binarySetupProgress,
+      signal,
     });
+    throwIfCancelled('after ensuring yt-dlp binary');
   } catch (error: any) {
+    if (error instanceof CancelledError) {
+      throw error;
+    }
     const baseMessage = error?.message || 'yt-dlp binary could not be set up.';
     const attemptedUrl =
       error instanceof YtDlpSetupError
@@ -279,7 +377,9 @@ export async function downloadVideoFromPlatform(
 
   // Ensure JS runtime is available for YouTube signature decryption
   // This runs during the "Initializing..." crawl phase so no separate progress stage needed
-  const jsRuntime = await ensureJsRuntime();
+  throwIfCancelled('before ensuring JS runtime');
+  const jsRuntime = await ensureJsRuntimeFn({ signal });
+  throwIfCancelled('after ensuring JS runtime');
   if (jsRuntime) {
     log.info(`[URLprocessor] Using JS runtime for yt-dlp: ${jsRuntime}`);
   } else {
@@ -310,16 +410,19 @@ export async function downloadVideoFromPlatform(
       stage: 'Preparing video engine…',
     });
     try {
-      await warmupYtDlp(ytDlpPath);
-      const ffmpegPathWarm = await findFfmpeg();
-      await warmupFfmpeg(ffmpegPathWarm);
+      await warmupYtDlpFn(ytDlpPath, signal, operationId);
+      const ffmpegPathWarm = await findFfmpegFn();
+      await warmupFfmpegFn(ffmpegPathWarm, signal, operationId);
       // Mark initialized right after successful warmup so later timeouts are normal
       await fsp.mkdir(join(app.getPath('userData'), 'bin'), {
         recursive: true,
       });
       await fsp.writeFile(firstRunFlag, new Date().toISOString(), 'utf8');
       isFirstRun = false; // ensure subsequent logic in this session uses normal timeouts
-    } catch {
+    } catch (error) {
+      if (error instanceof CancelledError) {
+        throw error;
+      }
       // continue; we'll still use relaxed timeouts this run
     }
   }
@@ -336,9 +439,21 @@ export async function downloadVideoFromPlatform(
     } catch {
       log.warn(`[URLprocessor] yt-dlp not executable, attempting chmod +x`);
       try {
-        await execa('chmod', ['+x', ytDlpPath], { windowsHide: true });
+        throwIfCancelled('before chmod +x yt-dlp');
+        await raceOperationCancellation(
+          execaImpl('chmod', ['+x', ytDlpPath], { windowsHide: true }),
+          {
+            signal,
+            operationId,
+            context: 'while making yt-dlp executable',
+            log,
+          }
+        );
         log.info(`[URLprocessor] chmod +x successful.`);
       } catch (e) {
+        if (e instanceof CancelledError) {
+          throw e;
+        }
         log.warn('[URLprocessor] Could not make yt-dlp executable:', e);
       }
     }
@@ -350,12 +465,17 @@ export async function downloadVideoFromPlatform(
   });
 
   try {
+    throwIfCancelled('before preparing output directory');
     await fsp.mkdir(outputDir, { recursive: true });
     const testFile = join(outputDir, `test_${Date.now()}.tmp`);
     await fsp.writeFile(testFile, 'test');
     await fsp.unlink(testFile);
+    throwIfCancelled('after preparing output directory');
     log.info(`[URLprocessor] Output directory verified: ${outputDir}`);
   } catch (dirError) {
+    if (dirError instanceof CancelledError) {
+      throw dirError;
+    }
     log.error(`[URLprocessor] Output directory check failed:`, dirError);
     progressCallback?.({
       percent: 0,
@@ -382,7 +502,15 @@ export async function downloadVideoFromPlatform(
   try {
     const hasCookiesFlag = effectiveExtraArgs.includes('--cookies');
     if (!hasCookiesFlag) {
-      const exported = await exportCookiesToFileForUrl(url);
+      const exported = await raceOperationCancellation(
+        exportCookiesToFileForUrlFn(url),
+        {
+          signal,
+          operationId,
+          context: 'while exporting app cookies',
+          log,
+        }
+      );
       if (exported.count > 0) {
         effectiveExtraArgs = [
           ...effectiveExtraArgs,
@@ -395,6 +523,9 @@ export async function downloadVideoFromPlatform(
       }
     }
   } catch (err: any) {
+    if (err instanceof CancelledError) {
+      throw err;
+    }
     log.warn(
       '[URLprocessor] Failed to export app cookies (continuing without):',
       err?.message || err
@@ -459,7 +590,9 @@ export async function downloadVideoFromPlatform(
     `[URLprocessor] Using simplified temp pattern: ${tempFilenamePattern}`
   );
 
-  const ffmpegPath = await findFfmpeg();
+  throwIfCancelled('before locating ffmpeg');
+  const ffmpegPath = await findFfmpegFn();
+  throwIfCancelled('after locating ffmpeg');
   // Ensure binaries are unblocked on Windows every run (cheap + idempotent)
   try {
     await unblockIfMarked(ytDlpPath);
@@ -504,13 +637,19 @@ export async function downloadVideoFromPlatform(
       prevStamp.ffmpegMtimeMs !== currentStamp.ffmpegMtimeMs;
     if (changed) {
       try {
-        await warmupYtDlp(ytDlpPath);
-      } catch {
+        await warmupYtDlpFn(ytDlpPath, signal, operationId);
+      } catch (error) {
+        if (error instanceof CancelledError) {
+          throw error;
+        }
         // ignore
       }
       try {
-        await warmupFfmpeg(ffmpegPath);
-      } catch {
+        await warmupFfmpegFn(ffmpegPath, signal, operationId);
+      } catch (error) {
+        if (error instanceof CancelledError) {
+          throw error;
+        }
         // ignore
       }
       await fsp.mkdir(join(app.getPath('userData'), 'bin'), {
@@ -614,6 +753,7 @@ export async function downloadVideoFromPlatform(
   let stdoutBuffer = '';
   let diagnosticLog = '';
   let finalFilepath: string | null = null;
+  let committedFilepath: string | null = null;
   let downloadInfo: Record<string, unknown> | null = null;
   const extractFinalFilename = (
     info: Record<string, unknown> | null
@@ -659,26 +799,16 @@ export async function downloadVideoFromPlatform(
     }
     return 'other';
   };
-  const throwIfCancelled = (context: string): void => {
-    if (!consumeCancelMarker(operationId)) return;
-    log.info(
-      `[URLprocessor] Cancellation marker consumed (${context}) (Op ID: ${operationId})`
-    );
-    throw new CancelledError();
-  };
   const waitWithCancelChecks = async (
     totalMs: number,
     context: string
   ): Promise<void> => {
-    const pollMs = 200;
-    let remainingMs = totalMs;
-    while (remainingMs > 0) {
-      throwIfCancelled(context);
-      const sliceMs = Math.min(pollMs, remainingMs);
-      await new Promise(resolve => setTimeout(resolve, sliceMs));
-      remainingMs -= sliceMs;
-    }
-    throwIfCancelled(context);
+    await sleepWithOperationCancellation(totalMs, {
+      signal,
+      operationId,
+      context,
+      log,
+    });
   };
 
   // Wrap download attempt flow
@@ -706,6 +836,7 @@ export async function downloadVideoFromPlatform(
     let lastError: any = null;
 
     while (attempt <= maxAttempts) {
+      throwIfCancelled(`before yt-dlp attempt ${attempt}/${maxAttempts}`);
       if (isYouTube && attempt > 1) {
         // Add a small backoff between full attempts to avoid hammering YouTube.
         const retryDelayMs = Math.min(7000, 1000 * attempt);
@@ -715,6 +846,9 @@ export async function downloadVideoFromPlatform(
         await waitWithCancelChecks(
           retryDelayMs,
           `youtube retry delay before attempt ${attempt}/${maxAttempts}`
+        );
+        throwIfCancelled(
+          `after youtube retry delay before attempt ${attempt}/${maxAttempts}`
         );
       }
 
@@ -748,7 +882,7 @@ export async function downloadVideoFromPlatform(
       );
 
       try {
-        subprocess = execa(ytDlpPath, args, {
+        subprocess = execaImpl(ytDlpPath, args, {
           windowsHide: true,
           encoding: 'utf8',
           all: true,
@@ -769,6 +903,11 @@ export async function downloadVideoFromPlatform(
         if (subprocess?.pid) {
           log.info(`[URLprocessor] yt-dlp PID: ${subprocess.pid}`);
         }
+
+        throwIfCancelled(
+          `after spawning yt-dlp attempt ${attempt}/${maxAttempts}`,
+          () => hardKill(subprocess)
+        );
 
         if (subprocess) {
           registerDownloadProcess(operationId, subprocess);
@@ -1097,6 +1236,9 @@ export async function downloadVideoFromPlatform(
         log.info(
           `[URLprocessor] Download successful, returning filepath: ${finalFilepath}`
         );
+        // Crossing the verified-file boundary commits the artifact. Late cancel
+        // must not delete it, even if UI adoption is skipped upstream.
+        committedFilepath = finalFilepath;
 
         // After successful download, mark initialized and trigger background self-update for future runs
         try {
@@ -1115,7 +1257,7 @@ export async function downloadVideoFromPlatform(
             // Fire-and-forget update; do not block user flow
             // Delay the update by a few seconds to ensure file handles are released
             setTimeout(() => {
-              execa(ytDlpPath, ['-U', '--quiet'], {
+              execaImpl(ytDlpPath, ['-U', '--quiet'], {
                 windowsHide: true,
                 timeout: 120_000,
                 stdio: 'ignore',
@@ -1295,7 +1437,7 @@ export async function downloadVideoFromPlatform(
     let userFriendlyErrorMessage = rawErrorMessage;
 
     // Check if this was a cancellation
-    if (error instanceof CancelledError || consumeCancelMarker(operationId)) {
+    if (error instanceof CancelledError || signal?.aborted) {
       log.info(
         `[URLprocessor] Download cancelled by user (Op ID: ${operationId})`
       );
@@ -1304,7 +1446,9 @@ export async function downloadVideoFromPlatform(
         stage: 'Download cancelled',
       });
       // Clean up partial download files before throwing
-      await cleanupPartialDownloads(outputDir, safeTimestamp, operationId);
+      await cleanupPartialDownloads(outputDir, safeTimestamp, operationId, {
+        preserveFilepaths: committedFilepath ? [committedFilepath] : [],
+      });
       throw new CancelledError();
     }
 
@@ -1356,7 +1500,9 @@ export async function downloadVideoFromPlatform(
       // ignore
     }
     // Clean up partial download files before throwing
-    await cleanupPartialDownloads(outputDir, safeTimestamp, operationId);
+    await cleanupPartialDownloads(outputDir, safeTimestamp, operationId, {
+      preserveFilepaths: committedFilepath ? [committedFilepath] : [],
+    });
     throw error;
   } finally {
     const hasNeedCookiesHints = Object.values(needCookiesHintCounters).some(

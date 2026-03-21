@@ -4,8 +4,13 @@ import log from 'electron-log';
 import type { WebContents } from 'electron';
 import { app } from 'electron';
 import { forceKillWindows } from './utils/process-killer.js';
-import { attachAutoCancelListeners } from './utils/auto-cancel-listeners.js';
-import { consumeCancelMarker, markCancelled } from './utils/cancel-markers.js';
+import {
+  clearAutoCancelListeners,
+  rebindAutoCancelListeners,
+} from './utils/auto-cancel-listeners.js';
+import { markCancelled } from './utils/cancel-markers.js';
+import { createPendingFileCleanupTracker } from './utils/pending-file-cleanup.js';
+import { claimPendingUrlResultFilePath as claimPendingUrlResultFilePathFromRegistry } from './utils/url-result-claim.js';
 
 export { consumeCancelMarker } from './utils/cancel-markers.js';
 
@@ -32,19 +37,20 @@ type RegistryEntry =
       kind: 'generic';
       wc: WebContents;
       cancel: () => void;
+    })
+  | (RegistryEntryBase & {
+      kind: 'url-result';
+      wc: WebContents;
+      filePath: string;
     });
 
 const registry = new Map<string, RegistryEntry>();
+const pendingUrlResultCleanup = createPendingFileCleanupTracker({
+  logger: log,
+});
 
 function cleanupAutoCancel(entry: RegistryEntry | undefined): void {
-  if (!entry?.autoCancelCleanup) return;
-  try {
-    entry.autoCancelCleanup();
-  } catch (error) {
-    log.warn('[registry] Failed to remove auto-cancel listeners:', error);
-  } finally {
-    entry.autoCancelCleanup = undefined;
-  }
+  clearAutoCancelListeners(entry, log);
 }
 
 function deleteRegistryEntry(id: string): boolean {
@@ -52,6 +58,21 @@ function deleteRegistryEntry(id: string): boolean {
   if (!entry) return false;
   cleanupAutoCancel(entry);
   return registry.delete(id);
+}
+
+async function deletePendingUrlResultFile(
+  id: string,
+  filePath: string
+): Promise<void> {
+  await pendingUrlResultCleanup.discard(id, filePath);
+}
+
+function claimPendingUrlResultFilePath(id: string): string | null {
+  return claimPendingUrlResultFilePathFromRegistry(
+    registry,
+    id,
+    deleteRegistryEntry
+  );
 }
 
 export async function registerDownloadProcess(
@@ -128,6 +149,62 @@ export function finish(id: string): boolean {
   return deleteRegistryEntry(id);
 }
 
+export function registerPendingUrlResult(
+  id: string,
+  wc: WebContents,
+  filePath: string
+): void {
+  const existing = registry.get(id);
+  cleanupAutoCancel(existing);
+
+  const entry: RegistryEntry = {
+    kind: 'url-result',
+    wc,
+    filePath,
+  };
+  registry.set(id, entry);
+  rebindAutoCancelListeners(
+    entry,
+    wc as any,
+    id,
+    createRegistryAutoCancelCallback(id),
+    log
+  );
+  log.info(`[registry] Registered pending URL result ${id}: ${filePath}`);
+}
+
+export function acceptPendingUrlResult(id: string): boolean {
+  const entry = registry.get(id);
+  if (!entry || entry.kind !== 'url-result') {
+    return false;
+  }
+
+  log.info(`[registry] Accepted pending URL result ${id}`);
+  return deleteRegistryEntry(id);
+}
+
+export async function discardPendingUrlResult(id: string): Promise<boolean> {
+  const filePath = claimPendingUrlResultFilePath(id);
+  if (!filePath) {
+    return pendingUrlResultCleanup.has(id);
+  }
+
+  await deletePendingUrlResultFile(id, filePath);
+  return true;
+}
+
+export async function cleanupAcceptedUrlResultFile(
+  cleanupId: string,
+  filePath: string
+): Promise<boolean> {
+  if (!String(cleanupId || '').trim() || !String(filePath || '').trim()) {
+    return false;
+  }
+
+  await deletePendingUrlResultFile(cleanupId, filePath);
+  return true;
+}
+
 export function hasProcess(id: string): boolean {
   return registry.has(id);
 }
@@ -139,9 +216,8 @@ export function registerAutoCancel(
 ) {
   const existing = registry.get(operationId);
 
-  cleanupAutoCancel(existing);
-
   if (existing?.kind === 'generic') {
+    cleanupAutoCancel(existing);
     existing.cancel = cancel;
     existing.wc = wc;
     log.info(
@@ -152,24 +228,27 @@ export function registerAutoCancel(
     log.info(`[registry] Registered new generic operation ${operationId}`);
   }
 
-  const autoCancelCleanup = attachAutoCancelListeners(
-    wc as any,
-    operationId,
-    () => {
-      void cancelSafely(operationId).catch(error => {
-        log.error(
-          `[registry] Auto-cancel failed for operation ${operationId}:`,
-          error
-        );
-      });
-    },
-    log
-  );
-
   const updatedEntry = registry.get(operationId);
   if (updatedEntry) {
-    updatedEntry.autoCancelCleanup = autoCancelCleanup;
+    rebindAutoCancelListeners(
+      updatedEntry,
+      wc as any,
+      operationId,
+      createRegistryAutoCancelCallback(operationId),
+      log
+    );
   }
+}
+
+function createRegistryAutoCancelCallback(operationId: string): () => void {
+  return () => {
+    void cancelSafely(operationId).catch(error => {
+      log.error(
+        `[registry] Auto-cancel failed for operation ${operationId}:`,
+        error
+      );
+    });
+  };
 }
 
 export async function cancel(id: string): Promise<boolean> {
@@ -197,6 +276,14 @@ export async function cancelSafely(id: string): Promise<boolean> {
         entry.handle.abort();
         break;
       case 'download':
+        try {
+          entry.cancel?.();
+        } catch (error) {
+          log.warn(
+            `[registry] Download cancel callback failed for ${id}:`,
+            error
+          );
+        }
         if (!entry.handle.killed) {
           if (process.platform === 'win32' && entry.handle.pid) {
             // On Windows, use taskkill for reliable termination of yt-dlp
@@ -271,6 +358,13 @@ export async function cancelSafely(id: string): Promise<boolean> {
       case 'generic':
         entry.cancel();
         break;
+      case 'url-result': {
+        const filePath = claimPendingUrlResultFilePath(id);
+        if (filePath) {
+          await deletePendingUrlResultFile(id, filePath);
+        }
+        break;
+      }
     }
   } finally {
     deleteRegistryEntry(id);

@@ -107,6 +107,7 @@
     "invalidRenderOptions": "ตัวเลือกการเรนเดอร์ไม่ถูกต้อง",
     "missingVideoMetadata": "ข้อมูลวิดีโอหายไป ({{missing}})",
     "noSourceVideo": "ไม่มีวิดีโอต้นฉบับ",
+    "sourceVideoUnavailable": "วิดีโอต้นฉบับถูกลบไปแล้วหรือไม่สามารถเข้าถึงได้อีกต่อไป เปิดใหม่แล้วลองอีกครั้ง",
     "noSubtitlesLoaded": "ไม่ได้โหลดคำบรรยาย",
     "failedToLoadSRT": "โหลดไฟล์ SRT ล้มเหลว",
     "cancelTranslationFailed": "ยกเลิกการแปลไม่สำเร็จ: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "บริบทการวินิจฉัยบางส่วนไม่สามารถโหลดได้ รายงานจะยังคงรวมรายละเอียดจากแอปนี้"
   }
 }
+
+

@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Chaguo batili za utengenezaji zimetolewa",
     "missingVideoMetadata": "Metadata ya video haipo ({{missing}})",
     "noSourceVideo": "Hakuna video ya chanzo",
+    "sourceVideoUnavailable": "Video asili imeondolewa au haipatikani tena. Ifungue tena na ujaribu tena.",
     "noSubtitlesLoaded": "Hakuna manukuu yaliyopakiwa",
     "failedToLoadSRT": "Imeshindikana kupakia faili ya SRT",
     "cancelTranslationFailed": "Imeshindikana kughairi tafsiri: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Baadhi ya muktadha wa uchunguzi haukuweza kupakiwa. Ripoti bado itajumuisha maelezo kutoka kwenye programu hii."
   }
 }
+
+

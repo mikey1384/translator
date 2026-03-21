@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Ugyldige renderingsindstillinger angivet",
     "missingVideoMetadata": "Manglende videometadata ({{missing}})",
     "noSourceVideo": "Ingen kildevideo",
+    "sourceVideoUnavailable": "Den originale video blev fjernet eller er ikke længere tilgængelig. Åbn den igen, og prøv igen.",
     "noSubtitlesLoaded": "Ingen undertekster indlæst",
     "failedToLoadSRT": "Kunne ikke indlæse SRT-fil",
     "cancelTranslationFailed": "Kunne ikke annullere oversættelsen: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Noget diagnostisk kontekst kunne ikke indlæses. Rapporten vil stadig indeholde detaljer fra denne app."
   }
 }
+
+

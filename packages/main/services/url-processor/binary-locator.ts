@@ -6,6 +6,9 @@ import log from 'electron-log';
 import { app } from 'electron';
 import which from 'which';
 import { esmDirname } from '@shared/esm-paths';
+import { CancelledError } from '../../../shared/cancelled-error.js';
+import { raceOperationCancellation } from '../../utils/operation-cancellation.js';
+import { terminateProcess } from '../../utils/process-killer.js';
 
 // Shared helper: Make file executable on Unix systems
 async function ensureExecutable(binaryPath: string): Promise<void> {
@@ -153,7 +156,34 @@ export async function findYtDlpBinary(): Promise<string | null> {
 }
 
 // Test if binary is working
-export async function testBinary(binaryPath: string): Promise<boolean> {
+async function runBinaryVersionCheck(
+  binaryPath: string,
+  timeout: number,
+  signal?: AbortSignal
+): Promise<string> {
+  const proc = execa(binaryPath, ['--version'], {
+    timeout,
+    windowsHide: true,
+  });
+
+  const { stdout } = await raceOperationCancellation(proc, {
+    signal,
+    context: `while testing yt-dlp binary ${binaryPath}`,
+    log,
+    onCancel: () =>
+      terminateProcess({
+        childProcess: proc,
+        logPrefix: 'yt-dlp-binary-test',
+      }),
+  });
+
+  return stdout;
+}
+
+export async function testBinary(
+  binaryPath: string,
+  signal?: AbortSignal
+): Promise<boolean> {
   const baseTimeoutMs = 10_000;
   const extendedTimeoutMs = app.isPackaged ? 120_000 : 30_000;
   const timeouts =
@@ -163,13 +193,13 @@ export async function testBinary(binaryPath: string): Promise<boolean> {
 
   for (const timeout of timeouts) {
     try {
-      const { stdout } = await execa(binaryPath, ['--version'], {
-        timeout,
-        windowsHide: true,
-      });
+      const stdout = await runBinaryVersionCheck(binaryPath, timeout, signal);
       log.info(`[URLprocessor] yt-dlp version detected: ${stdout.trim()}`);
       return true;
     } catch (error: any) {
+      if (error instanceof CancelledError) {
+        throw error;
+      }
       if (error?.timedOut && timeout < extendedTimeoutMs) {
         log.warn(
           `[URLprocessor] yt-dlp --version timed out after ${timeout}ms, retrying with extended timeout...`

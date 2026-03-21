@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Ogiltiga renderingsalternativ angavs",
     "missingVideoMetadata": "Videometadata saknas ({{missing}})",
     "noSourceVideo": "Ingen källvideo",
+    "sourceVideoUnavailable": "Originalvideon har tagits bort eller är inte längre tillgänglig. Öppna den igen och försök igen.",
     "noSubtitlesLoaded": "Inga undertexter laddade",
     "failedToLoadSRT": "Misslyckades att ladda SRT-fil",
     "cancelTranslationFailed": "Det gick inte att avbryta översättningen: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Viss diagnostisk kontext kunde inte läsas in. Rapporten kommer fortfarande att innehålla detaljer från den här appen."
   }
 }
+
+

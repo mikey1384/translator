@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Geçersiz render seçenekleri verildi",
     "missingVideoMetadata": "Video metadatası eksik ({{missing}})",
     "noSourceVideo": "Kaynak video yok",
+    "sourceVideoUnavailable": "Orijinal video silinmiş ya da artık erişilemiyor. Yeniden açın ve tekrar deneyin.",
     "noSubtitlesLoaded": "Yüklenen altyazı yok",
     "failedToLoadSRT": "SRT dosyası yüklenemedi",
     "cancelTranslationFailed": "Çeviri iptal edilemedi: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Tanılama bağlamının bir kısmı yüklenemedi. Rapor yine de bu uygulamaya ait ayrıntıları içerecek."
   }
 }
+
+

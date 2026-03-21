@@ -15,6 +15,12 @@ import { useUrlStore } from '../../../state/url-store';
 import * as SystemIPC from '../../../ipc/system';
 import { getByoErrorMessage, isByoError } from '../../../utils/byoErrors';
 import {
+  getSourceVideoErrorMessage,
+  getSourceVideoUnavailableMessage,
+  isSourceVideoPathAccessible,
+  isSourceVideoUnavailableError,
+} from '../../../utils/sourceVideoErrors';
+import {
   getTranslationFailureMessage,
   shouldSurfaceTranslationFailure,
 } from '../../../utils/translationFailure';
@@ -266,6 +272,16 @@ export async function executeDubGeneration({
     return { success: false };
   }
 
+  if (videoPath && !(await isSourceVideoPathAccessible(videoPath))) {
+    const message = getSourceVideoUnavailableMessage();
+    try {
+      useUrlStore.getState().setOperationError(message);
+    } catch {
+      // ignore
+    }
+    return { success: false };
+  }
+
   // Atomically check and start dubbing (prevents race condition)
   const started = useTaskStore
     .getState()
@@ -338,8 +354,9 @@ export async function executeDubGeneration({
       };
     }
 
-    const friendlyError =
-      res?.error && isByoError(res.error)
+    const friendlyError = isSourceVideoUnavailableError(res?.error)
+      ? getSourceVideoUnavailableMessage()
+      : res?.error && isByoError(res.error)
         ? getByoErrorMessage(res.error)
         : res?.error;
 
@@ -380,9 +397,11 @@ export async function executeDubGeneration({
       error instanceof Error
         ? error.message
         : 'Failed to generate dubbed audio.';
-    const friendlyError = isByoError(errorMsg)
-      ? getByoErrorMessage(errorMsg)
-      : errorMsg;
+    const friendlyError = isSourceVideoUnavailableError(errorMsg)
+      ? getSourceVideoUnavailableMessage()
+      : isByoError(errorMsg)
+        ? getByoErrorMessage(errorMsg)
+        : errorMsg;
     try {
       useUrlStore.getState().setOperationError(friendlyError);
     } catch {
@@ -526,13 +545,16 @@ export async function executeSubtitleGeneration({
       const cancelled = Boolean(result.cancelled);
       const errorMsg =
         typeof result.error === 'string' ? result.error.trim() : '';
+      const friendlyError = getSourceVideoErrorMessage(errorMsg);
       const stage = cancelled
         ? i18n.t('generateSubtitles.status.cancelled')
-        : errorMsg
-          ? isByoError(errorMsg)
-            ? getByoErrorMessage(errorMsg)
-            : errorMsg
-          : i18n.t('generateSubtitles.status.error');
+        : friendlyError
+          ? friendlyError
+          : errorMsg
+            ? isByoError(errorMsg)
+              ? getByoErrorMessage(errorMsg)
+              : errorMsg
+            : i18n.t('generateSubtitles.status.error');
       const percent = cancelled ? 0 : 100;
 
       if (!cancelled && errorMsg) {
@@ -569,9 +591,11 @@ export async function executeSubtitleGeneration({
     const cancelled =
       /operation cancelled/i.test(errorMsg) ||
       /process cancelled/i.test(errorMsg);
-    const friendlyError = isByoError(errorMsg)
-      ? getByoErrorMessage(errorMsg)
-      : errorMsg || i18n.t('generateSubtitles.status.error');
+    const friendlyError = isSourceVideoUnavailableError(errorMsg)
+      ? getSourceVideoUnavailableMessage()
+      : isByoError(errorMsg)
+        ? getByoErrorMessage(errorMsg)
+        : errorMsg || i18n.t('generateSubtitles.status.error');
 
     if (!cancelled) {
       useUrlStore.getState().setOperationError(friendlyError);
@@ -612,6 +636,25 @@ export async function startTranscriptionFlow({
   workflowOwner?: 'default' | 'highlight';
   openEditPanelOnStart?: boolean;
 }): Promise<GenerateSubtitlesResult> {
+  const videoState = useVideoStore.getState();
+  const sourceVideoPath =
+    videoFilePath ??
+    videoState.originalPath ??
+    videoState.path ??
+    (videoFile as any)?.path ??
+    (videoFile as any)?._originalPath ??
+    null;
+
+  if (
+    sourceVideoPath &&
+    !(await isSourceVideoPathAccessible(sourceVideoPath))
+  ) {
+    const message = getSourceVideoUnavailableMessage();
+    useUrlStore.getState().setOperationError(message);
+    await SystemIPC.showMessage(message);
+    return { success: false };
+  }
+
   // Validate inputs before prompting to replace the currently mounted subtitle.
   const validation = validateGenerationInputs(
     videoFile,

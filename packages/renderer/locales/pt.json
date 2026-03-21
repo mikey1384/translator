@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Opções de renderização inválidas fornecidas",
     "missingVideoMetadata": "Metadados de vídeo ausentes ({{missing}})",
     "noSourceVideo": "Sem vídeo de origem",
+    "sourceVideoUnavailable": "O vídeo original foi removido ou não está mais acessível. Abra-o novamente e tente de novo.",
     "noSubtitlesLoaded": "Nenhuma legenda carregada",
     "failedToLoadSRT": "Falha ao carregar arquivo SRT",
     "cancelTranslationFailed": "Falha ao cancelar a tradução: {{message}}",

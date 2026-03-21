@@ -2,12 +2,15 @@ import log from 'electron-log';
 import fsp from 'node:fs/promises';
 import type { ProgressCallback, VideoQuality } from './types.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
-import { consumeCancelMarker } from '../../utils/cancel-markers.js';
 import { PROGRESS } from './constants.js';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
 import type { FileManager } from '../file-manager.js';
 import path from 'node:path';
 import { CancelledError } from '../../../shared/cancelled-error.js';
+import {
+  raceOperationCancellation,
+  throwIfOperationCancelled,
+} from '../../utils/operation-cancellation.js';
 
 type NeedCookiesCause =
   | '429'
@@ -103,7 +106,10 @@ export async function processVideoUrl(
     fileManager: FileManager;
     ffmpeg: FFmpegContext;
   },
-  dependencies: ProcessVideoUrlDependencies = {}
+  dependencies: ProcessVideoUrlDependencies = {},
+  options: {
+    signal?: AbortSignal;
+  } = {}
 ): Promise<{
   videoPath: string;
   filename: string;
@@ -119,6 +125,7 @@ export async function processVideoUrl(
   proc: DownloadProcessType;
 }> {
   log.info(`[URLprocessor] processVideoUrl CALLED (Op ID: ${operationId})`);
+  const signal = options.signal;
 
   if (!services?.fileManager) {
     throw new Error('FileManager instance is required for processVideoUrl');
@@ -133,13 +140,14 @@ export async function processVideoUrl(
   }
   const { ffmpeg } = services;
   const downloadVideo =
-    dependencies.downloadVideoFromPlatformImpl || defaultDownloadVideoFromPlatform;
+    dependencies.downloadVideoFromPlatformImpl ||
+    defaultDownloadVideoFromPlatform;
   const exportCookies =
     dependencies.exportCookiesToFileForUrlImpl ||
     defaultExportCookiesToFileForUrl;
   const waitImpl =
-    dependencies.waitImpl || (async (ms: number) =>
-      new Promise(resolve => setTimeout(resolve, ms)));
+    dependencies.waitImpl ||
+    (async (ms: number) => new Promise(resolve => setTimeout(resolve, ms)));
 
   try {
     // Normalize YouTube Shorts to watch URL to improve extractor stability
@@ -229,9 +237,19 @@ export async function processVideoUrl(
       progressCallback,
       operationId,
       { ffmpeg },
-      extraArgs
+      extraArgs,
+      signal
     );
     const stats = await fsp.stat(downloadResult.filepath);
+    throwIfOperationCancelled({
+      signal,
+      operationId,
+      context: 'before reporting successful URL download',
+      log,
+      onCancel: async () => {
+        await fsp.rm(downloadResult.filepath, { force: true }).catch(() => {});
+      },
+    });
     const filename = path.basename(downloadResult.filepath);
     const metadata = extractDownloadMetadata(
       downloadResult.info as Record<string, unknown> | null | undefined,
@@ -259,16 +277,24 @@ export async function processVideoUrl(
   };
 
   try {
+    throwIfOperationCancelled({
+      signal,
+      operationId,
+      context: 'before initial download attempt',
+      log,
+    });
     return await run([]);
   } catch (err: any) {
     const host = new URL(url).hostname;
-    const throwIfCancelled = (context: string): void => {
-      if (!consumeCancelMarker(operationId)) return;
-      log.info(
-        `[URLprocessor] Cancellation marker consumed (${context}) (Op ID: ${operationId})`
-      );
-      throw new CancelledError();
-    };
+    if (err instanceof CancelledError) {
+      throw err;
+    }
+    throwIfOperationCancelled({
+      signal,
+      operationId,
+      context: 'after initial download attempt',
+      log,
+    });
     const waitWithCancelChecks = async (
       totalMs: number,
       context: string
@@ -276,12 +302,27 @@ export async function processVideoUrl(
       const pollMs = 200;
       let remainingMs = totalMs;
       while (remainingMs > 0) {
-        throwIfCancelled(context);
+        throwIfOperationCancelled({
+          signal,
+          operationId,
+          context,
+          log,
+        });
         const sliceMs = Math.min(pollMs, remainingMs);
-        await waitImpl(sliceMs);
+        await raceOperationCancellation(waitImpl(sliceMs), {
+          signal,
+          operationId,
+          context,
+          log,
+        });
         remainingMs -= sliceMs;
       }
-      throwIfCancelled(context);
+      throwIfOperationCancelled({
+        signal,
+        operationId,
+        context,
+        log,
+      });
     };
     const classify = (error: any) => {
       const combined = `${error?.message ?? ''}\n${error?.stderr ?? ''}\n${
@@ -312,10 +353,18 @@ export async function processVideoUrl(
     };
     const getCookieCountForGating = async (): Promise<number | null> => {
       try {
-        const exported = await exportCookies(url);
+        const exported = await raceOperationCancellation(exportCookies(url), {
+          signal,
+          operationId,
+          context: 'checking app cookies for NeedCookies gating',
+          log,
+        });
         return exported.count;
       } catch (cookieErr) {
         // If we can't determine cookie availability, do not mask the real error.
+        if (cookieErr instanceof CancelledError) {
+          throw cookieErr;
+        }
         log.warn(
           '[URLprocessor] Failed to check/export app cookies for NeedCookies gating:',
           cookieErr
@@ -355,6 +404,12 @@ export async function processVideoUrl(
         retryDelayMs,
         'rate-limit backoff before one-shot retry'
       );
+      throwIfOperationCancelled({
+        signal,
+        operationId,
+        context: 'after rate-limit backoff before one-shot retry',
+        log,
+      });
 
       try {
         return await run([]);

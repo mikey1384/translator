@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Ungültige Render-Optionen angegeben",
     "missingVideoMetadata": "Fehlende Video-Metadaten ({{missing}})",
     "noSourceVideo": "Kein Quellvideo",
+    "sourceVideoUnavailable": "Das Originalvideo wurde entfernt oder ist nicht mehr zugänglich. Öffne es erneut und versuche es nochmal.",
     "noSubtitlesLoaded": "Keine Untertitel geladen",
     "failedToLoadSRT": "SRT-Datei konnte nicht geladen werden",
     "cancelTranslationFailed": "Übersetzung konnte nicht abgebrochen werden: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Ein Teil des Diagnosekontexts konnte nicht geladen werden. Der Bericht enthält weiterhin Details aus dieser App."
   }
 }
+
+

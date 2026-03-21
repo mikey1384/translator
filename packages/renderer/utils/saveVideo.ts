@@ -6,6 +6,10 @@ import { syncStoredSubtitleVideoAssociationPath } from './subtitle-library';
 import { useSubStore } from '../state/subtitle-store';
 import { useVideoStore } from '../state/video-store';
 import { getNativePlayerInstance } from '../native-player';
+import {
+  getSourceVideoUnavailableMessage,
+  isSourceVideoPathAccessible,
+} from './sourceVideoErrors';
 
 const VIDEO_FILE_EXTENSIONS = ['mp4', 'mkv', 'webm', 'mov', 'avi'];
 
@@ -113,6 +117,10 @@ export async function saveOriginalVideoFile(
   originalVideoPath: string | null
 ): Promise<boolean> {
   if (!originalVideoPath) {
+    return false;
+  }
+  if (!(await isSourceVideoPathAccessible(originalVideoPath))) {
+    await SystemIPC.showMessage(getSourceVideoUnavailableMessage());
     return false;
   }
 

@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Podano nieprawidłowe opcje renderowania",
     "missingVideoMetadata": "Brakuje metadanych wideo ({{missing}})",
     "noSourceVideo": "Brak wideo źródłowego",
+    "sourceVideoUnavailable": "Oryginalny film został usunięty lub nie jest już dostępny. Otwórz go ponownie i spróbuj jeszcze raz.",
     "noSubtitlesLoaded": "Nie załadowano napisów",
     "failedToLoadSRT": "Nie udało się załadować pliku SRT",
     "cancelTranslationFailed": "Nie udało się anulować tłumaczenia: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Nie udało się wczytać części kontekstu diagnostycznego. Raport nadal będzie zawierał szczegóły z tej aplikacji."
   }
 }
+
+

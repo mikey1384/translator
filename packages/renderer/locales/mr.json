@@ -107,6 +107,7 @@
     "invalidRenderOptions": "चुकीचे रेंडर पर्याय दिले गेले",
     "missingVideoMetadata": "व्हिडिओ मेटाडेटा गहाळ आहे ({{missing}})",
     "noSourceVideo": "स्त्रोत व्हिडिओ नाही",
+    "sourceVideoUnavailable": "मूळ व्हिडिओ काढून टाकला आहे किंवा तो आता उपलब्ध नाही. तो पुन्हा उघडा आणि पुन्हा प्रयत्न करा.",
     "noSubtitlesLoaded": "उपशीर्षके लोड झाली नाहीत",
     "failedToLoadSRT": "SRT फाईल लोड करण्यात अयशस्वी",
     "cancelTranslationFailed": "भाषांतर रद्द करता आले नाही: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "काही निदान-संदर्भ लोड करता आला नाही. अहवालात तरीही या अॅपचे तपशील समाविष्ट असतील."
   }
 }
+
+

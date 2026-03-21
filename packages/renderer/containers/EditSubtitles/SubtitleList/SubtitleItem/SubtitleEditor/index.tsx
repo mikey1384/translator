@@ -17,6 +17,7 @@ import {
 } from '../../../../../state';
 import { transcribeOneLine } from '../../../../../ipc/subtitles';
 import { useSubStore } from '../../../../../state/subtitle-store';
+import { useUrlStore } from '../../../../../state/url-store';
 import {
   flattenText,
   groupWhisperReviewRanges,
@@ -24,6 +25,11 @@ import {
   synthesizePlaceholdersWithinWindow,
 } from '../../../../../utils/subtitle-heuristics.js';
 import { getByoErrorMessage, isByoError } from '../../../../../utils/byoErrors';
+import {
+  getSourceVideoErrorMessage,
+  getSourceVideoUnavailableMessage,
+  isSourceVideoPathAccessible,
+} from '../../../../../utils/sourceVideoErrors';
 import {
   subtitleRowCardStyles,
   subtitleRowContentStyles,
@@ -176,6 +182,13 @@ export default function SubtitleEditor({
       const segStart = currentSeg?.start ?? subtitle.start;
       const segEnd = currentSeg?.end ?? subtitle.end;
 
+      if (!(await isSourceVideoPathAccessible(videoPath))) {
+        useUrlStore
+          .getState()
+          .setOperationError(getSourceVideoUnavailableMessage());
+        return;
+      }
+
       const res = await transcribeOneLine({
         videoPath,
         sourceUrl,
@@ -183,8 +196,23 @@ export default function SubtitleEditor({
         promptContext: `${prompt}`,
         operationId,
       });
+      const errorMsg = String(res.error || '').trim();
+      const cancelled = Boolean(res.cancelled);
+      const didFail = cancelled || res.success === false || errorMsg.length > 0;
+      if (didFail) {
+        if (!cancelled) {
+          const sourceVideoError = getSourceVideoErrorMessage(errorMsg);
+          const byoError = isByoError(errorMsg)
+            ? getByoErrorMessage(errorMsg)
+            : '';
+          const friendlyError =
+            sourceVideoError || byoError || errorMsg || 'Transcription failed';
+          useUrlStore.getState().setOperationError(friendlyError);
+        }
+        return;
+      }
 
-      const segs = (res as any)?.segments as any[] | undefined;
+      const segs = res.segments;
       if (Array.isArray(segs) && segs.length > 0) {
         // If improving with a tighter gap threshold, insert placeholders for any gaps >= threshold
         const withPlaceholders = synthesizePlaceholdersWithinWindow(
@@ -199,7 +227,7 @@ export default function SubtitleEditor({
         // Do not call bridgeGaps(3) here; it would remove sub-3s placeholders
         // that we intentionally added within the improve window.
       } else {
-        const text = (res as any)?.transcript?.trim();
+        const text = res.transcript?.trim();
         if (typeof text === 'string' && text.length > 0) {
           actions.update({ original: text });
         }
@@ -212,6 +240,13 @@ export default function SubtitleEditor({
       }
     } catch (err) {
       console.error('[SubtitleEditor] single-line transcribe error:', err);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      const friendlyError =
+        getSourceVideoErrorMessage(errorMsg) ||
+        (isByoError(errorMsg)
+          ? getByoErrorMessage(errorMsg)
+          : errorMsg || 'Transcription failed');
+      useUrlStore.getState().setOperationError(friendlyError);
     } finally {
       setIsTranscribingOne(false);
     }

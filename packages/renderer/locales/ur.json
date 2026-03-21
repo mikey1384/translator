@@ -107,6 +107,7 @@
     "invalidRenderOptions": "غلط رینڈر آپشنز فراہم کیے گئے",
     "missingVideoMetadata": "ویڈیو میٹاڈیٹا غائب ہے ({{missing}})",
     "noSourceVideo": "سورس ویڈیو موجود نہیں",
+    "sourceVideoUnavailable": "اصل ویڈیو ہٹا دی گئی ہے یا اب دستیاب نہیں ہے۔ اسے دوبارہ کھولیں اور دوبارہ کوشش کریں۔",
     "noSubtitlesLoaded": "سب ٹائٹل لوڈ نہیں ہوئے",
     "failedToLoadSRT": "SRT فائل لوڈ کرنے میں ناکام",
     "cancelTranslationFailed": "ترجمہ منسوخ نہ ہو سکا: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "کچھ تشخیصی تناظر لوڈ نہیں ہو سکا۔ رپورٹ میں پھر بھی اس ایپ کی تفصیلات شامل ہوں گی۔"
   }
 }
+
+

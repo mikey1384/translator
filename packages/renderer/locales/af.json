@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Ongeldige rendering-opsies verskaf",
     "missingVideoMetadata": "Video-metadata ontbreek ({{missing}})",
     "noSourceVideo": "Geen bronvideo",
+    "sourceVideoUnavailable": "Die oorspronklike video is verwyder of is nie meer toeganklik nie. Maak dit weer oop en probeer weer.",
     "noSubtitlesLoaded": "Geen onderskrifte gelaai nie",
     "failedToLoadSRT": "Kon nie SRT-lêer laai nie",
     "cancelTranslationFailed": "Kon nie vertaling kanselleer nie: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Sommige diagnostiese konteks kon nie gelaai word nie. Die verslag sal steeds besonderhede uit hierdie toepassing insluit."
   }
 }
+
+

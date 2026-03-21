@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Poskytnuty neplatné možnosti renderování",
     "missingVideoMetadata": "Chybějící metadata videa ({{missing}})",
     "noSourceVideo": "Žádné zdrojové video",
+    "sourceVideoUnavailable": "Původní video bylo odstraněno nebo už není přístupné. Otevřete ho znovu a zkuste to znovu.",
     "noSubtitlesLoaded": "Žádné titulky nenačteny",
     "failedToLoadSRT": "Nepodařilo se načíst SRT soubor",
     "cancelTranslationFailed": "Nepodařilo se zrušit překlad: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Část diagnostického kontextu se nepodařilo načíst. Zpráva bude stále obsahovat podrobnosti z této aplikace."
   }
 }
+
+

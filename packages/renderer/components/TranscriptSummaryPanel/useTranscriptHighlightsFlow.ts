@@ -24,6 +24,11 @@ import {
 } from '../../ipc/subtitles';
 import { save as saveFile } from '../../ipc/file';
 import {
+  getSourceVideoErrorMessage,
+  getSourceVideoUnavailableMessage,
+  isSourceVideoPathAccessible,
+} from '../../utils/sourceVideoErrors';
+import {
   buildHighlightFilename,
   getHighlightKey,
   type HighlightClipCutState,
@@ -1082,9 +1087,11 @@ export default function useTranscriptHighlightsFlow({
             .refresh()
             .catch(() => void 0);
         } else {
+          const friendlyError =
+            getSourceVideoErrorMessage(progress.error) || progress.error;
           setError(
             t('summary.downloadHighlightFailed', {
-              message: progress.error,
+              message: friendlyError,
             })
           );
         }
@@ -1151,6 +1158,10 @@ export default function useTranscriptHighlightsFlow({
         }, 4000);
       } catch (err: any) {
         console.error('[TranscriptSummaryPanel] save highlight failed', err);
+        const message =
+          getSourceVideoErrorMessage(err?.message || String(err)) ||
+          err?.message ||
+          String(err);
         setDownloadStatus(prev => ({ ...prev, [stateKey]: 'error' }));
         if (downloadTimers.current[stateKey]) {
           clearTimeout(downloadTimers.current[stateKey]);
@@ -1166,7 +1177,7 @@ export default function useTranscriptHighlightsFlow({
 
         setError(
           t('summary.downloadHighlightFailed', {
-            message: err?.message || String(err),
+            message,
           })
         );
       }
@@ -1184,6 +1195,10 @@ export default function useTranscriptHighlightsFlow({
             'Open the source video to cut highlight clips.'
           )
         );
+        return;
+      }
+      if (!(await isSourceVideoPathAccessible(videoPath))) {
+        setError(getSourceVideoUnavailableMessage());
         return;
       }
 
@@ -1269,16 +1284,17 @@ export default function useTranscriptHighlightsFlow({
       } catch (err: any) {
         console.error('[TranscriptSummaryPanel] cut highlight failed', err);
         const message = err?.message || String(err);
+        const friendlyMessage = getSourceVideoErrorMessage(message) || message;
         if (
           currentArtifactSourceIdentityRef.current === operationSourceIdentity
         ) {
           setHighlightCutState(prev => ({
             ...prev,
-            [stateKey]: { status: 'error', percent: 0, error: message },
+            [stateKey]: { status: 'error', percent: 0, error: friendlyMessage },
           }));
           setError(
             t('summary.downloadHighlightFailed', {
-              message,
+              message: friendlyMessage,
             })
           );
         }
@@ -1408,6 +1424,10 @@ export default function useTranscriptHighlightsFlow({
       );
       return;
     }
+    if (!(await isSourceVideoPathAccessible(videoPath))) {
+      setError(getSourceVideoUnavailableMessage());
+      return;
+    }
 
     const aspectMode = combineAspectModeRef.current;
     const selectionSignature = buildOrderedSelectionSignature(orderedSelection);
@@ -1493,6 +1513,8 @@ export default function useTranscriptHighlightsFlow({
       }
     } catch (err: any) {
       console.error('[TranscriptSummaryPanel] cut combined failed', err);
+      const message = err?.message || String(err);
+      const friendlyMessage = getSourceVideoErrorMessage(message) || message;
       if (
         combineCutStateRef.current.operationId === operationId &&
         currentArtifactSourceIdentityRef.current === operationSourceIdentity
@@ -1500,7 +1522,7 @@ export default function useTranscriptHighlightsFlow({
         const nextErrorState: CombineCutState = {
           status: 'error',
           percent: 0,
-          error: err?.message,
+          error: friendlyMessage,
         };
         setCombineCutState(nextErrorState);
         combineCutStateRef.current = nextErrorState;
@@ -1508,7 +1530,7 @@ export default function useTranscriptHighlightsFlow({
         setError(
           t('summary.combinedCutFailed', {
             defaultValue: 'Failed to cut combined highlights: {{message}}',
-            message: err?.message || String(err),
+            message: friendlyMessage,
           })
         );
       }
@@ -1548,9 +1570,13 @@ export default function useTranscriptHighlightsFlow({
         }
       } catch (err: any) {
         console.error('[TranscriptSummaryPanel] save combined failed', err);
+        const message =
+          getSourceVideoErrorMessage(err?.message || String(err)) ||
+          err?.message ||
+          String(err);
         setError(
           t('summary.downloadHighlightFailed', {
-            message: err?.message || String(err),
+            message,
           })
         );
       }
@@ -1618,10 +1644,12 @@ export default function useTranscriptHighlightsFlow({
       }
 
       if (progress.error) {
+        const friendlyError =
+          getSourceVideoErrorMessage(progress.error) || progress.error;
         setError(
           t('summary.combinedCutFailed', {
             defaultValue: 'Failed to cut combined highlights: {{message}}',
-            message: progress.error,
+            message: friendlyError,
           })
         );
       }

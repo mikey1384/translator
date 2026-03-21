@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Opsi render yang diberikan tidak valid",
     "missingVideoMetadata": "Metadata video hilang ({{missing}})",
     "noSourceVideo": "Tidak ada video sumber",
+    "sourceVideoUnavailable": "Video asli telah dihapus atau sudah tidak dapat diakses. Buka lagi dan coba lagi.",
     "noSubtitlesLoaded": "Tidak ada subtitle yang dimuat",
     "failedToLoadSRT": "Gagal memuat berkas SRT",
     "cancelTranslationFailed": "Gagal membatalkan terjemahan: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Beberapa konteks diagnostik tidak dapat dimuat. Laporan tetap akan menyertakan detail dari aplikasi ini."
   }
 }
+
+

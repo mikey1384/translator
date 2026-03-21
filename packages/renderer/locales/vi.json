@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Các tùy chọn render không hợp lệ",
     "missingVideoMetadata": "Thiếu metadata video ({{missing}})",
     "noSourceVideo": "Không có video nguồn",
+    "sourceVideoUnavailable": "Video gốc đã bị xóa hoặc không còn truy cập được nữa. Hãy mở lại và thử lại.",
     "noSubtitlesLoaded": "Không có phụ đề nào được tải",
     "failedToLoadSRT": "Không thể tải tệp SRT",
     "cancelTranslationFailed": "Không thể hủy bản dịch: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Không thể tải một phần ngữ cảnh chẩn đoán. Báo cáo vẫn sẽ bao gồm chi tiết từ ứng dụng này."
   }
 }
+
+

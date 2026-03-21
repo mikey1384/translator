@@ -14,6 +14,21 @@ import {
   getPreferredInstallPath,
   getManagedBinaryPath,
 } from './binary-locator.js';
+import { CancelledError } from '../../../shared/cancelled-error.js';
+import {
+  raceOperationCancellation,
+  rethrowIfCancelled,
+  sleepWithOperationCancellation,
+  throwIfOperationCancelled,
+} from '../../utils/operation-cancellation.js';
+import { terminateProcess } from '../../utils/process-killer.js';
+import {
+  attachSharedCancellableJobWaiter,
+  createSharedCancellableJob,
+  type SharedCancellableJob,
+  waitForAbortingSharedCancellableJob,
+} from '../../utils/shared-cancellable-job.js';
+import { waitForSharedCancellableSingletonJob } from '../../utils/shared-cancellable-singleton-job.js';
 
 // Cache for update check - only check once per hour
 let lastUpdateCheckTime = 0;
@@ -22,7 +37,11 @@ const CONCURRENT_INSTALL_WAIT_TIMEOUT_MS = 120_000;
 const CONCURRENT_INSTALL_POLL_MS = 500;
 const WAITING_FOR_SETUP_STAGE = 'Waiting for yt-dlp setup…';
 
-let inFlightEnsureYtDlpBinary: Promise<string> | null = null;
+type YtDlpSetupJob = SharedCancellableJob<string> & {
+  skipUpdate: boolean;
+};
+
+let inFlightEnsureYtDlpBinaryJob: YtDlpSetupJob | null = null;
 let cachedHealthyBinaryPath: string | null = null;
 let cachedHealthyBinaryAt = 0;
 
@@ -83,14 +102,44 @@ function subscribeEnsureYtDlpProgress(
   };
 }
 
+type EnsureYtDlpBinaryInternalOptions = {
+  skipUpdate?: boolean;
+  signal?: AbortSignal;
+};
+
+function createYtDlpSetupJob(skipUpdate: boolean): YtDlpSetupJob {
+  const job = createSharedCancellableJob(
+    signal =>
+      ensureYtDlpBinaryInternal({
+        skipUpdate,
+        signal,
+      }),
+    () => {
+      if (inFlightEnsureYtDlpBinaryJob === job) {
+        inFlightEnsureYtDlpBinaryJob = null;
+      }
+      lastEnsureYtDlpProgress = null;
+    }
+  ) as YtDlpSetupJob;
+  job.skipUpdate = skipUpdate;
+  return job;
+}
+
+async function waitForAbortingYtDlpSetupJob(
+  job: YtDlpSetupJob,
+  signal?: AbortSignal
+): Promise<void> {
+  await waitForAbortingSharedCancellableJob(job, {
+    signal,
+    context: 'while waiting for prior yt-dlp setup cleanup',
+    log,
+  });
+}
+
 // Concurrent installation protection using file-based mutex
 
 function getInstallLockFilePath(): string {
   return join(app.getPath('userData'), 'bin', '.install-lock');
-}
-
-async function sleep(ms: number): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function readInstallLockPid(): Promise<number | null> {
@@ -165,7 +214,8 @@ function isStagedBinaryCandidate(binaryPath: string): boolean {
 }
 
 async function resolveHealthyBinaryCandidate(
-  targetBinaryPath: string
+  targetBinaryPath: string,
+  signal?: AbortSignal
 ): Promise<string | null> {
   let bestCandidate: { path: string; mtimeMs: number; staged: boolean } | null =
     null;
@@ -173,7 +223,7 @@ async function resolveHealthyBinaryCandidate(
   for (const candidate of getHealthyBinaryCandidates(targetBinaryPath)) {
     try {
       await fsp.access(candidate, fs.constants.X_OK);
-      if (!(await testBinary(candidate))) {
+      if (!(await testBinary(candidate, signal))) {
         continue;
       }
       const stats = await fsp.stat(candidate);
@@ -191,7 +241,8 @@ async function resolveHealthyBinaryCandidate(
       ) {
         bestCandidate = nextCandidate;
       }
-    } catch {
+    } catch (error) {
+      rethrowIfCancelled(error);
       // Try next candidate.
     }
   }
@@ -203,34 +254,49 @@ async function waitForConcurrentInstall(options: {
   targetBinaryPath: string;
   onProgress?: BinarySetupProgress;
   timeoutMs?: number;
+  signal?: AbortSignal;
 }): Promise<string | null> {
   const {
     targetBinaryPath,
     onProgress,
     timeoutMs = CONCURRENT_INSTALL_WAIT_TIMEOUT_MS,
+    signal,
   } = options;
 
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
+    throwIfOperationCancelled({
+      signal,
+      context: 'while waiting for another yt-dlp setup process',
+      log,
+    });
     onProgress?.({ stage: WAITING_FOR_SETUP_STAGE });
     const lockActive = await isInstallLockActive();
     if (!lockActive) {
       break;
     }
-    await sleep(CONCURRENT_INSTALL_POLL_MS);
+    await sleepWithOperationCancellation(CONCURRENT_INSTALL_POLL_MS, {
+      signal,
+      context: 'while waiting for another yt-dlp setup process',
+      log,
+    });
   }
 
-  return resolveHealthyBinaryCandidate(targetBinaryPath);
+  return resolveHealthyBinaryCandidate(targetBinaryPath, signal);
 }
 
 async function validateResolvedInstallBinary(
-  binaryPath: string
+  binaryPath: string,
+  signal?: AbortSignal
 ): Promise<boolean> {
   if (app.isPackaged) {
     return true;
   }
 
-  const supportsRequiredFlags = await supportsRequiredYtDlpFlags(binaryPath);
+  const supportsRequiredFlags = await supportsRequiredYtDlpFlags(
+    binaryPath,
+    signal
+  );
   if (supportsRequiredFlags === true) {
     return true;
   }
@@ -267,10 +333,11 @@ function clearHealthyBinaryCache(): void {
 }
 
 async function refreshCachedHealthyBinary(
-  cachedBinaryPath: string
+  cachedBinaryPath: string,
+  signal?: AbortSignal
 ): Promise<string | null> {
   if (app.isPackaged) {
-    const refreshed = await ensureWritableBinary();
+    const refreshed = await ensureWritableBinary({ signal });
     return refreshed || null;
   }
 
@@ -287,13 +354,14 @@ async function refreshCachedHealthyBinary(
   for (const candidate of candidates) {
     try {
       await fsp.access(candidate, fs.constants.X_OK);
-      if (!(await testBinary(candidate))) {
+      if (!(await testBinary(candidate, signal))) {
         continue;
       }
-      if (await validateResolvedInstallBinary(candidate)) {
+      if (await validateResolvedInstallBinary(candidate, signal)) {
         return candidate;
       }
-    } catch {
+    } catch (error) {
+      rethrowIfCancelled(error);
       // Try next candidate.
     }
   }
@@ -302,7 +370,8 @@ async function refreshCachedHealthyBinary(
 }
 
 async function getCachedHealthyBinary(
-  shouldCheckUpdate: boolean
+  shouldCheckUpdate: boolean,
+  signal?: AbortSignal
 ): Promise<string | null> {
   if (!cachedHealthyBinaryPath || shouldCheckUpdate) {
     return null;
@@ -312,7 +381,8 @@ async function getCachedHealthyBinary(
     await fsp.access(cachedHealthyBinaryPath, fs.constants.X_OK);
     if (Date.now() - cachedHealthyBinaryAt < UPDATE_CHECK_INTERVAL_MS) {
       const refreshedBinary = await refreshCachedHealthyBinary(
-        cachedHealthyBinaryPath
+        cachedHealthyBinaryPath,
+        signal
       );
       if (refreshedBinary) {
         if (refreshedBinary !== cachedHealthyBinaryPath) {
@@ -325,7 +395,8 @@ async function getCachedHealthyBinary(
       }
       clearHealthyBinaryCache();
     }
-  } catch {
+  } catch (error) {
+    rethrowIfCancelled(error);
     clearHealthyBinaryCache();
   }
 
@@ -407,12 +478,73 @@ async function releaseInstallLock(): Promise<void> {
   await fsp.unlink(getInstallLockFilePath()).catch(() => {});
 }
 
+async function runProcessWithCancellation<T>(
+  proc: Promise<T> & {
+    pid?: number;
+    killed?: boolean;
+    kill: (signal?: number | NodeJS.Signals, error?: Error) => boolean;
+  },
+  options: {
+    signal?: AbortSignal;
+    context: string;
+    logPrefix: string;
+  }
+): Promise<T> {
+  return await raceOperationCancellation(proc, {
+    signal: options.signal,
+    context: options.context,
+    log,
+    onCancel: () =>
+      terminateProcess({
+        childProcess: proc,
+        logPrefix: options.logPrefix,
+      }),
+  });
+}
+
 // Follow HTTP redirects (GitHub uses 302 for latest releases)
 function fetchWithRedirect(
   url: string,
-  maxRedirects = 4
+  maxRedirects = 4,
+  signal?: AbortSignal
 ): Promise<IncomingMessage> {
   return new Promise((resolve, reject) => {
+    let settled = false;
+    let responseRef: IncomingMessage | null = null;
+
+    const cleanup = () => {
+      signal?.removeEventListener('abort', onAbort);
+    };
+
+    const finish = (fn: () => void) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      fn();
+    };
+
+    const rejectOnce = (error: unknown) => {
+      finish(() => reject(error));
+    };
+
+    const resolveOnce = (value: IncomingMessage | Promise<IncomingMessage>) => {
+      finish(() => resolve(value));
+    };
+
+    const onAbort = () => {
+      const cancelled = new CancelledError();
+      request.destroy(cancelled);
+      responseRef?.destroy(cancelled);
+      rejectOnce(cancelled);
+    };
+
+    if (signal?.aborted) {
+      rejectOnce(new CancelledError());
+      return;
+    }
+
     const request = https.get(
       url,
       {
@@ -420,6 +552,7 @@ function fetchWithRedirect(
         timeout: 30000,
       },
       response => {
+        responseRef = response;
         const location = response.headers.location;
         if (
           [301, 302, 303, 307, 308].includes(response.statusCode!) &&
@@ -428,53 +561,96 @@ function fetchWithRedirect(
         ) {
           log.info(`[URLprocessor] Following redirect to: ${location}`);
           response.resume(); // Prevent socket leak
-          return resolve(fetchWithRedirect(location, maxRedirects - 1));
+          return resolveOnce(
+            fetchWithRedirect(location, maxRedirects - 1, signal)
+          );
         }
         if (response.statusCode !== 200) {
-          return reject(new Error(`HTTP ${response.statusCode} on ${url}`));
+          return rejectOnce(new Error(`HTTP ${response.statusCode} on ${url}`));
         }
-        resolve(response);
+        resolveOnce(response);
       }
     );
 
+    signal?.addEventListener('abort', onAbort, { once: true });
+
     request.on('error', (error: any) => {
+      if (settled) {
+        return;
+      }
+      if (error instanceof CancelledError) {
+        rejectOnce(error);
+        return;
+      }
       if (error.code === 'ENOTFOUND') {
-        reject(new Error('No network connection - unable to reach GitHub'));
+        rejectOnce(new Error('No network connection - unable to reach GitHub'));
       } else {
-        reject(error);
+        rejectOnce(error);
       }
     });
 
     request.on('timeout', () => {
       request.destroy();
-      reject(new Error('Download timeout'));
+      rejectOnce(new Error('Download timeout'));
     });
   });
 }
 
 // Calculate SHA-256 hash of a file
-async function calculateSHA256(filePath: string): Promise<string> {
+async function calculateSHA256(
+  filePath: string,
+  signal?: AbortSignal
+): Promise<string> {
+  throwIfOperationCancelled({
+    signal,
+    context: `before hashing ${filePath}`,
+    log,
+  });
   const hash = createHash('sha256');
   const stream = createReadStream(filePath);
-  for await (const chunk of stream) {
-    hash.update(chunk);
+
+  try {
+    for await (const chunk of stream) {
+      throwIfOperationCancelled({
+        signal,
+        context: `while hashing ${filePath}`,
+        log,
+        onCancel: () => {
+          stream.destroy(new CancelledError());
+        },
+      });
+      hash.update(chunk);
+    }
+  } catch (error) {
+    stream.destroy();
+    throw error;
   }
+
   return hash.digest('hex');
 }
 
 // Fetch SHA-256 hash from GitHub release
 async function fetchSha256ForRelease(
-  downloadUrl: string
+  downloadUrl: string,
+  signal?: AbortSignal
 ): Promise<string | null> {
   try {
     // Convert binary download URL to SHA-256 file URL
     const sha256Url = downloadUrl.replace(/\/([^/]+)$/, '/$1.sha256');
     log.info(`[URLprocessor] Fetching SHA-256 from: ${sha256Url}`);
 
-    const response = await fetchWithRedirect(sha256Url);
+    const response = await fetchWithRedirect(sha256Url, 4, signal);
     let sha256Data = '';
 
     for await (const chunk of response) {
+      throwIfOperationCancelled({
+        signal,
+        context: `while downloading SHA-256 for ${downloadUrl}`,
+        log,
+        onCancel: () => {
+          response.destroy(new CancelledError());
+        },
+      });
       sha256Data += chunk.toString();
     }
 
@@ -487,6 +663,9 @@ async function fetchSha256ForRelease(
     log.warn(`[URLprocessor] Invalid SHA-256 format: ${sha256Data}`);
     return null;
   } catch (error: any) {
+    if (error instanceof CancelledError) {
+      throw error;
+    }
     log.warn(`[URLprocessor] Could not fetch SHA-256 hash: ${error.message}`);
     return null;
   }
@@ -509,7 +688,11 @@ async function ensureExecutable(binaryPath: string): Promise<void> {
 }
 
 // Guarantee that a writable copy exists before downloads start
-export async function ensureWritableBinary(): Promise<string> {
+export async function ensureWritableBinary({
+  signal,
+}: {
+  signal?: AbortSignal;
+} = {}): Promise<string> {
   const exeExt = process.platform === 'win32' ? '.exe' : '';
   const binaryName = `yt-dlp${exeExt}`;
   const userBin = join(app.getPath('userData'), 'bin', binaryName);
@@ -523,12 +706,17 @@ export async function ensureWritableBinary(): Promise<string> {
   // on Windows where the primary exe may be locked (AV scanning, etc.) and thus
   // cannot be replaced in-place.
   try {
+    throwIfOperationCancelled({
+      signal,
+      context: 'before resolving writable yt-dlp binary',
+      log,
+    });
     const minBytes =
       process.platform === 'win32' ? 10 * 1024 * 1024 : 2 * 1024 * 1024;
 
     const nextStats = await fsp.stat(userBinNext).catch(() => null);
     if (nextStats && nextStats.size >= minBytes) {
-      const nextOk = await testBinary(userBinNext);
+      const nextOk = await testBinary(userBinNext, signal);
       if (nextOk) {
         const userStats = await fsp.stat(userBin).catch(() => null);
         // Do not use a 1s mtime guard here. On some filesystems/environments the
@@ -547,14 +735,15 @@ export async function ensureWritableBinary(): Promise<string> {
         await fsp.unlink(userBinNext).catch(() => {});
       }
     }
-  } catch {
-    // ignore
+  } catch (error) {
+    rethrowIfCancelled(error);
+    // Ignore ordinary probe failures and continue resolving.
   }
 
   // 2. If we already have a user copy, return it.
   try {
     await fsp.access(userBin, fs.constants.X_OK);
-    if (await testBinary(userBin)) {
+    if (await testBinary(userBin, signal)) {
       log.info(`[URLprocessor] Using existing writable binary: ${userBin}`);
       rememberHealthyBinary(userBin);
       return userBin;
@@ -562,7 +751,8 @@ export async function ensureWritableBinary(): Promise<string> {
     log.warn(
       `[URLprocessor] Existing writable binary is not working, rebuilding: ${userBin}`
     );
-  } catch {
+  } catch (error) {
+    rethrowIfCancelled(error);
     /* fall through and create it */
   }
 
@@ -571,6 +761,7 @@ export async function ensureWritableBinary(): Promise<string> {
     log.warn('[URLprocessor] Binary copy already in progress; waiting...');
     const awaitedBinary = await waitForConcurrentInstall({
       targetBinaryPath: userBin,
+      signal,
     });
     if (awaitedBinary) {
       rememberHealthyBinary(awaitedBinary);
@@ -608,7 +799,11 @@ export async function ensureWritableBinary(): Promise<string> {
         log.info(
           '[URLprocessor] Bundled yt-dlp not found. Falling back to direct download...'
         );
-        const downloaded = await downloadBinaryDirectly(userBin);
+        const downloaded = await downloadBinaryDirectly(
+          userBin,
+          undefined,
+          signal
+        );
         // Ensure executable permissions are set on POSIX systems
         if (process.platform !== 'win32') {
           await fsp.chmod(downloaded, 0o755).catch(() => {});
@@ -642,35 +837,60 @@ export async function ensureWritableBinary(): Promise<string> {
 export async function ensureYtDlpBinary({
   skipUpdate = false,
   onProgress,
+  signal,
 }: {
   skipUpdate?: boolean;
   onProgress?: BinarySetupProgress;
+  signal?: AbortSignal;
 } = {}): Promise<string> {
   const unsubscribe = onProgress
     ? subscribeEnsureYtDlpProgress(onProgress)
     : null;
-  if (inFlightEnsureYtDlpBinary) {
-    if (!lastEnsureYtDlpProgress && onProgress) {
-      onProgress({ stage: WAITING_FOR_SETUP_STAGE });
-    }
-    try {
-      return await inFlightEnsureYtDlpBinary;
-    } finally {
-      unsubscribe?.();
-    }
-  }
-
-  const promise = ensureYtDlpBinaryInternal({ skipUpdate }).finally(
-    () => {
-      if (inFlightEnsureYtDlpBinary === promise) {
-        inFlightEnsureYtDlpBinary = null;
-      }
-      lastEnsureYtDlpProgress = null;
-    }
-  );
-  inFlightEnsureYtDlpBinary = promise;
   try {
-    return await promise;
+    const throwIfCancelled = () =>
+      throwIfOperationCancelled({
+        signal,
+        context: 'before joining yt-dlp setup',
+        log,
+      });
+
+    throwIfCancelled();
+
+    let existingJob = inFlightEnsureYtDlpBinaryJob;
+    while (existingJob?.status === 'aborting') {
+      await waitForAbortingYtDlpSetupJob(existingJob, signal);
+      throwIfCancelled();
+      existingJob = inFlightEnsureYtDlpBinaryJob;
+    }
+
+    if (existingJob) {
+      if (!lastEnsureYtDlpProgress && onProgress) {
+        onProgress({ stage: WAITING_FOR_SETUP_STAGE });
+      }
+      const releaseWaiter = attachSharedCancellableJobWaiter(existingJob);
+      try {
+        return await raceOperationCancellation(existingJob.promise, {
+          signal,
+          context: 'while waiting for shared yt-dlp setup',
+          log,
+        });
+      } finally {
+        releaseWaiter();
+      }
+    }
+
+    const job = createYtDlpSetupJob(skipUpdate);
+    inFlightEnsureYtDlpBinaryJob = job;
+    const releaseWaiter = attachSharedCancellableJobWaiter(job);
+    try {
+      return await raceOperationCancellation(job.promise, {
+        signal,
+        context: 'while ensuring yt-dlp binary',
+        log,
+      });
+    } finally {
+      releaseWaiter();
+    }
   } finally {
     unsubscribe?.();
   }
@@ -678,9 +898,8 @@ export async function ensureYtDlpBinary({
 
 async function ensureYtDlpBinaryInternal({
   skipUpdate = false,
-}: {
-  skipUpdate?: boolean;
-} = {}): Promise<string> {
+  signal,
+}: EnsureYtDlpBinaryInternalOptions = {}): Promise<string> {
   // Start crawling progress immediately so users see movement during slow operations
   const INIT_END = 99; // Crawl toward 99%, which maps to ~4.9% overall (never reaches 5%)
   let currentPercent = 0;
@@ -700,11 +919,20 @@ async function ensureYtDlpBinaryInternal({
   const stopCrawl = () => clearInterval(crawlInterval);
 
   try {
+    throwIfOperationCancelled({
+      signal,
+      context: 'before ensuring yt-dlp binary',
+      log,
+    });
+
     // Check if we should skip update based on time
     const now = Date.now();
     const shouldCheckUpdate =
       !skipUpdate && now - lastUpdateCheckTime > UPDATE_CHECK_INTERVAL_MS;
-    const cachedBinary = await getCachedHealthyBinary(shouldCheckUpdate);
+    const cachedBinary = await getCachedHealthyBinary(
+      shouldCheckUpdate,
+      signal
+    );
     if (cachedBinary) {
       stopCrawl();
       log.info(
@@ -715,16 +943,19 @@ async function ensureYtDlpBinaryInternal({
 
     // For packaged apps, always use the writable binary approach
     if (app.isPackaged) {
-      const writablePath = await ensureWritableBinary();
+      const writablePath = await ensureWritableBinary({ signal });
 
       // Test if it's working
-      if (await testBinary(writablePath)) {
+      if (await testBinary(writablePath, signal)) {
         // Binary works - now try to update it (unless recently checked)
         if (shouldCheckUpdate) {
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
-          const updateSuccess = await updateExistingBinary(writablePath);
+          const updateSuccess = await updateExistingBinary(
+            writablePath,
+            signal
+          );
           lastUpdateCheckTime = now;
           if (!updateSuccess) {
             log.warn(
@@ -733,10 +964,13 @@ async function ensureYtDlpBinaryInternal({
           }
           // Re-evaluate in case the updater staged a newer side-by-side binary.
           stopCrawl();
-          const refreshedBinary = await ensureWritableBinary();
-          if (!(await testBinary(refreshedBinary))) {
+          const refreshedBinary = await ensureWritableBinary({ signal });
+          if (!(await testBinary(refreshedBinary, signal))) {
             clearHealthyBinaryCache();
-            const installed = await installNewBinary(emitEnsureYtDlpProgress);
+            const installed = await installNewBinary(
+              emitEnsureYtDlpProgress,
+              signal
+            );
             rememberHealthyBinary(installed);
             return installed;
           }
@@ -756,7 +990,10 @@ async function ensureYtDlpBinaryInternal({
         );
         clearHealthyBinaryCache();
         stopCrawl();
-        const installed = await installNewBinary(emitEnsureYtDlpProgress);
+        const installed = await installNewBinary(
+          emitEnsureYtDlpProgress,
+          signal
+        );
         rememberHealthyBinary(installed);
         return installed;
       }
@@ -772,9 +1009,11 @@ async function ensureYtDlpBinaryInternal({
       );
 
       // Test if it's working
-      if (await testBinary(existingBinary)) {
-        const supportsRequiredFlags =
-          await supportsRequiredYtDlpFlags(existingBinary);
+      if (await testBinary(existingBinary, signal)) {
+        const supportsRequiredFlags = await supportsRequiredYtDlpFlags(
+          existingBinary,
+          signal
+        );
         if (supportsRequiredFlags === false) {
           log.warn(
             `[URLprocessor] Existing yt-dlp binary is incompatible with Translator requirements (missing --js-runtimes): ${existingBinary}`
@@ -784,7 +1023,10 @@ async function ensureYtDlpBinaryInternal({
             '[URLprocessor] Installing managed yt-dlp binary for development compatibility...'
           );
           clearHealthyBinaryCache();
-          const installed = await installNewBinary(emitEnsureYtDlpProgress);
+          const installed = await installNewBinary(
+            emitEnsureYtDlpProgress,
+            signal
+          );
           rememberHealthyBinary(installed);
           return installed;
         }
@@ -800,7 +1042,10 @@ async function ensureYtDlpBinaryInternal({
             );
             stopCrawl();
             clearHealthyBinaryCache();
-            const installed = await installNewBinary(emitEnsureYtDlpProgress);
+            const installed = await installNewBinary(
+              emitEnsureYtDlpProgress,
+              signal
+            );
             rememberHealthyBinary(installed);
             return installed;
           }
@@ -811,7 +1056,10 @@ async function ensureYtDlpBinaryInternal({
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
-          const updateSuccess = await updateExistingBinary(existingBinary);
+          const updateSuccess = await updateExistingBinary(
+            existingBinary,
+            signal
+          );
           lastUpdateCheckTime = now;
           if (!updateSuccess) {
             log.warn(
@@ -843,11 +1091,15 @@ async function ensureYtDlpBinaryInternal({
     // If we get here, we need to install/reinstall
     log.info('[URLprocessor] Installing yt-dlp binary...');
     stopCrawl();
-    const installed = await installNewBinary(emitEnsureYtDlpProgress);
+    const installed = await installNewBinary(emitEnsureYtDlpProgress, signal);
     rememberHealthyBinary(installed);
     return installed;
   } catch (error: any) {
     stopCrawl();
+    if (error instanceof CancelledError) {
+      log.info('[URLprocessor] yt-dlp setup cancelled');
+      throw error;
+    }
     clearHealthyBinaryCache();
     log.error('[URLprocessor] Failed to ensure yt-dlp binary:', error);
     if (error instanceof YtDlpSetupError) {
@@ -860,15 +1112,24 @@ async function ensureYtDlpBinaryInternal({
 }
 
 async function supportsRequiredYtDlpFlags(
-  binaryPath: string
+  binaryPath: string,
+  signal?: AbortSignal
 ): Promise<boolean | null> {
   try {
-    const { stdout } = await execa(binaryPath, ['--help'], {
+    const proc = execa(binaryPath, ['--help'], {
       timeout: 20_000,
       windowsHide: true,
     });
+    const { stdout } = await runProcessWithCancellation(proc, {
+      signal,
+      context: `while probing yt-dlp feature flags for ${binaryPath}`,
+      logPrefix: 'yt-dlp-flag-probe',
+    });
     return stdout.includes('--js-runtimes');
   } catch (error: any) {
+    if (error instanceof CancelledError) {
+      throw error;
+    }
     log.warn(
       `[URLprocessor] Could not probe yt-dlp feature support for ${binaryPath}: ${error?.shortMessage || error?.message || error}`
     );
@@ -876,13 +1137,16 @@ async function supportsRequiredYtDlpFlags(
   }
 }
 
-async function updateExistingBinary(binaryPath: string): Promise<boolean> {
+async function updateExistingBinary(
+  binaryPath: string,
+  signal?: AbortSignal
+): Promise<boolean> {
   // Note: Progress is handled by the caller's crawl interval
   try {
     // On Windows, yt-dlp self-update is prone to failing when the executable is
     // locked. We instead stage a freshly downloaded binary side-by-side.
     if (process.platform === 'win32' && app.isPackaged) {
-      return await updateExistingBinaryWindowsPackaged(binaryPath);
+      return await updateExistingBinaryWindowsPackaged(binaryPath, signal);
     }
 
     log.info(`[URLprocessor] Attempting to update binary: ${binaryPath}`);
@@ -890,18 +1154,31 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
     // Get version before update for comparison
     let versionBefore = '';
     try {
-      const { stdout } = await execa(binaryPath, ['--version'], {
+      const proc = execa(binaryPath, ['--version'], {
         timeout: 10000,
         windowsHide: true,
       });
+      const { stdout } = await runProcessWithCancellation(proc, {
+        signal,
+        context: `while reading yt-dlp version before update for ${binaryPath}`,
+        logPrefix: 'yt-dlp-update-version-before',
+      });
       versionBefore = stdout.trim();
-    } catch {
+    } catch (error) {
+      if (error instanceof CancelledError) {
+        throw error;
+      }
       // If we can't get version, proceed anyway
     }
 
-    const result = await execa(binaryPath, ['-U', '--quiet'], {
+    const updateProc = execa(binaryPath, ['-U', '--quiet'], {
       timeout: 120000,
       windowsHide: true, // Prevent console flash on Windows
+    });
+    const result = await runProcessWithCancellation(updateProc, {
+      signal,
+      context: `while updating yt-dlp ${binaryPath}`,
+      logPrefix: 'yt-dlp-self-update',
     });
 
     const success =
@@ -916,9 +1193,14 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
       // Post-update sanity check: verify the binary was actually updated
       if (versionBefore) {
         try {
-          const { stdout } = await execa(binaryPath, ['--version'], {
+          const proc = execa(binaryPath, ['--version'], {
             timeout: 10000,
             windowsHide: true,
+          });
+          const { stdout } = await runProcessWithCancellation(proc, {
+            signal,
+            context: `while reading yt-dlp version after update for ${binaryPath}`,
+            logPrefix: 'yt-dlp-update-version-after',
           });
           const versionAfter = stdout.trim();
           if (
@@ -931,14 +1213,17 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
             return false;
           }
           log.info(`[URLprocessor] Version after update: ${versionAfter}`);
-        } catch {
+        } catch (error) {
+          if (error instanceof CancelledError) {
+            throw error;
+          }
           // If we can't get version after update, assume it worked
           log.warn('[URLprocessor] Could not verify version after update');
         }
       }
 
       // Log version after update
-      await testBinary(binaryPath);
+      await testBinary(binaryPath, signal);
     } else {
       log.warn(
         '[URLprocessor] Update command completed but result unclear:',
@@ -947,13 +1232,17 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
     }
     return success;
   } catch (error: any) {
+    if (error instanceof CancelledError) {
+      throw error;
+    }
     log.error('[URLprocessor] Failed to update existing binary:', error);
     return false;
   }
 }
 
 async function updateExistingBinaryWindowsPackaged(
-  existingPath: string
+  existingPath: string,
+  signal?: AbortSignal
 ): Promise<boolean> {
   // Serialize update attempts across app instances.
   if (!(await acquireInstallLock())) {
@@ -972,10 +1261,22 @@ async function updateExistingBinaryWindowsPackaged(
 
   try {
     // If we can fetch the expected hash, avoid a full download when already up to date.
-    const expectedHash = await fetchSha256ForRelease(downloadUrl);
+    const expectedHash = await fetchSha256ForRelease(downloadUrl, signal);
     if (expectedHash) {
-      const primaryHash = await calculateSHA256(primaryPath).catch(() => null);
-      const nextHash = await calculateSHA256(nextPath).catch(() => null);
+      const primaryHash = await calculateSHA256(primaryPath, signal).catch(
+        error => {
+          if (error instanceof CancelledError) {
+            throw error;
+          }
+          return null;
+        }
+      );
+      const nextHash = await calculateSHA256(nextPath, signal).catch(error => {
+        if (error instanceof CancelledError) {
+          throw error;
+        }
+        return null;
+      });
       if (primaryHash === expectedHash || nextHash === expectedHash) {
         log.info('[URLprocessor] yt-dlp already up to date (hash match)');
         return true;
@@ -988,7 +1289,7 @@ async function updateExistingBinaryWindowsPackaged(
       `yt-dlp.download.${process.pid}.${Date.now()}${exeExt}`
     );
     try {
-      await downloadBinaryDirectly(tmpPath);
+      await downloadBinaryDirectly(tmpPath, undefined, signal);
 
       // Promote to the staged "next" path (do not overwrite the primary path since it may be locked).
       await fsp.unlink(nextPath).catch(() => {});
@@ -997,6 +1298,9 @@ async function updateExistingBinaryWindowsPackaged(
       return true;
     } catch (error: any) {
       await fsp.unlink(tmpPath).catch(() => {});
+      if (error instanceof CancelledError) {
+        throw error;
+      }
       log.error('[URLprocessor] Failed to stage updated yt-dlp:', error);
       return false;
     }
@@ -1006,16 +1310,23 @@ async function updateExistingBinaryWindowsPackaged(
 }
 
 async function installNewBinary(
-  onProgress?: BinarySetupProgress
+  onProgress?: BinarySetupProgress,
+  signal?: AbortSignal
 ): Promise<string> {
   // Acquire installation lock
   if (!(await acquireInstallLock())) {
-    log.warn('[URLprocessor] Another process is already installing yt-dlp; waiting...');
+    log.warn(
+      '[URLprocessor] Another process is already installing yt-dlp; waiting...'
+    );
     const awaitedBinary = await waitForConcurrentInstall({
       targetBinaryPath: getPreferredInstallPath(),
       onProgress,
+      signal,
     });
-    if (awaitedBinary && (await validateResolvedInstallBinary(awaitedBinary))) {
+    if (
+      awaitedBinary &&
+      (await validateResolvedInstallBinary(awaitedBinary, signal))
+    ) {
       rememberHealthyBinary(awaitedBinary);
       return awaitedBinary;
     }
@@ -1051,22 +1362,32 @@ async function installNewBinary(
         '[URLprocessor] Packaged app detected, downloading yt-dlp directly from GitHub...'
       );
       try {
-        return await downloadBinaryDirectly(targetBinaryPath, onProgress);
+        return await downloadBinaryDirectly(
+          targetBinaryPath,
+          onProgress,
+          signal
+        );
       } catch (error: any) {
+        if (error instanceof CancelledError) {
+          throw error;
+        }
         // Windows can lock the primary exe; fall back to a side-by-side staged binary.
         if (process.platform === 'win32') {
           const altPath = join(targetBinDir, 'yt-dlp.next.exe');
           log.warn(
             `[URLprocessor] Primary yt-dlp path may be locked; trying staged path: ${altPath}`
           );
-          return await downloadBinaryDirectly(altPath, onProgress);
+          return await downloadBinaryDirectly(altPath, onProgress, signal);
         }
         throw error;
       }
     } else {
       // For development, try postinstall script first
       onProgress?.({ stage: 'Installing yt-dlp…' });
-      const postinstallResult = await tryPostinstallScript(targetBinaryPath);
+      const postinstallResult = await tryPostinstallScript(
+        targetBinaryPath,
+        signal
+      );
       if (postinstallResult) {
         return postinstallResult;
       }
@@ -1075,9 +1396,12 @@ async function installNewBinary(
       log.info(
         '[URLprocessor] Postinstall script failed, trying direct download...'
       );
-      return await downloadBinaryDirectly(targetBinaryPath, onProgress);
+      return await downloadBinaryDirectly(targetBinaryPath, onProgress, signal);
     }
   } catch (error: any) {
+    if (error instanceof CancelledError) {
+      throw error;
+    }
     log.error('[URLprocessor] Failed to install new binary:', error);
     if (error instanceof YtDlpSetupError) {
       throw error;
@@ -1091,7 +1415,8 @@ async function installNewBinary(
 }
 
 async function tryPostinstallScript(
-  targetBinaryPath: string
+  targetBinaryPath: string,
+  signal?: AbortSignal
 ): Promise<string | null> {
   try {
     // Try to find the package root more reliably than process.cwd()
@@ -1134,10 +1459,15 @@ async function tryPostinstallScript(
     log.info('[URLprocessor] Running youtube-dl-exec postinstall script...');
 
     // Run the postinstall script
-    const result = await execa('node', [postinstallScript], {
+    const proc = execa('node', [postinstallScript], {
       cwd: join(packageRoot, 'node_modules', 'youtube-dl-exec'),
       timeout: 120000,
       windowsHide: true,
+    });
+    const result = await runProcessWithCancellation(proc, {
+      signal,
+      context: 'while running youtube-dl-exec postinstall',
+      logPrefix: 'yt-dlp-postinstall',
     });
 
     log.info('[URLprocessor] Postinstall script completed:', result.stdout);
@@ -1163,6 +1493,9 @@ async function tryPostinstallScript(
       return null;
     }
   } catch (error: any) {
+    if (error instanceof CancelledError) {
+      throw error;
+    }
     log.error('[URLprocessor] Postinstall script failed:', error);
     return null;
   }
@@ -1170,7 +1503,8 @@ async function tryPostinstallScript(
 
 async function downloadBinaryDirectly(
   targetPath: string,
-  onProgress?: BinarySetupProgress
+  onProgress?: BinarySetupProgress,
+  signal?: AbortSignal
 ): Promise<string> {
   log.info('[URLprocessor] Attempting direct download from GitHub...');
 
@@ -1189,7 +1523,7 @@ async function downloadBinaryDirectly(
   await fsp.mkdir(targetDir, { recursive: true });
 
   try {
-    const response = await fetchWithRedirect(downloadUrl);
+    const response = await fetchWithRedirect(downloadUrl, 4, signal);
 
     // Track download progress
     const contentLength = parseInt(
@@ -1202,7 +1536,7 @@ async function downloadBinaryDirectly(
     const fileStream = createWriteStream(targetPath);
 
     // Download with progress tracking
-    await new Promise<void>((resolve, reject) => {
+    const downloadPromise = new Promise<void>((resolve, reject) => {
       response.on('data', (chunk: Buffer) => {
         downloaded += chunk.length;
         if (contentLength > 0) {
@@ -1219,10 +1553,19 @@ async function downloadBinaryDirectly(
       fileStream.on('finish', resolve);
       response.pipe(fileStream);
     });
+    await raceOperationCancellation(downloadPromise, {
+      signal,
+      context: `while downloading yt-dlp to ${targetPath}`,
+      log,
+      onCancel: () => {
+        response.destroy(new CancelledError());
+        fileStream.destroy(new CancelledError());
+      },
+    });
 
     onProgress?.({ stage: 'Verifying yt-dlp…' });
 
-    if (!(await verifyBinaryIntegrity(targetPath))) {
+    if (!(await verifyBinaryIntegrity(targetPath, signal))) {
       log.error('[URLprocessor] Downloaded binary failed integrity check');
       await fsp.unlink(targetPath).catch(() => {});
       throw new YtDlpSetupError(
@@ -1231,10 +1574,10 @@ async function downloadBinaryDirectly(
       );
     }
 
-    const actualHash = await calculateSHA256(targetPath);
+    const actualHash = await calculateSHA256(targetPath, signal);
     log.info(`[URLprocessor] Downloaded binary SHA-256: ${actualHash}`);
 
-    const expectedHash = await fetchSha256ForRelease(downloadUrl);
+    const expectedHash = await fetchSha256ForRelease(downloadUrl, signal);
     if (expectedHash && actualHash !== expectedHash) {
       log.error(
         `[URLprocessor] SHA-256 verification failed! Expected: ${expectedHash}, Got: ${actualHash}`
@@ -1261,6 +1604,9 @@ async function downloadBinaryDirectly(
     return targetPath;
   } catch (error: any) {
     await fsp.unlink(targetPath).catch(() => {});
+    if (error instanceof CancelledError) {
+      throw error;
+    }
     const message = error?.message ?? String(error);
     log.error('[URLprocessor] Failed to download binary directly:', message);
 
@@ -1301,7 +1647,9 @@ export async function installYtDlpBinary(): Promise<string> {
  */
 
 let cachedJsRuntime: string | null | undefined = undefined; // undefined = not checked yet
-let jsRuntimePromise: Promise<string | null> | null = null; // in-flight promise to prevent concurrent installs
+type JsRuntimeProbeJob = SharedCancellableJob<string | null>;
+
+let inFlightJsRuntimeJob: JsRuntimeProbeJob | null = null;
 
 function scrubEnvForNodeProbe(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   // Keep this in sync with the env-scrubbing used when spawning yt-dlp so we
@@ -1318,7 +1666,9 @@ function scrubEnvForNodeProbe(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return cleaned;
 }
 
-async function findExistingJsRuntime(): Promise<string | null> {
+async function findExistingJsRuntime(
+  signal?: AbortSignal
+): Promise<string | null> {
   const runtimes = [
     { name: 'node', cmd: 'node' },
     { name: 'deno', cmd: 'deno' },
@@ -1330,40 +1680,61 @@ async function findExistingJsRuntime(): Promise<string | null> {
       const env = scrubEnvForNodeProbe(process.env);
       if (process.platform === 'win32') {
         // On Windows, use 'where' command
-        const { stdout } = await execa('where', [cmd], {
+        const locateProc = execa('where', [cmd], {
           timeout: 5000,
           windowsHide: true,
+        });
+        const { stdout } = await runProcessWithCancellation(locateProc, {
+          signal,
+          context: `while locating ${name} runtime`,
+          logPrefix: `js-runtime-locate-${cmd}`,
         });
         const path = stdout.trim().split('\n')[0]?.trim();
         if (path) {
           // Verify it works
-          await execa(path, ['--version'], {
+          const verifyProc = execa(path, ['--version'], {
             timeout: 5000,
             windowsHide: true,
             env,
+          });
+          await runProcessWithCancellation(verifyProc, {
+            signal,
+            context: `while verifying ${name} runtime at ${path}`,
+            logPrefix: `js-runtime-verify-${cmd}`,
           });
           log.info(`[URLprocessor] Found JS runtime: ${name} at ${path}`);
           return `${name}:${path}`;
         }
       } else {
         // On Unix, use 'which' command
-        const { stdout } = await execa('which', [cmd], {
+        const locateProc = execa('which', [cmd], {
           timeout: 5000,
           windowsHide: true,
+        });
+        const { stdout } = await runProcessWithCancellation(locateProc, {
+          signal,
+          context: `while locating ${name} runtime`,
+          logPrefix: `js-runtime-locate-${cmd}`,
         });
         const path = stdout.trim();
         if (path) {
           // Verify it works
-          await execa(path, ['--version'], {
+          const verifyProc = execa(path, ['--version'], {
             timeout: 5000,
             windowsHide: true,
             env,
+          });
+          await runProcessWithCancellation(verifyProc, {
+            signal,
+            context: `while verifying ${name} runtime at ${path}`,
+            logPrefix: `js-runtime-verify-${cmd}`,
           });
           log.info(`[URLprocessor] Found JS runtime: ${name} at ${path}`);
           return `${name}:${path}`;
         }
       }
-    } catch {
+    } catch (error) {
+      rethrowIfCancelled(error);
       // Runtime not found or doesn't work, continue
     }
   }
@@ -1391,15 +1762,26 @@ async function findExistingJsRuntime(): Promise<string | null> {
 
   for (const nodePath of commonPaths) {
     try {
+      throwIfOperationCancelled({
+        signal,
+        context: `before checking common JS runtime path ${nodePath}`,
+        log,
+      });
       await fsp.access(nodePath, fs.constants.X_OK);
-      await execa(nodePath, ['--version'], {
+      const verifyProc = execa(nodePath, ['--version'], {
         timeout: 5000,
         windowsHide: true,
         env: scrubEnvForNodeProbe(process.env),
       });
+      await runProcessWithCancellation(verifyProc, {
+        signal,
+        context: `while verifying Node.js runtime at ${nodePath}`,
+        logPrefix: `js-runtime-verify-common-${nodePath.replace(/[^a-z0-9]+/gi, '_')}`,
+      });
       log.info(`[URLprocessor] Found Node.js at: ${nodePath}`);
       return `node:${nodePath}`;
-    } catch {
+    } catch (error) {
+      rethrowIfCancelled(error);
       // Not found
     }
   }
@@ -1407,7 +1789,9 @@ async function findExistingJsRuntime(): Promise<string | null> {
   return null;
 }
 
-async function findEmbeddedNodeRuntime(): Promise<string | null> {
+async function findEmbeddedNodeRuntime(
+  signal?: AbortSignal
+): Promise<string | null> {
   const execPath = process.execPath;
   if (!execPath) {
     return null;
@@ -1420,16 +1804,27 @@ async function findEmbeddedNodeRuntime(): Promise<string | null> {
   }
 
   try {
+    throwIfOperationCancelled({
+      signal,
+      context: 'before checking embedded Node.js runtime',
+      log,
+    });
     await fsp.access(execPath, fs.constants.X_OK);
     const verifyTimeout = process.platform === 'win32' ? 60_000 : 30_000;
-    await execa(execPath, ['--version'], {
+    const verifyProc = execa(execPath, ['--version'], {
       timeout: verifyTimeout,
       windowsHide: true,
       env,
     });
+    await runProcessWithCancellation(verifyProc, {
+      signal,
+      context: `while verifying embedded Node.js runtime at ${execPath}`,
+      logPrefix: 'js-runtime-embedded-node',
+    });
     log.info(`[URLprocessor] Using embedded Node.js runtime at: ${execPath}`);
     return `node:${execPath}`;
   } catch (error: any) {
+    rethrowIfCancelled(error);
     // If a security scan stalls the first run, prefer working downloads over strict validation.
     if (error?.timedOut) {
       log.warn(
@@ -1449,49 +1844,69 @@ async function findEmbeddedNodeRuntime(): Promise<string | null> {
  * First checks for existing runtimes (node, deno, bun). If none are found,
  * fall back to the Electron executable as a Node.js runtime.
  * Returns the runtime string in yt-dlp format: "runtime:path" or null if unavailable.
- * Uses in-flight promise pattern to prevent concurrent downloads racing.
+ * Uses a shared cancellable job so concurrent downloads can join one probe,
+ * and the underlying check aborts when the last waiter leaves.
  */
 export async function ensureJsRuntime({
   onProgress,
+  signal,
 }: {
   onProgress?: BinarySetupProgress;
+  signal?: AbortSignal;
 } = {}): Promise<string | null> {
-  // Return cached result if available
   if (cachedJsRuntime !== undefined) {
     return cachedJsRuntime;
   }
 
-  // If another call is already in flight, wait for it instead of racing
-  if (jsRuntimePromise) {
-    log.info('[URLprocessor] JS runtime check already in progress, waiting...');
-    return jsRuntimePromise;
-  }
-
-  // Start the actual work and store the promise so concurrent calls can wait
-  jsRuntimePromise = doEnsureJsRuntime(onProgress);
-
-  try {
-    return await jsRuntimePromise;
-  } finally {
-    jsRuntimePromise = null;
-  }
+  return await waitForSharedCancellableSingletonJob({
+    getJob: () => inFlightJsRuntimeJob,
+    setJob: job => {
+      inFlightJsRuntimeJob = job as JsRuntimeProbeJob | null;
+    },
+    createValue: sharedSignal => doEnsureJsRuntime(onProgress, sharedSignal),
+    signal,
+    onJoin: () => {
+      log.info(
+        '[URLprocessor] JS runtime check already in progress, waiting...'
+      );
+      onProgress?.({ stage: 'Checking JS runtime…' });
+    },
+    beforeJoinContext: 'before joining JS runtime check',
+    waitContext: 'while waiting for shared JS runtime check',
+    runContext: 'while ensuring JS runtime',
+    abortCleanupContext: 'while waiting for prior JS runtime check cleanup',
+    log,
+  });
 }
 
 async function doEnsureJsRuntime(
-  onProgress?: BinarySetupProgress
+  onProgress?: BinarySetupProgress,
+  signal?: AbortSignal
 ): Promise<string | null> {
   log.info('[URLprocessor] Checking for JavaScript runtime...');
   onProgress?.({ stage: 'Checking JS runtime…' });
 
+  throwIfOperationCancelled({
+    signal,
+    context: 'before checking JS runtime',
+    log,
+  });
+
   // First, check for existing runtimes
-  const existingRuntime = await findExistingJsRuntime();
+  const existingRuntime = await findExistingJsRuntime(signal);
   if (existingRuntime) {
     cachedJsRuntime = existingRuntime;
     return existingRuntime;
   }
 
+  throwIfOperationCancelled({
+    signal,
+    context: 'after checking existing JS runtimes',
+    log,
+  });
+
   // Fall back to embedded Node.js (Electron can run as Node via ELECTRON_RUN_AS_NODE).
-  const embeddedNode = await findEmbeddedNodeRuntime();
+  const embeddedNode = await findEmbeddedNodeRuntime(signal);
   if (embeddedNode) {
     cachedJsRuntime = embeddedNode;
     return embeddedNode;
@@ -1503,8 +1918,16 @@ async function doEnsureJsRuntime(
   return null;
 }
 
-async function verifyBinaryIntegrity(binaryPath: string): Promise<boolean> {
+async function verifyBinaryIntegrity(
+  binaryPath: string,
+  signal?: AbortSignal
+): Promise<boolean> {
   try {
+    throwIfOperationCancelled({
+      signal,
+      context: `before verifying ${binaryPath}`,
+      log,
+    });
     // Ensure executable bit is set before attempting to run the binary on POSIX systems
     await ensureExecutable(binaryPath);
 
@@ -1522,8 +1945,11 @@ async function verifyBinaryIntegrity(binaryPath: string): Promise<boolean> {
     }
 
     // Verify the binary can be executed
-    return await testBinary(binaryPath);
+    return await testBinary(binaryPath, signal);
   } catch (error: any) {
+    if (error instanceof CancelledError) {
+      throw error;
+    }
     log.error('[URLprocessor] Failed to verify binary integrity:', error);
     return false;
   }

@@ -186,7 +186,11 @@ const electronAPI = {
     ipcRenderer.invoke('detach-stored-subtitle-source', options),
   deleteStoredSubtitleEntry: (entryId: string) =>
     ipcRenderer.invoke('delete-stored-subtitle-entry', entryId),
-  deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),
+  deleteFile: (options: { filePath?: string } | string) => {
+    const filePathToDelete =
+      typeof options === 'string' ? options : options?.filePath;
+    return ipcRenderer.invoke('delete-file', { filePathToDelete });
+  },
 
   // ---------------------- Video Processing & Screenshots ----------------------
   processVideo: (options: any) => ipcRenderer.invoke('process-video', options),
@@ -203,6 +207,14 @@ const electronAPI = {
 
   // ---------------------- URL Processing ----------------------
   processUrl: (options: any) => ipcRenderer.invoke('process-url', options),
+  acceptProcessedUrl: (operationId: string) =>
+    ipcRenderer.invoke('process-url:accept', operationId),
+  discardProcessedUrl: (operationId: string) =>
+    ipcRenderer.invoke('process-url:discard', operationId),
+  cleanupAcceptedProcessedUrl: (options: {
+    operationId: string;
+    filePath: string;
+  }) => ipcRenderer.invoke('process-url:cleanup-accepted', options),
   suggestVideos: (request: any) =>
     ipcRenderer.invoke('suggest-videos', request),
   onVideoSuggestionProgress: (callback: (progress: any) => void) => {

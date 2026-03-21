@@ -7,11 +7,15 @@ import type { FFmpegContext } from '../services/ffmpeg-runner.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
 import type { ProcessUrlOptions, ProcessUrlResult } from '@shared-types/app';
 import {
+  acceptPendingUrlResult,
+  cleanupAcceptedUrlResultFile,
+  discardPendingUrlResult,
   registerAutoCancel,
   finish as registryFinish,
+  registerPendingUrlResult,
 } from '../active-processes.js';
-import { forceKillWindows } from '../utils/process-killer.js';
 import { getMainWindow } from '../utils/window.js';
+import { finalizeCancelledUrlOperation } from '../utils/url-operation-finalizers.js';
 
 interface UrlHandlerServices {
   fileManager: FileManager;
@@ -82,15 +86,15 @@ export async function handleProcessUrl(
     sendProgress({ percent: 0, stage: 'Validating' });
 
     const { fileManager, ffmpeg } = checkServicesInitialized();
-
-    // Track early cancellation
-    let cancelledEarly = false;
+    const controller = new AbortController();
 
     // Register auto-cancel early so generic cancellation can mark this operation
-    // before yt-dlp has been spawned and promoted into the registry.
+    // before yt-dlp has been spawned and promoted into the registry. The abort
+    // signal then stops setup + download as one operation.
     registerAutoCancel(operationId, _event.sender, () => {
-      cancelledEarly = true;
-      log.info(`[url-handler] Early cancel triggered for ${operationId}`);
+      if (controller.signal.aborted) return;
+      controller.abort();
+      log.info(`[url-handler] Cancel triggered for ${operationId}`);
     });
 
     const result = await processVideoUrl(
@@ -106,61 +110,20 @@ export async function handleProcessUrl(
       {
         fileManager,
         ffmpeg,
+      },
+      {},
+      {
+        signal: controller.signal,
       }
     );
 
-    // Check if cancellation was requested early before proceeding
-    if (cancelledEarly) {
-      if (!result.proc.killed) {
-        if (process.platform === 'win32' && result.proc.pid) {
-          // On Windows, use taskkill for reliable yt-dlp termination
-          log.info(
-            `[url-handler] Force-killing Windows yt-dlp process PID: ${result.proc.pid} for early cancelled ${operationId}`
-          );
-          forceKillWindows({
-            pid: result.proc.pid,
-            logPrefix: `url-handler-early-${operationId}`,
-          })
-            .then(killed => {
-              if (!killed) {
-                // Fallback to signal if taskkill fails
-                log.warn(
-                  `[url-handler] taskkill failed for early cancel ${operationId}, trying SIGTERM fallback`
-                );
-                try {
-                  result.proc.kill('SIGTERM');
-                } catch {
-                  // Ignore errors since process might already be dead
-                }
-              }
-            })
-            .catch(() => {
-              // Fallback to signal if taskkill throws
-              try {
-                result.proc.kill('SIGTERM');
-              } catch {
-                // Ignore errors since process might already be dead
-              }
-            });
-        } else {
-          // Non-Windows: use regular SIGINT
-          result.proc.kill('SIGINT');
-        }
-        log.info(
-          `[url-handler] Late kill of process for early cancelled ${operationId}`
-        );
-      }
-      registryFinish(operationId); // Clean up the entry
-      sendProgress({
-        percent: 0,
-        stage: 'Cancelled',
-        error: 'Cancelled by reload',
-      });
-      return {
-        success: false,
-        cancelled: true,
+    registerPendingUrlResult(operationId, _event.sender, result.videoPath);
+    if (controller.signal.aborted) {
+      return await finalizeCancelledUrlOperation({
         operationId,
-      };
+        discardPendingUrlResult,
+        registryFinish,
+      });
     }
 
     const successResult: ProcessUrlResult = {
@@ -178,16 +141,14 @@ export async function handleProcessUrl(
       originalVideoPath: result.originalVideoPath,
       operationId,
     };
-    registryFinish(operationId);
     return successResult;
   } catch (error: any) {
     if (error instanceof CancelledError) {
-      registryFinish(operationId);
-      return {
-        success: false,
-        cancelled: true,
+      return await finalizeCancelledUrlOperation({
         operationId,
-      };
+        discardPendingUrlResult,
+        registryFinish,
+      });
     }
 
     if (typeof error === 'string') {
@@ -217,6 +178,7 @@ export async function handleProcessUrl(
     // If upstream flagged NeedCookies, surface that stage instead of generic error
     if (rawErrorMessage === 'NeedCookies') {
       sendProgress({ percent: 0, stage: 'NeedCookies' });
+      await discardPendingUrlResult(operationId);
       registryFinish(operationId);
       return { success: false, error: 'NeedCookies', operationId };
     }
@@ -224,6 +186,7 @@ export async function handleProcessUrl(
     // Generic error fallback
     sendProgress({ percent: 0, stage: 'Error', error: userFriendlyMessage });
 
+    await discardPendingUrlResult(operationId);
     registryFinish(operationId);
     return {
       success: false,
@@ -231,4 +194,71 @@ export async function handleProcessUrl(
       operationId,
     };
   }
+}
+
+export async function handleAcceptProcessedUrl(
+  _event: IpcMainInvokeEvent,
+  operationId: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!String(operationId || '').trim()) {
+    return { success: false, error: 'Operation ID is required' };
+  }
+
+  const success = acceptPendingUrlResult(operationId);
+  if (!success) {
+    return {
+      success: false,
+      error: 'Processed URL result is no longer available',
+    };
+  }
+
+  return { success: true };
+}
+
+export async function handleDiscardProcessedUrl(
+  _event: IpcMainInvokeEvent,
+  operationId: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!String(operationId || '').trim()) {
+    return { success: false, error: 'Operation ID is required' };
+  }
+
+  const success = await discardPendingUrlResult(operationId);
+  if (!success) {
+    return {
+      success: false,
+      error: 'Processed URL result is no longer available',
+    };
+  }
+
+  return { success: true };
+}
+
+export async function handleCleanupAcceptedProcessedUrl(
+  _event: IpcMainInvokeEvent,
+  payload: { operationId: string; filePath: string }
+): Promise<{ success: boolean; error?: string }> {
+  const operationId = String(payload?.operationId || '').trim();
+  const filePath = String(payload?.filePath || '').trim();
+
+  if (!operationId) {
+    return { success: false, error: 'Operation ID is required' };
+  }
+
+  if (!filePath) {
+    return { success: false, error: 'File path is required' };
+  }
+
+  const success = await cleanupAcceptedUrlResultFile(
+    `${operationId}:accepted-stale`,
+    filePath
+  );
+  if (!success) {
+    return {
+      success: false,
+      error: 'Accepted processed URL result could not be scheduled for cleanup',
+    };
+  }
+
+  return { success: true };
 }

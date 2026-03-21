@@ -316,12 +316,12 @@ export async function respondWithOpenAiWebSearch({
   };
 
   const flushSseBuffer = (flushTail = false) => {
-    for (;;) {
-      const nextEventIndex = rawBuffer.indexOf('\n\n');
-      if (nextEventIndex === -1) break;
+    let nextEventIndex = rawBuffer.indexOf('\n\n');
+    while (nextEventIndex !== -1) {
       const rawEvent = rawBuffer.slice(0, nextEventIndex);
       rawBuffer = rawBuffer.slice(nextEventIndex + 2);
       processSseEvent(rawEvent);
+      nextEventIndex = rawBuffer.indexOf('\n\n');
     }
     if (flushTail) {
       const tail = rawBuffer.trim();

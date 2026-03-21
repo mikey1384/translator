@@ -160,6 +160,7 @@ export const ERROR_CODES = {
   UPDATE_REQUIRED: 'update-required',
   INSUFFICIENT_CREDITS: 'insufficient-credits',
   INSUFFICIENT_DISK_SPACE: 'insufficient-disk-space',
+  SOURCE_VIDEO_UNAVAILABLE: 'source-video-unavailable',
   OPENAI_KEY_INVALID: 'openai-key-invalid',
   OPENAI_RATE_LIMIT: 'openai-rate-limit',
   OPENAI_INSUFFICIENT_QUOTA: 'openai-insufficient-quota',

@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Hindi wastong render options ang binigay",
     "missingVideoMetadata": "Nawawalang metadata ng video ({{missing}})",
     "noSourceVideo": "Walang source video",
+    "sourceVideoUnavailable": "Nabura na ang orihinal na video o hindi na ito ma-access. Buksan itong muli at subukan ulit.",
     "noSubtitlesLoaded": "Walang na-load na subtitle",
     "failedToLoadSRT": "Nabigo ang pag-load ng SRT file",
     "cancelTranslationFailed": "Hindi makansela ang pagsasalin: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "May ilang konteksto ng pagsusuri na hindi na-load. Isasama pa rin sa ulat ang mga detalye mula sa app na ito."
   }
 }
+
+

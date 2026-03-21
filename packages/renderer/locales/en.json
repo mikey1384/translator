@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Invalid render options provided",
     "missingVideoMetadata": "Missing video metadata ({{missing}})",
     "noSourceVideo": "No source video",
+    "sourceVideoUnavailable": "The original video was removed or is no longer accessible. Open it again and try again.",
     "noSubtitlesLoaded": "No subtitles loaded",
     "failedToLoadSRT": "Failed to load SRT file",
     "cancelTranslationFailed": "Failed to cancel translation: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "Some diagnostic context could not be loaded. The report will still include details from this app."
   }
 }
+
+

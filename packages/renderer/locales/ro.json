@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Opțiuni de redare nevalide furnizate",
     "missingVideoMetadata": "Lipsesc metadatele video ({{missing}})",
     "noSourceVideo": "Fără video sursă",
+    "sourceVideoUnavailable": "Videoclipul original a fost eliminat sau nu mai este accesibil. Deschide-l din nou și încearcă din nou.",
     "noSubtitlesLoaded": "Nicio subtitrare încărcată",
     "failedToLoadSRT": "Încărcarea fișierului SRT a eșuat",
     "cancelTranslationFailed": "Anularea traducerii a eșuat: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "O parte din contextul de diagnostic nu a putut fi încărcată. Raportul va include în continuare detalii din această aplicație."
   }
 }
+
+

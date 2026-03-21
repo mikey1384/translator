@@ -254,6 +254,16 @@ declare module '@shared-types/app' {
     cancelled?: boolean;
   }
 
+  export interface ProcessUrlPendingResultAction {
+    success: boolean;
+    error?: string;
+  }
+
+  export interface CleanupAcceptedProcessedUrlOptions {
+    operationId: string;
+    filePath: string;
+  }
+
   export type UrlProgressCallback = (progress: {
     percent: number;
     stage: string;
@@ -616,9 +626,12 @@ declare module '@shared-types/app' {
   }
 
   export interface TranscribeOneLineResult {
-    transcript: string;
+    success: boolean;
+    transcript?: string;
     segments?: SrtSegment[];
+    cancelled?: boolean;
     error?: string;
+    operationId: string;
   }
 
   // Transcribe remaining portion of a video (append-mode)
@@ -632,8 +645,11 @@ declare module '@shared-types/app' {
   }
 
   export interface TranscribeRemainingResult {
-    segments: SrtSegment[];
+    success: boolean;
+    segments?: SrtSegment[];
+    cancelled?: boolean;
     error?: string;
+    operationId: string;
   }
 
   // =========================================
@@ -971,6 +987,15 @@ declare module '@shared-types/app' {
     ) => () => void;
 
     processUrl: (options: ProcessUrlOptions) => Promise<ProcessUrlResult>;
+    acceptProcessedUrl: (
+      operationId: string
+    ) => Promise<ProcessUrlPendingResultAction>;
+    discardProcessedUrl: (
+      operationId: string
+    ) => Promise<ProcessUrlPendingResultAction>;
+    cleanupAcceptedProcessedUrl: (
+      options: CleanupAcceptedProcessedUrlOptions
+    ) => Promise<ProcessUrlPendingResultAction>;
     onProcessUrlProgress: (callback: UrlProgressCallback | null) => () => void;
     suggestVideos: (
       request: VideoSuggestionChatRequest

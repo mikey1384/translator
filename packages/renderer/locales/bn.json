@@ -107,6 +107,7 @@
     "invalidRenderOptions": "অবৈধ রেন্ডার অপশন প্রদান করা হয়েছে",
     "missingVideoMetadata": "ভিডিও মেটাডেটা অনুপস্থিত ({{missing}})",
     "noSourceVideo": "কোন সোর্স ভিডিও নেই",
+    "sourceVideoUnavailable": "মূল ভিডিওটি মুছে ফেলা হয়েছে বা আর অ্যাক্সেস করা যাচ্ছে না। আবার খুলে আবার চেষ্টা করুন।",
     "noSubtitlesLoaded": "কোন সাবটাইটেল লোড হয়নি",
     "failedToLoadSRT": "SRT ফাইল লোড করতে ব্যর্থ",
     "cancelTranslationFailed": "অনুবাদ বাতিল করা যায়নি: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "কিছু ডায়াগনস্টিক প্রেক্ষাপট লোড করা যায়নি। রিপোর্টে তবুও এই অ্যাপের বিবরণ থাকবে।"
   }
 }
+
+

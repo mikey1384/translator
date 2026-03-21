@@ -64,6 +64,12 @@ import { sameArray } from '../../utils/array';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
 import { logButton, logTask, logError } from '../../utils/logger.js';
 import { getByoErrorMessage, isByoError } from '../../utils/byoErrors';
+import {
+  getSourceVideoErrorMessage,
+  getSourceVideoUnavailableMessage,
+  isSourceVideoPathAccessible,
+  isSourceVideoUnavailableError,
+} from '../../utils/sourceVideoErrors';
 
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
@@ -440,9 +446,20 @@ export default function EditSubtitles({
     if (isSubtitleMutationLocked) return;
     try {
       logButton('continue_transcribing');
-      const videoPath = useVideoStore.getState().path;
-      const sourceUrl = useVideoStore.getState().sourceUrl;
+      const videoState = useVideoStore.getState();
+      const videoPath = videoState.originalPath ?? videoState.path;
+      const sourceUrl = videoState.sourceUrl;
       if (!videoPath || subtitles.length === 0) return;
+      if (!(await isSourceVideoPathAccessible(videoPath))) {
+        const message = getSourceVideoUnavailableMessage();
+        useTaskStore.getState().setTranscription({
+          stage: message,
+          percent: 100,
+          inProgress: false,
+        });
+        useUrlStore.getState().setOperationError(message);
+        return;
+      }
       const start = subtitles[subtitles.length - 1].end;
       const operationId = `transcribe-${Date.now()}-tail`;
 
@@ -462,15 +479,39 @@ export default function EditSubtitles({
       } catch {
         // Do nothing
       }
-      await (
-        await import('../../ipc/subtitles')
-      ).transcribeRemaining({
+      const { transcribeRemaining } = await import('../../ipc/subtitles');
+      const result = await transcribeRemaining({
         videoPath,
         sourceUrl,
         start,
         operationId,
         qualityTranscription: useUIStore.getState().qualityTranscription,
       });
+      const errorMsg = String(result?.error || '').trim();
+      const cancelled = Boolean(result?.cancelled);
+      const didFail =
+        cancelled || result?.success === false || errorMsg.length > 0;
+      if (didFail) {
+        const sourceVideoError = getSourceVideoErrorMessage(errorMsg);
+        const byoError = isByoError(errorMsg)
+          ? getByoErrorMessage(errorMsg)
+          : '';
+        const friendlyError = cancelled
+          ? t('generateSubtitles.status.cancelled', 'Cancelled')
+          : sourceVideoError ||
+            byoError ||
+            errorMsg ||
+            t('generateSubtitles.status.error', 'Error');
+        useTaskStore.getState().setTranscription({
+          stage: friendlyError,
+          percent: cancelled ? 0 : 100,
+          inProgress: false,
+        });
+        if (!cancelled) {
+          useUrlStore.getState().setOperationError(friendlyError);
+        }
+        return;
+      }
       // Tail segments are appended via progress listener (appendSegments payload)
       // Mark completion explicitly (progress-buffer will also send final 100%)
       try {
@@ -486,9 +527,11 @@ export default function EditSubtitles({
     } catch (err) {
       console.error('[EditSubtitles] continue transcribing error:', err);
       const errorMsg = err instanceof Error ? err.message : String(err);
-      const friendlyError = isByoError(errorMsg)
-        ? getByoErrorMessage(errorMsg)
-        : errorMsg || t('generateSubtitles.status.error', 'Error');
+      const friendlyError = isSourceVideoUnavailableError(errorMsg)
+        ? getSourceVideoUnavailableMessage()
+        : isByoError(errorMsg)
+          ? getByoErrorMessage(errorMsg)
+          : errorMsg || t('generateSubtitles.status.error', 'Error');
       // Surface error state to progress UI
       try {
         useTaskStore.getState().setTranscription({
@@ -571,6 +614,13 @@ export default function EditSubtitles({
         } catch {
           // Do nothing
         }
+        return;
+      }
+      if (!(await isSourceVideoPathAccessible(videoPath))) {
+        const message = getSourceVideoUnavailableMessage();
+        setSaveError(message);
+        setMergeStage(message);
+        useUrlStore.getState().setOperationError(message);
         return;
       }
       if (subtitles.length === 0) {
@@ -725,7 +775,9 @@ export default function EditSubtitles({
         ? t('generateSubtitles.status.cancelled', 'Cancelled')
         : isDiskFull
           ? t('common.error.insufficientDiskSpace')
-          : errorMsg || t('generateSubtitles.status.error', 'Error');
+          : isSourceVideoUnavailableError(errorMsg)
+            ? getSourceVideoUnavailableMessage()
+            : errorMsg || t('generateSubtitles.status.error', 'Error');
 
       setSaveError(friendlyError);
       setMergeStage(friendlyError);

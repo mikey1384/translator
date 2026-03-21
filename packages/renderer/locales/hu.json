@@ -107,6 +107,7 @@
     "invalidRenderOptions": "Érvénytelen renderelési beállítások",
     "missingVideoMetadata": "Hiányzó videó metaadatok ({{missing}})",
     "noSourceVideo": "Nincs forrásvideó",
+    "sourceVideoUnavailable": "Az eredeti videó eltávolításra került, vagy már nem érhető el. Nyisd meg újra, és próbáld újra.",
     "noSubtitlesLoaded": "Nincsenek betöltött feliratok",
     "failedToLoadSRT": "SRT fájl betöltése sikertelen",
     "cancelTranslationFailed": "A fordítás megszakítása nem sikerült: {{message}}",
@@ -1031,3 +1032,5 @@
     "reportContextWarning": "A diagnosztikai környezet egy részét nem sikerült betölteni. A jelentés így is tartalmazni fogja ennek az alkalmazásnak a részleteit."
   }
 }
+
+
