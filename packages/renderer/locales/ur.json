@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "آؤٹ پٹ زبان",
     "showOriginalText": "اصل متن دکھائیں",
+    "displayModeLabel": "سب ٹائٹل ڈسپلے",
     "translate": "ترجمہ کریں",
     "continueTranscribing": "ٹرانسکرائبنگ جاری رکھیں",
     "generate": "سب ٹائٹل تیار کریں",
@@ -439,8 +440,8 @@
     "listTitle": "سب ٹائٹل ({{count}})",
     "workspace": {
       "editorStage": "ایڈیٹر ورک اسپیس",
-      "dualMode": "دوہرا متن موڈ",
-      "translationMode": "صرف ترجمہ موڈ",
+      "dualMode": "دوہرا متن",
+      "translationMode": "ترجمہ",
       "videoMounted": "پری ویو ویڈیو منسلک ہے",
       "videoNeeded": "پری ویو اور مرج کے لیے سورس ویڈیو منسلک کریں",
       "readyTitle": "سب ٹائٹل ایڈیٹر تیار ہے",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "کچھ تشخیصی تناظر لوڈ نہیں ہو سکا۔ رپورٹ میں پھر بھی اس ایپ کی تفصیلات شامل ہوں گی۔"
   }
 }
-
-

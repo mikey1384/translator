@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "لغة الإخراج",
     "showOriginalText": "عرض النص الأصلي",
+    "displayModeLabel": "عرض الترجمة النصية",
     "translate": "ترجم",
     "continueTranscribing": "متابعة النسخ",
     "generate": "إنشاء الترجمات",
@@ -439,8 +440,8 @@
     "listTitle": "الترجمات ({{count}})",
     "workspace": {
       "editorStage": "مساحة المحرر",
-      "dualMode": "وضع النص المزدوج",
-      "translationMode": "وضع الترجمة فقط",
+      "dualMode": "نص مزدوج",
+      "translationMode": "الترجمة",
       "videoMounted": "تم إرفاق فيديو المعاينة",
       "videoNeeded": "أرفق فيديو المصدر للمعاينة والدمج",
       "readyTitle": "محرر الترجمة جاهز",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "تعذر تحميل بعض سياق التشخيص. سيظل التقرير يتضمن تفاصيل من هذا التطبيق."
   }
 }
-
-

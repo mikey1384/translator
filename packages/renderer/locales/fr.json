@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Langue de sortie",
     "showOriginalText": "Afficher le texte original",
+    "displayModeLabel": "Affichage des sous-titres",
     "translate": "Traduire",
     "continueTranscribing": "Continuer la transcription",
     "generate": "Générer les sous-titres",
@@ -439,8 +440,8 @@
     "listTitle": "Sous-titres ({{count}})",
     "workspace": {
       "editorStage": "Espace de l’éditeur",
-      "dualMode": "Mode double texte",
-      "translationMode": "Mode traduction seule",
+      "dualMode": "Texte double",
+      "translationMode": "Traduction",
       "videoMounted": "Vidéo d’aperçu montée",
       "videoNeeded": "Montez une vidéo source pour prévisualiser et fusionner",
       "readyTitle": "Éditeur de sous-titres prêt",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Une partie du contexte de diagnostic n'a pas pu être chargée. Le rapport inclura quand même des détails de cette application."
   }
 }
-
-

@@ -37,9 +37,7 @@ export default function ConfirmReplaceSrtDialog({
         </>
       }
     >
-      <p style={{ margin: 0 }}>
-        {t('dialogs.unsavedSrtOnTranscribe.message')}
-      </p>
+      <p style={{ margin: 0 }}>{t('dialogs.unsavedSrtOnTranscribe.message')}</p>
     </Modal>
   );
 }

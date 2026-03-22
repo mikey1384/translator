@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Utdataspråk",
     "showOriginalText": "Vis originaltekst",
+    "displayModeLabel": "Visningsmodus for undertekster",
     "translate": "Oversett",
     "continueTranscribing": "Fortsett transkribering",
     "generate": "Generer undertekster",
@@ -439,8 +440,8 @@
     "listTitle": "Undertekster ({{count}})",
     "workspace": {
       "editorStage": "Redigeringsområde",
-      "dualMode": "Dobbel tekstmodus",
-      "translationMode": "Kun oversettelsesmodus",
+      "dualMode": "Dobbel tekst",
+      "translationMode": "Oversettelse",
       "videoMounted": "Forhåndsvideo montert",
       "videoNeeded": "Monter en kildevideo for forhåndsvisning og sammenslåing",
       "readyTitle": "Underteksteditor klar",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Noe diagnostikkontekst kunne ikke lastes inn. Rapporten vil fortsatt inneholde detaljer fra denne appen."
   }
 }
-
-

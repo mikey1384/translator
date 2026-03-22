@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Tulostuskieli",
     "showOriginalText": "Näytä alkuperäinen teksti",
+    "displayModeLabel": "Tekstityksen näyttö",
     "translate": "Käännä",
     "continueTranscribing": "Jatka litterointia",
     "generate": "Luo tekstitykset",
@@ -439,8 +440,8 @@
     "listTitle": "Tekstitykset ({{count}})",
     "workspace": {
       "editorStage": "Muokkaustyötila",
-      "dualMode": "Kaksitekstitila",
-      "translationMode": "Vain käännöstila",
+      "dualMode": "Kaksoisteksti",
+      "translationMode": "Käännös",
       "videoMounted": "Esikatseluvideo liitetty",
       "videoNeeded": "Liitä lähdevideo esikatselua ja yhdistämistä varten",
       "readyTitle": "Tekstityseditori valmis",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Osaa diagnostiikkakontekstista ei voitu ladata. Raportti sisältää silti tämän sovelluksen tiedot."
   }
 }
-
-

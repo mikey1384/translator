@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Język wyjściowy",
     "showOriginalText": "Pokaż oryginalny tekst",
+    "displayModeLabel": "Tryb wyświetlania napisów",
     "translate": "Przetłumacz",
     "continueTranscribing": "Kontynuuj transkrypcję",
     "generate": "Generuj napisy",
@@ -439,8 +440,8 @@
     "listTitle": "Napisy ({{count}})",
     "workspace": {
       "editorStage": "Obszar edytora",
-      "dualMode": "Tryb podwójnego tekstu",
-      "translationMode": "Tryb tylko tłumaczenia",
+      "dualMode": "Podwójny tekst",
+      "translationMode": "Tłumaczenie",
       "videoMounted": "Film podglądu podłączony",
       "videoNeeded": "Podłącz wideo źródłowe do podglądu i łączenia",
       "readyTitle": "Edytor napisów gotowy",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Nie udało się wczytać części kontekstu diagnostycznego. Raport nadal będzie zawierał szczegóły z tej aplikacji."
   }
 }
-
-

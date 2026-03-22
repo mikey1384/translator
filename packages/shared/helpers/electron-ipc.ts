@@ -1,5 +1,10 @@
 import * as FileIPC from '../../renderer/ipc/file.js';
 import { open } from '@ipc/file';
+import type {
+  SaveSubtitleDocumentRecordOptions,
+  SubtitleDocumentMeta,
+  SrtSegment,
+} from '@shared-types/app';
 
 export async function retryCall<Fn extends (...a: any[]) => Promise<any>>(
   fn: Fn,
@@ -167,6 +172,135 @@ export async function openFileWithRetry(options: {
     return {
       filePaths: [],
       error: error.message || String(error),
+    };
+  }
+}
+
+export async function readTextFileWithRetry(
+  filePath: string
+): Promise<{ content?: string; error?: string }> {
+  try {
+    const result = await retryCall(FileIPC.readFileContent, filePath);
+    if (!result?.success || !result.data) {
+      return {
+        error: result?.error || 'Failed to read file content.',
+      };
+    }
+
+    let bytes: Uint8Array;
+    if (result.data instanceof ArrayBuffer) {
+      bytes = new Uint8Array(result.data);
+    } else if (ArrayBuffer.isView(result.data)) {
+      const view = result.data;
+      bytes = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
+    } else {
+      bytes = new Uint8Array(result.data as ArrayBuffer);
+    }
+
+    return {
+      content: new TextDecoder().decode(bytes),
+    };
+  } catch (error: any) {
+    return {
+      error: error?.message || String(error),
+    };
+  }
+}
+
+export async function readSavedSubtitleMetadataWithRetry(args: {
+  filePath: string;
+  srtContent: string;
+}): Promise<{ segments?: SrtSegment[]; error?: string }> {
+  try {
+    const result = await retryCall(FileIPC.readSavedSubtitleMetadata, args);
+    if (!result?.success) {
+      return {
+        error: result?.error || 'Failed to read saved subtitle metadata.',
+      };
+    }
+    return {
+      segments: result.segments,
+    };
+  } catch (error: any) {
+    return {
+      error: error?.message || String(error),
+    };
+  }
+}
+
+export async function saveSubtitleDocumentRecordWithRetry(
+  args: SaveSubtitleDocumentRecordOptions
+): Promise<{ document?: SubtitleDocumentMeta; error?: string }> {
+  try {
+    const result = await retryCall(FileIPC.saveSubtitleDocumentRecord, args);
+    if (!result?.success) {
+      return {
+        error: result?.error || 'Failed to save subtitle document.',
+      };
+    }
+    return {
+      document: result.document,
+    };
+  } catch (error: any) {
+    return {
+      error: error?.message || String(error),
+    };
+  }
+}
+
+export async function findSubtitleDocumentForFileWithRetry(args: {
+  filePath: string;
+  srtContent: string;
+}): Promise<{
+  document?: SubtitleDocumentMeta;
+  segments?: SrtSegment[];
+  fileMode?: import('@shared-types/app').SubtitleDisplayMode | null;
+  fileRole?: import('@shared-types/app').SubtitleDocumentLinkedFileRole | null;
+  error?: string;
+}> {
+  try {
+    const result = await retryCall(FileIPC.findSubtitleDocumentForFile, args);
+    if (!result?.success) {
+      return {
+        error: result?.error || 'Failed to find subtitle document.',
+      };
+    }
+    return {
+      document: result.document,
+      segments: result.segments,
+      fileMode: result.fileMode,
+      fileRole: result.fileRole,
+    };
+  } catch (error: any) {
+    return {
+      error: error?.message || String(error),
+    };
+  }
+}
+
+export async function findSubtitleDocumentForSourceWithRetry(args: {
+  sourceVideoPath?: string | null;
+  sourceVideoAssetIdentity?: string | null;
+  sourceUrl?: string | null;
+}): Promise<{
+  document?: SubtitleDocumentMeta;
+  segments?: SrtSegment[];
+  error?: string;
+}> {
+  try {
+    const result = await retryCall(FileIPC.findSubtitleDocumentForSource, args);
+    if (!result?.success) {
+      return {
+        error: result?.error || 'Failed to find source subtitle document.',
+      };
+    }
+    return {
+      document: result.document,
+      segments: result.segments,
+    };
+  } catch (error: any) {
+    return {
+      error: error?.message || String(error),
     };
   }
 }

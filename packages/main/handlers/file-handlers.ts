@@ -4,7 +4,24 @@ import { IpcMainInvokeEvent } from 'electron';
 import { app } from 'electron';
 import { FileManager } from '../services/file-manager.js';
 import { SaveFileService, SaveFileOptions } from '../services/save-file.js';
-import { OpenFileResult, OpenFileOptions } from '@shared-types/app';
+import {
+  OpenFileResult,
+  OpenFileOptions,
+  ReadSavedSubtitleMetadataOptions,
+  ReadSavedSubtitleMetadataResult,
+  SaveSubtitleDocumentOptions,
+  SaveSubtitleDocumentResult,
+} from '@shared-types/app';
+import {
+  buildSubtitleSidecarContent,
+  getSubtitleSidecarPath,
+} from '../../shared/helpers/subtitle-sidecar.js';
+import {
+  readSavedSubtitleMetadata,
+  saveSavedSubtitleMetadata,
+  writeTextFileAtomically,
+} from '../services/saved-subtitle-metadata.js';
+import { saveSubtitleDocumentRecord } from '../services/subtitle-documents.js';
 
 interface FileHandlerServices {
   fileManager: FileManager;
@@ -49,6 +66,191 @@ export async function handleSaveFile(
   } catch (error: any) {
     console.error('[handleSaveFile] Error:', error);
     return { success: false, error: error.message || String(error) };
+  }
+}
+
+function buildSubtitleSaveWarning(args: {
+  documentSaved: boolean;
+  metadataCacheSaved: boolean;
+  sidecarSaved: boolean;
+  documentError?: string;
+  sidecarError?: string;
+  metadataCacheError?: string;
+}): string | null {
+  const documentError = String(args.documentError || '').trim();
+  const sidecarError = String(args.sidecarError || '').trim();
+  const metadataCacheError = String(args.metadataCacheError || '').trim();
+
+  if (!args.documentSaved) {
+    const base =
+      'Subtitle file saved, but Stage5 could not update its internal subtitle document. The exported SRT is fine, but Stage5 reopen fidelity may be out of date.';
+    const details = [documentError, sidecarError, metadataCacheError]
+      .filter(Boolean)
+      .join(' ');
+    return details ? `${base} ${details}` : base;
+  }
+
+  if (args.sidecarSaved) {
+    return null;
+  }
+
+  if (args.metadataCacheSaved) {
+    const base =
+      'Subtitle file saved, but Stage5 could not save the adjacent metadata file. Reopening on this machine should still preserve Stage5 metadata, but moving this SRT elsewhere may lose word timings or bilingual structure.';
+    return sidecarError ? `${base} ${sidecarError}` : base;
+  }
+
+  const base =
+    'Subtitle file saved, but Stage5 metadata could not be saved. Reopening in Stage5 may lose word timings or bilingual structure.';
+  const details = [sidecarError, metadataCacheError].filter(Boolean).join(' ');
+  return details ? `${base} ${details}` : base;
+}
+
+export async function handleSaveSubtitleDocument(
+  _event: IpcMainInvokeEvent,
+  options: SaveSubtitleDocumentOptions
+): Promise<SaveSubtitleDocumentResult> {
+  try {
+    const { saveFileService } = checkServicesInitialized();
+    const srtContent = String(options?.srtContent || '');
+    if (!srtContent.trim()) {
+      return {
+        status: 'error',
+        error: 'Cannot save empty subtitle content.',
+      };
+    }
+    if (!Array.isArray(options?.segments)) {
+      return {
+        status: 'error',
+        error: 'Subtitle segments are required to save a subtitle document.',
+      };
+    }
+
+    const filePath = await saveFileService.saveFile({
+      content: srtContent,
+      defaultPath: options.defaultPath,
+      filters: options.filters,
+      filePath: options.filePath,
+      forceDialog: options.forceDialog,
+      title: options.title,
+    });
+
+    let metadataCacheSaved = false;
+    let sidecarSaved = false;
+    let metadataCacheError = '';
+    let sidecarError = '';
+    let document = undefined;
+    let documentSaved = false;
+    let documentError = '';
+
+    try {
+      document = await saveSubtitleDocumentRecord({
+        documentId: options.documentId,
+        title: options.documentTitle,
+        segments: options.segments,
+        sourceVideoPath: options.sourceVideoPath,
+        sourceVideoAssetIdentity: options.sourceVideoAssetIdentity,
+        sourceUrl: options.sourceUrl,
+        subtitleKind: options.subtitleKind,
+        targetLanguage: options.targetLanguage,
+        importFilePath: options.importFilePath,
+        importSrtContent: options.importSrtContent,
+        importMode: options.importMode,
+        exportFilePath: filePath,
+        exportSrtContent: srtContent,
+        exportMode: options.fileMode,
+        activeLinkedFilePath: options.activeLinkedFilePath ?? filePath,
+        activeLinkedFileMode: options.activeLinkedFileMode ?? options.fileMode,
+        activeLinkedFileRole: options.activeLinkedFileRole ?? 'export',
+        transcriptionEngine: options.transcriptionEngine,
+      });
+      documentSaved = true;
+    } catch (error: any) {
+      documentError = error?.message || String(error);
+    }
+
+    try {
+      await saveSavedSubtitleMetadata({
+        filePath,
+        srtContent,
+        segments: options.segments,
+      });
+      metadataCacheSaved = true;
+    } catch (error: any) {
+      metadataCacheError = error?.message || String(error);
+    }
+
+    try {
+      const sidecarPath = getSubtitleSidecarPath(filePath);
+      const sidecarContent = buildSubtitleSidecarContent({
+        segments: options.segments,
+        srtContent,
+      });
+      await writeTextFileAtomically(sidecarPath, sidecarContent);
+      sidecarSaved = true;
+    } catch (error: any) {
+      sidecarError = error?.message || String(error);
+    }
+
+    const warning = buildSubtitleSaveWarning({
+      documentSaved,
+      metadataCacheSaved,
+      sidecarSaved,
+      documentError,
+      sidecarError,
+      metadataCacheError,
+    });
+    if (warning) {
+      return {
+        status: 'warning',
+        filePath,
+        warning,
+        metadataCacheSaved,
+        sidecarSaved,
+        document,
+      };
+    }
+
+    return {
+      status: 'success',
+      filePath,
+      metadataCacheSaved,
+      sidecarSaved,
+      document,
+    };
+  } catch (error: any) {
+    const message = error?.message || String(error);
+    if (/cancell?ed/i.test(message)) {
+      return { status: 'cancelled' };
+    }
+    return {
+      status: 'error',
+      error: message,
+      metadataCacheSaved: false,
+      sidecarSaved: false,
+    };
+  }
+}
+
+export async function handleReadSavedSubtitleMetadata(
+  _event: IpcMainInvokeEvent,
+  options: ReadSavedSubtitleMetadataOptions
+): Promise<ReadSavedSubtitleMetadataResult> {
+  try {
+    const segments = await readSavedSubtitleMetadata({
+      filePath: options.filePath,
+      srtContent: options.srtContent,
+    });
+    return {
+      success: true,
+      found: segments !== null,
+      segments: segments ?? undefined,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error?.message || String(error),
+    };
   }
 }
 

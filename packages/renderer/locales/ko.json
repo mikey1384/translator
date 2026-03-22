@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "출력 언어",
     "showOriginalText": "원본 텍스트 표시",
+    "displayModeLabel": "자막 표시",
     "translate": "번역",
     "continueTranscribing": "전사 계속하기",
     "generate": "자막 생성",
@@ -439,8 +440,8 @@
     "listTitle": "자막 ({{count}}개)",
     "workspace": {
       "editorStage": "편집 작업공간",
-      "dualMode": "이중 텍스트 모드",
-      "translationMode": "번역 전용 모드",
+      "dualMode": "이중 텍스트",
+      "translationMode": "번역",
       "videoMounted": "미리보기 영상 연결됨",
       "videoNeeded": "미리보기와 병합을 위해 원본 영상을 연결하세요",
       "readyTitle": "자막 편집기 준비됨",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "일부 진단 컨텍스트를 불러올 수 없습니다. 보고서에는 이 앱의 세부 정보가 계속 포함됩니다."
   }
 }
-
-

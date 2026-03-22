@@ -1,6 +1,13 @@
-import { SrtSegment } from '@shared-types/app';
+import {
+  SrtSegment,
+  SubtitleDisplayMode,
+  SubtitleDocumentLinkedFileRole,
+} from '@shared-types/app';
 import { autoSplitBilingualCues } from './bilingual';
-import { openFile as openFileIPC } from './electron-ipc';
+import {
+  getSubtitleSidecarPath,
+  restoreSegmentsFromSubtitleSidecar,
+} from './subtitle-sidecar';
 
 export function srtStringToSeconds(raw: string): number {
   const m = raw.match(/(\d{2}):(\d{2}):(\d{2}),(\d{3})/);
@@ -19,6 +26,36 @@ export class SubtitleProcessingError extends Error {
 function flattenCueText(input?: string): string {
   if (!input) return '';
   return input.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeComparableSrtText(input: string): string {
+  return String(input || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .trim();
+}
+
+export function inferSubtitleDisplayModeFromSrtContent(args: {
+  segments: SrtSegment[];
+  srtContent: string;
+}): SubtitleDisplayMode {
+  const normalizedInput = normalizeComparableSrtText(args.srtContent);
+  for (const mode of ['original', 'translation', 'dual'] as const) {
+    const serialized = buildSrt({
+      segments: args.segments,
+      mode,
+      noWrap: true,
+    });
+    if (normalizeComparableSrtText(serialized) === normalizedInput) {
+      return mode;
+    }
+  }
+
+  return args.segments.some(segment =>
+    Boolean((segment.translation || '').trim())
+  )
+    ? 'dual'
+    : 'original';
 }
 
 export function parseSrt(srtString: string): SrtSegment[] {
@@ -332,10 +369,20 @@ export async function openSubtitleWithElectron(): Promise<{
   file?: File;
   content?: string;
   segments?: SrtSegment[];
+  document?: import('@shared-types/app').SubtitleDocumentMeta;
   filePath?: string;
+  fileMode?: SubtitleDisplayMode;
+  fileRole?: SubtitleDocumentLinkedFileRole | null;
   error?: string;
 }> {
   try {
+    const {
+      findSubtitleDocumentForFileWithRetry,
+      openFile: openFileIPC,
+      readSavedSubtitleMetadataWithRetry,
+      readTextFileWithRetry,
+      saveSubtitleDocumentRecordWithRetry,
+    } = await import('./electron-ipc.js');
     const result = await openFileIPC({
       filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
       title: 'Open Subtitle File',
@@ -358,24 +405,75 @@ export async function openSubtitleWithElectron(): Promise<{
     localStorage.setItem('originalSrtPath', filePath);
     localStorage.setItem('originalLoadPath', filePath);
 
-    // When loading user SRT from disk, we start by treating the entire cue text
-    // as original only, then attempt a safe, script-aware split if the file looks
-    // bilingual (e.g., Japanese+English). Falls back to original-only when unsure.
-    const originalOnly = parseSrtOriginalOnly(content);
-    const segments = autoSplitBilingualCues(originalOnly).map(seg => ({
-      ...seg,
-      original: flattenCueText(seg.original),
-      translation:
-        typeof seg.translation === 'string'
-          ? flattenCueText(seg.translation)
-          : seg.translation,
-    }));
+    const documentResult = await findSubtitleDocumentForFileWithRetry({
+      filePath,
+      srtContent: content,
+    });
+
+    const sidecarPath = getSubtitleSidecarPath(filePath);
+    const sidecarResult = await readTextFileWithRetry(sidecarPath);
+    const sidecarSegments = restoreSegmentsFromSubtitleSidecar({
+      srtContent: content,
+      sidecarContent: sidecarResult.content,
+    });
+    const cachedMetadataResult = sidecarSegments
+      ? { segments: undefined as SrtSegment[] | undefined }
+      : await readSavedSubtitleMetadataWithRetry({
+          filePath,
+          srtContent: content,
+        });
+
+    // Prefer the canonical Stage5 document when it matches this file, then the
+    // adjacent sidecar, then the old metadata cache, and only then the plain
+    // heuristic parse for external SRTs that never had app metadata.
+    const segments =
+      documentResult.segments && documentResult.segments.length > 0
+        ? documentResult.segments
+        : sidecarSegments
+          ? sidecarSegments
+          : cachedMetadataResult.segments &&
+              cachedMetadataResult.segments.length > 0
+            ? cachedMetadataResult.segments
+            : autoSplitBilingualCues(parseSrtOriginalOnly(content)).map(
+                seg => ({
+                  ...seg,
+                  original: flattenCueText(seg.original),
+                  translation:
+                    typeof seg.translation === 'string'
+                      ? flattenCueText(seg.translation)
+                      : seg.translation,
+                })
+              );
+    const fileMode =
+      documentResult.fileMode ??
+      inferSubtitleDisplayModeFromSrtContent({
+        segments,
+        srtContent: content,
+      });
+    const fileRole = documentResult.fileRole ?? 'import';
+    const document =
+      documentResult.document ??
+      (
+        await saveSubtitleDocumentRecordWithRetry({
+          title: filename,
+          segments,
+          importFilePath: filePath,
+          importSrtContent: content,
+          importMode: fileMode,
+          activeLinkedFilePath: filePath,
+          activeLinkedFileMode: fileMode,
+          activeLinkedFileRole: fileRole,
+        })
+      ).document;
 
     return {
       file,
       content,
+      document,
       segments,
       filePath,
+      fileMode,
+      fileRole,
     };
   } catch (error: any) {
     const message = error.message || String(error);

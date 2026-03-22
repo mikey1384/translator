@@ -1,5 +1,6 @@
 import { cx } from '@emotion/css';
 import { FileCheck2 } from 'lucide-react';
+import type { SubtitleDisplayMode } from '@shared-types/app';
 import { selectStyles } from '../../../styles.js';
 import { useTranslation } from 'react-i18next';
 import Button from '../../../components/Button.js';
@@ -29,8 +30,6 @@ import {
 import {
   workflowPanelActionGroupStyles,
   workflowPanelBadgeStyles,
-  workflowPanelCheckboxInputStyles,
-  workflowPanelCheckboxLabelStyles,
   workflowPanelControlsStyles,
   workflowPanelCostStyles,
   workflowPanelCostWarningStyles,
@@ -71,8 +70,8 @@ export default function SrtMountedPanel({
   className,
 }: SrtMountedPanelProps) {
   const { t } = useTranslation();
-  const showOriginalText = useUIStore(s => s.showOriginalText);
-  const setShowOriginalText = useUIStore(s => s.setShowOriginalText);
+  const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
+  const setSubtitleDisplayMode = useUIStore(s => s.setSubtitleDisplayMode);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isTranslationTaskActive = useTaskStore(s => !!s.translation.inProgress);
   const isMergeInProgress = useTaskStore(s => !!s.merge.inProgress);
@@ -291,15 +290,33 @@ export default function SrtMountedPanel({
           </select>
         </div>
 
-        <label className={workflowPanelCheckboxLabelStyles}>
-          <input
-            type="checkbox"
-            checked={showOriginalText}
-            onChange={e => setShowOriginalText(e.target.checked)}
-            className={workflowPanelCheckboxInputStyles}
-          />
-          {t('subtitles.showOriginalText')}
-        </label>
+        <div className={workflowPanelInlineFieldStyles}>
+          <label htmlFor="subtitle-display-mode-select">
+            {t('subtitles.displayModeLabel', 'Subtitle display')}:
+          </label>
+          <select
+            id="subtitle-display-mode-select"
+            className={selectStyles}
+            value={subtitleDisplayMode}
+            onChange={e =>
+              setSubtitleDisplayMode(e.target.value as SubtitleDisplayMode)
+            }
+            disabled={isDisabled}
+          >
+            <option value="original">
+              {t('editSubtitles.workspace.originalLabel', 'Original')}
+            </option>
+            <option value="translation">
+              {t(
+                'editSubtitles.workspace.translationMode',
+                'Translation-only mode'
+              )}
+            </option>
+            <option value="dual">
+              {t('editSubtitles.workspace.dualMode', 'Dual text mode')}
+            </option>
+          </select>
+        </div>
 
         <div className={workflowPanelActionGroupStyles}>
           <Button

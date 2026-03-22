@@ -25,6 +25,7 @@ import { type GenerateSubtitlesWorkspaceTab } from './components/VideoSuggestion
 import type {
   SrtSegment,
   StoredSubtitleKind,
+  SubtitleDocumentMeta,
   VideoSuggestionResultItem,
 } from '@shared-types/app';
 
@@ -100,7 +101,13 @@ const workspaceTabButtonStyles = (active: boolean, disabled = false) => css`
 type SubtitleDocumentSnapshot = {
   sourceKey: string | null;
   segments: SrtSegment[];
+  documentMeta: SubtitleDocumentMeta | null;
   originalPath: string | null;
+  activeFilePath: string | null;
+  activeFileMode: import('@shared-types/app').SubtitleDisplayMode | null;
+  activeFileRole:
+    | import('@shared-types/app').SubtitleDocumentLinkedFileRole
+    | null;
   origin: 'fresh' | 'disk' | null;
   sourceVideoPath: string | null;
   sourceVideoAssetIdentity: string | null;
@@ -108,6 +115,7 @@ type SubtitleDocumentSnapshot = {
   libraryMeta: {
     entryId?: string | null;
     kind?: StoredSubtitleKind | null;
+    targetLanguage?: string | null;
   } | null;
 };
 
@@ -121,6 +129,8 @@ export default function GenerateSubtitles() {
   // UI State
   const targetLanguage = useUIStore(s => s.targetLanguage);
   const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
+  const summaryLanguage = useUIStore(s => s.summaryLanguage);
+  const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
 
   // URL processing state
   const urlInput = useUrlStore(s => s.urlInput);
@@ -165,7 +175,7 @@ export default function GenerateSubtitles() {
   const mountedSubtitleOrder = useSubStore(s => s.order);
   const mountedSubtitleSegments = useSubStore(s => s.segments);
   const mountedSubtitleCount = useSubStore(s => s.order.length);
-  const originalSrtPath = useSubStore(s => s.originalPath);
+  const mountedSrtPath = useSubStore(s => s.activeFilePath ?? s.originalPath);
   const hasMountedSubtitles = mountedSubtitleCount > 0;
   const summarySegments = useMemo(
     () =>
@@ -454,7 +464,9 @@ export default function GenerateSubtitles() {
       </div>
 
       <div
-        style={{ display: activeWorkspaceTab === 'main' ? 'block' : 'none' }}
+        style={{
+          display: activeWorkspaceTab === 'main' ? 'block' : 'none',
+        }}
       >
         <div className={workflowStageShellStyles}>
           <div className={workflowStageHeaderStyles}>
@@ -510,7 +522,10 @@ export default function GenerateSubtitles() {
         </div>
 
         {hasSourceSelection || hasTranscriptSummaryPanel ? (
-          <div className={workflowStageShellStyles}>
+          <div
+            className={workflowStageShellStyles}
+            style={{ marginTop: spacing.lg }}
+          >
             <div className={workflowStageHeaderStyles}>
               <div className={workflowStageHeaderRowStyles}>
                 <span className={workflowStageEyebrowStyles}>
@@ -529,6 +544,8 @@ export default function GenerateSubtitles() {
                     className={workflowPanelFlushStyles}
                     onTranscribe={handleTranscribeOnly}
                     onCreateHighlight={handleCreateHighlight}
+                    summaryLanguage={summaryLanguage}
+                    onSummaryLanguageChange={setSummaryLanguage}
                     isTranscribing={isTranscribing}
                     isCreatingHighlight={isStepTwoMutationLocked}
                     disabled={
@@ -560,7 +577,7 @@ export default function GenerateSubtitles() {
                 <>
                   <SrtMountedPanel
                     className={workflowPanelFlushStyles}
-                    srtPath={originalSrtPath}
+                    srtPath={mountedSrtPath}
                     onTranslate={handleTranslate}
                     isTranslating={isTranslating}
                     disabled={
@@ -726,7 +743,30 @@ export default function GenerateSubtitles() {
         .map(id => subtitleState.segments[id])
         .filter((segment): segment is SrtSegment => Boolean(segment))
         .map(segment => ({ ...segment })),
+      documentMeta: subtitleState.documentId
+        ? {
+            id: subtitleState.documentId,
+            title: subtitleState.documentTitle ?? null,
+            subtitleKind: subtitleState.subtitleKind ?? null,
+            targetLanguage: subtitleState.targetLanguage ?? null,
+            sourceVideoPath: subtitleState.sourceVideoPath ?? null,
+            sourceVideoAssetIdentity:
+              subtitleState.sourceVideoAssetIdentity ?? null,
+            sourceUrl: subtitleState.sourceUrl ?? null,
+            importFilePath: subtitleState.originalPath ?? null,
+            lastExportPath: subtitleState.exportPath ?? null,
+            activeLinkedFilePath: subtitleState.activeFilePath ?? null,
+            activeLinkedFileMode: subtitleState.activeFileMode ?? null,
+            activeLinkedFileRole: subtitleState.activeFileRole ?? null,
+            transcriptionEngine: subtitleState.transcriptionEngine ?? null,
+            createdAt: new Date(0).toISOString(),
+            updatedAt: new Date(0).toISOString(),
+          }
+        : null,
       originalPath: subtitleState.originalPath ?? null,
+      activeFilePath: subtitleState.activeFilePath ?? null,
+      activeFileMode: subtitleState.activeFileMode ?? null,
+      activeFileRole: subtitleState.activeFileRole ?? null,
       origin: subtitleState.origin ?? null,
       sourceVideoPath: subtitleState.sourceVideoPath ?? null,
       sourceVideoAssetIdentity: subtitleState.sourceVideoAssetIdentity ?? null,
@@ -734,6 +774,7 @@ export default function GenerateSubtitles() {
       libraryMeta: {
         entryId: subtitleState.libraryEntryId ?? null,
         kind: subtitleState.libraryKind ?? null,
+        targetLanguage: subtitleState.targetLanguage ?? null,
       },
     };
   }
@@ -753,8 +794,14 @@ export default function GenerateSubtitles() {
         snapshot.sourceVideoPath,
         snapshot.transcriptionEngine,
         snapshot.libraryMeta,
-        snapshot.sourceVideoAssetIdentity
+        snapshot.sourceVideoAssetIdentity,
+        snapshot.documentMeta
       );
+    useSubStore.getState().setActiveFileTarget({
+      filePath: snapshot.activeFilePath ?? null,
+      mode: snapshot.activeFileMode ?? null,
+      role: snapshot.activeFileRole ?? null,
+    });
   }
 
   function hasUsableMountedTranscriptSegments() {

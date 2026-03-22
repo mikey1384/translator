@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Výstupní jazyk",
     "showOriginalText": "Zobrazit původní text",
+    "displayModeLabel": "Zobrazení titulků",
     "translate": "Přeložit",
     "continueTranscribing": "Pokračovat v přepisu",
     "generate": "Generovat titulky",
@@ -439,8 +440,8 @@
     "listTitle": "Titulky ({{count}})",
     "workspace": {
       "editorStage": "Pracovní plocha editoru",
-      "dualMode": "Režim dvojitého textu",
-      "translationMode": "Režim pouze překladu",
+      "dualMode": "Dvojitý text",
+      "translationMode": "Překlad",
       "videoMounted": "Náhledové video připojeno",
       "videoNeeded": "Připojte zdrojové video pro náhled a sloučení",
       "readyTitle": "Editor titulků je připraven",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Část diagnostického kontextu se nepodařilo načíst. Zpráva bude stále obsahovat podrobnosti z této aplikace."
   }
 }
-
-

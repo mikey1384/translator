@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Çıktı Dili",
     "showOriginalText": "Orijinal metni göster",
+    "displayModeLabel": "Altyazı görünümü",
     "translate": "Çevir",
     "continueTranscribing": "Transkribe etmeye devam et",
     "generate": "Altyazı Oluştur",
@@ -439,8 +440,8 @@
     "listTitle": "Altyazılar ({{count}})",
     "workspace": {
       "editorStage": "Düzenleyici çalışma alanı",
-      "dualMode": "Çift metin modu",
-      "translationMode": "Yalnızca çeviri modu",
+      "dualMode": "Çift metin",
+      "translationMode": "Çeviri",
       "videoMounted": "Önizleme videosu bağlandı",
       "videoNeeded": "Önizleme ve birleştirme için bir kaynak video bağlayın",
       "readyTitle": "Altyazı düzenleyici hazır",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Tanılama bağlamının bir kısmı yüklenemedi. Rapor yine de bu uygulamaya ait ayrıntıları içerecek."
   }
 }
-
-

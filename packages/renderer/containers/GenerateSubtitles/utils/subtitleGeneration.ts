@@ -1,6 +1,8 @@
 import { useTaskStore } from '../../../state';
+import * as FileIPC from '../../../ipc/file';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
 import { parseSrt } from '../../../../shared/helpers';
+import type { SrtSegment } from '@shared-types/app';
 import { i18n } from '../../../i18n';
 import { buildSrt } from '../../../../shared/helpers';
 import {
@@ -11,6 +13,7 @@ import {
 } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
+import { didSaveSubtitleFile } from '../../../utils/saveSubtitles';
 import { useUrlStore } from '../../../state/url-store';
 import * as SystemIPC from '../../../ipc/system';
 import { getByoErrorMessage, isByoError } from '../../../utils/byoErrors';
@@ -155,10 +158,32 @@ export async function executeSrtTranslation({
       const finalSegments = parseSrt(res.translatedSubtitles);
       const { sourceVideoPath, sourceUrl, titleHint } =
         resolveTranslationSourceAssociation();
+      let documentMeta = null;
+      try {
+        const documentSaveResult = await FileIPC.saveSubtitleDocumentRecord({
+          segments: finalSegments,
+          title: titleHint,
+          sourceVideoPath: sourceVideoPath ?? null,
+          sourceVideoAssetIdentity:
+            useVideoStore.getState().sourceAssetIdentity ?? null,
+          sourceUrl,
+          subtitleKind: 'translation',
+          targetLanguage,
+        });
+        if (documentSaveResult.success && documentSaveResult.document) {
+          documentMeta = documentSaveResult.document;
+        }
+      } catch (documentError) {
+        console.error(
+          '[subtitleGeneration] Failed to create translation subtitle document:',
+          documentError
+        );
+      }
       let libraryMeta = null;
       try {
         libraryMeta = await storeGeneratedSubtitleArtifact({
           content: res.translatedSubtitles,
+          segments: finalSegments,
           kind: 'translation',
           targetLanguage,
           sourceVideoPath: sourceVideoPath ?? null,
@@ -181,7 +206,9 @@ export async function executeSrtTranslation({
           'fresh',
           sourceVideoPath ?? null,
           null,
-          libraryMeta
+          libraryMeta,
+          undefined,
+          documentMeta
         );
       useUrlStore.getState().clearError();
       useTaskStore.getState().setTranslation({
@@ -479,15 +506,39 @@ export async function executeSubtitleGeneration({
     const result = await SubtitlesIPC.generate(opts);
 
     if (result.subtitles) {
-      // Success: Parse and load subtitles
-      const finalSegments = parseSrt(result.subtitles);
+      const finalSegments: SrtSegment[] =
+        Array.isArray(result.segments) && result.segments.length > 0
+          ? result.segments
+          : parseSrt(result.subtitles);
       // Mark as freshly generated for the current video
       const { originalPath, path, sourceUrl, file } = useVideoStore.getState();
       const vpath = originalPath ?? path ?? videoFilePath ?? null;
+      let documentMeta = null;
+      try {
+        const documentSaveResult = await FileIPC.saveSubtitleDocumentRecord({
+          segments: finalSegments,
+          title: file?.name ?? null,
+          sourceVideoPath: vpath,
+          sourceVideoAssetIdentity:
+            useVideoStore.getState().sourceAssetIdentity ?? null,
+          sourceUrl,
+          subtitleKind: 'transcription',
+          transcriptionEngine: result.transcriptionEngine ?? null,
+        });
+        if (documentSaveResult.success && documentSaveResult.document) {
+          documentMeta = documentSaveResult.document;
+        }
+      } catch (documentError) {
+        console.error(
+          '[subtitleGeneration] Failed to create subtitle document:',
+          documentError
+        );
+      }
       let libraryMeta = null;
       try {
         libraryMeta = await storeGeneratedSubtitleArtifact({
           content: result.subtitles,
+          segments: finalSegments,
           kind: 'transcription',
           sourceVideoPath: vpath,
           sourceUrl,
@@ -528,7 +579,9 @@ export async function executeSubtitleGeneration({
           'fresh',
           vpath,
           result.transcriptionEngine ?? null,
-          libraryMeta
+          libraryMeta,
+          undefined,
+          documentMeta
         );
 
       setTranscription({
@@ -708,8 +761,8 @@ export async function startTranscriptionFlow({
     const choice = await openUnsavedSrtConfirm();
     if (choice === 'cancel') return { success: false };
     if (choice === 'save') {
-      const saved = await saveCurrentSubtitles();
-      if (!saved) return { success: false };
+      const saveResult = await saveCurrentSubtitles();
+      if (!didSaveSubtitleFile(saveResult)) return { success: false };
     }
     clearMountedSrtShared();
     try {

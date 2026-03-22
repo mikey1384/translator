@@ -113,6 +113,153 @@ declare module '@shared-types/app' {
     error?: string;
   }
 
+  export type SubtitleDocumentLinkedFileRole = 'import' | 'export';
+
+  export interface SubtitleDocumentMeta {
+    id: string;
+    title: string | null;
+    sourceVideoPath?: string | null;
+    sourceVideoAssetIdentity?: string | null;
+    sourceUrl?: string | null;
+    subtitleKind?: StoredSubtitleKind | null;
+    targetLanguage?: string | null;
+    importFilePath?: string | null;
+    lastExportPath?: string | null;
+    activeLinkedFilePath?: string | null;
+    activeLinkedFileMode?: SubtitleDisplayMode | null;
+    activeLinkedFileRole?: SubtitleDocumentLinkedFileRole | null;
+    createdAt: string;
+    updatedAt: string;
+    transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
+  }
+
+  export interface SaveSubtitleDocumentRecordOptions {
+    documentId?: string | null;
+    title?: string | null;
+    segments: SrtSegment[];
+    sourceVideoPath?: string | null;
+    sourceVideoAssetIdentity?: string | null;
+    sourceUrl?: string | null;
+    subtitleKind?: StoredSubtitleKind | null;
+    targetLanguage?: string | null;
+    importFilePath?: string | null;
+    importSrtContent?: string | null;
+    importMode?: SubtitleDisplayMode | null;
+    exportFilePath?: string | null;
+    exportSrtContent?: string | null;
+    exportMode?: SubtitleDisplayMode | null;
+    activeLinkedFilePath?: string | null;
+    activeLinkedFileMode?: SubtitleDisplayMode | null;
+    activeLinkedFileRole?: SubtitleDocumentLinkedFileRole | null;
+    transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
+  }
+
+  export interface SaveSubtitleDocumentRecordResult {
+    success: boolean;
+    document?: SubtitleDocumentMeta;
+    error?: string;
+  }
+
+  export interface ReadSubtitleDocumentOptions {
+    documentId: string;
+  }
+
+  export interface ReadSubtitleDocumentResult {
+    success: boolean;
+    document?: SubtitleDocumentMeta;
+    segments?: SrtSegment[];
+    error?: string;
+  }
+
+  export interface FindSubtitleDocumentForFileOptions {
+    filePath: string;
+    srtContent: string;
+  }
+
+  export interface FindSubtitleDocumentForFileResult {
+    success: boolean;
+    found?: boolean;
+    document?: SubtitleDocumentMeta;
+    segments?: SrtSegment[];
+    fileMode?: SubtitleDisplayMode | null;
+    fileRole?: SubtitleDocumentLinkedFileRole | null;
+    error?: string;
+  }
+
+  export interface FindSubtitleDocumentForSourceOptions {
+    sourceVideoPath?: string | null;
+    sourceVideoAssetIdentity?: string | null;
+    sourceUrl?: string | null;
+    subtitleKind?: StoredSubtitleKind | null;
+    targetLanguage?: string | null;
+  }
+
+  export interface FindSubtitleDocumentForSourceResult {
+    success: boolean;
+    found?: boolean;
+    document?: SubtitleDocumentMeta;
+    segments?: SrtSegment[];
+    error?: string;
+  }
+
+  export interface DetachSubtitleDocumentSourceOptions {
+    documentId: string;
+  }
+
+  export interface DetachSubtitleDocumentSourceResult {
+    success: boolean;
+    updated?: boolean;
+    document?: SubtitleDocumentMeta;
+    error?: string;
+  }
+
+  export interface SaveSubtitleDocumentOptions {
+    documentId?: string | null;
+    documentTitle?: string | null;
+    segments: SrtSegment[];
+    srtContent: string;
+    fileMode?: SubtitleDisplayMode | null;
+    defaultPath?: string;
+    filters?: { name: string; extensions: string[] }[];
+    filePath?: string;
+    forceDialog?: boolean;
+    title?: string;
+    sourceVideoPath?: string | null;
+    sourceVideoAssetIdentity?: string | null;
+    sourceUrl?: string | null;
+    subtitleKind?: StoredSubtitleKind | null;
+    targetLanguage?: string | null;
+    importFilePath?: string | null;
+    importSrtContent?: string | null;
+    importMode?: SubtitleDisplayMode | null;
+    activeLinkedFilePath?: string | null;
+    activeLinkedFileMode?: SubtitleDisplayMode | null;
+    activeLinkedFileRole?: SubtitleDocumentLinkedFileRole | null;
+    transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
+  }
+
+  export interface SaveSubtitleDocumentResult {
+    status: 'success' | 'warning' | 'cancelled' | 'error';
+    filePath?: string;
+    warning?: string;
+    error?: string;
+    metadataCacheSaved?: boolean;
+    sidecarSaved?: boolean;
+    document?: SubtitleDocumentMeta;
+  }
+
+  export interface ReadSavedSubtitleMetadataOptions {
+    filePath: string;
+    srtContent: string;
+  }
+
+  export interface ReadSavedSubtitleMetadataResult {
+    success: boolean;
+    found?: boolean;
+    segments?: SrtSegment[];
+    error?: string;
+  }
+
   export interface DeleteFileOptions {
     filePath: string;
   }
@@ -399,6 +546,7 @@ declare module '@shared-types/app' {
     _oldText?: string;
     avg_logprob?: number;
     no_speech_prob?: number;
+    // Word timings are stored relative to the segment start.
     words?: { start: number; end: number; word: string }[];
   }
 
@@ -577,6 +725,7 @@ declare module '@shared-types/app' {
   export interface GenerateSubtitlesResult {
     cancelled?: boolean;
     subtitles?: string;
+    segments?: SrtSegment[];
     error?: string;
     success: boolean;
     transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
@@ -739,6 +888,8 @@ declare module '@shared-types/app' {
   // === Subtitle Editing
   // =========================================
 
+  export type SubtitleDisplayMode = 'original' | 'translation' | 'dual';
+
   export type EditField = 'start' | 'end' | 'original' | 'translation';
   export type EditArgs = {
     index: number;
@@ -750,10 +901,40 @@ declare module '@shared-types/app' {
   // === Subtitle Rendering
   // =========================================
 
+  export type TimedSubtitlePartState = 'spoken' | 'active' | 'upcoming';
+
+  export type SubtitleRenderPart =
+    | {
+        kind: 'word';
+        text: string;
+        state: TimedSubtitlePartState;
+      }
+    | {
+        kind: 'whitespace';
+        text: string;
+      };
+
+  export type SubtitleRenderState =
+    | {
+        mode: 'plain';
+        text: string;
+      }
+    | {
+        mode: 'timed';
+        text: string;
+        parts: SubtitleRenderPart[];
+      };
+
+  export interface SubtitleRenderEvent {
+    timeMs: number;
+    state: SubtitleRenderState;
+  }
+
   export interface RenderSubtitlesOptions {
     fontSizePx: number;
     operationId: string;
     srtContent: string;
+    subtitleSegments?: SrtSegment[];
     outputDir: string;
     videoDuration: number;
     videoWidth: number;
@@ -762,7 +943,7 @@ declare module '@shared-types/app' {
     originalVideoPath?: string;
     overlayMode?: 'overlayOnVideo' | 'blackVideo';
     stylePreset?: SubtitleStylePresetKey;
-    outputMode?: 'original' | 'translation' | 'dual';
+    outputMode?: SubtitleDisplayMode;
     displayWidth?: number;
     displayHeight?: number;
     videoRotationDeg?: number;
@@ -837,7 +1018,28 @@ declare module '@shared-types/app' {
       savePhase: boolean;
     }>;
     saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
+    saveSubtitleDocumentRecord: (
+      options: SaveSubtitleDocumentRecordOptions
+    ) => Promise<SaveSubtitleDocumentRecordResult>;
+    readSubtitleDocument: (
+      options: ReadSubtitleDocumentOptions
+    ) => Promise<ReadSubtitleDocumentResult>;
+    findSubtitleDocumentForFile: (
+      options: FindSubtitleDocumentForFileOptions
+    ) => Promise<FindSubtitleDocumentForFileResult>;
+    findSubtitleDocumentForSource: (
+      options: FindSubtitleDocumentForSourceOptions
+    ) => Promise<FindSubtitleDocumentForSourceResult>;
+    detachSubtitleDocumentSource: (
+      options: DetachSubtitleDocumentSourceOptions
+    ) => Promise<DetachSubtitleDocumentSourceResult>;
+    saveSubtitleDocument: (
+      options: SaveSubtitleDocumentOptions
+    ) => Promise<SaveSubtitleDocumentResult>;
     openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;
+    readSavedSubtitleMetadata: (
+      options: ReadSavedSubtitleMetadataOptions
+    ) => Promise<ReadSavedSubtitleMetadataResult>;
     moveFile: (
       sourcePath: string,
       destinationPath: string
@@ -847,9 +1049,11 @@ declare module '@shared-types/app' {
       sourcePath: string,
       destinationPath: string
     ) => Promise<{ success?: boolean; error?: string }>;
-    readFileContent: (
-      filePath: string
-    ) => Promise<{ success: boolean; data?: ArrayBuffer; error?: string }>;
+    readFileContent: (filePath: string) => Promise<{
+      success: boolean;
+      data?: ArrayBuffer | ArrayBufferView;
+      error?: string;
+    }>;
     getFileSize: (
       filePath: string
     ) => Promise<{ success: boolean; sizeBytes?: number; error?: string }>;
@@ -877,6 +1081,7 @@ declare module '@shared-types/app' {
     }>;
     saveStoredSubtitleArtifact: (options: {
       content: string;
+      segments?: SrtSegment[];
       kind: StoredSubtitleKind;
       targetLanguage?: string | null;
       sourceVideoPath?: string | null;
@@ -895,6 +1100,7 @@ declare module '@shared-types/app' {
       success: boolean;
       entry?: StoredSubtitleEntry | null;
       content?: string;
+      segments?: SrtSegment[];
       error?: string;
     }>;
     syncStoredSubtitleVideoPath: (

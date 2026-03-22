@@ -2,7 +2,25 @@ import path from 'path';
 import fs from 'fs/promises';
 import { Page } from 'puppeteer';
 import log from 'electron-log';
+import type {
+  SubtitleRenderEvent,
+  SubtitleRenderState,
+} from '@shared-types/app';
 import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.js';
+
+function getRenderStateCacheKey(state: SubtitleRenderState): string {
+  if (state.mode === 'plain') {
+    return `plain:${state.text}`;
+  }
+
+  return `timed:${state.parts
+    .map(part =>
+      part.kind === 'whitespace'
+        ? `space:${part.text}`
+        : `word:${part.state}:${part.text}`
+    )
+    .join('|')}`;
+}
 
 export async function generateStatePngs({
   page,
@@ -20,7 +38,7 @@ export async function generateStatePngs({
   signal,
 }: {
   page: Page;
-  events: Array<{ timeMs: number; text: string }>;
+  events: SubtitleRenderEvent[];
   tempDirPath: string;
   videoWidth: number;
   videoHeight: number;
@@ -85,9 +103,10 @@ export async function generateStatePngs({
       // frame rates like 29.97fps where rounding has a systematic bias).
       // The concat demuxer with -vsync vfr handles fractional durations natively.
       const duration = durMs / 1000;
-      const key = (ev.text || '').trim() ? ev.text : '';
+      const key = getRenderStateCacheKey(ev.state);
+      const hasVisibleText = Boolean(ev.state.text.trim());
       const durationToUse =
-        i === 0 && key ? Math.max(duration, 2 / fps) : duration;
+        i === 0 && hasVisibleText ? Math.max(duration, 2 / fps) : duration;
       let file = stateCache.get(key);
       if (!file) {
         file = path.join(
@@ -101,17 +120,25 @@ export async function generateStatePngs({
         const scaledSize = fontSizePx ? Math.round(fontSizePx) : fontSizePx;
 
         await page.evaluate(
-          ({ txt, size, preset, displayWidth: dw, displayHeight: dh }) => {
-            // @ts-expect-error provided by render-host script
-            window.updateSubtitle(txt, {
+          ({ state, size, preset, displayWidth: dw, displayHeight: dh }) => {
+            const options = {
               fontSizePx: size,
               stylePreset: preset,
               videoWidthPx: dw,
               videoHeightPx: dh,
-            });
+            };
+
+            if (state.mode === 'timed') {
+              // @ts-expect-error provided by render-host script
+              window.updateTimedSubtitle(state, options);
+              return;
+            }
+
+            // @ts-expect-error provided by render-host script
+            window.updateSubtitle(state.text, options);
           },
           {
-            txt: key,
+            state: ev.state,
             size: scaledSize,
             preset: stylePreset,
             displayWidth,

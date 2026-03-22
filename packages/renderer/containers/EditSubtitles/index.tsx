@@ -56,12 +56,20 @@ import {
 } from '../../state';
 import { useUrlStore } from '../../state/url-store';
 
-import * as FileIPC from '@ipc/file';
-
-import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
+import {
+  RenderSubtitlesOptions,
+  SrtSegment,
+  SubtitleDisplayMode,
+} from '@shared-types/app';
 import { getNativePlayerInstance } from '../../native-player';
+import * as FileIPC from '../../ipc/file';
 import { sameArray } from '../../utils/array';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
+import {
+  didSaveSubtitleFile,
+  saveCurrentSubtitles,
+  saveSubtitlesAs,
+} from '../../utils/saveSubtitles';
 import { logButton, logTask, logError } from '../../utils/logger.js';
 import { getByoErrorMessage, isByoError } from '../../utils/byoErrors';
 import {
@@ -90,7 +98,7 @@ export default function EditSubtitles({
   editorRef,
 }: EditSubtitlesProps) {
   const searchText = useUIStore(s => s.searchText);
-  const showOriginalText = useUIStore(s => s.showOriginalText);
+  const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
   const navTick = useUIStore(s => s.navTick);
   const videoPath = useVideoStore(s => s.path);
   const isAudioOnly = useVideoStore(s => s.isAudioOnly);
@@ -111,11 +119,14 @@ export default function EditSubtitles({
   const origin = useSubStore(s => s.origin);
   const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
   const originalPath = useSubStore(s => s.originalPath);
-  const canSaveDirectly = !!originalPath;
+  const activeFilePath = useSubStore(s => s.activeFilePath);
+  const exportPath = useSubStore(s => s.exportPath);
   const videoDuration = meta?.duration ?? null;
-  const subtitleFileName = originalPath
-    ? originalPath.split(/[\\/]/).pop() || originalPath
-    : null;
+  const subtitleFileName =
+    activeFilePath || exportPath || originalPath
+      ? (activeFilePath || exportPath || originalPath)!.split(/[\\/]/).pop() ||
+        (activeFilePath || exportPath || originalPath)!
+      : null;
   const mountedVideoName = videoPath
     ? videoPath.split(/[\\/]/).pop() || videoPath
     : null;
@@ -166,14 +177,13 @@ export default function EditSubtitles({
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         if (isExportLocked) return;
-        if (canSaveDirectly) void handleSaveSrt();
-        else void handleSaveEditedSrtAs();
+        void handleSaveSrt();
       }
     };
     window.addEventListener('keydown', onKeyDown as any);
     return () => window.removeEventListener('keydown', onKeyDown as any);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canSaveDirectly, isExportLocked, originalPath, subtitles]);
+  }, [isExportLocked, subtitles]);
 
   useEffect(() => {
     if (editorRef?.current) {
@@ -187,7 +197,7 @@ export default function EditSubtitles({
     if (!sameArray(useUIStore.getState().matchedIndices, local)) {
       useUIStore.getState().setMatchedIndices(local);
     }
-  }, [searchText, showOriginalText, subtitles]);
+  }, [searchText, subtitleDisplayMode, subtitles]);
 
   useEffect(() => {
     const { matchedIndices, activeMatchIndex } = useUIStore.getState();
@@ -223,7 +233,7 @@ export default function EditSubtitles({
     prevSubsRef.current = subtitles;
   }, [subtitles]);
 
-  const getSrtMode = () => (showOriginalText ? 'dual' : 'translation');
+  const getSrtMode = (): SubtitleDisplayMode => subtitleDisplayMode;
 
   // Removed post-translation display-mode popup; user controls this via the bottom toggle.
 
@@ -257,9 +267,12 @@ export default function EditSubtitles({
     hasSubtitles &&
     typeof videoDuration === 'number' &&
     videoDuration - (subtitles[subtitles.length - 1]?.end ?? 0) >= 60;
-  const workspaceModeLabel = showOriginalText
-    ? t('editSubtitles.workspace.dualMode', 'Dual text mode')
-    : t('editSubtitles.workspace.translationMode', 'Translation-only mode');
+  const workspaceModeLabel =
+    subtitleDisplayMode === 'original'
+      ? t('editSubtitles.workspace.originalLabel', 'Original')
+      : subtitleDisplayMode === 'dual'
+        ? t('editSubtitles.workspace.dualMode', 'Dual text mode')
+        : t('editSubtitles.workspace.translationMode', 'Translation-only mode');
   const previewStatusLabel = videoPath
     ? t('editSubtitles.workspace.videoMounted', 'Preview video mounted')
     : t(
@@ -418,7 +431,7 @@ export default function EditSubtitles({
               onSave={handleSaveSrt}
               onSaveAs={handleSaveEditedSrtAs}
               onMerge={handleMerge}
-              canSaveDirectly={canSaveDirectly}
+              canSaveDirectly={subtitles.length > 0}
               subtitlesExist={subtitles.length > 0}
               videoFileExists={!!videoPath}
               isExportLocked={isExportLocked}
@@ -433,13 +446,26 @@ export default function EditSubtitles({
 
   async function handleSaveSrt() {
     if (isExportLocked) return;
-    if (!originalPath) return handleSaveEditedSrtAs();
     try {
       logButton('save_srt');
     } catch {
       // Do nothing
     }
-    await writeSrt(originalPath);
+    const result = await saveCurrentSubtitles();
+    if (result.status === 'error') {
+      setSaveError(result.error || t('common.error.unknown'));
+      return;
+    }
+    if (didSaveSubtitleFile(result)) {
+      alert(
+        result.filePath
+          ? t('messages.fileSaved', { path: result.filePath })
+          : t(
+              'editSubtitles.header.documentSaved',
+              'Subtitle document saved in Stage5.'
+            )
+      );
+    }
   }
 
   async function handleContinueTranscribing() {
@@ -554,44 +580,15 @@ export default function EditSubtitles({
     } catch {
       // Do nothing
     }
-    const suggestion = originalPath || 'subtitles.srt';
-    const res = await FileIPC.save({
-      title: t('dialogs.saveSrtFileAs'),
-      defaultPath: suggestion,
-      filters: [
-        { name: t('common.fileFilters.srtFiles'), extensions: ['srt'] },
-      ],
-      // Preserve exactly what the user sees (do not auto-wrap lines)
-      content: buildSrt({
-        segments: subtitles,
-        mode: getSrtMode(),
-        noWrap: true,
-      }),
-    });
-    if (res.error && !res.error.includes('canceled')) {
-      setSaveError(res.error);
-    } else if (res.filePath) {
-      useSubStore.getState().load(subtitles, res.filePath);
-      alert(t('messages.fileSaved', { path: res.filePath }));
+    const result = await saveSubtitlesAs();
+    if (result.status === 'error') {
+      setSaveError(result.error || t('common.error.unknown'));
+      return;
     }
-  }
-
-  async function writeSrt(path: string) {
-    if (isExportLocked) return;
-    const result = await FileIPC.save({
-      filePath: path,
-      // Preserve exactly what the user sees (do not auto-wrap lines)
-      content: buildSrt({
-        segments: subtitles,
-        mode: getSrtMode(),
-        noWrap: true,
-      }),
-    });
-    if (result.error) {
-      setSaveError(result.error);
-    } else {
-      alert(t('messages.fileSaved', { path: path }));
+    if (!didSaveSubtitleFile(result) || !result.filePath) {
+      return;
     }
+    alert(t('messages.fileSaved', { path: result.filePath }));
   }
 
   async function handleMerge() {
@@ -740,6 +737,8 @@ export default function EditSubtitles({
       const opts: RenderSubtitlesOptions = {
         operationId: opId,
         srtContent,
+        subtitleSegments: subtitles,
+        outputMode: subtitleDisplayMode,
         outputDir: '/placeholder/output/dir',
         videoDuration: meta?.duration ?? 0,
         videoWidth: meta?.width ?? 1280,
@@ -821,13 +820,23 @@ export default function EditSubtitles({
       return;
     }
     if (res.segments) {
-      const associatedVideoPath =
-        useVideoStore.getState().originalPath ??
-        useVideoStore.getState().path ??
-        null;
       useSubStore
         .getState()
-        .load(res.segments, res.filePath ?? null, 'disk', associatedVideoPath);
+        .load(
+          res.segments,
+          res.filePath ?? null,
+          'disk',
+          res.document?.sourceVideoPath ?? null,
+          res.document?.transcriptionEngine,
+          null,
+          res.document?.sourceVideoAssetIdentity,
+          res.document ?? null
+        );
+      useSubStore.getState().setActiveFileTarget({
+        filePath: res.filePath ?? null,
+        mode: res.fileMode ?? null,
+        role: res.fileRole ?? 'import',
+      });
       // Reset the 'Transcription Complete' state when user mounts a different SRT from disk
       try {
         useTaskStore.getState().setTranscription({

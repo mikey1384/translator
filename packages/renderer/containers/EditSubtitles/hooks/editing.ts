@@ -2,6 +2,7 @@ import { useState, useRef, Dispatch, SetStateAction, useEffect } from 'react';
 import { debounce } from 'lodash';
 import { EditField, SrtSegment } from '@shared-types/app';
 import { srtTimeToSeconds } from '../../../../shared/helpers/index.js';
+import { applySegmentPatchWithWordTimings } from '../../../../shared/helpers/word-timing.js';
 import { useRestoreFocus, FocusedInput } from './restoreFocus.js';
 import { DEBOUNCE_DELAY_MS } from '../../../../shared/constants/index.js';
 
@@ -86,8 +87,13 @@ export function useSubtitleEditing({
       current.map((sub, i) => {
         if (i !== index) return sub;
         return field === 'start'
-          ? { ...sub, start: numValue, end: newEnd }
-          : { ...sub, end: Math.max(numValue, sub.start) }; // Ensure end >= start
+          ? applySegmentPatchWithWordTimings(sub, {
+              start: numValue,
+              end: newEnd,
+            })
+          : applySegmentPatchWithWordTimings(sub, {
+              end: Math.max(numValue, sub.start),
+            }); // Ensure end >= start
       })
     );
 
@@ -158,7 +164,10 @@ export function useSubtitleEditing({
           onSetSubtitleSegments(curr =>
             curr.map((sub, i) => {
               if (i !== index) return sub;
-              return { ...sub, start: numValue, end: newEnd };
+              return applySegmentPatchWithWordTimings(sub, {
+                start: numValue,
+                end: newEnd,
+              });
             })
           );
         } else {
@@ -166,7 +175,9 @@ export function useSubtitleEditing({
           const finalEnd = Math.max(numValue, currentSub.start);
           onSetSubtitleSegments(curr =>
             curr.map((sub, i) =>
-              i === index ? { ...sub, end: finalEnd } : sub
+              i === index
+                ? applySegmentPatchWithWordTimings(sub, { end: finalEnd })
+                : sub
             )
           );
         }

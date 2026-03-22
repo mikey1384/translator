@@ -29,6 +29,7 @@ import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
 import { getFocusedOrMainWindow } from '../../../utils/window.js';
+import { rebaseWordTimingsToSegment } from '../word-timing-normalization.js';
 
 import { throwIfAborted, formatElevenLabsTimeRemaining } from '../utils.js';
 import {
@@ -343,7 +344,7 @@ export async function transcribePass({
         start: seg.start,
         end: seg.end,
         original: seg.text?.trim() || '',
-        words: seg.words,
+        words: rebaseWordTimingsToSegment(seg.words, seg.start, seg.end),
       }));
 
       const cleaned = srtSegments

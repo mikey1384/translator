@@ -1,11 +1,21 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { SrtSegment, StoredSubtitleKind } from '@shared-types/app';
+import {
+  SrtSegment,
+  StoredSubtitleKind,
+  SubtitleDisplayMode,
+  SubtitleDocumentMeta,
+  SubtitleDocumentLinkedFileRole,
+} from '@shared-types/app';
 import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
 import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
 import { secondsToSrtTime } from '../../shared/helpers';
+import {
+  applySegmentPatchWithWordTimings,
+  sanitizeRelativeWordTimings,
+} from '../../shared/helpers/word-timing.js';
 import {
   groupWhisperReviewRanges,
   shouldUseWhisperReviewHints,
@@ -20,11 +30,20 @@ interface State {
   playingId: string | null;
   _abortPlayListener?: () => void;
   sourceId: number;
+  documentId: string | null;
+  documentTitle: string | null;
   originalPath: string | null;
+  activeFilePath: string | null;
+  activeFileMode: SubtitleDisplayMode | null;
+  activeFileRole: SubtitleDocumentLinkedFileRole | null;
+  exportPath: string | null;
   origin: 'fresh' | 'disk' | null;
   // When origin is 'fresh', record the video file path this set of subtitles was generated for
   sourceVideoPath: string | null;
   sourceVideoAssetIdentity: string | null;
+  sourceUrl: string | null;
+  subtitleKind: StoredSubtitleKind | null;
+  targetLanguage: string | null;
   transcriptionEngine: 'elevenlabs' | 'whisper' | null;
   libraryEntryId: string | null;
   libraryKind: StoredSubtitleKind | null;
@@ -53,8 +72,21 @@ interface Actions {
     libraryMeta?: {
       entryId?: string | null;
       kind?: StoredSubtitleKind | null;
+      targetLanguage?: string | null;
     } | null,
-    videoAssetIdentityRef?: string | null
+    videoAssetIdentityRef?: string | null,
+    documentMeta?: SubtitleDocumentMeta | null
+  ) => void;
+  setDocumentMeta: (documentMeta?: SubtitleDocumentMeta | null) => void;
+  setActiveFileTarget: (args?: {
+    filePath?: string | null;
+    mode?: SubtitleDisplayMode | null;
+    role?: SubtitleDocumentLinkedFileRole | null;
+  }) => void;
+  setExportPath: (
+    exportPath?: string | null,
+    mode?: SubtitleDisplayMode | null,
+    role?: SubtitleDocumentLinkedFileRole | null
   ) => void;
   // Clear Whisper review state when it is no longer valid for the current source
   clearConfidence: () => void;
@@ -104,10 +136,19 @@ const initialState: State = {
   playingId: null,
   _abortPlayListener: undefined,
   sourceId: 0,
+  documentId: null,
+  documentTitle: null,
   originalPath: null,
+  activeFilePath: null,
+  activeFileMode: null,
+  activeFileRole: null,
+  exportPath: null,
   origin: null,
   sourceVideoPath: null,
   sourceVideoAssetIdentity: null,
+  sourceUrl: null,
+  subtitleKind: null,
+  targetLanguage: null,
   transcriptionEngine: null,
   libraryEntryId: null,
   libraryKind: null,
@@ -154,7 +195,8 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         videoPathRef = null,
         transcriptionEngine,
         libraryMeta = null,
-        videoAssetIdentityRef
+        videoAssetIdentityRef,
+        documentMeta = null
       ) => {
         set(s => {
           const isDiskBackedLoad =
@@ -189,14 +231,82 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
               : preserveExistingLibraryMeta
                 ? s.libraryKind
                 : null;
+          const preserveExistingVariantMeta =
+            !isDiskBackedLoad &&
+            libraryMeta == null &&
+            documentMeta == null &&
+            isEquivalentDocument;
+          const nextSubtitleKind =
+            documentMeta && 'subtitleKind' in documentMeta
+              ? (documentMeta.subtitleKind ?? null)
+              : libraryMeta && 'kind' in libraryMeta
+                ? (libraryMeta.kind ?? null)
+                : preserveExistingVariantMeta
+                  ? s.subtitleKind
+                  : null;
+          const nextTargetLanguage =
+            documentMeta && 'targetLanguage' in documentMeta
+              ? (documentMeta.targetLanguage ?? null)
+              : libraryMeta && 'targetLanguage' in libraryMeta
+                ? (libraryMeta.targetLanguage ?? null)
+                : preserveExistingVariantMeta
+                  ? s.targetLanguage
+                  : null;
+          const preserveExistingDocumentMeta =
+            documentMeta == null && isEquivalentDocument;
+          const nextDocumentId =
+            documentMeta && 'id' in documentMeta
+              ? documentMeta.id
+              : preserveExistingDocumentMeta
+                ? s.documentId
+                : null;
+          const nextDocumentTitle =
+            documentMeta && 'title' in documentMeta
+              ? (documentMeta.title ?? null)
+              : preserveExistingDocumentMeta
+                ? s.documentTitle
+                : null;
+          const nextOriginalPath =
+            documentMeta?.importFilePath !== undefined
+              ? (documentMeta.importFilePath ?? null)
+              : (srcPath ?? (isEquivalentDocument ? s.originalPath : null));
+          const nextActiveFilePath =
+            srcPath ??
+            documentMeta?.activeLinkedFilePath ??
+            (isEquivalentDocument ? s.activeFilePath : null) ??
+            null;
+          const preserveExistingActiveFileMeta =
+            !isDiskBackedLoad && isEquivalentDocument;
+          const nextActiveFileMode =
+            nextActiveFilePath &&
+            documentMeta?.activeLinkedFilePath === nextActiveFilePath
+              ? (documentMeta.activeLinkedFileMode ?? null)
+              : preserveExistingActiveFileMeta
+                ? s.activeFileMode
+                : null;
+          const nextActiveFileRole =
+            nextActiveFilePath &&
+            documentMeta?.activeLinkedFilePath === nextActiveFilePath
+              ? (documentMeta.activeLinkedFileRole ?? null)
+              : preserveExistingActiveFileMeta
+                ? s.activeFileRole
+                : null;
+          let nextExportPath =
+            documentMeta?.lastExportPath ??
+            (isEquivalentDocument ? s.exportPath : null);
+          if (!documentMeta && isDiskBackedLoad && srcPath) {
+            nextExportPath = srcPath;
+          }
           const nextSourceVideoPath =
             typeof videoPathRef === 'string'
               ? videoPathRef
-              : isDiskBackedLoad && isEquivalentDocument
-                ? (s.sourceVideoPath ?? null)
-                : isDiskBackedLoad
-                  ? null
-                  : (s.sourceVideoPath ?? null);
+              : documentMeta?.sourceVideoPath !== undefined
+                ? (documentMeta.sourceVideoPath ?? null)
+                : isDiskBackedLoad && isEquivalentDocument
+                  ? (s.sourceVideoPath ?? null)
+                  : isDiskBackedLoad
+                    ? null
+                    : (s.sourceVideoPath ?? null);
           const shouldPreserveExistingVideoAssetIdentity =
             typeof videoPathRef === 'string'
               ? s.sourceVideoPath === videoPathRef
@@ -204,8 +314,16 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           const nextSourceVideoAssetIdentity =
             videoAssetIdentityRef !== undefined
               ? (videoAssetIdentityRef ?? null)
-              : shouldPreserveExistingVideoAssetIdentity
-                ? (s.sourceVideoAssetIdentity ?? null)
+              : documentMeta?.sourceVideoAssetIdentity !== undefined
+                ? (documentMeta.sourceVideoAssetIdentity ?? null)
+                : shouldPreserveExistingVideoAssetIdentity
+                  ? (s.sourceVideoAssetIdentity ?? null)
+                  : null;
+          const nextSourceUrl =
+            documentMeta?.sourceUrl !== undefined
+              ? (documentMeta.sourceUrl ?? null)
+              : !isDiskBackedLoad || isEquivalentDocument
+                ? (s.sourceUrl ?? null)
                 : null;
 
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
@@ -214,13 +332,22 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           }, {});
           s.order = segs.map(cue => cue.id);
           s.sourceId += 1;
-          s.originalPath = srcPath;
+          s.documentId = nextDocumentId;
+          s.documentTitle = nextDocumentTitle;
+          s.originalPath = nextOriginalPath;
+          s.activeFilePath = nextActiveFilePath;
+          s.activeFileMode = nextActiveFileMode;
+          s.activeFileRole = nextActiveFileRole;
+          s.exportPath = nextExportPath;
           // Preserve previous origin if not explicitly provided and no srcPath indicates disk
           s.origin = loadOrigin ?? (srcPath ? 'disk' : (s.origin ?? null));
           // Disk-backed subtitle loads should not inherit a stale video
           // association unless the caller explicitly provides one.
           s.sourceVideoPath = nextSourceVideoPath;
           s.sourceVideoAssetIdentity = nextSourceVideoAssetIdentity;
+          s.sourceUrl = nextSourceUrl;
+          s.subtitleKind = nextSubtitleKind;
+          s.targetLanguage = nextTargetLanguage;
           // Replacing the subtitle set should clear engine-specific UI state
           // unless the caller explicitly carries the engine forward.
           s.transcriptionEngine = nextTranscriptionEngine;
@@ -232,15 +359,67 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         });
       },
 
+      setDocumentMeta: documentMeta =>
+        set(s => {
+          s.documentId = documentMeta?.id ?? null;
+          s.documentTitle = documentMeta?.title ?? null;
+          if (documentMeta == null) {
+            s.subtitleKind = null;
+            s.targetLanguage = null;
+          } else {
+            if (documentMeta.subtitleKind !== undefined) {
+              s.subtitleKind = documentMeta.subtitleKind ?? null;
+            }
+            if (documentMeta.targetLanguage !== undefined) {
+              s.targetLanguage = documentMeta.targetLanguage ?? null;
+            }
+          }
+          if (documentMeta?.importFilePath !== undefined) {
+            s.originalPath = documentMeta.importFilePath ?? null;
+          }
+          if (documentMeta?.lastExportPath !== undefined) {
+            s.exportPath = documentMeta.lastExportPath ?? null;
+          }
+          if (documentMeta?.sourceVideoPath !== undefined) {
+            s.sourceVideoPath = documentMeta.sourceVideoPath ?? null;
+          }
+          if (documentMeta?.sourceVideoAssetIdentity !== undefined) {
+            s.sourceVideoAssetIdentity =
+              documentMeta.sourceVideoAssetIdentity ?? null;
+          }
+          if (documentMeta?.sourceUrl !== undefined) {
+            s.sourceUrl = documentMeta.sourceUrl ?? null;
+          }
+        }),
+
+      setActiveFileTarget: args =>
+        set(s => {
+          const normalizedPath = args?.filePath
+            ? String(args.filePath).trim()
+            : null;
+          s.activeFilePath = normalizedPath;
+          s.activeFileMode = normalizedPath ? (args?.mode ?? null) : null;
+          s.activeFileRole = normalizedPath ? (args?.role ?? null) : null;
+        }),
+
+      setExportPath: (exportPath, mode, role = 'export') =>
+        set(s => {
+          const normalized = exportPath ? String(exportPath).trim() : null;
+          s.exportPath = normalized;
+          s.activeFilePath = normalized;
+          s.activeFileMode = normalized ? (mode ?? null) : null;
+          s.activeFileRole = normalized ? role : null;
+        }),
+
       clearConfidence: () =>
         set(s => {
           for (const id of s.order) {
             const cue = s.segments[id];
             if (!cue) continue;
-            // Remove fields used by Whisper review hints coming from transcription
+            // Remove transient Whisper review hints, but keep durable word timing
+            // metadata because save/reopen and timed original renders depend on it.
             delete (cue as any).avg_logprob;
             delete (cue as any).no_speech_prob;
-            delete (cue as any).words;
           }
           s.transcriptionEngine = null;
           s.lcRangesCache = [];
@@ -330,7 +509,9 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
       update: (id, patch) =>
         set(state => {
           const cue = state.segments[id];
-          if (cue) Object.assign(cue, patch);
+          if (!cue) return;
+
+          state.segments[id] = applySegmentPatchWithWordTimings(cue, patch);
         }),
 
       insertAfter: (id: string) => {
@@ -388,6 +569,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           const newStart = Math.max(0, cue.start + secs);
           cue.start = newStart;
           cue.end = newStart + dur;
+          cue.words = sanitizeRelativeWordTimings(cue.words, dur);
         }),
 
       shiftAll: offsetSeconds =>
@@ -397,6 +579,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             const newStart = Math.max(0, cue.start + offsetSeconds);
             cue.start = newStart;
             cue.end = newStart + dur;
+            cue.words = sanitizeRelativeWordTimings(cue.words, dur);
           });
         }),
 
@@ -489,7 +672,11 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         const re = new RegExp(escaped, 'gi');
         set(s => {
           Object.values(s.segments).forEach(cue => {
-            cue.original = cue.original.replace(re, replace);
+            const nextOriginal = cue.original.replace(re, replace);
+            if (nextOriginal !== cue.original) {
+              cue.original = nextOriginal;
+              cue.words = undefined;
+            }
             if (cue.translation) {
               cue.translation = cue.translation.replace(re, replace);
             }
@@ -509,6 +696,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           base.start = first.start;
           base.end = first.end;
           base.original = first.original;
+          base.words = undefined;
           // Clear translation when replacing transcription
           base.translation = base.translation ?? '';
 

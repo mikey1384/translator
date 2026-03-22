@@ -5,7 +5,10 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 import { sameArray } from '../utils/array';
-import type { SummaryEffortLevel } from '@shared-types/app';
+import type {
+  SubtitleDisplayMode,
+  SummaryEffortLevel,
+} from '@shared-types/app';
 import type { GenerateSubtitlesWorkspaceTab } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import {
   readGenerateSubtitlesWorkspaceTab,
@@ -22,7 +25,7 @@ interface State {
   targetLanguage: string;
   summaryLanguage: string;
   summaryEffortLevel: SummaryEffortLevel;
-  showOriginalText: boolean;
+  subtitleDisplayMode: SubtitleDisplayMode;
   // Quality toggles
   qualityTranscription: boolean; // true = sequential/contextual
   qualityTranslation: boolean; // true = include review phase
@@ -63,7 +66,7 @@ interface Actions {
   setTargetLanguage(lang: string): void;
   setSummaryLanguage(lang: string): void;
   setSummaryEffortLevel(level: SummaryEffortLevel): void;
-  setShowOriginalText(show: boolean): void;
+  setSubtitleDisplayMode(mode: SubtitleDisplayMode): void;
   setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
   setDubVoice(voice: string): void;
@@ -89,7 +92,8 @@ interface Actions {
 const TARGET_LANG_KEY = 'savedTargetLanguage';
 const SUMMARY_LANG_KEY = 'savedSummaryLanguage';
 const SUMMARY_EFFORT_KEY = 'savedSummaryEffortLevel';
-const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
+const SUBTITLE_DISPLAY_MODE_KEY = 'savedSubtitleDisplayMode';
+const LEGACY_SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
 const DUB_VOICE_KEY = 'savedDubVoice';
@@ -106,6 +110,17 @@ function parseStoredBool(key: string, fallback: boolean): boolean {
   } catch {
     return fallback;
   }
+}
+
+function parseStoredSubtitleDisplayMode(): SubtitleDisplayMode {
+  const raw = localStorage.getItem(SUBTITLE_DISPLAY_MODE_KEY);
+  if (raw === 'original' || raw === 'translation' || raw === 'dual') {
+    return raw;
+  }
+
+  return parseStoredBool(LEGACY_SHOW_ORIGINAL_KEY, true)
+    ? 'dual'
+    : 'translation';
 }
 
 // ElevenLabs voices (primary provider)
@@ -148,7 +163,7 @@ const initial: State = {
   summaryEffortLevel:
     (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ??
     'standard',
-  showOriginalText: parseStoredBool(SHOW_ORIGINAL_KEY, true),
+  subtitleDisplayMode: parseStoredSubtitleDisplayMode(),
   qualityTranscription: parseStoredBool(QUALITY_TRANSCRIPTION_KEY, true),
   qualityTranslation: parseStoredBool(QUALITY_TRANSLATION_KEY, false),
   dubVoice: (() => {
@@ -286,9 +301,10 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           set({ summaryEffortLevel: level });
         },
 
-        setShowOriginalText(show) {
-          localStorage.setItem(SHOW_ORIGINAL_KEY, JSON.stringify(show));
-          set({ showOriginalText: show });
+        setSubtitleDisplayMode(mode) {
+          localStorage.setItem(SUBTITLE_DISPLAY_MODE_KEY, mode);
+          localStorage.removeItem(LEGACY_SHOW_ORIGINAL_KEY);
+          set({ subtitleDisplayMode: mode });
         },
 
         setQualityTranscription(v) {
@@ -392,11 +408,11 @@ useUIStore.subscribe(s => {
 export const useSubtitlePrefs = () => {
   const baseFontSize = useUIStore(s => s.baseFontSize);
   const subtitleStyle = useUIStore(s => s.subtitleStyle);
-  const showOriginal = useUIStore(s => s.showOriginalText);
+  const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
 
   return {
     baseFontSize,
     subtitleStyle,
-    showOriginal,
+    subtitleDisplayMode,
   };
 };

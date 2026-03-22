@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Ausgabesprache",
     "showOriginalText": "Originaltext anzeigen",
+    "displayModeLabel": "Untertitelanzeige",
     "translate": "Übersetzen",
     "continueTranscribing": "Transkription fortsetzen",
     "generate": "Untertitel generieren",
@@ -439,8 +440,8 @@
     "listTitle": "Untertitel ({{count}})",
     "workspace": {
       "editorStage": "Arbeitsbereich des Editors",
-      "dualMode": "Doppeltextmodus",
-      "translationMode": "Nur-Übersetzungsmodus",
+      "dualMode": "Doppeltext",
+      "translationMode": "Übersetzung",
       "videoMounted": "Vorschauvideo eingebunden",
       "videoNeeded": "Binde ein Quellvideo für Vorschau und Zusammenführung ein",
       "readyTitle": "Untertitel-Editor bereit",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Ein Teil des Diagnosekontexts konnte nicht geladen werden. Der Bericht enthält weiterhin Details aus dieser App."
   }
 }
-
-

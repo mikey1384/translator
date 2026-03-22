@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "שפת פלט",
     "showOriginalText": "הצג טקסט מקורי",
+    "displayModeLabel": "תצוגת כתוביות",
     "translate": "תרגם",
     "continueTranscribing": "המשך תמלול",
     "generate": "צור כתוביות",
@@ -439,8 +440,8 @@
     "listTitle": "כתוביות ({{count}})",
     "workspace": {
       "editorStage": "סביבת העורך",
-      "dualMode": "מצב טקסט כפול",
-      "translationMode": "מצב תרגום בלבד",
+      "dualMode": "טקסט כפול",
+      "translationMode": "תרגום",
       "videoMounted": "וידאו התצוגה המקדימה נטען",
       "videoNeeded": "טען וידאו מקור לתצוגה מקדימה ולמיזוג",
       "readyTitle": "עורך הכתוביות מוכן",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "לא ניתן היה לטעון חלק מהקשר האבחון. הדוח עדיין יכלול פרטים מהיישום הזה."
   }
 }
-
-

@@ -45,6 +45,7 @@ import {
   getCookieStatusForUrl,
 } from './services/url-processor/site-cookies.js';
 import * as fileHandlers from './handlers/file-handlers.js';
+import * as subtitleDocumentHandlers from './handlers/subtitle-document-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
 import { createFFmpegContext } from './services/ffmpeg-runner.js';
 import type { FFmpegContext } from './services/ffmpeg-runner.js';
@@ -264,7 +265,35 @@ try {
   ipcMain.handle('ping', utilityHandlers.handlePing);
   ipcMain.handle('show-message', utilityHandlers.handleShowMessage);
   ipcMain.handle('save-file', fileHandlers.handleSaveFile);
+  ipcMain.handle(
+    'save-subtitle-document-record',
+    subtitleDocumentHandlers.handleSaveSubtitleDocumentRecord
+  );
+  ipcMain.handle(
+    'read-subtitle-document',
+    subtitleDocumentHandlers.handleReadSubtitleDocument
+  );
+  ipcMain.handle(
+    'find-subtitle-document-for-file',
+    subtitleDocumentHandlers.handleFindSubtitleDocumentForFile
+  );
+  ipcMain.handle(
+    'find-subtitle-document-for-source',
+    subtitleDocumentHandlers.handleFindSubtitleDocumentForSource
+  );
+  ipcMain.handle(
+    'detach-subtitle-document-source',
+    subtitleDocumentHandlers.handleDetachSubtitleDocumentSource
+  );
+  ipcMain.handle(
+    'save-subtitle-document',
+    fileHandlers.handleSaveSubtitleDocument
+  );
   ipcMain.handle('open-file', fileHandlers.handleOpenFile);
+  ipcMain.handle(
+    'read-saved-subtitle-metadata',
+    fileHandlers.handleReadSavedSubtitleMetadata
+  );
   ipcMain.handle('move-file', fileHandlers.handleMoveFile);
   ipcMain.handle('copy-file', fileHandlers.handleCopyFile);
   ipcMain.handle('delete-file', fileHandlers.handleDeleteFile);

@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "輸出語言",
     "showOriginalText": "顯示原文",
+    "displayModeLabel": "字幕顯示",
     "translate": "翻譯",
     "continueTranscribing": "繼續轉錄",
     "generate": "生成字幕",
@@ -439,8 +440,8 @@
     "listTitle": "字幕 ({{count}})",
     "workspace": {
       "editorStage": "編輯工作區",
-      "dualMode": "雙文字模式",
-      "translationMode": "僅翻譯模式",
+      "dualMode": "雙文字",
+      "translationMode": "翻譯",
       "videoMounted": "預覽影片已載入",
       "videoNeeded": "載入來源影片以預覽和合併",
       "readyTitle": "字幕編輯器已就緒",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "部分診斷內容無法載入。報告仍會包含此應用程式的詳細資訊。"
   }
 }
-
-

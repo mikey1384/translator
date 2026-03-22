@@ -1,18 +1,21 @@
 import type {
+  SrtSegment,
   StoredSubtitleKind,
   StoredSubtitleEntry,
 } from '@shared-types/app';
 import { parseSrt } from '../../shared/helpers';
 import * as SubtitleLibraryIPC from '../ipc/subtitle-library';
+import * as FileIPC from '../ipc/file';
 import { useSubStore } from '../state/subtitle-store';
 import { useUIStore } from '../state/ui-store';
 import { useVideoStore } from '../state/video-store';
 import { openUnsavedSrtConfirm } from '../state/modal-store';
-import { saveCurrentSubtitles } from './saveSubtitles';
+import { didSaveSubtitleFile, saveCurrentSubtitles } from './saveSubtitles';
 
 type StoredSubtitleLibraryMeta = {
   entryId: string | null;
   kind: StoredSubtitleKind | null;
+  targetLanguage: string | null;
 };
 
 function normalizeComparablePath(
@@ -42,6 +45,32 @@ function normalizeComparableSourceUrl(
   return normalized || null;
 }
 
+function normalizeComparableTargetLanguage(
+  value: string | null | undefined
+): string | null {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase();
+  return normalized || null;
+}
+
+function getPreferredSubtitleVariant(
+  targetLanguage: string | null | undefined
+): {
+  subtitleKind: StoredSubtitleKind;
+  targetLanguage?: string | null;
+} {
+  const normalizedTargetLanguage =
+    normalizeComparableTargetLanguage(targetLanguage);
+  if (!normalizedTargetLanguage || normalizedTargetLanguage === 'original') {
+    return { subtitleKind: 'transcription' };
+  }
+  return {
+    subtitleKind: 'translation',
+    targetLanguage: normalizedTargetLanguage,
+  };
+}
+
 function matchesCurrentVideoRequest(args: {
   sourceVideoPath?: string | null;
   sourceUrl?: string | null;
@@ -68,8 +97,34 @@ function matchesCurrentVideoRequest(args: {
   return true;
 }
 
+function restoreDocumentActiveFileTarget(
+  document: import('@shared-types/app').SubtitleDocumentMeta | null | undefined
+): void {
+  const filePath = document?.activeLinkedFilePath ?? null;
+  useSubStore.getState().setActiveFileTarget({
+    filePath,
+    mode: filePath ? (document?.activeLinkedFileMode ?? null) : null,
+    role: filePath ? (document?.activeLinkedFileRole ?? null) : null,
+  });
+}
+
+async function findStoredSubtitleEntryForVideo(args: {
+  sourceVideoPath?: string | null;
+  sourceUrl?: string | null;
+}): Promise<StoredSubtitleEntry | null> {
+  const result = await SubtitleLibraryIPC.findStoredSubtitleForVideo({
+    ...args,
+    targetLanguage: useUIStore.getState().targetLanguage || null,
+  });
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to look up subtitle history.');
+  }
+  return result.entry ?? null;
+}
+
 export async function storeGeneratedSubtitleArtifact(args: {
   content: string;
+  segments?: SrtSegment[];
   kind: StoredSubtitleKind;
   targetLanguage?: string | null;
   sourceVideoPath?: string | null;
@@ -82,6 +137,7 @@ export async function storeGeneratedSubtitleArtifact(args: {
     return {
       entryId: null,
       kind: null,
+      targetLanguage: null,
     };
   }
   const result = await SubtitleLibraryIPC.saveStoredSubtitleArtifact(args);
@@ -91,6 +147,7 @@ export async function storeGeneratedSubtitleArtifact(args: {
   return {
     entryId: result.entry.id,
     kind: result.entry.kind,
+    targetLanguage: result.entry.targetLanguage,
   };
 }
 
@@ -98,6 +155,85 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
   sourceVideoPath?: string | null;
   sourceUrl?: string | null;
 }): Promise<StoredSubtitleEntry | null> {
+  const currentVideoState = useVideoStore.getState();
+  const sourceVideoPath =
+    typeof args.sourceVideoPath === 'string' && args.sourceVideoPath.trim()
+      ? args.sourceVideoPath
+      : null;
+  const sourceVideoAssetIdentity =
+    sourceVideoPath &&
+    (pathsMatch(currentVideoState.path, sourceVideoPath) ||
+      pathsMatch(currentVideoState.originalPath, sourceVideoPath))
+      ? currentVideoState.sourceAssetIdentity
+      : null;
+
+  const preferredVariant = getPreferredSubtitleVariant(
+    useUIStore.getState().targetLanguage || null
+  );
+
+  const documentResult = await FileIPC.findSubtitleDocumentForSource({
+    sourceVideoPath,
+    sourceVideoAssetIdentity,
+    sourceUrl: args.sourceUrl ?? null,
+    subtitleKind: preferredVariant.subtitleKind,
+    targetLanguage: preferredVariant.targetLanguage ?? null,
+  });
+  if (
+    documentResult.success &&
+    documentResult.document &&
+    Array.isArray(documentResult.segments) &&
+    documentResult.segments.length > 0 &&
+    matchesCurrentVideoRequest(args)
+  ) {
+    let libraryMeta: StoredSubtitleLibraryMeta | null = null;
+    try {
+      const entry = await findStoredSubtitleEntryForVideo(args);
+      if (
+        sourceVideoPath &&
+        entry &&
+        !entry.sourceVideoPaths.some(path => pathsMatch(path, sourceVideoPath))
+      ) {
+        try {
+          await SubtitleLibraryIPC.rememberStoredSubtitleVideoPath(
+            entry.id,
+            sourceVideoPath
+          );
+        } catch (error) {
+          console.error(
+            '[subtitle-library] Failed to remember stored subtitle video path during document auto-mount:',
+            error
+          );
+        }
+      }
+      libraryMeta = entry
+        ? {
+            entryId: entry.id,
+            kind: entry.kind,
+            targetLanguage: entry.targetLanguage,
+          }
+        : null;
+    } catch (error) {
+      console.error(
+        '[subtitle-library] Failed to restore stored subtitle linkage for document auto-mount:',
+        error
+      );
+    }
+    useSubStore
+      .getState()
+      .load(
+        documentResult.segments,
+        documentResult.document.importFilePath ?? null,
+        documentResult.document.importFilePath ? 'disk' : 'fresh',
+        sourceVideoPath,
+        documentResult.document.transcriptionEngine ?? null,
+        libraryMeta,
+        sourceVideoAssetIdentity,
+        documentResult.document
+      );
+    restoreDocumentActiveFileTarget(documentResult.document);
+    return null;
+  }
+
   const result = await SubtitleLibraryIPC.findStoredSubtitleForVideo({
     ...args,
     targetLanguage: useUIStore.getState().targetLanguage || null,
@@ -105,24 +241,80 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
   if (!result.success) {
     throw new Error(result.error || 'Failed to look up subtitle history.');
   }
-  if (!result.entry || !result.content?.trim()) {
+  if (
+    !result.entry ||
+    (!result.content?.trim() &&
+      (!Array.isArray(result.segments) || result.segments.length === 0))
+  ) {
+    const fallbackDocumentResult = await FileIPC.findSubtitleDocumentForSource({
+      sourceVideoPath,
+      sourceVideoAssetIdentity,
+      sourceUrl: args.sourceUrl ?? null,
+      subtitleKind: preferredVariant.subtitleKind,
+      targetLanguage: preferredVariant.targetLanguage ?? null,
+    });
+    if (
+      fallbackDocumentResult.success &&
+      fallbackDocumentResult.document &&
+      Array.isArray(fallbackDocumentResult.segments) &&
+      fallbackDocumentResult.segments.length > 0 &&
+      matchesCurrentVideoRequest(args)
+    ) {
+      let libraryMeta: StoredSubtitleLibraryMeta | null = null;
+      try {
+        const entry = await findStoredSubtitleEntryForVideo(args);
+        if (
+          sourceVideoPath &&
+          entry &&
+          !entry.sourceVideoPaths.some(path =>
+            pathsMatch(path, sourceVideoPath)
+          )
+        ) {
+          try {
+            await SubtitleLibraryIPC.rememberStoredSubtitleVideoPath(
+              entry.id,
+              sourceVideoPath
+            );
+          } catch (error) {
+            console.error(
+              '[subtitle-library] Failed to remember stored subtitle video path during fallback document auto-mount:',
+              error
+            );
+          }
+        }
+        libraryMeta = entry
+          ? {
+              entryId: entry.id,
+              kind: entry.kind,
+              targetLanguage: entry.targetLanguage,
+            }
+          : null;
+      } catch (error) {
+        console.error(
+          '[subtitle-library] Failed to restore stored subtitle linkage for fallback document auto-mount:',
+          error
+        );
+      }
+      useSubStore
+        .getState()
+        .load(
+          fallbackDocumentResult.segments,
+          fallbackDocumentResult.document.importFilePath ?? null,
+          fallbackDocumentResult.document.importFilePath ? 'disk' : 'fresh',
+          sourceVideoPath,
+          fallbackDocumentResult.document.transcriptionEngine ?? null,
+          libraryMeta,
+          sourceVideoAssetIdentity,
+          fallbackDocumentResult.document
+        );
+      restoreDocumentActiveFileTarget(fallbackDocumentResult.document);
+    }
     return null;
   }
   if (!matchesCurrentVideoRequest(args)) {
     return null;
   }
 
-  const sourceVideoPath =
-    typeof args.sourceVideoPath === 'string' && args.sourceVideoPath.trim()
-      ? args.sourceVideoPath
-      : null;
-  const currentVideoState = useVideoStore.getState();
-  const sourceVideoAssetIdentity =
-    sourceVideoPath &&
-    (pathsMatch(currentVideoState.path, sourceVideoPath) ||
-      pathsMatch(currentVideoState.originalPath, sourceVideoPath))
-      ? currentVideoState.sourceAssetIdentity
-      : null;
   if (
     sourceVideoPath &&
     !result.entry.sourceVideoPaths.some(path =>
@@ -142,8 +334,33 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
     }
   }
 
+  const mountedSegments =
+    Array.isArray(result.segments) && result.segments.length > 0
+      ? result.segments
+      : parseSrt(result.content || '');
+  let documentMeta = null;
+  try {
+    const documentSaveResult = await FileIPC.saveSubtitleDocumentRecord({
+      segments: mountedSegments,
+      title: result.entry.filePath.split(/[\\/]/).pop() || null,
+      sourceVideoPath,
+      sourceVideoAssetIdentity,
+      sourceUrl: args.sourceUrl ?? null,
+      subtitleKind: result.entry.kind,
+      targetLanguage: result.entry.targetLanguage,
+    });
+    if (documentSaveResult.success && documentSaveResult.document) {
+      documentMeta = documentSaveResult.document;
+    }
+  } catch (error) {
+    console.error(
+      '[subtitle-library] Failed to create document from stored subtitle:',
+      error
+    );
+  }
+
   useSubStore.getState().load(
-    parseSrt(result.content),
+    mountedSegments,
     null,
     'fresh',
     sourceVideoPath,
@@ -151,8 +368,10 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
     {
       entryId: result.entry.id,
       kind: result.entry.kind,
+      targetLanguage: result.entry.targetLanguage,
     },
-    sourceVideoAssetIdentity
+    sourceVideoAssetIdentity,
+    documentMeta
   );
   return result.entry;
 }
@@ -211,10 +430,19 @@ export function unmountCurrentSubtitles(): void {
     playingId: null,
     _abortPlayListener: undefined,
     sourceId: useSubStore.getState().sourceId + 1,
+    documentId: null,
+    documentTitle: null,
     originalPath: null,
+    activeFilePath: null,
+    activeFileMode: null,
+    activeFileRole: null,
+    exportPath: null,
     origin: null,
     sourceVideoPath: null,
     sourceVideoAssetIdentity: null,
+    sourceUrl: null,
+    subtitleKind: null,
+    targetLanguage: null,
     transcriptionEngine: null,
     gapsCache: [],
     lcRangesCache: [],
@@ -227,6 +455,7 @@ export async function deleteMountedStoredSubtitle(): Promise<boolean> {
   const { libraryEntryId } = useSubStore.getState();
   if (!libraryEntryId) return false;
   const subtitleState = useSubStore.getState();
+  const mountedDocumentId = subtitleState.documentId;
   const hasMountedSubtitles = subtitleState.order.length > 0;
   if (hasMountedSubtitles) {
     const choice = await openUnsavedSrtConfirm();
@@ -234,10 +463,20 @@ export async function deleteMountedStoredSubtitle(): Promise<boolean> {
       return false;
     }
     if (choice === 'save') {
-      const saved = await saveCurrentSubtitles();
-      if (!saved) {
+      const saveResult = await saveCurrentSubtitles();
+      if (!didSaveSubtitleFile(saveResult)) {
         return false;
       }
+    }
+  }
+  if (mountedDocumentId) {
+    const detachResult = await FileIPC.detachSubtitleDocumentSource({
+      documentId: mountedDocumentId,
+    });
+    if (!detachResult.success) {
+      throw new Error(
+        detachResult.error || 'Failed to detach subtitle document source.'
+      );
     }
   }
   const result =

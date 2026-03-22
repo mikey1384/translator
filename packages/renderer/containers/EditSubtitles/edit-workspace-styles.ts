@@ -151,7 +151,7 @@ export const editorFooterDockStyles = css`
 
 export const editorFooterInnerStyles = css`
   ${surfaceCardStyles}
-  width: min(1120px, 100%);
+  width: min(1240px, 100%);
   margin: 0 auto;
   padding: ${spacing.sm} ${spacing.md};
   pointer-events: auto;
@@ -251,7 +251,7 @@ export const editorToolbarCompactInputStyles = css`
 export const editorToolbarSelectStyles = css`
   ${selectStyles}
   max-width: none;
-  width: 164px;
+  width: 152px;
   min-height: 44px;
   height: 44px;
   padding: 0 2.25rem 0 ${spacing.md};
@@ -282,7 +282,7 @@ export const editorButtonContentStyles = css`
 `;
 
 export const editorSaveButtonStyles = css`
-  min-width: 168px;
+  min-width: 156px;
 `;
 
 export const editorMergeButtonStyles = css`
@@ -463,8 +463,9 @@ const editorTextareaBaseStyles = css`
   padding: ${spacing.md};
   font-size: ${fontSize.sm};
   line-height: ${lineHeight.relaxed};
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    'Liberation Mono', 'Courier New', monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   box-sizing: border-box;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -495,7 +496,10 @@ export const editorTextareaHighlightStyles = (rows: number) => css`
   z-index: 1;
 `;
 
-export const editorTextareaInputStyles = (rows: number, readOnly: boolean) => css`
+export const editorTextareaInputStyles = (
+  rows: number,
+  readOnly: boolean
+) => css`
   ${editorTextareaBaseStyles}
   position: relative;
   min-height: calc(${rows} * 1.75em + (${spacing.md} * 2));
@@ -510,9 +514,7 @@ export const editorTextareaInputStyles = (rows: number, readOnly: boolean) => cs
   &:focus {
     outline: none;
     border-color: ${readOnly ? 'transparent' : colors.primary};
-    box-shadow: ${readOnly
-      ? 'none'
-      : `0 0 0 3px rgba(125, 167, 255, 0.12)`};
+    box-shadow: ${readOnly ? 'none' : `0 0 0 3px rgba(125, 167, 255, 0.12)`};
   }
 `;
 

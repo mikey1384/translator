@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "出力言語",
     "showOriginalText": "原文を表示",
+    "displayModeLabel": "字幕表示",
     "translate": "翻訳",
     "continueTranscribing": "文字起こしを続行",
     "generate": "字幕を生成",
@@ -439,8 +440,8 @@
     "listTitle": "字幕 ({{count}})",
     "workspace": {
       "editorStage": "編集ワークスペース",
-      "dualMode": "デュアルテキストモード",
-      "translationMode": "翻訳専用モード",
+      "dualMode": "デュアルテキスト",
+      "translationMode": "翻訳",
       "videoMounted": "プレビュー動画を読み込み済み",
       "videoNeeded": "プレビューと結合のため元動画を読み込んでください",
       "readyTitle": "字幕エディタの準備完了",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "一部の診断コンテキストを読み込めませんでした。レポートには引き続きこのアプリの詳細が含まれます。"
   }
 }
-
-

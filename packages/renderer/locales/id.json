@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Bahasa Keluaran",
     "showOriginalText": "Tampilkan teks asli",
+    "displayModeLabel": "Tampilan subtitle",
     "translate": "Terjemahkan",
     "continueTranscribing": "Lanjutkan transkripsi",
     "generate": "Hasilkan Subtitle",
@@ -439,8 +440,8 @@
     "listTitle": "Subtitle ({{count}})",
     "workspace": {
       "editorStage": "Ruang editor",
-      "dualMode": "Mode teks ganda",
-      "translationMode": "Mode hanya terjemahan",
+      "dualMode": "Teks ganda",
+      "translationMode": "Terjemahan",
       "videoMounted": "Video pratinjau terpasang",
       "videoNeeded": "Pasang video sumber untuk pratinjau dan gabung",
       "readyTitle": "Editor subtitle siap",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Beberapa konteks diagnostik tidak dapat dimuat. Laporan tetap akan menyertakan detail dari aplikasi ini."
   }
 }
-
-

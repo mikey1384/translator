@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Uittree-taal",
     "showOriginalText": "Wys oorspronklike teks",
+    "displayModeLabel": "Ondertitelvertoning",
     "translate": "Vertaal",
     "continueTranscribing": "Gaan voort met transkribeer",
     "generate": "Genereer Onderskrifte",
@@ -439,8 +440,8 @@
     "listTitle": "Onderskrifte ({{count}})",
     "workspace": {
       "editorStage": "Redigeerwerkruimte",
-      "dualMode": "Dubbelteksmodus",
-      "translationMode": "Slegs-vertaalmodus",
+      "dualMode": "Dubbelteks",
+      "translationMode": "Vertaling",
       "videoMounted": "Voorskouvideo gemonteer",
       "videoNeeded": "Monteer 'n bronvideo vir voorskou en samevoeging",
       "readyTitle": "Ondertitelredigeerder gereed",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Sommige diagnostiese konteks kon nie gelaai word nie. Die verslag sal steeds besonderhede uit hierdie toepassing insluit."
   }
 }
-
-

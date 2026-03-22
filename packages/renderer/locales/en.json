@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Output Language",
     "showOriginalText": "Show original text",
+    "displayModeLabel": "Subtitle Display",
     "translate": "Translate",
     "continueTranscribing": "Continue transcribing",
     "generate": "Generate Subtitles",
@@ -439,8 +440,8 @@
     "listTitle": "Subtitles ({{count}})",
     "workspace": {
       "editorStage": "Editor workspace",
-      "dualMode": "Dual text mode",
-      "translationMode": "Translation-only mode",
+      "dualMode": "Dual text",
+      "translationMode": "Translation",
       "videoMounted": "Preview video mounted",
       "videoNeeded": "Mount a source video to preview and merge",
       "readyTitle": "Subtitle editor ready",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Some diagnostic context could not be loaded. The report will still include details from this app."
   }
 }
-
-

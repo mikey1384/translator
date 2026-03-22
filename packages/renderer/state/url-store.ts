@@ -8,6 +8,7 @@ import { useSubStore } from './subtitle-store';
 import { useUIStore } from './ui-store';
 import { openDownloadSwitchConfirm } from './modal-store';
 import { upsertLocalVideoSuggestionHistoryItem } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
+import { mountedSubtitleMatchesVideoSource } from '../utils/subtitle-source-association';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -420,10 +421,14 @@ async function downloadMediaInternal(
         }
 
         if (!preserveSubtitles && !preserveMountedDiskSubs) {
-          const subState = useSubStore.getState();
-          const autoMountedForCurrentVideo =
-            Boolean(subState.libraryEntryId) &&
-            subState.sourceVideoPath === finalPath;
+          const autoMountedForCurrentVideo = mountedSubtitleMatchesVideoSource(
+            useSubStore.getState(),
+            {
+              sourceVideoPath: finalPath,
+              sourceVideoAssetIdentity:
+                useVideoStore.getState().sourceAssetIdentity ?? null,
+            }
+          );
           if (!autoMountedForCurrentVideo) {
             useSubStore.getState().load([]);
           }

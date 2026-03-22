@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "ภาษาเอาต์พุต",
     "showOriginalText": "แสดงข้อความต้นฉบับ",
+    "displayModeLabel": "การแสดงคำบรรยาย",
     "translate": "แปล",
     "continueTranscribing": "ถอดความต่อ",
     "generate": "สร้างคำบรรยาย",
@@ -439,8 +440,8 @@
     "listTitle": "คำบรรยาย ({{count}})",
     "workspace": {
       "editorStage": "พื้นที่แก้ไข",
-      "dualMode": "โหมดข้อความคู่",
-      "translationMode": "โหมดแปลอย่างเดียว",
+      "dualMode": "ข้อความคู่",
+      "translationMode": "แปล",
       "videoMounted": "เชื่อมต่อวิดีโอพรีวิวแล้ว",
       "videoNeeded": "เชื่อมต่อวิดีโอต้นฉบับเพื่อพรีวิวและรวมไฟล์",
       "readyTitle": "ตัวแก้ไขซับพร้อมแล้ว",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "บริบทการวินิจฉัยบางส่วนไม่สามารถโหลดได้ รายงานจะยังคงรวมรายละเอียดจากแอปนี้"
   }
 }
-
-

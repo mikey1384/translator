@@ -16,9 +16,13 @@ import {
 
 import { createOperationTempDir, cleanupTempDir } from './temp-utils.js';
 import { initPuppeteer } from './puppeteer-setup.js';
-import { generateSubtitleEvents } from './srt-parser.js';
-import { parseSrt, buildSrt } from '../../../shared/helpers/index.js';
+import {
+  generateSubtitleEvents,
+  generateTimedOriginalSubtitleEvents,
+} from './srt-parser.js';
+import { parseSrt } from '../../../shared/helpers/index.js';
 import { normalizeSubtitleSegments } from '../../services/subtitle-processing/pipeline/finalize-pass.js';
+import { normalizeSegmentWordTimingsForRender } from '../../services/subtitle-processing/word-timing-normalization.js';
 import { generateStatePngs } from './state-generator.js';
 import { directMerge } from './ffmpeg-direct-merge.js';
 import { probeFps } from './ffprobe-utils.js';
@@ -114,6 +118,12 @@ async function fileExists(p: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function isVerticalRender(options: RenderSubtitlesOptions): boolean {
+  const width = options.displayWidth ?? options.videoWidth;
+  const height = options.displayHeight ?? options.videoHeight;
+  return height > width;
 }
 
 async function assertOriginalVideoAccessible(
@@ -377,19 +387,34 @@ export function initializeRenderWindowHandlers({
 
         // Finalize subtitles just before render: join <5s gaps and enforce >=3s per cue
         sendProgress({ percent: 5, stage: 'Finalizing subtitles…' });
-        const parsedForFinalize = parseSrt(options.srtContent);
+        const parsedForFinalize =
+          Array.isArray(options.subtitleSegments) &&
+          options.subtitleSegments.length > 0
+            ? options.subtitleSegments
+            : parseSrt(options.srtContent);
         const normalizedSegs = normalizeSubtitleSegments(parsedForFinalize);
-        const finalizedSrt = buildSrt({
-          segments: normalizedSegs,
-          mode: 'dual',
-        });
+        const renderReadySegs =
+          normalizeSegmentWordTimingsForRender(normalizedSegs);
 
-        const uniqueEventsMs = generateSubtitleEvents({
-          srtContent: finalizedSrt,
-          outputMode: (options.outputMode ?? 'dual') as 'dual' | 'single',
-          videoDuration: options.videoDuration,
-          operationId,
-        });
+        const shouldUseTimedOriginalRender =
+          (options.outputMode ?? 'dual') === 'original' &&
+          isVerticalRender(options) &&
+          renderReadySegs.some(
+            segment => Array.isArray(segment.words) && segment.words.length > 0
+          );
+
+        const uniqueEventsMs = shouldUseTimedOriginalRender
+          ? generateTimedOriginalSubtitleEvents({
+              segments: renderReadySegs,
+              videoDuration: options.videoDuration,
+              operationId,
+            })
+          : generateSubtitleEvents({
+              segments: renderReadySegs,
+              outputMode: options.outputMode ?? 'dual',
+              videoDuration: options.videoDuration,
+              operationId,
+            });
 
         const statePngs = await generateStatePngs({
           page,

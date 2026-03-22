@@ -21,6 +21,7 @@ import {
   GenerateSubtitlesOptions,
   DubSegmentPayload,
   DubSubtitlesOptions,
+  SrtSegment,
   TranscriptHighlight,
   HighlightAspectMode,
   HighlightCutProgress,
@@ -260,6 +261,7 @@ export async function handleGenerateSubtitles(
 ): Promise<{
   success: boolean;
   subtitles?: string;
+  segments?: SrtSegment[];
   cancelled?: boolean;
   error?: string;
   operationId: string;
@@ -317,6 +319,7 @@ export async function handleGenerateSubtitles(
     return {
       success: true,
       subtitles: result.subtitles,
+      segments: result.segments,
       transcriptionEngine: result.transcriptionEngine ?? null,
       operationId,
     };

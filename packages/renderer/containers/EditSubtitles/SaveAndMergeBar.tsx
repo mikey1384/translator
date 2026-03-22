@@ -1,14 +1,13 @@
 import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../../state/ui-store.js';
+import type { SubtitleDisplayMode } from '@shared-types/app';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 import {
   editorButtonContentStyles,
   editorMergeButtonStyles,
   editorSaveButtonStyles,
   editorToolbarActionRowStyles,
-  editorToolbarCheckboxInputStyles,
-  editorToolbarCheckboxLabelStyles,
   editorToolbarCompactInputStyles,
   editorToolbarFieldGridStyles,
   editorToolbarFieldStyles,
@@ -47,8 +46,8 @@ export default function SaveAndMergeBar({
   const fontSize = useUIStore(s => s.baseFontSize);
   const stylePreset = useUIStore(s => s.subtitleStyle);
   const setStylePreset = useUIStore(s => s.setSubtitleStyle);
-  const showOriginal = useUIStore(s => s.showOriginalText);
-  const setShowOriginal = useUIStore(s => s.setShowOriginalText);
+  const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
+  const setSubtitleDisplayMode = useUIStore(s => s.setSubtitleDisplayMode);
 
   if (!subtitlesExist) return null;
 
@@ -64,11 +63,7 @@ export default function SaveAndMergeBar({
             size="sm"
             disabled={!canSaveDirectly || isExportLocked}
             className={editorSaveButtonStyles}
-            title={
-              !canSaveDirectly
-                ? t('editSubtitles.header.saveAsTooltip')
-                : t('editSubtitles.header.saveTooltip')
-            }
+            title={t('editSubtitles.header.saveTooltip')}
           >
             <div className={editorButtonContentStyles}>
               <svg
@@ -95,6 +90,7 @@ export default function SaveAndMergeBar({
             size="sm"
             disabled={isExportLocked}
             className={editorSaveButtonStyles}
+            title={t('editSubtitles.header.saveAsTooltip')}
           >
             <div className={editorButtonContentStyles}>
               <svg
@@ -220,19 +216,32 @@ export default function SaveAndMergeBar({
           </div>
           <div className={editorToolbarFieldStyles}>
             <label
-              className={editorToolbarCheckboxLabelStyles}
-              htmlFor="mergeShowOriginalToggle"
+              className={editorToolbarLabelStyles}
+              htmlFor="subtitleDisplayModeSelect"
             >
-              <input
-                id="mergeShowOriginalToggle"
-                type="checkbox"
-                className={editorToolbarCheckboxInputStyles}
-                checked={showOriginal}
-                onChange={e => setShowOriginal(e.target.checked)}
-                aria-label={t('subtitles.showOriginalText')}
-              />
-              <span>{t('subtitles.showOriginalText')}</span>
+              {t('subtitles.displayModeLabel', 'Subtitle display')}
             </label>
+            <select
+              id="subtitleDisplayModeSelect"
+              className={editorToolbarSelectStyles}
+              value={subtitleDisplayMode}
+              onChange={e =>
+                setSubtitleDisplayMode(e.target.value as SubtitleDisplayMode)
+              }
+            >
+              <option value="original">
+                {t('editSubtitles.workspace.originalLabel', 'Original')}
+              </option>
+              <option value="translation">
+                {t(
+                  'editSubtitles.workspace.translationMode',
+                  'Translation-only mode'
+                )}
+              </option>
+              <option value="dual">
+                {t('editSubtitles.workspace.dualMode', 'Dual text mode')}
+              </option>
+            </select>
           </div>
         </div>
       </div>

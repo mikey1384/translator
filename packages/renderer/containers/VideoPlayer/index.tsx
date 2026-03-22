@@ -79,7 +79,8 @@ export default function VideoPlayer() {
     s => !!s.dubbing.inProgress && (s.dubbing.id?.startsWith('dub-') ?? false)
   );
   const download = useUrlStore(s => s.download);
-  const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
+  const { baseFontSize, subtitleStyle, subtitleDisplayMode } =
+    useSubtitlePrefs();
 
   const isProgressBarVisible = useMemo(() => {
     return (
@@ -394,7 +395,7 @@ export default function VideoPlayer() {
             isFullyExpanded={isFullScreen}
             baseFontSize={baseFontSize}
             stylePreset={subtitleStyle}
-            showOriginalText={showOriginal}
+            subtitleDisplayMode={subtitleDisplayMode}
             isAudioOnly={isAudioOnly}
             videoHeight={videoHeightMeta}
             videoWidth={videoWidthMeta}

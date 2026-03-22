@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Wika ng Output",
     "showOriginalText": "Ipakita ang orihinal na teksto",
+    "displayModeLabel": "Ipakita ang subtitle",
     "translate": "Isalin",
     "continueTranscribing": "Ipagpatuloy ang pag-transcribe",
     "generate": "Bumuo ng Subtitle",
@@ -439,8 +440,8 @@
     "listTitle": "Mga Subtitle ({{count}})",
     "workspace": {
       "editorStage": "Workspace ng editor",
-      "dualMode": "Mode ng dobleng teksto",
-      "translationMode": "Mode ng salin lang",
+      "dualMode": "Dobleng teksto",
+      "translationMode": "Salin",
       "videoMounted": "Naka-mount ang preview video",
       "videoNeeded": "I-mount ang source video para sa preview at merge",
       "readyTitle": "Handa na ang editor ng subtitle",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "May ilang konteksto ng pagsusuri na hindi na-load. Isasama pa rin sa ulat ang mga detalye mula sa app na ito."
   }
 }
-
-

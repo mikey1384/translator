@@ -6,11 +6,130 @@ import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
 } from '../shared/constants/subtitle-styles.js';
+import type {
+  SubtitleRenderPart,
+  SubtitleRenderState,
+} from '@shared-types/app';
 
 const renderTarget = {
   width: undefined as number | undefined,
   height: undefined as number | undefined,
 };
+
+const UPCOMING_WORD_OPACITY = 0.18;
+const SPOKEN_WORD_OPACITY = 1;
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function splitTimedPartsIntoLines(
+  parts: SubtitleRenderPart[]
+): SubtitleRenderPart[][] {
+  const lines: SubtitleRenderPart[][] = [[]];
+
+  for (const part of parts) {
+    if (part.kind === 'whitespace' && part.text.includes('\n')) {
+      const pieces = part.text.split('\n');
+      pieces.forEach((piece, index) => {
+        if (piece) {
+          lines.at(-1)!.push({ kind: 'whitespace', text: piece });
+        }
+        if (index < pieces.length - 1) {
+          lines.push([]);
+        }
+      });
+      continue;
+    }
+
+    lines.at(-1)!.push(part);
+  }
+
+  return lines;
+}
+
+function renderLineBoxLineHtml(
+  lineHtml: string,
+  renderTheme: ReturnType<typeof resolveSubtitleRenderTheme>
+): string {
+  return (
+    `<span style="background-color:${renderTheme.lineBoxBackgroundColor};padding:${renderTheme.lineBoxPadding};display:inline;line-height:${renderTheme.lineHeight};white-space:pre-wrap;` +
+    `overflow-wrap:anywhere;word-break:break-word;` +
+    `border-radius:${renderTheme.lineBoxBorderRadiusPx}px;box-shadow:${renderTheme.lineBoxBoxShadow};` +
+    `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
+    `${lineHtml || '&nbsp;'}` +
+    `</span>`
+  );
+}
+
+function renderPlainSubtitleHtml(
+  text: string,
+  stylePreset: SubtitleStylePresetKey,
+  renderTheme: ReturnType<typeof resolveSubtitleRenderTheme>
+): string {
+  if (!text.trim()) {
+    return '';
+  }
+
+  if (stylePreset === 'LineBox') {
+    return text
+      .split('\n')
+      .map(line => renderLineBoxLineHtml(escapeHtml(line.trim()), renderTheme))
+      .join('<br/>');
+  }
+
+  return escapeHtml(text);
+}
+
+function renderTimedPartHtml(part: SubtitleRenderPart): string {
+  if (part.kind === 'whitespace') {
+    return `<span style="white-space:pre-wrap;">${escapeHtml(part.text)}</span>`;
+  }
+
+  if (part.state === 'upcoming') {
+    return `<span style="white-space:pre-wrap;opacity:${UPCOMING_WORD_OPACITY};">${escapeHtml(part.text)}</span>`;
+  }
+
+  if (part.state === 'active') {
+    return `<span style="white-space:pre-wrap;opacity:${SPOKEN_WORD_OPACITY};font-weight:700;">${escapeHtml(part.text)}</span>`;
+  }
+
+  return `<span style="white-space:pre-wrap;opacity:${SPOKEN_WORD_OPACITY};">${escapeHtml(part.text)}</span>`;
+}
+
+function renderTimedSubtitleHtml(
+  state: Extract<SubtitleRenderState, { mode: 'timed' }>,
+  stylePreset: SubtitleStylePresetKey,
+  renderTheme: ReturnType<typeof resolveSubtitleRenderTheme>
+): string {
+  if (!state.text.trim()) {
+    return '';
+  }
+
+  const lines = splitTimedPartsIntoLines(state.parts);
+  const renderedLines = lines.map(line =>
+    line.map(part => renderTimedPartHtml(part)).join('')
+  );
+
+  if (stylePreset === 'LineBox') {
+    return renderedLines
+      .map(line => renderLineBoxLineHtml(line, renderTheme))
+      .join('<br/>');
+  }
+
+  return renderedLines.join('<br/>');
+}
+
+function setSubtitleVisibility(el: HTMLElement, text: string) {
+  if (text.trim()) {
+    el.classList.add('visible');
+  } else {
+    el.classList.remove('visible');
+  }
+}
 
 function applyPresetStyles(
   el: HTMLElement | null,
@@ -99,9 +218,8 @@ function initializeSubtitleDisplay() {
     applyPresetStyles(subtitleEl);
   }
 
-  // @ts-expect-error...
-  window.updateSubtitle = (
-    text: string,
+  const updateElementFromState = (
+    state: SubtitleRenderState,
     opts: {
       stylePreset?: SubtitleStylePresetKey;
       fontSizePx?: number;
@@ -118,7 +236,7 @@ function initializeSubtitleDisplay() {
       videoWidthPx,
       videoHeightPx,
     } = opts;
-    const isMultiLine = text.includes('\n');
+    const isMultiLine = state.text.includes('\n');
     const renderTheme = resolveSubtitleRenderTheme({
       displayFontSize: fontSizePx,
       isFullScreen: false,
@@ -128,35 +246,14 @@ function initializeSubtitleDisplay() {
       videoHeightPx,
     });
 
-    /* ---------- render text ---------- */
-    if (stylePreset === 'LineBox') {
-      // replicate the editor's per-line <span> backgrounds
-      const esc = (s: string) =>
-        s
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .trim();
-
-      if (text.trim()) {
-        const html = text
-          .split('\n')
-          .map(
-            line =>
-              `<span style="background-color:${renderTheme.lineBoxBackgroundColor};padding:${renderTheme.lineBoxPadding};display:inline;line-height:${renderTheme.lineHeight};white-space:pre-wrap;` +
-              `overflow-wrap:anywhere;word-break:break-word;` +
-              `border-radius:${renderTheme.lineBoxBorderRadiusPx}px;box-shadow:${renderTheme.lineBoxBoxShadow};` +
-              `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
-              `${esc(line)}` +
-              `</span>`
-          )
-          .join('<br/>');
-        el.innerHTML = html;
-      } else {
-        el.innerHTML = '';
-      }
+    if (state.mode === 'timed') {
+      el.innerHTML = renderTimedSubtitleHtml(state, stylePreset, renderTheme);
     } else {
-      el.textContent = text;
+      el.innerHTML = renderPlainSubtitleHtml(
+        state.text,
+        stylePreset,
+        renderTheme
+      );
     }
 
     applyPresetStyles(el, {
@@ -179,18 +276,40 @@ function initializeSubtitleDisplay() {
       console.warn('[render-host] Failed to read font-family:', err);
     }
 
-    if (text.trim()) {
-      el.classList.add('visible'); // show subtitle if there's content
-    } else {
-      el.classList.remove('visible'); // hide if empty
-    }
+    setSubtitleVisibility(el, state.text);
+  };
+
+  // @ts-expect-error...
+  window.updateSubtitle = (
+    text: string,
+    opts: {
+      stylePreset?: SubtitleStylePresetKey;
+      fontSizePx?: number;
+      videoWidthPx?: number;
+      videoHeightPx?: number;
+    } = {}
+  ) => {
+    updateElementFromState({ mode: 'plain', text }, opts);
+  };
+
+  // @ts-expect-error...
+  window.updateTimedSubtitle = (
+    state: Extract<SubtitleRenderState, { mode: 'timed' }>,
+    opts: {
+      stylePreset?: SubtitleStylePresetKey;
+      fontSizePx?: number;
+      videoWidthPx?: number;
+      videoHeightPx?: number;
+    } = {}
+  ) => {
+    updateElementFromState(state, opts);
   };
 
   // @ts-expect-error...
   window.applySubtitlePreset = applySubtitlePreset;
 
   console.log(
-    '[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, applySubtitlePreset'
+    '[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, updateTimedSubtitle, applySubtitlePreset'
   );
 }
 

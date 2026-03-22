@@ -1,6 +1,12 @@
 import { app } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import type { SrtSegment } from '@shared-types/app';
+import {
+  buildSubtitleSidecarContent,
+  getSubtitleSidecarPath,
+  restoreSegmentsFromSubtitleSidecar,
+} from '../../shared/helpers/subtitle-sidecar.js';
 import { normalizeYoutubeWatchUrl } from './video-suggestions/shared.js';
 
 export type StoredSubtitleKind = 'transcription' | 'translation';
@@ -24,6 +30,7 @@ interface StoredSubtitleIndex {
 
 interface SaveStoredSubtitleArgs {
   content: string;
+  segments?: SrtSegment[];
   kind: StoredSubtitleKind;
   targetLanguage?: string | null;
   sourceVideoPath?: string | null;
@@ -104,20 +111,19 @@ function normalizeTargetLanguage(
 
 type StoredSourceStats = Awaited<ReturnType<typeof fs.stat>>;
 
+function coerceFiniteStatNumber(
+  value: number | bigint | null | undefined
+): number {
+  const numeric = typeof value === 'bigint' ? Number(value) : (value ?? 0);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 function buildStoredSourceAssetIdentity(stats: StoredSourceStats): string {
-  const sizeBytes = Number.isFinite(stats.size) ? stats.size : 0;
-  const mtimeMs = Number.isFinite(stats.mtimeMs)
-    ? Math.round(stats.mtimeMs)
-    : 0;
-  const birthtimeMs = Number.isFinite(stats.birthtimeMs)
-    ? Math.round(stats.birthtimeMs)
-    : 0;
-  const dev = Number.isFinite(Number((stats as any).dev))
-    ? Number((stats as any).dev)
-    : 0;
-  const ino = Number.isFinite(Number((stats as any).ino))
-    ? Number((stats as any).ino)
-    : 0;
+  const sizeBytes = coerceFiniteStatNumber(stats.size);
+  const mtimeMs = Math.round(coerceFiniteStatNumber(stats.mtimeMs));
+  const birthtimeMs = Math.round(coerceFiniteStatNumber(stats.birthtimeMs));
+  const dev = coerceFiniteStatNumber((stats as any).dev);
+  const ino = coerceFiniteStatNumber((stats as any).ino);
   return `file:${dev}:${ino}:${sizeBytes}:${mtimeMs}:${birthtimeMs}`;
 }
 
@@ -325,6 +331,44 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+async function writeEntrySidecar(args: {
+  filePath: string;
+  content: string;
+  segments?: SrtSegment[];
+}): Promise<void> {
+  const sidecarPath = getEntrySidecarPath(args.filePath);
+  if (Array.isArray(args.segments)) {
+    const sidecarContent = buildSubtitleSidecarContent({
+      segments: args.segments,
+      srtContent: args.content,
+    });
+    await fs.writeFile(sidecarPath, sidecarContent, 'utf8');
+    return;
+  }
+
+  await fs.rm(sidecarPath, { force: true });
+}
+
+async function readEntrySegments(args: {
+  filePath: string;
+  content: string;
+}): Promise<SrtSegment[] | undefined> {
+  try {
+    const sidecarContent = await fs.readFile(
+      getEntrySidecarPath(args.filePath),
+      'utf8'
+    );
+    return (
+      restoreSegmentsFromSubtitleSidecar({
+        srtContent: args.content,
+        sidecarContent,
+      }) ?? undefined
+    );
+  } catch {
+    return undefined;
+  }
+}
+
 function slugifyTitleHint(value: string | null | undefined): string {
   const raw = String(value || '').trim();
   if (!raw) return 'subtitles';
@@ -352,6 +396,10 @@ function buildEntryFilePath(
     getEntriesDir(),
     `${baseName}-${entry.kind}${languageSuffix}-${entry.id}.srt`
   );
+}
+
+function getEntrySidecarPath(filePath: string): string {
+  return getSubtitleSidecarPath(filePath);
 }
 
 function mergeAliases(values: string[], nextValue: string): string[] {
@@ -587,13 +635,22 @@ export async function saveStoredSubtitleArtifact(
 
   await ensureLibraryDirs();
   await fs.writeFile(entry.filePath, content, 'utf8');
+  await writeEntrySidecar({
+    filePath: entry.filePath,
+    content,
+    segments: args.segments,
+  });
   await writeIndex(index);
   return entry;
 }
 
 export async function findStoredSubtitleForVideo(
   args: FindStoredSubtitleArgs
-): Promise<{ entry: StoredSubtitleEntry | null; content?: string }> {
+): Promise<{
+  entry: StoredSubtitleEntry | null;
+  content?: string;
+  segments?: SrtSegment[];
+}> {
   const normalizedVideoPath = normalizeVideoPath(args.sourceVideoPath);
   const normalizedSourceUrl = normalizeSourceUrl(args.sourceUrl);
   const normalizedSourceVideoAssetIdentity = normalizeSourceAssetIdentity(
@@ -671,7 +728,11 @@ export async function findStoredSubtitleForVideo(
 
   const winner = compatibleEntries[0].entry;
   const content = await fs.readFile(winner.filePath, 'utf8');
-  return { entry: winner, content };
+  const segments = await readEntrySegments({
+    filePath: winner.filePath,
+    content,
+  });
+  return { entry: winner, content, segments };
 }
 
 export async function syncStoredSubtitleVideoPath(args: {
@@ -775,6 +836,7 @@ export async function detachStoredSubtitleSource(args: {
     await writeIndex(index);
     try {
       await fs.rm(entry.filePath, { force: true });
+      await fs.rm(getEntrySidecarPath(entry.filePath), { force: true });
     } catch {
       // Do nothing
     }
@@ -827,6 +889,7 @@ export async function deleteStoredSubtitleEntry(
   await writeIndex(index);
   try {
     await fs.rm(removed.filePath, { force: true });
+    await fs.rm(getEntrySidecarPath(removed.filePath), { force: true });
   } catch {
     // Ignore cleanup failures after index update.
   }

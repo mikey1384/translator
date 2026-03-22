@@ -162,6 +162,20 @@ const electronAPI = {
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),
+  saveSubtitleDocumentRecord: (options: any) =>
+    ipcRenderer.invoke('save-subtitle-document-record', options),
+  readSubtitleDocument: (options: any) =>
+    ipcRenderer.invoke('read-subtitle-document', options),
+  findSubtitleDocumentForFile: (options: any) =>
+    ipcRenderer.invoke('find-subtitle-document-for-file', options),
+  findSubtitleDocumentForSource: (options: any) =>
+    ipcRenderer.invoke('find-subtitle-document-for-source', options),
+  detachSubtitleDocumentSource: (options: any) =>
+    ipcRenderer.invoke('detach-subtitle-document-source', options),
+  saveSubtitleDocument: (options: any) =>
+    ipcRenderer.invoke('save-subtitle-document', options),
+  readSavedSubtitleMetadata: (options: any) =>
+    ipcRenderer.invoke('read-saved-subtitle-metadata', options),
   saveStoredSubtitleArtifact: (options: any) =>
     ipcRenderer.invoke('save-stored-subtitle-artifact', options),
   findStoredSubtitleForVideo: (options: any) =>

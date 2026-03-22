@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Idioma de salida",
     "showOriginalText": "Mostrar texto original",
+    "displayModeLabel": "Visualización de subtítulos",
     "translate": "Traducir",
     "continueTranscribing": "Continuar transcribiendo",
     "generate": "Generar subtítulos",
@@ -439,8 +440,8 @@
     "listTitle": "Subtítulos ({{count}})",
     "workspace": {
       "editorStage": "Espacio del editor",
-      "dualMode": "Modo de texto doble",
-      "translationMode": "Modo solo traducción",
+      "dualMode": "Texto doble",
+      "translationMode": "Traducción",
       "videoMounted": "Video de vista previa montado",
       "videoNeeded": "Monta un video fuente para previsualizar y fusionar",
       "readyTitle": "Editor de subtítulos listo",

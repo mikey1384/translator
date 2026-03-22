@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Lugha ya Matokeo",
     "showOriginalText": "Onyesha maandishi ya asili",
+    "displayModeLabel": "Hali ya kuonyesha manukuu",
     "translate": "Tafsiri",
     "continueTranscribing": "Endelea kunakili",
     "generate": "Tengeneza Manukuu",
@@ -439,8 +440,8 @@
     "listTitle": "Manukuu ({{count}})",
     "workspace": {
       "editorStage": "Eneo la kihariri",
-      "dualMode": "Hali ya maandishi mawili",
-      "translationMode": "Hali ya tafsiri pekee",
+      "dualMode": "Maandishi mawili",
+      "translationMode": "Tafsiri",
       "videoMounted": "Video ya hakikisho imeambatanishwa",
       "videoNeeded": "Ambatanisha video chanzo kwa hakikisho na kuunganisha",
       "readyTitle": "Kihariri cha manukuu kiko tayari",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Baadhi ya muktadha wa uchunguzi haukuweza kupakiwa. Ripoti bado itajumuisha maelezo kutoka kwenye programu hii."
   }
 }
-
-

@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "आउटपुट भाषा",
     "showOriginalText": "मूल टेक्स्ट दिखाएं",
+    "displayModeLabel": "उपशीर्षक प्रदर्शन",
     "translate": "अनुवाद करें",
     "continueTranscribing": "ट्रांसक्राइबिंग जारी रखें",
     "generate": "सबटाइटल उत्पन्न करें",
@@ -439,8 +440,8 @@
     "listTitle": "सबटाइटल ({{count}})",
     "workspace": {
       "editorStage": "एडिटर कार्यक्षेत्र",
-      "dualMode": "डुअल टेक्स्ट मोड",
-      "translationMode": "केवल अनुवाद मोड",
+      "dualMode": "डुअल टेक्स्ट",
+      "translationMode": "अनुवाद",
       "videoMounted": "प्रीव्यू वीडियो माउंट है",
       "videoNeeded": "प्रीव्यू और मर्ज के लिए स्रोत वीडियो माउंट करें",
       "readyTitle": "सबटाइटल एडिटर तैयार है",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "कुछ डायग्नोस्टिक संदर्भ लोड नहीं हो सका। रिपोर्ट में फिर भी इस ऐप के विवरण शामिल होंगे।"
   }
 }
-
-

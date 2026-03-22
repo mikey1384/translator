@@ -35,6 +35,7 @@ import { useVideoStore, useSubStore, useUIStore } from '../../state';
 import { useSubSourceId } from '../../state/subtitle-store';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
 import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
+import type { SubtitleDisplayMode } from '@shared-types/app';
 
 import { cueText } from '../../../shared/helpers';
 
@@ -82,7 +83,7 @@ export interface NativeVideoPlayerProps {
   isFullyExpanded?: boolean;
   baseFontSize: number;
   stylePreset: SubtitleStylePresetKey;
-  showOriginalText: boolean;
+  subtitleDisplayMode: SubtitleDisplayMode;
   isAudioOnly: boolean;
   videoHeight?: number | null;
   videoWidth?: number | null;
@@ -95,7 +96,7 @@ export default function NativeVideoPlayer({
   isFullyExpanded = false,
   baseFontSize,
   stylePreset,
-  showOriginalText,
+  subtitleDisplayMode,
   isAudioOnly,
   videoHeight,
   videoWidth,
@@ -204,7 +205,9 @@ export default function NativeVideoPlayer({
     const onPlay = () => flash('play');
     const onPause = () => flash('pause');
     const onErr = () =>
-      setErrorMessage(t('videoPlayer.mediaPlaybackError', 'Media playback error'));
+      setErrorMessage(
+        t('videoPlayer.mediaPlaybackError', 'Media playback error')
+      );
 
     const onLoadedMetadata = () => {
       setErrorMessage(null);
@@ -296,9 +299,7 @@ export default function NativeVideoPlayer({
         }
       }
       const seg = foundIdx >= 0 ? segments[order[foundIdx]] : undefined;
-      const txt = seg
-        ? cueText(seg, showOriginalText ? 'dual' : 'translation')
-        : '';
+      const txt = seg ? cueText(seg, subtitleDisplayMode) : '';
       if (txt !== activeSubtitle) {
         if (activeSubtitle) setSubtitleVisible(false);
         setActiveSubtitle(txt);
@@ -307,7 +308,7 @@ export default function NativeVideoPlayer({
 
     v.addEventListener('timeupdate', onTime);
     return () => v.removeEventListener('timeupdate', onTime);
-  }, [showOriginalText, activeSubtitle]);
+  }, [subtitleDisplayMode, activeSubtitle]);
 
   // Refresh subtitle immediately when subtitle source changes (e.g., translation completed)
   useEffect(() => {
@@ -333,9 +334,7 @@ export default function NativeVideoPlayer({
       }
     }
     const seg = foundIdx >= 0 ? segments[order[foundIdx]] : undefined;
-    const nextText = seg
-      ? cueText(seg, showOriginalText ? 'dual' : 'translation')
-      : '';
+    const nextText = seg ? cueText(seg, subtitleDisplayMode) : '';
     if (nextText !== activeSubtitle) {
       if (activeSubtitle) setSubtitleVisible(false);
       setActiveSubtitle(nextText);
@@ -343,7 +342,7 @@ export default function NativeVideoPlayer({
       setSubtitleVisible(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subSourceId, showOriginalText]);
+  }, [subSourceId, subtitleDisplayMode]);
 
   useEffect(() => {
     if (!activeSubtitle) {
@@ -523,20 +522,17 @@ export default function NativeVideoPlayer({
                 <path d="M12 17h.01" />
               </svg>
             </div>
-              <div className={videoPlayerCenterStateCopyStyles}>
-                <div className={videoPlayerCenterStateTitleStyles}>
-                  {t(
-                    'videoPlayer.icloudWaitingTitle',
-                    'Downloading from iCloud'
-                  )}
-                </div>
-                <div className={videoPlayerCenterStateBodyStyles}>
-                  {t(
-                    'videoPlayer.icloudWaitingBody',
-                    "This file is not stored locally yet. In Finder, click 'Download' and wait for the cloud icon to disappear."
-                  )}
-                </div>
+            <div className={videoPlayerCenterStateCopyStyles}>
+              <div className={videoPlayerCenterStateTitleStyles}>
+                {t('videoPlayer.icloudWaitingTitle', 'Downloading from iCloud')}
               </div>
+              <div className={videoPlayerCenterStateBodyStyles}>
+                {t(
+                  'videoPlayer.icloudWaitingBody',
+                  "This file is not stored locally yet. In Finder, click 'Download' and wait for the cloud icon to disappear."
+                )}
+              </div>
+            </div>
           </div>
           <div className={videoPlayerCenterStateProgressTrackStyles}>
             <div className={videoPlayerCenterStateProgressFillStyles} />
@@ -551,10 +547,7 @@ export default function NativeVideoPlayer({
       )}
 
       {showPlaybackErrorState && (
-        <div
-          className={videoPlayerCenterStateStyles('error')}
-          role="alert"
-        >
+        <div className={videoPlayerCenterStateStyles('error')} role="alert">
           <div className={videoPlayerCenterStateHeaderStyles}>
             <div
               className={videoPlayerCenterStateIconStyles('error')}

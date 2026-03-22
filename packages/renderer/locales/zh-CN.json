@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "输出语言",
     "showOriginalText": "显示原文",
+    "displayModeLabel": "字幕显示",
     "translate": "翻译",
     "continueTranscribing": "继续转录",
     "generate": "生成字幕",
@@ -439,8 +440,8 @@
     "listTitle": "字幕 ({{count}})",
     "workspace": {
       "editorStage": "编辑工作区",
-      "dualMode": "双文本模式",
-      "translationMode": "仅翻译模式",
+      "dualMode": "双文本",
+      "translationMode": "翻译",
       "videoMounted": "预览视频已加载",
       "videoNeeded": "加载源视频以预览和合并",
       "readyTitle": "字幕编辑器已就绪",

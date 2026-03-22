@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Bahasa Output",
     "showOriginalText": "Tunjukkan teks asal",
+    "displayModeLabel": "Paparan sari kata",
     "translate": "Terjemah",
     "continueTranscribing": "Teruskan transkripsi",
     "generate": "Jana Sarikata",
@@ -439,8 +440,8 @@
     "listTitle": "Sarikata ({{count}})",
     "workspace": {
       "editorStage": "Ruang editor",
-      "dualMode": "Mod dua teks",
-      "translationMode": "Mod terjemahan sahaja",
+      "dualMode": "Dua teks",
+      "translationMode": "Terjemahan",
       "videoMounted": "Video pratonton dipasang",
       "videoNeeded": "Pasang video sumber untuk pratonton dan gabung",
       "readyTitle": "Editor sari kata sedia",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Sesetengah konteks diagnostik tidak dapat dimuatkan. Laporan masih akan menyertakan butiran daripada aplikasi ini."
   }
 }
-
-

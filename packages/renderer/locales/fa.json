@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "زبان خروجی",
     "showOriginalText": "نمایش متن اصلی",
+    "displayModeLabel": "نمایش زیرنویس‌ها",
     "translate": "ترجمه",
     "continueTranscribing": "ادامه رونویسی",
     "generate": "تولید زیرنویس",
@@ -439,8 +440,8 @@
     "listTitle": "زیرنویس‌ها ({{count}})",
     "workspace": {
       "editorStage": "فضای ویرایشگر",
-      "dualMode": "حالت متن دوگانه",
-      "translationMode": "حالت فقط ترجمه",
+      "dualMode": "متن دوگانه",
+      "translationMode": "ترجمه",
       "videoMounted": "ویدیوی پیش‌نمایش متصل شد",
       "videoNeeded": "برای پیش‌نمایش و ادغام، ویدیوی منبع را متصل کنید",
       "readyTitle": "ویرایشگر زیرنویس آماده است",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "بارگیری بخشی از زمینهٔ عیب‌یابی ممکن نشد. گزارش همچنان جزئیات این برنامه را شامل می‌شود."
   }
 }
-
-

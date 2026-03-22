@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",
     "showOriginalText": "মূল টেক্সট দেখান",
+    "displayModeLabel": "সাবটাইটেল প্রদর্শন",
     "translate": "অনুবাদ করুন",
     "continueTranscribing": "ট্রান্সক্রিপশন চালিয়ে যান",
     "generate": "সাবটাইটেল তৈরি করুন",
@@ -439,8 +440,8 @@
     "listTitle": "সাবটাইটেল ({{count}})",
     "workspace": {
       "editorStage": "এডিটর কর্মক্ষেত্র",
-      "dualMode": "ডুয়াল টেক্সট মোড",
-      "translationMode": "শুধু অনুবাদ মোড",
+      "dualMode": "ডুয়াল টেক্সট",
+      "translationMode": "অনুবাদ",
       "videoMounted": "প্রিভিউ ভিডিও মাউন্ট করা হয়েছে",
       "videoNeeded": "প্রিভিউ ও মার্জের জন্য একটি সোর্স ভিডিও মাউন্ট করুন",
       "readyTitle": "সাবটাইটেল এডিটর প্রস্তুত",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "কিছু ডায়াগনস্টিক প্রেক্ষাপট লোড করা যায়নি। রিপোর্টে তবুও এই অ্যাপের বিবরণ থাকবে।"
   }
 }
-
-

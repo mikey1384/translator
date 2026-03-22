@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "आउटपुट भाषा",
     "showOriginalText": "मूळ मजकूर दाखवा",
+    "displayModeLabel": "उपशीर्षक प्रदर्शन",
     "translate": "भाषांतर करा",
     "continueTranscribing": "ट्रान्सक्राइबिंग सुरू ठेवा",
     "generate": "उपशीर्षके तयार करा",
@@ -439,8 +440,8 @@
     "listTitle": "उपशीर्षके ({{count}})",
     "workspace": {
       "editorStage": "एडिटर कार्यक्षेत्र",
-      "dualMode": "दुहेरी मजकूर मोड",
-      "translationMode": "फक्त भाषांतर मोड",
+      "dualMode": "दुहेरी मजकूर",
+      "translationMode": "भाषांतर",
       "videoMounted": "प्रीव्ह्यू व्हिडिओ जोडलेला आहे",
       "videoNeeded": "प्रीव्ह्यू आणि मर्जसाठी स्रोत व्हिडिओ जोडा",
       "readyTitle": "उपशीर्षक संपादक तयार आहे",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "काही निदान-संदर्भ लोड करता आला नाही. अहवालात तरीही या अॅपचे तपशील समाविष्ट असतील."
   }
 }
-
-

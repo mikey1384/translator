@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
     "showOriginalText": "Hiển thị văn bản gốc",
+    "displayModeLabel": "Hiển thị phụ đề",
     "translate": "Dịch",
     "continueTranscribing": "Tiếp tục chép lời",
     "generate": "Tạo Phụ đề",
@@ -439,8 +440,8 @@
     "listTitle": "Phụ đề ({{count}})",
     "workspace": {
       "editorStage": "Không gian chỉnh sửa",
-      "dualMode": "Chế độ hai văn bản",
-      "translationMode": "Chế độ chỉ dịch",
+      "dualMode": "Hai văn bản",
+      "translationMode": "Dịch",
       "videoMounted": "Đã gắn video xem trước",
       "videoNeeded": "Gắn video nguồn để xem trước và hợp nhất",
       "readyTitle": "Trình sửa phụ đề đã sẵn sàng",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Không thể tải một phần ngữ cảnh chẩn đoán. Báo cáo vẫn sẽ bao gồm chi tiết từ ứng dụng này."
   }
 }
-
-

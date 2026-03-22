@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Kimeneti nyelv",
     "showOriginalText": "Eredeti szöveg megjelenítése",
+    "displayModeLabel": "Felirat megjelenítése",
     "translate": "Fordítás",
     "continueTranscribing": "Átírás folytatása",
     "generate": "Feliratok generálása",
@@ -439,8 +440,8 @@
     "listTitle": "Feliratok ({{count}})",
     "workspace": {
       "editorStage": "Szerkesztői munkaterület",
-      "dualMode": "Kettős szöveg mód",
-      "translationMode": "Csak fordítás mód",
+      "dualMode": "Kettős szöveg",
+      "translationMode": "Fordítás",
       "videoMounted": "Az előnézeti videó csatolva",
       "videoNeeded": "Csatolj egy forrásvideót az előnézethez és az összefűzéshez",
       "readyTitle": "A feliratszerkesztő készen áll",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "A diagnosztikai környezet egy részét nem sikerült betölteni. A jelentés így is tartalmazni fogja ennek az alkalmazásnak a részleteit."
   }
 }
-
-

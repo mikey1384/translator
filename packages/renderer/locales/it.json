@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Lingua di output",
     "showOriginalText": "Mostra testo originale",
+    "displayModeLabel": "Visualizzazione sottotitoli",
     "translate": "Traduci",
     "continueTranscribing": "Continua la trascrizione",
     "generate": "Genera sottotitoli",
@@ -439,8 +440,8 @@
     "listTitle": "Sottotitoli ({{count}})",
     "workspace": {
       "editorStage": "Area editor",
-      "dualMode": "Modalità doppio testo",
-      "translationMode": "Modalità solo traduzione",
+      "dualMode": "Doppio testo",
+      "translationMode": "Traduzione",
       "videoMounted": "Video di anteprima montato",
       "videoNeeded": "Monta un video sorgente per anteprima e unione",
       "readyTitle": "Editor sottotitoli pronto",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Impossibile caricare parte del contesto diagnostico. Il report includerà comunque i dettagli di questa app."
   }
 }
-
-

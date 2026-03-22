@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Uitvoertaal",
     "showOriginalText": "Toon originele tekst",
+    "displayModeLabel": "Weergavemodus van ondertitels",
     "translate": "Vertalen",
     "continueTranscribing": "Doorgaan met transcriberen",
     "generate": "Ondertitels genereren",
@@ -439,8 +440,8 @@
     "listTitle": "Ondertitels ({{count}})",
     "workspace": {
       "editorStage": "Editorwerkruimte",
-      "dualMode": "Dubbele tekstmodus",
-      "translationMode": "Alleen vertaalmodus",
+      "dualMode": "Dubbele tekst",
+      "translationMode": "Vertaling",
       "videoMounted": "Voorbeeldvideo gekoppeld",
       "videoNeeded": "Koppel een bronvideo voor voorbeeld en samenvoegen",
       "readyTitle": "Ondertitel-editor klaar",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Een deel van de diagnostische context kon niet worden geladen. Het rapport bevat nog steeds details van deze app."
   }
 }
-
-

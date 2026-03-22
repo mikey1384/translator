@@ -1,10 +1,12 @@
 import type {
+  SrtSegment,
   StoredSubtitleEntry,
   StoredSubtitleKind,
 } from '@shared-types/app';
 
 export function saveStoredSubtitleArtifact(options: {
   content: string;
+  segments?: SrtSegment[];
   kind: StoredSubtitleKind;
   targetLanguage?: string | null;
   sourceVideoPath?: string | null;
@@ -22,6 +24,7 @@ export function findStoredSubtitleForVideo(options: {
   success: boolean;
   entry?: StoredSubtitleEntry | null;
   content?: string;
+  segments?: SrtSegment[];
   error?: string;
 }> {
   return window.electron.findStoredSubtitleForVideo(options);

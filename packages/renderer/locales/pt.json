@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Idioma de Saída",
     "showOriginalText": "Mostrar texto original",
+    "displayModeLabel": "Modo de exibição de legendas",
     "translate": "Traduzir",
     "continueTranscribing": "Continuar transcrevendo",
     "generate": "Gerar Legendas",
@@ -439,8 +440,8 @@
     "listTitle": "Legendas ({{count}})",
     "workspace": {
       "editorStage": "Área do editor",
-      "dualMode": "Modo de texto duplo",
-      "translationMode": "Modo só tradução",
+      "dualMode": "Texto duplo",
+      "translationMode": "Tradução",
       "videoMounted": "Vídeo de prévia montado",
       "videoNeeded": "Monte um vídeo de origem para pré-visualizar e mesclar",
       "readyTitle": "Editor de legendas pronto",

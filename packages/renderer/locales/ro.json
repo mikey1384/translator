@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Limba de ieșire",
     "showOriginalText": "Arată textul original",
+    "displayModeLabel": "Mod de afișare a subtitrărilor",
     "translate": "Traduce",
     "continueTranscribing": "Continuă transcrierea",
     "generate": "Generează Subtitrări",
@@ -439,8 +440,8 @@
     "listTitle": "Subtitrări ({{count}})",
     "workspace": {
       "editorStage": "Spațiul editorului",
-      "dualMode": "Mod text dublu",
-      "translationMode": "Mod doar traducere",
+      "dualMode": "Text dublu",
+      "translationMode": "Traducere",
       "videoMounted": "Videoclipul de previzualizare este atașat",
       "videoNeeded": "Atașați un videoclip sursă pentru previzualizare și îmbinare",
       "readyTitle": "Editorul de subtitrări este gata",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "O parte din contextul de diagnostic nu a putut fi încărcată. Raportul va include în continuare detalii din această aplicație."
   }
 }
-
-

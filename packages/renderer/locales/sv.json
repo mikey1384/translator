@@ -337,6 +337,7 @@
   "subtitles": {
     "outputLanguage": "Utmatningsspråk",
     "showOriginalText": "Visa originaltext",
+    "displayModeLabel": "Visningsläge för undertexter",
     "translate": "Översätt",
     "continueTranscribing": "Fortsätt transkribera",
     "generate": "Generera undertexter",
@@ -439,8 +440,8 @@
     "listTitle": "Undertexter ({{count}})",
     "workspace": {
       "editorStage": "Redigeringsyta",
-      "dualMode": "Dubbelt textläge",
-      "translationMode": "Endast översättningsläge",
+      "dualMode": "Dubbel text",
+      "translationMode": "Översättning",
       "videoMounted": "Förhandsvideo monterad",
       "videoNeeded": "Montera en källvideo för förhandsvisning och sammanfogning",
       "readyTitle": "Textningsredigeraren är klar",
@@ -1032,5 +1033,3 @@
     "reportContextWarning": "Viss diagnostisk kontext kunde inte läsas in. Rapporten kommer fortfarande att innehålla detaljer från den här appen."
   }
 }
-
-
