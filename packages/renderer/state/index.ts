@@ -8,3 +8,4 @@ export * from './ai-store';
 export * from './video-suggestion-store';
 export * from './highlight-generation-request-store';
 export * from './highlight-workflow-store';
+export * from './step-two-workflow-store';

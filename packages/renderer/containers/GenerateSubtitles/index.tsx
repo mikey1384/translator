@@ -6,6 +6,7 @@ import ErrorBanner from '../../components/ErrorBanner.js';
 import {
   useHighlightGenerationRequestStore,
   useHighlightWorkflowStore,
+  useStepTwoWorkflowStore,
   useUIStore,
   useVideoStore,
   useTaskStore,
@@ -120,11 +121,6 @@ type SubtitleDocumentSnapshot = {
     kind?: StoredSubtitleKind | null;
     targetLanguage?: string | null;
   } | null;
-};
-
-type PreTranscriptTranslateWorkflow = {
-  transcriptionOperationId: string;
-  translationOperationId: string | null;
 };
 
 export default function GenerateSubtitles() {
@@ -279,9 +275,23 @@ export default function GenerateSubtitles() {
   const highlightWorkflowSourceKey = useHighlightWorkflowStore(
     s => s.sourceKey
   );
+  const startStepTwoWorkflow = useStepTwoWorkflowStore(s => s.startWorkflow);
+  const transitionStepTwoWorkflowToHandoff = useStepTwoWorkflowStore(
+    s => s.transitionToHandoff
+  );
+  const transitionStepTwoWorkflowToRunning = useStepTwoWorkflowStore(
+    s => s.transitionToRunning
+  );
+  const clearStepTwoWorkflow = useStepTwoWorkflowStore(s => s.clearWorkflow);
+  const stepTwoWorkflowKind = useStepTwoWorkflowStore(s => s.kind);
+  const stepTwoWorkflowPhase = useStepTwoWorkflowStore(s => s.phase);
+  const stepTwoWorkflowRunToken = useStepTwoWorkflowStore(s => s.runToken);
+  const stepTwoWorkflowTranscriptionOperationId = useStepTwoWorkflowStore(
+    s => s.transcriptionOperationId
+  );
+  const stepTwoWorkflowFollowUpId = useStepTwoWorkflowStore(s => s.followUpId);
+  const stepTwoWorkflowSourceKey = useStepTwoWorkflowStore(s => s.sourceKey);
   const stepTwoActionLaunchLockRef = useRef(false);
-  const [preTranscriptTranslateWorkflow, setPreTranscriptTranslateWorkflow] =
-    useState<PreTranscriptTranslateWorkflow | null>(null);
   const [preTranscriptProcessingLanguage, setPreTranscriptProcessingLanguage] =
     useState(targetLanguage);
   const currentHighlightSourceKey = useMemo(() => {
@@ -293,13 +303,17 @@ export default function GenerateSubtitles() {
     }
     return '';
   }, [sourceAssetIdentity, sourceUrl, videoFilePath, videoFile]);
+  const stepTwoWorkflowActive = stepTwoWorkflowKind !== null;
   const isSourceChangeBlocked =
     isSourceChangeBlockedBase ||
+    stepTwoWorkflowActive ||
     highlightWorkflowRunning ||
     summaryTask.inProgress ||
     hasSummaryPanelRequest;
   const isStepTwoMutationLocked =
-    highlightWorkflowRunning || isCancellingHighlightWorkflow;
+    stepTwoWorkflowActive ||
+    highlightWorkflowRunning ||
+    isCancellingHighlightWorkflow;
 
   useEffect(() => {
     setPreTranscriptProcessingLanguage(targetLanguage);
@@ -373,23 +387,23 @@ export default function GenerateSubtitles() {
     highlightTranscriptionActive;
   const showMountedTranscriptStep =
     isTranscriptionDone && !isHighlightWorkflowTranscribing;
-  const isPreTranscriptTranslateRunning =
-    preTranscriptTranslateWorkflow !== null;
+  const isPreTranscriptTranslateRunning = stepTwoWorkflowKind === 'translate';
   const preTranscriptTranslateProgress = useMemo(() => {
-    if (!preTranscriptTranslateWorkflow) {
+    if (stepTwoWorkflowKind !== 'translate' || !stepTwoWorkflowPhase) {
       return null;
     }
 
-    const transcribeOperationId =
-      preTranscriptTranslateWorkflow.transcriptionOperationId;
+    const transcribeOperationId = stepTwoWorkflowTranscriptionOperationId;
     const translateOperationId =
-      preTranscriptTranslateWorkflow.translationOperationId;
+      typeof stepTwoWorkflowFollowUpId === 'string'
+        ? stepTwoWorkflowFollowUpId
+        : null;
 
     const transcribeActive =
       transcriptionTask.inProgress &&
       transcriptionTask.id === transcribeOperationId;
 
-    if (transcribeActive) {
+    if (stepTwoWorkflowPhase === 'transcribing' && transcribeActive) {
       const transcribePercent = Math.max(
         0,
         Math.min(100, Number(transcriptionTask.percent) || 0)
@@ -401,7 +415,11 @@ export default function GenerateSubtitles() {
       };
     }
 
-    if (!translateOperationId) {
+    if (
+      stepTwoWorkflowPhase === 'transcribing' ||
+      stepTwoWorkflowPhase === 'handoff' ||
+      !translateOperationId
+    ) {
       return {
         title: t('subtitles.translate', 'Translate'),
         stage: t('generateSubtitles.status.starting'),
@@ -412,7 +430,7 @@ export default function GenerateSubtitles() {
     const translateActive =
       translationTask.inProgress && translationTask.id === translateOperationId;
 
-    if (translateActive) {
+    if (stepTwoWorkflowPhase === 'running' && translateActive) {
       const translatePercent = Math.max(
         0,
         Math.min(100, Number(translationTask.percent) || 0)
@@ -431,7 +449,20 @@ export default function GenerateSubtitles() {
       stage: t('generateSubtitles.status.completed'),
       percent: 100,
     };
-  }, [preTranscriptTranslateWorkflow, t, transcriptionTask, translationTask]);
+  }, [
+    stepTwoWorkflowFollowUpId,
+    stepTwoWorkflowKind,
+    stepTwoWorkflowPhase,
+    stepTwoWorkflowTranscriptionOperationId,
+    t,
+    transcriptionTask,
+    translationTask,
+  ]);
+  // Recovered highlight runs come from highlightWorkflowStore.reconcileRuntime(),
+  // so visibility cannot depend on the newer step-two intent store.
+  const shouldShowHighlightWorkflowProgress =
+    highlightTranscriptionActive ||
+    (highlightWorkflowRunning && highlightWorkflowAwaitingSummaryStart);
   const isWorkspaceTabNavigationLocked =
     highlightWorkflowRunning ||
     summaryTask.inProgress ||
@@ -475,6 +506,42 @@ export default function GenerateSubtitles() {
     highlightWorkflowRunning,
     highlightWorkflowSourceKey,
     requestHighlightWorkflowCancellation,
+  ]);
+
+  useEffect(() => {
+    if (!stepTwoWorkflowActive) return;
+    if (!stepTwoWorkflowSourceKey) return;
+    if (stepTwoWorkflowSourceKey === currentHighlightSourceKey) return;
+    clearStepTwoWorkflow({ expectedRunToken: stepTwoWorkflowRunToken });
+  }, [
+    clearStepTwoWorkflow,
+    currentHighlightSourceKey,
+    stepTwoWorkflowActive,
+    stepTwoWorkflowRunToken,
+    stepTwoWorkflowSourceKey,
+  ]);
+
+  useEffect(() => {
+    if (stepTwoWorkflowKind !== 'highlight') return;
+
+    if (highlightWorkflowSummaryOperationId) {
+      transitionStepTwoWorkflowToRunning({
+        expectedRunToken: stepTwoWorkflowRunToken,
+        followUpId: highlightWorkflowSummaryOperationId,
+      });
+      return;
+    }
+
+    if (!highlightWorkflowRunning) {
+      clearStepTwoWorkflow({ expectedRunToken: stepTwoWorkflowRunToken });
+    }
+  }, [
+    clearStepTwoWorkflow,
+    highlightWorkflowRunning,
+    highlightWorkflowSummaryOperationId,
+    stepTwoWorkflowKind,
+    stepTwoWorkflowRunToken,
+    transitionStepTwoWorkflowToRunning,
   ]);
 
   useEffect(() => {
@@ -650,7 +717,7 @@ export default function GenerateSubtitles() {
                       progress={preTranscriptTranslateProgress.percent}
                     />
                   ) : null}
-                  {isHighlightWorkflowTranscribing ? (
+                  {shouldShowHighlightWorkflowProgress ? (
                     <HighlightWorkflowProgress
                       className={workflowPanelFlushStyles}
                       title={t('summary.generate', 'Generate highlights')}
@@ -688,6 +755,29 @@ export default function GenerateSubtitles() {
                       isStepTwoMutationLocked
                     }
                   />
+                  {preTranscriptTranslateProgress ? (
+                    <HighlightWorkflowProgress
+                      className={workflowPanelFlushStyles}
+                      title={preTranscriptTranslateProgress.title}
+                      stage={preTranscriptTranslateProgress.stage}
+                      progress={preTranscriptTranslateProgress.percent}
+                    />
+                  ) : null}
+                  {shouldShowHighlightWorkflowProgress ? (
+                    <HighlightWorkflowProgress
+                      className={workflowPanelFlushStyles}
+                      title={t('summary.generate', 'Generate highlights')}
+                      stage={
+                        highlightProgress.stage ||
+                        t('summary.status.inProgress')
+                      }
+                      progress={highlightProgress.percent}
+                      onCancel={() => {
+                        void handleCancelHighlightWorkflow();
+                      }}
+                      isCancelling={isCancellingHighlightWorkflow}
+                    />
+                  ) : null}
                   {summarySegments.length > 0 ? (
                     <TranscriptSummaryPanel
                       generationLocked={isHighlightWorkflowTranscribing}
@@ -905,9 +995,14 @@ export default function GenerateSubtitles() {
     if (highlightWorkflowRunning || !canCreateHighlight) return;
     if (!tryAcquireStepTwoActionLaunchLock()) return;
 
+    let stepTwoRunToken: number | null = null;
+
     try {
       const hasTranscriptNow = hasUsableMountedTranscriptSegments();
       const needsTranscription = !hasTranscriptNow;
+      const requestedSummaryLanguage = needsTranscription
+        ? preTranscriptProcessingLanguage
+        : useUIStore.getState().summaryLanguage;
       const subtitleRollbackSnapshot = needsTranscription
         ? captureSubtitleDocumentSnapshot(currentHighlightSourceKey || null)
         : null;
@@ -917,7 +1012,13 @@ export default function GenerateSubtitles() {
       const transcriptionOperationId = needsTranscription
         ? `transcribe-${Date.now()}`
         : null;
-      const runToken = startHighlightWorkflow({
+      stepTwoRunToken = startStepTwoWorkflow({
+        kind: 'highlight',
+        language: requestedSummaryLanguage,
+        sourceKey: currentHighlightSourceKey || null,
+        transcriptionOperationId,
+      });
+      const highlightRunToken = startHighlightWorkflow({
         requiresTranscription: needsTranscription,
         transcriptionOperationId,
         sourceKey: currentHighlightSourceKey || null,
@@ -945,17 +1046,28 @@ export default function GenerateSubtitles() {
           restoreSubtitleDocumentSnapshot(subtitleRollbackSnapshot);
         }
 
-        if (useHighlightWorkflowStore.getState().runToken !== runToken) {
+        if (
+          useHighlightWorkflowStore.getState().runToken !== highlightRunToken
+        ) {
+          clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });
           releaseStepTwoActionLaunchLock();
           return;
         }
 
         if (!transcriptionResult.success) {
+          clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });
           resetHighlightWorkflowState();
           return;
         }
 
-        if (transcriptionResult.subtitles) {
+        transitionStepTwoWorkflowToHandoff({
+          expectedRunToken: stepTwoRunToken,
+        });
+
+        const mountedTranscriptSegments = getMountedTranscriptSegments();
+        if (hasUsableTranscriptSegments(mountedTranscriptSegments)) {
+          finalRequestSegments = mountedTranscriptSegments;
+        } else if (transcriptionResult.subtitles) {
           finalRequestSegments = parseSrt(transcriptionResult.subtitles);
         }
 
@@ -971,12 +1083,14 @@ export default function GenerateSubtitles() {
           !hasUsableTranscriptSegments(finalRequestSegments)
         ) {
           restoreSubtitleDocumentSnapshot(subtitleRollbackSnapshot);
+          clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });
           resetHighlightWorkflowState();
           return;
         }
       }
 
-      if (useHighlightWorkflowStore.getState().runToken !== runToken) {
+      if (useHighlightWorkflowStore.getState().runToken !== highlightRunToken) {
+        clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });
         releaseStepTwoActionLaunchLock();
         return;
       }
@@ -995,6 +1109,7 @@ export default function GenerateSubtitles() {
         if (needsTranscription) {
           restoreSubtitleDocumentSnapshot(subtitleRollbackSnapshot);
         }
+        clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });
         resetHighlightWorkflowState();
         return;
       }
@@ -1002,9 +1117,7 @@ export default function GenerateSubtitles() {
       const currentUiState = useUIStore.getState();
       const currentVideoState = useVideoStore.getState();
       const currentSubtitleState = useSubStore.getState();
-      const highlightOutputLanguage = needsTranscription
-        ? preTranscriptProcessingLanguage
-        : currentUiState.summaryLanguage;
+      const highlightOutputLanguage = requestedSummaryLanguage;
       if (
         needsTranscription &&
         highlightOutputLanguage !== currentUiState.summaryLanguage
@@ -1027,17 +1140,27 @@ export default function GenerateSubtitles() {
         }),
       });
 
-      if (useHighlightWorkflowStore.getState().runToken !== runToken) {
+      if (useHighlightWorkflowStore.getState().runToken !== highlightRunToken) {
+        clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });
         releaseStepTwoActionLaunchLock();
         return;
       }
 
+      transitionStepTwoWorkflowToHandoff({
+        expectedRunToken: stepTwoRunToken,
+        followUpId: requestId,
+      });
       setHighlightWorkflowAwaitingSummaryStart(requestId);
     } catch (error) {
       console.error(
         '[GenerateSubtitles] Failed to start highlight workflow:',
         error
       );
+      if (stepTwoRunToken != null) {
+        clearStepTwoWorkflow({
+          expectedRunToken: stepTwoRunToken,
+        });
+      }
       resetHighlightWorkflowState();
     }
   }
@@ -1061,17 +1184,20 @@ export default function GenerateSubtitles() {
   async function handleTranslateFromScratch() {
     if (
       highlightWorkflowRunning ||
-      isPreTranscriptTranslateRunning ||
+      stepTwoWorkflowActive ||
       transcriptionInProgress
     ) {
       return;
     }
     if (!tryAcquireStepTwoActionLaunchLock()) return;
 
+    const requestedLanguage = preTranscriptProcessingLanguage;
     const transcriptionOperationId = `transcribe-${Date.now()}`;
-    setPreTranscriptTranslateWorkflow({
+    const stepTwoRunToken = startStepTwoWorkflow({
+      kind: 'translate',
+      language: requestedLanguage,
+      sourceKey: currentHighlightSourceKey || null,
       transcriptionOperationId,
-      translationOperationId: null,
     });
 
     try {
@@ -1092,6 +1218,14 @@ export default function GenerateSubtitles() {
         return;
       }
 
+      if (useStepTwoWorkflowStore.getState().runToken !== stepTwoRunToken) {
+        return;
+      }
+
+      transitionStepTwoWorkflowToHandoff({
+        expectedRunToken: stepTwoRunToken,
+      });
+
       let finalSegments = getMountedTranscriptSegments();
 
       if (
@@ -1108,20 +1242,24 @@ export default function GenerateSubtitles() {
         return;
       }
 
+      if (useStepTwoWorkflowStore.getState().runToken !== stepTwoRunToken) {
+        return;
+      }
+
       const translationOperationId = `translate-${Date.now()}`;
-      setPreTranscriptTranslateWorkflow({
-        transcriptionOperationId,
-        translationOperationId,
+      transitionStepTwoWorkflowToRunning({
+        expectedRunToken: stepTwoRunToken,
+        followUpId: translationOperationId,
       });
-      setTargetLanguage(preTranscriptProcessingLanguage);
+      setTargetLanguage(requestedLanguage);
 
       await executeSrtTranslation({
         segments: finalSegments,
-        targetLanguage: preTranscriptProcessingLanguage,
+        targetLanguage: requestedLanguage,
         operationId: translationOperationId,
       });
     } finally {
-      setPreTranscriptTranslateWorkflow(null);
+      clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });
       releaseStepTwoActionLaunchLock();
     }
   }

@@ -5,6 +5,7 @@ import type { SrtSegment } from '@shared-types/app';
 import ErrorBanner from '../ErrorBanner';
 import {
   useHighlightGenerationRequestStore,
+  useHighlightWorkflowStore,
   useSubStore,
   useTaskStore,
   useUIStore,
@@ -58,6 +59,9 @@ export function TranscriptSummaryPanel({
   );
   const claimedHighlightRequests = useHighlightGenerationRequestStore(
     state => state.claimedRequests
+  );
+  const activeGenerateSubtitlesHighlightRequestId = useHighlightWorkflowStore(
+    state => state.requestId
   );
   const requestHighlights = useHighlightGenerationRequestStore(
     state => state.requestHighlights
@@ -154,8 +158,27 @@ export function TranscriptSummaryPanel({
       };
     }
 
+    if (activeGenerateSubtitlesHighlightRequestId != null) {
+      // GenerateSubtitles already knows the exact pending request id for the
+      // pre-transcript handoff, so keep that path claimable even if the mounted
+      // transcript signature is not byte-for-byte identical to the queued one.
+      const pendingRequest =
+        pendingHighlightRequests[activeGenerateSubtitlesHighlightRequestId];
+      if (pendingRequest?.source === 'generate-subtitles') {
+        return {
+          id: activeGenerateSubtitlesHighlightRequestId,
+          source: pendingRequest.source,
+          ownerKey: pendingRequest.ownerKey,
+        };
+      }
+    }
+
     return null;
-  }, [pendingHighlightRequests, transcriptRequestOwnerKey]);
+  }, [
+    activeGenerateSubtitlesHighlightRequestId,
+    pendingHighlightRequests,
+    transcriptRequestOwnerKey,
+  ]);
 
   const activeRequestForThisTranscriptId = useMemo(() => {
     if (pendingRequestForThisTranscript) {
@@ -197,12 +220,18 @@ export function TranscriptSummaryPanel({
       return;
     }
 
+    const claimOptions =
+      pendingRequestForThisTranscript.ownerKey === transcriptRequestOwnerKey
+        ? {
+            expectedRequestId: pendingRequestForThisTranscript.id,
+            expectedOwnerKey: transcriptRequestOwnerKey,
+          }
+        : {
+            expectedRequestId: pendingRequestForThisTranscript.id,
+          };
     const claimedRequest = useHighlightGenerationRequestStore
       .getState()
-      .claimPendingRequest({
-        expectedRequestId: pendingRequestForThisTranscript.id,
-        expectedOwnerKey: transcriptRequestOwnerKey,
-      });
+      .claimPendingRequest(claimOptions);
     if (!claimedRequest) return;
 
     void handleGenerate(claimedRequest);
