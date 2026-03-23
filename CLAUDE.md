@@ -96,6 +96,7 @@ Quality preferences controlled via settings:
 
 When asked to version bump, tag, and push:
 
+0. **Treat "release" as "ship the current app state."** If the user asks to release/ship/version bump + tag + push, assume they mean the current codebase state, including already-dirty tracked or untracked app changes. Do **not** silently narrow the release to only the files changed in the current turn. A dirty worktree is not a reason to cut a partial release. Only exclude files when the user explicitly says to exclude them, or when they are obviously non-product scratch artifacts and you have confirmed they should stay out.
 1. **Bump version** in `package.json` (patch for fixes, minor for features)
 2. **Commit** with message format: `v{VERSION}: Short description of changes`
 3. **Create annotated tag** with user-facing release notes (NO "Co-Authored-By" — this shows in the update popup). The first line is the subject; after a blank line, add a non-empty body for the "What's New" popup text. Lightweight tags are not allowed:
