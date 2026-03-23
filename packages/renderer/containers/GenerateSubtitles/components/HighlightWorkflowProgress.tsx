@@ -17,8 +17,8 @@ type HighlightWorkflowProgressProps = {
   title: string;
   stage: string;
   progress: number;
-  onCancel: () => void;
-  isCancelling: boolean;
+  onCancel?: () => void;
+  isCancelling?: boolean;
   className?: string;
 };
 
@@ -71,7 +71,7 @@ export default function HighlightWorkflowProgress({
   stage,
   progress,
   onCancel,
-  isCancelling,
+  isCancelling = false,
   className,
 }: HighlightWorkflowProgressProps) {
   const { t } = useTranslation();
@@ -81,15 +81,17 @@ export default function HighlightWorkflowProgress({
     <div className={`${shellStyles} ${className ?? ''}`.trim()}>
       <div className={headerStyles}>
         <h4 className={titleStyles}>{title}</h4>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onCancel}
-          disabled={isCancelling}
-          isLoading={isCancelling}
-        >
-          {t('summary.cancel', 'Cancel')}
-        </Button>
+        {onCancel ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onCancel}
+            disabled={isCancelling}
+            isLoading={isCancelling}
+          >
+            {t('summary.cancel', 'Cancel')}
+          </Button>
+        ) : null}
       </div>
       <div className={stageRowStyles}>
         <span className={stageTextStyles}>{stage}</span>

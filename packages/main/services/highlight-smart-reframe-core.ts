@@ -31,8 +31,12 @@ const MEDIAN_HARD_BOUNDARY_RATIO = 0.58;
 const MEDIAN_HARD_BOUNDARY_MIN_PX = 280;
 const DESTINATION_LOOKAHEAD_SECONDS = 1.4;
 const CAMERA_QUANTIZE_PX = 8;
-const LOCK_DEADZONE_RATIO = 0.18;
+const LOCK_DEADZONE_RATIO = 0.24;
 const LOCK_DEADZONE_MIN_PX = 80;
+const GENTLE_DRIFT_STEP_RATIO = 0.1;
+const GENTLE_DRIFT_STEP_MIN_PX = 40;
+const GENTLE_DRIFT_HOLD_RATIO = 0.34;
+const GENTLE_DRIFT_HOLD_MIN_PX = 160;
 const IMMEDIATE_MOVE_MULTIPLIER = 2.4;
 const STATIC_LOCK_RANGE_RATIO = 0.035;
 const STATIC_LOCK_RANGE_MIN_PX = 16;
@@ -1562,6 +1566,14 @@ function buildCameraTrackWithHysteresis({
     LOCK_DEADZONE_MIN_PX,
     cropWidth * LOCK_DEADZONE_RATIO
   );
+  const gentleDriftStepThreshold = Math.max(
+    GENTLE_DRIFT_STEP_MIN_PX,
+    cropWidth * GENTLE_DRIFT_STEP_RATIO
+  );
+  const gentleDriftHoldThreshold = Math.max(
+    GENTLE_DRIFT_HOLD_MIN_PX,
+    cropWidth * GENTLE_DRIFT_HOLD_RATIO
+  );
   const immediateMoveThreshold = deadzone * IMMEDIATE_MOVE_MULTIPLIER;
   const cameraTrack = [quantizeValue(targetTrack[0], CAMERA_QUANTIZE_PX, maxX)];
   const decisionReasons = ['start'];
@@ -1570,9 +1582,16 @@ function buildCameraTrackWithHysteresis({
 
   for (let index = 1; index < targetTrack.length; index += 1) {
     const previous = cameraTrack[index - 1];
+    const previousTarget = quantizeValue(
+      targetTrack[index - 1],
+      CAMERA_QUANTIZE_PX,
+      maxX
+    );
     const target = quantizeValue(targetTrack[index], CAMERA_QUANTIZE_PX, maxX);
     const delta = target - previous;
     const absDelta = Math.abs(delta);
+    const targetStep = target - previousTarget;
+    const absTargetStep = Math.abs(targetStep);
     const rawStepSeconds = timeTrack[index] - timeTrack[index - 1];
     const stepSeconds =
       Number.isFinite(rawStepSeconds) && rawStepSeconds > 0
@@ -1608,6 +1627,18 @@ function buildCameraTrackWithHysteresis({
     }
 
     const direction: -1 | 1 = delta > 0 ? 1 : -1;
+    const isGentleDrift =
+      absDelta <= gentleDriftHoldThreshold &&
+      absTargetStep <= gentleDriftStepThreshold &&
+      (targetStep === 0 || Math.sign(targetStep) === direction);
+    if (isGentleDrift) {
+      pendingDirection = 0;
+      pendingElapsedSeconds = 0;
+      cameraTrack.push(previous);
+      decisionReasons.push('hold-gentle-drift');
+      continue;
+    }
+
     if (absDelta >= immediateMoveThreshold) {
       cameraTrack.push(
         resolveCutDestination({

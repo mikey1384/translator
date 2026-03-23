@@ -29,16 +29,11 @@ import {
 } from '../../../utils/translationFailure';
 import { logError } from '../../../utils/logger';
 import {
-  detachStoredSubtitleSourceAssociation,
   storeGeneratedSubtitleArtifact,
   unmountCurrentSubtitles,
 } from '../../../utils/subtitle-library';
-
-type PendingStoredSubtitleReplacement = {
-  entryId: string;
-  sourceVideoPath: string | null;
-  sourceUrl: string | null;
-};
+import { preserveWordTimingsOnTranslatedSegments } from '../../../utils/preserve-word-timings';
+import { detachSourceLinkedSubtitleOwnership } from '../../../utils/source-linked-subtitle-ownership';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -46,7 +41,6 @@ export interface GenerateSubtitlesParams {
   targetLanguage: string;
   operationId: string;
   workflowOwner?: 'default' | 'highlight';
-  pendingReplacementTarget?: PendingStoredSubtitleReplacement | null;
 }
 
 export interface GenerateSubtitlesResult {
@@ -155,7 +149,11 @@ export async function executeSrtTranslation({
       qualityTranslation,
     });
     if (res?.success && res?.translatedSubtitles) {
-      const finalSegments = parseSrt(res.translatedSubtitles);
+      const translatedSegments = parseSrt(res.translatedSubtitles);
+      const finalSegments = preserveWordTimingsOnTranslatedSegments(
+        segments,
+        translatedSegments
+      );
       const { sourceVideoPath, sourceUrl, titleHint } =
         resolveTranslationSourceAssociation();
       let documentMeta = null;
@@ -449,7 +447,6 @@ export async function executeSubtitleGeneration({
   targetLanguage,
   operationId,
   workflowOwner = 'default',
-  pendingReplacementTarget = null,
 }: GenerateSubtitlesParams): Promise<GenerateSubtitlesResult> {
   const { setTranscription } = useTaskStore.getState();
   // Ensure translation slice is not considered active during transcription-only
@@ -513,6 +510,19 @@ export async function executeSubtitleGeneration({
       // Mark as freshly generated for the current video
       const { originalPath, path, sourceUrl, file } = useVideoStore.getState();
       const vpath = originalPath ?? path ?? videoFilePath ?? null;
+      try {
+        await detachSourceLinkedSubtitleOwnership({
+          sourceVideoPath: vpath,
+          sourceVideoAssetIdentity:
+            useVideoStore.getState().sourceAssetIdentity ?? null,
+          sourceUrl,
+        });
+      } catch (detachErr) {
+        console.error(
+          '[subtitleGeneration] Failed to detach old source-linked subtitles before saving fresh transcription:',
+          detachErr
+        );
+      }
       let documentMeta = null;
       try {
         const documentSaveResult = await FileIPC.saveSubtitleDocumentRecord({
@@ -549,27 +559,6 @@ export async function executeSubtitleGeneration({
           '[subtitleGeneration] Failed to store transcription history:',
           storeErr
         );
-      }
-      if (
-        libraryMeta?.entryId &&
-        pendingReplacementTarget?.entryId &&
-        libraryMeta.entryId !== pendingReplacementTarget.entryId
-      ) {
-        // Replacement detaches whichever stored subtitle was mounted when the
-        // user chose to retranscribe. That is intentional for auto-mounted
-        // translations too: the new transcription becomes the source owner.
-        try {
-          await detachStoredSubtitleSourceAssociation({
-            entryId: pendingReplacementTarget.entryId,
-            sourceVideoPath: pendingReplacementTarget.sourceVideoPath,
-            sourceUrl: pendingReplacementTarget.sourceUrl,
-          });
-        } catch (detachErr) {
-          console.error(
-            '[subtitleGeneration] Failed to detach replaced stored subtitle source:',
-            detachErr
-          );
-        }
       }
       useSubStore
         .getState()
@@ -738,26 +727,7 @@ export async function startTranscriptionFlow({
 
   // If there are mounted subtitles, prompt to save/discard before proceeding
   const hasMounted = useSubStore.getState().order.length > 0;
-  let pendingReplacementTarget: PendingStoredSubtitleReplacement | null = null;
   if (hasMounted) {
-    const subtitleState = useSubStore.getState();
-    const videoState = useVideoStore.getState();
-    if (subtitleState.libraryEntryId) {
-      // Capture the current stored-owner before Save As or unmounting mutates
-      // the mounted subtitle metadata. This intentionally includes stored
-      // translations: retranscribing while any subtitle is mounted means the
-      // current stored document should stop owning this source after the fresh
-      // transcription has been stored successfully.
-      pendingReplacementTarget = {
-        entryId: subtitleState.libraryEntryId,
-        sourceVideoPath:
-          videoState.originalPath ??
-          videoState.path ??
-          subtitleState.sourceVideoPath ??
-          null,
-        sourceUrl: videoState.sourceUrl ?? null,
-      };
-    }
     const choice = await openUnsavedSrtConfirm();
     if (choice === 'cancel') return { success: false };
     if (choice === 'save') {
@@ -778,7 +748,6 @@ export async function startTranscriptionFlow({
     targetLanguage: 'original',
     operationId,
     workflowOwner,
-    pendingReplacementTarget,
   });
 }
 

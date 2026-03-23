@@ -147,6 +147,26 @@ test('buildVerticalReframePlan ignores slight speaker head movement', () => {
   assert.equal(new Set(xValues).size, 1);
 });
 
+test('buildVerticalReframePlan holds a gradual single-speaker drift', () => {
+  const plan = buildVerticalReframePlan({
+    sourceWidth: 1920,
+    sourceHeight: 1080,
+    durationSeconds: 2.6,
+    samples: [
+      { timeSeconds: 0, centerX: 960, confidence: 0.95 },
+      { timeSeconds: 0.65, centerX: 1010, confidence: 0.95 },
+      { timeSeconds: 1.3, centerX: 1060, confidence: 0.95 },
+      { timeSeconds: 1.95, centerX: 1110, confidence: 0.95 },
+      { timeSeconds: 2.6, centerX: 1160, confidence: 0.95 },
+    ],
+  });
+
+  assert.ok(plan);
+  const xValues = plan?.keyframes.map(keyframe => keyframe.x) ?? [];
+  assert.ok(xValues.length >= 3);
+  assert.equal(new Set(xValues).size, 1);
+});
+
 test('buildVerticalReframePlan keeps dwell-sized corrections as held transitions', () => {
   const plan = buildVerticalReframePlan({
     sourceWidth: 1920,

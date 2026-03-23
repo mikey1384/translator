@@ -25,6 +25,7 @@ import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 import {
   BASELINE_HEIGHT,
   fontScale,
+  MIN_SUBTITLE_FONT_SIZE,
   ERROR_CODES,
 } from '../../../shared/constants';
 import {
@@ -457,13 +458,19 @@ export default function EditSubtitles({
       return;
     }
     if (didSaveSubtitleFile(result)) {
+      const savedTargetLabel =
+        result.filePath ||
+        activeFilePath ||
+        exportPath ||
+        originalPath ||
+        subtitleFileName ||
+        mountedVideoName ||
+        useSubStore.getState().documentTitle ||
+        'subtitles';
       alert(
-        result.filePath
-          ? t('messages.fileSaved', { path: result.filePath })
-          : t(
-              'editSubtitles.header.documentSaved',
-              'Subtitle document saved in Stage5.'
-            )
+        t('messages.fileSaved', {
+          path: savedTargetLabel,
+        })
       );
     }
   }
@@ -718,8 +725,11 @@ export default function EditSubtitles({
 
       const targetHeight = meta?.height ?? BASELINE_HEIGHT;
       let fontSizePx = isAudioOnly
-        ? Math.max(10, baseFontSize)
-        : Math.max(10, Math.round(baseFontSize * fontScale(targetHeight)));
+        ? Math.max(MIN_SUBTITLE_FONT_SIZE, baseFontSize)
+        : Math.max(
+            MIN_SUBTITLE_FONT_SIZE,
+            Math.round(baseFontSize * fontScale(targetHeight))
+          );
 
       if (
         !isAudioOnly &&
@@ -731,7 +741,7 @@ export default function EditSubtitles({
           (previewSubtitleFontPx * previewVideoHeightPx) /
             previewDisplayHeightPx
         );
-        fontSizePx = Math.max(10, adjusted);
+        fontSizePx = Math.max(MIN_SUBTITLE_FONT_SIZE, adjusted);
       }
 
       const opts: RenderSubtitlesOptions = {

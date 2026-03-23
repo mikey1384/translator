@@ -13,6 +13,7 @@ export const ASR_FAST_MODE = false; // Set to true for faster processing with lo
 /* Subtitle Rendering */
 export const BASELINE_HEIGHT = 720;
 export const BASELINE_FONT_SIZE = 30;
+export const MIN_SUBTITLE_FONT_SIZE = 6;
 
 /* Progress & UI */
 export const DEBOUNCE_DELAY_MS = 300;

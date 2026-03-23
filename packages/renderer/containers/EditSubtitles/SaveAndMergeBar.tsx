@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../../state/ui-store.js';
 import type { SubtitleDisplayMode } from '@shared-types/app';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
+import { MIN_SUBTITLE_FONT_SIZE } from '../../../shared/constants';
 import {
   editorButtonContentStyles,
   editorMergeButtonStyles,
@@ -178,8 +179,12 @@ export default function SaveAndMergeBar({
                 useUIStore.getState().setBaseFontSize(Number(digits || 0));
               }}
               onBlur={() => {
-                const size = useUIStore.getState().baseFontSize || 10;
-                const clamped = Math.max(10, Math.min(size, 72));
+                const size =
+                  useUIStore.getState().baseFontSize || MIN_SUBTITLE_FONT_SIZE;
+                const clamped = Math.max(
+                  MIN_SUBTITLE_FONT_SIZE,
+                  Math.min(size, 72)
+                );
                 useUIStore.getState().setBaseFontSize(clamped);
               }}
             />

@@ -3,7 +3,10 @@ import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
 } from '../constants/subtitle-styles.js';
-import { BASELINE_FONT_SIZE } from '../constants/index.js';
+import {
+  BASELINE_FONT_SIZE,
+  MIN_SUBTITLE_FONT_SIZE,
+} from '../constants/index.js';
 
 const DEFAULT_FONT_STACK = [
   'Noto Sans',
@@ -246,7 +249,7 @@ export function resolveSubtitleRenderTheme(opts: {
     ? SHORT_FORM_TUNING[stylePreset]
     : null;
   const finalFontSize = Math.max(
-    10,
+    MIN_SUBTITLE_FONT_SIZE,
     displayFontSize * (shortFormTuning?.fontScale ?? 1)
   );
 

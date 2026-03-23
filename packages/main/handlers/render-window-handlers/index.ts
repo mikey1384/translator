@@ -19,6 +19,7 @@ import { initPuppeteer } from './puppeteer-setup.js';
 import {
   generateSubtitleEvents,
   generateTimedOriginalSubtitleEvents,
+  shouldUseTimedOriginalSubtitleRender,
 } from './srt-parser.js';
 import { parseSrt } from '../../../shared/helpers/index.js';
 import { normalizeSubtitleSegments } from '../../services/subtitle-processing/pipeline/finalize-pass.js';
@@ -397,11 +398,11 @@ export function initializeRenderWindowHandlers({
           normalizeSegmentWordTimingsForRender(normalizedSegs);
 
         const shouldUseTimedOriginalRender =
-          (options.outputMode ?? 'dual') === 'original' &&
-          isVerticalRender(options) &&
-          renderReadySegs.some(
-            segment => Array.isArray(segment.words) && segment.words.length > 0
-          );
+          shouldUseTimedOriginalSubtitleRender({
+            segments: renderReadySegs,
+            outputMode: options.outputMode,
+            isVertical: isVerticalRender(options),
+          });
 
         const uniqueEventsMs = shouldUseTimedOriginalRender
           ? generateTimedOriginalSubtitleEvents({

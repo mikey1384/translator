@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   generateSubtitleEvents,
   generateTimedOriginalSubtitleEvents,
+  shouldUseTimedOriginalSubtitleRender,
 } from '../handlers/render-window-handlers/srt-parser.js';
 import { applySegmentPatchWithWordTimings } from '../../shared/helpers/word-timing.js';
 import {
@@ -171,6 +172,53 @@ test('timed original render events step word by word for aligned segments', () =
   });
 });
 
+test('timed portrait render is enabled for untranslated dual-mode segments with word timings', () => {
+  assert.equal(
+    shouldUseTimedOriginalSubtitleRender({
+      isVertical: true,
+      outputMode: 'dual',
+      segments: [
+        {
+          id: 'seg-1',
+          index: 1,
+          start: 0,
+          end: 1,
+          original: 'hello world',
+          words: [
+            { start: 0, end: 0.4, word: 'hello' },
+            { start: 0.45, end: 0.8, word: 'world' },
+          ],
+        },
+      ],
+    }),
+    true
+  );
+});
+
+test('timed portrait render stays off for dual-mode translated segments', () => {
+  assert.equal(
+    shouldUseTimedOriginalSubtitleRender({
+      isVertical: true,
+      outputMode: 'dual',
+      segments: [
+        {
+          id: 'seg-1',
+          index: 1,
+          start: 0,
+          end: 1,
+          original: 'hello world',
+          translation: 'hola mundo',
+          words: [
+            { start: 0, end: 0.4, word: 'hello' },
+            { start: 0.45, end: 0.8, word: 'world' },
+          ],
+        },
+      ],
+    }),
+    false
+  );
+});
+
 test('timed original render shows upcoming text before a late first word and during gaps', () => {
   const events = generateTimedOriginalSubtitleEvents({
     segments: [
@@ -316,7 +364,7 @@ test('timed original render supports scripts without spaces', () => {
   assert.equal(events[0].timeMs, 0);
 });
 
-test('timed original render falls back to plain text when words cannot be aligned', () => {
+test('timed original render falls back to loose word layout when words cannot be aligned', () => {
   const events = generateTimedOriginalSubtitleEvents({
     segments: [
       {
@@ -335,10 +383,20 @@ test('timed original render falls back to plain text when words cannot be aligne
     operationId: 'fallback-test',
   });
 
-  assert.deepEqual(events, [
-    { timeMs: 0, state: { mode: 'plain', text: 'goodbye world' } },
-    { timeMs: 1000, state: { mode: 'plain', text: '' } },
-  ]);
+  assert.equal(events[0].state.mode, 'timed');
+  assert.equal(events[0].state.text, 'hello world');
+  assert.deepEqual(
+    events[0].state.mode === 'timed' ? events[0].state.parts : [],
+    [
+      { kind: 'word', text: 'hello', state: 'active' },
+      { kind: 'whitespace', text: ' ' },
+      { kind: 'word', text: 'world', state: 'upcoming' },
+    ]
+  );
+  assert.deepEqual(events.at(-1), {
+    timeMs: 1000,
+    state: { mode: 'plain', text: '' },
+  });
 });
 
 test('timed original render drops trimmed-out leading words from visible text', () => {

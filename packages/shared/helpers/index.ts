@@ -423,9 +423,9 @@ export async function openSubtitleWithElectron(): Promise<{
           srtContent: content,
         });
 
-    // Prefer the canonical Stage5 document when it matches this file, then the
-    // adjacent sidecar, then the old metadata cache, and only then the plain
-    // heuristic parse for external SRTs that never had app metadata.
+    // Prefer the canonical Stage5 document when it matches this file, then any
+    // legacy adjacent sidecar, then the internal metadata cache, and only then
+    // the plain heuristic parse for external SRTs that never had app metadata.
     const segments =
       documentResult.segments && documentResult.segments.length > 0
         ? documentResult.segments

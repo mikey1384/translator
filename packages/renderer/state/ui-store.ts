@@ -9,6 +9,7 @@ import type {
   SubtitleDisplayMode,
   SummaryEffortLevel,
 } from '@shared-types/app';
+import { TRANSLATION_LANGUAGES } from '../constants/translation-languages';
 import type { GenerateSubtitlesWorkspaceTab } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import {
   readGenerateSubtitlesWorkspaceTab,
@@ -94,11 +95,100 @@ const SUMMARY_LANG_KEY = 'savedSummaryLanguage';
 const SUMMARY_EFFORT_KEY = 'savedSummaryEffortLevel';
 const SUBTITLE_DISPLAY_MODE_KEY = 'savedSubtitleDisplayMode';
 const LEGACY_SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
+const APP_LANGUAGE_PREFERENCE_KEY = 'app_language_preference';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
 const DUB_VOICE_KEY = 'savedDubVoice';
 const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
 const DEFAULT_DUB_VOICE = 'rachel';
+const VALID_TARGET_LANGUAGES = new Set(
+  TRANSLATION_LANGUAGES.map(option => option.value)
+);
+
+function normalizeTargetLanguageValue(
+  value: string | null | undefined
+): string | null {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase();
+  if (!normalized || normalized === 'original') {
+    return null;
+  }
+  return VALID_TARGET_LANGUAGES.has(normalized) ? normalized : null;
+}
+
+export function mapUiLanguageToTargetLanguage(
+  value: string | null | undefined
+): string {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace('_', '-');
+  if (
+    normalized.startsWith('zh-tw') ||
+    normalized.startsWith('zh-hk') ||
+    normalized.startsWith('zh-mo') ||
+    normalized.includes('hant')
+  ) {
+    return 'chinese_traditional';
+  }
+  if (normalized.startsWith('zh')) {
+    return 'chinese_simplified';
+  }
+  const base = normalized.split('-')[0] || 'en';
+  const mapping: Record<string, string> = {
+    en: 'english',
+    es: 'spanish',
+    fr: 'french',
+    de: 'german',
+    it: 'italian',
+    pt: 'portuguese',
+    ru: 'russian',
+    ja: 'japanese',
+    ko: 'korean',
+    ar: 'arabic',
+    hi: 'hindi',
+    id: 'indonesian',
+    vi: 'vietnamese',
+    tr: 'turkish',
+    nl: 'dutch',
+    pl: 'polish',
+    sv: 'swedish',
+    no: 'norwegian',
+    da: 'danish',
+    fi: 'finnish',
+    el: 'greek',
+    cs: 'czech',
+    hu: 'hungarian',
+    ro: 'romanian',
+    uk: 'ukrainian',
+    he: 'hebrew',
+    fa: 'farsi',
+    th: 'thai',
+    ms: 'malay',
+    sw: 'swahili',
+    af: 'afrikaans',
+    bn: 'bengali',
+    ta: 'tamil',
+    te: 'telugu',
+    mr: 'marathi',
+    tl: 'tagalog',
+    ur: 'urdu',
+  };
+  return mapping[base] || 'english';
+}
+
+function resolveInitialTargetLanguage(): string {
+  const storedTargetLanguage = normalizeTargetLanguageValue(
+    localStorage.getItem(TARGET_LANG_KEY)
+  );
+  if (storedTargetLanguage) {
+    return storedTargetLanguage;
+  }
+  return mapUiLanguageToTargetLanguage(
+    localStorage.getItem(APP_LANGUAGE_PREFERENCE_KEY) || navigator.language
+  );
+}
 
 /** Safely parse a boolean from localStorage with fallback */
 function parseStoredBool(key: string, fallback: boolean): boolean {
@@ -158,7 +248,7 @@ const initial: State = {
   matchedIndices: [],
   navTick: 0,
   inputMode: 'file',
-  targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
+  targetLanguage: resolveInitialTargetLanguage(),
   summaryLanguage: localStorage.getItem(SUMMARY_LANG_KEY) ?? 'english',
   summaryEffortLevel:
     (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ??
@@ -287,8 +377,11 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         },
 
         setTargetLanguage(lang) {
-          localStorage.setItem(TARGET_LANG_KEY, lang);
-          set({ targetLanguage: lang });
+          const next =
+            normalizeTargetLanguageValue(lang) ||
+            resolveInitialTargetLanguage();
+          localStorage.setItem(TARGET_LANG_KEY, next);
+          set({ targetLanguage: next });
         },
 
         setSummaryLanguage(lang) {

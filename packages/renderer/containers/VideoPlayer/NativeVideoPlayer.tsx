@@ -34,7 +34,11 @@ import {
 import { useVideoStore, useSubStore, useUIStore } from '../../state';
 import { useSubSourceId } from '../../state/subtitle-store';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
-import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
+import {
+  BASELINE_HEIGHT,
+  fontScale,
+  MIN_SUBTITLE_FONT_SIZE,
+} from '../../../shared/constants';
 import type { SubtitleDisplayMode } from '@shared-types/app';
 
 import { cueText } from '../../../shared/helpers';
@@ -147,9 +151,9 @@ export default function NativeVideoPlayer({
       ? (displayHeight ?? videoHeight ?? targetVideoHeight ?? undefined)
       : undefined;
   const canonicalFontSize = isAudioOnly
-    ? Math.max(10, baseFontSize)
+    ? Math.max(MIN_SUBTITLE_FONT_SIZE, baseFontSize)
     : Math.max(
-        10,
+        MIN_SUBTITLE_FONT_SIZE,
         Math.round(
           baseFontSize * fontScale(targetVideoHeight ?? BASELINE_HEIGHT)
         )
@@ -353,7 +357,10 @@ export default function NativeVideoPlayer({
     return () => clearTimeout(id);
   }, [activeSubtitle]);
 
-  const effFontSize = Math.max(10, Math.round(canonicalFontSize * scale));
+  const effFontSize = Math.max(
+    MIN_SUBTITLE_FONT_SIZE,
+    Math.round(canonicalFontSize * scale)
+  );
 
   useEffect(() => {
     if (!isAudioOnly && displayHeightPx > 0 && targetVideoHeight) {

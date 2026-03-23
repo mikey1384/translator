@@ -132,6 +132,33 @@ export function generateSubtitleEvents({
   );
 }
 
+export function shouldUseTimedOriginalSubtitleRender({
+  segments,
+  outputMode,
+  isVertical,
+}: {
+  segments: SrtSegment[];
+  outputMode?: SubtitleDisplayMode | null;
+  isVertical: boolean;
+}): boolean {
+  if (!isVertical) {
+    return false;
+  }
+
+  const hasWordTimings = segments.some(
+    segment => Array.isArray(segment.words) && segment.words.length > 0
+  );
+  if (!hasWordTimings) {
+    return false;
+  }
+
+  if ((outputMode ?? 'dual') === 'original') {
+    return true;
+  }
+
+  return !segments.some(segment => Boolean(segment.translation?.trim()));
+}
+
 type TimedWordLayout =
   | {
       kind: 'whitespace';
@@ -149,6 +176,20 @@ type TimedWordMatch = {
   start: number;
   end: number;
 };
+
+type TimedWordLayoutResult =
+  | {
+      ok: true;
+      layout: TimedWordLayout[];
+      words: NonNullable<SrtSegment['words']>;
+      text: string;
+      mode: 'matched' | 'loose';
+      reason?: string;
+    }
+  | {
+      ok: false;
+      reason: string;
+    };
 
 const WORDISH_TEXT_RX = /[\p{L}\p{N}\p{M}]/u;
 const WORDISH_RUN_RX = /[\p{L}\p{N}\p{M}]+(?:['’\-‑–—][\p{L}\p{N}\p{M}]+)*/gu;
@@ -282,18 +323,74 @@ function buildSyntheticTimedWordLayout(args: {
   };
 }
 
-function buildTimedWordLayout(segment: SrtSegment): {
+function buildLooseTimedWordLayout(
+  words: NonNullable<SrtSegment['words']>
+): {
   layout: TimedWordLayout[];
   words: NonNullable<SrtSegment['words']>;
   text: string;
 } | null {
-  if (!Array.isArray(segment.words) || segment.words.length === 0) {
+  if (words.length === 0) {
     return null;
+  }
+
+  const hasCjk = words.some(word =>
+    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(
+      String(word.word ?? '')
+    )
+  );
+  const layout: TimedWordLayout[] = [];
+  let previousToken = '';
+
+  for (let wordIndex = 0; wordIndex < words.length; wordIndex += 1) {
+    const token = String(words[wordIndex]?.word ?? '').trim();
+    if (!token) {
+      return null;
+    }
+
+    if (layout.length > 0) {
+      const noSpaceBefore = /^(?:[.,!?…:;%)\]}])/.test(token);
+      const previousEndsAscii = /[A-Za-z0-9]$/.test(previousToken);
+      const nextStartsAscii = /^[A-Za-z0-9]/.test(token);
+      const shouldInsertSpace = hasCjk
+        ? !noSpaceBefore && previousEndsAscii && nextStartsAscii
+        : !noSpaceBefore;
+      if (shouldInsertSpace) {
+        layout.push({ kind: 'whitespace', text: ' ' });
+      }
+    }
+
+    layout.push({
+      kind: 'word',
+      text: token,
+      wordIndex,
+    });
+    previousToken = token;
+  }
+
+  return {
+    layout,
+    words,
+    text: buildTimedText(layout),
+  };
+}
+
+function buildTimedWordLayout(segment: SrtSegment): TimedWordLayoutResult {
+  if (!Array.isArray(segment.words) || segment.words.length === 0) {
+    return { ok: false, reason: 'no-word-timings' };
   }
 
   const sourceText = segment.original ?? '';
   if (!sourceText) {
-    return null;
+    const looseLayout = buildLooseTimedWordLayout(segment.words);
+    return looseLayout
+      ? {
+          ok: true,
+          ...looseLayout,
+          mode: 'loose',
+          reason: 'empty-original-text',
+        }
+      : { ok: false, reason: 'empty-original-text' };
   }
 
   const lowerSourceText = sourceText.toLocaleLowerCase();
@@ -304,7 +401,7 @@ function buildTimedWordLayout(segment: SrtSegment): {
     const word = segment.words[wordIndex];
     const token = String(word.word ?? '').trim();
     if (!token) {
-      return null;
+      return { ok: false, reason: 'empty-word-token' };
     }
 
     let matchIndex = sourceText.indexOf(token, cursor);
@@ -312,7 +409,15 @@ function buildTimedWordLayout(segment: SrtSegment): {
       matchIndex = lowerSourceText.indexOf(token.toLocaleLowerCase(), cursor);
     }
     if (matchIndex === -1) {
-      return null;
+      const looseLayout = buildLooseTimedWordLayout(segment.words);
+      return looseLayout
+        ? {
+            ok: true,
+            ...looseLayout,
+            mode: 'loose',
+            reason: 'word-token-not-found-in-original',
+          }
+        : { ok: false, reason: 'word-token-not-found-in-original' };
     }
 
     matches.push({
@@ -327,11 +432,18 @@ function buildTimedWordLayout(segment: SrtSegment): {
   const layout: TimedWordLayout[] = [];
   const leadingGap = sourceText.slice(0, matches[0]!.start);
   if (containsRenderableWordText(leadingGap)) {
-    return buildSyntheticTimedWordLayout({
+    const syntheticLayout = buildSyntheticTimedWordLayout({
       sourceText,
       matches,
       words: segment.words,
     });
+    return syntheticLayout
+      ? {
+          ok: true,
+          ...syntheticLayout,
+          mode: 'matched',
+        }
+      : { ok: false, reason: 'failed-to-build-synthetic-layout' };
   }
   if (leadingGap && !containsRenderableWordText(leadingGap)) {
     layout.push({
@@ -346,11 +458,18 @@ function buildTimedWordLayout(segment: SrtSegment): {
       const previous = matches[index - 1]!;
       const gap = sourceText.slice(previous.end, match.start);
       if (containsRenderableWordText(gap)) {
-        return buildSyntheticTimedWordLayout({
+        const syntheticLayout = buildSyntheticTimedWordLayout({
           sourceText,
           matches,
           words: segment.words,
         });
+        return syntheticLayout
+          ? {
+              ok: true,
+              ...syntheticLayout,
+              mode: 'matched',
+            }
+          : { ok: false, reason: 'failed-to-build-synthetic-layout' };
       }
       if (gap) {
         layout.push({
@@ -369,11 +488,18 @@ function buildTimedWordLayout(segment: SrtSegment): {
 
   const trailingGap = sourceText.slice(matches.at(-1)!.end);
   if (containsRenderableWordText(trailingGap)) {
-    return buildSyntheticTimedWordLayout({
+    const syntheticLayout = buildSyntheticTimedWordLayout({
       sourceText,
       matches,
       words: segment.words,
     });
+    return syntheticLayout
+      ? {
+          ok: true,
+          ...syntheticLayout,
+          mode: 'matched',
+        }
+      : { ok: false, reason: 'failed-to-build-synthetic-layout' };
   }
   if (trailingGap && !containsRenderableWordText(trailingGap)) {
     layout.push({
@@ -383,9 +509,11 @@ function buildTimedWordLayout(segment: SrtSegment): {
   }
 
   return {
+    ok: true,
     layout,
     words: segment.words,
     text: buildTimedText(layout),
+    mode: 'matched',
   };
 }
 
@@ -436,8 +564,6 @@ export function generateTimedOriginalSubtitleEvents({
   const events: SubtitleRenderEvent[] = [
     { timeMs: 0, state: createPlainState('') },
   ];
-  let timedSegments = 0;
-  let fallbackSegments = 0;
 
   for (const segment of segments) {
     const start = ms(segment.start);
@@ -447,8 +573,7 @@ export function generateTimedOriginalSubtitleEvents({
     }
 
     const timedLayout = buildTimedWordLayout(segment);
-    if (!timedLayout) {
-      fallbackSegments += 1;
+    if (!timedLayout.ok) {
       const text = cueText(segment, 'original');
       const state = createPlainState(text);
       if (start === 0) {
@@ -492,7 +617,6 @@ export function generateTimedOriginalSubtitleEvents({
     }
 
     if (!boundaryActions.length) {
-      fallbackSegments += 1;
       const state = createPlainState(cueText(segment, 'original'));
       if (start === 0) {
         events[0].state = state;
@@ -544,16 +668,10 @@ export function generateTimedOriginalSubtitleEvents({
           });
         }
       }
-
-      timedSegments += 1;
     }
 
     events.push({ timeMs: end, state: createPlainState('') });
   }
-
-  log.info(
-    `[srt-parser ${operationId}] timed original render enabled for ${timedSegments} segments, ${fallbackSegments} fallback`
-  );
 
   return finalizeRenderEvents(
     events,

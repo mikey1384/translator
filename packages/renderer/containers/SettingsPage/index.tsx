@@ -2,10 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import CreditCard from '../../components/CreditCard';
 import AdminResetButton from '../../components/AdminResetButton';
-import {
-  shellHeaderBlockStyles,
-  shellTitleStyles,
-} from '../../styles';
+import { shellHeaderBlockStyles, shellTitleStyles } from '../../styles';
 import { useCreditStore } from '../../state/credit-store';
 import { useAiStore } from '../../state';
 import { SystemIPC } from '../../ipc';
@@ -18,10 +15,7 @@ import ApiKeyModeToggle from './ApiKeyModeToggle';
 import ByoOpenAiSection from './ByoOpenAiSection';
 import SiteConnectionSection from './SiteConnectionSection';
 import { hasAnyByoEntitlementUnlocked } from '../../state/byo-runtime';
-import {
-  settingsCenterColumnStyles,
-  settingsPageLayoutStyles,
-} from './styles';
+import { settingsCenterColumnStyles, settingsPageLayoutStyles } from './styles';
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -74,34 +68,39 @@ export default function SettingsPage() {
   const showStage5Section = !effectiveByoUnlocked || !useApiKeysMode;
 
   return (
-    <div
-      className={settingsPageLayoutStyles}
-    >
+    <div className={settingsPageLayoutStyles}>
       <header className={shellHeaderBlockStyles}>
         <h1 className={shellTitleStyles}>{t('settings.title')}</h1>
       </header>
 
-      {/* —————————————————  BYO UNLOCK (if not unlocked)  ————————————————— */}
-      <ByoUnlockCard />
+      {/* —————————————————  STAGE5 CREDITS SECTION  ————————————————— */}
+      {showStage5Section && <CreditCard />}
 
       {/* —————————————————  BYO MODE TOGGLE (if unlocked)  ————————————————— */}
       <ApiKeyModeToggle />
 
-      {/* —————————————————  STAGE5 CREDITS SECTION  ————————————————— */}
       {showStage5Section && (
         <Section
-          title={t('settings.performanceQuality.title', 'Performance & Quality')}
+          title={t(
+            'settings.performanceQuality.title',
+            'Performance & Quality'
+          )}
           className={settingsCenterColumnStyles}
         >
           <QualityToggles />
           <DubbingVoiceSelector />
           <DubbingMixSlider />
-          <CreditCard />
         </Section>
       )}
 
+      {/* —————————————————  BYO UNLOCK (if not unlocked)  ————————————————— */}
+      <ByoUnlockCard />
+
       {isAdmin && (
-        <Section title={t('admin.title', 'Admin')} className={settingsCenterColumnStyles}>
+        <Section
+          title={t('admin.title', 'Admin')}
+          className={settingsCenterColumnStyles}
+        >
           <AdminResetButton />
         </Section>
       )}

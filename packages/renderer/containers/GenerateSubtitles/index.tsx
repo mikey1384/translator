@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ErrorBanner from '../../components/ErrorBanner.js';
 import {
   useHighlightGenerationRequestStore,
@@ -39,6 +39,7 @@ import useDownloadedVideoLibrary from './hooks/useDownloadedVideoLibrary.js';
 // Utilities
 import {
   startTranscriptionFlow,
+  executeSrtTranslation,
   executeDubGeneration,
 } from './utils/subtitleGeneration';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
@@ -49,6 +50,8 @@ import {
 } from '../../components/TranscriptSummaryPanel/transcript-usable-segments.js';
 import { parseSrt } from '../../../shared/helpers';
 import { deriveHighlightWorkflowState } from './highlight-workflow-progress.js';
+import { translateTranscriptionStageLabel } from '../../components/ProgressAreas/transcription-stage-label.js';
+import { translateTranslationStageLabel } from '../../components/ProgressAreas/translation-stage-label.js';
 import {
   workflowPanelFlushStyles,
   workflowStageBodyStyles,
@@ -119,6 +122,11 @@ type SubtitleDocumentSnapshot = {
   } | null;
 };
 
+type PreTranscriptTranslateWorkflow = {
+  transcriptionOperationId: string;
+  translationOperationId: string | null;
+};
+
 export default function GenerateSubtitles() {
   const { t, i18n } = useTranslation();
   const activeWorkspaceTab = useUIStore(s => s.generateSubtitlesWorkspaceTab);
@@ -129,7 +137,6 @@ export default function GenerateSubtitles() {
   // UI State
   const targetLanguage = useUIStore(s => s.targetLanguage);
   const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
-  const summaryLanguage = useUIStore(s => s.summaryLanguage);
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
 
   // URL processing state
@@ -153,6 +160,7 @@ export default function GenerateSubtitles() {
 
   // Task state
   const translationInProgress = useTaskStore(s => s.translation.inProgress);
+  const translationTask = useTaskStore(s => s.translation);
   const transcriptionTask = useTaskStore(s => s.transcription);
   const summaryTask = useTaskStore(s => s.summary);
   const transcriptionInProgress = transcriptionTask.inProgress;
@@ -272,6 +280,10 @@ export default function GenerateSubtitles() {
     s => s.sourceKey
   );
   const stepTwoActionLaunchLockRef = useRef(false);
+  const [preTranscriptTranslateWorkflow, setPreTranscriptTranslateWorkflow] =
+    useState<PreTranscriptTranslateWorkflow | null>(null);
+  const [preTranscriptProcessingLanguage, setPreTranscriptProcessingLanguage] =
+    useState(targetLanguage);
   const currentHighlightSourceKey = useMemo(() => {
     if (sourceAssetIdentity) return `asset:${sourceAssetIdentity}`;
     if (sourceUrl) return `url:${sourceUrl}`;
@@ -288,6 +300,11 @@ export default function GenerateSubtitles() {
     hasSummaryPanelRequest;
   const isStepTwoMutationLocked =
     highlightWorkflowRunning || isCancellingHighlightWorkflow;
+
+  useEffect(() => {
+    setPreTranscriptProcessingLanguage(targetLanguage);
+  }, [targetLanguage]);
+
   const workspaceTabs = useMemo(
     () =>
       [
@@ -356,6 +373,65 @@ export default function GenerateSubtitles() {
     highlightTranscriptionActive;
   const showMountedTranscriptStep =
     isTranscriptionDone && !isHighlightWorkflowTranscribing;
+  const isPreTranscriptTranslateRunning =
+    preTranscriptTranslateWorkflow !== null;
+  const preTranscriptTranslateProgress = useMemo(() => {
+    if (!preTranscriptTranslateWorkflow) {
+      return null;
+    }
+
+    const transcribeOperationId =
+      preTranscriptTranslateWorkflow.transcriptionOperationId;
+    const translateOperationId =
+      preTranscriptTranslateWorkflow.translationOperationId;
+
+    const transcribeActive =
+      transcriptionTask.inProgress &&
+      transcriptionTask.id === transcribeOperationId;
+
+    if (transcribeActive) {
+      const transcribePercent = Math.max(
+        0,
+        Math.min(100, Number(transcriptionTask.percent) || 0)
+      );
+      return {
+        title: t('subtitles.translate', 'Translate'),
+        stage: translateTranscriptionStageLabel(transcriptionTask.stage, t),
+        percent: Math.round(transcribePercent * 0.5),
+      };
+    }
+
+    if (!translateOperationId) {
+      return {
+        title: t('subtitles.translate', 'Translate'),
+        stage: t('generateSubtitles.status.starting'),
+        percent: 50,
+      };
+    }
+
+    const translateActive =
+      translationTask.inProgress && translationTask.id === translateOperationId;
+
+    if (translateActive) {
+      const translatePercent = Math.max(
+        0,
+        Math.min(100, Number(translationTask.percent) || 0)
+      );
+      return {
+        title: t('subtitles.translate', 'Translate'),
+        stage: translationTask.stage
+          ? translateTranslationStageLabel(translationTask.stage, t)
+          : t('generateSubtitles.status.starting'),
+        percent: 50 + Math.round(translatePercent * 0.5),
+      };
+    }
+
+    return {
+      title: t('subtitles.translate', 'Translate'),
+      stage: t('generateSubtitles.status.completed'),
+      percent: 100,
+    };
+  }, [preTranscriptTranslateWorkflow, t, transcriptionTask, translationTask]);
   const isWorkspaceTabNavigationLocked =
     highlightWorkflowRunning ||
     summaryTask.inProgress ||
@@ -429,7 +505,7 @@ export default function GenerateSubtitles() {
 
   const stepTwoStageTitle = showMountedTranscriptStep
     ? t('generateSubtitles.workflow.translateDubTitle', 'Translate Or Dub')
-    : t('generateSubtitles.workflow.transcribeTitle', 'Create Transcript');
+    : t('generateSubtitles.workflow.processVideoTitle', 'Process Video');
 
   return (
     <Section
@@ -543,20 +619,37 @@ export default function GenerateSubtitles() {
                   <TranscribeOnlyPanel
                     className={workflowPanelFlushStyles}
                     onTranscribe={handleTranscribeOnly}
+                    onTranslate={handleTranslateFromScratch}
                     onCreateHighlight={handleCreateHighlight}
-                    summaryLanguage={summaryLanguage}
-                    onSummaryLanguageChange={setSummaryLanguage}
-                    isTranscribing={isTranscribing}
+                    processingLanguage={preTranscriptProcessingLanguage}
+                    onProcessingLanguageChange={
+                      setPreTranscriptProcessingLanguage
+                    }
+                    isTranscribing={
+                      isTranscribing && !isPreTranscriptTranslateRunning
+                    }
+                    isTranslating={isPreTranscriptTranslateRunning}
                     isCreatingHighlight={isStepTwoMutationLocked}
                     disabled={
                       isButtonDisabled ||
                       hoursNeeded == null ||
                       isMetadataPending ||
-                      isStepTwoMutationLocked
+                      isStepTwoMutationLocked ||
+                      isPreTranscriptTranslateRunning
                     }
-                    createHighlightDisabled={!canCreateHighlight}
+                    createHighlightDisabled={
+                      !canCreateHighlight || isPreTranscriptTranslateRunning
+                    }
                     statusMessage={metadataStatusMessage}
                   />
+                  {preTranscriptTranslateProgress ? (
+                    <HighlightWorkflowProgress
+                      className={workflowPanelFlushStyles}
+                      title={preTranscriptTranslateProgress.title}
+                      stage={preTranscriptTranslateProgress.stage}
+                      progress={preTranscriptTranslateProgress.percent}
+                    />
+                  ) : null}
                   {isHighlightWorkflowTranscribing ? (
                     <HighlightWorkflowProgress
                       className={workflowPanelFlushStyles}
@@ -909,6 +1002,15 @@ export default function GenerateSubtitles() {
       const currentUiState = useUIStore.getState();
       const currentVideoState = useVideoStore.getState();
       const currentSubtitleState = useSubStore.getState();
+      const highlightOutputLanguage = needsTranscription
+        ? preTranscriptProcessingLanguage
+        : currentUiState.summaryLanguage;
+      if (
+        needsTranscription &&
+        highlightOutputLanguage !== currentUiState.summaryLanguage
+      ) {
+        setSummaryLanguage(highlightOutputLanguage);
+      }
       const requestId = requestHighlights('generate-subtitles', {
         ownerKey: buildSummaryRequestOwnerKey({
           semanticSourceIdentity: buildSemanticSummarySourceIdentity({
@@ -920,7 +1022,7 @@ export default function GenerateSubtitles() {
             sourceUrl: currentVideoState.sourceUrl ?? null,
           }),
           segments: finalRequestSegments,
-          summaryLanguage: currentUiState.summaryLanguage,
+          summaryLanguage: highlightOutputLanguage,
           effortLevel: currentUiState.summaryEffortLevel,
         }),
       });
@@ -952,6 +1054,74 @@ export default function GenerateSubtitles() {
     try {
       await proceedTranscribe();
     } finally {
+      releaseStepTwoActionLaunchLock();
+    }
+  }
+
+  async function handleTranslateFromScratch() {
+    if (
+      highlightWorkflowRunning ||
+      isPreTranscriptTranslateRunning ||
+      transcriptionInProgress
+    ) {
+      return;
+    }
+    if (!tryAcquireStepTwoActionLaunchLock()) return;
+
+    const transcriptionOperationId = `transcribe-${Date.now()}`;
+    setPreTranscriptTranslateWorkflow({
+      transcriptionOperationId,
+      translationOperationId: null,
+    });
+
+    try {
+      const transcriptionResult = await startTranscriptionFlow({
+        videoFile,
+        videoFilePath,
+        durationSecs,
+        hoursNeeded,
+        operationId: transcriptionOperationId,
+        metadataStatus: {
+          status: metadataStatus,
+          code: metadataErrorCode,
+          message: metadataErrorMessage,
+        },
+      });
+
+      if (!transcriptionResult.success) {
+        return;
+      }
+
+      let finalSegments = getMountedTranscriptSegments();
+
+      if (
+        !hasUsableTranscriptSegments(finalSegments) &&
+        transcriptionResult.subtitles
+      ) {
+        finalSegments = parseSrt(transcriptionResult.subtitles);
+      }
+
+      if (!finalSegments || !hasUsableTranscriptSegments(finalSegments)) {
+        useUrlStore
+          .getState()
+          .setValidationError('No SRT file available for translation');
+        return;
+      }
+
+      const translationOperationId = `translate-${Date.now()}`;
+      setPreTranscriptTranslateWorkflow({
+        transcriptionOperationId,
+        translationOperationId,
+      });
+      setTargetLanguage(preTranscriptProcessingLanguage);
+
+      await executeSrtTranslation({
+        segments: finalSegments,
+        targetLanguage: preTranscriptProcessingLanguage,
+        operationId: translationOperationId,
+      });
+    } finally {
+      setPreTranscriptTranslateWorkflow(null);
       releaseStepTwoActionLaunchLock();
     }
   }

@@ -10,14 +10,15 @@ import type {
   SubtitleRenderPart,
   SubtitleRenderState,
 } from '@shared-types/app';
+import {
+  getVisibleTimedSubtitleParts,
+  getVisibleTimedSubtitleText,
+} from './timed-subtitle-visibility.js';
 
 const renderTarget = {
   width: undefined as number | undefined,
   height: undefined as number | undefined,
 };
-
-const UPCOMING_WORD_OPACITY = 0.18;
-const SPOKEN_WORD_OPACITY = 1;
 
 function escapeHtml(text: string): string {
   return text
@@ -89,15 +90,7 @@ function renderTimedPartHtml(part: SubtitleRenderPart): string {
     return `<span style="white-space:pre-wrap;">${escapeHtml(part.text)}</span>`;
   }
 
-  if (part.state === 'upcoming') {
-    return `<span style="white-space:pre-wrap;opacity:${UPCOMING_WORD_OPACITY};">${escapeHtml(part.text)}</span>`;
-  }
-
-  if (part.state === 'active') {
-    return `<span style="white-space:pre-wrap;opacity:${SPOKEN_WORD_OPACITY};font-weight:700;">${escapeHtml(part.text)}</span>`;
-  }
-
-  return `<span style="white-space:pre-wrap;opacity:${SPOKEN_WORD_OPACITY};">${escapeHtml(part.text)}</span>`;
+  return `<span style="white-space:pre-wrap;font-weight:700;">${escapeHtml(part.text)}</span>`;
 }
 
 function renderTimedSubtitleHtml(
@@ -109,7 +102,12 @@ function renderTimedSubtitleHtml(
     return '';
   }
 
-  const lines = splitTimedPartsIntoLines(state.parts);
+  const visibleParts = getVisibleTimedSubtitleParts(state.parts);
+  if (visibleParts.length === 0) {
+    return '';
+  }
+
+  const lines = splitTimedPartsIntoLines(visibleParts);
   const renderedLines = lines.map(line =>
     line.map(part => renderTimedPartHtml(part)).join('')
   );
@@ -264,19 +262,12 @@ function initializeSubtitleDisplay() {
       videoHeightPx,
     });
 
-    try {
-      const computedFont = window
-        .getComputedStyle(el)
-        .getPropertyValue('font-family');
-      if (!(window as any).__loggedFontFamily) {
-        console.log('[render-host] subtitle font-family:', computedFont);
-        (window as any).__loggedFontFamily = true;
-      }
-    } catch (err) {
-      console.warn('[render-host] Failed to read font-family:', err);
-    }
-
-    setSubtitleVisibility(el, state.text);
+    setSubtitleVisibility(
+      el,
+      state.mode === 'timed'
+        ? getVisibleTimedSubtitleText(state.parts)
+        : state.text
+    );
   };
 
   // @ts-expect-error...

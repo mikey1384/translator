@@ -8,11 +8,11 @@ import {
   useTaskStore,
   useUpdateStore,
 } from '../state';
-import * as SystemIPC from '../ipc/system';
 import * as SubtitlesIPC from '../ipc/subtitles';
 import * as UpdateIPC from '../ipc/update';
 import { useCreditStore } from '../state';
 import { useUrlStore } from '../state/url-store';
+import * as SystemIPC from '../ipc/system';
 
 import FindBar from '../components/FindBar';
 import SettingsPage from '../containers/SettingsPage';
@@ -50,6 +50,7 @@ import {
   openRequiredUpdate,
   openUpdateNotes,
 } from '../state/modal-store';
+import { mapUiLanguageToTargetLanguage } from '../state/ui-store';
 
 const settingsHeader = css`
   position: sticky;
@@ -177,74 +178,60 @@ export default function AppContent() {
     };
   }, []);
 
-  // Initialize default target translation language from user preference (once)
+  // Keep the main-process target language in sync with the renderer choice.
   useEffect(() => {
-    const current = useUIStore.getState().targetLanguage;
-    if (current && current !== 'original') return; // user already chose
-
-    const mapToTarget = (pref: string | null): string => {
-      const p = (pref || '').toLowerCase();
-      const m: Record<string, string> = {
-        en: 'english',
-        es: 'spanish',
-        fr: 'french',
-        de: 'german',
-        it: 'italian',
-        pt: 'portuguese',
-        ru: 'russian',
-        ja: 'japanese',
-        ko: 'korean',
-        zh: 'chinese_simplified',
-        ar: 'arabic',
-        hi: 'hindi',
-        id: 'indonesian',
-        vi: 'vietnamese',
-        tr: 'turkish',
-        nl: 'dutch',
-        pl: 'polish',
-        sv: 'swedish',
-        no: 'norwegian',
-        da: 'danish',
-        fi: 'finnish',
-        el: 'greek',
-        cs: 'czech',
-        hu: 'hungarian',
-        ro: 'romanian',
-        uk: 'ukrainian',
-        he: 'hebrew',
-        fa: 'farsi',
-        th: 'thai',
-        ms: 'malay',
-        sw: 'swahili',
-        af: 'afrikaans',
-        bn: 'bengali',
-        ta: 'tamil',
-        te: 'telugu',
-        mr: 'marathi',
-        tl: 'tagalog',
-        ur: 'urdu',
-      };
-      return m[p] || 'english';
-    };
-
     (async () => {
+      const savedRendererTarget = String(
+        localStorage.getItem('savedTargetLanguage') || ''
+      )
+        .trim()
+        .toLowerCase();
+      const rendererHasExplicitSavedTarget =
+        savedRendererTarget.length > 0 && savedRendererTarget !== 'original';
+      let current = useUIStore.getState().targetLanguage;
+      let savedSubtitleTargetLanguage: string | null = null;
+
       try {
-        // Prefer a previously saved target language from main settings
         const saved = await SubtitlesIPC.getTargetLanguage();
         if (saved && saved !== 'original') {
-          useUIStore.getState().setTargetLanguage(saved);
-          return;
+          savedSubtitleTargetLanguage = saved;
         }
-        const pref = await SystemIPC.getLanguagePreference();
-        const target = mapToTarget(pref);
-        useUIStore.getState().setTargetLanguage(target);
-        await SubtitlesIPC.setTargetLanguage(target);
       } catch {
-        // Fallback to English if anything fails
-        const target = 'english';
-        useUIStore.getState().setTargetLanguage(target);
+        // Do nothing
+      }
+
+      if (!rendererHasExplicitSavedTarget) {
+        if (
+          savedSubtitleTargetLanguage &&
+          savedSubtitleTargetLanguage !== current
+        ) {
+          useUIStore.getState().setTargetLanguage(savedSubtitleTargetLanguage);
+          current = savedSubtitleTargetLanguage;
+        } else {
+          try {
+            const savedAppLanguage = await SystemIPC.getLanguagePreference();
+            const defaultTargetLanguage = mapUiLanguageToTargetLanguage(
+              savedAppLanguage ||
+                localStorage.getItem('app_language_preference') ||
+                navigator.language
+            );
+            if (defaultTargetLanguage !== current) {
+              useUIStore.getState().setTargetLanguage(defaultTargetLanguage);
+              current = defaultTargetLanguage;
+            }
+          } catch {
+            // Do nothing
+          }
+        }
+      }
+
+      try {
+        if (savedSubtitleTargetLanguage !== current) {
+          await SubtitlesIPC.setTargetLanguage(current);
+        }
+      } catch {
         try {
-          await SubtitlesIPC.setTargetLanguage(target);
+          await SubtitlesIPC.setTargetLanguage(current);
         } catch {
           // Do nothing
         }

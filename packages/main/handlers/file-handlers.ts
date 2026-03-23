@@ -13,13 +13,11 @@ import {
   SaveSubtitleDocumentResult,
 } from '@shared-types/app';
 import {
-  buildSubtitleSidecarContent,
   getSubtitleSidecarPath,
 } from '../../shared/helpers/subtitle-sidecar.js';
 import {
   readSavedSubtitleMetadata,
   saveSavedSubtitleMetadata,
-  writeTextFileAtomically,
 } from '../services/saved-subtitle-metadata.js';
 import { saveSubtitleDocumentRecord } from '../services/subtitle-documents.js';
 
@@ -72,38 +70,36 @@ export async function handleSaveFile(
 function buildSubtitleSaveWarning(args: {
   documentSaved: boolean;
   metadataCacheSaved: boolean;
-  sidecarSaved: boolean;
   documentError?: string;
-  sidecarError?: string;
   metadataCacheError?: string;
+  sidecarCleanupError?: string;
 }): string | null {
   const documentError = String(args.documentError || '').trim();
-  const sidecarError = String(args.sidecarError || '').trim();
   const metadataCacheError = String(args.metadataCacheError || '').trim();
+  const sidecarCleanupError = String(args.sidecarCleanupError || '').trim();
 
   if (!args.documentSaved) {
     const base =
       'Subtitle file saved, but Stage5 could not update its internal subtitle document. The exported SRT is fine, but Stage5 reopen fidelity may be out of date.';
-    const details = [documentError, sidecarError, metadataCacheError]
+    const details = [documentError, metadataCacheError, sidecarCleanupError]
       .filter(Boolean)
       .join(' ');
     return details ? `${base} ${details}` : base;
   }
 
-  if (args.sidecarSaved) {
-    return null;
-  }
-
-  if (args.metadataCacheSaved) {
+  if (!args.metadataCacheSaved) {
     const base =
-      'Subtitle file saved, but Stage5 could not save the adjacent metadata file. Reopening on this machine should still preserve Stage5 metadata, but moving this SRT elsewhere may lose word timings or bilingual structure.';
-    return sidecarError ? `${base} ${sidecarError}` : base;
+      'Subtitle file saved, but Stage5 metadata could not be saved internally. Reopening in Stage5 may lose word timings or bilingual structure.';
+    return metadataCacheError ? `${base} ${metadataCacheError}` : base;
   }
 
-  const base =
-    'Subtitle file saved, but Stage5 metadata could not be saved. Reopening in Stage5 may lose word timings or bilingual structure.';
-  const details = [sidecarError, metadataCacheError].filter(Boolean).join(' ');
-  return details ? `${base} ${details}` : base;
+  if (sidecarCleanupError) {
+    const base =
+      'Subtitle file saved, but Stage5 could not remove an old adjacent metadata file.';
+    return `${base} ${sidecarCleanupError}`;
+  }
+
+  return null;
 }
 
 export async function handleSaveSubtitleDocument(
@@ -136,9 +132,8 @@ export async function handleSaveSubtitleDocument(
     });
 
     let metadataCacheSaved = false;
-    let sidecarSaved = false;
     let metadataCacheError = '';
-    let sidecarError = '';
+    let sidecarCleanupError = '';
     let document = undefined;
     let documentSaved = false;
     let documentError = '';
@@ -182,23 +177,17 @@ export async function handleSaveSubtitleDocument(
 
     try {
       const sidecarPath = getSubtitleSidecarPath(filePath);
-      const sidecarContent = buildSubtitleSidecarContent({
-        segments: options.segments,
-        srtContent,
-      });
-      await writeTextFileAtomically(sidecarPath, sidecarContent);
-      sidecarSaved = true;
+      await fs.rm(sidecarPath, { force: true });
     } catch (error: any) {
-      sidecarError = error?.message || String(error);
+      sidecarCleanupError = error?.message || String(error);
     }
 
     const warning = buildSubtitleSaveWarning({
       documentSaved,
       metadataCacheSaved,
-      sidecarSaved,
       documentError,
-      sidecarError,
       metadataCacheError,
+      sidecarCleanupError,
     });
     if (warning) {
       return {
@@ -206,7 +195,7 @@ export async function handleSaveSubtitleDocument(
         filePath,
         warning,
         metadataCacheSaved,
-        sidecarSaved,
+        sidecarSaved: false,
         document,
       };
     }
@@ -215,7 +204,7 @@ export async function handleSaveSubtitleDocument(
       status: 'success',
       filePath,
       metadataCacheSaved,
-      sidecarSaved,
+      sidecarSaved: false,
       document,
     };
   } catch (error: any) {

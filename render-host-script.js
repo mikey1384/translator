@@ -1498,6 +1498,7 @@ var VENDOR_TTS_MODEL_PRICING = {
 
 // ../shared/constants/runtime-config.ts
 var BASELINE_FONT_SIZE = 30;
+var MIN_SUBTITLE_FONT_SIZE = 6;
 
 // ../shared/constants/index.ts
 var AI_MODEL_DISPLAY_NAMES = {
@@ -1714,7 +1715,7 @@ function resolveSubtitleRenderTheme(opts) {
   );
   const shortFormTuning = isShortFormPortrait ? SHORT_FORM_TUNING[stylePreset] : null;
   const finalFontSize = Math.max(
-    10,
+    MIN_SUBTITLE_FONT_SIZE,
     displayFontSize * (shortFormTuning?.fontScale ?? 1)
   );
   const outlineRgba = assColorToRgba(style.outlineColor);
@@ -1867,13 +1868,33 @@ function getSubtitleStyles(opts) {
   `;
 }
 
+// timed-subtitle-visibility.ts
+function getVisibleTimedSubtitleParts(parts) {
+  const wordParts = parts.filter(
+    (part) => part.kind === "word"
+  );
+  const activeWords = wordParts.filter((part) => part.state === "active");
+  if (activeWords.length === 0) {
+    const hasUpcomingWord = wordParts.some((part) => part.state === "upcoming");
+    if (!hasUpcomingWord) {
+      return [];
+    }
+    const lastSpokenWord = [...wordParts].reverse().find((part) => part.state === "spoken");
+    return lastSpokenWord ? [lastSpokenWord] : [];
+  }
+  return activeWords.flatMap(
+    (part, index) => index === 0 ? [part] : [{ kind: "whitespace", text: " " }, part]
+  );
+}
+function getVisibleTimedSubtitleText(parts) {
+  return getVisibleTimedSubtitleParts(parts).map((part) => part.text).join("");
+}
+
 // render-host-script.tsx
 var renderTarget = {
   width: void 0,
   height: void 0
 };
-var UPCOMING_WORD_OPACITY = 0.18;
-var SPOKEN_WORD_OPACITY = 1;
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -1912,19 +1933,17 @@ function renderTimedPartHtml(part) {
   if (part.kind === "whitespace") {
     return `<span style="white-space:pre-wrap;">${escapeHtml(part.text)}</span>`;
   }
-  if (part.state === "upcoming") {
-    return `<span style="white-space:pre-wrap;opacity:${UPCOMING_WORD_OPACITY};">${escapeHtml(part.text)}</span>`;
-  }
-  if (part.state === "active") {
-    return `<span style="white-space:pre-wrap;opacity:${SPOKEN_WORD_OPACITY};font-weight:700;">${escapeHtml(part.text)}</span>`;
-  }
-  return `<span style="white-space:pre-wrap;opacity:${SPOKEN_WORD_OPACITY};">${escapeHtml(part.text)}</span>`;
+  return `<span style="white-space:pre-wrap;font-weight:700;">${escapeHtml(part.text)}</span>`;
 }
 function renderTimedSubtitleHtml(state, stylePreset, renderTheme) {
   if (!state.text.trim()) {
     return "";
   }
-  const lines = splitTimedPartsIntoLines(state.parts);
+  const visibleParts = getVisibleTimedSubtitleParts(state.parts);
+  if (visibleParts.length === 0) {
+    return "";
+  }
+  const lines = splitTimedPartsIntoLines(visibleParts);
   const renderedLines = lines.map(
     (line2) => line2.map((part) => renderTimedPartHtml(part)).join("")
   );
@@ -2046,16 +2065,10 @@ function initializeSubtitleDisplay() {
       videoWidthPx,
       videoHeightPx
     });
-    try {
-      const computedFont = window.getComputedStyle(el).getPropertyValue("font-family");
-      if (!window.__loggedFontFamily) {
-        console.log("[render-host] subtitle font-family:", computedFont);
-        window.__loggedFontFamily = true;
-      }
-    } catch (err) {
-      console.warn("[render-host] Failed to read font-family:", err);
-    }
-    setSubtitleVisibility(el, state.text);
+    setSubtitleVisibility(
+      el,
+      state.mode === "timed" ? getVisibleTimedSubtitleText(state.parts) : state.text
+    );
   };
   window.updateSubtitle = (text, opts = {}) => {
     updateElementFromState({ mode: "plain", text }, opts);
