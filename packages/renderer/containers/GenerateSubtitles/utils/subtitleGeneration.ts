@@ -128,6 +128,10 @@ export async function executeSrtTranslation({
     return { success: false };
   }
 
+  if (useUIStore.getState().subtitleDisplayMode === 'original') {
+    useUIStore.getState().setSubtitleDisplayMode('translation');
+  }
+
   // Clear stale errors so users only see current run failures.
   useUrlStore.getState().clearError();
 
