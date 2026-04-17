@@ -5,19 +5,69 @@ import { AI_MODELS, normalizeAiModelId } from '@shared/constants';
 const ANTHROPIC_MAX_TOKENS = 16000;
 const ANTHROPIC_MAX_TOKENS_WITH_THINKING = 32000;
 
-// Extended thinking budget tokens by effort level
+type AnthropicEffort = 'low' | 'medium' | 'high' | 'xhigh';
+
+// Legacy extended thinking budget tokens for Claude models that still support
+// budget_tokens. Claude Opus 4.7 uses adaptive thinking instead.
 const THINKING_BUDGET: Record<'low' | 'medium' | 'high', number> = {
   low: 0, // No extended thinking
   medium: 8000, // Moderate reasoning
   high: 16000, // Deep reasoning
 };
 
+type AnthropicThinkingConfig =
+  | { enabled: false; maxTokens: number }
+  | {
+      enabled: true;
+      maxTokens: number;
+      apply: (requestParams: any) => void;
+      logMessage: string;
+    };
+
+function resolveAnthropicThinkingConfig(
+  normalizedModel: string,
+  effort?: AnthropicEffort
+): AnthropicThinkingConfig {
+  if (!effort || effort === 'low') {
+    return { enabled: false, maxTokens: ANTHROPIC_MAX_TOKENS };
+  }
+
+  if (normalizedModel === AI_MODELS.CLAUDE_OPUS) {
+    return {
+      enabled: true,
+      maxTokens: ANTHROPIC_MAX_TOKENS_WITH_THINKING,
+      apply: (requestParams) => {
+        requestParams.thinking = { type: 'adaptive' };
+        requestParams.output_config = {
+          ...(requestParams.output_config || {}),
+          effort,
+        };
+      },
+      logMessage: `[anthropic-client] Adaptive thinking enabled with effort: ${effort}`,
+    };
+  }
+
+  const legacyEffort = effort === 'xhigh' ? 'high' : effort;
+  const budgetTokens = THINKING_BUDGET[legacyEffort];
+  return {
+    enabled: true,
+    maxTokens: ANTHROPIC_MAX_TOKENS_WITH_THINKING,
+    apply: (requestParams) => {
+      requestParams.thinking = {
+        type: 'enabled',
+        budget_tokens: budgetTokens,
+      };
+    },
+    logMessage: `[anthropic-client] Extended thinking enabled with budget: ${budgetTokens} tokens`,
+  };
+}
+
 export interface AnthropicTranslateOptions {
   messages: Array<{ role: string; content: string }>;
   model?: string;
   apiKey: string;
   signal?: AbortSignal;
-  effort?: 'low' | 'medium' | 'high';
+  effort?: AnthropicEffort;
 }
 
 export interface AnthropicWebSearchOptions {
@@ -25,7 +75,7 @@ export interface AnthropicWebSearchOptions {
   model?: string;
   apiKey: string;
   signal?: AbortSignal;
-  effort?: 'low' | 'medium' | 'high';
+  effort?: AnthropicEffort;
   onTextDelta?: (delta: string) => void;
 }
 
@@ -68,36 +118,29 @@ export async function translateWithAnthropic({
     userMessages.unshift({ role: 'user', content: 'Please proceed.' });
   }
 
-  // Determine if extended thinking should be enabled
-  const budgetTokens = effort ? THINKING_BUDGET[effort] : 0;
-  const useExtendedThinking = budgetTokens > 0;
+  const thinkingConfig = resolveAnthropicThinkingConfig(
+    normalizedModel,
+    effort
+  );
 
   // Build request parameters
   const requestParams: Anthropic.MessageCreateParams = {
     model: normalizedModel,
-    max_tokens: useExtendedThinking
-      ? ANTHROPIC_MAX_TOKENS_WITH_THINKING
-      : ANTHROPIC_MAX_TOKENS,
+    max_tokens: thinkingConfig.maxTokens,
     messages: userMessages,
   };
 
   // Add system prompt if present (not compatible with extended thinking in some cases)
-  if (systemPrompt && !useExtendedThinking) {
+  if (systemPrompt && !thinkingConfig.enabled) {
     requestParams.system = systemPrompt;
-  } else if (systemPrompt && useExtendedThinking) {
+  } else if (systemPrompt && thinkingConfig.enabled) {
     // Prepend system context to first user message when using extended thinking
     userMessages[0].content = `${systemPrompt}\n\n${userMessages[0].content}`;
   }
 
-  // Add extended thinking configuration
-  if (useExtendedThinking) {
-    (requestParams as any).thinking = {
-      type: 'enabled',
-      budget_tokens: budgetTokens,
-    };
-    log.debug(
-      `[anthropic-client] Extended thinking enabled with budget: ${budgetTokens} tokens`
-    );
+  if (thinkingConfig.enabled) {
+    thinkingConfig.apply(requestParams);
+    log.debug(thinkingConfig.logMessage);
   }
 
   const response = await client.messages.create(requestParams, { signal });
@@ -157,14 +200,14 @@ export async function respondWithAnthropicWebSearch({
     userMessages.unshift({ role: 'user', content: 'Please proceed.' });
   }
 
-  const budgetTokens = effort ? THINKING_BUDGET[effort] : 0;
-  const useExtendedThinking = budgetTokens > 0;
+  const thinkingConfig = resolveAnthropicThinkingConfig(
+    normalizedModel,
+    effort
+  );
 
   const requestParams: any = {
     model: normalizedModel,
-    max_tokens: useExtendedThinking
-      ? ANTHROPIC_MAX_TOKENS_WITH_THINKING
-      : ANTHROPIC_MAX_TOKENS,
+    max_tokens: thinkingConfig.maxTokens,
     messages: userMessages,
     tools: [
       {
@@ -174,17 +217,14 @@ export async function respondWithAnthropicWebSearch({
     ],
   };
 
-  if (systemPrompt && !useExtendedThinking) {
+  if (systemPrompt && !thinkingConfig.enabled) {
     requestParams.system = systemPrompt;
-  } else if (systemPrompt && useExtendedThinking) {
+  } else if (systemPrompt && thinkingConfig.enabled) {
     userMessages[0].content = `${systemPrompt}\n\n${userMessages[0].content}`;
   }
 
-  if (useExtendedThinking) {
-    requestParams.thinking = {
-      type: 'enabled',
-      budget_tokens: budgetTokens,
-    };
+  if (thinkingConfig.enabled) {
+    thinkingConfig.apply(requestParams);
   }
 
   let textContent = '';

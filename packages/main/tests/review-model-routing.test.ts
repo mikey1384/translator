@@ -12,7 +12,7 @@ test('Stage5 review model config preserves the selected Anthropic family when Cl
       prefersClaude: true,
       stage5AnthropicReviewAvailable: true,
     }).model,
-    'claude-opus-4-6'
+    'claude-opus-4-7'
   );
 });
 
@@ -22,7 +22,7 @@ test('Stage5 review model config keeps the selected Anthropic family even if cac
       prefersClaude: true,
       stage5AnthropicReviewAvailable: false,
     }).model,
-    'claude-opus-4-6'
+    'claude-opus-4-7'
   );
 });
 

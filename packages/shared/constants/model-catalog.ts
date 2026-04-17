@@ -1,7 +1,7 @@
 export const AI_MODELS = {
   GPT: 'gpt-5.1',
   CLAUDE_SONNET: 'claude-sonnet-4-6',
-  CLAUDE_OPUS: 'claude-opus-4-6',
+  CLAUDE_OPUS: 'claude-opus-4-7',
   WHISPER: 'whisper-1',
 } as const;
 
@@ -24,7 +24,7 @@ export const STAGE5_REVIEW_PROVIDER_OPTIONS = {
   anthropic: {
     provider: 'anthropic',
     model: AI_MODELS.CLAUDE_OPUS,
-    exactModelLabel: 'Claude Opus 4.6',
+    exactModelLabel: 'Claude Opus 4.7',
   },
 } as const;
 
@@ -53,7 +53,10 @@ export const AI_MODEL_ALIASES: Record<string, string> = {
   'claude-sonnet-4-5-20250929': AI_MODELS.CLAUDE_SONNET,
   'claude-sonnet-4-5': AI_MODELS.CLAUDE_SONNET,
   'claude-sonnet-4.6': AI_MODELS.CLAUDE_SONNET,
+  // Legacy Opus 4.6 values from saved settings normalize to current Opus.
+  'claude-opus-4-6': AI_MODELS.CLAUDE_OPUS,
   'claude-opus-4.6': AI_MODELS.CLAUDE_OPUS,
+  'claude-opus-4.7': AI_MODELS.CLAUDE_OPUS,
 };
 
 export const STAGE5_TRANSLATION_MODEL_PRICING = {

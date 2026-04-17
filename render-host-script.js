@@ -1368,7 +1368,7 @@ var TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
 var AI_MODELS = {
   GPT: "gpt-5.1",
   CLAUDE_SONNET: "claude-sonnet-4-6",
-  CLAUDE_OPUS: "claude-opus-4-6",
+  CLAUDE_OPUS: "claude-opus-4-7",
   WHISPER: "whisper-1"
 };
 var STAGE5_REVIEW_TRANSLATION_MODEL = "gpt-5.4";
@@ -1387,14 +1387,17 @@ var STAGE5_REVIEW_PROVIDER_OPTIONS = {
   anthropic: {
     provider: "anthropic",
     model: AI_MODELS.CLAUDE_OPUS,
-    exactModelLabel: "Claude Opus 4.6"
+    exactModelLabel: "Claude Opus 4.7"
   }
 };
 var AI_MODEL_ALIASES = {
   "claude-sonnet-4-5-20250929": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4-5": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4.6": AI_MODELS.CLAUDE_SONNET,
-  "claude-opus-4.6": AI_MODELS.CLAUDE_OPUS
+  // Legacy Opus 4.6 values from saved settings normalize to current Opus.
+  "claude-opus-4-6": AI_MODELS.CLAUDE_OPUS,
+  "claude-opus-4.6": AI_MODELS.CLAUDE_OPUS,
+  "claude-opus-4.7": AI_MODELS.CLAUDE_OPUS
 };
 var STAGE5_TRANSLATION_MODEL_PRICING = {
   [AI_MODELS.GPT]: {

@@ -32,7 +32,7 @@ test('model-based hint resolves claude from claude model id', () => {
   assert.equal(
     resolveTranslationModelFamilyHint({
       translationPhase: 'review',
-      model: 'claude-opus-4-6',
+      model: 'claude-opus-4-7',
       hintSource: 'model',
       prefersClaudeDraft: false,
       prefersClaudeReview: false,

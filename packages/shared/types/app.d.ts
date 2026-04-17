@@ -426,13 +426,13 @@ declare module '@shared-types/app' {
     | 'gpt-5.1'
     | 'gpt-5.4'
     | 'claude-sonnet-4-6'
-    | 'claude-opus-4-6';
+    | 'claude-opus-4-7';
   export type Stage5VideoSuggestionMode = 'standard' | 'high';
   export type ByoVideoSuggestionModel =
     | 'gpt-5.1'
     | 'gpt-5.4'
     | 'claude-sonnet-4-6'
-    | 'claude-opus-4-6'
+    | 'claude-opus-4-7'
     // Migration-only compatibility states for legacy unified preferences.
     | 'follow-draft'
     | 'follow-review';
