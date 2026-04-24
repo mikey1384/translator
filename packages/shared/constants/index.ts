@@ -272,24 +272,28 @@ export const CREDIT_PACKS = {
   MICRO: {
     id: 'MICRO' as const,
     price: 1,
+    krw: 1_542,
     hours: MICRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: MICRO_CREDITS,
   },
   STARTER: {
     id: 'STARTER' as const,
     price: 5,
+    krw: 7_711,
     hours: STARTER_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: STARTER_CREDITS,
   },
   STANDARD: {
     id: 'STANDARD' as const,
     price: 10,
+    krw: 15_422,
     hours: STANDARD_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: STANDARD_CREDITS,
   },
   PRO: {
     id: 'PRO' as const,
     price: 50,
+    krw: 77_110,
     hours: PRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: PRO_CREDITS,
   },

@@ -51,10 +51,6 @@ const providerPillStyles = css`
   color: ${colors.primaryLight};
 `;
 
-const checkoutTextStyles = css`
-  color: ${colors.primaryLight};
-`;
-
 export type OperationType =
   | 'transcription'
   | 'translation'
@@ -189,7 +185,6 @@ export default function CreditBalance({
   const hours = useCreditStore(s => s.hours);
   const loading = useCreditStore(s => s.loading);
   const error = useCreditStore(s => s.error);
-  const checkoutPending = useCreditStore(s => s.checkoutPending);
 
   // Check if dubbing is in progress and get the model being used
   const dubbingInProgress = useTaskStore(s => s.dubbing.inProgress);
@@ -257,16 +252,6 @@ export default function CreditBalance({
     return (
       <div className={cx(metaPillStyles, creditBalanceContainer)}>
         <span className={errorText}>{t('common.error.unexpected')}</span>
-      </div>
-    );
-  }
-
-  if (checkoutPending) {
-    return (
-      <div className={cx(metaPillStyles, creditBalanceContainer)}>
-        <span className={cx(creditText, checkoutTextStyles)}>
-          {t('credits.redirectingToPayment', 'Opening secure checkout…')}
-        </span>
       </div>
     );
   }

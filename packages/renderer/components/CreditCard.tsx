@@ -21,13 +21,16 @@ const balanceTxt = css`
   color: ${colors.primary};
 `;
 
+function formatUsdListPrice(price: number): string {
+  return `US$${price}`;
+}
+
 export default function CreditCard() {
   const { t } = useTranslation();
   const credits = useCreditStore(s => s.credits);
   const hours = useCreditStore(s => s.hours);
   const loading = useCreditStore(s => s.loading);
   const error = useCreditStore(s => s.error);
-  const checkoutPending = useCreditStore(s => s.checkoutPending);
   const translationHoursLabel = t(
     'credits.translationHoursShort',
     'translation hrs'
@@ -40,6 +43,12 @@ export default function CreditCard() {
         })
       : '';
   const sharedHoursRemaining = estimateTranslatableHours(credits, false);
+  const creditPacks = [
+    CREDIT_PACKS.MICRO,
+    CREDIT_PACKS.STARTER,
+    CREDIT_PACKS.STANDARD,
+    CREDIT_PACKS.PRO,
+  ] as const;
 
   return (
     <section className={cx(surfaceCardStyles, card)}>
@@ -51,8 +60,6 @@ export default function CreditCard() {
         <p style={{ color: colors.textDim }}>{t('credits.loading')}</p>
       ) : error ? (
         <p style={{ color: colors.danger }}>{error}</p>
-      ) : checkoutPending ? (
-        <p style={{ color: colors.primary }}>🔄 Processing payment...</p>
       ) : credits !== null && hours !== null ? (
         <>
           <span className={balanceTxt}>
@@ -71,30 +78,18 @@ export default function CreditCard() {
           <div
             style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
           >
-            <BuyCreditsButton
-              packId={CREDIT_PACKS.MICRO.id}
-              label={`$${CREDIT_PACKS.MICRO.price} · ${fmtHours(
-                estimateTranslatableHours(CREDIT_PACKS.MICRO.credits, false)
-              )} ${translationHoursLabel} (${CREDIT_PACKS.MICRO.credits.toLocaleString()} cr)`}
-            />
-            <BuyCreditsButton
-              packId={CREDIT_PACKS.STARTER.id}
-              label={`$${CREDIT_PACKS.STARTER.price} · ${fmtHours(
-                estimateTranslatableHours(CREDIT_PACKS.STARTER.credits, false)
-              )} ${translationHoursLabel} (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
-            />
-            <BuyCreditsButton
-              packId={CREDIT_PACKS.STANDARD.id}
-              label={`$${CREDIT_PACKS.STANDARD.price} · ${fmtHours(
-                estimateTranslatableHours(CREDIT_PACKS.STANDARD.credits, false)
-              )} ${translationHoursLabel} (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
-            />
-            <BuyCreditsButton
-              packId={CREDIT_PACKS.PRO.id}
-              label={`$${CREDIT_PACKS.PRO.price} · ${fmtHours(
-                estimateTranslatableHours(CREDIT_PACKS.PRO.credits, false)
-              )} ${translationHoursLabel} (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
-            />
+            {creditPacks.map(pack => (
+              <BuyCreditsButton
+                key={pack.id}
+                packId={pack.id}
+                // Product decision: keep the app-facing list price in USD.
+                // Korean checkout may settle in KRW for local payment reliability,
+                // but those KRW amounts are payment-rail details, not CTA copy.
+                label={`${formatUsdListPrice(pack.price)} · ${fmtHours(
+                  estimateTranslatableHours(pack.credits, false)
+                )} ${translationHoursLabel} (${pack.credits.toLocaleString()} cr)`}
+              />
+            ))}
           </div>
 
           {/* Credits description under buttons */}
@@ -108,19 +103,6 @@ export default function CreditCard() {
           >
             {t('settings.creditsDescription')}
           </p>
-
-          {checkoutPending && (
-            <p
-              style={{
-                fontSize: '.9rem',
-                color: colors.primary,
-                textAlign: 'center',
-                fontStyle: 'italic',
-              }}
-            >
-              ⏳ Confirming payment with bank...
-            </p>
-          )}
         </>
       ) : null}
     </section>

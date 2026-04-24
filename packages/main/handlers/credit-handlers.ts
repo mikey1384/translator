@@ -1,10 +1,12 @@
-import type { CreditBalanceResult } from '@shared-types/app';
 import Store from 'electron-store';
-import { BrowserWindow } from 'electron';
+import { app, BrowserWindow, shell } from 'electron';
 import axios from 'axios';
 import log from 'electron-log';
 import { v4 as uuidv4 } from 'uuid';
-import { syncEntitlements } from '../services/entitlements-manager.js';
+import {
+  setByoUnlocked,
+  syncEntitlements,
+} from '../services/entitlements-manager.js';
 import { STAGE5_API_URL } from '../services/endpoints.js';
 import {
   withStage5AuthRetry,
@@ -15,6 +17,7 @@ import {
   hasUnlockedCheckoutEntitlement,
   normalizeCheckoutEntitlement,
 } from '../utils/payment-entitlements.js';
+import { resolveCheckoutCountryHintFromLocale } from '../utils/checkout-locale.js';
 import {
   CREDIT_PACKS,
   CREDITS_PER_AUDIO_HOUR,
@@ -57,6 +60,34 @@ function sendNetLog(
     // Do nothing
   }
 }
+
+function serializePaymentEventLogMeta(value: unknown): any {
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return {
+      unserializable: true,
+      preview: String(value),
+    };
+  }
+}
+
+function tracePaymentEventReceipt(
+  level: 'info' | 'warn' | 'error',
+  message: string,
+  meta?: unknown
+): void {
+  const safeMeta = serializePaymentEventLogMeta(meta);
+  if (level === 'info') {
+    log.info(message, safeMeta);
+  } else if (level === 'warn') {
+    log.warn(message, safeMeta);
+  } else {
+    log.error(message, safeMeta);
+  }
+  sendNetLog(level, message, safeMeta);
+}
+
 const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
   name: 'credit-balance',
   defaults: { balanceCredits: 0, creditsPerHour: CREDITS_PER_AUDIO_HOUR },
@@ -70,6 +101,17 @@ const PACK_CREDITS: Record<'MICRO' | 'STARTER' | 'STANDARD' | 'PRO', number> = {
 };
 type CreditPackId = keyof typeof PACK_CREDITS;
 
+class PaymentEventStreamUnavailableError extends Error {
+  constructor(message = 'Payment event stream is unavailable in this environment') {
+    super(message);
+    this.name = 'PaymentEventStreamUnavailableError';
+  }
+}
+
+function isPaymentEventStreamUnavailableError(error: unknown): boolean {
+  return error instanceof PaymentEventStreamUnavailableError;
+}
+
 function isCreditPackId(value: unknown): value is CreditPackId {
   return (
     typeof value === 'string' &&
@@ -78,7 +120,9 @@ function isCreditPackId(value: unknown): value is CreditPackId {
 }
 
 const CHECKOUT_SETTLEMENT_POLL_INTERVAL_MS = 2_000;
+const CHECKOUT_SETTLEMENT_POLL_REQUEST_TIMEOUT_MS = 10_000;
 const CHECKOUT_SETTLEMENT_MAX_WAIT_MS = 5 * 60_000;
+const CHECKOUT_EXTERNAL_FOREGROUND_SETTLEMENT_MAX_WAIT_MS = 30_000;
 const CHECKOUT_CLOSE_RECONCILE_MAX_WAIT_MS = 45_000;
 const CHECKOUT_SYNC_RETRY_COUNT = Math.max(
   API_TIMEOUTS.CREDIT_REFRESH_MAX_RETRIES,
@@ -99,8 +143,20 @@ interface StripeSettlementResult {
   status: StripeSettlementStatus;
 }
 
+interface CreditSnapshotPayload {
+  creditBalance: number;
+  hoursBalance: number;
+  creditsPerHour: number;
+  authoritative: boolean;
+  checkoutSessionId?: string | null;
+}
+
+type CheckoutMode = 'credits' | 'byo';
+
 const checkoutVisibilityFollowUps = new Set<string>();
 const checkoutSettlementFollowUps = new Set<string>();
+const externalCheckoutSettlementFollowUps = new Set<string>();
+const activeCheckoutSessions: Partial<Record<CheckoutMode, string>> = {};
 function buildCheckoutFollowUpKey(
   mode: CheckoutMode,
   sessionId: string
@@ -108,10 +164,114 @@ function buildCheckoutFollowUpKey(
   return `${mode}:${sessionId}`;
 }
 
+function shouldUseEmbeddedCheckoutWindow(): boolean {
+  const raw = process.env.STAGE5_EMBEDDED_CHECKOUT;
+  return raw === '1' || raw?.toLowerCase() === 'true';
+}
+
+function getCheckoutLogLabel(sessionId?: string | null): string {
+  return sessionId ? `session ${sessionId}` : 'session id unavailable';
+}
+
+function getActiveCheckoutSessionId(mode: CheckoutMode): string | null {
+  return activeCheckoutSessions[mode] ?? null;
+}
+
+function setActiveCheckoutSession(
+  mode: CheckoutMode,
+  sessionId: string | null | undefined
+): void {
+  if (!sessionId) {
+    return;
+  }
+
+  const previousSessionId = getActiveCheckoutSessionId(mode);
+  activeCheckoutSessions[mode] = sessionId;
+
+  if (previousSessionId && previousSessionId !== sessionId) {
+    log.info(
+      `[credit-handler] Replaced active ${mode} checkout ${previousSessionId} with ${sessionId}.`
+    );
+    return;
+  }
+
+  if (previousSessionId !== sessionId) {
+    log.info(
+      `[credit-handler] Marked ${mode} checkout ${sessionId} as active.`
+    );
+  }
+}
+
+function clearActiveCheckoutSession(
+  mode: CheckoutMode,
+  sessionId?: string | null
+): boolean {
+  const activeSessionId = getActiveCheckoutSessionId(mode);
+  if (!activeSessionId) {
+    return sessionId == null;
+  }
+
+  if (!sessionId) {
+    return false;
+  }
+
+  if (activeSessionId !== sessionId) {
+    return false;
+  }
+
+  delete activeCheckoutSessions[mode];
+  log.info(
+    `[credit-handler] Cleared active ${mode} checkout ${sessionId}.`
+  );
+  return true;
+}
+
+function shouldEmitCheckoutUiTransition(
+  mode: CheckoutMode,
+  sessionId: string | null | undefined,
+  transition: 'confirmed' | 'cancelled' | 'unresolved'
+): boolean {
+  const activeSessionId = getActiveCheckoutSessionId(mode);
+  if (!activeSessionId) {
+    if (!sessionId && transition === 'cancelled') {
+      return true;
+    }
+    if (sessionId) {
+      log.info(
+        `[credit-handler] Ignoring ${mode} checkout ${transition} for ${sessionId}; no active ${mode} checkout is pending.`
+      );
+    }
+    return false;
+  }
+
+  if (!sessionId) {
+    log.info(
+      `[credit-handler] Ignoring ${mode} checkout ${transition} without a checkout session id while ${activeSessionId} is active.`
+    );
+    return false;
+  }
+
+  if (activeSessionId !== sessionId) {
+    log.info(
+      `[credit-handler] Ignoring ${mode} checkout ${transition} for inactive session ${sessionId}; active session is ${activeSessionId}.`
+    );
+    return false;
+  }
+
+  return true;
+}
+
 function emitCheckoutCancelled(
   mode: CheckoutMode,
-  targetWindow?: BrowserWindow | null
+  targetWindow?: BrowserWindow | null,
+  sessionId?: string | null
 ): void {
+  if (!shouldEmitCheckoutUiTransition(mode, sessionId, 'cancelled')) {
+    return;
+  }
+
+  clearActiveCheckoutSession(mode, sessionId);
+
   if (!targetWindow || targetWindow.isDestroyed()) {
     return;
   }
@@ -122,6 +282,59 @@ function emitCheckoutCancelled(
   }
 
   targetWindow.webContents.send('checkout-cancelled');
+}
+
+function emitCheckoutUnresolved(
+  mode: CheckoutMode,
+  targetWindow?: BrowserWindow | null,
+  sessionId?: string | null
+): void {
+  if (!shouldEmitCheckoutUiTransition(mode, sessionId, 'unresolved')) {
+    return;
+  }
+
+  if (!targetWindow || targetWindow.isDestroyed()) {
+    return;
+  }
+
+  targetWindow.webContents.send(
+    mode === 'byo' ? 'byo-unlock-unresolved' : 'checkout-unresolved'
+  );
+}
+
+function emitCheckoutConfirmed(
+  sessionId: string | null | undefined,
+  targetWindow?: BrowserWindow | null
+): void {
+  if (!shouldEmitCheckoutUiTransition('credits', sessionId, 'confirmed')) {
+    return;
+  }
+
+  clearActiveCheckoutSession('credits', sessionId);
+
+  if (!targetWindow || targetWindow.isDestroyed()) {
+    return;
+  }
+
+  targetWindow.webContents.send('checkout-confirmed');
+}
+
+function emitByoUnlockConfirmed(
+  sessionId: string | null | undefined,
+  snapshot: Awaited<ReturnType<typeof syncEntitlements>> | ReturnType<typeof setByoUnlocked>,
+  targetWindow?: BrowserWindow | null
+): void {
+  if (!shouldEmitCheckoutUiTransition('byo', sessionId, 'confirmed')) {
+    return;
+  }
+
+  clearActiveCheckoutSession('byo', sessionId);
+
+  if (!targetWindow || targetWindow.isDestroyed()) {
+    return;
+  }
+
+  targetWindow.webContents.send('byo-unlock-confirmed', snapshot);
 }
 
 function shouldCloseCheckoutWindow(result: StripeSettlementResult): boolean {
@@ -138,7 +351,18 @@ interface CheckoutFollowUpOptions {
   baselineCredits?: number;
   expectedCredits?: number;
   packId?: CreditPackId;
+  alertOnSettlementTimeout?: boolean;
 }
+
+type CheckoutClientEventType =
+  | 'embedded_cancel_redirect'
+  | 'embedded_load_failure'
+  | 'embedded_manual_close_unpaid'
+  | 'embedded_manual_close_pending_timeout'
+  | 'external_settlement_cancelled'
+  | 'external_settlement_pending_timeout'
+  | 'external_reconciliation_failed'
+  | 'open_external_failed';
 
 function getCheckoutLocaleHint(): string {
   const raw = settingsStore.get('app_language_preference', 'en');
@@ -147,105 +371,570 @@ function getCheckoutLocaleHint(): string {
   return trimmed.length > 0 ? trimmed : 'en';
 }
 
-export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
-  // Dev override to simulate credit state without hitting the API
+function getCheckoutCountryHint(): string | null {
+  const rawLocale = (
+    app.getPreferredSystemLanguages?.()[0] ||
+    app.getLocale?.() ||
+    ''
+  );
+
+  return resolveCheckoutCountryHintFromLocale(rawLocale);
+}
+
+let paymentEventStreamAbort: AbortController | null = null;
+let paymentEventStreamConnecting = false;
+let paymentEventStreamReconnectTimer: ReturnType<typeof setTimeout> | null =
+  null;
+let currentCreditSnapshot: CreditSnapshotPayload | null = null;
+let creditBalanceHydrationPromise: Promise<CreditSnapshotPayload | null> | null =
+  null;
+
+function resolveCreditsPerHour(rawPerHour?: unknown): number {
+  return Math.max(
+    1,
+    Number(process.env.CREDITS_PER_HOUR_OVERRIDE) ||
+      Number(rawPerHour) ||
+      store.get('creditsPerHour', CREDITS_PER_AUDIO_HOUR) ||
+      CREDITS_PER_AUDIO_HOUR
+  );
+}
+
+function buildCreditSnapshotPayload({
+  credits,
+  perHour,
+  authoritative,
+  checkoutSessionId = null,
+}: {
+  credits: number;
+  perHour: number;
+  authoritative: boolean;
+  checkoutSessionId?: string | null;
+}): CreditSnapshotPayload {
+  return {
+    creditBalance: credits,
+    hoursBalance: credits / perHour,
+    creditsPerHour: perHour,
+    authoritative,
+    checkoutSessionId,
+  };
+}
+
+function buildCachedCreditSnapshot(): CreditSnapshotPayload {
+  const credits = Math.max(0, Number(store.get('balanceCredits', 0)) || 0);
+  const perHour = resolveCreditsPerHour(
+    store.get('creditsPerHour', CREDITS_PER_AUDIO_HOUR)
+  );
+
+  return buildCreditSnapshotPayload({
+    credits,
+    perHour,
+    authoritative: false,
+  });
+}
+
+function getCreditSnapshotOverride(): CreditSnapshotPayload | null {
   const overrideRaw = process.env.CREDIT_BALANCE_OVERRIDE;
   const forceZero = process.env.FORCE_ZERO_CREDITS === '1';
-  const perHourOverrideRaw = process.env.CREDITS_PER_HOUR_OVERRIDE;
-  if (forceZero || (overrideRaw && overrideRaw.length > 0)) {
-    const credits = forceZero ? 0 : Math.max(0, Number(overrideRaw) || 0);
-    const creditsPerHour = Math.max(
-      1,
-      Number(perHourOverrideRaw) || CREDITS_PER_AUDIO_HOUR
-    );
-    store.set('balanceCredits', credits);
-    store.set('creditsPerHour', creditsPerHour);
-    return {
-      success: true,
-      creditBalance: credits,
-      balanceHours: credits / creditsPerHour,
-      creditsPerHour,
-      updatedAt: new Date().toISOString(),
-    };
+  if (!forceZero && (!overrideRaw || overrideRaw.length === 0)) {
+    return null;
   }
+
+  const credits = forceZero ? 0 : Math.max(0, Number(overrideRaw) || 0);
+  const perHour = resolveCreditsPerHour();
+
+  return buildCreditSnapshotPayload({
+    credits,
+    perHour,
+    authoritative: false,
+  });
+}
+
+function publishCreditSnapshot({
+  snapshot,
+  targetWindow,
+}: {
+  snapshot: CreditSnapshotPayload;
+  targetWindow?: BrowserWindow | null;
+}): void {
+  store.set('balanceCredits', snapshot.creditBalance);
+  store.set('creditsPerHour', snapshot.creditsPerHour);
+  currentCreditSnapshot = snapshot;
+
+  const window = targetWindow ?? getMainWindow();
+  if (!window || window.isDestroyed()) {
+    return;
+  }
+
+  window.webContents.send('credits-updated', snapshot);
+}
+
+async function syncCreditBalanceFromServer(
+  targetWindow?: BrowserWindow | null
+): Promise<CreditSnapshotPayload | null> {
+  const overrideSnapshot = getCreditSnapshotOverride();
+  if (overrideSnapshot) {
+    publishCreditSnapshot({ snapshot: overrideSnapshot, targetWindow });
+    log.info(
+      `[credit-handler] Using local credit snapshot override: balance=${overrideSnapshot.creditBalance}.`
+    );
+    return overrideSnapshot;
+  }
+
+  const deviceId = getDeviceId();
+  const url = `${STAGE5_API_URL}/credits/${deviceId}`;
+  log.info(
+    `[credit-handler] Hydrating authoritative credit snapshot from ${url}.`
+  );
+  const response = await withStage5AuthRetry(authHeaders =>
+    axios.get(url, {
+      headers: authHeaders,
+    })
+  );
+
+  throwIfStage5UpdateRequiredResponse({
+    response,
+    source: 'stage5-api',
+  });
+
+  if (typeof response.data?.creditBalance !== 'number') {
+    return null;
+  }
+
+  sendNetLog('info', `GET /credits/${deviceId} -> ${response.status}`, {
+    url,
+    method: 'GET',
+    status: response.status,
+  });
+
+  const snapshot = buildCreditSnapshotPayload({
+    credits: Number(response.data.creditBalance) || 0,
+    perHour: resolveCreditsPerHour(response.data?.creditsPerHour),
+    authoritative: true,
+  });
+
+  publishCreditSnapshot({ snapshot, targetWindow });
+  log.info(
+    `[credit-handler] Published authoritative credit snapshot from /credits: balance=${snapshot.creditBalance}.`
+  );
+  return snapshot;
+}
+
+function requestCreditBalanceHydration(
+  targetWindow?: BrowserWindow | null
+): Promise<CreditSnapshotPayload | null> {
+  if (creditBalanceHydrationPromise) {
+    return creditBalanceHydrationPromise;
+  }
+
+  creditBalanceHydrationPromise = syncCreditBalanceFromServer(targetWindow)
+    .catch(error => {
+      if (isStage5UpdateRequiredError(error)) {
+        throw error;
+      }
+      log.warn('[credit-handler] Failed to hydrate credit balance:', error);
+      return null;
+    })
+    .finally(() => {
+      creditBalanceHydrationPromise = null;
+    });
+
+  return creditBalanceHydrationPromise;
+}
+
+export async function initializeCreditBalanceState(
+  targetWindow?: BrowserWindow | null
+): Promise<void> {
+  ensurePaymentEventStream();
+  await requestCreditBalanceHydration(targetWindow);
+}
+
+export async function handleGetCreditSnapshot(): Promise<CreditSnapshotPayload | null> {
+  ensurePaymentEventStream();
+  if (currentCreditSnapshot) {
+    log.info(
+      `[credit-handler] Returning cached credit snapshot: balance=${currentCreditSnapshot.creditBalance}.`
+    );
+    return currentCreditSnapshot;
+  }
+  log.info('[credit-handler] No cached credit snapshot yet; awaiting hydration.');
+  const hydratedSnapshot = await requestCreditBalanceHydration();
+  if (hydratedSnapshot) {
+    return hydratedSnapshot;
+  }
+
+  const fallbackSnapshot = buildCachedCreditSnapshot();
+  currentCreditSnapshot = fallbackSnapshot;
+  log.info(
+    `[credit-handler] Falling back to locally cached credit snapshot: balance=${fallbackSnapshot.creditBalance}.`
+  );
+  return fallbackSnapshot;
+}
+
+export async function handleRefreshCreditSnapshot(): Promise<CreditSnapshotPayload | null> {
+  ensurePaymentEventStream();
+  const refreshedSnapshot = await requestCreditBalanceHydration(getMainWindow());
+  if (refreshedSnapshot) {
+    return refreshedSnapshot;
+  }
+
+  return currentCreditSnapshot ?? buildCachedCreditSnapshot();
+}
+
+function schedulePaymentEventStreamReconnect(delayMs = 5_000): void {
+  if (paymentEventStreamReconnectTimer) {
+    return;
+  }
+
+  paymentEventStreamReconnectTimer = setTimeout(() => {
+    paymentEventStreamReconnectTimer = null;
+    ensurePaymentEventStream();
+  }, delayMs);
+}
+
+function ensurePaymentEventStream(): void {
+  if (paymentEventStreamAbort || paymentEventStreamConnecting) {
+    return;
+  }
+
+  const controller = new AbortController();
+  let shouldReconnect = true;
+  paymentEventStreamAbort = controller;
+  paymentEventStreamConnecting = true;
+
+  void connectPaymentEventStream(controller)
+    .catch(error => {
+      if (isStage5UpdateRequiredError(error)) {
+        shouldReconnect = false;
+        return;
+      }
+      if (isPaymentEventStreamUnavailableError(error)) {
+        shouldReconnect = false;
+        log.info(
+          `[credit-handler] Payment event stream is unavailable. Falling back to polling-only credit reconciliation.`
+        );
+        return;
+      }
+      log.warn('[credit-handler] Payment event stream disconnected:', error);
+    })
+    .finally(() => {
+      if (paymentEventStreamAbort === controller) {
+        paymentEventStreamAbort = null;
+      }
+      paymentEventStreamConnecting = false;
+      if (shouldReconnect && !controller.signal.aborted) {
+        schedulePaymentEventStreamReconnect();
+      }
+    });
+}
+
+async function connectPaymentEventStream(
+  controller: AbortController
+): Promise<void> {
+  const deviceId = getDeviceId();
+  const url = `${STAGE5_API_URL}/payments/events/${encodeURIComponent(deviceId)}`;
+  log.info(`[credit-handler] Connecting payment event stream for ${deviceId}.`);
+
+  const response = await withStage5AuthRetryOnResponse(authHeaders =>
+    fetch(url, {
+      headers: {
+        ...authHeaders,
+        Accept: 'text/event-stream',
+      },
+      signal: controller.signal,
+    })
+  );
+
+  if (response.status === 426) {
+    let data: any = null;
+    try {
+      data = await response.clone().json();
+    } catch {
+      data = null;
+    }
+    throwIfStage5UpdateRequiredResponse({
+      response: { status: response.status, data },
+      source: 'stage5-api',
+    });
+  }
+
+  if (response.status === 503) {
+    let data: any = null;
+    try {
+      data = await response.clone().json();
+    } catch {
+      data = null;
+    }
+
+    if (
+      data?.error === 'Payment event stream unavailable' ||
+      data?.message === 'Server push is not configured for this environment'
+    ) {
+      throw new PaymentEventStreamUnavailableError(
+        data?.message || 'Server push is not configured for this environment'
+      );
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(`Payment event stream failed with HTTP ${response.status}`);
+  }
+
+  if (!response.body) {
+    throw new Error('Payment event stream response did not include a body');
+  }
+
+  sendNetLog('info', `GET /payments/events/${deviceId} -> ${response.status}`, {
+    url,
+    method: 'GET',
+    status: response.status,
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (!controller.signal.aborted) {
+    const { value, done } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    buffer = processPaymentEventStreamBuffer(buffer);
+  }
+}
+
+function processPaymentEventStreamBuffer(buffer: string): string {
+  let remaining = buffer;
+  let separatorIndex = remaining.search(/\r?\n\r?\n/);
+
+  while (separatorIndex >= 0) {
+    const block = remaining.slice(0, separatorIndex);
+    const separatorMatch = remaining.slice(separatorIndex).match(/^\r?\n\r?\n/);
+    const separatorLength = separatorMatch?.[0]?.length ?? 2;
+    remaining = remaining.slice(separatorIndex + separatorLength);
+    handlePaymentEventStreamBlock(block);
+    separatorIndex = remaining.search(/\r?\n\r?\n/);
+  }
+
+  return remaining;
+}
+
+function handlePaymentEventStreamBlock(block: string): void {
+  const dataLines: string[] = [];
+  for (const line of block.split(/\r?\n/)) {
+    if (!line || line.startsWith(':')) {
+      continue;
+    }
+    const separatorIndex = line.indexOf(':');
+    const field =
+      separatorIndex >= 0 ? line.slice(0, separatorIndex) : line;
+    let value = separatorIndex >= 0 ? line.slice(separatorIndex + 1) : '';
+    if (value.startsWith(' ')) {
+      value = value.slice(1);
+    }
+    if (field === 'data') {
+      dataLines.push(value);
+    }
+  }
+
+  if (dataLines.length === 0) {
+    return;
+  }
+
+  const payloadText = dataLines.join('\n');
 
   try {
-    // Get credit balance from the API (server returns creditBalance and updatedAt)
-    const response = await withStage5AuthRetry(authHeaders =>
-      axios.get(`${STAGE5_API_URL}/credits/${getDeviceId()}`, {
-        headers: authHeaders,
-      })
+    const payload = JSON.parse(payloadText);
+    tracePaymentEventReceipt(
+      'info',
+      `[credit-handler] Received payment event stream payload: ${typeof payload?.type === 'string' ? payload.type : 'unknown'}`,
+      {
+        payload,
+      }
     );
-    // Intentionally avoid logging successful GET /credits to reduce noise in the UI log modal
-
-    const credits = Number(response.data?.creditBalance ?? 0);
-    const perHour = Math.max(
-      1,
-      Number(process.env.CREDITS_PER_HOUR_OVERRIDE) ||
-        Number(response.data?.creditsPerHour) ||
-        CREDITS_PER_AUDIO_HOUR
+    handlePaymentRealtimeEvent(payload);
+  } catch (error) {
+    tracePaymentEventReceipt(
+      'warn',
+      '[credit-handler] Failed to parse payment event stream payload.',
+      {
+        error:
+          error instanceof Error
+            ? { message: error.message, stack: error.stack }
+            : String(error),
+        block,
+        payloadText,
+      }
     );
-    const hours = credits / perHour;
-    store.set('balanceCredits', credits);
-    store.set('creditsPerHour', perHour); // Cache the conversion rate
-    return {
-      success: true,
-      creditBalance: credits,
-      balanceHours: hours,
-      creditsPerHour: perHour,
-      updatedAt: new Date().toISOString(),
-    };
-  } catch (err: any) {
-    throwIfStage5UpdateRequiredError({ error: err, source: 'stage5-api' });
-    if (err.response) {
-      sendNetLog(
-        'error',
-        `HTTP ${err.response.status} GET ${STAGE5_API_URL}/credits`,
-        {
-          status: err.response.status,
-          url: err.config?.url,
-          method: err.config?.method,
-        }
-      );
-    } else if (err.request) {
-      sendNetLog('error', `HTTP NO_RESPONSE GET ${STAGE5_API_URL}/credits`, {
-        url: err.config?.url,
-        method: err.config?.method,
-      });
-    }
-    log.error('[credit-handler] handleGetCreditBalance error:', err);
-    const cachedBal = store.get('balanceCredits', 0);
-    const cachedPerHour = store.get('creditsPerHour', CREDITS_PER_AUDIO_HOUR);
-    return {
-      success: false,
-      error: err.message,
-      creditBalance: cachedBal,
-      balanceHours: cachedBal / cachedPerHour,
-      creditsPerHour: cachedPerHour,
-      updatedAt: new Date().toISOString(),
-    };
   }
+}
+
+function handlePaymentRealtimeEvent(event: any): void {
+  const eventType = typeof event?.type === 'string' ? event.type : '';
+  if (!eventType || eventType === 'ready') {
+    return;
+  }
+
+  if (eventType === 'credits.updated') {
+    const credits = Number(event?.balanceAfter);
+    if (!Number.isFinite(credits)) {
+      return;
+    }
+    const snapshot = buildCreditSnapshotPayload({
+      credits,
+      perHour: resolveCreditsPerHour(event?.creditsPerHour),
+      authoritative: true,
+      checkoutSessionId: event?.checkoutSessionId ?? null,
+    });
+
+    publishCreditSnapshot({
+      snapshot,
+    });
+    emitCheckoutConfirmed(event?.checkoutSessionId ?? null, getMainWindow());
+
+    log.info(
+      `[credit-handler] Applied authoritative payment credit event: balance=${credits}, session=${event?.checkoutSessionId ?? 'n/a'}, paymentIntent=${event?.paymentIntentId ?? 'n/a'}.`
+    );
+    return;
+  }
+
+  if (eventType === 'entitlements.updated') {
+    const snapshot = setByoUnlocked(
+      {
+        byoOpenAi: Boolean(event?.entitlements?.byoOpenAi),
+        byoAnthropic: Boolean(event?.entitlements?.byoAnthropic),
+        byoElevenLabs: Boolean(event?.entitlements?.byoElevenLabs),
+      },
+      { notify: true }
+    );
+    const mainWindow = getMainWindow();
+    emitByoUnlockConfirmed(event?.checkoutSessionId ?? null, snapshot, mainWindow);
+    log.info(
+      `[credit-handler] Applied authoritative BYO entitlement event: openai=${snapshot.byoOpenAi}, session=${event?.checkoutSessionId ?? 'n/a'}.`
+    );
+    return;
+  }
+
+  if (eventType === 'checkout.failed') {
+    const mainWindow = getMainWindow();
+    const mode = event?.mode === 'byo' ? 'byo' : 'credits';
+    const sessionId =
+      typeof event?.checkoutSessionId === 'string'
+        ? event.checkoutSessionId
+        : getActiveCheckoutSessionId(mode);
+    emitCheckoutCancelled(mode, mainWindow, sessionId);
+    log.warn(
+      `[credit-handler] Payment checkout failed via webhook event (mode=${mode}, session=${sessionId ?? 'n/a'}, paymentIntent=${event?.paymentIntentId ?? 'n/a'}): ${event?.message ?? 'no message'}`
+    );
+  }
+}
+
+function reportCheckoutClientEventInBackground({
+  eventType,
+  sessionId,
+  mode,
+  packId,
+  message,
+}: {
+  eventType: CheckoutClientEventType;
+  sessionId?: string | null;
+  mode: CheckoutMode;
+  packId?: CreditPackId;
+  message?: string;
+}): void {
+  if (!sessionId) {
+    return;
+  }
+
+  void (async () => {
+    try {
+      const apiUrl = `${STAGE5_API_URL}/payments/checkout-event`;
+      await withStage5AuthRetry(authHeaders =>
+        axios.post(
+          apiUrl,
+          {
+            sessionId,
+            eventType,
+            mode,
+            packId,
+            entitlement: mode === 'byo' ? 'byo_openai' : undefined,
+            message,
+          },
+          {
+            headers: authHeaders,
+            timeout: 10_000,
+          }
+        )
+      );
+    } catch (error) {
+      if (isStage5UpdateRequiredError(error)) {
+        return;
+      }
+      log.warn(
+        `[credit-handler] Failed to report checkout client event ${eventType} for ${sessionId}:`,
+        error
+      );
+    }
+  })();
+}
+
+async function resolveCheckoutReturnSession(
+  returnId?: string | null
+): Promise<{ sessionId: string; mode: CheckoutMode } | null> {
+  const normalizedReturnId = String(returnId || '').trim();
+  if (!normalizedReturnId) {
+    return null;
+  }
+
+  const apiUrl = `${STAGE5_API_URL}/payments/checkout-return/${encodeURIComponent(normalizedReturnId)}`;
+  const response = await withStage5AuthRetry(authHeaders =>
+    axios.get(apiUrl, {
+      headers: authHeaders,
+      timeout: 10_000,
+    })
+  );
+  const sessionId =
+    typeof response.data?.sessionId === 'string'
+      ? response.data.sessionId.trim()
+      : '';
+  if (!sessionId) {
+    return null;
+  }
+
+  return {
+    sessionId,
+    mode: response.data?.mode === 'byo' ? 'byo' : 'credits',
+  };
 }
 
 export async function handleCreateCheckoutSession(
   _evt: Electron.IpcMainInvokeEvent,
   packId: CreditPackId
 ): Promise<string | null> {
-  try {
-    let baselineCredits = store.get('balanceCredits', 0);
-    try {
-      const balanceSnapshot = await handleGetCreditBalance();
-      if (typeof balanceSnapshot.creditBalance === 'number') {
-        baselineCredits = balanceSnapshot.creditBalance;
-      }
-    } catch (balanceErr) {
-      log.warn(
-        '[credit-handler] Failed to refresh baseline credits before checkout:',
-        balanceErr
-      );
-    }
+  ensurePaymentEventStream();
 
-    const expectedCredits = baselineCredits + PACK_CREDITS[packId];
+  try {
+    const mainWindow = getMainWindow();
+    const baselineCredits =
+      currentCreditSnapshot?.authoritative === true
+        ? currentCreditSnapshot.creditBalance
+        : undefined;
+    const expectedCredits =
+      typeof baselineCredits === 'number'
+        ? baselineCredits + PACK_CREDITS[packId]
+        : undefined;
+    if (typeof baselineCredits !== 'number') {
+      log.info(
+        `[credit-handler] Starting checkout for ${packId} without an authoritative local credit baseline; hydrating balance in the background.`
+      );
+      void requestCreditBalanceHydration(mainWindow).catch(error => {
+        log.warn(
+          `[credit-handler] Background credit balance hydration before checkout failed for ${packId}:`,
+          error
+        );
+      });
+    }
     const apiUrl = `${STAGE5_API_URL}/payments/create-session`;
     log.info(
       `[credit-handler] Creating checkout session for ${packId} via ${apiUrl}`
@@ -257,6 +946,7 @@ export async function handleCreateCheckoutSession(
           packId,
           deviceId: getDeviceId(),
           locale: getCheckoutLocaleHint(),
+          country: getCheckoutCountryHint() ?? undefined,
         },
         {
           headers: authHeaders,
@@ -271,26 +961,41 @@ export async function handleCreateCheckoutSession(
 
     // Expecting backend to respond with { url: 'https://checkout.stripe.com/…' }
     if (response.data?.url) {
-      log.info(
-        `[credit-handler] Checkout session URL received: ${response.data.url}`
-      );
-
-      // Emit checkout-pending event so UI can show "syncing balance..." until webhook lands
-      const mainWindow = getMainWindow();
-      if (mainWindow) {
-        mainWindow.webContents.send('checkout-pending');
-      }
-
       const checkoutSessionId =
         typeof response.data?.sessionId === 'string'
           ? response.data.sessionId
           : null;
+      log.info(
+        `[credit-handler] Checkout session received (${getCheckoutLogLabel(checkoutSessionId)}).`
+      );
+
+      // Emit checkout-pending event so UI can show "syncing balance..." until webhook lands
+      setActiveCheckoutSession('credits', checkoutSessionId);
+      if (mainWindow) {
+        mainWindow.webContents.send('checkout-pending');
+      }
+
+      if (checkoutSessionId && !shouldUseEmbeddedCheckoutWindow()) {
+        await openStripeCheckoutInExternalBrowser({
+          sessionUrl: response.data.url,
+          sessionId: checkoutSessionId,
+          mode: 'credits',
+          window: mainWindow ?? null,
+          baselineCredits,
+          expectedCredits,
+          packId,
+        });
+        return checkoutSessionId;
+      }
+
       let settlementCheckInFlight = false;
 
-      // Always open inside an Electron modal so we catch the redirect even in dev
+      // Optional fallback for debugging the legacy embedded checkout window.
       await openStripeCheckout({
         sessionUrl: response.data.url,
         defaultMode: 'credits',
+        sessionId: checkoutSessionId,
+        packId,
         onSuccess: async ({ sessionId, mode }) => {
           settlementCheckInFlight = true;
           try {
@@ -303,7 +1008,13 @@ export async function handleCreateCheckoutSession(
             });
 
             if (isCheckoutCancelled(result)) {
-              emitCheckoutCancelled(mode, mainWindow ?? null);
+              reportCheckoutClientEventInBackground({
+                eventType: 'embedded_manual_close_unpaid',
+                sessionId,
+                mode,
+                packId,
+              });
+              emitCheckoutCancelled(mode, mainWindow ?? null, sessionId);
             }
 
             return shouldCloseCheckoutWindow(result);
@@ -312,7 +1023,11 @@ export async function handleCreateCheckoutSession(
           }
         },
         onCancel: () => {
-          emitCheckoutCancelled('credits', mainWindow ?? null);
+          emitCheckoutCancelled(
+            'credits',
+            mainWindow ?? null,
+            checkoutSessionId
+          );
         },
         onClosed: () => {
           if (settlementCheckInFlight) {
@@ -350,12 +1065,34 @@ export async function handleCreateCheckoutSession(
                   `[credit-handler] Checkout ${checkoutSessionId} settled after manual close; local credit visibility is still syncing.`
                 );
               } else if (result.status === 'cancelled') {
-                emitCheckoutCancelled('credits', mainWindow ?? null);
+                reportCheckoutClientEventInBackground({
+                  eventType: 'embedded_manual_close_unpaid',
+                  sessionId: checkoutSessionId,
+                  mode: 'credits',
+                  packId,
+                });
+                emitCheckoutCancelled(
+                  'credits',
+                  mainWindow ?? null,
+                  checkoutSessionId
+                );
                 log.info(
                   `[credit-handler] Checkout ${checkoutSessionId} was not paid during post-close reconciliation.`
                 );
               } else {
-                emitCheckoutCancelled('credits', mainWindow ?? null);
+                reportCheckoutClientEventInBackground({
+                  eventType: 'embedded_manual_close_pending_timeout',
+                  sessionId: checkoutSessionId,
+                  mode: 'credits',
+                  packId,
+                  message:
+                    'Payment did not settle before the post-close reconciliation window ended.',
+                });
+                emitCheckoutCancelled(
+                  'credits',
+                  mainWindow ?? null,
+                  checkoutSessionId
+                );
                 scheduleCheckoutSettlementFollowUp(checkoutSessionId, {
                   mode: 'credits',
                   window: mainWindow ?? null,
@@ -381,7 +1118,7 @@ export async function handleCreateCheckoutSession(
           })();
         },
       });
-      return null;
+      return checkoutSessionId;
     }
     log.warn(
       '[credit-handler] Backend did not return a URL for checkout session.',
@@ -413,6 +1150,8 @@ export async function handleCreateCheckoutSession(
 }
 
 export async function handleCreateByoUnlockSession(): Promise<void> {
+  ensurePaymentEventStream();
+
   const mainWindow = getMainWindow();
   const deviceId = getDeviceId();
   const apiUrl = `${STAGE5_API_URL}/payments/create-byo-unlock`;
@@ -430,6 +1169,7 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
         {
           deviceId,
           locale: getCheckoutLocaleHint(),
+          country: getCheckoutCountryHint() ?? undefined,
         },
         {
           headers: authHeaders,
@@ -461,11 +1201,27 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
       typeof response.data?.sessionId === 'string'
         ? response.data.sessionId
         : null;
+    log.info(
+      `[credit-handler] BYO checkout session received (${getCheckoutLogLabel(checkoutSessionId)}).`
+    );
+    setActiveCheckoutSession('byo', checkoutSessionId);
+
+    if (checkoutSessionId && !shouldUseEmbeddedCheckoutWindow()) {
+      await openStripeCheckoutInExternalBrowser({
+        sessionUrl: checkoutUrl,
+        sessionId: checkoutSessionId,
+        mode: 'byo',
+        window: mainWindow,
+      });
+      return;
+    }
+
     let settlementCheckInFlight = false;
 
     await openStripeCheckout({
       sessionUrl: checkoutUrl,
       defaultMode: 'byo',
+      sessionId: checkoutSessionId,
       onSuccess: async ({ sessionId, mode }) => {
         settlementCheckInFlight = true;
         try {
@@ -475,7 +1231,12 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
           });
 
           if (isCheckoutCancelled(result)) {
-            emitCheckoutCancelled(mode, mainWindow);
+            reportCheckoutClientEventInBackground({
+              eventType: 'embedded_manual_close_unpaid',
+              sessionId,
+              mode,
+            });
+            emitCheckoutCancelled(mode, mainWindow, sessionId);
           }
 
           return shouldCloseCheckoutWindow(result);
@@ -484,7 +1245,7 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
         }
       },
       onCancel: () => {
-        emitCheckoutCancelled('byo', mainWindow);
+        emitCheckoutCancelled('byo', mainWindow, checkoutSessionId);
       },
       onClosed: () => {
         if (settlementCheckInFlight) {
@@ -519,12 +1280,24 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
                 `[credit-handler] BYO checkout ${checkoutSessionId} settled after manual close; entitlement visibility is still syncing.`
               );
             } else if (result.status === 'cancelled') {
-              emitCheckoutCancelled('byo', mainWindow);
+              reportCheckoutClientEventInBackground({
+                eventType: 'embedded_manual_close_unpaid',
+                sessionId: checkoutSessionId,
+                mode: 'byo',
+              });
+              emitCheckoutCancelled('byo', mainWindow, checkoutSessionId);
               log.info(
                 `[credit-handler] BYO checkout ${checkoutSessionId} was not paid during post-close reconciliation.`
               );
             } else {
-              emitCheckoutCancelled('byo', mainWindow);
+              reportCheckoutClientEventInBackground({
+                eventType: 'embedded_manual_close_pending_timeout',
+                sessionId: checkoutSessionId,
+                mode: 'byo',
+                message:
+                  'Payment did not settle before the post-close reconciliation window ended.',
+              });
+              emitCheckoutCancelled('byo', mainWindow, checkoutSessionId);
               scheduleCheckoutSettlementFollowUp(checkoutSessionId, {
                 mode: 'byo',
                 window: mainWindow,
@@ -575,11 +1348,82 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
   }
 }
 
-type CheckoutMode = 'credits' | 'byo';
+export function handleCheckoutReturnFromBrowser({
+  status,
+  sessionId,
+  returnId,
+  mode,
+}: {
+  status: 'success' | 'cancelled';
+  sessionId?: string | null;
+  returnId?: string | null;
+  mode?: CheckoutMode | string | null;
+}): void {
+  ensurePaymentEventStream();
+
+  void (async () => {
+    let checkoutMode: CheckoutMode = mode === 'byo' ? 'byo' : 'credits';
+    let checkoutSessionId =
+      typeof sessionId === 'string' && sessionId.trim()
+        ? sessionId.trim()
+        : null;
+    const mainWindow = getMainWindow();
+
+    if (!checkoutSessionId && returnId) {
+      try {
+        const resolved = await resolveCheckoutReturnSession(returnId);
+        if (resolved) {
+          checkoutSessionId = resolved.sessionId;
+          checkoutMode = resolved.mode;
+        }
+      } catch (error) {
+        if (isStage5UpdateRequiredError(error)) {
+          return;
+        }
+        log.warn(
+          `[credit-handler] Failed to resolve checkout return id ${returnId}:`,
+          error
+        );
+      }
+    }
+
+    if (status === 'cancelled') {
+      if (!checkoutSessionId) {
+        log.warn(
+          `[credit-handler] Ignoring ${checkoutMode} checkout cancel return without a checkout session id.`
+        );
+        return;
+      }
+
+      reportCheckoutClientEventInBackground({
+        eventType: 'external_settlement_cancelled',
+        sessionId: checkoutSessionId,
+        mode: checkoutMode,
+      });
+      emitCheckoutCancelled(checkoutMode, mainWindow, checkoutSessionId);
+      return;
+    }
+
+    if (!checkoutSessionId) {
+      log.warn(
+        '[credit-handler] Checkout return link opened without a checkout session id.'
+      );
+      return;
+    }
+
+    scheduleExternalCheckoutSettlementFollowUp(checkoutSessionId, {
+      mode: checkoutMode,
+      window: mainWindow,
+      alertOnSettlementTimeout: true,
+    });
+  })();
+}
 
 interface StripeCheckoutOptions {
   sessionUrl: string;
   defaultMode: CheckoutMode;
+  sessionId?: string | null;
+  packId?: CreditPackId;
   onSuccess?: (payload: {
     sessionId?: string | null;
     mode: CheckoutMode;
@@ -587,6 +1431,114 @@ interface StripeCheckoutOptions {
   }) => boolean | void | Promise<boolean | void>;
   onCancel?: () => void;
   onClosed?: () => void;
+}
+
+async function openStripeCheckoutInExternalBrowser(
+  options: CheckoutFollowUpOptions & {
+    sessionUrl: string;
+    sessionId: string;
+  }
+): Promise<void> {
+  const { sessionUrl, sessionId, mode } = options;
+
+  // South Korean cards, wallets, and 3DS flows can redirect to local processors.
+  // The system browser handles those authentication hops more reliably than Electron WebContents.
+  log.info(
+    `[credit-handler] Opening ${mode} checkout ${sessionId} in the system browser.`
+  );
+
+  try {
+    await shell.openExternal(sessionUrl);
+  } catch (error) {
+    reportCheckoutClientEventInBackground({
+      eventType: 'open_external_failed',
+      sessionId,
+      mode,
+      packId: options.packId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    emitCheckoutCancelled(mode, options.window ?? null, sessionId);
+    log.error(
+      `[credit-handler] Failed to open ${mode} checkout ${sessionId} in the system browser:`,
+      error
+    );
+    throw error;
+  }
+
+  scheduleExternalCheckoutSettlementFollowUp(sessionId, options);
+}
+
+function scheduleExternalCheckoutSettlementFollowUp(
+  sessionId: string,
+  opts: CheckoutFollowUpOptions
+): void {
+  const key = buildCheckoutFollowUpKey(opts.mode, sessionId);
+  if (externalCheckoutSettlementFollowUps.has(key)) {
+    return;
+  }
+
+  externalCheckoutSettlementFollowUps.add(key);
+  void (async () => {
+    try {
+      const result = await handleStripeSuccess(sessionId, {
+        mode: opts.mode,
+        window: opts.window,
+        baselineCredits: opts.baselineCredits,
+        expectedCredits: opts.expectedCredits,
+        packId: opts.packId,
+        settlementMaxWaitMs: CHECKOUT_EXTERNAL_FOREGROUND_SETTLEMENT_MAX_WAIT_MS,
+      });
+
+      if (result.status === 'confirmed') {
+        log.info(
+          `[credit-handler] External ${opts.mode} checkout confirmed ${sessionId}.`
+        );
+      } else if (result.status === 'settled_pending_sync') {
+        log.info(
+          `[credit-handler] External ${opts.mode} checkout settled ${sessionId}; local visibility sync is still pending.`
+        );
+      } else if (result.status === 'cancelled') {
+        reportCheckoutClientEventInBackground({
+          eventType: 'external_settlement_cancelled',
+          sessionId,
+          mode: opts.mode,
+          packId: opts.packId,
+        });
+        emitCheckoutCancelled(opts.mode, opts.window ?? null, sessionId);
+        log.info(
+          `[credit-handler] External ${opts.mode} checkout ${sessionId} was not paid.`
+        );
+      } else {
+        emitCheckoutUnresolved(opts.mode, opts.window ?? null, sessionId);
+        scheduleCheckoutSettlementFollowUp(sessionId, {
+          ...opts,
+          alertOnSettlementTimeout: true,
+        });
+        log.info(
+          `[credit-handler] External ${opts.mode} checkout ${sessionId} is still unresolved after the foreground polling window. Marking checkout unresolved and continuing reconciliation in the background.`
+        );
+      }
+    } catch (error: any) {
+      if (isStage5UpdateRequiredError(error)) {
+        return;
+      }
+      reportCheckoutClientEventInBackground({
+        eventType: 'external_reconciliation_failed',
+        sessionId,
+        mode: opts.mode,
+        packId: opts.packId,
+        message: error?.message || String(error),
+      });
+      emitCheckoutUnresolved(opts.mode, opts.window ?? null, sessionId);
+      scheduleCheckoutSettlementFollowUp(sessionId, opts);
+      log.error(
+        `[credit-handler] External ${opts.mode} checkout reconciliation failed for ${sessionId}. Keeping checkout unresolved and continuing background settlement follow-up:`,
+        error
+      );
+    } finally {
+      externalCheckoutSettlementFollowUps.delete(key);
+    }
+  })();
 }
 
 // Function to open Stripe checkout in a BrowserWindow
@@ -721,6 +1673,15 @@ async function openStripeCheckout(
             return;
           }
           cancelRedirectHandled = true;
+          const mode = parseMode(
+            targetUrl.searchParams.get('mode') ?? options.defaultMode
+          );
+          reportCheckoutClientEventInBackground({
+            eventType: 'embedded_cancel_redirect',
+            sessionId: options.sessionId,
+            mode,
+            packId: options.packId,
+          });
           try {
             options.onCancel?.();
           } catch (err) {
@@ -773,6 +1734,13 @@ async function openStripeCheckout(
       }
 
       loadFailureHandled = true;
+      reportCheckoutClientEventInBackground({
+        eventType: 'embedded_load_failure',
+        sessionId: options.sessionId,
+        mode: options.defaultMode,
+        packId: options.packId,
+        message: `${errorCode} ${errorDescription}`,
+      });
       try {
         options.onCancel?.();
       } catch (err) {
@@ -848,23 +1816,7 @@ export async function handleResetCredits(): Promise<{
       log.info(
         `[credit-handler] ✅ Admin add credits successful: Added ${creditsAdded} credits`
       );
-
-      // Force a refresh so UI updates instantly
-      const updatedBalance = await handleGetCreditBalance();
-
-      // Broadcast the updated balance to renderer
-      if (
-        updatedBalance.success &&
-        updatedBalance.creditBalance !== undefined
-      ) {
-        const mainWindow = getMainWindow();
-        if (mainWindow) {
-          mainWindow.webContents.send('credits-updated', {
-            creditBalance: updatedBalance.creditBalance,
-            hoursBalance: updatedBalance.balanceHours || 0,
-          });
-        }
-      }
+      await requestCreditBalanceHydration(getMainWindow());
 
       return {
         success: true,
@@ -911,23 +1863,7 @@ export async function handleResetCreditsToZero(): Promise<{
 
     if (response.data?.success) {
       log.info('[credit-handler] ✅ Admin reset to zero successful');
-
-      // Force a refresh so UI updates instantly
-      const updatedBalance = await handleGetCreditBalance();
-
-      // Broadcast the updated balance to renderer
-      if (
-        updatedBalance.success &&
-        updatedBalance.creditBalance !== undefined
-      ) {
-        const mainWindow = getMainWindow();
-        if (mainWindow) {
-          mainWindow.webContents.send('credits-updated', {
-            creditBalance: updatedBalance.creditBalance,
-            hoursBalance: updatedBalance.balanceHours || 0,
-          });
-        }
-      }
+      await requestCreditBalanceHydration(getMainWindow());
 
       return { success: true };
     } else {
@@ -948,6 +1884,7 @@ export async function handleResetCreditsToZero(): Promise<{
 interface CheckoutSessionState {
   status: string | null;
   paymentStatus: string | null;
+  fulfillmentStatus?: string | null;
   packId?: string | null;
   entitlement?: string | null;
   created?: number | null;
@@ -965,6 +1902,7 @@ async function getCheckoutSessionState(
   const response = await withStage5AuthRetryOnResponse(authHeaders =>
     axios.get(url, {
       headers: authHeaders,
+      timeout: CHECKOUT_SETTLEMENT_POLL_REQUEST_TIMEOUT_MS,
       validateStatus: () => true,
     })
   );
@@ -979,6 +1917,8 @@ async function getCheckoutSessionState(
       state: {
         status: (response.data?.status as string | null) ?? null,
         paymentStatus: (response.data?.paymentStatus as string | null) ?? null,
+        fulfillmentStatus:
+          (response.data?.fulfillmentStatus as string | null) ?? null,
         packId: (response.data?.packId as string | null) ?? null,
         entitlement: (response.data?.entitlement as string | null) ?? null,
         created:
@@ -1021,6 +1961,15 @@ async function waitForCheckoutSettlement(
       const state = pollResult.state;
       if (state) {
         lastState = state;
+        if (state.fulfillmentStatus === 'fulfilled') {
+          return { paid: true, timedOut: false, state };
+        }
+        if (
+          state.fulfillmentStatus === 'failed' ||
+          state.fulfillmentStatus === 'cancelled'
+        ) {
+          return { paid: false, timedOut: false, state };
+        }
         if (
           state.paymentStatus === 'paid' ||
           state.paymentStatus === 'no_payment_required'
@@ -1207,30 +2156,9 @@ async function refreshCreditsAfterPayment({
   maxRetries?: number;
 }): Promise<boolean> {
   const deviceId = getDeviceId();
-
-  const publishCreditsSnapshot = ({
-    credits,
-    perHour,
-    confirmed,
-  }: {
-    credits: number;
-    perHour: number;
-    confirmed: boolean;
-  }) => {
-    const hours = credits / perHour;
-    store.set('balanceCredits', credits);
-    store.set('creditsPerHour', perHour);
-
-    if (targetWindow && !targetWindow.isDestroyed()) {
-      targetWindow.webContents.send('credits-updated', {
-        creditBalance: credits,
-        hoursBalance: hours,
-      });
-      if (confirmed) {
-        targetWindow.webContents.send('checkout-confirmed');
-      }
-    }
-  };
+  const visibleBaselineCredits =
+    currentCreditSnapshot?.creditBalance ??
+    Math.max(0, Number(store.get('balanceCredits', 0)) || 0);
 
   const retryDelay = API_TIMEOUTS.CREDIT_REFRESH_RETRY_DELAY;
   const ledgerCheckInterval = 3;
@@ -1256,12 +2184,7 @@ async function refreshCreditsAfterPayment({
       }
 
       const credits = Number(response.data.creditBalance) || 0;
-      const perHour = Math.max(
-        1,
-        Number(process.env.CREDITS_PER_HOUR_OVERRIDE) ||
-          Number(response.data?.creditsPerHour) ||
-          CREDITS_PER_AUDIO_HOUR
-      );
+      const perHour = resolveCreditsPerHour(response.data?.creditsPerHour);
       lastObservedCredits = credits;
       lastObservedPerHour = perHour;
 
@@ -1282,7 +2205,16 @@ async function refreshCreditsAfterPayment({
         (noBaselineExpectation && !requiresLedgerConfirmation);
 
       if (hasConfirmedCreditRefresh) {
-        publishCreditsSnapshot({ credits, perHour, confirmed: true });
+        publishCreditSnapshot({
+          snapshot: buildCreditSnapshotPayload({
+            credits,
+            perHour,
+            authoritative: true,
+            checkoutSessionId: sessionId,
+          }),
+          targetWindow,
+        });
+        emitCheckoutConfirmed(sessionId, targetWindow);
         return true;
       }
 
@@ -1299,10 +2231,36 @@ async function refreshCreditsAfterPayment({
             stripeSessionCreatedUnix,
           });
           if (hasLedgerConfirmation) {
+            if (noBaselineExpectation) {
+              log.info(
+                `[credit-handler] Confirmed top-up via ledger reconciliation for checkout ${sessionId} without an authoritative pre-checkout baseline (credits=${credits}, visibleBaseline=${visibleBaselineCredits}, pack=${packId}).`
+              );
+              publishCreditSnapshot({
+                snapshot: buildCreditSnapshotPayload({
+                  credits,
+                  perHour,
+                  authoritative: true,
+                  checkoutSessionId: sessionId,
+                }),
+                targetWindow,
+              });
+              emitCheckoutConfirmed(sessionId, targetWindow);
+              return true;
+            }
+
             log.info(
-              `[credit-handler] Confirmed top-up via ledger reconciliation for checkout ${sessionId} despite balance delta being obscured (credits=${credits}, expected>=${expectedCredits ?? 'n/a'}, baseline=${baselineCredits ?? 'n/a'}).`
+              `[credit-handler] Confirmed top-up via ledger reconciliation for checkout ${sessionId} with a known baseline (credits=${credits}, expected>=${expectedCredits ?? 'n/a'}, baseline=${baselineCredits ?? 'n/a'}).`
             );
-            publishCreditsSnapshot({ credits, perHour, confirmed: true });
+            publishCreditSnapshot({
+              snapshot: buildCreditSnapshotPayload({
+                credits,
+                perHour,
+                authoritative: true,
+                checkoutSessionId: sessionId,
+              }),
+              targetWindow,
+            });
+            emitCheckoutConfirmed(sessionId, targetWindow);
             return true;
           }
         } catch (ledgerErr: any) {
@@ -1348,11 +2306,6 @@ async function refreshCreditsAfterPayment({
     log.warn(
       `[credit-handler] Paid checkout settlement confirmed but no credit refresh signal was observed after ${maxRetries} attempts (credits=${lastObservedCredits}, expected>=${expectedCredits ?? 'n/a'}, baseline=${baselineCredits ?? 'n/a'}, pack=${packId ?? 'n/a'}).`
     );
-    publishCreditsSnapshot({
-      credits: lastObservedCredits,
-      perHour: lastObservedPerHour,
-      confirmed: false,
-    });
   }
 
   return false;
@@ -1376,9 +2329,7 @@ async function waitForCheckoutEntitlementSync({
       window: targetWindow ?? undefined,
     });
     if (hasUnlockedCheckoutEntitlement(snapshot, expectedEntitlement)) {
-      if (targetWindow && !targetWindow.isDestroyed()) {
-        targetWindow.webContents.send('byo-unlock-confirmed', snapshot);
-      }
+      emitByoUnlockConfirmed(sessionId, snapshot, targetWindow);
       log.info(
         `[credit-handler] Entitlements synced for ${expectedEntitlement}. openai=${snapshot.byoOpenAi} anthropic=${snapshot.byoAnthropic} elevenlabs=${snapshot.byoElevenLabs}`
       );
@@ -1417,6 +2368,7 @@ function scheduleCheckoutVisibilityFollowUp(
           maxRetries: CHECKOUT_BACKGROUND_SYNC_RETRY_COUNT,
         });
         if (!synced) {
+          emitCheckoutUnresolved(opts.mode, opts.window ?? null, sessionId);
           log.warn(
             `[credit-handler] Background BYO entitlement reconciliation exhausted without confirmation for ${sessionId}.`
           );
@@ -1434,6 +2386,7 @@ function scheduleCheckoutVisibilityFollowUp(
         maxRetries: CHECKOUT_BACKGROUND_SYNC_RETRY_COUNT,
       });
       if (!synced) {
+        emitCheckoutUnresolved(opts.mode, opts.window ?? null, sessionId);
         log.warn(
           `[credit-handler] Background checkout credit reconciliation exhausted without visibility for ${sessionId}.`
         );
@@ -1486,11 +2439,21 @@ function scheduleCheckoutSettlementFollowUp(
           `[credit-handler] Background ${opts.mode} settlement reconciliation settled ${sessionId}; visibility sync is still pending.`
         );
       } else if (result.status === 'cancelled') {
-        emitCheckoutCancelled(opts.mode, opts.window ?? null);
+        emitCheckoutCancelled(opts.mode, opts.window ?? null, sessionId);
         log.info(
           `[credit-handler] Background ${opts.mode} settlement reconciliation determined ${sessionId} was not paid.`
         );
       } else {
+        if (opts.alertOnSettlementTimeout) {
+          reportCheckoutClientEventInBackground({
+            eventType: 'external_settlement_pending_timeout',
+            sessionId,
+            mode: opts.mode,
+            packId: opts.packId,
+            message:
+              'Payment did not settle before the background checkout reconciliation window ended.',
+          });
+        }
         log.warn(
           `[credit-handler] Background ${opts.mode} settlement reconciliation still timed out for ${sessionId}.`
         );

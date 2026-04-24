@@ -1545,24 +1545,28 @@ var CREDIT_PACKS = {
   MICRO: {
     id: "MICRO",
     price: 1,
+    krw: 1542,
     hours: MICRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: MICRO_CREDITS
   },
   STARTER: {
     id: "STARTER",
     price: 5,
+    krw: 7711,
     hours: STARTER_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: STARTER_CREDITS
   },
   STANDARD: {
     id: "STANDARD",
     price: 10,
+    krw: 15422,
     hours: STANDARD_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: STANDARD_CREDITS
   },
   PRO: {
     id: "PRO",
     price: 50,
+    krw: 77110,
     hours: PRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: PRO_CREDITS
   }

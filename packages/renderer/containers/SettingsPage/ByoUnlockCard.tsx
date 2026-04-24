@@ -21,6 +21,12 @@ import {
   hasFullByoBundleUnlocked,
 } from '../../state/byo-runtime';
 
+const BYO_UNLOCK_USD_PRICE_LABEL = 'US$10';
+
+function preserveLocalizedUnlockCopyWithUsdPrice(copy: string): string {
+  return copy.replace(/\$10|10\$/g, BYO_UNLOCK_USD_PRICE_LABEL);
+}
+
 export default function ByoUnlockCard() {
   const { t } = useTranslation();
   const [guideOpen, setGuideOpen] = useState(false);
@@ -36,8 +42,12 @@ export default function ByoUnlockCard() {
   const entitlementsLoading = useAiStore(state => state.entitlementsLoading);
   const entitlementsError = useAiStore(state => state.entitlementsError);
   const unlockPending = useAiStore(state => state.unlockPending);
+  const unlockUnresolved = useAiStore(state => state.unlockUnresolved);
   const unlockError = useAiStore(state => state.unlockError);
   const startUnlock = useAiStore(state => state.startUnlock);
+  const dismissUnresolvedUnlock = useAiStore(
+    state => state.dismissUnresolvedUnlock
+  );
   const refreshEntitlements = useAiStore(state => state.refreshEntitlements);
 
   const hasAnyUnlocked = hasAnyByoEntitlementUnlocked({
@@ -60,6 +70,13 @@ export default function ByoUnlockCard() {
     logButton('settings_byo_unlock_click');
     await startUnlock();
   };
+
+  // Product decision: BYO unlock is marketed as a USD list price. Korean
+  // checkout may settle in KRW for local payment reliability, but the app
+  // should not expose the raw KRW conversion in this CTA.
+  const unlockPriceLabel = preserveLocalizedUnlockCopyWithUsdPrice(
+    t('settings.byoOpenAi.unlockCta', 'Unlock for $10')
+  );
 
   // Hide the purchase CTA only after the full Stage5 BYO bundle is unlocked.
   // Legacy partial entitlements still need an upgrade path for audio/OpenAI coverage.
@@ -117,13 +134,36 @@ export default function ByoUnlockCard() {
 
       <Button
         onClick={handleUnlock}
-        disabled={unlockPending || loading}
+        disabled={unlockPending || unlockUnresolved || loading}
         variant="primary"
       >
         {unlockPending
           ? t('settings.byoOpenAi.unlocking', 'Opening checkout…')
-          : t('settings.byoOpenAi.unlockCta', 'Unlock for $10')}
+          : unlockUnresolved
+            ? t(
+                'settings.byoOpenAi.checkoutOpen',
+                'Checkout open in browser…'
+              )
+          : unlockPriceLabel}
       </Button>
+
+      {unlockUnresolved && (
+        <div className={settingsCalloutStyles}>
+          <div className={settingsCalloutBodyStyles}>
+            {t(
+              'settings.byoOpenAi.checkoutOpenHint',
+              'Complete checkout in your browser. We will unlock BYO automatically when payment settles.'
+            )}{' '}
+            <button
+              type="button"
+              onClick={dismissUnresolvedUnlock}
+              className={settingsInlineLinkButtonStyles}
+            >
+              {t('credits.iCancelledCheckout', 'I cancelled checkout')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {unlockError && (
         <p className={settingsStatusErrorStyles}>{unlockError}</p>

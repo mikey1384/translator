@@ -16,6 +16,7 @@ import type {
 } from '@shared-types/app';
 import { ERROR_CODES } from '../../../shared/constants';
 import { useCreditStore } from '../../state';
+import * as SystemIPC from '../../ipc/system';
 import {
   cutCombinedHighlights,
   cutHighlightClip,
@@ -1081,11 +1082,13 @@ export default function useTranscriptHighlightsFlow({
 
       if (progress.error && shouldApplyVisibleUpdates) {
         if (progress.error === ERROR_CODES.INSUFFICIENT_CREDITS) {
+          void SystemIPC.refreshCreditSnapshot().catch(error => {
+            console.warn(
+              '[useTranscriptHighlightsFlow] Failed to refresh credits after insufficient-credit highlight generation:',
+              error
+            );
+          });
           setError(t('summary.insufficientCredits'));
-          useCreditStore
-            .getState()
-            .refresh()
-            .catch(() => void 0);
         } else {
           const friendlyError =
             getSourceVideoErrorMessage(progress.error) || progress.error;

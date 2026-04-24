@@ -34,6 +34,7 @@ import {
   saveStoredTranscriptAnalysis,
 } from '../../ipc/transcript-analysis';
 import * as OperationIPC from '../../ipc/operation';
+import * as SystemIPC from '../../ipc/system';
 import { getByoErrorMessage, isByoError } from '../../utils/byoErrors';
 import {
   estimateSummaryCredits,
@@ -474,10 +475,12 @@ export default function useTranscriptSummaryFlow({
 
         if (highlightStage) {
           if (message === ERROR_CODES.INSUFFICIENT_CREDITS) {
-            useCreditStore
-              .getState()
-              .refresh()
-              .catch(() => void 0);
+            void SystemIPC.refreshCreditSnapshot().catch(error => {
+              console.warn(
+                '[useTranscriptSummaryFlow] Failed to refresh credits after insufficient-credit highlight extraction:',
+                error
+              );
+            });
             setHighlightWarningMessage(
               t(
                 'summary.highlightsInsufficientCredits',
@@ -496,11 +499,13 @@ export default function useTranscriptSummaryFlow({
             );
           }
         } else if (message === ERROR_CODES.INSUFFICIENT_CREDITS) {
+          void SystemIPC.refreshCreditSnapshot().catch(error => {
+            console.warn(
+              '[useTranscriptSummaryFlow] Failed to refresh credits after insufficient-credit summary generation:',
+              error
+            );
+          });
           setError(t('summary.insufficientCredits'));
-          useCreditStore
-            .getState()
-            .refresh()
-            .catch(() => void 0);
         } else if (isByoError(message)) {
           setError(getByoErrorMessage(message));
         } else {

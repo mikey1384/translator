@@ -4,7 +4,6 @@ import {
   AllByoSettings,
   ExposedRenderResult,
   RenderSubtitlesOptions,
-  CreditBalanceResult,
   ByoVideoSuggestionModel,
   Stage5VideoSuggestionMode,
   VideoSuggestionModelPreference,
@@ -410,9 +409,6 @@ const electronAPI = {
     ipcRenderer.invoke('get-video-playback-position', filePath),
   // --- END ADD MAPPINGS ---
 
-  getCreditBalance: (): Promise<CreditBalanceResult> =>
-    ipcRenderer.invoke('get-credit-balance'),
-
   createCheckoutSession: (packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO') =>
     ipcRenderer.invoke('create-checkout-session', packId),
   createByoUnlockSession: (): Promise<void> =>
@@ -490,12 +486,34 @@ const electronAPI = {
 
   // Listen for credit balance updates from the main process
   onCreditsUpdated: (
-    callback: (payload: { creditBalance: number; hoursBalance: number }) => void
+    callback: (payload: {
+      creditBalance: number;
+      hoursBalance: number;
+      creditsPerHour?: number;
+      authoritative?: boolean;
+      checkoutSessionId?: string | null;
+    }) => void
   ) => {
-    const handler = (_: any, payload: any) => callback(payload);
+    const handler = (_: any, payload: any) => {
+      callback(payload);
+    };
     ipcRenderer.on('credits-updated', handler);
     return () => ipcRenderer.removeListener('credits-updated', handler);
   },
+  getCreditSnapshot: (): Promise<{
+    creditBalance: number;
+    hoursBalance: number;
+    creditsPerHour: number;
+    authoritative: boolean;
+    checkoutSessionId?: string | null;
+  } | null> => ipcRenderer.invoke('get-credit-snapshot'),
+  refreshCreditSnapshot: (): Promise<{
+    creditBalance: number;
+    hoursBalance: number;
+    creditsPerHour: number;
+    authoritative: boolean;
+    checkoutSessionId?: string | null;
+  } | null> => ipcRenderer.invoke('refresh-credit-snapshot'),
 
   // Listen for checkout status events
   onCheckoutPending: (callback: () => void) => {
@@ -508,6 +526,11 @@ const electronAPI = {
     const handler = () => callback();
     ipcRenderer.on('checkout-confirmed', handler);
     return () => ipcRenderer.removeListener('checkout-confirmed', handler);
+  },
+  onCheckoutUnresolved: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('checkout-unresolved', handler);
+    return () => ipcRenderer.removeListener('checkout-unresolved', handler);
   },
   onCheckoutCancelled: (callback: () => void) => {
     const handler = () => callback();
@@ -573,6 +596,11 @@ const electronAPI = {
       ipcRenderer.removeListener('byo-unlock-cancelled', handler);
       ipcRenderer.removeListener('byo-unlock-closed', handler);
     };
+  },
+  onByoUnlockUnresolved: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('byo-unlock-unresolved', handler);
+    return () => ipcRenderer.removeListener('byo-unlock-unresolved', handler);
   },
   onByoUnlockError: (callback: (payload: { message?: string }) => void) => {
     const handler = (_: any, payload: any) => callback(payload);

@@ -1240,7 +1240,6 @@ declare module '@shared-types/app' {
       }) => void
     ) => () => void;
 
-    getCreditBalance: () => Promise<CreditBalanceResult>;
     createCheckoutSession: (
       packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
     ) => Promise<string | null>;
@@ -1273,10 +1272,28 @@ declare module '@shared-types/app' {
       callback: (payload: {
         creditBalance: number;
         hoursBalance: number;
+        creditsPerHour?: number;
+        authoritative?: boolean;
+        checkoutSessionId?: string | null;
       }) => void
     ) => () => void;
+    getCreditSnapshot: () => Promise<{
+      creditBalance: number;
+      hoursBalance: number;
+      creditsPerHour: number;
+      authoritative: boolean;
+      checkoutSessionId?: string | null;
+    } | null>;
+    refreshCreditSnapshot: () => Promise<{
+      creditBalance: number;
+      hoursBalance: number;
+      creditsPerHour: number;
+      authoritative: boolean;
+      checkoutSessionId?: string | null;
+    } | null>;
     onCheckoutPending: (callback: () => void) => () => void;
     onCheckoutConfirmed: (callback: () => void) => () => void;
+    onCheckoutUnresolved: (callback: () => void) => () => void;
     onCheckoutCancelled: (callback: () => void) => () => void;
     getEntitlements: () => Promise<EntitlementsSnapshot>;
     refreshEntitlements: () => Promise<EntitlementsSnapshot>;
@@ -1291,6 +1308,7 @@ declare module '@shared-types/app' {
       callback: (snapshot: EntitlementsSnapshot) => void
     ) => () => void;
     onByoUnlockCancelled: (callback: () => void) => () => void;
+    onByoUnlockUnresolved: (callback: () => void) => () => void;
     onByoUnlockError: (
       callback: (payload: { message?: string }) => void
     ) => () => void;

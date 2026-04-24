@@ -34,6 +34,7 @@ import {
 } from '../../../utils/subtitle-library';
 import { preserveWordTimingsOnTranslatedSegments } from '../../../utils/preserve-word-timings';
 import { detachSourceLinkedSubtitleOwnership } from '../../../utils/source-linked-subtitle-ownership';
+import { registerStage5CreditRefreshOperation } from '../../../utils/creditRefreshOperations';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -127,6 +128,7 @@ export async function executeSrtTranslation({
   if (!started) {
     return { success: false };
   }
+  registerStage5CreditRefreshOperation(operationId);
 
   if (useUIStore.getState().subtitleDisplayMode === 'original') {
     useUIStore.getState().setSubtitleDisplayMode('translation');
@@ -134,13 +136,6 @@ export async function executeSrtTranslation({
 
   // Clear stale errors so users only see current run failures.
   useUrlStore.getState().clearError();
-
-  // Refresh credits at start of translation for accurate progress display
-  try {
-    useCreditStore.getState().refresh();
-  } catch {
-    // Non-blocking; continue even if refresh fails
-  }
 
   const srtContent = buildSrt({ segments, mode: 'dual' });
 
@@ -318,6 +313,7 @@ export async function executeDubGeneration({
   if (!started) {
     return { success: false };
   }
+  registerStage5CreditRefreshOperation(operationId);
 
   const payloadSegments = segments.map((seg: any, idx: number) => ({
     start: Number(seg?.start ?? 0),
@@ -458,6 +454,7 @@ export async function executeSubtitleGeneration({
   useUrlStore.getState().clearError();
 
   // Initialize progress tracking (transcription-only)
+  registerStage5CreditRefreshOperation(operationId);
   setTranscription({
     id: operationId,
     stage: i18n.t('generateSubtitles.status.starting'),

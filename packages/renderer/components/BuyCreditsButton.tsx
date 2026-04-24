@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as SystemIPC from '@ipc/system';
-import { useCreditStore } from '../state';
 
 interface BuyCreditsButtonProps {
   packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
@@ -14,14 +13,20 @@ export default function BuyCreditsButton({
 }: BuyCreditsButtonProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const checkoutPending = useCreditStore(s => s.checkoutPending);
 
   async function handleClick() {
+    if (loading) {
+      return;
+    }
+
     try {
       setLoading(true);
-      await SystemIPC.createCheckoutSession(packId);
-
-      await useCreditStore.getState().refresh();
+      const checkoutSessionId = await SystemIPC.createCheckoutSession(packId);
+      if (!checkoutSessionId) {
+        await SystemIPC.showMessage(
+          'An error occurred while trying to start checkout. Please check your connection and try again.'
+        );
+      }
     } catch (err: any) {
       console.error('Failed to start checkout:', err);
       await SystemIPC.showMessage(
@@ -32,7 +37,7 @@ export default function BuyCreditsButton({
     }
   }
 
-  const isDisabled = loading || checkoutPending;
+  const isDisabled = loading;
 
   return (
     <button
@@ -41,14 +46,10 @@ export default function BuyCreditsButton({
       style={{
         padding: '10px 15px',
         cursor: isDisabled ? 'wait' : 'pointer',
-        opacity: checkoutPending ? 0.7 : 1,
+        opacity: isDisabled ? 0.7 : 1,
       }}
     >
-      {loading
-        ? t('credits.redirectingToPayment')
-        : checkoutPending
-          ? 'Processing...'
-          : label}
+      {loading ? t('credits.redirectingToPayment') : label}
     </button>
   );
 }

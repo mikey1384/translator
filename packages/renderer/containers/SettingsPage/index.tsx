@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import CreditCard from '../../components/CreditCard';
 import AdminResetButton from '../../components/AdminResetButton';
 import { shellHeaderBlockStyles, shellTitleStyles } from '../../styles';
-import { useCreditStore } from '../../state/credit-store';
 import { useAiStore } from '../../state';
 import { SystemIPC } from '../../ipc';
 import Section from '../../components/Section';
@@ -35,10 +34,6 @@ export default function SettingsPage() {
       byoAnthropicUnlocked,
       byoElevenLabsUnlocked,
     }) && !adminByoPreviewMode;
-
-  useEffect(() => {
-    useCreditStore.getState().refresh();
-  }, []);
 
   useEffect(() => {
     let mounted = true;

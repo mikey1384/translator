@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useCreditStore } from '../../../state';
 import { useAiStore } from '../../../state';
 import { hasApiKeyModeActiveCoverage } from '../../../state/byo-runtime';
@@ -6,7 +5,6 @@ import { hasApiKeyModeActiveCoverage } from '../../../state/byo-runtime';
 export function useCreditSystem() {
   const hours = useCreditStore(s => s.hours);
   const creditLoading = useCreditStore(s => s.loading);
-  const refresh = useCreditStore(s => s.refresh);
   const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
@@ -31,13 +29,13 @@ export function useCreditSystem() {
     elevenLabsKeyPresent,
   });
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
   // Avoid flashing the warning before BYO state is initialized
   const showCreditWarning =
-    aiInitialized && !usingApiKey && (hours ?? 0) <= 0 && !creditLoading;
+    aiInitialized &&
+    !usingApiKey &&
+    hours !== null &&
+    hours <= 0 &&
+    !creditLoading;
   const isButtonDisabled = false;
 
   return {
@@ -45,6 +43,5 @@ export function useCreditSystem() {
     creditLoading,
     showCreditWarning,
     isButtonDisabled,
-    refreshCreditState: refresh,
   };
 }

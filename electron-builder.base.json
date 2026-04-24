@@ -31,6 +31,13 @@
 
   "copyright": "Copyright © 2025 Mikey Lee",
 
+  "protocols": [
+    {
+      "name": "Stage5 Translator Checkout",
+      "schemes": ["stage5-translator"]
+    }
+  ],
+
   "afterPack": "scripts/sign-chromium.cjs",
 
   "extraResources": [

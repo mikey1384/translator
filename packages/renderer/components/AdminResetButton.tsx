@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCreditStore, useAiStore } from '../state';
+import { useAiStore } from '../state';
 import { colors } from '../styles';
 import { SystemIPC } from '../ipc';
 
@@ -67,7 +67,6 @@ const previewActiveButton = css`
 
 export default function AdminResetButton() {
   const { t } = useTranslation();
-  const refresh = useCreditStore(s => s.refresh);
   const adminByoPreviewMode = useAiStore(state => state.adminByoPreviewMode);
   const setAdminByoPreviewMode = useAiStore(
     state => state.setAdminByoPreviewMode
@@ -99,8 +98,6 @@ export default function AdminResetButton() {
         console.log(
           `✅ Credits added successful: Added ${result.creditsAdded} credits`
         );
-        // Refresh credit balance
-        await refresh();
       } else {
         console.error('❌ Credit add failed:', result.error);
         alert(
@@ -141,8 +138,6 @@ export default function AdminResetButton() {
 
       if (result.success) {
         console.log('✅ Credits reset to 0 successful');
-        // Refresh credit balance
-        await refresh();
       } else {
         console.error('❌ Credit reset to 0 failed:', result.error);
         alert(

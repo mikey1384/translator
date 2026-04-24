@@ -88,6 +88,7 @@ interface AiStoreState {
   entitlementsLoading: boolean;
   entitlementsError?: string;
   unlockPending: boolean;
+  unlockUnresolved: boolean;
   unlockError?: string;
   lastFetched?: string;
   // Global API-key mode (never spend Stage5 credits)
@@ -138,6 +139,7 @@ interface AiStoreState {
   fetchEntitlements: () => Promise<void>;
   refreshEntitlements: () => Promise<void>;
   startUnlock: () => Promise<void>;
+  dismissUnresolvedUnlock: () => void;
   // Admin preview mode action
   setAdminByoPreviewMode: (value: boolean) => void;
   // API key mode actions
@@ -360,6 +362,73 @@ async function enableConfiguredByoToggles(
 }
 
 const unsubscribers: Array<() => void> = [];
+const BYO_UNLOCK_REFRESH_INTERVAL_MS = 2_500;
+const BYO_UNLOCK_REFRESH_MAX_MS = 10 * 60_000;
+const BYO_UNLOCK_FOCUS_REFRESH_DEBOUNCE_MS = 1_000;
+
+let byoUnlockRefreshInterval: ReturnType<typeof setInterval> | null = null;
+let byoUnlockRefreshStartedAt: number | null = null;
+let byoUnlockRefreshInFlight = false;
+let lastByoUnlockFocusRefreshAt = 0;
+
+function stopByoUnlockRefreshLoop() {
+  if (byoUnlockRefreshInterval) {
+    clearInterval(byoUnlockRefreshInterval);
+    byoUnlockRefreshInterval = null;
+  }
+  byoUnlockRefreshInFlight = false;
+}
+
+function refreshUnresolvedByoUnlock(get: () => AiStoreState) {
+  const state = get();
+  if (!state.unlockUnresolved || state.byoUnlocked) {
+    stopByoUnlockRefreshLoop();
+    return;
+  }
+
+  if (
+    byoUnlockRefreshStartedAt &&
+    Date.now() - byoUnlockRefreshStartedAt > BYO_UNLOCK_REFRESH_MAX_MS
+  ) {
+    byoUnlockRefreshStartedAt = null;
+    stopByoUnlockRefreshLoop();
+    return;
+  }
+
+  if (byoUnlockRefreshInFlight) {
+    return;
+  }
+
+  byoUnlockRefreshInFlight = true;
+  void state
+    .refreshEntitlements()
+    .catch(err => {
+      console.error('[AiStore] Failed to poll unresolved BYO unlock:', err);
+    })
+    .finally(() => {
+      byoUnlockRefreshInFlight = false;
+      const nextState = get();
+      if (!nextState.unlockUnresolved || nextState.byoUnlocked) {
+        stopByoUnlockRefreshLoop();
+      }
+    });
+}
+
+function startByoUnlockRefreshLoop(get: () => AiStoreState) {
+  if (!byoUnlockRefreshStartedAt) {
+    byoUnlockRefreshStartedAt = Date.now();
+  }
+
+  refreshUnresolvedByoUnlock(get);
+
+  if (byoUnlockRefreshInterval) {
+    return;
+  }
+
+  byoUnlockRefreshInterval = setInterval(() => {
+    refreshUnresolvedByoUnlock(get);
+  }, BYO_UNLOCK_REFRESH_INTERVAL_MS);
+}
 
 function ensureSubscriptions(
   set: (partial: Partial<AiStoreState>) => void,
@@ -367,10 +436,45 @@ function ensureSubscriptions(
 ) {
   if (unsubscribers.length > 0) return;
 
+  const refreshUnresolvedByoUnlockAfterReturn = () => {
+    const state = get();
+    if (!state.unlockUnresolved || state.byoUnlocked) return;
+
+    const now = Date.now();
+    if (
+      now - lastByoUnlockFocusRefreshAt <
+      BYO_UNLOCK_FOCUS_REFRESH_DEBOUNCE_MS
+    ) {
+      return;
+    }
+    lastByoUnlockFocusRefreshAt = now;
+
+    startByoUnlockRefreshLoop(get);
+  };
+
+  const onWindowFocus = () => refreshUnresolvedByoUnlockAfterReturn();
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      refreshUnresolvedByoUnlockAfterReturn();
+    }
+  };
+
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    window.addEventListener('focus', onWindowFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    unsubscribers.push(() => {
+      window.removeEventListener('focus', onWindowFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      stopByoUnlockRefreshLoop();
+    });
+  }
+
   unsubscribers.push(
     SystemIPC.onEntitlementsUpdated(snapshot => {
+      const hasByoOpenAi = Boolean(snapshot?.byoOpenAi);
+      const previousState = get();
       set({
-        byoUnlocked: Boolean(snapshot?.byoOpenAi),
+        byoUnlocked: hasByoOpenAi,
         byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
         byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
         stage5AnthropicReviewAvailable: Boolean(
@@ -379,9 +483,16 @@ function ensureSubscriptions(
         entitlementsHydrated: true,
         entitlementsLoading: false,
         entitlementsError: undefined,
-        unlockPending: false,
+        unlockPending: hasByoOpenAi ? false : previousState.unlockPending,
+        unlockUnresolved: hasByoOpenAi
+          ? false
+          : previousState.unlockUnresolved,
         lastFetched: snapshot?.fetchedAt,
       });
+      if (hasByoOpenAi) {
+        byoUnlockRefreshStartedAt = null;
+        stopByoUnlockRefreshLoop();
+      }
       void enableConfiguredByoToggles(get, set);
     })
   );
@@ -392,13 +503,22 @@ function ensureSubscriptions(
         entitlementsError: payload?.message || 'Failed to load entitlements',
         entitlementsLoading: false,
         unlockPending: false,
+        unlockUnresolved: false,
       });
+      byoUnlockRefreshStartedAt = null;
+      stopByoUnlockRefreshLoop();
     })
   );
 
   unsubscribers.push(
     SystemIPC.onByoUnlockPending(() => {
-      set({ unlockPending: true, unlockError: undefined });
+      set({
+        unlockPending: true,
+        unlockUnresolved: false,
+        unlockError: undefined,
+      });
+      byoUnlockRefreshStartedAt = null;
+      stopByoUnlockRefreshLoop();
     })
   );
 
@@ -406,6 +526,7 @@ function ensureSubscriptions(
     SystemIPC.onByoUnlockConfirmed(snapshot => {
       set({
         unlockPending: false,
+        unlockUnresolved: false,
         unlockError: undefined,
         byoUnlocked: Boolean(snapshot?.byoOpenAi),
         byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
@@ -418,15 +539,27 @@ function ensureSubscriptions(
         entitlementsError: undefined,
         lastFetched: snapshot?.fetchedAt,
       });
+      byoUnlockRefreshStartedAt = null;
+      stopByoUnlockRefreshLoop();
       void enableConfiguredByoToggles(get, set);
     })
   );
 
   unsubscribers.push(
     SystemIPC.onByoUnlockCancelled(() => {
-      if (get().unlockPending) {
-        set({ unlockPending: false });
+      if (get().unlockPending || get().unlockUnresolved) {
+        set({ unlockPending: false, unlockUnresolved: false });
       }
+      byoUnlockRefreshStartedAt = null;
+      stopByoUnlockRefreshLoop();
+    })
+  );
+
+  unsubscribers.push(
+    SystemIPC.onByoUnlockUnresolved(() => {
+      set({ unlockPending: false, unlockUnresolved: true });
+      byoUnlockRefreshStartedAt = Date.now();
+      startByoUnlockRefreshLoop(get);
     })
   );
 
@@ -434,8 +567,11 @@ function ensureSubscriptions(
     SystemIPC.onByoUnlockError(payload => {
       set({
         unlockPending: false,
+        unlockUnresolved: false,
         unlockError: payload?.message || 'Unlock failed',
       });
+      byoUnlockRefreshStartedAt = null;
+      stopByoUnlockRefreshLoop();
     })
   );
 
@@ -561,6 +697,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     entitlementsLoading: true,
     entitlementsError: undefined,
     unlockPending: false,
+    unlockUnresolved: false,
     unlockError: undefined,
     lastFetched: undefined,
     // API key mode (defaults to false - user must explicitly enable it)
@@ -731,8 +868,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       try {
         set({ entitlementsLoading: true, entitlementsError: undefined });
         const snapshot = await SystemIPC.getEntitlements();
+        const hasByoOpenAi = Boolean(snapshot?.byoOpenAi);
+        const previousState = get();
         set({
-          byoUnlocked: Boolean(snapshot?.byoOpenAi),
+          byoUnlocked: hasByoOpenAi,
           byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
           byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
           stage5AnthropicReviewAvailable: Boolean(
@@ -741,8 +880,16 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           entitlementsHydrated: true,
           entitlementsLoading: false,
           entitlementsError: undefined,
+          unlockPending: hasByoOpenAi ? false : previousState.unlockPending,
+          unlockUnresolved: hasByoOpenAi
+            ? false
+            : previousState.unlockUnresolved,
           lastFetched: snapshot?.fetchedAt,
         });
+        if (hasByoOpenAi) {
+          byoUnlockRefreshStartedAt = null;
+          stopByoUnlockRefreshLoop();
+        }
         await enableConfiguredByoToggles(get, set);
       } catch (err: any) {
         set({
@@ -756,8 +903,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       try {
         set({ entitlementsLoading: true, entitlementsError: undefined });
         const snapshot = await SystemIPC.refreshEntitlements();
+        const hasByoOpenAi = Boolean(snapshot?.byoOpenAi);
+        const previousState = get();
         set({
-          byoUnlocked: Boolean(snapshot?.byoOpenAi),
+          byoUnlocked: hasByoOpenAi,
           byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
           byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
           stage5AnthropicReviewAvailable: Boolean(
@@ -766,8 +915,16 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           entitlementsHydrated: true,
           entitlementsLoading: false,
           entitlementsError: undefined,
+          unlockPending: hasByoOpenAi ? false : previousState.unlockPending,
+          unlockUnresolved: hasByoOpenAi
+            ? false
+            : previousState.unlockUnresolved,
           lastFetched: snapshot?.fetchedAt,
         });
+        if (hasByoOpenAi) {
+          byoUnlockRefreshStartedAt = null;
+          stopByoUnlockRefreshLoop();
+        }
         await enableConfiguredByoToggles(get, set);
       } catch (err: any) {
         set({
@@ -778,15 +935,28 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     },
 
     startUnlock: async () => {
-      set({ unlockPending: true, unlockError: undefined });
+      set({
+        unlockPending: true,
+        unlockUnresolved: false,
+        unlockError: undefined,
+      });
+      byoUnlockRefreshStartedAt = null;
+      stopByoUnlockRefreshLoop();
       try {
         await SystemIPC.createByoUnlockSession();
       } catch (err: any) {
         set({
           unlockPending: false,
+          unlockUnresolved: false,
           unlockError: err?.message || 'Unable to start checkout',
         });
       }
+    },
+
+    dismissUnresolvedUnlock: () => {
+      set({ unlockPending: false, unlockUnresolved: false });
+      byoUnlockRefreshStartedAt = null;
+      stopByoUnlockRefreshLoop();
     },
 
     setAdminByoPreviewMode: (value: boolean) => {

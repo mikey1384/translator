@@ -6,6 +6,7 @@ import {
   getTranslationFailureMessage,
   shouldSurfaceTranslationFailure,
 } from './translationFailure';
+import { registerStage5CreditRefreshOperation } from './creditRefreshOperations';
 
 /**
  * Translates only untranslated subtitle items using the existing streaming pipeline.
@@ -38,6 +39,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     noWrap: true,
   });
   const operationId = `translate-missing-${Date.now()}`;
+  registerStage5CreditRefreshOperation(operationId);
 
   // Initialize translation task progress
   useTaskStore.getState().setTranslation({

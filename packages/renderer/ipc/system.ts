@@ -1,7 +1,6 @@
 import type {
   AllByoSettings,
   ByoVideoSuggestionModel,
-  CreditBalanceResult,
   ErrorReportContext,
   Stage5VideoSuggestionMode,
   VideoSuggestionModelPreference,
@@ -25,10 +24,6 @@ export function setLanguagePreference(
   lang: string
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.setLanguagePreference(lang);
-}
-
-export function getCreditBalance(): Promise<CreditBalanceResult> {
-  return window.electron.getCreditBalance();
 }
 
 export function getVideoMetadata(
@@ -90,9 +85,35 @@ export function setByoProviderEnabled(
 }
 
 export function onCreditsUpdated(
-  callback: (payload: { creditBalance: number; hoursBalance: number }) => void
+  callback: (payload: {
+    creditBalance: number;
+    hoursBalance: number;
+    creditsPerHour?: number;
+    authoritative?: boolean;
+    checkoutSessionId?: string | null;
+  }) => void
 ): () => void {
   return window.electron.onCreditsUpdated(callback);
+}
+
+export function getCreditSnapshot(): Promise<{
+  creditBalance: number;
+  hoursBalance: number;
+  creditsPerHour: number;
+  authoritative: boolean;
+  checkoutSessionId?: string | null;
+} | null> {
+  return window.electron.getCreditSnapshot();
+}
+
+export function refreshCreditSnapshot(): Promise<{
+  creditBalance: number;
+  hoursBalance: number;
+  creditsPerHour: number;
+  authoritative: boolean;
+  checkoutSessionId?: string | null;
+} | null> {
+  return window.electron.refreshCreditSnapshot();
 }
 
 export function onCheckoutPending(callback: () => void): () => void {
@@ -101,6 +122,10 @@ export function onCheckoutPending(callback: () => void): () => void {
 
 export function onCheckoutConfirmed(callback: () => void): () => void {
   return window.electron.onCheckoutConfirmed(callback);
+}
+
+export function onCheckoutUnresolved(callback: () => void): () => void {
+  return window.electron.onCheckoutUnresolved(callback);
 }
 
 export function onCheckoutCancelled(callback: () => void): () => void {
@@ -163,6 +188,10 @@ export function onByoUnlockConfirmed(
 
 export function onByoUnlockCancelled(callback: () => void): () => void {
   return window.electron.onByoUnlockCancelled(callback);
+}
+
+export function onByoUnlockUnresolved(callback: () => void): () => void {
+  return window.electron.onByoUnlockUnresolved(callback);
 }
 
 export function onByoUnlockError(

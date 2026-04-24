@@ -171,13 +171,6 @@ export default function AppContent() {
   const download = useUrlStore(s => s.download);
   const { showCreditWarning } = useCreditSystem();
 
-  // Cleanup credit store listeners on unmount
-  useEffect(() => {
-    return () => {
-      useCreditStore.getState().cleanup();
-    };
-  }, []);
-
   // Keep the main-process target language in sync with the renderer choice.
   useEffect(() => {
     (async () => {

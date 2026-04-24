@@ -50,11 +50,14 @@ import * as utilityHandlers from './handlers/utility-handlers.js';
 import { createFFmpegContext } from './services/ffmpeg-runner.js';
 import type { FFmpegContext } from './services/ffmpeg-runner.js';
 import {
-  handleGetCreditBalance,
   handleCreateCheckoutSession,
   handleResetCredits,
   handleResetCreditsToZero,
   handleCreateByoUnlockSession,
+  handleGetCreditSnapshot,
+  handleRefreshCreditSnapshot,
+  handleCheckoutReturnFromBrowser,
+  initializeCreditBalanceState,
 } from './handlers/credit-handlers.js';
 import {
   initEntitlementsManager,
@@ -91,16 +94,137 @@ import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
+const CHECKOUT_RETURN_PROTOCOL = 'stage5-translator';
 let filePathToOpenOnLoad: string | null = null;
+let checkoutReturnUrlToOpenOnLoad: string | null = null;
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
 
 initEntitlementsManager(settingsStore);
 initAiProvider(settingsStore);
 
+function registerCheckoutReturnProtocol(): void {
+  try {
+    const isDefaultApp = Boolean((nodeProcess as any).defaultApp);
+    if (isDefaultApp && nodeProcess.argv.length >= 2) {
+      app.setAsDefaultProtocolClient(
+        CHECKOUT_RETURN_PROTOCOL,
+        nodeProcess.execPath,
+        [path.resolve(nodeProcess.argv[1])]
+      );
+      return;
+    }
+
+    app.setAsDefaultProtocolClient(CHECKOUT_RETURN_PROTOCOL);
+  } catch (error) {
+    log.warn('[main.ts] Failed to register checkout return protocol:', error);
+  }
+}
+
+function findCheckoutReturnUrl(args: string[]): string | null {
+  for (const arg of args) {
+    const normalized = String(arg || '').trim().replace(/^"|"$/g, '');
+    if (normalized.toLowerCase().startsWith(`${CHECKOUT_RETURN_PROTOCOL}://`)) {
+      return normalized;
+    }
+  }
+
+  return null;
+}
+
+function parseCheckoutReturnUrl(rawUrl: string): {
+  status: 'success' | 'cancelled';
+  sessionId: string | null;
+  returnId: string | null;
+  mode: 'credits' | 'byo';
+} | null {
+  try {
+    const url = new URL(rawUrl);
+    if (url.protocol !== `${CHECKOUT_RETURN_PROTOCOL}:`) {
+      return null;
+    }
+
+    const path = `${url.hostname}${url.pathname}`.replace(/^\/+/, '');
+    const status = path.endsWith('checkout/cancelled')
+      ? 'cancelled'
+      : path.endsWith('checkout/success')
+        ? 'success'
+        : null;
+    if (!status) {
+      return null;
+    }
+
+    return {
+      status,
+      sessionId:
+        url.searchParams.get('session_id') ?? url.searchParams.get('sessionId'),
+      returnId:
+        url.searchParams.get('return_id') ?? url.searchParams.get('returnId'),
+      mode: url.searchParams.get('mode') === 'byo' ? 'byo' : 'credits',
+    };
+  } catch {
+    return null;
+  }
+}
+
+function focusMainWindow(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow().catch(err =>
+      log.error('[main.ts] Error creating window for checkout return:', err)
+    );
+    return;
+  }
+
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+function handleCheckoutReturnUrl(rawUrl: string): boolean {
+  const checkoutReturn = parseCheckoutReturnUrl(rawUrl);
+  if (!checkoutReturn) {
+    return false;
+  }
+
+  log.info(
+    `[main.ts] Checkout return URL received: status=${checkoutReturn.status}, mode=${checkoutReturn.mode}, session=${checkoutReturn.sessionId ?? 'n/a'}, return=${checkoutReturn.returnId ?? 'n/a'}`
+  );
+
+  if (!app.isReady()) {
+    checkoutReturnUrlToOpenOnLoad = rawUrl;
+    return true;
+  }
+
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    checkoutReturnUrlToOpenOnLoad = rawUrl;
+    createWindow().catch(err =>
+      log.error('[main.ts] Error creating window for checkout return:', err)
+    );
+    return true;
+  }
+
+  focusMainWindow();
+  if (mainWindow.webContents.isLoading()) {
+    checkoutReturnUrlToOpenOnLoad = rawUrl;
+    return true;
+  }
+
+  handleCheckoutReturnFromBrowser(checkoutReturn);
+  return true;
+}
+
+registerCheckoutReturnProtocol();
+
 if (!app.requestSingleInstanceLock()) {
   log.info('[main.ts] Another instance detected. Quitting this instance.');
   app.quit();
   nodeProcess.exit(0);
+}
+
+const checkoutReturnUrlFromPrimaryInstance = findCheckoutReturnUrl(
+  nodeProcess.argv
+);
+if (checkoutReturnUrlFromPrimaryInstance) {
+  checkoutReturnUrlToOpenOnLoad = checkoutReturnUrlFromPrimaryInstance;
 }
 
 const fileArgFromPrimaryInstance = nodeProcess.argv
@@ -121,6 +245,11 @@ if (fileArgFromPrimaryInstance) {
 app.on('second-instance', (_event, commandLine, _workingDirectory) => {
   log.info("[main.ts] 'second-instance' event triggered.");
   log.info(`[main.ts] Command line: ${commandLine.join(' ')}`);
+
+  const checkoutReturnUrl = findCheckoutReturnUrl(commandLine);
+  if (checkoutReturnUrl && handleCheckoutReturnUrl(checkoutReturnUrl)) {
+    return;
+  }
 
   const fileArg = commandLine
     .slice(1)
@@ -157,6 +286,11 @@ app.on('second-instance', (_event, commandLine, _workingDirectory) => {
       log.error('[main.ts] Error creating window on second-instance:', err)
     );
   }
+});
+
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  handleCheckoutReturnUrl(url);
 });
 
 let mainWindow: BrowserWindow | null = null;
@@ -739,11 +873,12 @@ try {
 
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
 
-  ipcMain.handle('get-credit-balance', handleGetCreditBalance);
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
   ipcMain.handle('create-byo-unlock-session', () =>
     handleCreateByoUnlockSession()
   );
+  ipcMain.handle('get-credit-snapshot', handleGetCreditSnapshot);
+  ipcMain.handle('refresh-credit-snapshot', handleRefreshCreditSnapshot);
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
   ipcMain.handle('is-admin-mode', () => hasConfiguredAdminSecret());
@@ -1149,6 +1284,39 @@ async function createWindow() {
     log.error('[main.ts] Error initializing update handlers:', err);
   }
 
+  mainWindow.webContents.on('did-finish-load', () => {
+    log.info('[main.ts] Main window finished loading content.');
+    if (filePathToOpenOnLoad) {
+      log.info(
+        `[main.ts] Processing queued file path on did-finish-load: ${filePathToOpenOnLoad}`
+      );
+      if (
+        mainWindow &&
+        !mainWindow.isDestroyed() &&
+        mainWindow.webContents &&
+        !mainWindow.webContents.isDestroyed()
+      ) {
+        mainWindow.webContents.send('open-video-file', filePathToOpenOnLoad);
+      } else {
+        log.error(
+          '[main.ts] Cannot send queued file: mainWindow or webContents became invalid before did-finish-load processing.'
+        );
+      }
+      filePathToOpenOnLoad = null;
+    }
+
+    if (checkoutReturnUrlToOpenOnLoad) {
+      const checkoutReturnUrl = checkoutReturnUrlToOpenOnLoad;
+      checkoutReturnUrlToOpenOnLoad = null;
+      log.info('[main.ts] Processing queued checkout return URL.');
+      handleCheckoutReturnUrl(checkoutReturnUrl);
+    }
+
+    void initializeCreditBalanceState(mainWindow).catch(err => {
+      log.warn('[main.ts] Initial credit balance sync failed:', err);
+    });
+  });
+
   const rendererPath = getRendererHtmlPath();
   log.info(`[main.ts] Loading renderer from: ${rendererPath}`);
   try {
@@ -1205,28 +1373,6 @@ async function createWindow() {
       activeMatchOrdinal: result.activeMatchOrdinal,
       finalUpdate: result.finalUpdate,
     });
-  });
-
-  mainWindow.webContents.on('did-finish-load', () => {
-    log.info('[main.ts] Main window finished loading content.');
-    if (filePathToOpenOnLoad) {
-      log.info(
-        `[main.ts] Processing queued file path on did-finish-load: ${filePathToOpenOnLoad}`
-      );
-      if (
-        mainWindow &&
-        !mainWindow.isDestroyed() &&
-        mainWindow.webContents &&
-        !mainWindow.webContents.isDestroyed()
-      ) {
-        mainWindow.webContents.send('open-video-file', filePathToOpenOnLoad);
-      } else {
-        log.error(
-          '[main.ts] Cannot send queued file: mainWindow or webContents became invalid before did-finish-load processing.'
-        );
-      }
-      filePathToOpenOnLoad = null;
-    }
   });
 
   createApplicationMenu();

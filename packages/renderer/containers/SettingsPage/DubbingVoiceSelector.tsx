@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { colors, selectStyles } from '../../styles';
 import { useUIStore } from '../../state/ui-store';
 import { useAiStore } from '../../state';
-import { useCreditStore } from '../../state/credit-store';
 import * as SubtitlesIPC from '../../ipc/subtitles';
+import * as SystemIPC from '../../ipc/system';
 import { PREVIEW_TTS_CREDITS } from '../../utils/creditEstimates';
 
 const ELEVENLABS_VOICES = [
@@ -50,7 +50,6 @@ export default function DubbingVoiceSelector() {
   const stage5DubbingTtsProvider = useAiStore(
     state => state.stage5DubbingTtsProvider
   );
-  const refreshCredits = useCreditStore(state => state.refresh);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
@@ -94,6 +93,7 @@ export default function DubbingVoiceSelector() {
     activeDubbingProvider === 'stage5'
       ? stage5DubbingTtsProvider
       : activeDubbingProvider;
+  const isUsingStage5Credits = activeDubbingProvider === 'stage5';
 
   const isUsingElevenLabs = activeVoiceProvider === 'elevenlabs';
   const activeVoices = isUsingElevenLabs ? ELEVENLABS_VOICES : OPENAI_VOICES;
@@ -138,8 +138,13 @@ export default function DubbingVoiceSelector() {
       });
       if (previewTokenRef.current !== token) return;
       if (result?.success && result.audioBase64) {
-        if (!useApiKeysMode || activeDubbingProvider === 'stage5') {
-          refreshCredits();
+        if (isUsingStage5Credits) {
+          void SystemIPC.refreshCreditSnapshot().catch(error => {
+            console.warn(
+              '[SettingsPage] Failed to refresh authoritative credit snapshot after voice preview:',
+              error
+            );
+          });
         }
         try {
           audioRef.current?.pause();
