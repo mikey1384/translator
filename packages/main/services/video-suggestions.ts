@@ -31,7 +31,9 @@ import {
   createVideoSearchContinuation,
   runVideoSearch,
   type VideoSearchContinuation,
+  type VideoSearchRunOutcome,
 } from './video-suggestions/search.js';
+import { splitContinuationPageResults } from './video-suggestions/pagination.js';
 import {
   type IntentResolverPayload,
   type QueryFormulatorPayload,
@@ -47,6 +49,7 @@ import {
   normalizeExcludeUrls,
   normalizeIntentCandidates,
   normalizePreferenceSlots,
+  normalizeYoutubeWatchUrl,
   quotedStatusValue,
   recencyLabel,
   sanitizeCountryHint,
@@ -170,9 +173,7 @@ function buildThreadContext(
   return recent.map(item => `${item.role}: ${item.content}`).join('\n');
 }
 
-function buildTargetCountryLanguageInstruction(
-  targetCountry?: string
-): string {
+function buildTargetCountryLanguageInstruction(targetCountry?: string): string {
   const normalizedTargetCountry = compactText(targetCountry);
   if (!normalizedTargetCountry) {
     return 'Use English for searchQuery and retrievalQueries.';
@@ -224,6 +225,799 @@ function normalizeBiasMetadata({
     youtubeSearchLanguage: normalizedSearchLanguage,
     primarySearchLanguage: normalizedSearchLanguage,
     searchLanguages: normalizedSearchLanguages,
+  };
+}
+
+type AgenticSearchPlan = {
+  searchQuery: string;
+  retrievalQueries: string[];
+  youtubeRegionCode?: string;
+  youtubeSearchLanguage?: string;
+  selectedChannels: string[];
+  capturedPreferences?: ReturnType<typeof normalizePreferenceSlots>;
+};
+
+type AgenticJudgePayload = {
+  quality: 'good' | 'partial' | 'bad';
+  shouldContinue: boolean;
+  reason: string;
+  revisedQueries: string[];
+  assistantMessage: string;
+  capturedPreferences?: ReturnType<typeof normalizePreferenceSlots>;
+};
+
+type AgenticLoopOutcome = {
+  results: VideoSuggestionResultItem[];
+  searchQuery: string;
+  continuation: VideoSearchContinuation;
+  assistantMessage: string;
+  capturedPreferences?: ReturnType<typeof normalizePreferenceSlots>;
+  lowConfidenceReason?: string;
+};
+
+function resolveAgenticIterationLimit({
+  preference,
+  translationPhase,
+}: {
+  preference: VideoSuggestionModelPreference;
+  translationPhase: 'draft' | 'review';
+}): number {
+  return translationPhase === 'review' || preference === 'quality' ? 3 : 2;
+}
+
+function parseJsonObjectPayload(raw: string): Record<string, unknown> | null {
+  const input = String(raw || '').trim();
+  if (!input) return null;
+
+  const attempts = [input];
+  const fenced = input
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+  if (fenced && fenced !== input) attempts.push(fenced);
+
+  const firstBrace = input.indexOf('{');
+  const lastBrace = input.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    attempts.push(input.slice(firstBrace, lastBrace + 1));
+  }
+
+  for (const candidate of attempts) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      // Continue trying fallback JSON spans.
+    }
+  }
+
+  return null;
+}
+
+function parseBooleanField(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return value !== 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', 'yes', '1', 'y'].includes(normalized)) return true;
+    if (['false', 'no', '0', 'n'].includes(normalized)) return false;
+  }
+  return null;
+}
+
+function normalizeQueryList(input: unknown, limit = 8): string[] {
+  if (!Array.isArray(input)) return [];
+  return uniqueTexts(
+    input.map(value => sanitizeSearchKeywords(String(value || '')))
+  )
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
+function parseAgenticJudgePayload(
+  raw: string,
+  canContinue: boolean
+): AgenticJudgePayload | null {
+  const obj = parseJsonObjectPayload(raw);
+  if (!obj) return null;
+
+  const qualityRaw = compactText(obj.quality).toLowerCase();
+  const quality =
+    qualityRaw === 'good' || qualityRaw === 'partial' || qualityRaw === 'bad'
+      ? qualityRaw
+      : 'partial';
+  const revisedQueries = normalizeQueryList(obj.revisedQueries);
+  const shouldContinue =
+    canContinue &&
+    (parseBooleanField(obj.shouldContinue) ?? false) &&
+    revisedQueries.length > 0;
+  const capturedPreferenceSource = {
+    ...(obj.preferences && typeof obj.preferences === 'object'
+      ? (obj.preferences as Record<string, unknown>)
+      : {}),
+    ...(obj.capturedPreferences && typeof obj.capturedPreferences === 'object'
+      ? (obj.capturedPreferences as Record<string, unknown>)
+      : {}),
+  };
+
+  return {
+    quality,
+    shouldContinue,
+    reason: clampTraceMessage(compactText(obj.reason), 360),
+    revisedQueries,
+    assistantMessage: clampTraceMessage(compactText(obj.assistantMessage), 520),
+    capturedPreferences: normalizePreferenceSlots(capturedPreferenceSource),
+  };
+}
+
+function mergeVideoSuggestionResults(
+  items: VideoSuggestionResultItem[]
+): VideoSuggestionResultItem[] {
+  const merged: VideoSuggestionResultItem[] = [];
+  const seen = new Set<string>();
+
+  for (const item of items) {
+    const normalizedUrl = normalizeYoutubeWatchUrl(item?.url) || item?.url;
+    const url = compactText(normalizedUrl);
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    merged.push(item);
+  }
+
+  return merged;
+}
+
+function buildCandidateSummaryForJudge(
+  items: VideoSuggestionResultItem[],
+  max = 24
+): string {
+  if (items.length === 0) return 'None.';
+  return items
+    .slice(0, max)
+    .map((item, index) => {
+      const parts = [
+        `${index + 1}. ${compactText(item.title) || 'Untitled'}`,
+        compactText(item.channel) ? `channel=${compactText(item.channel)}` : '',
+        compactText(item.uploadedAt)
+          ? `uploaded=${compactText(item.uploadedAt)}`
+          : '',
+        `url=${compactText(item.url)}`,
+      ].filter(Boolean);
+      return parts.join(' | ');
+    })
+    .join('\n');
+}
+
+function buildJudgeCandidateContext({
+  currentResults,
+  candidatePool,
+}: {
+  currentResults: VideoSuggestionResultItem[];
+  candidatePool: VideoSuggestionResultItem[];
+}): string {
+  const freshResults = mergeVideoSuggestionResults(currentResults).slice(0, 24);
+  const freshUrls = new Set(
+    freshResults
+      .map(item => normalizeYoutubeWatchUrl(item.url) || compactText(item.url))
+      .filter(Boolean)
+  );
+  const priorResults = candidatePool.filter(item => {
+    const url = normalizeYoutubeWatchUrl(item.url) || compactText(item.url);
+    return Boolean(url) && !freshUrls.has(url);
+  });
+
+  return [
+    `Fresh candidates from this pass:\n${buildCandidateSummaryForJudge(
+      freshResults,
+      24
+    )}`,
+    priorResults.length > 0
+      ? `Prior candidates still available:\n${buildCandidateSummaryForJudge(
+          priorResults,
+          12
+        )}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+function createAgenticRetrievalProgressForwarder(
+  onProgress?: (progress: VideoSuggestionProgress) => void
+): ((progress: VideoSuggestionProgress) => void) | undefined {
+  if (!onProgress) return undefined;
+  return progress => {
+    emitSuggestionProgress(onProgress, progress);
+  };
+}
+
+function buildAgenticPlanFromPlanner({
+  queryPlanner,
+  answerer,
+  latestUserQuery,
+  fallbackQuery,
+  fallbackYoutubeRegionCode,
+  fallbackYoutubeSearchLanguage,
+}: {
+  queryPlanner?: QueryFormulatorPayload | null;
+  answerer?: IntentResolverPayload | null;
+  latestUserQuery: string;
+  fallbackQuery?: string;
+  fallbackYoutubeRegionCode?: string;
+  fallbackYoutubeSearchLanguage?: string;
+}): AgenticSearchPlan {
+  const answererSeedQueries = buildOrderedIntentSeedQueries({
+    candidates: answerer?.candidates,
+    descriptorPhrases: answerer?.descriptorPhrases,
+    resolvedIntent: answerer?.resolvedIntent || answerer?.intentSummary,
+    latestUserQuery,
+  });
+  const retrievalQueries = uniqueTexts(
+    [
+      ...(queryPlanner?.retrievalQueries || []),
+      queryPlanner?.searchQuery || '',
+      ...answererSeedQueries,
+      fallbackQuery || '',
+      latestUserQuery,
+    ].map(query => sanitizeSearchKeywords(query))
+  )
+    .filter(Boolean)
+    .slice(0, 10);
+  const normalizedBias = normalizeBiasMetadata({
+    youtubeRegionCode: queryPlanner?.youtubeRegionCode,
+    youtubeSearchLanguage: queryPlanner?.youtubeSearchLanguage,
+    primarySearchLanguage: queryPlanner?.primarySearchLanguage,
+    searchLanguages: [
+      ...(queryPlanner?.searchLanguages || []),
+      ...(answerer?.searchLanguages || []),
+    ],
+    fallbackYoutubeRegionCode:
+      answerer?.youtubeRegionCode || fallbackYoutubeRegionCode,
+    fallbackYoutubeSearchLanguage:
+      answerer?.youtubeSearchLanguage ||
+      answerer?.primarySearchLanguage ||
+      fallbackYoutubeSearchLanguage ||
+      'en',
+  });
+
+  return {
+    searchQuery:
+      sanitizeSearchKeywords(queryPlanner?.searchQuery || '') ||
+      retrievalQueries[0] ||
+      sanitizeSearchKeywords(answerer?.resolvedIntent || '') ||
+      sanitizeSearchKeywords(fallbackQuery || latestUserQuery),
+    retrievalQueries,
+    youtubeRegionCode: normalizedBias.youtubeRegionCode,
+    youtubeSearchLanguage: normalizedBias.youtubeSearchLanguage,
+    selectedChannels: (answerer?.candidates || [])
+      .map(candidate => compactText(candidate.name))
+      .filter(Boolean),
+    capturedPreferences:
+      queryPlanner?.capturedPreferences || answerer?.capturedPreferences,
+  };
+}
+
+function queryKey(value: string): string {
+  return sanitizeSearchKeywords(value).toLowerCase();
+}
+
+function buildReplannedAgenticPlan({
+  previousPlan,
+  judge,
+  answerer,
+  latestUserQuery,
+  triedQueryKeys,
+}: {
+  previousPlan: AgenticSearchPlan;
+  judge: AgenticJudgePayload;
+  answerer?: IntentResolverPayload | null;
+  latestUserQuery: string;
+  triedQueryKeys: Set<string>;
+}): AgenticSearchPlan | null {
+  const fallbackQueries = buildOrderedIntentSeedQueries({
+    candidates: answerer?.candidates,
+    descriptorPhrases: answerer?.descriptorPhrases,
+    resolvedIntent: answerer?.resolvedIntent || answerer?.intentSummary,
+    latestUserQuery,
+  });
+  const freshQueries = uniqueTexts(
+    [
+      ...judge.revisedQueries,
+      ...fallbackQueries,
+      sanitizeSearchKeywords(answerer?.resolvedIntent || ''),
+      sanitizeSearchKeywords(latestUserQuery),
+    ].filter(Boolean)
+  )
+    .filter(query => !triedQueryKeys.has(queryKey(query)))
+    .slice(0, 8);
+
+  if (freshQueries.length === 0) return null;
+
+  return {
+    ...previousPlan,
+    searchQuery: freshQueries[0],
+    retrievalQueries: freshQueries,
+    capturedPreferences:
+      judge.capturedPreferences &&
+      Object.keys(judge.capturedPreferences).length > 0
+        ? judge.capturedPreferences
+        : previousPlan.capturedPreferences,
+  };
+}
+
+function fallbackAgenticJudge({
+  candidateCount,
+  canContinue,
+}: {
+  candidateCount: number;
+  canContinue: boolean;
+}): AgenticJudgePayload {
+  const quality =
+    candidateCount >= 8 ? 'good' : candidateCount > 0 ? 'partial' : 'bad';
+  return {
+    quality,
+    shouldContinue: canContinue && candidateCount < 6,
+    reason:
+      candidateCount > 0
+        ? `Fallback query review accepted ${candidateCount} retrieved candidate${candidateCount === 1 ? '' : 's'}.`
+        : 'Fallback query review found no retrieved candidates.',
+    revisedQueries: [],
+    assistantMessage:
+      candidateCount > 0
+        ? '__i18n__:input.videoSuggestion.defaultFollowUp'
+        : '__i18n__:input.videoSuggestion.searchFailed',
+  };
+}
+
+async function runAgenticJudge({
+  operationId,
+  model,
+  translationPhase,
+  signal,
+  history,
+  latestUserQuery,
+  plan,
+  candidatePool,
+  currentResults,
+  triedQueries,
+  iteration,
+  maxIterations,
+  preferredLanguage,
+  preferredLanguageName,
+  onProgress,
+  startedAt,
+  onResolvedModel,
+}: {
+  operationId: string;
+  model: string;
+  translationPhase: 'draft' | 'review';
+  signal?: AbortSignal;
+  history: Array<{ role: 'user' | 'assistant'; content: string }>;
+  latestUserQuery: string;
+  plan: AgenticSearchPlan;
+  candidatePool: VideoSuggestionResultItem[];
+  currentResults: VideoSuggestionResultItem[];
+  triedQueries: string[];
+  iteration: number;
+  maxIterations: number;
+  preferredLanguage?: string;
+  preferredLanguageName?: string;
+  onProgress?: (progress: VideoSuggestionProgress) => void;
+  startedAt: number;
+  onResolvedModel?: (model: string) => void;
+}): Promise<AgenticJudgePayload> {
+  const canContinue = iteration < maxIterations;
+  emitSuggestionProgress(onProgress, {
+    operationId,
+    phase: 'ranking',
+    message: `Agent pass ${iteration}/${maxIterations}: checking query effectiveness.`,
+    searchQuery: plan.searchQuery,
+    resultCount: candidatePool.length,
+    stageKey: 'planner',
+    stageIndex: 2,
+    stageTotal: 3,
+    stageState: 'running',
+    elapsedMs: Date.now() - startedAt,
+  });
+
+  try {
+    const raw = await callAIModel({
+      operationId: `${operationId}-judge-${iteration}`,
+      model,
+      translationPhase,
+      modelFamilyHintSource: 'model',
+      onResolvedModel,
+      reasoning: { effort: translationPhase === 'review' ? 'high' : 'medium' },
+      signal,
+      retryAttempts: 1,
+      messages: [
+        {
+          role: 'system',
+          content: `You are the query reviewer in a bounded agentic YouTube video recommender.
+Reply with JSON only. No markdown.
+
+Schema:
+{
+  "quality": "good|partial|bad",
+  "shouldContinue": false,
+  "reason": "short reason",
+  "revisedQueries": ["fresh YouTube keyword query if another pass is needed"],
+  "assistantMessage": "one or two helpful sentences for the user"
+}
+
+Rules:
+- Do not select, rank, or filter individual observed videos. Your job is query strategy only.
+- Set shouldContinue=true only when another retrieval pass is likely to improve the match and a fresh query is available.
+- If shouldContinue=true, revisedQueries must avoid already tried queries and must be plain YouTube keyword searches, not operators like site:, channel:, intitle:, or boolean syntax.
+- When revisedQueries are needed, use domain knowledge: include native search idioms, specific shows/franchises, notable creators/channels/critics, studios, producers, or expert names that are likely to retrieve better videos. Avoid only translating the user's words literally.
+- If the current query produced plausible candidates, set shouldContinue=false even if the result list is imperfect.
+- Write assistantMessage in the requested UI language. Do not mention implementation details or pipeline steps.`,
+        },
+        {
+          role: 'user',
+          content: [
+            preferredLanguage || preferredLanguageName
+              ? `User interface language: ${compactText(
+                  preferredLanguageName || preferredLanguage
+                )} (${compactText(preferredLanguage || '').toLowerCase()}).`
+              : '',
+            `Agent pass: ${iteration}/${maxIterations}. More passes allowed: ${
+              canContinue ? 'yes' : 'no'
+            }.`,
+            buildThreadContext(history)
+              ? `Conversation:\n${buildThreadContext(history)}`
+              : '',
+            latestUserQuery ? `Current user request:\n${latestUserQuery}` : '',
+            `Current search query:\n${plan.searchQuery}`,
+            plan.retrievalQueries.length > 0
+              ? `Current retrieval queries:\n${plan.retrievalQueries.join('\n')}`
+              : '',
+            triedQueries.length > 0
+              ? `Already tried queries:\n${triedQueries.join('\n')}`
+              : '',
+            `New results this pass: ${currentResults.length}. Total observed candidates: ${candidatePool.length}.`,
+            `Observed candidates:\n${buildJudgeCandidateContext({
+              currentResults,
+              candidatePool,
+            })}`,
+          ]
+            .filter(Boolean)
+            .join('\n\n'),
+        },
+      ],
+    });
+
+    const parsed = parseAgenticJudgePayload(raw, canContinue);
+    if (parsed) {
+      emitSuggestionProgress(onProgress, {
+        operationId,
+        phase: 'ranking',
+        message:
+          parsed.shouldContinue && canContinue
+            ? `Agent pass ${iteration}/${maxIterations}: revising the search.`
+            : `Agent pass ${iteration}/${maxIterations}: search query accepted.`,
+        searchQuery: plan.searchQuery,
+        resultCount: candidatePool.length,
+        assistantPreview: parsed.reason,
+        stageKey: 'planner',
+        stageIndex: 2,
+        stageTotal: 3,
+        stageState: 'cleared',
+        stageOutcome: clampTraceLines(
+          [
+            `Query review quality: ${parsed.quality}.`,
+            parsed.reason ? `Reason: ${parsed.reason}` : '',
+            parsed.revisedQueries.length > 0
+              ? `Revised queries: ${summarizeValues(parsed.revisedQueries, 4)}.`
+              : '',
+          ],
+          620
+        ),
+        elapsedMs: Date.now() - startedAt,
+      });
+      return parsed;
+    }
+  } catch (error) {
+    if (isSuggestionAbortError(error, signal)) {
+      throw error;
+    }
+    log.warn(
+      `[video-suggestions] Agentic judge failed (${operationId} pass ${iteration}):`,
+      summarizeSearchError(error)
+    );
+  }
+
+  const fallback = fallbackAgenticJudge({
+    candidateCount: candidatePool.length,
+    canContinue,
+  });
+  emitSuggestionProgress(onProgress, {
+    operationId,
+    phase: 'ranking',
+    message: `Agent pass ${iteration}/${maxIterations}: fallback judge used.`,
+    searchQuery: plan.searchQuery,
+    resultCount: candidatePool.length,
+    stageKey: 'planner',
+    stageIndex: 2,
+    stageTotal: 3,
+    stageState: 'cleared',
+    stageOutcome: fallback.reason,
+    elapsedMs: Date.now() - startedAt,
+  });
+  return fallback;
+}
+
+async function runAgenticVideoSearchLoop({
+  operationId,
+  model,
+  translationPhase,
+  signal,
+  history,
+  latestUserQuery,
+  initialPlan,
+  answerer,
+  preferredRecency,
+  excludeUrls,
+  preferredLanguage,
+  preferredLanguageName,
+  maxIterations,
+  onProgress,
+  startedAt,
+  onResolvedModel,
+}: {
+  operationId: string;
+  model: string;
+  translationPhase: 'draft' | 'review';
+  signal?: AbortSignal;
+  history: Array<{ role: 'user' | 'assistant'; content: string }>;
+  latestUserQuery: string;
+  initialPlan: AgenticSearchPlan;
+  answerer?: IntentResolverPayload | null;
+  preferredRecency: VideoSuggestionRecency;
+  excludeUrls: Set<string>;
+  preferredLanguage?: string;
+  preferredLanguageName?: string;
+  maxIterations: number;
+  onProgress?: (progress: VideoSuggestionProgress) => void;
+  startedAt: number;
+  onResolvedModel?: (model: string) => void;
+}): Promise<AgenticLoopOutcome> {
+  let currentPlan = initialPlan;
+  let candidatePool: VideoSuggestionResultItem[] = [];
+  let deferredCandidatePool: VideoSuggestionResultItem[] = [];
+  let observedCandidatePool: VideoSuggestionResultItem[] = [];
+  let lastOutcome: VideoSearchRunOutcome | null = null;
+  let lastJudge: AgenticJudgePayload | null = null;
+  let lowConfidenceReason = '';
+  const triedQueryKeys = new Set<string>();
+  const triedQueries: string[] = [];
+  const totalIterations = Math.max(1, Math.min(3, Math.floor(maxIterations)));
+  const mutedRetrievalProgress =
+    createAgenticRetrievalProgressForwarder(onProgress);
+
+  for (let pass = 1; pass <= totalIterations; pass += 1) {
+    throwIfSuggestionAborted(signal);
+
+    const retrievalQueries = uniqueTexts(
+      [...currentPlan.retrievalQueries, currentPlan.searchQuery].map(query =>
+        sanitizeSearchKeywords(query)
+      )
+    )
+      .filter(Boolean)
+      .slice(0, 10);
+    if (retrievalQueries.length === 0) break;
+
+    for (const query of retrievalQueries) {
+      const key = queryKey(query);
+      if (!triedQueryKeys.has(key)) {
+        triedQueryKeys.add(key);
+        triedQueries.push(query);
+      }
+    }
+
+    emitSuggestionProgress(onProgress, {
+      operationId,
+      phase: 'searching',
+      message: `Agent pass ${pass}/${totalIterations}: retrieving YouTube candidates.`,
+      searchQuery: retrievalQueries[0],
+      assistantPreview: clampTraceMessage(
+        `Trying: ${summarizeValues(retrievalQueries, 4)}.`
+      ),
+      stageKey: 'retrieval',
+      stageIndex: 3,
+      stageTotal: 3,
+      stageState: 'running',
+      elapsedMs: Date.now() - startedAt,
+    });
+
+    const effectiveExcludeUrls = new Set(excludeUrls);
+    for (const item of observedCandidatePool) {
+      const url = normalizeYoutubeWatchUrl(item.url) || compactText(item.url);
+      if (url) effectiveExcludeUrls.add(url);
+    }
+
+    const continuation = createVideoSearchContinuation({
+      recency: preferredRecency,
+      translationPhase,
+      model,
+      maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
+      intentQuery: currentPlan.searchQuery || retrievalQueries[0],
+      youtubeRegionCode: currentPlan.youtubeRegionCode,
+      youtubeSearchLanguage: currentPlan.youtubeSearchLanguage,
+      retrievalQueries,
+      retrievalSeedUrls: [],
+      selectedChannels: currentPlan.selectedChannels,
+      iteration: pass - 1,
+    });
+
+    const outcome = await runVideoSearch({
+      continuation,
+      excludeUrls: effectiveExcludeUrls,
+      emitReuseStages: false,
+      operationId,
+      onProgress: mutedRetrievalProgress,
+      startedAt,
+      signal,
+    });
+    lastOutcome = outcome;
+    lowConfidenceReason = outcome.lowConfidenceReason || lowConfidenceReason;
+    const passResults = mergeVideoSuggestionResults([
+      ...outcome.results,
+      ...(outcome.continuation.pendingResults || []),
+    ]);
+    const observedPool = mergeVideoSuggestionResults([
+      ...observedCandidatePool,
+      ...passResults,
+    ]);
+
+    lastJudge = await runAgenticJudge({
+      operationId,
+      model,
+      translationPhase,
+      signal,
+      history,
+      latestUserQuery,
+      plan: currentPlan,
+      candidatePool: observedPool,
+      currentResults: passResults,
+      triedQueries,
+      iteration: pass,
+      maxIterations: totalIterations,
+      preferredLanguage,
+      preferredLanguageName,
+      onProgress,
+      startedAt,
+      onResolvedModel,
+    });
+
+    const shouldDeferPass = lastJudge.shouldContinue && pass < totalIterations;
+    if (!shouldDeferPass) {
+      candidatePool = mergeVideoSuggestionResults([
+        ...candidatePool,
+        ...passResults,
+      ]);
+      observedCandidatePool = observedPool;
+      break;
+    }
+
+    const nextPlan = buildReplannedAgenticPlan({
+      previousPlan: currentPlan,
+      judge: lastJudge,
+      answerer,
+      latestUserQuery,
+      triedQueryKeys,
+    });
+    if (!nextPlan) {
+      candidatePool = mergeVideoSuggestionResults([
+        ...candidatePool,
+        ...passResults,
+      ]);
+      observedCandidatePool = observedPool;
+      break;
+    }
+
+    deferredCandidatePool = mergeVideoSuggestionResults([
+      ...deferredCandidatePool,
+      ...passResults,
+    ]);
+    observedCandidatePool = observedPool;
+    currentPlan = nextPlan;
+  }
+
+  const prioritizedCandidatePool = mergeVideoSuggestionResults([
+    ...candidatePool,
+    ...deferredCandidatePool,
+  ]);
+  const pagedResults = splitContinuationPageResults({
+    items: prioritizedCandidatePool,
+    pageSize: VIDEO_SUGGESTION_BATCH_SIZE,
+  });
+  const finalResults = pagedResults.pageResults;
+  const finalLowConfidenceReason =
+    finalResults.length > 0
+      ? undefined
+      : lowConfidenceReason ||
+        (lastJudge?.quality === 'bad' ? 'no-scored-results' : undefined);
+  const finalSearchQuery =
+    currentPlan.searchQuery ||
+    currentPlan.retrievalQueries[0] ||
+    lastOutcome?.searchQuery ||
+    latestUserQuery;
+  const finalContinuation = createVideoSearchContinuation({
+    recency: preferredRecency,
+    translationPhase,
+    model,
+    maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
+    intentQuery: finalSearchQuery,
+    youtubeRegionCode: currentPlan.youtubeRegionCode,
+    youtubeSearchLanguage: currentPlan.youtubeSearchLanguage,
+    retrievalQueries:
+      currentPlan.retrievalQueries.length > 0
+        ? currentPlan.retrievalQueries
+        : [finalSearchQuery],
+    retrievalSeedUrls: [],
+    selectedChannels: currentPlan.selectedChannels,
+    iteration: lastOutcome?.continuation.iteration || 1,
+    pendingResults: pagedResults.pendingResults,
+  });
+
+  emitSuggestionProgress(onProgress, {
+    operationId,
+    phase: 'finalizing',
+    message:
+      finalResults.length === 0
+        ? 'No verified YouTube candidates survived the agent loop.'
+        : `Agent loop found ${finalResults.length} result${finalResults.length === 1 ? '' : 's'}.`,
+    searchQuery: finalSearchQuery,
+    resultCount: finalResults.length,
+    partialResults: finalResults,
+    assistantPreview:
+      lastJudge?.assistantMessage &&
+      !lastJudge.assistantMessage.startsWith('__i18n__:')
+        ? lastJudge.assistantMessage
+        : undefined,
+    stageKey: 'retrieval',
+    stageIndex: 3,
+    stageTotal: 3,
+    stageState: 'cleared',
+    stageOutcome: clampTraceLines(
+      [
+        `Prioritized candidates: ${prioritizedCandidatePool.length}.`,
+        deferredCandidatePool.length > 0
+          ? `Deferred fallback candidates: ${deferredCandidatePool.length}.`
+          : '',
+        observedCandidatePool.length !== prioritizedCandidatePool.length
+          ? `Candidates seen across passes: ${observedCandidatePool.length}.`
+          : '',
+        `Returned candidates: ${finalResults.length}.`,
+        lastJudge?.quality
+          ? `Final query review quality: ${lastJudge.quality}.`
+          : '',
+        lastJudge?.reason ? `Reason: ${lastJudge.reason}` : '',
+      ],
+      620
+    ),
+    elapsedMs: Date.now() - startedAt,
+  });
+
+  return {
+    results: finalResults,
+    searchQuery: finalSearchQuery,
+    continuation: finalContinuation,
+    assistantMessage:
+      lastJudge?.assistantMessage ||
+      (finalResults.length > 0
+        ? '__i18n__:input.videoSuggestion.defaultFollowUp'
+        : '__i18n__:input.videoSuggestion.searchFailed'),
+    capturedPreferences:
+      lastJudge?.capturedPreferences &&
+      Object.keys(lastJudge.capturedPreferences).length > 0
+        ? lastJudge.capturedPreferences
+        : currentPlan.capturedPreferences,
+    lowConfidenceReason: finalLowConfidenceReason,
   };
 }
 
@@ -382,23 +1176,23 @@ Schema:
   "youtubeSearchLanguage": "language code like en/ja/es",
   "candidates": [
     {
-      "name": "direct answer to user's query",
+      "name": "knowledgeable search anchor: native topic term, creator, channel, franchise, critic, studio, producer, or expert name",
       "confidence": "high"
     },
     {
-      "name": "direct answer to user's query 2",
+      "name": "another high-value search anchor",
       "confidence": "medium"
     },
     {
-      "name": "direct answer to user's query 3",
+      "name": "another high-value search anchor",
       "confidence": "medium"
     },
     {
-      "name": "most likely specific candidate that could help find the right video",
+      "name": "specific candidate that could help find better YouTube videos",
       "confidence": "medium"
     },
     {
-      "name": "another likely specific candidate that could help find the right video",
+      "name": "another specific candidate that could help find better YouTube videos",
       "confidence": "medium"
     }
   ],
@@ -422,7 +1216,8 @@ Rules:
 - primarySearchLanguage must equal youtubeSearchLanguage.
 - Treat candidates as a wide pool of likely targets, not a single winner.
 - Return at least 10 likely candidates whenever the request is broad enough to support that many plausible targets. Return fewer only when the space is genuinely narrow.
-- Prefer grounded specific names when available, but if a likely fit is obvious you may still propose it even when this run does not fully verify it.
+- Prefer grounded specific names, native YouTube search idioms, notable creators/channels/critics, franchises, studios, producers, and expert names over literal keyword translation.
+- If the user asks for a broad category like Japanese animation introductions, do not merely translate that phrase. Use domain knowledge to propose search anchors likely to surface real explainers, reviews, retrospectives, recommendations, and commentary.
 - Use confidence to express uncertainty. High = strongly likely, medium = plausible, low = speculative fallback.
 - answerToUserQuestion should state the likely best direction directly. Do not fill it with verification caveats or "I could not reliably ground..." style hedging.
 - Prefer credible specific names over generic descriptors when they are likely to improve retrieval.
@@ -672,11 +1467,12 @@ Schema:
 
 Rules:
 - Search source is YouTube only.
-- Use only names from candidates for name-based queries.
+- Use candidates as knowledgeable search anchors for name-based queries.
 - Use only descriptor phrases from descriptorPhrases or explicit user wording.
 - You may reorder terms, combine candidate names with descriptor phrases, normalize wording, and selectively relax constraints as the plan broadens.
 - Order retrievalQueries from most likely/high-confidence specific seeds to less specific fallback seeds.
 - searchQuery must equal retrievalQueries[0].
+- Prefer native YouTube search idioms and real domain anchors over literal translations of the user's phrase.
 - If App target country is present, you MUST output youtubeRegionCode and youtubeSearchLanguage for it. Do not omit them.
 - If the target country is unclear or not a real place, set youtubeRegionCode="" and youtubeSearchLanguage="en".
 - primarySearchLanguage must equal youtubeSearchLanguage.
@@ -693,9 +1489,7 @@ Rules:
               latestUserQuery
                 ? `Current user request:\n${latestUserQuery}`
                 : '',
-              targetCountry
-                ? `App target country:\n${targetCountry}`
-                : '',
+              targetCountry ? `App target country:\n${targetCountry}` : '',
               answerer
                 ? `Structured step 1 output:\n${JSON.stringify({
                     answerToUserQuestion: answerer.answerToUserQuestion || '',
@@ -831,8 +1625,7 @@ Rules:
       ...normalizeBiasMetadata({
         youtubeRegionCode: answerer?.youtubeRegionCode,
         youtubeSearchLanguage:
-          answerer?.youtubeSearchLanguage ||
-          answerer?.primarySearchLanguage,
+          answerer?.youtubeSearchLanguage || answerer?.primarySearchLanguage,
         primarySearchLanguage: answerer?.primarySearchLanguage,
         searchLanguages: answerer?.searchLanguages,
       }),
@@ -886,8 +1679,7 @@ Rules:
       ...normalizeBiasMetadata({
         youtubeRegionCode: answerer?.youtubeRegionCode,
         youtubeSearchLanguage:
-          answerer?.youtubeSearchLanguage ||
-          answerer?.primarySearchLanguage,
+          answerer?.youtubeSearchLanguage || answerer?.primarySearchLanguage,
         primarySearchLanguage: answerer?.primarySearchLanguage,
         searchLanguages: answerer?.searchLanguages,
       }),
@@ -1111,7 +1903,7 @@ export async function suggestVideosViaChat(
         outcome.continuation,
         continuationId
       );
-      let nextAssistantMessage =
+      const nextAssistantMessage =
         (await runClarifyingFollowUp({
           operationId,
           model: resolvedModel,
@@ -1273,7 +2065,7 @@ export async function suggestVideosViaChat(
       }
       const detail = summarizeSearchError(error);
       log.error(
-        `[video-suggestions] Search-more failed (${operationId}):`,
+        `[video-suggestions] Broad acceptance search failed (${operationId}):`,
         detail
       );
       emitSuggestionProgress(onProgress, {
@@ -1299,6 +2091,15 @@ export async function suggestVideosViaChat(
     let results: VideoSuggestionResultItem[] = [];
     let searchQuery = '';
     let assistantMessage = 'Searching now.';
+    const forcedHistory: Array<{
+      role: 'user' | 'assistant';
+      content: string;
+    }> = [
+      {
+        role: 'user',
+        content: `Intent: ${forcedSearchQueryRaw}`,
+      },
+    ];
 
     try {
       const forcedIntent = await runIntentResolver({
@@ -1306,12 +2107,7 @@ export async function suggestVideosViaChat(
         model: resolvedModel,
         translationPhase: suggestionTranslationPhase,
         signal,
-        history: [
-          {
-            role: 'user',
-            content: `Intent: ${forcedSearchQueryRaw}`,
-          },
-        ],
+        history: forcedHistory,
         targetCountry,
         preferredRecency,
         includeDownloadHistory,
@@ -1328,79 +2124,58 @@ export async function suggestVideosViaChat(
         model: resolvedModel,
         translationPhase: suggestionTranslationPhase,
         signal,
-        history: [
-          {
-            role: 'user',
-            content: `Intent: ${forcedSearchQueryRaw}`,
-          },
-        ],
+        history: forcedHistory,
         answerer: forcedIntent,
         targetCountry,
         onProgress,
         startedAt,
         onResolvedModel: observeResolvedModel,
       });
-      const outcome = await runVideoSearch({
-        continuation: createVideoSearchContinuation({
-          recency: preferredRecency,
-          translationPhase: suggestionTranslationPhase,
-          model: resolvedModel,
-          maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
-          intentQuery: forcedSearchQueryRaw,
-          youtubeRegionCode: forcedPlan?.youtubeRegionCode,
-          youtubeSearchLanguage:
-            forcedPlan?.youtubeSearchLanguage ||
-            forcedPlan?.primarySearchLanguage,
-          retrievalQueries: forcedPlan?.retrievalQueries?.length
-            ? forcedPlan.retrievalQueries
-            : [forcedSearchQueryRaw],
-          retrievalSeedUrls: [],
-          selectedChannels: (forcedIntent?.candidates || []).map(
-            candidate => candidate.name
-          ),
-          iteration: 0,
+      const agentOutcome = await runAgenticVideoSearchLoop({
+        operationId,
+        model: resolvedModel,
+        translationPhase: suggestionTranslationPhase,
+        signal,
+        history: forcedHistory,
+        latestUserQuery: forcedSearchQueryRaw,
+        answerer: forcedIntent,
+        initialPlan: buildAgenticPlanFromPlanner({
+          queryPlanner: forcedPlan,
+          answerer: forcedIntent,
+          latestUserQuery: forcedSearchQueryRaw,
+          fallbackQuery: forcedSearchQueryRaw,
+          fallbackYoutubeRegionCode: requestYoutubeRegionCode,
+          fallbackYoutubeSearchLanguage: requestYoutubeSearchLanguage,
         }),
         excludeUrls,
-        operationId,
+        preferredRecency,
+        preferredLanguage: request.preferredLanguage,
+        preferredLanguageName: request.preferredLanguageName,
+        maxIterations: resolveAgenticIterationLimit({
+          preference,
+          translationPhase: suggestionTranslationPhase,
+        }),
         onProgress,
         startedAt,
-        signal,
+        onResolvedModel: observeResolvedModel,
       });
       const nextContinuationId = persistVideoSearchContinuation(
-        outcome.continuation,
+        agentOutcome.continuation,
         activeContinuationId
       );
       activeContinuationId = nextContinuationId;
-      results = outcome.results;
-      searchQuery = outcome.searchQuery;
+      results = agentOutcome.results;
+      searchQuery = agentOutcome.searchQuery;
       assistantMessage =
-        (await runClarifyingFollowUp({
-          operationId,
-          model: resolvedModel,
-          translationPhase: suggestionTranslationPhase,
-          signal,
-          history: [
-            {
-              role: 'user',
-              content: `Intent: ${forcedSearchQueryRaw}`,
-            },
-          ],
-          answerer: forcedIntent,
-          queryPlanner: forcedPlan,
-          results,
-          searchQuery,
-          preferredLanguage: request.preferredLanguage,
-          preferredLanguageName: request.preferredLanguageName,
-          onResolvedModel: observeResolvedModel,
-        })) ||
+        agentOutcome.assistantMessage ||
         forcedPlan?.assistantMessage ||
         assistantMessage;
-      if (outcome.lowConfidenceReason) {
+      if (agentOutcome.lowConfidenceReason) {
         emitSuggestionProgress(onProgress, {
           operationId,
           phase: 'finalizing',
           message: `${describeLowConfidenceReason(
-            outcome.lowConfidenceReason
+            agentOutcome.lowConfidenceReason
           )} Try a broader topic, add one more detail, or change recency.`,
           searchQuery,
           resultCount: 0,
@@ -1430,11 +2205,13 @@ export async function suggestVideosViaChat(
         success: true,
         assistantMessage: compactText(assistantMessage),
         searchQuery,
-        youtubeRegionCode: outcome.continuation.youtubeRegionCode,
-        youtubeSearchLanguage: outcome.continuation.youtubeSearchLanguage,
+        youtubeRegionCode: agentOutcome.continuation.youtubeRegionCode,
+        youtubeSearchLanguage: agentOutcome.continuation.youtubeSearchLanguage,
         results,
         capturedPreferences:
-          forcedPlan?.capturedPreferences || forcedIntent?.capturedPreferences,
+          agentOutcome.capturedPreferences ||
+          forcedPlan?.capturedPreferences ||
+          forcedIntent?.capturedPreferences,
         continuationId: nextContinuationId,
         resolvedModel: observedResolvedModel,
       };
@@ -1541,6 +2318,8 @@ export async function suggestVideosViaChat(
 
     let results: VideoSuggestionResultItem[] = [];
     let searchFailureDetail = '';
+    let capturedPreferences =
+      queryPlanner?.capturedPreferences || answerer?.capturedPreferences;
 
     const effectiveBaseQuery = baseQueryForSearch();
     if (hasUserMessage && effectiveBaseQuery) {
@@ -1555,67 +2334,59 @@ export async function suggestVideosViaChat(
         elapsedMs: Date.now() - startedAt,
       });
       try {
-        const outcome = await runVideoSearch({
-          continuation: createVideoSearchContinuation({
-            recency: preferredRecency,
-            translationPhase: suggestionTranslationPhase,
-            model: resolvedModel,
-            maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
-            intentQuery: effectiveBaseQuery,
-            youtubeRegionCode: queryPlanner?.youtubeRegionCode,
-            youtubeSearchLanguage:
-              queryPlanner?.youtubeSearchLanguage ||
-              queryPlanner?.primarySearchLanguage,
-            retrievalQueries:
-              plannerRetrievalQueries.length > 0
-                ? plannerRetrievalQueries
-                : [effectiveBaseQuery],
-            retrievalSeedUrls: [],
-            selectedChannels: (answerer?.candidates || []).map(
-              candidate => candidate.name
-            ),
-            iteration: 0,
-          }),
-          excludeUrls,
+        const agentOutcome = await runAgenticVideoSearchLoop({
           operationId,
+          model: resolvedModel,
+          translationPhase: suggestionTranslationPhase,
+          signal,
+          history: plannerHistory,
+          latestUserQuery:
+            getLastUserQuery(plannerHistory) || effectiveBaseQuery,
+          answerer,
+          initialPlan: buildAgenticPlanFromPlanner({
+            queryPlanner,
+            answerer,
+            latestUserQuery:
+              getLastUserQuery(plannerHistory) || effectiveBaseQuery,
+            fallbackQuery: effectiveBaseQuery,
+            fallbackYoutubeRegionCode: requestYoutubeRegionCode,
+            fallbackYoutubeSearchLanguage: requestYoutubeSearchLanguage,
+          }),
+          preferredRecency,
+          excludeUrls,
+          preferredLanguage: request.preferredLanguage,
+          preferredLanguageName: request.preferredLanguageName,
+          maxIterations: resolveAgenticIterationLimit({
+            preference,
+            translationPhase: suggestionTranslationPhase,
+          }),
           onProgress,
           startedAt,
-          signal,
+          onResolvedModel: observeResolvedModel,
         });
         const nextContinuationId = persistVideoSearchContinuation(
-          outcome.continuation,
+          agentOutcome.continuation,
           activeContinuationId
         );
         activeContinuationId = nextContinuationId;
-        results = outcome.results;
-        searchQuery = outcome.searchQuery;
+        results = agentOutcome.results;
+        searchQuery = agentOutcome.searchQuery;
+        capturedPreferences =
+          agentOutcome.capturedPreferences || capturedPreferences;
         assistantMessage =
-          (await runClarifyingFollowUp({
-            operationId,
-            model: resolvedModel,
-            translationPhase: suggestionTranslationPhase,
-            signal,
-            history: plannerHistory,
-            answerer,
-            queryPlanner,
-            results,
-            searchQuery,
-            preferredLanguage: request.preferredLanguage,
-            preferredLanguageName: request.preferredLanguageName,
-            onResolvedModel: observeResolvedModel,
-          })) ||
+          agentOutcome.assistantMessage ||
           queryPlanner?.assistantMessage ||
           assistantMessage ||
           '__i18n__:input.videoSuggestion.defaultFollowUp';
-        if (outcome.lowConfidenceReason) {
+        if (agentOutcome.lowConfidenceReason) {
           searchFailureDetail = lowConfidenceErrorKey(
-            outcome.lowConfidenceReason
+            agentOutcome.lowConfidenceReason
           );
           emitSuggestionProgress(onProgress, {
             operationId,
             phase: 'finalizing',
             message: `${describeLowConfidenceReason(
-              outcome.lowConfidenceReason
+              agentOutcome.lowConfidenceReason
             )} Try a broader topic, add one more detail, or change recency.`,
             searchQuery,
             resultCount: 0,
@@ -1691,8 +2462,7 @@ export async function suggestVideosViaChat(
         getVideoSearchContinuation(activeContinuationId)
           ?.youtubeSearchLanguage || undefined,
       results,
-      capturedPreferences:
-        queryPlanner?.capturedPreferences || answerer?.capturedPreferences,
+      capturedPreferences,
       continuationId: activeContinuationId,
       resolvedModel: observedResolvedModel,
       error: searchFailureDetail || undefined,

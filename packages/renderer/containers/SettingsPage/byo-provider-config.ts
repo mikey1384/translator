@@ -103,7 +103,7 @@ export const BYO_PROVIDERS = {
     high: {
       openai: {
         labelKey: 'settings.byoPreferences.gptHigh',
-        fallback: 'GPT-5.4',
+        fallback: 'GPT-5.5',
         price: formatUsdEstimate(OPENAI_SUMMARY_HIGH_USD, '/hr'),
       },
       anthropic: {
@@ -136,7 +136,7 @@ export const BYO_PROVIDERS = {
     },
     gptHigh: {
       labelKey: 'settings.byoPreferences.gptHigh',
-      fallback: 'GPT-5.4',
+      fallback: 'GPT-5.5',
       price: formatUsdEstimate(
         estimateVideoSuggestionUsdPerSearch(STAGE5_REVIEW_TRANSLATION_MODEL),
         '/search'

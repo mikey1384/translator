@@ -33,6 +33,6 @@ test('API key review model config falls back to the available provider family', 
       canUseAnthropicByo: false,
       canUseOpenAiByo: true,
     }).model,
-    'gpt-5.4'
+    'gpt-5.5'
   );
 });

@@ -82,9 +82,6 @@ export default function CreditCard() {
               <BuyCreditsButton
                 key={pack.id}
                 packId={pack.id}
-                // Product decision: keep the app-facing list price in USD.
-                // Korean checkout may settle in KRW for local payment reliability,
-                // but those KRW amounts are payment-rail details, not CTA copy.
                 label={`${formatUsdListPrice(pack.price)} · ${fmtHours(
                   estimateTranslatableHours(pack.credits, false)
                 )} ${translationHoursLabel} (${pack.credits.toLocaleString()} cr)`}

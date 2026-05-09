@@ -95,7 +95,7 @@ interface AiStoreState {
   useApiKeysMode: boolean;
   // Claude translation preference (use Sonnet for draft instead of GPT)
   preferClaudeTranslation: boolean;
-  // High-end review preference (Anthropic uses Opus, OpenAI uses GPT-5.4)
+  // High-end review preference (Anthropic uses Opus, OpenAI uses GPT-5.5)
   preferClaudeReview: boolean;
   // Claude summary preference (use Claude on BYO summary paths instead of GPT)
   preferClaudeSummary: boolean;

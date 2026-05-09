@@ -5,11 +5,12 @@ import { AI_MODELS, STAGE5_REVIEW_TRANSLATION_MODEL } from '../../shared/constan
 import {
   getSupportedDirectVideoSuggestionModels,
   normalizeByoVideoSuggestionModel,
+  normalizeVideoSuggestionModelPreference,
   resolveEffectiveVideoSuggestionModel,
   resolveVideoSuggestionPreferenceForMode,
 } from '../../shared/helpers/video-suggestion-model-preference.js';
 
-test('Stage5 credit quality video suggestions stay on GPT-5.4 even when review prefers Claude', () => {
+test('Stage5 credit quality video suggestions stay on GPT-5.5 even when review prefers Claude', () => {
   assert.equal(
     resolveEffectiveVideoSuggestionModel({
       preference: 'quality',
@@ -21,7 +22,7 @@ test('Stage5 credit quality video suggestions stay on GPT-5.4 even when review p
   );
 });
 
-test('Stage5 credit video suggestion quality coerces legacy Claude-quality selections to GPT-5.4', () => {
+test('Stage5 credit video suggestion quality coerces legacy Claude-quality selections to GPT-5.5', () => {
   assert.equal(
     resolveEffectiveVideoSuggestionModel({
       preference: AI_MODELS.CLAUDE_OPUS,
@@ -59,6 +60,17 @@ test('BYO direct model list includes both OpenAI and Anthropic options', () => {
     AI_MODELS.CLAUDE_SONNET,
     AI_MODELS.CLAUDE_OPUS,
   ]);
+});
+
+test('legacy GPT-5.4 video suggestion selections normalize to GPT-5.5', () => {
+  assert.equal(
+    normalizeVideoSuggestionModelPreference('gpt-5.4'),
+    STAGE5_REVIEW_TRANSLATION_MODEL
+  );
+  assert.equal(
+    normalizeByoVideoSuggestionModel('gpt-5.4'),
+    STAGE5_REVIEW_TRANSLATION_MODEL
+  );
 });
 
 test('API key mode quality video suggestions can still follow the selected BYO review model', () => {

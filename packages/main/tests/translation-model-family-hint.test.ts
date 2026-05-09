@@ -7,7 +7,7 @@ test('review-phase hint follows preference by default', () => {
   assert.equal(
     resolveTranslationModelFamilyHint({
       translationPhase: 'review',
-      model: 'gpt-5.4',
+      model: 'gpt-5.5',
       prefersClaudeDraft: false,
       prefersClaudeReview: true,
     }),
@@ -19,7 +19,7 @@ test('review-phase hint can be forced from concrete model', () => {
   assert.equal(
     resolveTranslationModelFamilyHint({
       translationPhase: 'review',
-      model: 'gpt-5.4',
+      model: 'gpt-5.5',
       hintSource: 'model',
       prefersClaudeDraft: false,
       prefersClaudeReview: true,

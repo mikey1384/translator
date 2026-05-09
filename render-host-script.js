@@ -1371,7 +1371,7 @@ var AI_MODELS = {
   CLAUDE_OPUS: "claude-opus-4-7",
   WHISPER: "whisper-1"
 };
-var STAGE5_REVIEW_TRANSLATION_MODEL = "gpt-5.4";
+var STAGE5_REVIEW_TRANSLATION_MODEL = "gpt-5.5";
 var STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
 var STAGE5_ELEVENLABS_SCRIBE_MODEL = "elevenlabs-scribe";
 var STAGE5_TTS_MODEL_STANDARD = "tts-1";
@@ -1382,7 +1382,7 @@ var STAGE5_REVIEW_PROVIDER_OPTIONS = {
   openai: {
     provider: "openai",
     model: STAGE5_REVIEW_TRANSLATION_MODEL,
-    exactModelLabel: "GPT-5.4"
+    exactModelLabel: "GPT-5.5"
   },
   anthropic: {
     provider: "anthropic",
@@ -1391,6 +1391,8 @@ var STAGE5_REVIEW_PROVIDER_OPTIONS = {
   }
 };
 var AI_MODEL_ALIASES = {
+  // Legacy GPT-5.4 values from saved settings normalize to current GPT review.
+  "gpt-5.4": STAGE5_REVIEW_TRANSLATION_MODEL,
   "claude-sonnet-4-5-20250929": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4-5": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4.6": AI_MODELS.CLAUDE_SONNET,
@@ -1405,8 +1407,8 @@ var STAGE5_TRANSLATION_MODEL_PRICING = {
     out: 10 / 1e6
   },
   [STAGE5_REVIEW_TRANSLATION_MODEL]: {
-    in: 2.5 / 1e6,
-    out: 15 / 1e6
+    in: 5 / 1e6,
+    out: 30 / 1e6
   },
   [AI_MODELS.CLAUDE_OPUS]: {
     in: 5 / 1e6,
@@ -1506,7 +1508,7 @@ var MIN_SUBTITLE_FONT_SIZE = 6;
 // ../shared/constants/index.ts
 var AI_MODEL_DISPLAY_NAMES = {
   [AI_MODELS.GPT]: "GPT-5.1",
-  [STAGE5_REVIEW_TRANSLATION_MODEL]: "GPT-5.4",
+  [STAGE5_REVIEW_TRANSLATION_MODEL]: "GPT-5.5",
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet",
   [AI_MODELS.CLAUDE_OPUS]: "Claude Opus",
   [AI_MODELS.WHISPER]: "Whisper",
@@ -1545,28 +1547,24 @@ var CREDIT_PACKS = {
   MICRO: {
     id: "MICRO",
     price: 1,
-    krw: 1542,
     hours: MICRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: MICRO_CREDITS
   },
   STARTER: {
     id: "STARTER",
     price: 5,
-    krw: 7711,
     hours: STARTER_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: STARTER_CREDITS
   },
   STANDARD: {
     id: "STANDARD",
     price: 10,
-    krw: 15422,
     hours: STANDARD_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: STANDARD_CREDITS
   },
   PRO: {
     id: "PRO",
     price: 50,
-    krw: 77110,
     hours: PRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
     credits: PRO_CREDITS
   }

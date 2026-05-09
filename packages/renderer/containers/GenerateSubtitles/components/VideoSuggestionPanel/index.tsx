@@ -144,7 +144,7 @@ export default function VideoSuggestionPanel({
       case AI_MODELS.GPT:
         return t('settings.byoPreferences.gpt', 'GPT-5.1');
       case STAGE5_REVIEW_TRANSLATION_MODEL:
-        return t('settings.byoPreferences.gptHigh', 'GPT-5.4');
+        return t('settings.byoPreferences.gptHigh', 'GPT-5.5');
       case AI_MODELS.CLAUDE_SONNET:
         return t('settings.byoPreferences.claudeSonnet', 'Claude Sonnet');
       case AI_MODELS.CLAUDE_OPUS:

@@ -527,13 +527,13 @@
       },
       "qualitySummary": {
         "label": "고품질 요약",
-        "modelOn": "GPT-5.4 정밀 분석 + 하이라이트 클립",
+        "modelOn": "GPT-5.5 정밀 분석 + 하이라이트 클립",
         "modelOff": "GPT-5.1 기본 분석",
         "help": "켜짐: Claude Opus로 정밀 분석 + 하이라이트 클립 (~4× 크레딧). 꺼짐: GPT-5.1로 빠른 분석.",
         "helpWithEstimate": "정밀 분석 + 하이라이트 클립 (~4× 크레딧). 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질.",
-        "helpOn": "<b>4× 크레딧</b> • GPT-5.4 정밀 분석 + 하이라이트 클립",
+        "helpOn": "<b>4× 크레딧</b> • GPT-5.5 정밀 분석 + 하이라이트 클립",
         "helpOff": "<b>1× 크레딧</b> • GPT-5.1 기본 분석",
-        "helpWithEstimateOn": "<b>4× 크레딧</b> • GPT-5.4 정밀 분석 + 하이라이트 클립 • 보유 크레딧: ~{{time}}",
+        "helpWithEstimateOn": "<b>4× 크레딧</b> • GPT-5.5 정밀 분석 + 하이라이트 클립 • 보유 크레딧: ~{{time}}",
         "helpWithEstimateOff": "<b>1× 크레딧</b> • GPT-5.1 기본 분석 • 보유 크레딧: ~{{time}}"
       },
       "qualityDubbing": {
@@ -641,10 +641,10 @@
       "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "번역 (초안)",
-      "gptHigh": "GPT-5.4",
+      "gptHigh": "GPT-5.5",
       "openAiHighEnd": "OpenAI 고급 모델",
       "gpt": "GPT-5.1",
-      "gptSummaryStack": "GPT-5.1 / GPT-5.4",
+      "gptSummaryStack": "GPT-5.1 / GPT-5.5",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
       "anthropicHighEnd": "Anthropic 고급 모델",
@@ -715,7 +715,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API 키 (선택 사항)",
-      "description": "Anthropic API 키를 추가하면 번역 검토 단계에서 Claude 모델을 직접 사용할 수 있습니다. 이 키가 없으면 GPT-5.4가 검토 패스를 처리합니다.",
+      "description": "Anthropic API 키를 추가하면 번역 검토 단계에서 Claude 모델을 직접 사용할 수 있습니다. 이 키가 없으면 GPT-5.5가 검토 패스를 처리합니다.",
       "apiKeyLabel": "Anthropic API 키",
       "hide": "숨기기",
       "show": "표시",

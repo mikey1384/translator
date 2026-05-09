@@ -71,9 +71,6 @@ export default function ByoUnlockCard() {
     await startUnlock();
   };
 
-  // Product decision: BYO unlock is marketed as a USD list price. Korean
-  // checkout may settle in KRW for local payment reliability, but the app
-  // should not expose the raw KRW conversion in this CTA.
   const unlockPriceLabel = preserveLocalizedUnlockCopyWithUsdPrice(
     t('settings.byoOpenAi.unlockCta', 'Unlock for $10')
   );

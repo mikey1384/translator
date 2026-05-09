@@ -5,7 +5,7 @@ export const AI_MODELS = {
   WHISPER: 'whisper-1',
 } as const;
 
-export const STAGE5_REVIEW_TRANSLATION_MODEL = 'gpt-5.4';
+export const STAGE5_REVIEW_TRANSLATION_MODEL = 'gpt-5.5';
 export const STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
 export const STAGE5_ELEVENLABS_SCRIBE_MODEL = 'elevenlabs-scribe';
 export const STAGE5_TTS_MODEL_STANDARD = 'tts-1';
@@ -19,7 +19,7 @@ export const STAGE5_REVIEW_PROVIDER_OPTIONS = {
   openai: {
     provider: 'openai',
     model: STAGE5_REVIEW_TRANSLATION_MODEL,
-    exactModelLabel: 'GPT-5.4',
+    exactModelLabel: 'GPT-5.5',
   },
   anthropic: {
     provider: 'anthropic',
@@ -50,6 +50,8 @@ export function getStage5ReviewOptionForPreference(
 }
 
 export const AI_MODEL_ALIASES: Record<string, string> = {
+  // Legacy GPT-5.4 values from saved settings normalize to current GPT review.
+  'gpt-5.4': STAGE5_REVIEW_TRANSLATION_MODEL,
   'claude-sonnet-4-5-20250929': AI_MODELS.CLAUDE_SONNET,
   'claude-sonnet-4-5': AI_MODELS.CLAUDE_SONNET,
   'claude-sonnet-4.6': AI_MODELS.CLAUDE_SONNET,
@@ -65,8 +67,8 @@ export const STAGE5_TRANSLATION_MODEL_PRICING = {
     out: 10 / 1_000_000,
   },
   [STAGE5_REVIEW_TRANSLATION_MODEL]: {
-    in: 2.5 / 1_000_000,
-    out: 15 / 1_000_000,
+    in: 5 / 1_000_000,
+    out: 30 / 1_000_000,
   },
   [AI_MODELS.CLAUDE_OPUS]: {
     in: 5 / 1_000_000,

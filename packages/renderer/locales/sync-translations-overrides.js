@@ -6,11 +6,11 @@ const baseOverrides = {
   af: {
     'admin.title': 'Administrateur',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 konsep + GPT-5.4 hersiening',
+      'GPT-5.1 konsep + GPT-5.5 hersiening',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Slegs GPT-5.1-konsep',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 diep ontleding + hoogtepuntknipsels',
+      'GPT-5.5 diep ontleding + hoogtepuntknipsels',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 standaardontleding',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -25,11 +25,11 @@ const baseOverrides = {
   ar: {
     'admin.title': 'المسؤول',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'مسودة GPT-5.1 + مراجعة GPT-5.4',
+      'مسودة GPT-5.1 + مراجعة GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'مسودة GPT-5.1 فقط',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'تحليل عميق بـ GPT-5.4 + مقاطع مميزة',
+      'تحليل عميق بـ GPT-5.5 + مقاطع مميزة',
     'settings.performanceQuality.qualitySummary.modelOff':
       'تحليل قياسي بـ GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -43,11 +43,11 @@ const baseOverrides = {
   bn: {
     'admin.title': 'প্রশাসক',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 খসড়া + GPT-5.4 রিভিউ',
+      'GPT-5.1 খসড়া + GPT-5.5 রিভিউ',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'শুধু GPT-5.1 খসড়া',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 গভীর বিশ্লেষণ + হাইলাইট ক্লিপ',
+      'GPT-5.5 গভীর বিশ্লেষণ + হাইলাইট ক্লিপ',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 মানক বিশ্লেষণ',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -61,11 +61,11 @@ const baseOverrides = {
   cs: {
     'admin.title': 'Administrátor',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Návrh GPT-5.1 + kontrola GPT-5.4',
+      'Návrh GPT-5.1 + kontrola GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Pouze návrh GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Hloubková analýza GPT-5.4 + highlight klipy',
+      'Hloubková analýza GPT-5.5 + highlight klipy',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Standardní analýza GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -80,11 +80,11 @@ const baseOverrides = {
   da: {
     'admin.title': 'Administrator',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1-kladde + GPT-5.4-review',
+      'GPT-5.1-kladde + GPT-5.5-review',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Kun GPT-5.1-kladde',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 dybdeanalyse + highlight-klip',
+      'GPT-5.5 dybdeanalyse + highlight-klip',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 standardanalyse',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -99,11 +99,11 @@ const baseOverrides = {
   de: {
     'admin.title': 'Administrator',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1-Entwurf + GPT-5.4-Review',
+      'GPT-5.1-Entwurf + GPT-5.5-Review',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Nur GPT-5.1-Entwurf',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4-Tiefenanalyse + Highlight-Clips',
+      'GPT-5.5-Tiefenanalyse + Highlight-Clips',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1-Standardanalyse',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -117,11 +117,11 @@ const baseOverrides = {
   el: {
     'admin.title': 'Διαχειριστής',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Πρόχειρο GPT-5.1 + έλεγχος GPT-5.4',
+      'Πρόχειρο GPT-5.1 + έλεγχος GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Μόνο πρόχειρο GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Βαθιά ανάλυση GPT-5.4 + αποσπάσματα highlight',
+      'Βαθιά ανάλυση GPT-5.5 + αποσπάσματα highlight',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Τυπική ανάλυση GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -137,11 +137,11 @@ const baseOverrides = {
   es: {
     'admin.title': 'Administrador',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Borrador con GPT-5.1 + revisión con GPT-5.4',
+      'Borrador con GPT-5.1 + revisión con GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Solo borrador con GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Análisis profundo con GPT-5.4 + clips destacados',
+      'Análisis profundo con GPT-5.5 + clips destacados',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Análisis estándar con GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -156,11 +156,11 @@ const baseOverrides = {
   fa: {
     'admin.title': 'مدیر',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'پیش‌نویس GPT-5.1 + بازبینی GPT-5.4',
+      'پیش‌نویس GPT-5.1 + بازبینی GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'فقط پیش‌نویس GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'تحلیل عمیق GPT-5.4 + کلیپ‌های هایلایت',
+      'تحلیل عمیق GPT-5.5 + کلیپ‌های هایلایت',
     'settings.performanceQuality.qualitySummary.modelOff':
       'تحلیل استاندارد GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -174,11 +174,11 @@ const baseOverrides = {
   fi: {
     'admin.title': 'Ylläpitäjä',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1-luonnos + GPT-5.4-tarkistus',
+      'GPT-5.1-luonnos + GPT-5.5-tarkistus',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Vain GPT-5.1-luonnos',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4-syväanalyysi + kohokohtaklipit',
+      'GPT-5.5-syväanalyysi + kohokohtaklipit',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1-perusanalyysi',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -193,11 +193,11 @@ const baseOverrides = {
   fr: {
     'admin.title': 'Administrateur',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Brouillon GPT-5.1 + révision GPT-5.4',
+      'Brouillon GPT-5.1 + révision GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Brouillon GPT-5.1 seulement',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Analyse approfondie GPT-5.4 + extraits marquants',
+      'Analyse approfondie GPT-5.5 + extraits marquants',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Analyse standard GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -212,11 +212,11 @@ const baseOverrides = {
   he: {
     'admin.title': 'מנהל מערכת',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'טיוטת GPT-5.1 + סקירת GPT-5.4',
+      'טיוטת GPT-5.1 + סקירת GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'טיוטת GPT-5.1 בלבד',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'ניתוח מעמיק ב-GPT-5.4 + קטעי הדגשה',
+      'ניתוח מעמיק ב-GPT-5.5 + קטעי הדגשה',
     'settings.performanceQuality.qualitySummary.modelOff':
       'ניתוח רגיל ב-GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -230,11 +230,11 @@ const baseOverrides = {
   hi: {
     'admin.title': 'प्रशासक',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 ड्राफ्ट + GPT-5.4 समीक्षा',
+      'GPT-5.1 ड्राफ्ट + GPT-5.5 समीक्षा',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'सिर्फ GPT-5.1 ड्राफ्ट',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 गहन विश्लेषण + हाइलाइट क्लिप',
+      'GPT-5.5 गहन विश्लेषण + हाइलाइट क्लिप',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 मानक विश्लेषण',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -248,11 +248,11 @@ const baseOverrides = {
   hu: {
     'admin.title': 'Adminisztrátor',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1-vázlat + GPT-5.4-ellenőrzés',
+      'GPT-5.1-vázlat + GPT-5.5-ellenőrzés',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Csak GPT-5.1-vázlat',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 mélyelemzés + kiemelt klipek',
+      'GPT-5.5 mélyelemzés + kiemelt klipek',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 standard elemzés',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -266,11 +266,11 @@ const baseOverrides = {
   id: {
     'admin.title': 'Administrator',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Draf GPT-5.1 + ulasan GPT-5.4',
+      'Draf GPT-5.1 + ulasan GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Hanya draf GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Analisis mendalam GPT-5.4 + klip sorotan',
+      'Analisis mendalam GPT-5.5 + klip sorotan',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Analisis standar GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -285,11 +285,11 @@ const baseOverrides = {
   it: {
     'admin.title': 'Amministratore',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Bozza GPT-5.1 + revisione GPT-5.4',
+      'Bozza GPT-5.1 + revisione GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Solo bozza GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Analisi approfondita GPT-5.4 + clip in evidenza',
+      'Analisi approfondita GPT-5.5 + clip in evidenza',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Analisi standard GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -304,11 +304,11 @@ const baseOverrides = {
   ja: {
     'admin.title': '管理者',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1ドラフト + GPT-5.4レビュー',
+      'GPT-5.1ドラフト + GPT-5.5レビュー',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'GPT-5.1ドラフトのみ',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4詳細分析 + ハイライトクリップ',
+      'GPT-5.5詳細分析 + ハイライトクリップ',
     'settings.performanceQuality.qualitySummary.modelOff': 'GPT-5.1標準分析',
     'settings.performanceQuality.qualityDubbing.modelOn':
       'ElevenLabs TTS プレミアム音声',
@@ -333,7 +333,7 @@ const baseOverrides = {
     'settings.performanceQuality.qualityTranslation.anthropicHighEnd':
       'Anthropic 고급 검토',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 정밀 분석 + 하이라이트 클립',
+      'GPT-5.5 정밀 분석 + 하이라이트 클립',
     'settings.performanceQuality.qualitySummary.modelOff': 'GPT-5.1 기본 분석',
     'settings.performanceQuality.qualityDubbing.modelOn':
       'ElevenLabs TTS 프리미엄 음성',
@@ -349,11 +349,11 @@ const baseOverrides = {
   mr: {
     'admin.title': 'प्रशासक',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 मसुदा + GPT-5.4 पुनरावलोकन',
+      'GPT-5.1 मसुदा + GPT-5.5 पुनरावलोकन',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'फक्त GPT-5.1 मसुदा',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 सखोल विश्लेषण + हायलाइट क्लिप्स',
+      'GPT-5.5 सखोल विश्लेषण + हायलाइट क्लिप्स',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 मानक विश्लेषण',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -368,11 +368,11 @@ const baseOverrides = {
   ms: {
     'admin.title': 'Pentadbir',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Draf GPT-5.1 + semakan GPT-5.4',
+      'Draf GPT-5.1 + semakan GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Draf GPT-5.1 sahaja',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Analisis mendalam GPT-5.4 + klip sorotan',
+      'Analisis mendalam GPT-5.5 + klip sorotan',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Analisis standard GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -386,11 +386,11 @@ const baseOverrides = {
   nl: {
     'admin.title': 'Beheerder',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1-concept + GPT-5.4-review',
+      'GPT-5.1-concept + GPT-5.5-review',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Alleen GPT-5.1-concept',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4-diepteanalyse + highlightclips',
+      'GPT-5.5-diepteanalyse + highlightclips',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1-standaardanalyse',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -405,11 +405,11 @@ const baseOverrides = {
   no: {
     'admin.title': 'Administrator',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1-utkast + GPT-5.4-gjennomgang',
+      'GPT-5.1-utkast + GPT-5.5-gjennomgang',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Kun GPT-5.1-utkast',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 dybdeanalyse + høydepunktklipp',
+      'GPT-5.5 dybdeanalyse + høydepunktklipp',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 standardanalyse',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -423,11 +423,11 @@ const baseOverrides = {
   pl: {
     'admin.title': 'Administrator',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Szkic GPT-5.1 + przegląd GPT-5.4',
+      'Szkic GPT-5.1 + przegląd GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Tylko szkic GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Dogłębna analiza GPT-5.4 + klipy z wyróżnieniami',
+      'Dogłębna analiza GPT-5.5 + klipy z wyróżnieniami',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Standardowa analiza GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -442,11 +442,11 @@ const baseOverrides = {
   pt: {
     'admin.title': 'Administrador',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Rascunho GPT-5.1 + revisão GPT-5.4',
+      'Rascunho GPT-5.1 + revisão GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Apenas rascunho GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Análise profunda GPT-5.4 + clipes em destaque',
+      'Análise profunda GPT-5.5 + clipes em destaque',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Análise padrão GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -461,11 +461,11 @@ const baseOverrides = {
   ro: {
     'admin.title': 'Administrator',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Schiță GPT-5.1 + revizuire GPT-5.4',
+      'Schiță GPT-5.1 + revizuire GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Doar schiță GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Analiză profundă GPT-5.4 + clipuri highlight',
+      'Analiză profundă GPT-5.5 + clipuri highlight',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Analiză standard GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -480,11 +480,11 @@ const baseOverrides = {
   ru: {
     'admin.title': 'Администратор',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Черновик GPT-5.1 + проверка GPT-5.4',
+      'Черновик GPT-5.1 + проверка GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Только черновик GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Глубокий анализ GPT-5.4 + клипы-хайлайты',
+      'Глубокий анализ GPT-5.5 + клипы-хайлайты',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Стандартный анализ GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -498,11 +498,11 @@ const baseOverrides = {
   sv: {
     'admin.title': 'Administratör',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1-utkast + GPT-5.4-granskning',
+      'GPT-5.1-utkast + GPT-5.5-granskning',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Endast GPT-5.1-utkast',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 djupanalys + highlightklipp',
+      'GPT-5.5 djupanalys + highlightklipp',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 standardanalys',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -517,11 +517,11 @@ const baseOverrides = {
   sw: {
     'admin.title': 'Msimamizi',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Rasimu ya GPT-5.1 + mapitio ya GPT-5.4',
+      'Rasimu ya GPT-5.1 + mapitio ya GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Rasimu ya GPT-5.1 pekee',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Uchambuzi wa kina wa GPT-5.4 + klipu za vivutio',
+      'Uchambuzi wa kina wa GPT-5.5 + klipu za vivutio',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Uchambuzi wa kawaida wa GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -536,11 +536,11 @@ const baseOverrides = {
   ta: {
     'admin.title': 'நிர்வாகி',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 வரைவு + GPT-5.4 மதிப்பாய்வு',
+      'GPT-5.1 வரைவு + GPT-5.5 மதிப்பாய்வு',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'GPT-5.1 வரைவு மட்டும்',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 ஆழமான பகுப்பாய்வு + ஹைலைட் கிளிப்புகள்',
+      'GPT-5.5 ஆழமான பகுப்பாய்வு + ஹைலைட் கிளிப்புகள்',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 நிலையான பகுப்பாய்வு',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -556,11 +556,11 @@ const baseOverrides = {
   te: {
     'admin.title': 'నిర్వాహకుడు',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 డ్రాఫ్ట్ + GPT-5.4 సమీక్ష',
+      'GPT-5.1 డ్రాఫ్ట్ + GPT-5.5 సమీక్ష',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'GPT-5.1 డ్రాఫ్ట్ మాత్రమే',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 లోతైన విశ్లేషణ + హైలైట్ క్లిప్స్',
+      'GPT-5.5 లోతైన విశ్లేషణ + హైలైట్ క్లిప్స్',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 ప్రమాణ విశ్లేషణ',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -576,11 +576,11 @@ const baseOverrides = {
   th: {
     'admin.title': 'ผู้ดูแลระบบ',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 ฉบับร่าง + GPT-5.4 รีวิว',
+      'GPT-5.1 ฉบับร่าง + GPT-5.5 รีวิว',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'GPT-5.1 ฉบับร่างเท่านั้น',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 วิเคราะห์เชิงลึก + คลิปไฮไลต์',
+      'GPT-5.5 วิเคราะห์เชิงลึก + คลิปไฮไลต์',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 วิเคราะห์มาตรฐาน',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -595,11 +595,11 @@ const baseOverrides = {
   tl: {
     'admin.title': 'Tagapangasiwa',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Burador ng GPT-5.1 + rebyu ng GPT-5.4',
+      'Burador ng GPT-5.1 + rebyu ng GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Burador ng GPT-5.1 lang',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Malalim na pagsusuri ng GPT-5.4 + mga highlight clip',
+      'Malalim na pagsusuri ng GPT-5.5 + mga highlight clip',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Karaniwang pagsusuri ng GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -614,11 +614,11 @@ const baseOverrides = {
   tr: {
     'admin.title': 'Yönetici',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 taslak + GPT-5.4 inceleme',
+      'GPT-5.1 taslak + GPT-5.5 inceleme',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Yalnızca GPT-5.1 taslak',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 derin analiz + öne çıkan klipler',
+      'GPT-5.5 derin analiz + öne çıkan klipler',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 standart analiz',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -632,11 +632,11 @@ const baseOverrides = {
   uk: {
     'admin.title': 'Адміністратор',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Чернетка GPT-5.1 + перевірка GPT-5.4',
+      'Чернетка GPT-5.1 + перевірка GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Лише чернетка GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Глибокий аналіз GPT-5.4 + кліпи-хайлайти',
+      'Глибокий аналіз GPT-5.5 + кліпи-хайлайти',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Стандартний аналіз GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -650,11 +650,11 @@ const baseOverrides = {
   ur: {
     'admin.title': 'منتظم',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 مسودہ + GPT-5.4 جائزہ',
+      'GPT-5.1 مسودہ + GPT-5.5 جائزہ',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'صرف GPT-5.1 مسودہ',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 گہرا تجزیہ + ہائی لائٹ کلپس',
+      'GPT-5.5 گہرا تجزیہ + ہائی لائٹ کلپس',
     'settings.performanceQuality.qualitySummary.modelOff':
       'GPT-5.1 معیاری تجزیہ',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -668,11 +668,11 @@ const baseOverrides = {
   vi: {
     'admin.title': 'Quản trị viên',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'Bản nháp GPT-5.1 + rà soát GPT-5.4',
+      'Bản nháp GPT-5.1 + rà soát GPT-5.5',
     'settings.performanceQuality.qualityTranslation.modelOff':
       'Chỉ bản nháp GPT-5.1',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'Phân tích sâu GPT-5.4 + clip nổi bật',
+      'Phân tích sâu GPT-5.5 + clip nổi bật',
     'settings.performanceQuality.qualitySummary.modelOff':
       'Phân tích tiêu chuẩn GPT-5.1',
     'settings.performanceQuality.qualityDubbing.modelOn':
@@ -687,11 +687,11 @@ const baseOverrides = {
   'zh-CN': {
     'admin.title': '管理员',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 草稿 + GPT-5.4 复审',
+      'GPT-5.1 草稿 + GPT-5.5 复审',
     'settings.performanceQuality.qualityTranslation.modelOff':
       '仅 GPT-5.1 草稿',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 深度分析 + 高亮片段',
+      'GPT-5.5 深度分析 + 高亮片段',
     'settings.performanceQuality.qualitySummary.modelOff': 'GPT-5.1 标准分析',
     'settings.performanceQuality.qualityDubbing.modelOn':
       'ElevenLabs TTS 高级音色',
@@ -704,11 +704,11 @@ const baseOverrides = {
   'zh-TW': {
     'admin.title': '管理員',
     'settings.performanceQuality.qualityTranslation.modelOn':
-      'GPT-5.1 草稿 + GPT-5.4 複審',
+      'GPT-5.1 草稿 + GPT-5.5 複審',
     'settings.performanceQuality.qualityTranslation.modelOff':
       '僅 GPT-5.1 草稿',
     'settings.performanceQuality.qualitySummary.modelOn':
-      'GPT-5.4 深度分析 + 精華片段',
+      'GPT-5.5 深度分析 + 精華片段',
     'settings.performanceQuality.qualitySummary.modelOff': 'GPT-5.1 標準分析',
     'settings.performanceQuality.qualityDubbing.modelOn':
       'ElevenLabs TTS 高級音色',

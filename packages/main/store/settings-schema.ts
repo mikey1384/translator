@@ -52,7 +52,7 @@ export type AppSettingsSchema = {
   preferClaudeSummary: boolean;
   // Legacy unified preference kept for backward-compat migration only.
   videoSuggestionModelPreference: VideoSuggestionModelPreferenceValue;
-  // Stage5 credits path: standard vs high (GPT-5.1 vs GPT-5.4).
+  // Stage5 credits path: standard vs high (GPT-5.1 vs GPT-5.5).
   stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
   // BYO path: explicit direct model selection (+ migration-only legacy follow states).
   byoVideoSuggestionModel: ByoVideoSuggestionModel;

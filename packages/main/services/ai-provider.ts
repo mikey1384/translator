@@ -1344,7 +1344,7 @@ export function getCurrentElevenLabsApiKey(): string | null {
  *
  * For Stage5 (non-BYO):
  *   - Standard: GPT-5.1
- *   - High: GPT-5.4
+ *   - High: GPT-5.5
  *
  * For BYO users:
  *   - If prefers Claude (or only has Anthropic key):
@@ -1352,7 +1352,7 @@ export function getCurrentElevenLabsApiKey(): string | null {
  *     - High: Claude Opus 4.7
  *   - If prefers OpenAI (or only has OpenAI key):
  *     - Standard: GPT-5.1
- *     - High: GPT-5.4
+ *     - High: GPT-5.5
  */
 export function getSummaryModelConfig(
   effortLevel: 'standard' | 'high'

@@ -332,7 +332,7 @@ export default function QualityToggles() {
               unit: 'perHour',
               model: t(
                 'settings.performanceQuality.qualitySummary.modelOn',
-                'GPT-5.4 deep analysis + highlight clips'
+                'GPT-5.5 deep analysis + highlight clips'
               ),
               estimateHours: summaryHqHours,
             })

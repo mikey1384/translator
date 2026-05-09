@@ -209,6 +209,7 @@ function emitContinuationReuseStages({
 export async function runVideoSearch({
   continuation,
   excludeUrls,
+  emitReuseStages = true,
   operationId,
   onProgress,
   startedAt,
@@ -216,6 +217,7 @@ export async function runVideoSearch({
 }: {
   continuation: VideoSearchContinuation;
   excludeUrls: Set<string>;
+  emitReuseStages?: boolean;
   operationId: string;
   onProgress?: SuggestionProgressCallback;
   startedAt: number;
@@ -237,17 +239,19 @@ export async function runVideoSearch({
     .slice(0, 24);
   const nextIteration = Math.max(0, continuation.iteration) + 1;
 
-  emitContinuationReuseStages({
-    continuation,
-    effectiveSeedUrls,
-    excludeUrls,
-    retrievalQueries,
-    initialQuery,
-    nextIteration,
-    operationId,
-    onProgress,
-    startedAt,
-  });
+  if (emitReuseStages) {
+    emitContinuationReuseStages({
+      continuation,
+      effectiveSeedUrls,
+      excludeUrls,
+      retrievalQueries,
+      initialQuery,
+      nextIteration,
+      operationId,
+      onProgress,
+      startedAt,
+    });
+  }
 
   const pendingPage = consumeContinuationPage({
     items: continuation.pendingResults || [],
