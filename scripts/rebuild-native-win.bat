@@ -9,6 +9,8 @@ echo Skipping node_modules removal to avoid file locks...
 
 REM Rebuild native add-ons with explicit Electron version and module directory
 echo Rebuilding native modules for Electron...
-npx @electron/rebuild --arch %TARGET_ARCH% --parallel --force --electron-version 35.5.1 --module-dir node_modules
+for /f "delims=" %%i in ('node -p "require('electron/package.json').version"') do set ELECTRON_VERSION=%%i
+echo Targeting Electron %ELECTRON_VERSION%...
+npx @electron/rebuild --arch %TARGET_ARCH% --parallel --force --version %ELECTRON_VERSION% --module-dir .
 
 echo ✅  Native add-ons ready for %TARGET_ARCH% 

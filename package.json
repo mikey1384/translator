@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@electron/osx-sign": "^2.0.0",
-    "@electron/rebuild": "^3.2.10",
+    "@electron/rebuild": "^4.0.4",
     "@types/i18next": "^13.0.0",
     "@types/lodash": "^4.17.16",
     "@types/lodash-es": "^4.17.12",
@@ -57,7 +57,7 @@
     "chokidar-cli": "^3.0.0",
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
-    "electron": "^35.7.5",
+    "electron": "^39.8.5",
     "electron-builder": "^26.0.12",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.2",
@@ -82,7 +82,7 @@
     "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
     "@types/which": "^3.0.4",
-    "axios": "^1.15.0",
+    "axios": "^1.16.1",
     "combined-stream": "^1.0.8",
     "dotenv": "^16.5.0",
     "electron-context-menu": "^4.1.0",
@@ -107,7 +107,7 @@
     "react-merge-refs": "^3.0.1",
     "url": "^0.11.4",
     "use-sync-external-store": "^1.5.0",
-    "uuid": "^11.1.0",
+    "uuid": "^11.1.1",
     "webrtcvad": "^1.0.1",
     "which": "^5.0.0",
     "youtube-dl-exec": "^3.0.22",
@@ -130,8 +130,16 @@
     "youtube-dl-exec"
   ],
   "overrides": {
-    "tmp": "^0.2.5",
+    "tmp": "^0.2.7",
+    "basic-ftp": "^5.3.1",
+    "fast-uri": "^3.1.2",
+    "ip-address": "^10.2.0",
+    "minimatch@10": {
+      "brace-expansion": "^5.0.6"
+    },
+    "qs": "^6.15.2",
     "tar-fs": "^3.1.1",
+    "ws": "^8.21.0",
     "prebuild-install": {
       "tar-fs": "^3.1.1"
     },

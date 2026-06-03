@@ -14,6 +14,6 @@ arch -x86_64 npx @electron/rebuild   \
   --parallel                         \
   --types prod,optional              \
   --force                            \
-  --module-dir node_modules
+  --module-dir .
 
 echo "✅  Native add-ons ready for $TARGET_ARCH" 
