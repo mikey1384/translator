@@ -1349,7 +1349,7 @@ export function getCurrentElevenLabsApiKey(): string | null {
  * For BYO users:
  *   - If prefers Claude (or only has Anthropic key):
  *     - Standard: Claude Sonnet 4.6
- *     - High: Claude Opus 4.7
+ *     - High: Claude Opus 4.8
  *   - If prefers OpenAI (or only has OpenAI key):
  *     - Standard: GPT-5.1
  *     - High: GPT-5.5

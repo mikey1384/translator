@@ -8,7 +8,7 @@ const ANTHROPIC_MAX_TOKENS_WITH_THINKING = 32000;
 type AnthropicEffort = 'low' | 'medium' | 'high' | 'xhigh';
 
 // Legacy extended thinking budget tokens for Claude models that still support
-// budget_tokens. Claude Opus 4.7 uses adaptive thinking instead.
+// budget_tokens. Claude Opus 4.8 uses adaptive thinking instead.
 const THINKING_BUDGET: Record<'low' | 'medium' | 'high', number> = {
   low: 0, // No extended thinking
   medium: 8000, // Moderate reasoning
