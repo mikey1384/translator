@@ -25,9 +25,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
 
@@ -37,7 +37,7 @@ jobs:
           choco install visualstudio2022buildtools --quiet --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --norestart"
 
       - name: Setup Python (for node-gyp)
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -50,7 +50,7 @@ jobs:
           npm run prebuild
 
       - name: Upload prebuilds
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: prebuilds-${{ matrix.os }}-${{ matrix.arch }}
           path: webrtcvad-fork/prebuilds/**/*.tar.gz
@@ -61,10 +61,10 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/windows'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Download all prebuilds
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: prebuilds-artifacts
           
@@ -75,7 +75,7 @@ jobs:
           
       - name: Create Release
         if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: webrtcvad-v1.0.1-stage5.${{ github.run_number }}
           name: webrtcvad Prebuilds v1.0.1-stage5.${{ github.run_number }}

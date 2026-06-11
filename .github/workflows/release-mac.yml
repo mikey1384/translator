@@ -43,16 +43,16 @@ jobs:
 
     steps:
       # ————————————————————————————————————————————————————————————
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # ---------- Node (no Bun) ----------
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22' # updated to avoid warnings
           cache: 'npm'
 
       # ---------- Apple signing cert ----------
-      - uses: apple-actions/import-codesign-certs@v2
+      - uses: apple-actions/import-codesign-certs@v7
         with:
           p12-file-base64: ${{ secrets.MACOS_CERT_P12 }}
           p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
