@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { BrowserWindow } from 'electron';
+import log from 'electron-log';
 import Store from 'electron-store';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -168,7 +169,9 @@ function buildDetachedDurableTranscriptionMessage(jobId: string): string {
   return `Durable transcription is still running on Stage5 (job ${jobId}). Start the same file again to reconnect.`;
 }
 
-function shouldDetachDurableTranscriptionForTransientError(error: any): boolean {
+function shouldDetachDurableTranscriptionForTransientError(
+  error: any
+): boolean {
   const status = getRelayStatus(error);
   if (status != null) {
     if (status >= 200 && status < 400) {
@@ -185,7 +188,9 @@ function shouldDetachDurableTranscriptionForTransientError(error: any): boolean 
   }
 
   const message = getRelayErrorMessage(error) || String(error?.message ?? '');
-  if (DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_MESSAGE_PATTERN.test(message)) {
+  if (
+    DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_MESSAGE_PATTERN.test(message)
+  ) {
     return true;
   }
 
@@ -202,6 +207,21 @@ function sendNetLog(
     BrowserWindow.getAllWindows().forEach(w =>
       w.webContents.send('app:log', payload)
     );
+  } catch {
+    // Do nothing
+  }
+  // Also persist to main.log: renderer-only logs vanish with the window, which
+  // left hung network requests undiagnosable from disk.
+  try {
+    let metaStr = '';
+    if (meta !== undefined) {
+      const serialized = JSON.stringify(meta);
+      metaStr =
+        serialized.length > 2_000
+          ? ` ${serialized.slice(0, 2_000)}…[truncated]`
+          : ` ${serialized}`;
+    }
+    log[level](`[net] ${message}${metaStr}`);
   } catch {
     // Do nothing
   }
@@ -353,11 +373,15 @@ async function fetchDurableTranscriptionStatus({
     source: 'stage5-api',
   });
 
-  sendNetLog('info', `GET /transcribe/status/${jobId} -> ${statusResponse.status}`, {
-    url: `${STAGE5_API_URL}/transcribe/status/${jobId}`,
-    method: 'GET',
-    status: statusResponse.status,
-  });
+  sendNetLog(
+    'info',
+    `GET /transcribe/status/${jobId} -> ${statusResponse.status}`,
+    {
+      url: `${STAGE5_API_URL}/transcribe/status/${jobId}`,
+      method: 'GET',
+      status: statusResponse.status,
+    }
+  );
 
   return statusResponse;
 }
@@ -390,11 +414,15 @@ async function startDurableTranscriptionJob({
     source: 'stage5-api',
   });
 
-  sendNetLog('info', `POST /transcribe/process/${jobId} -> ${processResponse.status}`, {
-    url: `${STAGE5_API_URL}/transcribe/process/${jobId}`,
-    method: 'POST',
-    status: processResponse.status,
-  });
+  sendNetLog(
+    'info',
+    `POST /transcribe/process/${jobId} -> ${processResponse.status}`,
+    {
+      url: `${STAGE5_API_URL}/transcribe/process/${jobId}`,
+      method: 'POST',
+      status: processResponse.status,
+    }
+  );
 
   if (processResponse.status === 402) {
     throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
@@ -1028,6 +1056,8 @@ export async function synthesizeDub({
   ttsProvider?: 'openai' | 'elevenlabs';
   idempotencyKey?: string;
   signal?: AbortSignal;
+  /** Live per-segment progress; only honored by the direct relay path. */
+  onSegmentProgress?: (completed: number, total: number) => void;
 }): Promise<{
   audioBase64?: string;
   format: string;
@@ -1070,6 +1100,9 @@ export async function synthesizeDub({
             ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
           },
           signal,
+          // stage5-api aborts /dub internally at 300s; bound the client wait
+          // slightly above that so a dead connection cannot hang forever.
+          timeout: 330_000,
         }
       )
     );
@@ -1345,12 +1378,16 @@ export async function transcribeViaR2({
         cleanup();
       }
 
-      sendNetLog('info', `PUT durable transcription upload -> ${uploadStatus}`, {
-        url: 'presigned-r2-upload',
-        method: 'PUT',
-        status: uploadStatus,
-        jobId,
-      });
+      sendNetLog(
+        'info',
+        `PUT durable transcription upload -> ${uploadStatus}`,
+        {
+          url: 'presigned-r2-upload',
+          method: 'PUT',
+          status: uploadStatus,
+          jobId,
+        }
+      );
 
       onProgress?.('Starting durable transcription...', 35);
       durableJobIdForDetach = jobId;
@@ -1759,6 +1796,150 @@ export async function translateViaDirect({
   }
 }
 
+// The relay emits an NDJSON heartbeat every 10s while synthesizing; a few
+// missed beats means the connection is dead, regardless of how long the
+// synthesis itself legitimately takes.
+const DUB_STREAM_IDLE_TIMEOUT_MS = 45_000;
+
+function buildDubHttpError(status: number, data: unknown): Error {
+  const body = (data ?? {}) as { error?: string; details?: string };
+  const error: any = new Error(
+    body.error || body.details || `Dub request failed with HTTP ${status}`
+  );
+  error.response = { status, data: body };
+  return error;
+}
+
+async function readDubResponseBody(
+  stream: NodeJS.ReadableStream
+): Promise<unknown> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream as AsyncIterable<Buffer>) {
+    chunks.push(Buffer.from(chunk));
+  }
+  const text = Buffer.concat(chunks).toString('utf8');
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+/**
+ * Consume a /dub-direct response. Streaming relays send NDJSON
+ * (start/heartbeat/progress lines, then one result or error line); we watch
+ * for heartbeat gaps to detect dead connections quickly. Non-streaming
+ * (older) relays send one buffered JSON body, which we read whole.
+ */
+async function consumeDubDirectResponse(
+  response: {
+    status: number;
+    headers?: Record<string, unknown>;
+    data: NodeJS.ReadableStream;
+  },
+  options: {
+    signal?: AbortSignal;
+    onSegmentProgress?: (completed: number, total: number) => void;
+  }
+): Promise<any> {
+  const contentType = String(response.headers?.['content-type'] ?? '');
+  if (!contentType.includes('x-ndjson')) {
+    return readDubResponseBody(response.data);
+  }
+
+  const { signal, onSegmentProgress } = options;
+  const stream = response.data;
+  return new Promise((resolve, reject) => {
+    let buffer = '';
+    let settled = false;
+    let idleTimer: NodeJS.Timeout | undefined;
+
+    const cleanup = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      signal?.removeEventListener('abort', onAbort);
+      stream.removeAllListeners?.('data');
+    };
+    const fail = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      (stream as any).destroy?.();
+      reject(error);
+    };
+    const succeed = (value: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    };
+    const onAbort = () =>
+      fail(new DOMException('Operation cancelled', 'AbortError'));
+    const resetIdleTimer = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        const error: any = new Error(
+          `Dub stream stalled: no relay heartbeat for ${DUB_STREAM_IDLE_TIMEOUT_MS}ms`
+        );
+        error.code = 'ETIMEDOUT';
+        fail(error);
+      }, DUB_STREAM_IDLE_TIMEOUT_MS);
+    };
+
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+    signal?.addEventListener('abort', onAbort, { once: true });
+    resetIdleTimer();
+
+    stream.on('data', (chunk: Buffer) => {
+      resetIdleTimer();
+      buffer += chunk.toString('utf8');
+      let newlineIndex = buffer.indexOf('\n');
+      while (newlineIndex >= 0) {
+        const line = buffer.slice(0, newlineIndex).trim();
+        buffer = buffer.slice(newlineIndex + 1);
+        newlineIndex = buffer.indexOf('\n');
+        if (!line) continue;
+        let event: any;
+        try {
+          event = JSON.parse(line);
+        } catch {
+          continue;
+        }
+        if (event?.type === 'progress') {
+          try {
+            onSegmentProgress?.(
+              Number(event.completed) || 0,
+              Number(event.total) || 0
+            );
+          } catch {
+            // Progress reporting must never break the dub.
+          }
+        } else if (event?.type === 'result') {
+          succeed(event.data);
+        } else if (event?.type === 'error') {
+          fail(
+            buildDubHttpError(Number(event.status) || 500, {
+              error: event.error,
+              details: event.details,
+            })
+          );
+        }
+        // 'start' and 'heartbeat' lines only feed the idle timer.
+      }
+    });
+    stream.on('error', (error: unknown) => fail(error));
+    stream.on('end', () => {
+      const error: any = new Error(
+        'Dub stream ended without a result (connection lost)'
+      );
+      error.code = 'ECONNRESET';
+      fail(error);
+    });
+  });
+}
+
 /**
  * Dub via direct relay endpoint (simplified flow).
  * App sends request directly to relay, relay handles auth/credits via CF Worker.
@@ -1773,6 +1954,7 @@ export async function dubViaDirect({
   ttsProvider,
   idempotencyKey,
   signal,
+  onSegmentProgress,
 }: {
   segments: Array<{
     start?: number;
@@ -1788,6 +1970,7 @@ export async function dubViaDirect({
   ttsProvider?: 'openai' | 'elevenlabs';
   idempotencyKey?: string;
   signal?: AbortSignal;
+  onSegmentProgress?: (completed: number, total: number) => void;
 }): Promise<{
   audioBase64?: string;
   format: string;
@@ -1812,13 +1995,42 @@ export async function dubViaDirect({
   // Relay / API both support idempotent replay recovery for transient 408s.
   const effectiveModel =
     model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
-  const maxAttempts = 2;
+  const maxAttempts = 3;
   const hasIdempotencyKey = Boolean(String(idempotencyKey || '').trim());
+  const totalChars = segments.reduce(
+    (sum, seg) => sum + String(seg.translation || seg.original || '').length,
+    0
+  );
+  // The relay streams NDJSON heartbeats while it synthesizes, so liveness is
+  // detected via heartbeat gaps (45s) rather than a total-time cap — a batch
+  // can legitimately take many minutes under vendor slowness without being
+  // cancelled, while a dead connection is caught within seconds. The axios
+  // timeout below only bounds time-to-response-headers: seconds on a
+  // streaming relay; sized to the relay's per-wave retry budget (pool
+  // concurrency 5, 3 attempts x 45s/90s + backoff per wave) as a fallback
+  // for an older relay that buffers the whole response.
+  const relayPoolConcurrency = 5; // mirrors relay DUB_SEGMENT_CONCURRENCY default
+  const retryBudgetPerWaveMs = ttsProvider === 'elevenlabs' ? 280_000 : 145_000;
+  const waves = Math.max(1, Math.ceil(segments.length / relayPoolConcurrency));
+  const requestTimeoutMs = Math.min(
+    1_200_000,
+    60_000 + waves * retryBudgetPerWaveMs
+  );
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const attemptStartedAt = Date.now();
+    sendNetLog('info', 'POST /dub-direct start', {
+      attempt,
+      maxAttempts,
+      segments: segments.length,
+      chars: totalChars,
+      ttsProvider: ttsProvider ?? 'openai',
+      idempotencyKey,
+      timeoutMs: requestTimeoutMs,
+    });
     try {
-      const response = await withStage5AuthRetry(authHeaders =>
-        axios.post(
+      const data = (await withStage5AuthRetry(async authHeaders => {
+        const response = await axios.post(
           `${RELAY_URL}/dub-direct`,
           {
             segments,
@@ -1832,21 +2044,28 @@ export async function dubViaDirect({
             headers: {
               ...authHeaders,
               'Content-Type': 'application/json',
+              'X-Dub-Stream': '1',
               ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
             },
             signal,
-            timeout: 0,
+            timeout: requestTimeoutMs,
+            responseType: 'stream',
+            validateStatus: () => true,
           }
-        )
-      );
-
-      sendNetLog('info', `POST /dub-direct -> ${response.status}`, {
-        url: `${RELAY_URL}/dub-direct`,
-        method: 'POST',
-        status: response.status,
-      });
-
-      const data = response.data as {
+        );
+        if (response.status !== 200) {
+          // Buffer the error body so status-based handling (auth retry,
+          // insufficient credits, retry classification) sees the usual shape.
+          throw buildDubHttpError(
+            response.status,
+            await readDubResponseBody(response.data)
+          );
+        }
+        return consumeDubDirectResponse(response, {
+          signal,
+          onSegmentProgress,
+        });
+      })) as {
         audioBase64?: string;
         format?: string;
         voice?: string;
@@ -1859,6 +2078,15 @@ export async function dubViaDirect({
         chunkCount?: number;
         segmentCount?: number;
       };
+
+      sendNetLog('info', 'POST /dub-direct -> 200', {
+        url: `${RELAY_URL}/dub-direct`,
+        method: 'POST',
+        status: 200,
+        attempt,
+        durationMs: Date.now() - attemptStartedAt,
+        segments: data?.segments?.length,
+      });
 
       if (
         !data.audioBase64 &&
@@ -1912,6 +2140,8 @@ export async function dubViaDirect({
             attempt,
             maxAttempts,
             status: getRelayStatus(error),
+            code: error?.code,
+            durationMs: Date.now() - attemptStartedAt,
             data: error?.response?.data,
           }
         );
@@ -1925,6 +2155,8 @@ export async function dubViaDirect({
           `HTTP ${error.response.status} POST ${RELAY_URL}/dub-direct`,
           {
             status: error.response.status,
+            attempt,
+            durationMs: Date.now() - attemptStartedAt,
             data: error.response.data,
           }
         );
@@ -1932,9 +2164,15 @@ export async function dubViaDirect({
         sendNetLog('error', `HTTP NO_RESPONSE POST ${RELAY_URL}/dub-direct`, {
           url: `${RELAY_URL}/dub-direct`,
           method: 'POST',
+          code: error?.code,
+          attempt,
+          durationMs: Date.now() - attemptStartedAt,
         });
       } else {
-        sendNetLog('error', `HTTP ERROR: ${relayMessage}`);
+        sendNetLog('error', `HTTP ERROR: ${relayMessage}`, {
+          attempt,
+          durationMs: Date.now() - attemptStartedAt,
+        });
       }
 
       if (error && typeof error === 'object') {

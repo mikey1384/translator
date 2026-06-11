@@ -43,7 +43,10 @@ import {
   executeSrtTranslation,
   executeDubGeneration,
 } from './utils/subtitleGeneration';
-import { runFullSrtTranslation } from '../../utils/runFullTranslation';
+import {
+  ensureSubtitlesTranslatedForDubbing,
+  runFullSrtTranslation,
+} from '../../utils/runFullTranslation';
 import {
   buildSemanticSummarySourceIdentity,
   buildSummaryRequestOwnerKey,
@@ -1302,8 +1305,8 @@ export default function GenerateSubtitles() {
 
   async function handleDub() {
     if (isStepTwoMutationLocked) return;
-    const subtitleState = useSubStore.getState();
-    const currentSegments = subtitleState.order.map(
+    let subtitleState = useSubStore.getState();
+    let currentSegments = subtitleState.order.map(
       id => subtitleState.segments[id]
     );
     if (currentSegments.length === 0) {
@@ -1312,6 +1315,16 @@ export default function GenerateSubtitles() {
         .setValidationError('No subtitles available for dubbing');
       return;
     }
+
+    // Dub the selected output language, not whatever text happens to be
+    // mounted: translate first when translations are missing or were made
+    // for a different language.
+    const ready = await ensureSubtitlesTranslatedForDubbing();
+    if (!ready.ok) {
+      return;
+    }
+    subtitleState = useSubStore.getState();
+    currentSegments = subtitleState.order.map(id => subtitleState.segments[id]);
 
     const operationId = `dub-${Date.now()}`;
     const videoStoreState = useVideoStore.getState();

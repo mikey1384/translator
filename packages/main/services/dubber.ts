@@ -241,13 +241,46 @@ export async function generateDubbedMedia({
       model: ttsProvider,
     });
 
+    const batchStartedAt = Date.now();
+    log.info(
+      `[${operationId}] Dub batch ${batchIndex + 1}/${batchCount}: requesting segments ${start + 1}-${Math.min(
+        payloadSegments.length,
+        start + batchSegments.length
+      )}/${payloadSegments.length}`
+    );
+
     const result = await synthesizeDubAi({
       segments: batchSegments,
       voice,
       quality: 'standard',
       idempotencyKey: `dub:${operationId}:batch:${batchIndex}`,
       signal,
+      onSegmentProgress: (completed: number) => {
+        const overallDone = Math.min(payloadSegments.length, start + completed);
+        progressCallback?.({
+          percent: Math.min(
+            44,
+            percentBase + (percentRange * overallDone) / payloadSegments.length
+          ),
+          stage: `Requesting voice synthesis (${overallDone}/${payloadSegments.length})...`,
+          phaseKey: 'synthesize',
+          current: overallDone,
+          total: payloadSegments.length,
+          unit: 'segments',
+          operationId,
+          model: ttsProvider,
+        });
+      },
     });
+
+    log.info(
+      `[${operationId}] Dub batch ${batchIndex + 1}/${batchCount}: completed in ${(
+        (Date.now() - batchStartedAt) /
+        1000
+      ).toFixed(1)}s (clips=${result?.segments?.length ?? 0}, model=${
+        result?.model ?? 'unknown'
+      })`
+    );
 
     if (result?.segments?.length) {
       aggregatedClips.push(...result.segments);
