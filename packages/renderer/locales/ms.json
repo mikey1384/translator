@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Pilih lokasi lain",
     "continue": "Teruskan",
-    "send": "Hantar"
+    "send": "Hantar",
+    "dismiss": "Tutup"
   },
   "errors": {
     "needCookies": "YouTube meminta pengesahan manusia. Klik Sambung untuk meneruskan.",
@@ -333,7 +334,16 @@
         "planner": "Bina carian",
         "retrieval": "Muatkan hasil"
       }
-    }
+    },
+    "downloadAndTranslate": "Muat turun & terjemah",
+    "downloadAndTranscribe": "Muat turun & transkripsi",
+    "autoRunLabel": "Selepas muat turun, jalankan hingga",
+    "autoRunStopDownload": "Muat turun",
+    "autoRunStopTranscribe": "+ Sari kata",
+    "autoRunStopTranslate": "+ Terjemah",
+    "autoRunStepDownload": "Muat turun",
+    "autoRunStepTranscribe": "Transkripsi",
+    "autoRunStepTranslate": "Terjemah ke {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Bahasa Output",

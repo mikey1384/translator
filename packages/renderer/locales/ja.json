@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "別の場所を選択",
     "continue": "続行",
-    "send": "送信"
+    "send": "送信",
+    "dismiss": "閉じる"
   },
   "errors": {
     "needCookies": "YouTubeが認証を求めています。「接続」をクリックして続行してください。",
@@ -333,7 +334,16 @@
         "planner": "検索を作成",
         "retrieval": "結果を読み込む"
       }
-    }
+    },
+    "downloadAndTranslate": "ダウンロードして翻訳",
+    "downloadAndTranscribe": "ダウンロードして文字起こし",
+    "autoRunLabel": "ダウンロード後に実行",
+    "autoRunStopDownload": "ダウンロード",
+    "autoRunStopTranscribe": "+ 字幕",
+    "autoRunStopTranslate": "+ 翻訳",
+    "autoRunStepDownload": "ダウンロード",
+    "autoRunStepTranscribe": "文字起こし",
+    "autoRunStepTranslate": "{{language}}に翻訳"
   },
   "subtitles": {
     "outputLanguage": "出力言語",

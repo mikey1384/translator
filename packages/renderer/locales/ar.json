@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "اختر موقعًا آخر",
     "continue": "متابعة",
-    "send": "إرسال"
+    "send": "إرسال",
+    "dismiss": "إغلاق"
   },
   "errors": {
     "needCookies": "طلب YouTube التحقق البشري. انقر على اتصال للمتابعة.",
@@ -333,7 +334,16 @@
         "planner": "صياغة البحث",
         "retrieval": "تحميل النتائج"
       }
-    }
+    },
+    "downloadAndTranslate": "تنزيل وترجمة",
+    "downloadAndTranscribe": "تنزيل ونسخ",
+    "autoRunLabel": "بعد التنزيل، التنفيذ حتى",
+    "autoRunStopDownload": "تنزيل",
+    "autoRunStopTranscribe": "+ ترجمة نصية",
+    "autoRunStopTranslate": "+ ترجمة",
+    "autoRunStepDownload": "تنزيل",
+    "autoRunStepTranscribe": "نسخ",
+    "autoRunStepTranslate": "الترجمة إلى {{language}}"
   },
   "subtitles": {
     "outputLanguage": "لغة الإخراج",

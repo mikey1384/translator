@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Başka bir konum seç",
     "continue": "Devam et",
-    "send": "Gönder"
+    "send": "Gönder",
+    "dismiss": "Kapat"
   },
   "errors": {
     "needCookies": "YouTube insan doğrulaması istedi. Devam etmek için Bağlan'a tıklayın.",
@@ -333,7 +334,16 @@
         "planner": "Arama",
         "retrieval": "Sonuçları yükle"
       }
-    }
+    },
+    "downloadAndTranslate": "İndir ve çevir",
+    "downloadAndTranscribe": "İndir ve deşifre et",
+    "autoRunLabel": "İndirdikten sonra şuraya kadar çalıştır",
+    "autoRunStopDownload": "İndir",
+    "autoRunStopTranscribe": "+ Altyazılar",
+    "autoRunStopTranslate": "+ Çevir",
+    "autoRunStepDownload": "İndir",
+    "autoRunStepTranscribe": "Deşifre et",
+    "autoRunStepTranslate": "{{language}} diline çevir"
   },
   "subtitles": {
     "outputLanguage": "Çıktı Dili",

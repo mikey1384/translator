@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Pumili ng ibang lokasyon",
     "continue": "Magpatuloy",
-    "send": "Ipadala"
+    "send": "Ipadala",
+    "dismiss": "Isara"
   },
   "errors": {
     "needCookies": "Humiling ang YouTube ng human check. I-click ang Connect para magpatuloy.",
@@ -333,7 +334,16 @@
         "planner": "Bumuo ng paghahanap",
         "retrieval": "I-load ang mga resulta"
       }
-    }
+    },
+    "downloadAndTranslate": "I-download at isalin",
+    "downloadAndTranscribe": "I-download at i-transcribe",
+    "autoRunLabel": "Pagkatapos i-download, patakbuhin hanggang",
+    "autoRunStopDownload": "I-download",
+    "autoRunStopTranscribe": "+ Mga subtitle",
+    "autoRunStopTranslate": "+ Isalin",
+    "autoRunStepDownload": "I-download",
+    "autoRunStepTranscribe": "I-transcribe",
+    "autoRunStepTranslate": "Isalin sa {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Wika ng Output",

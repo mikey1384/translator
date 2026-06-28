@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "इतर ठिकाण निवडा",
     "continue": "सुरू ठेवा",
-    "send": "पाठवा"
+    "send": "पाठवा",
+    "dismiss": "बंद करा"
   },
   "errors": {
     "needCookies": "YouTube ने मानवी पडताळणी विनंती केली. सुरू ठेवण्यासाठी कनेक्ट क्लिक करा.",
@@ -333,7 +334,16 @@
         "planner": "शोध तयार करा",
         "retrieval": "निकाल लोड करा"
       }
-    }
+    },
+    "downloadAndTranslate": "डाउनलोड करा आणि भाषांतर करा",
+    "downloadAndTranscribe": "डाउनलोड करा आणि लिप्यंतरण करा",
+    "autoRunLabel": "डाउनलोडनंतर येथपर्यंत चालवा",
+    "autoRunStopDownload": "डाउनलोड",
+    "autoRunStopTranscribe": "+ उपशीर्षके",
+    "autoRunStopTranslate": "+ भाषांतर",
+    "autoRunStepDownload": "डाउनलोड",
+    "autoRunStepTranscribe": "लिप्यंतरण",
+    "autoRunStepTranslate": "{{language}} मध्ये भाषांतर करा"
   },
   "subtitles": {
     "outputLanguage": "आउटपुट भाषा",

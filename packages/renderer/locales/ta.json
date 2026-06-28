@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "வேறு இடத்தைத் தேர்ந்தெடுக்கவும்",
     "continue": "தொடரவும்",
-    "send": "அனுப்பு"
+    "send": "அனுப்பு",
+    "dismiss": "மூடு"
   },
   "errors": {
     "needCookies": "YouTube மனித சரிபார்ப்பைக் கேட்டது. தொடர இணைக்கவும் என்பதைக் கிளிக் செய்யவும்.",
@@ -333,7 +334,16 @@
         "planner": "தேடல் அமை",
         "retrieval": "முடிவுகளை ஏற்று"
       }
-    }
+    },
+    "downloadAndTranslate": "பதிவிறக்கி மொழிபெயர்",
+    "downloadAndTranscribe": "பதிவிறக்கி படியெடு",
+    "autoRunLabel": "பதிவிறக்கத்திற்குப் பிறகு இதுவரை இயக்கு",
+    "autoRunStopDownload": "பதிவிறக்கு",
+    "autoRunStopTranscribe": "+ வசன வரிகள்",
+    "autoRunStopTranslate": "+ மொழிபெயர்",
+    "autoRunStepDownload": "பதிவிறக்கு",
+    "autoRunStepTranscribe": "படியெடுத்தல்",
+    "autoRunStepTranslate": "{{language}} மொழிக்கு மொழிபெயர்"
   },
   "subtitles": {
     "outputLanguage": "வெளியீட்டு மொழி",

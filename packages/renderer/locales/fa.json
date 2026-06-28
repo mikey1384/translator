@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "مکان دیگری را انتخاب کنید",
     "continue": "ادامه",
-    "send": "ارسال"
+    "send": "ارسال",
+    "dismiss": "بستن"
   },
   "errors": {
     "needCookies": "YouTube درخواست تأیید انسانی کرد. برای ادامه روی اتصال کلیک کنید.",
@@ -333,7 +334,16 @@
         "planner": "ساخت جستجو",
         "retrieval": "بارگذاری نتایج"
       }
-    }
+    },
+    "downloadAndTranslate": "دانلود و ترجمه",
+    "downloadAndTranscribe": "دانلود و رونویسی",
+    "autoRunLabel": "پس از دانلود، اجرا تا",
+    "autoRunStopDownload": "دانلود",
+    "autoRunStopTranscribe": "+ زیرنویس",
+    "autoRunStopTranslate": "+ ترجمه",
+    "autoRunStepDownload": "دانلود",
+    "autoRunStepTranscribe": "رونویسی",
+    "autoRunStepTranslate": "ترجمه به {{language}}"
   },
   "subtitles": {
     "outputLanguage": "زبان خروجی",

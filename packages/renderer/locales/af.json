@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Kies 'n ander ligging",
     "continue": "Gaan voort",
-    "send": "Stuur"
+    "send": "Stuur",
+    "dismiss": "Maak toe"
   },
   "errors": {
     "needCookies": "YouTube het 'n menslike verifikasie gevra. Klik op Verbind om voort te gaan.",
@@ -333,7 +334,16 @@
         "planner": "Bou soektog",
         "retrieval": "Laai resultate"
       }
-    }
+    },
+    "downloadAndTranslate": "Laai af en vertaal",
+    "downloadAndTranscribe": "Laai af en transkribeer",
+    "autoRunLabel": "Voer ná aflaai uit tot",
+    "autoRunStopDownload": "Laai af",
+    "autoRunStopTranscribe": "+ Onderskrifte",
+    "autoRunStopTranslate": "+ Vertaal",
+    "autoRunStepDownload": "Laai af",
+    "autoRunStepTranscribe": "Transkribeer",
+    "autoRunStepTranslate": "Vertaal na {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Uittree-taal",

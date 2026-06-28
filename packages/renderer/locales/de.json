@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Anderen Speicherort wählen",
     "continue": "Weiter",
-    "send": "Senden"
+    "send": "Senden",
+    "dismiss": "Schließen"
   },
   "errors": {
     "needCookies": "YouTube hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren.",
@@ -333,7 +334,16 @@
         "planner": "Suche erstellen",
         "retrieval": "Ergebnisse laden"
       }
-    }
+    },
+    "downloadAndTranslate": "Herunterladen & übersetzen",
+    "downloadAndTranscribe": "Herunterladen & transkribieren",
+    "autoRunLabel": "Nach Download ausführen bis",
+    "autoRunStopDownload": "Herunterladen",
+    "autoRunStopTranscribe": "+ Untertitel",
+    "autoRunStopTranslate": "+ Übersetzen",
+    "autoRunStepDownload": "Herunterladen",
+    "autoRunStepTranscribe": "Transkribieren",
+    "autoRunStepTranslate": "Übersetzen nach {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Ausgabesprache",

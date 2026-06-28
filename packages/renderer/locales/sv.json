@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Välj en annan plats",
     "continue": "Fortsätt",
-    "send": "Skicka"
+    "send": "Skicka",
+    "dismiss": "Stäng"
   },
   "errors": {
     "needCookies": "YouTube begärde en mänsklig verifiering. Klicka på Anslut för att fortsätta.",
@@ -333,7 +334,16 @@
         "planner": "Skapa sökning",
         "retrieval": "Ladda resultat"
       }
-    }
+    },
+    "downloadAndTranslate": "Ladda ner och översätt",
+    "downloadAndTranscribe": "Ladda ner och transkribera",
+    "autoRunLabel": "Kör efter nedladdning till",
+    "autoRunStopDownload": "Ladda ner",
+    "autoRunStopTranscribe": "+ Undertexter",
+    "autoRunStopTranslate": "+ Översätt",
+    "autoRunStepDownload": "Ladda ner",
+    "autoRunStepTranscribe": "Transkribera",
+    "autoRunStepTranslate": "Översätt till {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Utmatningsspråk",

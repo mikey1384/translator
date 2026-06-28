@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Pilih lokasi lain",
     "continue": "Lanjutkan",
-    "send": "Kirim"
+    "send": "Kirim",
+    "dismiss": "Tutup"
   },
   "errors": {
     "needCookies": "YouTube meminta verifikasi manusia. Klik Hubungkan untuk melanjutkan.",
@@ -333,7 +334,16 @@
         "planner": "Susun pencarian",
         "retrieval": "Muat hasil"
       }
-    }
+    },
+    "downloadAndTranslate": "Unduh & terjemahkan",
+    "downloadAndTranscribe": "Unduh & transkripsikan",
+    "autoRunLabel": "Setelah unduh, jalankan hingga",
+    "autoRunStopDownload": "Unduh",
+    "autoRunStopTranscribe": "+ Subtitel",
+    "autoRunStopTranslate": "+ Terjemahkan",
+    "autoRunStepDownload": "Unduh",
+    "autoRunStepTranscribe": "Transkripsikan",
+    "autoRunStepTranslate": "Terjemahkan ke {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Bahasa Keluaran",

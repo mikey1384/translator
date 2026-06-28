@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "మరొక స్థానాన్ని ఎంచుకోండి",
     "continue": "కొనసాగించండి",
-    "send": "పంపు"
+    "send": "పంపు",
+    "dismiss": "మూసివేయి"
   },
   "errors": {
     "needCookies": "YouTube మానవ ధృవీకరణ కోరింది. కొనసాగించడానికి కనెక్ట్ క్లిక్ చేయండి.",
@@ -333,7 +334,16 @@
         "planner": "శోధన రూపొందించు",
         "retrieval": "ఫలితాలను లోడ్ చేయి"
       }
-    }
+    },
+    "downloadAndTranslate": "డౌన్‌లోడ్ చేసి అనువదించు",
+    "downloadAndTranscribe": "డౌన్‌లోడ్ చేసి లిప్యంతరీకరించు",
+    "autoRunLabel": "డౌన్‌లోడ్ తర్వాత ఇంత వరకు అమలు చేయి",
+    "autoRunStopDownload": "డౌన్‌లోడ్",
+    "autoRunStopTranscribe": "+ ఉపశీర్షికలు",
+    "autoRunStopTranslate": "+ అనువదించు",
+    "autoRunStepDownload": "డౌన్‌లోడ్",
+    "autoRunStepTranscribe": "లిప్యంతరీకరణ",
+    "autoRunStepTranslate": "{{language}}కి అనువదించు"
   },
   "subtitles": {
     "outputLanguage": "అవుట్‌పుట్ భాష",

@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "選擇其他位置",
     "continue": "繼續",
-    "send": "傳送"
+    "send": "傳送",
+    "dismiss": "關閉"
   },
   "errors": {
     "needCookies": "YouTube 要求進行人機驗證。點擊「連接」繼續。",
@@ -333,7 +334,16 @@
         "planner": "建立搜尋",
         "retrieval": "載入結果"
       }
-    }
+    },
+    "downloadAndTranslate": "下載並翻譯",
+    "downloadAndTranscribe": "下載並轉錄",
+    "autoRunLabel": "下載後執行至",
+    "autoRunStopDownload": "下載",
+    "autoRunStopTranscribe": "+ 字幕",
+    "autoRunStopTranslate": "+ 翻譯",
+    "autoRunStepDownload": "下載",
+    "autoRunStepTranscribe": "轉錄",
+    "autoRunStepTranslate": "翻譯為 {{language}}"
   },
   "subtitles": {
     "outputLanguage": "輸出語言",

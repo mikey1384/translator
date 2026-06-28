@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Escolher outro local",
     "continue": "Continuar",
-    "send": "Enviar"
+    "send": "Enviar",
+    "dismiss": "Dispensar"
   },
   "errors": {
     "needCookies": "O YouTube solicitou uma verificação humana. Clique em Conectar para continuar.",
@@ -333,7 +334,16 @@
         "planner": "Criar pesquisa",
         "retrieval": "Carregar resultados"
       }
-    }
+    },
+    "downloadAndTranslate": "Baixar e traduzir",
+    "downloadAndTranscribe": "Baixar e transcrever",
+    "autoRunLabel": "Após o download, executar até",
+    "autoRunStopDownload": "Baixar",
+    "autoRunStopTranscribe": "+ Legendas",
+    "autoRunStopTranslate": "+ Traduzir",
+    "autoRunStepDownload": "Baixar",
+    "autoRunStepTranscribe": "Transcrever",
+    "autoRunStepTranslate": "Traduzir para {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Idioma de Saída",

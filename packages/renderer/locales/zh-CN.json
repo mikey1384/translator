@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "选择其他位置",
     "continue": "继续",
-    "send": "发送"
+    "send": "发送",
+    "dismiss": "关闭"
   },
   "errors": {
     "needCookies": "YouTube 要求进行人机验证。点击「连接」继续。",
@@ -333,7 +334,16 @@
         "planner": "构建搜索",
         "retrieval": "加载结果"
       }
-    }
+    },
+    "downloadAndTranslate": "下载并翻译",
+    "downloadAndTranscribe": "下载并转录",
+    "autoRunLabel": "下载后执行到",
+    "autoRunStopDownload": "下载",
+    "autoRunStopTranscribe": "+ 字幕",
+    "autoRunStopTranslate": "+ 翻译",
+    "autoRunStepDownload": "下载",
+    "autoRunStepTranscribe": "转录",
+    "autoRunStepTranslate": "翻译为 {{language}}"
   },
   "subtitles": {
     "outputLanguage": "输出语言",

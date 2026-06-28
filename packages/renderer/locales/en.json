@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Choose another location",
     "continue": "Continue",
-    "send": "Send"
+    "send": "Send",
+    "dismiss": "Dismiss"
   },
   "errors": {
     "needCookies": "YouTube asked for a human check. Click Connect to continue.",
@@ -333,7 +334,16 @@
         "planner": "Form search",
         "retrieval": "Load results"
       }
-    }
+    },
+    "downloadAndTranslate": "Download & Translate",
+    "downloadAndTranscribe": "Download & Transcribe",
+    "autoRunLabel": "After download, run to",
+    "autoRunStopDownload": "Download",
+    "autoRunStopTranscribe": "+ Subtitles",
+    "autoRunStopTranslate": "+ Translate",
+    "autoRunStepDownload": "Download",
+    "autoRunStepTranscribe": "Transcribe",
+    "autoRunStepTranslate": "Translate to {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Output Language",

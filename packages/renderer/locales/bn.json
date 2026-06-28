@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "অন্য একটি অবস্থান বেছে নিন",
     "continue": "চালিয়ে যান",
-    "send": "পাঠান"
+    "send": "পাঠান",
+    "dismiss": "বন্ধ করুন"
   },
   "errors": {
     "needCookies": "YouTube মানব যাচাইয়ের জন্য অনুরোধ করেছে। চালিয়ে যেতে সংযোগ করুন ক্লিক করুন।",
@@ -333,7 +334,16 @@
         "planner": "সার্চ তৈরি",
         "retrieval": "ফল লোড করুন"
       }
-    }
+    },
+    "downloadAndTranslate": "ডাউনলোড ও অনুবাদ",
+    "downloadAndTranscribe": "ডাউনলোড ও প্রতিলিপি",
+    "autoRunLabel": "ডাউনলোডের পরে চালান পর্যন্ত",
+    "autoRunStopDownload": "ডাউনলোড",
+    "autoRunStopTranscribe": "+ সাবটাইটেল",
+    "autoRunStopTranslate": "+ অনুবাদ",
+    "autoRunStepDownload": "ডাউনলোড",
+    "autoRunStepTranscribe": "প্রতিলিপি",
+    "autoRunStepTranslate": "{{language}}-এ অনুবাদ"
   },
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",

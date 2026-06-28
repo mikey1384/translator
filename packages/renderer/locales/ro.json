@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Alege o altă locație",
     "continue": "Continuă",
-    "send": "Trimite"
+    "send": "Trimite",
+    "dismiss": "Închide"
   },
   "errors": {
     "needCookies": "YouTube a solicitat verificare umană. Faceți clic pe Conectare pentru a continua.",
@@ -333,7 +334,16 @@
         "planner": "Căutare",
         "retrieval": "Încarcă rezultatele"
       }
-    }
+    },
+    "downloadAndTranslate": "Descarcă și tradu",
+    "downloadAndTranscribe": "Descarcă și transcrie",
+    "autoRunLabel": "După descărcare, rulează până la",
+    "autoRunStopDownload": "Descarcă",
+    "autoRunStopTranscribe": "+ Subtitrări",
+    "autoRunStopTranslate": "+ Tradu",
+    "autoRunStepDownload": "Descarcă",
+    "autoRunStepTranscribe": "Transcrie",
+    "autoRunStepTranslate": "Tradu în {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Limba de ieșire",

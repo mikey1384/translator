@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Выбрать другое расположение",
     "continue": "Продолжить",
-    "send": "Отправить"
+    "send": "Отправить",
+    "dismiss": "Закрыть"
   },
   "errors": {
     "needCookies": "YouTube запросил проверку. Нажмите «Подключить», чтобы продолжить.",
@@ -333,7 +334,16 @@
         "planner": "Поиск",
         "retrieval": "Загрузить результаты"
       }
-    }
+    },
+    "downloadAndTranslate": "Скачать и перевести",
+    "downloadAndTranscribe": "Скачать и расшифровать",
+    "autoRunLabel": "После загрузки выполнить до",
+    "autoRunStopDownload": "Скачать",
+    "autoRunStopTranscribe": "+ Субтитры",
+    "autoRunStopTranslate": "+ Перевести",
+    "autoRunStepDownload": "Скачать",
+    "autoRunStepTranscribe": "Расшифровка",
+    "autoRunStepTranslate": "Перевести на {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Язык вывода",

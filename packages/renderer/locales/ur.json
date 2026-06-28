@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "کوئی اور مقام منتخب کریں",
     "continue": "جاری رکھیں",
-    "send": "بھیجیں"
+    "send": "بھیجیں",
+    "dismiss": "بند کریں"
   },
   "errors": {
     "needCookies": "YouTube نے انسانی تصدیق کی درخواست کی۔ جاری رکھنے کے لیے کنیکٹ پر کلک کریں۔",
@@ -333,7 +334,16 @@
         "planner": "تلاش بنائیں",
         "retrieval": "نتائج لوڈ کریں"
       }
-    }
+    },
+    "downloadAndTranslate": "ڈاؤن لوڈ اور ترجمہ کریں",
+    "downloadAndTranscribe": "ڈاؤن لوڈ اور نقل کریں",
+    "autoRunLabel": "ڈاؤن لوڈ کے بعد یہاں تک چلائیں",
+    "autoRunStopDownload": "ڈاؤن لوڈ",
+    "autoRunStopTranscribe": "+ سب ٹائٹلز",
+    "autoRunStopTranslate": "+ ترجمہ",
+    "autoRunStepDownload": "ڈاؤن لوڈ",
+    "autoRunStepTranscribe": "نقل کریں",
+    "autoRunStepTranslate": "{{language}} میں ترجمہ کریں"
   },
   "subtitles": {
     "outputLanguage": "آؤٹ پٹ زبان",

@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Chagua eneo jingine",
     "continue": "Endelea",
-    "send": "Tuma"
+    "send": "Tuma",
+    "dismiss": "Funga"
   },
   "errors": {
     "needCookies": "YouTube iliomba uthibitisho wa binadamu. Bofya Unganisha kuendelea.",
@@ -333,7 +334,16 @@
         "planner": "Unda utafutaji",
         "retrieval": "Pakia matokeo"
       }
-    }
+    },
+    "downloadAndTranslate": "Pakua na utafsiri",
+    "downloadAndTranscribe": "Pakua na unukuu",
+    "autoRunLabel": "Baada ya kupakua, endesha hadi",
+    "autoRunStopDownload": "Pakua",
+    "autoRunStopTranscribe": "+ Manukuu",
+    "autoRunStopTranslate": "+ Tafsiri",
+    "autoRunStepDownload": "Pakua",
+    "autoRunStepTranscribe": "Nukuu",
+    "autoRunStepTranslate": "Tafsiri kwa {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Lugha ya Matokeo",

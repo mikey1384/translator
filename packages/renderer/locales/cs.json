@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Vybrat jiné umístění",
     "continue": "Pokračovat",
-    "send": "Odeslat"
+    "send": "Odeslat",
+    "dismiss": "Zavřít"
   },
   "errors": {
     "needCookies": "YouTube požádal o ověření člověka. Klikněte na Připojit pro pokračování.",
@@ -333,7 +334,16 @@
         "planner": "Hledání",
         "retrieval": "Načíst výsledky"
       }
-    }
+    },
+    "downloadAndTranslate": "Stáhnout a přeložit",
+    "downloadAndTranscribe": "Stáhnout a přepsat",
+    "autoRunLabel": "Po stažení provést až po",
+    "autoRunStopDownload": "Stáhnout",
+    "autoRunStopTranscribe": "+ Titulky",
+    "autoRunStopTranslate": "+ Přeložit",
+    "autoRunStepDownload": "Stáhnout",
+    "autoRunStepTranscribe": "Přepsat",
+    "autoRunStepTranslate": "Přeložit do {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Výstupní jazyk",

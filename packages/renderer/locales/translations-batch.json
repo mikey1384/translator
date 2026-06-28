@@ -275,7 +275,17 @@
     "input.videoSuggestion.liveActivityTitle": "검색 진행 상황",
     "logs.empty": "아직 로그가 없습니다.",
     "editSubtitles.header.save": "자막 저장",
-    "editSubtitles.header.saveAs": "자막 다른 이름으로 저장..."
+    "editSubtitles.header.saveAs": "자막 다른 이름으로 저장...",
+    "input.downloadAndTranslate": "다운로드 및 번역",
+    "input.downloadAndTranscribe": "다운로드 및 전사",
+    "input.autoRunLabel": "다운로드 후 실행",
+    "input.autoRunStopDownload": "다운로드",
+    "input.autoRunStopTranscribe": "+ 자막",
+    "input.autoRunStopTranslate": "+ 번역",
+    "input.autoRunStepDownload": "다운로드",
+    "input.autoRunStepTranscribe": "전사",
+    "input.autoRunStepTranslate": "{{language}}(으)로 번역",
+    "common.dismiss": "닫기"
   },
   "ja": {
     "common.send": "送信",
@@ -553,7 +563,17 @@
     "input.videoSuggestion.liveActivityTitle": "検索の進行状況",
     "logs.empty": "まだログはありません。",
     "editSubtitles.header.save": "字幕を保存",
-    "editSubtitles.header.saveAs": "字幕に名前を付けて保存..."
+    "editSubtitles.header.saveAs": "字幕に名前を付けて保存...",
+    "input.downloadAndTranslate": "ダウンロードして翻訳",
+    "input.downloadAndTranscribe": "ダウンロードして文字起こし",
+    "input.autoRunLabel": "ダウンロード後に実行",
+    "input.autoRunStopDownload": "ダウンロード",
+    "input.autoRunStopTranscribe": "+ 字幕",
+    "input.autoRunStopTranslate": "+ 翻訳",
+    "input.autoRunStepDownload": "ダウンロード",
+    "input.autoRunStepTranscribe": "文字起こし",
+    "input.autoRunStepTranslate": "{{language}}に翻訳",
+    "common.dismiss": "閉じる"
   },
   "zh-CN": {
     "common.send": "发送",
@@ -831,7 +851,17 @@
     "input.videoSuggestion.liveActivityTitle": "搜索进度",
     "logs.empty": "暂无日志。",
     "editSubtitles.header.save": "保存字幕",
-    "editSubtitles.header.saveAs": "字幕另存为..."
+    "editSubtitles.header.saveAs": "字幕另存为...",
+    "input.downloadAndTranslate": "下载并翻译",
+    "input.downloadAndTranscribe": "下载并转录",
+    "input.autoRunLabel": "下载后执行到",
+    "input.autoRunStopDownload": "下载",
+    "input.autoRunStopTranscribe": "+ 字幕",
+    "input.autoRunStopTranslate": "+ 翻译",
+    "input.autoRunStepDownload": "下载",
+    "input.autoRunStepTranscribe": "转录",
+    "input.autoRunStepTranslate": "翻译为 {{language}}",
+    "common.dismiss": "关闭"
   },
   "zh-TW": {
     "common.send": "傳送",
@@ -1109,7 +1139,17 @@
     "input.videoSuggestion.liveActivityTitle": "搜尋進度",
     "logs.empty": "尚無日誌。",
     "editSubtitles.header.save": "儲存字幕",
-    "editSubtitles.header.saveAs": "字幕另存為..."
+    "editSubtitles.header.saveAs": "字幕另存為...",
+    "input.downloadAndTranslate": "下載並翻譯",
+    "input.downloadAndTranscribe": "下載並轉錄",
+    "input.autoRunLabel": "下載後執行至",
+    "input.autoRunStopDownload": "下載",
+    "input.autoRunStopTranscribe": "+ 字幕",
+    "input.autoRunStopTranslate": "+ 翻譯",
+    "input.autoRunStepDownload": "下載",
+    "input.autoRunStepTranscribe": "轉錄",
+    "input.autoRunStepTranslate": "翻譯為 {{language}}",
+    "common.dismiss": "關閉"
   },
   "es": {
     "common.send": "Enviar",
@@ -1387,7 +1427,17 @@
     "input.videoSuggestion.liveActivityTitle": "Progreso de la búsqueda",
     "logs.empty": "Aún no hay registros.",
     "editSubtitles.header.save": "Guardar subtítulos",
-    "editSubtitles.header.saveAs": "Guardar subtítulos como..."
+    "editSubtitles.header.saveAs": "Guardar subtítulos como...",
+    "input.downloadAndTranslate": "Descargar y traducir",
+    "input.downloadAndTranscribe": "Descargar y transcribir",
+    "input.autoRunLabel": "Tras descargar, ejecutar hasta",
+    "input.autoRunStopDownload": "Descargar",
+    "input.autoRunStopTranscribe": "+ Subtítulos",
+    "input.autoRunStopTranslate": "+ Traducir",
+    "input.autoRunStepDownload": "Descargar",
+    "input.autoRunStepTranscribe": "Transcribir",
+    "input.autoRunStepTranslate": "Traducir a {{language}}",
+    "common.dismiss": "Descartar"
   },
   "fr": {
     "common.send": "Envoyer",
@@ -1665,7 +1715,17 @@
     "input.videoSuggestion.liveActivityTitle": "Progression de la recherche",
     "logs.empty": "Aucun journal pour le moment.",
     "editSubtitles.header.save": "Enregistrer les sous-titres",
-    "editSubtitles.header.saveAs": "Enregistrer les sous-titres sous..."
+    "editSubtitles.header.saveAs": "Enregistrer les sous-titres sous...",
+    "input.downloadAndTranslate": "Télécharger et traduire",
+    "input.downloadAndTranscribe": "Télécharger et transcrire",
+    "input.autoRunLabel": "Après le téléchargement, aller jusqu’à",
+    "input.autoRunStopDownload": "Télécharger",
+    "input.autoRunStopTranscribe": "+ Sous-titres",
+    "input.autoRunStopTranslate": "+ Traduire",
+    "input.autoRunStepDownload": "Télécharger",
+    "input.autoRunStepTranscribe": "Transcrire",
+    "input.autoRunStepTranslate": "Traduire en {{language}}",
+    "common.dismiss": "Fermer"
   },
   "de": {
     "common.send": "Senden",
@@ -1943,7 +2003,17 @@
     "input.videoSuggestion.liveActivityTitle": "Suchfortschritt",
     "logs.empty": "Noch keine Protokolle.",
     "editSubtitles.header.save": "Untertitel speichern",
-    "editSubtitles.header.saveAs": "Untertitel speichern unter..."
+    "editSubtitles.header.saveAs": "Untertitel speichern unter...",
+    "input.downloadAndTranslate": "Herunterladen & übersetzen",
+    "input.downloadAndTranscribe": "Herunterladen & transkribieren",
+    "input.autoRunLabel": "Nach Download ausführen bis",
+    "input.autoRunStopDownload": "Herunterladen",
+    "input.autoRunStopTranscribe": "+ Untertitel",
+    "input.autoRunStopTranslate": "+ Übersetzen",
+    "input.autoRunStepDownload": "Herunterladen",
+    "input.autoRunStepTranscribe": "Transkribieren",
+    "input.autoRunStepTranslate": "Übersetzen nach {{language}}",
+    "common.dismiss": "Schließen"
   },
   "it": {
     "common.send": "Invia",
@@ -2221,7 +2291,17 @@
     "input.videoSuggestion.liveActivityTitle": "Avanzamento della ricerca",
     "logs.empty": "Ancora nessun log.",
     "editSubtitles.header.save": "Salva sottotitoli",
-    "editSubtitles.header.saveAs": "Salva sottotitoli con nome..."
+    "editSubtitles.header.saveAs": "Salva sottotitoli con nome...",
+    "input.downloadAndTranslate": "Scarica e traduci",
+    "input.downloadAndTranscribe": "Scarica e trascrivi",
+    "input.autoRunLabel": "Dopo il download, esegui fino a",
+    "input.autoRunStopDownload": "Scarica",
+    "input.autoRunStopTranscribe": "+ Sottotitoli",
+    "input.autoRunStopTranslate": "+ Traduci",
+    "input.autoRunStepDownload": "Scarica",
+    "input.autoRunStepTranscribe": "Trascrivi",
+    "input.autoRunStepTranslate": "Traduci in {{language}}",
+    "common.dismiss": "Ignora"
   },
   "pt": {
     "common.send": "Enviar",
@@ -2499,7 +2579,17 @@
     "input.videoSuggestion.liveActivityTitle": "Progresso da pesquisa",
     "logs.empty": "Ainda não há logs.",
     "editSubtitles.header.save": "Salvar legendas",
-    "editSubtitles.header.saveAs": "Salvar legendas como..."
+    "editSubtitles.header.saveAs": "Salvar legendas como...",
+    "input.downloadAndTranslate": "Baixar e traduzir",
+    "input.downloadAndTranscribe": "Baixar e transcrever",
+    "input.autoRunLabel": "Após o download, executar até",
+    "input.autoRunStopDownload": "Baixar",
+    "input.autoRunStopTranscribe": "+ Legendas",
+    "input.autoRunStopTranslate": "+ Traduzir",
+    "input.autoRunStepDownload": "Baixar",
+    "input.autoRunStepTranscribe": "Transcrever",
+    "input.autoRunStepTranslate": "Traduzir para {{language}}",
+    "common.dismiss": "Dispensar"
   },
   "ru": {
     "common.send": "Отправить",
@@ -2777,7 +2867,17 @@
     "input.videoSuggestion.liveActivityTitle": "Ход поиска",
     "logs.empty": "Логов пока нет.",
     "editSubtitles.header.save": "Сохранить субтитры",
-    "editSubtitles.header.saveAs": "Сохранить субтитры как..."
+    "editSubtitles.header.saveAs": "Сохранить субтитры как...",
+    "input.downloadAndTranslate": "Скачать и перевести",
+    "input.downloadAndTranscribe": "Скачать и расшифровать",
+    "input.autoRunLabel": "После загрузки выполнить до",
+    "input.autoRunStopDownload": "Скачать",
+    "input.autoRunStopTranscribe": "+ Субтитры",
+    "input.autoRunStopTranslate": "+ Перевести",
+    "input.autoRunStepDownload": "Скачать",
+    "input.autoRunStepTranscribe": "Расшифровка",
+    "input.autoRunStepTranslate": "Перевести на {{language}}",
+    "common.dismiss": "Закрыть"
   },
   "nl": {
     "common.send": "Versturen",
@@ -3055,7 +3155,17 @@
     "input.videoSuggestion.liveActivityTitle": "Zoekvoortgang",
     "logs.empty": "Nog geen logs.",
     "editSubtitles.header.save": "Ondertitels opslaan",
-    "editSubtitles.header.saveAs": "Ondertitels opslaan als..."
+    "editSubtitles.header.saveAs": "Ondertitels opslaan als...",
+    "input.downloadAndTranslate": "Downloaden en vertalen",
+    "input.downloadAndTranscribe": "Downloaden en transcriberen",
+    "input.autoRunLabel": "Na download uitvoeren tot",
+    "input.autoRunStopDownload": "Downloaden",
+    "input.autoRunStopTranscribe": "+ Ondertitels",
+    "input.autoRunStopTranslate": "+ Vertalen",
+    "input.autoRunStepDownload": "Downloaden",
+    "input.autoRunStepTranscribe": "Transcriberen",
+    "input.autoRunStepTranslate": "Vertalen naar {{language}}",
+    "common.dismiss": "Sluiten"
   },
   "pl": {
     "common.send": "Wyślij",
@@ -3333,7 +3443,17 @@
     "input.videoSuggestion.liveActivityTitle": "Postęp wyszukiwania",
     "logs.empty": "Nie ma jeszcze logów.",
     "editSubtitles.header.save": "Zapisz napisy",
-    "editSubtitles.header.saveAs": "Zapisz napisy jako..."
+    "editSubtitles.header.saveAs": "Zapisz napisy jako...",
+    "input.downloadAndTranslate": "Pobierz i przetłumacz",
+    "input.downloadAndTranscribe": "Pobierz i transkrybuj",
+    "input.autoRunLabel": "Po pobraniu wykonaj do",
+    "input.autoRunStopDownload": "Pobierz",
+    "input.autoRunStopTranscribe": "+ Napisy",
+    "input.autoRunStopTranslate": "+ Przetłumacz",
+    "input.autoRunStepDownload": "Pobierz",
+    "input.autoRunStepTranscribe": "Transkrybuj",
+    "input.autoRunStepTranslate": "Przetłumacz na {{language}}",
+    "common.dismiss": "Zamknij"
   },
   "sv": {
     "common.send": "Skicka",
@@ -3611,7 +3731,17 @@
     "input.videoSuggestion.liveActivityTitle": "Sökförlopp",
     "logs.empty": "Inga loggar än.",
     "editSubtitles.header.save": "Spara undertexter",
-    "editSubtitles.header.saveAs": "Spara undertexter som..."
+    "editSubtitles.header.saveAs": "Spara undertexter som...",
+    "input.downloadAndTranslate": "Ladda ner och översätt",
+    "input.downloadAndTranscribe": "Ladda ner och transkribera",
+    "input.autoRunLabel": "Kör efter nedladdning till",
+    "input.autoRunStopDownload": "Ladda ner",
+    "input.autoRunStopTranscribe": "+ Undertexter",
+    "input.autoRunStopTranslate": "+ Översätt",
+    "input.autoRunStepDownload": "Ladda ner",
+    "input.autoRunStepTranscribe": "Transkribera",
+    "input.autoRunStepTranslate": "Översätt till {{language}}",
+    "common.dismiss": "Stäng"
   },
   "tr": {
     "common.send": "Gönder",
@@ -3889,7 +4019,17 @@
     "input.videoSuggestion.liveActivityTitle": "Arama ilerlemesi",
     "logs.empty": "Henüz log yok.",
     "editSubtitles.header.save": "Altyazıları kaydet",
-    "editSubtitles.header.saveAs": "Altyazıları farklı kaydet..."
+    "editSubtitles.header.saveAs": "Altyazıları farklı kaydet...",
+    "input.downloadAndTranslate": "İndir ve çevir",
+    "input.downloadAndTranscribe": "İndir ve deşifre et",
+    "input.autoRunLabel": "İndirdikten sonra şuraya kadar çalıştır",
+    "input.autoRunStopDownload": "İndir",
+    "input.autoRunStopTranscribe": "+ Altyazılar",
+    "input.autoRunStopTranslate": "+ Çevir",
+    "input.autoRunStepDownload": "İndir",
+    "input.autoRunStepTranscribe": "Deşifre et",
+    "input.autoRunStepTranslate": "{{language}} diline çevir",
+    "common.dismiss": "Kapat"
   },
   "no": {
     "common.send": "Send",
@@ -4167,7 +4307,17 @@
     "input.videoSuggestion.liveActivityTitle": "Søkefremdrift",
     "logs.empty": "Ingen logger ennå.",
     "editSubtitles.header.save": "Lagre undertekster",
-    "editSubtitles.header.saveAs": "Lagre undertekster som..."
+    "editSubtitles.header.saveAs": "Lagre undertekster som...",
+    "input.downloadAndTranslate": "Last ned og oversett",
+    "input.downloadAndTranscribe": "Last ned og transkriber",
+    "input.autoRunLabel": "Kjør etter nedlasting til",
+    "input.autoRunStopDownload": "Last ned",
+    "input.autoRunStopTranscribe": "+ Undertekster",
+    "input.autoRunStopTranslate": "+ Oversett",
+    "input.autoRunStepDownload": "Last ned",
+    "input.autoRunStepTranscribe": "Transkriber",
+    "input.autoRunStepTranslate": "Oversett til {{language}}",
+    "common.dismiss": "Lukk"
   },
   "da": {
     "common.send": "Send",
@@ -4446,7 +4596,17 @@
     "input.videoSuggestion.liveActivityTitle": "Søgeforløb",
     "logs.empty": "Ingen logs endnu.",
     "editSubtitles.header.save": "Gem undertekster",
-    "editSubtitles.header.saveAs": "Gem undertekster som..."
+    "editSubtitles.header.saveAs": "Gem undertekster som...",
+    "input.downloadAndTranslate": "Download og oversæt",
+    "input.downloadAndTranscribe": "Download og transskriber",
+    "input.autoRunLabel": "Kør efter download til",
+    "input.autoRunStopDownload": "Download",
+    "input.autoRunStopTranscribe": "+ Undertekster",
+    "input.autoRunStopTranslate": "+ Oversæt",
+    "input.autoRunStepDownload": "Download",
+    "input.autoRunStepTranscribe": "Transskriber",
+    "input.autoRunStepTranslate": "Oversæt til {{language}}",
+    "common.dismiss": "Luk"
   },
   "fi": {
     "common.send": "Lähetä",
@@ -4724,7 +4884,17 @@
     "input.videoSuggestion.liveActivityTitle": "Haun eteneminen",
     "logs.empty": "Ei vielä lokeja.",
     "editSubtitles.header.save": "Tallenna tekstitykset",
-    "editSubtitles.header.saveAs": "Tallenna tekstitykset nimellä..."
+    "editSubtitles.header.saveAs": "Tallenna tekstitykset nimellä...",
+    "input.downloadAndTranslate": "Lataa ja käännä",
+    "input.downloadAndTranscribe": "Lataa ja litteroi",
+    "input.autoRunLabel": "Latauksen jälkeen suorita kohtaan",
+    "input.autoRunStopDownload": "Lataa",
+    "input.autoRunStopTranscribe": "+ Tekstitykset",
+    "input.autoRunStopTranslate": "+ Käännä",
+    "input.autoRunStepDownload": "Lataa",
+    "input.autoRunStepTranscribe": "Litteroi",
+    "input.autoRunStepTranslate": "Käännä kielelle {{language}}",
+    "common.dismiss": "Sulje"
   },
   "el": {
     "common.send": "Αποστολή",
@@ -5003,7 +5173,17 @@
     "input.videoSuggestion.liveActivityTitle": "Πρόοδος αναζήτησης",
     "logs.empty": "Δεν υπάρχουν ακόμη καταγραφές.",
     "editSubtitles.header.save": "Αποθήκευση υποτίτλων",
-    "editSubtitles.header.saveAs": "Αποθήκευση υποτίτλων ως..."
+    "editSubtitles.header.saveAs": "Αποθήκευση υποτίτλων ως...",
+    "input.downloadAndTranslate": "Λήψη και μετάφραση",
+    "input.downloadAndTranscribe": "Λήψη και απομαγνητοφώνηση",
+    "input.autoRunLabel": "Μετά τη λήψη, εκτέλεση έως",
+    "input.autoRunStopDownload": "Λήψη",
+    "input.autoRunStopTranscribe": "+ Υπότιτλοι",
+    "input.autoRunStopTranslate": "+ Μετάφραση",
+    "input.autoRunStepDownload": "Λήψη",
+    "input.autoRunStepTranscribe": "Απομαγνητοφώνηση",
+    "input.autoRunStepTranslate": "Μετάφραση σε {{language}}",
+    "common.dismiss": "Κλείσιμο"
   },
   "cs": {
     "common.send": "Odeslat",
@@ -5282,7 +5462,17 @@
     "input.videoSuggestion.liveActivityTitle": "Průběh vyhledávání",
     "logs.empty": "Zatím žádné logy.",
     "editSubtitles.header.save": "Uložit titulky",
-    "editSubtitles.header.saveAs": "Uložit titulky jako..."
+    "editSubtitles.header.saveAs": "Uložit titulky jako...",
+    "input.downloadAndTranslate": "Stáhnout a přeložit",
+    "input.downloadAndTranscribe": "Stáhnout a přepsat",
+    "input.autoRunLabel": "Po stažení provést až po",
+    "input.autoRunStopDownload": "Stáhnout",
+    "input.autoRunStopTranscribe": "+ Titulky",
+    "input.autoRunStopTranslate": "+ Přeložit",
+    "input.autoRunStepDownload": "Stáhnout",
+    "input.autoRunStepTranscribe": "Přepsat",
+    "input.autoRunStepTranslate": "Přeložit do {{language}}",
+    "common.dismiss": "Zavřít"
   },
   "hu": {
     "common.send": "Küldés",
@@ -5560,7 +5750,17 @@
     "input.videoSuggestion.liveActivityTitle": "Keresés folyamata",
     "logs.empty": "Még nincsenek naplók.",
     "editSubtitles.header.save": "Feliratok mentése",
-    "editSubtitles.header.saveAs": "Feliratok mentése másként..."
+    "editSubtitles.header.saveAs": "Feliratok mentése másként...",
+    "input.downloadAndTranslate": "Letöltés és fordítás",
+    "input.downloadAndTranscribe": "Letöltés és átírás",
+    "input.autoRunLabel": "Letöltés után eddig fusson",
+    "input.autoRunStopDownload": "Letöltés",
+    "input.autoRunStopTranscribe": "+ Feliratok",
+    "input.autoRunStopTranslate": "+ Fordítás",
+    "input.autoRunStepDownload": "Letöltés",
+    "input.autoRunStepTranscribe": "Átírás",
+    "input.autoRunStepTranslate": "Fordítás erre: {{language}}",
+    "common.dismiss": "Bezárás"
   },
   "ro": {
     "common.send": "Trimite",
@@ -5838,7 +6038,17 @@
     "input.videoSuggestion.liveActivityTitle": "Progresul căutării",
     "logs.empty": "Încă nu există jurnale.",
     "editSubtitles.header.save": "Salvează subtitrările",
-    "editSubtitles.header.saveAs": "Salvează subtitrările ca..."
+    "editSubtitles.header.saveAs": "Salvează subtitrările ca...",
+    "input.downloadAndTranslate": "Descarcă și tradu",
+    "input.downloadAndTranscribe": "Descarcă și transcrie",
+    "input.autoRunLabel": "După descărcare, rulează până la",
+    "input.autoRunStopDownload": "Descarcă",
+    "input.autoRunStopTranscribe": "+ Subtitrări",
+    "input.autoRunStopTranslate": "+ Tradu",
+    "input.autoRunStepDownload": "Descarcă",
+    "input.autoRunStepTranscribe": "Transcrie",
+    "input.autoRunStepTranslate": "Tradu în {{language}}",
+    "common.dismiss": "Închide"
   },
   "uk": {
     "common.send": "Надіслати",
@@ -6116,7 +6326,17 @@
     "input.videoSuggestion.liveActivityTitle": "Прогрес пошуку",
     "logs.empty": "Логів ще немає.",
     "editSubtitles.header.save": "Зберегти субтитри",
-    "editSubtitles.header.saveAs": "Зберегти субтитри як..."
+    "editSubtitles.header.saveAs": "Зберегти субтитри як...",
+    "input.downloadAndTranslate": "Завантажити та перекласти",
+    "input.downloadAndTranscribe": "Завантажити та транскрибувати",
+    "input.autoRunLabel": "Після завантаження виконати до",
+    "input.autoRunStopDownload": "Завантажити",
+    "input.autoRunStopTranscribe": "+ Субтитри",
+    "input.autoRunStopTranslate": "+ Перекласти",
+    "input.autoRunStepDownload": "Завантажити",
+    "input.autoRunStepTranscribe": "Транскрибування",
+    "input.autoRunStepTranslate": "Перекласти на {{language}}",
+    "common.dismiss": "Закрити"
   },
   "hi": {
     "common.send": "भेजें",
@@ -6394,7 +6614,17 @@
     "input.videoSuggestion.liveActivityTitle": "खोज की प्रगति",
     "logs.empty": "अभी तक कोई लॉग नहीं।",
     "editSubtitles.header.save": "सबटाइटल सहेजें",
-    "editSubtitles.header.saveAs": "सबटाइटल इस नाम से सहेजें..."
+    "editSubtitles.header.saveAs": "सबटाइटल इस नाम से सहेजें...",
+    "input.downloadAndTranslate": "डाउनलोड और अनुवाद करें",
+    "input.downloadAndTranscribe": "डाउनलोड और ट्रांसक्राइब करें",
+    "input.autoRunLabel": "डाउनलोड के बाद यहाँ तक चलाएँ",
+    "input.autoRunStopDownload": "डाउनलोड",
+    "input.autoRunStopTranscribe": "+ उपशीर्षक",
+    "input.autoRunStopTranslate": "+ अनुवाद",
+    "input.autoRunStepDownload": "डाउनलोड",
+    "input.autoRunStepTranscribe": "ट्रांसक्राइब",
+    "input.autoRunStepTranslate": "{{language}} में अनुवाद करें",
+    "common.dismiss": "खारिज करें"
   },
   "id": {
     "common.send": "Kirim",
@@ -6672,7 +6902,17 @@
     "input.videoSuggestion.liveActivityTitle": "Progres pencarian",
     "logs.empty": "Belum ada log.",
     "editSubtitles.header.save": "Simpan subtitle",
-    "editSubtitles.header.saveAs": "Simpan subtitle sebagai..."
+    "editSubtitles.header.saveAs": "Simpan subtitle sebagai...",
+    "input.downloadAndTranslate": "Unduh & terjemahkan",
+    "input.downloadAndTranscribe": "Unduh & transkripsikan",
+    "input.autoRunLabel": "Setelah unduh, jalankan hingga",
+    "input.autoRunStopDownload": "Unduh",
+    "input.autoRunStopTranscribe": "+ Subtitel",
+    "input.autoRunStopTranslate": "+ Terjemahkan",
+    "input.autoRunStepDownload": "Unduh",
+    "input.autoRunStepTranscribe": "Transkripsikan",
+    "input.autoRunStepTranslate": "Terjemahkan ke {{language}}",
+    "common.dismiss": "Tutup"
   },
   "th": {
     "common.send": "ส่ง",
@@ -6950,7 +7190,17 @@
     "input.videoSuggestion.liveActivityTitle": "ความคืบหน้าการค้นหา",
     "logs.empty": "ยังไม่มีบันทึก",
     "editSubtitles.header.save": "บันทึกซับไตเติล",
-    "editSubtitles.header.saveAs": "บันทึกซับไตเติลเป็น..."
+    "editSubtitles.header.saveAs": "บันทึกซับไตเติลเป็น...",
+    "input.downloadAndTranslate": "ดาวน์โหลดและแปล",
+    "input.downloadAndTranscribe": "ดาวน์โหลดและถอดเสียง",
+    "input.autoRunLabel": "หลังดาวน์โหลด ทำต่อถึง",
+    "input.autoRunStopDownload": "ดาวน์โหลด",
+    "input.autoRunStopTranscribe": "+ คำบรรยาย",
+    "input.autoRunStopTranslate": "+ แปล",
+    "input.autoRunStepDownload": "ดาวน์โหลด",
+    "input.autoRunStepTranscribe": "ถอดเสียง",
+    "input.autoRunStepTranslate": "แปลเป็น {{language}}",
+    "common.dismiss": "ปิด"
   },
   "ms": {
     "common.send": "Hantar",
@@ -7229,7 +7479,17 @@
     "input.videoSuggestion.liveActivityTitle": "Kemajuan carian",
     "logs.empty": "Belum ada log.",
     "editSubtitles.header.save": "Simpan sari kata",
-    "editSubtitles.header.saveAs": "Simpan sari kata sebagai..."
+    "editSubtitles.header.saveAs": "Simpan sari kata sebagai...",
+    "input.downloadAndTranslate": "Muat turun & terjemah",
+    "input.downloadAndTranscribe": "Muat turun & transkripsi",
+    "input.autoRunLabel": "Selepas muat turun, jalankan hingga",
+    "input.autoRunStopDownload": "Muat turun",
+    "input.autoRunStopTranscribe": "+ Sari kata",
+    "input.autoRunStopTranslate": "+ Terjemah",
+    "input.autoRunStepDownload": "Muat turun",
+    "input.autoRunStepTranscribe": "Transkripsi",
+    "input.autoRunStepTranslate": "Terjemah ke {{language}}",
+    "common.dismiss": "Tutup"
   },
   "tl": {
     "common.send": "Ipadala",
@@ -7508,7 +7768,17 @@
     "input.videoSuggestion.liveActivityTitle": "Progreso ng paghahanap",
     "logs.empty": "Wala pang logs.",
     "editSubtitles.header.save": "I-save ang subtitle",
-    "editSubtitles.header.saveAs": "I-save ang subtitle bilang..."
+    "editSubtitles.header.saveAs": "I-save ang subtitle bilang...",
+    "input.downloadAndTranslate": "I-download at isalin",
+    "input.downloadAndTranscribe": "I-download at i-transcribe",
+    "input.autoRunLabel": "Pagkatapos i-download, patakbuhin hanggang",
+    "input.autoRunStopDownload": "I-download",
+    "input.autoRunStopTranscribe": "+ Mga subtitle",
+    "input.autoRunStopTranslate": "+ Isalin",
+    "input.autoRunStepDownload": "I-download",
+    "input.autoRunStepTranscribe": "I-transcribe",
+    "input.autoRunStepTranslate": "Isalin sa {{language}}",
+    "common.dismiss": "Isara"
   },
   "bn": {
     "common.send": "পাঠান",
@@ -7787,7 +8057,17 @@
     "input.videoSuggestion.liveActivityTitle": "অনুসন্ধানের অগ্রগতি",
     "logs.empty": "এখনও কোনো লগ নেই।",
     "editSubtitles.header.save": "সাবটাইটেল সংরক্ষণ করুন",
-    "editSubtitles.header.saveAs": "সাবটাইটেল অন্য নামে সংরক্ষণ করুন..."
+    "editSubtitles.header.saveAs": "সাবটাইটেল অন্য নামে সংরক্ষণ করুন...",
+    "input.downloadAndTranslate": "ডাউনলোড ও অনুবাদ",
+    "input.downloadAndTranscribe": "ডাউনলোড ও প্রতিলিপি",
+    "input.autoRunLabel": "ডাউনলোডের পরে চালান পর্যন্ত",
+    "input.autoRunStopDownload": "ডাউনলোড",
+    "input.autoRunStopTranscribe": "+ সাবটাইটেল",
+    "input.autoRunStopTranslate": "+ অনুবাদ",
+    "input.autoRunStepDownload": "ডাউনলোড",
+    "input.autoRunStepTranscribe": "প্রতিলিপি",
+    "input.autoRunStepTranslate": "{{language}}-এ অনুবাদ",
+    "common.dismiss": "বন্ধ করুন"
   },
   "ta": {
     "common.send": "அனுப்பு",
@@ -8066,7 +8346,17 @@
     "input.videoSuggestion.liveActivityTitle": "தேடல் முன்னேற்றம்",
     "logs.empty": "இன்னும் பதிவுகள் இல்லை.",
     "editSubtitles.header.save": "வசனவரிகளை சேமி",
-    "editSubtitles.header.saveAs": "வசனவரிகளை இவ்வாறு சேமி..."
+    "editSubtitles.header.saveAs": "வசனவரிகளை இவ்வாறு சேமி...",
+    "input.downloadAndTranslate": "பதிவிறக்கி மொழிபெயர்",
+    "input.downloadAndTranscribe": "பதிவிறக்கி படியெடு",
+    "input.autoRunLabel": "பதிவிறக்கத்திற்குப் பிறகு இதுவரை இயக்கு",
+    "input.autoRunStopDownload": "பதிவிறக்கு",
+    "input.autoRunStopTranscribe": "+ வசன வரிகள்",
+    "input.autoRunStopTranslate": "+ மொழிபெயர்",
+    "input.autoRunStepDownload": "பதிவிறக்கு",
+    "input.autoRunStepTranscribe": "படியெடுத்தல்",
+    "input.autoRunStepTranslate": "{{language}} மொழிக்கு மொழிபெயர்",
+    "common.dismiss": "மூடு"
   },
   "te": {
     "common.send": "పంపు",
@@ -8345,7 +8635,17 @@
     "input.videoSuggestion.liveActivityTitle": "శోధన పురోగతి",
     "logs.empty": "ఇంకా లాగ్‌లు లేవు.",
     "editSubtitles.header.save": "సబ్‌టైటిల్స్ సేవ్ చేయి",
-    "editSubtitles.header.saveAs": "సబ్‌టైటిల్స్‌ను ఇలా సేవ్ చేయి..."
+    "editSubtitles.header.saveAs": "సబ్‌టైటిల్స్‌ను ఇలా సేవ్ చేయి...",
+    "input.downloadAndTranslate": "డౌన్‌లోడ్ చేసి అనువదించు",
+    "input.downloadAndTranscribe": "డౌన్‌లోడ్ చేసి లిప్యంతరీకరించు",
+    "input.autoRunLabel": "డౌన్‌లోడ్ తర్వాత ఇంత వరకు అమలు చేయి",
+    "input.autoRunStopDownload": "డౌన్‌లోడ్",
+    "input.autoRunStopTranscribe": "+ ఉపశీర్షికలు",
+    "input.autoRunStopTranslate": "+ అనువదించు",
+    "input.autoRunStepDownload": "డౌన్‌లోడ్",
+    "input.autoRunStepTranscribe": "లిప్యంతరీకరణ",
+    "input.autoRunStepTranslate": "{{language}}కి అనువదించు",
+    "common.dismiss": "మూసివేయి"
   },
   "mr": {
     "common.send": "पाठवा",
@@ -8624,7 +8924,17 @@
     "input.videoSuggestion.liveActivityTitle": "शोध प्रगती",
     "logs.empty": "अजून लॉग्स नाहीत.",
     "editSubtitles.header.save": "सबटायटल जतन करा",
-    "editSubtitles.header.saveAs": "सबटायटल इतर नावाने जतन करा..."
+    "editSubtitles.header.saveAs": "सबटायटल इतर नावाने जतन करा...",
+    "input.downloadAndTranslate": "डाउनलोड करा आणि भाषांतर करा",
+    "input.downloadAndTranscribe": "डाउनलोड करा आणि लिप्यंतरण करा",
+    "input.autoRunLabel": "डाउनलोडनंतर येथपर्यंत चालवा",
+    "input.autoRunStopDownload": "डाउनलोड",
+    "input.autoRunStopTranscribe": "+ उपशीर्षके",
+    "input.autoRunStopTranslate": "+ भाषांतर",
+    "input.autoRunStepDownload": "डाउनलोड",
+    "input.autoRunStepTranscribe": "लिप्यंतरण",
+    "input.autoRunStepTranslate": "{{language}} मध्ये भाषांतर करा",
+    "common.dismiss": "बंद करा"
   },
   "ur": {
     "common.send": "بھیجیں",
@@ -8903,7 +9213,17 @@
     "input.videoSuggestion.liveActivityTitle": "تلاش کی پیش رفت",
     "logs.empty": "ابھی تک کوئی لاگ نہیں۔",
     "editSubtitles.header.save": "سب ٹائٹلز محفوظ کریں",
-    "editSubtitles.header.saveAs": "سب ٹائٹلز اس نام سے محفوظ کریں..."
+    "editSubtitles.header.saveAs": "سب ٹائٹلز اس نام سے محفوظ کریں...",
+    "input.downloadAndTranslate": "ڈاؤن لوڈ اور ترجمہ کریں",
+    "input.downloadAndTranscribe": "ڈاؤن لوڈ اور نقل کریں",
+    "input.autoRunLabel": "ڈاؤن لوڈ کے بعد یہاں تک چلائیں",
+    "input.autoRunStopDownload": "ڈاؤن لوڈ",
+    "input.autoRunStopTranscribe": "+ سب ٹائٹلز",
+    "input.autoRunStopTranslate": "+ ترجمہ",
+    "input.autoRunStepDownload": "ڈاؤن لوڈ",
+    "input.autoRunStepTranscribe": "نقل کریں",
+    "input.autoRunStepTranslate": "{{language}} میں ترجمہ کریں",
+    "common.dismiss": "بند کریں"
   },
   "ar": {
     "common.send": "إرسال",
@@ -9181,7 +9501,17 @@
     "input.videoSuggestion.liveActivityTitle": "تقدم البحث",
     "logs.empty": "لا توجد سجلات بعد.",
     "editSubtitles.header.save": "حفظ الترجمة",
-    "editSubtitles.header.saveAs": "حفظ الترجمة باسم..."
+    "editSubtitles.header.saveAs": "حفظ الترجمة باسم...",
+    "input.downloadAndTranslate": "تنزيل وترجمة",
+    "input.downloadAndTranscribe": "تنزيل ونسخ",
+    "input.autoRunLabel": "بعد التنزيل، التنفيذ حتى",
+    "input.autoRunStopDownload": "تنزيل",
+    "input.autoRunStopTranscribe": "+ ترجمة نصية",
+    "input.autoRunStopTranslate": "+ ترجمة",
+    "input.autoRunStepDownload": "تنزيل",
+    "input.autoRunStepTranscribe": "نسخ",
+    "input.autoRunStepTranslate": "الترجمة إلى {{language}}",
+    "common.dismiss": "إغلاق"
   },
   "he": {
     "common.send": "שלח",
@@ -9460,7 +9790,17 @@
     "input.videoSuggestion.liveActivityTitle": "התקדמות החיפוש",
     "logs.empty": "אין עדיין לוגים.",
     "editSubtitles.header.save": "שמור כתוביות",
-    "editSubtitles.header.saveAs": "שמור כתוביות בשם..."
+    "editSubtitles.header.saveAs": "שמור כתוביות בשם...",
+    "input.downloadAndTranslate": "הורד ותרגם",
+    "input.downloadAndTranscribe": "הורד ותמלל",
+    "input.autoRunLabel": "לאחר ההורדה, הרץ עד",
+    "input.autoRunStopDownload": "הורד",
+    "input.autoRunStopTranscribe": "+ כתוביות",
+    "input.autoRunStopTranslate": "+ תרגם",
+    "input.autoRunStepDownload": "הורד",
+    "input.autoRunStepTranscribe": "תמלל",
+    "input.autoRunStepTranslate": "תרגם ל-{{language}}",
+    "common.dismiss": "סגור"
   },
   "fa": {
     "common.send": "ارسال",
@@ -9738,7 +10078,17 @@
     "input.videoSuggestion.liveActivityTitle": "پیشرفت جستجو",
     "logs.empty": "هنوز لاگی نیست.",
     "editSubtitles.header.save": "ذخیره زیرنویس‌ها",
-    "editSubtitles.header.saveAs": "ذخیره زیرنویس‌ها با نام..."
+    "editSubtitles.header.saveAs": "ذخیره زیرنویس‌ها با نام...",
+    "input.downloadAndTranslate": "دانلود و ترجمه",
+    "input.downloadAndTranscribe": "دانلود و رونویسی",
+    "input.autoRunLabel": "پس از دانلود، اجرا تا",
+    "input.autoRunStopDownload": "دانلود",
+    "input.autoRunStopTranscribe": "+ زیرنویس",
+    "input.autoRunStopTranslate": "+ ترجمه",
+    "input.autoRunStepDownload": "دانلود",
+    "input.autoRunStepTranscribe": "رونویسی",
+    "input.autoRunStepTranslate": "ترجمه به {{language}}",
+    "common.dismiss": "بستن"
   },
   "sw": {
     "common.send": "Tuma",
@@ -10017,7 +10367,17 @@
     "input.videoSuggestion.liveActivityTitle": "Maendeleo ya utafutaji",
     "logs.empty": "Bado hakuna logi.",
     "editSubtitles.header.save": "Hifadhi manukuu",
-    "editSubtitles.header.saveAs": "Hifadhi manukuu kama..."
+    "editSubtitles.header.saveAs": "Hifadhi manukuu kama...",
+    "input.downloadAndTranslate": "Pakua na utafsiri",
+    "input.downloadAndTranscribe": "Pakua na unukuu",
+    "input.autoRunLabel": "Baada ya kupakua, endesha hadi",
+    "input.autoRunStopDownload": "Pakua",
+    "input.autoRunStopTranscribe": "+ Manukuu",
+    "input.autoRunStopTranslate": "+ Tafsiri",
+    "input.autoRunStepDownload": "Pakua",
+    "input.autoRunStepTranscribe": "Nukuu",
+    "input.autoRunStepTranslate": "Tafsiri kwa {{language}}",
+    "common.dismiss": "Funga"
   },
   "af": {
     "common.send": "Stuur",
@@ -10295,7 +10655,17 @@
     "input.videoSuggestion.liveActivityTitle": "Soekvordering",
     "logs.empty": "Nog geen logs nie.",
     "editSubtitles.header.save": "Stoor onderskrifte",
-    "editSubtitles.header.saveAs": "Stoor onderskrifte as..."
+    "editSubtitles.header.saveAs": "Stoor onderskrifte as...",
+    "input.downloadAndTranslate": "Laai af en vertaal",
+    "input.downloadAndTranscribe": "Laai af en transkribeer",
+    "input.autoRunLabel": "Voer ná aflaai uit tot",
+    "input.autoRunStopDownload": "Laai af",
+    "input.autoRunStopTranscribe": "+ Onderskrifte",
+    "input.autoRunStopTranslate": "+ Vertaal",
+    "input.autoRunStepDownload": "Laai af",
+    "input.autoRunStepTranscribe": "Transkribeer",
+    "input.autoRunStepTranslate": "Vertaal na {{language}}",
+    "common.dismiss": "Maak toe"
   },
   "vi": {
     "common.send": "Gửi",
@@ -10574,6 +10944,16 @@
     "input.videoSuggestion.liveActivityTitle": "Tiến trình tìm kiếm",
     "logs.empty": "Chưa có nhật ký.",
     "editSubtitles.header.save": "Lưu phụ đề",
-    "editSubtitles.header.saveAs": "Lưu phụ đề thành..."
+    "editSubtitles.header.saveAs": "Lưu phụ đề thành...",
+    "input.downloadAndTranslate": "Tải xuống & dịch",
+    "input.downloadAndTranscribe": "Tải xuống & chép lời",
+    "input.autoRunLabel": "Sau khi tải, chạy đến",
+    "input.autoRunStopDownload": "Tải xuống",
+    "input.autoRunStopTranscribe": "+ Phụ đề",
+    "input.autoRunStopTranslate": "+ Dịch",
+    "input.autoRunStepDownload": "Tải xuống",
+    "input.autoRunStepTranscribe": "Chép lời",
+    "input.autoRunStepTranslate": "Dịch sang {{language}}",
+    "common.dismiss": "Đóng"
   }
 }

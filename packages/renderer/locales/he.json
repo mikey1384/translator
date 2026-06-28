@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "בחר מיקום אחר",
     "continue": "המשך",
-    "send": "שלח"
+    "send": "שלח",
+    "dismiss": "סגור"
   },
   "errors": {
     "needCookies": "YouTube ביקש אימות אנושי. לחץ על התחבר כדי להמשיך.",
@@ -333,7 +334,16 @@
         "planner": "בניית חיפוש",
         "retrieval": "טעינת תוצאות"
       }
-    }
+    },
+    "downloadAndTranslate": "הורד ותרגם",
+    "downloadAndTranscribe": "הורד ותמלל",
+    "autoRunLabel": "לאחר ההורדה, הרץ עד",
+    "autoRunStopDownload": "הורד",
+    "autoRunStopTranscribe": "+ כתוביות",
+    "autoRunStopTranslate": "+ תרגם",
+    "autoRunStepDownload": "הורד",
+    "autoRunStepTranscribe": "תמלל",
+    "autoRunStepTranslate": "תרגם ל-{{language}}"
   },
   "subtitles": {
     "outputLanguage": "שפת פלט",

@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Chọn vị trí khác",
     "continue": "Tiếp tục",
-    "send": "Gửi"
+    "send": "Gửi",
+    "dismiss": "Đóng"
   },
   "errors": {
     "needCookies": "YouTube yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
@@ -333,7 +334,16 @@
         "planner": "Tạo truy vấn",
         "retrieval": "Tải kết quả"
       }
-    }
+    },
+    "downloadAndTranslate": "Tải xuống & dịch",
+    "downloadAndTranscribe": "Tải xuống & chép lời",
+    "autoRunLabel": "Sau khi tải, chạy đến",
+    "autoRunStopDownload": "Tải xuống",
+    "autoRunStopTranscribe": "+ Phụ đề",
+    "autoRunStopTranslate": "+ Dịch",
+    "autoRunStepDownload": "Tải xuống",
+    "autoRunStepTranscribe": "Chép lời",
+    "autoRunStepTranslate": "Dịch sang {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",

@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Valitse toinen sijainti",
     "continue": "Jatka",
-    "send": "Lähetä"
+    "send": "Lähetä",
+    "dismiss": "Sulje"
   },
   "errors": {
     "needCookies": "YouTube pyysi ihmisen vahvistusta. Jatka napsauttamalla Yhdistä.",
@@ -333,7 +334,16 @@
         "planner": "Muodosta haku",
         "retrieval": "Lataa tulokset"
       }
-    }
+    },
+    "downloadAndTranslate": "Lataa ja käännä",
+    "downloadAndTranscribe": "Lataa ja litteroi",
+    "autoRunLabel": "Latauksen jälkeen suorita kohtaan",
+    "autoRunStopDownload": "Lataa",
+    "autoRunStopTranscribe": "+ Tekstitykset",
+    "autoRunStopTranslate": "+ Käännä",
+    "autoRunStepDownload": "Lataa",
+    "autoRunStepTranscribe": "Litteroi",
+    "autoRunStepTranslate": "Käännä kielelle {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Tulostuskieli",

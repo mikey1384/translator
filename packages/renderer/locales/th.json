@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "เลือกตำแหน่งอื่น",
     "continue": "ดำเนินการต่อ",
-    "send": "ส่ง"
+    "send": "ส่ง",
+    "dismiss": "ปิด"
   },
   "errors": {
     "needCookies": "YouTube ขอการยืนยันตัวตน คลิกเชื่อมต่อเพื่อดำเนินการต่อ",
@@ -333,7 +334,16 @@
         "planner": "ร่างการค้นหา",
         "retrieval": "โหลดผลลัพธ์"
       }
-    }
+    },
+    "downloadAndTranslate": "ดาวน์โหลดและแปล",
+    "downloadAndTranscribe": "ดาวน์โหลดและถอดเสียง",
+    "autoRunLabel": "หลังดาวน์โหลด ทำต่อถึง",
+    "autoRunStopDownload": "ดาวน์โหลด",
+    "autoRunStopTranscribe": "+ คำบรรยาย",
+    "autoRunStopTranslate": "+ แปล",
+    "autoRunStepDownload": "ดาวน์โหลด",
+    "autoRunStepTranscribe": "ถอดเสียง",
+    "autoRunStepTranslate": "แปลเป็น {{language}}"
   },
   "subtitles": {
     "outputLanguage": "ภาษาเอาต์พุต",

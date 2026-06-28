@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Kies een andere locatie",
     "continue": "Doorgaan",
-    "send": "Versturen"
+    "send": "Versturen",
+    "dismiss": "Sluiten"
   },
   "errors": {
     "needCookies": "YouTube heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan.",
@@ -333,7 +334,16 @@
         "planner": "Zoekopdracht maken",
         "retrieval": "Resultaten laden"
       }
-    }
+    },
+    "downloadAndTranslate": "Downloaden en vertalen",
+    "downloadAndTranscribe": "Downloaden en transcriberen",
+    "autoRunLabel": "Na download uitvoeren tot",
+    "autoRunStopDownload": "Downloaden",
+    "autoRunStopTranscribe": "+ Ondertitels",
+    "autoRunStopTranslate": "+ Vertalen",
+    "autoRunStepDownload": "Downloaden",
+    "autoRunStepTranscribe": "Transcriberen",
+    "autoRunStepTranslate": "Vertalen naar {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Uitvoertaal",

@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Vælg en anden placering",
     "continue": "Fortsæt",
-    "send": "Afsend"
+    "send": "Afsend",
+    "dismiss": "Luk"
   },
   "errors": {
     "needCookies": "YouTube bad om menneskelig verifikation. Klik på Forbind for at fortsætte.",
@@ -333,7 +334,16 @@
         "planner": "Opret søgning",
         "retrieval": "Indlæs resultater"
       }
-    }
+    },
+    "downloadAndTranslate": "Download og oversæt",
+    "downloadAndTranscribe": "Download og transskriber",
+    "autoRunLabel": "Kør efter download til",
+    "autoRunStopDownload": "Download",
+    "autoRunStopTranscribe": "+ Undertekster",
+    "autoRunStopTranslate": "+ Oversæt",
+    "autoRunStepDownload": "Download",
+    "autoRunStepTranscribe": "Transskriber",
+    "autoRunStepTranslate": "Oversæt til {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Outputsprog",

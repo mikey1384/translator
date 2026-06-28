@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Вибрати інше розташування",
     "continue": "Продовжити",
-    "send": "Надіслати"
+    "send": "Надіслати",
+    "dismiss": "Закрити"
   },
   "errors": {
     "needCookies": "YouTube запросив перевірку. Натисніть «Підключити», щоб продовжити.",
@@ -333,7 +334,16 @@
         "planner": "Пошук",
         "retrieval": "Завантажити результати"
       }
-    }
+    },
+    "downloadAndTranslate": "Завантажити та перекласти",
+    "downloadAndTranscribe": "Завантажити та транскрибувати",
+    "autoRunLabel": "Після завантаження виконати до",
+    "autoRunStopDownload": "Завантажити",
+    "autoRunStopTranscribe": "+ Субтитри",
+    "autoRunStopTranslate": "+ Перекласти",
+    "autoRunStepDownload": "Завантажити",
+    "autoRunStepTranscribe": "Транскрибування",
+    "autoRunStepTranslate": "Перекласти на {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Мова виведення",

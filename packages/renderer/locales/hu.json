@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Válassz másik helyet",
     "continue": "Folytatás",
-    "send": "Küldés"
+    "send": "Küldés",
+    "dismiss": "Bezárás"
   },
   "errors": {
     "needCookies": "A YouTube emberi ellenőrzést kért. Kattintson a Csatlakozás gombra a folytatáshoz.",
@@ -333,7 +334,16 @@
         "planner": "Keresés",
         "retrieval": "Eredmények betöltése"
       }
-    }
+    },
+    "downloadAndTranslate": "Letöltés és fordítás",
+    "downloadAndTranscribe": "Letöltés és átírás",
+    "autoRunLabel": "Letöltés után eddig fusson",
+    "autoRunStopDownload": "Letöltés",
+    "autoRunStopTranscribe": "+ Feliratok",
+    "autoRunStopTranslate": "+ Fordítás",
+    "autoRunStepDownload": "Letöltés",
+    "autoRunStepTranscribe": "Átírás",
+    "autoRunStepTranslate": "Fordítás erre: {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Kimeneti nyelv",

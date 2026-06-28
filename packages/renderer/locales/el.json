@@ -90,7 +90,8 @@
     },
     "chooseAnotherLocation": "Επιλέξτε άλλη τοποθεσία",
     "continue": "Συνέχεια",
-    "send": "Αποστολή"
+    "send": "Αποστολή",
+    "dismiss": "Κλείσιμο"
   },
   "errors": {
     "needCookies": "Το YouTube ζήτησε επαλήθευση ανθρώπου. Κάντε κλικ στο Σύνδεση για να συνεχίσετε.",
@@ -333,7 +334,16 @@
         "planner": "Αναζήτηση",
         "retrieval": "Φόρτωση αποτελεσμάτων"
       }
-    }
+    },
+    "downloadAndTranslate": "Λήψη και μετάφραση",
+    "downloadAndTranscribe": "Λήψη και απομαγνητοφώνηση",
+    "autoRunLabel": "Μετά τη λήψη, εκτέλεση έως",
+    "autoRunStopDownload": "Λήψη",
+    "autoRunStopTranscribe": "+ Υπότιτλοι",
+    "autoRunStopTranslate": "+ Μετάφραση",
+    "autoRunStepDownload": "Λήψη",
+    "autoRunStepTranscribe": "Απομαγνητοφώνηση",
+    "autoRunStepTranslate": "Μετάφραση σε {{language}}"
   },
   "subtitles": {
     "outputLanguage": "Γλώσσα Εξόδου",
