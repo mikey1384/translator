@@ -58,12 +58,10 @@ async function checkAndDisableApiKeyModeIfNeeded(
       await SystemIPC.setApiKeyModeEnabled(false);
       set({
         useApiKeysMode: false,
-        videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference(
-          {
-            ...state,
-            useApiKeysMode: false,
-          }
-        ),
+        videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
+          ...state,
+          useApiKeysMode: false,
+        }),
       });
       openApiKeysRequired();
     }
@@ -484,9 +482,7 @@ function ensureSubscriptions(
         entitlementsLoading: false,
         entitlementsError: undefined,
         unlockPending: hasByoOpenAi ? false : previousState.unlockPending,
-        unlockUnresolved: hasByoOpenAi
-          ? false
-          : previousState.unlockUnresolved,
+        unlockUnresolved: hasByoOpenAi ? false : previousState.unlockUnresolved,
         lastFetched: snapshot?.fetchedAt,
       });
       if (hasByoOpenAi) {
@@ -708,8 +704,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     preferClaudeReview: false,
     // Claude summary preference (defaults to true - prefer Claude on BYO summary paths)
     preferClaudeSummary: true,
-    // Video suggestion model settings (split by mode)
-    stage5VideoSuggestionMode: 'standard',
+    // Video suggestion model settings (split by mode).
+    // Default to the GPT-5.5 review tier for the agent's reasoning; users can
+    // drop to 'standard' (GPT-5.1) as a cost downgrade.
+    stage5VideoSuggestionMode: 'high',
     byoVideoSuggestionModel: 'gpt-5.1',
     videoSuggestionModelPreference: 'gpt-5.1',
     // Transcription provider preference (defaults to ElevenLabs for highest quality)
@@ -764,10 +762,12 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         if (settingsResult.status === 'fulfilled') {
           const settings = settingsResult.value;
           const stage5VideoSuggestionMode = normalizeStage5VideoSuggestionMode(
-            settings.stage5VideoSuggestionMode ?? settings.videoSuggestionModelPreference
+            settings.stage5VideoSuggestionMode ??
+              settings.videoSuggestionModelPreference
           );
           const byoVideoSuggestionModel = normalizeByoVideoSuggestionModel(
-            settings.byoVideoSuggestionModel ?? settings.videoSuggestionModelPreference
+            settings.byoVideoSuggestionModel ??
+              settings.videoSuggestionModelPreference
           );
           const videoSuggestionModelPreference =
             resolveVideoSuggestionPreferenceForMode({
@@ -1338,10 +1338,11 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           const useApiKeysMode = Boolean(enabled);
           return {
             useApiKeysMode,
-            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
-              ...state,
-              useApiKeysMode,
-            }),
+            videoSuggestionModelPreference:
+              resolveActiveVideoSuggestionPreference({
+                ...state,
+                useApiKeysMode,
+              }),
           };
         });
       } catch (err) {
@@ -1363,10 +1364,11 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             const useApiKeysMode = Boolean(value);
             return {
               useApiKeysMode,
-              videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
-                ...state,
-                useApiKeysMode,
-              }),
+              videoSuggestionModelPreference:
+                resolveActiveVideoSuggestionPreference({
+                  ...state,
+                  useApiKeysMode,
+                }),
             };
           });
 
@@ -1512,13 +1514,15 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       try {
         const mode = await SystemIPC.getStage5VideoSuggestionMode();
         set(state => {
-          const stage5VideoSuggestionMode = normalizeStage5VideoSuggestionMode(mode);
+          const stage5VideoSuggestionMode =
+            normalizeStage5VideoSuggestionMode(mode);
           return {
             stage5VideoSuggestionMode,
-            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
-              ...state,
-              stage5VideoSuggestionMode,
-            }),
+            videoSuggestionModelPreference:
+              resolveActiveVideoSuggestionPreference({
+                ...state,
+                stage5VideoSuggestionMode,
+              }),
           };
         });
       } catch (err) {
@@ -1536,10 +1540,11 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         if (result.success) {
           set(state => ({
             stage5VideoSuggestionMode: mode,
-            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
-              ...state,
-              stage5VideoSuggestionMode: mode,
-            }),
+            videoSuggestionModelPreference:
+              resolveActiveVideoSuggestionPreference({
+                ...state,
+                stage5VideoSuggestionMode: mode,
+              }),
           }));
         }
         return result;
@@ -1559,17 +1564,22 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       try {
         const model = await SystemIPC.getByoVideoSuggestionModel();
         set(state => {
-          const byoVideoSuggestionModel = normalizeByoVideoSuggestionModel(model);
+          const byoVideoSuggestionModel =
+            normalizeByoVideoSuggestionModel(model);
           return {
             byoVideoSuggestionModel,
-            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
-              ...state,
-              byoVideoSuggestionModel,
-            }),
+            videoSuggestionModelPreference:
+              resolveActiveVideoSuggestionPreference({
+                ...state,
+                byoVideoSuggestionModel,
+              }),
           };
         });
       } catch (err) {
-        console.error('[AiStore] Failed to sync BYO video suggestion model:', err);
+        console.error(
+          '[AiStore] Failed to sync BYO video suggestion model:',
+          err
+        );
       }
     },
 
@@ -1580,15 +1590,19 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         if (result.success) {
           set(state => ({
             byoVideoSuggestionModel: model,
-            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
-              ...state,
-              byoVideoSuggestionModel: model,
-            }),
+            videoSuggestionModelPreference:
+              resolveActiveVideoSuggestionPreference({
+                ...state,
+                byoVideoSuggestionModel: model,
+              }),
           }));
         }
         return result;
       } catch (err: any) {
-        console.error('[AiStore] Failed to update BYO video suggestion model:', err);
+        console.error(
+          '[AiStore] Failed to update BYO video suggestion model:',
+          err
+        );
         return {
           success: false,
           error: err?.message || 'Failed to save preference',
@@ -1608,16 +1622,18 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           const normalizedStage5 = normalizeStage5VideoSuggestionMode(
             stage5VideoSuggestionMode
           );
-          const normalizedByo =
-            normalizeByoVideoSuggestionModel(byoVideoSuggestionModel);
+          const normalizedByo = normalizeByoVideoSuggestionModel(
+            byoVideoSuggestionModel
+          );
           return {
             stage5VideoSuggestionMode: normalizedStage5,
             byoVideoSuggestionModel: normalizedByo,
-            videoSuggestionModelPreference: resolveActiveVideoSuggestionPreference({
-              ...state,
-              stage5VideoSuggestionMode: normalizedStage5,
-              byoVideoSuggestionModel: normalizedByo,
-            }),
+            videoSuggestionModelPreference:
+              resolveActiveVideoSuggestionPreference({
+                ...state,
+                stage5VideoSuggestionMode: normalizedStage5,
+                byoVideoSuggestionModel: normalizedByo,
+              }),
           };
         });
       } catch (err) {

@@ -1,11 +1,9 @@
 import type { VideoSuggestionMessage } from '@shared-types/app';
 import {
-  type IntentResolverPayload,
-  type QueryFormulatorPayload,
+  type SearchPlannerPayload,
   clampMessage,
   compactText,
   normalizeIntentCandidates,
-  parseBooleanLike,
   sanitizeLanguageToken,
   sanitizeYoutubeRegionCode,
   sanitizeSearchKeywords,
@@ -13,9 +11,9 @@ import {
   normalizePreferenceSlots,
 } from './shared.js';
 
-export function parseIntentResolverPayload(
+export function parseSearchPlannerPayload(
   raw: string
-): IntentResolverPayload | null {
+): SearchPlannerPayload | null {
   const input = String(raw || '').trim();
   if (!input) return null;
 
@@ -36,13 +34,9 @@ export function parseIntentResolverPayload(
   for (const candidate of attempts) {
     try {
       const obj = JSON.parse(candidate);
-      const answerToUserQuestion = clampMessage(
-        compactText(obj?.answerToUserQuestion)
-      );
       const assistantMessage = clampMessage(compactText(obj?.assistantMessage));
       const resolvedIntent = clampMessage(compactText(obj?.resolvedIntent));
       const intentSummary = clampMessage(compactText(obj?.intentSummary));
-      const strategy = clampMessage(compactText(obj?.strategy));
       const candidates = normalizeIntentCandidates(obj?.candidates);
       const descriptorPhrases = uniqueTexts(
         Array.isArray(obj?.descriptorPhrases)
@@ -51,135 +45,6 @@ export function parseIntentResolverPayload(
             )
           : []
       ).slice(0, 8);
-      const canonicalEntities = uniqueTexts(
-        Array.isArray(obj?.canonicalEntities)
-          ? obj.canonicalEntities.map((value: unknown) => compactText(value))
-          : []
-      ).slice(0, 6);
-      const impliedLocale = compactText(obj?.impliedLocale).slice(0, 30);
-      const impliedSearchLanguage = sanitizeLanguageToken(
-        obj?.impliedSearchLanguage
-      ).toLowerCase();
-      const youtubeRegionCode = sanitizeYoutubeRegionCode(
-        obj?.youtubeRegionCode
-      );
-      const youtubeSearchLanguage = sanitizeLanguageToken(
-        obj?.youtubeSearchLanguage
-      ).toLowerCase();
-      const primarySearchLanguage = sanitizeLanguageToken(
-        obj?.primarySearchLanguage
-      ).toLowerCase();
-      const searchLanguages = uniqueTexts(
-        Array.isArray(obj?.searchLanguages)
-          ? obj.searchLanguages.map((value: unknown) =>
-              sanitizeLanguageToken(value).toLowerCase()
-            )
-          : []
-      ).slice(0, 3);
-      const searchQuery = compactText(obj?.searchQuery);
-      const discoveryQueries = uniqueTexts(
-        Array.isArray(obj?.discoveryQueries)
-          ? obj.discoveryQueries.map((value: unknown) =>
-              sanitizeSearchKeywords(String(value || ''))
-            )
-          : []
-      ).slice(0, 5);
-      const impliedConstraintsRaw =
-        obj?.impliedConstraints && typeof obj.impliedConstraints === 'object'
-          ? (obj.impliedConstraints as Record<string, unknown>)
-          : {};
-      const ambiguities = uniqueTexts(
-        Array.isArray(obj?.ambiguities)
-          ? obj.ambiguities.map((value: unknown) => compactText(value))
-          : []
-      ).slice(0, 4);
-      const recommendedInterpretation = clampMessage(
-        compactText(obj?.recommendedInterpretation)
-      );
-      const confidenceRaw = compactText(obj?.confidence).toLowerCase();
-      const confidence =
-        confidenceRaw === 'low' ||
-        confidenceRaw === 'medium' ||
-        confidenceRaw === 'high'
-          ? confidenceRaw
-          : undefined;
-      const parsedNeedsMoreContext = parseBooleanLike(obj?.needsMoreContext);
-      const capturedPreferenceSource = {
-        ...(obj && typeof obj === 'object'
-          ? (obj as Record<string, unknown>)
-          : {}),
-        ...(obj?.preferences && typeof obj.preferences === 'object'
-          ? (obj.preferences as Record<string, unknown>)
-          : {}),
-        ...(obj?.capturedPreferences &&
-        typeof obj.capturedPreferences === 'object'
-          ? (obj.capturedPreferences as Record<string, unknown>)
-          : {}),
-      };
-      const capturedPreferences = normalizePreferenceSlots(
-        capturedPreferenceSource
-      );
-
-      return {
-        assistantMessage,
-        answerToUserQuestion,
-        resolvedIntent,
-        intentSummary,
-        strategy,
-        needsMoreContext: parsedNeedsMoreContext ?? undefined,
-        candidates,
-        descriptorPhrases,
-        canonicalEntities,
-        impliedLocale,
-        impliedSearchLanguage,
-        youtubeRegionCode,
-        youtubeSearchLanguage,
-        primarySearchLanguage,
-        searchLanguages,
-        searchQuery,
-        discoveryQueries,
-        impliedConstraints: {
-          recency: compactText(impliedConstraintsRaw.recency).toLowerCase(),
-        },
-        ambiguities,
-        recommendedInterpretation,
-        confidence,
-        capturedPreferences,
-      };
-    } catch {
-      // Continue trying fallback parsers.
-    }
-  }
-
-  return null;
-}
-
-export function parseQueryFormulatorPayload(
-  raw: string
-): QueryFormulatorPayload | null {
-  const input = String(raw || '').trim();
-  if (!input) return null;
-
-  const attempts = [input];
-  const fenced = input
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/\s*```$/, '')
-    .trim();
-  if (fenced && fenced !== input) attempts.push(fenced);
-
-  const firstBrace = input.indexOf('{');
-  const lastBrace = input.lastIndexOf('}');
-  if (firstBrace !== -1 && lastBrace > firstBrace) {
-    attempts.push(input.slice(firstBrace, lastBrace + 1));
-  }
-
-  for (const candidate of attempts) {
-    try {
-      const obj = JSON.parse(candidate);
-      const assistantMessage = clampMessage(compactText(obj?.assistantMessage));
-      const intentSummary = clampMessage(compactText(obj?.intentSummary));
-      const strategy = clampMessage(compactText(obj?.strategy));
       const youtubeRegionCode = sanitizeYoutubeRegionCode(
         obj?.youtubeRegionCode
       );
@@ -221,13 +86,13 @@ export function parseQueryFormulatorPayload(
       const capturedPreferences = normalizePreferenceSlots(
         capturedPreferenceSource
       );
-      const parsedNeedsMoreContext = parseBooleanLike(obj?.needsMoreContext);
 
       return {
         assistantMessage,
+        resolvedIntent,
         intentSummary,
-        strategy,
-        needsMoreContext: parsedNeedsMoreContext ?? undefined,
+        candidates,
+        descriptorPhrases,
         youtubeRegionCode,
         youtubeSearchLanguage,
         primarySearchLanguage,

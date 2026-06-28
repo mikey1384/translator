@@ -58,6 +58,12 @@ export type QueryFormulatorPayload = {
   capturedPreferences?: VideoSuggestionPreferenceSlots;
 };
 
+// Output of the single merged planning call (intent + query formulation in one).
+// A superset of both legacy payloads, so it can be passed wherever either was
+// expected (buildAgenticPlanFromPlanner / runAgenticVideoSearchLoop) unchanged.
+export type SearchPlannerPayload = IntentResolverPayload &
+  QueryFormulatorPayload;
+
 export type SeedSearchOutcome = {
   results: VideoSuggestionResultItem[];
   searchQuery: string;
@@ -214,10 +220,6 @@ export function countryTextMatchesAlias(
   }
   return country.includes(needle);
 }
-
-const REGION_DISPLAY_NAMES = new Intl.DisplayNames(['en'], {
-  type: 'region',
-});
 
 export function buildYoutubeSearchPageUrl({
   query,
@@ -429,10 +431,9 @@ export function buildOrderedIntentSeedQueries({
     .map(item => sanitizeSearchKeywords(item.name))
     .filter(Boolean)
     .slice(0, 8);
-  const cleanedDescriptors = normalizeDescriptorPhrases(descriptorPhrases).slice(
-    0,
-    4
-  );
+  const cleanedDescriptors = normalizeDescriptorPhrases(
+    descriptorPhrases
+  ).slice(0, 4);
   const combinedQueries: string[] = [];
 
   for (const candidateName of candidateNames.slice(0, 4)) {

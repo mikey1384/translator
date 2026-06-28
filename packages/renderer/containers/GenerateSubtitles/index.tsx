@@ -14,7 +14,13 @@ import {
 } from '../../state';
 import { useUrlStore } from '../../state/url-store';
 import UrlCookieBanner from './UrlCookieBanner';
-import MediaInputSection from './components/MediaInputSection.js';
+import MediaInputSection, {
+  type AutoRunTarget,
+} from './components/MediaInputSection.js';
+import AutoRunProgress, {
+  type AutoRunPhase,
+  type AutoRunFailedStep,
+} from './components/AutoRunProgress.js';
 import HighlightWorkflowProgress from './components/HighlightWorkflowProgress.js';
 import TranscribeOnlyPanel from './components/TranscribeOnlyPanel.js';
 import SrtMountedPanel from './components/SrtMountedPanel.js';
@@ -24,6 +30,7 @@ import VideoSuggestionChannelsTab from './components/VideoSuggestionPanel/VideoS
 import VideoSuggestionHistoryTab from './components/VideoSuggestionPanel/VideoSuggestionHistoryTab.js';
 import { type GenerateSubtitlesWorkspaceTab } from './components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import type {
+  ProcessUrlResult,
   SrtSegment,
   StoredSubtitleKind,
   SubtitleDocumentMeta,
@@ -72,6 +79,27 @@ import {
   fontWeight,
   spacing,
 } from '../../components/design-system/tokens.js';
+
+// Auto-run preferences (how far to chain after download).
+const AUTO_RUN_TARGET_KEY = 'autoRunTarget';
+const AUTO_RUN_LANGUAGE_KEY = 'autoRunLanguage';
+// Legacy phase-1 boolean key, migrated into AUTO_RUN_TARGET_KEY on first load.
+const LEGACY_AUTO_RUN_BOOL_KEY = 'autoRunAfterDownload';
+
+function getInitialAutoRunTarget(): AutoRunTarget {
+  const stored = localStorage.getItem(AUTO_RUN_TARGET_KEY);
+  if (
+    stored === 'download' ||
+    stored === 'transcribe' ||
+    stored === 'translate'
+  ) {
+    return stored;
+  }
+  // Migrate the phase-1 on/off toggle: "on" meant download → transcribe → translate.
+  if (localStorage.getItem(LEGACY_AUTO_RUN_BOOL_KEY) === '1')
+    return 'translate';
+  return 'download';
+}
 
 const workspaceTabsRowStyles = css`
   display: flex;
@@ -297,6 +325,39 @@ export default function GenerateSubtitles() {
   const stepTwoActionLaunchLockRef = useRef(false);
   const [preTranscriptProcessingLanguage, setPreTranscriptProcessingLanguage] =
     useState(targetLanguage);
+
+  // Auto-run: how far to chain after download, plus the live pipeline session.
+  const [autoRunTarget, setAutoRunTargetState] = useState(
+    getInitialAutoRunTarget
+  );
+  const setAutoRunTarget = useCallback((value: AutoRunTarget) => {
+    localStorage.setItem(AUTO_RUN_TARGET_KEY, value);
+    setAutoRunTargetState(value);
+  }, []);
+  const [autoRunLanguage, setAutoRunLanguageState] = useState(
+    () => localStorage.getItem(AUTO_RUN_LANGUAGE_KEY) || targetLanguage
+  );
+  const setAutoRunLanguage = useCallback((value: string) => {
+    localStorage.setItem(AUTO_RUN_LANGUAGE_KEY, value);
+    setAutoRunLanguageState(value);
+  }, []);
+  // The active pipeline session that drives the AutoRunProgress strip. null when
+  // no multi-step auto-run is running (plain download or nothing in flight).
+  const [autoRunSession, setAutoRunSession] = useState<{
+    target: Exclude<AutoRunTarget, 'download'>;
+    phase: AutoRunPhase;
+    failedStep?: AutoRunFailedStep;
+  } | null>(null);
+  // The continuation still owed once the download mounts ('download' = none).
+  const pendingAutoRunTargetRef = useRef<AutoRunTarget>('download');
+  // The source path the pending auto-run is bound to. Bound (as state, not a ref)
+  // only once the download has actually mounted, so (a) the continuation can
+  // never fire against the old/unrelated source while the download is in flight
+  // and (b) binding it schedules a render, guaranteeing the firing effect re-runs
+  // even if the new file's metadata already settled during the download await.
+  const [autoRunBoundSource, setAutoRunBoundSource] = useState<string | null>(
+    null
+  );
   const currentHighlightSourceKey = useMemo(() => {
     if (sourceAssetIdentity) return `asset:${sourceAssetIdentity}`;
     if (sourceUrl) return `url:${sourceUrl}`;
@@ -321,6 +382,101 @@ export default function GenerateSubtitles() {
   useEffect(() => {
     setPreTranscriptProcessingLanguage(targetLanguage);
   }, [targetLanguage]);
+
+  // Once an auto-run download has mounted and its metadata is ready, continue
+  // into the chosen stop: transcribe-only, or transcribe → translate. This
+  // mirrors clicking the matching button in TranscribeOnlyPanel, unattended.
+  useEffect(() => {
+    const target = pendingAutoRunTargetRef.current;
+    if (target === 'download') return;
+
+    // Only fire against the exact source this download mounted. While the
+    // download is still in flight the continuation is unbound (null), so a
+    // mid-download metadata/source change on the previously mounted video can
+    // never trigger transcription/translation against the wrong file. Binding is
+    // state, so it schedules this effect to re-run once the mount completes.
+    const boundSource = autoRunBoundSource;
+    if (!boundSource) return;
+    if ((videoFilePath ?? null) !== boundSource) return;
+
+    // Can't proceed (e.g. iCloud placeholder); disarm so it can't fire later
+    // against an unrelated source the user mounts afterwards.
+    if (metadataStatus === 'failed') {
+      pendingAutoRunTargetRef.current = 'download';
+      setAutoRunBoundSource(null);
+      // Download mounted but the file's metadata is unreadable (e.g. iCloud
+      // placeholder): transcription can't start, so the failure is on transcribe.
+      setAutoRunSession(s =>
+        s ? { ...s, phase: 'error', failedStep: 'transcribe' } : null
+      );
+      return;
+    }
+
+    const metadataReady = !isMetadataPending && hoursNeeded != null;
+    const idle =
+      !transcriptionInProgress &&
+      !isTranslating &&
+      !stepTwoWorkflowActive &&
+      !isStepTwoMutationLocked;
+
+    if (metadataReady && idle && !isButtonDisabled) {
+      pendingAutoRunTargetRef.current = 'download';
+      setAutoRunBoundSource(null);
+      setAutoRunSession(s => (s ? { ...s, phase: 'transcribing' } : s));
+      // Drive the terminal phase from the operation's actual result rather than
+      // from task-completion flags (which mark error stages as "complete" and
+      // leave cancellations stuck). The intermediate transcribing → translating
+      // animation is handled by the phase-advance effect below.
+      const runChain =
+        target === 'transcribe'
+          ? handleTranscribeOnly
+          : handleTranslateFromScratch;
+      // On failure, mark the step that was active when it failed (transcribe, or
+      // translate once the chain advanced) — never the already-finished download.
+      const markError = () =>
+        setAutoRunSession(s =>
+          s
+            ? {
+                ...s,
+                phase: 'error',
+                failedStep:
+                  s.phase === 'translating' ? 'translate' : 'transcribe',
+              }
+            : s
+        );
+      void runChain().then(
+        ok =>
+          ok
+            ? setAutoRunSession(s => (s ? { ...s, phase: 'done' } : s))
+            : markError(),
+        () => markError()
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    autoRunBoundSource,
+    videoFile,
+    videoFilePath,
+    metadataStatus,
+    isMetadataPending,
+    hoursNeeded,
+    transcriptionInProgress,
+    isTranslating,
+    stepTwoWorkflowActive,
+    isStepTwoMutationLocked,
+    isButtonDisabled,
+  ]);
+
+  // Animate the live pipeline strip forward from transcribing → translating once
+  // translation actually begins. Terminal phases (done/error) are set from the
+  // operation result by the firing effect above, not inferred from task flags.
+  useEffect(() => {
+    if (!autoRunSession) return;
+    const { target, phase } = autoRunSession;
+    if (phase === 'transcribing' && target === 'translate' && isTranslating) {
+      setAutoRunSession(s => (s ? { ...s, phase: 'translating' } : null));
+    }
+  }, [autoRunSession, isTranslating]);
 
   const workspaceTabs = useMemo(
     () =>
@@ -564,9 +720,65 @@ export default function GenerateSubtitles() {
     return openLocalMedia({ preserveSubtitles: false });
   }
 
+  // Arm the auto-run chain for the chosen stop and run a download. If the
+  // download doesn't produce a mounted video, disarm + mark the session errored
+  // so the effect never fires stale and the strip stops spinning.
+  async function runDownloadWithAutoRun(
+    downloadFn: () => Promise<ProcessUrlResult | void>
+  ) {
+    const target = autoRunTarget;
+    // Bind to a source only after the download mounts (below). Until then the
+    // continuation is unbound and cannot fire against whatever is currently
+    // mounted, even if that source's metadata becomes ready mid-download.
+    setAutoRunBoundSource(null);
+    if (target === 'download') {
+      pendingAutoRunTargetRef.current = 'download';
+      setAutoRunSession(null);
+    } else {
+      if (target === 'translate') {
+        setPreTranscriptProcessingLanguage(autoRunLanguage);
+      }
+      pendingAutoRunTargetRef.current = target;
+      setAutoRunSession({ target, phase: 'downloading' });
+    }
+    const result = await downloadFn();
+    const typedResult =
+      result && typeof result === 'object'
+        ? (result as ProcessUrlResult)
+        : null;
+    // A successful ProcessUrlResult only means the URL was processed — not that
+    // the downloaded file became the current source. If the user changed the
+    // mounted source during the download and then declined the "switch to
+    // downloaded video" prompt, the path changes without the download mounting.
+    // Require the current source to be the downloaded file itself (its stored
+    // path equals res.videoPath/filePath verbatim — see video-store setFile),
+    // so the continuation can never bind to the old or an unrelated file.
+    const downloadedPath =
+      typedResult?.videoPath ?? typedResult?.filePath ?? null;
+    const mountedSourcePath = useVideoStore.getState().path;
+    const mountedDownloadedVideo = Boolean(
+      typedResult?.success &&
+      downloadedPath &&
+      mountedSourcePath === downloadedPath
+    );
+    if (pendingAutoRunTargetRef.current !== 'download') {
+      if (mountedDownloadedVideo) {
+        // Binding via state schedules a render, so the firing effect re-runs and
+        // starts transcription/translation even if the new file's metadata
+        // already settled while the download was awaited.
+        setAutoRunBoundSource(mountedSourcePath);
+      } else {
+        pendingAutoRunTargetRef.current = 'download';
+        setAutoRunBoundSource(null);
+        setAutoRunSession(null);
+      }
+    }
+    return result;
+  }
+
   async function handleProcessUrlDownload() {
     if (isSourceChangeBlocked) return;
-    await downloadMedia();
+    await runDownloadWithAutoRun(() => downloadMedia());
   }
 
   function handleRemoveRecentMedia(path: string) {
@@ -614,6 +826,16 @@ export default function GenerateSubtitles() {
           display: activeWorkspaceTab === 'main' ? 'block' : 'none',
         }}
       >
+        {autoRunSession ? (
+          <AutoRunProgress
+            target={autoRunSession.target}
+            phase={autoRunSession.phase}
+            language={autoRunLanguage}
+            failedStep={autoRunSession.failedStep}
+            onDismiss={() => setAutoRunSession(null)}
+          />
+        ) : null}
+
         <div className={workflowStageShellStyles}>
           <div className={workflowStageHeaderStyles}>
             <div className={workflowStageHeaderRowStyles}>
@@ -646,6 +868,10 @@ export default function GenerateSubtitles() {
                   downloadQuality={downloadQuality}
                   setDownloadQuality={setDownloadQuality}
                   handleProcessUrl={handleProcessUrlDownload}
+                  autoRunTarget={autoRunTarget}
+                  setAutoRunTarget={setAutoRunTarget}
+                  autoRunLanguage={autoRunLanguage}
+                  setAutoRunLanguage={setAutoRunLanguage}
                 />
               </>
             ) : null}
@@ -1172,27 +1398,27 @@ export default function GenerateSubtitles() {
     await requestHighlightWorkflowCancellation();
   }
 
-  async function handleTranscribeOnly() {
-    if (highlightWorkflowRunning) return;
-    if (!tryAcquireStepTwoActionLaunchLock()) return;
+  async function handleTranscribeOnly(): Promise<boolean> {
+    if (highlightWorkflowRunning) return false;
+    if (!tryAcquireStepTwoActionLaunchLock()) return false;
 
     // If an SRT is already mounted, prompt user before proceeding
     try {
-      await proceedTranscribe();
+      return await proceedTranscribe();
     } finally {
       releaseStepTwoActionLaunchLock();
     }
   }
 
-  async function handleTranslateFromScratch() {
+  async function handleTranslateFromScratch(): Promise<boolean> {
     if (
       highlightWorkflowRunning ||
       stepTwoWorkflowActive ||
       transcriptionInProgress
     ) {
-      return;
+      return false;
     }
-    if (!tryAcquireStepTwoActionLaunchLock()) return;
+    if (!tryAcquireStepTwoActionLaunchLock()) return false;
 
     const requestedLanguage = preTranscriptProcessingLanguage;
     const transcriptionOperationId = `transcribe-${Date.now()}`;
@@ -1218,11 +1444,11 @@ export default function GenerateSubtitles() {
       });
 
       if (!transcriptionResult.success) {
-        return;
+        return false;
       }
 
       if (useStepTwoWorkflowStore.getState().runToken !== stepTwoRunToken) {
-        return;
+        return false;
       }
 
       transitionStepTwoWorkflowToHandoff({
@@ -1242,11 +1468,11 @@ export default function GenerateSubtitles() {
         useUrlStore
           .getState()
           .setValidationError('No SRT file available for translation');
-        return;
+        return false;
       }
 
       if (useStepTwoWorkflowStore.getState().runToken !== stepTwoRunToken) {
-        return;
+        return false;
       }
 
       const translationOperationId = `translate-${Date.now()}`;
@@ -1256,11 +1482,12 @@ export default function GenerateSubtitles() {
       });
       setTargetLanguage(requestedLanguage);
 
-      await executeSrtTranslation({
+      const translationResult = await executeSrtTranslation({
         segments: finalSegments,
         targetLanguage: requestedLanguage,
         operationId: translationOperationId,
       });
+      return Boolean(translationResult?.success);
     } finally {
       clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });
       releaseStepTwoActionLaunchLock();
@@ -1277,9 +1504,9 @@ export default function GenerateSubtitles() {
     stepTwoActionLaunchLockRef.current = false;
   }
 
-  async function proceedTranscribe() {
+  async function proceedTranscribe(): Promise<boolean> {
     const operationId = `transcribe-${Date.now()}`;
-    await startTranscriptionFlow({
+    const result = await startTranscriptionFlow({
       videoFile,
       videoFilePath,
       durationSecs,
@@ -1291,6 +1518,7 @@ export default function GenerateSubtitles() {
         message: metadataErrorMessage,
       },
     });
+    return Boolean(result?.success);
   }
 
   async function handleTranslate() {
@@ -1353,6 +1581,8 @@ export default function GenerateSubtitles() {
     const url = String(item?.url || '').trim();
     if (!url) return;
     useUrlStore.getState().setUrlInput(url);
-    await useUrlStore.getState().downloadMedia({ url });
+    await runDownloadWithAutoRun(() =>
+      useUrlStore.getState().downloadMedia({ url })
+    );
   }
 }

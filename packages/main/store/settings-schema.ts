@@ -84,7 +84,9 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   preferClaudeReview: false,
   preferClaudeSummary: true,
   videoSuggestionModelPreference: 'default',
-  stage5VideoSuggestionMode: 'standard',
+  // Default the video-search agent's reasoning to the GPT-5.5 review tier.
+  // 'standard' (GPT-5.1) remains user-selectable as a cost downgrade.
+  stage5VideoSuggestionMode: 'high',
   byoVideoSuggestionModel: 'gpt-5.1',
   videoSuggestionTargetCountry: VIDEO_SUGGESTION_DEFAULT_COUNTRY,
   videoSuggestionRecency: VIDEO_SUGGESTION_DEFAULT_RECENCY,

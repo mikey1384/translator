@@ -12,6 +12,10 @@ import { VideoQuality } from '@shared-types/app';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  TRANSLATION_LANGUAGE_GROUPS,
+  TRANSLATION_LANGUAGES_BASE,
+} from '../../../constants/translation-languages';
+import {
   borderRadius,
   fontSize,
   fontWeight,
@@ -19,6 +23,10 @@ import {
   spacing,
 } from '../../../components/design-system/tokens.js';
 import type { RecentLocalMediaItem } from '../../../state/recent-local-media.js';
+
+// How far the post-download pipeline should run before stopping. The stops are
+// cumulative: 'transcribe' implies download, 'translate' implies transcribe.
+export type AutoRunTarget = 'download' | 'transcribe' | 'translate';
 
 interface MediaInputSectionProps {
   // File input props
@@ -36,7 +44,87 @@ interface MediaInputSectionProps {
   downloadQuality: VideoQuality;
   setDownloadQuality: (quality: VideoQuality) => void;
   handleProcessUrl: () => void;
+
+  // Auto-run: how far to chain after download (download → transcribe → translate).
+  // Optional so reuse sites (e.g. the "Change Video" modal) can omit it; the
+  // selector only renders when setAutoRunTarget is provided.
+  autoRunTarget?: AutoRunTarget;
+  setAutoRunTarget?: (value: AutoRunTarget) => void;
+  autoRunLanguage?: string;
+  setAutoRunLanguage?: (value: string) => void;
 }
+
+const autoRunRowStyles = css`
+  display: grid;
+  gap: ${spacing.sm};
+  padding-top: ${spacing.xs};
+`;
+
+const autoRunLabelStyles = css`
+  font-size: ${fontSize.xs};
+  font-weight: ${fontWeight.semibold};
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${colors.textDim};
+`;
+
+const autoRunSegmentedStyles = css`
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid ${colors.border};
+  border-radius: ${borderRadius.full};
+  background: rgba(255, 255, 255, 0.03);
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+`;
+
+const autoRunSegmentStyles = (active: boolean) => css`
+  appearance: none;
+  border: 0;
+  border-radius: ${borderRadius.full};
+  padding: 0.4rem 0.85rem;
+  font-size: ${fontSize.sm};
+  font-weight: ${active ? fontWeight.semibold : fontWeight.medium};
+  cursor: pointer;
+  white-space: nowrap;
+  color: ${active ? colors.text : colors.textDim};
+  background: ${active ? 'rgba(125, 167, 255, 0.16)' : 'transparent'};
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover:not(:disabled) {
+    color: ${colors.text};
+    background: ${active
+      ? 'rgba(125, 167, 255, 0.22)'
+      : 'rgba(255, 255, 255, 0.06)'};
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`;
+
+const autoRunLanguageRowStyles = css`
+  display: flex;
+  align-items: center;
+  gap: ${spacing.sm};
+  font-size: ${fontSize.sm};
+  color: ${colors.textDim};
+
+  label {
+    white-space: nowrap;
+  }
+
+  select {
+    flex: 1;
+    min-width: 0;
+  }
+`;
 
 const containerStyles = css`
   display: grid;
@@ -306,6 +394,10 @@ export default function MediaInputSection({
   downloadQuality,
   setDownloadQuality,
   handleProcessUrl,
+  autoRunTarget = 'download',
+  setAutoRunTarget,
+  autoRunLanguage = 'english',
+  setAutoRunLanguage,
 }: MediaInputSectionProps) {
   const { t } = useTranslation();
   const hasRecentMedia = recentMedia.length > 0;
@@ -473,10 +565,88 @@ export default function MediaInputSection({
               >
                 {isDownloadInProgress
                   ? t('input.downloading')
-                  : t('common.download')}
+                  : autoRunTarget === 'translate'
+                    ? t('input.downloadAndTranslate', 'Download & Translate')
+                    : autoRunTarget === 'transcribe'
+                      ? t(
+                          'input.downloadAndTranscribe',
+                          'Download & Transcribe'
+                        )
+                      : t('common.download')}
               </Button>
             </div>
           </div>
+
+          {setAutoRunTarget ? (
+            <div className={autoRunRowStyles}>
+              <span className={autoRunLabelStyles}>
+                {t('input.autoRunLabel', 'After download, run to')}
+              </span>
+              <div
+                className={autoRunSegmentedStyles}
+                role="radiogroup"
+                aria-label={t('input.autoRunLabel', 'After download, run to')}
+              >
+                {(['download', 'transcribe', 'translate'] as const).map(
+                  value => {
+                    const labels: Record<AutoRunTarget, string> = {
+                      download: t('input.autoRunStopDownload', 'Download'),
+                      transcribe: t(
+                        'input.autoRunStopTranscribe',
+                        '+ Subtitles'
+                      ),
+                      translate: t('input.autoRunStopTranslate', '+ Translate'),
+                    };
+                    const active = autoRunTarget === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        className={autoRunSegmentStyles(active)}
+                        onClick={() => setAutoRunTarget(value)}
+                        disabled={
+                          isDownloadInProgress || isTranslationInProgress
+                        }
+                      >
+                        {labels[value]}
+                      </button>
+                    );
+                  }
+                )}
+              </div>
+              {autoRunTarget === 'translate' ? (
+                <div className={autoRunLanguageRowStyles}>
+                  <label htmlFor="auto-run-language-select">
+                    {t('subtitles.outputLanguage', 'Output language')}:
+                  </label>
+                  <select
+                    id="auto-run-language-select"
+                    className={selectStyles}
+                    value={autoRunLanguage}
+                    onChange={e => setAutoRunLanguage?.(e.target.value)}
+                    disabled={isDownloadInProgress || isTranslationInProgress}
+                  >
+                    {TRANSLATION_LANGUAGES_BASE.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {t(option.labelKey)}
+                      </option>
+                    ))}
+                    {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+                      <optgroup key={group.labelKey} label={t(group.labelKey)}>
+                        {group.options.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {t(option.labelKey)}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

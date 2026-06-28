@@ -19,8 +19,7 @@ import { isVideoSuggestionRecency } from '../../shared/helpers/video-suggestion-
 import {
   findFallbackTopicFromHistory,
   isBroadAcceptanceReply,
-  parseIntentResolverPayload,
-  parseQueryFormulatorPayload,
+  parseSearchPlannerPayload,
   toPlannerMessages,
 } from './video-suggestions/planner.js';
 import {
@@ -37,6 +36,7 @@ import { splitContinuationPageResults } from './video-suggestions/pagination.js'
 import {
   type IntentResolverPayload,
   type QueryFormulatorPayload,
+  type SearchPlannerPayload,
   VIDEO_SUGGESTION_SOURCE_LABEL,
   buildOrderedIntentSeedQueries,
   clampMessage,
@@ -63,14 +63,9 @@ import {
 } from './video-suggestions/shared.js';
 
 const STARTER_QUESTION = '__i18n__:input.videoSuggestion.starterQuestion';
-const INTENT_RESOLUTION_PROGRESS_MESSAGES = [
-  'Answering the question first...',
-  'Checking likely interpretations...',
-  'Locking the best answer before search...',
-];
-const QUERY_FORMULATOR_PROGRESS_MESSAGES = [
-  'Turning the answer into search queries...',
-  'Shaping the best search queries...',
+const SEARCH_PLANNER_PROGRESS_MESSAGES = [
+  'Planning the best YouTube search...',
+  'Grounding real names and channels...',
   'Finalizing the search queries...',
 ];
 const VIDEO_SUGGESTION_BATCH_SIZE = 20;
@@ -645,16 +640,15 @@ Schema:
   "shouldContinue": false,
   "reason": "short reason",
   "revisedQueries": ["fresh YouTube keyword query if another pass is needed"],
-  "assistantMessage": "one or two helpful sentences for the user"
+  "assistantMessage": "one short helpful sentence for the user"
 }
 
 Rules:
 - Do not select, rank, or filter individual observed videos. Your job is query strategy only.
 - Set shouldContinue=true only when another retrieval pass is likely to improve the match and a fresh query is available.
-- If shouldContinue=true, revisedQueries must avoid already tried queries and must be plain YouTube keyword searches, not operators like site:, channel:, intitle:, or boolean syntax.
-- When revisedQueries are needed, use domain knowledge: include native search idioms, specific shows/franchises, notable creators/channels/critics, studios, producers, or expert names that are likely to retrieve better videos. Avoid only translating the user's words literally.
+- If shouldContinue=true, revisedQueries must avoid already tried queries and must be plain YouTube keyword searches, not operators like site:, channel:, intitle:, or boolean syntax. Use domain knowledge: native search idioms, specific shows/franchises, notable creators/studios/experts — not literal translations.
 - If the current query produced plausible candidates, set shouldContinue=false even if the result list is imperfect.
-- Write assistantMessage in the requested UI language. Do not mention implementation details or pipeline steps.`,
+- Write assistantMessage as a single sentence in the requested UI language. Do not mention implementation details or pipeline steps.`,
         },
         {
           role: 'user',
@@ -1077,7 +1071,7 @@ function buildAnswererContextBlock({
   return lines.join('\n');
 }
 
-async function runIntentResolver({
+async function runSearchPlanner({
   operationId,
   model,
   modelPreference,
@@ -1111,7 +1105,7 @@ async function runIntentResolver({
   onProgress?: (progress: VideoSuggestionProgress) => void;
   startedAt: number;
   onResolvedModel?: (model: string) => void;
-}) {
+}): Promise<SearchPlannerPayload> {
   const answererQuery =
     compactText(getLastUserQuery(history)) ||
     'Find the best YouTube video match for this request.';
@@ -1125,13 +1119,30 @@ async function runIntentResolver({
     recentDownloadTitles,
     recentChannelNames,
   });
+  const targetCountryLanguageInstruction =
+    buildTargetCountryLanguageInstruction(targetCountry);
+  const buildFallbackPayload = (): SearchPlannerPayload => {
+    const seedQueries = buildOrderedIntentSeedQueries({
+      resolvedIntent: answererQuery,
+      latestUserQuery: answererQuery,
+    });
+    const fallbackQuery =
+      seedQueries[0] || sanitizeSearchKeywords(answererQuery);
+    return {
+      resolvedIntent: fallbackQuery,
+      ...normalizeBiasMetadata({}),
+      retrievalQueries: fallbackQuery ? [fallbackQuery] : [],
+      searchQuery: fallbackQuery,
+      capturedPreferences: savedPreferences,
+    };
+  };
   emitSuggestionProgress(onProgress, {
     operationId,
     phase: 'planning',
-    message: INTENT_RESOLUTION_PROGRESS_MESSAGES[0],
-    stageKey: 'answerer',
+    message: SEARCH_PLANNER_PROGRESS_MESSAGES[0],
+    stageKey: 'planner',
     stageIndex: 1,
-    stageTotal: 3,
+    stageTotal: 1,
     stageState: 'running',
     elapsedMs: Date.now() - startedAt,
   });
@@ -1139,19 +1150,19 @@ async function runIntentResolver({
     onProgress,
     operationId,
     phase: 'planning',
-    messages: INTENT_RESOLUTION_PROGRESS_MESSAGES,
+    messages: SEARCH_PLANNER_PROGRESS_MESSAGES,
     startedAt,
     extra: () => ({
-      stageKey: 'answerer',
+      stageKey: 'planner',
       stageIndex: 1,
-      stageTotal: 3,
+      stageTotal: 1,
       stageState: 'running',
     }),
   });
 
   try {
     const raw = await callAIModel({
-      operationId: `${operationId}-intent-resolver`,
+      operationId: `${operationId}-search-planner`,
       model,
       translationPhase,
       modelFamilyHintSource: 'model',
@@ -1163,67 +1174,28 @@ async function runIntentResolver({
       messages: [
         {
           role: 'system',
-          content: `You resolve recommendation intent for a YouTube video finder.
-Use web search as a supporting signal, not a hard gate. The goal is strong candidate generation for retrieval, not perfect verification.
-Reply with JSON only. No markdown.
+          content: `You plan a YouTube video search for a recommender. Use web search to ground real names. Reply with JSON only. No markdown.
 
 Schema:
 {
-  "answerToUserQuestion": "short direct answer or recommendation",
+  "assistantMessage": "one short helpful sentence; if the request is too vague to search, ask one short clarifying question instead",
   "resolvedIntent": "short canonical intent",
-  "intentSummary": "short summary",
-  "youtubeRegionCode": "2-letter YouTube region code like US/JP/BR or empty string if unclear",
+  "candidates": [{ "name": "search anchor: native topic term, creator, channel, franchise, studio, or expert", "confidence": "high|medium|low" }],
+  "descriptorPhrases": ["retrieval-friendly descriptor phrase"],
+  "youtubeRegionCode": "2-letter code like US/JP/BR, or empty if unclear",
   "youtubeSearchLanguage": "language code like en/ja/es",
-  "candidates": [
-    {
-      "name": "knowledgeable search anchor: native topic term, creator, channel, franchise, critic, studio, producer, or expert name",
-      "confidence": "high"
-    },
-    {
-      "name": "another high-value search anchor",
-      "confidence": "medium"
-    },
-    {
-      "name": "another high-value search anchor",
-      "confidence": "medium"
-    },
-    {
-      "name": "specific candidate that could help find better YouTube videos",
-      "confidence": "medium"
-    },
-    {
-      "name": "another specific candidate that could help find better YouTube videos",
-      "confidence": "medium"
-    }
-  ],
-  "descriptorPhrases": [
-    "retrieval-friendly descriptor phrase",
-    "broader descriptor phrase"
-  ],
-  "primarySearchLanguage": "same language code as youtubeSearchLanguage",
   "searchLanguages": ["preferred language codes in order"],
-    "capturedPreferences": {
-      "topic": "short topic keyword or empty"
-    },
-  "needsMoreContext": false
+  "retrievalQueries": ["plain YouTube keyword queries, most precise first, broadening to fallbacks"],
+  "searchQuery": "must equal retrievalQueries[0]",
+  "capturedPreferences": { "topic": "short topic keyword or empty" }
 }
 
 Rules:
-- Search source is YouTube only.
-- Always use websearch first.
-- If Target country is present, you MUST output youtubeRegionCode and youtubeSearchLanguage for it. Do not omit them.
-- If the target country is unclear or not a real place, set youtubeRegionCode="" and youtubeSearchLanguage="en".
-- primarySearchLanguage must equal youtubeSearchLanguage.
-- Treat candidates as a wide pool of likely targets, not a single winner.
-- Return at least 10 likely candidates whenever the request is broad enough to support that many plausible targets. Return fewer only when the space is genuinely narrow.
-- Prefer grounded specific names, native YouTube search idioms, notable creators/channels/critics, franchises, studios, producers, and expert names over literal keyword translation.
-- If the user asks for a broad category like Japanese animation introductions, do not merely translate that phrase. Use domain knowledge to propose search anchors likely to surface real explainers, reviews, retrospectives, recommendations, and commentary.
-- Use confidence to express uncertainty. High = strongly likely, medium = plausible, low = speculative fallback.
-- answerToUserQuestion should state the likely best direction directly. Do not fill it with verification caveats or "I could not reliably ground..." style hedging.
-- Prefer credible specific names over generic descriptors when they are likely to improve retrieval.
-- descriptorPhrases must be retrieval-friendly phrases built from the user's request. Do not output vague adjectives alone.
-- Do not output final retrievalQueries. Step 2 will order the plan.
-- If the request is too vague to act on, set needsMoreContext=true and explain briefly in answerToUserQuestion.`,
+- YouTube only. Never use operators (site:, intitle:, channel:, quotes, or boolean syntax).
+- Prefer grounded specific names and native search idioms over literal translation of the user's words; use domain knowledge to surface real creators, franchises, and experts rather than restating the request.
+- Order retrievalQueries from high-confidence specific seeds to broader fallbacks, and keep them in the target language when that is clearly best.
+- If a target country is given you MUST set youtubeRegionCode and youtubeSearchLanguage for it; otherwise use "" and "en".
+- ${targetCountryLanguageInstruction}`,
         },
         {
           role: 'user',
@@ -1232,6 +1204,7 @@ Rules:
             settingsContext
               ? `Current recommender settings:\n${settingsContext}`
               : '',
+            targetCountry ? `App target country:\n${targetCountry}` : '',
             `Current user request:\n${answererQuery}`,
           ]
             .filter(Boolean)
@@ -1240,7 +1213,7 @@ Rules:
       ],
     });
     stopIntentPulse();
-    const parsed = parseIntentResolverPayload(raw);
+    const parsed = parseSearchPlannerPayload(raw);
     if (parsed) {
       const normalizedBias = normalizeBiasMetadata({
         youtubeRegionCode: parsed.youtubeRegionCode,
@@ -1258,13 +1231,23 @@ Rules:
         resolvedIntent: parsed.resolvedIntent || parsed.intentSummary,
         latestUserQuery: answererQuery,
       });
-      const normalizedParsed: IntentResolverPayload = {
+      const resolvedIntent =
+        parsed.resolvedIntent ||
+        parsed.intentSummary ||
+        fallbackQueries[0] ||
+        sanitizeSearchKeywords(answererQuery);
+      const retrievalQueries = uniqueTexts(
+        [
+          ...(parsed.retrievalQueries || []),
+          parsed.searchQuery || '',
+          ...fallbackQueries,
+        ].map(query => sanitizeSearchKeywords(query))
+      )
+        .filter(Boolean)
+        .slice(0, 10);
+      const normalizedParsed: SearchPlannerPayload = {
         ...parsed,
-        resolvedIntent:
-          parsed.resolvedIntent ||
-          parsed.intentSummary ||
-          fallbackQueries[0] ||
-          sanitizeSearchKeywords(answererQuery),
+        resolvedIntent,
         capturedPreferences:
           parsed.capturedPreferences &&
           Object.keys(parsed.capturedPreferences).length > 0
@@ -1276,326 +1259,49 @@ Rules:
         youtubeSearchLanguage: normalizedBias.youtubeSearchLanguage,
         primarySearchLanguage: normalizedBias.primarySearchLanguage,
         searchLanguages: normalizedBias.searchLanguages,
+        retrievalQueries,
+        searchQuery:
+          sanitizeSearchKeywords(parsed.searchQuery || '') ||
+          retrievalQueries[0] ||
+          resolvedIntent,
       };
 
       emitSuggestionProgress(onProgress, {
         operationId,
         phase: 'planning',
-        message: 'Step 1/3 cleared: answerer ready.',
+        message: 'Search plan ready.',
         searchQuery:
-          fallbackQueries[0] || normalizedParsed.resolvedIntent || '',
+          normalizedParsed.searchQuery ||
+          fallbackQueries[0] ||
+          normalizedParsed.resolvedIntent ||
+          '',
         assistantPreview: clampTraceMessage(
           [
-            normalizedParsed.answerToUserQuestion
-              ? `Answer: ${normalizedParsed.answerToUserQuestion}`
-              : '',
             normalizedParsed.candidates?.length
               ? `Candidates: ${summarizeValues(
                   normalizedParsed.candidates.map(item => item.name),
                   3
                 )}`
               : '',
-            normalizedParsed.descriptorPhrases?.length
-              ? `Descriptors: ${summarizeValues(
-                  normalizedParsed.descriptorPhrases,
-                  3
-                )}`
-              : '',
-          ]
-            .filter(Boolean)
-            .join(' | ')
-        ),
-        stageKey: 'answerer',
-        stageIndex: 1,
-        stageTotal: 3,
-        stageState: 'cleared',
-        stageOutcome: clampTraceLines(
-          [
-            normalizedParsed.answerToUserQuestion
-              ? `Answer: ${normalizedParsed.answerToUserQuestion}`
-              : '',
-            normalizedParsed.candidates?.length
-              ? `Likely candidates (${normalizedParsed.candidates.length}): ${summarizeValues(
-                  normalizedParsed.candidates.map(item => item.name),
-                  4
-                )}.`
-              : 'No likely candidates were found.',
-            normalizedParsed.descriptorPhrases?.length
-              ? `Descriptor phrases: ${summarizeValues(
-                  normalizedParsed.descriptorPhrases,
-                  4
-                )}.`
-              : '',
-          ],
-          620
-        ),
-        elapsedMs: Date.now() - startedAt,
-      });
-      return normalizedParsed;
-    }
-
-    const answerText = clampMessage(compactText(raw));
-    if (answerText) {
-      const fallbackQuery = sanitizeSearchKeywords(answererQuery);
-      const resolvedAnchor =
-        sanitizeSearchKeywords(answerText) || fallbackQuery;
-      const parsed: IntentResolverPayload = {
-        answerToUserQuestion: answerText,
-        resolvedIntent: resolvedAnchor || answerText,
-        intentSummary: answerText,
-        ...normalizeBiasMetadata({}),
-        capturedPreferences: savedPreferences,
-      };
-      emitSuggestionProgress(onProgress, {
-        operationId,
-        phase: 'planning',
-        message: 'Step 1/3 cleared: answerer ready.',
-        searchQuery: parsed.resolvedIntent || '',
-        assistantPreview: clampTraceMessage(`Answer: ${answerText}`),
-        stageKey: 'answerer',
-        stageIndex: 1,
-        stageTotal: 3,
-        stageState: 'cleared',
-        stageOutcome: clampTraceLines([`Answer: ${answerText}`], 620),
-        elapsedMs: Date.now() - startedAt,
-      });
-      return parsed;
-    }
-  } catch (error) {
-    stopIntentPulse();
-    if (isSuggestionAbortError(error, signal)) {
-      throw error;
-    }
-    const errorDetail = summarizeSearchError(error);
-    log.error(
-      `[video-suggestions] Answerer failed (${operationId}):`,
-      errorDetail
-    );
-  }
-}
-
-async function runQueryFormulator({
-  operationId,
-  model,
-  translationPhase,
-  signal,
-  history,
-  answerer,
-  targetCountry,
-  onProgress,
-  startedAt,
-  onResolvedModel,
-}: {
-  operationId: string;
-  model: string;
-  translationPhase: 'draft' | 'review';
-  signal?: AbortSignal;
-  history: Array<{ role: 'user' | 'assistant'; content: string }>;
-  answerer?: IntentResolverPayload | null;
-  targetCountry?: string;
-  onProgress?: (progress: VideoSuggestionProgress) => void;
-  startedAt: number;
-  onResolvedModel?: (model: string) => void;
-}): Promise<QueryFormulatorPayload | null> {
-  const answererText = compactText(answerer?.answerToUserQuestion || '');
-  const latestUserQuery = compactText(getLastUserQuery(history));
-  const answererSeedQueries = buildOrderedIntentSeedQueries({
-    candidates: answerer?.candidates,
-    descriptorPhrases: answerer?.descriptorPhrases,
-    resolvedIntent: answerer?.resolvedIntent || answerer?.intentSummary,
-    latestUserQuery,
-  });
-  const answererAnchor =
-    answererSeedQueries[0] ||
-    sanitizeSearchKeywords(answerer?.resolvedIntent || '') ||
-    sanitizeSearchKeywords(answererText);
-  const threadContext = buildThreadContext(history);
-  const targetCountryLanguageInstruction =
-    buildTargetCountryLanguageInstruction(targetCountry);
-  emitSuggestionProgress(onProgress, {
-    operationId,
-    phase: 'planning',
-    message: QUERY_FORMULATOR_PROGRESS_MESSAGES[0],
-    stageKey: 'planner',
-    stageIndex: 2,
-    stageTotal: 3,
-    stageState: 'running',
-    elapsedMs: Date.now() - startedAt,
-  });
-  const stopPulse = startProgressPulse({
-    onProgress,
-    operationId,
-    phase: 'planning',
-    messages: QUERY_FORMULATOR_PROGRESS_MESSAGES,
-    startedAt,
-    extra: () => ({
-      stageKey: 'planner',
-      stageIndex: 2,
-      stageTotal: 3,
-      stageState: 'running',
-    }),
-  });
-
-  try {
-    const raw = await callAIModel({
-      operationId: `${operationId}-query-formulator`,
-      model,
-      translationPhase,
-      modelFamilyHintSource: 'model',
-      onResolvedModel,
-      reasoning: { effort: 'medium' },
-      signal,
-      retryAttempts: 2,
-      messages: [
-        {
-          role: 'system',
-          content: `Turn the structured intent output into an ordered yt-dlp YouTube search plan.
-Reply with JSON only. No markdown.
-
-Schema:
-{
-  "youtubeRegionCode": "2-letter YouTube region code like US/JP/BR or empty string if unclear",
-  "youtubeSearchLanguage": "language code like en/ja/es",
-  "primarySearchLanguage": "same language code as youtubeSearchLanguage",
-  "searchLanguages": ["preferred language codes in order"],
-  "searchQuery": "must equal the first retrieval query",
-  "retrievalQueries": ["ordered from most precise/high-confidence to broader fallback"],
-    "capturedPreferences": {
-      "topic": "short topic keyword or empty"
-    }
-}
-
-Rules:
-- Search source is YouTube only.
-- Use candidates as knowledgeable search anchors for name-based queries.
-- Use only descriptor phrases from descriptorPhrases or explicit user wording.
-- You may reorder terms, combine candidate names with descriptor phrases, normalize wording, and selectively relax constraints as the plan broadens.
-- Order retrievalQueries from most likely/high-confidence specific seeds to less specific fallback seeds.
-- searchQuery must equal retrievalQueries[0].
-- Prefer native YouTube search idioms and real domain anchors over literal translations of the user's phrase.
-- If App target country is present, you MUST output youtubeRegionCode and youtubeSearchLanguage for it. Do not omit them.
-- If the target country is unclear or not a real place, set youtubeRegionCode="" and youtubeSearchLanguage="en".
-- primarySearchLanguage must equal youtubeSearchLanguage.
-- When a local-language search is clearly best, keep most queries in that language and only include English if it adds real retrieval value.
-- Never use operators like site:, inurl:, intitle:, channel:, or quoted boolean syntax.
-- ${targetCountryLanguageInstruction}
-`,
-        },
-        {
-          role: 'user',
-          content:
-            [
-              threadContext ? `Conversation thread:\n${threadContext}` : '',
-              latestUserQuery
-                ? `Current user request:\n${latestUserQuery}`
-                : '',
-              targetCountry ? `App target country:\n${targetCountry}` : '',
-              answerer
-                ? `Structured step 1 output:\n${JSON.stringify({
-                    answerToUserQuestion: answerer.answerToUserQuestion || '',
-                    resolvedIntent: answerer.resolvedIntent || '',
-                    youtubeRegionCode: answerer.youtubeRegionCode || '',
-                    youtubeSearchLanguage:
-                      answerer.youtubeSearchLanguage ||
-                      answerer.primarySearchLanguage ||
-                      '',
-                    candidates: answerer.candidates || [],
-                    descriptorPhrases: answerer.descriptorPhrases || [],
-                    primarySearchLanguage: answerer.primarySearchLanguage || '',
-                    searchLanguages: answerer.searchLanguages || [],
-                  })}`
-                : '',
-              answererSeedQueries.length > 0
-                ? `Seed queries already derivable from step 1:\n${answererSeedQueries.join('\n')}`
-                : '',
-            ]
-              .filter(Boolean)
-              .join('\n\n') || 'Find the best matching YouTube videos.',
-        },
-        ...(answererText
-          ? [
-              {
-                role: 'assistant' as const,
-                content: `Likely answer or candidate context:\n${answererText}`,
-              },
-            ]
-          : []),
-        {
-          role: 'user',
-          content: 'Return only the search formulation JSON.',
-        },
-      ],
-    });
-    stopPulse();
-    const parsed = parseQueryFormulatorPayload(raw);
-    if (parsed) {
-      const retrievalQueries =
-        parsed.retrievalQueries && parsed.retrievalQueries.length > 0
-          ? parsed.retrievalQueries
-          : answererSeedQueries;
-      const normalizedBias = normalizeBiasMetadata({
-        youtubeRegionCode: parsed.youtubeRegionCode,
-        youtubeSearchLanguage: parsed.youtubeSearchLanguage,
-        primarySearchLanguage: parsed.primarySearchLanguage,
-        searchLanguages: [
-          ...(parsed.searchLanguages || []),
-          ...(answerer?.searchLanguages || []),
-        ],
-        fallbackYoutubeRegionCode: answerer?.youtubeRegionCode,
-        fallbackYoutubeSearchLanguage:
-          answerer?.youtubeSearchLanguage ||
-          answerer?.primarySearchLanguage ||
-          'en',
-      });
-      const normalizedParsed: QueryFormulatorPayload = {
-        ...parsed,
-        youtubeRegionCode: normalizedBias.youtubeRegionCode,
-        youtubeSearchLanguage: normalizedBias.youtubeSearchLanguage,
-        primarySearchLanguage: normalizedBias.primarySearchLanguage,
-        searchLanguages: normalizedBias.searchLanguages,
-        searchQuery:
-          parsed.searchQuery ||
-          retrievalQueries[0] ||
-          answerer?.resolvedIntent ||
-          '',
-        retrievalQueries,
-      };
-      emitSuggestionProgress(onProgress, {
-        operationId,
-        phase: 'planning',
-        message: 'Step 2/3 cleared: search formulator ready.',
-        searchQuery:
-          normalizedParsed.searchQuery ||
-          normalizedParsed.retrievalQueries?.[0] ||
-          answerer?.resolvedIntent ||
-          '',
-        assistantPreview: clampTraceMessage(
-          [
-            answerer?.answerToUserQuestion
-              ? `Answer: ${answerer.answerToUserQuestion}`
-              : '',
-            normalizedParsed.strategy
-              ? `Plan: ${normalizedParsed.strategy}`
-              : '',
             normalizedParsed.retrievalQueries?.length
-              ? `Queries: ${summarizeValues(
-                  normalizedParsed.retrievalQueries,
-                  3
-                )}`
+              ? `Queries: ${summarizeValues(normalizedParsed.retrievalQueries, 3)}`
               : '',
           ]
             .filter(Boolean)
             .join(' | ')
         ),
         stageKey: 'planner',
-        stageIndex: 2,
-        stageTotal: 3,
+        stageIndex: 1,
+        stageTotal: 1,
         stageState: 'cleared',
         stageOutcome: clampTraceLines(
           [
-            answerer?.answerToUserQuestion
-              ? `Answer from step 1: ${answerer.answerToUserQuestion}`
-              : '',
+            normalizedParsed.candidates?.length
+              ? `Likely candidates (${normalizedParsed.candidates.length}): ${summarizeValues(
+                  normalizedParsed.candidates.map(item => item.name),
+                  4
+                )}.`
+              : 'No likely candidates were found.',
             normalizedParsed.retrievalQueries?.length
               ? `Retrieval queries (${normalizedParsed.retrievalQueries.length}): ${summarizeValues(
                   normalizedParsed.retrievalQueries,
@@ -1610,110 +1316,43 @@ Rules:
       return normalizedParsed;
     }
 
-    const fallbackQueries =
-      answererSeedQueries.length > 0
-        ? answererSeedQueries
-        : answererAnchor
-          ? [answererAnchor]
-          : [];
-    const fallbackQuery = fallbackQueries[0] || '';
-    const fallbackPayload: QueryFormulatorPayload = {
-      intentSummary: answerer?.resolvedIntent || fallbackQuery,
-      strategy: fallbackQuery
-        ? 'Use the structured candidates/descriptors output as the search plan.'
-        : '',
-      ...normalizeBiasMetadata({
-        youtubeRegionCode: answerer?.youtubeRegionCode,
-        youtubeSearchLanguage:
-          answerer?.youtubeSearchLanguage || answerer?.primarySearchLanguage,
-        primarySearchLanguage: answerer?.primarySearchLanguage,
-        searchLanguages: answerer?.searchLanguages,
-      }),
-      searchQuery: fallbackQuery,
-      retrievalQueries: fallbackQueries,
-      capturedPreferences: answerer?.capturedPreferences,
-    };
-    emitSuggestionProgress(onProgress, {
-      operationId,
-      phase: 'planning',
-      message: 'Step 2/3 cleared: search formulator fallback used.',
-      searchQuery: fallbackQuery,
-      assistantPreview: clampTraceMessage(
-        fallbackQuery
-          ? `Using direct fallback search query: ${quotedStatusValue(fallbackQuery, 120)}.`
-          : 'Search formulator returned no structured result; continuing with minimal fallback.'
-      ),
-      stageKey: 'planner',
-      stageIndex: 2,
-      stageTotal: 3,
-      stageState: 'cleared',
-      stageOutcome: clampTraceLines(
-        [
-          'Search formulator did not return a parseable structured payload.',
-          fallbackQuery
-            ? `Fallback search query: ${quotedStatusValue(fallbackQuery, 120)}.`
-            : 'No answerer-backed fallback search query was available.',
-        ],
-        620
-      ),
-      elapsedMs: Date.now() - startedAt,
-    });
-    return fallbackPayload;
+    const answerText = clampMessage(compactText(raw));
+    if (answerText) {
+      const fallbackPayload = buildFallbackPayload();
+      const fallbackPlan: SearchPlannerPayload = {
+        ...fallbackPayload,
+        assistantMessage: answerText,
+        intentSummary: answerText,
+      };
+      emitSuggestionProgress(onProgress, {
+        operationId,
+        phase: 'planning',
+        message: 'Search plan ready.',
+        searchQuery:
+          fallbackPlan.searchQuery || fallbackPlan.resolvedIntent || '',
+        assistantPreview: clampTraceMessage(`Plan: ${answerText}`),
+        stageKey: 'planner',
+        stageIndex: 1,
+        stageTotal: 1,
+        stageState: 'cleared',
+        stageOutcome: clampTraceLines([`Plan: ${answerText}`], 620),
+        elapsedMs: Date.now() - startedAt,
+      });
+      return fallbackPlan;
+    }
   } catch (error) {
-    stopPulse();
+    stopIntentPulse();
     if (isSuggestionAbortError(error, signal)) {
       throw error;
     }
-    const fallbackQueries =
-      answererSeedQueries.length > 0
-        ? answererSeedQueries
-        : answererAnchor
-          ? [answererAnchor]
-          : [];
-    const fallbackQuery = fallbackQueries[0] || '';
-    const fallbackPayload: QueryFormulatorPayload = {
-      intentSummary: answerer?.resolvedIntent || fallbackQuery,
-      strategy: fallbackQuery
-        ? 'Use the structured candidates/descriptors output as the search plan.'
-        : '',
-      ...normalizeBiasMetadata({
-        youtubeRegionCode: answerer?.youtubeRegionCode,
-        youtubeSearchLanguage:
-          answerer?.youtubeSearchLanguage || answerer?.primarySearchLanguage,
-        primarySearchLanguage: answerer?.primarySearchLanguage,
-        searchLanguages: answerer?.searchLanguages,
-      }),
-      searchQuery: fallbackQuery,
-      retrievalQueries: fallbackQueries,
-      capturedPreferences: answerer?.capturedPreferences,
-    };
-    emitSuggestionProgress(onProgress, {
-      operationId,
-      phase: 'planning',
-      message: 'Step 2/3 cleared: search formulator fallback used.',
-      searchQuery: fallbackQuery,
-      assistantPreview: clampTraceMessage(
-        fallbackQuery
-          ? `Using direct fallback search query: ${quotedStatusValue(fallbackQuery, 120)}.`
-          : 'Search formulator failed; continuing with minimal fallback.'
-      ),
-      stageKey: 'planner',
-      stageIndex: 2,
-      stageTotal: 3,
-      stageState: 'cleared',
-      stageOutcome: clampTraceLines(
-        [
-          'Search formulator failed before returning a structured payload.',
-          fallbackQuery
-            ? `Fallback search query: ${quotedStatusValue(fallbackQuery, 120)}.`
-            : 'No reliable fallback search query was available.',
-        ],
-        620
-      ),
-      elapsedMs: Date.now() - startedAt,
-    });
-    return fallbackPayload;
+    const errorDetail = summarizeSearchError(error);
+    log.error(
+      `[video-suggestions] Search planner failed (${operationId}):`,
+      errorDetail
+    );
   }
+
+  return buildFallbackPayload();
 }
 
 async function runClarifyingFollowUp({
@@ -1722,8 +1361,6 @@ async function runClarifyingFollowUp({
   translationPhase,
   signal,
   history,
-  answerer,
-  queryPlanner,
   results,
   searchQuery,
   preferredLanguage,
@@ -1735,25 +1372,15 @@ async function runClarifyingFollowUp({
   translationPhase: 'draft' | 'review';
   signal?: AbortSignal;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
-  answerer?: IntentResolverPayload | null;
-  queryPlanner?: QueryFormulatorPayload | null;
   results?: VideoSuggestionResultItem[];
   searchQuery?: string;
   preferredLanguage?: string;
   preferredLanguageName?: string;
   onResolvedModel?: (model: string) => void;
 }): Promise<string> {
-  const threadContext = buildThreadContext(history);
   const latestUserQuery = compactText(getLastUserQuery(history));
-  const answererText = compactText(answerer?.answerToUserQuestion || '');
-  const retrievalQueries = uniqueTexts(
-    queryPlanner?.retrievalQueries || []
-  ).slice(0, 6);
   const topTitles = uniqueTexts(
     (results || []).map(item => compactText(item.title || ''))
-  ).slice(0, 4);
-  const topChannels = uniqueTexts(
-    (results || []).map(item => compactText(item.channel || ''))
   ).slice(0, 4);
 
   try {
@@ -1763,35 +1390,27 @@ async function runClarifyingFollowUp({
       translationPhase,
       modelFamilyHintSource: 'model',
       onResolvedModel,
-      reasoning: { effort: 'medium' },
+      reasoning: { effort: 'low' },
       signal,
       retryAttempts: 1,
       messages: [
         {
           role: 'system',
-          content: `Write a helpful follow-up message for an AI video recommender after search completes. If the request was clear enough, suggest a smart next lookup closely related to the current results. If the request is still too broad or unclear, ask a thoughtful clarifying question instead. When the search space is broad or confusing, teach the user a bit about it by naming example creators, categories, or directions they could choose from so they can make a more informed choice. Always write the follow-up in the user interface language requested below, not the language of the search results unless they are the same.`,
+          content: `Write one short, friendly follow-up sentence after a YouTube search. If the request was clear, suggest a closely related next search. If it was too vague, ask one short clarifying question instead. Write it in the requested UI language. Keep it to a single sentence; do not list examples or explain the search.`,
         },
         {
           role: 'user',
           content: [
             preferredLanguage || preferredLanguageName
-              ? `User interface language: ${compactText(
+              ? `UI language: ${compactText(
                   preferredLanguageName || preferredLanguage
                 )} (${compactText(preferredLanguage || '').toLowerCase()}).`
               : '',
-            threadContext ? `Conversation thread:\n${threadContext}` : '',
             latestUserQuery ? `Current user request:\n${latestUserQuery}` : '',
             searchQuery ? `Search used:\n${searchQuery}` : '',
-            answererText ? `Step 1 output:\n${answererText}` : '',
-            retrievalQueries.length > 0
-              ? `Step 2 search queries:\n${retrievalQueries.join('\n')}`
-              : '',
             `Results found: ${(results || []).length}.`,
             topTitles.length > 0
               ? `Top result titles:\n${topTitles.join('\n')}`
-              : 'Top result titles:\nNone yet.',
-            topChannels.length > 0
-              ? `Top result channels:\n${topChannels.join('\n')}`
               : '',
           ]
             .filter(Boolean)
@@ -2102,7 +1721,7 @@ export async function suggestVideosViaChat(
     ];
 
     try {
-      const forcedIntent = await runIntentResolver({
+      const forcedIntent = await runSearchPlanner({
         operationId,
         model: resolvedModel,
         translationPhase: suggestionTranslationPhase,
@@ -2119,18 +1738,9 @@ export async function suggestVideosViaChat(
         startedAt,
         onResolvedModel: observeResolvedModel,
       });
-      const forcedPlan = await runQueryFormulator({
-        operationId,
-        model: resolvedModel,
-        translationPhase: suggestionTranslationPhase,
-        signal,
-        history: forcedHistory,
-        answerer: forcedIntent,
-        targetCountry,
-        onProgress,
-        startedAt,
-        onResolvedModel: observeResolvedModel,
-      });
+      // Single merged planner now produces both the intent seeds and the query
+      // plan; alias so the existing downstream wiring is unchanged.
+      const forcedPlan = forcedIntent;
       const agentOutcome = await runAgenticVideoSearchLoop({
         operationId,
         model: resolvedModel,
@@ -2253,7 +1863,7 @@ export async function suggestVideosViaChat(
         },
       ];
 
-  const answerer = await runIntentResolver({
+  const answerer = await runSearchPlanner({
     operationId,
     model: resolvedModel,
     translationPhase: suggestionTranslationPhase,
@@ -2270,18 +1880,9 @@ export async function suggestVideosViaChat(
     startedAt,
     onResolvedModel: observeResolvedModel,
   });
-  const queryPlanner = await runQueryFormulator({
-    operationId,
-    model: resolvedModel,
-    translationPhase: suggestionTranslationPhase,
-    signal,
-    history: plannerHistory,
-    answerer,
-    targetCountry,
-    onProgress,
-    startedAt,
-    onResolvedModel: observeResolvedModel,
-  });
+  // Single merged planner produces both intent seeds and the query plan; alias
+  // so the existing downstream wiring (answerer + queryPlanner) is unchanged.
+  const queryPlanner = answerer;
   try {
     let assistantMessage = queryPlanner?.assistantMessage || '';
     const plannerRetrievalQueries = uniqueTexts(
@@ -2413,22 +2014,12 @@ export async function suggestVideosViaChat(
       }
     }
 
+    // The merged planner already supplies a concise assistantMessage (an answer
+    // preview, or a clarifying question when the request is too vague), and the
+    // judge overwrites it after the search loop. Fall back to the default
+    // follow-up rather than spending another LLM call.
     if (hasUserMessage && !searchFailureDetail && !assistantMessage.trim()) {
-      assistantMessage =
-        (await runClarifyingFollowUp({
-          operationId,
-          model: resolvedModel,
-          translationPhase: suggestionTranslationPhase,
-          signal,
-          history: plannerHistory,
-          answerer,
-          queryPlanner,
-          results,
-          searchQuery,
-          preferredLanguage: request.preferredLanguage,
-          preferredLanguageName: request.preferredLanguageName,
-          onResolvedModel: observeResolvedModel,
-        })) || '__i18n__:input.videoSuggestion.defaultFollowUp';
+      assistantMessage = '__i18n__:input.videoSuggestion.defaultFollowUp';
     }
 
     emitSuggestionProgress(onProgress, {
