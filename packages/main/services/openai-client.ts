@@ -1,7 +1,11 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import log from 'electron-log';
-import type { DubSegmentPayload } from '@shared-types/app';
+import type {
+  ChatToolChoice,
+  ChatToolDefinition,
+  DubSegmentPayload,
+} from '@shared-types/app';
 import { AI_MODELS, normalizeAiModelId } from '@shared/constants';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
@@ -21,6 +25,8 @@ export interface OpenAiTranslateOptions {
   apiKey: string;
   signal?: AbortSignal;
   reasoning?: { effort?: 'low' | 'medium' | 'high' };
+  tools?: ChatToolDefinition[];
+  toolChoice?: ChatToolChoice;
 }
 
 export interface OpenAiWebSearchOptions {
@@ -112,12 +118,21 @@ export async function translateWithOpenAi({
   apiKey,
   signal,
   reasoning,
+  tools,
+  toolChoice,
 }: OpenAiTranslateOptions): Promise<any> {
   const normalizedModel = normalizeAiModelId(model);
   const payload: Record<string, any> = {
     model: normalizedModel,
     messages,
   };
+
+  if (Array.isArray(tools) && tools.length > 0) {
+    payload.tools = tools;
+    if (toolChoice === 'required') {
+      payload.tool_choice = 'required';
+    }
+  }
 
   // Add reasoning_effort for models that support it (e.g., GPT-5.1)
   // Chat Completions API uses flat `reasoning_effort` parameter, not nested object

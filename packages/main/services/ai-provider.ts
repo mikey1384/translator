@@ -883,6 +883,8 @@ export async function translate(
     reasoning,
     translationPhase,
     modelFamilyHintSource = 'preference',
+    tools,
+    toolChoice,
     ...stage5RestOptions
   } = options;
   const normalizedModel = normalizeAiModelId(model);
@@ -907,6 +909,8 @@ export async function translate(
     signal,
     translationPhase,
     reasoning: effectiveReasoning,
+    tools,
+    toolChoice,
     // Subtitle translation phases use backend-authoritative model routing in Stage5 mode.
     model: useServerModelAuthority ? undefined : normalizedModel,
     // Preserve user/provider family intent without pinning concrete model versions.
@@ -936,6 +940,8 @@ export async function translate(
         apiKey: anthropicKey,
         signal,
         effort: effectiveReasoning?.effort,
+        tools,
+        toolChoice,
       });
     } catch (error) {
       mapAnthropicError(error);
@@ -963,6 +969,8 @@ export async function translate(
         apiKey,
         signal,
         reasoning: effectiveReasoning,
+        tools,
+        toolChoice,
       });
     } catch (error) {
       mapOpenAiError(error);

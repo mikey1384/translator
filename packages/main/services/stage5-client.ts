@@ -846,6 +846,8 @@ export async function translate({
   qualityMode,
   idempotencyKey,
   signal,
+  tools,
+  toolChoice,
 }: {
   messages: any[];
   model?: string;
@@ -857,6 +859,8 @@ export async function translate({
   qualityMode?: boolean;
   idempotencyKey?: string;
   signal?: AbortSignal;
+  tools?: import('@shared-types/app').ChatToolDefinition[];
+  toolChoice?: import('@shared-types/app').ChatToolChoice;
 }) {
   // Dev: simulate zero credits without hitting the network
   if (process.env.FORCE_ZERO_CREDITS === '1') {
@@ -881,6 +885,12 @@ export async function translate({
     }
     if (typeof qualityMode === 'boolean') {
       payload.qualityMode = qualityMode;
+    }
+    if (Array.isArray(tools) && tools.length > 0) {
+      payload.tools = tools;
+      if (toolChoice) {
+        payload.toolChoice = toolChoice;
+      }
     }
     const postResponse = await withStage5AuthRetryOnResponse(authHeaders =>
       axios.post(`${STAGE5_API_URL}/translate`, payload, {
@@ -1704,6 +1714,8 @@ export async function translateViaDirect({
   qualityMode,
   idempotencyKey,
   signal,
+  tools,
+  toolChoice,
 }: {
   messages: any[];
   model?: string;
@@ -1716,6 +1728,8 @@ export async function translateViaDirect({
   qualityMode?: boolean;
   idempotencyKey?: string;
   signal?: AbortSignal;
+  tools?: import('@shared-types/app').ChatToolDefinition[];
+  toolChoice?: import('@shared-types/app').ChatToolChoice;
 }): Promise<any> {
   if (process.env.FORCE_ZERO_CREDITS === '1') {
     throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
@@ -1742,6 +1756,12 @@ export async function translateViaDirect({
     }
     if (webSearch === true) {
       payload.webSearch = true;
+    }
+    if (Array.isArray(tools) && tools.length > 0) {
+      payload.tools = tools;
+      if (toolChoice) {
+        payload.toolChoice = toolChoice;
+      }
     }
     const response = await withStage5AuthRetry(authHeaders =>
       axios.post(`${RELAY_URL}/translate-direct`, payload, {

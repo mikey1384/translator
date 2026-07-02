@@ -398,6 +398,12 @@ export default function useVideoSuggestionFlow({
         ]);
 
         setSearchQuery((res?.searchQuery || '').trim());
+        if (nextResults.length > 0) {
+          // The response carries the agent's final ranked selection; it
+          // supersedes candidates streamed while searching. Progress events
+          // race the invoke reply, so this assignment is the reliable one.
+          setResults(nextResults);
+        }
         if (streamedGrowth || nextResults.length > 0) {
           markPipelineClearedThroughRetrieval();
           onResultsReady();
@@ -469,6 +475,7 @@ export default function useVideoSuggestionFlow({
       setLastRequestPreferences,
       setMessages,
       setResolvedModelRuntime,
+      setResults,
       setSearchQuery,
       setShowQuickStartAction,
       setYoutubeRegionCode,

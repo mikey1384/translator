@@ -1,5 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
 import log from 'electron-log';
+import type {
+  ChatToolCall,
+  ChatToolChoice,
+  ChatToolDefinition,
+} from '@shared-types/app';
 import { AI_MODELS, normalizeAiModelId } from '@shared/constants';
 
 const ANTHROPIC_MAX_TOKENS = 16000;
@@ -36,7 +41,7 @@ function resolveAnthropicThinkingConfig(
     return {
       enabled: true,
       maxTokens: ANTHROPIC_MAX_TOKENS_WITH_THINKING,
-      apply: (requestParams) => {
+      apply: requestParams => {
         requestParams.thinking = { type: 'adaptive' };
         requestParams.output_config = {
           ...(requestParams.output_config || {}),
@@ -52,7 +57,7 @@ function resolveAnthropicThinkingConfig(
   return {
     enabled: true,
     maxTokens: ANTHROPIC_MAX_TOKENS_WITH_THINKING,
-    apply: (requestParams) => {
+    apply: requestParams => {
       requestParams.thinking = {
         type: 'enabled',
         budget_tokens: budgetTokens,
@@ -63,11 +68,134 @@ function resolveAnthropicThinkingConfig(
 }
 
 export interface AnthropicTranslateOptions {
-  messages: Array<{ role: string; content: string }>;
+  messages: Array<{
+    role: string;
+    content: string | null;
+    tool_calls?: ChatToolCall[];
+    tool_call_id?: string;
+  }>;
   model?: string;
   apiKey: string;
   signal?: AbortSignal;
   effort?: AnthropicEffort;
+  tools?: ChatToolDefinition[];
+  toolChoice?: ChatToolChoice;
+}
+
+function parseToolArguments(raw: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(String(raw || '{}'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Map chat-completions-style messages (system/user/assistant with
+ * tool_calls, and role:'tool' results) onto Anthropic Messages blocks.
+ */
+export function toAnthropicMessages(
+  messages: AnthropicTranslateOptions['messages']
+): {
+  systemPrompt: string | undefined;
+  anthropicMessages: Array<{ role: 'user' | 'assistant'; content: any }>;
+} {
+  let systemPrompt: string | undefined;
+  const anthropicMessages: Array<{ role: 'user' | 'assistant'; content: any }> =
+    [];
+
+  const pushToolResult = (toolCallId: string, content: string) => {
+    const block = {
+      type: 'tool_result',
+      tool_use_id: toolCallId,
+      content,
+    };
+    const last = anthropicMessages[anthropicMessages.length - 1];
+    // Anthropic requires tool results for parallel tool calls to share
+    // one user message.
+    if (last && last.role === 'user' && Array.isArray(last.content)) {
+      last.content.push(block);
+      return;
+    }
+    anthropicMessages.push({ role: 'user', content: [block] });
+  };
+
+  for (const msg of messages) {
+    if (msg.role === 'system') {
+      systemPrompt = String(msg.content || '');
+      continue;
+    }
+    if (msg.role === 'tool') {
+      if (msg.tool_call_id) {
+        pushToolResult(msg.tool_call_id, String(msg.content || ''));
+      }
+      continue;
+    }
+    if (msg.role === 'assistant') {
+      const blocks: any[] = [];
+      const text = String(msg.content || '');
+      if (text.trim()) {
+        blocks.push({ type: 'text', text });
+      }
+      for (const call of msg.tool_calls || []) {
+        blocks.push({
+          type: 'tool_use',
+          id: call.id,
+          name: call.function.name,
+          input: parseToolArguments(call.function.arguments),
+        });
+      }
+      if (blocks.length > 0) {
+        anthropicMessages.push({ role: 'assistant', content: blocks });
+      }
+      continue;
+    }
+    if (msg.role === 'user') {
+      const text = String(msg.content || '');
+      if (text.trim()) {
+        anthropicMessages.push({ role: 'user', content: text });
+      }
+    }
+  }
+
+  if (anthropicMessages.length === 0 || anthropicMessages[0].role !== 'user') {
+    anthropicMessages.unshift({ role: 'user', content: 'Please proceed.' });
+  }
+
+  return { systemPrompt, anthropicMessages };
+}
+
+export function toAnthropicTools(tools: ChatToolDefinition[]): Array<{
+  name: string;
+  description?: string;
+  input_schema: Record<string, unknown>;
+}> {
+  return tools.map(tool => ({
+    name: tool.function.name,
+    description: tool.function.description,
+    input_schema: tool.function.parameters,
+  }));
+}
+
+export function extractAnthropicToolCalls(
+  content: Array<{ type: string; [key: string]: unknown }>
+): ChatToolCall[] {
+  const toolCalls: ChatToolCall[] = [];
+  for (const block of content) {
+    if (block.type !== 'tool_use') continue;
+    toolCalls.push({
+      id: String(block.id || ''),
+      type: 'function',
+      function: {
+        name: String(block.name || ''),
+        arguments: JSON.stringify(block.input ?? {}),
+      },
+    });
+  }
+  return toolCalls;
 }
 
 export interface AnthropicWebSearchOptions {
@@ -93,30 +221,14 @@ export async function translateWithAnthropic({
   apiKey,
   signal,
   effort,
+  tools,
+  toolChoice,
 }: AnthropicTranslateOptions): Promise<any> {
   const normalizedModel = normalizeAiModelId(model);
   const client = makeAnthropic(apiKey);
+  const hasTools = Array.isArray(tools) && tools.length > 0;
 
-  // Extract system message if present
-  let systemPrompt: string | undefined;
-  const userMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
-    [];
-
-  for (const msg of messages) {
-    if (msg.role === 'system') {
-      systemPrompt = msg.content;
-    } else if (msg.role === 'user' || msg.role === 'assistant') {
-      userMessages.push({
-        role: msg.role,
-        content: msg.content,
-      });
-    }
-  }
-
-  // Ensure first message is from user (Anthropic requirement)
-  if (userMessages.length === 0 || userMessages[0].role !== 'user') {
-    userMessages.unshift({ role: 'user', content: 'Please proceed.' });
-  }
+  const { systemPrompt, anthropicMessages } = toAnthropicMessages(messages);
 
   const thinkingConfig = resolveAnthropicThinkingConfig(
     normalizedModel,
@@ -127,15 +239,31 @@ export async function translateWithAnthropic({
   const requestParams: Anthropic.MessageCreateParams = {
     model: normalizedModel,
     max_tokens: thinkingConfig.maxTokens,
-    messages: userMessages,
+    messages: anthropicMessages as Anthropic.MessageParam[],
   };
 
-  // Add system prompt if present (not compatible with extended thinking in some cases)
-  if (systemPrompt && !thinkingConfig.enabled) {
+  if (hasTools) {
+    (requestParams as any).tools = toAnthropicTools(tools);
+    // Thinking cannot be combined with forced tool use; the loop's system
+    // prompt carries the "call a tool" instruction in that case.
+    if (toolChoice === 'required' && !thinkingConfig.enabled) {
+      (requestParams as any).tool_choice = { type: 'any' };
+    }
+    // Tool flows need the system prompt intact — never fold it into the
+    // first user turn.
+    if (systemPrompt) {
+      requestParams.system = systemPrompt;
+    }
+  } else if (systemPrompt && !thinkingConfig.enabled) {
     requestParams.system = systemPrompt;
   } else if (systemPrompt && thinkingConfig.enabled) {
     // Prepend system context to first user message when using extended thinking
-    userMessages[0].content = `${systemPrompt}\n\n${userMessages[0].content}`;
+    const first = anthropicMessages[0];
+    if (typeof first.content === 'string') {
+      first.content = `${systemPrompt}\n\n${first.content}`;
+    } else {
+      requestParams.system = systemPrompt;
+    }
   }
 
   if (thinkingConfig.enabled) {
@@ -154,12 +282,16 @@ export async function translateWithAnthropic({
     // Skip 'thinking' blocks - they contain internal reasoning
   }
 
+  const toolCalls = extractAnthropicToolCalls(response.content as any);
+
   return {
+    model: normalizedModel,
     choices: [
       {
         message: {
           role: 'assistant',
           content: textContent,
+          ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
         },
       },
     ],

@@ -438,10 +438,16 @@ export const useVideoSuggestionStore =
           }
 
           if (Array.isArray(progress?.partialResults)) {
-            state.results = mergeSuggestionResults(
-              state.results,
-              progress.partialResults
-            );
+            if (progress.resultsFinal) {
+              // The agent's final ranked selection supersedes whatever
+              // raw candidates streamed in while it was searching.
+              state.results = progress.partialResults;
+            } else {
+              state.results = mergeSuggestionResults(
+                state.results,
+                progress.partialResults
+              );
+            }
           }
         }),
 

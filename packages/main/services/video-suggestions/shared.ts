@@ -221,14 +221,28 @@ export function countryTextMatchesAlias(
   return country.includes(needle);
 }
 
+// YouTube's own upload-date search filter (the "sp" param behind
+// Filters > Upload date). Filtering server-side keeps flat-playlist
+// extraction possible: entries need no upload_date for recency to hold.
+const YOUTUBE_UPLOAD_DATE_FILTER: Partial<
+  Record<VideoSuggestionRecency, string>
+> = {
+  day: 'EgIIAg==',
+  week: 'EgIIAw==',
+  month: 'EgIIBA==',
+  year: 'EgIIBQ==',
+};
+
 export function buildYoutubeSearchPageUrl({
   query,
   youtubeRegionCode,
   youtubeSearchLanguage,
+  recency,
 }: {
   query: string;
   youtubeRegionCode?: string;
   youtubeSearchLanguage?: string;
+  recency?: VideoSuggestionRecency;
 }): string {
   const url = new URL(`${YOUTUBE_ROOT_URL}/results`);
   url.searchParams.set('search_query', compactText(query));
@@ -241,6 +255,12 @@ export function buildYoutubeSearchPageUrl({
   }
   if (searchLanguage) {
     url.searchParams.set('hl', searchLanguage);
+  }
+  const uploadDateFilter = recency
+    ? YOUTUBE_UPLOAD_DATE_FILTER[recency]
+    : undefined;
+  if (uploadDateFilter) {
+    url.searchParams.set('sp', uploadDateFilter);
   }
 
   return url.toString();

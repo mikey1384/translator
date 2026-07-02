@@ -15,7 +15,6 @@ import {
 import { terminateProcess } from '../../utils/process-killer.js';
 import {
   type SeedSearchOutcome,
-  VIDEO_SUGGESTION_SOURCE_LABEL,
   buildYoutubeSearchPageUrl,
   clampTraceMessage,
   compactText,
@@ -104,22 +103,6 @@ function recencyDays(recency: VideoSuggestionRecency): number | null {
     default:
       return null;
   }
-}
-
-function toCompactDate(value: Date): string {
-  const year = value.getUTCFullYear();
-  const month = String(value.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(value.getUTCDate()).padStart(2, '0');
-  return `${year}${month}${day}`;
-}
-
-function dateAfterForRecency(
-  recency: VideoSuggestionRecency
-): string | undefined {
-  const days = recencyDays(recency);
-  if (!days) return undefined;
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  return toCompactDate(cutoff);
 }
 
 function parseYtDlpJsonLines(output: string): YtDlpEntry[] {
@@ -258,6 +241,15 @@ function normalizeYoutubeYtDlpResult(
     entry.upload_date ?? entry.release_date ?? timestampIso
   );
 
+  const viewCountRaw =
+    typeof entry.view_count === 'number'
+      ? entry.view_count
+      : Number(entry.view_count);
+  const viewCount =
+    Number.isFinite(viewCountRaw) && viewCountRaw >= 0
+      ? viewCountRaw
+      : undefined;
+
   return {
     id: `yt-dlp-${index + 1}`,
     title,
@@ -267,6 +259,7 @@ function normalizeYoutubeYtDlpResult(
     thumbnailUrl,
     durationSec,
     uploadedAt,
+    viewCount,
   };
 }
 
@@ -315,9 +308,10 @@ function applyRecencyPreference(
   }
 
   return {
-    // Strict dropdown behavior: when recency is selected, only dated matches
-    // within the window are kept.
-    items: recent,
+    // Recency is enforced server-side via the search URL's upload-date
+    // filter, so undated flat-playlist entries are already in-window.
+    // Keep them after dated matches; drop only entries known to be old.
+    items: [...recent, ...unknownDate],
     recentCount: recent.length,
     unknownCount: unknownDate.length,
     oldCount: old.length,
@@ -332,6 +326,7 @@ async function runAbortableYtDlpCommand({
   signal,
   logPrefix,
   fallbackMessage,
+  timeoutMs = 120_000,
 }: {
   ytDlpPath: string;
   args: string[];
@@ -339,13 +334,14 @@ async function runAbortableYtDlpCommand({
   signal?: AbortSignal;
   logPrefix: string;
   fallbackMessage: string;
+  timeoutMs?: number;
 }): Promise<string> {
   throwIfSuggestionAborted(signal);
 
   const subprocess = execa(ytDlpPath, args, {
     windowsHide: true,
     encoding: 'utf8',
-    timeout: 120_000,
+    timeout: timeoutMs,
     maxBuffer: 24 * 1024 * 1024,
     env,
   });
@@ -391,16 +387,12 @@ async function runYtDlpUrlSeedSearch({
   env,
   targetUrl,
   limit,
-  flatPlaylist,
-  dateAfter,
   signal,
 }: {
   ytDlpPath: string;
   env: NodeJS.ProcessEnv;
   targetUrl: string;
   limit: number;
-  flatPlaylist: boolean;
-  dateAfter?: string;
   signal?: AbortSignal;
 }): Promise<string> {
   const args = [
@@ -413,13 +405,10 @@ async function runYtDlpUrlSeedSearch({
     '--no-warnings',
     '--no-progress',
     '--ignore-errors',
+    // Flat extraction reads only the search/playlist page instead of
+    // fetching every video's watch page — one network round trip per seed.
+    '--flat-playlist',
   ];
-  if (flatPlaylist) {
-    args.push('--flat-playlist');
-  }
-  if (dateAfter) {
-    args.push('--dateafter', dateAfter);
-  }
   return runAbortableYtDlpCommand({
     ytDlpPath,
     args,
@@ -427,6 +416,7 @@ async function runYtDlpUrlSeedSearch({
     signal,
     logPrefix: 'video-suggestions-yt-dlp-seed',
     fallbackMessage: 'yt-dlp url-seed search failed.',
+    timeoutMs: 45_000,
   });
 }
 
@@ -468,20 +458,26 @@ export async function runYoutubeYtDlpSearch({
       .map(url => compactText(url))
       .filter(isYoutubeVideoSuggestionUrl)
   ).slice(0, 24);
-  const seeds: YoutubeSearchSeed[] = uniqueTexts([
-    ...normalizedQueries.map(query =>
-      buildYoutubeSearchPageUrl({
-        query,
-        youtubeRegionCode,
-        youtubeSearchLanguage,
-      })
-    ),
-    ...normalizedSeedUrls,
-  ])
-    .map((url, index) => ({
-      query: normalizedQueries[index] || normalizedSearchQuery || url,
-      url,
-    }))
+  const querySeeds: YoutubeSearchSeed[] = normalizedQueries.map(query => ({
+    query,
+    url: buildYoutubeSearchPageUrl({
+      query,
+      youtubeRegionCode,
+      youtubeSearchLanguage,
+      recency,
+    }),
+  }));
+  const urlSeeds: YoutubeSearchSeed[] = normalizedSeedUrls.map(url => ({
+    query: normalizedSearchQuery || url,
+    url,
+  }));
+  const seenSeedUrls = new Set<string>();
+  const seeds = [...querySeeds, ...urlSeeds]
+    .filter(seed => {
+      if (seenSeedUrls.has(seed.url)) return false;
+      seenSeedUrls.add(seed.url);
+      return true;
+    })
     .slice(0, 10);
 
   if (seeds.length === 0) {
@@ -499,30 +495,33 @@ export async function runYoutubeYtDlpSearch({
   const ytDlpPath = await ensureYtDlpBinary();
   const jsRuntime = await ensureJsRuntime();
   const env = buildYtDlpEnv(jsRuntime);
-  const dateAfter = dateAfterForRecency(recency);
   const perSeedLimit = Math.max(
-    6,
-    Math.min(12, Math.ceil((maxResults * 2) / seeds.length))
+    8,
+    Math.min(20, Math.ceil((maxResults * 2) / seeds.length))
   );
-  const seenUrls = new Set<string>(excludeUrls);
-  const collectedResults: VideoSuggestionResultItem[] = [];
+  const excludedUrls = new Set<string>(excludeUrls);
+  // Display-only dedupe for streamed partials (completion order). Final
+  // ranking dedupes separately, in seed order, after all seeds return.
+  const streamedUrls = new Set<string>();
+  const resultsBySeed: VideoSuggestionResultItem[][] = seeds.map(() => []);
+  let normalizedCount = 0;
+  let completedSeeds = 0;
+  let streamedCount = 0;
 
-  for (let index = 0; index < seeds.length; index += 1) {
-    throwIfSuggestionAborted(signal);
+  emitSuggestionProgress(onProgress, {
+    operationId,
+    phase: 'searching',
+    message: `Searching ${seeds.length} seed${seeds.length === 1 ? '' : 's'} in parallel.`,
+    searchQuery: normalizedSearchQuery || seeds[0].query,
+    stageKey: 'retrieval',
+    stageIndex: 3,
+    stageTotal: 3,
+    stageState: 'running',
+    elapsedMs: Date.now() - startedAt,
+  });
 
+  const runSeed = async (index: number): Promise<void> => {
     const seed = seeds[index];
-    emitSuggestionProgress(onProgress, {
-      operationId,
-      phase: 'searching',
-      message: `Search seed ${index + 1}/${seeds.length}: collecting candidates.`,
-      searchQuery: seed.query || normalizedSearchQuery,
-      stageKey: 'retrieval',
-      stageIndex: 3,
-      stageTotal: 3,
-      stageState: 'running',
-      elapsedMs: Date.now() - startedAt,
-    });
-
     let stdout = '';
     try {
       stdout = await runYtDlpUrlSeedSearch({
@@ -530,36 +529,45 @@ export async function runYoutubeYtDlpSearch({
         env,
         targetUrl: seed.url,
         limit: perSeedLimit,
-        flatPlaylist: false,
-        dateAfter,
         signal,
       });
     } catch (error) {
+      if (isSuggestionAbortError(error, signal)) {
+        throw error;
+      }
       log.warn(
         '[video-suggestions] yt-dlp seed failed:',
         compactText((error as Error)?.message || String(error || ''))
       );
-      continue;
     }
 
-    const parsedRows = parseYtDlpJsonLines(stdout);
     const freshResults: VideoSuggestionResultItem[] = [];
-
-    for (const row of parsedRows) {
-      const item = normalizeYoutubeYtDlpResult(row, collectedResults.length);
-      if (!item?.url || seenUrls.has(item.url)) continue;
-      seenUrls.add(item.url);
-      collectedResults.push(item);
-      freshResults.push(item);
+    const seedUrls = new Set<string>();
+    for (const row of parseYtDlpJsonLines(stdout)) {
+      const item = normalizeYoutubeYtDlpResult(row, normalizedCount);
+      if (!item?.url || excludedUrls.has(item.url) || seedUrls.has(item.url)) {
+        continue;
+      }
+      // Keep cross-seed duplicates in every seed's bucket: which seed a
+      // URL ranks under must not depend on subprocess completion order.
+      seedUrls.add(item.url);
+      normalizedCount += 1;
+      resultsBySeed[index].push(item);
+      if (!streamedUrls.has(item.url)) {
+        streamedUrls.add(item.url);
+        freshResults.push(item);
+      }
     }
 
+    completedSeeds += 1;
+    streamedCount += freshResults.length;
     if (freshResults.length > 0) {
       emitSuggestionProgress(onProgress, {
         operationId,
         phase: 'searching',
-        message: `Search seed ${index + 1}/${seeds.length}: loaded ${freshResults.length} result${freshResults.length === 1 ? '' : 's'}.`,
+        message: `Search seed ${completedSeeds}/${seeds.length}: loaded ${freshResults.length} result${freshResults.length === 1 ? '' : 's'}.`,
         searchQuery: seed.query || normalizedSearchQuery,
-        resultCount: collectedResults.length,
+        resultCount: streamedCount,
         partialResults: freshResults,
         assistantPreview: clampTraceMessage(
           `Loaded ${freshResults.length} result${freshResults.length === 1 ? '' : 's'} from ${quotedStatusValue(
@@ -574,6 +582,30 @@ export async function runYoutubeYtDlpSearch({
         elapsedMs: Date.now() - startedAt,
       });
     }
+  };
+
+  const concurrency = Math.min(4, seeds.length);
+  let nextSeedIndex = 0;
+  await Promise.all(
+    Array.from({ length: concurrency }, async () => {
+      while (nextSeedIndex < seeds.length) {
+        throwIfSuggestionAborted(signal);
+        const index = nextSeedIndex;
+        nextSeedIndex += 1;
+        await runSeed(index);
+      }
+    })
+  );
+
+  // Merge in seed order and dedupe here, so the most precise query's hits
+  // lead and duplicates keep the earliest seed's ranking, regardless of
+  // which seed's subprocess finished first.
+  const mergedUrls = new Set<string>();
+  const collectedResults: VideoSuggestionResultItem[] = [];
+  for (const item of resultsBySeed.flat()) {
+    if (mergedUrls.has(item.url)) continue;
+    mergedUrls.add(item.url);
+    collectedResults.push(item);
   }
 
   const recencyApplied = applyRecencyPreference(collectedResults, recency);

@@ -118,3 +118,21 @@ The GitHub Action handles the macOS release from SemVer tags: it builds, signs, 
 ## Environment
 
 Uses `.env` file in project root. API keys stored encrypted via electron-store (AES-256-GCM).
+
+
+## Running & Driving the App for E2E Verification (agents)
+
+Use the `run-translator` skill: `.claude/skills/run-translator/SKILL.md`.
+It has a working Playwright REPL driver (`driver.mjs`), the FIFO-based
+workflow for this tmux-less Mac, and every discovered gotcha: Korean UI
+labels, the hidden-panel DOM trap, userData/log paths
+(`~/Library/Application Support/@app/main/`, `~/Library/Logs/@app/main/`),
+dev-device credit grants via the stage5-api admin route (a review-phase
+model call reserves ~34k credits — grant STARTER, not MICRO), and relay
+log inspection (`flyctl logs` in `openai-relay/`). Do not rediscover any
+of this — read the skill first.
+
+Key invariant learned the hard way: video-suggestion progress IPC events
+race the invoke reply, and the renderer store drops events after
+`finishOperation` clears `activeOperationId`. Final state must always
+ride in the resolved IPC response, not only in trailing progress events.

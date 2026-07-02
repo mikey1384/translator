@@ -7,6 +7,11 @@ import {
   getActiveProvider,
 } from '../ai-provider.js';
 import type { TranslationModelFamilyHintSource } from '../../utils/translation-model-family-hint.js';
+import type {
+  ChatToolCall,
+  ChatToolChoice,
+  ChatToolDefinition,
+} from '@shared-types/app';
 import log from 'electron-log';
 import {
   AI_MODELS,
@@ -326,6 +331,134 @@ export async function callAIModel({
 
   throw new Error(
     `${providerName} API call failed after ${retryAttempts} attempts.`
+  );
+}
+
+function extractToolCallsFromCompletion(completion: any): ChatToolCall[] {
+  const rawCalls =
+    completion?.choices?.[0]?.message?.tool_calls ?? completion?.toolCalls;
+  if (!Array.isArray(rawCalls)) return [];
+
+  const toolCalls: ChatToolCall[] = [];
+  for (const call of rawCalls) {
+    const name = String(call?.function?.name || call?.name || '').trim();
+    if (!name) continue;
+    const rawArguments =
+      call?.function?.arguments ?? call?.arguments ?? call?.input ?? '{}';
+    toolCalls.push({
+      id: String(call?.id || `tool-call-${toolCalls.length + 1}`),
+      type: 'function',
+      function: {
+        name,
+        arguments:
+          typeof rawArguments === 'string'
+            ? rawArguments
+            : JSON.stringify(rawArguments ?? {}),
+      },
+    });
+  }
+  return toolCalls;
+}
+
+export type AIToolTurnResult = {
+  content: string;
+  toolCalls: ChatToolCall[];
+  resolvedModel?: string;
+};
+
+/**
+ * One model turn in a tool-calling conversation. Unlike callAIModel this
+ * does not treat an empty text body as a failure — a turn that is only
+ * tool calls is a valid outcome.
+ */
+export async function callAIModelWithTools({
+  messages,
+  tools,
+  toolChoice,
+  model = AI_MODELS.GPT,
+  reasoning,
+  translationPhase,
+  modelFamilyHintSource = 'preference',
+  signal,
+  operationId,
+  retryAttempts = 2,
+}: {
+  messages: any[];
+  tools: ChatToolDefinition[];
+  toolChoice?: ChatToolChoice;
+  model?: string;
+  reasoning?: { effort?: 'low' | 'medium' | 'high' };
+  translationPhase?: 'draft' | 'review';
+  modelFamilyHintSource?: TranslationModelFamilyHintSource;
+  signal?: AbortSignal;
+  operationId: string;
+  retryAttempts?: number;
+}): Promise<AIToolTurnResult> {
+  const requestIdempotencyKey = buildTranslationIdempotencyKey({
+    operationId,
+    model,
+    reasoning,
+    translationPhase,
+    modelFamilyHintSource,
+    messages: [{ tools, toolChoice }, ...messages],
+  });
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= retryAttempts; attempt++) {
+    if (signal?.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    try {
+      const completion = await translateAi({
+        messages,
+        model,
+        reasoning,
+        translationPhase,
+        modelFamilyHintSource,
+        tools,
+        toolChoice,
+        idempotencyKey: requestIdempotencyKey,
+        signal,
+      });
+
+      const resolvedModel =
+        typeof completion?.model === 'string' && completion.model.trim()
+          ? normalizeAiModelId(completion.model)
+          : undefined;
+      const toolCalls = extractToolCallsFromCompletion(completion);
+      const content = extractContentFromCompletion(completion) || '';
+
+      if (!content.trim() && toolCalls.length === 0) {
+        throw new Error('Model returned neither text nor tool calls.');
+      }
+
+      return { content, toolCalls, resolvedModel };
+    } catch (error: any) {
+      if (signal?.aborted || error?.name === 'AbortError') {
+        throw new DOMException('Operation cancelled', 'AbortError');
+      }
+      if (error?.message === ERROR_CODES.INSUFFICIENT_CREDITS) {
+        throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+      }
+      if (Object.values(ERROR_CODES).includes(error?.message)) {
+        throw new Error(error.message);
+      }
+      lastError = error;
+      if (attempt < retryAttempts) {
+        const delay = 1000 * Math.pow(2, attempt);
+        log.debug(
+          `[${operationId}] Tool turn failed (${error?.message || error}). Retrying in ${delay}ms (attempt ${attempt}/${retryAttempts})`
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw new Error(
+    `AI tool turn failed after ${retryAttempts} attempts: ${
+      (lastError as Error)?.message || String(lastError)
+    }`
   );
 }
 

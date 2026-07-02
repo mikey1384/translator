@@ -437,6 +437,29 @@ declare module '@shared-types/app' {
     | 'follow-draft'
     | 'follow-review';
 
+  // Chat-completions-style tool calling, used across every AI provider
+  // path (Stage5 relay, BYO OpenAI, BYO Anthropic). Anthropic adapters
+  // translate these to/from tool_use / tool_result blocks.
+  export interface ChatToolDefinition {
+    type: 'function';
+    function: {
+      name: string;
+      description?: string;
+      parameters: Record<string, unknown>;
+    };
+  }
+
+  export interface ChatToolCall {
+    id: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }
+
+  export type ChatToolChoice = 'auto' | 'required';
+
   export type VideoSuggestionRecency =
     | 'any'
     | 'day'
@@ -464,6 +487,7 @@ declare module '@shared-types/app' {
     channelUrl?: string;
     durationSec?: number;
     uploadedAt?: string;
+    viewCount?: number;
   }
 
   export interface VideoSuggestionPreferenceSlots {
@@ -524,6 +548,9 @@ declare module '@shared-types/app' {
     assistantPreview?: string;
     resultCount?: number;
     partialResults?: VideoSuggestionResultItem[];
+    // True when partialResults is the agent's final ranked selection —
+    // the renderer replaces the streamed candidate list instead of merging.
+    resultsFinal?: boolean;
     stageKey?: VideoSuggestionStageKey;
     stageIndex?: number;
     stageTotal?: number;
