@@ -244,6 +244,11 @@ export const workspaceStyles = css`
 
   @media (max-width: 1040px) {
     grid-template-columns: 1fr;
+    /* The fixed workspace height must not survive the single-column
+       layout: children switch to overflow visible here, so a fixed
+       height paints cards into the panel's hidden overflow — clipped,
+       unreachable, and unscrollable. */
+    height: auto;
     min-height: 0;
     max-height: none;
     overflow: visible;

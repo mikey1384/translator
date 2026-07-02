@@ -1,8 +1,6 @@
 import {
   Fragment,
-  useCallback,
   useEffect,
-  useRef,
   useState,
   type KeyboardEvent,
   type ReactNode,
@@ -31,29 +29,12 @@ import {
   suggestedFollowUpsHeaderStyles,
   suggestedFollowUpsStyles,
   inputWrapStyles,
-  loadingProgressFillStyles,
-  loadingProgressHeaderStyles,
-  loadingProgressLabelStyles,
-  loadingProgressPercentStyles,
-  loadingProgressTrackStyles,
   loadingMetaStyles,
   messagesStyles,
   messagesCompactStyles,
   userBubbleStyles,
 } from './VideoSuggestionPanel.styles.js';
-import type {
-  PipelineStageKey,
-  PipelineStageProgress,
-} from './VideoSuggestionPanel.types.js';
 import type { VideoSuggestionMessage } from '@shared-types/app';
-import {
-  calculateOverallPipelineProgress,
-  clampPercent,
-  inferRetrievalStageProgressFromMessage,
-  runningStageTargetPercent,
-  STAGE_PROGRESS_TICK_MS,
-  type StageProgressMap,
-} from './video-suggestion-helpers.js';
 
 type VideoSuggestionChatColumnProps = {
   cancelling: boolean;
@@ -64,8 +45,6 @@ type VideoSuggestionChatColumnProps = {
   messages: VideoSuggestionMessage[];
   loadingElapsedSec: number;
   loadingMessage: string;
-  pipelineStages: PipelineStageProgress[];
-  runningStage: PipelineStageProgress | null;
   suggestedFollowUpPrompts: string[];
   streamingPreview: string;
   t: TFunction;
@@ -81,7 +60,6 @@ type VideoSuggestionChatColumnProps = {
   resetDisabled: boolean;
   showQuickStartAction: boolean;
   resolveI18n: (text: string) => string;
-  pipelineStageLabel: (key: PipelineStageKey) => string;
 };
 
 function renderAssistantInline(text: string, keyPrefix: string): ReactNode[] {
@@ -216,8 +194,6 @@ export default function VideoSuggestionChatColumn({
   messages,
   loadingElapsedSec,
   loadingMessage,
-  pipelineStages,
-  runningStage,
   suggestedFollowUpPrompts,
   streamingPreview,
   t,
@@ -233,89 +209,15 @@ export default function VideoSuggestionChatColumn({
   resetDisabled,
   showQuickStartAction,
   resolveI18n,
-  pipelineStageLabel,
 }: VideoSuggestionChatColumnProps) {
   const [showSuggestedFollowUps, setShowSuggestedFollowUps] = useState(false);
-  const [stageProgress, setStageProgress] = useState<StageProgressMap>({});
   const canShowSuggestedFollowUps = suggestedFollowUpPrompts.length > 0;
-  const stageRunStartedAtRef = useRef<
-    Partial<Record<PipelineStageKey, number>>
-  >({});
-  const pipelineStagesRef = useRef<PipelineStageProgress[]>(pipelineStages);
-
-  const updateStageProgress = useCallback(
-    (stages: PipelineStageProgress[], nowMs: number) => {
-      setStageProgress(prev => {
-        const next: StageProgressMap = { ...prev };
-        for (const stage of stages) {
-          if (stage.state === 'cleared') {
-            next[stage.key] = 100;
-            delete stageRunStartedAtRef.current[stage.key];
-            continue;
-          }
-
-          if (stage.state === 'running') {
-            const startedAt = stageRunStartedAtRef.current[stage.key] || nowMs;
-            stageRunStartedAtRef.current[stage.key] = startedAt;
-            const elapsedSec = Math.max(0, (nowMs - startedAt) / 1000);
-            const target = runningStageTargetPercent(elapsedSec);
-            const current = clampPercent(next[stage.key] ?? 0);
-            next[stage.key] = clampPercent(Math.max(current, target));
-            continue;
-          }
-
-          next[stage.key] = 0;
-          delete stageRunStartedAtRef.current[stage.key];
-        }
-        return next;
-      });
-    },
-    []
-  );
 
   useEffect(() => {
     if (!canShowSuggestedFollowUps || loading) {
       setShowSuggestedFollowUps(false);
     }
   }, [canShowSuggestedFollowUps, loading]);
-
-  useEffect(() => {
-    pipelineStagesRef.current = pipelineStages;
-    updateStageProgress(pipelineStages, Date.now());
-  }, [pipelineStages, updateStageProgress]);
-
-  useEffect(() => {
-    if (!loading) return;
-    const timer = window.setInterval(() => {
-      updateStageProgress(pipelineStagesRef.current, Date.now());
-    }, STAGE_PROGRESS_TICK_MS);
-    return () => window.clearInterval(timer);
-  }, [loading, updateStageProgress]);
-
-  const retrievalStage = pipelineStages.find(
-    stage => stage.key === 'retrieval'
-  );
-  const hintedRetrievalProgress =
-    retrievalStage?.state === 'running'
-      ? inferRetrievalStageProgressFromMessage(loadingMessage)
-      : null;
-  const effectiveStageProgress: StageProgressMap =
-    hintedRetrievalProgress == null
-      ? stageProgress
-      : {
-          ...stageProgress,
-          retrieval: Math.max(
-            stageProgress.retrieval ?? 0,
-            hintedRetrievalProgress
-          ),
-        };
-  const rawOverallProgressPercent = Math.round(
-    calculateOverallPipelineProgress(pipelineStages, effectiveStageProgress)
-  );
-  const overallProgressPercent =
-    loading && rawOverallProgressPercent >= 100
-      ? 99
-      : rawOverallProgressPercent;
 
   return (
     <div className={cx(chatColumnStyles, compact && chatColumnCompactStyles)}>
@@ -364,29 +266,6 @@ export default function VideoSuggestionChatColumn({
         {loading ? (
           <div className={assistantBubbleStyles}>
             <div>{loadingMessage}</div>
-            <div className={loadingProgressHeaderStyles}>
-              <span className={loadingProgressLabelStyles}>
-                {t(
-                  'input.videoSuggestion.liveActivityTitle',
-                  'Search progress'
-                )}
-              </span>
-              <span className={loadingProgressPercentStyles}>
-                {overallProgressPercent}%
-              </span>
-            </div>
-            <div className={loadingProgressTrackStyles} aria-hidden="true">
-              <div
-                className={loadingProgressFillStyles}
-                style={{ width: `${overallProgressPercent}%` }}
-              />
-            </div>
-            {runningStage ? (
-              <div className={loadingMetaStyles}>
-                {t('input.videoSuggestion.currentStep', 'Current step')}:{' '}
-                {runningStage.index}. {pipelineStageLabel(runningStage.key)}
-              </div>
-            ) : null}
             {streamingPreview.trim() ? (
               <div className={loadingMetaStyles}>{streamingPreview}</div>
             ) : loadingElapsedSec >= 8 ? (

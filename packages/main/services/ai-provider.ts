@@ -890,8 +890,12 @@ export async function translate(
   const normalizedModel = normalizeAiModelId(model);
   const provider = getActiveProviderForModel(normalizedModel);
   const apiKeyModeEnabled = isApiKeyModeEnabled();
+  // hintSource 'model' means the caller pinned a concrete model (e.g. the
+  // video-suggestion agent); send it explicitly instead of deferring to
+  // backend-authoritative translation-model routing.
   const useServerModelAuthority =
-    translationPhase === 'draft' || translationPhase === 'review';
+    (translationPhase === 'draft' || translationPhase === 'review') &&
+    modelFamilyHintSource !== 'model';
   const modelFamilyHint = resolveTranslationModelFamilyHint({
     translationPhase,
     model: normalizedModel,

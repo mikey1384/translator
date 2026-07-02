@@ -37,7 +37,12 @@ function resolveAnthropicThinkingConfig(
     return { enabled: false, maxTokens: ANTHROPIC_MAX_TOKENS };
   }
 
-  if (normalizedModel === AI_MODELS.CLAUDE_OPUS) {
+  // Claude 4.8+/5-family models use adaptive thinking; older models still
+  // take explicit budget_tokens.
+  if (
+    normalizedModel === AI_MODELS.CLAUDE_OPUS ||
+    normalizedModel === AI_MODELS.CLAUDE_SONNET
+  ) {
     return {
       enabled: true,
       maxTokens: ANTHROPIC_MAX_TOKENS_WITH_THINKING,
@@ -227,13 +232,16 @@ export async function translateWithAnthropic({
   const normalizedModel = normalizeAiModelId(model);
   const client = makeAnthropic(apiKey);
   const hasTools = Array.isArray(tools) && tools.length > 0;
+  const forceToolUse = hasTools && toolChoice === 'required';
 
   const { systemPrompt, anthropicMessages } = toAnthropicMessages(messages);
 
-  const thinkingConfig = resolveAnthropicThinkingConfig(
-    normalizedModel,
-    effort
-  );
+  // Anthropic rejects forced tool_choice combined with thinking. The tool
+  // contract wins: drop thinking for this call rather than silently
+  // downgrading a required tool call to auto.
+  const thinkingConfig: AnthropicThinkingConfig = forceToolUse
+    ? { enabled: false, maxTokens: ANTHROPIC_MAX_TOKENS }
+    : resolveAnthropicThinkingConfig(normalizedModel, effort);
 
   // Build request parameters
   const requestParams: Anthropic.MessageCreateParams = {
@@ -244,9 +252,7 @@ export async function translateWithAnthropic({
 
   if (hasTools) {
     (requestParams as any).tools = toAnthropicTools(tools);
-    // Thinking cannot be combined with forced tool use; the loop's system
-    // prompt carries the "call a tool" instruction in that case.
-    if (toolChoice === 'required' && !thinkingConfig.enabled) {
+    if (forceToolUse) {
       (requestParams as any).tool_choice = { type: 'any' };
     }
     // Tool flows need the system prompt intact — never fold it into the

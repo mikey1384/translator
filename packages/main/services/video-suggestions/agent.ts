@@ -491,10 +491,11 @@ export async function runVideoSearchAgent({
       });
     }
 
+    // No translationPhase here: sending it would trigger the relay's
+    // subtitle-workflow model authority, which rewrites the pinned model.
     const turnResult = await callAIModelWithTools({
       operationId: `${operationId}-agent-${turn}`,
       model,
-      translationPhase,
       modelFamilyHintSource: 'model',
       reasoning: { effort: reasoningEffort },
       signal,

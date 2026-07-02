@@ -425,13 +425,13 @@ declare module '@shared-types/app' {
     | 'quality'
     | 'gpt-5.1'
     | 'gpt-5.5'
-    | 'claude-sonnet-4-6'
+    | 'claude-sonnet-5'
     | 'claude-opus-4-8';
   export type Stage5VideoSuggestionMode = 'standard' | 'high';
   export type ByoVideoSuggestionModel =
     | 'gpt-5.1'
     | 'gpt-5.5'
-    | 'claude-sonnet-4-6'
+    | 'claude-sonnet-5'
     | 'claude-opus-4-8'
     // Migration-only compatibility states for legacy unified preferences.
     | 'follow-draft'

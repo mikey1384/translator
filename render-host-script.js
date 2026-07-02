@@ -1367,7 +1367,7 @@ var TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
 // ../shared/constants/model-catalog.ts
 var AI_MODELS = {
   GPT: "gpt-5.1",
-  CLAUDE_SONNET: "claude-sonnet-4-6",
+  CLAUDE_SONNET: "claude-sonnet-5",
   CLAUDE_OPUS: "claude-opus-4-8",
   WHISPER: "whisper-1"
 };
@@ -1396,6 +1396,8 @@ var AI_MODEL_ALIASES = {
   "claude-sonnet-4-5-20250929": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4-5": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4.6": AI_MODELS.CLAUDE_SONNET,
+  // Legacy Sonnet values from saved settings normalize to current Sonnet.
+  "claude-sonnet-4-6": AI_MODELS.CLAUDE_SONNET,
   // Legacy Opus values from saved settings normalize to current Opus.
   "claude-opus-4-6": AI_MODELS.CLAUDE_OPUS,
   "claude-opus-4.6": AI_MODELS.CLAUDE_OPUS,
@@ -1411,6 +1413,10 @@ var STAGE5_TRANSLATION_MODEL_PRICING = {
   [STAGE5_REVIEW_TRANSLATION_MODEL]: {
     in: 5 / 1e6,
     out: 30 / 1e6
+  },
+  [AI_MODELS.CLAUDE_SONNET]: {
+    in: 3 / 1e6,
+    out: 15 / 1e6
   },
   [AI_MODELS.CLAUDE_OPUS]: {
     in: 5 / 1e6,
@@ -1519,7 +1525,7 @@ var AI_MODEL_DISPLAY_NAMES = {
 var AI_MODEL_EXACT_DISPLAY_NAMES = {
   [AI_MODELS.GPT]: "GPT-5.1",
   [STAGE5_REVIEW_TRANSLATION_MODEL]: STAGE5_REVIEW_PROVIDER_OPTIONS.openai.exactModelLabel,
-  [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet 4.6",
+  [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet 5",
   [AI_MODELS.CLAUDE_OPUS]: STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
   [AI_MODELS.WHISPER]: "Whisper",
   [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3"

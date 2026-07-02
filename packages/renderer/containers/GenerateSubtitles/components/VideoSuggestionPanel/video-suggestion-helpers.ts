@@ -14,20 +14,12 @@ import type {
 import { isVideoSuggestionRecency } from '../../../../../shared/helpers/video-suggestion-sanitize.js';
 
 export const NO_PRESET_VALUE = '__none__';
-export const STAGE_PROGRESS_TICK_MS = 450;
-export const STAGE_PROGRESS_RUNNING_MIN = 7;
-export const STAGE_PROGRESS_RUNNING_MAX = 95;
-export const STAGE_PROGRESS_EASE_SEC = 28;
-const RETRIEVAL_SEED_PROGRESS_BASE = 35;
-const RETRIEVAL_SEED_PROGRESS_RANGE = 60;
 
 const PIPELINE_STAGE_KEYS: PipelineStageKey[] = [
   'answerer',
   'planner',
   'retrieval',
 ];
-
-export type StageProgressMap = Partial<Record<PipelineStageKey, number>>;
 
 export function resolveI18n(text: string, t: TFunction): string {
   if (text.startsWith('__i18n__:')) {
@@ -136,57 +128,6 @@ export function inferStageFromMessage(
   const key = PIPELINE_STAGE_KEYS[idx - 1];
   const state = /cleared/i.test(message) ? 'cleared' : 'running';
   return { key, state };
-}
-
-export function clampPercent(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  if (value <= 0) return 0;
-  if (value >= 100) return 100;
-  return value;
-}
-
-export function runningStageTargetPercent(elapsedSec: number): number {
-  const safeElapsed = Math.max(0, elapsedSec);
-  const eased = 1 - Math.exp(-safeElapsed / STAGE_PROGRESS_EASE_SEC);
-  return (
-    STAGE_PROGRESS_RUNNING_MIN +
-    (STAGE_PROGRESS_RUNNING_MAX - STAGE_PROGRESS_RUNNING_MIN) * eased
-  );
-}
-
-export function inferRetrievalStageProgressFromMessage(
-  message: string
-): number | null {
-  const match = String(message || '').match(/Search seed\s+(\d+)\s*\/\s*(\d+)/i);
-  if (!match) return null;
-  const current = Number(match[1]);
-  const total = Number(match[2]);
-  if (!Number.isFinite(current) || !Number.isFinite(total) || total <= 0) {
-    return null;
-  }
-  const completion = Math.min(1, Math.max(0, current / total));
-  return clampPercent(
-    RETRIEVAL_SEED_PROGRESS_BASE +
-      completion * RETRIEVAL_SEED_PROGRESS_RANGE
-  );
-}
-
-export function calculateOverallPipelineProgress(
-  pipelineStages: PipelineStageProgress[],
-  stageProgress: StageProgressMap
-): number {
-  if (pipelineStages.length === 0) return 0;
-  const total = pipelineStages.reduce((sum, stage) => {
-    const current = stageProgress[stage.key];
-    if (typeof current === 'number') {
-      return sum + clampPercent(current);
-    }
-    if (stage.state === 'cleared') {
-      return sum + 100;
-    }
-    return sum;
-  }, 0);
-  return clampPercent(total / pipelineStages.length);
 }
 
 export function pipelineStageLabel(

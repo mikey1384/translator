@@ -75,7 +75,6 @@ import {
 } from './video-suggestion-local-storage.js';
 import {
   buildVideoMetaDetails as buildVideoMetaDetailsFromHelper,
-  pipelineStageLabel,
   resolveErrorText,
   resolveI18n,
   resolvePreferredLanguageName,
@@ -256,7 +255,6 @@ export default function VideoSuggestionPanel({
     activeTraceLines,
     cancelSearch,
     cancelling,
-    clearedStageCount,
     continuationId,
     error,
     input,
@@ -859,8 +857,6 @@ export default function VideoSuggestionPanel({
               messages={messages}
               loadingElapsedSec={loadingElapsedSec}
               loadingMessage={loadingMessage}
-              pipelineStages={pipelineStages}
-              runningStage={runningStage}
               suggestedFollowUpPrompts={suggestedFollowUpPrompts}
               streamingPreview={streamingPreview}
               t={t}
@@ -888,7 +884,6 @@ export default function VideoSuggestionPanel({
               resetDisabled={resetChatDisabled}
               showQuickStartAction={showQuickStartAction}
               resolveI18n={text => resolveI18n(text, t)}
-              pipelineStageLabel={key => pipelineStageLabel(key, t)}
             />
 
             <div
@@ -901,17 +896,12 @@ export default function VideoSuggestionPanel({
                 {showLiveActivityPanel ? (
                   <VideoSuggestionLiveActivity
                     activeTraceLines={activeTraceLines}
-                    clearedStageCount={clearedStageCount}
                     hasResults={results.length > 0}
                     hidden={false}
                     loading={loading}
                     loadingElapsedSec={loadingElapsedSec}
                     loadingMessage={loadingMessage}
-                    pipelineStages={pipelineStages}
-                    runningStage={runningStage}
-                    searchQuery={searchQuery}
                     t={t}
-                    pipelineStageLabel={key => pipelineStageLabel(key, t)}
                   />
                 ) : null}
                 <VideoSuggestionResultsTab

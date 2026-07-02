@@ -12,13 +12,12 @@ export type Stage5VideoSuggestionMode = 'standard' | 'high';
 export const STAGE5_CREDITS_VIDEO_SUGGESTION_DIRECT_MODELS = [
   AI_MODELS.GPT,
   STAGE5_REVIEW_TRANSLATION_MODEL,
-] as const;
-
-export const BYO_VIDEO_SUGGESTION_DIRECT_MODELS = [
-  ...STAGE5_CREDITS_VIDEO_SUGGESTION_DIRECT_MODELS,
   AI_MODELS.CLAUDE_SONNET,
   AI_MODELS.CLAUDE_OPUS,
 ] as const;
+
+export const BYO_VIDEO_SUGGESTION_DIRECT_MODELS =
+  STAGE5_CREDITS_VIDEO_SUGGESTION_DIRECT_MODELS;
 
 export type DirectVideoSuggestionModelId =
   (typeof BYO_VIDEO_SUGGESTION_DIRECT_MODELS)[number];
@@ -118,12 +117,8 @@ function resolveApiKeyModeVideoSuggestionFallback(
 function resolveStage5CreditModeDirectSelection(
   selected: DirectVideoSuggestionModelId
 ): DirectVideoSuggestionModelId {
-  if (selected === AI_MODELS.CLAUDE_SONNET) {
-    return AI_MODELS.GPT;
-  }
-  if (selected === AI_MODELS.CLAUDE_OPUS) {
-    return STAGE5_REVIEW_TRANSLATION_MODEL;
-  }
+  // Stage5 credits mode routes video suggestions through Claude Sonnet;
+  // explicit GPT/Opus picks pass through unchanged.
   return selected;
 }
 
@@ -234,9 +229,12 @@ export function resolveVideoSuggestionPreferenceForMode({
     return normalizedByoModel;
   }
 
+  // Semantic tiers, not concrete model ids: the effective-model resolver
+  // owns which model each tier runs on (currently Claude Sonnet for both,
+  // with quality deepening reasoning).
   return normalizeStage5VideoSuggestionMode(stage5Mode) === 'high'
-    ? STAGE5_REVIEW_TRANSLATION_MODEL
-    : AI_MODELS.GPT;
+    ? 'quality'
+    : 'default';
 }
 
 export function resolveEffectiveVideoSuggestionModel({
@@ -279,8 +277,6 @@ export function resolveEffectiveVideoSuggestionModel({
       );
     }
 
-    // Product decision: Stage5 credits mode only supports OpenAI models for
-    // video recommendations. Explicit Claude picks map to the nearest OpenAI tier.
     return resolveStage5CreditModeDirectSelection(selected);
   }
 
@@ -291,7 +287,10 @@ export function resolveEffectiveVideoSuggestionModel({
         normalizedAvailableByoModels
       );
     }
-    return STAGE5_REVIEW_TRANSLATION_MODEL;
+    // Product decision: Stage5 credits video suggestions run on Claude
+    // Sonnet — better multilingual intent-reading and native-language
+    // query formulation; quality tier deepens reasoning, not the model.
+    return AI_MODELS.CLAUDE_SONNET;
   }
 
   if (apiKeyModeEnabled) {
@@ -301,5 +300,5 @@ export function resolveEffectiveVideoSuggestionModel({
     );
   }
 
-  return normalizedDraftModel;
+  return AI_MODELS.CLAUDE_SONNET;
 }

@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { AI_MODELS, STAGE5_REVIEW_TRANSLATION_MODEL } from '../../shared/constants/index.js';
+import {
+  AI_MODELS,
+  STAGE5_REVIEW_TRANSLATION_MODEL,
+} from '../../shared/constants/index.js';
 import {
   getSupportedDirectVideoSuggestionModels,
   normalizeByoVideoSuggestionModel,
@@ -10,7 +13,7 @@ import {
   resolveVideoSuggestionPreferenceForMode,
 } from '../../shared/helpers/video-suggestion-model-preference.js';
 
-test('Stage5 credit quality video suggestions stay on GPT-5.5 even when review prefers Claude', () => {
+test('Stage5 credit quality video suggestions run on Claude Sonnet', () => {
   assert.equal(
     resolveEffectiveVideoSuggestionModel({
       preference: 'quality',
@@ -18,11 +21,23 @@ test('Stage5 credit quality video suggestions stay on GPT-5.5 even when review p
       translationDraftModel: AI_MODELS.GPT,
       translationReviewModel: AI_MODELS.CLAUDE_OPUS,
     }),
-    STAGE5_REVIEW_TRANSLATION_MODEL
+    AI_MODELS.CLAUDE_SONNET
   );
 });
 
-test('Stage5 credit video suggestion quality coerces legacy Claude-quality selections to GPT-5.5', () => {
+test('Stage5 credit standard video suggestions run on Claude Sonnet', () => {
+  assert.equal(
+    resolveEffectiveVideoSuggestionModel({
+      preference: 'default',
+      apiKeyModeEnabled: false,
+      translationDraftModel: AI_MODELS.GPT,
+      translationReviewModel: AI_MODELS.CLAUDE_OPUS,
+    }),
+    AI_MODELS.CLAUDE_SONNET
+  );
+});
+
+test('Stage5 credit explicit model picks pass through unchanged', () => {
   assert.equal(
     resolveEffectiveVideoSuggestionModel({
       preference: AI_MODELS.CLAUDE_OPUS,
@@ -30,14 +45,11 @@ test('Stage5 credit video suggestion quality coerces legacy Claude-quality selec
       translationDraftModel: AI_MODELS.GPT,
       translationReviewModel: AI_MODELS.CLAUDE_OPUS,
     }),
-    STAGE5_REVIEW_TRANSLATION_MODEL
+    AI_MODELS.CLAUDE_OPUS
   );
-});
-
-test('Stage5 credit video suggestion standard coerces legacy Claude Sonnet selection to GPT-5.1', () => {
   assert.equal(
     resolveEffectiveVideoSuggestionModel({
-      preference: AI_MODELS.CLAUDE_SONNET,
+      preference: AI_MODELS.GPT,
       apiKeyModeEnabled: false,
       translationDraftModel: AI_MODELS.GPT,
       translationReviewModel: AI_MODELS.CLAUDE_OPUS,
@@ -46,10 +58,12 @@ test('Stage5 credit video suggestion standard coerces legacy Claude Sonnet selec
   );
 });
 
-test('Stage5 credits direct model list is OpenAI-only by product decision', () => {
+test('Stage5 credits direct model list includes OpenAI and Anthropic options', () => {
   assert.deepEqual(getSupportedDirectVideoSuggestionModels(false), [
     AI_MODELS.GPT,
     STAGE5_REVIEW_TRANSLATION_MODEL,
+    AI_MODELS.CLAUDE_SONNET,
+    AI_MODELS.CLAUDE_OPUS,
   ]);
 });
 
@@ -93,7 +107,7 @@ test('stage5 mode preference resolves independently from BYO model setting', () 
       stage5Mode: 'standard',
       byoModel: AI_MODELS.CLAUDE_OPUS,
     }),
-    AI_MODELS.GPT
+    'default'
   );
   assert.equal(
     resolveVideoSuggestionPreferenceForMode({
@@ -101,7 +115,7 @@ test('stage5 mode preference resolves independently from BYO model setting', () 
       stage5Mode: 'high',
       byoModel: AI_MODELS.GPT,
     }),
-    STAGE5_REVIEW_TRANSLATION_MODEL
+    'quality'
   );
 });
 

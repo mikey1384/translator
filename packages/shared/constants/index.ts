@@ -139,7 +139,7 @@ export const AI_MODEL_EXACT_DISPLAY_NAMES: Record<string, string> = {
   [AI_MODELS.GPT]: 'GPT-5.1',
   [STAGE5_REVIEW_TRANSLATION_MODEL]:
     STAGE5_REVIEW_PROVIDER_OPTIONS.openai.exactModelLabel,
-  [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet 4.6',
+  [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet 5',
   [AI_MODELS.CLAUDE_OPUS]:
     STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
   [AI_MODELS.WHISPER]: 'Whisper',

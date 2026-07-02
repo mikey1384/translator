@@ -16,14 +16,12 @@ import { terminateProcess } from '../../utils/process-killer.js';
 import {
   type SeedSearchOutcome,
   buildYoutubeSearchPageUrl,
-  clampTraceMessage,
   compactText,
   fallbackYoutubeThumbnailUrl,
   normalizeUploadedAt,
   normalizeYoutubeChannelUrl,
   normalizeYoutubeWatchUrl,
   isYoutubeVideoSuggestionUrl,
-  quotedStatusValue,
   isSuggestionAbortError,
   sanitizeSearchKeywords,
   throwIfSuggestionAborted,
@@ -103,27 +101,6 @@ function recencyDays(recency: VideoSuggestionRecency): number | null {
     default:
       return null;
   }
-}
-
-function parseYtDlpJsonLines(output: string): YtDlpEntry[] {
-  const lines = String(output || '')
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .filter(Boolean);
-
-  const rows: YtDlpEntry[] = [];
-  for (const line of lines) {
-    if (!line.startsWith('{')) continue;
-    try {
-      const parsed = JSON.parse(line);
-      if (parsed && typeof parsed === 'object') {
-        rows.push(parsed as YtDlpEntry);
-      }
-    } catch {
-      // Ignore malformed lines.
-    }
-  }
-  return rows;
 }
 
 function extractThumbnail(entry: YtDlpEntry): string | undefined {
@@ -319,84 +296,32 @@ function applyRecencyPreference(
   };
 }
 
-async function runAbortableYtDlpCommand({
-  ytDlpPath,
-  args,
-  env,
-  signal,
-  logPrefix,
-  fallbackMessage,
-  timeoutMs = 120_000,
-}: {
-  ytDlpPath: string;
-  args: string[];
-  env: NodeJS.ProcessEnv;
-  signal?: AbortSignal;
-  logPrefix: string;
-  fallbackMessage: string;
-  timeoutMs?: number;
-}): Promise<string> {
-  throwIfSuggestionAborted(signal);
-
-  const subprocess = execa(ytDlpPath, args, {
-    windowsHide: true,
-    encoding: 'utf8',
-    timeout: timeoutMs,
-    maxBuffer: 24 * 1024 * 1024,
-    env,
-  });
-
-  const abortListener = () => {
-    void terminateProcess({
-      childProcess: subprocess,
-      logPrefix,
-    }).catch(error => {
-      log.warn(`[${logPrefix}] Failed to terminate yt-dlp on abort:`, error);
-    });
-  };
-
-  signal?.addEventListener('abort', abortListener, { once: true });
-
-  try {
-    const result = await subprocess;
-    return String(result.stdout || '');
-  } catch (error: any) {
-    if (isSuggestionAbortError(error, signal)) {
-      throw new DOMException('Operation cancelled', 'AbortError');
-    }
-    const fallbackStdout =
-      typeof error?.stdout === 'string' ? error.stdout : '';
-    if (fallbackStdout.trim()) {
-      return fallbackStdout;
-    }
-    const stderr =
-      typeof error?.stderr === 'string' ? compactText(error.stderr) : '';
-    throw new Error(
-      stderr ||
-        compactText(error?.shortMessage) ||
-        compactText(error?.message) ||
-        fallbackMessage
-    );
-  } finally {
-    signal?.removeEventListener('abort', abortListener);
-  }
-}
-
-async function runYtDlpUrlSeedSearch({
+/**
+ * Run every seed URL in ONE yt-dlp invocation, streaming parsed JSON rows
+ * as they arrive. The official macOS yt-dlp binary spends ~15-20s on
+ * process startup (onefile unpack + malware scan) versus ~1s per actual
+ * search request, so batching pays the startup tax once instead of once
+ * per seed. A timeout is not fatal: rows streamed before it still count.
+ */
+async function runYtDlpBatchedSeedSearch({
   ytDlpPath,
   env,
-  targetUrl,
+  targetUrls,
   limit,
   signal,
+  onJsonRow,
 }: {
   ytDlpPath: string;
   env: NodeJS.ProcessEnv;
-  targetUrl: string;
+  targetUrls: string[];
   limit: number;
   signal?: AbortSignal;
-}): Promise<string> {
+  onJsonRow: (row: YtDlpEntry) => void;
+}): Promise<void> {
+  throwIfSuggestionAborted(signal);
+
   const args = [
-    targetUrl,
+    ...targetUrls,
     '--skip-download',
     '--dump-json',
     '--yes-playlist',
@@ -409,15 +334,68 @@ async function runYtDlpUrlSeedSearch({
     // fetching every video's watch page — one network round trip per seed.
     '--flat-playlist',
   ];
-  return runAbortableYtDlpCommand({
-    ytDlpPath,
-    args,
+  const timeoutMs = Math.min(150_000, 60_000 + 8_000 * targetUrls.length);
+  const logPrefix = 'video-suggestions-yt-dlp-seed';
+
+  const subprocess = execa(ytDlpPath, args, {
+    windowsHide: true,
+    encoding: 'utf8',
+    timeout: timeoutMs,
+    maxBuffer: 24 * 1024 * 1024,
     env,
-    signal,
-    logPrefix: 'video-suggestions-yt-dlp-seed',
-    fallbackMessage: 'yt-dlp url-seed search failed.',
-    timeoutMs: 45_000,
+    buffer: false,
   });
+
+  const abortListener = () => {
+    void terminateProcess({
+      childProcess: subprocess,
+      logPrefix,
+    }).catch(error => {
+      log.warn(`[${logPrefix}] Failed to terminate yt-dlp on abort:`, error);
+    });
+  };
+  signal?.addEventListener('abort', abortListener, { once: true });
+
+  let lineRemainder = '';
+  const consumeChunk = (chunk: string) => {
+    const combined = lineRemainder + chunk;
+    const lines = combined.split(/\r?\n/);
+    lineRemainder = lines.pop() ?? '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('{')) continue;
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === 'object') {
+          onJsonRow(parsed as YtDlpEntry);
+        }
+      } catch {
+        // Ignore malformed lines.
+      }
+    }
+  };
+  subprocess.stdout?.on('data', (chunk: Buffer | string) => {
+    consumeChunk(String(chunk));
+  });
+
+  try {
+    await subprocess;
+  } catch (error: any) {
+    if (isSuggestionAbortError(error, signal)) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+    // Timeouts and per-URL extraction errors are soft failures — whatever
+    // streamed before the exit is still usable.
+    log.warn(
+      `[${logPrefix}] yt-dlp batch ended with error (keeping streamed rows):`,
+      compactText(error?.shortMessage || error?.message || String(error || ''))
+    );
+  } finally {
+    signal?.removeEventListener('abort', abortListener);
+    if (lineRemainder.trim()) {
+      consumeChunk('\n');
+    }
+  }
 }
 
 export async function runYoutubeYtDlpSearch({
@@ -500,18 +478,29 @@ export async function runYoutubeYtDlpSearch({
     Math.min(20, Math.ceil((maxResults * 2) / seeds.length))
   );
   const excludedUrls = new Set<string>(excludeUrls);
-  // Display-only dedupe for streamed partials (completion order). Final
-  // ranking dedupes separately, in seed order, after all seeds return.
+  // Display-only dedupe for streamed partials (arrival order). Final
+  // ranking dedupes separately, in seed order, after the batch returns.
   const streamedUrls = new Set<string>();
   const resultsBySeed: VideoSuggestionResultItem[][] = seeds.map(() => []);
+  // Search-page rows report the originating query as their playlist name,
+  // which is how a batched invocation attributes rows back to seeds.
+  const seedIndexByQuery = new Map<string, number>();
+  seeds.forEach((seed, index) => {
+    const key = compactText(seed.query).toLowerCase();
+    if (key && !seedIndexByQuery.has(key)) {
+      seedIndexByQuery.set(key, index);
+    }
+  });
+  const seedUrlSets: Array<Set<string>> = seeds.map(() => new Set<string>());
   let normalizedCount = 0;
-  let completedSeeds = 0;
   let streamedCount = 0;
+  let streamBuffer: VideoSuggestionResultItem[] = [];
+  let lastEmitAt = 0;
 
   emitSuggestionProgress(onProgress, {
     operationId,
     phase: 'searching',
-    message: `Searching ${seeds.length} seed${seeds.length === 1 ? '' : 's'} in parallel.`,
+    message: `Searching ${seeds.length} quer${seeds.length === 1 ? 'y' : 'ies'} on YouTube.`,
     searchQuery: normalizedSearchQuery || seeds[0].query,
     stageKey: 'retrieval',
     stageIndex: 3,
@@ -520,86 +509,66 @@ export async function runYoutubeYtDlpSearch({
     elapsedMs: Date.now() - startedAt,
   });
 
-  const runSeed = async (index: number): Promise<void> => {
-    const seed = seeds[index];
-    let stdout = '';
-    try {
-      stdout = await runYtDlpUrlSeedSearch({
-        ytDlpPath,
-        env,
-        targetUrl: seed.url,
-        limit: perSeedLimit,
-        signal,
-      });
-    } catch (error) {
-      if (isSuggestionAbortError(error, signal)) {
-        throw error;
-      }
-      log.warn(
-        '[video-suggestions] yt-dlp seed failed:',
-        compactText((error as Error)?.message || String(error || ''))
-      );
-    }
-
-    const freshResults: VideoSuggestionResultItem[] = [];
-    const seedUrls = new Set<string>();
-    for (const row of parseYtDlpJsonLines(stdout)) {
-      const item = normalizeYoutubeYtDlpResult(row, normalizedCount);
-      if (!item?.url || excludedUrls.has(item.url) || seedUrls.has(item.url)) {
-        continue;
-      }
-      // Keep cross-seed duplicates in every seed's bucket: which seed a
-      // URL ranks under must not depend on subprocess completion order.
-      seedUrls.add(item.url);
-      normalizedCount += 1;
-      resultsBySeed[index].push(item);
-      if (!streamedUrls.has(item.url)) {
-        streamedUrls.add(item.url);
-        freshResults.push(item);
-      }
-    }
-
-    completedSeeds += 1;
-    streamedCount += freshResults.length;
-    if (freshResults.length > 0) {
-      emitSuggestionProgress(onProgress, {
-        operationId,
-        phase: 'searching',
-        message: `Search seed ${completedSeeds}/${seeds.length}: loaded ${freshResults.length} result${freshResults.length === 1 ? '' : 's'}.`,
-        searchQuery: seed.query || normalizedSearchQuery,
-        resultCount: streamedCount,
-        partialResults: freshResults,
-        assistantPreview: clampTraceMessage(
-          `Loaded ${freshResults.length} result${freshResults.length === 1 ? '' : 's'} from ${quotedStatusValue(
-            seed.query || normalizedSearchQuery,
-            120
-          )}.`
-        ),
-        stageKey: 'retrieval',
-        stageIndex: 3,
-        stageTotal: 3,
-        stageState: 'running',
-        elapsedMs: Date.now() - startedAt,
-      });
-    }
+  const flushStreamBuffer = (force = false) => {
+    if (streamBuffer.length === 0) return;
+    const now = Date.now();
+    if (!force && streamBuffer.length < 6 && now - lastEmitAt < 2_000) return;
+    lastEmitAt = now;
+    const fresh = streamBuffer;
+    streamBuffer = [];
+    streamedCount += fresh.length;
+    emitSuggestionProgress(onProgress, {
+      operationId,
+      phase: 'searching',
+      message: `Loaded ${streamedCount} candidate${streamedCount === 1 ? '' : 's'} so far.`,
+      searchQuery: normalizedSearchQuery || seeds[0].query,
+      resultCount: streamedCount,
+      partialResults: fresh,
+      stageKey: 'retrieval',
+      stageIndex: 3,
+      stageTotal: 3,
+      stageState: 'running',
+      elapsedMs: Date.now() - startedAt,
+    });
   };
 
-  const concurrency = Math.min(4, seeds.length);
-  let nextSeedIndex = 0;
-  await Promise.all(
-    Array.from({ length: concurrency }, async () => {
-      while (nextSeedIndex < seeds.length) {
-        throwIfSuggestionAborted(signal);
-        const index = nextSeedIndex;
-        nextSeedIndex += 1;
-        await runSeed(index);
+  await runYtDlpBatchedSeedSearch({
+    ytDlpPath,
+    env,
+    targetUrls: seeds.map(seed => seed.url),
+    limit: perSeedLimit,
+    signal,
+    onJsonRow: row => {
+      const playlistKey = compactText(
+        String(row.playlist_id ?? row.playlist ?? '')
+      ).toLowerCase();
+      // Rows from URL seeds (channels/playlists) report their own titles;
+      // anything unattributable ranks after query-seed hits.
+      const seedIndex = seedIndexByQuery.get(playlistKey) ?? seeds.length - 1;
+
+      const item = normalizeYoutubeYtDlpResult(row, normalizedCount);
+      if (
+        !item?.url ||
+        excludedUrls.has(item.url) ||
+        seedUrlSets[seedIndex].has(item.url)
+      ) {
+        return;
       }
-    })
-  );
+      seedUrlSets[seedIndex].add(item.url);
+      normalizedCount += 1;
+      resultsBySeed[seedIndex].push(item);
+      if (!streamedUrls.has(item.url)) {
+        streamedUrls.add(item.url);
+        streamBuffer.push(item);
+        flushStreamBuffer();
+      }
+    },
+  });
+  flushStreamBuffer(true);
 
   // Merge in seed order and dedupe here, so the most precise query's hits
   // lead and duplicates keep the earliest seed's ranking, regardless of
-  // which seed's subprocess finished first.
+  // row arrival order.
   const mergedUrls = new Set<string>();
   const collectedResults: VideoSuggestionResultItem[] = [];
   for (const item of resultsBySeed.flat()) {
