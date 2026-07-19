@@ -250,6 +250,10 @@ const electronAPI = {
     operationId: string;
     filePath: string;
   }) => ipcRenderer.invoke('process-url:cleanup-accepted', options),
+  mutateVideoSuggestionDownloadHistory: (request: any) =>
+    ipcRenderer.invoke('video-suggestion-download-history:mutate', request),
+  setMountedUrlDownloadLibraryPaths: (options: { filePaths: string[] }) =>
+    ipcRenderer.invoke('process-url:set-mounted-library-paths', options),
   suggestVideos: (request: any) =>
     ipcRenderer.invoke('suggest-videos', request),
   onVideoSuggestionProgress: (callback: (progress: any) => void) => {

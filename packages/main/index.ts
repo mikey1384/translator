@@ -32,10 +32,18 @@ import { settingsStore } from './store/settings-store.js';
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
 import {
+  cleanupInterruptedUrlDownloadPromotions,
+  cleanupLegacyUrlDownloadScratchDir,
+  getUrlDownloadLibraryDir,
+  getUrlDownloadScratchDir,
+} from './services/url-download-library.js';
+import {
   handleAcceptProcessedUrl,
   handleCleanupAcceptedProcessedUrl,
   handleDiscardProcessedUrl,
+  handleMutateVideoSuggestionDownloadHistory,
   handleProcessUrl,
+  handleSetMountedUrlDownloadLibraryPaths,
   initializeUrlHandler,
 } from './handlers/url-handlers.js';
 import {
@@ -352,8 +360,13 @@ function getShellAssetPath(fileName: string) {
 try {
   log.info('[main.ts] Initializing Services...');
 
-  const tempPath = path.join(app.getPath('temp'), 'translator-electron');
+  const tempPath = getUrlDownloadScratchDir(
+    app.getPath('temp'),
+    app.isPackaged
+  );
+  const downloadLibraryDir = getUrlDownloadLibraryDir(app.getPath('userData'));
   log.info(`[main.ts] Determined temp path for services: ${tempPath}`);
+  log.info(`[main.ts] Persistent URL download library: ${downloadLibraryDir}`);
 
   const saveFileService = SaveFileService.getInstance();
   const fileManager = new FileManager(tempPath);
@@ -364,7 +377,7 @@ try {
   log.info('[main.ts] Initializing Handlers...');
   fileHandlers.initializeFileHandlers({ fileManager, saveFileService });
   subtitleHandlers.initializeSubtitleHandlers({ ffmpeg, fileManager });
-  initializeUrlHandler({ fileManager, ffmpeg });
+  initializeUrlHandler({ fileManager, ffmpeg, downloadLibraryDir });
   renderWindowHandlers.initializeRenderWindowHandlers({ ffmpeg });
   log.info('[main.ts] Handlers Initialized.');
 
@@ -817,6 +830,14 @@ try {
   ipcMain.handle(
     'process-url:cleanup-accepted',
     handleCleanupAcceptedProcessedUrl
+  );
+  ipcMain.handle(
+    'video-suggestion-download-history:mutate',
+    handleMutateVideoSuggestionDownloadHistory
+  );
+  ipcMain.handle(
+    'process-url:set-mounted-library-paths',
+    handleSetMountedUrlDownloadLibraryPaths
   );
   ipcMain.handle('suggest-videos', async (event, request) => {
     const operationId =
@@ -1612,6 +1633,35 @@ app
       console.error('[main.ts] Error configuring logging:', error);
     }
 
+    try {
+      await cleanupInterruptedUrlDownloadPromotions({
+        libraryDir: getUrlDownloadLibraryDir(app.getPath('userData')),
+        logger: log,
+      });
+    } catch (cleanupError) {
+      log.error(
+        '[main.ts] Error cleaning interrupted URL download promotions:',
+        cleanupError
+      );
+    }
+
+    // Packaged upgrades own the legacy shared directory. Avoid having a
+    // development instance delete work belonging to an older packaged build
+    // that may still be running under a separate app identity.
+    if (app.isPackaged) {
+      try {
+        await cleanupLegacyUrlDownloadScratchDir({
+          systemTempDir: app.getPath('temp'),
+          logger: log,
+        });
+      } catch (cleanupError) {
+        log.error(
+          '[main.ts] Error cleaning legacy translator-electron scratch directory:',
+          cleanupError
+        );
+      }
+    }
+
     log.info('[main.ts] Performing startup cleanup...');
     if (services?.fileManager?.cleanup) {
       try {
@@ -1649,6 +1699,17 @@ app
         });
       }
     });
+
+    // Prewarm the download pipeline (yt-dlp binary check + self-update +
+    // JS-runtime probe) off the critical path so the user's first download
+    // skips the multi-second warm-up.
+    setTimeout(() => {
+      import('./services/url-processor/index.js')
+        .then(urlProcessor => urlProcessor.prewarmDownloadPipeline())
+        .catch(err =>
+          log.warn('[main.ts] Download pipeline prewarm failed:', err)
+        );
+    }, 4_000);
   })
   .catch(error => {
     log.error('[main.ts] Error during app.whenReady:', error);

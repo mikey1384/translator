@@ -13,12 +13,14 @@ import {
 import {
   readLocalVideoSuggestionHiddenChannels,
   readLocalVideoSuggestionHistory,
+  removeLocalVideoSuggestionHistoryItem,
+  syncAuthoritativeVideoSuggestionHistory,
   subscribeToVideoSuggestionHistorySync,
   writeLocalVideoSuggestionHiddenChannels,
-  writeLocalVideoSuggestionHistory,
 } from '../components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 import type { VideoSuggestionDownloadHistoryItem } from '../components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import type { VideoSuggestionResultItem } from '@shared-types/app';
+import { acquireProvisionalUrlDownloadLibraryPath } from '../../../listeners/mounted-download-leases.js';
 
 type RecentDownloadedChannel = {
   key: string;
@@ -39,9 +41,7 @@ function sortHistoryByDownloadedAt(
   });
 }
 
-export default function useDownloadedVideoLibrary(
-  preferredLanguage: string
-) {
+export default function useDownloadedVideoLibrary(preferredLanguage: string) {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [downloadHistory, setDownloadHistory] = useState<
@@ -55,17 +55,47 @@ export default function useDownloadedVideoLibrary(
   >({});
 
   useEffect(() => {
-    writeLocalVideoSuggestionHistory(downloadHistory);
-  }, [downloadHistory]);
-
-  useEffect(() => {
     writeLocalVideoSuggestionHiddenChannels(hiddenChannelKeys);
   }, [hiddenChannelKeys]);
 
   useEffect(() => {
-    return subscribeToVideoSuggestionHistorySync(() => {
-      setDownloadHistory(sortHistoryByDownloadedAt(readLocalVideoSuggestionHistory()));
+    let cancelled = false;
+    void syncAuthoritativeVideoSuggestionHistory()
+      .then(items => {
+        if (!cancelled) setDownloadHistory(sortHistoryByDownloadedAt(items));
+      })
+      .catch(err => {
+        console.error('[download-history] Initial history sync failed:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const unsubscribe = subscribeToVideoSuggestionHistorySync(source => {
+      if (source === 'local') {
+        setDownloadHistory(
+          sortHistoryByDownloadedAt(readLocalVideoSuggestionHistory())
+        );
+        return;
+      }
+      void syncAuthoritativeVideoSuggestionHistory()
+        .then(items => {
+          if (!cancelled) setDownloadHistory(sortHistoryByDownloadedAt(items));
+        })
+        .catch(err => {
+          console.error(
+            '[download-history] Cross-tab history sync failed:',
+            err
+          );
+        });
     });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -203,7 +233,9 @@ export default function useDownloadedVideoLibrary(
         return;
       }
 
+      let releaseLease: (() => Promise<void>) | null = null;
       try {
+        releaseLease = await acquireProvisionalUrlDownloadLibraryPath(filePath);
         const exists = await window.fileApi.fileExists(filePath);
         setPlayablePathMap(prev => ({
           ...prev,
@@ -238,6 +270,15 @@ export default function useDownloadedVideoLibrary(
             t
           )
         );
+      } finally {
+        if (releaseLease) {
+          await releaseLease().catch(error => {
+            console.warn(
+              '[download-history] Failed to release provisional open lease:',
+              error
+            );
+          });
+        }
       }
     },
     [t]
@@ -262,15 +303,32 @@ export default function useDownloadedVideoLibrary(
     [t]
   );
 
-  const removeHistoryItem = useCallback((id: string) => {
-    setDownloadHistory(prev => prev.filter(item => item.id !== id));
-    setPlayablePathMap(prev => {
-      if (!(id in prev)) return prev;
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-  }, []);
+  const removeHistoryItem = useCallback(
+    async (id: string) => {
+      try {
+        const items = await removeLocalVideoSuggestionHistoryItem(id);
+        setDownloadHistory(sortHistoryByDownloadedAt(items));
+        setPlayablePathMap(prev => {
+          if (!(id in prev)) return prev;
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      } catch (err: any) {
+        setError(
+          resolveErrorText(
+            err?.message,
+            t(
+              'input.videoSuggestion.removeHistoryFailed',
+              'Could not remove this download from history.'
+            ),
+            t
+          )
+        );
+      }
+    },
+    [t]
+  );
 
   const removeChannelHistoryItem = useCallback((key: string) => {
     const normalized = String(key || '')

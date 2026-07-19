@@ -50,6 +50,7 @@
     position: relative;
   }
   .tab:hover { background: rgba(150, 165, 191, 0.08); }
+  .tab.dragging { opacity: 0.4; }
   .tab.active {
     background: var(--surface);
     border-color: var(--border);
@@ -157,12 +158,81 @@
       );
     }
 
+    // --- drag-to-reorder ---------------------------------------------
+    let draggedEl = null;
+    let draggedStartIndex = -1;
+
+    function tabAfterPoint(x) {
+      const others = [...strip.querySelectorAll('.tab:not(.dragging)')];
+      return (
+        others.find(el => {
+          const rect = el.getBoundingClientRect();
+          return x < rect.left + rect.width / 2;
+        }) ?? null
+      );
+    }
+
+    strip.addEventListener('dragover', e => {
+      if (!draggedEl) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const after = tabAfterPoint(e.clientX);
+      strip.insertBefore(draggedEl, after ?? newTabBtn);
+    });
+
+    strip.addEventListener('drop', e => {
+      if (draggedEl) e.preventDefault();
+    });
+
+    function commitDrag(event) {
+      if (!draggedEl) return;
+      const el = draggedEl;
+      const startIndex = draggedStartIndex;
+      const cancelled = event?.dataTransfer?.dropEffect === 'none';
+      draggedEl = null;
+      draggedStartIndex = -1;
+      el.classList.remove('dragging');
+      if (cancelled) {
+        const siblings = [...strip.querySelectorAll('.tab')].filter(
+          candidate => candidate !== el
+        );
+        strip.insertBefore(el, siblings[startIndex] ?? newTabBtn);
+      }
+      const index = cancelled
+        ? startIndex
+        : [...strip.querySelectorAll('.tab')].indexOf(el);
+      if (index >= 0) {
+        // A cancelled drag sends the original index. The main process treats
+        // that as a no-op while still restoring focus to the active app view.
+        window.tabs.reorder(Number(el.dataset.tabId), index);
+      }
+      // Apply any state update deferred while the drag was in progress
+      // (the reorder above will also push fresh state right after).
+      if (pendingState) {
+        const state = pendingState;
+        pendingState = null;
+        render(state);
+      }
+    }
+    // -----------------------------------------------------------------
+
+    // Progress updates push tabs:state every ~250ms while any job runs; a
+    // re-render mid-drag would destroy the dragged element and silently
+    // cancel the reorder. Defer renders until the drag commits.
+    let pendingState = null;
+
     function render(state) {
+      if (draggedEl) {
+        pendingState = state;
+        return;
+      }
       strip.querySelectorAll('.tab').forEach(el => el.remove());
       for (const t of state) {
         const el = document.createElement('div');
         el.className = 'tab' + (t.active ? ' active' : '');
         el.title = t.title;
+        el.dataset.tabId = t.id;
+        el.draggable = true;
 
         let indicator = '';
         if (t.running) {
@@ -190,6 +260,16 @@
         el.addEventListener('auxclick', e => {
           if (e.button === 1) window.tabs.close(t.id);
         });
+
+        el.addEventListener('dragstart', e => {
+          draggedEl = el;
+          draggedStartIndex = [...strip.querySelectorAll('.tab')].indexOf(el);
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(t.id));
+          // defer so the drag image is the un-faded tab
+          setTimeout(() => el.classList.add('dragging'), 0);
+        });
+        el.addEventListener('dragend', commitDrag);
 
         strip.insertBefore(el, newTabBtn);
       }

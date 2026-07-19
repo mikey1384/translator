@@ -30,9 +30,18 @@ export type VideoSearchContinuation = {
   model: string;
   maxResults: number;
   intentQuery: string;
+  /**
+   * The user's original natural-language request (e.g. "old school tech
+   * interviews"), as opposed to intentQuery which is the first derived
+   * keyword query. Used to re-plan fresh queries when the stored ones are
+   * exhausted.
+   */
+  originalIntent?: string;
   youtubeRegionCode?: string;
   youtubeSearchLanguage?: string;
   retrievalQueries: string[];
+  /** Every query tried across this search session, including exhausted ones. */
+  triedQueries?: string[];
   retrievalSeedUrls: string[];
   selectedChannels: string[];
   iteration: number;
@@ -49,15 +58,22 @@ export function createVideoSearchContinuation({
   model,
   maxResults,
   intentQuery,
+  originalIntent,
   youtubeRegionCode,
   youtubeSearchLanguage,
   retrievalQueries,
+  triedQueries,
   retrievalSeedUrls,
   selectedChannels,
   iteration,
   pendingResults,
 }: VideoSearchContinuation): VideoSearchContinuation {
   const sanitizedIntentQuery = sanitizeSearchKeywords(intentQuery);
+  // Keep the NEWEST entries when capping — recently exhausted queries are
+  // the ones a replan must be steered away from.
+  const sanitizedTriedQueries = uniqueTexts(
+    (triedQueries || []).map(query => sanitizeSearchKeywords(query))
+  ).slice(-24);
   const sanitizedQueries = uniqueTexts(
     retrievalQueries.map(query => sanitizeSearchKeywords(query))
   ).slice(0, 10);
@@ -82,6 +98,9 @@ export function createVideoSearchContinuation({
     model,
     maxResults,
     intentQuery: sanitizedIntentQuery || compactText(intentQuery),
+    originalIntent:
+      compactText(originalIntent || '').slice(0, 500) || undefined,
+    triedQueries: sanitizedTriedQueries,
     youtubeRegionCode: sanitizeYoutubeRegionCode(youtubeRegionCode),
     youtubeSearchLanguage: sanitizeLanguageToken(
       youtubeSearchLanguage

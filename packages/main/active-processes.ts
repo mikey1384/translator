@@ -173,14 +173,12 @@ export function registerPendingUrlResult(
   log.info(`[registry] Registered pending URL result ${id}: ${filePath}`);
 }
 
-export function acceptPendingUrlResult(id: string): boolean {
-  const entry = registry.get(id);
-  if (!entry || entry.kind !== 'url-result') {
-    return false;
-  }
+export function acceptPendingUrlResult(id: string): string | null {
+  const filePath = claimPendingUrlResultFilePath(id);
+  if (!filePath) return null;
 
-  log.info(`[registry] Accepted pending URL result ${id}`);
-  return deleteRegistryEntry(id);
+  log.info(`[registry] Accepted pending URL result ${id}: ${filePath}`);
+  return filePath;
 }
 
 export async function discardPendingUrlResult(id: string): Promise<boolean> {

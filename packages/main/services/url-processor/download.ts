@@ -13,6 +13,7 @@ import { CancelledError } from '../../../shared/cancelled-error.js';
 import {
   ensureYtDlpBinary,
   ensureJsRuntime,
+  shouldSkipYtDlpUpdateFromEnv,
   YtDlpSetupError,
   type BinarySetupProgress,
 } from './binary-installer.js';
@@ -328,9 +329,7 @@ export async function downloadVideoFromPlatform(
     });
   };
 
-  const skipUpdateEnv =
-    process.env.TRANSLATOR_YTDLP_SKIP_UPDATE === '1' ||
-    process.env.YTDLP_SKIP_UPDATE === '1';
+  const skipUpdateEnv = shouldSkipYtDlpUpdateFromEnv();
   let ytDlpPath: string;
   try {
     throwIfCancelled('before ensuring yt-dlp binary');
@@ -708,6 +707,13 @@ export async function downloadVideoFromPlatform(
       ...extractorArgs,
       // JS runtime for YouTube signature decryption
       ...jsRuntimeArgs,
+      // Parallel fragment downloads for DASH/HLS formats — a large
+      // throughput win on YouTube's per-connection throttling. The
+      // last-resort attempt appends `--concurrent-fragments 1` after these
+      // args, which wins (yt-dlp arg parsing is last-wins), preserving the
+      // conservative fallback.
+      '--concurrent-fragments',
+      '4',
       // Network reliability guards to reduce initial stalls
       '--socket-timeout',
       socketTimeoutSeconds,

@@ -2201,6 +2201,7 @@ const videoSuggestionContextOverrides = {
   },
   ko: {
     'input.videoSuggestion.savedToFolder': '내 폴더에 저장됨',
+    'input.videoSuggestion.storedInAppLibrary': '앱 라이브러리에 저장됨',
     'input.videoSuggestion.tempFileAvailable': '임시 사본이 아직 남아 있습니다',
     'input.videoSuggestion.localFileAvailable': '파일을 사용할 수 있습니다',
     'input.videoSuggestion.includeDownloadHistoryLabel':

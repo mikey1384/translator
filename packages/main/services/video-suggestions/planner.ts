@@ -21,3 +21,20 @@ export function toPlannerMessages(
     .slice(-12);
   return cleaned;
 }
+
+export function appendExhaustedSearchMoreTurn(
+  history: Array<{ role: 'user' | 'assistant'; content: string }>,
+  originalIntent: string
+): Array<{ role: 'user' | 'assistant'; content: string }> {
+  const intent = compactText(originalIntent);
+  const intentSuffix = intent ? ` Original request: "${intent}".` : '';
+  return [
+    ...history,
+    {
+      role: 'user',
+      content:
+        'Find more distinct video results by replanning with genuinely fresh search angles. Do not repeat the exhausted searches.' +
+        intentSuffix,
+    },
+  ];
+}

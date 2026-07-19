@@ -216,6 +216,7 @@ export async function runVideoSearchAgent({
   preferredLanguageName,
   savedPreferences,
   contextBlock,
+  initialTriedQueries = [],
   maxResults,
   onProgress,
   startedAt,
@@ -235,6 +236,7 @@ export async function runVideoSearchAgent({
   preferredLanguageName?: string;
   savedPreferences?: VideoSuggestionPreferenceSlots;
   contextBlock?: string;
+  initialTriedQueries?: string[];
   maxResults: number;
   onProgress?: (progress: VideoSuggestionProgress) => void;
   startedAt: number;
@@ -256,7 +258,11 @@ export async function runVideoSearchAgent({
   const candidatePool: VideoSuggestionResultItem[] = [];
   const candidateByUrl = new Map<string, VideoSuggestionResultItem>();
   const triedQueries: string[] = [];
-  const triedQueryKeys = new Set<string>();
+  const triedQueryKeys = new Set(
+    initialTriedQueries
+      .map(query => sanitizeSearchKeywords(query).toLowerCase())
+      .filter(Boolean)
+  );
   let lastSearchRegion = sanitizeYoutubeRegionCode(youtubeRegionCode);
   let lastSearchLanguage = sanitizeLanguageToken(
     youtubeSearchLanguage

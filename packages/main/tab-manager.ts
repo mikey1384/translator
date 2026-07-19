@@ -261,6 +261,30 @@ export function closeActiveTab(): void {
   if (activeTabId != null) closeTab(activeTabId);
 }
 
+/**
+ * Move a tab to a new position in the strip. Array order is authoritative
+ * for Ctrl+Tab cycling and Cmd+1-9, so those follow the new order for free.
+ */
+export function reorderTab(id: number, targetIndex: number): void {
+  const idx = tabs.findIndex(t => t.id === id);
+  if (idx === -1 || !Number.isFinite(targetIndex)) return;
+  const clamped = Math.max(
+    0,
+    Math.min(Math.floor(targetIndex), tabs.length - 1)
+  );
+  if (clamped !== idx) {
+    const [tab] = tabs.splice(idx, 1);
+    tabs.splice(clamped, 0, tab);
+  }
+  pushStateToShell();
+  // The drag interaction focused the shell; hand keyboard focus back to
+  // the active app view (same as closing a background tab).
+  const activeWc = getActiveTabWebContents();
+  if (activeWc) {
+    activeWc.focus();
+  }
+}
+
 export function newTab(): void {
   void createTab({ activate: true });
 }
@@ -367,6 +391,11 @@ ipcMain.on('tabs:select', (event, id: number) => {
 ipcMain.on('tabs:close', (event, id: number) => {
   if (!shellOnly(event)) return;
   closeTab(Number(id));
+});
+
+ipcMain.on('tabs:reorder', (event, id: number, index: number) => {
+  if (!shellOnly(event)) return;
+  reorderTab(Number(id), Number(index));
 });
 
 ipcMain.on('tabs:request-state', event => {

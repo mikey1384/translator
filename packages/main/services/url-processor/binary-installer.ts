@@ -29,10 +29,48 @@ import {
   waitForAbortingSharedCancellableJob,
 } from '../../utils/shared-cancellable-job.js';
 import { waitForSharedCancellableSingletonJob } from '../../utils/shared-cancellable-singleton-job.js';
+import { settingsStore } from '../../store/settings-store.js';
 
-// Cache for update check - only check once per hour
+// Cache for update check - only check once per hour. Persisted so the
+// packaged app's first download after every launch doesn't re-pay a
+// network self-update in the warm-up path.
 let lastUpdateCheckTime = 0;
+let lastUpdateCheckLoaded = false;
+const UPDATE_CHECK_STORE_KEY = 'ytDlpLastUpdateCheckAt' as const;
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+
+export function shouldSkipYtDlpUpdateFromEnv(
+  env: NodeJS.ProcessEnv = process.env
+): boolean {
+  return (
+    env.TRANSLATOR_YTDLP_SKIP_UPDATE === '1' || env.YTDLP_SKIP_UPDATE === '1'
+  );
+}
+
+function getLastUpdateCheckTime(): number {
+  if (!lastUpdateCheckLoaded) {
+    lastUpdateCheckLoaded = true;
+    try {
+      const stored = Number(settingsStore.get(UPDATE_CHECK_STORE_KEY));
+      if (Number.isFinite(stored) && stored > 0) {
+        lastUpdateCheckTime = stored;
+      }
+    } catch {
+      // store unavailable; fall back to in-memory only
+    }
+  }
+  return lastUpdateCheckTime;
+}
+
+function markUpdateChecked(at: number): void {
+  lastUpdateCheckTime = at;
+  lastUpdateCheckLoaded = true;
+  try {
+    settingsStore.set(UPDATE_CHECK_STORE_KEY, at);
+  } catch {
+    // store unavailable; in-memory value still applies this session
+  }
+}
 const CONCURRENT_INSTALL_WAIT_TIMEOUT_MS = 120_000;
 const CONCURRENT_INSTALL_POLL_MS = 500;
 const WAITING_FOR_SETUP_STAGE = 'Waiting for yt-dlp setup…';
@@ -928,7 +966,7 @@ async function ensureYtDlpBinaryInternal({
     // Check if we should skip update based on time
     const now = Date.now();
     const shouldCheckUpdate =
-      !skipUpdate && now - lastUpdateCheckTime > UPDATE_CHECK_INTERVAL_MS;
+      !skipUpdate && now - getLastUpdateCheckTime() > UPDATE_CHECK_INTERVAL_MS;
     const cachedBinary = await getCachedHealthyBinary(
       shouldCheckUpdate,
       signal
@@ -956,7 +994,7 @@ async function ensureYtDlpBinaryInternal({
             writablePath,
             signal
           );
-          lastUpdateCheckTime = now;
+          markUpdateChecked(now);
           if (!updateSuccess) {
             log.warn(
               '[URLprocessor] Update failed, but existing binary works, continuing...'
@@ -1060,7 +1098,7 @@ async function ensureYtDlpBinaryInternal({
             existingBinary,
             signal
           );
-          lastUpdateCheckTime = now;
+          markUpdateChecked(now);
           if (!updateSuccess) {
             log.warn(
               '[URLprocessor] Update failed, but existing binary works, continuing...'
@@ -1070,7 +1108,7 @@ async function ensureYtDlpBinaryInternal({
           log.info(
             `[URLprocessor] Skipping self-update for non-managed yt-dlp binary: ${existingBinary}`
           );
-          lastUpdateCheckTime = now;
+          markUpdateChecked(now);
         } else {
           log.info(
             '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'

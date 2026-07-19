@@ -453,3 +453,33 @@ export async function processVideoUrl(
 }
 
 export { VideoQuality };
+
+/**
+ * Prewarm the download pipeline during app idle so the first real download
+ * doesn't pay binary setup, the (persisted, hourly-capped) self-update
+ * check, or JS-runtime probing inside its warm-up phase. Failures are
+ * logged and ignored — the download path performs the same steps lazily.
+ */
+export async function prewarmDownloadPipeline(): Promise<void> {
+  const { ensureYtDlpBinary, ensureJsRuntime, shouldSkipYtDlpUpdateFromEnv } =
+    await import('./binary-installer.js');
+  try {
+    await ensureYtDlpBinary({
+      skipUpdate: shouldSkipYtDlpUpdateFromEnv(),
+    });
+  } catch (error) {
+    log.warn(
+      '[URLprocessor] yt-dlp prewarm failed (will retry lazily):',
+      error
+    );
+    return;
+  }
+  try {
+    await ensureJsRuntime({});
+  } catch (error) {
+    log.warn(
+      '[URLprocessor] JS-runtime prewarm failed (will retry lazily):',
+      error
+    );
+  }
+}

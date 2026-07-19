@@ -1,5 +1,6 @@
 import type {
   VideoSuggestionContextToggles,
+  VideoSuggestionDownloadHistoryItem as SharedVideoSuggestionDownloadHistoryItem,
   VideoSuggestionMessage,
   VideoSuggestionPreferenceSlots,
   VideoSuggestionRecency,
@@ -31,18 +32,8 @@ export type LocalVideoSuggestionPrefs = {
   contextToggles: VideoSuggestionContextToggles;
 };
 
-export type VideoSuggestionDownloadHistoryItem = {
-  id: string;
-  sourceUrl: string;
-  title: string;
-  thumbnailUrl?: string;
-  channel?: string;
-  channelUrl?: string;
-  durationSec?: number;
-  uploadedAt?: string;
-  downloadedAtIso: string;
-  localPath?: string;
-};
+export type VideoSuggestionDownloadHistoryItem =
+  SharedVideoSuggestionDownloadHistoryItem;
 
 export type VideoSuggestionPlannerMessage = Pick<
   VideoSuggestionMessage,

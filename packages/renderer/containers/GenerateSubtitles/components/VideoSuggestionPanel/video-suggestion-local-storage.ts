@@ -1,4 +1,7 @@
-import type { VideoSuggestionPreferenceSlots } from '@shared-types/app';
+import type {
+  VideoSuggestionDownloadHistoryMutation,
+  VideoSuggestionPreferenceSlots,
+} from '@shared-types/app';
 import {
   isVideoSuggestionRecency,
   sanitizeVideoSuggestionCountry,
@@ -16,6 +19,9 @@ import type {
   LocalVideoSuggestionPrefs,
   VideoSuggestionDownloadHistoryItem,
 } from './VideoSuggestionPanel.types.js';
+import * as UrlIPC from '@ipc/url';
+import { useVideoStore } from '../../../../state/video-store.js';
+import { includeProvisionalUrlDownloadLibraryPaths } from '../../../../listeners/mounted-download-leases.js';
 
 const LOCAL_VIDEO_SUGGESTION_PREFS_KEY = 'video-suggestion-prefs-v3';
 const LEGACY_LOCAL_VIDEO_SUGGESTION_PREFS_KEYS = [
@@ -82,15 +88,19 @@ function isLikelyManagedTempHistoryPath(value: unknown): boolean {
   if (!normalized) return false;
   return (
     normalized.includes('/translator-electron/') ||
+    normalized.includes('/translator-electron-dev/') ||
+    normalized.includes('/translator-electron-work/') ||
+    normalized.includes('/translator-electron-dev-work/') ||
     normalized.includes('/translator-url-')
   );
 }
 
 export function getVideoSuggestionHistoryStorageKind(
   value: unknown
-): 'temp' | 'saved' | 'unknown' {
+): 'temp' | 'library' | 'saved' | 'unknown' {
   const normalized = normalizeHistoryPath(value);
   if (!normalized) return 'unknown';
+  if (normalized.includes('/downloaded-media/')) return 'library';
   return isLikelyManagedTempHistoryPath(value) ? 'temp' : 'saved';
 }
 
@@ -118,7 +128,10 @@ function parseLocalVideoSuggestionPrefs(
       ? (parsed.contextToggles as Record<string, unknown>)
       : {};
   const topic = sanitizeVideoSuggestionPreference(
-    prefSource?.topic ?? prefSource?.contentTopic ?? prefSource?.intentTopic ?? parsed?.topic
+    prefSource?.topic ??
+      prefSource?.contentTopic ??
+      prefSource?.intentTopic ??
+      parsed?.topic
   );
 
   return {
@@ -295,7 +308,18 @@ function sanitizeHistoryItem(
   return out;
 }
 
+// When localStorage writes fail (quota, private mode, policy), the freshest
+// authoritative items are kept here so readers in THIS tab still see them —
+// otherwise a successful download would vanish from the UI until the next
+// authoritative resync. Cleared once a write succeeds again. (Other tabs
+// still rely on their own authoritative resync; localStorage is unreachable
+// for cross-tab sync in this state by definition.)
+let memoryHistoryFallback: VideoSuggestionDownloadHistoryItem[] | null = null;
+
 export function readLocalVideoSuggestionHistory(): VideoSuggestionDownloadHistoryItem[] {
+  if (memoryHistoryFallback) {
+    return memoryHistoryFallback.slice(0, MAX_HISTORY_ITEMS);
+  }
   try {
     const raw = window.localStorage.getItem(LOCAL_VIDEO_SUGGESTION_HISTORY_KEY);
     if (!raw) return [];
@@ -314,7 +338,7 @@ export function readLocalVideoSuggestionHistory(): VideoSuggestionDownloadHistor
 
 export function writeLocalVideoSuggestionHistory(
   items: VideoSuggestionDownloadHistoryItem[]
-): void {
+): boolean {
   try {
     const sanitized = items
       .map(item => sanitizeHistoryItem(item))
@@ -326,9 +350,57 @@ export function writeLocalVideoSuggestionHistory(
       LOCAL_VIDEO_SUGGESTION_HISTORY_KEY,
       JSON.stringify(sanitized)
     );
+    memoryHistoryFallback = null;
+    return true;
   } catch {
-    // Ignore localStorage failures (private mode / quota / policy).
+    // localStorage unavailable (private mode / quota / policy): keep the
+    // authoritative items in memory so this tab's readers stay current.
+    memoryHistoryFallback = items
+      .map(item => sanitizeHistoryItem(item))
+      .filter((item): item is VideoSuggestionDownloadHistoryItem =>
+        Boolean(item)
+      )
+      .slice(0, MAX_HISTORY_ITEMS);
+    return false;
   }
+}
+
+function getMountedVideoPaths(): string[] {
+  const state = useVideoStore.getState();
+  const filePath =
+    state.file &&
+    typeof state.file === 'object' &&
+    'path' in state.file &&
+    typeof state.file.path === 'string'
+      ? state.file.path
+      : '';
+  return includeProvisionalUrlDownloadLibraryPaths(
+    Array.from(
+      new Set(
+        [state.path, state.originalPath, state.dubbedVideoPath, filePath]
+          .map(value => sanitizeVideoSuggestionHistoryPath(value))
+          .filter(Boolean)
+      )
+    )
+  );
+}
+
+async function mutateAuthoritativeDownloadHistory(
+  mutation: VideoSuggestionDownloadHistoryMutation
+): Promise<VideoSuggestionDownloadHistoryItem[]> {
+  const result = await UrlIPC.mutateVideoSuggestionDownloadHistory({
+    mutation,
+    seedItems: readLocalVideoSuggestionHistory(),
+    mountedPaths: getMountedVideoPaths(),
+  });
+  if (!result.success) {
+    throw new Error(
+      result.error || 'Persistent download history could not be updated'
+    );
+  }
+  writeLocalVideoSuggestionHistory(result.items);
+  dispatchVideoSuggestionHistorySync();
+  return result.items;
 }
 
 function dispatchVideoSuggestionHistorySync(): void {
@@ -339,22 +411,51 @@ function dispatchVideoSuggestionHistorySync(): void {
   }
 }
 
-export function upsertLocalVideoSuggestionHistoryItem(
+export async function upsertLocalVideoSuggestionHistoryItem(
   item: VideoSuggestionDownloadHistoryItem
-): VideoSuggestionDownloadHistoryItem[] {
+): Promise<VideoSuggestionDownloadHistoryItem[]> {
   const sanitized = sanitizeHistoryItem(item);
   if (!sanitized) {
     return readLocalVideoSuggestionHistory();
   }
+  return mutateAuthoritativeDownloadHistory({
+    type: 'upsert',
+    item: sanitized,
+  });
+}
 
-  const nextItems = mergeVideoSuggestionHistoryItems(
-    readLocalVideoSuggestionHistory(),
-    sanitized
-  );
+export async function removeLocalVideoSuggestionHistoryItem(
+  id: string,
+  reclaimPath?: string
+): Promise<VideoSuggestionDownloadHistoryItem[]> {
+  const normalizedId = String(id || '').trim();
+  if (!normalizedId) return readLocalVideoSuggestionHistory();
+  return mutateAuthoritativeDownloadHistory({
+    type: 'remove',
+    id: normalizedId,
+    reclaimPath: sanitizeVideoSuggestionHistoryPath(reclaimPath) || undefined,
+  });
+}
 
-  writeLocalVideoSuggestionHistory(nextItems);
-  dispatchVideoSuggestionHistorySync();
-  return nextItems;
+export async function rollbackLocalVideoSuggestionHistoryUpsert(
+  id: string,
+  reclaimPath?: string
+): Promise<VideoSuggestionDownloadHistoryItem[]> {
+  const normalizedId = String(id || '').trim();
+  if (!normalizedId) return readLocalVideoSuggestionHistory();
+  // Unlike a plain remove, this also restores any history entries the
+  // original upsert displaced past the size cap.
+  return mutateAuthoritativeDownloadHistory({
+    type: 'rollback-upsert',
+    id: normalizedId,
+    reclaimPath: sanitizeVideoSuggestionHistoryPath(reclaimPath) || undefined,
+  });
+}
+
+export async function syncAuthoritativeVideoSuggestionHistory(): Promise<
+  VideoSuggestionDownloadHistoryItem[]
+> {
+  return mutateAuthoritativeDownloadHistory({ type: 'get' });
 }
 
 export function mergeVideoSuggestionHistoryItems(
@@ -404,50 +505,36 @@ export function mergeVideoSuggestionHistoryItems(
   return nextItems.slice(0, MAX_HISTORY_ITEMS);
 }
 
-export function syncSavedVideoSuggestionHistoryPath(options: {
+export async function syncSavedVideoSuggestionHistoryPath(options: {
   previousPath: string;
   savedPath: string;
-}): boolean {
+}): Promise<boolean> {
   const previousPath = sanitizeVideoSuggestionHistoryPath(options.previousPath);
   const savedPath = sanitizeVideoSuggestionHistoryPath(options.savedPath);
   if (!previousPath || !savedPath) return false;
 
-  const previousKey = normalizeHistoryPath(previousPath);
-  const savedKey = normalizeHistoryPath(savedPath);
-  if (!previousKey || !savedKey) return false;
-
-  const items = readLocalVideoSuggestionHistory();
-  let changed = false;
-  const nextItems = items.map(item => {
-    if (normalizeHistoryPath(item.localPath) !== previousKey) {
-      return item;
-    }
-    if (normalizeHistoryPath(item.localPath) === savedKey) {
-      return item;
-    }
-    changed = true;
-    return {
-      ...item,
-      localPath: savedPath,
-    };
+  await mutateAuthoritativeDownloadHistory({
+    type: 'replace-path',
+    previousPath,
+    savedPath,
   });
-
-  if (!changed) return false;
-
-  writeLocalVideoSuggestionHistory(nextItems);
-  dispatchVideoSuggestionHistorySync();
   return true;
 }
 
 export function subscribeToVideoSuggestionHistorySync(
-  listener: () => void
+  listener: (source: 'local' | 'storage') => void
 ): () => void {
   const wrapped = () => {
-    listener();
+    listener('local');
+  };
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === LOCAL_VIDEO_SUGGESTION_HISTORY_KEY) listener('storage');
   };
   window.addEventListener(VIDEO_SUGGESTION_HISTORY_SYNC_EVENT, wrapped);
+  window.addEventListener('storage', handleStorage);
   return () => {
     window.removeEventListener(VIDEO_SUGGESTION_HISTORY_SYNC_EVENT, wrapped);
+    window.removeEventListener('storage', handleStorage);
   };
 }
 

@@ -1,14 +1,23 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { VideoQuality, ProcessUrlResult } from '@shared-types/app';
+import type {
+  ProcessUrlPendingResultAction,
+  ProcessUrlResult,
+  VideoQuality,
+  VideoSuggestionDownloadHistoryItem,
+} from '@shared-types/app';
 import * as UrlIPC from '@ipc/url';
 import { i18n } from '../i18n';
 import { useVideoStore } from './video-store';
 import { useSubStore } from './subtitle-store';
 import { useUIStore } from './ui-store';
 import { openDownloadSwitchConfirm } from './modal-store';
-import { upsertLocalVideoSuggestionHistoryItem } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
+import {
+  rollbackLocalVideoSuggestionHistoryUpsert,
+  upsertLocalVideoSuggestionHistoryItem,
+} from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 import { mountedSubtitleMatchesVideoSource } from '../utils/subtitle-source-association';
+import { handoffPromotedDownloadHistory } from '../../shared/helpers/url-download-history-handoff.js';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -176,26 +185,39 @@ async function downloadMediaInternal(
       );
     }
   };
-  const acceptProcessedUrl = async (): Promise<boolean> => {
-    try {
-      const result = await UrlIPC.acceptProcessedUrl(opId);
-      if (!result.success) {
+  const acceptProcessedUrl =
+    async (): Promise<ProcessUrlPendingResultAction> => {
+      try {
+        const result = await UrlIPC.acceptProcessedUrl(opId);
+        const acceptedPath = String(result.filePath || '').trim();
+        if (!result.success || !acceptedPath) {
+          console.warn(
+            `[url-store] Processed URL result for ${opId} could not be accepted: ${result.error || 'unknown error'}`
+          );
+        }
+        return result.success && acceptedPath
+          ? { ...result, filePath: acceptedPath }
+          : {
+              success: false,
+              error: result.error || 'Downloaded video could not be saved',
+            };
+      } catch (error) {
         console.warn(
-          `[url-store] Processed URL result for ${opId} could not be accepted: ${result.error || 'unknown error'}`
+          `[url-store] Failed to accept processed URL result for ${opId}:`,
+          error
         );
+        return {
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Downloaded video could not be saved',
+        };
       }
-      return result.success;
-    } catch (error) {
-      console.warn(
-        `[url-store] Failed to accept processed URL result for ${opId}:`,
-        error
-      );
-      return false;
-    }
-  };
+    };
   const cleanupAcceptedProcessedUrl = async (
     filePath: string
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     try {
       const result = await UrlIPC.cleanupAcceptedProcessedUrl({
         operationId: opId,
@@ -206,11 +228,13 @@ async function downloadMediaInternal(
           `[url-store] Accepted processed URL result for ${opId} could not be scheduled for cleanup: ${result.error || 'unknown error'}`
         );
       }
+      return result.success;
     } catch (error) {
       console.warn(
         `[url-store] Failed to schedule cleanup for accepted processed URL result ${opId}:`,
         error
       );
+      return false;
     }
   };
   const isCurrentDownloadCancelledOrStale = (): boolean => {
@@ -301,7 +325,7 @@ async function downloadMediaInternal(
       return cancelledResult();
     }
 
-    const finalPath = res.videoPath ?? res.filePath;
+    let finalPath = res.videoPath ?? res.filePath;
     const filename = res.filename;
 
     if (res.cancelled || !finalPath || !filename) {
@@ -345,19 +369,37 @@ async function downloadMediaInternal(
     }
 
     shouldDiscardPendingResult = true;
-    const accepted = await acceptProcessedUrl();
-    if (!accepted) {
+    const acceptance = await acceptProcessedUrl();
+    const acceptedPath = String(acceptance.filePath || '').trim();
+    if (!acceptance.success || !acceptedPath) {
+      if (isCurrentDownloadCancelledOrStale()) {
+        return cancelledResult();
+      }
+      // A returned promotion failure has already claimed and cleaned the
+      // scratch result in main. If IPC itself failed before that happened,
+      // this best-effort discard prevents the completed scratch file leaking.
+      await discardProcessedUrl();
+      const message = acceptance.error || 'Downloaded video could not be saved';
       set((state: UrlState) => {
         state.needCookies = false;
         state.download.inProgress = false;
-        state.download.stage = 'Cancelled';
+        state.download.stage = 'Error';
         state.download.percent = 100;
-        state.error = null;
-        state.errorKind = null;
+        state.error = message;
+        state.errorKind = inferErrorKind(message);
       });
-      return cancelledResult();
+      return {
+        ...res,
+        success: false,
+        cancelled: false,
+        error: message,
+      };
     }
     shouldDiscardPendingResult = false;
+    finalPath = acceptedPath;
+    res.filePath = acceptedPath;
+    if (res.videoPath) res.videoPath = acceptedPath;
+    if (res.originalVideoPath) res.originalVideoPath = acceptedPath;
 
     if (isCurrentDownloadCancelledOrStale()) {
       await cleanupAcceptedProcessedUrl(finalPath);
@@ -370,7 +412,7 @@ async function downloadMediaInternal(
         .replace(/\.[^/.]+$/, '')
         .trim() ||
       requestedUrl;
-    upsertLocalVideoSuggestionHistoryItem({
+    const historyItem: VideoSuggestionDownloadHistoryItem = {
       id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       sourceUrl: requestedUrl,
       title: derivedTitle,
@@ -384,7 +426,59 @@ async function downloadMediaInternal(
       uploadedAt: String(res.uploadedAt || '').trim() || undefined,
       downloadedAtIso: new Date().toISOString(),
       localPath: finalPath,
+    };
+    const historyHandoff = await handoffPromotedDownloadHistory({
+      persistHistory: async () => {
+        await upsertLocalVideoSuggestionHistoryItem(historyItem);
+      },
+      isStale: isCurrentDownloadCancelledOrStale,
+      rollbackHistory: async () => {
+        // rollback-upsert (not a plain remove): the main process restores any
+        // entries this upsert displaced past the history size cap, so a stale
+        // operation cannot silently shrink the library by one download.
+        await rollbackLocalVideoSuggestionHistoryUpsert(
+          historyItem.id,
+          finalPath
+        );
+      },
+      cleanupUnownedFile: async () => {
+        if (!(await cleanupAcceptedProcessedUrl(finalPath))) {
+          throw new Error(
+            'The unowned promoted download could not be scheduled for cleanup.'
+          );
+        }
+      },
     });
+
+    if (historyHandoff.status === 'stale') {
+      if (historyHandoff.rollbackError) {
+        console.warn(
+          `[url-store] Stale promoted download ${opId} remains history-owned because rollback failed:`,
+          historyHandoff.rollbackError
+        );
+      }
+      if (historyHandoff.cleanupError) {
+        console.warn(
+          `[url-store] Stale unowned promoted download ${opId} could not be reclaimed:`,
+          historyHandoff.cleanupError
+        );
+      }
+      return cancelledResult();
+    }
+
+    if (historyHandoff.status === 'failed') {
+      const historyError =
+        historyHandoff.error instanceof Error
+          ? historyHandoff.error.message
+          : String(historyHandoff.error || 'Unknown history error');
+      const cleanupSuffix = historyHandoff.cleanupError
+        ? ` The completed file remains at ${finalPath}.`
+        : '';
+      const historyErrorSuffix = /[.!?]$/.test(historyError) ? '' : '.';
+      throw new Error(
+        `Downloaded video could not be added to download history: ${historyError}${historyErrorSuffix}${cleanupSuffix}`
+      );
+    }
 
     let mountErrorMessage: string | null = null;
 

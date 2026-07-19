@@ -7,6 +7,7 @@ import {
   ensureVideoSuggestionStoreRuntime,
   useVideoSuggestionStore,
 } from '../../../../state/video-suggestion-store.js';
+import { finalizeVideoSuggestionSearchMoreResults } from '../../../../../shared/helpers/video-suggestion-result-state.js';
 import type { PipelineStageProgress } from './VideoSuggestionPanel.types.js';
 import type {
   VideoSuggestionContextToggles,
@@ -603,21 +604,32 @@ export default function useVideoSuggestionFlow({
       }
 
       const incoming = Array.isArray(res?.results) ? res.results : [];
-      const latestResults = useVideoSuggestionStore.getState().results;
-      const streamedGrowth = latestResults.length > startingResultCount;
-      const seen = new Set(latestResults.map(item => item.url));
-      const fresh: VideoSuggestionResultItem[] = [];
-      for (const item of incoming) {
-        if (seen.has(item.url)) continue;
-        seen.add(item.url);
-        fresh.push(item);
+      const stateNow = useVideoSuggestionStore.getState();
+      const latestResults = stateNow.results;
+      // The resolved response carries this operation's final ranked
+      // selection. Apply it here over the pre-operation baseline: the
+      // trailing resultsFinal progress event races finishOperation and is
+      // dropped when it loses, and the streamed partials it would have
+      // replaced are unranked candidates, not the final list.
+      const baseline =
+        stateNow.resultsBeforeOperation.length > 0 || startingResultCount === 0
+          ? stateNow.resultsBeforeOperation
+          : latestResults;
+      const finalState = finalizeVideoSuggestionSearchMoreResults(
+        baseline,
+        incoming
+      );
+
+      if (res?.success !== false) {
+        // Always replace this operation's streamed candidates with the
+        // authoritative response. An empty final response means every raw
+        // candidate was rejected (for example by hard recency), so restoring
+        // the pre-operation baseline is required.
+        setResults(finalState.results);
+        markPipelineClearedThroughRetrieval();
       }
 
-      if (res?.success !== false && (fresh.length > 0 || streamedGrowth)) {
-        if (fresh.length > 0) {
-          setResults([...latestResults, ...fresh]);
-        }
-        markPipelineClearedThroughRetrieval();
+      if (res?.success !== false && finalState.gainedResults) {
         onResultsReady();
       } else if (res?.success !== false) {
         setMessages(prev => [

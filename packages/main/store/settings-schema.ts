@@ -12,7 +12,10 @@ import {
   VIDEO_SUGGESTION_DEFAULT_RECENCY,
   VIDEO_SUGGESTION_DEFAULT_TOPIC,
 } from '../../shared/helpers/video-suggestion-defaults.js';
-import type { VideoSuggestionRecency } from '@shared-types/app';
+import type {
+  VideoSuggestionDownloadHistoryItem,
+  VideoSuggestionRecency,
+} from '@shared-types/app';
 
 export type TranscriptionProviderPreference =
   | 'elevenlabs'
@@ -31,6 +34,11 @@ type PostInstallNotice = {
 
 export type AppSettingsSchema = {
   pendingPostInstallNotice: PostInstallNotice | null;
+  /** Epoch ms of the last yt-dlp self-update check (persisted so the check
+   * doesn't re-fire on the first download of every app launch). */
+  ytDlpLastUpdateCheckAt: number;
+  videoSuggestionDownloadHistory: VideoSuggestionDownloadHistoryItem[] | null;
+  pendingUrlDownloadLibraryReclaims: string[];
   app_language_preference: string;
   subtitleTargetLanguage: string;
   apiKey: string | null;
@@ -66,6 +74,9 @@ export type AppSettingsSchema = {
 
 export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   pendingPostInstallNotice: null,
+  ytDlpLastUpdateCheckAt: 0,
+  videoSuggestionDownloadHistory: null,
+  pendingUrlDownloadLibraryReclaims: [],
   app_language_preference: 'en',
   subtitleTargetLanguage: 'original',
   apiKey: null,

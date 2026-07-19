@@ -27,10 +27,12 @@ export function sanitizeVideoSuggestionPreference(value: unknown): string {
 }
 
 export function sanitizeVideoSuggestionHistoryPath(value: unknown): string {
-  return String(value ?? '')
-    .replace(DISALLOWED_CHARS_REGEX, '')
-    .trim()
-    .slice(0, 4096);
+  // Filesystem paths are opaque identifiers. Characters that are unsafe in
+  // search/preferences (for example `[` and `]`) can be legal parts of a file
+  // or parent-directory name, so rewriting them would point history at a
+  // different file. Scope and ownership checks belong at the filesystem
+  // boundary; this shared helper only rejects non-string IPC/storage values.
+  return typeof value === 'string' ? value : '';
 }
 
 export function sanitizeVideoSuggestionWebUrl(value: unknown): string {

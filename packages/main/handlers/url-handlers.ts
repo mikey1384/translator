@@ -5,7 +5,12 @@ import log from 'electron-log';
 import { FileManager } from '../services/file-manager.js';
 import type { FFmpegContext } from '../services/ffmpeg-runner.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
-import type { ProcessUrlOptions, ProcessUrlResult } from '@shared-types/app';
+import type {
+  ProcessUrlOptions,
+  ProcessUrlResult,
+  VideoSuggestionDownloadHistoryMutationRequest,
+  VideoSuggestionDownloadHistoryMutationResult,
+} from '@shared-types/app';
 import {
   acceptPendingUrlResult,
   cleanupAcceptedUrlResultFile,
@@ -15,22 +20,80 @@ import {
   registerPendingUrlResult,
 } from '../active-processes.js';
 import { finalizeCancelledUrlOperation } from '../utils/url-operation-finalizers.js';
+import {
+  isUrlDownloadLibraryFilePath,
+  promoteUrlDownload,
+  reclaimUrlDownloadLibraryFiles,
+} from '../services/url-download-library.js';
+import { VideoSuggestionDownloadHistoryManager } from '../services/video-suggestion-download-history.js';
+import { settingsStore } from '../store/settings-store.js';
+import { isIpcInvokeSenderGone } from '../utils/ipc-sender-liveness.js';
 
 interface UrlHandlerServices {
   fileManager: FileManager;
   ffmpeg: FFmpegContext;
+  downloadLibraryDir: string;
 }
 
 let fileManagerInstance: FileManager | null = null;
 let ffmpegCtx: FFmpegContext | null = null;
+let downloadLibraryDir: string | null = null;
+let downloadHistoryManager: VideoSuggestionDownloadHistoryManager | null = null;
+const leaseCleanupRegistered = new Set<number>();
+
+async function reclaimManagedHistoryPaths(
+  filePaths: string[]
+): Promise<string[]> {
+  if (!downloadLibraryDir || filePaths.length === 0) return [];
+  const result = await reclaimUrlDownloadLibraryFiles({
+    libraryDir: downloadLibraryDir,
+    filePaths,
+    logger: log,
+  });
+  const failedByPath = new Map(
+    result.failedPaths.map(failed => [failed.filePath, failed])
+  );
+  // Keep genuine deletion failures in the manager's persisted pending set so
+  // they survive restart and are retried after the next history/lease update.
+  return filePaths.filter(filePath => !failedByPath.has(filePath));
+}
 
 export function initializeUrlHandler(services: UrlHandlerServices): void {
-  if (!services || !services.fileManager || !services.ffmpeg) {
-    throw new Error('[url-handler] FileManager and FFmpegContext required.');
+  if (
+    !services ||
+    !services.fileManager ||
+    !services.ffmpeg ||
+    !String(services.downloadLibraryDir || '').trim()
+  ) {
+    throw new Error(
+      '[url-handler] FileManager, FFmpegContext, and download library required.'
+    );
   }
   fileManagerInstance = services.fileManager;
   ffmpegCtx = services.ffmpeg;
-  log.info('[url-handler] Initialized with FileManager + FFmpegContext.');
+  downloadLibraryDir = services.downloadLibraryDir;
+  downloadHistoryManager = new VideoSuggestionDownloadHistoryManager({
+    persistence: {
+      loadHistory: () => settingsStore.get('videoSuggestionDownloadHistory'),
+      saveHistory: items =>
+        settingsStore.set('videoSuggestionDownloadHistory', items),
+      loadPendingReclaims: () =>
+        settingsStore.get('pendingUrlDownloadLibraryReclaims'),
+      savePendingReclaims: filePaths =>
+        settingsStore.set('pendingUrlDownloadLibraryReclaims', filePaths),
+    },
+    isManagedLibraryPath: filePath =>
+      isUrlDownloadLibraryFilePath(services.downloadLibraryDir, filePath),
+    reclaimPaths: reclaimManagedHistoryPaths,
+    onMaintenanceError: error =>
+      log.warn(
+        '[url-handler] Download history cleanup will be retried:',
+        error
+      ),
+  });
+  log.info(
+    `[url-handler] Initialized with persistent download library: ${downloadLibraryDir}`
+  );
 }
 
 function checkServicesInitialized(): {
@@ -195,22 +258,79 @@ export async function handleProcessUrl(
 }
 
 export async function handleAcceptProcessedUrl(
-  _event: IpcMainInvokeEvent,
+  event: IpcMainInvokeEvent,
   operationId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; filePath?: string; error?: string }> {
   if (!String(operationId || '').trim()) {
     return { success: false, error: 'Operation ID is required' };
   }
 
-  const success = acceptPendingUrlResult(operationId);
-  if (!success) {
+  const pendingFilePath = acceptPendingUrlResult(operationId);
+  if (!pendingFilePath) {
     return {
       success: false,
       error: 'Processed URL result is no longer available',
     };
   }
 
-  return { success: true };
+  if (!downloadLibraryDir) {
+    await cleanupAcceptedUrlResultFile(
+      `${operationId}:promotion-unavailable`,
+      pendingFilePath
+    );
+    return {
+      success: false,
+      error: 'Persistent download storage is not available',
+    };
+  }
+
+  try {
+    const filePath = await promoteUrlDownload({
+      sourcePath: pendingFilePath,
+      libraryDir: downloadLibraryDir,
+      operationId,
+      persistDestinationOwnership: async destinationPath => {
+        if (!downloadHistoryManager) {
+          throw new Error('Persistent download ownership is not available');
+        }
+        await downloadHistoryManager.trackPromotedFile(destinationPath);
+      },
+      logger: log,
+    });
+
+    // Promotion persisted a reclaim claim before publishing the final path.
+    // If the renderer died or reloaded while we promoted, no one will commit
+    // the history entry that owns this file, so reclaim it immediately.
+    if (isIpcInvokeSenderGone(event)) {
+      log.warn(
+        `[url-handler] Renderer gone before accepting handoff of ${operationId}; reclaiming promoted file.`
+      );
+      await cleanupAcceptedUrlResultFile(
+        `${operationId}:sender-gone`,
+        filePath
+      );
+      return {
+        success: false,
+        error: 'Requesting view is no longer available',
+      };
+    }
+    return { success: true, filePath };
+  } catch (error: any) {
+    log.error(
+      `[url-handler] Failed to promote accepted URL result ${operationId}:`,
+      error
+    );
+    await cleanupAcceptedUrlResultFile(
+      `${operationId}:promotion-failed`,
+      pendingFilePath
+    );
+    return {
+      success: false,
+      error:
+        error?.message ||
+        'Downloaded video could not be moved into persistent storage',
+    };
+  }
 }
 
 export async function handleDiscardProcessedUrl(
@@ -259,4 +379,82 @@ export async function handleCleanupAcceptedProcessedUrl(
   }
 
   return { success: true };
+}
+
+function registerLeaseCleanup(event: IpcMainInvokeEvent): void {
+  const rendererId = event.sender.id;
+  if (leaseCleanupRegistered.has(rendererId)) return;
+  leaseCleanupRegistered.add(rendererId);
+  event.sender.once('destroyed', () => {
+    leaseCleanupRegistered.delete(rendererId);
+    void downloadHistoryManager?.releaseRenderer(rendererId);
+  });
+}
+
+export async function handleMutateVideoSuggestionDownloadHistory(
+  event: IpcMainInvokeEvent,
+  request: VideoSuggestionDownloadHistoryMutationRequest
+): Promise<VideoSuggestionDownloadHistoryMutationResult> {
+  if (!downloadHistoryManager || !request?.mutation) {
+    return {
+      success: false,
+      items: [],
+      error: 'Persistent download history is not available',
+    };
+  }
+  registerLeaseCleanup(event);
+  try {
+    const items = await downloadHistoryManager.mutate({
+      rendererId: event.sender.id,
+      mutation: request.mutation,
+      seedItems: Array.isArray(request.seedItems) ? request.seedItems : [],
+      mountedPaths: Array.isArray(request.mountedPaths)
+        ? request.mountedPaths
+        : [],
+    });
+    return { success: true, items };
+  } catch (error) {
+    log.error('[url-handler] Failed to mutate download history:', error);
+    return {
+      success: false,
+      items: [],
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Persistent download history could not be updated',
+    };
+  }
+}
+
+export async function handleSetMountedUrlDownloadLibraryPaths(
+  event: IpcMainInvokeEvent,
+  payload: { filePaths?: unknown }
+): Promise<{ success: boolean; error?: string }> {
+  if (!downloadHistoryManager) {
+    return {
+      success: false,
+      error: 'Persistent download history is not available',
+    };
+  }
+  registerLeaseCleanup(event);
+  try {
+    await downloadHistoryManager.setMountedPaths(
+      event.sender.id,
+      Array.isArray(payload?.filePaths)
+        ? payload.filePaths.filter(
+            (filePath): filePath is string => typeof filePath === 'string'
+          )
+        : []
+    );
+    return { success: true };
+  } catch (error) {
+    log.error('[url-handler] Failed to update mounted download leases:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Mounted download leases could not be updated',
+    };
+  }
 }

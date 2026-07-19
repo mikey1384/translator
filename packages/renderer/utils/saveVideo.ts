@@ -92,7 +92,11 @@ export function isManagedTempOriginalVideoPath(
   const fileName = normalizedPath.split('/').pop() || '';
   const isManagedTempDir =
     normalizedPath.includes('/translator-electron/') ||
-    normalizedPath.includes('/translator-electron-monorepo/');
+    normalizedPath.includes('/translator-electron-dev/') ||
+    normalizedPath.includes('/translator-electron-work/') ||
+    normalizedPath.includes('/translator-electron-dev-work/') ||
+    normalizedPath.includes('/translator-electron-monorepo/') ||
+    normalizedPath.includes('/downloaded-media/');
   const isManagedDownloadName =
     /^download_\d+_.+\.[a-z0-9]+$/i.test(fileName) ||
     /^ytdl_.+\.[a-z0-9]+$/i.test(fileName);
@@ -136,10 +140,17 @@ export async function saveOriginalVideoFile(
   });
   if (!savedPath) return false;
 
-  syncSavedVideoSuggestionHistoryPath({
-    previousPath: originalVideoPath,
-    savedPath,
-  });
+  // Best-effort: the user's copy already exists and the success dialog has
+  // shown — a history-sync failure must not abort the completed save flow
+  // (same policy as the subtitle association sync below).
+  try {
+    await syncSavedVideoSuggestionHistoryPath({
+      previousPath: originalVideoPath,
+      savedPath,
+    });
+  } catch (err) {
+    console.error('[save-video] download history sync failed:', err);
+  }
   try {
     await syncStoredSubtitleVideoAssociationPath({
       previousPath: originalVideoPath,

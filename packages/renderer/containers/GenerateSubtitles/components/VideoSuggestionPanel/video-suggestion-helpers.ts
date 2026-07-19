@@ -6,20 +6,10 @@ import type {
   VideoSuggestionRecency,
   VideoSuggestionResultItem,
 } from '@shared-types/app';
-import type {
-  PipelineStageKey,
-  PipelineStageProgress,
-  PipelineStageState,
-} from './VideoSuggestionPanel.types.js';
+import type { PipelineStageKey } from './VideoSuggestionPanel.types.js';
 import { isVideoSuggestionRecency } from '../../../../../shared/helpers/video-suggestion-sanitize.js';
 
 export const NO_PRESET_VALUE = '__none__';
-
-const PIPELINE_STAGE_KEYS: PipelineStageKey[] = [
-  'answerer',
-  'planner',
-  'retrieval',
-];
 
 export function resolveI18n(text: string, t: TFunction): string {
   if (text.startsWith('__i18n__:')) {
@@ -100,34 +90,6 @@ export function isMatchingOperationId(
     progressOperationId === activeOperationId ||
     progressOperationId.startsWith(`${activeOperationId}-`)
   );
-}
-
-export function createInitialPipelineStages(): PipelineStageProgress[] {
-  return PIPELINE_STAGE_KEYS.map((key, index) => ({
-    key,
-    index: index + 1,
-    state: 'pending',
-    outcome: '',
-  }));
-}
-
-export function isPipelineStageKey(value: unknown): value is PipelineStageKey {
-  return (
-    typeof value === 'string' &&
-    PIPELINE_STAGE_KEYS.includes(value as PipelineStageKey)
-  );
-}
-
-export function inferStageFromMessage(
-  message: string
-): { key: PipelineStageKey; state: PipelineStageState } | null {
-  const match = message.match(/step\s*([1-3])\s*\/\s*3/i);
-  if (!match) return null;
-  const idx = Number(match[1]);
-  if (!Number.isFinite(idx) || idx < 1 || idx > 3) return null;
-  const key = PIPELINE_STAGE_KEYS[idx - 1];
-  const state = /cleared/i.test(message) ? 'cleared' : 'running';
-  return { key, state };
 }
 
 export function pipelineStageLabel(
@@ -302,7 +264,8 @@ export function buildSuggestedFollowUpPrompts(
   const topic = compactSuggestionText(savedPreferences.topic);
   const topChannel = compactSuggestionText(results[0]?.channel);
   const recentDownloadTitle =
-    context?.includeDownloadHistory && Array.isArray(context.recentDownloadTitles)
+    context?.includeDownloadHistory &&
+    Array.isArray(context.recentDownloadTitles)
       ? compactSuggestionText(context.recentDownloadTitles[0])
       : '';
   const recentChannel =
@@ -332,7 +295,11 @@ export function buildSuggestedFollowUpPrompts(
       )
     );
 
-    if (!/\b(interview|interviews|podcast|podcasts|conversation|conversations|talk show|talks)\b/i.test(normalizedQuery)) {
+    if (
+      !/\b(interview|interviews|podcast|podcasts|conversation|conversations|talk show|talks)\b/i.test(
+        normalizedQuery
+      )
+    ) {
       pushUniqueSuggestion(
         prompts,
         seen,
@@ -344,7 +311,11 @@ export function buildSuggestedFollowUpPrompts(
       );
     }
 
-    if (!/\b(live|performance|performances|concert|concerts|clip|clips|highlights)\b/i.test(normalizedQuery)) {
+    if (
+      !/\b(live|performance|performances|concert|concerts|clip|clips|highlights)\b/i.test(
+        normalizedQuery
+      )
+    ) {
       pushUniqueSuggestion(
         prompts,
         seen,

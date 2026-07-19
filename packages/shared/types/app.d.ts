@@ -403,7 +403,44 @@ declare module '@shared-types/app' {
 
   export interface ProcessUrlPendingResultAction {
     success: boolean;
+    filePath?: string;
     error?: string;
+  }
+
+  export interface VideoSuggestionDownloadHistoryItem {
+    id: string;
+    sourceUrl: string;
+    title: string;
+    thumbnailUrl?: string;
+    channel?: string;
+    channelUrl?: string;
+    durationSec?: number;
+    uploadedAt?: string;
+    downloadedAtIso: string;
+    localPath?: string;
+  }
+
+  export type VideoSuggestionDownloadHistoryMutation =
+    | { type: 'get' }
+    | { type: 'upsert'; item: VideoSuggestionDownloadHistoryItem }
+    | { type: 'remove'; id: string; reclaimPath?: string }
+    | { type: 'rollback-upsert'; id: string; reclaimPath?: string }
+    | { type: 'replace-path'; previousPath: string; savedPath: string };
+
+  export interface VideoSuggestionDownloadHistoryMutationRequest {
+    mutation: VideoSuggestionDownloadHistoryMutation;
+    seedItems?: VideoSuggestionDownloadHistoryItem[];
+    mountedPaths?: string[];
+  }
+
+  export interface VideoSuggestionDownloadHistoryMutationResult {
+    success: boolean;
+    items: VideoSuggestionDownloadHistoryItem[];
+    error?: string;
+  }
+
+  export interface SetMountedUrlDownloadLibraryPathsOptions {
+    filePaths: string[];
   }
 
   export interface CleanupAcceptedProcessedUrlOptions {
@@ -556,6 +593,8 @@ declare module '@shared-types/app' {
     stageTotal?: number;
     stageState?: VideoSuggestionStageState;
     stageOutcome?: string;
+    // Starts a genuinely new plan inside the same Search More operation.
+    resetPipelineStages?: boolean;
   }
 
   // =========================================
@@ -1229,6 +1268,12 @@ declare module '@shared-types/app' {
     cleanupAcceptedProcessedUrl: (
       options: CleanupAcceptedProcessedUrlOptions
     ) => Promise<ProcessUrlPendingResultAction>;
+    mutateVideoSuggestionDownloadHistory: (
+      request: VideoSuggestionDownloadHistoryMutationRequest
+    ) => Promise<VideoSuggestionDownloadHistoryMutationResult>;
+    setMountedUrlDownloadLibraryPaths: (
+      options: SetMountedUrlDownloadLibraryPathsOptions
+    ) => Promise<{ success: boolean; error?: string }>;
     onProcessUrlProgress: (callback: UrlProgressCallback | null) => () => void;
     suggestVideos: (
       request: VideoSuggestionChatRequest

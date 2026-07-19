@@ -207,6 +207,7 @@
       "downloadedOn": "Downloaded {{date}}",
       "downloadedRecently": "Downloaded recently",
       "savedToFolder": "Saved to your folder",
+      "storedInAppLibrary": "Stored in app library",
       "tempFileAvailable": "Temp copy still available",
       "localFileAvailable": "File available",
       "findVideos": "Find videos",

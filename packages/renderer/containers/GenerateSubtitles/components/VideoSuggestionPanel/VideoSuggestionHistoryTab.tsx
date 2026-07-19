@@ -1,13 +1,7 @@
 import type { TFunction } from 'i18next';
 import Button from '../../../../components/Button.js';
 import IconButton from '../../../../components/IconButton.js';
-import {
-  Download,
-  ExternalLink,
-  Play,
-  Trash2,
-  UserRound,
-} from 'lucide-react';
+import { Download, ExternalLink, Play, Trash2, UserRound } from 'lucide-react';
 import {
   cardActionsStyles,
   cardBodyStyles,
@@ -17,7 +11,6 @@ import {
   detailsSummaryStyles,
   emptyTabStateStyles,
   historyActionIconRowStyles,
-  historyActionsStyles,
   historyCardsStyles,
   historySectionStyles,
   historyStatusPillStyles,
@@ -140,7 +133,15 @@ export default function VideoSuggestionHistoryTab({
                         )}
                       </span>
                     ) : null}
-                    {storageKind !== 'saved' ? (
+                    {storageKind === 'library' ? (
+                      <span className={historyStatusSavedPillStyles}>
+                        {t(
+                          'input.videoSuggestion.storedInAppLibrary',
+                          'Stored in app library'
+                        )}
+                      </span>
+                    ) : null}
+                    {storageKind === 'temp' ? (
                       <span className={historyStatusTempPillStyles}>
                         {t(
                           'input.videoSuggestion.tempFileAvailable',
@@ -211,8 +212,7 @@ export default function VideoSuggestionHistoryTab({
                             'input.videoSuggestion.downloadAgain',
                             'Download again'
                           )}
-                        >
-                        </IconButton>
+                        ></IconButton>
                       ) : (
                         <IconButton
                           onClick={() => onOpenDownloadedVideo(item)}
@@ -222,8 +222,7 @@ export default function VideoSuggestionHistoryTab({
                           icon={<Play size={16} />}
                           title={localPrimaryActionLabel}
                           aria-label={localPrimaryActionLabel}
-                        >
-                        </IconButton>
+                        ></IconButton>
                       )}
                       <IconButton
                         onClick={() => onOpenVideoExternally(item.sourceUrl)}
@@ -238,8 +237,7 @@ export default function VideoSuggestionHistoryTab({
                           'input.videoSuggestion.openOnYoutube',
                           'Open on YouTube'
                         )}
-                      >
-                      </IconButton>
+                      ></IconButton>
                       <IconButton
                         onClick={() =>
                           onOpenChannelExternally(item.channelUrl, item.channel)
@@ -256,8 +254,7 @@ export default function VideoSuggestionHistoryTab({
                           'input.videoSuggestion.openChannel',
                           'Open channel'
                         )}
-                      >
-                      </IconButton>
+                      ></IconButton>
                       <IconButton
                         onClick={() => onRemoveHistoryItem(item.id)}
                         size="sm"
@@ -271,8 +268,7 @@ export default function VideoSuggestionHistoryTab({
                           'input.videoSuggestion.removeHistoryItem',
                           'Remove'
                         )}
-                      >
-                      </IconButton>
+                      ></IconButton>
                     </div>
                   </details>
                 </div>

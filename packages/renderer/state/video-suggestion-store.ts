@@ -8,15 +8,12 @@ import type {
   VideoSuggestionResultItem,
 } from '@shared-types/app';
 import {
-  createInitialPipelineStages,
-  inferStageFromMessage,
-  isMatchingOperationId,
-  isPipelineStageKey,
-} from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-helpers.js';
-import type {
-  PipelineStageProgress,
-  PipelineStageState,
-} from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
+  applyVideoSuggestionPipelineProgress,
+  createInitialVideoSuggestionPipelineStages,
+} from '../../shared/helpers/video-suggestion-pipeline-state.js';
+import { mergeVideoSuggestionResults } from '../../shared/helpers/video-suggestion-result-state.js';
+import { isMatchingOperationId } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-helpers.js';
+import type { PipelineStageProgress } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 
 const MAX_LOADING_TRACE_BUFFER = 28;
 
@@ -48,6 +45,7 @@ type VideoSuggestionState = {
   cancellingOperationId: string | null;
   lastRequestPreferences: VideoSuggestionPreferenceSlots;
   lastTraceKey: string;
+  resultsBeforeOperation: VideoSuggestionResultItem[];
 };
 
 type VideoSuggestionActions = {
@@ -64,15 +62,15 @@ type VideoSuggestionActions = {
   setLastRequestPreferences: (value: VideoSuggestionPreferenceSlots) => void;
   setCancellingOperation: (value: string | null) => void;
   nextRequestId: () => number;
-  startOperation: (operationId: string, mode: Exclude<LoadingMode, null>) => void;
+  startOperation: (
+    operationId: string,
+    mode: Exclude<LoadingMode, null>
+  ) => void;
   finishOperation: (operationId: string) => void;
   clearActiveOperation: (operationId?: string | null) => void;
   resetLiveActivityState: () => void;
   markPipelineClearedThroughRetrieval: (retrievalReadyText: string) => void;
-  resetSession: (
-    starterMessage: string,
-    showQuickStartAction: boolean
-  ) => void;
+  resetSession: (starterMessage: string, showQuickStartAction: boolean) => void;
   ensureStarterMessage: (
     starterMessage: string,
     showQuickStartAction: boolean
@@ -96,7 +94,7 @@ const initialState: VideoSuggestionState = {
   streamingStatus: '',
   streamingPreview: '',
   loadingTrace: [],
-  pipelineStages: createInitialPipelineStages(),
+  pipelineStages: createInitialVideoSuggestionPipelineStages(),
   error: null,
   showQuickStartAction: false,
   resolvedModelRuntime: null,
@@ -108,6 +106,7 @@ const initialState: VideoSuggestionState = {
   cancellingOperationId: null,
   lastRequestPreferences: {},
   lastTraceKey: '',
+  resultsBeforeOperation: [],
 };
 
 function resolveUpdater<T>(value: Updater<T>, prev: T): T {
@@ -125,21 +124,8 @@ function resetLiveActivityState(state: VideoSuggestionState) {
   state.streamingStatus = '';
   state.streamingPreview = '';
   state.loadingTrace = [];
-  state.pipelineStages = createInitialPipelineStages();
-}
-
-function mergeSuggestionResults(
-  current: VideoSuggestionResultItem[],
-  incoming: VideoSuggestionResultItem[]
-): VideoSuggestionResultItem[] {
-  if (incoming.length === 0) return current;
-  const seen = new Set(current.map(item => item.url));
-  const fresh = incoming.filter(item => {
-    if (!item?.url || seen.has(item.url)) return false;
-    seen.add(item.url);
-    return true;
-  });
-  return fresh.length > 0 ? [...current, ...fresh] : current;
+  state.pipelineStages = createInitialVideoSuggestionPipelineStages();
+  state.resultsBeforeOperation = [];
 }
 
 export const useVideoSuggestionStore =
@@ -229,9 +215,11 @@ export const useVideoSuggestionStore =
           state.streamingStatus = '';
           state.streamingPreview = '';
           state.loadingTrace = [];
-          state.pipelineStages = createInitialPipelineStages();
+          state.pipelineStages = createInitialVideoSuggestionPipelineStages();
           state.resolvedModelRuntime = null;
           state.lastTraceKey = '';
+          state.resultsBeforeOperation =
+            mode === 'more' ? [...state.results] : [];
         }),
 
       finishOperation: operationId =>
@@ -242,6 +230,7 @@ export const useVideoSuggestionStore =
           state.loadingStartedAtMs = null;
           state.streamingStatus = '';
           state.activeOperationId = null;
+          state.resultsBeforeOperation = [];
         }),
 
       clearActiveOperation: operationId =>
@@ -344,7 +333,9 @@ export const useVideoSuggestionStore =
           }
 
           const progressMessage =
-            typeof progress?.message === 'string' ? progress.message.trim() : '';
+            typeof progress?.message === 'string'
+              ? progress.message.trim()
+              : '';
 
           if (progressMessage) {
             state.streamingStatus = progressMessage;
@@ -360,7 +351,8 @@ export const useVideoSuggestionStore =
             const isRepeat = state.lastTraceKey === traceKey;
             if (isRepeat) {
               if (state.loadingTrace.length > 0) {
-                state.loadingTrace[state.loadingTrace.length - 1] = prefixedLine;
+                state.loadingTrace[state.loadingTrace.length - 1] =
+                  prefixedLine;
               }
             } else {
               state.lastTraceKey = traceKey;
@@ -370,46 +362,11 @@ export const useVideoSuggestionStore =
             }
           }
 
-          const stageFromPayload = isPipelineStageKey(progress?.stageKey)
-            ? {
-                key: progress.stageKey,
-                state:
-                  progress?.stageState === 'cleared'
-                    ? ('cleared' as const)
-                    : progress?.stageState === 'running'
-                      ? ('running' as const)
-                      : ('pending' as const),
-              }
-            : null;
-
-          const stageFromMessage =
-            !stageFromPayload && progressMessage
-              ? inferStageFromMessage(progressMessage)
-              : null;
-
-          const stageUpdate = stageFromPayload || stageFromMessage;
-
-          if (stageUpdate) {
-            const outcomeRaw =
-              typeof progress?.stageOutcome === 'string'
-                ? progress.stageOutcome.trim()
-                : '';
-            const outcome =
-              outcomeRaw ||
-              (stageUpdate.state === 'cleared' ? progressMessage : '');
-
-            state.pipelineStages = state.pipelineStages.map(stage => {
-              if (stage.key !== stageUpdate.key) return stage;
-              if (stage.state === 'cleared' && stageUpdate.state !== 'cleared') {
-                return stage;
-              }
-              return {
-                ...stage,
-                state: stageUpdate.state as PipelineStageState,
-                outcome: outcome || stage.outcome,
-              };
-            });
-          }
+          state.pipelineStages = applyVideoSuggestionPipelineProgress(
+            state.pipelineStages,
+            progress,
+            progressMessage
+          );
 
           const streamedQuery =
             typeof progress?.searchQuery === 'string'
@@ -440,10 +397,18 @@ export const useVideoSuggestionStore =
           if (Array.isArray(progress?.partialResults)) {
             if (progress.resultsFinal) {
               // The agent's final ranked selection supersedes whatever
-              // raw candidates streamed in while it was searching.
-              state.results = progress.partialResults;
+              // raw candidates streamed in while it was searching. Search
+              // More only replaces this operation's candidates; results from
+              // earlier pages must remain in the list.
+              state.results =
+                state.loadingMode === 'more'
+                  ? mergeVideoSuggestionResults(
+                      state.resultsBeforeOperation,
+                      progress.partialResults
+                    )
+                  : progress.partialResults;
             } else {
-              state.results = mergeSuggestionResults(
+              state.results = mergeVideoSuggestionResults(
                 state.results,
                 progress.partialResults
               );

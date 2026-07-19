@@ -14,7 +14,10 @@ import {
 } from './ai-provider.js';
 import { normalizeVideoSuggestionModelPreference } from './video-suggestion-model-preference.js';
 import { isVideoSuggestionRecency } from '../../shared/helpers/video-suggestion-sanitize.js';
-import { toPlannerMessages } from './video-suggestions/planner.js';
+import {
+  appendExhaustedSearchMoreTurn,
+  toPlannerMessages,
+} from './video-suggestions/planner.js';
 import { emitSuggestionProgress } from './video-suggestions/progress.js';
 import { runVideoSearchAgent } from './video-suggestions/agent.js';
 import {
@@ -221,7 +224,8 @@ export async function suggestVideosViaChat(
   };
 
   const runContinuationSearch = async (
-    continuation: VideoSearchContinuation
+    continuation: VideoSearchContinuation,
+    opts: { suppressEmptyDone?: boolean } = {}
   ): Promise<VideoSuggestionChatResult> => {
     try {
       const outcome = await runVideoSearch({
@@ -237,7 +241,9 @@ export async function suggestVideosViaChat(
         activeContinuationId
       );
 
-      emitDone(outcome.searchQuery, outcome.results.length);
+      if (!(opts.suppressEmptyDone && outcome.results.length === 0)) {
+        emitDone(outcome.searchQuery, outcome.results.length);
+      }
       return {
         success: true,
         assistantMessage: DEFAULT_FOLLOW_UP,
@@ -275,16 +281,58 @@ export async function suggestVideosViaChat(
     }
   };
 
-  // "Search more": serve buffered results / re-run the stored plan.
-  // No model calls on this path.
+  // "Search more": serve buffered results / re-run the stored plan (no
+  // model calls) — but when the stored queries come back empty, the plan is
+  // structurally exhausted (YouTube search scraping has no pagination, so a
+  // query can never go past its first page). In that case fall through to a
+  // fresh agent run that re-plans different-angle queries for the ORIGINAL
+  // request instead of reporting "no more results".
+  let exhaustedReplan: {
+    exhaustedQueries: string[];
+    originalIntent: string;
+  } | null = null;
   const storedContinuation = getVideoSearchContinuation(activeContinuationId);
   if (storedContinuation) {
-    return runContinuationSearch(storedContinuation);
+    const contResult = await runContinuationSearch(storedContinuation, {
+      suppressEmptyDone: true,
+    });
+    const cameUpEmpty =
+      contResult.success === true && (contResult.results?.length ?? 0) === 0;
+    if (!cameUpEmpty) {
+      return contResult;
+    }
+    const lastUserMessage = [...history]
+      .reverse()
+      .find(msg => msg.role === 'user' && msg.content.trim());
+    exhaustedReplan = {
+      exhaustedQueries: uniqueTexts([
+        ...(storedContinuation.triedQueries || []),
+        ...storedContinuation.retrievalQueries,
+      ]),
+      originalIntent:
+        storedContinuation.originalIntent ||
+        lastUserMessage?.content ||
+        storedContinuation.intentQuery,
+    };
+    emitSuggestionProgress(onProgress, {
+      operationId,
+      phase: 'planning',
+      message:
+        'Prior search queries are exhausted — planning fresh angles for the original request.',
+      searchQuery: storedContinuation.intentQuery,
+      resetPipelineStages: true,
+      elapsedMs: Date.now() - startedAt,
+    });
+    log.info(
+      `[video-suggestions] Continuation exhausted (${operationId}); re-planning with ${exhaustedReplan.exhaustedQueries.length} exhausted queries.`
+    );
   }
 
   // Explicit query override (e.g. re-running a saved search): direct
-  // retrieval, no model calls.
-  if (queryOverride) {
+  // retrieval, no model calls. Never on the exhausted-replan path — the
+  // standard Search More flow sends the override alongside continuationId,
+  // and re-running the exhausted query here would bypass the agent replan.
+  if (queryOverride && !exhaustedReplan) {
     return runContinuationSearch(
       createVideoSearchContinuation({
         recency: preferredRecency,
@@ -303,8 +351,9 @@ export async function suggestVideosViaChat(
   }
 
   // Empty conversation: greet with the canned starter question instead of
-  // spending a model call.
-  if (!hasUserMessage) {
+  // spending a model call. (Never on the exhausted-replan path — that must
+  // reach the agent even if the renderer sent no history.)
+  if (!hasUserMessage && !exhaustedReplan) {
     emitDone('', 0);
     return {
       success: true,
@@ -316,7 +365,7 @@ export async function suggestVideosViaChat(
   }
 
   try {
-    const contextBlock = buildAgentContextBlock({
+    let contextBlock = buildAgentContextBlock({
       preferredRecency,
       includeDownloadHistory: Boolean(
         request.contextToggles?.includeDownloadHistory
@@ -339,12 +388,42 @@ export async function suggestVideosViaChat(
       savedTopic: savedPreferences?.topic,
     });
 
+    if (exhaustedReplan) {
+      // Newest exhausted queries matter most — they're the ones the model
+      // would otherwise re-pick.
+      const exhaustedList = exhaustedReplan.exhaustedQueries
+        .slice(-12)
+        .map(query => `"${query}"`)
+        .join(', ');
+      contextBlock = [
+        contextBlock,
+        [
+          'LOAD-MORE RE-PLAN: The user asked for MORE results for their',
+          `original request ("${exhaustedReplan.originalIntent}"). These`,
+          `previously used search queries are EXHAUSTED — they have no new`,
+          `results left: ${exhaustedList}.`,
+          'Generate genuinely different-angle queries that still serve the',
+          'original request (different people, eras, synonyms, adjacent',
+          'topics, or languages as appropriate). Do NOT reuse or lightly',
+          'rephrase the exhausted queries.',
+        ].join(' '),
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+    }
+
+    const agentHistory = exhaustedReplan
+      ? appendExhaustedSearchMoreTurn(history, exhaustedReplan.originalIntent)
+      : hasUserMessage
+        ? history
+        : [];
+
     const outcome = await runVideoSearchAgent({
       operationId,
       model: resolvedModel,
       translationPhase: suggestionTranslationPhase,
       signal,
-      history,
+      history: agentHistory,
       targetCountry,
       youtubeRegionCode: requestYoutubeRegionCode,
       youtubeSearchLanguage: requestYoutubeSearchLanguage,
@@ -354,6 +433,7 @@ export async function suggestVideosViaChat(
       preferredLanguageName: request.preferredLanguageName,
       savedPreferences,
       contextBlock,
+      initialTriedQueries: exhaustedReplan?.exhaustedQueries,
       maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
       onProgress,
       startedAt,
@@ -377,6 +457,9 @@ export async function suggestVideosViaChat(
           .map(item => compactText(item.channel || ''))
           .filter(Boolean)
       ).slice(0, 6);
+      const lastUserMessage = [...history]
+        .reverse()
+        .find(msg => msg.role === 'user' && msg.content.trim());
       activeContinuationId = persistVideoSearchContinuation(
         createVideoSearchContinuation({
           recency: preferredRecency,
@@ -384,11 +467,21 @@ export async function suggestVideosViaChat(
           model: resolvedModel,
           maxResults: VIDEO_SUGGESTION_BATCH_SIZE,
           intentQuery: outcome.searchQuery,
+          // Preserve the natural-language ask so later exhausted re-plans
+          // target the real intent, not the first derived keyword query.
+          originalIntent:
+            exhaustedReplan?.originalIntent || lastUserMessage?.content,
           youtubeRegionCode:
             outcome.youtubeRegionCode || requestYoutubeRegionCode,
           youtubeSearchLanguage:
             outcome.youtubeSearchLanguage || requestYoutubeSearchLanguage,
           retrievalQueries: outcome.queriesTried,
+          // Accumulate every query ever tried so future re-plans keep
+          // steering the agent away from tapped-out angles.
+          triedQueries: [
+            ...(exhaustedReplan?.exhaustedQueries || []),
+            ...outcome.queriesTried,
+          ],
           retrievalSeedUrls: [],
           selectedChannels: channels,
           iteration: 1,
