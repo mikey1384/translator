@@ -13,6 +13,7 @@ import { CancelledError } from '../../../shared/cancelled-error.js';
 import {
   ensureYtDlpBinary,
   ensureJsRuntime,
+  requestBackgroundYtDlpUpdate,
   shouldSkipYtDlpUpdateFromEnv,
   YtDlpSetupError,
   type BinarySetupProgress,
@@ -1255,30 +1256,10 @@ export async function downloadVideoFromPlatform(
         } catch {
           // fall through
         }
-        // On Windows, avoid yt-dlp self-update (-U) because the exe is often locked and can
-        // cause confusing "update succeeded but version unchanged" states. Startup already
-        // performs a safe update check.
-        if (!skipUpdateEnv && process.platform !== 'win32') {
-          try {
-            // Fire-and-forget update; do not block user flow
-            // Delay the update by a few seconds to ensure file handles are released
-            setTimeout(() => {
-              execaImpl(ytDlpPath, ['-U', '--quiet'], {
-                windowsHide: true,
-                timeout: 120_000,
-                stdio: 'ignore',
-                shell: false,
-              }).catch(error => {
-                log.debug(
-                  '[URLprocessor] Background update failed:',
-                  error.message
-                );
-              });
-            }, 3000);
-          } catch {
-            // fall through
-          }
-        }
+        // Keep the binary fresh for future runs via the shared single-flight
+        // background updater (env skip + hourly cap + post-update health
+        // check live there; Windows updates are staged side-by-side).
+        requestBackgroundYtDlpUpdate(ytDlpPath);
 
         // Final 100% tick
         progressCallback?.({ percent: 100, stage: 'Completed' });

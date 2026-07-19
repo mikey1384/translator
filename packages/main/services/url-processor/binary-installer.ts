@@ -370,13 +370,51 @@ function clearHealthyBinaryCache(): void {
   cachedHealthyBinaryAt = 0;
 }
 
+/**
+ * Resolve the freshest usable binary via filesystem checks only — no
+ * `yt-dlp --version` spawn. The macOS/Windows release binaries are
+ * PyInstaller onefile builds that pay a multi-second cold start per spawn,
+ * so the recently-verified cache path must never re-spawn the binary.
+ */
+async function resolveBinaryWithoutSpawn(
+  cachedBinaryPath: string
+): Promise<string | null> {
+  const minBytes =
+    process.platform === 'win32' ? 10 * 1024 * 1024 : 2 * 1024 * 1024;
+  const managedBinaryPath = getManagedBinaryPath();
+  const candidates = [
+    getStagedBinaryPath(managedBinaryPath),
+    managedBinaryPath,
+    getStagedBinaryPath(cachedBinaryPath),
+    cachedBinaryPath,
+  ].filter((value, index, all) => value && all.indexOf(value) === index);
+
+  let best: { path: string; mtimeMs: number } | null = null;
+  for (const candidate of candidates) {
+    try {
+      await fsp.access(candidate, fs.constants.X_OK);
+      const stats = await fsp.stat(candidate);
+      if (stats.size < minBytes) {
+        continue;
+      }
+      const mtimeMs = Number.isFinite(stats.mtimeMs) ? stats.mtimeMs : 0;
+      if (!best || mtimeMs > best.mtimeMs) {
+        best = { path: candidate, mtimeMs };
+      }
+    } catch {
+      // Try next candidate.
+    }
+  }
+
+  return best?.path ?? null;
+}
+
 async function refreshCachedHealthyBinary(
   cachedBinaryPath: string,
   signal?: AbortSignal
 ): Promise<string | null> {
   if (app.isPackaged) {
-    const refreshed = await ensureWritableBinary({ signal });
-    return refreshed || null;
+    return await resolveBinaryWithoutSpawn(cachedBinaryPath);
   }
 
   const managedBinaryPath = getManagedBinaryPath();
@@ -428,7 +466,9 @@ async function getCachedHealthyBinary(
             `[URLprocessor] Refreshed cached healthy yt-dlp binary: ${cachedHealthyBinaryPath} -> ${refreshedBinary}`
           );
         }
-        rememberHealthyBinary(refreshedBinary);
+        // Keep the original verification timestamp so a real (spawned)
+        // re-verification still happens once the cache interval elapses.
+        cachedHealthyBinaryPath = refreshedBinary;
         return refreshedBinary;
       }
       clearHealthyBinaryCache();
@@ -859,6 +899,24 @@ export async function ensureWritableBinary({
       await fsp.chmod(userBin, 0o755);
     }
 
+    // Verify the fresh copy so every path out of this function is a binary
+    // that actually runs (callers rely on that and skip their own test).
+    if (!(await testBinary(userBin, signal))) {
+      log.warn(
+        '[URLprocessor] Bundled yt-dlp copy failed verification. Falling back to direct download...'
+      );
+      const downloaded = await downloadBinaryDirectly(
+        userBin,
+        undefined,
+        signal
+      );
+      if (process.platform !== 'win32') {
+        await fsp.chmod(downloaded, 0o755).catch(() => {});
+      }
+      rememberHealthyBinary(downloaded);
+      return downloaded;
+    }
+
     rememberHealthyBinary(userBin);
     return userBin;
   } finally {
@@ -967,11 +1025,17 @@ async function ensureYtDlpBinaryInternal({
     const now = Date.now();
     const shouldCheckUpdate =
       !skipUpdate && now - getLastUpdateCheckTime() > UPDATE_CHECK_INTERVAL_MS;
+    // In packaged builds the self-update runs in the background, so a due
+    // update check must not force the slow (spawning) resolution path.
     const cachedBinary = await getCachedHealthyBinary(
-      shouldCheckUpdate,
+      app.isPackaged ? false : shouldCheckUpdate,
       signal
     );
     if (cachedBinary) {
+      if (app.isPackaged && shouldCheckUpdate) {
+        markUpdateChecked(now);
+        scheduleBackgroundYtDlpUpdate(cachedBinary);
+      }
       stopCrawl();
       log.info(
         `[URLprocessor] Reusing cached healthy yt-dlp binary: ${cachedBinary}`
@@ -979,53 +1043,22 @@ async function ensureYtDlpBinaryInternal({
       return cachedBinary;
     }
 
-    // For packaged apps, always use the writable binary approach
+    // For packaged apps, always use the writable binary approach.
+    // ensureWritableBinary only returns verified binaries, so no extra
+    // testBinary spawn here; the self-update never blocks the download.
     if (app.isPackaged) {
-      const writablePath = await ensureWritableBinary({ signal });
-
-      // Test if it's working
-      if (await testBinary(writablePath, signal)) {
-        // Binary works - now try to update it (unless recently checked)
-        if (shouldCheckUpdate) {
-          log.info(
-            '[URLprocessor] Attempting to update yt-dlp to latest version...'
-          );
-          const updateSuccess = await updateExistingBinary(
-            writablePath,
-            signal
-          );
-          markUpdateChecked(now);
-          if (!updateSuccess) {
-            log.warn(
-              '[URLprocessor] Update failed, but existing binary works, continuing...'
-            );
-          }
-          // Re-evaluate in case the updater staged a newer side-by-side binary.
-          stopCrawl();
-          const refreshedBinary = await ensureWritableBinary({ signal });
-          if (!(await testBinary(refreshedBinary, signal))) {
-            clearHealthyBinaryCache();
-            const installed = await installNewBinary(
-              emitEnsureYtDlpProgress,
-              signal
-            );
-            rememberHealthyBinary(installed);
-            return installed;
-          }
-          rememberHealthyBinary(refreshedBinary);
-          return refreshedBinary;
-        } else {
-          log.info(
-            '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
-          );
-        }
-        stopCrawl();
-        rememberHealthyBinary(writablePath);
-        return writablePath;
-      } else {
+      let writablePath: string | null = null;
+      try {
+        writablePath = await ensureWritableBinary({ signal });
+      } catch (error) {
+        rethrowIfCancelled(error);
         log.warn(
-          '[URLprocessor] Writable binary is not working, will reinstall...'
+          '[URLprocessor] Writable binary setup failed, will reinstall...',
+          error
         );
+      }
+
+      if (!writablePath) {
         clearHealthyBinaryCache();
         stopCrawl();
         const installed = await installNewBinary(
@@ -1035,6 +1068,14 @@ async function ensureYtDlpBinaryInternal({
         rememberHealthyBinary(installed);
         return installed;
       }
+
+      if (shouldCheckUpdate) {
+        markUpdateChecked(now);
+        scheduleBackgroundYtDlpUpdate(writablePath);
+      }
+      stopCrawl();
+      rememberHealthyBinary(writablePath);
+      return writablePath;
     }
 
     // For dev environment, prefer a managed app-local binary over arbitrary PATH installs.
@@ -1173,6 +1214,67 @@ async function supportsRequiredYtDlpFlags(
     );
     return null;
   }
+}
+
+let backgroundUpdateInFlight = false;
+
+/**
+ * Run the yt-dlp self-update off the critical path. Downloads never wait on
+ * this; macOS/Linux update the binary in place and Windows stages a
+ * side-by-side .next binary, both of which the next ensure pass picks up.
+ *
+ * Every self-update in the app must go through here (or
+ * requestBackgroundYtDlpUpdate) so concurrent `-U` runs against the same
+ * executable are impossible.
+ */
+function scheduleBackgroundYtDlpUpdate(binaryPath: string): void {
+  if (backgroundUpdateInFlight) {
+    return;
+  }
+  backgroundUpdateInFlight = true;
+  void (async () => {
+    try {
+      log.info(
+        '[URLprocessor] Checking for yt-dlp updates in the background...'
+      );
+      const updated = await updateExistingBinary(binaryPath);
+      if (!updated) {
+        log.warn(
+          '[URLprocessor] Background yt-dlp update did not complete; keeping current binary'
+        );
+      }
+      // `-U` may have replaced the file in place. The spawn-free cache would
+      // otherwise serve a broken replacement for up to an hour, so verify it
+      // now and force a full (reinstalling) ensure pass if it doesn't run.
+      if (!(await testBinary(binaryPath))) {
+        log.warn(
+          '[URLprocessor] yt-dlp failed verification after background update; clearing cache so the next use reinstalls'
+        );
+        clearHealthyBinaryCache();
+      }
+    } catch (error) {
+      log.warn('[URLprocessor] Background yt-dlp update error:', error);
+    } finally {
+      backgroundUpdateInFlight = false;
+    }
+  })();
+}
+
+/**
+ * Entry point for callers outside the ensure pass (e.g. the post-download
+ * hook). Applies the env-var skip, the persisted hourly cap, and the
+ * single-flight guard before running the shared background updater.
+ */
+export function requestBackgroundYtDlpUpdate(binaryPath: string): void {
+  if (shouldSkipYtDlpUpdateFromEnv()) {
+    return;
+  }
+  const now = Date.now();
+  if (now - getLastUpdateCheckTime() <= UPDATE_CHECK_INTERVAL_MS) {
+    return;
+  }
+  markUpdateChecked(now);
+  scheduleBackgroundYtDlpUpdate(binaryPath);
 }
 
 async function updateExistingBinary(
