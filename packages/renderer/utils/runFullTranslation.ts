@@ -33,7 +33,7 @@ export async function runFullSrtTranslation(options: TranslateAllOptions = {}) {
   }
 
   const targetLanguage = useUIStore.getState().targetLanguage;
-  const operationId = `${operationPrefix ?? 'translate'}-${Date.now()}`;
+  const operationId = `${operationPrefix ?? 'translate'}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
   return executeSrtTranslation({
     segments,

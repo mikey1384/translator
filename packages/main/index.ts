@@ -20,7 +20,6 @@ import {
 } from 'electron';
 import * as fsPromises from 'fs/promises';
 import * as fs from 'fs';
-import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
 import os from 'os';
 import * as renderWindowHandlers from './handlers/render-window-handlers/index.js';
@@ -58,6 +57,7 @@ import {
   handleRefreshCreditSnapshot,
   handleCheckoutReturnFromBrowser,
   initializeCreditBalanceState,
+  replayPendingCheckoutState,
 } from './handlers/credit-handlers.js';
 import {
   initEntitlementsManager,
@@ -87,7 +87,12 @@ import type {
   VideoSuggestionRecency,
 } from '@shared-types/app';
 import { testElevenLabsApiKey } from './services/elevenlabs-client.js';
-import { getMainWindow } from './utils/window.js';
+import {
+  getMainWindow,
+  broadcastToApp,
+  getActiveAppWebContents,
+} from './utils/window.js';
+import * as tabManager from './tab-manager.js';
 import { suggestVideosViaChat } from './services/video-suggestions.js';
 import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-gate.js';
 import { hasConfiguredAdminSecret } from './services/admin-auth.js';
@@ -96,6 +101,10 @@ log.info('--- [main.ts] Execution Started ---');
 
 const CHECKOUT_RETURN_PROTOCOL = 'stage5-translator';
 let filePathToOpenOnLoad: string | null = null;
+// The tab the queued file was meant for; null means "first tab to finish
+// loading" (app startup). Prevents a background tab that happens to finish
+// loading first from claiming a file intended for the active tab.
+let filePathTargetWebContentsId: number | null = null;
 let checkoutReturnUrlToOpenOnLoad: string | null = null;
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
 
@@ -122,7 +131,9 @@ function registerCheckoutReturnProtocol(): void {
 
 function findCheckoutReturnUrl(args: string[]): string | null {
   for (const arg of args) {
-    const normalized = String(arg || '').trim().replace(/^"|"$/g, '');
+    const normalized = String(arg || '')
+      .trim()
+      .replace(/^"|"$/g, '');
     if (normalized.toLowerCase().startsWith(`${CHECKOUT_RETURN_PROTOCOL}://`)) {
       return normalized;
     }
@@ -330,6 +341,12 @@ function getPreloadPath() {
         'preload.cjs'
       )
     : path.join(__dirname, '../preload/preload.cjs');
+}
+
+function getShellAssetPath(fileName: string) {
+  return app.isPackaged
+    ? path.join(app.getAppPath(), 'packages', 'main', 'dist', 'shell', fileName)
+    : path.join(__dirname, '../shell', fileName);
 }
 
 try {
@@ -878,7 +895,9 @@ try {
     handleCreateByoUnlockSession()
   );
   ipcMain.handle('get-credit-snapshot', handleGetCreditSnapshot);
-  ipcMain.handle('refresh-credit-snapshot', handleRefreshCreditSnapshot);
+  ipcMain.handle('refresh-credit-snapshot', (_event, force?: boolean) =>
+    handleRefreshCreditSnapshot(force === true)
+  );
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
   ipcMain.handle('is-admin-mode', () => hasConfiguredAdminSecret());
@@ -920,20 +939,14 @@ try {
   ipcMain.handle('get-openai-api-key', () => settingsHandlers.getApiKey());
   ipcMain.handle('set-openai-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setApiKey(event, apiKey);
-    const mainWin = getMainWindow();
-    if (mainWin && !mainWin.isDestroyed()) {
-      mainWin.webContents.send('openai-api-key-changed', {
-        hasKey: result.success && Boolean(apiKey?.trim?.()),
-      });
-    }
+    broadcastToApp('openai-api-key-changed', {
+      hasKey: result.success && Boolean(apiKey?.trim?.()),
+    });
     return result;
   });
   ipcMain.handle('clear-openai-api-key', async () => {
     const result = await settingsHandlers.clearApiKey();
-    const mainWin = getMainWindow();
-    if (mainWin && !mainWin.isDestroyed()) {
-      mainWin.webContents.send('openai-api-key-changed', { hasKey: false });
-    }
+    broadcastToApp('openai-api-key-changed', { hasKey: false });
     return result;
   });
   ipcMain.handle('validate-openai-api-key', async (_event, apiKey?: string) => {
@@ -957,20 +970,14 @@ try {
   );
   ipcMain.handle('set-anthropic-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setAnthropicApiKey(event, apiKey);
-    const mainWin = getMainWindow();
-    if (mainWin && !mainWin.isDestroyed()) {
-      mainWin.webContents.send('anthropic-api-key-changed', {
-        hasKey: result.success && Boolean(apiKey?.trim?.()),
-      });
-    }
+    broadcastToApp('anthropic-api-key-changed', {
+      hasKey: result.success && Boolean(apiKey?.trim?.()),
+    });
     return result;
   });
   ipcMain.handle('clear-anthropic-api-key', async () => {
     const result = await settingsHandlers.clearAnthropicApiKey();
-    const mainWin = getMainWindow();
-    if (mainWin && !mainWin.isDestroyed()) {
-      mainWin.webContents.send('anthropic-api-key-changed', { hasKey: false });
-    }
+    broadcastToApp('anthropic-api-key-changed', { hasKey: false });
     return result;
   });
   ipcMain.handle(
@@ -997,20 +1004,14 @@ try {
   );
   ipcMain.handle('set-elevenlabs-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setElevenLabsApiKey(event, apiKey);
-    const mainWin = getMainWindow();
-    if (mainWin && !mainWin.isDestroyed()) {
-      mainWin.webContents.send('elevenlabs-api-key-changed', {
-        hasKey: result.success && Boolean(apiKey?.trim?.()),
-      });
-    }
+    broadcastToApp('elevenlabs-api-key-changed', {
+      hasKey: result.success && Boolean(apiKey?.trim?.()),
+    });
     return result;
   });
   ipcMain.handle('clear-elevenlabs-api-key', async () => {
     const result = await settingsHandlers.clearElevenLabsApiKey();
-    const mainWin = getMainWindow();
-    if (mainWin && !mainWin.isDestroyed()) {
-      mainWin.webContents.send('elevenlabs-api-key-changed', { hasKey: false });
-    }
+    broadcastToApp('elevenlabs-api-key-changed', { hasKey: false });
     return result;
   });
   ipcMain.handle(
@@ -1149,16 +1150,12 @@ try {
 
   ipcMain.on('stripe-cancelled', (_event, data) => {
     log.info('[main.ts] Received stripe-cancelled message:', data);
-    if (!mainWindow || mainWindow.isDestroyed()) {
-      return;
-    }
-
     if (data?.mode === 'byo') {
-      mainWindow.webContents.send('byo-unlock-cancelled');
+      broadcastToApp('byo-unlock-cancelled');
       return;
     }
 
-    mainWindow.webContents.send('checkout-cancelled');
+    broadcastToApp('checkout-cancelled');
   });
 
   // Expose app.isPackaged to renderer via preload (sync)
@@ -1257,17 +1254,9 @@ async function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      webSecurity: !isDev,
-      allowRunningInsecureContent: false,
       sandbox: false,
-      preload: getPreloadPath(),
-      backgroundThrottling: false,
+      preload: getShellAssetPath('shell-preload.cjs'),
     },
-  });
-
-  electronContextMenu({
-    window: mainWindow,
-    showInspectElement: isDev,
   });
 
   // Initialize update handlers before renderer boot so IPC channels exist
@@ -1284,44 +1273,96 @@ async function createWindow() {
     log.error('[main.ts] Error initializing update handlers:', err);
   }
 
-  mainWindow.webContents.on('did-finish-load', () => {
-    log.info('[main.ts] Main window finished loading content.');
-    if (filePathToOpenOnLoad) {
-      log.info(
-        `[main.ts] Processing queued file path on did-finish-load: ${filePathToOpenOnLoad}`
-      );
+  tabManager.initTabManager({
+    window: mainWindow,
+    rendererHtmlPath: getRendererHtmlPath(),
+    preloadPath: getPreloadPath(),
+    isDev,
+    onTabClosed: closedWebContentsId => {
+      // A queued file-open whose target tab died would otherwise wait for
+      // an unrelated future tab load; re-route it to the active tab now.
       if (
-        mainWindow &&
-        !mainWindow.isDestroyed() &&
-        mainWindow.webContents &&
-        !mainWindow.webContents.isDestroyed()
+        !filePathToOpenOnLoad ||
+        filePathTargetWebContentsId !== closedWebContentsId
       ) {
-        mainWindow.webContents.send('open-video-file', filePathToOpenOnLoad);
-      } else {
-        log.error(
-          '[main.ts] Cannot send queued file: mainWindow or webContents became invalid before did-finish-load processing.'
-        );
+        return;
       }
-      filePathToOpenOnLoad = null;
-    }
+      const active = getActiveAppWebContents();
+      if (active && !active.isLoading()) {
+        log.info(
+          `[main.ts] Re-routing queued file to active tab after target tab closed: ${filePathToOpenOnLoad}`
+        );
+        active.send('open-video-file', filePathToOpenOnLoad);
+        filePathToOpenOnLoad = null;
+        filePathTargetWebContentsId = null;
+      } else {
+        filePathTargetWebContentsId = active?.id ?? null;
+      }
+    },
+    onTabCreated: (wc, { isFirst }) => {
+      wc.on('found-in-page', (_event, result) => {
+        if (!wc.isDestroyed()) {
+          wc.send('find-results', {
+            matches: result.matches,
+            activeMatchOrdinal: result.activeMatchOrdinal,
+            finalUpdate: result.finalUpdate,
+          });
+        }
+      });
 
-    if (checkoutReturnUrlToOpenOnLoad) {
-      const checkoutReturnUrl = checkoutReturnUrlToOpenOnLoad;
-      checkoutReturnUrlToOpenOnLoad = null;
-      log.info('[main.ts] Processing queued checkout return URL.');
-      handleCheckoutReturnUrl(checkoutReturnUrl);
-    }
+      wc.on('did-finish-load', () => {
+        // A tab created mid-checkout missed the pending broadcast; replay
+        // it so the tab can't start a conflicting payment session.
+        replayPendingCheckoutState(wc);
 
-    void initializeCreditBalanceState(mainWindow).catch(err => {
-      log.warn('[main.ts] Initial credit balance sync failed:', err);
-    });
+        // Consume a queued file-open, but only in the tab it was meant for.
+        // A null target means "first tab to load" (startup); a destroyed
+        // target falls back to whichever tab finishes next.
+        if (filePathToOpenOnLoad) {
+          const targetGone =
+            filePathTargetWebContentsId !== null &&
+            !tabManager
+              .getAllTabWebContents()
+              .some(t => t.id === filePathTargetWebContentsId);
+          const isIntendedTab =
+            filePathTargetWebContentsId === null ||
+            filePathTargetWebContentsId === wc.id ||
+            targetGone;
+          if (isIntendedTab) {
+            log.info(
+              `[main.ts] Processing queued file path on did-finish-load: ${filePathToOpenOnLoad}`
+            );
+            if (!wc.isDestroyed()) {
+              wc.send('open-video-file', filePathToOpenOnLoad);
+            }
+            filePathToOpenOnLoad = null;
+            filePathTargetWebContentsId = null;
+          }
+        }
+
+        if (!isFirst) return;
+        log.info('[main.ts] First tab finished loading content.');
+
+        if (checkoutReturnUrlToOpenOnLoad) {
+          const checkoutReturnUrl = checkoutReturnUrlToOpenOnLoad;
+          checkoutReturnUrlToOpenOnLoad = null;
+          log.info('[main.ts] Processing queued checkout return URL.');
+          handleCheckoutReturnUrl(checkoutReturnUrl);
+        }
+
+        void initializeCreditBalanceState(mainWindow).catch(err => {
+          log.warn('[main.ts] Initial credit balance sync failed:', err);
+        });
+      });
+    },
   });
 
-  const rendererPath = getRendererHtmlPath();
-  log.info(`[main.ts] Loading renderer from: ${rendererPath}`);
+  const shellPath = getShellAssetPath('shell.html');
+  log.info(`[main.ts] Loading tab shell from: ${shellPath}`);
   try {
-    await mainWindow.loadFile(rendererPath);
-    log.info('[main.ts] Renderer loaded successfully.');
+    await mainWindow.loadFile(shellPath);
+    await tabManager.createTab({ activate: true });
+    log.info('[main.ts] Shell and first tab loaded successfully.');
   } catch (loadError: any) {
     log.error('[main.ts] Error loading renderer:', loadError);
     dialog.showErrorBox(
@@ -1333,7 +1374,7 @@ async function createWindow() {
   }
 
   if (isDev) {
-    mainWindow.webContents.openDevTools();
+    tabManager.getActiveTabWebContents()?.openDevTools({ mode: 'detach' });
   }
 
   mainWindow.on('closed', () => {
@@ -1344,35 +1385,29 @@ async function createWindow() {
   let currentFindText = '';
   ipcMain.on(
     'find-in-page',
-    (_event, { text, findNext, forward, matchCase }) => {
-      if (!mainWindow) return;
+    (event, { text, findNext, forward, matchCase }) => {
+      // Find runs in the tab that asked for it.
+      const wc = event.sender;
+      if (wc.isDestroyed()) return;
       if (text && text.length > 0) {
         if (text !== currentFindText) currentFindText = text;
-        mainWindow.webContents.findInPage(text, {
+        wc.findInPage(text, {
           findNext: !!findNext,
           forward: forward === undefined ? true : forward,
           matchCase: !!matchCase,
         });
       } else {
-        mainWindow.webContents.stopFindInPage('clearSelection');
+        wc.stopFindInPage('clearSelection');
         currentFindText = '';
       }
     }
   );
 
-  ipcMain.on('stop-find', () => {
-    if (mainWindow) {
-      mainWindow.webContents.stopFindInPage('clearSelection');
+  ipcMain.on('stop-find', event => {
+    if (!event.sender.isDestroyed()) {
+      event.sender.stopFindInPage('clearSelection');
       currentFindText = '';
     }
-  });
-
-  mainWindow.webContents.on('found-in-page', (_event, result) => {
-    mainWindow?.webContents.send('find-results', {
-      matches: result.matches,
-      activeMatchOrdinal: result.activeMatchOrdinal,
-      finalUpdate: result.finalUpdate,
-    });
   });
 
   createApplicationMenu();
@@ -1405,8 +1440,45 @@ function createApplicationMenu() {
     {
       label: 'File',
       submenu: [
+        {
+          label: 'New Tab',
+          accelerator: 'CmdOrCtrl+T',
+          click: () => {
+            // On macOS the app outlives the window (closing the last tab
+            // closes it); Cmd+T must bring the window back.
+            if (!mainWindow || mainWindow.isDestroyed()) {
+              createWindow().catch(err =>
+                log.error('[main.ts] Error recreating window for New Tab:', err)
+              );
+              return;
+            }
+            tabManager.newTab();
+          },
+        },
+        {
+          label: 'Close Tab',
+          accelerator: 'CmdOrCtrl+W',
+          click: () => tabManager.closeActiveTab(),
+        },
+        { type: 'separator' },
+        {
+          label: 'Next Tab',
+          accelerator: 'Ctrl+Tab',
+          click: () => tabManager.selectRelativeTab(1),
+        },
+        {
+          label: 'Previous Tab',
+          accelerator: 'Ctrl+Shift+Tab',
+          click: () => tabManager.selectRelativeTab(-1),
+        },
+        { type: 'separator' },
+        // Cmd+W belongs to Close Tab; the window close gets Shift+Cmd+W
+        // (browser convention) so the accelerators never collide.
         nodeProcess.platform === 'darwin'
-          ? { role: 'close' }
+          ? ({
+              role: 'close',
+              accelerator: 'Shift+CmdOrCtrl+W',
+            } as MenuItemConstructorOptions)
           : { role: 'quit' },
       ],
     },
@@ -1439,7 +1511,7 @@ function createApplicationMenu() {
         {
           label: 'Find',
           accelerator: 'CmdOrCtrl+F',
-          click: () => mainWindow?.webContents.send('show-find-bar'),
+          click: () => getActiveAppWebContents()?.send('show-find-bar'),
         },
       ],
     },
@@ -1460,6 +1532,13 @@ function createApplicationMenu() {
     {
       label: 'Window',
       submenu: [
+        ...(Array.from({ length: 9 }, (_, i) => ({
+          label: `Select Tab ${i + 1}`,
+          accelerator: `CmdOrCtrl+${i + 1}`,
+          visible: false,
+          acceleratorWorksWhenHidden: true,
+          click: () => tabManager.selectTabAtIndex(i === 8 ? -1 : i),
+        })) as MenuItemConstructorOptions[]),
         { role: 'minimize' },
         { role: 'zoom' },
         ...((nodeProcess.platform === 'darwin'
@@ -1469,7 +1548,10 @@ function createApplicationMenu() {
               { type: 'separator' },
               { role: 'window' },
             ]
-          : [{ role: 'close' }]) as MenuItemConstructorOptions[]),
+          : [
+              // Ctrl+W belongs to Close Tab; see the File menu note.
+              { role: 'close', accelerator: 'Shift+CmdOrCtrl+W' },
+            ]) as MenuItemConstructorOptions[]),
       ],
     },
   ];
@@ -1585,20 +1667,21 @@ function openVideoFile(filePath: string) {
       `[main.ts] Invalid or non-existent file path for openVideoFile: ${filePath}`
     );
     filePathToOpenOnLoad = null;
+    filePathTargetWebContentsId = null;
     return;
   }
 
+  const activeTab = getActiveAppWebContents();
   if (
     mainWindow &&
     !mainWindow.isDestroyed() &&
-    mainWindow.webContents &&
-    !mainWindow.webContents.isDestroyed() &&
-    !mainWindow.webContents.isLoading()
+    activeTab &&
+    !activeTab.isLoading()
   ) {
     log.info(
-      `[main.ts] Main window is ready. Sending 'open-video-file' IPC for: ${filePath}`
+      `[main.ts] Active tab is ready. Sending 'open-video-file' IPC for: ${filePath}`
     );
-    mainWindow.webContents.send('open-video-file', filePath);
+    activeTab.send('open-video-file', filePath);
     if (mainWindow.isMinimized()) {
       mainWindow.restore();
     }
@@ -1609,6 +1692,7 @@ function openVideoFile(filePath: string) {
       `[main.ts] Main window not fully ready or available. Queuing filePath: ${filePath}`
     );
     filePathToOpenOnLoad = filePath;
+    filePathTargetWebContentsId = activeTab?.id ?? null;
     if (app.isReady() && BrowserWindow.getAllWindows().length === 0) {
       log.info(
         '[main.ts] No windows open, creating one to handle queued file.'
@@ -1628,11 +1712,13 @@ app.on('open-file', (event, filePath) => {
       `[main.ts] Invalid or non-existent file path from 'open-file' event: ${filePath}`
     );
     filePathToOpenOnLoad = null;
+    filePathTargetWebContentsId = null;
     return;
   }
   if (app.isReady()) {
     openVideoFile(filePath);
   } else {
     filePathToOpenOnLoad = filePath;
+    filePathTargetWebContentsId = null;
   }
 });

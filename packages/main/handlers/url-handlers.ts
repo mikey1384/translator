@@ -14,7 +14,6 @@ import {
   finish as registryFinish,
   registerPendingUrlResult,
 } from '../active-processes.js';
-import { getMainWindow } from '../utils/window.js';
 import { finalizeCancelledUrlOperation } from '../utils/url-operation-finalizers.js';
 
 interface UrlHandlerServices {
@@ -45,23 +44,22 @@ function checkServicesInitialized(): {
 }
 
 export async function handleProcessUrl(
-  _event: IpcMainInvokeEvent,
+  event: IpcMainInvokeEvent,
   options: ProcessUrlOptions
 ): Promise<ProcessUrlResult> {
-  const mainWindow = getMainWindow();
   const operationId = options.operationId || uuidv4();
   log.info(
     `[url-handler] Starting process for URL: ${options.url}, Effective Operation ID used: ${operationId}`
   );
 
-  // Use the specific inline type matching the service's callback definition
+  // Progress goes to the tab that started the operation.
   const sendProgress = (progressData: {
     percent: number;
     stage: string;
     error?: string | null;
   }) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('url-processing-progress', {
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('url-processing-progress', {
         ...progressData,
         operationId,
       });
@@ -91,7 +89,7 @@ export async function handleProcessUrl(
     // Register auto-cancel early so generic cancellation can mark this operation
     // before yt-dlp has been spawned and promoted into the registry. The abort
     // signal then stops setup + download as one operation.
-    registerAutoCancel(operationId, _event.sender, () => {
+    registerAutoCancel(operationId, event.sender, () => {
       if (controller.signal.aborted) return;
       controller.abort();
       log.info(`[url-handler] Cancel triggered for ${operationId}`);
@@ -117,7 +115,7 @@ export async function handleProcessUrl(
       }
     );
 
-    registerPendingUrlResult(operationId, _event.sender, result.videoPath);
+    registerPendingUrlResult(operationId, event.sender, result.videoPath);
     if (controller.signal.aborted) {
       return await finalizeCancelledUrlOperation({
         operationId,

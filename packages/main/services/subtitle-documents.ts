@@ -14,6 +14,7 @@ import type {
 } from '@shared-types/app';
 import { fingerprintSubtitleText } from '../../shared/helpers/subtitle-sidecar.js';
 import { writeTextFileAtomically } from './saved-subtitle-metadata.js';
+import { withLock } from './async-lock.js';
 import { normalizeYoutubeWatchUrl } from './video-suggestions/shared.js';
 
 const SUBTITLE_DOCUMENTS_DIR_NAME = 'subtitle-documents';
@@ -533,7 +534,7 @@ function resolveImportLinkedFileArgs(args: {
   });
 }
 
-export async function saveSubtitleDocumentRecord(
+async function saveSubtitleDocumentRecordUnlocked(
   options: SaveSubtitleDocumentRecordOptions & {
     rootDir?: string;
   }
@@ -651,7 +652,7 @@ export async function readSubtitleDocument(options: {
   };
 }
 
-export async function detachSubtitleDocumentSource(
+async function detachSubtitleDocumentSourceUnlocked(
   options: DetachSubtitleDocumentSourceOptions & {
     rootDir?: string;
   }
@@ -832,3 +833,21 @@ export async function findSubtitleDocumentForSource(
     rootDir: options.rootDir,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Both operations above perform read-modify-write on the shared documents
+// index.json. Serialize them so concurrent saves from multiple tabs cannot
+// lose updates (the write itself is already atomic via temp+rename).
+// ---------------------------------------------------------------------------
+
+const DOCUMENTS_LOCK = 'subtitle-documents-index';
+
+export const saveSubtitleDocumentRecord = (
+  ...args: Parameters<typeof saveSubtitleDocumentRecordUnlocked>
+) =>
+  withLock(DOCUMENTS_LOCK, () => saveSubtitleDocumentRecordUnlocked(...args));
+
+export const detachSubtitleDocumentSource = (
+  ...args: Parameters<typeof detachSubtitleDocumentSourceUnlocked>
+) =>
+  withLock(DOCUMENTS_LOCK, () => detachSubtitleDocumentSourceUnlocked(...args));

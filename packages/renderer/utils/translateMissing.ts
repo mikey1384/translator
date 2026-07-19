@@ -38,7 +38,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     mode: 'original',
     noWrap: true,
   });
-  const operationId = `translate-missing-${Date.now()}`;
+  const operationId = `translate-missing-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   registerStage5CreditRefreshOperation(operationId);
 
   // Initialize translation task progress

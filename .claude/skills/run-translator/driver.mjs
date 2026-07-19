@@ -32,10 +32,25 @@ const COMMANDS = {
       timeout: 45_000,
     });
     for (let i = 0; i < 30; i++) {
-      const w = app
-        .windows()
-        .find(
-          w => !w.url().startsWith('devtools://') && w.url() !== 'about:blank'
+      // Prefer an app tab (renderer index.html); the window also hosts a
+      // tab-strip shell page (shell.html) that is not the app UI.
+      //
+      // NOTE (verified live, 2026-07-18): despite its name, Playwright's
+      // ElectronApplication.windows() enumerates ALL CDP page targets —
+      // including WebContentsView-backed tab pages, not just BrowserWindow
+      // pages. With the current playwright-core + Electron 39 combo this
+      // loop DOES find the renderer/dist/index.html tab (confirmed by
+      // eval'ing location.href through the selected page). Do not "fix"
+      // this to use context.pages() or explicit target attachment unless
+      // windows() has demonstrably stopped returning the tab pages.
+      const wins = app.windows();
+      const w =
+        wins.find(w => w.url().includes('renderer/dist/index.html')) ??
+        wins.find(
+          w =>
+            !w.url().startsWith('devtools://') &&
+            w.url() !== 'about:blank' &&
+            !w.url().includes('shell.html')
         );
       if (w) {
         page = w;

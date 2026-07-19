@@ -8,6 +8,7 @@ import {
   restoreSegmentsFromSubtitleSidecar,
 } from '../../shared/helpers/subtitle-sidecar.js';
 import { normalizeYoutubeWatchUrl } from './video-suggestions/shared.js';
+import { withLock } from './async-lock.js';
 
 export type StoredSubtitleKind = 'transcription' | 'translation';
 
@@ -319,7 +320,10 @@ async function readIndex(): Promise<StoredSubtitleIndex> {
 
 async function writeIndex(index: StoredSubtitleIndex): Promise<void> {
   await ensureLibraryDirs();
-  await fs.writeFile(getIndexPath(), JSON.stringify(index, null, 2) + '\n');
+  // Atomic replace so concurrent readers never see a partial file.
+  const tmpPath = `${getIndexPath()}.tmp-${process.pid}`;
+  await fs.writeFile(tmpPath, JSON.stringify(index, null, 2) + '\n');
+  await fs.rename(tmpPath, getIndexPath());
 }
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -535,7 +539,7 @@ function detachCompetingPathOwners(args: {
   return changed;
 }
 
-export async function saveStoredSubtitleArtifact(
+async function saveStoredSubtitleArtifactUnlocked(
   args: SaveStoredSubtitleArgs
 ): Promise<StoredSubtitleEntry> {
   const content = String(args.content || '').trim();
@@ -644,7 +648,7 @@ export async function saveStoredSubtitleArtifact(
   return entry;
 }
 
-export async function findStoredSubtitleForVideo(
+async function findStoredSubtitleForVideoUnlocked(
   args: FindStoredSubtitleArgs
 ): Promise<{
   entry: StoredSubtitleEntry | null;
@@ -735,7 +739,7 @@ export async function findStoredSubtitleForVideo(
   return { entry: winner, content, segments };
 }
 
-export async function syncStoredSubtitleVideoPath(args: {
+async function syncStoredSubtitleVideoPathUnlocked(args: {
   previousPath: string;
   savedPath: string;
 }): Promise<boolean> {
@@ -766,7 +770,7 @@ export async function syncStoredSubtitleVideoPath(args: {
   return true;
 }
 
-export async function rememberStoredSubtitleVideoPath(args: {
+async function rememberStoredSubtitleVideoPathUnlocked(args: {
   entryId: string;
   sourceVideoPath: string;
 }): Promise<boolean> {
@@ -802,7 +806,7 @@ export async function rememberStoredSubtitleVideoPath(args: {
   return true;
 }
 
-export async function detachStoredSubtitleSource(args: {
+async function detachStoredSubtitleSourceUnlocked(args: {
   entryId: string;
   sourceVideoPath?: string | null;
   sourceUrl?: string | null;
@@ -865,7 +869,7 @@ export async function detachStoredSubtitleSource(args: {
   return true;
 }
 
-export async function deleteStoredSubtitleEntry(
+async function deleteStoredSubtitleEntryUnlocked(
   entryId: string
 ): Promise<boolean> {
   const id = String(entryId || '').trim();
@@ -895,3 +899,39 @@ export async function deleteStoredSubtitleEntry(
   }
   return true;
 }
+
+// ---------------------------------------------------------------------------
+// Every operation above performs a read-modify-write on the shared
+// index.json. With multiple tabs, IPC handlers from different renderers can
+// interleave at await points and lose updates, so all mutations (and lazily
+// migrating reads) are serialized behind one lock.
+// ---------------------------------------------------------------------------
+
+const LIBRARY_LOCK = 'subtitle-library-index';
+
+export const saveStoredSubtitleArtifact = (
+  ...args: Parameters<typeof saveStoredSubtitleArtifactUnlocked>
+) => withLock(LIBRARY_LOCK, () => saveStoredSubtitleArtifactUnlocked(...args));
+
+export const findStoredSubtitleForVideo = (
+  ...args: Parameters<typeof findStoredSubtitleForVideoUnlocked>
+) => withLock(LIBRARY_LOCK, () => findStoredSubtitleForVideoUnlocked(...args));
+
+export const syncStoredSubtitleVideoPath = (
+  ...args: Parameters<typeof syncStoredSubtitleVideoPathUnlocked>
+) => withLock(LIBRARY_LOCK, () => syncStoredSubtitleVideoPathUnlocked(...args));
+
+export const rememberStoredSubtitleVideoPath = (
+  ...args: Parameters<typeof rememberStoredSubtitleVideoPathUnlocked>
+) =>
+  withLock(LIBRARY_LOCK, () =>
+    rememberStoredSubtitleVideoPathUnlocked(...args)
+  );
+
+export const detachStoredSubtitleSource = (
+  ...args: Parameters<typeof detachStoredSubtitleSourceUnlocked>
+) => withLock(LIBRARY_LOCK, () => detachStoredSubtitleSourceUnlocked(...args));
+
+export const deleteStoredSubtitleEntry = (
+  ...args: Parameters<typeof deleteStoredSubtitleEntryUnlocked>
+) => withLock(LIBRARY_LOCK, () => deleteStoredSubtitleEntryUnlocked(...args));

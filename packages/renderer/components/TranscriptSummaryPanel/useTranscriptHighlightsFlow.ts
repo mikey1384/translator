@@ -1082,7 +1082,7 @@ export default function useTranscriptHighlightsFlow({
 
       if (progress.error && shouldApplyVisibleUpdates) {
         if (progress.error === ERROR_CODES.INSUFFICIENT_CREDITS) {
-          void SystemIPC.refreshCreditSnapshot().catch(error => {
+          void SystemIPC.refreshCreditSnapshot(true).catch(error => {
             console.warn(
               '[useTranscriptHighlightsFlow] Failed to refresh credits after insufficient-credit highlight generation:',
               error

@@ -159,7 +159,7 @@ async function downloadMediaInternal(
   const { urlInput, downloadQuality } = get();
   const requestedUrl = String(options?.url ?? urlInput ?? '').trim();
   const preserveSubtitles = Boolean(options?.preserveSubtitles);
-  const opId = `download-${Date.now()}`;
+  const opId = `download-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   let shouldDiscardPendingResult = false;
   const cancelledResult = (): ProcessUrlResult => ({
     success: false,

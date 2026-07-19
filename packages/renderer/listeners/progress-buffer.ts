@@ -54,7 +54,9 @@ function isOperationStillActive(operationId: string): boolean {
   }
 
   if (operationId.startsWith('dub-')) {
-    return state.dubbing.inProgress === true && state.dubbing.id === operationId;
+    return (
+      state.dubbing.inProgress === true && state.dubbing.id === operationId
+    );
   }
 
   return false;
@@ -94,7 +96,9 @@ function requestAuthoritativeCreditRefresh(
   }
 
   creditRefreshInFlightOperations.add(operationId);
-  void SystemIPC.refreshCreditSnapshot()
+  // Terminal refreshes must bypass main's short TTL cache: the settlement
+  // just happened, so a coalesced pre-settlement snapshot would be stale.
+  void SystemIPC.refreshCreditSnapshot(options.terminal === true)
     .catch(error => {
       if (options.terminal) {
         terminalCreditRefreshOperations.delete(operationId);

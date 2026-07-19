@@ -1,4 +1,8 @@
-import { SubtitleProcessingError } from './errors.js';
+import {
+  SubtitleProcessingError,
+  isTranslationAdmissionLimitError,
+  toAdmissionMarkerError,
+} from './errors.js';
 import fs from 'fs';
 import { createHash } from 'node:crypto';
 import {
@@ -321,6 +325,14 @@ export async function callAIModel({
         // Preserve provider-specific error codes (e.g., BYO quota/auth/rate errors)
         // so the renderer can show exact recovery guidance.
         throw new Error(error.message);
+      }
+
+      if (isTranslationAdmissionLimitError(error)) {
+        // Keep the admission marker (and any server retryAfterSec) intact —
+        // the generic wrap below would strip both, and the retry pool needs
+        // them to defer/retry on the server's cadence instead of falling
+        // back to source text.
+        throw toAdmissionMarkerError(error);
       }
 
       throw new Error(

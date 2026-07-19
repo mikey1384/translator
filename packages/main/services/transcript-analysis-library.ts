@@ -8,6 +8,7 @@ import type {
   TranscriptSummarySection,
 } from '@shared-types/app';
 import { normalizeYoutubeWatchUrl } from './video-suggestions/shared.js';
+import { withLock } from './async-lock.js';
 
 export interface StoredTranscriptAnalysisArtifact {
   summary: string;
@@ -323,7 +324,10 @@ async function readIndex(): Promise<StoredTranscriptAnalysisIndex> {
 
 async function writeIndex(index: StoredTranscriptAnalysisIndex): Promise<void> {
   await ensureLibraryDirs();
-  await fs.writeFile(getIndexPath(), JSON.stringify(index, null, 2) + '\n');
+  // Atomic replace so concurrent readers never see a partial file.
+  const tmpPath = `${getIndexPath()}.tmp-${process.pid}`;
+  await fs.writeFile(tmpPath, JSON.stringify(index, null, 2) + '\n');
+  await fs.rename(tmpPath, getIndexPath());
 }
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -377,7 +381,7 @@ function entryPreferenceScore(
   return score;
 }
 
-export async function saveStoredTranscriptAnalysis(
+async function saveStoredTranscriptAnalysisUnlocked(
   args: SaveStoredTranscriptAnalysisArgs
 ): Promise<StoredTranscriptAnalysisEntry> {
   const transcriptHash = normalizeTranscriptHash(args.transcriptHash);
@@ -454,7 +458,7 @@ export async function saveStoredTranscriptAnalysis(
   return entry;
 }
 
-export async function findStoredTranscriptAnalysis(
+async function findStoredTranscriptAnalysisUnlocked(
   args: FindStoredTranscriptAnalysisArgs
 ): Promise<{
   entry: StoredTranscriptAnalysisEntry | null;
@@ -534,3 +538,21 @@ export async function findStoredTranscriptAnalysis(
 
   return { entry: null };
 }
+
+// ---------------------------------------------------------------------------
+// Both operations above perform read-modify-write on the shared index.json
+// (find lazily migrates entries). Serialize them so concurrent completions
+// from multiple tabs cannot lose updates.
+// ---------------------------------------------------------------------------
+
+const ANALYSIS_LOCK = 'transcript-analysis-index';
+
+export const saveStoredTranscriptAnalysis = (
+  ...args: Parameters<typeof saveStoredTranscriptAnalysisUnlocked>
+) =>
+  withLock(ANALYSIS_LOCK, () => saveStoredTranscriptAnalysisUnlocked(...args));
+
+export const findStoredTranscriptAnalysis = (
+  ...args: Parameters<typeof findStoredTranscriptAnalysisUnlocked>
+) =>
+  withLock(ANALYSIS_LOCK, () => findStoredTranscriptAnalysisUnlocked(...args));

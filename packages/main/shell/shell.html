@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Stage5 Translator</title>
+<style>
+  :root {
+    --bg: #090d14;
+    --surface: #141b26;
+    --surface-raised: #192231;
+    --text: #edf2fb;
+    --text-dim: #9aa8bd;
+    --primary: #7da7ff;
+    --success: #39c887;
+    --danger: #ff6d72;
+    --border: rgba(150, 165, 191, 0.18);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    user-select: none;
+  }
+  #strip {
+    display: flex;
+    align-items: flex-end;
+    height: 40px;
+    padding: 6px 8px 0 8px;
+    gap: 2px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 33px;
+    min-width: 0;
+    max-width: 220px;
+    flex: 1 1 180px;
+    padding: 0 8px 0 12px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
+    color: var(--text-dim);
+    background: transparent;
+    cursor: default;
+    position: relative;
+  }
+  .tab:hover { background: rgba(150, 165, 191, 0.08); }
+  .tab.active {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  /* mask the strip's bottom border under the active tab */
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 1px;
+    background: var(--surface);
+  }
+  .tab .title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12.5px;
+    line-height: 1;
+  }
+  .tab .pct {
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--primary);
+    flex: none;
+  }
+  .ring {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    transform: rotate(-90deg);
+  }
+  .ring .track { stroke: rgba(125, 167, 255, 0.22); }
+  .ring .bar {
+    stroke: var(--primary);
+    transition: stroke-dashoffset 0.35s ease;
+  }
+  .dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .dot.done { background: var(--success); box-shadow: 0 0 6px rgba(57, 200, 135, 0.7); }
+  .dot.error { background: var(--danger); box-shadow: 0 0 6px rgba(255, 109, 114, 0.7); }
+  .close {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .close:hover { background: rgba(255, 109, 114, 0.2); color: var(--text); }
+  #new-tab {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    margin: 0 0 3px 4px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  #new-tab:hover { background: rgba(150, 165, 191, 0.12); color: var(--text); }
+  #spacer { flex: 100 1 0; }
+</style>
+</head>
+<body>
+  <div id="strip">
+    <button id="new-tab" title="New tab (⌘T)">+</button>
+    <div id="spacer"></div>
+  </div>
+  <script>
+    const strip = document.getElementById('strip');
+    const newTabBtn = document.getElementById('new-tab');
+    const spacer = document.getElementById('spacer');
+
+    newTabBtn.addEventListener('click', () => window.tabs.create());
+
+    const R = 5.5;
+    const CIRC = 2 * Math.PI * R;
+
+    function ringSvg(percent) {
+      const filled = Math.max(0, Math.min(100, percent ?? 0)) / 100;
+      return (
+        '<svg class="ring" viewBox="0 0 14 14">' +
+        `<circle class="track" cx="7" cy="7" r="${R}" fill="none" stroke-width="2.4"/>` +
+        `<circle class="bar" cx="7" cy="7" r="${R}" fill="none" stroke-width="2.4" ` +
+        `stroke-linecap="round" stroke-dasharray="${CIRC.toFixed(2)}" ` +
+        `stroke-dashoffset="${(CIRC * (1 - filled)).toFixed(2)}"/>` +
+        '</svg>'
+      );
+    }
+
+    function render(state) {
+      strip.querySelectorAll('.tab').forEach(el => el.remove());
+      for (const t of state) {
+        const el = document.createElement('div');
+        el.className = 'tab' + (t.active ? ' active' : '');
+        el.title = t.title;
+
+        let indicator = '';
+        if (t.running) {
+          indicator =
+            ringSvg(t.percent) +
+            (t.percent != null ? `<span class="pct">${t.percent}%</span>` : '');
+        } else if (t.badge === 'done') {
+          indicator = '<span class="dot done"></span>';
+        } else if (t.badge === 'error') {
+          indicator = '<span class="dot error"></span>';
+        }
+
+        el.innerHTML =
+          indicator +
+          `<span class="title"></span>` +
+          `<button class="close" title="Close tab">×</button>`;
+        el.querySelector('.title').textContent = t.title;
+
+        el.addEventListener('click', () => window.tabs.select(t.id));
+        el.querySelector('.close').addEventListener('click', e => {
+          e.stopPropagation();
+          window.tabs.close(t.id);
+        });
+        // middle-click closes, like a browser
+        el.addEventListener('auxclick', e => {
+          if (e.button === 1) window.tabs.close(t.id);
+        });
+
+        strip.insertBefore(el, newTabBtn);
+      }
+    }
+
+    window.tabs.onState(render);
+  </script>
+</body>
+</html>

@@ -1239,7 +1239,7 @@ export default function GenerateSubtitles() {
         ? null
         : getMountedTranscriptSegments();
       const transcriptionOperationId = needsTranscription
-        ? `transcribe-${Date.now()}`
+        ? `transcribe-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
         : null;
       stepTwoRunToken = startStepTwoWorkflow({
         kind: 'highlight',
@@ -1421,7 +1421,7 @@ export default function GenerateSubtitles() {
     if (!tryAcquireStepTwoActionLaunchLock()) return false;
 
     const requestedLanguage = preTranscriptProcessingLanguage;
-    const transcriptionOperationId = `transcribe-${Date.now()}`;
+    const transcriptionOperationId = `transcribe-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const stepTwoRunToken = startStepTwoWorkflow({
       kind: 'translate',
       language: requestedLanguage,
@@ -1475,7 +1475,7 @@ export default function GenerateSubtitles() {
         return false;
       }
 
-      const translationOperationId = `translate-${Date.now()}`;
+      const translationOperationId = `translate-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       transitionStepTwoWorkflowToRunning({
         expectedRunToken: stepTwoRunToken,
         followUpId: translationOperationId,
@@ -1505,7 +1505,7 @@ export default function GenerateSubtitles() {
   }
 
   async function proceedTranscribe(): Promise<boolean> {
-    const operationId = `transcribe-${Date.now()}`;
+    const operationId = `transcribe-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const result = await startTranscriptionFlow({
       videoFile,
       videoFilePath,
@@ -1554,7 +1554,7 @@ export default function GenerateSubtitles() {
     subtitleState = useSubStore.getState();
     currentSegments = subtitleState.order.map(id => subtitleState.segments[id]);
 
-    const operationId = `dub-${Date.now()}`;
+    const operationId = `dub-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const videoStoreState = useVideoStore.getState();
     const sourceVideoPath =
       videoStoreState.originalPath ??

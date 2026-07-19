@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as SystemIPC from '@ipc/system';
+import { CHECKOUT_ALREADY_PENDING } from '../../shared/constants';
 
 interface BuyCreditsButtonProps {
   packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
@@ -22,6 +23,11 @@ export default function BuyCreditsButton({
     try {
       setLoading(true);
       const checkoutSessionId = await SystemIPC.createCheckoutSession(packId);
+      if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
+        // A checkout is already in flight (possibly from another tab); the
+        // re-broadcast pending/unresolved event drives the UI — no error.
+        return;
+      }
       if (!checkoutSessionId) {
         await SystemIPC.showMessage(
           'An error occurred while trying to start checkout. Please check your connection and try again.'

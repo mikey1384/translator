@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   setByoUnlocked,
   syncEntitlements,
+  invalidateCachedEntitlementsFetch,
 } from '../services/entitlements-manager.js';
 import { STAGE5_API_URL } from '../services/endpoints.js';
 import {
@@ -22,8 +23,9 @@ import {
   CREDIT_PACKS,
   CREDITS_PER_AUDIO_HOUR,
   API_TIMEOUTS,
+  CHECKOUT_ALREADY_PENDING,
 } from '../../shared/constants/index.js';
-import { getMainWindow } from '../utils/window.js';
+import { getMainWindow, broadcastToApp } from '../utils/window.js';
 import { settingsStore } from '../store/settings-store.js';
 import {
   getStage5VersionHeaders,
@@ -53,9 +55,7 @@ function sendNetLog(
 ) {
   try {
     const payload = { level, kind: 'network', message, meta };
-    BrowserWindow.getAllWindows().forEach(w =>
-      w.webContents.send('app:log', payload)
-    );
+    broadcastToApp('app:log', payload);
   } catch {
     // Do nothing
   }
@@ -102,7 +102,9 @@ const PACK_CREDITS: Record<'MICRO' | 'STARTER' | 'STANDARD' | 'PRO', number> = {
 type CreditPackId = keyof typeof PACK_CREDITS;
 
 class PaymentEventStreamUnavailableError extends Error {
-  constructor(message = 'Payment event stream is unavailable in this environment') {
+  constructor(
+    message = 'Payment event stream is unavailable in this environment'
+  ) {
     super(message);
     this.name = 'PaymentEventStreamUnavailableError';
   }
@@ -157,6 +159,102 @@ const checkoutVisibilityFollowUps = new Set<string>();
 const checkoutSettlementFollowUps = new Set<string>();
 const externalCheckoutSettlementFollowUps = new Set<string>();
 const activeCheckoutSessions: Partial<Record<CheckoutMode, string>> = {};
+// The last UI transition emitted for each mode. Replays to late-created tabs
+// and duplicate-request guards must reproduce the CURRENT state — after
+// settlement polling goes unresolved, replaying "pending" would clear the
+// renderer's unresolved recovery UI.
+type CheckoutUiTransition = 'pending' | 'unresolved';
+const checkoutUiTransitions: Partial<
+  Record<CheckoutMode, CheckoutUiTransition>
+> = {};
+
+function markCheckoutTransition(
+  mode: CheckoutMode,
+  transition: CheckoutUiTransition | null
+): void {
+  if (transition === null) {
+    delete checkoutUiTransitions[mode];
+  } else {
+    checkoutUiTransitions[mode] = transition;
+  }
+}
+
+function checkoutTransitionEvent(
+  mode: CheckoutMode,
+  transition: CheckoutUiTransition
+): string {
+  if (mode === 'byo') {
+    return transition === 'unresolved'
+      ? 'byo-unlock-unresolved'
+      : 'byo-unlock-pending';
+  }
+  return transition === 'unresolved'
+    ? 'checkout-unresolved'
+    : 'checkout-pending';
+}
+
+/** Re-broadcast the current transition for a mode (guards against dupes). */
+function reassertCheckoutTransition(mode: CheckoutMode): void {
+  const transition = checkoutUiTransitions[mode] ?? 'pending';
+  broadcastToApp(checkoutTransitionEvent(mode, transition));
+}
+
+// Synchronous reservation for session creation. The tracked session ID is
+// only set after the create POST resolves, so two tabs clicking Buy inside
+// that window would both pass an ID-only guard and open two Stripe sessions.
+const checkoutCreationInFlight: Partial<Record<CheckoutMode, boolean>> = {};
+
+/**
+ * Synchronously decide whether a new checkout may start for `mode`.
+ * Blocks while a creation is in flight or a session is pending; a session
+ * stuck in `unresolved` (abandoned browser checkout that polling gave up
+ * on) is released and replaced — otherwise the Buy button would stay dead
+ * until Stripe expires the session or the app restarts. Returns true and
+ * takes the in-flight reservation when creation may proceed.
+ */
+function tryBeginCheckoutCreation(mode: CheckoutMode): boolean {
+  if (checkoutCreationInFlight[mode]) {
+    reassertCheckoutTransition(mode);
+    return false;
+  }
+  const existingSessionId = getActiveCheckoutSessionId(mode);
+  if (existingSessionId) {
+    if (checkoutUiTransitions[mode] === 'unresolved') {
+      log.info(
+        `[credit-handler] Replacing stale unresolved ${mode} checkout session before starting a new one.`
+      );
+      clearActiveCheckoutSession(mode, existingSessionId);
+      markCheckoutTransition(mode, null);
+    } else {
+      log.warn(
+        `[credit-handler] ${mode} checkout requested while another session is active; re-asserting its state.`
+      );
+      reassertCheckoutTransition(mode);
+      return false;
+    }
+  }
+  checkoutCreationInFlight[mode] = true;
+  return true;
+}
+
+function endCheckoutCreation(mode: CheckoutMode): void {
+  checkoutCreationInFlight[mode] = false;
+}
+
+/**
+ * After a failed session creation, clear pending UI state that may have
+ * been speculatively broadcast (e.g. a second tab's guard re-asserted
+ * "pending" while this creation was in flight). Without this, every tab
+ * stays stuck in checkoutPending with no active session to resolve it.
+ */
+function clearSpeculativeCheckoutPending(mode: CheckoutMode): void {
+  if (getActiveCheckoutSessionId(mode)) return;
+  markCheckoutTransition(mode, null);
+  broadcastToApp(
+    mode === 'byo' ? 'byo-unlock-cancelled' : 'checkout-cancelled'
+  );
+}
+
 function buildCheckoutFollowUpKey(
   mode: CheckoutMode,
   sessionId: string
@@ -220,9 +318,7 @@ function clearActiveCheckoutSession(
   }
 
   delete activeCheckoutSessions[mode];
-  log.info(
-    `[credit-handler] Cleared active ${mode} checkout ${sessionId}.`
-  );
+  log.info(`[credit-handler] Cleared active ${mode} checkout ${sessionId}.`);
   return true;
 }
 
@@ -271,17 +367,15 @@ function emitCheckoutCancelled(
   }
 
   clearActiveCheckoutSession(mode, sessionId);
-
-  if (!targetWindow || targetWindow.isDestroyed()) {
-    return;
-  }
+  markCheckoutTransition(mode, null);
+  void targetWindow; // checkout events go to every tab
 
   if (mode === 'byo') {
-    targetWindow.webContents.send('byo-unlock-cancelled');
+    broadcastToApp('byo-unlock-cancelled');
     return;
   }
 
-  targetWindow.webContents.send('checkout-cancelled');
+  broadcastToApp('checkout-cancelled');
 }
 
 function emitCheckoutUnresolved(
@@ -292,12 +386,10 @@ function emitCheckoutUnresolved(
   if (!shouldEmitCheckoutUiTransition(mode, sessionId, 'unresolved')) {
     return;
   }
+  void targetWindow; // checkout events go to every tab
+  markCheckoutTransition(mode, 'unresolved');
 
-  if (!targetWindow || targetWindow.isDestroyed()) {
-    return;
-  }
-
-  targetWindow.webContents.send(
+  broadcastToApp(
     mode === 'byo' ? 'byo-unlock-unresolved' : 'checkout-unresolved'
   );
 }
@@ -311,17 +403,17 @@ function emitCheckoutConfirmed(
   }
 
   clearActiveCheckoutSession('credits', sessionId);
+  markCheckoutTransition('credits', null);
+  void targetWindow; // checkout events go to every tab
 
-  if (!targetWindow || targetWindow.isDestroyed()) {
-    return;
-  }
-
-  targetWindow.webContents.send('checkout-confirmed');
+  broadcastToApp('checkout-confirmed');
 }
 
 function emitByoUnlockConfirmed(
   sessionId: string | null | undefined,
-  snapshot: Awaited<ReturnType<typeof syncEntitlements>> | ReturnType<typeof setByoUnlocked>,
+  snapshot:
+    | Awaited<ReturnType<typeof syncEntitlements>>
+    | ReturnType<typeof setByoUnlocked>,
   targetWindow?: BrowserWindow | null
 ): void {
   if (!shouldEmitCheckoutUiTransition('byo', sessionId, 'confirmed')) {
@@ -329,12 +421,10 @@ function emitByoUnlockConfirmed(
   }
 
   clearActiveCheckoutSession('byo', sessionId);
+  markCheckoutTransition('byo', null);
+  void targetWindow; // checkout events go to every tab
 
-  if (!targetWindow || targetWindow.isDestroyed()) {
-    return;
-  }
-
-  targetWindow.webContents.send('byo-unlock-confirmed', snapshot);
+  broadcastToApp('byo-unlock-confirmed', snapshot);
 }
 
 function shouldCloseCheckoutWindow(result: StripeSettlementResult): boolean {
@@ -372,11 +462,8 @@ function getCheckoutLocaleHint(): string {
 }
 
 function getCheckoutCountryHint(): string | null {
-  const rawLocale = (
-    app.getPreferredSystemLanguages?.()[0] ||
-    app.getLocale?.() ||
-    ''
-  );
+  const rawLocale =
+    app.getPreferredSystemLanguages?.()[0] || app.getLocale?.() || '';
 
   return resolveCheckoutCountryHintFromLocale(rawLocale);
 }
@@ -459,18 +546,15 @@ function publishCreditSnapshot({
   store.set('balanceCredits', snapshot.creditBalance);
   store.set('creditsPerHour', snapshot.creditsPerHour);
   currentCreditSnapshot = snapshot;
+  void targetWindow; // credit updates go to every tab
 
-  const window = targetWindow ?? getMainWindow();
-  if (!window || window.isDestroyed()) {
-    return;
-  }
-
-  window.webContents.send('credits-updated', snapshot);
+  broadcastToApp('credits-updated', snapshot);
 }
 
 async function syncCreditBalanceFromServer(
   targetWindow?: BrowserWindow | null
 ): Promise<CreditSnapshotPayload | null> {
+  const epochAtStart = creditHydrationEpoch;
   const overrideSnapshot = getCreditSnapshotOverride();
   if (overrideSnapshot) {
     publishCreditSnapshot({ snapshot: overrideSnapshot, targetWindow });
@@ -512,20 +596,44 @@ async function syncCreditBalanceFromServer(
     authoritative: true,
   });
 
+  if (epochAtStart !== creditHydrationEpoch) {
+    // An authoritative realtime event published a newer balance while this
+    // request was in flight; do not overwrite it (or refresh the TTL) with
+    // this older response.
+    log.info(
+      '[credit-handler] Discarding stale /credits response superseded by a realtime credit event.'
+    );
+    return currentCreditSnapshot;
+  }
+
   publishCreditSnapshot({ snapshot, targetWindow });
+  lastCreditHydrationAt = Date.now();
   log.info(
     `[credit-handler] Published authoritative credit snapshot from /credits: balance=${snapshot.creditBalance}.`
   );
   return snapshot;
 }
 
-function requestCreditBalanceHydration(
+// Staggered polling loops from multiple tabs would each trigger their own
+// server sync; a short TTL on top of the in-flight dedupe coalesces them
+// to roughly one request per interval. Terminal/forced refreshes (an
+// operation just settled) bypass the TTL — and when one arrives while a
+// possibly-pre-settlement fetch is in flight, a fresh fetch is chained
+// after it rather than joining it.
+let lastCreditHydrationAt = 0;
+const CREDIT_HYDRATION_TTL_MS = 2_000;
+// Bumped when an authoritative realtime credit event publishes a snapshot;
+// an in-flight /credits response that started earlier must not overwrite it.
+let creditHydrationEpoch = 0;
+
+function markAuthoritativeCreditEvent(): void {
+  creditHydrationEpoch++;
+  lastCreditHydrationAt = 0;
+}
+
+function startCreditBalanceHydration(
   targetWindow?: BrowserWindow | null
 ): Promise<CreditSnapshotPayload | null> {
-  if (creditBalanceHydrationPromise) {
-    return creditBalanceHydrationPromise;
-  }
-
   creditBalanceHydrationPromise = syncCreditBalanceFromServer(targetWindow)
     .catch(error => {
       if (isStage5UpdateRequiredError(error)) {
@@ -539,6 +647,34 @@ function requestCreditBalanceHydration(
     });
 
   return creditBalanceHydrationPromise;
+}
+
+function requestCreditBalanceHydration(
+  targetWindow?: BrowserWindow | null,
+  opts?: { force?: boolean }
+): Promise<CreditSnapshotPayload | null> {
+  const force = opts?.force === true;
+  if (creditBalanceHydrationPromise) {
+    if (!force) {
+      return creditBalanceHydrationPromise;
+    }
+    // The in-flight fetch may predate the settlement that triggered this
+    // forced refresh; chain an authoritative fetch after it settles.
+    return creditBalanceHydrationPromise.then(() =>
+      creditBalanceHydrationPromise
+        ? creditBalanceHydrationPromise
+        : startCreditBalanceHydration(targetWindow)
+    );
+  }
+  if (
+    !force &&
+    currentCreditSnapshot &&
+    Date.now() - lastCreditHydrationAt < CREDIT_HYDRATION_TTL_MS
+  ) {
+    return Promise.resolve(currentCreditSnapshot);
+  }
+
+  return startCreditBalanceHydration(targetWindow);
 }
 
 export async function initializeCreditBalanceState(
@@ -556,7 +692,9 @@ export async function handleGetCreditSnapshot(): Promise<CreditSnapshotPayload |
     );
     return currentCreditSnapshot;
   }
-  log.info('[credit-handler] No cached credit snapshot yet; awaiting hydration.');
+  log.info(
+    '[credit-handler] No cached credit snapshot yet; awaiting hydration.'
+  );
   const hydratedSnapshot = await requestCreditBalanceHydration();
   if (hydratedSnapshot) {
     return hydratedSnapshot;
@@ -570,9 +708,14 @@ export async function handleGetCreditSnapshot(): Promise<CreditSnapshotPayload |
   return fallbackSnapshot;
 }
 
-export async function handleRefreshCreditSnapshot(): Promise<CreditSnapshotPayload | null> {
+export async function handleRefreshCreditSnapshot(
+  force = false
+): Promise<CreditSnapshotPayload | null> {
   ensurePaymentEventStream();
-  const refreshedSnapshot = await requestCreditBalanceHydration(getMainWindow());
+  const refreshedSnapshot = await requestCreditBalanceHydration(
+    getMainWindow(),
+    { force }
+  );
   if (refreshedSnapshot) {
     return refreshedSnapshot;
   }
@@ -727,8 +870,7 @@ function handlePaymentEventStreamBlock(block: string): void {
       continue;
     }
     const separatorIndex = line.indexOf(':');
-    const field =
-      separatorIndex >= 0 ? line.slice(0, separatorIndex) : line;
+    const field = separatorIndex >= 0 ? line.slice(0, separatorIndex) : line;
     let value = separatorIndex >= 0 ? line.slice(separatorIndex + 1) : '';
     if (value.startsWith(' ')) {
       value = value.slice(1);
@@ -788,6 +930,9 @@ function handlePaymentRealtimeEvent(event: any): void {
       checkoutSessionId: event?.checkoutSessionId ?? null,
     });
 
+    // Supersede any in-flight /credits hydration: its response predates
+    // this realtime balance and must not overwrite or TTL-cache over it.
+    markAuthoritativeCreditEvent();
     publishCreditSnapshot({
       snapshot,
     });
@@ -800,6 +945,9 @@ function handlePaymentRealtimeEvent(event: any): void {
   }
 
   if (eventType === 'entitlements.updated') {
+    // The payment event is authoritative; a TTL-cached pre-payment fetch
+    // must never be served (and re-applied) after this point.
+    invalidateCachedEntitlementsFetch();
     const snapshot = setByoUnlocked(
       {
         byoOpenAi: Boolean(event?.entitlements?.byoOpenAi),
@@ -809,7 +957,11 @@ function handlePaymentRealtimeEvent(event: any): void {
       { notify: true }
     );
     const mainWindow = getMainWindow();
-    emitByoUnlockConfirmed(event?.checkoutSessionId ?? null, snapshot, mainWindow);
+    emitByoUnlockConfirmed(
+      event?.checkoutSessionId ?? null,
+      snapshot,
+      mainWindow
+    );
     log.info(
       `[credit-handler] Applied authoritative BYO entitlement event: openai=${snapshot.byoOpenAi}, session=${event?.checkoutSessionId ?? 'n/a'}.`
     );
@@ -908,11 +1060,33 @@ async function resolveCheckoutReturnSession(
   };
 }
 
+/**
+ * Replay in-flight checkout state to a single webContents. Tabs created
+ * after a checkout started missed the broadcast; without this a new tab
+ * initializes checkoutPending=false and could start a conflicting session.
+ */
+export function replayPendingCheckoutState(wc: Electron.WebContents): void {
+  if (wc.isDestroyed()) return;
+  for (const mode of ['credits', 'byo'] as CheckoutMode[]) {
+    if (!getActiveCheckoutSessionId(mode)) continue;
+    // Replay the CURRENT transition — after settlement polling has gone
+    // unresolved, replaying "pending" would hide the recovery UI.
+    const transition = checkoutUiTransitions[mode] ?? 'pending';
+    wc.send(checkoutTransitionEvent(mode, transition));
+  }
+}
+
 export async function handleCreateCheckoutSession(
   _evt: Electron.IpcMainInvokeEvent,
   packId: CreditPackId
 ): Promise<string | null> {
   ensurePaymentEventStream();
+
+  // One checkout at a time: reserved synchronously so two tabs clicking Buy
+  // during the create POST can't both open Stripe sessions.
+  if (!tryBeginCheckoutCreation('credits')) {
+    return CHECKOUT_ALREADY_PENDING;
+  }
 
   try {
     const mainWindow = getMainWindow();
@@ -971,9 +1145,8 @@ export async function handleCreateCheckoutSession(
 
       // Emit checkout-pending event so UI can show "syncing balance..." until webhook lands
       setActiveCheckoutSession('credits', checkoutSessionId);
-      if (mainWindow) {
-        mainWindow.webContents.send('checkout-pending');
-      }
+      markCheckoutTransition('credits', 'pending');
+      broadcastToApp('checkout-pending');
 
       if (checkoutSessionId && !shouldUseEmbeddedCheckoutWindow()) {
         await openStripeCheckoutInExternalBrowser({
@@ -1146,11 +1319,22 @@ export async function handleCreateCheckoutSession(
     }
     log.error('[credit-handler] handleCreateCheckoutSession error:', err);
     return null;
+  } finally {
+    endCheckoutCreation('credits');
+    // No-op when a session became active; otherwise clears any pending
+    // state speculatively broadcast during the failed creation.
+    clearSpeculativeCheckoutPending('credits');
   }
 }
 
 export async function handleCreateByoUnlockSession(): Promise<void> {
   ensurePaymentEventStream();
+
+  // Mirror the credits guard: reserved synchronously, stale unresolved
+  // sessions released.
+  if (!tryBeginCheckoutCreation('byo')) {
+    return;
+  }
 
   const mainWindow = getMainWindow();
   const deviceId = getDeviceId();
@@ -1159,9 +1343,8 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
   try {
     log.info('[credit-handler] Initiating BYO OpenAI unlock checkout.');
 
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('byo-unlock-pending');
-    }
+    markCheckoutTransition('byo', 'pending');
+    broadcastToApp('byo-unlock-pending');
 
     const response = await withStage5AuthRetry(authHeaders =>
       axios.post(
@@ -1191,9 +1374,7 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
       log.warn(
         '[credit-handler] BYO unlock endpoint did not return a checkout URL.'
       );
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('byo-unlock-cancelled');
-      }
+      broadcastToApp('byo-unlock-cancelled');
       return;
     }
 
@@ -1337,14 +1518,17 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
     }
 
     log.error('[credit-handler] Failed to initiate BYO unlock checkout:', err);
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('byo-unlock-error', {
-        message:
-          err?.response?.data?.message ||
-          err?.message ||
-          'Unable to start checkout',
-      });
-    }
+    broadcastToApp('byo-unlock-error', {
+      message:
+        err?.response?.data?.message ||
+        err?.message ||
+        'Unable to start checkout',
+    });
+  } finally {
+    endCheckoutCreation('byo');
+    // BYO broadcasts 'pending' before the create POST; a failed creation
+    // must not leave tabs stuck in that state (no-op on success).
+    clearSpeculativeCheckoutPending('byo');
   }
 }
 
@@ -1486,7 +1670,8 @@ function scheduleExternalCheckoutSettlementFollowUp(
         baselineCredits: opts.baselineCredits,
         expectedCredits: opts.expectedCredits,
         packId: opts.packId,
-        settlementMaxWaitMs: CHECKOUT_EXTERNAL_FOREGROUND_SETTLEMENT_MAX_WAIT_MS,
+        settlementMaxWaitMs:
+          CHECKOUT_EXTERNAL_FOREGROUND_SETTLEMENT_MAX_WAIT_MS,
       });
 
       if (result.status === 'confirmed') {
@@ -1816,7 +2001,7 @@ export async function handleResetCredits(): Promise<{
       log.info(
         `[credit-handler] ✅ Admin add credits successful: Added ${creditsAdded} credits`
       );
-      await requestCreditBalanceHydration(getMainWindow());
+      await requestCreditBalanceHydration(getMainWindow(), { force: true });
 
       return {
         success: true,
@@ -1863,7 +2048,7 @@ export async function handleResetCreditsToZero(): Promise<{
 
     if (response.data?.success) {
       log.info('[credit-handler] ✅ Admin reset to zero successful');
-      await requestCreditBalanceHydration(getMainWindow());
+      await requestCreditBalanceHydration(getMainWindow(), { force: true });
 
       return { success: true };
     } else {
@@ -2399,8 +2584,8 @@ function scheduleCheckoutVisibilityFollowUp(
         `[credit-handler] Background ${opts.mode} settlement reconciliation failed for ${sessionId}:`,
         error
       );
-      if (opts.mode === 'byo' && opts.window && !opts.window.isDestroyed()) {
-        opts.window.webContents.send('byo-unlock-error', {
+      if (opts.mode === 'byo') {
+        broadcastToApp('byo-unlock-error', {
           message: error?.message || 'Failed to refresh entitlements',
         });
       }
@@ -2537,11 +2722,9 @@ export async function handleStripeSuccess(
         '[credit-handler] Failed to sync entitlements after BYO unlock:',
         error
       );
-      if (targetWindow && !targetWindow.isDestroyed()) {
-        targetWindow.webContents.send('byo-unlock-error', {
-          message: error?.message || 'Failed to refresh entitlements',
-        });
-      }
+      broadcastToApp('byo-unlock-error', {
+        message: error?.message || 'Failed to refresh entitlements',
+      });
       return { status: 'pending' };
     }
   }

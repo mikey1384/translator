@@ -48,6 +48,28 @@ const electronAPI = {
     return ipcRenderer.invoke('translate-subtitles', options);
   },
 
+  reportTabStatus: (status: {
+    title: string;
+    percent: number | null;
+    running: boolean;
+    error: boolean;
+  }) => {
+    ipcRenderer.send('tab:status-report', status);
+  },
+
+  onTabVisibilityChanged: (callback: (info: { visible: boolean }) => void) => {
+    if (typeof callback !== 'function') return;
+    const listener = (_: any, info: { visible: boolean }) => {
+      try {
+        callback(info);
+      } catch (error) {
+        console.error('[preload] tab:visibility-changed error:', error);
+      }
+    };
+    ipcRenderer.on('tab:visibility-changed', listener);
+    return () => ipcRenderer.removeListener('tab:visibility-changed', listener);
+  },
+
   dubSubtitles: async (options: any) => {
     return ipcRenderer.invoke('dub-subtitles', options);
   },
@@ -507,13 +529,15 @@ const electronAPI = {
     authoritative: boolean;
     checkoutSessionId?: string | null;
   } | null> => ipcRenderer.invoke('get-credit-snapshot'),
-  refreshCreditSnapshot: (): Promise<{
+  refreshCreditSnapshot: (
+    force?: boolean
+  ): Promise<{
     creditBalance: number;
     hoursBalance: number;
     creditsPerHour: number;
     authoritative: boolean;
     checkoutSessionId?: string | null;
-  } | null> => ipcRenderer.invoke('refresh-credit-snapshot'),
+  } | null> => ipcRenderer.invoke('refresh-credit-snapshot', force === true),
 
   // Listen for checkout status events
   onCheckoutPending: (callback: () => void) => {

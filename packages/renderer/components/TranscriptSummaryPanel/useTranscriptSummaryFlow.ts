@@ -475,7 +475,7 @@ export default function useTranscriptSummaryFlow({
 
         if (highlightStage) {
           if (message === ERROR_CODES.INSUFFICIENT_CREDITS) {
-            void SystemIPC.refreshCreditSnapshot().catch(error => {
+            void SystemIPC.refreshCreditSnapshot(true).catch(error => {
               console.warn(
                 '[useTranscriptSummaryFlow] Failed to refresh credits after insufficient-credit highlight extraction:',
                 error
@@ -499,7 +499,7 @@ export default function useTranscriptSummaryFlow({
             );
           }
         } else if (message === ERROR_CODES.INSUFFICIENT_CREDITS) {
-          void SystemIPC.refreshCreditSnapshot().catch(error => {
+          void SystemIPC.refreshCreditSnapshot(true).catch(error => {
             console.warn(
               '[useTranscriptSummaryFlow] Failed to refresh credits after insufficient-credit summary generation:',
               error
@@ -569,7 +569,7 @@ export default function useTranscriptSummaryFlow({
         const requestedSourceUrl = sourceUrl;
         const requestedLibraryEntryId = libraryEntryId;
 
-        const operationId = `summary-${Date.now()}`;
+        const operationId = `summary-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
         if (!isClaimedRequestActive()) return;
         const started = useTaskStore

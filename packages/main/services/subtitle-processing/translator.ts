@@ -1,6 +1,10 @@
 import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
+import {
+  isTranslationAdmissionLimitError,
+  isProviderRateLimitError,
+} from './errors.js';
 import { TranslateBatchArgs } from '@shared-types/app';
 import {
   ERROR_CODES,
@@ -448,11 +452,14 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
         lowerMsg.includes('insufficient_quota');
 
       // BYO account/key failures should be surfaced to users, not silently
-      // replaced with source text.
+      // replaced with source text. Admission-limit 429s are deterministic-
+      // retryable, so surface them too — the concurrency pool defers and
+      // retries them once in-flight jobs release their slots.
       if (
         msg === ERROR_CODES.INSUFFICIENT_CREDITS ||
         isProviderAuthError ||
-        isProviderQuotaError
+        isProviderQuotaError ||
+        isTranslationAdmissionLimitError(err)
       ) {
         throw err;
       }
@@ -770,6 +777,14 @@ OUTPUT ${batch.segments.length} lines:
           shouldRetry = true;
           continue;
         }
+      }
+      if (
+        isTranslationAdmissionLimitError(error) ||
+        isProviderRateLimitError(error)
+      ) {
+        // Retryable backpressure: surface so the review pool can defer and
+        // retry instead of silently shipping the unreviewed draft.
+        throw error;
       }
       log.error(
         `[Review] Unhandled error in reviewTranslationBatch (${operationId}): ${

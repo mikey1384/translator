@@ -18,6 +18,23 @@ export const MAX_CHUNK_DURATION_SEC = 15;
 
 // --- Concurrency Setting ---
 export const TRANSCRIPTION_BATCH_SIZE = 5;
+// Draft-translation batches are independent (context is source text only),
+// so several LLM calls can be in flight at once.
+export const TRANSLATION_CONCURRENCY = 4;
+// Review runs on the heavier reasoning model; keep concurrency lower to
+// stay clear of rate limits and large simultaneous credit reservations.
+export const REVIEW_CONCURRENCY = 3;
+// Serial-phase retry cadence for Stage5 admission-limit rejections (server
+// sends Retry-After: 10); ~2 minutes of patience at the default cadence.
+// When the server advertises a longer Retry-After it is honored, bounded by
+// the total-delay budget below.
+export const ADMISSION_RETRY_DELAY_MS = 10_000;
+export const ADMISSION_RETRY_MAX_ATTEMPTS = 12;
+export const ADMISSION_RETRY_MAX_TOTAL_MS = 10 * 60_000;
+// A 402 during the serial phase may be transient pressure from another
+// tab's in-flight reservations; retry briefly before treating it as
+// genuine exhaustion so the insufficient-credits error still surfaces fast.
+export const CREDIT_PRESSURE_RETRY_MAX_ATTEMPTS = 3;
 
 // --- Review/Polish constants ---
 export const REVIEW_BATCH_SIZE = 50;

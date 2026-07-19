@@ -26,6 +26,22 @@ export type AudioQualityMode = 'whisper' | 'elevenlabs';
 export const mkTempAudioName = (stem: string): string =>
   `${stem}${ASR_OUT_EXT}`;
 
+/**
+ * Truncate a string so its UTF-8 encoding fits in `maxBytes`, iterating by
+ * code point so surrogate pairs (emoji etc.) are never split.
+ */
+function truncateUtf8(value: string, maxBytes: number): string {
+  let out = '';
+  let bytes = 0;
+  for (const ch of value) {
+    const chBytes = Buffer.byteLength(ch, 'utf8');
+    if (bytes + chBytes > maxBytes) break;
+    out += ch;
+    bytes += chBytes;
+  }
+  return out;
+}
+
 declare module '../ffmpeg-runner.js' {
   interface FFmpegContext {
     extractAudio?: (opts: {
@@ -90,11 +106,22 @@ export async function extractAudio(
     throw new FFmpegError(`Input video file not found: ${videoPath}`);
   }
 
+  // Namespace by operation so concurrent jobs on the same (or same-named)
+  // video never share an output file — each job deletes its audio when done.
+  // The basename is truncated by ENCODED byte length (code-point safe) so
+  // the full component — stem + suffix + extension — stays within the
+  // common 255-byte filename limit even for CJK/emoji-heavy names.
+  const uniqueSuffix = operationId || `${Date.now()}`;
+  const reservedBytes = Buffer.byteLength(
+    `_audio_${uniqueSuffix}${ASR_OUT_EXT}`
+  );
+  const maxStemBytes = Math.max(16, 255 - reservedBytes);
+  const baseStem = truncateUtf8(
+    path.basename(videoPath, path.extname(videoPath)),
+    Math.min(maxStemBytes, 120)
+  );
   const outputPath = mkTempAudioName(
-    path.join(
-      ctx.tempDir,
-      `${path.basename(videoPath, path.extname(videoPath))}_audio`
-    )
+    path.join(ctx.tempDir, `${baseStem}_audio_${uniqueSuffix}`)
   );
 
   try {

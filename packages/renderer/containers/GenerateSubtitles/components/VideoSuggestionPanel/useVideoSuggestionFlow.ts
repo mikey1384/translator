@@ -329,7 +329,7 @@ export default function useVideoSuggestionFlow({
       preferencesForRequest: VideoSuggestionPreferenceSlots
     ) => {
       const id = useVideoSuggestionStore.getState().nextRequestId();
-      const operationId = `video-suggest-chat-${Date.now()}`;
+      const operationId = `video-suggest-chat-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       const startingResultCount =
         useVideoSuggestionStore.getState().results.length;
 
@@ -546,7 +546,7 @@ export default function useVideoSuggestionFlow({
     }
 
     const id = currentState.nextRequestId();
-    const operationId = `video-suggest-more-${Date.now()}`;
+    const operationId = `video-suggest-more-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const startingResultCount = currentState.results.length;
     const continuationPreferences = currentState.lastRequestPreferences.topic
       ? currentState.lastRequestPreferences

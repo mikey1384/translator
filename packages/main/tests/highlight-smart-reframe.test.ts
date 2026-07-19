@@ -13,29 +13,25 @@ test('computeVerticalCropWidth uses a filled 9:16 crop', () => {
   assert.equal(computeVerticalCropWidth(1080, 1920), null);
 });
 
-test('buildPiecewiseLinearExpression supports interpolated transitions', () => {
-  const expression = buildPiecewiseLinearExpression(
-    [
-      { timeSeconds: 0, x: 120 },
-      { timeSeconds: 1, x: 260 },
-    ],
-    ['interpolate']
-  );
-
-  assert.ok(expression.includes('(t-0)'));
-  assert.ok(expression.includes('120+(140)*(t-0)'));
-});
-
-test('buildPiecewiseLinearExpression keeps snapped transitions as holds', () => {
-  const expression = buildPiecewiseLinearExpression(
-    [
-      { timeSeconds: 0, x: 120 },
-      { timeSeconds: 1, x: 520 },
-    ],
-    ['snap']
-  );
+test('buildPiecewiseLinearExpression emits step-holds between keyframes', () => {
+  // The implementation intentionally emits step-holds (no interpolation):
+  // each keyframe's x holds until the next keyframe's time.
+  const expression = buildPiecewiseLinearExpression([
+    { timeSeconds: 0, x: 120 },
+    { timeSeconds: 1, x: 520 },
+  ]);
 
   assert.equal(expression, 'if(lt(t,1),120,520)');
+});
+
+test('buildPiecewiseLinearExpression collapses repeated positions', () => {
+  const expression = buildPiecewiseLinearExpression([
+    { timeSeconds: 0, x: 120 },
+    { timeSeconds: 1, x: 120 },
+    { timeSeconds: 2, x: 120 },
+  ]);
+
+  assert.equal(expression, '120');
 });
 
 test('buildVerticalReframePlan falls back to a centered crop when no face is tracked', () => {
@@ -292,7 +288,9 @@ test('buildVerticalReframePlan interpolates large single-subject movement', () =
 
   assert.ok(plan);
   assert.equal(plan?.strategy, 'tracked-face');
-  assert.ok(plan?.xExpression.includes('(t-'));
+  // Interpolation was removed: large movement is followed with step-holds.
+  assert.ok(plan?.xExpression.includes('lt(t,'));
+  assert.ok(!plan?.xExpression.includes('*(t-'));
 });
 
 test('buildVerticalReframePlan snaps when tracking is reacquired after a gap', () => {

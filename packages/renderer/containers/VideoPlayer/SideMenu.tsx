@@ -228,7 +228,7 @@ export default function SideMenu({
     }
   }
   async function handleTranscribe() {
-    const operationId = `transcribe-${Date.now()}`;
+    const operationId = `transcribe-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     await startTranscriptionFlow({
       videoFile: (videoFile as any) ?? null,
       videoFilePath: videoFilePath ?? null,
@@ -282,7 +282,7 @@ export default function SideMenu({
     subtitleState = useSubStore.getState();
     currentSegments = subtitleState.order.map(id => subtitleState.segments[id]);
 
-    const operationId = `dub-${Date.now()}`;
+    const operationId = `dub-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const videoStoreState = useVideoStore.getState();
     const sourceVideoPath =
       videoStoreState.originalPath ??

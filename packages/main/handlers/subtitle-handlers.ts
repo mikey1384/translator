@@ -188,6 +188,70 @@ const SHORT_CLIP_WIDTH = 1080;
 const SHORT_CLIP_HEIGHT = 1920;
 const HIGHLIGHT_VIDEO_PRESET = 'superfast';
 const HIGHLIGHT_VIDEO_CRF = 23;
+// Hardware encode on Apple Silicon with explicit constant quality (-q:v,
+// 1-100) so output never depends on VideoToolbox's auto bitrate; -allow_sw
+// lets VideoToolbox fall back to its software encoder instead of erroring.
+// Intel Macs keep libx264: their VT hardware doesn't support constant
+// quality and its auto-bitrate behavior is the least predictable.
+const HIGHLIGHT_VIDEO_VT_QUALITY = 65; // ≈ visually comparable to CRF 23
+const HIGHLIGHT_VIDEO_X264_ARGS = [
+  '-c:v',
+  'libx264',
+  '-preset',
+  HIGHLIGHT_VIDEO_PRESET,
+  '-crf',
+  String(HIGHLIGHT_VIDEO_CRF),
+];
+const HIGHLIGHT_VIDEO_ENCODER_ARGS =
+  process.platform === 'darwin' && process.arch === 'arm64'
+    ? [
+        '-c:v',
+        'h264_videotoolbox',
+        '-q:v',
+        String(HIGHLIGHT_VIDEO_VT_QUALITY),
+        '-allow_sw',
+        '1',
+      ]
+    : HIGHLIGHT_VIDEO_X264_ARGS;
+
+/**
+ * Run a highlight encode; if the VideoToolbox invocation fails (e.g. no
+ * encoding session available), retry once with libx264 so exports that
+ * always succeeded pre-VideoToolbox keep succeeding. Cancellations rethrow.
+ */
+async function runHighlightEncode(
+  ffmpeg: FFmpegContext,
+  args: string[],
+  runOpts: {
+    operationId: string;
+    signal?: AbortSignal;
+    totalDuration?: number;
+    progress?: (pct: number) => void;
+  }
+): Promise<void> {
+  try {
+    await ffmpeg.run(args, runOpts);
+  } catch (err: any) {
+    const vtIndex = args.indexOf('h264_videotoolbox');
+    if (
+      vtIndex === -1 ||
+      runOpts.signal?.aborted ||
+      err?.name === 'AbortError'
+    ) {
+      throw err;
+    }
+    const encoderStart = vtIndex - 1; // the preceding '-c:v'
+    const fallbackArgs = [
+      ...args.slice(0, encoderStart),
+      ...HIGHLIGHT_VIDEO_X264_ARGS,
+      ...args.slice(encoderStart + HIGHLIGHT_VIDEO_ENCODER_ARGS.length),
+    ];
+    log.warn(
+      `[${runOpts.operationId}] VideoToolbox encode failed (${err?.message || err}); retrying with libx264.`
+    );
+    await ffmpeg.run(fallbackArgs, runOpts);
+  }
+}
 type ResolvedHighlightAspectMode =
   | 'original'
   | 'vertical_reframe'
@@ -1252,14 +1316,7 @@ export async function handleCutHighlightClip(
     }
 
     if (requiresVideoFilter) {
-      args.push(
-        '-c:v',
-        'libx264',
-        '-preset',
-        HIGHLIGHT_VIDEO_PRESET,
-        '-crf',
-        String(HIGHLIGHT_VIDEO_CRF)
-      );
+      args.push(...HIGHLIGHT_VIDEO_ENCODER_ARGS);
     } else {
       args.push('-c:v', 'copy');
     }
@@ -1273,7 +1330,7 @@ export async function handleCutHighlightClip(
     args.push('-movflags', '+faststart', outPath);
 
     try {
-      await ffmpeg.run(args, {
+      await runHighlightEncode(ffmpeg, args, {
         operationId,
         signal: controller.signal,
         totalDuration: duration,
@@ -1584,12 +1641,7 @@ export async function handleCutCombinedHighlights(
       '-map',
       '[outv]',
       ...(hasAudio ? ['-map', '[outa]'] : []),
-      '-c:v',
-      'libx264',
-      '-preset',
-      HIGHLIGHT_VIDEO_PRESET,
-      '-crf',
-      String(HIGHLIGHT_VIDEO_CRF),
+      ...HIGHLIGHT_VIDEO_ENCODER_ARGS,
       ...(hasAudio ? ['-c:a', 'aac', '-b:a', '128k'] : []),
       '-movflags',
       '+faststart',
@@ -1615,7 +1667,7 @@ export async function handleCutCombinedHighlights(
 
     emitProgress(30, 'Cutting combined highlights');
 
-    await ffmpeg.run(args, {
+    await runHighlightEncode(ffmpeg, args, {
       operationId,
       signal: controller.signal,
       totalDuration: totalCombinedDuration,

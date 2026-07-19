@@ -52,6 +52,27 @@ export function throwIfAborted(signal?: AbortSignal): void {
   }
 }
 
+export {
+  runWithConcurrency,
+  runWithConcurrencySerialFallback,
+} from './concurrency.js';
+
+/**
+ * Per-operation wall-clock stage timer. Call the returned function at the
+ * end of each stage; logs the stage duration and cumulative elapsed time.
+ */
+export function createStageTimer(operationId: string) {
+  const startedAt = Date.now();
+  let last = startedAt;
+  return (stage: string) => {
+    const now = Date.now();
+    log.info(
+      `[${operationId}] [timing] ${stage}: ${now - last}ms (elapsed ${now - startedAt}ms)`
+    );
+    last = now;
+  };
+}
+
 /**
  * Format time remaining for ElevenLabs transcription progress.
  * Returns i18n keys for consistent display across all transcription flows.

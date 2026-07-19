@@ -1,4 +1,5 @@
-import { app, BrowserWindow } from 'electron';
+import { app } from 'electron';
+import { broadcastToApp } from '../utils/window.js';
 import type { AxiosResponse } from 'axios';
 import type { UpdateRequiredNotice } from '@shared-types/app';
 import { ERROR_CODES } from '../../shared/constants/index.js';
@@ -93,11 +94,7 @@ export function emitStage5UpdateRequiredNotice(
   lastBroadcastSignature = signature;
 
   try {
-    BrowserWindow.getAllWindows().forEach(window => {
-      if (!window.isDestroyed()) {
-        window.webContents.send('update:required', notice);
-      }
-    });
+    broadcastToApp('update:required', notice);
   } catch {
     // Do nothing - renderer will fetch the pending notice on launch.
   }

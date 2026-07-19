@@ -19,6 +19,18 @@ import {
 } from '../../../shared/constants/index.js';
 import { scaleProgress, Stage } from './pipeline/progress.js';
 import { reviewTranslationBatch, getReviewModel } from './translator.js';
+import { createStageTimer, runWithConcurrencySerialFallback } from './utils.js';
+import {
+  isTranslationAdmissionLimitError,
+  isProviderRateLimitError,
+} from './errors.js';
+import {
+  REVIEW_CONCURRENCY,
+  ADMISSION_RETRY_DELAY_MS,
+  ADMISSION_RETRY_MAX_ATTEMPTS,
+  ADMISSION_RETRY_MAX_TOTAL_MS,
+  CREDIT_PRESSURE_RETRY_MAX_ATTEMPTS,
+} from './constants.js';
 
 export async function extractSubtitlesFromMedia({
   options,
@@ -55,6 +67,7 @@ export async function extractSubtitlesFromMedia({
     progressCallback;
 
   let audioPath: string | null = null;
+  const markStage = createStageTimer(operationId);
 
   try {
     const { audioPath: extractedAudioPath } = await prepareAudio({
@@ -65,6 +78,7 @@ export async function extractSubtitlesFromMedia({
       signal,
     });
     audioPath = extractedAudioPath;
+    markStage('prepare_audio');
 
     const { segments, speechIntervals, transcriptionEngine } =
       await transcribePass({
@@ -77,6 +91,7 @@ export async function extractSubtitlesFromMedia({
         signal,
         qualityTranscription: options?.qualityTranscription ?? false,
       });
+    markStage('transcribe');
 
     const finalized = await finalizePass({
       segments,
@@ -85,6 +100,7 @@ export async function extractSubtitlesFromMedia({
       progressCallback,
       operationId,
     });
+    markStage('finalize');
     return { ...finalized, transcriptionEngine };
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
@@ -157,6 +173,8 @@ export async function translateSubtitlesFromSrt({
       }
     : undefined;
 
+  const markStage = createStageTimer(operationId);
+
   const translatedSegments = await translatePass({
     segments,
     targetLang: targetLanguage,
@@ -165,6 +183,7 @@ export async function translateSubtitlesFromSrt({
     qualityTranslation: qualityTranslation ?? false,
     signal,
   });
+  markStage('translate');
 
   // Optionally run review pass (skip when target is 'original')
   const reviewedSegments = translatedSegments;
@@ -230,67 +249,123 @@ export async function translateSubtitlesFromSrt({
         emitRangeStage(0, Math.min(BATCH, total), done, false);
       }
 
+      // Review batches run concurrently; before-context for a batch whose
+      // predecessor is still in flight falls back to the draft translation.
+      const batchStarts: number[] = [];
       for (let start = 0; start < total; start += BATCH) {
-        const end = Math.min(start + BATCH, total);
-        emitRangeStage(start, end, done, false);
-        const contextBefore = reviewedSegments.slice(
-          Math.max(0, start - BEFORE_CTX),
-          start
-        );
-        const contextAfter = translatedSegments.slice(
-          end,
-          Math.min(end + AFTER_CTX, total)
-        );
-        const batch = {
-          segments: translatedSegments.slice(start, end),
-          startIndex: start,
-          endIndex: end,
-          targetLang: targetLanguage,
-          contextBefore,
-          contextAfter,
-        } as any;
-
-        if (signal?.aborted)
-          throw new DOMException('Operation cancelled', 'AbortError');
-
-        try {
-          const reviewed = await reviewTranslationBatch({
-            batch,
-            operationId,
-            signal,
-            initialReviewConfig: reviewConfigOverride ?? undefined,
-            onModelFallback: fallbackModel => {
-              reviewConfigOverride = { model: fallbackModel };
-              const fallbackName = formatReviewModelName(fallbackModel);
-              const displayName = `${fallbackName} (fallback)`;
-              if (displayName !== reviewModelName) {
-                reviewModelName = displayName;
-                emitRangeStage(start, end, done, false);
-              }
-            },
-          });
-          // splice results back in place
-          for (let i = 0; i < reviewed.length; i++) {
-            reviewedSegments[start + i] = reviewed[i];
-          }
-        } catch (err: any) {
-          if (
-            err?.name === 'AbortError' ||
-            String(err?.message).includes(ERROR_CODES.INSUFFICIENT_CREDITS)
-          ) {
-            throw err;
-          }
-        }
-        done += Math.min(BATCH, end - start);
-        const nextStart = done;
-        const nextEnd = Math.min(done + BATCH, total);
-        emitRangeStage(nextStart, nextEnd, done, true);
+        batchStarts.push(start);
       }
+
+      await runWithConcurrencySerialFallback({
+        taskCount: batchStarts.length,
+        concurrency: REVIEW_CONCURRENCY,
+        // Review reservations are large (~34k credits each); a balance that
+        // funds one review call must still complete, just sequentially. The
+        // same applies to server admission slots and BYO provider rate tiers.
+        isDeferrable: err =>
+          (String((err as any)?.message || err || '').includes(
+            ERROR_CODES.INSUFFICIENT_CREDITS
+          ) ||
+            isTranslationAdmissionLimitError(err) ||
+            isProviderRateLimitError(err)) &&
+          !signal?.aborted,
+        serialRetry: {
+          shouldRetry: (err, attemptsSoFar) => {
+            if (signal?.aborted) return false;
+            if (
+              isTranslationAdmissionLimitError(err) ||
+              isProviderRateLimitError(err)
+            ) {
+              return true;
+            }
+            // Transient cross-tab credit pressure gets a brief retry window.
+            return (
+              String((err as any)?.message || err || '').includes(
+                ERROR_CODES.INSUFFICIENT_CREDITS
+              ) && attemptsSoFar < CREDIT_PRESSURE_RETRY_MAX_ATTEMPTS
+            );
+          },
+          delayMs: ADMISSION_RETRY_DELAY_MS,
+          delayMsFor: err => {
+            const retryAfterSec = (err as any)?.retryAfterSec;
+            return typeof retryAfterSec === 'number' && retryAfterSec > 0
+              ? retryAfterSec * 1000
+              : undefined;
+          },
+          maxAttempts: ADMISSION_RETRY_MAX_ATTEMPTS,
+          maxTotalDelayMs: ADMISSION_RETRY_MAX_TOTAL_MS,
+          signal,
+        },
+        onFallback: count =>
+          log.info(
+            `[${operationId}] concurrency backpressure (credits/admission); retrying ${count} review batches sequentially`
+          ),
+        runTask: async taskIndex => {
+          const start = batchStarts[taskIndex];
+          const end = Math.min(start + BATCH, total);
+          emitRangeStage(start, end, done, false);
+          const contextBefore = reviewedSegments.slice(
+            Math.max(0, start - BEFORE_CTX),
+            start
+          );
+          const contextAfter = translatedSegments.slice(
+            end,
+            Math.min(end + AFTER_CTX, total)
+          );
+          const batch = {
+            segments: translatedSegments.slice(start, end),
+            startIndex: start,
+            endIndex: end,
+            targetLang: targetLanguage,
+            contextBefore,
+            contextAfter,
+          } as any;
+
+          if (signal?.aborted)
+            throw new DOMException('Operation cancelled', 'AbortError');
+
+          try {
+            const reviewed = await reviewTranslationBatch({
+              batch,
+              operationId,
+              signal,
+              initialReviewConfig: reviewConfigOverride ?? undefined,
+              onModelFallback: fallbackModel => {
+                reviewConfigOverride = { model: fallbackModel };
+                const fallbackName = formatReviewModelName(fallbackModel);
+                const displayName = `${fallbackName} (fallback)`;
+                if (displayName !== reviewModelName) {
+                  reviewModelName = displayName;
+                  emitRangeStage(start, end, done, false);
+                }
+              },
+            });
+            // splice results back in place
+            for (let i = 0; i < reviewed.length; i++) {
+              reviewedSegments[start + i] = reviewed[i];
+            }
+          } catch (err: any) {
+            if (
+              err?.name === 'AbortError' ||
+              String(err?.message).includes(ERROR_CODES.INSUFFICIENT_CREDITS) ||
+              isTranslationAdmissionLimitError(err) ||
+              isProviderRateLimitError(err)
+            ) {
+              throw err;
+            }
+          }
+          done += Math.min(BATCH, end - start);
+          const nextStart = done;
+          const nextEnd = Math.min(done + BATCH, total);
+          emitRangeStage(nextStart, nextEnd, done, true);
+        },
+      });
     } catch (reviewErr: any) {
       log.warn(
         `[translateSubtitles] Review pass failed, continuing with base translation: ${reviewErr?.message || reviewErr}`
       );
     }
+    markStage('review');
   }
 
   const finalized = await finalizePass({
@@ -300,6 +375,7 @@ export async function translateSubtitlesFromSrt({
     progressCallback: adaptedProgress ?? progressCallback,
     operationId,
   });
+  markStage('finalize');
 
   return { subtitles: finalized.subtitles };
 }

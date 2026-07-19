@@ -56,38 +56,36 @@ export default function DubbingVoiceSelector() {
   const previewTokenRef = useRef(0);
 
   const hasOpenAiByo =
-    useApiKeysMode &&
-    byoOpenAiUnlocked &&
-    openAiKeyPresent &&
-    useByoOpenAi;
+    useApiKeysMode && byoOpenAiUnlocked && openAiKeyPresent && useByoOpenAi;
   const hasElevenLabsByo =
     useApiKeysMode &&
     byoElevenLabsUnlocked &&
     elevenLabsKeyPresent &&
     useByoElevenLabs;
 
-  const activeDubbingProvider: 'stage5' | 'openai' | 'elevenlabs' = useApiKeysMode
-    ? (() => {
-        if (preferredDubbingProvider === 'stage5') {
+  const activeDubbingProvider: 'stage5' | 'openai' | 'elevenlabs' =
+    useApiKeysMode
+      ? (() => {
+          if (preferredDubbingProvider === 'stage5') {
+            if (hasOpenAiByo) return 'openai';
+            if (hasElevenLabsByo) return 'elevenlabs';
+            return 'stage5';
+          }
+          if (preferredDubbingProvider === 'elevenlabs') {
+            if (hasElevenLabsByo) return 'elevenlabs';
+            if (hasOpenAiByo) return 'openai';
+            return 'stage5';
+          }
+          if (preferredDubbingProvider === 'openai') {
+            if (hasOpenAiByo) return 'openai';
+            if (hasElevenLabsByo) return 'elevenlabs';
+            return 'stage5';
+          }
           if (hasOpenAiByo) return 'openai';
           if (hasElevenLabsByo) return 'elevenlabs';
           return 'stage5';
-        }
-        if (preferredDubbingProvider === 'elevenlabs') {
-          if (hasElevenLabsByo) return 'elevenlabs';
-          if (hasOpenAiByo) return 'openai';
-          return 'stage5';
-        }
-        if (preferredDubbingProvider === 'openai') {
-          if (hasOpenAiByo) return 'openai';
-          if (hasElevenLabsByo) return 'elevenlabs';
-          return 'stage5';
-        }
-        if (hasOpenAiByo) return 'openai';
-        if (hasElevenLabsByo) return 'elevenlabs';
-        return 'stage5';
-      })()
-    : 'stage5';
+        })()
+      : 'stage5';
 
   const activeVoiceProvider: 'openai' | 'elevenlabs' =
     activeDubbingProvider === 'stage5'
@@ -139,7 +137,7 @@ export default function DubbingVoiceSelector() {
       if (previewTokenRef.current !== token) return;
       if (result?.success && result.audioBase64) {
         if (isUsingStage5Credits) {
-          void SystemIPC.refreshCreditSnapshot().catch(error => {
+          void SystemIPC.refreshCreditSnapshot(true).catch(error => {
             console.warn(
               '[SettingsPage] Failed to refresh authoritative credit snapshot after voice preview:',
               error
@@ -261,9 +259,13 @@ export default function DubbingVoiceSelector() {
             ? t('settings.dubbing.previewing', 'Playing...')
             : useApiKeysMode && activeDubbingProvider !== 'stage5'
               ? t('settings.dubbing.previewFree', 'Preview')
-              : t('settings.dubbing.previewWithCost', 'Preview ({{cost}} credits)', {
-                  cost: previewCost,
-                })}
+              : t(
+                  'settings.dubbing.previewWithCost',
+                  'Preview ({{cost}} credits)',
+                  {
+                    cost: previewCost,
+                  }
+                )}
         </button>
       </div>
 

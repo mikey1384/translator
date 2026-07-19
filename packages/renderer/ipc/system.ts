@@ -106,14 +106,14 @@ export function getCreditSnapshot(): Promise<{
   return window.electron.getCreditSnapshot();
 }
 
-export function refreshCreditSnapshot(): Promise<{
+export function refreshCreditSnapshot(force?: boolean): Promise<{
   creditBalance: number;
   hoursBalance: number;
   creditsPerHour: number;
   authoritative: boolean;
   checkoutSessionId?: string | null;
 } | null> {
-  return window.electron.refreshCreditSnapshot();
+  return window.electron.refreshCreditSnapshot(force);
 }
 
 export function onCheckoutPending(callback: () => void): () => void {

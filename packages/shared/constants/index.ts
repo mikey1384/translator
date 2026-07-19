@@ -268,6 +268,10 @@ const STARTER_CREDITS = 150_000;
 const STANDARD_CREDITS = 350_000;
 const PRO_CREDITS = 2_400_000;
 
+// Returned by create-checkout-session when a session is already in flight so
+// the renderer can distinguish "already pending" from a creation failure.
+export const CHECKOUT_ALREADY_PENDING = 'checkout-already-pending';
+
 export const CREDIT_PACKS = {
   MICRO: {
     id: 'MICRO' as const,

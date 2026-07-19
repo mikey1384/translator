@@ -71,6 +71,18 @@ eval (()=>{const s=document.body.innerText; const i=s.indexOf("영상을 선택�
 
 ## Gotchas (all hit for real)
 
+- **The app is tabbed (2026-07-17).** The window hosts a tab-strip shell page
+  (`shell.html`) plus one `WebContentsView` per tab, each loading the full
+  renderer (`index.html`). `launch` picks the first *tab* page; additional
+  tabs appear as extra `index.html` pages in `app.windows()`. Yes, really:
+  Playwright's `ElectronApplication.windows()` returns all CDP page targets
+  including `WebContentsView` pages, not only `BrowserWindow` pages —
+  verified live (2026-07-18) with this playwright-core + Electron 39 combo. Drive the tab
+  strip via the shell page's `window.tabs` API (`create/select/close/onState`).
+  Page screenshots capture one page only — for the composited window use
+  `screencapture -x -o -l<id>` with the id from
+  `win.getMediaSourceId()` (main-process eval, format `window:<id>:0`).
+
 - **UI is Korean.** Key labels: `AI로 영상 찾기` (open AI panel), `웹에서`
   (from web), `영상 찾기` (find videos), `설정` (settings). The search
   textarea is found by placeholder containing `길거리`.

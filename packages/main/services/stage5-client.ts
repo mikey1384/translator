@@ -1,6 +1,11 @@
 import axios from 'axios';
-import { BrowserWindow } from 'electron';
 import log from 'electron-log';
+import { broadcastToApp } from '../utils/window.js';
+import {
+  WIRE_TOO_MANY_ACTIVE_TRANSLATIONS,
+  WIRE_TRANSLATION_RATE_LIMIT,
+  WIRE_TRANSLATION_QUEUE_OVERLOADED,
+} from '../../shared/constants/wire-protocol.js';
 import Store from 'electron-store';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -204,9 +209,7 @@ function sendNetLog(
 ) {
   try {
     const payload = { level, kind: 'network', message, meta };
-    BrowserWindow.getAllWindows().forEach(w =>
-      w.webContents.send('app:log', payload)
-    );
+    broadcastToApp('app:log', payload);
   } catch {
     // Do nothing
   }
@@ -929,6 +932,27 @@ export async function translate({
       response: postResponse,
       source: 'stage5-api',
     });
+
+    // Admission rejections (429 per-device caps, 503 global backlog) are
+    // deterministic-retryable; keep the wire marker in the message so the
+    // translation pool defers and retries instead of the generic message
+    // being silently converted to source-text fallback downstream. The
+    // server's Retry-After rides along so retries honor its cadence.
+    const admissionMarker = postResponse.data?.error;
+    if (
+      (postResponse.status === 429 &&
+        (admissionMarker === WIRE_TOO_MANY_ACTIVE_TRANSLATIONS ||
+          admissionMarker === WIRE_TRANSLATION_RATE_LIMIT)) ||
+      (postResponse.status === 503 &&
+        admissionMarker === WIRE_TRANSLATION_QUEUE_OVERLOADED)
+    ) {
+      const admissionError = new Error(String(admissionMarker));
+      const retryAfterSec = Number(postResponse.headers?.['retry-after']);
+      if (Number.isFinite(retryAfterSec) && retryAfterSec > 0) {
+        (admissionError as any).retryAfterSec = retryAfterSec;
+      }
+      throw admissionError;
+    }
 
     throw new Error(
       postResponse.data?.message || 'Failed to submit translation job'
@@ -1739,8 +1763,11 @@ export async function translateViaDirect({
     throw new DOMException('Operation cancelled', 'AbortError');
   }
 
+  // Hoisted above the try so the catch can attribute provider throttling
+  // to the routed model.
+  const normalizedModel = model ? normalizeAiModelId(model) : undefined;
+
   try {
-    const normalizedModel = model ? normalizeAiModelId(model) : undefined;
     const payload: Record<string, unknown> = { messages, reasoning };
     if (normalizedModel) {
       payload.model = normalizedModel;
@@ -1810,6 +1837,39 @@ export async function translateViaDirect({
           data: error.response.data,
         }
       );
+    }
+
+    // The relay surfaces exhausted vendor errors as HTTP 500 with the
+    // provider's message only in data.details. Map provider throttling to
+    // the rate-limit error codes so concurrent batches defer and retry
+    // serially instead of being silently replaced with source text.
+    if (
+      error.response &&
+      (error.response.status === 429 || error.response.status >= 500)
+    ) {
+      const details = String(
+        error.response.data?.details || error.response.data?.error || ''
+      );
+      const looksThrottled =
+        /rate.?limit|too many requests|overloaded|\b429\b|\b529\b/i.test(
+          details
+        );
+      const looksTerminal = /insufficient_quota|quota exceeded|billing/i.test(
+        details
+      );
+      if (looksThrottled && !looksTerminal) {
+        // Attribute the throttle to the routed provider: an explicit model
+        // wins, then the family hint; phase is only a last resort (server
+        // routes review to Claude by default when nothing else is pinned).
+        const routedToClaude = normalizedModel
+          ? normalizedModel.startsWith('claude-')
+          : modelFamily === 'claude' || translationPhase === 'review';
+        throw new Error(
+          routedToClaude
+            ? ERROR_CODES.ANTHROPIC_RATE_LIMIT
+            : ERROR_CODES.OPENAI_RATE_LIMIT
+        );
+      }
     }
 
     throw error;

@@ -7,6 +7,7 @@ import {
 import { app, BrowserWindow, ipcMain } from 'electron';
 import log from 'electron-log';
 import { settingsStore } from '../store/settings-store.js';
+import { broadcastToApp } from '../utils/window.js';
 
 const PENDING_POST_INSTALL_NOTICE_KEY = 'pendingPostInstallNotice';
 
@@ -163,7 +164,7 @@ export function buildUpdateHandlers(opts: {
   mainWindow: BrowserWindow;
   isDev: boolean;
 }) {
-  const { mainWindow, isDev } = opts;
+  const { isDev } = opts;
   let latestAvailableInfo: UpdateInfo | null = null;
 
   if (isDev) {
@@ -190,18 +191,7 @@ export function buildUpdateHandlers(opts: {
 
   /* 2️⃣  Event fan-out to renderer ----------------------------------- */
   const send = (chan: string, payload?: any) => {
-    if (
-      mainWindow &&
-      !mainWindow.isDestroyed() &&
-      mainWindow.webContents &&
-      !mainWindow.webContents.isDestroyed()
-    ) {
-      mainWindow.webContents.send(`update:${chan}`, payload);
-    } else {
-      log.warn(
-        `[update] Renderer window unavailable, dropping event: update:${chan}`
-      );
-    }
+    broadcastToApp(`update:${chan}`, payload);
   };
 
   autoUpdater.on('error', err => {
@@ -209,15 +199,25 @@ export function buildUpdateHandlers(opts: {
     send('error', err == null ? 'unknown' : String(err));
   });
 
+  // Terminal updater state, remembered so a cached check can replay it to
+  // a tab that wasn't alive when the events were broadcast.
+  let lastUpdateState:
+    | { kind: 'available'; info: UpdateInfo }
+    | { kind: 'downloaded'; info: UpdateInfo | null }
+    | { kind: 'not-available' }
+    | null = null;
+
   autoUpdater.on('update-available', (info: UpdateInfo) => {
     log.info('[update] Update available:', info);
     log.info('[update] Starting automatic download...');
     latestAvailableInfo = info;
+    lastUpdateState = { kind: 'available', info };
     send('available', info);
   });
 
   autoUpdater.on('update-not-available', () => {
     log.info('[update] Update not available');
+    lastUpdateState = { kind: 'not-available' };
     send('not-available');
   });
 
@@ -230,18 +230,62 @@ export function buildUpdateHandlers(opts: {
     log.info('[update] Update downloaded');
     const noticeSource = info ?? latestAvailableInfo;
     stagePostInstallNotice(noticeSource);
+    lastUpdateState = { kind: 'downloaded', info: noticeSource ?? null };
     send('downloaded');
   });
 
   /* 3️⃣  IPC API ------------------------------------------------------ */
-  async function checkForUpdates(_evt: any): Promise<UpdateCheckResult | null> {
-    try {
-      log.info('[update] Checking for updates...');
-      return await autoUpdater.checkForUpdates();
-    } catch (err: any) {
-      log.error('[update] Check for updates failed:', err);
-      throw err;
+  // Every tab's renderer mounts its own update checker with a 10-minute
+  // interval; coalesce here so N tabs produce one feed request per window.
+  let updateCheckInFlight: Promise<UpdateCheckResult | null> | null = null;
+  let lastUpdateCheck: { at: number; result: UpdateCheckResult | null } | null =
+    null;
+  const UPDATE_CHECK_TTL_MS = 60_000;
+
+  // The renderer's update store reacts to update:* events, not the
+  // returned value — so a coalesced check must replay the current state
+  // to the requesting tab or a late-created tab never shows the update.
+  function replayUpdateStateTo(evt: any): void {
+    const wc = evt?.sender;
+    if (!wc || wc.isDestroyed() || !lastUpdateState) return;
+    if (lastUpdateState.kind === 'not-available') {
+      wc.send('update:not-available');
+      return;
     }
+    if (lastUpdateState.info) {
+      wc.send('update:available', lastUpdateState.info);
+    }
+    if (lastUpdateState.kind === 'downloaded') {
+      wc.send('update:downloaded');
+    }
+  }
+
+  async function checkForUpdates(_evt: any): Promise<UpdateCheckResult | null> {
+    if (updateCheckInFlight) {
+      replayUpdateStateTo(_evt);
+      return updateCheckInFlight;
+    }
+    if (
+      lastUpdateCheck &&
+      Date.now() - lastUpdateCheck.at < UPDATE_CHECK_TTL_MS
+    ) {
+      replayUpdateStateTo(_evt);
+      return lastUpdateCheck.result;
+    }
+    updateCheckInFlight = (async () => {
+      try {
+        log.info('[update] Checking for updates...');
+        const result = await autoUpdater.checkForUpdates();
+        lastUpdateCheck = { at: Date.now(), result };
+        return result;
+      } catch (err: any) {
+        log.error('[update] Check for updates failed:', err);
+        throw err;
+      } finally {
+        updateCheckInFlight = null;
+      }
+    })();
+    return updateCheckInFlight;
   }
 
   async function downloadUpdate(_evt: any): Promise<void> {

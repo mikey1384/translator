@@ -122,3 +122,13 @@ await fs.promises.writeFile('dist/main/main.cjs', cjsContent);
 
 // Remove the temporary ESM file
 await fs.promises.unlink('dist/main/main.mjs');
+
+// Copy the tab-strip shell assets (loaded at runtime from dist/shell/)
+mkdirSync(path.resolve(__dirname, 'dist/shell'), { recursive: true });
+for (const asset of ['shell.html', 'shell-preload.cjs']) {
+  await fs.promises.copyFile(
+    path.resolve(__dirname, 'shell', asset),
+    path.resolve(__dirname, 'dist/shell', asset)
+  );
+}
+console.log('[build] copied shell assets to dist/shell/');

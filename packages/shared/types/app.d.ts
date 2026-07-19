@@ -1311,7 +1311,7 @@ declare module '@shared-types/app' {
       authoritative: boolean;
       checkoutSessionId?: string | null;
     } | null>;
-    refreshCreditSnapshot: () => Promise<{
+    refreshCreditSnapshot: (force?: boolean) => Promise<{
       creditBalance: number;
       hoursBalance: number;
       creditsPerHour: number;
