@@ -161,6 +161,50 @@ jobs:
             --title "$TITLE" \
             --notes-file /tmp/release-notes.md
 
-      - name: Replace GitHub latest-mac.yml asset with release-notes-enriched copy
+      - name: Upload and verify GitHub auto-updater assets
         if: startsWith(github.ref, 'refs/tags/')
-        run: gh release upload "$GITHUB_REF_NAME" dist/latest-mac.yml --clobber
+        run: |
+          set -euo pipefail
+
+          APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
+          ASSETS=(
+            "dist/Translator-${APP_VERSION}-darwin-arm64.zip"
+            "dist/Translator-${APP_VERSION}-darwin-arm64.zip.blockmap"
+            "dist/Translator-${APP_VERSION}-darwin-x64.zip"
+            "dist/Translator-${APP_VERSION}-darwin-x64.zip.blockmap"
+            "dist/latest-mac.yml"
+          )
+
+          for asset in "${ASSETS[@]}"; do
+            if [ ! -f "$asset" ]; then
+              echo "::error::Required auto-updater asset is missing: $asset"
+              exit 1
+            fi
+          done
+
+          # electron-builder can finish successfully even when a large GitHub
+          # release upload is incomplete. Upload the updater payloads explicitly.
+          gh release upload "$GITHUB_REF_NAME" "${ASSETS[@]}" --clobber
+
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" \
+            > /tmp/github-release.json
+
+          for asset in "${ASSETS[@]}"; do
+            name=$(basename "$asset")
+            expected_size=$(stat -f '%z' "$asset")
+            uploaded_size=$(jq -r --arg name "$name" \
+              '.assets[] | select(.name == $name) | .size' \
+              /tmp/github-release.json)
+
+            if [ -z "$uploaded_size" ] || [ "$uploaded_size" = "null" ]; then
+              echo "::error::GitHub release asset is missing after upload: $name"
+              exit 1
+            fi
+
+            if [ "$uploaded_size" != "$expected_size" ]; then
+              echo "::error::GitHub release asset size mismatch for $name (expected $expected_size, got $uploaded_size)"
+              exit 1
+            fi
+
+            echo "Verified $name ($uploaded_size bytes)"
+          done
