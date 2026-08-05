@@ -1,4 +1,10 @@
-import { BrowserWindow, WebContentsView, WebContents, ipcMain } from 'electron';
+import {
+  BrowserWindow,
+  WebContentsView,
+  WebContents,
+  ipcMain,
+  powerMonitor,
+} from 'electron';
 import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import { registerAppTabProviders } from './utils/window.js';
@@ -16,6 +22,8 @@ interface Tab {
   id: number;
   view: WebContentsView;
   status: TabStatus;
+  mediaPlaying: boolean;
+  lastSurfaceRefreshAt: number;
 }
 
 interface TabManagerOptions {
@@ -35,6 +43,16 @@ let tabs: Tab[] = [];
 let activeTabId: number | null = null;
 let nextTabId = 1;
 let firstTabCreated = false;
+let windowsMediaSurfaceTimer: NodeJS.Timeout | null = null;
+
+// Chromium's Windows compositor can occasionally stop presenting a long-lived
+// WebContentsView even though its renderer and media keep running. Hiding and
+// re-showing the view reattaches the surface (which is also why switching tabs
+// clears the black frame). Keep this infrequent: it should be a recovery pulse,
+// not a substitute for normal frame production.
+const WINDOWS_MEDIA_SURFACE_REFRESH_MS = 5 * 60 * 1000;
+const WINDOWS_MEDIA_SURFACE_POLL_MS = 30 * 1000;
+const WINDOWS_SURFACE_REFRESH_COOLDOWN_MS = 1000;
 
 function shellWebContents(): WebContents | null {
   return win && !win.isDestroyed() && !win.webContents.isDestroyed()
@@ -70,6 +88,87 @@ function layoutTabs(): void {
   for (const t of tabs) {
     t.view.setBounds(bounds);
   }
+}
+
+function refreshTabSurface(tab: Tab, reason: string): boolean {
+  if (
+    process.platform !== 'win32' ||
+    !win ||
+    win.isDestroyed() ||
+    !win.isVisible() ||
+    win.isMinimized() ||
+    tab.id !== activeTabId ||
+    tab.view.webContents.isDestroyed()
+  ) {
+    return false;
+  }
+
+  const now = Date.now();
+  if (now - tab.lastSurfaceRefreshAt < WINDOWS_SURFACE_REFRESH_COOLDOWN_MS) {
+    return false;
+  }
+
+  try {
+    // Synchronous visibility toggles preserve the renderer and media element;
+    // they only make Chromium recreate the view's presented surface.
+    tab.view.setVisible(false);
+    tab.view.setVisible(true);
+    layoutTabs();
+    tab.view.webContents.focus();
+    tab.lastSurfaceRefreshAt = now;
+    log.info(
+      `[tab-manager] Refreshed Windows tab surface for tab ${tab.id} (${reason}).`
+    );
+    return true;
+  } catch (err) {
+    log.warn(
+      `[tab-manager] Failed to refresh Windows tab surface for tab ${tab.id} (${reason}):`,
+      err
+    );
+    return false;
+  }
+}
+
+export function refreshActiveTabSurface(reason = 'requested'): boolean {
+  const tab = tabs.find(t => t.id === activeTabId);
+  return tab ? refreshTabSurface(tab, reason) : false;
+}
+
+function stopWindowsSurfaceRecovery(): void {
+  if (windowsMediaSurfaceTimer) {
+    clearInterval(windowsMediaSurfaceTimer);
+    windowsMediaSurfaceTimer = null;
+  }
+  powerMonitor.removeListener('resume', handleSystemResume);
+  powerMonitor.removeListener('unlock-screen', handleSystemUnlock);
+}
+
+function handleSystemResume(): void {
+  refreshActiveTabSurface('system-resume');
+}
+
+function handleSystemUnlock(): void {
+  refreshActiveTabSurface('screen-unlock');
+}
+
+function startWindowsSurfaceRecovery(): void {
+  stopWindowsSurfaceRecovery();
+  if (process.platform !== 'win32') return;
+
+  windowsMediaSurfaceTimer = setInterval(() => {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (
+      !tab?.mediaPlaying ||
+      Date.now() - tab.lastSurfaceRefreshAt < WINDOWS_MEDIA_SURFACE_REFRESH_MS
+    ) {
+      return;
+    }
+    refreshTabSurface(tab, 'long-running-media');
+  }, WINDOWS_MEDIA_SURFACE_POLL_MS);
+  windowsMediaSurfaceTimer.unref();
+
+  powerMonitor.on('resume', handleSystemResume);
+  powerMonitor.on('unlock-screen', handleSystemUnlock);
 }
 
 export function getTabForWebContents(wc: WebContents): { id: number } | null {
@@ -113,6 +212,7 @@ export function selectTab(id: number): void {
     t.view.setVisible(t.id === id);
     applyBackgroundPolicy(t);
   }
+  tab.lastSurfaceRefreshAt = Date.now();
   // Let the renderers react (e.g. pause media in the hidden tab).
   if (previousActive && previousActive.id !== id) {
     const prevWc = previousActive.view.webContents;
@@ -164,6 +264,8 @@ export async function createTab({
     id: nextTabId++,
     view,
     status: { title: 'New Tab', percent: null, running: false, badge: null },
+    mediaPlaying: false,
+    lastSurfaceRefreshAt: Date.now(),
   };
   tabs.push(tab);
 
@@ -180,6 +282,14 @@ export async function createTab({
       `[tab-manager] Tab ${tab.id} renderer gone (${details.reason}); closing tab.`
     );
     closeTab(tab.id);
+  });
+
+  view.webContents.on('media-started-playing', () => {
+    tab.mediaPlaying = true;
+    tab.lastSurfaceRefreshAt = Date.now();
+  });
+  view.webContents.on('media-paused', () => {
+    tab.mediaPlaying = false;
   });
 
   win.contentView.addChildView(view);
@@ -345,6 +455,7 @@ export function initTabManager(options: TabManagerOptions): void {
   tabs = [];
   activeTabId = null;
   firstTabCreated = false;
+  startWindowsSurfaceRecovery();
 
   registerAppTabProviders({
     getAll: getAllTabWebContents,
@@ -356,6 +467,9 @@ export function initTabManager(options: TabManagerOptions): void {
   win.on('unmaximize', layoutTabs);
   win.on('enter-full-screen', layoutTabs);
   win.on('leave-full-screen', layoutTabs);
+  win.on('focus', () => refreshActiveTabSurface('window-focus'));
+  win.on('restore', () => refreshActiveTabSurface('window-restore'));
+  win.on('show', () => refreshActiveTabSurface('window-show'));
   win.on('closed', () => {
     // Closing the window does NOT destroy child WebContentsView webContents —
     // without this, tab renderers (and their registered operations, whose
@@ -372,6 +486,7 @@ export function initTabManager(options: TabManagerOptions): void {
     win = null;
     tabs = [];
     activeTabId = null;
+    stopWindowsSurfaceRecovery();
   });
 }
 
