@@ -1,182 +1,143 @@
 <p align="center">
-  <img src="assets/icon.png" alt="Stage5 Translator" width="128" height="128">
-</p>
-
-<h1 align="center">Stage5 Translator</h1>
-
-<p align="center">
-  <strong>AI-powered video translation for content creators</strong>
-</p>
-
-<p align="center">
-  <a href="https://stage5.tools">
-    <img src="https://img.shields.io/badge/Download-stage5.tools-blue?style=for-the-badge" alt="Download">
+  <a href="https://translator.tools">
+    <img src="assets/icon.png" alt="Translator app icon" width="120" height="120">
   </a>
 </p>
 
+<h1 align="center">Translator</h1>
+
 <p align="center">
-  <img src="https://img.shields.io/badge/Electron-191970?style=flat-square&logo=electron&logoColor=white" alt="Electron">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
-  <img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Windows-lightgrey?style=flat-square" alt="Platform">
+  <strong>An open-source desktop video workstation for crossing language boundaries.</strong>
 </p>
 
 <p align="center">
-  Transcribe, translate, and dub videos in 30+ languages with state-of-the-art AI models.
-  <br>
-  Free tools included. No account required.
+  Discover, download, transcribe, translate, review, edit, dub, and export video<br>
+  without reducing the workflow to a pile of disconnected browser tools.
 </p>
-
----
-
-## ✨ Features
-
-### 🆓 Free Forever
-- **Video Download** — Save videos from YouTube and other platforms
-- **Subtitle Editor** — Edit, sync, and style your subtitles
-- **Subtitle Merge** — Burn subtitles directly into your videos
-- **Highlight Clips** — Extract the best moments automatically
-
-### 💎 AI-Powered (Credits)
-- **Transcription** — Convert speech to text with OpenAI Whisper
-- **Translation** — GPT-5.1 draft + Claude Opus 4.8 review for premium quality
-- **Dubbing** — Generate natural voice-overs in any target language
-- **Smart Summaries** — AI-generated video summaries and highlights
-
-### 🌍 30+ Languages
-Arabic, Chinese, Czech, Danish, Dutch, English, Finnish, French, German, Greek, Hebrew, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Malay, Norwegian, Polish, Portuguese, Romanian, Russian, Spanish, Swedish, Thai, Turkish, Ukrainian, Vietnamese, and more.
-
----
-
-## 📸 Screenshots
 
 <p align="center">
-  <em>Screenshots coming soon</em>
+  <a href="https://translator.tools/#all-downloads"><strong>Download the app</strong></a>
+  ·
+  <a href="https://translator.tools/open-source">Open-source overview</a>
+  ·
+  <a href="https://translator.tools/pricing">Pricing</a>
+  ·
+  <a href="https://translator.tools/faq">FAQ</a>
 </p>
 
-<!--
 <p align="center">
-  <img src="docs/screenshots/transcribe.png" width="45%" alt="Transcription">
-  <img src="docs/screenshots/translate.png" width="45%" alt="Translation">
+  <img src="https://img.shields.io/github/v/release/mikey1384/translator?display_name=tag&sort=semver" alt="Latest release">
+  <img src="https://img.shields.io/badge/license-MIT-8a9cff" alt="MIT license">
+  <img src="https://img.shields.io/badge/platform-macOS%20%2B%20Windows-20242c" alt="macOS and Windows">
+  <img src="https://img.shields.io/badge/Electron-39-47848f?logo=electron" alt="Electron 39">
+  <img src="https://img.shields.io/badge/TypeScript-source-3178c6?logo=typescript&logoColor=white" alt="TypeScript source">
 </p>
--->
 
----
+![Translator with multiple video workspaces open in tabs](https://translator.tools/screenshots/watch-translated-subtitles-editorial-2026-08.webp)
 
-## 🚀 Installation
+## Why Translator exists
 
-### Download
-Visit **[stage5.tools](https://stage5.tools)** to download the latest version for your platform.
+Most video-language workflows make you move a file through separate downloaders, transcription pages, translation boxes, subtitle editors, dubbing tools, and export utilities. Translator keeps that work in one desktop application.
 
-| Platform | Chip | Download |
-|----------|------|----------|
-| macOS | Apple Silicon (M1/M2/M3/M4) | [Download](https://stage5.tools) |
-| macOS | Intel | [Download](https://stage5.tools) |
-| Windows | x64 | [Download](https://stage5.tools) |
+Its defining interface is a **multitab workspace**. Each tab holds an independent video job, background work reports progress in the tab strip, and completed work stays organized instead of replacing the thing you were already doing.
 
-### Build from Source
+This repository contains the real desktop product—not a demonstration client or a marketing sample.
+
+## What the app does
+
+| Area | Capabilities |
+| --- | --- |
+| Workspaces | Multiple independent video tabs, background progress, completion state, and preserved task context |
+| Discovery | AI-assisted video discovery beyond the user's usual recommendation feed |
+| Input | Local video files, video URLs, subtitle files, and source-linked subtitle documents |
+| Downloading | Video and audio downloading through the desktop app, with available quality choices |
+| Transcription | Whisper or ElevenLabs transcription paths, including higher-quality contextual workflows |
+| Translation | 39 target languages, GPT-5.1 base translation, and optional second-pass review with GPT-5.5 or Claude Opus 4.8 |
+| Review and editing | Original/translated comparison, video-synchronized subtitle editing, timing controls, search, and replacement |
+| Output | SRT export, burned-in subtitles, summaries, highlight clips, and dubbed video |
+| Payment choice | Stage5 pay-as-you-go credits or supported bring-your-own OpenAI, Anthropic, and ElevenLabs credentials |
+
+Core downloading, subtitle editing, timing, and export tools are available in the free finished app. Optional AI operations incur Stage5 credit charges or third-party provider costs when BYO credentials are used.
+
+## Open-source boundary
+
+The **desktop client is MIT-licensed**. You can audit it, modify it, build it, and redistribute it under the terms of the license.
+
+Open source does not imply that external infrastructure is free or included in this repository. Hosted Stage5 APIs, payment systems, model-provider accounts, and third-party services remain separate. The code makes those boundaries inspectable instead of hiding them behind a generic architecture claim.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the process and trust boundaries.
+
+## Download a finished build
+
+Use the signed downloads at [translator.tools](https://translator.tools/#all-downloads):
+
+- macOS — Apple Silicon
+- macOS — Intel
+- Windows — x64
+
+No subscription is required. See the current [pricing page](https://translator.tools/pricing) for optional AI usage and BYO details.
+
+## Run from source
+
+Prerequisites:
+
+- A current Node.js LTS release and npm
+- macOS or Windows
+- Platform build tools required by Electron native dependencies
+
 ```bash
-# Clone the repository
 git clone https://github.com/mikey1384/translator.git
 cd translator
-
-# Install dependencies
 npm install
-
-# Start development mode
 npm run dev
+```
 
-# Build for production
+The first development start builds the Electron main process, preload bridge, renderer, and render host before launching the app.
+
+## Build and verify
+
+```bash
+# Compile the application
 npm run build
 
-# Package for distribution
-npm run package:arm    # macOS Apple Silicon
-npm run package:intel  # macOS Intel
-npm run package:win    # Windows
+# Static checks
+npm run lint
+
+# Main-process test suite
+npm run --prefix packages/main test
 ```
 
----
+Packaging requires platform-specific native dependencies and, for distributable macOS builds, signing and notarization credentials. The repository's release scripts encode those paths:
 
-## 🔄 How It Works
-
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Video     │────▶│  Transcribe │────▶│  Translate  │────▶│     Dub     │
-│   Input     │     │  (Whisper)  │     │ (GPT+Claude)│     │    (TTS)    │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
-```
-
-1. **Input** — Load a video file or paste a URL
-2. **Transcribe** — AI converts speech to subtitles with timestamps
-3. **Translate** — Two-pass translation: GPT-5.1 drafts, Claude Opus 4.8 reviews
-4. **Dub** — Generate natural voice-over in the target language
-5. **Export** — Download subtitles (SRT) or video with burned-in captions
-
----
-
-## 💰 Pricing
-
-Stage5 uses a **credit-based** system — pay only for what you use.
-
-| Feature | Cost |
-|---------|------|
-| Video Download | **Free** |
-| Subtitle Editing | **Free** |
-| Subtitle Merge | **Free** |
-| AI Transcription | Credits |
-| AI Translation | Credits |
-| AI Dubbing | Credits |
-
-**New users get free credits to try AI features.** Purchase more credits anytime at [stage5.tools](https://stage5.tools).
-
-### 🔑 Bring Your Own API Keys
-Power users can connect their own OpenAI, Anthropic, or ElevenLabs API keys to use AI features without credits. Enable BYO mode in Settings.
-
----
-
-## 🛠 Tech Stack
-
-| Component | Technology |
-|-----------|------------|
-| Framework | Electron 36 |
-| Frontend | React 18, Zustand |
-| Language | TypeScript |
-| Styling | Emotion CSS |
-| Video Processing | FFmpeg |
-| AI Models | OpenAI GPT-5.1, Claude Opus 4.8, Whisper |
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how to get started:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-Please read our contributing guidelines before submitting PRs.
-
-### Development Setup
 ```bash
-npm install    # Install dependencies
-npm run dev    # Start with hot reload
-npm run lint   # Check for issues
-npm run build  # Production build
+npm run package:arm     # macOS Apple Silicon
+npm run package:intel   # macOS Intel
+npm run package:win     # Windows x64
 ```
 
+## Repository map
+
+```text
+packages/main/       Electron main process, tabs, jobs, downloads, APIs, storage
+packages/preload/    Typed bridge between the desktop shell and renderer
+packages/renderer/   React product interface and localized user experience
+packages/shared/     Shared constants, types, model catalog, and helpers
+scripts/             Packaging, release, native dependency, and verification tools
+assets/              Product icons and bundled interface assets
+```
+
+Read [ARCHITECTURE.md](ARCHITECTURE.md) before changing process boundaries, IPC contracts, credential handling, or background-job behavior.
+
+## Contributing
+
+Issues and focused pull requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), and use [GitHub Issues](https://github.com/mikey1384/translator/issues) for reproducible bugs and scoped proposals.
+
+For vulnerabilities or reports involving credentials, payments, update delivery, or private data, follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
+
+## License
+
+Translator is released under the [MIT License](LICENSE).
+
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-<p align="center">
-  Made with ❤️ by the Stage5 team
-  <br>
-  <a href="https://stage5.tools">stage5.tools</a>
-</p>
+Built by [Stage5 Tools](https://translator.tools). The product website and this repository are intended to describe the same current application; if they drift, please open an issue.

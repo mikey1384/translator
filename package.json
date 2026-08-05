@@ -3,8 +3,17 @@
   "private": true,
   "version": "1.16.2",
   "type": "module",
-  "description": "Translator - AI-powered video translation tool",
+  "description": "Open-source desktop video discovery, subtitle translation, editing, dubbing, and export workstation",
   "author": "Mikey Lee",
+  "license": "MIT",
+  "homepage": "https://translator.tools",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikey1384/translator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mikey1384/translator/issues"
+  },
   "workspaces": [
     "packages/*"
   ],
