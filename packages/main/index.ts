@@ -104,6 +104,10 @@ import * as tabManager from './tab-manager.js';
 import { suggestVideosViaChat } from './services/video-suggestions.js';
 import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-gate.js';
 import { hasConfiguredAdminSecret } from './services/admin-auth.js';
+import {
+  trackAppOpen,
+  trackFirstMeaningfulUse,
+} from './services/product-analytics.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -453,7 +457,13 @@ try {
     'save-subtitle-document',
     fileHandlers.handleSaveSubtitleDocument
   );
-  ipcMain.handle('open-file', fileHandlers.handleOpenFile);
+  ipcMain.handle('open-file', async (event, options) => {
+    const result = await fileHandlers.handleOpenFile(event, options);
+    if (!result.canceled && result.filePaths.length > 0 && !result.error) {
+      void trackFirstMeaningfulUse('video_open');
+    }
+    return result;
+  });
   ipcMain.handle(
     'read-saved-subtitle-metadata',
     fileHandlers.handleReadSavedSubtitleMetadata
@@ -825,7 +835,13 @@ try {
   });
 
   ipcMain.handle('process-url', handleProcessUrl);
-  ipcMain.handle('process-url:accept', handleAcceptProcessedUrl);
+  ipcMain.handle('process-url:accept', async (event, operationId) => {
+    const result = await handleAcceptProcessedUrl(event, operationId);
+    if (result.success) {
+      void trackFirstMeaningfulUse('video_download');
+    }
+    return result;
+  });
   ipcMain.handle('process-url:discard', handleDiscardProcessedUrl);
   ipcMain.handle(
     'process-url:cleanup-accepted',
@@ -1693,6 +1709,7 @@ app
 
     await createWindow().then(() => {
       log.info('[main.ts] Main window created.');
+      void trackAppOpen();
       if (isDev) {
         mainWindow?.webContents.on('devtools-opened', () => {
           // Additional dev logic if desired
@@ -1731,6 +1748,8 @@ function openVideoFile(filePath: string) {
     filePathTargetWebContentsId = null;
     return;
   }
+
+  void trackFirstMeaningfulUse('video_open');
 
   const activeTab = getActiveAppWebContents();
   if (
