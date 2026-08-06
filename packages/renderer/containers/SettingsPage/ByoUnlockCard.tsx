@@ -84,7 +84,10 @@ export default function ByoUnlockCard() {
   const loading = entitlementsLoading && !hasAnyUnlocked;
 
   return (
-    <section className={byoCardStyles}>
+    <section
+      className={byoCardStyles}
+      data-translator-destination="settings-byo"
+    >
       <h2 className={settingsCardTitleStyles}>
         {t('settings.byoOpenAi.title', 'Bring Your Own API Keys')}
       </h2>
@@ -137,11 +140,8 @@ export default function ByoUnlockCard() {
         {unlockPending
           ? t('settings.byoOpenAi.unlocking', 'Opening checkout…')
           : unlockUnresolved
-            ? t(
-                'settings.byoOpenAi.checkoutOpen',
-                'Checkout open in browser…'
-              )
-          : unlockPriceLabel}
+            ? t('settings.byoOpenAi.checkoutOpen', 'Checkout open in browser…')
+            : unlockPriceLabel}
       </Button>
 
       {unlockUnresolved && (

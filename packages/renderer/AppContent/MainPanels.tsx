@@ -68,7 +68,7 @@ export default function MainPanels() {
   return (
     <>
       {/* Generate Subtitles transforming container */}
-      <div className={panelBlockStyles}>
+      <div className={panelBlockStyles} data-translator-destination="create">
         {/* Underlying content (always rendered) */}
         <div style={{ display: isGenerateOpen ? 'block' : 'none' }}>
           <GenerateSubtitles />
@@ -111,7 +111,7 @@ export default function MainPanels() {
       </div>
 
       {/* Edit Subtitles transforming container */}
-      <div className={panelBlockStyles}>
+      <div className={panelBlockStyles} data-translator-destination="editor">
         {/* Underlying content (always rendered) */}
         <div style={{ display: isEditOpen ? 'block' : 'none' }}>
           <EditSubtitles

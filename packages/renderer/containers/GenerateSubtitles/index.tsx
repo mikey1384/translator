@@ -791,6 +791,7 @@ export default function GenerateSubtitles() {
 
   return (
     <Section
+      destination="generate"
       title={t('subtitles.generate')}
       contentClassName={workflowStageStackStyles}
     >
@@ -1021,7 +1022,10 @@ export default function GenerateSubtitles() {
       </div>
 
       {activeWorkspaceTab === 'history' ? (
-        <div className={workflowStageShellStyles}>
+        <div
+          className={workflowStageShellStyles}
+          data-translator-destination="downloads"
+        >
           <div className={workflowStageHeaderStyles}>
             <div className={workflowStageHeaderRowStyles}>
               <h3 className={workflowStageTitleStyles}>
@@ -1079,7 +1083,10 @@ export default function GenerateSubtitles() {
       ) : null}
 
       {activeWorkspaceTab === 'channels' ? (
-        <div className={workflowStageShellStyles}>
+        <div
+          className={workflowStageShellStyles}
+          data-translator-destination="channels"
+        >
           <div className={workflowStageHeaderStyles}>
             <div className={workflowStageHeaderRowStyles}>
               <h3 className={workflowStageTitleStyles}>

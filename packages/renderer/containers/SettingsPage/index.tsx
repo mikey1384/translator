@@ -63,7 +63,10 @@ export default function SettingsPage() {
   const showStage5Section = !effectiveByoUnlocked || !useApiKeysMode;
 
   return (
-    <div className={settingsPageLayoutStyles}>
+    <div
+      className={settingsPageLayoutStyles}
+      data-translator-destination="settings"
+    >
       <header className={shellHeaderBlockStyles}>
         <h1 className={shellTitleStyles}>{t('settings.title')}</h1>
       </header>
@@ -76,6 +79,7 @@ export default function SettingsPage() {
 
       {showStage5Section && (
         <Section
+          destination="settings-quality"
           title={t(
             'settings.performanceQuality.title',
             'Performance & Quality'

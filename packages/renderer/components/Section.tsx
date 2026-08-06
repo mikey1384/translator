@@ -11,6 +11,7 @@ import {
 
 interface SectionProps {
   children: ReactNode;
+  destination?: string;
   title?: string;
   headerRight?: ReactNode;
   className?: string;
@@ -79,6 +80,7 @@ const subTitleStyles = css`
 
 export default function Section({
   children,
+  destination,
   title,
   headerRight,
   className,
@@ -91,6 +93,7 @@ export default function Section({
 }: SectionProps) {
   return (
     <section
+      data-translator-destination={destination}
       className={cx(
         sectionStyles,
         noMargin && noMarginStyle,

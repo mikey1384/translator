@@ -1565,6 +1565,113 @@ declare module '@shared-types/app' {
       };
       env: {
         isPackaged: boolean;
+        agentMode: boolean;
+      };
+      translatorAgent?: {
+        status: () => Promise<Record<string, unknown>>;
+        navigationSnapshot: () => Promise<Record<string, unknown>>;
+        navigate: (input?: {
+          destination?:
+            | 'home'
+            | 'create'
+            | 'video-search'
+            | 'downloads'
+            | 'channels'
+            | 'editor'
+            | 'settings'
+            | 'settings-credits'
+            | 'settings-quality'
+            | 'settings-provider'
+            | 'settings-byo'
+            | 'settings-api-keys';
+        }) => Promise<Record<string, unknown>>;
+        openExternalWebPage: (input?: {
+          url?: string;
+        }) => Promise<Record<string, unknown>>;
+        openCreditCheckout: (input?: {
+          pack?: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
+        }) => Promise<Record<string, unknown>>;
+        showSettings: (input?: {
+          open?: boolean;
+        }) => Promise<Record<string, unknown>>;
+        settingsSnapshot: () => Promise<Record<string, unknown>>;
+        updateSettings: (input?: {
+          qualityTranslation?: boolean;
+          qualityTranscription?: boolean;
+          reviewProvider?: 'openai' | 'anthropic';
+          summaryQuality?: 'standard' | 'high';
+          summaryProvider?: 'openai' | 'anthropic';
+          stage5DubbingTtsProvider?: 'openai' | 'elevenlabs';
+          stage5VideoSuggestionMode?: 'standard' | 'high';
+          dubVoice?: string;
+          dubAmbientMix?: number;
+          apiKeyMode?: boolean;
+          translationDraftProvider?: 'openai' | 'anthropic';
+          byoVideoSuggestionModel?:
+            | 'gpt-5.1'
+            | 'gpt-5.5'
+            | 'claude-sonnet-5'
+            | 'claude-opus-4-8';
+          transcriptionProvider?: 'stage5' | 'openai' | 'elevenlabs';
+          dubbingProvider?: 'stage5' | 'openai' | 'elevenlabs';
+          openAiEnabled?: boolean;
+          anthropicEnabled?: boolean;
+          elevenLabsEnabled?: boolean;
+        }) => Promise<Record<string, unknown>>;
+        storeProviderKey: (input?: {
+          provider?: 'openai' | 'anthropic' | 'elevenlabs';
+          apiKey?: string;
+          validate?: boolean;
+        }) => Promise<Record<string, unknown>>;
+        clearProviderKey: (input?: {
+          provider?: 'openai' | 'anthropic' | 'elevenlabs';
+          confirm?: string;
+        }) => Promise<Record<string, unknown>>;
+        openVideo: (input?: {
+          path?: string;
+        }) => Promise<Record<string, unknown>>;
+        mountSubtitles: (input?: {
+          path?: string;
+        }) => Promise<Record<string, unknown>>;
+        setDisplayMode: (input?: {
+          mode?: SubtitleDisplayMode;
+        }) => Promise<Record<string, unknown>>;
+        setSubtitleStyle: (input?: {
+          style?: string;
+        }) => Promise<Record<string, unknown>>;
+        showDownloadHistory: () => Promise<Record<string, unknown>>;
+        listDownloadHistory: (input?: {
+          query?: string;
+          availability?: 'all' | 'local' | 'missing';
+          limit?: number;
+        }) => Promise<Record<string, unknown>>;
+        openDownloadHistoryItem: (input?: {
+          id?: string;
+        }) => Promise<Record<string, unknown>>;
+        redownloadHistoryItem: (input?: {
+          id?: string;
+          quality?: VideoQuality;
+        }) => Promise<Record<string, unknown>>;
+        searchVideos: (input?: {
+          prompt?: string;
+          preferredLanguage?: string;
+          targetCountry?: string;
+          recency?: VideoSuggestionRecency;
+          includeDownloadHistory?: boolean;
+          includeWatchedChannels?: boolean;
+        }) => Promise<Record<string, unknown>>;
+        searchMoreVideos: () => Promise<Record<string, unknown>>;
+        videoSearchStatus: () => Promise<Record<string, unknown>>;
+        startSuggestedVideoBatch: (input?: {
+          ids?: string[];
+          quality?: VideoQuality;
+        }) => Promise<Record<string, unknown>>;
+        cancelSuggestedVideoBatch: () => Promise<Record<string, unknown>>;
+        suggestedVideoBatchStatus: () => Promise<Record<string, unknown>>;
+        startVideoDownload: (input?: {
+          url?: string;
+          quality?: VideoQuality;
+        }) => Promise<Record<string, unknown>>;
       };
     }
   }

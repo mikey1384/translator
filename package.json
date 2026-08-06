@@ -1,7 +1,7 @@
 {
   "name": "translator",
   "private": true,
-  "version": "1.16.4",
+  "version": "1.16.5",
   "type": "module",
   "description": "Open-source desktop video discovery, subtitle translation, editing, dubbing, and export workstation",
   "author": "Mikey Lee",
@@ -49,7 +49,10 @@
     "release:checklist": "bash scripts/release-checklist.sh",
     "test:intel": "arch -x86_64 open dist/mac/Translator.app",
     "test:arm": "open dist/mac-arm64/Translator.app",
-    "test:win": "cmd /c scripts\\test-windows-package.bat"
+    "test:win": "cmd /c scripts\\test-windows-package.bat",
+    "agent": "npm run --workspace @translator/agent-server cli --",
+    "agent:mcp": "npm run --workspace @translator/agent-server mcp",
+    "agent:test": "npm run --workspace @translator/agent-server test"
   },
   "devDependencies": {
     "@electron/osx-sign": "^2.0.0",

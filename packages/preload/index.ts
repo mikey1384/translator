@@ -862,7 +862,10 @@ contextBridge.exposeInMainWorld('appShell', {
 });
 
 const isPackaged = ipcRenderer.sendSync('is-packaged');
-contextBridge.exposeInMainWorld('env', { isPackaged });
+contextBridge.exposeInMainWorld('env', {
+  isPackaged,
+  agentMode: !isPackaged && process.env.TRANSLATOR_AGENT_DEV === '1',
+});
 
 // Listen for postMessage from Stripe checkout pages and forward to main process
 window.addEventListener('message', event => {

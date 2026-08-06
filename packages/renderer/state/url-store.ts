@@ -87,6 +87,7 @@ interface UrlState {
   setValidationError: (msg: string) => void;
   setOperationError: (msg: string) => void;
   downloadMedia: (options?: {
+    mountOnComplete?: boolean;
     preserveSubtitles?: boolean;
     url?: string;
   }) => Promise<ProcessUrlResult | void>;
@@ -163,11 +164,16 @@ export const useUrlStore = create<UrlState>()(
 async function downloadMediaInternal(
   set: any,
   get: any,
-  options?: { preserveSubtitles?: boolean; url?: string }
+  options?: {
+    mountOnComplete?: boolean;
+    preserveSubtitles?: boolean;
+    url?: string;
+  }
 ): Promise<ProcessUrlResult | void> {
   const { urlInput, downloadQuality } = get();
   const requestedUrl = String(options?.url ?? urlInput ?? '').trim();
   const preserveSubtitles = Boolean(options?.preserveSubtitles);
+  const mountOnComplete = options?.mountOnComplete !== false;
   const opId = `download-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   let shouldDiscardPendingResult = false;
   const cancelledResult = (): ProcessUrlResult => ({
@@ -361,7 +367,8 @@ async function downloadMediaInternal(
       existingSubs.length > 0 && subsOrigin === 'disk' && !libraryEntryId;
     const hasMountedSource = Boolean(getMountedSourcePath());
     const shouldSwitchToDownloaded =
-      !hasMountedSource || (await openDownloadSwitchConfirm());
+      mountOnComplete &&
+      (!hasMountedSource || (await openDownloadSwitchConfirm()));
 
     if (isCurrentDownloadCancelledOrStale()) {
       await discardProcessedUrl();

@@ -45,19 +45,52 @@ This repository contains the real desktop product—not a demonstration client o
 
 ## What the app does
 
-| Area | Capabilities |
-| --- | --- |
-| Workspaces | Multiple independent video tabs, background progress, completion state, and preserved task context |
-| Discovery | AI-assisted video discovery beyond the user's usual recommendation feed |
-| Input | Local video files, video URLs, subtitle files, and source-linked subtitle documents |
-| Downloading | Video and audio downloading through the desktop app, with available quality choices |
-| Transcription | Whisper or ElevenLabs transcription paths, including higher-quality contextual workflows |
-| Translation | 39 target languages, GPT-5.1 base translation, and optional second-pass review with GPT-5.5 or Claude Opus 4.8 |
-| Review and editing | Original/translated comparison, video-synchronized subtitle editing, timing controls, search, and replacement |
-| Output | SRT export, burned-in subtitles, summaries, highlight clips, and dubbed video |
-| Payment choice | Stage5 pay-as-you-go credits or supported bring-your-own OpenAI, Anthropic, and ElevenLabs credentials |
+| Area               | Capabilities                                                                                                          |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Workspaces         | Multiple independent video tabs, background progress, completion state, and preserved task context                    |
+| Discovery          | AI-assisted video discovery beyond the user's usual recommendation feed                                               |
+| Input              | Local video files, video URLs, subtitle files, and source-linked subtitle documents                                   |
+| Downloading        | Video and audio downloading with quality choices and a reusable in-app history for watching or reopening saved videos |
+| Transcription      | Whisper or ElevenLabs transcription paths, including higher-quality contextual workflows                              |
+| Translation        | 39 target languages, GPT-5.1 base translation, and optional second-pass review with GPT-5.5 or Claude Opus 4.8        |
+| Review and editing | Original/translated comparison, video-synchronized subtitle editing, timing controls, search, and replacement         |
+| Output             | SRT export, burned-in subtitles, summaries, highlight clips, and dubbed video                                         |
+| Payment choice     | Stage5 pay-as-you-go credits or supported bring-your-own OpenAI, Anthropic, and ElevenLabs credentials                |
 
 Core downloading, subtitle editing, timing, and export tools are available in the free finished app. Optional AI operations incur Stage5 credit charges or third-party provider costs when BYO credentials are used.
+
+## Use Translator with an LLM agent
+
+Translator includes a local MCP server for a slower, zero-marginal-API-cost
+translation and review path. The connected LLM reads subtitle cues in small
+contextual batches, supplies the translated or revised text from its existing
+subscription, and exports a translation-only or bilingual SRT. Translator does
+not call a paid model for this path.
+
+The development bridge also lets an agent download an explicit video URL into
+the local library, open a local video, mount an SRT, switch among original,
+translation, and dual-text display, choose Default, Classic, Boxed, or LineBox
+subtitle styling, and list, open, or re-download items from the Downloads
+library by stable entry ID. It can also use Translator's ranked video search,
+continue a search, and queue selected recommendation IDs for bounded sequential
+downloads.
+
+The development agent can navigate directly to named app destinations, open an
+explicit web page for the user, or hand off to a secure Stage5 credit checkout.
+It cannot read or submit payment fields.
+It can also inspect and operate Settings through typed controls for quality,
+voice, provider, model, and BYO preferences. Provider keys are write-only and
+masked; purchases, entitlement checkout, and admin resets remain manual.
+It is explicitly development-only until the packaged-app permission and
+entitlement UX is ready.
+
+```bash
+npm run agent:test
+npm run agent:mcp
+```
+
+See [docs/agent-interface.md](docs/agent-interface.md) for the tool workflow,
+Codex configuration, security boundary, and current limitations.
 
 ## Open-source boundary
 
@@ -122,6 +155,7 @@ packages/main/       Electron main process, tabs, jobs, downloads, APIs, storage
 packages/preload/    Typed bridge between the desktop shell and renderer
 packages/renderer/   React product interface and localized user experience
 packages/shared/     Shared constants, types, model catalog, and helpers
+packages/agent-server/ Local MCP server, translation sessions, and dev-app controls
 scripts/             Packaging, release, native dependency, and verification tools
 assets/              Product icons and bundled interface assets
 ```

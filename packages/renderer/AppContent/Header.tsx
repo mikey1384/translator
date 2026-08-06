@@ -32,7 +32,10 @@ const rightGroup = css`
 
 export default function Header() {
   return (
-    <div className={`${subtleSurfaceCardStyles} ${headerRow}`}>
+    <div
+      className={`${subtleSurfaceCardStyles} ${headerRow}`}
+      data-translator-destination="home"
+    >
       <div className={leftGroup}>
         <LogoDisplay />
         <LanguageSwitcher />

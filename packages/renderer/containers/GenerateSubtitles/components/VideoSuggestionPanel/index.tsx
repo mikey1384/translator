@@ -684,7 +684,7 @@ export default function VideoSuggestionPanel({
   ]);
 
   return (
-    <div className={wrapperStyles}>
+    <div className={wrapperStyles} data-translator-destination="video-search">
       {!hideToggle ? (
         <button
           type="button"

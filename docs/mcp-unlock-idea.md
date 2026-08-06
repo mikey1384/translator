@@ -1,6 +1,25 @@
-# MCP Unlock — Subscription-Powered Translator (Idea)
+# MCP Unlock — Subscription-Powered Translator
 
-_Captured 2026-07-19 from a brainstorm. Not scheduled; revisit when ready._
+_Captured 2026-07-19 from a brainstorm. First local implementation completed
+2026-08-06; see `docs/agent-interface.md`._
+
+## Current implementation
+
+The repository now ships the first free/local slice under
+`packages/agent-server`:
+
+- stdio MCP tools for persistent translate and review sessions;
+- contextual cue batches supplied to the connected subscription LLM;
+- safe translation submission and revision;
+- translation-only, source-only, or bilingual SRT export;
+- a development-only app controller for opening videos, mounting SRTs,
+  selecting original/translation/dual display, changing subtitle style, and
+  opening Download history.
+
+No Translator-hosted inference runs in this path. Transcription, dubbing, and
+other operations with real provider costs remain outside the free tool set.
+Packaged-app exposure, local Whisper, and a customer-facing permission and
+entitlement UI remain future work.
 
 ## The problem this solves
 

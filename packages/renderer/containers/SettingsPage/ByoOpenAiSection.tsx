@@ -73,7 +73,10 @@ export default function ByoOpenAiSection() {
   }
 
   return (
-    <section className={byoCardStyles}>
+    <section
+      className={byoCardStyles}
+      data-translator-destination="settings-api-keys"
+    >
       <h2 className={settingsCardTitleStyles}>
         {t('settings.byoOpenAi.title', 'Bring Your Own API Keys')}
       </h2>

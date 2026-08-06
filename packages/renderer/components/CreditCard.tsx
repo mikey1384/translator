@@ -51,7 +51,10 @@ export default function CreditCard() {
   ] as const;
 
   return (
-    <section className={cx(surfaceCardStyles, card)}>
+    <section
+      className={cx(surfaceCardStyles, card)}
+      data-translator-destination="settings-credits"
+    >
       <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: colors.text }}>
         {t('credits.title')}
       </h2>

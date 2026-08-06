@@ -101,6 +101,19 @@ const COMMANDS = {
     console.log('click-text', JSON.stringify(text), '→', r);
   },
 
+  // Real Playwright input click for controls that open a native file dialog.
+  // A DOM .click() is sufficient for ordinary React controls, but native
+  // dialogs need the app window focused and a trusted pointer event.
+  async 'pw-click-text'(text) {
+    if (!page) return console.log('ERROR: launch first');
+    const target = page
+      .locator('button:visible, a:visible, [role="button"]:visible, [role="tab"]:visible')
+      .filter({ hasText: text })
+      .first();
+    await target.click({ timeout: 15_000 });
+    console.log('pw-click-text', JSON.stringify(text), '→ OK');
+  },
+
   async type(text) {
     if (page) await page.keyboard.type(text, { delay: 20 });
     console.log('typed');

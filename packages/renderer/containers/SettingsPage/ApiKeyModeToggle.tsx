@@ -1,4 +1,4 @@
-import { css, cx } from '@emotion/css';
+import { cx } from '@emotion/css';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAiStore } from '../../state';
@@ -90,10 +90,7 @@ export default function ApiKeyModeToggle() {
     if (!result.success) {
       setStatusError(
         result.error ||
-          t(
-            'settings.apiKeyMode.toggleError',
-            'Failed to update preference.'
-          )
+          t('settings.apiKeyMode.toggleError', 'Failed to update preference.')
       );
       return;
     }
@@ -111,7 +108,10 @@ export default function ApiKeyModeToggle() {
   };
 
   return (
-    <section className={byoCardStyles}>
+    <section
+      className={byoCardStyles}
+      data-translator-destination="settings-provider"
+    >
       <h2 className={settingsCardTitleStyles}>
         {t('settings.aiProvider.title', 'AI Provider')}
       </h2>
@@ -142,23 +142,14 @@ export default function ApiKeyModeToggle() {
           </span>
           <span className={settingsMetaTextStyles}>
             {useApiKeysMode
-              ? t(
-                  'settings.apiKeyMode.usingApiKeys',
-                  'Stage5 credits off'
-                )
-              : t(
-                  'settings.apiKeyMode.usingCredits',
-                  'Stage5 credits on'
-                )}
+              ? t('settings.apiKeyMode.usingApiKeys', 'Stage5 credits off')
+              : t('settings.apiKeyMode.usingCredits', 'Stage5 credits on')}
           </span>
         </div>
         <Switch
           checked={useApiKeysMode}
           onChange={handleToggle}
-          aria-label={t(
-            'settings.apiKeyMode.toggleAria',
-            'Use my API keys'
-          )}
+          aria-label={t('settings.apiKeyMode.toggleAria', 'Use my API keys')}
         />
       </div>
 

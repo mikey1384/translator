@@ -9,3 +9,4 @@ import './network-log-listener';
 import './tab-status-reporter';
 import './tab-visibility-listener';
 import './mounted-download-lease-listener';
+import './translator-agent-listener';
