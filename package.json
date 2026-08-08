@@ -52,7 +52,9 @@
     "test:win": "cmd /c scripts\\test-windows-package.bat",
     "agent": "npm run --workspace @translator/agent-server cli --",
     "agent:mcp": "npm run --workspace @translator/agent-server mcp",
-    "agent:test": "npm run --workspace @translator/agent-server test"
+    "agent:test": "npm run --workspace @translator/agent-server test",
+    "distribution:check": "node scripts/update-distribution-manifests.mjs --check",
+    "distribution:update": "node scripts/update-distribution-manifests.mjs --write"
   },
   "devDependencies": {
     "@electron/osx-sign": "^2.0.0",
