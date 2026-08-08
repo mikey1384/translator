@@ -3,4 +3,4 @@ PackageIdentifier: Stage5Tools.Translator
 PackageVersion: 1.16.5
 DefaultLocale: en-US
 ManifestType: version
-ManifestVersion: 1.10.0
+ManifestVersion: 1.12.0

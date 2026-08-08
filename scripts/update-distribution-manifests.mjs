@@ -96,7 +96,7 @@ PackageIdentifier: Stage5Tools.Translator
 PackageVersion: ${version}
 DefaultLocale: en-US
 ManifestType: version
-ManifestVersion: 1.10.0
+ManifestVersion: 1.12.0
 `;
 
 const wingetInstaller = `# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
@@ -128,7 +128,7 @@ Installers:
         Publisher: Mikey Lee
         InstallerType: nullsoft
 ManifestType: installer
-ManifestVersion: 1.10.0
+ManifestVersion: 1.12.0
 `;
 
 const wingetLocale = `# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
@@ -157,7 +157,7 @@ Tags:
   - video
 ReleaseNotesUrl: https://github.com/mikey1384/translator/releases/tag/v${version}
 ManifestType: defaultLocale
-ManifestVersion: 1.10.0
+ManifestVersion: 1.12.0
 `;
 
 const files = new Map([
