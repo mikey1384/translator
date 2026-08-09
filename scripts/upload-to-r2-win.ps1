@@ -205,13 +205,34 @@ function Get-TagReleaseNotes {
     return $null
   }
 
-  $bodyLines = @(& git tag -l --format='%(contents:body)' $tag 2>$null)
-  if ($LASTEXITCODE -eq 0) {
-    $body = ($bodyLines -join "`n").Trim()
+  # Windows PowerShell 5.1 decodes native-process stdout with the active
+  # console code page. Capture Git through .NET with an explicit UTF-8 decoder
+  # so typographic punctuation and localized notes reach latest.yml intact.
+  $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+  $startInfo.FileName = 'git'
+  $startInfo.Arguments = "tag -l --format=`"%(contents:body)`" `"$tag`""
+  $startInfo.UseShellExecute = $false
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  $startInfo.CreateNoWindow = $true
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  $startInfo.StandardOutputEncoding = $utf8NoBom
+  $startInfo.StandardErrorEncoding = $utf8NoBom
+
+  $process = New-Object System.Diagnostics.Process
+  $process.StartInfo = $startInfo
+  $null = $process.Start()
+  $body = $process.StandardOutput.ReadToEnd().Trim()
+  $gitError = $process.StandardError.ReadToEnd().Trim()
+  $process.WaitForExit()
+
+  if ($process.ExitCode -eq 0) {
     if ($body.Length -gt 0) {
       Write-Host "Using release notes from local tag annotation body: $tag"
       return $body
     }
+  } elseif ($gitError.Length -gt 0) {
+    Write-Host "WARNING: Unable to read UTF-8 tag body for ${tag}: $gitError" -ForegroundColor Yellow
   }
 
   Write-Host "WARNING: Tag $tag annotation body is empty." -ForegroundColor Yellow
