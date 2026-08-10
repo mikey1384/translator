@@ -323,6 +323,8 @@ let services: {
   ffmpeg: FFmpegContext;
 } | null = null;
 let isQuitting = false;
+let quitCleanupPromise: Promise<void> | null = null;
+let quitAfterCleanupScheduled = false;
 
 const isDev = !app.isPackaged;
 
@@ -1224,29 +1226,49 @@ try {
     });
 }
 
-app.on('will-quit', async event => {
-  log.info(`[main.ts] 'will-quit' event triggered. isQuitting: ${isQuitting}`);
+async function prepareToQuit(reason: 'normal' | 'update'): Promise<void> {
   if (isQuitting) {
+    await quitCleanupPromise;
     return;
   }
-  isQuitting = true;
-  event.preventDefault();
 
-  log.info('[main.ts] Starting cleanup before quitting...');
-  try {
-    if (services?.fileManager?.cleanup) {
-      log.info('[main.ts] Attempting FileManager cleanup...');
-      await services.fileManager.cleanup();
-      log.info('[main.ts] FileManager cleanup finished.');
-    } else {
-      log.warn('[main.ts] FileManager service not available for cleanup.');
+  isQuitting = true;
+  quitCleanupPromise = (async () => {
+    log.info(`[main.ts] Starting cleanup before ${reason} quit...`);
+    try {
+      if (services?.fileManager?.cleanup) {
+        log.info('[main.ts] Attempting FileManager cleanup...');
+        await services.fileManager.cleanup();
+        log.info('[main.ts] FileManager cleanup finished.');
+      } else {
+        log.warn('[main.ts] FileManager service not available for cleanup.');
+      }
+    } catch (err) {
+      log.error('[main.ts] Error during cleanup:', err);
+    } finally {
+      log.info(`[main.ts] Cleanup finished for ${reason} quit.`);
     }
-  } catch (err) {
-    log.error('[main.ts] Error during cleanup:', err);
-  } finally {
-    log.info('[main.ts] Cleanup finished. Quitting app now.');
-    app.quit();
+  })();
+
+  await quitCleanupPromise;
+}
+
+app.on('will-quit', event => {
+  log.info(`[main.ts] 'will-quit' event triggered. isQuitting: ${isQuitting}`);
+  if (isQuitting) {
+    // Update installation calls prepareToQuit() before quitAndInstall(), so
+    // Squirrel's quit must pass through without being cancelled here.
+    return;
   }
+
+  event.preventDefault();
+  if (quitAfterCleanupScheduled) return;
+  quitAfterCleanupScheduled = true;
+
+  void prepareToQuit('normal').finally(() => {
+    log.info('[main.ts] Quitting app after cleanup.');
+    app.quit();
+  });
 });
 
 app.on('window-all-closed', () => {
@@ -1295,20 +1317,6 @@ async function createWindow() {
       preload: getShellAssetPath('shell-preload.cjs'),
     },
   });
-
-  // Initialize update handlers before renderer boot so IPC channels exist
-  // when the preload/renderer startup effects invoke update APIs.
-  try {
-    const updateHandlers = buildUpdateHandlers({
-      mainWindow,
-      isDev,
-    });
-    if (updateHandlers) {
-      log.info('[main.ts] Update handlers initialized.');
-    }
-  } catch (err: any) {
-    log.error('[main.ts] Error initializing update handlers:', err);
-  }
 
   tabManager.initTabManager({
     window: mainWindow,
@@ -1647,6 +1655,21 @@ app
       log.info(`[main.ts] Resolved log file path: ${resolvedLogPath}`);
     } catch (error) {
       console.error('[main.ts] Error configuring logging:', error);
+    }
+
+    // Register updater listeners and IPC exactly once for the lifetime of the
+    // main process. createWindow() may run repeatedly on macOS.
+    try {
+      const updateHandlers = buildUpdateHandlers({
+        isDev,
+        prepareToQuitForUpdate: () => prepareToQuit('update'),
+      });
+      if (updateHandlers) {
+        log.info('[main.ts] Update handlers initialized.');
+      }
+    } catch (err: any) {
+      log.error('[main.ts] Error initializing update handlers:', err);
+      throw err;
     }
 
     try {

@@ -91,7 +91,8 @@ const cask = `cask "stage5-translator" do
 end
 `;
 
-const wingetVersion = `# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
+const wingetVersion = `# yaml-language-server: $schema=https://aka.ms/winget-manifest.version.1.12.0.schema.json
+# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
 PackageIdentifier: Stage5Tools.Translator
 PackageVersion: ${version}
 DefaultLocale: en-US
@@ -99,7 +100,8 @@ ManifestType: version
 ManifestVersion: 1.12.0
 `;
 
-const wingetInstaller = `# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
+const wingetInstaller = `# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
+# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
 PackageIdentifier: Stage5Tools.Translator
 PackageVersion: ${version}
 InstallerType: nullsoft
@@ -131,7 +133,8 @@ ManifestType: installer
 ManifestVersion: 1.12.0
 `;
 
-const wingetLocale = `# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
+const wingetLocale = `# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
+# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
 PackageIdentifier: Stage5Tools.Translator
 PackageVersion: ${version}
 PackageLocale: en-US

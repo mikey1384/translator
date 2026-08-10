@@ -69,6 +69,7 @@ export default function GlobalModals() {
   const updateAvailable = useUpdateStore(s => s.available);
   const updateDownloading = useUpdateStore(s => s.downloading);
   const updateDownloaded = useUpdateStore(s => s.downloaded);
+  const updateInstalling = useUpdateStore(s => s.installing);
   const updateError = useUpdateStore(s => s.error);
   const checkForUpdates = useUpdateStore(s => s.check);
   const installUpdate = useUpdateStore(s => s.install);
@@ -122,6 +123,8 @@ export default function GlobalModals() {
   }, [changeVideoOpen, refreshRecentLocalMedia]);
 
   const handleRequiredUpdateAction = async () => {
+    if (updateInstalling) return;
+
     if (updateDownloaded) {
       await installUpdate();
       return;
@@ -292,14 +295,16 @@ export default function GlobalModals() {
             <Button
               variant="primary"
               onClick={() => void handleRequiredUpdateAction()}
-              disabled={updateDownloading}
-              isLoading={updateDownloading}
+              disabled={updateDownloading || updateInstalling}
+              isLoading={updateDownloading || updateInstalling}
             >
-              {updateDownloaded
-                ? t('common.installUpdateNow', 'Install Update')
-                : updateAvailable
-                  ? t('common.downloadUpdateNow', 'Download Update')
-                  : t('common.checkForUpdateNow', 'Check for Update')}
+              {updateInstalling
+                ? t('common.installingUpdate', 'Installing update...')
+                : updateDownloaded
+                  ? t('common.installUpdateNow', 'Install Update')
+                  : updateAvailable
+                    ? t('common.downloadUpdateNow', 'Download Update')
+                    : t('common.checkForUpdateNow', 'Check for Update')}
             </Button>
           </>
         }

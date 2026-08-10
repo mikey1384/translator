@@ -6,6 +6,7 @@ interface UpdateState {
   downloading: boolean;
   percent: number;
   downloaded: boolean;
+  installing: boolean;
   error?: string;
   updateInfo?: any;
   check: () => Promise<void>;
@@ -46,6 +47,7 @@ export const useUpdateStore = create<UpdateState>(set => {
     downloading: false,
     percent: 0,
     downloaded: false,
+    installing: false,
     error: undefined,
     updateInfo: undefined,
 
@@ -73,10 +75,17 @@ export const useUpdateStore = create<UpdateState>(set => {
     },
 
     install: async () => {
+      const s = useUpdateStore.getState();
+      if (s.installing) return;
+
       try {
+        set({ installing: true, error: undefined });
         await UpdateIPC.installUpdate();
       } catch (err: any) {
-        set({ error: err.message || 'Failed to install update' });
+        set({
+          installing: false,
+          error: err.message || 'Failed to install update',
+        });
       }
     },
 

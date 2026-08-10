@@ -74,6 +74,42 @@ jobs:
       - name: Build both architectures
         run: npm run package:mac
 
+      - name: Verify signed apps and updater archives
+        run: |
+          set -euo pipefail
+
+          APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
+          VERIFY_ROOT=$(mktemp -d)
+          trap 'rm -rf "$VERIFY_ROOT"' EXIT
+
+          verify_app() {
+            local app_path="$1"
+            echo "Verifying signed app: $app_path"
+            codesign --verify --deep --strict --verbose=4 "$app_path"
+            xcrun stapler validate "$app_path"
+            spctl --assess --type execute --verbose=4 "$app_path"
+          }
+
+          verify_zip() {
+            local arch="$1"
+            local zip_path="dist/Translator-${APP_VERSION}-darwin-${arch}.zip"
+            local extract_dir="$VERIFY_ROOT/$arch"
+
+            if [ ! -f "$zip_path" ]; then
+              echo "::error::Missing updater archive: $zip_path"
+              exit 1
+            fi
+
+            mkdir -p "$extract_dir"
+            ditto -x -k "$zip_path" "$extract_dir"
+            verify_app "$extract_dir/Translator.app"
+          }
+
+          verify_app "dist/mac/Translator.app"
+          verify_app "dist/mac-arm64/Translator.app"
+          verify_zip x64
+          verify_zip arm64
+
       - name: Extract tag annotation
         if: startsWith(github.ref, 'refs/tags/')
         id: tag_notes

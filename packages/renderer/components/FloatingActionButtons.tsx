@@ -210,6 +210,7 @@ export default function FloatingActionButtons({
   const downloading = useUpdateStore(s => s.downloading);
   const percent = useUpdateStore(s => s.percent);
   const downloaded = useUpdateStore(s => s.downloaded);
+  const installing = useUpdateStore(s => s.installing);
   const install = useUpdateStore(s => s.install);
   const check = useUpdateStore(s => s.check);
   const doDownload = () => useUpdateStore.getState().download();
@@ -267,6 +268,8 @@ export default function FloatingActionButtons({
   };
 
   const handleReloadClick = async () => {
+    if (installing) return;
+
     const blockSavePhaseReload = () => {
       useUrlStore
         .getState()
@@ -359,6 +362,39 @@ export default function FloatingActionButtons({
 
   // Determine button appearance based on update state
   const getButtonProps = () => {
+    if (installing) {
+      return {
+        title: t('common.installingUpdate', 'Installing update...'),
+        'aria-label': t('common.installingUpdate', 'Installing update...'),
+        'aria-live': 'polite' as const,
+        'aria-busy': true,
+        kind: 'update' as const,
+        className: updatePillDownloadingStyles,
+        label: t('common.installingUpdateShort', 'INSTALLING'),
+        meta: t('common.installingUpdate', 'Installing update...'),
+        icon: (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={downloadSpinnerStyles}
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="8"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="34 16"
+            />
+          </svg>
+        ),
+      };
+    }
+
     if (downloaded) {
       return {
         title: t(
@@ -595,7 +631,7 @@ export default function FloatingActionButtons({
             aria-label={buttonProps['aria-label'] ?? buttonProps.title}
             aria-live={buttonProps['aria-live'] ?? undefined}
             aria-busy={buttonProps['aria-busy'] ?? undefined}
-            disabled={downloading}
+            disabled={downloading || installing}
             className={cx(updatePillBaseStyles, buttonProps.className)}
           >
             <div className={iconContainerStyles}>
@@ -620,7 +656,7 @@ export default function FloatingActionButtons({
             aria-label={buttonProps['aria-label'] ?? buttonProps.title}
             size="lg"
             variant={buttonProps.variant}
-            disabled={downloading}
+            disabled={downloading || installing}
             icon={buttonProps.icon}
             className={buttonProps.className}
           />

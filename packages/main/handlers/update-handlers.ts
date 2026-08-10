@@ -4,7 +4,7 @@ import {
   UpdateInfo,
   ProgressInfo,
 } from 'electron-updater';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import log from 'electron-log';
 import { settingsStore } from '../store/settings-store.js';
 import { broadcastToApp } from '../utils/window.js';
@@ -161,10 +161,10 @@ function clearPostInstallNotice(expectedVersion?: string): void {
  * No extra "initialize…" call needed.
  * -------------------------------------------------------- */
 export function buildUpdateHandlers(opts: {
-  mainWindow: BrowserWindow;
   isDev: boolean;
+  prepareToQuitForUpdate: () => Promise<void>;
 }) {
-  const { isDev } = opts;
+  const { isDev, prepareToQuitForUpdate } = opts;
   let latestAvailableInfo: UpdateInfo | null = null;
 
   if (isDev) {
@@ -298,12 +298,26 @@ export function buildUpdateHandlers(opts: {
     }
   }
 
+  let installRequested = false;
+
   async function installUpdate(_evt: any): Promise<void> {
+    if (installRequested) {
+      log.info('[update] Ignoring duplicate install request');
+      return;
+    }
+
+    installRequested = true;
     try {
-      log.info('[update] Installing update...');
-      // will quit & relaunch automatically
+      log.info('[update] Preparing app for update installation...');
+      // Squirrel must observe every instance of the old bundle as fully
+      // terminated before it can replace /Applications/Translator.app.
+      // Finish our asynchronous cleanup first, then let quitAndInstall own
+      // the quit without the global will-quit handler preventing it.
+      await prepareToQuitForUpdate();
+      log.info('[update] Cleanup complete; installing update...');
       autoUpdater.quitAndInstall();
     } catch (err: any) {
+      installRequested = false;
       log.error('[update] Install failed:', err);
       throw err;
     }

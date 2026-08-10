@@ -5,7 +5,6 @@ const fs = require('fs');
 
 module.exports = async ({ appOutDir, packager }) => {
   const id = packager.platformSpecificBuildOptions.identity;
-  const ent = packager.platformSpecificBuildOptions.entitlements;
 
   // Sign vendored headless_shell binaries
   const resourcesPath = path.join(
@@ -54,22 +53,18 @@ module.exports = async ({ appOutDir, packager }) => {
   }
 
   function walkAndSign(dir) {
-    try {
-      for (const entry of fs.readdirSync(dir)) {
-        const fullPath = path.join(dir, entry);
-        const stat = fs.lstatSync(fullPath);
+    for (const entry of fs.readdirSync(dir)) {
+      const fullPath = path.join(dir, entry);
+      const stat = fs.lstatSync(fullPath);
 
-        if (stat.isDirectory()) {
-          walkAndSign(fullPath);
-        } else if (
-          entry === 'chrome-headless-shell' ||
-          entry === 'headless_shell'
-        ) {
-          signBinary(fullPath);
-        }
+      if (stat.isDirectory()) {
+        walkAndSign(fullPath);
+      } else if (
+        entry === 'chrome-headless-shell' ||
+        entry === 'headless_shell'
+      ) {
+        signBinary(fullPath);
       }
-    } catch (error) {
-      console.log(`[sign-chromium] Error walking ${dir}: ${error.message}`);
     }
   }
 
