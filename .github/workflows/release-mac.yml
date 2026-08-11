@@ -162,29 +162,56 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           set -euo pipefail
+          APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
           mkdir -p latest
-          # Copy the critical auto-updater files
+          # Keep the exact filenames referenced by latest-mac.yml. The updater
+          # resolves them relative to /mac/latest/, so aliases alone are not enough.
           cp dist/latest-mac.yml latest/
           cp dist/*.blockmap latest/
-          # Copy DMGs with clear names
-          cp dist/Translator-*-darwin-arm64.dmg latest/Translator-arm64.dmg
-          cp dist/Translator-*-darwin-x64.dmg   latest/Translator-x64.dmg
+          cp "dist/Translator-${APP_VERSION}-darwin-arm64.zip" latest/
+          cp "dist/Translator-${APP_VERSION}-darwin-x64.zip" latest/
+          cp "dist/Translator-${APP_VERSION}-darwin-arm64.dmg" latest/
+          cp "dist/Translator-${APP_VERSION}-darwin-x64.dmg" latest/
+
+          # Preserve the stable direct-download aliases used by the website.
+          cp "dist/Translator-${APP_VERSION}-darwin-arm64.dmg" latest/Translator-arm64.dmg
+          cp "dist/Translator-${APP_VERSION}-darwin-x64.dmg" latest/Translator-x64.dmg
 
           # Upload small metadata files first
           aws s3 cp latest/ "s3://${R2_BUCKET}/mac/latest/" \
             --recursive --exclude "*" --include "*.yml" --include "*.blockmap" \
             --endpoint-url "${R2_ENDPOINT}"
 
-          # Upload large DMGs individually to avoid R2 InvalidPart issues with recursive multipart
-          for dmg in Translator-arm64.dmg Translator-x64.dmg; do
-            echo "Uploading $dmg (single PUT)"
-            aws s3 cp "latest/$dmg" "s3://${R2_BUCKET}/mac/latest/$dmg" \
+          # Upload updater ZIPs, versioned DMGs, and stable DMG aliases
+          # individually to avoid R2 InvalidPart issues.
+          LARGE_ARTIFACTS=(
+            "Translator-${APP_VERSION}-darwin-arm64.zip"
+            "Translator-${APP_VERSION}-darwin-x64.zip"
+            "Translator-${APP_VERSION}-darwin-arm64.dmg"
+            "Translator-${APP_VERSION}-darwin-x64.dmg"
+            "Translator-arm64.dmg"
+            "Translator-x64.dmg"
+          )
+          for artifact in "${LARGE_ARTIFACTS[@]}"; do
+            echo "Uploading $artifact (single PUT)"
+            aws s3 cp "latest/$artifact" "s3://${R2_BUCKET}/mac/latest/$artifact" \
               --no-progress --no-multipart --endpoint-url "${R2_ENDPOINT}" || {
-              echo "Multipart fallback for $dmg (reduced concurrency)"
+              echo "Multipart fallback for $artifact (reduced concurrency)"
               AWS_MAX_CONCURRENCY=2 AWS_S3_MULTI_PART_CHUNK_SIZE=64MB \
-                aws s3 cp "latest/$dmg" "s3://${R2_BUCKET}/mac/latest/$dmg" \
+                aws s3 cp "latest/$artifact" "s3://${R2_BUCKET}/mac/latest/$artifact" \
                 --no-progress --endpoint-url "${R2_ENDPOINT}"
             }
+          done
+
+          # Fail the release if the public feed references an object that the
+          # canonical latest path cannot serve.
+          for artifact in \
+            "Translator-${APP_VERSION}-darwin-arm64.zip" \
+            "Translator-${APP_VERSION}-darwin-x64.zip" \
+            "Translator-${APP_VERSION}-darwin-arm64.dmg" \
+            "Translator-${APP_VERSION}-darwin-x64.dmg"; do
+            curl --fail --silent --show-error --head \
+              "https://downloads.stage5.tools/mac/latest/$artifact" >/dev/null
           done
 
       - name: Publish GitHub Release
