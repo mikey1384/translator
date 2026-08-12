@@ -7,9 +7,18 @@ import log from 'electron-log';
 import { STAGE5_API_URL } from './endpoints.js';
 import { withStage5AuthRetry } from './stage5-auth.js';
 import type { TranslationFunnelEvent } from './translation-funnel.js';
+import {
+  acknowledgeCriticalFailure,
+  listPendingCriticalFailures,
+  type PendingCriticalFailure,
+} from './startup-health.js';
 
 type MeaningfulUseFeature = 'video_open' | 'video_download';
-type ProductEvent = 'app_open' | 'app_meaningful_use' | TranslationFunnelEvent;
+type ProductEvent =
+  | 'app_open'
+  | 'app_meaningful_use'
+  | 'app_critical_failure'
+  | TranslationFunnelEvent;
 type TranslationWorkflow = 'full_srt';
 
 type ProductMeasurementStore = {
@@ -57,11 +66,13 @@ async function postProductEvent({
   event,
   feature,
   workflow,
+  criticalFailure,
 }: {
   eventId: string;
   event: ProductEvent;
   feature?: MeaningfulUseFeature;
   workflow?: TranslationWorkflow;
+  criticalFailure?: PendingCriticalFailure;
 }): Promise<void> {
   await withStage5AuthRetry(headers =>
     axios.post(
@@ -75,6 +86,18 @@ async function postProductEvent({
         locale: normalizedLocale(),
         ...(feature ? { feature } : {}),
         ...(workflow ? { workflow } : {}),
+        ...(criticalFailure
+          ? {
+              failureClass: criticalFailure.failureClass,
+              startupPhase: criticalFailure.startupPhase,
+              failedAppVersion: criticalFailure.failedAppVersion,
+              failedPlatform: criticalFailure.failedPlatform,
+              failedArchitecture: criticalFailure.failedArchitecture,
+              ...(criticalFailure.processReason
+                ? { processReason: criticalFailure.processReason }
+                : {}),
+            }
+          : {}),
       },
       {
         headers,
@@ -82,6 +105,24 @@ async function postProductEvent({
       }
     )
   );
+}
+
+export async function flushPendingCriticalFailures(): Promise<void> {
+  for (const criticalFailure of listPendingCriticalFailures()) {
+    try {
+      await postProductEvent({
+        eventId: criticalFailure.eventId,
+        event: 'app_critical_failure',
+        criticalFailure,
+      });
+      acknowledgeCriticalFailure(criticalFailure.eventId);
+    } catch (error) {
+      log.info(
+        `[product-measurement] Critical-failure measurement remains pending for retry (${measurementErrorLabel(error)}).`
+      );
+      return;
+    }
+  }
 }
 
 export async function trackAppOpen(): Promise<void> {

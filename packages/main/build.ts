@@ -112,6 +112,10 @@ cjsContent = `
 (async () => {
 ${cjsContent}
 })().catch(err => {
+  globalThis.__translatorStartupHealth?.recordFailure(
+    'main_process_exception',
+    undefined
+  );
   console.error('Error in main process:', err);
   process.exit(1);
 });

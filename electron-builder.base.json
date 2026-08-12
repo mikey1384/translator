@@ -49,6 +49,7 @@
   "files": [
     "packages/main/dist/**/*",
     "packages/main/boot.mjs",
+    "packages/main/startup-health.mjs",
     "packages/renderer/dist/**/*",
     "packages/renderer/locales/**/*",
     "index.js",

@@ -4,6 +4,36 @@ Use this dated log to align desktop product changes with GA4 and settled Stripe
 outcomes. Treat small samples as directional and compare releases sequentially;
 do not infer causality from calendar overlap alone.
 
+## 2026-08-12 — Critical startup and process health baseline
+
+- Status: prepared for Translator 1.16.9; production rollout evidence is added
+  here only after the API and signed desktop release are verified.
+- Problem: download clicks without a later `app_open` can indicate abandonment,
+  installer friction, an app that never launched, or a failure before the old
+  analytics code initialized. The prior measurement could not distinguish those
+  causes or measure later renderer and child-process terminations.
+- Change: install a packaged-app-only startup sentinel before the bundled main
+  process loads. It persists an interrupted startup locally and reports it after
+  the next successful authenticated launch. Runtime main-process, renderer, and
+  child-process failures use the same durable queue.
+- Privacy contract: `app_critical_failure` contains only an allowlisted failure
+  class, startup phase, failed app version, OS, architecture, and—only for a
+  renderer or child process—an allowlisted termination reason. The client stores
+  and the API accepts no error message, stack trace, path, filename, URL, media
+  metadata, subtitle text, customer content, or raw device identity. Classified
+  internal devices remain excluded server-side.
+- Reliability controls: a normal second-instance exit is explicitly successful;
+  normal shutdown process exits are ignored; malformed persisted records are
+  discarded; events are acknowledged locally only after the authenticated API
+  accepts them; the API and GA4 outbox deduplicate by event ID.
+- Primary read: critical failures per released-app `app_open`, segmented by
+  failed version, OS/architecture, failure class, startup phase, and process
+  reason. Preserve download-to-`app_open` by architecture as the broader control
+  because a device that never launches again cannot upload its sentinel.
+- Guardrails: telemetry must never delay or prevent startup, synthetic crashes
+  are not generated in production, and low-count diagnostics must not be treated
+  as customer-demand evidence.
+
 ## 2026-08-12 — Direct $1 first-value offer
 
 - Status: macOS Translator 1.16.8 shipped on 2026-08-12 at 13:38

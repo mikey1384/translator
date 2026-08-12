@@ -105,11 +105,18 @@ import { suggestVideosViaChat } from './services/video-suggestions.js';
 import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-gate.js';
 import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 import {
+  flushPendingCriticalFailures,
   trackAppOpen,
   trackFirstMeaningfulUse,
   trackTranslationFunnelEvent,
 } from './services/product-analytics.js';
 import { classifyTranslationOutcome } from './services/translation-funnel.js';
+import {
+  markStartupSuccessful,
+  recordCriticalFailure,
+  setStartupPhase,
+  type ProcessFailureReason,
+} from './services/startup-health.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -241,6 +248,8 @@ registerCheckoutReturnProtocol();
 
 if (!app.requestSingleInstanceLock()) {
   log.info('[main.ts] Another instance detected. Quitting this instance.');
+  // This is an expected early exit, not an interrupted startup.
+  markStartupSuccessful();
   app.quit();
   nodeProcess.exit(0);
 }
@@ -366,6 +375,7 @@ function getShellAssetPath(fileName: string) {
 }
 
 try {
+  setStartupPhase('services_initialization');
   log.info('[main.ts] Initializing Services...');
 
   const tempPath = getUrlDownloadScratchDir(
@@ -1209,6 +1219,10 @@ try {
     getPendingStage5UpdateRequiredNotice()
   );
 } catch (error) {
+  recordCriticalFailure(
+    'startup_initialization_failed',
+    'services_initialization'
+  );
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   app
     .whenReady()
@@ -1298,6 +1312,7 @@ app.on('activate', () => {
 });
 
 nodeProcess.on('uncaughtException', error => {
+  recordCriticalFailure('main_process_exception', 'runtime');
   log.error('[main.ts] UNCAUGHT EXCEPTION:', error);
   if (!isDev) {
     dialog.showErrorBox(
@@ -1309,7 +1324,34 @@ nodeProcess.on('uncaughtException', error => {
   }
 });
 
+nodeProcess.on('unhandledRejection', reason => {
+  recordCriticalFailure('main_process_rejection', 'runtime');
+  log.error('[main.ts] UNHANDLED REJECTION:', reason);
+  if (!isDev) {
+    dialog.showErrorBox(
+      'Unhandled Error',
+      'An unexpected background error occurred. The app will now quit.'
+    );
+    app.quit();
+    nodeProcess.exit(1);
+  }
+});
+
+app.on('child-process-gone', (_event, details) => {
+  if (!isQuitting && details.reason !== 'clean-exit') {
+    recordCriticalFailure(
+      'child_process_gone',
+      'runtime',
+      details.reason as ProcessFailureReason
+    );
+  }
+  log.error(
+    `[main.ts] Child process gone (${details.type}, ${details.reason}).`
+  );
+});
+
 async function createWindow() {
+  setStartupPhase('window_creation');
   log.info('[main.ts] Creating main window...');
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -1320,6 +1362,17 @@ async function createWindow() {
       sandbox: false,
       preload: getShellAssetPath('shell-preload.cjs'),
     },
+  });
+
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    if (!isQuitting && details.reason !== 'clean-exit') {
+      recordCriticalFailure(
+        'renderer_process_gone',
+        'runtime',
+        details.reason as ProcessFailureReason
+      );
+    }
+    log.error(`[main.ts] Shell renderer gone (${details.reason}).`);
   });
 
   tabManager.initTabManager({
@@ -1347,6 +1400,14 @@ async function createWindow() {
       } else {
         filePathTargetWebContentsId = active?.id ?? null;
       }
+    },
+    onCriticalFailure: processReason => {
+      if (isQuitting) return;
+      recordCriticalFailure(
+        'renderer_process_gone',
+        'runtime',
+        processReason as ProcessFailureReason
+      );
     },
     onTabCreated: (wc, { isFirst }) => {
       wc.on('found-in-page', (_event, result) => {
@@ -1620,6 +1681,7 @@ async function testYtDlpInstallation() {
 app
   .whenReady()
   .then(async () => {
+    setStartupPhase('app_ready');
     log.info('[main.ts] App is ready.');
 
     // Customize About panel
@@ -1705,6 +1767,7 @@ app
       }
     }
 
+    setStartupPhase('startup_cleanup');
     log.info('[main.ts] Performing startup cleanup...');
     if (services?.fileManager?.cleanup) {
       try {
@@ -1735,8 +1798,11 @@ app
     }
 
     await createWindow().then(() => {
+      setStartupPhase('renderer_ready');
+      markStartupSuccessful();
       log.info('[main.ts] Main window created.');
       void trackAppOpen();
+      void flushPendingCriticalFailures();
       if (isDev) {
         mainWindow?.webContents.on('devtools-opened', () => {
           // Additional dev logic if desired
@@ -1756,6 +1822,7 @@ app
     }, 4_000);
   })
   .catch(error => {
+    recordCriticalFailure('startup_initialization_failed');
     log.error('[main.ts] Error during app.whenReady:', error);
     dialog.showErrorBox(
       'Application Error',

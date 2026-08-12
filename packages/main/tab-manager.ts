@@ -35,6 +35,8 @@ interface TabManagerOptions {
   onTabCreated?: (wc: WebContents, info: { isFirst: boolean }) => void;
   /** Called after a tab is torn down (close button, Cmd+W, renderer crash). */
   onTabClosed?: (closedWebContentsId: number) => void;
+  /** Called for a renderer termination before the failed tab is closed. */
+  onCriticalFailure?: (reason: string) => void;
 }
 
 let win: BrowserWindow | null = null;
@@ -281,6 +283,9 @@ export async function createTab({
     log.error(
       `[tab-manager] Tab ${tab.id} renderer gone (${details.reason}); closing tab.`
     );
+    if (details.reason !== 'clean-exit') {
+      opts?.onCriticalFailure?.(details.reason);
+    }
     closeTab(tab.id);
   });
 
