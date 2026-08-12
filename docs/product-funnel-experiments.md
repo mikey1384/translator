@@ -6,8 +6,14 @@ do not infer causality from calendar overlap alone.
 
 ## 2026-08-12 — Critical startup and process health baseline
 
-- Status: prepared for Translator 1.16.9; production rollout evidence is added
-  here only after the API and signed desktop release are verified.
+- Status: shipped for macOS in Translator 1.16.9 on 2026-08-12 at 14:31
+  Asia/Bangkok from source commit `0b35208` and release workflow `31572908903`.
+  Native-architecture, signature, notarization, updater archive, GitHub asset,
+  R2 feed, and exact latest-artifact checks passed. The production contract was
+  deployed first as Stage5 API Worker `c567cbf8-fa29-4fd2-9f43-48548a48200b`;
+  Homebrew cask commit `7def90d` and validation run `31574542740` are current.
+  Windows remains in the pre-change cohort until the separately signed 1.16.9
+  build is completed and verified.
 - Problem: download clicks without a later `app_open` can indicate abandonment,
   installer friction, an app that never launched, or a failure before the old
   analytics code initialized. The prior measurement could not distinguish those
