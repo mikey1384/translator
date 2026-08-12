@@ -6,8 +6,15 @@ do not infer causality from calendar overlap alone.
 
 ## 2026-08-12 — YouTube download recovery baseline
 
-- Status: prepared for Translator 1.16.10; production release evidence will be
-  recorded here after the backend contract and signed app artifacts ship.
+- Status: shipped for macOS in Translator 1.16.10 on 2026-08-12 at 15:11
+  Asia/Bangkok from source commit `79f026c` and release workflow `31576165031`.
+  Native-architecture, signature, notarization, Gatekeeper, updater-archive,
+  GitHub asset, versioned R2, exact latest-artifact, and feed checks passed. The
+  production contract was deployed first from API commit `b7a3b5b` as Worker
+  `48da204f-8aa5-4c15-b65a-94cddb70b986`. Homebrew cask commit `0a478b0` and
+  validation run `31577381528` are current. Windows remains in the pre-change
+  cohort until the separately signed 1.16.10 build is completed and verified;
+  skip the superseded 1.16.9 Windows build.
 - Problem: a valid YouTube URL can reach a rate limit, login requirement, or
   human-verification step before the customer experiences Translator. The
   existing app opened an isolated local connection window and retried after the
