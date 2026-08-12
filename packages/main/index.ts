@@ -122,6 +122,7 @@ import {
   setStartupPhase,
   type ProcessFailureReason,
 } from './services/startup-health.js';
+import { createWindowCreationCoordinator } from './window-creation-coordinator.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -205,9 +206,15 @@ function parseCheckoutReturnUrl(rawUrl: string): {
 
 function focusMainWindow(): void {
   if (!mainWindow || mainWindow.isDestroyed()) {
-    createWindow().catch(err =>
-      log.error('[main.ts] Error creating window for checkout return:', err)
-    );
+    ensureMainWindow()
+      .then(window => {
+        if (window.isMinimized()) window.restore();
+        window.show();
+        window.focus();
+      })
+      .catch(err =>
+        log.error('[main.ts] Error creating window for checkout return:', err)
+      );
     return;
   }
 
@@ -233,7 +240,7 @@ function handleCheckoutReturnUrl(rawUrl: string): boolean {
 
   if (!mainWindow || mainWindow.isDestroyed()) {
     checkoutReturnUrlToOpenOnLoad = rawUrl;
-    createWindow().catch(err =>
+    ensureMainWindow().catch(err =>
       log.error('[main.ts] Error creating window for checkout return:', err)
     );
     return true;
@@ -314,14 +321,14 @@ app.on('second-instance', (_event, commandLine, _workingDirectory) => {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
   } else if (fileArg) {
-    createWindow().catch(err =>
+    ensureMainWindow().catch(err =>
       log.error(
         '[main.ts] Error creating window on second-instance for file:',
         err
       )
     );
   } else {
-    createWindow().catch(err =>
+    ensureMainWindow().catch(err =>
       log.error('[main.ts] Error creating window on second-instance:', err)
     );
   }
@@ -333,6 +340,34 @@ app.on('open-url', (event, url) => {
 });
 
 let mainWindow: BrowserWindow | null = null;
+let releaseWindowCreationGate: (() => void) | null = null;
+const windowCreationGate = new Promise<void>(resolve => {
+  releaseWindowCreationGate = resolve;
+});
+const mainWindowCoordinator = createWindowCreationCoordinator<BrowserWindow>({
+  getCurrent: () => mainWindow,
+  setCurrent: window => {
+    mainWindow = window;
+  },
+  isDestroyed: window => window.isDestroyed(),
+  create: createWindow,
+});
+
+function allowMainWindowCreation(): void {
+  if (!releaseWindowCreationGate) return;
+  const release = releaseWindowCreationGate;
+  releaseWindowCreationGate = null;
+  release();
+}
+
+async function ensureMainWindow(): Promise<BrowserWindow> {
+  // macOS can emit `activate` as soon as Electron is ready, while our startup
+  // cleanup is still running. Queue every creation request behind that cleanup
+  // and then coalesce competing requests through one shared promise.
+  await windowCreationGate;
+  return mainWindowCoordinator.ensure();
+}
+
 let services: {
   saveFileService: SaveFileService;
   fileManager: FileManager;
@@ -1333,17 +1368,30 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    log.info("[main.ts] 'activate': No windows open, creating new one.");
-    createWindow().catch(err =>
-      log.error('[main.ts] Error recreating window on activate:', err)
-    );
-  } else if (filePathToOpenOnLoad && mainWindow) {
+  const needsWindow = !mainWindow || mainWindow.isDestroyed();
+  if (needsWindow || mainWindowCoordinator.isCreating()) {
     log.info(
-      `[main.ts] 'activate' with pending file: ${filePathToOpenOnLoad}. Ensuring it's processed.`
+      `[main.ts] 'activate': Main window unavailable${
+        mainWindowCoordinator.isCreating() ? ' (creation already pending)' : ''
+      }; ensuring one window.`
     );
-    openVideoFile(filePathToOpenOnLoad);
   }
+
+  ensureMainWindow()
+    .then(window => {
+      if (window.isMinimized()) window.restore();
+      window.show();
+      window.focus();
+      if (filePathToOpenOnLoad) {
+        log.info(
+          `[main.ts] 'activate' with pending file: ${filePathToOpenOnLoad}. Ensuring it's processed.`
+        );
+        openVideoFile(filePathToOpenOnLoad);
+      }
+    })
+    .catch(err =>
+      log.error('[main.ts] Error ensuring window on activate:', err)
+    );
 });
 
 nodeProcess.on('uncaughtException', error => {
@@ -1385,10 +1433,10 @@ app.on('child-process-gone', (_event, details) => {
   );
 });
 
-async function createWindow() {
+async function createWindow(): Promise<BrowserWindow> {
   setStartupPhase('window_creation');
   log.info('[main.ts] Creating main window...');
-  mainWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
@@ -1398,8 +1446,16 @@ async function createWindow() {
       preload: getShellAssetPath('shell-preload.cjs'),
     },
   });
+  mainWindow = window;
 
-  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+  // Capture this exact instance. A stale window closing must never clear a
+  // newer main window that replaced it after a lifecycle transition.
+  window.on('closed', () => {
+    log.info('[main.ts] Main window closed.');
+    mainWindowCoordinator.clearIfCurrent(window);
+  });
+
+  window.webContents.on('render-process-gone', (_event, details) => {
     if (!isQuitting && details.reason !== 'clean-exit') {
       recordCriticalFailure(
         'renderer_process_gone',
@@ -1411,7 +1467,7 @@ async function createWindow() {
   });
 
   tabManager.initTabManager({
-    window: mainWindow,
+    window,
     rendererHtmlPath: getRendererHtmlPath(),
     preloadPath: getPreloadPath(),
     isDev,
@@ -1495,7 +1551,7 @@ async function createWindow() {
           handleCheckoutReturnUrl(checkoutReturnUrl);
         }
 
-        void initializeCreditBalanceState(mainWindow).catch(err => {
+        void initializeCreditBalanceState(window).catch(err => {
           log.warn('[main.ts] Initial credit balance sync failed:', err);
         });
       });
@@ -1505,7 +1561,7 @@ async function createWindow() {
   const shellPath = getShellAssetPath('shell.html');
   log.info(`[main.ts] Loading tab shell from: ${shellPath}`);
   try {
-    await mainWindow.loadFile(shellPath);
+    await window.loadFile(shellPath);
     await tabManager.createTab({ activate: true });
     log.info('[main.ts] Shell and first tab loaded successfully.');
   } catch (loadError: any) {
@@ -1515,17 +1571,12 @@ async function createWindow() {
       `Failed to load UI: ${loadError.message}`
     );
     app.quit();
-    return;
+    return window;
   }
 
   if (isDev) {
     tabManager.getActiveTabWebContents()?.openDevTools({ mode: 'detach' });
   }
-
-  mainWindow.on('closed', () => {
-    log.info('[main.ts] Main window closed.');
-    mainWindow = null;
-  });
 
   let currentFindText = '';
   ipcMain.on(
@@ -1557,9 +1608,11 @@ async function createWindow() {
 
   createApplicationMenu();
 
-  syncEntitlements({ window: mainWindow, silent: true }).catch(err => {
+  syncEntitlements({ window, silent: true }).catch(err => {
     log.warn('[main.ts] Initial entitlements sync failed:', err);
   });
+
+  return window;
 }
 
 function createApplicationMenu() {
@@ -1592,7 +1645,7 @@ function createApplicationMenu() {
             // On macOS the app outlives the window (closing the last tab
             // closes it); Cmd+T must bring the window back.
             if (!mainWindow || mainWindow.isDestroyed()) {
-              createWindow().catch(err =>
+              ensureMainWindow().catch(err =>
                 log.error('[main.ts] Error recreating window for New Tab:', err)
               );
               return;
@@ -1832,14 +1885,15 @@ app
       await testYtDlpInstallation();
     }
 
-    await createWindow().then(() => {
+    allowMainWindowCreation();
+    await ensureMainWindow().then(window => {
       setStartupPhase('renderer_ready');
       markStartupSuccessful();
       log.info('[main.ts] Main window created.');
       void trackAppOpen();
       void flushPendingCriticalFailures();
       if (isDev) {
-        mainWindow?.webContents.on('devtools-opened', () => {
+        window.webContents.on('devtools-opened', () => {
           // Additional dev logic if desired
         });
       }
@@ -1902,11 +1956,11 @@ function openVideoFile(filePath: string) {
     );
     filePathToOpenOnLoad = filePath;
     filePathTargetWebContentsId = activeTab?.id ?? null;
-    if (app.isReady() && BrowserWindow.getAllWindows().length === 0) {
+    if (app.isReady() && (!mainWindow || mainWindow.isDestroyed())) {
       log.info(
         '[main.ts] No windows open, creating one to handle queued file.'
       );
-      createWindow().catch(err =>
+      ensureMainWindow().catch(err =>
         log.error('[main.ts] Error creating window for queued file:', err)
       );
     }
