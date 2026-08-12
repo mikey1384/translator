@@ -1,7 +1,7 @@
 {
   "name": "translator",
   "private": true,
-  "version": "1.16.7",
+  "version": "1.16.8",
   "type": "module",
   "description": "Open-source desktop video discovery, subtitle translation, editing, dubbing, and export workstation",
   "author": "Mikey Lee",
@@ -114,7 +114,7 @@
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "node-machine-id": "^1.1.12",
-    "onnxruntime-node": "^1.24.3",
+    "onnxruntime-node": "1.23.2",
     "proxy-from-env": "^1.1.0",
     "puppeteer-core": "^24.10.0",
     "react-i18next": "^15.5.1",

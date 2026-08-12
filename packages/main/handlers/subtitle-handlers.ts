@@ -327,6 +327,7 @@ export async function handleGenerateSubtitles(
   subtitles?: string;
   segments?: SrtSegment[];
   cancelled?: boolean;
+  blockedReason?: 'insufficient_credits';
   error?: string;
   operationId: string;
   transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
@@ -553,6 +554,7 @@ export async function handleTranslateSubtitles(
     return {
       success: false,
       cancelled: isCancel,
+      blockedReason: creditCancel ? 'insufficient_credits' : undefined,
       error: isCancel ? undefined : error?.message || String(error),
       operationId,
     };

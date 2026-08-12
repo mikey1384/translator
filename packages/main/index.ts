@@ -107,7 +107,9 @@ import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 import {
   trackAppOpen,
   trackFirstMeaningfulUse,
+  trackTranslationFunnelEvent,
 } from './services/product-analytics.js';
+import { classifyTranslationOutcome } from './services/translation-funnel.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -596,12 +598,14 @@ try {
     log.info(
       `[main.ts/translate-subtitles] Starting operation: ${operationId}`
     );
+    void trackTranslationFunnelEvent('translation_started');
     try {
       const result = await subtitleHandlers.handleTranslateSubtitles(
         event,
         options,
         operationId
       );
+      void trackTranslationFunnelEvent(classifyTranslationOutcome(result));
       log.info(
         `[main.ts/translate-subtitles] Operation ${operationId} completed.`
       );

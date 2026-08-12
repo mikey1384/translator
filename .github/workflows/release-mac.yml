@@ -74,6 +74,9 @@ jobs:
       - name: Build both architectures
         run: npm run package:mac
 
+      - name: Verify native payload architectures
+        run: npm run verify:architectures
+
       - name: Verify signed apps and updater archives
         run: |
           set -euo pipefail

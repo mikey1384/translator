@@ -6,8 +6,11 @@ import Store from 'electron-store';
 import log from 'electron-log';
 import { STAGE5_API_URL } from './endpoints.js';
 import { withStage5AuthRetry } from './stage5-auth.js';
+import type { TranslationFunnelEvent } from './translation-funnel.js';
 
 type MeaningfulUseFeature = 'video_open' | 'video_download';
+type ProductEvent = 'app_open' | 'app_meaningful_use' | TranslationFunnelEvent;
+type TranslationWorkflow = 'full_srt';
 
 type ProductMeasurementStore = {
   meaningfulUseReported?: boolean;
@@ -53,10 +56,12 @@ async function postProductEvent({
   eventId,
   event,
   feature,
+  workflow,
 }: {
   eventId: string;
-  event: 'app_open' | 'app_meaningful_use';
+  event: ProductEvent;
   feature?: MeaningfulUseFeature;
+  workflow?: TranslationWorkflow;
 }): Promise<void> {
   await withStage5AuthRetry(headers =>
     axios.post(
@@ -69,6 +74,7 @@ async function postProductEvent({
         architecture: supportedArchitecture(),
         locale: normalizedLocale(),
         ...(feature ? { feature } : {}),
+        ...(workflow ? { workflow } : {}),
       },
       {
         headers,
@@ -125,4 +131,20 @@ export function trackFirstMeaningfulUse(
   })();
 
   return meaningfulUseInFlight;
+}
+
+export async function trackTranslationFunnelEvent(
+  event: TranslationFunnelEvent
+): Promise<void> {
+  try {
+    await postProductEvent({
+      eventId: randomUUID(),
+      event,
+      workflow: 'full_srt',
+    });
+  } catch (error) {
+    log.info(
+      `[product-measurement] ${event} measurement was not recorded (${measurementErrorLabel(error)}).`
+    );
+  }
 }

@@ -1,24 +1,55 @@
 #!/usr/bin/env bash
-set -e
-shopt -s globstar nullglob
+set -euo pipefail
 
-echo "🔍 Verifying native module architectures…"
-echo
+verify_macho_arch() {
+  local path="$1"
+  local expected_arch="$2"
 
-for app_path in "dist"/mac*/**/*.app; do
-  [[ -d "$app_path" ]] || continue
-  echo "📦 $app_path"
+  if [[ ! -f "$path" ]]; then
+    echo "::error::Missing native runtime file: $path" >&2
+    return 1
+  fi
+
+  if ! lipo "$path" -verify_arch "$expected_arch" 2>/dev/null; then
+    echo "::error::Expected $expected_arch Mach-O, got: $(file "$path")" >&2
+    return 1
+  fi
+
+  printf "  %-45s %s\n" "$(basename "$path")" "$(lipo -archs "$path")"
+}
+
+verify_app() {
+  local app_path="$1"
+  local expected_arch="$2"
+  local runtime_arch="$3"
+  local resources="$app_path/Contents/Resources/app.asar.unpacked/node_modules"
+  local onnx_dir="$resources/onnxruntime-node/bin/napi-v6/darwin/$runtime_arch"
+
+  if [[ ! -d "$app_path" ]]; then
+    echo "::error::Missing packaged app: $app_path" >&2
+    return 1
+  fi
+
+  echo "📦 $app_path ($expected_arch)"
   echo "----------------------------------------"
-  while IFS= read -r -d '' nodefile; do
-    if command -v lipo >/dev/null 2>&1; then
-      printf "  %-50s %s\n" "$(basename "$nodefile")" "$(lipo -archs "$nodefile")"
-    else
-      printf "  %-50s %s\n" "$(basename "$nodefile")" "$(file "$nodefile" | sed 's/.*: //')"
-    fi
-  done < <(find "$app_path" -name '*.node' -print0)
-  echo
-done
+  verify_macho_arch "$app_path/Contents/MacOS/Translator" "$expected_arch"
+  verify_macho_arch "$onnx_dir/onnxruntime_binding.node" "$expected_arch"
 
-echo "✅ Expectation:"
-echo "   • Intel build: all nodes → x86_64"
-echo "   • Apple-Silicon build: all nodes → arm64" 
+  local onnx_dylib
+  onnx_dylib="$(find "$onnx_dir" -maxdepth 1 -name 'libonnxruntime*.dylib' -print -quit)"
+  if [[ -z "$onnx_dylib" ]]; then
+    echo "::error::Missing ONNX Runtime dylib in $onnx_dir" >&2
+    return 1
+  fi
+  verify_macho_arch "$onnx_dylib" "$expected_arch"
+
+  verify_macho_arch "$resources/webrtcvad/build/Release/vad.node" "$expected_arch"
+  echo
+}
+
+echo "🔍 Verifying executable native payloads…"
+echo
+verify_app "dist/mac/Translator.app" "x86_64" "x64"
+verify_app "dist/mac-arm64/Translator.app" "arm64" "arm64"
+
+echo "✅ Both packaged apps contain loadable native payloads for their target architecture."

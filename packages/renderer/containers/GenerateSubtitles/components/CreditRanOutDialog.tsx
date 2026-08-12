@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import Modal from '../../../components/Modal';
 import Button from '../../../components/Button';
+import MicroCreditCheckoutButton from '../../../components/MicroCreditCheckoutButton';
 
 interface Props {
   open: boolean;
@@ -25,9 +26,13 @@ export default function CreditRanOutDialog({
           <Button variant="secondary" onClick={onOk}>
             {t('dialogs.creditRanOut.ok', 'OK')}
           </Button>
-          <Button variant="primary" onClick={onOpenSettings}>
+          <Button variant="secondary" onClick={onOpenSettings}>
             {t('dialogs.creditRanOut.openSettings', 'Open Settings')}
           </Button>
+          <MicroCreditCheckoutButton
+            placement="credit-ran-out-dialog"
+            onCheckoutCreated={onOk}
+          />
         </>
       }
     >
