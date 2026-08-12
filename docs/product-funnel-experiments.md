@@ -4,6 +4,38 @@ Use this dated log to align desktop product changes with GA4 and settled Stripe
 outcomes. Treat small samples as directional and compare releases sequentially;
 do not infer causality from calendar overlap alone.
 
+## 2026-08-12 — YouTube download recovery baseline
+
+- Status: prepared for Translator 1.16.10; production release evidence will be
+  recorded here after the backend contract and signed app artifacts ship.
+- Problem: a valid YouTube URL can reach a rate limit, login requirement, or
+  human-verification step before the customer experiences Translator. The
+  existing app opened an isolated local connection window and retried after the
+  user closed it, but the flow was unmeasured and the manual close was easy to
+  miss after a first-time sign-in.
+- Change: when a customer signs into YouTube for the first time in Translator's
+  isolated connection session, automatically close the connection window only
+  after valid YouTube authentication cookies exist and navigation has returned
+  to YouTube; then use the existing automatic retry. Previously authenticated,
+  stale sessions and non-login verification retain the explicit-close fallback.
+- Measurement: record URL download starts, yt-dlp completions, cancellations,
+  cookie requirements, coarse failures, and connection-window outcomes. Segment
+  only by `youtube|other`, the allowlisted verification cause, coarse failure
+  category, release/OS/architecture/locale, and whether connection began from
+  download recovery or Settings.
+- Privacy contract: never collect the URL, hostname, video or channel identity,
+  title, cookie value or count, account data, file path, raw yt-dlp output, or
+  error content. The API strict schema rejects unapproved fields and classified
+  internal devices remain excluded before the analytics outbox.
+- Primary read: YouTube yt-dlp completion per start; connection start per cookie
+  requirement; connection completion per connection start; and successful
+  automatic retry inferred from the next YouTube completion. Continue to read
+  `app_meaningful_use(video_download)` separately because yt-dlp completion is
+  not proof that the customer accepted and used the downloaded file.
+- Guardrails: no browser-cookie extraction, no CAPTCHA bypass, no change to
+  download-site access controls, no production synthetic traffic, and no claim
+  of improved conversion until real released-app cohorts accumulate.
+
 ## 2026-08-12 — Critical startup and process health baseline
 
 - Status: shipped for macOS in Translator 1.16.9 on 2026-08-12 at 14:31

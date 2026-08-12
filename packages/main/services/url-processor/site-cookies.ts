@@ -3,6 +3,7 @@ import log from 'electron-log';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
+import { shouldAutoCompleteYouTubeConnection } from '../url-download-funnel.js';
 
 type ConnectResult = {
   success: boolean;
@@ -231,6 +232,14 @@ export async function connectCookiesInteractive(
   }
 
   const partition = partitionForKey(key);
+  const connectionSession = session.fromPartition(partition);
+  const hadYouTubeAuthAtOpen =
+    key === 'youtube'
+      ? await connectionSession.cookies
+          .get({})
+          .then(hasValidYouTubeAuthCookiesInJar)
+          .catch(() => false)
+      : false;
 
   const promise: Promise<ConnectResult> = new Promise(resolve => {
     const win = new BrowserWindow({
@@ -238,7 +247,10 @@ export async function connectCookiesInteractive(
       height: 850,
       // Avoid modal/parent windows for auth flows. On some platforms, modal
       // sheets can feel "uncloseable" to users.
-      title: 'Connect (close this window when done)',
+      title:
+        key === 'youtube'
+          ? 'Connect YouTube — finish the check, then close this window'
+          : 'Connect — finish the check, then close this window',
       autoHideMenuBar: true,
       webPreferences: {
         nodeIntegration: false,
@@ -248,6 +260,49 @@ export async function connectCookiesInteractive(
       },
     });
     connectWinByKey.set(key, win);
+    let autoCloseTimer: NodeJS.Timeout | null = null;
+    let authCheckInFlight = false;
+
+    const maybeAutoCompleteYouTube = async () => {
+      if (
+        key !== 'youtube' ||
+        hadYouTubeAuthAtOpen ||
+        authCheckInFlight ||
+        autoCloseTimer ||
+        win.isDestroyed()
+      ) {
+        return;
+      }
+      authCheckInFlight = true;
+      try {
+        const cookies = await connectionSession.cookies.get({});
+        if (
+          shouldAutoCompleteYouTubeConnection({
+            hadAuthAtOpen: hadYouTubeAuthAtOpen,
+            hasAuthNow: hasValidYouTubeAuthCookiesInJar(cookies),
+            currentUrl: win.webContents.getURL(),
+          })
+        ) {
+          // Wait briefly for the redirected YouTube page to finish persisting
+          // the rest of its session before exporting the jar and retrying.
+          autoCloseTimer = setTimeout(() => {
+            if (!win.isDestroyed()) win.close();
+          }, 1_000);
+        }
+      } catch {
+        // Manual close remains the reliable fallback.
+      } finally {
+        authCheckInFlight = false;
+      }
+    };
+
+    const onCookieChanged = () => {
+      void maybeAutoCompleteYouTube();
+    };
+    connectionSession.cookies.on('changed', onCookieChanged);
+    win.webContents.on('did-finish-load', () => {
+      void maybeAutoCompleteYouTube();
+    });
 
     // Remove "Electron/x" from UA to reduce embedded-browser detection.
     try {
@@ -286,6 +341,8 @@ export async function connectCookiesInteractive(
     });
 
     const cleanup = () => {
+      if (autoCloseTimer) clearTimeout(autoCloseTimer);
+      connectionSession.cookies.removeListener('changed', onCookieChanged);
       connectWinByKey.delete(key);
       connectInFlightByKey.delete(key);
     };

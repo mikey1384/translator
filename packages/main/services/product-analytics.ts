@@ -12,12 +12,20 @@ import {
   listPendingCriticalFailures,
   type PendingCriticalFailure,
 } from './startup-health.js';
+import type {
+  NeedCookiesCause,
+  UrlConnectionContext,
+  UrlDownloadFailureCategory,
+  UrlDownloadFunnelEvent,
+  UrlSourceType,
+} from './url-download-funnel.js';
 
 type MeaningfulUseFeature = 'video_open' | 'video_download';
 type ProductEvent =
   | 'app_open'
   | 'app_meaningful_use'
   | 'app_critical_failure'
+  | UrlDownloadFunnelEvent
   | TranslationFunnelEvent;
 type TranslationWorkflow = 'full_srt';
 
@@ -67,12 +75,19 @@ async function postProductEvent({
   feature,
   workflow,
   criticalFailure,
+  urlDownload,
 }: {
   eventId: string;
   event: ProductEvent;
   feature?: MeaningfulUseFeature;
   workflow?: TranslationWorkflow;
   criticalFailure?: PendingCriticalFailure;
+  urlDownload?: {
+    sourceType: UrlSourceType;
+    cookieCause?: NeedCookiesCause;
+    failureCategory?: UrlDownloadFailureCategory;
+    connectionContext?: UrlConnectionContext;
+  };
 }): Promise<void> {
   await withStage5AuthRetry(headers =>
     axios.post(
@@ -95,6 +110,20 @@ async function postProductEvent({
               failedArchitecture: criticalFailure.failedArchitecture,
               ...(criticalFailure.processReason
                 ? { processReason: criticalFailure.processReason }
+                : {}),
+            }
+          : {}),
+        ...(urlDownload
+          ? {
+              sourceType: urlDownload.sourceType,
+              ...(urlDownload.cookieCause
+                ? { cookieCause: urlDownload.cookieCause }
+                : {}),
+              ...(urlDownload.failureCategory
+                ? { downloadFailure: urlDownload.failureCategory }
+                : {}),
+              ...(urlDownload.connectionContext
+                ? { connectionContext: urlDownload.connectionContext }
                 : {}),
             }
           : {}),
@@ -182,6 +211,28 @@ export async function trackTranslationFunnelEvent(
       eventId: randomUUID(),
       event,
       workflow: 'full_srt',
+    });
+  } catch (error) {
+    log.info(
+      `[product-measurement] ${event} measurement was not recorded (${measurementErrorLabel(error)}).`
+    );
+  }
+}
+
+export async function trackUrlDownloadFunnelEvent(
+  event: UrlDownloadFunnelEvent,
+  details: {
+    sourceType: UrlSourceType;
+    cookieCause?: NeedCookiesCause;
+    failureCategory?: UrlDownloadFailureCategory;
+    connectionContext?: UrlConnectionContext;
+  }
+): Promise<void> {
+  try {
+    await postProductEvent({
+      eventId: randomUUID(),
+      event,
+      urlDownload: details,
     });
   } catch (error) {
     log.info(

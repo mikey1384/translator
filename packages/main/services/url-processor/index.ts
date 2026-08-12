@@ -11,12 +11,11 @@ import {
   raceOperationCancellation,
   throwIfOperationCancelled,
 } from '../../utils/operation-cancellation.js';
+import {
+  NeedCookiesError,
+  type NeedCookiesCause,
+} from '../url-download-funnel.js';
 
-type NeedCookiesCause =
-  | '429'
-  | 'login_required'
-  | 'captcha_not_a_bot'
-  | 'other';
 type NeedCookiesCounters = Record<NeedCookiesCause, number>;
 
 type DownloadVideoFromPlatformFn =
@@ -54,9 +53,9 @@ const NEED_COOKIES_CAPTCHA_RE =
 
 function makeNeedCookiesCounters(): NeedCookiesCounters {
   return {
-    '429': 0,
+    rate_limited: 0,
     login_required: 0,
-    captcha_not_a_bot: 0,
+    human_verification: 0,
     other: 0,
   };
 }
@@ -349,7 +348,7 @@ export async function processVideoUrl(
         percent: PROGRESS.WARMUP_END,
         stage: 'NeedCookies',
       });
-      throw new Error('NeedCookies');
+      throw new NeedCookiesError(cause);
     };
     const getCookieCountForGating = async (): Promise<number | null> => {
       try {
@@ -386,7 +385,7 @@ export async function processVideoUrl(
       );
     }
     if (firstCheck.hasCaptchaOrHumanCheck) {
-      requestNeedCookies('captcha_not_a_bot', 'humanCheck=true');
+      requestNeedCookies('human_verification', 'humanCheck=true');
     }
 
     // For pure rate-limit (429-ish) errors, prefer a delayed retry once before forcing
@@ -426,7 +425,7 @@ export async function processVideoUrl(
         }
         if (retryCheck.hasCaptchaOrHumanCheck) {
           requestNeedCookies(
-            'captcha_not_a_bot',
+            'human_verification',
             'humanCheck=true, after429Retry=true'
           );
         }
@@ -435,7 +434,7 @@ export async function processVideoUrl(
           // Only request cookies when we don't already have app-managed cookies.
           const cookieCount = await getCookieCountForGating();
           if (cookieCount === 0) {
-            requestNeedCookies('429', '429-ish=true, afterRetry=true');
+            requestNeedCookies('rate_limited', '429-ish=true, afterRetry=true');
           }
           if (cookieCount && cookieCount > 0) {
             log.info(

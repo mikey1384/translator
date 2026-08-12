@@ -818,13 +818,14 @@ const electronAPI = {
 
   // --- App-managed cookies session (cross-platform) ---
   connectCookiesForUrl: (
-    url: string
+    url: string,
+    context: 'download_recovery' | 'settings' = 'settings'
   ): Promise<{
     success: boolean;
     cookiesWritten: number;
     cancelled: boolean;
     error?: string;
-  }> => ipcRenderer.invoke('cookies:connect', url),
+  }> => ipcRenderer.invoke('cookies:connect', url, context),
   getCookiesStatusForUrl: (
     url: string
   ): Promise<{ count: number; hasYouTubeAuth: boolean }> =>

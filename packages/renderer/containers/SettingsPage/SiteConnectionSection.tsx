@@ -40,7 +40,10 @@ export default function SiteConnectionSection() {
 
   const api = (window as any).electron as
     | {
-        connectCookiesForUrl?: (url: string) => Promise<{
+        connectCookiesForUrl?: (
+          url: string,
+          context?: 'download_recovery' | 'settings'
+        ) => Promise<{
           success: boolean;
           cookiesWritten: number;
           cancelled: boolean;
@@ -121,7 +124,7 @@ export default function SiteConnectionSection() {
     if (!api?.connectCookiesForUrl || busy) return;
     setBusy(true);
     try {
-      const res = await api.connectCookiesForUrl(valid);
+      const res = await api.connectCookiesForUrl(valid, 'settings');
       if (res?.success !== true) {
         if (!res?.cancelled) {
           setError(

@@ -28,6 +28,12 @@ import {
 import { VideoSuggestionDownloadHistoryManager } from '../services/video-suggestion-download-history.js';
 import { settingsStore } from '../store/settings-store.js';
 import { isIpcInvokeSenderGone } from '../utils/ipc-sender-liveness.js';
+import {
+  classifyUrlDownloadFailure,
+  classifyUrlSourceType,
+  NeedCookiesError,
+} from '../services/url-download-funnel.js';
+import { trackUrlDownloadFunnelEvent } from '../services/product-analytics.js';
 
 interface UrlHandlerServices {
   fileManager: FileManager;
@@ -143,6 +149,9 @@ export async function handleProcessUrl(
     return { success: false, error: 'Invalid URL format', operationId };
   }
 
+  const sourceType = classifyUrlSourceType(url);
+  void trackUrlDownloadFunnelEvent('url_download_started', { sourceType });
+
   try {
     sendProgress({ percent: 0, stage: 'Validating' });
 
@@ -178,6 +187,8 @@ export async function handleProcessUrl(
       }
     );
 
+    void trackUrlDownloadFunnelEvent('url_download_completed', { sourceType });
+
     registerPendingUrlResult(operationId, event.sender, result.videoPath);
     if (controller.signal.aborted) {
       return await finalizeCancelledUrlOperation({
@@ -205,6 +216,9 @@ export async function handleProcessUrl(
     return successResult;
   } catch (error: any) {
     if (error instanceof CancelledError) {
+      void trackUrlDownloadFunnelEvent('url_download_cancelled', {
+        sourceType,
+      });
       return await finalizeCancelledUrlOperation({
         operationId,
         discardPendingUrlResult,
@@ -238,6 +252,11 @@ export async function handleProcessUrl(
 
     // If upstream flagged NeedCookies, surface that stage instead of generic error
     if (rawErrorMessage === 'NeedCookies') {
+      void trackUrlDownloadFunnelEvent('url_download_cookie_required', {
+        sourceType,
+        cookieCause:
+          error instanceof NeedCookiesError ? error.causeCode : 'other',
+      });
       sendProgress({ percent: 0, stage: 'NeedCookies' });
       await discardPendingUrlResult(operationId);
       registryFinish(operationId);
@@ -245,6 +264,10 @@ export async function handleProcessUrl(
     }
 
     // Generic error fallback
+    void trackUrlDownloadFunnelEvent('url_download_failed', {
+      sourceType,
+      failureCategory: classifyUrlDownloadFailure(error),
+    });
     sendProgress({ percent: 0, stage: 'Error', error: userFriendlyMessage });
 
     await discardPendingUrlResult(operationId);

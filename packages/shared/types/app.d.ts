@@ -1496,7 +1496,10 @@ declare module '@shared-types/app' {
     }>;
     getErrorReportContext: () => Promise<ErrorReportContext>;
 
-    connectCookiesForUrl: (url: string) => Promise<{
+    connectCookiesForUrl: (
+      url: string,
+      context?: 'download_recovery' | 'settings'
+    ) => Promise<{
       success: boolean;
       cookiesWritten: number;
       cancelled: boolean;

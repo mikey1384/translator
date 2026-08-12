@@ -109,8 +109,13 @@ import {
   trackAppOpen,
   trackFirstMeaningfulUse,
   trackTranslationFunnelEvent,
+  trackUrlDownloadFunnelEvent,
 } from './services/product-analytics.js';
 import { classifyTranslationOutcome } from './services/translation-funnel.js';
+import {
+  classifyUrlSourceType,
+  type UrlConnectionContext,
+} from './services/url-download-funnel.js';
 import {
   markStartupSuccessful,
   recordCriticalFailure,
@@ -931,8 +936,38 @@ try {
   });
 
   // App-managed cookies session (cross-platform, avoids Windows DPAPI / locked DB issues)
-  ipcMain.handle('cookies:connect', (_evt, url: string) =>
-    connectCookiesInteractive(url)
+  ipcMain.handle(
+    'cookies:connect',
+    async (_evt, url: string, requestedContext?: UrlConnectionContext) => {
+      const sourceType = classifyUrlSourceType(url);
+      const connectionContext: UrlConnectionContext =
+        requestedContext === 'download_recovery'
+          ? 'download_recovery'
+          : 'settings';
+      void trackUrlDownloadFunnelEvent('url_cookie_connect_started', {
+        sourceType,
+        connectionContext,
+      });
+      try {
+        const result = await connectCookiesInteractive(url);
+        const event = result.success
+          ? 'url_cookie_connect_completed'
+          : result.cancelled
+            ? 'url_cookie_connect_cancelled'
+            : 'url_cookie_connect_failed';
+        void trackUrlDownloadFunnelEvent(event, {
+          sourceType,
+          connectionContext,
+        });
+        return result;
+      } catch (error) {
+        void trackUrlDownloadFunnelEvent('url_cookie_connect_failed', {
+          sourceType,
+          connectionContext,
+        });
+        throw error;
+      }
+    }
   );
   ipcMain.handle('cookies:clear', (_evt, url: string) =>
     clearCookiesForUrl(url)

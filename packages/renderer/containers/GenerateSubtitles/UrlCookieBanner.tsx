@@ -44,7 +44,10 @@ export default function UrlCookieBanner() {
 
     setConnecting(true);
     try {
-      const res = await (window as any).electron.connectCookiesForUrl?.(url);
+      const res = await (window as any).electron.connectCookiesForUrl?.(
+        url,
+        'download_recovery'
+      );
       if (!res) {
         setError(
           t('errors.connectFailed', 'Could not connect. Please try again.')
