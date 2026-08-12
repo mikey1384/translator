@@ -6,7 +6,12 @@ do not infer causality from calendar overlap alone.
 
 ## 2026-08-12 — Direct $1 first-value offer
 
-- Status: release target Translator 1.16.8; production verification pending.
+- Status: macOS Translator 1.16.8 shipped on 2026-08-12 at 13:38
+  Asia/Bangkok from source commit `2475dab` and release workflow `31569954652`.
+  The production analytics contract was deployed first as Stage5 API Worker
+  `b425de8d-3913-4376-9691-c874fe963e1c`. The separately signed Windows 1.16.8
+  build is not yet live, so Windows traffic remains in the pre-change cohort
+  until its owner-operated release is verified.
 - Baseline window: 2026-08-05 through 2026-08-11 (Asia/Bangkok).
 - Aggregate GA4 evidence: about 14 downloaders, 8 app devices opened, 3 devices
   reached the current video-open or video-download meaningful-use milestone, 1
