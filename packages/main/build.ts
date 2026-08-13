@@ -31,6 +31,8 @@ await esbuild.build({
     'ffmpeg-ffprobe-static', // needs to reference unpacked binaries
     'onnxruntime-node', // native .node addon
     'puppeteer', // keep external so it's loaded from node_modules
+    'puppeteer-core', // ESM package; bundling breaks import.meta.resolve in its browser tooling
+    '@puppeteer/browsers', // runtime dependency of Puppeteer Core; preserve its native ESM boundary
   ],
 });
 

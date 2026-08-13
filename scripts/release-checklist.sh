@@ -9,6 +9,10 @@ echo "1️⃣  Clean install..."
 npm run clean && npm install
 
 echo
+echo "🔒 Checking release dependency security gates..."
+npm run security:dependencies
+
+echo
 echo "2️⃣  Building both architectures..."
 npm run package
 
@@ -31,4 +35,4 @@ echo
 echo "5️⃣  If both launch without bouncing, you're ready to:"
 echo "   • Sign & notarize (if not automated)"
 echo "   • Push tags and upload artifacts"
-echo "   • Ship! 🚢" 
+echo "   • Ship! 🚢"
