@@ -6,8 +6,11 @@ do not infer causality from calendar overlap alone.
 
 ## 2026-08-14 — Exclude unreleased development builds from customer funnels
 
-- Status: included in the approved Translator 1.16.12 patch release; live
-  artifact and feed verification is recorded after the release workflow.
+- Status: shipped on macOS in Translator 1.16.12 on 2026-08-14 at 06:54
+  Asia/Bangkok from source commit `27d0baa`; release workflow `31754604357`
+  passed signing, notarization, exact updater-artifact, R2 and GitHub checks.
+  Homebrew cask commit `b7a2aed` and validation run `31755625583` passed.
+  The separately signed Windows 1.16.12 build remains pending.
 - Evidence: the privacy-safe 28-day analytics outbox contained 41 `app_open`
   events, including 16 macOS arm64 events reporting app version `0.0.0`. That is
   an unreleased development version and must not count as customer acquisition,
@@ -22,6 +25,9 @@ do not infer causality from calendar overlap alone.
 - Measurement: exclude all historical `0.0.0` rows from customer cohorts. After
   release, require every new outbox product event to carry the shipped version;
   reopen on any new `0.0.0`, malformed-version, or unpackaged telemetry.
+- Earliest review: 2026-08-21 after normal release adoption and analytics
+  processing. Segment macOS 1.16.12 first; add Windows only after its signed
+  release is verified.
 - Guardrails: no device identifier, URL, content, error detail or entitlement is
   added; customer event semantics are unchanged; production telemetry remains
   enabled for valid packaged builds.
