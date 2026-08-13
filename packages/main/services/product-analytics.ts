@@ -19,6 +19,7 @@ import type {
   UrlDownloadFunnelEvent,
   UrlSourceType,
 } from './url-download-funnel.js';
+import { shouldSendProductAnalytics } from './product-analytics-policy.js';
 
 type MeaningfulUseFeature = 'video_open' | 'video_download';
 type ProductEvent =
@@ -39,6 +40,13 @@ const measurementStore = new Store<ProductMeasurementStore>({
 });
 
 let meaningfulUseInFlight: Promise<void> | null = null;
+
+function productAnalyticsEnabled(): boolean {
+  return shouldSendProductAnalytics({
+    isPackaged: app.isPackaged,
+    appVersion: app.getVersion(),
+  });
+}
 
 function measurementErrorLabel(error: unknown): string {
   const status = (error as { response?: { status?: unknown } })?.response
@@ -137,6 +145,7 @@ async function postProductEvent({
 }
 
 export async function flushPendingCriticalFailures(): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
   for (const criticalFailure of listPendingCriticalFailures()) {
     try {
       await postProductEvent({
@@ -155,6 +164,7 @@ export async function flushPendingCriticalFailures(): Promise<void> {
 }
 
 export async function trackAppOpen(): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
   try {
     await postProductEvent({
       eventId: randomUUID(),
@@ -170,6 +180,7 @@ export async function trackAppOpen(): Promise<void> {
 export function trackFirstMeaningfulUse(
   feature: MeaningfulUseFeature
 ): Promise<void> {
+  if (!productAnalyticsEnabled()) return Promise.resolve();
   if (measurementStore.get('meaningfulUseReported') === true) {
     return Promise.resolve();
   }
@@ -206,6 +217,7 @@ export function trackFirstMeaningfulUse(
 export async function trackTranslationFunnelEvent(
   event: TranslationFunnelEvent
 ): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
   try {
     await postProductEvent({
       eventId: randomUUID(),
@@ -228,6 +240,7 @@ export async function trackUrlDownloadFunnelEvent(
     connectionContext?: UrlConnectionContext;
   }
 ): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
   try {
     await postProductEvent({
       eventId: randomUUID(),

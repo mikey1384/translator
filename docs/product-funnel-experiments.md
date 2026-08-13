@@ -4,6 +4,28 @@ Use this dated log to align desktop product changes with GA4 and settled Stripe
 outcomes. Treat small samples as directional and compare releases sequentially;
 do not infer causality from calendar overlap alone.
 
+## 2026-08-14 — Exclude unreleased development builds from customer funnels
+
+- Status: included in the approved Translator 1.16.12 patch release; live
+  artifact and feed verification is recorded after the release workflow.
+- Evidence: the privacy-safe 28-day analytics outbox contained 41 `app_open`
+  events, including 16 macOS arm64 events reporting app version `0.0.0`. That is
+  an unreleased development version and must not count as customer acquisition,
+  activation, reliability, conversion, or retention.
+- Change: every desktop product event now requires both `app.isPackaged` and a
+  valid non-`0.0.0` release version before it can be sent. This covers app-open,
+  meaningful-use, startup-failure recovery, URL-download, cookie-recovery, and
+  translation-funnel events.
+- Hypothesis: future customer-funnel denominators will no longer be inflated by
+  local development sessions, making release, OS, architecture, activation and
+  failure rates decision-relevant.
+- Measurement: exclude all historical `0.0.0` rows from customer cohorts. After
+  release, require every new outbox product event to carry the shipped version;
+  reopen on any new `0.0.0`, malformed-version, or unpackaged telemetry.
+- Guardrails: no device identifier, URL, content, error detail or entitlement is
+  added; customer event semantics are unchanged; production telemetry remains
+  enabled for valid packaged builds.
+
 ## 2026-08-12 — YouTube download recovery baseline
 
 - Status: shipped for macOS in Translator 1.16.10 on 2026-08-12 at 15:11
