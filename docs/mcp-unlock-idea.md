@@ -21,6 +21,32 @@ other operations with real provider costs remain outside the free tool set.
 Packaged-app exposure, local Whisper, and a customer-facing permission and
 entitlement UI remain future work.
 
+## OpenAI plugin distribution checkpoint (2026-08-16)
+
+OpenAI's current public submission path accepts skills-only, MCP-only, or
+combined plugins. The local stdio server is still the right product proof and
+desktop integration, but it is not by itself a publishable remote MCP plugin.
+An MCP-backed public submission requires a production HTTPS endpoint, verified
+publisher and domain, accurate read/write/open-world/destructive annotations,
+five positive and three negative test cases, and privacy-safe tool responses.
+Customer-specific data or write actions additionally require standards-compliant
+OAuth 2.1; a local pasted token is not a substitute for that public contract.
+
+A skills-only plugin is the smallest reversible distribution option because it
+does not require remote custody or OAuth. It may truthfully teach agents how to
+use the desktop app and local MCP workflow, but it must not imply that remote
+translation or pay-per-call service is live. Do not build or submit it merely to
+occupy a catalog slot. First measure qualified interest through the live
+`/agents` page and `agent_workflow_click`; if demand appears, package the local
+workflow and submission test matrix. Build a remote authenticated MCP endpoint
+only after entitlement mapping, privacy, support, abuse, and measured economics
+are independently ready.
+
+Primary references:
+
+- <https://developers.openai.com/plugins/deploy/submission>
+- <https://developers.openai.com/plugins/build/auth>
+
 ## The problem this solves
 
 Power users already pay $100–200/mo for Claude Max or ChatGPT Pro. They do
