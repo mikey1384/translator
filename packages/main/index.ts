@@ -111,7 +111,10 @@ import {
   trackTranslationFunnelEvent,
   trackUrlDownloadFunnelEvent,
 } from './services/product-analytics.js';
-import { classifyTranslationOutcome } from './services/translation-funnel.js';
+import {
+  classifyTranslationOutcome,
+  isTranslationMeaningfulUse,
+} from './services/translation-funnel.js';
 import {
   classifyUrlSourceType,
   type UrlConnectionContext,
@@ -655,7 +658,11 @@ try {
         options,
         operationId
       );
-      void trackTranslationFunnelEvent(classifyTranslationOutcome(result));
+      const translationOutcome = classifyTranslationOutcome(result);
+      void trackTranslationFunnelEvent(translationOutcome);
+      if (isTranslationMeaningfulUse(translationOutcome)) {
+        void trackFirstMeaningfulUse('translation');
+      }
       log.info(
         `[main.ts/translate-subtitles] Operation ${operationId} completed.`
       );

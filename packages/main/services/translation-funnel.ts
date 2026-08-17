@@ -17,3 +17,9 @@ export function classifyTranslationOutcome(result: {
   if (result.cancelled) return 'translation_cancelled';
   return 'translation_failed';
 }
+
+export function isTranslationMeaningfulUse(
+  event: TranslationFunnelEvent
+): boolean {
+  return event === 'translation_completed';
+}

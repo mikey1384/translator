@@ -21,7 +21,7 @@ import type {
 } from './url-download-funnel.js';
 import { shouldSendProductAnalytics } from './product-analytics-policy.js';
 
-type MeaningfulUseFeature = 'video_open' | 'video_download';
+type MeaningfulUseFeature = 'video_open' | 'video_download' | 'translation';
 type ProductEvent =
   | 'app_open'
   | 'app_meaningful_use'

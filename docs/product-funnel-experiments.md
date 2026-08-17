@@ -144,3 +144,22 @@ do not infer causality from calendar overlap alone.
   but no media URL, filename, subtitle text, target language, customer identity,
   or device ID in GA4. The API continues to pseudonymize devices and excludes
   classified internal devices before its analytics outbox.
+
+## 2026-08-17 — Count completed translation as first value
+
+- Status: prepared locally; not deployed or included in a signed desktop release.
+- Evidence: released-app telemetry can contain matched `translation_started` and
+  `translation_completed` events while `app_meaningful_use` remains zero because
+  the one-time activation marker only accepts video open/download features.
+- Hypothesis: treating a successful full-SRT translation as first product value
+  removes a measurement blind spot without changing the translation workflow or
+  collecting customer content.
+- Change: after `translation_completed`, emit the existing once-per-installation
+  `app_meaningful_use` event with allowlisted feature `translation`; extend the
+  API schema and measurement contract accordingly.
+- Primary read: released `app_meaningful_use(feature=translation)` events and
+  released `translation_completed` events, segmented by version and platform.
+- Guardrails: emit only after a successful completion, retain the existing
+  once-per-installation deduplication, exclude classified internal devices, and
+  collect no URL, filename, subtitle text, target language, identity, or device
+  identifier in GA4.
