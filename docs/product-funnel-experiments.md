@@ -147,7 +147,9 @@ do not infer causality from calendar overlap alone.
 
 ## 2026-08-17 — Count completed translation as first value
 
-- Status: prepared locally; not deployed or included in a signed desktop release.
+- Status: API deployed and macOS shipped in signed Translator 1.16.13;
+  Windows remains on 1.16.11 until the owner-operated signing machine publishes
+  1.16.13.
 - Evidence: released-app telemetry can contain matched `translation_started` and
   `translation_completed` events while `app_meaningful_use` remains zero because
   the one-time activation marker only accepts video open/download features.
@@ -163,3 +165,13 @@ do not infer causality from calendar overlap alone.
   once-per-installation deduplication, exclude classified internal devices, and
   collect no URL, filename, subtitle text, target language, identity, or device
   identifier in GA4.
+- Deployment evidence: API commit `86b30af` is live as Cloudflare Worker version
+  `3205c50e-1f1e-435e-9297-0c439085418b`; desktop commit `7edaeb2` shipped as
+  annotated tag `v1.16.13`. macOS release run `31981374614` passed builds,
+  signatures, notarization, updater metadata, R2 promotion, and GitHub artifact
+  verification. The live updater feed names version 1.16.13 and both exact ZIP
+  archives return HTTP 200. Homebrew cask commit `e4a7361` and validation run
+  `31982056505` passed.
+- Review dates: first directional read on or after 2026-08-24; 28-day read on or
+  after 2026-09-14. Segment by released app version and platform, and do not
+  compare Windows until its signed 1.16.13 cohort exists.
