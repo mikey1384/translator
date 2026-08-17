@@ -1,8 +1,17 @@
-import { parseSrt } from '../../shared/helpers';
-import { CHECKOUT_ALREADY_PENDING, CREDIT_PACKS } from '../../shared/constants';
+import { buildSrt, parseSrt } from '../../shared/helpers';
+import {
+  BASELINE_HEIGHT,
+  CHECKOUT_ALREADY_PENDING,
+  CREDIT_PACKS,
+  MIN_SUBTITLE_FONT_SIZE,
+  fontScale,
+} from '../../shared/constants';
 import { SUBTITLE_STYLE_PRESETS } from '../../shared/constants/subtitle-styles';
 import type {
+  SrtSegment,
+  RenderSubtitlesOptions,
   SubtitleDisplayMode,
+  SummaryEffortLevel,
   VideoQuality,
   VideoSuggestionChatResult,
   VideoSuggestionDownloadHistoryItem,
@@ -18,10 +27,30 @@ import {
 } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage';
 import * as OperationIPC from '../ipc/operation';
 import * as SystemIPC from '../ipc/system';
+import {
+  generateTranscriptSummary,
+  onTranscriptSummaryProgress,
+  transcribeOneLine,
+  translateOneLine,
+} from '../ipc/subtitles';
 import { suggestVideos } from '../ipc/video-suggestions';
+import {
+  executeDubGeneration,
+  executeSrtTranslation,
+  executeSubtitleGeneration,
+} from '../containers/GenerateSubtitles/utils/subtitleGeneration';
+import { ensureSubtitlesTranslatedForDubbing } from '../utils/runFullTranslation';
+import {
+  didSaveSubtitleFile,
+  saveCurrentSubtitles,
+  saveSubtitleFilesToPath,
+} from '../utils/saveSubtitles';
+import { unmountCurrentSubtitles } from '../utils/subtitle-library';
 import { acquireProvisionalUrlDownloadLibraryPath } from './mounted-download-leases';
+import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import { useAiStore } from '../state/ai-store';
 import { useSubStore } from '../state/subtitle-store';
+import { useTaskStore } from '../state/task-store';
 import { useUIStore } from '../state/ui-store';
 import { useUrlStore } from '../state/url-store';
 import { useVideoStore } from '../state/video-store';
@@ -128,6 +157,43 @@ type AgentBatchDownloadState = {
   finishedAtIso: string | null;
 };
 
+type AgentProcessingKind =
+  | 'transcription'
+  | 'translation'
+  | 'dubbing'
+  | 'summary'
+  | 'merge'
+  | 'cue-transcription'
+  | 'cue-translation'
+  | 'media-workflow';
+type AgentProcessingStatus =
+  | 'idle'
+  | 'running'
+  | 'cancelling'
+  | 'completed'
+  | 'failed'
+  | 'cancelled';
+type MountedSubtitleStrategy = 'fail' | 'discard' | 'save';
+
+const MOUNTED_SUBTITLE_STRATEGIES = new Set<MountedSubtitleStrategy>([
+  'fail',
+  'discard',
+  'save',
+]);
+const SUMMARY_EFFORT_LEVELS = new Set<SummaryEffortLevel>(['standard', 'high']);
+
+type AgentProcessingState = {
+  id: string | null;
+  kind: AgentProcessingKind | null;
+  status: AgentProcessingStatus;
+  stage: string;
+  cancelRequested: boolean;
+  startedAtIso: string | null;
+  finishedAtIso: string | null;
+  result: Record<string, unknown> | null;
+  error: string | null;
+};
+
 let lastVideoSearchContext: VideoSearchContext | null = null;
 let agentBatchDownloadState: AgentBatchDownloadState = {
   batchId: null,
@@ -140,6 +206,18 @@ let agentBatchDownloadState: AgentBatchDownloadState = {
   cancelRequested: false,
   startedAtIso: null,
   finishedAtIso: null,
+};
+
+let agentProcessingState: AgentProcessingState = {
+  id: null,
+  kind: null,
+  status: 'idle',
+  stage: '',
+  cancelRequested: false,
+  startedAtIso: null,
+  finishedAtIso: null,
+  result: null,
+  error: null,
 };
 
 function waitForRenderedDestination(): Promise<void> {
@@ -382,7 +460,11 @@ async function downloadHistorySnapshot(input?: {
 
 async function openDownloadHistoryItem(input?: {
   id?: string;
+  replaceSubtitles?: MountedSubtitleStrategy;
 }): Promise<Record<string, unknown>> {
+  if (hasActiveAppProcessing()) {
+    throw new Error('Translator already has an active processing operation.');
+  }
   const item = await requireDownloadHistoryItem(input);
   const localPath = sanitizeVideoSuggestionHistoryPath(item.localPath);
   if (!localPath) {
@@ -401,6 +483,9 @@ async function openDownloadHistoryItem(input?: {
     }
     const fallbackName =
       localPath.split(/[\\/]/).pop() || item.title || 'downloaded-video';
+    await prepareMountedSubtitles(
+      requireMountedSubtitleStrategy(input?.replaceSubtitles, 'fail')
+    );
     await useVideoStore.getState().setFile({
       name: fallbackName,
       path: localPath,
@@ -423,6 +508,7 @@ async function openDownloadHistoryItem(input?: {
 async function redownloadHistoryItem(input?: {
   id?: string;
   quality?: VideoQuality;
+  replaceSubtitles?: MountedSubtitleStrategy;
 }): Promise<Record<string, unknown>> {
   const item = await requireDownloadHistoryItem(input);
   let parsedUrl: URL;
@@ -444,20 +530,30 @@ async function redownloadHistoryItem(input?: {
   if (urlState.download.inProgress) {
     throw new Error('A video download is already in progress.');
   }
+  if (hasActiveAppProcessing()) {
+    throw new Error('Translator already has an active processing operation.');
+  }
+  const replacementStrategy = requireMountedSubtitleStrategy(
+    input?.replaceSubtitles,
+    'fail'
+  );
+  assertMountedSubtitleReplacementAllowed(replacementStrategy);
   const ui = useUIStore.getState();
   ui.setGeneratePanelOpen(true);
   ui.setGenerateSubtitlesWorkspaceTab('main');
   urlState.setUrlInput(parsedUrl.toString());
   urlState.setDownloadQuality(quality);
-  void urlState
-    .downloadMedia({ url: parsedUrl.toString(), preserveSubtitles: false })
-    .catch(error => {
-      useUrlStore
-        .getState()
-        .setOperationError(
-          error instanceof Error ? error.message : String(error)
-        );
-    });
+  void downloadAndMountAgentSource({
+    url: parsedUrl.toString(),
+    quality,
+    strategy: replacementStrategy,
+  }).catch(error => {
+    useUrlStore
+      .getState()
+      .setOperationError(
+        error instanceof Error ? error.message : String(error)
+      );
+  });
   return {
     redownloadingEntryId: item.id,
     redownloadingTitle: item.title,
@@ -527,6 +623,9 @@ async function runVideoSearch(
   mode: 'search' | 'more'
 ): Promise<Record<string, unknown>> {
   ensureVideoSuggestionStoreRuntime();
+  if (hasActiveAppProcessing()) {
+    throw new Error('Translator already has an active processing operation.');
+  }
   const search = useVideoSuggestionStore.getState();
   if (search.loading)
     throw new Error('A video recommendation search is running.');
@@ -702,6 +801,30 @@ async function runVideoSearch(
   };
 }
 
+async function cancelVideoSearch(): Promise<Record<string, unknown>> {
+  const search = useVideoSuggestionStore.getState();
+  const operationId = search.activeOperationId;
+  if (!operationId || !search.loading) return videoSearchSnapshot();
+  if (search.cancelling) return videoSearchSnapshot();
+  search.setCancellingOperation(operationId);
+  try {
+    const result = await OperationIPC.cancel(operationId);
+    if (!result?.success) {
+      throw new Error(
+        result?.message || 'Translator could not cancel the search.'
+      );
+    }
+    const current = useVideoSuggestionStore.getState();
+    current.nextRequestId();
+    current.clearActiveOperation(operationId);
+    current.resetLiveActivityState();
+    current.setError(null);
+  } finally {
+    useVideoSuggestionStore.getState().setCancellingOperation(null);
+  }
+  return videoSearchSnapshot();
+}
+
 async function runSuggestedVideoBatch(
   items: VideoSuggestionResultItem[],
   quality: VideoQuality
@@ -770,6 +893,9 @@ async function startSuggestedVideoBatch(input?: {
   ids?: string[];
   quality?: VideoQuality;
 }): Promise<Record<string, unknown>> {
+  if (hasActiveAppProcessing()) {
+    throw new Error('Translator already has an active processing operation.');
+  }
   if (agentBatchDownloadState.status === 'running') {
     throw new Error('A suggested-video batch download is already running.');
   }
@@ -851,6 +977,1049 @@ async function cancelSuggestedVideoBatch(): Promise<Record<string, unknown>> {
   return batchDownloadSnapshot();
 }
 
+function processingTaskSnapshot(task: Record<string, any>) {
+  return {
+    id: task.id ?? null,
+    stage: task.stage || '',
+    percent: Number(task.percent || 0),
+    inProgress: Boolean(task.inProgress),
+    isCompleted: Boolean(task.isCompleted),
+    model: task.model || null,
+    phaseKey: task.phaseKey || null,
+    current: task.current ?? null,
+    total: task.total ?? null,
+    unit: task.unit || null,
+    etaSeconds: task.etaSeconds ?? null,
+  };
+}
+
+function agentProcessingSnapshot(): Record<string, unknown> {
+  const tasks = useTaskStore.getState();
+  const video = useVideoStore.getState();
+  const subtitles = useSubStore.getState();
+  const download = useUrlStore.getState();
+  return {
+    ...agentProcessingState,
+    source: {
+      videoPath: video.originalPath ?? video.path ?? null,
+      videoReady: video.isReady,
+      durationSeconds: video.meta?.duration ?? null,
+    },
+    subtitles: {
+      cueCount: subtitles.order.length,
+      translatedCueCount: subtitles.order.filter(id =>
+        Boolean(subtitles.segments[id]?.translation?.trim())
+      ).length,
+      targetLanguage: subtitles.targetLanguage ?? null,
+      kind: subtitles.subtitleKind ?? null,
+      activeFilePath:
+        subtitles.activeFilePath ??
+        subtitles.exportPath ??
+        subtitles.originalPath ??
+        null,
+    },
+    outputs: {
+      dubbedVideoPath: video.dubbedVideoPath ?? null,
+      dubbedAudioPath: video.dubbedAudioPath ?? null,
+      downloadedFilePath: download.download.completedFilePath ?? null,
+    },
+    tasks: {
+      transcription: processingTaskSnapshot(tasks.transcription),
+      translation: processingTaskSnapshot(tasks.translation),
+      dubbing: processingTaskSnapshot(tasks.dubbing),
+      summary: processingTaskSnapshot(tasks.summary),
+      merge: processingTaskSnapshot(tasks.merge),
+      download: {
+        id: download.download.id,
+        stage: download.download.stage,
+        percent: download.download.percent,
+        inProgress: download.download.inProgress,
+        needCookies: download.needCookies,
+        error: download.error,
+      },
+    },
+  };
+}
+
+function hasActiveAppProcessing(): boolean {
+  const tasks = useTaskStore.getState();
+  return Boolean(
+    agentProcessingState.status === 'running' ||
+    agentProcessingState.status === 'cancelling' ||
+    agentBatchDownloadState.status === 'running' ||
+    useVideoSuggestionStore.getState().loading ||
+    useUrlStore.getState().download.inProgress ||
+    tasks.transcription.inProgress ||
+    tasks.translation.inProgress ||
+    tasks.dubbing.inProgress ||
+    tasks.summary.inProgress ||
+    tasks.merge.inProgress
+  );
+}
+
+function beginAgentProcessing(
+  kind: AgentProcessingKind,
+  runner: (agentOperationId: string) => Promise<Record<string, unknown>>
+): Record<string, unknown> {
+  if (
+    agentProcessingState.status === 'running' ||
+    agentProcessingState.status === 'cancelling' ||
+    hasActiveAppProcessing()
+  ) {
+    throw new Error(
+      'Translator already has an active processing operation. Poll app_processing_status or cancel it before starting another.'
+    );
+  }
+  const id = `agent-${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  agentProcessingState = {
+    id,
+    kind,
+    status: 'running',
+    stage: 'starting',
+    cancelRequested: false,
+    startedAtIso: new Date().toISOString(),
+    finishedAtIso: null,
+    result: null,
+    error: null,
+  };
+  void runner(id)
+    .then(result => {
+      if (agentProcessingState.id !== id) return;
+      const cancelled = agentProcessingState.cancelRequested;
+      agentProcessingState = {
+        ...agentProcessingState,
+        status: cancelled ? 'cancelled' : 'completed',
+        stage: cancelled ? 'cancelled' : 'completed',
+        finishedAtIso: new Date().toISOString(),
+        result: cancelled ? null : result,
+        error: null,
+      };
+    })
+    .catch(error => {
+      if (agentProcessingState.id !== id) return;
+      const message = error instanceof Error ? error.message : String(error);
+      const cancelled =
+        agentProcessingState.cancelRequested || /cancel/i.test(message);
+      agentProcessingState = {
+        ...agentProcessingState,
+        status: cancelled ? 'cancelled' : 'failed',
+        stage: cancelled ? 'cancelled' : 'failed',
+        finishedAtIso: new Date().toISOString(),
+        result: null,
+        error: cancelled ? null : message,
+      };
+    });
+  return agentProcessingSnapshot();
+}
+
+function throwIfAgentCancelled(): void {
+  if (agentProcessingState.cancelRequested) {
+    throw new Error('Operation cancelled.');
+  }
+}
+
+async function prepareMountedSubtitles(
+  strategy: MountedSubtitleStrategy
+): Promise<void> {
+  const mountedCount = useSubStore.getState().order.length;
+  if (mountedCount === 0) return;
+  if (strategy === 'fail') {
+    throw new Error(
+      'Subtitles are already mounted. Choose replace_subtitles=save or discard explicitly.'
+    );
+  }
+  if (strategy === 'save') {
+    const saved = await saveCurrentSubtitles();
+    if (!didSaveSubtitleFile(saved)) {
+      throw new Error(saved.error || 'Mounted subtitles could not be saved.');
+    }
+  }
+  unmountCurrentSubtitles();
+  useVideoStore.getState().clearDubbedMedia();
+}
+
+function assertMountedSubtitleReplacementAllowed(
+  strategy: MountedSubtitleStrategy
+): void {
+  if (useSubStore.getState().order.length > 0 && strategy === 'fail') {
+    throw new Error(
+      'Subtitles are already mounted. Choose replace_subtitles=save or discard explicitly.'
+    );
+  }
+}
+
+function requireMountedSubtitleStrategy(
+  value: unknown,
+  fallback: MountedSubtitleStrategy = 'fail'
+): MountedSubtitleStrategy {
+  const strategy = String(value || fallback) as MountedSubtitleStrategy;
+  if (!MOUNTED_SUBTITLE_STRATEGIES.has(strategy)) {
+    throw new Error(
+      'Unsupported subtitle replacement policy. Choose fail, save, or discard.'
+    );
+  }
+  return strategy;
+}
+
+async function runAgentTranscription(
+  agentOperationId: string,
+  strategy: MountedSubtitleStrategy
+): Promise<Record<string, unknown>> {
+  const video = useVideoStore.getState();
+  const videoPath =
+    video.originalPath ??
+    video.path ??
+    (video.file as any)?.path ??
+    (video.file as any)?._originalPath ??
+    null;
+  if (!videoPath)
+    throw new Error('Open or download a video before transcribing.');
+  if (!(await window.fileApi.fileExists(videoPath))) {
+    throw new Error(`The mounted video is no longer available: ${videoPath}`);
+  }
+  await prepareMountedSubtitles(strategy);
+  throwIfAgentCancelled();
+  agentProcessingState = {
+    ...agentProcessingState,
+    stage: 'transcribing',
+  };
+  useUIStore.getState().setGeneratePanelOpen(true);
+  useUIStore.getState().setEditPanelOpen(true);
+  const operationId = `${agentOperationId}-transcribe`;
+  const result = await executeSubtitleGeneration({
+    videoFile: video.file,
+    videoFilePath: videoPath,
+    targetLanguage: 'original',
+    operationId,
+  });
+  if (!result.success) {
+    if (result.cancelled) throw new Error('Transcription cancelled.');
+    throw new Error(
+      useUrlStore.getState().error ||
+        'Translator could not transcribe the video.'
+    );
+  }
+  const subtitles = useSubStore.getState();
+  return {
+    operationId,
+    videoPath,
+    cueCount: subtitles.order.length,
+    transcriptionEngine: subtitles.transcriptionEngine ?? null,
+  };
+}
+
+async function runAgentTranslation(
+  agentOperationId: string,
+  targetLanguage: string
+): Promise<Record<string, unknown>> {
+  const language = String(targetLanguage || '').trim();
+  if (!language) throw new Error('A target language is required.');
+  const subtitles = useSubStore.getState();
+  const segments = subtitles.order.map(id => subtitles.segments[id]);
+  if (!segments.length) {
+    throw new Error('Transcribe or mount subtitles before translating.');
+  }
+  throwIfAgentCancelled();
+  agentProcessingState = {
+    ...agentProcessingState,
+    stage: 'translating',
+  };
+  useUIStore.getState().setTargetLanguage(language);
+  const operationId = `${agentOperationId}-translate`;
+  const result = await executeSrtTranslation({
+    segments,
+    targetLanguage: language,
+    operationId,
+  });
+  if (!result.success) {
+    if (result.cancelled) throw new Error('Translation cancelled.');
+    throw new Error(
+      result.error || 'Translator could not translate the subtitles.'
+    );
+  }
+  const translated = useSubStore.getState();
+  return {
+    operationId,
+    targetLanguage: language,
+    cueCount: translated.order.length,
+    translatedCueCount: translated.order.filter(id =>
+      Boolean(translated.segments[id]?.translation?.trim())
+    ).length,
+  };
+}
+
+async function runAgentDubbing(
+  agentOperationId: string,
+  input: {
+    targetLanguage?: string;
+    voice?: string;
+    translateIfNeeded?: boolean;
+  }
+): Promise<Record<string, unknown>> {
+  const targetLanguage =
+    String(input.targetLanguage || '').trim() ||
+    useUIStore.getState().targetLanguage;
+  if (!targetLanguage) throw new Error('A target language is required.');
+  const voice =
+    String(input.voice || '').trim() || useUIStore.getState().dubVoice;
+  if (!DUB_VOICES.has(voice)) throw new Error('Unsupported dubbing voice.');
+  throwIfAgentCancelled();
+  useUIStore.getState().setTargetLanguage(targetLanguage);
+  if (input.translateIfNeeded !== false) {
+    agentProcessingState = {
+      ...agentProcessingState,
+      stage: 'preparing-dub-translation',
+    };
+    const ready = await ensureSubtitlesTranslatedForDubbing({
+      operationPrefix: `${agentOperationId}-dub-translate`,
+    });
+    if (!ready.ok)
+      throw new Error('Subtitles could not be prepared for dubbing.');
+    throwIfAgentCancelled();
+  }
+  const subtitles = useSubStore.getState();
+  const segments = subtitles.order.map(id => subtitles.segments[id]);
+  if (!segments.length) throw new Error('Subtitles are required for dubbing.');
+  if (
+    input.translateIfNeeded === false &&
+    segments.some(segment =>
+      Boolean(segment.original?.trim() && !segment.translation?.trim())
+    )
+  ) {
+    throw new Error(
+      'Some cues have no translation. Enable translate_if_needed or translate first.'
+    );
+  }
+  agentProcessingState = {
+    ...agentProcessingState,
+    stage: 'dubbing',
+  };
+  const video = useVideoStore.getState();
+  const videoPath =
+    video.originalPath ?? subtitles.sourceVideoPath ?? video.path ?? null;
+  const operationId = `${agentOperationId}-dub`;
+  const result = await executeDubGeneration({
+    segments,
+    operationId,
+    videoPath,
+    voice,
+    targetLanguage,
+    videoDurationSeconds: video.meta?.duration,
+  });
+  if (!result.success) {
+    if (result.cancelled) throw new Error('Dubbing cancelled.');
+    throw new Error('Translator could not generate the dubbed media.');
+  }
+  return {
+    operationId,
+    targetLanguage,
+    voice,
+    videoPath: result.videoPath ?? null,
+    audioPath: result.audioPath ?? null,
+  };
+}
+
+async function runAgentSummary(
+  agentOperationId: string,
+  input: {
+    targetLanguage?: string;
+    effortLevel?: SummaryEffortLevel;
+    includeHighlights?: boolean;
+  }
+): Promise<Record<string, unknown>> {
+  const subtitles = useSubStore.getState();
+  const segments = subtitles.order
+    .map(id => subtitles.segments[id])
+    .filter((segment): segment is SrtSegment => Boolean(segment));
+  if (!segments.length) {
+    throw new Error(
+      'Transcribe or mount subtitles before generating a summary.'
+    );
+  }
+  throwIfAgentCancelled();
+  const targetLanguage =
+    String(input.targetLanguage || '').trim() ||
+    useUIStore.getState().summaryLanguage;
+  const effortLevel =
+    input.effortLevel || useUIStore.getState().summaryEffortLevel;
+  if (!SUMMARY_EFFORT_LEVELS.has(effortLevel)) {
+    throw new Error('Unsupported summary quality. Choose standard or high.');
+  }
+  const operationId = `${agentOperationId}-summary`;
+  const taskStore = useTaskStore.getState();
+  if (!taskStore.tryStartSummary(operationId, 'Preparing summary')) {
+    throw new Error('Translator could not start summary generation.');
+  }
+  agentProcessingState = {
+    ...agentProcessingState,
+    stage: 'summarizing',
+  };
+  const removeProgressListener = onTranscriptSummaryProgress(progress => {
+    if (progress.operationId && progress.operationId !== operationId) return;
+    const percent = Math.max(0, Math.min(100, Number(progress.percent) || 0));
+    useTaskStore.getState().setSummary({
+      id: operationId,
+      stage: String(progress.stage || 'Generating summary'),
+      percent,
+      inProgress: percent < 100,
+    });
+  });
+  try {
+    const video = useVideoStore.getState();
+    const result = await generateTranscriptSummary({
+      segments: segments.map(segment => ({
+        start: segment.start,
+        end: segment.end,
+        text: segment.original,
+      })),
+      targetLanguage,
+      operationId,
+      videoPath:
+        video.originalPath ?? subtitles.sourceVideoPath ?? video.path ?? null,
+      includeHighlights: input.includeHighlights !== false,
+      effortLevel,
+    });
+    if (result.error) throw new Error(result.error);
+    if (result.cancelled || result.success === false) {
+      throw new Error('Summary generation cancelled.');
+    }
+    return {
+      operationId,
+      targetLanguage,
+      effortLevel,
+      summary: String(result.summary || '').trim(),
+      sections: Array.isArray(result.sections) ? result.sections : [],
+      highlights: Array.isArray(result.highlights) ? result.highlights : [],
+      highlightStatus: result.highlightStatus ?? null,
+    };
+  } finally {
+    removeProgressListener();
+    useTaskStore.getState().setSummary({
+      id: null,
+      inProgress: false,
+    });
+  }
+}
+
+function requireMountedCue(idValue: unknown): SrtSegment {
+  const id = String(idValue || '').trim();
+  const cue = useSubStore.getState().segments[id];
+  if (!cue)
+    throw new Error(`Subtitle cue was not found: ${id || '(missing ID)'}`);
+  return cue;
+}
+
+async function runAgentCueTranslation(
+  agentOperationId: string,
+  input: { id?: string; targetLanguage?: string }
+): Promise<Record<string, unknown>> {
+  const cue = requireMountedCue(input.id);
+  if (!cue.original?.trim())
+    throw new Error('The subtitle cue has no source text.');
+  const targetLanguage =
+    String(input.targetLanguage || '').trim() ||
+    useUIStore.getState().targetLanguage;
+  if (!targetLanguage) throw new Error('A target language is required.');
+  throwIfAgentCancelled();
+  const operationId = `${agentOperationId}-translate-cue`;
+  if (
+    !useTaskStore
+      .getState()
+      .tryStartTranslation(operationId, 'Translating subtitle cue')
+  ) {
+    throw new Error('Translator could not start cue translation.');
+  }
+  agentProcessingState = {
+    ...agentProcessingState,
+    stage: 'translating-cue',
+  };
+  try {
+    const store = useSubStore.getState();
+    const cueIndex = store.order.indexOf(cue.id);
+    const contextBefore = store.order
+      .slice(Math.max(0, cueIndex - 2), cueIndex)
+      .map(id => store.segments[id]);
+    const contextAfter = store.order
+      .slice(cueIndex + 1, cueIndex + 3)
+      .map(id => store.segments[id]);
+    const result = await translateOneLine({
+      segment: cue,
+      contextBefore,
+      contextAfter,
+      targetLanguage,
+      operationId,
+    });
+    if (result.error) throw new Error(result.error);
+    const translation = String(result.translation || '').trim();
+    if (!translation) throw new Error('Cue translation returned no text.');
+    useSubStore.getState().update(cue.id, { translation });
+    return {
+      operationId,
+      id: cue.id,
+      targetLanguage,
+      translation,
+    };
+  } finally {
+    useTaskStore.getState().setTranslation({
+      id: null,
+      inProgress: false,
+    });
+  }
+}
+
+async function runAgentCueTranscription(
+  agentOperationId: string,
+  input: { id?: string }
+): Promise<Record<string, unknown>> {
+  const cue = requireMountedCue(input.id);
+  const video = useVideoStore.getState();
+  const subtitles = useSubStore.getState();
+  const videoPath =
+    video.originalPath ?? subtitles.sourceVideoPath ?? video.path ?? null;
+  if (!videoPath) throw new Error('A source video is required.');
+  if (!(await window.fileApi.fileExists(videoPath))) {
+    throw new Error(`The mounted video is no longer available: ${videoPath}`);
+  }
+  throwIfAgentCancelled();
+  const operationId = `${agentOperationId}-transcribe-cue`;
+  useTaskStore.getState().setTranscription({
+    id: operationId,
+    stage: 'Transcribing subtitle cue',
+    percent: 0,
+    inProgress: true,
+  });
+  agentProcessingState = {
+    ...agentProcessingState,
+    stage: 'transcribing-cue',
+  };
+  try {
+    const cueIndex = subtitles.order.indexOf(cue.id);
+    const promptContext = subtitles.order
+      .slice(Math.max(0, cueIndex - 2), cueIndex)
+      .map(id => subtitles.segments[id]?.original?.trim())
+      .filter(Boolean)
+      .join(' \n ');
+    const result = await transcribeOneLine({
+      videoPath,
+      sourceUrl: video.sourceUrl ?? subtitles.sourceUrl ?? undefined,
+      segment: { start: cue.start, end: cue.end },
+      promptContext,
+      operationId,
+    });
+    if (result.error) throw new Error(result.error);
+    if (result.cancelled || result.success === false) {
+      throw new Error('Cue transcription cancelled.');
+    }
+    if (Array.isArray(result.segments) && result.segments.length > 0) {
+      const replacements = result.segments.map(segment => ({
+        start: segment.start,
+        end: segment.end,
+        original: segment.original,
+      }));
+      useSubStore.getState().replaceWithSegments(cue.id, replacements);
+      return {
+        operationId,
+        replacedId: cue.id,
+        cueCount: replacements.length,
+      };
+    }
+    const transcript = String(result.transcript || '').trim();
+    if (!transcript) throw new Error('Cue transcription returned no text.');
+    useSubStore.getState().update(cue.id, { original: transcript });
+    return { operationId, id: cue.id, transcript };
+  } finally {
+    useTaskStore.getState().setTranscription({
+      id: null,
+      stage: '',
+      percent: 0,
+      inProgress: false,
+    });
+  }
+}
+
+async function runAgentMerge(
+  agentOperationId: string,
+  input: { outputPath?: string; overwrite?: boolean }
+): Promise<Record<string, unknown>> {
+  const outputPath = String(input.outputPath || '').trim();
+  if (!outputPath) throw new Error('An explicit output path is required.');
+  if (!/\.mp4$/i.test(outputPath)) {
+    throw new Error('Merged video output path must end in .mp4.');
+  }
+  const video = useVideoStore.getState();
+  const subtitles = useSubStore.getState();
+  const videoPath =
+    video.originalPath ?? subtitles.sourceVideoPath ?? video.path ?? null;
+  if (!videoPath) throw new Error('A source video is required for merging.');
+  if (!(await window.fileApi.fileExists(videoPath))) {
+    throw new Error(`The mounted video is no longer available: ${videoPath}`);
+  }
+  throwIfAgentCancelled();
+  const segments = subtitles.order.map(id => subtitles.segments[id]);
+  if (!segments.length) throw new Error('Mounted subtitles are required.');
+  if (!video.isAudioOnly) {
+    const missing = [
+      video.meta?.duration ? null : 'duration',
+      video.meta?.width ? null : 'width',
+      video.meta?.height ? null : 'height',
+      video.meta?.frameRate ? null : 'frame rate',
+    ].filter(Boolean);
+    if (missing.length) {
+      throw new Error(
+        `Source video metadata is missing: ${missing.join(', ')}`
+      );
+    }
+  }
+  const operationId = `${agentOperationId}-merge`;
+  const ui = useUIStore.getState();
+  const targetHeight = video.meta?.height ?? BASELINE_HEIGHT;
+  let fontSizePx = video.isAudioOnly
+    ? Math.max(MIN_SUBTITLE_FONT_SIZE, ui.baseFontSize)
+    : Math.max(
+        MIN_SUBTITLE_FONT_SIZE,
+        Math.round(ui.baseFontSize * fontScale(targetHeight))
+      );
+  if (
+    !video.isAudioOnly &&
+    ui.previewSubtitleFontPx > 0 &&
+    ui.previewDisplayHeightPx > 0 &&
+    ui.previewVideoHeightPx > 0
+  ) {
+    fontSizePx = Math.max(
+      MIN_SUBTITLE_FONT_SIZE,
+      Math.round(
+        (ui.previewSubtitleFontPx * ui.previewVideoHeightPx) /
+          ui.previewDisplayHeightPx
+      )
+    );
+  }
+  const options: RenderSubtitlesOptions = {
+    operationId,
+    srtContent: buildSrt({
+      segments,
+      mode: ui.subtitleDisplayMode,
+      noWrap: true,
+    }),
+    subtitleSegments: segments,
+    outputDir: '/placeholder/output/dir',
+    outputSavePath: outputPath,
+    outputOverwrite: input.overwrite === true,
+    videoDuration: video.meta?.duration ?? 0,
+    videoWidth: video.meta?.width ?? 1280,
+    videoHeight: video.meta?.height ?? 720,
+    displayWidth: video.meta?.displayWidth ?? video.meta?.width ?? 1280,
+    displayHeight: video.meta?.displayHeight ?? video.meta?.height ?? 720,
+    videoRotationDeg: video.meta?.rotation ?? 0,
+    frameRate: Number(video.meta?.frameRate ?? 30),
+    originalVideoPath: videoPath,
+    fontSizePx,
+    stylePreset: ui.subtitleStyle,
+    outputMode: ui.subtitleDisplayMode,
+    overlayMode: video.isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
+  };
+  useTaskStore.getState().setMerge({
+    id: operationId,
+    stage: 'Starting merge',
+    percent: 0,
+    inProgress: true,
+  });
+  agentProcessingState = {
+    ...agentProcessingState,
+    stage: 'merging',
+  };
+  try {
+    const result = await subtitleRendererClient.renderSubtitles(options);
+    if (!result.success || !result.outputPath) {
+      throw new Error(result.error || 'Translator could not merge subtitles.');
+    }
+    return {
+      operationId,
+      outputPath: result.outputPath,
+      mode: ui.subtitleDisplayMode,
+      style: ui.subtitleStyle,
+    };
+  } finally {
+    useTaskStore.getState().setMerge({
+      id: null,
+      inProgress: false,
+    });
+  }
+}
+
+async function downloadAndMountAgentSource(input: {
+  url: string;
+  quality: VideoQuality;
+  strategy: MountedSubtitleStrategy;
+  checkCancellation?: boolean;
+}): Promise<{ videoPath: string; filename: string }> {
+  assertMountedSubtitleReplacementAllowed(input.strategy);
+  const urlState = useUrlStore.getState();
+  urlState.setDownloadQuality(input.quality);
+  const result = await urlState.downloadMedia({
+    url: input.url,
+    preserveSubtitles: true,
+    mountOnComplete: false,
+  });
+  const finalDownload = useUrlStore.getState();
+  const videoPath = finalDownload.download.completedFilePath;
+  if (!result?.success || !videoPath || finalDownload.error) {
+    if (finalDownload.needCookies) {
+      throw new Error(
+        'The source requires the app-managed cookie connection or manual verification.'
+      );
+    }
+    throw new Error(
+      String(
+        result?.error || finalDownload.error || 'Download did not complete.'
+      )
+    );
+  }
+  if (input.checkCancellation) throwIfAgentCancelled();
+  await prepareMountedSubtitles(input.strategy);
+  if (input.checkCancellation) throwIfAgentCancelled();
+  const filename =
+    String(result.filename || '').trim() ||
+    videoPath.split(/[\\/]/).pop() ||
+    'downloaded-video';
+  await useVideoStore.getState().setFile(
+    {
+      name: filename,
+      path: videoPath,
+      sourceUrl: input.url,
+    },
+    { skipStoredSubtitleAutoMount: true }
+  );
+  useUIStore.getState().setInputMode('file');
+  return { videoPath, filename };
+}
+
+async function runAgentMediaWorkflow(
+  agentOperationId: string,
+  input: {
+    url?: string;
+    path?: string;
+    quality?: VideoQuality;
+    runTo?: 'download' | 'transcribe' | 'summary' | 'translate' | 'dub';
+    targetLanguage?: string;
+    summaryEffortLevel?: SummaryEffortLevel;
+    includeHighlights?: boolean;
+    voice?: string;
+    replaceSubtitles?: MountedSubtitleStrategy;
+  }
+): Promise<Record<string, unknown>> {
+  if (input.url && input.path) {
+    throw new Error('Choose either a URL or a local path, not both.');
+  }
+  const runTo = input.runTo || 'transcribe';
+  const strategy = input.replaceSubtitles || 'fail';
+  let videoPath = String(input.path || '').trim() || null;
+  const steps: Record<string, unknown> = {};
+  if (input.url || videoPath) {
+    assertMountedSubtitleReplacementAllowed(strategy);
+  }
+  if (input.url) {
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(input.url);
+    } catch {
+      throw new Error('A valid http or https video URL is required.');
+    }
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new Error('Only http and https video URLs are supported.');
+    }
+    const quality = input.quality || '1080p';
+    if (!DOWNLOAD_QUALITIES.has(quality))
+      throw new Error('Unsupported quality.');
+    const urlState = useUrlStore.getState();
+    urlState.setUrlInput(parsedUrl.toString());
+    urlState.setDownloadQuality(quality);
+    agentProcessingState = {
+      ...agentProcessingState,
+      stage: 'downloading',
+    };
+    const downloaded = await downloadAndMountAgentSource({
+      url: parsedUrl.toString(),
+      quality,
+      strategy,
+      checkCancellation: true,
+    });
+    videoPath = downloaded.videoPath;
+    steps.download = { success: true, filePath: videoPath, quality };
+  }
+  if (videoPath && !input.url) {
+    if (!(await window.fileApi.fileExists(videoPath))) {
+      throw new Error(`The source file does not exist: ${videoPath}`);
+    }
+    await prepareMountedSubtitles(strategy);
+    throwIfAgentCancelled();
+    await useVideoStore.getState().setFile(
+      {
+        name: videoPath.split(/[\\/]/).pop() || 'local-video',
+        path: videoPath,
+      },
+      { skipStoredSubtitleAutoMount: true }
+    );
+    useUIStore.getState().setInputMode('file');
+  }
+  if (runTo === 'download') {
+    if (!videoPath) throw new Error('Provide a URL or local path to open.');
+    return { runTo, videoPath, steps };
+  }
+  if (!videoPath && !useVideoStore.getState().path) {
+    throw new Error('Provide a URL or local path, or open a video first.');
+  }
+  throwIfAgentCancelled();
+  steps.transcription = await runAgentTranscription(agentOperationId, strategy);
+  throwIfAgentCancelled();
+  if (runTo === 'transcribe') {
+    return { runTo, videoPath, steps };
+  }
+  if (runTo === 'summary') {
+    steps.summary = await runAgentSummary(agentOperationId, {
+      targetLanguage: input.targetLanguage,
+      effortLevel: input.summaryEffortLevel,
+      includeHighlights: input.includeHighlights,
+    });
+    return { runTo, videoPath, steps };
+  }
+  const targetLanguage = String(input.targetLanguage || '').trim();
+  if (!targetLanguage) {
+    throw new Error(
+      'target_language is required when run_to is translate or dub.'
+    );
+  }
+  steps.translation = await runAgentTranslation(
+    agentOperationId,
+    targetLanguage
+  );
+  throwIfAgentCancelled();
+  if (runTo === 'translate') {
+    return { runTo, videoPath, targetLanguage, steps };
+  }
+  steps.dubbing = await runAgentDubbing(agentOperationId, {
+    targetLanguage,
+    voice: input.voice,
+    translateIfNeeded: false,
+  });
+  return { runTo, videoPath, targetLanguage, steps };
+}
+
+async function cancelAgentProcessing(): Promise<Record<string, unknown>> {
+  const tasks = useTaskStore.getState();
+  const mergeOperationId = tasks.merge.id;
+  if (mergeOperationId && tasks.merge.inProgress) {
+    const cancellation =
+      await subtitleRendererClient.cancelMerge(mergeOperationId);
+    if (cancellation.accepted) {
+      agentProcessingState = {
+        ...agentProcessingState,
+        status: 'cancelling',
+        stage: 'cancelling',
+        cancelRequested: true,
+      };
+    }
+    return {
+      ...agentProcessingSnapshot(),
+      cancellation,
+    };
+  }
+  const ids = new Set(
+    [
+      useUrlStore.getState().download.id,
+      tasks.transcription.id,
+      tasks.translation.id,
+      tasks.dubbing.id,
+      tasks.summary.id,
+    ].filter((id): id is string => Boolean(id))
+  );
+  if (agentProcessingState.status === 'running') {
+    agentProcessingState = {
+      ...agentProcessingState,
+      status: 'cancelling',
+      stage: 'cancelling',
+      cancelRequested: true,
+    };
+  }
+  await Promise.all(
+    [...ids].map(id => OperationIPC.cancel(id).catch(() => undefined))
+  );
+  return agentProcessingSnapshot();
+}
+
+function subtitleBatchSnapshot(input?: {
+  offset?: number;
+  limit?: number;
+}): Record<string, unknown> {
+  const subtitles = useSubStore.getState();
+  const offset = Math.max(0, Math.floor(input?.offset || 0));
+  const limit = Math.min(100, Math.max(1, Math.floor(input?.limit || 50)));
+  const ids = subtitles.order.slice(offset, offset + limit);
+  return {
+    offset,
+    limit,
+    total: subtitles.order.length,
+    hasMore: offset + ids.length < subtitles.order.length,
+    cues: ids.map(id => {
+      const cue = subtitles.segments[id];
+      return {
+        id: cue.id,
+        index: cue.index,
+        start: cue.start,
+        end: cue.end,
+        original: cue.original,
+        translation: cue.translation || '',
+      };
+    }),
+  };
+}
+
+function updateSubtitleBatch(input?: {
+  updates?: Array<{
+    id?: string;
+    original?: string;
+    translation?: string;
+    start?: number;
+    end?: number;
+  }>;
+}): Record<string, unknown> {
+  if (hasActiveAppProcessing()) {
+    throw new Error('Wait for active media processing before editing cues.');
+  }
+  const updates = input?.updates || [];
+  if (!updates.length) throw new Error('Provide at least one subtitle update.');
+  const store = useSubStore.getState();
+  const validated = updates.map(update => {
+    const id = String(update.id || '').trim();
+    const current = store.segments[id];
+    if (!current) throw new Error(`Subtitle cue was not found: ${id}`);
+    const patch: Partial<SrtSegment> = {};
+    if (update.original !== undefined) patch.original = update.original;
+    if (update.translation !== undefined)
+      patch.translation = update.translation;
+    if (update.start !== undefined) patch.start = update.start;
+    if (update.end !== undefined) patch.end = update.end;
+    const nextStart = Number(patch.start ?? current.start);
+    const nextEnd = Number(patch.end ?? current.end);
+    if (
+      !Number.isFinite(nextStart) ||
+      !Number.isFinite(nextEnd) ||
+      nextStart < 0
+    ) {
+      throw new Error(`Subtitle cue has invalid timing: ${id}`);
+    }
+    if (nextEnd <= nextStart) {
+      throw new Error(`Subtitle cue end must be after start: ${id}`);
+    }
+    return { id, patch };
+  });
+  for (const { id, patch } of validated) {
+    store.update(id, patch);
+  }
+  return {
+    updated: updates.length,
+    subtitles: subtitleBatchSnapshot({ offset: 0, limit: 1 }),
+  };
+}
+
+function mutateMountedSubtitles(input?: {
+  operation?: 'insert_after' | 'remove' | 'shift' | 'shift_all';
+  id?: string;
+  seconds?: number;
+  confirm?: string;
+}): Record<string, unknown> {
+  if (hasActiveAppProcessing()) {
+    throw new Error('Wait for active media processing before editing cues.');
+  }
+  const operation = input?.operation;
+  const store = useSubStore.getState();
+  if (!store.order.length) throw new Error('There are no mounted subtitles.');
+  if (operation === 'shift_all') {
+    const seconds = Number(input?.seconds);
+    if (!Number.isFinite(seconds) || seconds === 0) {
+      throw new Error('shift_all requires a finite, non-zero seconds value.');
+    }
+    store.shiftAll(seconds);
+    return { operation, seconds, cueCount: store.order.length };
+  }
+  const cue = requireMountedCue(input?.id);
+  if (operation === 'insert_after') {
+    const insertedId = store.insertAfter(cue.id);
+    if (!insertedId) throw new Error('Translator could not insert the cue.');
+    return { operation, afterId: cue.id, insertedId };
+  }
+  if (operation === 'remove') {
+    if (input?.confirm !== 'REMOVE') {
+      throw new Error('Removing a cue requires confirm=REMOVE.');
+    }
+    store.remove(cue.id);
+    return {
+      operation,
+      removedId: cue.id,
+      cueCount: useSubStore.getState().order.length,
+    };
+  }
+  if (operation === 'shift') {
+    const seconds = Number(input?.seconds);
+    if (!Number.isFinite(seconds) || seconds === 0) {
+      throw new Error('shift requires a finite, non-zero seconds value.');
+    }
+    store.shift(cue.id, seconds);
+    const shiftedCue = useSubStore.getState().segments[cue.id];
+    return {
+      operation,
+      id: cue.id,
+      seconds,
+      start: shiftedCue.start,
+      end: shiftedCue.end,
+    };
+  }
+  throw new Error('Unsupported subtitle mutation operation.');
+}
+
+async function exportMountedSubtitles(input?: {
+  path?: string;
+  mode?: SubtitleDisplayMode;
+  overwrite?: boolean;
+}): Promise<Record<string, unknown>> {
+  if (hasActiveAppProcessing()) {
+    throw new Error('Wait for active media processing before exporting cues.');
+  }
+  const path = requirePath(input);
+  const absolutePath =
+    path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path) || /^\\\\/.test(path);
+  if (!absolutePath) {
+    throw new Error('Subtitle export path must be absolute.');
+  }
+  if (!/\.srt$/i.test(path)) {
+    throw new Error('Subtitle export path must end in .srt.');
+  }
+  if ((await window.fileApi.fileExists(path)) && input?.overwrite !== true) {
+    throw new Error(
+      'Subtitle export already exists. Confirm overwrite explicitly.'
+    );
+  }
+  const subtitles = useSubStore.getState();
+  const segments = subtitles.order.map(id => subtitles.segments[id]);
+  if (!segments.length)
+    throw new Error('There are no mounted subtitles to export.');
+  const mode = input?.mode || useUIStore.getState().subtitleDisplayMode;
+  if (!DISPLAY_MODES.has(mode))
+    throw new Error('Unsupported subtitle export mode.');
+  const result = await saveSubtitleFilesToPath(path, segments, mode);
+  if (!didSaveSubtitleFile(result)) {
+    throw new Error(
+      result.error || 'Translator could not export the subtitles.'
+    );
+  }
+  return {
+    success: true,
+    filePath: result.filePath || path,
+    mode,
+    cueCount: segments.length,
+    warning: result.warning || null,
+  };
+}
+
 function currentStatus(): Record<string, unknown> {
   const video = useVideoStore.getState();
   const subtitles = useSubStore.getState();
@@ -882,6 +2051,7 @@ function currentStatus(): Record<string, unknown> {
     },
     videoSearch: videoSearchSnapshot(),
     videoBatchDownload: batchDownloadSnapshot(),
+    processing: agentProcessingSnapshot(),
   };
 }
 
@@ -1181,6 +2351,17 @@ if (window.env.agentMode) {
 
     async openVideo(input) {
       const filePath = requirePath(input);
+      if (hasActiveAppProcessing()) {
+        throw new Error(
+          'Translator already has an active processing operation.'
+        );
+      }
+      if (!(await window.fileApi.fileExists(filePath))) {
+        throw new Error(`Video file does not exist: ${filePath}`);
+      }
+      await prepareMountedSubtitles(
+        requireMountedSubtitleStrategy(input?.replaceSubtitles, 'fail')
+      );
       const result = await useVideoStore
         .getState()
         .openRecentLocalMedia(filePath, { preserveSubtitles: false });
@@ -1197,6 +2378,11 @@ if (window.env.agentMode) {
 
     async mountSubtitles(input) {
       const filePath = requirePath(input);
+      if (hasActiveAppProcessing()) {
+        throw new Error(
+          'Translator already has an active processing operation.'
+        );
+      }
       if (!(await window.fileApi.fileExists(filePath))) {
         throw new Error(`Subtitle file does not exist: ${filePath}`);
       }
@@ -1205,6 +2391,9 @@ if (window.env.agentMode) {
       if (!segments.length) {
         throw new Error(`Subtitle file contains no readable cues: ${filePath}`);
       }
+      await prepareMountedSubtitles(
+        requireMountedSubtitleStrategy(input?.replaceSubtitles, 'fail')
+      );
       const sourceVideoPath = useVideoStore.getState().path;
       useSubStore
         .getState()
@@ -1269,6 +2458,10 @@ if (window.env.agentMode) {
       return videoSearchSnapshot();
     },
 
+    async cancelVideoSearch() {
+      return cancelVideoSearch();
+    },
+
     async startSuggestedVideoBatch(input) {
       return startSuggestedVideoBatch(input);
     },
@@ -1300,21 +2493,140 @@ if (window.env.agentMode) {
       if (urlState.download.inProgress) {
         throw new Error('A video download is already in progress.');
       }
+      if (hasActiveAppProcessing()) {
+        throw new Error(
+          'Translator already has an active processing operation.'
+        );
+      }
+      const replacementStrategy = requireMountedSubtitleStrategy(
+        input?.replaceSubtitles,
+        'fail'
+      );
+      assertMountedSubtitleReplacementAllowed(replacementStrategy);
       const ui = useUIStore.getState();
       ui.setGeneratePanelOpen(true);
       ui.setGenerateSubtitlesWorkspaceTab('main');
       urlState.setUrlInput(parsedUrl.toString());
       urlState.setDownloadQuality(quality);
-      void urlState
-        .downloadMedia({ url: parsedUrl.toString(), preserveSubtitles: false })
-        .catch(error => {
-          useUrlStore
-            .getState()
-            .setOperationError(
-              error instanceof Error ? error.message : String(error)
-            );
-        });
+      void downloadAndMountAgentSource({
+        url: parsedUrl.toString(),
+        quality,
+        strategy: replacementStrategy,
+      }).catch(error => {
+        useUrlStore
+          .getState()
+          .setOperationError(
+            error instanceof Error ? error.message : String(error)
+          );
+      });
       return currentStatus();
+    },
+
+    async startTranscription(input) {
+      const strategy = requireMountedSubtitleStrategy(
+        input?.replaceSubtitles,
+        'fail'
+      );
+      return beginAgentProcessing('transcription', operationId =>
+        runAgentTranscription(operationId, strategy)
+      );
+    },
+
+    async startTranslation(input) {
+      const targetLanguage = String(input?.targetLanguage || '').trim();
+      return beginAgentProcessing('translation', operationId =>
+        runAgentTranslation(operationId, targetLanguage)
+      );
+    },
+
+    async startDubbing(input) {
+      return beginAgentProcessing('dubbing', operationId =>
+        runAgentDubbing(operationId, {
+          targetLanguage: input?.targetLanguage,
+          voice: input?.voice,
+          translateIfNeeded: input?.translateIfNeeded,
+        })
+      );
+    },
+
+    async startSummary(input) {
+      const effortLevel = (input?.effortLevel ||
+        useUIStore.getState().summaryEffortLevel) as SummaryEffortLevel;
+      return beginAgentProcessing('summary', operationId =>
+        runAgentSummary(operationId, {
+          targetLanguage: input?.targetLanguage,
+          effortLevel,
+          includeHighlights: input?.includeHighlights,
+        })
+      );
+    },
+
+    async startCueTranslation(input) {
+      return beginAgentProcessing('cue-translation', operationId =>
+        runAgentCueTranslation(operationId, {
+          id: input?.id,
+          targetLanguage: input?.targetLanguage,
+        })
+      );
+    },
+
+    async startCueTranscription(input) {
+      return beginAgentProcessing('cue-transcription', operationId =>
+        runAgentCueTranscription(operationId, { id: input?.id })
+      );
+    },
+
+    async startMerge(input) {
+      return beginAgentProcessing('merge', operationId =>
+        runAgentMerge(operationId, {
+          outputPath: input?.outputPath,
+          overwrite: input?.overwrite,
+        })
+      );
+    },
+
+    async startMediaWorkflow(input) {
+      const replaceSubtitles = requireMountedSubtitleStrategy(
+        input?.replaceSubtitles,
+        'fail'
+      );
+      return beginAgentProcessing('media-workflow', operationId =>
+        runAgentMediaWorkflow(operationId, {
+          url: input?.url,
+          path: input?.path,
+          quality: input?.quality,
+          runTo: input?.runTo,
+          targetLanguage: input?.targetLanguage,
+          summaryEffortLevel: input?.summaryEffortLevel,
+          includeHighlights: input?.includeHighlights,
+          voice: input?.voice,
+          replaceSubtitles,
+        })
+      );
+    },
+
+    async processingStatus() {
+      return agentProcessingSnapshot();
+    },
+
+    async cancelProcessing() {
+      return cancelAgentProcessing();
+    },
+
+    async subtitlesBatch(input) {
+      return subtitleBatchSnapshot(input);
+    },
+
+    async updateSubtitles(input) {
+      return updateSubtitleBatch(input);
+    },
+
+    async mutateSubtitles(input) {
+      return mutateMountedSubtitles(input);
+    },
+
+    async exportSubtitles(input) {
+      return exportMountedSubtitles(input);
     },
   };
 }

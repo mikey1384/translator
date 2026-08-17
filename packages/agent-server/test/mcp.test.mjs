@@ -51,12 +51,27 @@ test('MCP server exposes and runs the subscription-powered translation loop', as
   assert.ok(names.includes('app_open_web_page'));
   assert.ok(names.includes('app_open_credit_checkout'));
   assert.ok(names.includes('app_start_video_download'));
+  assert.ok(names.includes('app_start_transcription'));
+  assert.ok(names.includes('app_start_translation'));
+  assert.ok(names.includes('app_start_dubbing'));
+  assert.ok(names.includes('app_start_summary'));
+  assert.ok(names.includes('app_start_cue_translation'));
+  assert.ok(names.includes('app_start_cue_transcription'));
+  assert.ok(names.includes('app_start_merge'));
+  assert.ok(names.includes('app_start_media_workflow'));
+  assert.ok(names.includes('app_processing_status'));
+  assert.ok(names.includes('app_processing_cancel'));
+  assert.ok(names.includes('app_subtitles_get'));
+  assert.ok(names.includes('app_subtitles_update'));
+  assert.ok(names.includes('app_subtitles_mutate'));
+  assert.ok(names.includes('app_subtitles_export'));
   assert.ok(names.includes('app_downloads_list'));
   assert.ok(names.includes('app_downloads_open'));
   assert.ok(names.includes('app_downloads_redownload'));
   assert.ok(names.includes('app_video_search'));
   assert.ok(names.includes('app_video_search_more'));
   assert.ok(names.includes('app_video_search_status'));
+  assert.ok(names.includes('app_video_search_cancel'));
   assert.ok(names.includes('app_video_batch_download'));
   assert.ok(names.includes('app_video_batch_cancel'));
   assert.ok(names.includes('app_video_batch_status'));
@@ -64,6 +79,36 @@ test('MCP server exposes and runs the subscription-powered translation loop', as
   assert.ok(names.includes('app_settings_update'));
   assert.ok(names.includes('app_settings_store_provider_key'));
   assert.ok(names.includes('app_settings_clear_provider_key'));
+
+  const invalidRemoval = await client.callTool({
+    name: 'app_subtitles_mutate',
+    arguments: { operation: 'remove', id: 'cue-1' },
+  });
+  assert.equal(invalidRemoval.isError, true);
+
+  const invalidTranslatedWorkflow = await client.callTool({
+    name: 'app_start_media_workflow',
+    arguments: { run_to: 'translate' },
+  });
+  assert.equal(invalidTranslatedWorkflow.isError, true);
+
+  const invalidMergeOverwrite = await client.callTool({
+    name: 'app_start_merge',
+    arguments: {
+      output_path: '/tmp/merged.mp4',
+      confirm_overwrite: 'yes',
+    },
+  });
+  assert.equal(invalidMergeOverwrite.isError, true);
+
+  const invalidExportOverwrite = await client.callTool({
+    name: 'app_subtitles_export',
+    arguments: {
+      path: '/tmp/subtitles.srt',
+      confirm_overwrite: 'yes',
+    },
+  });
+  assert.equal(invalidExportOverwrite.isError, true);
 
   const created = await client.callTool({
     name: 'create_translation_session',

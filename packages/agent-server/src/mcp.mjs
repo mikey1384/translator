@@ -21,7 +21,7 @@ function buildServer() {
     { name: 'stage5-translator', version: '0.1.0' },
     {
       instructions:
-        "Use translation sessions to translate or review SRT cues with the connected LLM subscription. This path has no Translator inference charge because the client model supplies the text. Transcription, dubbing, and hosted AI remain outside this free tool set. Call create_translation_session, then repeatedly get_translation_batch and submit_translation_batch, then export_translation_srt. The development-app tools are local-only and require app_launch first. app_video_search and app_video_search_more invoke the app's configured Stage5-credit or BYO recommendation model; status, library, and download tools do not invoke that model. Batch downloads must use current recommendation result IDs and are bounded to eight items. Navigation tools may open visible app sections or explicit web pages but cannot interact with forms. app_open_credit_checkout may create and open a Stripe checkout session, but entering or submitting payment information remains exclusively manual. Settings tools never return stored secret values; completed purchases, entitlement checkout submission, and admin resets remain manual-only.",
+        "Use translation sessions to translate or review SRT cues with the connected LLM subscription. That local session path has no Translator inference charge because the client model supplies the text. The development-app tools are local-only and require app_launch first. app_start_media_workflow provides complete URL/path -> transcription -> summary/highlights, translation, or dubbing orchestration; the individual app_start_transcription, app_start_translation, app_start_dubbing, and app_start_summary tools operate on mounted media or subtitles. These app processing tools use Translator's configured Stage5 credits or BYO providers exactly like the visible UI, return immediately, and must be followed with app_processing_status. Mounted cues can be inspected, edited, and exported with the app_subtitles tools. app_video_search and app_video_search_more also invoke the configured Stage5-credit or BYO model; status, library, and download-only tools do not. Batch downloads use current recommendation IDs and are bounded to eight items. Navigation can open visible app sections or explicit web pages but cannot interact with forms. app_open_credit_checkout may create and open a Stripe checkout session, but payment entry and submission remain manual. Settings never return stored secret values; completed purchases, entitlement checkout submission, cookie/login verification, and admin resets remain manual-only.",
     }
   );
 
@@ -336,20 +336,39 @@ function buildServer() {
   server.registerTool(
     'app_open_video',
     {
-      description: 'Open an existing local video in the development app.',
-      inputSchema: z.object({ path: z.string().min(1) }),
+      description:
+        'Open an existing local video in the development app. Existing mounted subtitles are preserved unless replacement is explicitly authorized.',
+      inputSchema: z.object({
+        path: z.string().min(1),
+        replace_subtitles: z.enum(['fail', 'discard', 'save']).default('fail'),
+      }),
     },
-    async input => result(await app.call('openVideo', { path: input.path }))
+    async input =>
+      result(
+        await app.call('openVideo', {
+          path: input.path,
+          replaceSubtitles: input.replace_subtitles,
+        })
+      )
   );
 
   server.registerTool(
     'app_mount_subtitles',
     {
-      description: 'Mount an existing local SRT in the development app.',
-      inputSchema: z.object({ path: z.string().min(1) }),
+      description:
+        'Mount an existing local SRT in the development app. Existing mounted subtitles are preserved unless replacement is explicitly authorized.',
+      inputSchema: z.object({
+        path: z.string().min(1),
+        replace_subtitles: z.enum(['fail', 'discard', 'save']).default('fail'),
+      }),
     },
     async input =>
-      result(await app.call('mountSubtitles', { path: input.path }))
+      result(
+        await app.call('mountSubtitles', {
+          path: input.path,
+          replaceSubtitles: input.replace_subtitles,
+        })
+      )
   );
 
   server.registerTool(
@@ -403,9 +422,18 @@ function buildServer() {
     {
       description:
         'Open an existing, locally available Downloads library item in Translator by its stable entry ID.',
-      inputSchema: z.object({ id: z.string().min(1) }),
+      inputSchema: z.object({
+        id: z.string().min(1),
+        replace_subtitles: z.enum(['fail', 'discard', 'save']).default('fail'),
+      }),
     },
-    async input => result(await app.call('openDownloadHistoryItem', input))
+    async input =>
+      result(
+        await app.call('openDownloadHistoryItem', {
+          id: input.id,
+          replaceSubtitles: input.replace_subtitles,
+        })
+      )
   );
 
   server.registerTool(
@@ -430,9 +458,17 @@ function buildServer() {
             '240p',
           ])
           .default('1080p'),
+        replace_subtitles: z.enum(['fail', 'discard', 'save']).default('fail'),
       }),
     },
-    async input => result(await app.call('redownloadHistoryItem', input))
+    async input =>
+      result(
+        await app.call('redownloadHistoryItem', {
+          id: input.id,
+          quality: input.quality,
+          replaceSubtitles: input.replace_subtitles,
+        })
+      )
   );
 
   server.registerTool(
@@ -457,9 +493,376 @@ function buildServer() {
             '240p',
           ])
           .default('1080p'),
+        replace_subtitles: z.enum(['fail', 'discard', 'save']).default('fail'),
       }),
     },
-    async input => result(await app.call('startVideoDownload', input))
+    async input =>
+      result(
+        await app.call('startVideoDownload', {
+          url: input.url,
+          quality: input.quality,
+          replaceSubtitles: input.replace_subtitles,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_start_transcription',
+    {
+      description:
+        "Start transcription of the currently mounted video with Translator's configured Stage5-credit or BYO provider. Returns immediately; poll app_processing_status.",
+      inputSchema: z.object({
+        replace_subtitles: z.enum(['fail', 'discard', 'save']).default('fail'),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('startTranscription', {
+          replaceSubtitles: input.replace_subtitles,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_start_translation',
+    {
+      description:
+        "Translate every mounted subtitle cue to a target language with Translator's configured Stage5-credit or BYO provider. Returns immediately; poll app_processing_status.",
+      inputSchema: z.object({
+        target_language: z.string().min(2).max(80),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('startTranslation', {
+          targetLanguage: input.target_language,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_start_dubbing',
+    {
+      description:
+        "Generate dubbed media from mounted subtitles with Translator's configured Stage5-credit or BYO provider. Missing translations can be generated first. Returns immediately; poll app_processing_status.",
+      inputSchema: z.object({
+        target_language: z.string().min(2).max(80).optional(),
+        voice: z
+          .enum([
+            'rachel',
+            'adam',
+            'josh',
+            'sarah',
+            'charlie',
+            'emily',
+            'matilda',
+            'brian',
+            'alloy',
+            'echo',
+            'fable',
+            'onyx',
+            'nova',
+            'shimmer',
+          ])
+          .optional(),
+        translate_if_needed: z.boolean().default(true),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('startDubbing', {
+          targetLanguage: input.target_language,
+          voice: input.voice,
+          translateIfNeeded: input.translate_if_needed,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_start_summary',
+    {
+      description:
+        "Generate a summary, sections, and optional highlights from mounted subtitles with Translator's configured Stage5-credit or BYO provider. Returns immediately; poll app_processing_status for the result.",
+      inputSchema: z.object({
+        target_language: z.string().min(2).max(80).optional(),
+        effort_level: z.enum(['standard', 'high']).optional(),
+        include_highlights: z.boolean().default(true),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('startSummary', {
+          targetLanguage: input.target_language,
+          effortLevel: input.effort_level,
+          includeHighlights: input.include_highlights,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_start_cue_translation',
+    {
+      description:
+        "Translate or improve one mounted cue by stable ID with nearby context, using Translator's configured Stage5-credit or BYO provider. The existing translation is preserved unless a new result succeeds. Poll app_processing_status.",
+      inputSchema: z.object({
+        id: z.string().min(1),
+        target_language: z.string().min(2).max(80),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('startCueTranslation', {
+          id: input.id,
+          targetLanguage: input.target_language,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_start_cue_transcription',
+    {
+      description:
+        "Retranscribe or improve one mounted cue by stable ID from the mounted source video, using Translator's configured Stage5-credit or BYO provider. Existing text is preserved unless a new result succeeds. Poll app_processing_status.",
+      inputSchema: z.object({ id: z.string().min(1) }),
+    },
+    async input =>
+      result(await app.call('startCueTranscription', { id: input.id }))
+  );
+
+  server.registerTool(
+    'app_start_merge',
+    {
+      description:
+        'Burn the mounted subtitles into the mounted video using the current display/style settings and save to an explicit absolute MP4 path without a native save dialog. Existing files are refused unless confirm_overwrite=OVERWRITE. Returns immediately; poll app_processing_status.',
+      inputSchema: z.object({
+        output_path: z.string().min(1),
+        confirm_overwrite: z.literal('OVERWRITE').optional(),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('startMerge', {
+          outputPath: input.output_path,
+          overwrite: input.confirm_overwrite === 'OVERWRITE',
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_start_media_workflow',
+    {
+      description:
+        'Run the complete Translator workflow from an explicit URL, local path, or currently mounted video through download/open, transcription, summary/highlights, translation, or dubbing. Paid inference follows the app settings. Returns immediately; poll app_processing_status.',
+      inputSchema: z
+        .object({
+          url: z.url().optional(),
+          path: z.string().min(1).optional(),
+          quality: z
+            .enum([
+              'high',
+              'mid',
+              'low',
+              '4320p',
+              '2160p',
+              '1440p',
+              '1080p',
+              '720p',
+              '480p',
+              '360p',
+              '240p',
+            ])
+            .default('1080p'),
+          run_to: z
+            .enum(['download', 'transcribe', 'summary', 'translate', 'dub'])
+            .default('transcribe'),
+          target_language: z.string().min(2).max(80).optional(),
+          summary_effort_level: z.enum(['standard', 'high']).optional(),
+          include_highlights: z.boolean().default(true),
+          voice: z
+            .enum([
+              'rachel',
+              'adam',
+              'josh',
+              'sarah',
+              'charlie',
+              'emily',
+              'matilda',
+              'brian',
+              'alloy',
+              'echo',
+              'fable',
+              'onyx',
+              'nova',
+              'shimmer',
+            ])
+            .optional(),
+          replace_subtitles: z
+            .enum(['fail', 'discard', 'save'])
+            .default('fail'),
+        })
+        .refine(input => !(input.url && input.path), {
+          message: 'Choose either url or path, not both.',
+        })
+        .refine(
+          input =>
+            !['translate', 'dub'].includes(input.run_to) ||
+            Boolean(input.target_language),
+          {
+            message:
+              'target_language is required when run_to is translate or dub.',
+          }
+        ),
+    },
+    async input =>
+      result(
+        await app.call('startMediaWorkflow', {
+          url: input.url,
+          path: input.path,
+          quality: input.quality,
+          runTo: input.run_to,
+          targetLanguage: input.target_language,
+          summaryEffortLevel: input.summary_effort_level,
+          includeHighlights: input.include_highlights,
+          voice: input.voice,
+          replaceSubtitles: input.replace_subtitles,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_processing_status',
+    {
+      description:
+        'Inspect the active or last app-controlled download, transcription, translation, dubbing, summary, and merge operation with progress and output paths.',
+      inputSchema: z.object({}),
+    },
+    async () => result(await app.call('processingStatus'))
+  );
+
+  server.registerTool(
+    'app_processing_cancel',
+    {
+      description:
+        'Cancel the active Translator download or media-processing operation and preserve any previously completed durable results.',
+      inputSchema: z.object({}),
+    },
+    async () => result(await app.call('cancelProcessing'))
+  );
+
+  server.registerTool(
+    'app_subtitles_get',
+    {
+      description:
+        'Read a bounded page of mounted subtitle cues, including stable IDs, timing, original text, and translations.',
+      inputSchema: z.object({
+        offset: z.number().int().min(0).default(0),
+        limit: z.number().int().min(1).max(100).default(50),
+      }),
+    },
+    async input => result(await app.call('subtitlesBatch', input))
+  );
+
+  server.registerTool(
+    'app_subtitles_update',
+    {
+      description:
+        'Update mounted subtitle text or timing by stable cue ID. Changes stay in the app until saved or exported.',
+      inputSchema: z.object({
+        updates: z
+          .array(
+            z
+              .object({
+                id: z.string().min(1),
+                original: z.string().optional(),
+                translation: z.string().optional(),
+                start: z.number().min(0).optional(),
+                end: z.number().positive().optional(),
+              })
+              .refine(
+                update =>
+                  update.original !== undefined ||
+                  update.translation !== undefined ||
+                  update.start !== undefined ||
+                  update.end !== undefined,
+                { message: 'Each cue update must change at least one field.' }
+              )
+          )
+          .min(1)
+          .max(100),
+      }),
+    },
+    async input => result(await app.call('updateSubtitles', input))
+  );
+
+  server.registerTool(
+    'app_subtitles_mutate',
+    {
+      description:
+        'Insert, remove, or shift mounted subtitle cues by stable ID. Removing a cue requires confirm=REMOVE; only one structural mutation is accepted per call.',
+      inputSchema: z
+        .object({
+          operation: z.enum(['insert_after', 'remove', 'shift', 'shift_all']),
+          id: z.string().min(1).optional(),
+          seconds: z.number().finite().optional(),
+          confirm: z.string().optional(),
+        })
+        .superRefine((input, ctx) => {
+          if (input.operation !== 'shift_all' && !input.id) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['id'],
+              message: 'id is required for this subtitle mutation.',
+            });
+          }
+          if (
+            ['shift', 'shift_all'].includes(input.operation) &&
+            (!Number.isFinite(input.seconds) || input.seconds === 0)
+          ) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['seconds'],
+              message: 'A finite, non-zero seconds value is required.',
+            });
+          }
+          if (input.operation === 'remove' && input.confirm !== 'REMOVE') {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['confirm'],
+              message: 'Removing a cue requires confirm=REMOVE.',
+            });
+          }
+        }),
+    },
+    async input =>
+      result(
+        await app.call('mutateSubtitles', {
+          operation: input.operation,
+          id: input.id,
+          seconds: input.seconds,
+          confirm: input.confirm,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_subtitles_export',
+    {
+      description:
+        'Export the mounted subtitle document to an explicit absolute local SRT path without opening a native save dialog. Existing files are refused unless confirm_overwrite=OVERWRITE.',
+      inputSchema: z.object({
+        path: z.string().min(1),
+        mode: z.enum(['original', 'translation', 'dual']).default('dual'),
+        confirm_overwrite: z.literal('OVERWRITE').optional(),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('exportSubtitles', {
+          path: input.path,
+          mode: input.mode,
+          overwrite: input.confirm_overwrite === 'OVERWRITE',
+        })
+      )
   );
 
   server.registerTool(
@@ -507,6 +910,16 @@ function buildServer() {
       inputSchema: z.object({}),
     },
     async () => result(await app.call('videoSearchStatus'))
+  );
+
+  server.registerTool(
+    'app_video_search_cancel',
+    {
+      description:
+        'Cancel the active Translator video-recommendation search without clearing previously completed results.',
+      inputSchema: z.object({}),
+    },
+    async () => result(await app.call('cancelVideoSearch'))
   );
 
   server.registerTool(

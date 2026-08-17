@@ -1002,6 +1002,10 @@ declare module '@shared-types/app' {
     srtContent: string;
     subtitleSegments?: SrtSegment[];
     outputDir: string;
+    /** Optional explicit save path used by trusted local automation. */
+    outputSavePath?: string;
+    /** Explicitly authorize replacing an existing automation output file. */
+    outputOverwrite?: boolean;
     videoDuration: number;
     videoWidth: number;
     videoHeight: number;
@@ -1632,9 +1636,11 @@ declare module '@shared-types/app' {
         }) => Promise<Record<string, unknown>>;
         openVideo: (input?: {
           path?: string;
+          replaceSubtitles?: 'fail' | 'discard' | 'save';
         }) => Promise<Record<string, unknown>>;
         mountSubtitles: (input?: {
           path?: string;
+          replaceSubtitles?: 'fail' | 'discard' | 'save';
         }) => Promise<Record<string, unknown>>;
         setDisplayMode: (input?: {
           mode?: SubtitleDisplayMode;
@@ -1650,10 +1656,12 @@ declare module '@shared-types/app' {
         }) => Promise<Record<string, unknown>>;
         openDownloadHistoryItem: (input?: {
           id?: string;
+          replaceSubtitles?: 'fail' | 'discard' | 'save';
         }) => Promise<Record<string, unknown>>;
         redownloadHistoryItem: (input?: {
           id?: string;
           quality?: VideoQuality;
+          replaceSubtitles?: 'fail' | 'discard' | 'save';
         }) => Promise<Record<string, unknown>>;
         searchVideos: (input?: {
           prompt?: string;
@@ -1665,6 +1673,7 @@ declare module '@shared-types/app' {
         }) => Promise<Record<string, unknown>>;
         searchMoreVideos: () => Promise<Record<string, unknown>>;
         videoSearchStatus: () => Promise<Record<string, unknown>>;
+        cancelVideoSearch: () => Promise<Record<string, unknown>>;
         startSuggestedVideoBatch: (input?: {
           ids?: string[];
           quality?: VideoQuality;
@@ -1674,6 +1683,71 @@ declare module '@shared-types/app' {
         startVideoDownload: (input?: {
           url?: string;
           quality?: VideoQuality;
+          replaceSubtitles?: 'fail' | 'discard' | 'save';
+        }) => Promise<Record<string, unknown>>;
+        startTranscription: (input?: {
+          replaceSubtitles?: 'fail' | 'discard' | 'save';
+        }) => Promise<Record<string, unknown>>;
+        startTranslation: (input?: {
+          targetLanguage?: string;
+        }) => Promise<Record<string, unknown>>;
+        startDubbing: (input?: {
+          targetLanguage?: string;
+          voice?: string;
+          translateIfNeeded?: boolean;
+        }) => Promise<Record<string, unknown>>;
+        startSummary: (input?: {
+          targetLanguage?: string;
+          effortLevel?: SummaryEffortLevel;
+          includeHighlights?: boolean;
+        }) => Promise<Record<string, unknown>>;
+        startCueTranslation: (input?: {
+          id?: string;
+          targetLanguage?: string;
+        }) => Promise<Record<string, unknown>>;
+        startCueTranscription: (input?: {
+          id?: string;
+        }) => Promise<Record<string, unknown>>;
+        startMerge: (input?: {
+          outputPath?: string;
+          overwrite?: boolean;
+        }) => Promise<Record<string, unknown>>;
+        startMediaWorkflow: (input?: {
+          url?: string;
+          path?: string;
+          quality?: VideoQuality;
+          runTo?: 'download' | 'transcribe' | 'summary' | 'translate' | 'dub';
+          targetLanguage?: string;
+          summaryEffortLevel?: SummaryEffortLevel;
+          includeHighlights?: boolean;
+          voice?: string;
+          replaceSubtitles?: 'fail' | 'discard' | 'save';
+        }) => Promise<Record<string, unknown>>;
+        processingStatus: () => Promise<Record<string, unknown>>;
+        cancelProcessing: () => Promise<Record<string, unknown>>;
+        subtitlesBatch: (input?: {
+          offset?: number;
+          limit?: number;
+        }) => Promise<Record<string, unknown>>;
+        updateSubtitles: (input?: {
+          updates?: Array<{
+            id?: string;
+            original?: string;
+            translation?: string;
+            start?: number;
+            end?: number;
+          }>;
+        }) => Promise<Record<string, unknown>>;
+        mutateSubtitles: (input?: {
+          operation?: 'insert_after' | 'remove' | 'shift' | 'shift_all';
+          id?: string;
+          seconds?: number;
+          confirm?: string;
+        }) => Promise<Record<string, unknown>>;
+        exportSubtitles: (input?: {
+          path?: string;
+          mode?: SubtitleDisplayMode;
+          overwrite?: boolean;
         }) => Promise<Record<string, unknown>>;
       };
     }

@@ -352,6 +352,56 @@ export function initializeRenderWindowHandlers({
           operationId
         );
 
+        const explicitOutputPath = String(options.outputSavePath || '').trim();
+        if (explicitOutputPath) {
+          if (app.isPackaged || process.env.TRANSLATOR_AGENT_DEV !== '1') {
+            throw new Error(
+              'Explicit merge output paths are available only in local agent development mode.'
+            );
+          }
+          if (!path.isAbsolute(explicitOutputPath)) {
+            throw new Error('Merged video output path must be absolute.');
+          }
+          if (path.extname(explicitOutputPath).toLowerCase() !== '.mp4') {
+            throw new Error('Merged video output path must end in .mp4.');
+          }
+          if (
+            path.resolve(explicitOutputPath) ===
+            path.resolve(options.originalVideoPath)
+          ) {
+            throw new Error('Merged output cannot overwrite the source video.');
+          }
+          const destinationDirectory = path.dirname(explicitOutputPath);
+          const destinationStat = await fs.stat(destinationDirectory);
+          if (!destinationStat.isDirectory()) {
+            throw new Error(
+              'Merged video output directory is not a directory.'
+            );
+          }
+          if (await fileExists(explicitOutputPath)) {
+            const outputStat = await fs.stat(explicitOutputPath);
+            if (!outputStat.isFile()) {
+              throw new Error(
+                'Merged video output path is not a regular file.'
+              );
+            }
+            const [sourceRealPath, outputRealPath] = await Promise.all([
+              fs.realpath(options.originalVideoPath),
+              fs.realpath(explicitOutputPath),
+            ]);
+            if (sourceRealPath === outputRealPath) {
+              throw new Error(
+                'Merged output cannot overwrite the source video.'
+              );
+            }
+            if (!options.outputOverwrite) {
+              throw new Error(
+                'Merged video output already exists. Confirm overwrite explicitly.'
+              );
+            }
+          }
+        }
+
         const { browser: br, page } = await initPuppeteer({
           operationId,
           videoWidth: options.videoWidth,
@@ -520,11 +570,13 @@ export function initializeRenderWindowHandlers({
           });
 
           while (!savedPath) {
-            const saveDialogResult = await dialog.showSaveDialog(win, {
-              title: 'Save Merged Video As',
-              defaultPath: suggestedName,
-              filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
-            });
+            const saveDialogResult = explicitOutputPath
+              ? { canceled: false, filePath: explicitOutputPath }
+              : await dialog.showSaveDialog(win, {
+                  title: 'Save Merged Video As',
+                  defaultPath: suggestedName,
+                  filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
+                });
             const selectedPath = saveDialogResult.filePath;
 
             if (saveDialogResult.canceled || !selectedPath) {
@@ -537,6 +589,16 @@ export function initializeRenderWindowHandlers({
                 cancelled: true,
               });
               return;
+            }
+
+            if (
+              explicitOutputPath &&
+              !options.outputOverwrite &&
+              (await fileExists(selectedPath))
+            ) {
+              throw new Error(
+                'Merged video output appeared while rendering. Confirm overwrite and try again.'
+              );
             }
 
             sendProgress({ percent: 98, stage: 'Saving…' });
@@ -579,6 +641,7 @@ export function initializeRenderWindowHandlers({
                   percent: heartbeatPercent,
                   stage: heartbeatStage,
                 });
+                if (explicitOutputPath) throw saveErr;
                 continue;
               }
             }
@@ -597,6 +660,9 @@ export function initializeRenderWindowHandlers({
                 destFreeBytes > 0 &&
                 destFreeBytes <= warnBelowBytes
               ) {
+                if (explicitOutputPath) {
+                  throw new Error(ERROR_CODES.INSUFFICIENT_DISK_SPACE);
+                }
                 const lang = getLanguagePreference();
                 const t = await getMainT(lang);
 
@@ -653,7 +719,14 @@ export function initializeRenderWindowHandlers({
                 }
                 // Continue (copy)
               }
-            } catch {
+            } catch (error) {
+              if (
+                explicitOutputPath &&
+                error instanceof Error &&
+                error.message === ERROR_CODES.INSUFFICIENT_DISK_SPACE
+              ) {
+                throw error;
+              }
               // Best-effort only: never block saving if the check fails.
             }
 
@@ -694,6 +767,7 @@ export function initializeRenderWindowHandlers({
                 percent: heartbeatPercent,
                 stage: heartbeatStage,
               });
+              if (explicitOutputPath) throw copyErr;
               continue;
             }
           }

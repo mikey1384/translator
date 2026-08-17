@@ -17,9 +17,10 @@ or coding-agent subscription. Translator performs local SRT parsing, session
 storage, validation, and export. This avoids a second marginal model charge for
 translation and review.
 
-It does not make audio transcription or dubbing free. Those require provider
-inference or, in a future phase, a bundled local model. Hosted Stage5 AI and BYO
-provider workflows keep their existing economics.
+It does not make audio transcription, hosted translation, or dubbing free.
+Those app-processing tools use the same configured Stage5 credits or BYO
+provider billing as the visible UI. The no-extra-inference path applies only to
+the local translation-session loop where the connected client supplies text.
 
 ## Translation workflow
 
@@ -59,9 +60,24 @@ The server also exposes:
 - `app_downloads_open`
 - `app_downloads_redownload`
 - `app_start_video_download`
+- `app_start_transcription`
+- `app_start_translation`
+- `app_start_dubbing`
+- `app_start_summary`
+- `app_start_cue_translation`
+- `app_start_cue_transcription`
+- `app_start_merge`
+- `app_start_media_workflow`
+- `app_processing_status`
+- `app_processing_cancel`
+- `app_subtitles_get`
+- `app_subtitles_update`
+- `app_subtitles_mutate`
+- `app_subtitles_export`
 - `app_video_search`
 - `app_video_search_more`
 - `app_video_search_status`
+- `app_video_search_cancel`
 - `app_video_batch_download`
 - `app_video_batch_cancel`
 - `app_video_batch_status`
@@ -90,6 +106,32 @@ Translator's existing quality choices. It starts the normal app downloader and
 adds a successful result to the Downloads library. The caller polls
 `app_status` for progress, completion, cookie requirements, or errors. The tool
 does not add any geo-bypass, access-control bypass, or hidden scraping behavior.
+Opening another local/library video, mounting another SRT, or starting a
+download also defaults to `replace_subtitles=fail`; existing cue work is not
+silently cleared during a source switch.
+
+`app_start_media_workflow` is the complete creation path. It accepts an
+explicit URL, an explicit local path, or the already mounted video and can stop
+after download/open, transcription, summary/highlights, translation, or
+dubbing. The individual
+start tools operate on the currently mounted media. They return immediately so
+long jobs never monopolize the MCP request; poll `app_processing_status` and use
+`app_processing_cancel` when needed. Replacing mounted subtitles is explicit:
+the caller must choose fail, save, or discard instead of triggering a hidden
+native confirmation dialog.
+
+The subtitle tools page through mounted cues by stable ID, apply bounded text or
+timing updates, insert/remove/shift cues, rerun one cue's transcription or
+translation with context, and export to an explicit SRT path without a native
+save dialog. A cue removal requires the explicit value `REMOVE`, and paid
+single-cue inference preserves the existing cue unless a replacement succeeds.
+Together these tools let an agent inspect and hand off the actual transcription
+result rather than merely observe a cue count.
+
+`app_start_merge` burns the mounted subtitle document into the mounted source
+video using the current display mode and style. It requires an explicit absolute
+`.mp4` output path, never opens the native save dialog, and uses the same
+progress/cancellation channel as the visible merge workflow.
 
 The Downloads tools use the app's authoritative saved library. A caller lists
 entries and receives stable IDs plus local-file availability, then uses an ID to
@@ -122,6 +164,30 @@ The renderer bridge exists only when the app is unpackaged and launched with
 `TRANSLATOR_AGENT_DEV=1`. Packaged builds do not expose
 `window.translatorAgent`. The MCP server starts the development build with that
 flag automatically.
+
+## Parity status
+
+The core creation workflow now has direct MCP coverage: explicit media/SRT
+opening, URL download, transcription, translation, dubbing, summary/highlight
+analysis, cue inspection and editing, SRT export, subtitle burn-in merge,
+progress, cancellation, library reuse, and recommendation-driven batch
+downloads. Source switches and destructive cue changes fail closed by default.
+URL downloads keep the currently mounted work intact until the replacement has
+actually downloaded and passed validation; a failed source acquisition cannot
+discard the current subtitle document.
+
+This is not yet a claim that every secondary UI gesture has an MCP equivalent.
+The remaining app-local parity work is tracked explicitly: selecting,
+reordering, cutting, combining, and exporting generated highlight clips;
+recent-media removal; playback/seek transport; watched-channel management; and
+persisting an MCP-generated analysis back into the visible summary-history UI.
+Those are engineering gaps, not actions that inherently require a human.
+
+Authentication challenges, cookie consent/verification, payment entry and
+submission, privileged administration, and OS/platform security prompts remain
+human-gated by design. Packaged-app MCP also remains disabled until Translator
+has an in-product permission screen, allowed-directory controls, visible active
+operation status, and a kill switch.
 
 ## Run and test
 
@@ -162,6 +228,18 @@ prompts for tools that write files or mutate the development app.
   exposed as an MCP tool.
 - Downloads library actions use stable app-owned entry IDs; they cannot select
   arbitrary local paths.
+- Long-running media processing is single-flight, status-driven, cancellable,
+  and uses the same credit/BYO routing and durable artifact storage as the UI.
+- Existing mounted subtitles are never silently destroyed: replacement must be
+  explicitly set to fail, save, or discard, and a URL replacement is deferred
+  until the new source is available.
+- Subtitle reads and writes are bounded to 100 stable-ID cues per call; export
+  writes only to an explicit absolute `.srt` path. Existing files require the
+  separate confirmation value `OVERWRITE`.
+- Automated merge writes only to its explicit absolute `.mp4` output path and
+  validates the destination before rendering. Existing files require the
+  separate confirmation value `OVERWRITE`, after which the app retains its
+  transactional backup/restore behavior.
 - Settings snapshots reveal key presence, never secret values.
 - Checkout pages may be opened, but entering payment details, completing a
   purchase, and privileged admin resets are not agent actions.
