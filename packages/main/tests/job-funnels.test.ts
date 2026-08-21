@@ -33,20 +33,39 @@ test('dubbing outcomes detect credit blocks from error message', () => {
     classifyDubbingOutcome({ success: true }),
     'dubbing_completed'
   );
+  
+  // Test with the actual error code used in handlers
+  const ERROR_CODES = { INSUFFICIENT_CREDITS: 'INSUFFICIENT_CREDITS' };
   assert.equal(
     classifyDubbingOutcome({
       success: false,
-      error: 'INSUFFICIENT_CREDITS',
+      error: ERROR_CODES.INSUFFICIENT_CREDITS,
     }),
-    'dubbing_credit_blocked'
+    'dubbing_credit_blocked',
+    'Should detect credit block from INSUFFICIENT_CREDITS error code'
   );
+  
+  // When cancelled but not for credits
   assert.equal(
     classifyDubbingOutcome({ success: false, cancelled: true }),
     'dubbing_cancelled'
   );
+  
+  // Regular failure
   assert.equal(
     classifyDubbingOutcome({ success: false, error: 'Network timeout' }),
     'dubbing_failed'
+  );
+  
+  // Credit block takes precedence even when marked as cancelled
+  assert.equal(
+    classifyDubbingOutcome({
+      success: false,
+      cancelled: true,
+      error: ERROR_CODES.INSUFFICIENT_CREDITS,
+    }),
+    'dubbing_credit_blocked',
+    'Credit block should take precedence over cancelled flag'
   );
 });
 

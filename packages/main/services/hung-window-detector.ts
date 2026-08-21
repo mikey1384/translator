@@ -1,15 +1,16 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, powerMonitor } from 'electron';
 import log from 'electron-log';
 import { recordCriticalFailure } from './startup-health.js';
 
 const HEARTBEAT_INTERVAL_MS = 10_000; // 10 seconds
 const HEARTBEAT_TIMEOUT_MS = 30_000; // 30 seconds
-const MAX_HANG_REPORTS = 3; // Limit hung reports per session
+export const MAX_HANG_REPORTS = 3; // Limit hung reports per session
 
 let heartbeatTimer: NodeJS.Timeout | null = null;
 let lastHeartbeatTime: number | null = null;
 let hangReportCount = 0;
 let isMonitoring = false;
+let isPaused = false;
 
 /**
  * Start monitoring the main window for hangs.
@@ -22,10 +23,26 @@ export function startHungWindowMonitoring(window: BrowserWindow): void {
   }
 
   isMonitoring = true;
+  isPaused = false;
   lastHeartbeatTime = Date.now();
   hangReportCount = 0;
 
   log.info('[hung-window-detector] Starting heartbeat monitoring');
+
+  // Pause monitoring on system suspend to avoid false positives from sleep/lid-close
+  const handleSuspend = () => {
+    log.info('[hung-window-detector] System suspending, pausing monitoring');
+    isPaused = true;
+  };
+
+  const handleResume = () => {
+    log.info('[hung-window-detector] System resumed, resetting heartbeat timer');
+    isPaused = false;
+    lastHeartbeatTime = Date.now();
+  };
+
+  powerMonitor.on('suspend', handleSuspend);
+  powerMonitor.on('resume', handleResume);
 
   const checkHeartbeat = () => {
     if (!window || window.isDestroyed()) {
@@ -33,8 +50,8 @@ export function startHungWindowMonitoring(window: BrowserWindow): void {
       return;
     }
 
-    if (!window.isVisible()) {
-      // Don't monitor invisible windows
+    // Don't monitor when paused (system suspended) or when window is not visible
+    if (isPaused || !window.isVisible()) {
       lastHeartbeatTime = Date.now();
       return;
     }
@@ -47,7 +64,8 @@ export function startHungWindowMonitoring(window: BrowserWindow): void {
         log.warn(
           `[hung-window-detector] Window hung detected (${timeSinceLastBeat}ms since last heartbeat)`
         );
-        recordCriticalFailure('renderer_process_gone', 'runtime', 'abnormal-exit');
+        // Use distinct failure class, not renderer_process_gone
+        recordCriticalFailure('renderer_window_hung', 'runtime');
         hangReportCount++;
         // Reset the timer to avoid spam
         lastHeartbeatTime = now;
@@ -73,7 +91,11 @@ export function stopHungWindowMonitoring(): void {
     clearInterval(heartbeatTimer);
     heartbeatTimer = null;
   }
+  // Clean up power monitor listeners
+  powerMonitor.removeAllListeners('suspend');
+  powerMonitor.removeAllListeners('resume');
   isMonitoring = false;
+  isPaused = false;
   log.info('[hung-window-detector] Stopped heartbeat monitoring');
 }
 

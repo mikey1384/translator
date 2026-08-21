@@ -698,10 +698,13 @@ export async function handleDubSubtitles(
     void trackDubbingFunnelEvent(classifyDubbingOutcome(successResult));
     return successResult;
   } catch (error: any) {
+    const errorMsg = String(error?.message || '');
+    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
     const isCancel =
       controller.signal.aborted ||
       error?.name === 'AbortError' ||
-      error?.message === 'Operation cancelled';
+      error?.message === 'Operation cancelled' ||
+      creditCancel;
 
     progressCallback({
       percent: 100,
@@ -709,13 +712,21 @@ export async function handleDubSubtitles(
         ? 'Process cancelled'
         : `Error: ${error?.message || String(error)}`,
       operationId,
-      error: isCancel ? undefined : error?.message || String(error),
+      error: creditCancel
+        ? ERROR_CODES.INSUFFICIENT_CREDITS
+        : isCancel
+          ? undefined
+          : error?.message || String(error),
     });
 
     const errorResult = {
       success: false,
       cancelled: isCancel,
-      error: isCancel ? undefined : error?.message || String(error),
+      error: creditCancel
+        ? ERROR_CODES.INSUFFICIENT_CREDITS
+        : isCancel
+          ? undefined
+          : error?.message || String(error),
       operationId,
     };
     void trackDubbingFunnelEvent(classifyDubbingOutcome(errorResult));
