@@ -55,7 +55,9 @@ const changeVideoBodyStyles = css`
 export default function GlobalModals() {
   const { t } = useTranslation();
   const unsavedOpen = useModalStore(s => s.unsavedSrtOpen);
+  const unsavedContext = useModalStore(s => s.unsavedSrtContext);
   const downloadSwitchOpen = useModalStore(s => s.downloadSwitchOpen);
+  const downloadSwitchContext = useModalStore(s => s.downloadSwitchContext);
   const creditOpen = useModalStore(s => s.creditRanOutOpen);
   const changeVideoOpen = useModalStore(s => s.changeVideoOpen);
   const logsOpen = useModalStore(s => s.logsOpen);
@@ -159,16 +161,21 @@ export default function GlobalModals() {
     <>
       <ConfirmReplaceSrtDialog
         open={unsavedOpen}
+        context={unsavedContext}
         onCancel={() => resolveUnsavedSrt('cancel')}
         onDiscardAndTranscribe={() => resolveUnsavedSrt('discard')}
         onSaveAndTranscribe={() => resolveUnsavedSrt('save')}
       />
       <Modal
         open={downloadSwitchOpen}
-        title={t(
-          'input.downloadFinishedSwitchTitle',
-          'Watch downloaded video?'
-        )}
+        title={
+          downloadSwitchContext === 'caption_recovery'
+            ? t(
+                'input.captionRecoverySwitchTitle',
+                'Open captions without the current video?'
+              )
+            : t('input.downloadFinishedSwitchTitle', 'Watch downloaded video?')
+        }
         titleId="download-switch-title"
         onClose={() => resolveDownloadSwitch(false)}
         hideCloseButton
@@ -178,22 +185,31 @@ export default function GlobalModals() {
               variant="secondary"
               onClick={() => resolveDownloadSwitch(false)}
             >
-              {t('input.downloadFinishedWatchLater', 'Watch later')}
+              {downloadSwitchContext === 'caption_recovery'
+                ? t('input.captionRecoveryKeepVideo', 'Keep current video')
+                : t('input.downloadFinishedWatchLater', 'Watch later')}
             </Button>
             <Button
               variant="primary"
               onClick={() => resolveDownloadSwitch(true)}
             >
-              {t('input.downloadFinishedWatchNow', 'Watch now')}
+              {downloadSwitchContext === 'caption_recovery'
+                ? t('input.captionRecoveryOpenCaptions', 'Open captions')
+                : t('input.downloadFinishedWatchNow', 'Watch now')}
             </Button>
           </>
         }
       >
         <div>
-          {t(
-            'input.downloadFinishedSwitchPrompt',
-            'Your download is ready. Watch it now, or keep your current video and open it later from history.'
-          )}
+          {downloadSwitchContext === 'caption_recovery'
+            ? t(
+                'input.captionRecoverySwitchPrompt',
+                'Translator recovered YouTube automatic captions, but the URL video is unavailable. Opening them will unmount the current video.'
+              )
+            : t(
+                'input.downloadFinishedSwitchPrompt',
+                'Your download is ready. Watch it now, or keep your current video and open it later from history.'
+              )}
         </div>
       </Modal>
       <CreditRanOutDialog

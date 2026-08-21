@@ -6,6 +6,7 @@ import { PROGRESS } from './constants.js';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
 import type { FileManager } from '../file-manager.js';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { CancelledError } from '../../../shared/cancelled-error.js';
 import {
   raceOperationCancellation,
@@ -15,6 +16,20 @@ import {
   NeedCookiesError,
   type NeedCookiesCause,
 } from '../url-download-funnel.js';
+import { loadDevelopmentCaptionRecoveryFixture } from './development-caption-recovery-fixture.js';
+
+const require = createRequire(import.meta.url);
+
+function getElectronApp(): {
+  isPackaged: boolean;
+  getAppPath(): string;
+} | null {
+  try {
+    return require('electron').app ?? null;
+  } catch {
+    return null;
+  }
+}
 
 type NeedCookiesCounters = Record<NeedCookiesCause, number>;
 
@@ -28,6 +43,34 @@ type ProcessVideoUrlDependencies = {
   exportCookiesToFileForUrlImpl?: ExportCookiesToFileForUrlFn;
   waitImpl?: (ms: number) => Promise<void>;
 };
+
+export type ProcessVideoUrlResult =
+  | {
+      kind: 'media';
+      videoPath: string;
+      filename: string;
+      title?: string;
+      thumbnailUrl?: string;
+      channel?: string;
+      channelUrl?: string;
+      durationSec?: number;
+      uploadedAt?: string;
+      size: number;
+      fileUrl: string;
+      originalVideoPath: string;
+      proc: DownloadProcessType;
+    }
+  | {
+      kind: 'automatic_captions';
+      subtitles: string;
+      captionLanguageCode: string;
+      title?: string;
+      thumbnailUrl?: string;
+      channel?: string;
+      channelUrl?: string;
+      durationSec?: number;
+      uploadedAt?: string;
+    };
 
 async function defaultDownloadVideoFromPlatform(
   ...args: Parameters<DownloadVideoFromPlatformFn>
@@ -109,20 +152,7 @@ export async function processVideoUrl(
   options: {
     signal?: AbortSignal;
   } = {}
-): Promise<{
-  videoPath: string;
-  filename: string;
-  title?: string;
-  thumbnailUrl?: string;
-  channel?: string;
-  channelUrl?: string;
-  durationSec?: number;
-  uploadedAt?: string;
-  size: number;
-  fileUrl: string;
-  originalVideoPath: string;
-  proc: DownloadProcessType;
-}> {
+): Promise<ProcessVideoUrlResult> {
   log.info(`[URLprocessor] processVideoUrl CALLED (Op ID: ${operationId})`);
   const signal = options.signal;
 
@@ -227,6 +257,42 @@ export async function processVideoUrl(
       normalizeUploadedAt(info?.upload_date),
   });
 
+  const enabledDevelopmentFixture =
+    process.env.TRANSLATOR_LOCAL_URL_RECOVERY_FIXTURE;
+  const electronApp = enabledDevelopmentFixture ? getElectronApp() : null;
+  const developmentFixture =
+    enabledDevelopmentFixture && electronApp && !electronApp.isPackaged
+      ? await loadDevelopmentCaptionRecoveryFixture({
+          url,
+          isPackaged: false,
+          appPath: electronApp.getAppPath(),
+          outputDir: tempDir,
+          enabledFixture: enabledDevelopmentFixture,
+          onLog: message => log.info(`[URLprocessor] ${message}`),
+        })
+      : null;
+  if (developmentFixture) {
+    const metadata = extractDownloadMetadata(
+      developmentFixture.info,
+      'YouTube automatic captions'
+    );
+    progressCallback?.({
+      percent: PROGRESS.FINAL_END,
+      stage: 'Automatic captions ready; video remains unavailable',
+    });
+    return {
+      kind: 'automatic_captions',
+      subtitles: developmentFixture.subtitles,
+      captionLanguageCode: developmentFixture.languageCode,
+      title: metadata.title,
+      thumbnailUrl: metadata.thumbnailUrl,
+      channel: metadata.channel,
+      channelUrl: metadata.channelUrl,
+      durationSec: metadata.durationSec,
+      uploadedAt: metadata.uploadedAt,
+    };
+  }
+
   // --- Download attempt ---
   const run = async (extraArgs: string[]) => {
     const downloadResult = await downloadVideo(
@@ -239,6 +305,27 @@ export async function processVideoUrl(
       extraArgs,
       signal
     );
+    if (downloadResult.kind === 'automatic_captions') {
+      const metadata = extractDownloadMetadata(
+        downloadResult.info,
+        'YouTube automatic captions'
+      );
+      progressCallback?.({
+        percent: PROGRESS.FINAL_END,
+        stage: 'Automatic captions ready; video remains unavailable',
+      });
+      return {
+        kind: 'automatic_captions' as const,
+        subtitles: downloadResult.subtitles,
+        captionLanguageCode: downloadResult.languageCode,
+        title: metadata.title,
+        thumbnailUrl: metadata.thumbnailUrl,
+        channel: metadata.channel,
+        channelUrl: metadata.channelUrl,
+        durationSec: metadata.durationSec,
+        uploadedAt: metadata.uploadedAt,
+      };
+    }
     const stats = await fsp.stat(downloadResult.filepath);
     throwIfOperationCancelled({
       signal,
@@ -260,6 +347,7 @@ export async function processVideoUrl(
     });
 
     return {
+      kind: 'media' as const,
       videoPath: downloadResult.filepath,
       filename,
       title: metadata.title,

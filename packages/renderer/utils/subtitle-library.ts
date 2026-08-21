@@ -427,6 +427,7 @@ export function unmountCurrentSubtitles(): void {
     sourceVideoPath: null,
     sourceVideoAssetIdentity: null,
     sourceUrl: null,
+    sourceProvenance: null,
     subtitleKind: null,
     targetLanguage: null,
     transcriptionEngine: null,

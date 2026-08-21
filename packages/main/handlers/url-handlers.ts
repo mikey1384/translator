@@ -187,6 +187,39 @@ export async function handleProcessUrl(
       }
     );
 
+    if (result.kind === 'automatic_captions') {
+      if (controller.signal.aborted) {
+        return await finalizeCancelledUrlOperation({
+          operationId,
+          discardPendingUrlResult,
+          registryFinish,
+        });
+      }
+      // Media bytes still failed, so do not count this as a completed video
+      // download. The useful caption-only result is carried explicitly below.
+      void trackUrlDownloadFunnelEvent('url_download_failed', {
+        sourceType,
+        failureCategory: 'site_rejected',
+      });
+      registryFinish(operationId);
+      return {
+        success: true,
+        subtitles: result.subtitles,
+        captionRecovery: {
+          kind: 'youtube_automatic_captions',
+          mediaFailure: 'http_403',
+          languageCode: result.captionLanguageCode,
+        },
+        title: result.title,
+        thumbnailUrl: result.thumbnailUrl,
+        channel: result.channel,
+        channelUrl: result.channelUrl,
+        durationSec: result.durationSec,
+        uploadedAt: result.uploadedAt,
+        operationId,
+      };
+    }
+
     void trackUrlDownloadFunnelEvent('url_download_completed', { sourceType });
 
     registerPendingUrlResult(operationId, event.sender, result.videoPath);

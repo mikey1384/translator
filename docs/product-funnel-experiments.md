@@ -4,6 +4,43 @@ Use this dated log to align desktop product changes with GA4 and settled Stripe
 outcomes. Treat small samples as directional and compare releases sequentially;
 do not infer causality from calendar overlap alone.
 
+## 2026-08-21 — YouTube media-403 caption-only recovery
+
+- Status: implemented and locally verified in the unreleased working tree based
+  on shipped Translator 1.16.14 (`47c36e0`). No release, signing, packaging, or
+  production shadow run was performed.
+- Problem: when yt-dlp reached YouTube media bytes and then received HTTP 403,
+  the raw downloader error reached the UI and the editor remained empty even
+  when the public video advertised automatic captions.
+- Change: classify URL failures by phase; only a proven YouTube media-transfer
+  403 may start a separate unauthenticated, subtitle-only lookup. If an
+  unambiguous original automatic-caption track yields valid SRT cues, keep the
+  job open in the editor without media. Webpage/player 403s, ambiguous 403s,
+  login, human verification, private/restricted videos, 429s, and denied caption
+  requests retain their existing failure or connection behavior.
+- Customer truth: the editor labels the source as `YouTube automatic captions`
+  and explicitly says it is not a fresh transcription. Edit, translate, and SRT
+  export remain available; preview and burn-in remain unavailable until the
+  customer mounts media. Existing mounted subtitles require an explicit
+  save/discard/cancel choice before replacement.
+- Measurement: the media-byte failure remains `url_download_failed` with the
+  allowlisted `site_rejected` category and is not counted as
+  `url_download_completed`. This app-only change adds no URL, caption content,
+  raw error, device identity, or new backend analytics field. Caption-recovery
+  adoption therefore is not separately measurable in this unreleased change.
+- Verification: deterministic fixtures cover media versus source 403s, original
+  automatic-caption selection, credential stripping, caption denial, valid SRT,
+  cleanup, and durable subtitle provenance. The dev-only Electron fixture is
+  gated off in packaged builds and fixed to a reserved `.invalid` URL. The full
+  Electron flow loaded three caption rows with no media, enabled Translate and
+  Save As, disabled burn-in, and showed the truthful provenance and replacement
+  UI. The designated test-only shadow was not used.
+- Guardrails: no cookies, usernames, passwords, custom authorization headers,
+  alternate extractor clients, proxies, geo-bypass, TLS bypass, or media retry
+  are carried into caption lookup; no access control is bypassed; manual
+  captions are not relabeled as automatic captions; automatic captions are not
+  called transcription.
+
 ## 2026-08-14 — Exclude unreleased development builds from customer funnels
 
 - Status: shipped on macOS in Translator 1.16.12 on 2026-08-14 at 06:54

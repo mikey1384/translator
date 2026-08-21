@@ -77,6 +77,77 @@ test('document-backed loads preserve subtitle variant metadata without requiring
   assert.equal(state.sourceUrl, 'https://example.com/watch?v=123');
 });
 
+test('caption-only loads keep automatic-caption provenance and no transcription source', () => {
+  useSubStore.getState().load(
+    [
+      {
+        id: 'caption-1',
+        index: 1,
+        start: 0,
+        end: 1.2,
+        original: 'Fixture automatic caption',
+      },
+    ],
+    null,
+    'fresh',
+    null,
+    null,
+    null,
+    null,
+    {
+      title: 'Fixture automatic captions',
+      sourceVideoPath: null,
+      sourceVideoAssetIdentity: null,
+      sourceUrl: 'https://www.youtube.com/watch?v=fixture',
+      sourceProvenance: 'youtube_automatic_captions',
+      subtitleKind: null,
+      targetLanguage: null,
+    }
+  );
+
+  const state = useSubStore.getState();
+  assert.equal(state.sourceProvenance, 'youtube_automatic_captions');
+  assert.equal(state.sourceVideoPath, null);
+  assert.equal(state.sourceVideoAssetIdentity, null);
+  assert.equal(state.transcriptionEngine, null);
+  assert.equal(state.subtitleKind, null);
+});
+
+test('translated caption documents retain automatic-caption provenance', () => {
+  useSubStore.getState().load(
+    [
+      {
+        id: 'translated-caption-1',
+        index: 1,
+        start: 0,
+        end: 1.2,
+        original: 'Fixture automatic caption',
+        translation: 'Translated fixture caption',
+      },
+    ],
+    null,
+    'fresh',
+    null,
+    null,
+    null,
+    null,
+    {
+      id: 'translated-caption-document',
+      title: 'Fixture automatic captions',
+      sourceUrl: 'https://www.youtube.com/watch?v=fixture',
+      sourceProvenance: 'youtube_automatic_captions',
+      subtitleKind: 'translation',
+      targetLanguage: 'ko',
+    }
+  );
+
+  const state = useSubStore.getState();
+  assert.equal(state.sourceProvenance, 'youtube_automatic_captions');
+  assert.equal(state.subtitleKind, 'translation');
+  assert.equal(state.targetLanguage, 'ko');
+  assert.equal(state.transcriptionEngine, null);
+});
+
 test('disk-backed document load preserves import linkage while reopening a different linked file as the active target', () => {
   useSubStore.getState().load(
     [

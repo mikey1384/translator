@@ -11,13 +11,22 @@ import { i18n } from '../i18n';
 import { useVideoStore } from './video-store';
 import { useSubStore } from './subtitle-store';
 import { useUIStore } from './ui-store';
-import { openDownloadSwitchConfirm } from './modal-store';
+import {
+  closeChangeVideo,
+  openDownloadSwitchConfirm,
+  openUnsavedSrtConfirm,
+} from './modal-store';
 import {
   rollbackLocalVideoSuggestionHistoryUpsert,
   upsertLocalVideoSuggestionHistoryItem,
 } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 import { mountedSubtitleMatchesVideoSource } from '../utils/subtitle-source-association';
 import { handoffPromotedDownloadHistory } from '../../shared/helpers/url-download-history-handoff.js';
+import { parseSrt } from '../../shared/helpers';
+import {
+  didSaveSubtitleFile,
+  saveCurrentSubtitles,
+} from '../utils/saveSubtitles';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -247,10 +256,9 @@ async function downloadMediaInternal(
     const current = get().download;
     return current.id !== opId || current.stage === 'Cancelled';
   };
-  const getMountedSourcePath = () => {
-    const { originalPath, path } = useVideoStore.getState();
-    const normalized = String(originalPath || path || '').trim();
-    return normalized || null;
+  const hasMountedVideo = () => {
+    const { originalPath, path, url, file } = useVideoStore.getState();
+    return Boolean(String(originalPath || path || url || '').trim() || file);
   };
   if (!requestedUrl) {
     set((state: UrlState) => {
@@ -331,6 +339,129 @@ async function downloadMediaInternal(
       return cancelledResult();
     }
 
+    if (
+      res.success &&
+      res.captionRecovery?.kind === 'youtube_automatic_captions' &&
+      res.captionRecovery.mediaFailure === 'http_403'
+    ) {
+      const recoveredSegments = parseSrt(String(res.subtitles || ''));
+      if (recoveredSegments.length === 0) {
+        const message =
+          'Public automatic captions were found, but Translator could not read them.';
+        set((state: UrlState) => {
+          state.needCookies = false;
+          state.download.inProgress = false;
+          state.download.stage = 'Error';
+          state.download.percent = 100;
+          state.error = message;
+          state.errorKind = 'operation';
+        });
+        return { ...res, success: false, error: message };
+      }
+
+      if (!mountOnComplete) {
+        set((state: UrlState) => {
+          state.needCookies = false;
+          state.download.inProgress = false;
+          state.download.stage = 'Video blocked; automatic captions available';
+          state.download.percent = 100;
+          state.error = null;
+          state.errorKind = null;
+        });
+        return res;
+      }
+
+      const hasMountedSource = hasMountedVideo();
+      if (
+        hasMountedSource &&
+        !(await openDownloadSwitchConfirm('caption_recovery'))
+      ) {
+        if (isCurrentDownloadCancelledOrStale()) {
+          return cancelledResult();
+        }
+        set((state: UrlState) => {
+          state.needCookies = false;
+          state.download.inProgress = false;
+          state.download.stage = 'Automatic captions ready; not opened';
+          state.download.percent = 100;
+          state.error = null;
+          state.errorKind = null;
+        });
+        return res;
+      }
+
+      if (isCurrentDownloadCancelledOrStale()) {
+        return cancelledResult();
+      }
+
+      if (useSubStore.getState().order.length > 0) {
+        const choice = await openUnsavedSrtConfirm('caption_recovery');
+        if (isCurrentDownloadCancelledOrStale()) {
+          return cancelledResult();
+        }
+        if (choice === 'cancel') {
+          set((state: UrlState) => {
+            state.needCookies = false;
+            state.download.inProgress = false;
+            state.download.stage = 'Automatic captions ready; not opened';
+            state.download.percent = 100;
+            state.error = null;
+            state.errorKind = null;
+          });
+          return res;
+        }
+        if (choice === 'save') {
+          const saveResult = await saveCurrentSubtitles();
+          if (!didSaveSubtitleFile(saveResult)) {
+            const message =
+              saveResult.error ||
+              'Existing subtitles could not be saved. Automatic captions were not opened.';
+            set((state: UrlState) => {
+              state.needCookies = false;
+              state.download.inProgress = false;
+              state.download.stage = 'Error';
+              state.download.percent = 100;
+              state.error = message;
+              state.errorKind = 'operation';
+            });
+            return { ...res, success: false, error: message };
+          }
+        }
+      }
+
+      if (isCurrentDownloadCancelledOrStale()) {
+        return cancelledResult();
+      }
+      await useVideoStore.getState().setFile(null);
+      if (isCurrentDownloadCancelledOrStale()) {
+        return cancelledResult();
+      }
+      useSubStore
+        .getState()
+        .load(recoveredSegments, null, 'fresh', null, null, null, null, {
+          title: String(res.title || '').trim() || 'YouTube automatic captions',
+          sourceVideoPath: null,
+          sourceVideoAssetIdentity: null,
+          sourceUrl: requestedUrl,
+          sourceProvenance: 'youtube_automatic_captions',
+          subtitleKind: null,
+          targetLanguage: null,
+        });
+      closeChangeVideo();
+      useUIStore.getState().setEditPanelOpen(true);
+      set((state: UrlState) => {
+        state.needCookies = false;
+        state.download.stage = 'Automatic captions ready; video unavailable';
+        state.download.percent = 100;
+        state.download.inProgress = false;
+        state.download.completedFilePath = null;
+        state.error = null;
+        state.errorKind = null;
+        state.urlInput = '';
+      });
+      return res;
+    }
+
     let finalPath = res.videoPath ?? res.filePath;
     const filename = res.filename;
 
@@ -365,7 +496,7 @@ async function downloadMediaInternal(
     } = useSubStore.getState();
     const preserveMountedDiskSubs =
       existingSubs.length > 0 && subsOrigin === 'disk' && !libraryEntryId;
-    const hasMountedSource = Boolean(getMountedSourcePath());
+    const hasMountedSource = hasMountedVideo();
     const shouldSwitchToDownloaded =
       mountOnComplete &&
       (!hasMountedSource || (await openDownloadSwitchConfirm()));

@@ -172,6 +172,10 @@
     "downloadFinishedSwitchPrompt": "Your download is ready. Watch it now, or keep your current video and open it later from history.",
     "downloadFinishedWatchNow": "Watch now",
     "downloadFinishedWatchLater": "Watch later",
+    "captionRecoverySwitchTitle": "Open captions without the current video?",
+    "captionRecoverySwitchPrompt": "Translator recovered YouTube automatic captions, but the URL video is unavailable. Opening them will unmount the current video.",
+    "captionRecoveryOpenCaptions": "Open captions",
+    "captionRecoveryKeepVideo": "Keep current video",
     "videoSuggestion": {
       "show": "Find videos with AI",
       "hide": "Hide AI video search",
@@ -467,7 +471,11 @@
       "listCopy": "Edit source text, translation, timing, and line-level actions directly in place.",
       "originalLabel": "Original",
       "translationLabel": "Translation",
-      "mergeNeedsVideoCopy": "Mount a source video before starting a burn-in export."
+      "mergeNeedsVideoCopy": "Mount a source video before starting a burn-in export.",
+      "automaticCaptionsTitle": "YouTube automatic captions",
+      "automaticCaptionsPill": "YouTube automatic captions",
+      "automaticCaptionsCopy": "Video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. You can edit, translate, and export SRT now. Mount media to preview or burn in subtitles.",
+      "automaticCaptionsCopyWithMedia": "The URL video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. The mounted media is available for preview and burn-in."
     },
     "item": {
       "seek": "Seek",
@@ -971,6 +979,12 @@
       "saveAndTranscribe": "Save and Transcribe",
       "discardAndTranscribe": "Discard and Transcribe",
       "cancel": "Cancel"
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "title": "Open recovered automatic captions?",
+      "message": "You already have subtitles open. Save or discard them before replacing them with YouTube automatic captions.",
+      "saveAndOpen": "Save and open captions",
+      "discardAndOpen": "Discard and open captions"
     },
     "downloadInProgress": "Download in Progress",
     "saveDownloadedFile": "Save the downloaded file: {{path}}",

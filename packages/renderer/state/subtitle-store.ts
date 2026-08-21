@@ -7,6 +7,7 @@ import {
   SubtitleDisplayMode,
   SubtitleDocumentMeta,
   SubtitleDocumentLinkedFileRole,
+  SubtitleSourceProvenance,
 } from '@shared-types/app';
 import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
@@ -42,6 +43,7 @@ interface State {
   sourceVideoPath: string | null;
   sourceVideoAssetIdentity: string | null;
   sourceUrl: string | null;
+  sourceProvenance: SubtitleSourceProvenance | null;
   subtitleKind: StoredSubtitleKind | null;
   targetLanguage: string | null;
   transcriptionEngine: 'elevenlabs' | 'whisper' | null;
@@ -75,9 +77,11 @@ interface Actions {
       targetLanguage?: string | null;
     } | null,
     videoAssetIdentityRef?: string | null,
-    documentMeta?: SubtitleDocumentMeta | null
+    documentMeta?: Partial<SubtitleDocumentMeta> | null
   ) => void;
-  setDocumentMeta: (documentMeta?: SubtitleDocumentMeta | null) => void;
+  setDocumentMeta: (
+    documentMeta?: Partial<SubtitleDocumentMeta> | null
+  ) => void;
   setActiveFileTarget: (args?: {
     filePath?: string | null;
     mode?: SubtitleDisplayMode | null;
@@ -147,6 +151,7 @@ const initialState: State = {
   sourceVideoPath: null,
   sourceVideoAssetIdentity: null,
   sourceUrl: null,
+  sourceProvenance: null,
   subtitleKind: null,
   targetLanguage: null,
   transcriptionEngine: null,
@@ -256,7 +261,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             documentMeta == null && isEquivalentDocument;
           const nextDocumentId =
             documentMeta && 'id' in documentMeta
-              ? documentMeta.id
+              ? (documentMeta.id ?? null)
               : preserveExistingDocumentMeta
                 ? s.documentId
                 : null;
@@ -325,6 +330,12 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
               : !isDiskBackedLoad || isEquivalentDocument
                 ? (s.sourceUrl ?? null)
                 : null;
+          const nextSourceProvenance =
+            documentMeta && 'sourceProvenance' in documentMeta
+              ? (documentMeta.sourceProvenance ?? null)
+              : documentMeta == null && isEquivalentDocument
+                ? (s.sourceProvenance ?? null)
+                : null;
 
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
             acc[cue.id] = { ...cue, index: i + 1 };
@@ -346,6 +357,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.sourceVideoPath = nextSourceVideoPath;
           s.sourceVideoAssetIdentity = nextSourceVideoAssetIdentity;
           s.sourceUrl = nextSourceUrl;
+          s.sourceProvenance = nextSourceProvenance;
           s.subtitleKind = nextSubtitleKind;
           s.targetLanguage = nextTargetLanguage;
           // Replacing the subtitle set should clear engine-specific UI state
@@ -366,12 +378,16 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           if (documentMeta == null) {
             s.subtitleKind = null;
             s.targetLanguage = null;
+            s.sourceProvenance = null;
           } else {
             if (documentMeta.subtitleKind !== undefined) {
               s.subtitleKind = documentMeta.subtitleKind ?? null;
             }
             if (documentMeta.targetLanguage !== undefined) {
               s.targetLanguage = documentMeta.targetLanguage ?? null;
+            }
+            if (documentMeta.sourceProvenance !== undefined) {
+              s.sourceProvenance = documentMeta.sourceProvenance ?? null;
             }
           }
           if (documentMeta?.importFilePath !== undefined) {

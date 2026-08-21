@@ -2,15 +2,10 @@ import { useTaskStore } from '../../../state';
 import * as FileIPC from '../../../ipc/file';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
 import { parseSrt } from '../../../../shared/helpers';
-import type { SrtSegment } from '@shared-types/app';
+import type { SrtSegment, SubtitleSourceProvenance } from '@shared-types/app';
 import { i18n } from '../../../i18n';
 import { buildSrt } from '../../../../shared/helpers';
-import {
-  useSubStore,
-  useUIStore,
-  useVideoStore,
-  useCreditStore,
-} from '../../../state';
+import { useSubStore, useUIStore, useVideoStore } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
 import { didSaveSubtitleFile } from '../../../utils/saveSubtitles';
@@ -87,6 +82,7 @@ function buildGenerateSubtitlesDurableRecoverySeed({
 function resolveTranslationSourceAssociation(): {
   sourceVideoPath: string | null;
   sourceUrl: string | null;
+  sourceProvenance: SubtitleSourceProvenance | null;
   titleHint: string | null;
 } {
   const subtitleState = useSubStore.getState();
@@ -99,8 +95,14 @@ function resolveTranslationSourceAssociation(): {
 
   return {
     sourceVideoPath: subtitleState.sourceVideoPath ?? null,
-    sourceUrl: subtitlesBelongToCurrentVideo ? videoState.sourceUrl : null,
-    titleHint: videoState.file?.name ?? null,
+    sourceUrl:
+      subtitleState.sourceProvenance === 'youtube_automatic_captions'
+        ? (subtitleState.sourceUrl ?? null)
+        : subtitlesBelongToCurrentVideo
+          ? videoState.sourceUrl
+          : null,
+    sourceProvenance: subtitleState.sourceProvenance ?? null,
+    titleHint: videoState.file?.name ?? subtitleState.documentTitle ?? null,
   };
 }
 
@@ -153,7 +155,7 @@ export async function executeSrtTranslation({
         segments,
         translatedSegments
       );
-      const { sourceVideoPath, sourceUrl, titleHint } =
+      const { sourceVideoPath, sourceUrl, sourceProvenance, titleHint } =
         resolveTranslationSourceAssociation();
       let documentMeta = null;
       try {
@@ -164,6 +166,7 @@ export async function executeSrtTranslation({
           sourceVideoAssetIdentity:
             useVideoStore.getState().sourceAssetIdentity ?? null,
           sourceUrl,
+          sourceProvenance,
           subtitleKind: 'translation',
           targetLanguage,
         });
@@ -193,8 +196,9 @@ export async function executeSrtTranslation({
           storeErr
         );
       }
-      // Preserve linkage to the source video, but translated documents should
-      // not retain transcription-review provenance from the source transcript.
+      // Preserve source linkage and automatic-caption provenance, but
+      // translated documents should not retain transcription-review engine
+      // state from the source transcript.
       useSubStore
         .getState()
         .load(

@@ -21,6 +21,11 @@ import {
 import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
+import { classifyUrlDownloadFailureDetail } from './failure-taxonomy.js';
+import {
+  recoverPublicYouTubeAutomaticCaptions,
+  type AutomaticCaptionCommandRunner,
+} from './automatic-caption-recovery.js';
 import { findFfmpeg } from '../ffmpeg-runner.js';
 import { app } from 'electron';
 import { exportCookiesToFileForUrl } from './site-cookies.js';
@@ -34,6 +39,7 @@ import {
   throwIfOperationCancelled,
 } from '../../utils/operation-cancellation.js';
 import { terminateProcess } from '../../utils/process-killer.js';
+import { classifyUrlSourceType } from '../url-download-funnel.js';
 
 type DownloadVideoFromPlatformDependencies = {
   ensureYtDlpBinaryImpl?: typeof ensureYtDlpBinary;
@@ -44,6 +50,20 @@ type DownloadVideoFromPlatformDependencies = {
   warmupYtDlpImpl?: typeof warmupYtDlp;
   warmupFfmpegImpl?: typeof warmupFfmpeg;
 };
+
+export type DownloadVideoFromPlatformResult =
+  | {
+      kind: 'media';
+      filepath: string;
+      info: Record<string, unknown> | null;
+      proc: DownloadProcessType;
+    }
+  | {
+      kind: 'automatic_captions';
+      subtitles: string;
+      languageCode: string;
+      info: Record<string, unknown>;
+    };
 
 /**
  * Clean up partial/incomplete download files matching a timestamp pattern.
@@ -281,11 +301,7 @@ export async function downloadVideoFromPlatform(
   extraArgs: string[] = [],
   signal?: AbortSignal,
   dependencies: DownloadVideoFromPlatformDependencies = {}
-): Promise<{
-  filepath: string;
-  info: any;
-  proc: DownloadProcessType;
-}> {
+): Promise<DownloadVideoFromPlatformResult> {
   log.info(`[URLprocessor] Starting download: ${url} (Op ID: ${operationId})`);
   const ensureYtDlpBinaryFn =
     dependencies.ensureYtDlpBinaryImpl ?? ensureYtDlpBinary;
@@ -487,7 +503,7 @@ export async function downloadVideoFromPlatform(
 
   let effectiveExtraArgs = [...extraArgs];
 
-  const isYouTube = /youtube\.com|youtu\.be/.test(url);
+  const isYouTube = classifyUrlSourceType(url) === 'youtube';
   const isYouTubeShorts = /youtube\.com\/shorts\//.test(url);
   const sourceHost = (() => {
     try {
@@ -1265,6 +1281,7 @@ export async function downloadVideoFromPlatform(
         progressCallback?.({ percent: 100, stage: 'Completed' });
 
         return {
+          kind: 'media',
           filepath: finalFilepath,
           info: downloadInfo,
           proc: subprocess!,
@@ -1457,6 +1474,96 @@ export async function downloadVideoFromPlatform(
     log.error(
       `[URLprocessor] Handling non-termination error for Op ID ${operationId}`
     );
+
+    const failureDetail = classifyUrlDownloadFailureDetail(error);
+    if (isYouTube && failureDetail.canAttemptPublicAutomaticCaptions) {
+      log.info(
+        `[URLprocessor] Media transfer was blocked with HTTP 403; checking public automatic captions (Op ID: ${operationId}).`
+      );
+      progressCallback?.({
+        percent: PROGRESS.FINAL_START,
+        stage: 'Video blocked; checking public automatic captions...',
+      });
+      await cleanupPartialDownloads(outputDir, safeTimestamp, operationId);
+
+      const captionConnectionArgs = [
+        ...jsRuntimeArgs,
+        '--socket-timeout',
+        socketTimeoutSeconds,
+        '--retries',
+        '1',
+        '--retry-sleep',
+        retrySleepArg,
+        ...requestPacingArgs,
+        ...(ipMode === 'v4'
+          ? ['--force-ipv4']
+          : ipMode === 'v6'
+            ? ['--force-ipv6']
+            : []),
+      ];
+      const runCaptionCommand: AutomaticCaptionCommandRunner = async (
+        args,
+        context
+      ) => {
+        throwIfCancelled(`before ${context}`);
+        const captionProcess = execaImpl(ytDlpPath, args, {
+          windowsHide: true,
+          encoding: 'utf8',
+          cwd: outputDir,
+          timeout: 120_000,
+          detached: process.platform !== 'win32',
+          env: {
+            ...childEnv(),
+            ...(runElectronAsNode ? { ELECTRON_RUN_AS_NODE: '1' } : {}),
+            PYTHONUNBUFFERED: '1',
+            PYTHONIOENCODING: 'utf-8',
+          },
+        });
+        await registerDownloadProcess(operationId, captionProcess);
+        try {
+          const result = await raceOperationCancellation(captionProcess, {
+            signal,
+            operationId,
+            context,
+            log,
+            onCancel: () =>
+              terminateProcess({
+                childProcess: captionProcess,
+                logPrefix: `url-caption-recovery-${operationId}`,
+              }),
+          });
+          return { stdout: result.stdout };
+        } finally {
+          removeDownloadProcess(operationId);
+        }
+      };
+
+      const recovered = await recoverPublicYouTubeAutomaticCaptions({
+        url,
+        outputDir,
+        filePrefix: `caption_recovery_${safeTimestamp}_`,
+        ffmpegPath,
+        connectionArgs: captionConnectionArgs,
+        runYtDlp: runCaptionCommand,
+        onLog: message =>
+          log.info(`[URLprocessor] ${message} (Op ID: ${operationId})`),
+      });
+      if (recovered) {
+        log.info(
+          `[URLprocessor] Recovered public automatic captions without media (language=${recovered.languageCode}, Op ID: ${operationId}).`
+        );
+        progressCallback?.({
+          percent: 100,
+          stage: 'Automatic captions ready; video remains unavailable',
+        });
+        return {
+          kind: 'automatic_captions',
+          subtitles: recovered.subtitles,
+          languageCode: recovered.languageCode,
+          info: recovered.info,
+        };
+      }
+    }
 
     // Use mapErrorToUserFriendly for error mapping (prefer combined stream)
     userFriendlyErrorMessage = mapErrorToUserFriendly({

@@ -1,0 +1,2 @@
+[youtube] fixture-source-403: Downloading webpage
+ERROR: [youtube] fixture-source-403: Unable to download webpage: HTTP Error 403: Forbidden

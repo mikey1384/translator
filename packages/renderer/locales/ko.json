@@ -172,6 +172,10 @@
     "downloadFinishedSwitchPrompt": "다운로드가 준비되었습니다. 지금 보거나, 현재 영상을 유지한 채 나중에 기록에서 열 수 있습니다.",
     "downloadFinishedWatchNow": "지금 보기",
     "downloadFinishedWatchLater": "나중에 보기",
+    "captionRecoverySwitchTitle": "현재 영상 없이 자막을 열까요?",
+    "captionRecoverySwitchPrompt": "Translator가 YouTube 자동 생성 자막을 복구했지만 URL 영상은 사용할 수 없습니다. 자막을 열면 현재 영상이 닫힙니다.",
+    "captionRecoveryOpenCaptions": "자막 열기",
+    "captionRecoveryKeepVideo": "현재 영상 유지",
     "videoSuggestion": {
       "show": "AI로 영상 찾기",
       "hide": "AI 영상 검색 숨기기",
@@ -467,7 +471,11 @@
       "listCopy": "원문, 번역, 타이밍, 줄 단위 작업을 바로 편집하세요.",
       "originalLabel": "원문",
       "translationLabel": "번역",
-      "mergeNeedsVideoCopy": "자막 입히기 내보내기를 시작하기 전에 원본 영상을 연결하세요."
+      "mergeNeedsVideoCopy": "자막 입히기 내보내기를 시작하기 전에 원본 영상을 연결하세요.",
+      "automaticCaptionsTitle": "YouTube 자동 생성 자막",
+      "automaticCaptionsPill": "YouTube 자동 생성 자막",
+      "automaticCaptionsCopy": "영상 다운로드가 차단되었습니다(HTTP 403). 이 자막은 새로 전사한 결과가 아니라 YouTube 자동 생성 자막입니다. 지금 편집, 번역, SRT 내보내기를 할 수 있습니다. 미리보기나 자막 입히기를 하려면 미디어를 연결하세요.",
+      "automaticCaptionsCopyWithMedia": "URL 영상 다운로드가 차단되었습니다(HTTP 403). 이 자막은 새로 전사한 결과가 아니라 YouTube 자동 생성 자막입니다. 연결된 미디어로 미리보기와 자막 입히기를 할 수 있습니다."
     },
     "item": {
       "seek": "탐색",
@@ -971,6 +979,12 @@
       "saveAndTranscribe": "저장하고 전사하기",
       "discardAndTranscribe": "저장하지 않고 전사하기",
       "cancel": "취소"
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "title": "복구한 자동 생성 자막을 여시겠습니까?",
+      "message": "이미 자막이 열려 있습니다. YouTube 자동 생성 자막으로 교체하기 전에 기존 자막을 저장하거나 삭제하세요.",
+      "saveAndOpen": "저장하고 자막 열기",
+      "discardAndOpen": "삭제하고 자막 열기"
     },
     "downloadInProgress": "다운로드 진행 중",
     "saveDownloadedFile": "다운로드한 파일 저장: {{path}}",

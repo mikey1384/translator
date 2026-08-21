@@ -30,6 +30,12 @@ import {
 } from '../../utils/shared-cancellable-job.js';
 import { waitForSharedCancellableSingletonJob } from '../../utils/shared-cancellable-singleton-job.js';
 import { settingsStore } from '../../store/settings-store.js';
+import {
+  ytDlpReleaseAssetName,
+  ytDlpStagedBinaryName,
+} from './yt-dlp-binary-names.js';
+export { ytDlpReleaseAssetName, ytDlpStagedBinaryName };
+
 
 // Cache for update check - only check once per hour. Persisted so the
 // packaged app's first download after every launch doesn't re-pay a
@@ -1219,12 +1225,12 @@ async function supportsRequiredYtDlpFlags(
 let backgroundUpdateInFlight = false;
 
 /**
- * Run the yt-dlp self-update off the critical path. Downloads never wait on
- * this; macOS/Linux update the binary in place and Windows stages a
- * side-by-side .next binary, both of which the next ensure pass picks up.
+ * Run the yt-dlp update off the critical path. Downloads never wait on
+ * this. Every platform stages a side-by-side .next binary; the next
+ * ensure pass picks it up. Never overwrite a running PyInstaller onefile.
  *
  * Every self-update in the app must go through here (or
- * requestBackgroundYtDlpUpdate) so concurrent `-U` runs against the same
+ * requestBackgroundYtDlpUpdate) so concurrent in-place updates against the same
  * executable are impossible.
  */
 function scheduleBackgroundYtDlpUpdate(binaryPath: string): void {
@@ -1243,9 +1249,8 @@ function scheduleBackgroundYtDlpUpdate(binaryPath: string): void {
           '[URLprocessor] Background yt-dlp update did not complete; keeping current binary'
         );
       }
-      // `-U` may have replaced the file in place. The spawn-free cache would
-      // otherwise serve a broken replacement for up to an hour, so verify it
-      // now and force a full (reinstalling) ensure pass if it doesn't run.
+      // Staging writes yt-dlp.next and leaves the running binary alone.
+      // Verify the path we were using still runs; if not, force reinstall.
       if (!(await testBinary(binaryPath))) {
         log.warn(
           '[URLprocessor] yt-dlp failed verification after background update; clearing cache so the next use reinstalls'
@@ -1281,106 +1286,13 @@ async function updateExistingBinary(
   binaryPath: string,
   signal?: AbortSignal
 ): Promise<boolean> {
-  // Note: Progress is handled by the caller's crawl interval
-  try {
-    // On Windows, yt-dlp self-update is prone to failing when the executable is
-    // locked. We instead stage a freshly downloaded binary side-by-side.
-    if (process.platform === 'win32' && app.isPackaged) {
-      return await updateExistingBinaryWindowsPackaged(binaryPath, signal);
-    }
-
-    log.info(`[URLprocessor] Attempting to update binary: ${binaryPath}`);
-
-    // Get version before update for comparison
-    let versionBefore = '';
-    try {
-      const proc = execa(binaryPath, ['--version'], {
-        timeout: 10000,
-        windowsHide: true,
-      });
-      const { stdout } = await runProcessWithCancellation(proc, {
-        signal,
-        context: `while reading yt-dlp version before update for ${binaryPath}`,
-        logPrefix: 'yt-dlp-update-version-before',
-      });
-      versionBefore = stdout.trim();
-    } catch (error) {
-      if (error instanceof CancelledError) {
-        throw error;
-      }
-      // If we can't get version, proceed anyway
-    }
-
-    const updateProc = execa(binaryPath, ['-U', '--quiet'], {
-      timeout: 120000,
-      windowsHide: true, // Prevent console flash on Windows
-    });
-    const result = await runProcessWithCancellation(updateProc, {
-      signal,
-      context: `while updating yt-dlp ${binaryPath}`,
-      logPrefix: 'yt-dlp-self-update',
-    });
-
-    const success =
-      result.stdout.includes('up to date') ||
-      result.stdout.includes('updated') ||
-      result.stdout.includes('Successfully updated') ||
-      result.exitCode === 0;
-
-    if (success) {
-      log.info('[URLprocessor] Binary update completed successfully');
-
-      // Post-update sanity check: verify the binary was actually updated
-      if (versionBefore) {
-        try {
-          const proc = execa(binaryPath, ['--version'], {
-            timeout: 10000,
-            windowsHide: true,
-          });
-          const { stdout } = await runProcessWithCancellation(proc, {
-            signal,
-            context: `while reading yt-dlp version after update for ${binaryPath}`,
-            logPrefix: 'yt-dlp-update-version-after',
-          });
-          const versionAfter = stdout.trim();
-          if (
-            versionBefore === versionAfter &&
-            !result.stdout.includes('up to date')
-          ) {
-            log.warn(
-              '[URLprocessor] Update claimed success but version unchanged - binary may still be locked'
-            );
-            return false;
-          }
-          log.info(`[URLprocessor] Version after update: ${versionAfter}`);
-        } catch (error) {
-          if (error instanceof CancelledError) {
-            throw error;
-          }
-          // If we can't get version after update, assume it worked
-          log.warn('[URLprocessor] Could not verify version after update');
-        }
-      }
-
-      // Log version after update
-      await testBinary(binaryPath, signal);
-    } else {
-      log.warn(
-        '[URLprocessor] Update command completed but result unclear:',
-        result.stdout
-      );
-    }
-    return success;
-  } catch (error: any) {
-    if (error instanceof CancelledError) {
-      throw error;
-    }
-    log.error('[URLprocessor] Failed to update existing binary:', error);
-    return false;
-  }
+  // Never run `yt-dlp -U` against a binary that may already be executing.
+  // PyInstaller onefile lazy-loads from the on-disk archive; an in-place
+  // replace mid-download yields zlib "incorrect header check".
+  return await updateExistingBinaryStaged(binaryPath, signal);
 }
 
-async function updateExistingBinaryWindowsPackaged(
+async function updateExistingBinaryStaged(
   existingPath: string,
   signal?: AbortSignal
 ): Promise<boolean> {
@@ -1392,12 +1304,12 @@ async function updateExistingBinaryWindowsPackaged(
     return false;
   }
 
-  const exeExt = '.exe';
+  const exeExt = process.platform === 'win32' ? '.exe' : '';
   const binDir = dirname(existingPath);
   const primaryPath = join(binDir, `yt-dlp${exeExt}`);
-  const nextPath = join(binDir, `yt-dlp.next${exeExt}`);
+  const nextPath = join(binDir, ytDlpStagedBinaryName());
 
-  const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp${exeExt}`;
+  const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${ytDlpReleaseAssetName()}`;
 
   try {
     // If we can fetch the expected hash, avoid a full download when already up to date.
@@ -1434,6 +1346,7 @@ async function updateExistingBinaryWindowsPackaged(
       // Promote to the staged "next" path (do not overwrite the primary path since it may be locked).
       await fsp.unlink(nextPath).catch(() => {});
       await fsp.rename(tmpPath, nextPath);
+      await ensureExecutable(nextPath);
       log.info(`[URLprocessor] Staged updated yt-dlp at: ${nextPath}`);
       return true;
     } catch (error: any) {
@@ -1641,6 +1554,8 @@ async function tryPostinstallScript(
   }
 }
 
+
+
 async function downloadBinaryDirectly(
   targetPath: string,
   onProgress?: BinarySetupProgress,
@@ -1648,12 +1563,7 @@ async function downloadBinaryDirectly(
 ): Promise<string> {
   log.info('[URLprocessor] Attempting direct download from GitHub...');
 
-  const assetName =
-    process.platform === 'win32'
-      ? 'yt-dlp.exe'
-      : process.platform === 'darwin'
-        ? 'yt-dlp_macos'
-        : 'yt-dlp';
+  const assetName = ytDlpReleaseAssetName();
   const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
 
   log.info(`[URLprocessor] Downloading from: ${downloadUrl}`);

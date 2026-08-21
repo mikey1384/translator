@@ -35,6 +35,12 @@ test('download errors collapse to allowlisted categories without returning conte
     'site_rejected'
   );
   assert.equal(
+    classifyUrlDownloadFailure(
+      new Error('unable to download video data: HTTP Error 403: Forbidden')
+    ),
+    'site_rejected'
+  );
+  assert.equal(
     classifyUrlDownloadFailure(new Error('unrecognized secret error text')),
     'unknown'
   );

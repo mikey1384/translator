@@ -1172,6 +1172,7 @@ export default function GenerateSubtitles() {
             sourceVideoAssetIdentity:
               subtitleState.sourceVideoAssetIdentity ?? null,
             sourceUrl: subtitleState.sourceUrl ?? null,
+            sourceProvenance: subtitleState.sourceProvenance ?? null,
             importFilePath: subtitleState.originalPath ?? null,
             lastExportPath: subtitleState.exportPath ?? null,
             activeLinkedFilePath: subtitleState.activeFilePath ?? null,

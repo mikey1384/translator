@@ -114,6 +114,7 @@ declare module '@shared-types/app' {
   }
 
   export type SubtitleDocumentLinkedFileRole = 'import' | 'export';
+  export type SubtitleSourceProvenance = 'youtube_automatic_captions';
 
   export interface SubtitleDocumentMeta {
     id: string;
@@ -121,6 +122,7 @@ declare module '@shared-types/app' {
     sourceVideoPath?: string | null;
     sourceVideoAssetIdentity?: string | null;
     sourceUrl?: string | null;
+    sourceProvenance?: SubtitleSourceProvenance | null;
     subtitleKind?: StoredSubtitleKind | null;
     targetLanguage?: string | null;
     importFilePath?: string | null;
@@ -140,6 +142,7 @@ declare module '@shared-types/app' {
     sourceVideoPath?: string | null;
     sourceVideoAssetIdentity?: string | null;
     sourceUrl?: string | null;
+    sourceProvenance?: SubtitleSourceProvenance | null;
     subtitleKind?: StoredSubtitleKind | null;
     targetLanguage?: string | null;
     importFilePath?: string | null;
@@ -227,6 +230,7 @@ declare module '@shared-types/app' {
     sourceVideoPath?: string | null;
     sourceVideoAssetIdentity?: string | null;
     sourceUrl?: string | null;
+    sourceProvenance?: SubtitleSourceProvenance | null;
     subtitleKind?: StoredSubtitleKind | null;
     targetLanguage?: string | null;
     importFilePath?: string | null;
@@ -384,6 +388,11 @@ declare module '@shared-types/app' {
   export interface ProcessUrlResult {
     success: boolean;
     subtitles?: string;
+    captionRecovery?: {
+      kind: 'youtube_automatic_captions';
+      mediaFailure: 'http_403';
+      languageCode: string;
+    };
     videoPath?: string;
     filePath?: string;
     filename?: string;

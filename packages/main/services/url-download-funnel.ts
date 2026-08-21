@@ -90,7 +90,7 @@ export function classifyUrlDownloadFailure(
     return 'postprocessing';
   }
   if (
-    /unsupported url|private video|video unavailable|not available|members-only|age-restricted/.test(
+    /unsupported url|private video|video unavailable|not available|members-only|age-restricted|http error 403|\b403\b.*forbidden|forbidden.*\b403\b/.test(
       text
     )
   ) {

@@ -1,0 +1,22 @@
+{
+  "id": "fixture-media-403",
+  "title": "Fixture: media blocked, automatic captions public",
+  "language": "en",
+  "duration": 12.5,
+  "thumbnail": "https://assets.fixture.invalid/thumbnail.jpg",
+  "automatic_captions": {
+    "en-orig": [
+      {
+        "ext": "vtt",
+        "url": "https://captions.fixture.invalid/fixture-media-403/en-orig.vtt"
+      }
+    ],
+    "es": [
+      {
+        "ext": "vtt",
+        "url": "https://captions.fixture.invalid/fixture-media-403/es.vtt"
+      }
+    ]
+  },
+  "subtitles": {}
+}

@@ -43,6 +43,7 @@ function getExportContext() {
     sourceVideoPath: subtitleState.sourceVideoPath ?? null,
     sourceVideoAssetIdentity: subtitleState.sourceVideoAssetIdentity ?? null,
     sourceUrl: subtitleState.sourceUrl ?? null,
+    sourceProvenance: subtitleState.sourceProvenance ?? null,
     subtitleKind: subtitleState.subtitleKind ?? null,
     targetLanguage: subtitleState.targetLanguage ?? null,
     transcriptionEngine: subtitleState.transcriptionEngine ?? null,

@@ -1,0 +1,3 @@
+[youtube] fixture-media-403: Downloading webpage
+[download] Got error: HTTP Error 403: Forbidden. Retrying fragment 1 (1/2)...
+ERROR: unable to download video data: HTTP Error 403: Forbidden

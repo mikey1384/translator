@@ -1651,7 +1651,15 @@ async function downloadAndMountAgentSource(input: {
   quality: VideoQuality;
   strategy: MountedSubtitleStrategy;
   checkCancellation?: boolean;
-}): Promise<{ videoPath: string; filename: string }> {
+}): Promise<{
+  videoPath: string | null;
+  filename: string;
+  captionRecovery?: {
+    kind: 'youtube_automatic_captions';
+    mediaFailure: 'http_403';
+    languageCode?: string | null;
+  };
+}> {
   assertMountedSubtitleReplacementAllowed(input.strategy);
   const urlState = useUrlStore.getState();
   urlState.setDownloadQuality(input.quality);
@@ -1661,6 +1669,51 @@ async function downloadAndMountAgentSource(input: {
     mountOnComplete: false,
   });
   const finalDownload = useUrlStore.getState();
+  const captionRecovery =
+    result?.success &&
+    result.captionRecovery?.kind === 'youtube_automatic_captions' &&
+    result.captionRecovery.mediaFailure === 'http_403'
+      ? result.captionRecovery
+      : null;
+  if (captionRecovery) {
+    const recoveredSegments = parseSrt(String(result.subtitles || ''));
+    if (recoveredSegments.length === 0) {
+      throw new Error(
+        'Public automatic captions were found, but Translator could not read them.'
+      );
+    }
+    if (input.checkCancellation) throwIfAgentCancelled();
+    await prepareMountedSubtitles(input.strategy);
+    if (input.checkCancellation) throwIfAgentCancelled();
+    await useVideoStore.getState().setFile(null);
+    useSubStore.getState().load(
+      recoveredSegments,
+      null,
+      'fresh',
+      null,
+      null,
+      null,
+      null,
+      {
+        title:
+          String(result.title || '').trim() || 'YouTube automatic captions',
+        sourceVideoPath: null,
+        sourceVideoAssetIdentity: null,
+        sourceUrl: input.url,
+        sourceProvenance: 'youtube_automatic_captions',
+        subtitleKind: null,
+        targetLanguage: null,
+      }
+    );
+    useUIStore.getState().setEditPanelOpen(true);
+    return {
+      videoPath: null,
+      filename:
+        String(result.filename || result.title || '').trim() ||
+        'YouTube automatic captions',
+      captionRecovery,
+    };
+  }
   const videoPath = finalDownload.download.completedFilePath;
   if (!result?.success || !videoPath || finalDownload.error) {
     if (finalDownload.needCookies) {
@@ -1744,7 +1797,15 @@ async function runAgentMediaWorkflow(
       checkCancellation: true,
     });
     videoPath = downloaded.videoPath;
-    steps.download = { success: true, filePath: videoPath, quality };
+    steps.download = downloaded.captionRecovery
+      ? {
+          success: true,
+          filePath: null,
+          quality,
+          captionRecovery: downloaded.captionRecovery,
+          cueCount: useSubStore.getState().order.length,
+        }
+      : { success: true, filePath: videoPath, quality };
   }
   if (videoPath && !input.url) {
     if (!(await window.fileApi.fileExists(videoPath))) {
@@ -1762,14 +1823,36 @@ async function runAgentMediaWorkflow(
     useUIStore.getState().setInputMode('file');
   }
   if (runTo === 'download') {
-    if (!videoPath) throw new Error('Provide a URL or local path to open.');
+    if (
+      !videoPath &&
+      !(steps.download as { captionRecovery?: unknown } | undefined)
+        ?.captionRecovery
+    ) {
+      throw new Error('Provide a URL or local path to open.');
+    }
     return { runTo, videoPath, steps };
   }
-  if (!videoPath && !useVideoStore.getState().path) {
+  const captionOnly =
+    Boolean(
+      (steps.download as { captionRecovery?: unknown } | undefined)
+        ?.captionRecovery
+    ) && useSubStore.getState().order.length > 0;
+  if (!videoPath && !useVideoStore.getState().path && !captionOnly) {
     throw new Error('Provide a URL or local path, or open a video first.');
   }
   throwIfAgentCancelled();
-  steps.transcription = await runAgentTranscription(agentOperationId, strategy);
+  if (captionOnly) {
+    steps.transcription = {
+      skipped: true,
+      reason: 'youtube_automatic_captions',
+      cueCount: useSubStore.getState().order.length,
+    };
+  } else {
+    steps.transcription = await runAgentTranscription(
+      agentOperationId,
+      strategy
+    );
+  }
   throwIfAgentCancelled();
   if (runTo === 'transcribe') {
     return { runTo, videoPath, steps };

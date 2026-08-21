@@ -4,6 +4,8 @@ import { immer } from 'zustand/middleware/immer';
 import type { UpdateRequiredNotice } from '@shared-types/app';
 
 type UnsavedChoice = 'save' | 'discard' | 'cancel';
+export type UnsavedSrtContext = 'transcription' | 'caption_recovery';
+export type DownloadSwitchContext = 'downloaded_video' | 'caption_recovery';
 type PostInstallUpdateNotice = {
   version: string;
   releaseName?: string;
@@ -13,8 +15,10 @@ type PostInstallUpdateNotice = {
 
 interface State {
   unsavedSrtOpen: boolean;
+  unsavedSrtContext: UnsavedSrtContext;
   _resolver?: (choice: UnsavedChoice) => void;
   downloadSwitchOpen: boolean;
+  downloadSwitchContext: DownloadSwitchContext;
   _downloadSwitchResolver?: (choice: boolean) => void;
   // Credit ran out modal
   creditRanOutOpen: boolean;
@@ -36,9 +40,13 @@ interface State {
 }
 
 interface Actions {
-  openUnsavedSrtConfirm: () => Promise<UnsavedChoice>;
+  openUnsavedSrtConfirm: (
+    context?: UnsavedSrtContext
+  ) => Promise<UnsavedChoice>;
   resolveUnsavedSrt: (choice: UnsavedChoice) => void;
-  openDownloadSwitchConfirm: () => Promise<boolean>;
+  openDownloadSwitchConfirm: (
+    context?: DownloadSwitchContext
+  ) => Promise<boolean>;
   resolveDownloadSwitch: (choice: boolean) => void;
   openCreditRanOut: () => Promise<'settings' | 'ok'>;
   resolveCreditRanOut: (choice: 'settings' | 'ok') => void;
@@ -56,8 +64,10 @@ interface Actions {
 export const useModalStore = createWithEqualityFn<State & Actions>()(
   immer((set, get) => ({
     unsavedSrtOpen: false,
+    unsavedSrtContext: 'transcription',
     _resolver: undefined,
     downloadSwitchOpen: false,
+    downloadSwitchContext: 'downloaded_video',
     _downloadSwitchResolver: undefined,
     creditRanOutOpen: false,
     _creditResolver: undefined,
@@ -71,10 +81,11 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     requiredUpdateOpen: false,
     requiredUpdate: null,
 
-    openUnsavedSrtConfirm: () =>
+    openUnsavedSrtConfirm: (context = 'transcription') =>
       new Promise<UnsavedChoice>(resolve => {
         set(s => {
           s.unsavedSrtOpen = true;
+          s.unsavedSrtContext = context;
           s._resolver = resolve;
         });
       }),
@@ -84,14 +95,16 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
       if (resolver) resolver(choice);
       set(s => {
         s.unsavedSrtOpen = false;
+        s.unsavedSrtContext = 'transcription';
         s._resolver = undefined;
       });
     },
 
-    openDownloadSwitchConfirm: () =>
+    openDownloadSwitchConfirm: (context = 'downloaded_video') =>
       new Promise<boolean>(resolve => {
         set(s => {
           s.downloadSwitchOpen = true;
+          s.downloadSwitchContext = context;
           s._downloadSwitchResolver = resolve;
         });
       }),
@@ -101,6 +114,7 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
       if (resolver) resolver(choice);
       set(s => {
         s.downloadSwitchOpen = false;
+        s.downloadSwitchContext = 'downloaded_video';
         s._downloadSwitchResolver = undefined;
       });
     },
@@ -186,16 +200,20 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
   }))
 );
 
-export async function openUnsavedSrtConfirm(): Promise<UnsavedChoice> {
-  return useModalStore.getState().openUnsavedSrtConfirm();
+export async function openUnsavedSrtConfirm(
+  context?: UnsavedSrtContext
+): Promise<UnsavedChoice> {
+  return useModalStore.getState().openUnsavedSrtConfirm(context);
 }
 
 export function resolveUnsavedSrt(choice: UnsavedChoice) {
   return useModalStore.getState().resolveUnsavedSrt(choice);
 }
 
-export async function openDownloadSwitchConfirm(): Promise<boolean> {
-  return useModalStore.getState().openDownloadSwitchConfirm();
+export async function openDownloadSwitchConfirm(
+  context?: DownloadSwitchContext
+): Promise<boolean> {
+  return useModalStore.getState().openDownloadSwitchConfirm(context);
 }
 
 export function resolveDownloadSwitch(choice: boolean) {

@@ -12,9 +12,7 @@ import {
   SaveSubtitleDocumentOptions,
   SaveSubtitleDocumentResult,
 } from '@shared-types/app';
-import {
-  getSubtitleSidecarPath,
-} from '../../shared/helpers/subtitle-sidecar.js';
+import { getSubtitleSidecarPath } from '../../shared/helpers/subtitle-sidecar.js';
 import {
   readSavedSubtitleMetadata,
   saveSavedSubtitleMetadata,
@@ -146,6 +144,7 @@ export async function handleSaveSubtitleDocument(
         sourceVideoPath: options.sourceVideoPath,
         sourceVideoAssetIdentity: options.sourceVideoAssetIdentity,
         sourceUrl: options.sourceUrl,
+        sourceProvenance: options.sourceProvenance,
         subtitleKind: options.subtitleKind,
         targetLanguage: options.targetLanguage,
         importFilePath: options.importFilePath,

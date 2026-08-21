@@ -61,6 +61,36 @@ test('subtitle document records persist and restore segments', async () => {
   });
 });
 
+test('YouTube automatic-caption provenance persists without becoming transcription', async () => {
+  await withTempDir(async rootDir => {
+    const document = await saveSubtitleDocumentRecord({
+      segments: createSegments(),
+      title: 'Fixture automatic captions',
+      sourceUrl: 'https://www.youtube.com/watch?v=fixture',
+      sourceProvenance: 'youtube_automatic_captions',
+      subtitleKind: null,
+      transcriptionEngine: null,
+      rootDir,
+    });
+
+    const restored = await readSubtitleDocument({
+      documentId: document.id,
+      rootDir,
+    });
+
+    assert.equal(
+      restored?.document.sourceProvenance,
+      'youtube_automatic_captions'
+    );
+    assert.equal(restored?.document.subtitleKind, null);
+    assert.equal(restored?.document.transcriptionEngine, null);
+    assert.equal(
+      restored?.document.sourceUrl,
+      'https://www.youtube.com/watch?v=fixture'
+    );
+  });
+});
+
 test('subtitle documents resolve by linked SRT file and fingerprint', async () => {
   await withTempDir(async rootDir => {
     const segments = createSegments();

@@ -1,4 +1,5 @@
 import log from 'electron-log';
+import { classifyUrlDownloadFailureDetail } from './failure-taxonomy.js';
 
 export function mapErrorToUserFriendly({
   rawErrorMessage,
@@ -9,6 +10,10 @@ export function mapErrorToUserFriendly({
 }): string {
   const combinedErrorText =
     `${rawErrorMessage}\n${stderrContent}`.toLowerCase();
+  const failureDetail = classifyUrlDownloadFailureDetail({
+    message: rawErrorMessage,
+    stderr: stderrContent,
+  });
 
   if (combinedErrorText.includes('unsupported url')) {
     return 'This website or URL is not supported.';
@@ -18,6 +23,13 @@ export function mapErrorToUserFriendly({
     return 'This video is private.';
   } else if (combinedErrorText.includes('http error 404')) {
     return 'Video not found at this URL (404 Error).';
+  } else if (failureDetail.code === 'http_403_media') {
+    return 'Video download was blocked (HTTP 403), and no public automatic captions could be recovered.';
+  } else if (
+    failureDetail.code === 'http_403_source' ||
+    failureDetail.code === 'http_403_unknown'
+  ) {
+    return 'This site refused access to the video (HTTP 403).';
   } else if (combinedErrorText.includes('invalid url')) {
     return 'The URL format appears invalid.';
   } else if (

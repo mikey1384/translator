@@ -10,6 +10,7 @@ import type {
   SubtitleDisplayMode,
   SubtitleDocumentMeta,
   SubtitleDocumentLinkedFileRole,
+  SubtitleSourceProvenance,
   SrtSegment,
 } from '@shared-types/app';
 import { fingerprintSubtitleText } from '../../shared/helpers/subtitle-sidecar.js';
@@ -40,6 +41,7 @@ type SubtitleDocumentRecord = {
   sourceVideoPath: string | null;
   sourceVideoAssetIdentity: string | null;
   sourceUrl: string | null;
+  sourceProvenance?: SubtitleSourceProvenance;
   subtitleKind: StoredSubtitleKind | null;
   targetLanguage: string | null;
   linkedFiles: SubtitleDocumentLinkedFile[];
@@ -133,6 +135,12 @@ function normalizeSubtitleKind(
   return value === 'transcription' || value === 'translation' ? value : null;
 }
 
+function normalizeSourceProvenance(
+  value: unknown
+): SubtitleSourceProvenance | null {
+  return value === 'youtube_automatic_captions' ? value : null;
+}
+
 function normalizeSubtitleDisplayMode(
   value: SubtitleDisplayMode | null | undefined
 ): SubtitleDisplayMode | null {
@@ -173,12 +181,14 @@ function buildDocumentMeta(
   const latestExportFile = getLatestLinkedFile(record.linkedFiles, 'export');
   const activeLinkedFile = resolveActiveLinkedFile(record);
 
+  const sourceProvenance = normalizeSourceProvenance(record.sourceProvenance);
   return {
     id: record.id,
     title: record.title,
     sourceVideoPath: record.sourceVideoPath,
     sourceVideoAssetIdentity: record.sourceVideoAssetIdentity,
     sourceUrl: record.sourceUrl,
+    ...(sourceProvenance ? { sourceProvenance } : {}),
     subtitleKind: record.subtitleKind,
     targetLanguage: record.targetLanguage,
     importFilePath: latestImportFile?.path ?? null,
@@ -316,6 +326,7 @@ function sanitizeDocumentRecord(input: unknown): SubtitleDocumentRecord | null {
     return null;
   }
 
+  const sourceProvenance = normalizeSourceProvenance(raw.sourceProvenance);
   return {
     version: DOCUMENT_SCHEMA_VERSION,
     id,
@@ -326,6 +337,7 @@ function sanitizeDocumentRecord(input: unknown): SubtitleDocumentRecord | null {
       raw.sourceVideoAssetIdentity
     ),
     sourceUrl: normalizeSourceUrl(raw.sourceUrl),
+    ...(sourceProvenance ? { sourceProvenance } : {}),
     subtitleKind: normalizeSubtitleKind(raw.subtitleKind),
     targetLanguage: normalizeTargetLanguage(raw.targetLanguage),
     linkedFiles: Array.isArray(raw.linkedFiles)
@@ -555,6 +567,10 @@ async function saveSubtitleDocumentRecordUnlocked(
     options,
     existing,
   });
+  const sourceProvenance =
+    options.sourceProvenance !== undefined
+      ? normalizeSourceProvenance(options.sourceProvenance)
+      : (existing?.sourceProvenance ?? null);
 
   const record: SubtitleDocumentRecord = {
     version: DOCUMENT_SCHEMA_VERSION,
@@ -579,6 +595,7 @@ async function saveSubtitleDocumentRecordUnlocked(
       null,
     sourceUrl:
       normalizeSourceUrl(options.sourceUrl) ?? existing?.sourceUrl ?? null,
+    ...(sourceProvenance ? { sourceProvenance } : {}),
     subtitleKind:
       normalizeSubtitleKind(options.subtitleKind) ??
       existing?.subtitleKind ??

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import Section from '../../components/Section';
 import ErrorBanner from '../../components/ErrorBanner';
 import Button from '../../components/Button';
+import { Alert } from '../../components/design-system';
 
 import SubtitleList from './SubtitleList';
 import SaveAndMergeBar from './SaveAndMergeBar';
@@ -119,6 +120,7 @@ export default function EditSubtitles({
   );
   const origin = useSubStore(s => s.origin);
   const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
+  const sourceProvenance = useSubStore(s => s.sourceProvenance);
   const originalPath = useSubStore(s => s.originalPath);
   const activeFilePath = useSubStore(s => s.activeFilePath);
   const exportPath = useSubStore(s => s.exportPath);
@@ -263,6 +265,8 @@ export default function EditSubtitles({
     !!sourceVideoPath &&
     sourceVideoPath === videoPath;
   const hasSubtitles = subtitles.length > 0;
+  const hasYouTubeAutomaticCaptions =
+    sourceProvenance === 'youtube_automatic_captions';
   const canContinueTranscribing =
     Boolean(videoPath) &&
     hasSubtitles &&
@@ -317,6 +321,24 @@ export default function EditSubtitles({
         </div>
       ) : (
         <>
+          {hasYouTubeAutomaticCaptions ? (
+            <Alert
+              variant="info"
+              title={t(
+                'editSubtitles.workspace.automaticCaptionsTitle',
+                'YouTube automatic captions'
+              )}
+            >
+              {t(
+                videoPath
+                  ? 'editSubtitles.workspace.automaticCaptionsCopyWithMedia'
+                  : 'editSubtitles.workspace.automaticCaptionsCopy',
+                videoPath
+                  ? 'The URL video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. The mounted media is available for preview and burn-in.'
+                  : 'Video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. You can edit, translate, and export SRT now. Mount media to preview or burn in subtitles.'
+              )}
+            </Alert>
+          ) : null}
           <div className={editorStatusShellStyles}>
             <div className={editorStatusPillRowStyles}>
               <span className={editorStatusPillStyles}>
@@ -334,6 +356,14 @@ export default function EditSubtitles({
               <span className={editorStatusPillStyles}>
                 {previewStatusLabel}
               </span>
+              {hasYouTubeAutomaticCaptions ? (
+                <span className={editorStatusPillStyles}>
+                  {t(
+                    'editSubtitles.workspace.automaticCaptionsPill',
+                    'YouTube automatic captions'
+                  )}
+                </span>
+              ) : null}
               {isHighlightWorkflowLocked ? (
                 <span className={editorStatusPillStyles}>
                   {t(

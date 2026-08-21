@@ -27,6 +27,7 @@ export async function saveMountedSubtitleDocument(): Promise<{
     sourceVideoPath: subtitleState.sourceVideoPath ?? null,
     sourceVideoAssetIdentity: subtitleState.sourceVideoAssetIdentity ?? null,
     sourceUrl: subtitleState.sourceUrl ?? null,
+    sourceProvenance: subtitleState.sourceProvenance ?? null,
     subtitleKind: subtitleState.subtitleKind ?? null,
     targetLanguage: subtitleState.targetLanguage ?? null,
     activeLinkedFilePath: subtitleState.activeFilePath ?? null,
