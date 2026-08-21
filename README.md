@@ -100,12 +100,12 @@ Then point your MCP client (Cursor, Codex, etc.) to the packaged helper:
 
 **macOS:**
 ```
-/Applications/Translator.app/Contents/Resources/packaged-helper.mjs
+/Applications/Translator.app/Contents/Resources/packaged-mcp.mjs
 ```
 
 **Windows:**
 ```
-C:\Program Files\Translator\resources\packaged-helper.mjs
+C:\Program Files\Translator\resources\packaged-mcp.mjs
 ```
 
 Agent control includes a kill switch and can be disabled at any time from Settings.

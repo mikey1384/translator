@@ -44,7 +44,9 @@
     { "from": "vendor/headless-arm64", "to": "headless-arm64" },
     { "from": "vendor/headless-x64", "to": "headless-x64" },
     { "from": "vendor/vision", "to": "vision-models" },
-    { "from": "packages/agent-server/src/packaged-helper.mjs", "to": "packaged-helper.mjs" }
+    { "from": "packages/agent-server/src/packaged-mcp.mjs", "to": "packaged-mcp.mjs" },
+    { "from": "packages/agent-server/src/session-store.mjs", "to": "session-store.mjs" },
+    { "from": "packages/agent-server/src/srt.mjs", "to": "srt.mjs" }
   ],
 
   "files": [

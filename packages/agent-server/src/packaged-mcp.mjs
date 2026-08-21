@@ -40,18 +40,44 @@ const store = new TranslationSessionStore({
   root: process.env.TRANSLATOR_AGENT_SESSION_ROOT || undefined,
 });
 
-// Determine socket path based on platform
+// Determine socket path by reading from Translator's userData
 function getSocketPath() {
-  if (platform() === 'win32') {
-    return '\\\\.\\pipe\\translator-agent';
+  // Compute userData path matching app.getPath('userData')
+  // productName: Translator, appId: tools.stage5.translator
+  let userDataPath;
+  
+  if (platform() === 'darwin') {
+    userDataPath = join(homedir(), 'Library', 'Application Support', 'Translator');
+  } else if (platform() === 'win32') {
+    userDataPath = join(process.env.APPDATA || '', 'Translator');
+  } else if (platform() === 'linux') {
+    userDataPath = join(homedir(), '.config', 'Translator');
   } else {
-    const userDataPath = join(
-      homedir(),
-      'Library',
-      'Application Support',
-      '@app',
-      'main'
-    );
+    throw new Error(`Unsupported platform: ${platform()}`);
+  }
+  
+  // Read socket path from file written by AgentSocketServer
+  const socketInfoPath = join(userDataPath, 'agent', 'socket-path.txt');
+  
+  try {
+    const fs = await import('fs');
+    if (fs.existsSync(socketInfoPath)) {
+      const socketPath = fs.readFileSync(socketInfoPath, 'utf8').trim();
+      if (socketPath) {
+        return socketPath;
+      }
+    }
+  } catch (err) {
+    // Fall through to default path computation
+  }
+  
+  // Fallback: compute expected socket path
+  if (platform() === 'win32') {
+    // Windows: per-user named pipe
+    const sanitized = userDataPath.replace(/[^a-zA-Z0-9]/g, '_');
+    return `\\\\.\\pipe\\translator-agent-${sanitized}`;
+  } else {
+    // Unix socket
     return join(userDataPath, 'agent', 'translator-agent.sock');
   }
 }
