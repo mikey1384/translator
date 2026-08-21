@@ -281,18 +281,16 @@ function buildServer() {
       )
   );
 
-  // App control tools (require connection to running Translator)
+  // Safe app control tools (forward to running Translator)
+  // EXCLUDED: openCreditCheckout, updateSettings, storeProviderKey, clearProviderKey
+  // (payment submit and secret writes stay human-gated / fail closed)
   const appTools = [
     'status',
     'navigationSnapshot',
     'navigate',
     'openExternalWebPage',
-    'openCreditCheckout',
     'showSettings',
     'settingsSnapshot',
-    'updateSettings',
-    'storeProviderKey',
-    'clearProviderKey',
     'openVideo',
     'mountSubtitles',
     'setDisplayMode',
