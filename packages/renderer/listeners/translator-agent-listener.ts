@@ -1546,6 +1546,18 @@ async function runAgentMerge(
   if (!/\.mp4$/i.test(outputPath)) {
     throw new Error('Merged video output path must end in .mp4.');
   }
+  
+  // In packaged mode, enforce allowlist
+  if (window.env.isPackaged) {
+    const allowed = await window.electron.checkAgentPathAllowed?.(outputPath);
+    if (!allowed) {
+      throw new Error(
+        'Merge output path is outside the allowed directories. ' +
+        'Configure allowed directories in Settings → Agent Control.'
+      );
+    }
+  }
+  
   const video = useVideoStore.getState();
   const subtitles = useSubStore.getState();
   const videoPath =
