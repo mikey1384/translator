@@ -1241,6 +1241,33 @@ try {
       connectedClients: agentSocketServer.getConnectedClientCount(),
     };
   });
+
+  ipcMain.handle('check-agent-path-allowed', async (_event, filePath: string) => {
+    if (!app.isPackaged) {
+      return true; // In dev mode, all paths allowed
+    }
+    
+    const agentEnabled = settingsStore.get('agentControlEnabled', false);
+    if (!agentEnabled) {
+      return false;
+    }
+    
+    const allowedDirs = settingsStore.get('agentAllowedDirectories', []);
+    // Fall back to default if empty
+    const dirs = Array.isArray(allowedDirs) && allowedDirs.length > 0
+      ? allowedDirs
+      : [
+          app.getPath('downloads'),
+          path.join(app.getPath('userData'), 'url-downloads'),
+        ];
+    
+    const resolvedPath = path.resolve(filePath);
+    return dirs.some(dir => {
+      const resolvedDir = path.resolve(String(dir));
+      return resolvedPath.startsWith(resolvedDir + path.sep) || 
+             resolvedPath === resolvedDir;
+    });
+  });
   ipcMain.handle('show-open-dialog', async (_event, options) => {
     const mainWindow = getMainWindow();
     if (!mainWindow) {

@@ -7,6 +7,7 @@
 
 import { ipcMain, BrowserWindow } from 'electron';
 import log from 'electron-log';
+import { getActiveAppWebContents } from '../utils/window.js';
 
 type AgentMethod = string;
 type AgentParams = Record<string, unknown>;
@@ -21,13 +22,10 @@ export function registerAgentBridgeHandler(
 ): void {
   ipcMain.handle(`agent-bridge:${method}`, async (_event, params: AgentParams) => {
     try {
-      if (!mainWindow || mainWindow.isDestroyed()) {
-        throw new Error('Main window not available');
-      }
-
-      const webContents = mainWindow.webContents;
+      // Get the active tab WebContentsView where translatorAgent lives
+      const webContents = getActiveAppWebContents(mainWindow);
       if (!webContents) {
-        throw new Error('WebContents not available');
+        throw new Error('Active tab WebContents not available');
       }
 
       // Send request to renderer and wait for response
@@ -63,14 +61,46 @@ export function registerAgentBridgeHandler(
 }
 
 /**
- * Call an agent method from the socket server via IPC.
+ * Call an agent method directly (used by AgentSocketServer).
+ * Do NOT use ipcMain.invoke from main process - call the handler function directly.
  */
 export async function callAgentMethod(
   method: AgentMethod,
-  params: AgentParams
+  params: AgentParams,
+  mainWindow: BrowserWindow
 ): Promise<unknown> {
   try {
-    return await ipcMain.invoke(`agent-bridge:${method}`, null, params);
+    // Get the active tab WebContentsView where translatorAgent lives
+    const webContents = getActiveAppWebContents(mainWindow);
+    if (!webContents) {
+      throw new Error('Active tab WebContents not available');
+    }
+
+    // Send request to renderer and wait for response
+    const result = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error(`Agent bridge timeout for method: ${method}`));
+      }, 120000); // 2 minute timeout for long operations
+
+      const responseChannel = `agent-bridge-response:${method}:${Date.now()}`;
+      
+      ipcMain.handleOnce(responseChannel, async (_evt, response) => {
+        clearTimeout(timeout);
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          resolve(response.result);
+        }
+      });
+
+      webContents.send('agent-bridge-request', {
+        method,
+        params,
+        responseChannel,
+      });
+    });
+
+    return result;
   } catch (error: any) {
     log.error(`[agent-bridge] Failed to call ${method}:`, error);
     throw error;
