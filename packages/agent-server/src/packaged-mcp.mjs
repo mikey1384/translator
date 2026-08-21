@@ -2,8 +2,8 @@
 /**
  * Packaged MCP server for installed Translator.app
  * 
- * Minimal MCP stdio server (no npm dependencies) that forwards tool calls
- * to the running Translator's agent socket server.
+ * Implements MCP stdio protocol with Content-Length framing.
+ * Zero npm dependencies.
  * 
  * Prerequisites:
  *   1. Launch Translator.app
@@ -11,78 +11,65 @@
  *   3. Enable "Allow agent control"
  *   4. Configure allowed directories for file writes
  * 
- * Usage:
- *   node packaged-mcp.mjs
- * 
  * Add to Cursor/Codex MCP config:
- *   [macOS]
- *   /Applications/Translator.app/Contents/Resources/packaged-mcp.mjs
- *   
- *   [Windows] 
- *   "C:\Program Files\Translator\resources\packaged-mcp.mjs"
- * 
- * Security:
- *   - Requires explicit user permission in Translator Settings
- *   - Agent control can be disabled at any time (kill switch)
- *   - File writes are restricted to allowed directories only
- *   - Payment/checkout, secret writes stay human-gated (NOT in tool list)
+ *   [macOS] /Applications/Translator.app/Contents/Resources/packaged-mcp.mjs
+ *   [Windows] "C:\Program Files\Translator\resources\packaged-mcp.mjs"
  */
 
 import { createConnection } from 'net';
 import { homedir, platform } from 'os';
 import { join } from 'path';
 import { readFileSync, existsSync } from 'fs';
-import { createInterface } from 'readline';
 
 let socket = null;
 let requestId = 0;
 const pendingRequests = new Map();
 
-// Safe app tools (excludes human-gated operations)
-const APP_TOOLS = [
-  { name: 'app_status', description: 'Get current app state' },
-  { name: 'app_navigation_list', description: 'List navigation history' },
-  { name: 'app_navigate', description: 'Navigate to a section' },
-  { name: 'app_open_web_page', description: 'Open external web page' },
-  { name: 'app_settings_show', description: 'Show settings UI' },
-  { name: 'app_settings_get', description: 'Get current settings' },
-  { name: 'app_open_video', description: 'Open video file or URL' },
-  { name: 'app_mount_subtitles', description: 'Mount subtitle file' },
-  { name: 'app_set_subtitle_display', description: 'Set subtitle display mode' },
-  { name: 'app_set_subtitle_style', description: 'Set subtitle style' },
-  { name: 'app_downloads_list', description: 'List download history' },
-  { name: 'app_downloads_open', description: 'Open downloaded file' },
-  { name: 'app_downloads_redownload', description: 'Redownload from URL' },
-  { name: 'app_video_search', description: 'Search videos' },
-  { name: 'app_video_search_more', description: 'Load more search results' },
-  { name: 'app_video_search_status', description: 'Get search status' },
-  { name: 'app_video_search_cancel', description: 'Cancel search' },
-  { name: 'app_video_batch_download', description: 'Batch download videos' },
-  { name: 'app_video_batch_cancel', description: 'Cancel batch download' },
-  { name: 'app_video_batch_status', description: 'Get batch status' },
-  { name: 'app_start_video_download', description: 'Download video' },
-  { name: 'app_start_transcription', description: 'Transcribe audio' },
-  { name: 'app_start_translation', description: 'Translate subtitles' },
-  { name: 'app_start_dubbing', description: 'Generate dubbed audio' },
-  { name: 'app_start_summary', description: 'Generate video summary' },
-  { name: 'app_start_cue_translation', description: 'Translate single cue' },
-  { name: 'app_start_cue_transcription', description: 'Transcribe single cue' },
-  { name: 'app_start_merge', description: 'Merge subtitles with video' },
-  { name: 'app_start_media_workflow', description: 'Run full media workflow' },
-  { name: 'app_processing_status', description: 'Get processing status' },
-  { name: 'app_processing_cancel', description: 'Cancel processing' },
-  { name: 'app_subtitles_get', description: 'Get subtitle batch' },
-  { name: 'app_subtitles_update', description: 'Update subtitles' },
-  { name: 'app_subtitles_mutate', description: 'Mutate subtitle' },
-  { name: 'app_subtitles_export', description: 'Export subtitles to file' },
-];
+// Explicit tool name → translator method map (from mcp.mjs)
+const TOOL_MAP = {
+  app_status: 'status',
+  app_navigation_list: 'navigationSnapshot',
+  app_navigate: 'navigate',
+  app_open_web_page: 'openExternalWebPage',
+  app_settings_show: 'showSettings',
+  app_settings_get: 'settingsSnapshot',
+  app_open_video: 'openVideo',
+  app_mount_subtitles: 'mountSubtitles',
+  app_set_subtitle_display: 'setDisplayMode',
+  app_set_subtitle_style: 'setSubtitleStyle',
+  app_show_download_history: 'showDownloadHistory',
+  app_downloads_list: 'listDownloadHistory',
+  app_downloads_open: 'openDownloadHistoryItem',
+  app_downloads_redownload: 'redownloadHistoryItem',
+  app_video_search: 'searchVideos',
+  app_video_search_more: 'searchMoreVideos',
+  app_video_search_status: 'videoSearchStatus',
+  app_video_search_cancel: 'cancelVideoSearch',
+  app_video_batch_download: 'startSuggestedVideoBatch',
+  app_video_batch_cancel: 'cancelSuggestedVideoBatch',
+  app_video_batch_status: 'suggestedVideoBatchStatus',
+  app_start_video_download: 'startVideoDownload',
+  app_start_transcription: 'startTranscription',
+  app_start_translation: 'startTranslation',
+  app_start_dubbing: 'startDubbing',
+  app_start_summary: 'startSummary',
+  app_start_cue_translation: 'startCueTranslation',
+  app_start_cue_transcription: 'startCueTranscription',
+  app_start_merge: 'startMerge',
+  app_start_media_workflow: 'startMediaWorkflow',
+  app_processing_status: 'processingStatus',
+  app_processing_cancel: 'cancelProcessing',
+  app_subtitles_get: 'subtitlesBatch',
+  app_subtitles_update: 'updateSubtitles',
+  app_subtitles_mutate: 'mutateSubtitles',
+  app_subtitles_export: 'exportSubtitles',
+};
 
-// Determine socket path by reading from Translator's userData
+// Safe tools list (excludes checkout/keys)
+const SAFE_TOOLS = Object.keys(TOOL_MAP);
+
 function getSocketPath() {
-  // Compute userData path matching app.getPath('userData')
-  // productName: Translator, appId: tools.stage5.translator
   let userDataPath;
-  
   if (platform() === 'darwin') {
     userDataPath = join(homedir(), 'Library', 'Application Support', 'Translator');
   } else if (platform() === 'win32') {
@@ -93,27 +80,18 @@ function getSocketPath() {
     throw new Error(`Unsupported platform: ${platform()}`);
   }
   
-  // Read socket path from file written by AgentSocketServer
   const socketInfoPath = join(userDataPath, 'agent', 'socket-path.txt');
-  
   try {
     if (existsSync(socketInfoPath)) {
       const socketPath = readFileSync(socketInfoPath, 'utf8').trim();
-      if (socketPath) {
-        return socketPath;
-      }
+      if (socketPath) return socketPath;
     }
-  } catch (err) {
-    // Fall through to default path computation
-  }
+  } catch (err) {}
   
-  // Fallback: compute expected socket path
   if (platform() === 'win32') {
-    // Windows: per-user named pipe
     const sanitized = userDataPath.replace(/[^a-zA-Z0-9]/g, '_');
     return `\\\\.\\pipe\\translator-agent-${sanitized}`;
   } else {
-    // Unix socket
     return join(userDataPath, 'agent', 'translator-agent.sock');
   }
 }
@@ -127,7 +105,7 @@ async function connectToTranslator() {
     let buffer = '';
     
     socket.on('connect', () => {
-      console.error(`[packaged-mcp] Connected to Translator at ${socketPath}`);
+      console.error(`[packaged-mcp] Connected to ${socketPath}`);
       resolve();
     });
     
@@ -149,19 +127,13 @@ async function connectToTranslator() {
               resolve(response.result);
             }
           }
-        } catch (err) {
-          console.error('[packaged-mcp] Failed to parse socket response:', err);
-        }
+        } catch (err) {}
       }
     });
     
     socket.on('error', (err) => {
       console.error('[packaged-mcp] Socket error:', err.message);
-      console.error('');
-      console.error('Make sure:');
-      console.error('  1. Translator.app is running');
-      console.error('  2. Agent control is enabled in Settings → Agent Control');
-      console.error('  3. At least one allowed directory is configured');
+      console.error('Make sure Translator.app is running with agent control enabled');
       reject(err);
     });
     
@@ -191,68 +163,138 @@ async function callTranslatorMethod(method, params) {
       }
     });
     
-    const request = {
-      jsonrpc: '2.0',
-      method,
-      params,
-      id
-    };
-    
-    socket.write(JSON.stringify(request) + '\n');
+    socket.write(JSON.stringify({ jsonrpc: '2.0', method, params, id }) + '\n');
   });
 }
 
-// MCP protocol handler
-async function handleMcpRequest(request) {
-  const { method, params, id } = request;
+// Field mapping: snake_case → camelCase (from mcp.mjs)
+function mapFields(input) {
+  if (!input || typeof input !== 'object') return input;
+  
+  const mapped = {};
+  for (const [key, value] of Object.entries(input)) {
+    // Special mappings
+    if (key === 'confirm_overwrite' && value === 'OVERWRITE') {
+      mapped.overwrite = true;
+    } else if (key === 'output_path') {
+      mapped.outputPath = value;
+    } else if (key === 'target_language') {
+      mapped.targetLanguage = value;
+    } else if (key === 'replace_subtitles') {
+      mapped.replaceSubtitles = value;
+    } else {
+      // Generic snake_to_camel
+      const camelKey = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      mapped[camelKey] = value;
+    }
+  }
+  return mapped;
+}
+
+// Content-Length framing (official MCP stdio protocol)
+let stdinBuffer = '';
+let expectedLength = null;
+
+function writeMessage(msg) {
+  const json = JSON.stringify(msg);
+  const content = `Content-Length: ${Buffer.byteLength(json, 'utf8')}\r\n\r\n${json}`;
+  process.stdout.write(content);
+}
+
+function readContentLengthMessage(data) {
+  stdinBuffer += data;
+  
+  while (true) {
+    if (expectedLength === null) {
+      const headerEnd = stdinBuffer.indexOf('\r\n\r\n');
+      if (headerEnd === -1) return;
+      
+      const header = stdinBuffer.substring(0, headerEnd);
+      const match = header.match(/Content-Length:\s*(\d+)/i);
+      if (!match) {
+        console.error('[packaged-mcp] Invalid Content-Length header');
+        stdinBuffer = stdinBuffer.substring(headerEnd + 4);
+        continue;
+      }
+      
+      expectedLength = parseInt(match[1], 10);
+      stdinBuffer = stdinBuffer.substring(headerEnd + 4);
+    }
+    
+    if (stdinBuffer.length >= expectedLength) {
+      const message = stdinBuffer.substring(0, expectedLength);
+      stdinBuffer = stdinBuffer.substring(expectedLength);
+      expectedLength = null;
+      
+      try {
+        const msg = JSON.parse(message);
+        handleMessage(msg);
+      } catch (err) {
+        console.error('[packaged-mcp] Parse error:', err);
+      }
+    } else {
+      return;
+    }
+  }
+}
+
+async function handleMessage(msg) {
+  const { method, params, id } = msg;
+  
+  // Ignore notifications (no id)
+  if (id === undefined || id === null) {
+    if (method === 'notifications/initialized') {
+      console.error('[packaged-mcp] Client initialized');
+    }
+    return;
+  }
   
   try {
     if (method === 'initialize') {
-      return {
+      writeMessage({
         jsonrpc: '2.0',
         id,
         result: {
           protocolVersion: '2024-11-05',
-          capabilities: {
-            tools: {}
-          },
-          serverInfo: {
-            name: 'translator-packaged-mcp',
-            version: '1.0.0'
-          }
+          capabilities: { tools: {} },
+          serverInfo: { name: 'translator-packaged-mcp', version: '1.0.0' }
         }
-      };
+      });
+      return;
+    }
+    
+    if (method === 'ping') {
+      writeMessage({ jsonrpc: '2.0', id, result: {} });
+      return;
     }
     
     if (method === 'tools/list') {
-      return {
-        jsonrpc: '2.0',
-        id,
-        result: {
-          tools: APP_TOOLS.map(t => ({
-            name: t.name,
-            description: t.description,
-            inputSchema: {
-              type: 'object',
-              properties: {},
-              additionalProperties: true
-            }
-          }))
+      const tools = SAFE_TOOLS.map(name => ({
+        name,
+        description: `Translator: ${TOOL_MAP[name]}`,
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          additionalProperties: true
         }
-      };
+      }));
+      writeMessage({ jsonrpc: '2.0', id, result: { tools } });
+      return;
     }
     
     if (method === 'tools/call') {
       const { name: toolName, arguments: toolArgs } = params;
       
-      // Convert app_* MCP tool name to translator method
-      // app_start_merge -> startMerge (translator expects camelCase)
-      let translatorMethod = toolName.replace(/^app_/, '');
-      translatorMethod = translatorMethod.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      if (!TOOL_MAP[toolName]) {
+        throw new Error(`Unknown tool: ${toolName}`);
+      }
       
-      const result = await callTranslatorMethod(translatorMethod, toolArgs || {});
+      const translatorMethod = TOOL_MAP[toolName];
+      const mappedArgs = mapFields(toolArgs || {});
       
-      return {
+      const result = await callTranslatorMethod(translatorMethod, mappedArgs);
+      
+      writeMessage({
         jsonrpc: '2.0',
         id,
         result: {
@@ -263,19 +305,20 @@ async function handleMcpRequest(request) {
             }
           ]
         }
-      };
+      });
+      return;
     }
     
     throw new Error(`Unknown method: ${method}`);
   } catch (error) {
-    return {
+    writeMessage({
       jsonrpc: '2.0',
       id,
       error: {
         code: -32603,
         message: error.message || String(error)
       }
-    };
+    });
   }
 }
 
@@ -283,35 +326,11 @@ async function main() {
   try {
     await connectToTranslator();
     
-    // Handle MCP stdio protocol
-    const rl = createInterface({
-      input: process.stdin,
-      output: process.stdout,
-      terminal: false
+    process.stdin.on('data', (chunk) => {
+      readContentLengthMessage(chunk.toString('utf8'));
     });
     
-    rl.on('line', async (line) => {
-      if (!line.trim()) return;
-      
-      try {
-        const request = JSON.parse(line);
-        const response = await handleMcpRequest(request);
-        process.stdout.write(JSON.stringify(response) + '\n');
-      } catch (err) {
-        console.error('[packaged-mcp] Error handling request:', err);
-        const errorResponse = {
-          jsonrpc: '2.0',
-          id: null,
-          error: {
-            code: -32700,
-            message: 'Parse error'
-          }
-        };
-        process.stdout.write(JSON.stringify(errorResponse) + '\n');
-      }
-    });
-    
-    console.error('[packaged-mcp] MCP server ready');
+    console.error('[packaged-mcp] MCP server ready (Content-Length protocol)');
   } catch (err) {
     console.error('[packaged-mcp] Failed to start:', err.message);
     process.exit(1);
