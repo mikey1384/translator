@@ -2385,47 +2385,13 @@ async function clearProviderKey(input?: {
   return settingsSnapshot();
 }
 
-async function initializeAgentBridge() {
-  // In development: check TRANSLATOR_AGENT_DEV flag (already set in window.env.agentMode)
-  // In packaged mode: check if user has enabled agent control in Settings
-  let agentEnabled = window.env.agentMode;
-
-  if (window.env.isPackaged && !agentEnabled) {
-    // Check if agent control is enabled in settings
-    try {
-      agentEnabled = await window.electron.getAgentControlEnabled();
-    } catch (err) {
-      console.warn('[agent-listener] Failed to check agent control setting:', err);
-      agentEnabled = false;
-    }
-  }
-
-  if (!agentEnabled) {
+function installAgentBridge() {
+  if (window.translatorAgent) {
+    console.log('[agent-listener] Bridge already installed');
     return;
   }
 
-  // Setup IPC bridge listener for packaged mode agent requests
-  if (window.env.isPackaged) {
-    window.electron.onAgentBridgeRequest?.((request: any) => {
-      const { method, params, responseChannel } = request;
-      
-      (async () => {
-        try {
-          if (!window.translatorAgent || typeof window.translatorAgent[method] !== 'function') {
-            throw new Error(`Agent method not available: ${method}`);
-          }
-          
-          const result = await window.translatorAgent[method](params);
-          window.electron.sendAgentBridgeResponse(responseChannel, { result });
-        } catch (error: any) {
-          window.electron.sendAgentBridgeResponse(responseChannel, {
-            error: error?.message || String(error),
-          });
-        }
-      })();
-    });
-  }
-
+  console.log('[agent-listener] Installing agent bridge');
   window.translatorAgent = {
     async status() {
       return currentStatus();
@@ -2752,21 +2718,70 @@ async function initializeAgentBridge() {
       return exportMountedSubtitles(input);
     },
   };
+}
 
-  // Listen for agent control changes in packaged mode
+function removeAgentBridge() {
+  if (!window.translatorAgent) {
+    return;
+  }
+  console.log('[agent-listener] Removing agent bridge');
+  delete window.translatorAgent;
+}
+
+async function initializeAgentBridge() {
+  // In development: check TRANSLATOR_AGENT_DEV flag (already set in window.env.agentMode)
+  // In packaged mode: check if user has enabled agent control in Settings
+  let agentEnabled = window.env.agentMode;
+
+  if (window.env.isPackaged && !agentEnabled) {
+    // Check if agent control is enabled in settings
+    try {
+      agentEnabled = await window.electron.getAgentControlEnabled();
+    } catch (err) {
+      console.warn('[agent-listener] Failed to check agent control setting:', err);
+      agentEnabled = false;
+    }
+  }
+
+  // Setup IPC bridge listener for packaged mode agent requests
+  // This must be registered even when disabled so it can handle enable/disable toggles
   if (window.env.isPackaged) {
-    window.electron.onAgentControlChanged?.(({ enabled }) => {
-      if (!enabled) {
-        // User disabled agent control - remove the bridge
-        if (window.translatorAgent) {
-          console.log('[agent-listener] Agent control disabled by user');
-          delete window.translatorAgent;
+    window.electron.onAgentBridgeRequest?.((request: any) => {
+      const { method, params, responseChannel } = request;
+      
+      (async () => {
+        try {
+          if (!window.translatorAgent || typeof window.translatorAgent[method] !== 'function') {
+            throw new Error('Agent control is not enabled. Enable it in Settings → Agent Control.');
+          }
+          
+          const result = await window.translatorAgent[method](params);
+          window.electron.sendAgentBridgeResponse(responseChannel, { result });
+        } catch (error: any) {
+          window.electron.sendAgentBridgeResponse(responseChannel, {
+            error: error?.message || String(error),
+          });
         }
+      })();
+    });
+
+    // Listen for agent control changes - install/remove bridge dynamically
+    window.electron.onAgentControlChanged?.(({ enabled }) => {
+      if (enabled) {
+        // User enabled agent control - install bridge immediately (no reload)
+        console.log('[agent-listener] Agent control enabled - installing bridge');
+        installAgentBridge();
       } else {
-        // User enabled agent control - reinitialize
-        console.log('[agent-listener] Agent control enabled by user - reload required');
+        // User disabled agent control - remove bridge immediately
+        console.log('[agent-listener] Agent control disabled - removing bridge');
+        removeAgentBridge();
       }
     });
+  }
+
+  // Install bridge if currently enabled
+  if (agentEnabled) {
+    installAgentBridge();
   }
 }
 

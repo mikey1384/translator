@@ -187,7 +187,7 @@ MCP interface as dev mode:
 
 **Windows:**
 ```cmd
-%LOCALAPPDATA%\Programs\Translator\resources\agent-mcp\packaged-mcp.mjs
+C:\Program Files\Translator\resources\agent-mcp\packaged-mcp.mjs
 ```
 
 Add this path to your MCP client (Cursor, Codex, etc.) configuration. The

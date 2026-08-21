@@ -4,6 +4,7 @@ import fs from 'fs';
 import { app, BrowserWindow } from 'electron';
 import log from 'electron-log';
 import { callAgentMethod } from '../handlers/agent-bridge-handlers.js';
+import { settingsStore } from '../store/settings-store.js';
 
 export class AgentSocketServer {
   private server: NetServer | null = null;
@@ -175,6 +176,12 @@ export class AgentSocketServer {
     const { method, params, id } = request;
 
     try {
+      // Re-read agentControlEnabled on every request (kill switch check)
+      const agentEnabled = settingsStore.get('agentControlEnabled', false);
+      if (!agentEnabled) {
+        throw new Error('Agent control is disabled. Enable it in Settings → Agent Control.');
+      }
+
       // Check that main window is still available
       if (!this.mainWindow || this.mainWindow.isDestroyed()) {
         throw new Error('Main window not available');
