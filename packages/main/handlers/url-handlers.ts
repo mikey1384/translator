@@ -195,11 +195,11 @@ export async function handleProcessUrl(
           registryFinish,
         });
       }
-      // Media bytes still failed, so do not count this as a completed video
-      // download. The useful caption-only result is carried explicitly below.
-      void trackUrlDownloadFunnelEvent('url_download_failed', {
+      // Caption-only recovery is tracked separately from hard failures.
+      // Media bytes failed but the result is still useful.
+      void trackUrlDownloadFunnelEvent('url_download_caption_only', {
         sourceType,
-        failureCategory: 'site_rejected',
+        mediaFailure: 'http_403',
       });
       registryFinish(operationId);
       return {

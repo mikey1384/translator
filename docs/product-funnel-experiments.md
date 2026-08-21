@@ -4,6 +4,21 @@ Use this dated log to align desktop product changes with GA4 and settled Stripe
 outcomes. Treat small samples as directional and compare releases sequentially;
 do not infer causality from calendar overlap alone.
 
+## Current Coverage and Remaining Gaps
+
+Packaged release builds (`isPackaged` + real semver) send privacy-safe events to `/analytics/events`:
+- **URL downloads**: started, completed, caption-only (separate from failure), cookie-required, cancelled, failed, plus cookie-connection events
+- **Translation**: full-SRT workflow with started/completed/credit-blocked/cancelled/failed
+- **Transcription, dubbing, summary, merge**: same start/outcome funnel as translation; credit-blocked where applicable
+- **Caption-only recovery**: distinct `url_download_caption_only` event with `sourceType` + `mediaFailure`; not counted as completed or generic failed
+- **App lifecycle**: app-open once per launch, meaningful-use once per install (video-open | video-download | translation), critical failures (startup/crash classes)
+- **Hung-window detection**: automatic ping if renderer stops responding for >30s; limited to 3 emissions per session
+- **Retry queue**: dropped funnel + caption-only + hung/crash events persist locally and flush on next authenticated launch; capped at 100 events
+
+Events contain no URL, hostname, filename, subtitle text, target language, cookie value, local path, raw error, or device ID in GA4. The API pseudonymizes devices and excludes classified internal devices before the analytics outbox.
+
+**Remaining blind spots** (not covered by automatic events): search, settings, checkout funnel micro-steps, editor gestures. The user-initiated error-report bundle (Logs modal) remains opt-in and is not auto-uploaded.
+
 ## 2026-08-21 — YouTube media-403 caption-only recovery
 
 - Status: implemented and locally verified in the unreleased working tree based

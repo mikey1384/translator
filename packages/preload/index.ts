@@ -17,6 +17,24 @@ const electronAPI = {
   test: () => 'Electron API is working',
   showMessage: (message: string) => ipcRenderer.invoke('show-message', message),
 
+  // ---------------------- Heartbeat ----------------------
+  onHeartbeatPing: (callback: () => void) => {
+    if (typeof callback !== 'function') return;
+    const listener = () => {
+      try {
+        callback();
+        // Automatically respond to heartbeat pings
+        ipcRenderer.invoke('heartbeat-pong').catch(() => {
+          // Silent failure - don't spam console if main process is gone
+        });
+      } catch (error) {
+        console.error('[preload] heartbeat-ping error:', error);
+      }
+    };
+    ipcRenderer.on('heartbeat-ping', listener);
+    return () => ipcRenderer.removeListener('heartbeat-ping', listener);
+  },
+
   // ---------------------- Subtitle Generation ----------------------
   generateSubtitles: async (options: any) => {
     const processedOptions = { ...options };

@@ -17,6 +17,16 @@ import {
 } from '../services/subtitle-processing/translator.js';
 import type { ReviewBatch } from '../services/subtitle-processing/types.js';
 import {
+  trackTranscriptionFunnelEvent,
+  trackDubbingFunnelEvent,
+  trackSummaryFunnelEvent,
+  trackMergeFunnelEvent,
+} from '../services/product-analytics.js';
+import { classifyTranscriptionOutcome } from '../services/transcription-funnel.js';
+import { classifyDubbingOutcome } from '../services/dubbing-funnel.js';
+import { classifySummaryOutcome } from '../services/summary-funnel.js';
+import { classifyMergeOutcome } from '../services/merge-funnel.js';
+import {
   GenerateProgressCallback,
   GenerateSubtitlesOptions,
   DubSegmentPayload,
@@ -336,6 +346,8 @@ export async function handleGenerateSubtitles(
 
   log.info(`[handleGenerateSubtitles] Starting. Operation ID: ${operationId}`);
 
+  void trackTranscriptionFunnelEvent('transcription_started');
+
   let tempVideoPath: string | null = null;
   const finalOptions = { ...options };
   const controller = new AbortController();
@@ -381,13 +393,17 @@ export async function handleGenerateSubtitles(
 
     await cleanupTempFile(tempVideoPath);
 
-    return {
+    const successResult = {
       success: true,
       subtitles: result.subtitles,
       segments: result.segments,
       transcriptionEngine: result.transcriptionEngine ?? null,
       operationId,
     };
+    void trackTranscriptionFunnelEvent(
+      classifyTranscriptionOutcome(successResult)
+    );
+    return successResult;
   } catch (error: any) {
     log.error(`[${operationId}] Error generating subtitles:`, error);
 
@@ -413,12 +429,17 @@ export async function handleGenerateSubtitles(
       cancelled: isCancel,
       operationId,
     });
-    return {
+    const errorResult = {
       success: false,
       cancelled: isCancel,
+      blockedReason: creditCancel ? ('insufficient_credits' as const) : undefined,
       error: !isCancel ? error.message || String(error) : undefined,
       operationId,
     };
+    void trackTranscriptionFunnelEvent(
+      classifyTranscriptionOutcome(errorResult)
+    );
+    return errorResult;
   } finally {
     registryFinish(operationId);
   }
@@ -585,6 +606,8 @@ export async function handleDubSubtitles(
     };
   }
 
+  void trackDubbingFunnelEvent('dubbing_started');
+
   const controller = new AbortController();
   registerAutoCancel(operationId, event.sender, () => controller.abort());
   addSubtitle(operationId, controller);
@@ -666,12 +689,14 @@ export async function handleDubSubtitles(
       operationId,
     });
 
-    return {
+    const successResult = {
       success: true,
       audioPath: result.audioPath,
       videoPath: result.videoPath,
       operationId,
     };
+    void trackDubbingFunnelEvent(classifyDubbingOutcome(successResult));
+    return successResult;
   } catch (error: any) {
     const isCancel =
       controller.signal.aborted ||
@@ -687,12 +712,14 @@ export async function handleDubSubtitles(
       error: isCancel ? undefined : error?.message || String(error),
     });
 
-    return {
+    const errorResult = {
       success: false,
       cancelled: isCancel,
       error: isCancel ? undefined : error?.message || String(error),
       operationId,
     };
+    void trackDubbingFunnelEvent(classifyDubbingOutcome(errorResult));
+    return errorResult;
   } finally {
     registryFinish(operationId);
   }
@@ -991,6 +1018,8 @@ export async function handleGenerateTranscriptSummary(
   cancelled?: boolean;
   operationId: string;
 }> {
+  void trackSummaryFunnelEvent('summary_started');
+
   const controller = new AbortController();
   registerAutoCancel(operationId, event.sender, () => controller.abort());
 
@@ -1002,7 +1031,9 @@ export async function handleGenerateTranscriptSummary(
         `[${operationId}] Summary operation cancelled before handler startup`
       );
       controller.abort();
-      return { success: false, cancelled: true, operationId };
+      const cancelResult = { success: false, cancelled: true, operationId };
+      void trackSummaryFunnelEvent(classifySummaryOutcome(cancelResult));
+      return cancelResult;
     }
 
     const { summary, sections, highlights, highlightStatus } =
@@ -1021,7 +1052,7 @@ export async function handleGenerateTranscriptSummary(
         },
       });
 
-    return {
+    const successResult = {
       success: true,
       summary,
       sections,
@@ -1029,6 +1060,8 @@ export async function handleGenerateTranscriptSummary(
       highlightStatus,
       operationId,
     };
+    void trackSummaryFunnelEvent(classifySummaryOutcome(successResult));
+    return successResult;
   } catch (error: any) {
     const aborted =
       controller.signal.aborted ||
@@ -1049,13 +1082,29 @@ export async function handleGenerateTranscriptSummary(
     });
 
     if (insufficientCredits) {
+      const creditResult = {
+        success: false,
+        cancelled: false,
+        error: ERROR_CODES.INSUFFICIENT_CREDITS,
+        operationId,
+      };
+      void trackSummaryFunnelEvent(classifySummaryOutcome(creditResult));
       throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
     if (aborted) {
-      return { success: false, cancelled: true, operationId };
+      const cancelResult = { success: false, cancelled: true, operationId };
+      void trackSummaryFunnelEvent(classifySummaryOutcome(cancelResult));
+      return cancelResult;
     }
 
+    const errorResult = {
+      success: false,
+      cancelled: false,
+      error: error?.message,
+      operationId,
+    };
+    void trackSummaryFunnelEvent(classifySummaryOutcome(errorResult));
     throw error;
   } finally {
     registryFinish(operationId);
@@ -1444,6 +1493,8 @@ export async function handleCutCombinedHighlights(
   options: CutCombinedHighlightsRequest,
   operationId: string
 ): Promise<CutCombinedHighlightsResult> {
+  void trackMergeFunnelEvent('merge_started');
+
   const controller = new AbortController();
   registerAutoCancel(operationId, event.sender, () => controller.abort());
   addSubtitle(operationId, controller);
@@ -1678,11 +1729,13 @@ export async function handleCutCombinedHighlights(
 
     emitProgress(100, 'ready');
 
-    return {
+    const successResult = {
       success: true,
       videoPath: outPath,
       operationId,
     };
+    void trackMergeFunnelEvent(classifyMergeOutcome(successResult));
+    return successResult;
   } catch (error: any) {
     const aborted =
       controller.signal.aborted ||
@@ -1695,8 +1748,15 @@ export async function handleCutCombinedHighlights(
       error: message,
     });
 
+    const errorResult = {
+      success: false,
+      cancelled: aborted,
+      operationId,
+    };
+    void trackMergeFunnelEvent(classifyMergeOutcome(errorResult));
+
     if (aborted) {
-      return { success: false, cancelled: true, operationId };
+      return errorResult;
     }
     throw error;
   } finally {

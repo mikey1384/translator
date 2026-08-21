@@ -106,6 +106,7 @@ import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-
 import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 import {
   flushPendingCriticalFailures,
+  flushPendingProductEvents,
   trackAppOpen,
   trackFirstMeaningfulUse,
   trackTranslationFunnelEvent,
@@ -131,6 +132,11 @@ import {
   registerAllAgentBridgeHandlers,
   cleanupAgentBridgeHandlers,
 } from './handlers/agent-bridge-handlers.js';
+import {
+  startHungWindowMonitoring,
+  stopHungWindowMonitoring,
+  recordHeartbeat,
+} from './services/hung-window-detector.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -516,6 +522,10 @@ try {
   });
 
   ipcMain.handle('ping', utilityHandlers.handlePing);
+  ipcMain.handle('heartbeat-pong', () => {
+    recordHeartbeat();
+    return { success: true };
+  });
   ipcMain.handle('show-message', utilityHandlers.handleShowMessage);
   ipcMain.handle('save-file', fileHandlers.handleSaveFile);
   ipcMain.handle(
@@ -1577,6 +1587,7 @@ async function createWindow(): Promise<BrowserWindow> {
   // newer main window that replaced it after a lifecycle transition.
   window.on('closed', () => {
     log.info('[main.ts] Main window closed.');
+    stopHungWindowMonitoring();
     mainWindowCoordinator.clearIfCurrent(window);
   });
 
@@ -2024,6 +2035,8 @@ app
       
       void trackAppOpen();
       void flushPendingCriticalFailures();
+      void flushPendingProductEvents();
+      startHungWindowMonitoring(window);
       if (isDev) {
         window.webContents.on('devtools-opened', () => {
           // Additional dev logic if desired
