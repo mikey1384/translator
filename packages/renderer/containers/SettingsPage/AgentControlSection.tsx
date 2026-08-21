@@ -176,8 +176,7 @@ export default function AgentControlSection() {
       if (!enabled || !window.env.isPackaged) return;
       
       try {
-        // @ts-expect-error - getAgentSocketStatus will be added
-        const status = await window.electron.getAgentSocketStatus?.();
+        const status = await window.electron.getAgentSocketStatus();
         if (mounted && status) {
           setClientsConnected(status.connectedClients || 0);
         }
@@ -219,7 +218,6 @@ export default function AgentControlSection() {
 
   const handleAddDirectory = async () => {
     try {
-      // @ts-expect-error - dialog API exists but not typed in preload
       const result = await window.electron.showOpenDialog({
         properties: ['openDirectory', 'createDirectory'],
         title: t(
