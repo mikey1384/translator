@@ -1232,6 +1232,15 @@ try {
   ipcMain.handle('remove-agent-allowed-directory', (_event, dir: string) =>
     settingsHandlers.removeAgentAllowedDirectory(dir)
   );
+  ipcMain.handle('get-agent-socket-status', () => {
+    if (!agentSocketServer) {
+      return { running: false, connectedClients: 0 };
+    }
+    return {
+      running: agentSocketServer.isRunning(),
+      connectedClients: agentSocketServer.getConnectedClientCount(),
+    };
+  });
   ipcMain.handle('show-open-dialog', async (_event, options) => {
     const mainWindow = getMainWindow();
     if (!mainWindow) {

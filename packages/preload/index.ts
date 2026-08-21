@@ -856,6 +856,10 @@ const electronAPI = {
     dir: string
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('remove-agent-allowed-directory', dir),
+  getAgentSocketStatus: (): Promise<{
+    running: boolean;
+    connectedClients: number;
+  }> => ipcRenderer.invoke('get-agent-socket-status'),
   onAgentControlChanged: (
     callback: (payload: { enabled: boolean }) => void
   ) => {

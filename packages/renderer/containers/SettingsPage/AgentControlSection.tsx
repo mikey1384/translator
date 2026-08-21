@@ -145,10 +145,12 @@ export default function AgentControlSection() {
   const [enabled, setEnabled] = useState(false);
   const [allowedDirectories, setAllowedDirectories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clientsConnected, setClientsConnected] = useState(0);
 
-  // Load settings on mount
+  // Load settings and connection status on mount
   useEffect(() => {
     let mounted = true;
+    let statusInterval: NodeJS.Timeout | null = null;
 
     const loadSettings = async () => {
       try {
@@ -170,12 +172,35 @@ export default function AgentControlSection() {
       }
     };
 
+    const updateConnectionStatus = async () => {
+      if (!enabled || !window.env.isPackaged) return;
+      
+      try {
+        // @ts-expect-error - getAgentSocketStatus will be added
+        const status = await window.electron.getAgentSocketStatus?.();
+        if (mounted && status) {
+          setClientsConnected(status.connectedClients || 0);
+        }
+      } catch (error) {
+        // Silently fail - socket server may not be running
+      }
+    };
+
     void loadSettings();
+    
+    // Poll connection status every 2 seconds when enabled
+    if (enabled && window.env.isPackaged) {
+      void updateConnectionStatus();
+      statusInterval = setInterval(updateConnectionStatus, 2000);
+    }
 
     return () => {
       mounted = false;
+      if (statusInterval) {
+        clearInterval(statusInterval);
+      }
     };
-  }, []);
+  }, [enabled]);
 
   const handleToggleEnabled = async (newValue: boolean) => {
     try {
@@ -252,11 +277,22 @@ export default function AgentControlSection() {
       title={t('settings.agentControl.title', 'Agent Control')}
       className={settingsCenterColumnStyles}
       headerRight={
-        <div className={statusIndicatorStyles(enabled)}>
-          <span className={statusDotStyles(enabled)} />
-          {enabled
-            ? t('settings.agentControl.status.enabled', 'Enabled')
-            : t('settings.agentControl.status.disabled', 'Disabled')}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div className={statusIndicatorStyles(enabled)}>
+            <span className={statusDotStyles(enabled)} />
+            {enabled
+              ? t('settings.agentControl.status.enabled', 'Enabled')
+              : t('settings.agentControl.status.disabled', 'Disabled')}
+          </div>
+          {enabled && clientsConnected > 0 && (
+            <div className={statusIndicatorStyles(true)}>
+              <span className={statusDotStyles(true)} />
+              {t(
+                'settings.agentControl.status.connected',
+                `${clientsConnected} client${clientsConnected > 1 ? 's' : ''} connected`
+              )}
+            </div>
+          )}
         </div>
       }
     >
