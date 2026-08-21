@@ -166,32 +166,48 @@ test('packaged-mcp helper - reads socket path from file', async () => {
   );
 });
 
-test('packaged-mcp helper - is pure stdio forwarder with no tools', () => {
+test('packaged-mcp helper - implements Content-Length MCP protocol', () => {
   const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
   const helperContent = fs.readFileSync(helperPath, 'utf8');
   
-  // Helper must be pure forwarder with NO tool definitions
+  // Must implement Content-Length framing
   assert.ok(
-    !helperContent.includes('registerTool'),
-    'Helper must NOT define any tools (pure stdio forwarder)'
+    helperContent.includes('Content-Length:'),
+    'Helper must use Content-Length framing (not newline-delimited)'
   );
   assert.ok(
-    !helperContent.includes('z.record'),
-    'Helper must NOT use zod schemas (no tool definitions)'
-  );
-  assert.ok(
-    !helperContent.includes('McpServer'),
-    'Helper must NOT import @modelcontextprotocol/server'
+    helperContent.includes('\\r\\n\\r\\n'),
+    'Helper must use \\r\\n\\r\\n header separator'
   );
   
-  // Must use only Node.js builtins
+  // Must handle MCP methods
   assert.ok(
-    helperContent.includes('import { createConnection } from \'net\''),
-    'Helper must use Node.js net module'
+    helperContent.includes('initialize'),
+    'Helper must handle initialize'
   );
   assert.ok(
-    helperContent.includes('import { readFileSync, existsSync } from \'fs\''),
-    'Helper must use Node.js fs module'
+    helperContent.includes('tools/list'),
+    'Helper must handle tools/list'
+  );
+  assert.ok(
+    helperContent.includes('tools/call'),
+    'Helper must handle tools/call'
+  );
+  
+  // Must ignore notifications
+  assert.ok(
+    helperContent.includes('notifications/initialized'),
+    'Helper must recognize notifications/initialized'
+  );
+  
+  // Zero npm dependencies
+  assert.ok(
+    !helperContent.includes('@modelcontextprotocol/server'),
+    'Helper must NOT import @modelcontextprotocol/server'
+  );
+  assert.ok(
+    !helperContent.includes('import * as z from'),
+    'Helper must NOT import zod'
   );
 });
 
@@ -245,6 +261,74 @@ test('AgentSocketServer - re-reads kill switch per request', () => {
   );
 });
 
+test('packaged-mcp helper - tool name mappings are correct', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  // Must have explicit TOOL_MAP
+  assert.ok(
+    helperContent.includes('const TOOL_MAP'),
+    'Helper must define TOOL_MAP'
+  );
+  
+  // Verify critical mappings (not naive snake_to_camel)
+  const criticalMappings = [
+    ['app_navigation_list', 'navigationSnapshot'],
+    ['app_downloads_list', 'listDownloadHistory'],
+    ['app_subtitles_get', 'subtitlesBatch'],
+    ['app_video_batch_download', 'startSuggestedVideoBatch'],
+    ['app_settings_get', 'settingsSnapshot'],
+  ];
+  
+  for (const [tool, method] of criticalMappings) {
+    assert.ok(
+      helperContent.includes(`${tool}: '${method}'`),
+      `TOOL_MAP must map ${tool} → ${method}`
+    );
+  }
+});
+
+test('packaged-mcp helper - excludes human-gated tools', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  // TOOL_MAP must NOT include these
+  const excluded = [
+    'app_open_credit_checkout',
+    'app_settings_update',
+    'app_settings_store_provider_key',
+    'app_settings_clear_provider_key'
+  ];
+  
+  for (const tool of excluded) {
+    assert.ok(
+      !helperContent.includes(`${tool}:`),
+      `TOOL_MAP must NOT include ${tool}`
+    );
+  }
+});
+
+test('packaged-mcp helper - maps fields correctly', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  // Must have mapFields function
+  assert.ok(
+    helperContent.includes('function mapFields'),
+    'Helper must define mapFields'
+  );
+  
+  // Must map critical fields
+  assert.ok(
+    helperContent.includes('output_path') && helperContent.includes('outputPath'),
+    'Must map output_path → outputPath'
+  );
+  assert.ok(
+    helperContent.includes('confirm_overwrite') && helperContent.includes('OVERWRITE'),
+    'Must map confirm_overwrite=OVERWRITE → overwrite=true'
+  );
+});
+
 test('extraResources bundling - ships only standalone helper', () => {
   const builderPath = path.join(projectRoot, 'electron-builder.base.json');
   assert.ok(fs.existsSync(builderPath), 'electron-builder.base.json must exist');
@@ -257,7 +341,7 @@ test('extraResources bundling - ships only standalone helper', () => {
   );
   assert.ok(
     !builderContent.includes('session-store.mjs'),
-    'Must NOT bundle session-store.mjs (helper is pure forwarder)'
+    'Must NOT bundle session-store.mjs'
   );
   assert.ok(
     !builderContent.includes('dev-app-controller'),
