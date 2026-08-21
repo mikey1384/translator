@@ -20,7 +20,7 @@
  *   /Applications/Translator.app/Contents/Resources/packaged-mcp.mjs
  *   
  *   [Windows] 
- *   C:\Program Files\Translator\resources\packaged-mcp.mjs
+ *   "C:\Program Files\Translator\resources\packaged-mcp.mjs"
  * 
  * Security:
  *   - Requires explicit user permission in Translator Settings

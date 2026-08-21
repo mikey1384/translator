@@ -182,6 +182,18 @@ export class AgentSocketServer {
         throw new Error('Agent control is disabled. Enable it in Settings → Agent Control.');
       }
 
+      // Refuse human-gated operations (payment submit, secret writes)
+      const humanGatedMethods = [
+        'openCreditCheckout',
+        'storeProviderKey',
+        'clearProviderKey',
+        'updateSettings', // May contain secret values
+      ];
+      
+      if (humanGatedMethods.includes(method)) {
+        throw new Error(`Method ${method} requires human interaction and cannot be called via agent.`);
+      }
+
       // Check that main window is still available
       if (!this.mainWindow || this.mainWindow.isDestroyed()) {
         throw new Error('Main window not available');

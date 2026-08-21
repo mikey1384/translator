@@ -36,14 +36,17 @@ export function registerAgentBridgeHandler(
 
         const responseChannel = `agent-bridge-response:${method}:${Date.now()}`;
         
-        ipcMain.handleOnce(responseChannel, async (_evt, response) => {
+        const onResponse = (_evt: any, response: any) => {
           clearTimeout(timeout);
+          ipcMain.removeListener(responseChannel, onResponse);
           if (response.error) {
             reject(new Error(response.error));
           } else {
             resolve(response.result);
           }
-        });
+        };
+        
+        ipcMain.on(responseChannel, onResponse);
 
         webContents.send('agent-bridge-request', {
           method,

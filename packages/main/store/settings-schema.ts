@@ -110,7 +110,7 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   stage5DubbingTtsProvider: 'openai',
   // Agent control off by default - requires explicit user grant
   agentControlEnabled: false,
-  // Default to user Downloads directory only
+  // Default allowlist: Downloads + Translator library (populated at runtime)
   agentAllowedDirectories: [],
 };
 

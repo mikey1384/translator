@@ -159,7 +159,7 @@ async function updateAgentSocketServer() {
     } catch (err) {
       log.error('[main] Failed to start agent socket server:', err);
     }
-  } else if ((!agentEnabled || !isPackagedBuild) && agentSocketServer.isRunning()) {
+  } else if ((!agentEnabled || !isPackagedBuild) && agentSocketServer && agentSocketServer.isRunning()) {
     try {
       await agentSocketServer.stop();
       log.info('[main] Agent socket server stopped');
