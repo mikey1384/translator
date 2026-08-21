@@ -188,7 +188,7 @@ export class AgentSocketServer {
       }
 
       // Forward the request via secure IPC bridge (not executeJavaScript)
-      const result = await callAgentMethod(method, params || {});
+      const result = await callAgentMethod(method, params || {}, this.mainWindow);
 
       const response = {
         jsonrpc: '2.0',
