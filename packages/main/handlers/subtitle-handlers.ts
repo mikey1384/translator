@@ -1093,6 +1093,7 @@ export async function handleGenerateTranscriptSummary(
     });
 
     if (insufficientCredits) {
+      // Track credit-blocked before throwing so it's not double-counted by caller
       const creditResult = {
         success: false,
         cancelled: false,

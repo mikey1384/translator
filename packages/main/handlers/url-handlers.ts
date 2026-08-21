@@ -197,6 +197,10 @@ export async function handleProcessUrl(
       }
       // Caption-only recovery is tracked separately from hard failures.
       // Media bytes failed but the result is still useful.
+      // mediaFailure is currently hardcoded to 'http_403' because this branch
+      // is exclusively the YouTube media-byte 403 recovery path. If a future
+      // non-403 caption fallback is added, pass the actual classified media
+      // failure instead of hardcoding it here.
       void trackUrlDownloadFunnelEvent('url_download_caption_only', {
         sourceType,
         mediaFailure: 'http_403',

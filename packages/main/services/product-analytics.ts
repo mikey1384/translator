@@ -182,6 +182,8 @@ export async function flushPendingCriticalFailures(): Promise<void> {
 
 export async function flushPendingProductEvents(): Promise<void> {
   if (!productAnalyticsEnabled()) return;
+  // Match flushPendingCriticalFailures pattern: both require packaged + semver,
+  // and both wait for authenticated session (via withStage5AuthRetry in postProductEvent).
   for (const queuedEvent of listPendingProductEvents()) {
     try {
       await postProductEvent(queuedEvent);
