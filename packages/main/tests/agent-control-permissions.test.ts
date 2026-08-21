@@ -294,3 +294,89 @@ test('documentation - Windows path uses Program Files', () => {
     'README must not use LocalAppData (NSIS is perMachine)'
   );
 });
+
+test('IPC response pattern - send/on matches on both sides', () => {
+  const bridgePath = path.join(projectRoot, 'packages/main/handlers/agent-bridge-handlers.ts');
+  const preloadPath = path.join(projectRoot, 'packages/preload/index.ts');
+  
+  assert.ok(fs.existsSync(bridgePath), 'agent-bridge-handlers.ts must exist');
+  assert.ok(fs.existsSync(preloadPath), 'preload/index.ts must exist');
+  
+  const bridgeContent = fs.readFileSync(bridgePath, 'utf8');
+  const preloadContent = fs.readFileSync(preloadPath, 'utf8');
+  
+  // Bridge must use ipcMain.on (not handleOnce) to receive responses
+  assert.ok(
+    bridgeContent.includes('ipcMain.on(responseChannel'),
+    'agent-bridge-handlers must use ipcMain.on for responses'
+  );
+  assert.ok(
+    !bridgeContent.includes('ipcMain.handleOnce(responseChannel'),
+    'agent-bridge-handlers must not use handleOnce (incompatible with send)'
+  );
+  
+  // Preload must use ipcRenderer.send (not invoke)
+  assert.ok(
+    preloadContent.includes('sendAgentBridgeResponse') && preloadContent.includes('ipcRenderer.send'),
+    'preload must use ipcRenderer.send for agent bridge responses'
+  );
+});
+
+test('socket server - refuses human-gated methods', () => {
+  const serverPath = path.join(projectRoot, 'packages/main/services/agent-socket-server.ts');
+  assert.ok(fs.existsSync(serverPath), 'agent-socket-server.ts must exist');
+  
+  const serverContent = fs.readFileSync(serverPath, 'utf8');
+  
+  // Must define list of human-gated methods
+  assert.ok(
+    serverContent.includes('humanGatedMethods'),
+    'handleRequest must define humanGatedMethods list'
+  );
+  
+  // Must include payment and secret operations
+  const requiredBlocked = [
+    'openCreditCheckout',
+    'storeProviderKey',
+    'clearProviderKey',
+    'updateSettings'
+  ];
+  
+  for (const method of requiredBlocked) {
+    assert.ok(
+      serverContent.includes(`'${method}'`),
+      `humanGatedMethods must include ${method}`
+    );
+  }
+});
+
+test('allowlist - uses realpath to prevent symlink escape', () => {
+  const mainPath = path.join(projectRoot, 'packages/main/index.ts');
+  assert.ok(fs.existsSync(mainPath), 'main/index.ts must exist');
+  
+  const mainContent = fs.readFileSync(mainPath, 'utf8');
+  
+  // check-agent-path-allowed must use fs.realpathSync
+  assert.ok(
+    mainContent.includes('fs.realpathSync') && mainContent.includes('check-agent-path-allowed'),
+    'check-agent-path-allowed must use fs.realpathSync for both file and allowed dirs'
+  );
+});
+
+test('kill switch - null-safe agentSocketServer checks', () => {
+  const mainPath = path.join(projectRoot, 'packages/main/index.ts');
+  const mainContent = fs.readFileSync(mainPath, 'utf8');
+  
+  // updateAgentSocketServer must check for null before calling .isRunning()
+  const updateFnMatch = mainContent.match(/async function updateAgentSocketServer\(\)[^}]+\}/s);
+  assert.ok(updateFnMatch, 'updateAgentSocketServer function must exist');
+  
+  const updateFnBody = updateFnMatch[0];
+  
+  // Must have null check in both start and stop conditions
+  assert.ok(
+    updateFnBody.includes('agentSocketServer &&') || 
+    updateFnBody.includes('&& agentSocketServer'),
+    'updateAgentSocketServer must check agentSocketServer is not null before .isRunning()'
+  );
+});
