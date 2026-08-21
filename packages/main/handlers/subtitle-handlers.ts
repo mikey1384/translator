@@ -599,11 +599,13 @@ export async function handleDubSubtitles(
   const { ffmpeg, fileManager } = checkServicesInitialized();
 
   if (!Array.isArray(options?.segments) || options.segments.length === 0) {
-    return {
+    const errorResult = {
       success: false,
       error: 'No subtitle segments provided',
       operationId,
     };
+    void trackDubbingFunnelEvent(classifyDubbingOutcome(errorResult));
+    return errorResult;
   }
 
   void trackDubbingFunnelEvent('dubbing_started');
@@ -627,11 +629,13 @@ export async function handleDubSubtitles(
   }
 
   if (!normalizedVideoPath) {
-    return {
+    const errorResult = {
       success: false,
       error: ERROR_CODES.SOURCE_VIDEO_UNAVAILABLE,
       operationId,
     };
+    void trackDubbingFunnelEvent(classifyDubbingOutcome(errorResult));
+    return errorResult;
   }
 
   const progressCallback: GenerateProgressCallback = progress => {

@@ -12,7 +12,8 @@ export function classifySummaryOutcome(result: {
 }): Exclude<SummaryFunnelEvent, 'summary_started'> {
   if (result.success) return 'summary_completed';
   const errorMsg = String(result.error || '');
-  if (errorMsg.includes('INSUFFICIENT_CREDITS')) {
+  // Check for the actual constant value 'insufficient-credits', not the identifier
+  if (errorMsg.includes('insufficient-credits')) {
     return 'summary_credit_blocked';
   }
   if (result.cancelled) return 'summary_cancelled';

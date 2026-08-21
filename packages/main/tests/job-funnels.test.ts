@@ -34,15 +34,16 @@ test('dubbing outcomes detect credit blocks from error message', () => {
     'dubbing_completed'
   );
   
-  // Test with the actual error code used in handlers
-  const ERROR_CODES = { INSUFFICIENT_CREDITS: 'INSUFFICIENT_CREDITS' };
+  // Test with the actual constant value from ERROR_CODES.INSUFFICIENT_CREDITS
+  // The value is 'insufficient-credits' (lowercase with hyphen), not 'INSUFFICIENT_CREDITS'
+  const actualConstantValue = 'insufficient-credits';
   assert.equal(
     classifyDubbingOutcome({
       success: false,
-      error: ERROR_CODES.INSUFFICIENT_CREDITS,
+      error: actualConstantValue,
     }),
     'dubbing_credit_blocked',
-    'Should detect credit block from INSUFFICIENT_CREDITS error code'
+    'Should detect credit block from insufficient-credits error code'
   );
   
   // When cancelled but not for credits
@@ -62,7 +63,7 @@ test('dubbing outcomes detect credit blocks from error message', () => {
     classifyDubbingOutcome({
       success: false,
       cancelled: true,
-      error: ERROR_CODES.INSUFFICIENT_CREDITS,
+      error: actualConstantValue,
     }),
     'dubbing_credit_blocked',
     'Credit block should take precedence over cancelled flag'
@@ -74,10 +75,12 @@ test('summary outcomes detect credit blocks from error message', () => {
     classifySummaryOutcome({ success: true }),
     'summary_completed'
   );
+  
+  // Test with the actual constant value 'insufficient-credits'
   assert.equal(
     classifySummaryOutcome({
       success: false,
-      error: 'INSUFFICIENT_CREDITS',
+      error: 'insufficient-credits',
     }),
     'summary_credit_blocked'
   );

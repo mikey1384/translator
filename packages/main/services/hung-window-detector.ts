@@ -1,6 +1,7 @@
 import { BrowserWindow, powerMonitor } from 'electron';
 import log from 'electron-log';
 import { recordCriticalFailure } from './startup-health.js';
+import { getActiveAppWebContents } from '../utils/window.js';
 
 const HEARTBEAT_INTERVAL_MS = 10_000; // 10 seconds
 const HEARTBEAT_TIMEOUT_MS = 30_000; // 30 seconds
@@ -11,6 +12,8 @@ let lastHeartbeatTime: number | null = null;
 let hangReportCount = 0;
 let isMonitoring = false;
 let isPaused = false;
+let suspendHandler: (() => void) | null = null;
+let resumeHandler: (() => void) | null = null;
 
 /**
  * Start monitoring the main window for hangs.
@@ -30,19 +33,19 @@ export function startHungWindowMonitoring(window: BrowserWindow): void {
   log.info('[hung-window-detector] Starting heartbeat monitoring');
 
   // Pause monitoring on system suspend to avoid false positives from sleep/lid-close
-  const handleSuspend = () => {
+  suspendHandler = () => {
     log.info('[hung-window-detector] System suspending, pausing monitoring');
     isPaused = true;
   };
 
-  const handleResume = () => {
+  resumeHandler = () => {
     log.info('[hung-window-detector] System resumed, resetting heartbeat timer');
     isPaused = false;
     lastHeartbeatTime = Date.now();
   };
 
-  powerMonitor.on('suspend', handleSuspend);
-  powerMonitor.on('resume', handleResume);
+  powerMonitor.on('suspend', suspendHandler);
+  powerMonitor.on('resume', resumeHandler);
 
   const checkHeartbeat = () => {
     if (!window || window.isDestroyed()) {
@@ -71,11 +74,15 @@ export function startHungWindowMonitoring(window: BrowserWindow): void {
         lastHeartbeatTime = now;
       }
     } else {
-      // Request a heartbeat ping from the renderer
-      try {
-        window.webContents.send('heartbeat-ping');
-      } catch (err) {
-        log.warn('[hung-window-detector] Failed to send heartbeat ping:', err);
+      // Ping the active tab webContents, not the shell window.
+      // The app uses shell BrowserWindow + WebContentsView tabs.
+      const activeTab = getActiveAppWebContents();
+      if (activeTab && !activeTab.isDestroyed()) {
+        try {
+          activeTab.send('heartbeat-ping');
+        } catch (err) {
+          log.warn('[hung-window-detector] Failed to send heartbeat ping:', err);
+        }
       }
     }
   };
@@ -91,9 +98,15 @@ export function stopHungWindowMonitoring(): void {
     clearInterval(heartbeatTimer);
     heartbeatTimer = null;
   }
-  // Clean up power monitor listeners
-  powerMonitor.removeAllListeners('suspend');
-  powerMonitor.removeAllListeners('resume');
+  // Remove only the specific listeners we added, not all listeners
+  if (suspendHandler) {
+    powerMonitor.removeListener('suspend', suspendHandler);
+    suspendHandler = null;
+  }
+  if (resumeHandler) {
+    powerMonitor.removeListener('resume', resumeHandler);
+    resumeHandler = null;
+  }
   isMonitoring = false;
   isPaused = false;
   log.info('[hung-window-detector] Stopped heartbeat monitoring');
