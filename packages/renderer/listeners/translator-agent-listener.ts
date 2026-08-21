@@ -2404,6 +2404,28 @@ async function initializeAgentBridge() {
     return;
   }
 
+  // Setup IPC bridge listener for packaged mode agent requests
+  if (window.env.isPackaged) {
+    window.electron.onAgentBridgeRequest?.((request: any) => {
+      const { method, params, responseChannel } = request;
+      
+      (async () => {
+        try {
+          if (!window.translatorAgent || typeof window.translatorAgent[method] !== 'function') {
+            throw new Error(`Agent method not available: ${method}`);
+          }
+          
+          const result = await window.translatorAgent[method](params);
+          window.electron.sendAgentBridgeResponse(responseChannel, { result });
+        } catch (error: any) {
+          window.electron.sendAgentBridgeResponse(responseChannel, {
+            error: error?.message || String(error),
+          });
+        }
+      })();
+    });
+  }
+
   window.translatorAgent = {
     async status() {
       return currentStatus();

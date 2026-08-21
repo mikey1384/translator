@@ -1,26 +1,41 @@
 import { Server as NetServer, Socket } from 'net';
 import path from 'path';
 import fs from 'fs';
-import { app } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import log from 'electron-log';
-import { getActiveAppWebContents } from '../utils/window.js';
+import { callAgentMethod } from '../handlers/agent-bridge-handlers.js';
 
 export class AgentSocketServer {
   private server: NetServer | null = null;
   private socketPath: string;
+  private socketInfoPath: string;
   private clients: Set<Socket> = new Set();
+  private mainWindow: BrowserWindow | null = null;
 
-  constructor() {
-    // Use a named pipe on Windows, Unix socket on Mac/Linux
+  constructor(mainWindow: BrowserWindow) {
+    this.mainWindow = mainWindow;
+    
+    // Use userData path consistently across platforms
+    const userData = app.getPath('userData');
+    const socketDir = path.join(userData, 'agent');
+    
+    // Ensure agent directory exists with restrictive permissions
+    if (!fs.existsSync(socketDir)) {
+      fs.mkdirSync(socketDir, { recursive: true, mode: 0o700 });
+    }
+    
+    // Platform-specific socket path
     if (process.platform === 'win32') {
-      this.socketPath = '\\\\.\\pipe\\translator-agent';
+      // Use per-user named pipe under userData (not well-known name)
+      const sanitized = userData.replace(/[^a-zA-Z0-9]/g, '_');
+      this.socketPath = `\\\\.\\pipe\\translator-agent-${sanitized}`;
     } else {
-      const socketDir = path.join(app.getPath('userData'), 'agent');
-      if (!fs.existsSync(socketDir)) {
-        fs.mkdirSync(socketDir, { recursive: true, mode: 0o700 });
-      }
+      // Unix socket
       this.socketPath = path.join(socketDir, 'translator-agent.sock');
     }
+    
+    // Write socket path info file for helper discovery
+    this.socketInfoPath = path.join(socketDir, 'socket-path.txt');
   }
 
   async start(): Promise<void> {
@@ -91,6 +106,7 @@ export class AgentSocketServer {
 
       this.server.listen(this.socketPath, () => {
         log.info(`[AgentSocketServer] Listening on ${this.socketPath}`);
+        
         // Set restrictive permissions on Unix sockets
         if (process.platform !== 'win32') {
           try {
@@ -99,6 +115,18 @@ export class AgentSocketServer {
             log.warn('[AgentSocketServer] Failed to set socket permissions:', err);
           }
         }
+        
+        // Write socket path info file for helper discovery
+        try {
+          fs.writeFileSync(this.socketInfoPath, this.socketPath, {
+            encoding: 'utf8',
+            mode: 0o600,
+          });
+          log.info(`[AgentSocketServer] Wrote socket path to ${this.socketInfoPath}`);
+        } catch (err) {
+          log.warn('[AgentSocketServer] Failed to write socket info:', err);
+        }
+        
         resolve();
       });
     });
@@ -128,6 +156,15 @@ export class AgentSocketServer {
           }
         }
         
+        // Clean up socket info file
+        if (fs.existsSync(this.socketInfoPath)) {
+          try {
+            fs.unlinkSync(this.socketInfoPath);
+          } catch (err) {
+            log.warn('[AgentSocketServer] Failed to remove socket info:', err);
+          }
+        }
+        
         this.server = null;
         resolve();
       });
@@ -138,27 +175,13 @@ export class AgentSocketServer {
     const { method, params, id } = request;
 
     try {
-      // Forward the request to the renderer's translator-agent bridge
-      const webContents = getActiveAppWebContents();
-      if (!webContents) {
-        throw new Error('No active Translator window');
+      // Check that main window is still available
+      if (!this.mainWindow || this.mainWindow.isDestroyed()) {
+        throw new Error('Main window not available');
       }
 
-      // Execute the method on the translator-agent bridge
-      const result = await webContents.executeJavaScript(`
-        (async () => {
-          if (!window.translatorAgent) {
-            throw new Error('Agent control is not enabled. Enable it in Settings → Agent Control.');
-          }
-          const method = ${JSON.stringify(method)};
-          const params = ${JSON.stringify(params)};
-          const fn = window.translatorAgent[method];
-          if (typeof fn !== 'function') {
-            throw new Error('Unknown agent method: ' + method);
-          }
-          return await fn(params);
-        })();
-      `);
+      // Forward the request via secure IPC bridge (not executeJavaScript)
+      const result = await callAgentMethod(method, params || {});
 
       const response = {
         jsonrpc: '2.0',
@@ -185,7 +208,15 @@ export class AgentSocketServer {
     return this.socketPath;
   }
 
+  getSocketInfoPath(): string {
+    return this.socketInfoPath;
+  }
+
   isRunning(): boolean {
     return this.server !== null;
+  }
+
+  getConnectedClientCount(): number {
+    return this.clients.size;
   }
 }

@@ -127,6 +127,10 @@ import {
 } from './services/startup-health.js';
 import { createWindowCreationCoordinator } from './window-creation-coordinator.js';
 import { AgentSocketServer } from './services/agent-socket-server.js';
+import {
+  registerAllAgentBridgeHandlers,
+  cleanupAgentBridgeHandlers,
+} from './handlers/agent-bridge-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -142,13 +146,13 @@ log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
 initEntitlementsManager(settingsStore);
 initAiProvider(settingsStore);
 
-// Initialize agent socket server for packaged-app MCP
-const agentSocketServer = new AgentSocketServer();
+// Initialize agent socket server for packaged-app MCP (will be started after main window created)
+let agentSocketServer: AgentSocketServer | null = null;
 async function updateAgentSocketServer() {
   const agentEnabled = settingsStore.get('agentControlEnabled', false);
   const isPackagedBuild = app.isPackaged;
   
-  if (isPackagedBuild && agentEnabled && !agentSocketServer.isRunning()) {
+  if (isPackagedBuild && agentEnabled && agentSocketServer && !agentSocketServer.isRunning()) {
     try {
       await agentSocketServer.start();
       log.info('[main] Agent socket server started');
@@ -1390,7 +1394,7 @@ async function prepareToQuit(reason: 'normal' | 'update'): Promise<void> {
     log.info(`[main.ts] Starting cleanup before ${reason} quit...`);
     try {
       // Stop agent socket server
-      if (agentSocketServer.isRunning()) {
+      if (agentSocketServer && agentSocketServer.isRunning()) {
         log.info('[main.ts] Stopping agent socket server...');
         await agentSocketServer.stop();
         log.info('[main.ts] Agent socket server stopped.');
@@ -1962,6 +1966,13 @@ app
       setStartupPhase('renderer_ready');
       markStartupSuccessful();
       log.info('[main.ts] Main window created.');
+      
+      // Initialize agent socket server for packaged mode
+      if (!agentSocketServer) {
+        agentSocketServer = new AgentSocketServer(window);
+        log.info('[main.ts] Agent socket server initialized');
+      }
+      
       void trackAppOpen();
       void flushPendingCriticalFailures();
       if (isDev) {
@@ -1971,7 +1982,7 @@ app
       }
     });
 
-    // Initialize agent socket server if agent control is enabled in packaged build
+    // Start agent socket server if agent control is enabled in packaged build
     await updateAgentSocketServer();
 
     // Prewarm the download pipeline (yt-dlp binary check + self-update +

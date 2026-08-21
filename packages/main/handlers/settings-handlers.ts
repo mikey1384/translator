@@ -1033,16 +1033,53 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  /**
+   * Get default allowed directories for agent file writes.
+   * Returns user Downloads + Translator library directory.
+   */
+  function getDefaultAllowedDirectories(): string[] {
+    const defaults: string[] = [];
+    
+    try {
+      // User Downloads directory
+      const downloads = app.getPath('downloads');
+      if (downloads) {
+        defaults.push(downloads);
+      }
+    } catch (err) {
+      log.warn('[settings] Failed to get downloads path:', err);
+    }
+    
+    try {
+      // Translator library directory (URL downloads)
+      const userData = app.getPath('userData');
+      const libraryDir = path.join(userData, 'url-downloads');
+      defaults.push(libraryDir);
+    } catch (err) {
+      log.warn('[settings] Failed to get library path:', err);
+    }
+    
+    return defaults;
+  }
+
   function getAgentAllowedDirectories(): string[] {
     try {
       const dirs = store.get(
         'agentAllowedDirectories',
         APP_SETTINGS_DEFAULTS.agentAllowedDirectories
       );
-      return Array.isArray(dirs) ? dirs.filter(d => typeof d === 'string') : [];
+      const filtered = Array.isArray(dirs) ? dirs.filter(d => typeof d === 'string') : [];
+      
+      // Return tight default set if empty (Downloads + Translator library)
+      if (filtered.length === 0) {
+        return getDefaultAllowedDirectories();
+      }
+      
+      return filtered;
     } catch (err) {
       log.error('[settings] Failed to read agent allowed directories:', err);
-      return [];
+      // Fall back to defaults on error
+      return getDefaultAllowedDirectories();
     }
   }
 

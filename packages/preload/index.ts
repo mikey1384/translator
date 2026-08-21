@@ -867,6 +867,16 @@ const electronAPI = {
     options: any
   ): Promise<{ canceled: boolean; filePaths: string[] }> =>
     ipcRenderer.invoke('show-open-dialog', options),
+
+  // Agent bridge IPC (packaged mode)
+  onAgentBridgeRequest: (callback: (request: any) => void) => {
+    const handler = (_: any, request: any) => callback(request);
+    ipcRenderer.on('agent-bridge-request', handler);
+    return () => ipcRenderer.removeListener('agent-bridge-request', handler);
+  },
+  sendAgentBridgeResponse: (channel: string, response: any) => {
+    ipcRenderer.send(channel, response);
+  },
 };
 
 try {
