@@ -166,34 +166,32 @@ test('packaged-mcp helper - reads socket path from file', async () => {
   );
 });
 
-test('packaged-mcp helper - excludes payment and secret tools', () => {
+test('packaged-mcp helper - is pure stdio forwarder with no tools', () => {
   const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
   const helperContent = fs.readFileSync(helperPath, 'utf8');
   
-  // These must NOT be in the tool list
-  const excludedTools = [
-    'openCreditCheckout',
-    'updateSettings',
-    'storeProviderKey',
-    'clearProviderKey',
-  ];
-  
-  // Find the appTools array definition
-  const toolsMatch = helperContent.match(/const appTools = \[([\s\S]*?)\];/);
-  assert.ok(toolsMatch, 'appTools array must be defined');
-  
-  const toolsList = toolsMatch[1];
-  for (const excluded of excludedTools) {
-    assert.ok(
-      !toolsList.includes(`'${excluded}'`),
-      `${excluded} must not be in packaged-mcp tool list`
-    );
-  }
-  
-  // Verify comment explains exclusion
+  // Helper must be pure forwarder with NO tool definitions
   assert.ok(
-    helperContent.includes('EXCLUDED') || helperContent.includes('human-gated'),
-    'Helper must document why tools are excluded'
+    !helperContent.includes('registerTool'),
+    'Helper must NOT define any tools (pure stdio forwarder)'
+  );
+  assert.ok(
+    !helperContent.includes('z.record'),
+    'Helper must NOT use zod schemas (no tool definitions)'
+  );
+  assert.ok(
+    !helperContent.includes('McpServer'),
+    'Helper must NOT import @modelcontextprotocol/server'
+  );
+  
+  // Must use only Node.js builtins
+  assert.ok(
+    helperContent.includes('import { createConnection } from \'net\''),
+    'Helper must use Node.js net module'
+  );
+  assert.ok(
+    helperContent.includes('import { readFileSync, existsSync } from \'fs\''),
+    'Helper must use Node.js fs module'
   );
 });
 
@@ -247,7 +245,7 @@ test('AgentSocketServer - re-reads kill switch per request', () => {
   );
 });
 
-test('extraResources bundling - excludes dev tools', () => {
+test('extraResources bundling - ships only standalone helper', () => {
   const builderPath = path.join(projectRoot, 'electron-builder.base.json');
   assert.ok(fs.existsSync(builderPath), 'electron-builder.base.json must exist');
   
@@ -255,11 +253,11 @@ test('extraResources bundling - excludes dev tools', () => {
   
   assert.ok(
     builderContent.includes('packaged-mcp.mjs'),
-    'Must bundle packaged-mcp.mjs'
+    'Must bundle standalone packaged-mcp.mjs'
   );
   assert.ok(
-    builderContent.includes('session-store.mjs'),
-    'Must bundle session-store.mjs dependency'
+    !builderContent.includes('session-store.mjs'),
+    'Must NOT bundle session-store.mjs (helper is pure forwarder)'
   );
   assert.ok(
     !builderContent.includes('dev-app-controller'),
@@ -268,6 +266,10 @@ test('extraResources bundling - excludes dev tools', () => {
   assert.ok(
     !builderContent.includes('playwright'),
     'Must NOT bundle playwright'
+  );
+  assert.ok(
+    !builderContent.includes('packages/agent-server/src/mcp.mjs'),
+    'Must NOT bundle dev mcp.mjs'
   );
 });
 
