@@ -2076,6 +2076,17 @@ async function exportMountedSubtitles(input?: {
   if (!/\.srt$/i.test(path)) {
     throw new Error('Subtitle export path must end in .srt.');
   }
+  
+  // In packaged mode, enforce allowlist
+  if (window.env.isPackaged) {
+    const allowed = await window.electron.checkAgentPathAllowed?.(path);
+    if (!allowed) {
+      throw new Error(
+        'Subtitle export directory is not in the agent allowed directories list. Configure allowed directories in Settings → Agent Control.'
+      );
+    }
+  }
+  
   if ((await window.fileApi.fileExists(path)) && input?.overwrite !== true) {
     throw new Error(
       'Subtitle export already exists. Confirm overwrite explicitly.'

@@ -856,10 +856,12 @@ const electronAPI = {
     dir: string
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('remove-agent-allowed-directory', dir),
-  getAgentSocketStatus: (): Promise<{
-    running: boolean;
-    connectedClients: number;
-  }> => ipcRenderer.invoke('get-agent-socket-status'),
+          getAgentSocketStatus: (): Promise<{
+            running: boolean;
+            connectedClients: number;
+          }> => ipcRenderer.invoke('get-agent-socket-status'),
+          checkAgentPathAllowed: (filePath: string): Promise<boolean> =>
+            ipcRenderer.invoke('check-agent-path-allowed', filePath),
   onAgentControlChanged: (
     callback: (payload: { enabled: boolean }) => void
   ) => {
