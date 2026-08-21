@@ -1261,11 +1261,24 @@ try {
           path.join(app.getPath('userData'), 'url-downloads'),
         ];
     
-    const resolvedPath = path.resolve(filePath);
+    // Use realpath to prevent symlink escapes
+    let realPath: string;
+    try {
+      realPath = fs.realpathSync(path.resolve(filePath));
+    } catch (err) {
+      // Path doesn't exist yet - use resolved path for new files
+      realPath = path.resolve(filePath);
+    }
+    
     return dirs.some(dir => {
-      const resolvedDir = path.resolve(String(dir));
-      return resolvedPath.startsWith(resolvedDir + path.sep) || 
-             resolvedPath === resolvedDir;
+      let realDir: string;
+      try {
+        realDir = fs.realpathSync(path.resolve(String(dir)));
+      } catch (err) {
+        realDir = path.resolve(String(dir));
+      }
+      return realPath.startsWith(realDir + path.sep) || 
+             realPath === realDir;
     });
   });
   ipcMain.handle('show-open-dialog', async (_event, options) => {
