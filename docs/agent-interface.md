@@ -182,12 +182,12 @@ MCP interface as dev mode:
 
 **macOS:**
 ```bash
-/Applications/Translator.app/Contents/Resources/agent-mcp/packaged-mcp.mjs
+/Applications/Translator.app/Contents/Resources/packaged-helper.mjs
 ```
 
 **Windows:**
 ```cmd
-C:\Program Files\Translator\resources\agent-mcp\packaged-mcp.mjs
+C:\Program Files\Translator\resources\packaged-helper.mjs
 ```
 
 Add this path to your MCP client (Cursor, Codex, etc.) configuration. The

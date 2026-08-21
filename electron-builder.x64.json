@@ -8,7 +8,8 @@
     },
     { "from": "vendor/headless-arm64", "to": "headless-arm64" },
     { "from": "vendor/headless-x64", "to": "headless-x64" },
-    { "from": "vendor/vision", "to": "vision-models" }
+    { "from": "vendor/vision", "to": "vision-models" },
+    { "from": "packages/agent-server/src/packaged-helper.mjs", "to": "packaged-helper.mjs" }
   ],
   "mac": {
     "category": "public.app-category.video",
