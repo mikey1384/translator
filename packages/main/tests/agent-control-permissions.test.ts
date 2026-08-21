@@ -327,6 +327,168 @@ test('packaged-mcp helper - maps fields correctly', () => {
     helperContent.includes('confirm_overwrite') && helperContent.includes('OVERWRITE'),
     'Must map confirm_overwrite=OVERWRITE → overwrite=true'
   );
+  
+  // Must map result_ids → ids (NOT resultIds)
+  assert.ok(
+    helperContent.includes('result_ids') && helperContent.includes('mapped.ids = value'),
+    'Must map result_ids → ids (NOT resultIds) for startSuggestedVideoBatch'
+  );
+  
+  // Must map other special fields
+  const requiredMappings = [
+    ['target_language', 'targetLanguage'],
+    ['replace_subtitles', 'replaceSubtitles'],
+    ['run_to', 'runTo'],
+    ['effort_level', 'effortLevel'],
+    ['summary_effort_level', 'summaryEffortLevel'],
+    ['translate_if_needed', 'translateIfNeeded'],
+    ['preferred_language', 'preferredLanguage'],
+    ['include_highlights', 'includeHighlights'],
+    ['include_download_history', 'includeDownloadHistory'],
+    ['include_watched_channels', 'includeWatchedChannels'],
+  ];
+  
+  for (const [snake, camel] of requiredMappings) {
+    assert.ok(
+      helperContent.includes(snake) && helperContent.includes(camel),
+      `Must map ${snake} → ${camel}`
+    );
+  }
+});
+
+test('packaged-mcp helper - TOOL_SCHEMAS includes real schemas (not z.any)', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  // Must define TOOL_SCHEMAS
+  assert.ok(
+    helperContent.includes('const TOOL_SCHEMAS'),
+    'Helper must define TOOL_SCHEMAS'
+  );
+  
+  // Must NOT emit empty schemas for key tools
+  const toolsWithConstraints = [
+    'app_video_batch_download',
+    'app_start_merge',
+    'app_subtitles_export',
+    'app_start_translation',
+    'app_navigate',
+  ];
+  
+  for (const tool of toolsWithConstraints) {
+    // Extract the schema for this tool
+    const schemaRegex = new RegExp(`${tool}:\\s*\\{[\\s\\S]*?\\}`);
+    const schemaMatch = helperContent.match(schemaRegex);
+    
+    assert.ok(schemaMatch, `Must have schema for ${tool}`);
+    
+    const schema = schemaMatch[0];
+    
+    // Must have properties, not additionalProperties: true
+    assert.ok(
+      schema.includes('properties:') && !schema.includes('additionalProperties: true'),
+      `${tool} schema must have real properties, not z.any()`
+    );
+  }
+  
+  // app_video_batch_download must have result_ids array constraint
+  assert.ok(
+    helperContent.includes('app_video_batch_download:') &&
+    helperContent.includes('result_ids:') &&
+    helperContent.includes('type: \'array\''),
+    'app_video_batch_download must define result_ids as array'
+  );
+  assert.ok(
+    helperContent.includes('minItems: 1') && helperContent.includes('maxItems: 8'),
+    'app_video_batch_download result_ids must have minItems: 1, maxItems: 8'
+  );
+  
+  // app_start_merge must have confirm_overwrite enum
+  assert.ok(
+    helperContent.includes('app_start_merge:') &&
+    helperContent.includes('confirm_overwrite:') &&
+    helperContent.includes('enum: [\'OVERWRITE\']'),
+    'app_start_merge must define confirm_overwrite enum'
+  );
+  
+  // tools/list handler must use TOOL_SCHEMAS
+  assert.ok(
+    helperContent.includes('TOOL_SCHEMAS[name]'),
+    'tools/list handler must use TOOL_SCHEMAS'
+  );
+  assert.ok(
+    !helperContent.includes('additionalProperties: true'),
+    'tools/list must NOT emit additionalProperties: true (z.any)'
+  );
+});
+
+test('packaged-mcp helper - executes mapFields and TOOL_MAP correctly', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  // Extract mapFields function
+  const mapFieldsStart = helperContent.indexOf('function mapFields(input)');
+  const mapFieldsEnd = helperContent.indexOf('\n}\n', mapFieldsStart) + 2;
+  assert.ok(mapFieldsStart !== -1, 'mapFields function not found');
+  
+  const mapFieldsCode = helperContent.substring(mapFieldsStart, mapFieldsEnd);
+  
+  // Create an isolated mapFields function via Function constructor (safer than eval)
+  const mapFieldsFn = new Function('input', `
+    ${mapFieldsCode}
+    return mapFields(input);
+  `);
+  
+  // Test result_ids → ids transformation
+  const batchDownloadArgs = {
+    result_ids: ['vid1', 'vid2', 'vid3'],
+    quality: '1080p',
+  };
+  
+  const mapped = mapFieldsFn(batchDownloadArgs);
+  
+  assert.strictEqual(mapped.ids, batchDownloadArgs.result_ids, 'result_ids must map to ids');
+  assert.strictEqual(mapped.resultIds, undefined, 'result_ids must NOT map to resultIds');
+  assert.strictEqual(mapped.quality, '1080p', 'quality must pass through');
+  
+  // Test confirm_overwrite=OVERWRITE → overwrite=true
+  const mergeArgs = {
+    output_path: '/tmp/test.mp4',
+    confirm_overwrite: 'OVERWRITE',
+  };
+  
+  const mappedMerge = mapFieldsFn(mergeArgs);
+  
+  assert.strictEqual(mappedMerge.overwrite, true, 'confirm_overwrite=OVERWRITE must map to overwrite=true');
+  assert.strictEqual(mappedMerge.confirmOverwrite, undefined, 'confirm_overwrite must NOT map to confirmOverwrite');
+  assert.strictEqual(mappedMerge.outputPath, '/tmp/test.mp4', 'output_path must map to outputPath');
+  
+  // Test other special mappings
+  const complexArgs = {
+    target_language: 'Korean',
+    replace_subtitles: 'fail',
+    run_to: 'translate',
+    effort_level: 'high',
+    summary_effort_level: 'standard',
+    translate_if_needed: true,
+    preferred_language: 'en',
+    include_highlights: false,
+    include_download_history: true,
+    include_watched_channels: false,
+  };
+  
+  const mappedComplex = mapFieldsFn(complexArgs);
+  
+  assert.strictEqual(mappedComplex.targetLanguage, 'Korean');
+  assert.strictEqual(mappedComplex.replaceSubtitles, 'fail');
+  assert.strictEqual(mappedComplex.runTo, 'translate');
+  assert.strictEqual(mappedComplex.effortLevel, 'high');
+  assert.strictEqual(mappedComplex.summaryEffortLevel, 'standard');
+  assert.strictEqual(mappedComplex.translateIfNeeded, true);
+  assert.strictEqual(mappedComplex.preferredLanguage, 'en');
+  assert.strictEqual(mappedComplex.includeHighlights, false);
+  assert.strictEqual(mappedComplex.includeDownloadHistory, true);
+  assert.strictEqual(mappedComplex.includeWatchedChannels, false);
 });
 
 test('extraResources bundling - ships only standalone helper', () => {

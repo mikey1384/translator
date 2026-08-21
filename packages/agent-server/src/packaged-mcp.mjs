@@ -68,6 +68,245 @@ const TOOL_MAP = {
 // Safe tools list (excludes checkout/keys)
 const SAFE_TOOLS = Object.keys(TOOL_MAP);
 
+// JSON Schemas for each tool (hand-written from mcp.mjs, zero npm deps)
+const TOOL_SCHEMAS = {
+  app_status: { type: 'object', properties: {}, additionalProperties: false },
+  app_navigation_list: { type: 'object', properties: {}, additionalProperties: false },
+  app_navigate: {
+    type: 'object',
+    properties: {
+      screen: { type: 'string', enum: ['generate', 'edit', 'settings', 'library'] }
+    },
+    required: ['screen'],
+    additionalProperties: false
+  },
+  app_open_web_page: {
+    type: 'object',
+    properties: { url: { type: 'string', format: 'uri' } },
+    required: ['url'],
+    additionalProperties: false
+  },
+  app_settings_show: { type: 'object', properties: {}, additionalProperties: false },
+  app_settings_get: { type: 'object', properties: {}, additionalProperties: false },
+  app_credits_balance: { type: 'object', properties: {}, additionalProperties: false },
+  app_mount_video_file: {
+    type: 'object',
+    properties: { path: { type: 'string', minLength: 1 } },
+    required: ['path'],
+    additionalProperties: false
+  },
+  app_mount_subtitle_file: {
+    type: 'object',
+    properties: { path: { type: 'string', minLength: 1 } },
+    required: ['path'],
+    additionalProperties: false
+  },
+  app_mount_url: {
+    type: 'object',
+    properties: { url: { type: 'string', format: 'uri' } },
+    required: ['url'],
+    additionalProperties: false
+  },
+  app_close_mounted_video: { type: 'object', properties: {}, additionalProperties: false },
+  app_close_mounted_subtitles: { type: 'object', properties: {}, additionalProperties: false },
+  app_library_downloads_list: { type: 'object', properties: {}, additionalProperties: false },
+  app_library_history_item_open: {
+    type: 'object',
+    properties: { id: { type: 'string', minLength: 1 } },
+    required: ['id'],
+    additionalProperties: false
+  },
+  app_library_history_item_redownload: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', minLength: 1 },
+      quality: {
+        type: 'string',
+        enum: ['high', 'mid', 'low', '4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'],
+        default: '1080p'
+      },
+      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' }
+    },
+    required: ['id'],
+    additionalProperties: false
+  },
+  app_video_search: {
+    type: 'object',
+    properties: {
+      prompt: { type: 'string', minLength: 1, maxLength: 2000 },
+      preferred_language: { type: 'string', minLength: 2, maxLength: 24 },
+      target_country: { type: 'string', maxLength: 100 },
+      recency: { type: 'string', enum: ['any', 'day', 'week', 'month', 'year'] },
+      include_download_history: { type: 'boolean' },
+      include_watched_channels: { type: 'boolean' }
+    },
+    required: ['prompt'],
+    additionalProperties: false
+  },
+  app_video_batch_download: {
+    type: 'object',
+    properties: {
+      result_ids: { type: 'array', items: { type: 'string', minLength: 1 }, minItems: 1, maxItems: 8 },
+      quality: {
+        type: 'string',
+        enum: ['high', 'mid', 'low', '4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'],
+        default: '1080p'
+      }
+    },
+    required: ['result_ids'],
+    additionalProperties: false
+  },
+  app_video_batch_cancel: { type: 'object', properties: {}, additionalProperties: false },
+  app_video_batch_status: { type: 'object', properties: {}, additionalProperties: false },
+  app_start_video_download: {
+    type: 'object',
+    properties: {
+      url: { type: 'string', format: 'uri' },
+      quality: {
+        type: 'string',
+        enum: ['high', 'mid', 'low', '4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'],
+        default: '1080p'
+      },
+      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' }
+    },
+    required: ['url'],
+    additionalProperties: false
+  },
+  app_start_transcription: {
+    type: 'object',
+    properties: {
+      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' }
+    },
+    additionalProperties: false
+  },
+  app_start_translation: {
+    type: 'object',
+    properties: {
+      target_language: { type: 'string', minLength: 2, maxLength: 80 }
+    },
+    required: ['target_language'],
+    additionalProperties: false
+  },
+  app_start_dubbing: {
+    type: 'object',
+    properties: {
+      target_language: { type: 'string', minLength: 2, maxLength: 80 },
+      voice: {
+        type: 'string',
+        enum: ['rachel', 'adam', 'josh', 'sarah', 'charlie', 'emily', 'matilda', 'brian', 'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+      },
+      translate_if_needed: { type: 'boolean', default: true }
+    },
+    additionalProperties: false
+  },
+  app_start_summary: {
+    type: 'object',
+    properties: {
+      target_language: { type: 'string', minLength: 2, maxLength: 80 },
+      effort_level: { type: 'string', enum: ['standard', 'high'] },
+      include_highlights: { type: 'boolean', default: true }
+    },
+    additionalProperties: false
+  },
+  app_start_cue_translation: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', minLength: 1 },
+      target_language: { type: 'string', minLength: 2, maxLength: 80 }
+    },
+    required: ['id', 'target_language'],
+    additionalProperties: false
+  },
+  app_start_cue_transcription: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', minLength: 1 }
+    },
+    required: ['id'],
+    additionalProperties: false
+  },
+  app_start_merge: {
+    type: 'object',
+    properties: {
+      output_path: { type: 'string', minLength: 1 },
+      confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] }
+    },
+    required: ['output_path'],
+    additionalProperties: false
+  },
+  app_processing_status: { type: 'object', properties: {}, additionalProperties: false },
+  app_processing_cancel: { type: 'object', properties: {}, additionalProperties: false },
+  app_subtitles_get: {
+    type: 'object',
+    properties: {
+      offset: { type: 'integer', minimum: 0, default: 0 },
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 }
+    },
+    additionalProperties: false
+  },
+  app_subtitles_update: {
+    type: 'object',
+    properties: {
+      cues: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', minLength: 1 },
+            text: { type: 'string' },
+            translation: { type: 'string' }
+          },
+          required: ['id']
+        }
+      }
+    },
+    required: ['cues'],
+    additionalProperties: false
+  },
+  app_subtitles_mutate: {
+    type: 'object',
+    properties: {
+      action: { type: 'string', enum: ['DELETE', 'SPLIT', 'MERGE'] },
+      id: { type: 'string', minLength: 1 },
+      split_at_ms: { type: 'integer', minimum: 0 },
+      merge_with_next: { type: 'boolean' }
+    },
+    required: ['action', 'id'],
+    additionalProperties: false
+  },
+  app_subtitles_export: {
+    type: 'object',
+    properties: {
+      output_path: { type: 'string', minLength: 1 },
+      confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] }
+    },
+    required: ['output_path'],
+    additionalProperties: false
+  },
+  app_start_media_workflow: {
+    type: 'object',
+    properties: {
+      url: { type: 'string', format: 'uri' },
+      path: { type: 'string', minLength: 1 },
+      quality: {
+        type: 'string',
+        enum: ['high', 'mid', 'low', '4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'],
+        default: '1080p'
+      },
+      run_to: { type: 'string', enum: ['download', 'transcribe', 'translate', 'dub', 'summary'] },
+      target_language: { type: 'string', minLength: 2, maxLength: 80 },
+      summary_effort_level: { type: 'string', enum: ['standard', 'high'] },
+      include_highlights: { type: 'boolean', default: true },
+      voice: {
+        type: 'string',
+        enum: ['rachel', 'adam', 'josh', 'sarah', 'charlie', 'emily', 'matilda', 'brian', 'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+      },
+      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' }
+    },
+    additionalProperties: false
+  }
+};
+
 function getSocketPath() {
   let userDataPath;
   if (platform() === 'darwin') {
@@ -173,17 +412,43 @@ function mapFields(input) {
   
   const mapped = {};
   for (const [key, value] of Object.entries(input)) {
-    // Special mappings
+    // Special mappings from mcp.mjs (exact field transformations)
     if (key === 'confirm_overwrite' && value === 'OVERWRITE') {
       mapped.overwrite = true;
+    } else if (key === 'result_ids') {
+      mapped.ids = value; // NOT resultIds - startSuggestedVideoBatch expects ids
     } else if (key === 'output_path') {
       mapped.outputPath = value;
     } else if (key === 'target_language') {
       mapped.targetLanguage = value;
     } else if (key === 'replace_subtitles') {
       mapped.replaceSubtitles = value;
+    } else if (key === 'run_to') {
+      mapped.runTo = value;
+    } else if (key === 'effort_level') {
+      mapped.effortLevel = value;
+    } else if (key === 'summary_effort_level') {
+      mapped.summaryEffortLevel = value;
+    } else if (key === 'translate_if_needed') {
+      mapped.translateIfNeeded = value;
+    } else if (key === 'preferred_language') {
+      mapped.preferredLanguage = value;
+    } else if (key === 'include_highlights') {
+      mapped.includeHighlights = value;
+    } else if (key === 'include_download_history') {
+      mapped.includeDownloadHistory = value;
+    } else if (key === 'include_watched_channels') {
+      mapped.includeWatchedChannels = value;
+    } else if (key === 'source_srt') {
+      mapped.sourceSrt = value;
+    } else if (key === 'source_language') {
+      mapped.sourceLanguage = value;
+    } else if (key === 'existing_translation_srt') {
+      mapped.existingTranslationSrt = value;
+    } else if (key === 'target_country') {
+      mapped.targetCountry = value;
     } else {
-      // Generic snake_to_camel
+      // Generic snake_to_camel for any remaining fields
       const camelKey = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
       mapped[camelKey] = value;
     }
@@ -272,10 +537,10 @@ async function handleMessage(msg) {
       const tools = SAFE_TOOLS.map(name => ({
         name,
         description: `Translator: ${TOOL_MAP[name]}`,
-        inputSchema: {
+        inputSchema: TOOL_SCHEMAS[name] || {
           type: 'object',
           properties: {},
-          additionalProperties: true
+          additionalProperties: false
         }
       }));
       writeMessage({ jsonrpc: '2.0', id, result: { tools } });
