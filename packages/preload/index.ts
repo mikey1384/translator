@@ -834,6 +834,55 @@ const electronAPI = {
     ipcRenderer.invoke('cookies:clear', url),
 
   // yt-dlp auto-update is always on; no setting exposed
+
+  // Agent control settings
+  getAgentControlEnabled: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-agent-control-enabled'),
+  setAgentControlEnabled: (
+    enabled: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-agent-control-enabled', enabled),
+  getAgentAllowedDirectories: (): Promise<string[]> =>
+    ipcRenderer.invoke('get-agent-allowed-directories'),
+  setAgentAllowedDirectories: (
+    dirs: string[]
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-agent-allowed-directories', dirs),
+  addAgentAllowedDirectory: (
+    dir: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('add-agent-allowed-directory', dir),
+  removeAgentAllowedDirectory: (
+    dir: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('remove-agent-allowed-directory', dir),
+          getAgentSocketStatus: (): Promise<{
+            running: boolean;
+            connectedClients: number;
+          }> => ipcRenderer.invoke('get-agent-socket-status'),
+          checkAgentPathAllowed: (filePath: string): Promise<boolean> =>
+            ipcRenderer.invoke('check-agent-path-allowed', filePath),
+  onAgentControlChanged: (
+    callback: (payload: { enabled: boolean }) => void
+  ) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('agent-control-changed', handler);
+    return () => ipcRenderer.removeListener('agent-control-changed', handler);
+  },
+  showOpenDialog: (
+    options: any
+  ): Promise<{ canceled: boolean; filePaths: string[] }> =>
+    ipcRenderer.invoke('show-open-dialog', options),
+
+  // Agent bridge IPC (packaged mode)
+  onAgentBridgeRequest: (callback: (request: any) => void) => {
+    const handler = (_: any, request: any) => callback(request);
+    ipcRenderer.on('agent-bridge-request', handler);
+    return () => ipcRenderer.removeListener('agent-bridge-request', handler);
+  },
+  sendAgentBridgeResponse: (channel: string, response: any) => {
+    ipcRenderer.send(channel, response);
+  },
 };
 
 try {
@@ -863,9 +912,15 @@ contextBridge.exposeInMainWorld('appShell', {
 });
 
 const isPackaged = ipcRenderer.sendSync('is-packaged');
+// In development, agent mode is enabled with TRANSLATOR_AGENT_DEV=1
+// In production, agent mode requires explicit user permission via Settings
+const agentModeEnabled = isPackaged
+  ? false // Will be determined dynamically in renderer after settings load
+  : process.env.TRANSLATOR_AGENT_DEV === '1';
+
 contextBridge.exposeInMainWorld('env', {
   isPackaged,
-  agentMode: !isPackaged && process.env.TRANSLATOR_AGENT_DEV === '1',
+  agentMode: agentModeEnabled,
 });
 
 // Listen for postMessage from Stripe checkout pages and forward to main process

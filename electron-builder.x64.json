@@ -5,7 +5,11 @@
       "from": "packages/renderer/dist/assets",
       "to": "assets",
       "filter": ["**/*"]
-    }
+    },
+    { "from": "vendor/headless-arm64", "to": "headless-arm64" },
+    { "from": "vendor/headless-x64", "to": "headless-x64" },
+    { "from": "vendor/vision", "to": "vision-models" },
+    { "from": "packages/agent-server/src/packaged-mcp.mjs", "to": "packaged-mcp.mjs" }
   ],
   "mac": {
     "category": "public.app-category.video",

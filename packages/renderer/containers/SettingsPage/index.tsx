@@ -13,6 +13,7 @@ import ByoUnlockCard from './ByoUnlockCard';
 import ApiKeyModeToggle from './ApiKeyModeToggle';
 import ByoOpenAiSection from './ByoOpenAiSection';
 import SiteConnectionSection from './SiteConnectionSection';
+import AgentControlSection from './AgentControlSection';
 import { hasAnyByoEntitlementUnlocked } from '../../state/byo-runtime';
 import { settingsCenterColumnStyles, settingsPageLayoutStyles } from './styles';
 
@@ -105,6 +106,9 @@ export default function SettingsPage() {
       )}
 
       {isAdmin && <SiteConnectionSection />}
+
+      {/* —————————————————  AGENT CONTROL SECTION  ————————————————— */}
+      <AgentControlSection />
 
       {/* —————————————————  BYO API KEYS SECTION (if unlocked + API-key mode ON)  ————————————————— */}
       <ByoOpenAiSection />

@@ -70,6 +70,9 @@ export type AppSettingsSchema = {
   preferredTranscriptionProvider: TranscriptionProviderPreference;
   preferredDubbingProvider: DubbingProviderPreference;
   stage5DubbingTtsProvider: Stage5DubbingTtsProviderPreference;
+  // Agent control settings (packaged-app MCP)
+  agentControlEnabled: boolean;
+  agentAllowedDirectories: string[];
 };
 
 export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
@@ -105,6 +108,10 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   preferredTranscriptionProvider: 'elevenlabs',
   preferredDubbingProvider: 'openai',
   stage5DubbingTtsProvider: 'openai',
+  // Agent control off by default - requires explicit user grant
+  agentControlEnabled: false,
+  // Default allowlist: Downloads + Translator library (populated at runtime)
+  agentAllowedDirectories: [],
 };
 
 export function normalizeVideoSuggestionModelPreferenceSetting(

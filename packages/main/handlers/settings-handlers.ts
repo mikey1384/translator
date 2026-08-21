@@ -1008,6 +1008,131 @@ export function buildSettingsHandlers(opts: {
     return isEncryptionAvailable();
   }
 
+  /* ─────────── Agent control settings ─────────── */
+  function getAgentControlEnabled(): boolean {
+    try {
+      return Boolean(
+        store.get('agentControlEnabled', APP_SETTINGS_DEFAULTS.agentControlEnabled)
+      );
+    } catch (err) {
+      log.error('[settings] Failed to read agent control enabled:', err);
+      return APP_SETTINGS_DEFAULTS.agentControlEnabled;
+    }
+  }
+
+  function setAgentControlEnabled(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set('agentControlEnabled', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist agent control enabled:', err);
+      return { success: false, error: err?.message || 'Failed to save setting' };
+    }
+  }
+
+  /**
+   * Get default allowed directories for agent file writes.
+   * Returns user Downloads + Translator library directory.
+   */
+  function getDefaultAllowedDirectories(): string[] {
+    const defaults: string[] = [];
+    
+    try {
+      // User Downloads directory
+      const downloads = app.getPath('downloads');
+      if (downloads) {
+        defaults.push(downloads);
+      }
+    } catch (err) {
+      log.warn('[settings] Failed to get downloads path:', err);
+    }
+    
+    try {
+      // Translator library directory (URL downloads)
+      const userData = app.getPath('userData');
+      const libraryDir = path.join(userData, 'url-downloads');
+      defaults.push(libraryDir);
+    } catch (err) {
+      log.warn('[settings] Failed to get library path:', err);
+    }
+    
+    return defaults;
+  }
+
+  function getAgentAllowedDirectories(): string[] {
+    try {
+      const dirs = store.get(
+        'agentAllowedDirectories',
+        APP_SETTINGS_DEFAULTS.agentAllowedDirectories
+      );
+      const filtered = Array.isArray(dirs) ? dirs.filter(d => typeof d === 'string') : [];
+      
+      // Return tight default set if empty (Downloads + Translator library)
+      if (filtered.length === 0) {
+        return getDefaultAllowedDirectories();
+      }
+      
+      return filtered;
+    } catch (err) {
+      log.error('[settings] Failed to read agent allowed directories:', err);
+      // Fall back to defaults on error
+      return getDefaultAllowedDirectories();
+    }
+  }
+
+  function setAgentAllowedDirectories(dirs: string[]): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      if (!Array.isArray(dirs)) {
+        return { success: false, error: 'Allowed directories must be an array' };
+      }
+      const sanitized = dirs
+        .filter(d => typeof d === 'string' && d.trim().length > 0)
+        .map(d => path.resolve(d.trim()));
+      store.set('agentAllowedDirectories', sanitized);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist agent allowed directories:', err);
+      return { success: false, error: err?.message || 'Failed to save directories' };
+    }
+  }
+
+  function addAgentAllowedDirectory(dir: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      const current = getAgentAllowedDirectories();
+      const resolved = path.resolve(dir.trim());
+      if (!current.includes(resolved)) {
+        return setAgentAllowedDirectories([...current, resolved]);
+      }
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to add agent allowed directory:', err);
+      return { success: false, error: err?.message || 'Failed to add directory' };
+    }
+  }
+
+  function removeAgentAllowedDirectory(dir: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      const current = getAgentAllowedDirectories();
+      const resolved = path.resolve(dir.trim());
+      return setAgentAllowedDirectories(current.filter(d => d !== resolved));
+    } catch (err: any) {
+      log.error('[settings] Failed to remove agent allowed directory:', err);
+      return { success: false, error: err?.message || 'Failed to remove directory' };
+    }
+  }
+
   /* ------------------------------------------------ */
   return {
     checkEncryptionAvailable,
@@ -1061,6 +1186,12 @@ export function buildSettingsHandlers(opts: {
     setPreferredDubbingProvider,
     getStage5DubbingTtsProvider,
     setStage5DubbingTtsProvider,
+    getAgentControlEnabled,
+    setAgentControlEnabled,
+    getAgentAllowedDirectories,
+    setAgentAllowedDirectories,
+    addAgentAllowedDirectory,
+    removeAgentAllowedDirectory,
     // yt-dlp auto update is always on
   };
 }

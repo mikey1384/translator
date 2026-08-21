@@ -354,7 +354,27 @@ export function initializeRenderWindowHandlers({
 
         const explicitOutputPath = String(options.outputSavePath || '').trim();
         if (explicitOutputPath) {
-          if (app.isPackaged || process.env.TRANSLATOR_AGENT_DEV !== '1') {
+          // In packaged mode, explicit paths require agent control enabled + allowlist check
+          if (app.isPackaged) {
+            const agentEnabled = settingsStore.get('agentControlEnabled', false);
+            if (!agentEnabled) {
+              throw new Error(
+                'Explicit merge output paths require agent control to be enabled in Settings.'
+              );
+            }
+            const allowedDirs = settingsStore.get('agentAllowedDirectories', []);
+            const resolvedOutput = path.resolve(explicitOutputPath);
+            const isAllowed = Array.isArray(allowedDirs) && allowedDirs.some(dir => {
+              const resolvedDir = path.resolve(String(dir));
+              return resolvedOutput.startsWith(resolvedDir + path.sep) || 
+                     resolvedOutput === resolvedDir;
+            });
+            if (!isAllowed) {
+              throw new Error(
+                'Merge output directory is not in the agent allowed directories list. Configure allowed directories in Settings → Agent Control.'
+              );
+            }
+          } else if (process.env.TRANSLATOR_AGENT_DEV !== '1') {
             throw new Error(
               'Explicit merge output paths are available only in local agent development mode.'
             );

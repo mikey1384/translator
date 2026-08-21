@@ -1546,6 +1546,18 @@ async function runAgentMerge(
   if (!/\.mp4$/i.test(outputPath)) {
     throw new Error('Merged video output path must end in .mp4.');
   }
+  
+  // In packaged mode, enforce allowlist
+  if (window.env.isPackaged) {
+    const allowed = await window.electron.checkAgentPathAllowed?.(outputPath);
+    if (!allowed) {
+      throw new Error(
+        'Merge output path is outside the allowed directories. ' +
+        'Configure allowed directories in Settings → Agent Control.'
+      );
+    }
+  }
+  
   const video = useVideoStore.getState();
   const subtitles = useSubStore.getState();
   const videoPath =
@@ -2076,6 +2088,17 @@ async function exportMountedSubtitles(input?: {
   if (!/\.srt$/i.test(path)) {
     throw new Error('Subtitle export path must end in .srt.');
   }
+  
+  // In packaged mode, enforce allowlist
+  if (window.env.isPackaged) {
+    const allowed = await window.electron.checkAgentPathAllowed?.(path);
+    if (!allowed) {
+      throw new Error(
+        'Subtitle export directory is not in the agent allowed directories list. Configure allowed directories in Settings → Agent Control.'
+      );
+    }
+  }
+  
   if ((await window.fileApi.fileExists(path)) && input?.overwrite !== true) {
     throw new Error(
       'Subtitle export already exists. Confirm overwrite explicitly.'
@@ -2385,7 +2408,13 @@ async function clearProviderKey(input?: {
   return settingsSnapshot();
 }
 
-if (window.env.agentMode) {
+function installAgentBridge() {
+  if (window.translatorAgent) {
+    console.log('[agent-listener] Bridge already installed');
+    return;
+  }
+
+  console.log('[agent-listener] Installing agent bridge');
   window.translatorAgent = {
     async status() {
       return currentStatus();
@@ -2713,3 +2742,71 @@ if (window.env.agentMode) {
     },
   };
 }
+
+function removeAgentBridge() {
+  if (!window.translatorAgent) {
+    return;
+  }
+  console.log('[agent-listener] Removing agent bridge');
+  delete window.translatorAgent;
+}
+
+async function initializeAgentBridge() {
+  // In development: check TRANSLATOR_AGENT_DEV flag (already set in window.env.agentMode)
+  // In packaged mode: check if user has enabled agent control in Settings
+  let agentEnabled = window.env.agentMode;
+
+  if (window.env.isPackaged && !agentEnabled) {
+    // Check if agent control is enabled in settings
+    try {
+      agentEnabled = await window.electron.getAgentControlEnabled();
+    } catch (err) {
+      console.warn('[agent-listener] Failed to check agent control setting:', err);
+      agentEnabled = false;
+    }
+  }
+
+  // Setup IPC bridge listener for packaged mode agent requests
+  // This must be registered even when disabled so it can handle enable/disable toggles
+  if (window.env.isPackaged) {
+    window.electron.onAgentBridgeRequest?.((request: any) => {
+      const { method, params, responseChannel } = request;
+      
+      (async () => {
+        try {
+          if (!window.translatorAgent || typeof window.translatorAgent[method] !== 'function') {
+            throw new Error('Agent control is not enabled. Enable it in Settings → Agent Control.');
+          }
+          
+          const result = await window.translatorAgent[method](params);
+          window.electron.sendAgentBridgeResponse(responseChannel, { result });
+        } catch (error: any) {
+          window.electron.sendAgentBridgeResponse(responseChannel, {
+            error: error?.message || String(error),
+          });
+        }
+      })();
+    });
+
+    // Listen for agent control changes - install/remove bridge dynamically
+    window.electron.onAgentControlChanged?.(({ enabled }) => {
+      if (enabled) {
+        // User enabled agent control - install bridge immediately (no reload)
+        console.log('[agent-listener] Agent control enabled - installing bridge');
+        installAgentBridge();
+      } else {
+        // User disabled agent control - remove bridge immediately
+        console.log('[agent-listener] Agent control disabled - removing bridge');
+        removeAgentBridge();
+      }
+    });
+  }
+
+  // Install bridge if currently enabled
+  if (agentEnabled) {
+    installAgentBridge();
+  }
+}
+
+// Initialize agent bridge on load
+void initializeAgentBridge();
