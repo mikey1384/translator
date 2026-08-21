@@ -160,10 +160,39 @@ requires the literal confirmation value `CLEAR`. Credit purchases, BYO
 entitlement checkout, and admin credit resets remain manual-only because they
 cross commerce or privileged-account boundaries.
 
-The renderer bridge exists only when the app is unpackaged and launched with
-`TRANSLATOR_AGENT_DEV=1`. Packaged builds do not expose
-`window.translatorAgent`. The MCP server starts the development build with that
-flag automatically.
+## Development vs Production Agent Control
+
+### Development Mode
+The renderer bridge exists when the app is unpackaged and launched with
+`TRANSLATOR_AGENT_DEV=1`. The dev MCP server (`npm run agent:mcp`) starts the
+development build with Playwright and that flag automatically.
+
+### Production/Packaged Mode
+Packaged builds (`/Applications/Translator.app` on macOS, installed app on Windows)
+expose agent control only after explicit user permission:
+
+1. Launch Translator.app
+2. Go to Settings → Agent Control
+3. Enable "Allow agent control of this app"
+4. Configure allowed directories for file writes (exports, merged videos)
+
+When enabled, a local IPC socket server runs within the app. The packaged MCP
+helper (`packaged-mcp.mjs`) connects to this socket and exposes the same stdio
+MCP interface as dev mode:
+
+**macOS:**
+```bash
+/Applications/Translator.app/Contents/Resources/agent-mcp/packaged-mcp.mjs
+```
+
+**Windows:**
+```cmd
+%LOCALAPPDATA%\Programs\Translator\resources\agent-mcp\packaged-mcp.mjs
+```
+
+Add this path to your MCP client (Cursor, Codex, etc.) configuration. The
+agent control setting persists across app launches and can be disabled at any
+time (kill switch).
 
 ## Parity status
 
@@ -185,9 +214,9 @@ Those are engineering gaps, not actions that inherently require a human.
 
 Authentication challenges, cookie consent/verification, payment entry and
 submission, privileged administration, and OS/platform security prompts remain
-human-gated by design. Packaged-app MCP also remains disabled until Translator
-has an in-product permission screen, allowed-directory controls, visible active
-operation status, and a kill switch.
+human-gated by design. Packaged-app MCP requires explicit user permission via
+the in-product Settings UI and respects allowed-directory controls and the kill
+switch.
 
 ## Run and test
 
@@ -220,7 +249,12 @@ prompts for tools that write files or mutate the development app.
 
 - No HTTP listener, remote exposure, or bearer token is needed for stdio.
 - The free tool set does not invoke paid Translator AI operations.
-- App control is development-only and off by default.
+- App control is off by default in packaged mode and requires explicit user permission.
+- In development mode, agent control requires `TRANSLATOR_AGENT_DEV=1` flag.
+- Packaged mode includes an in-product permission screen (Settings → Agent Control).
+- Visible agent-operation status shown in Settings when enabled.
+- Kill switch allows immediate disabling of agent control.
+- File writes (exports, merged videos) restricted to user-configured allowed directories.
 - Translation updates must use cue IDs from the current session.
 - Export refuses incomplete translation or dual files.
 - Source subtitle text is never overwritten by review submissions.
@@ -237,13 +271,9 @@ prompts for tools that write files or mutate the development app.
   writes only to an explicit absolute `.srt` path. Existing files require the
   separate confirmation value `OVERWRITE`.
 - Automated merge writes only to its explicit absolute `.mp4` output path and
-  validates the destination before rendering. Existing files require the
-  separate confirmation value `OVERWRITE`, after which the app retains its
-  transactional backup/restore behavior.
+  validates the destination before rendering. File writes outside allowed directories
+  are rejected. Existing files require the separate confirmation value `OVERWRITE`,
+  after which the app retains its transactional backup/restore behavior.
 - Settings snapshots reveal key presence, never secret values.
 - Checkout pages may be opened, but entering payment details, completing a
   purchase, and privileged admin resets are not agent actions.
-
-Before packaged-app release, add an in-product permission screen, visible
-agent-operation status, explicit allowed directories, and a user-controlled
-kill switch.

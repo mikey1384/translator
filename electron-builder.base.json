@@ -43,7 +43,10 @@
   "extraResources": [
     { "from": "vendor/headless-arm64", "to": "headless-arm64" },
     { "from": "vendor/headless-x64", "to": "headless-x64" },
-    { "from": "vendor/vision", "to": "vision-models" }
+    { "from": "vendor/vision", "to": "vision-models" },
+    { "from": "packages/agent-server/src", "to": "agent-mcp" },
+    { "from": "packages/agent-server/package.json", "to": "agent-mcp/package.json" },
+    { "from": "packages/agent-server/node_modules", "to": "agent-mcp/node_modules" }
   ],
 
   "files": [

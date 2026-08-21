@@ -2385,7 +2385,25 @@ async function clearProviderKey(input?: {
   return settingsSnapshot();
 }
 
-if (window.env.agentMode) {
+async function initializeAgentBridge() {
+  // In development: check TRANSLATOR_AGENT_DEV flag (already set in window.env.agentMode)
+  // In packaged mode: check if user has enabled agent control in Settings
+  let agentEnabled = window.env.agentMode;
+
+  if (window.env.isPackaged && !agentEnabled) {
+    // Check if agent control is enabled in settings
+    try {
+      agentEnabled = await window.electron.getAgentControlEnabled();
+    } catch (err) {
+      console.warn('[agent-listener] Failed to check agent control setting:', err);
+      agentEnabled = false;
+    }
+  }
+
+  if (!agentEnabled) {
+    return;
+  }
+
   window.translatorAgent = {
     async status() {
       return currentStatus();
@@ -2712,4 +2730,23 @@ if (window.env.agentMode) {
       return exportMountedSubtitles(input);
     },
   };
+
+  // Listen for agent control changes in packaged mode
+  if (window.env.isPackaged) {
+    window.electron.onAgentControlChanged?.(({ enabled }) => {
+      if (!enabled) {
+        // User disabled agent control - remove the bridge
+        if (window.translatorAgent) {
+          console.log('[agent-listener] Agent control disabled by user');
+          delete window.translatorAgent;
+        }
+      } else {
+        // User enabled agent control - reinitialize
+        console.log('[agent-listener] Agent control enabled by user - reload required');
+      }
+    });
+  }
 }
+
+// Initialize agent bridge on load
+void initializeAgentBridge();

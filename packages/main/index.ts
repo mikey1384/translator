@@ -126,6 +126,7 @@ import {
   type ProcessFailureReason,
 } from './services/startup-health.js';
 import { createWindowCreationCoordinator } from './window-creation-coordinator.js';
+import { AgentSocketServer } from './services/agent-socket-server.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -140,6 +141,29 @@ log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
 
 initEntitlementsManager(settingsStore);
 initAiProvider(settingsStore);
+
+// Initialize agent socket server for packaged-app MCP
+const agentSocketServer = new AgentSocketServer();
+async function updateAgentSocketServer() {
+  const agentEnabled = settingsStore.get('agentControlEnabled', false);
+  const isPackagedBuild = app.isPackaged;
+  
+  if (isPackagedBuild && agentEnabled && !agentSocketServer.isRunning()) {
+    try {
+      await agentSocketServer.start();
+      log.info('[main] Agent socket server started');
+    } catch (err) {
+      log.error('[main] Failed to start agent socket server:', err);
+    }
+  } else if ((!agentEnabled || !isPackagedBuild) && agentSocketServer.isRunning()) {
+    try {
+      await agentSocketServer.stop();
+      log.info('[main] Agent socket server stopped');
+    } catch (err) {
+      log.error('[main] Failed to stop agent socket server:', err);
+    }
+  }
+}
 
 function registerCheckoutReturnProtocol(): void {
   try {
@@ -1178,6 +1202,40 @@ try {
     settingsHandlers.setApiKeyModeEnabled(Boolean(value))
   );
 
+  // Agent control handlers
+  ipcMain.handle('get-agent-control-enabled', () =>
+    settingsHandlers.getAgentControlEnabled()
+  );
+  ipcMain.handle('set-agent-control-enabled', async (_event, value: boolean) => {
+    const result = settingsHandlers.setAgentControlEnabled(Boolean(value));
+    if (result.success) {
+      // Broadcast to all windows that agent control state changed
+      broadcastToApp('agent-control-changed', { enabled: Boolean(value) });
+      // Update socket server state
+      await updateAgentSocketServer();
+    }
+    return result;
+  });
+  ipcMain.handle('get-agent-allowed-directories', () =>
+    settingsHandlers.getAgentAllowedDirectories()
+  );
+  ipcMain.handle('set-agent-allowed-directories', (_event, dirs: string[]) =>
+    settingsHandlers.setAgentAllowedDirectories(dirs)
+  );
+  ipcMain.handle('add-agent-allowed-directory', (_event, dir: string) =>
+    settingsHandlers.addAgentAllowedDirectory(dir)
+  );
+  ipcMain.handle('remove-agent-allowed-directory', (_event, dir: string) =>
+    settingsHandlers.removeAgentAllowedDirectory(dir)
+  );
+  ipcMain.handle('show-open-dialog', async (_event, options) => {
+    const mainWindow = getMainWindow();
+    if (!mainWindow) {
+      return { canceled: true, filePaths: [] };
+    }
+    return await dialog.showOpenDialog(mainWindow, options);
+  });
+
   // Claude translation preference handlers
   ipcMain.handle('get-prefer-claude-translation', () =>
     settingsHandlers.getPreferClaudeTranslation()
@@ -1331,6 +1389,13 @@ async function prepareToQuit(reason: 'normal' | 'update'): Promise<void> {
   quitCleanupPromise = (async () => {
     log.info(`[main.ts] Starting cleanup before ${reason} quit...`);
     try {
+      // Stop agent socket server
+      if (agentSocketServer.isRunning()) {
+        log.info('[main.ts] Stopping agent socket server...');
+        await agentSocketServer.stop();
+        log.info('[main.ts] Agent socket server stopped.');
+      }
+      
       if (services?.fileManager?.cleanup) {
         log.info('[main.ts] Attempting FileManager cleanup...');
         await services.fileManager.cleanup();
@@ -1905,6 +1970,9 @@ app
         });
       }
     });
+
+    // Initialize agent socket server if agent control is enabled in packaged build
+    await updateAgentSocketServer();
 
     // Prewarm the download pipeline (yt-dlp binary check + self-update +
     // JS-runtime probe) off the critical path so the user's first download

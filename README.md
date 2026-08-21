@@ -67,7 +67,7 @@ contextual batches, supplies the translated or revised text from its existing
 subscription, and exports a translation-only or bilingual SRT. Translator does
 not call a paid model for this path.
 
-The development bridge also lets an agent download an explicit video URL into
+The agent bridge also lets an agent download an explicit video URL into
 the local library, open a local video, mount an SRT, switch among original,
 translation, and dual-text display, choose Default, Classic, Boxed, or LineBox
 subtitle styling, and list, open, or re-download items from the Downloads
@@ -75,22 +75,43 @@ library by stable entry ID. It can also use Translator's ranked video search,
 continue a search, and queue selected recommendation IDs for bounded sequential
 downloads.
 
-The development agent can navigate directly to named app destinations, open an
+The agent can navigate directly to named app destinations, open an
 explicit web page for the user, or hand off to a secure Stage5 credit checkout.
 It cannot read or submit payment fields.
 It can also inspect and operate Settings through typed controls for quality,
 voice, provider, model, and BYO preferences. Provider keys are write-only and
 masked; purchases, entitlement checkout, and admin resets remain manual.
-It is explicitly development-only until the packaged-app permission and
-entitlement UX is ready.
 
+### Development Mode
 ```bash
 npm run agent:test
 npm run agent:mcp
 ```
 
-See [docs/agent-interface.md](docs/agent-interface.md) for the tool workflow,
-Codex configuration, security boundary, and current limitations.
+### Production/Installed App
+Agent control is available in packaged builds with explicit user permission:
+
+1. Launch Translator.app (or installed Windows app)
+2. Go to **Settings → Agent Control**
+3. Enable "Allow agent control of this app"
+4. Configure allowed directories for file writes
+
+Then point your MCP client (Cursor, Codex, etc.) to the packaged helper:
+
+**macOS:**
+```
+/Applications/Translator.app/Contents/Resources/agent-mcp/packaged-mcp.mjs
+```
+
+**Windows:**
+```
+%LOCALAPPDATA%\Programs\Translator\resources\agent-mcp\packaged-mcp.mjs
+```
+
+Agent control includes a kill switch and can be disabled at any time from Settings.
+
+See [docs/agent-interface.md](docs/agent-interface.md) for the complete tool workflow,
+security boundary, and current limitations.
 
 ## Open-source boundary
 
