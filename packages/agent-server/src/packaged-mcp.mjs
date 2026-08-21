@@ -335,52 +335,75 @@ function getSocketPath() {
   }
 }
 
-async function connectToTranslator() {
-  const socketPath = getSocketPath();
+async function ensureConnected() {
+  if (socket) return; // Already connected
   
-  return new Promise((resolve, reject) => {
-    socket = createConnection(socketPath);
-    
-    let buffer = '';
-    
-    socket.on('connect', () => {
-      console.error(`[packaged-mcp] Connected to ${socketPath}`);
-      resolve();
-    });
-    
-    socket.on('data', (data) => {
-      buffer += data.toString();
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-      
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const response = JSON.parse(line);
-          if (response.id && pendingRequests.has(response.id)) {
-            const { resolve, reject } = pendingRequests.get(response.id);
-            pendingRequests.delete(response.id);
-            if (response.error) {
-              reject(new Error(response.error.message || JSON.stringify(response.error)));
-            } else {
-              resolve(response.result);
-            }
+  const socketPath = getSocketPath();
+  const maxRetries = 3;
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await new Promise((resolve, reject) => {
+        socket = createConnection(socketPath);
+        
+        let localBuffer = '';
+        
+        socket.on('connect', () => {
+          console.error(`[packaged-mcp] Connected to ${socketPath}`);
+          resolve();
+        });
+        
+        socket.on('data', (data) => {
+          localBuffer += data.toString();
+          const lines = localBuffer.split('\n');
+          localBuffer = lines.pop() || '';
+          
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const response = JSON.parse(line);
+              if (response.id && pendingRequests.has(response.id)) {
+                const { resolve, reject } = pendingRequests.get(response.id);
+                pendingRequests.delete(response.id);
+                if (response.error) {
+                  reject(new Error(response.error.message || JSON.stringify(response.error)));
+                } else {
+                  resolve(response.result);
+                }
+              }
+            } catch (err) {}
           }
-        } catch (err) {}
+        });
+        
+        socket.on('error', (err) => {
+          socket = null;
+          reject(err);
+        });
+        
+        socket.on('end', () => {
+          console.error('[packaged-mcp] Connection closed');
+          socket = null;
+        });
+      });
+      
+      return; // Success
+    } catch (err) {
+      lastError = err;
+      console.error(`[packaged-mcp] Connection attempt ${attempt}/${maxRetries} failed: ${err.message}`);
+      
+      if (attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 4000);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-    });
-    
-    socket.on('error', (err) => {
-      console.error('[packaged-mcp] Socket error:', err.message);
-      console.error('Make sure Translator.app is running with agent control enabled');
-      reject(err);
-    });
-    
-    socket.on('end', () => {
-      console.error('[packaged-mcp] Connection closed');
-      process.exit(0);
-    });
-  });
+    }
+  }
+  
+  throw new Error(
+    `Failed to connect after ${maxRetries} attempts. ` +
+    `Make sure Translator.app is running with agent control enabled. ` +
+    `Last error: ${lastError?.message || 'unknown'}`
+  );
 }
 
 async function callTranslatorMethod(method, params) {
@@ -554,6 +577,9 @@ async function handleMessage(msg) {
         throw new Error(`Unknown tool: ${toolName}`);
       }
       
+      // Connect to Translator socket (lazy, with retries)
+      await ensureConnected();
+      
       const translatorMethod = TOOL_MAP[toolName];
       const mappedArgs = mapFields(toolArgs || {});
       
@@ -588,18 +614,12 @@ async function handleMessage(msg) {
 }
 
 async function main() {
-  try {
-    await connectToTranslator();
-    
-    process.stdin.on('data', (chunk) => {
-      readContentLengthMessage(chunk.toString('utf8'));
-    });
-    
-    console.error('[packaged-mcp] MCP server ready (Content-Length protocol)');
-  } catch (err) {
-    console.error('[packaged-mcp] Failed to start:', err.message);
-    process.exit(1);
-  }
+  // Start MCP stdio server immediately (no socket required for handshake)
+  process.stdin.on('data', (chunk) => {
+    readContentLengthMessage(chunk.toString('utf8'));
+  });
+  
+  console.error('[packaged-mcp] MCP server ready (will connect to Translator on first tool call)');
 }
 
 process.on('SIGINT', () => {
