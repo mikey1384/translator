@@ -104,3 +104,23 @@ test('malformed persisted failures cannot block later valid reports', t => {
   const launch = harness.launch();
   assert.deepEqual(launch.listPendingFailures(), []);
 });
+
+test('renderer_window_hung persists as renderer_window_hung, not main_process_exception', t => {
+  const harness = createHarness();
+  t.after(() => fs.rmSync(harness.directory, { recursive: true, force: true }));
+
+  const first = harness.launch();
+  first.recordFailure('renderer_window_hung', 'runtime');
+  
+  // Verify the failure persists with the correct class
+  const recovered = harness.launch();
+  const pending = recovered.listPendingFailures();
+  
+  assert.equal(pending.length, 1);
+  assert.equal(
+    pending[0].failureClass,
+    'renderer_window_hung',
+    'Hung window must persist as renderer_window_hung, not be remapped to main_process_exception'
+  );
+  assert.equal(pending[0].startupPhase, 'runtime');
+});
