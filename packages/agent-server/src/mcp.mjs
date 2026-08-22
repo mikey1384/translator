@@ -637,6 +637,9 @@ function buildServer() {
       inputSchema: z.object({
         output_path: z.string().min(1),
         confirm_overwrite: z.literal('OVERWRITE').optional(),
+        history_id: z.string().min(1).optional(),
+        style: z.enum(['Default', 'Classic', 'Boxed', 'LineBox']).optional(),
+        display_mode: z.enum(['original', 'translation', 'dual']).optional(),
       }),
     },
     async input =>
@@ -644,6 +647,9 @@ function buildServer() {
         await app.call('startMerge', {
           outputPath: input.output_path,
           overwrite: input.confirm_overwrite === 'OVERWRITE',
+          historyId: input.history_id,
+          style: input.style,
+          displayMode: input.display_mode,
         })
       )
   );

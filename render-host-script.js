@@ -1938,7 +1938,8 @@ function renderPlainSubtitleHtml(text, stylePreset, renderTheme) {
     return "";
   }
   if (stylePreset === "LineBox") {
-    return text.split("\n").map((line2) => renderLineBoxLineHtml(escapeHtml(line2.trim()), renderTheme)).join("<br/>");
+    const lines = text.split("\n").map((line2) => renderLineBoxLineHtml(escapeHtml(line2.trim()), renderTheme)).join("<br/>");
+    return `<span style="display:inline-block;text-align:left;">${lines}</span>`;
   }
   return escapeHtml(text);
 }
@@ -1961,7 +1962,8 @@ function renderTimedSubtitleHtml(state, stylePreset, renderTheme) {
     (line2) => line2.map((part) => renderTimedPartHtml(part)).join("")
   );
   if (stylePreset === "LineBox") {
-    return renderedLines.map((line2) => renderLineBoxLineHtml(line2, renderTheme)).join("<br/>");
+    const lines2 = renderedLines.map((line2) => renderLineBoxLineHtml(line2, renderTheme)).join("<br/>");
+    return `<span style="display:inline-block;text-align:left;">${lines2}</span>`;
   }
   return renderedLines.join("<br/>");
 }
