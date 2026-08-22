@@ -85,7 +85,7 @@
     "react-intersection-observer": "^9.16.0",
     "rimraf": "^5.0.6",
     "ts-node": "^10.9.2",
-    "tsx": "^4.23.12",
+    "tsx": "^4.22.4",
     "typescript": "^5.8.2",
     "wait-on": "^8.0.3"
   },
