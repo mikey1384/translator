@@ -1977,30 +1977,45 @@ async function cancelAgentProcessing(): Promise<Record<string, unknown>> {
   return agentProcessingSnapshot();
 }
 
-function subtitleBatchSnapshot(input?: {
+async function subtitleBatchSnapshot(input?: {
   offset?: number;
   limit?: number;
-}): Record<string, unknown> {
-  const subtitles = useSubStore.getState();
+  historyId?: string;
+}): Promise<Record<string, unknown>> {
   const offset = Math.max(0, Math.floor(input?.offset || 0));
   const limit = Math.min(100, Math.max(1, Math.floor(input?.limit || 50)));
-  const ids = subtitles.order.slice(offset, offset + limit);
+
+  let segments: SrtSegment[];
+  let total: number;
+  let sourceNote: string | undefined;
+
+  if (input?.historyId) {
+    const loaded = await loadSubtitlesFromHistory(input.historyId);
+    segments = loaded.segments;
+    total = segments.length;
+    sourceNote = `Loaded from library item: ${loaded.item.title}`;
+  } else {
+    const subtitles = useSubStore.getState();
+    segments = subtitles.order.map(id => subtitles.segments[id]);
+    total = segments.length;
+    sourceNote = 'Loaded from currently mounted subtitles';
+  }
+
+  const sliced = segments.slice(offset, offset + limit);
   return {
     offset,
     limit,
-    total: subtitles.order.length,
-    hasMore: offset + ids.length < subtitles.order.length,
-    cues: ids.map(id => {
-      const cue = subtitles.segments[id];
-      return {
-        id: cue.id,
-        index: cue.index,
-        start: cue.start,
-        end: cue.end,
-        original: cue.original,
-        translation: cue.translation || '',
-      };
-    }),
+    total,
+    hasMore: offset + sliced.length < total,
+    sourceNote,
+    cues: sliced.map(cue => ({
+      id: cue.id,
+      index: cue.index,
+      start: cue.start,
+      end: cue.end,
+      original: cue.original,
+      translation: cue.translation || '',
+    })),
   };
 }
 
@@ -2111,6 +2126,7 @@ async function exportMountedSubtitles(input?: {
   path?: string;
   mode?: SubtitleDisplayMode;
   overwrite?: boolean;
+  historyId?: string;
 }): Promise<Record<string, unknown>> {
   if (hasActiveAppProcessing()) {
     throw new Error('Wait for active media processing before exporting cues.');
@@ -2140,10 +2156,22 @@ async function exportMountedSubtitles(input?: {
       'Subtitle export already exists. Confirm overwrite explicitly.'
     );
   }
-  const subtitles = useSubStore.getState();
-  const segments = subtitles.order.map(id => subtitles.segments[id]);
-  if (!segments.length)
-    throw new Error('There are no mounted subtitles to export.');
+
+  let segments: SrtSegment[];
+  let sourceNote: string;
+
+  if (input?.historyId) {
+    const loaded = await loadSubtitlesFromHistory(input.historyId);
+    segments = loaded.segments;
+    sourceNote = `Exported from library item: ${loaded.item.title}`;
+  } else {
+    const subtitles = useSubStore.getState();
+    segments = subtitles.order.map(id => subtitles.segments[id]);
+    if (!segments.length)
+      throw new Error('There are no mounted subtitles to export.');
+    sourceNote = 'Exported from currently mounted subtitles';
+  }
+
   const mode = input?.mode || useUIStore.getState().subtitleDisplayMode;
   if (!DISPLAY_MODES.has(mode))
     throw new Error('Unsupported subtitle export mode.');
@@ -2159,6 +2187,7 @@ async function exportMountedSubtitles(input?: {
     mode,
     cueCount: segments.length,
     warning: result.warning || null,
+    sourceNote,
   };
 }
 
@@ -2195,6 +2224,68 @@ function currentStatus(): Record<string, unknown> {
     videoBatchDownload: batchDownloadSnapshot(),
     processing: agentProcessingSnapshot(),
   };
+}
+
+async function tabsSnapshot(): Promise<Record<string, unknown>> {
+  const video = useVideoStore.getState();
+  const subtitles = useSubStore.getState();
+  
+  const mountedTab = {
+    id: 'mounted',
+    type: 'active' as const,
+    title: video.path?.split(/[\\/]/).pop() ?? subtitles.activeFilePath?.split(/[\\/]/).pop() ?? 'Untitled',
+    videoPath: video.path,
+    videoUrl: video.sourceUrl,
+    subtitlesLoaded: subtitles.order.length > 0,
+    cueCount: subtitles.order.length,
+    translatedCueCount: subtitles.order.filter(id =>
+      Boolean(subtitles.segments[id]?.translation?.trim())
+    ).length,
+    targetLanguage: subtitles.targetLanguage,
+    isReady: video.isReady,
+  };
+
+  return {
+    tabs: [mountedTab],
+    activeTabId: 'mounted',
+    note: 'This version tracks a single mounted state. Use history_id with export/get/status to work with library items without remounting.',
+  };
+}
+
+async function loadSubtitlesFromHistory(
+  historyId: string
+): Promise<{ segments: SrtSegment[]; item: VideoSuggestionDownloadHistoryItem }> {
+  const item = await requireDownloadHistoryItem({ id: historyId });
+  const localPath = sanitizeVideoSuggestionHistoryPath(item.localPath);
+  if (!localPath || !(await window.fileApi.fileExists(localPath))) {
+    throw new Error(
+      `Library item video file not found: ${historyId}. File may have been moved or deleted.`
+    );
+  }
+
+  // Check for stored subtitle file associated with this video
+  const videoIdentity = await window.fileApi.getFileIdentity(localPath);
+  if (!videoIdentity?.success || !videoIdentity.identity) {
+    throw new Error(`Failed to get file identity for library video: ${localPath}`);
+  }
+
+  const storedSubtitlePath = await window.electron.getStoredSubtitlePath?.(
+    `file:${videoIdentity.identity}`
+  );
+  
+  if (!storedSubtitlePath || !(await window.fileApi.fileExists(storedSubtitlePath))) {
+    throw new Error(
+      `Library item has no stored subtitles: ${historyId}. Generate or import subtitles first.`
+    );
+  }
+
+  const content = await window.fileApi.readText(storedSubtitlePath);
+  const segments = parseSrt(content);
+  if (!segments.length) {
+    throw new Error(`Stored subtitle file is empty or unreadable: ${storedSubtitlePath}`);
+  }
+
+  return { segments, item };
 }
 
 function requireSuccess(
@@ -2452,8 +2543,27 @@ function installAgentBridge() {
 
   console.log('[agent-listener] Installing agent bridge');
   window.translatorAgent = {
-    async status() {
+    async status(input) {
+      if (input?.historyId) {
+        const loaded = await loadSubtitlesFromHistory(input.historyId);
+        return {
+          ready: true,
+          historyId: input.historyId,
+          historyTitle: loaded.item.title,
+          videoPath: sanitizeVideoSuggestionHistoryPath(loaded.item.localPath),
+          videoReady: true,
+          subtitleCueCount: loaded.segments.length,
+          translatedCueCount: loaded.segments.filter(seg =>
+            Boolean(seg.translation?.trim())
+          ).length,
+          sourceNote: 'Status loaded from library item without remounting',
+        };
+      }
       return currentStatus();
+    },
+
+    async tabsList() {
+      return tabsSnapshot();
     },
 
     async navigationSnapshot() {
@@ -2762,7 +2872,7 @@ function installAgentBridge() {
     },
 
     async subtitlesBatch(input) {
-      return subtitleBatchSnapshot(input);
+      return await subtitleBatchSnapshot(input);
     },
 
     async updateSubtitles(input) {
@@ -2774,7 +2884,7 @@ function installAgentBridge() {
     },
 
     async exportSubtitles(input) {
-      return exportMountedSubtitles(input);
+      return await exportMountedSubtitles(input);
     },
   };
 }
