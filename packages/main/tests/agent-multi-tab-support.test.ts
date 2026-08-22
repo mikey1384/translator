@@ -5,7 +5,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 /**
- * Agent Multi-Tab Support Tests
+ * Agent History-ID Support Tests
  * 
  * Tests that MCP tools support operating on library items without remounting,
  * enabling multiple agents to work on different videos simultaneously.
@@ -16,33 +16,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '../../..');
-
-test('packaged-mcp - exposes app_tabs_list tool', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  assert.ok(
-    helperContent.includes('app_tabs_list:'),
-    'TOOL_MAP must include app_tabs_list'
-  );
-  assert.ok(
-    helperContent.includes("app_tabs_list: 'tabsList'"),
-    'app_tabs_list must map to tabsList method'
-  );
-});
-
-test('packaged-mcp - app_tabs_list has empty schema', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  assert.ok(
-    helperContent.includes('app_tabs_list:') &&
-    helperContent.includes("type: 'object'") &&
-    helperContent.includes('properties: {}') &&
-    helperContent.includes('additionalProperties: false'),
-    'app_tabs_list schema must be empty object'
-  );
-});
 
 test('packaged-mcp - app_status accepts optional history_id', () => {
   const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
@@ -103,6 +76,82 @@ test('packaged-mcp - app_subtitles_export accepts optional history_id', () => {
   );
 });
 
+test('packaged-mcp - app_start_transcription accepts optional history_id', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  const schemaMatch = helperContent.match(/app_start_transcription:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
+  assert.ok(schemaMatch, 'app_start_transcription schema not found');
+  
+  const schema = schemaMatch[0];
+  
+  assert.ok(
+    schema.includes('history_id'),
+    'app_start_transcription schema must include history_id parameter'
+  );
+  assert.ok(
+    schema.includes('replace_subtitles'),
+    'app_start_transcription must retain replace_subtitles parameter'
+  );
+});
+
+test('packaged-mcp - app_start_translation accepts optional history_id', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  const schemaMatch = helperContent.match(/app_start_translation:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
+  assert.ok(schemaMatch, 'app_start_translation schema not found');
+  
+  const schema = schemaMatch[0];
+  
+  assert.ok(
+    schema.includes('history_id'),
+    'app_start_translation schema must include history_id parameter'
+  );
+  assert.ok(
+    schema.includes('target_language') && schema.includes("required: ['target_language']"),
+    'app_start_translation must require target_language'
+  );
+});
+
+test('packaged-mcp - app_start_merge accepts optional history_id', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  const schemaMatch = helperContent.match(/app_start_merge:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
+  assert.ok(schemaMatch, 'app_start_merge schema not found');
+  
+  const schema = schemaMatch[0];
+  
+  assert.ok(
+    schema.includes('history_id'),
+    'app_start_merge schema must include history_id parameter'
+  );
+  assert.ok(
+    schema.includes('output_path') && schema.includes("required: ['output_path']"),
+    'app_start_merge must require output_path'
+  );
+});
+
+test('packaged-mcp - app_processing_status accepts optional history_id', () => {
+  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
+  const helperContent = fs.readFileSync(helperPath, 'utf8');
+  
+  const schemaMatch = helperContent.match(/app_processing_status:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
+  assert.ok(schemaMatch, 'app_processing_status schema not found');
+  
+  const schema = schemaMatch[0];
+  
+  assert.ok(
+    schema.includes('history_id'),
+    'app_processing_status schema must include history_id parameter'
+  );
+  assert.ok(
+    schema.includes("type: 'object'"),
+    'app_processing_status must be an object schema'
+  );
+});
+
 test('packaged-mcp - maps history_id to historyId', () => {
   const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
   const helperContent = fs.readFileSync(helperPath, 'utf8');
@@ -127,22 +176,6 @@ test('packaged-mcp - maps history_id to historyId', () => {
   
   const mapped = mapFieldsFn({ history_id: 'test-id-123' });
   assert.strictEqual(mapped.historyId, 'test-id-123', 'history_id must map to historyId');
-});
-
-test('translator-agent-listener - tabsList function exists', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  assert.ok(fs.existsSync(listenerPath), 'translator-agent-listener.ts must exist');
-  
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  assert.ok(
-    listenerContent.includes('async tabsList()'),
-    'Agent bridge must expose tabsList method'
-  );
-  assert.ok(
-    listenerContent.includes('function tabsSnapshot'),
-    'Must define tabsSnapshot helper function'
-  );
 });
 
 test('translator-agent-listener - loadSubtitlesFromHistory function exists', () => {
@@ -207,6 +240,27 @@ test('translator-agent-listener - exportSubtitles accepts historyId', () => {
     listenerContent.includes('await exportMountedSubtitles(input)'),
     'Agent bridge must await exportMountedSubtitles call'
   );
+});
+
+test('translator-agent-listener - job operations reject history_id with clear error', () => {
+  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
+  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
+  
+  // startTranscription should check for history_id and throw error
+  const transcriptionMatch = listenerContent.match(/async startTranscription\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?throw new Error/);
+  assert.ok(transcriptionMatch, 'startTranscription must reject history_id with clear error');
+  
+  // startTranslation should check for history_id and throw error
+  const translationMatch = listenerContent.match(/async startTranslation\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?throw new Error/);
+  assert.ok(translationMatch, 'startTranslation must reject history_id with clear error');
+  
+  // startMerge should check for history_id and throw error
+  const mergeMatch = listenerContent.match(/async startMerge\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?throw new Error/);
+  assert.ok(mergeMatch, 'startMerge must reject history_id with clear error');
+  
+  // processingStatus should check for history_id and throw error
+  const statusMatch = listenerContent.match(/async processingStatus\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?throw new Error/);
+  assert.ok(statusMatch, 'processingStatus must reject history_id with clear error');
 });
 
 test('translator-agent-listener - history-based operations do not remount UI', () => {
@@ -321,12 +375,6 @@ test('translator-agent-listener - loadSubtitlesFromHistory validates subtitle co
 test('packaged-mcp - tool list excludes human-gated tools', () => {
   const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
   const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  // New tab tools should be safe (no payment, no secrets)
-  assert.ok(
-    helperContent.includes('app_tabs_list:'),
-    'app_tabs_list is safe and should be included'
-  );
   
   // TOOL_MAP must still exclude human-gated operations
   const excluded = [

@@ -2226,32 +2226,6 @@ function currentStatus(): Record<string, unknown> {
   };
 }
 
-async function tabsSnapshot(): Promise<Record<string, unknown>> {
-  const video = useVideoStore.getState();
-  const subtitles = useSubStore.getState();
-  
-  const mountedTab = {
-    id: 'mounted',
-    type: 'active' as const,
-    title: video.path?.split(/[\\/]/).pop() ?? subtitles.activeFilePath?.split(/[\\/]/).pop() ?? 'Untitled',
-    videoPath: video.path,
-    videoUrl: video.sourceUrl,
-    subtitlesLoaded: subtitles.order.length > 0,
-    cueCount: subtitles.order.length,
-    translatedCueCount: subtitles.order.filter(id =>
-      Boolean(subtitles.segments[id]?.translation?.trim())
-    ).length,
-    targetLanguage: subtitles.targetLanguage,
-    isReady: video.isReady,
-  };
-
-  return {
-    tabs: [mountedTab],
-    activeTabId: 'mounted',
-    note: 'This version tracks a single mounted state. Use history_id with export/get/status to work with library items without remounting.',
-  };
-}
-
 async function loadSubtitlesFromHistory(
   historyId: string
 ): Promise<{ segments: SrtSegment[]; item: VideoSuggestionDownloadHistoryItem }> {
@@ -2562,10 +2536,6 @@ function installAgentBridge() {
       return currentStatus();
     },
 
-    async tabsList() {
-      return tabsSnapshot();
-    },
-
     async navigationSnapshot() {
       return navigationSnapshot();
     },
@@ -2781,6 +2751,12 @@ function installAgentBridge() {
     },
 
     async startTranscription(input) {
+      if (input?.historyId) {
+        throw new Error(
+          'Transcription from library history not yet supported. ' +
+          'Load the item with app_library_history_item_open first, then transcribe.'
+        );
+      }
       const strategy = requireMountedSubtitleStrategy(
         input?.replaceSubtitles,
         'fail'
@@ -2791,6 +2767,12 @@ function installAgentBridge() {
     },
 
     async startTranslation(input) {
+      if (input?.historyId) {
+        throw new Error(
+          'Translation from library history not yet supported. ' +
+          'Load the item with app_library_history_item_open first, then translate.'
+        );
+      }
       const targetLanguage = String(input?.targetLanguage || '').trim();
       return beginAgentProcessing('translation', operationId =>
         runAgentTranslation(operationId, targetLanguage)
@@ -2835,6 +2817,12 @@ function installAgentBridge() {
     },
 
     async startMerge(input) {
+      if (input?.historyId) {
+        throw new Error(
+          'Merge from library history not yet supported. ' +
+          'Load the item with app_library_history_item_open first, then merge.'
+        );
+      }
       return beginAgentProcessing('merge', operationId =>
         runAgentMerge(operationId, {
           outputPath: input?.outputPath,
@@ -2863,7 +2851,13 @@ function installAgentBridge() {
       );
     },
 
-    async processingStatus() {
+    async processingStatus(input) {
+      if (input?.historyId) {
+        throw new Error(
+          'Processing status for library history items is not supported. ' +
+          'Use app_status with history_id to check library item status.'
+        );
+      }
       return agentProcessingSnapshot();
     },
 
