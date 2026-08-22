@@ -1395,7 +1395,7 @@ async function runHistoryTranslation(
 async function runHistoryMerge(
   agentOperationId: string,
   historyId: string,
-  input: { outputPath?: string; overwrite?: boolean }
+  input: { outputPath?: string; overwrite?: boolean; style?: string; displayMode?: string }
 ): Promise<Record<string, unknown>> {
   const outputPath = String(input.outputPath || '').trim();
   if (!outputPath) throw new Error('An explicit output path is required.');
@@ -1450,11 +1450,14 @@ async function runHistoryMerge(
       Math.round(ui.baseFontSize * fontScale(targetHeight))
     );
     
+    const subtitleStyle = input.style ?? ui.subtitleStyle;
+    const subtitleDisplayMode = input.displayMode ?? ui.subtitleDisplayMode;
+    
     const options: RenderSubtitlesOptions = {
       operationId,
       srtContent: buildSrt({
         segments,
-        mode: ui.subtitleDisplayMode,
+        mode: subtitleDisplayMode,
         noWrap: true,
       }),
       subtitleSegments: segments,
@@ -1470,8 +1473,8 @@ async function runHistoryMerge(
       frameRate: Number(videoMeta.frameRate ?? 30),
       originalVideoPath: videoPath,
       fontSizePx,
-      stylePreset: ui.subtitleStyle,
-      outputMode: ui.subtitleDisplayMode,
+      stylePreset: subtitleStyle,
+      outputMode: subtitleDisplayMode,
       overlayMode: 'overlayOnVideo',
     };
     
@@ -1902,7 +1905,7 @@ async function runAgentCueTranscription(
 
 async function runAgentMerge(
   agentOperationId: string,
-  input: { outputPath?: string; overwrite?: boolean }
+  input: { outputPath?: string; overwrite?: boolean; style?: string; displayMode?: string }
 ): Promise<Record<string, unknown>> {
   const outputPath = String(input.outputPath || '').trim();
   if (!outputPath) throw new Error('An explicit output path is required.');
@@ -1968,11 +1971,13 @@ async function runAgentMerge(
       )
     );
   }
+  const subtitleStyle = input.style ?? ui.subtitleStyle;
+  const subtitleDisplayMode = input.displayMode ?? ui.subtitleDisplayMode;
   const options: RenderSubtitlesOptions = {
     operationId,
     srtContent: buildSrt({
       segments,
-      mode: ui.subtitleDisplayMode,
+      mode: subtitleDisplayMode,
       noWrap: true,
     }),
     subtitleSegments: segments,
@@ -1988,8 +1993,8 @@ async function runAgentMerge(
     frameRate: Number(video.meta?.frameRate ?? 30),
     originalVideoPath: videoPath,
     fontSizePx,
-    stylePreset: ui.subtitleStyle,
-    outputMode: ui.subtitleDisplayMode,
+    stylePreset: subtitleStyle,
+    outputMode: subtitleDisplayMode,
     overlayMode: video.isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
   };
   useTaskStore.getState().setMerge({
@@ -2010,8 +2015,8 @@ async function runAgentMerge(
     return {
       operationId,
       outputPath: result.outputPath,
-      mode: ui.subtitleDisplayMode,
-      style: ui.subtitleStyle,
+      mode: subtitleDisplayMode,
+      style: subtitleStyle,
     };
   } finally {
     useTaskStore.getState().setMerge({
@@ -3148,6 +3153,8 @@ function installAgentBridge() {
           runHistoryMerge(operationId, input.historyId, {
             outputPath: input?.outputPath,
             overwrite: input?.overwrite,
+            style: input?.style,
+            displayMode: input?.displayMode,
           })
         );
       }
@@ -3155,6 +3162,8 @@ function installAgentBridge() {
         runAgentMerge(operationId, {
           outputPath: input?.outputPath,
           overwrite: input?.overwrite,
+          style: input?.style,
+          displayMode: input?.displayMode,
         })
       );
     },

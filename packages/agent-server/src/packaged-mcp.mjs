@@ -238,7 +238,9 @@ const TOOL_SCHEMAS = {
     properties: {
       output_path: { type: 'string', minLength: 1 },
       confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] },
-      history_id: { type: 'string', minLength: 1 }
+      history_id: { type: 'string', minLength: 1 },
+      style: { type: 'string', enum: ['Default', 'Classic', 'Boxed', 'LineBox'] },
+      display_mode: { type: 'string', enum: ['original', 'translation', 'dual'] }
     },
     required: ['output_path'],
     additionalProperties: false
@@ -489,6 +491,8 @@ function mapFields(input) {
       mapped.targetCountry = value;
     } else if (key === 'history_id') {
       mapped.historyId = value;
+    } else if (key === 'display_mode') {
+      mapped.displayMode = value;
     } else {
       // Generic snake_to_camel for any remaining fields
       const camelKey = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());

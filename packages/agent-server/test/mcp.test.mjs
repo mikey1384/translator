@@ -101,6 +101,24 @@ test('MCP server exposes and runs the subscription-powered translation loop', as
   });
   assert.equal(invalidMergeOverwrite.isError, true);
 
+  // Test that app_start_merge accepts style and display_mode parameters
+  const mergeSchema = listed.tools.find(t => t.name === 'app_start_merge');
+  assert.ok(mergeSchema);
+  assert.ok(mergeSchema.inputSchema.properties.style);
+  assert.ok(mergeSchema.inputSchema.properties.display_mode);
+  assert.deepEqual(mergeSchema.inputSchema.properties.style.enum, [
+    'Default',
+    'Classic',
+    'Boxed',
+    'LineBox',
+  ]);
+  assert.deepEqual(mergeSchema.inputSchema.properties.display_mode.enum, [
+    'original',
+    'translation',
+    'dual',
+  ]);
+  assert.ok(mergeSchema.inputSchema.properties.history_id);
+
   const invalidExportOverwrite = await client.callTool({
     name: 'app_subtitles_export',
     arguments: {

@@ -76,10 +76,12 @@ function renderPlainSubtitleHtml(
   }
 
   if (stylePreset === 'LineBox') {
-    return text
+    const lines = text
       .split('\n')
       .map(line => renderLineBoxLineHtml(escapeHtml(line.trim()), renderTheme))
       .join('<br/>');
+    // Wrap all lines in a container so they center as a single block
+    return `<span style="display:inline-block;text-align:left;">${lines}</span>`;
   }
 
   return escapeHtml(text);
@@ -113,9 +115,11 @@ function renderTimedSubtitleHtml(
   );
 
   if (stylePreset === 'LineBox') {
-    return renderedLines
+    const lines = renderedLines
       .map(line => renderLineBoxLineHtml(line, renderTheme))
       .join('<br/>');
+    // Wrap all lines in a container so they center as a single block
+    return `<span style="display:inline-block;text-align:left;">${lines}</span>`;
   }
 
   return renderedLines.join('<br/>');
