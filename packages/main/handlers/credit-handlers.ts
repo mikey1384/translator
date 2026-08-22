@@ -397,16 +397,8 @@ function emitCheckoutUnresolved(
     mode === 'byo' ? 'byo-unlock-unresolved' : 'checkout-unresolved'
   );
   
-  // Track unresolved checkout (may become failed if timeout exceeded)
-  if (mode === 'byo') {
-    void trackPurchaseFunnelEvent('byo_unlock_failed', {
-      failureReason: 'settlement_timeout',
-    });
-  } else {
-    void trackPurchaseFunnelEvent('credit_checkout_failed', {
-      failureReason: 'settlement_timeout',
-    });
-  }
+  // Unresolved is not a failure - checkout is still open in browser.
+  // Terminal outcomes (completed/cancelled) are tracked when they actually occur.
 }
 
 function emitCheckoutConfirmed(
@@ -434,12 +426,12 @@ function emitByoUnlockConfirmed(
     | ReturnType<typeof setByoUnlocked>,
   targetWindow?: BrowserWindow | null
 ): void {
-  // Track successful BYO unlock
-  void trackPurchaseFunnelEvent('byo_unlock_completed');
-  
   if (!shouldEmitCheckoutUiTransition('byo', sessionId, 'confirmed')) {
     return;
   }
+  
+  // Track successful BYO unlock (after guard to prevent double-counting)
+  void trackPurchaseFunnelEvent('byo_unlock_completed');
 
   clearActiveCheckoutSession('byo', sessionId);
   markCheckoutTransition('byo', null);
@@ -1400,6 +1392,12 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
       log.warn(
         '[credit-handler] BYO unlock endpoint did not return a checkout URL.'
       );
+      
+      // Track session creation failure immediately
+      void trackPurchaseFunnelEvent('byo_unlock_failed', {
+        failureReason: 'api_error',
+      });
+      
       broadcastToApp('byo-unlock-cancelled');
       return;
     }
@@ -1547,6 +1545,13 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
     }
 
     log.error('[credit-handler] Failed to initiate BYO unlock checkout:', err);
+    
+    // Track session creation failure immediately
+    const failureReason = classifyPurchaseFailure({ error: err });
+    void trackPurchaseFunnelEvent('byo_unlock_failed', {
+      failureReason,
+    });
+    
     broadcastToApp('byo-unlock-error', {
       message:
         err?.response?.data?.message ||

@@ -59,14 +59,7 @@ export default function BuyCreditsButton({
       if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
         // A checkout is already in flight (possibly from another tab); the
         // re-broadcast pending/unresolved event drives the UI — no error.
-        // Track as failed with already_pending reason
-        window.electron.trackPurchaseEvent?.('credit_checkout_failed', {
-          packId,
-          placement,
-          failureReason: 'already_pending',
-        }).catch(() => {
-          // Ignore tracking errors
-        });
+        // already_pending is not a failure, so we don't emit *_failed event
         onCheckoutCreated?.();
         return;
       }

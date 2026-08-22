@@ -88,6 +88,7 @@ export default function CreditCard() {
                 label={`${formatUsdListPrice(pack.price)} · ${fmtHours(
                   estimateTranslatableHours(pack.credits, false)
                 )} ${translationHoursLabel} (${pack.credits.toLocaleString()} cr)`}
+                placement="settings-credit-card"
               />
             ))}
           </div>

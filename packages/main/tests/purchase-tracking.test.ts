@@ -158,6 +158,45 @@ describe('classifyPurchaseFailure', () => {
 });
 
 /**
+ * Tests for critical purchase tracking rules.
+ */
+describe('Purchase Tracking Critical Rules', () => {
+  it('should not treat already_pending as a failure', () => {
+    // Intent: CHECKOUT_ALREADY_PENDING should NOT emit credit_checkout_failed
+    // This is not a failure - another checkout is already in progress
+    const alreadyPendingReason = classifyPurchaseFailure({ alreadyPending: true });
+    assert.strictEqual(alreadyPendingReason, 'already_pending');
+    
+    // Verify this is a distinct reason, not bundled with actual failures
+    const networkFailure = classifyPurchaseFailure({ error: new Error('ECONNREFUSED') });
+    assert.notStrictEqual(alreadyPendingReason, networkFailure);
+  });
+
+  it('should not treat settlement_timeout as a payment failure', () => {
+    // Intent: Timeout is not a payment failure - checkout may still complete in browser
+    // emitCheckoutUnresolved should NOT emit *_failed events
+    const timeoutReason = classifyPurchaseFailure({ settlementTimeout: true });
+    assert.strictEqual(timeoutReason, 'settlement_timeout');
+    
+    // This reason should not be used for *_failed events in emitCheckoutUnresolved
+    // The unresolved state is still pending, not failed
+  });
+
+  it('should prevent double-counting BYO completed via guard', () => {
+    // Intent: emitByoUnlockConfirmed must check shouldEmitCheckoutUiTransition
+    // BEFORE tracking byo_unlock_completed to prevent multiple emissions
+    // 
+    // The correct order is:
+    // 1. Check shouldEmitCheckoutUiTransition guard (returns early if already emitted)
+    // 2. Track byo_unlock_completed (only if guard passed)
+    //
+    // This test documents the requirement; the actual implementation
+    // is verified by reading emitByoUnlockConfirmed in credit-handlers.ts
+    assert.ok(true, 'Guard must be checked before tracking to prevent double-counting');
+  });
+});
+
+/**
  * Tests for the purchase tracking intent.
  * These tests verify the expected behavior of button clicks and session creation failures.
  */

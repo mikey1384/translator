@@ -27,7 +27,8 @@ export type PurchasePlacement =
   | 'zero-credit-banner'
   | 'credit-ran-out-dialog'
   | 'settings-credit-card'
-  | 'settings-byo';
+  | 'settings-byo'
+  | 'agent';
 
 export type PurchaseFailureReason =
   | 'network_error'

@@ -1068,6 +1068,8 @@ try {
   );
   
   // Purchase funnel tracking from renderer
+  // Only allow renderer to emit: button_shown, button_clicked, and *_failed
+  // (session_created, opened, completed, cancelled must come from main process only)
   ipcMain.handle(
     'track-purchase-event',
     async (
@@ -1080,6 +1082,26 @@ try {
       }
     ) => {
       try {
+        // Validate that renderer can only emit specific events
+        const allowedRendererEvents = [
+          'credit_checkout_button_shown',
+          'credit_checkout_button_clicked',
+          'credit_checkout_failed',
+          'byo_unlock_button_shown',
+          'byo_unlock_button_clicked',
+          'byo_unlock_failed',
+        ];
+        
+        if (!allowedRendererEvents.includes(eventName)) {
+          log.warn(
+            `[main] Renderer attempted to emit restricted purchase event: ${eventName}`
+          );
+          return {
+            success: false,
+            error: `Event ${eventName} can only be emitted from main process`,
+          };
+        }
+        
         await trackPurchaseFunnelEvent(eventName, context || {});
         return { success: true };
       } catch (error: any) {
