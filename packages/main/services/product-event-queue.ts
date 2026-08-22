@@ -8,6 +8,10 @@ import type {
   SummaryFunnelEvent,
   MergeFunnelEvent,
   UrlDownloadFunnelEvent,
+  PurchaseFunnelEvent,
+  CreditPackId,
+  PurchasePlacement,
+  PurchaseFailureReason,
 } from './product-analytics.js';
 
 type QueuedProductEvent = {
@@ -18,7 +22,8 @@ type QueuedProductEvent = {
     | DubbingFunnelEvent
     | SummaryFunnelEvent
     | MergeFunnelEvent
-    | UrlDownloadFunnelEvent;
+    | UrlDownloadFunnelEvent
+    | PurchaseFunnelEvent;
   workflow?: string;
   urlDownload?: {
     sourceType: string;
@@ -26,6 +31,11 @@ type QueuedProductEvent = {
     failureCategory?: string;
     connectionContext?: string;
     mediaFailure?: string;
+  };
+  purchase?: {
+    packId?: CreditPackId;
+    placement?: PurchasePlacement;
+    failureReason?: PurchaseFailureReason;
   };
 };
 

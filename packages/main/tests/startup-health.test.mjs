@@ -110,6 +110,7 @@ test('renderer_window_hung persists as renderer_window_hung, not main_process_ex
   t.after(() => fs.rmSync(harness.directory, { recursive: true, force: true }));
 
   const first = harness.launch();
+  first.markSuccessful(); // Avoid startup_incomplete
   first.recordFailure('renderer_window_hung', 'runtime');
   
   // Verify the failure persists with the correct class

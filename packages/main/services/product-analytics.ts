@@ -11,6 +11,12 @@ import type { TranscriptionFunnelEvent } from './transcription-funnel.js';
 import type { DubbingFunnelEvent } from './dubbing-funnel.js';
 import type { SummaryFunnelEvent } from './summary-funnel.js';
 import type { MergeFunnelEvent } from './merge-funnel.js';
+import type {
+  PurchaseFunnelEvent,
+  CreditPackId,
+  PurchasePlacement,
+  PurchaseFailureReason,
+} from './purchase-funnel.js';
 import {
   acknowledgeCriticalFailure,
   listPendingCriticalFailures,
@@ -40,7 +46,8 @@ type ProductEvent =
   | TranscriptionFunnelEvent
   | DubbingFunnelEvent
   | SummaryFunnelEvent
-  | MergeFunnelEvent;
+  | MergeFunnelEvent
+  | PurchaseFunnelEvent;
 type TranslationWorkflow = 'full_srt';
 
 type ProductMeasurementStore = {
@@ -97,6 +104,7 @@ async function postProductEvent({
   workflow,
   criticalFailure,
   urlDownload,
+  purchase,
 }: {
   eventId: string;
   event: ProductEvent;
@@ -109,6 +117,11 @@ async function postProductEvent({
     failureCategory?: UrlDownloadFailureCategory;
     connectionContext?: UrlConnectionContext;
     mediaFailure?: string;
+  };
+  purchase?: {
+    packId?: CreditPackId;
+    placement?: PurchasePlacement;
+    failureReason?: PurchaseFailureReason;
   };
 }): Promise<void> {
   await withStage5AuthRetry(headers =>
@@ -149,6 +162,15 @@ async function postProductEvent({
                 : {}),
               ...(urlDownload.mediaFailure
                 ? { mediaFailure: urlDownload.mediaFailure }
+                : {}),
+            }
+          : {}),
+        ...(purchase
+          ? {
+              ...(purchase.packId ? { packId: purchase.packId } : {}),
+              ...(purchase.placement ? { placement: purchase.placement } : {}),
+              ...(purchase.failureReason
+                ? { failureReason: purchase.failureReason }
                 : {}),
             }
           : {}),
@@ -362,5 +384,38 @@ export async function trackUrlDownloadFunnelEvent(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
     queueProductEvent({ eventId, event, urlDownload: details });
+  }
+}
+
+export async function trackPurchaseFunnelEvent(
+  event: PurchaseFunnelEvent,
+  details: {
+    packId?: CreditPackId;
+    placement?: PurchasePlacement;
+    failureReason?: PurchaseFailureReason;
+  } = {}
+): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
+  const eventId = randomUUID();
+  try {
+    await postProductEvent({
+      eventId,
+      event,
+      purchase: details,
+    });
+    // Flush failures immediately for visibility
+    if (
+      event === 'credit_checkout_failed' ||
+      event === 'byo_unlock_failed' ||
+      event === 'credit_checkout_cancelled' ||
+      event === 'byo_unlock_cancelled'
+    ) {
+      log.info(`[product-measurement] ${event} flushed immediately.`);
+    }
+  } catch (error) {
+    log.info(
+      `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
+    );
+    queueProductEvent({ eventId, event, purchase: details });
   }
 }
