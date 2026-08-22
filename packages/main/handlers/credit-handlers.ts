@@ -34,6 +34,8 @@ import {
   throwIfStage5UpdateRequiredResponse,
 } from '../services/stage5-version-gate.js';
 import { getConfiguredAdminSecret } from '../services/admin-auth.js';
+import { trackPurchaseFunnelEvent } from '../services/product-analytics.js';
+import { classifyPurchaseFailure } from '../services/purchase-funnel.js';
 
 // Generate or retrieve device ID using proper UUID v4
 export function getDeviceId(): string {
@@ -372,10 +374,12 @@ function emitCheckoutCancelled(
 
   if (mode === 'byo') {
     broadcastToApp('byo-unlock-cancelled');
+    void trackPurchaseFunnelEvent('byo_unlock_cancelled');
     return;
   }
 
   broadcastToApp('checkout-cancelled');
+  void trackPurchaseFunnelEvent('credit_checkout_cancelled');
 }
 
 function emitCheckoutUnresolved(
@@ -392,6 +396,17 @@ function emitCheckoutUnresolved(
   broadcastToApp(
     mode === 'byo' ? 'byo-unlock-unresolved' : 'checkout-unresolved'
   );
+  
+  // Track unresolved checkout (may become failed if timeout exceeded)
+  if (mode === 'byo') {
+    void trackPurchaseFunnelEvent('byo_unlock_failed', {
+      failureReason: 'settlement_timeout',
+    });
+  } else {
+    void trackPurchaseFunnelEvent('credit_checkout_failed', {
+      failureReason: 'settlement_timeout',
+    });
+  }
 }
 
 function emitCheckoutConfirmed(
@@ -407,6 +422,9 @@ function emitCheckoutConfirmed(
   void targetWindow; // checkout events go to every tab
 
   broadcastToApp('checkout-confirmed');
+  
+  // Track successful checkout completion
+  void trackPurchaseFunnelEvent('credit_checkout_completed');
 }
 
 function emitByoUnlockConfirmed(
@@ -416,6 +434,9 @@ function emitByoUnlockConfirmed(
     | ReturnType<typeof setByoUnlocked>,
   targetWindow?: BrowserWindow | null
 ): void {
+  // Track successful BYO unlock
+  void trackPurchaseFunnelEvent('byo_unlock_completed');
+  
   if (!shouldEmitCheckoutUiTransition('byo', sessionId, 'confirmed')) {
     return;
   }
@@ -1147,6 +1168,11 @@ export async function handleCreateCheckoutSession(
       setActiveCheckoutSession('credits', checkoutSessionId);
       markCheckoutTransition('credits', 'pending');
       broadcastToApp('checkout-pending');
+      
+      // Track checkout session created
+      void trackPurchaseFunnelEvent('credit_checkout_session_created', {
+        packId,
+      });
 
       if (checkoutSessionId && !shouldUseEmbeddedCheckoutWindow()) {
         await openStripeCheckoutInExternalBrowser({
