@@ -27,6 +27,7 @@ import {
 } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage';
 import * as OperationIPC from '../ipc/operation';
 import * as SystemIPC from '../ipc/system';
+import * as SubtitlesIPC from '../ipc/subtitles';
 import {
   generateTranscriptSummary,
   onTranscriptSummaryProgress,
@@ -45,7 +46,11 @@ import {
   saveCurrentSubtitles,
   saveSubtitleFilesToPath,
 } from '../utils/saveSubtitles';
-import { unmountCurrentSubtitles } from '../utils/subtitle-library';
+import {
+  unmountCurrentSubtitles,
+  storeGeneratedSubtitleArtifact,
+} from '../utils/subtitle-library';
+import { preserveWordTimingsOnTranslatedSegments } from '../utils/preserve-word-timings';
 import { acquireProvisionalUrlDownloadLibraryPath } from './mounted-download-leases';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import { useAiStore } from '../state/ai-store';
@@ -1195,6 +1200,328 @@ function requireMountedSubtitleStrategy(
     );
   }
   return strategy;
+}
+
+const historyJobState: Record<string, {
+  operationId: string;
+  historyId: string;
+  stage: string;
+  percent: number;
+  inProgress: boolean;
+}> = {};
+
+async function runHistoryTranscription(
+  agentOperationId: string,
+  historyId: string
+): Promise<Record<string, unknown>> {
+  const item = await requireDownloadHistoryItem({ id: historyId });
+  const videoPath = sanitizeVideoSuggestionHistoryPath(item.localPath);
+  
+  if (!(await window.fileApi.fileExists(videoPath))) {
+    throw new Error(`History item video file no longer exists: ${videoPath}`);
+  }
+  
+  throwIfAgentCancelled();
+  
+  const operationId = `${agentOperationId}-transcribe-history-${historyId}`;
+  historyJobState[historyId] = {
+    operationId,
+    historyId,
+    stage: 'transcribing',
+    percent: 0,
+    inProgress: true,
+  };
+  
+  try {
+    const opts: any = {
+      targetLanguage: 'original',
+      streamResults: true,
+      videoPath,
+      operationId,
+      qualityTranscription: useUIStore.getState().qualityTranscription,
+    };
+    
+    const result = await SubtitlesIPC.generate(opts);
+    
+    if (result.subtitles) {
+      const finalSegments: SrtSegment[] =
+        Array.isArray(result.segments) && result.segments.length > 0
+          ? result.segments
+          : parseSrt(result.subtitles);
+      
+      await storeGeneratedSubtitleArtifact({
+        content: result.subtitles,
+        segments: finalSegments,
+        kind: 'transcription',
+        sourceVideoPath: videoPath,
+        sourceUrl: null,
+        titleHint: item.title,
+      });
+      
+      historyJobState[historyId] = {
+        ...historyJobState[historyId],
+        stage: 'completed',
+        percent: 100,
+        inProgress: false,
+      };
+      
+      return {
+        operationId,
+        historyId,
+        videoPath,
+        cueCount: finalSegments.length,
+        transcriptionEngine: result.transcriptionEngine ?? null,
+        sourceNote: 'Transcription completed for library item without remounting',
+      };
+    } else {
+      const cancelled = Boolean(result.cancelled);
+      const errorMsg = result.error || 'Transcription failed';
+      
+      historyJobState[historyId] = {
+        ...historyJobState[historyId],
+        stage: cancelled ? 'cancelled' : errorMsg,
+        percent: 100,
+        inProgress: false,
+      };
+      
+      throw new Error(cancelled ? 'Transcription cancelled' : errorMsg);
+    }
+  } catch (error) {
+    historyJobState[historyId] = {
+      ...historyJobState[historyId],
+      stage: error instanceof Error ? error.message : String(error),
+      percent: 100,
+      inProgress: false,
+    };
+    throw error;
+  }
+}
+
+async function runHistoryTranslation(
+  agentOperationId: string,
+  historyId: string,
+  targetLanguage: string
+): Promise<Record<string, unknown>> {
+  const language = String(targetLanguage || '').trim();
+  if (!language) throw new Error('A target language is required.');
+  
+  const loaded = await loadSubtitlesFromHistory(historyId);
+  const segments = loaded.segments;
+  
+  if (!segments.length) {
+    throw new Error('No subtitles found for this library item. Transcribe first.');
+  }
+  
+  throwIfAgentCancelled();
+  
+  const operationId = `${agentOperationId}-translate-history-${historyId}`;
+  historyJobState[historyId] = {
+    operationId,
+    historyId,
+    stage: 'translating',
+    percent: 0,
+    inProgress: true,
+  };
+  
+  try {
+    const srtContent = buildSrt({ segments, mode: 'dual' });
+    const qualityTranslation = useUIStore.getState().qualityTranslation;
+    
+    const res = await SubtitlesIPC.translateSubtitles({
+      subtitles: srtContent,
+      targetLanguage: language,
+      operationId,
+      qualityTranslation,
+    });
+    
+    if (res?.success && res?.translatedSubtitles) {
+      const translatedSegments = parseSrt(res.translatedSubtitles);
+      const finalSegments = preserveWordTimingsOnTranslatedSegments(
+        segments,
+        translatedSegments
+      );
+      
+      await storeGeneratedSubtitleArtifact({
+        content: res.translatedSubtitles,
+        segments: finalSegments,
+        kind: 'translation',
+        targetLanguage: language,
+        sourceVideoPath: loaded.item.localPath,
+        sourceUrl: null,
+        titleHint: loaded.item.title,
+      });
+      
+      historyJobState[historyId] = {
+        ...historyJobState[historyId],
+        stage: 'completed',
+        percent: 100,
+        inProgress: false,
+      };
+      
+      return {
+        operationId,
+        historyId,
+        targetLanguage: language,
+        cueCount: finalSegments.length,
+        translatedCueCount: finalSegments.filter(seg =>
+          Boolean(seg.translation?.trim())
+        ).length,
+        sourceNote: 'Translation completed for library item without remounting',
+      };
+    }
+    
+    const cancelled = Boolean(res?.cancelled);
+    const errorMsg = res?.error || 'Translation failed';
+    
+    historyJobState[historyId] = {
+      ...historyJobState[historyId],
+      stage: cancelled ? 'cancelled' : errorMsg,
+      percent: 100,
+      inProgress: false,
+    };
+    
+    throw new Error(cancelled ? 'Translation cancelled' : errorMsg);
+  } catch (error) {
+    historyJobState[historyId] = {
+      ...historyJobState[historyId],
+      stage: error instanceof Error ? error.message : String(error),
+      percent: 100,
+      inProgress: false,
+    };
+    throw error;
+  }
+}
+
+async function runHistoryMerge(
+  agentOperationId: string,
+  historyId: string,
+  input: { outputPath?: string; overwrite?: boolean }
+): Promise<Record<string, unknown>> {
+  const outputPath = String(input.outputPath || '').trim();
+  if (!outputPath) throw new Error('An explicit output path is required.');
+  if (!/\.mp4$/i.test(outputPath)) {
+    throw new Error('Merged video output path must end in .mp4.');
+  }
+  
+  if (window.env.isPackaged) {
+    const allowed = await window.electron.checkAgentPathAllowed?.(outputPath);
+    if (!allowed) {
+      throw new Error(
+        'Merge output path is outside the allowed directories. ' +
+        'Configure allowed directories in Settings → Agent Control.'
+      );
+    }
+  }
+  
+  const loaded = await loadSubtitlesFromHistory(historyId);
+  const videoPath = sanitizeVideoSuggestionHistoryPath(loaded.item.localPath);
+  const segments = loaded.segments;
+  
+  if (!segments.length) {
+    throw new Error('No subtitles found for this library item. Transcribe or translate first.');
+  }
+  
+  if (!(await window.fileApi.fileExists(videoPath))) {
+    throw new Error(`History item video file no longer exists: ${videoPath}`);
+  }
+  
+  throwIfAgentCancelled();
+  
+  const operationId = `${agentOperationId}-merge-history-${historyId}`;
+  historyJobState[historyId] = {
+    operationId,
+    historyId,
+    stage: 'merging',
+    percent: 0,
+    inProgress: true,
+  };
+  
+  try {
+    const ui = useUIStore.getState();
+    const videoMeta = await window.fileApi.getVideoMetadata?.(videoPath);
+    
+    if (!videoMeta || !videoMeta.duration) {
+      throw new Error('Could not read video metadata for merge');
+    }
+    
+    const targetHeight = videoMeta.height ?? BASELINE_HEIGHT;
+    const fontSizePx = Math.max(
+      MIN_SUBTITLE_FONT_SIZE,
+      Math.round(ui.baseFontSize * fontScale(targetHeight))
+    );
+    
+    const options: RenderSubtitlesOptions = {
+      operationId,
+      srtContent: buildSrt({
+        segments,
+        mode: ui.subtitleDisplayMode,
+        noWrap: true,
+      }),
+      subtitleSegments: segments,
+      outputDir: '/placeholder/output/dir',
+      outputSavePath: outputPath,
+      outputOverwrite: input.overwrite === true,
+      videoDuration: videoMeta.duration,
+      videoWidth: videoMeta.width ?? 1280,
+      videoHeight: videoMeta.height ?? 720,
+      displayWidth: videoMeta.displayWidth ?? videoMeta.width ?? 1280,
+      displayHeight: videoMeta.displayHeight ?? videoMeta.height ?? 720,
+      videoRotationDeg: videoMeta.rotation ?? 0,
+      frameRate: Number(videoMeta.frameRate ?? 30),
+      originalVideoPath: videoPath,
+      fontSizePx,
+      stylePreset: ui.subtitleStyle,
+      outputMode: ui.subtitleDisplayMode,
+      overlayMode: 'overlayOnVideo',
+    };
+    
+    const result = await subtitleRendererClient.renderSubtitles(options);
+    
+    if (result.cancelled) {
+      historyJobState[historyId] = {
+        ...historyJobState[historyId],
+        stage: 'cancelled',
+        percent: 100,
+        inProgress: false,
+      };
+      throw new Error('Merge cancelled');
+    }
+    
+    if (!result.success) {
+      const errorMsg = result.error || 'Merge failed';
+      historyJobState[historyId] = {
+        ...historyJobState[historyId],
+        stage: errorMsg,
+        percent: 100,
+        inProgress: false,
+      };
+      throw new Error(errorMsg);
+    }
+    
+    historyJobState[historyId] = {
+      ...historyJobState[historyId],
+      stage: 'completed',
+      percent: 100,
+      inProgress: false,
+    };
+    
+    return {
+      operationId,
+      historyId,
+      outputPath,
+      videoPath,
+      cueCount: segments.length,
+      sourceNote: 'Merge completed for library item without remounting',
+    };
+  } catch (error) {
+    historyJobState[historyId] = {
+      ...historyJobState[historyId],
+      stage: error instanceof Error ? error.message : String(error),
+      percent: 100,
+      inProgress: false,
+    };
+    throw error;
+  }
 }
 
 async function runAgentTranscription(
@@ -2752,9 +3079,8 @@ function installAgentBridge() {
 
     async startTranscription(input) {
       if (input?.historyId) {
-        throw new Error(
-          'Transcription from library history not yet supported. ' +
-          'Load the item with app_library_history_item_open first, then transcribe.'
+        return beginAgentProcessing('transcription', operationId =>
+          runHistoryTranscription(operationId, input.historyId)
         );
       }
       const strategy = requireMountedSubtitleStrategy(
@@ -2768,9 +3094,9 @@ function installAgentBridge() {
 
     async startTranslation(input) {
       if (input?.historyId) {
-        throw new Error(
-          'Translation from library history not yet supported. ' +
-          'Load the item with app_library_history_item_open first, then translate.'
+        const targetLanguage = String(input?.targetLanguage || '').trim();
+        return beginAgentProcessing('translation', operationId =>
+          runHistoryTranslation(operationId, input.historyId, targetLanguage)
         );
       }
       const targetLanguage = String(input?.targetLanguage || '').trim();
@@ -2818,9 +3144,11 @@ function installAgentBridge() {
 
     async startMerge(input) {
       if (input?.historyId) {
-        throw new Error(
-          'Merge from library history not yet supported. ' +
-          'Load the item with app_library_history_item_open first, then merge.'
+        return beginAgentProcessing('merge', operationId =>
+          runHistoryMerge(operationId, input.historyId, {
+            outputPath: input?.outputPath,
+            overwrite: input?.overwrite,
+          })
         );
       }
       return beginAgentProcessing('merge', operationId =>
@@ -2853,10 +3181,22 @@ function installAgentBridge() {
 
     async processingStatus(input) {
       if (input?.historyId) {
-        throw new Error(
-          'Processing status for library history items is not supported. ' +
-          'Use app_status with history_id to check library item status.'
-        );
+        const job = historyJobState[input.historyId];
+        if (!job) {
+          return {
+            inProgress: false,
+            historyId: input.historyId,
+            note: 'No active job for this library item',
+          };
+        }
+        return {
+          operationId: job.operationId,
+          historyId: job.historyId,
+          stage: job.stage,
+          percent: job.percent,
+          inProgress: job.inProgress,
+          sourceNote: 'Job status for library item',
+        };
       }
       return agentProcessingSnapshot();
     },

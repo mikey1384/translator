@@ -242,25 +242,64 @@ test('translator-agent-listener - exportSubtitles accepts historyId', () => {
   );
 });
 
-test('translator-agent-listener - job operations reject history_id with clear error', () => {
+test('translator-agent-listener - job operations support history_id without remounting', () => {
   const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
   const listenerContent = fs.readFileSync(listenerPath, 'utf8');
   
-  // startTranscription should check for history_id and throw error
-  const transcriptionMatch = listenerContent.match(/async startTranscription\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?throw new Error/);
-  assert.ok(transcriptionMatch, 'startTranscription must reject history_id with clear error');
+  // startTranscription should handle history_id via runHistoryTranscription
+  const transcriptionMatch = listenerContent.match(/async startTranscription\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?runHistoryTranscription/);
+  assert.ok(transcriptionMatch, 'startTranscription must handle history_id via runHistoryTranscription');
   
-  // startTranslation should check for history_id and throw error
-  const translationMatch = listenerContent.match(/async startTranslation\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?throw new Error/);
-  assert.ok(translationMatch, 'startTranslation must reject history_id with clear error');
+  // startTranslation should handle history_id via runHistoryTranslation
+  const translationMatch = listenerContent.match(/async startTranslation\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?runHistoryTranslation/);
+  assert.ok(translationMatch, 'startTranslation must handle history_id via runHistoryTranslation');
   
-  // startMerge should check for history_id and throw error
-  const mergeMatch = listenerContent.match(/async startMerge\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?throw new Error/);
-  assert.ok(mergeMatch, 'startMerge must reject history_id with clear error');
+  // startMerge should handle history_id via runHistoryMerge
+  const mergeMatch = listenerContent.match(/async startMerge\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?runHistoryMerge/);
+  assert.ok(mergeMatch, 'startMerge must handle history_id via runHistoryMerge');
   
-  // processingStatus should check for history_id and throw error
-  const statusMatch = listenerContent.match(/async processingStatus\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?throw new Error/);
-  assert.ok(statusMatch, 'processingStatus must reject history_id with clear error');
+  // processingStatus should handle history_id via historyJobState
+  const statusMatch = listenerContent.match(/async processingStatus\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?historyJobState/);
+  assert.ok(statusMatch, 'processingStatus must handle history_id via historyJobState');
+  
+  // runHistoryTranscription must not call store.load or openDownloadHistoryItem
+  const historyTranscriptionMatch = listenerContent.match(/async function runHistoryTranscription[\s\S]*?return \{[\s\S]*?\}/);
+  assert.ok(historyTranscriptionMatch, 'runHistoryTranscription function not found');
+  const historyTranscriptionBody = historyTranscriptionMatch[0];
+  assert.ok(
+    !historyTranscriptionBody.includes('useSubStore.getState().load('),
+    'runHistoryTranscription must NOT call store.load (would remount UI)'
+  );
+  assert.ok(
+    !historyTranscriptionBody.includes('openDownloadHistoryItem'),
+    'runHistoryTranscription must NOT call openDownloadHistoryItem (would remount UI)'
+  );
+  
+  // runHistoryTranslation must not call store.load or openDownloadHistoryItem
+  const historyTranslationMatch = listenerContent.match(/async function runHistoryTranslation[\s\S]*?return \{[\s\S]*?\}/);
+  assert.ok(historyTranslationMatch, 'runHistoryTranslation function not found');
+  const historyTranslationBody = historyTranslationMatch[0];
+  assert.ok(
+    !historyTranslationBody.includes('useSubStore.getState().load('),
+    'runHistoryTranslation must NOT call store.load (would remount UI)'
+  );
+  assert.ok(
+    !historyTranslationBody.includes('openDownloadHistoryItem'),
+    'runHistoryTranslation must NOT call openDownloadHistoryItem (would remount UI)'
+  );
+  
+  // runHistoryMerge must not call store.load or openDownloadHistoryItem
+  const historyMergeMatch = listenerContent.match(/async function runHistoryMerge[\s\S]*?return \{[\s\S]*?\}/);
+  assert.ok(historyMergeMatch, 'runHistoryMerge function not found');
+  const historyMergeBody = historyMergeMatch[0];
+  assert.ok(
+    !historyMergeBody.includes('useSubStore.getState().load('),
+    'runHistoryMerge must NOT call store.load (would remount UI)'
+  );
+  assert.ok(
+    !historyMergeBody.includes('openDownloadHistoryItem'),
+    'runHistoryMerge must NOT call openDownloadHistoryItem (would remount UI)'
+  );
 });
 
 test('translator-agent-listener - history-based operations do not remount UI', () => {
