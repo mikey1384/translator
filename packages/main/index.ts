@@ -1448,11 +1448,17 @@ try {
 
   ipcMain.on('stripe-cancelled', (_event, data) => {
     log.info('[main.ts] Received stripe-cancelled message:', data);
+    
+    // Track cancellation event (guard already handled by the caller)
     if (data?.mode === 'byo') {
+      void trackPurchaseFunnelEvent('byo_unlock_cancelled');
       broadcastToApp('byo-unlock-cancelled');
       return;
     }
 
+    void trackPurchaseFunnelEvent('credit_checkout_cancelled', {
+      packId: data?.packId,
+    });
     broadcastToApp('checkout-cancelled');
   });
 
