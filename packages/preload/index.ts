@@ -35,6 +35,17 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('heartbeat-ping', listener);
   },
 
+  // ---------------------- Purchase Tracking ----------------------
+  trackPurchaseEvent: async (
+    event: string,
+    context?: {
+      packId?: string;
+      placement?: string;
+      failureReason?: string;
+    }
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('track-purchase-event', event, context),
+
   // ---------------------- Subtitle Generation ----------------------
   generateSubtitles: async (options: any) => {
     const processedOptions = { ...options };

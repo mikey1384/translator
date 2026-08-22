@@ -1412,6 +1412,9 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
       `[credit-handler] BYO checkout session received (${getCheckoutLogLabel(checkoutSessionId)}).`
     );
     setActiveCheckoutSession('byo', checkoutSessionId);
+    
+    // Track BYO unlock session created
+    void trackPurchaseFunnelEvent('byo_unlock_session_created');
 
     if (checkoutSessionId && !shouldUseEmbeddedCheckoutWindow()) {
       await openStripeCheckoutInExternalBrowser({

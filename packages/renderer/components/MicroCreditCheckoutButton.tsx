@@ -38,6 +38,7 @@ export default function MicroCreditCheckoutButton({
       variant="primary"
       size="sm"
       dataLog={`${placement}-buy-micro-credits`}
+      placement={placement}
       onCheckoutCreated={onCheckoutCreated}
     />
   );

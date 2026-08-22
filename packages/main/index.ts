@@ -1066,6 +1066,31 @@ try {
   ipcMain.handle('refresh-credit-snapshot', (_event, force?: boolean) =>
     handleRefreshCreditSnapshot(force === true)
   );
+  
+  // Purchase funnel tracking from renderer
+  ipcMain.handle(
+    'track-purchase-event',
+    async (
+      _event,
+      eventName: PurchaseFunnelEvent,
+      context?: {
+        packId?: CreditPackId;
+        placement?: PurchasePlacement;
+        failureReason?: PurchaseFailureReason;
+      }
+    ) => {
+      try {
+        await trackPurchaseFunnelEvent(eventName, context || {});
+        return { success: true };
+      } catch (error: any) {
+        log.error('[main] track-purchase-event error:', error);
+        return {
+          success: false,
+          error: error?.message || String(error),
+        };
+      }
+    }
+  );
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
   ipcMain.handle('is-admin-mode', () => hasConfiguredAdminSecret());

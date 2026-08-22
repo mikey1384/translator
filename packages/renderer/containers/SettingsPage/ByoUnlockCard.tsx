@@ -68,6 +68,14 @@ export default function ByoUnlockCard() {
 
   const handleUnlock = async () => {
     logButton('settings_byo_unlock_click');
+    
+    // Track button click
+    window.electron.trackPurchaseEvent?.('byo_unlock_button_clicked', {
+      placement: 'settings-byo',
+    }).catch(() => {
+      // Ignore tracking errors
+    });
+    
     await startUnlock();
   };
 
