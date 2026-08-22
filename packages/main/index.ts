@@ -106,6 +106,7 @@ import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-
 import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 import {
   flushPendingCriticalFailures,
+  flushPendingProductEvents,
   trackAppOpen,
   trackFirstMeaningfulUse,
   trackTranslationFunnelEvent,
@@ -131,6 +132,11 @@ import {
   registerAllAgentBridgeHandlers,
   cleanupAgentBridgeHandlers,
 } from './handlers/agent-bridge-handlers.js';
+import {
+  startHungWindowMonitoring,
+  stopHungWindowMonitoring,
+  recordHeartbeat,
+} from './services/hung-window-detector.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -516,6 +522,10 @@ try {
   });
 
   ipcMain.handle('ping', utilityHandlers.handlePing);
+  ipcMain.handle('heartbeat-pong', () => {
+    recordHeartbeat();
+    return { success: true };
+  });
   ipcMain.handle('show-message', utilityHandlers.handleShowMessage);
   ipcMain.handle('save-file', fileHandlers.handleSaveFile);
   ipcMain.handle(
@@ -1056,6 +1066,53 @@ try {
   ipcMain.handle('refresh-credit-snapshot', (_event, force?: boolean) =>
     handleRefreshCreditSnapshot(force === true)
   );
+  
+  // Purchase funnel tracking from renderer
+  // Only allow renderer to emit: button_shown, button_clicked, and *_failed
+  // (session_created, opened, completed, cancelled must come from main process only)
+  ipcMain.handle(
+    'track-purchase-event',
+    async (
+      _event,
+      eventName: PurchaseFunnelEvent,
+      context?: {
+        packId?: CreditPackId;
+        placement?: PurchasePlacement;
+        failureReason?: PurchaseFailureReason;
+      }
+    ) => {
+      try {
+        // Validate that renderer can only emit specific events
+        const allowedRendererEvents = [
+          'credit_checkout_button_shown',
+          'credit_checkout_button_clicked',
+          'credit_checkout_failed',
+          'byo_unlock_button_shown',
+          'byo_unlock_button_clicked',
+          'byo_unlock_failed',
+        ];
+        
+        if (!allowedRendererEvents.includes(eventName)) {
+          log.warn(
+            `[main] Renderer attempted to emit restricted purchase event: ${eventName}`
+          );
+          return {
+            success: false,
+            error: `Event ${eventName} can only be emitted from main process`,
+          };
+        }
+        
+        await trackPurchaseFunnelEvent(eventName, context || {});
+        return { success: true };
+      } catch (error: any) {
+        log.error('[main] track-purchase-event error:', error);
+        return {
+          success: false,
+          error: error?.message || String(error),
+        };
+      }
+    }
+  );
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
   ipcMain.handle('is-admin-mode', () => hasConfiguredAdminSecret());
@@ -1391,11 +1448,17 @@ try {
 
   ipcMain.on('stripe-cancelled', (_event, data) => {
     log.info('[main.ts] Received stripe-cancelled message:', data);
+    
+    // Track cancellation event (guard already handled by the caller)
     if (data?.mode === 'byo') {
+      void trackPurchaseFunnelEvent('byo_unlock_cancelled');
       broadcastToApp('byo-unlock-cancelled');
       return;
     }
 
+    void trackPurchaseFunnelEvent('credit_checkout_cancelled', {
+      packId: data?.packId,
+    });
     broadcastToApp('checkout-cancelled');
   });
 
@@ -1577,6 +1640,7 @@ async function createWindow(): Promise<BrowserWindow> {
   // newer main window that replaced it after a lifecycle transition.
   window.on('closed', () => {
     log.info('[main.ts] Main window closed.');
+    stopHungWindowMonitoring();
     mainWindowCoordinator.clearIfCurrent(window);
   });
 
@@ -2024,6 +2088,8 @@ app
       
       void trackAppOpen();
       void flushPendingCriticalFailures();
+      void flushPendingProductEvents();
+      startHungWindowMonitoring(window);
       if (isDev) {
         window.webContents.on('devtools-opened', () => {
           // Additional dev logic if desired

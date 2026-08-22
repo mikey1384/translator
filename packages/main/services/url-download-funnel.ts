@@ -20,6 +20,7 @@ export type UrlConnectionContext = 'download_recovery' | 'settings';
 export type UrlDownloadFunnelEvent =
   | 'url_download_started'
   | 'url_download_completed'
+  | 'url_download_caption_only'
   | 'url_download_cookie_required'
   | 'url_download_cancelled'
   | 'url_download_failed'

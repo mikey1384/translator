@@ -319,25 +319,61 @@ async function openCreditCheckout(input?: {
   if (!packId || !Object.hasOwn(CREDIT_PACKS, packId)) {
     throw new Error('Credit pack must be MICRO, STARTER, STANDARD, or PRO.');
   }
+  
+  // Track agent-initiated purchase (equivalent to button click)
+  window.electron.trackPurchaseEvent?.('credit_checkout_button_clicked', {
+    packId,
+    placement: 'agent',
+  }).catch(() => {
+    // Ignore tracking errors
+  });
+  
   await navigateToDestination('settings-credits');
-  const checkoutSessionId = await SystemIPC.createCheckoutSession(packId);
-  if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
+  
+  try {
+    const checkoutSessionId = await SystemIPC.createCheckoutSession(packId);
+    if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
+      // already_pending is not a failure, so no failed event
+      return {
+        opened: true,
+        alreadyPending: true,
+        pack: CREDIT_PACKS[packId],
+        note: 'A credit checkout is already open. The user must complete or cancel it in the browser.',
+      };
+    }
+    if (!checkoutSessionId) {
+      // Track session creation failure
+      window.electron.trackPurchaseEvent?.('credit_checkout_failed', {
+        packId,
+        placement: 'agent',
+        failureReason: 'api_error',
+      }).catch(() => {
+        // Ignore tracking errors
+      });
+      throw new Error('Translator could not open the secure credit checkout.');
+    }
     return {
       opened: true,
-      alreadyPending: true,
+      alreadyPending: false,
       pack: CREDIT_PACKS[packId],
-      note: 'A credit checkout is already open. The user must complete or cancel it in the browser.',
+      note: 'Stripe checkout is open in the browser. The agent cannot read, enter, or submit card or payment details.',
     };
+  } catch (err) {
+    // Track session creation failure if not already tracked
+    if (err instanceof Error && !err.message.includes('could not open')) {
+      const failureReason = String(err).includes('network')
+        ? 'network_error'
+        : 'api_error';
+      window.electron.trackPurchaseEvent?.('credit_checkout_failed', {
+        packId,
+        placement: 'agent',
+        failureReason,
+      }).catch(() => {
+        // Ignore tracking errors
+      });
+    }
+    throw err;
   }
-  if (!checkoutSessionId) {
-    throw new Error('Translator could not open the secure credit checkout.');
-  }
-  return {
-    opened: true,
-    alreadyPending: false,
-    pack: CREDIT_PACKS[packId],
-    note: 'Stripe checkout is open in the browser. The agent cannot read, enter, or submit card or payment details.',
-  };
 }
 
 type SettingsUpdate = {

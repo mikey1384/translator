@@ -14,7 +14,8 @@ export type CriticalFailureClass =
   | 'main_process_exception'
   | 'main_process_rejection'
   | 'renderer_process_gone'
-  | 'child_process_gone';
+  | 'child_process_gone'
+  | 'renderer_window_hung';
 
 export type ProcessFailureReason =
   | 'clean-exit'

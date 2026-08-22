@@ -7,6 +7,16 @@ import log from 'electron-log';
 import { STAGE5_API_URL } from './endpoints.js';
 import { withStage5AuthRetry } from './stage5-auth.js';
 import type { TranslationFunnelEvent } from './translation-funnel.js';
+import type { TranscriptionFunnelEvent } from './transcription-funnel.js';
+import type { DubbingFunnelEvent } from './dubbing-funnel.js';
+import type { SummaryFunnelEvent } from './summary-funnel.js';
+import type { MergeFunnelEvent } from './merge-funnel.js';
+import type {
+  PurchaseFunnelEvent,
+  CreditPackId,
+  PurchasePlacement,
+  PurchaseFailureReason,
+} from './purchase-funnel.js';
 import {
   acknowledgeCriticalFailure,
   listPendingCriticalFailures,
@@ -20,6 +30,11 @@ import type {
   UrlSourceType,
 } from './url-download-funnel.js';
 import { shouldSendProductAnalytics } from './product-analytics-policy.js';
+import {
+  queueProductEvent,
+  listPendingProductEvents,
+  acknowledgeProductEvent,
+} from './product-event-queue.js';
 
 type MeaningfulUseFeature = 'video_open' | 'video_download' | 'translation';
 type ProductEvent =
@@ -27,7 +42,12 @@ type ProductEvent =
   | 'app_meaningful_use'
   | 'app_critical_failure'
   | UrlDownloadFunnelEvent
-  | TranslationFunnelEvent;
+  | TranslationFunnelEvent
+  | TranscriptionFunnelEvent
+  | DubbingFunnelEvent
+  | SummaryFunnelEvent
+  | MergeFunnelEvent
+  | PurchaseFunnelEvent;
 type TranslationWorkflow = 'full_srt';
 
 type ProductMeasurementStore = {
@@ -84,6 +104,7 @@ async function postProductEvent({
   workflow,
   criticalFailure,
   urlDownload,
+  purchase,
 }: {
   eventId: string;
   event: ProductEvent;
@@ -95,6 +116,12 @@ async function postProductEvent({
     cookieCause?: NeedCookiesCause;
     failureCategory?: UrlDownloadFailureCategory;
     connectionContext?: UrlConnectionContext;
+    mediaFailure?: string;
+  };
+  purchase?: {
+    packId?: CreditPackId;
+    placement?: PurchasePlacement;
+    failureReason?: PurchaseFailureReason;
   };
 }): Promise<void> {
   await withStage5AuthRetry(headers =>
@@ -133,6 +160,18 @@ async function postProductEvent({
               ...(urlDownload.connectionContext
                 ? { connectionContext: urlDownload.connectionContext }
                 : {}),
+              ...(urlDownload.mediaFailure
+                ? { mediaFailure: urlDownload.mediaFailure }
+                : {}),
+            }
+          : {}),
+        ...(purchase
+          ? {
+              ...(purchase.packId ? { packId: purchase.packId } : {}),
+              ...(purchase.placement ? { placement: purchase.placement } : {}),
+              ...(purchase.failureReason
+                ? { failureReason: purchase.failureReason }
+                : {}),
             }
           : {}),
       },
@@ -157,6 +196,23 @@ export async function flushPendingCriticalFailures(): Promise<void> {
     } catch (error) {
       log.info(
         `[product-measurement] Critical-failure measurement remains pending for retry (${measurementErrorLabel(error)}).`
+      );
+      return;
+    }
+  }
+}
+
+export async function flushPendingProductEvents(): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
+  // Match flushPendingCriticalFailures pattern: both require packaged + semver,
+  // and both wait for authenticated session (via withStage5AuthRetry in postProductEvent).
+  for (const queuedEvent of listPendingProductEvents()) {
+    try {
+      await postProductEvent(queuedEvent);
+      acknowledgeProductEvent(queuedEvent.eventId);
+    } catch (error) {
+      log.info(
+        `[product-measurement] Queued ${queuedEvent.event} remains pending for retry (${measurementErrorLabel(error)}).`
       );
       return;
     }
@@ -218,16 +274,90 @@ export async function trackTranslationFunnelEvent(
   event: TranslationFunnelEvent
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
+  const eventId = randomUUID();
   try {
     await postProductEvent({
-      eventId: randomUUID(),
+      eventId,
       event,
       workflow: 'full_srt',
     });
   } catch (error) {
     log.info(
-      `[product-measurement] ${event} measurement was not recorded (${measurementErrorLabel(error)}).`
+      `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
+    queueProductEvent({ eventId, event, workflow: 'full_srt' });
+  }
+}
+
+export async function trackTranscriptionFunnelEvent(
+  event: TranscriptionFunnelEvent
+): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
+  const eventId = randomUUID();
+  try {
+    await postProductEvent({
+      eventId,
+      event,
+    });
+  } catch (error) {
+    log.info(
+      `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
+    );
+    queueProductEvent({ eventId, event });
+  }
+}
+
+export async function trackDubbingFunnelEvent(
+  event: DubbingFunnelEvent
+): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
+  const eventId = randomUUID();
+  try {
+    await postProductEvent({
+      eventId,
+      event,
+    });
+  } catch (error) {
+    log.info(
+      `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
+    );
+    queueProductEvent({ eventId, event });
+  }
+}
+
+export async function trackSummaryFunnelEvent(
+  event: SummaryFunnelEvent
+): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
+  const eventId = randomUUID();
+  try {
+    await postProductEvent({
+      eventId,
+      event,
+    });
+  } catch (error) {
+    log.info(
+      `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
+    );
+    queueProductEvent({ eventId, event });
+  }
+}
+
+export async function trackMergeFunnelEvent(
+  event: MergeFunnelEvent
+): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
+  const eventId = randomUUID();
+  try {
+    await postProductEvent({
+      eventId,
+      event,
+    });
+  } catch (error) {
+    log.info(
+      `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
+    );
+    queueProductEvent({ eventId, event });
   }
 }
 
@@ -238,18 +368,54 @@ export async function trackUrlDownloadFunnelEvent(
     cookieCause?: NeedCookiesCause;
     failureCategory?: UrlDownloadFailureCategory;
     connectionContext?: UrlConnectionContext;
+    mediaFailure?: string;
   }
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
+  const eventId = randomUUID();
   try {
     await postProductEvent({
-      eventId: randomUUID(),
+      eventId,
       event,
       urlDownload: details,
     });
   } catch (error) {
     log.info(
-      `[product-measurement] ${event} measurement was not recorded (${measurementErrorLabel(error)}).`
+      `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
+    queueProductEvent({ eventId, event, urlDownload: details });
+  }
+}
+
+export async function trackPurchaseFunnelEvent(
+  event: PurchaseFunnelEvent,
+  details: {
+    packId?: CreditPackId;
+    placement?: PurchasePlacement;
+    failureReason?: PurchaseFailureReason;
+  } = {}
+): Promise<void> {
+  if (!productAnalyticsEnabled()) return;
+  const eventId = randomUUID();
+  try {
+    await postProductEvent({
+      eventId,
+      event,
+      purchase: details,
+    });
+    // Flush failures immediately for visibility
+    if (
+      event === 'credit_checkout_failed' ||
+      event === 'byo_unlock_failed' ||
+      event === 'credit_checkout_cancelled' ||
+      event === 'byo_unlock_cancelled'
+    ) {
+      log.info(`[product-measurement] ${event} flushed immediately.`);
+    }
+  } catch (error) {
+    log.info(
+      `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
+    );
+    queueProductEvent({ eventId, event, purchase: details });
   }
 }

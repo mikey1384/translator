@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as SystemIPC from '@ipc/system';
 import { CHECKOUT_ALREADY_PENDING } from '../../shared/constants';
@@ -12,6 +12,7 @@ interface BuyCreditsButtonProps {
   fullWidth?: boolean;
   dataLog?: string;
   className?: string;
+  placement?: 'zero-credit-banner' | 'credit-ran-out-dialog' | 'settings-credit-card';
   onCheckoutCreated?: () => void;
 }
 
@@ -23,15 +24,34 @@ export default function BuyCreditsButton({
   fullWidth = false,
   dataLog,
   className,
+  placement,
   onCheckoutCreated,
 }: BuyCreditsButtonProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    // Track button shown once on mount
+    window.electron.trackPurchaseEvent?.('credit_checkout_button_shown', {
+      packId,
+      placement,
+    }).catch(() => {
+      // Ignore tracking errors
+    });
+  }, [packId, placement]);
+
   async function handleClick() {
     if (loading) {
       return;
     }
+
+    // Track button press
+    window.electron.trackPurchaseEvent?.('credit_checkout_button_clicked', {
+      packId,
+      placement,
+    }).catch(() => {
+      // Ignore tracking errors
+    });
 
     try {
       setLoading(true);
@@ -39,10 +59,19 @@ export default function BuyCreditsButton({
       if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
         // A checkout is already in flight (possibly from another tab); the
         // re-broadcast pending/unresolved event drives the UI — no error.
+        // already_pending is not a failure, so we don't emit *_failed event
         onCheckoutCreated?.();
         return;
       }
       if (!checkoutSessionId) {
+        // Session creation failed - track failure
+        window.electron.trackPurchaseEvent?.('credit_checkout_failed', {
+          packId,
+          placement,
+          failureReason: 'api_error',
+        }).catch(() => {
+          // Ignore tracking errors
+        });
         await SystemIPC.showMessage(
           'An error occurred while trying to start checkout. Please check your connection and try again.'
         );
@@ -51,6 +80,17 @@ export default function BuyCreditsButton({
       onCheckoutCreated?.();
     } catch (err: any) {
       console.error('Failed to start checkout:', err);
+      // Track session creation failure
+      const failureReason = String(err).includes('network')
+        ? 'network_error'
+        : 'api_error';
+      window.electron.trackPurchaseEvent?.('credit_checkout_failed', {
+        packId,
+        placement,
+        failureReason,
+      }).catch(() => {
+        // Ignore tracking errors
+      });
       await SystemIPC.showMessage(
         'An error occurred while trying to start checkout. Please check your connection and try again.'
       );

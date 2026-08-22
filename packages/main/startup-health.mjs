@@ -22,6 +22,7 @@ const FAILURE_CLASSES = new Set([
   'main_process_rejection',
   'renderer_process_gone',
   'child_process_gone',
+  'renderer_window_hung',
 ]);
 const RENDERER_REASONS = new Set([
   'clean-exit',

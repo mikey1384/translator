@@ -32,6 +32,7 @@ import CreditWarningBanner from '../containers/GenerateSubtitles/components/Cred
 import ErrorBanner from '../components/ErrorBanner';
 import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
 import { useAiStore } from '../state';
+import { useHeartbeat } from '../hooks/useHeartbeat';
 
 import { css } from '@emotion/css';
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
@@ -71,6 +72,7 @@ const settingsPageWrapper = css`
 
 export default function AppContent() {
   const { t } = useTranslation();
+  useHeartbeat();
   useEffect(() => {
     if (!window.env.isPackaged) return;
 
