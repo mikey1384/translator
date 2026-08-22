@@ -1662,6 +1662,13 @@ async function openStripeCheckoutInExternalBrowser(
 
   try {
     await shell.openExternal(sessionUrl);
+    
+    // Track checkout opened in external browser
+    const event =
+      mode === 'byo' ? 'byo_unlock_opened' : 'credit_checkout_opened';
+    void trackPurchaseFunnelEvent(event, {
+      ...(options.packId ? { packId: options.packId } : {}),
+    });
   } catch (error) {
     reportCheckoutClientEventInBackground({
       eventType: 'open_external_failed',
@@ -1774,6 +1781,15 @@ async function openStripeCheckout(
     });
 
     win.loadURL(options.sessionUrl);
+    
+    // Track checkout opened in embedded window
+    const event =
+      options.defaultMode === 'byo'
+        ? 'byo_unlock_opened'
+        : 'credit_checkout_opened';
+    void trackPurchaseFunnelEvent(event, {
+      ...(options.packId ? { packId: options.packId } : {}),
+    });
 
     let completed = false;
     let skipOnClosedCallback = false;

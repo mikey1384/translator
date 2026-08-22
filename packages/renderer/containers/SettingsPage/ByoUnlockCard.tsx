@@ -66,6 +66,17 @@ export default function ByoUnlockCard() {
     }
   }, [initialized, initialize]);
 
+  useEffect(() => {
+    // Track button shown once when card is mounted and not hidden
+    if (!shouldHideUpgradeCard) {
+      window.electron.trackPurchaseEvent?.('byo_unlock_button_shown', {
+        placement: 'settings-byo',
+      }).catch(() => {
+        // Ignore tracking errors
+      });
+    }
+  }, [shouldHideUpgradeCard]);
+
   const handleUnlock = async () => {
     logButton('settings_byo_unlock_click');
     

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as SystemIPC from '@ipc/system';
 import { CHECKOUT_ALREADY_PENDING } from '../../shared/constants';
@@ -29,6 +29,16 @@ export default function BuyCreditsButton({
 }: BuyCreditsButtonProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Track button shown once on mount
+    window.electron.trackPurchaseEvent?.('credit_checkout_button_shown', {
+      packId,
+      placement,
+    }).catch(() => {
+      // Ignore tracking errors
+    });
+  }, [packId, placement]);
 
   async function handleClick() {
     if (loading) {
