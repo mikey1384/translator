@@ -70,7 +70,13 @@ const SAFE_TOOLS = Object.keys(TOOL_MAP);
 
 // JSON Schemas for each tool (hand-written from mcp.mjs, zero npm deps)
 const TOOL_SCHEMAS = {
-  app_status: { type: 'object', properties: {}, additionalProperties: false },
+  app_status: { 
+    type: 'object', 
+    properties: {
+      history_id: { type: 'string', minLength: 1 }
+    },
+    additionalProperties: false 
+  },
   app_navigation_list: { type: 'object', properties: {}, additionalProperties: false },
   app_navigate: {
     type: 'object',
@@ -175,14 +181,16 @@ const TOOL_SCHEMAS = {
   app_start_transcription: {
     type: 'object',
     properties: {
-      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' }
+      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' },
+      history_id: { type: 'string', minLength: 1 }
     },
     additionalProperties: false
   },
   app_start_translation: {
     type: 'object',
     properties: {
-      target_language: { type: 'string', minLength: 2, maxLength: 80 }
+      target_language: { type: 'string', minLength: 2, maxLength: 80 },
+      history_id: { type: 'string', minLength: 1 }
     },
     required: ['target_language'],
     additionalProperties: false
@@ -229,18 +237,26 @@ const TOOL_SCHEMAS = {
     type: 'object',
     properties: {
       output_path: { type: 'string', minLength: 1 },
-      confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] }
+      confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] },
+      history_id: { type: 'string', minLength: 1 }
     },
     required: ['output_path'],
     additionalProperties: false
   },
-  app_processing_status: { type: 'object', properties: {}, additionalProperties: false },
+  app_processing_status: { 
+    type: 'object', 
+    properties: {
+      history_id: { type: 'string', minLength: 1 }
+    },
+    additionalProperties: false 
+  },
   app_processing_cancel: { type: 'object', properties: {}, additionalProperties: false },
   app_subtitles_get: {
     type: 'object',
     properties: {
       offset: { type: 'integer', minimum: 0, default: 0 },
-      limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 }
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+      history_id: { type: 'string', minLength: 1 }
     },
     additionalProperties: false
   },
@@ -278,7 +294,8 @@ const TOOL_SCHEMAS = {
     type: 'object',
     properties: {
       output_path: { type: 'string', minLength: 1 },
-      confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] }
+      confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] },
+      history_id: { type: 'string', minLength: 1 }
     },
     required: ['output_path'],
     additionalProperties: false
@@ -470,6 +487,8 @@ function mapFields(input) {
       mapped.existingTranslationSrt = value;
     } else if (key === 'target_country') {
       mapped.targetCountry = value;
+    } else if (key === 'history_id') {
+      mapped.historyId = value;
     } else {
       // Generic snake_to_camel for any remaining fields
       const camelKey = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
