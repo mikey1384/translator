@@ -3,6 +3,7 @@
   - Builds & signs the app (npm run package:win)
   - Uploads artifacts to Cloudflare R2 (scripts/upload-to-r2-win.ps1)
   - Injects release notes from dist/release-notes.txt or local annotated tag body
+  - Archives the same final artifacts on the canonical GitHub release
   - Purges Cloudflare cache (scripts/purge-cloudflare-cache.ps1)
 
   Usage: Double‑click Release-Windows-OneClick.bat in repo root
@@ -102,6 +103,11 @@ try {
   Write-Stage 'Preflight checks'
   Ensure-Tool -tool 'npm' -hint 'Install Node.js / npm.'
   Ensure-Tool -tool 'rclone' -hint 'Install rclone and configure your R2 remote (e.g., r2-upload).'
+  Ensure-Tool -tool 'gh' -hint 'Install GitHub CLI and run gh auth login.'
+  & gh auth status
+  if ($LASTEXITCODE -ne 0) {
+    throw "GitHub CLI authentication failed with exit code $LASTEXITCODE. Run gh auth login."
+  }
 
   $version = Get-AppVersion
   Write-Host "Version: $version"
@@ -140,6 +146,16 @@ try {
     $uploadParams.AllowMissingReleaseNotes = $true
   }
   & "$repo\scripts\upload-to-r2-win.ps1" @uploadParams
+
+  # The R2 step deterministically injects release notes into latest.yml.
+  # Archive only afterward so both publication channels carry identical
+  # updater metadata. This step is idempotent and safe to retry.
+  Write-Stage 'Archiving verified artifacts on GitHub'
+  $bridgeScript = Join-Path -Path $repo -ChildPath 'scripts\bridge-windows-to-github.ps1'
+  if (-not (Test-Path -LiteralPath $bridgeScript -PathType Leaf)) {
+    throw "Canonical Windows GitHub bridge not found: $bridgeScript"
+  }
+  & $bridgeScript
 
   if (-not $SkipPurge) {
     Write-Stage 'Purging Cloudflare cache'

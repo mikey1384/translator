@@ -340,6 +340,7 @@ test('Windows release wrappers propagate package and upload failures', () => {
   const preflightConfig = readJson('electron-builder.win.preflight.json');
   const packageTest = read('scripts/test-windows-package.bat');
   const updaterTest = read('scripts/test-windows-updater-metadata.ps1');
+  const distribution = read('scripts/update-distribution-manifests.mjs');
   const artifacts = read('scripts/windows-release-artifacts.ps1');
   const legacyBatch = read('Inform-Windows-Legacy-Users.bat');
   const legacyRelease = read('scripts/inform-windows-legacy.ps1');
@@ -390,6 +391,19 @@ test('Windows release wrappers propagate package and upload failures', () => {
   assert.match(artifacts, /System\.Security\.Cryptography\.SHA256/);
   assert.match(release, /Assert-WindowsInstallerSignature/);
   assert.match(release, /test-windows-package\.bat --no-launch/i);
+  assert.match(release, /Ensure-Tool -tool 'gh'/);
+  assert.match(release, /gh auth status/);
+  assert.match(release, /bridge-windows-to-github\.ps1/);
+  assert.ok(
+    release.indexOf("Write-Stage 'Archiving verified artifacts on GitHub'") >
+      release.indexOf("Write-Stage 'Uploading to Cloudflare R2'"),
+    'Windows metadata must be finalized before the exact files are archived'
+  );
+  assert.ok(
+    release.indexOf("Write-Stage 'Archiving verified artifacts on GitHub'") <
+      release.indexOf("Write-Stage 'Purging Cloudflare cache'"),
+    'the immutable GitHub archive must be verified before cache purge completes the release'
+  );
   assert.match(upload, /Assert-WindowsUpdaterMetadataMatchesInstaller/);
   assert.match(purge, /Get-WindowsInstallerFileName -Version \$ver/);
   assert.match(updaterTest, /Assert-WindowsUpdaterMetadataMatchesInstaller/);
@@ -464,22 +478,12 @@ test('Windows release wrappers propagate package and upload failures', () => {
   assert.match(upload, /Remote SHA256 mismatch/);
   assert.doesNotMatch(upload, /exit code \$LASTEXITCODE:/);
   assert.match(upload, /refs\/tags\/\$\{tag\}:refs\/tags\/\$\{tag\}/);
-  assert.match(upload, /function Invoke-RcloneCopyImmutable/);
-  assert.match(upload, /function Invoke-RcloneCopyRemoteImmutable/);
-  assert.match(upload, /'copyto', '--immutable'/);
-  assert.match(upload, /cannot overwrite immutable versioned objects/);
-  assert.match(
-    upload,
-    /Invoke-RcloneCopyImmutable -from \$src -to \$destUpdaterVersion/
-  );
-  assert.match(
-    upload,
-    /Invoke-RcloneCopyRemoteImmutable -fromRemote \$destUpdaterVersion -toRemote \$destVersion/
-  );
-  assert.match(
-    upload,
-    /Invoke-RcloneCopyImmutable -from \$latestYaml -to \$destVersionYaml/
-  );
+  assert.doesNotMatch(upload, /Invoke-RcloneCopyImmutable/);
+  assert.doesNotMatch(upload, /\$BucketBase\/\$Version/);
+  assert.doesNotMatch(upload, /destUpdaterVersion/);
+  assert.doesNotMatch(upload, /destVersion/);
+  assert.doesNotMatch(upload, /destVersionYaml/);
+  assert.doesNotMatch(upload, /destBlockmapVersion/);
   assert.match(
     upload,
     /Invoke-RcloneCopyAlways -from \$latestYaml -to \$destLatestYaml/
@@ -500,8 +504,28 @@ test('Windows release wrappers propagate package and upload failures', () => {
   );
   assert.equal(
     (upload.match(/rclone .*failed with exit code/g) || []).length,
-    5,
+    3,
     'every rclone upload mode must turn native failures into terminating errors'
+  );
+  assert.match(upload, /release-storage-policy\.mjs/);
+  assert.match(upload, /prepare-retention/);
+  assert.match(upload, /release-retention\.json/);
+  assert.match(upload, /--retention \$retentionStatePath/);
+  assert.match(upload, /Remove-StaleLatestObjects/);
+  assert.match(
+    distribution,
+    /github\.com\/mikey1384\/translator\/releases\/download\/v\$\{version\}/
+  );
+  assert.doesNotMatch(
+    distribution,
+    /downloads\.stage5\.tools\/win\/\$\{version\}/
+  );
+  assert.ok(
+    upload.lastIndexOf('Remove-StaleLatestObjects') >
+      upload.lastIndexOf(
+        'Invoke-RcloneCopyAlways -from $latestYaml -to $destLatestYaml'
+      ),
+    'stale Windows payloads must be pruned only after the new manifest is verified'
   );
 });
 
@@ -1197,9 +1221,19 @@ test('macOS release stays draft until every GitHub artifact is verified', () => 
     'stable website aliases must switch only after the updater manifest'
   );
   assert.match(workflow, /group: mac-release\s+cancel-in-progress: false/);
+  assert.doesNotMatch(workflow, /- name: Upload to R2/);
+  assert.doesNotMatch(workflow, /TARGET="mac\/\$\{APP_VERSION\}"/);
+  assert.match(workflow, /release-storage-policy\.mjs plan-latest/);
+  assert.match(workflow, /release-storage-policy\.mjs prepare-retention/);
+  assert.match(workflow, /release-retention\.json/);
+  assert.match(workflow, /--retention latest\/release-retention\.json/);
+  assert.match(workflow, /aws s3api delete-object/);
   assert.ok(
-    uploadStep < workflow.indexOf('- name: Upload to R2'),
-    'the immutable GitHub draft must be established before any R2 mutation'
+    workflow.lastIndexOf('aws s3api delete-object') >
+      workflow.lastIndexOf(
+        'for artifact in "Translator-arm64.dmg" "Translator-x64.dmg"'
+      ),
+    'stale macOS payloads must be pruned only after stable aliases are verified'
   );
   assert.match(workflow, /aws s3api put-object/);
   assert.match(workflow, /aws s3api head-object/);

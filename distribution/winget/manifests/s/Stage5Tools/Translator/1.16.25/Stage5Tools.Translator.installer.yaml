@@ -21,7 +21,7 @@ FileExtensions:
   - webm
 Installers:
   - Architecture: x64
-    InstallerUrl: https://downloads.stage5.tools/win/1.16.25/Translator-x64.exe
+    InstallerUrl: https://github.com/mikey1384/translator/releases/download/v1.16.25/Translator-Setup-1.16.25.exe
     InstallerSha256: 85422037AEAE20F9F561EAE7234ED6795D5419F42119A1C4A5D4DE6EC9DA2441
     AppsAndFeaturesEntries:
       - DisplayName: Translator

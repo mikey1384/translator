@@ -249,71 +249,13 @@ jobs:
               ;;
           esac
 
-      # Establish one immutable GitHub draft before touching either R2
-      # namespace. A completed/public or conflicting tag therefore fails
-      # without overwriting versioned downloads.
+      # Establish the immutable GitHub archive before mutating the bounded R2
+      # delivery channel. A completed/public or conflicting tag therefore
+      # fails without changing public updater payloads.
       - name: Upload and verify GitHub release assets
         if: github.ref_type == 'tag'
         id: github_release
         run: scripts/upload-github-mac-release-assets.sh
-
-      - name: Upload to R2
-        if: github.ref_type == 'tag'
-        run: |
-          set -euo pipefail
-          APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
-          TARGET="mac/${APP_VERSION}"
-
-          upload_versioned_object() {
-            local source_path="$1"
-            local name
-            local expected_size
-            local expected_sha256
-            local remote_size
-            local remote_sha256
-            name=$(basename "$source_path")
-            expected_size=$(stat -f '%z' "$source_path")
-            expected_sha256=$(shasum -a 256 "$source_path" | awk '{print $1}')
-
-            aws s3api put-object \
-              --bucket "$R2_BUCKET" \
-              --key "${TARGET}/${name}" \
-              --body "$source_path" \
-              --metadata "sha256=${expected_sha256}" \
-              --cache-control "public, max-age=31536000, immutable" \
-              --endpoint-url "$R2_ENDPOINT" >/dev/null
-
-            remote_size=$(aws s3api head-object \
-              --bucket "$R2_BUCKET" \
-              --key "${TARGET}/${name}" \
-              --query ContentLength --output text \
-              --endpoint-url "$R2_ENDPOINT")
-            remote_sha256=$(aws s3api head-object \
-              --bucket "$R2_BUCKET" \
-              --key "${TARGET}/${name}" \
-              --query 'Metadata.sha256' --output text \
-              --endpoint-url "$R2_ENDPOINT")
-            if [ "$remote_size" != "$expected_size" ] || \
-               [ "$remote_sha256" != "$expected_sha256" ]; then
-              echo "::error::Versioned R2 verification failed for $name"
-              exit 1
-            fi
-          }
-
-          VERSIONED_ASSETS=(
-            "dist/Translator-${APP_VERSION}-darwin-arm64.dmg"
-            "dist/Translator-${APP_VERSION}-darwin-arm64.dmg.blockmap"
-            "dist/Translator-${APP_VERSION}-darwin-arm64.zip"
-            "dist/Translator-${APP_VERSION}-darwin-arm64.zip.blockmap"
-            "dist/Translator-${APP_VERSION}-darwin-x64.dmg"
-            "dist/Translator-${APP_VERSION}-darwin-x64.dmg.blockmap"
-            "dist/Translator-${APP_VERSION}-darwin-x64.zip"
-            "dist/Translator-${APP_VERSION}-darwin-x64.zip.blockmap"
-            "dist/latest-mac.yml"
-          )
-          for asset in "${VERSIONED_ASSETS[@]}"; do
-            upload_versioned_object "$asset"
-          done
 
       - name: Promote artefacts to latest/
         if: github.ref_type == 'tag'
@@ -333,6 +275,41 @@ jobs:
           # Preserve the stable direct-download aliases used by the website.
           cp "dist/Translator-${APP_VERSION}-darwin-arm64.dmg" latest/Translator-arm64.dmg
           cp "dist/Translator-${APP_VERSION}-darwin-x64.dmg" latest/Translator-x64.dmg
+
+          previous_manifest=$(mktemp)
+          existing_retention=$(mktemp)
+          public_manifest=$(mktemp)
+          latest_inventory=$(mktemp)
+          stale_latest=$(mktemp)
+          remaining_stale=$(mktemp)
+          trap 'rm -f "$previous_manifest" "$existing_retention" "$public_manifest" "$latest_inventory" "$stale_latest" "$remaining_stale"' EXIT
+
+          # Capture the exact currently published payload set before switching
+          # the manifest. On a retry where the new manifest is already public,
+          # reuse the previously verified retention record instead.
+          aws s3api get-object \
+            --bucket "$R2_BUCKET" \
+            --key "mac/latest/latest-mac.yml" \
+            --endpoint-url "$R2_ENDPOINT" \
+            "$previous_manifest" >/dev/null
+          retention_args=()
+          if aws s3api head-object \
+            --bucket "$R2_BUCKET" \
+            --key "mac/latest/release-retention.json" \
+            --endpoint-url "$R2_ENDPOINT" >/dev/null 2>&1; then
+            aws s3api get-object \
+              --bucket "$R2_BUCKET" \
+              --key "mac/latest/release-retention.json" \
+              --endpoint-url "$R2_ENDPOINT" \
+              "$existing_retention" >/dev/null
+            retention_args=(--existing-retention "$existing_retention")
+          fi
+          node scripts/release-storage-policy.mjs prepare-retention \
+            --platform mac \
+            --current-manifest latest/latest-mac.yml \
+            --published-manifest "$previous_manifest" \
+            "${retention_args[@]}" \
+            --output latest/release-retention.json
 
           # Every payload is a single, authenticated PutObject with its local
           # SHA-256 persisted as R2 metadata. This avoids the multipart race
@@ -410,11 +387,14 @@ jobs:
             fi
           done
 
+          # Publish the exact rollback payload record before the manifest. It
+          # makes interrupted retries and deliberate rollbacks deterministic.
+          upload_latest_object "release-retention.json" \
+            "no-cache, no-store, must-revalidate"
+
           upload_latest_object "latest-mac.yml" \
             "no-cache, no-store, must-revalidate"
 
-          public_manifest=$(mktemp)
-          trap 'rm -f "$public_manifest"' EXIT
           curl --fail --silent --show-error \
             "https://downloads.stage5.tools/mac/latest/latest-mac.yml?run=${GITHUB_RUN_ID}" \
             --output "$public_manifest"
@@ -439,6 +419,52 @@ jobs:
               exit 1
             fi
           done
+
+          # GitHub Releases is the immutable archive. R2 latest/ is a bounded
+          # delivery channel: retain the current updater generation and one
+          # prior generation so a client that fetched the old manifest just
+          # before promotion can still finish its download.
+          aws s3api list-objects-v2 \
+            --bucket "$R2_BUCKET" \
+            --prefix "mac/latest/" \
+            --query 'Contents[].Key' \
+            --output text \
+            --endpoint-url "$R2_ENDPOINT" | \
+            tr '\t' '\n' > "$latest_inventory"
+
+          node scripts/release-storage-policy.mjs plan-latest \
+            --platform mac \
+            --inventory "$latest_inventory" \
+            --current-manifest latest/latest-mac.yml \
+            --retention latest/release-retention.json \
+            --output "$stale_latest"
+
+          while IFS= read -r stale_object; do
+            [ -n "$stale_object" ] || continue
+            aws s3api delete-object \
+              --bucket "$R2_BUCKET" \
+              --key "mac/latest/$stale_object" \
+              --endpoint-url "$R2_ENDPOINT" >/dev/null
+          done < "$stale_latest"
+
+          aws s3api list-objects-v2 \
+            --bucket "$R2_BUCKET" \
+            --prefix "mac/latest/" \
+            --query 'Contents[].Key' \
+            --output text \
+            --endpoint-url "$R2_ENDPOINT" | \
+            tr '\t' '\n' > "$latest_inventory"
+          node scripts/release-storage-policy.mjs plan-latest \
+            --platform mac \
+            --inventory "$latest_inventory" \
+            --current-manifest latest/latest-mac.yml \
+            --retention latest/release-retention.json \
+            --output "$remaining_stale"
+          if [ -s "$remaining_stale" ]; then
+            echo "::error::R2 latest cleanup left stale macOS payloads"
+            cat "$remaining_stale"
+            exit 1
+          fi
 
       - name: Publish GitHub Release
         if: github.ref_type == 'tag'

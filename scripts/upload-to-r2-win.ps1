@@ -36,6 +36,7 @@ if (-not (Test-Path -LiteralPath $releaseArtifactsScript)) {
 . $releaseArtifactsScript
 $releaseMutex = Enter-WindowsReleaseMutex
 $hashFile = $null
+$retentionTempDir = $null
 
 try {
 
@@ -272,7 +273,7 @@ function Inject-ReleaseNotesIntoLatestYaml {
 Write-Host "== Upload to R2 (Windows) =="
 Write-Host "Version: $Version"
 if ($Force) {
-  Write-Host 'WARNING: -Force is retained for caller compatibility. It can refresh latest/ pointers but cannot overwrite immutable versioned objects.' -ForegroundColor Yellow
+  Write-Host 'WARNING: -Force is retained for caller compatibility. R2 latest/ pointers are always refreshed from the verified release candidate.' -ForegroundColor Yellow
 }
 
 $recoveredFromLegacyShift = $false
@@ -369,26 +370,22 @@ $hashFile = Join-Path $env:TEMP ("Translator-x64-" + [Guid]::NewGuid().ToString(
 Write-Host "Checksum: $hash"
 Write-Host "Checksum file: $hashFile"
 
-# Destinations
-$destVersion = "$BucketBase/$Version/Translator-x64.exe"
+# R2 is a bounded delivery channel. GitHub Releases is the immutable archive.
 $destLatest  = "$BucketBase/latest/Translator-x64.exe"
-$destVersionSha = "$BucketBase/$Version/Translator-x64.exe.sha256"
 $destLatestSha  = "$BucketBase/latest/Translator-x64.exe.sha256"
 
 # The physical artifact and latest.yml use the same canonical, URL-safe name.
 $updaterInstallerName = [System.IO.Path]::GetFileName($src)
 $destUpdaterLatest  = "$BucketBase/latest/$updaterInstallerName"
-$destUpdaterVersion = "$BucketBase/$Version/$updaterInstallerName"
 
 # latest.yml destinations (primarily used by auto-updater)
 $destLatestYaml  = "$BucketBase/latest/latest.yml"
-$destVersionYaml = "$BucketBase/$Version/latest.yml"
+$destRetentionLatest = "$BucketBase/latest/release-retention.json"
 
 # Blockmap destinations (match the installerFileName + .blockmap)
 if ($null -ne $blockmap) {
   $blockmapFileName = "$updaterInstallerName.blockmap"
   $destBlockmapLatest  = "$BucketBase/latest/$blockmapFileName"
-  $destBlockmapVersion = "$BucketBase/$Version/$blockmapFileName"
 }
 
 function Invoke-RcloneCopyTo {
@@ -432,32 +429,6 @@ function Invoke-RcloneCopyAlways {
   }
 }
 
-function Invoke-RcloneCopyImmutable {
-  param(
-    [string]$from,
-    [string]$to
-  )
-  Write-Host "rclone copyto (immutable) -> $to"
-  $rcloneArgs = @('copyto', '--immutable', '--progress', '--transfers', '4', '--retries', '3', '--retries-sleep', '2s')
-  & rclone @rcloneArgs -- $from $to
-  if ($LASTEXITCODE -ne 0) {
-    throw "rclone immutable copyto failed with exit code ${LASTEXITCODE}: $to"
-  }
-}
-
-function Invoke-RcloneCopyRemoteImmutable {
-  param(
-    [string]$fromRemote,
-    [string]$toRemote
-  )
-  Write-Host "rclone (remote->remote immutable) copyto -> $toRemote"
-  $rcloneArgs = @('copyto', '--immutable', '--retries', '3', '--retries-sleep', '2s')
-  & rclone @rcloneArgs -- $fromRemote $toRemote
-  if ($LASTEXITCODE -ne 0) {
-    throw "rclone immutable remote copyto failed with exit code ${LASTEXITCODE}: $toRemote"
-  }
-}
-
 function Assert-RemoteMatchesLocal {
   param(
     [string]$localPath,
@@ -490,22 +461,52 @@ function Assert-RemoteMatchesLocal {
   }
 }
 
-# Upload and verify immutable versioned objects first.
-Invoke-RcloneCopyImmutable -from $src -to $destUpdaterVersion
-Invoke-RcloneCopyRemoteImmutable -fromRemote $destUpdaterVersion -toRemote $destVersion
-Invoke-RcloneCopyImmutable -from $hashFile -to $destVersionSha
-if ($null -ne $blockmap) {
-  Invoke-RcloneCopyImmutable -from $blockmap -to $destBlockmapVersion
+$policyScript = Join-Path -Path $PSScriptRoot -ChildPath 'release-storage-policy.mjs'
+if (-not (Test-Path -LiteralPath $policyScript -PathType Leaf)) {
+  throw "Release storage policy not found: $policyScript"
 }
-Invoke-RcloneCopyImmutable -from $latestYaml -to $destVersionYaml
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+  throw "Required tool 'node' not found for bounded R2 latest cleanup."
+}
 
-Assert-RemoteMatchesLocal -localPath $src -remotePath $destUpdaterVersion
-Assert-RemoteMatchesLocal -localPath $src -remotePath $destVersion
-Assert-RemoteMatchesLocal -localPath $hashFile -remotePath $destVersionSha
-if ($null -ne $blockmap) {
-  Assert-RemoteMatchesLocal -localPath $blockmap -remotePath $destBlockmapVersion
+# Snapshot the currently published manifest before any pointer changes. The
+# generated record names the exact generation retained for interrupted clients.
+# On a retry after the new manifest is public, the existing record is reused.
+$retentionTempDir = Join-Path $env:TEMP ("translator-r2-retention-" + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $retentionTempDir | Out-Null
+$publishedManifestPath = Join-Path $retentionTempDir 'published-latest.yml'
+$existingRetentionPath = Join-Path $retentionTempDir 'existing-retention.json'
+$retentionStatePath = Join-Path $retentionTempDir 'release-retention.json'
+$latestInventory = @(& rclone lsf --files-only -- "$BucketBase/latest")
+if ($LASTEXITCODE -ne 0) {
+  throw "Unable to list R2 latest objects before preparing retention state."
 }
-Assert-RemoteMatchesLocal -localPath $latestYaml -remotePath $destVersionYaml
+if (@($latestInventory | Where-Object { $_ -ceq 'latest.yml' }).Count -ne 1) {
+  throw "R2 latest inventory must contain exactly one latest.yml before promotion."
+}
+& rclone copyto --retries 3 --retries-sleep 2s -- $destLatestYaml $publishedManifestPath
+if ($LASTEXITCODE -ne 0) {
+  throw "Unable to snapshot the published R2 latest.yml before promotion."
+}
+$retentionArgs = @(
+  $policyScript,
+  'prepare-retention',
+  '--platform', 'win',
+  '--current-manifest', $latestYaml,
+  '--published-manifest', $publishedManifestPath
+)
+if (@($latestInventory | Where-Object { $_ -ceq 'release-retention.json' }).Count -eq 1) {
+  & rclone copyto --retries 3 --retries-sleep 2s -- $destRetentionLatest $existingRetentionPath
+  if ($LASTEXITCODE -ne 0) {
+    throw "Unable to read the existing R2 release retention state."
+  }
+  $retentionArgs += @('--existing-retention', $existingRetentionPath)
+}
+$retentionArgs += @('--output', $retentionStatePath)
+& node @retentionArgs
+if ($LASTEXITCODE -ne 0) {
+  throw "Unable to prepare exact R2 release retention state."
+}
 
 # Stage every latest/ payload before switching its updater manifest.
 Invoke-RcloneCopyTo -from $src -to $destUpdaterLatest
@@ -522,15 +523,86 @@ if ($null -ne $blockmap) {
   Assert-RemoteMatchesLocal -localPath $blockmap -remotePath $destBlockmapLatest
 }
 
-# latest.yml is the final pointer switch and is verified byte-for-byte.
+# Persist the exact rollback payload set before switching latest.yml. If the
+# pointer upload is interrupted, the next retry regenerates the same record.
+Invoke-RcloneCopyAlways -from $retentionStatePath -to $destRetentionLatest
+Assert-RemoteMatchesLocal -localPath $retentionStatePath -remotePath $destRetentionLatest
+
+# latest.yml is the final updater pointer switch and is verified byte-for-byte.
 Invoke-RcloneCopyAlways -from $latestYaml -to $destLatestYaml
 Assert-RemoteMatchesLocal -localPath $latestYaml -remotePath $destLatestYaml
+
+function Remove-StaleLatestObjects {
+  $tempDir = Join-Path $env:TEMP ("translator-r2-prune-" + [Guid]::NewGuid().ToString('N'))
+  New-Item -ItemType Directory -Path $tempDir | Out-Null
+  try {
+    $inventoryPath = Join-Path $tempDir 'inventory.txt'
+    $stalePath = Join-Path $tempDir 'stale.txt'
+    $remainingPath = Join-Path $tempDir 'remaining.txt'
+
+    $inventory = @(& rclone lsf --files-only -- "$BucketBase/latest")
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to list R2 latest objects before cleanup."
+    }
+    [System.IO.File]::WriteAllLines(
+      $inventoryPath,
+      [string[]]$inventory,
+      (New-Object System.Text.UTF8Encoding($false))
+    )
+
+    & node $policyScript plan-latest `
+      --platform win `
+      --inventory $inventoryPath `
+      --current-manifest $latestYaml `
+      --retention $retentionStatePath `
+      --output $stalePath
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to calculate the bounded R2 latest cleanup plan."
+    }
+
+    foreach ($staleObject in @(Get-Content -LiteralPath $stalePath)) {
+      if ([string]::IsNullOrWhiteSpace($staleObject)) { continue }
+      Write-Host "Removing stale latest object: $staleObject"
+      & rclone deletefile -- "$BucketBase/latest/$staleObject"
+      if ($LASTEXITCODE -ne 0) {
+        throw "Unable to remove stale R2 latest object: $staleObject"
+      }
+    }
+
+    $inventory = @(& rclone lsf --files-only -- "$BucketBase/latest")
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to verify R2 latest objects after cleanup."
+    }
+    [System.IO.File]::WriteAllLines(
+      $inventoryPath,
+      [string[]]$inventory,
+      (New-Object System.Text.UTF8Encoding($false))
+    )
+    & node $policyScript plan-latest `
+      --platform win `
+      --inventory $inventoryPath `
+      --current-manifest $latestYaml `
+      --retention $retentionStatePath `
+      --output $remainingPath
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to verify the bounded R2 latest cleanup plan."
+    }
+    if ((Get-Item -LiteralPath $remainingPath).Length -ne 0) {
+      throw "R2 latest cleanup left stale Windows payloads."
+    }
+  } finally {
+    if (Test-Path -LiteralPath $tempDir) {
+      Remove-Item -LiteralPath $tempDir -Recurse -Force
+    }
+  }
+}
+
+Remove-StaleLatestObjects
 
 Write-Host "Uploads complete."
 
 # Print public-ish hints (bucket path only)
 Write-Host "Canonical: $destUpdaterLatest"
-Write-Host "Versioned canonical: $destUpdaterVersion"
 Write-Host "Stable alias (latest): $destLatest"
 Write-Host "latest.yml: $destLatestYaml"
 if ($null -ne $blockmap) {
@@ -539,6 +611,9 @@ if ($null -ne $blockmap) {
 } finally {
   if ($hashFile -and (Test-Path -LiteralPath $hashFile)) {
     Remove-Item -LiteralPath $hashFile -Force
+  }
+  if ($retentionTempDir -and (Test-Path -LiteralPath $retentionTempDir)) {
+    Remove-Item -LiteralPath $retentionTempDir -Recurse -Force
   }
   Exit-WindowsReleaseMutex -Mutex $releaseMutex
 }

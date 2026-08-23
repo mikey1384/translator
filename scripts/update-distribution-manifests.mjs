@@ -49,16 +49,11 @@ const macArmName = `Translator-${version}-darwin-arm64.zip`;
 const macIntelName = `Translator-${version}-darwin-x64.zip`;
 const macArmSha256 = releaseDigest(macArmName);
 const macIntelSha256 = releaseDigest(macIntelName);
-const windowsUrl = `https://downloads.stage5.tools/win/${version}/Translator-x64.exe`;
-const windowsShaUrl = `${windowsUrl}.sha256`;
-const windowsShaText = await (await fetchOk(windowsShaUrl)).text();
-const windowsShaMatch = /^([A-Fa-f0-9]{64})\s+Translator-x64\.exe\s*$/m.exec(
-  windowsShaText,
-);
-if (!windowsShaMatch) {
-  throw new Error(`Invalid published Windows checksum at ${windowsShaUrl}`);
-}
-const windowsSha256 = windowsShaMatch[1].toUpperCase();
+const windowsName = `Translator-Setup-${version}.exe`;
+const windowsSha256 = releaseDigest(windowsName).toUpperCase();
+const windowsUrl =
+  `https://github.com/mikey1384/translator/releases/download/v${version}/` +
+  windowsName;
 
 const immutableUrls = [
   `https://github.com/mikey1384/translator/releases/download/v${version}/${macArmName}`,
