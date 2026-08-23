@@ -4,7 +4,60 @@ const path = require('path');
 const fs = require('fs');
 
 module.exports = async ({ appOutDir, packager }) => {
-  const id = packager.platformSpecificBuildOptions.identity;
+  const platformName = packager.platform.nodeName;
+  const platformOptions = packager.platformSpecificBuildOptions;
+
+  if (platformName === 'win32') {
+    // electron-builder signs executables discovered while recursively copying
+    // directories, but its single-file extraResources copy path bypasses that
+    // transformer. Sign the copied supervisor through the builder's own queue so
+    // it uses the exact certificate, timestamp, retry, and force-signing policy
+    // configured for the enclosing Windows package.
+    if (
+      platformOptions.signExecutable === false ||
+      platformOptions.signAndEditExecutable === false
+    ) {
+      console.log(
+        '[sign-chromium] Windows code signing disabled – leaving the owner supervisor unsigned'
+      );
+      return;
+    }
+
+    const supervisorPath = path.join(
+      appOutDir,
+      'resources',
+      'translator-owner-supervisor.exe'
+    );
+    if (!fs.existsSync(supervisorPath)) {
+      throw new Error(
+        `[sign-chromium] Windows owner supervisor is missing: ${supervisorPath}`
+      );
+    }
+    if (typeof packager.signIf !== 'function') {
+      throw new Error(
+        '[sign-chromium] electron-builder Windows signing API is unavailable'
+      );
+    }
+
+    console.log(`[sign-chromium] signing ${supervisorPath}`);
+    const signed = await packager.signIf(supervisorPath);
+    if (signed !== true) {
+      throw new Error(
+        `[sign-chromium] failed to sign Windows owner supervisor: ${supervisorPath}`
+      );
+    }
+    console.log(`[sign-chromium] successfully signed ${supervisorPath}`);
+    return;
+  }
+
+  if (platformName !== 'darwin') {
+    console.log(
+      `[sign-chromium] no packaged binary signing required for ${platformName}`
+    );
+    return;
+  }
+
+  const id = platformOptions.identity;
 
   // electron-builder supports identity=null for unsigned directory builds.
   // Its CLI override may reach hooks as either null or the literal "null";

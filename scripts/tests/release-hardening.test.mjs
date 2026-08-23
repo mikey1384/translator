@@ -878,6 +878,7 @@ test('Windows icon generation emits and validates every PNG frame', () => {
 
 test('Windows package smoke test fails closed and checks the owner supervisor', () => {
   const script = read('scripts/test-windows-package.bat');
+  const signingHook = read('scripts/sign-chromium.cjs');
 
   assert.match(script, /translator-owner-supervisor\.exe/i);
   assert.match(script, /Get-AuthenticodeSignature/);
@@ -885,6 +886,10 @@ test('Windows package smoke test fails closed and checks the owner supervisor', 
   assert.match(script, /CN=Stage5 Tools LLC/);
   assert.match(script, /headless-arm64/i);
   assert.match(script, /exit \/b !TEST_EXIT!/i);
+  assert.match(signingHook, /platformName === 'win32'/);
+  assert.match(signingHook, /translator-owner-supervisor\.exe/);
+  assert.match(signingHook, /await packager\.signIf\(supervisorPath\)/);
+  assert.match(signingHook, /signed !== true/);
 });
 
 test('macOS release stays draft until every GitHub artifact is verified', () => {
