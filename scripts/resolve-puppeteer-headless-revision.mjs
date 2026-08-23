@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PUPPETEER_REVISIONS } from 'puppeteer-core/lib/puppeteer/revisions.js';
 
@@ -11,10 +12,27 @@ export function resolvePuppeteerHeadlessRevision() {
   return revision;
 }
 
-if (
-  process.argv[1] &&
-  fileURLToPath(import.meta.url) ===
-    fileURLToPath(new URL(process.argv[1], 'file:'))
-) {
+export function isDirectInvocation({
+  argvPath = process.argv[1],
+  moduleUrl = import.meta.url,
+  platform = process.platform,
+  cwd = process.cwd(),
+} = {}) {
+  if (!argvPath) return false;
+
+  const windows = platform === 'win32';
+  const pathApi = windows ? path.win32 : path.posix;
+  const invokedPath = pathApi.resolve(cwd, argvPath);
+  const modulePath = pathApi.normalize(fileURLToPath(moduleUrl, { windows }));
+
+  // Windows path identity is case-insensitive. Compare filesystem paths, not
+  // URL constructors: a drive path such as C:\\repo\\script.mjs is otherwise
+  // parsed as a URL whose scheme is "c:" and fileURLToPath rejects it.
+  return windows
+    ? invokedPath.toLowerCase() === modulePath.toLowerCase()
+    : invokedPath === modulePath;
+}
+
+if (isDirectInvocation()) {
   process.stdout.write(`${resolvePuppeteerHeadlessRevision()}\n`);
 }

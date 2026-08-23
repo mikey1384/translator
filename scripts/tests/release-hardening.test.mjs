@@ -4,11 +4,16 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { BrowserPlatform } from '@puppeteer/browsers';
 import { PUPPETEER_REVISIONS } from 'puppeteer-core/lib/puppeteer/revisions.js';
 import yaml from 'yaml';
 
 const { parse: parseYaml } = yaml;
-import { resolvePuppeteerHeadlessRevision } from '../resolve-puppeteer-headless-revision.mjs';
+import { requiresExecutablePermission } from '../install-pinned-headless-chrome.mjs';
+import {
+  isDirectInvocation,
+  resolvePuppeteerHeadlessRevision,
+} from '../resolve-puppeteer-headless-revision.mjs';
 
 const repoRoot = path.resolve(import.meta.dirname, '..', '..');
 const read = relativePath =>
@@ -60,6 +65,77 @@ test('packaging installs the lockfile-pinned headless browser revision', () => {
   );
   assert.doesNotMatch(workflow, /npx puppeteer@/);
   assert.doesNotMatch(workflow, /chrome-headless-shell@stable/);
+});
+
+test('headless revision resolver accepts an absolute Windows drive path', () => {
+  const scriptName = 'resolve-puppeteer-headless-revision.mjs';
+  const windowsRoot = String.raw`C:\Users\mikey\Developer\translator`;
+  const argvPath = path.win32.join(windowsRoot, 'scripts', scriptName);
+  const moduleUrl = `file:///C:/Users/mikey/Developer/translator/scripts/${scriptName}`;
+
+  assert.equal(
+    isDirectInvocation({
+      argvPath,
+      moduleUrl,
+      platform: 'win32',
+      cwd: windowsRoot,
+    }),
+    true
+  );
+  assert.equal(
+    isDirectInvocation({
+      argvPath: argvPath.toUpperCase(),
+      moduleUrl,
+      platform: 'win32',
+      cwd: windowsRoot,
+    }),
+    true,
+    'Windows path comparison must remain case-insensitive'
+  );
+  assert.equal(
+    isDirectInvocation({
+      argvPath: path.win32.join(windowsRoot, 'scripts', 'other.mjs'),
+      moduleUrl,
+      platform: 'win32',
+      cwd: windowsRoot,
+    }),
+    false
+  );
+});
+
+test('headless revision resolver runs successfully as a CLI', () => {
+  const resolver = path.join(
+    repoRoot,
+    'scripts/resolve-puppeteer-headless-revision.mjs'
+  );
+  const result = spawnSync(process.execPath, [resolver], { encoding: 'utf8' });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(result.stderr, '');
+  assert.equal(result.stdout.trim(), resolvePuppeteerHeadlessRevision());
+});
+
+test('headless artifact permissions follow the target rather than the host', () => {
+  assert.equal(requiresExecutablePermission(BrowserPlatform.WIN32), false);
+  assert.equal(requiresExecutablePermission(BrowserPlatform.WIN64), false);
+  assert.equal(requiresExecutablePermission(BrowserPlatform.MAC), true);
+  assert.equal(requiresExecutablePermission(BrowserPlatform.MAC_ARM), true);
+  assert.equal(requiresExecutablePermission(BrowserPlatform.LINUX), true);
+  assert.equal(requiresExecutablePermission(BrowserPlatform.LINUX_ARM), true);
+});
+
+test('macOS publication waits for the real Windows browser preflight', () => {
+  const workflow = parseYaml(read('.github/workflows/release-mac.yml'));
+  const windowsJob = workflow.jobs['windows-preflight'];
+  const windowsCommands = windowsJob.steps
+    .map(step => step.run)
+    .filter(command => typeof command === 'string')
+    .join('\n');
+
+  assert.equal(windowsJob['runs-on'], 'windows-2022');
+  assert.match(windowsCommands, /npm ci --ignore-scripts/);
+  assert.match(windowsCommands, /npm run download:headless-win/);
+  assert.equal(workflow.jobs['mac-build'].needs, 'windows-preflight');
 });
 
 test('headless browser installer rejects ambiguous or unsupported targets', () => {
@@ -140,7 +216,10 @@ test('Windows headless download cannot report success with stale output', () => 
     /node scripts\\install-pinned-headless-chrome\.mjs win64/i
   );
   assert.match(installer, /fs\.rm\(target\.cacheDir/);
-  assert.match(installer, /await validateExecutable\(expectedExecutable\)/);
+  assert.match(
+    installer,
+    /await validateExecutable\(expectedExecutable, target\.platform\)/
+  );
   assert.doesNotMatch(script, /\bnpx\b/i);
   assert.doesNotMatch(script, /copy \/y/i);
   assert.doesNotMatch(script, /chrome-headless-shell@stable/i);

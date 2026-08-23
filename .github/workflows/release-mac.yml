@@ -18,7 +18,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Exercise the real Windows browser-download entry point before a Mac
+  # release can publish. Pure source-level tests on a POSIX runner cannot
+  # prove that Windows drive paths survive Node's URL/path boundary.
+  windows-preflight:
+    runs-on: windows-2022
+    timeout-minutes: 15
+
+    env:
+      YOUTUBE_DL_SKIP_DOWNLOAD: 'true'
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+          cache: 'npm'
+
+      - name: Install JavaScript dependencies without package side effects
+        run: npm ci --ignore-scripts --no-audit --fund=false
+
+      - name: Validate the Windows headless-browser packaging preflight
+        run: npm run download:headless-win
+
   mac-build:
+    needs: windows-preflight
     runs-on: macos-14 # Apple-silicon runner, Rosetta is available
     timeout-minutes: 60
 

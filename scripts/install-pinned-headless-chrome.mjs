@@ -35,12 +35,21 @@ const targetDefinitions = new Map([
   ],
 ]);
 
-async function validateExecutable(executablePath) {
+export function requiresExecutablePermission(platform) {
+  return (
+    platform !== BrowserPlatform.WIN32 && platform !== BrowserPlatform.WIN64
+  );
+}
+
+async function validateExecutable(executablePath, platform) {
   const stat = await fs.stat(executablePath);
   if (!stat.isFile() || stat.size === 0) {
     throw new Error(`Headless Chrome executable is invalid: ${executablePath}`);
   }
-  if (process.platform !== 'win32') {
+  // Validate the downloaded artifact, not the machine doing the download.
+  // Windows PE files do not carry a Unix executable bit when fetched on a
+  // Mac/Linux release host, while Unix targets must remain executable.
+  if (requiresExecutablePermission(platform)) {
     await fs.access(executablePath, fsConstants.X_OK);
   }
 }
@@ -96,7 +105,7 @@ export async function installPinnedHeadlessChrome(targetNames) {
       );
     }
 
-    await validateExecutable(expectedExecutable);
+    await validateExecutable(expectedExecutable, target.platform);
     console.log(
       `Installed chrome-headless-shell@${buildId} for ${target.targetName}: ${expectedExecutable}`
     );
