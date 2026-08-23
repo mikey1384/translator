@@ -42,14 +42,23 @@ if exist "%RESOURCES%\headless-arm64" (
 )
 
 set "HEADLESS_BINARY="
+set "HEADLESS_BINARY_COUNT=0"
 if exist "%RESOURCES%\headless-x64" (
   for /r "%RESOURCES%\headless-x64" %%F in (chrome-headless-shell.exe) do (
-    if not defined HEADLESS_BINARY set "HEADLESS_BINARY=%%~fF"
+    if exist "%%~fF" (
+      set /a HEADLESS_BINARY_COUNT+=1 >nul
+      if not defined HEADLESS_BINARY set "HEADLESS_BINARY=%%~fF"
+    )
   )
 )
-if not defined HEADLESS_BINARY (
+if "!HEADLESS_BINARY_COUNT!"=="0" (
   echo [FAIL] chrome-headless-shell.exe is missing. 1>&2
   set "TEST_EXIT=1"
+) else if not "!HEADLESS_BINARY_COUNT!"=="1" (
+  echo [FAIL] Expected exactly one chrome-headless-shell.exe, found !HEADLESS_BINARY_COUNT!. 1>&2
+  set "TEST_EXIT=1"
+) else (
+  echo Headless shell: !HEADLESS_BINARY!
 )
 
 for %%F in (
@@ -69,6 +78,8 @@ for %%F in (
     set "TEST_EXIT=1"
   )
 )
+
+if not "!TEST_EXIT!"=="0" exit /b !TEST_EXIT!
 
 if "!REQUIRE_SIGNATURES!"=="1" (
   powershell -NoProfile -NonInteractive -Command "$headless='!HEADLESS_BINARY!'; $paths=@('%APP_DIR%\Translator.exe','%RESOURCES%\translator-owner-supervisor.exe',$headless); foreach($path in $paths){$signature=Get-AuthenticodeSignature -LiteralPath $path; if($signature.Status -ne 'Valid'){Write-Error ('Invalid Authenticode signature: '+$path+' ('+$signature.Status+')'); exit 1}; if($path -ne $headless -and (-not $signature.SignerCertificate -or $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=Stage5 Tools LLC(?:,|$)')){Write-Error ('Unexpected Authenticode signer: '+$path+' ('+$signature.SignerCertificate.Subject+')'); exit 1}}"

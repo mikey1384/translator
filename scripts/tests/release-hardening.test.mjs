@@ -885,12 +885,111 @@ test('Windows package smoke test fails closed and checks the owner supervisor', 
   assert.match(script, /!HEADLESS_BINARY!/i);
   assert.match(script, /CN=Stage5 Tools LLC/);
   assert.match(script, /headless-arm64/i);
+  assert.match(script, /if exist "%%~fF"/i);
+  assert.match(script, /HEADLESS_BINARY_COUNT/);
+  assert.match(script, /Expected exactly one chrome-headless-shell\.exe/);
+  assert.ok(
+    script.indexOf('if not "!TEST_EXIT!"=="0" exit /b !TEST_EXIT!') <
+      script.indexOf('if "!REQUIRE_SIGNATURES!"=="1"'),
+    'structural package failures must stop before Authenticode validation'
+  );
   assert.match(script, /exit \/b !TEST_EXIT!/i);
   assert.match(signingHook, /platformName === 'win32'/);
   assert.match(signingHook, /translator-owner-supervisor\.exe/);
   assert.match(signingHook, /await packager\.signIf\(supervisorPath\)/);
   assert.match(signingHook, /signed !== true/);
 });
+
+test(
+  'Windows package smoke test resolves only real nested headless executables',
+  { skip: process.platform !== 'win32' },
+  () => {
+    const tempDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'translator-windows-package-smoke-')
+    );
+    const fixtureScript = path.join(
+      tempDir,
+      'scripts',
+      'test-windows-package.bat'
+    );
+    const appDir = path.join(tempDir, 'dist', 'win-unpacked');
+    const resourcesDir = path.join(appDir, 'resources');
+    const headlessDir = path.join(resourcesDir, 'headless-x64');
+    const nestedBinary = path.join(
+      headlessDir,
+      'chrome-headless-shell',
+      'win64-fixture',
+      'chrome-headless-shell-win64',
+      'chrome-headless-shell.exe'
+    );
+    const requiredResources = [
+      'packaged-mcp.mjs',
+      'transport-bound-lifecycle.mjs',
+      'native-owner-monitor.mjs',
+      'packaged-agent-protocol.mjs',
+      'stream-codecs.mjs',
+      'packaged-tool-map.mjs',
+      'tool-schema-validator.mjs',
+      'packaged-socket-path.mjs',
+      'translator-mcp.cmd',
+      'translator-owner-supervisor.exe',
+    ];
+    const runValidator = () =>
+      spawnSync(
+        'cmd.exe',
+        [
+          '/d',
+          '/s',
+          '/c',
+          'scripts\\test-windows-package.bat --no-launch --allow-unsigned',
+        ],
+        { cwd: tempDir, encoding: 'utf8' }
+      );
+
+    try {
+      fs.mkdirSync(path.dirname(fixtureScript), { recursive: true });
+      fs.copyFileSync(
+        path.join(repoRoot, 'scripts', 'test-windows-package.bat'),
+        fixtureScript
+      );
+      fs.mkdirSync(path.dirname(nestedBinary), { recursive: true });
+      fs.writeFileSync(path.join(appDir, 'Translator.exe'), 'fixture');
+      fs.writeFileSync(nestedBinary, 'fixture');
+      for (const fileName of requiredResources) {
+        fs.writeFileSync(path.join(resourcesDir, fileName), 'fixture');
+      }
+
+      const nested = runValidator();
+      assert.equal(nested.status, 0, nested.stderr || nested.stdout);
+      assert.match(nested.stdout, /Headless shell: .*win64-fixture/i);
+
+      fs.rmSync(nestedBinary);
+      const missing = runValidator();
+      assert.notEqual(missing.status, 0);
+      assert.match(
+        `${missing.stdout}\n${missing.stderr}`,
+        /chrome-headless-shell\.exe is missing/
+      );
+
+      fs.writeFileSync(nestedBinary, 'fixture');
+      const duplicateBinary = path.join(
+        headlessDir,
+        'duplicate',
+        'chrome-headless-shell.exe'
+      );
+      fs.mkdirSync(path.dirname(duplicateBinary), { recursive: true });
+      fs.writeFileSync(duplicateBinary, 'fixture');
+      const duplicate = runValidator();
+      assert.notEqual(duplicate.status, 0);
+      assert.match(
+        `${duplicate.stdout}\n${duplicate.stderr}`,
+        /Expected exactly one chrome-headless-shell\.exe, found 2/
+      );
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  }
+);
 
 test('macOS release stays draft until every GitHub artifact is verified', () => {
   const workflow = read('.github/workflows/release-mac.yml');
