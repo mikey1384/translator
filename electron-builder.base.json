@@ -4,16 +4,7 @@
   "artifactName": "Translator-${version}-darwin-${arch}.${ext}",
   "icon": "assets/icon",
 
-  "publish": [
-    {
-      "provider": "github",
-      "owner": "mikey1384",
-      "repo": "translator"
-    }
-  ],
-
   "directories": {
-    "app": ".",
     "output": "dist"
   },
 
@@ -41,10 +32,6 @@
   "afterPack": "scripts/sign-chromium.cjs",
 
   "extraResources": [
-    {
-      "from": "vendor/headless-${arch}",
-      "to": "headless-${arch}"
-    },
     { "from": "vendor/vision", "to": "vision-models" },
     {
       "from": "packages/agent-server/src/packaged-mcp.mjs",
@@ -77,18 +64,6 @@
     {
       "from": "packages/agent-server/src/packaged-socket-path.mjs",
       "to": "packaged-socket-path.mjs"
-    },
-    {
-      "from": "packages/agent-server/bin/translator-mcp",
-      "to": "translator-mcp"
-    },
-    {
-      "from": "packages/agent-server/bin/translator-mcp.cmd",
-      "to": "translator-mcp.cmd"
-    },
-    {
-      "from": "packages/agent-server/bin/translator-owner-supervisor",
-      "to": "translator-owner-supervisor"
     }
   ],
 
@@ -107,6 +82,27 @@
   ],
 
   "mac": {
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "mikey1384",
+        "repo": "translator"
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "vendor/headless-${arch}",
+        "to": "headless-${arch}"
+      },
+      {
+        "from": "packages/agent-server/bin/translator-mcp",
+        "to": "translator-mcp"
+      },
+      {
+        "from": "packages/agent-server/bin/translator-owner-supervisor",
+        "to": "translator-owner-supervisor"
+      }
+    ],
     "category": "public.app-category.video",
     "hardenedRuntime": true,
     "gatekeeperAssess": false,
@@ -121,19 +117,5 @@
         "rank": "Alternate"
       }
     ]
-  },
-
-  "win": {
-    "target": [{ "target": "nsis", "arch": ["x64", "ia32"] }],
-    "fileAssociations": [
-      {
-        "ext": ["mp4", "mkv", "mov", "webm", "avi"],
-        "name": "Video File",
-        "description": "Video file opened with Translator",
-        "icon": "build/file_icon.ico"
-      }
-    ]
-  },
-
-  "nsis": { "perMachine": true }
+  }
 }

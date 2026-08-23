@@ -733,6 +733,10 @@ test('extraResources bundling - ships the standalone helper and its runtime modu
   );
 
   const builderContent = fs.readFileSync(builderPath, 'utf8');
+  const windowsBuilderContent = fs.readFileSync(
+    path.join(projectRoot, 'electron-builder.win.json'),
+    'utf8'
+  );
 
   assert.ok(
     builderContent.includes('packaged-mcp.mjs'),
@@ -740,8 +744,8 @@ test('extraResources bundling - ships the standalone helper and its runtime modu
   );
   assert.ok(
     builderContent.includes('translator-mcp') &&
-      builderContent.includes('translator-mcp.cmd'),
-    'Must bundle launchers that use Translator runtime without external Node'
+      windowsBuilderContent.includes('translator-mcp.cmd'),
+    'Each platform must bundle its launcher that uses Translator runtime without external Node'
   );
   assert.ok(
     builderContent.includes('native-owner-monitor.mjs') &&

@@ -3,61 +3,24 @@
   "buildDependenciesFromSource": true,
   "npmRebuild": true,
   "artifactName": "Translator-${version}-win32-${arch}.${ext}",
-  "extraResources": [
-    { "from": "vendor/headless-x64", "to": "headless-x64" },
-    { "from": "vendor/vision", "to": "vision-models" },
-    {
-      "from": "packages/agent-server/src/packaged-mcp.mjs",
-      "to": "packaged-mcp.mjs"
-    },
-    {
-      "from": "packages/agent-server/src/transport-bound-lifecycle.mjs",
-      "to": "transport-bound-lifecycle.mjs"
-    },
-    {
-      "from": "packages/agent-server/src/native-owner-monitor.mjs",
-      "to": "native-owner-monitor.mjs"
-    },
-    {
-      "from": "packages/agent-server/src/packaged-agent-protocol.mjs",
-      "to": "packaged-agent-protocol.mjs"
-    },
-    {
-      "from": "packages/agent-server/src/stream-codecs.mjs",
-      "to": "stream-codecs.mjs"
-    },
-    {
-      "from": "packages/agent-server/src/packaged-tool-map.mjs",
-      "to": "packaged-tool-map.mjs"
-    },
-    {
-      "from": "packages/agent-server/src/tool-schema-validator.mjs",
-      "to": "tool-schema-validator.mjs"
-    },
-    {
-      "from": "packages/agent-server/src/packaged-socket-path.mjs",
-      "to": "packaged-socket-path.mjs"
-    },
-    {
-      "from": "packages/agent-server/bin/translator-mcp",
-      "to": "translator-mcp"
-    },
-    {
-      "from": "packages/agent-server/bin/translator-mcp.cmd",
-      "to": "translator-mcp.cmd"
-    },
-    {
-      "from": "packages/agent-server/bin/translator-owner-supervisor.exe",
-      "to": "translator-owner-supervisor.exe"
-    }
-  ],
-  "publish": [
-    {
-      "provider": "generic",
-      "url": "https://downloads.stage5.tools/win/latest/"
-    }
-  ],
   "win": {
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://downloads.stage5.tools/win/latest/"
+      }
+    ],
+    "extraResources": [
+      { "from": "vendor/headless-x64", "to": "headless-x64" },
+      {
+        "from": "packages/agent-server/bin/translator-mcp.cmd",
+        "to": "translator-mcp.cmd"
+      },
+      {
+        "from": "packages/agent-server/bin/translator-owner-supervisor.exe",
+        "to": "translator-owner-supervisor.exe"
+      }
+    ],
     "target": [{ "target": "nsis", "arch": ["x64"] }],
     "signtoolOptions": {
       "certificateSubjectName": "Stage5 Tools LLC",

@@ -5,7 +5,22 @@ set "APP_DIR=dist\win-unpacked"
 set "RESOURCES=%APP_DIR%\resources"
 set "TEST_EXIT=0"
 set "NO_LAUNCH=0"
-if /i "%~1"=="--no-launch" set "NO_LAUNCH=1"
+set "REQUIRE_SIGNATURES=1"
+
+:parse_args
+if "%~1"=="" goto :args_parsed
+if /i "%~1"=="--no-launch" (
+  set "NO_LAUNCH=1"
+) else if /i "%~1"=="--allow-unsigned" (
+  set "REQUIRE_SIGNATURES=0"
+) else (
+  echo [FAIL] Unknown argument: %~1 1>&2
+  exit /b 2
+)
+shift
+goto :parse_args
+
+:args_parsed
 
 echo Testing Windows packaged application...
 
@@ -55,12 +70,16 @@ for %%F in (
   )
 )
 
-powershell -NoProfile -NonInteractive -Command "$headless='%HEADLESS_BINARY%'; $paths=@('%APP_DIR%\Translator.exe','%RESOURCES%\translator-owner-supervisor.exe',$headless); foreach($path in $paths){$signature=Get-AuthenticodeSignature -LiteralPath $path; if($signature.Status -ne 'Valid'){Write-Error ('Invalid Authenticode signature: '+$path+' ('+$signature.Status+')'); exit 1}; if($path -ne $headless -and (-not $signature.SignerCertificate -or $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=Stage5 Tools LLC(?:,|$)')){Write-Error ('Unexpected Authenticode signer: '+$path+' ('+$signature.SignerCertificate.Subject+')'); exit 1}}"
-if errorlevel 1 set "TEST_EXIT=1"
+if "!REQUIRE_SIGNATURES!"=="1" (
+  powershell -NoProfile -NonInteractive -Command "$headless='!HEADLESS_BINARY!'; $paths=@('%APP_DIR%\Translator.exe','%RESOURCES%\translator-owner-supervisor.exe',$headless); foreach($path in $paths){$signature=Get-AuthenticodeSignature -LiteralPath $path; if($signature.Status -ne 'Valid'){Write-Error ('Invalid Authenticode signature: '+$path+' ('+$signature.Status+')'); exit 1}; if($path -ne $headless -and (-not $signature.SignerCertificate -or $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=Stage5 Tools LLC(?:,|$)')){Write-Error ('Unexpected Authenticode signer: '+$path+' ('+$signature.SignerCertificate.Subject+')'); exit 1}}"
+  if errorlevel 1 set "TEST_EXIT=1"
+) else (
+  echo Skipping Authenticode validation for the unsigned CI preflight.
+)
 
 if not "!TEST_EXIT!"=="0" exit /b !TEST_EXIT!
 
-echo Package structure and signatures are valid.
+echo Windows package validation passed.
 if "%NO_LAUNCH%"=="1" exit /b 0
 
 echo Launching Translator.exe for the interactive smoke test...

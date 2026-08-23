@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -15,24 +16,109 @@ import {
   resolvePuppeteerHeadlessRevision,
 } from '../resolve-puppeteer-headless-revision.mjs';
 
+const require = createRequire(import.meta.url);
+const { doMergeConfigs } = require('app-builder-lib/out/util/config/config.js');
 const repoRoot = path.resolve(import.meta.dirname, '..', '..');
 const read = relativePath =>
   fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 const readJson = relativePath => JSON.parse(read(relativePath));
 
-test('packaged apps carry only their target headless-browser architecture', () => {
+test('packaged apps carry each platform resource exactly once', () => {
   const base = readJson('electron-builder.base.json');
   const x64 = readJson('electron-builder.x64.json');
   const win = readJson('electron-builder.win.json');
 
-  const headlessSources = config =>
-    config.extraResources
-      .map(entry => entry.from)
-      .filter(source => source.startsWith('vendor/headless-'));
+  assert.equal(
+    base.directories.app,
+    undefined,
+    'the default project app directory must not be redundantly re-declared'
+  );
+  const effectiveConfig = child =>
+    doMergeConfigs([structuredClone(base), structuredClone(child)]);
+  const effectiveResources = (child, platform, arch) => {
+    const config = effectiveConfig(child);
+    return [
+      ...(config.extraResources || []),
+      ...(config[platform]?.extraResources || []),
+    ].map(entry => ({
+      from: entry.from?.replaceAll('${arch}', arch),
+      to: entry.to?.replaceAll('${arch}', arch),
+    }));
+  };
+  const assertUniqueDestinations = resources => {
+    const destinations = resources.map(entry => entry.to);
+    assert.equal(
+      new Set(destinations).size,
+      destinations.length,
+      `duplicate extraResources destinations: ${destinations.join(', ')}`
+    );
+  };
 
-  assert.deepEqual(headlessSources(base), ['vendor/headless-${arch}']);
-  assert.deepEqual(headlessSources(x64), ['vendor/headless-x64']);
-  assert.deepEqual(headlessSources(win), ['vendor/headless-x64']);
+  const combinedMac = effectiveResources({}, 'mac', 'x64');
+  const intelMac = effectiveResources(x64, 'mac', 'x64');
+  const windows = effectiveResources(win, 'win', 'x64');
+  const intelConfig = effectiveConfig(x64);
+  const windowsConfig = effectiveConfig(win);
+
+  assertUniqueDestinations(combinedMac);
+  assertUniqueDestinations(intelMac);
+  assertUniqueDestinations(windows);
+  assert.equal(intelConfig.mac.fileAssociations.length, 1);
+  assert.deepEqual(intelConfig.mac.target, [
+    { target: 'dmg', arch: ['x64'] },
+    { target: 'zip', arch: ['x64'] },
+  ]);
+  assert.deepEqual(windowsConfig.win.target, [
+    { target: 'nsis', arch: ['x64'] },
+  ]);
+  assert.deepEqual(windowsConfig.win.publish, [
+    {
+      provider: 'generic',
+      url: 'https://downloads.stage5.tools/win/latest/',
+    },
+  ]);
+  assert.equal(
+    windowsConfig.publish,
+    undefined,
+    'Windows must not inherit the macOS GitHub publisher'
+  );
+
+  assert.equal(
+    windows.filter(entry => entry.from === 'vendor/headless-x64').length,
+    1
+  );
+  assert.equal(
+    windows.filter(
+      entry =>
+        entry.from ===
+        'packages/agent-server/bin/translator-owner-supervisor.exe'
+    ).length,
+    1
+  );
+  assert.equal(
+    windows.some(
+      entry =>
+        entry.from === 'packages/agent-server/bin/translator-owner-supervisor'
+    ),
+    false,
+    'Windows must not inherit the Unix owner supervisor'
+  );
+  assert.equal(
+    windows.some(
+      entry => entry.from === 'packages/agent-server/bin/translator-mcp'
+    ),
+    false,
+    'Windows must not inherit the Unix launcher'
+  );
+  assert.equal(
+    combinedMac.filter(entry => entry.from === 'vendor/headless-x64').length,
+    1
+  );
+  assert.equal(
+    combinedMac.some(entry => entry.from?.endsWith('.exe')),
+    false,
+    'macOS must not inherit Windows executables'
+  );
 
   const verifier = read('scripts/verify-architectures.sh');
   assert.match(verifier, /Unexpected non-target headless browser payload/);
@@ -124,7 +210,7 @@ test('headless artifact permissions follow the target rather than the host', () 
   assert.equal(requiresExecutablePermission(BrowserPlatform.LINUX_ARM), true);
 });
 
-test('macOS publication waits for the real Windows browser preflight', () => {
+test('macOS publication waits for the complete Windows package preflight', () => {
   const workflow = parseYaml(read('.github/workflows/release-mac.yml'));
   const windowsJob = workflow.jobs['windows-preflight'];
   const windowsCommands = windowsJob.steps
@@ -134,8 +220,13 @@ test('macOS publication waits for the real Windows browser preflight', () => {
 
   assert.equal(windowsJob['runs-on'], 'windows-2022');
   assert.match(windowsCommands, /npm ci --ignore-scripts/);
-  assert.match(windowsCommands, /npm run download:headless-win/);
+  assert.match(windowsCommands, /npm run package:win:preflight/);
   assert.equal(workflow.jobs['mac-build'].needs, 'windows-preflight');
+  assert.equal(
+    workflow.jobs['mac-build'].if,
+    "github.event_name == 'push' && github.ref_type == 'tag'",
+    'manual workflow dispatch must never enter the publishing job'
+  );
 });
 
 test('headless browser installer rejects ambiguous or unsupported targets', () => {
@@ -235,10 +326,31 @@ test('Windows release wrappers propagate package and upload failures', () => {
   const release = read('scripts/release-windows-oneclick.ps1');
   const upload = read('scripts/upload-to-r2-win.ps1');
   const identity = read('scripts/assert-windows-release-identity.ps1');
+  const packageJson = readJson('package.json');
+  const preflight = read('scripts/package-windows-preflight.bat');
+  const preflightConfig = readJson('electron-builder.win.preflight.json');
+  const packageTest = read('scripts/test-windows-package.bat');
 
   assert.match(batch, /set "RELEASE_EXIT=%ERRORLEVEL%"/i);
   assert.match(batch, /endlocal & exit \/b %RELEASE_EXIT%/i);
   assert.match(release, /npm run package:win failed with exit code/);
+  assert.match(
+    packageJson.scripts['package:win'],
+    /npm run build:owner-supervisor/
+  );
+  assert.match(preflight, /npm run download:headless-win/i);
+  assert.match(preflight, /npm run build:owner-supervisor/i);
+  assert.match(preflight, /electron-builder\.win\.preflight\.json/i);
+  assert.match(
+    preflight,
+    /test-windows-package\.bat --no-launch --allow-unsigned/i
+  );
+  assert.equal(preflightConfig.forceCodeSigning, false);
+  assert.equal(preflightConfig.win.target, 'dir');
+  assert.equal(preflightConfig.win.signExecutable, false);
+  assert.equal(preflightConfig.win.signtoolOptions, null);
+  assert.match(packageTest, /Unknown argument/i);
+  assert.match(packageTest, /REQUIRE_SIGNATURES/);
   assert.match(release, /exit \$exitCode/);
   assert.match(release, /Get-AuthenticodeSignature/);
   assert.match(release, /test-windows-package\.bat --no-launch/i);
@@ -314,7 +426,7 @@ test('Windows package smoke test fails closed and checks the owner supervisor', 
 
   assert.match(script, /translator-owner-supervisor\.exe/i);
   assert.match(script, /Get-AuthenticodeSignature/);
-  assert.match(script, /%HEADLESS_BINARY%/i);
+  assert.match(script, /!HEADLESS_BINARY!/i);
   assert.match(script, /CN=Stage5 Tools LLC/);
   assert.match(script, /headless-arm64/i);
   assert.match(script, /exit \/b !TEST_EXIT!/i);

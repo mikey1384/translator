@@ -843,14 +843,46 @@ test(
 );
 
 test('packaged builds ship every packaged-mcp runtime module beside it', async () => {
-  for (const configName of [
-    'electron-builder.base.json',
-    'electron-builder.x64.json',
-    'electron-builder.win.json',
-  ]) {
-    const config = JSON.parse(
-      await fs.readFile(path.join(repoRoot, configName), 'utf8')
-    );
+  const base = JSON.parse(
+    await fs.readFile(path.join(repoRoot, 'electron-builder.base.json'), 'utf8')
+  );
+  const x64 = JSON.parse(
+    await fs.readFile(path.join(repoRoot, 'electron-builder.x64.json'), 'utf8')
+  );
+  const win = JSON.parse(
+    await fs.readFile(path.join(repoRoot, 'electron-builder.win.json'), 'utf8')
+  );
+  const configs = [
+    {
+      configName: 'electron-builder.base.json',
+      resources: [...base.extraResources, ...base.mac.extraResources],
+      launcherName: 'translator-mcp',
+      supervisorName: 'translator-owner-supervisor',
+    },
+    {
+      configName: 'electron-builder.x64.json',
+      resources: [
+        ...base.extraResources,
+        ...base.mac.extraResources,
+        ...x64.mac.extraResources,
+      ],
+      launcherName: 'translator-mcp',
+      supervisorName: 'translator-owner-supervisor',
+    },
+    {
+      configName: 'electron-builder.win.json',
+      resources: [...base.extraResources, ...win.win.extraResources],
+      launcherName: 'translator-mcp.cmd',
+      supervisorName: 'translator-owner-supervisor.exe',
+    },
+  ];
+
+  for (const {
+    configName,
+    resources,
+    launcherName,
+    supervisorName,
+  } of configs) {
     for (const moduleName of [
       'transport-bound-lifecycle.mjs',
       'native-owner-monitor.mjs',
@@ -861,7 +893,7 @@ test('packaged builds ship every packaged-mcp runtime module beside it', async (
       'packaged-socket-path.mjs',
     ]) {
       assert.ok(
-        config.extraResources.some(
+        resources.some(
           resource =>
             resource.from === `packages/agent-server/src/${moduleName}` &&
             resource.to === moduleName
@@ -870,22 +902,16 @@ test('packaged builds ship every packaged-mcp runtime module beside it', async (
       );
     }
 
-    for (const launcherName of ['translator-mcp', 'translator-mcp.cmd']) {
-      assert.ok(
-        config.extraResources.some(
-          resource =>
-            resource.from === `packages/agent-server/bin/${launcherName}` &&
-            resource.to === launcherName
-        ),
-        `${configName} must ship ${launcherName}`
-      );
-    }
-    const supervisorName =
-      configName === 'electron-builder.win.json'
-        ? 'translator-owner-supervisor.exe'
-        : 'translator-owner-supervisor';
     assert.ok(
-      config.extraResources.some(
+      resources.some(
+        resource =>
+          resource.from === `packages/agent-server/bin/${launcherName}` &&
+          resource.to === launcherName
+      ),
+      `${configName} must ship ${launcherName}`
+    );
+    assert.ok(
+      resources.some(
         resource =>
           resource.from === `packages/agent-server/bin/${supervisorName}` &&
           resource.to === supervisorName
