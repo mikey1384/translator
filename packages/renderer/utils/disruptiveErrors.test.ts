@@ -9,10 +9,7 @@ import {
 
 test('treats credits and provider quota errors as expected user-facing failures', () => {
   assert.equal(isExpectedUserFacingFailure('insufficient-credits'), true);
-  assert.equal(
-    isExpectedUserFacingFailure('openai-insufficient-quota'),
-    true
-  );
+  assert.equal(isExpectedUserFacingFailure('openai-insufficient-quota'), true);
   assert.equal(
     isExpectedUserFacingFailure('Your OpenAI API key is invalid or expired.'),
     true

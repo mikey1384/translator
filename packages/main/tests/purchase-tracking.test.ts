@@ -4,9 +4,13 @@ import type {
   PurchaseFunnelEvent,
   CreditPackId,
   PurchasePlacement,
-  PurchaseFailureReason,
 } from '../services/purchase-funnel.js';
-import { classifyPurchaseFailure } from '../services/purchase-funnel.js';
+import {
+  classifyPurchaseFailure,
+  isRendererPurchaseFunnelEvent,
+  parseRendererPurchaseContext,
+  RENDERER_PURCHASE_FUNNEL_EVENTS,
+} from '../services/purchase-funnel.js';
 
 /**
  * Real tests for purchase funnel tracking implementation.
@@ -15,19 +19,9 @@ import { classifyPurchaseFailure } from '../services/purchase-funnel.js';
 
 /**
  * Test the IPC allowlist that prevents renderer from spoofing terminal events.
- * This replicates the logic from packages/main/index.ts track-purchase-event handler.
+ * This imports the exact policy used by the main-process IPC boundary.
  */
 describe('IPC Allowlist (Renderer Event Validation)', () => {
-  // This is the actual allowlist from main/index.ts
-  const allowedRendererEvents: PurchaseFunnelEvent[] = [
-    'credit_checkout_button_shown',
-    'credit_checkout_button_clicked',
-    'credit_checkout_failed',
-    'byo_unlock_button_shown',
-    'byo_unlock_button_clicked',
-    'byo_unlock_failed',
-  ];
-
   const restrictedEvents: PurchaseFunnelEvent[] = [
     'credit_checkout_session_created',
     'credit_checkout_opened',
@@ -40,42 +34,44 @@ describe('IPC Allowlist (Renderer Event Validation)', () => {
   ];
 
   it('should allow renderer to emit button_shown events', () => {
-    assert.ok(allowedRendererEvents.includes('credit_checkout_button_shown'));
-    assert.ok(allowedRendererEvents.includes('byo_unlock_button_shown'));
+    assert.ok(isRendererPurchaseFunnelEvent('credit_checkout_button_shown'));
+    assert.ok(isRendererPurchaseFunnelEvent('byo_unlock_button_shown'));
   });
 
   it('should allow renderer to emit button_clicked events', () => {
-    assert.ok(allowedRendererEvents.includes('credit_checkout_button_clicked'));
-    assert.ok(allowedRendererEvents.includes('byo_unlock_button_clicked'));
+    assert.ok(isRendererPurchaseFunnelEvent('credit_checkout_button_clicked'));
+    assert.ok(isRendererPurchaseFunnelEvent('byo_unlock_button_clicked'));
   });
 
   it('should allow renderer to emit *_failed events for session creation failures', () => {
-    assert.ok(allowedRendererEvents.includes('credit_checkout_failed'));
-    assert.ok(allowedRendererEvents.includes('byo_unlock_failed'));
+    assert.ok(isRendererPurchaseFunnelEvent('credit_checkout_failed'));
+    assert.ok(isRendererPurchaseFunnelEvent('byo_unlock_failed'));
   });
 
   it('should reject renderer spoofing of session_created events', () => {
-    assert.ok(!allowedRendererEvents.includes('credit_checkout_session_created'));
-    assert.ok(!allowedRendererEvents.includes('byo_unlock_session_created'));
+    assert.ok(
+      !isRendererPurchaseFunnelEvent('credit_checkout_session_created')
+    );
+    assert.ok(!isRendererPurchaseFunnelEvent('byo_unlock_session_created'));
   });
 
   it('should reject renderer spoofing of opened events', () => {
-    assert.ok(!allowedRendererEvents.includes('credit_checkout_opened'));
-    assert.ok(!allowedRendererEvents.includes('byo_unlock_opened'));
+    assert.ok(!isRendererPurchaseFunnelEvent('credit_checkout_opened'));
+    assert.ok(!isRendererPurchaseFunnelEvent('byo_unlock_opened'));
   });
 
   it('should reject renderer spoofing of completed events', () => {
-    assert.ok(!allowedRendererEvents.includes('credit_checkout_completed'));
-    assert.ok(!allowedRendererEvents.includes('byo_unlock_completed'));
+    assert.ok(!isRendererPurchaseFunnelEvent('credit_checkout_completed'));
+    assert.ok(!isRendererPurchaseFunnelEvent('byo_unlock_completed'));
   });
 
   it('should reject renderer spoofing of cancelled events', () => {
-    assert.ok(!allowedRendererEvents.includes('credit_checkout_cancelled'));
-    assert.ok(!allowedRendererEvents.includes('byo_unlock_cancelled'));
+    assert.ok(!isRendererPurchaseFunnelEvent('credit_checkout_cancelled'));
+    assert.ok(!isRendererPurchaseFunnelEvent('byo_unlock_cancelled'));
   });
 
   it('should have exactly 6 allowed renderer events', () => {
-    assert.strictEqual(allowedRendererEvents.length, 6);
+    assert.strictEqual(RENDERER_PURCHASE_FUNNEL_EVENTS.length, 6);
   });
 
   it('should have exactly 8 restricted main-only events', () => {
@@ -83,8 +79,42 @@ describe('IPC Allowlist (Renderer Event Validation)', () => {
   });
 
   it('should not overlap allowed and restricted events', () => {
-    const overlap = allowedRendererEvents.filter(e => restrictedEvents.includes(e));
-    assert.strictEqual(overlap.length, 0, 'No events should be both allowed and restricted');
+    const overlap = RENDERER_PURCHASE_FUNNEL_EVENTS.filter(e =>
+      restrictedEvents.includes(e)
+    );
+    assert.strictEqual(
+      overlap.length,
+      0,
+      'No events should be both allowed and restricted'
+    );
+  });
+
+  it('validates renderer context values and rejects extra fields', () => {
+    assert.deepEqual(
+      parseRendererPurchaseContext({
+        packId: 'STANDARD',
+        placement: 'settings-credit-card',
+        failureReason: 'network_error',
+      }),
+      {
+        ok: true,
+        value: {
+          packId: 'STANDARD',
+          placement: 'settings-credit-card',
+          failureReason: 'network_error',
+        },
+      }
+    );
+    assert.deepEqual(parseRendererPurchaseContext(undefined), {
+      ok: true,
+      value: {},
+    });
+    assert.equal(parseRendererPurchaseContext(null).ok, false);
+    assert.equal(
+      parseRendererPurchaseContext({ packId: 'UNLIMITED' }).ok,
+      false
+    );
+    assert.equal(parseRendererPurchaseContext({ terminal: true }).ok, false);
   });
 });
 
@@ -109,13 +139,17 @@ describe('already_pending is NOT a failure', () => {
 
   it('should be distinct from network_error', () => {
     const alreadyPending = classifyPurchaseFailure({ alreadyPending: true });
-    const networkError = classifyPurchaseFailure({ error: new Error('ECONNREFUSED') });
+    const networkError = classifyPurchaseFailure({
+      error: new Error('ECONNREFUSED'),
+    });
     assert.notStrictEqual(alreadyPending, networkError);
   });
 
   it('should be distinct from api_error', () => {
     const alreadyPending = classifyPurchaseFailure({ alreadyPending: true });
-    const apiError = classifyPurchaseFailure({ error: new Error('API failed') });
+    const apiError = classifyPurchaseFailure({
+      error: new Error('API failed'),
+    });
     assert.notStrictEqual(alreadyPending, apiError);
   });
 });
@@ -228,7 +262,12 @@ describe('PurchasePlacement types', () => {
  */
 describe('CreditPackId types', () => {
   it('should include all credit pack IDs', () => {
-    const requiredPackIds: CreditPackId[] = ['MICRO', 'STARTER', 'STANDARD', 'PRO'];
+    const requiredPackIds: CreditPackId[] = [
+      'MICRO',
+      'STARTER',
+      'STANDARD',
+      'PRO',
+    ];
 
     requiredPackIds.forEach(packId => {
       assert.ok(
@@ -280,52 +319,18 @@ describe('PurchaseFunnelEvent completeness', () => {
   });
 
   it('should have parallel structure between credit and BYO events', () => {
-    const creditSuffixes = creditEvents.map(e => e.replace('credit_checkout_', ''));
+    const creditSuffixes = creditEvents.map(e =>
+      e.replace('credit_checkout_', '')
+    );
     const byoSuffixes = byoEvents.map(e => e.replace('byo_unlock_', ''));
-    
+
     creditSuffixes.sort();
     byoSuffixes.sort();
-    
-    assert.deepStrictEqual(creditSuffixes, byoSuffixes,
+
+    assert.deepStrictEqual(
+      creditSuffixes,
+      byoSuffixes,
       'Credit and BYO events should have the same suffixes'
     );
-  });
-});
-
-/**
- * Document implementation requirements that can't be unit tested without Electron.
- * These tests serve as specification and can be verified via code review.
- */
-describe('Implementation requirements (documented)', () => {
-  it('button_shown must emit on component mount', () => {
-    // Implementation: BuyCreditsButton and ByoUnlockCard use useEffect(() => {
-    //   trackPurchaseEvent('*_button_shown', { packId, placement })
-    // }, [packId, placement])
-    assert.ok(true, 'Verified via code review: useEffect tracks button_shown on mount');
-  });
-
-  it('checkout_opened must emit after browser/window opens', () => {
-    // Implementation in credit-handlers.ts:
-    // - openStripeCheckoutInExternalBrowser: after shell.openExternal succeeds
-    // - openStripeCheckout: after win.loadURL
-    assert.ok(true, 'Verified via code review: opened tracks after shell.openExternal and win.loadURL');
-  });
-
-  it('emitCheckoutUnresolved must NOT emit *_failed', () => {
-    // Implementation: emitCheckoutUnresolved comment says
-    // "Unresolved is not a failure - checkout is still open in browser"
-    assert.ok(true, 'Verified via code review: emitCheckoutUnresolved has no trackPurchaseFunnelEvent calls');
-  });
-
-  it('emitByoUnlockConfirmed must check guard before tracking', () => {
-    // Implementation: shouldEmitCheckoutUiTransition check must come BEFORE
-    // trackPurchaseFunnelEvent('byo_unlock_completed') to prevent double-counting
-    assert.ok(true, 'Verified via code review: guard check is first in emitByoUnlockConfirmed');
-  });
-
-  it('stripe-cancelled IPC must emit cancelled events', () => {
-    // Implementation: ipcMain.on('stripe-cancelled') must call
-    // trackPurchaseFunnelEvent('*_cancelled') with packId
-    assert.ok(true, 'Verified via code review: stripe-cancelled emits tracking events');
   });
 });

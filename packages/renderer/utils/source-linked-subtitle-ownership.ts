@@ -23,7 +23,7 @@ export async function detachSourceLinkedSubtitleOwnership(args: {
 
   const detachedDocumentIds: string[] = [];
   const seenDocumentIds = new Set<string>();
-  while (true) {
+  for (;;) {
     const result = await FileIPC.findSubtitleDocumentForSource({
       sourceVideoPath,
       sourceVideoAssetIdentity,
@@ -46,7 +46,8 @@ export async function detachSourceLinkedSubtitleOwnership(args: {
     });
     if (!detachResult.success) {
       throw new Error(
-        detachResult.error || 'Failed to detach source-linked subtitle document.'
+        detachResult.error ||
+          'Failed to detach source-linked subtitle document.'
       );
     }
 
@@ -59,7 +60,7 @@ export async function detachSourceLinkedSubtitleOwnership(args: {
 
   const detachedLibraryEntryIds: string[] = [];
   const seenLibraryEntryIds = new Set<string>();
-  while (true) {
+  for (;;) {
     const result = await SubtitleLibraryIPC.findStoredSubtitleForVideo({
       sourceVideoPath,
       sourceUrl,

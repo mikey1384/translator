@@ -9,15 +9,11 @@ macOS with a real display — no xvfb needed.
 
 All paths relative to `translator/`.
 
-## Prerequisites (one-time per scratch dir)
+## Prerequisites
 
-`playwright-core` is NOT a project dependency. Install it in a scratch
-directory and run the driver from there (the driver resolves it from cwd):
-
-```bash
-cd <scratch-dir>
-npm install playwright-core --silent
-```
+Install the repository dependencies. The driver uses `playwright-core` from
+the `@translator/agent-server` workspace and does not depend on the current
+working directory.
 
 ## Build
 
@@ -31,33 +27,35 @@ not in the running app.
 
 ## Run (agent path)
 
-No tmux on this machine — use a FIFO to keep the REPL's stdin open:
+Start the driver as a foreground process in a genuinely long-lived execution
+session and send commands to that session's stdin:
 
 ```bash
-cd <scratch-dir>   # where playwright-core is installed
-rm -f cmd driver.log && mkfifo cmd
-(node /path/to/translator/.claude/skills/run-translator/driver.mjs < cmd > driver.log 2>&1 &)
-(sleep 3600 > cmd &)          # keepalive — WITHOUT this, the first echo closes stdin and the driver (and app) quit
-echo launch > cmd && sleep 18 && tail -5 driver.log
+cd /path/to/translator
+npm run build:owner-supervisor
+packages/agent-server/bin/translator-dev-driver
 ```
 
-Send commands with `printf '...\n' > cmd`, read output with `tail driver.log`.
-Screenshots land in `./shots/` (override: `SCREENSHOT_DIR`).
+Do not detach it through a one-shot shell or keep a FIFO artificially open.
+The launcher binds the complete driver process group to its exact parent before
+Electron can start, and the driver's inner native monitor tracks the exact
+Electron root. Stdin/readline closure is also a shutdown request. Screenshots
+land in `./shots/` (override: `SCREENSHOT_DIR`).
 
 ### Commands
 
-| command | what it does |
-|---|---|
-| `launch` | launch the app (~15s), find the UI window |
-| `open-panel` | open the AI video suggestion panel + focus its input |
-| `focus-search` | focus the video-search textarea (panel must be open) |
-| `ss [name]` | screenshot → `./shots/<name>.png` |
-| `click <css>` / `click-text <text>` | DOM click (not coordinates) |
-| `type <text>` / `press <key>` | keyboard input (Enter submits the search) |
-| `eval <js>` | evaluate in the page, print JSON |
-| `text [css]` | print innerText |
-| `buttons` | list clickable elements (Korean UI labels) |
-| `quit` | close app, exit |
+| command                             | what it does                                         |
+| ----------------------------------- | ---------------------------------------------------- |
+| `launch`                            | launch the app (~15s), find the UI window            |
+| `open-panel`                        | open the AI video suggestion panel + focus its input |
+| `focus-search`                      | focus the video-search textarea (panel must be open) |
+| `ss [name]`                         | screenshot → `./shots/<name>.png`                    |
+| `click <css>` / `click-text <text>` | DOM click (not coordinates)                          |
+| `type <text>` / `press <key>`       | keyboard input (Enter submits the search)            |
+| `eval <js>`                         | evaluate in the page, print JSON                     |
+| `text [css]`                        | print innerText                                      |
+| `buttons`                           | list clickable elements (Korean UI labels)           |
+| `quit`                              | close app, exit                                      |
 
 ### Driving the AI video search end to end
 
@@ -73,7 +71,7 @@ eval (()=>{const s=document.body.innerText; const i=s.indexOf("영상을 선택�
 
 - **The app is tabbed (2026-07-17).** The window hosts a tab-strip shell page
   (`shell.html`) plus one `WebContentsView` per tab, each loading the full
-  renderer (`index.html`). `launch` picks the first *tab* page; additional
+  renderer (`index.html`). `launch` picks the first _tab_ page; additional
   tabs appear as extra `index.html` pages in `app.windows()`. Yes, really:
   Playwright's `ElectronApplication.windows()` returns all CDP page targets
   including `WebContentsView` pages, not only `BrowserWindow` pages —

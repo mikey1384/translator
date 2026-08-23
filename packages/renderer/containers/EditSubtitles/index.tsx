@@ -75,6 +75,10 @@ import {
 import { logButton, logTask, logError } from '../../utils/logger.js';
 import { getByoErrorMessage, isByoError } from '../../utils/byoErrors';
 import {
+  CancelledError,
+  isExplicitCancellation,
+} from '../../../shared/cancelled-error';
+import {
   getSourceVideoErrorMessage,
   getSourceVideoUnavailableMessage,
   isSourceVideoPathAccessible,
@@ -86,7 +90,7 @@ export interface EditSubtitlesProps {
   onSetMergeOperationId: (id: string | null) => void;
   onStartPngRenderRequest: (
     opts: RenderSubtitlesOptions
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; cancelled?: boolean }>;
   editorRef?: React.RefObject<{
     scrollToCurrentSubtitle: () => void;
     scrollToSubtitleIndex: (idx: number) => void;
@@ -519,6 +523,7 @@ export default function EditSubtitles({
           stage: message,
           percent: 100,
           inProgress: false,
+          isCompleted: false,
         });
         useUrlStore.getState().setOperationError(message);
         return;
@@ -533,6 +538,7 @@ export default function EditSubtitles({
           stage: t('generateSubtitles.status.starting', 'Starting...'),
           percent: 0,
           inProgress: true,
+          isCompleted: false,
         });
         logTask('start', 'transcription', {
           operationId,
@@ -569,6 +575,7 @@ export default function EditSubtitles({
           stage: friendlyError,
           percent: cancelled ? 0 : 100,
           inProgress: false,
+          isCompleted: false,
         });
         if (!cancelled) {
           useUrlStore.getState().setOperationError(friendlyError);
@@ -582,6 +589,7 @@ export default function EditSubtitles({
           stage: t('generateSubtitles.status.completed', 'Completed'),
           percent: 100,
           inProgress: false,
+          isCompleted: true,
         });
         logTask('complete', 'transcription', { operationId });
       } catch {
@@ -601,6 +609,7 @@ export default function EditSubtitles({
           stage: friendlyError,
           percent: 100,
           inProgress: false,
+          isCompleted: false,
         });
         useUrlStore.getState().setOperationError(friendlyError);
       } catch {
@@ -734,7 +743,7 @@ export default function EditSubtitles({
       }
 
       setMergeStage(t('progress.starting', 'Starting...'));
-      opId = `render-${Date.now()}`;
+      opId = `render-${globalThis.crypto.randomUUID()}`;
       onSetMergeOperationId(opId);
       useTaskStore.getState().startMerge();
 
@@ -798,13 +807,14 @@ export default function EditSubtitles({
 
       // Defensive: some callers may return {success:false} instead of throwing.
       if (!ok) {
+        if (res?.cancelled) throw new CancelledError();
         const errMsg =
           res?.error || t('common.error.renderFailed', 'Render failed');
         throw new Error(errMsg);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
-      const cancelled = /cancel/i.test(errorMsg);
+      const cancelled = isExplicitCancellation(err);
       const isDiskFull =
         errorMsg === ERROR_CODES.INSUFFICIENT_DISK_SPACE ||
         /\bENOSPC\b/i.test(errorMsg) ||
@@ -850,7 +860,7 @@ export default function EditSubtitles({
     }
     setSaveError('');
     const res = await openSubtitleWithElectron();
-    if (res.error && !res.error.includes('canceled')) {
+    if (res.error && !res.cancelled) {
       setSaveError(res.error);
       try {
         logError('open_srt', res.error as any);

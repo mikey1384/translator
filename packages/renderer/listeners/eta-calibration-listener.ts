@@ -133,33 +133,22 @@ function getTracker(
   return tracker;
 }
 
-function dropTracker(operationType: OperationKind, operationId?: string | null) {
+function dropTracker(
+  operationType: OperationKind,
+  operationId?: string | null
+) {
   if (!operationId) return;
   trackers.delete(trackerKey(operationType, operationId));
-}
-
-function isFailureLike(stage: string): boolean {
-  return /(cancel|abort|error|fail|insufficient|quota|denied|invalid)/i.test(
-    stage
-  );
 }
 
 function shouldRecordTerminalPhase(
   current: TaskSnapshot,
   previous: TaskSnapshot
 ): boolean {
-  const stage = String(current.stage || previous.stage || '');
-  if (isFailureLike(stage)) return false;
-  return Boolean(
-    current.percent >= 100 ||
-      previous.percent >= 100 ||
-      current.isCompleted ||
-      previous.isCompleted
-  );
+  return current.isCompleted === true || previous.isCompleted === true;
 }
 
 function recordPhaseObservation(
-  operationType: OperationKind,
   tracker: Tracker,
   task: TaskSnapshot,
   endedAtMs: number
@@ -220,7 +209,7 @@ function handleTaskChange(
 
   if (phaseChanged) {
     const endedAtMs = current.phaseStartedAt ?? Date.now();
-    recordPhaseObservation(operationType, tracker, previous, endedAtMs);
+    recordPhaseObservation(tracker, previous, endedAtMs);
     return;
   }
 
@@ -230,7 +219,7 @@ function handleTaskChange(
   }
 
   if (shouldRecordTerminalPhase(current, previous)) {
-    recordPhaseObservation(operationType, tracker, previous, Date.now());
+    recordPhaseObservation(tracker, previous, Date.now());
   }
 
   dropTracker(operationType, previousId);
@@ -238,6 +227,10 @@ function handleTaskChange(
 
 useTaskStore.subscribe((state, previous) => {
   handleTaskChange('translation', state.translation, previous.translation);
-  handleTaskChange('transcription', state.transcription, previous.transcription);
+  handleTaskChange(
+    'transcription',
+    state.transcription,
+    previous.transcription
+  );
   handleTaskChange('dubbing', state.dubbing, previous.dubbing);
 });

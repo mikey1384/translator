@@ -12,7 +12,10 @@ interface BuyCreditsButtonProps {
   fullWidth?: boolean;
   dataLog?: string;
   className?: string;
-  placement?: 'zero-credit-banner' | 'credit-ran-out-dialog' | 'settings-credit-card';
+  placement?:
+    | 'zero-credit-banner'
+    | 'credit-ran-out-dialog'
+    | 'settings-credit-card';
   onCheckoutCreated?: () => void;
 }
 
@@ -32,7 +35,7 @@ export default function BuyCreditsButton({
 
   useEffect(() => {
     // Track button shown once on mount
-    window.electron.trackPurchaseEvent?.('credit_checkout_button_shown', {
+    void SystemIPC.trackPurchaseEvent('credit_checkout_button_shown', {
       packId,
       placement,
     }).catch(() => {
@@ -46,7 +49,7 @@ export default function BuyCreditsButton({
     }
 
     // Track button press
-    window.electron.trackPurchaseEvent?.('credit_checkout_button_clicked', {
+    void SystemIPC.trackPurchaseEvent('credit_checkout_button_clicked', {
       packId,
       placement,
     }).catch(() => {
@@ -65,7 +68,7 @@ export default function BuyCreditsButton({
       }
       if (!checkoutSessionId) {
         // Session creation failed - track failure
-        window.electron.trackPurchaseEvent?.('credit_checkout_failed', {
+        void SystemIPC.trackPurchaseEvent('credit_checkout_failed', {
           packId,
           placement,
           failureReason: 'api_error',
@@ -84,7 +87,7 @@ export default function BuyCreditsButton({
       const failureReason = String(err).includes('network')
         ? 'network_error'
         : 'api_error';
-      window.electron.trackPurchaseEvent?.('credit_checkout_failed', {
+      void SystemIPC.trackPurchaseEvent('credit_checkout_failed', {
         packId,
         placement,
         failureReason,

@@ -1,10 +1,5 @@
 import { css } from '@emotion/css';
-import {
-  breakpoints,
-  colors,
-  gradients,
-  shadows,
-} from '../../styles';
+import { breakpoints, colors, gradients, shadows } from '../../styles';
 import {
   borderRadius,
   fontSize,

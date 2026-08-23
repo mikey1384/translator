@@ -223,7 +223,13 @@ export default function CreditBalance({
     }
 
     return (
-      <div className={cx(metaPillStyles, creditBalanceContainer, providerPillStyles)}>
+      <div
+        className={cx(
+          metaPillStyles,
+          creditBalanceContainer,
+          providerPillStyles
+        )}
+      >
         <span className={creditText}>{badgeText}</span>
         {suffixText && (
           <span

@@ -9,7 +9,10 @@ import {
 
 export type SettingsStoreType = Store<AppSettingsSchema>;
 
-const settingsStorePath = path.join(app.getPath('userData'), 'app-settings.json');
+const settingsStorePath = path.join(
+  app.getPath('userData'),
+  'app-settings.json'
+);
 const hadExistingSettingsFile = fs.existsSync(settingsStorePath);
 
 const STORE_DEFAULTS: Partial<AppSettingsSchema> = {

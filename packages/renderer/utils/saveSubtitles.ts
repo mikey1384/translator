@@ -107,7 +107,8 @@ export async function saveSubtitleFilesToPath(
   filePath: string,
   segments: SrtSegment[],
   mode: SubtitleDisplayMode,
-  role: SubtitleDocumentLinkedFileRole = 'export'
+  role: SubtitleDocumentLinkedFileRole = 'export',
+  options: { requireAgentPathAuthorization?: boolean } = {}
 ): Promise<SubtitleSaveResult> {
   const content = buildSavedSubtitleSrt(segments, mode);
   const subtitleState = useSubStore.getState();
@@ -124,10 +125,16 @@ export async function saveSubtitleFilesToPath(
       role === 'import' ? filePath : (subtitleState.originalPath ?? null),
     importSrtContent: role === 'import' ? content : null,
     importMode: role === 'import' ? mode : null,
+    requireAgentPathAuthorization:
+      options.requireAgentPathAuthorization === true,
   });
   if (didSaveSubtitleFile(result)) {
+    const savedFilePath = result.filePath ?? filePath;
     useSubStore.getState().setActiveFileTarget({
-      filePath,
+      // Main may canonicalize an agent-authorized destination. Keep that
+      // authoritative path for every subsequent user-initiated Save instead
+      // of retaining a symlink alias supplied by the agent.
+      filePath: savedFilePath,
       mode,
       role,
     });

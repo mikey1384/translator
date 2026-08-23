@@ -305,7 +305,10 @@ export const useCreditStore = create<CreditState>((set, get) => {
       }
     })
     .catch(error => {
-      console.error('[credit-store] Failed to get initial credit snapshot:', error);
+      console.error(
+        '[credit-store] Failed to get initial credit snapshot:',
+        error
+      );
       set({
         loading: false,
         error: 'Unable to load credits.',

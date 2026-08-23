@@ -21,9 +21,7 @@ export const BYO_VIDEO_SUGGESTION_DIRECT_MODELS =
 
 export type DirectVideoSuggestionModelId =
   (typeof BYO_VIDEO_SUGGESTION_DIRECT_MODELS)[number];
-export type LegacyByoVideoSuggestionModel =
-  | 'follow-draft'
-  | 'follow-review';
+export type LegacyByoVideoSuggestionModel = 'follow-draft' | 'follow-review';
 export type ByoVideoSuggestionModel =
   | DirectVideoSuggestionModelId
   | LegacyByoVideoSuggestionModel;
@@ -110,7 +108,9 @@ function resolveApiKeyModeVideoSuggestionFallback(
     AI_MODELS.CLAUDE_OPUS,
   ]);
 
-  const available = candidates.find(model => availableByoModels.includes(model));
+  const available = candidates.find(model =>
+    availableByoModels.includes(model)
+  );
   return available || AI_MODELS.GPT;
 }
 
@@ -188,7 +188,7 @@ export function normalizeByoVideoSuggestionModel(
     return normalizedText;
   }
 
-  const normalized = normalizeVideoSuggestionModelPreference(value, fallback);
+  const normalized = normalizeVideoSuggestionModelPreference(value, 'default');
 
   if (
     normalized === AI_MODELS.GPT ||
@@ -200,13 +200,13 @@ export function normalizeByoVideoSuggestionModel(
   }
 
   if (normalized === 'default') {
-    return 'follow-draft';
+    return normalizedText === 'default' ? 'follow-draft' : fallback;
   }
   if (normalized === 'quality') {
     return 'follow-review';
   }
 
-  return normalizeByoVideoSuggestionModel(fallback, AI_MODELS.GPT);
+  return fallback;
 }
 
 export function resolveVideoSuggestionPreferenceForMode({
@@ -255,7 +255,8 @@ export function resolveEffectiveVideoSuggestionModel({
       })
   );
   const normalizedDraftModel =
-    normalizeEffectiveVideoSuggestionModel(translationDraftModel) || AI_MODELS.GPT;
+    normalizeEffectiveVideoSuggestionModel(translationDraftModel) ||
+    AI_MODELS.GPT;
   const normalizedReviewModel =
     normalizeEffectiveVideoSuggestionModel(translationReviewModel) ||
     STAGE5_REVIEW_TRANSLATION_MODEL;

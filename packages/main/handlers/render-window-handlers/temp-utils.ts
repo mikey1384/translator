@@ -2,13 +2,17 @@ import path from 'path';
 import fs from 'fs/promises';
 import { app } from 'electron';
 import log from 'electron-log';
+import { renderOperationPathToken } from '../../utils/render-operation-id.js';
 
 export async function createOperationTempDir({
   operationId,
 }: {
   operationId: string;
 }): Promise<string> {
-  const dir = path.join(app.getPath('temp'), `subtitle-render-${operationId}`);
+  const dir = path.join(
+    app.getPath('temp'),
+    `subtitle-render-${renderOperationPathToken(operationId)}`
+  );
   log.info(`[temp-utils] mkdir ${dir}`);
   await fs.mkdir(dir, { recursive: true });
   return dir;

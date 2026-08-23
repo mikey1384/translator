@@ -1,9 +1,10 @@
 import { css } from '@emotion/css';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Section from '../../components/Section';
 import Switch from '../../components/Switch';
 import { colors } from '../../styles';
+import * as SystemIPC from '../../ipc/system';
 import { settingsCenterColumnStyles } from './styles';
 
 const infoBoxStyles = css`
@@ -49,7 +50,7 @@ const directoryItemStyles = css`
   padding: 10px 12px;
   border: 1px solid ${colors.border};
   border-radius: 6px;
-  background: ${colors.white};
+  background: ${colors.surface};
   font-size: 0.9rem;
 `;
 
@@ -81,7 +82,7 @@ const removeButtonStyles = css`
 
 const addButtonStyles = css`
   padding: 8px 14px;
-  background: ${colors.blue};
+  background: ${colors.primary};
   border: none;
   border-radius: 6px;
   color: white;
@@ -145,22 +146,26 @@ export default function AgentControlSection() {
   const [enabled, setEnabled] = useState(false);
   const [allowedDirectories, setAllowedDirectories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
   const [clientsConnected, setClientsConnected] = useState(0);
+  const authoritativeRevisionRef = useRef(0);
 
-  // Load settings and connection status on mount
+  // Load authoritative settings and follow fail-closed or cross-tab changes.
   useEffect(() => {
     let mounted = true;
-    let statusInterval: NodeJS.Timeout | null = null;
 
     const loadSettings = async () => {
+      const loadRevision = authoritativeRevisionRef.current;
       try {
         const [enabledValue, dirs] = await Promise.all([
-          window.electron.getAgentControlEnabled(),
-          window.electron.getAgentAllowedDirectories(),
+          SystemIPC.getAgentControlEnabled(),
+          SystemIPC.getAgentAllowedDirectories(),
         ]);
 
         if (mounted) {
-          setEnabled(enabledValue);
+          if (authoritativeRevisionRef.current === loadRevision) {
+            setEnabled(enabledValue);
+          }
           setAllowedDirectories(dirs);
           setLoading(false);
         }
@@ -172,25 +177,42 @@ export default function AgentControlSection() {
       }
     };
 
+    const unsubscribe = SystemIPC.onAgentControlChanged(payload => {
+      authoritativeRevisionRef.current += 1;
+      if (mounted) setEnabled(payload.enabled === true);
+    });
+
+    void loadSettings();
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  // Poll connection status only while the packaged socket is meant to run.
+  useEffect(() => {
+    let mounted = true;
+    let statusInterval: NodeJS.Timeout | null = null;
+
     const updateConnectionStatus = async () => {
       if (!enabled || !window.env.isPackaged) return;
-      
+
       try {
-        const status = await window.electron.getAgentSocketStatus();
+        const status = await SystemIPC.getAgentSocketStatus();
         if (mounted && status) {
           setClientsConnected(status.connectedClients || 0);
         }
-      } catch (error) {
+      } catch {
         // Silently fail - socket server may not be running
       }
     };
 
-    void loadSettings();
-    
-    // Poll connection status every 2 seconds when enabled
     if (enabled && window.env.isPackaged) {
       void updateConnectionStatus();
       statusInterval = setInterval(updateConnectionStatus, 2000);
+    } else {
+      setClientsConnected(0);
     }
 
     return () => {
@@ -202,10 +224,16 @@ export default function AgentControlSection() {
   }, [enabled]);
 
   const handleToggleEnabled = async (newValue: boolean) => {
+    if (updating) return;
+    setUpdating(true);
+    const requestRevision = authoritativeRevisionRef.current;
     try {
-      const result = await window.electron.setAgentControlEnabled(newValue);
+      const result = await SystemIPC.setAgentControlEnabled(newValue);
+      if (authoritativeRevisionRef.current === requestRevision) {
+        setEnabled(result.enabled);
+      }
       if (result.success) {
-        setEnabled(newValue);
+        return;
       } else {
         console.error('Failed to update agent control:', result.error);
         alert(result.error || 'Failed to update agent control setting');
@@ -213,12 +241,22 @@ export default function AgentControlSection() {
     } catch (error) {
       console.error('Failed to toggle agent control:', error);
       alert('Failed to update agent control setting');
+      try {
+        const enabledValue = await SystemIPC.getAgentControlEnabled();
+        if (authoritativeRevisionRef.current === requestRevision) {
+          setEnabled(enabledValue);
+        }
+      } catch {
+        // A broadcast or the next settings load will reconcile the UI.
+      }
+    } finally {
+      setUpdating(false);
     }
   };
 
   const handleAddDirectory = async () => {
     try {
-      const result = await window.electron.showOpenDialog({
+      const result = await SystemIPC.showOpenDialog({
         properties: ['openDirectory', 'createDirectory'],
         title: t(
           'settings.agentControl.selectDirectory',
@@ -228,12 +266,10 @@ export default function AgentControlSection() {
 
       if (!result.canceled && result.filePaths.length > 0) {
         const dirPath = result.filePaths[0];
-        const addResult = await window.electron.addAgentAllowedDirectory(
-          dirPath
-        );
+        const addResult = await SystemIPC.addAgentAllowedDirectory(dirPath);
 
         if (addResult.success) {
-          const updatedDirs = await window.electron.getAgentAllowedDirectories();
+          const updatedDirs = await SystemIPC.getAgentAllowedDirectories();
           setAllowedDirectories(updatedDirs);
         } else {
           alert(addResult.error || 'Failed to add directory');
@@ -247,9 +283,9 @@ export default function AgentControlSection() {
 
   const handleRemoveDirectory = async (dirPath: string) => {
     try {
-      const result = await window.electron.removeAgentAllowedDirectory(dirPath);
+      const result = await SystemIPC.removeAgentAllowedDirectory(dirPath);
       if (result.success) {
-        const updatedDirs = await window.electron.getAgentAllowedDirectories();
+        const updatedDirs = await SystemIPC.getAgentAllowedDirectories();
         setAllowedDirectories(updatedDirs);
       } else {
         alert(result.error || 'Failed to remove directory');
@@ -313,6 +349,7 @@ export default function AgentControlSection() {
         <Switch
           checked={enabled}
           onChange={handleToggleEnabled}
+          disabled={updating}
           ariaLabel="Enable agent control"
         />
       </div>

@@ -76,6 +76,14 @@ export function generateSubtitleEvents({
     `[srt-parser ${operationId}] received ${segments.length} subtitle segments`
   );
 
+  const segmentTiming = (segment: SrtSegment) =>
+    JSON.stringify({
+      id: segment.id,
+      index: segment.index,
+      start: segment.start,
+      end: segment.end,
+    });
+
   for (const segment of segments) {
     const start = ms(segment.start);
     const end = ms(segment.end);
@@ -84,7 +92,7 @@ export function generateSubtitleEvents({
 
     if (start >= clampedEnd) {
       log.warn(
-        `[srt-parser ${operationId}] Skipping segment with zero/negative duration or past video duration: ${JSON.stringify(segment)}`
+        `[srt-parser ${operationId}] Skipping segment with zero/negative duration or past video duration: ${segmentTiming(segment)}`
       );
       continue;
     }
@@ -102,7 +110,7 @@ export function generateSubtitleEvents({
     }
 
     log.warn(
-      `[srt-parser ${operationId}] Skipping segment after start time adjustment due to overlap: ${JSON.stringify(segment)}`
+      `[srt-parser ${operationId}] Skipping segment after start time adjustment due to overlap: ${segmentTiming(segment)}`
     );
   }
 
@@ -323,9 +331,7 @@ function buildSyntheticTimedWordLayout(args: {
   };
 }
 
-function buildLooseTimedWordLayout(
-  words: NonNullable<SrtSegment['words']>
-): {
+function buildLooseTimedWordLayout(words: NonNullable<SrtSegment['words']>): {
   layout: TimedWordLayout[];
   words: NonNullable<SrtSegment['words']>;
   text: string;

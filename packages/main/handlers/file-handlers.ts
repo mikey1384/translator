@@ -3,7 +3,11 @@ import fs from 'fs/promises';
 import { IpcMainInvokeEvent } from 'electron';
 import { app } from 'electron';
 import { FileManager } from '../services/file-manager.js';
-import { SaveFileService, SaveFileOptions } from '../services/save-file.js';
+import {
+  SaveFileCancelledError,
+  SaveFileService,
+  SaveFileOptions,
+} from '../services/save-file.js';
 import {
   OpenFileResult,
   OpenFileOptions,
@@ -18,6 +22,7 @@ import {
   saveSavedSubtitleMetadata,
 } from '../services/saved-subtitle-metadata.js';
 import { saveSubtitleDocumentRecord } from '../services/subtitle-documents.js';
+import { assertAgentOutputPathAuthorized } from '../utils/agent-output-authorization.js';
 
 interface FileHandlerServices {
   fileManager: FileManager;
@@ -120,13 +125,42 @@ export async function handleSaveSubtitleDocument(
       };
     }
 
+    if (
+      options?.requireAgentPathAuthorization !== undefined &&
+      typeof options.requireAgentPathAuthorization !== 'boolean'
+    ) {
+      return {
+        status: 'error',
+        error: 'Invalid agent path authorization request.',
+      };
+    }
+    let authorizedAgentPath: string | null = null;
+    if (options.requireAgentPathAuthorization === true) {
+      const explicitPath = String(options.filePath || '').trim();
+      if (!explicitPath) {
+        return {
+          status: 'error',
+          error: 'Agent subtitle export requires an explicit output path.',
+        };
+      }
+      authorizedAgentPath = assertAgentOutputPathAuthorized(
+        explicitPath,
+        'Subtitle export'
+      );
+    }
+
     const filePath = await saveFileService.saveFile({
       content: srtContent,
       defaultPath: options.defaultPath,
       filters: options.filters,
-      filePath: options.filePath,
+      filePath: authorizedAgentPath ?? options.filePath,
       forceDialog: options.forceDialog,
       title: options.title,
+      authorizeTargetPath:
+        options.requireAgentPathAuthorization === true
+          ? targetPath =>
+              assertAgentOutputPathAuthorized(targetPath, 'Subtitle export')
+          : undefined,
     });
 
     let metadataCacheSaved = false;
@@ -153,7 +187,13 @@ export async function handleSaveSubtitleDocument(
         exportFilePath: filePath,
         exportSrtContent: srtContent,
         exportMode: options.fileMode,
-        activeLinkedFilePath: options.activeLinkedFilePath ?? filePath,
+        // An agent-selected path is canonicalized at the authorization
+        // boundary. Persist that same identity so a later ordinary Save
+        // cannot reuse a caller-supplied symlink alias after it is retargeted.
+        activeLinkedFilePath:
+          options.requireAgentPathAuthorization === true
+            ? filePath
+            : (options.activeLinkedFilePath ?? filePath),
         activeLinkedFileMode: options.activeLinkedFileMode ?? options.fileMode,
         activeLinkedFileRole: options.activeLinkedFileRole ?? 'export',
         transcriptionEngine: options.transcriptionEngine,
@@ -208,7 +248,7 @@ export async function handleSaveSubtitleDocument(
     };
   } catch (error: any) {
     const message = error?.message || String(error);
-    if (/cancell?ed/i.test(message)) {
+    if (error instanceof SaveFileCancelledError) {
       return { status: 'cancelled' };
     }
     return {

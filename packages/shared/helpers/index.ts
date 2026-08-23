@@ -373,6 +373,7 @@ export async function openSubtitleWithElectron(): Promise<{
   filePath?: string;
   fileMode?: SubtitleDisplayMode;
   fileRole?: SubtitleDocumentLinkedFileRole | null;
+  cancelled?: boolean;
   error?: string;
 }> {
   try {
@@ -393,7 +394,7 @@ export async function openSubtitleWithElectron(): Promise<{
       !result.filePaths?.length ||
       !result.fileContents?.length
     ) {
-      return { error: 'File selection was canceled' };
+      return { cancelled: true };
     }
 
     const filePath = result.filePaths[0];

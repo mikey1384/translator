@@ -121,7 +121,9 @@ function readStoredRecoveryToken(): string | null {
   return decrypted;
 }
 
-function writeStoredRecoveryToken(recoveryToken: string | null | undefined): void {
+function writeStoredRecoveryToken(
+  recoveryToken: string | null | undefined
+): void {
   const trimmed = String(recoveryToken || '').trim();
   if (!trimmed) {
     store.delete('stage5ApiRecoveryToken');
@@ -307,9 +309,9 @@ export async function withStage5AuthRetry<T>(
   }
 }
 
-export async function withStage5AuthRetryOnResponse<T extends { status: number }>(
-  request: (headers: Record<string, string>) => Promise<T>
-): Promise<T> {
+export async function withStage5AuthRetryOnResponse<
+  T extends { status: number },
+>(request: (headers: Record<string, string>) => Promise<T>): Promise<T> {
   const first = await request(await getStage5AuthHeaders());
   if (!isRejectedOpaqueTokenError({ response: { status: first.status } })) {
     return first;

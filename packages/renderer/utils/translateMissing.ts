@@ -7,6 +7,7 @@ import {
   shouldSurfaceTranslationFailure,
 } from './translationFailure';
 import { registerStage5CreditRefreshOperation } from './creditRefreshOperations';
+import { isExplicitCancellation } from '../../shared/cancelled-error';
 
 /**
  * Translates only untranslated subtitle items using the existing streaming pipeline.
@@ -47,6 +48,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     stage: 'Starting...',
     percent: 0,
     inProgress: true,
+    isCompleted: false,
   });
 
   try {
@@ -80,6 +82,7 @@ export async function translateMissingUntranslated(): Promise<void> {
         stage: 'Completed',
         percent: 100,
         inProgress: false,
+        isCompleted: true,
       });
       return;
     }
@@ -94,6 +97,7 @@ export async function translateMissingUntranslated(): Promise<void> {
       stage: friendlyError,
       percent: 100,
       inProgress: false,
+      isCompleted: false,
     });
 
     if (shouldSurfaceTranslationFailure({ error: res?.error, cancelled })) {
@@ -101,9 +105,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     }
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
-    const cancelled =
-      /operation cancelled/i.test(errorMsg) ||
-      /process cancelled/i.test(errorMsg);
+    const cancelled = isExplicitCancellation(err);
     const friendlyError = getTranslationFailureMessage({
       error: errorMsg,
       cancelled,
@@ -113,6 +115,7 @@ export async function translateMissingUntranslated(): Promise<void> {
       stage: friendlyError,
       percent: 100,
       inProgress: false,
+      isCompleted: false,
     });
 
     if (shouldSurfaceTranslationFailure({ error: errorMsg, cancelled })) {

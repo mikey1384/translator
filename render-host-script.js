@@ -1810,10 +1810,7 @@ function resolveSubtitleRenderTheme(opts) {
   };
 }
 function getSubtitleStyles(opts) {
-  const {
-    isFullScreen = false,
-    stylePreset = "Default"
-  } = opts;
+  const { isFullScreen = false, stylePreset = "Default" } = opts;
   const style = SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
   const textColor = assColorToRgba(style.primaryColor);
   const theme = resolveSubtitleRenderTheme(opts);

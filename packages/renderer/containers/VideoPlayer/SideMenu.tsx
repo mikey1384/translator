@@ -171,6 +171,7 @@ export default function SideMenu({
         stage: t('generateSubtitles.status.error', 'Error'),
         percent: 100,
         inProgress: false,
+        isCompleted: false,
       });
     }
   }

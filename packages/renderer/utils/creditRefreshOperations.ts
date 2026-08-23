@@ -1,7 +1,11 @@
 import { useAiStore } from '../state/ai-store';
 import { hasApiKeyModeActiveCoverage } from '../state/byo-runtime';
+import { BoundedRecentMap } from './bounded-recent-map';
 
-const stage5CreditRefreshOperations = new Map<string, boolean>();
+const MAX_RECENT_CREDIT_REFRESH_OPERATIONS = 2048;
+const stage5CreditRefreshOperations = new BoundedRecentMap<string, boolean>(
+  MAX_RECENT_CREDIT_REFRESH_OPERATIONS
+);
 
 export function isCreditRefreshableOperation(operationId: string): boolean {
   return (

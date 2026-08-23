@@ -11,6 +11,9 @@ import {
 } from '@shared-types/app';
 import { promises as fs } from 'fs';
 
+const AGENT_BRIDGE_RESPONSE_CHANNEL_PATTERN =
+  /^agent-bridge-response:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const electronAPI = {
   // ---------------------- Basic / Test Methods ----------------------
   ping: async (): Promise<string> => ipcRenderer.invoke('ping'),
@@ -414,7 +417,13 @@ const electronAPI = {
    */
   sendPngRenderRequest: (options: RenderSubtitlesOptions): void => {
     try {
-      console.log('[Preload] Sending PngRenderRequest:', options);
+      console.log('[Preload] Sending PngRenderRequest:', {
+        operationId: options.operationId,
+        outputMode: options.outputMode,
+        overlayMode: options.overlayMode,
+        srtContentLength: options.srtContent?.length ?? 0,
+        subtitleSegmentCount: options.subtitleSegments?.length ?? 0,
+      });
       ipcRenderer.send('render-subtitles-request', options);
     } catch (error) {
       console.error('[Preload] Error sending PngRenderRequest:', error);
@@ -869,7 +878,7 @@ const electronAPI = {
     ipcRenderer.invoke('get-agent-control-enabled'),
   setAgentControlEnabled: (
     enabled: boolean
-  ): Promise<{ success: boolean; error?: string }> =>
+  ): Promise<{ success: boolean; enabled: boolean; error?: string }> =>
     ipcRenderer.invoke('set-agent-control-enabled', enabled),
   getAgentAllowedDirectories: (): Promise<string[]> =>
     ipcRenderer.invoke('get-agent-allowed-directories'),
@@ -885,12 +894,12 @@ const electronAPI = {
     dir: string
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('remove-agent-allowed-directory', dir),
-          getAgentSocketStatus: (): Promise<{
-            running: boolean;
-            connectedClients: number;
-          }> => ipcRenderer.invoke('get-agent-socket-status'),
-          checkAgentPathAllowed: (filePath: string): Promise<boolean> =>
-            ipcRenderer.invoke('check-agent-path-allowed', filePath),
+  getAgentSocketStatus: (): Promise<{
+    running: boolean;
+    connectedClients: number;
+  }> => ipcRenderer.invoke('get-agent-socket-status'),
+  checkAgentPathAllowed: (filePath: string): Promise<boolean> =>
+    ipcRenderer.invoke('check-agent-path-allowed', filePath),
   onAgentControlChanged: (
     callback: (payload: { enabled: boolean }) => void
   ) => {
@@ -910,7 +919,17 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('agent-bridge-request', handler);
   },
   sendAgentBridgeResponse: (channel: string, response: any) => {
+    if (!AGENT_BRIDGE_RESPONSE_CHANNEL_PATTERN.test(channel)) {
+      throw new Error('Invalid agent bridge response channel.');
+    }
     ipcRenderer.send(channel, response);
+  },
+  reportAgentHistoryJobTerminal: (payload: {
+    historyId: string;
+    operationId: string;
+    routeToken: string;
+  }) => {
+    ipcRenderer.send('agent-history-job-terminal', payload);
   },
 };
 
@@ -950,26 +969,4 @@ const agentModeEnabled = isPackaged
 contextBridge.exposeInMainWorld('env', {
   isPackaged,
   agentMode: agentModeEnabled,
-});
-
-// Listen for postMessage from Stripe checkout pages and forward to main process
-window.addEventListener('message', event => {
-  // Only accept messages from our trusted checkout domains
-  const trustedOrigins = ['https://stage5.tools', 'https://translator.tools'];
-
-  // In development, also allow localhost for testing
-  const isPackaged = ipcRenderer.sendSync('is-packaged');
-  if (!isPackaged) {
-    trustedOrigins.push('http://localhost:3000');
-  }
-
-  if (!trustedOrigins.includes(event.origin)) {
-    return;
-  }
-
-  if (event.data?.type === 'stripe-success') {
-    ipcRenderer.send('stripe-success', event.data);
-  } else if (event.data?.type === 'stripe-cancelled') {
-    ipcRenderer.send('stripe-cancelled', event.data);
-  }
 });

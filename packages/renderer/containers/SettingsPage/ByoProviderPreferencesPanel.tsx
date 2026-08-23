@@ -1,15 +1,13 @@
 import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import { useMemo, type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import type { VideoSuggestionModelPreference } from '@shared-types/app';
 import {
   AI_MODEL_DISPLAY_NAMES,
   AI_MODELS,
   STAGE5_REVIEW_TRANSLATION_MODEL,
 } from '../../../shared/constants';
-import {
-  resolveEffectiveVideoSuggestionModel,
-} from '../../../shared/helpers/video-suggestion-model-preference';
+import { resolveEffectiveVideoSuggestionModel } from '../../../shared/helpers/video-suggestion-model-preference';
 import { colors } from '../../styles';
 import { useAiStore } from '../../state';
 import { useUIStore } from '../../state/ui-store';
@@ -415,7 +413,8 @@ export default function ByoProviderPreferencesPanel() {
   const videoSuggestionUsesOpus =
     selectedVideoSuggestionModel === AI_MODELS.CLAUDE_OPUS;
   const showVideoSuggestionRuntimeHint =
-    useApiKeysMode && selectedVideoSuggestionModel !== resolvedVideoSuggestionModel;
+    useApiKeysMode &&
+    selectedVideoSuggestionModel !== resolvedVideoSuggestionModel;
   const videoSuggestionLegacyFollowHint =
     byoVideoSuggestionModel === 'follow-draft'
       ? String(
@@ -443,20 +442,24 @@ export default function ByoProviderPreferencesPanel() {
         resolvedVideoSuggestionModel
       }`
     : null;
-  const videoSuggestionFooter = [videoSuggestionLegacyFollowHint, videoSuggestionRuntimeHint]
+  const videoSuggestionFooter = [
+    videoSuggestionLegacyFollowHint,
+    videoSuggestionRuntimeHint,
+  ]
     .filter((value): value is string => Boolean(value && value.trim()))
     .join(' • ');
-  const handleVideoSuggestionModelChange = async (
-    value: DirectVideoSuggestionModelPreference
-  ) => {
-    const result = await setByoVideoSuggestionModel(value);
-    if (!result.success) {
-      console.error(
-        'Failed to update BYO video suggestion model:',
-        result.error
-      );
-    }
-  };
+  const handleVideoSuggestionModelChange = useCallback(
+    async (value: DirectVideoSuggestionModelPreference) => {
+      const result = await setByoVideoSuggestionModel(value);
+      if (!result.success) {
+        console.error(
+          'Failed to update BYO video suggestion model:',
+          result.error
+        );
+      }
+    },
+    [setByoVideoSuggestionModel]
+  );
   const videoSuggestionOptions = useMemo<PreferenceRowProps['options']>(() => {
     const options: PreferenceRowProps['options'] = [
       {
@@ -503,7 +506,8 @@ export default function ByoProviderPreferencesPanel() {
           'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
           'Requires Anthropic BYO unlock, key, and toggle.'
         ),
-        onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_SONNET),
+        onSelect: () =>
+          handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_SONNET),
       },
       {
         value: AI_MODELS.CLAUDE_OPUS,

@@ -67,9 +67,7 @@ const SubtitleItemComponent = forwardRef<HTMLDivElement, Props>(
             }
           />
         )}
-        {!shouldRender && (
-          <div className={subtitleRowPlaceholderStyles}></div>
-        )}
+        {!shouldRender && <div className={subtitleRowPlaceholderStyles}></div>}
       </div>
     );
   }

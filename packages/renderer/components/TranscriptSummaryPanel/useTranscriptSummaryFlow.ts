@@ -36,6 +36,7 @@ import {
 import * as OperationIPC from '../../ipc/operation';
 import * as SystemIPC from '../../ipc/system';
 import { getByoErrorMessage, isByoError } from '../../utils/byoErrors';
+import { classifyTerminalProgress } from '../../utils/progress-terminal';
 import {
   estimateSummaryCredits,
   translateStageLabel,
@@ -260,6 +261,7 @@ export default function useTranscriptSummaryFlow({
         stage: '',
         percent: 0,
         inProgress: false,
+        isCompleted: false,
       });
 
       if (
@@ -439,6 +441,14 @@ export default function useTranscriptSummaryFlow({
       const nextLabel = translateStageLabel(progress.stage ?? '', t);
       const pct = typeof progress.percent === 'number' ? progress.percent : 0;
       const clampedPercent = Math.min(100, Math.max(0, pct));
+      const terminalKind =
+        pct >= 100
+          ? classifyTerminalProgress({
+              stage: progress.stage,
+              percent: pct,
+              error: progress.error,
+            })
+          : null;
       setProgressLabel(nextLabel);
       setProgressPercent(clampedPercent);
 
@@ -464,7 +474,8 @@ export default function useTranscriptSummaryFlow({
         id: currentOperationId,
         stage: nextLabel,
         percent: pct,
-        inProgress: pct < 100,
+        inProgress: terminalKind === null,
+        ...(terminalKind ? { isCompleted: terminalKind === 'completed' } : {}),
       });
 
       if (progress.error) {
@@ -513,11 +524,12 @@ export default function useTranscriptSummaryFlow({
         }
       }
 
-      if (pct >= 100) {
+      if (pct >= 100 && terminalKind === 'completed') {
         useTaskStore.getState().setSummary({
           stage: t('summary.status.ready'),
           percent: 100,
           inProgress: false,
+          isCompleted: true,
           id: currentOperationId,
         });
       }
@@ -653,6 +665,7 @@ export default function useTranscriptSummaryFlow({
               stage: t('summary.status.cancelled'),
               percent: 0,
               inProgress: false,
+              isCompleted: false,
               id: null,
             });
             return;
@@ -788,6 +801,7 @@ export default function useTranscriptSummaryFlow({
             stage: t('summary.status.ready'),
             percent: 100,
             inProgress: false,
+            isCompleted: true,
             id: null,
           });
         } catch (err: any) {
@@ -808,6 +822,7 @@ export default function useTranscriptSummaryFlow({
             stage: friendlyMessage,
             percent: progressPercent,
             inProgress: false,
+            isCompleted: false,
             id: null,
           });
         } finally {

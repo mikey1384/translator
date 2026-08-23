@@ -93,6 +93,7 @@ export default function GlobalModals() {
   const recentLocalMedia = useVideoStore(s => s.recentLocalMedia);
   const openLocalMedia = useVideoStore(s => s.openLocalMedia);
   const openRecentLocalMedia = useVideoStore(s => s.openRecentLocalMedia);
+  const removeRecentLocalMedia = useVideoStore(s => s.removeRecentLocalMedia);
   const refreshRecentLocalMedia = useVideoStore(s => s.refreshRecentLocalMedia);
   const videoPath = useVideoStore(s => s.path);
   const videoFile = useVideoStore(s => s.file);
@@ -242,6 +243,7 @@ export default function GlobalModals() {
             });
             if (res.opened) closeChangeVideo();
           }}
+          onRemoveRecentFile={removeRecentLocalMedia}
           isDownloadInProgress={download.inProgress}
           isTranslationInProgress={isTranslationInProgress}
           urlInput={urlInput}

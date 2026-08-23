@@ -14,10 +14,16 @@ import {
   isCreditRefreshableOperation,
   shouldRefreshStage5CreditsForOperation,
 } from '../utils/creditRefreshOperations';
+import { BoundedRecentMap } from '../utils/bounded-recent-map';
+import {
+  acceptProgressOperation,
+  classifyTerminalProgress,
+} from '../utils/progress-terminal';
+import { agentBackgroundOperations } from './agent-background-operations';
 
 type ProgressPayload = Parameters<
   Parameters<typeof SubtitlesIPC.onGenerateProgress>[0]
->[1];
+>[0];
 
 let queued: ProgressPayload | null = null;
 let flushTimer: NodeJS.Timeout | null = null;
@@ -28,7 +34,13 @@ let lastTranslate = { id: null as string | null, stage: '' };
 // Track how many tail-segments have been appended per operation
 const tailCounts: Record<string, number> = Object.create(null);
 const ACTIVE_CREDIT_REFRESH_INTERVAL_MS = 5_000;
-const terminalCreditRefreshOperations = new Set<string>();
+const MAX_TERMINAL_CREDIT_REFRESH_TOMBSTONES = 2048;
+const terminalProgressOperations = new BoundedRecentMap<string, true>(
+  MAX_TERMINAL_CREDIT_REFRESH_TOMBSTONES
+);
+const terminalCreditRefreshOperations = new BoundedRecentMap<string, true>(
+  MAX_TERMINAL_CREDIT_REFRESH_TOMBSTONES
+);
 const pendingTerminalCreditRefreshOperations = new Set<string>();
 const creditRefreshInFlightOperations = new Set<string>();
 const activeCreditRefreshTimers = new Map<
@@ -37,6 +49,8 @@ const activeCreditRefreshTimers = new Map<
 >();
 
 function isOperationStillActive(operationId: string): boolean {
+  if (agentBackgroundOperations.isActive(operationId)) return true;
+
   const state = useTaskStore.getState();
 
   if (operationId.startsWith('translate-')) {
@@ -76,7 +90,7 @@ function requestAuthoritativeCreditRefresh(
   operationId?: string | null,
   options: { terminal?: boolean } = {}
 ) {
-  if (!shouldRefreshStage5CreditsForOperation(operationId)) {
+  if (!operationId || !shouldRefreshStage5CreditsForOperation(operationId)) {
     return;
   }
 
@@ -92,7 +106,7 @@ function requestAuthoritativeCreditRefresh(
   }
 
   if (options.terminal) {
-    terminalCreditRefreshOperations.add(operationId);
+    terminalCreditRefreshOperations.set(operationId, true);
   }
 
   creditRefreshInFlightOperations.add(operationId);
@@ -143,30 +157,6 @@ function finishCreditRefresh(operationId?: string | null) {
   requestAuthoritativeCreditRefresh(operationId, { terminal: true });
 }
 
-function shouldFinishCreditRefreshForPacket({
-  stageLower,
-  error,
-  isComplete,
-}: {
-  stageLower: string;
-  error?: unknown;
-  isComplete: boolean;
-}): boolean {
-  if (isComplete) return true;
-  if (typeof error === 'string' && error.trim()) return true;
-
-  return (
-    stageLower.includes('process_cancelled') ||
-    stageLower.includes('cancelled') ||
-    stageLower.includes('canceled') ||
-    stageLower.includes('cancel') ||
-    stageLower.includes('error') ||
-    stageLower.includes('failed') ||
-    stageLower.includes('failure') ||
-    stageLower.includes('insufficient')
-  );
-}
-
 function flush() {
   if (isFlushing) return;
   isFlushing = true;
@@ -185,9 +175,28 @@ function flush() {
       etaSeconds,
       partialResult,
       error,
+      cancelled,
       model,
     } = queued as any;
-    const stageLower = (stage ?? '').toLowerCase();
+    const terminalKind = classifyTerminalProgress({
+      stage,
+      percent,
+      error,
+      cancelled,
+    });
+    const isComplete = terminalKind === 'completed';
+    const isTerminal = terminalKind !== null;
+
+    if (
+      !acceptProgressOperation(
+        terminalProgressOperations,
+        operationId,
+        terminalKind
+      )
+    ) {
+      queued = null;
+      return;
+    }
 
     // If we detect credits exhaustion, trigger the global modal once
     if (
@@ -228,15 +237,6 @@ function flush() {
         }
       }
     }
-
-    // After completion, stop applying any further queued updates
-    const isComplete =
-      percent >= 100 || /processing complete/i.test(stage ?? '');
-    const shouldFinishCreditRefresh = shouldFinishCreditRefreshForPacket({
-      stageLower,
-      error,
-      isComplete,
-    });
 
     // Tail continuation: when startOffset is provided, partialResult SRT is
     // relative to the tail slice; append new cues incrementally with offset.
@@ -298,6 +298,7 @@ function flush() {
         phaseKey,
         etaSeconds,
         model,
+        ...(isTerminal ? { isCompleted: isComplete } : {}),
       });
       // Log phase changes (stage string transitions)
       if (stage && operationId && lastTranslate.stage !== stage) {
@@ -321,7 +322,7 @@ function flush() {
           flushTimer = null;
         }
         try {
-          if (operationId && !/cancel/.test(stageLower)) {
+          if (operationId) {
             logTask('complete', 'translation', { operationId });
           }
         } catch {
@@ -329,7 +330,7 @@ function flush() {
         }
         return;
       }
-      if (shouldFinishCreditRefresh) {
+      if (isTerminal) {
         finishCreditRefresh(operationId);
       } else {
         startActiveCreditRefresh(operationId);
@@ -353,7 +354,7 @@ function flush() {
       if (
         !inProgress &&
         !isComplete &&
-        !shouldFinishCreditRefresh &&
+        !isTerminal &&
         !isNewIdleTranscriptionOperation
       ) {
         queued = null;
@@ -379,8 +380,9 @@ function flush() {
         phaseKey,
         etaSeconds,
         model,
+        ...(isTerminal ? { isCompleted: isComplete } : {}),
       });
-      if (!isComplete && shouldFinishCreditRefresh) {
+      if (!isComplete && isTerminal) {
         finishCreditRefresh(operationId);
       } else if (!isComplete) {
         startActiveCreditRefresh(operationId);
@@ -438,29 +440,34 @@ function flush() {
       }
     }
 
-    // After completion, stop applying any further queued updates
-    if (isComplete) {
+    // After a terminal packet, stop applying any further queued updates. Only
+    // successful completion may finalize subtitle caches.
+    if (isTerminal) {
       finishCreditRefresh(operationId);
-      // Explicitly clear active transcription id so future operations aren't dropped
       if (isTranscribe) {
         try {
-          useTaskStore.getState().setTranscription({ inProgress: false });
+          useTaskStore.getState().setTranscription({
+            inProgress: false,
+            isCompleted: isComplete,
+          });
         } catch {
           // Do nothing
         }
 
-        try {
-          useSubStore.getState().bridgeGaps(3);
-        } catch {
-          // Do nothing
+        if (isComplete) {
+          try {
+            useSubStore.getState().bridgeGaps(3);
+          } catch {
+            // Do nothing
+          }
+          // Generate Gap/LC caches once per successful transcription process
+          try {
+            useSubStore.getState().recomputeCaches(3);
+          } catch {
+            // Do nothing
+          }
         }
-        // Generate Gap/LC caches once per transcription process
-        try {
-          useSubStore.getState().recomputeCaches(3);
-        } catch {
-          // Do nothing
-        }
-      } else {
+      } else if (isComplete) {
         // Translation completed: recompute caches to repopulate Gap/LC lists
         try {
           useSubStore.getState().recomputeCaches(3);
@@ -468,7 +475,7 @@ function flush() {
           // Do nothing
         }
       }
-      // Clear tail counters for completed operations
+      // Clear tail counters for every terminal operation.
       if (isTranscribe && operationId) {
         delete tailCounts[operationId];
       }
@@ -487,7 +494,19 @@ function flush() {
 }
 
 SubtitlesIPC.onGenerateProgress(progress => {
+  if (agentBackgroundOperations.route(progress)) return;
+
   queued = progress;
+
+  const terminalKind = classifyTerminalProgress(progress);
+  if (terminalKind) {
+    if (flushTimer) {
+      clearTimeout(flushTimer);
+      flushTimer = null;
+    }
+    flush();
+    return;
+  }
 
   if (!document.hidden) {
     flush();
@@ -502,32 +521,39 @@ SubtitlesIPC.onGenerateProgress(progress => {
   }
 });
 
-SubtitlesIPC.onDubProgress((eventOrProgress, progressMaybe) => {
+SubtitlesIPC.onDubProgress(progress => {
   try {
-    const progress = progressMaybe ?? eventOrProgress ?? {};
-    const stage = progress?.stage ?? '';
-    const percent =
-      typeof progress?.percent === 'number' ? progress.percent : 0;
+    const packet = progress ?? ({} as typeof progress);
+    const stage = packet?.stage ?? '';
+    const percent = typeof packet?.percent === 'number' ? packet.percent : 0;
     const operationId =
-      typeof progress?.operationId === 'string' ? progress.operationId : null;
-    const error = (progress as any)?.error as string | undefined;
-    const model = (progress as any)?.model as string | undefined;
+      typeof packet?.operationId === 'string' ? packet.operationId : null;
+    const error = packet?.error;
+    const model = packet?.model;
     const current =
-      typeof progress?.current === 'number' ? progress.current : undefined;
-    const total =
-      typeof progress?.total === 'number' ? progress.total : undefined;
-    const unit =
-      typeof (progress as any)?.unit === 'string'
-        ? ((progress as any).unit as string)
-        : undefined;
+      typeof packet?.current === 'number' ? packet.current : undefined;
+    const total = typeof packet?.total === 'number' ? packet.total : undefined;
+    const unit = typeof packet?.unit === 'string' ? packet.unit : undefined;
     const phaseKey =
-      typeof (progress as any)?.phaseKey === 'string'
-        ? ((progress as any).phaseKey as string)
-        : undefined;
+      typeof packet?.phaseKey === 'string' ? packet.phaseKey : undefined;
     const etaSeconds =
-      typeof (progress as any)?.etaSeconds === 'number'
-        ? (progress as any).etaSeconds
-        : undefined;
+      typeof packet?.etaSeconds === 'number' ? packet.etaSeconds : undefined;
+
+    const terminalKind = classifyTerminalProgress({
+      stage,
+      percent,
+      error,
+      cancelled: packet?.cancelled,
+    });
+    if (
+      !acceptProgressOperation(
+        terminalProgressOperations,
+        operationId,
+        terminalKind
+      )
+    ) {
+      return;
+    }
 
     if (
       typeof error === 'string' &&
@@ -552,16 +578,11 @@ SubtitlesIPC.onDubProgress((eventOrProgress, progressMaybe) => {
       model,
     });
 
-    const lower = stage.toLowerCase();
-    if (
-      percent >= 100 ||
-      /complete|done/.test(lower) ||
-      /cancel/.test(lower) ||
-      typeof error === 'string'
-    ) {
+    if (terminalKind) {
       finishCreditRefresh(operationId);
       useTaskStore.getState().setDubbing({
         inProgress: false,
+        isCompleted: terminalKind === 'completed',
         stage,
         percent: percent >= 100 ? percent : 100,
       });

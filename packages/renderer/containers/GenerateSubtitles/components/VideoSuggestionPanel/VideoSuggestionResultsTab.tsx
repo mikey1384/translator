@@ -35,10 +35,7 @@ function getLocalProgressPercent(
   if (!hasRunningStage) return 12;
   const safeElapsed = Math.max(0, loadingElapsedSec);
   const eased = 1 - Math.exp(-safeElapsed / LOCAL_PROGRESS_EASE_SEC);
-  return (
-    LOCAL_PROGRESS_MIN +
-    (LOCAL_PROGRESS_MAX - LOCAL_PROGRESS_MIN) * eased
-  );
+  return LOCAL_PROGRESS_MIN + (LOCAL_PROGRESS_MAX - LOCAL_PROGRESS_MIN) * eased;
 }
 
 type VideoSuggestionResultsTabProps = {
@@ -82,7 +79,8 @@ export default function VideoSuggestionResultsTab({
 }: VideoSuggestionResultsTabProps) {
   const showInlineSearchMoreProgress = loading && loadingMode === 'more';
   const canSearchMore = Boolean(continuationId || searchQuery.trim());
-  const showSearchMoreButton = canSearchMore && (!loading || loadingMode === 'more');
+  const showSearchMoreButton =
+    canSearchMore && (!loading || loadingMode === 'more');
   const showMoreActions = showInlineSearchMoreProgress || showSearchMoreButton;
   const localProgressPercent = getLocalProgressPercent(
     loadingElapsedSec,
@@ -133,9 +131,7 @@ export default function VideoSuggestionResultsTab({
                     <div className={cardActionsStyles}>
                       <Button
                         onClick={() => onDownloadFromSuggestion(item)}
-                        disabled={
-                          disablePrimaryActions || isDownloadInProgress
-                        }
+                        disabled={disablePrimaryActions || isDownloadInProgress}
                         size="sm"
                         variant="primary"
                         fullWidth

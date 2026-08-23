@@ -1,140 +1,244 @@
 #!/usr/bin/env node
 /**
  * Packaged MCP server for installed Translator.app
- * 
- * Implements MCP stdio protocol with Content-Length framing.
+ *
+ * Implements MCP stdio with standard newline framing and compatibility for
+ * Translator's previously shipped Content-Length framing.
  * Zero npm dependencies.
- * 
+ *
  * Prerequisites:
  *   1. Launch Translator.app
  *   2. Go to Settings → Agent Control
  *   3. Enable "Allow agent control"
  *   4. Configure allowed directories for file writes
- * 
+ *
  * Add to Cursor/Codex MCP config:
- *   [macOS] /Applications/Translator.app/Contents/Resources/packaged-mcp.mjs
- *   [Windows] "C:\Program Files\Translator\resources\packaged-mcp.mjs"
+ *   [macOS] /Applications/Translator.app/Contents/Resources/translator-mcp
+ *   [Windows] "C:\Program Files\Translator\resources\translator-mcp.cmd"
  */
 
 import { createConnection } from 'net';
-import { homedir, platform } from 'os';
-import { join } from 'path';
-import { readFileSync, existsSync } from 'fs';
+import { randomUUID } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
+import { createNativeOwnerMonitor } from './native-owner-monitor.mjs';
+import {
+  PACKAGED_AGENT_HANDSHAKE_ID,
+  PACKAGED_AGENT_HANDSHAKE_METHOD,
+  PACKAGED_AGENT_HANDSHAKE_TIMEOUT_MS,
+  PACKAGED_AGENT_PROTOCOL_VERSION,
+  getPackagedAgentHandshakeResponseRouteToken,
+  isValidPackagedAgentHandshakeResponse,
+} from './packaged-agent-protocol.mjs';
+import { getPackagedSocketDiscoveryCandidates } from './packaged-socket-path.mjs';
+import { PACKAGED_TOOL_MAP as TOOL_MAP } from './packaged-tool-map.mjs';
+import {
+  installTransportBoundLifecycle,
+  shouldForceDevelopmentShutdown,
+} from './transport-bound-lifecycle.mjs';
+import { McpStdioDecoder, Utf8LineDecoder } from './stream-codecs.mjs';
+import { parseToolArguments } from './tool-schema-validator.mjs';
 
 let socket = null;
+let connectionPromise = null;
+let activeSocketUsers = 0;
 let requestId = 0;
 const pendingRequests = new Map();
+let shuttingDown = false;
+let lifecycle = null;
+const clientSessionId = randomUUID();
+let workspaceRouteToken = null;
+let workspaceRouteInstanceToken = null;
+const ownerMonitor = createNativeOwnerMonitor({
+  onOwnershipLost: reason => requestLifecycleShutdown(reason, 1),
+});
 
-// Explicit tool name → translator method map (from mcp.mjs)
-const TOOL_MAP = {
-  app_status: 'status',
-  app_navigation_list: 'navigationSnapshot',
-  app_navigate: 'navigate',
-  app_open_web_page: 'openExternalWebPage',
-  app_settings_show: 'showSettings',
-  app_settings_get: 'settingsSnapshot',
-  app_open_video: 'openVideo',
-  app_mount_subtitles: 'mountSubtitles',
-  app_set_subtitle_display: 'setDisplayMode',
-  app_set_subtitle_style: 'setSubtitleStyle',
-  app_show_download_history: 'showDownloadHistory',
-  app_downloads_list: 'listDownloadHistory',
-  app_downloads_open: 'openDownloadHistoryItem',
-  app_downloads_redownload: 'redownloadHistoryItem',
-  app_video_search: 'searchVideos',
-  app_video_search_more: 'searchMoreVideos',
-  app_video_search_status: 'videoSearchStatus',
-  app_video_search_cancel: 'cancelVideoSearch',
-  app_video_batch_download: 'startSuggestedVideoBatch',
-  app_video_batch_cancel: 'cancelSuggestedVideoBatch',
-  app_video_batch_status: 'suggestedVideoBatchStatus',
-  app_start_video_download: 'startVideoDownload',
-  app_start_transcription: 'startTranscription',
-  app_start_translation: 'startTranslation',
-  app_start_dubbing: 'startDubbing',
-  app_start_summary: 'startSummary',
-  app_start_cue_translation: 'startCueTranslation',
-  app_start_cue_transcription: 'startCueTranscription',
-  app_start_merge: 'startMerge',
-  app_start_media_workflow: 'startMediaWorkflow',
-  app_processing_status: 'processingStatus',
-  app_processing_cancel: 'cancelProcessing',
-  app_subtitles_get: 'subtitlesBatch',
-  app_subtitles_update: 'updateSubtitles',
-  app_subtitles_mutate: 'mutateSubtitles',
-  app_subtitles_export: 'exportSubtitles',
-};
+function rejectPendingRequests(error) {
+  for (const pending of pendingRequests.values()) {
+    pending.reject(error);
+  }
+  pendingRequests.clear();
+}
 
-// Safe tools list (excludes checkout/keys)
+function closeTranslatorSocketIfIdle() {
+  if (shuttingDown || activeSocketUsers !== 0 || pendingRequests.size !== 0) {
+    return;
+  }
+
+  const idleSocket = socket;
+  socket = null;
+  idleSocket?.destroy();
+}
+
+function releaseTranslatorSocket() {
+  activeSocketUsers = Math.max(0, activeSocketUsers - 1);
+  closeTranslatorSocketIfIdle();
+}
+
+// Safe tools list (excludes checkout and settings/key mutation)
 const SAFE_TOOLS = Object.keys(TOOL_MAP);
 
 // JSON Schemas for each tool (hand-written from mcp.mjs, zero npm deps)
-const TOOL_SCHEMAS = {
-  app_status: { 
-    type: 'object', 
+export const TOOL_SCHEMAS = {
+  app_status: {
+    type: 'object',
     properties: {
-      history_id: { type: 'string', minLength: 1 }
+      history_id: { type: 'string', minLength: 1, maxLength: 512 },
     },
-    additionalProperties: false 
+    additionalProperties: false,
   },
-  app_navigation_list: { type: 'object', properties: {}, additionalProperties: false },
+  app_navigation_list: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
+  },
   app_navigate: {
     type: 'object',
     properties: {
-      screen: { type: 'string', enum: ['generate', 'edit', 'settings', 'library'] }
+      destination: {
+        type: 'string',
+        enum: [
+          'home',
+          'create',
+          'video-search',
+          'downloads',
+          'channels',
+          'editor',
+          'settings',
+          'settings-credits',
+          'settings-quality',
+          'settings-provider',
+          'settings-byo',
+          'settings-api-keys',
+        ],
+      },
     },
-    required: ['screen'],
-    additionalProperties: false
+    required: ['destination'],
+    additionalProperties: false,
   },
   app_open_web_page: {
     type: 'object',
     properties: { url: { type: 'string', format: 'uri' } },
     required: ['url'],
-    additionalProperties: false
+    additionalProperties: false,
   },
-  app_settings_show: { type: 'object', properties: {}, additionalProperties: false },
-  app_settings_get: { type: 'object', properties: {}, additionalProperties: false },
-  app_credits_balance: { type: 'object', properties: {}, additionalProperties: false },
-  app_mount_video_file: {
+  app_settings_show: {
     type: 'object',
-    properties: { path: { type: 'string', minLength: 1 } },
+    properties: { open: { type: 'boolean', default: true } },
+    additionalProperties: false,
+  },
+  app_settings_get: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
+  },
+  app_open_video: {
+    type: 'object',
+    properties: {
+      path: { type: 'string', minLength: 1 },
+      replace_subtitles: {
+        type: 'string',
+        enum: ['fail', 'discard', 'save'],
+        default: 'fail',
+      },
+    },
     required: ['path'],
-    additionalProperties: false
+    additionalProperties: false,
   },
-  app_mount_subtitle_file: {
+  app_mount_subtitles: {
     type: 'object',
-    properties: { path: { type: 'string', minLength: 1 } },
+    properties: {
+      path: { type: 'string', minLength: 1 },
+      replace_subtitles: {
+        type: 'string',
+        enum: ['fail', 'discard', 'save'],
+        default: 'fail',
+      },
+    },
     required: ['path'],
-    additionalProperties: false
+    additionalProperties: false,
   },
-  app_mount_url: {
+  app_set_subtitle_display: {
     type: 'object',
-    properties: { url: { type: 'string', format: 'uri' } },
-    required: ['url'],
-    additionalProperties: false
+    properties: {
+      mode: {
+        type: 'string',
+        enum: ['original', 'translation', 'dual'],
+      },
+    },
+    required: ['mode'],
+    additionalProperties: false,
   },
-  app_close_mounted_video: { type: 'object', properties: {}, additionalProperties: false },
-  app_close_mounted_subtitles: { type: 'object', properties: {}, additionalProperties: false },
-  app_library_downloads_list: { type: 'object', properties: {}, additionalProperties: false },
-  app_library_history_item_open: {
+  app_set_subtitle_style: {
     type: 'object',
-    properties: { id: { type: 'string', minLength: 1 } },
+    properties: {
+      style: {
+        type: 'string',
+        enum: ['Default', 'Classic', 'Boxed', 'LineBox'],
+      },
+    },
+    required: ['style'],
+    additionalProperties: false,
+  },
+  app_show_download_history: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
+  },
+  app_downloads_list: {
+    type: 'object',
+    properties: {
+      query: { type: 'string' },
+      availability: {
+        type: 'string',
+        enum: ['all', 'local', 'missing'],
+        default: 'all',
+      },
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 30 },
+    },
+    additionalProperties: false,
+  },
+  app_downloads_open: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', minLength: 1 },
+      replace_subtitles: {
+        type: 'string',
+        enum: ['fail', 'discard', 'save'],
+        default: 'fail',
+      },
+    },
     required: ['id'],
-    additionalProperties: false
+    additionalProperties: false,
   },
-  app_library_history_item_redownload: {
+  app_downloads_redownload: {
     type: 'object',
     properties: {
       id: { type: 'string', minLength: 1 },
       quality: {
         type: 'string',
-        enum: ['high', 'mid', 'low', '4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'],
-        default: '1080p'
+        enum: [
+          'high',
+          'mid',
+          'low',
+          '4320p',
+          '2160p',
+          '1440p',
+          '1080p',
+          '720p',
+          '480p',
+          '360p',
+          '240p',
+        ],
+        default: '1080p',
       },
-      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' }
+      replace_subtitles: {
+        type: 'string',
+        enum: ['fail', 'discard', 'save'],
+        default: 'fail',
+      },
     },
     required: ['id'],
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_video_search: {
     type: 'object',
@@ -142,58 +246,121 @@ const TOOL_SCHEMAS = {
       prompt: { type: 'string', minLength: 1, maxLength: 2000 },
       preferred_language: { type: 'string', minLength: 2, maxLength: 24 },
       target_country: { type: 'string', maxLength: 100 },
-      recency: { type: 'string', enum: ['any', 'day', 'week', 'month', 'year'] },
+      recency: {
+        type: 'string',
+        enum: ['any', 'day', 'week', 'month', 'year'],
+      },
       include_download_history: { type: 'boolean' },
-      include_watched_channels: { type: 'boolean' }
+      include_watched_channels: { type: 'boolean' },
     },
     required: ['prompt'],
-    additionalProperties: false
+    additionalProperties: false,
+  },
+  app_video_search_more: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
+  },
+  app_video_search_status: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
+  },
+  app_video_search_cancel: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
   },
   app_video_batch_download: {
     type: 'object',
     properties: {
-      result_ids: { type: 'array', items: { type: 'string', minLength: 1 }, minItems: 1, maxItems: 8 },
+      result_ids: {
+        type: 'array',
+        items: { type: 'string', minLength: 1 },
+        minItems: 1,
+        maxItems: 8,
+      },
       quality: {
         type: 'string',
-        enum: ['high', 'mid', 'low', '4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'],
-        default: '1080p'
-      }
+        enum: [
+          'high',
+          'mid',
+          'low',
+          '4320p',
+          '2160p',
+          '1440p',
+          '1080p',
+          '720p',
+          '480p',
+          '360p',
+          '240p',
+        ],
+        default: '1080p',
+      },
     },
     required: ['result_ids'],
-    additionalProperties: false
+    additionalProperties: false,
   },
-  app_video_batch_cancel: { type: 'object', properties: {}, additionalProperties: false },
-  app_video_batch_status: { type: 'object', properties: {}, additionalProperties: false },
+  app_video_batch_cancel: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
+  },
+  app_video_batch_status: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
+  },
   app_start_video_download: {
     type: 'object',
     properties: {
       url: { type: 'string', format: 'uri' },
       quality: {
         type: 'string',
-        enum: ['high', 'mid', 'low', '4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'],
-        default: '1080p'
+        enum: [
+          'high',
+          'mid',
+          'low',
+          '4320p',
+          '2160p',
+          '1440p',
+          '1080p',
+          '720p',
+          '480p',
+          '360p',
+          '240p',
+        ],
+        default: '1080p',
       },
-      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' }
+      replace_subtitles: {
+        type: 'string',
+        enum: ['fail', 'discard', 'save'],
+        default: 'fail',
+      },
     },
     required: ['url'],
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_start_transcription: {
     type: 'object',
     properties: {
-      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' },
-      history_id: { type: 'string', minLength: 1 }
+      replace_subtitles: {
+        type: 'string',
+        enum: ['fail', 'discard', 'save'],
+        default: 'fail',
+      },
+      history_id: { type: 'string', minLength: 1, maxLength: 512 },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_start_translation: {
     type: 'object',
     properties: {
       target_language: { type: 'string', minLength: 2, maxLength: 80 },
-      history_id: { type: 'string', minLength: 1 }
+      history_id: { type: 'string', minLength: 1, maxLength: 512 },
     },
     required: ['target_language'],
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_start_dubbing: {
     type: 'object',
@@ -201,104 +368,170 @@ const TOOL_SCHEMAS = {
       target_language: { type: 'string', minLength: 2, maxLength: 80 },
       voice: {
         type: 'string',
-        enum: ['rachel', 'adam', 'josh', 'sarah', 'charlie', 'emily', 'matilda', 'brian', 'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+        enum: [
+          'rachel',
+          'adam',
+          'josh',
+          'sarah',
+          'charlie',
+          'emily',
+          'matilda',
+          'brian',
+          'alloy',
+          'echo',
+          'fable',
+          'onyx',
+          'nova',
+          'shimmer',
+        ],
       },
-      translate_if_needed: { type: 'boolean', default: true }
+      translate_if_needed: { type: 'boolean', default: true },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_start_summary: {
     type: 'object',
     properties: {
       target_language: { type: 'string', minLength: 2, maxLength: 80 },
       effort_level: { type: 'string', enum: ['standard', 'high'] },
-      include_highlights: { type: 'boolean', default: true }
+      include_highlights: { type: 'boolean', default: true },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_start_cue_translation: {
     type: 'object',
     properties: {
       id: { type: 'string', minLength: 1 },
-      target_language: { type: 'string', minLength: 2, maxLength: 80 }
+      target_language: { type: 'string', minLength: 2, maxLength: 80 },
     },
     required: ['id', 'target_language'],
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_start_cue_transcription: {
     type: 'object',
     properties: {
-      id: { type: 'string', minLength: 1 }
+      id: { type: 'string', minLength: 1 },
     },
     required: ['id'],
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_start_merge: {
     type: 'object',
     properties: {
       output_path: { type: 'string', minLength: 1 },
       confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] },
-      history_id: { type: 'string', minLength: 1 }
+      history_id: { type: 'string', minLength: 1, maxLength: 512 },
     },
     required: ['output_path'],
-    additionalProperties: false
+    additionalProperties: false,
   },
-  app_processing_status: { 
-    type: 'object', 
+  app_processing_status: {
+    type: 'object',
     properties: {
-      history_id: { type: 'string', minLength: 1 }
+      history_id: { type: 'string', minLength: 1, maxLength: 512 },
     },
-    additionalProperties: false 
+    additionalProperties: false,
   },
-  app_processing_cancel: { type: 'object', properties: {}, additionalProperties: false },
+  app_processing_cancel: {
+    type: 'object',
+    properties: {
+      history_id: { type: 'string', minLength: 1, maxLength: 512 },
+    },
+    additionalProperties: false,
+  },
   app_subtitles_get: {
     type: 'object',
     properties: {
       offset: { type: 'integer', minimum: 0, default: 0 },
       limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-      history_id: { type: 'string', minLength: 1 }
+      history_id: { type: 'string', minLength: 1, maxLength: 512 },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   app_subtitles_update: {
     type: 'object',
     properties: {
-      cues: {
+      updates: {
         type: 'array',
+        minItems: 1,
+        maxItems: 100,
         items: {
           type: 'object',
           properties: {
             id: { type: 'string', minLength: 1 },
-            text: { type: 'string' },
-            translation: { type: 'string' }
+            original: { type: 'string' },
+            translation: { type: 'string' },
+            start: { type: 'number', minimum: 0 },
+            end: { type: 'number', exclusiveMinimum: 0 },
           },
-          required: ['id']
-        }
-      }
+          required: ['id'],
+          anyOf: [
+            { required: ['original'] },
+            { required: ['translation'] },
+            { required: ['start'] },
+            { required: ['end'] },
+          ],
+          additionalProperties: false,
+        },
+      },
     },
-    required: ['cues'],
-    additionalProperties: false
+    required: ['updates'],
+    additionalProperties: false,
   },
   app_subtitles_mutate: {
     type: 'object',
     properties: {
-      action: { type: 'string', enum: ['DELETE', 'SPLIT', 'MERGE'] },
+      operation: {
+        type: 'string',
+        enum: ['insert_after', 'remove', 'shift', 'shift_all'],
+      },
       id: { type: 'string', minLength: 1 },
-      split_at_ms: { type: 'integer', minimum: 0 },
-      merge_with_next: { type: 'boolean' }
+      seconds: { type: 'number' },
+      confirm: { type: 'string' },
     },
-    required: ['action', 'id'],
-    additionalProperties: false
+    required: ['operation'],
+    allOf: [
+      {
+        if: {
+          properties: {
+            operation: { enum: ['insert_after', 'remove', 'shift'] },
+          },
+        },
+        then: { required: ['id'] },
+      },
+      {
+        if: {
+          properties: { operation: { enum: ['shift', 'shift_all'] } },
+        },
+        then: {
+          required: ['seconds'],
+          properties: { seconds: { not: { const: 0 } } },
+        },
+      },
+      {
+        if: { properties: { operation: { const: 'remove' } } },
+        then: {
+          required: ['confirm'],
+          properties: { confirm: { const: 'REMOVE' } },
+        },
+      },
+    ],
+    additionalProperties: false,
   },
   app_subtitles_export: {
     type: 'object',
     properties: {
-      output_path: { type: 'string', minLength: 1 },
+      path: { type: 'string', minLength: 1 },
+      mode: {
+        type: 'string',
+        enum: ['original', 'translation', 'dual'],
+        default: 'dual',
+      },
       confirm_overwrite: { type: 'string', enum: ['OVERWRITE'] },
-      history_id: { type: 'string', minLength: 1 }
+      history_id: { type: 'string', minLength: 1, maxLength: 512 },
     },
-    required: ['output_path'],
-    additionalProperties: false
+    required: ['path'],
+    additionalProperties: false,
   },
   app_start_media_workflow: {
     type: 'object',
@@ -307,149 +540,371 @@ const TOOL_SCHEMAS = {
       path: { type: 'string', minLength: 1 },
       quality: {
         type: 'string',
-        enum: ['high', 'mid', 'low', '4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'],
-        default: '1080p'
+        enum: [
+          'high',
+          'mid',
+          'low',
+          '4320p',
+          '2160p',
+          '1440p',
+          '1080p',
+          '720p',
+          '480p',
+          '360p',
+          '240p',
+        ],
+        default: '1080p',
       },
-      run_to: { type: 'string', enum: ['download', 'transcribe', 'translate', 'dub', 'summary'] },
+      run_to: {
+        type: 'string',
+        enum: ['download', 'transcribe', 'translate', 'dub', 'summary'],
+        default: 'transcribe',
+      },
       target_language: { type: 'string', minLength: 2, maxLength: 80 },
       summary_effort_level: { type: 'string', enum: ['standard', 'high'] },
       include_highlights: { type: 'boolean', default: true },
       voice: {
         type: 'string',
-        enum: ['rachel', 'adam', 'josh', 'sarah', 'charlie', 'emily', 'matilda', 'brian', 'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+        enum: [
+          'rachel',
+          'adam',
+          'josh',
+          'sarah',
+          'charlie',
+          'emily',
+          'matilda',
+          'brian',
+          'alloy',
+          'echo',
+          'fable',
+          'onyx',
+          'nova',
+          'shimmer',
+        ],
       },
-      replace_subtitles: { type: 'string', enum: ['fail', 'discard', 'save'], default: 'fail' }
+      replace_subtitles: {
+        type: 'string',
+        enum: ['fail', 'discard', 'save'],
+        default: 'fail',
+      },
     },
-    additionalProperties: false
-  }
+    allOf: [
+      { not: { required: ['url', 'path'] } },
+      {
+        if: {
+          required: ['run_to'],
+          properties: { run_to: { enum: ['translate', 'dub'] } },
+        },
+        then: { required: ['target_language'] },
+      },
+    ],
+    additionalProperties: false,
+  },
 };
 
-function getSocketPath() {
-  let userDataPath;
-  if (platform() === 'darwin') {
-    userDataPath = join(homedir(), 'Library', 'Application Support', 'Translator');
-  } else if (platform() === 'win32') {
-    userDataPath = join(process.env.APPDATA || '', 'Translator');
-  } else if (platform() === 'linux') {
-    userDataPath = join(homedir(), '.config', 'Translator');
-  } else {
-    throw new Error(`Unsupported platform: ${platform()}`);
-  }
-  
-  const socketInfoPath = join(userDataPath, 'agent', 'socket-path.txt');
+function getSocketDiscoveries() {
+  return getPackagedSocketDiscoveryCandidates();
+}
+
+function handleTranslatorResponseLine(line) {
+  if (!line.trim()) return;
   try {
-    if (existsSync(socketInfoPath)) {
-      const socketPath = readFileSync(socketInfoPath, 'utf8').trim();
-      if (socketPath) return socketPath;
+    const response = JSON.parse(line);
+    if (
+      response.id !== undefined &&
+      response.id !== null &&
+      pendingRequests.has(response.id)
+    ) {
+      const pending = pendingRequests.get(response.id);
+      pendingRequests.delete(response.id);
+      if (response.error) {
+        pending.reject(
+          new Error(response.error.message || JSON.stringify(response.error))
+        );
+      } else {
+        pending.resolve(response.result);
+      }
     }
-  } catch (err) {}
-  
-  if (platform() === 'win32') {
-    const sanitized = userDataPath.replace(/[^a-zA-Z0-9]/g, '_');
-    return `\\\\.\\pipe\\translator-agent-${sanitized}`;
-  } else {
-    return join(userDataPath, 'agent', 'translator-agent.sock');
+  } catch {
+    // A malformed app response cannot be reported as a valid MCP response.
   }
 }
 
-async function ensureConnected() {
-  if (socket) return; // Already connected
-  
-  const socketPath = getSocketPath();
-  const maxRetries = 3;
-  let lastError;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await new Promise((resolve, reject) => {
-        socket = createConnection(socketPath);
-        
-        let localBuffer = '';
-        
-        socket.on('connect', () => {
-          console.error(`[packaged-mcp] Connected to ${socketPath}`);
-          resolve();
-        });
-        
-        socket.on('data', (data) => {
-          localBuffer += data.toString();
-          const lines = localBuffer.split('\n');
-          localBuffer = lines.pop() || '';
-          
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              const response = JSON.parse(line);
-              if (response.id && pendingRequests.has(response.id)) {
-                const { resolve, reject } = pendingRequests.get(response.id);
-                pendingRequests.delete(response.id);
-                if (response.error) {
-                  reject(new Error(response.error.message || JSON.stringify(response.error)));
-                } else {
-                  resolve(response.result);
-                }
-              }
-            } catch (err) {}
+function connectTranslatorSocket(discovery) {
+  return new Promise((resolve, reject) => {
+    const { socketPath, protocolVersion, instanceToken } = discovery;
+    if (
+      protocolVersion !== PACKAGED_AGENT_PROTOCOL_VERSION ||
+      typeof instanceToken !== 'string'
+    ) {
+      reject(
+        new Error(
+          'Translator socket discovery is stale or lacks an ownership lease. Restart the updated Translator app.'
+        )
+      );
+      return;
+    }
+
+    const candidateSocket = createConnection(socketPath);
+    const decoder = new Utf8LineDecoder();
+    let authenticated = false;
+    let settled = false;
+    let handshakeDeadline = null;
+    socket = candidateSocket;
+
+    const clearHandshakeDeadline = () => {
+      if (!handshakeDeadline) return;
+      clearTimeout(handshakeDeadline);
+      handshakeDeadline = null;
+    };
+
+    const rejectOnce = error => {
+      if (settled) return;
+      settled = true;
+      clearHandshakeDeadline();
+      reject(error);
+    };
+    handshakeDeadline = setTimeout(() => {
+      rejectOnce(new Error('Translator ownership handshake timed out.'));
+      candidateSocket.destroy();
+    }, PACKAGED_AGENT_HANDSHAKE_TIMEOUT_MS);
+    handshakeDeadline.unref?.();
+    const handleCandidateLine = line => {
+      if (authenticated) {
+        handleTranslatorResponseLine(line);
+        return;
+      }
+      if (!line.trim()) return;
+      let response;
+      try {
+        response = JSON.parse(line);
+      } catch {
+        rejectOnce(
+          new Error('Translator returned an invalid ownership handshake.')
+        );
+        candidateSocket.destroy();
+        return;
+      }
+      if (!isValidPackagedAgentHandshakeResponse(response)) {
+        rejectOnce(
+          new Error(
+            response.error?.message ||
+              'Translator rejected the ownership handshake.'
+          )
+        );
+        candidateSocket.destroy();
+        return;
+      }
+      const receivedRouteToken =
+        getPackagedAgentHandshakeResponseRouteToken(response);
+      if (!receivedRouteToken) {
+        rejectOnce(
+          new Error('Translator returned an invalid workspace lease.')
+        );
+        candidateSocket.destroy();
+        return;
+      }
+      workspaceRouteToken = receivedRouteToken;
+      workspaceRouteInstanceToken = instanceToken;
+      authenticated = true;
+      clearHandshakeDeadline();
+      settled = true;
+      console.error(`[packaged-mcp] Connected to ${socketPath}`);
+      resolve();
+    };
+
+    candidateSocket.once('connect', () => {
+      if (shuttingDown) {
+        if (socket === candidateSocket) socket = null;
+        candidateSocket.destroy();
+        rejectOnce(new Error('MCP transport disconnected.'));
+        return;
+      }
+      try {
+        candidateSocket.write(
+          `${JSON.stringify({
+            jsonrpc: '2.0',
+            id: PACKAGED_AGENT_HANDSHAKE_ID,
+            method: PACKAGED_AGENT_HANDSHAKE_METHOD,
+            params: {
+              protocolVersion: PACKAGED_AGENT_PROTOCOL_VERSION,
+              instanceToken,
+              clientSessionId,
+              ...(workspaceRouteInstanceToken === instanceToken &&
+              workspaceRouteToken
+                ? { workspaceRouteToken }
+                : {}),
+            },
+          })}\n`,
+          error => {
+            if (error) {
+              rejectOnce(error);
+              candidateSocket.destroy();
+            }
           }
-        });
-        
-        socket.on('error', (err) => {
-          socket = null;
-          reject(err);
-        });
-        
-        socket.on('end', () => {
+        );
+      } catch (error) {
+        rejectOnce(error);
+        candidateSocket.destroy();
+      }
+    });
+
+    candidateSocket.on('data', data => {
+      try {
+        for (const line of decoder.write(data)) {
+          handleCandidateLine(line);
+        }
+      } catch (error) {
+        candidateSocket.destroy(error);
+      }
+    });
+
+    candidateSocket.once('end', () => {
+      try {
+        for (const line of decoder.end()) {
+          handleCandidateLine(line);
+        }
+      } catch (error) {
+        candidateSocket.destroy(error);
+      }
+    });
+
+    candidateSocket.once('error', error => {
+      if (socket === candidateSocket) {
+        socket = null;
+        if (!shuttingDown) rejectPendingRequests(error);
+      }
+      if (!authenticated) rejectOnce(error);
+    });
+
+    candidateSocket.once('close', () => {
+      clearHandshakeDeadline();
+      if (socket === candidateSocket) {
+        socket = null;
+        if (!shuttingDown) {
           console.error('[packaged-mcp] Connection closed');
-          socket = null;
-        });
-      });
-      
-      return; // Success
-    } catch (err) {
-      lastError = err;
-      console.error(`[packaged-mcp] Connection attempt ${attempt}/${maxRetries} failed: ${err.message}`);
-      
+          rejectPendingRequests(new Error('Translator connection closed.'));
+        }
+      }
+      if (!authenticated) {
+        rejectOnce(
+          new Error('Translator connection closed before authentication.')
+        );
+      }
+    });
+  });
+}
+
+function ensureConnected() {
+  if (shuttingDown) {
+    return Promise.reject(new Error('MCP transport disconnected.'));
+  }
+  if (connectionPromise) return connectionPromise;
+  if (socket && !socket.destroyed) return Promise.resolve();
+
+  const maxRetries = 3;
+  const connecting = (async () => {
+    let lastError;
+    for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
+      // Re-resolve discovery on every attempt. Translator may have started or
+      // published its exact userData-cased endpoint after an earlier attempt.
+      const discoveries = getSocketDiscoveries();
+      for (const discovery of discoveries) {
+        try {
+          await connectTranslatorSocket(discovery);
+          return;
+        } catch (error) {
+          lastError = error;
+          if (shuttingDown) throw error;
+          console.error(
+            `[packaged-mcp] Connection attempt ${attempt}/${maxRetries} failed for ${discovery.socketPath}: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+
       if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 4000);
+        const delay = Math.min(1000 * 2 ** (attempt - 1), 4000);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
+
+    throw new Error(
+      `Failed to connect after ${maxRetries} attempts. ` +
+        `Make sure Translator.app is running with agent control enabled. ` +
+        `Last error: ${lastError instanceof Error ? lastError.message : String(lastError ?? 'unknown')}`
+    );
+  })();
+  const trackedConnection = connecting.finally(() => {
+    if (connectionPromise === trackedConnection) connectionPromise = null;
+  });
+  connectionPromise = trackedConnection;
+  return trackedConnection;
+}
+
+async function acquireTranslatorSocket() {
+  await ensureConnected();
+  const activeSocket = socket;
+  if (shuttingDown || !activeSocket || activeSocket.destroyed) {
+    throw new Error('Translator connection is not available.');
   }
-  
-  throw new Error(
-    `Failed to connect after ${maxRetries} attempts. ` +
-    `Make sure Translator.app is running with agent control enabled. ` +
-    `Last error: ${lastError?.message || 'unknown'}`
-  );
+  activeSocketUsers += 1;
+  return activeSocket;
 }
 
 async function callTranslatorMethod(method, params) {
+  const activeSocket = await acquireTranslatorSocket();
+
   return new Promise((resolve, reject) => {
     const id = ++requestId;
     const timeout = setTimeout(() => {
+      const pending = pendingRequests.get(id);
+      if (!pending) return;
       pendingRequests.delete(id);
-      reject(new Error(`Timeout calling ${method}`));
+      pending.reject(new Error(`Timeout calling ${method}`));
     }, 120000);
-    
+
+    let released = false;
+    const releaseOnce = () => {
+      if (released) return;
+      released = true;
+      releaseTranslatorSocket();
+    };
     pendingRequests.set(id, {
-      resolve: (result) => {
+      resolve: result => {
         clearTimeout(timeout);
+        releaseOnce();
         resolve(result);
       },
-      reject: (err) => {
+      reject: error => {
         clearTimeout(timeout);
-        reject(err);
-      }
+        releaseOnce();
+        reject(error);
+      },
     });
-    
-    socket.write(JSON.stringify({ jsonrpc: '2.0', method, params, id }) + '\n');
+
+    try {
+      activeSocket.write(
+        `${JSON.stringify({ jsonrpc: '2.0', method, params, id })}\n`,
+        error => {
+          if (!error) return;
+          const pending = pendingRequests.get(id);
+          if (!pending) return;
+          pendingRequests.delete(id);
+          pending.reject(error);
+        }
+      );
+    } catch (error) {
+      const pending = pendingRequests.get(id);
+      pendingRequests.delete(id);
+      pending?.reject(error);
+    }
   });
 }
 
 // Field mapping: snake_case → camelCase (from mcp.mjs)
-function mapFields(input) {
+export function mapFields(input) {
   if (!input || typeof input !== 'object') return input;
-  
+
   const mapped = {};
   for (const [key, value] of Object.entries(input)) {
     // Special mappings from mcp.mjs (exact field transformations)
@@ -498,64 +953,113 @@ function mapFields(input) {
   return mapped;
 }
 
-// Content-Length framing (official MCP stdio protocol)
-let stdinBuffer = '';
-let expectedLength = null;
+const stdinDecoder = new McpStdioDecoder();
 
 function writeMessage(msg) {
+  if (shuttingDown) return;
   const json = JSON.stringify(msg);
-  const content = `Content-Length: ${Buffer.byteLength(json, 'utf8')}\r\n\r\n${json}`;
-  process.stdout.write(content);
+  const content =
+    stdinDecoder.framing === 'content-length'
+      ? `Content-Length: ${Buffer.byteLength(json, 'utf8')}\r\n\r\n${json}`
+      : `${json}\n`;
+  try {
+    process.stdout.write(content, error => {
+      if (error) requestOutputShutdown(error);
+    });
+  } catch (error) {
+    requestOutputShutdown(error);
+  }
 }
 
-function readContentLengthMessage(data) {
-  stdinBuffer += data;
-  
-  while (true) {
-    if (expectedLength === null) {
-      const headerEnd = stdinBuffer.indexOf('\r\n\r\n');
-      if (headerEnd === -1) return;
-      
-      const header = stdinBuffer.substring(0, headerEnd);
-      const match = header.match(/Content-Length:\s*(\d+)/i);
-      if (!match) {
-        console.error('[packaged-mcp] Invalid Content-Length header');
-        stdinBuffer = stdinBuffer.substring(headerEnd + 4);
-        continue;
-      }
-      
-      expectedLength = parseInt(match[1], 10);
-      stdinBuffer = stdinBuffer.substring(headerEnd + 4);
-    }
-    
-    if (stdinBuffer.length >= expectedLength) {
-      const message = stdinBuffer.substring(0, expectedLength);
-      stdinBuffer = stdinBuffer.substring(expectedLength);
-      expectedLength = null;
-      
-      try {
-        const msg = JSON.parse(message);
-        handleMessage(msg);
-      } catch (err) {
-        console.error('[packaged-mcp] Parse error:', err);
-      }
-    } else {
-      return;
+function requestOutputShutdown(_error) {
+  // Never try to describe an output failure through the failed output. The
+  // lifecycle owns one idempotent resource close and process exit request.
+  requestLifecycleShutdown('output:error', 1);
+}
+
+function requestLifecycleShutdown(reason, exitCode) {
+  if (!lifecycle) {
+    shuttingDown = true;
+    process.exitCode = exitCode;
+    return;
+  }
+  try {
+    const result = lifecycle.requestShutdown(reason, exitCode);
+    void Promise.resolve(result).catch(() => {
+      process.exitCode = exitCode;
+    });
+  } catch {
+    process.exitCode = exitCode;
+  }
+}
+
+function readStdioMessage(data) {
+  const { messages, errors } = stdinDecoder.write(data);
+  for (const error of errors) {
+    console.error('[packaged-mcp] Invalid stdio frame:', error);
+  }
+  if (errors.length > 0) {
+    // A bad length makes the byte stream ambiguous: there is no principled
+    // resynchronization point. Treat it as a definite transport failure
+    // instead of leaving a detached helper waiting on a corrupted channel.
+    requestLifecycleShutdown('input:protocol-error', 1);
+    return;
+  }
+  for (const message of messages) {
+    try {
+      const msg = JSON.parse(message.toString('utf8'));
+      void handleMessage(msg).catch(error => {
+        console.error('[packaged-mcp] Request handling failed:', error);
+        requestLifecycleShutdown('input:protocol-error', 1);
+      });
+    } catch (error) {
+      console.error('[packaged-mcp] Parse error:', error);
+      writeMessage({
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: -32700, message: 'Parse error' },
+      });
     }
   }
 }
 
 async function handleMessage(msg) {
+  if (shuttingDown) return;
+  if (!msg || typeof msg !== 'object' || Array.isArray(msg)) {
+    writeMessage({
+      jsonrpc: '2.0',
+      id: null,
+      error: { code: -32600, message: 'Invalid Request' },
+    });
+    return;
+  }
+
   const { method, params, id } = msg;
-  
-  // Ignore notifications (no id)
-  if (id === undefined || id === null) {
+  const hasId = Object.hasOwn(msg, 'id');
+
+  const validId =
+    !hasId ||
+    id === null ||
+    typeof id === 'string' ||
+    (typeof id === 'number' && Number.isFinite(id));
+  if (msg.jsonrpc !== '2.0' || typeof method !== 'string' || !validId) {
+    writeMessage({
+      jsonrpc: '2.0',
+      id: validId ? (id ?? null) : null,
+      error: { code: -32600, message: 'Invalid Request' },
+    });
+    return;
+  }
+
+  // A notification omits id. JSON-RPC permits (but discourages) null request
+  // IDs, and those requests still require a response whose id is null.
+  if (!hasId) {
     if (method === 'notifications/initialized') {
       console.error('[packaged-mcp] Client initialized');
     }
     return;
   }
-  
+
   try {
     if (method === 'initialize') {
       writeMessage({
@@ -564,46 +1068,75 @@ async function handleMessage(msg) {
         result: {
           protocolVersion: '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'translator-packaged-mcp', version: '1.0.0' }
-        }
+          serverInfo: { name: 'translator-packaged-mcp', version: '1.0.0' },
+        },
       });
       return;
     }
-    
+
     if (method === 'ping') {
       writeMessage({ jsonrpc: '2.0', id, result: {} });
       return;
     }
-    
+
     if (method === 'tools/list') {
       const tools = SAFE_TOOLS.map(name => ({
         name,
         description: `Translator: ${TOOL_MAP[name]}`,
-        inputSchema: TOOL_SCHEMAS[name] || {
-          type: 'object',
-          properties: {},
-          additionalProperties: false
-        }
+        inputSchema: TOOL_SCHEMAS[name],
       }));
       writeMessage({ jsonrpc: '2.0', id, result: { tools } });
       return;
     }
-    
+
     if (method === 'tools/call') {
-      const { name: toolName, arguments: toolArgs } = params;
-      
-      if (!TOOL_MAP[toolName]) {
-        throw new Error(`Unknown tool: ${toolName}`);
+      if (!params || typeof params !== 'object' || Array.isArray(params)) {
+        writeMessage({
+          jsonrpc: '2.0',
+          id,
+          error: { code: -32602, message: 'Invalid params' },
+        });
+        return;
       }
-      
-      // Connect to Translator socket (lazy, with retries)
-      await ensureConnected();
-      
+      const { name: toolName, arguments: toolArgs } = params;
+
+      if (
+        typeof toolName !== 'string' ||
+        !Object.hasOwn(TOOL_MAP, toolName) ||
+        (toolArgs !== undefined &&
+          (!toolArgs ||
+            typeof toolArgs !== 'object' ||
+            Array.isArray(toolArgs)))
+      ) {
+        writeMessage({
+          jsonrpc: '2.0',
+          id,
+          error: { code: -32602, message: 'Invalid tool call params' },
+        });
+        return;
+      }
+
+      let parsedArgs;
+      try {
+        parsedArgs = parseToolArguments(TOOL_SCHEMAS[toolName], toolArgs);
+      } catch (error) {
+        writeMessage({
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32602,
+            message:
+              error instanceof Error ? error.message : 'Invalid tool arguments',
+          },
+        });
+        return;
+      }
+
       const translatorMethod = TOOL_MAP[toolName];
-      const mappedArgs = mapFields(toolArgs || {});
-      
+      const mappedArgs = mapFields(parsedArgs);
+
       const result = await callTranslatorMethod(translatorMethod, mappedArgs);
-      
+
       writeMessage({
         jsonrpc: '2.0',
         id,
@@ -611,44 +1144,87 @@ async function handleMessage(msg) {
           content: [
             {
               type: 'text',
-              text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
-            }
-          ]
-        }
+              text:
+                typeof result === 'string'
+                  ? result
+                  : JSON.stringify(result, null, 2),
+            },
+          ],
+        },
       });
       return;
     }
-    
-    throw new Error(`Unknown method: ${method}`);
+
+    writeMessage({
+      jsonrpc: '2.0',
+      id,
+      error: { code: -32601, message: 'Method not found' },
+    });
   } catch (error) {
+    if (shuttingDown) return;
     writeMessage({
       jsonrpc: '2.0',
       id,
       error: {
         code: -32603,
-        message: error.message || String(error)
-      }
+        message: error instanceof Error ? error.message : String(error),
+      },
     });
   }
 }
 
-async function main() {
-  // Start MCP stdio server immediately (no socket required for handshake)
-  process.stdin.on('data', (chunk) => {
-    readContentLengthMessage(chunk.toString('utf8'));
-  });
-  
-  console.error('[packaged-mcp] MCP server ready (will connect to Translator on first tool call)');
+async function closePackagedResources() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  const activeSocket = socket;
+  socket = null;
+  activeSocket?.destroy();
+
+  const disconnectError = new Error('MCP transport disconnected.');
+  rejectPendingRequests(disconnectError);
 }
 
-process.on('SIGINT', () => {
-  if (socket) socket.end();
-  process.exit(0);
-});
+async function main() {
+  lifecycle = installTransportBoundLifecycle({
+    close: async () => {
+      await closePackagedResources();
+      await ownerMonitor.close();
+    },
+    forceClose: async () => {
+      await closePackagedResources();
+      void ownerMonitor.close().catch(() => {});
+    },
+    forceOnFirstShutdown: shouldForceDevelopmentShutdown,
+  });
 
-process.on('SIGTERM', () => {
-  if (socket) socket.end();
-  process.exit(0);
-});
+  try {
+    await ownerMonitor.start();
+  } catch (error) {
+    try {
+      process.stderr.write(
+        `[packaged-mcp] Ownership setup failed: ${error instanceof Error ? error.message : String(error)}\n`
+      );
+    } catch {
+      // Never recurse through an output channel that may already be gone.
+    }
+    await lifecycle.requestShutdown('owner-monitor:exit', 1);
+    return;
+  }
 
-main();
+  // Start MCP stdio server immediately (no socket required for handshake)
+  process.stdin.on('data', chunk => {
+    readStdioMessage(chunk);
+  });
+
+  console.error(
+    '[packaged-mcp] MCP server ready (will connect to Translator on first tool call)'
+  );
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  void main().catch(() => requestLifecycleShutdown('startup:error', 1));
+}

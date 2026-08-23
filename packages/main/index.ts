@@ -109,6 +109,7 @@ import {
   flushPendingProductEvents,
   trackAppOpen,
   trackFirstMeaningfulUse,
+  trackPurchaseFunnelEvent,
   trackTranslationFunnelEvent,
   trackUrlDownloadFunnelEvent,
 } from './services/product-analytics.js';
@@ -129,14 +130,56 @@ import {
 import { createWindowCreationCoordinator } from './window-creation-coordinator.js';
 import { AgentSocketServer } from './services/agent-socket-server.js';
 import {
-  registerAllAgentBridgeHandlers,
-  cleanupAgentBridgeHandlers,
-} from './handlers/agent-bridge-handlers.js';
+  isRendererPurchaseFunnelEvent,
+  parseRendererPurchaseContext,
+} from './services/purchase-funnel.js';
+import { registerAgentBridgeLifecycleHandlers } from './handlers/agent-bridge-handlers.js';
 import {
   startHungWindowMonitoring,
   stopHungWindowMonitoring,
   recordHeartbeat,
 } from './services/hung-window-detector.js';
+import {
+  createIdempotentShutdownRequest,
+  installOutputChannelFailureGuard,
+  type OutputFailureLogger,
+} from './output-channel-failure.js';
+import { installDevelopmentOwnerLeaseClient } from './development-owner-lease.js';
+import { SerializedLatestState } from './utils/serialized-latest-state.js';
+import { isPathInsideAllowedDirectories } from './utils/path-containment.js';
+
+const requestOwnershipFailureExit = createIdempotentShutdownRequest(
+  (exitCode: number) => app.exit(exitCode)
+);
+
+const outputChannelFailureGuard = installOutputChannelFailureGuard({
+  logger: log as unknown as OutputFailureLogger,
+  stdout: nodeProcess.stdout,
+  stderr: nodeProcess.stderr,
+  onFailure: () => recordCriticalFailure('main_process_exception', 'runtime'),
+  // A broken controlling output channel is an ownership failure. Do not route
+  // it through will-quit cleanup, which may itself be waiting on the vanished
+  // controller or another permanently pending resource.
+  requestShutdown: () => requestOwnershipFailureExit(1),
+});
+
+const developmentOwnerLeaseClient = installDevelopmentOwnerLeaseClient({
+  env: nodeProcess.env,
+  requestShutdown: reason => {
+    try {
+      log.warn(
+        `[main.ts] Development controller ownership lease lost (${reason}); exiting.`
+      );
+    } finally {
+      // Ownership loss is not a normal user quit. Fail closed immediately so
+      // neither a logging failure nor wedged will-quit cleanup can leave an
+      // ownerless development process. A simultaneous EPIPE owns the first,
+      // non-zero terminal request instead of issuing a second app.exit().
+      requestOwnershipFailureExit(1);
+    }
+  },
+});
+app.once('quit', () => developmentOwnerLeaseClient.dispose());
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -154,25 +197,76 @@ initAiProvider(settingsStore);
 
 // Initialize agent socket server for packaged-app MCP (will be started after main window created)
 let agentSocketServer: AgentSocketServer | null = null;
-async function updateAgentSocketServer() {
-  const agentEnabled = settingsStore.get('agentControlEnabled', false);
-  const isPackagedBuild = app.isPackaged;
-  
-  if (isPackagedBuild && agentEnabled && agentSocketServer && !agentSocketServer.isRunning()) {
+let agentControlRequestRevision = 0;
+const agentSocketServerState = new SerializedLatestState(
+  false,
+  async shouldRun => {
+    const server = agentSocketServer;
+    if (!server) return;
+
     try {
-      await agentSocketServer.start();
-      log.info('[main] Agent socket server started');
+      if (shouldRun) {
+        await server.start();
+      } else {
+        await server.stop();
+      }
+
+      if (server.isRunning()) {
+        log.info('[main] Agent socket server started');
+      } else {
+        log.info('[main] Agent socket server stopped');
+      }
     } catch (err) {
-      log.error('[main] Failed to start agent socket server:', err);
-    }
-  } else if ((!agentEnabled || !isPackagedBuild) && agentSocketServer && agentSocketServer.isRunning()) {
-    try {
-      await agentSocketServer.stop();
-      log.info('[main] Agent socket server stopped');
-    } catch (err) {
-      log.error('[main] Failed to stop agent socket server:', err);
+      log.error(
+        `[main] Failed to ${shouldRun ? 'start' : 'stop'} agent socket server:`,
+        err
+      );
+      throw err;
     }
   }
+);
+
+function updateAgentSocketServer(): Promise<void> {
+  const shouldRun =
+    app.isPackaged && settingsStore.get('agentControlEnabled', false) === true;
+  return agentSocketServerState.set(shouldRun);
+}
+
+async function failClosedAgentControl(
+  error: unknown,
+  requestRevision = ++agentControlRequestRevision
+): Promise<{ enabled: boolean; error: string }> {
+  const message = error instanceof Error ? error.message : String(error);
+  // A failed older enable must not overwrite a newer user choice. The check
+  // and write are synchronous, so another IPC request cannot interleave
+  // between them on Electron's main thread.
+  if (requestRevision === agentControlRequestRevision) {
+    try {
+      settingsStore.set('agentControlEnabled', false);
+    } catch (persistError) {
+      log.error(
+        '[main] Failed to persist the agent-control safety rollback:',
+        persistError
+      );
+    }
+    try {
+      await agentSocketServerState.set(false);
+    } catch (stopError) {
+      log.error(
+        '[main] Failed to finish the agent-control safety shutdown:',
+        stopError
+      );
+    }
+  }
+  // The serialized transition may have applied a newer user request while
+  // this rollback was queued. Never publish or return this request's stale
+  // `false`; reconcile with the persisted authoritative state instead.
+  const enabled = settingsStore.get('agentControlEnabled', false) === true;
+  broadcastToApp('agent-control-changed', { enabled });
+  return {
+    enabled,
+    error: `Agent control encountered a safety failure: ${message}`,
+  };
 }
 
 function registerCheckoutReturnProtocol(): void {
@@ -477,6 +571,7 @@ try {
   log.info('[main.ts] Handlers Initialized.');
 
   log.info('[main.ts] Registering IPC Handlers...');
+  registerAgentBridgeLifecycleHandlers();
 
   // ──────────────────────────────────────────────────────────────
   // Settings IPC handlers
@@ -1066,43 +1161,33 @@ try {
   ipcMain.handle('refresh-credit-snapshot', (_event, force?: boolean) =>
     handleRefreshCreditSnapshot(force === true)
   );
-  
+
   // Purchase funnel tracking from renderer
   // Only allow renderer to emit: button_shown, button_clicked, and *_failed
   // (session_created, opened, completed, cancelled must come from main process only)
   ipcMain.handle(
     'track-purchase-event',
-    async (
-      _event,
-      eventName: PurchaseFunnelEvent,
-      context?: {
-        packId?: CreditPackId;
-        placement?: PurchasePlacement;
-        failureReason?: PurchaseFailureReason;
-      }
-    ) => {
+    async (_event, eventName: unknown, context?: unknown) => {
       try {
-        // Validate that renderer can only emit specific events
-        const allowedRendererEvents = [
-          'credit_checkout_button_shown',
-          'credit_checkout_button_clicked',
-          'credit_checkout_failed',
-          'byo_unlock_button_shown',
-          'byo_unlock_button_clicked',
-          'byo_unlock_failed',
-        ];
-        
-        if (!allowedRendererEvents.includes(eventName)) {
+        if (!isRendererPurchaseFunnelEvent(eventName)) {
           log.warn(
-            `[main] Renderer attempted to emit restricted purchase event: ${eventName}`
+            `[main] Renderer attempted to emit restricted purchase event: ${String(eventName)}`
           );
           return {
             success: false,
-            error: `Event ${eventName} can only be emitted from main process`,
+            error: `Event ${String(eventName)} can only be emitted from main process`,
           };
         }
-        
-        await trackPurchaseFunnelEvent(eventName, context || {});
+
+        const parsedContext = parseRendererPurchaseContext(context);
+        if (!parsedContext.ok) {
+          log.warn(
+            `[main] Renderer sent invalid purchase event context: ${parsedContext.error}`
+          );
+          return { success: false, error: parsedContext.error };
+        }
+
+        await trackPurchaseFunnelEvent(eventName, parsedContext.value);
         return { success: true };
       } catch (error: any) {
         log.error('[main] track-purchase-event error:', error);
@@ -1267,16 +1352,53 @@ try {
   ipcMain.handle('get-agent-control-enabled', () =>
     settingsHandlers.getAgentControlEnabled()
   );
-  ipcMain.handle('set-agent-control-enabled', async (_event, value: boolean) => {
-    const result = settingsHandlers.setAgentControlEnabled(Boolean(value));
-    if (result.success) {
-      // Broadcast to all windows that agent control state changed
-      broadcastToApp('agent-control-changed', { enabled: Boolean(value) });
-      // Update socket server state
-      await updateAgentSocketServer();
+  ipcMain.handle(
+    'set-agent-control-enabled',
+    async (_event, value: boolean) => {
+      if (typeof value !== 'boolean') {
+        return {
+          success: false,
+          enabled: settingsHandlers.getAgentControlEnabled(),
+          error: 'Agent control enabled must be a boolean',
+        };
+      }
+      const enabled = value;
+      const result = settingsHandlers.setAgentControlEnabled(enabled);
+      if (!result.success) {
+        return {
+          ...result,
+          enabled: settingsHandlers.getAgentControlEnabled(),
+        };
+      }
+      const requestRevision = ++agentControlRequestRevision;
+
+      try {
+        await updateAgentSocketServer();
+      } catch (error) {
+        if (enabled) {
+          const failure = await failClosedAgentControl(error, requestRevision);
+          return {
+            success: false,
+            ...failure,
+          };
+        }
+        const actualEnabled = settingsHandlers.getAgentControlEnabled();
+        broadcastToApp('agent-control-changed', { enabled: actualEnabled });
+        return {
+          success: false,
+          enabled: actualEnabled,
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+
+      // A newer queued request may have superseded this one before the shared
+      // socket transition ran. Publish and return only the persisted latest
+      // state, never the stale request value.
+      const actualEnabled = settingsHandlers.getAgentControlEnabled();
+      broadcastToApp('agent-control-changed', { enabled: actualEnabled });
+      return { ...result, enabled: actualEnabled };
     }
-    return result;
-  });
+  );
   ipcMain.handle('get-agent-allowed-directories', () =>
     settingsHandlers.getAgentAllowedDirectories()
   );
@@ -1295,49 +1417,39 @@ try {
     }
     return {
       running: agentSocketServer.isRunning(),
-      connectedClients: agentSocketServer.getConnectedClientCount(),
+      // Only authenticated helpers represent a usable controlling client.
+      // Counting sockets still inside the ownership handshake lets a stalled
+      // or hostile half-connection make the UI claim an agent is connected.
+      connectedClients: agentSocketServer.getAuthenticatedClientCount(),
     };
   });
 
-  ipcMain.handle('check-agent-path-allowed', async (_event, filePath: string) => {
-    if (!app.isPackaged) {
-      return true; // In dev mode, all paths allowed
-    }
-    
-    const agentEnabled = settingsStore.get('agentControlEnabled', false);
-    if (!agentEnabled) {
-      return false;
-    }
-    
-    const allowedDirs = settingsStore.get('agentAllowedDirectories', []);
-    // Fall back to default if empty
-    const dirs = Array.isArray(allowedDirs) && allowedDirs.length > 0
-      ? allowedDirs
-      : [
-          app.getPath('downloads'),
-          path.join(app.getPath('userData'), 'url-downloads'),
-        ];
-    
-    // Use realpath to prevent symlink escapes
-    let realPath: string;
-    try {
-      realPath = fs.realpathSync(path.resolve(filePath));
-    } catch (err) {
-      // Path doesn't exist yet - use resolved path for new files
-      realPath = path.resolve(filePath);
-    }
-    
-    return dirs.some(dir => {
-      let realDir: string;
-      try {
-        realDir = fs.realpathSync(path.resolve(String(dir)));
-      } catch (err) {
-        realDir = path.resolve(String(dir));
+  ipcMain.handle(
+    'check-agent-path-allowed',
+    async (_event, filePath: string) => {
+      if (!app.isPackaged) {
+        return true; // In dev mode, all paths allowed
       }
-      return realPath.startsWith(realDir + path.sep) || 
-             realPath === realDir;
-    });
-  });
+
+      const agentEnabled =
+        settingsStore.get('agentControlEnabled', false) === true;
+      if (!agentEnabled) {
+        return false;
+      }
+
+      const allowedDirs = settingsStore.get('agentAllowedDirectories', []);
+      // Fall back to default if empty
+      const dirs =
+        Array.isArray(allowedDirs) && allowedDirs.length > 0
+          ? allowedDirs
+          : [
+              app.getPath('downloads'),
+              path.join(app.getPath('userData'), 'url-downloads'),
+            ];
+
+      return isPathInsideAllowedDirectories(filePath, dirs);
+    }
+  );
   ipcMain.handle('show-open-dialog', async (_event, options) => {
     const mainWindow = getMainWindow();
     if (!mainWindow) {
@@ -1446,22 +1558,6 @@ try {
       settingsHandlers.setStage5DubbingTtsProvider(value)
   );
 
-  ipcMain.on('stripe-cancelled', (_event, data) => {
-    log.info('[main.ts] Received stripe-cancelled message:', data);
-    
-    // Track cancellation event (guard already handled by the caller)
-    if (data?.mode === 'byo') {
-      void trackPurchaseFunnelEvent('byo_unlock_cancelled');
-      broadcastToApp('byo-unlock-cancelled');
-      return;
-    }
-
-    void trackPurchaseFunnelEvent('credit_checkout_cancelled', {
-      packId: data?.packId,
-    });
-    broadcastToApp('checkout-cancelled');
-  });
-
   // Expose app.isPackaged to renderer via preload (sync)
   ipcMain.on('is-packaged', event => {
     event.returnValue = app.isPackaged;
@@ -1505,13 +1601,12 @@ async function prepareToQuit(reason: 'normal' | 'update'): Promise<void> {
   quitCleanupPromise = (async () => {
     log.info(`[main.ts] Starting cleanup before ${reason} quit...`);
     try {
-      // Stop agent socket server
-      if (agentSocketServer && agentSocketServer.isRunning()) {
+      if (agentSocketServer) {
         log.info('[main.ts] Stopping agent socket server...');
-        await agentSocketServer.stop();
+        await agentSocketServerState.shutdown(false);
         log.info('[main.ts] Agent socket server stopped.');
       }
-      
+
       if (services?.fileManager?.cleanup) {
         log.info('[main.ts] Attempting FileManager cleanup...');
         await services.fileManager.cleanup();
@@ -1583,6 +1678,11 @@ app.on('activate', () => {
 });
 
 nodeProcess.on('uncaughtException', error => {
+  // Console/stdout/stderr failures are contained at their exact source. Only
+  // suppress EPIPEs queued after that positive observation; a first EPIPE from
+  // an unrelated socket or pipe retains the existing exception behavior.
+  if (outputChannelFailureGuard.shouldSuppressUnhandled(error)) return;
+
   recordCriticalFailure('main_process_exception', 'runtime');
   log.error('[main.ts] UNCAUGHT EXCEPTION:', error);
   if (!isDev) {
@@ -1596,6 +1696,8 @@ nodeProcess.on('uncaughtException', error => {
 });
 
 nodeProcess.on('unhandledRejection', reason => {
+  if (outputChannelFailureGuard.shouldSuppressUnhandled(reason)) return;
+
   recordCriticalFailure('main_process_rejection', 'runtime');
   log.error('[main.ts] UNHANDLED REJECTION:', reason);
   if (!isDev) {
@@ -1635,6 +1737,7 @@ async function createWindow(): Promise<BrowserWindow> {
     },
   });
   mainWindow = window;
+  agentSocketServer?.setMainWindow(window);
 
   // Capture this exact instance. A stale window closing must never clear a
   // newer main window that replaced it after a lifecycle transition.
@@ -1987,7 +2090,9 @@ app
 
       log.transports.file.resolvePathFn = () => logFilePath;
       log.transports.file.level = isDev ? 'debug' : 'info';
-      log.transports.console.level = isDev ? 'debug' : 'info';
+      if (!outputChannelFailureGuard.hasFailed()) {
+        log.transports.console.level = isDev ? 'debug' : 'info';
+      }
 
       const resolvedLogPath = log.transports.file.getFile().path;
       log.info(
@@ -2079,13 +2184,15 @@ app
       setStartupPhase('renderer_ready');
       markStartupSuccessful();
       log.info('[main.ts] Main window created.');
-      
+
       // Initialize agent socket server for packaged mode
       if (!agentSocketServer) {
-        agentSocketServer = new AgentSocketServer(window);
+        agentSocketServer = new AgentSocketServer(window, {
+          onUnexpectedFailure: error => failClosedAgentControl(error),
+        });
         log.info('[main.ts] Agent socket server initialized');
       }
-      
+
       void trackAppOpen();
       void flushPendingCriticalFailures();
       void flushPendingProductEvents();
@@ -2098,7 +2205,15 @@ app
     });
 
     // Start agent socket server if agent control is enabled in packaged build
-    await updateAgentSocketServer();
+    try {
+      await updateAgentSocketServer();
+    } catch (error) {
+      log.error(
+        '[main.ts] Disabling agent control after unsafe socket startup:',
+        error
+      );
+      await failClosedAgentControl(error);
+    }
 
     // Prewarm the download pipeline (yt-dlp binary check + self-update +
     // JS-runtime probe) off the critical path so the user's first download

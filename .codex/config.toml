@@ -1,6 +1,6 @@
 [mcp_servers.translator]
-command = "npm"
-args = ["run", "agent:mcp"]
+command = "packages/agent-server/bin/translator-owner-supervisor"
+args = ["--supervise", "1", "--", "node", "packages/agent-server/src/mcp.mjs"]
 cwd = "."
 enabled = true
 startup_timeout_sec = 20

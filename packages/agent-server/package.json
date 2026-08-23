@@ -5,8 +5,10 @@
   "type": "module",
   "description": "Local MCP and CLI bridge for subscription-powered Translator workflows",
   "scripts": {
+    "pretest": "npm run --prefix ../.. build:owner-supervisor",
     "test": "node --test",
-    "mcp": "node src/mcp.mjs",
+    "premcp": "npm run --prefix ../.. build:owner-supervisor",
+    "mcp": "bin/translator-dev-mcp",
     "cli": "node src/cli.mjs"
   },
   "dependencies": {

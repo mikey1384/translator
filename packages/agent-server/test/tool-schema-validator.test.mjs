@@ -1,0 +1,117 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { TOOL_SCHEMAS } from '../src/packaged-mcp.mjs';
+import {
+  parseToolArguments,
+  validateJsonSchema,
+} from '../src/tool-schema-validator.mjs';
+
+test('packaged tool validation accepts valid arguments and applies advertised defaults', () => {
+  const input = { id: 'download-1' };
+  assert.deepEqual(parseToolArguments(TOOL_SCHEMAS.app_downloads_open, input), {
+    id: 'download-1',
+    replace_subtitles: 'fail',
+  });
+  assert.deepEqual(input, { id: 'download-1' }, 'input must not be mutated');
+  assert.deepEqual(
+    parseToolArguments(TOOL_SCHEMAS.app_start_media_workflow, {}),
+    {
+      quality: '1080p',
+      run_to: 'transcribe',
+      include_highlights: true,
+      replace_subtitles: 'fail',
+    }
+  );
+});
+
+test('packaged tool validation enforces required, type, enum, bounds, and unknown-field constraints', () => {
+  assert.throws(
+    () => parseToolArguments(TOOL_SCHEMAS.app_navigate, {}),
+    /destination.*required/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_navigate, {
+        destination: 'home',
+        screen: 'settings',
+      }),
+    /screen.*not allowed/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_navigate, {
+        destination: 'somewhere',
+      }),
+    /must be one of/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_downloads_list, {
+        limit: 1.5,
+      }),
+    /must be integer/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_status, {
+        history_id: 'x'.repeat(513),
+      }),
+    /at most 512/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_video_batch_download, {
+        result_ids: [],
+      }),
+    /at least 1 items/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_open_web_page, {
+        url: 'not a URI',
+      }),
+    /absolute URI/
+  );
+});
+
+test('packaged tool validation enforces conditional and composite schemas', () => {
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_subtitles_mutate, {
+        operation: 'remove',
+        id: 'cue-1',
+      }),
+    /confirm.*required/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_subtitles_mutate, {
+        operation: 'shift_all',
+        seconds: 0,
+      }),
+    /forbidden shape/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_subtitles_update, {
+        updates: [{ id: 'cue-1' }],
+      }),
+    /does not satisfy any allowed shape/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(TOOL_SCHEMAS.app_start_media_workflow, {
+        url: 'https://example.com/video',
+        path: '/tmp/video.mp4',
+      }),
+    /forbidden shape/
+  );
+  assert.equal(
+    validateJsonSchema(TOOL_SCHEMAS.app_subtitles_mutate, {
+      operation: 'remove',
+      id: 'cue-1',
+      confirm: 'REMOVE',
+    }),
+    null
+  );
+});

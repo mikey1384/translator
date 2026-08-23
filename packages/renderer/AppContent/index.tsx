@@ -10,7 +10,6 @@ import {
 } from '../state';
 import * as SubtitlesIPC from '../ipc/subtitles';
 import * as UpdateIPC from '../ipc/update';
-import { useCreditStore } from '../state';
 import { useUrlStore } from '../state/url-store';
 import * as SystemIPC from '../ipc/system';
 

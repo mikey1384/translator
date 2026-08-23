@@ -347,8 +347,15 @@ export default function SubtitleEditor({
         operationId,
       });
 
-      const translated = (res as any)?.translation?.trim();
-      if (translated) actions.update({ translation: translated });
+      if (res.cancelled) return;
+      if (!res.success) {
+        throw new Error(res.error || 'Subtitle cue translation failed.');
+      }
+      const translated = res.translation?.trim();
+      if (!translated) {
+        throw new Error('Subtitle cue translation returned no text.');
+      }
+      actions.update({ translation: translated });
       setTranslationState({
         stage: t('generateSubtitles.status.completed', 'Completed'),
         percent: 100,

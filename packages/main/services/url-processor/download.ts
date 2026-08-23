@@ -1213,13 +1213,16 @@ export async function downloadVideoFromPlatform(
               '[URLprocessor] Error parsing final JSON from buffer:',
               jsonError
             );
-            log.error(`[URLprocessor] Final buffer content: ${stdoutBuffer}`);
+            log.error(
+              `[URLprocessor] Invalid final JSON buffer (${Buffer.byteLength(stdoutBuffer, 'utf8')} bytes; content omitted).`
+            );
             throw new Error('Failed to parse final JSON output from yt-dlp.');
           }
         } else if (!finalFilepath && stdoutBuffer.trim()) {
-          // Log remaining buffer if it wasn't JSON and we don't have a path yet
+          // Raw yt-dlp output can contain signed media URLs. Keep only its
+          // size in diagnostics when it does not match the expected protocol.
           log.warn(
-            `[URLprocessor] yt-dlp finished with non-JSON remaining buffer: ${stdoutBuffer.trim().substring(0, 500)}...`
+            `[URLprocessor] yt-dlp finished with a non-JSON buffer (${Buffer.byteLength(stdoutBuffer, 'utf8')} bytes; content omitted).`
           );
         }
 
@@ -1227,7 +1230,9 @@ export async function downloadVideoFromPlatform(
           log.error(
             '[URLprocessor] Final filename not found in yt-dlp output.'
           );
-          log.error(`[URLprocessor] Final JSON attempted: ${finalJsonOutput}`);
+          log.error(
+            `[URLprocessor] Final JSON candidate was ${Buffer.byteLength(finalJsonOutput, 'utf8')} bytes; content omitted.`
+          );
           throw new Error('yt-dlp did not provide a final filename in JSON.');
         }
 
@@ -1461,13 +1466,19 @@ export async function downloadVideoFromPlatform(
       `[URLprocessor] Handling non-cancellation error for Op ID ${operationId}`
     );
     if (error.stderr) {
-      log.error('[URLprocessor] yt-dlp STDERR:', error.stderr);
+      log.error(
+        `[URLprocessor] yt-dlp STDERR captured (${Buffer.byteLength(String(error.stderr), 'utf8')} bytes; content omitted).`
+      );
     }
     if (error.stdout) {
-      log.error('[URLprocessor] yt-dlp STDOUT on error:', error.stdout);
+      log.error(
+        `[URLprocessor] yt-dlp STDOUT captured (${Buffer.byteLength(String(error.stdout), 'utf8')} bytes; content omitted).`
+      );
     }
     if (error.all) {
-      log.error('[URLprocessor] yt-dlp ALL on error:', error.all);
+      log.error(
+        `[URLprocessor] yt-dlp combined output captured (${Buffer.byteLength(String(error.all), 'utf8')} bytes; content omitted).`
+      );
     }
 
     // Handle ALL OTHER (non-cancellation) errors
@@ -1577,15 +1588,28 @@ export async function downloadVideoFromPlatform(
     );
     // --- End User-Friendly Error Mapping ---
 
-    // Enhanced error logging (Keep this if you want detailed logs)
+    // Keep structural diagnostics without persisting captured yt-dlp output,
+    // signed media URLs, or an Execa message that may inline those streams.
     log.error(`[URLprocessor] Error type: ${typeof error}`);
-    log.error(`[URLprocessor] Raw error message: ${rawErrorMessage}`);
-    if (error.stderr) log.error(`[URLprocessor] Error stderr: ${error.stderr}`);
-    if (error.stack) log.error(`[URLprocessor] Error stack: ${error.stack}`);
-    if ((error as any).all || diagnosticLog)
+    log.error(
+      `[URLprocessor] Raw error message captured (${Buffer.byteLength(rawErrorMessage, 'utf8')} bytes; content omitted).`
+    );
+    if (error.stderr) {
       log.error(
-        `[URLprocessor] Error ALL: ${(error as any).all || diagnosticLog}`
+        `[URLprocessor] Error stderr captured (${Buffer.byteLength(String(error.stderr), 'utf8')} bytes; content omitted).`
       );
+    }
+    if (error.stack) {
+      log.error(
+        `[URLprocessor] Error stack captured (${String(error.stack).split('\n').length} lines; content omitted).`
+      );
+    }
+    if ((error as any).all || diagnosticLog) {
+      const combinedOutput = String((error as any).all || diagnosticLog);
+      log.error(
+        `[URLprocessor] Error combined output captured (${Buffer.byteLength(combinedOutput, 'utf8')} bytes; content omitted).`
+      );
+    }
     // Re-throw original ExecaError so upstream can inspect combined output
     error.userFriendly = userFriendlyErrorMessage;
     try {

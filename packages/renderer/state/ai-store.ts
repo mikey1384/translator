@@ -950,12 +950,12 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           unlockUnresolved: false,
           unlockError: err?.message || 'Unable to start checkout',
         });
-        
+
         // Track BYO unlock session creation failure
         const failureReason = String(err).includes('network')
           ? 'network_error'
           : 'api_error';
-        window.electron.trackPurchaseEvent?.('byo_unlock_failed', {
+        void SystemIPC.trackPurchaseEvent('byo_unlock_failed', {
           placement: 'settings-byo',
           failureReason,
         }).catch(() => {

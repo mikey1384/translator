@@ -29,7 +29,10 @@ function trimLogTail(text: string, maxLines: number): string {
       ? normalized.slice(firstNewline + 1)
       : normalized;
   const lines = withoutPartialLine.split('\n');
-  return lines.slice(Math.max(0, lines.length - maxLines)).join('\n').trim();
+  return lines
+    .slice(Math.max(0, lines.length - maxLines))
+    .join('\n')
+    .trim();
 }
 
 async function readLogTail(filePath: string): Promise<{
@@ -54,7 +57,10 @@ async function readLogTail(filePath: string): Promise<{
       const offset = Math.max(0, stats.size - length);
       const buffer = Buffer.alloc(length);
       await handle.read(buffer, 0, length, offset);
-      const tail = trimLogTail(buffer.toString('utf8'), MAX_MAIN_LOG_TAIL_LINES);
+      const tail = trimLogTail(
+        buffer.toString('utf8'),
+        MAX_MAIN_LOG_TAIL_LINES
+      );
       return {
         available: true,
         tail,

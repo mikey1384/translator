@@ -1,36 +1,70 @@
 @echo off
+setlocal EnableExtensions EnableDelayedExpansion
+
+set "APP_DIR=dist\win-unpacked"
+set "RESOURCES=%APP_DIR%\resources"
+set "TEST_EXIT=0"
+set "NO_LAUNCH=0"
+if /i "%~1"=="--no-launch" set "NO_LAUNCH=1"
+
 echo Testing Windows packaged application...
 
-REM Check if the executable exists
-if exist "dist\win-unpacked\Translator.exe" (
-    echo Found Translator.exe
-    
-    REM Check file size (should be around 200MB)
-    for %%A in ("dist\win-unpacked\Translator.exe") do (
-        echo File size: %%~zA bytes
-    )
-    
-    REM Check if headless binaries are included
-    if exist "dist\win-unpacked\resources\headless-x64" (
-        echo ✓ Headless binaries found
-    ) else (
-        echo ✗ Headless binaries missing
-    )
-    
-    REM Check if chrome-headless-shell.exe exists
-    if exist "dist\win-unpacked\resources\headless-x64\chrome-headless-shell\win64-*\chrome-headless-shell-win64\chrome-headless-shell.exe" (
-        echo ✓ Chrome headless shell executable found
-    ) else (
-        echo ✗ Chrome headless shell executable missing
-    )
-    
-    REM Launch the application
-    echo Launching Translator.exe...
-    start "" "dist\win-unpacked\Translator.exe"
-    
-) else (
-    echo ✗ Translator.exe not found in dist\win-unpacked\
-    echo Make sure to run 'npm run package:win' first
+if not exist "%APP_DIR%\Translator.exe" (
+  echo [FAIL] Translator.exe not found in %APP_DIR%\ 1>&2
+  echo Run npm run package:win first. 1>&2
+  exit /b 1
 )
 
-pause 
+for %%A in ("%APP_DIR%\Translator.exe") do echo Translator.exe size: %%~zA bytes
+
+if not exist "%RESOURCES%\headless-x64" (
+  echo [FAIL] Target-architecture headless browser directory is missing. 1>&2
+  set "TEST_EXIT=1"
+)
+if exist "%RESOURCES%\headless-arm64" (
+  echo [FAIL] Non-target arm64 headless browser was packaged in the x64 app. 1>&2
+  set "TEST_EXIT=1"
+)
+
+set "HEADLESS_BINARY="
+if exist "%RESOURCES%\headless-x64" (
+  for /r "%RESOURCES%\headless-x64" %%F in (chrome-headless-shell.exe) do (
+    if not defined HEADLESS_BINARY set "HEADLESS_BINARY=%%~fF"
+  )
+)
+if not defined HEADLESS_BINARY (
+  echo [FAIL] chrome-headless-shell.exe is missing. 1>&2
+  set "TEST_EXIT=1"
+)
+
+for %%F in (
+  packaged-mcp.mjs
+  transport-bound-lifecycle.mjs
+  native-owner-monitor.mjs
+  packaged-agent-protocol.mjs
+  stream-codecs.mjs
+  packaged-tool-map.mjs
+  tool-schema-validator.mjs
+  packaged-socket-path.mjs
+  translator-mcp.cmd
+  translator-owner-supervisor.exe
+) do (
+  if not exist "%RESOURCES%\%%F" (
+    echo [FAIL] Missing packaged agent runtime: %%F 1>&2
+    set "TEST_EXIT=1"
+  )
+)
+
+powershell -NoProfile -NonInteractive -Command "$paths=@('%APP_DIR%\Translator.exe','%RESOURCES%\translator-owner-supervisor.exe'); foreach($path in $paths){$signature=Get-AuthenticodeSignature -LiteralPath $path; if($signature.Status -ne 'Valid'){Write-Error ('Invalid Authenticode signature: '+$path+' ('+$signature.Status+')'); exit 1}}"
+if errorlevel 1 set "TEST_EXIT=1"
+
+if not "!TEST_EXIT!"=="0" exit /b !TEST_EXIT!
+
+echo Package structure and signatures are valid.
+if "%NO_LAUNCH%"=="1" exit /b 0
+
+echo Launching Translator.exe for the interactive smoke test...
+start "" "%APP_DIR%\Translator.exe"
+if errorlevel 1 exit /b %errorlevel%
+
+exit /b 0

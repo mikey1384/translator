@@ -86,12 +86,7 @@ export function ApiKeyOptionBox({
   children,
 }: ApiKeyOptionBoxProps) {
   return (
-    <div
-      className={cx(
-        optionBoxStyles,
-        satisfied && optionBoxSatisfiedStyles
-      )}
-    >
+    <div className={cx(optionBoxStyles, satisfied && optionBoxSatisfiedStyles)}>
       <div className={optionHeaderStyles}>
         <span
           className={cx(
@@ -110,9 +105,7 @@ export function ApiKeyOptionBox({
 
 export function OrDivider() {
   const { t } = useTranslation();
-  return (
-    <div className={dividerStyles}>— {t('common.or', 'OR')} —</div>
-  );
+  return <div className={dividerStyles}>— {t('common.or', 'OR')} —</div>;
 }
 
 interface ApiKeyOptionInputWrapperProps {

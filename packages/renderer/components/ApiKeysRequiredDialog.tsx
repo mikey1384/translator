@@ -197,8 +197,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
 
   const hasOpenAiConfigured = byoUnlocked && keyPresent;
   const hasAnthropicConfigured = byoAnthropicUnlocked && anthropicKeyPresent;
-  const hasElevenLabsConfigured =
-    byoElevenLabsUnlocked && elevenLabsKeyPresent;
+  const hasElevenLabsConfigured = byoElevenLabsUnlocked && elevenLabsKeyPresent;
 
   const hasTranslationCoverage = hasOpenAiConfigured || hasAnthropicConfigured;
   const hasAudioCoverage = hasOpenAiConfigured || hasElevenLabsConfigured;
@@ -318,9 +317,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
           </div>
         }
       >
-        <p
-          className={`${settingsBodyTextStyles} ${introStyles}`}
-        >
+        <p className={`${settingsBodyTextStyles} ${introStyles}`}>
           {t(
             'dialogs.apiKeysRequired.message',
             'To use your API keys for all AI operations, you need translation coverage and audio coverage. OpenAI covers both. Anthropic needs OpenAI or ElevenLabs for audio.'

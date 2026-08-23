@@ -15,7 +15,6 @@ import type {
   TranscriptHighlight,
 } from '@shared-types/app';
 import { ERROR_CODES } from '../../../shared/constants';
-import { useCreditStore } from '../../state';
 import * as SystemIPC from '../../ipc/system';
 import {
   cutCombinedHighlights,
@@ -35,6 +34,10 @@ import {
   type HighlightClipCutState,
 } from './TranscriptSummaryPanel.helpers';
 import type { CombineCutState } from './TranscriptSummaryLogic.types';
+import {
+  classifyHighlightProgressStage,
+  isHighlightProgressTerminalStage,
+} from '../../utils/progress-terminal';
 
 type HighlightClipAspectMode = Exclude<HighlightAspectMode, 'vertical'>;
 
@@ -358,15 +361,6 @@ function buildOrderedSelectionSignature(
   return orderedSelection
     .map(highlight => buildHighlightArtifactKey(withoutVideoPath(highlight)))
     .join('|');
-}
-
-function isTerminalProgressStage(stage: string | null | undefined): boolean {
-  const normalized = String(stage || '').toLowerCase();
-  return (
-    normalized.includes('ready') ||
-    normalized.includes('cancel') ||
-    normalized.includes('error')
-  );
 }
 
 export default function useTranscriptHighlightsFlow({
@@ -1034,16 +1028,7 @@ export default function useTranscriptHighlightsFlow({
             percent: 0,
           };
           let status: HighlightClipCutState['status'] = prevState.status;
-          const stageText = String(progress.stage || '').toLowerCase();
-          if (stageText.includes('ready')) {
-            status = 'ready';
-          } else if (stageText.includes('cancel')) {
-            status = 'cancelled';
-          } else if (stageText.includes('error')) {
-            status = 'error';
-          } else if (stageText) {
-            status = 'cutting';
-          }
+          status = classifyHighlightProgressStage(progress.stage) ?? status;
 
           return {
             ...prev,
@@ -1100,7 +1085,7 @@ export default function useTranscriptHighlightsFlow({
         }
       }
 
-      if (operationId && isTerminalProgressStage(progress.stage)) {
+      if (operationId && isHighlightProgressTerminalStage(progress.stage)) {
         delete highlightCutSourceByOperationRef.current[operationId];
       }
     });
@@ -1596,8 +1581,8 @@ export default function useTranscriptHighlightsFlow({
           : null;
       const activeCombineOperationId = combineCutStateRef.current.operationId;
       const activeSourceIdentity = resolveCurrentArtifactSourceIdentity();
-      const stageText = String(progress.stage || '').toLowerCase();
-      const isTerminal = isTerminalProgressStage(stageText);
+      const stageStatus = classifyHighlightProgressStage(progress.stage);
+      const isTerminal = isHighlightProgressTerminalStage(progress.stage);
 
       if (!activeCombineOperationId) {
         if (isTerminal && operationId) {
@@ -1631,10 +1616,7 @@ export default function useTranscriptHighlightsFlow({
       }
 
       const pct = typeof progress.percent === 'number' ? progress.percent : 0;
-      let status: CombineCutState['status'] = 'cutting';
-      if (stageText.includes('ready')) status = 'ready';
-      else if (stageText.includes('cancel')) status = 'cancelled';
-      else if (stageText.includes('error')) status = 'error';
+      const status: CombineCutState['status'] = stageStatus ?? 'cutting';
 
       setCombineCutState(prev => ({
         ...prev,

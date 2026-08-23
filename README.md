@@ -83,12 +83,22 @@ voice, provider, model, and BYO preferences. Provider keys are write-only and
 masked; purchases, entitlement checkout, and admin resets remain manual.
 
 ### Development Mode
+
 ```bash
 npm run agent:test
 npm run agent:mcp
 ```
 
+The repository MCP configuration launches the native owner supervisor as the
+direct client child, with the controller and every process it launches in the
+supervised process group. This covers owner loss even before Playwright returns
+the Electron process handle and independently of stdio EOF. An inner exact
+process monitor then tracks the launched Electron root. Controller shutdown is
+idempotent: explicit quit allows one 10-second Playwright grace period, while
+ownership loss takes the independent force path immediately.
+
 ### Production/Installed App
+
 Agent control is available in packaged builds with explicit user permission:
 
 1. Launch Translator.app (or installed Windows app)
@@ -99,14 +109,24 @@ Agent control is available in packaged builds with explicit user permission:
 Then point your MCP client (Cursor, Codex, etc.) to the packaged helper:
 
 **macOS:**
+
 ```
-/Applications/Translator.app/Contents/Resources/packaged-mcp.mjs
+/Applications/Translator.app/Contents/Resources/translator-mcp
 ```
 
 **Windows:**
+
 ```
-C:\Program Files\Translator\resources\packaged-mcp.mjs
+C:\Program Files\Translator\resources\translator-mcp.cmd
 ```
+
+These launchers use the Node runtime already bundled with Translator, so a
+separate Node.js installation is not required. They also supervise the exact
+MCP client and terminate the helper if that client exits, even if another
+process inherited every stdio descriptor. Each Translator start publishes a
+new authenticated local-socket generation, so stale helpers cannot attach to a
+restarted app. After updating Translator, restart both the app and MCP client
+to activate the new launcher and generation.
 
 Agent control includes a kill switch and can be disabled at any time from Settings.
 
@@ -157,8 +177,8 @@ npm run build
 # Static checks
 npm run lint
 
-# Main-process test suite
-npm run --prefix packages/main test
+# Main, agent lifecycle, renderer, shared, and release-script suites
+npm test
 ```
 
 Packaging requires platform-specific native dependencies and, for distributable macOS builds, signing and notarization credentials. The repository's release scripts encode those paths:

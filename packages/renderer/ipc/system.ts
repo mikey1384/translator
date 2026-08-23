@@ -2,11 +2,102 @@ import type {
   AllByoSettings,
   ByoVideoSuggestionModel,
   ErrorReportContext,
+  AgentBridgeRequest,
+  CreditPackId,
+  PurchaseFailureReason,
+  PurchaseFunnelEvent,
+  PurchasePlacement,
   Stage5VideoSuggestionMode,
   VideoSuggestionModelPreference,
   VideoSuggestionRecency,
   VideoMetadataResult,
 } from '@shared-types/app';
+
+export function onHeartbeatPing(callback: () => void): () => void {
+  return window.electron.onHeartbeatPing(callback) ?? (() => {});
+}
+
+export function trackPurchaseEvent(
+  event: PurchaseFunnelEvent,
+  context?: {
+    packId?: CreditPackId;
+    placement?: PurchasePlacement;
+    failureReason?: PurchaseFailureReason;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.trackPurchaseEvent(event, context);
+}
+
+export function getAgentControlEnabled(): Promise<boolean> {
+  return window.electron.getAgentControlEnabled();
+}
+
+export function setAgentControlEnabled(
+  enabled: boolean
+): Promise<{ success: boolean; enabled: boolean; error?: string }> {
+  return window.electron.setAgentControlEnabled(enabled);
+}
+
+export function getAgentAllowedDirectories(): Promise<string[]> {
+  return window.electron.getAgentAllowedDirectories();
+}
+
+export function addAgentAllowedDirectory(
+  directory: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.addAgentAllowedDirectory(directory);
+}
+
+export function removeAgentAllowedDirectory(
+  directory: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.removeAgentAllowedDirectory(directory);
+}
+
+export function getAgentSocketStatus(): Promise<{
+  running: boolean;
+  connectedClients: number;
+}> {
+  return window.electron.getAgentSocketStatus();
+}
+
+export function checkAgentPathAllowed(filePath: string): Promise<boolean> {
+  return window.electron.checkAgentPathAllowed(filePath);
+}
+
+export function showOpenDialog(options: {
+  properties?: Array<'openDirectory' | 'createDirectory'>;
+  title?: string;
+}): Promise<{ canceled: boolean; filePaths: string[] }> {
+  return window.electron.showOpenDialog(options);
+}
+
+export function onAgentBridgeRequest(
+  callback: (request: AgentBridgeRequest) => void
+): () => void {
+  return window.electron.onAgentBridgeRequest(callback);
+}
+
+export function sendAgentBridgeResponse(
+  channel: string,
+  response: { result?: unknown; error?: string }
+): void {
+  window.electron.sendAgentBridgeResponse(channel, response);
+}
+
+export function reportAgentHistoryJobTerminal(payload: {
+  historyId: string;
+  operationId: string;
+  routeToken: string;
+}): void {
+  window.electron.reportAgentHistoryJobTerminal(payload);
+}
+
+export function onAgentControlChanged(
+  callback: (payload: { enabled: boolean }) => void
+): () => void {
+  return window.electron.onAgentControlChanged(callback);
+}
 
 export function showMessage(message: string): Promise<void> {
   return window.electron.showMessage(message);

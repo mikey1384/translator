@@ -580,7 +580,10 @@ export function buildSettingsHandlers(opts: {
       );
       return { success: true };
     } catch (err: any) {
-      log.error('[settings] Failed to persist Stage5 video suggestion mode:', err);
+      log.error(
+        '[settings] Failed to persist Stage5 video suggestion mode:',
+        err
+      );
       return {
         success: false,
         error: err?.message || 'Failed to save preference',
@@ -612,7 +615,10 @@ export function buildSettingsHandlers(opts: {
       );
       return { success: true };
     } catch (err: any) {
-      log.error('[settings] Failed to persist BYO video suggestion model:', err);
+      log.error(
+        '[settings] Failed to persist BYO video suggestion model:',
+        err
+      );
       return {
         success: false,
         error: err?.message || 'Failed to save preference',
@@ -1011,8 +1017,11 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Agent control settings ─────────── */
   function getAgentControlEnabled(): boolean {
     try {
-      return Boolean(
-        store.get('agentControlEnabled', APP_SETTINGS_DEFAULTS.agentControlEnabled)
+      return (
+        store.get(
+          'agentControlEnabled',
+          APP_SETTINGS_DEFAULTS.agentControlEnabled
+        ) === true
       );
     } catch (err) {
       log.error('[settings] Failed to read agent control enabled:', err);
@@ -1025,11 +1034,20 @@ export function buildSettingsHandlers(opts: {
     error?: string;
   } {
     try {
-      store.set('agentControlEnabled', Boolean(value));
+      if (typeof value !== 'boolean') {
+        return {
+          success: false,
+          error: 'Agent control enabled must be a boolean',
+        };
+      }
+      store.set('agentControlEnabled', value);
       return { success: true };
     } catch (err: any) {
       log.error('[settings] Failed to persist agent control enabled:', err);
-      return { success: false, error: err?.message || 'Failed to save setting' };
+      return {
+        success: false,
+        error: err?.message || 'Failed to save setting',
+      };
     }
   }
 
@@ -1039,7 +1057,7 @@ export function buildSettingsHandlers(opts: {
    */
   function getDefaultAllowedDirectories(): string[] {
     const defaults: string[] = [];
-    
+
     try {
       // User Downloads directory
       const downloads = app.getPath('downloads');
@@ -1049,7 +1067,7 @@ export function buildSettingsHandlers(opts: {
     } catch (err) {
       log.warn('[settings] Failed to get downloads path:', err);
     }
-    
+
     try {
       // Translator library directory (URL downloads)
       const userData = app.getPath('userData');
@@ -1058,7 +1076,7 @@ export function buildSettingsHandlers(opts: {
     } catch (err) {
       log.warn('[settings] Failed to get library path:', err);
     }
-    
+
     return defaults;
   }
 
@@ -1068,13 +1086,15 @@ export function buildSettingsHandlers(opts: {
         'agentAllowedDirectories',
         APP_SETTINGS_DEFAULTS.agentAllowedDirectories
       );
-      const filtered = Array.isArray(dirs) ? dirs.filter(d => typeof d === 'string') : [];
-      
+      const filtered = Array.isArray(dirs)
+        ? dirs.filter(d => typeof d === 'string')
+        : [];
+
       // Return tight default set if empty (Downloads + Translator library)
       if (filtered.length === 0) {
         return getDefaultAllowedDirectories();
       }
-      
+
       return filtered;
     } catch (err) {
       log.error('[settings] Failed to read agent allowed directories:', err);
@@ -1089,7 +1109,10 @@ export function buildSettingsHandlers(opts: {
   } {
     try {
       if (!Array.isArray(dirs)) {
-        return { success: false, error: 'Allowed directories must be an array' };
+        return {
+          success: false,
+          error: 'Allowed directories must be an array',
+        };
       }
       const sanitized = dirs
         .filter(d => typeof d === 'string' && d.trim().length > 0)
@@ -1098,7 +1121,10 @@ export function buildSettingsHandlers(opts: {
       return { success: true };
     } catch (err: any) {
       log.error('[settings] Failed to persist agent allowed directories:', err);
-      return { success: false, error: err?.message || 'Failed to save directories' };
+      return {
+        success: false,
+        error: err?.message || 'Failed to save directories',
+      };
     }
   }
 
@@ -1115,7 +1141,10 @@ export function buildSettingsHandlers(opts: {
       return { success: true };
     } catch (err: any) {
       log.error('[settings] Failed to add agent allowed directory:', err);
-      return { success: false, error: err?.message || 'Failed to add directory' };
+      return {
+        success: false,
+        error: err?.message || 'Failed to add directory',
+      };
     }
   }
 
@@ -1129,7 +1158,10 @@ export function buildSettingsHandlers(opts: {
       return setAgentAllowedDirectories(current.filter(d => d !== resolved));
     } catch (err: any) {
       log.error('[settings] Failed to remove agent allowed directory:', err);
-      return { success: false, error: err?.message || 'Failed to remove directory' };
+      return {
+        success: false,
+        error: err?.message || 'Failed to remove directory',
+      };
     }
   }
 

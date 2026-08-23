@@ -31,14 +31,16 @@ test('caption-only events include mediaFailure but not failureCategory', () => {
 test('negative: caption-only path must not emit url_download_failed or url_download_completed', () => {
   // This test verifies the event taxonomy at the type level
   const captionOnlyEvent: UrlDownloadFunnelEvent = 'url_download_caption_only';
-  
-  // These assignments would fail at compile time if the types were wrong
-  const isNotFailed = captionOnlyEvent !== 'url_download_failed';
-  const isNotCompleted = captionOnlyEvent !== 'url_download_completed';
-  
-  assert.ok(isNotFailed, 'Caption-only must not be classified as failed');
-  assert.ok(isNotCompleted, 'Caption-only must not be classified as completed');
-  
+
+  const terminalMediaEvents: UrlDownloadFunnelEvent[] = [
+    'url_download_failed',
+    'url_download_completed',
+  ];
+  assert.ok(
+    !terminalMediaEvents.includes(captionOnlyEvent),
+    'Caption-only must not be classified as failed or completed'
+  );
+
   // Verify the event is in the allowed set
   const allowedEvents: UrlDownloadFunnelEvent[] = [
     'url_download_started',
@@ -52,6 +54,6 @@ test('negative: caption-only path must not emit url_download_failed or url_downl
     'url_cookie_connect_cancelled',
     'url_cookie_connect_failed',
   ];
-  
+
   assert.ok(allowedEvents.includes(captionOnlyEvent));
 });

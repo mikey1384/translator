@@ -50,7 +50,10 @@ function trimText(value: unknown, max = 1600): string {
 
 function tailLines(value: string, count: number): string {
   const lines = value.split(/\r?\n/);
-  return lines.slice(Math.max(0, lines.length - count)).join('\n').trim();
+  return lines
+    .slice(Math.max(0, lines.length - count))
+    .join('\n')
+    .trim();
 }
 
 function basename(filePath?: string | null): string | null {
@@ -61,7 +64,9 @@ function basename(filePath?: string | null): string | null {
   return parts[parts.length - 1] || raw;
 }
 
-function pickTaskSnapshot(task: TranslationTask): Record<string, unknown> | null {
+function pickTaskSnapshot(
+  task: TranslationTask
+): Record<string, unknown> | null {
   const hasSignal =
     Boolean(task.id) ||
     Boolean(task.stage) ||
@@ -83,7 +88,9 @@ function pickTaskSnapshot(task: TranslationTask): Record<string, unknown> | null
   };
 }
 
-function extractRecentExceptions(entries: LogEntry[]): Array<Record<string, unknown>> {
+function extractRecentExceptions(
+  entries: LogEntry[]
+): Array<Record<string, unknown>> {
   return entries
     .filter(entry => entry.level === 'error' || entry.kind === 'error')
     .slice(-6)
@@ -120,10 +127,23 @@ function buildSummaryLines(args: {
   const { mainContext, prompt, operationSnapshot, recentExceptions } = args;
   const tasks = (operationSnapshot.tasks || {}) as Record<string, any>;
   const ui = (operationSnapshot.ui || {}) as Record<string, any>;
-  const activeTask = ['dubbing', 'transcription', 'translation', 'merge', 'summary']
+  const activeTask = [
+    'dubbing',
+    'transcription',
+    'translation',
+    'merge',
+    'summary',
+  ]
     .map(name => ({ name, value: tasks[name] }))
-    .find(item => item.value && (item.value.inProgress || item.value.id || item.value.stage));
-  const currentError = (operationSnapshot.currentError || {}) as Record<string, any>;
+    .find(
+      item =>
+        item.value &&
+        (item.value.inProgress || item.value.id || item.value.stage)
+    );
+  const currentError = (operationSnapshot.currentError || {}) as Record<
+    string,
+    any
+  >;
   const video = (operationSnapshot.video || {}) as Record<string, any>;
   const ai = (operationSnapshot.ai || {}) as Record<string, any>;
 
@@ -379,7 +399,8 @@ export function buildErrorReportBundle(args: {
   mainContext?: ErrorReportContext | null;
   mainContextError?: string | null;
 }): ErrorReportBundle {
-  const { logs, userMessage, reportPrompt, mainContext, mainContextError } = args;
+  const { logs, userMessage, reportPrompt, mainContext, mainContextError } =
+    args;
   const operationSnapshot = buildOperationSnapshot();
   const rendererLogTail = compactAndFormatLogs(logs);
   const recentExceptions = extractRecentExceptions(logs);
@@ -392,7 +413,10 @@ export function buildErrorReportBundle(args: {
 
   const condensedSections = [
     'Stage5 Error Report',
-    buildSection('Generated', mainContext?.generatedAt || new Date().toISOString()),
+    buildSection(
+      'Generated',
+      mainContext?.generatedAt || new Date().toISOString()
+    ),
     buildSection('User Message', userMessage),
     buildSection('Summary', summaryLines.join('\n')),
     buildSection(
@@ -407,7 +431,9 @@ export function buildErrorReportBundle(args: {
     buildSection('Operation Snapshot', toPrettyJson(operationSnapshot)),
     buildSection(
       'Recent Exceptions',
-      recentExceptions.length ? toPrettyJson(recentExceptions) : 'None recorded.'
+      recentExceptions.length
+        ? toPrettyJson(recentExceptions)
+        : 'None recorded.'
     ),
   ].filter(Boolean);
 

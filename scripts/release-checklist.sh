@@ -6,10 +6,13 @@ echo "=============================="
 echo
 
 echo "1️⃣  Clean install..."
-npm run clean && npm install
+npm run clean
+npm ci --no-audit --fund=false
 
 echo
-echo "🔒 Checking release dependency security gates..."
+echo "🔎 Running release validation..."
+npm run lint
+npm test
 npm run security:dependencies
 
 echo

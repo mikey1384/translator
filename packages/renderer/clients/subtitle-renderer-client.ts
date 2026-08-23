@@ -3,6 +3,9 @@ import * as SubtitleIPC from '@ipc/subtitles';
 import type { RenderCancelRequestResult } from '@ipc/subtitles';
 import { useTaskStore } from '../state';
 import { SUBTITLE_RENDER_TIMEOUT } from '../../shared/constants/runtime-config';
+import { agentBackgroundOperations } from '../listeners/agent-background-operations';
+import { CancelledError } from '../../shared/cancelled-error';
+import { assertRenderOperationAvailable } from '../utils/render-operation-reservation';
 
 type PngRenderResult = {
   operationId: string;
@@ -144,10 +147,16 @@ class SubtitleRendererClient {
                 `[SubtitleRendererClient ${operationId}] Received FAILURE result from main:`,
                 error
               );
-              const reason = cancelled
-                ? 'Cancelled'
-                : String(error || 'Unknown rendering error from main process');
-              promiseCallbacks.reject(new Error(reason));
+              promiseCallbacks.resolve({
+                operationId,
+                success: false,
+                cancelled,
+                error: cancelled
+                  ? new CancelledError().message
+                  : String(
+                      error || 'Unknown rendering error from main process'
+                    ),
+              });
             }
             this.renderPromises.delete(operationId);
           } else {
@@ -171,11 +180,18 @@ class SubtitleRendererClient {
   ): Promise<PngRenderResult> {
     const DEFAULT_TIMEOUT_MS = SUBTITLE_RENDER_TIMEOUT;
     const { operationId, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
+    assertRenderOperationAvailable(this.renderPromises, operationId);
     this.clearOperationTracking(operationId);
     this.operationTimeouts.set(operationId, timeoutMs);
+    const diagnosticOptions: Record<string, unknown> = { ...options };
+    diagnosticOptions.srtContentLength = options.srtContent.length;
+    diagnosticOptions.subtitleSegmentCount =
+      options.subtitleSegments?.length ?? 0;
+    delete diagnosticOptions.srtContent;
+    delete diagnosticOptions.subtitleSegments;
     console.log(
       `[SubtitleRendererClient ${operationId}] Starting overlay render process via bridge:`,
-      options
+      diagnosticOptions
     );
 
     let timer: ReturnType<typeof setTimeout>;
@@ -239,16 +255,18 @@ class SubtitleRendererClient {
         },
       });
 
-      offProgress = SubtitleIPC.onMergeProgress(
-        (p: { operationId: string; [key: string]: any }) => {
-          if (p.operationId !== operationId) return;
-          if (!this.isCurrentMergeOperation(operationId)) return;
-
+      offProgress = SubtitleIPC.onMergeProgress(p => {
+        if (p.operationId !== operationId) return;
+        if (agentBackgroundOperations.route(p)) {
           arm();
-          const { percent = 0, stage = '' } = p ?? {};
-          useTaskStore.getState().setMerge({ percent, stage });
+          return;
         }
-      );
+        if (!this.isCurrentMergeOperation(operationId)) return;
+
+        arm();
+        const { percent = 0, stage = '' } = p ?? {};
+        useTaskStore.getState().setMerge({ percent, stage });
+      });
 
       try {
         SubtitleIPC.sendPngRenderRequest(options);

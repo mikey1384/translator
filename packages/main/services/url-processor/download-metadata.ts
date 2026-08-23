@@ -52,7 +52,9 @@ export function applyPrintedYtDlpMetadataLine(
   }
 
   const key = payload.slice(0, separatorIndex) as PrintedMetadataKey;
-  const value = normalizePrintedMetadataValue(payload.slice(separatorIndex + 1));
+  const value = normalizePrintedMetadataValue(
+    payload.slice(separatorIndex + 1)
+  );
   if (!value) {
     return current;
   }

@@ -67,10 +67,7 @@ export function translateStageLabel(stage: string, t: TFunction): string {
     (text.includes('selecting') || text.includes('selection')) &&
     text.includes('highlight');
   if (selectingState) {
-    return t(
-      'summary.status.selectingHighlights',
-      'Picking highlights…'
-    );
+    return t('summary.status.selectingHighlights', 'Picking highlights…');
   }
   if (text.includes('cutting') && text.includes('highlight')) {
     const cutMatch = text.match(/cutting\s+highlight\s+(\d+)\s+of\s+(\d+)/);

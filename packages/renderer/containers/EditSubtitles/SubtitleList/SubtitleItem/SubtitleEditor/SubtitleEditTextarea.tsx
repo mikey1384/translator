@@ -152,7 +152,10 @@ export default function SubtitleEditTextarea({
             const end = start + m[0].length;
             if (start > last) nodes.push(raw.slice(last, start));
             nodes.push(
-              <span key={`h-${start}-${end}`} className={editorTextareaHighlightMatchStyles}>
+              <span
+                key={`h-${start}-${end}`}
+                className={editorTextareaHighlightMatchStyles}
+              >
                 {raw.slice(start, end)}
               </span>
             );

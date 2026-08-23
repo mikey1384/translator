@@ -26,7 +26,9 @@ export function getVisibleTimedSubtitleParts(
   );
 }
 
-export function getVisibleTimedSubtitleText(parts: SubtitleRenderPart[]): string {
+export function getVisibleTimedSubtitleText(
+  parts: SubtitleRenderPart[]
+): string {
   return getVisibleTimedSubtitleParts(parts)
     .map(part => part.text)
     .join('');

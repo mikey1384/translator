@@ -6,6 +6,7 @@ import type {
   GenerateSubtitlesResult,
   DubSubtitlesOptions,
   DubSubtitlesResult,
+  TranslateOneLineResult,
   TranscribeOneLineOptions,
   TranscribeOneLineResult,
   TranscribeRemainingOptions,
@@ -17,6 +18,7 @@ type PngRenderResult = {
   success: boolean;
   outputPath?: string;
   error?: string;
+  cancelled?: boolean;
 };
 
 export type RenderCancelRequestResult = {
@@ -140,7 +142,9 @@ export function generateTranscriptSummary(options: {
 }
 
 export function onTranscriptSummaryProgress(
-  callback: ProgressEventCallback
+  callback: (
+    progress: import('@shared-types/app').TranscriptSummaryProgress
+  ) => void
 ): () => void {
   return (window.electron as any).onTranscriptSummaryProgress(callback);
 }
@@ -177,8 +181,8 @@ export function translateOneLine(options: {
   contextAfter?: import('@shared-types/app').SrtSegment[];
   targetLanguage: string;
   operationId?: string;
-}): Promise<{ translation: string; error?: string }> {
-  return (window.electron as any).translateOneLine(options);
+}): Promise<TranslateOneLineResult> {
+  return window.electron.translateOneLine(options);
 }
 
 export function transcribeOneLine(

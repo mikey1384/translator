@@ -396,7 +396,7 @@ function emitCheckoutUnresolved(
   broadcastToApp(
     mode === 'byo' ? 'byo-unlock-unresolved' : 'checkout-unresolved'
   );
-  
+
   // Unresolved is not a failure - checkout is still open in browser.
   // Terminal outcomes (completed/cancelled) are tracked when they actually occur.
 }
@@ -414,7 +414,7 @@ function emitCheckoutConfirmed(
   void targetWindow; // checkout events go to every tab
 
   broadcastToApp('checkout-confirmed');
-  
+
   // Track successful checkout completion
   void trackPurchaseFunnelEvent('credit_checkout_completed');
 }
@@ -429,7 +429,7 @@ function emitByoUnlockConfirmed(
   if (!shouldEmitCheckoutUiTransition('byo', sessionId, 'confirmed')) {
     return;
   }
-  
+
   // Track successful BYO unlock (after guard to prevent double-counting)
   void trackPurchaseFunnelEvent('byo_unlock_completed');
 
@@ -1160,7 +1160,7 @@ export async function handleCreateCheckoutSession(
       setActiveCheckoutSession('credits', checkoutSessionId);
       markCheckoutTransition('credits', 'pending');
       broadcastToApp('checkout-pending');
-      
+
       // Track checkout session created
       void trackPurchaseFunnelEvent('credit_checkout_session_created', {
         packId,
@@ -1392,12 +1392,12 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
       log.warn(
         '[credit-handler] BYO unlock endpoint did not return a checkout URL.'
       );
-      
+
       // Track session creation failure immediately
       void trackPurchaseFunnelEvent('byo_unlock_failed', {
         failureReason: 'api_error',
       });
-      
+
       broadcastToApp('byo-unlock-cancelled');
       return;
     }
@@ -1410,7 +1410,7 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
       `[credit-handler] BYO checkout session received (${getCheckoutLogLabel(checkoutSessionId)}).`
     );
     setActiveCheckoutSession('byo', checkoutSessionId);
-    
+
     // Track BYO unlock session created
     void trackPurchaseFunnelEvent('byo_unlock_session_created');
 
@@ -1545,13 +1545,13 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
     }
 
     log.error('[credit-handler] Failed to initiate BYO unlock checkout:', err);
-    
+
     // Track session creation failure immediately
     const failureReason = classifyPurchaseFailure({ error: err });
     void trackPurchaseFunnelEvent('byo_unlock_failed', {
       failureReason,
     });
-    
+
     broadcastToApp('byo-unlock-error', {
       message:
         err?.response?.data?.message ||
@@ -1667,7 +1667,7 @@ async function openStripeCheckoutInExternalBrowser(
 
   try {
     await shell.openExternal(sessionUrl);
-    
+
     // Track checkout opened in external browser
     const event =
       mode === 'byo' ? 'byo_unlock_opened' : 'credit_checkout_opened';
@@ -1786,7 +1786,7 @@ async function openStripeCheckout(
     });
 
     win.loadURL(options.sessionUrl);
-    
+
     // Track checkout opened in embedded window
     const event =
       options.defaultMode === 'byo'

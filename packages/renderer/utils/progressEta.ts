@@ -107,10 +107,14 @@ function getTranslationDraftProvider(
 function getTranslationReviewProvider(
   input: OperationEtaInput
 ): ProviderHint | undefined {
-  return detectProviderFromModel(input.model) ?? input.translationReviewProvider;
+  return (
+    detectProviderFromModel(input.model) ?? input.translationReviewProvider
+  );
 }
 
-function buildTranslationPhasePlan(input: OperationEtaInput): EtaPhaseDuration[] {
+function buildTranslationPhasePlan(
+  input: OperationEtaInput
+): EtaPhaseDuration[] {
   const segmentCount =
     positive(input.segmentCount) ?? estimateSegments(input.videoDurationSec);
   const draftProvider = getTranslationDraftProvider(input);
@@ -245,7 +249,9 @@ function resolveBucketProvider(
       }
       return getTranslationDraftProvider(input);
     case 'transcription':
-      return detectProviderFromModel(input.model) ?? input.transcriptionProvider;
+      return (
+        detectProviderFromModel(input.model) ?? input.transcriptionProvider
+      );
     case 'dubbing':
       return detectProviderFromModel(input.model) ?? input.dubbingProvider;
     default:
@@ -391,7 +397,8 @@ function estimateOverallRemainingSeconds(
 ): number | null {
   const startedAt = positive(input.startedAt);
   if (!startedAt) return null;
-  if (input.percent < MIN_LIVE_PROGRESS_PCT || input.percent >= 100) return null;
+  if (input.percent < MIN_LIVE_PROGRESS_PCT || input.percent >= 100)
+    return null;
 
   const elapsedSec = Math.max(1, (nowMs - startedAt) / 1000);
   if (elapsedSec < MIN_LIVE_ELAPSED_SEC) return null;
@@ -409,17 +416,22 @@ export function estimateRemainingSeconds(
 
   const nowMs = input.nowMs ?? Date.now();
   const plan = buildPhaseDurationPlan(input, calibrationLookup);
-  const baselineRemaining = estimateBaselineRemainingSeconds(input, plan, nowMs);
+  const baselineRemaining = estimateBaselineRemainingSeconds(
+    input,
+    plan,
+    nowMs
+  );
   const phaseRemaining = estimatePhaseRemainingSeconds(input, nowMs);
   const overallRemaining = estimateOverallRemainingSeconds(input, nowMs);
 
   let remaining =
     overallRemaining != null && baselineRemaining != null
       ? overallRemaining * 0.75 + baselineRemaining * 0.25
-      : overallRemaining ?? baselineRemaining ?? null;
+      : (overallRemaining ?? baselineRemaining ?? null);
 
   if (phaseRemaining != null) {
-    remaining = remaining != null ? Math.max(remaining, phaseRemaining) : phaseRemaining;
+    remaining =
+      remaining != null ? Math.max(remaining, phaseRemaining) : phaseRemaining;
   }
 
   if (!Number.isFinite(remaining) || remaining == null || remaining <= 0) {

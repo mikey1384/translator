@@ -1,6 +1,7 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 import { i18n } from '../i18n';
+import { resolveTaskLifecycle } from './task-state-transition';
 
 export interface TranslationTask {
   id: string | null;
@@ -166,6 +167,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
             Math.round(p.percent) === Math.round(t.percent)) &&
           (!has('id') || p.id === t.id) &&
           (!has('inProgress') || p.inProgress === t.inProgress) &&
+          (!has('isCompleted') || p.isCompleted === t.isCompleted) &&
           (!has('workflowOwner') || p.workflowOwner === t.workflowOwner) &&
           (!has('model') || p.model === t.model) &&
           (!has('phaseKey') || p.phaseKey === t.phaseKey) &&
@@ -176,34 +178,12 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           (!has('batchStartIndex') ||
             p.batchStartIndex === t.reviewedBatchStartIndex);
         if (same) return;
+        const lifecycle = resolveTaskLifecycle(t, p);
         applyRuntimePatch(s.translation, p);
-        const stageNow = (p.stage ?? s.translation.stage ?? '').toLowerCase();
-        const pctNow = p.percent ?? s.translation.percent ?? 0;
-        const isCancelled = /cancel/.test(stageNow);
-
-        // Respect explicit inProgress override first
-        if (p.inProgress !== undefined) {
-          s.translation.inProgress = p.inProgress;
-        } else if (isCancelled) {
-          // Explicitly stop showing the panel on cancellation
-          s.translation.inProgress = false;
-        } else if (p.percent !== undefined) {
-          // Derive inProgress from percent/stage when not explicitly provided
-          const isComplete =
-            pctNow >= 100 &&
-            (stageNow.includes('complete') ||
-              stageNow.includes('done') ||
-              stageNow.includes('error') ||
-              stageNow.includes('processing complete'));
-          s.translation.inProgress = pctNow < 100 || !isComplete;
-          if (!s.translation.inProgress)
-            s.translation.reviewedBatchStartIndex = null;
-        }
-        if (p.percent !== undefined || p.stage !== undefined) {
-          s.translation.isCompleted =
-            !isCancelled &&
-            (pctNow >= 100 ||
-              /processing complete|complete|done/i.test(stageNow ?? ''));
+        s.translation.inProgress = lifecycle.inProgress;
+        s.translation.isCompleted = lifecycle.isCompleted;
+        if (has('isCompleted')) {
+          s.translation.reviewedBatchStartIndex = null;
         }
         if (p.batchStartIndex !== undefined) {
           s.translation.reviewedBatchStartIndex = p.batchStartIndex;
@@ -228,6 +208,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
             Math.round(p.percent) === Math.round(task.percent)) &&
           (!has('id') || p.id === task.id) &&
           (!has('inProgress') || p.inProgress === task.inProgress) &&
+          (!has('isCompleted') || p.isCompleted === task.isCompleted) &&
           (!has('workflowOwner') || p.workflowOwner === task.workflowOwner) &&
           (!has('model') || p.model === task.model) &&
           (!has('phaseKey') || p.phaseKey === task.phaseKey) &&
@@ -236,29 +217,10 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           (!has('unit') || p.unit === task.unit) &&
           (!has('etaSeconds') || p.etaSeconds === task.etaSeconds);
         if (same) return;
+        const lifecycle = resolveTaskLifecycle(task, p);
         applyRuntimePatch(s.dubbing, p);
-        const stageNow = (p.stage ?? s.dubbing.stage ?? '').toLowerCase();
-        const pctNow = p.percent ?? s.dubbing.percent ?? 0;
-        const isCancelled = /cancel/.test(stageNow);
-
-        if (p.inProgress !== undefined) {
-          s.dubbing.inProgress = p.inProgress;
-        } else if (isCancelled) {
-          s.dubbing.inProgress = false;
-        } else if (p.percent !== undefined) {
-          const isComplete =
-            pctNow >= 100 &&
-            (stageNow.includes('complete') ||
-              stageNow.includes('done') ||
-              stageNow.includes('error'));
-          s.dubbing.inProgress = pctNow < 100 || !isComplete;
-        }
-        if (p.percent !== undefined || p.stage !== undefined) {
-          s.dubbing.isCompleted =
-            !isCancelled &&
-            (pctNow >= 100 ||
-              /processing complete|complete|done/i.test(stageNow ?? ''));
-        }
+        s.dubbing.inProgress = lifecycle.inProgress;
+        s.dubbing.isCompleted = lifecycle.isCompleted;
         if (p.inProgress === false) {
           s.dubbing.inProgress = false;
           s.dubbing.id = null;
@@ -277,6 +239,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
             Math.round(p.percent) === Math.round(t.percent)) &&
           (!has('id') || p.id === t.id) &&
           (!has('inProgress') || p.inProgress === t.inProgress) &&
+          (!has('isCompleted') || p.isCompleted === t.isCompleted) &&
           (!has('workflowOwner') || p.workflowOwner === t.workflowOwner) &&
           (!has('model') || p.model === t.model) &&
           (!has('phaseKey') || p.phaseKey === t.phaseKey) &&
@@ -285,24 +248,10 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           (!has('unit') || p.unit === t.unit) &&
           (!has('etaSeconds') || p.etaSeconds === t.etaSeconds);
         if (same) return;
+        const lifecycle = resolveTaskLifecycle(t, p);
         applyRuntimePatch(s.transcription, p);
-        const stageNow = (p.stage ?? s.transcription.stage ?? '').toLowerCase();
-        const pctNow = p.percent ?? s.transcription.percent ?? 0;
-        const isCancelled = /cancel/.test(stageNow);
-        if (p.inProgress !== undefined) {
-          s.transcription.inProgress = p.inProgress;
-        } else if (isCancelled) {
-          // Explicitly stop showing the panel on cancellation
-          s.transcription.inProgress = false;
-        } else if (p.percent !== undefined) {
-          s.transcription.inProgress = pctNow < 100;
-        }
-        if (p.percent !== undefined || p.stage !== undefined) {
-          s.transcription.isCompleted =
-            !isCancelled &&
-            (pctNow >= 100 ||
-              /processing complete|complete|done/i.test(stageNow));
-        }
+        s.transcription.inProgress = lifecycle.inProgress;
+        s.transcription.isCompleted = lifecycle.isCompleted;
         if (p.inProgress === false) {
           // Preserve the finished operation identity until an explicit reset or
           // replacement operation arrives so buffered completion packets still
@@ -329,23 +278,13 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           (p.percent === undefined ||
             Math.round(p.percent) === Math.round(t.percent)) &&
           (p.id === undefined || p.id === t.id) &&
-          (p.inProgress === undefined || p.inProgress === t.inProgress);
+          (p.inProgress === undefined || p.inProgress === t.inProgress) &&
+          (p.isCompleted === undefined || p.isCompleted === t.isCompleted);
         if (same) return;
+        const lifecycle = resolveTaskLifecycle(t, p);
         Object.assign(s.summary, p);
-        const stageNow = (p.stage ?? s.summary.stage ?? '').toLowerCase();
-        const pctNow = p.percent ?? s.summary.percent ?? 0;
-        const isCancelled = /cancel/.test(stageNow);
-        if (p.inProgress !== undefined) {
-          s.summary.inProgress = p.inProgress;
-        } else if (isCancelled) {
-          s.summary.inProgress = false;
-        } else if (p.percent !== undefined) {
-          s.summary.inProgress = pctNow < 100;
-        }
-        if (p.percent !== undefined || p.stage !== undefined) {
-          s.summary.isCompleted =
-            !isCancelled && (pctNow >= 100 || /complete|done/.test(stageNow));
-        }
+        s.summary.inProgress = lifecycle.inProgress;
+        s.summary.isCompleted = lifecycle.isCompleted;
         if (p.inProgress === false) {
           s.summary.inProgress = false;
           s.summary.id = null;
@@ -363,6 +302,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
             Math.round(p.percent) === Math.round(task.percent)) &&
           (!has('id') || p.id === task.id) &&
           (!has('inProgress') || p.inProgress === task.inProgress) &&
+          (!has('isCompleted') || p.isCompleted === task.isCompleted) &&
           (!has('workflowOwner') || p.workflowOwner === task.workflowOwner) &&
           (!has('model') || p.model === task.model) &&
           (!has('phaseKey') || p.phaseKey === task.phaseKey) &&
@@ -371,25 +311,10 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           (!has('unit') || p.unit === task.unit) &&
           (!has('etaSeconds') || p.etaSeconds === task.etaSeconds);
         if (same) return;
-
+        const lifecycle = resolveTaskLifecycle(task, p);
         applyRuntimePatch(task, p);
-
-        const stageNow = (p.stage ?? task.stage ?? '').toLowerCase();
-        const pctNow = p.percent ?? task.percent ?? 0;
-        const isCancelled = /cancel/.test(stageNow);
-
-        if (p.inProgress !== undefined) {
-          task.inProgress = p.inProgress;
-        } else if (isCancelled) {
-          task.inProgress = false;
-        } else if (p.percent !== undefined) {
-          task.inProgress = pctNow < 100;
-        }
-
-        if (p.percent !== undefined || p.stage !== undefined) {
-          task.isCompleted =
-            !isCancelled && (pctNow >= 100 || /complete|done/.test(stageNow));
-        }
+        task.inProgress = lifecycle.inProgress;
+        task.isCompleted = lifecycle.isCompleted;
 
         if (p.inProgress === false) {
           task.inProgress = false;
@@ -404,6 +329,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           percent: 0,
           stage: i18n.t('generateSubtitles.status.starting'),
           inProgress: true,
+          isCompleted: false,
         };
       }),
     doneMerge: () =>

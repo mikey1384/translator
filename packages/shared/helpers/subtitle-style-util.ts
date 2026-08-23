@@ -303,7 +303,8 @@ export function resolveSubtitleRenderTheme(opts: {
     boxShadowValue =
       shortFormTuning?.boxShadow || '0 4px 16px rgba(0, 0, 0, 0.4)';
     if (style.borderStyle === 4 && style.outlineSize > 0) {
-      const outlineSize = style.outlineSize * (shortFormTuning?.outlineMultiplier ?? 1);
+      const outlineSize =
+        style.outlineSize * (shortFormTuning?.outlineMultiplier ?? 1);
       textStrokeColor = outlineRgba;
       textStrokeWidthPx = outlineSize;
       textShadow = buildSoftShadow(
@@ -363,10 +364,7 @@ export function getSubtitleStyles(opts: {
   videoWidthPx?: number;
   videoHeightPx?: number;
 }): string {
-  const {
-    isFullScreen = false,
-    stylePreset = 'Default',
-  } = opts;
+  const { isFullScreen = false, stylePreset = 'Default' } = opts;
   const style =
     SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
   const textColor = assColorToRgba(style.primaryColor);

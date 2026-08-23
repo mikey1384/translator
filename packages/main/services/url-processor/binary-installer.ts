@@ -36,7 +36,6 @@ import {
 } from './yt-dlp-binary-names.js';
 export { ytDlpReleaseAssetName, ytDlpStagedBinaryName };
 
-
 // Cache for update check - only check once per hour. Persisted so the
 // packaged app's first download after every launch doesn't re-pay a
 // network self-update in the warm-up path.
@@ -1553,8 +1552,6 @@ async function tryPostinstallScript(
     return null;
   }
 }
-
-
 
 async function downloadBinaryDirectly(
   targetPath: string,

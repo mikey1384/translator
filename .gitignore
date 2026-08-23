@@ -32,6 +32,8 @@ scripts/.secrets/
 
 # Testing
 coverage/
+packages/agent-server/bin/translator-owner-supervisor
+packages/agent-server/bin/translator-owner-supervisor.exe
 
 # Temporary files
 uploads/

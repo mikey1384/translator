@@ -54,10 +54,10 @@ test('preserveWordTimingsOnTranslatedSegments carries source words into translat
     translatedSegments
   );
 
-  assert.deepEqual(preserved.map(segment => segment.words), [
-    sourceSegments[0].words,
-    sourceSegments[1].words,
-  ]);
+  assert.deepEqual(
+    preserved.map(segment => segment.words),
+    [sourceSegments[0].words, sourceSegments[1].words]
+  );
   assert.equal(preserved[0].translation, 'Hola mundo');
   assert.equal(preserved[1].translation, 'Como estas');
 });

@@ -30,6 +30,7 @@ import {
 import { preserveWordTimingsOnTranslatedSegments } from '../../../utils/preserve-word-timings';
 import { detachSourceLinkedSubtitleOwnership } from '../../../utils/source-linked-subtitle-ownership';
 import { registerStage5CreditRefreshOperation } from '../../../utils/creditRefreshOperations';
+import { isExplicitCancellation } from '../../../../shared/cancelled-error';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -216,6 +217,7 @@ export async function executeSrtTranslation({
         stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
         inProgress: false,
+        isCompleted: true,
       });
       return { success: true, subtitles: res.translatedSubtitles };
     }
@@ -230,6 +232,7 @@ export async function executeSrtTranslation({
       stage: friendlyError,
       percent: 100,
       inProgress: false,
+      isCompleted: false,
     });
 
     if (!cancelled) {
@@ -252,9 +255,7 @@ export async function executeSrtTranslation({
       segmentCount: Array.isArray(segments) ? segments.length : 0,
     });
     const errorMsg = err?.message || String(err);
-    const cancelled =
-      /operation cancelled/i.test(errorMsg) ||
-      /process cancelled/i.test(errorMsg);
+    const cancelled = isExplicitCancellation(err);
     const userFriendlyMsg = getTranslationFailureMessage({
       error: errorMsg,
       cancelled,
@@ -264,6 +265,7 @@ export async function executeSrtTranslation({
       stage: userFriendlyMsg,
       percent: 100,
       inProgress: false,
+      isCompleted: false,
     });
 
     if (shouldSurfaceTranslationFailure({ error: errorMsg, cancelled })) {
@@ -357,6 +359,7 @@ export async function executeDubGeneration({
         stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
         inProgress: false,
+        isCompleted: true,
       });
 
       useVideoStore.getState().registerDubbedResult({
@@ -412,6 +415,7 @@ export async function executeDubGeneration({
       stage: errorStage,
       percent: 100,
       inProgress: false,
+      isCompleted: false,
     });
     return { success: false, cancelled: res?.cancelled };
   } catch (error) {
@@ -440,6 +444,7 @@ export async function executeDubGeneration({
       stage: friendlyError,
       percent: 100,
       inProgress: false,
+      isCompleted: false,
     });
     return { success: false };
   }
@@ -454,7 +459,9 @@ export async function executeSubtitleGeneration({
 }: GenerateSubtitlesParams): Promise<GenerateSubtitlesResult> {
   const { setTranscription } = useTaskStore.getState();
   // Ensure translation slice is not considered active during transcription-only
-  useTaskStore.getState().setTranslation({ inProgress: false });
+  useTaskStore
+    .getState()
+    .setTranslation({ inProgress: false, isCompleted: false });
   useUrlStore.getState().clearError();
 
   // Initialize progress tracking (transcription-only)
@@ -464,6 +471,7 @@ export async function executeSubtitleGeneration({
     stage: i18n.t('generateSubtitles.status.starting'),
     percent: 0,
     inProgress: true,
+    isCompleted: false,
     workflowOwner,
   });
 
@@ -583,6 +591,7 @@ export async function executeSubtitleGeneration({
         stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
         inProgress: false,
+        isCompleted: true,
         workflowOwner,
       });
 
@@ -622,6 +631,7 @@ export async function executeSubtitleGeneration({
         stage,
         percent,
         inProgress: false,
+        isCompleted: false,
         workflowOwner,
       });
 
@@ -635,9 +645,7 @@ export async function executeSubtitleGeneration({
       videoFileName: videoFile?.name,
     });
     const errorMsg = error instanceof Error ? error.message : String(error);
-    const cancelled =
-      /operation cancelled/i.test(errorMsg) ||
-      /process cancelled/i.test(errorMsg);
+    const cancelled = isExplicitCancellation(error);
     const friendlyError = isSourceVideoUnavailableError(errorMsg)
       ? getSourceVideoUnavailableMessage()
       : isByoError(errorMsg)
@@ -653,6 +661,7 @@ export async function executeSubtitleGeneration({
       stage: friendlyError,
       percent: cancelled ? 0 : 100,
       inProgress: false,
+      isCompleted: false,
       workflowOwner,
     });
 
@@ -765,6 +774,7 @@ function clearMountedSrtShared() {
     stage: '',
     percent: 0,
     inProgress: false,
+    isCompleted: false,
     batchStartIndex: undefined,
   });
   useTaskStore.getState().setTranscription({
@@ -772,6 +782,7 @@ function clearMountedSrtShared() {
     stage: '',
     percent: 0,
     inProgress: false,
+    isCompleted: false,
   });
 }
 

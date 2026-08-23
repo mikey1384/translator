@@ -22,7 +22,10 @@ Param(
   [string]$ReleaseNotesFile,
 
   [Parameter(Mandatory = $false)]
-  [switch]$AllowMissingReleaseNotes
+  [switch]$AllowMissingReleaseNotes,
+
+  [Parameter(Mandatory = $false)]
+  [switch]$NoPause
 )
 
 Set-StrictMode -Version Latest
@@ -69,10 +72,31 @@ function Confirm-ArtifactPaths {
   $latestYml = Join-Path $dist 'latest.yml'
   if (-not (Test-Path -LiteralPath $installer)) { throw "Missing installer: $installer" }
   if (-not (Test-Path -LiteralPath $latestYml)) { throw "Missing updater file: $latestYml (did the build finish?)" }
+
+  $signature = Get-AuthenticodeSignature -LiteralPath $installer
+  if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
+    throw "Installer Authenticode signature is not valid: $($signature.Status) ($installer)"
+  }
+  if (-not $signature.SignerCertificate -or $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=Stage5 Tools LLC(?:,|$)') {
+    throw "Installer signer is not Stage5 Tools LLC: $($signature.SignerCertificate.Subject)"
+  }
+
+  $latestYamlText = [System.IO.File]::ReadAllText($latestYml)
+  $escapedVersion = [Regex]::Escape($version)
+  if ($latestYamlText -notmatch "(?m)^version:\s*$escapedVersion\s*$") {
+    throw "latest.yml does not declare the requested version '$version'."
+  }
+
+  $expectedUpdaterName = ([System.IO.Path]::GetFileName($installer) -replace ' ', '-')
+  $escapedUpdaterName = [Regex]::Escape($expectedUpdaterName)
+  if ($latestYamlText -notmatch "(?m)^\s*-?\s*(?:url|path):\s*$escapedUpdaterName\s*$") {
+    throw "latest.yml does not reference the expected installer '$expectedUpdaterName'."
+  }
 }
 
 $repo = Get-RepoRoot
 Set-Location -LiteralPath $repo
+$exitCode = 0
 
 try {
   Write-Stage 'Preflight checks'
@@ -84,7 +108,10 @@ try {
 
   if (-not $SkipBuild) {
     Write-Stage 'Building & signing (npm run package:win)'
-    npm run package:win
+    & npm run package:win
+    if ($LASTEXITCODE -ne 0) {
+      throw "npm run package:win failed with exit code $LASTEXITCODE."
+    }
   } else {
     Write-Host 'Skipping build as requested.'
   }
@@ -122,11 +149,14 @@ try {
   Write-Host "  https://downloads.stage5.tools/win/latest/latest.yml"
 
 } catch {
+  $exitCode = 1
   Write-Host ("ERROR: " + $_.Exception.Message) -ForegroundColor Red
-  # Do not exit immediately; allow user to see the error
 }
 
-# Always pause when launched interactively (double-click)
-if ($Host.Name -notlike '*Visual Studio Code*') {
+# Pause once for direct interactive launches. The .bat wrapper supplies
+# -NoPause and owns its own pause so failures still propagate as an exit code.
+if (-not $NoPause -and $Host.Name -notlike '*Visual Studio Code*') {
   Read-Host "Press Enter to exit"
 }
+
+exit $exitCode

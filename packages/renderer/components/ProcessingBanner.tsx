@@ -61,9 +61,7 @@ export default function ProcessingBanner({
 
   return (
     <div className={workflowStatusNoticeShellStyles}>
-      <span className={workflowStatusNoticeIconStyles}>
-        {icon}
-      </span>
+      <span className={workflowStatusNoticeIconStyles}>{icon}</span>
       <div className={workflowStatusNoticeContentStyles}>
         <span className={workflowStatusNoticeTitleStyles}>{t(titleKey)}</span>
         {t(descriptionKey)}{' '}

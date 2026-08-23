@@ -8,7 +8,7 @@ import type { UrlDownloadFunnelEvent } from '../services/url-download-funnel.js'
 test('product event queue persists failed events', () => {
   // Verify the intended queue behavior
   const mockQueue: Array<{ eventId: string; event: string }> = [];
-  
+
   const event1 = {
     eventId: 'test-1',
     event: 'transcription_started' as const,

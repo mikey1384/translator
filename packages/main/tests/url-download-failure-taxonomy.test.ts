@@ -87,3 +87,17 @@ test('a failed recovery maps HTTP 403 to app copy instead of raw yt-dlp text', a
     'This site refused access to the video (HTTP 403).'
   );
 });
+
+test('an unknown failure never returns raw upstream diagnostics to the UI', () => {
+  const secretMarker = 'signed-media-token=must-not-escape';
+  const result = mapErrorToUserFriendly({
+    rawErrorMessage: `Unexpected extractor failure (${secretMarker})`,
+    stderrContent: `opaque stderr (${secretMarker})`,
+  });
+
+  assert.equal(
+    result,
+    'Video download failed. Please try again or use a different URL.'
+  );
+  assert.doesNotMatch(result, /must-not-escape/);
+});

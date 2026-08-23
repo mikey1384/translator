@@ -1,13 +1,12 @@
 import React, { useRef, ChangeEvent, ReactNode, forwardRef } from 'react';
 import { css, cx } from '@emotion/css';
-import { colors, breakpoints } from '../styles.js';
+import { colors, breakpoints, shadows } from '../styles.js';
 import { logButton } from '../utils/logger.js';
 import { useTranslation } from 'react-i18next';
 import {
   borderRadius,
   componentSizes,
   fontWeight,
-  shadows,
   spacing,
   transitions,
 } from './design-system/tokens.js';
@@ -27,8 +26,7 @@ type FileChangeEvent =
   | ChangeEvent<HTMLInputElement>
   | { target: { files: FileList | { name: string; path: string }[] | null } };
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;

@@ -53,7 +53,7 @@ export function mapErrorToUserFriendly({
   }
 
   log.info(
-    `[URLprocessor] No specific error mapping for: "${rawErrorMessage}"`
+    `[URLprocessor] No specific error mapping (code=${failureDetail.code}, phase=${failureDetail.phase}, httpStatus=${failureDetail.httpStatus ?? 'none'}, rawBytes=${Buffer.byteLength(rawErrorMessage, 'utf8')}, stderrBytes=${Buffer.byteLength(stderrContent, 'utf8')}; content omitted).`
   );
-  return rawErrorMessage;
+  return 'Video download failed. Please try again or use a different URL.';
 }

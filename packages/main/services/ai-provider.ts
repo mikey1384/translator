@@ -3,7 +3,6 @@ import type { SettingsStoreType } from '../handlers/settings-handlers.js';
 import { decryptString } from './secure-storage.js';
 import * as stage5Client from './stage5-client.js';
 import {
-  transcribeViaDirect,
   transcribeViaR2,
   translateViaDirect,
   dubViaDirect,

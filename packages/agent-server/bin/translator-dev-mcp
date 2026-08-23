@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+launcher_dir=$(CDPATH= cd -P "$(dirname "$0")" && pwd)
+
+exec "$launcher_dir/translator-owner-supervisor" \
+  --supervise 1 -- \
+  node "$launcher_dir/../src/mcp.mjs" "$@"

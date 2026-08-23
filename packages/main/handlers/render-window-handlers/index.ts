@@ -12,6 +12,7 @@ import {
   registerAutoCancel,
   registerRenderJob,
   cancel as registryCancel,
+  finish as registryFinish,
 } from '../../active-processes.js';
 
 import { createOperationTempDir, cleanupTempDir } from './temp-utils.js';
@@ -32,6 +33,12 @@ import { getMainT } from '../../utils/i18n.js';
 import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.js';
 import { ERROR_CODES } from '../../../shared/constants/index.js';
 import { settingsStore } from '../../store/settings-store.js';
+import { assertAgentOutputPathAuthorized } from '../../utils/agent-output-authorization.js';
+import { normalizeRenderFailure } from '../../utils/render-failure.js';
+import {
+  renderOperationPathToken,
+  requireRenderOperationId,
+} from '../../utils/render-operation-id.js';
 
 const activeRenderJobs = new Map<
   string,
@@ -201,45 +208,6 @@ async function restoreDestinationFromBackup({
   }
 }
 
-function normalizeRenderFailure(
-  err: unknown,
-  signal?: AbortSignal
-): { error: string; cancelled?: boolean } {
-  // Signal cancellation always wins.
-  if (signal?.aborted) {
-    return { error: 'Cancelled', cancelled: true };
-  }
-
-  const message =
-    err instanceof Error
-      ? err.message
-      : typeof err === 'string'
-        ? err
-        : err && typeof err === 'object' && 'error' in err
-          ? String((err as any).error)
-          : String(err);
-
-  const code =
-    err && typeof err === 'object' && 'code' in err
-      ? String((err as any).code)
-      : '';
-
-  const isDiskFull =
-    message === ERROR_CODES.INSUFFICIENT_DISK_SPACE ||
-    code === 'ENOSPC' ||
-    /\bENOSPC\b/i.test(message) ||
-    /no space left on device/i.test(message) ||
-    /disk quota exceeded/i.test(message);
-
-  if (isDiskFull) return { error: ERROR_CODES.INSUFFICIENT_DISK_SPACE };
-
-  const cancelled = /cancel/i.test(message);
-  return {
-    error: message || 'Unknown error',
-    cancelled: cancelled || undefined,
-  };
-}
-
 export function initializeRenderWindowHandlers({
   ffmpeg,
 }: {
@@ -286,7 +254,30 @@ export function initializeRenderWindowHandlers({
   ipcMain.on(
     'render-subtitles-request',
     async (event, options: RenderSubtitlesOptions) => {
-      const { operationId } = options;
+      let operationId: string;
+      try {
+        operationId = requireRenderOperationId(options?.operationId);
+      } catch (error) {
+        event.reply('render-subtitles-result', {
+          operationId:
+            typeof options?.operationId === 'string' ? options.operationId : '',
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
+      if (
+        jobControllers.has(operationId) ||
+        activeRenderJobs.has(operationId)
+      ) {
+        event.reply('render-subtitles-result', {
+          operationId,
+          success: false,
+          error: 'A render with this operation ID is already active.',
+        });
+        return;
+      }
+      const operationPathToken = renderOperationPathToken(operationId);
       log.info(
         `[RenderWindowHandlers ${operationId}] render-subtitles-request received`
       );
@@ -352,33 +343,15 @@ export function initializeRenderWindowHandlers({
           operationId
         );
 
-        const explicitOutputPath = String(options.outputSavePath || '').trim();
-        if (explicitOutputPath) {
-          // In packaged mode, explicit paths require agent control enabled + allowlist check
-          if (app.isPackaged) {
-            const agentEnabled = settingsStore.get('agentControlEnabled', false);
-            if (!agentEnabled) {
-              throw new Error(
-                'Explicit merge output paths require agent control to be enabled in Settings.'
-              );
-            }
-            const allowedDirs = settingsStore.get('agentAllowedDirectories', []);
-            const resolvedOutput = path.resolve(explicitOutputPath);
-            const isAllowed = Array.isArray(allowedDirs) && allowedDirs.some(dir => {
-              const resolvedDir = path.resolve(String(dir));
-              return resolvedOutput.startsWith(resolvedDir + path.sep) || 
-                     resolvedOutput === resolvedDir;
-            });
-            if (!isAllowed) {
-              throw new Error(
-                'Merge output directory is not in the agent allowed directories list. Configure allowed directories in Settings → Agent Control.'
-              );
-            }
-          } else if (process.env.TRANSLATOR_AGENT_DEV !== '1') {
-            throw new Error(
-              'Explicit merge output paths are available only in local agent development mode.'
-            );
-          }
+        const requestedExplicitOutputPath = String(
+          options.outputSavePath || ''
+        ).trim();
+        let explicitOutputPath = '';
+        if (requestedExplicitOutputPath) {
+          explicitOutputPath = assertAgentOutputPathAuthorized(
+            requestedExplicitOutputPath,
+            'Explicit merge output'
+          );
           if (!path.isAbsolute(explicitOutputPath)) {
             throw new Error('Merged video output path must be absolute.');
           }
@@ -515,14 +488,17 @@ export function initializeRenderWindowHandlers({
 
         const concatListPath = path.join(
           tempDirPath,
-          `pngs_${operationId}.txt`
+          `pngs_${operationPathToken}.txt`
         );
         await writeConcat({ frames: statePngs, listPath: concatListPath });
         sendProgress({ percent: 40, stage: 'Overlay concat ready' });
 
         let videoForMerge = options.originalVideoPath;
         if (options.overlayMode === 'blackVideo') {
-          videoForMerge = path.join(tempDirPath, `black_${operationId}.mp4`);
+          videoForMerge = path.join(
+            tempDirPath,
+            `black_${operationPathToken}.mp4`
+          );
           await makeBlackVideo({
             out: videoForMerge,
             w: options.videoWidth,
@@ -532,7 +508,10 @@ export function initializeRenderWindowHandlers({
           });
         }
 
-        const tempMerged = path.join(tempDirPath, `merged_${operationId}.mp4`);
+        const tempMerged = path.join(
+          tempDirPath,
+          `merged_${operationPathToken}.mp4`
+        );
         await directMerge({
           concatListPath,
           baseVideoPath: videoForMerge,
@@ -609,6 +588,24 @@ export function initializeRenderWindowHandlers({
                 cancelled: true,
               });
               return;
+            }
+
+            // A long render leaves time for the kill switch, allowlist, or a
+            // symlinked parent to change. Re-authorize at the actual write
+            // boundary instead of relying on the pre-render decision.
+            if (explicitOutputPath) {
+              const reauthorizedOutputPath = assertAgentOutputPathAuthorized(
+                requestedExplicitOutputPath,
+                'Explicit merge output'
+              );
+              if (
+                path.relative(explicitOutputPath, reauthorizedOutputPath) !== ''
+              ) {
+                throw new Error(
+                  'Explicit merge output changed while rendering. Start the merge again.'
+                );
+              }
+              explicitOutputPath = reauthorizedOutputPath;
             }
 
             if (
@@ -752,7 +749,7 @@ export function initializeRenderWindowHandlers({
 
             const tempDest = path.join(
               destDir,
-              `translator_tmp_${operationId}_${Date.now()}.mp4`
+              `translator_tmp_${operationPathToken}_${Date.now()}.mp4`
             );
             let backupPath: string | null = null;
             try {
@@ -831,17 +828,28 @@ export function initializeRenderWindowHandlers({
         activeRenderJobs.delete(operationId);
         jobControllers.delete(operationId);
         savePhaseOperations.delete(operationId);
+        registryFinish(operationId);
       }
     }
   );
 
-  ipcMain.on('render-subtitles-cancel', (_event, { operationId }) => {
-    cancelRenderJob(operationId);
+  ipcMain.on('render-subtitles-cancel', (_event, payload) => {
+    try {
+      cancelRenderJob(requireRenderOperationId(payload?.operationId));
+    } catch {
+      // Invalid renderer input never names an active operation.
+    }
   });
 
   ipcMain.handle(
     'request-render-subtitles-cancel',
-    (_event, { operationId }): RenderCancelRequestResult => {
+    (_event, payload): RenderCancelRequestResult => {
+      let operationId: string;
+      try {
+        operationId = requireRenderOperationId(payload?.operationId);
+      } catch {
+        return { accepted: false, reason: 'not_found' };
+      }
       if (savePhaseOperations.has(operationId)) {
         log.warn(
           `[render-cancel] rejecting cancel for ${operationId} during save phase`
@@ -863,7 +871,13 @@ export function initializeRenderWindowHandlers({
 
   ipcMain.handle(
     'request-render-subtitles-status',
-    (_event, { operationId }): RenderOperationStatusResult => {
+    (_event, payload): RenderOperationStatusResult => {
+      let operationId: string;
+      try {
+        operationId = requireRenderOperationId(payload?.operationId);
+      } catch {
+        return { active: false, savePhase: false };
+      }
       const savePhase = savePhaseOperations.has(operationId);
       const active =
         savePhase ||

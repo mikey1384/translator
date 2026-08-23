@@ -67,9 +67,8 @@ test('detachSourceLinkedSubtitleOwnership detaches every source-linked document 
   });
 
   try {
-    const { detachSourceLinkedSubtitleOwnership } = await import(
-      './source-linked-subtitle-ownership'
-    );
+    const { detachSourceLinkedSubtitleOwnership } =
+      await import('./source-linked-subtitle-ownership');
 
     const result = await detachSourceLinkedSubtitleOwnership({
       sourceVideoPath: '/Users/test/Videos/interview.mp4',

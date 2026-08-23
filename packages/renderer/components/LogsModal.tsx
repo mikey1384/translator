@@ -49,10 +49,7 @@ export default function LogsModal({
     }
     return value;
   };
-  const resolvedPrompt = useMemo(
-    () => (reportPrompt ? resolveReportPrompt(reportPrompt) : ''),
-    [reportPrompt, t]
-  );
+  const resolvedPrompt = reportPrompt ? resolveReportPrompt(reportPrompt) : '';
   const defaultIntro = t(
     'logs.reportPrompt',
     'Something went wrong. Report this to the creator for a quick fix.'
@@ -106,10 +103,7 @@ export default function LogsModal({
 
   const previewText = useMemo(() => {
     if (loadingContext && !mainContext) {
-      return t(
-        'logs.preparingReport',
-        'Preparing diagnostic bundle...'
-      );
+      return t('logs.preparingReport', 'Preparing diagnostic bundle...');
     }
     return buildReportPreview({ bundle, mainContext });
   }, [bundle, loadingContext, mainContext, t]);

@@ -39,7 +39,9 @@ export function startHungWindowMonitoring(window: BrowserWindow): void {
   };
 
   resumeHandler = () => {
-    log.info('[hung-window-detector] System resumed, resetting heartbeat timer');
+    log.info(
+      '[hung-window-detector] System resumed, resetting heartbeat timer'
+    );
     isPaused = false;
     lastHeartbeatTime = Date.now();
   };
@@ -81,7 +83,10 @@ export function startHungWindowMonitoring(window: BrowserWindow): void {
         try {
           activeTab.send('heartbeat-ping');
         } catch (err) {
-          log.warn('[hung-window-detector] Failed to send heartbeat ping:', err);
+          log.warn(
+            '[hung-window-detector] Failed to send heartbeat ping:',
+            err
+          );
         }
       }
     }

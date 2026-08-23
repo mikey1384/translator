@@ -311,12 +311,8 @@ export default function ApiKeyInput({
         </Button>
       </div>
 
-      {statusMessage && (
-        <p className={statusMessageStyles}>{statusMessage}</p>
-      )}
-      {statusError && (
-        <p className={statusErrorStyles}>{statusError}</p>
-      )}
+      {statusMessage && <p className={statusMessageStyles}>{statusMessage}</p>}
+      {statusError && <p className={statusErrorStyles}>{statusError}</p>}
     </div>
   );
 }

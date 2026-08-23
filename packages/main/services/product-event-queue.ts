@@ -1,18 +1,23 @@
-import { randomUUID } from 'node:crypto';
 import Store from 'electron-store';
 import log from 'electron-log';
+import type { TranslationFunnelEvent } from './translation-funnel.js';
+import type { TranscriptionFunnelEvent } from './transcription-funnel.js';
+import type { DubbingFunnelEvent } from './dubbing-funnel.js';
+import type { SummaryFunnelEvent } from './summary-funnel.js';
+import type { MergeFunnelEvent } from './merge-funnel.js';
 import type {
-  TranslationFunnelEvent,
-  TranscriptionFunnelEvent,
-  DubbingFunnelEvent,
-  SummaryFunnelEvent,
-  MergeFunnelEvent,
+  NeedCookiesCause,
+  UrlConnectionContext,
+  UrlDownloadFailureCategory,
   UrlDownloadFunnelEvent,
-  PurchaseFunnelEvent,
+  UrlSourceType,
+} from './url-download-funnel.js';
+import type {
   CreditPackId,
-  PurchasePlacement,
   PurchaseFailureReason,
-} from './product-analytics.js';
+  PurchaseFunnelEvent,
+  PurchasePlacement,
+} from './purchase-funnel.js';
 
 type QueuedProductEvent = {
   eventId: string;
@@ -24,12 +29,12 @@ type QueuedProductEvent = {
     | MergeFunnelEvent
     | UrlDownloadFunnelEvent
     | PurchaseFunnelEvent;
-  workflow?: string;
+  workflow?: 'full_srt';
   urlDownload?: {
-    sourceType: string;
-    cookieCause?: string;
-    failureCategory?: string;
-    connectionContext?: string;
+    sourceType: UrlSourceType;
+    cookieCause?: NeedCookiesCause;
+    failureCategory?: UrlDownloadFailureCategory;
+    connectionContext?: UrlConnectionContext;
     mediaFailure?: string;
   };
   purchase?: {
@@ -51,7 +56,7 @@ const eventQueue = new Store<ProductEventQueueStore>({
 
 export function queueProductEvent(event: QueuedProductEvent): void {
   const pending = eventQueue.get('pendingEvents') ?? [];
-  
+
   // Cap the queue to prevent unbounded growth
   if (pending.length >= MAX_QUEUE_SIZE) {
     log.warn(
@@ -59,7 +64,7 @@ export function queueProductEvent(event: QueuedProductEvent): void {
     );
     pending.shift();
   }
-  
+
   pending.push(event);
   eventQueue.set('pendingEvents', pending);
 }

@@ -20,6 +20,7 @@ import {
   hasAnyByoEntitlementUnlocked,
   hasFullByoBundleUnlocked,
 } from '../../state/byo-runtime';
+import * as SystemIPC from '../../ipc/system';
 
 const BYO_UNLOCK_USD_PRICE_LABEL = 'US$10';
 
@@ -69,7 +70,7 @@ export default function ByoUnlockCard() {
   useEffect(() => {
     // Track button shown once when card is mounted and not hidden
     if (!shouldHideUpgradeCard) {
-      window.electron.trackPurchaseEvent?.('byo_unlock_button_shown', {
+      void SystemIPC.trackPurchaseEvent('byo_unlock_button_shown', {
         placement: 'settings-byo',
       }).catch(() => {
         // Ignore tracking errors
@@ -79,14 +80,14 @@ export default function ByoUnlockCard() {
 
   const handleUnlock = async () => {
     logButton('settings_byo_unlock_click');
-    
+
     // Track button click
-    window.electron.trackPurchaseEvent?.('byo_unlock_button_clicked', {
+    void SystemIPC.trackPurchaseEvent('byo_unlock_button_clicked', {
       placement: 'settings-byo',
     }).catch(() => {
       // Ignore tracking errors
     });
-    
+
     await startUnlock();
   };
 

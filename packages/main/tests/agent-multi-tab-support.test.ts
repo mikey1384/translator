@@ -1,461 +1,524 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 
-/**
- * Agent History-ID Support Tests
- * 
- * Tests that MCP tools support operating on library items without remounting,
- * enabling multiple agents to work on different videos simultaneously.
- * 
- * Related Issue: Multiple agents sharing one Translator.app instance
- * would interfere when remounting videos/subtitles.
- */
+import {
+  TOOL_SCHEMAS,
+  mapFields,
+} from '../../agent-server/src/packaged-mcp.mjs';
+import { PACKAGED_TOOL_MAP } from '../../agent-server/src/packaged-tool-map.mjs';
+import {
+  AgentBackgroundOperationRouter,
+  createAgentHistoryOperationId,
+  isAgentHistoryOperationId,
+  type AgentBackgroundProgress,
+} from '../../renderer/listeners/agent-background-operations';
+import { AgentClientSessionRouteRegistry } from '../utils/agent-client-session-routing';
+import {
+  AgentHistoryJobRegistry,
+  createAgentSubtitleBatchSnapshot,
+} from '../../renderer/listeners/agent-history-jobs';
+import { AgentHistoryRouteRegistry } from '../utils/agent-history-routing';
+import {
+  AgentBridgeDeliveryUnknownError,
+  AgentBridgeNotDeliveredError,
+  AgentBridgeResponseError,
+  isDefiniteAgentBridgeStartFailure,
+} from '../utils/agent-bridge-delivery';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.resolve(__dirname, '../../..');
+const HISTORY_AWARE_TOOLS = [
+  'app_status',
+  'app_start_transcription',
+  'app_start_translation',
+  'app_start_merge',
+  'app_processing_status',
+  'app_processing_cancel',
+  'app_subtitles_get',
+  'app_subtitles_export',
+] as const;
+const HISTORY_OPERATION =
+  'agent-history:translation:00000000-0000-4000-8000-000000000001';
 
-test('packaged-mcp - app_status accepts optional history_id', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  // Find app_status schema
-  const schemaStart = helperContent.indexOf('app_status:');
-  const schemaEnd = helperContent.indexOf('},', schemaStart) + 1;
-  assert.ok(schemaStart !== -1, 'app_status schema not found');
-  
-  const schemaBlock = helperContent.substring(schemaStart, schemaEnd);
-  
-  assert.ok(
-    schemaBlock.includes('history_id'),
-    'app_status schema must include history_id parameter'
-  );
-  assert.ok(
-    schemaBlock.includes("type: 'string'") && schemaBlock.includes('minLength: 1'),
-    'history_id must be non-empty string'
+function createRouteTarget(id: number) {
+  return {
+    id,
+    destroyed: false,
+    isDestroyed() {
+      return this.destroyed;
+    },
+  };
+}
+
+test('packaged MCP exposes an executable schema for every allowed tool', () => {
+  assert.deepEqual(
+    Object.keys(TOOL_SCHEMAS).sort(),
+    Object.keys(PACKAGED_TOOL_MAP).sort()
   );
 });
 
-test('packaged-mcp - app_subtitles_get accepts optional history_id', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  const schemaMatch = helperContent.match(/app_subtitles_get:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
-  assert.ok(schemaMatch, 'app_subtitles_get schema not found');
-  
-  const schema = schemaMatch[0];
-  
-  assert.ok(
-    schema.includes('history_id'),
-    'app_subtitles_get schema must include history_id parameter'
-  );
-  assert.ok(
-    schema.includes('offset') && schema.includes('limit'),
-    'app_subtitles_get must retain offset and limit parameters'
-  );
-});
-
-test('packaged-mcp - app_subtitles_export accepts optional history_id', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  const schemaMatch = helperContent.match(/app_subtitles_export:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
-  assert.ok(schemaMatch, 'app_subtitles_export schema not found');
-  
-  const schema = schemaMatch[0];
-  
-  assert.ok(
-    schema.includes('history_id'),
-    'app_subtitles_export schema must include history_id parameter'
-  );
-  assert.ok(
-    schema.includes('output_path') && schema.includes("required: ['output_path']"),
-    'app_subtitles_export must require output_path'
-  );
-});
-
-test('packaged-mcp - app_start_transcription accepts optional history_id', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  const schemaMatch = helperContent.match(/app_start_transcription:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
-  assert.ok(schemaMatch, 'app_start_transcription schema not found');
-  
-  const schema = schemaMatch[0];
-  
-  assert.ok(
-    schema.includes('history_id'),
-    'app_start_transcription schema must include history_id parameter'
-  );
-  assert.ok(
-    schema.includes('replace_subtitles'),
-    'app_start_transcription must retain replace_subtitles parameter'
-  );
-});
-
-test('packaged-mcp - app_start_translation accepts optional history_id', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  const schemaMatch = helperContent.match(/app_start_translation:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
-  assert.ok(schemaMatch, 'app_start_translation schema not found');
-  
-  const schema = schemaMatch[0];
-  
-  assert.ok(
-    schema.includes('history_id'),
-    'app_start_translation schema must include history_id parameter'
-  );
-  assert.ok(
-    schema.includes('target_language') && schema.includes("required: ['target_language']"),
-    'app_start_translation must require target_language'
-  );
-});
-
-test('packaged-mcp - app_start_merge accepts optional history_id', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  const schemaMatch = helperContent.match(/app_start_merge:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
-  assert.ok(schemaMatch, 'app_start_merge schema not found');
-  
-  const schema = schemaMatch[0];
-  
-  assert.ok(
-    schema.includes('history_id'),
-    'app_start_merge schema must include history_id parameter'
-  );
-  assert.ok(
-    schema.includes('output_path') && schema.includes("required: ['output_path']"),
-    'app_start_merge must require output_path'
-  );
-});
-
-test('packaged-mcp - app_processing_status accepts optional history_id', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  const schemaMatch = helperContent.match(/app_processing_status:\s*\{[\s\S]*?additionalProperties: false\s*\}/);
-  assert.ok(schemaMatch, 'app_processing_status schema not found');
-  
-  const schema = schemaMatch[0];
-  
-  assert.ok(
-    schema.includes('history_id'),
-    'app_processing_status schema must include history_id parameter'
-  );
-  assert.ok(
-    schema.includes("type: 'object'"),
-    'app_processing_status must be an object schema'
-  );
-});
-
-test('packaged-mcp - maps history_id to historyId', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  // Find mapFields function
-  const mapFieldsStart = helperContent.indexOf('function mapFields(input)');
-  const mapFieldsEnd = helperContent.indexOf('\n}\n', mapFieldsStart) + 2;
-  assert.ok(mapFieldsStart !== -1, 'mapFields function not found');
-  
-  const mapFieldsCode = helperContent.substring(mapFieldsStart, mapFieldsEnd);
-  
-  assert.ok(
-    mapFieldsCode.includes('history_id') && mapFieldsCode.includes('historyId'),
-    'mapFields must map history_id → historyId'
-  );
-  
-  // Test the mapping
-  const mapFieldsFn = new Function('input', `
-    ${mapFieldsCode}
-    return mapFields(input);
-  `);
-  
-  const mapped = mapFieldsFn({ history_id: 'test-id-123' });
-  assert.strictEqual(mapped.historyId, 'test-id-123', 'history_id must map to historyId');
-});
-
-test('translator-agent-listener - loadSubtitlesFromHistory function exists', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  assert.ok(
-    listenerContent.includes('async function loadSubtitlesFromHistory'),
-    'Must define loadSubtitlesFromHistory helper'
-  );
-  assert.ok(
-    listenerContent.includes('requireDownloadHistoryItem'),
-    'loadSubtitlesFromHistory must validate history item exists'
-  );
-  assert.ok(
-    listenerContent.includes('parseSrt'),
-    'loadSubtitlesFromHistory must parse stored subtitle file'
-  );
-});
-
-test('translator-agent-listener - status accepts historyId parameter', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  // Find status method in agent bridge
-  const statusMatch = listenerContent.match(/async status\(input\)[^}]+loadSubtitlesFromHistory/s);
-  assert.ok(statusMatch, 'status method must check for input.historyId');
-  
-  assert.ok(
-    listenerContent.includes('input?.historyId'),
-    'status must accept optional historyId parameter'
-  );
-});
-
-test('translator-agent-listener - subtitlesBatch is async and accepts historyId', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  assert.ok(
-    listenerContent.includes('async function subtitleBatchSnapshot'),
-    'subtitleBatchSnapshot must be async'
-  );
-  assert.ok(
-    listenerContent.includes('input?.historyId'),
-    'subtitleBatchSnapshot must check for historyId parameter'
-  );
-  assert.ok(
-    listenerContent.includes('await subtitleBatchSnapshot(input)'),
-    'Agent bridge must await subtitleBatchSnapshot call'
-  );
-});
-
-test('translator-agent-listener - exportSubtitles accepts historyId', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  // Find exportMountedSubtitles function
-  const exportMatch = listenerContent.match(/async function exportMountedSubtitles\(input[^{]+{[\s\S]*?historyId[\s\S]*?loadSubtitlesFromHistory/);
-  assert.ok(exportMatch, 'exportMountedSubtitles must accept and use historyId');
-  
-  assert.ok(
-    listenerContent.includes('await exportMountedSubtitles(input)'),
-    'Agent bridge must await exportMountedSubtitles call'
-  );
-});
-
-test('translator-agent-listener - job operations support history_id without remounting', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  // startTranscription should handle history_id via runHistoryTranscription
-  const transcriptionMatch = listenerContent.match(/async startTranscription\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?runHistoryTranscription/);
-  assert.ok(transcriptionMatch, 'startTranscription must handle history_id via runHistoryTranscription');
-  
-  // startTranslation should handle history_id via runHistoryTranslation
-  const translationMatch = listenerContent.match(/async startTranslation\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?runHistoryTranslation/);
-  assert.ok(translationMatch, 'startTranslation must handle history_id via runHistoryTranslation');
-  
-  // startMerge should handle history_id via runHistoryMerge
-  const mergeMatch = listenerContent.match(/async startMerge\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?runHistoryMerge/);
-  assert.ok(mergeMatch, 'startMerge must handle history_id via runHistoryMerge');
-  
-  // processingStatus should handle history_id via historyJobState
-  const statusMatch = listenerContent.match(/async processingStatus\(input\)[\s\S]*?if \(input\?\.historyId\)[\s\S]*?historyJobState/);
-  assert.ok(statusMatch, 'processingStatus must handle history_id via historyJobState');
-  
-  // runHistoryTranscription must not call store.load or openDownloadHistoryItem
-  const historyTranscriptionMatch = listenerContent.match(/async function runHistoryTranscription[\s\S]*?return \{[\s\S]*?\}/);
-  assert.ok(historyTranscriptionMatch, 'runHistoryTranscription function not found');
-  const historyTranscriptionBody = historyTranscriptionMatch[0];
-  assert.ok(
-    !historyTranscriptionBody.includes('useSubStore.getState().load('),
-    'runHistoryTranscription must NOT call store.load (would remount UI)'
-  );
-  assert.ok(
-    !historyTranscriptionBody.includes('openDownloadHistoryItem'),
-    'runHistoryTranscription must NOT call openDownloadHistoryItem (would remount UI)'
-  );
-  
-  // runHistoryTranslation must not call store.load or openDownloadHistoryItem
-  const historyTranslationMatch = listenerContent.match(/async function runHistoryTranslation[\s\S]*?return \{[\s\S]*?\}/);
-  assert.ok(historyTranslationMatch, 'runHistoryTranslation function not found');
-  const historyTranslationBody = historyTranslationMatch[0];
-  assert.ok(
-    !historyTranslationBody.includes('useSubStore.getState().load('),
-    'runHistoryTranslation must NOT call store.load (would remount UI)'
-  );
-  assert.ok(
-    !historyTranslationBody.includes('openDownloadHistoryItem'),
-    'runHistoryTranslation must NOT call openDownloadHistoryItem (would remount UI)'
-  );
-  
-  // runHistoryMerge must not call store.load or openDownloadHistoryItem
-  const historyMergeMatch = listenerContent.match(/async function runHistoryMerge[\s\S]*?return \{[\s\S]*?\}/);
-  assert.ok(historyMergeMatch, 'runHistoryMerge function not found');
-  const historyMergeBody = historyMergeMatch[0];
-  assert.ok(
-    !historyMergeBody.includes('useSubStore.getState().load('),
-    'runHistoryMerge must NOT call store.load (would remount UI)'
-  );
-  assert.ok(
-    !historyMergeBody.includes('openDownloadHistoryItem'),
-    'runHistoryMerge must NOT call openDownloadHistoryItem (would remount UI)'
-  );
-});
-
-test('translator-agent-listener - history-based operations do not remount UI', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  // loadSubtitlesFromHistory should read from disk, not call useSubStore.getState().load
-  const loadFnMatch = listenerContent.match(/async function loadSubtitlesFromHistory[\s\S]*?return \{[\s\S]*?\}/);
-  assert.ok(loadFnMatch, 'loadSubtitlesFromHistory function not found');
-  
-  const loadFnBody = loadFnMatch[0];
-  
-  assert.ok(
-    !loadFnBody.includes('useSubStore.getState().load'),
-    'loadSubtitlesFromHistory must NOT call store.load (would remount UI)'
-  );
-  assert.ok(
-    !loadFnBody.includes('setFile'),
-    'loadSubtitlesFromHistory must NOT call setFile (would remount video)'
-  );
-  assert.ok(
-    loadFnBody.includes('parseSrt'),
-    'loadSubtitlesFromHistory must parse subtitle file directly'
-  );
-});
-
-test('translator-agent-listener - history operations include sourceNote', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  // exportMountedSubtitles should return sourceNote when historyId is provided
-  const exportFnMatch = listenerContent.match(/async function exportMountedSubtitles[\s\S]*?return \{[\s\S]*?\}/);
-  assert.ok(exportFnMatch, 'exportMountedSubtitles not found');
-  
-  const exportFnBody = exportFnMatch[0];
-  assert.ok(
-    exportFnBody.includes('sourceNote'),
-    'exportMountedSubtitles must return sourceNote field'
-  );
-  assert.ok(
-    exportFnBody.includes('library item'),
-    'sourceNote must indicate when exporting from library'
-  );
-  
-  // subtitleBatchSnapshot should also return sourceNote
-  const batchFnMatch = listenerContent.match(/async function subtitleBatchSnapshot[\s\S]*?return \{[\s\S]*?\}/);
-  assert.ok(batchFnMatch, 'subtitleBatchSnapshot not found');
-  
-  const batchFnBody = batchFnMatch[0];
-  assert.ok(
-    batchFnBody.includes('sourceNote'),
-    'subtitleBatchSnapshot must return sourceNote field'
-  );
-});
-
-test('translator-agent-listener - loadSubtitlesFromHistory validates file exists', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  const loadFnMatch = listenerContent.match(/async function loadSubtitlesFromHistory[\s\S]*?return \{[\s\S]*?\}/);
-  assert.ok(loadFnMatch, 'loadSubtitlesFromHistory function not found');
-  
-  const loadFnBody = loadFnMatch[0];
-  
-  // Must check video file exists
-  assert.ok(
-    loadFnBody.includes('fileExists'),
-    'Must verify video file exists before loading'
-  );
-  
-  // Must check stored subtitle file exists
-  assert.ok(
-    loadFnBody.includes('getStoredSubtitlePath') || loadFnBody.includes('storedSubtitlePath'),
-    'Must locate stored subtitle file for video'
-  );
-  
-  // Must throw error if subtitle file missing
-  assert.ok(
-    loadFnBody.includes('has no stored subtitles') || loadFnBody.includes('throw'),
-    'Must throw error if stored subtitles missing'
-  );
-});
-
-test('translator-agent-listener - loadSubtitlesFromHistory validates subtitle content', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  
-  const loadFnMatch = listenerContent.match(/async function loadSubtitlesFromHistory[\s\S]*?return \{[\s\S]*?\}/);
-  assert.ok(loadFnMatch, 'loadSubtitlesFromHistory function not found');
-  
-  const loadFnBody = loadFnMatch[0];
-  
-  // Must parse subtitle file
-  assert.ok(
-    loadFnBody.includes('parseSrt'),
-    'Must parse SRT content'
-  );
-  
-  // Must validate non-empty segments
-  assert.ok(
-    loadFnBody.includes('segments.length') || loadFnBody.includes('!segments.length'),
-    'Must check segments array is not empty'
-  );
-  
-  // Must throw error for empty subtitle file
-  assert.ok(
-    loadFnBody.includes('empty or unreadable'),
-    'Must throw error for empty subtitle files'
-  );
-});
-
-test('packaged-mcp - tool list excludes human-gated tools', () => {
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  // TOOL_MAP must still exclude human-gated operations
-  const excluded = [
-    'openCreditCheckout',
-    'storeProviderKey',
-    'clearProviderKey',
-  ];
-  
-  for (const method of excluded) {
-    assert.ok(
-      !helperContent.includes(`'${method}'`) || helperContent.includes('humanGatedMethods'),
-      `${method} must remain human-gated`
+test('packaged MCP history-aware tools accept non-empty history IDs', () => {
+  for (const tool of HISTORY_AWARE_TOOLS) {
+    const historyId = TOOL_SCHEMAS[tool].properties?.history_id;
+    assert.deepEqual(
+      historyId,
+      { type: 'string', minLength: 1, maxLength: 512 },
+      tool
     );
   }
+
+  assert.deepEqual(TOOL_SCHEMAS.app_start_translation.required, [
+    'target_language',
+  ]);
+  assert.deepEqual(TOOL_SCHEMAS.app_start_merge.required, ['output_path']);
+  assert.deepEqual(TOOL_SCHEMAS.app_subtitles_export.required, ['path']);
+  assert.deepEqual(TOOL_SCHEMAS.app_subtitles_export.properties?.mode, {
+    type: 'string',
+    enum: ['original', 'translation', 'dual'],
+    default: 'dual',
+  });
 });
 
-test('documentation - no TRANSLATOR_AGENT_DEV references in production code', () => {
-  const listenerPath = path.join(projectRoot, 'packages/renderer/listeners/translator-agent-listener.ts');
-  const helperPath = path.join(projectRoot, 'packages/agent-server/src/packaged-mcp.mjs');
-  
-  const listenerContent = fs.readFileSync(listenerPath, 'utf8');
-  const helperContent = fs.readFileSync(helperPath, 'utf8');
-  
-  // Filter out comment lines before checking
-  const listenerLines = listenerContent.split('\n').filter(line => {
-    const trimmed = line.trim();
-    return !trimmed.startsWith('//') && !trimmed.startsWith('*');
+test('packaged MCP maps history and output fields without dropping ordinary fields', () => {
+  assert.deepEqual(
+    mapFields({
+      history_id: 'history-123',
+      output_path: '/tmp/video.mp4',
+      target_language: 'French',
+      path: '/tmp/subtitles.srt',
+      mode: 'translation',
+    }),
+    {
+      historyId: 'history-123',
+      outputPath: '/tmp/video.mp4',
+      targetLanguage: 'French',
+      path: '/tmp/subtitles.srt',
+      mode: 'translation',
+    }
+  );
+});
+
+test('packaged MCP tool map excludes human-gated mutations', () => {
+  const methods = new Set(Object.values(PACKAGED_TOOL_MAP));
+  assert.equal(methods.has('openCreditCheckout'), false);
+  assert.equal(methods.has('storeProviderKey'), false);
+  assert.equal(methods.has('clearProviderKey'), false);
+});
+
+test('background operation routing consumes active and trailing packets', () => {
+  const router = new AgentBackgroundOperationRouter();
+  const received: AgentBackgroundProgress[] = [];
+  const finish = router.register(HISTORY_OPERATION, progress => {
+    received.push(progress);
   });
-  const helperLines = helperContent.split('\n').filter(line => {
-    const trimmed = line.trim();
-    return !trimmed.startsWith('//') && !trimmed.startsWith('*');
+
+  const activePacket = {
+    operationId: HISTORY_OPERATION,
+    percent: 40,
+    stage: 'translating',
+  };
+  assert.equal(router.isActive(HISTORY_OPERATION), true);
+  assert.equal(router.route(activePacket), true);
+  assert.deepEqual(received, [activePacket]);
+
+  finish();
+  finish();
+  assert.equal(router.isActive(HISTORY_OPERATION), false);
+  assert.equal(
+    router.route({ operationId: HISTORY_OPERATION, percent: 100 }),
+    true,
+    'late packets must stay classified and cannot fall through to mounted UI state'
+  );
+  assert.equal(received.length, 1);
+  assert.equal(router.route({ operationId: 'mounted-operation' }), false);
+  assert.throws(
+    () => router.register('history-operation', () => undefined),
+    /invalid or already active/
+  );
+});
+
+test('history operation identities use an exact reserved structure', () => {
+  const operationId = createAgentHistoryOperationId('merge');
+  assert.equal(isAgentHistoryOperationId(operationId), true);
+  assert.equal(isAgentHistoryOperationId(HISTORY_OPERATION), true);
+  assert.equal(
+    isAgentHistoryOperationId('agent-history:merge:not-a-uuid'),
+    false
+  );
+  assert.equal(isAgentHistoryOperationId('translate-mounted-operation'), false);
+});
+
+test('background operation routing remains a safety boundary if its observer throws', () => {
+  const router = new AgentBackgroundOperationRouter();
+  router.register(HISTORY_OPERATION, () => {
+    throw new Error('observer failed');
   });
-  
-  const listenerCodeOnly = listenerLines.join('\n');
-  const helperCodeOnly = helperLines.join('\n');
-  
+
+  assert.doesNotThrow(() => {
+    assert.equal(router.route({ operationId: HISTORY_OPERATION }), true);
+  });
+});
+
+test('history job registry fences stale completions by exact operation identity', () => {
+  const jobs = new AgentHistoryJobRegistry();
+  jobs.start({
+    historyId: 'history-1',
+    operationId: 'operation-old',
+    kind: 'transcription',
+    stage: 'transcribing',
+  });
+  jobs.start({
+    historyId: 'history-1',
+    operationId: 'operation-current',
+    kind: 'translation',
+    stage: 'translating',
+  });
+
+  assert.equal(
+    jobs.finish('history-1', 'operation-old', {
+      status: 'completed',
+      result: { stale: true },
+    }),
+    false
+  );
+  assert.equal(
+    jobs.update('history-1', 'operation-current', {
+      percent: 150,
+      stage: 'reviewing',
+    }),
+    true
+  );
+  const active = jobs.active();
+  assert.equal(active.length, 1);
+  assert.equal(active[0]?.historyId, 'history-1');
+  assert.equal(active[0]?.operationId, 'operation-current');
+  assert.equal(active[0]?.percent, 100);
+  assert.equal(active[0]?.stage, 'reviewing');
+  assert.equal(active[0]?.inProgress, true);
+
+  assert.equal(
+    jobs.finish('history-1', 'operation-current', {
+      status: 'completed',
+      result: { cueCount: 3 },
+    }),
+    true
+  );
+  assert.equal(jobs.active().length, 0);
+  const completed = jobs.get('history-1');
+  assert.equal(completed?.status, 'completed');
+  assert.deepEqual(completed?.result, { cueCount: 3 });
+  assert.equal(completed?.inProgress, false);
+  assert.equal(
+    jobs.markCancelling('history-1', 'operation-current'),
+    false,
+    'a late cancel acknowledgement must not turn a completed job back into cancelling'
+  );
+});
+
+test('history job registry bounds terminal retention without evicting active work', () => {
+  const jobs = new AgentHistoryJobRegistry(1);
+  for (const historyId of ['finished-1', 'finished-2']) {
+    jobs.start({
+      historyId,
+      operationId: `operation-${historyId}`,
+      kind: 'transcription',
+      stage: 'transcribing',
+    });
+    jobs.finish(historyId, `operation-${historyId}`, {
+      status: 'completed',
+      result: { historyId },
+    });
+  }
+  jobs.start({
+    historyId: 'active',
+    operationId: 'operation-active',
+    kind: 'merge',
+    stage: 'merging',
+  });
+
+  assert.equal(jobs.get('finished-1'), null);
+  assert.equal(jobs.get('finished-2')?.status, 'completed');
+  assert.equal(jobs.get('active')?.inProgress, true);
+  assert.equal(jobs.size(), 2);
+});
+
+test('history routing keeps follow-ups on their owner and balances concurrent jobs', () => {
+  const routes = new AgentHistoryRouteRegistry<{
+    id: number;
+    destroyed: boolean;
+    isDestroyed(): boolean;
+  }>();
+  const first = {
+    id: 1,
+    destroyed: false,
+    isDestroyed() {
+      return this.destroyed;
+    },
+  };
+  const second = {
+    id: 2,
+    destroyed: false,
+    isDestroyed() {
+      return this.destroyed;
+    },
+  };
+
+  assert.equal(routes.chooseLeastLoaded([first, second], first), first);
+  routes.setActive('history-1', first);
+  assert.equal(routes.isActive('history-1', first), true);
+  assert.equal(
+    routes.chooseLeastLoaded([first, second], first),
+    second,
+    'a concurrent history job should prefer the idle renderer'
+  );
+  routes.setActive('history-2', second);
+  assert.equal(routes.get('history-1'), first);
+  assert.equal(routes.get('history-2'), second);
+
+  assert.equal(routes.markInactive('history-1', second), false);
+  assert.equal(routes.markInactive('history-1', first), true);
+  assert.equal(routes.isActive('history-1', first), false);
+  assert.equal(
+    routes.chooseLeastLoaded([first, second], first),
+    first,
+    'a completed route must stop counting as active load'
+  );
+
+  first.destroyed = true;
+  assert.equal(routes.get('history-1'), null);
+  assert.equal(routes.deleteIfTarget('history-2', first), false);
+  assert.equal(routes.get('history-2'), second);
+});
+
+test('packaged helper sessions stay pinned across idle socket reconnects', () => {
+  let tokenSequence = 0;
+  const routes = new AgentClientSessionRouteRegistry(
+    () => `route-${++tokenSequence}`
+  );
+  const first = createRouteTarget(1);
+  const second = createRouteTarget(2);
+
+  const initial = routes.bind('client-1', null, first);
+  assert.equal(initial.target, first);
+  assert.equal(initial.routeToken, 'route-1');
+  assert.equal(routes.resolve(initial.routeToken), first);
+
+  assert.equal(
+    routes.bind('client-1', null, second),
+    initial,
+    'a retry after a lost handshake response must retain the original tab'
+  );
+  assert.equal(
+    routes.bind('client-1', initial.routeToken, second),
+    initial,
+    'a reconnect must ignore a newly active tab'
+  );
+  assert.throws(
+    () => routes.bind('client-1', 'forged-route', second),
+    /stale or invalid/
+  );
+
+  first.destroyed = true;
+  assert.throws(
+    () => routes.resolve(initial.routeToken),
+    /owned by this agent session was closed/
+  );
+});
+
+test('evicted packaged workspace leases fail closed instead of changing tabs', () => {
+  let tokenSequence = 0;
+  const routes = new AgentClientSessionRouteRegistry(
+    () => `route-${++tokenSequence}`,
+    2
+  );
+  const first = createRouteTarget(1);
+  const second = createRouteTarget(2);
+  const third = createRouteTarget(3);
+
+  const oldest = routes.bind('client-oldest', null, first);
+  const retained = routes.bind('client-retained', null, second);
+  routes.resolve(retained.routeToken);
+  routes.bind('client-new', null, third);
+
+  assert.equal(routes.size(), 2);
+  assert.throws(() => routes.resolve(oldest.routeToken), /lease expired/);
+  assert.throws(
+    () => routes.bind('client-oldest', oldest.routeToken, third),
+    /stale or invalid/,
+    'an evicted helper must never be rebound to whichever tab is active'
+  );
+  assert.equal(routes.resolve(retained.routeToken), second);
+});
+
+test('history route retention is bounded only for inactive routes', () => {
+  const target = { id: 1, isDestroyed: () => false };
+  const routes = new AgentHistoryRouteRegistry<typeof target>(1);
+  routes.setActive('finished-1', target);
+  routes.markInactive('finished-1', target);
+  routes.setActive('still-active', target);
+  routes.setActive('finished-2', target);
+  routes.markInactive('finished-2', target);
+
+  assert.equal(routes.get('finished-1'), null);
+  assert.equal(routes.get('finished-2'), target);
+  assert.equal(routes.get('still-active'), target);
+  assert.equal(routes.isActive('still-active', target), true);
+});
+
+test('history terminal acknowledgements are generation-fenced and failed starts restore the prior route', () => {
+  const target = { id: 1, isDestroyed: () => false };
+  const routes = new AgentHistoryRouteRegistry<typeof target>();
+  routes.setActive('history-1', target, 'old-token');
+
+  const previous = routes.setActive('history-1', target, 'new-token');
+  assert.equal(
+    routes.markInactiveByToken('history-1', target, 'old-token'),
+    false,
+    'a stale completion must not retire a replacement start'
+  );
+  assert.equal(routes.restoreIfToken('history-1', 'new-token', previous), true);
+  assert.equal(routes.isActive('history-1', target), true);
+  assert.equal(
+    routes.markInactiveByToken('history-1', target, 'old-token'),
+    true
+  );
+
+  routes.setActive('history-1', target, 'latest-token');
+  assert.equal(
+    routes.restoreIfToken('history-1', 'new-token', previous),
+    false,
+    'a late rejection must not restore over a newer start'
+  );
+  assert.equal(routes.isActive('history-1', target), true);
+});
+
+test('the bridge rejects duplicate active history starts before replacing their generation', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const testDirectory = path.dirname(fileURLToPath(import.meta.url));
+  const projectRoot = path.resolve(testDirectory, '../../..');
+  const bridgeSource = fs.readFileSync(
+    path.join(projectRoot, 'packages/main/handlers/agent-bridge-handlers.ts'),
+    'utf8'
+  );
+
+  const activeCheck = bridgeSource.indexOf('if (existing?.active)');
+  const replacement = bridgeSource.indexOf(
+    'previousRoute = historyRoutes.setActive'
+  );
+  assert.ok(activeCheck >= 0 && replacement > activeCheck);
+});
+
+test('delayed history follow-up responses cannot retire a replacement generation', () => {
+  const target = { id: 1, isDestroyed: () => false };
+  const routes = new AgentHistoryRouteRegistry<typeof target>();
+  routes.setActive('history-1', target, 'observed-token');
+  const observed = routes.getSnapshot('history-1');
+  assert.equal(observed?.token, 'observed-token');
+
+  routes.setActive('history-1', target, 'replacement-token');
+  assert.equal(
+    routes.markInactiveByToken('history-1', observed!.target, observed!.token!),
+    false,
+    'a stale status or cancellation result must not retire the newer start'
+  );
+  assert.equal(routes.isActive('history-1', target), true);
+});
+
+test('completed history jobs notify main without waiting for a polling client', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const testDirectory = path.dirname(fileURLToPath(import.meta.url));
+  const projectRoot = path.resolve(testDirectory, '../../..');
+  const bridgeSource = fs.readFileSync(
+    path.join(projectRoot, 'packages/main/handlers/agent-bridge-handlers.ts'),
+    'utf8'
+  );
+  const rendererSource = fs.readFileSync(
+    path.join(
+      projectRoot,
+      'packages/renderer/listeners/translator-agent-listener.ts'
+    ),
+    'utf8'
+  );
+
   assert.ok(
-    !listenerCodeOnly.includes('TRANSLATOR_AGENT_DEV'),
-    'translator-agent-listener must not reference TRANSLATOR_AGENT_DEV in code (comments OK)'
+    bridgeSource.includes("'agent-history-job-terminal'") &&
+      bridgeSource.includes('markInactiveByToken') &&
+      bridgeSource.includes('event.sender'),
+    'main must accept only sender- and generation-bound terminal notices'
   );
   assert.ok(
-    !helperCodeOnly.includes('TRANSLATOR_AGENT_DEV'),
-    'packaged-mcp must not reference TRANSLATOR_AGENT_DEV in code (comments OK)'
+    rendererSource.includes('.finally(() => {') &&
+      rendererSource.includes('reportAgentHistoryJobTerminal'),
+    'every history runner outcome must release its main-process active route'
   );
+});
+
+test('history start delivery distinguishes definite rejection from ambiguous loss', () => {
+  assert.equal(
+    isDefiniteAgentBridgeStartFailure(
+      new AgentBridgeResponseError('renderer rejected start')
+    ),
+    true
+  );
+  assert.equal(
+    isDefiniteAgentBridgeStartFailure(
+      new AgentBridgeNotDeliveredError('renderer was gone before send')
+    ),
+    true
+  );
+  assert.equal(
+    isDefiniteAgentBridgeStartFailure(
+      new Error('client disconnected after request was sent')
+    ),
+    false
+  );
+  assert.equal(
+    isDefiniteAgentBridgeStartFailure(new Error('agent bridge timeout')),
+    false
+  );
+  assert.equal(
+    isDefiniteAgentBridgeStartFailure(
+      new AgentBridgeDeliveryUnknownError('renderer disappeared after send')
+    ),
+    false
+  );
+});
+
+test('subtitle snapshots are synchronous, bounded, and paginated', () => {
+  const snapshot = createAgentSubtitleBatchSnapshot(
+    [
+      { id: 'one', index: 1, start: 0, end: 1, original: 'One' },
+      {
+        id: 'two',
+        index: 2,
+        start: 1,
+        end: 2,
+        original: 'Two',
+        translation: 'Deux',
+      },
+      { id: 'three', index: 3, start: 2, end: 3, original: 'Three' },
+    ],
+    { offset: 1, limit: 1, sourceNote: 'library item' }
+  );
+
+  assert.equal(snapshot instanceof Promise, false);
+  assert.deepEqual(snapshot, {
+    offset: 1,
+    limit: 1,
+    total: 3,
+    hasMore: true,
+    sourceNote: 'library item',
+    cues: [
+      {
+        id: 'two',
+        index: 2,
+        start: 1,
+        end: 2,
+        original: 'Two',
+        translation: 'Deux',
+      },
+    ],
+  });
 });

@@ -82,10 +82,13 @@ function Build-PurgeUrls {
   $base = $baseUrl.TrimEnd('/')
   $latest = "$base/latest"
   $encodedInstaller = [System.Uri]::EscapeDataString("Translator Setup $ver.exe")
+  $canonicalInstaller = "Translator-Setup-$ver.exe"
   $urls = @(
     "$latest/latest.yml",
     "$latest/$encodedInstaller",
     "$latest/$encodedInstaller.blockmap",
+    "$latest/$canonicalInstaller",
+    "$latest/$canonicalInstaller.blockmap",
     "$latest/Translator-x64.exe",
     "$latest/Translator-x64.exe.sha256"
   )
@@ -95,6 +98,8 @@ function Build-PurgeUrls {
       "$verBase/latest.yml",
       "$verBase/$encodedInstaller",
       "$verBase/$encodedInstaller.blockmap",
+      "$verBase/$canonicalInstaller",
+      "$verBase/$canonicalInstaller.blockmap",
       "$verBase/Translator-x64.exe",
       "$verBase/Translator-x64.exe.sha256"
     )

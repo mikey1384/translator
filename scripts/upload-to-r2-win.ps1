@@ -146,6 +146,81 @@ function Resolve-BlockmapPath {
   return $null
 }
 
+function Assert-InstallerSignature {
+  param([string]$installerPath)
+
+  $signature = Get-AuthenticodeSignature -LiteralPath $installerPath
+  if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
+    throw "Installer Authenticode signature is not valid: $($signature.Status) ($installerPath)"
+  }
+  if (-not $signature.SignerCertificate -or $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=Stage5 Tools LLC(?:,|$)') {
+    throw "Installer signer is not Stage5 Tools LLC: $($signature.SignerCertificate.Subject)"
+  }
+}
+
+function Get-Sha512Base64 {
+  param([string]$filePath)
+
+  $stream = [System.IO.File]::OpenRead($filePath)
+  $sha512 = [System.Security.Cryptography.SHA512]::Create()
+  try {
+    return [Convert]::ToBase64String($sha512.ComputeHash($stream))
+  } finally {
+    $sha512.Dispose()
+    $stream.Dispose()
+  }
+}
+
+function Assert-UpdaterMetadataMatchesInstaller {
+  param(
+    [string]$latestYamlPath,
+    [string]$installerPath,
+    [string]$version
+  )
+
+  $yamlText = [System.IO.File]::ReadAllText($latestYamlPath)
+  $escapedVersion = [Regex]::Escape($version)
+  if ($yamlText -notmatch "(?m)^version:\s*$escapedVersion\s*$") {
+    throw "latest.yml does not declare requested version '$version'."
+  }
+
+  $expectedName = ([System.IO.Path]::GetFileName($installerPath) -replace ' ', '-')
+  $escapedName = [Regex]::Escape($expectedName)
+  $urlMatch = [Regex]::Match(
+    $yamlText,
+    "(?m)^\s*-\s+url:\s*$escapedName\s*$"
+  )
+  if (-not $urlMatch.Success) {
+    throw "latest.yml does not contain an updater entry for '$expectedName'."
+  }
+  if ($yamlText -notmatch "(?m)^path:\s*$escapedName\s*$") {
+    throw "latest.yml path does not reference '$expectedName'."
+  }
+
+  $entryTail = $yamlText.Substring($urlMatch.Index + $urlMatch.Length)
+  $nextEntry = [Regex]::Match($entryTail, "(?m)^\s*-\s+url:|^path:")
+  if ($nextEntry.Success) {
+    $entryTail = $entryTail.Substring(0, $nextEntry.Index)
+  }
+
+  $shaMatch = [Regex]::Match($entryTail, '(?m)^\s+sha512:\s*(\S+)\s*$')
+  $sizeMatch = [Regex]::Match($entryTail, '(?m)^\s+size:\s*(\d+)\s*$')
+  if (-not $shaMatch.Success -or -not $sizeMatch.Success) {
+    throw "latest.yml entry for '$expectedName' is missing sha512 or size metadata."
+  }
+
+  $actualSize = (Get-Item -LiteralPath $installerPath).Length
+  $declaredSize = [Int64]::Parse($sizeMatch.Groups[1].Value)
+  if ($declaredSize -ne $actualSize) {
+    throw "latest.yml size mismatch for '$expectedName': declared $declaredSize, actual $actualSize."
+  }
+
+  $actualSha512 = Get-Sha512Base64 -filePath $installerPath
+  if ($shaMatch.Groups[1].Value -cne $actualSha512) {
+    throw "latest.yml sha512 mismatch for '$expectedName'."
+  }
+}
+
 function Resolve-ReleaseNotesScriptPath {
   $scriptPath = Join-Path -Path $PSScriptRoot -ChildPath 'set-latest-yml-release-notes.ps1'
   if (-not (Test-Path -LiteralPath $scriptPath)) {
@@ -299,6 +374,7 @@ if (-not $srcPathProvided) {
 $src = Resolve-SourcePath -p $SrcPath -version $Version -AllowVersionFallback:(-not $srcPathProvided)
 Write-Host "Source: $src"
 Assert-SourceMatchesVersion -fullPath $src -version $Version
+Assert-InstallerSignature -installerPath $src
 
 $latestYaml = Resolve-LatestYamlPath -p $LatestYamlPath
 Write-Host "latest.yml: $latestYaml"
@@ -342,6 +418,11 @@ if (-not $didInjectReleaseNotes) {
     throw $msg
   }
 }
+
+Assert-UpdaterMetadataMatchesInstaller `
+  -latestYamlPath $latestYaml `
+  -installerPath $src `
+  -version $Version
 
 # Optional blockmap (present if differential metadata is generated)
 $blockmap = Resolve-BlockmapPath -installerPath $src
@@ -398,6 +479,9 @@ function Invoke-RcloneCopyTo {
     $rcloneArgs += '--size-only'
   }
   & rclone @rcloneArgs -- $from $to
+  if ($LASTEXITCODE -ne 0) {
+    throw "rclone copyto failed with exit code $LASTEXITCODE: $to"
+  }
 }
 
 function Invoke-RcloneCopyRemote {
@@ -408,6 +492,9 @@ function Invoke-RcloneCopyRemote {
   Write-Host "rclone (remote->remote) copyto -> $toRemote"
   $rcloneArgs = @('copyto', '--retries', '3', '--retries-sleep', '2s')
   & rclone @rcloneArgs -- $fromRemote $toRemote
+  if ($LASTEXITCODE -ne 0) {
+    throw "rclone remote copyto failed with exit code $LASTEXITCODE: $toRemote"
+  }
 }
 
 function Invoke-RcloneCopyAlways {
@@ -418,6 +505,9 @@ function Invoke-RcloneCopyAlways {
   Write-Host "rclone copyto (force) -> $to"
   $rcloneArgs = @('copyto', '--ignore-times', '--retries', '3', '--retries-sleep', '2s')
   & rclone @rcloneArgs -- $from $to
+  if ($LASTEXITCODE -ne 0) {
+    throw "rclone forced copyto failed with exit code $LASTEXITCODE: $to"
+  }
 }
 
 # Upload canonical installer to latest (hyphenated name matches latest.yml)

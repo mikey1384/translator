@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import * as SystemIPC from '../ipc/system';
 
 /**
  * Sets up a heartbeat listener that automatically responds to pings from the
@@ -6,7 +7,7 @@ import { useEffect } from 'react';
  */
 export function useHeartbeat(): void {
   useEffect(() => {
-    const cleanup = window.electron.onHeartbeatPing(() => {
+    const cleanup = SystemIPC.onHeartbeatPing(() => {
       // The preload layer automatically sends the pong response
     });
     return cleanup;

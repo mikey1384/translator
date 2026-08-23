@@ -1,10 +1,21 @@
-// scripts/sign-chromium.js
+// scripts/sign-chromium.cjs
 const { execaSync } = require('execa');
 const path = require('path');
 const fs = require('fs');
 
 module.exports = async ({ appOutDir, packager }) => {
   const id = packager.platformSpecificBuildOptions.identity;
+
+  // electron-builder supports identity=null for unsigned directory builds.
+  // Its CLI override may reach hooks as either null or the literal "null";
+  // neither is a certificate name. Leave vendored binaries untouched when
+  // the enclosing app is intentionally not being signed.
+  if (id == null || id === false || id === '' || id === 'null') {
+    console.log(
+      '[sign-chromium] code signing disabled – leaving vendored binaries unsigned'
+    );
+    return;
+  }
 
   // Sign vendored headless_shell binaries
   const resourcesPath = path.join(

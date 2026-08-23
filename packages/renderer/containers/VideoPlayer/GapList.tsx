@@ -47,9 +47,7 @@ export default function GapList() {
   const seenLC = useUIStore(s => s.seenLC);
   const markGapSeen = useUIStore(s => s.markGapSeen);
   const markLCSeen = useUIStore(s => s.markLCSeen);
-  const showLowConfidenceTab = shouldUseWhisperReviewHints(
-    transcriptionEngine
-  );
+  const showLowConfidenceTab = shouldUseWhisperReviewHints(transcriptionEngine);
 
   // Tab state
   const [tab, setTab] = useState<'gaps' | 'confidence'>('gaps');
@@ -94,7 +92,10 @@ export default function GapList() {
         </span>
         <span className={sidePanelMetaRowStyles}>
           {unseen ? (
-            <span className={sidePanelNewBadgeStyles} title={t('panel.new', 'new')}>
+            <span
+              className={sidePanelNewBadgeStyles}
+              title={t('panel.new', 'new')}
+            >
               !
             </span>
           ) : null}
@@ -129,7 +130,10 @@ export default function GapList() {
         </span>
         <span className={sidePanelMetaRowStyles}>
           {unseen ? (
-            <span className={sidePanelNewBadgeStyles} title={t('panel.new', 'new')}>
+            <span
+              className={sidePanelNewBadgeStyles}
+              title={t('panel.new', 'new')}
+            >
               !
             </span>
           ) : null}

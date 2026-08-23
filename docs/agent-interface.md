@@ -163,11 +163,25 @@ cross commerce or privileged-account boundaries.
 ## Development vs Production Agent Control
 
 ### Development Mode
+
 The renderer bridge exists when the app is unpackaged and launched with
 `TRANSLATOR_AGENT_DEV=1`. The dev MCP server (`npm run agent:mcp`) starts the
-development build with Playwright and that flag automatically.
+development build with Playwright and that flag automatically. Run the MCP
+entry point through the native supervisor as a direct child of the controlling
+client, as the checked-in `.codex/config.toml` does. The supervisor contains
+the complete controller process group from launch, including the interval
+before Playwright returns an Electron handle. An inner native process monitor
+then observes the exact launched Electron root; inherited stdio descriptors
+cannot hide owner death.
+
+SIGINT, SIGTERM, SIGHUP, parent-process disconnect, stdin/readline closure,
+stdio failure, and MCP transport closure all enter one idempotent shutdown
+path. A normal explicit quit awaits the single Playwright close request for up
+to 10 seconds. Exact ownership loss, or the expiry of that already-requested
+quit grace period, invokes the independent exact-process force path.
 
 ### Production/Packaged Mode
+
 Packaged builds (`/Applications/Translator.app` on macOS, installed app on Windows)
 expose agent control only after explicit user permission:
 
@@ -181,14 +195,38 @@ helper (`packaged-mcp.mjs`) connects to this socket and exposes the same stdio
 MCP interface as dev mode:
 
 **macOS:**
+
 ```bash
-/Applications/Translator.app/Contents/Resources/packaged-mcp.mjs
+/Applications/Translator.app/Contents/Resources/translator-mcp
 ```
 
 **Windows:**
+
 ```cmd
-C:\Program Files\Translator\resources\packaged-mcp.mjs
+C:\Program Files\Translator\resources\translator-mcp.cmd
 ```
+
+The launcher runs the zero-dependency helper with Translator's bundled
+Electron runtime in Node mode; users do not need to install Node.js separately.
+The native launcher supervisor binds the helper to the exact MCP client process
+instead of inferring ownership from EOF or descriptor state. The helper also
+observes stdio/transport closure directly and releases any app socket before
+exit.
+
+Translator rotates a random local-socket generation token every time agent
+control starts. The helper must authenticate that exact protocol version and
+generation before forwarding a method. Legacy discovery files and stale
+helpers are rejected without being treated as a live client. Installed legacy
+helpers are not changed retroactively: install and restart the updated app,
+then restart the MCP client to use this lifecycle.
+
+Each packaged helper process also receives one opaque workspace lease. The
+lease keeps its mounted-media, status, cancellation, search, batch, and subtitle
+calls on the same tab even when the user changes the visible tab or the helper
+releases and reconnects its idle app socket. Closing that owned tab or losing an
+expired lease fails closed; restart the MCP helper to deliberately bind it to a
+different active tab. History-item jobs retain their own per-job routes so
+multiple tabs can process independent library work concurrently.
 
 Add this path to your MCP client (Cursor, Codex, etc.) configuration. The
 agent control setting persists across app launches and can be disabled at any
@@ -238,7 +276,7 @@ repository cloned somewhere else, use that checkout's own absolute path. For
 example:
 
 ```bash
-codex mcp add translator -- node /absolute/path/to/translator/packages/agent-server/src/mcp.mjs
+codex mcp add translator -- /absolute/path/to/translator/packages/agent-server/bin/translator-owner-supervisor --supervise 1 -- node /absolute/path/to/translator/packages/agent-server/src/mcp.mjs
 ```
 
 Restart the Codex client after adding or changing MCP configuration. Use

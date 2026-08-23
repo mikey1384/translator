@@ -29,11 +29,8 @@ test('transcription outcomes stay mutually exclusive', () => {
 });
 
 test('dubbing outcomes detect credit blocks from error message', () => {
-  assert.equal(
-    classifyDubbingOutcome({ success: true }),
-    'dubbing_completed'
-  );
-  
+  assert.equal(classifyDubbingOutcome({ success: true }), 'dubbing_completed');
+
   // Test with the actual constant value from ERROR_CODES.INSUFFICIENT_CREDITS
   // The value is 'insufficient-credits' (lowercase with hyphen), not 'INSUFFICIENT_CREDITS'
   const actualConstantValue = 'insufficient-credits';
@@ -45,19 +42,19 @@ test('dubbing outcomes detect credit blocks from error message', () => {
     'dubbing_credit_blocked',
     'Should detect credit block from insufficient-credits error code'
   );
-  
+
   // When cancelled but not for credits
   assert.equal(
     classifyDubbingOutcome({ success: false, cancelled: true }),
     'dubbing_cancelled'
   );
-  
+
   // Regular failure
   assert.equal(
     classifyDubbingOutcome({ success: false, error: 'Network timeout' }),
     'dubbing_failed'
   );
-  
+
   // Credit block takes precedence even when marked as cancelled
   assert.equal(
     classifyDubbingOutcome({
@@ -71,11 +68,8 @@ test('dubbing outcomes detect credit blocks from error message', () => {
 });
 
 test('summary outcomes detect credit blocks from error message', () => {
-  assert.equal(
-    classifySummaryOutcome({ success: true }),
-    'summary_completed'
-  );
-  
+  assert.equal(classifySummaryOutcome({ success: true }), 'summary_completed');
+
   // Test with the actual constant value 'insufficient-credits'
   assert.equal(
     classifySummaryOutcome({
@@ -95,18 +89,12 @@ test('summary outcomes detect credit blocks from error message', () => {
 });
 
 test('merge outcomes have no credit block state', () => {
-  assert.equal(
-    classifyMergeOutcome({ success: true }),
-    'merge_completed'
-  );
+  assert.equal(classifyMergeOutcome({ success: true }), 'merge_completed');
   assert.equal(
     classifyMergeOutcome({ success: false, cancelled: true }),
     'merge_cancelled'
   );
-  assert.equal(
-    classifyMergeOutcome({ success: false }),
-    'merge_failed'
-  );
+  assert.equal(classifyMergeOutcome({ success: false }), 'merge_failed');
 });
 
 test('job funnel events contain no PII', () => {
@@ -140,15 +128,18 @@ test('job funnel events contain no PII', () => {
   ];
 
   // All events are simple strings with no embedded data
-  [...transcriptionEvents, ...dubbingEvents, ...summaryEvents, ...mergeEvents].forEach(
-    event => {
-      assert.equal(typeof event, 'string');
-      assert.ok(event.length > 0);
-      // No spaces, URLs, paths, or user content
-      assert.ok(!event.includes(' '));
-      assert.ok(!event.includes('/'));
-      assert.ok(!event.includes('\\'));
-      assert.ok(!event.includes('http'));
-    }
-  );
+  [
+    ...transcriptionEvents,
+    ...dubbingEvents,
+    ...summaryEvents,
+    ...mergeEvents,
+  ].forEach(event => {
+    assert.equal(typeof event, 'string');
+    assert.ok(event.length > 0);
+    // No spaces, URLs, paths, or user content
+    assert.ok(!event.includes(' '));
+    assert.ok(!event.includes('/'));
+    assert.ok(!event.includes('\\'));
+    assert.ok(!event.includes('http'));
+  });
 });

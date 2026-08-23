@@ -1,13 +1,24 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import * as z from 'zod/v4';
+import { DisconnectAwareStdioServerTransport } from './disconnect-aware-stdio-transport.mjs';
 import { DevAppController } from './dev-app-controller.mjs';
+import { createNativeOwnerMonitor } from './native-owner-monitor.mjs';
 import { TranslationSessionStore } from './session-store.mjs';
+import {
+  installTransportBoundLifecycle,
+  shouldForceDevelopmentShutdown,
+} from './transport-bound-lifecycle.mjs';
 
 const store = new TranslationSessionStore({
   root: process.env.TRANSLATOR_AGENT_SESSION_ROOT || undefined,
 });
-const app = new DevAppController();
+let lifecycle = null;
+const ownerMonitor = createNativeOwnerMonitor({
+  onOwnershipLost: reason => lifecycle?.requestShutdown(reason, 1),
+});
+const app = new DevAppController({ ownerMonitor });
+const optionalHistoryId = z.string().min(1).max(512).optional();
 
 function result(value) {
   return {
@@ -134,9 +145,9 @@ function buildServer() {
     'app_status',
     {
       description: 'Inspect the current local development-app state.',
-      inputSchema: z.object({}),
+      inputSchema: z.object({ history_id: optionalHistoryId }),
     },
-    async () => result(await app.status())
+    async input => result(await app.status({ historyId: input.history_id }))
   );
 
   server.registerTool(
@@ -513,12 +524,14 @@ function buildServer() {
         "Start transcription of the currently mounted video with Translator's configured Stage5-credit or BYO provider. Returns immediately; poll app_processing_status.",
       inputSchema: z.object({
         replace_subtitles: z.enum(['fail', 'discard', 'save']).default('fail'),
+        history_id: optionalHistoryId,
       }),
     },
     async input =>
       result(
         await app.call('startTranscription', {
           replaceSubtitles: input.replace_subtitles,
+          historyId: input.history_id,
         })
       )
   );
@@ -530,12 +543,14 @@ function buildServer() {
         "Translate every mounted subtitle cue to a target language with Translator's configured Stage5-credit or BYO provider. Returns immediately; poll app_processing_status.",
       inputSchema: z.object({
         target_language: z.string().min(2).max(80),
+        history_id: optionalHistoryId,
       }),
     },
     async input =>
       result(
         await app.call('startTranslation', {
           targetLanguage: input.target_language,
+          historyId: input.history_id,
         })
       )
   );
@@ -637,6 +652,7 @@ function buildServer() {
       inputSchema: z.object({
         output_path: z.string().min(1),
         confirm_overwrite: z.literal('OVERWRITE').optional(),
+        history_id: optionalHistoryId,
       }),
     },
     async input =>
@@ -644,6 +660,7 @@ function buildServer() {
         await app.call('startMerge', {
           outputPath: input.output_path,
           overwrite: input.confirm_overwrite === 'OVERWRITE',
+          historyId: input.history_id,
         })
       )
   );
@@ -734,9 +751,12 @@ function buildServer() {
     {
       description:
         'Inspect the active or last app-controlled download, transcription, translation, dubbing, summary, and merge operation with progress and output paths.',
-      inputSchema: z.object({}),
+      inputSchema: z.object({ history_id: optionalHistoryId }),
     },
-    async () => result(await app.call('processingStatus'))
+    async input =>
+      result(
+        await app.call('processingStatus', { historyId: input.history_id })
+      )
   );
 
   server.registerTool(
@@ -744,9 +764,12 @@ function buildServer() {
     {
       description:
         'Cancel the active Translator download or media-processing operation and preserve any previously completed durable results.',
-      inputSchema: z.object({}),
+      inputSchema: z.object({ history_id: optionalHistoryId }),
     },
-    async () => result(await app.call('cancelProcessing'))
+    async input =>
+      result(
+        await app.call('cancelProcessing', { historyId: input.history_id })
+      )
   );
 
   server.registerTool(
@@ -757,9 +780,17 @@ function buildServer() {
       inputSchema: z.object({
         offset: z.number().int().min(0).default(0),
         limit: z.number().int().min(1).max(100).default(50),
+        history_id: optionalHistoryId,
       }),
     },
-    async input => result(await app.call('subtitlesBatch', input))
+    async input =>
+      result(
+        await app.call('subtitlesBatch', {
+          offset: input.offset,
+          limit: input.limit,
+          historyId: input.history_id,
+        })
+      )
   );
 
   server.registerTool(
@@ -853,6 +884,7 @@ function buildServer() {
         path: z.string().min(1),
         mode: z.enum(['original', 'translation', 'dual']).default('dual'),
         confirm_overwrite: z.literal('OVERWRITE').optional(),
+        history_id: optionalHistoryId,
       }),
     },
     async input =>
@@ -861,6 +893,7 @@ function buildServer() {
           path: input.path,
           mode: input.mode,
           overwrite: input.confirm_overwrite === 'OVERWRITE',
+          historyId: input.history_id,
         })
       )
   );
@@ -978,10 +1011,42 @@ function buildServer() {
   return server;
 }
 
-process.on('SIGINT', async () => {
-  await app.close();
-  process.exit(0);
+let stdioHandle = null;
+lifecycle = installTransportBoundLifecycle({
+  close: async () => {
+    await app.close();
+    await ownerMonitor.close();
+  },
+  forceClose: async () => {
+    await app.forceClose();
+    void ownerMonitor.close().catch(() => {});
+  },
+  forceOnFirstShutdown: shouldForceDevelopmentShutdown,
+  closeTransport: () => stdioHandle?.close(),
 });
 
-void serveStdio(buildServer);
-console.error('Stage5 Translator MCP server running on stdio');
+async function main() {
+  try {
+    await ownerMonitor.start();
+  } catch (error) {
+    try {
+      process.stderr.write(
+        `Stage5 Translator MCP ownership setup failed: ${error instanceof Error ? error.message : String(error)}\n`
+      );
+    } catch {
+      // A failed output channel is already an ownership-loss condition.
+    }
+    await lifecycle.requestShutdown('owner-monitor:exit', 1);
+    return;
+  }
+
+  const transport = new DisconnectAwareStdioServerTransport({
+    onDisconnect: lifecycle.transportClosed,
+  });
+  stdioHandle = serveStdio(buildServer, { transport });
+  console.error('Stage5 Translator MCP server running on stdio');
+}
+
+void main()
+  .catch(() => lifecycle.requestShutdown('startup:error', 1))
+  .catch(() => {});

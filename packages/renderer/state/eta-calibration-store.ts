@@ -91,44 +91,46 @@ export function getEffectiveCalibrationMultiplier(
   return 1 + (record.averageMultiplier - 1) * confidence;
 }
 
-export const useEtaCalibrationStore = create<EtaCalibrationState>((set, get) => ({
-  records: loadRecords(),
-  version: 0,
-  recordObservation: observation => {
-    const expectedSeconds = Number(observation.expectedSeconds);
-    const observedSeconds = Number(observation.observedSeconds);
-    if (
-      !observation.bucketKey ||
-      !Number.isFinite(expectedSeconds) ||
-      !Number.isFinite(observedSeconds) ||
-      expectedSeconds < 1 ||
-      observedSeconds < 1
-    ) {
-      return;
-    }
+export const useEtaCalibrationStore = create<EtaCalibrationState>(
+  (set, get) => ({
+    records: loadRecords(),
+    version: 0,
+    recordObservation: observation => {
+      const expectedSeconds = Number(observation.expectedSeconds);
+      const observedSeconds = Number(observation.observedSeconds);
+      if (
+        !observation.bucketKey ||
+        !Number.isFinite(expectedSeconds) ||
+        !Number.isFinite(observedSeconds) ||
+        expectedSeconds < 1 ||
+        observedSeconds < 1
+      ) {
+        return;
+      }
 
-    const multiplier = clamp(
-      observedSeconds / expectedSeconds,
-      MIN_MULTIPLIER,
-      MAX_MULTIPLIER
-    );
-    const current = get().records;
-    const next = {
-      ...current,
-      [observation.bucketKey]: mergeObservation(
-        current[observation.bucketKey],
-        multiplier,
-        observedSeconds
-      ),
-    };
-    persistRecords(next);
-    set(state => ({
-      records: next,
-      version: state.version + 1,
-    }));
-  },
-  reset: () => {
-    persistRecords({});
-    set(state => ({ records: {}, version: state.version + 1 }));
-  },
-}));
+      const multiplier = clamp(
+        observedSeconds / expectedSeconds,
+        MIN_MULTIPLIER,
+        MAX_MULTIPLIER
+      );
+      const current = get().records;
+      const next = {
+        ...current,
+        [observation.bucketKey]: mergeObservation(
+          current[observation.bucketKey],
+          multiplier,
+          observedSeconds
+        ),
+      };
+      persistRecords(next);
+      set(state => ({
+        records: next,
+        version: state.version + 1,
+      }));
+    },
+    reset: () => {
+      persistRecords({});
+      set(state => ({ records: {}, version: state.version + 1 }));
+    },
+  })
+);

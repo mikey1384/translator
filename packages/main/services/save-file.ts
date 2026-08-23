@@ -63,6 +63,13 @@ export class SaveFileError extends Error {
   }
 }
 
+export class SaveFileCancelledError extends SaveFileError {
+  constructor() {
+    super('File save was canceled by user');
+    this.name = 'SaveFileCancelledError';
+  }
+}
+
 export interface SaveFileOptions {
   defaultPath?: string;
   filters?: { name: string; extensions: string[] }[];
@@ -71,6 +78,8 @@ export interface SaveFileOptions {
   filePath?: string;
   forceDialog?: boolean;
   title?: string;
+  /** Main-process policy gate run after path preparation, immediately before I/O. */
+  authorizeTargetPath?: (targetPath: string) => string | Promise<string>;
 }
 
 export class SaveFileService {
@@ -112,11 +121,15 @@ export class SaveFileService {
         sourcePath,
         filePath,
         forceDialog,
+        authorizeTargetPath,
       } = options;
       let targetPath: string | undefined = undefined;
 
+      const diagnosticOptions = { ...options };
+      delete diagnosticOptions.content;
+      delete diagnosticOptions.authorizeTargetPath;
       console.log('[saveFile] Received options:', {
-        ...options,
+        ...diagnosticOptions,
         contentLength: typeof content === 'string' ? content.length : undefined,
       });
 
@@ -167,7 +180,7 @@ export class SaveFileService {
         console.log('[saveFile] Dialog result:', dialogResult);
 
         if (dialogResult.canceled || !dialogResult.filePath) {
-          throw new SaveFileError('File save was canceled by user');
+          throw new SaveFileCancelledError();
         }
         targetPath = dialogResult.filePath;
 
@@ -176,6 +189,10 @@ export class SaveFileService {
 
       if (!targetPath) {
         throw new SaveFileError('No target path determined for saving.');
+      }
+
+      if (authorizeTargetPath) {
+        targetPath = await authorizeTargetPath(targetPath);
       }
 
       if (sourcePath) {

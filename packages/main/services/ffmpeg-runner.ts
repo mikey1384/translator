@@ -103,9 +103,7 @@ async function pickBinary(
     const bundledPath = resolveBundledPath(p);
     if (fs.existsSync(bundledPath)) {
       if (app.isPackaged && bundledPath !== p) {
-        log.debug(
-          `[ffmpeg-runner] Constructed unpacked path: ${bundledPath}`
-        );
+        log.debug(`[ffmpeg-runner] Constructed unpacked path: ${bundledPath}`);
       }
       return bundledPath;
     }

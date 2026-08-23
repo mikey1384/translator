@@ -149,7 +149,9 @@ export default function Modal({
           {title}
         </h3>
         <div className={cx(messageStyles, bodyClassName)}>{children}</div>
-        {actions && <div className={cx(actionsStyles, actionsClassName)}>{actions}</div>}
+        {actions && (
+          <div className={cx(actionsStyles, actionsClassName)}>{actions}</div>
+        )}
       </div>
     </div>
   );

@@ -432,7 +432,9 @@ export async function handleGenerateSubtitles(
     const errorResult = {
       success: false,
       cancelled: isCancel,
-      blockedReason: creditCancel ? ('insufficient_credits' as const) : undefined,
+      blockedReason: creditCancel
+        ? ('insufficient_credits' as const)
+        : undefined,
       error: !isCancel ? error.message || String(error) : undefined,
       operationId,
     };
@@ -514,6 +516,7 @@ export async function handleTranslateSubtitles(
   success: boolean;
   translatedSubtitles?: string;
   cancelled?: boolean;
+  blockedReason?: 'insufficient_credits';
   error?: string;
   operationId: string;
 }> {
@@ -1942,7 +1945,7 @@ export async function handleTranslateOneLine(
       );
     }
     return {
-      success: !isCancel,
+      success: false,
       cancelled: isCancel,
       error: isCancel ? undefined : error?.message || String(error),
       operationId,

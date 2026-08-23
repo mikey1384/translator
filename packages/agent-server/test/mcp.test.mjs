@@ -6,6 +6,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
+import { PACKAGED_TOOL_MAP } from '../src/packaged-tool-map.mjs';
 
 const packageRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -44,6 +45,12 @@ test('MCP server exposes and runs the subscription-powered translation loop', as
 
   const listed = await client.listTools();
   const names = listed.tools.map(tool => tool.name);
+  for (const packagedTool of Object.keys(PACKAGED_TOOL_MAP)) {
+    assert.ok(
+      names.includes(packagedTool),
+      `packaged tool ${packagedTool} must remain part of the canonical MCP contract`
+    );
+  }
   assert.ok(names.includes('create_translation_session'));
   assert.ok(names.includes('app_set_subtitle_display'));
   assert.ok(names.includes('app_navigation_list'));
@@ -79,6 +86,24 @@ test('MCP server exposes and runs the subscription-powered translation loop', as
   assert.ok(names.includes('app_settings_update'));
   assert.ok(names.includes('app_settings_store_provider_key'));
   assert.ok(names.includes('app_settings_clear_provider_key'));
+
+  for (const name of [
+    'app_status',
+    'app_start_transcription',
+    'app_start_translation',
+    'app_start_merge',
+    'app_processing_status',
+    'app_processing_cancel',
+    'app_subtitles_get',
+    'app_subtitles_export',
+  ]) {
+    const tool = listed.tools.find(candidate => candidate.name === name);
+    assert.equal(
+      tool?.inputSchema?.properties?.history_id?.maxLength,
+      512,
+      `${name} must expose the bounded history_id contract in development`
+    );
+  }
 
   const invalidRemoval = await client.callTool({
     name: 'app_subtitles_mutate',

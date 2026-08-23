@@ -40,7 +40,7 @@ const reviewProviderCardStyles = css`
   padding: 10px 14px 12px;
   border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.white};
+  background: ${colors.surface};
 `;
 
 const reviewProviderLabelStyles = css`

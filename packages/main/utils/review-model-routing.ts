@@ -1,6 +1,4 @@
-import {
-  getStage5ReviewOption,
-} from '../../shared/constants/index.js';
+import { getStage5ReviewOption } from '../../shared/constants/index.js';
 
 export type ReviewModelConfig = {
   model: string;

@@ -8,7 +8,9 @@
     "baseUrl": ".",
     "paths": {
       "@ipc/*": ["./ipc/*"],
-      "@shared-types/*": ["../../shared/types/*"]
+      "@shared/*": ["../shared/*"],
+      "@shared-types/*": ["../shared/types/*"]
     }
-  }
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "../shared/**/*.ts", "../shared/**/*.d.ts"]
 }

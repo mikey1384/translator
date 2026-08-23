@@ -20,6 +20,47 @@ declare module '@shared-types/app' {
     | '360p'
     | '240p';
 
+  export type PurchaseFunnelEvent =
+    | 'credit_checkout_button_shown'
+    | 'credit_checkout_button_clicked'
+    | 'credit_checkout_session_created'
+    | 'credit_checkout_opened'
+    | 'credit_checkout_completed'
+    | 'credit_checkout_failed'
+    | 'credit_checkout_cancelled'
+    | 'byo_unlock_button_shown'
+    | 'byo_unlock_button_clicked'
+    | 'byo_unlock_session_created'
+    | 'byo_unlock_opened'
+    | 'byo_unlock_completed'
+    | 'byo_unlock_failed'
+    | 'byo_unlock_cancelled';
+
+  export type CreditPackId = 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
+
+  export type PurchasePlacement =
+    | 'zero-credit-banner'
+    | 'credit-ran-out-dialog'
+    | 'settings-credit-card'
+    | 'settings-byo'
+    | 'agent';
+
+  export type PurchaseFailureReason =
+    | 'network_error'
+    | 'api_error'
+    | 'stripe_error'
+    | 'settlement_timeout'
+    | 'already_pending'
+    | 'unknown';
+
+  export interface AgentBridgeRequest {
+    method: string;
+    params?: Record<string, unknown>;
+    responseChannel: string;
+    /** Unforgeable main-process generation for a history start request. */
+    historyRouteToken?: string;
+  }
+
   export interface CancelOperationResult {
     success: boolean;
     error?: string;
@@ -240,6 +281,8 @@ declare module '@shared-types/app' {
     activeLinkedFileMode?: SubtitleDisplayMode | null;
     activeLinkedFileRole?: SubtitleDocumentLinkedFileRole | null;
     transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
+    /** Main-process authorization gate for an agent-selected destination. */
+    requireAgentPathAuthorization?: boolean;
   }
 
   export interface SaveSubtitleDocumentResult {
@@ -338,29 +381,7 @@ declare module '@shared-types/app' {
   // === Progress Callbacks
   // =========================================
 
-  type ProgressEventCallback = (
-    event: any,
-    progress: {
-      partialResult?: string;
-      percent: number;
-      stage: string;
-      /** Machine-readable phase key for ETA / progress logic. */
-      phaseKey?: string;
-      current?: number;
-      total?: number;
-      /** Unit for current/total counters (e.g. "chunks", "segments"). */
-      unit?: string;
-      /** Numeric remaining-time hint from the backend when available. */
-      etaSeconds?: number;
-      warning?: string;
-      operationId?: string;
-      batchStartIndex?: number;
-      /** AI model or provider being used (e.g. "Claude Opus", "OpenAI TTS"). */
-      model?: string;
-    }
-  ) => void;
-
-  export type ProgressCallback = (progress: {
+  export interface ProgressPayload {
     percent: number;
     stage: string;
     phaseKey?: string;
@@ -370,10 +391,16 @@ declare module '@shared-types/app' {
     etaSeconds?: number;
     partialResult?: string;
     error?: string;
+    cancelled?: boolean;
+    warning?: string;
     batchStartIndex?: number;
     operationId?: string;
     model?: string;
-  }) => void;
+  }
+
+  /** Preload strips Electron's internal event before invoking renderer code. */
+  export type ProgressEventCallback = (progress: ProgressPayload) => void;
+  export type ProgressCallback = ProgressEventCallback;
 
   // =========================================
   // === URL Processing
@@ -783,6 +810,7 @@ declare module '@shared-types/app' {
   }
 
   export interface GenerateSubtitlesOptions {
+    operationId?: string;
     videoPath?: string;
     videoFile?: File;
     /** Stable original source path used for durable transcription recovery. */
@@ -836,8 +864,11 @@ declare module '@shared-types/app' {
   }
 
   export interface TranslateOneLineResult {
-    translation: string;
+    success: boolean;
+    translation?: string;
+    cancelled?: boolean;
     error?: string;
+    operationId: string;
   }
 
   // Single-line transcription with context and precise audio segment
@@ -1325,10 +1356,55 @@ declare module '@shared-types/app' {
       }) => void
     ) => () => void;
 
-    createCheckoutSession: (
-      packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
-    ) => Promise<string | null>;
+    createCheckoutSession: (packId: CreditPackId) => Promise<string | null>;
     createByoUnlockSession: () => Promise<void>;
+    trackPurchaseEvent: (
+      event: PurchaseFunnelEvent,
+      context?: {
+        packId?: CreditPackId;
+        placement?: PurchasePlacement;
+        failureReason?: PurchaseFailureReason;
+      }
+    ) => Promise<{ success: boolean; error?: string }>;
+    onHeartbeatPing: (callback: () => void) => (() => void) | undefined;
+    getAgentControlEnabled: () => Promise<boolean>;
+    setAgentControlEnabled: (
+      enabled: boolean
+    ) => Promise<{ success: boolean; enabled: boolean; error?: string }>;
+    getAgentAllowedDirectories: () => Promise<string[]>;
+    setAgentAllowedDirectories: (
+      dirs: string[]
+    ) => Promise<{ success: boolean; error?: string }>;
+    addAgentAllowedDirectory: (
+      dir: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    removeAgentAllowedDirectory: (
+      dir: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    getAgentSocketStatus: () => Promise<{
+      running: boolean;
+      connectedClients: number;
+    }>;
+    checkAgentPathAllowed: (filePath: string) => Promise<boolean>;
+    onAgentControlChanged: (
+      callback: (payload: { enabled: boolean }) => void
+    ) => () => void;
+    showOpenDialog: (options: {
+      properties?: Array<'openDirectory' | 'createDirectory'>;
+      title?: string;
+    }) => Promise<{ canceled: boolean; filePaths: string[] }>;
+    onAgentBridgeRequest: (
+      callback: (request: AgentBridgeRequest) => void
+    ) => () => void;
+    sendAgentBridgeResponse: (
+      channel: string,
+      response: { result?: unknown; error?: string }
+    ) => void;
+    reportAgentHistoryJobTerminal: (payload: {
+      historyId: string;
+      operationId: string;
+      routeToken: string;
+    }) => void;
     checkEncryptionAvailable: () => Promise<boolean>;
     getAllByoSettings: () => Promise<AllByoSettings>;
     resetCredits: () => Promise<{
@@ -1584,7 +1660,9 @@ declare module '@shared-types/app' {
         agentMode: boolean;
       };
       translatorAgent?: {
-        status: () => Promise<Record<string, unknown>>;
+        status: (input?: {
+          historyId?: string;
+        }) => Promise<Record<string, unknown>>;
         navigationSnapshot: () => Promise<Record<string, unknown>>;
         navigate: (input?: {
           destination?:
@@ -1696,9 +1774,11 @@ declare module '@shared-types/app' {
         }) => Promise<Record<string, unknown>>;
         startTranscription: (input?: {
           replaceSubtitles?: 'fail' | 'discard' | 'save';
+          historyId?: string;
         }) => Promise<Record<string, unknown>>;
         startTranslation: (input?: {
           targetLanguage?: string;
+          historyId?: string;
         }) => Promise<Record<string, unknown>>;
         startDubbing: (input?: {
           targetLanguage?: string;
@@ -1720,6 +1800,7 @@ declare module '@shared-types/app' {
         startMerge: (input?: {
           outputPath?: string;
           overwrite?: boolean;
+          historyId?: string;
         }) => Promise<Record<string, unknown>>;
         startMediaWorkflow: (input?: {
           url?: string;
@@ -1732,11 +1813,16 @@ declare module '@shared-types/app' {
           voice?: string;
           replaceSubtitles?: 'fail' | 'discard' | 'save';
         }) => Promise<Record<string, unknown>>;
-        processingStatus: () => Promise<Record<string, unknown>>;
-        cancelProcessing: () => Promise<Record<string, unknown>>;
+        processingStatus: (input?: {
+          historyId?: string;
+        }) => Promise<Record<string, unknown>>;
+        cancelProcessing: (input?: {
+          historyId?: string;
+        }) => Promise<Record<string, unknown>>;
         subtitlesBatch: (input?: {
           offset?: number;
           limit?: number;
+          historyId?: string;
         }) => Promise<Record<string, unknown>>;
         updateSubtitles: (input?: {
           updates?: Array<{
@@ -1757,6 +1843,7 @@ declare module '@shared-types/app' {
           path?: string;
           mode?: SubtitleDisplayMode;
           overwrite?: boolean;
+          historyId?: string;
         }) => Promise<Record<string, unknown>>;
       };
     }

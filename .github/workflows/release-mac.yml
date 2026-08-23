@@ -3,9 +3,9 @@ name: Release – macOS (R2)
 on:
   workflow_dispatch: # manual trigger for testing
   push:
-    tags: 
-      - 'v*-mac'                 # Mac-only releases
-      - 'v[0-9]+.[0-9]+.[0-9]+'  # Full releases (both platforms) - pure SemVer only
+    tags:
+      - 'v*-mac' # Mac-only releases
+      - 'v[0-9]+.[0-9]+.[0-9]+' # Full releases (both platforms) - pure SemVer only
 
 permissions:
   contents: write
@@ -65,6 +65,12 @@ jobs:
             --platform mac_arm --path vendor/headless-arm64
           npx puppeteer@24.10.0 browsers install chrome-headless-shell \
             --platform mac     --path vendor/headless-x64
+
+      - name: Validate release candidate
+        run: |
+          npm run lint
+          npm test
+          npm run security:dependencies
 
       # ---------- Rebuild native modules for both architectures ----------
       - name: Rebuild native modules for x64

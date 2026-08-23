@@ -5,7 +5,7 @@ import type { SubtitleRenderPart } from '@shared-types/app';
 import {
   getVisibleTimedSubtitleParts,
   getVisibleTimedSubtitleText,
-} from '../../renderer/timed-subtitle-visibility.ts';
+} from '../../renderer/timed-subtitle-visibility.js';
 
 test('timed subtitle visibility keeps only the active word', () => {
   const parts: SubtitleRenderPart[] = [

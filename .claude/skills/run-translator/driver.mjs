@@ -1,67 +1,77 @@
 // REPL driver for the Stage5 translator Electron app (macOS, real display).
-// Requires playwright-core resolvable from the directory you run it in:
-//   npm install playwright-core   (in any scratch dir; run driver from there)
+// Uses the repository's Playwright development-app controller.
 // See SKILL.md for the full workflow.
 import * as readline from 'node:readline';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { DevAppController } from '../../../packages/agent-server/src/dev-app-controller.mjs';
+import { createNativeOwnerMonitor } from '../../../packages/agent-server/src/native-owner-monitor.mjs';
+import {
+  installTransportBoundLifecycle,
+  shouldForceDevelopmentShutdown,
+} from '../../../packages/agent-server/src/transport-bound-lifecycle.mjs';
 
-const APP_ROOT = path.resolve(import.meta.dirname, '../../..');
-const APP_DIR = path.join(APP_ROOT, 'packages/main');
-const ELECTRON_BIN = path.join(
-  APP_ROOT,
-  'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'
-);
 const SHOT_DIR = process.env.SCREENSHOT_DIR || path.resolve('./shots');
 fs.mkdirSync(SHOT_DIR, { recursive: true });
 
-const { _electron: electron } = await import(
-  path.join(process.cwd(), 'node_modules/playwright-core/index.mjs')
-);
-
+let lifecycle = null;
+const ownerMonitor = createNativeOwnerMonitor({
+  onOwnershipLost: reason => lifecycle?.requestShutdown(reason, 1),
+});
+const appController = new DevAppController({ ownerMonitor });
 let app = null;
 let page = null;
+let launchPromise = null;
+let driverClosePromise = null;
+let driverClosing = false;
+let requestDriverShutdown = null;
+
+function closeAppOnce() {
+  if (driverClosePromise) return driverClosePromise;
+
+  driverClosing = true;
+  driverClosePromise = appController.close().finally(() => {
+    app = null;
+    page = null;
+  });
+  return driverClosePromise;
+}
+
+function forceCloseAppOnce() {
+  void closeAppOnce().catch(() => {});
+  return appController.forceClose();
+}
 
 const COMMANDS = {
   async launch() {
+    if (driverClosing) return console.log('driver is shutting down');
     if (app) return console.log('already launched');
-    app = await electron.launch({
-      executablePath: ELECTRON_BIN,
-      args: [APP_DIR],
-      cwd: APP_DIR,
-      timeout: 45_000,
-    });
-    for (let i = 0; i < 30; i++) {
-      // Prefer an app tab (renderer index.html); the window also hosts a
-      // tab-strip shell page (shell.html) that is not the app UI.
-      //
-      // NOTE (verified live, 2026-07-18): despite its name, Playwright's
-      // ElectronApplication.windows() enumerates ALL CDP page targets —
-      // including WebContentsView-backed tab pages, not just BrowserWindow
-      // pages. With the current playwright-core + Electron 39 combo this
-      // loop DOES find the renderer/dist/index.html tab (confirmed by
-      // eval'ing location.href through the selected page). Do not "fix"
-      // this to use context.pages() or explicit target attachment unless
-      // windows() has demonstrably stopped returning the tab pages.
-      const wins = app.windows();
-      const w =
-        wins.find(w => w.url().includes('renderer/dist/index.html')) ??
-        wins.find(
-          w =>
-            !w.url().startsWith('devtools://') &&
-            w.url() !== 'about:blank' &&
-            !w.url().includes('shell.html')
-        );
-      if (w) {
-        page = w;
-        break;
+    if (launchPromise) return launchPromise;
+
+    const activeLaunch = (async () => {
+      await appController.launch();
+      if (driverClosing) return;
+      app = appController.app;
+      page = appController.page;
+      if (!app || !page) {
+        throw new Error('Development Electron closed before driver setup.');
       }
-      await new Promise(r => setTimeout(r, 1000));
+      const activeApp = app;
+      activeApp?.once?.('close', () => {
+        if (app === activeApp) {
+          app = null;
+          page = null;
+        }
+      });
+      console.log('launched.', app.windows().length, 'windows:');
+      for (const w of app.windows()) console.log(' ', w.url());
+    })();
+    launchPromise = activeLaunch;
+    try {
+      await activeLaunch;
+    } finally {
+      if (launchPromise === activeLaunch) launchPromise = null;
     }
-    page = page ?? (await app.firstWindow());
-    await new Promise(r => setTimeout(r, 3000));
-    console.log('launched.', app.windows().length, 'windows:');
-    for (const w of app.windows()) console.log(' ', w.url());
   },
 
   async ss(name) {
@@ -107,7 +117,9 @@ const COMMANDS = {
   async 'pw-click-text'(text) {
     if (!page) return console.log('ERROR: launch first');
     const target = page
-      .locator('button:visible, a:visible, [role="button"]:visible, [role="tab"]:visible')
+      .locator(
+        'button:visible, a:visible, [role="button"]:visible, [role="tab"]:visible'
+      )
       .filter({ hasText: text })
       .first();
     await target.click({ timeout: 15_000 });
@@ -182,7 +194,9 @@ const COMMANDS = {
     if (!page) return console.log('ERROR: launch first');
     const list = await page.evaluate(() =>
       [...document.querySelectorAll('button, [role="button"], [role="tab"]')]
-        .map(e => (e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60))
+        .map(e =>
+          (e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60)
+        )
         .filter(Boolean)
     );
     console.log(JSON.stringify(list, null, 1));
@@ -194,9 +208,11 @@ const COMMANDS = {
   },
 
   async quit() {
-    if (app) await app.close().catch(() => {});
-    app = null;
-    page = null;
+    if (requestDriverShutdown) {
+      await requestDriverShutdown('command:quit');
+      return;
+    }
+    await closeAppOnce();
   },
   help() {
     console.log('commands:', Object.keys(COMMANDS).join(', '));
@@ -226,16 +242,36 @@ rl.on('line', async line => {
   } catch (e) {
     console.log('ERROR:', e.message);
   }
-  if (cmd === 'quit') {
-    rl.close();
-    process.exit(0);
-  }
+  if (cmd === 'quit') return;
   rl.prompt();
 });
-rl.on('close', async () => {
-  await COMMANDS.quit();
-  process.exit(0);
+lifecycle = installTransportBoundLifecycle({
+  close: async () => {
+    await closeAppOnce();
+    await ownerMonitor.close();
+  },
+  forceClose: async () => {
+    await forceCloseAppOnce();
+    void ownerMonitor.close().catch(() => {});
+  },
+  forceOnFirstShutdown: shouldForceDevelopmentShutdown,
+  closeTransport: () => rl.close(),
+  input: stdin,
+  readline: rl,
 });
+requestDriverShutdown = lifecycle.requestShutdown;
 
-console.log('translator driver — "help" for commands, "launch" to start');
-rl.prompt();
+try {
+  await ownerMonitor.start();
+  console.log('translator driver — "help" for commands, "launch" to start');
+  rl.prompt();
+} catch (error) {
+  try {
+    process.stderr.write(
+      `translator driver ownership setup failed: ${error instanceof Error ? error.message : String(error)}\n`
+    );
+  } catch {
+    // The lifecycle owns failed output handling.
+  }
+  await lifecycle.requestShutdown('owner-monitor:exit', 1);
+}

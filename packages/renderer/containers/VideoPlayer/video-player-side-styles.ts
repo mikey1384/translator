@@ -93,10 +93,10 @@ export const sidePanelTabButtonStyles = (active: boolean) => css`
   ${metaPillStyles}
   cursor: pointer;
   justify-content: center;
-  border-color: ${active
-    ? 'rgba(125, 167, 255, 0.24)'
-    : colors.border};
-  background: ${active ? 'rgba(125, 167, 255, 0.12)' : 'rgba(255,255,255,0.03)'};
+  border-color: ${active ? 'rgba(125, 167, 255, 0.24)' : colors.border};
+  background: ${active
+    ? 'rgba(125, 167, 255, 0.12)'
+    : 'rgba(255,255,255,0.03)'};
   color: ${active ? colors.text : colors.textDim};
 `;
 
@@ -190,7 +190,9 @@ export const speedMenuStyles = (placement: 'up' | 'down') => css`
   ${subtleSurfaceCardStyles}
   position: absolute;
   right: 0;
-  ${placement === 'down' ? `top: calc(100% + ${spacing.sm});` : `bottom: calc(100% + ${spacing.sm});`}
+  ${placement === 'down'
+    ? `top: calc(100% + ${spacing.sm});`
+    : `bottom: calc(100% + ${spacing.sm});`}
   list-style: none;
   margin: 0;
   padding: ${spacing.xs};
@@ -352,9 +354,7 @@ const overlayControlsBaseStyles = css`
   }
 `;
 
-export const videoPlayerOverlayControlsStyles = (
-  isFullScreen: boolean
-) => css`
+export const videoPlayerOverlayControlsStyles = (isFullScreen: boolean) => css`
   ${overlayControlsBaseStyles}
   height: ${isFullScreen ? '100px' : '80px'};
   padding: 0 ${isFullScreen ? '40px' : '20px'};

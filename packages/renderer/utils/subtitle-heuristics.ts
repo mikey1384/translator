@@ -69,7 +69,10 @@ export function groupWhisperReviewRanges(
     let count = 1;
     const firstId = seg.id ?? id;
     let j = i + 1;
-    while (j < order.length && isWhisperReviewHintCandidate(segments[order[j]])) {
+    while (
+      j < order.length &&
+      isWhisperReviewHintCandidate(segments[order[j]])
+    ) {
       const s = segments[order[j]]!;
       start = Math.min(start, s.start ?? start);
       end = Math.max(end, s.end ?? end);

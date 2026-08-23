@@ -270,10 +270,16 @@ export async function handleProcessUrl(
         `[url-handler] Error object keys: ${Object.keys(error).join(', ')}`
       );
 
-      if (error.stderr)
-        log.error(`[url-handler] Error stderr: ${error.stderr}`);
-      if (error.stdout)
-        log.error(`[url-handler] Error stdout: ${error.stdout}`);
+      if (error.stderr) {
+        log.error(
+          `[url-handler] Error stderr captured (${Buffer.byteLength(String(error.stderr), 'utf8')} bytes; content omitted).`
+        );
+      }
+      if (error.stdout) {
+        log.error(
+          `[url-handler] Error stdout captured (${Buffer.byteLength(String(error.stdout), 'utf8')} bytes; content omitted).`
+        );
+      }
       if (error.code) log.error(`[url-handler] Error code: ${error.code}`);
     }
 

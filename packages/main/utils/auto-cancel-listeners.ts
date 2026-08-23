@@ -1,4 +1,5 @@
 type AutoCancelTarget = {
+  on: (event: string, listener: (...args: any[]) => void) => unknown;
   once: (event: string, listener: (...args: any[]) => void) => unknown;
   removeListener: (
     event: string,
@@ -21,21 +22,20 @@ export function attachAutoCancelListeners(
   cancel: () => void,
   logger?: AutoCancelLogger
 ): () => void {
+  let cancelled = false;
   const cancelOnce = () => {
+    if (cancelled) return;
+    cancelled = true;
     cancel();
   };
-  const handleNavigation = (
-    _e: unknown,
-    _url: unknown,
-    _isInPlace: unknown,
-    _isMainFrame: unknown,
-    _frameId: unknown,
-    _parentFrameId: unknown,
-    details: unknown
-  ) => {
-    if ((details as any)?.isReload) {
+  const handleNavigation = (details: unknown) => {
+    const navigation = details as {
+      isMainFrame?: boolean;
+      isSameDocument?: boolean;
+    };
+    if (navigation?.isMainFrame && !navigation.isSameDocument) {
       logger?.info?.(
-        `[registry] Cancelling due to reload for operation ${operationId}`
+        `[registry] Cancelling due to main-frame navigation for operation ${operationId}`
       );
       cancelOnce();
     }
@@ -44,7 +44,9 @@ export function attachAutoCancelListeners(
   target.once('destroyed', cancelOnce);
   target.once('render-process-gone', cancelOnce);
   target.once('will-navigate', cancelOnce);
-  target.once('did-start-navigation', handleNavigation);
+  // Subframe and same-document events must not consume the listener before a
+  // later reload or document replacement reaches this WebContents.
+  target.on('did-start-navigation', handleNavigation);
 
   return () => {
     target.removeListener('destroyed', cancelOnce);

@@ -31,6 +31,22 @@ The renderer should treat network and native operations as asynchronous jobs. It
 
 `packages/shared` contains wire contracts, model identifiers, pricing inputs, target-language definitions, subtitle helpers, and other cross-process types. Changes here should be checked for drift across main, preload, renderer, and the Stage5 API.
 
+### Local agent controllers
+
+Development agent control launches Electron through Playwright. A native,
+event-driven supervisor watches the exact controller owner and launched
+Electron process identity, so process ownership does not depend on inherited
+stdio descriptors. The controller has one awaited close request and one
+idempotent force path after exact ownership loss or the defined explicit-quit
+grace period.
+
+Packaged agent control uses a supervised helper and an authenticated local
+socket. The app rotates the socket generation on each start; a helper must
+present the exact per-instance token before any agent method is accepted.
+macOS uses kqueue process events, Linux uses pidfds, and Windows uses process
+handles plus a kill-on-close Job Object. Native supervisor binaries are build
+artifacts and must be built and architecture-checked as part of packaging.
+
 ## Data and trust boundaries
 
 ### Local product data
@@ -70,6 +86,9 @@ The exact provider and model depend on user settings, Stage5 availability, and B
 - IPC senders must be checked for liveness before replies are delivered.
 - Temporary files and source-linked subtitle state need explicit ownership.
 - Update, packaging, and native-binary changes must be tested per architecture.
+- Agent ownership must use exact process or transport identities, not polling,
+  timing guesses, process-name matching, or the assumption that stdio EOF is
+  always observable.
 
 ## Where to start
 

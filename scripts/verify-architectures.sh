@@ -23,7 +23,17 @@ verify_app() {
   local expected_arch="$2"
   local runtime_arch="$3"
   local resources="$app_path/Contents/Resources/app.asar.unpacked/node_modules"
+  local app_resources="$app_path/Contents/Resources"
   local onnx_dir="$resources/onnxruntime-node/bin/napi-v6/darwin/$runtime_arch"
+  local headless_dir="$app_resources/headless-$runtime_arch"
+  local other_runtime_arch
+  local headless_binary
+
+  if [[ "$runtime_arch" == "arm64" ]]; then
+    other_runtime_arch="x64"
+  else
+    other_runtime_arch="arm64"
+  fi
 
   if [[ ! -d "$app_path" ]]; then
     echo "::error::Missing packaged app: $app_path" >&2
@@ -33,6 +43,9 @@ verify_app() {
   echo "📦 $app_path ($expected_arch)"
   echo "----------------------------------------"
   verify_macho_arch "$app_path/Contents/MacOS/Translator" "$expected_arch"
+  verify_macho_arch \
+    "$app_path/Contents/Resources/translator-owner-supervisor" \
+    "$expected_arch"
   verify_macho_arch "$onnx_dir/onnxruntime_binding.node" "$expected_arch"
 
   local onnx_dylib
@@ -44,6 +57,26 @@ verify_app() {
   verify_macho_arch "$onnx_dylib" "$expected_arch"
 
   verify_macho_arch "$resources/webrtcvad/build/Release/vad.node" "$expected_arch"
+
+  if [[ ! -d "$headless_dir" ]]; then
+    echo "::error::Missing target-architecture headless browser directory: $headless_dir" >&2
+    return 1
+  fi
+  if [[ -e "$app_resources/headless-$other_runtime_arch" ]]; then
+    echo "::error::Unexpected non-target headless browser payload: $app_resources/headless-$other_runtime_arch" >&2
+    return 1
+  fi
+
+  headless_binary="$(
+    find "$headless_dir" -type f \
+      \( -name 'chrome-headless-shell' -o -name 'headless_shell' \) \
+      -print -quit
+  )"
+  if [[ -z "$headless_binary" ]]; then
+    echo "::error::Missing headless browser executable in $headless_dir" >&2
+    return 1
+  fi
+  verify_macho_arch "$headless_binary" "$expected_arch"
   echo
 }
 
