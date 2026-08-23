@@ -107,23 +107,6 @@ let lastEntitlementsFetch: {
   snapshot: EntitlementsSnapshot;
 } | null = null;
 const ENTITLEMENTS_FETCH_TTL_MS = 2_000;
-// Bumped by invalidation. A fetch that started under an older epoch
-// resolved against pre-event server state; its result must neither be
-// cached nor handed to joined callers — it refetches instead.
-let entitlementsFetchEpoch = 0;
-const ENTITLEMENTS_FETCH_MAX_RETRIES = 3;
-
-/**
- * Drop the short-lived fetch cache. Must be called when an authoritative
- * entitlement change arrives outside the fetch path (payment events) —
- * otherwise a poll inside the TTL would write the pre-payment snapshot
- * back over the paid unlock. Also marks any in-flight fetch stale so its
- * (pre-event) response is discarded and refetched.
- */
-export function invalidateCachedEntitlementsFetch(): void {
-  lastEntitlementsFetch = null;
-  entitlementsFetchEpoch++;
-}
 
 export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapshot> {
   if (entitlementsFetchInFlight) {
@@ -136,34 +119,15 @@ export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapsho
     return lastEntitlementsFetch.snapshot;
   }
 
-  entitlementsFetchInFlight = (async () => {
-    for (let attempt = 0; ; attempt++) {
-      const epochAtStart = entitlementsFetchEpoch;
-      const raw = await fetchEntitlementsFromServerUncached();
-      if (epochAtStart === entitlementsFetchEpoch) {
-        // Only a confirmed-current response may touch the store.
-        const snapshot = setByoUnlocked(raw, { notify: false });
-        lastEntitlementsFetch = { at: Date.now(), snapshot };
-        return snapshot;
-      }
-      if (attempt >= ENTITLEMENTS_FETCH_MAX_RETRIES) {
-        // Invalidation storm; never apply a possibly-stale response — the
-        // store already holds the authoritative event values.
-        log.warn(
-          '[entitlements-manager] Fetch epoch kept advancing; returning store state without applying the fetch.'
-        );
-        return getCachedEntitlements();
-      }
-      // Invalidated mid-flight (authoritative payment event): this response
-      // predates the event — fetch again so joined callers get post-event
-      // entitlements instead of re-locking a paid unlock.
-      log.info(
-        '[entitlements-manager] Discarding stale in-flight entitlements fetch after authoritative update; refetching.'
-      );
-    }
-  })().finally(() => {
-    entitlementsFetchInFlight = null;
-  });
+  entitlementsFetchInFlight = fetchEntitlementsFromServerUncached()
+    .then(raw => {
+      const snapshot = setByoUnlocked(raw, { notify: false });
+      lastEntitlementsFetch = { at: Date.now(), snapshot };
+      return snapshot;
+    })
+    .finally(() => {
+      entitlementsFetchInFlight = null;
+    });
 
   return entitlementsFetchInFlight;
 }

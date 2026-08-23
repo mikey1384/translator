@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   setByoUnlocked,
   syncEntitlements,
-  invalidateCachedEntitlementsFetch,
 } from '../services/entitlements-manager.js';
 import { STAGE5_API_URL } from '../services/endpoints.js';
 import {
@@ -63,33 +62,6 @@ function sendNetLog(
   }
 }
 
-function serializePaymentEventLogMeta(value: unknown): any {
-  try {
-    return JSON.parse(JSON.stringify(value));
-  } catch {
-    return {
-      unserializable: true,
-      preview: String(value),
-    };
-  }
-}
-
-function tracePaymentEventReceipt(
-  level: 'info' | 'warn' | 'error',
-  message: string,
-  meta?: unknown
-): void {
-  const safeMeta = serializePaymentEventLogMeta(meta);
-  if (level === 'info') {
-    log.info(message, safeMeta);
-  } else if (level === 'warn') {
-    log.warn(message, safeMeta);
-  } else {
-    log.error(message, safeMeta);
-  }
-  sendNetLog(level, message, safeMeta);
-}
-
 const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
   name: 'credit-balance',
   defaults: { balanceCredits: 0, creditsPerHour: CREDITS_PER_AUDIO_HOUR },
@@ -102,19 +74,6 @@ const PACK_CREDITS: Record<'MICRO' | 'STARTER' | 'STANDARD' | 'PRO', number> = {
   PRO: CREDIT_PACKS.PRO.credits,
 };
 type CreditPackId = keyof typeof PACK_CREDITS;
-
-class PaymentEventStreamUnavailableError extends Error {
-  constructor(
-    message = 'Payment event stream is unavailable in this environment'
-  ) {
-    super(message);
-    this.name = 'PaymentEventStreamUnavailableError';
-  }
-}
-
-function isPaymentEventStreamUnavailableError(error: unknown): boolean {
-  return error instanceof PaymentEventStreamUnavailableError;
-}
 
 function isCreditPackId(value: unknown): value is CreditPackId {
   return (
@@ -481,10 +440,6 @@ function getCheckoutCountryHint(): string | null {
   return resolveCheckoutCountryHintFromLocale(rawLocale);
 }
 
-let paymentEventStreamAbort: AbortController | null = null;
-let paymentEventStreamConnecting = false;
-let paymentEventStreamReconnectTimer: ReturnType<typeof setTimeout> | null =
-  null;
 let currentCreditSnapshot: CreditSnapshotPayload | null = null;
 let creditBalanceHydrationPromise: Promise<CreditSnapshotPayload | null> | null =
   null;
@@ -567,7 +522,6 @@ function publishCreditSnapshot({
 async function syncCreditBalanceFromServer(
   targetWindow?: BrowserWindow | null
 ): Promise<CreditSnapshotPayload | null> {
-  const epochAtStart = creditHydrationEpoch;
   const overrideSnapshot = getCreditSnapshotOverride();
   if (overrideSnapshot) {
     publishCreditSnapshot({ snapshot: overrideSnapshot, targetWindow });
@@ -609,16 +563,6 @@ async function syncCreditBalanceFromServer(
     authoritative: true,
   });
 
-  if (epochAtStart !== creditHydrationEpoch) {
-    // An authoritative realtime event published a newer balance while this
-    // request was in flight; do not overwrite it (or refresh the TTL) with
-    // this older response.
-    log.info(
-      '[credit-handler] Discarding stale /credits response superseded by a realtime credit event.'
-    );
-    return currentCreditSnapshot;
-  }
-
   publishCreditSnapshot({ snapshot, targetWindow });
   lastCreditHydrationAt = Date.now();
   log.info(
@@ -635,14 +579,6 @@ async function syncCreditBalanceFromServer(
 // after it rather than joining it.
 let lastCreditHydrationAt = 0;
 const CREDIT_HYDRATION_TTL_MS = 2_000;
-// Bumped when an authoritative realtime credit event publishes a snapshot;
-// an in-flight /credits response that started earlier must not overwrite it.
-let creditHydrationEpoch = 0;
-
-function markAuthoritativeCreditEvent(): void {
-  creditHydrationEpoch++;
-  lastCreditHydrationAt = 0;
-}
 
 function startCreditBalanceHydration(
   targetWindow?: BrowserWindow | null
@@ -693,12 +629,10 @@ function requestCreditBalanceHydration(
 export async function initializeCreditBalanceState(
   targetWindow?: BrowserWindow | null
 ): Promise<void> {
-  ensurePaymentEventStream();
   await requestCreditBalanceHydration(targetWindow);
 }
 
 export async function handleGetCreditSnapshot(): Promise<CreditSnapshotPayload | null> {
-  ensurePaymentEventStream();
   if (currentCreditSnapshot) {
     log.info(
       `[credit-handler] Returning cached credit snapshot: balance=${currentCreditSnapshot.creditBalance}.`
@@ -724,7 +658,6 @@ export async function handleGetCreditSnapshot(): Promise<CreditSnapshotPayload |
 export async function handleRefreshCreditSnapshot(
   force = false
 ): Promise<CreditSnapshotPayload | null> {
-  ensurePaymentEventStream();
   const refreshedSnapshot = await requestCreditBalanceHydration(
     getMainWindow(),
     { force }
@@ -734,265 +667,6 @@ export async function handleRefreshCreditSnapshot(
   }
 
   return currentCreditSnapshot ?? buildCachedCreditSnapshot();
-}
-
-function schedulePaymentEventStreamReconnect(delayMs = 5_000): void {
-  if (paymentEventStreamReconnectTimer) {
-    return;
-  }
-
-  paymentEventStreamReconnectTimer = setTimeout(() => {
-    paymentEventStreamReconnectTimer = null;
-    ensurePaymentEventStream();
-  }, delayMs);
-}
-
-function ensurePaymentEventStream(): void {
-  if (paymentEventStreamAbort || paymentEventStreamConnecting) {
-    return;
-  }
-
-  const controller = new AbortController();
-  let shouldReconnect = true;
-  paymentEventStreamAbort = controller;
-  paymentEventStreamConnecting = true;
-
-  void connectPaymentEventStream(controller)
-    .catch(error => {
-      if (isStage5UpdateRequiredError(error)) {
-        shouldReconnect = false;
-        return;
-      }
-      if (isPaymentEventStreamUnavailableError(error)) {
-        shouldReconnect = false;
-        log.info(
-          `[credit-handler] Payment event stream is unavailable. Falling back to polling-only credit reconciliation.`
-        );
-        return;
-      }
-      log.warn('[credit-handler] Payment event stream disconnected:', error);
-    })
-    .finally(() => {
-      if (paymentEventStreamAbort === controller) {
-        paymentEventStreamAbort = null;
-      }
-      paymentEventStreamConnecting = false;
-      if (shouldReconnect && !controller.signal.aborted) {
-        schedulePaymentEventStreamReconnect();
-      }
-    });
-}
-
-async function connectPaymentEventStream(
-  controller: AbortController
-): Promise<void> {
-  const deviceId = getDeviceId();
-  const url = `${STAGE5_API_URL}/payments/events/${encodeURIComponent(deviceId)}`;
-  log.info(`[credit-handler] Connecting payment event stream for ${deviceId}.`);
-
-  const response = await withStage5AuthRetryOnResponse(authHeaders =>
-    fetch(url, {
-      headers: {
-        ...authHeaders,
-        Accept: 'text/event-stream',
-      },
-      signal: controller.signal,
-    })
-  );
-
-  if (response.status === 426) {
-    let data: any = null;
-    try {
-      data = await response.clone().json();
-    } catch {
-      data = null;
-    }
-    throwIfStage5UpdateRequiredResponse({
-      response: { status: response.status, data },
-      source: 'stage5-api',
-    });
-  }
-
-  if (response.status === 503) {
-    let data: any = null;
-    try {
-      data = await response.clone().json();
-    } catch {
-      data = null;
-    }
-
-    if (
-      data?.error === 'Payment event stream unavailable' ||
-      data?.message === 'Server push is not configured for this environment'
-    ) {
-      throw new PaymentEventStreamUnavailableError(
-        data?.message || 'Server push is not configured for this environment'
-      );
-    }
-  }
-
-  if (!response.ok) {
-    throw new Error(`Payment event stream failed with HTTP ${response.status}`);
-  }
-
-  if (!response.body) {
-    throw new Error('Payment event stream response did not include a body');
-  }
-
-  sendNetLog('info', `GET /payments/events/${deviceId} -> ${response.status}`, {
-    url,
-    method: 'GET',
-    status: response.status,
-  });
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-
-  while (!controller.signal.aborted) {
-    const { value, done } = await reader.read();
-    if (done) {
-      break;
-    }
-
-    buffer += decoder.decode(value, { stream: true });
-    buffer = processPaymentEventStreamBuffer(buffer);
-  }
-}
-
-function processPaymentEventStreamBuffer(buffer: string): string {
-  let remaining = buffer;
-  let separatorIndex = remaining.search(/\r?\n\r?\n/);
-
-  while (separatorIndex >= 0) {
-    const block = remaining.slice(0, separatorIndex);
-    const separatorMatch = remaining.slice(separatorIndex).match(/^\r?\n\r?\n/);
-    const separatorLength = separatorMatch?.[0]?.length ?? 2;
-    remaining = remaining.slice(separatorIndex + separatorLength);
-    handlePaymentEventStreamBlock(block);
-    separatorIndex = remaining.search(/\r?\n\r?\n/);
-  }
-
-  return remaining;
-}
-
-function handlePaymentEventStreamBlock(block: string): void {
-  const dataLines: string[] = [];
-  for (const line of block.split(/\r?\n/)) {
-    if (!line || line.startsWith(':')) {
-      continue;
-    }
-    const separatorIndex = line.indexOf(':');
-    const field = separatorIndex >= 0 ? line.slice(0, separatorIndex) : line;
-    let value = separatorIndex >= 0 ? line.slice(separatorIndex + 1) : '';
-    if (value.startsWith(' ')) {
-      value = value.slice(1);
-    }
-    if (field === 'data') {
-      dataLines.push(value);
-    }
-  }
-
-  if (dataLines.length === 0) {
-    return;
-  }
-
-  const payloadText = dataLines.join('\n');
-
-  try {
-    const payload = JSON.parse(payloadText);
-    tracePaymentEventReceipt(
-      'info',
-      `[credit-handler] Received payment event stream payload: ${typeof payload?.type === 'string' ? payload.type : 'unknown'}`,
-      {
-        payload,
-      }
-    );
-    handlePaymentRealtimeEvent(payload);
-  } catch (error) {
-    tracePaymentEventReceipt(
-      'warn',
-      '[credit-handler] Failed to parse payment event stream payload.',
-      {
-        error:
-          error instanceof Error
-            ? { message: error.message, stack: error.stack }
-            : String(error),
-        block,
-        payloadText,
-      }
-    );
-  }
-}
-
-function handlePaymentRealtimeEvent(event: any): void {
-  const eventType = typeof event?.type === 'string' ? event.type : '';
-  if (!eventType || eventType === 'ready') {
-    return;
-  }
-
-  if (eventType === 'credits.updated') {
-    const credits = Number(event?.balanceAfter);
-    if (!Number.isFinite(credits)) {
-      return;
-    }
-    const snapshot = buildCreditSnapshotPayload({
-      credits,
-      perHour: resolveCreditsPerHour(event?.creditsPerHour),
-      authoritative: true,
-      checkoutSessionId: event?.checkoutSessionId ?? null,
-    });
-
-    // Supersede any in-flight /credits hydration: its response predates
-    // this realtime balance and must not overwrite or TTL-cache over it.
-    markAuthoritativeCreditEvent();
-    publishCreditSnapshot({
-      snapshot,
-    });
-    emitCheckoutConfirmed(event?.checkoutSessionId ?? null, getMainWindow());
-
-    log.info(
-      `[credit-handler] Applied authoritative payment credit event: balance=${credits}, session=${event?.checkoutSessionId ?? 'n/a'}, paymentIntent=${event?.paymentIntentId ?? 'n/a'}.`
-    );
-    return;
-  }
-
-  if (eventType === 'entitlements.updated') {
-    // The payment event is authoritative; a TTL-cached pre-payment fetch
-    // must never be served (and re-applied) after this point.
-    invalidateCachedEntitlementsFetch();
-    const snapshot = setByoUnlocked(
-      {
-        byoOpenAi: Boolean(event?.entitlements?.byoOpenAi),
-        byoAnthropic: Boolean(event?.entitlements?.byoAnthropic),
-        byoElevenLabs: Boolean(event?.entitlements?.byoElevenLabs),
-      },
-      { notify: true }
-    );
-    const mainWindow = getMainWindow();
-    emitByoUnlockConfirmed(
-      event?.checkoutSessionId ?? null,
-      snapshot,
-      mainWindow
-    );
-    log.info(
-      `[credit-handler] Applied authoritative BYO entitlement event: openai=${snapshot.byoOpenAi}, session=${event?.checkoutSessionId ?? 'n/a'}.`
-    );
-    return;
-  }
-
-  if (eventType === 'checkout.failed') {
-    const mainWindow = getMainWindow();
-    const mode = event?.mode === 'byo' ? 'byo' : 'credits';
-    const sessionId =
-      typeof event?.checkoutSessionId === 'string'
-        ? event.checkoutSessionId
-        : getActiveCheckoutSessionId(mode);
-    emitCheckoutCancelled(mode, mainWindow, sessionId);
-    log.warn(
-      `[credit-handler] Payment checkout failed via webhook event (mode=${mode}, session=${sessionId ?? 'n/a'}, paymentIntent=${event?.paymentIntentId ?? 'n/a'}): ${event?.message ?? 'no message'}`
-    );
-  }
 }
 
 function reportCheckoutClientEventInBackground({
@@ -1093,8 +767,6 @@ export async function handleCreateCheckoutSession(
   _evt: Electron.IpcMainInvokeEvent,
   packId: CreditPackId
 ): Promise<string | null> {
-  ensurePaymentEventStream();
-
   // One checkout at a time: reserved synchronously so two tabs clicking Buy
   // during the create POST can't both open Stripe sessions.
   if (!tryBeginCheckoutCreation('credits')) {
@@ -1346,8 +1018,6 @@ export async function handleCreateCheckoutSession(
 }
 
 export async function handleCreateByoUnlockSession(): Promise<void> {
-  ensurePaymentEventStream();
-
   // Mirror the credits guard: reserved synchronously, stale unresolved
   // sessions released.
   if (!tryBeginCheckoutCreation('byo')) {
@@ -1577,8 +1247,6 @@ export function handleCheckoutReturnFromBrowser({
   returnId?: string | null;
   mode?: CheckoutMode | string | null;
 }): void {
-  ensurePaymentEventStream();
-
   void (async () => {
     let checkoutMode: CheckoutMode = mode === 'byo' ? 'byo' : 'credits';
     let checkoutSessionId =
