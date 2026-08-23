@@ -29,6 +29,11 @@ if (-not (Test-Path -LiteralPath $releaseIdentityScript)) {
   throw "Release identity preflight not found: $releaseIdentityScript"
 }
 . $releaseIdentityScript
+$releaseArtifactsScript = Join-Path -Path $PSScriptRoot -ChildPath 'windows-release-artifacts.ps1'
+if (-not (Test-Path -LiteralPath $releaseArtifactsScript)) {
+  throw "Windows release artifact helpers not found: $releaseArtifactsScript"
+}
+. $releaseArtifactsScript
 $releaseMutex = Enter-WindowsReleaseMutex
 $hashFile = $null
 
@@ -52,7 +57,7 @@ function Read-PackageVersion {
 
 function Get-DefaultSourcePath {
   param([string]$version)
-  return (Join-Path -Path 'dist' -ChildPath "Translator Setup $version.exe")
+  return (Get-WindowsInstallerPath -Version $version -DistPath 'dist')
 }
 
 function Normalize-Version {
@@ -100,16 +105,12 @@ function Resolve-SourcePath {
     throw "Cannot resolve fallback source installer because version '$version' is invalid."
   }
 
-  $escapedVersion = [Regex]::Escape($normalizedVersion)
-  # Fallback: only select an installer that exactly matches the normalized version.
-  $candidates = Get-ChildItem -LiteralPath 'dist' -Filter 'Translator Setup *.exe' -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match "^Translator Setup $escapedVersion\.exe$" } |
-    Sort-Object LastWriteTime -Descending
-  if ($candidates -and $candidates.Count -gt 0) {
-    return $candidates[0].FullName
+  $candidate = Get-WindowsInstallerPath -Version $normalizedVersion -DistPath 'dist'
+  if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+    return (Get-Item -LiteralPath $candidate).FullName
   }
 
-  throw "Source installer not found at '$p' and no installer matching version '$normalizedVersion' in dist/"
+  throw "Source installer not found at '$p' or canonical path '$candidate'."
 }
 
 function Assert-SourceMatchesVersion {
@@ -118,19 +119,10 @@ function Assert-SourceMatchesVersion {
     [string]$version
   )
 
-  $fileNameNoExt = [System.IO.Path]::GetFileNameWithoutExtension($fullPath)
-  if ($fileNameNoExt -notmatch '^Translator Setup (.+)$') {
-    Write-Host "WARNING: Could not infer version from installer filename '$fileNameNoExt'. Skipping version consistency check." -ForegroundColor Yellow
-    return
-  }
-
-  $fromName = Normalize-Version -raw $Matches[1]
-  if (-not $fromName) {
-    throw "Resolved installer '$fullPath' has an invalid version segment in its filename."
-  }
-
-  if ($fromName -ne $version) {
-    throw "Resolved installer '$fullPath' does not match requested version '$version' (found '$fromName')."
+  $expectedName = Get-WindowsInstallerFileName -Version $version
+  $actualName = [System.IO.Path]::GetFileName($fullPath)
+  if ($actualName -cne $expectedName) {
+    throw "Resolved installer '$fullPath' must use canonical filename '$expectedName'."
   }
 }
 
@@ -154,81 +146,6 @@ function Resolve-BlockmapPath {
   }
 
   return $null
-}
-
-function Assert-InstallerSignature {
-  param([string]$installerPath)
-
-  $signature = Get-AuthenticodeSignature -LiteralPath $installerPath
-  if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
-    throw "Installer Authenticode signature is not valid: $($signature.Status) ($installerPath)"
-  }
-  if (-not $signature.SignerCertificate -or $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=Stage5 Tools LLC(?:,|$)') {
-    throw "Installer signer is not Stage5 Tools LLC: $($signature.SignerCertificate.Subject)"
-  }
-}
-
-function Get-Sha512Base64 {
-  param([string]$filePath)
-
-  $stream = [System.IO.File]::OpenRead($filePath)
-  $sha512 = [System.Security.Cryptography.SHA512]::Create()
-  try {
-    return [Convert]::ToBase64String($sha512.ComputeHash($stream))
-  } finally {
-    $sha512.Dispose()
-    $stream.Dispose()
-  }
-}
-
-function Assert-UpdaterMetadataMatchesInstaller {
-  param(
-    [string]$latestYamlPath,
-    [string]$installerPath,
-    [string]$version
-  )
-
-  $yamlText = [System.IO.File]::ReadAllText($latestYamlPath)
-  $escapedVersion = [Regex]::Escape($version)
-  if ($yamlText -notmatch "(?m)^version:\s*$escapedVersion\s*$") {
-    throw "latest.yml does not declare requested version '$version'."
-  }
-
-  $expectedName = ([System.IO.Path]::GetFileName($installerPath) -replace ' ', '-')
-  $escapedName = [Regex]::Escape($expectedName)
-  $urlMatch = [Regex]::Match(
-    $yamlText,
-    "(?m)^\s*-\s+url:\s*$escapedName\s*$"
-  )
-  if (-not $urlMatch.Success) {
-    throw "latest.yml does not contain an updater entry for '$expectedName'."
-  }
-  if ($yamlText -notmatch "(?m)^path:\s*$escapedName\s*$") {
-    throw "latest.yml path does not reference '$expectedName'."
-  }
-
-  $entryTail = $yamlText.Substring($urlMatch.Index + $urlMatch.Length)
-  $nextEntry = [Regex]::Match($entryTail, "(?m)^\s*-\s+url:|^path:")
-  if ($nextEntry.Success) {
-    $entryTail = $entryTail.Substring(0, $nextEntry.Index)
-  }
-
-  $shaMatch = [Regex]::Match($entryTail, '(?m)^\s+sha512:\s*(\S+)\s*$')
-  $sizeMatch = [Regex]::Match($entryTail, '(?m)^\s+size:\s*(\d+)\s*$')
-  if (-not $shaMatch.Success -or -not $sizeMatch.Success) {
-    throw "latest.yml entry for '$expectedName' is missing sha512 or size metadata."
-  }
-
-  $actualSize = (Get-Item -LiteralPath $installerPath).Length
-  $declaredSize = [Int64]::Parse($sizeMatch.Groups[1].Value)
-  if ($declaredSize -ne $actualSize) {
-    throw "latest.yml size mismatch for '$expectedName': declared $declaredSize, actual $actualSize."
-  }
-
-  $actualSha512 = Get-Sha512Base64 -filePath $installerPath
-  if ($shaMatch.Groups[1].Value -cne $actualSha512) {
-    throw "latest.yml sha512 mismatch for '$expectedName'."
-  }
 }
 
 function Resolve-ReleaseNotesScriptPath {
@@ -276,7 +193,7 @@ function Get-TagReleaseNotes {
   $tagTypeLines = @(& git cat-file -t $tag 2>$null)
   if ($LASTEXITCODE -ne 0) {
     Write-Host "Tag $tag not found locally. Attempting to fetch annotated tag from origin..." -ForegroundColor Yellow
-    @(& git fetch --force origin "refs/tags/$tag:refs/tags/$tag" 2>$null) | Out-Null
+    @(& git fetch --force origin "refs/tags/${tag}:refs/tags/${tag}" 2>$null) | Out-Null
     $tagTypeLines = @(& git cat-file -t $tag 2>$null)
     if ($LASTEXITCODE -ne 0) {
       Write-Host "WARNING: Tag $tag could not be resolved locally or from origin." -ForegroundColor Yellow
@@ -387,7 +304,7 @@ if (-not $srcPathProvided) {
 $src = Resolve-SourcePath -p $SrcPath -version $Version -AllowVersionFallback:(-not $srcPathProvided)
 Write-Host "Source: $src"
 Assert-SourceMatchesVersion -fullPath $src -version $Version
-Assert-InstallerSignature -installerPath $src
+Assert-WindowsInstallerSignature -InstallerPath $src
 
 $latestYaml = Resolve-LatestYamlPath -p $LatestYamlPath
 Write-Host "latest.yml: $latestYaml"
@@ -432,10 +349,10 @@ if (-not $didInjectReleaseNotes) {
   }
 }
 
-Assert-UpdaterMetadataMatchesInstaller `
-  -latestYamlPath $latestYaml `
-  -installerPath $src `
-  -version $Version
+Assert-WindowsUpdaterMetadataMatchesInstaller `
+  -LatestYamlPath $latestYaml `
+  -InstallerPath $src `
+  -Version $Version
 
 # Optional blockmap (present if differential metadata is generated)
 $blockmap = Resolve-BlockmapPath -installerPath $src
@@ -446,7 +363,7 @@ if ($null -ne $blockmap) {
 }
 
 # Compute SHA256 and write checksum file
-$hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $src).Hash
+$hash = (Get-WindowsArtifactSha256Hex -FilePath $src).ToUpperInvariant()
 $hashFile = Join-Path $env:TEMP ("Translator-x64-" + [Guid]::NewGuid().ToString('N') + '.exe.sha256')
 "$hash  Translator-x64.exe" | Out-File -FilePath $hashFile -Encoding ascii -Force
 Write-Host "Checksum: $hash"
@@ -458,13 +375,10 @@ $destLatest  = "$BucketBase/latest/Translator-x64.exe"
 $destVersionSha = "$BucketBase/$Version/Translator-x64.exe.sha256"
 $destLatestSha  = "$BucketBase/latest/Translator-x64.exe.sha256"
 
-# Also compute names expected by latest.yml
-$installerFileName = [System.IO.Path]::GetFileName($src)
-
-# Hyphenated canonical name to match latest.yml (which may replace spaces with '-')
-$installerHyphen = $installerFileName -replace ' ', '-'
-$destHyphenLatest  = "$BucketBase/latest/$installerHyphen"
-$destHyphenVersion = "$BucketBase/$Version/$installerHyphen"
+# The physical artifact and latest.yml use the same canonical, URL-safe name.
+$updaterInstallerName = [System.IO.Path]::GetFileName($src)
+$destUpdaterLatest  = "$BucketBase/latest/$updaterInstallerName"
+$destUpdaterVersion = "$BucketBase/$Version/$updaterInstallerName"
 
 # latest.yml destinations (primarily used by auto-updater)
 $destLatestYaml  = "$BucketBase/latest/latest.yml"
@@ -472,7 +386,7 @@ $destVersionYaml = "$BucketBase/$Version/latest.yml"
 
 # Blockmap destinations (match the installerFileName + .blockmap)
 if ($null -ne $blockmap) {
-  $blockmapFileName = "$installerHyphen.blockmap"
+  $blockmapFileName = "$updaterInstallerName.blockmap"
   $destBlockmapLatest  = "$BucketBase/latest/$blockmapFileName"
   $destBlockmapVersion = "$BucketBase/$Version/$blockmapFileName"
 }
@@ -488,7 +402,7 @@ function Invoke-RcloneCopyTo {
   $rcloneArgs = @('copyto', '--progress', '--transfers', '4', '--retries', '3', '--retries-sleep', '2s', '--ignore-times')
   & rclone @rcloneArgs -- $from $to
   if ($LASTEXITCODE -ne 0) {
-    throw "rclone copyto failed with exit code $LASTEXITCODE: $to"
+    throw "rclone copyto failed with exit code ${LASTEXITCODE}: $to"
   }
 }
 
@@ -501,7 +415,7 @@ function Invoke-RcloneCopyRemote {
   $rcloneArgs = @('copyto', '--retries', '3', '--retries-sleep', '2s', '--ignore-times')
   & rclone @rcloneArgs -- $fromRemote $toRemote
   if ($LASTEXITCODE -ne 0) {
-    throw "rclone remote copyto failed with exit code $LASTEXITCODE: $toRemote"
+    throw "rclone remote copyto failed with exit code ${LASTEXITCODE}: $toRemote"
   }
 }
 
@@ -514,7 +428,7 @@ function Invoke-RcloneCopyAlways {
   $rcloneArgs = @('copyto', '--ignore-times', '--retries', '3', '--retries-sleep', '2s')
   & rclone @rcloneArgs -- $from $to
   if ($LASTEXITCODE -ne 0) {
-    throw "rclone forced copyto failed with exit code $LASTEXITCODE: $to"
+    throw "rclone forced copyto failed with exit code ${LASTEXITCODE}: $to"
   }
 }
 
@@ -563,8 +477,8 @@ function Assert-RemoteMatchesLocal {
       throw "Remote size mismatch for ${remotePath}: expected $($localItem.Length), got $($remoteItem.Length)."
     }
 
-    $localHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $localPath).Hash
-    $remoteHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $verificationPath).Hash
+    $localHash = Get-WindowsArtifactSha256Hex -FilePath $localPath
+    $remoteHash = Get-WindowsArtifactSha256Hex -FilePath $verificationPath
     if ($localHash -cne $remoteHash) {
       throw "Remote SHA256 mismatch for $remotePath."
     }
@@ -577,15 +491,15 @@ function Assert-RemoteMatchesLocal {
 }
 
 # Upload and verify immutable versioned objects first.
-Invoke-RcloneCopyImmutable -from $src -to $destHyphenVersion
-Invoke-RcloneCopyRemoteImmutable -fromRemote $destHyphenVersion -toRemote $destVersion
+Invoke-RcloneCopyImmutable -from $src -to $destUpdaterVersion
+Invoke-RcloneCopyRemoteImmutable -fromRemote $destUpdaterVersion -toRemote $destVersion
 Invoke-RcloneCopyImmutable -from $hashFile -to $destVersionSha
 if ($null -ne $blockmap) {
   Invoke-RcloneCopyImmutable -from $blockmap -to $destBlockmapVersion
 }
 Invoke-RcloneCopyImmutable -from $latestYaml -to $destVersionYaml
 
-Assert-RemoteMatchesLocal -localPath $src -remotePath $destHyphenVersion
+Assert-RemoteMatchesLocal -localPath $src -remotePath $destUpdaterVersion
 Assert-RemoteMatchesLocal -localPath $src -remotePath $destVersion
 Assert-RemoteMatchesLocal -localPath $hashFile -remotePath $destVersionSha
 if ($null -ne $blockmap) {
@@ -594,14 +508,14 @@ if ($null -ne $blockmap) {
 Assert-RemoteMatchesLocal -localPath $latestYaml -remotePath $destVersionYaml
 
 # Stage every latest/ payload before switching its updater manifest.
-Invoke-RcloneCopyTo -from $src -to $destHyphenLatest
-Invoke-RcloneCopyRemote -fromRemote $destHyphenLatest -toRemote $destLatest
+Invoke-RcloneCopyTo -from $src -to $destUpdaterLatest
+Invoke-RcloneCopyRemote -fromRemote $destUpdaterLatest -toRemote $destLatest
 Invoke-RcloneCopyAlways -from $hashFile -to $destLatestSha
 if ($null -ne $blockmap) {
   Invoke-RcloneCopyTo -from $blockmap -to $destBlockmapLatest
 }
 
-Assert-RemoteMatchesLocal -localPath $src -remotePath $destHyphenLatest
+Assert-RemoteMatchesLocal -localPath $src -remotePath $destUpdaterLatest
 Assert-RemoteMatchesLocal -localPath $src -remotePath $destLatest
 Assert-RemoteMatchesLocal -localPath $hashFile -remotePath $destLatestSha
 if ($null -ne $blockmap) {
@@ -615,8 +529,8 @@ Assert-RemoteMatchesLocal -localPath $latestYaml -remotePath $destLatestYaml
 Write-Host "Uploads complete."
 
 # Print public-ish hints (bucket path only)
-Write-Host "Canonical: $destHyphenLatest"
-Write-Host "Versioned canonical: $destHyphenVersion"
+Write-Host "Canonical: $destUpdaterLatest"
+Write-Host "Versioned canonical: $destUpdaterVersion"
 Write-Host "Stable alias (latest): $destLatest"
 Write-Host "latest.yml: $destLatestYaml"
 if ($null -ne $blockmap) {

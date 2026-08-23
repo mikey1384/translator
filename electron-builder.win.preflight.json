@@ -2,7 +2,6 @@
   "extends": "./electron-builder.win.json",
   "forceCodeSigning": false,
   "win": {
-    "target": "dir",
     "signExecutable": false,
     "signtoolOptions": null
   }

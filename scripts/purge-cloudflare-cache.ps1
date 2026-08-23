@@ -18,6 +18,12 @@ Param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$releaseArtifactsScript = Join-Path -Path $PSScriptRoot -ChildPath 'windows-release-artifacts.ps1'
+if (-not (Test-Path -LiteralPath $releaseArtifactsScript -PathType Leaf)) {
+  throw "Windows release artifact helpers not found: $releaseArtifactsScript"
+}
+. $releaseArtifactsScript
+
 function Get-PackageVersion {
   if ($Version -and $Version.Trim().Length -gt 0) { return $Version }
   if (Test-Path -LiteralPath 'package.json') {
@@ -81,8 +87,10 @@ function Build-PurgeUrls {
   param([string]$baseUrl, [string]$ver, [switch]$includeVersioned)
   $base = $baseUrl.TrimEnd('/')
   $latest = "$base/latest"
+  # Purge the pre-1.16.22 spaced object as well so a legacy cached URL cannot
+  # survive the canonical-name migration.
   $encodedInstaller = [System.Uri]::EscapeDataString("Translator Setup $ver.exe")
-  $canonicalInstaller = "Translator-Setup-$ver.exe"
+  $canonicalInstaller = Get-WindowsInstallerFileName -Version $ver
   $urls = @(
     "$latest/latest.yml",
     "$latest/$encodedInstaller",

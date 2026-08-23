@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
@@ -71,6 +72,11 @@ test('packaged apps carry each platform resource exactly once', () => {
   assert.deepEqual(windowsConfig.win.target, [
     { target: 'nsis', arch: ['x64'] },
   ]);
+  assert.equal(
+    windowsConfig.nsis.artifactName,
+    '${productName}-Setup-${version}.${ext}',
+    'the physical installer and generic updater metadata must share one URL-safe name'
+  );
   assert.deepEqual(windowsConfig.win.publish, [
     {
       provider: 'generic',
@@ -325,14 +331,30 @@ test('Windows release wrappers propagate package and upload failures', () => {
   const batch = read('Release-Windows-OneClick.bat');
   const release = read('scripts/release-windows-oneclick.ps1');
   const upload = read('scripts/upload-to-r2-win.ps1');
+  const purge = read('scripts/purge-cloudflare-cache.ps1');
   const identity = read('scripts/assert-windows-release-identity.ps1');
   const packageJson = readJson('package.json');
   const preflight = read('scripts/package-windows-preflight.bat');
   const preflightConfig = readJson('electron-builder.win.preflight.json');
   const packageTest = read('scripts/test-windows-package.bat');
+  const updaterTest = read('scripts/test-windows-updater-metadata.ps1');
+  const artifacts = read('scripts/windows-release-artifacts.ps1');
+  const legacyBatch = read('Inform-Windows-Legacy-Users.bat');
+  const legacyRelease = read('scripts/inform-windows-legacy.ps1');
+  const githubBridge = read('scripts/bridge-windows-to-github.ps1');
+  const baseConfig = readJson('electron-builder.base.json');
+  const winConfig = readJson('electron-builder.win.json');
+  const effectivePreflightConfig = doMergeConfigs([
+    structuredClone(baseConfig),
+    structuredClone(winConfig),
+    structuredClone(preflightConfig),
+  ]);
 
   assert.match(batch, /set "RELEASE_EXIT=%ERRORLEVEL%"/i);
   assert.match(batch, /endlocal & exit \/b %RELEASE_EXIT%/i);
+  assert.match(legacyBatch, /set "LEGACY_RELEASE_EXIT=%ERRORLEVEL%"/i);
+  assert.match(legacyBatch, /inform-windows-legacy\.ps1" -NoPause/i);
+  assert.match(legacyBatch, /endlocal & exit \/b %LEGACY_RELEASE_EXIT%/i);
   assert.match(release, /npm run package:win failed with exit code/);
   assert.match(
     packageJson.scripts['package:win'],
@@ -340,22 +362,73 @@ test('Windows release wrappers propagate package and upload failures', () => {
   );
   assert.match(preflight, /npm run download:headless-win/i);
   assert.match(preflight, /npm run build:owner-supervisor/i);
+  assert.match(preflight, /npm run test:release/i);
   assert.match(preflight, /electron-builder\.win\.preflight\.json/i);
   assert.match(
     preflight,
     /test-windows-package\.bat --no-launch --allow-unsigned/i
   );
+  assert.match(preflight, /test-windows-updater-metadata\.ps1/i);
   assert.equal(preflightConfig.forceCodeSigning, false);
-  assert.equal(preflightConfig.win.target, 'dir');
+  assert.equal(preflightConfig.win.target, undefined);
+  assert.deepEqual(effectivePreflightConfig.win.target, [
+    { target: 'nsis', arch: ['x64'] },
+  ]);
   assert.equal(preflightConfig.win.signExecutable, false);
   assert.equal(preflightConfig.win.signtoolOptions, null);
+  assert.equal(
+    winConfig.nsis.artifactName,
+    '${productName}-Setup-${version}.${ext}'
+  );
   assert.match(packageTest, /Unknown argument/i);
   assert.match(packageTest, /REQUIRE_SIGNATURES/);
   assert.match(release, /exit \$exitCode/);
-  assert.match(release, /Get-AuthenticodeSignature/);
+  assert.match(artifacts, /Get-AuthenticodeSignature/);
+  assert.match(artifacts, /System\.Security\.Cryptography\.SHA256/);
+  assert.match(release, /Assert-WindowsInstallerSignature/);
   assert.match(release, /test-windows-package\.bat --no-launch/i);
-  assert.match(upload, /Assert-UpdaterMetadataMatchesInstaller/);
-  assert.match(upload, /latest\.yml sha512 mismatch/);
+  assert.match(upload, /Assert-WindowsUpdaterMetadataMatchesInstaller/);
+  assert.match(purge, /Get-WindowsInstallerFileName -Version \$ver/);
+  assert.match(updaterTest, /Assert-WindowsUpdaterMetadataMatchesInstaller/);
+  assert.match(artifacts, /latest\.yml sha512 mismatch/);
+  assert.match(artifacts, /latest\.yml top-level sha512 mismatch/);
+  assert.match(artifacts, /if \(\$sizeFields\.Count -eq 1\)/);
+  assert.doesNotMatch(artifacts, /-replace ' ', '-'/);
+  assert.doesNotMatch(upload, /-replace ' ', '-'/);
+  assert.doesNotMatch(release, /-replace ' ', '-'/);
+  assert.match(artifacts, /Translator-Setup-\$Version\.exe/);
+  assert.match(legacyRelease, /bridge-windows-to-github\.ps1/);
+  assert.match(legacyRelease, /& \$bridgeScript -Repo \$Repo/);
+  assert.doesNotMatch(legacyRelease, /gh release (?:create|upload)/);
+  assert.match(legacyRelease, /exit \$exitCode/);
+  assert.match(githubBridge, /Assert-WindowsReleaseIdentity/);
+  assert.match(githubBridge, /Assert-WindowsInstallerSignature/);
+  assert.match(githubBridge, /Enter-WindowsReleaseMutex/);
+  assert.match(githubBridge, /Exit-WindowsReleaseMutex/);
+  assert.match(githubBridge, /--paginate/);
+  assert.match(githubBridge, /@base64/);
+  assert.doesNotMatch(githubBridge, /'--slurp'/);
+  assert.match(githubBridge, /\$tag = "v\$ver"/);
+  assert.doesNotMatch(githubBridge, /TagSuffix/);
+  assert.match(githubBridge, /Assert-CanonicalReleaseAssets/);
+  assert.match(githubBridge, /Get-RequiredMacAssetNames/);
+  assert.match(githubBridge, /latest-mac\.yml/);
+  assert.match(githubBridge, /\.published_at/);
+  assert.match(githubBridge, /\.digest/);
+  assert.match(githubBridge, /\.state/);
+  assert.match(githubBridge, /Assert-RemoteTagCommit/);
+  assert.match(githubBridge, /Assert-ReleaseIsLatest/);
+  assert.doesNotMatch(githubBridge, /make_latest/);
+  assert.doesNotMatch(githubBridge, /'PATCH'/);
+  assert.doesNotMatch(githubBridge, /'POST'/);
+  assert.ok(
+    githubBridge.indexOf('Uploading missing immutable Windows payloads') <
+      githubBridge.indexOf('Uploading latest.yml as the final Windows pointer'),
+    'legacy Windows payloads must upload before their public manifest'
+  );
+  assert.match(githubBridge, /\$LASTEXITCODE -ne 0/);
+  assert.doesNotMatch(legacyRelease, /--clobber/);
+  assert.doesNotMatch(githubBridge, /--clobber/);
   assert.match(release, /Assert-WindowsReleaseIdentity -Version \$version/);
   assert.match(upload, /Assert-WindowsReleaseIdentity -Version \$Version/);
   assert.match(identity, /Release tag \$tag points to/);
@@ -372,17 +445,19 @@ test('Windows release wrappers propagate package and upload failures', () => {
   assert.match(upload, /Exit-WindowsReleaseMutex -Mutex \$releaseMutex/);
   assert.match(upload, /Assert-RemoteMatchesLocal/);
   assert.match(upload, /Remote SHA256 mismatch/);
+  assert.doesNotMatch(upload, /exit code \$LASTEXITCODE:/);
+  assert.match(upload, /refs\/tags\/\$\{tag\}:refs\/tags\/\$\{tag\}/);
   assert.match(upload, /function Invoke-RcloneCopyImmutable/);
   assert.match(upload, /function Invoke-RcloneCopyRemoteImmutable/);
   assert.match(upload, /'copyto', '--immutable'/);
   assert.match(upload, /cannot overwrite immutable versioned objects/);
   assert.match(
     upload,
-    /Invoke-RcloneCopyImmutable -from \$src -to \$destHyphenVersion/
+    /Invoke-RcloneCopyImmutable -from \$src -to \$destUpdaterVersion/
   );
   assert.match(
     upload,
-    /Invoke-RcloneCopyRemoteImmutable -fromRemote \$destHyphenVersion -toRemote \$destVersion/
+    /Invoke-RcloneCopyRemoteImmutable -fromRemote \$destUpdaterVersion -toRemote \$destVersion/
   );
   assert.match(
     upload,
@@ -393,7 +468,10 @@ test('Windows release wrappers propagate package and upload failures', () => {
     /Invoke-RcloneCopyAlways -from \$latestYaml -to \$destLatestYaml/
   );
   assert.doesNotMatch(upload, /--size-only/);
-  assert.match(upload, /\$blockmapFileName = "\$installerHyphen\.blockmap"/);
+  assert.match(
+    upload,
+    /\$blockmapFileName = "\$updaterInstallerName\.blockmap"/
+  );
   assert.ok(
     upload.lastIndexOf(
       'Invoke-RcloneCopyAlways -from $latestYaml -to $destLatestYaml'
@@ -409,6 +487,383 @@ test('Windows release wrappers propagate package and upload failures', () => {
     'every rclone upload mode must turn native failures into terminating errors'
   );
 });
+
+test(
+  'Windows release PowerShell scripts parse before packaging',
+  { skip: process.platform !== 'win32' },
+  () => {
+    for (const relativePath of [
+      'scripts/windows-release-artifacts.ps1',
+      'scripts/test-windows-updater-metadata.ps1',
+      'scripts/release-windows-oneclick.ps1',
+      'scripts/upload-to-r2-win.ps1',
+      'scripts/purge-cloudflare-cache.ps1',
+      'scripts/bridge-windows-to-github.ps1',
+      'scripts/inform-windows-legacy.ps1',
+    ]) {
+      const scriptPath = path.join(repoRoot, relativePath);
+      const result = spawnSync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          [
+            '$tokens = $null',
+            '$errors = $null',
+            `[void][System.Management.Automation.Language.Parser]::ParseFile('${scriptPath.replaceAll("'", "''")}', [ref]$tokens, [ref]$errors)`,
+            'if ($errors.Count -gt 0) { $errors | ForEach-Object { Write-Error $_ }; exit 1 }',
+          ].join('; '),
+        ],
+        { encoding: 'utf8' }
+      );
+      assert.equal(
+        result.status,
+        0,
+        `${relativePath}: ${result.stderr || result.stdout}`
+      );
+    }
+  }
+);
+
+test(
+  'Windows updater metadata validator accepts size-less manifests and rejects drift',
+  { skip: process.platform !== 'win32' },
+  () => {
+    const tempDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'translator-windows-updater-metadata-')
+    );
+    const version = '9.8.7';
+    const installerName = `Translator-Setup-${version}.exe`;
+    const installerPath = path.join(tempDir, installerName);
+    const latestYamlPath = path.join(tempDir, 'latest.yml');
+    const invocationPath = path.join(tempDir, 'validate.ps1');
+    const helperPath = path
+      .join(repoRoot, 'scripts/windows-release-artifacts.ps1')
+      .replaceAll("'", "''");
+    const psInstallerPath = installerPath.replaceAll("'", "''");
+    const psLatestYamlPath = latestYamlPath.replaceAll("'", "''");
+
+    const payload = Buffer.from('signed-installer-fixture');
+    const sha512 = crypto.createHash('sha512').update(payload).digest('base64');
+    const manifest = ({ entrySha = sha512, topSha = sha512, size } = {}) =>
+      [
+        `version: ${version}`,
+        'files:',
+        `  - url: ${installerName}`,
+        `    sha512: ${entrySha}`,
+        ...(size == null ? [] : [`    size: ${size}`]),
+        `path: ${installerName}`,
+        `sha512: ${topSha}`,
+      ].join('\n');
+
+    const validate = yamlText => {
+      fs.writeFileSync(latestYamlPath, yamlText);
+      return spawnSync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-File',
+          invocationPath,
+        ],
+        { encoding: 'utf8' }
+      );
+    };
+
+    try {
+      fs.writeFileSync(installerPath, payload);
+      fs.writeFileSync(
+        invocationPath,
+        [
+          "$ErrorActionPreference = 'Stop'",
+          `. '${helperPath}'`,
+          `Assert-WindowsUpdaterMetadataMatchesInstaller -LatestYamlPath '${psLatestYamlPath}' -InstallerPath '${psInstallerPath}' -Version '${version}'`,
+        ].join('\r\n')
+      );
+
+      const withoutSize = validate(manifest());
+      assert.equal(
+        withoutSize.status,
+        0,
+        withoutSize.stderr || withoutSize.stdout
+      );
+
+      const providerDependentName = validate(
+        manifest().replace(
+          `url: ${installerName}`,
+          `url: Translator Setup ${version}.exe`
+        )
+      );
+      assert.notEqual(providerDependentName.status, 0);
+      assert.match(
+        `${providerDependentName.stdout}\n${providerDependentName.stderr}`,
+        /exactly one updater entry/
+      );
+
+      const wrongEntryHash = validate(manifest({ entrySha: 'wrong' }));
+      assert.notEqual(wrongEntryHash.status, 0);
+      assert.match(
+        `${wrongEntryHash.stdout}\n${wrongEntryHash.stderr}`,
+        /sha512 mismatch/
+      );
+
+      const wrongTopHash = validate(manifest({ topSha: 'wrong' }));
+      assert.notEqual(wrongTopHash.status, 0);
+      assert.match(
+        `${wrongTopHash.stdout}\n${wrongTopHash.stderr}`,
+        /top-level sha512 mismatch/
+      );
+
+      const wrongSize = validate(manifest({ size: payload.length + 1 }));
+      assert.notEqual(wrongSize.status, 0);
+      assert.match(`${wrongSize.stdout}\n${wrongSize.stderr}`, /size mismatch/);
+
+      const malformedSize = validate(manifest({ size: 'not-a-number' }));
+      assert.notEqual(malformedSize.status, 0);
+      assert.match(
+        `${malformedSize.stdout}\n${malformedSize.stderr}`,
+        /invalid size field/
+      );
+
+      const extraEntry = validate(
+        manifest().replace(
+          `path: ${installerName}`,
+          `  - url: unexpected.exe\n    sha512: ${sha512}\npath: ${installerName}`
+        )
+      );
+      assert.notEqual(extraEntry.status, 0);
+      assert.match(
+        `${extraEntry.stdout}\n${extraEntry.stderr}`,
+        /exactly one updater entry/
+      );
+
+      const duplicatePath = validate(`${manifest()}\npath: ${installerName}`);
+      assert.notEqual(duplicatePath.status, 0);
+      assert.match(
+        `${duplicatePath.stdout}\n${duplicatePath.stderr}`,
+        /exactly one top-level path/
+      );
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  }
+);
+
+test(
+  'Windows GitHub bridge preserves Mac assets and publishes its manifest last',
+  { skip: process.platform !== 'win32' },
+  () => {
+    const tempDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'translator-windows-github-bridge-')
+    );
+    const binDir = path.join(tempDir, 'bin');
+    const distDir = path.join(tempDir, 'dist');
+    const version = '9.8.7';
+    const tag = `v${version}`;
+    const commit = '1234567890abcdef1234567890abcdef12345678';
+    const installerName = `Translator-Setup-${version}.exe`;
+    const installerPath = path.join(distDir, installerName);
+    const latestYamlPath = path.join(distDir, 'latest.yml');
+    const statePath = path.join(tempDir, 'github-state.json');
+    const harnessPath = path.join(tempDir, 'run-bridge.ps1');
+    const fakeGitPath = path.join(binDir, 'fake-git.mjs');
+    const fakeGhPath = path.join(binDir, 'fake-gh.mjs');
+    const bridgePath = path
+      .join(repoRoot, 'scripts/bridge-windows-to-github.ps1')
+      .replaceAll("'", "''");
+    const payload = Buffer.from('signed-windows-installer');
+    const sha512 = crypto.createHash('sha512').update(payload).digest('base64');
+    const requiredMacNames = ['arm64', 'x64'].flatMap(arch =>
+      ['dmg', 'dmg.blockmap', 'zip', 'zip.blockmap'].map(
+        suffix => `Translator-${version}-darwin-${arch}.${suffix}`
+      )
+    );
+    requiredMacNames.push('latest-mac.yml');
+
+    try {
+      fs.mkdirSync(binDir);
+      fs.mkdirSync(distDir);
+      fs.writeFileSync(
+        path.join(tempDir, 'package.json'),
+        JSON.stringify({ version })
+      );
+      fs.writeFileSync(installerPath, payload);
+      fs.writeFileSync(
+        latestYamlPath,
+        [
+          `version: ${version}`,
+          'files:',
+          `  - url: ${installerName}`,
+          `    sha512: ${sha512}`,
+          `path: ${installerName}`,
+          `sha512: ${sha512}`,
+        ].join('\n')
+      );
+      fs.writeFileSync(
+        statePath,
+        JSON.stringify({
+          uploads: [],
+          assets: requiredMacNames.map((name, index) => ({
+            name,
+            size: index + 1,
+            state: 'uploaded',
+            digest: `sha256:${'a'.repeat(64)}`,
+          })),
+        })
+      );
+
+      fs.writeFileSync(
+        fakeGitPath,
+        `const args = process.argv.slice(2);
+const commit = process.env.FAKE_RELEASE_COMMIT;
+if (args[0] === 'cat-file' && args[1] === '-t') {
+  process.stdout.write('tag\\n');
+} else if (args[0] === 'rev-parse') {
+  process.stdout.write(commit + '\\n');
+} else if (args[0] === 'status') {
+  // A clean worktree intentionally has no output.
+} else {
+  process.stderr.write('unexpected fake git invocation: ' + args.join(' ') + '\\n');
+  process.exit(64);
+}
+`
+      );
+      fs.writeFileSync(
+        fakeGhPath,
+        `import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const args = process.argv.slice(2);
+const statePath = process.env.FAKE_GH_STATE;
+const version = process.env.FAKE_RELEASE_VERSION;
+const tag = 'v' + version;
+const commit = process.env.FAKE_RELEASE_COMMIT;
+const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+const release = () => ({
+  id: 42,
+  tag_name: tag,
+  draft: false,
+  prerelease: false,
+  published_at: '2026-08-23T00:00:00Z',
+  assets: state.assets,
+});
+
+if (args[0] === 'auth' && args[1] === 'status') process.exit(0);
+
+if (args[0] === 'release' && args[1] === 'upload') {
+  const repoIndex = args.indexOf('--repo');
+  const assetPaths = args.slice(3).filter((value, index, values) => {
+    if (value === '--repo') return false;
+    if (index > 0 && values[index - 1] === '--repo') return false;
+    return true;
+  });
+  if (repoIndex < 0 || assetPaths.length === 0) process.exit(65);
+  const names = [];
+  for (const assetPath of assetPaths) {
+    const bytes = fs.readFileSync(assetPath);
+    const name = path.basename(assetPath);
+    if (state.assets.some(asset => asset.name === name)) process.exit(66);
+    state.assets.push({
+      name,
+      size: bytes.length,
+      state: 'uploaded',
+      digest: 'sha256:' + crypto.createHash('sha256').update(bytes).digest('hex'),
+    });
+    names.push(name);
+  }
+  state.uploads.push(names);
+  fs.writeFileSync(statePath, JSON.stringify(state));
+  process.exit(0);
+}
+
+if (args[0] !== 'api') process.exit(67);
+const endpoint = args.find(value => value.startsWith('repos/')) || '';
+if (args.includes('--paginate')) {
+  process.stdout.write(Buffer.from(JSON.stringify({ id: 42, tag_name: tag })).toString('base64') + '\\n');
+} else if (endpoint.includes('/commits/')) {
+  process.stdout.write(commit + '\\n');
+} else if (endpoint.endsWith('/releases/latest') || endpoint.endsWith('/releases/42')) {
+  process.stdout.write(JSON.stringify(release()));
+} else {
+  process.stderr.write('unexpected fake gh endpoint: ' + endpoint + '\\n');
+  process.exit(68);
+}
+`
+      );
+      fs.writeFileSync(
+        harnessPath,
+        [
+          "$ErrorActionPreference = 'Stop'",
+          'function global:git {',
+          `  & node '${fakeGitPath.replaceAll("'", "''")}' @args`,
+          '}',
+          'function global:gh {',
+          `  & node '${fakeGhPath.replaceAll("'", "''")}' @args`,
+          '}',
+          'function global:Get-AuthenticodeSignature {',
+          '  param([string]$LiteralPath)',
+          '  return [PSCustomObject]@{',
+          '    Status = [System.Management.Automation.SignatureStatus]::Valid',
+          "    SignerCertificate = [PSCustomObject]@{ Subject = 'CN=Stage5 Tools LLC, O=Stage5 Tools LLC' }",
+          '  }',
+          '}',
+          `& '${bridgePath}' -Version '${version}' -Repo 'owner/repo'`,
+        ].join('\r\n')
+      );
+
+      const environment = {
+        ...process.env,
+        FAKE_GH_STATE: statePath,
+        FAKE_RELEASE_COMMIT: commit,
+        FAKE_RELEASE_VERSION: version,
+      };
+      const runBridge = () =>
+        spawnSync(
+          'powershell.exe',
+          [
+            '-NoProfile',
+            '-NonInteractive',
+            '-ExecutionPolicy',
+            'Bypass',
+            '-File',
+            harnessPath,
+          ],
+          { cwd: tempDir, env: environment, encoding: 'utf8' }
+        );
+
+      const first = runBridge();
+      assert.equal(first.status, 0, first.stderr || first.stdout);
+      let state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+      assert.deepEqual(state.uploads, [[installerName], ['latest.yml']]);
+
+      const second = runBridge();
+      assert.equal(second.status, 0, second.stderr || second.stdout);
+      state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+      assert.deepEqual(
+        state.uploads,
+        [[installerName], ['latest.yml']],
+        'an idempotent rerun must upload nothing'
+      );
+
+      const installerAsset = state.assets.find(
+        asset => asset.name === installerName
+      );
+      installerAsset.digest = `sha256:${'0'.repeat(64)}`;
+      fs.writeFileSync(statePath, JSON.stringify(state));
+      const drift = runBridge();
+      assert.notEqual(drift.status, 0);
+      assert.match(`${drift.stdout}\n${drift.stderr}`, /digest differs/);
+      const driftedState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+      assert.deepEqual(driftedState.uploads, [[installerName], ['latest.yml']]);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  }
+);
 
 test('Windows icon generation emits and validates every PNG frame', () => {
   const script = read('scripts/create-windows-icon.ps1');

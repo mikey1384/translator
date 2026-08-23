@@ -68,30 +68,16 @@ function Get-AppVersion {
 function Confirm-ArtifactPaths {
   param([string]$version)
   $dist = Join-Path $repo 'dist'
-  $installer = Join-Path $dist "Translator Setup $version.exe"
+  $installer = Get-WindowsInstallerPath -Version $version -DistPath $dist
   $latestYml = Join-Path $dist 'latest.yml'
   if (-not (Test-Path -LiteralPath $installer)) { throw "Missing installer: $installer" }
   if (-not (Test-Path -LiteralPath $latestYml)) { throw "Missing updater file: $latestYml (did the build finish?)" }
 
-  $signature = Get-AuthenticodeSignature -LiteralPath $installer
-  if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
-    throw "Installer Authenticode signature is not valid: $($signature.Status) ($installer)"
-  }
-  if (-not $signature.SignerCertificate -or $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=Stage5 Tools LLC(?:,|$)') {
-    throw "Installer signer is not Stage5 Tools LLC: $($signature.SignerCertificate.Subject)"
-  }
-
-  $latestYamlText = [System.IO.File]::ReadAllText($latestYml)
-  $escapedVersion = [Regex]::Escape($version)
-  if ($latestYamlText -notmatch "(?m)^version:\s*$escapedVersion\s*$") {
-    throw "latest.yml does not declare the requested version '$version'."
-  }
-
-  $expectedUpdaterName = ([System.IO.Path]::GetFileName($installer) -replace ' ', '-')
-  $escapedUpdaterName = [Regex]::Escape($expectedUpdaterName)
-  if ($latestYamlText -notmatch "(?m)^\s*-?\s*(?:url|path):\s*$escapedUpdaterName\s*$") {
-    throw "latest.yml does not reference the expected installer '$expectedUpdaterName'."
-  }
+  Assert-WindowsInstallerSignature -InstallerPath $installer
+  Assert-WindowsUpdaterMetadataMatchesInstaller `
+    -LatestYamlPath $latestYml `
+    -InstallerPath $installer `
+    -Version $version
 }
 
 $repo = Get-RepoRoot
@@ -100,12 +86,17 @@ $exitCode = 0
 $releaseMutex = $null
 
 $releaseIdentityScript = Join-Path -Path $repo -ChildPath 'scripts\assert-windows-release-identity.ps1'
+$releaseArtifactsScript = Join-Path -Path $repo -ChildPath 'scripts\windows-release-artifacts.ps1'
 
 try {
   if (-not (Test-Path -LiteralPath $releaseIdentityScript)) {
     throw "Release identity preflight not found: $releaseIdentityScript"
   }
   . $releaseIdentityScript
+  if (-not (Test-Path -LiteralPath $releaseArtifactsScript)) {
+    throw "Windows release artifact helpers not found: $releaseArtifactsScript"
+  }
+  . $releaseArtifactsScript
   $releaseMutex = Enter-WindowsReleaseMutex
 
   Write-Stage 'Preflight checks'
