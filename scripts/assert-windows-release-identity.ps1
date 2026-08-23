@@ -1,11 +1,74 @@
+function Invoke-ReleaseGit {
+  param([string[]]$Arguments)
+
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    # Windows PowerShell converts a native program's stderr into error records.
+    # Git can emit harmless line-ending warnings while returning success, so
+    # capture the native exit code without allowing those warnings to bypass it.
+    $ErrorActionPreference = 'Continue'
+    $lines = @(& git @Arguments 2>$null)
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
+  if ($exitCode -ne 0) {
+    throw "git $($Arguments -join ' ') failed with exit code $exitCode."
+  }
+  return $lines
+}
+
 function Get-ReleaseGitValue {
   param([string[]]$Arguments)
 
-  $lines = @(& git @Arguments 2>$null)
-  if ($LASTEXITCODE -ne 0) {
-    throw "git $($Arguments -join ' ') failed with exit code $LASTEXITCODE."
-  }
+  $lines = @(Invoke-ReleaseGit -Arguments $Arguments)
   return ($lines -join "`n").Trim()
+}
+
+function Get-ReleaseGitLines {
+  param([string[]]$Arguments)
+
+  $lines = @(Invoke-ReleaseGit -Arguments $Arguments)
+  return @($lines | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
+}
+
+function Assert-WindowsReleaseWorktree {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ExpectedCommit,
+
+    [Parameter(Mandatory = $false)]
+    [string]$RepoRoot = (Get-Location).Path
+  )
+
+  Push-Location -LiteralPath $RepoRoot
+  try {
+    $expected = Get-ReleaseGitValue -Arguments @('rev-parse', "$ExpectedCommit^{commit}")
+    $staged = @(Get-ReleaseGitLines -Arguments @(
+      'diff', '--cached', '--no-ext-diff', '--no-textconv',
+      '--ignore-submodules=none', '--name-status', '--no-renames',
+      $expected, '--'
+    ))
+    $unstaged = @(Get-ReleaseGitLines -Arguments @(
+      'diff', '--no-ext-diff', '--no-textconv', '--ignore-submodules=none',
+      '--name-status', '--no-renames', '--'
+    ))
+    $untracked = @(Get-ReleaseGitLines -Arguments @(
+      'ls-files', '--others', '--exclude-standard'
+    ))
+
+    $changes = @(
+      foreach ($line in $staged) { "staged: $line" }
+      foreach ($line in $unstaged) { "unstaged: $line" }
+      foreach ($line in $untracked) { "untracked: $line" }
+    )
+    if ($changes.Count -ne 0) {
+      $details = ($changes | ForEach-Object { "  $_" }) -join "`n"
+      throw "Tracked, staged, or untracked working-tree content would make the Windows build differ from its release commit. Use a clean release checkout.`n$details"
+    }
+  } finally {
+    Pop-Location
+  }
 }
 
 function Assert-WindowsReleaseIdentity {
@@ -56,13 +119,7 @@ function Assert-WindowsReleaseIdentity {
       throw "Release tag $tag points to $tagCommit, but the Windows build is at $headCommit."
     }
 
-    $statusLines = @(& git status --porcelain=v1 --untracked-files=all)
-    if ($LASTEXITCODE -ne 0) {
-      throw "Unable to inspect the release worktree (git status exit $LASTEXITCODE)."
-    }
-    if ($statusLines.Count -ne 0) {
-      throw 'Tracked, staged, or untracked working-tree content would make the Windows build differ from its release tag. Use a clean release checkout.'
-    }
+    Assert-WindowsReleaseWorktree -ExpectedCommit $tagCommit -RepoRoot $RepoRoot
   } finally {
     Pop-Location
   }

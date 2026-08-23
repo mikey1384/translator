@@ -333,6 +333,8 @@ test('Windows release wrappers propagate package and upload failures', () => {
   const upload = read('scripts/upload-to-r2-win.ps1');
   const purge = read('scripts/purge-cloudflare-cache.ps1');
   const identity = read('scripts/assert-windows-release-identity.ps1');
+  const worktreeTest = read('scripts/test-windows-release-worktree.ps1');
+  const gitAttributes = read('.gitattributes');
   const packageJson = readJson('package.json');
   const preflight = read('scripts/package-windows-preflight.bat');
   const preflightConfig = readJson('electron-builder.win.preflight.json');
@@ -369,6 +371,7 @@ test('Windows release wrappers propagate package and upload failures', () => {
     /test-windows-package\.bat --no-launch --allow-unsigned/i
   );
   assert.match(preflight, /test-windows-updater-metadata\.ps1/i);
+  assert.match(preflight, /test-windows-release-worktree\.ps1/i);
   assert.equal(preflightConfig.forceCodeSigning, false);
   assert.equal(preflightConfig.win.target, undefined);
   assert.deepEqual(effectivePreflightConfig.win.target, [
@@ -432,8 +435,16 @@ test('Windows release wrappers propagate package and upload failures', () => {
   assert.match(release, /Assert-WindowsReleaseIdentity -Version \$version/);
   assert.match(upload, /Assert-WindowsReleaseIdentity -Version \$Version/);
   assert.match(identity, /Release tag \$tag points to/);
-  assert.match(identity, /git status --porcelain=v1 --untracked-files=all/);
+  assert.match(identity, /'diff', '--cached'/);
+  assert.match(identity, /'diff', '--no-ext-diff'/);
+  assert.match(identity, /'ls-files', '--others', '--exclude-standard'/);
+  assert.doesNotMatch(identity, /git status --porcelain/);
+  assert.match(identity, /staged: \$line/);
+  assert.match(identity, /unstaged: \$line/);
+  assert.match(identity, /untracked: \$line/);
   assert.match(identity, /Use a clean release checkout/);
+  assert.match(worktreeTest, /Assert-WindowsReleaseWorktree/);
+  assert.match(gitAttributes, /^\/render-host-script\.js text eol=lf$/m);
   assert.match(identity, /System\.Threading\.Mutex/);
   assert.match(
     identity,
@@ -494,6 +505,8 @@ test(
   () => {
     for (const relativePath of [
       'scripts/windows-release-artifacts.ps1',
+      'scripts/assert-windows-release-identity.ps1',
+      'scripts/test-windows-release-worktree.ps1',
       'scripts/test-windows-updater-metadata.ps1',
       'scripts/release-windows-oneclick.ps1',
       'scripts/upload-to-r2-win.ps1',
@@ -522,6 +535,98 @@ test(
         0,
         `${relativePath}: ${result.stderr || result.stdout}`
       );
+    }
+  }
+);
+
+test(
+  'Windows release worktree check accepts normalized line endings and reports real drift',
+  { skip: process.platform !== 'win32' },
+  () => {
+    const tempRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'translator-windows-release-worktree-')
+    );
+    const fixtureRepo = path.join(tempRoot, 'repo');
+    const generatedPath = path.join(fixtureRepo, 'generated.js');
+    const untrackedPath = path.join(fixtureRepo, 'local-notes.txt');
+    const helperPath = path
+      .join(repoRoot, 'scripts/assert-windows-release-identity.ps1')
+      .replaceAll("'", "''");
+    const psRepo = fixtureRepo.replaceAll("'", "''");
+    const git = (...args) => {
+      const result = spawnSync('git', args, {
+        cwd: fixtureRepo,
+        encoding: 'utf8',
+      });
+      assert.equal(
+        result.status,
+        0,
+        `git ${args.join(' ')}: ${result.stderr || result.stdout}`
+      );
+    };
+    const assertWorktree = () =>
+      spawnSync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          [
+            "$ErrorActionPreference = 'Stop'",
+            `. '${helperPath}'`,
+            `Assert-WindowsReleaseWorktree -ExpectedCommit 'HEAD' -RepoRoot '${psRepo}'`,
+          ].join('; '),
+        ],
+        { encoding: 'utf8' }
+      );
+    const combinedOutput = result =>
+      `${result.stdout || ''}\n${result.stderr || ''}`;
+
+    try {
+      fs.mkdirSync(fixtureRepo);
+      git('init');
+      git('config', 'user.name', 'Translator Release Test');
+      git('config', 'user.email', 'release-test@stage5.tools');
+      git('config', 'core.autocrlf', 'true');
+      fs.writeFileSync(generatedPath, 'const value = 1;\n');
+      git('add', 'generated.js');
+      git('commit', '-m', 'fixture');
+
+      fs.rmSync(generatedPath);
+      git('restore', '--source=HEAD', '--worktree', '--', 'generated.js');
+      assert.match(fs.readFileSync(generatedPath, 'utf8'), /\r\n/);
+
+      // Simulate esbuild replacing a CRLF checkout with equivalent LF output.
+      fs.writeFileSync(generatedPath, 'const value = 1;\n');
+      const normalizedOnly = assertWorktree();
+      assert.equal(normalizedOnly.status, 0, combinedOutput(normalizedOnly));
+
+      fs.writeFileSync(generatedPath, 'const value = 2;\n');
+      const unstaged = assertWorktree();
+      assert.notEqual(unstaged.status, 0);
+      assert.match(combinedOutput(unstaged), /unstaged: M\s+generated\.js/);
+
+      git('add', 'generated.js');
+      const staged = assertWorktree();
+      assert.notEqual(staged.status, 0);
+      assert.match(combinedOutput(staged), /staged: M\s+generated\.js/);
+
+      git(
+        'restore',
+        '--source=HEAD',
+        '--staged',
+        '--worktree',
+        '--',
+        'generated.js'
+      );
+      fs.writeFileSync(untrackedPath, 'do not publish\n');
+      const untracked = assertWorktree();
+      assert.notEqual(untracked.status, 0);
+      assert.match(combinedOutput(untracked), /untracked: local-notes\.txt/);
+    } finally {
+      fs.rmSync(tempRoot, { recursive: true, force: true });
     }
   }
 );
@@ -723,7 +828,7 @@ if (args[0] === 'cat-file' && args[1] === '-t') {
   process.stdout.write('tag\\n');
 } else if (args[0] === 'rev-parse') {
   process.stdout.write(commit + '\\n');
-} else if (args[0] === 'status') {
+} else if (args[0] === 'status' || args[0] === 'diff' || args[0] === 'ls-files') {
   // A clean worktree intentionally has no output.
 } else {
   process.stderr.write('unexpected fake git invocation: ' + args.join(' ') + '\\n');

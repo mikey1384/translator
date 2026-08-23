@@ -1,7 +1,7 @@
 {
   "name": "translator",
   "private": true,
-  "version": "1.16.24",
+  "version": "1.16.25",
   "type": "module",
   "description": "Open-source desktop video discovery, subtitle translation, editing, dubbing, and export workstation",
   "author": "Mikey Lee",

@@ -31,5 +31,8 @@ if errorlevel 1 exit /b !errorlevel!
 powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts\test-windows-updater-metadata.ps1
 if errorlevel 1 exit /b !errorlevel!
 
+powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts\test-windows-release-worktree.ps1
+if errorlevel 1 exit /b !errorlevel!
+
 echo Complete unsigned Windows package preflight passed.
 exit /b 0
