@@ -304,6 +304,124 @@ test(
   }
 );
 
+test(
+  'release cleanup preserves failures on the runner Bash',
+  { skip: process.platform === 'win32' },
+  () => {
+    const helper = path.join(repoRoot, 'scripts/release-shell-cleanup.sh');
+    const shell = fs.existsSync('/bin/bash') ? '/bin/bash' : 'bash';
+    const cleanupRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'translator-release-cleanup-')
+    );
+    const cleanupTarget = path.join(cleanupRoot, 'temporary');
+    fs.writeFileSync(cleanupTarget, 'temporary');
+
+    const nounsetFailure = spawnSync(
+      shell,
+      [
+        '-c',
+        `set -euo pipefail
+. "$1"
+cleanup_target="$2"
+cleanup_test_file() { rm -f "$cleanup_target"; }
+RELEASE_STEP_COMPLETED=false
+trap 'release_cleanup_and_exit "$?" "\${RELEASE_STEP_COMPLETED:-false}" cleanup_test_file' EXIT
+unset missing_release_value
+printf '%s\\n' "$missing_release_value"
+`,
+        'release-cleanup-test',
+        helper,
+        cleanupTarget,
+      ],
+      { encoding: 'utf8' }
+    );
+
+    assert.equal(nounsetFailure.status, 1, nounsetFailure.stderr);
+    assert.equal(fs.existsSync(cleanupTarget), false);
+
+    const cleanupFailure = spawnSync(
+      shell,
+      [
+        '-c',
+        `set -euo pipefail
+. "$1"
+RELEASE_STEP_COMPLETED=true
+trap 'release_cleanup_and_exit "$?" "\${RELEASE_STEP_COMPLETED:-false}" false' EXIT
+true
+`,
+        'release-cleanup-test',
+        helper,
+      ],
+      { encoding: 'utf8' }
+    );
+    assert.equal(cleanupFailure.status, 1, cleanupFailure.stderr);
+
+    const originalFailure = spawnSync(
+      shell,
+      [
+        '-c',
+        `set -euo pipefail
+. "$1"
+RELEASE_STEP_COMPLETED=false
+trap 'release_cleanup_and_exit "$?" "\${RELEASE_STEP_COMPLETED:-false}" false' EXIT
+exit 23
+`,
+        'release-cleanup-test',
+        helper,
+      ],
+      { encoding: 'utf8' }
+    );
+    assert.equal(originalFailure.status, 23, originalFailure.stderr);
+
+    const fatalCleanup = spawnSync(
+      shell,
+      [
+        '-c',
+        `set -euo pipefail
+. "$1"
+RELEASE_STEP_COMPLETED=false
+cleanup_with_nounset() {
+  unset missing_cleanup_value
+  printf '%s\\n' "$missing_cleanup_value"
+}
+trap 'release_cleanup_and_exit "$?" "\${RELEASE_STEP_COMPLETED:-false}" cleanup_with_nounset' EXIT
+exit 23
+`,
+        'release-cleanup-test',
+        helper,
+      ],
+      { encoding: 'utf8' }
+    );
+    assert.equal(fatalCleanup.status, 23, fatalCleanup.stderr);
+
+    fs.rmSync(cleanupRoot, { recursive: true, force: true });
+  }
+);
+
+test('macOS R2 promotion cannot mask an absent retention record', () => {
+  const workflow = parseYaml(read('.github/workflows/release-mac.yml'));
+  const steps = workflow.jobs['mac-build'].steps;
+  const promotion = steps.find(step => step.name === 'Promote artefacts to latest/');
+  const publication = steps.find(step => step.name === 'Publish GitHub Release');
+  const upload = read('scripts/upload-github-mac-release-assets.sh');
+
+  assert.ok(promotion);
+  assert.ok(publication);
+  assert.doesNotMatch(promotion.run, /retention_args/);
+  assert.match(promotion.run, /else\s+node scripts\/release-storage-policy\.mjs prepare-retention/);
+  assert.match(promotion.run, /release_cleanup_and_exit/);
+  assert.match(promotion.run, /RELEASE_STEP_COMPLETED=true\s*$/);
+  assert.match(publication.run, /release_cleanup_and_exit/);
+  assert.match(publication.run, /RELEASE_STEP_COMPLETED=true\s*$/);
+  assert.equal(publication.if, "github.ref_type == 'tag' && success()");
+  assert.match(upload, /release_cleanup_and_exit/);
+  assert.match(upload, /RELEASE_STEP_COMPLETED=true\s*$/);
+  assert.doesNotMatch(
+    `${promotion.run}\n${publication.run}\n${upload}`,
+    /trap\s+['"]rm\s+-[fr]+[^\n]*EXIT/
+  );
+});
+
 test('Windows headless download cannot report success with stale output', () => {
   const script = read('scripts/download-headless-win.bat');
   const installer = read('scripts/install-pinned-headless-chrome.mjs');

@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+. "$SCRIPT_DIR/release-shell-cleanup.sh"
+
 : "${GITHUB_REF_NAME:?GITHUB_REF_NAME is required}"
 : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 
@@ -35,7 +38,11 @@ MATCHES_JSON=$(mktemp)
 CONFLICTS_JSON=$(mktemp)
 RELEASE_JSON=$(mktemp)
 CREATE_JSON=$(mktemp)
-trap 'rm -f "$RELEASES_JSON" "$MATCHES_JSON" "$CONFLICTS_JSON" "$RELEASE_JSON" "$CREATE_JSON"' EXIT
+cleanup_release_temporaries() {
+  rm -f "$RELEASES_JSON" "$MATCHES_JSON" "$CONFLICTS_JSON" "$RELEASE_JSON" "$CREATE_JSON"
+}
+RELEASE_STEP_COMPLETED=false
+trap 'release_cleanup_and_exit "$?" "${RELEASE_STEP_COMPLETED:-false}" cleanup_release_temporaries' EXIT
 
 ASSETS=(
   "dist/Translator-${APP_VERSION}-darwin-arm64.dmg"
@@ -258,3 +265,5 @@ if [ "$MODE" = "upload" ]; then
     printf 'release_id=%s\n' "$RELEASE_ID"
   fi
 fi
+
+RELEASE_STEP_COMPLETED=true

@@ -149,18 +149,20 @@ jobs:
       - name: Verify signed apps, updater archives, and disk images
         run: |
           set -euo pipefail
+          . scripts/release-shell-cleanup.sh
 
           APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
           VERIFY_ROOT=$(mktemp -d)
           MOUNTED_DMG=""
 
-          cleanup() {
+          cleanup_verify_outputs() {
             if [ -n "$MOUNTED_DMG" ]; then
               hdiutil detach "$MOUNTED_DMG" >/dev/null 2>&1 || true
             fi
             rm -rf "$VERIFY_ROOT"
           }
-          trap cleanup EXIT
+          RELEASE_STEP_COMPLETED=false
+          trap 'release_cleanup_and_exit "$?" "${RELEASE_STEP_COMPLETED:-false}" cleanup_verify_outputs' EXIT
 
           verify_app() {
             local app_path="$1"
@@ -218,6 +220,7 @@ jobs:
           verify_zip arm64
           verify_dmg x64
           verify_dmg arm64
+          RELEASE_STEP_COMPLETED=true
 
       - name: Inject release notes into latest-mac.yml
         if: github.ref_type == 'tag'
@@ -261,6 +264,7 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           set -euo pipefail
+          . scripts/release-shell-cleanup.sh
           APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
           mkdir -p latest
           # Keep the exact filenames referenced by latest-mac.yml. The updater
@@ -282,7 +286,11 @@ jobs:
           latest_inventory=$(mktemp)
           stale_latest=$(mktemp)
           remaining_stale=$(mktemp)
-          trap 'rm -f "$previous_manifest" "$existing_retention" "$public_manifest" "$latest_inventory" "$stale_latest" "$remaining_stale"' EXIT
+          cleanup_release_temporaries() {
+            rm -f "$previous_manifest" "$existing_retention" "$public_manifest" "$latest_inventory" "$stale_latest" "$remaining_stale"
+          }
+          RELEASE_STEP_COMPLETED=false
+          trap 'release_cleanup_and_exit "$?" "${RELEASE_STEP_COMPLETED:-false}" cleanup_release_temporaries' EXIT
 
           # Capture the exact currently published payload set before switching
           # the manifest. On a retry where the new manifest is already public,
@@ -292,7 +300,6 @@ jobs:
             --key "mac/latest/latest-mac.yml" \
             --endpoint-url "$R2_ENDPOINT" \
             "$previous_manifest" >/dev/null
-          retention_args=()
           if aws s3api head-object \
             --bucket "$R2_BUCKET" \
             --key "mac/latest/release-retention.json" \
@@ -302,14 +309,19 @@ jobs:
               --key "mac/latest/release-retention.json" \
               --endpoint-url "$R2_ENDPOINT" \
               "$existing_retention" >/dev/null
-            retention_args=(--existing-retention "$existing_retention")
+            node scripts/release-storage-policy.mjs prepare-retention \
+              --platform mac \
+              --current-manifest latest/latest-mac.yml \
+              --published-manifest "$previous_manifest" \
+              --existing-retention "$existing_retention" \
+              --output latest/release-retention.json
+          else
+            node scripts/release-storage-policy.mjs prepare-retention \
+              --platform mac \
+              --current-manifest latest/latest-mac.yml \
+              --published-manifest "$previous_manifest" \
+              --output latest/release-retention.json
           fi
-          node scripts/release-storage-policy.mjs prepare-retention \
-            --platform mac \
-            --current-manifest latest/latest-mac.yml \
-            --published-manifest "$previous_manifest" \
-            "${retention_args[@]}" \
-            --output latest/release-retention.json
 
           # Every payload is a single, authenticated PutObject with its local
           # SHA-256 persisted as R2 metadata. This avoids the multipart race
@@ -465,18 +477,24 @@ jobs:
             cat "$remaining_stale"
             exit 1
           fi
+          RELEASE_STEP_COMPLETED=true
 
       - name: Publish GitHub Release
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' && success()
         run: |
           set -euo pipefail
+          . scripts/release-shell-cleanup.sh
 
           TITLE=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
           RELEASE_ID="${{ steps.github_release.outputs.release_id }}"
           PAYLOAD=$(mktemp)
           RESPONSE=$(mktemp)
           CANONICAL=$(mktemp)
-          trap 'rm -f "$PAYLOAD" "$RESPONSE" "$CANONICAL"' EXIT
+          cleanup_release_temporaries() {
+            rm -f "$PAYLOAD" "$RESPONSE" "$CANONICAL"
+          }
+          RELEASE_STEP_COMPLETED=false
+          trap 'release_cleanup_and_exit "$?" "${RELEASE_STEP_COMPLETED:-false}" cleanup_release_temporaries' EXIT
 
           jq -n \
             --arg name "$TITLE" \
@@ -514,3 +532,4 @@ jobs:
             echo "::error::The canonical GitHub tag endpoint does not expose the verified release."
             exit 1
           fi
+          RELEASE_STEP_COMPLETED=true
