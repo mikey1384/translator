@@ -408,8 +408,14 @@ test('Windows release wrappers propagate package and upload failures', () => {
   assert.match(githubBridge, /Assert-WindowsInstallerSignature/);
   assert.match(githubBridge, /Enter-WindowsReleaseMutex/);
   assert.match(githubBridge, /Exit-WindowsReleaseMutex/);
-  assert.match(githubBridge, /--paginate/);
-  assert.match(githubBridge, /@base64/);
+  assert.match(githubBridge, /releases\?per_page=100&page=\$page/);
+  assert.match(
+    githubBridge,
+    /\[string\]\$candidate\.tag_name -ceq \$ReleaseTag/
+  );
+  assert.doesNotMatch(githubBridge, /--jq/);
+  assert.doesNotMatch(githubBridge, /@base64/);
+  assert.doesNotMatch(githubBridge, /--paginate/);
   assert.doesNotMatch(githubBridge, /'--slurp'/);
   assert.match(githubBridge, /\$tag = "v\$ver"/);
   assert.doesNotMatch(githubBridge, /TagSuffix/);
@@ -887,10 +893,21 @@ if (args[0] === 'release' && args[1] === 'upload') {
 
 if (args[0] !== 'api') process.exit(67);
 const endpoint = args.find(value => value.startsWith('repos/')) || '';
-if (args.includes('--paginate')) {
-  process.stdout.write(Buffer.from(JSON.stringify({ id: 42, tag_name: tag })).toString('base64') + '\\n');
+if (endpoint.includes('/releases?')) {
+  if (args.includes('--jq') || args.includes('--paginate')) process.exit(69);
+  const page = Number(new URL('https://example.test/' + endpoint).searchParams.get('page'));
+  if (page === 1) {
+    process.stdout.write(JSON.stringify(Array.from({ length: 100 }, (_, index) => ({
+      id: 1000 + index,
+      tag_name: 'v0.0.' + index,
+    }))));
+  } else if (page === 2) {
+    process.stdout.write(JSON.stringify([{ id: 42, tag_name: tag }]));
+  } else {
+    process.stdout.write('[]');
+  }
 } else if (endpoint.includes('/commits/')) {
-  process.stdout.write(commit + '\\n');
+  process.stdout.write(JSON.stringify({ sha: commit }));
 } else if (endpoint.endsWith('/releases/latest') || endpoint.endsWith('/releases/42')) {
   process.stdout.write(JSON.stringify(release()));
 } else {

@@ -148,36 +148,29 @@ function Get-MatchingReleases {
     [string]$ReleaseTag
   )
 
-  # GitHub's by-tag endpoint omits drafts. Filter every releases page and emit
-  # one base64-encoded JSON object per match so this also works with older gh
-  # versions that support --paginate but not --slurp.
-  $listArguments = @(
-    'api',
-    '--paginate',
-    "repos/$Repository/releases?per_page=100",
-    '--jq',
-    ".[] | select(.tag_name == `"$ReleaseTag`") | {id, tag_name} | @base64"
-  )
-  $encodedMatches = @(& gh @listArguments)
-  if ($LASTEXITCODE -ne 0) {
-    throw "Unable to enumerate GitHub releases (gh exit $LASTEXITCODE)."
-  }
-
+  # GitHub's by-tag endpoint omits drafts. Read every releases page as JSON in
+  # PowerShell instead of interpolating the tag into a jq program. Windows
+  # PowerShell can strip the jq string's embedded quotes at the native-command
+  # boundary, turning a tag such as v1.16.25 into invalid jq syntax.
   $matches = @()
-  foreach ($encodedMatch in $encodedMatches) {
-    if ([string]::IsNullOrWhiteSpace($encodedMatch)) {
-      continue
+  [Int64]$page = 1
+  while ($true) {
+    $pageReleases = @(Invoke-GhJson -Arguments @(
+      'api',
+      "repos/$Repository/releases?per_page=100&page=$page"
+    ))
+    foreach ($candidate in $pageReleases) {
+      if ([string]$candidate.tag_name -ceq $ReleaseTag) {
+        $matches += [PSCustomObject]@{
+          id = [Int64]$candidate.id
+          tag_name = [string]$candidate.tag_name
+        }
+      }
     }
-    try {
-      $jsonBytes = [Convert]::FromBase64String($encodedMatch.Trim())
-      $candidate = [Text.Encoding]::UTF8.GetString($jsonBytes) | ConvertFrom-Json
-    } catch {
-      throw 'GitHub CLI returned an invalid encoded release record.'
+    if ($pageReleases.Count -lt 100) {
+      break
     }
-    if ([string]$candidate.tag_name -cne $ReleaseTag) {
-      throw "GitHub release enumeration returned unexpected tag '$($candidate.tag_name)'."
-    }
-    $matches += $candidate
+    $page++
   }
   return $matches
 }
@@ -295,12 +288,11 @@ function Assert-RemoteTagCommit {
     [string]$ExpectedCommit
   )
 
-  $remoteCommit = (Invoke-GhCapture -Arguments @(
+  $remote = Invoke-GhJson -Arguments @(
     'api',
-    "repos/$Repository/commits/$ReleaseTag",
-    '--jq',
-    '.sha'
-  )).Trim()
+    "repos/$Repository/commits/$ReleaseTag"
+  )
+  $remoteCommit = ([string]$remote.sha).Trim()
   if ($remoteCommit -cne $ExpectedCommit) {
     throw "Remote tag '$ReleaseTag' resolves to '$remoteCommit', expected '$ExpectedCommit'."
   }
