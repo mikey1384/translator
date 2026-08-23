@@ -88,17 +88,17 @@ test('independent terminal failures share one shutdown request', () => {
   assert.deepEqual(exitCodes, [1]);
 });
 
-test('a synchronous shutdown request failure can be retried', () => {
+test('a synchronous shutdown request failure is still invoked at most once', () => {
   let attempts = 0;
   const requestShutdown = createIdempotentShutdownRequest(() => {
     attempts += 1;
-    if (attempts === 1) throw new Error('app.exit unavailable');
+    throw new Error('app.exit unavailable');
   });
 
   assert.throws(() => requestShutdown(undefined), /app\.exit unavailable/);
-  assert.equal(requestShutdown(undefined), true);
   assert.equal(requestShutdown(undefined), false);
-  assert.equal(attempts, 2);
+  assert.equal(requestShutdown(undefined), false);
+  assert.equal(attempts, 1);
 });
 
 test('one console EPIPE is contained before electron-log can recursively report it', () => {
@@ -251,14 +251,14 @@ test('a shutdown callback that synchronously surfaces another EPIPE is not re-en
   assert.equal(harness.fileMessages.length, 1);
 });
 
-test('a synchronous shutdown-request failure is retried without re-entering logging', () => {
+test('a synchronous shutdown-request failure cannot be re-entered by queued EPIPEs', () => {
   const harness = createLoggerHarness();
   let shutdownAttempts = 0;
   const guard = installOutputChannelFailureGuard({
     logger: harness.logger,
     requestShutdown: () => {
       shutdownAttempts += 1;
-      if (shutdownAttempts === 1) throw new Error('exit unavailable');
+      throw new Error('exit unavailable');
     },
   });
 
@@ -266,9 +266,30 @@ test('a synchronous shutdown-request failure is retried without re-entering logg
   assert.equal(guard.handle(brokenPipeError()), true);
   assert.equal(guard.handle(brokenPipeError()), true);
 
-  assert.equal(shutdownAttempts, 2);
+  assert.equal(shutdownAttempts, 1);
   assert.equal(harness.fileMessages.length, 1);
   assert.equal(harness.logger.transports.console.level, false);
+});
+
+test('a rejected shutdown request cannot be re-entered by later EPIPEs', async () => {
+  const harness = createLoggerHarness();
+  let shutdownAttempts = 0;
+  const guard = installOutputChannelFailureGuard({
+    logger: harness.logger,
+    requestShutdown: () => {
+      shutdownAttempts += 1;
+      return Promise.reject(new Error('exit unavailable'));
+    },
+  });
+
+  assert.equal(guard.handle(brokenPipeError()), true);
+  await Promise.resolve();
+  for (let index = 0; index < 20; index += 1) {
+    assert.equal(guard.handle(brokenPipeError()), true);
+  }
+
+  assert.equal(shutdownAttempts, 1);
+  assert.equal(harness.fileMessages.length, 1);
 });
 
 test('normal non-EPIPE logging still reaches console and file transports', () => {

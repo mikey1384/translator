@@ -1,14 +1,31 @@
 import fs from 'node:fs/promises';
-import fsSync from 'node:fs';
 import path from 'node:path';
+import {
+  Browser,
+  Cache,
+  computeExecutablePath,
+  detectBrowserPlatform,
+  install,
+} from '@puppeteer/browsers';
 import { app } from 'electron';
-import { execa } from 'execa';
 import log from 'electron-log';
+import { PUPPETEER_REVISIONS } from 'puppeteer-core/lib/puppeteer/revisions.js';
+import {
+  releaseInstallLock,
+  waitForInstallLock,
+} from './headless-chrome-install-lock.js';
+
+const HEADLESS_CHROME_BUILD_ID = PUPPETEER_REVISIONS['chrome-headless-shell'];
+
+if (
+  typeof HEADLESS_CHROME_BUILD_ID !== 'string' ||
+  !/^[0-9A-Za-z._-]+$/.test(HEADLESS_CHROME_BUILD_ID)
+) {
+  throw new Error('Puppeteer did not expose a valid headless-shell revision.');
+}
 
 interface HeadlessChromePaths {
   headlessDir: string;
-  chromeDir: string;
-  executablePath: string;
   lockFile: string;
 }
 
@@ -22,18 +39,9 @@ function getHeadlessChromePaths(): HeadlessChromePaths {
     process.arch === 'arm64' ? 'headless-arm64' : 'headless-x64'
   );
 
-  const chromeDir = path.join(headlessDir, 'chrome-headless-shell');
   const lockFile = path.join(headlessDir, '.install-lock');
 
-  // Determine executable path based on platform
-  let executablePath: string;
-  if (process.platform === 'win32') {
-    executablePath = path.join(headlessDir, 'headless_shell.exe');
-  } else {
-    executablePath = path.join(headlessDir, 'headless_shell');
-  }
-
-  return { headlessDir, chromeDir, executablePath, lockFile };
+  return { headlessDir, lockFile };
 }
 
 /**
@@ -62,124 +70,29 @@ async function isHeadlessChromeBinaryValid(
 }
 
 /**
- * Find the actual executable in the nested directory structure
+ * Resolve only the executable owned by the lockfile-pinned Puppeteer build.
  */
-async function findExecutableInNestedStructure(
-  chromeDir: string
+async function findPinnedExecutable(
+  headlessDir: string
 ): Promise<string | null> {
   try {
-    const versionDirs = await fs.readdir(chromeDir);
+    const platform = detectBrowserPlatform();
+    if (!platform) return null;
 
-    // Platform-specific directory patterns
-    let versionDirPattern: string;
-    let binaryDirPattern: string;
-    let executableName: string;
-
-    if (process.platform === 'win32') {
-      versionDirPattern = process.arch === 'arm64' ? 'win-arm64-' : 'win64-';
-      binaryDirPattern = 'chrome-headless-shell-win';
-      executableName = 'chrome-headless-shell.exe';
-    } else {
-      // macOS
-      versionDirPattern = process.arch === 'arm64' ? 'mac_arm-' : 'mac-';
-      binaryDirPattern = 'chrome-headless-shell-mac-';
-      executableName = 'chrome-headless-shell';
-    }
-
-    const versionDir = versionDirs.find(dir =>
-      dir.startsWith(versionDirPattern)
-    );
-    if (!versionDir) return null;
-
-    const platformDir = path.join(chromeDir, versionDir);
-    const platformDirs = await fs.readdir(platformDir);
-    const binaryDir = platformDirs.find(dir =>
-      dir.startsWith(binaryDirPattern)
-    );
-    if (!binaryDir) return null;
-
-    const executablePath = path.join(platformDir, binaryDir, executableName);
-
-    // Verify the executable exists
+    const executablePath = computeExecutablePath({
+      browser: Browser.CHROMEHEADLESSSHELL,
+      buildId: HEADLESS_CHROME_BUILD_ID,
+      cacheDir: headlessDir,
+      platform,
+    });
     if (await isHeadlessChromeBinaryValid(executablePath)) {
       return executablePath;
     }
 
     return null;
   } catch (error) {
-    log.warn(
-      `[HeadlessChrome] Error finding executable in nested structure: ${error}`
-    );
+    log.warn(`[HeadlessChrome] Error resolving pinned executable: ${error}`);
     return null;
-  }
-}
-
-/**
- * Acquire installation lock to prevent concurrent installations
- */
-async function acquireInstallLock(lockFile: string): Promise<boolean> {
-  try {
-    const lockDir = path.dirname(lockFile);
-    await fs.mkdir(lockDir, { recursive: true });
-
-    // Check if lock file exists and contains a valid PID
-    try {
-      const lockContent = await fs.readFile(lockFile, 'utf-8');
-      const pid = parseInt(lockContent.trim(), 10);
-
-      if (!isNaN(pid)) {
-        // Check if process is still running
-        try {
-          process.kill(pid, 0); // Signal 0 checks if process exists
-          log.info(
-            `[HeadlessChrome] Installation already in progress (PID: ${pid})`
-          );
-          return false;
-        } catch (error: any) {
-          if (error.code === 'ESRCH') {
-            // Process not found, remove stale lock
-            log.info(
-              `[HeadlessChrome] Removing stale lock file (PID ${pid} not found)`
-            );
-            await fs.unlink(lockFile);
-          } else if (error.code === 'EPERM') {
-            // Process exists but we can't signal it (Windows)
-            log.info(
-              `[HeadlessChrome] Installation already in progress (PID: ${pid})`
-            );
-            return false;
-          } else {
-            throw error;
-          }
-        }
-      }
-    } catch (error: any) {
-      if (error.code !== 'ENOENT') {
-        log.warn(`[HeadlessChrome] Error reading lock file: ${error}`);
-      }
-    }
-
-    // Create lock file with current PID
-    await fs.writeFile(lockFile, process.pid.toString());
-    return true;
-  } catch (error) {
-    log.error(`[HeadlessChrome] Failed to acquire installation lock: ${error}`);
-    return false;
-  }
-}
-
-/**
- * Release installation lock
- */
-async function releaseInstallLock(lockFile: string): Promise<void> {
-  try {
-    await fs.unlink(lockFile);
-  } catch (error: any) {
-    if (error.code !== 'ENOENT') {
-      log.warn(
-        `[HeadlessChrome] Failed to release installation lock: ${error}`
-      );
-    }
   }
 }
 
@@ -188,46 +101,57 @@ async function releaseInstallLock(lockFile: string): Promise<void> {
  */
 async function downloadHeadlessChrome(headlessDir: string): Promise<void> {
   log.info(
-    `[HeadlessChrome] Downloading chrome-headless-shell@stable to ${headlessDir}`
+    `[HeadlessChrome] Downloading chrome-headless-shell@${HEADLESS_CHROME_BUILD_ID} to ${headlessDir}`
   );
 
   try {
     // Ensure directory exists
     await fs.mkdir(headlessDir, { recursive: true });
 
-    // Use @puppeteer/browsers to download
-    const result = await execa(
-      'npx',
-      [
-        '@puppeteer/browsers',
-        'install',
-        'chrome-headless-shell@stable',
-        '--path',
-        headlessDir,
-      ],
-      {
-        timeout: 300000, // 5 minutes timeout
-        env: { ...process.env },
-        windowsHide: true,
-      }
-    );
-
-    log.info(`[HeadlessChrome] Download completed: ${result.stdout}`);
-
-    // Verify the nested executable exists and is accessible
-    const chromeDir = path.join(headlessDir, 'chrome-headless-shell');
-    const nestedExecutable = await findExecutableInNestedStructure(chromeDir);
-
-    if (nestedExecutable) {
-      log.info(
-        `[HeadlessChrome] Verified nested executable at: ${nestedExecutable}`
-      );
-      // Don't copy the executable - use it in place so it has access to supporting files
-    } else {
-      log.warn(
-        `[HeadlessChrome] Could not find executable in nested structure`
+    const platform = detectBrowserPlatform();
+    if (!platform) {
+      throw new Error(
+        `Unsupported platform for headless Chrome: ${process.platform}/${process.arch}`
       );
     }
+
+    // @puppeteer/browsers treats an existing installation directory as a
+    // completed cache hit. Remove only this exact browser/platform/build while
+    // holding the install lock so a truncated prior download is repairable.
+    const installationDir = new Cache(headlessDir).installationDir(
+      Browser.CHROMEHEADLESSSHELL,
+      platform,
+      HEADLESS_CHROME_BUILD_ID
+    );
+    await fs.rm(installationDir, { recursive: true, force: true });
+
+    const installedBrowser = await install({
+      browser: Browser.CHROMEHEADLESSSHELL,
+      buildId: HEADLESS_CHROME_BUILD_ID,
+      cacheDir: headlessDir,
+      platform,
+    });
+
+    if (!(await isHeadlessChromeBinaryValid(installedBrowser.executablePath))) {
+      throw new Error(
+        'Puppeteer reported a completed headless Chrome install without an executable binary'
+      );
+    }
+
+    log.info(
+      `[HeadlessChrome] Download completed at ${installedBrowser.executablePath}`
+    );
+
+    const pinnedExecutable = await findPinnedExecutable(headlessDir);
+    if (pinnedExecutable !== installedBrowser.executablePath) {
+      throw new Error(
+        'Puppeteer installed headless Chrome outside the pinned cache location'
+      );
+    }
+
+    log.info(
+      `[HeadlessChrome] Verified pinned executable: ${pinnedExecutable}`
+    );
   } catch (error) {
     log.error(`[HeadlessChrome] Download failed: ${error}`);
     throw error;
@@ -238,82 +162,54 @@ async function downloadHeadlessChrome(headlessDir: string): Promise<void> {
  * Ensure headless Chrome binary is available, downloading if necessary
  */
 export async function ensureHeadlessChrome(): Promise<string> {
-  const { headlessDir, chromeDir, executablePath, lockFile } =
-    getHeadlessChromePaths();
+  const { headlessDir, lockFile } = getHeadlessChromePaths();
 
-  // First check if nested structure executable exists (preferred)
-  const nestedExecutable = await findExecutableInNestedStructure(chromeDir);
-  if (nestedExecutable) {
-    log.info(`[HeadlessChrome] Using nested binary: ${nestedExecutable}`);
-    return nestedExecutable;
-  }
-
-  // Fallback to simple executable (for backward compatibility)
-  if (await isHeadlessChromeBinaryValid(executablePath)) {
-    log.info(`[HeadlessChrome] Using fallback binary: ${executablePath}`);
-    return executablePath;
+  const pinnedExecutable = await findPinnedExecutable(headlessDir);
+  if (pinnedExecutable) {
+    log.info(`[HeadlessChrome] Using pinned binary: ${pinnedExecutable}`);
+    return pinnedExecutable;
   }
 
   // Binary not found, need to download
   log.info(`[HeadlessChrome] Binary not found, downloading...`);
 
-  // Acquire lock to prevent concurrent downloads
-  if (!(await acquireInstallLock(lockFile))) {
-    // Another process is installing, wait and retry
-    log.info(
-      `[HeadlessChrome] Waiting for concurrent installation to complete...`
-    );
-
-    // Wait up to 5 minutes for installation to complete
-    const maxWaitTime = 300000; // 5 minutes
-    const checkInterval = 5000; // 5 seconds
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < maxWaitTime) {
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
-
-      // Check if binary is now available
-      if (await isHeadlessChromeBinaryValid(executablePath)) {
-        return executablePath;
-      }
-
-      const nestedCheck = await findExecutableInNestedStructure(chromeDir);
-      if (nestedCheck) {
-        return nestedCheck;
-      }
-    }
-
-    throw new Error(
-      'Headless Chrome installation timeout - concurrent installation did not complete'
-    );
-  }
+  // Wait up to five minutes for an active installer, but retry the atomic
+  // acquisition each turn. If that installer exits, its stale lock is
+  // recovered immediately instead of forcing this process to time out.
+  const maxWaitTime = 300000;
+  const checkInterval = 5000;
+  const lock = await waitForInstallLock({
+    lockFile,
+    findReadyValue: () => findPinnedExecutable(headlessDir),
+    maxWaitTime,
+    checkInterval,
+    logger: log,
+  });
+  if (lock.readyValue !== null) return lock.readyValue;
+  const lockToken = lock.lockToken;
 
   try {
+    // The other process can finish between our last executable check and our
+    // successful lock creation. Keep its valid result instead of redownloading.
+    const concurrentlyInstalled = await findPinnedExecutable(headlessDir);
+    if (concurrentlyInstalled) return concurrentlyInstalled;
+
     // Download headless Chrome
     await downloadHeadlessChrome(headlessDir);
 
-    // Verify installation - check nested structure first
-    const finalNestedCheck = await findExecutableInNestedStructure(chromeDir);
-    if (finalNestedCheck) {
+    const installedExecutable = await findPinnedExecutable(headlessDir);
+    if (installedExecutable) {
       log.info(
-        `[HeadlessChrome] Installation successful (nested): ${finalNestedCheck}`
+        `[HeadlessChrome] Installation successful: ${installedExecutable}`
       );
-      return finalNestedCheck;
-    }
-
-    // Fallback verification
-    if (await isHeadlessChromeBinaryValid(executablePath)) {
-      log.info(
-        `[HeadlessChrome] Installation successful (fallback): ${executablePath}`
-      );
-      return executablePath;
+      return installedExecutable;
     }
 
     throw new Error(
       'Headless Chrome installation completed but binary not found'
     );
   } finally {
-    await releaseInstallLock(lockFile);
+    await releaseInstallLock(lockFile, lockToken, log);
   }
 }
 
@@ -329,68 +225,11 @@ export async function getHeadlessChromePath(): Promise<string> {
     return '';
   }
 
-  // First try bundled binary in resources
-  const bundledPath = (() => {
-    const headlessDir = path.join(
-      process.resourcesPath,
-      process.arch === 'arm64' ? 'headless-arm64' : 'headless-x64'
-    );
-
-    try {
-      // Try nested structure first
-      const chromeDir = path.join(headlessDir, 'chrome-headless-shell');
-      if (fsSync.existsSync(chromeDir)) {
-        // Use synchronous version for compatibility with existing code
-        const versionDirs = fsSync.readdirSync(chromeDir);
-
-        let versionDirPattern: string;
-        let binaryDirPattern: string;
-        let executableName: string;
-
-        if (process.platform === 'win32') {
-          versionDirPattern =
-            process.arch === 'arm64' ? 'win-arm64-' : 'win64-';
-          binaryDirPattern = 'chrome-headless-shell-win';
-          executableName = 'chrome-headless-shell.exe';
-        } else {
-          versionDirPattern = process.arch === 'arm64' ? 'mac_arm-' : 'mac-';
-          binaryDirPattern = 'chrome-headless-shell-mac-';
-          executableName = 'chrome-headless-shell';
-        }
-
-        const versionDir = versionDirs.find((dir: string) =>
-          dir.startsWith(versionDirPattern)
-        );
-        if (versionDir) {
-          const platformDir = path.join(chromeDir, versionDir);
-          const platformDirs = fsSync.readdirSync(platformDir);
-          const binaryDir = platformDirs.find((dir: string) =>
-            dir.startsWith(binaryDirPattern)
-          );
-          if (binaryDir) {
-            const execPath = path.join(platformDir, binaryDir, executableName);
-            if (fsSync.existsSync(execPath)) {
-              return execPath;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      log.warn(
-        `[HeadlessChrome] Error checking bundled nested structure: ${error}`
-      );
-    }
-
-    // Fallback to simple structure
-    const fallbackExecutable =
-      process.platform === 'win32' ? 'headless_shell.exe' : 'headless_shell';
-    const fallbackPath = path.join(headlessDir, fallbackExecutable);
-    if (fsSync.existsSync(fallbackPath)) {
-      return fallbackPath;
-    }
-
-    return null;
-  })();
+  const bundledDir = path.join(
+    process.resourcesPath,
+    process.arch === 'arm64' ? 'headless-arm64' : 'headless-x64'
+  );
+  const bundledPath = await findPinnedExecutable(bundledDir);
 
   if (bundledPath) {
     log.info(`[HeadlessChrome] Using bundled binary: ${bundledPath}`);

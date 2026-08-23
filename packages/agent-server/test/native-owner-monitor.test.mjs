@@ -222,19 +222,33 @@ test('Windows supervisor uses exact process handles and an uncapped tree snapsho
 });
 
 test('every documented development launcher starts inside native supervision', async () => {
-  const [packageJson, codexConfig, shellLauncher, windowsLauncher] =
-    await Promise.all([
-      fs.readFile(path.join(packageRoot, 'package.json'), 'utf8'),
-      fs.readFile(
-        path.join(packageRoot, '..', '..', '.codex', 'config.toml'),
-        'utf8'
-      ),
-      fs.readFile(path.join(packageRoot, 'bin', 'translator-dev-mcp'), 'utf8'),
-      fs.readFile(
-        path.join(packageRoot, 'bin', 'translator-dev-mcp.cmd'),
-        'utf8'
-      ),
-    ]);
+  const [
+    packageJson,
+    codexConfig,
+    shellLauncher,
+    windowsLauncher,
+    electronLauncher,
+    controllerSource,
+  ] = await Promise.all([
+    fs.readFile(path.join(packageRoot, 'package.json'), 'utf8'),
+    fs.readFile(
+      path.join(packageRoot, '..', '..', '.codex', 'config.toml'),
+      'utf8'
+    ),
+    fs.readFile(path.join(packageRoot, 'bin', 'translator-dev-mcp'), 'utf8'),
+    fs.readFile(
+      path.join(packageRoot, 'bin', 'translator-dev-mcp.cmd'),
+      'utf8'
+    ),
+    fs.readFile(
+      path.join(packageRoot, 'bin', 'translator-dev-electron'),
+      'utf8'
+    ),
+    fs.readFile(
+      path.join(packageRoot, 'src', 'dev-app-controller.mjs'),
+      'utf8'
+    ),
+  ]);
   assert.equal(JSON.parse(packageJson).scripts.mcp, 'bin/translator-dev-mcp');
   assert.match(
     codexConfig,
@@ -244,7 +258,134 @@ test('every documented development launcher starts inside native supervision', a
   assert.match(shellLauncher, /--supervise 1 --/);
   assert.match(windowsLauncher, /translator-owner-supervisor\.exe/);
   assert.match(windowsLauncher, /--supervise 2 --/);
+  assert.match(electronLauncher, /translator-owner-supervisor/);
+  assert.match(electronLauncher, /--guard-parent --/);
+  assert.match(controllerSource, /translator-dev-electron/);
 });
+
+test(
+  'guarded exec kills the pre-resolution app group when its exact controller dies',
+  { skip: process.platform === 'win32' },
+  async t => {
+    const fixtureRoot = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'translator-native-exec-guard-test-')
+    );
+    const rootPidPath = path.join(fixtureRoot, 'root.pid');
+    const descendantPidPath = path.join(fixtureRoot, 'descendant.pid');
+    const supervisorPath = getOwnerSupervisorPath();
+    const guardedSource = `
+      const { spawn } = require('node:child_process');
+      const { writeFileSync } = require('node:fs');
+      writeFileSync(process.argv[1], String(process.pid));
+      const descendant = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
+        stdio: ['ignore', 'ignore', 'ignore'],
+      });
+      writeFileSync(process.argv[2], String(descendant.pid));
+      descendant.unref();
+      setInterval(() => {}, 1000);
+    `;
+    const ownerSource = `
+      const { spawn } = require('node:child_process');
+      const holder = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
+        detached: true,
+        stdio: ['ignore', 'inherit', 'inherit'],
+      });
+      holder.unref();
+      const guarded = spawn(process.argv[1], [
+        '--guard-parent', '--', process.execPath, '-e', process.argv[4],
+        process.argv[2], process.argv[3]
+      ], {
+        detached: true,
+        stdio: ['ignore', 'inherit', 'inherit'],
+      });
+      guarded.unref();
+      process.stdout.write(JSON.stringify({ holderPid: holder.pid, guardedPid: guarded.pid }) + '\\n');
+      setInterval(() => {}, 1000);
+    `;
+    const owner = spawn(
+      process.execPath,
+      [
+        '-e',
+        ownerSource,
+        supervisorPath,
+        rootPidPath,
+        descendantPidPath,
+        guardedSource,
+      ],
+      { stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    let output = '';
+    const ownerInfo = new Promise((resolve, reject) => {
+      owner.once('error', reject);
+      owner.stdout.on('data', chunk => {
+        output += chunk.toString('utf8');
+        const newline = output.indexOf('\n');
+        if (newline >= 0) resolve(JSON.parse(output.slice(0, newline)));
+      });
+    });
+    let holderPid = null;
+    let guardedPid = null;
+    let descendantPid = null;
+    t.after(async () => {
+      for (const pid of [owner.pid, guardedPid, descendantPid, holderPid]) {
+        if (pid && isProcessAlive(pid)) {
+          try {
+            process.kill(pid, 'SIGKILL');
+          } catch {
+            // Exact fixture process already exited.
+          }
+        }
+      }
+      await fs.rm(fixtureRoot, { recursive: true, force: true });
+    });
+
+    ({ holderPid, guardedPid } = await waitFor(
+      () => ownerInfo,
+      'fixture owner did not publish the guarded process'
+    ));
+    const rootPid = Number(
+      await waitFor(async () => {
+        try {
+          return await fs.readFile(rootPidPath, 'utf8');
+        } catch {
+          return null;
+        }
+      }, 'guarded executable did not start')
+    );
+    descendantPid = Number(
+      await waitFor(async () => {
+        try {
+          return await fs.readFile(descendantPidPath, 'utf8');
+        } catch {
+          return null;
+        }
+      }, 'guarded executable did not publish its descendant')
+    );
+
+    assert.equal(
+      rootPid,
+      guardedPid,
+      'the guard must exec without changing PID'
+    );
+    assert.ok(isProcessAlive(holderPid));
+    assert.ok(isProcessAlive(guardedPid));
+    assert.ok(isProcessAlive(descendantPid));
+
+    process.kill(owner.pid, 'SIGKILL');
+    await waitFor(
+      () => !isProcessAlive(guardedPid),
+      'guarded executable survived exact controller loss'
+    );
+    await waitFor(
+      () => !isProcessAlive(descendantPid),
+      'guarded executable descendant survived exact controller loss'
+    );
+    assert.ok(
+      isProcessAlive(holderPid),
+      'descriptor holder must remain alive to prove stdio stayed open'
+    );
+  }
+);
 
 test(
   'native supervisor observes exact owner death while another process retains stdio',

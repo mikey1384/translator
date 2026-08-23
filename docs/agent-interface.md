@@ -169,10 +169,11 @@ The renderer bridge exists when the app is unpackaged and launched with
 development build with Playwright and that flag automatically. Run the MCP
 entry point through the native supervisor as a direct child of the controlling
 client, as the checked-in `.codex/config.toml` does. The supervisor contains
-the complete controller process group from launch, including the interval
-before Playwright returns an Electron handle. An inner native process monitor
-then observes the exact launched Electron root; inherited stdio descriptors
-cannot hide owner death.
+the controller process group from launch. Because Playwright deliberately
+detaches Electron into another process group, an exact native launch wrapper
+arms a parent guardian before it execs Electron. An inner native process
+monitor then observes that same launched root after Playwright returns it;
+inherited stdio descriptors cannot hide owner death in either interval.
 
 SIGINT, SIGTERM, SIGHUP, parent-process disconnect, stdin/readline closure,
 stdio failure, and MCP transport closure all enter one idempotent shutdown

@@ -37,10 +37,11 @@ packages/agent-server/bin/translator-dev-driver
 ```
 
 Do not detach it through a one-shot shell or keep a FIFO artificially open.
-The launcher binds the complete driver process group to its exact parent before
-Electron can start, and the driver's inner native monitor tracks the exact
-Electron root. Stdin/readline closure is also a shutdown request. Screenshots
-land in `./shots/` (override: `SCREENSHOT_DIR`).
+The launcher binds the driver to its exact parent, and the Electron launch
+wrapper arms an exact native parent guardian before it execs Electron. The
+driver's inner native monitor then tracks that same process-group root.
+Stdin/readline closure is also a shutdown request. Screenshots land in
+`./shots/` (override: `SCREENSHOT_DIR`).
 
 ### Commands
 

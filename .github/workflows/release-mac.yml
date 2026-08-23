@@ -11,8 +11,11 @@ permissions:
   contents: write
 
 concurrency:
-  group: mac-release-${{ github.ref }}
-  cancel-in-progress: true
+  # vX.Y.Z and vX.Y.Z-mac publish the same versioned object names. Serialize
+  # every Mac release so those two tag forms can never mutate shared channels
+  # concurrently; the upload gate below also rejects the alternate tag form.
+  group: mac-release
+  cancel-in-progress: false
 
 jobs:
   mac-build:
@@ -35,36 +38,70 @@ jobs:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       # ---------- GitHub ----------
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
 
       # ---------- youtube-dl-exec ----------
       YOUTUBE_DL_SKIP_DOWNLOAD: 'true'
 
     steps:
       # ————————————————————————————————————————————————————————————
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       # ---------- Node (no Bun) ----------
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: '22' # updated to avoid warnings
+          node-version: '22.16.0'
           cache: 'npm'
 
+      - name: Validate release identity and extract notes
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-mac)?$ ]]; then
+            echo "::error::Unsupported macOS release tag: $GITHUB_REF_NAME"
+            exit 1
+          fi
+
+          APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
+          if [ "${BASH_REMATCH[1]}" != "$APP_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package version $APP_VERSION"
+            exit 1
+          fi
+
+          TAG_TYPE=$(git cat-file -t "$GITHUB_REF_NAME" 2>/dev/null || true)
+          if [ "$TAG_TYPE" != "tag" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME must be an annotated tag."
+            exit 1
+          fi
+
+          TAG_COMMIT=$(git rev-parse "$GITHUB_REF_NAME^{}")
+          HEAD_COMMIT=$(git rev-parse HEAD)
+          if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+            echo "::error::Checked-out commit $HEAD_COMMIT does not match $GITHUB_REF_NAME ($TAG_COMMIT)."
+            exit 1
+          fi
+
+          BODY=$(git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME")
+          if [ -z "$(printf '%s' "$BODY" | tr -d '[:space:]')" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME annotation body is empty."
+            echo "::error::Add release notes after a blank line in the tag annotation."
+            exit 1
+          fi
+
+          printf '%s\n' "$BODY" > /tmp/release-notes.md
+
       # ---------- Apple signing cert ----------
-      - uses: apple-actions/import-codesign-certs@v7
+      - uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
         with:
           p12-file-base64: ${{ secrets.MACOS_CERT_P12 }}
           p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
 
-      # ---------- Install deps & headless_shell (arm64) ----------
-      - name: Install deps & headless_shell (arm64)
-        run: |
-          npm ci --no-audit --fund=false
-          npx puppeteer@24.10.0 browsers install chrome-headless-shell \
-            --platform mac_arm --path vendor/headless-arm64
-          npx puppeteer@24.10.0 browsers install chrome-headless-shell \
-            --platform mac     --path vendor/headless-x64
+      # ---------- Install dependencies ----------
+      - name: Install dependencies
+        run: npm ci --no-audit --fund=false
 
       - name: Validate release candidate
         run: |
@@ -83,20 +120,28 @@ jobs:
       - name: Verify native payload architectures
         run: npm run verify:architectures
 
-      - name: Verify signed apps and updater archives
+      - name: Verify signed apps, updater archives, and disk images
         run: |
           set -euo pipefail
 
           APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
           VERIFY_ROOT=$(mktemp -d)
-          trap 'rm -rf "$VERIFY_ROOT"' EXIT
+          MOUNTED_DMG=""
+
+          cleanup() {
+            if [ -n "$MOUNTED_DMG" ]; then
+              hdiutil detach "$MOUNTED_DMG" >/dev/null 2>&1 || true
+            fi
+            rm -rf "$VERIFY_ROOT"
+          }
+          trap cleanup EXIT
 
           verify_app() {
             local app_path="$1"
             echo "Verifying signed app: $app_path"
-            codesign --verify --deep --strict --verbose=4 "$app_path"
-            xcrun stapler validate "$app_path"
-            spctl --assess --type execute --verbose=4 "$app_path"
+            codesign --verify --deep --strict --verbose=4 "$app_path" || return $?
+            xcrun stapler validate "$app_path" || return $?
+            spctl --assess --type execute --verbose=4 "$app_path" || return $?
           }
 
           verify_zip() {
@@ -114,36 +159,42 @@ jobs:
             verify_app "$extract_dir/Translator.app"
           }
 
+          verify_dmg() {
+            local arch="$1"
+            local dmg_path="dist/Translator-${APP_VERSION}-darwin-${arch}.dmg"
+            local mount_dir="$VERIFY_ROOT/dmg-${arch}"
+            local app_status=0
+            local detach_status=0
+
+            if [ ! -f "$dmg_path" ]; then
+              echo "::error::Missing disk image: $dmg_path"
+              return 1
+            fi
+
+            hdiutil verify "$dmg_path"
+            mkdir -p "$mount_dir"
+            hdiutil attach -nobrowse -readonly -mountpoint "$mount_dir" "$dmg_path"
+            MOUNTED_DMG="$mount_dir"
+
+            verify_app "$mount_dir/Translator.app" || app_status=$?
+            hdiutil detach "$mount_dir" || detach_status=$?
+            MOUNTED_DMG=""
+
+            if [ "$app_status" -ne 0 ]; then
+              return "$app_status"
+            fi
+            return "$detach_status"
+          }
+
           verify_app "dist/mac/Translator.app"
           verify_app "dist/mac-arm64/Translator.app"
           verify_zip x64
           verify_zip arm64
-
-      - name: Extract tag annotation
-        if: startsWith(github.ref, 'refs/tags/')
-        id: tag_notes
-        run: |
-          # Ensure the full annotated tag object is available
-          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
-
-          TAG_TYPE=$(git cat-file -t "$GITHUB_REF_NAME" 2>/dev/null || true)
-          if [ "$TAG_TYPE" != "tag" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME must be an annotated tag."
-            exit 1
-          fi
-
-          # Extract the body (text after the subject line + blank line).
-          BODY=$(git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME")
-          if [ -z "$(printf '%s' "$BODY" | tr -d '[:space:]')" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME annotation body is empty."
-            echo "::error::Add release notes after a blank line in the tag annotation."
-            exit 1
-          fi
-
-          printf '%s\n' "$BODY" > /tmp/release-notes.md
+          verify_dmg x64
+          verify_dmg arm64
 
       - name: Inject release notes into latest-mac.yml
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         run: |
           APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
           node scripts/inject-update-release-notes.mjs \
@@ -153,19 +204,90 @@ jobs:
 
       # —————————————————————————————————— upload & release ——————————————————————————
       - name: Install AWS CLI v2
+        if: github.ref_type == 'tag'
         run: |
-          curl -sSL "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o aws.pkg
+          set -euo pipefail
+          AWS_CLI_VERSION="2.36.29"
+          AWS_CLI_SHA256="f2025d418e6d7e7aa2cd7ef237bd1b664522abe657c06172c2ded32bc1016ab9"
+          curl --fail --silent --show-error --location \
+            "https://awscli.amazonaws.com/AWSCLIV2-${AWS_CLI_VERSION}.pkg" \
+            --output aws.pkg
+          printf '%s  %s\n' "$AWS_CLI_SHA256" aws.pkg | shasum -a 256 --check
           sudo installer -pkg aws.pkg -target /
-          aws --version
+          installed_version=$(aws --version)
+          case "$installed_version" in
+            "aws-cli/${AWS_CLI_VERSION} "*) ;;
+            *)
+              echo "::error::Installed AWS CLI does not match ${AWS_CLI_VERSION}: $installed_version"
+              exit 1
+              ;;
+          esac
+
+      # Establish one immutable GitHub draft before touching either R2
+      # namespace. A completed/public or conflicting tag therefore fails
+      # without overwriting versioned downloads.
+      - name: Upload and verify GitHub release assets
+        if: github.ref_type == 'tag'
+        id: github_release
+        run: scripts/upload-github-mac-release-assets.sh
 
       - name: Upload to R2
+        if: github.ref_type == 'tag'
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          TARGET="mac/${VERSION:-latest}"
-          aws s3 cp dist/ "s3://${R2_BUCKET}/${TARGET}/" \
-            --recursive --exclude "*" --include "*.dmg" --include "*.zip" \
-            --include "*mac.yml" --include "*.blockmap" \
-            --endpoint-url "${R2_ENDPOINT}"
+          set -euo pipefail
+          APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
+          TARGET="mac/${APP_VERSION}"
+
+          upload_versioned_object() {
+            local source_path="$1"
+            local name
+            local expected_size
+            local expected_sha256
+            local remote_size
+            local remote_sha256
+            name=$(basename "$source_path")
+            expected_size=$(stat -f '%z' "$source_path")
+            expected_sha256=$(shasum -a 256 "$source_path" | awk '{print $1}')
+
+            aws s3api put-object \
+              --bucket "$R2_BUCKET" \
+              --key "${TARGET}/${name}" \
+              --body "$source_path" \
+              --metadata "sha256=${expected_sha256}" \
+              --cache-control "public, max-age=31536000, immutable" \
+              --endpoint-url "$R2_ENDPOINT" >/dev/null
+
+            remote_size=$(aws s3api head-object \
+              --bucket "$R2_BUCKET" \
+              --key "${TARGET}/${name}" \
+              --query ContentLength --output text \
+              --endpoint-url "$R2_ENDPOINT")
+            remote_sha256=$(aws s3api head-object \
+              --bucket "$R2_BUCKET" \
+              --key "${TARGET}/${name}" \
+              --query 'Metadata.sha256' --output text \
+              --endpoint-url "$R2_ENDPOINT")
+            if [ "$remote_size" != "$expected_size" ] || \
+               [ "$remote_sha256" != "$expected_sha256" ]; then
+              echo "::error::Versioned R2 verification failed for $name"
+              exit 1
+            fi
+          }
+
+          VERSIONED_ASSETS=(
+            "dist/Translator-${APP_VERSION}-darwin-arm64.dmg"
+            "dist/Translator-${APP_VERSION}-darwin-arm64.dmg.blockmap"
+            "dist/Translator-${APP_VERSION}-darwin-arm64.zip"
+            "dist/Translator-${APP_VERSION}-darwin-arm64.zip.blockmap"
+            "dist/Translator-${APP_VERSION}-darwin-x64.dmg"
+            "dist/Translator-${APP_VERSION}-darwin-x64.dmg.blockmap"
+            "dist/Translator-${APP_VERSION}-darwin-x64.zip"
+            "dist/Translator-${APP_VERSION}-darwin-x64.zip.blockmap"
+            "dist/latest-mac.yml"
+          )
+          for asset in "${VERSIONED_ASSETS[@]}"; do
+            upload_versioned_object "$asset"
+          done
 
       - name: Promote artefacts to latest/
         if: github.ref_type == 'tag'
@@ -186,97 +308,157 @@ jobs:
           cp "dist/Translator-${APP_VERSION}-darwin-arm64.dmg" latest/Translator-arm64.dmg
           cp "dist/Translator-${APP_VERSION}-darwin-x64.dmg" latest/Translator-x64.dmg
 
-          # Upload small metadata files first
-          aws s3 cp latest/ "s3://${R2_BUCKET}/mac/latest/" \
-            --recursive --exclude "*" --include "*.yml" --include "*.blockmap" \
-            --endpoint-url "${R2_ENDPOINT}"
+          # Every payload is a single, authenticated PutObject with its local
+          # SHA-256 persisted as R2 metadata. This avoids the multipart race
+          # that previously returned InvalidPart while still appearing retryable.
+          upload_latest_object() {
+            local artifact="$1"
+            local cache_control="$2"
+            local source_path="latest/$artifact"
+            local expected_size
+            local expected_sha256
+            local remote_size
+            local remote_sha256
+            expected_size=$(stat -f '%z' "$source_path")
+            expected_sha256=$(shasum -a 256 "$source_path" | awk '{print $1}')
 
-          # Upload updater ZIPs, versioned DMGs, and stable DMG aliases
-          # individually to avoid R2 InvalidPart issues.
-          LARGE_ARTIFACTS=(
+            aws s3api put-object \
+              --bucket "$R2_BUCKET" \
+              --key "mac/latest/$artifact" \
+              --body "$source_path" \
+              --metadata "sha256=${expected_sha256}" \
+              --cache-control "$cache_control" \
+              --endpoint-url "$R2_ENDPOINT" >/dev/null
+
+            remote_size=$(aws s3api head-object \
+              --bucket "$R2_BUCKET" \
+              --key "mac/latest/$artifact" \
+              --query ContentLength --output text \
+              --endpoint-url "$R2_ENDPOINT")
+            remote_sha256=$(aws s3api head-object \
+              --bucket "$R2_BUCKET" \
+              --key "mac/latest/$artifact" \
+              --query 'Metadata.sha256' --output text \
+              --endpoint-url "$R2_ENDPOINT")
+            if [ "$remote_size" != "$expected_size" ] || \
+               [ "$remote_sha256" != "$expected_sha256" ]; then
+              echo "::error::Latest R2 verification failed for $artifact"
+              exit 1
+            fi
+          }
+
+          IMMUTABLE_ARTIFACTS=(
+            "Translator-${APP_VERSION}-darwin-arm64.zip.blockmap"
+            "Translator-${APP_VERSION}-darwin-x64.zip.blockmap"
+            "Translator-${APP_VERSION}-darwin-arm64.dmg.blockmap"
+            "Translator-${APP_VERSION}-darwin-x64.dmg.blockmap"
             "Translator-${APP_VERSION}-darwin-arm64.zip"
             "Translator-${APP_VERSION}-darwin-x64.zip"
             "Translator-${APP_VERSION}-darwin-arm64.dmg"
             "Translator-${APP_VERSION}-darwin-x64.dmg"
-            "Translator-arm64.dmg"
-            "Translator-x64.dmg"
           )
-          for artifact in "${LARGE_ARTIFACTS[@]}"; do
-            echo "Uploading $artifact (single PUT)"
-            aws s3 cp "latest/$artifact" "s3://${R2_BUCKET}/mac/latest/$artifact" \
-              --no-progress --no-multipart --endpoint-url "${R2_ENDPOINT}" || {
-              echo "Multipart fallback for $artifact (reduced concurrency)"
-              AWS_MAX_CONCURRENCY=2 AWS_S3_MULTI_PART_CHUNK_SIZE=64MB \
-                aws s3 cp "latest/$artifact" "s3://${R2_BUCKET}/mac/latest/$artifact" \
-                --no-progress --endpoint-url "${R2_ENDPOINT}"
-            }
+          for artifact in "${IMMUTABLE_ARTIFACTS[@]}"; do
+            upload_latest_object "$artifact" \
+              "public, max-age=31536000, immutable"
           done
 
-          # Fail the release if the public feed references an object that the
-          # canonical latest path cannot serve.
+          # Do not publish the new manifest until every referenced object is
+          # independently reachable from the canonical public path.
           for artifact in \
             "Translator-${APP_VERSION}-darwin-arm64.zip" \
             "Translator-${APP_VERSION}-darwin-x64.zip" \
             "Translator-${APP_VERSION}-darwin-arm64.dmg" \
-            "Translator-${APP_VERSION}-darwin-x64.dmg"; do
-            curl --fail --silent --show-error --head \
-              "https://downloads.stage5.tools/mac/latest/$artifact" >/dev/null
+            "Translator-${APP_VERSION}-darwin-x64.dmg" \
+            "Translator-${APP_VERSION}-darwin-arm64.zip.blockmap" \
+            "Translator-${APP_VERSION}-darwin-x64.zip.blockmap" \
+            "Translator-${APP_VERSION}-darwin-arm64.dmg.blockmap" \
+            "Translator-${APP_VERSION}-darwin-x64.dmg.blockmap"; do
+            expected_size=$(stat -f '%z' "latest/$artifact")
+            remote_size=$(curl --fail --silent --show-error --location --head \
+              "https://downloads.stage5.tools/mac/latest/$artifact?run=${GITHUB_RUN_ID}" | \
+              sed -n 's/^[Cc]ontent-[Ll]ength:[[:space:]]*//p' | \
+              tr -d '\r' | tail -n 1)
+            if [ "$remote_size" != "$expected_size" ]; then
+              echo "::error::Public R2 artifact size mismatch for $artifact (expected $expected_size, got ${remote_size:-missing})"
+              exit 1
+            fi
+          done
+
+          upload_latest_object "latest-mac.yml" \
+            "no-cache, no-store, must-revalidate"
+
+          public_manifest=$(mktemp)
+          trap 'rm -f "$public_manifest"' EXIT
+          curl --fail --silent --show-error \
+            "https://downloads.stage5.tools/mac/latest/latest-mac.yml?run=${GITHUB_RUN_ID}" \
+            --output "$public_manifest"
+          if ! cmp -s latest/latest-mac.yml "$public_manifest"; then
+            echo "::error::The public latest-mac.yml does not match the promoted release manifest."
+            exit 1
+          fi
+
+          # Stable website aliases are independent final pointers. Updating
+          # them after the verified updater manifest means any earlier failure
+          # leaves both active channels on the previous release.
+          for artifact in "Translator-arm64.dmg" "Translator-x64.dmg"; do
+            upload_latest_object "$artifact" \
+              "no-cache, no-store, must-revalidate"
+            expected_size=$(stat -f '%z' "latest/$artifact")
+            remote_size=$(curl --fail --silent --show-error --location --head \
+              "https://downloads.stage5.tools/mac/latest/$artifact?run=${GITHUB_RUN_ID}" | \
+              sed -n 's/^[Cc]ontent-[Ll]ength:[[:space:]]*//p' | \
+              tr -d '\r' | tail -n 1)
+            if [ "$remote_size" != "$expected_size" ]; then
+              echo "::error::Public R2 alias size mismatch for $artifact (expected $expected_size, got ${remote_size:-missing})"
+              exit 1
+            fi
           done
 
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          TITLE=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
-          gh release edit "$GITHUB_REF_NAME" \
-            --draft=false \
-            --latest \
-            --title "$TITLE" \
-            --notes-file /tmp/release-notes.md
-
-      - name: Upload and verify GitHub auto-updater assets
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         run: |
           set -euo pipefail
 
-          APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
-          ASSETS=(
-            "dist/Translator-${APP_VERSION}-darwin-arm64.zip"
-            "dist/Translator-${APP_VERSION}-darwin-arm64.zip.blockmap"
-            "dist/Translator-${APP_VERSION}-darwin-x64.zip"
-            "dist/Translator-${APP_VERSION}-darwin-x64.zip.blockmap"
-            "dist/latest-mac.yml"
-          )
+          TITLE=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
+          RELEASE_ID="${{ steps.github_release.outputs.release_id }}"
+          PAYLOAD=$(mktemp)
+          RESPONSE=$(mktemp)
+          CANONICAL=$(mktemp)
+          trap 'rm -f "$PAYLOAD" "$RESPONSE" "$CANONICAL"' EXIT
 
-          for asset in "${ASSETS[@]}"; do
-            if [ ! -f "$asset" ]; then
-              echo "::error::Required auto-updater asset is missing: $asset"
-              exit 1
-            fi
-          done
+          jq -n \
+            --arg name "$TITLE" \
+            --rawfile body /tmp/release-notes.md \
+            '{name: $name, body: $body, draft: false, prerelease: false, make_latest: "true"}' \
+            > "$PAYLOAD"
 
-          # electron-builder can finish successfully even when a large GitHub
-          # release upload is incomplete. Upload the updater payloads explicitly.
-          gh release upload "$GITHUB_REF_NAME" "${ASSETS[@]}" --clobber
+          gh api --method PATCH \
+            "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
+            --input "$PAYLOAD" > "$RESPONSE"
 
-          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" \
-            > /tmp/github-release.json
+          if ! jq -e \
+            --argjson id "$RELEASE_ID" \
+            --arg tag "$GITHUB_REF_NAME" \
+            --arg name "$TITLE" \
+            --rawfile body /tmp/release-notes.md \
+            '.id == $id and .tag_name == $tag and .draft == false and
+             .prerelease == false and .name == $name and .body == $body and
+             .published_at != null' \
+            "$RESPONSE" >/dev/null; then
+            echo "::error::GitHub did not publish the verified draft release exactly as requested."
+            exit 1
+          fi
 
-          for asset in "${ASSETS[@]}"; do
-            name=$(basename "$asset")
-            expected_size=$(stat -f '%z' "$asset")
-            uploaded_size=$(jq -r --arg name "$name" \
-              '.assets[] | select(.name == $name) | .size' \
-              /tmp/github-release.json)
+          # Re-hash the public release by exact ID after the state transition;
+          # do not rely on the earlier draft verification remaining unchanged.
+          scripts/upload-github-mac-release-assets.sh \
+            --verify-only "$RELEASE_ID" false
 
-            if [ -z "$uploaded_size" ] || [ "$uploaded_size" = "null" ]; then
-              echo "::error::GitHub release asset is missing after upload: $name"
-              exit 1
-            fi
-
-            if [ "$uploaded_size" != "$expected_size" ]; then
-              echo "::error::GitHub release asset size mismatch for $name (expected $expected_size, got $uploaded_size)"
-              exit 1
-            fi
-
-            echo "Verified $name ($uploaded_size bytes)"
-          done
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" \
+            > "$CANONICAL"
+          if [ "$(jq -r '.id' "$CANONICAL")" != "$RELEASE_ID" ] || \
+             [ "$(jq -r '.draft' "$CANONICAL")" != "false" ]; then
+            echo "::error::The canonical GitHub tag endpoint does not expose the verified release."
+            exit 1
+          fi

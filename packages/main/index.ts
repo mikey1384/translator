@@ -149,7 +149,15 @@ import { SerializedLatestState } from './utils/serialized-latest-state.js';
 import { isPathInsideAllowedDirectories } from './utils/path-containment.js';
 
 const requestOwnershipFailureExit = createIdempotentShutdownRequest(
-  (exitCode: number) => app.exit(exitCode)
+  (exitCode: number) => {
+    try {
+      app.exit(exitCode);
+    } catch {
+      // This is the one terminal request. If Electron cannot honor it, use the
+      // direct process boundary instead of retrying through failed output.
+      nodeProcess.exit(exitCode);
+    }
+  }
 );
 
 const outputChannelFailureGuard = installOutputChannelFailureGuard({

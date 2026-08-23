@@ -97,14 +97,24 @@ function Confirm-ArtifactPaths {
 $repo = Get-RepoRoot
 Set-Location -LiteralPath $repo
 $exitCode = 0
+$releaseMutex = $null
+
+$releaseIdentityScript = Join-Path -Path $repo -ChildPath 'scripts\assert-windows-release-identity.ps1'
 
 try {
+  if (-not (Test-Path -LiteralPath $releaseIdentityScript)) {
+    throw "Release identity preflight not found: $releaseIdentityScript"
+  }
+  . $releaseIdentityScript
+  $releaseMutex = Enter-WindowsReleaseMutex
+
   Write-Stage 'Preflight checks'
   Ensure-Tool -tool 'npm' -hint 'Install Node.js / npm.'
   Ensure-Tool -tool 'rclone' -hint 'Install rclone and configure your R2 remote (e.g., r2-upload).'
 
   $version = Get-AppVersion
   Write-Host "Version: $version"
+  Assert-WindowsReleaseIdentity -Version $version -RepoRoot $repo
 
   if (-not $SkipBuild) {
     Write-Stage 'Building & signing (npm run package:win)'
@@ -117,6 +127,12 @@ try {
   }
   
   Confirm-ArtifactPaths -version $version
+
+  Write-Stage 'Validating packaged Windows payload'
+  & cmd.exe /d /s /c 'scripts\test-windows-package.bat --no-launch'
+  if ($LASTEXITCODE -ne 0) {
+    throw "Windows package validation failed with exit code $LASTEXITCODE."
+  }
 
   Write-Stage 'Uploading to Cloudflare R2'
   $uploadParams = @{
@@ -151,6 +167,10 @@ try {
 } catch {
   $exitCode = 1
   Write-Host ("ERROR: " + $_.Exception.Message) -ForegroundColor Red
+} finally {
+  if ($null -ne $releaseMutex) {
+    Exit-WindowsReleaseMutex -Mutex $releaseMutex
+  }
 }
 
 # Pause once for direct interactive launches. The .bat wrapper supplies

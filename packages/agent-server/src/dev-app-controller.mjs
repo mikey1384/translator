@@ -9,23 +9,14 @@ const packageDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(packageDirectory, '../../..');
 const appDirectory = path.join(repoRoot, 'packages', 'main');
 const electronExecutable =
-  process.platform === 'darwin'
-    ? path.join(
-        repoRoot,
-        'node_modules',
-        'electron',
-        'dist',
-        'Electron.app',
-        'Contents',
-        'MacOS',
-        'Electron'
-      )
+  process.platform === 'win32'
+    ? path.join(repoRoot, 'node_modules', 'electron', 'dist', 'electron.exe')
     : path.join(
         repoRoot,
-        'node_modules',
-        'electron',
-        'dist',
-        process.platform === 'win32' ? 'electron.exe' : 'electron'
+        'packages',
+        'agent-server',
+        'bin',
+        'translator-dev-electron'
       );
 const CONTROLLER_SIGNALS = ['SIGINT', 'SIGTERM', 'SIGHUP'];
 

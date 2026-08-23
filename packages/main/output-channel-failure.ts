@@ -31,15 +31,8 @@ export function createIdempotentShutdownRequest<T>(
   return value => {
     if (requested) return false;
     requested = true;
-    try {
-      requestShutdown(value);
-      return true;
-    } catch (error) {
-      // A synchronous failure did not initiate shutdown, so a later exact
-      // terminal event must still be allowed to retry it.
-      requested = false;
-      throw error;
-    }
+    requestShutdown(value);
+    return true;
   };
 }
 
@@ -78,14 +71,10 @@ export function installOutputChannelFailureGuard({
     shutdownRequested = true;
     try {
       const shutdownResult = requestShutdown(error);
-      void Promise.resolve(shutdownResult).catch(() => {
-        // A rejected request did not establish shutdown. Keep the failed
-        // output muted, but let a later exact EPIPE retry the terminal action.
-        shutdownRequested = false;
-      });
+      void Promise.resolve(shutdownResult).catch(() => {});
     } catch {
-      // A synchronous failure likewise leaves a later EPIPE eligible to retry.
-      shutdownRequested = false;
+      // The failed output remains contained. The terminal callback is never
+      // re-entered through a later queued EPIPE.
     }
   };
 

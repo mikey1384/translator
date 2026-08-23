@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { PUPPETEER_REVISIONS } from 'puppeteer-core/internal/revisions.js';
+import { PUPPETEER_REVISIONS } from 'puppeteer-core/lib/puppeteer/revisions.js';
 
 export function resolvePuppeteerHeadlessRevision() {
   const revision = PUPPETEER_REVISIONS['chrome-headless-shell'];

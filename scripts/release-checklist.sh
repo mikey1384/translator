@@ -16,8 +16,8 @@ npm test
 npm run security:dependencies
 
 echo
-echo "2️⃣  Building both architectures..."
-npm run package
+echo "2️⃣  Building both architectures without publishing..."
+npm run package:mac
 
 echo
 echo "3️⃣  Verifying native module architectures..."
@@ -36,6 +36,8 @@ echo "   arch -x86_64 open dist/mac/Translator.app"
 echo "   # or: arch -x86_64 dist/mac/Translator.app/Contents/MacOS/Translator &"
 echo
 echo "5️⃣  If both launch without bouncing, you're ready to:"
-echo "   • Sign & notarize (if not automated)"
-echo "   • Push tags and upload artifacts"
-echo "   • Ship! 🚢"
+echo "   • Stage and review the exact version bump and release changes"
+echo "   • Create an annotated SemVer tag with non-empty release notes"
+echo "   • Push the approved commit and tag together"
+echo "   • Let the tag-triggered GitHub Action rebuild, sign, notarize, verify,"
+echo "     upload, and publish the release; never upload SemVer assets manually"

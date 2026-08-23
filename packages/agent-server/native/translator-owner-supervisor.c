@@ -243,12 +243,10 @@ static int validate_relationship(pid_t owner_pid, pid_t controller_pid,
   return 0;
 }
 
-static int write_ready(void) {
-  static const char ready[] = "READY\n";
+static int write_all(int descriptor, const char *bytes, size_t length) {
   size_t written = 0;
-  while (written < sizeof(ready) - 1) {
-    ssize_t count =
-        write(STDOUT_FILENO, ready + written, sizeof(ready) - 1 - written);
+  while (written < length) {
+    ssize_t count = write(descriptor, bytes + written, length - written);
     if (count > 0) {
       written += (size_t)count;
       continue;
@@ -258,6 +256,46 @@ static int write_ready(void) {
     return -1;
   }
   return 0;
+}
+
+static int write_ready_to(int descriptor) {
+  static const char ready[] = "READY\n";
+  return write_all(descriptor, ready, sizeof(ready) - 1);
+}
+
+static int write_ready(void) {
+  return write_ready_to(STDOUT_FILENO);
+}
+
+static int read_ready_from(int descriptor) {
+  static const char ready[] = "READY\n";
+  char received[sizeof(ready) - 1];
+  size_t length = 0;
+  while (length < sizeof(received)) {
+    ssize_t count = read(descriptor, received + length,
+                         sizeof(received) - length);
+    if (count > 0) {
+      length += (size_t)count;
+      continue;
+    }
+    if (count < 0 && errno == EINTR)
+      continue;
+    return -1;
+  }
+  if (memcmp(received, ready, sizeof(received)) != 0) {
+    errno = EPROTO;
+    return -1;
+  }
+  return 0;
+}
+
+static void close_application_descriptors(int preserve) {
+  /* Playwright gives Electron stdin/stdout/stderr plus two auxiliary pipes.
+   * The detached guardian must not retain any of those ownership channels. */
+  for (int descriptor = STDIN_FILENO; descriptor <= 4; descriptor += 1) {
+    if (descriptor != preserve)
+      (void)close(descriptor);
+  }
 }
 
 typedef struct {
@@ -683,6 +721,69 @@ static int run_supervisor(int owner_depth, char **command) {
   }
 }
 
+static void kill_guarded_group(const process_identity *root) {
+  if (root == NULL || root->pid <= 1)
+    return;
+  /* The guarded executable is the process-group leader created by
+   * Playwright's detached spawn. Its PID may already have exited when the
+   * process event arrives, but surviving descendants keep this exact group ID
+   * allocated until they are killed. */
+  (void)kill(-root->pid, SIGKILL);
+  kill_identity(root, 0);
+}
+
+static int run_exec_guardian(const process_identity *owner,
+                             const process_identity *root, int ready_fd) {
+  close_application_descriptors(ready_fd);
+  int queue = kqueue();
+  if (queue < 0 || register_process(queue, owner, 1) != 0 ||
+      register_process(queue, root, 2) != 0) {
+    if (queue >= 0)
+      close(queue);
+    close(ready_fd);
+    return EXIT_SETUP;
+  }
+
+  process_identity verified_owner;
+  process_identity verified_root;
+  pid_t root_parent = 0;
+  if (read_identity(owner->pid, &verified_owner, NULL) != 0 ||
+      read_identity(root->pid, &verified_root, &root_parent) != 0 ||
+      !same_identity(owner, &verified_owner) ||
+      !same_identity(root, &verified_root) || root_parent != owner->pid) {
+    close(queue);
+    close(ready_fd);
+    return EXIT_SETUP;
+  }
+
+  if (write_ready_to(ready_fd) != 0) {
+    close(queue);
+    close(ready_fd);
+    return EXIT_SETUP;
+  }
+  close(ready_fd);
+
+  for (;;) {
+    struct kevent events[4];
+    int count = kevent(queue, NULL, 0, events, 4, NULL);
+    if (count < 0 && errno == EINTR)
+      continue;
+    if (count <= 0) {
+      kill_guarded_group(root);
+      close(queue);
+      return EXIT_SETUP;
+    }
+    for (int index = 0; index < count; index += 1) {
+      intptr_t tag = (intptr_t)events[index].udata;
+      if (tag == 1 || tag == 2) {
+        kill_guarded_group(root);
+        close(queue);
+        return 0;
+      }
+    }
+  }
+}
+
 #elif defined(__linux__)
 
 static int run_watcher(pid_t owner_pid, pid_t controller_pid) {
@@ -974,13 +1075,122 @@ static int run_supervisor(int owner_depth, char **command) {
   }
 }
 
+static void kill_guarded_group(const process_identity *root) {
+  if (root == NULL || root->pid <= 1)
+    return;
+  (void)kill(-root->pid, SIGKILL);
+  kill_identity(root, 0);
+}
+
+static int run_exec_guardian(const process_identity *owner,
+                             const process_identity *root, int ready_fd) {
+  close_application_descriptors(ready_fd);
+  int owner_descriptor = open_process_descriptor(owner->pid);
+  int root_descriptor = open_process_descriptor(root->pid);
+  if (owner_descriptor < 0 || root_descriptor < 0) {
+    if (owner_descriptor >= 0)
+      close(owner_descriptor);
+    if (root_descriptor >= 0)
+      close(root_descriptor);
+    close(ready_fd);
+    return EXIT_SETUP;
+  }
+
+  process_identity verified_owner;
+  process_identity verified_root;
+  pid_t root_parent = 0;
+  if (read_identity(owner->pid, &verified_owner, NULL) != 0 ||
+      read_identity(root->pid, &verified_root, &root_parent) != 0 ||
+      !same_identity(owner, &verified_owner) ||
+      !same_identity(root, &verified_root) || root_parent != owner->pid) {
+    close(owner_descriptor);
+    close(root_descriptor);
+    close(ready_fd);
+    return EXIT_SETUP;
+  }
+
+  if (write_ready_to(ready_fd) != 0) {
+    close(owner_descriptor);
+    close(root_descriptor);
+    close(ready_fd);
+    return EXIT_SETUP;
+  }
+  close(ready_fd);
+
+  struct pollfd descriptors[2] = {
+      {owner_descriptor, POLLIN, 0},
+      {root_descriptor, POLLIN, 0},
+  };
+  for (;;) {
+    int count = poll(descriptors, 2, -1);
+    if (count < 0 && errno == EINTR)
+      continue;
+    if (count <= 0 || descriptors[0].revents != 0 ||
+        descriptors[1].revents != 0) {
+      kill_guarded_group(root);
+      close(owner_descriptor);
+      close(root_descriptor);
+      return count < 0 ? EXIT_SETUP : 0;
+    }
+  }
+}
+
 #endif
+
+static int run_guarded_exec(char **command) {
+  process_identity root;
+  process_identity owner;
+  pid_t owner_pid = 0;
+  if (read_identity(getpid(), &root, &owner_pid) != 0 || owner_pid <= 1 ||
+      read_identity(owner_pid, &owner, NULL) != 0 ||
+      identity_started_after(&owner, &root) || getpgrp() != getpid()) {
+    errno = ESRCH;
+    report_error("cannot establish guarded executable ownership");
+    return EXIT_SETUP;
+  }
+
+  int ready_pipe[2];
+  if (pipe(ready_pipe) != 0) {
+    report_error("cannot create guarded executable readiness pipe");
+    return EXIT_SETUP;
+  }
+
+  pid_t guardian_pid = fork();
+  if (guardian_pid < 0) {
+    report_error("cannot launch executable ownership guardian");
+    close(ready_pipe[0]);
+    close(ready_pipe[1]);
+    return EXIT_SETUP;
+  }
+  if (guardian_pid == 0) {
+    close(ready_pipe[0]);
+    if (setpgid(0, 0) != 0)
+      _exit(EXIT_SETUP);
+    _exit(run_exec_guardian(&owner, &root, ready_pipe[1]));
+  }
+
+  close(ready_pipe[1]);
+  int ready = read_ready_from(ready_pipe[0]);
+  int saved_errno = errno;
+  close(ready_pipe[0]);
+  errno = saved_errno;
+  if (ready != 0) {
+    (void)wait_for_child(guardian_pid);
+    report_error("executable ownership guardian did not become ready");
+    return EXIT_SETUP;
+  }
+
+  execvp(command[0], command);
+  report_error("cannot execute guarded process");
+  return 127;
+}
 
 static void usage(void) {
   static const char text[] =
       "usage: translator-owner-supervisor --watch OWNER_PID CONTROLLER_PID\n"
       "   or: translator-owner-supervisor --supervise OWNER_DEPTH -- COMMAND "
-      "[ARGS...]\n";
+      "[ARGS...]\n"
+      "   or: translator-owner-supervisor --guard-parent -- COMMAND [ARGS...]\n";
   (void)write(STDERR_FILENO, text, sizeof(text) - 1);
 }
 
@@ -1004,6 +1214,10 @@ int main(int argc, char **argv) {
       return EXIT_USAGE;
     }
     return run_supervisor(owner_depth, &argv[4]);
+  }
+  if (argc >= 4 && strcmp(argv[1], "--guard-parent") == 0 &&
+      strcmp(argv[2], "--") == 0) {
+    return run_guarded_exec(&argv[3]);
   }
   usage();
   return EXIT_USAGE;

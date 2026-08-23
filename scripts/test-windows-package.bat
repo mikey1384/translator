@@ -55,7 +55,7 @@ for %%F in (
   )
 )
 
-powershell -NoProfile -NonInteractive -Command "$paths=@('%APP_DIR%\Translator.exe','%RESOURCES%\translator-owner-supervisor.exe'); foreach($path in $paths){$signature=Get-AuthenticodeSignature -LiteralPath $path; if($signature.Status -ne 'Valid'){Write-Error ('Invalid Authenticode signature: '+$path+' ('+$signature.Status+')'); exit 1}}"
+powershell -NoProfile -NonInteractive -Command "$headless='%HEADLESS_BINARY%'; $paths=@('%APP_DIR%\Translator.exe','%RESOURCES%\translator-owner-supervisor.exe',$headless); foreach($path in $paths){$signature=Get-AuthenticodeSignature -LiteralPath $path; if($signature.Status -ne 'Valid'){Write-Error ('Invalid Authenticode signature: '+$path+' ('+$signature.Status+')'); exit 1}; if($path -ne $headless -and (-not $signature.SignerCertificate -or $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=Stage5 Tools LLC(?:,|$)')){Write-Error ('Unexpected Authenticode signer: '+$path+' ('+$signature.SignerCertificate.Subject+')'); exit 1}}"
 if errorlevel 1 set "TEST_EXIT=1"
 
 if not "!TEST_EXIT!"=="0" exit /b !TEST_EXIT!

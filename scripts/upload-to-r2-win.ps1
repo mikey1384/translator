@@ -24,6 +24,16 @@ Param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$releaseIdentityScript = Join-Path -Path $PSScriptRoot -ChildPath 'assert-windows-release-identity.ps1'
+if (-not (Test-Path -LiteralPath $releaseIdentityScript)) {
+  throw "Release identity preflight not found: $releaseIdentityScript"
+}
+. $releaseIdentityScript
+$releaseMutex = Enter-WindowsReleaseMutex
+$hashFile = $null
+
+try {
+
 function Read-PackageVersion {
   $pkgPath = Join-Path -Path (Get-Location) -ChildPath 'package.json'
   if (-not (Test-Path -LiteralPath $pkgPath)) {
@@ -344,7 +354,9 @@ function Inject-ReleaseNotesIntoLatestYaml {
 
 Write-Host "== Upload to R2 (Windows) =="
 Write-Host "Version: $Version"
-Write-Host "Force re-upload: $Force"
+if ($Force) {
+  Write-Host 'WARNING: -Force is retained for caller compatibility. It can refresh latest/ pointers but cannot overwrite immutable versioned objects.' -ForegroundColor Yellow
+}
 
 $recoveredFromLegacyShift = $false
 $legacyShiftedVersion = Normalize-Version -raw $SrcPath
@@ -365,6 +377,7 @@ if (-not $resolvedVersion) {
   Write-Host "WARNING: Invalid -Version '$Version'. Falling back to package.json version '$resolvedVersion'." -ForegroundColor Yellow
 }
 $Version = $resolvedVersion
+Assert-WindowsReleaseIdentity -Version $Version
 
 $srcPathProvided = (-not $recoveredFromLegacyShift) -and $PSBoundParameters.ContainsKey('SrcPath') -and -not [string]::IsNullOrWhiteSpace($SrcPath)
 if (-not $srcPathProvided) {
@@ -434,7 +447,7 @@ if ($null -ne $blockmap) {
 
 # Compute SHA256 and write checksum file
 $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $src).Hash
-$hashFile = Join-Path $env:TEMP 'Translator-x64.exe.sha256'
+$hashFile = Join-Path $env:TEMP ("Translator-x64-" + [Guid]::NewGuid().ToString('N') + '.exe.sha256')
 "$hash  Translator-x64.exe" | Out-File -FilePath $hashFile -Encoding ascii -Force
 Write-Host "Checksum: $hash"
 Write-Host "Checksum file: $hashFile"
@@ -459,7 +472,7 @@ $destVersionYaml = "$BucketBase/$Version/latest.yml"
 
 # Blockmap destinations (match the installerFileName + .blockmap)
 if ($null -ne $blockmap) {
-  $blockmapFileName = "$installerFileName.blockmap"
+  $blockmapFileName = "$installerHyphen.blockmap"
   $destBlockmapLatest  = "$BucketBase/latest/$blockmapFileName"
   $destBlockmapVersion = "$BucketBase/$Version/$blockmapFileName"
 }
@@ -470,14 +483,9 @@ function Invoke-RcloneCopyTo {
     [string]$to
   )
   Write-Host "rclone copyto -> $to"
-  $rcloneArgs = @('copyto', '--progress', '--transfers', '4', '--retries', '3', '--retries-sleep', '2s')
-  if ($Force) {
-    # Force transfer even if size and times match
-    $rcloneArgs += '--ignore-times'
-  } else {
-    # Fast path: skip if same size
-    $rcloneArgs += '--size-only'
-  }
+  # A same-size binary can still differ byte-for-byte on a rebuilt release.
+  # Always transfer the selected artifact; exact remote verification follows.
+  $rcloneArgs = @('copyto', '--progress', '--transfers', '4', '--retries', '3', '--retries-sleep', '2s', '--ignore-times')
   & rclone @rcloneArgs -- $from $to
   if ($LASTEXITCODE -ne 0) {
     throw "rclone copyto failed with exit code $LASTEXITCODE: $to"
@@ -490,7 +498,7 @@ function Invoke-RcloneCopyRemote {
     [string]$toRemote
   )
   Write-Host "rclone (remote->remote) copyto -> $toRemote"
-  $rcloneArgs = @('copyto', '--retries', '3', '--retries-sleep', '2s')
+  $rcloneArgs = @('copyto', '--retries', '3', '--retries-sleep', '2s', '--ignore-times')
   & rclone @rcloneArgs -- $fromRemote $toRemote
   if ($LASTEXITCODE -ne 0) {
     throw "rclone remote copyto failed with exit code $LASTEXITCODE: $toRemote"
@@ -510,29 +518,99 @@ function Invoke-RcloneCopyAlways {
   }
 }
 
-# Upload canonical installer to latest (hyphenated name matches latest.yml)
+function Invoke-RcloneCopyImmutable {
+  param(
+    [string]$from,
+    [string]$to
+  )
+  Write-Host "rclone copyto (immutable) -> $to"
+  $rcloneArgs = @('copyto', '--immutable', '--progress', '--transfers', '4', '--retries', '3', '--retries-sleep', '2s')
+  & rclone @rcloneArgs -- $from $to
+  if ($LASTEXITCODE -ne 0) {
+    throw "rclone immutable copyto failed with exit code ${LASTEXITCODE}: $to"
+  }
+}
+
+function Invoke-RcloneCopyRemoteImmutable {
+  param(
+    [string]$fromRemote,
+    [string]$toRemote
+  )
+  Write-Host "rclone (remote->remote immutable) copyto -> $toRemote"
+  $rcloneArgs = @('copyto', '--immutable', '--retries', '3', '--retries-sleep', '2s')
+  & rclone @rcloneArgs -- $fromRemote $toRemote
+  if ($LASTEXITCODE -ne 0) {
+    throw "rclone immutable remote copyto failed with exit code ${LASTEXITCODE}: $toRemote"
+  }
+}
+
+function Assert-RemoteMatchesLocal {
+  param(
+    [string]$localPath,
+    [string]$remotePath
+  )
+
+  $verificationPath = Join-Path $env:TEMP ("translator-r2-verify-" + [Guid]::NewGuid().ToString('N'))
+  try {
+    & rclone copyto --retries 3 --retries-sleep 2s -- $remotePath $verificationPath
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to download remote object for verification: $remotePath"
+    }
+
+    $localItem = Get-Item -LiteralPath $localPath
+    $remoteItem = Get-Item -LiteralPath $verificationPath
+    if ($localItem.Length -ne $remoteItem.Length) {
+      throw "Remote size mismatch for ${remotePath}: expected $($localItem.Length), got $($remoteItem.Length)."
+    }
+
+    $localHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $localPath).Hash
+    $remoteHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $verificationPath).Hash
+    if ($localHash -cne $remoteHash) {
+      throw "Remote SHA256 mismatch for $remotePath."
+    }
+    Write-Host "Verified remote SHA256: $remotePath"
+  } finally {
+    if (Test-Path -LiteralPath $verificationPath) {
+      Remove-Item -LiteralPath $verificationPath -Force
+    }
+  }
+}
+
+# Upload and verify immutable versioned objects first.
+Invoke-RcloneCopyImmutable -from $src -to $destHyphenVersion
+Invoke-RcloneCopyRemoteImmutable -fromRemote $destHyphenVersion -toRemote $destVersion
+Invoke-RcloneCopyImmutable -from $hashFile -to $destVersionSha
+if ($null -ne $blockmap) {
+  Invoke-RcloneCopyImmutable -from $blockmap -to $destBlockmapVersion
+}
+Invoke-RcloneCopyImmutable -from $latestYaml -to $destVersionYaml
+
+Assert-RemoteMatchesLocal -localPath $src -remotePath $destHyphenVersion
+Assert-RemoteMatchesLocal -localPath $src -remotePath $destVersion
+Assert-RemoteMatchesLocal -localPath $hashFile -remotePath $destVersionSha
+if ($null -ne $blockmap) {
+  Assert-RemoteMatchesLocal -localPath $blockmap -remotePath $destBlockmapVersion
+}
+Assert-RemoteMatchesLocal -localPath $latestYaml -remotePath $destVersionYaml
+
+# Stage every latest/ payload before switching its updater manifest.
 Invoke-RcloneCopyTo -from $src -to $destHyphenLatest
-
-# Also upload directly to the versioned canonical path to guarantee folder presence
-Invoke-RcloneCopyTo -from $src -to $destHyphenVersion
-
-# Server-side copy canonical -> stable aliases (latest and versioned)
 Invoke-RcloneCopyRemote -fromRemote $destHyphenLatest -toRemote $destLatest
-Invoke-RcloneCopyRemote -fromRemote $destHyphenVersion -toRemote $destVersion
-
-# Upload checksum files (always overwrite small metadata)
-Invoke-RcloneCopyAlways -from $hashFile -to $destVersionSha
 Invoke-RcloneCopyAlways -from $hashFile -to $destLatestSha
-
-# Upload latest.yml to latest (always overwrite), and also write a copy to versioned
-Invoke-RcloneCopyAlways -from $latestYaml -to $destLatestYaml
-Invoke-RcloneCopyAlways -from $latestYaml -to $destVersionYaml
-
-# Upload blockmap if present (place next to canonical and ensure versioned copy exists)
 if ($null -ne $blockmap) {
   Invoke-RcloneCopyTo -from $blockmap -to $destBlockmapLatest
-  Invoke-RcloneCopyTo -from $blockmap -to $destBlockmapVersion
 }
+
+Assert-RemoteMatchesLocal -localPath $src -remotePath $destHyphenLatest
+Assert-RemoteMatchesLocal -localPath $src -remotePath $destLatest
+Assert-RemoteMatchesLocal -localPath $hashFile -remotePath $destLatestSha
+if ($null -ne $blockmap) {
+  Assert-RemoteMatchesLocal -localPath $blockmap -remotePath $destBlockmapLatest
+}
+
+# latest.yml is the final pointer switch and is verified byte-for-byte.
+Invoke-RcloneCopyAlways -from $latestYaml -to $destLatestYaml
+Assert-RemoteMatchesLocal -localPath $latestYaml -remotePath $destLatestYaml
 
 Write-Host "Uploads complete."
 
@@ -544,13 +622,9 @@ Write-Host "latest.yml: $destLatestYaml"
 if ($null -ne $blockmap) {
   Write-Host "blockmap: $destBlockmapLatest"
 }
-
-# Quick verify listing (best-effort)
-try {
-  Write-Host "--- Verify listing: latest/ ---"
-  & rclone lsf "$BucketBase/latest" | Out-Host
-} catch {}
-try {
-  Write-Host "--- Verify listing: $Version/ ---"
-  & rclone lsf "$BucketBase/$Version" | Out-Host
-} catch {}
+} finally {
+  if ($hashFile -and (Test-Path -LiteralPath $hashFile)) {
+    Remove-Item -LiteralPath $hashFile -Force
+  }
+  Exit-WindowsReleaseMutex -Mutex $releaseMutex
+}

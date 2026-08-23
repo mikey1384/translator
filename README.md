@@ -89,13 +89,14 @@ npm run agent:test
 npm run agent:mcp
 ```
 
-The repository MCP configuration launches the native owner supervisor as the
-direct client child, with the controller and every process it launches in the
-supervised process group. This covers owner loss even before Playwright returns
-the Electron process handle and independently of stdio EOF. An inner exact
-process monitor then tracks the launched Electron root. Controller shutdown is
-idempotent: explicit quit allows one 10-second Playwright grace period, while
-ownership loss takes the independent force path immediately.
+The repository MCP configuration launches the controller through the native
+owner supervisor. Playwright's detached Electron spawn enters an exact native
+launch wrapper, which arms a parent guardian before exec and retains Electron's
+process-group identity. This covers owner loss before Playwright returns the
+Electron handle and independently of stdio EOF. An inner exact process monitor
+then tracks the same root. Controller shutdown is idempotent: explicit quit
+allows one 10-second Playwright grace period, while ownership loss takes the
+independent force path immediately.
 
 ### Production/Installed App
 

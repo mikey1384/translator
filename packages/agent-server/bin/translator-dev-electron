@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+launcher_dir=$(CDPATH= cd -P "$(dirname "$0")" && pwd)
+repo_root=$(CDPATH= cd -P "$launcher_dir/../../.." && pwd)
+
+case "$(uname -s)" in
+  Darwin)
+    electron_executable="$repo_root/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+    ;;
+  Linux)
+    electron_executable="$repo_root/node_modules/electron/dist/electron"
+    ;;
+  *)
+    echo "translator-dev-electron: unsupported platform" >&2
+    exit 70
+    ;;
+esac
+
+exec "$launcher_dir/translator-owner-supervisor" \
+  --guard-parent -- \
+  "$electron_executable" "$@"
