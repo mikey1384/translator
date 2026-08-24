@@ -31,6 +31,20 @@ import {
 } from './packaged-agent-protocol.mjs';
 import { getPackagedSocketDiscoveryCandidates } from './packaged-socket-path.mjs';
 import { PACKAGED_TOOL_MAP as TOOL_MAP } from './packaged-tool-map.mjs';
+import { PersistentJobStore } from './job-store.mjs';
+import {
+  MCP_SERVER_NAMES,
+  MCP_SERVER_VERSION,
+  MCP_V2_PROTOCOL_VERSION,
+  MCP_V2_TOOL_DEFINITIONS,
+  MCP_V2_TOOL_NAMES,
+} from './mcp-v2-contract.mjs';
+import {
+  McpV2Service,
+  legacyToolDescription,
+  legacyResultContext,
+  legacyToolBilling,
+} from './mcp-v2-service.mjs';
 import {
   installTransportBoundLifecycle,
   shouldForceDevelopmentShutdown,
@@ -51,6 +65,42 @@ let workspaceRouteInstanceToken = null;
 const ownerMonitor = createNativeOwnerMonitor({
   onOwnershipLost: reason => requestLifecycleShutdown(reason, 1),
 });
+
+class TranslatorCallError extends Error {
+  constructor(message, { rpcCode = null, deliveryState = null } = {}) {
+    super(message);
+    this.name = 'TranslatorCallError';
+    this.rpcCode = rpcCode;
+    this.deliveryState = deliveryState;
+    this.code =
+      deliveryState === 'unknown'
+        ? 'APP_DELIVERY_UNKNOWN'
+        : deliveryState === 'not_delivered'
+          ? 'APP_NOT_DELIVERED'
+          : deliveryState === 'rejected'
+            ? 'APP_REQUEST_REJECTED'
+            : 'APP_CALL_FAILED';
+  }
+}
+
+function remoteTranslatorError(payload) {
+  return new TranslatorCallError(
+    payload?.message ||
+      JSON.stringify(payload || { message: 'Translator request failed.' }),
+    {
+      rpcCode: Number.isFinite(payload?.code) ? payload.code : null,
+      deliveryState: ['not_delivered', 'rejected', 'unknown'].includes(
+        payload?.data?.deliveryState
+      )
+        ? payload.data.deliveryState
+        : null,
+    }
+  );
+}
+
+function deliveryUnknownError(message) {
+  return new TranslatorCallError(message, { deliveryState: 'unknown' });
+}
 
 function rejectPendingRequests(error) {
   for (const pending of pendingRequests.values()) {
@@ -75,7 +125,36 @@ function releaseTranslatorSocket() {
 }
 
 // Safe tools list (excludes checkout and settings/key mutation)
-const SAFE_TOOLS = Object.keys(TOOL_MAP);
+const SAFE_TOOLS = [
+  ...new Set([...Object.keys(TOOL_MAP), ...MCP_V2_TOOL_NAMES]),
+];
+let jobStore = null;
+let v2Service = null;
+
+function initializePersistentServices() {
+  if (v2Service) return v2Service;
+  jobStore = new PersistentJobStore({ environment: 'production' });
+  v2Service = new McpV2Service({
+    environment: 'production',
+    store: jobStore,
+    callApp: (method, params) => callTranslatorMethod(method, params),
+  });
+  return v2Service;
+}
+
+async function packagedLegacyContext() {
+  try {
+    return await initializePersistentServices().appContext();
+  } catch (error) {
+    return {
+      connected: false,
+      version: null,
+      stage5: { account: null, credits: null },
+      providers: {},
+      connection_error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
 
 // JSON Schemas for each tool (hand-written from mcp.mjs, zero npm deps)
 export const TOOL_SCHEMAS = {
@@ -429,6 +508,7 @@ export const TOOL_SCHEMAS = {
     type: 'object',
     properties: {
       history_id: { type: 'string', minLength: 1, maxLength: 512 },
+      operation_id: { type: 'string', minLength: 1, maxLength: 200 },
     },
     additionalProperties: false,
   },
@@ -436,6 +516,7 @@ export const TOOL_SCHEMAS = {
     type: 'object',
     properties: {
       history_id: { type: 'string', minLength: 1, maxLength: 512 },
+      operation_id: { type: 'string', minLength: 1, maxLength: 200 },
     },
     additionalProperties: false,
   },
@@ -602,31 +683,72 @@ export const TOOL_SCHEMAS = {
   },
 };
 
+const V2_TOOL_SCHEMAS = Object.fromEntries(
+  Object.entries(MCP_V2_TOOL_DEFINITIONS).map(([name, definition]) => [
+    name,
+    definition.inputSchema,
+  ])
+);
+
 function getSocketDiscoveries() {
   return getPackagedSocketDiscoveryCandidates();
 }
 
+function rejectMalformedTranslatorResponse(message) {
+  const malformedSocket = socket;
+  socket = null;
+  rejectPendingRequests(deliveryUnknownError(message));
+  malformedSocket?.destroy();
+}
+
 function handleTranslatorResponseLine(line) {
   if (!line.trim()) return;
+  let response;
   try {
-    const response = JSON.parse(line);
-    if (
-      response.id !== undefined &&
-      response.id !== null &&
-      pendingRequests.has(response.id)
-    ) {
-      const pending = pendingRequests.get(response.id);
-      pendingRequests.delete(response.id);
-      if (response.error) {
-        pending.reject(
-          new Error(response.error.message || JSON.stringify(response.error))
-        );
-      } else {
-        pending.resolve(response.result);
-      }
-    }
+    response = JSON.parse(line);
   } catch {
-    // A malformed app response cannot be reported as a valid MCP response.
+    rejectMalformedTranslatorResponse(
+      'Translator returned malformed JSON; in-flight request delivery is unknown.'
+    );
+    return;
+  }
+  const hasResult =
+    response &&
+    typeof response === 'object' &&
+    Object.hasOwn(response, 'result');
+  const hasError =
+    response &&
+    typeof response === 'object' &&
+    Object.hasOwn(response, 'error');
+  const validId =
+    response?.id === null ||
+    typeof response?.id === 'string' ||
+    (typeof response?.id === 'number' && Number.isFinite(response.id));
+  if (
+    !response ||
+    typeof response !== 'object' ||
+    Array.isArray(response) ||
+    response.jsonrpc !== '2.0' ||
+    !validId ||
+    hasResult === hasError ||
+    (hasError &&
+      (!response.error ||
+        typeof response.error !== 'object' ||
+        Array.isArray(response.error)))
+  ) {
+    rejectMalformedTranslatorResponse(
+      'Translator returned an invalid JSON-RPC response; in-flight request delivery is unknown.'
+    );
+    return;
+  }
+  if (response.id !== null && pendingRequests.has(response.id)) {
+    const pending = pendingRequests.get(response.id);
+    pendingRequests.delete(response.id);
+    if (hasError) {
+      pending.reject(remoteTranslatorError(response.error));
+    } else {
+      pending.resolve(response.result);
+    }
   }
 }
 
@@ -772,7 +894,15 @@ function connectTranslatorSocket(discovery) {
     candidateSocket.once('error', error => {
       if (socket === candidateSocket) {
         socket = null;
-        if (!shuttingDown) rejectPendingRequests(error);
+        if (!shuttingDown) {
+          rejectPendingRequests(
+            authenticated
+              ? deliveryUnknownError(
+                  `Translator connection failed with requests in flight: ${error.message}`
+                )
+              : error
+          );
+        }
       }
       if (!authenticated) rejectOnce(error);
     });
@@ -783,7 +913,11 @@ function connectTranslatorSocket(discovery) {
         socket = null;
         if (!shuttingDown) {
           console.error('[packaged-mcp] Connection closed');
-          rejectPendingRequests(new Error('Translator connection closed.'));
+          rejectPendingRequests(
+            deliveryUnknownError(
+              'Translator connection closed with requests in flight.'
+            )
+          );
         }
       }
       if (!authenticated) {
@@ -860,7 +994,11 @@ async function callTranslatorMethod(method, params) {
       const pending = pendingRequests.get(id);
       if (!pending) return;
       pendingRequests.delete(id);
-      pending.reject(new Error(`Timeout calling ${method}`));
+      pending.reject(
+        deliveryUnknownError(
+          `Translator did not acknowledge ${method} before the app-call deadline.`
+        )
+      );
     }, 120000);
 
     let released = false;
@@ -890,13 +1028,21 @@ async function callTranslatorMethod(method, params) {
           const pending = pendingRequests.get(id);
           if (!pending) return;
           pendingRequests.delete(id);
-          pending.reject(error);
+          pending.reject(
+            deliveryUnknownError(
+              `Translator request delivery became unknown: ${error.message}`
+            )
+          );
         }
       );
     } catch (error) {
       const pending = pendingRequests.get(id);
       pendingRequests.delete(id);
-      pending?.reject(error);
+      pending?.reject(
+        deliveryUnknownError(
+          `Translator request delivery became unknown: ${error instanceof Error ? error.message : String(error)}`
+        )
+      );
     }
   });
 }
@@ -1068,7 +1214,10 @@ async function handleMessage(msg) {
         result: {
           protocolVersion: '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'translator-packaged-mcp', version: '1.0.0' },
+          serverInfo: {
+            name: MCP_SERVER_NAMES.production,
+            version: MCP_SERVER_VERSION,
+          },
         },
       });
       return;
@@ -1080,11 +1229,16 @@ async function handleMessage(msg) {
     }
 
     if (method === 'tools/list') {
-      const tools = SAFE_TOOLS.map(name => ({
-        name,
-        description: `Translator: ${TOOL_MAP[name]}`,
-        inputSchema: TOOL_SCHEMAS[name],
-      }));
+      const tools = SAFE_TOOLS.map(name => {
+        const v2 = MCP_V2_TOOL_DEFINITIONS[name];
+        return {
+          name,
+          description:
+            v2?.description ||
+            legacyToolDescription(name, `Translator: ${TOOL_MAP[name]}`),
+          inputSchema: v2?.inputSchema || TOOL_SCHEMAS[name],
+        };
+      });
       writeMessage({ jsonrpc: '2.0', id, result: { tools } });
       return;
     }
@@ -1102,7 +1256,8 @@ async function handleMessage(msg) {
 
       if (
         typeof toolName !== 'string' ||
-        !Object.hasOwn(TOOL_MAP, toolName) ||
+        (!Object.hasOwn(TOOL_MAP, toolName) &&
+          !Object.hasOwn(MCP_V2_TOOL_DEFINITIONS, toolName)) ||
         (toolArgs !== undefined &&
           (!toolArgs ||
             typeof toolArgs !== 'object' ||
@@ -1118,7 +1273,10 @@ async function handleMessage(msg) {
 
       let parsedArgs;
       try {
-        parsedArgs = parseToolArguments(TOOL_SCHEMAS[toolName], toolArgs);
+        parsedArgs = parseToolArguments(
+          V2_TOOL_SCHEMAS[toolName] || TOOL_SCHEMAS[toolName],
+          toolArgs
+        );
       } catch (error) {
         writeMessage({
           jsonrpc: '2.0',
@@ -1132,10 +1290,56 @@ async function handleMessage(msg) {
         return;
       }
 
+      if (Object.hasOwn(MCP_V2_TOOL_DEFINITIONS, toolName)) {
+        const execution = await initializePersistentServices().execute(
+          toolName,
+          parsedArgs
+        );
+        writeMessage({
+          jsonrpc: '2.0',
+          id,
+          result: {
+            content: [
+              { type: 'text', text: JSON.stringify(execution.value, null, 2) },
+            ],
+            structuredContent: execution.value,
+            ...(execution.isError ? { isError: true } : {}),
+          },
+        });
+        return;
+      }
+
       const translatorMethod = TOOL_MAP[toolName];
       const mappedArgs = mapFields(parsedArgs);
-
-      const result = await callTranslatorMethod(translatorMethod, mappedArgs);
+      let result;
+      let toolError = null;
+      try {
+        result = await callTranslatorMethod(translatorMethod, mappedArgs);
+      } catch (error) {
+        toolError = error;
+      }
+      const context = await packagedLegacyContext();
+      const metadata = legacyResultContext(
+        'production',
+        context,
+        toolName,
+        legacyToolBilling(toolName, parsedArgs, context)
+      );
+      const decorated = toolError
+        ? {
+            error: {
+              code: toolError?.code || 'LEGACY_TOOL_FAILED',
+              message:
+                toolError instanceof Error
+                  ? toolError.message
+                  : String(toolError),
+              delivery_state: toolError?.deliveryState || null,
+            },
+            _mcp: metadata,
+          }
+        : result && typeof result === 'object' && !Array.isArray(result)
+          ? { ...result, _mcp: metadata }
+          : { value: result ?? null, _mcp: metadata };
 
       writeMessage({
         jsonrpc: '2.0',
@@ -1144,12 +1348,11 @@ async function handleMessage(msg) {
           content: [
             {
               type: 'text',
-              text:
-                typeof result === 'string'
-                  ? result
-                  : JSON.stringify(result, null, 2),
+              text: JSON.stringify(decorated, null, 2),
             },
           ],
+          structuredContent: decorated,
+          ...(toolError ? { isError: true } : {}),
         },
       });
       return;
@@ -1177,12 +1380,31 @@ async function closePackagedResources() {
   if (shuttingDown) return;
   shuttingDown = true;
 
+  const service = v2Service;
+  service?.prepareForShutdown('packaged_mcp_transport_shutdown');
+
   const activeSocket = socket;
   socket = null;
   activeSocket?.destroy();
 
-  const disconnectError = new Error('MCP transport disconnected.');
+  const disconnectError = deliveryUnknownError(
+    'MCP transport disconnected with Translator requests in flight.'
+  );
   rejectPendingRequests(disconnectError);
+  try {
+    await service?.close('packaged_mcp_transport_shutdown');
+  } catch {
+    // The ownership lease may already be closed by a concurrent shutdown.
+  } finally {
+    v2Service = null;
+  }
+  try {
+    jobStore?.close();
+  } catch {
+    // SQLite may already be closed by a concurrent shutdown.
+  } finally {
+    jobStore = null;
+  }
 }
 
 async function main() {
@@ -1192,7 +1414,7 @@ async function main() {
       await ownerMonitor.close();
     },
     forceClose: async () => {
-      await closePackagedResources();
+      void closePackagedResources().catch(() => {});
       void ownerMonitor.close().catch(() => {});
     },
     forceOnFirstShutdown: shouldForceDevelopmentShutdown,

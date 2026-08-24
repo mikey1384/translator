@@ -105,6 +105,18 @@ export class AgentHistoryRouteRegistry<T extends AgentHistoryRouteTarget> {
     return previous ? { ...previous } : null;
   }
 
+  /** Bind follow-up calls without counting the route as active work. */
+  setInactive(
+    historyId: string,
+    target: T
+  ): AgentHistoryRouteSnapshot<T> | null {
+    const previous = this.routes.get(historyId) ?? null;
+    this.routes.delete(historyId);
+    this.routes.set(historyId, { target, active: false, token: null });
+    this.pruneInactive();
+    return previous ? { ...previous } : null;
+  }
+
   /** Restore a superseded route only if this exact tentative start still owns it. */
   restoreIfToken(
     historyId: string,

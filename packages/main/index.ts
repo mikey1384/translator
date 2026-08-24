@@ -79,6 +79,10 @@ import {
 } from './services/ai-provider.js';
 import { getErrorReportContext } from './services/error-report.js';
 import {
+  createAgentV2Handlers,
+  getAgentRuntimeContext,
+} from './handlers/agent-v2-handlers.js';
+import {
   deleteStoredSubtitleEntry,
   detachStoredSubtitleSource,
   findStoredSubtitleForVideo,
@@ -1431,6 +1435,71 @@ try {
       connectedClients: agentSocketServer.getAuthenticatedClientCount(),
     };
   });
+  ipcMain.handle('agent-get-runtime-context', () => getAgentRuntimeContext());
+  ipcMain.handle('agent-v2-probe-source', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).probeSource(input)
+  );
+  ipcMain.handle('agent-v2-fetch-source-captions', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).fetchSourceCaptions(
+      input
+    )
+  );
+  ipcMain.handle('agent-v2-inspect-output-directory', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).inspectOutputDirectory(
+      input
+    )
+  );
+  ipcMain.handle('agent-v2-doctor', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).doctor(input || {})
+  );
+  ipcMain.handle('agent-v2-inspect-media', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).inspectMedia(input)
+  );
+  ipcMain.handle('agent-v2-write-text-output', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).writeTextOutput(input)
+  );
+  ipcMain.handle('agent-v2-transcode-output', async (event, input) => {
+    const operationId = String(input?.operationId || '').trim();
+    if (!operationId)
+      throw new Error('Preset transcode operationId is required.');
+    registry.registerAutoCancel(operationId, event.sender, () =>
+      services!.ffmpeg.cancelOperation(operationId)
+    );
+    try {
+      return await createAgentV2Handlers({
+        ffmpeg: services!.ffmpeg,
+      }).transcodeOutput(input, progress => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('agent-v2-transcode-progress', {
+            operationId,
+            ...progress,
+          });
+        }
+      });
+    } finally {
+      registry.finish(operationId);
+    }
+  });
+  ipcMain.handle('agent-v2-render-preview', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).renderPreviewFrames(
+      input
+    )
+  );
+  ipcMain.handle('agent-v2-reserve-temporary-output', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).reserveTemporaryOutput(
+      input
+    )
+  );
+  ipcMain.handle('agent-v2-claim-temporary-output', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).claimTemporaryOutput(
+      input
+    )
+  );
+  ipcMain.handle('agent-v2-delete-temporary-output', (_event, input) =>
+    createAgentV2Handlers({ ffmpeg: services!.ffmpeg }).deleteTemporaryOutput(
+      input
+    )
+  );
 
   ipcMain.handle(
     'check-agent-path-allowed',

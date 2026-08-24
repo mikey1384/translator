@@ -22,6 +22,183 @@ Those app-processing tools use the same configured Stage5 credits or BYO
 provider billing as the visible UI. The no-extra-inference path applies only to
 the local translation-session loop where the connected client supplies text.
 
+## Persistent MCP v2 workflow
+
+MCP v2 keeps the original direct app tools for compatibility and adds a
+recoverable, plan-first workflow. Its tools are:
+
+- Discovery and planning: `get_server_info`, `get_capabilities`, `doctor`,
+  `probe_source`, and `plan_job`
+- Durable jobs: `create_job`, `get_job`, `list_jobs`, `watch_job`, `pause_job`,
+  `resume_job`, `cancel_job`, and `retry_stage`
+- External translation: `get_transcript_batch`,
+  `submit_translation_batch`, `validate_translation`, `get_project_profile`,
+  and `save_project_profile`
+- Outputs: `render_preview`, `render_outputs`, `verify_outputs`, and
+  `get_job_manifest`
+- Human-gated publishing handoff: `prepare_youtube_upload` and `prepare_x_post`
+
+The older direct app tools remain available for compatibility. Any legacy tool
+that can start paid inference is explicitly labeled as low-level in `tools/list`:
+it does not inherit v2 planning, durable recovery, or idempotency guarantees and
+must not be blindly retried after an uncertain delivery. New workflows should
+use `plan_job` and `create_job` whenever the operation is supported there.
+
+Every result envelope repeats:
+
+- `environment` (`development` or `production`) and a visibly different server
+  name
+- MCP protocol/server version and connected Translator version
+- Masked Stage5 account identity and the current credit snapshot, including
+  explicit `connection_verified` and credit `authoritative` flags
+- Per-call billing intent, including whether the call may or will consume
+  Stage5 credit
+
+`plan_job` is no-cost. It probes the exact source, snapshots the selected
+providers, quality settings, credit rates, project profile, expected outputs,
+platform constraints, time/disk ranges, and a per-stage Stage5 credit estimate.
+It returns an immutable `plan_hash`. `create_job` requires an `idempotency_key`;
+repeating the same request returns the existing job instead of starting or
+charging twice. A paid plan also requires
+`confirm=AUTHORIZE_STAGE5_CREDITS` and a `max_stage5_credits` value at least as
+large as the estimate.
+
+Source URLs must use HTTP or HTTPS and cannot contain embedded username/password
+credentials. Use Translator's normal cookie or sign-in flow for authenticated
+media; those credentials are never copied into a persistent plan or result.
+
+That maximum is a preflight estimate gate, not a provider-side hard cap.
+Provider settlement is authoritative and can differ after a request has begun.
+Before each paid stage, the helper and renderer independently recheck the exact
+provider route, relevant quality/rate assumptions, current authoritative
+balance, persisted authorization, cancellation state, and operation identity.
+The job records observed usage per operation without treating unrelated
+account-wide balance changes as exact job spend.
+
+Jobs use transactional SQLite storage under
+`~/.translator-agent/v2/{production,development}.sqlite3`. State includes the
+immutable plan, stages, generation-fenced operation IDs, event cursor, credit
+ledger, translation batches, validation, artifacts, and audit history. Jobs
+survive helper disconnects, agent context resets, and app restarts. If an app
+restart or lost acknowledgement makes delivery unknowable, the job blocks at
+the last safe checkpoint and requires an explicit stage retry; it never guesses
+that a paid request was not delivered.
+
+Each helper that claims a starting stage owns a private random local socket or
+named pipe and an exact token. Other helpers probe that lease before deciding a
+start was abandoned. The descriptor is stored only for recovery, the token and
+pending manifest internals are removed recursively from all public results, and
+shutdown closes the lease before the job database. This is ownership detection,
+not a timer or keyword heuristic.
+
+`resume_job` is deliberately narrow: it resumes only a job that was explicitly
+paused. A blocked, failed, interrupted, or delivery-unknown checkpoint requires
+`retry_stage`, so an ordinary resume cannot replay a request that may already
+have reached a paid inference provider. Once an app stage starts it can continue
+without the MCP client; a later `get_job` or `watch_job` reconciles its retained
+result and may advance the next stage already authorized by that persisted job.
+The response repeats the remaining authorized credit estimate; observing a job
+never grants new paid-stage authorization. If the app also restarts and an
+inference result is no longer observable, the job stays blocked for explicit
+review.
+
+Retrying a paid stage also requires
+`confirm_paid_retry=RETRY_PAID_STAGE`. This is separate from the original plan
+authorization because an earlier delivery-unknown or failed attempt may already
+have settled provider usage; an agent cannot silently turn an ordinary retry
+into duplicate spend.
+
+### External-agent translation
+
+Choose `translation_provider=agent` to lock translation to the connected LLM.
+The plan sets Stage5 translation usage to zero and forbids an automatic Stage5
+fallback. Transcript batches follow punctuation and timing boundaries, include
+neighboring read-only context, speaker/topic fields when known, the immutable
+profile glossary, and stable cue IDs. A submission is accepted only when it
+matches the exact outstanding batch: missing, duplicate, extra, empty, stale,
+or invented IDs are rejected without changing timestamps or source text.
+
+The built-in `stage5_korean` profile contains the default natural Korean style,
+subtitle line limits, recurring-name glossary, output presets, and metadata and
+publishing preferences. Saved profiles cannot contain credentials. A plan
+retains the exact profile revision and per-video glossary that existed when it
+was created, so later preference edits cannot silently change an active job.
+Profile output presets are durable recommendations; because rendering is costly
+in time and disk space, the caller still selects the desired presets explicitly
+in `plan_job` and later authorizes the full render after validation.
+
+Mock mode provisions a versioned, durable local video clip and an immutable
+sample transcript. It can exercise translation batches, preview generation,
+rendering, verification, and manifest publication end to end without Stage5
+inference credits.
+
+For a video plus an existing transcript, `transcription_method` must be
+`imported_transcript` and `imported_transcript_path` must name the exact SRT.
+The plan binds its cue content and the source video's SHA-256. It never imports
+whatever subtitles happen to be mounted in the active tab. Library-item imports
+likewise bind both exact media bytes and exact stored cue content. Requesting
+highlights implies the summary stage and includes that provider's credit estimate
+instead of silently ignoring the option.
+
+`validate_translation` reports missing/untranslated cues, invalid timing,
+overlaps and gaps, reading speed, display duration, line count/length, broken
+punctuation and broken-character encoding markers, duplicate text, glossary inconsistencies,
+suspicious untranslated English, and media-duration mismatch. Failed validation
+can issue correction-only review batches and rendering stays blocked until the
+errors are resolved. Counts always cover the complete subtitle document, while a
+single response retains at most 100 issue details to keep the MCP payload and
+persistent job record bounded. Error details take priority over warnings; if
+`issues_truncated` is true, correct the returned segments and validate again to
+surface the next bounded set.
+
+Character validation detects invalid/control Unicode data; it does not claim to
+prove that every installed font contains every glyph. Use `render_preview` and
+inspect its frames for that visual guarantee before authorizing the full encode.
+
+### Rendering, verification, and manifest
+
+A job can render representative beginning/middle/end previews before encoding.
+Supported output presets are `youtube_1080p`, `youtube_4k`,
+`x_long_video_720p`, `x_long_video_1080p`, `archive_master`, and
+`preview_low_resolution`. Subtitle output can be SRT, VTT, or ASS. Output names
+and directories are fixed in the plan, writes remain inside the user's allowed
+directories, existing destinations fail unless overwrite was explicitly
+planned, every preview and finished-verification frame name participates in the
+same preflight collision check, planned outputs are forbidden from overlapping
+any media or transcript input even when overwrite is enabled, and one
+subtitle-burned intermediate is reused across presets.
+
+Local and library video bytes are hashed during planning and rechecked before
+media-consuming stages. Downloaded, transcribed, dubbed, and rendered app
+artifacts receive durable size/SHA-256 checkpoints when their producing stage
+completes. Preview and final rendering recheck the selected checkpoint and, for
+a dubbing plan, consume the exact durable dubbed master rather than falling back
+to the original audio. A changed or unbound artifact fails closed before another
+stage can consume it.
+
+Every encoded file receives an operation-bound ownership receipt. Verification
+requires that exact receipt and checks codecs, dimensions, frame rate, duration,
+pixel format, fast-start layout, byte size, platform limits, and SHA-256. It then
+extracts operation-bound beginning/middle/end frames from each finished render,
+rehashes them independently, and records them separately from the pre-encode
+subtitle-style preview. The final `<base_name>-manifest.json` includes source
+identity, outputs, both frame sets, sizes, hashes, verification, validation,
+credit observations, and stage audit data. Manifest creation rehashes rendered
+artifacts and rejects anything modified after verification.
+When translation is requested, the manifest also retains a separate
+`<base_name>-source.srt`; requested SRT/VTT/ASS files contain the translated
+subtitle document. The manifest labels its event cursor and stage snapshot as
+the preparation checkpoint rather than claiming they are post-write events.
+It also provides a compact file map and structured metadata inputs from the
+source probe and optional summary/highlight stage, so an agent can prepare final
+publishing copy without scraping the stage audit log.
+
+`prepare_youtube_upload` and `prepare_x_post` validate a current verified
+platform artifact and return a complete draft descriptor with the configured
+account/channel and visibility. They do not upload, create a remote draft, or
+publish. Those external side effects remain deliberately separate and
+human-controlled.
+
 ## Translation workflow
 
 The MCP server exposes:

@@ -1,10 +1,23 @@
-import { McpServer } from '@modelcontextprotocol/server';
+import { McpServer, fromJsonSchema } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import * as z from 'zod/v4';
 import { DisconnectAwareStdioServerTransport } from './disconnect-aware-stdio-transport.mjs';
 import { DevAppController } from './dev-app-controller.mjs';
 import { createNativeOwnerMonitor } from './native-owner-monitor.mjs';
 import { TranslationSessionStore } from './session-store.mjs';
+import { PersistentJobStore } from './job-store.mjs';
+import {
+  MCP_SERVER_NAMES,
+  MCP_SERVER_VERSION,
+  MCP_V2_PROTOCOL_VERSION,
+  MCP_V2_TOOL_DEFINITIONS,
+} from './mcp-v2-contract.mjs';
+import {
+  McpV2Service,
+  legacyToolDescription,
+  legacyResultContext,
+  legacyToolBilling,
+} from './mcp-v2-service.mjs';
 import {
   installTransportBoundLifecycle,
   shouldForceDevelopmentShutdown,
@@ -18,7 +31,17 @@ const ownerMonitor = createNativeOwnerMonitor({
   onOwnershipLost: reason => lifecycle?.requestShutdown(reason, 1),
 });
 const app = new DevAppController({ ownerMonitor });
+const jobStore = new PersistentJobStore({ environment: 'development' });
+const v2Service = new McpV2Service({
+  environment: 'development',
+  store: jobStore,
+  callApp: async (method, params) => {
+    await app.launch();
+    return app.call(method, params);
+  },
+});
 const optionalHistoryId = z.string().min(1).max(512).optional();
+const optionalOperationId = z.string().min(1).max(200).optional();
 
 function result(value) {
   return {
@@ -27,14 +50,139 @@ function result(value) {
   };
 }
 
+function v2Result(execution) {
+  return {
+    content: [{ type: 'text', text: JSON.stringify(execution.value, null, 2) }],
+    structuredContent: execution.value,
+    ...(execution.isError ? { isError: true } : {}),
+  };
+}
+
+function registerV2Tools(server) {
+  for (const [name, definition] of Object.entries(MCP_V2_TOOL_DEFINITIONS)) {
+    // This legacy session tool keeps its established name. It is registered
+    // below with a discriminated session/job schema and dispatches v2 calls
+    // when job_id is present.
+    if (name === 'submit_translation_batch') continue;
+    server.registerTool(
+      name,
+      {
+        description: definition.description,
+        inputSchema: fromJsonSchema(definition.inputSchema),
+      },
+      async input => v2Result(await v2Service.execute(name, input))
+    );
+  }
+}
+
+async function developmentLegacyContext() {
+  try {
+    const raw = await app.call('mcpContext', {});
+    return {
+      connected: true,
+      version: raw?.app?.version || null,
+      stage5: raw?.stage5 || { account: null, credits: null },
+      providers: raw?.providers || {},
+    };
+  } catch (error) {
+    return {
+      connected: false,
+      version: null,
+      stage5: { account: null, credits: null },
+      providers: {},
+      connection_error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+async function decorateLegacyToolResult(toolResult, toolName, args) {
+  const structured = toolResult?.structuredContent;
+  if (
+    structured?.schema_version === 1 &&
+    typeof structured?.environment === 'string'
+  ) {
+    return toolResult;
+  }
+  const context = await developmentLegacyContext();
+  const metadata = legacyResultContext(
+    'development',
+    context,
+    toolName,
+    legacyToolBilling(toolName, args, context)
+  );
+  const decorated = isPlainObject(structured)
+    ? { ...structured, _mcp: metadata }
+    : { value: structured ?? null, _mcp: metadata };
+  return {
+    ...toolResult,
+    structuredContent: decorated,
+    content: [{ type: 'text', text: JSON.stringify(decorated, null, 2) }],
+  };
+}
+
+async function legacyToolErrorResult(error, toolName, args) {
+  const context = await developmentLegacyContext();
+  const decorated = {
+    error: {
+      code: error?.code || 'LEGACY_TOOL_FAILED',
+      message: error instanceof Error ? error.message : String(error),
+      delivery_state: error?.deliveryState || null,
+    },
+    _mcp: legacyResultContext(
+      'development',
+      context,
+      toolName,
+      legacyToolBilling(toolName, args, context)
+    ),
+  };
+  return {
+    isError: true,
+    content: [{ type: 'text', text: JSON.stringify(decorated, null, 2) }],
+    structuredContent: decorated,
+  };
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
 function buildServer() {
   const server = new McpServer(
-    { name: 'stage5-translator', version: '0.1.0' },
+    {
+      name: MCP_SERVER_NAMES.development,
+      version: MCP_SERVER_VERSION,
+    },
     {
       instructions:
         "Use translation sessions to translate or review SRT cues with the connected LLM subscription. That local session path has no Translator inference charge because the client model supplies the text. The development-app tools are local-only and require app_launch first. app_start_media_workflow provides complete URL/path -> transcription -> summary/highlights, translation, or dubbing orchestration; the individual app_start_transcription, app_start_translation, app_start_dubbing, and app_start_summary tools operate on mounted media or subtitles. These app processing tools use Translator's configured Stage5 credits or BYO providers exactly like the visible UI, return immediately, and must be followed with app_processing_status. Mounted cues can be inspected, edited, and exported with the app_subtitles tools. app_video_search and app_video_search_more also invoke the configured Stage5-credit or BYO model; status, library, and download-only tools do not. Batch downloads use current recommendation IDs and are bounded to eight items. Navigation can open visible app sections or explicit web pages but cannot interact with forms. app_open_credit_checkout may create and open a Stripe checkout session, but payment entry and submission remain manual. Settings never return stored secret values; completed purchases, entitlement checkout submission, cookie/login verification, and admin resets remain manual-only.",
     }
   );
+
+  const registerTool = server.registerTool.bind(server);
+  server.registerTool = (name, config, callback) =>
+    registerTool(
+      name,
+      Object.hasOwn(MCP_V2_TOOL_DEFINITIONS, name)
+        ? config
+        : {
+            ...config,
+            description: legacyToolDescription(name, config.description),
+          },
+      async (...callbackArgs) => {
+        try {
+          const toolResult = await callback(...callbackArgs);
+          return decorateLegacyToolResult(
+            toolResult,
+            name,
+            callbackArgs[0] || {}
+          );
+        } catch (error) {
+          return legacyToolErrorResult(error, name, callbackArgs[0] || {});
+        }
+      }
+    );
+
+  registerV2Tools(server);
 
   server.registerTool(
     'create_translation_session',
@@ -83,23 +231,61 @@ function buildServer() {
     'submit_translation_batch',
     {
       description:
-        'Write translated or reviewed cue text into a local session. Existing translations can be revised safely.',
-      inputSchema: z.object({
-        session_id: z.string().min(8),
-        mode: z.enum(['translate', 'review']).default('translate'),
-        translations: z
-          .array(z.object({ id: z.string().min(1), text: z.string().min(1) }))
-          .min(1)
-          .max(20),
-      }),
+        'Submit an exact issued MCP v2 job batch, or update a legacy local translation session.',
+      inputSchema: z.union([
+        z
+          .object({
+            job_id: z.string().min(8).max(80),
+            batch_id: z.string().min(8).max(120),
+            translations: z
+              .array(
+                z
+                  .object({
+                    id: z.string().min(1).max(200),
+                    text: z.string().min(1).max(10_000),
+                  })
+                  .strict()
+              )
+              .min(1)
+              .max(40),
+          })
+          .strict(),
+        z
+          .object({
+            session_id: z.string().min(8).max(120),
+            mode: z.enum(['translate', 'review']).default('translate'),
+            translations: z
+              .array(
+                z
+                  .object({
+                    id: z.string().min(1).max(200),
+                    text: z.string().min(1).max(10_000),
+                  })
+                  .strict()
+              )
+              .min(1)
+              .max(40),
+          })
+          .strict(),
+      ]),
     },
-    async input =>
-      result(
+    async input => {
+      if (input.job_id && input.batch_id) {
+        return v2Result(
+          await v2Service.execute('submit_translation_batch', {
+            job_id: input.job_id,
+            batch_id: input.batch_id,
+            translations: input.translations,
+          })
+        );
+      }
+      return result(
         await store.submit(input.session_id, {
           mode: input.mode,
           translations: input.translations,
         })
-      )
+      );
+    }
   );
 
   server.registerTool(
@@ -751,11 +937,17 @@ function buildServer() {
     {
       description:
         'Inspect the active or last app-controlled download, transcription, translation, dubbing, summary, and merge operation with progress and output paths.',
-      inputSchema: z.object({ history_id: optionalHistoryId }),
+      inputSchema: z.object({
+        history_id: optionalHistoryId,
+        operation_id: optionalOperationId,
+      }),
     },
     async input =>
       result(
-        await app.call('processingStatus', { historyId: input.history_id })
+        await app.call('processingStatus', {
+          historyId: input.history_id,
+          operationId: input.operation_id,
+        })
       )
   );
 
@@ -764,11 +956,17 @@ function buildServer() {
     {
       description:
         'Cancel the active Translator download or media-processing operation and preserve any previously completed durable results.',
-      inputSchema: z.object({ history_id: optionalHistoryId }),
+      inputSchema: z.object({
+        history_id: optionalHistoryId,
+        operation_id: optionalOperationId,
+      }),
     },
     async input =>
       result(
-        await app.call('cancelProcessing', { historyId: input.history_id })
+        await app.call('cancelProcessing', {
+          historyId: input.history_id,
+          operationId: input.operation_id,
+        })
       )
   );
 
@@ -1012,14 +1210,29 @@ function buildServer() {
 }
 
 let stdioHandle = null;
+let jobStoreClosePromise = null;
+function closeJobStore() {
+  if (jobStoreClosePromise) return jobStoreClosePromise;
+  jobStoreClosePromise = Promise.resolve().then(async () => {
+    try {
+      await v2Service.close('development_controller_shutdown');
+    } finally {
+      jobStore.close();
+    }
+  });
+  return jobStoreClosePromise;
+}
 lifecycle = installTransportBoundLifecycle({
   close: async () => {
     await app.close();
     await ownerMonitor.close();
+    await closeJobStore();
   },
   forceClose: async () => {
     await app.forceClose();
     void ownerMonitor.close().catch(() => {});
+    v2Service.prepareForShutdown('development_controller_forced_shutdown');
+    void closeJobStore().catch(() => {});
   },
   forceOnFirstShutdown: shouldForceDevelopmentShutdown,
   closeTransport: () => stdioHandle?.close(),

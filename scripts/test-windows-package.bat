@@ -68,6 +68,13 @@ for %%F in (
   packaged-agent-protocol.mjs
   stream-codecs.mjs
   packaged-tool-map.mjs
+  canonical-json.mjs
+  job-store.mjs
+  job-owner-lease.mjs
+  mcp-v2-contract.mjs
+  mcp-v2-service.mjs
+  srt.mjs
+  subtitle-quality.mjs
   tool-schema-validator.mjs
   packaged-socket-path.mjs
   translator-mcp.cmd

@@ -15,6 +15,7 @@ import {
   PACKAGED_AGENT_PROTOCOL_VERSION,
 } from '../src/packaged-agent-protocol.mjs';
 import { PACKAGED_TOOL_MAP } from '../src/packaged-tool-map.mjs';
+import { MCP_V2_TOOL_NAMES } from '../src/mcp-v2-contract.mjs';
 import {
   ContentLengthDecoder,
   Utf8LineDecoder,
@@ -87,6 +88,12 @@ function installFixtureHandshake(candidate, observedHandshakes) {
 function frame(message) {
   const json = JSON.stringify(message);
   return `Content-Length: ${Buffer.byteLength(json, 'utf8')}\r\n\r\n${json}`;
+}
+
+function toolValue(response) {
+  if (response.structuredContent) return response.structuredContent;
+  const text = response.content?.find(item => item.type === 'text')?.text;
+  return JSON.parse(text || '{}');
 }
 
 function withTimeout(promise, milliseconds, message) {
@@ -367,7 +374,7 @@ test(
         stdio: ['pipe', 'pipe', 'pipe'],
       }
     );
-    child.stdout.resume();
+    const output = collectMessages(child.stdout);
     child.stderr.resume();
 
     t.after(async () => {
@@ -378,9 +385,6 @@ test(
       await fs.rm(fixtureRoot, { recursive: true, force: true });
     });
 
-    const firstConnection = new Promise(resolve =>
-      server.once('connection', resolve)
-    );
     child.stdin.write(
       frame({
         jsonrpc: '2.0',
@@ -393,23 +397,21 @@ test(
       })
     );
     await withTimeout(
-      firstConnection,
+      output.waitFor(message => message?.id === 1),
       2_000,
-      'packaged MCP did not open its first Translator socket'
+      'packaged MCP did not finish its first decorated tool response'
     );
     await withTimeout(
-      socketClosures[0],
+      socketClosures[1],
       2_000,
-      'packaged MCP retained its first idle Translator socket'
+      'packaged MCP retained a business or context socket after its first tool response'
     );
 
     assert.equal(child.exitCode, null);
     assert.equal(receivedRequests[0].method, 'searchVideos');
     assert.equal(receivedRequests[0].params.prompt, '한국어 🎬');
+    assert.equal(receivedRequests[1].method, 'mcpContext');
 
-    const secondConnection = new Promise(resolve =>
-      server.once('connection', resolve)
-    );
     child.stdin.write(
       frame({
         jsonrpc: '2.0',
@@ -419,21 +421,26 @@ test(
       })
     );
     await withTimeout(
-      secondConnection,
+      output.waitFor(message => message?.id === 2),
       2_000,
-      'packaged MCP did not reconnect to Translator'
+      'packaged MCP did not finish its second decorated tool response'
     );
     await withTimeout(
-      socketClosures[1],
+      socketClosures[3],
       2_000,
-      'packaged MCP did not release its reconnected Translator socket'
+      'packaged MCP retained a business or context socket after reconnecting'
     );
 
-    assert.equal(receivedRequests.length, 2);
-    assert.equal(observedHandshakes.length, 2);
-    assert.equal(
-      observedHandshakes[1].clientSessionId,
-      observedHandshakes[0].clientSessionId,
+    assert.deepEqual(
+      receivedRequests.map(request => request.method),
+      ['searchVideos', 'mcpContext', 'status', 'mcpContext']
+    );
+    assert.equal(observedHandshakes.length, 4);
+    assert.ok(
+      observedHandshakes.every(
+        handshake =>
+          handshake.clientSessionId === observedHandshakes[0].clientSessionId
+      ),
       'idle reconnects must retain the helper process identity'
     );
     assert.equal(
@@ -446,6 +453,105 @@ test(
       TEST_WORKSPACE_ROUTE_TOKEN,
       'the reconnect must present the exact workspace lease'
     );
+    assert.equal(child.exitCode, null);
+
+    const exited = new Promise(resolve => child.once('exit', resolve));
+    child.stdin.end();
+    assert.equal(
+      await withTimeout(
+        exited,
+        2_000,
+        'packaged MCP did not exit on stdin EOF'
+      ),
+      0
+    );
+  }
+);
+
+test(
+  'packaged MCP fails an in-flight request immediately when the app response is malformed',
+  { skip: process.platform === 'win32' },
+  async t => {
+    const fixtureRoot = await fs.mkdtemp(path.join('/tmp', 'tmcp-malformed-'));
+    const socketPath = path.join(fixtureRoot, 'translator.sock');
+    const fixtureUserData =
+      process.platform === 'darwin'
+        ? path.join(fixtureRoot, 'Library', 'Application Support', 'Translator')
+        : path.join(fixtureRoot, '.config', 'Translator');
+    const fixtureAgentDirectory = path.join(fixtureUserData, 'agent');
+    await fs.mkdir(fixtureAgentDirectory, { recursive: true });
+    await publishFixtureDiscovery(fixtureAgentDirectory, socketPath);
+
+    let malformedResponses = 0;
+    const server = net.createServer(candidate => {
+      const decoder = new Utf8LineDecoder();
+      candidate.on('error', () => {});
+      candidate.on('data', data => {
+        for (const line of decoder.write(data)) {
+          if (!line.trim()) continue;
+          const request = JSON.parse(line);
+          if (respondToFixtureHandshake(candidate, request)) continue;
+          if (request.method === 'status') {
+            malformedResponses += 1;
+            candidate.write('{not-json}\n');
+            continue;
+          }
+          assert.equal(request.method, 'mcpContext');
+          candidate.write(
+            `${JSON.stringify({
+              jsonrpc: '2.0',
+              id: request.id,
+              result: {
+                app: { version: 'test', platform: process.platform },
+                stage5: { account: null, credits: null },
+                providers: {},
+              },
+            })}\n`
+          );
+        }
+      });
+    });
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(socketPath, resolve);
+    });
+
+    const child = spawn(
+      process.execPath,
+      [path.join(packageRoot, 'src', 'packaged-mcp.mjs')],
+      {
+        env: { ...process.env, HOME: fixtureRoot, XDG_CONFIG_HOME: '' },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }
+    );
+    const output = collectMessages(child.stdout);
+    child.stderr.resume();
+    t.after(async () => {
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill('SIGKILL');
+      }
+      await new Promise(resolve => server.close(resolve));
+      await fs.rm(fixtureRoot, { recursive: true, force: true });
+    });
+
+    child.stdin.write(
+      frame({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: 'app_status', arguments: {} },
+      })
+    );
+    const response = await withTimeout(
+      output.waitFor(message => message?.id === 1),
+      2_000,
+      'malformed app response was left pending until the 120-second deadline'
+    );
+    const value = toolValue(response.result);
+    assert.equal(malformedResponses, 1);
+    assert.equal(response.result.isError, true);
+    assert.equal(value.error.code, 'APP_DELIVERY_UNKNOWN');
+    assert.match(value.error.message, /malformed JSON/i);
     assert.equal(child.exitCode, null);
 
     const exited = new Promise(resolve => child.once('exit', resolve));
@@ -600,10 +706,132 @@ test('packaged MCP interoperates with the repository MCP SDK stdio client', asyn
   const listed = await client.listTools();
   assert.deepEqual(
     listed.tools.map(tool => tool.name).sort(),
-    Object.keys(PACKAGED_TOOL_MAP).sort()
+    [
+      ...new Set([...Object.keys(PACKAGED_TOOL_MAP), ...MCP_V2_TOOL_NAMES]),
+    ].sort()
   );
   await client.close();
 });
+
+test(
+  'packaged MCP executes the v2 envelope through an authenticated app transport',
+  { skip: process.platform === 'win32' },
+  async t => {
+    const fixtureRoot = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'translator-packaged-mcp-v2-test-')
+    );
+    const socketPath = path.join(fixtureRoot, 'translator.sock');
+    const fixtureUserData =
+      process.platform === 'darwin'
+        ? path.join(fixtureRoot, 'Library', 'Application Support', 'Translator')
+        : path.join(fixtureRoot, '.config', 'Translator');
+    const fixtureAgentDirectory = path.join(fixtureUserData, 'agent');
+    const fixtureJobRoot = path.join(fixtureRoot, 'jobs');
+    await fs.mkdir(fixtureAgentDirectory, { recursive: true });
+    await publishFixtureDiscovery(fixtureAgentDirectory, socketPath);
+
+    const observedMethods = [];
+    const sockets = new Set();
+    const server = net.createServer(candidate => {
+      sockets.add(candidate);
+      candidate.once('close', () => sockets.delete(candidate));
+      candidate.on('error', () => {});
+      const decoder = new Utf8LineDecoder();
+      candidate.on('data', data => {
+        for (const line of decoder.write(data)) {
+          if (!line.trim()) continue;
+          const request = JSON.parse(line);
+          if (respondToFixtureHandshake(candidate, request)) continue;
+          observedMethods.push(request.method);
+          assert.equal(request.method, 'mcpContext');
+          candidate.write(
+            `${JSON.stringify({
+              jsonrpc: '2.0',
+              id: request.id,
+              result: {
+                app: {
+                  version: '1.17.0-test',
+                  platform: process.platform,
+                  arch: process.arch,
+                },
+                stage5: {
+                  account: {
+                    kind: 'device',
+                    reference: 'device:test',
+                    authenticated: true,
+                  },
+                  credits: { balance: 42, authoritative: true },
+                },
+                providers: {
+                  transcription: {
+                    kind: 'stage5',
+                    provider: 'elevenlabs',
+                  },
+                },
+                planning: { credit_rates: {} },
+              },
+            })}\n`
+          );
+        }
+      });
+    });
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(socketPath, resolve);
+    });
+
+    const transport = new StdioClientTransport({
+      command: process.execPath,
+      args: [path.join(packageRoot, 'src', 'packaged-mcp.mjs')],
+      env: {
+        ...process.env,
+        HOME: fixtureRoot,
+        XDG_CONFIG_HOME: '',
+        TRANSLATOR_AGENT_JOB_ROOT: fixtureJobRoot,
+      },
+      stderr: 'pipe',
+    });
+    transport.stderr?.resume();
+    const client = new Client({
+      name: 'packaged-mcp-v2-test',
+      version: '1.0.0',
+    });
+    let clientClosed = false;
+    t.after(async () => {
+      if (!clientClosed) await client.close().catch(() => undefined);
+      for (const candidate of sockets) candidate.destroy();
+      await new Promise(resolve => server.close(resolve));
+      await fs.rm(fixtureRoot, { recursive: true, force: true });
+    });
+
+    await client.connect(transport);
+    const response = await client.callTool({
+      name: 'get_capabilities',
+      arguments: {},
+    });
+    const value = toolValue(response);
+    assert.equal(response.isError, undefined);
+    assert.equal(value.ok, true);
+    assert.equal(value.environment, 'production');
+    assert.equal(value.server.name, 'translator-production-mcp');
+    assert.equal(value.app.version, '1.17.0-test');
+    assert.equal(value.stage5.credits.balance, 42);
+    assert.equal(value.billing.will_consume_stage5_credits, false);
+    assert.equal(
+      value.data.active_provider_routes.transcription.provider,
+      'elevenlabs'
+    );
+    assert.deepEqual(observedMethods, ['mcpContext']);
+    assert.ok(
+      (await fs.readdir(fixtureJobRoot)).some(name =>
+        name.startsWith('production.sqlite3')
+      )
+    );
+
+    await client.close();
+    clientClosed = true;
+  }
+);
 
 test('packaged MCP rejects a non-object request without an unhandled rejection', async t => {
   const child = spawn(
@@ -828,9 +1056,19 @@ test(
         'second request did not survive shared retry'
       ),
     ]);
+    const values = responses.map(response =>
+      JSON.parse(response.result?.content?.[0]?.text || '{}')
+    );
     assert.deepEqual(
-      responses.map(response => response.result?.content?.[0]?.text),
-      ['{\n  "requestId": 1\n}', '{\n  "requestId": 2\n}']
+      values.map(value => value.requestId),
+      [1, 2]
+    );
+    assert.ok(
+      values.every(
+        value =>
+          value._mcp?.environment === 'production' &&
+          value._mcp?.billing?.will_consume_stage5_credits === false
+      )
     );
 
     const exited = new Promise(resolve => child.once('exit', resolve));
@@ -889,6 +1127,13 @@ test('packaged builds ship every packaged-mcp runtime module beside it', async (
       'packaged-agent-protocol.mjs',
       'stream-codecs.mjs',
       'packaged-tool-map.mjs',
+      'canonical-json.mjs',
+      'job-owner-lease.mjs',
+      'job-store.mjs',
+      'mcp-v2-contract.mjs',
+      'mcp-v2-service.mjs',
+      'srt.mjs',
+      'subtitle-quality.mjs',
       'tool-schema-validator.mjs',
       'packaged-socket-path.mjs',
     ]) {
@@ -959,13 +1204,18 @@ test(
     t.after(() => fs.rm(fixtureRoot, { recursive: true, force: true }));
 
     const child = spawn(launcher, [], { stdio: ['ignore', 'pipe', 'pipe'] });
+    t.after(() => {
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill('SIGKILL');
+      }
+    });
     let stdout = '';
     child.stdout.on('data', chunk => {
       stdout += chunk.toString('utf8');
     });
     const exitCode = await withTimeout(
       new Promise(resolve => child.once('exit', resolve)),
-      2_000,
+      5_000,
       'packaged launcher did not exit'
     );
 

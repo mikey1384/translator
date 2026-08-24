@@ -301,17 +301,51 @@ export class DevAppController {
 
   async call(method, args = undefined) {
     await this.ensureReady();
-    return this.page.evaluate(
-      async ({ methodName, methodArgs }) => {
-        const bridge = window.translatorAgent;
-        const fn = bridge?.[methodName];
-        if (typeof fn !== 'function') {
-          throw new Error(`Unknown Translator agent method: ${methodName}`);
-        }
-        return fn(methodArgs);
-      },
-      { methodName: method, methodArgs: args }
-    );
+    let response;
+    try {
+      response = await this.page.evaluate(
+        async ({ methodName, methodArgs }) => {
+          try {
+            const bridge = window.translatorAgent;
+            const fn = bridge?.[methodName];
+            if (typeof fn !== 'function') {
+              throw new Error(`Unknown Translator agent method: ${methodName}`);
+            }
+            return { ok: true, value: await fn(methodArgs) };
+          } catch (error) {
+            return {
+              ok: false,
+              error: {
+                name: error instanceof Error ? error.name : 'Error',
+                message: error instanceof Error ? error.message : String(error),
+                code:
+                  error && typeof error === 'object' && 'code' in error
+                    ? String(error.code || '')
+                    : '',
+              },
+            };
+          }
+        },
+        { methodName: method, methodArgs: args }
+      );
+    } catch (error) {
+      const deliveryError = new Error(
+        `Development app request delivery became unknown: ${error instanceof Error ? error.message : String(error)}`
+      );
+      deliveryError.code = 'APP_DELIVERY_UNKNOWN';
+      deliveryError.deliveryState = 'unknown';
+      throw deliveryError;
+    }
+    if (response?.ok !== true) {
+      const rejected = new Error(
+        response?.error?.message || 'Translator rejected the app request.'
+      );
+      rejected.name = response?.error?.name || 'TranslatorCallError';
+      rejected.code = response?.error?.code || 'APP_REQUEST_REJECTED';
+      rejected.deliveryState = 'rejected';
+      throw rejected;
+    }
+    return response.value;
   }
 
   async status(input = undefined) {

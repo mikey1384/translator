@@ -9,25 +9,91 @@ function parseTimecodeMatch(match, offset) {
   return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000;
 }
 
-export function parseSrt(input) {
+function validTimecodeComponents(match) {
+  return (
+    Number(match[2]) < 60 &&
+    Number(match[3]) < 60 &&
+    Number(match[6]) < 60 &&
+    Number(match[7]) < 60
+  );
+}
+
+export function parseSrtWithDiagnostics(input, { detailLimit = 20 } = {}) {
   const normalized = String(input || '')
     .replace(/^\uFEFF/, '')
     .replace(/\r\n?/g, '\n')
     .trim();
-  if (!normalized) return [];
+  if (!normalized) {
+    return {
+      segments: [],
+      totalBlockCount: 0,
+      invalidBlockCount: 0,
+      diagnostics: [],
+      diagnosticsTruncated: false,
+    };
+  }
 
   const segments = [];
-  for (const block of normalized.split(/\n{2,}/)) {
+  const diagnostics = [];
+  let invalidBlockCount = 0;
+  const blocks = normalized.split(/\n{2,}/);
+  const boundedDetailLimit = Math.min(
+    100,
+    Math.max(0, Number.isInteger(detailLimit) ? detailLimit : 20)
+  );
+  const invalidate = (blockNumber, code, message) => {
+    invalidBlockCount += 1;
+    if (diagnostics.length < boundedDetailLimit) {
+      diagnostics.push({ block: blockNumber, code, message });
+    }
+  };
+
+  for (const [blockOffset, block] of blocks.entries()) {
     const lines = block.split('\n');
-    const timeIndex = lines.findIndex(line => TIMECODE_RE.test(line.trim()));
-    if (timeIndex === -1) continue;
-    const match = lines[timeIndex].trim().match(TIMECODE_RE);
-    if (!match) continue;
+    const timeMatches = lines
+      .map((line, index) => ({ index, match: line.trim().match(TIMECODE_RE) }))
+      .filter(entry => entry.match);
+    if (timeMatches.length === 0) {
+      invalidate(
+        blockOffset + 1,
+        block.includes('-->') ? 'invalid_timecode' : 'missing_timecode',
+        block.includes('-->')
+          ? 'The cue has an invalid timecode line.'
+          : 'The cue has no timecode line.'
+      );
+      continue;
+    }
+    const [{ index: timeIndex, match }] = timeMatches;
+    let invalid = false;
+    if (timeMatches.length > 1) {
+      invalidate(
+        blockOffset + 1,
+        'multiple_timecodes',
+        'The block contains multiple cue timecodes, usually because a blank cue separator is missing.'
+      );
+      invalid = true;
+    } else if (!validTimecodeComponents(match)) {
+      invalidate(
+        blockOffset + 1,
+        'invalid_timecode_component',
+        'Minutes and seconds in an SRT timecode must be between 00 and 59.'
+      );
+      invalid = true;
+    }
     const text = lines
       .slice(timeIndex + 1)
       .join('\n')
       .trim();
-    if (!text) continue;
+    if (!text) {
+      if (!invalid) {
+        invalidate(
+          blockOffset + 1,
+          'empty_cue_text',
+          'The cue has no subtitle text.'
+        );
+      }
+      continue;
+    }
     segments.push({
       id: `cue-${segments.length + 1}`,
       index: segments.length + 1,
@@ -39,7 +105,17 @@ export function parseSrt(input) {
       revisionCount: 0,
     });
   }
-  return segments;
+  return {
+    segments,
+    totalBlockCount: blocks.length,
+    invalidBlockCount,
+    diagnostics,
+    diagnosticsTruncated: invalidBlockCount > diagnostics.length,
+  };
+}
+
+export function parseSrt(input) {
+  return parseSrtWithDiagnostics(input).segments;
 }
 
 export function formatSrtTime(totalSeconds) {
@@ -62,7 +138,8 @@ export function buildSrt(segments, mode = 'dual') {
       const translation = String(segment.translation || '').trim();
       let text = source;
       if (mode === 'translation') text = translation || source;
-      if (mode === 'dual') text = translation ? `${source}\n${translation}` : source;
+      if (mode === 'dual')
+        text = translation ? `${source}\n${translation}` : source;
       return `${offset + 1}\n${formatSrtTime(segment.start)} --> ${formatSrtTime(segment.end)}\n${text}`;
     })
     .join('\n\n')

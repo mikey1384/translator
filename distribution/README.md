@@ -38,8 +38,8 @@ or silently switch the URLs to mutable aliases.
   external threshold changes. Until then, the same cask can be distributed from
   a publisher-owned tap without representing it as an official Homebrew Cask.
 - **WinGet:** generation and validation are intentionally gated on the immutable
-  Windows artifact for the exact package version. At this checkout's `1.16.18`
-  version, that artifact has not been published, so `npm run distribution:check`
-  correctly fails instead of treating an older Windows release as current.
-  After publication, external submission remains gated on the clean Windows x64
-  `/S` install, reinstall, upgrade, and uninstall smoke test described above.
+  Windows artifact for the exact package version. The checked-in manifests must
+  pass `npm run distribution:check`; a newly bumped version will fail closed
+  until its exact Windows release exists instead of treating an older installer
+  as current. External submission remains gated on the clean Windows x64 `/S`
+  install, reinstall, upgrade, and uninstall smoke test described above.

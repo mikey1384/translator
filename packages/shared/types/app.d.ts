@@ -59,6 +59,10 @@ declare module '@shared-types/app' {
     responseChannel: string;
     /** Unforgeable main-process generation for a history start request. */
     historyRouteToken?: string;
+    /** Persistent MCP job whose workspace owns this request. */
+    mcpJobId?: string;
+    /** Unforgeable main-process generation for an MCP job start request. */
+    mcpJobRouteToken?: string;
   }
 
   export interface CancelOperationResult {
@@ -155,7 +159,9 @@ declare module '@shared-types/app' {
   }
 
   export type SubtitleDocumentLinkedFileRole = 'import' | 'export';
-  export type SubtitleSourceProvenance = 'youtube_automatic_captions';
+  export type SubtitleSourceProvenance =
+    | 'youtube_automatic_captions'
+    | 'mcp_persistent_job';
 
   export interface SubtitleDocumentMeta {
     id: string;
@@ -1385,6 +1391,35 @@ declare module '@shared-types/app' {
       running: boolean;
       connectedClients: number;
     }>;
+    getAgentRuntimeContext: () => Promise<Record<string, unknown>>;
+    agentV2ProbeSource: (input: unknown) => Promise<Record<string, unknown>>;
+    agentV2FetchSourceCaptions: (
+      input: unknown
+    ) => Promise<Record<string, unknown>>;
+    agentV2InspectOutputDirectory: (
+      input: unknown
+    ) => Promise<Record<string, unknown>>;
+    agentV2Doctor: (input: unknown) => Promise<Record<string, unknown>>;
+    agentV2InspectMedia: (input: unknown) => Promise<Record<string, unknown>>;
+    agentV2WriteTextOutput: (
+      input: unknown
+    ) => Promise<Record<string, unknown>>;
+    agentV2TranscodeOutput: (
+      input: unknown
+    ) => Promise<Record<string, unknown>>;
+    agentV2RenderPreview: (input: unknown) => Promise<Record<string, unknown>>;
+    agentV2ReserveTemporaryOutput: (
+      input: unknown
+    ) => Promise<Record<string, unknown>>;
+    agentV2ClaimTemporaryOutput: (
+      input: unknown
+    ) => Promise<Record<string, unknown>>;
+    agentV2DeleteTemporaryOutput: (
+      input: unknown
+    ) => Promise<Record<string, unknown>>;
+    onAgentV2TranscodeProgress: (
+      callback: (progress: Record<string, unknown>) => void
+    ) => () => void;
     checkAgentPathAllowed: (filePath: string) => Promise<boolean>;
     onAgentControlChanged: (
       callback: (payload: { enabled: boolean }) => void
@@ -1402,6 +1437,11 @@ declare module '@shared-types/app' {
     ) => void;
     reportAgentHistoryJobTerminal: (payload: {
       historyId: string;
+      operationId: string;
+      routeToken: string;
+    }) => void;
+    reportAgentMcpJobTerminal: (payload: {
+      jobId: string;
       operationId: string;
       routeToken: string;
     }) => void;
@@ -1660,6 +1700,34 @@ declare module '@shared-types/app' {
         agentMode: boolean;
       };
       translatorAgent?: {
+        mcpContext: () => Promise<Record<string, unknown>>;
+        mcpDoctor: (input?: {
+          checkNetwork?: boolean;
+        }) => Promise<Record<string, unknown>>;
+        probeSource: (
+          input?: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>;
+        fetchSourceCaptions: (
+          input?: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>;
+        inspectOutputDirectory: (
+          input?: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>;
+        inspectMedia: (
+          input?: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>;
+        writeAgentOutputText: (
+          input?: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>;
+        applyTranslationSession: (
+          input?: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>;
+        startPresetRender: (
+          input?: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>;
+        renderPreview: (
+          input?: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>;
         status: (input?: {
           historyId?: string;
         }) => Promise<Record<string, unknown>>;
@@ -1775,32 +1843,42 @@ declare module '@shared-types/app' {
         startTranscription: (input?: {
           replaceSubtitles?: 'fail' | 'discard' | 'save';
           historyId?: string;
+          operationId?: string;
+          sourceVideoPath?: string;
         }) => Promise<Record<string, unknown>>;
         startTranslation: (input?: {
           targetLanguage?: string;
           historyId?: string;
+          operationId?: string;
         }) => Promise<Record<string, unknown>>;
         startDubbing: (input?: {
           targetLanguage?: string;
           voice?: string;
           translateIfNeeded?: boolean;
+          operationId?: string;
+          sourceVideoPath?: string;
         }) => Promise<Record<string, unknown>>;
         startSummary: (input?: {
           targetLanguage?: string;
           effortLevel?: SummaryEffortLevel;
           includeHighlights?: boolean;
+          operationId?: string;
+          sourceVideoPath?: string;
         }) => Promise<Record<string, unknown>>;
         startCueTranslation: (input?: {
           id?: string;
           targetLanguage?: string;
+          operationId?: string;
         }) => Promise<Record<string, unknown>>;
         startCueTranscription: (input?: {
           id?: string;
+          operationId?: string;
         }) => Promise<Record<string, unknown>>;
         startMerge: (input?: {
           outputPath?: string;
           overwrite?: boolean;
           historyId?: string;
+          operationId?: string;
         }) => Promise<Record<string, unknown>>;
         startMediaWorkflow: (input?: {
           url?: string;
@@ -1812,12 +1890,15 @@ declare module '@shared-types/app' {
           includeHighlights?: boolean;
           voice?: string;
           replaceSubtitles?: 'fail' | 'discard' | 'save';
+          operationId?: string;
         }) => Promise<Record<string, unknown>>;
         processingStatus: (input?: {
           historyId?: string;
+          operationId?: string;
         }) => Promise<Record<string, unknown>>;
         cancelProcessing: (input?: {
           historyId?: string;
+          operationId?: string;
         }) => Promise<Record<string, unknown>>;
         subtitlesBatch: (input?: {
           offset?: number;

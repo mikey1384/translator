@@ -61,6 +61,82 @@ export function getAgentSocketStatus(): Promise<{
   return window.electron.getAgentSocketStatus();
 }
 
+export function getAgentRuntimeContext(): Promise<Record<string, unknown>> {
+  return window.electron.getAgentRuntimeContext();
+}
+
+export function agentV2ProbeSource(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2ProbeSource(input);
+}
+
+export function agentV2FetchSourceCaptions(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2FetchSourceCaptions(input);
+}
+
+export function agentV2InspectOutputDirectory(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2InspectOutputDirectory(input);
+}
+
+export function agentV2Doctor(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2Doctor(input);
+}
+
+export function agentV2InspectMedia(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2InspectMedia(input);
+}
+
+export function agentV2WriteTextOutput(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2WriteTextOutput(input);
+}
+
+export function agentV2TranscodeOutput(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2TranscodeOutput(input);
+}
+
+export function agentV2RenderPreview(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2RenderPreview(input);
+}
+
+export function agentV2ReserveTemporaryOutput(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2ReserveTemporaryOutput(input);
+}
+
+export function agentV2ClaimTemporaryOutput(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2ClaimTemporaryOutput(input);
+}
+
+export function agentV2DeleteTemporaryOutput(
+  input: unknown
+): Promise<Record<string, unknown>> {
+  return window.electron.agentV2DeleteTemporaryOutput(input);
+}
+
+export function onAgentV2TranscodeProgress(
+  callback: (progress: Record<string, unknown>) => void
+): () => void {
+  return window.electron.onAgentV2TranscodeProgress(callback);
+}
+
 export function checkAgentPathAllowed(filePath: string): Promise<boolean> {
   return window.electron.checkAgentPathAllowed(filePath);
 }
@@ -91,6 +167,14 @@ export function reportAgentHistoryJobTerminal(payload: {
   routeToken: string;
 }): void {
   window.electron.reportAgentHistoryJobTerminal(payload);
+}
+
+export function reportAgentMcpJobTerminal(payload: {
+  jobId: string;
+  operationId: string;
+  routeToken: string;
+}): void {
+  window.electron.reportAgentMcpJobTerminal(payload);
 }
 
 export function onAgentControlChanged(

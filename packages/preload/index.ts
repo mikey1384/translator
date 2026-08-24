@@ -898,6 +898,40 @@ const electronAPI = {
     running: boolean;
     connectedClients: number;
   }> => ipcRenderer.invoke('get-agent-socket-status'),
+  getAgentRuntimeContext: () => ipcRenderer.invoke('agent-get-runtime-context'),
+  agentV2ProbeSource: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-probe-source', input),
+  agentV2FetchSourceCaptions: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-fetch-source-captions', input),
+  agentV2InspectOutputDirectory: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-inspect-output-directory', input),
+  agentV2Doctor: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-doctor', input),
+  agentV2InspectMedia: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-inspect-media', input),
+  agentV2WriteTextOutput: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-write-text-output', input),
+  agentV2TranscodeOutput: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-transcode-output', input),
+  agentV2RenderPreview: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-render-preview', input),
+  agentV2ReserveTemporaryOutput: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-reserve-temporary-output', input),
+  agentV2ClaimTemporaryOutput: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-claim-temporary-output', input),
+  agentV2DeleteTemporaryOutput: (input: unknown) =>
+    ipcRenderer.invoke('agent-v2-delete-temporary-output', input),
+  onAgentV2TranscodeProgress: (
+    callback: (progress: Record<string, unknown>) => void
+  ) => {
+    const handler = (
+      _event: IpcRendererEvent,
+      progress: Record<string, unknown>
+    ) => callback(progress);
+    ipcRenderer.on('agent-v2-transcode-progress', handler);
+    return () =>
+      ipcRenderer.removeListener('agent-v2-transcode-progress', handler);
+  },
   checkAgentPathAllowed: (filePath: string): Promise<boolean> =>
     ipcRenderer.invoke('check-agent-path-allowed', filePath),
   onAgentControlChanged: (
@@ -930,6 +964,13 @@ const electronAPI = {
     routeToken: string;
   }) => {
     ipcRenderer.send('agent-history-job-terminal', payload);
+  },
+  reportAgentMcpJobTerminal: (payload: {
+    jobId: string;
+    operationId: string;
+    routeToken: string;
+  }) => {
+    ipcRenderer.send('agent-mcp-job-terminal', payload);
   },
 };
 

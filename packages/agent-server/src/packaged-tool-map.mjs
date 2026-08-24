@@ -42,6 +42,19 @@ export const PACKAGED_TOOL_MAP = Object.freeze({
   app_subtitles_export: 'exportSubtitles',
 });
 
-export const PACKAGED_AGENT_METHODS = Object.freeze(
-  Object.values(PACKAGED_TOOL_MAP)
-);
+export const PACKAGED_AGENT_METHODS = Object.freeze([
+  ...Object.values(PACKAGED_TOOL_MAP),
+  // Internal primitives used only by the persistent high-level MCP v2
+  // service. They remain behind the same authenticated app socket and its
+  // main-process path authorization boundary.
+  'mcpContext',
+  'mcpDoctor',
+  'probeSource',
+  'fetchSourceCaptions',
+  'inspectOutputDirectory',
+  'applyTranslationSession',
+  'startPresetRender',
+  'renderPreview',
+  'inspectMedia',
+  'writeAgentOutputText',
+]);

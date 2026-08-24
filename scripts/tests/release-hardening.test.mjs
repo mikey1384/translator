@@ -401,14 +401,21 @@ exit 23
 test('macOS R2 promotion cannot mask an absent retention record', () => {
   const workflow = parseYaml(read('.github/workflows/release-mac.yml'));
   const steps = workflow.jobs['mac-build'].steps;
-  const promotion = steps.find(step => step.name === 'Promote artefacts to latest/');
-  const publication = steps.find(step => step.name === 'Publish GitHub Release');
+  const promotion = steps.find(
+    step => step.name === 'Promote artefacts to latest/'
+  );
+  const publication = steps.find(
+    step => step.name === 'Publish GitHub Release'
+  );
   const upload = read('scripts/upload-github-mac-release-assets.sh');
 
   assert.ok(promotion);
   assert.ok(publication);
   assert.doesNotMatch(promotion.run, /retention_args/);
-  assert.match(promotion.run, /else\s+node scripts\/release-storage-policy\.mjs prepare-retention/);
+  assert.match(
+    promotion.run,
+    /else\s+node scripts\/release-storage-policy\.mjs prepare-retention/
+  );
   assert.match(promotion.run, /release_cleanup_and_exit/);
   assert.match(promotion.run, /RELEASE_STEP_COMPLETED=true\s*$/);
   assert.match(publication.run, /release_cleanup_and_exit/);
@@ -1193,6 +1200,13 @@ test(
       'packaged-agent-protocol.mjs',
       'stream-codecs.mjs',
       'packaged-tool-map.mjs',
+      'canonical-json.mjs',
+      'job-store.mjs',
+      'job-owner-lease.mjs',
+      'mcp-v2-contract.mjs',
+      'mcp-v2-service.mjs',
+      'srt.mjs',
+      'subtitle-quality.mjs',
       'tool-schema-validator.mjs',
       'packaged-socket-path.mjs',
       'translator-mcp.cmd',

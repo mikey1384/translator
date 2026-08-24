@@ -67,6 +67,32 @@ contextual batches, supplies the translated or revised text from its existing
 subscription, and exports a translation-only or bilingual SRT. Translator does
 not call a paid model for this path.
 
+The MCP v2 workflow adds no-cost source probing and immutable planning before
+work starts. Every result identifies the development or production environment,
+the app and server versions, the connected Stage5 account and credit snapshot
+(including whether it is authoritative), and whether the operation can consume
+credit. A paid stage requires a fresh authoritative balance and an explicit
+authorization of its current estimate; the estimate gate prevents an unintended
+start, while settled provider usage remains the billing authority.
+Retrying a paid stage requires a separate literal confirmation so an uncertain
+earlier delivery cannot turn an automatic retry into duplicate spend.
+
+Long workflows are durable SQLite jobs with stable operation IDs, event cursors,
+checkpoint pause/resume/cancel/retry controls, exact-source duplicate detection,
+and concise artifact references. External-agent translation uses semantic
+batches with immutable cue IDs, overlapping read-only context, saved glossaries,
+and exact batch validation. Subtitle QA, representative preview frames,
+multi-platform render presets, output ownership receipts, post-render media
+inspection, hashed beginning/middle/end frames from every finished render,
+SHA-256 integrity checks, and a final `<base_name>-manifest.json` are part of
+the same recoverable workflow. Upload preparation is available, but no MCP tool
+uploads or publishes to YouTube or X.
+
+Mock mode generates a durable local sample clip and transcript, so an agent can
+exercise planning, translation, preview, rendering, verification, and manifest
+creation without Stage5 inference credit. Translated jobs publish a separate
+`<base_name>-source.srt` alongside the requested translated subtitle formats.
+
 The agent bridge also lets an agent download an explicit video URL into
 the local library, open a local video, mount an SRT, switch among original,
 translation, and dual-text display, choose Default, Classic, Boxed, or LineBox
@@ -128,6 +154,13 @@ process inherited every stdio descriptor. Each Translator start publishes a
 new authenticated local-socket generation, so stale helpers cannot attach to a
 restarted app. After updating Translator, restart both the app and MCP client
 to activate the new launcher and generation.
+
+MCP v2 job state is stored per environment under
+`~/.translator-agent/v2/{production,development}.sqlite3`. A helper that owns a
+stage publishes a private, token-authenticated local lease, so another helper
+can distinguish a live start from a genuinely abandoned one without a polling
+or heartbeat guess. Private ownership credentials are never returned in tool
+results.
 
 Agent control includes a kill switch and can be disabled at any time from Settings.
 

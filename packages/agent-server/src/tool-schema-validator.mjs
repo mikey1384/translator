@@ -123,6 +123,14 @@ export function validateJsonSchema(schema, value, path = '$') {
     if (schema.maxItems !== undefined && value.length > schema.maxItems) {
       return `${path} must contain at most ${schema.maxItems} items`;
     }
+    if (schema.uniqueItems === true) {
+      const seen = new Set();
+      for (const item of value) {
+        const key = JSON.stringify(item);
+        if (seen.has(key)) return `${path} must contain unique items`;
+        seen.add(key);
+      }
+    }
     if (schema.items) {
       for (let index = 0; index < value.length; index += 1) {
         const error = validateJsonSchema(
@@ -137,6 +145,19 @@ export function validateJsonSchema(schema, value, path = '$') {
 
   if (isObject(value)) {
     const properties = isObject(schema.properties) ? schema.properties : {};
+    const propertyCount = Object.keys(value).length;
+    if (
+      schema.minProperties !== undefined &&
+      propertyCount < schema.minProperties
+    ) {
+      return `${path} must contain at least ${schema.minProperties} properties`;
+    }
+    if (
+      schema.maxProperties !== undefined &&
+      propertyCount > schema.maxProperties
+    ) {
+      return `${path} must contain at most ${schema.maxProperties} properties`;
+    }
     if (Array.isArray(schema.required)) {
       for (const key of schema.required) {
         if (!Object.hasOwn(value, key)) {
@@ -149,6 +170,16 @@ export function validateJsonSchema(schema, value, path = '$') {
         if (!Object.hasOwn(properties, key)) {
           return `${propertyPath(path, key)} is not allowed`;
         }
+      }
+    } else if (isObject(schema.additionalProperties)) {
+      for (const [key, child] of Object.entries(value)) {
+        if (Object.hasOwn(properties, key)) continue;
+        const error = validateJsonSchema(
+          schema.additionalProperties,
+          child,
+          propertyPath(path, key)
+        );
+        if (error) return error;
       }
     }
     for (const [key, childSchema] of Object.entries(properties)) {

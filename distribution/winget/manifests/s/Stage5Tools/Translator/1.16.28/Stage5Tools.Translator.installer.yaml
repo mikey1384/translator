@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
+# Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
+PackageIdentifier: Stage5Tools.Translator
+PackageVersion: 1.16.28
+InstallerType: nullsoft
+Scope: machine
+InstallModes:
+  - interactive
+  - silent
+  - silentWithProgress
+InstallerSwitches:
+  Silent: /S
+  SilentWithProgress: /S
+UpgradeBehavior: install
+ElevationRequirement: elevatesSelf
+FileExtensions:
+  - avi
+  - mkv
+  - mov
+  - mp4
+  - webm
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/mikey1384/translator/releases/download/v1.16.28/Translator-Setup-1.16.28.exe
+    InstallerSha256: 05FD372B27F5C9A6BDD134B71245533F771E3D9F6A8667F8694FEB9D205F0DBA
+    AppsAndFeaturesEntries:
+      - DisplayName: Translator
+        Publisher: Mikey Lee
+        InstallerType: nullsoft
+ManifestType: installer
+ManifestVersion: 1.12.0

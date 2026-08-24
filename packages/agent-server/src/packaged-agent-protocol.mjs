@@ -1,6 +1,9 @@
 import { timingSafeEqual } from 'node:crypto';
 
-export const PACKAGED_AGENT_PROTOCOL_VERSION = 3;
+// Version 4 adds the authenticated MCP v2 app primitives and structured
+// delivery-state errors. Reject older discovery files/helpers rather than
+// silently losing idempotency guarantees across an app/helper mismatch.
+export const PACKAGED_AGENT_PROTOCOL_VERSION = 4;
 export const PACKAGED_AGENT_HANDSHAKE_METHOD = 'translator/handshake';
 export const PACKAGED_AGENT_HANDSHAKE_ID = 'translator-internal-handshake';
 export const PACKAGED_AGENT_HANDSHAKE_TIMEOUT_MS = 5_000;

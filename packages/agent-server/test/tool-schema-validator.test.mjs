@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { TOOL_SCHEMAS } from '../src/packaged-mcp.mjs';
+import { MCP_V2_TOOL_DEFINITIONS } from '../src/mcp-v2-contract.mjs';
 import {
   parseToolArguments,
   validateJsonSchema,
@@ -20,6 +21,27 @@ test('packaged tool validation accepts valid arguments and applies advertised de
       run_to: 'transcribe',
       include_highlights: true,
       replace_subtitles: 'fail',
+    }
+  );
+});
+
+test('plan validation allows a saved profile to supply the target language', () => {
+  assert.deepEqual(
+    parseToolArguments(MCP_V2_TOOL_DEFINITIONS.plan_job.inputSchema, {
+      source: { mock: true },
+      project_profile: 'stage5_korean',
+      translation_provider: 'agent',
+    }),
+    {
+      source: { mock: true },
+      project_profile: 'stage5_korean',
+      transcription_method: 'stage5',
+      translation_provider: 'agent',
+      include_summary: false,
+      include_highlights: false,
+      summary_effort_level: 'standard',
+      include_dubbing: false,
+      quality: '1080p',
     }
   );
 });
@@ -113,5 +135,27 @@ test('packaged tool validation enforces conditional and composite schemas', () =
       confirm: 'REMOVE',
     }),
     null
+  );
+});
+
+test('packaged tool validation rejects duplicate values in unique arrays', () => {
+  assert.throws(
+    () =>
+      parseToolArguments(
+        {
+          type: 'object',
+          properties: {
+            formats: {
+              type: 'array',
+              items: { type: 'string' },
+              uniqueItems: true,
+            },
+          },
+          required: ['formats'],
+          additionalProperties: false,
+        },
+        { formats: ['srt', 'srt'] }
+      ),
+    /must contain unique items/
   );
 });

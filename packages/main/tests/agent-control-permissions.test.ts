@@ -750,8 +750,10 @@ test('extraResources bundling - ships the standalone helper and its runtime modu
   assert.ok(
     builderContent.includes('native-owner-monitor.mjs') &&
       builderContent.includes('translator-owner-supervisor') &&
-      builderContent.includes('packaged-agent-protocol.mjs'),
-    'Must bundle native ownership supervision and packaged generation fencing'
+      builderContent.includes('packaged-agent-protocol.mjs') &&
+      builderContent.includes('job-owner-lease.mjs') &&
+      builderContent.includes('mcp-v2-service.mjs'),
+    'Must bundle native ownership supervision, packaged generation fencing, and the persistent MCP v2 runtime'
   );
   assert.ok(
     !builderContent.includes('session-store.mjs'),
@@ -979,6 +981,30 @@ test('agent subtitle export is authorized inside the main-process save boundary'
     rendererSaveContent,
     /const savedFilePath = result\.filePath \?\? filePath;[\s\S]*?setActiveFileTarget\(\{[\s\S]*?filePath: savedFilePath/,
     'the renderer must retain the canonical path returned by main'
+  );
+});
+
+test('persistent rendering reuses only an exact claimed subtitle master', () => {
+  const listenerContent = fs.readFileSync(
+    path.join(
+      projectRoot,
+      'packages/renderer/listeners/translator-agent-listener.ts'
+    ),
+    'utf8'
+  );
+  const handlerContent = fs.readFileSync(
+    path.join(projectRoot, 'packages/main/handlers/agent-v2-handlers.ts'),
+    'utf8'
+  );
+
+  assert.ok(
+    listenerContent.includes("expectedReceiptKind: 'temporary_master'") &&
+      listenerContent.includes(
+        'inspectedMaster.operation_receipt_valid === true'
+      ) &&
+      listenerContent.includes('if (!reusedIntermediateMaster)') &&
+      handlerContent.includes('kind: expectedReceiptKind'),
+    'restart recovery must reuse only a media file bound to the exact render operation receipt'
   );
 });
 

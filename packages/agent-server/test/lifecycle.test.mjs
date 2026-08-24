@@ -430,6 +430,37 @@ test('DevAppController closes one ElectronApplication exactly once', async () =>
   assert.equal(controller.page, null);
 });
 
+test('DevAppController distinguishes renderer rejection from unknown delivery', async () => {
+  const rejectedController = new DevAppController();
+  rejectedController.page = {
+    isClosed: () => false,
+    evaluate: async () => ({
+      ok: false,
+      error: { name: 'Error', message: 'renderer rejected request' },
+    }),
+  };
+  await assert.rejects(
+    () => rejectedController.call('startTranscription', {}),
+    error =>
+      error.message === 'renderer rejected request' &&
+      error.deliveryState === 'rejected'
+  );
+
+  const disconnectedController = new DevAppController();
+  disconnectedController.page = {
+    isClosed: () => false,
+    evaluate: async () => {
+      throw new Error('Playwright connection closed');
+    },
+  };
+  await assert.rejects(
+    () => disconnectedController.call('startTranscription', {}),
+    error =>
+      /delivery became unknown/i.test(error.message) &&
+      error.deliveryState === 'unknown'
+  );
+});
+
 test('DevAppController finishes when Electron exits even if Playwright close never settles', async () => {
   const child = new EventEmitter();
   Object.assign(child, { pid: 4177, exitCode: null, signalCode: null });
@@ -469,7 +500,7 @@ test('DevAppController tracks and untracks the exact launched Electron root', as
     isClosed: () => false,
     url: () => 'file:///renderer/dist/index.html',
     waitForFunction: async () => {},
-    evaluate: async () => ({ running: true }),
+    evaluate: async () => ({ ok: true, value: { running: true } }),
   };
   const app = new EventEmitter();
   Object.assign(app, {
@@ -662,7 +693,7 @@ test('DevAppController establishes its private lease before Electron launch', as
     isClosed: () => false,
     url: () => 'file:///renderer/dist/index.html',
     waitForFunction: async () => {},
-    evaluate: async () => ({ running: true }),
+    evaluate: async () => ({ ok: true, value: { running: true } }),
   };
   const fakeApp = {
     process: () => child,
@@ -732,7 +763,7 @@ test('DevAppController removes only Playwright signal handlers added by launch',
     isClosed: () => false,
     url: () => 'file:///renderer/dist/index.html',
     waitForFunction: async () => {},
-    evaluate: async () => ({ running: true }),
+    evaluate: async () => ({ ok: true, value: { running: true } }),
   };
   const fakeApp = new EventEmitter();
   Object.assign(fakeApp, {
@@ -915,7 +946,7 @@ test('DevAppController retires a spontaneously closed app before relaunching', a
       url: () => 'file:///renderer/dist/index.html',
       isClosed: () => false,
       waitForFunction: async () => {},
-      evaluate: async () => ({ launch: index + 1 }),
+      evaluate: async () => ({ ok: true, value: { launch: index + 1 } }),
     };
     const fakeApp = new EventEmitter();
     Object.assign(fakeApp, {

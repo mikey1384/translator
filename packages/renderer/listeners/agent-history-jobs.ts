@@ -20,7 +20,122 @@ export type AgentHistoryJob = {
   finishedAtIso: string | null;
   result: Record<string, unknown> | null;
   error: string | null;
+  creditUsage: Record<string, unknown> | null;
 };
+
+type TerminalAgentOperationStatus = 'completed' | 'failed' | 'cancelled';
+
+export type TerminalAgentOperationSnapshot = Record<string, unknown> & {
+  id: string;
+  status: TerminalAgentOperationStatus;
+};
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+/**
+ * Replays of an accepted or completed operation are read-only. Failed and
+ * cancelled operations are intentionally restartable with the same stable
+ * operation ID so an MCP retry can preserve downstream spend idempotency.
+ */
+export function shouldReuseAgentOperation(
+  status: AgentHistoryJobStatus | 'idle'
+): boolean {
+  return (
+    status === 'running' || status === 'cancelling' || status === 'completed'
+  );
+}
+
+export function usesMainOperationCancellation(
+  kind: string | null,
+  stage: string
+): boolean {
+  return kind === 'preset-render' && stage.startsWith('encoding ');
+}
+
+export type AgentProgressTaskName =
+  | 'download'
+  | 'transcription'
+  | 'translation'
+  | 'dubbing'
+  | 'summary'
+  | 'merge';
+
+export function agentProgressTaskFor(
+  kind: string | null,
+  stage: string
+): AgentProgressTaskName | null {
+  if (kind === 'media-workflow') {
+    const normalized = stage.toLowerCase();
+    if (normalized.includes('download')) return 'download';
+    if (normalized.includes('translat')) return 'translation';
+    if (normalized.includes('summar')) return 'summary';
+    if (normalized.includes('dubb')) return 'dubbing';
+    if (normalized.includes('merge') || normalized.includes('encod')) {
+      return 'merge';
+    }
+    return 'transcription';
+  }
+  if (kind === 'transcription' || kind === 'cue-transcription') {
+    return 'transcription';
+  }
+  if (kind === 'translation' || kind === 'cue-translation') {
+    return 'translation';
+  }
+  if (kind === 'dubbing') return 'dubbing';
+  if (kind === 'summary') return 'summary';
+  if (kind === 'merge' || kind === 'preset-render') return 'merge';
+  return null;
+}
+
+/** Retains exact terminal snapshots after a later mounted operation begins. */
+export class AgentTerminalOperationRegistry {
+  private readonly operations = new Map<
+    string,
+    TerminalAgentOperationSnapshot
+  >();
+
+  constructor(private readonly maxRetainedOperations = 256) {
+    if (
+      !Number.isSafeInteger(maxRetainedOperations) ||
+      maxRetainedOperations < 0
+    ) {
+      throw new RangeError(
+        'maxRetainedOperations must be a non-negative integer.'
+      );
+    }
+  }
+
+  record(snapshot: TerminalAgentOperationSnapshot): void {
+    if (
+      !snapshot.id ||
+      !['completed', 'failed', 'cancelled'].includes(snapshot.status)
+    ) {
+      throw new TypeError('Only terminal operation snapshots can be retained.');
+    }
+    this.operations.delete(snapshot.id);
+    this.operations.set(snapshot.id, cloneJson(snapshot));
+    while (this.operations.size > this.maxRetainedOperations) {
+      const oldest = this.operations.keys().next().value as string | undefined;
+      if (!oldest) break;
+      this.operations.delete(oldest);
+    }
+  }
+
+  get(operationId: string): TerminalAgentOperationSnapshot | null {
+    const snapshot = this.operations.get(operationId);
+    return snapshot ? cloneJson(snapshot) : null;
+  }
+
+  forget(operationId: string): boolean {
+    return this.operations.delete(operationId);
+  }
+
+  size(): number {
+    return this.operations.size;
+  }
+}
 
 type MutableJobPatch = Partial<
   Omit<AgentHistoryJob, 'historyId' | 'operationId' | 'kind' | 'startedAtIso'>
@@ -28,6 +143,7 @@ type MutableJobPatch = Partial<
 
 export class AgentHistoryJobRegistry {
   private readonly jobs = new Map<string, AgentHistoryJob>();
+  private readonly terminalOperations = new Map<string, AgentHistoryJob>();
 
   constructor(private readonly maxRetainedTerminalJobs = 256) {
     if (
@@ -53,6 +169,14 @@ export class AgentHistoryJobRegistry {
       terminalCount -= 1;
       if (terminalCount <= this.maxRetainedTerminalJobs) break;
     }
+
+    while (this.terminalOperations.size > this.maxRetainedTerminalJobs) {
+      const oldest = this.terminalOperations.keys().next().value as
+        | string
+        | undefined;
+      if (!oldest) break;
+      this.terminalOperations.delete(oldest);
+    }
   }
 
   start(args: {
@@ -61,6 +185,7 @@ export class AgentHistoryJobRegistry {
     kind: AgentHistoryJobKind;
     stage: string;
   }): AgentHistoryJob {
+    this.terminalOperations.delete(args.operationId);
     const job: AgentHistoryJob = {
       ...args,
       status: 'running',
@@ -70,6 +195,7 @@ export class AgentHistoryJobRegistry {
       finishedAtIso: null,
       result: null,
       error: null,
+      creditUsage: null,
     };
     // Reinsert a restarted history at the newest position for deterministic
     // terminal-result retention.
@@ -122,7 +248,7 @@ export class AgentHistoryJobRegistry {
     const updated = this.update(historyId, operationId, {
       status: args.status,
       stage: args.status,
-      percent: 100,
+      percent: args.status === 'completed' ? 100 : undefined,
       inProgress: false,
       finishedAtIso: new Date().toISOString(),
       result: args.status === 'completed' ? args.result : null,
@@ -134,6 +260,8 @@ export class AgentHistoryJobRegistry {
     if (finished) {
       this.jobs.delete(historyId);
       this.jobs.set(historyId, finished);
+      this.terminalOperations.delete(operationId);
+      this.terminalOperations.set(operationId, { ...finished });
     }
     this.pruneTerminalJobs();
     return true;
@@ -141,6 +269,14 @@ export class AgentHistoryJobRegistry {
 
   get(historyId: string): AgentHistoryJob | null {
     const job = this.jobs.get(historyId);
+    return job ? { ...job } : null;
+  }
+
+  getByOperationId(operationId: string): AgentHistoryJob | null {
+    for (const job of this.jobs.values()) {
+      if (job.operationId === operationId) return { ...job };
+    }
+    const job = this.terminalOperations.get(operationId);
     return job ? { ...job } : null;
   }
 

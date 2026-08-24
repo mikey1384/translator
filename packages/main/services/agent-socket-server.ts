@@ -13,6 +13,11 @@ import {
   PACKAGED_AGENT_PROTOCOL_VERSION,
 } from '../../agent-server/src/packaged-agent-protocol.mjs';
 import { callAgentMethod } from '../handlers/agent-bridge-handlers.js';
+import {
+  AgentBridgeDeliveryUnknownError,
+  AgentBridgeNotDeliveredError,
+  AgentBridgeResponseError,
+} from '../utils/agent-bridge-delivery.js';
 import { settingsStore } from '../store/settings-store.js';
 import { AgentClientSessionRouteRegistry } from '../utils/agent-client-session-routing.js';
 import { Utf8LineDecoder } from '../utils/utf8-line-decoder.js';
@@ -27,6 +32,27 @@ class AgentProtocolError extends Error {
   ) {
     super(message);
   }
+}
+
+function serializeAgentError(error: unknown): {
+  code: number;
+  message: string;
+  data?: { deliveryState: 'not_delivered' | 'rejected' | 'unknown' };
+} {
+  const message = error instanceof Error ? error.message : String(error);
+  if (error instanceof AgentProtocolError) {
+    return { code: error.code, message };
+  }
+  if (error instanceof AgentBridgeNotDeliveredError) {
+    return { code: -32010, message, data: { deliveryState: 'not_delivered' } };
+  }
+  if (error instanceof AgentBridgeResponseError) {
+    return { code: -32012, message, data: { deliveryState: 'rejected' } };
+  }
+  if (error instanceof AgentBridgeDeliveryUnknownError) {
+    return { code: -32011, message, data: { deliveryState: 'unknown' } };
+  }
+  return { code: -32603, message };
 }
 
 function isRequestObject(value: unknown): value is Record<string, unknown> {
@@ -498,7 +524,7 @@ export class AgentSocketServer {
       const agentEnabled =
         settingsStore.get('agentControlEnabled', false) === true;
       if (!agentEnabled) {
-        throw new Error(
+        throw new AgentBridgeResponseError(
           'Agent control is disabled. Enable it in Settings → Agent Control.'
         );
       }
@@ -519,13 +545,22 @@ export class AgentSocketServer {
 
       const routeToken = this.clientRouteTokens.get(socket);
       if (!routeToken) {
-        throw new Error('Packaged agent workspace lease is unavailable.');
+        throw new AgentBridgeNotDeliveredError(
+          'Packaged agent workspace lease is unavailable.'
+        );
       }
-      const sessionTarget = this.clientSessionRoutes.resolve(routeToken);
+      let sessionTarget: WebContents;
+      try {
+        sessionTarget = this.clientSessionRoutes.resolve(routeToken);
+      } catch (error) {
+        throw new AgentBridgeNotDeliveredError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
 
       const mainWindow = this.mainWindow;
       if (!mainWindow || mainWindow.isDestroyed()) {
-        throw new Error('Main window not available');
+        throw new AgentBridgeNotDeliveredError('Main window not available');
       }
 
       const result = await callAgentMethod(
@@ -541,10 +576,7 @@ export class AgentSocketServer {
       this.writeResponse(socket, {
         jsonrpc: '2.0',
         id,
-        error: {
-          code: error instanceof AgentProtocolError ? error.code : -32603,
-          message: error?.message || String(error),
-        },
+        error: serializeAgentError(error),
       });
     }
   }

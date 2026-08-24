@@ -3,10 +3,16 @@ import {
   BASELINE_HEIGHT,
   CHECKOUT_ALREADY_PENDING,
   CREDIT_PACKS,
+  CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
+  SUMMARY_QUALITY_MULTIPLIER,
+  TTS_CREDITS_PER_MINUTE,
   MIN_SUBTITLE_FONT_SIZE,
   fontScale,
 } from '../../shared/constants';
-import { SUBTITLE_STYLE_PRESETS } from '../../shared/constants/subtitle-styles';
+import {
+  SUBTITLE_STYLE_PRESETS,
+  type SubtitleStylePresetKey,
+} from '../../shared/constants/subtitle-styles';
 import type {
   SrtSegment,
   GenerateSubtitlesOptions,
@@ -55,9 +61,14 @@ import {
   storeGeneratedSubtitleArtifact,
 } from '../utils/subtitle-library';
 import { preserveWordTimingsOnTranslatedSegments } from '../utils/preserve-word-timings';
+import {
+  CREDITS_PER_SUMMARY_AUDIO_HOUR,
+  estimateTranslationCreditsPerHour,
+} from '../utils/creditEstimates';
 import { acquireProvisionalUrlDownloadLibraryPath } from './mounted-download-leases';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import { useAiStore } from '../state/ai-store';
+import { useCreditStore } from '../state/credit-store';
 import { useSubStore } from '../state/subtitle-store';
 import { useTaskStore } from '../state/task-store';
 import { useUIStore } from '../state/ui-store';
@@ -70,10 +81,16 @@ import {
 import {
   agentBackgroundOperations,
   createAgentHistoryOperationId,
+  isAgentHistoryOperationId,
 } from './agent-background-operations';
 import {
   AgentHistoryJobRegistry,
+  AgentTerminalOperationRegistry,
+  agentProgressTaskFor,
   createAgentSubtitleBatchSnapshot,
+  shouldReuseAgentOperation,
+  usesMainOperationCancellation,
+  type AgentHistoryJob,
   type AgentHistoryJobKind,
 } from './agent-history-jobs';
 
@@ -196,6 +213,7 @@ type AgentProcessingKind =
   | 'dubbing'
   | 'summary'
   | 'merge'
+  | 'preset-render'
   | 'cue-transcription'
   | 'cue-translation'
   | 'media-workflow';
@@ -207,6 +225,18 @@ type AgentProcessingStatus =
   | 'failed'
   | 'cancelled';
 type MountedSubtitleStrategy = 'fail' | 'discard' | 'save';
+
+type AgentCreditUsage = {
+  before_balance: number | null;
+  current_balance: number | null;
+  after_balance: number | null;
+  observed_stage5_credit_delta: number;
+  stage5_credits_consumed: number;
+  authoritative: boolean;
+  balance_snapshots_authoritative: boolean;
+  attribution_scope: 'account_balance_delta';
+  measurement: 'observed_account_balance_delta';
+};
 
 const MOUNTED_SUBTITLE_STRATEGIES = new Set<MountedSubtitleStrategy>([
   'fail',
@@ -225,6 +255,8 @@ type AgentProcessingState = {
   finishedAtIso: string | null;
   result: Record<string, unknown> | null;
   error: string | null;
+  creditUsage: AgentCreditUsage | null;
+  progressDetails: Record<string, unknown> | null;
 };
 
 let lastVideoSearchContext: VideoSearchContext | null = null;
@@ -251,7 +283,104 @@ let agentProcessingState: AgentProcessingState = {
   finishedAtIso: null,
   result: null,
   error: null,
+  creditUsage: null,
+  progressDetails: null,
 };
+let activeAgentPreview: {
+  operationId: string;
+  promise: Promise<Record<string, unknown>>;
+} | null = null;
+const terminalAgentOperations = new AgentTerminalOperationRegistry();
+
+type CreditSnapshot = Awaited<ReturnType<typeof SystemIPC.getCreditSnapshot>>;
+
+async function agentCreditSnapshot(refresh: boolean): Promise<CreditSnapshot> {
+  if (!refresh) return SystemIPC.getCreditSnapshot();
+  try {
+    return await SystemIPC.refreshCreditSnapshot(true);
+  } catch {
+    const cached = await SystemIPC.getCreditSnapshot().catch(() => null);
+    return cached ? { ...cached, authoritative: false } : cached;
+  }
+}
+
+function creditBalance(snapshot: CreditSnapshot): number | null {
+  return Number.isFinite(Number(snapshot?.creditBalance))
+    ? Number(snapshot?.creditBalance)
+    : null;
+}
+
+function buildAgentCreditUsage(
+  before: CreditSnapshot,
+  after: CreditSnapshot
+): AgentCreditUsage {
+  const beforeBalance = creditBalance(before);
+  const afterBalance = creditBalance(after);
+  const observed =
+    beforeBalance !== null && afterBalance !== null
+      ? Math.max(0, beforeBalance - afterBalance)
+      : 0;
+  return {
+    before_balance: beforeBalance,
+    current_balance: afterBalance,
+    after_balance: afterBalance,
+    observed_stage5_credit_delta: observed,
+    stage5_credits_consumed: observed,
+    // Both balance snapshots can be authoritative while attribution is not:
+    // another app operation may settle between them. Never label this
+    // account-wide delta as exact per-operation billing.
+    authoritative: false,
+    balance_snapshots_authoritative: Boolean(
+      before?.authoritative && after?.authoritative
+    ),
+    attribution_scope: 'account_balance_delta',
+    measurement: 'observed_account_balance_delta',
+  };
+}
+
+function currentAgentCreditUsage(
+  usage: AgentCreditUsage | null
+): AgentCreditUsage | null {
+  if (!usage) return null;
+  const current = useCreditStore.getState();
+  const currentBalance = Number.isFinite(Number(current.credits))
+    ? Number(current.credits)
+    : usage.current_balance;
+  const observed =
+    usage.before_balance !== null && currentBalance !== null
+      ? Math.max(0, usage.before_balance - currentBalance)
+      : usage.observed_stage5_credit_delta;
+  return {
+    ...usage,
+    current_balance: currentBalance,
+    observed_stage5_credit_delta: observed,
+    stage5_credits_consumed: observed,
+    authoritative: false,
+    balance_snapshots_authoritative:
+      usage.balance_snapshots_authoritative && current.authoritative,
+  };
+}
+
+async function runWithStage5CreditObservation(
+  operationId: string,
+  runner: () => Promise<Record<string, unknown>>,
+  onUsage?: (usage: AgentCreditUsage) => void
+): Promise<Record<string, unknown>> {
+  const before = await agentCreditSnapshot(true).catch(() => null);
+  const initial = buildAgentCreditUsage(before, before);
+  onUsage?.(initial);
+  try {
+    const result = await runner();
+    const after = await agentCreditSnapshot(true).catch(() => null);
+    const usage = buildAgentCreditUsage(before, after);
+    onUsage?.(usage);
+    return { ...result, operationId, credit_usage: usage };
+  } catch (error) {
+    const after = await agentCreditSnapshot(true).catch(() => null);
+    onUsage?.(buildAgentCreditUsage(before, after));
+    throw error;
+  }
+}
 
 class AgentProcessingCancellationError extends Error {
   constructor(message: string) {
@@ -463,6 +592,28 @@ function getInternalHistoryRouteToken(input: unknown): string | undefined {
   }
   const token = (input as Record<string, unknown>).__agentHistoryRouteToken;
   return typeof token === 'string' && token ? token : undefined;
+}
+
+type InternalMcpJobRoute = {
+  jobId: string;
+  routeToken: string;
+};
+
+function getInternalMcpJobRoute(
+  input: unknown
+): InternalMcpJobRoute | undefined {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return undefined;
+  }
+  const record = input as Record<string, unknown>;
+  const jobId = record.__agentMcpJobId;
+  const routeToken = record.__agentMcpJobRouteToken;
+  return typeof jobId === 'string' &&
+    jobId &&
+    typeof routeToken === 'string' &&
+    routeToken
+    ? { jobId, routeToken }
+    : undefined;
 }
 
 function sortDownloadHistory(
@@ -1106,8 +1257,33 @@ function agentProcessingSnapshot(): Record<string, unknown> {
   const video = useVideoStore.getState();
   const subtitles = useSubStore.getState();
   const download = useUrlStore.getState();
+  const taskName = agentProgressTaskFor(
+    agentProcessingState.kind,
+    agentProcessingState.stage
+  );
+  const kindTask =
+    taskName === 'download'
+      ? download.download
+      : taskName
+        ? tasks[taskName]
+        : null;
+  const terminalComplete = agentProcessingState.status === 'completed';
+  const taskEtaSeconds =
+    kindTask && 'etaSeconds' in kindTask ? kindTask.etaSeconds : null;
   return {
     ...agentProcessingState,
+    credit_usage: currentAgentCreditUsage(agentProcessingState.creditUsage),
+    percent: terminalComplete
+      ? 100
+      : (kindTask?.percent ?? download.download.percent ?? 0),
+    etaSeconds:
+      (agentProcessingState.progressDetails?.estimated_remaining_seconds as
+        | number
+        | null
+        | undefined) ??
+      taskEtaSeconds ??
+      null,
+    progress: agentProcessingState.progressDetails,
     source: {
       videoPath: video.originalPath ?? video.path ?? null,
       videoReady: video.isReady,
@@ -1149,11 +1325,27 @@ function agentProcessingSnapshot(): Record<string, unknown> {
   };
 }
 
+function retainTerminalAgentProcessingSnapshot(): void {
+  if (
+    !agentProcessingState.id ||
+    !['completed', 'failed', 'cancelled'].includes(agentProcessingState.status)
+  ) {
+    return;
+  }
+  terminalAgentOperations.record(
+    agentProcessingSnapshot() as {
+      id: string;
+      status: 'completed' | 'failed' | 'cancelled';
+    }
+  );
+}
+
 function hasActiveAppProcessing(): boolean {
   const tasks = useTaskStore.getState();
   return Boolean(
     agentProcessingState.status === 'running' ||
     agentProcessingState.status === 'cancelling' ||
+    activeAgentPreview !== null ||
     agentBatchDownloadState.status === 'running' ||
     useVideoSuggestionStore.getState().loading ||
     useUrlStore.getState().download.inProgress ||
@@ -1167,8 +1359,40 @@ function hasActiveAppProcessing(): boolean {
 
 function beginAgentProcessing(
   kind: AgentProcessingKind,
-  runner: (agentOperationId: string) => Promise<Record<string, unknown>>
+  runner: (agentOperationId: string) => Promise<Record<string, unknown>>,
+  requestedOperationId?: unknown,
+  mcpJobRoute?: InternalMcpJobRoute
 ): Record<string, unknown> {
+  const requestedId = String(requestedOperationId || '').trim();
+  if (
+    requestedId &&
+    (requestedId.length > 200 || /[\p{Cc}]/u.test(requestedId))
+  ) {
+    throw new Error(
+      'Agent operation ID must contain at most 200 printable characters.'
+    );
+  }
+  if (
+    requestedId &&
+    agentProcessingState.id === requestedId &&
+    shouldReuseAgentOperation(agentProcessingState.status)
+  ) {
+    // The MCP ledger may replay a start after an uncertain delivery. Return
+    // the one already-running or terminal operation instead of charging or
+    // rendering twice.
+    return agentProcessingState.status === 'completed'
+      ? terminalAgentOperations.get(requestedId) || agentProcessingSnapshot()
+      : agentProcessingSnapshot();
+  }
+  const retained = requestedId
+    ? terminalAgentOperations.get(requestedId)
+    : null;
+  if (retained && shouldReuseAgentOperation(retained.status)) {
+    return {
+      ...retained,
+      sourceNote: 'Existing idempotent mounted operation result.',
+    };
+  }
   if (
     agentProcessingState.status === 'running' ||
     agentProcessingState.status === 'cancelling' ||
@@ -1178,7 +1402,10 @@ function beginAgentProcessing(
       'Translator already has an active processing operation. Poll app_processing_status or cancel it before starting another.'
     );
   }
-  const id = `agent-${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const id =
+    requestedId ||
+    `agent-${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  terminalAgentOperations.forget(id);
   agentProcessingState = {
     id,
     kind,
@@ -1189,19 +1416,30 @@ function beginAgentProcessing(
     finishedAtIso: null,
     result: null,
     error: null,
+    creditUsage: null,
+    progressDetails: null,
   };
-  void runner(id)
+  void runWithStage5CreditObservation(
+    id,
+    () => runner(id),
+    usage => {
+      if (agentProcessingState.id !== id) return;
+      agentProcessingState = { ...agentProcessingState, creditUsage: usage };
+    }
+  )
     .then(result => {
       if (agentProcessingState.id !== id) return;
-      const cancelled = agentProcessingState.cancelRequested;
       agentProcessingState = {
         ...agentProcessingState,
-        status: cancelled ? 'cancelled' : 'completed',
-        stage: cancelled ? 'cancelled' : 'completed',
+        // A resolved runner completed before cancellation took effect. Keep its
+        // exact result; the persistent job can stop at the next checkpoint.
+        status: 'completed',
+        stage: 'completed',
         finishedAtIso: new Date().toISOString(),
-        result: cancelled ? null : result,
+        result,
         error: null,
       };
+      retainTerminalAgentProcessingSnapshot();
     })
     .catch(error => {
       if (agentProcessingState.id !== id) return;
@@ -1215,9 +1453,19 @@ function beginAgentProcessing(
         status: cancelled ? 'cancelled' : 'failed',
         stage: cancelled ? 'cancelled' : 'failed',
         finishedAtIso: new Date().toISOString(),
-        result: null,
+        // Some compound operations publish independently verified artifacts
+        // before a later child operation fails or is cancelled. Keep that
+        // checkpoint visible to the persistent MCP job instead of discarding
+        // valid work that can be reused by an exact-operation retry.
+        result: agentProcessingState.result,
         error: cancelled ? null : message,
       };
+      retainTerminalAgentProcessingSnapshot();
+    })
+    .finally(() => {
+      if (mcpJobRoute) {
+        reportMcpJobTerminal(mcpJobRoute, id);
+      }
     });
   return agentProcessingSnapshot();
 }
@@ -1272,6 +1520,10 @@ function requireMountedSubtitleStrategy(
 }
 
 const historyJobs = new AgentHistoryJobRegistry();
+
+function historyJobSnapshot(job: AgentHistoryJob): Record<string, unknown> {
+  return { ...job, credit_usage: job.creditUsage };
+}
 
 function registerHistoryProgress(
   historyId: string,
@@ -1345,6 +1597,22 @@ function reportHistoryJobTerminal(
   }
 }
 
+function reportMcpJobTerminal(
+  route: InternalMcpJobRoute,
+  operationId: string
+): void {
+  try {
+    SystemIPC.reportAgentMcpJobTerminal({
+      jobId: route.jobId,
+      operationId,
+      routeToken: route.routeToken,
+    });
+  } catch {
+    // Main independently prunes destroyed renderers. The exact terminal
+    // acknowledgement is best effort during renderer teardown.
+  }
+}
+
 function throwIfHistoryJobCancelled(
   historyId: string,
   operationId: string
@@ -1362,7 +1630,9 @@ function beginHistoryProcessing(
   kind: AgentHistoryJobKind,
   historyId: string,
   runner: (operationId: string) => Promise<Record<string, unknown>>,
-  routeToken?: string
+  routeToken?: string,
+  requestedOperationId?: unknown,
+  mcpJobRoute?: InternalMcpJobRoute
 ): Record<string, unknown> {
   const normalizedHistoryId = String(historyId || '').trim();
   if (!normalizedHistoryId) throw new Error('A history ID is required.');
@@ -1372,14 +1642,41 @@ function beginHistoryProcessing(
     );
   }
 
+  const requestedId = String(requestedOperationId || '').trim();
+  if (requestedId && !isAgentHistoryOperationId(requestedId)) {
+    throw new Error(
+      'Persistent history operation ID has an invalid structure.'
+    );
+  }
   const existing = historyJobs.get(normalizedHistoryId);
+  if (
+    existing?.operationId === requestedId &&
+    requestedId &&
+    shouldReuseAgentOperation(existing.status)
+  ) {
+    return {
+      ...historyJobSnapshot(existing),
+      sourceNote: 'Existing idempotent library job.',
+    };
+  }
+  const retained = requestedId
+    ? historyJobs.getByOperationId(requestedId)
+    : null;
+  if (
+    retained?.historyId === normalizedHistoryId &&
+    shouldReuseAgentOperation(retained.status)
+  ) {
+    return {
+      ...historyJobSnapshot(retained),
+      sourceNote: 'Existing idempotent library operation result.',
+    };
+  }
   if (existing?.inProgress) {
     throw new Error(
       `Library item already has an active ${existing.kind} operation.`
     );
   }
-
-  const operationId = createAgentHistoryOperationId(kind);
+  const operationId = requestedId || createAgentHistoryOperationId(kind);
   const job = historyJobs.start({
     operationId,
     historyId: normalizedHistoryId,
@@ -1387,7 +1684,15 @@ function beginHistoryProcessing(
     stage: `preparing-${kind}`,
   });
 
-  void runner(operationId)
+  void runWithStage5CreditObservation(
+    operationId,
+    () => runner(operationId),
+    usage => {
+      historyJobs.update(normalizedHistoryId, operationId, {
+        creditUsage: usage,
+      });
+    }
+  )
     .then(result => {
       historyJobs.finish(normalizedHistoryId, operationId, {
         status: 'completed',
@@ -1401,19 +1706,34 @@ function beginHistoryProcessing(
       if (routeToken) {
         reportHistoryJobTerminal(normalizedHistoryId, operationId, routeToken);
       }
+      if (mcpJobRoute) {
+        reportMcpJobTerminal(mcpJobRoute, operationId);
+      }
     });
 
-  return { ...job, sourceNote: 'Job started for a library item.' };
+  return {
+    ...historyJobSnapshot(job),
+    sourceNote: 'Job started for a library item.',
+  };
 }
 
 async function runHistoryTranscription(
   operationId: string,
-  historyId: string
+  historyId: string,
+  expectedVideoPath?: string
 ): Promise<Record<string, unknown>> {
   const finishProgress = registerHistoryProgress(historyId, operationId);
 
   try {
     const { item, videoPath } = await requireHistoryVideo(historyId);
+    if (
+      expectedVideoPath &&
+      String(expectedVideoPath).trim() !== String(videoPath).trim()
+    ) {
+      throw new Error(
+        'The library item video changed after the persistent job integrity check.'
+      );
+    }
     throwIfHistoryJobCancelled(historyId, operationId);
 
     historyJobs.update(historyId, operationId, { stage: 'transcribing' });
@@ -1714,6 +2034,7 @@ async function runAgentDubbing(
     targetLanguage?: string;
     voice?: string;
     translateIfNeeded?: boolean;
+    sourceVideoPath?: string;
   }
 ): Promise<Record<string, unknown>> {
   const targetLanguage =
@@ -1756,7 +2077,11 @@ async function runAgentDubbing(
   };
   const video = useVideoStore.getState();
   const videoPath =
-    video.originalPath ?? subtitles.sourceVideoPath ?? video.path ?? null;
+    String(input.sourceVideoPath || '').trim() ||
+    video.originalPath ||
+    subtitles.sourceVideoPath ||
+    video.path ||
+    null;
   const operationId = `${agentOperationId}-dub`;
   const result = await executeDubGeneration({
     segments,
@@ -1787,6 +2112,7 @@ async function runAgentSummary(
     targetLanguage?: string;
     effortLevel?: SummaryEffortLevel;
     includeHighlights?: boolean;
+    sourceVideoPath?: string;
   }
 ): Promise<Record<string, unknown>> {
   const subtitles = useSubStore.getState();
@@ -1846,7 +2172,11 @@ async function runAgentSummary(
       targetLanguage,
       operationId,
       videoPath:
-        video.originalPath ?? subtitles.sourceVideoPath ?? video.path ?? null,
+        String(input.sourceVideoPath || '').trim() ||
+        video.originalPath ||
+        subtitles.sourceVideoPath ||
+        video.path ||
+        null,
       includeHighlights: input.includeHighlights !== false,
       effortLevel,
     });
@@ -2026,7 +2356,14 @@ async function runAgentCueTranscription(
 
 async function runAgentMerge(
   agentOperationId: string,
-  input: { outputPath?: string; overwrite?: boolean }
+  input: {
+    outputPath?: string;
+    overwrite?: boolean;
+    sourceVideoPath?: string;
+    subtitleDisplayMode?: SubtitleDisplayMode;
+    subtitleStyle?: SubtitleStylePresetKey;
+    subtitleFontSize?: number;
+  }
 ): Promise<Record<string, unknown>> {
   const outputPath = String(input.outputPath || '').trim();
   if (!outputPath) throw new Error('An explicit output path is required.');
@@ -2048,7 +2385,11 @@ async function runAgentMerge(
   const video = useVideoStore.getState();
   const subtitles = useSubStore.getState();
   const videoPath =
-    video.originalPath ?? subtitles.sourceVideoPath ?? video.path ?? null;
+    String(input.sourceVideoPath || '').trim() ||
+    video.originalPath ||
+    subtitles.sourceVideoPath ||
+    video.path ||
+    null;
   if (!videoPath) throw new Error('A source video is required for merging.');
   if (!(await window.fileApi.fileExists(videoPath))) {
     throw new Error(`The mounted video is no longer available: ${videoPath}`);
@@ -2071,14 +2412,27 @@ async function runAgentMerge(
   }
   const operationId = `${agentOperationId}-merge`;
   const ui = useUIStore.getState();
+  const displayMode = input.subtitleDisplayMode || ui.subtitleDisplayMode;
+  if (!DISPLAY_MODES.has(displayMode)) {
+    throw new Error('Unsupported planned subtitle display mode.');
+  }
+  const subtitleStyle = input.subtitleStyle || ui.subtitleStyle;
+  if (!Object.hasOwn(SUBTITLE_STYLE_PRESETS, subtitleStyle)) {
+    throw new Error('Unsupported planned subtitle style.');
+  }
+  const requestedFontSize = Number(input.subtitleFontSize);
+  const baseFontSize = Number.isFinite(requestedFontSize)
+    ? Math.max(12, Math.min(96, requestedFontSize))
+    : ui.baseFontSize;
   const targetHeight = video.meta?.height ?? BASELINE_HEIGHT;
   let fontSizePx = video.isAudioOnly
-    ? Math.max(MIN_SUBTITLE_FONT_SIZE, ui.baseFontSize)
+    ? Math.max(MIN_SUBTITLE_FONT_SIZE, baseFontSize)
     : Math.max(
         MIN_SUBTITLE_FONT_SIZE,
-        Math.round(ui.baseFontSize * fontScale(targetHeight))
+        Math.round(baseFontSize * fontScale(targetHeight))
       );
   if (
+    !Number.isFinite(requestedFontSize) &&
     !video.isAudioOnly &&
     ui.previewSubtitleFontPx > 0 &&
     ui.previewDisplayHeightPx > 0 &&
@@ -2096,7 +2450,7 @@ async function runAgentMerge(
     operationId,
     srtContent: buildSrt({
       segments,
-      mode: ui.subtitleDisplayMode,
+      mode: displayMode,
       noWrap: true,
     }),
     subtitleSegments: segments,
@@ -2112,8 +2466,8 @@ async function runAgentMerge(
     frameRate: Number(video.meta?.frameRate ?? 30),
     originalVideoPath: videoPath,
     fontSizePx,
-    stylePreset: ui.subtitleStyle,
-    outputMode: ui.subtitleDisplayMode,
+    stylePreset: subtitleStyle,
+    outputMode: displayMode,
     overlayMode: video.isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
   };
   useTaskStore.getState().setMerge({
@@ -2138,8 +2492,9 @@ async function runAgentMerge(
     return {
       operationId,
       outputPath: result.outputPath,
-      mode: ui.subtitleDisplayMode,
-      style: ui.subtitleStyle,
+      mode: displayMode,
+      style: subtitleStyle,
+      fontSizePx,
     };
   } finally {
     useTaskStore.getState().setMerge({
@@ -2147,6 +2502,459 @@ async function runAgentMerge(
       inProgress: false,
     });
   }
+}
+
+const AGENT_ENCODING_PRESETS = new Set([
+  'youtube_1080p',
+  'youtube_4k',
+  'x_long_video_720p',
+  'x_long_video_1080p',
+  'archive_master',
+  'preview_low_resolution',
+]);
+const WINDOWS_RESERVED_AGENT_BASENAME =
+  /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
+const MAX_AGENT_OUTPUT_BASE_NAME_UTF8_BYTES = 160;
+
+function cleanAgentOutputBaseName(value: unknown): string {
+  let cleaned =
+    String(value || 'translator-output')
+      .normalize('NFKC')
+      .replace(/[<>:"/\\|?*\p{Cc}]/gu, '-')
+      .replace(/\s+/g, ' ')
+      .replace(/[. ]+$/g, '')
+      .trim() || 'translator-output';
+  if (WINDOWS_RESERVED_AGENT_BASENAME.test(cleaned)) cleaned = `_${cleaned}`;
+  const encoder = new TextEncoder();
+  const segments = new Intl.Segmenter(undefined, {
+    granularity: 'grapheme',
+  }).segment(cleaned);
+  let result = '';
+  let bytes = 0;
+  for (const { segment } of segments) {
+    const segmentBytes = encoder.encode(segment).byteLength;
+    if (bytes + segmentBytes > MAX_AGENT_OUTPUT_BASE_NAME_UTF8_BYTES) break;
+    result += segment;
+    bytes += segmentBytes;
+  }
+  return result || 'translator-output';
+}
+
+function joinAgentOutputPath(directory: string, name: string): string {
+  const separator = directory.includes('\\') ? '\\' : '/';
+  return `${directory.replace(/[\\/]+$/g, '')}${separator}${name}`;
+}
+
+async function stableAgentOperationSuffix(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await window.crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('')
+    .slice(0, 24);
+}
+
+async function runAgentPresetRender(
+  agentOperationId: string,
+  input?: {
+    sourceVideoPath?: string;
+    protectedInputPaths?: string[];
+    outputs?: {
+      output_directory?: string;
+      base_name?: string;
+      presets?: string[];
+      overwrite?: boolean;
+      burn_subtitles?: boolean;
+      subtitle_display_mode?: SubtitleDisplayMode;
+      subtitle_style?: SubtitleStylePresetKey;
+      subtitle_font_size?: number;
+      x_account_tier?: 'standard' | 'premium';
+    };
+  }
+): Promise<Record<string, unknown>> {
+  const outputs = input?.outputs || {};
+  const outputDirectory = String(outputs.output_directory || '').trim();
+  if (!outputDirectory)
+    throw new Error('Planned video rendering requires an output directory.');
+  const presets = Array.isArray(outputs.presets) ? outputs.presets : [];
+  if (!presets.length)
+    throw new Error('Planned video rendering requires at least one preset.');
+  if (new Set(presets).size !== presets.length) {
+    throw new Error('Encoding presets cannot be duplicated.');
+  }
+  for (const preset of presets) {
+    if (!AGENT_ENCODING_PRESETS.has(preset)) {
+      throw new Error(`Unsupported encoding preset: ${preset}`);
+    }
+  }
+  const baseName = cleanAgentOutputBaseName(outputs.base_name);
+  const stableSuffix = await stableAgentOperationSuffix(agentOperationId);
+  const temporaryMaster = joinAgentOutputPath(
+    outputDirectory,
+    `${baseName}.mcp-master-${stableSuffix}.mp4`
+  );
+  const burnSubtitles = outputs.burn_subtitles !== false;
+  const reusableOutputs = new Map<string, Record<string, unknown>>();
+  const completedOutputs = (): Array<Record<string, unknown>> =>
+    presets.flatMap(preset => {
+      const output = reusableOutputs.get(preset);
+      return output ? [output] : [];
+    });
+  const checkpointCompletedOutputs = (): void => {
+    if (reusableOutputs.size === 0) return;
+    agentProcessingState = {
+      ...agentProcessingState,
+      result: {
+        operationId: agentOperationId,
+        outputs: completedOutputs(),
+        incomplete: true,
+        completed_preset_count: reusableOutputs.size,
+        preset_count: presets.length,
+        burned_subtitles: burnSubtitles,
+      },
+    };
+  };
+  for (let index = 0; index < presets.length; index += 1) {
+    const preset = presets[index];
+    const outputPath = joinAgentOutputPath(
+      outputDirectory,
+      `${baseName}-${preset}.mp4`
+    );
+    if (!(await window.fileApi.fileExists(outputPath))) continue;
+    const expectedOperationId = `${agentOperationId}-encode-${index + 1}`;
+    const inspected = await SystemIPC.agentV2InspectMedia({
+      path: outputPath,
+      expectedPreset: preset,
+      expectedOperationId,
+      xAccountTier: outputs.x_account_tier || 'standard',
+    }).catch(() => null);
+    if (
+      inspected?.passed === true &&
+      inspected.operation_receipt_valid === true
+    ) {
+      reusableOutputs.set(preset, {
+        preset,
+        path: outputPath,
+        metadata: inspected,
+        reused: true,
+      });
+    }
+  }
+  checkpointCompletedOutputs();
+  if (reusableOutputs.size === presets.length) {
+    if (burnSubtitles) {
+      await SystemIPC.agentV2DeleteTemporaryOutput({
+        path: temporaryMaster,
+        operationId: agentOperationId,
+      });
+    }
+    return {
+      operationId: agentOperationId,
+      outputs: completedOutputs(),
+      reused_intermediate_master: false,
+      burned_subtitles: burnSubtitles,
+      recovered_after_restart: true,
+    };
+  }
+  let transcodeSource: string | null = null;
+  let reusedIntermediateMaster = false;
+  let renderError: unknown = null;
+  let cleanupError: unknown = null;
+  let renderResult: Record<string, unknown> | null = null;
+  try {
+    if (burnSubtitles) {
+      if (await window.fileApi.fileExists(temporaryMaster)) {
+        const inspectedMaster = await SystemIPC.agentV2InspectMedia({
+          path: temporaryMaster,
+          expectedOperationId: agentOperationId,
+          expectedReceiptKind: 'temporary_master',
+        }).catch(() => null);
+        reusedIntermediateMaster =
+          inspectedMaster?.passed === true &&
+          inspectedMaster.operation_receipt_valid === true;
+      }
+      if (!reusedIntermediateMaster) {
+        agentProcessingState = {
+          ...agentProcessingState,
+          stage: 'rendering subtitle master',
+        };
+        await SystemIPC.agentV2DeleteTemporaryOutput({
+          path: temporaryMaster,
+          operationId: agentOperationId,
+        });
+        await SystemIPC.agentV2ReserveTemporaryOutput({
+          path: temporaryMaster,
+          operationId: agentOperationId,
+        });
+        await runAgentMerge(agentOperationId, {
+          outputPath: temporaryMaster,
+          overwrite: false,
+          sourceVideoPath: input?.sourceVideoPath,
+          subtitleDisplayMode: outputs.subtitle_display_mode,
+          subtitleStyle: outputs.subtitle_style,
+          subtitleFontSize: outputs.subtitle_font_size,
+        });
+        await SystemIPC.agentV2ClaimTemporaryOutput({
+          path: temporaryMaster,
+          operationId: agentOperationId,
+        });
+        throwIfAgentCancelled();
+      }
+      transcodeSource = temporaryMaster;
+    } else {
+      transcodeSource =
+        String(input?.sourceVideoPath || '').trim() ||
+        useVideoStore.getState().originalPath ||
+        useSubStore.getState().sourceVideoPath ||
+        useVideoStore.getState().path ||
+        null;
+      if (
+        !transcodeSource ||
+        !(await window.fileApi.fileExists(transcodeSource))
+      ) {
+        throw new Error(
+          'The planned source video is unavailable for encoding.'
+        );
+      }
+    }
+    throwIfAgentCancelled();
+
+    for (let index = 0; index < presets.length; index += 1) {
+      const preset = presets[index];
+      const outputPath = joinAgentOutputPath(
+        outputDirectory,
+        `${baseName}-${preset}.mp4`
+      );
+      const reusable = reusableOutputs.get(preset);
+      if (reusable) {
+        continue;
+      }
+      const transcodeOperationId = `${agentOperationId}-encode-${index + 1}`;
+      agentProcessingState = {
+        ...agentProcessingState,
+        stage: `encoding ${preset} (${index + 1}/${presets.length})`,
+      };
+      useTaskStore.getState().setMerge({
+        id: transcodeOperationId,
+        stage: agentProcessingState.stage,
+        percent: 0,
+        inProgress: true,
+        isCompleted: false,
+      });
+      const removeProgress = SystemIPC.onAgentV2TranscodeProgress(progress => {
+        if (progress.operationId !== transcodeOperationId) return;
+        const percent = Math.max(
+          0,
+          Math.min(100, Number(progress.percent || 0))
+        );
+        useTaskStore.getState().setMerge({
+          percent,
+          stage: `Encoding ${preset}: ${Math.round(percent)}%`,
+          etaSeconds:
+            typeof progress.estimated_remaining_seconds === 'number'
+              ? progress.estimated_remaining_seconds
+              : undefined,
+          current:
+            typeof progress.estimated_frames_processed === 'number'
+              ? progress.estimated_frames_processed
+              : undefined,
+          unit: 'frames',
+        });
+        agentProcessingState = {
+          ...agentProcessingState,
+          progressDetails: {
+            preset,
+            preset_index: index + 1,
+            preset_count: presets.length,
+            frames_processed:
+              typeof progress.estimated_frames_processed === 'number'
+                ? progress.estimated_frames_processed
+                : null,
+            encoding_frames_per_second:
+              typeof progress.encoding_frames_per_second === 'number'
+                ? progress.encoding_frames_per_second
+                : null,
+            encoding_speed_realtime:
+              typeof progress.encoding_speed_realtime === 'number'
+                ? progress.encoding_speed_realtime
+                : null,
+            output_bytes:
+              typeof progress.output_bytes === 'number'
+                ? progress.output_bytes
+                : null,
+            estimated_final_bytes:
+              typeof progress.estimated_final_bytes === 'number'
+                ? progress.estimated_final_bytes
+                : null,
+            estimated_remaining_seconds:
+              typeof progress.estimated_remaining_seconds === 'number'
+                ? progress.estimated_remaining_seconds
+                : null,
+          },
+        };
+      });
+      try {
+        const metadata = await SystemIPC.agentV2TranscodeOutput({
+          operationId: transcodeOperationId,
+          sourcePath: transcodeSource,
+          outputPath,
+          preset,
+          overwrite: outputs.overwrite === true,
+          protectedPaths: input?.protectedInputPaths,
+        });
+        reusableOutputs.set(preset, {
+          preset,
+          path: outputPath,
+          metadata,
+          reused: false,
+        });
+        checkpointCompletedOutputs();
+      } finally {
+        removeProgress();
+      }
+      throwIfAgentCancelled();
+    }
+    renderResult = {
+      operationId: agentOperationId,
+      outputs: completedOutputs(),
+      incomplete: false,
+      reused_intermediate_master: reusedIntermediateMaster,
+      shared_intermediate_master_across_presets:
+        burnSubtitles && presets.length > 1,
+      burned_subtitles: burnSubtitles,
+    };
+  } catch (error) {
+    renderError = error;
+  } finally {
+    useTaskStore.getState().setMerge({ id: null, inProgress: false });
+    if (burnSubtitles) {
+      try {
+        await SystemIPC.agentV2DeleteTemporaryOutput({
+          path: temporaryMaster,
+          operationId: agentOperationId,
+        });
+      } catch (error) {
+        cleanupError = error;
+      }
+    }
+  }
+  if (renderError && cleanupError) {
+    throw new AggregateError(
+      [renderError, cleanupError],
+      `Preset rendering failed and its temporary master could not be removed: ${temporaryMaster}`
+    );
+  }
+  if (renderError) throw renderError;
+  if (cleanupError) {
+    throw new Error(
+      `Preset outputs completed, but the temporary master could not be removed: ${temporaryMaster}`,
+      { cause: cleanupError }
+    );
+  }
+  if (!renderResult) {
+    throw new Error('Preset rendering ended without a result.');
+  }
+  return renderResult;
+}
+
+type AgentPreviewInput = {
+  operationId?: string;
+  sourceVideoPath?: string;
+  protectedInputPaths?: string[];
+  outputs?: {
+    output_directory?: string;
+    base_name?: string;
+    overwrite?: boolean;
+    subtitle_display_mode?: SubtitleDisplayMode;
+    subtitle_style?: SubtitleStylePresetKey;
+    subtitle_font_size?: number;
+  };
+};
+
+async function performAgentPreview(
+  input: AgentPreviewInput | undefined
+): Promise<Record<string, unknown>> {
+  const video = useVideoStore.getState();
+  const subtitles = useSubStore.getState();
+  const videoPath =
+    String(input?.sourceVideoPath || '').trim() ||
+    video.originalPath ||
+    subtitles.sourceVideoPath ||
+    video.path ||
+    null;
+  if (!videoPath) {
+    throw new Error(
+      'A mounted source video is required for preview rendering.'
+    );
+  }
+  const segments = subtitles.order.map(id => subtitles.segments[id]);
+  if (!segments.length) {
+    throw new Error('Mounted subtitles are required for preview rendering.');
+  }
+  const outputDirectory = String(input?.outputs?.output_directory || '').trim();
+  if (!outputDirectory)
+    throw new Error('Preview rendering requires an output directory.');
+  const representative = [0.1, 0.5, 0.9].map(ratio => {
+    const index = Math.min(
+      segments.length - 1,
+      Math.floor((segments.length - 1) * ratio)
+    );
+    return segments[index].start;
+  });
+  const displayMode = input?.outputs?.subtitle_display_mode || 'translation';
+  if (!DISPLAY_MODES.has(displayMode)) {
+    throw new Error('Unsupported planned subtitle display mode.');
+  }
+  return SystemIPC.agentV2RenderPreview({
+    operationId: input?.operationId,
+    videoPath,
+    srtContent: buildSrt({
+      segments,
+      mode: displayMode,
+      noWrap: true,
+    }),
+    outputDirectory,
+    baseName: `${cleanAgentOutputBaseName(input?.outputs?.base_name)}-preview`,
+    overwrite: input?.outputs?.overwrite === true,
+    positionsSeconds: representative,
+    subtitleStyle: input?.outputs?.subtitle_style,
+    subtitleFontSize: input?.outputs?.subtitle_font_size,
+    protectedPaths: input?.protectedInputPaths,
+  });
+}
+
+function renderAgentPreview(
+  input?: AgentPreviewInput
+): Promise<Record<string, unknown>> {
+  const requestedOperationId = String(input?.operationId || '').trim();
+  if (
+    activeAgentPreview &&
+    requestedOperationId &&
+    activeAgentPreview.operationId === requestedOperationId
+  ) {
+    return activeAgentPreview.promise;
+  }
+  if (activeAgentPreview || hasActiveAppProcessing()) {
+    return Promise.reject(
+      new Error('Translator is busy with another processing operation.')
+    );
+  }
+  const operationId =
+    requestedOperationId ||
+    `agent-preview-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const mcpJobRoute = getInternalMcpJobRoute(input);
+  const previewPromise = performAgentPreview({ ...input, operationId }).finally(
+    () => {
+      if (activeAgentPreview?.promise === previewPromise) {
+        activeAgentPreview = null;
+      }
+      if (mcpJobRoute) {
+        reportMcpJobTerminal(mcpJobRoute, operationId);
+      }
+    }
+  );
+  activeAgentPreview = { operationId, promise: previewPromise };
+  return previewPromise;
 }
 
 async function downloadAndMountAgentSource(input: {
@@ -2391,13 +3199,23 @@ async function runAgentMediaWorkflow(
 }
 
 async function cancelHistoryProcessing(
-  historyId: string
+  historyId: string,
+  requestedOperationId?: string
 ): Promise<Record<string, unknown>> {
   const activeHistoryJob = historyJobs.get(historyId);
   if (!activeHistoryJob?.inProgress) {
     return {
       historyJob: activeHistoryJob,
       cancellation: { accepted: false, reason: 'not_active' },
+    };
+  }
+  if (
+    requestedOperationId &&
+    activeHistoryJob.operationId !== requestedOperationId
+  ) {
+    return {
+      historyJob: activeHistoryJob,
+      cancellation: { accepted: false, reason: 'operation_mismatch' },
     };
   }
 
@@ -2423,13 +3241,24 @@ async function cancelHistoryProcessing(
 
 async function cancelAgentProcessing(input?: {
   historyId?: string;
+  operationId?: string;
 }): Promise<Record<string, unknown>> {
   const requestedHistoryId = String(input?.historyId || '').trim();
+  const requestedOperationId = String(input?.operationId || '').trim();
   if (requestedHistoryId) {
-    return cancelHistoryProcessing(requestedHistoryId);
+    return cancelHistoryProcessing(requestedHistoryId, requestedOperationId);
   }
 
   const tasks = useTaskStore.getState();
+  if (
+    requestedOperationId &&
+    agentProcessingState.id !== requestedOperationId
+  ) {
+    return {
+      ...agentProcessingSnapshot(),
+      cancellation: { accepted: false, reason: 'operation_mismatch' },
+    };
+  }
   const mountedOperationActive =
     agentProcessingState.status === 'running' ||
     agentProcessingState.status === 'cancelling' ||
@@ -2455,8 +3284,15 @@ async function cancelAgentProcessing(input?: {
 
   const mergeOperationId = tasks.merge.id;
   if (mergeOperationId && tasks.merge.inProgress) {
-    const cancellation =
-      await subtitleRendererClient.cancelMerge(mergeOperationId);
+    const cancellation = usesMainOperationCancellation(
+      agentProcessingState.kind,
+      agentProcessingState.stage
+    )
+      ? await OperationIPC.cancel(mergeOperationId).then(result => ({
+          accepted: result.success,
+          reason: result.success ? 'accepted' : 'not_found',
+        }))
+      : await subtitleRendererClient.cancelMerge(mergeOperationId);
     if (cancellation.accepted) {
       agentProcessingState = {
         ...agentProcessingState,
@@ -2827,11 +3663,15 @@ function requireSuccess(
   }
 }
 
-async function settingsSnapshot(): Promise<Record<string, unknown>> {
+async function settingsSnapshot({
+  refreshCredits = false,
+}: {
+  refreshCredits?: boolean;
+} = {}): Promise<Record<string, unknown>> {
   const ui = useUIStore.getState();
   const ai = useAiStore.getState();
   const [creditSnapshot, appLanguage] = await Promise.all([
-    SystemIPC.getCreditSnapshot().catch(() => null),
+    agentCreditSnapshot(refreshCredits).catch(() => null),
     SystemIPC.getLanguagePreference().catch(() => null),
   ]);
   return {
@@ -2890,6 +3730,319 @@ async function settingsSnapshot(): Promise<Record<string, unknown>> {
       'completing credit or BYO purchases',
       'admin credit resets',
     ],
+  };
+}
+
+function providerDescriptor(
+  provider: string,
+  byoActive: boolean,
+  available = true
+): Record<string, unknown> {
+  if (!available) return { kind: 'unavailable', provider };
+  return byoActive
+    ? { kind: 'byo', provider, stage5_credits: false }
+    : { kind: 'stage5', provider, stage5_credits: true };
+}
+
+async function mcpContext({
+  refreshCredits = true,
+}: {
+  refreshCredits?: boolean;
+} = {}): Promise<Record<string, unknown>> {
+  const ai = useAiStore.getState();
+  const [runtime, settings, allowedDirectories, socketStatus] =
+    await Promise.all([
+      SystemIPC.getAgentRuntimeContext(),
+      settingsSnapshot({ refreshCredits }),
+      SystemIPC.getAgentAllowedDirectories().catch(() => []),
+      SystemIPC.getAgentSocketStatus().catch(() => ({
+        running: false,
+        connectedClients: 0,
+      })),
+    ]);
+  const openAiByo = Boolean(
+    ai.useApiKeysMode && ai.useByo && ai.keyPresent && ai.byoUnlocked
+  );
+  const anthropicByo = Boolean(
+    ai.useApiKeysMode &&
+    ai.useByoAnthropic &&
+    ai.anthropicKeyPresent &&
+    ai.byoAnthropicUnlocked
+  );
+  const elevenLabsByo = Boolean(
+    ai.useApiKeysMode &&
+    ai.useByoElevenLabs &&
+    ai.elevenLabsKeyPresent &&
+    ai.byoElevenLabsUnlocked
+  );
+  const draftProvider = ai.preferClaudeTranslation ? 'anthropic' : 'openai';
+  const summaryProvider = ai.preferClaudeSummary ? 'anthropic' : 'openai';
+  const transcriptionProvider = ai.preferredTranscriptionProvider;
+  const dubbingProvider = ai.preferredDubbingProvider;
+  const videoSuggestionProvider = /claude|anthropic/i.test(
+    String(ai.byoVideoSuggestionModel || '')
+  )
+    ? 'anthropic'
+    : 'openai';
+  const byoFor = (provider: string) =>
+    provider === 'openai'
+      ? openAiByo
+      : provider === 'anthropic'
+        ? anthropicByo
+        : provider === 'elevenlabs'
+          ? elevenLabsByo
+          : false;
+  const creditContext = (settings as any)?.credits || null;
+  const runtimeAccount = (runtime as any)?.stage5?.account || null;
+  const stage5ConnectionVerified = creditContext?.authoritative === true;
+
+  return {
+    ...runtime,
+    stage5: {
+      ...((runtime as any)?.stage5 || {}),
+      account: runtimeAccount
+        ? {
+            ...runtimeAccount,
+            identity_present: true,
+            authenticated: stage5ConnectionVerified,
+            connection_verified: stage5ConnectionVerified,
+          }
+        : null,
+      credits: creditContext,
+    },
+    providers: (runtime as any)?.providers || {
+      transcription:
+        transcriptionProvider === 'stage5'
+          ? providerDescriptor('elevenlabs-scribe', false)
+          : providerDescriptor(
+              transcriptionProvider,
+              byoFor(transcriptionProvider),
+              byoFor(transcriptionProvider)
+            ),
+      translation: providerDescriptor(draftProvider, byoFor(draftProvider)),
+      summary: providerDescriptor(summaryProvider, byoFor(summaryProvider)),
+      summary_high: providerDescriptor(
+        summaryProvider,
+        byoFor(summaryProvider)
+      ),
+      dubbing:
+        dubbingProvider === 'stage5'
+          ? providerDescriptor(ai.stage5DubbingTtsProvider, false)
+          : providerDescriptor(
+              dubbingProvider,
+              byoFor(dubbingProvider),
+              byoFor(dubbingProvider)
+            ),
+      video_suggestions: ai.useApiKeysMode
+        ? providerDescriptor(
+            videoSuggestionProvider,
+            byoFor(videoSuggestionProvider),
+            byoFor(videoSuggestionProvider)
+          )
+        : providerDescriptor('stage5', false),
+    },
+    planning: {
+      quality_translation: useUIStore.getState().qualityTranslation,
+      quality_transcription: useUIStore.getState().qualityTranscription,
+      credit_rates: {
+        transcription_per_hour: CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
+        translation_standard_per_hour: estimateTranslationCreditsPerHour(false),
+        translation_quality_per_hour: estimateTranslationCreditsPerHour(true),
+        summary_standard_per_hour: CREDITS_PER_SUMMARY_AUDIO_HOUR,
+        summary_high_per_hour:
+          CREDITS_PER_SUMMARY_AUDIO_HOUR * SUMMARY_QUALITY_MULTIPLIER,
+        dubbing_openai_per_minute: TTS_CREDITS_PER_MINUTE.openai,
+        dubbing_elevenlabs_per_minute: TTS_CREDITS_PER_MINUTE.elevenlabs,
+      },
+    },
+    agent_control: {
+      enabled: window.env.isPackaged
+        ? socketStatus.running
+        : window.env.agentMode,
+      connected_clients: socketStatus.connectedClients,
+      allowed_directories: allowedDirectories,
+    },
+  };
+}
+
+function mcpV2ProviderRouteKey(value: unknown): string {
+  const descriptor =
+    value && typeof value === 'object'
+      ? (value as Record<string, unknown>)
+      : {};
+  return [
+    descriptor.kind || 'unavailable',
+    descriptor.provider || '',
+    descriptor.model || '',
+  ].join(':');
+}
+
+async function assertMcpV2RuntimeGuard(
+  input?: Record<string, unknown>
+): Promise<void> {
+  const guard = input?.runtimeGuard;
+  if (!guard || typeof guard !== 'object' || Array.isArray(guard)) return;
+  const value = guard as Record<string, unknown>;
+  const providerSlot = String(value.provider_slot || value.provider_name || '');
+  if (
+    ![
+      'transcription',
+      'translation',
+      'summary',
+      'summary_high',
+      'dubbing',
+    ].includes(providerSlot)
+  ) {
+    throw new Error('MCP v2 runtime guard names an unsupported provider slot.');
+  }
+  const expectedRoute = String(value.expected_route || '');
+  if (!expectedRoute) {
+    throw new Error(
+      'MCP v2 runtime guard is missing its planned provider route.'
+    );
+  }
+  const context = await mcpContext({ refreshCredits: true });
+  const providers = (context.providers || {}) as Record<string, unknown>;
+  const currentRoute = mcpV2ProviderRouteKey(providers[providerSlot]);
+  if (currentRoute !== expectedRoute) {
+    throw new Error(
+      `MCP v2 provider changed immediately before operation start (${expectedRoute} → ${currentRoute}).`
+    );
+  }
+  const expectations = value.planning_expectations;
+  if (
+    expectations &&
+    typeof expectations === 'object' &&
+    !Array.isArray(expectations)
+  ) {
+    const planning = (context.planning || {}) as Record<string, unknown>;
+    const creditRates = (planning.credit_rates || {}) as Record<
+      string,
+      unknown
+    >;
+    for (const [name, expected] of Object.entries(
+      expectations as Record<string, unknown>
+    )) {
+      if (expected === undefined) continue;
+      const current = name.startsWith('quality_')
+        ? planning[name] === true
+        : Number(creditRates[name]);
+      if (current !== expected) {
+        throw new Error(
+          `MCP v2 planning assumption changed immediately before operation start (${name}: ${String(expected)} → ${String(current)}).`
+        );
+      }
+    }
+  }
+  const minimumCredits = Math.max(0, Number(value.minimum_stage5_credits || 0));
+  if (minimumCredits > 0) {
+    const credits = (context.stage5 as any)?.credits;
+    const balance = Number(credits?.balance);
+    if (credits?.authoritative !== true || !Number.isFinite(balance)) {
+      throw new Error(
+        'MCP v2 requires an authoritative Stage5 balance immediately before operation start.'
+      );
+    }
+    if (balance < minimumCredits) {
+      throw new Error(
+        `Stage5 balance ${balance} is below this stage's ${minimumCredits}-credit estimate.`
+      );
+    }
+  }
+}
+
+async function applyTranslationSession(input?: {
+  source?: { kind?: string; path?: string; history_id?: string; url?: string };
+  videoPath?: string;
+  targetLanguage?: string;
+  segments?: Array<Record<string, unknown>>;
+}): Promise<Record<string, unknown>> {
+  if (hasActiveAppProcessing()) {
+    throw new Error('Translator is busy with another processing operation.');
+  }
+  if (!Array.isArray(input?.segments) || input.segments.length === 0) {
+    throw new Error('A non-empty persistent subtitle session is required.');
+  }
+  if (input.segments.length > 100_000) {
+    throw new Error('Persistent subtitle session exceeds 100,000 cues.');
+  }
+  const ids = new Set<string>();
+  const segments: SrtSegment[] = input.segments.map((raw, index) => {
+    const id = String(raw.id || '').trim();
+    const start = Number(raw.start);
+    const end = Number(raw.end);
+    const original = String(raw.source ?? raw.original ?? '').trim();
+    const translation = String(raw.translation || '').trim();
+    if (!id || ids.has(id))
+      throw new Error(`Invalid or duplicate subtitle ID: ${id}`);
+    if (
+      !Number.isFinite(start) ||
+      !Number.isFinite(end) ||
+      start < 0 ||
+      end <= start
+    ) {
+      throw new Error(`Invalid subtitle timing for ID: ${id}`);
+    }
+    if (!original)
+      throw new Error(`Subtitle source text is empty for ID: ${id}`);
+    ids.add(id);
+    return {
+      id,
+      index: index + 1,
+      start,
+      end,
+      original,
+      translation,
+    };
+  });
+
+  let videoPath = String(input?.videoPath || '').trim();
+  if (!videoPath && input?.source?.kind === 'local_file') {
+    videoPath = String(input.source.path || '').trim();
+  }
+  if (!videoPath && input?.source?.kind === 'library_item') {
+    const history = await requireHistoryVideo(
+      String(input.source.history_id || '')
+    );
+    videoPath = history.videoPath;
+  }
+  if (videoPath) {
+    if (!(await window.fileApi.fileExists(videoPath))) {
+      throw new Error(
+        `Persistent job video is no longer available: ${videoPath}`
+      );
+    }
+    const video = useVideoStore.getState();
+    const currentVideoPath = video.originalPath ?? video.path ?? null;
+    if (currentVideoPath !== videoPath) {
+      await useVideoStore.getState().setFile(
+        {
+          name: videoPath.split(/[\\/]/).pop() || 'persistent-job-video',
+          path: videoPath,
+          sourceUrl: input?.source?.url,
+        },
+        { skipStoredSubtitleAutoMount: true }
+      );
+    }
+  }
+  useSubStore
+    .getState()
+    .load(segments, null, 'fresh', videoPath || null, null, null, null, {
+      title: 'Persistent MCP job subtitles',
+      sourceVideoPath: videoPath || null,
+      sourceUrl: input?.source?.url || null,
+      sourceProvenance: 'mcp_persistent_job',
+      targetLanguage: String(input?.targetLanguage || '').trim() || null,
+    });
+  useUIStore.getState().setEditPanelOpen(true);
+  return {
+    applied: true,
+    cueCount: segments.length,
+    translatedCueCount: segments.filter(segment =>
+      Boolean(segment.translation?.trim())
+    ).length,
+    videoPath: videoPath || null,
+    targetLanguage: String(input?.targetLanguage || '').trim() || null,
   };
 }
 
@@ -3073,6 +4226,55 @@ function installAgentBridge() {
 
   console.log('[agent-listener] Installing agent bridge');
   window.translatorAgent = {
+    async mcpContext() {
+      return mcpContext({ refreshCredits: true });
+    },
+
+    async mcpDoctor(input) {
+      const [doctor, context] = await Promise.all([
+        SystemIPC.agentV2Doctor(input || {}),
+        mcpContext({ refreshCredits: true }),
+      ]);
+      return { ...doctor, context };
+    },
+
+    async probeSource(input) {
+      return SystemIPC.agentV2ProbeSource(input || {});
+    },
+
+    async fetchSourceCaptions(input) {
+      return SystemIPC.agentV2FetchSourceCaptions(input || {});
+    },
+
+    async inspectOutputDirectory(input) {
+      return SystemIPC.agentV2InspectOutputDirectory(input || {});
+    },
+
+    async inspectMedia(input) {
+      return SystemIPC.agentV2InspectMedia(input || {});
+    },
+
+    async writeAgentOutputText(input) {
+      return SystemIPC.agentV2WriteTextOutput(input || {});
+    },
+
+    async applyTranslationSession(input) {
+      return applyTranslationSession(input);
+    },
+
+    async startPresetRender(input) {
+      return beginAgentProcessing(
+        'preset-render',
+        operationId => runAgentPresetRender(operationId, input),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
+      );
+    },
+
+    async renderPreview(input) {
+      return renderAgentPreview(input);
+    },
+
     async status(input) {
       if (input?.historyId) {
         const context = await requireHistoryVideo(input.historyId);
@@ -3308,25 +4510,37 @@ function installAgentBridge() {
     },
 
     async startTranscription(input) {
+      await assertMcpV2RuntimeGuard(input);
       if (input?.historyId) {
         const historyId = input.historyId;
         return beginHistoryProcessing(
           'transcription',
           historyId,
-          operationId => runHistoryTranscription(operationId, historyId),
-          getInternalHistoryRouteToken(input)
+          operationId =>
+            runHistoryTranscription(
+              operationId,
+              historyId,
+              input?.sourceVideoPath
+            ),
+          getInternalHistoryRouteToken(input),
+          input?.operationId,
+          getInternalMcpJobRoute(input)
         );
       }
       const strategy = requireMountedSubtitleStrategy(
         input?.replaceSubtitles,
         'fail'
       );
-      return beginAgentProcessing('transcription', operationId =>
-        runAgentTranscription(operationId, strategy)
+      return beginAgentProcessing(
+        'transcription',
+        operationId => runAgentTranscription(operationId, strategy),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
       );
     },
 
     async startTranslation(input) {
+      await assertMcpV2RuntimeGuard(input);
       if (input?.historyId) {
         const historyId = input.historyId;
         const targetLanguage = String(input?.targetLanguage || '').trim();
@@ -3336,49 +4550,73 @@ function installAgentBridge() {
           historyId,
           operationId =>
             runHistoryTranslation(operationId, historyId, targetLanguage),
-          getInternalHistoryRouteToken(input)
+          getInternalHistoryRouteToken(input),
+          input?.operationId,
+          getInternalMcpJobRoute(input)
         );
       }
       const targetLanguage = String(input?.targetLanguage || '').trim();
-      return beginAgentProcessing('translation', operationId =>
-        runAgentTranslation(operationId, targetLanguage)
+      return beginAgentProcessing(
+        'translation',
+        operationId => runAgentTranslation(operationId, targetLanguage),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
       );
     },
 
     async startDubbing(input) {
-      return beginAgentProcessing('dubbing', operationId =>
-        runAgentDubbing(operationId, {
-          targetLanguage: input?.targetLanguage,
-          voice: input?.voice,
-          translateIfNeeded: input?.translateIfNeeded,
-        })
+      await assertMcpV2RuntimeGuard(input);
+      return beginAgentProcessing(
+        'dubbing',
+        operationId =>
+          runAgentDubbing(operationId, {
+            targetLanguage: input?.targetLanguage,
+            voice: input?.voice,
+            translateIfNeeded: input?.translateIfNeeded,
+            sourceVideoPath: input?.sourceVideoPath,
+          }),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
       );
     },
 
     async startSummary(input) {
+      await assertMcpV2RuntimeGuard(input);
       const effortLevel = (input?.effortLevel ||
         useUIStore.getState().summaryEffortLevel) as SummaryEffortLevel;
-      return beginAgentProcessing('summary', operationId =>
-        runAgentSummary(operationId, {
-          targetLanguage: input?.targetLanguage,
-          effortLevel,
-          includeHighlights: input?.includeHighlights,
-        })
+      return beginAgentProcessing(
+        'summary',
+        operationId =>
+          runAgentSummary(operationId, {
+            targetLanguage: input?.targetLanguage,
+            effortLevel,
+            includeHighlights: input?.includeHighlights,
+            sourceVideoPath: input?.sourceVideoPath,
+          }),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
       );
     },
 
     async startCueTranslation(input) {
-      return beginAgentProcessing('cue-translation', operationId =>
-        runAgentCueTranslation(operationId, {
-          id: input?.id,
-          targetLanguage: input?.targetLanguage,
-        })
+      return beginAgentProcessing(
+        'cue-translation',
+        operationId =>
+          runAgentCueTranslation(operationId, {
+            id: input?.id,
+            targetLanguage: input?.targetLanguage,
+          }),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
       );
     },
 
     async startCueTranscription(input) {
-      return beginAgentProcessing('cue-transcription', operationId =>
-        runAgentCueTranscription(operationId, { id: input?.id })
+      return beginAgentProcessing(
+        'cue-transcription',
+        operationId => runAgentCueTranscription(operationId, { id: input?.id }),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
       );
     },
 
@@ -3393,40 +4631,77 @@ function installAgentBridge() {
               outputPath: input?.outputPath,
               overwrite: input?.overwrite,
             }),
-          getInternalHistoryRouteToken(input)
+          getInternalHistoryRouteToken(input),
+          input?.operationId,
+          getInternalMcpJobRoute(input)
         );
       }
-      return beginAgentProcessing('merge', operationId =>
-        runAgentMerge(operationId, {
-          outputPath: input?.outputPath,
-          overwrite: input?.overwrite,
-        })
+      return beginAgentProcessing(
+        'merge',
+        operationId =>
+          runAgentMerge(operationId, {
+            outputPath: input?.outputPath,
+            overwrite: input?.overwrite,
+          }),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
       );
     },
 
     async startMediaWorkflow(input) {
+      await assertMcpV2RuntimeGuard(input);
       const replaceSubtitles = requireMountedSubtitleStrategy(
         input?.replaceSubtitles,
         'fail'
       );
-      return beginAgentProcessing('media-workflow', operationId =>
-        runAgentMediaWorkflow(operationId, {
-          url: input?.url,
-          path: input?.path,
-          quality: input?.quality,
-          runTo: input?.runTo,
-          targetLanguage: input?.targetLanguage,
-          summaryEffortLevel: input?.summaryEffortLevel,
-          includeHighlights: input?.includeHighlights,
-          voice: input?.voice,
-          replaceSubtitles,
-        })
+      return beginAgentProcessing(
+        'media-workflow',
+        operationId =>
+          runAgentMediaWorkflow(operationId, {
+            url: input?.url,
+            path: input?.path,
+            quality: input?.quality,
+            runTo: input?.runTo,
+            targetLanguage: input?.targetLanguage,
+            summaryEffortLevel: input?.summaryEffortLevel,
+            includeHighlights: input?.includeHighlights,
+            voice: input?.voice,
+            replaceSubtitles,
+          }),
+        input?.operationId,
+        getInternalMcpJobRoute(input)
       );
     },
 
     async processingStatus(input) {
       if (input?.historyId) {
         const job = historyJobs.get(input.historyId);
+        const requestedOperationId = String(input.operationId || '').trim();
+        if (requestedOperationId && job?.operationId !== requestedOperationId) {
+          const retained = historyJobs.getByOperationId(requestedOperationId);
+          if (retained?.historyId === input.historyId) {
+            return {
+              ...historyJobSnapshot(retained),
+              sourceNote: 'Retained exact library operation result.',
+            };
+          }
+          if (job?.inProgress) {
+            return {
+              ...historyJobSnapshot(job),
+              sourceNote:
+                'A different operation is active for this library item.',
+            };
+          }
+          return {
+            id: null,
+            operationId: null,
+            inProgress: false,
+            status: 'unknown',
+            requestedOperationId,
+            historyId: input.historyId,
+            sourceNote: 'No retained result for the requested operation.',
+          };
+        }
         if (!job) {
           return {
             inProgress: false,
@@ -3435,8 +4710,52 @@ function installAgentBridge() {
           };
         }
         return {
-          ...job,
+          ...historyJobSnapshot(job),
           sourceNote: 'Job status for a library item.',
+        };
+      }
+      const requestedOperationId = String(input?.operationId || '').trim();
+      if (
+        requestedOperationId &&
+        activeAgentPreview?.operationId === requestedOperationId
+      ) {
+        return {
+          id: requestedOperationId,
+          operationId: requestedOperationId,
+          kind: 'preview',
+          status: 'running',
+          inProgress: true,
+          stage: 'rendering-preview',
+          sourceNote: 'Exact persistent preview operation is still active.',
+        };
+      }
+      if (
+        requestedOperationId &&
+        agentProcessingState.id !== requestedOperationId
+      ) {
+        const retained = terminalAgentOperations.get(requestedOperationId);
+        if (retained) {
+          return {
+            ...retained,
+            sourceNote: 'Retained exact mounted operation result.',
+          };
+        }
+        if (
+          agentProcessingState.status === 'running' ||
+          agentProcessingState.status === 'cancelling'
+        ) {
+          return {
+            ...agentProcessingSnapshot(),
+            sourceNote: 'A different mounted operation is active.',
+          };
+        }
+        return {
+          id: null,
+          operationId: null,
+          inProgress: false,
+          status: 'unknown',
+          requestedOperationId,
+          sourceNote: 'No retained result for the requested operation.',
         };
       }
       return agentProcessingSnapshot();
@@ -3494,7 +4813,14 @@ async function initializeAgentBridge() {
   // This must be registered even when disabled so it can handle enable/disable toggles
   if (window.env.isPackaged) {
     SystemIPC.onAgentBridgeRequest(request => {
-      const { method, params, responseChannel, historyRouteToken } = request;
+      const {
+        method,
+        params,
+        responseChannel,
+        historyRouteToken,
+        mcpJobId,
+        mcpJobRouteToken,
+      } = request;
 
       (async () => {
         try {
@@ -3509,9 +4835,19 @@ async function initializeAgentBridge() {
             );
           }
 
-          const invocationParams = historyRouteToken
-            ? { ...(params || {}), __agentHistoryRouteToken: historyRouteToken }
-            : params;
+          const invocationParams =
+            historyRouteToken || mcpJobId || mcpJobRouteToken
+              ? {
+                  ...(params || {}),
+                  ...(historyRouteToken
+                    ? { __agentHistoryRouteToken: historyRouteToken }
+                    : {}),
+                  ...(mcpJobId ? { __agentMcpJobId: mcpJobId } : {}),
+                  ...(mcpJobRouteToken
+                    ? { __agentMcpJobRouteToken: mcpJobRouteToken }
+                    : {}),
+                }
+              : params;
           const result = await handler(invocationParams);
           SystemIPC.sendAgentBridgeResponse(responseChannel, { result });
         } catch (error: any) {

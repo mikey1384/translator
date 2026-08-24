@@ -28,12 +28,26 @@ const HISTORY_OWNED_METHODS = new Set([
   'processingStatus',
   'cancelProcessing',
 ]);
+const MCP_JOB_START_METHODS = new Set([
+  'startTranscription',
+  'startTranslation',
+  'startDubbing',
+  'startSummary',
+  'startCueTranslation',
+  'startCueTranscription',
+  'startMerge',
+  'startMediaWorkflow',
+  'startPresetRender',
+  'renderPreview',
+]);
 const MAX_HISTORY_ID_LENGTH = 512;
-const HISTORY_ROUTE_TOKEN_PATTERN =
+const UUID_V4_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const HISTORY_TERMINAL_CHANNEL = 'agent-history-job-terminal';
+const MCP_JOB_TERMINAL_CHANNEL = 'agent-mcp-job-terminal';
 
 const historyRoutes = new AgentHistoryRouteRegistry<WebContents>();
+const mcpJobRoutes = new AgentHistoryRouteRegistry<WebContents>();
 let lifecycleHandlersRegistered = false;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -54,6 +68,29 @@ function getHistoryId(params: AgentParams): string | null {
   return historyId;
 }
 
+function getMcpJobId(params: AgentParams): string | null {
+  if (!Object.hasOwn(params, 'mcpJobId')) return null;
+  const jobId =
+    typeof params.mcpJobId === 'string' ? params.mcpJobId.trim() : '';
+  if (!UUID_V4_PATTERN.test(jobId)) {
+    throw new Error('mcp_job_id must be a UUID v4 string.');
+  }
+  return jobId;
+}
+
+function isTerminalAgentResult(method: string, result: unknown): boolean {
+  if (!isRecord(result)) return false;
+  if (method === 'renderPreview') return true;
+  const candidate =
+    method === 'cancelProcessing' && isRecord(result.historyJob)
+      ? result.historyJob
+      : result;
+  if (candidate.inProgress === false) return true;
+  return ['completed', 'failed', 'cancelled', 'idle', 'unknown'].includes(
+    String(candidate.status || '')
+  );
+}
+
 function chooseHistoryTarget(): WebContents | null {
   return historyRoutes.chooseLeastLoaded(
     getAllAppWebContents(),
@@ -66,7 +103,9 @@ function forwardAgentRequest(
   params: AgentParams,
   target?: WebContents | null,
   signal?: AbortSignal,
-  historyRouteToken?: string | null
+  historyRouteToken?: string | null,
+  mcpJobId?: string | null,
+  mcpJobRouteToken?: string | null
 ): Promise<unknown> {
   const webContents = target ?? getActiveAppWebContents();
   if (!webContents || webContents.isDestroyed()) {
@@ -145,6 +184,8 @@ function forwardAgentRequest(
         params,
         responseChannel,
         ...(historyRouteToken ? { historyRouteToken } : {}),
+        ...(mcpJobId ? { mcpJobId } : {}),
+        ...(mcpJobRouteToken ? { mcpJobRouteToken } : {}),
       });
     } catch (error) {
       cleanup();
@@ -171,11 +212,30 @@ export function registerAgentBridgeLifecycleHandlers(): void {
     if (
       !historyId ||
       historyId.length > MAX_HISTORY_ID_LENGTH ||
-      !HISTORY_ROUTE_TOKEN_PATTERN.test(routeToken)
+      !UUID_V4_PATTERN.test(routeToken)
     ) {
       return;
     }
     historyRoutes.markInactiveByToken(historyId, event.sender, routeToken);
+  });
+
+  ipcMain.on(MCP_JOB_TERMINAL_CHANNEL, (event, payload: unknown) => {
+    if (!isRecord(payload)) return;
+    const jobId = typeof payload.jobId === 'string' ? payload.jobId.trim() : '';
+    const operationId =
+      typeof payload.operationId === 'string' ? payload.operationId.trim() : '';
+    const routeToken =
+      typeof payload.routeToken === 'string' ? payload.routeToken : '';
+    if (
+      !UUID_V4_PATTERN.test(jobId) ||
+      !operationId ||
+      operationId.length > 200 ||
+      /[\p{Cc}]/u.test(operationId) ||
+      !UUID_V4_PATTERN.test(routeToken)
+    ) {
+      return;
+    }
+    mcpJobRoutes.markInactiveByToken(jobId, event.sender, routeToken);
   });
 }
 
@@ -187,46 +247,113 @@ export async function callAgentMethod(
   sessionTarget?: WebContents | null
 ): Promise<unknown> {
   const historyId = getHistoryId(params);
+  const mcpJobId = getMcpJobId(params);
   const historyOwned = historyId && HISTORY_OWNED_METHODS.has(method);
   let target: WebContents | null = sessionTarget ?? null;
   let historyRouteToken: string | null = null;
   let observedHistoryRouteToken: string | null = null;
   let previousRoute: ReturnType<typeof historyRoutes.setActive> = null;
+  let mcpJobRouteToken: string | null = null;
+  let observedMcpJobRouteToken: string | null = null;
+  let previousMcpJobRoute: ReturnType<typeof mcpJobRoutes.setActive> = null;
+  const existingHistoryRoute = historyId
+    ? historyRoutes.getSnapshot(historyId)
+    : null;
+  const existingMcpJobRoute = mcpJobId
+    ? mcpJobRoutes.getSnapshot(mcpJobId)
+    : null;
+
+  if (
+    historyOwned &&
+    existingHistoryRoute?.active &&
+    existingMcpJobRoute?.active &&
+    existingHistoryRoute.target.id !== existingMcpJobRoute.target.id
+  ) {
+    throw new AgentBridgeResponseError(
+      'The persistent MCP job and library operation are owned by different Translator tabs.'
+    );
+  }
+
+  target =
+    existingMcpJobRoute?.target ??
+    (historyOwned ? existingHistoryRoute?.target : null) ??
+    (historyOwned ? chooseHistoryTarget() : target);
+
+  if (mcpJobId && (!target || target.isDestroyed())) {
+    throw new AgentBridgeNotDeliveredError(
+      'No Translator tab is available for the persistent MCP job.'
+    );
+  }
 
   if (historyOwned) {
-    const existing = historyRoutes.getSnapshot(historyId);
-    target = existing?.target ?? chooseHistoryTarget();
     if (!target) {
-      throw new Error('No Translator tab is available for the history job.');
+      throw new AgentBridgeNotDeliveredError(
+        'No Translator tab is available for the history job.'
+      );
     }
     if (HISTORY_START_METHODS.has(method)) {
       // The renderer rejects a second active job for the same library item.
       // Reject it before installing a tentative generation: otherwise the
       // original job can finish while its route is temporarily superseded,
       // causing that exact terminal acknowledgement to be discarded as stale.
-      if (existing?.active) {
-        throw new Error(
+      if (
+        existingHistoryRoute?.active &&
+        !(
+          mcpJobId &&
+          existingMcpJobRoute?.active &&
+          existingMcpJobRoute.target.id === existingHistoryRoute.target.id
+        )
+      ) {
+        throw new AgentBridgeResponseError(
           'This library item already has an active agent operation.'
         );
       }
-      historyRouteToken = randomUUID();
-      previousRoute = historyRoutes.setActive(
-        historyId,
-        target,
-        historyRouteToken
-      );
+      if (existingHistoryRoute?.active) {
+        observedHistoryRouteToken = existingHistoryRoute.token;
+      } else {
+        historyRouteToken = randomUUID();
+        previousRoute = historyRoutes.setActive(
+          historyId,
+          target,
+          historyRouteToken
+        );
+      }
     } else {
-      observedHistoryRouteToken = existing?.token ?? null;
+      observedHistoryRouteToken = existingHistoryRoute?.token ?? null;
     }
   }
+
+  if (mcpJobId && target) {
+    if (MCP_JOB_START_METHODS.has(method)) {
+      if (existingMcpJobRoute?.active) {
+        observedMcpJobRouteToken = existingMcpJobRoute.token;
+      } else {
+        mcpJobRouteToken = randomUUID();
+        previousMcpJobRoute = mcpJobRoutes.setActive(
+          mcpJobId,
+          target,
+          mcpJobRouteToken
+        );
+      }
+    } else if (existingMcpJobRoute) {
+      observedMcpJobRouteToken = existingMcpJobRoute.token;
+    } else {
+      mcpJobRoutes.setInactive(mcpJobId, target);
+    }
+  }
+
+  const forwardedParams = { ...params };
+  if (mcpJobId) delete forwardedParams.mcpJobId;
 
   try {
     const result = await forwardAgentRequest(
       method,
-      params,
+      forwardedParams,
       target,
       signal,
-      historyRouteToken
+      historyRouteToken,
+      mcpJobId,
+      mcpJobRouteToken
     );
     if (
       historyId &&
@@ -251,6 +378,15 @@ export async function callAgentMethod(
         }
       }
     }
+    if (mcpJobId && target && isTerminalAgentResult(method, result)) {
+      const terminalToken =
+        mcpJobRouteToken || observedMcpJobRouteToken || null;
+      if (terminalToken) {
+        mcpJobRoutes.markInactiveByToken(mcpJobId, target, terminalToken);
+      } else {
+        mcpJobRoutes.markInactive(mcpJobId, target);
+      }
+    }
     return result;
   } catch (error) {
     // Timeout or packaged-client disconnect after send is ambiguous: the
@@ -260,6 +396,13 @@ export async function callAgentMethod(
     const startDefinitelyDidNotBegin = isDefiniteAgentBridgeStartFailure(error);
     if (historyId && historyRouteToken && startDefinitelyDidNotBegin) {
       historyRoutes.restoreIfToken(historyId, historyRouteToken, previousRoute);
+    }
+    if (mcpJobId && mcpJobRouteToken && startDefinitelyDidNotBegin) {
+      mcpJobRoutes.restoreIfToken(
+        mcpJobId,
+        mcpJobRouteToken,
+        previousMcpJobRoute
+      );
     }
     if (!signal?.aborted) {
       log.error(`[agent-bridge] Failed to call ${method}:`, error);

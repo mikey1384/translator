@@ -1,4 +1,4 @@
-export declare const PACKAGED_AGENT_PROTOCOL_VERSION: 3;
+export declare const PACKAGED_AGENT_PROTOCOL_VERSION: 4;
 export declare const PACKAGED_AGENT_HANDSHAKE_METHOD: 'translator/handshake';
 export declare const PACKAGED_AGENT_HANDSHAKE_ID: 'translator-internal-handshake';
 export declare const PACKAGED_AGENT_HANDSHAKE_TIMEOUT_MS: 5000;

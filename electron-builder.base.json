@@ -58,6 +58,34 @@
       "to": "packaged-tool-map.mjs"
     },
     {
+      "from": "packages/agent-server/src/canonical-json.mjs",
+      "to": "canonical-json.mjs"
+    },
+    {
+      "from": "packages/agent-server/src/job-store.mjs",
+      "to": "job-store.mjs"
+    },
+    {
+      "from": "packages/agent-server/src/job-owner-lease.mjs",
+      "to": "job-owner-lease.mjs"
+    },
+    {
+      "from": "packages/agent-server/src/mcp-v2-contract.mjs",
+      "to": "mcp-v2-contract.mjs"
+    },
+    {
+      "from": "packages/agent-server/src/mcp-v2-service.mjs",
+      "to": "mcp-v2-service.mjs"
+    },
+    {
+      "from": "packages/agent-server/src/srt.mjs",
+      "to": "srt.mjs"
+    },
+    {
+      "from": "packages/agent-server/src/subtitle-quality.mjs",
+      "to": "subtitle-quality.mjs"
+    },
+    {
       "from": "packages/agent-server/src/tool-schema-validator.mjs",
       "to": "tool-schema-validator.mjs"
     },

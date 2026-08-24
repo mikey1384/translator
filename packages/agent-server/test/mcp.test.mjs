@@ -36,6 +36,7 @@ test('MCP server exposes and runs the subscription-powered translation loop', as
     env: {
       ...process.env,
       TRANSLATOR_AGENT_SESSION_ROOT: path.join(fixtureRoot, 'sessions'),
+      TRANSLATOR_AGENT_JOB_ROOT: path.join(fixtureRoot, 'jobs'),
     },
     stderr: 'pipe',
   });
@@ -104,6 +105,27 @@ test('MCP server exposes and runs the subscription-powered translation loop', as
       `${name} must expose the bounded history_id contract in development`
     );
   }
+  for (const name of ['app_processing_status', 'app_processing_cancel']) {
+    const tool = listed.tools.find(candidate => candidate.name === name);
+    assert.equal(
+      tool?.inputSchema?.properties?.operation_id?.maxLength,
+      200,
+      `${name} must support querying the exact retained operation`
+    );
+  }
+
+  const unavailableStatus = await client.callTool({
+    name: 'app_status',
+    arguments: {},
+  });
+  const unavailableValue = toolValue(unavailableStatus);
+  assert.equal(unavailableStatus.isError, true);
+  assert.equal(unavailableValue._mcp.environment, 'development');
+  assert.equal(
+    unavailableValue._mcp.billing.will_consume_stage5_credits,
+    false
+  );
+  assert.match(unavailableValue.error.message, /launch|running|available/i);
 
   const invalidRemoval = await client.callTool({
     name: 'app_subtitles_mutate',

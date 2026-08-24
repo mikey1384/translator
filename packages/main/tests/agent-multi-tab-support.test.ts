@@ -75,6 +75,14 @@ test('packaged MCP history-aware tools accept non-empty history IDs', () => {
     enum: ['original', 'translation', 'dual'],
     default: 'dual',
   });
+
+  for (const tool of ['app_processing_status', 'app_processing_cancel']) {
+    assert.deepEqual(
+      TOOL_SCHEMAS[tool].properties?.operation_id,
+      { type: 'string', minLength: 1, maxLength: 200 },
+      `${tool} must match the main-process operation identity bound`
+    );
+  }
 });
 
 test('packaged MCP maps history and output fields without dropping ordinary fields', () => {
@@ -363,6 +371,44 @@ test('history route retention is bounded only for inactive routes', () => {
   assert.equal(routes.isActive('still-active', target), true);
 });
 
+test('persistent MCP job routes retain workspace affinity without counting idle bindings as active', () => {
+  const first = createRouteTarget(1);
+  const second = createRouteTarget(2);
+  const routes = new AgentHistoryRouteRegistry<typeof first>();
+
+  routes.setInactive('00000000-0000-4000-8000-000000000001', first);
+  assert.equal(routes.get('00000000-0000-4000-8000-000000000001'), first);
+  assert.equal(
+    routes.isActive('00000000-0000-4000-8000-000000000001', first),
+    false
+  );
+  assert.equal(routes.chooseLeastLoaded([first, second], first), first);
+
+  routes.setActive(
+    '00000000-0000-4000-8000-000000000001',
+    first,
+    '00000000-0000-4000-8000-000000000010'
+  );
+  assert.equal(routes.chooseLeastLoaded([first, second], first), second);
+  assert.equal(
+    routes.markInactiveByToken(
+      '00000000-0000-4000-8000-000000000001',
+      first,
+      '00000000-0000-4000-8000-000000000009'
+    ),
+    false,
+    'a stale helper completion cannot retire the current job generation'
+  );
+  assert.equal(
+    routes.markInactiveByToken(
+      '00000000-0000-4000-8000-000000000001',
+      first,
+      '00000000-0000-4000-8000-000000000010'
+    ),
+    true
+  );
+});
+
 test('history terminal acknowledgements are generation-fenced and failed starts restore the prior route', () => {
   const target = { id: 1, isDestroyed: () => false };
   const routes = new AgentHistoryRouteRegistry<typeof target>();
@@ -401,7 +447,7 @@ test('the bridge rejects duplicate active history starts before replacing their 
     'utf8'
   );
 
-  const activeCheck = bridgeSource.indexOf('if (existing?.active)');
+  const activeCheck = bridgeSource.indexOf('existingHistoryRoute?.active &&');
   const replacement = bridgeSource.indexOf(
     'previousRoute = historyRoutes.setActive'
   );
@@ -452,6 +498,41 @@ test('completed history jobs notify main without waiting for a polling client', 
     rendererSource.includes('.finally(() => {') &&
       rendererSource.includes('reportAgentHistoryJobTerminal'),
     'every history runner outcome must release its main-process active route'
+  );
+});
+
+test('persistent MCP jobs route follow-ups to their owning renderer across helper sessions', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const testDirectory = path.dirname(fileURLToPath(import.meta.url));
+  const projectRoot = path.resolve(testDirectory, '../../..');
+  const bridgeSource = fs.readFileSync(
+    path.join(projectRoot, 'packages/main/handlers/agent-bridge-handlers.ts'),
+    'utf8'
+  );
+  const rendererSource = fs.readFileSync(
+    path.join(
+      projectRoot,
+      'packages/renderer/listeners/translator-agent-listener.ts'
+    ),
+    'utf8'
+  );
+
+  assert.ok(
+    bridgeSource.includes('existingMcpJobRoute?.target') &&
+      bridgeSource.includes('delete forwardedParams.mcpJobId') &&
+      bridgeSource.includes("'agent-mcp-job-terminal'") &&
+      bridgeSource.includes(
+        'mcpJobRoutes.markInactiveByToken(jobId, event.sender, routeToken)'
+      ),
+    'main must route by the explicit job UUID and fence terminal notices by sender and generation'
+  );
+  assert.ok(
+    rendererSource.includes('__agentMcpJobRouteToken') &&
+      rendererSource.includes('reportAgentMcpJobTerminal') &&
+      rendererSource.includes('getInternalMcpJobRoute(input)'),
+    'mounted and preview work must release the exact persistent job route when it settles'
   );
 });
 
