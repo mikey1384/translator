@@ -774,6 +774,43 @@
       "unavailable": "Indisponibil",
       "thisSite": "acest site",
       "clearConfirm": "Aceasta te va deconecta de la {{site}} în Translator. Continui?"
+    },
+    "agentControl": {
+      "title": "Controlul agenților",
+      "description": "Permite agenților AI externi (Cursor, Codex etc.) să controleze această aplicație Translator printr-o interfață MCP locală. Când opțiunea este activată, agenții pot descărca videoclipuri, gestiona biblioteca, edita subtitrări și exporta fișiere în dosarele permise.",
+      "enableLabel": "Permite agenților să controleze această aplicație",
+      "enableAria": "Activează controlul agenților",
+      "status": {
+        "enabled": "Activat",
+        "disabled": "Dezactivat",
+        "connected": "Clienți conectați: {{count}}"
+      },
+      "permissions": "Ce pot face agenții:",
+      "permission": {
+        "download": "Descărca și gestiona videoclipuri",
+        "subtitles": "Crea, edita și traduce subtitrări",
+        "export": "Exporta fișiere în dosarele permise",
+        "settings": "Citi și modifica setările aplicației"
+      },
+      "restrictions": "Ce nu pot face agenții:",
+      "restriction": {
+        "payment": "Efectua achiziții sau accesa informații de plată",
+        "secrets": "Citi chei API sau tokenuri de autentificare salvate",
+        "admin": "Efectua operațiuni de administrator sau resetări la setările din fabrică"
+      },
+      "allowedDirectories": {
+        "title": "Dosare permise pentru scrierea fișierelor:",
+        "description": "Agenții pot scrie fișiere (exporturi, videoclipuri îmbinate) numai în aceste dosare. Configurează cel puțin un dosar pentru a activa exportul fișierelor.",
+        "empty": "Nu este configurat niciun dosar permis. Adaugă cel puțin unul pentru a activa exportul fișierelor."
+      },
+      "selectDirectory": "Selectează un dosar în care agenții pot scrie fișiere",
+      "removeDirectory": "Elimină",
+      "addDirectory": "+ Adaugă dosar",
+      "errors": {
+        "update": "Setarea pentru controlul agenților nu a putut fi actualizată.",
+        "addDirectory": "Dosarul nu a putut fi adăugat.",
+        "removeDirectory": "Dosarul nu a putut fi eliminat."
+      }
     }
   },
   "credits": {

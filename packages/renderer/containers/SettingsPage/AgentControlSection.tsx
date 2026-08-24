@@ -236,11 +236,21 @@ export default function AgentControlSection() {
         return;
       } else {
         console.error('Failed to update agent control:', result.error);
-        alert(result.error || 'Failed to update agent control setting');
+        alert(
+          t(
+            'settings.agentControl.errors.update',
+            'Failed to update agent control setting.'
+          )
+        );
       }
     } catch (error) {
       console.error('Failed to toggle agent control:', error);
-      alert('Failed to update agent control setting');
+      alert(
+        t(
+          'settings.agentControl.errors.update',
+          'Failed to update agent control setting.'
+        )
+      );
       try {
         const enabledValue = await SystemIPC.getAgentControlEnabled();
         if (authoritativeRevisionRef.current === requestRevision) {
@@ -272,12 +282,23 @@ export default function AgentControlSection() {
           const updatedDirs = await SystemIPC.getAgentAllowedDirectories();
           setAllowedDirectories(updatedDirs);
         } else {
-          alert(addResult.error || 'Failed to add directory');
+          console.error('Failed to add directory:', addResult.error);
+          alert(
+            t(
+              'settings.agentControl.errors.addDirectory',
+              'Failed to add directory.'
+            )
+          );
         }
       }
     } catch (error) {
       console.error('Failed to add directory:', error);
-      alert('Failed to add directory');
+      alert(
+        t(
+          'settings.agentControl.errors.addDirectory',
+          'Failed to add directory.'
+        )
+      );
     }
   };
 
@@ -288,11 +309,22 @@ export default function AgentControlSection() {
         const updatedDirs = await SystemIPC.getAgentAllowedDirectories();
         setAllowedDirectories(updatedDirs);
       } else {
-        alert(result.error || 'Failed to remove directory');
+        console.error('Failed to remove directory:', result.error);
+        alert(
+          t(
+            'settings.agentControl.errors.removeDirectory',
+            'Failed to remove directory.'
+          )
+        );
       }
     } catch (error) {
       console.error('Failed to remove directory:', error);
-      alert('Failed to remove directory');
+      alert(
+        t(
+          'settings.agentControl.errors.removeDirectory',
+          'Failed to remove directory.'
+        )
+      );
     }
   };
 
@@ -323,7 +355,8 @@ export default function AgentControlSection() {
               <span className={statusDotStyles(true)} />
               {t(
                 'settings.agentControl.status.connected',
-                `${clientsConnected} client${clientsConnected > 1 ? 's' : ''} connected`
+                '{{count}} client(s) connected',
+                { count: clientsConnected }
               )}
             </div>
           )}
@@ -350,7 +383,10 @@ export default function AgentControlSection() {
           checked={enabled}
           onChange={handleToggleEnabled}
           disabled={updating}
-          ariaLabel="Enable agent control"
+          ariaLabel={t(
+            'settings.agentControl.enableAria',
+            'Enable agent control'
+          )}
         />
       </div>
 

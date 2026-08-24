@@ -774,6 +774,43 @@
       "unavailable": "無法使用",
       "thisSite": "這個網站",
       "clearConfirm": "這會讓你在 Translator 中登出 {{site}}。要繼續嗎？"
+    },
+    "agentControl": {
+      "title": "代理程式控制",
+      "description": "允許外部 AI 代理程式（Cursor、Codex 等）透過本機 MCP 介面控制此 Translator 應用程式。啟用後，代理程式可以下載影片、管理您的媒體庫、編輯字幕，並將檔案匯出至允許的資料夾。",
+      "enableLabel": "允許代理程式控制此應用程式",
+      "enableAria": "啟用代理程式控制",
+      "status": {
+        "enabled": "已啟用",
+        "disabled": "已停用",
+        "connected": "已連線用戶端：{{count}}"
+      },
+      "permissions": "代理程式可以執行：",
+      "permission": {
+        "download": "下載及管理影片",
+        "subtitles": "建立、編輯及翻譯字幕",
+        "export": "將檔案匯出至允許的資料夾",
+        "settings": "讀取及修改應用程式設定"
+      },
+      "restrictions": "代理程式無法執行：",
+      "restriction": {
+        "payment": "進行購買或存取付款資訊",
+        "secrets": "讀取已儲存的 API 金鑰或驗證權杖",
+        "admin": "執行管理員操作或恢復原廠設定"
+      },
+      "allowedDirectories": {
+        "title": "允許寫入檔案的資料夾：",
+        "description": "代理程式只能將檔案（匯出檔案、合併後的影片）寫入這些資料夾。請至少設定一個資料夾以啟用檔案匯出。",
+        "empty": "尚未設定允許的資料夾。請至少新增一個資料夾以啟用檔案匯出。"
+      },
+      "selectDirectory": "選擇允許代理程式寫入檔案的資料夾",
+      "removeDirectory": "移除",
+      "addDirectory": "+ 新增資料夾",
+      "errors": {
+        "update": "無法更新代理程式控制設定。",
+        "addDirectory": "無法新增資料夾。",
+        "removeDirectory": "無法移除資料夾。"
+      }
     }
   },
   "credits": {

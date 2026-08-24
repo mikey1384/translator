@@ -774,6 +774,43 @@
       "unavailable": "Nedostupné",
       "thisSite": "tento web",
       "clearConfirm": "Tímto se v Translatoru odhlásíte z {{site}}. Pokračovat?"
+    },
+    "agentControl": {
+      "title": "Ovládání agenty",
+      "description": "Povolte externím agentům AI (Cursor, Codex apod.) ovládat tuto aplikaci Translator prostřednictvím místního rozhraní MCP. Po zapnutí mohou agenti stahovat videa, spravovat vaši knihovnu, upravovat titulky a exportovat soubory do povolených složek.",
+      "enableLabel": "Povolit agentům ovládat tuto aplikaci",
+      "enableAria": "Zapnout ovládání agenty",
+      "status": {
+        "enabled": "Zapnuto",
+        "disabled": "Vypnuto",
+        "connected": "Připojení klienti: {{count}}"
+      },
+      "permissions": "Co mohou agenti dělat:",
+      "permission": {
+        "download": "Stahovat a spravovat videa",
+        "subtitles": "Vytvářet, upravovat a překládat titulky",
+        "export": "Exportovat soubory do povolených složek",
+        "settings": "Číst a měnit nastavení aplikace"
+      },
+      "restrictions": "Co agenti nemohou dělat:",
+      "restriction": {
+        "payment": "Provádět nákupy nebo přistupovat k platebním údajům",
+        "secrets": "Číst uložené klíče API nebo ověřovací tokeny",
+        "admin": "Provádět operace správce nebo obnovení továrního nastavení"
+      },
+      "allowedDirectories": {
+        "title": "Složky povolené pro zápis souborů:",
+        "description": "Agenti mohou zapisovat soubory (exporty, sloučená videa) pouze do těchto složek. Pro export souborů nastavte alespoň jednu složku.",
+        "empty": "Nejsou nastaveny žádné povolené složky. Pro export souborů přidejte alespoň jednu."
+      },
+      "selectDirectory": "Vyberte složku, do které mohou agenti zapisovat soubory",
+      "removeDirectory": "Odebrat",
+      "addDirectory": "+ Přidat složku",
+      "errors": {
+        "update": "Nastavení ovládání agenty se nepodařilo aktualizovat.",
+        "addDirectory": "Složku se nepodařilo přidat.",
+        "removeDirectory": "Složku se nepodařilo odebrat."
+      }
     }
   },
   "credits": {

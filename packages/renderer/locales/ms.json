@@ -774,6 +774,43 @@
       "unavailable": "Tidak tersedia",
       "thisSite": "laman ini",
       "clearConfirm": "Ini akan mengeluarkan anda daripada {{site}} di dalam Translator. Teruskan?"
+    },
+    "agentControl": {
+      "title": "Kawalan Ejen",
+      "description": "Benarkan ejen AI luaran (Cursor, Codex dan sebagainya) mengawal aplikasi Translator ini melalui antara muka MCP setempat. Apabila didayakan, ejen boleh memuat turun video, mengurus pustaka anda, menyunting sari kata dan mengeksport fail ke folder yang dibenarkan.",
+      "enableLabel": "Benarkan kawalan ejen untuk aplikasi ini",
+      "enableAria": "Dayakan kawalan ejen",
+      "status": {
+        "enabled": "Didayakan",
+        "disabled": "Dilumpuhkan",
+        "connected": "Klien disambungkan: {{count}}"
+      },
+      "permissions": "Perkara yang boleh dilakukan oleh ejen:",
+      "permission": {
+        "download": "Muat turun dan urus video",
+        "subtitles": "Cipta, sunting dan terjemah sari kata",
+        "export": "Eksport fail ke folder yang dibenarkan",
+        "settings": "Baca dan ubah suai tetapan aplikasi"
+      },
+      "restrictions": "Perkara yang tidak boleh dilakukan oleh ejen:",
+      "restriction": {
+        "payment": "Membuat pembelian atau mengakses maklumat pembayaran",
+        "secrets": "Membaca kunci API atau token pengesahan yang disimpan",
+        "admin": "Melakukan operasi pentadbir atau tetapan semula kilang"
+      },
+      "allowedDirectories": {
+        "title": "Folder yang dibenarkan untuk penulisan fail:",
+        "description": "Ejen hanya boleh menulis fail (eksport, video digabungkan) ke folder ini. Tetapkan sekurang-kurangnya satu folder untuk mendayakan eksport fail.",
+        "empty": "Tiada folder dibenarkan ditetapkan. Tambah sekurang-kurangnya satu untuk mendayakan eksport fail."
+      },
+      "selectDirectory": "Pilih folder untuk membenarkan penulisan fail oleh ejen",
+      "removeDirectory": "Alih keluar",
+      "addDirectory": "+ Tambah Folder",
+      "errors": {
+        "update": "Tetapan kawalan ejen gagal dikemas kini.",
+        "addDirectory": "Folder gagal ditambah.",
+        "removeDirectory": "Folder gagal dialih keluar."
+      }
     }
   },
   "credits": {

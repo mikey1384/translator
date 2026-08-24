@@ -772,6 +772,43 @@
     "byoStack": {
       "title": "Your AI Stack"
     },
+    "agentControl": {
+      "title": "Agent Control",
+      "description": "Allow external AI agents (Cursor, Codex, etc.) to control this Translator application via a local MCP interface. When enabled, agents can download videos, manage your library, edit subtitles, and export files to allowed directories.",
+      "enableLabel": "Allow agent control of this app",
+      "enableAria": "Enable agent control",
+      "status": {
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "connected": "{{count}} client(s) connected"
+      },
+      "permissions": "What agents can do:",
+      "permission": {
+        "download": "Download and manage videos",
+        "subtitles": "Create, edit, and translate subtitles",
+        "export": "Export files to allowed directories",
+        "settings": "Read and modify app settings"
+      },
+      "restrictions": "What agents cannot do:",
+      "restriction": {
+        "payment": "Make purchases or access payment information",
+        "secrets": "Read stored API keys or authentication tokens",
+        "admin": "Perform admin operations or factory resets"
+      },
+      "allowedDirectories": {
+        "title": "Allowed directories for file writes:",
+        "description": "Agents can only write files (exports, merged videos) to these directories. Configure at least one directory to enable file exports.",
+        "empty": "No allowed directories configured. Add at least one to enable file exports."
+      },
+      "selectDirectory": "Select directory to allow agent file writes",
+      "removeDirectory": "Remove",
+      "addDirectory": "+ Add Directory",
+      "errors": {
+        "update": "Failed to update agent control setting.",
+        "addDirectory": "Failed to add directory.",
+        "removeDirectory": "Failed to remove directory."
+      }
+    },
     "siteConnection": {
       "title": "Website connection",
       "siteUrlLabel": "Site URL",

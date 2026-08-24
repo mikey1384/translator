@@ -774,6 +774,43 @@
       "unavailable": "Indisponível",
       "thisSite": "este site",
       "clearConfirm": "Isso fará você sair de {{site}} dentro do Translator. Continuar?"
+    },
+    "agentControl": {
+      "title": "Controle de agentes",
+      "description": "Permita que agentes externos de IA (Cursor, Codex etc.) controlem este aplicativo Translator por meio de uma interface MCP local. Quando ativado, os agentes podem baixar vídeos, gerenciar sua biblioteca, editar legendas e exportar arquivos para as pastas permitidas.",
+      "enableLabel": "Permitir que agentes controlem este aplicativo",
+      "enableAria": "Ativar controle de agentes",
+      "status": {
+        "enabled": "Ativado",
+        "disabled": "Desativado",
+        "connected": "Clientes conectados: {{count}}"
+      },
+      "permissions": "O que os agentes podem fazer:",
+      "permission": {
+        "download": "Baixar e gerenciar vídeos",
+        "subtitles": "Criar, editar e traduzir legendas",
+        "export": "Exportar arquivos para as pastas permitidas",
+        "settings": "Ler e modificar as configurações do aplicativo"
+      },
+      "restrictions": "O que os agentes não podem fazer:",
+      "restriction": {
+        "payment": "Fazer compras ou acessar informações de pagamento",
+        "secrets": "Ler chaves de API ou tokens de autenticação armazenados",
+        "admin": "Realizar operações de administrador ou restaurações de fábrica"
+      },
+      "allowedDirectories": {
+        "title": "Pastas permitidas para gravação de arquivos:",
+        "description": "Os agentes só podem gravar arquivos (exportações, vídeos mesclados) nestas pastas. Configure pelo menos uma pasta para habilitar a exportação de arquivos.",
+        "empty": "Nenhuma pasta permitida foi configurada. Adicione pelo menos uma para habilitar a exportação de arquivos."
+      },
+      "selectDirectory": "Selecione uma pasta para permitir que os agentes gravem arquivos",
+      "removeDirectory": "Remover",
+      "addDirectory": "+ Adicionar pasta",
+      "errors": {
+        "update": "Não foi possível atualizar a configuração de controle de agentes.",
+        "addDirectory": "Não foi possível adicionar a pasta.",
+        "removeDirectory": "Não foi possível remover a pasta."
+      }
     }
   },
   "credits": {

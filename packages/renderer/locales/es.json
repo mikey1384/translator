@@ -774,6 +774,43 @@
       "unavailable": "No disponible",
       "thisSite": "este sitio",
       "clearConfirm": "Esto cerrará tu sesión de {{site}} dentro de Translator. ¿Continuar?"
+    },
+    "agentControl": {
+      "title": "Control de agentes",
+      "description": "Permite que agentes de IA externos (Cursor, Codex, etc.) controlen esta aplicación Translator mediante una interfaz MCP local. Al habilitarlos, los agentes pueden descargar vídeos, gestionar tu biblioteca, editar subtítulos y exportar archivos a las carpetas permitidas.",
+      "enableLabel": "Permitir que agentes controlen esta aplicación",
+      "enableAria": "Activar el control de agentes",
+      "status": {
+        "enabled": "Activado",
+        "disabled": "Desactivado",
+        "connected": "Clientes conectados: {{count}}"
+      },
+      "permissions": "Qué pueden hacer los agentes:",
+      "permission": {
+        "download": "Descargar y gestionar vídeos",
+        "subtitles": "Crear, editar y traducir subtítulos",
+        "export": "Exportar archivos a las carpetas permitidas",
+        "settings": "Leer y modificar los ajustes de la aplicación"
+      },
+      "restrictions": "Qué no pueden hacer los agentes:",
+      "restriction": {
+        "payment": "Realizar compras o acceder a información de pago",
+        "secrets": "Leer claves de API o tokens de autenticación almacenados",
+        "admin": "Realizar operaciones de administrador o restablecimientos de fábrica"
+      },
+      "allowedDirectories": {
+        "title": "Carpetas permitidas para escribir archivos:",
+        "description": "Los agentes solo pueden escribir archivos (exportaciones y vídeos combinados) en estas carpetas. Configura al menos una carpeta para habilitar la exportación de archivos.",
+        "empty": "No hay carpetas permitidas configuradas. Añade al menos una para habilitar la exportación de archivos."
+      },
+      "selectDirectory": "Selecciona una carpeta para permitir que los agentes escriban archivos",
+      "removeDirectory": "Eliminar",
+      "addDirectory": "+ Añadir carpeta",
+      "errors": {
+        "update": "No se pudo actualizar el ajuste de control de agentes.",
+        "addDirectory": "No se pudo añadir la carpeta.",
+        "removeDirectory": "No se pudo eliminar la carpeta."
+      }
     }
   },
   "credits": {

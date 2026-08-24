@@ -774,6 +774,43 @@
       "unavailable": "Ej tillgänglig",
       "thisSite": "den här webbplatsen",
       "clearConfirm": "Detta loggar ut dig från {{site}} i Translator. Fortsätta?"
+    },
+    "agentControl": {
+      "title": "Agentstyrning",
+      "description": "Tillåt externa AI-agenter (Cursor, Codex med flera) att styra den här Translator-appen via ett lokalt MCP-gränssnitt. När detta är aktiverat kan agenter hämta videor, hantera ditt bibliotek, redigera undertexter och exportera filer till tillåtna mappar.",
+      "enableLabel": "Tillåt agentstyrning av den här appen",
+      "enableAria": "Aktivera agentstyrning",
+      "status": {
+        "enabled": "Aktiverad",
+        "disabled": "Inaktiverad",
+        "connected": "Anslutna klienter: {{count}}"
+      },
+      "permissions": "Vad agenter kan göra:",
+      "permission": {
+        "download": "Hämta och hantera videor",
+        "subtitles": "Skapa, redigera och översätta undertexter",
+        "export": "Exportera filer till tillåtna mappar",
+        "settings": "Läsa och ändra appinställningar"
+      },
+      "restrictions": "Vad agenter inte kan göra:",
+      "restriction": {
+        "payment": "Göra köp eller komma åt betalningsinformation",
+        "secrets": "Läsa sparade API-nycklar eller autentiseringstoken",
+        "admin": "Utföra administratörsåtgärder eller fabriksåterställningar"
+      },
+      "allowedDirectories": {
+        "title": "Tillåtna mappar för filskrivning:",
+        "description": "Agenter kan bara skriva filer (exporter, sammanfogade videor) till dessa mappar. Konfigurera minst en mapp för att aktivera filexport.",
+        "empty": "Inga tillåtna mappar har konfigurerats. Lägg till minst en för att aktivera filexport."
+      },
+      "selectDirectory": "Välj en mapp där agenter får skriva filer",
+      "removeDirectory": "Ta bort",
+      "addDirectory": "+ Lägg till mapp",
+      "errors": {
+        "update": "Det gick inte att uppdatera inställningen för agentstyrning.",
+        "addDirectory": "Det gick inte att lägga till mappen.",
+        "removeDirectory": "Det gick inte att ta bort mappen."
+      }
     }
   },
   "credits": {

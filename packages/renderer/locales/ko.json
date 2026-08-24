@@ -783,6 +783,43 @@
       "unavailable": "사용 불가",
       "thisSite": "이 사이트",
       "clearConfirm": "Translator 내에서 {{site}}에서 로그아웃됩니다. 계속할까요?"
+    },
+    "agentControl": {
+      "title": "에이전트 제어",
+      "description": "외부 AI 에이전트(Cursor, Codex 등)가 로컬 MCP 인터페이스를 통해 이 Translator 앱을 제어하도록 허용합니다. 활성화하면 에이전트가 동영상을 다운로드하고, 라이브러리를 관리하고, 자막을 편집하고, 허용된 폴더로 파일을 내보낼 수 있습니다.",
+      "enableLabel": "이 앱의 에이전트 제어 허용",
+      "enableAria": "에이전트 제어 활성화",
+      "status": {
+        "enabled": "활성화됨",
+        "disabled": "비활성화됨",
+        "connected": "클라이언트 {{count}}개 연결됨"
+      },
+      "permissions": "에이전트가 할 수 있는 작업:",
+      "permission": {
+        "download": "동영상 다운로드 및 관리",
+        "subtitles": "자막 생성, 편집 및 번역",
+        "export": "허용된 폴더로 파일 내보내기",
+        "settings": "앱 설정 읽기 및 수정"
+      },
+      "restrictions": "에이전트가 할 수 없는 작업:",
+      "restriction": {
+        "payment": "구매 또는 결제 정보 접근",
+        "secrets": "저장된 API 키 또는 인증 토큰 읽기",
+        "admin": "관리자 작업 또는 초기화 수행"
+      },
+      "allowedDirectories": {
+        "title": "파일 쓰기가 허용된 폴더:",
+        "description": "에이전트는 이 폴더에만 파일(내보내기, 병합된 동영상)을 쓸 수 있습니다. 파일 내보내기를 사용하려면 폴더를 하나 이상 설정하세요.",
+        "empty": "허용된 폴더가 없습니다. 파일 내보내기를 사용하려면 하나 이상 추가하세요."
+      },
+      "selectDirectory": "에이전트의 파일 쓰기를 허용할 폴더 선택",
+      "removeDirectory": "제거",
+      "addDirectory": "+ 폴더 추가",
+      "errors": {
+        "update": "에이전트 제어 설정을 업데이트하지 못했습니다.",
+        "addDirectory": "폴더를 추가하지 못했습니다.",
+        "removeDirectory": "폴더를 제거하지 못했습니다."
+      }
     }
   },
   "credits": {

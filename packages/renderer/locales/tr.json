@@ -774,6 +774,43 @@
       "unavailable": "Kullanılamıyor",
       "thisSite": "bu site",
       "clearConfirm": "Bu işlem sizi Translator içindeki {{site}} hesabından çıkarır. Devam edilsin mi?"
+    },
+    "agentControl": {
+      "title": "Aracı Denetimi",
+      "description": "Harici yapay zekâ aracıların (Cursor, Codex vb.) bu Translator uygulamasını yerel bir MCP arayüzü üzerinden denetlemesine izin verin. Etkinleştirildiğinde aracılar video indirebilir, kitaplığınızı yönetebilir, altyazıları düzenleyebilir ve dosyaları izin verilen klasörlere aktarabilir.",
+      "enableLabel": "Aracıların bu uygulamayı denetlemesine izin ver",
+      "enableAria": "Aracı denetimini etkinleştir",
+      "status": {
+        "enabled": "Etkin",
+        "disabled": "Devre dışı",
+        "connected": "Bağlı istemci sayısı: {{count}}"
+      },
+      "permissions": "Aracıların yapabilecekleri:",
+      "permission": {
+        "download": "Videoları indirme ve yönetme",
+        "subtitles": "Altyazı oluşturma, düzenleme ve çevirme",
+        "export": "Dosyaları izin verilen klasörlere aktarma",
+        "settings": "Uygulama ayarlarını okuma ve değiştirme"
+      },
+      "restrictions": "Aracıların yapamayacakları:",
+      "restriction": {
+        "payment": "Satın alma işlemi yapma veya ödeme bilgilerine erişme",
+        "secrets": "Kayıtlı API anahtarlarını veya kimlik doğrulama belirteçlerini okuma",
+        "admin": "Yönetici işlemleri veya fabrika ayarlarına sıfırlama yapma"
+      },
+      "allowedDirectories": {
+        "title": "Dosya yazma izni verilen klasörler:",
+        "description": "Aracılar dosyaları (dışa aktarımlar, birleştirilmiş videolar) yalnızca bu klasörlere yazabilir. Dosya dışa aktarımını etkinleştirmek için en az bir klasör yapılandırın.",
+        "empty": "İzin verilen klasör yapılandırılmamış. Dosya dışa aktarımını etkinleştirmek için en az bir klasör ekleyin."
+      },
+      "selectDirectory": "Aracıların dosya yazmasına izin verilecek klasörü seçin",
+      "removeDirectory": "Kaldır",
+      "addDirectory": "+ Klasör Ekle",
+      "errors": {
+        "update": "Aracı denetimi ayarı güncellenemedi.",
+        "addDirectory": "Klasör eklenemedi.",
+        "removeDirectory": "Klasör kaldırılamadı."
+      }
     }
   },
   "credits": {

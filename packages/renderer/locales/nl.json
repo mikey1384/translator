@@ -774,6 +774,43 @@
       "unavailable": "Niet beschikbaar",
       "thisSite": "deze site",
       "clearConfirm": "Hierdoor word je in Translator afgemeld bij {{site}}. Doorgaan?"
+    },
+    "agentControl": {
+      "title": "Agentbesturing",
+      "description": "Sta externe AI-agents (Cursor, Codex enz.) toe om deze Translator-app via een lokale MCP-interface te besturen. Wanneer dit is ingeschakeld, kunnen agents video's downloaden, je bibliotheek beheren, ondertitels bewerken en bestanden naar toegestane mappen exporteren.",
+      "enableLabel": "Agentbesturing voor deze app toestaan",
+      "enableAria": "Agentbesturing inschakelen",
+      "status": {
+        "enabled": "Ingeschakeld",
+        "disabled": "Uitgeschakeld",
+        "connected": "Verbonden clients: {{count}}"
+      },
+      "permissions": "Wat agents kunnen doen:",
+      "permission": {
+        "download": "Video's downloaden en beheren",
+        "subtitles": "Ondertitels maken, bewerken en vertalen",
+        "export": "Bestanden naar toegestane mappen exporteren",
+        "settings": "App-instellingen lezen en wijzigen"
+      },
+      "restrictions": "Wat agents niet kunnen doen:",
+      "restriction": {
+        "payment": "Aankopen doen of betalingsgegevens bekijken",
+        "secrets": "Opgeslagen API-sleutels of verificatietokens lezen",
+        "admin": "Beheertaken uitvoeren of de fabrieksinstellingen herstellen"
+      },
+      "allowedDirectories": {
+        "title": "Toegestane mappen voor het schrijven van bestanden:",
+        "description": "Agents kunnen bestanden (exports, samengevoegde video's) alleen naar deze mappen schrijven. Stel minstens één map in om bestandsexport mogelijk te maken.",
+        "empty": "Er zijn geen toegestane mappen ingesteld. Voeg er minstens één toe om bestandsexport mogelijk te maken."
+      },
+      "selectDirectory": "Selecteer een map waarin agents bestanden mogen schrijven",
+      "removeDirectory": "Verwijderen",
+      "addDirectory": "+ Map toevoegen",
+      "errors": {
+        "update": "De instelling voor agentbesturing kon niet worden bijgewerkt.",
+        "addDirectory": "De map kon niet worden toegevoegd.",
+        "removeDirectory": "De map kon niet worden verwijderd."
+      }
     }
   },
   "credits": {

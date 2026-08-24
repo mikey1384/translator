@@ -774,6 +774,43 @@
       "unavailable": "Non disponibile",
       "thisSite": "questo sito",
       "clearConfirm": "Questo ti disconnetterà da {{site}} dentro Translator. Continuare?"
+    },
+    "agentControl": {
+      "title": "Controllo agenti",
+      "description": "Consenti agli agenti IA esterni (Cursor, Codex e altri) di controllare questa applicazione Translator tramite un’interfaccia MCP locale. Quando l’opzione è attiva, gli agenti possono scaricare video, gestire la tua libreria, modificare i sottotitoli ed esportare file nelle cartelle consentite.",
+      "enableLabel": "Consenti agli agenti di controllare questa app",
+      "enableAria": "Attiva il controllo agenti",
+      "status": {
+        "enabled": "Attivato",
+        "disabled": "Disattivato",
+        "connected": "Client connessi: {{count}}"
+      },
+      "permissions": "Cosa possono fare gli agenti:",
+      "permission": {
+        "download": "Scaricare e gestire video",
+        "subtitles": "Creare, modificare e tradurre sottotitoli",
+        "export": "Esportare file nelle cartelle consentite",
+        "settings": "Leggere e modificare le impostazioni dell’app"
+      },
+      "restrictions": "Cosa non possono fare gli agenti:",
+      "restriction": {
+        "payment": "Effettuare acquisti o accedere alle informazioni di pagamento",
+        "secrets": "Leggere chiavi API o token di autenticazione memorizzati",
+        "admin": "Eseguire operazioni di amministrazione o ripristini di fabbrica"
+      },
+      "allowedDirectories": {
+        "title": "Cartelle consentite per la scrittura dei file:",
+        "description": "Gli agenti possono scrivere file (esportazioni, video uniti) solo in queste cartelle. Configura almeno una cartella per abilitare l’esportazione dei file.",
+        "empty": "Non è configurata alcuna cartella consentita. Aggiungine almeno una per abilitare l’esportazione dei file."
+      },
+      "selectDirectory": "Seleziona una cartella in cui consentire agli agenti di scrivere file",
+      "removeDirectory": "Rimuovi",
+      "addDirectory": "+ Aggiungi cartella",
+      "errors": {
+        "update": "Impossibile aggiornare l’impostazione di controllo agenti.",
+        "addDirectory": "Impossibile aggiungere la cartella.",
+        "removeDirectory": "Impossibile rimuovere la cartella."
+      }
     }
   },
   "credits": {

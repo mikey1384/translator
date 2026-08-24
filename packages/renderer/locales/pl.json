@@ -774,6 +774,43 @@
       "unavailable": "Niedostępne",
       "thisSite": "ta strona",
       "clearConfirm": "To wyloguje Cię z {{site}} w Translatorze. Kontynuować?"
+    },
+    "agentControl": {
+      "title": "Sterowanie agentami",
+      "description": "Zezwalaj zewnętrznym agentom AI (Cursor, Codex itp.) na sterowanie aplikacją Translator przez lokalny interfejs MCP. Po włączeniu agenci mogą pobierać filmy, zarządzać biblioteką, edytować napisy i eksportować pliki do dozwolonych folderów.",
+      "enableLabel": "Zezwalaj agentom na sterowanie tą aplikacją",
+      "enableAria": "Włącz sterowanie agentami",
+      "status": {
+        "enabled": "Włączone",
+        "disabled": "Wyłączone",
+        "connected": "Połączeni klienci: {{count}}"
+      },
+      "permissions": "Co agenci mogą robić:",
+      "permission": {
+        "download": "Pobierać filmy i nimi zarządzać",
+        "subtitles": "Tworzyć, edytować i tłumaczyć napisy",
+        "export": "Eksportować pliki do dozwolonych folderów",
+        "settings": "Odczytywać i zmieniać ustawienia aplikacji"
+      },
+      "restrictions": "Czego agenci nie mogą robić:",
+      "restriction": {
+        "payment": "Dokonywać zakupów ani uzyskiwać dostępu do informacji o płatnościach",
+        "secrets": "Odczytywać zapisanych kluczy API ani tokenów uwierzytelniających",
+        "admin": "Wykonywać operacji administratora ani przywracać ustawień fabrycznych"
+      },
+      "allowedDirectories": {
+        "title": "Foldery dozwolone do zapisu plików:",
+        "description": "Agenci mogą zapisywać pliki (eksporty, połączone filmy) tylko w tych folderach. Skonfiguruj co najmniej jeden folder, aby włączyć eksport plików.",
+        "empty": "Nie skonfigurowano dozwolonych folderów. Dodaj co najmniej jeden, aby włączyć eksport plików."
+      },
+      "selectDirectory": "Wybierz folder, w którym agenci mogą zapisywać pliki",
+      "removeDirectory": "Usuń",
+      "addDirectory": "+ Dodaj folder",
+      "errors": {
+        "update": "Nie udało się zaktualizować ustawienia sterowania agentami.",
+        "addDirectory": "Nie udało się dodać folderu.",
+        "removeDirectory": "Nie udało się usunąć folderu."
+      }
     }
   },
   "credits": {

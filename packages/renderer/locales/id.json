@@ -774,6 +774,43 @@
       "unavailable": "Tidak tersedia",
       "thisSite": "situs ini",
       "clearConfirm": "Ini akan mengeluarkan Anda dari {{site}} di dalam Translator. Lanjutkan?"
+    },
+    "agentControl": {
+      "title": "Kontrol Agen",
+      "description": "Izinkan agen AI eksternal (Cursor, Codex, dan lainnya) mengontrol aplikasi Translator ini melalui antarmuka MCP lokal. Jika diaktifkan, agen dapat mengunduh video, mengelola pustaka Anda, mengedit subtitel, dan mengekspor file ke folder yang diizinkan.",
+      "enableLabel": "Izinkan agen mengontrol aplikasi ini",
+      "enableAria": "Aktifkan kontrol agen",
+      "status": {
+        "enabled": "Aktif",
+        "disabled": "Nonaktif",
+        "connected": "Klien terhubung: {{count}}"
+      },
+      "permissions": "Yang dapat dilakukan agen:",
+      "permission": {
+        "download": "Mengunduh dan mengelola video",
+        "subtitles": "Membuat, mengedit, dan menerjemahkan subtitel",
+        "export": "Mengekspor file ke folder yang diizinkan",
+        "settings": "Membaca dan mengubah pengaturan aplikasi"
+      },
+      "restrictions": "Yang tidak dapat dilakukan agen:",
+      "restriction": {
+        "payment": "Melakukan pembelian atau mengakses informasi pembayaran",
+        "secrets": "Membaca kunci API atau token autentikasi yang tersimpan",
+        "admin": "Melakukan operasi administrator atau reset pabrik"
+      },
+      "allowedDirectories": {
+        "title": "Folder yang diizinkan untuk penulisan file:",
+        "description": "Agen hanya dapat menulis file (hasil ekspor, video gabungan) ke folder ini. Konfigurasikan setidaknya satu folder untuk mengaktifkan ekspor file.",
+        "empty": "Belum ada folder yang diizinkan. Tambahkan setidaknya satu untuk mengaktifkan ekspor file."
+      },
+      "selectDirectory": "Pilih folder untuk mengizinkan agen menulis file",
+      "removeDirectory": "Hapus",
+      "addDirectory": "+ Tambah Folder",
+      "errors": {
+        "update": "Pengaturan kontrol agen gagal diperbarui.",
+        "addDirectory": "Folder gagal ditambahkan.",
+        "removeDirectory": "Folder gagal dihapus."
+      }
     }
   },
   "credits": {

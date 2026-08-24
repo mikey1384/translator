@@ -774,6 +774,43 @@
       "unavailable": "Utilgjengelig",
       "thisSite": "dette nettstedet",
       "clearConfirm": "Dette vil logge deg ut av {{site}} i Translator. Fortsette?"
+    },
+    "agentControl": {
+      "title": "Agentkontroll",
+      "description": "Tillat eksterne KI-agenter (Cursor, Codex osv.) å styre denne Translator-appen via et lokalt MCP-grensesnitt. Når dette er aktivert, kan agenter laste ned videoer, administrere biblioteket ditt, redigere undertekster og eksportere filer til tillatte mapper.",
+      "enableLabel": "Tillat agentkontroll av denne appen",
+      "enableAria": "Aktiver agentkontroll",
+      "status": {
+        "enabled": "Aktivert",
+        "disabled": "Deaktivert",
+        "connected": "Tilkoblede klienter: {{count}}"
+      },
+      "permissions": "Dette kan agenter gjøre:",
+      "permission": {
+        "download": "Laste ned og administrere videoer",
+        "subtitles": "Opprette, redigere og oversette undertekster",
+        "export": "Eksportere filer til tillatte mapper",
+        "settings": "Lese og endre appinnstillinger"
+      },
+      "restrictions": "Dette kan agenter ikke gjøre:",
+      "restriction": {
+        "payment": "Foreta kjøp eller få tilgang til betalingsinformasjon",
+        "secrets": "Lese lagrede API-nøkler eller autentiseringstokener",
+        "admin": "Utføre administratorhandlinger eller tilbakestilling til fabrikkinnstillinger"
+      },
+      "allowedDirectories": {
+        "title": "Tillatte mapper for filskriving:",
+        "description": "Agenter kan bare skrive filer (eksporter, sammenslåtte videoer) til disse mappene. Konfigurer minst én mappe for å aktivere fileksport.",
+        "empty": "Ingen tillatte mapper er konfigurert. Legg til minst én for å aktivere fileksport."
+      },
+      "selectDirectory": "Velg en mappe der agenter kan skrive filer",
+      "removeDirectory": "Fjern",
+      "addDirectory": "+ Legg til mappe",
+      "errors": {
+        "update": "Kunne ikke oppdatere innstillingen for agentkontroll.",
+        "addDirectory": "Kunne ikke legge til mappen.",
+        "removeDirectory": "Kunne ikke fjerne mappen."
+      }
     }
   },
   "credits": {

@@ -774,6 +774,43 @@
       "unavailable": "Nem érhető el",
       "thisSite": "ez az oldal",
       "clearConfirm": "Ez kijelentkezteti a {{site}} oldalról a Translatorban. Folytatja?"
+    },
+    "agentControl": {
+      "title": "Ügynökvezérlés",
+      "description": "Engedélyezze, hogy külső MI-ügynökök (Cursor, Codex stb.) egy helyi MCP-felületen keresztül vezéreljék ezt a Translator alkalmazást. Bekapcsolás után az ügynökök videókat tölthetnek le, kezelhetik a médiatárat, szerkeszthetik a feliratokat, és fájlokat exportálhatnak az engedélyezett mappákba.",
+      "enableLabel": "Az alkalmazás ügynökvezérlésének engedélyezése",
+      "enableAria": "Ügynökvezérlés bekapcsolása",
+      "status": {
+        "enabled": "Bekapcsolva",
+        "disabled": "Kikapcsolva",
+        "connected": "Csatlakoztatott kliensek: {{count}}"
+      },
+      "permissions": "Az ügynökök által elvégezhető műveletek:",
+      "permission": {
+        "download": "Videók letöltése és kezelése",
+        "subtitles": "Feliratok létrehozása, szerkesztése és fordítása",
+        "export": "Fájlok exportálása engedélyezett mappákba",
+        "settings": "Alkalmazásbeállítások olvasása és módosítása"
+      },
+      "restrictions": "Az ügynökök által nem végezhető műveletek:",
+      "restriction": {
+        "payment": "Vásárlás vagy fizetési adatok elérése",
+        "secrets": "Mentett API-kulcsok vagy hitelesítési tokenek olvasása",
+        "admin": "Rendszergazdai műveletek vagy gyári visszaállítás végrehajtása"
+      },
+      "allowedDirectories": {
+        "title": "Fájlírásra engedélyezett mappák:",
+        "description": "Az ügynökök csak ezekbe a mappákba írhatnak fájlokat (exportokat, egyesített videókat). A fájlexport engedélyezéséhez állítson be legalább egy mappát.",
+        "empty": "Nincs engedélyezett mappa beállítva. A fájlexport engedélyezéséhez adjon hozzá legalább egyet."
+      },
+      "selectDirectory": "Válassza ki a mappát, amelybe az ügynökök fájlokat írhatnak",
+      "removeDirectory": "Eltávolítás",
+      "addDirectory": "+ Mappa hozzáadása",
+      "errors": {
+        "update": "Nem sikerült frissíteni az ügynökvezérlés beállítását.",
+        "addDirectory": "Nem sikerült hozzáadni a mappát.",
+        "removeDirectory": "Nem sikerült eltávolítani a mappát."
+      }
     }
   },
   "credits": {

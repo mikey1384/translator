@@ -774,6 +774,43 @@
       "unavailable": "Ei saatavilla",
       "thisSite": "tämä sivusto",
       "clearConfirm": "Tämä kirjaa sinut ulos sivustosta {{site}} Translatorissa. Jatketaanko?"
+    },
+    "agentControl": {
+      "title": "Agenttiohjaus",
+      "description": "Salli ulkoisten tekoälyagenttien (Cursor, Codex ym.) ohjata tätä Translator-sovellusta paikallisen MCP-liittymän kautta. Kun asetus on käytössä, agentit voivat ladata videoita, hallita kirjastoasi, muokata tekstityksiä ja viedä tiedostoja sallittuihin kansioihin.",
+      "enableLabel": "Salli tämän sovelluksen agenttiohjaus",
+      "enableAria": "Ota agenttiohjaus käyttöön",
+      "status": {
+        "enabled": "Käytössä",
+        "disabled": "Ei käytössä",
+        "connected": "Yhdistettyjä asiakkaita: {{count}}"
+      },
+      "permissions": "Mitä agentit voivat tehdä:",
+      "permission": {
+        "download": "Ladata ja hallita videoita",
+        "subtitles": "Luoda, muokata ja kääntää tekstityksiä",
+        "export": "Viedä tiedostoja sallittuihin kansioihin",
+        "settings": "Lukea ja muuttaa sovelluksen asetuksia"
+      },
+      "restrictions": "Mitä agentit eivät voi tehdä:",
+      "restriction": {
+        "payment": "Tehdä ostoksia tai käyttää maksutietoja",
+        "secrets": "Lukea tallennettuja API-avaimia tai todennustunnuksia",
+        "admin": "Suorittaa ylläpitotoimia tai palauttaa tehdasasetuksia"
+      },
+      "allowedDirectories": {
+        "title": "Tiedostojen kirjoittamiseen sallitut kansiot:",
+        "description": "Agentit voivat kirjoittaa tiedostoja (vientejä, yhdistettyjä videoita) vain näihin kansioihin. Määritä vähintään yksi kansio tiedostojen viennin käyttöön ottamiseksi.",
+        "empty": "Sallittuja kansioita ei ole määritetty. Lisää vähintään yksi, jotta tiedostojen vienti voidaan ottaa käyttöön."
+      },
+      "selectDirectory": "Valitse kansio, johon agentit saavat kirjoittaa tiedostoja",
+      "removeDirectory": "Poista",
+      "addDirectory": "+ Lisää kansio",
+      "errors": {
+        "update": "Agenttiohjauksen asetusta ei voitu päivittää.",
+        "addDirectory": "Kansiota ei voitu lisätä.",
+        "removeDirectory": "Kansiota ei voitu poistaa."
+      }
     }
   },
   "credits": {

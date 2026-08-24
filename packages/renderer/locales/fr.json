@@ -774,6 +774,43 @@
       "unavailable": "Indisponible",
       "thisSite": "ce site",
       "clearConfirm": "Cela vous déconnectera de {{site}} dans Translator. Continuer ?"
+    },
+    "agentControl": {
+      "title": "Contrôle des agents",
+      "description": "Autorisez des agents IA externes (Cursor, Codex, etc.) à contrôler cette application Translator via une interface MCP locale. Lorsque cette option est activée, les agents peuvent télécharger des vidéos, gérer votre bibliothèque, modifier les sous-titres et exporter des fichiers vers les dossiers autorisés.",
+      "enableLabel": "Autoriser les agents à contrôler cette application",
+      "enableAria": "Activer le contrôle des agents",
+      "status": {
+        "enabled": "Activé",
+        "disabled": "Désactivé",
+        "connected": "Clients connectés : {{count}}"
+      },
+      "permissions": "Ce que les agents peuvent faire :",
+      "permission": {
+        "download": "Télécharger et gérer des vidéos",
+        "subtitles": "Créer, modifier et traduire des sous-titres",
+        "export": "Exporter des fichiers vers les dossiers autorisés",
+        "settings": "Lire et modifier les paramètres de l’application"
+      },
+      "restrictions": "Ce que les agents ne peuvent pas faire :",
+      "restriction": {
+        "payment": "Effectuer des achats ou accéder aux informations de paiement",
+        "secrets": "Lire les clés API ou les jetons d’authentification enregistrés",
+        "admin": "Effectuer des opérations d’administration ou rétablir les paramètres d’usine"
+      },
+      "allowedDirectories": {
+        "title": "Dossiers autorisés pour l’écriture de fichiers :",
+        "description": "Les agents peuvent uniquement écrire des fichiers (exportations, vidéos fusionnées) dans ces dossiers. Configurez au moins un dossier pour activer l’exportation de fichiers.",
+        "empty": "Aucun dossier autorisé n’est configuré. Ajoutez-en au moins un pour activer l’exportation de fichiers."
+      },
+      "selectDirectory": "Sélectionner un dossier dans lequel les agents peuvent écrire",
+      "removeDirectory": "Supprimer",
+      "addDirectory": "+ Ajouter un dossier",
+      "errors": {
+        "update": "Impossible de mettre à jour le paramètre de contrôle des agents.",
+        "addDirectory": "Impossible d’ajouter le dossier.",
+        "removeDirectory": "Impossible de supprimer le dossier."
+      }
     }
   },
   "credits": {

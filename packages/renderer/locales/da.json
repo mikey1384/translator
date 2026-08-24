@@ -774,6 +774,43 @@
       "unavailable": "Utilgængelig",
       "thisSite": "dette website",
       "clearConfirm": "Dette logger dig ud af {{site}} i Translator. Fortsæt?"
+    },
+    "agentControl": {
+      "title": "Agentstyring",
+      "description": "Tillad eksterne AI-agenter (Cursor, Codex osv.) at styre denne Translator-app via en lokal MCP-grænseflade. Når dette er aktiveret, kan agenter hente videoer, administrere dit bibliotek, redigere undertekster og eksportere filer til tilladte mapper.",
+      "enableLabel": "Tillad agentstyring af denne app",
+      "enableAria": "Aktivér agentstyring",
+      "status": {
+        "enabled": "Aktiveret",
+        "disabled": "Deaktiveret",
+        "connected": "Forbundne klienter: {{count}}"
+      },
+      "permissions": "Hvad agenter kan gøre:",
+      "permission": {
+        "download": "Hente og administrere videoer",
+        "subtitles": "Oprette, redigere og oversætte undertekster",
+        "export": "Eksportere filer til tilladte mapper",
+        "settings": "Læse og ændre appindstillinger"
+      },
+      "restrictions": "Hvad agenter ikke kan gøre:",
+      "restriction": {
+        "payment": "Foretage køb eller få adgang til betalingsoplysninger",
+        "secrets": "Læse gemte API-nøgler eller godkendelsestokens",
+        "admin": "Udføre administratorhandlinger eller nulstilling til fabriksindstillinger"
+      },
+      "allowedDirectories": {
+        "title": "Tilladte mapper til filskrivning:",
+        "description": "Agenter kan kun skrive filer (eksporter, sammenflettede videoer) til disse mapper. Konfigurer mindst én mappe for at aktivere fileksport.",
+        "empty": "Der er ikke konfigureret nogen tilladte mapper. Tilføj mindst én for at aktivere fileksport."
+      },
+      "selectDirectory": "Vælg en mappe, som agenter må skrive filer til",
+      "removeDirectory": "Fjern",
+      "addDirectory": "+ Tilføj mappe",
+      "errors": {
+        "update": "Indstillingen for agentstyring kunne ikke opdateres.",
+        "addDirectory": "Mappen kunne ikke tilføjes.",
+        "removeDirectory": "Mappen kunne ikke fjernes."
+      }
     }
   },
   "credits": {

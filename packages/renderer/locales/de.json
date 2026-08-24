@@ -774,6 +774,43 @@
       "unavailable": "Nicht verfügbar",
       "thisSite": "diese Website",
       "clearConfirm": "Dadurch wirst du in Translator bei {{site}} abgemeldet. Fortfahren?"
+    },
+    "agentControl": {
+      "title": "Agentensteuerung",
+      "description": "Erlaube externen KI-Agenten (Cursor, Codex usw.), diese Translator-Anwendung über eine lokale MCP-Schnittstelle zu steuern. Wenn diese Option aktiviert ist, können Agenten Videos herunterladen, deine Mediathek verwalten, Untertitel bearbeiten und Dateien in zulässige Ordner exportieren.",
+      "enableLabel": "Agentensteuerung für diese App zulassen",
+      "enableAria": "Agentensteuerung aktivieren",
+      "status": {
+        "enabled": "Aktiviert",
+        "disabled": "Deaktiviert",
+        "connected": "Verbundene Clients: {{count}}"
+      },
+      "permissions": "Was Agenten tun können:",
+      "permission": {
+        "download": "Videos herunterladen und verwalten",
+        "subtitles": "Untertitel erstellen, bearbeiten und übersetzen",
+        "export": "Dateien in zulässige Ordner exportieren",
+        "settings": "App-Einstellungen lesen und ändern"
+      },
+      "restrictions": "Was Agenten nicht tun können:",
+      "restriction": {
+        "payment": "Käufe tätigen oder auf Zahlungsinformationen zugreifen",
+        "secrets": "Gespeicherte API-Schlüssel oder Authentifizierungstoken lesen",
+        "admin": "Administratoraktionen oder Zurücksetzungen auf Werkseinstellungen durchführen"
+      },
+      "allowedDirectories": {
+        "title": "Zulässige Ordner für Dateizugriffe:",
+        "description": "Agenten können Dateien (Exporte, zusammengeführte Videos) nur in diese Ordner schreiben. Konfiguriere mindestens einen Ordner, um Dateiexporte zu aktivieren.",
+        "empty": "Es sind keine zulässigen Ordner konfiguriert. Füge mindestens einen hinzu, um Dateiexporte zu aktivieren."
+      },
+      "selectDirectory": "Ordner auswählen, in den Agenten Dateien schreiben dürfen",
+      "removeDirectory": "Entfernen",
+      "addDirectory": "+ Ordner hinzufügen",
+      "errors": {
+        "update": "Die Einstellung für die Agentensteuerung konnte nicht aktualisiert werden.",
+        "addDirectory": "Der Ordner konnte nicht hinzugefügt werden.",
+        "removeDirectory": "Der Ordner konnte nicht entfernt werden."
+      }
     }
   },
   "credits": {

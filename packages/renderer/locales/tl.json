@@ -774,6 +774,43 @@
       "unavailable": "Hindi available",
       "thisSite": "ang site na ito",
       "clearConfirm": "Ilo-log out ka nito sa {{site}} sa loob ng Translator. Magpatuloy?"
+    },
+    "agentControl": {
+      "title": "Kontrol ng Agent",
+      "description": "Payagan ang mga panlabas na AI agent (Cursor, Codex, at iba pa) na kontrolin ang Translator app na ito sa pamamagitan ng lokal na MCP interface. Kapag naka-enable, maaaring mag-download ng mga video ang mga agent, pamahalaan ang iyong library, mag-edit ng mga subtitle, at mag-export ng mga file sa mga pinapayagang folder.",
+      "enableLabel": "Payagan ang mga agent na kontrolin ang app na ito",
+      "enableAria": "I-enable ang kontrol ng agent",
+      "status": {
+        "enabled": "Naka-enable",
+        "disabled": "Naka-disable",
+        "connected": "Mga nakakonektang client: {{count}}"
+      },
+      "permissions": "Mga puwedeng gawin ng mga agent:",
+      "permission": {
+        "download": "Mag-download at mamahala ng mga video",
+        "subtitles": "Gumawa, mag-edit, at magsalin ng mga subtitle",
+        "export": "Mag-export ng mga file sa mga pinapayagang folder",
+        "settings": "Basahin at baguhin ang mga setting ng app"
+      },
+      "restrictions": "Mga hindi puwedeng gawin ng mga agent:",
+      "restriction": {
+        "payment": "Bumili o i-access ang impormasyon sa pagbabayad",
+        "secrets": "Basahin ang mga nakaimbak na API key o authentication token",
+        "admin": "Magsagawa ng mga operasyong pang-admin o factory reset"
+      },
+      "allowedDirectories": {
+        "title": "Mga folder na pinapayagang sulatan ng file:",
+        "description": "Sa mga folder na ito lamang maaaring magsulat ng mga file ang mga agent (mga export at pinagsamang video). Mag-configure ng kahit isang folder para ma-enable ang pag-export ng file.",
+        "empty": "Walang naka-configure na pinapayagang folder. Magdagdag ng kahit isa para ma-enable ang pag-export ng file."
+      },
+      "selectDirectory": "Pumili ng folder na maaaring sulatan ng mga agent",
+      "removeDirectory": "Alisin",
+      "addDirectory": "+ Magdagdag ng Folder",
+      "errors": {
+        "update": "Hindi na-update ang setting ng kontrol ng agent.",
+        "addDirectory": "Hindi naidagdag ang folder.",
+        "removeDirectory": "Hindi naalis ang folder."
+      }
     }
   },
   "credits": {

@@ -774,6 +774,43 @@
       "unavailable": "Nie beskikbaar nie",
       "thisSite": "hierdie werf",
       "clearConfirm": "Dit sal jou binne Translator by {{site}} afmeld. Gaan voort?"
+    },
+    "agentControl": {
+      "title": "Agentbeheer",
+      "description": "Laat eksterne KI-agente (Cursor, Codex, ens.) toe om hierdie Translator-toepassing deur ’n plaaslike MCP-koppelvlak te beheer. Wanneer dit geaktiveer is, kan agente video’s aflaai, jou biblioteek bestuur, onderskrifte wysig en lêers na toegelate vouers uitvoer.",
+      "enableLabel": "Laat agente toe om hierdie toepassing te beheer",
+      "enableAria": "Aktiveer agentbeheer",
+      "status": {
+        "enabled": "Geaktiveer",
+        "disabled": "Gedeaktiveer",
+        "connected": "Gekoppelde kliënte: {{count}}"
+      },
+      "permissions": "Wat agente kan doen:",
+      "permission": {
+        "download": "Video’s aflaai en bestuur",
+        "subtitles": "Onderskrifte skep, wysig en vertaal",
+        "export": "Lêers na toegelate vouers uitvoer",
+        "settings": "Toepassingsinstellings lees en verander"
+      },
+      "restrictions": "Wat agente nie kan doen nie:",
+      "restriction": {
+        "payment": "Aankope doen of toegang tot betalingsinligting kry",
+        "secrets": "Gestoorde API-sleutels of verifikasietekens lees",
+        "admin": "Administrateurhandelinge of fabriekterugstellings uitvoer"
+      },
+      "allowedDirectories": {
+        "title": "Toegelate vouers vir die skryf van lêers:",
+        "description": "Agente kan lêers (uitvoere, saamgevoegde video’s) slegs na hierdie vouers skryf. Stel minstens een vouer op om lêeruitvoer te aktiveer.",
+        "empty": "Geen toegelate vouers is opgestel nie. Voeg minstens een by om lêeruitvoer te aktiveer."
+      },
+      "selectDirectory": "Kies ’n vouer waarin agente lêers mag skryf",
+      "removeDirectory": "Verwyder",
+      "addDirectory": "+ Voeg vouer by",
+      "errors": {
+        "update": "Die agentbeheerinstelling kon nie bygewerk word nie.",
+        "addDirectory": "Die vouer kon nie bygevoeg word nie.",
+        "removeDirectory": "Die vouer kon nie verwyder word nie."
+      }
     }
   },
   "credits": {

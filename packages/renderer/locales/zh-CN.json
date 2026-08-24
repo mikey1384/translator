@@ -774,6 +774,43 @@
       "unavailable": "不可用",
       "thisSite": "此站点",
       "clearConfirm": "这会让你在 Translator 中退出 {{site}}。是否继续？"
+    },
+    "agentControl": {
+      "title": "智能体控制",
+      "description": "允许外部 AI 智能体（Cursor、Codex 等）通过本地 MCP 接口控制此 Translator 应用。启用后，智能体可以下载视频、管理您的媒体库、编辑字幕，并将文件导出到允许的文件夹。",
+      "enableLabel": "允许智能体控制此应用",
+      "enableAria": "启用智能体控制",
+      "status": {
+        "enabled": "已启用",
+        "disabled": "已禁用",
+        "connected": "已连接客户端：{{count}}"
+      },
+      "permissions": "智能体可以执行：",
+      "permission": {
+        "download": "下载和管理视频",
+        "subtitles": "创建、编辑和翻译字幕",
+        "export": "将文件导出到允许的文件夹",
+        "settings": "读取和修改应用设置"
+      },
+      "restrictions": "智能体不能执行：",
+      "restriction": {
+        "payment": "进行购买或访问付款信息",
+        "secrets": "读取已存储的 API 密钥或身份验证令牌",
+        "admin": "执行管理员操作或恢复出厂设置"
+      },
+      "allowedDirectories": {
+        "title": "允许写入文件的文件夹：",
+        "description": "智能体只能向这些文件夹写入文件（导出文件、合并后的视频）。请至少配置一个文件夹以启用文件导出。",
+        "empty": "尚未配置允许的文件夹。请至少添加一个文件夹以启用文件导出。"
+      },
+      "selectDirectory": "选择允许智能体写入文件的文件夹",
+      "removeDirectory": "移除",
+      "addDirectory": "+ 添加文件夹",
+      "errors": {
+        "update": "无法更新智能体控制设置。",
+        "addDirectory": "无法添加文件夹。",
+        "removeDirectory": "无法移除文件夹。"
+      }
     }
   },
   "credits": {

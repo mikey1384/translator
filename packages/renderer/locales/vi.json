@@ -774,6 +774,43 @@
       "unavailable": "Không khả dụng",
       "thisSite": "trang web này",
       "clearConfirm": "Thao tác này sẽ đăng xuất bạn khỏi {{site}} trong Translator. Tiếp tục?"
+    },
+    "agentControl": {
+      "title": "Điều khiển tác nhân",
+      "description": "Cho phép các tác nhân AI bên ngoài (Cursor, Codex, v.v.) điều khiển ứng dụng Translator này qua giao diện MCP cục bộ. Khi bật, tác nhân có thể tải video xuống, quản lý thư viện, chỉnh sửa phụ đề và xuất tệp vào các thư mục được phép.",
+      "enableLabel": "Cho phép tác nhân điều khiển ứng dụng này",
+      "enableAria": "Bật điều khiển tác nhân",
+      "status": {
+        "enabled": "Đã bật",
+        "disabled": "Đã tắt",
+        "connected": "Máy khách đã kết nối: {{count}}"
+      },
+      "permissions": "Những việc tác nhân có thể làm:",
+      "permission": {
+        "download": "Tải xuống và quản lý video",
+        "subtitles": "Tạo, chỉnh sửa và dịch phụ đề",
+        "export": "Xuất tệp vào các thư mục được phép",
+        "settings": "Đọc và thay đổi cài đặt ứng dụng"
+      },
+      "restrictions": "Những việc tác nhân không thể làm:",
+      "restriction": {
+        "payment": "Mua hàng hoặc truy cập thông tin thanh toán",
+        "secrets": "Đọc khóa API hoặc mã xác thực đã lưu",
+        "admin": "Thực hiện thao tác quản trị hoặc khôi phục cài đặt gốc"
+      },
+      "allowedDirectories": {
+        "title": "Thư mục được phép ghi tệp:",
+        "description": "Tác nhân chỉ có thể ghi tệp (tệp xuất, video đã ghép) vào các thư mục này. Hãy cấu hình ít nhất một thư mục để bật tính năng xuất tệp.",
+        "empty": "Chưa cấu hình thư mục được phép nào. Hãy thêm ít nhất một thư mục để bật tính năng xuất tệp."
+      },
+      "selectDirectory": "Chọn thư mục cho phép tác nhân ghi tệp",
+      "removeDirectory": "Xóa",
+      "addDirectory": "+ Thêm thư mục",
+      "errors": {
+        "update": "Không thể cập nhật cài đặt điều khiển tác nhân.",
+        "addDirectory": "Không thể thêm thư mục.",
+        "removeDirectory": "Không thể xóa thư mục."
+      }
     }
   },
   "credits": {

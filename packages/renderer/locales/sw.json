@@ -774,6 +774,43 @@
       "unavailable": "Haipatikani",
       "thisSite": "tovuti hii",
       "clearConfirm": "Hii itakuondoa kwenye {{site}} ndani ya Translator. Endelea?"
+    },
+    "agentControl": {
+      "title": "Udhibiti wa Mawakala",
+      "description": "Ruhusu mawakala wa nje wa AI (Cursor, Codex na wengine) kudhibiti programu hii ya Translator kupitia kiolesura cha ndani cha MCP. Ikishawashwa, mawakala wanaweza kupakua video, kusimamia maktaba yako, kuhariri manukuu na kuhamisha faili kwenye folda zinazoruhusiwa.",
+      "enableLabel": "Ruhusu mawakala kudhibiti programu hii",
+      "enableAria": "Washa udhibiti wa mawakala",
+      "status": {
+        "enabled": "Imewashwa",
+        "disabled": "Imezimwa",
+        "connected": "Wateja waliounganishwa: {{count}}"
+      },
+      "permissions": "Mambo ambayo mawakala wanaweza kufanya:",
+      "permission": {
+        "download": "Kupakua na kusimamia video",
+        "subtitles": "Kuunda, kuhariri na kutafsiri manukuu",
+        "export": "Kuhamisha faili kwenye folda zinazoruhusiwa",
+        "settings": "Kusoma na kubadilisha mipangilio ya programu"
+      },
+      "restrictions": "Mambo ambayo mawakala hawawezi kufanya:",
+      "restriction": {
+        "payment": "Kufanya ununuzi au kufikia taarifa za malipo",
+        "secrets": "Kusoma funguo za API au tokeni za uthibitishaji zilizohifadhiwa",
+        "admin": "Kufanya shughuli za msimamizi au kurejesha mipangilio ya kiwandani"
+      },
+      "allowedDirectories": {
+        "title": "Folda zinazoruhusiwa kuandikiwa faili:",
+        "description": "Mawakala wanaweza kuandika faili (faili zilizohamishwa, video zilizounganishwa) kwenye folda hizi pekee. Sanidi angalau folda moja ili kuwezesha uhamishaji wa faili.",
+        "empty": "Hakuna folda iliyoruhusiwa iliyosanidiwa. Ongeza angalau moja ili kuwezesha uhamishaji wa faili."
+      },
+      "selectDirectory": "Chagua folda ya kuruhusu mawakala kuandika faili",
+      "removeDirectory": "Ondoa",
+      "addDirectory": "+ Ongeza Folda",
+      "errors": {
+        "update": "Imeshindikana kusasisha mpangilio wa udhibiti wa mawakala.",
+        "addDirectory": "Imeshindikana kuongeza folda.",
+        "removeDirectory": "Imeshindikana kuondoa folda."
+      }
     }
   },
   "credits": {

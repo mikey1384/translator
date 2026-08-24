@@ -774,6 +774,43 @@
       "unavailable": "利用不可",
       "thisSite": "このサイト",
       "clearConfirm": "これによりTranslator内の{{site}}からサインアウトします。続行しますか？"
+    },
+    "agentControl": {
+      "title": "エージェント制御",
+      "description": "外部のAIエージェント（Cursor、Codexなど）が、ローカルMCPインターフェースを介してこのTranslatorアプリを操作できるようにします。有効にすると、エージェントは動画のダウンロード、ライブラリの管理、字幕の編集、許可されたフォルダーへのファイルのエクスポートを行えます。",
+      "enableLabel": "このアプリのエージェント制御を許可",
+      "enableAria": "エージェント制御を有効にする",
+      "status": {
+        "enabled": "有効",
+        "disabled": "無効",
+        "connected": "接続中のクライアント: {{count}}"
+      },
+      "permissions": "エージェントが実行できること:",
+      "permission": {
+        "download": "動画のダウンロードと管理",
+        "subtitles": "字幕の作成、編集、翻訳",
+        "export": "許可されたフォルダーへのファイルのエクスポート",
+        "settings": "アプリ設定の読み取りと変更"
+      },
+      "restrictions": "エージェントが実行できないこと:",
+      "restriction": {
+        "payment": "購入または支払い情報へのアクセス",
+        "secrets": "保存されたAPIキーまたは認証トークンの読み取り",
+        "admin": "管理操作または初期化の実行"
+      },
+      "allowedDirectories": {
+        "title": "ファイル書き込みを許可するフォルダー:",
+        "description": "エージェントは、ファイル（エクスポート、結合済み動画）をこれらのフォルダーにのみ書き込めます。ファイルのエクスポートを有効にするには、1つ以上のフォルダーを設定してください。",
+        "empty": "許可されたフォルダーが設定されていません。ファイルのエクスポートを有効にするには、1つ以上追加してください。"
+      },
+      "selectDirectory": "エージェントのファイル書き込みを許可するフォルダーを選択",
+      "removeDirectory": "削除",
+      "addDirectory": "+ フォルダーを追加",
+      "errors": {
+        "update": "エージェント制御設定を更新できませんでした。",
+        "addDirectory": "フォルダーを追加できませんでした。",
+        "removeDirectory": "フォルダーを削除できませんでした。"
+      }
     }
   },
   "credits": {
