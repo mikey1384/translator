@@ -14,6 +14,10 @@ const SUBTITLE_STYLE_PRESETS = new Set([
   'Boxed',
   'LineBox',
 ]);
+const SUBTITLE_DISPLAY_MODES = new Set(['original', 'translation', 'dual']);
+const SUBTITLE_FONT_FAMILY = 'Noto Sans';
+const SUBTITLE_FONT_ASSET = 'NotoSans-Regular.ttf';
+const SUBTITLE_SCALE_RULE = 'height_ratio_720_clamped_0.5_2';
 
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -74,13 +78,16 @@ export function persistentJobCheckpointSha256(job) {
   return canonicalJsonHash(job ?? null);
 }
 
-export function hasUnstartedRenderCheckpoint(job) {
+function hasText(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+export function hasRecoverableRenderCheckpoint(job) {
   const renderStages = Array.isArray(job?.stages)
     ? job.stages.filter(stage => stage?.id === 'render_outputs')
     : [];
   if (
     renderStages.length !== 1 ||
-    job?.render_authorized === true ||
     (job?.artifacts || []).some(
       artifact => artifact?.stage === 'render_outputs'
     )
@@ -89,20 +96,49 @@ export function hasUnstartedRenderCheckpoint(job) {
   }
   const stage = renderStages[0];
   const attempts = Number(stage.attempts || 0);
-  if (stage.result != null || stage.finished_at != null) return false;
-  if (attempts === 0) {
+  if (!Number.isSafeInteger(attempts) || attempts < 0) return false;
+
+  const neverStarted =
+    job?.render_authorized !== true &&
+    stage.result == null &&
+    stage.finished_at == null;
+  if (neverStarted && attempts === 0) {
     return (
       ['pending', 'cancelled'].includes(stage.status) &&
       stage.started_at == null &&
       stage.operation_id == null
     );
   }
-  return (
+  if (
+    neverStarted &&
     attempts === 1 &&
     ['blocked', 'cancelled'].includes(stage.status) &&
     stage.error?.code === 'RENDER_AUTHORIZATION_REQUIRED'
+  ) {
+    return true;
+  }
+
+  // A render that was explicitly authorized and then durably cancelled is a
+  // valid recovery source even though encoding began. Both callers separately
+  // require the source job to have no active-work claim, while the artifact
+  // check above and output-collision preflight prevent reuse of produced media.
+  return Boolean(
+    job?.status === 'cancelled' &&
+    job?.stage === 'cancelled' &&
+    job?.render_authorized === true &&
+    hasText(job?.finished_at) &&
+    stage.status === 'cancelled' &&
+    attempts >= 1 &&
+    hasText(stage.started_at) &&
+    hasText(stage.finished_at) &&
+    hasText(stage.operation_id) &&
+    stage.error == null
   );
 }
+
+// Kept as an internal compatibility alias for callers compiled against the
+// first recovery-tool release.
+export const hasUnstartedRenderCheckpoint = hasRecoverableRenderCheckpoint;
 
 export function stablePlanForEnvironment(plan, environment, schemaVersion) {
   if (!isObject(plan)) throw new TypeError('A candidate plan is required.');
@@ -148,6 +184,71 @@ function assertOriginalRenderSpec(originalSpec) {
   }
 }
 
+function positivePlanNumber(value, field) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(
+      `The legacy source plan cannot derive subtitle render spec ${field}.`
+    );
+  }
+  return parsed;
+}
+
+function resolveSourceRenderSpec(sourcePlan, style, baseFontSize) {
+  const outputs = sourcePlan.outputs;
+  const storedSpec = outputs.subtitle_render_spec;
+  if (storedSpec !== undefined && storedSpec !== null) {
+    assertOriginalRenderSpec(storedSpec);
+    return clone(storedSpec);
+  }
+
+  const displayMode = String(outputs.subtitle_display_mode || '');
+  if (!SUBTITLE_DISPLAY_MODES.has(displayMode)) {
+    throw new Error(
+      'The legacy source plan has no supported immutable subtitle display mode.'
+    );
+  }
+  const metadata = sourcePlan.source_metadata;
+  if (!isObject(metadata)) {
+    throw new Error(
+      'The legacy source plan has no immutable source metadata for subtitle rendering.'
+    );
+  }
+  const videoWidth = positivePlanNumber(metadata.width, 'video_width_px');
+  const videoHeight = positivePlanNumber(metadata.height, 'video_height_px');
+  const displayWidth =
+    metadata.display_width === undefined || metadata.display_width === null
+      ? videoWidth
+      : positivePlanNumber(metadata.display_width, 'display_width_px');
+  const displayHeight =
+    metadata.display_height === undefined || metadata.display_height === null
+      ? videoHeight
+      : positivePlanNumber(metadata.display_height, 'display_height_px');
+
+  return {
+    display_mode: displayMode,
+    style,
+    base_font_size_px: baseFontSize,
+    output_font_size_px: plannedSubtitleOutputFontSize(
+      baseFontSize,
+      videoHeight
+    ),
+    video_width_px: videoWidth,
+    video_height_px: videoHeight,
+    display_width_px: displayWidth,
+    display_height_px: displayHeight,
+    font_family: SUBTITLE_FONT_FAMILY,
+    font_asset: SUBTITLE_FONT_ASSET,
+    scale_rule: SUBTITLE_SCALE_RULE,
+    schema_version: 1,
+    field_sources: {
+      display_mode: 'legacy_plan_outputs',
+      style: 'render_checkpoint_fork',
+      base_font_size_px: 'render_checkpoint_fork',
+    },
+  };
+}
+
 export function buildRenderCheckpointForkPlan({
   sourcePlan,
   sourceJobId,
@@ -180,8 +281,6 @@ export function buildRenderCheckpointForkPlan({
       'Render-checkpoint fork recovery for a dubbed render source is not supported.'
     );
   }
-  const originalSpec = originalOutputs.subtitle_render_spec;
-  assertOriginalRenderSpec(originalSpec);
   const style = String(renderOverride?.style || '');
   const baseFontSize = Number(renderOverride?.base_font_size_px);
   if (!SUBTITLE_STYLE_PRESETS.has(style)) {
@@ -196,6 +295,7 @@ export function buildRenderCheckpointForkPlan({
       'The recovery subtitle base font size must be between 12 and 96.'
     );
   }
+  const originalSpec = resolveSourceRenderSpec(sourcePlan, style, baseFontSize);
   const outputFontSize = plannedSubtitleOutputFontSize(
     baseFontSize,
     originalSpec.video_height_px

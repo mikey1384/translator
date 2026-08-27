@@ -1,6 +1,6 @@
 export const MCP_V2_PROTOCOL_VERSION = '2.0.0';
 export const MCP_V2_SCHEMA_VERSION = 1;
-export const MCP_SERVER_VERSION = '0.2.2';
+export const MCP_SERVER_VERSION = '0.2.3';
 export const WATCH_JOB_DEFAULT_WAIT_MS = 25_000;
 export const WATCH_JOB_MAX_WAIT_MS = 50_000;
 

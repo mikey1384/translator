@@ -32,7 +32,16 @@ function koreanOrdinal(value) {
   return result;
 }
 
-async function recoveryFixture(t, { segmentCount = 5_700 } = {}) {
+async function recoveryFixture(
+  t,
+  {
+    segmentCount = 5_700,
+    legacyRenderSpec = false,
+    terminalCancelledRender = false,
+    sourceMetadataOverrides = {},
+    subtitleDisplayMode = 'translation',
+  } = {}
+) {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), 'translator-render-recovery-')
   );
@@ -120,6 +129,7 @@ async function recoveryFixture(t, { segmentCount = 5_700 } = {}) {
         display_width: 1920,
         display_height: 1080,
         bytes: sourceContent.byteLength,
+        ...sourceMetadataOverrides,
       },
       project_profile: 'stage5_korean',
       profile_snapshot: {
@@ -143,7 +153,7 @@ async function recoveryFixture(t, { segmentCount = 5_700 } = {}) {
           presets: ['youtube_1080p'],
           subtitle_formats: ['srt'],
           burn_subtitles: true,
-          subtitle_display_mode: 'translation',
+          subtitle_display_mode: subtitleDisplayMode,
           subtitle_style: 'Default',
           subtitle_font_size: 24,
           overwrite: false,
@@ -155,10 +165,12 @@ async function recoveryFixture(t, { segmentCount = 5_700 } = {}) {
         presets: ['youtube_1080p'],
         subtitle_formats: ['srt'],
         burn_subtitles: true,
-        subtitle_display_mode: 'translation',
+        subtitle_display_mode: subtitleDisplayMode,
         subtitle_style: 'Default',
         subtitle_font_size: 24,
-        subtitle_render_spec: originalRenderSpec,
+        ...(legacyRenderSpec
+          ? {}
+          : { subtitle_render_spec: originalRenderSpec }),
         x_account_tier: 'standard',
         overwrite: false,
       },
@@ -221,13 +233,27 @@ async function recoveryFixture(t, { segmentCount = 5_700 } = {}) {
         job.stages[index].percent = 100;
       }
       job.stages[2].result = validation;
-      job.stages[3].status = 'cancelled';
-      job.stages[3].attempts = 1;
-      job.stages[3].operation_id = `mcp-v2:${created.job_id}:render_outputs`;
-      job.stages[3].error = {
-        code: 'RENDER_AUTHORIZATION_REQUIRED',
-        message: 'Explicit render authorization required.',
-      };
+      const renderStage = job.stages[3];
+      renderStage.status = 'cancelled';
+      renderStage.operation_id = `mcp-v2:${created.job_id}:render_outputs`;
+      if (terminalCancelledRender) {
+        renderStage.attempts = 2;
+        renderStage.started_at = '2026-08-27T12:00:00.000Z';
+        renderStage.finished_at = '2026-08-27T12:01:00.000Z';
+        renderStage.result = {
+          id: renderStage.operation_id,
+          status: 'cancelled',
+          percent: 37,
+        };
+        renderStage.error = null;
+        job.render_authorized = true;
+      } else {
+        renderStage.attempts = 1;
+        renderStage.error = {
+          code: 'RENDER_AUTHORIZATION_REQUIRED',
+          message: 'Explicit render authorization required.',
+        };
+      }
       job.stage_index = 3;
       job.status = 'cancelled';
       job.stage = 'cancelled';
@@ -433,6 +459,114 @@ test('pure preflight preserves 5,700 accepted translations and the exact ledger 
   assert.equal(fixture.store.listJobs({ limit: 100 }).length, 2);
 });
 
+test('terminally cancelled legacy render synthesizes only the explicit LineBox/40 override', async t => {
+  const fixture = await recoveryFixture(t, {
+    segmentCount: 5_700,
+    legacyRenderSpec: true,
+    terminalCancelledRender: true,
+  });
+  const sourceJobBefore = fixture.store.requireJob(fixture.sourceJobId);
+  const sourceSessionBefore = fixture.store.getTranslationSession(
+    fixture.sourceJobId
+  );
+  const changesBefore = fixture.store.totalChanges();
+
+  const evaluated = await fixture.service.evaluateRenderCheckpointFork(
+    fixture.preflightArgs
+  );
+  const preflight = evaluated.receipt;
+  assert.equal(preflight.eligible, true);
+  assert.deepEqual(preflight.blockers, []);
+  assert.equal(preflight.source_job.render_stage_attempts, 2);
+  assert.equal(preflight.translations.total_segments, 5_700);
+  assert.equal(preflight.translations.accepted_segments, 5_700);
+  assert.equal(
+    preflight.translations.session_sha256,
+    fixture.expected.translation_session_sha256
+  );
+  assert.equal(preflight.validation.recomputed_matches, true);
+  assert.equal(
+    preflight.credits.source_ledger_sha256,
+    fixture.expected.credit_ledger_sha256
+  );
+  assert.equal(preflight.credits.observed_value, 147_319);
+  assert.equal(preflight.render.previous_spec, null);
+  assert.deepEqual(preflight.render.resolved_spec, {
+    display_mode: 'translation',
+    style: 'LineBox',
+    base_font_size_px: 40,
+    output_font_size_px: 60,
+    video_width_px: 1920,
+    video_height_px: 1080,
+    display_width_px: 1920,
+    display_height_px: 1080,
+    font_family: 'Noto Sans',
+    font_asset: 'NotoSans-Regular.ttf',
+    scale_rule: 'height_ratio_720_clamped_0.5_2',
+    schema_version: 1,
+    field_sources: {
+      display_mode: 'legacy_plan_outputs',
+      style: 'render_checkpoint_fork',
+      base_font_size_px: 'render_checkpoint_fork',
+    },
+    selection_binding_version: 1,
+  });
+  assert.equal(evaluated.candidatePlan.outputs.base_name, 'recovered-video');
+  assert.deepEqual(evaluated.candidatePlan.outputs.presets, ['youtube_1080p']);
+  assert.deepEqual(evaluated.candidatePlan.outputs.subtitle_formats, ['srt']);
+  assert.equal(evaluated.candidatePlan.outputs.burn_subtitles, true);
+  assert.equal(
+    evaluated.candidatePlan.outputs.subtitle_display_mode,
+    'translation'
+  );
+  assert.equal(evaluated.candidatePlan.outputs.x_account_tier, 'standard');
+  assert.equal(evaluated.candidatePlan.outputs.overwrite, false);
+  assert.equal(preflight.mutation_proof.writes, 0);
+  assert.equal(preflight.mutation_proof.app_mutations, 0);
+  assert.equal(preflight.mutation_proof.provider_calls, 0);
+  assert.equal(preflight.mutation_proof.ids_allocated, 0);
+  assert.equal(fixture.store.totalChanges(), changesBefore);
+  assert.deepEqual(
+    fixture.store.requireJob(fixture.sourceJobId),
+    sourceJobBefore
+  );
+  assert.deepEqual(
+    fixture.store.getTranslationSession(fixture.sourceJobId),
+    sourceSessionBefore
+  );
+  assert.deepEqual(
+    fixture.appCalls.map(call => call.method),
+    []
+  );
+
+  const created = data(
+    await fixture.service.execute('create_render_checkpoint_fork', {
+      ...fixture.preflightArgs,
+      preflight_digest: preflight.preflight_digest,
+      idempotency_key: 'legacy-terminal-render-recovery-fork',
+      confirm: 'CREATE_RENDER_CHECKPOINT_FORK',
+    })
+  );
+  assert.equal(created.render_started, false);
+  assert.equal(created.job.status, 'blocked');
+  assert.equal(created.job.render_authorized, false);
+  assert.equal(created.plan.outputs.subtitle_style, 'LineBox');
+  assert.equal(created.plan.outputs.subtitle_font_size, 40);
+  assert.equal(created.plan.credit_usage.total_stage5_credits, 0);
+  assert.deepEqual(
+    fixture.store.requireJob(fixture.sourceJobId),
+    sourceJobBefore
+  );
+  assert.deepEqual(
+    fixture.store.getTranslationSession(fixture.sourceJobId),
+    sourceSessionBefore
+  );
+  assert.deepEqual(
+    fixture.appCalls.map(call => call.method),
+    ['mcpContext']
+  );
+});
+
 test('fork creation fails closed when a bound checkpoint changes after preflight', async t => {
   const fixture = await recoveryFixture(t, { segmentCount: 12 });
   const preflight = data(
@@ -587,6 +721,157 @@ test('preflight refuses ambiguous evidence that the render checkpoint never star
   assert.equal(preflight.mutation_proof.writes, 0);
   assert.equal(fixture.store.totalChanges(), changesBefore);
   assert.equal(fixture.store.listJobs({ limit: 100 }).length, 1);
+});
+
+test('terminal cancellation recovery fails closed on artifacts or incomplete terminal evidence', async t => {
+  const artifactFixture = await recoveryFixture(t, {
+    segmentCount: 12,
+    legacyRenderSpec: true,
+    terminalCancelledRender: true,
+  });
+  artifactFixture.store.mutateJob(
+    artifactFixture.sourceJobId,
+    job => {
+      job.artifacts.push({
+        path: path.join(artifactFixture.outputDirectory, 'partial-render.mp4'),
+        stage: 'render_outputs',
+        kind: 'video',
+        partial: true,
+      });
+      return job;
+    },
+    { eventType: 'synthetic_partial_render_artifact' }
+  );
+  const artifactBlocked = data(
+    await artifactFixture.service.execute(
+      'preflight_render_checkpoint_fork',
+      artifactFixture.preflightArgs
+    )
+  );
+  assert.equal(artifactBlocked.eligible, false);
+  assert.ok(
+    artifactBlocked.blockers.some(
+      blocker => blocker.code === 'RENDER_CHECKPOINT_ALREADY_ATTEMPTED'
+    )
+  );
+  assert.equal(artifactBlocked.mutation_proof.writes, 0);
+
+  const unfinishedFixture = await recoveryFixture(t, {
+    segmentCount: 12,
+    legacyRenderSpec: true,
+    terminalCancelledRender: true,
+  });
+  unfinishedFixture.store.mutateJob(
+    unfinishedFixture.sourceJobId,
+    job => {
+      const renderStage = job.stages.find(
+        stage => stage.id === 'render_outputs'
+      );
+      renderStage.finished_at = null;
+      return job;
+    },
+    { eventType: 'synthetic_incomplete_render_cancellation' }
+  );
+  const unfinishedBlocked = data(
+    await unfinishedFixture.service.execute(
+      'preflight_render_checkpoint_fork',
+      unfinishedFixture.preflightArgs
+    )
+  );
+  assert.equal(unfinishedBlocked.eligible, false);
+  assert.ok(
+    unfinishedBlocked.blockers.some(
+      blocker => blocker.code === 'RENDER_CHECKPOINT_ALREADY_ATTEMPTED'
+    )
+  );
+  assert.equal(unfinishedBlocked.mutation_proof.writes, 0);
+});
+
+test('terminal cancellation recovery fails closed while source work is active', async t => {
+  const fixture = await recoveryFixture(t, {
+    segmentCount: 12,
+    legacyRenderSpec: true,
+    terminalCancelledRender: true,
+  });
+  const activityToken = '11111111-1111-4111-8111-111111111111';
+  const owner = {
+    protocol_version: 1,
+    endpoint: 'test-active-recovery-owner',
+    token: 'b'.repeat(64),
+    pid: process.pid,
+  };
+  assert.equal(
+    fixture.store.claimJobActivity(
+      fixture.sourceJobId,
+      'render_outputs',
+      activityToken,
+      owner
+    ).claimed,
+    true
+  );
+  const changesBefore = fixture.store.totalChanges();
+
+  const blocked = data(
+    await fixture.service.execute(
+      'preflight_render_checkpoint_fork',
+      fixture.preflightArgs
+    )
+  );
+  assert.equal(blocked.eligible, false);
+  assert.ok(
+    blocked.blockers.some(
+      blocker => blocker.code === 'SOURCE_JOB_ACTIVITY_PRESENT'
+    )
+  );
+  assert.equal(blocked.mutation_proof.writes, 0);
+  assert.equal(fixture.store.totalChanges(), changesBefore);
+  assert.equal(fixture.store.listJobs({ limit: 100 }).length, 1);
+});
+
+test('legacy render spec synthesis refuses missing or ambiguous persisted fields', async t => {
+  const missingHeight = await recoveryFixture(t, {
+    segmentCount: 12,
+    legacyRenderSpec: true,
+    terminalCancelledRender: true,
+    sourceMetadataOverrides: { height: null, display_height: null },
+  });
+  const heightBlocked = data(
+    await missingHeight.service.execute(
+      'preflight_render_checkpoint_fork',
+      missingHeight.preflightArgs
+    )
+  );
+  assert.equal(heightBlocked.eligible, false);
+  assert.ok(
+    heightBlocked.blockers.some(
+      blocker =>
+        blocker.code === 'CANDIDATE_FORK_INVALID' &&
+        /video_height_px/.test(blocker.message)
+    )
+  );
+  assert.equal(heightBlocked.mutation_proof.writes, 0);
+
+  const missingDisplayMode = await recoveryFixture(t, {
+    segmentCount: 12,
+    legacyRenderSpec: true,
+    terminalCancelledRender: true,
+    subtitleDisplayMode: null,
+  });
+  const displayModeBlocked = data(
+    await missingDisplayMode.service.execute(
+      'preflight_render_checkpoint_fork',
+      missingDisplayMode.preflightArgs
+    )
+  );
+  assert.equal(displayModeBlocked.eligible, false);
+  assert.ok(
+    displayModeBlocked.blockers.some(
+      blocker =>
+        blocker.code === 'CANDIDATE_FORK_INVALID' &&
+        /display mode/.test(blocker.message)
+    )
+  );
+  assert.equal(displayModeBlocked.mutation_proof.writes, 0);
 });
 
 test('atomic fork creation rejects an unbound source path and non-render plan drift', async t => {

@@ -14,7 +14,7 @@ import {
   RENDER_CHECKPOINT_FORK_STAGES,
   buildRenderCheckpointForkPlan,
   creditLedgerCheckpointSha256,
-  hasUnstartedRenderCheckpoint,
+  hasRecoverableRenderCheckpoint,
   persistentJobCheckpointSha256,
   stablePlanForEnvironment,
   translationSessionCheckpointSha256,
@@ -973,9 +973,9 @@ export class PersistentJobStore {
           'The source validation checkpoint is no longer completed and passing.'
         );
       }
-      if (!hasUnstartedRenderCheckpoint(sourceJob)) {
+      if (!hasRecoverableRenderCheckpoint(sourceJob)) {
         throw new IdempotencyConflictError(
-          'The source render checkpoint no longer proves that encoding never started.'
+          'The source render checkpoint is no longer unstarted or durably cancelled without rendered artifacts.'
         );
       }
       if (

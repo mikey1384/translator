@@ -15,7 +15,7 @@ import {
   SUBTITLE_RENDER_SELECTION_BINDING_VERSION,
   buildRenderCheckpointForkPlan,
   creditLedgerCheckpointSha256,
-  hasUnstartedRenderCheckpoint,
+  hasRecoverableRenderCheckpoint,
   persistentJobCheckpointSha256,
   renderCheckpointForkPreflightDigest,
   stablePlanForEnvironment,
@@ -972,10 +972,17 @@ function renderRecoveryStateSnapshot(store, jobId) {
   };
 }
 
-function renderInvariantOutputSnapshot(outputs) {
+function renderInvariantOutputSnapshot(
+  outputs,
+  { omitSynthesizedRenderSpec = false } = {}
+) {
   const stable = clone(outputs || {});
   delete stable.subtitle_style;
   delete stable.subtitle_font_size;
+  if (omitSynthesizedRenderSpec) {
+    delete stable.subtitle_render_spec;
+    return stable;
+  }
   if (isObject(stable.subtitle_render_spec)) {
     delete stable.subtitle_render_spec.style;
     delete stable.subtitle_render_spec.base_font_size_px;
@@ -3155,10 +3162,10 @@ export class McpV2Service {
         'RENDER_CHECKPOINT_UNAVAILABLE',
         'The source job has no planned render_outputs checkpoint.'
       );
-    } else if (!hasUnstartedRenderCheckpoint(sourceJob)) {
+    } else if (!hasRecoverableRenderCheckpoint(sourceJob)) {
       block(
         'RENDER_CHECKPOINT_ALREADY_ATTEMPTED',
-        'The source render checkpoint has already started or completed; automatic fork recovery is refused.'
+        'The source render checkpoint is neither unstarted nor a clean terminal cancellation without rendered artifacts.'
       );
     }
     if (
@@ -3300,11 +3307,18 @@ export class McpV2Service {
           this.environment,
           MCP_V2_SCHEMA_VERSION
         );
+        const sourceHasRenderSpec = isObject(
+          sourcePlan.outputs?.subtitle_render_spec
+        );
         const sourceOutputInvariantSha256 = canonicalJsonHash(
-          renderInvariantOutputSnapshot(sourcePlan.outputs)
+          renderInvariantOutputSnapshot(sourcePlan.outputs, {
+            omitSynthesizedRenderSpec: !sourceHasRenderSpec,
+          })
         );
         const candidateOutputInvariantSha256 = canonicalJsonHash(
-          renderInvariantOutputSnapshot(candidatePlan.outputs)
+          renderInvariantOutputSnapshot(candidatePlan.outputs, {
+            omitSynthesizedRenderSpec: !sourceHasRenderSpec,
+          })
         );
         if (sourceOutputInvariantSha256 !== candidateOutputInvariantSha256) {
           block(
