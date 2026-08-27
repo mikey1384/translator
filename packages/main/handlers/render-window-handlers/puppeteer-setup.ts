@@ -6,6 +6,7 @@ import type { Browser, Page } from 'puppeteer-core';
 import { app } from 'electron';
 import log from 'electron-log';
 import { getHeadlessChromePath } from '../../services/headless-chrome-installer.js';
+import { assertSubtitleRenderFontReadable } from '../../utils/subtitle-render-font.js';
 
 /* ───────── helpers ───────── */
 
@@ -44,9 +45,13 @@ export async function initPuppeteer({
 }): Promise<{ browser: Browser; page: Page }> {
   const hostHtml = getRenderHostPath();
   const hostUrl = url.pathToFileURL(hostHtml).toString();
+  const renderFont = await assertSubtitleRenderFontReadable(fontRegular);
 
   log.info('[Puppeteer]', { hostHtml });
   log.info(`[Puppeteer:${operationId}] Render host URL: ${hostUrl}`);
+  log.info(
+    `[Puppeteer:${operationId}] Font asset accessible at ${renderFont.path}`
+  );
 
   // choose package + executable ------------------------------------------
   const isDev = !app.isPackaged;
@@ -92,13 +97,13 @@ export async function initPuppeteer({
     content: `
       @font-face {
         font-family: "Noto Sans";
-        src: url("${fontRegular}") format("truetype");
+        src: url("${renderFont.url}") format("truetype");
         font-weight: 400;
         font-style: normal;
       }
       @font-face {
         font-family: "Noto Sans";
-        src: url("${fontRegular}") format("truetype");
+        src: url("${renderFont.url}") format("truetype");
         font-weight: 700;
         font-style: normal;
       }
@@ -116,23 +121,6 @@ export async function initPuppeteer({
   await page.waitForFunction('typeof window.updateSubtitle === "function"', {
     timeout: 5_000,
   });
-
-  if (fontRegular) {
-    try {
-      const fontPath = url.fileURLToPath(fontRegular);
-      await fs.promises.access(fontPath, fs.constants.R_OK);
-      log.info(
-        `[Puppeteer:${operationId}] Font asset accessible at ${fontPath}`
-      );
-    } catch (err) {
-      log.error(
-        `[Puppeteer:${operationId}] Unable to access font asset ${fontRegular}:`,
-        err
-      );
-    }
-  } else {
-    log.warn(`[Puppeteer:${operationId}] No font asset provided`);
-  }
 
   await page.addStyleTag({
     content: `

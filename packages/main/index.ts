@@ -151,6 +151,7 @@ import {
 import { installDevelopmentOwnerLeaseClient } from './development-owner-lease.js';
 import { SerializedLatestState } from './utils/serialized-latest-state.js';
 import { isPathInsideAllowedDirectories } from './utils/path-containment.js';
+import { getAgentMcpOnboarding } from './utils/agent-mcp-onboarding.js';
 
 const requestOwnershipFailureExit = createIdempotentShutdownRequest(
   (exitCode: number) => {
@@ -1424,8 +1425,13 @@ try {
     settingsHandlers.removeAgentAllowedDirectory(dir)
   );
   ipcMain.handle('get-agent-socket-status', () => {
+    const onboarding = getAgentMcpOnboarding({
+      isPackaged: app.isPackaged,
+      resourcesPath: nodeProcess.resourcesPath,
+      platform: nodeProcess.platform,
+    });
     if (!agentSocketServer) {
-      return { running: false, connectedClients: 0 };
+      return { running: false, connectedClients: 0, ...onboarding };
     }
     return {
       running: agentSocketServer.isRunning(),
@@ -1433,6 +1439,7 @@ try {
       // Counting sockets still inside the ownership handshake lets a stalled
       // or hostile half-connection make the UI claim an agent is connected.
       connectedClients: agentSocketServer.getAuthenticatedClientCount(),
+      ...onboarding,
     };
   });
   ipcMain.handle('agent-get-runtime-context', () => getAgentRuntimeContext());

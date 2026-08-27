@@ -57,6 +57,10 @@ export function removeAgentAllowedDirectory(
 export function getAgentSocketStatus(): Promise<{
   running: boolean;
   connectedClients: number;
+  serverName: 'translator';
+  transport: 'stdio';
+  launcherPath: string | null;
+  restartRequired: true;
 }> {
   return window.electron.getAgentSocketStatus();
 }

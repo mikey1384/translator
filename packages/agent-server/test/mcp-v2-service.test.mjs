@@ -4,22 +4,232 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { MCP_SERVER_VERSION } from '../src/mcp-v2-contract.mjs';
+import {
+  MCP_SERVER_VERSION,
+  WATCH_JOB_MAX_WAIT_MS,
+} from '../src/mcp-v2-contract.mjs';
 import { PersistentJobStore } from '../src/job-store.mjs';
 import {
+  bindAppObservationToPlan,
+  buildAss,
   McpV2Service,
   legacyToolDescription,
   legacyToolBilling,
   maximumSegmentEnd,
+  plannedAppSourceBinding,
   readStableBoundedTextFile,
+  repairZeroDurationTranscriptSegments,
+  resolvePlannedSubtitleRenderSpec,
   xWeightedTextLength,
 } from '../src/mcp-v2-service.mjs';
+
+test('subtitle render planning snapshots Translator preview preferences', () => {
+  const spec = resolvePlannedSubtitleRenderSpec({
+    planning: {
+      subtitle_rendering: {
+        display_mode: 'translation',
+        style: 'LineBox',
+        base_font_size_px: 40,
+      },
+    },
+    translationProvider: 'agent',
+    sourceMetadata: {
+      width: 1920,
+      height: 1080,
+      display_width: 1920,
+      display_height: 1080,
+    },
+  });
+
+  assert.deepEqual(spec, {
+    display_mode: 'translation',
+    style: 'LineBox',
+    base_font_size_px: 40,
+    output_font_size_px: 60,
+    video_width_px: 1920,
+    video_height_px: 1080,
+    display_width_px: 1920,
+    display_height_px: 1080,
+    font_family: 'Noto Sans',
+    font_asset: 'NotoSans-Regular.ttf',
+    scale_rule: 'height_ratio_720_clamped_0.5_2',
+    schema_version: 1,
+    field_sources: {
+      display_mode: 'translator_preview',
+      style: 'translator_preview',
+      base_font_size_px: 'translator_preview',
+    },
+  });
+});
+
+test('explicit subtitle render options override preview preferences field by field', () => {
+  const spec = resolvePlannedSubtitleRenderSpec({
+    requestedOutputs: {
+      subtitle_style: 'Classic',
+    },
+    planning: {
+      subtitle_rendering: {
+        display_mode: 'dual',
+        style: 'LineBox',
+        base_font_size_px: 40,
+      },
+    },
+    sourceMetadata: { width: 1080, height: 1920 },
+  });
+
+  assert.equal(spec.display_mode, 'dual');
+  assert.equal(spec.style, 'Classic');
+  assert.equal(spec.base_font_size_px, 40);
+  assert.equal(spec.output_font_size_px, 80);
+  assert.equal(spec.field_sources.display_mode, 'translator_preview');
+  assert.equal(spec.field_sources.style, 'request');
+  assert.equal(spec.field_sources.base_font_size_px, 'translator_preview');
+});
+
+test('subtitle render planning fails closed for malformed preview and profile values', () => {
+  assert.throws(
+    () =>
+      resolvePlannedSubtitleRenderSpec({
+        planning: {
+          subtitle_rendering: {
+            display_mode: 'translation',
+            style: 'LineBox',
+            base_font_size_px: null,
+          },
+        },
+      }),
+    /invalid preview font size/i
+  );
+  assert.throws(
+    () =>
+      resolvePlannedSubtitleRenderSpec({
+        profile: {
+          subtitle_rendering: {
+            display_mode: 'translation',
+            style: 'Unsupported',
+            font_size: 24,
+          },
+        },
+      }),
+    /resolved subtitle style is unsupported/i
+  );
+  assert.throws(
+    () =>
+      resolvePlannedSubtitleRenderSpec({
+        profile: {
+          subtitle_rendering: {
+            display_mode: 'translation',
+            style: 'Default',
+            font_size: '24',
+          },
+        },
+      }),
+    /profile subtitle font size is invalid/i
+  );
+});
+
+test('ASS exports keep canonical font size relative to the planned display canvas', () => {
+  const ass = buildAss(
+    [
+      {
+        id: 'cue-1',
+        start: 0,
+        end: 2,
+        source: 'Source',
+        translation: 'Translation',
+      },
+    ],
+    {
+      style: 'LineBox',
+      fontSize: 36,
+      playResX: 1280,
+      playResY: 720,
+    }
+  );
+
+  assert.match(ass, /PlayResX: 1280\nPlayResY: 720/);
+  assert.match(ass, /Style: LineBox,Noto Sans,36,/);
+
+  const maximum = buildAss([], { fontSize: 192 });
+  assert.match(maximum, /Style: Default,Noto Sans,192,/);
+});
 
 test('maximum transcript duration supports the advertised 100,000-cue ceiling', () => {
   const segments = Array.from({ length: 100_000 }, (_, index) => ({
     end: index / 10,
   }));
   assert.equal(maximumSegmentEnd(segments), 9_999.9);
+});
+
+test('planned source binding redacts an unrelated app workspace until mount', () => {
+  const plan = {
+    source: { kind: 'url', source_key: 'media:sha256:planned-source' },
+    source_metadata: { duration_seconds: 18_951 },
+  };
+  const stale = {
+    id: 'mcp-v2:test:transcription',
+    status: 'running',
+    source: {
+      videoPath: '/old/workspace.mp4',
+      durationSeconds: 1_026,
+    },
+    subtitles: { cueCount: 331, translatedCueCount: 331 },
+    outputs: { downloadedFilePath: '/old/workspace.mp4' },
+  };
+
+  const unverified = bindAppObservationToPlan(plan, stale);
+  assert.equal(unverified.source_binding.state, 'unverified');
+  assert.equal(unverified.source.videoPath, null);
+  assert.equal(unverified.source.durationSeconds, 18_951);
+  assert.equal(unverified.subtitles.cueCount, null);
+  assert.equal(unverified.outputs.downloadedFilePath, null);
+
+  const mounted = bindAppObservationToPlan(plan, {
+    ...stale,
+    source_binding: plannedAppSourceBinding(plan, 'mounted'),
+  });
+  assert.equal(mounted.source_binding.state, 'mounted');
+  assert.equal(mounted.source.videoPath, '/old/workspace.mp4');
+  assert.equal(mounted.subtitles.cueCount, 331);
+});
+
+test('zero-duration transcript repair preserves text in a same-start survivor', () => {
+  const repaired = repairZeroDurationTranscriptSegments([
+    {
+      id: 'zero-a',
+      index: 1,
+      start: 5,
+      end: 5,
+      source: 'First fragment.',
+    },
+    {
+      id: 'zero-b',
+      index: 2,
+      start: 5,
+      end: 5,
+      source: 'Second fragment.',
+    },
+    {
+      id: 'survivor',
+      index: 3,
+      start: 5,
+      end: 8,
+      source: 'Final fragment.',
+    },
+  ]);
+
+  assert.equal(repaired.original_segment_count, 3);
+  assert.equal(repaired.repaired_segment_count, 2);
+  assert.equal(repaired.persisted_segment_count, 1);
+  assert.equal(repaired.segments[0].id, 'survivor');
+  assert.equal(
+    repaired.segments[0].source,
+    'First fragment. Second fragment. Final fragment.'
+  );
+  assert.deepEqual(
+    repaired.repairs.map(item => item.merged_into_segment_id),
+    ['survivor', 'survivor']
+  );
 });
 
 test('stable bounded controller reads reject path swaps and oversized content', async t => {
@@ -92,6 +302,7 @@ function fakeApp(options = {}) {
       video_suggestions: { kind: 'stage5', provider: 'openai' },
     },
     planning: { credit_rates: {}, quality_translation: false },
+    agent_control: { source_binding_protocol_version: 1 },
     ...(options.context || {}),
   };
   return {
@@ -204,6 +415,69 @@ async function setup(t, environment = 'production', appOptions = {}) {
   return { store, app, service };
 }
 
+test('plan_job carries the live preview selection into its immutable outputs', async t => {
+  const fixture = await setup(t, 'production', {
+    context: {
+      planning: {
+        credit_rates: {},
+        quality_translation: false,
+        subtitle_rendering: {
+          display_mode: 'translation',
+          style: 'LineBox',
+          base_font_size_px: 40,
+        },
+      },
+    },
+    handlers: {
+      probeSource: async () => ({
+        metadata: {
+          title: 'Preview-bound source',
+          duration_seconds: 60,
+          width: 1920,
+          height: 1080,
+          display_width: 1920,
+          display_height: 1080,
+        },
+        compatibility: [],
+      }),
+    },
+  });
+  const sourcePath = path.join(fixture.store.root, 'preview-bound.mp4');
+  await fs.writeFile(sourcePath, 'fixture');
+
+  const plan = data(
+    await fixture.service.execute('plan_job', {
+      source: { path: sourcePath },
+      transcription_method: 'none',
+      translation_provider: 'agent',
+      target_language: 'Korean',
+    })
+  );
+
+  assert.equal(plan.outputs.subtitle_display_mode, 'translation');
+  assert.equal(plan.outputs.subtitle_style, 'LineBox');
+  assert.equal(plan.outputs.subtitle_font_size, 40);
+  assert.deepEqual(plan.outputs.subtitle_render_spec, {
+    display_mode: 'translation',
+    style: 'LineBox',
+    base_font_size_px: 40,
+    output_font_size_px: 60,
+    video_width_px: 1920,
+    video_height_px: 1080,
+    display_width_px: 1920,
+    display_height_px: 1080,
+    font_family: 'Noto Sans',
+    font_asset: 'NotoSans-Regular.ttf',
+    scale_rule: 'height_ratio_720_clamped_0.5_2',
+    schema_version: 1,
+    field_sources: {
+      display_mode: 'translator_preview',
+      style: 'translator_preview',
+      base_font_size_px: 'translator_preview',
+    },
+  });
+});
+
 function data(execution) {
   assert.equal(execution.isError, false, JSON.stringify(execution.value.error));
   return execution.value.data;
@@ -297,6 +571,48 @@ test('every v2 result names environment, versions, account, credits, and billing
   assert.equal(execution.value.stage5.account.reference, 'device…1234');
   assert.equal(execution.value.stage5.credits.balance, 123_456);
   assert.equal(execution.value.billing.will_consume_stage5_credits, false);
+  assert.equal(execution.value.data.source_binding.protocol_version, 1);
+  assert.equal(execution.value.data.source_binding.app_attested, true);
+  assert.equal(execution.value.data.source_binding.safe_for_new_jobs, true);
+});
+
+test('job creation fails closed until the connected app attests source binding', async t => {
+  const { service, store, app } = await setup(t, 'production', {
+    context: { agent_control: null },
+    handlers: {
+      probeSource: async () => ({
+        metadata: { title: 'Old app fixture', duration_seconds: 60 },
+        compatibility: [],
+      }),
+    },
+  });
+  const sourcePath = path.join(store.root, 'old-app-source.mp4');
+  await fs.writeFile(sourcePath, 'fixture');
+  const plan = data(
+    await service.execute('plan_job', {
+      source: { path: sourcePath },
+      transcription_method: 'stage5',
+      translation_provider: 'none',
+    })
+  );
+
+  const failure = executionError(
+    await service.execute('create_job', {
+      plan_hash: plan.plan_hash,
+      idempotency_key: 'old-app-source-binding-rejected',
+      credit_authorization: {
+        confirm: 'AUTHORIZE_STAGE5_CREDITS',
+        max_stage5_credits: plan.credit_usage.total_stage5_credits,
+      },
+    })
+  );
+  assert.equal(failure.code, 'APP_SOURCE_BINDING_PROTOCOL_REQUIRED');
+  assert.equal(failure.required_protocol_version, 1);
+  assert.equal(failure.observed_protocol_version, null);
+  assert.equal(
+    app.calls.some(call => call.method === 'startMediaWorkflow'),
+    false
+  );
 });
 
 test('a rejected paid start never claims that the failed request will consume credit', async t => {
@@ -379,6 +695,187 @@ test('status results expose authorized background spend and query the exact oper
     call => call.method === 'startMediaWorkflow'
   );
   assert.equal(startCall?.params.mcpJobId, fixture.created.job.job_id);
+});
+
+test('persistent stage acknowledgements are bound to the immutable planned source', async t => {
+  let activeOperationId = null;
+  const staleWorkspace = {
+    source: {
+      videoPath: '/old/workspace.mp4',
+      videoReady: true,
+      durationSeconds: 1_026,
+    },
+    subtitles: { cueCount: 331, translatedCueCount: 331 },
+    outputs: { downloadedFilePath: '/old/workspace.mp4' },
+  };
+  const fixture = await createRunningLocalJob(t, {
+    startMediaWorkflow: async params => {
+      activeOperationId = params.operationId;
+      return {
+        id: activeOperationId,
+        status: 'running',
+        inProgress: true,
+        percent: 0,
+        ...staleWorkspace,
+      };
+    },
+    processingStatus: async () => ({
+      id: activeOperationId,
+      status: 'running',
+      inProgress: true,
+      percent: 1,
+      ...staleWorkspace,
+    }),
+  });
+
+  const startCall = fixture.app.calls.find(
+    call => call.method === 'startMediaWorkflow'
+  );
+  assert.deepEqual(startCall?.params.sourceBinding, {
+    source_key: fixture.plan.source.source_key,
+    source_kind: 'local_file',
+    planned_duration_seconds: 60,
+    state: 'preparing',
+  });
+
+  const startedStage = fixture.created.job.stages.find(
+    stage => stage.id === 'transcription'
+  );
+  assert.equal(startedStage.result.source_binding.state, 'unverified');
+  assert.equal(startedStage.result.source.videoPath, null);
+  assert.equal(startedStage.result.source.durationSeconds, 60);
+  assert.equal(startedStage.result.subtitles.cueCount, null);
+
+  const refreshed = data(
+    await fixture.service.execute('get_job', {
+      job_id: fixture.created.job.job_id,
+    })
+  );
+  const refreshedStage = refreshed.job.stages.find(
+    stage => stage.id === 'transcription'
+  );
+  assert.equal(refreshedStage.result.source.videoPath, null);
+  assert.equal(refreshedStage.result.subtitles.cueCount, null);
+});
+
+test('a retained completed transcription recovers local zero timings without provider replay', async t => {
+  let operationId = null;
+  let providerStarts = 0;
+  let appliedSegments = null;
+  const fixture = await createRunningLocalJob(t, {
+    startMediaWorkflow: async params => {
+      providerStarts += 1;
+      operationId = params.operationId;
+      return {
+        id: operationId,
+        status: 'running',
+        inProgress: true,
+        source_binding: params.sourceBinding,
+      };
+    },
+    processingStatus: async params => ({
+      id: operationId,
+      status: 'completed',
+      inProgress: false,
+      percent: 100,
+      source_binding: { ...params.sourceBinding, state: 'mounted' },
+      result: {
+        videoPath: fixture.sourcePath,
+        credit_usage: {
+          stage5_credits_consumed: 17,
+          before_balance: 100,
+          after_balance: 83,
+          balance_snapshots_authoritative: true,
+        },
+      },
+    }),
+    subtitlesBatch: async ({ offset = 0, limit = 50 }) => {
+      const cues = [
+        {
+          id: 'zero-provider-cue',
+          index: 1,
+          start: 2,
+          end: 2,
+          original: 'Recovered fragment.',
+          translation: '',
+        },
+        {
+          id: 'valid-provider-cue',
+          index: 2,
+          start: 2,
+          end: 5,
+          original: 'Valid fragment.',
+          translation: '',
+        },
+      ];
+      const page = cues.slice(offset, offset + limit);
+      return {
+        offset,
+        limit,
+        total: cues.length,
+        hasMore: offset + page.length < cues.length,
+        cues: page,
+      };
+    },
+    applyTranslationSession: async params => {
+      appliedSegments = params.segments;
+      return {
+        applied: true,
+        cueCount: params.segments.length,
+        source_binding: params.sourceBinding,
+      };
+    },
+  });
+
+  fixture.store.mutateJob(fixture.created.job.job_id, job => {
+    const stage = job.stages[job.stage_index];
+    const failure = {
+      code: 'STAGE_FAILED',
+      stage: stage.id,
+      message: 'Invalid timing for segment: zero-provider-cue',
+      recoverable: true,
+      credit_consumed: 17,
+      suggested_action: 'retry_stage',
+    };
+    stage.status = 'failed';
+    stage.error = failure;
+    stage.result = {
+      videoPath: fixture.sourcePath,
+      credit_usage: { stage5_credits_consumed: 17 },
+    };
+    job.status = 'failed';
+    job.error = failure;
+    job.human_status = 'Failed: Transcribe source';
+    return job;
+  });
+
+  const recovered = data(
+    await fixture.service.execute('get_job', {
+      job_id: fixture.created.job.job_id,
+    })
+  ).job;
+  const transcription = recovered.stages[0];
+  const session = fixture.store.getTranslationSession(recovered.job_id);
+
+  assert.equal(providerStarts, 1);
+  assert.equal(transcription.status, 'completed');
+  assert.equal(
+    transcription.result.transcript_checkpoint.provider_retried,
+    false
+  );
+  assert.equal(
+    transcription.result.transcript_checkpoint.zero_duration_segments_merged,
+    1
+  );
+  assert.equal(recovered.credit_usage.consumed_stage5_credits, 17);
+  assert.equal(appliedSegments.length, 1);
+  assert.equal(appliedSegments[0].id, 'valid-provider-cue');
+  assert.equal(
+    appliedSegments[0].source,
+    'Recovered fragment. Valid fragment.'
+  );
+  assert.equal(session.segments.length, 1);
+  assert.equal(session.segments[0].source, appliedSegments[0].source);
 });
 
 test('unchanged app progress does not create false change-cursor events', async t => {
@@ -1567,6 +2064,62 @@ test('job event pagination is lossless and rejects impossible cursors', async t 
   );
 });
 
+test('watch_job ignores cursorless notifications until its unchanged timeout', async t => {
+  assert.equal(WATCH_JOB_MAX_WAIT_MS, 50_000);
+  const { service, store } = await setup(t);
+  const plan = store.putPlan({
+    request: { source: { mock: true } },
+    plan: {
+      source: { kind: 'mock', source_key: 'mock:watch-timeout' },
+      credit_usage: { total_stage5_credits: 0 },
+      stages: [{ id: 'checkpoint', label: 'Checkpoint' }],
+    },
+  });
+  const created = store.createJob({
+    planHash: plan.plan_hash,
+    idempotencyKey: 'watch-timeout-envelope',
+    request: {},
+  }).job;
+  const paused = store.mutateJob(created.job_id, next => {
+    next.status = 'paused';
+    next.human_status = 'Paused for watch timeout fixture';
+    return next;
+  });
+
+  const waitMs = 120;
+  let cursorlessNotificationSent = false;
+  const notification = setTimeout(() => {
+    cursorlessNotificationSent = true;
+    service.notify(created.job_id);
+  }, 20);
+  t.after(() => clearTimeout(notification));
+  const startedAt = performance.now();
+  const watched = data(
+    await service.execute('watch_job', {
+      job_id: created.job_id,
+      after_cursor: paused.event_cursor,
+      wait_ms: waitMs,
+    })
+  );
+  const elapsedMs = performance.now() - startedAt;
+
+  assert.equal(cursorlessNotificationSent, true);
+  assert.ok(
+    elapsedMs >= waitMs - 15,
+    `watch returned after ${elapsedMs}ms instead of holding for ${waitMs}ms`
+  );
+  assert.equal(watched.changed, false);
+  assert.equal(watched.unchanged, true);
+  assert.equal(watched.timed_out, true);
+  assert.equal(watched.wake_reason, 'timeout');
+  assert.equal(watched.requested_wait_ms, waitMs);
+  assert.equal(watched.effective_wait_ms, waitMs);
+  assert.ok(watched.waited_ms >= waitMs - 15);
+  assert.equal(watched.next_cursor, paused.event_cursor);
+  assert.equal(watched.has_more_events, false);
+  assert.deepEqual(watched.events, []);
+});
+
 test('controller shutdown interrupts and drains an outstanding job watch before store close', async t => {
   const { service, store } = await setup(t);
   const plan = store.putPlan({
@@ -1926,6 +2479,90 @@ test('immutable timing failures direct callers to a corrected plan instead of an
   });
   assert.equal(review.isError, true);
   assert.match(review.value.error.message, /validation-blocked correction/i);
+});
+
+test('validation retry preserves translations when excessive speed is timing-constrained', async t => {
+  const { service, store } = await setup(t);
+  const plan = store.putPlan({
+    request: { source: { mock: true } },
+    plan: {
+      source: { kind: 'mock', source_key: 'mock:timing-constrained-speed' },
+      source_metadata: { duration_seconds: 0.05 },
+      project_profile: 'stage5_korean',
+      profile_revision: 0,
+      profile_snapshot: {
+        target_language: 'Korean',
+        translation_style: {},
+      },
+      target_language: 'Korean',
+      translation: { provider: 'agent' },
+      credit_usage: { total_stage5_credits: 0 },
+      outputs: { output_directory: null, presets: [] },
+      stages: [{ id: 'translation_validation', label: 'Validate subtitles' }],
+    },
+  });
+  const job = store.createJob({
+    planHash: plan.plan_hash,
+    idempotencyKey: 'timing-constrained-validation-retry',
+    request: {},
+  }).job;
+  store.initializeTranslationSession(job.job_id, {
+    targetLanguage: 'Korean',
+    mediaDurationSeconds: 0.05,
+    segments: [
+      {
+        id: 'seg_1',
+        start: 0,
+        end: 0.05,
+        source: 'Go.',
+        translation: '가나다라마바',
+      },
+    ],
+  });
+  store.markTranslationSegmentsForCorrection(job.job_id, ['seg_1']);
+  store.mutateJob(job.job_id, next => {
+    next.status = 'blocked';
+    next.stage = 'translation_validation';
+    next.error = { code: 'TRANSLATION_VALIDATION_FAILED' };
+    next.stages[0].status = 'blocked';
+    return next;
+  });
+  const staleReview = data(
+    await service.execute('get_transcript_batch', {
+      job_id: job.job_id,
+      mode: 'review',
+    })
+  );
+
+  const retried = data(
+    await service.execute('retry_stage', {
+      job_id: job.job_id,
+      stage: 'translation_validation',
+    })
+  );
+  assert.equal(retried.status, 'completed');
+  assert.equal(retried.validation.passed, true);
+  assert.equal(
+    retried.validation.warning_code_counts.reading_speed_timing_constrained,
+    1
+  );
+  const session = store.getTranslationSession(job.job_id);
+  assert.equal(session.segments[0].translation, '가나다라마바');
+  assert.equal(session.segments[0].status, 'translated');
+  assert.equal(retried.credit_usage.consumed_stage5_credits, 0);
+  const rejectedStaleReview = await service.execute(
+    'submit_translation_batch',
+    {
+      job_id: job.job_id,
+      batch_id: staleReview.batch_id,
+      translations: [{ id: 'seg_1', text: '다른 번역' }],
+    }
+  );
+  assert.equal(rejectedStaleReview.isError, true);
+  assert.equal(
+    store.getTranslationSession(job.job_id).segments[0].translation,
+    '가나다라마바'
+  );
 });
 
 test('manifest retries reuse identical partial text outputs and complete only after the manifest write', async t => {

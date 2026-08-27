@@ -780,6 +780,10 @@
       "description": "Tillat eksterne KI-agenter (Cursor, Codex osv.) å styre denne Translator-appen via et lokalt MCP-grensesnitt. Når dette er aktivert, kan agenter laste ned videoer, administrere biblioteket ditt, redigere undertekster og eksportere filer til tillatte mapper.",
       "enableLabel": "Tillat agentkontroll av denne appen",
       "enableAria": "Aktiver agentkontroll",
+      "connection": {
+        "title": "Koble til Codex eller ChatGPT",
+        "instructions": "Legg til en STDIO-MCP-server med navnet «translator» ved å bruke denne startbanen. Lagre serveren, og start deretter Codex eller ChatGPT på nytt slik at de nye verktøyene vises."
+      },
       "status": {
         "enabled": "Aktivert",
         "disabled": "Deaktivert",

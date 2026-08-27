@@ -780,6 +780,10 @@
       "description": "Erlaube externen KI-Agenten (Cursor, Codex usw.), diese Translator-Anwendung über eine lokale MCP-Schnittstelle zu steuern. Wenn diese Option aktiviert ist, können Agenten Videos herunterladen, deine Mediathek verwalten, Untertitel bearbeiten und Dateien in zulässige Ordner exportieren.",
       "enableLabel": "Agentensteuerung für diese App zulassen",
       "enableAria": "Agentensteuerung aktivieren",
+      "connection": {
+        "title": "Codex oder ChatGPT verbinden",
+        "instructions": "Füge einen STDIO-MCP-Server namens „translator“ mit diesem Startpfad hinzu. Speichere den Server und starte anschließend Codex oder ChatGPT neu, damit die neuen Tools angezeigt werden."
+      },
       "status": {
         "enabled": "Aktiviert",
         "disabled": "Deaktiviert",

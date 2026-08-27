@@ -780,6 +780,10 @@
       "description": "Laat eksterne KI-agente (Cursor, Codex, ens.) toe om hierdie Translator-toepassing deur ’n plaaslike MCP-koppelvlak te beheer. Wanneer dit geaktiveer is, kan agente video’s aflaai, jou biblioteek bestuur, onderskrifte wysig en lêers na toegelate vouers uitvoer.",
       "enableLabel": "Laat agente toe om hierdie toepassing te beheer",
       "enableAria": "Aktiveer agentbeheer",
+      "connection": {
+        "title": "Koppel Codex of ChatGPT",
+        "instructions": "Voeg ’n STDIO-MCP-bediener met die naam “translator” by en gebruik hierdie lanseerderpad. Stoor die bediener en herbegin dan Codex of ChatGPT sodat die nuwe nutsgoed verskyn."
+      },
       "status": {
         "enabled": "Geaktiveer",
         "disabled": "Gedeaktiveer",

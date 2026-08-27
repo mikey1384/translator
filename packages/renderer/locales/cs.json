@@ -780,6 +780,10 @@
       "description": "Povolte externím agentům AI (Cursor, Codex apod.) ovládat tuto aplikaci Translator prostřednictvím místního rozhraní MCP. Po zapnutí mohou agenti stahovat videa, spravovat vaši knihovnu, upravovat titulky a exportovat soubory do povolených složek.",
       "enableLabel": "Povolit agentům ovládat tuto aplikaci",
       "enableAria": "Zapnout ovládání agenty",
+      "connection": {
+        "title": "Připojit Codex nebo ChatGPT",
+        "instructions": "Přidejte server MCP typu STDIO s názvem „translator“ a použijte tuto cestu ke spouštěči. Server uložte a poté restartujte Codex nebo ChatGPT, aby se zobrazily nové nástroje."
+      },
       "status": {
         "enabled": "Zapnuto",
         "disabled": "Vypnuto",

@@ -780,6 +780,10 @@
       "description": "Salli ulkoisten tekoälyagenttien (Cursor, Codex ym.) ohjata tätä Translator-sovellusta paikallisen MCP-liittymän kautta. Kun asetus on käytössä, agentit voivat ladata videoita, hallita kirjastoasi, muokata tekstityksiä ja viedä tiedostoja sallittuihin kansioihin.",
       "enableLabel": "Salli tämän sovelluksen agenttiohjaus",
       "enableAria": "Ota agenttiohjaus käyttöön",
+      "connection": {
+        "title": "Yhdistä Codex tai ChatGPT",
+        "instructions": "Lisää STDIO-MCP-palvelin nimeltä ”translator” käyttäen tätä käynnistyspolkua. Tallenna palvelin ja käynnistä sitten Codex tai ChatGPT uudelleen, jotta uudet työkalut tulevat näkyviin."
+      },
       "status": {
         "enabled": "Käytössä",
         "disabled": "Ei käytössä",

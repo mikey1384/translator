@@ -25,6 +25,7 @@ import {
 import { parseSrt } from '../../../shared/helpers/index.js';
 import { normalizeSubtitleSegments } from '../../services/subtitle-processing/pipeline/finalize-pass.js';
 import { normalizeSegmentWordTimingsForRender } from '../../services/subtitle-processing/word-timing-normalization.js';
+import { parseSubtitleRenderSpec } from '../../../shared/helpers/subtitle-render-spec.js';
 import { generateStatePngs } from './state-generator.js';
 import { directMerge } from './ffmpeg-direct-merge.js';
 import { probeFps } from './ffprobe-utils.js';
@@ -94,6 +95,31 @@ function getLanguagePreference(): string {
   // 4) Fall back to base language (en, es, fr, etc.)
   const base = ln.split('-')[0];
   return base || 'en';
+}
+
+function assertSubtitleRenderSpecMatchesOptions(
+  options: RenderSubtitlesOptions
+): void {
+  if (!options.subtitleRenderSpec) return;
+  const spec = parseSubtitleRenderSpec(options.subtitleRenderSpec);
+  const comparisons: Array<[string, unknown, unknown]> = [
+    ['display mode', options.outputMode, spec.displayMode],
+    ['style', options.stylePreset, spec.stylePreset],
+    ['font size', options.fontSizePx, spec.outputFontSizePx],
+    ['video width', options.videoWidth, spec.videoWidthPx],
+    ['video height', options.videoHeight, spec.videoHeightPx],
+    ['display width', options.displayWidth, spec.displayWidthPx],
+    ['display height', options.displayHeight, spec.displayHeightPx],
+    ['audio-only mode', options.overlayMode === 'blackVideo', spec.isAudioOnly],
+  ];
+  const mismatch = comparisons.find(
+    ([, actual, expected]) => actual !== expected
+  );
+  if (mismatch) {
+    throw new Error(
+      `Subtitle render options conflict with the canonical render spec (${mismatch[0]}).`
+    );
+  }
 }
 
 function formatBytes(bytes: number): string {
@@ -332,6 +358,7 @@ export function initializeRenderWindowHandlers({
           options.videoWidth = 1280;
         if (!options.videoHeight || options.videoHeight <= 0)
           options.videoHeight = 720;
+        assertSubtitleRenderSpecMatchesOptions(options);
 
         if (!options.originalVideoPath) {
           throw new Error(

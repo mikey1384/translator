@@ -780,6 +780,10 @@
       "description": "Autorisez des agents IA externes (Cursor, Codex, etc.) à contrôler cette application Translator via une interface MCP locale. Lorsque cette option est activée, les agents peuvent télécharger des vidéos, gérer votre bibliothèque, modifier les sous-titres et exporter des fichiers vers les dossiers autorisés.",
       "enableLabel": "Autoriser les agents à contrôler cette application",
       "enableAria": "Activer le contrôle des agents",
+      "connection": {
+        "title": "Connecter Codex ou ChatGPT",
+        "instructions": "Ajoutez un serveur MCP STDIO nommé « translator » à l’aide de ce chemin de lancement. Enregistrez le serveur, puis redémarrez Codex ou ChatGPT pour faire apparaître les nouveaux outils."
+      },
       "status": {
         "enabled": "Activé",
         "disabled": "Désactivé",

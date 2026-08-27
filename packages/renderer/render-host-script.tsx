@@ -1,6 +1,10 @@
 import {
   getSubtitleStyles,
+  normalizeSubtitleLineBoxLineText,
+  resolveSubtitleLineBoxStyle,
   resolveSubtitleRenderTheme,
+  subtitleLineBoxStyleToCssText,
+  subtitleTextUsesMultipleLines,
 } from '../shared/helpers/subtitle-style-util.js';
 import {
   SUBTITLE_STYLE_PRESETS,
@@ -56,14 +60,10 @@ function renderLineBoxLineHtml(
   lineHtml: string,
   renderTheme: ReturnType<typeof resolveSubtitleRenderTheme>
 ): string {
-  return (
-    `<span style="background-color:${renderTheme.lineBoxBackgroundColor};padding:${renderTheme.lineBoxPadding};display:inline;line-height:${renderTheme.lineHeight};white-space:pre-wrap;` +
-    `overflow-wrap:anywhere;word-break:break-word;` +
-    `border-radius:${renderTheme.lineBoxBorderRadiusPx}px;box-shadow:${renderTheme.lineBoxBoxShadow};` +
-    `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
-    `${lineHtml || '&nbsp;'}` +
-    `</span>`
+  const style = subtitleLineBoxStyleToCssText(
+    resolveSubtitleLineBoxStyle(renderTheme)
   );
+  return `<span style="${style}">${lineHtml || '&nbsp;'}</span>`;
 }
 
 function renderPlainSubtitleHtml(
@@ -78,7 +78,12 @@ function renderPlainSubtitleHtml(
   if (stylePreset === 'LineBox') {
     return text
       .split('\n')
-      .map(line => renderLineBoxLineHtml(escapeHtml(line.trim()), renderTheme))
+      .map(line =>
+        renderLineBoxLineHtml(
+          escapeHtml(normalizeSubtitleLineBoxLineText(line)),
+          renderTheme
+        )
+      )
       .join('<br/>');
   }
 
@@ -234,33 +239,36 @@ function initializeSubtitleDisplay() {
       videoWidthPx,
       videoHeightPx,
     } = opts;
-    const isMultiLine = state.text.includes('\n');
-    const renderTheme = resolveSubtitleRenderTheme({
-      displayFontSize: fontSizePx,
-      isFullScreen: false,
-      stylePreset,
-      isMultiLine,
-      videoWidthPx,
-      videoHeightPx,
-    });
-
-    if (state.mode === 'timed') {
-      el.innerHTML = renderTimedSubtitleHtml(state, stylePreset, renderTheme);
-    } else {
-      el.innerHTML = renderPlainSubtitleHtml(
-        state.text,
+    const renderWithLineState = (isMultiLine: boolean) => {
+      const renderTheme = resolveSubtitleRenderTheme({
+        displayFontSize: fontSizePx,
+        isFullScreen: false,
         stylePreset,
-        renderTheme
-      );
-    }
+        isMultiLine,
+        videoWidthPx,
+        videoHeightPx,
+      });
 
-    applyPresetStyles(el, {
-      fontSizePx,
-      stylePreset,
-      isMultiLine,
-      videoWidthPx,
-      videoHeightPx,
-    });
+      el.innerHTML =
+        state.mode === 'timed'
+          ? renderTimedSubtitleHtml(state, stylePreset, renderTheme)
+          : renderPlainSubtitleHtml(state.text, stylePreset, renderTheme);
+
+      applyPresetStyles(el, {
+        fontSizePx,
+        stylePreset,
+        isMultiLine,
+        videoWidthPx,
+        videoHeightPx,
+      });
+    };
+
+    let isMultiLine = state.text.includes('\n');
+    renderWithLineState(isMultiLine);
+    if (!isMultiLine && subtitleTextUsesMultipleLines(el, state.text)) {
+      isMultiLine = true;
+      renderWithLineState(isMultiLine);
+    }
 
     setSubtitleVisibility(
       el,

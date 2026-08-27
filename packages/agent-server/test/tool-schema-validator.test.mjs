@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { TOOL_SCHEMAS } from '../src/packaged-mcp.mjs';
-import { MCP_V2_TOOL_DEFINITIONS } from '../src/mcp-v2-contract.mjs';
+import {
+  MCP_V2_TOOL_DEFINITIONS,
+  WATCH_JOB_MAX_WAIT_MS,
+} from '../src/mcp-v2-contract.mjs';
 import {
   parseToolArguments,
   validateJsonSchema,
@@ -43,6 +46,27 @@ test('plan validation allows a saved profile to supply the target language', () 
       include_dubbing: false,
       quality: '1080p',
     }
+  );
+});
+
+test('watch_job accepts the advertised fifty-second long-poll ceiling', () => {
+  const schema = MCP_V2_TOOL_DEFINITIONS.watch_job.inputSchema;
+  assert.equal(schema.properties.wait_ms.maximum, WATCH_JOB_MAX_WAIT_MS);
+  assert.equal(
+    parseToolArguments(schema, {
+      job_id: 'job_12345678',
+      after_cursor: 9,
+      wait_ms: WATCH_JOB_MAX_WAIT_MS,
+    }).wait_ms,
+    50_000
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(schema, {
+        job_id: 'job_12345678',
+        wait_ms: WATCH_JOB_MAX_WAIT_MS + 1,
+      }),
+    /at most 50000/
   );
 });
 

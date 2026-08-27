@@ -49,6 +49,9 @@ import {
   finitePositiveMetadataNumber,
   safeHttpMetadataUrl,
 } from '../utils/agent-source-metadata.js';
+import { assertSubtitleRenderFontReadable } from '../utils/subtitle-render-font.js';
+import { MAX_SUBTITLE_OUTPUT_FONT_SIZE } from '../../shared/helpers/subtitle-render-spec.js';
+import { MIN_SUBTITLE_FONT_SIZE } from '../../shared/constants/runtime-config.js';
 
 const execFileAsync = promisify(execFile);
 const MAX_PROBE_BUFFER_BYTES = 24 * 1024 * 1024;
@@ -401,8 +404,11 @@ async function renderRepresentativeFrames(
   }[subtitleStyle];
   if (!styleDetails) throw new Error('Unsupported subtitle preview style.');
   const fontSize = Math.max(
-    12,
-    Math.min(96, Number(input?.subtitleFontSize) || 24)
+    MIN_SUBTITLE_FONT_SIZE,
+    Math.min(
+      MAX_SUBTITLE_OUTPUT_FONT_SIZE,
+      Number(input?.subtitleFontSize) || 24
+    )
   );
   const baseName = cleanAgentOutputBaseName(
     input?.baseName,
@@ -420,6 +426,9 @@ async function renderRepresentativeFrames(
   let tempSrt: string | null = null;
   let subtitleFilter: string | null = null;
   if (burnSubtitles) {
+    const renderFont = await assertSubtitleRenderFontReadable(
+      getAssetsPath('NotoSans-Regular.ttf')
+    );
     tempSrt = path.join(ffmpeg.tempDir, `mcp-preview-${randomUUID()}.srt`);
     await fs.writeFile(tempSrt, srtContent, {
       encoding: 'utf8',
@@ -431,7 +440,7 @@ async function renderRepresentativeFrames(
       .replace(/:/g, '\\:')
       .replace(/'/g, "\\'");
     const escapedFontsDirectory = path
-      .dirname(getAssetsPath('NotoSans-Regular.ttf'))
+      .dirname(renderFont.path)
       .replace(/\\/g, '/')
       .replace(/:/g, '\\:')
       .replace(/'/g, "\\'");

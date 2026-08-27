@@ -789,6 +789,10 @@
       "description": "외부 AI 에이전트(Cursor, Codex 등)가 로컬 MCP 인터페이스를 통해 이 Translator 앱을 제어하도록 허용합니다. 활성화하면 에이전트가 동영상을 다운로드하고, 라이브러리를 관리하고, 자막을 편집하고, 허용된 폴더로 파일을 내보낼 수 있습니다.",
       "enableLabel": "이 앱의 에이전트 제어 허용",
       "enableAria": "에이전트 제어 활성화",
+      "connection": {
+        "title": "Codex 또는 ChatGPT 연결",
+        "instructions": "이 실행 경로를 사용해 이름이 “translator”인 STDIO MCP 서버를 추가하세요. 서버를 저장한 다음 Codex 또는 ChatGPT를 다시 시작하면 새 도구가 표시됩니다."
+      },
       "status": {
         "enabled": "활성화됨",
         "disabled": "비활성화됨",

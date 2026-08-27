@@ -39,6 +39,7 @@ import {
   workflowStatusTitleStyles,
   workflowStatusUtilityRowStyles,
 } from '../workflow-surface-styles';
+import { resolveProgressOperationComplete } from './progress-operation-state';
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -47,6 +48,7 @@ interface ProgressAreaProps {
   title: string;
   progressBarColor: string;
   operationId: string | null;
+  operationComplete?: boolean;
   onCancel: (operationId: string) => Promise<void> | void;
   autoCloseDelay?: number;
   isCancelling?: boolean;
@@ -67,6 +69,7 @@ export default function ProgressArea({
   title,
   progressBarColor,
   operationId,
+  operationComplete,
   onCancel,
   isCancelling,
   cancelDisabled,
@@ -100,6 +103,10 @@ export default function ProgressArea({
   const preferClaudeTranslation = useAiStore(s => s.preferClaudeTranslation);
   const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
   const preferClaudeSummary = useAiStore(s => s.preferClaudeSummary);
+  const isOperationComplete = resolveProgressOperationComplete(
+    progress,
+    operationComplete
+  );
 
   const runtimeState = useMemo<ByoRuntimeState>(
     () => ({
@@ -209,17 +216,17 @@ export default function ProgressArea({
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
-    if (isVisible && progress >= 100) {
+    if (isVisible && isOperationComplete) {
       timer = setTimeout(() => {
         onClose();
       }, autoCloseDelay);
     }
     return () => clearTimeout(timer);
-  }, [progress, isVisible, onClose, autoCloseDelay]);
+  }, [isOperationComplete, isVisible, onClose, autoCloseDelay]);
 
   const handleCloseOrCancelClick = async () => {
     try {
-      const isCancel = progress < 100;
+      const isCancel = !isOperationComplete;
       const action = isCancel ? 'progress_cancel' : 'progress_close';
       logButton(action, { title, operationId: operationId ?? undefined });
       if (isCancel && operationId) {
@@ -233,7 +240,7 @@ export default function ProgressArea({
     } catch {
       // Ignore logging errors
     }
-    if (progress < 100) {
+    if (!isOperationComplete) {
       if (!operationId) {
         console.warn(
           `[ProgressArea] Cannot trigger cancel for "${title}": operationId is missing.`
@@ -286,7 +293,9 @@ export default function ProgressArea({
             <button
               className={workflowStatusIconButtonStyles}
               onClick={handleCloseOrCancelClick}
-              disabled={isCancelling || (progress < 100 && cancelDisabled)}
+              disabled={
+                isCancelling || (!isOperationComplete && cancelDisabled)
+              }
               aria-label={t(
                 'common.closeOrCancelProcess',
                 'Close or cancel process'

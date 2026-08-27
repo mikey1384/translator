@@ -1809,6 +1809,64 @@ function resolveSubtitleRenderTheme(opts) {
     width
   };
 }
+function resolveSubtitleLineBoxStyle(theme) {
+  return {
+    backgroundColor: theme.lineBoxBackgroundColor,
+    padding: theme.lineBoxPadding,
+    display: "inline",
+    lineHeight: String(theme.lineHeight),
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
+    wordBreak: "break-word",
+    borderRadius: `${theme.lineBoxBorderRadiusPx}px`,
+    boxShadow: theme.lineBoxBoxShadow,
+    boxDecorationBreak: "clone",
+    WebkitBoxDecorationBreak: "clone"
+  };
+}
+function normalizeSubtitleLineBoxLineText(value) {
+  return String(value || "").trim() || "\xA0";
+}
+function subtitleTextUsesMultipleLines(element, text) {
+  if (text.includes("\n")) return true;
+  if (!text) return false;
+  const containerWidth = element.clientWidth;
+  const document2 = element.ownerDocument;
+  const view = document2.defaultView;
+  if (!view || containerWidth <= 0) return false;
+  const computedStyle = view.getComputedStyle(element);
+  if (!computedStyle.fontSize || !computedStyle.fontFamily) return false;
+  const probe = document2.createElement("span");
+  probe.style.fontFamily = computedStyle.fontFamily;
+  probe.style.fontSize = computedStyle.fontSize;
+  probe.style.fontWeight = computedStyle.fontWeight;
+  probe.style.letterSpacing = computedStyle.letterSpacing;
+  probe.style.whiteSpace = "nowrap";
+  probe.style.visibility = "hidden";
+  probe.style.position = "absolute";
+  probe.textContent = text.replace(/\n/g, " ");
+  try {
+    document2.body.appendChild(probe);
+    return probe.scrollWidth > containerWidth + 1;
+  } finally {
+    probe.remove();
+  }
+}
+function subtitleLineBoxStyleToCssText(style) {
+  return [
+    `background-color:${style.backgroundColor}`,
+    `padding:${style.padding}`,
+    `display:${style.display}`,
+    `line-height:${style.lineHeight}`,
+    `white-space:${style.whiteSpace}`,
+    `overflow-wrap:${style.overflowWrap}`,
+    `word-break:${style.wordBreak}`,
+    `border-radius:${style.borderRadius}`,
+    `box-shadow:${style.boxShadow}`,
+    `box-decoration-break:${style.boxDecorationBreak}`,
+    `-webkit-box-decoration-break:${style.WebkitBoxDecorationBreak}`
+  ].join(";");
+}
 function getSubtitleStyles(opts) {
   const { isFullScreen = false, stylePreset = "Default" } = opts;
   const style = SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
@@ -1928,14 +1986,22 @@ function splitTimedPartsIntoLines(parts) {
   return lines;
 }
 function renderLineBoxLineHtml(lineHtml, renderTheme) {
-  return `<span style="background-color:${renderTheme.lineBoxBackgroundColor};padding:${renderTheme.lineBoxPadding};display:inline;line-height:${renderTheme.lineHeight};white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;border-radius:${renderTheme.lineBoxBorderRadiusPx}px;box-shadow:${renderTheme.lineBoxBoxShadow};box-decoration-break:clone;-webkit-box-decoration-break:clone;">${lineHtml || "&nbsp;"}</span>`;
+  const style = subtitleLineBoxStyleToCssText(
+    resolveSubtitleLineBoxStyle(renderTheme)
+  );
+  return `<span style="${style}">${lineHtml || "&nbsp;"}</span>`;
 }
 function renderPlainSubtitleHtml(text, stylePreset, renderTheme) {
   if (!text.trim()) {
     return "";
   }
   if (stylePreset === "LineBox") {
-    return text.split("\n").map((line2) => renderLineBoxLineHtml(escapeHtml(line2.trim()), renderTheme)).join("<br/>");
+    return text.split("\n").map(
+      (line2) => renderLineBoxLineHtml(
+        escapeHtml(normalizeSubtitleLineBoxLineText(line2)),
+        renderTheme
+      )
+    ).join("<br/>");
   }
   return escapeHtml(text);
 }
@@ -2050,31 +2116,30 @@ function initializeSubtitleDisplay() {
       videoWidthPx,
       videoHeightPx
     } = opts;
-    const isMultiLine = state.text.includes("\n");
-    const renderTheme = resolveSubtitleRenderTheme({
-      displayFontSize: fontSizePx,
-      isFullScreen: false,
-      stylePreset,
-      isMultiLine,
-      videoWidthPx,
-      videoHeightPx
-    });
-    if (state.mode === "timed") {
-      el.innerHTML = renderTimedSubtitleHtml(state, stylePreset, renderTheme);
-    } else {
-      el.innerHTML = renderPlainSubtitleHtml(
-        state.text,
+    const renderWithLineState = (isMultiLine2) => {
+      const renderTheme = resolveSubtitleRenderTheme({
+        displayFontSize: fontSizePx,
+        isFullScreen: false,
         stylePreset,
-        renderTheme
-      );
+        isMultiLine: isMultiLine2,
+        videoWidthPx,
+        videoHeightPx
+      });
+      el.innerHTML = state.mode === "timed" ? renderTimedSubtitleHtml(state, stylePreset, renderTheme) : renderPlainSubtitleHtml(state.text, stylePreset, renderTheme);
+      applyPresetStyles(el, {
+        fontSizePx,
+        stylePreset,
+        isMultiLine: isMultiLine2,
+        videoWidthPx,
+        videoHeightPx
+      });
+    };
+    let isMultiLine = state.text.includes("\n");
+    renderWithLineState(isMultiLine);
+    if (!isMultiLine && subtitleTextUsesMultipleLines(el, state.text)) {
+      isMultiLine = true;
+      renderWithLineState(isMultiLine);
     }
-    applyPresetStyles(el, {
-      fontSizePx,
-      stylePreset,
-      isMultiLine,
-      videoWidthPx,
-      videoHeightPx
-    });
     setSubtitleVisibility(
       el,
       state.mode === "timed" ? getVisibleTimedSubtitleText(state.parts) : state.text

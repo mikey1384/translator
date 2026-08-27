@@ -4,6 +4,8 @@ import ProgressArea from './ProgressArea.js';
 import { useTranslation } from 'react-i18next';
 import subtitleRendererClient from '../../clients/subtitle-renderer-client.js';
 import { useTaskStore } from '../../state';
+import * as OperationIPC from '../../ipc/operation';
+import { cancelMergeOperation } from './merge-cancellation';
 
 const MERGE_PROGRESS_COLOR = colors.progressMerge;
 
@@ -23,6 +25,7 @@ type MergeSlice = {
   percent: number;
   stage: string;
   id?: string;
+  isCompleted?: boolean;
 };
 
 function isProtectedSavePhaseStage(stage: string): boolean {
@@ -41,7 +44,7 @@ export default function MergingProgressArea({
   const { t } = useTranslation();
   const merge = useTaskStore(s => s.merge) as MergeSlice;
   const patchMerge = useTaskStore(s => s.setMerge);
-  const { inProgress, percent, stage, id } = merge;
+  const { inProgress, percent, stage, id, isCompleted } = merge;
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [savePhaseNotice, setSavePhaseNotice] = useState<string | null>(null);
@@ -75,7 +78,11 @@ export default function MergingProgressArea({
     }
     try {
       devLog('[MergePA] cancelling', id);
-      const result = await subtitleRendererClient.cancelMerge(id);
+      const result = await cancelMergeOperation(id, {
+        cancelMainOperation: OperationIPC.cancel,
+        cancelSubtitleRender: operationId =>
+          subtitleRendererClient.cancelMerge(operationId),
+      });
       if (!result.accepted) {
         if (result.reason === 'save_phase') {
           setSavePhaseNotice(
@@ -101,10 +108,10 @@ export default function MergingProgressArea({
   const progressBarColor = useMemo(() => {
     return stage.toLowerCase().includes('error')
       ? colors.danger
-      : percent >= 100
+      : isCompleted
         ? colors.success
         : MERGE_PROGRESS_COLOR;
-  }, [stage, percent]);
+  }, [isCompleted, stage]);
 
   if (!inProgress) return null;
 
@@ -118,11 +125,12 @@ export default function MergingProgressArea({
       isCancelling={isCancelling}
       cancelDisabled={cancelDisabled}
       operationId={id ?? null}
+      operationComplete={isCompleted === true}
       onCancel={handleCancel}
       onClose={handleClose}
       subLabel={savePhaseNotice ?? undefined}
       autoCloseDelay={
-        percent >= 100 && !stage.toLowerCase().includes('error')
+        isCompleted && !stage.toLowerCase().includes('error')
           ? autoCloseDelay
           : undefined
       }

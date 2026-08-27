@@ -6,6 +6,98 @@ import { GenerateSubtitlesFullResult } from '../types.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { Stage, scaleProgress } from './progress.js';
 
+function joinCueText(values: Array<string | undefined>): string {
+  return values
+    .map(value => String(value || '').trim())
+    .filter(Boolean)
+    .join(' ');
+}
+
+export function mergeZeroDurationSubtitleSegments(
+  segments: SrtSegment[]
+): SrtSegment[] {
+  const candidates = segments.map(segment => ({ ...segment }));
+  const merged: SrtSegment[] = [];
+
+  const mergeGroup = (
+    target: SrtSegment,
+    group: SrtSegment[],
+    strategy: 'prepend' | 'append'
+  ) => {
+    const groupOriginals = group.map(segment => segment.original);
+    target.original =
+      strategy === 'prepend'
+        ? joinCueText([...groupOriginals, target.original])
+        : joinCueText([target.original, ...groupOriginals]);
+    const groupTranslations = group.map(segment => segment.translation);
+    target.translation =
+      strategy === 'prepend'
+        ? joinCueText([...groupTranslations, target.translation])
+        : joinCueText([target.translation, ...groupTranslations]);
+    // Word offsets belong to the removed cue boundaries and are no longer a
+    // truthful timing source after text is merged into the surviving cue.
+    target.words = [];
+  };
+
+  for (let index = 0; index < candidates.length; index += 1) {
+    const candidate = candidates[index];
+    const repairable =
+      Number.isFinite(candidate.start) &&
+      candidate.start >= 0 &&
+      Number.isFinite(candidate.end) &&
+      candidate.end === candidate.start;
+    if (!repairable) {
+      merged.push(candidate);
+      continue;
+    }
+
+    const group = [candidate];
+    while (index + 1 < candidates.length) {
+      const next = candidates[index + 1];
+      if (
+        !Number.isFinite(next.start) ||
+        !Number.isFinite(next.end) ||
+        next.start !== candidate.start ||
+        next.end !== next.start
+      ) {
+        break;
+      }
+      group.push(next);
+      index += 1;
+    }
+
+    const next = candidates[index + 1];
+    if (
+      next &&
+      Number.isFinite(next.start) &&
+      Number.isFinite(next.end) &&
+      next.start === candidate.start &&
+      next.end > next.start
+    ) {
+      const survivor = { ...next };
+      mergeGroup(survivor, group, 'prepend');
+      merged.push(survivor);
+      index += 1;
+      continue;
+    }
+
+    const previous = merged.at(-1);
+    if (previous) {
+      mergeGroup(previous, group, 'append');
+      continue;
+    }
+
+    // Retain an all-degenerate transcript so a later validator fails closed
+    // instead of silently discarding the provider's text.
+    merged.push(...group);
+  }
+
+  merged.forEach((segment, index) => {
+    segment.index = index + 1;
+  });
+  return merged;
+}
+
 export function normalizeSubtitleSegments(
   segments: SrtSegment[]
 ): SrtSegment[] {
@@ -82,10 +174,7 @@ export function normalizeSubtitleSegments(
     }
   }
 
-  // Reindex sequentially
-  for (let i = 0; i < items.length; i++) items[i].index = i + 1;
-
-  return items;
+  return mergeZeroDurationSubtitleSegments(items);
 }
 
 export async function finalizePass({

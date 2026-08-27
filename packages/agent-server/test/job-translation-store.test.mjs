@@ -212,6 +212,42 @@ test('correction review batches include translations that are completely missing
   assert.equal(accepted.session.pending_segments, 0);
 });
 
+test('clearing obsolete correction markers preserves completed translations', async t => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'translator-translation-clear-corrections-')
+  );
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const store = new PersistentJobStore({ environment: 'production', root });
+  t.after(() => store.close());
+  const job = setup(store);
+  store.initializeTranslationSession(job.job_id, {
+    segments: [
+      { ...SEGMENTS[0], translation: '기존 번역' },
+      { ...SEGMENTS[1], translation: '' },
+    ],
+    targetLanguage: 'Korean',
+  });
+  const marked = store.markTranslationSegmentsForCorrection(job.job_id, [
+    'seg_1',
+    'seg_2',
+  ]);
+  const markedRevision = marked.revision;
+
+  const cleared = store.clearTranslationCorrectionMarkers(job.job_id);
+  assert.deepEqual(
+    cleared.segments.map(segment => [segment.status, segment.translation]),
+    [
+      ['translated', '기존 번역'],
+      ['pending', ''],
+    ]
+  );
+  assert.equal(cleared.revision, markedRevision + 1);
+  assert.equal(
+    store.clearTranslationCorrectionMarkers(job.job_id).revision,
+    cleared.revision
+  );
+});
+
 test('translation sessions enforce bounded identities, cue counts, and known statuses', async t => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), 'translator-translation-bounds-')

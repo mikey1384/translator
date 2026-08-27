@@ -36,7 +36,7 @@ test('subtitle validation reports completeness, overlap, speed, layout, and glos
   const codes = new Set(result.issues.map(item => item.code));
   for (const code of [
     'duration_too_short',
-    'reading_speed_excessive',
+    'reading_speed_timing_constrained',
     'line_too_long',
     'suspicious_untranslated_text',
     'glossary_mismatch',
@@ -46,6 +46,60 @@ test('subtitle validation reports completeness, overlap, speed, layout, and glos
   ]) {
     assert.ok(codes.has(code), code);
   }
+});
+
+test('immutable sub-minimum cue timing reports excessive speed as a warning', () => {
+  const result = validateSubtitleSegments(
+    [
+      {
+        id: 'short-cue',
+        index: 1,
+        start: 0,
+        end: 0.05,
+        source: 'Go.',
+        translation: '가나다라마바',
+      },
+    ],
+    {
+      targetLanguage: 'Korean',
+      mediaDurationSeconds: 0.05,
+    }
+  );
+
+  assert.equal(result.passed, true);
+  assert.equal(result.error_count, 0);
+  assert.equal(result.warning_code_counts.duration_too_short, 1);
+  assert.equal(
+    result.warning_code_counts.reading_speed_timing_constrained,
+    1
+  );
+  assert.equal(result.error_code_counts.reading_speed_excessive, undefined);
+});
+
+test('ordinary-duration excessive reading speed remains a correction error', () => {
+  const result = validateSubtitleSegments(
+    [
+      {
+        id: 'verbose-cue',
+        index: 1,
+        start: 0,
+        end: 1,
+        source: 'Brief source.',
+        translation: '가'.repeat(40),
+      },
+    ],
+    {
+      targetLanguage: 'Korean',
+      mediaDurationSeconds: 1,
+    }
+  );
+
+  assert.equal(result.passed, false);
+  assert.equal(result.error_code_counts.reading_speed_excessive, 1);
+  assert.equal(
+    result.warning_code_counts.reading_speed_timing_constrained,
+    undefined
+  );
 });
 
 test('subtitle coverage distinguishes a quiet ending from cues beyond the media', () => {

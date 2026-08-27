@@ -1102,7 +1102,7 @@ test('packaged builds ship every packaged-mcp runtime module beside it', async (
       resources: [
         ...base.extraResources,
         ...base.mac.extraResources,
-        ...x64.mac.extraResources,
+        ...(x64.mac.extraResources || []),
       ],
       launcherName: 'translator-mcp',
       supervisorName: 'translator-owner-supervisor',

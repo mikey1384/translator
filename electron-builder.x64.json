@@ -1,13 +1,6 @@
 {
   "extends": "electron-builder.base.json",
   "mac": {
-    "extraResources": [
-      {
-        "from": "packages/renderer/dist/assets",
-        "to": "assets",
-        "filter": ["**/*"]
-      }
-    ],
     "target": [
       { "target": "dmg", "arch": ["x64"] },
       { "target": "zip", "arch": ["x64"] }

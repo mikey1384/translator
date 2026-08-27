@@ -1,13 +1,10 @@
 import { buildSrt, parseSrt } from '../../shared/helpers';
 import {
-  BASELINE_HEIGHT,
   CHECKOUT_ALREADY_PENDING,
   CREDIT_PACKS,
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
   SUMMARY_QUALITY_MULTIPLIER,
   TTS_CREDITS_PER_MINUTE,
-  MIN_SUBTITLE_FONT_SIZE,
-  fontScale,
 } from '../../shared/constants';
 import {
   SUBTITLE_STYLE_PRESETS,
@@ -27,6 +24,13 @@ import type {
 } from '@shared-types/app';
 import { sanitizeVideoSuggestionHistoryPath } from '../../shared/helpers/video-suggestion-sanitize';
 import { isExplicitCancellation } from '../../shared/cancelled-error';
+import {
+  SUBTITLE_RENDER_SPEC_VERSION,
+  findSubtitlePreviewSelectionDrift,
+  normalizeSubtitleBaseFontSize,
+  resolveSubtitleRenderSpec,
+  serializeSubtitleRenderSpec,
+} from '../../shared/helpers/subtitle-render-spec';
 import { classifyTerminalProgress } from '../utils/progress-terminal';
 import { resolvePreferredLanguageName } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-helpers';
 import {
@@ -93,6 +97,15 @@ import {
   type AgentHistoryJob,
   type AgentHistoryJobKind,
 } from './agent-history-jobs';
+import {
+  AGENT_SOURCE_BINDING_PROTOCOL_VERSION,
+  agentSourceBindingIdentitiesMatch,
+  agentSourceBindingsMatch,
+  parseAgentSourceBinding,
+  projectAgentWorkspaceSnapshot,
+  serializeAgentSourceBinding,
+  type AgentSourceBinding,
+} from './agent-processing-source-binding';
 
 const DISPLAY_MODES = new Set<SubtitleDisplayMode>([
   'original',
@@ -257,6 +270,7 @@ type AgentProcessingState = {
   error: string | null;
   creditUsage: AgentCreditUsage | null;
   progressDetails: Record<string, unknown> | null;
+  sourceBinding: AgentSourceBinding | null;
 };
 
 let lastVideoSearchContext: VideoSearchContext | null = null;
@@ -285,7 +299,14 @@ let agentProcessingState: AgentProcessingState = {
   error: null,
   creditUsage: null,
   progressDetails: null,
+  sourceBinding: null,
 };
+let mountedMcpWorkspaceBinding: {
+  jobId: string;
+  binding: AgentSourceBinding;
+  videoPath: string | null;
+  subtitleSourceId: number;
+} | null = null;
 let activeAgentPreview: {
   operationId: string;
   promise: Promise<Record<string, unknown>>;
@@ -598,6 +619,15 @@ type InternalMcpJobRoute = {
   jobId: string;
   routeToken: string;
 };
+
+function getInternalMcpJobId(input: unknown): string | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return null;
+  }
+  const record = input as Record<string, unknown>;
+  const jobId = record.__agentMcpJobId ?? record.mcpJobId;
+  return typeof jobId === 'string' && jobId.trim() ? jobId.trim() : null;
+}
 
 function getInternalMcpJobRoute(
   input: unknown
@@ -1257,6 +1287,7 @@ function agentProcessingSnapshot(): Record<string, unknown> {
   const video = useVideoStore.getState();
   const subtitles = useSubStore.getState();
   const download = useUrlStore.getState();
+  const { sourceBinding, ...publicProcessingState } = agentProcessingState;
   const taskName = agentProgressTaskFor(
     agentProcessingState.kind,
     agentProcessingState.stage
@@ -1270,20 +1301,8 @@ function agentProcessingSnapshot(): Record<string, unknown> {
   const terminalComplete = agentProcessingState.status === 'completed';
   const taskEtaSeconds =
     kindTask && 'etaSeconds' in kindTask ? kindTask.etaSeconds : null;
-  return {
-    ...agentProcessingState,
-    credit_usage: currentAgentCreditUsage(agentProcessingState.creditUsage),
-    percent: terminalComplete
-      ? 100
-      : (kindTask?.percent ?? download.download.percent ?? 0),
-    etaSeconds:
-      (agentProcessingState.progressDetails?.estimated_remaining_seconds as
-        | number
-        | null
-        | undefined) ??
-      taskEtaSeconds ??
-      null,
-    progress: agentProcessingState.progressDetails,
+  const preparingSource = sourceBinding?.state === 'preparing';
+  const workspace = projectAgentWorkspaceSnapshot(sourceBinding, {
     source: {
       videoPath: video.originalPath ?? video.path ?? null,
       videoReady: video.isReady,
@@ -1307,6 +1326,25 @@ function agentProcessingSnapshot(): Record<string, unknown> {
       dubbedAudioPath: video.dubbedAudioPath ?? null,
       downloadedFilePath: download.download.completedFilePath ?? null,
     },
+  });
+  return {
+    ...publicProcessingState,
+    credit_usage: currentAgentCreditUsage(agentProcessingState.creditUsage),
+    percent:
+      preparingSource && agentProcessingState.stage === 'starting'
+        ? 0
+        : terminalComplete
+          ? 100
+          : (kindTask?.percent ?? download.download.percent ?? 0),
+    etaSeconds:
+      (agentProcessingState.progressDetails?.estimated_remaining_seconds as
+        | number
+        | null
+        | undefined) ??
+      taskEtaSeconds ??
+      null,
+    progress: agentProcessingState.progressDetails,
+    ...workspace,
     tasks: {
       transcription: processingTaskSnapshot(tasks.transcription),
       translation: processingTaskSnapshot(tasks.translation),
@@ -1361,9 +1399,24 @@ function beginAgentProcessing(
   kind: AgentProcessingKind,
   runner: (agentOperationId: string) => Promise<Record<string, unknown>>,
   requestedOperationId?: unknown,
-  mcpJobRoute?: InternalMcpJobRoute
+  mcpJobRoute?: InternalMcpJobRoute,
+  sourceBindingInput?: unknown,
+  mcpJobId?: string | null
 ): Record<string, unknown> {
   const requestedId = String(requestedOperationId || '').trim();
+  const sourceBinding =
+    sourceBindingInput === undefined
+      ? null
+      : parseAgentSourceBinding(sourceBindingInput);
+  if (sourceBindingInput !== undefined && !sourceBinding) {
+    throw new Error('Persistent MCP job source binding is invalid.');
+  }
+  if (mcpJobRoute && !sourceBinding) {
+    throw new Error('Persistent MCP job start is missing its source binding.');
+  }
+  if (mcpJobRoute && mcpJobId && mcpJobRoute.jobId !== mcpJobId) {
+    throw new Error('Persistent MCP job source binding has the wrong job ID.');
+  }
   if (
     requestedId &&
     (requestedId.length > 200 || /[\p{Cc}]/u.test(requestedId))
@@ -1377,6 +1430,16 @@ function beginAgentProcessing(
     agentProcessingState.id === requestedId &&
     shouldReuseAgentOperation(agentProcessingState.status)
   ) {
+    if (
+      !agentSourceBindingIdentitiesMatch(
+        agentProcessingState.sourceBinding,
+        sourceBinding
+      )
+    ) {
+      throw new Error(
+        'The idempotent operation ID is already bound to a different source.'
+      );
+    }
     // The MCP ledger may replay a start after an uncertain delivery. Return
     // the one already-running or terminal operation instead of charging or
     // rendering twice.
@@ -1402,6 +1465,28 @@ function beginAgentProcessing(
       'Translator already has an active processing operation. Poll app_processing_status or cancel it before starting another.'
     );
   }
+  if (sourceBinding?.state === 'mounted' && mcpJobId) {
+    const mountedVideo = useVideoStore.getState();
+    const mountedSubtitles = useSubStore.getState();
+    const mountedVideoPath =
+      mountedVideo.originalPath ?? mountedVideo.path ?? null;
+    if (
+      mountedMcpWorkspaceBinding?.jobId !== mcpJobId ||
+      !agentSourceBindingsMatch(
+        mountedMcpWorkspaceBinding.binding,
+        sourceBinding
+      ) ||
+      mountedMcpWorkspaceBinding.videoPath !== mountedVideoPath ||
+      mountedMcpWorkspaceBinding.subtitleSourceId !== mountedSubtitles.sourceId
+    ) {
+      throw new Error(
+        'The planned source is not the workspace mounted for this persistent MCP job.'
+      );
+    }
+  }
+  if (sourceBinding?.state === 'preparing') {
+    mountedMcpWorkspaceBinding = null;
+  }
   const id =
     requestedId ||
     `agent-${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -1418,6 +1503,7 @@ function beginAgentProcessing(
     error: null,
     creditUsage: null,
     progressDetails: null,
+    sourceBinding,
   };
   void runWithStage5CreditObservation(
     id,
@@ -1468,6 +1554,22 @@ function beginAgentProcessing(
       }
     });
   return agentProcessingSnapshot();
+}
+
+function markAgentSourceMounted(agentOperationId: string): void {
+  if (
+    agentProcessingState.id !== agentOperationId ||
+    agentProcessingState.sourceBinding?.state !== 'preparing'
+  ) {
+    return;
+  }
+  agentProcessingState = {
+    ...agentProcessingState,
+    sourceBinding: {
+      ...agentProcessingState.sourceBinding,
+      state: 'mounted',
+    },
+  };
 }
 
 function throwIfAgentCancelled(): void {
@@ -1885,11 +1987,16 @@ async function runHistoryMerge(
       );
     }
     const videoMeta = metadataResult.metadata;
-    const targetHeight = videoMeta.height ?? BASELINE_HEIGHT;
-    const fontSizePx = Math.max(
-      MIN_SUBTITLE_FONT_SIZE,
-      Math.round(ui.baseFontSize * fontScale(targetHeight))
-    );
+    const subtitleRenderSpec = resolveSubtitleRenderSpec({
+      displayMode: ui.subtitleDisplayMode,
+      stylePreset: ui.subtitleStyle,
+      baseFontSizePx: ui.baseFontSize,
+      videoWidthPx: videoMeta.width,
+      videoHeightPx: videoMeta.height,
+      displayWidthPx: videoMeta.displayWidth ?? videoMeta.width,
+      displayHeightPx: videoMeta.displayHeight ?? videoMeta.height,
+    });
+    const fontSizePx = subtitleRenderSpec.outputFontSizePx;
     historyJobs.update(historyId, operationId, { stage: 'merging' });
     const options: RenderSubtitlesOptions = {
       operationId,
@@ -1912,6 +2019,7 @@ async function runHistoryMerge(
       originalVideoPath: videoPath,
       fontSizePx,
       stylePreset: ui.subtitleStyle,
+      subtitleRenderSpec: serializeSubtitleRenderSpec(subtitleRenderSpec),
       outputMode: ui.subtitleDisplayMode,
       overlayMode: 'overlayOnVideo',
     };
@@ -2354,6 +2462,45 @@ async function runAgentCueTranscription(
   }
 }
 
+function assertPlannedSubtitleRenderSpecCompatible(
+  plannedSpec: Record<string, unknown> | undefined,
+  resolvedSpec: ReturnType<typeof resolveSubtitleRenderSpec>
+): void {
+  if (!plannedSpec) return;
+  if (plannedSpec.schema_version !== 1) {
+    throw new Error('Unsupported planned subtitle render spec version.');
+  }
+  for (const [plannedKey, resolvedValue] of [
+    ['base_font_size_px', resolvedSpec.baseFontSizePx],
+    ['output_font_size_px', resolvedSpec.outputFontSizePx],
+    ['video_width_px', resolvedSpec.videoWidthPx],
+    ['video_height_px', resolvedSpec.videoHeightPx],
+    ['display_width_px', resolvedSpec.displayWidthPx],
+    ['display_height_px', resolvedSpec.displayHeightPx],
+  ] as const) {
+    const rawPlannedValue = plannedSpec[plannedKey];
+    if (rawPlannedValue === null || rawPlannedValue === undefined) continue;
+    const plannedValue = Number(rawPlannedValue);
+    if (!Number.isFinite(plannedValue)) {
+      throw new Error(`Planned subtitle render spec ${plannedKey} is invalid.`);
+    }
+    if (plannedValue !== resolvedValue) {
+      throw new Error(
+        `Planned subtitle render spec ${plannedKey} does not match the mounted video.`
+      );
+    }
+  }
+  if (plannedSpec.font_family !== resolvedSpec.fontFamily) {
+    throw new Error('Planned subtitle render font family is unsupported.');
+  }
+  if (plannedSpec.font_asset !== resolvedSpec.fontAsset) {
+    throw new Error('Planned subtitle render font asset is unsupported.');
+  }
+  if (plannedSpec.scale_rule !== resolvedSpec.scaleRule) {
+    throw new Error('Planned subtitle render scale rule is unsupported.');
+  }
+}
+
 async function runAgentMerge(
   agentOperationId: string,
   input: {
@@ -2363,6 +2510,7 @@ async function runAgentMerge(
     subtitleDisplayMode?: SubtitleDisplayMode;
     subtitleStyle?: SubtitleStylePresetKey;
     subtitleFontSize?: number;
+    subtitleRenderSpec?: Record<string, unknown>;
   }
 ): Promise<Record<string, unknown>> {
   const outputPath = String(input.outputPath || '').trim();
@@ -2412,40 +2560,84 @@ async function runAgentMerge(
   }
   const operationId = `${agentOperationId}-merge`;
   const ui = useUIStore.getState();
-  const displayMode = input.subtitleDisplayMode || ui.subtitleDisplayMode;
+  const plannedSpec = input.subtitleRenderSpec;
+  const displayMode =
+    (plannedSpec?.display_mode as SubtitleDisplayMode | undefined) ||
+    input.subtitleDisplayMode ||
+    ui.subtitleDisplayMode;
   if (!DISPLAY_MODES.has(displayMode)) {
     throw new Error('Unsupported planned subtitle display mode.');
   }
-  const subtitleStyle = input.subtitleStyle || ui.subtitleStyle;
+  const subtitleStyle =
+    (plannedSpec?.style as SubtitleStylePresetKey | undefined) ||
+    input.subtitleStyle ||
+    ui.subtitleStyle;
   if (!Object.hasOwn(SUBTITLE_STYLE_PRESETS, subtitleStyle)) {
     throw new Error('Unsupported planned subtitle style.');
   }
-  const requestedFontSize = Number(input.subtitleFontSize);
-  const baseFontSize = Number.isFinite(requestedFontSize)
-    ? Math.max(12, Math.min(96, requestedFontSize))
-    : ui.baseFontSize;
-  const targetHeight = video.meta?.height ?? BASELINE_HEIGHT;
-  let fontSizePx = video.isAudioOnly
-    ? Math.max(MIN_SUBTITLE_FONT_SIZE, baseFontSize)
-    : Math.max(
-        MIN_SUBTITLE_FONT_SIZE,
-        Math.round(baseFontSize * fontScale(targetHeight))
-      );
+  const plannedBaseFontSize = Number(plannedSpec?.base_font_size_px);
+  const legacyBaseFontSize = Number(input.subtitleFontSize);
   if (
-    !Number.isFinite(requestedFontSize) &&
-    !video.isAudioOnly &&
-    ui.previewSubtitleFontPx > 0 &&
-    ui.previewDisplayHeightPx > 0 &&
-    ui.previewVideoHeightPx > 0
+    Number.isFinite(plannedBaseFontSize) &&
+    Number.isFinite(legacyBaseFontSize) &&
+    plannedBaseFontSize !== legacyBaseFontSize
   ) {
-    fontSizePx = Math.max(
-      MIN_SUBTITLE_FONT_SIZE,
-      Math.round(
-        (ui.previewSubtitleFontPx * ui.previewVideoHeightPx) /
-          ui.previewDisplayHeightPx
-      )
+    throw new Error(
+      'Planned subtitle render spec conflicts with the legacy font-size field.'
     );
   }
+  if (
+    plannedSpec?.style !== undefined &&
+    input.subtitleStyle !== undefined &&
+    plannedSpec.style !== input.subtitleStyle
+  ) {
+    throw new Error(
+      'Planned subtitle render spec conflicts with the legacy style field.'
+    );
+  }
+  if (
+    plannedSpec?.display_mode !== undefined &&
+    input.subtitleDisplayMode !== undefined &&
+    plannedSpec.display_mode !== input.subtitleDisplayMode
+  ) {
+    throw new Error(
+      'Planned subtitle render spec conflicts with the legacy display-mode field.'
+    );
+  }
+  const baseFontSize = normalizeSubtitleBaseFontSize(
+    Number.isFinite(plannedBaseFontSize)
+      ? plannedBaseFontSize
+      : Number.isFinite(legacyBaseFontSize)
+        ? legacyBaseFontSize
+        : ui.baseFontSize
+  );
+  if (plannedSpec) {
+    const changedPreviewFields = findSubtitlePreviewSelectionDrift(
+      plannedSpec,
+      {
+        displayMode: ui.subtitleDisplayMode,
+        stylePreset: ui.subtitleStyle,
+        baseFontSizePx: ui.baseFontSize,
+      }
+    );
+    if (changedPreviewFields.length > 0) {
+      throw new Error(
+        `Translator preview subtitle settings changed after this render was planned (${changedPreviewFields.join(', ')}). Restore the planned preview settings or create a new plan before rendering.`
+      );
+    }
+  }
+  const subtitleRenderSpec = resolveSubtitleRenderSpec({
+    displayMode,
+    stylePreset: subtitleStyle,
+    baseFontSizePx: baseFontSize,
+    videoWidthPx: video.meta?.width,
+    videoHeightPx: video.meta?.height,
+    displayWidthPx: video.meta?.displayWidth ?? video.meta?.width,
+    displayHeightPx: video.meta?.displayHeight ?? video.meta?.height,
+    isAudioOnly: video.isAudioOnly,
+  });
+  assertPlannedSubtitleRenderSpecCompatible(plannedSpec, subtitleRenderSpec);
+  const fontSizePx = subtitleRenderSpec.outputFontSizePx;
   const options: RenderSubtitlesOptions = {
     operationId,
     srtContent: buildSrt({
@@ -2467,6 +2659,7 @@ async function runAgentMerge(
     originalVideoPath: videoPath,
     fontSizePx,
     stylePreset: subtitleStyle,
+    subtitleRenderSpec: serializeSubtitleRenderSpec(subtitleRenderSpec),
     outputMode: displayMode,
     overlayMode: video.isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
   };
@@ -2495,6 +2688,7 @@ async function runAgentMerge(
       mode: displayMode,
       style: subtitleStyle,
       fontSizePx,
+      subtitle_render_spec: serializeSubtitleRenderSpec(subtitleRenderSpec),
     };
   } finally {
     useTaskStore.getState().setMerge({
@@ -2568,6 +2762,7 @@ async function runAgentPresetRender(
       subtitle_display_mode?: SubtitleDisplayMode;
       subtitle_style?: SubtitleStylePresetKey;
       subtitle_font_size?: number;
+      subtitle_render_spec?: Record<string, unknown>;
       x_account_tier?: 'standard' | 'premium';
     };
   }
@@ -2693,6 +2888,7 @@ async function runAgentPresetRender(
           subtitleDisplayMode: outputs.subtitle_display_mode,
           subtitleStyle: outputs.subtitle_style,
           subtitleFontSize: outputs.subtitle_font_size,
+          subtitleRenderSpec: outputs.subtitle_render_spec,
         });
         await SystemIPC.agentV2ClaimTemporaryOutput({
           path: temporaryMaster,
@@ -2868,6 +3064,7 @@ type AgentPreviewInput = {
     subtitle_display_mode?: SubtitleDisplayMode;
     subtitle_style?: SubtitleStylePresetKey;
     subtitle_font_size?: number;
+    subtitle_render_spec?: Record<string, unknown>;
   };
 };
 
@@ -2901,11 +3098,49 @@ async function performAgentPreview(
     );
     return segments[index].start;
   });
-  const displayMode = input?.outputs?.subtitle_display_mode || 'translation';
+  const displayMode =
+    (input?.outputs?.subtitle_render_spec?.display_mode as
+      | SubtitleDisplayMode
+      | undefined) ||
+    input?.outputs?.subtitle_display_mode ||
+    'translation';
   if (!DISPLAY_MODES.has(displayMode)) {
     throw new Error('Unsupported planned subtitle display mode.');
   }
-  return SystemIPC.agentV2RenderPreview({
+  const stylePreset =
+    (input?.outputs?.subtitle_render_spec?.style as
+      | SubtitleStylePresetKey
+      | undefined) ||
+    input?.outputs?.subtitle_style ||
+    'Default';
+  const plannedSpec = input?.outputs?.subtitle_render_spec;
+  const plannedBaseFontSize = Number(
+    input?.outputs?.subtitle_render_spec?.base_font_size_px
+  );
+  const baseFontSize = normalizeSubtitleBaseFontSize(
+    Number.isFinite(plannedBaseFontSize)
+      ? plannedBaseFontSize
+      : Number(input?.outputs?.subtitle_font_size) || 24
+  );
+  const metadataResult = await SystemIPC.getVideoMetadata(videoPath);
+  if (!metadataResult.success || !metadataResult.metadata) {
+    throw new Error(
+      metadataResult.error || 'Could not read video metadata for preview.'
+    );
+  }
+  const metadata = metadataResult.metadata;
+  const subtitleRenderSpec = resolveSubtitleRenderSpec({
+    displayMode,
+    stylePreset,
+    baseFontSizePx: baseFontSize,
+    videoWidthPx: metadata.width,
+    videoHeightPx: metadata.height,
+    displayWidthPx: metadata.displayWidth ?? metadata.width,
+    displayHeightPx: metadata.displayHeight ?? metadata.height,
+    isAudioOnly: video.isAudioOnly,
+  });
+  assertPlannedSubtitleRenderSpecCompatible(plannedSpec, subtitleRenderSpec);
+  const result = await SystemIPC.agentV2RenderPreview({
     operationId: input?.operationId,
     videoPath,
     srtContent: buildSrt({
@@ -2917,10 +3152,14 @@ async function performAgentPreview(
     baseName: `${cleanAgentOutputBaseName(input?.outputs?.base_name)}-preview`,
     overwrite: input?.outputs?.overwrite === true,
     positionsSeconds: representative,
-    subtitleStyle: input?.outputs?.subtitle_style,
-    subtitleFontSize: input?.outputs?.subtitle_font_size,
+    subtitleStyle: subtitleRenderSpec.stylePreset,
+    subtitleFontSize: subtitleRenderSpec.outputFontSizePx,
     protectedPaths: input?.protectedInputPaths,
   });
+  return {
+    ...result,
+    subtitle_render_spec: serializeSubtitleRenderSpec(subtitleRenderSpec),
+  };
 }
 
 function renderAgentPreview(
@@ -3107,6 +3346,7 @@ async function runAgentMediaWorkflow(
       strategy,
       checkCancellation: true,
     });
+    markAgentSourceMounted(agentOperationId);
     videoPath = downloaded.videoPath;
     steps.download = downloaded.captionRecovery
       ? {
@@ -3132,6 +3372,7 @@ async function runAgentMediaWorkflow(
       { skipStoredSubtitleAutoMount: true }
     );
     useUIStore.getState().setInputMode('file');
+    markAgentSourceMounted(agentOperationId);
   }
   if (runTo === 'download') {
     if (
@@ -3579,6 +3820,8 @@ function currentStatus(): Record<string, unknown> {
     ).length,
     subtitleDisplayMode: ui.subtitleDisplayMode,
     subtitleStyle: ui.subtitleStyle,
+    subtitleBaseFontSize: normalizeSubtitleBaseFontSize(ui.baseFontSize),
+    subtitleRenderSelection: currentSubtitleRenderSelection(),
     workspaceTab: ui.generateSubtitlesWorkspaceTab,
     generatePanelOpen: ui.showGeneratePanel,
     editPanelOpen: ui.showEditPanel,
@@ -3595,6 +3838,17 @@ function currentStatus(): Record<string, unknown> {
     videoSearch: videoSearchSnapshot(),
     videoBatchDownload: batchDownloadSnapshot(),
     processing: agentProcessingSnapshot(),
+  };
+}
+
+function currentSubtitleRenderSelection(): Record<string, unknown> {
+  const ui = useUIStore.getState();
+  return {
+    schema_version: SUBTITLE_RENDER_SPEC_VERSION,
+    display_mode: ui.subtitleDisplayMode,
+    style: ui.subtitleStyle,
+    base_font_size_px: normalizeSubtitleBaseFontSize(ui.baseFontSize),
+    source: 'translator_preview_preferences',
   };
 }
 
@@ -3750,6 +4004,7 @@ async function mcpContext({
   refreshCredits?: boolean;
 } = {}): Promise<Record<string, unknown>> {
   const ai = useAiStore.getState();
+  const ui = useUIStore.getState();
   const [runtime, settings, allowedDirectories, socketStatus] =
     await Promise.all([
       SystemIPC.getAgentRuntimeContext(),
@@ -3842,8 +4097,9 @@ async function mcpContext({
         : providerDescriptor('stage5', false),
     },
     planning: {
-      quality_translation: useUIStore.getState().qualityTranslation,
-      quality_transcription: useUIStore.getState().qualityTranscription,
+      quality_translation: ui.qualityTranslation,
+      quality_transcription: ui.qualityTranscription,
+      subtitle_rendering: currentSubtitleRenderSelection(),
       credit_rates: {
         transcription_per_hour: CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
         translation_standard_per_hour: estimateTranslationCreditsPerHour(false),
@@ -3861,6 +4117,7 @@ async function mcpContext({
         : window.env.agentMode,
       connected_clients: socketStatus.connectedClients,
       allowed_directories: allowedDirectories,
+      source_binding_protocol_version: AGENT_SOURCE_BINDING_PROTOCOL_VERSION,
     },
   };
 }
@@ -3956,9 +4213,24 @@ async function applyTranslationSession(input?: {
   videoPath?: string;
   targetLanguage?: string;
   segments?: Array<Record<string, unknown>>;
+  sourceBinding?: unknown;
+  mcpJobId?: string;
 }): Promise<Record<string, unknown>> {
   if (hasActiveAppProcessing()) {
     throw new Error('Translator is busy with another processing operation.');
+  }
+  const mcpJobId = getInternalMcpJobId(input);
+  const sourceBinding =
+    input?.sourceBinding === undefined
+      ? null
+      : parseAgentSourceBinding(input.sourceBinding);
+  if (input?.sourceBinding !== undefined && !sourceBinding) {
+    throw new Error('Persistent MCP job source binding is invalid.');
+  }
+  if (mcpJobId && sourceBinding?.state !== 'mounted') {
+    throw new Error(
+      'Persistent MCP job session is missing its mounted source binding.'
+    );
   }
   if (!Array.isArray(input?.segments) || input.segments.length === 0) {
     throw new Error('A non-empty persistent subtitle session is required.');
@@ -4024,6 +4296,10 @@ async function applyTranslationSession(input?: {
         { skipStoredSubtitleAutoMount: true }
       );
     }
+  } else if (sourceBinding) {
+    // A transcript-only persistent source owns a workspace with no video.
+    // Do not leave the tab's previously open media attached to that job.
+    await useVideoStore.getState().setFile(null);
   }
   useSubStore
     .getState()
@@ -4035,6 +4311,17 @@ async function applyTranslationSession(input?: {
       targetLanguage: String(input?.targetLanguage || '').trim() || null,
     });
   useUIStore.getState().setEditPanelOpen(true);
+  const mountedVideo = useVideoStore.getState();
+  const mountedSubtitles = useSubStore.getState();
+  mountedMcpWorkspaceBinding =
+    mcpJobId && sourceBinding
+      ? {
+          jobId: mcpJobId,
+          binding: sourceBinding,
+          videoPath: mountedVideo.originalPath ?? mountedVideo.path ?? null,
+          subtitleSourceId: mountedSubtitles.sourceId,
+        }
+      : null;
   return {
     applied: true,
     cueCount: segments.length,
@@ -4043,6 +4330,9 @@ async function applyTranslationSession(input?: {
     ).length,
     videoPath: videoPath || null,
     targetLanguage: String(input?.targetLanguage || '').trim() || null,
+    ...(sourceBinding
+      ? { source_binding: serializeAgentSourceBinding(sourceBinding) }
+      : {}),
   };
 }
 
@@ -4267,7 +4557,9 @@ function installAgentBridge() {
         'preset-render',
         operationId => runAgentPresetRender(operationId, input),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 
@@ -4535,7 +4827,9 @@ function installAgentBridge() {
         'transcription',
         operationId => runAgentTranscription(operationId, strategy),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 
@@ -4560,7 +4854,9 @@ function installAgentBridge() {
         'translation',
         operationId => runAgentTranslation(operationId, targetLanguage),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 
@@ -4576,7 +4872,9 @@ function installAgentBridge() {
             sourceVideoPath: input?.sourceVideoPath,
           }),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 
@@ -4594,7 +4892,9 @@ function installAgentBridge() {
             sourceVideoPath: input?.sourceVideoPath,
           }),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 
@@ -4607,7 +4907,9 @@ function installAgentBridge() {
             targetLanguage: input?.targetLanguage,
           }),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 
@@ -4616,7 +4918,9 @@ function installAgentBridge() {
         'cue-transcription',
         operationId => runAgentCueTranscription(operationId, { id: input?.id }),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 
@@ -4644,7 +4948,9 @@ function installAgentBridge() {
             overwrite: input?.overwrite,
           }),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 
@@ -4669,7 +4975,9 @@ function installAgentBridge() {
             replaceSubtitles,
           }),
         input?.operationId,
-        getInternalMcpJobRoute(input)
+        getInternalMcpJobRoute(input),
+        input?.sourceBinding,
+        getInternalMcpJobId(input)
       );
     },
 

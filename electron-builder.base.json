@@ -34,6 +34,11 @@
   "extraResources": [
     { "from": "vendor/vision", "to": "vision-models" },
     {
+      "from": "packages/renderer/dist/assets",
+      "to": "assets",
+      "filter": ["**/*"]
+    },
+    {
       "from": "packages/agent-server/src/packaged-mcp.mjs",
       "to": "packaged-mcp.mjs"
     },

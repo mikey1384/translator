@@ -780,6 +780,10 @@
       "description": "Cho phép các tác nhân AI bên ngoài (Cursor, Codex, v.v.) điều khiển ứng dụng Translator này qua giao diện MCP cục bộ. Khi bật, tác nhân có thể tải video xuống, quản lý thư viện, chỉnh sửa phụ đề và xuất tệp vào các thư mục được phép.",
       "enableLabel": "Cho phép tác nhân điều khiển ứng dụng này",
       "enableAria": "Bật điều khiển tác nhân",
+      "connection": {
+        "title": "Kết nối Codex hoặc ChatGPT",
+        "instructions": "Thêm máy chủ MCP STDIO tên “translator” bằng đường dẫn trình khởi chạy này. Lưu máy chủ, rồi khởi động lại Codex hoặc ChatGPT để các công cụ mới xuất hiện."
+      },
       "status": {
         "enabled": "Đã bật",
         "disabled": "Đã tắt",

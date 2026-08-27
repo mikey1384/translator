@@ -36,9 +36,9 @@ import { useSubSourceId } from '../../state/subtitle-store';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
 import {
   BASELINE_HEIGHT,
-  fontScale,
   MIN_SUBTITLE_FONT_SIZE,
 } from '../../../shared/constants';
+import { resolveSubtitleOutputFontSize } from '../../../shared/helpers/subtitle-render-spec';
 import type { SubtitleDisplayMode } from '@shared-types/app';
 
 import { cueText } from '../../../shared/helpers';
@@ -150,14 +150,11 @@ export default function NativeVideoPlayer({
     !isAudioOnly && (displayHeight || videoHeight || targetVideoHeight)
       ? (displayHeight ?? videoHeight ?? targetVideoHeight ?? undefined)
       : undefined;
-  const canonicalFontSize = isAudioOnly
-    ? Math.max(MIN_SUBTITLE_FONT_SIZE, baseFontSize)
-    : Math.max(
-        MIN_SUBTITLE_FONT_SIZE,
-        Math.round(
-          baseFontSize * fontScale(targetVideoHeight ?? BASELINE_HEIGHT)
-        )
-      );
+  const canonicalFontSize = resolveSubtitleOutputFontSize({
+    baseFontSizePx: baseFontSize,
+    videoHeightPx: targetVideoHeight ?? BASELINE_HEIGHT,
+    isAudioOnly,
+  });
 
   const recomputeScale = useCallback(() => {
     const v = videoRef.current;

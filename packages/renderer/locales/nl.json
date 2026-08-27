@@ -780,6 +780,10 @@
       "description": "Sta externe AI-agents (Cursor, Codex enz.) toe om deze Translator-app via een lokale MCP-interface te besturen. Wanneer dit is ingeschakeld, kunnen agents video's downloaden, je bibliotheek beheren, ondertitels bewerken en bestanden naar toegestane mappen exporteren.",
       "enableLabel": "Agentbesturing voor deze app toestaan",
       "enableAria": "Agentbesturing inschakelen",
+      "connection": {
+        "title": "Codex of ChatGPT verbinden",
+        "instructions": "Voeg met dit opstartpad een STDIO-MCP-server met de naam ‘translator’ toe. Sla de server op en start daarna Codex of ChatGPT opnieuw zodat de nieuwe hulpmiddelen verschijnen."
+      },
       "status": {
         "enabled": "Ingeschakeld",
         "disabled": "Uitgeschakeld",

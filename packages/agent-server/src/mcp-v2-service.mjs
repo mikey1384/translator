@@ -20,6 +20,8 @@ import {
   MCP_V2_SCHEMA_VERSION,
   MCP_V2_TOOL_DEFINITIONS,
   MCP_V2_TOOL_NAMES,
+  WATCH_JOB_DEFAULT_WAIT_MS,
+  WATCH_JOB_MAX_WAIT_MS,
   getMcpToolBilling,
 } from './mcp-v2-contract.mjs';
 
@@ -101,6 +103,7 @@ const MAX_TRANSCRIPT_BYTES = 32 * 1024 * 1024;
 const MAX_MANIFEST_BYTES = 32 * 1024 * 1024;
 const MAX_TRANSLATION_SESSION_SEGMENTS = 100_000;
 const MOCK_SOURCE_VERSION = 1;
+const SOURCE_BINDING_PROTOCOL_VERSION = 1;
 const ACTIVE_APP_STAGE_IDS = new Set([
   'download_source',
   'transcription',
@@ -123,6 +126,18 @@ const IMMUTABLE_TIMING_VALIDATION_CODES = new Set([
 const WINDOWS_RESERVED_BASENAME =
   /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 const MAX_OUTPUT_BASE_NAME_UTF8_BYTES = 160;
+const SUBTITLE_DISPLAY_MODES = new Set(['original', 'translation', 'dual']);
+const SUBTITLE_STYLE_PRESETS = new Set([
+  'Default',
+  'Classic',
+  'Boxed',
+  'LineBox',
+]);
+const SUBTITLE_RENDER_SPEC_VERSION = 1;
+const SUBTITLE_FONT_FAMILY = 'Noto Sans';
+const SUBTITLE_FONT_ASSET = 'NotoSans-Regular.ttf';
+const MIN_SUBTITLE_OUTPUT_FONT_SIZE = 6;
+const MAX_SUBTITLE_OUTPUT_FONT_SIZE = 192;
 
 function isObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -130,6 +145,336 @@ function isObject(value) {
 
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function finiteSubtitleBaseFontSize(value) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(6, Math.min(96, value))
+    : null;
+}
+
+function plannedSubtitleOutputFontSize(baseFontSize, videoHeight) {
+  const height = Number(videoHeight);
+  if (!Number.isFinite(height) || height <= 0) return null;
+  const scale = Math.min(Math.max(Math.max(height, 360) / 720, 0.5), 2);
+  return Math.max(6, Math.round(baseFontSize * scale));
+}
+
+export function resolvePlannedSubtitleRenderSpec({
+  requestedOutputs = {},
+  profile = {},
+  planning = {},
+  translationProvider = 'agent',
+  sourceMetadata = {},
+} = {}) {
+  const preview = isObject(planning?.subtitle_rendering)
+    ? planning.subtitle_rendering
+    : {};
+  if (
+    preview.display_mode !== undefined &&
+    !SUBTITLE_DISPLAY_MODES.has(preview.display_mode)
+  ) {
+    throw new Error('Translator returned an invalid preview display mode.');
+  }
+  if (
+    preview.style !== undefined &&
+    !SUBTITLE_STYLE_PRESETS.has(preview.style)
+  ) {
+    throw new Error('Translator returned an invalid preview subtitle style.');
+  }
+  const previewFontSize =
+    preview.base_font_size_px === undefined
+      ? null
+      : finiteSubtitleBaseFontSize(preview.base_font_size_px);
+  if (preview.base_font_size_px !== undefined && previewFontSize === null) {
+    throw new Error('Translator returned an invalid preview font size.');
+  }
+
+  const profileRendering = isObject(profile?.subtitle_rendering)
+    ? profile.subtitle_rendering
+    : {};
+  const requestedDisplayMode = requestedOutputs.subtitle_display_mode;
+  const requestedStyle = requestedOutputs.subtitle_style;
+  const requestedFontSize =
+    requestedOutputs.subtitle_font_size === undefined
+      ? null
+      : finiteSubtitleBaseFontSize(requestedOutputs.subtitle_font_size);
+  if (
+    requestedOutputs.subtitle_font_size !== undefined &&
+    requestedFontSize === null
+  ) {
+    throw new Error('The requested subtitle font size is invalid.');
+  }
+  const displayMode =
+    translationProvider === 'none'
+      ? 'original'
+      : requestedDisplayMode ||
+        preview.display_mode ||
+        profileRendering.display_mode ||
+        'translation';
+  const style =
+    requestedStyle || preview.style || profileRendering.style || 'Default';
+  const profileFontSize = finiteSubtitleBaseFontSize(
+    profileRendering.font_size
+  );
+  if (profileRendering.font_size !== undefined && profileFontSize === null) {
+    throw new Error('The saved project profile subtitle font size is invalid.');
+  }
+  const baseFontSize =
+    requestedFontSize ?? previewFontSize ?? profileFontSize ?? 24;
+  if (!SUBTITLE_DISPLAY_MODES.has(displayMode)) {
+    throw new Error('The resolved subtitle display mode is unsupported.');
+  }
+  if (!SUBTITLE_STYLE_PRESETS.has(style)) {
+    throw new Error('The resolved subtitle style is unsupported.');
+  }
+  const width = Number(sourceMetadata?.width);
+  const height = Number(sourceMetadata?.height);
+  const displayWidth = Number(sourceMetadata?.display_width);
+  const displayHeight = Number(sourceMetadata?.display_height);
+
+  return {
+    display_mode: displayMode,
+    style,
+    base_font_size_px: baseFontSize,
+    output_font_size_px: plannedSubtitleOutputFontSize(baseFontSize, height),
+    video_width_px: Number.isFinite(width) && width > 0 ? width : null,
+    video_height_px: Number.isFinite(height) && height > 0 ? height : null,
+    display_width_px:
+      Number.isFinite(displayWidth) && displayWidth > 0
+        ? displayWidth
+        : Number.isFinite(width) && width > 0
+          ? width
+          : null,
+    display_height_px:
+      Number.isFinite(displayHeight) && displayHeight > 0
+        ? displayHeight
+        : Number.isFinite(height) && height > 0
+          ? height
+          : null,
+    font_family: SUBTITLE_FONT_FAMILY,
+    font_asset: SUBTITLE_FONT_ASSET,
+    scale_rule: 'height_ratio_720_clamped_0.5_2',
+    schema_version: SUBTITLE_RENDER_SPEC_VERSION,
+    field_sources: {
+      display_mode:
+        translationProvider === 'none'
+          ? 'workflow'
+          : requestedDisplayMode
+            ? 'request'
+            : preview.display_mode
+              ? 'translator_preview'
+              : profileRendering.display_mode
+                ? 'project_profile'
+                : 'default',
+      style: requestedStyle
+        ? 'request'
+        : preview.style
+          ? 'translator_preview'
+          : profileRendering.style
+            ? 'project_profile'
+            : 'default',
+      base_font_size_px:
+        requestedFontSize !== null
+          ? 'request'
+          : previewFontSize !== null
+            ? 'translator_preview'
+            : profileFontSize !== null
+              ? 'project_profile'
+              : 'default',
+    },
+  };
+}
+
+export function plannedAppSourceBinding(plan, state = 'preparing') {
+  if (!['preparing', 'mounted'].includes(state)) {
+    throw new TypeError('Source binding state must be preparing or mounted.');
+  }
+  const sourceKind = String(plan?.source?.kind || '').trim();
+  if (!sourceKind) {
+    throw new Error('The immutable plan is missing its source kind.');
+  }
+  const explicitSourceKey = String(plan?.source?.source_key || '').trim();
+  // Plans written by early v2 development builds may predate source_key.
+  // Bind them to the immutable stored source snapshot without exposing paths
+  // or URLs, while current plans continue to use their content/media key.
+  const sourceKey =
+    explicitSourceKey ||
+    `legacy-plan:sha256:${createHash('sha256')
+      .update(canonicalJson(plan.source))
+      .digest('hex')}`;
+  const duration = Number(plan?.source_metadata?.duration_seconds);
+  return {
+    source_key: sourceKey,
+    source_kind: sourceKind,
+    planned_duration_seconds:
+      Number.isFinite(duration) && duration >= 0 ? duration : null,
+    state,
+  };
+}
+
+export function bindAppObservationToPlan(plan, observation) {
+  if (!isObject(observation)) return observation;
+  const expected = plannedAppSourceBinding(plan);
+  const observedBinding = isObject(observation.source_binding)
+    ? observation.source_binding
+    : null;
+  const bindingMatches =
+    observedBinding?.source_key === expected.source_key &&
+    observedBinding?.source_kind === expected.source_kind &&
+    (observedBinding?.planned_duration_seconds ?? null) ===
+      expected.planned_duration_seconds;
+  const observedState = String(observedBinding?.state || '');
+  const state =
+    bindingMatches && ['preparing', 'mounted'].includes(observedState)
+      ? observedState
+      : 'unverified';
+  const bound = {
+    ...clone(observation),
+    source_binding: { ...expected, state },
+  };
+  if (state === 'mounted') return bound;
+
+  // The app tab may already contain unrelated media. Until it attests that
+  // the immutable planned source is mounted, never persist or return that
+  // workspace as evidence for this job. Nested operation results remain
+  // intact so completed artifacts can still be fingerprinted and recovered.
+  bound.source = {
+    videoPath: null,
+    videoReady: false,
+    durationSeconds: expected.planned_duration_seconds,
+  };
+  bound.subtitles = {
+    cueCount: null,
+    translatedCueCount: null,
+    targetLanguage: null,
+    kind: null,
+    activeFilePath: null,
+  };
+  bound.outputs = {
+    dubbedVideoPath: null,
+    dubbedAudioPath: null,
+    downloadedFilePath: null,
+  };
+  return bound;
+}
+
+function joinTranscriptCueText(values) {
+  return values
+    .map(value => String(value || '').trim())
+    .filter(Boolean)
+    .join(' ');
+}
+
+export function repairZeroDurationTranscriptSegments(segments) {
+  if (!Array.isArray(segments)) {
+    throw new TypeError('Transcript segments must be an array.');
+  }
+  const candidates = clone(segments);
+  const repaired = [];
+  const repairs = [];
+
+  const mergeGroup = (target, group, strategy) => {
+    const groupSource = group.map(
+      segment => segment?.source ?? segment?.original ?? ''
+    );
+    const targetSource = target?.source ?? target?.original ?? '';
+    const source =
+      strategy === 'prepend'
+        ? joinTranscriptCueText([...groupSource, targetSource])
+        : joinTranscriptCueText([targetSource, ...groupSource]);
+    target.source = source;
+    if (Object.hasOwn(target, 'original')) target.original = source;
+
+    const groupTranslations = group.map(segment => segment?.translation || '');
+    const targetTranslation = target?.translation || '';
+    const translation =
+      strategy === 'prepend'
+        ? joinTranscriptCueText([...groupTranslations, targetTranslation])
+        : joinTranscriptCueText([targetTranslation, ...groupTranslations]);
+    if (translation || Object.hasOwn(target, 'translation')) {
+      target.translation = translation;
+    }
+
+    for (const segment of group) {
+      repairs.push({
+        removed_segment_id: String(segment?.id || ''),
+        merged_into_segment_id: String(target?.id || ''),
+        timestamp_seconds: Number(segment?.start),
+        strategy,
+      });
+    }
+  };
+
+  for (let index = 0; index < candidates.length; index += 1) {
+    const candidate = candidates[index];
+    const start = Number(candidate?.start);
+    const end = Number(candidate?.end);
+    const repairable =
+      Number.isFinite(start) &&
+      start >= 0 &&
+      Number.isFinite(end) &&
+      end === start;
+    if (!repairable) {
+      repaired.push(candidate);
+      continue;
+    }
+
+    const group = [candidate];
+    while (index + 1 < candidates.length) {
+      const next = candidates[index + 1];
+      const nextStart = Number(next?.start);
+      const nextEnd = Number(next?.end);
+      if (
+        !Number.isFinite(nextStart) ||
+        !Number.isFinite(nextEnd) ||
+        nextStart !== start ||
+        nextEnd !== nextStart
+      ) {
+        break;
+      }
+      group.push(next);
+      index += 1;
+    }
+
+    const next = candidates[index + 1];
+    const nextStart = Number(next?.start);
+    const nextEnd = Number(next?.end);
+    if (
+      next &&
+      Number.isFinite(nextStart) &&
+      Number.isFinite(nextEnd) &&
+      nextStart === start &&
+      nextEnd > nextStart
+    ) {
+      const survivor = clone(next);
+      mergeGroup(survivor, group, 'prepend');
+      repaired.push(survivor);
+      index += 1;
+      continue;
+    }
+
+    const previous = repaired.at(-1);
+    if (previous) {
+      mergeGroup(previous, group, 'append');
+      continue;
+    }
+
+    // With no positive-duration neighbour, retain the invalid group so the
+    // durable session validator fails closed instead of discarding content.
+    repaired.push(...group);
+  }
+
+  repaired.forEach((segment, index) => {
+    segment.index = index + 1;
+  });
+  return {
+    segments: repaired,
+    original_segment_count: candidates.length,
+    repaired_segment_count: repairs.length,
+    persisted_segment_count: repaired.length,
+    repairs,
+  };
 }
 
 function publicToolData(value) {
@@ -478,6 +823,18 @@ function operationId(job, stage) {
 
 function usesLibraryHistoryStage(plan, stage) {
   return plan?.source?.kind === 'library_item' && stage?.id === 'transcription';
+}
+
+function appSourceBindingStateForStage(plan, stage) {
+  if (stage?.id === 'transcription') {
+    return plan?.source?.kind === 'library_item' ? 'mounted' : 'preparing';
+  }
+  return stage?.id === 'download_source' ? 'preparing' : 'mounted';
+}
+
+function appSourceBindingProtocolVersion(context) {
+  const value = Number(context?.agent_control?.source_binding_protocol_version);
+  return Number.isInteger(value) && value >= 0 ? value : null;
 }
 
 function isVideoArtifact(artifact) {
@@ -830,14 +1187,32 @@ const ASS_STYLE_PRESETS = Object.freeze({
   }),
 });
 
-function buildAss(
+function boundedAssPlayResolution(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0
+    ? Math.max(16, Math.min(32_768, Math.round(parsed)))
+    : fallback;
+}
+
+export function buildAss(
   segments,
-  { style = 'Default', fontSize = 24, mode = 'translation' } = {}
+  {
+    style = 'Default',
+    fontSize = 24,
+    mode = 'translation',
+    playResX = 1920,
+    playResY = 1080,
+  } = {}
 ) {
   const styleName = Object.hasOwn(ASS_STYLE_PRESETS, style) ? style : 'Default';
   const preset = ASS_STYLE_PRESETS[styleName];
-  const boundedFontSize = Math.max(12, Math.min(96, Number(fontSize) || 24));
-  const header = `[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\nWrapStyle: 0\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: ${styleName},Noto Sans,${boundedFontSize},${preset.primary},&H000000FF,${preset.outline},${preset.back},-1,0,0,0,100,100,0,0,${preset.border},${preset.outlineSize},${preset.shadow},2,10,10,15,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;
+  const boundedFontSize = Math.max(
+    MIN_SUBTITLE_OUTPUT_FONT_SIZE,
+    Math.min(MAX_SUBTITLE_OUTPUT_FONT_SIZE, Number(fontSize) || 24)
+  );
+  const boundedPlayResX = boundedAssPlayResolution(playResX, 1920);
+  const boundedPlayResY = boundedAssPlayResolution(playResY, 1080);
+  const header = `[Script Info]\nScriptType: v4.00+\nPlayResX: ${boundedPlayResX}\nPlayResY: ${boundedPlayResY}\nWrapStyle: 0\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: ${styleName},Noto Sans,${boundedFontSize},${preset.primary},&H000000FF,${preset.outline},${preset.back},-1,0,0,0,100,100,0,0,${preset.border},${preset.outlineSize},${preset.shadow},2,10,10,15,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;
   return (
     header +
     segments
@@ -1449,6 +1824,7 @@ export class McpV2Service {
 
   async getCapabilities(sharedContext = null) {
     const context = sharedContext || (await this.appContext());
+    const appBindingProtocol = appSourceBindingProtocolVersion(context);
     return {
       schema_version: MCP_V2_SCHEMA_VERSION,
       tools: MCP_V2_TOOL_NAMES,
@@ -1469,6 +1845,16 @@ export class McpV2Service {
         ambiguous_inference_policy:
           'block_for_explicit_review_instead_of_risking_duplicate_credit_spend',
         event_cursor: true,
+      },
+      source_binding: {
+        protocol_version: SOURCE_BINDING_PROTOCOL_VERSION,
+        app_protocol_version: appBindingProtocol,
+        app_attested: appBindingProtocol === SOURCE_BINDING_PROTOCOL_VERSION,
+        safe_for_new_jobs:
+          context.connected === true &&
+          appBindingProtocol === SOURCE_BINDING_PROTOCOL_VERSION,
+        start_states: ['preparing', 'mounted'],
+        unverified_workspace_redaction: true,
       },
       source_types: ['url', 'local_file', 'library_item', 'transcript', 'mock'],
       languages: {
@@ -2391,6 +2777,14 @@ export class McpV2Service {
     }
     stages.push({ id: 'manifest', label: 'Write result manifest' });
 
+    const subtitleRenderSpec = resolvePlannedSubtitleRenderSpec({
+      requestedOutputs,
+      profile,
+      planning: context.planning,
+      translationProvider,
+      sourceMetadata: probe.metadata,
+    });
+
     const plan = {
       source: probe.source,
       source_metadata: probe.metadata,
@@ -2440,20 +2834,10 @@ export class McpV2Service {
         presets,
         subtitle_formats: subtitleFormats,
         burn_subtitles: requestedOutputs.burn_subtitles !== false,
-        subtitle_display_mode:
-          translationProvider === 'none'
-            ? 'original'
-            : requestedOutputs.subtitle_display_mode ||
-              profile.subtitle_rendering?.display_mode ||
-              'translation',
-        subtitle_style:
-          requestedOutputs.subtitle_style ||
-          profile.subtitle_rendering?.style ||
-          'Default',
-        subtitle_font_size:
-          requestedOutputs.subtitle_font_size ||
-          profile.subtitle_rendering?.font_size ||
-          24,
+        subtitle_display_mode: subtitleRenderSpec.display_mode,
+        subtitle_style: subtitleRenderSpec.style,
+        subtitle_font_size: subtitleRenderSpec.base_font_size_px,
+        subtitle_render_spec: subtitleRenderSpec,
         x_account_tier: xTier,
         overwrite: requestedOutputs.overwrite === true,
       },
@@ -2609,6 +2993,19 @@ export class McpV2Service {
       throw new Error(
         'Translator must be connected when a job starts so provider and credit state can be revalidated.'
       );
+    }
+    const appBindingProtocol = appSourceBindingProtocolVersion(context);
+    if (appBindingProtocol !== SOURCE_BINDING_PROTOCOL_VERSION) {
+      const error = new Error(
+        'The connected Translator app does not support the required planned-source binding protocol. Install and restart the updated packaged app before creating a new job.'
+      );
+      error.code = 'APP_SOURCE_BINDING_PROTOCOL_REQUIRED';
+      error.details = {
+        required_protocol_version: SOURCE_BINDING_PROTOCOL_VERSION,
+        observed_protocol_version: appBindingProtocol,
+        suggested_action: 'install and restart the updated Translator package',
+      };
+      throw error;
     }
     const providerChecks = [
       [['stage5', 'byo'].includes(plan.transcription?.method), 'transcription'],
@@ -3362,6 +3759,7 @@ export class McpV2Service {
           );
           return 'blocked';
         }
+        this.store.clearTranslationCorrectionMarkers(job.job_id);
         this.completeStage(job.job_id, validation, stage);
         return 'complete';
       }
@@ -3571,13 +3969,18 @@ export class McpV2Service {
       return 'blocked';
     }
     try {
-      const result = await this.callApp(method, {
+      const plan = this.store.getPlan(job.plan_hash);
+      const rawResult = await this.callApp(method, {
         ...params,
         mcpJobId: job.job_id,
+        sourceBinding: plannedAppSourceBinding(
+          plan,
+          appSourceBindingStateForStage(plan, stage)
+        ),
       });
+      const result = bindAppObservationToPlan(plan, rawResult);
       const updated = this.markStageRunning(job.job_id, result, stage);
       if (updated.cancel_requested) {
-        const plan = this.store.getPlan(updated.plan_hash);
         const updatedStage = updated.stages[updated.stage_index];
         void this.callApp('cancelProcessing', {
           mcpJobId: job.job_id,
@@ -3875,9 +4278,109 @@ export class McpV2Service {
     );
   }
 
+  async recoverCompletedTranscription(job) {
+    const stage = job?.stages?.[Number(job?.stage_index)];
+    if (
+      job?.status !== 'failed' ||
+      stage?.id !== 'transcription' ||
+      stage?.status !== 'failed' ||
+      !/invalid timing for segment/i.test(String(stage?.error?.message || ''))
+    ) {
+      return null;
+    }
+
+    const plan = this.store.getPlan(job.plan_hash);
+    let appStatus;
+    try {
+      const rawAppStatus = await this.callApp('processingStatus', {
+        mcpJobId: job.job_id,
+        operationId: operationId(job, stage),
+        sourceBinding: plannedAppSourceBinding(
+          plan,
+          appSourceBindingStateForStage(plan, stage)
+        ),
+        ...(usesLibraryHistoryStage(plan, stage)
+          ? { historyId: plan.source.history_id }
+          : {}),
+      });
+      appStatus = bindAppObservationToPlan(plan, rawAppStatus);
+    } catch {
+      return null;
+    }
+
+    if (
+      (appStatus?.id || appStatus?.operationId || null) !==
+        operationId(job, stage) ||
+      appResultStatus(appStatus) !== 'completed' ||
+      appStatus?.source_binding?.state !== 'mounted'
+    ) {
+      return null;
+    }
+
+    let artifactFingerprints;
+    try {
+      artifactFingerprints = await this.captureCompletedAppStage(
+        job,
+        stage,
+        appStatus
+      );
+    } catch {
+      return null;
+    }
+    if (
+      artifactFingerprints === null ||
+      !isObject(appStatus?.result?.transcript_checkpoint)
+    ) {
+      return null;
+    }
+
+    const completionResult = appStatus.result || appStatus;
+    const recovering = this.mutateJob(
+      job.job_id,
+      next => {
+        const current = next.stages[next.stage_index];
+        current.status = 'running';
+        current.error = null;
+        current.result = clone(completionResult);
+        applyStageCreditUsage(next, current, completionResult);
+        next.status = 'running';
+        next.error = null;
+        next.human_status = 'Recovering completed transcription locally';
+        next.recoverability = {
+          recoverable: true,
+          status: 'local_recovery',
+          resume_from_stage: current.id,
+        };
+        return next;
+      },
+      {
+        eventType: 'stage_local_recovery_started',
+        eventData: {
+          stage: stage.id,
+          operation_id: stage.operation_id,
+          provider_retried: false,
+          transcript_checkpoint: clone(appStatus.result.transcript_checkpoint),
+        },
+        expectedStage: stageFence(stage),
+        allowFailedExpectedStage: true,
+      }
+    );
+    const recoveringStage = recovering.stages[recovering.stage_index];
+    this.completeStage(
+      job.job_id,
+      completionResult,
+      recoveringStage,
+      artifactFingerprints
+    );
+    return this.advanceJob(job.job_id);
+  }
+
   async reconcileJob(jobId) {
     let job = this.store.requireJob(jobId);
-    if (TERMINAL.has(job.status)) return job;
+    if (TERMINAL.has(job.status)) {
+      const recovered = await this.recoverCompletedTranscription(job);
+      return recovered || job;
+    }
     let stage = job.stages[job.stage_index];
     if (!stage) return job;
 
@@ -3943,15 +4446,21 @@ export class McpV2Service {
       return job;
     }
 
+    const plan = this.store.getPlan(job.plan_hash);
     let appStatus;
     try {
-      appStatus = await this.callApp('processingStatus', {
+      const rawAppStatus = await this.callApp('processingStatus', {
         mcpJobId: jobId,
         operationId: operationId(job, stage),
-        ...(usesLibraryHistoryStage(this.store.getPlan(job.plan_hash), stage)
-          ? { historyId: this.store.getPlan(job.plan_hash).source.history_id }
+        sourceBinding: plannedAppSourceBinding(
+          plan,
+          appSourceBindingStateForStage(plan, stage)
+        ),
+        ...(usesLibraryHistoryStage(plan, stage)
+          ? { historyId: plan.source.history_id }
           : {}),
       });
+      appStatus = bindAppObservationToPlan(plan, rawAppStatus);
     } catch {
       return job;
     }
@@ -4187,7 +4696,7 @@ export class McpV2Service {
     if (!this.isCurrentStage(job.job_id, stage)) return null;
     if (['transcription', 'translation_app'].includes(stage.id)) {
       const plan = this.store.getPlan(job.plan_hash);
-      const segments = await this.readAllAppSubtitles(
+      let segments = await this.readAllAppSubtitles(
         usesLibraryHistoryStage(plan, stage) ? plan.source : null,
         job.job_id
       );
@@ -4196,14 +4705,50 @@ export class McpV2Service {
         throw new Error(`Completed ${stage.id} returned no subtitle segments.`);
       }
       if (stage.id === 'transcription') {
-        this.store.initializeTranslationSession(job.job_id, {
-          segments,
-          targetLanguage: plan.target_language || 'translation-not-requested',
-          sourceLanguage: appStatus?.result?.sourceLanguage || 'auto',
-          profileName: plan.project_profile,
-          glossary: this.mergedGlossary(plan),
-          mediaDurationSeconds: plan.source_metadata?.duration_seconds,
-        });
+        const repair = repairZeroDurationTranscriptSegments(segments);
+        segments = repair.segments;
+        if (repair.repaired_segment_count > 0) {
+          const rawApplied = await this.callApp('applyTranslationSession', {
+            mcpJobId: job.job_id,
+            source: plan.source,
+            sourceBinding: plannedAppSourceBinding(plan, 'mounted'),
+            videoPath:
+              String(appStatus?.result?.videoPath || '').trim() ||
+              plannedVideoPath(job, plan),
+            targetLanguage: plan.target_language || 'translation-not-requested',
+            segments,
+          });
+          const applied = bindAppObservationToPlan(plan, rawApplied);
+          if (applied?.source_binding?.state !== 'mounted') {
+            throw new Error(
+              'Translator did not attest the planned source after applying the locally repaired transcript.'
+            );
+          }
+        }
+        const initialized = this.store.initializeTranslationSession(
+          job.job_id,
+          {
+            segments,
+            targetLanguage: plan.target_language || 'translation-not-requested',
+            sourceLanguage: appStatus?.result?.sourceLanguage || 'auto',
+            profileName: plan.project_profile,
+            glossary: this.mergedGlossary(plan),
+            mediaDurationSeconds: plan.source_metadata?.duration_seconds,
+          }
+        );
+        appStatus.result = {
+          ...(isObject(appStatus.result) ? appStatus.result : {}),
+          transcript_checkpoint: {
+            kind: 'completed_provider_transcript',
+            provider_retried: false,
+            original_segment_count: repair.original_segment_count,
+            persisted_segment_count: repair.persisted_segment_count,
+            zero_duration_segments_merged: repair.repaired_segment_count,
+            session_reused: initialized.reused === true,
+            repairs: repair.repairs.slice(0, 200),
+            repair_details_truncated: repair.repairs.length > 200,
+          },
+        };
       } else {
         this.store.synchronizeTranslationSession(job.job_id, segments);
       }
@@ -4436,6 +4981,7 @@ export class McpV2Service {
     const result = await this.callApp('applyTranslationSession', {
       mcpJobId: job.job_id,
       source: plan.source,
+      sourceBinding: plannedAppSourceBinding(plan, 'mounted'),
       videoPath: videoPath || plannedVideoPath(job, plan),
       targetLanguage: plan.target_language,
       segments: session.segments,
@@ -4528,8 +5074,49 @@ export class McpV2Service {
   async watchJob({
     job_id: jobId,
     after_cursor: afterCursor = 0,
-    wait_ms: waitMs = 25_000,
+    wait_ms: waitMs = WATCH_JOB_DEFAULT_WAIT_MS,
   }) {
+    const numericWait = Number(waitMs);
+    const effectiveWaitMs = Math.min(
+      WATCH_JOB_MAX_WAIT_MS,
+      Math.max(
+        0,
+        Number.isFinite(numericWait) ? numericWait : WATCH_JOB_DEFAULT_WAIT_MS
+      )
+    );
+    const startedAt = performance.now();
+    const deadline = startedAt + effectiveWaitMs;
+    const decorate = (current, timedOut = false) => {
+      const interrupted = Boolean(this.shutdownReason);
+      const unchanged =
+        current.events.length === 0 &&
+        Number(current.next_cursor) === Number(afterCursor);
+      const wakeReason = interrupted
+        ? 'interrupted'
+        : current.events.length > 0
+          ? 'change'
+          : TERMINAL.has(current.job.status)
+            ? 'terminal'
+            : effectiveWaitMs <= 0
+              ? 'poll'
+              : timedOut
+                ? 'timeout'
+                : 'unchanged';
+      return {
+        ...current,
+        changed: !unchanged,
+        unchanged,
+        timed_out: timedOut,
+        wake_reason: wakeReason,
+        requested_wait_ms: numericWait,
+        effective_wait_ms: effectiveWaitMs,
+        waited_ms: Math.max(0, Math.round(performance.now() - startedAt)),
+        interrupted,
+        ...(this.shutdownReason
+          ? { interruption_reason: this.shutdownReason }
+          : {}),
+      };
+    };
     let response = await this.getJob({
       job_id: jobId,
       after_cursor: afterCursor,
@@ -4537,59 +5124,66 @@ export class McpV2Service {
     if (
       response.events.length ||
       TERMINAL.has(response.job.status) ||
-      Number(waitMs) <= 0 ||
+      effectiveWaitMs <= 0 ||
       this.shutdownReason
     ) {
-      return {
-        ...response,
-        timed_out: false,
-        interrupted: Boolean(this.shutdownReason),
-        ...(this.shutdownReason
-          ? { interruption_reason: this.shutdownReason }
-          : {}),
-      };
+      return decorate(response);
     }
-    const boundedWait = Math.min(30_000, Math.max(0, Number(waitMs) || 25_000));
     let resolveCompletion;
     const completion = new Promise(resolve => {
       resolveCompletion = resolve;
     });
     this.pendingWatchCompletions.add(completion);
     try {
-      await new Promise(resolve => {
-        let settled = false;
-        const finish = () => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timer);
-          this.events.removeListener(jobId, finish);
-          this.pendingWatchInterrupts.delete(finish);
-          resolve();
-        };
-        const timer = setTimeout(finish, boundedWait);
-        this.pendingWatchInterrupts.add(finish);
-        this.events.once(jobId, finish);
-        // Close the registration race: a mutation can commit after the first
-        // read but immediately before the listener is attached.
+      while (performance.now() < deadline && !this.shutdownReason) {
+        const remainingWaitMs = Math.max(0, deadline - performance.now());
+        await new Promise(resolve => {
+          let settled = false;
+          const finish = () => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            this.events.removeListener(jobId, finish);
+            this.pendingWatchInterrupts.delete(finish);
+            resolve();
+          };
+          const timer = setTimeout(finish, remainingWaitMs);
+          this.pendingWatchInterrupts.add(finish);
+          this.events.once(jobId, finish);
+          // Close the registration race: a mutation can commit after the
+          // preceding read but immediately before the listener is attached.
+          if (
+            Number(this.store.requireJob(jobId).event_cursor || 0) >
+            Number(afterCursor || 0)
+          ) {
+            finish();
+          }
+        });
+        response = await this.getJob({
+          job_id: jobId,
+          after_cursor: afterCursor,
+        });
         if (
-          Number(this.store.requireJob(jobId).event_cursor || 0) >
-          Number(afterCursor || 0)
+          response.events.length ||
+          TERMINAL.has(response.job.status) ||
+          this.shutdownReason
         ) {
-          finish();
+          return decorate(response);
         }
-      });
-      response = await this.getJob({
-        job_id: jobId,
-        after_cursor: afterCursor,
-      });
-      return {
-        ...response,
-        timed_out: response.events.length === 0 && !this.shutdownReason,
-        interrupted: Boolean(this.shutdownReason),
-        ...(this.shutdownReason
-          ? { interruption_reason: this.shutdownReason }
-          : {}),
-      };
+        // EventEmitter notifications are advisory. A fenced no-op mutation
+        // can wake a listener without advancing the persisted event cursor;
+        // keep waiting until a real change, interruption, or the deadline.
+      }
+      if (!this.shutdownReason) {
+        response = await this.getJob({
+          job_id: jobId,
+          after_cursor: afterCursor,
+        });
+        if (response.events.length || TERMINAL.has(response.job.status)) {
+          return decorate(response);
+        }
+      }
+      return decorate(response, !this.shutdownReason);
     } finally {
       this.pendingWatchCompletions.delete(completion);
       resolveCompletion();
@@ -4944,6 +5538,9 @@ export class McpV2Service {
 
   async validateTranslation(jobId) {
     const validation = await this.runValidation(jobId);
+    if (validation.passed) {
+      this.store.clearTranslationCorrectionMarkers(jobId);
+    }
     const currentJob = this.store.requireJob(jobId);
     if (['completed', 'cancelled'].includes(currentJob.status)) {
       return validation;
@@ -5556,9 +6153,16 @@ export class McpV2Service {
             : format === 'vtt'
               ? srtToVtt(srt)
               : buildAss(session.segments, {
-                  style: plan.outputs.subtitle_style,
-                  fontSize: plan.outputs.subtitle_font_size,
+                  style:
+                    plan.outputs.subtitle_render_spec?.style ||
+                    plan.outputs.subtitle_style,
+                  fontSize:
+                    plan.outputs.subtitle_render_spec?.output_font_size_px ||
+                    plan.outputs.subtitle_font_size,
                   mode: srtMode,
+                  playResX: plan.outputs.subtitle_render_spec?.display_width_px,
+                  playResY:
+                    plan.outputs.subtitle_render_spec?.display_height_px,
                 });
         await writeSubtitleArtifact({
           outputPath,

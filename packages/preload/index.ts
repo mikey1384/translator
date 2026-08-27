@@ -897,6 +897,10 @@ const electronAPI = {
   getAgentSocketStatus: (): Promise<{
     running: boolean;
     connectedClients: number;
+    serverName: 'translator';
+    transport: 'stdio';
+    launcherPath: string | null;
+    restartRequired: true;
   }> => ipcRenderer.invoke('get-agent-socket-status'),
   getAgentRuntimeContext: () => ipcRenderer.invoke('agent-get-runtime-context'),
   agentV2ProbeSource: (input: unknown) =>

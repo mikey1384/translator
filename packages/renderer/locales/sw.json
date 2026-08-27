@@ -780,6 +780,10 @@
       "description": "Ruhusu mawakala wa nje wa AI (Cursor, Codex na wengine) kudhibiti programu hii ya Translator kupitia kiolesura cha ndani cha MCP. Ikishawashwa, mawakala wanaweza kupakua video, kusimamia maktaba yako, kuhariri manukuu na kuhamisha faili kwenye folda zinazoruhusiwa.",
       "enableLabel": "Ruhusu mawakala kudhibiti programu hii",
       "enableAria": "Washa udhibiti wa mawakala",
+      "connection": {
+        "title": "Unganisha Codex au ChatGPT",
+        "instructions": "Ongeza seva ya MCP ya STDIO inayoitwa “translator” kwa kutumia njia hii ya kizindua. Hifadhi seva, kisha uanzishe upya Codex au ChatGPT ili zana mpya zionekane."
+      },
       "status": {
         "enabled": "Imewashwa",
         "disabled": "Imezimwa",

@@ -89,6 +89,20 @@ export type SubtitleRenderTheme = {
   width: string;
 };
 
+export type SubtitleLineBoxStyle = {
+  backgroundColor: string;
+  borderRadius: string;
+  boxDecorationBreak: 'clone';
+  boxShadow: string;
+  display: 'inline';
+  lineHeight: string;
+  overflowWrap: 'anywhere';
+  padding: string;
+  WebkitBoxDecorationBreak: 'clone';
+  whiteSpace: 'pre-wrap';
+  wordBreak: 'break-word';
+};
+
 const SHORT_FORM_TUNING: Record<SubtitleStylePresetKey, ShortFormTuning> = {
   Default: {
     borderRadiusPx: 10,
@@ -354,6 +368,79 @@ export function resolveSubtitleRenderTheme(opts: {
     textStrokeWidthPx,
     width,
   };
+}
+
+export function resolveSubtitleLineBoxStyle(
+  theme: SubtitleRenderTheme
+): SubtitleLineBoxStyle {
+  return {
+    backgroundColor: theme.lineBoxBackgroundColor,
+    padding: theme.lineBoxPadding,
+    display: 'inline',
+    lineHeight: String(theme.lineHeight),
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word',
+    borderRadius: `${theme.lineBoxBorderRadiusPx}px`,
+    boxShadow: theme.lineBoxBoxShadow,
+    boxDecorationBreak: 'clone',
+    WebkitBoxDecorationBreak: 'clone',
+  };
+}
+
+export function normalizeSubtitleLineBoxLineText(value: string): string {
+  return String(value || '').trim() || '\u00a0';
+}
+
+export function subtitleTextUsesMultipleLines(
+  element: HTMLElement,
+  text: string
+): boolean {
+  if (text.includes('\n')) return true;
+  if (!text) return false;
+
+  const containerWidth = element.clientWidth;
+  const document = element.ownerDocument;
+  const view = document.defaultView;
+  if (!view || containerWidth <= 0) return false;
+
+  const computedStyle = view.getComputedStyle(element);
+  if (!computedStyle.fontSize || !computedStyle.fontFamily) return false;
+
+  const probe = document.createElement('span');
+  probe.style.fontFamily = computedStyle.fontFamily;
+  probe.style.fontSize = computedStyle.fontSize;
+  probe.style.fontWeight = computedStyle.fontWeight;
+  probe.style.letterSpacing = computedStyle.letterSpacing;
+  probe.style.whiteSpace = 'nowrap';
+  probe.style.visibility = 'hidden';
+  probe.style.position = 'absolute';
+  probe.textContent = text.replace(/\n/g, ' ');
+
+  try {
+    document.body.appendChild(probe);
+    return probe.scrollWidth > containerWidth + 1;
+  } finally {
+    probe.remove();
+  }
+}
+
+export function subtitleLineBoxStyleToCssText(
+  style: SubtitleLineBoxStyle
+): string {
+  return [
+    `background-color:${style.backgroundColor}`,
+    `padding:${style.padding}`,
+    `display:${style.display}`,
+    `line-height:${style.lineHeight}`,
+    `white-space:${style.whiteSpace}`,
+    `overflow-wrap:${style.overflowWrap}`,
+    `word-break:${style.wordBreak}`,
+    `border-radius:${style.borderRadius}`,
+    `box-shadow:${style.boxShadow}`,
+    `box-decoration-break:${style.boxDecorationBreak}`,
+    `-webkit-box-decoration-break:${style.WebkitBoxDecorationBreak}`,
+  ].join(';');
 }
 
 export function getSubtitleStyles(opts: {

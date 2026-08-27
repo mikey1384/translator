@@ -1936,4 +1936,36 @@ export class PersistentJobStore {
       return clone(session);
     });
   }
+
+  clearTranslationCorrectionMarkers(jobId) {
+    return this.transaction(() => {
+      const row = this.database
+        .prepare(
+          'SELECT session_json FROM translation_sessions WHERE job_id = ?'
+        )
+        .get(jobId);
+      if (!row)
+        throw new Error(`Translation session not found for job: ${jobId}`);
+      const session = parseJson(row.session_json);
+      let changed = false;
+      for (const segment of session.segments) {
+        if (segment.status !== 'needs_correction') continue;
+        segment.status = String(segment.translation || '').trim()
+          ? 'translated'
+          : 'pending';
+        changed = true;
+      }
+      if (!changed) return clone(session);
+      const now = this.timestamp();
+      session.revision = Number(session.revision || 0) + 1;
+      session.updated_at = now;
+      this.database
+        .prepare(
+          `UPDATE translation_sessions SET revision = ?, updated_at = ?, session_json = ?
+           WHERE job_id = ?`
+        )
+        .run(session.revision, now, canonicalJson(session), jobId);
+      return clone(session);
+    });
+  }
 }

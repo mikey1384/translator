@@ -111,6 +111,21 @@ const labelStyles = css`
   color: ${colors.text};
 `;
 
+const launcherPathStyles = css`
+  display: block;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background: ${colors.surface};
+  color: ${colors.text};
+  font-family: monospace;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  user-select: text;
+`;
+
 const permissionListStyles = css`
   padding-left: 20px;
   margin: 8px 0;
@@ -148,6 +163,7 @@ export default function AgentControlSection() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [clientsConnected, setClientsConnected] = useState(0);
+  const [launcherPath, setLauncherPath] = useState<string | null>(null);
   const authoritativeRevisionRef = useRef(0);
 
   // Load authoritative settings and follow fail-closed or cross-tab changes.
@@ -202,6 +218,7 @@ export default function AgentControlSection() {
         const status = await SystemIPC.getAgentSocketStatus();
         if (mounted && status) {
           setClientsConnected(status.connectedClients || 0);
+          setLauncherPath(status.launcherPath || null);
         }
       } catch {
         // Silently fail - socket server may not be running
@@ -213,6 +230,7 @@ export default function AgentControlSection() {
       statusInterval = setInterval(updateConnectionStatus, 2000);
     } else {
       setClientsConnected(0);
+      setLauncherPath(null);
     }
 
     return () => {
@@ -392,6 +410,26 @@ export default function AgentControlSection() {
 
       {enabled && (
         <>
+          {window.env.isPackaged && launcherPath && (
+            <div className={infoBoxStyles}>
+              <strong>
+                {t(
+                  'settings.agentControl.connection.title',
+                  'Connect Codex or ChatGPT'
+                )}
+              </strong>
+              <p style={{ margin: '6px 0 0', color: colors.gray }}>
+                {t(
+                  'settings.agentControl.connection.instructions',
+                  'Add an STDIO MCP server named “translator” using this launcher path. Save the server, then restart Codex or ChatGPT so the new tools appear.'
+                )}
+              </p>
+              <code className={launcherPathStyles} dir="ltr">
+                {launcherPath}
+              </code>
+            </div>
+          )}
+
           <div className={labelStyles}>
             {t('settings.agentControl.permissions', 'What agents can do:')}
           </div>

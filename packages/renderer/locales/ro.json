@@ -780,6 +780,10 @@
       "description": "Permite agenților AI externi (Cursor, Codex etc.) să controleze această aplicație Translator printr-o interfață MCP locală. Când opțiunea este activată, agenții pot descărca videoclipuri, gestiona biblioteca, edita subtitrări și exporta fișiere în dosarele permise.",
       "enableLabel": "Permite agenților să controleze această aplicație",
       "enableAria": "Activează controlul agenților",
+      "connection": {
+        "title": "Conectează Codex sau ChatGPT",
+        "instructions": "Adaugă un server MCP STDIO numit „translator” folosind această cale de lansare. Salvează serverul, apoi repornește Codex sau ChatGPT pentru ca noile instrumente să apară."
+      },
       "status": {
         "enabled": "Activat",
         "disabled": "Dezactivat",

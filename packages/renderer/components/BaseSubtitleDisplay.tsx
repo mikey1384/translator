@@ -1,7 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   getSubtitleStyles,
+  normalizeSubtitleLineBoxLineText,
+  resolveSubtitleLineBoxStyle,
   resolveSubtitleRenderTheme,
+  subtitleTextUsesMultipleLines,
 } from '../../shared/helpers/subtitle-style-util.js';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles.js';
 
@@ -30,43 +33,14 @@ export default function BaseSubtitleDisplay({
   useEffect(() => {
     const element = subtitleRef?.current;
     if (element && text) {
-      const hasExplicitNewline = text.includes('\n');
-      let hasWrapped = false;
       try {
-        const containerWidth = element.clientWidth;
-        const computedStyle = window.getComputedStyle(element);
-        const fontSize = computedStyle.fontSize;
-        const fontFamily = computedStyle.fontFamily;
-        const fontWeight = computedStyle.fontWeight;
-        const letterSpacing = computedStyle.letterSpacing;
-
-        if (containerWidth > 0 && fontSize && fontFamily) {
-          const tempSpan = document.createElement('span');
-
-          tempSpan.style.fontFamily = fontFamily;
-          tempSpan.style.fontSize = fontSize;
-          tempSpan.style.fontWeight = fontWeight;
-          tempSpan.style.letterSpacing = letterSpacing;
-          tempSpan.style.whiteSpace = 'nowrap';
-          tempSpan.style.visibility = 'hidden';
-          tempSpan.style.position = 'absolute';
-
-          tempSpan.textContent = text.replace(/\n/g, ' ');
-
-          document.body.appendChild(tempSpan);
-          const textIntrinsicWidth = tempSpan.scrollWidth;
-          document.body.removeChild(tempSpan);
-
-          hasWrapped = textIntrinsicWidth > containerWidth + 1;
-        }
+        setIsMultiLine(subtitleTextUsesMultipleLines(element, text));
       } catch (e) {
         console.error(
           '[BaseSubtitleDisplay Effect] Error during width measurement:',
           e
         );
-      } finally {
-        const finalIsMultiLine = hasExplicitNewline || hasWrapped;
-        setIsMultiLine(finalIsMultiLine);
+        setIsMultiLine(text.includes('\n'));
       }
     } else if (!text) {
       setIsMultiLine(false);
@@ -98,6 +72,7 @@ export default function BaseSubtitleDisplay({
     videoWidthPx,
     videoHeightPx,
   });
+  const lineBoxStyle = resolveSubtitleLineBoxStyle(renderTheme);
 
   if (!text && !isVisible) {
     return <></>;
@@ -108,21 +83,8 @@ export default function BaseSubtitleDisplay({
       {stylePreset === 'LineBox'
         ? text.split('\n').map((line, index, arr) => (
             <React.Fragment key={index}>
-              <span
-                style={{
-                  backgroundColor: renderTheme.lineBoxBackgroundColor,
-                  padding: renderTheme.lineBoxPadding,
-                  display: 'inline',
-                  boxDecorationBreak: 'clone',
-                  WebkitBoxDecorationBreak: 'clone',
-                  borderRadius: `${renderTheme.lineBoxBorderRadiusPx}px`,
-                  boxShadow: renderTheme.lineBoxBoxShadow,
-                  lineHeight: String(renderTheme.lineHeight),
-                  overflowWrap: 'anywhere',
-                  wordBreak: 'break-word',
-                }}
-              >
-                {line}
+              <span style={lineBoxStyle}>
+                {normalizeSubtitleLineBoxLineText(line)}
               </span>
               {index < arr.length - 1 && <br />}
             </React.Fragment>

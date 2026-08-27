@@ -780,6 +780,10 @@
       "description": "Izinkan agen AI eksternal (Cursor, Codex, dan lainnya) mengontrol aplikasi Translator ini melalui antarmuka MCP lokal. Jika diaktifkan, agen dapat mengunduh video, mengelola pustaka Anda, mengedit subtitel, dan mengekspor file ke folder yang diizinkan.",
       "enableLabel": "Izinkan agen mengontrol aplikasi ini",
       "enableAria": "Aktifkan kontrol agen",
+      "connection": {
+        "title": "Hubungkan Codex atau ChatGPT",
+        "instructions": "Tambahkan server MCP STDIO bernama “translator” menggunakan jalur peluncur ini. Simpan server, lalu mulai ulang Codex atau ChatGPT agar alat baru muncul."
+      },
       "status": {
         "enabled": "Aktif",
         "disabled": "Nonaktif",

@@ -1060,6 +1060,8 @@ declare module '@shared-types/app' {
     overlayMode?: 'overlayOnVideo' | 'blackVideo';
     stylePreset?: SubtitleStylePresetKey;
     outputMode?: SubtitleDisplayMode;
+    /** Canonical preview-to-render selection and resolved output geometry. */
+    subtitleRenderSpec?: Record<string, unknown>;
     displayWidth?: number;
     displayHeight?: number;
     videoRotationDeg?: number;
@@ -1390,6 +1392,10 @@ declare module '@shared-types/app' {
     getAgentSocketStatus: () => Promise<{
       running: boolean;
       connectedClients: number;
+      serverName: 'translator';
+      transport: 'stdio';
+      launcherPath: string | null;
+      restartRequired: true;
     }>;
     getAgentRuntimeContext: () => Promise<Record<string, unknown>>;
     agentV2ProbeSource: (input: unknown) => Promise<Record<string, unknown>>;
@@ -1845,11 +1851,13 @@ declare module '@shared-types/app' {
           historyId?: string;
           operationId?: string;
           sourceVideoPath?: string;
+          sourceBinding?: unknown;
         }) => Promise<Record<string, unknown>>;
         startTranslation: (input?: {
           targetLanguage?: string;
           historyId?: string;
           operationId?: string;
+          sourceBinding?: unknown;
         }) => Promise<Record<string, unknown>>;
         startDubbing: (input?: {
           targetLanguage?: string;
@@ -1857,6 +1865,7 @@ declare module '@shared-types/app' {
           translateIfNeeded?: boolean;
           operationId?: string;
           sourceVideoPath?: string;
+          sourceBinding?: unknown;
         }) => Promise<Record<string, unknown>>;
         startSummary: (input?: {
           targetLanguage?: string;
@@ -1864,21 +1873,25 @@ declare module '@shared-types/app' {
           includeHighlights?: boolean;
           operationId?: string;
           sourceVideoPath?: string;
+          sourceBinding?: unknown;
         }) => Promise<Record<string, unknown>>;
         startCueTranslation: (input?: {
           id?: string;
           targetLanguage?: string;
           operationId?: string;
+          sourceBinding?: unknown;
         }) => Promise<Record<string, unknown>>;
         startCueTranscription: (input?: {
           id?: string;
           operationId?: string;
+          sourceBinding?: unknown;
         }) => Promise<Record<string, unknown>>;
         startMerge: (input?: {
           outputPath?: string;
           overwrite?: boolean;
           historyId?: string;
           operationId?: string;
+          sourceBinding?: unknown;
         }) => Promise<Record<string, unknown>>;
         startMediaWorkflow: (input?: {
           url?: string;
@@ -1891,6 +1904,7 @@ declare module '@shared-types/app' {
           voice?: string;
           replaceSubtitles?: 'fail' | 'discard' | 'save';
           operationId?: string;
+          sourceBinding?: unknown;
         }) => Promise<Record<string, unknown>>;
         processingStatus: (input?: {
           historyId?: string;

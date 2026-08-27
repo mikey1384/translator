@@ -1,6 +1,8 @@
 export const MCP_V2_PROTOCOL_VERSION = '2.0.0';
 export const MCP_V2_SCHEMA_VERSION = 1;
-export const MCP_SERVER_VERSION = '0.2.0';
+export const MCP_SERVER_VERSION = '0.2.2';
+export const WATCH_JOB_DEFAULT_WAIT_MS = 25_000;
+export const WATCH_JOB_MAX_WAIT_MS = 50_000;
 
 export const MCP_SERVER_NAMES = Object.freeze({
   development: 'translator-development-mcp',
@@ -148,18 +150,15 @@ const outputOptionsSchema = Object.freeze({
     subtitle_display_mode: {
       type: 'string',
       enum: ['original', 'translation', 'dual'],
-      default: 'translation',
     },
     subtitle_style: {
       type: 'string',
       enum: ['Default', 'Classic', 'Boxed', 'LineBox'],
-      default: 'Default',
     },
     subtitle_font_size: {
       type: 'number',
       minimum: 12,
       maximum: 96,
-      default: 24,
     },
     x_account_tier: {
       type: 'string',
@@ -467,8 +466,8 @@ export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
         wait_ms: {
           type: 'integer',
           minimum: 0,
-          maximum: 30000,
-          default: 25000,
+          maximum: WATCH_JOB_MAX_WAIT_MS,
+          default: WATCH_JOB_DEFAULT_WAIT_MS,
         },
       },
       required: ['job_id'],

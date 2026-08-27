@@ -23,12 +23,11 @@ import {
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
 import { flashReviewedSegment, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
+import { ERROR_CODES } from '../../../shared/constants';
 import {
-  BASELINE_HEIGHT,
-  fontScale,
-  MIN_SUBTITLE_FONT_SIZE,
-  ERROR_CODES,
-} from '../../../shared/constants';
+  resolveSubtitleRenderSpec,
+  serializeSubtitleRenderSpec,
+} from '../../../shared/helpers/subtitle-render-spec';
 import {
   editorEmptyActionsStyles,
   editorEmptyPrimaryButtonStyles,
@@ -754,34 +753,18 @@ export default function EditSubtitles({
         noWrap: true,
       });
 
-      const {
-        baseFontSize,
-        subtitleStyle,
-        previewSubtitleFontPx,
-        previewDisplayHeightPx,
-        previewVideoHeightPx,
-      } = useUIStore.getState();
-
-      const targetHeight = meta?.height ?? BASELINE_HEIGHT;
-      let fontSizePx = isAudioOnly
-        ? Math.max(MIN_SUBTITLE_FONT_SIZE, baseFontSize)
-        : Math.max(
-            MIN_SUBTITLE_FONT_SIZE,
-            Math.round(baseFontSize * fontScale(targetHeight))
-          );
-
-      if (
-        !isAudioOnly &&
-        previewSubtitleFontPx > 0 &&
-        previewDisplayHeightPx > 0 &&
-        previewVideoHeightPx > 0
-      ) {
-        const adjusted = Math.round(
-          (previewSubtitleFontPx * previewVideoHeightPx) /
-            previewDisplayHeightPx
-        );
-        fontSizePx = Math.max(MIN_SUBTITLE_FONT_SIZE, adjusted);
-      }
+      const { baseFontSize, subtitleStyle } = useUIStore.getState();
+      const subtitleRenderSpec = resolveSubtitleRenderSpec({
+        displayMode: subtitleDisplayMode,
+        stylePreset: subtitleStyle,
+        baseFontSizePx: baseFontSize,
+        videoWidthPx: meta?.width,
+        videoHeightPx: meta?.height,
+        displayWidthPx: meta?.displayWidth ?? meta?.width,
+        displayHeightPx: meta?.displayHeight ?? meta?.height,
+        isAudioOnly,
+      });
+      const fontSizePx = subtitleRenderSpec.outputFontSizePx;
 
       const opts: RenderSubtitlesOptions = {
         operationId: opId,
@@ -799,6 +782,7 @@ export default function EditSubtitles({
         originalVideoPath: videoPath,
         fontSizePx,
         stylePreset: subtitleStyle,
+        subtitleRenderSpec: serializeSubtitleRenderSpec(subtitleRenderSpec),
         overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
       };
 

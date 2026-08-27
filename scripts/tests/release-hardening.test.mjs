@@ -120,6 +120,21 @@ test('packaged apps carry each platform resource exactly once', () => {
     combinedMac.filter(entry => entry.from === 'vendor/headless-x64').length,
     1
   );
+  for (const [platformName, resources] of [
+    ['combined macOS', combinedMac],
+    ['Intel macOS', intelMac],
+    ['Windows', windows],
+  ]) {
+    assert.equal(
+      resources.filter(
+        entry =>
+          entry.from === 'packages/renderer/dist/assets' &&
+          entry.to === 'assets'
+      ).length,
+      1,
+      `${platformName} must ship the renderer font assets exactly once`
+    );
+  }
   assert.equal(
     combinedMac.some(entry => entry.from?.endsWith('.exe')),
     false,

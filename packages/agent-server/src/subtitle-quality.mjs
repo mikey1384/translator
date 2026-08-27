@@ -314,17 +314,33 @@ export function validateSubtitleSegments(
         const characters = [...text.replace(/\s/gu, '')].length;
         const cps = characters / duration;
         if (cps > hardCharactersPerSecond) {
-          recordIssue(
-            issue(
-              'error',
-              'reading_speed_excessive',
-              segment,
-              'Subtitle reading speed is excessive.',
-              {
-                characters_per_second: Number(cps.toFixed(1)),
-              }
-            )
-          );
+          if (duration < minimumDurationSeconds) {
+            recordIssue(
+              issue(
+                'warning',
+                'reading_speed_timing_constrained',
+                segment,
+                'Subtitle reading speed is excessive because the immutable cue timing is shorter than the minimum display duration.',
+                {
+                  characters_per_second: Number(cps.toFixed(1)),
+                  duration_seconds: Number(duration.toFixed(3)),
+                  minimum_duration_seconds: minimumDurationSeconds,
+                }
+              )
+            );
+          } else {
+            recordIssue(
+              issue(
+                'error',
+                'reading_speed_excessive',
+                segment,
+                'Subtitle reading speed is excessive.',
+                {
+                  characters_per_second: Number(cps.toFixed(1)),
+                }
+              )
+            );
+          }
         } else if (cps > preferredCharactersPerSecond) {
           recordIssue(
             issue(

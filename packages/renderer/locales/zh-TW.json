@@ -780,6 +780,10 @@
       "description": "允許外部 AI 代理程式（Cursor、Codex 等）透過本機 MCP 介面控制此 Translator 應用程式。啟用後，代理程式可以下載影片、管理您的媒體庫、編輯字幕，並將檔案匯出至允許的資料夾。",
       "enableLabel": "允許代理程式控制此應用程式",
       "enableAria": "啟用代理程式控制",
+      "connection": {
+        "title": "連接 Codex 或 ChatGPT",
+        "instructions": "使用此啟動器路徑新增名為「translator」的 STDIO MCP 伺服器。儲存伺服器，然後重新啟動 Codex 或 ChatGPT，讓新工具顯示出來。"
+      },
       "status": {
         "enabled": "已啟用",
         "disabled": "已停用",

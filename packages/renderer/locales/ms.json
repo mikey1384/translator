@@ -780,6 +780,10 @@
       "description": "Benarkan ejen AI luaran (Cursor, Codex dan sebagainya) mengawal aplikasi Translator ini melalui antara muka MCP setempat. Apabila didayakan, ejen boleh memuat turun video, mengurus pustaka anda, menyunting sari kata dan mengeksport fail ke folder yang dibenarkan.",
       "enableLabel": "Benarkan kawalan ejen untuk aplikasi ini",
       "enableAria": "Dayakan kawalan ejen",
+      "connection": {
+        "title": "Sambungkan Codex atau ChatGPT",
+        "instructions": "Tambah pelayan MCP STDIO bernama “translator” menggunakan laluan pelancar ini. Simpan pelayan, kemudian mulakan semula Codex atau ChatGPT supaya alat baharu muncul."
+      },
       "status": {
         "enabled": "Didayakan",
         "disabled": "Dilumpuhkan",

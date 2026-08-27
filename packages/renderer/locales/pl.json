@@ -780,6 +780,10 @@
       "description": "Zezwalaj zewnętrznym agentom AI (Cursor, Codex itp.) na sterowanie aplikacją Translator przez lokalny interfejs MCP. Po włączeniu agenci mogą pobierać filmy, zarządzać biblioteką, edytować napisy i eksportować pliki do dozwolonych folderów.",
       "enableLabel": "Zezwalaj agentom na sterowanie tą aplikacją",
       "enableAria": "Włącz sterowanie agentami",
+      "connection": {
+        "title": "Połącz Codex lub ChatGPT",
+        "instructions": "Dodaj serwer MCP typu STDIO o nazwie „translator”, używając tej ścieżki uruchamiania. Zapisz serwer, a następnie uruchom ponownie Codex lub ChatGPT, aby pojawiły się nowe narzędzia."
+      },
       "status": {
         "enabled": "Włączone",
         "disabled": "Wyłączone",

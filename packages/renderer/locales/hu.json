@@ -780,6 +780,10 @@
       "description": "Engedélyezze, hogy külső MI-ügynökök (Cursor, Codex stb.) egy helyi MCP-felületen keresztül vezéreljék ezt a Translator alkalmazást. Bekapcsolás után az ügynökök videókat tölthetnek le, kezelhetik a médiatárat, szerkeszthetik a feliratokat, és fájlokat exportálhatnak az engedélyezett mappákba.",
       "enableLabel": "Az alkalmazás ügynökvezérlésének engedélyezése",
       "enableAria": "Ügynökvezérlés bekapcsolása",
+      "connection": {
+        "title": "A Codex vagy a ChatGPT csatlakoztatása",
+        "instructions": "Adjon hozzá egy „translator” nevű STDIO MCP-kiszolgálót ezzel az indítási útvonallal. Mentse a kiszolgálót, majd indítsa újra a Codexet vagy a ChatGPT-t, hogy megjelenjenek az új eszközök."
+      },
       "status": {
         "enabled": "Bekapcsolva",
         "disabled": "Kikapcsolva",

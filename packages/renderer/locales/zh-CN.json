@@ -780,6 +780,10 @@
       "description": "允许外部 AI 智能体（Cursor、Codex 等）通过本地 MCP 接口控制此 Translator 应用。启用后，智能体可以下载视频、管理您的媒体库、编辑字幕，并将文件导出到允许的文件夹。",
       "enableLabel": "允许智能体控制此应用",
       "enableAria": "启用智能体控制",
+      "connection": {
+        "title": "连接 Codex 或 ChatGPT",
+        "instructions": "使用此启动器路径添加一个名为“translator”的 STDIO MCP 服务器。保存服务器，然后重启 Codex 或 ChatGPT 以显示新工具。"
+      },
       "status": {
         "enabled": "已启用",
         "disabled": "已禁用",

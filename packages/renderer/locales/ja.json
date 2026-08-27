@@ -780,6 +780,10 @@
       "description": "外部のAIエージェント（Cursor、Codexなど）が、ローカルMCPインターフェースを介してこのTranslatorアプリを操作できるようにします。有効にすると、エージェントは動画のダウンロード、ライブラリの管理、字幕の編集、許可されたフォルダーへのファイルのエクスポートを行えます。",
       "enableLabel": "このアプリのエージェント制御を許可",
       "enableAria": "エージェント制御を有効にする",
+      "connection": {
+        "title": "Codex または ChatGPT を接続",
+        "instructions": "このランチャーパスを使用して、「translator」という名前の STDIO MCP サーバーを追加します。サーバーを保存してから Codex または ChatGPT を再起動すると、新しいツールが表示されます。"
+      },
       "status": {
         "enabled": "有効",
         "disabled": "無効",

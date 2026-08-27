@@ -780,6 +780,10 @@
       "description": "Harici yapay zekâ aracıların (Cursor, Codex vb.) bu Translator uygulamasını yerel bir MCP arayüzü üzerinden denetlemesine izin verin. Etkinleştirildiğinde aracılar video indirebilir, kitaplığınızı yönetebilir, altyazıları düzenleyebilir ve dosyaları izin verilen klasörlere aktarabilir.",
       "enableLabel": "Aracıların bu uygulamayı denetlemesine izin ver",
       "enableAria": "Aracı denetimini etkinleştir",
+      "connection": {
+        "title": "Codex veya ChatGPT’yi bağla",
+        "instructions": "Bu başlatıcı yolunu kullanarak “translator” adlı bir STDIO MCP sunucusu ekleyin. Sunucuyu kaydedin, ardından yeni araçların görünmesi için Codex’i veya ChatGPT’yi yeniden başlatın."
+      },
       "status": {
         "enabled": "Etkin",
         "disabled": "Devre dışı",

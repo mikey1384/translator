@@ -63,7 +63,7 @@ test('Agent Control is completely translated in every bundled locale', () => {
   const english = getAgentControl(readLocale('en.json'));
   assert.ok(english, 'en.json is missing settings.agentControl');
   const englishStrings = flattenStrings(english);
-  assert.equal(englishStrings.size, 25, 'unexpected Agent Control key count');
+  assert.equal(englishStrings.size, 27, 'unexpected Agent Control key count');
 
   for (const fileName of localeFiles) {
     const agentControl = getAgentControl(readLocale(fileName));
