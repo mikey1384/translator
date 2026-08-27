@@ -752,7 +752,8 @@ test('extraResources bundling - ships the standalone helper and its runtime modu
       builderContent.includes('translator-owner-supervisor') &&
       builderContent.includes('packaged-agent-protocol.mjs') &&
       builderContent.includes('job-owner-lease.mjs') &&
-      builderContent.includes('mcp-v2-service.mjs'),
+      builderContent.includes('mcp-v2-service.mjs') &&
+      builderContent.includes('render-checkpoint-recovery.mjs'),
     'Must bundle native ownership supervision, packaged generation fencing, and the persistent MCP v2 runtime'
   );
   assert.ok(

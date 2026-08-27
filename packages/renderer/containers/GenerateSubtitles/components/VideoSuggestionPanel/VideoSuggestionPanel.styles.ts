@@ -1200,6 +1200,10 @@ export const historyActionsStyles = css`
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: ${spacing.sm};
 
+  & > :only-child {
+    grid-column: 1 / -1;
+  }
+
   @media (max-width: 700px) {
     grid-template-columns: 1fr;
   }

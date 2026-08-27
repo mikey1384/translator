@@ -28,6 +28,12 @@ async function withTempDir<T>(fn: (rootDir: string) => Promise<T>): Promise<T> {
   }
 }
 
+function rollbackableOwnership(onRollback?: () => Promise<void>) {
+  return {
+    rollback: onRollback || (async () => void 0),
+  };
+}
+
 test('accepted URL downloads survive scratch-directory cleanup', async () => {
   await withTempDir(async rootDir => {
     const scratchDir = path.join(rootDir, 'translator-electron-dev-work');
@@ -41,7 +47,7 @@ test('accepted URL downloads survive scratch-directory cleanup', async () => {
       sourcePath,
       libraryDir,
       operationId: 'download-123',
-      persistDestinationOwnership: async () => void 0,
+      persistDestinationOwnership: async () => rollbackableOwnership(),
     });
 
     assert.equal(path.dirname(promotedPath), libraryDir);
@@ -138,7 +144,7 @@ test('promotion never overwrites an existing managed download', async () => {
       sourcePath,
       libraryDir,
       operationId: 'download-456',
-      persistDestinationOwnership: async () => void 0,
+      persistDestinationOwnership: async () => rollbackableOwnership(),
     });
 
     assert.notEqual(promotedPath, existingPath);
@@ -163,6 +169,7 @@ test('promotion persists ownership before publishing the final path', async () =
       persistDestinationOwnership: async destinationPath => {
         claimedPath = destinationPath;
         await assert.rejects(fs.access(destinationPath), { code: 'ENOENT' });
+        return rollbackableOwnership();
       },
     });
 
@@ -213,10 +220,102 @@ test('promotion rejects empty completed downloads', async () => {
         sourcePath,
         libraryDir: path.join(rootDir, 'downloaded-media'),
         operationId: 'download-empty',
-        persistDestinationOwnership: async () => void 0,
+        persistDestinationOwnership: async () => rollbackableOwnership(),
       }),
       /missing or empty/
     );
+  });
+});
+
+test(
+  'concurrent same-basename promotions reserve distinct paths and preserve both payloads',
+  { timeout: 5_000 },
+  async () => {
+    await withTempDir(async rootDir => {
+      const libraryDir = path.join(rootDir, 'downloaded-media');
+      const firstSource = path.join(rootDir, 'first', 'shared-name.mp4');
+      const secondSource = path.join(rootDir, 'second', 'shared-name.mp4');
+      await fs.mkdir(path.dirname(firstSource), { recursive: true });
+      await fs.mkdir(path.dirname(secondSource), { recursive: true });
+      await fs.writeFile(firstSource, 'first payload');
+      await fs.writeFile(secondSource, 'second payload');
+
+      let releaseBarrier!: () => void;
+      const barrier = new Promise<void>(resolve => {
+        releaseBarrier = resolve;
+      });
+      const claimedPaths: string[] = [];
+      const persistOwnership = async (destinationPath: string) => {
+        claimedPaths.push(destinationPath);
+        if (claimedPaths.length === 2) releaseBarrier();
+        await barrier;
+        return rollbackableOwnership();
+      };
+
+      const [firstPath, secondPath] = await Promise.all([
+        promoteUrlDownload({
+          sourcePath: firstSource,
+          libraryDir,
+          operationId: 'concurrent-first',
+          persistDestinationOwnership: persistOwnership,
+        }),
+        promoteUrlDownload({
+          sourcePath: secondSource,
+          libraryDir,
+          operationId: 'concurrent-second',
+          persistDestinationOwnership: persistOwnership,
+        }),
+      ]);
+
+      assert.notEqual(firstPath, secondPath);
+      assert.equal(new Set(claimedPaths).size, 2);
+      assert.deepEqual(
+        new Set([
+          await fs.readFile(firstPath, 'utf8'),
+          await fs.readFile(secondPath, 'utf8'),
+        ]),
+        new Set(['first payload', 'second payload'])
+      );
+      assert.deepEqual(
+        await fs.readdir(getUrlDownloadPromotionPartialDir(libraryDir)),
+        []
+      );
+    });
+  }
+);
+
+test('promotion publication is no-replace and rolls back only its ownership claim', async () => {
+  await withTempDir(async rootDir => {
+    const scratchDir = path.join(rootDir, 'scratch');
+    const libraryDir = path.join(rootDir, 'downloaded-media');
+    const sourcePath = path.join(scratchDir, 'externally-raced.mp4');
+    let racedDestination = '';
+    let rollbackCount = 0;
+    await fs.mkdir(scratchDir, { recursive: true });
+    await fs.writeFile(sourcePath, 'promotion payload');
+
+    await assert.rejects(
+      promoteUrlDownload({
+        sourcePath,
+        libraryDir,
+        operationId: 'no-replace-publication',
+        persistDestinationOwnership: async destinationPath => {
+          racedDestination = destinationPath;
+          await fs.writeFile(destinationPath, 'outside payload');
+          return rollbackableOwnership(async () => {
+            rollbackCount += 1;
+          });
+        },
+      }),
+      { code: 'EEXIST' }
+    );
+
+    assert.equal(rollbackCount, 1);
+    assert.equal(
+      await fs.readFile(racedDestination, 'utf8'),
+      'outside payload'
+    );
+    assert.equal(await fs.readFile(sourcePath, 'utf8'), 'promotion payload');
   });
 });
 
@@ -235,6 +334,8 @@ test('history reclamation deletes only requested managed library files', async (
     });
 
     assert.deepEqual(result.reclaimedPaths, [reclaimedPath]);
+    assert.deepEqual(result.deletedPaths, [reclaimedPath]);
+    assert.deepEqual(result.alreadyAbsentPaths, []);
     assert.deepEqual(result.failedPaths, []);
     await assert.rejects(fs.access(reclaimedPath), { code: 'ENOENT' });
     assert.equal(await fs.readFile(retainedPath, 'utf8'), 'retained video');
@@ -254,10 +355,76 @@ test('history reclamation refuses files outside the managed library', async () =
     });
 
     assert.deepEqual(result.reclaimedPaths, []);
+    assert.deepEqual(result.deletedPaths, []);
+    assert.deepEqual(result.alreadyAbsentPaths, []);
     assert.deepEqual(result.failedPaths, []);
     assert.equal(await fs.readFile(outsidePath, 'utf8'), 'user video');
   });
 });
+
+test('history reclamation resolves an already absent managed file', async () => {
+  await withTempDir(async rootDir => {
+    const libraryDir = path.join(rootDir, 'downloaded-media');
+    const missingPath = path.join(libraryDir, 'already-gone.mp4');
+    await fs.mkdir(libraryDir, { recursive: true });
+
+    const result = await reclaimUrlDownloadLibraryFiles({
+      libraryDir,
+      filePaths: [missingPath],
+    });
+
+    assert.deepEqual(result.reclaimedPaths, [missingPath]);
+    assert.deepEqual(result.deletedPaths, []);
+    assert.deepEqual(result.alreadyAbsentPaths, [missingPath]);
+    assert.deepEqual(result.failedPaths, []);
+  });
+});
+
+test('history reclamation refuses a managed-library directory', async () => {
+  await withTempDir(async rootDir => {
+    const libraryDir = path.join(rootDir, 'downloaded-media');
+    const directoryPath = path.join(libraryDir, 'not-a-video.mp4');
+    await fs.mkdir(directoryPath, { recursive: true });
+
+    const result = await reclaimUrlDownloadLibraryFiles({
+      libraryDir,
+      filePaths: [directoryPath],
+    });
+
+    assert.deepEqual(result.reclaimedPaths, []);
+    assert.deepEqual(result.deletedPaths, []);
+    assert.deepEqual(result.alreadyAbsentPaths, []);
+    assert.deepEqual(result.failedPaths, []);
+    assert.equal((await fs.lstat(directoryPath)).isDirectory(), true);
+  });
+});
+
+test(
+  'history reclamation refuses a managed-library symlink',
+  { skip: process.platform === 'win32' },
+  async () => {
+    await withTempDir(async rootDir => {
+      const libraryDir = path.join(rootDir, 'downloaded-media');
+      const outsidePath = path.join(rootDir, 'outside-video.mp4');
+      const symlinkPath = path.join(libraryDir, 'linked-video.mp4');
+      await fs.mkdir(libraryDir, { recursive: true });
+      await fs.writeFile(outsidePath, 'outside video');
+      await fs.symlink(outsidePath, symlinkPath);
+
+      const result = await reclaimUrlDownloadLibraryFiles({
+        libraryDir,
+        filePaths: [symlinkPath],
+      });
+
+      assert.deepEqual(result.reclaimedPaths, []);
+      assert.deepEqual(result.deletedPaths, []);
+      assert.deepEqual(result.alreadyAbsentPaths, []);
+      assert.deepEqual(result.failedPaths, []);
+      assert.equal((await fs.lstat(symlinkPath)).isSymbolicLink(), true);
+      assert.equal(await fs.readFile(outsidePath, 'utf8'), 'outside video');
+    });
+  }
+);
 
 test('acceptance claims the exact pending file path for promotion', () => {
   const entries = new Map([

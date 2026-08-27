@@ -333,7 +333,16 @@
         "answerer": "Traiter la requête",
         "planner": "Préparer la recherche",
         "retrieval": "Charger les résultats"
-      }
+      },
+      "deleteLocalFile": "Supprimer le fichier de l’appareil",
+      "deleteLocalFileConfirm": "Supprimer définitivement ce fichier téléchargé de cet appareil ? L’entrée d’historique et le lien source seront conservés.",
+      "deleteLocalFileFailed": "Impossible de supprimer le fichier téléchargé de cet appareil.",
+      "deleteLocalFileUnavailable": "Ce téléchargement ne possède plus de fichier supprimable dans la bibliothèque de l’application.",
+      "deleteLocalFileInUse": "Cette vidéo est actuellement ouverte. Ouvrez une autre vidéo avant de la supprimer.",
+      "deleteFileAndHistory": "Supprimer le fichier et l’historique",
+      "deleteFileAndHistoryConfirm": "Supprimer définitivement ce fichier téléchargé et son entrée d’historique ? Cette action est irréversible.",
+      "removeFromHistory": "Retirer de l’historique",
+      "removeFromHistoryConfirm": "Retirer cet élément de l’historique des téléchargements ? Les fichiers enregistrés hors de la bibliothèque de l’application resteront sur l’appareil."
     },
     "downloadAndTranslate": "Télécharger et traduire",
     "downloadAndTranscribe": "Télécharger et transcrire",

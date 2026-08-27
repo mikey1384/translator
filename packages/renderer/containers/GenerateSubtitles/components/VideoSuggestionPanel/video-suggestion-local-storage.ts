@@ -1,5 +1,6 @@
 import type {
   VideoSuggestionDownloadHistoryMutation,
+  VideoSuggestionDownloadHistoryMutationResult,
   VideoSuggestionPreferenceSlots,
 } from '@shared-types/app';
 import {
@@ -22,6 +23,7 @@ import type {
 import * as UrlIPC from '@ipc/url';
 import { useVideoStore } from '../../../../state/video-store.js';
 import { includeProvisionalUrlDownloadLibraryPaths } from '../../../../listeners/mounted-download-leases.js';
+import { shouldSyncDownloadHistoryMutationResult } from './download-history-actions.js';
 
 const LOCAL_VIDEO_SUGGESTION_PREFS_KEY = 'video-suggestion-prefs-v3';
 const LEGACY_LOCAL_VIDEO_SUGGESTION_PREFS_KEYS = [
@@ -96,11 +98,18 @@ function isLikelyManagedTempHistoryPath(value: unknown): boolean {
 }
 
 export function getVideoSuggestionHistoryStorageKind(
-  value: unknown
+  value: unknown,
+  managedLocalFile?: boolean
 ): 'temp' | 'library' | 'saved' | 'unknown' {
   const normalized = normalizeHistoryPath(value);
   if (!normalized) return 'unknown';
-  if (normalized.includes('/downloaded-media/')) return 'library';
+  if (managedLocalFile === true) return 'library';
+  if (
+    managedLocalFile === undefined &&
+    normalized.includes('/downloaded-media/')
+  ) {
+    return 'library';
+  }
   return isLikelyManagedTempHistoryPath(value) ? 'temp' : 'saved';
 }
 
@@ -305,6 +314,9 @@ function sanitizeHistoryItem(
     out.durationSec = raw.durationSec;
   }
   if (localPath) out.localPath = localPath;
+  if (typeof raw.managedLocalFile === 'boolean') {
+    out.managedLocalFile = raw.managedLocalFile;
+  }
   return out;
 }
 
@@ -388,19 +400,31 @@ function getMountedVideoPaths(): string[] {
 async function mutateAuthoritativeDownloadHistory(
   mutation: VideoSuggestionDownloadHistoryMutation
 ): Promise<VideoSuggestionDownloadHistoryItem[]> {
-  const result = await UrlIPC.mutateVideoSuggestionDownloadHistory({
-    mutation,
-    seedItems: readLocalVideoSuggestionHistory(),
-    mountedPaths: getMountedVideoPaths(),
-  });
+  const result = await mutateAuthoritativeDownloadHistoryDetailed(mutation);
   if (!result.success) {
     throw new Error(
       result.error || 'Persistent download history could not be updated'
     );
   }
-  writeLocalVideoSuggestionHistory(result.items);
-  dispatchVideoSuggestionHistorySync();
   return result.items;
+}
+
+async function mutateAuthoritativeDownloadHistoryDetailed(
+  mutation: VideoSuggestionDownloadHistoryMutation
+): Promise<VideoSuggestionDownloadHistoryMutationResult> {
+  const result = await UrlIPC.mutateVideoSuggestionDownloadHistory({
+    mutation,
+    seedItems: readLocalVideoSuggestionHistory(),
+    mountedPaths: getMountedVideoPaths(),
+  });
+  // Structured deletion failures carry an authoritative partial/recovered
+  // state. A generic IPC failure does not: its empty fallback must never wipe
+  // the renderer's legacy history cache.
+  if (shouldSyncDownloadHistoryMutationResult(result)) {
+    writeLocalVideoSuggestionHistory(result.items);
+    dispatchVideoSuggestionHistorySync();
+  }
+  return result;
 }
 
 function dispatchVideoSuggestionHistorySync(): void {
@@ -434,6 +458,42 @@ export async function removeLocalVideoSuggestionHistoryItem(
     type: 'remove',
     id: normalizedId,
     reclaimPath: sanitizeVideoSuggestionHistoryPath(reclaimPath) || undefined,
+  });
+}
+
+export async function deleteLocalVideoSuggestionHistoryFile(
+  id: string,
+  expectedLocalPath: string
+): Promise<VideoSuggestionDownloadHistoryMutationResult> {
+  const normalizedId = String(id || '').trim();
+  const normalizedPath = sanitizeVideoSuggestionHistoryPath(expectedLocalPath);
+  if (!normalizedId || !normalizedPath) {
+    throw new Error(
+      '__i18n__:input.videoSuggestion.deleteLocalFileUnavailable'
+    );
+  }
+  return mutateAuthoritativeDownloadHistoryDetailed({
+    type: 'delete-file',
+    id: normalizedId,
+    expectedLocalPath: normalizedPath,
+  });
+}
+
+export async function deleteLocalVideoSuggestionHistoryFileAndHistory(
+  id: string,
+  expectedLocalPath: string
+): Promise<VideoSuggestionDownloadHistoryMutationResult> {
+  const normalizedId = String(id || '').trim();
+  const normalizedPath = sanitizeVideoSuggestionHistoryPath(expectedLocalPath);
+  if (!normalizedId || !normalizedPath) {
+    throw new Error(
+      '__i18n__:input.videoSuggestion.deleteLocalFileUnavailable'
+    );
+  }
+  return mutateAuthoritativeDownloadHistoryDetailed({
+    type: 'delete-file-and-history',
+    id: normalizedId,
+    expectedLocalPath: normalizedPath,
   });
 }
 

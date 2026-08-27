@@ -1,7 +1,14 @@
 import type { TFunction } from 'i18next';
 import Button from '../../../../components/Button.js';
 import IconButton from '../../../../components/IconButton.js';
-import { Download, ExternalLink, Play, Trash2, UserRound } from 'lucide-react';
+import {
+  Download,
+  ExternalLink,
+  FileX2,
+  ListX,
+  Play,
+  UserRound,
+} from 'lucide-react';
 import {
   cardActionsStyles,
   cardBodyStyles,
@@ -11,6 +18,7 @@ import {
   detailsSummaryStyles,
   emptyTabStateStyles,
   historyActionIconRowStyles,
+  historyActionsStyles,
   historyCardsStyles,
   historySectionStyles,
   historyStatusPillStyles,
@@ -24,6 +32,10 @@ import {
 import type { VideoSuggestionDownloadHistoryItem } from './VideoSuggestionPanel.types.js';
 import type { VideoSuggestionResultItem } from '@shared-types/app';
 import { getVideoSuggestionHistoryStorageKind } from './video-suggestion-local-storage.js';
+import {
+  canDeleteDownloadHistoryFile,
+  historyRemovalDeletesManagedFile,
+} from './download-history-actions.js';
 
 type VideoSuggestionHistoryTabProps = {
   disabled: boolean;
@@ -39,6 +51,10 @@ type VideoSuggestionHistoryTabProps = {
   onOpenDownloadedVideo: (item: VideoSuggestionDownloadHistoryItem) => void;
   onOpenVideoExternally: (url: string) => void;
   onRedownloadHistoryItem: (item: VideoSuggestionDownloadHistoryItem) => void;
+  onDeleteHistoryFile: (item: VideoSuggestionDownloadHistoryItem) => void;
+  onDeleteHistoryFileAndHistory: (
+    item: VideoSuggestionDownloadHistoryItem
+  ) => void;
   onRemoveHistoryItem: (id: string) => void;
 };
 
@@ -56,6 +72,8 @@ export default function VideoSuggestionHistoryTab({
   onOpenDownloadedVideo,
   onOpenVideoExternally,
   onRedownloadHistoryItem,
+  onDeleteHistoryFile,
+  onDeleteHistoryFileAndHistory,
   onRemoveHistoryItem,
 }: VideoSuggestionHistoryTabProps) {
   if (downloadHistory.length === 0) {
@@ -86,8 +104,25 @@ export default function VideoSuggestionHistoryTab({
           const canPlay =
             Boolean(item.localPath) && playablePathMap[item.id] === true;
           const storageKind = getVideoSuggestionHistoryStorageKind(
-            item.localPath
+            item.localPath,
+            item.managedLocalFile
           );
+          const canDeleteLocalFile = canDeleteDownloadHistoryFile({
+            managedLocalFile: item.managedLocalFile === true,
+            canPlay,
+          });
+          const removeDeletesManagedFile = historyRemovalDeletesManagedFile(
+            item.managedLocalFile === true
+          );
+          const removeHistoryLabel = removeDeletesManagedFile
+            ? t(
+                'input.videoSuggestion.deleteFileAndHistory',
+                'Delete file and history'
+              )
+            : t(
+                'input.videoSuggestion.removeFromHistory',
+                'Remove from history'
+              );
 
           return (
             <div key={`history-${item.id}`} className={cardStyles}>
@@ -255,20 +290,64 @@ export default function VideoSuggestionHistoryTab({
                           'Open channel'
                         )}
                       ></IconButton>
-                      <IconButton
-                        onClick={() => onRemoveHistoryItem(item.id)}
+                    </div>
+                    <div className={historyActionsStyles}>
+                      {canDeleteLocalFile ? (
+                        <Button
+                          onClick={() => {
+                            if (
+                              !window.confirm(
+                                t(
+                                  'input.videoSuggestion.deleteLocalFileConfirm',
+                                  'Permanently delete this downloaded file from this device? Its history entry and source link will stay.'
+                                )
+                              )
+                            ) {
+                              return;
+                            }
+                            onDeleteHistoryFile(item);
+                          }}
+                          disabled={isTranslationInProgress}
+                          size="sm"
+                          variant="danger"
+                          fullWidth
+                          leftIcon={<FileX2 size={16} />}
+                        >
+                          {t(
+                            'input.videoSuggestion.deleteLocalFile',
+                            'Delete file from device'
+                          )}
+                        </Button>
+                      ) : null}
+                      <Button
+                        onClick={() => {
+                          const confirmed = window.confirm(
+                            removeDeletesManagedFile
+                              ? t(
+                                  'input.videoSuggestion.deleteFileAndHistoryConfirm',
+                                  'Permanently delete this downloaded file and remove its history entry? This cannot be undone.'
+                                )
+                              : t(
+                                  'input.videoSuggestion.removeFromHistoryConfirm',
+                                  'Remove this item from download history? Any file saved outside the app library will stay on your device.'
+                                )
+                          );
+                          if (!confirmed) return;
+                          if (removeDeletesManagedFile) {
+                            onDeleteHistoryFileAndHistory(item);
+                          } else {
+                            onRemoveHistoryItem(item.id);
+                          }
+                        }}
                         size="sm"
-                        variant="secondary"
-                        icon={<Trash2 size={16} />}
-                        title={t(
-                          'input.videoSuggestion.removeHistoryItem',
-                          'Remove'
-                        )}
-                        aria-label={t(
-                          'input.videoSuggestion.removeHistoryItem',
-                          'Remove'
-                        )}
-                      ></IconButton>
+                        variant={
+                          removeDeletesManagedFile ? 'danger' : 'secondary'
+                        }
+                        fullWidth
+                        leftIcon={<ListX size={16} />}
+                      >
+                        {removeHistoryLabel}
+                      </Button>
                     </div>
                   </details>
                 </div>

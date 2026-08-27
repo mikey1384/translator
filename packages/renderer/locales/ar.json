@@ -333,7 +333,16 @@
         "answerer": "معالجة الاستعلام",
         "planner": "صياغة البحث",
         "retrieval": "تحميل النتائج"
-      }
+      },
+      "deleteLocalFile": "حذف الملف من الجهاز",
+      "deleteLocalFileConfirm": "هل تريد حذف ملف التنزيل هذا نهائيًا من هذا الجهاز؟ سيبقى إدخال السجل ورابط المصدر.",
+      "deleteLocalFileFailed": "تعذر حذف الملف الذي تم تنزيله من هذا الجهاز.",
+      "deleteLocalFileUnavailable": "لم يعد لهذا التنزيل ملف قابل للحذف في مكتبة التطبيق.",
+      "deleteLocalFileInUse": "هذا الفيديو مفتوح حاليًا. افتح فيديو آخر قبل حذفه.",
+      "deleteFileAndHistory": "حذف الملف والسجل",
+      "deleteFileAndHistoryConfirm": "هل تريد حذف ملف التنزيل هذا نهائيًا وإزالة إدخاله من السجل؟ لا يمكن التراجع عن ذلك.",
+      "removeFromHistory": "إزالة من السجل",
+      "removeFromHistoryConfirm": "هل تريد إزالة هذا العنصر من سجل التنزيلات؟ سيبقى أي ملف محفوظ خارج مكتبة التطبيق على جهازك."
     },
     "downloadAndTranslate": "تنزيل وترجمة",
     "downloadAndTranscribe": "تنزيل ونسخ",

@@ -10,6 +10,16 @@ import {
   JOB_STATUSES,
   MCP_V2_SCHEMA_VERSION,
 } from './mcp-v2-contract.mjs';
+import {
+  RENDER_CHECKPOINT_FORK_STAGES,
+  buildRenderCheckpointForkPlan,
+  creditLedgerCheckpointSha256,
+  hasUnstartedRenderCheckpoint,
+  persistentJobCheckpointSha256,
+  stablePlanForEnvironment,
+  translationSessionCheckpointSha256,
+  validationCheckpointSha256,
+} from './render-checkpoint-recovery.mjs';
 import { isSemanticBoundary } from './subtitle-quality.mjs';
 
 const TERMINAL_JOB_STATUSES = new Set(['cancelled', 'failed', 'completed']);
@@ -42,6 +52,13 @@ function parseJson(value, fallback = null) {
 
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function normalizedStoredPathIdentity(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  const resolved = path.resolve(raw);
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
 }
 
 function cleanProfileName(value) {
@@ -654,6 +671,11 @@ export class PersistentJobStore {
     return this.now().toISOString();
   }
 
+  totalChanges() {
+    const row = this.database.prepare('SELECT total_changes() AS value').get();
+    return Number(row?.value || 0);
+  }
+
   putPlan({ request, plan }) {
     if (!isObject(request) || !isObject(plan)) {
       throw new TypeError('Plan request and result must be JSON objects.');
@@ -831,6 +853,460 @@ export class PersistentJobStore {
         now
       );
       return { job: clone(job), reused: false };
+    });
+  }
+
+  createRenderCheckpointFork({
+    sourceJobId,
+    sourceJobSha256,
+    translationSessionSha256,
+    validationSha256,
+    creditLedgerSha256,
+    preflightDigest,
+    idempotencyKey,
+    request,
+    plan,
+    sourceCheckpoint,
+  }) {
+    const sourceId = String(sourceJobId || '').trim();
+    if (!sourceId) throw new TypeError('sourceJobId is required.');
+    const expectedSourceJobSha256 = cleanHash(
+      sourceJobSha256,
+      'source_job_sha256'
+    );
+    const expectedSessionSha256 = cleanHash(
+      translationSessionSha256,
+      'translation_session_sha256'
+    );
+    const expectedValidationSha256 = cleanHash(
+      validationSha256,
+      'validation_sha256'
+    );
+    const expectedCreditLedgerSha256 = cleanHash(
+      creditLedgerSha256,
+      'credit_ledger_sha256'
+    );
+    const expectedPreflightDigest = cleanHash(
+      preflightDigest,
+      'preflight_digest'
+    );
+    const cleanKey = cleanIdempotencyKey(idempotencyKey);
+    const stablePlan = stablePlanForEnvironment(
+      plan,
+      this.environment,
+      MCP_V2_SCHEMA_VERSION
+    );
+    const requestPayload = clone(request || {});
+    const requestHash = canonicalJsonHash({
+      kind: 'render_checkpoint_fork',
+      source_job_id: sourceId,
+      plan_hash: stablePlan.plan_hash,
+      preflight_digest: expectedPreflightDigest,
+      request: requestPayload,
+    });
+
+    return this.transaction(() => {
+      const sourceJob = this.requireJob(sourceId);
+      const sourceSession = this.getTranslationSession(sourceId);
+      const sourcePlan = this.getPlan(sourceJob.plan_hash);
+      if (sourceJob.status !== 'cancelled') {
+        throw new IdempotencyConflictError(
+          'The render-checkpoint source job is no longer cancelled.'
+        );
+      }
+      if (!sourceSession) {
+        throw new IdempotencyConflictError(
+          'The render-checkpoint source translation session is unavailable.'
+        );
+      }
+      if (!sourcePlan) {
+        throw new IdempotencyConflictError(
+          'The render-checkpoint source plan is unavailable.'
+        );
+      }
+      if (this.getJobActivityClaim(sourceId)) {
+        throw new IdempotencyConflictError(
+          'The render-checkpoint source job has active work.'
+        );
+      }
+      if (
+        persistentJobCheckpointSha256(sourceJob) !== expectedSourceJobSha256
+      ) {
+        throw new IdempotencyConflictError(
+          'The canceled source job changed after render recovery preflight.'
+        );
+      }
+      if (
+        translationSessionCheckpointSha256(sourceSession) !==
+        expectedSessionSha256
+      ) {
+        throw new IdempotencyConflictError(
+          'The accepted translation checkpoint changed after preflight.'
+        );
+      }
+      if (
+        validationCheckpointSha256(sourceJob.validation) !==
+        expectedValidationSha256
+      ) {
+        throw new IdempotencyConflictError(
+          'The completed validation checkpoint changed after preflight.'
+        );
+      }
+      if (
+        creditLedgerCheckpointSha256(sourceJob.credit_usage) !==
+        expectedCreditLedgerSha256
+      ) {
+        throw new IdempotencyConflictError(
+          'The source credit ledger changed after preflight.'
+        );
+      }
+      const validationStage = sourceJob.stages?.find(
+        stage => stage?.id === 'translation_validation'
+      );
+      if (
+        validationStage?.status !== 'completed' ||
+        sourceJob.validation?.passed !== true ||
+        validationCheckpointSha256(validationStage.result) !==
+          expectedValidationSha256
+      ) {
+        throw new IdempotencyConflictError(
+          'The source validation checkpoint is no longer completed and passing.'
+        );
+      }
+      if (!hasUnstartedRenderCheckpoint(sourceJob)) {
+        throw new IdempotencyConflictError(
+          'The source render checkpoint no longer proves that encoding never started.'
+        );
+      }
+      if (
+        !Array.isArray(sourceSession.segments) ||
+        sourceSession.segments.length === 0 ||
+        !sourceSession.segments.every(
+          segment =>
+            String(segment?.translation || '').trim() &&
+            ['translated', 'reviewed'].includes(String(segment?.status || ''))
+        )
+      ) {
+        throw new IdempotencyConflictError(
+          'The source translation checkpoint is no longer fully accepted.'
+        );
+      }
+      if (
+        stablePlan.recovery?.source_job_id !== sourceId ||
+        stablePlan.recovery?.source_job_sha256 !== expectedSourceJobSha256 ||
+        stablePlan.recovery?.translation_session_sha256 !==
+          expectedSessionSha256 ||
+        stablePlan.recovery?.validation_sha256 !== expectedValidationSha256 ||
+        stablePlan.recovery?.inherited_credit_ledger?.ledger_sha256 !==
+          expectedCreditLedgerSha256
+      ) {
+        throw new IdempotencyConflictError(
+          'The candidate fork plan is not bound to the exact preflight checkpoints.'
+        );
+      }
+      if (
+        canonicalJson(stablePlan.stages) !==
+          canonicalJson(RENDER_CHECKPOINT_FORK_STAGES) ||
+        Number(stablePlan.credit_usage?.total_stage5_credits) !== 0
+      ) {
+        throw new IdempotencyConflictError(
+          'The candidate fork contains a non-render stage or credit estimate.'
+        );
+      }
+      if (
+        stablePlan.recovery?.source_checkpoint?.sha256 !==
+          sourceCheckpoint?.sha256 ||
+        Number(stablePlan.recovery?.source_checkpoint?.bytes) !==
+          Number(sourceCheckpoint?.bytes) ||
+        normalizedStoredPathIdentity(
+          stablePlan.recovery?.source_checkpoint?.path
+        ) !== normalizedStoredPathIdentity(sourceCheckpoint?.path)
+      ) {
+        throw new IdempotencyConflictError(
+          'The candidate fork source checkpoint does not match preflight.'
+        );
+      }
+      const checkpointPath = normalizedStoredPathIdentity(
+        sourceCheckpoint?.path
+      );
+      const checkpointSha256 = cleanHash(
+        sourceCheckpoint?.sha256,
+        'source_checkpoint.sha256'
+      );
+      const checkpointBytes = Number(sourceCheckpoint?.bytes);
+      const authoritativeSources = [
+        {
+          path: sourcePlan.source?.path,
+          sha256: sourcePlan.source?.sha256,
+          bytes: sourcePlan.source?.bytes,
+        },
+        ...(sourceJob.artifacts || []).map(artifact => ({
+          path: artifact?.path,
+          sha256: artifact?.checkpoint_sha256 || artifact?.sha256,
+          bytes: artifact?.checkpoint_bytes ?? artifact?.bytes,
+        })),
+      ];
+      if (
+        !checkpointPath ||
+        !Number.isSafeInteger(checkpointBytes) ||
+        checkpointBytes <= 0 ||
+        !authoritativeSources.some(
+          candidate =>
+            normalizedStoredPathIdentity(candidate.path) === checkpointPath &&
+            String(candidate.sha256 || '').toLowerCase() === checkpointSha256 &&
+            Number(candidate.bytes) === checkpointBytes
+        )
+      ) {
+        throw new IdempotencyConflictError(
+          'The recovery source checkpoint is not bound to the canceled source job.'
+        );
+      }
+      const rebuiltPlan = stablePlanForEnvironment(
+        buildRenderCheckpointForkPlan({
+          sourcePlan,
+          sourceJobId: sourceId,
+          sourceJobSha256: expectedSourceJobSha256,
+          sourceCheckpoint,
+          translationSessionSha256: expectedSessionSha256,
+          validationSha256: expectedValidationSha256,
+          creditLedgerSha256: expectedCreditLedgerSha256,
+          renderOverride: requestPayload.render_override,
+        }),
+        this.environment,
+        MCP_V2_SCHEMA_VERSION
+      );
+      if (rebuiltPlan.plan_hash !== stablePlan.plan_hash) {
+        throw new IdempotencyConflictError(
+          'The candidate fork plan is not the deterministic render-only derivative of the source plan.'
+        );
+      }
+
+      const existing = this.database
+        .prepare(
+          `SELECT request_hash, job_json FROM jobs
+           WHERE environment = ? AND idempotency_key = ?`
+        )
+        .get(this.environment, cleanKey);
+      if (existing) {
+        if (existing.request_hash !== requestHash) {
+          throw new IdempotencyConflictError(
+            'This idempotency_key is already bound to a different render-checkpoint fork.'
+          );
+        }
+        return {
+          job: parseJson(existing.job_json),
+          plan: stablePlan,
+          reused: true,
+        };
+      }
+      const duplicateFork = this.database
+        .prepare(
+          `SELECT job_json FROM jobs
+           WHERE environment = ? ORDER BY created_at DESC`
+        )
+        .all(this.environment)
+        .map(row => parseJson(row.job_json))
+        .find(
+          candidate =>
+            candidate?.recovery?.preflight_digest === expectedPreflightDigest
+        );
+      if (duplicateFork) {
+        throw new IdempotencyConflictError(
+          `This render-checkpoint preflight already created fork ${duplicateFork.job_id}; reuse its original idempotency_key.`
+        );
+      }
+
+      const now = this.timestamp();
+      this.database
+        .prepare(
+          `INSERT INTO plans(plan_hash, environment, created_at, request_json, plan_json)
+           VALUES(?, ?, ?, ?, ?)
+           ON CONFLICT(plan_hash) DO NOTHING`
+        )
+        .run(
+          stablePlan.plan_hash,
+          this.environment,
+          now,
+          canonicalJson(requestPayload),
+          canonicalJson(stablePlan)
+        );
+
+      const jobId = randomUUID();
+      const stages = RENDER_CHECKPOINT_FORK_STAGES.map((stage, index) => ({
+        id: stage.id,
+        label: stage.label,
+        status: index === 0 ? 'blocked' : 'pending',
+        percent: 0,
+        operation_id: null,
+        started_at: null,
+        finished_at: null,
+        attempts: 0,
+        claim_owner: null,
+        recoverable: true,
+        result: null,
+        error:
+          index === 0
+            ? {
+                code: 'RENDER_AUTHORIZATION_REQUIRED',
+                message:
+                  'Render-only recovery fork is ready. Explicitly authorize render_outputs before encoding.',
+                recoverable: true,
+                suggested_action: 'render_outputs',
+              }
+            : null,
+      }));
+      const sourceArtifact = {
+        path: String(sourceCheckpoint?.path || ''),
+        stage: String(sourceCheckpoint?.stage || 'recovery_source'),
+        kind: sourceCheckpoint?.kind || 'video',
+        checkpoint_sha256: String(sourceCheckpoint?.sha256 || ''),
+        checkpoint_bytes: Number(sourceCheckpoint?.bytes),
+        checkpoint_captured_at: sourceCheckpoint?.checkpoint_captured_at || now,
+        verified: false,
+        inherited_from_job_id: sourceId,
+      };
+      const job = {
+        schema_version: MCP_V2_SCHEMA_VERSION,
+        job_id: jobId,
+        environment: this.environment,
+        idempotency_key: cleanKey,
+        plan_hash: stablePlan.plan_hash,
+        status: 'blocked',
+        stage: 'render_outputs',
+        stage_index: 0,
+        percent: 0,
+        human_status:
+          'Render-only recovery fork ready; explicit render approval required',
+        created_at: now,
+        updated_at: now,
+        started_at: null,
+        finished_at: null,
+        estimated_remaining_seconds:
+          stablePlan.estimated_processing_time?.likely_seconds ?? null,
+        pause_requested: false,
+        cancel_requested: false,
+        recoverability: {
+          recoverable: true,
+          status: 'render_authorization_required',
+          resume_from_stage: 'render_outputs',
+        },
+        credit_usage: {
+          estimated_stage5_credits: 0,
+          authorized_stage5_credits: 0,
+          consumed_stage5_credits: 0,
+          authorization_kind: 'render_checkpoint_fork_no_credit',
+          authorization_is_hard_cap: true,
+          consumption_attribution_authoritative: true,
+          measurement: 'no_credit_bearing_stages',
+          entries: [],
+          inherited_ledger: {
+            source_job_id: sourceId,
+            ledger_sha256: expectedCreditLedgerSha256,
+            snapshot: clone(sourceJob.credit_usage || {}),
+          },
+        },
+        source: clone(stablePlan.source || null),
+        stages,
+        artifacts: [sourceArtifact],
+        validation: clone(sourceJob.validation),
+        manifest: null,
+        request: requestPayload,
+        recovery: {
+          ...clone(stablePlan.recovery),
+          preflight_digest: expectedPreflightDigest,
+        },
+        render_authorized: false,
+        render_warnings_authorized: false,
+        error: clone(stages[0].error),
+        revision: 1,
+        event_cursor: 1,
+      };
+      this.database
+        .prepare(
+          `INSERT INTO jobs(
+             job_id, environment, idempotency_key, request_hash, plan_hash,
+             status, stage, percent, revision, created_at, updated_at,
+             finished_at, job_json
+           ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .run(
+          jobId,
+          this.environment,
+          cleanKey,
+          requestHash,
+          stablePlan.plan_hash,
+          job.status,
+          job.stage,
+          job.percent,
+          job.revision,
+          now,
+          now,
+          null,
+          canonicalJson(job)
+        );
+
+      const forkSession = {
+        ...clone(sourceSession),
+        job_id: jobId,
+        created_at: now,
+        updated_at: now,
+        revision: 1,
+      };
+      this.database
+        .prepare(
+          `INSERT INTO translation_sessions(
+             job_id, source_hash, revision, created_at, updated_at, session_json
+           ) VALUES(?, ?, ?, ?, ?, ?)`
+        )
+        .run(
+          jobId,
+          forkSession.source_hash,
+          forkSession.revision,
+          now,
+          now,
+          canonicalJson(forkSession)
+        );
+      this.insertEvent(
+        jobId,
+        1,
+        'render_checkpoint_fork_created',
+        job.stage,
+        {
+          source_job_id: sourceId,
+          source_job_sha256: expectedSourceJobSha256,
+          translation_session_sha256: expectedSessionSha256,
+          validation_sha256: expectedValidationSha256,
+          credit_ledger_sha256: expectedCreditLedgerSha256,
+          preflight_digest: expectedPreflightDigest,
+          render_authorized: false,
+        },
+        now
+      );
+      const sourceKey = String(stablePlan.source?.source_key || '').trim();
+      if (sourceKey) {
+        this.database
+          .prepare(
+            `INSERT INTO source_records(
+               environment, source_key, job_id, updated_at, data_json
+             ) VALUES(?, ?, ?, ?, ?)
+             ON CONFLICT(environment, source_key, job_id) DO UPDATE SET
+               updated_at = excluded.updated_at,
+               data_json = excluded.data_json`
+          )
+          .run(
+            this.environment,
+            sourceKey,
+            jobId,
+            now,
+            canonicalJson({
+              plan_hash: stablePlan.plan_hash,
+              status: job.status,
+              stage: job.stage,
+              recovery_source_job_id: sourceId,
+            })
+          );
+      }
+      return { job: clone(job), plan: clone(stablePlan), reused: false };
     });
   }
 

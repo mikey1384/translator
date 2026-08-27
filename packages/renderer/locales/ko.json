@@ -338,7 +338,16 @@
         "answerer": "요청 처리",
         "planner": "검색 구성",
         "retrieval": "결과 불러오기"
-      }
+      },
+      "deleteLocalFile": "기기에서 파일 삭제",
+      "deleteLocalFileConfirm": "이 다운로드 파일을 기기에서 영구적으로 삭제할까요? 기록 항목과 원본 링크는 유지됩니다.",
+      "deleteLocalFileFailed": "다운로드 파일을 기기에서 삭제하지 못했습니다.",
+      "deleteLocalFileUnavailable": "이 다운로드에는 앱 라이브러리에서 삭제할 수 있는 파일이 더 이상 없습니다.",
+      "deleteLocalFileInUse": "이 동영상은 현재 열려 있습니다. 삭제하기 전에 다른 동영상을 여세요.",
+      "deleteFileAndHistory": "파일 및 기록 삭제",
+      "deleteFileAndHistoryConfirm": "이 다운로드 파일과 기록 항목을 영구적으로 삭제할까요? 이 작업은 취소할 수 없습니다.",
+      "removeFromHistory": "기록에서 제거",
+      "removeFromHistoryConfirm": "이 항목을 다운로드 기록에서 제거할까요? 앱 라이브러리 외부에 저장된 파일은 기기에 남습니다."
     },
     "downloadAndTranslate": "다운로드 및 번역",
     "downloadAndTranscribe": "다운로드 및 전사",

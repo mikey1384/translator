@@ -333,7 +333,16 @@
         "answerer": "Behandl forespørgsel",
         "planner": "Opret søgning",
         "retrieval": "Indlæs resultater"
-      }
+      },
+      "deleteLocalFile": "Slet fil fra enheden",
+      "deleteLocalFileConfirm": "Vil du slette denne downloadede fil permanent fra enheden? Historikposten og kildelinket bevares.",
+      "deleteLocalFileFailed": "Den downloadede fil kunne ikke slettes fra enheden.",
+      "deleteLocalFileUnavailable": "Denne download har ikke længere en fil i appbiblioteket, der kan slettes.",
+      "deleteLocalFileInUse": "Denne video er åben. Åbn en anden video, før du sletter den.",
+      "deleteFileAndHistory": "Slet fil og historik",
+      "deleteFileAndHistoryConfirm": "Vil du slette denne downloadede fil permanent og fjerne historikposten? Dette kan ikke fortrydes.",
+      "removeFromHistory": "Fjern fra historik",
+      "removeFromHistoryConfirm": "Vil du fjerne dette element fra downloadhistorikken? Filer, der er gemt uden for appbiblioteket, bliver på enheden."
     },
     "downloadAndTranslate": "Download og oversæt",
     "downloadAndTranscribe": "Download og transskriber",

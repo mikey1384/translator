@@ -16,6 +16,7 @@ import type {
   VideoSuggestionDownloadHistoryItem,
   VideoSuggestionRecency,
 } from '@shared-types/app';
+import type { PendingVideoSuggestionFileDeletionIntent } from '../services/video-suggestion-download-history.js';
 
 export type TranscriptionProviderPreference =
   | 'elevenlabs'
@@ -39,6 +40,7 @@ export type AppSettingsSchema = {
   ytDlpLastUpdateCheckAt: number;
   videoSuggestionDownloadHistory: VideoSuggestionDownloadHistoryItem[] | null;
   pendingUrlDownloadLibraryReclaims: string[];
+  pendingVideoSuggestionFileDeletions: PendingVideoSuggestionFileDeletionIntent[];
   app_language_preference: string;
   subtitleTargetLanguage: string;
   apiKey: string | null;
@@ -80,6 +82,7 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   ytDlpLastUpdateCheckAt: 0,
   videoSuggestionDownloadHistory: null,
   pendingUrlDownloadLibraryReclaims: [],
+  pendingVideoSuggestionFileDeletions: [],
   app_language_preference: 'en',
   subtitleTargetLanguage: 'original',
   apiKey: null,

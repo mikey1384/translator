@@ -333,7 +333,16 @@
         "answerer": "Zpracování",
         "planner": "Hledání",
         "retrieval": "Načíst výsledky"
-      }
+      },
+      "deleteLocalFile": "Odstranit soubor ze zařízení",
+      "deleteLocalFileConfirm": "Trvale odstranit tento stažený soubor ze zařízení? Záznam v historii a odkaz na zdroj zůstanou zachovány.",
+      "deleteLocalFileFailed": "Stažený soubor se ze zařízení nepodařilo odstranit.",
+      "deleteLocalFileUnavailable": "Toto stažení již nemá soubor v knihovně aplikace, který lze odstranit.",
+      "deleteLocalFileInUse": "Toto video je právě otevřené. Před odstraněním otevřete jiné video.",
+      "deleteFileAndHistory": "Odstranit soubor i historii",
+      "deleteFileAndHistoryConfirm": "Trvale odstranit tento stažený soubor i jeho záznam v historii? Tuto akci nelze vrátit zpět.",
+      "removeFromHistory": "Odebrat z historie",
+      "removeFromHistoryConfirm": "Odebrat tuto položku z historie stahování? Soubor uložený mimo knihovnu aplikace zůstane v zařízení."
     },
     "downloadAndTranslate": "Stáhnout a přeložit",
     "downloadAndTranscribe": "Stáhnout a přepsat",

@@ -333,7 +333,16 @@
         "answerer": "Anfrage verarbeiten",
         "planner": "Suche erstellen",
         "retrieval": "Ergebnisse laden"
-      }
+      },
+      "deleteLocalFile": "Datei vom Gerät löschen",
+      "deleteLocalFileConfirm": "Diese heruntergeladene Datei dauerhaft vom Gerät löschen? Verlaufseintrag und Quelllink bleiben erhalten.",
+      "deleteLocalFileFailed": "Die heruntergeladene Datei konnte nicht vom Gerät gelöscht werden.",
+      "deleteLocalFileUnavailable": "Für diesen Download gibt es keine löschbare Datei mehr in der App-Mediathek.",
+      "deleteLocalFileInUse": "Dieses Video ist derzeit geöffnet. Öffne vor dem Löschen ein anderes Video.",
+      "deleteFileAndHistory": "Datei und Verlauf löschen",
+      "deleteFileAndHistoryConfirm": "Diese heruntergeladene Datei und ihren Verlaufseintrag dauerhaft löschen? Dies kann nicht rückgängig gemacht werden.",
+      "removeFromHistory": "Aus Verlauf entfernen",
+      "removeFromHistoryConfirm": "Diesen Eintrag aus dem Downloadverlauf entfernen? Außerhalb der App-Mediathek gespeicherte Dateien bleiben auf dem Gerät."
     },
     "downloadAndTranslate": "Herunterladen & übersetzen",
     "downloadAndTranscribe": "Herunterladen & transkribieren",

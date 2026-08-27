@@ -25,6 +25,7 @@ import type {
 import { sanitizeVideoSuggestionHistoryPath } from '../../shared/helpers/video-suggestion-sanitize';
 import { isExplicitCancellation } from '../../shared/cancelled-error';
 import {
+  SUBTITLE_RENDER_SELECTION_BINDING_VERSION,
   SUBTITLE_RENDER_SPEC_VERSION,
   findSubtitlePreviewSelectionDrift,
   normalizeSubtitleBaseFontSize,
@@ -2469,6 +2470,15 @@ function assertPlannedSubtitleRenderSpecCompatible(
   if (!plannedSpec) return;
   if (plannedSpec.schema_version !== 1) {
     throw new Error('Unsupported planned subtitle render spec version.');
+  }
+  if (
+    plannedSpec.selection_binding_version !== undefined &&
+    plannedSpec.selection_binding_version !==
+      SUBTITLE_RENDER_SELECTION_BINDING_VERSION
+  ) {
+    throw new Error(
+      'Unsupported planned subtitle render selection binding version.'
+    );
   }
   for (const [plannedKey, resolvedValue] of [
     ['base_font_size_px', resolvedSpec.baseFontSizePx],

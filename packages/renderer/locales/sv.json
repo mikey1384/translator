@@ -333,7 +333,16 @@
         "answerer": "Bearbeta sökfråga",
         "planner": "Skapa sökning",
         "retrieval": "Ladda resultat"
-      }
+      },
+      "deleteLocalFile": "Ta bort filen från enheten",
+      "deleteLocalFileConfirm": "Vill du ta bort den här nedladdade filen permanent från enheten? Historikposten och källänken behålls.",
+      "deleteLocalFileFailed": "Det gick inte att ta bort den nedladdade filen från enheten.",
+      "deleteLocalFileUnavailable": "Den här nedladdningen har inte längre någon fil i appbiblioteket som kan tas bort.",
+      "deleteLocalFileInUse": "Den här videon är öppen. Öppna en annan video innan du tar bort den.",
+      "deleteFileAndHistory": "Ta bort fil och historik",
+      "deleteFileAndHistoryConfirm": "Vill du ta bort den här nedladdade filen och historikposten permanent? Detta kan inte ångras.",
+      "removeFromHistory": "Ta bort från historiken",
+      "removeFromHistoryConfirm": "Vill du ta bort objektet från nedladdningshistoriken? Filer som sparats utanför appbiblioteket blir kvar på enheten."
     },
     "downloadAndTranslate": "Ladda ner och översätt",
     "downloadAndTranscribe": "Ladda ner och transkribera",

@@ -333,7 +333,16 @@
         "answerer": "Przetwarzanie",
         "planner": "Wyszukiwanie",
         "retrieval": "Załaduj wyniki"
-      }
+      },
+      "deleteLocalFile": "Usuń plik z urządzenia",
+      "deleteLocalFileConfirm": "Trwale usunąć pobrany plik z urządzenia? Wpis historii i link źródłowy pozostaną.",
+      "deleteLocalFileFailed": "Nie udało się usunąć pobranego pliku z urządzenia.",
+      "deleteLocalFileUnavailable": "To pobranie nie ma już pliku możliwego do usunięcia w bibliotece aplikacji.",
+      "deleteLocalFileInUse": "Ten film jest obecnie otwarty. Przed usunięciem otwórz inny film.",
+      "deleteFileAndHistory": "Usuń plik i historię",
+      "deleteFileAndHistoryConfirm": "Trwale usunąć pobrany plik i jego wpis historii? Tej czynności nie można cofnąć.",
+      "removeFromHistory": "Usuń z historii",
+      "removeFromHistoryConfirm": "Usunąć ten element z historii pobierania? Pliki zapisane poza biblioteką aplikacji pozostaną na urządzeniu."
     },
     "downloadAndTranslate": "Pobierz i przetłumacz",
     "downloadAndTranscribe": "Pobierz i transkrybuj",

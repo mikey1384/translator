@@ -70,6 +70,58 @@ test('watch_job accepts the advertised fifty-second long-poll ceiling', () => {
   );
 });
 
+test('render-checkpoint fork schemas require exact checkpoint bindings and explicit creation confirmation', () => {
+  const sha256 = 'a'.repeat(64);
+  const preflight = {
+    source_job_id: 'job_12345678',
+    expected: {
+      source_key: `file:sha256:${sha256}`,
+      source_checkpoint_sha256: sha256,
+      source_checkpoint_bytes: 123,
+      translation_session_sha256: sha256,
+      accepted_segment_count: 5_700,
+      target_language: 'Korean',
+      validation_sha256: sha256,
+      credit_ledger_sha256: sha256,
+      credit_ledger_value_field: 'consumed_stage5_credits',
+      credit_ledger_value: 147_319,
+    },
+    render_override: { style: 'LineBox', base_font_size_px: 40 },
+  };
+  assert.deepEqual(
+    parseToolArguments(
+      MCP_V2_TOOL_DEFINITIONS.preflight_render_checkpoint_fork.inputSchema,
+      preflight
+    ),
+    preflight
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(
+        MCP_V2_TOOL_DEFINITIONS.create_render_checkpoint_fork.inputSchema,
+        {
+          ...preflight,
+          preflight_digest: sha256,
+          idempotency_key: 'recovery-fork-1',
+        }
+      ),
+    /confirm.*required/
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(
+        MCP_V2_TOOL_DEFINITIONS.create_render_checkpoint_fork.inputSchema,
+        {
+          ...preflight,
+          preflight_digest: sha256,
+          idempotency_key: 'recovery-fork-1',
+          confirm: 'RENDER_NOW',
+        }
+      ),
+    /confirm.*must equal/
+  );
+});
+
 test('packaged tool validation enforces required, type, enum, bounds, and unknown-field constraints', () => {
   assert.throws(
     () => parseToolArguments(TOOL_SCHEMAS.app_navigate, {}),

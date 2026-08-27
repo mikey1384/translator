@@ -11,6 +11,8 @@ import {
   resolveErrorText,
 } from '../components/VideoSuggestionPanel/video-suggestion-helpers.js';
 import {
+  deleteLocalVideoSuggestionHistoryFile,
+  deleteLocalVideoSuggestionHistoryFileAndHistory,
   readLocalVideoSuggestionHiddenChannels,
   readLocalVideoSuggestionHistory,
   removeLocalVideoSuggestionHistoryItem,
@@ -330,6 +332,103 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
     [t]
   );
 
+  const deleteHistoryFile = useCallback(
+    async (item: VideoSuggestionDownloadHistoryItem) => {
+      try {
+        const filePath = sanitizeVideoSuggestionHistoryPath(item.localPath);
+        if (!filePath) {
+          throw new Error(
+            '__i18n__:input.videoSuggestion.deleteLocalFileUnavailable'
+          );
+        }
+        const result = await deleteLocalVideoSuggestionHistoryFile(
+          item.id,
+          filePath
+        );
+        setDownloadHistory(sortHistoryByDownloadedAt(result.items));
+        if (
+          result.deletion?.diskOutcome === 'deleted' ||
+          result.deletion?.diskOutcome === 'already_absent'
+        ) {
+          setPlayablePathMap(prev => ({
+            ...prev,
+            [item.id]: false,
+          }));
+        }
+        if (!result.success) {
+          throw new Error(
+            result.error ||
+              '__i18n__:input.videoSuggestion.deleteLocalFileFailed'
+          );
+        }
+      } catch (err: any) {
+        setError(
+          resolveErrorText(
+            err?.message,
+            t(
+              'input.videoSuggestion.deleteLocalFileFailed',
+              'Could not delete the downloaded file from this device.'
+            ),
+            t
+          )
+        );
+      }
+    },
+    [t]
+  );
+
+  const deleteHistoryFileAndHistory = useCallback(
+    async (item: VideoSuggestionDownloadHistoryItem) => {
+      try {
+        const filePath = sanitizeVideoSuggestionHistoryPath(item.localPath);
+        if (!filePath) {
+          throw new Error(
+            '__i18n__:input.videoSuggestion.deleteLocalFileUnavailable'
+          );
+        }
+        const result = await deleteLocalVideoSuggestionHistoryFileAndHistory(
+          item.id,
+          filePath
+        );
+        setDownloadHistory(sortHistoryByDownloadedAt(result.items));
+        if (result.deletion?.historyOutcome === 'removed') {
+          setPlayablePathMap(prev => {
+            if (!(item.id in prev)) return prev;
+            const next = { ...prev };
+            delete next[item.id];
+            return next;
+          });
+        } else if (
+          result.deletion?.diskOutcome === 'deleted' ||
+          result.deletion?.diskOutcome === 'already_absent'
+        ) {
+          setPlayablePathMap(prev => ({
+            ...prev,
+            [item.id]: false,
+          }));
+        }
+        if (!result.success) {
+          throw new Error(
+            result.error ||
+              '__i18n__:input.videoSuggestion.deleteLocalFileFailed'
+          );
+        }
+      } catch (err: any) {
+        setError(
+          resolveErrorText(
+            err?.message,
+            t(
+              'input.videoSuggestion.deleteLocalFileFailed',
+              'Could not delete the downloaded file from this device.'
+            ),
+            t
+          )
+        );
+      }
+    },
+    [t]
+  );
+
   const removeChannelHistoryItem = useCallback((key: string) => {
     const normalized = String(key || '')
       .trim()
@@ -364,6 +463,8 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
 
   return {
     buildHistoryMetaDetails,
+    deleteHistoryFile,
+    deleteHistoryFileAndHistory,
     downloadHistory,
     error,
     formatHistoryTimestamp,

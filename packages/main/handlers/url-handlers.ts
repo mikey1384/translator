@@ -1,4 +1,5 @@
 import { IpcMainInvokeEvent } from 'electron';
+import path from 'node:path';
 import { processVideoUrl } from '../services/url-processor/index.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
@@ -56,12 +57,36 @@ async function reclaimManagedHistoryPaths(
     filePaths,
     logger: log,
   });
-  const failedByPath = new Map(
-    result.failedPaths.map(failed => [failed.filePath, failed])
-  );
-  // Keep genuine deletion failures in the manager's persisted pending set so
-  // they survive restart and are retried after the next history/lease update.
-  return filePaths.filter(filePath => !failedByPath.has(filePath));
+  // Only paths confirmed deleted (or already absent) are complete. Refused
+  // non-file entries and genuine failures remain owned for a safe later retry.
+  return result.reclaimedPaths;
+}
+
+async function deleteManagedHistoryPath(
+  filePath: string
+): Promise<'deleted' | 'already_absent'> {
+  if (!downloadLibraryDir) {
+    throw new Error('The managed download library is unavailable.');
+  }
+  const result = await reclaimUrlDownloadLibraryFiles({
+    libraryDir: downloadLibraryDir,
+    filePaths: [filePath],
+    logger: log,
+  });
+  const normalize = (value: string): string => {
+    const resolved = path.resolve(value);
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  const key = normalize(filePath);
+  if (result.deletedPaths.some(candidate => normalize(candidate) === key)) {
+    return 'deleted';
+  }
+  if (
+    result.alreadyAbsentPaths.some(candidate => normalize(candidate) === key)
+  ) {
+    return 'already_absent';
+  }
+  throw new Error('The managed download could not be deleted.');
 }
 
 export function initializeUrlHandler(services: UrlHandlerServices): void {
@@ -87,10 +112,15 @@ export function initializeUrlHandler(services: UrlHandlerServices): void {
         settingsStore.get('pendingUrlDownloadLibraryReclaims'),
       savePendingReclaims: filePaths =>
         settingsStore.set('pendingUrlDownloadLibraryReclaims', filePaths),
+      loadPendingFileDeletions: () =>
+        settingsStore.get('pendingVideoSuggestionFileDeletions'),
+      savePendingFileDeletions: intents =>
+        settingsStore.set('pendingVideoSuggestionFileDeletions', intents),
     },
     isManagedLibraryPath: filePath =>
       isUrlDownloadLibraryFilePath(services.downloadLibraryDir, filePath),
     reclaimPaths: reclaimManagedHistoryPaths,
+    deleteManagedFile: deleteManagedHistoryPath,
     onMaintenanceError: error =>
       log.warn(
         '[url-handler] Download history cleanup will be retried:',
@@ -359,7 +389,7 @@ export async function handleAcceptProcessedUrl(
         if (!downloadHistoryManager) {
           throw new Error('Persistent download ownership is not available');
         }
-        await downloadHistoryManager.trackPromotedFile(destinationPath);
+        return downloadHistoryManager.trackPromotedFile(destinationPath);
       },
       logger: log,
     });
@@ -470,7 +500,7 @@ export async function handleMutateVideoSuggestionDownloadHistory(
   }
   registerLeaseCleanup(event);
   try {
-    const items = await downloadHistoryManager.mutate({
+    const result = await downloadHistoryManager.mutateDetailed({
       rendererId: event.sender.id,
       mutation: request.mutation,
       seedItems: Array.isArray(request.seedItems) ? request.seedItems : [],
@@ -478,7 +508,17 @@ export async function handleMutateVideoSuggestionDownloadHistory(
         ? request.mountedPaths
         : [],
     });
-    return { success: true, items };
+    return {
+      ...result,
+      items: result.items.map(item => ({
+        ...item,
+        managedLocalFile: Boolean(
+          downloadLibraryDir &&
+          item.localPath &&
+          isUrlDownloadLibraryFilePath(downloadLibraryDir, item.localPath)
+        ),
+      })),
+    };
   } catch (error) {
     log.error('[url-handler] Failed to mutate download history:', error);
     return {

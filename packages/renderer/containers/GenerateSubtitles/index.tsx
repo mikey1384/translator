@@ -1074,6 +1074,12 @@ export default function GenerateSubtitles() {
               onRedownloadHistoryItem={item => {
                 void downloadedVideoLibrary.redownloadHistoryItem(item);
               }}
+              onDeleteHistoryFile={item => {
+                void downloadedVideoLibrary.deleteHistoryFile(item);
+              }}
+              onDeleteHistoryFileAndHistory={item => {
+                void downloadedVideoLibrary.deleteHistoryFileAndHistory(item);
+              }}
               onRemoveHistoryItem={id => {
                 downloadedVideoLibrary.removeHistoryItem(id);
               }}

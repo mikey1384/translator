@@ -333,7 +333,16 @@
         "answerer": "Procesare",
         "planner": "Căutare",
         "retrieval": "Încarcă rezultatele"
-      }
+      },
+      "deleteLocalFile": "Șterge fișierul de pe dispozitiv",
+      "deleteLocalFileConfirm": "Ștergeți definitiv acest fișier descărcat de pe dispozitiv? Intrarea din istoric și linkul sursă vor rămâne.",
+      "deleteLocalFileFailed": "Fișierul descărcat nu a putut fi șters de pe dispozitiv.",
+      "deleteLocalFileUnavailable": "Această descărcare nu mai are un fișier care poate fi șters în biblioteca aplicației.",
+      "deleteLocalFileInUse": "Acest videoclip este deschis. Deschideți alt videoclip înainte de a-l șterge.",
+      "deleteFileAndHistory": "Șterge fișierul și istoricul",
+      "deleteFileAndHistoryConfirm": "Ștergeți definitiv acest fișier descărcat și intrarea sa din istoric? Acțiunea nu poate fi anulată.",
+      "removeFromHistory": "Elimină din istoric",
+      "removeFromHistoryConfirm": "Eliminați acest element din istoricul descărcărilor? Fișierele salvate în afara bibliotecii aplicației vor rămâne pe dispozitiv."
     },
     "downloadAndTranslate": "Descarcă și tradu",
     "downloadAndTranscribe": "Descarcă și transcrie",

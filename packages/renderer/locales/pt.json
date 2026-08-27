@@ -333,7 +333,16 @@
         "answerer": "Processar consulta",
         "planner": "Criar pesquisa",
         "retrieval": "Carregar resultados"
-      }
+      },
+      "deleteLocalFile": "Excluir arquivo do dispositivo",
+      "deleteLocalFileConfirm": "Excluir permanentemente este arquivo baixado do dispositivo? A entrada do histórico e o link da fonte serão mantidos.",
+      "deleteLocalFileFailed": "Não foi possível excluir o arquivo baixado do dispositivo.",
+      "deleteLocalFileUnavailable": "Este download não tem mais um arquivo que possa ser excluído na biblioteca do aplicativo.",
+      "deleteLocalFileInUse": "Este vídeo está aberto. Abra outro vídeo antes de excluí-lo.",
+      "deleteFileAndHistory": "Excluir arquivo e histórico",
+      "deleteFileAndHistoryConfirm": "Excluir permanentemente este arquivo baixado e a entrada do histórico? Esta ação não pode ser desfeita.",
+      "removeFromHistory": "Remover do histórico",
+      "removeFromHistoryConfirm": "Remover este item do histórico de downloads? Arquivos salvos fora da biblioteca do aplicativo permanecerão no dispositivo."
     },
     "downloadAndTranslate": "Baixar e traduzir",
     "downloadAndTranscribe": "Baixar e transcrever",

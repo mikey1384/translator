@@ -333,7 +333,16 @@
         "answerer": "İşleme",
         "planner": "Arama",
         "retrieval": "Sonuçları yükle"
-      }
+      },
+      "deleteLocalFile": "Dosyayı cihazdan sil",
+      "deleteLocalFileConfirm": "İndirilen bu dosya cihazdan kalıcı olarak silinsin mi? Geçmiş kaydı ve kaynak bağlantısı kalır.",
+      "deleteLocalFileFailed": "İndirilen dosya cihazdan silinemedi.",
+      "deleteLocalFileUnavailable": "Bu indirmede artık uygulama kitaplığında silinebilecek bir dosya yok.",
+      "deleteLocalFileInUse": "Bu video şu anda açık. Silmeden önce başka bir video açın.",
+      "deleteFileAndHistory": "Dosyayı ve geçmişi sil",
+      "deleteFileAndHistoryConfirm": "İndirilen bu dosya ve geçmiş kaydı kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
+      "removeFromHistory": "Geçmişten kaldır",
+      "removeFromHistoryConfirm": "Bu öğe indirme geçmişinden kaldırılsın mı? Uygulama kitaplığı dışında kaydedilen dosyalar cihazda kalır."
     },
     "downloadAndTranslate": "İndir ve çevir",
     "downloadAndTranscribe": "İndir ve deşifre et",

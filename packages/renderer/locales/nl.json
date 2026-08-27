@@ -333,7 +333,16 @@
         "answerer": "Zoekvraag verwerken",
         "planner": "Zoekopdracht maken",
         "retrieval": "Resultaten laden"
-      }
+      },
+      "deleteLocalFile": "Bestand van apparaat verwijderen",
+      "deleteLocalFileConfirm": "Dit gedownloade bestand permanent van het apparaat verwijderen? De geschiedenisvermelding en bronlink blijven behouden.",
+      "deleteLocalFileFailed": "Het gedownloade bestand kon niet van het apparaat worden verwijderd.",
+      "deleteLocalFileUnavailable": "Deze download heeft geen verwijderbaar bestand meer in de appbibliotheek.",
+      "deleteLocalFileInUse": "Deze video is momenteel geopend. Open een andere video voordat je hem verwijdert.",
+      "deleteFileAndHistory": "Bestand en geschiedenis verwijderen",
+      "deleteFileAndHistoryConfirm": "Dit gedownloade bestand en de geschiedenisvermelding permanent verwijderen? Dit kan niet ongedaan worden gemaakt.",
+      "removeFromHistory": "Uit geschiedenis verwijderen",
+      "removeFromHistoryConfirm": "Dit item uit de downloadgeschiedenis verwijderen? Bestanden die buiten de appbibliotheek zijn opgeslagen, blijven op het apparaat staan."
     },
     "downloadAndTranslate": "Downloaden en vertalen",
     "downloadAndTranscribe": "Downloaden en transcriberen",

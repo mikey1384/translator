@@ -1220,6 +1220,7 @@ test(
       'job-owner-lease.mjs',
       'mcp-v2-contract.mjs',
       'mcp-v2-service.mjs',
+      'render-checkpoint-recovery.mjs',
       'srt.mjs',
       'subtitle-quality.mjs',
       'tool-schema-validator.mjs',

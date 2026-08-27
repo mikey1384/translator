@@ -333,7 +333,16 @@
         "answerer": "Chakata swali",
         "planner": "Unda utafutaji",
         "retrieval": "Pakia matokeo"
-      }
+      },
+      "deleteLocalFile": "Futa faili kwenye kifaa",
+      "deleteLocalFileConfirm": "Ufute kabisa faili hii iliyopakuliwa kwenye kifaa? Ingizo la historia na kiungo cha chanzo vitabaki.",
+      "deleteLocalFileFailed": "Faili iliyopakuliwa haikuweza kufutwa kwenye kifaa.",
+      "deleteLocalFileUnavailable": "Upakuaji huu hauna tena faili inayoweza kufutwa katika maktaba ya programu.",
+      "deleteLocalFileInUse": "Video hii imefunguliwa kwa sasa. Fungua video nyingine kabla ya kuifuta.",
+      "deleteFileAndHistory": "Futa faili na historia",
+      "deleteFileAndHistoryConfirm": "Ufute kabisa faili hii iliyopakuliwa na ingizo lake la historia? Kitendo hiki hakiwezi kutenduliwa.",
+      "removeFromHistory": "Ondoa kwenye historia",
+      "removeFromHistoryConfirm": "Uondoe kipengee hiki kwenye historia ya vipakuliwa? Faili zilizohifadhiwa nje ya maktaba ya programu zitabaki kwenye kifaa."
     },
     "downloadAndTranslate": "Pakua na utafsiri",
     "downloadAndTranscribe": "Pakua na unukuu",

@@ -333,7 +333,16 @@
         "answerer": "Behandle forespørsel",
         "planner": "Lag søk",
         "retrieval": "Last inn resultater"
-      }
+      },
+      "deleteLocalFile": "Slett fil fra enheten",
+      "deleteLocalFileConfirm": "Vil du slette denne nedlastede filen permanent fra enheten? Historikkoppføringen og kildelenken beholdes.",
+      "deleteLocalFileFailed": "Den nedlastede filen kunne ikke slettes fra enheten.",
+      "deleteLocalFileUnavailable": "Denne nedlastingen har ikke lenger en fil i appbiblioteket som kan slettes.",
+      "deleteLocalFileInUse": "Denne videoen er åpen. Åpne en annen video før du sletter den.",
+      "deleteFileAndHistory": "Slett fil og historikk",
+      "deleteFileAndHistoryConfirm": "Vil du slette denne nedlastede filen og historikkoppføringen permanent? Dette kan ikke angres.",
+      "removeFromHistory": "Fjern fra historikk",
+      "removeFromHistoryConfirm": "Vil du fjerne dette elementet fra nedlastingshistorikken? Filer lagret utenfor appbiblioteket blir værende på enheten."
     },
     "downloadAndTranslate": "Last ned og oversett",
     "downloadAndTranscribe": "Last ned og transkriber",

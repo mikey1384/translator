@@ -90,6 +90,7 @@ test('subtitle plans detect only preview-derived fields changed after planning',
         display_mode: 'translation',
         style: 'LineBox',
         base_font_size_px: 40,
+        selection_binding_version: 1,
         field_sources: {
           display_mode: 'translator_preview',
           style: 'request',
@@ -103,6 +104,53 @@ test('subtitle plans detect only preview-derived fields changed after planning',
       }
     ),
     ['display_mode', 'base_font_size_px']
+  );
+});
+
+test('legacy subtitle plans fail closed when any preview selection drifted', () => {
+  assert.deepEqual(
+    findSubtitlePreviewSelectionDrift(
+      {
+        display_mode: 'translation',
+        style: 'Default',
+        base_font_size_px: 24,
+        field_sources: {
+          display_mode: 'request',
+          style: 'request',
+          base_font_size_px: 'request',
+        },
+      },
+      {
+        displayMode: 'translation',
+        stylePreset: 'LineBox',
+        baseFontSizePx: 40,
+      }
+    ),
+    ['style', 'base_font_size_px']
+  );
+});
+
+test('versioned render-checkpoint overrides remain immutable plan intent', () => {
+  assert.deepEqual(
+    findSubtitlePreviewSelectionDrift(
+      {
+        display_mode: 'translation',
+        style: 'LineBox',
+        base_font_size_px: 40,
+        selection_binding_version: 1,
+        field_sources: {
+          display_mode: 'request',
+          style: 'render_checkpoint_fork',
+          base_font_size_px: 'render_checkpoint_fork',
+        },
+      },
+      {
+        displayMode: 'dual',
+        stylePreset: 'Default',
+        baseFontSizePx: 24,
+      }
+    ),
+    []
   );
 });
 

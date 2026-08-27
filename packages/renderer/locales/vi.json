@@ -333,7 +333,16 @@
         "answerer": "Xử lý truy vấn",
         "planner": "Tạo truy vấn",
         "retrieval": "Tải kết quả"
-      }
+      },
+      "deleteLocalFile": "Xóa tệp khỏi thiết bị",
+      "deleteLocalFileConfirm": "Xóa vĩnh viễn tệp đã tải xuống này khỏi thiết bị? Mục lịch sử và liên kết nguồn sẽ được giữ lại.",
+      "deleteLocalFileFailed": "Không thể xóa tệp đã tải xuống khỏi thiết bị.",
+      "deleteLocalFileUnavailable": "Bản tải xuống này không còn tệp có thể xóa trong thư viện ứng dụng.",
+      "deleteLocalFileInUse": "Video này đang được mở. Hãy mở video khác trước khi xóa.",
+      "deleteFileAndHistory": "Xóa tệp và lịch sử",
+      "deleteFileAndHistoryConfirm": "Xóa vĩnh viễn tệp đã tải xuống này và mục lịch sử của tệp? Không thể hoàn tác thao tác này.",
+      "removeFromHistory": "Xóa khỏi lịch sử",
+      "removeFromHistoryConfirm": "Xóa mục này khỏi lịch sử tải xuống? Các tệp lưu ngoài thư viện ứng dụng sẽ vẫn còn trên thiết bị."
     },
     "downloadAndTranslate": "Tải xuống & dịch",
     "downloadAndTranscribe": "Tải xuống & chép lời",

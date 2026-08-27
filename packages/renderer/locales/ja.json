@@ -333,7 +333,16 @@
         "answerer": "要望を整理",
         "planner": "検索を作成",
         "retrieval": "結果を読み込む"
-      }
+      },
+      "deleteLocalFile": "デバイスからファイルを削除",
+      "deleteLocalFileConfirm": "このダウンロード済みファイルをデバイスから完全に削除しますか？履歴項目と元のリンクは残ります。",
+      "deleteLocalFileFailed": "ダウンロード済みファイルをデバイスから削除できませんでした。",
+      "deleteLocalFileUnavailable": "このダウンロードには、アプリライブラリ内に削除できるファイルがありません。",
+      "deleteLocalFileInUse": "この動画は現在開いています。削除する前に別の動画を開いてください。",
+      "deleteFileAndHistory": "ファイルと履歴を削除",
+      "deleteFileAndHistoryConfirm": "このダウンロード済みファイルと履歴項目を完全に削除しますか？この操作は元に戻せません。",
+      "removeFromHistory": "履歴から削除",
+      "removeFromHistoryConfirm": "この項目をダウンロード履歴から削除しますか？アプリライブラリ外に保存したファイルはデバイスに残ります。"
     },
     "downloadAndTranslate": "ダウンロードして翻訳",
     "downloadAndTranscribe": "ダウンロードして文字起こし",

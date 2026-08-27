@@ -333,7 +333,16 @@
         "answerer": "Proses kueri",
         "planner": "Bina carian",
         "retrieval": "Muatkan hasil"
-      }
+      },
+      "deleteLocalFile": "Padam fail daripada peranti",
+      "deleteLocalFileConfirm": "Padam fail yang dimuat turun ini secara kekal daripada peranti? Entri sejarah dan pautan sumber akan dikekalkan.",
+      "deleteLocalFileFailed": "Fail yang dimuat turun tidak dapat dipadam daripada peranti.",
+      "deleteLocalFileUnavailable": "Muat turun ini tidak lagi mempunyai fail yang boleh dipadam dalam pustaka aplikasi.",
+      "deleteLocalFileInUse": "Video ini sedang dibuka. Buka video lain sebelum memadamkannya.",
+      "deleteFileAndHistory": "Padam fail dan sejarah",
+      "deleteFileAndHistoryConfirm": "Padam fail yang dimuat turun ini serta entri sejarahnya secara kekal? Tindakan ini tidak boleh dibuat asal.",
+      "removeFromHistory": "Alih keluar daripada sejarah",
+      "removeFromHistoryConfirm": "Alih keluar item ini daripada sejarah muat turun? Fail yang disimpan di luar pustaka aplikasi akan kekal pada peranti."
     },
     "downloadAndTranslate": "Muat turun & terjemah",
     "downloadAndTranscribe": "Muat turun & transkripsi",

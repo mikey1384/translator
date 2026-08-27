@@ -54,6 +54,7 @@ test('subtitle render planning snapshots Translator preview preferences', () => 
     font_asset: 'NotoSans-Regular.ttf',
     scale_rule: 'height_ratio_720_clamped_0.5_2',
     schema_version: 1,
+    selection_binding_version: 1,
     field_sources: {
       display_mode: 'translator_preview',
       style: 'translator_preview',
@@ -470,6 +471,7 @@ test('plan_job carries the live preview selection into its immutable outputs', a
     font_asset: 'NotoSans-Regular.ttf',
     scale_rule: 'height_ratio_720_clamped_0.5_2',
     schema_version: 1,
+    selection_binding_version: 1,
     field_sources: {
       display_mode: 'translator_preview',
       style: 'translator_preview',

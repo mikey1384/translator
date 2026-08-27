@@ -333,7 +333,16 @@
         "answerer": "Proses kueri",
         "planner": "Susun pencarian",
         "retrieval": "Muat hasil"
-      }
+      },
+      "deleteLocalFile": "Hapus file dari perangkat",
+      "deleteLocalFileConfirm": "Hapus permanen file unduhan ini dari perangkat? Entri riwayat dan tautan sumber akan tetap ada.",
+      "deleteLocalFileFailed": "File unduhan tidak dapat dihapus dari perangkat.",
+      "deleteLocalFileUnavailable": "Unduhan ini tidak lagi memiliki file yang dapat dihapus di pustaka aplikasi.",
+      "deleteLocalFileInUse": "Video ini sedang dibuka. Buka video lain sebelum menghapusnya.",
+      "deleteFileAndHistory": "Hapus file dan riwayat",
+      "deleteFileAndHistoryConfirm": "Hapus permanen file unduhan ini beserta entri riwayatnya? Tindakan ini tidak dapat dibatalkan.",
+      "removeFromHistory": "Hapus dari riwayat",
+      "removeFromHistoryConfirm": "Hapus item ini dari riwayat unduhan? File yang disimpan di luar pustaka aplikasi akan tetap ada di perangkat."
     },
     "downloadAndTranslate": "Unduh & terjemahkan",
     "downloadAndTranscribe": "Unduh & transkripsikan",

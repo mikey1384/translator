@@ -333,7 +333,16 @@
         "answerer": "Käsittele kysely",
         "planner": "Muodosta haku",
         "retrieval": "Lataa tulokset"
-      }
+      },
+      "deleteLocalFile": "Poista tiedosto laitteelta",
+      "deleteLocalFileConfirm": "Poistetaanko tämä ladattu tiedosto pysyvästi laitteelta? Historiatieto ja lähdelinkki säilyvät.",
+      "deleteLocalFileFailed": "Ladattua tiedostoa ei voitu poistaa laitteelta.",
+      "deleteLocalFileUnavailable": "Tällä latauksella ei enää ole poistettavaa tiedostoa sovelluskirjastossa.",
+      "deleteLocalFileInUse": "Tämä video on parhaillaan avoinna. Avaa toinen video ennen poistamista.",
+      "deleteFileAndHistory": "Poista tiedosto ja historia",
+      "deleteFileAndHistoryConfirm": "Poistetaanko tämä ladattu tiedosto ja sen historiatieto pysyvästi? Toimintoa ei voi kumota.",
+      "removeFromHistory": "Poista historiasta",
+      "removeFromHistoryConfirm": "Poistetaanko tämä kohde lataushistoriasta? Sovelluskirjaston ulkopuolelle tallennetut tiedostot säilyvät laitteella."
     },
     "downloadAndTranslate": "Lataa ja käännä",
     "downloadAndTranscribe": "Lataa ja litteroi",

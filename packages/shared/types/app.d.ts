@@ -460,11 +460,19 @@ declare module '@shared-types/app' {
     uploadedAt?: string;
     downloadedAtIso: string;
     localPath?: string;
+    /** Main-process classification for display/action gating; never trusted on input. */
+    managedLocalFile?: boolean;
   }
 
   export type VideoSuggestionDownloadHistoryMutation =
     | { type: 'get' }
     | { type: 'upsert'; item: VideoSuggestionDownloadHistoryItem }
+    | { type: 'delete-file'; id: string; expectedLocalPath: string }
+    | {
+        type: 'delete-file-and-history';
+        id: string;
+        expectedLocalPath: string;
+      }
     | { type: 'remove'; id: string; reclaimPath?: string }
     | { type: 'rollback-upsert'; id: string; reclaimPath?: string }
     | { type: 'replace-path'; previousPath: string; savedPath: string };
@@ -478,6 +486,19 @@ declare module '@shared-types/app' {
   export interface VideoSuggestionDownloadHistoryMutationResult {
     success: boolean;
     items: VideoSuggestionDownloadHistoryItem[];
+    deletion?: {
+      operation: 'delete-file' | 'delete-file-and-history';
+      diskOutcome: 'deleted' | 'already_absent' | 'deferred' | 'failed';
+      historyOutcome: 'retained' | 'removed' | 'pending';
+      deferredReason?:
+        | 'mounted'
+        | 'intent_persistence_failed'
+        | 'disk_reclaim_failed'
+        | 'history_persistence_failed'
+        | 'history_conflict'
+        | 'intent_cleanup_failed';
+      recovered?: boolean;
+    };
     error?: string;
   }
 

@@ -333,7 +333,16 @@
         "answerer": "Procesar consulta",
         "planner": "Preparar búsqueda",
         "retrieval": "Cargar resultados"
-      }
+      },
+      "deleteLocalFile": "Eliminar archivo del dispositivo",
+      "deleteLocalFileConfirm": "¿Eliminar permanentemente este archivo descargado del dispositivo? La entrada del historial y el enlace de origen se conservarán.",
+      "deleteLocalFileFailed": "No se pudo eliminar el archivo descargado del dispositivo.",
+      "deleteLocalFileUnavailable": "Esta descarga ya no tiene un archivo eliminable en la biblioteca de la aplicación.",
+      "deleteLocalFileInUse": "Este video está abierto. Abre otro video antes de eliminarlo.",
+      "deleteFileAndHistory": "Eliminar archivo e historial",
+      "deleteFileAndHistoryConfirm": "¿Eliminar permanentemente este archivo descargado y su entrada del historial? Esta acción no se puede deshacer.",
+      "removeFromHistory": "Quitar del historial",
+      "removeFromHistoryConfirm": "¿Quitar este elemento del historial de descargas? Los archivos guardados fuera de la biblioteca de la aplicación permanecerán en el dispositivo."
     },
     "downloadAndTranslate": "Descargar y traducir",
     "downloadAndTranscribe": "Descargar y transcribir",

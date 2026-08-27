@@ -10,6 +10,7 @@ import {
 } from '../constants/subtitle-styles.js';
 
 export const SUBTITLE_RENDER_SPEC_VERSION = 1 as const;
+export const SUBTITLE_RENDER_SELECTION_BINDING_VERSION = 1 as const;
 export const SUBTITLE_FONT_FAMILY = 'Noto Sans' as const;
 export const SUBTITLE_FONT_ASSET = 'NotoSans-Regular.ttf' as const;
 export const MAX_SUBTITLE_BASE_FONT_SIZE = 96;
@@ -200,10 +201,14 @@ export function findSubtitlePreviewSelectionDrift(
     style: current.stylePreset,
     base_font_size_px: normalizeSubtitleBaseFontSize(current.baseFontSizePx),
   };
+  const hasCurrentSelectionBinding =
+    plannedSpec.selection_binding_version ===
+    SUBTITLE_RENDER_SELECTION_BINDING_VERSION;
 
   return (Object.keys(expected) as SubtitleRenderSelectionField[]).filter(
     field =>
-      sources[field] === 'translator_preview' &&
+      (!hasCurrentSelectionBinding ||
+        sources[field] === 'translator_preview') &&
       plannedSpec[field] !== expected[field]
   );
 }

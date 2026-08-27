@@ -94,6 +94,12 @@ const cursorProperty = Object.freeze({
   minimum: 0,
   default: 0,
 });
+const sha256Property = Object.freeze({
+  type: 'string',
+  minLength: 64,
+  maxLength: 64,
+  pattern: '^[a-f0-9]{64}$',
+});
 
 const sourceSchema = Object.freeze({
   type: 'object',
@@ -361,6 +367,65 @@ const planJobSchema = Object.freeze({
   additionalProperties: false,
 });
 
+const renderCheckpointForkExpectedSchema = Object.freeze({
+  type: 'object',
+  properties: {
+    source_key: { type: 'string', minLength: 1, maxLength: 4096 },
+    source_checkpoint_sha256: sha256Property,
+    source_checkpoint_bytes: { type: 'integer', minimum: 1 },
+    translation_session_sha256: sha256Property,
+    accepted_segment_count: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 100_000,
+    },
+    target_language: { type: 'string', minLength: 2, maxLength: 80 },
+    validation_sha256: sha256Property,
+    credit_ledger_sha256: sha256Property,
+    credit_ledger_value_field: {
+      type: 'string',
+      enum: [
+        'estimated_stage5_credits',
+        'authorized_stage5_credits',
+        'consumed_stage5_credits',
+      ],
+    },
+    credit_ledger_value: { type: 'integer', minimum: 0 },
+  },
+  required: [
+    'source_key',
+    'source_checkpoint_sha256',
+    'source_checkpoint_bytes',
+    'translation_session_sha256',
+    'accepted_segment_count',
+    'target_language',
+    'validation_sha256',
+    'credit_ledger_sha256',
+    'credit_ledger_value_field',
+    'credit_ledger_value',
+  ],
+  additionalProperties: false,
+});
+
+const renderCheckpointForkOverrideSchema = Object.freeze({
+  type: 'object',
+  properties: {
+    style: {
+      type: 'string',
+      enum: ['Default', 'Classic', 'Boxed', 'LineBox'],
+    },
+    base_font_size_px: { type: 'number', minimum: 12, maximum: 96 },
+  },
+  required: ['style', 'base_font_size_px'],
+  additionalProperties: false,
+});
+
+const renderCheckpointForkPreflightProperties = Object.freeze({
+  source_job_id: jobIdProperty,
+  expected: renderCheckpointForkExpectedSchema,
+  render_override: renderCheckpointForkOverrideSchema,
+});
+
 export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
   get_server_info: {
     description:
@@ -401,6 +466,40 @@ export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
     description:
       'Create a no-cost immutable workflow plan with providers, Stage5 credit estimate, compatibility findings, outputs, time/disk ranges, and a plan hash.',
     inputSchema: planJobSchema,
+    billing: 'none',
+  },
+  preflight_render_checkpoint_fork: {
+    description:
+      'Pure read-only eligibility check for a render-only fork of an exact canceled source, accepted translation session, validation receipt, and credit ledger. It creates no plan or job, calls no provider, reserves no credit, and renders nothing.',
+    inputSchema: {
+      type: 'object',
+      properties: renderCheckpointForkPreflightProperties,
+      required: ['source_job_id', 'expected', 'render_override'],
+      additionalProperties: false,
+    },
+    billing: 'none',
+  },
+  create_render_checkpoint_fork: {
+    description:
+      'Create an idempotent local render-only fork bound to an eligible preflight digest. The fork starts blocked at render_outputs, contains no transcription or translation stage, spends no Stage5 credit, and does not render until render_outputs is separately authorized.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ...renderCheckpointForkPreflightProperties,
+        preflight_digest: sha256Property,
+        idempotency_key: { type: 'string', minLength: 8, maxLength: 200 },
+        confirm: { const: 'CREATE_RENDER_CHECKPOINT_FORK' },
+      },
+      required: [
+        'source_job_id',
+        'expected',
+        'render_override',
+        'preflight_digest',
+        'idempotency_key',
+        'confirm',
+      ],
+      additionalProperties: false,
+    },
     billing: 'none',
   },
   create_job: {

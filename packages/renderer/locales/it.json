@@ -333,7 +333,16 @@
         "answerer": "Elabora richiesta",
         "planner": "Crea ricerca",
         "retrieval": "Carica risultati"
-      }
+      },
+      "deleteLocalFile": "Elimina file dal dispositivo",
+      "deleteLocalFileConfirm": "Eliminare definitivamente questo file scaricato dal dispositivo? La voce della cronologia e il link di origine resteranno disponibili.",
+      "deleteLocalFileFailed": "Impossibile eliminare il file scaricato dal dispositivo.",
+      "deleteLocalFileUnavailable": "Questo download non ha più un file eliminabile nella libreria dell’app.",
+      "deleteLocalFileInUse": "Questo video è attualmente aperto. Apri un altro video prima di eliminarlo.",
+      "deleteFileAndHistory": "Elimina file e cronologia",
+      "deleteFileAndHistoryConfirm": "Eliminare definitivamente questo file scaricato e la relativa voce della cronologia? L’azione non può essere annullata.",
+      "removeFromHistory": "Rimuovi dalla cronologia",
+      "removeFromHistoryConfirm": "Rimuovere questo elemento dalla cronologia dei download? I file salvati fuori dalla libreria dell’app resteranno sul dispositivo."
     },
     "downloadAndTranslate": "Scarica e traduci",
     "downloadAndTranscribe": "Scarica e trascrivi",

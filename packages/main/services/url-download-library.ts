@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { constants } from 'node:fs';
 import fsp from 'node:fs/promises';
 
@@ -9,8 +9,17 @@ type DownloadLibraryLogger = {
 };
 
 export type ReclaimUrlDownloadLibraryResult = {
+  /** Paths deleted by this call or already absent when deletion was attempted. */
   reclaimedPaths: string[];
+  /** Paths whose regular files were unlinked by this call. */
+  deletedPaths: string[];
+  /** Paths that were already absent when this call checked them. */
+  alreadyAbsentPaths: string[];
   failedPaths: Array<{ filePath: string; error: string }>;
+};
+
+export type UrlDownloadPromotionOwnership = {
+  rollback: () => Promise<void>;
 };
 
 export const URL_DOWNLOAD_LIBRARY_DIRNAME = 'downloaded-media';
@@ -142,6 +151,8 @@ export async function reclaimUrlDownloadLibraryFiles(options: {
   );
   const result: ReclaimUrlDownloadLibraryResult = {
     reclaimedPaths: [],
+    deletedPaths: [],
+    alreadyAbsentPaths: [],
     failedPaths: [],
   };
 
@@ -163,11 +174,19 @@ export async function reclaimUrlDownloadLibraryFiles(options: {
       }
       await fsp.unlink(filePath);
       result.reclaimedPaths.push(filePath);
+      result.deletedPaths.push(filePath);
       options.logger?.info?.(
         `[url-download-library] Reclaimed unowned managed download: ${filePath}`
       );
     } catch (error) {
-      if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') continue;
+      if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
+        // The desired disk state is already satisfied. Reporting the path as
+        // reclaimed lets durable cleanup ownership end without conflating a
+        // refused, still-existing directory or symlink with success.
+        result.reclaimedPaths.push(filePath);
+        result.alreadyAbsentPaths.push(filePath);
+        continue;
+      }
       const message =
         error instanceof Error
           ? error.message
@@ -183,31 +202,64 @@ export async function reclaimUrlDownloadLibraryFiles(options: {
   return result;
 }
 
-async function chooseDestinationPath(
+type DestinationReservation = {
+  destinationPath: string;
+  reservationPath: string;
+};
+
+function reservationIdentity(filePath: string): string {
+  const resolved = path.resolve(filePath);
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+}
+
+async function tryReserveDestinationPath(
+  partialDir: string,
+  destinationPath: string
+): Promise<DestinationReservation | null> {
+  if (await pathExists(destinationPath)) return null;
+  const reservationPath = path.join(
+    partialDir,
+    `${createHash('sha256')
+      .update(reservationIdentity(destinationPath))
+      .digest('hex')}.reserve`
+  );
+  let handle: Awaited<ReturnType<typeof fsp.open>> | null = null;
+  try {
+    handle = await fsp.open(reservationPath, 'wx', 0o600);
+    await handle.close();
+    handle = null;
+  } catch (error) {
+    await handle?.close().catch(() => void 0);
+    if ((error as NodeJS.ErrnoException)?.code === 'EEXIST') return null;
+    throw error;
+  }
+  if (await pathExists(destinationPath)) {
+    await fsp.rm(reservationPath, { force: true });
+    return null;
+  }
+  return { destinationPath, reservationPath };
+}
+
+async function reserveDestinationPath(
   libraryDir: string,
   sourcePath: string,
-  operationId: string
-): Promise<string> {
+  operationId: string,
+  partialDir: string
+): Promise<DestinationReservation> {
   const sourceName = path.basename(sourcePath);
   const extension = path.extname(sourceName);
   const stem = path.basename(sourceName, extension);
   const operationSuffix = sanitizeOperationId(operationId);
-  let candidate = path.join(libraryDir, sourceName);
-
-  if (!(await pathExists(candidate))) return candidate;
-
-  candidate = path.join(
-    libraryDir,
-    `${stem}-${operationSuffix || 'download'}${extension}`
-  );
-  if (!(await pathExists(candidate))) return candidate;
-
-  for (let suffix = 2; suffix < 10_000; suffix += 1) {
-    candidate = path.join(
-      libraryDir,
-      `${stem}-${operationSuffix || 'download'}-${suffix}${extension}`
-    );
-    if (!(await pathExists(candidate))) return candidate;
+  for (let suffix = 0; suffix < 10_000; suffix += 1) {
+    const candidate =
+      suffix === 0
+        ? path.join(libraryDir, sourceName)
+        : path.join(
+            libraryDir,
+            `${stem}-${operationSuffix || 'download'}${suffix === 1 ? '' : `-${suffix}`}${extension}`
+          );
+    const reservation = await tryReserveDestinationPath(partialDir, candidate);
+    if (reservation) return reservation;
   }
 
   throw new Error('Could not reserve a unique path for the downloaded video.');
@@ -222,7 +274,9 @@ export async function promoteUrlDownload(options: {
   sourcePath: string;
   libraryDir: string;
   operationId: string;
-  persistDestinationOwnership: (destinationPath: string) => Promise<void>;
+  persistDestinationOwnership: (
+    destinationPath: string
+  ) => Promise<UrlDownloadPromotionOwnership>;
   logger?: DownloadLibraryLogger;
 }): Promise<string> {
   const sourcePath = path.resolve(String(options.sourcePath || ''));
@@ -246,11 +300,6 @@ export async function promoteUrlDownload(options: {
   }
 
   await fsp.mkdir(libraryDir, { recursive: true });
-  const destinationPath = await chooseDestinationPath(
-    libraryDir,
-    sourcePath,
-    operationId
-  );
   const partialDir = getUrlDownloadPromotionPartialDir(libraryDir);
   const partialPath = path.join(
     partialDir,
@@ -258,6 +307,10 @@ export async function promoteUrlDownload(options: {
   );
   let movedSourceToPartial = false;
   let copiedSourceToPartial = false;
+  let reservation: DestinationReservation | null = null;
+  let ownership: UrlDownloadPromotionOwnership | null = null;
+  let ownershipAttempted = false;
+  let published = false;
 
   await fsp.mkdir(partialDir, { recursive: true });
   try {
@@ -272,21 +325,75 @@ export async function promoteUrlDownload(options: {
       copiedSourceToPartial = true;
     }
 
+    reservation = await reserveDestinationPath(
+      libraryDir,
+      sourcePath,
+      operationId,
+      partialDir
+    );
     // Persist the reclaim claim only after staging is complete, but before
     // the final path becomes visible. A crash can now leave a startup-cleaned
     // partial or a claimed final file, never an unclaimed persistent file.
-    await options.persistDestinationOwnership(destinationPath);
-    await fsp.rename(partialPath, destinationPath);
+    ownershipAttempted = true;
+    ownership = await options.persistDestinationOwnership(
+      reservation.destinationPath
+    );
+    if (!ownership || typeof ownership.rollback !== 'function') {
+      throw new Error(
+        'Persistent download ownership must provide caller-scoped rollback.'
+      );
+    }
+    // The reservation serializes app promotions. link() is the publication
+    // boundary: it is atomic on the library filesystem and fails with EEXIST
+    // instead of replacing a path created by any outside actor.
+    await fsp.link(partialPath, reservation.destinationPath);
+    published = true;
   } catch (error) {
+    let ownershipRolledBack = false;
+    if (ownership && !published) {
+      try {
+        await ownership.rollback();
+        ownershipRolledBack = true;
+      } catch (rollbackError) {
+        options.logger?.warn?.(
+          '[url-download-library] Failed to roll back unpublished destination ownership; retaining its hidden reservation for recovery.',
+          rollbackError
+        );
+      }
+    }
+    if (reservation && (!ownershipAttempted || ownershipRolledBack)) {
+      await fsp
+        .rm(reservation.reservationPath, { force: true })
+        .catch(() => void 0);
+    }
     if (movedSourceToPartial) {
-      await fsp.rename(partialPath, sourcePath).catch(async () => {
-        await fsp.rm(partialPath, { force: true }).catch(() => void 0);
-      });
+      try {
+        await fsp.link(partialPath, sourcePath);
+        await fsp.rm(partialPath, { force: true });
+      } catch (restoreError) {
+        options.logger?.warn?.(
+          `[url-download-library] Failed to restore the staged source without replacing a newer scratch file; retaining the hidden partial: ${partialPath}`,
+          restoreError
+        );
+      }
     } else {
       await fsp.rm(partialPath, { force: true }).catch(() => void 0);
     }
     throw error;
   }
+
+  await fsp.rm(partialPath, { force: true }).catch(error => {
+    options.logger?.warn?.(
+      `[url-download-library] Published download retained a cleanup partial: ${partialPath}`,
+      error
+    );
+  });
+  await fsp.rm(reservation!.reservationPath, { force: true }).catch(error => {
+    options.logger?.warn?.(
+      `[url-download-library] Published download retained a destination reservation: ${reservation!.reservationPath}`,
+      error
+    );
+  });
 
   if (copiedSourceToPartial) {
     try {
@@ -300,7 +407,7 @@ export async function promoteUrlDownload(options: {
   }
 
   options.logger?.info?.(
-    `[url-download-library] Promoted accepted URL download ${operationId}: ${sourcePath} -> ${destinationPath}`
+    `[url-download-library] Promoted accepted URL download ${operationId}: ${sourcePath} -> ${reservation!.destinationPath}`
   );
-  return destinationPath;
+  return reservation!.destinationPath;
 }

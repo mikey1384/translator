@@ -1,7 +1,9 @@
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import type {
   VideoSuggestionDownloadHistoryItem,
   VideoSuggestionDownloadHistoryMutation,
+  VideoSuggestionDownloadHistoryMutationResult,
 } from '@shared-types/app';
 import {
   sanitizeVideoSuggestionHistoryPath,
@@ -18,6 +20,32 @@ const PROMOTED_FILE_COMMIT_GRACE_MS = 5 * 60_000;
 type PendingReclaimEntry = {
   filePath: string;
   notBefore: number;
+  ownerToken?: string;
+};
+
+export type TrackedPromotedFileOwnership = {
+  rollback: () => Promise<void>;
+};
+
+type ExplicitDeletionOperation = Extract<
+  VideoSuggestionDownloadHistoryMutation,
+  { type: 'delete-file' | 'delete-file-and-history' }
+>['type'];
+
+type ExplicitDeletionOutcome = NonNullable<
+  VideoSuggestionDownloadHistoryMutationResult['deletion']
+>;
+
+type ExplicitDeletionHistoryState =
+  | { state: 'pending'; itemIndex: number }
+  | { state: 'committed' }
+  | { state: 'conflict' };
+
+export type PendingVideoSuggestionFileDeletionIntent = {
+  version: 1;
+  operation: ExplicitDeletionOperation;
+  itemId: string;
+  filePath: string;
 };
 
 // Upserts whose displaced entries are still restorable by a rollback. Bounded
@@ -29,12 +57,19 @@ export type DownloadHistoryPersistence = {
   saveHistory: (items: VideoSuggestionDownloadHistoryItem[]) => void;
   loadPendingReclaims: () => unknown;
   savePendingReclaims: (paths: string[]) => void;
+  loadPendingFileDeletions: () => unknown;
+  savePendingFileDeletions: (
+    intents: PendingVideoSuggestionFileDeletionIntent[]
+  ) => void;
 };
 
 export type DownloadHistoryManagerOptions = {
   persistence: DownloadHistoryPersistence;
   isManagedLibraryPath: (filePath: string) => boolean;
   reclaimPaths: (filePaths: string[]) => Promise<string[]>;
+  deleteManagedFile?: (
+    filePath: string
+  ) => Promise<'deleted' | 'already_absent'>;
   onMaintenanceError?: (error: unknown) => void;
   /** Test seam — production uses PROMOTED_FILE_COMMIT_GRACE_MS. */
   commitGraceMs?: number;
@@ -96,6 +131,64 @@ function sanitizeHistory(items: unknown): VideoSuggestionDownloadHistoryItem[] {
     .slice(0, MAX_HISTORY_ITEMS);
 }
 
+function historiesMatch(
+  left: VideoSuggestionDownloadHistoryItem[],
+  right: VideoSuggestionDownloadHistoryItem[]
+): boolean {
+  return (
+    JSON.stringify(sanitizeHistory(left)) ===
+    JSON.stringify(sanitizeHistory(right))
+  );
+}
+
+function sanitizeDeletionIntent(
+  value: unknown,
+  isManagedLibraryPath: (filePath: string) => boolean
+): PendingVideoSuggestionFileDeletionIntent | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Partial<PendingVideoSuggestionFileDeletionIntent>;
+  const operation = raw.operation;
+  const itemId = String(raw.itemId || '').trim();
+  const filePath = sanitizeVideoSuggestionHistoryPath(raw.filePath);
+  if (
+    raw.version !== 1 ||
+    (operation !== 'delete-file' && operation !== 'delete-file-and-history') ||
+    !itemId ||
+    !filePath ||
+    !normalizePath(filePath) ||
+    !isManagedLibraryPath(filePath)
+  ) {
+    return null;
+  }
+  return { version: 1, operation, itemId, filePath };
+}
+
+function sanitizeDeletionIntents(
+  values: unknown,
+  isManagedLibraryPath: (filePath: string) => boolean
+): PendingVideoSuggestionFileDeletionIntent[] {
+  if (!Array.isArray(values)) return [];
+  const seen = new Set<string>();
+  const intents: PendingVideoSuggestionFileDeletionIntent[] = [];
+  for (const value of values) {
+    const intent = sanitizeDeletionIntent(value, isManagedLibraryPath);
+    if (!intent) continue;
+    const key = `${intent.operation}\u0000${intent.itemId}\u0000${normalizePath(intent.filePath)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    intents.push(intent);
+    if (intents.length >= 8) break;
+  }
+  return intents;
+}
+
+function deletionIntentsMatch(
+  left: PendingVideoSuggestionFileDeletionIntent[],
+  right: PendingVideoSuggestionFileDeletionIntent[]
+): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 function mergeHistoryItem(
   items: VideoSuggestionDownloadHistoryItem[],
   incomingValue: unknown
@@ -136,10 +229,14 @@ export class VideoSuggestionDownloadHistoryManager {
   private readonly persistence: DownloadHistoryPersistence;
   private readonly isManagedLibraryPath: (filePath: string) => boolean;
   private readonly reclaimPaths: (filePaths: string[]) => Promise<string[]>;
+  private readonly deleteManagedFile: (
+    filePath: string
+  ) => Promise<'deleted' | 'already_absent'>;
   private readonly onMaintenanceError?: (error: unknown) => void;
   private history: VideoSuggestionDownloadHistoryItem[] | null = null;
   private readonly commitGraceMs: number;
   private pendingReclaims = new Map<string, PendingReclaimEntry>();
+  private pendingFileDeletions: PendingVideoSuggestionFileDeletionIntent[] = [];
   private mountedPathsByRenderer = new Map<number, Set<string>>();
   private displacedByUpsertId = new Map<
     string,
@@ -153,6 +250,18 @@ export class VideoSuggestionDownloadHistoryManager {
     this.persistence = options.persistence;
     this.isManagedLibraryPath = options.isManagedLibraryPath;
     this.reclaimPaths = options.reclaimPaths;
+    this.deleteManagedFile =
+      options.deleteManagedFile ??
+      (async filePath => {
+        const reclaimed = await this.reclaimPaths([filePath]);
+        const key = normalizePath(filePath);
+        if (!reclaimed.some(candidate => normalizePath(candidate) === key)) {
+          throw new Error('The managed download was not reclaimed.');
+        }
+        // Legacy/test reclaim callbacks do not distinguish an unlink from an
+        // already-absent path. Production supplies the categorical callback.
+        return 'deleted';
+      });
     this.onMaintenanceError = options.onMaintenanceError;
     this.commitGraceMs = options.commitGraceMs ?? PROMOTED_FILE_COMMIT_GRACE_MS;
   }
@@ -163,12 +272,38 @@ export class VideoSuggestionDownloadHistoryManager {
     seedItems?: VideoSuggestionDownloadHistoryItem[];
     mountedPaths?: string[];
   }): Promise<VideoSuggestionDownloadHistoryItem[]> {
+    return this.mutateDetailed(options).then(result => {
+      if (!result.success) {
+        throw new Error(
+          result.error || 'Persistent download history could not be updated'
+        );
+      }
+      return result.items;
+    });
+  }
+
+  mutateDetailed(options: {
+    rendererId: number;
+    mutation: VideoSuggestionDownloadHistoryMutation;
+    seedItems?: VideoSuggestionDownloadHistoryItem[];
+    mountedPaths?: string[];
+  }): Promise<VideoSuggestionDownloadHistoryMutationResult> {
     return this.serialized(async () => {
       this.ensureLoaded(options.seedItems);
       this.setMountedPathsInternal(
         options.rendererId,
         options.mountedPaths || []
       );
+      const recovery = await this.recoverPendingFileDeletions();
+      if (recovery && !recovery.success) return recovery;
+
+      if (
+        options.mutation.type === 'delete-file' ||
+        options.mutation.type === 'delete-file-and-history'
+      ) {
+        return this.beginExplicitFileDeletion(options.mutation);
+      }
+
       const previous = this.history!;
       const next = this.applyMutation(previous, options.mutation);
       if (this.rememberDroppedManagedPaths(previous, next, options.mutation)) {
@@ -180,21 +315,31 @@ export class VideoSuggestionDownloadHistoryManager {
       this.persistence.saveHistory(next);
       this.history = next;
       await this.flushPendingReclaimsSafely();
-      return [...next];
+      return {
+        success: true,
+        items: [...next],
+        deletion: recovery?.deletion,
+      };
     });
   }
 
   setMountedPaths(rendererId: number, filePaths: string[]): Promise<void> {
     return this.serialized(async () => {
       this.setMountedPathsInternal(rendererId, filePaths);
-      if (this.history) await this.flushPendingReclaimsSafely();
+      if (this.history) {
+        await this.recoverPendingFileDeletions();
+        await this.flushPendingReclaimsSafely();
+      }
     });
   }
 
   releaseRenderer(rendererId: number): Promise<void> {
     return this.serialized(async () => {
       this.mountedPathsByRenderer.delete(rendererId);
-      if (this.history) await this.flushPendingReclaimsSafely();
+      if (this.history) {
+        await this.recoverPendingFileDeletions();
+        await this.flushPendingReclaimsSafely();
+      }
     });
   }
 
@@ -225,11 +370,16 @@ export class VideoSuggestionDownloadHistoryManager {
         loadedReclaims.set(key, { filePath, notBefore: 0 });
       }
     }
+    const loadedFileDeletions = sanitizeDeletionIntents(
+      this.persistence.loadPendingFileDeletions(),
+      this.isManagedLibraryPath
+    );
     // Commit only after every fallible load/save above has succeeded. A
     // transient persistence failure must leave the manager unloaded so the
     // next call retries, instead of marking it loaded with the persisted
     // reclaim queue silently dropped.
     this.history = history;
+    this.pendingFileDeletions = loadedFileDeletions;
     for (const [key, entry] of loadedReclaims) {
       if (!this.pendingReclaims.has(key)) {
         this.pendingReclaims.set(key, entry);
@@ -237,23 +387,66 @@ export class VideoSuggestionDownloadHistoryManager {
     }
   }
 
-  trackPromotedFile(filePath: string): Promise<void> {
+  trackPromotedFile(filePath: string): Promise<TrackedPromotedFileOwnership> {
     return this.serialized(async () => {
       this.ensureLoaded();
+      // A promotion can reuse the basename of a file that an interrupted
+      // explicit deletion already removed. Finish that durable intent while
+      // the destination is still only a hidden partial, or fail the promotion
+      // closed so recovery can never unlink a newly published replacement.
+      const recovery = await this.recoverPendingFileDeletions();
+      if (recovery && !recovery.success) {
+        throw new Error(
+          recovery.error || 'Pending file deletion could not be recovered'
+        );
+      }
       const sanitized = sanitizeVideoSuggestionHistoryPath(filePath);
       const key = normalizePath(sanitized);
-      if (!sanitized || !key || !this.isManagedLibraryPath(sanitized)) return;
+      if (!sanitized || !key || !this.isManagedLibraryPath(sanitized)) {
+        throw new Error('Promoted file is outside the managed library');
+      }
       // The file is owned on disk from this moment: if the renderer dies
       // before its history upsert commits, a later flush (or the next
       // session's restore) reclaims it. The grace window keeps a concurrent
       // tab's flush from deleting it while the commit is still in flight.
       const notBefore = Date.now() + this.commitGraceMs;
-      this.pendingReclaims.set(key, { filePath: sanitized, notBefore });
-      this.persistPendingReclaims();
+      const ownerToken = randomUUID();
+      const previous = this.pendingReclaims.get(key);
+      this.pendingReclaims.set(key, {
+        filePath: sanitized,
+        notBefore,
+        ownerToken,
+      });
+      try {
+        this.persistPendingReclaims();
+      } catch (error) {
+        if (previous) this.pendingReclaims.set(key, previous);
+        else this.pendingReclaims.delete(key);
+        throw error;
+      }
       // If the renderer dies without ever committing (or releasing a lease),
       // no mutation may arrive to flush this entry — make sure a flush runs
       // once the grace expires.
       this.scheduleGraceFlush(notBefore);
+      return {
+        rollback: () =>
+          this.serialized(async () => {
+            this.ensureLoaded();
+            const current = this.pendingReclaims.get(key);
+            if (current?.ownerToken !== ownerToken) return;
+            if (previous) this.pendingReclaims.set(key, previous);
+            else this.pendingReclaims.delete(key);
+            try {
+              this.persistPendingReclaims();
+            } catch (error) {
+              this.pendingReclaims.set(key, current);
+              throw error;
+            }
+            if (previous && previous.notBefore > Date.now()) {
+              this.scheduleGraceFlush(previous.notBefore);
+            }
+          }),
+      };
     });
   }
 
@@ -340,6 +533,316 @@ export class VideoSuggestionDownloadHistoryManager {
     }
   }
 
+  private async beginExplicitFileDeletion(
+    mutation: Extract<
+      VideoSuggestionDownloadHistoryMutation,
+      { type: 'delete-file' | 'delete-file-and-history' }
+    >
+  ): Promise<VideoSuggestionDownloadHistoryMutationResult> {
+    const operation = mutation.type;
+    const itemId = String(mutation.id || '').trim();
+    const expectedPath = sanitizeVideoSuggestionHistoryPath(
+      mutation.expectedLocalPath
+    );
+    const expectedKey = normalizePath(expectedPath);
+    const matchingIndexes = this.history!.map((item, index) =>
+      item.id === itemId ? index : -1
+    ).filter(index => index >= 0);
+    const itemIndex = matchingIndexes[0] ?? -1;
+    const filePath = sanitizeVideoSuggestionHistoryPath(
+      this.history![itemIndex]?.localPath
+    );
+    const fileKey = normalizePath(filePath);
+    const sharedPath = this.history!.some(
+      (item, index) =>
+        index !== itemIndex && normalizePath(item.localPath) === fileKey
+    );
+
+    if (
+      !itemId ||
+      matchingIndexes.length !== 1 ||
+      !filePath ||
+      !fileKey ||
+      !expectedKey ||
+      fileKey !== expectedKey ||
+      !this.isManagedLibraryPath(filePath) ||
+      sharedPath
+    ) {
+      return {
+        success: false,
+        items: [...this.history!],
+        deletion: {
+          operation,
+          diskOutcome: 'deferred',
+          historyOutcome: 'retained',
+          deferredReason: 'history_conflict',
+        },
+        error: '__i18n__:input.videoSuggestion.deleteLocalFileUnavailable',
+      };
+    }
+
+    if (this.isPathMounted(fileKey)) {
+      return {
+        success: false,
+        items: [...this.history!],
+        deletion: {
+          operation,
+          diskOutcome: 'deferred',
+          historyOutcome: 'retained',
+          deferredReason: 'mounted',
+        },
+        error: '__i18n__:input.videoSuggestion.deleteLocalFileInUse',
+      };
+    }
+
+    const intent: PendingVideoSuggestionFileDeletionIntent = {
+      version: 1,
+      operation,
+      itemId,
+      filePath,
+    };
+    const nextIntents = [...this.pendingFileDeletions, intent];
+    if (!this.persistFileDeletionIntentsVerified(nextIntents)) {
+      return {
+        success: false,
+        items: [...this.history!],
+        deletion: {
+          operation,
+          diskOutcome: 'deferred',
+          historyOutcome: 'retained',
+          deferredReason: 'intent_persistence_failed',
+        },
+        error: '__i18n__:input.videoSuggestion.deleteLocalFileFailed',
+      };
+    }
+    this.pendingFileDeletions = nextIntents;
+    return this.completeExplicitFileDeletion(intent, false);
+  }
+
+  private async recoverPendingFileDeletions(): Promise<
+    VideoSuggestionDownloadHistoryMutationResult | undefined
+  > {
+    let latest: VideoSuggestionDownloadHistoryMutationResult | undefined;
+    while (this.pendingFileDeletions.length > 0) {
+      const intent = this.pendingFileDeletions[0]!;
+      latest = await this.completeExplicitFileDeletion(intent, true);
+      if (!latest.success) return latest;
+    }
+    return latest;
+  }
+
+  private inspectExplicitDeletionHistory(
+    intent: PendingVideoSuggestionFileDeletionIntent
+  ): ExplicitDeletionHistoryState {
+    const key = normalizePath(intent.filePath);
+    const matchingIndexes = this.history!.map((item, index) =>
+      item.id === intent.itemId ? index : -1
+    ).filter(index => index >= 0);
+    if (!key || matchingIndexes.length > 1) return { state: 'conflict' };
+
+    if (matchingIndexes.length === 0) {
+      const shared = this.history!.some(
+        item => normalizePath(item.localPath) === key
+      );
+      return intent.operation === 'delete-file-and-history' && !shared
+        ? { state: 'committed' }
+        : { state: 'conflict' };
+    }
+
+    const itemIndex = matchingIndexes[0]!;
+    const itemPathKey = normalizePath(this.history![itemIndex]?.localPath);
+    const shared = this.history!.some(
+      (item, index) =>
+        index !== itemIndex && normalizePath(item.localPath) === key
+    );
+    if (shared) return { state: 'conflict' };
+    if (itemPathKey === key) return { state: 'pending', itemIndex };
+    if (intent.operation === 'delete-file' && !itemPathKey) {
+      return { state: 'committed' };
+    }
+    return { state: 'conflict' };
+  }
+
+  private async completeExplicitFileDeletion(
+    intent: PendingVideoSuggestionFileDeletionIntent,
+    recovered: boolean
+  ): Promise<VideoSuggestionDownloadHistoryMutationResult> {
+    const operation = intent.operation;
+    const key = normalizePath(intent.filePath);
+    const historyState = this.inspectExplicitDeletionHistory(intent);
+    if (historyState.state === 'conflict') {
+      return {
+        success: false,
+        items: [...this.history!],
+        deletion: {
+          operation,
+          diskOutcome: 'deferred',
+          historyOutcome: 'pending',
+          deferredReason: 'history_conflict',
+          recovered,
+        },
+        error: '__i18n__:input.videoSuggestion.deleteLocalFileUnavailable',
+      };
+    }
+    if (this.isPathMounted(key)) {
+      return {
+        success: false,
+        items: [...this.history!],
+        deletion: {
+          operation,
+          diskOutcome: 'deferred',
+          historyOutcome: 'pending',
+          deferredReason: 'mounted',
+          recovered,
+        },
+        error: '__i18n__:input.videoSuggestion.deleteLocalFileInUse',
+      };
+    }
+
+    let diskOutcome: ExplicitDeletionOutcome['diskOutcome'];
+    try {
+      diskOutcome = await this.deleteManagedFile(intent.filePath);
+    } catch (error) {
+      this.onMaintenanceError?.(error);
+      return {
+        success: false,
+        items: [...this.history!],
+        deletion: {
+          operation,
+          diskOutcome: 'failed',
+          historyOutcome: 'pending',
+          deferredReason: 'disk_reclaim_failed',
+          recovered,
+        },
+        error: '__i18n__:input.videoSuggestion.deleteLocalFileFailed',
+      };
+    }
+
+    if (historyState.state === 'pending') {
+      const next = [...this.history!];
+      if (operation === 'delete-file') {
+        const retainedItem = { ...next[historyState.itemIndex]! };
+        delete retainedItem.localPath;
+        next[historyState.itemIndex] = retainedItem;
+      } else {
+        next.splice(historyState.itemIndex, 1);
+      }
+      if (!this.persistHistoryVerified(next)) {
+        return {
+          success: false,
+          items: [...this.history!],
+          deletion: {
+            operation,
+            diskOutcome,
+            historyOutcome: 'pending',
+            deferredReason: 'history_persistence_failed',
+            recovered,
+          },
+          error: '__i18n__:input.videoSuggestion.deleteLocalFileHistoryPending',
+        };
+      }
+      this.history = next;
+    }
+
+    if (this.pendingReclaims.delete(key)) {
+      try {
+        this.persistPendingReclaims();
+      } catch (error) {
+        // A stale cleanup claim can safely retry: the explicit deletion is
+        // idempotent, and the history boundary is already committed.
+        this.onMaintenanceError?.(error);
+      }
+    }
+
+    const nextIntents = this.pendingFileDeletions.filter(
+      candidate => candidate !== intent
+    );
+    if (!this.persistFileDeletionIntentsVerified(nextIntents)) {
+      return {
+        success: false,
+        items: [...this.history!],
+        deletion: {
+          operation,
+          diskOutcome,
+          historyOutcome: operation === 'delete-file' ? 'retained' : 'removed',
+          deferredReason: 'intent_cleanup_failed',
+          recovered,
+        },
+        error: '__i18n__:input.videoSuggestion.deleteLocalFileHistoryPending',
+      };
+    }
+    this.pendingFileDeletions = nextIntents;
+
+    return {
+      success: true,
+      items: [...this.history!],
+      deletion: {
+        operation,
+        diskOutcome,
+        historyOutcome: operation === 'delete-file' ? 'retained' : 'removed',
+        recovered,
+      },
+    };
+  }
+
+  private persistHistoryVerified(
+    next: VideoSuggestionDownloadHistoryItem[]
+  ): boolean {
+    let failure: unknown;
+    try {
+      this.persistence.saveHistory(next);
+    } catch (error) {
+      failure = error;
+    }
+    try {
+      const stored = sanitizeHistory(this.persistence.loadHistory());
+      if (historiesMatch(stored, next)) {
+        if (failure) this.onMaintenanceError?.(failure);
+        return true;
+      }
+    } catch (error) {
+      failure = failure || error;
+    }
+    this.onMaintenanceError?.(
+      failure || new Error('Download history persistence did not round-trip.')
+    );
+    return false;
+  }
+
+  private persistFileDeletionIntentsVerified(
+    next: PendingVideoSuggestionFileDeletionIntent[]
+  ): boolean {
+    let failure: unknown;
+    try {
+      this.persistence.savePendingFileDeletions(next);
+    } catch (error) {
+      failure = error;
+    }
+    try {
+      const stored = sanitizeDeletionIntents(
+        this.persistence.loadPendingFileDeletions(),
+        this.isManagedLibraryPath
+      );
+      if (deletionIntentsMatch(stored, next)) {
+        if (failure) this.onMaintenanceError?.(failure);
+        return true;
+      }
+    } catch (error) {
+      failure = failure || error;
+    }
+    this.onMaintenanceError?.(
+      failure || new Error('File deletion intent did not round-trip.')
+    );
+    return false;
+  }
+
+  private isPathMounted(key: string): boolean {
+    for (const mountedPaths of this.mountedPathsByRenderer.values()) {
+      if (mountedPaths.has(key)) return true;
+    }
+    return false;
+  }
+
   private setMountedPathsInternal(
     rendererId: number,
     filePaths: string[]
@@ -358,6 +861,15 @@ export class VideoSuggestionDownloadHistoryManager {
     next: VideoSuggestionDownloadHistoryItem[],
     mutation: VideoSuggestionDownloadHistoryMutation
   ): boolean {
+    // Explicit file deletion already synchronously reclaimed the exact
+    // authoritative path before the history item was detached from it.
+    if (
+      mutation.type === 'delete-file' ||
+      mutation.type === 'delete-file-and-history'
+    ) {
+      return false;
+    }
+
     let changed = false;
     const retained = new Set(
       next.map(item => normalizePath(item.localPath)).filter(Boolean)

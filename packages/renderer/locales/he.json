@@ -333,7 +333,16 @@
         "answerer": "עיבוד שאילתה",
         "planner": "בניית חיפוש",
         "retrieval": "טעינת תוצאות"
-      }
+      },
+      "deleteLocalFile": "מחיקת הקובץ מהמכשיר",
+      "deleteLocalFileConfirm": "למחוק לצמיתות את הקובץ שהורד מהמכשיר? רשומת ההיסטוריה והקישור למקור יישארו.",
+      "deleteLocalFileFailed": "לא ניתן למחוק את הקובץ שהורד מהמכשיר.",
+      "deleteLocalFileUnavailable": "להורדה הזו כבר אין קובץ שניתן למחוק בספריית היישום.",
+      "deleteLocalFileInUse": "הסרטון פתוח כעת. יש לפתוח סרטון אחר לפני המחיקה.",
+      "deleteFileAndHistory": "מחיקת הקובץ וההיסטוריה",
+      "deleteFileAndHistoryConfirm": "למחוק לצמיתות את הקובץ שהורד ואת רשומת ההיסטוריה שלו? לא ניתן לבטל פעולה זו.",
+      "removeFromHistory": "הסרה מההיסטוריה",
+      "removeFromHistoryConfirm": "להסיר פריט זה מהיסטוריית ההורדות? קבצים שנשמרו מחוץ לספריית היישום יישארו במכשיר."
     },
     "downloadAndTranslate": "הורד ותרגם",
     "downloadAndTranscribe": "הורד ותמלל",

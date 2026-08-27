@@ -333,7 +333,16 @@
         "answerer": "Verwerk navraag",
         "planner": "Bou soektog",
         "retrieval": "Laai resultate"
-      }
+      },
+      "deleteLocalFile": "Vee lêer van toestel uit",
+      "deleteLocalFileConfirm": "Vee hierdie afgelaaide lêer permanent van hierdie toestel uit? Die geskiedenisinskrywing en bronskakel sal behoue bly.",
+      "deleteLocalFileFailed": "Die afgelaaide lêer kon nie van hierdie toestel uitgevee word nie.",
+      "deleteLocalFileUnavailable": "Hierdie aflaai het nie meer ’n uitveebare lêer in die toepassingbiblioteek nie.",
+      "deleteLocalFileInUse": "Hierdie video is tans oop. Maak ’n ander video oop voordat jy dit uitvee.",
+      "deleteFileAndHistory": "Vee lêer en geskiedenis uit",
+      "deleteFileAndHistoryConfirm": "Vee hierdie afgelaaide lêer permanent uit en verwyder die geskiedenisinskrywing? Dit kan nie ongedaan gemaak word nie.",
+      "removeFromHistory": "Verwyder uit geskiedenis",
+      "removeFromHistoryConfirm": "Verwyder hierdie item uit die aflaaigeskiedenis? Enige lêer wat buite die toepassingbiblioteek gestoor is, sal op jou toestel bly."
     },
     "downloadAndTranslate": "Laai af en vertaal",
     "downloadAndTranscribe": "Laai af en transkribeer",

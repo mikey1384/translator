@@ -333,7 +333,16 @@
         "answerer": "پردازش پرس و جو",
         "planner": "ساخت جستجو",
         "retrieval": "بارگذاری نتایج"
-      }
+      },
+      "deleteLocalFile": "حذف فایل از دستگاه",
+      "deleteLocalFileConfirm": "این فایل دانلودشده برای همیشه از این دستگاه حذف شود؟ ورودی سابقه و پیوند منبع باقی می‌مانند.",
+      "deleteLocalFileFailed": "فایل دانلودشده از این دستگاه حذف نشد.",
+      "deleteLocalFileUnavailable": "این دانلود دیگر فایل قابل حذفی در کتابخانه برنامه ندارد.",
+      "deleteLocalFileInUse": "این ویدیو اکنون باز است. پیش از حذف، ویدیوی دیگری را باز کنید.",
+      "deleteFileAndHistory": "حذف فایل و سابقه",
+      "deleteFileAndHistoryConfirm": "این فایل دانلودشده و ورودی سابقه آن برای همیشه حذف شوند؟ این کار قابل بازگشت نیست.",
+      "removeFromHistory": "حذف از سابقه",
+      "removeFromHistoryConfirm": "این مورد از سابقه دانلود حذف شود؟ فایل‌های ذخیره‌شده بیرون از کتابخانه برنامه روی دستگاه باقی می‌مانند."
     },
     "downloadAndTranslate": "دانلود و ترجمه",
     "downloadAndTranscribe": "دانلود و رونویسی",

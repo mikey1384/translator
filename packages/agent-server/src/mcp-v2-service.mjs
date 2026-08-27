@@ -2,13 +2,26 @@ import { createHash, randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { constants as fsConstants, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { canonicalJson } from './canonical-json.mjs';
+import { canonicalJson, canonicalJsonHash } from './canonical-json.mjs';
 import { buildSrt, parseSrtWithDiagnostics } from './srt.mjs';
 import {
   DEFAULT_SUBTITLE_ISSUE_DETAIL_LIMIT,
   validateSubtitleSegments,
 } from './subtitle-quality.mjs';
 import { createJobOwnerLease, probeJobOwnerLease } from './job-owner-lease.mjs';
+import {
+  RENDER_CHECKPOINT_FORK_STAGES,
+  RENDER_CHECKPOINT_FORK_VERSION,
+  SUBTITLE_RENDER_SELECTION_BINDING_VERSION,
+  buildRenderCheckpointForkPlan,
+  creditLedgerCheckpointSha256,
+  hasUnstartedRenderCheckpoint,
+  persistentJobCheckpointSha256,
+  renderCheckpointForkPreflightDigest,
+  stablePlanForEnvironment,
+  translationSessionCheckpointSha256,
+  validationCheckpointSha256,
+} from './render-checkpoint-recovery.mjs';
 import { parseToolArguments } from './tool-schema-validator.mjs';
 import {
   BUILTIN_PROJECT_PROFILES,
@@ -256,6 +269,7 @@ export function resolvePlannedSubtitleRenderSpec({
     font_asset: SUBTITLE_FONT_ASSET,
     scale_rule: 'height_ratio_720_clamped_0.5_2',
     schema_version: SUBTITLE_RENDER_SPEC_VERSION,
+    selection_binding_version: SUBTITLE_RENDER_SELECTION_BINDING_VERSION,
     field_sources: {
       display_mode:
         translationProvider === 'none'
@@ -870,6 +884,175 @@ function plannedVideoPath(job, plan, { preferDubbed = false } = {}) {
         isVideoArtifact(artifact)
     );
   return prepared?.path || plan?.source?.path || null;
+}
+
+function plannedRenderSourceCheckpoint(job, plan) {
+  const selectedPath = plannedVideoPath(job, plan, {
+    preferDubbed: plan?.options?.include_dubbing === true,
+  });
+  if (!selectedPath) {
+    throw new Error(
+      'The canceled job has no durable video checkpoint for render recovery.'
+    );
+  }
+  const resolvedPath = path.resolve(selectedPath);
+  const identity = normalizedPathIdentity(resolvedPath);
+  const artifact = (job?.artifacts || []).find(
+    candidate =>
+      normalizedPathIdentity(String(candidate?.path || '')) === identity
+  );
+  const plannedSourcePath = String(plan?.source?.path || '').trim();
+  const isPlannedSource =
+    plannedSourcePath && normalizedPathIdentity(plannedSourcePath) === identity;
+  const sha256 = String(
+    artifact?.checkpoint_sha256 ||
+      artifact?.sha256 ||
+      (isPlannedSource ? plan?.source?.sha256 : '') ||
+      ''
+  );
+  const bytes = Number(
+    artifact?.checkpoint_bytes ??
+      artifact?.bytes ??
+      (isPlannedSource ? plan?.source?.bytes : NaN)
+  );
+  if (
+    !/^[a-f0-9]{64}$/.test(sha256) ||
+    !Number.isSafeInteger(bytes) ||
+    bytes <= 0
+  ) {
+    throw new Error(
+      'The canceled job render source has no complete SHA-256/byte checkpoint.'
+    );
+  }
+  return {
+    path: resolvedPath,
+    stage: artifact?.stage || 'recovery_source',
+    kind: artifact?.kind || 'video',
+    sha256,
+    bytes,
+    checkpoint_captured_at: artifact?.checkpoint_captured_at || null,
+  };
+}
+
+function translationAcceptanceSummary(session) {
+  const segments = Array.isArray(session?.segments) ? session.segments : [];
+  const accepted = segments.filter(
+    segment =>
+      String(segment?.translation || '').trim() &&
+      ['translated', 'reviewed'].includes(String(segment?.status || ''))
+  ).length;
+  const needsCorrection = segments.filter(
+    segment => segment?.status === 'needs_correction'
+  ).length;
+  return {
+    total_segments: segments.length,
+    accepted_segments: accepted,
+    pending_segments: segments.length - accepted - needsCorrection,
+    needs_correction_segments: needsCorrection,
+  };
+}
+
+function renderRecoveryStateSnapshot(store, jobId) {
+  const job = store.requireJob(jobId);
+  const plan = store.getPlan(job.plan_hash);
+  const session = store.getTranslationSession(jobId);
+  return {
+    job,
+    plan,
+    session,
+    total_changes: store.totalChanges(),
+    job_sha256: persistentJobCheckpointSha256(job),
+    plan_sha256: canonicalJsonHash(plan),
+    session_sha256: session
+      ? translationSessionCheckpointSha256(session)
+      : null,
+    session_row_sha256: canonicalJsonHash(session),
+    validation_sha256: validationCheckpointSha256(job.validation),
+    credit_ledger_sha256: creditLedgerCheckpointSha256(job.credit_usage),
+  };
+}
+
+function renderInvariantOutputSnapshot(outputs) {
+  const stable = clone(outputs || {});
+  delete stable.subtitle_style;
+  delete stable.subtitle_font_size;
+  if (isObject(stable.subtitle_render_spec)) {
+    delete stable.subtitle_render_spec.style;
+    delete stable.subtitle_render_spec.base_font_size_px;
+    delete stable.subtitle_render_spec.output_font_size_px;
+    delete stable.subtitle_render_spec.selection_binding_version;
+    if (isObject(stable.subtitle_render_spec.field_sources)) {
+      delete stable.subtitle_render_spec.field_sources.style;
+      delete stable.subtitle_render_spec.field_sources.base_font_size_px;
+    }
+  }
+  return stable;
+}
+
+async function inspectRenderCheckpointForkOutputs(plan, renderSourcePath) {
+  const outputDirectory = String(plan?.outputs?.output_directory || '').trim();
+  if (!outputDirectory) {
+    throw new Error('The recovery plan has no output directory.');
+  }
+  const resolvedDirectory = await fs.realpath(outputDirectory);
+  const directoryStat = await fs.stat(resolvedDirectory);
+  if (!directoryStat.isDirectory()) {
+    throw new Error('The recovery output destination is not a directory.');
+  }
+  await fs.access(resolvedDirectory, fsConstants.W_OK);
+  const overlaps = await findOutputInputOverlaps(
+    plannedOutputPaths(plan),
+    plannedInputPaths(plan, [renderSourcePath])
+  );
+  const existingFiles = [];
+  const existingPreviewFiles = [];
+  for (const plannedPath of plannedOutputPaths(plan)) {
+    try {
+      const stat = await fs.lstat(plannedPath);
+      if (stat) {
+        if (/-preview-[123]\.png$/i.test(plannedPath)) {
+          existingPreviewFiles.push(path.resolve(plannedPath));
+        } else {
+          existingFiles.push(path.resolve(plannedPath));
+        }
+      }
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+  let availableBytes = null;
+  try {
+    const filesystem = await fs.statfs(resolvedDirectory);
+    availableBytes = Number(filesystem.bavail) * Number(filesystem.bsize);
+  } catch {
+    // Some supported filesystems do not expose statfs. The preflight reports
+    // that disk capacity is unverified rather than manufacturing a value.
+  }
+  const requiredBytes = Number(
+    plan?.estimated_disk_usage?.peak_additional_bytes || 0
+  );
+  const normalizedAvailableBytes =
+    Number.isFinite(availableBytes) && availableBytes >= 0
+      ? availableBytes
+      : null;
+  const normalizedRequiredBytes =
+    Number.isFinite(requiredBytes) && requiredBytes > 0
+      ? Math.ceil(requiredBytes * 1.2)
+      : null;
+  return {
+    directory: resolvedDirectory,
+    overwrite: plan?.outputs?.overwrite === true,
+    planned_file_count: plannedOutputPaths(plan).length,
+    existing_files: existingFiles,
+    existing_preview_files: existingPreviewFiles,
+    input_overlaps: overlaps,
+    available_bytes: normalizedAvailableBytes,
+    required_bytes: normalizedRequiredBytes,
+    capacity_sufficient:
+      normalizedAvailableBytes !== null &&
+      (normalizedRequiredBytes === null ||
+        normalizedAvailableBytes >= normalizedRequiredBytes),
+  };
 }
 
 function stageFence(stage) {
@@ -1762,6 +1945,10 @@ export class McpV2Service {
         return this.probeSource(args.source);
       case 'plan_job':
         return this.planJob(args);
+      case 'preflight_render_checkpoint_fork':
+        return this.preflightRenderCheckpointFork(args);
+      case 'create_render_checkpoint_fork':
+        return this.createRenderCheckpointFork(args);
       case 'create_job':
         return this.createJob(args);
       case 'get_job':
@@ -1855,6 +2042,17 @@ export class McpV2Service {
           appBindingProtocol === SOURCE_BINDING_PROTOCOL_VERSION,
         start_states: ['preparing', 'mounted'],
         unverified_workspace_redaction: true,
+      },
+      render_checkpoint_recovery: {
+        schema_version: RENDER_CHECKPOINT_FORK_VERSION,
+        pure_preflight: true,
+        preflight_persists_state: false,
+        fork_starts_rendering: false,
+        fork_requires_explicit_render_outputs: true,
+        preserves_translation_checkpoint: true,
+        preserves_validation_checkpoint: true,
+        paid_stage_replay_allowed: false,
+        allowed_stages: RENDER_CHECKPOINT_FORK_STAGES.map(stage => stage.id),
       },
       source_types: ['url', 'local_file', 'library_item', 'transcript', 'mock'],
       languages: {
@@ -2899,6 +3097,486 @@ export class McpV2Service {
       no_cost_plan: true,
     };
     return this.store.putPlan({ request, plan });
+  }
+
+  async evaluateRenderCheckpointFork(args) {
+    const expected = args.expected || {};
+    const blockers = [];
+    const block = (code, message) => blockers.push({ code, message });
+    const before = renderRecoveryStateSnapshot(this.store, args.source_job_id);
+    const sourceJob = before.job;
+    const sourcePlan = before.plan;
+    const sourceSession = before.session;
+    const sourceKey = String(sourcePlan?.source?.source_key || '');
+    const acceptance = translationAcceptanceSummary(sourceSession);
+    const validationStage = sourceJob.stages?.find(
+      stage => stage.id === 'translation_validation'
+    );
+    const renderStage = sourceJob.stages?.find(
+      stage => stage.id === 'render_outputs'
+    );
+    const activeClaim = this.store.getJobActivityClaim(sourceJob.job_id);
+
+    if (sourceJob.status !== 'cancelled') {
+      block(
+        'SOURCE_JOB_NOT_CANCELLED',
+        'Render recovery requires an immutable canceled source job.'
+      );
+    }
+    if (activeClaim) {
+      block(
+        'SOURCE_JOB_ACTIVITY_PRESENT',
+        'The canceled source job still has an activity claim.'
+      );
+    }
+    if (!sourcePlan) {
+      block('SOURCE_PLAN_UNAVAILABLE', 'The source job plan is unavailable.');
+    }
+    if (!sourceSession) {
+      block(
+        'TRANSLATION_CHECKPOINT_UNAVAILABLE',
+        'The source job has no persistent translation checkpoint.'
+      );
+    }
+    if (
+      !validationStage ||
+      validationStage.status !== 'completed' ||
+      sourceJob.validation?.passed !== true ||
+      validationCheckpointSha256(validationStage?.result) !==
+        before.validation_sha256
+    ) {
+      block(
+        'VALIDATION_CHECKPOINT_INCOMPLETE',
+        'The source job has no completed passing translation validation checkpoint.'
+      );
+    }
+    if (!renderStage) {
+      block(
+        'RENDER_CHECKPOINT_UNAVAILABLE',
+        'The source job has no planned render_outputs checkpoint.'
+      );
+    } else if (!hasUnstartedRenderCheckpoint(sourceJob)) {
+      block(
+        'RENDER_CHECKPOINT_ALREADY_ATTEMPTED',
+        'The source render checkpoint has already started or completed; automatic fork recovery is refused.'
+      );
+    }
+    if (
+      acceptance.accepted_segments !== acceptance.total_segments ||
+      acceptance.pending_segments !== 0 ||
+      acceptance.needs_correction_segments !== 0
+    ) {
+      block(
+        'TRANSLATIONS_NOT_FULLY_ACCEPTED',
+        'Every source checkpoint segment must have an accepted translation with no correction marker.'
+      );
+    }
+
+    if (sourceKey !== expected.source_key) {
+      block(
+        'SOURCE_KEY_MISMATCH',
+        'The source key does not match the expected immutable source.'
+      );
+    }
+    if (before.session_sha256 !== expected.translation_session_sha256) {
+      block(
+        'TRANSLATION_SESSION_MISMATCH',
+        'The translation session digest does not match the expected checkpoint.'
+      );
+    }
+    if (
+      acceptance.accepted_segments !== Number(expected.accepted_segment_count)
+    ) {
+      block(
+        'ACCEPTED_SEGMENT_COUNT_MISMATCH',
+        'The accepted translation count does not match the expected checkpoint.'
+      );
+    }
+    if (
+      String(sourceSession?.target_language || '') !==
+      String(expected.target_language || '')
+    ) {
+      block(
+        'TARGET_LANGUAGE_MISMATCH',
+        'The translation checkpoint target language does not match.'
+      );
+    }
+    if (before.validation_sha256 !== expected.validation_sha256) {
+      block(
+        'VALIDATION_DIGEST_MISMATCH',
+        'The completed validation digest does not match the expected checkpoint.'
+      );
+    }
+    if (before.credit_ledger_sha256 !== expected.credit_ledger_sha256) {
+      block(
+        'CREDIT_LEDGER_DIGEST_MISMATCH',
+        'The credit ledger digest does not match the expected checkpoint.'
+      );
+    }
+    const ledgerField = String(expected.credit_ledger_value_field || '');
+    const ledgerValue = Number(sourceJob.credit_usage?.[ledgerField]);
+    if (
+      !Number.isSafeInteger(ledgerValue) ||
+      ledgerValue !== Number(expected.credit_ledger_value)
+    ) {
+      block(
+        'CREDIT_LEDGER_VALUE_MISMATCH',
+        'The named credit ledger value does not match the expected checkpoint.'
+      );
+    }
+
+    let sourceCheckpoint = null;
+    let observedSourceFingerprint = null;
+    try {
+      sourceCheckpoint = plannedRenderSourceCheckpoint(sourceJob, sourcePlan);
+      observedSourceFingerprint = await fingerprintRegularFile(
+        sourceCheckpoint.path
+      );
+      if (
+        sourceCheckpoint.sha256 !== observedSourceFingerprint.sha256 ||
+        sourceCheckpoint.bytes !== observedSourceFingerprint.bytes
+      ) {
+        block(
+          'SOURCE_CHECKPOINT_CHANGED',
+          'The render source bytes no longer match the canceled job checkpoint.'
+        );
+      }
+      if (
+        sourceCheckpoint.sha256 !== expected.source_checkpoint_sha256 ||
+        sourceCheckpoint.bytes !== Number(expected.source_checkpoint_bytes)
+      ) {
+        block(
+          'EXPECTED_SOURCE_CHECKPOINT_MISMATCH',
+          'The render source checkpoint does not match the expected SHA-256 and byte count.'
+        );
+      }
+    } catch (error) {
+      block(
+        'SOURCE_CHECKPOINT_UNAVAILABLE',
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+
+    let recomputedValidation = null;
+    let recomputedValidationSha256 = null;
+    if (sourcePlan && sourceSession) {
+      try {
+        recomputedValidation = await this.runValidation(sourceJob.job_id);
+        recomputedValidationSha256 =
+          validationCheckpointSha256(recomputedValidation);
+        if (
+          recomputedValidation.passed !== true ||
+          recomputedValidationSha256 !== before.validation_sha256
+        ) {
+          block(
+            'VALIDATION_RECOMPUTATION_MISMATCH',
+            'Current deterministic validation no longer reproduces the completed validation receipt.'
+          );
+        }
+      } catch (error) {
+        block(
+          'VALIDATION_RECOMPUTATION_FAILED',
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    let candidatePlan = null;
+    let outputInspection = null;
+    if (sourcePlan && sourceCheckpoint) {
+      try {
+        const candidate = buildRenderCheckpointForkPlan({
+          sourcePlan,
+          sourceJobId: sourceJob.job_id,
+          sourceJobSha256: before.job_sha256,
+          sourceCheckpoint,
+          translationSessionSha256: before.session_sha256,
+          validationSha256: before.validation_sha256,
+          creditLedgerSha256: before.credit_ledger_sha256,
+          renderOverride: args.render_override,
+        });
+        candidatePlan = stablePlanForEnvironment(
+          candidate,
+          this.environment,
+          MCP_V2_SCHEMA_VERSION
+        );
+        const sourceOutputInvariantSha256 = canonicalJsonHash(
+          renderInvariantOutputSnapshot(sourcePlan.outputs)
+        );
+        const candidateOutputInvariantSha256 = canonicalJsonHash(
+          renderInvariantOutputSnapshot(candidatePlan.outputs)
+        );
+        if (sourceOutputInvariantSha256 !== candidateOutputInvariantSha256) {
+          block(
+            'NON_RENDER_OUTPUT_DRIFT',
+            'The candidate fork changed an output field outside the subtitle style/font override.'
+          );
+        }
+        const stageIds = candidatePlan.stages.map(stage => stage.id);
+        if (
+          canonicalJson(stageIds) !==
+            canonicalJson(
+              RENDER_CHECKPOINT_FORK_STAGES.map(stage => stage.id)
+            ) ||
+          stageIds.some(stageId =>
+            [
+              'load_transcript',
+              'transcription',
+              'translation_external',
+              'translation_app',
+              'translation_validation',
+              'summary',
+              'dubbing',
+            ].includes(stageId)
+          ) ||
+          Number(candidatePlan.credit_usage?.total_stage5_credits) !== 0
+        ) {
+          block(
+            'UNSAFE_FORK_STAGE_GRAPH',
+            'The candidate fork contains a disallowed or credit-bearing stage.'
+          );
+        }
+        outputInspection = await inspectRenderCheckpointForkOutputs(
+          candidatePlan,
+          sourceCheckpoint.path
+        );
+        if (outputInspection.overwrite) {
+          block(
+            'OUTPUT_OVERWRITE_ENABLED',
+            'Render recovery never inherits overwrite=true.'
+          );
+        }
+        if (outputInspection.existing_files.length > 0) {
+          block(
+            'PLANNED_OUTPUT_EXISTS',
+            'One or more non-preview recovery outputs already exist.'
+          );
+        }
+        if (outputInspection.input_overlaps.length > 0) {
+          block(
+            'OUTPUT_OVERLAPS_INPUT',
+            'A planned recovery output overlaps an immutable workflow input.'
+          );
+        }
+        if (outputInspection.available_bytes === null) {
+          block(
+            'OUTPUT_CAPACITY_UNVERIFIED',
+            'The output filesystem did not expose available capacity.'
+          );
+        } else if (
+          outputInspection.required_bytes !== null &&
+          outputInspection.available_bytes < outputInspection.required_bytes
+        ) {
+          block(
+            'INSUFFICIENT_OUTPUT_DISK_SPACE',
+            'The output filesystem lacks the planned recovery working space.'
+          );
+        }
+      } catch (error) {
+        block(
+          'CANDIDATE_FORK_INVALID',
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    const after = renderRecoveryStateSnapshot(this.store, args.source_job_id);
+    const targetStateUnchanged =
+      after.job_sha256 === before.job_sha256 &&
+      after.plan_sha256 === before.plan_sha256 &&
+      after.session_sha256 === before.session_sha256 &&
+      after.session_row_sha256 === before.session_row_sha256 &&
+      after.validation_sha256 === before.validation_sha256 &&
+      after.credit_ledger_sha256 === before.credit_ledger_sha256;
+    const writes = after.total_changes - before.total_changes;
+    if (!targetStateUnchanged || writes !== 0) {
+      block(
+        'STORE_CHANGED_DURING_PREFLIGHT',
+        'Persistent state changed while the read-only recovery preflight was running.'
+      );
+    }
+
+    const previousRenderSpec = clone(
+      sourcePlan?.outputs?.subtitle_render_spec || null
+    );
+    const resolvedRenderSpec = clone(
+      candidatePlan?.outputs?.subtitle_render_spec || null
+    );
+    const receipt = {
+      schema_version: RENDER_CHECKPOINT_FORK_VERSION,
+      eligible: blockers.length === 0,
+      blockers,
+      source_job: {
+        job_id: sourceJob.job_id,
+        status: sourceJob.status,
+        job_sha256: before.job_sha256,
+        plan_sha256: before.plan_sha256,
+        render_stage_attempts: Number(renderStage?.attempts || 0),
+      },
+      source_checkpoint: sourceCheckpoint
+        ? {
+            source_key: sourceKey,
+            sha256: sourceCheckpoint.sha256,
+            bytes: sourceCheckpoint.bytes,
+            observed_sha256: observedSourceFingerprint?.sha256 || null,
+            observed_bytes: observedSourceFingerprint?.bytes ?? null,
+            matches: Boolean(
+              observedSourceFingerprint &&
+              observedSourceFingerprint.sha256 === sourceCheckpoint.sha256 &&
+              observedSourceFingerprint.bytes === sourceCheckpoint.bytes
+            ),
+          }
+        : null,
+      translations: {
+        ...acceptance,
+        target_language: sourceSession?.target_language || null,
+        session_sha256: before.session_sha256,
+        preserved_by_reference: true,
+      },
+      validation: {
+        passed: sourceJob.validation?.passed === true,
+        checkpoint_sha256: before.validation_sha256,
+        recomputed_sha256: recomputedValidationSha256,
+        recomputed_matches:
+          recomputedValidationSha256 === before.validation_sha256,
+      },
+      credits: {
+        source_ledger_sha256: before.credit_ledger_sha256,
+        source_ledger: clone(sourceJob.credit_usage || {}),
+        expected_value_field: ledgerField,
+        expected_value: Number(expected.credit_ledger_value),
+        observed_value: Number.isFinite(ledgerValue) ? ledgerValue : null,
+        projected_delta: {
+          estimated: 0,
+          authorized: 0,
+          reserved: 0,
+          charged: 0,
+        },
+        paid_stage_decisions: {
+          transcription: 'skip_exact_checkpoint',
+          translation: 'skip_exact_checkpoint',
+        },
+        projected_ledger_sha256: before.credit_ledger_sha256,
+      },
+      render: {
+        previous_spec: previousRenderSpec,
+        resolved_spec: resolvedRenderSpec,
+        requested_override: clone(args.render_override),
+        display_mode_preserved:
+          previousRenderSpec?.display_mode === resolvedRenderSpec?.display_mode,
+        output_invariants_sha256: candidatePlan
+          ? canonicalJsonHash(
+              renderInvariantOutputSnapshot(candidatePlan.outputs)
+            )
+          : null,
+      },
+      output_preflight: outputInspection,
+      candidate: candidatePlan
+        ? {
+            plan_hash: candidatePlan.plan_hash,
+            stages: candidatePlan.stages.map(stage => stage.id),
+            persisted: false,
+            job_id_allocated: false,
+            render_authorized: false,
+          }
+        : null,
+      mutation_proof: {
+        store_total_changes_before: before.total_changes,
+        store_total_changes_after: after.total_changes,
+        writes,
+        target_job_revision_before: sourceJob.revision,
+        target_job_revision_after: after.job.revision,
+        target_job_sha256_before: before.job_sha256,
+        target_job_sha256_after: after.job_sha256,
+        translation_session_sha256_before: before.session_sha256,
+        translation_session_sha256_after: after.session_sha256,
+        credit_ledger_sha256_before: before.credit_ledger_sha256,
+        credit_ledger_sha256_after: after.credit_ledger_sha256,
+        app_mutations: 0,
+        provider_calls: 0,
+        ids_allocated: 0,
+      },
+    };
+    receipt.preflight_digest = renderCheckpointForkPreflightDigest(receipt);
+    return { receipt, candidatePlan, sourceCheckpoint };
+  }
+
+  async preflightRenderCheckpointFork(args) {
+    const { receipt } = await this.evaluateRenderCheckpointFork(args);
+    return receipt;
+  }
+
+  async createRenderCheckpointFork(args) {
+    const preflightArgs = {
+      source_job_id: args.source_job_id,
+      expected: args.expected,
+      render_override: args.render_override,
+    };
+    const { receipt, candidatePlan, sourceCheckpoint } =
+      await this.evaluateRenderCheckpointFork(preflightArgs);
+    if (!receipt.eligible || !candidatePlan || !sourceCheckpoint) {
+      const error = new Error(
+        'The render-checkpoint fork preflight is not eligible; no fork was created.'
+      );
+      error.code = 'RENDER_CHECKPOINT_FORK_INELIGIBLE';
+      error.details = { blockers: receipt.blockers };
+      throw error;
+    }
+    if (receipt.preflight_digest !== args.preflight_digest) {
+      const error = new Error(
+        'The render-checkpoint fork preflight digest is stale or does not match this request.'
+      );
+      error.code = 'RENDER_CHECKPOINT_PREFLIGHT_MISMATCH';
+      error.details = {
+        expected_preflight_digest: receipt.preflight_digest,
+      };
+      throw error;
+    }
+    const created = this.store.createRenderCheckpointFork({
+      sourceJobId: args.source_job_id,
+      sourceJobSha256: receipt.source_job.job_sha256,
+      translationSessionSha256: receipt.translations.session_sha256,
+      validationSha256: receipt.validation.checkpoint_sha256,
+      creditLedgerSha256: receipt.credits.source_ledger_sha256,
+      preflightDigest: receipt.preflight_digest,
+      idempotencyKey: args.idempotency_key,
+      request: {
+        ...preflightArgs,
+        preflight_digest: receipt.preflight_digest,
+      },
+      plan: candidatePlan,
+      sourceCheckpoint,
+    });
+    const persistedSource = this.store.requireJob(args.source_job_id);
+    const persistedSession = this.store.getTranslationSession(
+      created.job.job_id
+    );
+    const persistedPlan = this.store.getPlan(created.job.plan_hash);
+    if (
+      persistentJobCheckpointSha256(persistedSource) !==
+        receipt.source_job.job_sha256 ||
+      translationSessionCheckpointSha256(persistedSession) !==
+        receipt.translations.session_sha256 ||
+      created.job.status !== 'blocked' ||
+      created.job.stage !== 'render_outputs' ||
+      created.job.render_authorized !== false ||
+      Number(created.job.credit_usage?.consumed_stage5_credits) !== 0 ||
+      canonicalJson(persistedPlan?.stages?.map(stage => stage.id)) !==
+        canonicalJson(RENDER_CHECKPOINT_FORK_STAGES.map(stage => stage.id))
+    ) {
+      throw new Error(
+        'The persisted render-checkpoint fork failed its post-commit invariant check.'
+      );
+    }
+    this.notify(created.job.job_id);
+    return {
+      reused: created.reused,
+      job: created.job,
+      plan: created.plan,
+      preflight_digest: receipt.preflight_digest,
+      render_started: false,
+      stage5_credits_consumed: 0,
+    };
   }
 
   async createJob({

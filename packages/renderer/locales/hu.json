@@ -333,7 +333,16 @@
         "answerer": "Feldolgozás",
         "planner": "Keresés",
         "retrieval": "Eredmények betöltése"
-      }
+      },
+      "deleteLocalFile": "Fájl törlése az eszközről",
+      "deleteLocalFileConfirm": "Végleg törli ezt a letöltött fájlt az eszközről? Az előzménybejegyzés és a forráshivatkozás megmarad.",
+      "deleteLocalFileFailed": "A letöltött fájlt nem sikerült törölni az eszközről.",
+      "deleteLocalFileUnavailable": "Ehhez a letöltéshez már nem tartozik törölhető fájl az alkalmazás könyvtárában.",
+      "deleteLocalFileInUse": "Ez a videó jelenleg meg van nyitva. Törlés előtt nyisson meg egy másik videót.",
+      "deleteFileAndHistory": "Fájl és előzmény törlése",
+      "deleteFileAndHistoryConfirm": "Végleg törli ezt a letöltött fájlt és az előzménybejegyzését? Ez nem vonható vissza.",
+      "removeFromHistory": "Eltávolítás az előzményekből",
+      "removeFromHistoryConfirm": "Eltávolítja ezt az elemet a letöltési előzményekből? Az alkalmazás könyvtárán kívül mentett fájlok az eszközön maradnak."
     },
     "downloadAndTranslate": "Letöltés és fordítás",
     "downloadAndTranscribe": "Letöltés és átírás",

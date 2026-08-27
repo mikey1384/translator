@@ -333,7 +333,16 @@
         "answerer": "处理查询",
         "planner": "构建搜索",
         "retrieval": "加载结果"
-      }
+      },
+      "deleteLocalFile": "从设备中删除文件",
+      "deleteLocalFileConfirm": "要从此设备永久删除这个已下载文件吗？历史记录和来源链接将保留。",
+      "deleteLocalFileFailed": "无法从设备中删除已下载文件。",
+      "deleteLocalFileUnavailable": "此下载在应用媒体库中已没有可删除的文件。",
+      "deleteLocalFileInUse": "此视频当前已打开。请先打开其他视频再删除。",
+      "deleteFileAndHistory": "删除文件和历史记录",
+      "deleteFileAndHistoryConfirm": "要永久删除这个已下载文件及其历史记录吗？此操作无法撤销。",
+      "removeFromHistory": "从历史记录中移除",
+      "removeFromHistoryConfirm": "要从下载历史记录中移除此项目吗？保存在应用媒体库之外的文件将留在设备上。"
     },
     "downloadAndTranslate": "下载并翻译",
     "downloadAndTranscribe": "下载并转录",

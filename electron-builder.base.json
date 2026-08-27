@@ -83,6 +83,10 @@
       "to": "mcp-v2-service.mjs"
     },
     {
+      "from": "packages/agent-server/src/render-checkpoint-recovery.mjs",
+      "to": "render-checkpoint-recovery.mjs"
+    },
+    {
       "from": "packages/agent-server/src/srt.mjs",
       "to": "srt.mjs"
     },
