@@ -2862,6 +2862,8 @@ async function runAgentPresetRender(
     };
   }
   let transcodeSource: string | null = null;
+  let transcodeSourceFingerprint: { sha256: string; bytes: number } | null =
+    null;
   let reusedIntermediateMaster = false;
   let renderError: unknown = null;
   let cleanupError: unknown = null;
@@ -2874,9 +2876,27 @@ async function runAgentPresetRender(
           expectedOperationId: agentOperationId,
           expectedReceiptKind: 'temporary_master',
         }).catch(() => null);
+        const inspectedFingerprint = inspectedMaster?.operation_receipt as
+          | Record<string, unknown>
+          | undefined;
+        const inspectedSha256 = String(
+          inspectedFingerprint?.sha256 || ''
+        ).toLowerCase();
+        const inspectedBytes = Number(inspectedFingerprint?.bytes);
+        const hasValidInspectedFingerprint =
+          /^[a-f0-9]{64}$/.test(inspectedSha256) &&
+          Number.isSafeInteger(inspectedBytes) &&
+          inspectedBytes >= 0;
         reusedIntermediateMaster =
           inspectedMaster?.passed === true &&
-          inspectedMaster.operation_receipt_valid === true;
+          inspectedMaster.operation_receipt_valid === true &&
+          hasValidInspectedFingerprint;
+        if (reusedIntermediateMaster) {
+          transcodeSourceFingerprint = {
+            sha256: inspectedSha256,
+            bytes: inspectedBytes,
+          };
+        }
       }
       if (!reusedIntermediateMaster) {
         agentProcessingState = {
@@ -2900,13 +2920,33 @@ async function runAgentPresetRender(
           subtitleFontSize: outputs.subtitle_font_size,
           subtitleRenderSpec: outputs.subtitle_render_spec,
         });
-        await SystemIPC.agentV2ClaimTemporaryOutput({
+        const claimedMaster = await SystemIPC.agentV2ClaimTemporaryOutput({
           path: temporaryMaster,
           operationId: agentOperationId,
         });
+        const claimedSha256 = String(claimedMaster.sha256 || '').toLowerCase();
+        const claimedBytes = Number(claimedMaster.bytes);
+        if (
+          !/^[a-f0-9]{64}$/.test(claimedSha256) ||
+          !Number.isSafeInteger(claimedBytes) ||
+          claimedBytes < 0
+        ) {
+          throw new Error(
+            'The rendered subtitle master did not return a valid ownership fingerprint.'
+          );
+        }
+        transcodeSourceFingerprint = {
+          sha256: claimedSha256,
+          bytes: claimedBytes,
+        };
         throwIfAgentCancelled();
       }
       transcodeSource = temporaryMaster;
+      if (!transcodeSourceFingerprint) {
+        throw new Error(
+          'The temporary subtitle master is missing its operation-bound fingerprint.'
+        );
+      }
     } else {
       transcodeSource =
         String(input?.sourceVideoPath || '').trim() ||
@@ -3007,6 +3047,10 @@ async function runAgentPresetRender(
           preset,
           overwrite: outputs.overwrite === true,
           protectedPaths: input?.protectedInputPaths,
+          sourceOperationId: burnSubtitles ? agentOperationId : undefined,
+          sourceFingerprint: burnSubtitles
+            ? transcodeSourceFingerprint
+            : undefined,
         });
         reusableOutputs.set(preset, {
           preset,

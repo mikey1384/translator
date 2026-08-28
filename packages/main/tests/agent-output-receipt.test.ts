@@ -139,6 +139,74 @@ test('output fingerprints reject symbolic links instead of following them', asyn
   );
 });
 
+test('output fingerprints accept ctime-only churn only after a stable second hash', async t => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'translator-fingerprint-metadata-')
+  );
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const outputPath = path.join(root, 'metadata-churn.mp4');
+  await fs.writeFile(outputPath, 'stable output');
+
+  const originalLstat = fs.lstat;
+  let outputLstatCalls = 0;
+  (fs as any).lstat = async (...args: any[]) => {
+    const stat = await originalLstat(args[0], args[1]);
+    if (String(args[0]) !== outputPath) return stat;
+    outputLstatCalls += 1;
+    if (outputLstatCalls !== 2 || typeof stat.ctimeNs !== 'bigint') {
+      return stat;
+    }
+    return new Proxy(stat, {
+      get(target, property, receiver) {
+        if (property === 'ctimeNs') return target.ctimeNs + 1n;
+        return Reflect.get(target, property, receiver);
+      },
+    });
+  };
+  try {
+    assert.deepEqual(await fingerprintAgentOutputFile(outputPath), {
+      sha256: createHash('sha256').update('stable output').digest('hex'),
+      bytes: Buffer.byteLength('stable output'),
+    });
+  } finally {
+    (fs as any).lstat = originalLstat;
+  }
+  assert.ok(outputLstatCalls >= 4, 'metadata churn must force a second pass');
+});
+
+test('output fingerprints reject a same-size rewrite between stability passes', async t => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'translator-fingerprint-rewrite-')
+  );
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const outputPath = path.join(root, 'rewritten.mp4');
+  const fixedTime = new Date('2024-01-01T00:00:00.000Z');
+  await fs.writeFile(outputPath, 'AAAA');
+  await fs.utimes(outputPath, fixedTime, fixedTime);
+
+  const originalLstat = fs.lstat;
+  let outputLstatCalls = 0;
+  (fs as any).lstat = async (...args: any[]) => {
+    if (String(args[0]) === outputPath) {
+      outputLstatCalls += 1;
+      if (outputLstatCalls === 2) {
+        await fs.writeFile(outputPath, 'BBBB');
+        await fs.utimes(outputPath, fixedTime, fixedTime);
+      }
+    }
+    return originalLstat(args[0], args[1]);
+  };
+  try {
+    await assert.rejects(
+      () => fingerprintAgentOutputFile(outputPath),
+      /changed while its integrity was being verified/i
+    );
+  } finally {
+    (fs as any).lstat = originalLstat;
+  }
+  assert.ok(outputLstatCalls >= 3, 'the rewrite must reach a second pass');
+});
+
 test('an exact output receipt makes a completed operation safely reusable', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'translator-receipt-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

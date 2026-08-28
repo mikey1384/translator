@@ -1009,6 +1009,31 @@ test('persistent rendering reuses only an exact claimed subtitle master', () => 
   );
 });
 
+test('transcoding tolerates only hash-proven metadata churn on a claimed master', () => {
+  const listenerContent = fs.readFileSync(
+    path.join(
+      projectRoot,
+      'packages/renderer/listeners/translator-agent-listener.ts'
+    ),
+    'utf8'
+  );
+  const handlerContent = fs.readFileSync(
+    path.join(projectRoot, 'packages/main/handlers/agent-v2-handlers.ts'),
+    'utf8'
+  );
+
+  assert.ok(
+    listenerContent.includes('sourceOperationId: burnSubtitles') &&
+      listenerContent.includes('sourceFingerprint: burnSubtitles') &&
+      handlerContent.includes(
+        '!isAgentTemporaryMasterPath(sourcePath, sourceOperationId)'
+      ) &&
+      handlerContent.includes('verifyAgentTranscodeSourceSnapshot({') &&
+      handlerContent.includes('source_metadata_revalidated_by_sha256'),
+    'temporary masters must stay operation-bound and metadata-only changes must be accepted only after exact SHA-256 revalidation'
+  );
+});
+
 test('kill switch - serialized state is null-safe and terminal on shutdown', () => {
   const mainPath = path.join(projectRoot, 'packages/main/index.ts');
   const mainContent = fs.readFileSync(mainPath, 'utf8');

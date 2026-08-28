@@ -52,6 +52,10 @@ import {
 import { assertSubtitleRenderFontReadable } from '../utils/subtitle-render-font.js';
 import { MAX_SUBTITLE_OUTPUT_FONT_SIZE } from '../../shared/helpers/subtitle-render-spec.js';
 import { MIN_SUBTITLE_FONT_SIZE } from '../../shared/constants/runtime-config.js';
+import {
+  parseExpectedAgentFileFingerprint,
+  verifyAgentTranscodeSourceSnapshot,
+} from '../utils/agent-transcode-source.js';
 
 const execFileAsync = promisify(execFile);
 const MAX_PROBE_BUFFER_BYTES = 24 * 1024 * 1024;
@@ -1249,6 +1253,8 @@ export function createAgentV2Handlers({ ffmpeg }: AgentV2Services) {
         operationId?: string;
         overwrite?: boolean;
         protectedPaths?: string[];
+        sourceOperationId?: string;
+        sourceFingerprint?: { sha256?: unknown; bytes?: unknown };
       },
       onProgress?: (progress: Record<string, unknown>) => void
     ) {
@@ -1272,6 +1278,36 @@ export function createAgentV2Handlers({ ffmpeg }: AgentV2Services) {
       const sourceBefore = await fs.stat(sourcePath, { bigint: true });
       if (!sourceBefore.isFile())
         throw new Error(`Transcode source is not a file: ${sourcePath}`);
+      const sourceOperationId = input?.sourceOperationId
+        ? assertAgentOperationId(input.sourceOperationId)
+        : null;
+      const expectedSourceFingerprint = parseExpectedAgentFileFingerprint(
+        input?.sourceFingerprint || null
+      );
+      if (
+        sourceOperationId &&
+        !isAgentTemporaryMasterPath(sourcePath, sourceOperationId)
+      ) {
+        throw new Error(
+          'Transcode source does not belong to the claimed render operation.'
+        );
+      }
+      if (
+        isAgentTemporaryMasterPath(sourcePath) &&
+        (!sourceOperationId || !expectedSourceFingerprint)
+      ) {
+        throw new Error(
+          'A temporary render master requires its operation-bound fingerprint.'
+        );
+      }
+      if (
+        expectedSourceFingerprint &&
+        BigInt(expectedSourceFingerprint.bytes) !== sourceBefore.size
+      ) {
+        throw new Error(
+          `Transcode source no longer matches its claimed fingerprint: ${sourcePath}`
+        );
+      }
       const destinationParent = await fs.stat(path.dirname(outputPath));
       if (!destinationParent.isDirectory())
         throw new Error('Preset output parent is not a directory.');
@@ -1465,10 +1501,24 @@ export function createAgentV2Handlers({ ffmpeg }: AgentV2Services) {
           },
         });
         const sourceAfter = await fs.stat(sourcePath, { bigint: true });
-        if (
-          !sourceAfter.isFile() ||
-          !sameFileSnapshot(sourceBefore, sourceAfter)
-        ) {
+        let sourceMetadataRevalidatedBySha256 = false;
+        let sourceVerified = sourceAfter.isFile();
+        if (sourceVerified) {
+          try {
+            const verification = await verifyAgentTranscodeSourceSnapshot({
+              sourcePath,
+              before: sourceBefore,
+              after: sourceAfter,
+              expectedFingerprint: expectedSourceFingerprint,
+            });
+            sourceVerified = verification.verified;
+            sourceMetadataRevalidatedBySha256 =
+              verification.verified && verification.metadataOnlyChange;
+          } catch {
+            sourceVerified = false;
+          }
+        }
+        if (!sourceVerified) {
           throw new Error(
             `Transcode source changed while Translator was encoding it: ${sourcePath}`
           );
@@ -1505,6 +1555,8 @@ export function createAgentV2Handlers({ ffmpeg }: AgentV2Services) {
           preset,
           operation_id: operationId,
           sha256,
+          source_metadata_revalidated_by_sha256:
+            sourceMetadataRevalidatedBySha256,
           operation_receipt: { ...fingerprint, path: finalPath },
           reused: false,
         };

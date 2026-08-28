@@ -162,6 +162,33 @@ function sameFileSnapshot(
   return leftSnapshot.every((value, index) => value === rightSnapshot[index]);
 }
 
+function sameFileIdentityAndContentMetadata(
+  left: fsSync.BigIntStats,
+  right: fsSync.BigIntStats
+): boolean {
+  return (
+    left.dev === right.dev &&
+    left.ino === right.ino &&
+    left.size === right.size &&
+    left.mtimeNs === right.mtimeNs
+  );
+}
+
+async function hashOpenAgentOutputFile(
+  handle: Awaited<ReturnType<typeof fs.open>>
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const hash = createHash('sha256');
+    const stream = handle.createReadStream({
+      autoClose: false,
+      start: 0,
+    });
+    stream.on('error', reject);
+    stream.on('data', chunk => hash.update(chunk));
+    stream.on('end', () => resolve(hash.digest('hex')));
+  });
+}
+
 function privateAgentSiblingPath(
   referencePath: string,
   purpose: 'receipt' | 'replaced',
@@ -310,30 +337,80 @@ export async function fingerprintAgentOutputFile(
   const handle = await fs.open(filePath, flags);
   try {
     const before = await handle.stat({ bigint: true });
-    if (!before.isFile() || !sameFileSnapshot(pathBefore, before)) {
+    if (
+      !before.isFile() ||
+      !sameFileIdentityAndContentMetadata(pathBefore, before)
+    ) {
       throw new Error('Agent output integrity target is not a regular file.');
     }
-    const sha256 = await new Promise<string>((resolve, reject) => {
-      const hash = createHash('sha256');
-      const stream = handle.createReadStream({ autoClose: false });
-      stream.on('error', reject);
-      stream.on('data', chunk => hash.update(chunk));
-      stream.on('end', () => resolve(hash.digest('hex')));
-    });
-    const after = await handle.stat({ bigint: true });
-    const pathAfter = await fs.lstat(filePath, { bigint: true });
+    let metadataOnlyChangeObserved = !sameFileSnapshot(pathBefore, before);
+    const firstSha256 = await hashOpenAgentOutputFile(handle);
+    const afterFirstPass = await handle.stat({ bigint: true });
+    const pathAfterFirstPass = await fs.lstat(filePath, { bigint: true });
     if (
-      !after.isFile() ||
-      !pathAfter.isFile() ||
-      pathAfter.isSymbolicLink() ||
-      !sameFileSnapshot(before, after) ||
-      !sameFileSnapshot(after, pathAfter)
+      !afterFirstPass.isFile() ||
+      !pathAfterFirstPass.isFile() ||
+      pathAfterFirstPass.isSymbolicLink() ||
+      !sameFileIdentityAndContentMetadata(before, afterFirstPass) ||
+      !sameFileIdentityAndContentMetadata(afterFirstPass, pathAfterFirstPass)
     ) {
       throw new Error(
         'Agent output changed while its integrity was being verified.'
       );
     }
-    const bytes = Number(after.size);
+    metadataOnlyChangeObserved =
+      metadataOnlyChangeObserved ||
+      !sameFileSnapshot(before, afterFirstPass) ||
+      !sameFileSnapshot(afterFirstPass, pathAfterFirstPass);
+
+    let sha256 = firstSha256;
+    let finalStat = afterFirstPass;
+    if (metadataOnlyChangeObserved) {
+      // APFS metadata services can update ctime on a newly created movie
+      // without touching its bytes. A second identical full-file hash on the
+      // same open inode distinguishes that benign churn from a concurrent
+      // same-size rewrite without weakening the source-integrity boundary.
+      const beforeSecondPass = await handle.stat({ bigint: true });
+      const pathBeforeSecondPass = await fs.lstat(filePath, { bigint: true });
+      if (
+        !beforeSecondPass.isFile() ||
+        !pathBeforeSecondPass.isFile() ||
+        pathBeforeSecondPass.isSymbolicLink() ||
+        !sameFileIdentityAndContentMetadata(afterFirstPass, beforeSecondPass) ||
+        !sameFileIdentityAndContentMetadata(
+          beforeSecondPass,
+          pathBeforeSecondPass
+        )
+      ) {
+        throw new Error(
+          'Agent output changed while its integrity was being verified.'
+        );
+      }
+      const secondSha256 = await hashOpenAgentOutputFile(handle);
+      const afterSecondPass = await handle.stat({ bigint: true });
+      const pathAfterSecondPass = await fs.lstat(filePath, { bigint: true });
+      if (
+        !afterSecondPass.isFile() ||
+        !pathAfterSecondPass.isFile() ||
+        pathAfterSecondPass.isSymbolicLink() ||
+        !sameFileIdentityAndContentMetadata(
+          beforeSecondPass,
+          afterSecondPass
+        ) ||
+        !sameFileIdentityAndContentMetadata(
+          afterSecondPass,
+          pathAfterSecondPass
+        ) ||
+        secondSha256 !== firstSha256
+      ) {
+        throw new Error(
+          'Agent output changed while its integrity was being verified.'
+        );
+      }
+      sha256 = secondSha256;
+      finalStat = afterSecondPass;
+    }
+    const bytes = Number(finalStat.size);
     if (!Number.isSafeInteger(bytes) || bytes < 0) {
       throw new Error('Agent output size exceeds the supported integer range.');
     }
