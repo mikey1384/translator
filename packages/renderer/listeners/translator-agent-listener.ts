@@ -3150,7 +3150,7 @@ async function performAgentPreview(
       segments.length - 1,
       Math.floor((segments.length - 1) * ratio)
     );
-    return segments[index].start;
+    return (segments[index].start + segments[index].end) / 2;
   });
   const displayMode =
     (input?.outputs?.subtitle_render_spec?.display_mode as

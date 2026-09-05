@@ -5,15 +5,34 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const packageJson = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
-const version = packageJson.version;
-const mode = process.argv[2] || '--check';
+const packageJson = JSON.parse(
+  await readFile(resolve(root, 'package.json'), 'utf8')
+);
+const usage =
+  'Usage: node scripts/update-distribution-manifests.mjs [--check|--write] [--version <semver>] [--winget-only]';
+let version = packageJson.version;
+let mode = '--check';
+let modeWasSet = false;
+let wingetOnly = false;
+
+for (let index = 2; index < process.argv.length; index += 1) {
+  const argument = process.argv[index];
+  if (['--check', '--write'].includes(argument)) {
+    if (modeWasSet && mode !== argument) throw new Error(usage);
+    mode = argument;
+    modeWasSet = true;
+  } else if (argument === '--version') {
+    version = process.argv[index + 1];
+    index += 1;
+  } else if (argument === '--winget-only') {
+    wingetOnly = true;
+  } else {
+    throw new Error(usage);
+  }
+}
 
 if (!/^\d+\.\d+\.\d+$/.test(version)) {
   throw new Error(`Package version must be SemVer, received ${version}`);
-}
-if (!['--check', '--write'].includes(mode)) {
-  throw new Error('Usage: node scripts/update-distribution-manifests.mjs [--check|--write]');
 }
 
 async function fetchOk(url, init = {}) {
@@ -26,41 +45,107 @@ async function fetchOk(url, init = {}) {
     },
   });
   if (!response.ok) {
-    throw new Error(`${init.method || 'GET'} ${url} returned ${response.status}`);
+    throw new Error(
+      `${init.method || 'GET'} ${url} returned ${response.status}`
+    );
   }
   return response;
 }
 
 const release = await (
   await fetchOk(
-    `https://api.github.com/repos/mikey1384/translator/releases/tags/v${version}`,
+    `https://api.github.com/repos/mikey1384/translator/releases/tags/v${version}`
   )
 ).json();
 
-function releaseDigest(name) {
-  const asset = release.assets.find((candidate) => candidate.name === name);
+function releaseAsset(name) {
+  const asset = release.assets.find(candidate => candidate.name === name);
   if (!asset) throw new Error(`GitHub release is missing ${name}`);
   const match = /^sha256:([a-f0-9]{64})$/i.exec(asset.digest || '');
-  if (!match) throw new Error(`GitHub release has no SHA256 digest for ${name}`);
-  return match[1].toLowerCase();
+  if (!match)
+    throw new Error(`GitHub release has no SHA256 digest for ${name}`);
+  const expectedUrl =
+    `https://github.com/mikey1384/translator/releases/download/v${version}/` +
+    name;
+  if (asset.browser_download_url !== expectedUrl) {
+    throw new Error(
+      `Unexpected GitHub release URL for ${name}: ${asset.browser_download_url}`
+    );
+  }
+  return {
+    sha256: match[1].toLowerCase(),
+    url: asset.browser_download_url,
+  };
 }
 
-const macArmName = `Translator-${version}-darwin-arm64.zip`;
-const macIntelName = `Translator-${version}-darwin-x64.zip`;
-const macArmSha256 = releaseDigest(macArmName);
-const macIntelSha256 = releaseDigest(macIntelName);
-const windowsName = `Translator-Setup-${version}.exe`;
-const windowsSha256 = releaseDigest(windowsName).toUpperCase();
-const windowsUrl =
-  `https://github.com/mikey1384/translator/releases/download/v${version}/` +
-  windowsName;
+let macArmAsset;
+let macIntelAsset;
+let macArmSha256;
+let macIntelSha256;
+if (!wingetOnly) {
+  const macArmName = `Translator-${version}-darwin-arm64.zip`;
+  const macIntelName = `Translator-${version}-darwin-x64.zip`;
+  macArmAsset = releaseAsset(macArmName);
+  macIntelAsset = releaseAsset(macIntelName);
+  macArmSha256 = macArmAsset.sha256;
+  macIntelSha256 = macIntelAsset.sha256;
+}
+
+const legacyWingetAssets = new Map([
+  [
+    '1.16.6',
+    {
+      name: 'Translator-x64.exe',
+      url: 'https://downloads.stage5.tools/win/1.16.6/Translator-x64.exe',
+      sha256:
+        'B7BE49BAD34BE5DE7A0474F13C4F4446EBF282B6A72D244AEB5197BE23A17610',
+    },
+  ],
+]);
+
+const legacyWingetAsset = legacyWingetAssets.get(version);
+let windowsUrl;
+let windowsSha256;
+if (legacyWingetAsset) {
+  windowsUrl = legacyWingetAsset.url;
+  windowsSha256 = legacyWingetAsset.sha256;
+  const checksum = (
+    await (await fetchOk(`${windowsUrl}.sha256`)).text()
+  ).trim();
+  const checksumMatch = /^([a-f0-9]{64})(?:\s+\*?(.+))?$/i.exec(checksum);
+  if (
+    !checksumMatch ||
+    checksumMatch[1].toUpperCase() !== windowsSha256 ||
+    (checksumMatch[2] && checksumMatch[2] !== legacyWingetAsset.name)
+  ) {
+    throw new Error(`Published SHA256 sidecar does not match ${windowsUrl}`);
+  }
+} else {
+  const windowsName = `Translator-Setup-${version}.exe`;
+  const windowsAsset = releaseAsset(windowsName);
+  windowsUrl = windowsAsset.url;
+  windowsSha256 = windowsAsset.sha256.toUpperCase();
+}
+const productCode = '3934dcbd-1ef6-5ce0-b182-24803d0fbb8d';
+const releaseDate = release.published_at?.slice(0, 10);
+if (!/^\d{4}-\d{2}-\d{2}$/.test(releaseDate || '')) {
+  throw new Error(
+    `GitHub release has no valid published_at date: ${release.published_at}`
+  );
+}
 
 const immutableUrls = [
-  `https://github.com/mikey1384/translator/releases/download/v${version}/${macArmName}`,
-  `https://github.com/mikey1384/translator/releases/download/v${version}/${macIntelName}`,
+  ...(wingetOnly ? [] : [macArmAsset.url, macIntelAsset.url]),
   windowsUrl,
 ];
-await Promise.all(immutableUrls.map((url) => fetchOk(url, { method: 'HEAD' })));
+await Promise.all(
+  immutableUrls.map(url =>
+    fetchOk(url, {
+      method: 'HEAD',
+      ...(url === legacyWingetAsset?.url ? { redirect: 'manual' } : {}),
+    })
+  )
+);
 
 const cask = `cask "stage5-translator" do
   arch arm: "arm64", intel: "x64"
@@ -99,6 +184,7 @@ const wingetInstaller = `# yaml-language-server: $schema=https://aka.ms/winget-m
 # Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
 PackageIdentifier: Stage5Tools.Translator
 PackageVersion: ${version}
+InstallerLocale: en-US
 InstallerType: nullsoft
 Scope: machine
 InstallModes:
@@ -109,21 +195,27 @@ InstallerSwitches:
   Silent: /S
   SilentWithProgress: /S
 UpgradeBehavior: install
-ElevationRequirement: elevatesSelf
+ElevationRequirement: elevationRequired
 FileExtensions:
   - avi
   - mkv
   - mov
   - mp4
   - webm
+Protocols:
+  - stage5-translator
+ProductCode: ${productCode}
+ReleaseDate: ${releaseDate}
+AppsAndFeaturesEntries:
+  - DisplayName: Translator
+    Publisher: Mikey Lee
+    ProductCode: ${productCode}
+InstallationMetadata:
+  DefaultInstallLocation: '%ProgramFiles%\\Video Tools\\Translator'
 Installers:
   - Architecture: x64
     InstallerUrl: ${windowsUrl}
     InstallerSha256: ${windowsSha256}
-    AppsAndFeaturesEntries:
-      - DisplayName: Translator
-        Publisher: Mikey Lee
-        InstallerType: nullsoft
 ManifestType: installer
 ManifestVersion: 1.12.0
 `;
@@ -133,11 +225,11 @@ const wingetLocale = `# yaml-language-server: $schema=https://aka.ms/winget-mani
 PackageIdentifier: Stage5Tools.Translator
 PackageVersion: ${version}
 PackageLocale: en-US
-Publisher: Mikey Lee
+Publisher: Stage5 Tools LLC
 PublisherUrl: https://stage5.tools/
 PublisherSupportUrl: https://github.com/mikey1384/translator/issues
 PrivacyUrl: https://translator.tools/privacy
-Author: Stage5 Tools LLC
+Author: Mikey Lee
 PackageName: Translator
 PackageUrl: https://translator.tools/
 License: MIT
@@ -159,7 +251,7 @@ ManifestVersion: 1.12.0
 `;
 
 const files = new Map([
-  ['distribution/homebrew/stage5-translator.rb', cask],
+  ...(wingetOnly ? [] : [['distribution/homebrew/stage5-translator.rb', cask]]),
   [
     `distribution/winget/manifests/s/Stage5Tools/Translator/${version}/Stage5Tools.Translator.yaml`,
     wingetVersion,
@@ -193,7 +285,9 @@ if (mode === '--write') {
     if (actual !== expected) mismatches.push(`${relativePath} is stale`);
   }
   if (mismatches.length) {
-    throw new Error(`${mismatches.join('; ')}. Run npm run distribution:update.`);
+    throw new Error(
+      `${mismatches.join('; ')}. Run npm run distribution:update.`
+    );
   }
 }
 
@@ -202,11 +296,16 @@ console.log(
     {
       mode,
       version,
+      wingetOnly,
       release: release.html_url,
-      homebrew: {
-        arm64Sha256: macArmSha256,
-        x64Sha256: macIntelSha256,
-      },
+      ...(wingetOnly
+        ? {}
+        : {
+            homebrew: {
+              arm64Sha256: macArmSha256,
+              x64Sha256: macIntelSha256,
+            },
+          }),
       winget: {
         installerUrl: windowsUrl,
         installerSha256: windowsSha256,
@@ -216,6 +315,6 @@ console.log(
       immutableUrlsVerified: immutableUrls.length,
     },
     null,
-    2,
-  ),
+    2
+  )
 );

@@ -50,6 +50,11 @@ import {
   safeHttpMetadataUrl,
 } from '../utils/agent-source-metadata.js';
 import { assertSubtitleRenderFontReadable } from '../utils/subtitle-render-font.js';
+import {
+  representativeFrameArgs,
+  representativeFrameRevision,
+  representativeFrameScriptResolution,
+} from '../utils/agent-representative-frame.js';
 import { MAX_SUBTITLE_OUTPUT_FONT_SIZE } from '../../shared/helpers/subtitle-render-spec.js';
 import { MIN_SUBTITLE_FONT_SIZE } from '../../shared/constants/runtime-config.js';
 import {
@@ -429,10 +434,14 @@ async function renderRepresentativeFrames(
 
   let tempSrt: string | null = null;
   let subtitleFilter: string | null = null;
+  let subtitleFontSha256: string | undefined;
   if (burnSubtitles) {
     const renderFont = await assertSubtitleRenderFontReadable(
       getAssetsPath('NotoSans-Regular.ttf')
     );
+    subtitleFontSha256 = createHash('sha256')
+      .update(await fs.readFile(renderFont.path))
+      .digest('hex');
     tempSrt = path.join(ffmpeg.tempDir, `mcp-preview-${randomUUID()}.srt`);
     await fs.writeFile(tempSrt, srtContent, {
       encoding: 'utf8',
@@ -448,9 +457,25 @@ async function renderRepresentativeFrames(
       .replace(/\\/g, '/')
       .replace(/:/g, '\\:')
       .replace(/'/g, "\\'");
-    subtitleFilter = `subtitles='${escapedSubtitlePath}':fontsdir='${escapedFontsDirectory}':force_style='FontName=Noto Sans,FontSize=${fontSize},${styleDetails},Alignment=2,MarginV=40'`;
+    subtitleFilter = `subtitles='${escapedSubtitlePath}':fontsdir='${escapedFontsDirectory}':force_style='${representativeFrameScriptResolution(Number(metadata.width), Number(metadata.height))},FontName=Noto Sans,FontSize=${fontSize},${styleDetails},Alignment=2,MarginV=40'`;
   }
 
+  const previewRevision = representativeFrameRevision({
+    sourceSnapshot: [
+      videoPath,
+      videoBefore.dev,
+      videoBefore.ino,
+      videoBefore.size,
+      videoBefore.mtimeNs,
+    ]
+      .map(String)
+      .join(':'),
+    positionsSeconds: positions,
+    srtContent,
+    subtitleStyle,
+    subtitleFontSize: fontSize,
+    subtitleFontSha256,
+  });
   const frames: string[] = [];
   const artifacts: Array<Record<string, unknown>> = [];
   try {
@@ -472,11 +497,19 @@ async function renderRepresentativeFrames(
         `${operationId}-${index + 1}`
       );
       const frameReceiptKind = `${receiptKindPrefix}_${index + 1}`;
-      const reusable = await readAgentOutputReceipt({
+      const owned = await readAgentOutputReceipt({
         outputPath,
         operationId: frameOperationId,
         kind: frameReceiptKind,
       });
+      const reusable =
+        owned &&
+        (await readAgentOutputReceipt({
+          outputPath,
+          operationId: frameOperationId,
+          kind: frameReceiptKind,
+          inputSha256: previewRevision,
+        }));
       if (reusable) {
         frames.push(outputPath);
         artifacts.push({
@@ -494,7 +527,12 @@ async function renderRepresentativeFrames(
           `Another Translator operation is already writing this representative frame: ${outputPath}`
         );
       }
-      if (!input?.overwrite && (await fs.lstat(outputPath).catch(() => null))) {
+      const replaceOwnedPreview = Boolean(owned);
+      if (
+        !input?.overwrite &&
+        !replaceOwnedPreview &&
+        (await fs.lstat(outputPath).catch(() => null))
+      ) {
         throw new Error(`Representative frame already exists: ${outputPath}`);
       }
       const temporaryPath = assertAgentOutputPathAuthorized(
@@ -507,19 +545,12 @@ async function renderRepresentativeFrames(
       activeTranscodeOutputPaths.add(outputPathIdentity);
       try {
         await ffmpeg.run(
-          [
-            '-y',
-            '-ss',
-            String(Math.max(0, Number(positions[index]) || 0)),
-            '-i',
+          representativeFrameArgs({
             videoPath,
-            ...(subtitleFilter ? ['-vf', subtitleFilter] : []),
-            '-frames:v',
-            '1',
-            '-q:v',
-            '2',
-            temporaryPath,
-          ],
+            outputPath: temporaryPath,
+            positionSeconds: positions[index],
+            subtitleFilter,
+          }),
           { operationId: frameOperationId }
         );
         const videoAfterFrame = await fs.stat(videoPath, { bigint: true });
@@ -538,12 +569,13 @@ async function renderRepresentativeFrames(
           kind: frameReceiptKind,
           bytes: fingerprint.bytes,
           sha256: fingerprint.sha256,
+          inputSha256: previewRevision,
           authorizePath: assertAgentOutputPathAuthorized,
         });
         await publishAgentOutputFile({
           temporaryPath,
           outputPath,
-          overwrite: input?.overwrite === true,
+          overwrite: input?.overwrite === true || replaceOwnedPreview,
         });
         frames.push(outputPath);
         artifacts.push({

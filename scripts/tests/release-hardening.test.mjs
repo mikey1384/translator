@@ -467,6 +467,80 @@ test('Windows headless download cannot report success with stale output', () => 
   );
 });
 
+test('WinGet 1.16.6 manifests match the signed NSIS release identity', () => {
+  const manifestRoot =
+    'distribution/winget/manifests/s/Stage5Tools/Translator/1.16.6';
+  const generator = read('scripts/update-distribution-manifests.mjs');
+  const version = read(`${manifestRoot}/Stage5Tools.Translator.yaml`);
+  const installer = read(
+    `${manifestRoot}/Stage5Tools.Translator.installer.yaml`
+  );
+  const locale = read(
+    `${manifestRoot}/Stage5Tools.Translator.locale.en-US.yaml`
+  );
+
+  assert.equal(
+    version.split(/\r?\n/, 1)[0],
+    '# yaml-language-server: $schema=https://aka.ms/winget-manifest.version.1.12.0.schema.json'
+  );
+  assert.equal(
+    installer.split(/\r?\n/, 1)[0],
+    '# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json'
+  );
+  assert.equal(
+    locale.split(/\r?\n/, 1)[0],
+    '# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json'
+  );
+  for (const manifest of [version, installer, locale]) {
+    assert.match(manifest, /^PackageIdentifier: Stage5Tools\.Translator$/m);
+    assert.match(manifest, /^PackageVersion: 1\.16\.6$/m);
+    assert.match(manifest, /^ManifestVersion: 1\.12\.0$/m);
+  }
+
+  assert.match(installer, /^InstallerLocale: en-US$/m);
+  assert.match(installer, /^InstallerType: nullsoft$/m);
+  assert.match(installer, /^Scope: machine$/m);
+  assert.match(installer, /^UpgradeBehavior: install$/m);
+  assert.match(installer, /^ElevationRequirement: elevationRequired$/m);
+  assert.match(installer, /^  - stage5-translator$/m);
+  assert.equal(
+    (
+      installer.match(
+        /^\s*ProductCode: 3934dcbd-1ef6-5ce0-b182-24803d0fbb8d$/gm
+      ) || []
+    ).length,
+    2
+  );
+  assert.match(installer, /^    Publisher: Mikey Lee$/m);
+  assert.match(installer, /^  - Architecture: x64$/m);
+  assert.match(
+    installer,
+    /^    InstallerUrl: https:\/\/downloads\.stage5\.tools\/win\/1\.16\.6\/Translator-x64\.exe$/m
+  );
+  assert.match(
+    installer,
+    /^    InstallerSha256: B7BE49BAD34BE5DE7A0474F13C4F4446EBF282B6A72D244AEB5197BE23A17610$/m
+  );
+  assert.match(
+    installer,
+    /^  DefaultInstallLocation: '%ProgramFiles%\\Video Tools\\Translator'$/m
+  );
+  assert.match(locale, /^Publisher: Stage5 Tools LLC$/m);
+  assert.match(locale, /^Author: Mikey Lee$/m);
+  assert.match(generator, /argument === '--version'/);
+  assert.match(generator, /argument === '--winget-only'/);
+  assert.match(
+    generator,
+    /url: 'https:\/\/downloads\.stage5\.tools\/win\/1\.16\.6\/Translator-x64\.exe'/
+  );
+  assert.match(
+    generator,
+    /'B7BE49BAD34BE5DE7A0474F13C4F4446EBF282B6A72D244AEB5197BE23A17610'/
+  );
+  assert.match(generator, /Published SHA256 sidecar does not match/);
+  assert.match(generator, /redirect: 'manual'/);
+});
+
 test('Windows release wrappers propagate package and upload failures', () => {
   const batch = read('Release-Windows-OneClick.bat');
   const release = read('scripts/release-windows-oneclick.ps1');
@@ -656,6 +730,11 @@ test('Windows release wrappers propagate package and upload failures', () => {
     distribution,
     /github\.com\/mikey1384\/translator\/releases\/download\/v\$\{version\}/
   );
+  assert.match(distribution, /asset\.browser_download_url !== expectedUrl/);
+  assert.match(distribution, /Publisher: Stage5 Tools LLC/);
+  assert.match(distribution, /Author: Mikey Lee/);
+  assert.match(distribution, /ElevationRequirement: elevationRequired/);
+  assert.match(distribution, /ProductCode: \$\{productCode\}/);
   assert.doesNotMatch(
     distribution,
     /downloads\.stage5\.tools\/win\/\$\{version\}/

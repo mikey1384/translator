@@ -503,10 +503,12 @@ export async function readAgentOutputReceipt({
   outputPath,
   operationId,
   kind,
+  inputSha256,
 }: {
   outputPath: string;
   operationId: string;
   kind: string;
+  inputSha256?: string;
 }): Promise<Record<string, unknown> | null> {
   const outputStat = await fs.lstat(outputPath).catch(() => null);
   if (!outputStat?.isFile() || outputStat.isSymbolicLink()) return null;
@@ -517,6 +519,7 @@ export async function readAgentOutputReceipt({
     receipt.schema_version !== 1 ||
     receipt.operation_id !== operationId ||
     receipt.kind !== kind ||
+    (inputSha256 !== undefined && receipt.input_sha256 !== inputSha256) ||
     receipt.output_path !== outputPath ||
     Number(receipt.bytes) !== outputStat.size ||
     !/^[a-f0-9]{64}$/.test(String(receipt.sha256 || ''))
@@ -650,6 +653,7 @@ export async function writeAgentOutputReceipt({
   sha256,
   authorizePath = value => value,
   allowedPriorKinds = [],
+  inputSha256,
 }: {
   outputPath: string;
   operationId: string;
@@ -658,6 +662,7 @@ export async function writeAgentOutputReceipt({
   sha256: string;
   authorizePath?: (value: string, label: string) => string;
   allowedPriorKinds?: string[];
+  inputSha256?: string;
 }): Promise<string> {
   const cleanOperationId = assertAgentOperationId(operationId);
   if (!Number.isSafeInteger(bytes) || bytes < 0) {
@@ -667,6 +672,9 @@ export async function writeAgentOutputReceipt({
   }
   if (!/^[a-f0-9]{64}$/.test(sha256)) {
     throw new Error('Agent output receipt SHA-256 is invalid.');
+  }
+  if (inputSha256 !== undefined && !/^[a-f0-9]{64}$/.test(inputSha256)) {
+    throw new Error('Agent output receipt input SHA-256 is invalid.');
   }
   const receiptPath = authorizePath(
     getAgentOutputReceiptPath(outputPath, cleanOperationId),
@@ -683,6 +691,7 @@ export async function writeAgentOutputReceipt({
     output_path: outputPath,
     bytes,
     sha256,
+    ...(inputSha256 !== undefined ? { input_sha256: inputSha256 } : {}),
   };
   const existing = await fs.lstat(receiptPath).catch(() => null);
   if (existing) {

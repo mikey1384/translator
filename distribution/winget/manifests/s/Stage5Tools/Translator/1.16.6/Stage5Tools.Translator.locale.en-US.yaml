@@ -3,11 +3,11 @@
 PackageIdentifier: Stage5Tools.Translator
 PackageVersion: 1.16.6
 PackageLocale: en-US
-Publisher: Mikey Lee
+Publisher: Stage5 Tools LLC
 PublisherUrl: https://stage5.tools/
 PublisherSupportUrl: https://github.com/mikey1384/translator/issues
 PrivacyUrl: https://translator.tools/privacy
-Author: Stage5 Tools LLC
+Author: Mikey Lee
 PackageName: Translator
 PackageUrl: https://translator.tools/
 License: MIT

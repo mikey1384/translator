@@ -2,6 +2,7 @@
 # Created from publisher-owned immutable artifacts by scripts/update-distribution-manifests.mjs
 PackageIdentifier: Stage5Tools.Translator
 PackageVersion: 1.16.6
+InstallerLocale: en-US
 InstallerType: nullsoft
 Scope: machine
 InstallModes:
@@ -12,20 +13,26 @@ InstallerSwitches:
   Silent: /S
   SilentWithProgress: /S
 UpgradeBehavior: install
-ElevationRequirement: elevatesSelf
+ElevationRequirement: elevationRequired
 FileExtensions:
   - avi
   - mkv
   - mov
   - mp4
   - webm
+Protocols:
+  - stage5-translator
+ProductCode: 3934dcbd-1ef6-5ce0-b182-24803d0fbb8d
+ReleaseDate: 2026-08-09
+AppsAndFeaturesEntries:
+  - DisplayName: Translator
+    Publisher: Mikey Lee
+    ProductCode: 3934dcbd-1ef6-5ce0-b182-24803d0fbb8d
+InstallationMetadata:
+  DefaultInstallLocation: '%ProgramFiles%\Video Tools\Translator'
 Installers:
   - Architecture: x64
     InstallerUrl: https://downloads.stage5.tools/win/1.16.6/Translator-x64.exe
     InstallerSha256: B7BE49BAD34BE5DE7A0474F13C4F4446EBF282B6A72D244AEB5197BE23A17610
-    AppsAndFeaturesEntries:
-      - DisplayName: Translator
-        Publisher: Mikey Lee
-        InstallerType: nullsoft
 ManifestType: installer
 ManifestVersion: 1.12.0
