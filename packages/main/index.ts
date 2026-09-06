@@ -1363,7 +1363,9 @@ try {
   );
 
   ipcMain.handle('get-analytics-privacy', () => getAnalyticsPrivacy());
-  ipcMain.handle('set-analytics-privacy', (_event, enabled: boolean) => setAnalyticsPrivacy(enabled));
+  ipcMain.handle('set-analytics-privacy', (_event, enabled: boolean) =>
+    setAnalyticsPrivacy(enabled)
+  );
   ipcMain.handle('sync-analytics-privacy', () => syncAnalyticsPrivacy());
 
   // Agent control handlers
@@ -2283,7 +2285,9 @@ app
       }
 
       void initializeProductAnalytics().catch(() => {
-        log.info('[product-measurement] Privacy synchronization remains pending.');
+        log.info(
+          '[product-measurement] Privacy synchronization remains pending.'
+        );
       });
       startHungWindowMonitoring(window);
       if (isDev) {

@@ -1438,7 +1438,9 @@ declare module '@shared-types/app' {
     getAnalyticsPrivacy: () => Promise<AnalyticsPrivacyState>;
     setAnalyticsPrivacy: (enabled: boolean) => Promise<AnalyticsPrivacyState>;
     syncAnalyticsPrivacy: () => Promise<AnalyticsPrivacyState>;
-    onAnalyticsPrivacyChanged: (callback: (state: AnalyticsPrivacyState) => void) => () => void;
+    onAnalyticsPrivacyChanged: (
+      callback: (state: AnalyticsPrivacyState) => void
+    ) => () => void;
     getAgentControlEnabled: () => Promise<boolean>;
     setAgentControlEnabled: (
       enabled: boolean

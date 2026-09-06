@@ -64,47 +64,65 @@ const measurementStore = new Store<ProductMeasurementStore>({
 });
 
 const preferenceStore = new Store<{ enabled: boolean; revision: number }>({
-  name: 'product-analytics-preference', defaults: { enabled: false, revision: 0 },
+  name: 'product-analytics-preference',
+  defaults: { enabled: false, revision: 0 },
 });
 
 function releaseAnalyticsAvailable() {
-  return shouldSendProductAnalytics({ isPackaged: app.isPackaged, appVersion: app.getVersion() });
+  return shouldSendProductAnalytics({
+    isPackaged: app.isPackaged,
+    appVersion: app.getVersion(),
+  });
 }
 
 function clearPendingAnalytics() {
   clearAllPendingEvents();
-  for (const failure of listPendingCriticalFailures()) acknowledgeCriticalFailure(failure.eventId);
+  for (const failure of listPendingCriticalFailures())
+    acknowledgeCriticalFailure(failure.eventId);
   measurementStore.delete('pendingMeaningfulUseEventId');
   measurementStore.delete('pendingMeaningfulUseOccurredAt');
 }
 
 const privacy = createAnalyticsPreferenceController({
-  read: () => ({ enabled: preferenceStore.get('enabled') === true, revision: preferenceStore.get('revision') }),
-  write: choice => { preferenceStore.set(choice); },
+  read: () => ({
+    enabled: preferenceStore.get('enabled') === true,
+    revision: preferenceStore.get('revision'),
+  }),
+  write: choice => {
+    preferenceStore.set(choice);
+  },
   send: async choice => {
-    const response = await withStage5AuthRetry(headers => axios.post(
-      `${STAGE5_API_URL}/analytics/preferences`, choice, { headers, timeout: 10_000 }
-    ));
+    const response = await withStage5AuthRetry(headers =>
+      axios.post(`${STAGE5_API_URL}/analytics/preferences`, choice, {
+        headers,
+        timeout: 10_000,
+      })
+    );
     return response.data;
   },
   clearPending: clearPendingAnalytics,
   available: releaseAnalyticsAvailable,
   changed: state => {
     for (const contents of webContents.getAllWebContents()) {
-      if (!contents.isDestroyed()) contents.send('analytics-privacy-changed', state);
+      if (!contents.isDestroyed())
+        contents.send('analytics-privacy-changed', state);
     }
   },
 });
 
 export const getAnalyticsPrivacy = () => privacy.snapshot();
-export const setAnalyticsPrivacy = (enabled: boolean) => privacy.setEnabled(enabled);
-export const syncAnalyticsPrivacy = () => privacy.setEnabled(privacy.snapshot().enabled);
+export const setAnalyticsPrivacy = (enabled: boolean) =>
+  privacy.setEnabled(enabled);
+export const syncAnalyticsPrivacy = () =>
+  privacy.setEnabled(privacy.snapshot().enabled);
 
 let maintenance: ReturnType<typeof setInterval> | undefined;
 function prunePendingAnalytics() {
   listPendingProductEvents();
   listPendingCriticalFailures();
-  if (!isFreshProductEvent(measurementStore.get('pendingMeaningfulUseOccurredAt'))) {
+  if (
+    !isFreshProductEvent(measurementStore.get('pendingMeaningfulUseOccurredAt'))
+  ) {
     measurementStore.delete('pendingMeaningfulUseEventId');
     measurementStore.delete('pendingMeaningfulUseOccurredAt');
   }
@@ -114,14 +132,17 @@ export async function initializeProductAnalytics() {
   // Purge legacy untimed queues, even when analytics remains disabled.
   prunePendingAnalytics();
   if (!maintenance) {
-    maintenance = setInterval(() => {
-      prunePendingAnalytics();
-      void (async () => {
-        if (privacy.snapshot().status === 'pending') await privacy.sync();
-        await flushPendingCriticalFailures();
-        await flushPendingProductEvents();
-      })().catch(() => {});
-    }, 15 * 60 * 1000);
+    maintenance = setInterval(
+      () => {
+        prunePendingAnalytics();
+        void (async () => {
+          if (privacy.snapshot().status === 'pending') await privacy.sync();
+          await flushPendingCriticalFailures();
+          await flushPendingProductEvents();
+        })().catch(() => {});
+      },
+      15 * 60 * 1000
+    );
     maintenance.unref();
   }
   await privacy.sync();
@@ -198,7 +219,11 @@ async function postProductEvent({
 }): Promise<void> {
   const signal = privacy.signal();
   await withStage5AuthRetry(headers => {
-    if (!privacy.maySend(consentRevision) || signal.aborted || !isFreshProductEvent(occurredAt))
+    if (
+      !privacy.maySend(consentRevision) ||
+      signal.aborted ||
+      !isFreshProductEvent(occurredAt)
+    )
       throw new Error('analytics_not_allowed');
     return axios.post(
       `${STAGE5_API_URL}/analytics/events`,
@@ -332,7 +357,9 @@ export function trackFirstMeaningfulUse(
   const fresh = isFreshProductEvent(priorTime);
   const occurredAt = fresh ? priorTime! : new Date().toISOString();
   const consentRevision = privacy.snapshot().revision;
-  const existingEventId = fresh ? measurementStore.get('pendingMeaningfulUseEventId') : undefined;
+  const existingEventId = fresh
+    ? measurementStore.get('pendingMeaningfulUseEventId')
+    : undefined;
   const eventId =
     typeof existingEventId === 'string' && existingEventId.trim()
       ? existingEventId
@@ -385,7 +412,13 @@ export async function trackTranslationFunnelEvent(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
     if (!privacy.maySend(consentRevision)) return;
-    queueProductEvent({ eventId, occurredAt, consentRevision, event, workflow: 'full_srt' });
+    queueProductEvent({
+      eventId,
+      occurredAt,
+      consentRevision,
+      event,
+      workflow: 'full_srt',
+    });
   }
 }
 
@@ -508,7 +541,13 @@ export async function trackUrlDownloadFunnelEvent(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
     if (!privacy.maySend(consentRevision)) return;
-    queueProductEvent({ eventId, occurredAt, consentRevision, event, urlDownload: details });
+    queueProductEvent({
+      eventId,
+      occurredAt,
+      consentRevision,
+      event,
+      urlDownload: details,
+    });
   }
 }
 
@@ -546,6 +585,12 @@ export async function trackPurchaseFunnelEvent(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
     if (!privacy.maySend(consentRevision)) return;
-    queueProductEvent({ eventId, occurredAt, consentRevision, event, purchase: details });
+    queueProductEvent({
+      eventId,
+      occurredAt,
+      consentRevision,
+      event,
+      purchase: details,
+    });
   }
 }

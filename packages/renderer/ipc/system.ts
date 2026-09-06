@@ -634,6 +634,10 @@ export function onElevenLabsApiKeyChanged(
 }
 
 export const getAnalyticsPrivacy = () => window.electron.getAnalyticsPrivacy();
-export const setAnalyticsPrivacy = (enabled: boolean) => window.electron.setAnalyticsPrivacy(enabled);
-export const syncAnalyticsPrivacy = () => window.electron.syncAnalyticsPrivacy();
-export const onAnalyticsPrivacyChanged = (callback: (state: AnalyticsPrivacyState) => void) => window.electron.onAnalyticsPrivacyChanged(callback);
+export const setAnalyticsPrivacy = (enabled: boolean) =>
+  window.electron.setAnalyticsPrivacy(enabled);
+export const syncAnalyticsPrivacy = () =>
+  window.electron.syncAnalyticsPrivacy();
+export const onAnalyticsPrivacyChanged = (
+  callback: (state: AnalyticsPrivacyState) => void
+) => window.electron.onAnalyticsPrivacyChanged(callback);
