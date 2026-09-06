@@ -6,6 +6,7 @@ import type {
   TranscriptHighlightStatus,
 } from '@shared-types/app';
 import Button from '../Button';
+import HighlightEditorialEditor from './HighlightEditorialEditor';
 import {
   formatRange,
   getHighlightKey,
@@ -488,6 +489,14 @@ export default function TranscriptSummaryHighlightsTab({
                     t={t}
                   />
                 </div>
+
+                <HighlightEditorialEditor
+                  highlight={highlight}
+                  disabled={cutDisabled}
+                  onSaved={() =>
+                    onSetHighlightAspectMode(highlight, 'vertical_reframe')
+                  }
+                />
 
                 {highlight.videoPath ? (
                   <video

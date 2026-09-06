@@ -318,28 +318,15 @@ export function srtTimeToSeconds(timeString: string): number {
  * Convert seconds to SRT time format (00:00:00,000)
  */
 export function secondsToSrtTime(totalSeconds: number): string {
-  if (isNaN(totalSeconds) || totalSeconds < 0 || totalSeconds == null)
-    return '00:00:00,000';
-
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = Math.floor(totalSeconds % 60);
-  const milliseconds = Math.floor((totalSeconds % 1) * 1000);
-
-  const finalSeconds = milliseconds === 1000 ? seconds + 1 : seconds;
-  const finalMilliseconds = milliseconds === 1000 ? 0 : milliseconds;
-
-  const finalMinutes = finalSeconds === 60 ? minutes + 1 : minutes;
-  const finalSecondsAdjusted = finalSeconds === 60 ? 0 : finalSeconds;
-
-  const finalHours = finalMinutes === 60 ? hours + 1 : hours;
-  const finalMinutesAdjusted = finalMinutes === 60 ? 0 : finalMinutes;
-
-  return `${String(finalHours).padStart(2, '0')}:${String(
-    finalMinutesAdjusted
-  ).padStart(2, '0')}:${String(finalSecondsAdjusted).padStart(2, '0')},${String(
-    finalMilliseconds
-  ).padStart(3, '0')}`;
+  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return '00:00:00,000';
+  // Round once before splitting fields: floating-point fractions such as
+  // 970.156 otherwise lose a millisecond on every SRT export/reopen cycle.
+  const totalMs = Math.round(totalSeconds * 1000);
+  const hours = Math.floor(totalMs / 3_600_000);
+  const minutes = Math.floor(totalMs / 60_000) % 60;
+  const seconds = Math.floor(totalMs / 1000) % 60;
+  const milliseconds = totalMs % 1000;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')},${String(milliseconds).padStart(3, '0')}`;
 }
 
 export function fixOverlappingSegments(segments: SrtSegment[]): SrtSegment[] {

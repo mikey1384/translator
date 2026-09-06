@@ -50,7 +50,7 @@ export function buildHighlightFilename(
 function slugify(value: string): string {
   return value
     .toLowerCase()
-    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/[^\p{L}\p{N}]+/giu, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
 }

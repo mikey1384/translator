@@ -1,3 +1,9 @@
+import {
+  buildEditorialReframeGraph,
+  validateHighlightEditorialPlan,
+} from '../../shared/helpers/highlight-editorial.js';
+import { renderOperationPathToken } from '../utils/render-operation-id.js';
+import { resolveClipRanges } from '../../shared/helpers/highlight-clips.js';
 import path from 'path';
 import fs from 'fs/promises';
 import { spawn } from 'child_process';
@@ -1213,6 +1219,12 @@ export async function handleCutHighlightClip(
       confidence: highlight.confidence,
       category: highlight.category,
       justification: highlight.justification,
+      editorial: highlight.editorial
+        ? validateHighlightEditorialPlan(
+            highlight.editorial,
+            highlight.end - highlight.start
+          )
+        : undefined,
     };
     resolvedHighlightId = sanitizedHighlight.id;
 
@@ -1222,42 +1234,15 @@ export async function handleCutHighlightClip(
 
     emitHighlightProgress(lastProgressPercent, 'Preparing highlight clip');
 
-    const rawStart = Number.isFinite(sanitizedHighlight.start)
-      ? Math.max(0, Number(sanitizedHighlight.start))
-      : 0;
-    const fallbackEnd = rawStart + 30;
-    const requestedEnd = Number.isFinite(sanitizedHighlight.end)
-      ? Math.max(rawStart + 2, Number(sanitizedHighlight.end))
-      : fallbackEnd;
-
-    let safeStart = durationKnown
-      ? Math.min(rawStart, Math.max(0, totalDur - 1))
-      : rawStart;
-
-    let safeEnd = durationKnown
-      ? Math.min(Math.max(safeStart + 2, requestedEnd), totalDur)
-      : Math.max(safeStart + 2, requestedEnd);
-
-    if (!Number.isFinite(safeEnd) || safeEnd <= safeStart) {
-      safeEnd = durationKnown
-        ? Math.min(totalDur, safeStart + 15)
-        : safeStart + 15;
-    }
-
-    const leadPadding = 0.35;
-    const tailPadding = 0.45;
-    safeStart = Math.max(0, safeStart - leadPadding);
-    safeEnd = durationKnown
-      ? Math.min(totalDur, safeEnd + tailPadding)
-      : safeEnd + tailPadding;
-
-    const duration = Math.max(2, safeEnd - safeStart);
-    const fadeDuration = Math.min(0.6, Math.max(0.25, duration / 12));
-    const fadeOutStart = Math.max(0.1, duration - fadeDuration);
+    const [{ start: safeStart, end: safeEnd }] = resolveClipRanges(
+      [sanitizedHighlight],
+      totalDur
+    );
+    const duration = safeEnd - safeStart;
 
     const outPath = path.join(
       ffmpeg.tempDir,
-      `highlight-${operationId}-${Math.round(safeStart)}-${Math.round(safeEnd)}.mp4`
+      `highlight-${renderOperationPathToken(operationId)}-${Math.round(safeStart)}-${Math.round(safeEnd)}.mp4`
     );
 
     const handleFfmpegProgress = (pct: number) => {
@@ -1294,7 +1279,21 @@ export async function handleCutHighlightClip(
     let filterLabelCounter = 0;
     const nextLabel = (prefix: string) => `${prefix}${++filterLabelCounter}`;
 
-    if (enforceVertical) {
+    if (sanitizedHighlight.editorial) {
+      if (aspectMode !== 'vertical_reframe')
+        throw new Error('An editorial Short uses the Shorts Reframe format.');
+      filterParts.push(
+        buildEditorialReframeGraph(
+          sanitizedHighlight.editorial,
+          videoMeta?.width ?? 0,
+          videoMeta?.height ?? 0,
+          currentLabel,
+          'editorialVideo',
+          'editorial'
+        )
+      );
+      currentLabel = 'editorialVideo';
+    } else if (enforceVertical) {
       let verticalFilter = buildLegacyVerticalPadFilter();
       if (aspectMode === 'vertical_reframe') {
         emitHighlightProgress(12, 'Analyzing subject framing');
@@ -1349,21 +1348,6 @@ export async function handleCutHighlightClip(
       // ignore mkdir errors; writeFile will throw if still unavailable
     }
 
-    const needsVideoFade = duration > fadeDuration * 2;
-    let audioFadeFilter: string | null = null;
-    if (needsVideoFade) {
-      const fadeLabel = nextLabel('fade');
-      filterParts.push(
-        `[${currentLabel}]fade=t=in:st=0:d=${fadeDuration.toFixed(
-          2
-        )},fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}[${fadeLabel}]`
-      );
-      currentLabel = fadeLabel;
-      audioFadeFilter = `afade=t=in:st=0:d=${fadeDuration.toFixed(
-        2
-      )},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`;
-    }
-
     lastProgressPercent = Math.max(lastProgressPercent, 20);
     emitHighlightProgress(lastProgressPercent, 'Cutting highlight clip');
 
@@ -1381,21 +1365,9 @@ export async function handleCutHighlightClip(
 
     args.push('-map', '0:a:0?');
 
-    if (audioFadeFilter) {
-      args.push('-af', audioFadeFilter);
-    }
-
-    if (requiresVideoFilter) {
-      args.push(...HIGHLIGHT_VIDEO_ENCODER_ARGS);
-    } else {
-      args.push('-c:v', 'copy');
-    }
-
-    if (audioFadeFilter) {
-      args.push('-c:a', 'aac', '-b:a', '128k');
-    } else {
-      args.push('-c:a', 'copy');
-    }
+    // Accurate frame boundaries matter even when no crop/filter is applied.
+    // Fading the first and last spoken words weakens the hook and the payoff.
+    args.push(...HIGHLIGHT_VIDEO_ENCODER_ARGS, '-c:a', 'aac', '-b:a', '128k');
 
     args.push('-movflags', '+faststart', outPath);
 
@@ -1414,8 +1386,6 @@ export async function handleCutHighlightClip(
 
     const cutHighlight: TranscriptHighlight = {
       ...sanitizedHighlight,
-      start: safeStart,
-      end: safeEnd,
       videoPath: outPath,
     };
 
@@ -1424,6 +1394,7 @@ export async function handleCutHighlightClip(
     return {
       success: true,
       highlight: cutHighlight,
+      sourceRanges: [{ start: safeStart, end: safeEnd }],
       operationId,
     };
   } catch (error: any) {
@@ -1470,40 +1441,6 @@ async function hasAudioStream(
     p.stdout.on('data', d => (out += d));
     p.on('error', () => resolve(false));
     p.on('close', () => resolve(out.trim().length > 0));
-  });
-}
-
-/**
- * Convert highlights to time ranges in user-defined order.
- * Applies lead padding to first segment and tail padding to last segment.
- */
-function highlightsToSegments(
-  highlights: TranscriptHighlight[],
-  totalDur: number
-): Array<{ start: number; end: number }> {
-  if (highlights.length === 0) return [];
-
-  const leadPadding = 0.35;
-  const tailPadding = 0.45;
-
-  return highlights.map((h, idx) => {
-    const isFirst = idx === 0;
-    const isLast = idx === highlights.length - 1;
-
-    let segStart = Math.max(0, h.start);
-    let segEnd = Math.max(segStart + 0.5, h.end);
-
-    if (isFirst) {
-      segStart = Math.max(0, segStart - leadPadding);
-    }
-    if (isLast) {
-      segEnd =
-        totalDur > 0
-          ? Math.min(totalDur, segEnd + tailPadding)
-          : segEnd + tailPadding;
-    }
-
-    return { start: segStart, end: segEnd };
   });
 }
 
@@ -1584,11 +1521,16 @@ export async function handleCutCombinedHighlights(
       videoMeta
     );
 
+    if (highlights.some(h => h.editorial))
+      throw new Error(
+        'Render editorial Shorts individually. Combine source selections before authoring a single edit.'
+      );
+
     // Check if video has audio stream
     const hasAudio = await hasAudioStream(videoPath, ffmpeg.ffprobePath);
 
     // Convert highlights to segments in user-defined order
-    const segments = highlightsToSegments(highlights, totalDur);
+    const segments = resolveClipRanges(highlights, totalDur);
     if (segments.length === 0) {
       throw new Error('no-valid-segments');
     }
@@ -1663,6 +1605,12 @@ export async function handleCutCombinedHighlights(
       totalCombinedDuration += seg.end - seg.start;
     }
 
+    // Seek once to the earliest selected interval instead of decoding the
+    // entire lead-in of a long archived video. Trim timestamps are now local.
+    const seekOffset = Math.min(...segments.map(segment => segment.start));
+    const sourceWindowDuration =
+      Math.max(...segments.map(segment => segment.end)) - seekOffset;
+
     // Build FFmpeg filter chain with trim+concat
     const videoFilters: string[] = [];
     const audioFilters: string[] = [];
@@ -1671,8 +1619,8 @@ export async function handleCutCombinedHighlights(
 
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
-      const safeStart = Math.max(0, seg.start);
-      const safeEnd = durationKnown ? Math.min(totalDur, seg.end) : seg.end;
+      const safeStart = seg.start - seekOffset;
+      const safeEnd = seg.end - seekOffset;
 
       // Video trim + portrait reframe
       let vFilter = `[0:v]trim=start=${safeStart.toFixed(3)}:end=${safeEnd.toFixed(3)},setpts=PTS-STARTPTS`;
@@ -1702,10 +1650,17 @@ export async function handleCutCombinedHighlights(
       ? [...videoFilters, ...audioFilters, concatFilter].join(';')
       : [...videoFilters, concatFilter].join(';');
 
-    const outPath = path.join(ffmpeg.tempDir, `combined-${operationId}.mp4`);
+    const outPath = path.join(
+      ffmpeg.tempDir,
+      `combined-${renderOperationPathToken(operationId)}.mp4`
+    );
 
     const args = [
       '-y',
+      '-ss',
+      String(seekOffset),
+      '-t',
+      String(sourceWindowDuration),
       '-i',
       videoPath,
       '-filter_complex',
@@ -1751,6 +1706,7 @@ export async function handleCutCombinedHighlights(
     const successResult = {
       success: true,
       videoPath: outPath,
+      sourceRanges: segments,
       operationId,
     };
     void trackMergeFunnelEvent(classifyMergeOutcome(successResult));

@@ -583,12 +583,20 @@ function buildServer() {
   server.registerTool(
     'app_set_subtitle_style',
     {
-      description: 'Choose the development app subtitle style.',
+      description:
+        'Choose subtitle style and optional base font size. These settings also control highlight renders; LineBox at 35 is a good Korean Shorts starting point.',
       inputSchema: z.object({
         style: z.enum(['Default', 'Classic', 'Boxed', 'LineBox']),
+        base_font_size_px: z.number().min(6).max(96).optional(),
       }),
     },
-    async input => result(await app.call('setSubtitleStyle', input))
+    async input =>
+      result(
+        await app.call('setSubtitleStyle', {
+          style: input.style,
+          baseFontSizePx: input.base_font_size_px,
+        })
+      )
   );
 
   server.registerTool(
@@ -965,6 +973,109 @@ function buildServer() {
       result(
         await app.call('cancelProcessing', {
           historyId: input.history_id,
+          operationId: input.operation_id,
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_highlights_get',
+    {
+      description:
+        'Read saved highlights and a source/transcript snapshot ID. Read app_subtitles_get for context before selecting complete ideas. No inference or credits.',
+      inputSchema: z.object({}),
+    },
+    async () => result(await app.call('highlightsSnapshot', {}))
+  );
+
+  server.registerTool(
+    'app_highlights_set',
+    {
+      description:
+        'Save agent-selected highlights into the visible app and persistent transcript library. Bind complete ideas to start/end cue IDs from app_subtitles_get; snapshot_id comes from app_highlights_get. Replaces the current selection, preserves any summary. Empty selection is allowed. Optional editorial plan: clip-relative shots covering the entire interval, normalized source centerX/centerY, zoom 1–2.5, and faithful short caption phrases with exact-substring emphasis. Inspect source frames to follow speaker/camera changes; never guess framing. Authored phrase times are not word alignment. Editorial Shorts render individually in vertical_reframe. No inference or credits.',
+      inputSchema: z.object({
+        snapshot_id: z.string().min(1),
+        highlights: z
+          .array(
+            z.object({
+              id: z.string().min(1).max(80),
+              title: z.string().min(1).max(160),
+              start_cue_id: z.string().min(1),
+              end_cue_id: z.string().min(1),
+              description: z.string().max(2000).optional(),
+              reason: z.string().max(2000).optional(),
+              editorial: z
+                .object({
+                  label: z.string().max(60).optional(),
+                  shots: z
+                    .array(
+                      z.object({
+                        start: z.number().nonnegative(),
+                        end: z.number().positive(),
+                        centerX: z.number().min(0).max(1),
+                        centerY: z.number().min(0).max(1),
+                        zoom: z.number().min(1).max(2.5),
+                      })
+                    )
+                    .min(1)
+                    .max(40),
+                  captions: z
+                    .array(
+                      z.object({
+                        start: z.number().nonnegative(),
+                        end: z.number().positive(),
+                        text: z.string().min(1).max(100),
+                        emphasis: z.string().max(100).optional(),
+                      })
+                    )
+                    .min(1)
+                    .max(160),
+                })
+                .optional(),
+            })
+          )
+          .max(20),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('setHighlights', {
+          snapshotId: input.snapshot_id,
+          highlights: input.highlights.map(h => ({
+            id: h.id,
+            title: h.title,
+            startCueId: h.start_cue_id,
+            endCueId: h.end_cue_id,
+            description: h.description,
+            reason: h.reason,
+            editorial: h.editorial,
+          })),
+        })
+      )
+  );
+
+  server.registerTool(
+    'app_start_highlight_render',
+    {
+      description:
+        'Locally cut and caption saved highlights, keeping the original and translated SRT reusable. One ID makes a Short; multiple IDs are combined in supplied order. Plain clips use current subtitle display/style/font settings. A saved editorial plan supplies precise framing and styled phrase captions and requires one highlight in vertical_reframe. vertical_fit preserves demonstrations; vertical_reframe follows subjects or the saved editorial shots. Returns immediately: poll app_processing_status with operation_id; cancel via app_processing_cancel. A stable operation_id prevents replay within this app session. output_path must be a new MP4, or omit to keep a preview in the app library. No transcription, translation, inference credit, upload or publication.',
+      inputSchema: z.object({
+        snapshot_id: z.string().min(1),
+        highlight_ids: z.array(z.string().min(1)).min(1).max(20),
+        aspect_mode: z
+          .enum(['vertical_fit', 'vertical_reframe', 'original'])
+          .default('vertical_fit'),
+        output_path: z.string().min(1).optional(),
+        operation_id: optionalOperationId,
+      }),
+    },
+    async input =>
+      result(
+        await app.call('startHighlightRender', {
+          snapshotId: input.snapshot_id,
+          highlightIds: input.highlight_ids,
+          aspectMode: input.aspect_mode,
+          outputPath: input.output_path,
           operationId: input.operation_id,
         })
       )

@@ -1,3 +1,4 @@
+import { editorialCaptionHtml } from '../shared/helpers/editorial-caption-html.js';
 import {
   getSubtitleStyles,
   normalizeSubtitleLineBoxLineText,
@@ -232,6 +233,17 @@ function initializeSubtitleDisplay() {
   ) => {
     const el = document.getElementById('subtitle');
     if (!el) return;
+    if (state.mode === 'editorial') {
+      el.className = '';
+      el.style.cssText =
+        'position:absolute;inset:0;width:100%;height:100%;opacity:1;transform:none;margin:0;padding:0;max-width:none;';
+      el.innerHTML = editorialCaptionHtml(
+        state,
+        opts.videoWidthPx ?? window.innerWidth
+      );
+      return;
+    }
+    el.style.cssText = '';
 
     const {
       stylePreset = 'Default',
@@ -303,6 +315,9 @@ function initializeSubtitleDisplay() {
   ) => {
     updateElementFromState(state, opts);
   };
+
+  // @ts-expect-error provided by this isolated render host
+  window.updateEditorialSubtitle = updateElementFromState;
 
   // @ts-expect-error...
   window.applySubtitlePreset = applySubtitlePreset;

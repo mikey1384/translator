@@ -1,3 +1,4 @@
+import { rankDistinctHighlights } from '../../../shared/helpers/highlight-clips.js';
 import { callAIModel } from './ai-client.js';
 import type {
   TranscriptSummarySegment,
@@ -883,7 +884,7 @@ async function processHighlightChunk({
     }
   }
 
-  tracker.latest = Array.from(tracker.seen.values());
+  tracker.latest = rankDistinctHighlights(Array.from(tracker.seen.values()));
 
   return tracker.latest;
 }
@@ -891,13 +892,7 @@ async function processHighlightChunk({
 function finalizeHighlightTracker(
   tracker: HighlightTrackerState
 ): TranscriptHighlight[] {
-  let final = Array.from(tracker.seen.values());
-
-  if (final.length === 0) {
-    final = buildFallbackHighlightsFromSegments({
-      segments: tracker.segments,
-    });
-  }
+  const final = rankDistinctHighlights(Array.from(tracker.seen.values()));
 
   tracker.latest = final;
   return final;
@@ -1254,70 +1249,4 @@ function normalizeLineNumber(value: unknown): number | undefined {
     }
   }
   return undefined;
-}
-
-function buildFallbackHighlightsFromSegments({
-  segments,
-}: {
-  segments: NumberedSegment[];
-}): TranscriptHighlight[] {
-  if (!Array.isArray(segments) || segments.length === 0) {
-    return [];
-  }
-
-  const totalDuration = segments.reduce((max, seg) => {
-    const end = Number(seg?.end);
-    if (!Number.isFinite(end)) return max;
-    return Math.max(max, end);
-  }, 0);
-
-  if (!Number.isFinite(totalDuration) || totalDuration <= 0) {
-    return [];
-  }
-
-  const estimatedCount = Math.max(1, Math.round(totalDuration / 90));
-  const count = Math.min(segments.length, estimatedCount);
-  const bucketSize = totalDuration / count;
-  const results: TranscriptHighlight[] = [];
-
-  for (let i = 0; i < count; i++) {
-    const bucketStart = i * bucketSize;
-    const bucketEnd =
-      i === count - 1 ? totalDuration : bucketStart + bucketSize;
-    const bucketSegments = segments.filter(
-      seg => seg.end > bucketStart && seg.start < bucketEnd
-    );
-    if (bucketSegments.length === 0) continue;
-
-    const pivot = bucketSegments.reduce((best, seg) => {
-      const bestScore = best?.text?.length ?? 0;
-      const segScore = seg?.text?.length ?? 0;
-      if (!best) return seg;
-      return segScore > bestScore ? seg : best;
-    }, bucketSegments[0]);
-
-    if (!pivot) continue;
-    const clipStart = Math.max(0, pivot.start - 1.5);
-    const clipEnd = Math.min(
-      totalDuration,
-      Math.max(pivot.end + 4, clipStart + 3)
-    );
-
-    const lastSegInBucket = bucketSegments[bucketSegments.length - 1];
-    results.push({
-      id: `fallback-${i + 1}`,
-      start: Number(clipStart.toFixed(3)),
-      end: Number(clipEnd.toFixed(3)),
-      title: `Key moment ${i + 1}`,
-      description: pivot.text,
-      confidence: 0.2,
-      category: 'context',
-      justification:
-        'Auto-selected because highlight detection returned no confident candidates.',
-      lineStart: pivot.lineNumber,
-      lineEnd: lastSegInBucket?.lineNumber ?? pivot.lineNumber,
-    });
-  }
-
-  return results;
 }

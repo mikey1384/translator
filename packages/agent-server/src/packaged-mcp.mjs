@@ -254,6 +254,7 @@ export const TOOL_SCHEMAS = {
         type: 'string',
         enum: ['Default', 'Classic', 'Boxed', 'LineBox'],
       },
+      base_font_size_px: { type: 'number', minimum: 6, maximum: 96 },
     },
     required: ['style'],
     additionalProperties: false,
@@ -519,6 +520,99 @@ export const TOOL_SCHEMAS = {
       operation_id: { type: 'string', minLength: 1, maxLength: 200 },
     },
     additionalProperties: false,
+  },
+  app_highlights_get: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false,
+  },
+  app_highlights_set: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['snapshot_id', 'highlights'],
+    properties: {
+      snapshot_id: { type: 'string', minLength: 1 },
+      highlights: {
+        type: 'array',
+        maxItems: 20,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['id', 'title', 'start_cue_id', 'end_cue_id'],
+          properties: {
+            id: { type: 'string', minLength: 1, maxLength: 80 },
+            title: { type: 'string', minLength: 1, maxLength: 160 },
+            start_cue_id: { type: 'string', minLength: 1 },
+            end_cue_id: { type: 'string', minLength: 1 },
+            description: { type: 'string', maxLength: 2000 },
+            reason: { type: 'string', maxLength: 2000 },
+            editorial: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['shots', 'captions'],
+              properties: {
+                label: { type: 'string', maxLength: 60 },
+                shots: {
+                  type: 'array',
+                  minItems: 1,
+                  maxItems: 40,
+                  items: {
+                    type: 'object',
+                    additionalProperties: false,
+                    required: ['start', 'end', 'centerX', 'centerY', 'zoom'],
+                    properties: {
+                      start: { type: 'number', minimum: 0 },
+                      end: { type: 'number', exclusiveMinimum: 0 },
+                      centerX: { type: 'number', minimum: 0, maximum: 1 },
+                      centerY: { type: 'number', minimum: 0, maximum: 1 },
+                      zoom: { type: 'number', minimum: 1, maximum: 2.5 },
+                    },
+                  },
+                },
+                captions: {
+                  type: 'array',
+                  minItems: 1,
+                  maxItems: 160,
+                  items: {
+                    type: 'object',
+                    additionalProperties: false,
+                    required: ['start', 'end', 'text'],
+                    properties: {
+                      start: { type: 'number', minimum: 0 },
+                      end: { type: 'number', exclusiveMinimum: 0 },
+                      text: { type: 'string', minLength: 1, maxLength: 100 },
+                      emphasis: { type: 'string', maxLength: 100 },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  app_start_highlight_render: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['snapshot_id', 'highlight_ids'],
+    properties: {
+      snapshot_id: { type: 'string', minLength: 1 },
+      highlight_ids: {
+        type: 'array',
+        minItems: 1,
+        maxItems: 20,
+        uniqueItems: true,
+        items: { type: 'string', minLength: 1 },
+      },
+      aspect_mode: {
+        type: 'string',
+        enum: ['vertical_fit', 'vertical_reframe', 'original'],
+        default: 'vertical_fit',
+      },
+      output_path: { type: 'string', minLength: 1 },
+      operation_id: { type: 'string', minLength: 1, maxLength: 200 },
+    },
   },
   app_subtitles_get: {
     type: 'object',
@@ -1056,6 +1150,8 @@ export function mapFields(input) {
     // Special mappings from mcp.mjs (exact field transformations)
     if (key === 'confirm_overwrite' && value === 'OVERWRITE') {
       mapped.overwrite = true;
+    } else if (key === 'highlights' && Array.isArray(value)) {
+      mapped.highlights = value.map(mapFields);
     } else if (key === 'result_ids') {
       mapped.ids = value; // NOT resultIds - startSuggestedVideoBatch expects ids
     } else if (key === 'output_path') {
@@ -1235,7 +1331,19 @@ async function handleMessage(msg) {
           name,
           description:
             v2?.description ||
-            legacyToolDescription(name, `Translator: ${TOOL_MAP[name]}`),
+            legacyToolDescription(
+              name,
+              {
+                app_set_subtitle_style:
+                  'Set subtitle style and optional base_font_size_px (6–96). These settings also control saved-video Shorts; LineBox at 35 is a Korean Shorts starting point.',
+                app_highlights_get:
+                  'Read saved highlights and a snapshot ID. Read app_subtitles_get for context. No credits.',
+                app_highlights_set:
+                  'Save agent-selected highlights using complete start/end cue IDs and the snapshot from app_highlights_get. Replaces highlights, preserves summaries. Optional editorial plan: clip-relative shots covering the entire interval, normalized source centerX/centerY, zoom 1–2.5, and faithful short caption phrases with exact-substring emphasis. Inspect source frames to follow speaker/camera changes; never guess framing. Authored phrase times are not word alignment. Editorial Shorts render individually in vertical_reframe. No inference or credits.',
+                app_start_highlight_render:
+                  'Cut and caption saved highlight IDs in playback order. Plain clips use current subtitle display/style settings. A saved editorial plan supplies precise framing and styled phrase captions and requires one highlight in vertical_reframe. Poll app_processing_status; cancel via app_processing_cancel. Reuse a stable operation_id within this app session. vertical_fit preserves demonstrations; vertical_reframe follows subjects or the saved editorial shots. Output to a new MP4 path or omit for an app-library preview. Preserves original/translated SRT. No credits, upload or publication.',
+              }[name] || `Translator: ${TOOL_MAP[name]}`
+            ),
           inputSchema: v2?.inputSchema || TOOL_SCHEMAS[name],
         };
       });

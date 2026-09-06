@@ -1,3 +1,4 @@
+import { validateHighlightEditorialPlan } from '../../shared/helpers/highlight-editorial.js';
 import { app } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -224,6 +225,13 @@ function sanitizeHighlight(input: unknown): TranscriptHighlight | null {
     justification,
     lineStart,
     lineEnd,
+    editorialSourceSignature:
+      typeof raw.editorialSourceSignature === 'string'
+        ? raw.editorialSourceSignature
+        : undefined,
+    editorial: raw.editorial
+      ? validateHighlightEditorialPlan(raw.editorial, end - start)
+      : undefined,
   };
 }
 
@@ -410,7 +418,8 @@ async function saveStoredTranscriptAnalysisUnlocked(
   if (
     !artifact.summary &&
     artifact.sections.length === 0 &&
-    artifact.highlights.length === 0
+    artifact.highlights.length === 0 &&
+    args.highlightStatus !== 'complete'
   ) {
     throw new Error('Cannot store empty transcript analysis.');
   }
@@ -526,7 +535,8 @@ async function findStoredTranscriptAnalysisUnlocked(
       if (
         !analysis.summary &&
         analysis.sections.length === 0 &&
-        analysis.highlights.length === 0
+        analysis.highlights.length === 0 &&
+        parsed?.highlightStatus !== 'complete'
       ) {
         continue;
       }

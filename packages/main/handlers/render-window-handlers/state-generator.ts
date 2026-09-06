@@ -9,6 +9,7 @@ import type {
 import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.js';
 
 function getRenderStateCacheKey(state: SubtitleRenderState): string {
+  if (state.mode === 'editorial') return JSON.stringify(state);
   if (state.mode === 'plain') {
     return `plain:${state.text}`;
   }
@@ -106,7 +107,9 @@ export async function generateStatePngs({
       const key = getRenderStateCacheKey(ev.state);
       const hasVisibleText = Boolean(ev.state.text.trim());
       const durationToUse =
-        i === 0 && hasVisibleText ? Math.max(duration, 2 / fps) : duration;
+        i === 0 && hasVisibleText && ev.state.mode !== 'editorial'
+          ? Math.max(duration, 2 / fps)
+          : duration;
       let file = stateCache.get(key);
       if (!file) {
         file = path.join(
@@ -128,6 +131,11 @@ export async function generateStatePngs({
               videoHeightPx: dh,
             };
 
+            if (state.mode === 'editorial') {
+              // @ts-expect-error provided by render-host script
+              window.updateEditorialSubtitle(state, options);
+              return;
+            }
             if (state.mode === 'timed') {
               // @ts-expect-error provided by render-host script
               window.updateTimedSubtitle(state, options);

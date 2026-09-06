@@ -117,3 +117,17 @@ export function buildSummaryRequestOwnerKey({
   });
   return `${inputSignature}|${semanticSourceIdentity}`;
 }
+
+export async function buildTranscriptHash(
+  segments: ReturnType<typeof toUsableTranscriptSegments>
+): Promise<string> {
+  const canonical = buildCanonicalTranscriptText(segments);
+  if (!window.crypto?.subtle) {
+    throw new Error('Secure transcript hashing unavailable');
+  }
+  const encoded = new TextEncoder().encode(canonical);
+  const digest = await window.crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(digest))
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
+}

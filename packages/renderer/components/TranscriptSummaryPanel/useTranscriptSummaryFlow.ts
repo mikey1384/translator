@@ -1,3 +1,4 @@
+import { HIGHLIGHT_ANALYSIS_CHANGED } from '../../listeners/agent-highlights';
 import {
   useCallback,
   useEffect,
@@ -42,7 +43,7 @@ import {
   translateStageLabel,
 } from './TranscriptSummaryPanel.helpers';
 import {
-  buildCanonicalTranscriptText,
+  buildTranscriptHash,
   buildSemanticSummarySourceIdentity,
   buildSummaryInputSignature,
   normalizeSourcePathSignature,
@@ -95,20 +96,6 @@ type ActiveSummaryRun = {
   operationId: string;
   settled: Promise<void>;
 };
-
-async function buildTranscriptHash(
-  segments: ReturnType<typeof toUsableTranscriptSegments>
-): Promise<string> {
-  const canonical = buildCanonicalTranscriptText(segments);
-  if (!window.crypto?.subtle) {
-    throw new Error('Secure transcript hashing unavailable');
-  }
-  const encoded = new TextEncoder().encode(canonical);
-  const digest = await window.crypto.subtle.digest('SHA-256', encoded);
-  return Array.from(new Uint8Array(digest))
-    .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 function buildRestoreLookupKey({
   transcriptHash,
@@ -224,6 +211,17 @@ export default function useTranscriptSummaryFlow({
   const pendingTeardownRef = useRef<Promise<void> | null>(null);
   const pendingPersistByLookupKeyRef = useRef<Map<string, number>>(new Map());
 
+  useEffect(() => {
+    const refresh = () => {
+      restoreKeyRef.current = null;
+      pendingRestoreRetryRef.current = true;
+      setPersistCompletionTick(value => value + 1);
+    };
+    window.addEventListener(HIGHLIGHT_ANALYSIS_CHANGED, refresh);
+    return () =>
+      window.removeEventListener(HIGHLIGHT_ANALYSIS_CHANGED, refresh);
+  }, []);
+
   const beginRunEpoch = useCallback(() => {
     runEpochRef.current += 1;
     return runEpochRef.current;
@@ -306,8 +304,11 @@ export default function useTranscriptSummaryFlow({
 
   const hasTranscript = usableSegments.length > 0;
   const hasSummaryResult = useMemo(
-    () => summary.trim().length > 0 || sections.length > 0,
-    [summary, sections]
+    () =>
+      summary.trim().length > 0 ||
+      sections.length > 0 ||
+      highlightStatus !== 'not_requested',
+    [summary, sections, highlightStatus]
   );
   const inputSignature = useMemo(
     () =>

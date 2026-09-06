@@ -1,3 +1,9 @@
+import {
+  getMountedHighlights,
+  setMountedHighlights,
+  resolveMountedHighlightRender,
+} from './agent-highlights';
+import { renderHighlight } from '../utils/render-highlight';
 import { buildSrt, parseSrt } from '../../shared/helpers';
 import {
   CHECKOUT_ALREADY_PENDING,
@@ -226,6 +232,7 @@ type AgentProcessingKind =
   | 'translation'
   | 'dubbing'
   | 'summary'
+  | 'highlight-render'
   | 'merge'
   | 'preset-render'
   | 'cue-transcription'
@@ -273,6 +280,8 @@ type AgentProcessingState = {
   progressDetails: Record<string, unknown> | null;
   sourceBinding: AgentSourceBinding | null;
 };
+
+const highlightRenderRequests = new Map<string, string>();
 
 let lastVideoSearchContext: VideoSearchContext | null = null;
 let agentBatchDownloadState: AgentBatchDownloadState = {
@@ -3608,6 +3617,9 @@ async function cancelAgentProcessing(input?: {
       tasks.translation.id,
       tasks.dubbing.id,
       tasks.summary.id,
+      agentProcessingState.kind === 'highlight-render'
+        ? agentProcessingState.id
+        : null,
     ].filter((id): id is string => Boolean(id))
   );
   if (agentProcessingState.status === 'running') {
@@ -4756,7 +4768,15 @@ function installAgentBridge() {
           'Subtitle style must be Default, Classic, Boxed, or LineBox.'
         );
       }
+      const size = input?.baseFontSizePx;
+      if (
+        size !== undefined &&
+        (!Number.isFinite(size) || normalizeSubtitleBaseFontSize(size) !== size)
+      ) {
+        throw new Error('Subtitle base font size must be between 6 and 96.');
+      }
       useUIStore.getState().setSubtitleStyle(style);
+      if (size !== undefined) useUIStore.getState().setBaseFontSize(size);
       return currentStatus();
     },
 
@@ -4930,6 +4950,73 @@ function installAgentBridge() {
         input?.sourceBinding,
         getInternalMcpJobId(input)
       );
+    },
+
+    async highlightsSnapshot() {
+      return getMountedHighlights();
+    },
+
+    async setHighlights(input) {
+      if (
+        hasActiveAppProcessing() ||
+        ['running', 'cancelling'].includes(agentProcessingState.status)
+      ) {
+        throw new Error(
+          'Wait for the current operation before changing highlights.'
+        );
+      }
+      return setMountedHighlights(input);
+    },
+
+    async startHighlightRender(input) {
+      const context = await resolveMountedHighlightRender(input);
+      const aspectMode = input.aspectMode || 'vertical_fit';
+      if (
+        !['original', 'vertical_fit', 'vertical_reframe'].includes(aspectMode)
+      )
+        throw new Error('Unsupported highlight aspect mode.');
+      const requestSignature = JSON.stringify([
+        context.snapshotId,
+        context.highlights,
+        aspectMode,
+        input.outputPath,
+        context.ui.subtitleDisplayMode,
+        context.ui.subtitleStyle,
+        context.ui.baseFontSize,
+      ]);
+      const requestId = String(input.operationId || '').trim();
+      if (
+        requestId &&
+        highlightRenderRequests.has(requestId) &&
+        highlightRenderRequests.get(requestId) !== requestSignature
+      ) {
+        throw new Error(
+          'This operation ID is already bound to another clip or render setting.'
+        );
+      }
+      const result = beginAgentProcessing(
+        'highlight-render',
+        operationId =>
+          renderHighlight({
+            videoPath: context.videoPath,
+            highlights: context.highlights,
+            segments: context.segments,
+            operationId,
+            aspectMode,
+            outputPath: input.outputPath,
+            displayMode: context.ui.subtitleDisplayMode,
+            style: context.ui.subtitleStyle,
+            fontSize: context.ui.baseFontSize,
+            targetLanguage: context.targetLanguage,
+            checkCancelled: throwIfAgentCancelled,
+            onStage: stage => {
+              agentProcessingState = { ...agentProcessingState, stage };
+            },
+          }),
+        input.operationId
+      );
+      if (requestId) highlightRenderRequests.set(requestId, requestSignature);
+      return result;
     },
 
     async startSummary(input) {

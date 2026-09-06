@@ -13,6 +13,16 @@ import { assertSubtitleRenderFontReadable } from '../../utils/subtitle-render-fo
 function getRenderHostPath(): string {
   const dev = path.resolve(__dirname, 'render-host.html');
   if (fs.existsSync(dev)) return dev;
+  // The development driver launches packages/main, while the render host is
+  // built at the workspace root alongside its script bundle.
+  if (!app.isPackaged) {
+    const workspaceHost = path.resolve(
+      app.getAppPath(),
+      '../..',
+      'render-host.html'
+    );
+    if (fs.existsSync(workspaceHost)) return workspaceHost;
+  }
   const unpacked = path.join(
     path.dirname(app.getAppPath()),
     'app.asar.unpacked',

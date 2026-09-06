@@ -5196,6 +5196,12 @@ test('legacy video search billing follows the video-suggestion provider slot', (
 });
 
 test('legacy paid tools are unmistakably labeled as lacking v2 safeguards', () => {
+  for (const tool of ['app_highlights_get', 'app_highlights_set', 'app_start_highlight_render']) {
+    const billing = legacyToolBilling(tool, {}, {providers:{translation:{kind:'stage5'}}});
+    assert.equal(billing.may_consume_stage5_credits, false);
+    assert.equal(billing.will_consume_stage5_credits, false);
+    assert.equal(legacyToolDescription(tool, 'Local saved-video workflow.'), 'Local saved-video workflow.');
+  }
   assert.match(
     legacyToolDescription(
       'app_start_translation',

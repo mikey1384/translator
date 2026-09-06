@@ -16,6 +16,7 @@ function createPlainState(text: string): SubtitleRenderState {
 }
 
 function getRenderStateKey(state: SubtitleRenderState): string {
+  if (state.mode === 'editorial') return JSON.stringify(state);
   if (state.mode === 'plain') {
     return `plain:${state.text}`;
   }

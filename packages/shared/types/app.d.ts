@@ -690,7 +690,28 @@ declare module '@shared-types/app' {
     text: string;
   }
 
+  export interface HighlightEditorialPlan {
+    /** Clip-relative seconds. Shots cover the entire clip, with no gaps. */
+    shots: Array<{
+      start: number;
+      end: number;
+      centerX: number;
+      centerY: number;
+      zoom: number;
+    }>;
+    /** Authored, source-faithful phrase timing; not inferred word alignment. */
+    captions: Array<{
+      start: number;
+      end: number;
+      text: string;
+      emphasis?: string;
+    }>;
+    label?: string;
+  }
+
   export interface TranscriptHighlight {
+    editorial?: HighlightEditorialPlan;
+    editorialSourceSignature?: string;
     id?: string;
     start: number;
     end: number;
@@ -763,6 +784,7 @@ declare module '@shared-types/app' {
   }
 
   export interface CutHighlightClipResult {
+    sourceRanges?: Array<{ start: number; end: number }>;
     success: boolean;
     highlight?: TranscriptHighlight;
     error?: string;
@@ -787,6 +809,7 @@ declare module '@shared-types/app' {
   }
 
   export interface CutCombinedHighlightsResult {
+    sourceRanges?: Array<{ start: number; end: number }>;
     success: boolean;
     videoPath?: string;
     error?: string;
@@ -1049,6 +1072,13 @@ declare module '@shared-types/app' {
 
   export type SubtitleRenderState =
     | {
+        mode: 'editorial';
+        text: string;
+        emphasis?: string;
+        label?: string;
+        scale?: number;
+      }
+    | {
         mode: 'plain';
         text: string;
       }
@@ -1068,9 +1098,12 @@ declare module '@shared-types/app' {
     operationId: string;
     srtContent: string;
     subtitleSegments?: SrtSegment[];
+    editorialCaptions?: HighlightEditorialPlan;
     outputDir: string;
     /** Optional explicit save path used by trusted local automation. */
     outputSavePath?: string;
+    /** Keep a preview clip at an app-generated library path, without a save dialog. */
+    outputToLibrary?: boolean;
     /** Explicitly authorize replacing an existing automation output file. */
     outputOverwrite?: boolean;
     videoDuration: number;
@@ -1829,6 +1862,7 @@ declare module '@shared-types/app' {
         }) => Promise<Record<string, unknown>>;
         setSubtitleStyle: (input?: {
           style?: string;
+          baseFontSizePx?: number;
         }) => Promise<Record<string, unknown>>;
         showDownloadHistory: () => Promise<Record<string, unknown>>;
         listDownloadHistory: (input?: {
@@ -1887,6 +1921,25 @@ declare module '@shared-types/app' {
           operationId?: string;
           sourceVideoPath?: string;
           sourceBinding?: unknown;
+        }) => Promise<Record<string, unknown>>;
+        highlightsSnapshot: () => Promise<Record<string, unknown>>;
+        setHighlights: (input: {
+          snapshotId: string;
+          highlights: Array<{
+            id: string;
+            title: string;
+            startCueId: string;
+            endCueId: string;
+            description?: string;
+            reason?: string;
+          }>;
+        }) => Promise<Record<string, unknown>>;
+        startHighlightRender: (input: {
+          snapshotId: string;
+          highlightIds: string[];
+          aspectMode?: 'vertical_fit' | 'vertical_reframe' | 'original';
+          outputPath?: string;
+          operationId?: string;
         }) => Promise<Record<string, unknown>>;
         startSummary: (input?: {
           targetLanguage?: string;

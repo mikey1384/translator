@@ -1,4 +1,13 @@
 import {
+  renderHighlight,
+  HIGHLIGHT_RENDER_COMPLETED,
+  type HighlightRenderCompletion,
+} from '../../utils/render-highlight';
+import { highlightCaptionSignature } from '../../../shared/helpers/highlight-clips';
+import { useSubStore } from '../../state/subtitle-store';
+import { useUIStore } from '../../state/ui-store';
+import { syncStoredSubtitleVideoPath } from '../../ipc/subtitle-library';
+import {
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -17,8 +26,6 @@ import type {
 import { ERROR_CODES } from '../../../shared/constants';
 import * as SystemIPC from '../../ipc/system';
 import {
-  cutCombinedHighlights,
-  cutHighlightClip,
   onCombinedHighlightCutProgress,
   onHighlightCutProgress,
 } from '../../ipc/subtitles';
@@ -219,7 +226,7 @@ function buildHighlightArtifactKey(highlight: TranscriptHighlight): string {
   const end = Number.isFinite(highlight.end)
     ? Math.round(highlight.end * 1000)
     : start;
-  return `${start}-${end}`;
+  return `${start}-${end}|${JSON.stringify(highlight.editorial ?? null)}`;
 }
 
 function buildHighlightUiKey(highlight: TranscriptHighlight): string {
@@ -426,6 +433,39 @@ export default function useTranscriptHighlightsFlow({
   >({});
   const highlightDisplayGenerationRef = useRef(0);
 
+  const subtitleSegments = useSubStore(state => state.segments);
+  const subtitleOrder = useSubStore(state => state.order);
+  const displayMode = useUIStore(state => state.subtitleDisplayMode);
+  const subtitleStyle = useUIStore(state => state.subtitleStyle);
+  const subtitleFontSize = useUIStore(state => state.baseFontSize);
+  const captionSignature = useMemo(
+    () =>
+      highlightCaptionSignature(
+        subtitleOrder.map(id => subtitleSegments[id]),
+        displayMode,
+        subtitleStyle,
+        subtitleFontSize
+      ),
+    [
+      displayMode,
+      subtitleStyle,
+      subtitleFontSize,
+      subtitleOrder,
+      subtitleSegments,
+    ]
+  );
+  const captionInput = useCallback(() => {
+    const document = useSubStore.getState();
+    const ui = useUIStore.getState();
+    return {
+      segments: document.order.map(id => document.segments[id]),
+      displayMode: ui.subtitleDisplayMode,
+      style: ui.subtitleStyle,
+      fontSize: ui.baseFontSize,
+      targetLanguage: document.targetLanguage || ui.targetLanguage,
+    };
+  }, []);
+
   const viewSourceIdentity = useMemo(
     () =>
       buildHighlightViewSourceIdentity({
@@ -445,8 +485,9 @@ export default function useTranscriptHighlightsFlow({
         sourceAssetIdentity,
         sourceUrl,
         libraryEntryId,
-      }),
+      }) + captionSignature,
     [
+      captionSignature,
       fallbackVideoAssetIdentity,
       fallbackVideoPath,
       libraryEntryId,
@@ -691,7 +732,7 @@ export default function useTranscriptHighlightsFlow({
       currentArtifactSourceIdentityRef.current;
     const sourceArtifacts = ensureSourceArtifacts(artifactSourceIdentity);
     const nextHighlightAspectModes = buildVisibleHighlightAspectModes(
-      highlightsRef.current.map(highlight => withoutVideoPath(highlight)),
+      highlights.map(highlight => withoutVideoPath(highlight)),
       {},
       sourceArtifacts.highlightPreferredModesByArtifactKey
     );
@@ -703,7 +744,7 @@ export default function useTranscriptHighlightsFlow({
       setHighlightAspectModes(nextHighlightAspectModes);
       syncCombinedCutStateForSource(
         artifactSourceIdentity,
-        orderedSelectionRef.current,
+        orderedSelection,
         combineAspectModeRef.current
       );
       return;
@@ -723,12 +764,12 @@ export default function useTranscriptHighlightsFlow({
 
     const nextHighlights = applySourceArtifacts(
       artifactSourceIdentity,
-      highlightsRef.current.map(highlight => withoutVideoPath(highlight)),
+      highlights.map(highlight => withoutVideoPath(highlight)),
       nextHighlightAspectModes
     );
     const nextOrderedSelection = applySourceArtifacts(
       artifactSourceIdentity,
-      orderedSelectionRef.current.map(highlight => withoutVideoPath(highlight)),
+      orderedSelection.map(highlight => withoutVideoPath(highlight)),
       nextHighlightAspectModes
     );
     const { nextCombineCutState, nextSelectionSignature } =
@@ -756,6 +797,8 @@ export default function useTranscriptHighlightsFlow({
   }, [
     applySourceArtifacts,
     artifactSourceIdentity,
+    highlights,
+    orderedSelection,
     buildCombinedCutStateForSource,
     ensureSourceArtifacts,
     persistVisibleArtifactsForSource,
@@ -784,9 +827,7 @@ export default function useTranscriptHighlightsFlow({
             existing ? { ...existing, ...cleanedIncoming } : cleanedIncoming
           );
         });
-        const merged = Array.from(map.values()).sort(
-          (a, b) => a.start - b.start
-        );
+        const merged = Array.from(map.values());
         nextHighlightAspectModes = buildVisibleHighlightAspectModes(
           merged,
           highlightAspectModesRef.current,
@@ -824,9 +865,7 @@ export default function useTranscriptHighlightsFlow({
             )
             .values()
         : [];
-      const normalizedEntries = Array.from(normalizedIncoming).sort(
-        (a, b) => a.start - b.start
-      );
+      const normalizedEntries = Array.from(normalizedIncoming);
       const nextHighlightAspectModes = buildVisibleHighlightAspectModes(
         normalizedEntries,
         highlightAspectModesRef.current,
@@ -982,6 +1021,7 @@ export default function useTranscriptHighlightsFlow({
 
   useEffect(() => {
     const unsubscribe = onHighlightCutProgress(progress => {
+      if (classifyHighlightProgressStage(progress.stage) === 'ready') return;
       const highlight = progress.highlight as TranscriptHighlight | undefined;
       const operationId = progress.operationId;
       const hasOperationId = Boolean(operationId);
@@ -1131,6 +1171,10 @@ export default function useTranscriptHighlightsFlow({
         if (!result?.success || !result.filePath) {
           throw new Error(result?.error || 'Unknown error');
         }
+        await syncStoredSubtitleVideoPath(
+          highlight.videoPath!,
+          result.filePath
+        );
 
         setDownloadStatus(prev => ({ ...prev, [stateKey]: 'saved' }));
         if (downloadTimers.current[stateKey]) {
@@ -1185,12 +1229,15 @@ export default function useTranscriptHighlightsFlow({
         );
         return;
       }
+      const captions = captionInput();
+      const capturedSourceIdentity = resolveCurrentArtifactSourceIdentity();
       if (!(await isSourceVideoPathAccessible(videoPath))) {
         setError(getSourceVideoUnavailableMessage());
         return;
       }
 
       const activeSourceIdentity = resolveCurrentArtifactSourceIdentity();
+      if (activeSourceIdentity !== capturedSourceIdentity) return;
       const sourceArtifacts = ensureSourceArtifacts(activeSourceIdentity);
       const aspectMode = getHighlightPreferredMode(
         highlight,
@@ -1221,11 +1268,12 @@ export default function useTranscriptHighlightsFlow({
       setError(null);
 
       try {
-        const result = await cutHighlightClip({
+        const result = await renderHighlight({
           videoPath,
-          highlight,
+          highlights: [highlight],
           operationId,
           aspectMode,
+          ...captions,
         });
 
         if (result?.error) {
@@ -1291,6 +1339,7 @@ export default function useTranscriptHighlightsFlow({
       }
     },
     [
+      captionInput,
       fallbackVideoPath,
       ensureSourceArtifacts,
       highlightCutState,
@@ -1412,6 +1461,8 @@ export default function useTranscriptHighlightsFlow({
       );
       return;
     }
+    const captions = captionInput();
+    const capturedSourceIdentity = resolveCurrentArtifactSourceIdentity();
     if (!(await isSourceVideoPathAccessible(videoPath))) {
       setError(getSourceVideoUnavailableMessage());
       return;
@@ -1423,6 +1474,7 @@ export default function useTranscriptHighlightsFlow({
       .toString(36)
       .slice(2, 8)}`;
     const operationSourceIdentity = resolveCurrentArtifactSourceIdentity();
+    if (operationSourceIdentity !== capturedSourceIdentity) return;
     combinedCutSourceByOperationRef.current[operationId] = {
       aspectMode,
       selectionSignature,
@@ -1440,11 +1492,12 @@ export default function useTranscriptHighlightsFlow({
     setError(null);
 
     try {
-      const result = await cutCombinedHighlights({
+      const result = await renderHighlight({
         videoPath,
         highlights: orderedSelection,
         operationId,
         aspectMode,
+        ...captions,
       });
 
       if (result?.error) throw new Error(result.error);
@@ -1526,6 +1579,7 @@ export default function useTranscriptHighlightsFlow({
       delete combinedCutSourceByOperationRef.current[operationId];
     }
   }, [
+    captionInput,
     ensureCombinedArtifact,
     ensureSourceArtifacts,
     fallbackVideoPath,
@@ -1534,6 +1588,74 @@ export default function useTranscriptHighlightsFlow({
     resolveCurrentArtifactSourceIdentity,
     setError,
     t,
+  ]);
+
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const result = (event as CustomEvent<HighlightRenderCompletion>).detail;
+      if (
+        !result ||
+        result.sourceVideoPath !== (originalVideoPath || fallbackVideoPath) ||
+        result.captionSignature !== captionSignature
+      )
+        return;
+      // The initiating UI callback owns its own completion. This path makes
+      // agent-created outputs visible in the same preview and download UI.
+      if (
+        highlightCutSourceByOperationRef.current[result.operationId] ||
+        combinedCutSourceByOperationRef.current[result.operationId]
+      )
+        return;
+      const identity = resolveCurrentArtifactSourceIdentity();
+      const aspectMode = resolveHighlightAspectMode(result.aspectMode);
+      const artifacts = ensureSourceArtifacts(identity);
+      if (result.highlights.length === 1) {
+        const highlight = result.highlights[0];
+        setHighlightVideoPathForSource({
+          aspectMode,
+          highlight,
+          identity,
+          videoPath: result.videoPath,
+        });
+        artifacts.highlightPreferredModesByArtifactKey[
+          buildHighlightArtifactKey(withoutVideoPath(highlight))
+        ] = aspectMode;
+        const modes = {
+          ...highlightAspectModesRef.current,
+          [buildHighlightUiKey(highlight)]: aspectMode,
+        };
+        highlightAspectModesRef.current = modes;
+        setHighlightAspectModes(modes);
+        setHighlights(previous =>
+          applySourceArtifacts(identity, previous, modes)
+        );
+      } else {
+        const artifact = ensureCombinedArtifact(artifacts, aspectMode);
+        artifact.outputPath = result.videoPath;
+        artifact.selectionSignature = buildOrderedSelectionSignature(
+          result.highlights
+        );
+        combineAspectModeRef.current = aspectMode;
+        setCombineAspectModeState(aspectMode);
+        setCombineMode(true);
+        setOrderedSelection(result.highlights);
+        setSelectedHighlights(new Set(result.highlights.map(getHighlightKey)));
+        syncCombinedCutStateForSource(identity, result.highlights, aspectMode);
+      }
+    };
+    window.addEventListener(HIGHLIGHT_RENDER_COMPLETED, receive);
+    return () =>
+      window.removeEventListener(HIGHLIGHT_RENDER_COMPLETED, receive);
+  }, [
+    applySourceArtifacts,
+    captionSignature,
+    ensureCombinedArtifact,
+    ensureSourceArtifacts,
+    fallbackVideoPath,
+    originalVideoPath,
+    resolveCurrentArtifactSourceIdentity,
+    setHighlightVideoPathForSource,
+    syncCombinedCutStateForSource,
   ]);
 
   const handleDownloadCombined = useCallback(
@@ -1556,6 +1678,7 @@ export default function useTranscriptHighlightsFlow({
         if (!result?.success || !result.filePath) {
           throw new Error(result?.error || 'Unknown error');
         }
+        await syncStoredSubtitleVideoPath(outputPath!, result.filePath);
       } catch (err: any) {
         console.error('[TranscriptSummaryPanel] save combined failed', err);
         const message =
@@ -1574,6 +1697,7 @@ export default function useTranscriptHighlightsFlow({
 
   useEffect(() => {
     const unsubscribe = onCombinedHighlightCutProgress(progress => {
+      if (classifyHighlightProgressStage(progress.stage) === 'ready') return;
       const operationId = progress.operationId;
       const trackedOperationMeta =
         operationId && combinedCutSourceByOperationRef.current[operationId]

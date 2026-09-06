@@ -1,3 +1,8 @@
+import {
+  editorialCaptionEvents,
+  validateHighlightEditorialPlan,
+} from '../../../shared/helpers/highlight-editorial.js';
+import { randomUUID } from 'node:crypto';
 import path from 'path';
 import fs from 'fs/promises';
 import { ChildProcess } from 'child_process';
@@ -373,6 +378,11 @@ export function initializeRenderWindowHandlers({
         const requestedExplicitOutputPath = String(
           options.outputSavePath || ''
         ).trim();
+        if (options.outputToLibrary && requestedExplicitOutputPath) {
+          throw new Error(
+            'Choose library output or an explicit path, not both.'
+          );
+        }
         let explicitOutputPath = '';
         if (requestedExplicitOutputPath) {
           explicitOutputPath = assertAgentOutputPathAuthorized(
@@ -474,18 +484,26 @@ export function initializeRenderWindowHandlers({
             isVertical: isVerticalRender(options),
           });
 
-        const uniqueEventsMs = shouldUseTimedOriginalRender
-          ? generateTimedOriginalSubtitleEvents({
-              segments: renderReadySegs,
-              videoDuration: options.videoDuration,
-              operationId,
-            })
-          : generateSubtitleEvents({
-              segments: renderReadySegs,
-              outputMode: options.outputMode ?? 'dual',
-              videoDuration: options.videoDuration,
-              operationId,
-            });
+        const editorial = options.editorialCaptions
+          ? validateHighlightEditorialPlan(
+              options.editorialCaptions,
+              options.videoDuration
+            )
+          : undefined;
+        const uniqueEventsMs = editorial
+          ? editorialCaptionEvents(editorial, options.videoDuration)
+          : shouldUseTimedOriginalRender
+            ? generateTimedOriginalSubtitleEvents({
+                segments: renderReadySegs,
+                videoDuration: options.videoDuration,
+                operationId,
+              })
+            : generateSubtitleEvents({
+                segments: renderReadySegs,
+                outputMode: options.outputMode ?? 'dual',
+                videoDuration: options.videoDuration,
+                operationId,
+              });
 
         const statePngs = await generateStatePngs({
           page,
@@ -556,6 +574,25 @@ export function initializeRenderWindowHandlers({
           registerProcess,
           signal: controller.signal,
         });
+
+        if (options.outputToLibrary === true) {
+          // The caller supplies no path. Keep the finished preview outside the
+          // temporary render directory so cleanup cannot delete it.
+          const libraryDir = path.join(
+            app.getPath('userData'),
+            'highlight-clips'
+          );
+          await fs.mkdir(libraryDir, { recursive: true });
+          const libraryPath = path.join(libraryDir, `${randomUUID()}.mp4`);
+          await fs.copyFile(tempMerged, libraryPath, 1 /* COPYFILE_EXCL */);
+          sendProgress({ percent: 100, stage: 'Merge complete!' });
+          event.reply('render-subtitles-result', {
+            operationId,
+            success: true,
+            outputPath: libraryPath,
+          });
+          return;
+        }
 
         const win = getFocusedOrMainWindow();
         if (!win) {

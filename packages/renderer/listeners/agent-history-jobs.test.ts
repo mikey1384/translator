@@ -103,6 +103,19 @@ test('preset encoding cancellation targets the main FFmpeg operation', () => {
     false
   );
   assert.equal(usesMainOperationCancellation('merge', 'merging'), false);
+  assert.equal(
+    usesMainOperationCancellation('highlight-render', 'cutting'),
+    true
+  );
+  assert.equal(
+    usesMainOperationCancellation('highlight-render', 'rendering-subtitles'),
+    false
+  );
+  assert.equal(agentProgressTaskFor('highlight-render', 'cutting'), 'merge');
+  assert.equal(
+    agentProgressTaskFor('highlight-render', 'rendering-subtitles'),
+    'merge'
+  );
 });
 
 test('media workflow progress follows the stage that is actually running', () => {

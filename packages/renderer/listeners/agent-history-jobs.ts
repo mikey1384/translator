@@ -51,7 +51,10 @@ export function usesMainOperationCancellation(
   kind: string | null,
   stage: string
 ): boolean {
-  return kind === 'preset-render' && stage.startsWith('encoding ');
+  return (
+    (kind === 'preset-render' && stage.startsWith('encoding ')) ||
+    (kind === 'highlight-render' && stage === 'cutting')
+  );
 }
 
 export type AgentProgressTaskName =
@@ -85,7 +88,12 @@ export function agentProgressTaskFor(
   }
   if (kind === 'dubbing') return 'dubbing';
   if (kind === 'summary') return 'summary';
-  if (kind === 'merge' || kind === 'preset-render') return 'merge';
+  if (
+    kind === 'merge' ||
+    kind === 'preset-render' ||
+    kind === 'highlight-render'
+  )
+    return 'merge';
   return null;
 }
 

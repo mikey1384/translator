@@ -1,3 +1,22 @@
+// ../shared/helpers/editorial-caption-html.ts
+var escape = (value) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function editorialCaptionHtml(state, width) {
+  const unit = width / 1080;
+  const fontSize = 88 * unit;
+  let text = escape(state.text);
+  if (state.emphasis && state.text.includes(state.emphasis)) {
+    text = text.replace(
+      escape(state.emphasis),
+      `<span style="color:#d9ff66">${escape(state.emphasis)}</span>`
+    );
+  }
+  const font = "'Pretendard','SUIT','Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+  return `<div style="position:absolute;inset:0;pointer-events:none;font-family:${font};color:white;">
+    ${state.label ? `<div style="position:absolute;top:5.5%;left:7%;font-size:${33 * unit}px;font-weight:750;letter-spacing:${0.3 * unit}px;text-shadow:0 ${2 * unit}px ${8 * unit}px #000"><span style="display:inline-block;width:${6 * unit}px;height:${27 * unit}px;background:#d9ff66;margin-right:${16 * unit}px;vertical-align:middle"></span>${escape(state.label)}</div>` : ""}
+    ${state.text ? `<div style="position:absolute;left:6%;right:12%;top:64%;text-align:center;transform:scale(${Math.max(0.9, Math.min(1.1, state.scale ?? 1))});transform-origin:center;white-space:pre-wrap;font-size:${fontSize}px;line-height:1.22;font-weight:900;letter-spacing:${-2.8 * unit}px;word-break:keep-all;overflow-wrap:break-word;paint-order:stroke fill;-webkit-text-stroke:${6 * unit}px #151715;text-shadow:0 ${6 * unit}px ${4 * unit}px #151715,0 ${10 * unit}px ${24 * unit}px #0009;">${text}</div>` : ""}
+  </div>`;
+}
+
 // ../../node_modules/@emotion/sheet/dist/emotion-sheet.esm.js
 var isDevelopment = false;
 function sheetForTag(tag) {
@@ -1672,19 +1691,21 @@ var SHORT_FORM_TUNING = {
   },
   LineBox: {
     borderRadiusPx: 0,
-    bottomMultiLine: "31%",
-    bottomSingleLine: "25%",
+    // Keep one stable reading position above social-app controls. Moving
+    // multi-line captions upward covered faces and demos in Shorts Fit.
+    bottomMultiLine: "18%",
+    bottomSingleLine: "18%",
     containerPadding: "0 14px 12px 14px",
-    fontScale: 1.06,
+    fontScale: 1.08,
     fontWeight: 800,
-    horizontalInset: "6%",
-    letterSpacing: "0",
-    lineBoxBackgroundColor: "rgba(10, 10, 12, 0.82)",
-    lineBoxBorderRadiusPx: 14,
+    horizontalInset: "7%",
+    letterSpacing: "-0.02em",
+    lineBoxBackgroundColor: "rgba(12, 14, 18, 0.88)",
+    lineBoxBorderRadiusPx: 12,
     lineBoxBoxShadow: "0 10px 24px rgba(0, 0, 0, 0.24)",
-    lineBoxPadding: "4px 12px 5px 12px",
-    lineHeight: 1.24,
-    maxWidth: "88%",
+    lineBoxPadding: "4px 14px 5px 14px",
+    lineHeight: 1.28,
+    maxWidth: "86%",
     outlineMultiplier: 1,
     softShadowBlurPx: 8,
     softShadowColor: "rgba(0, 0, 0, 0.28)",
@@ -1817,7 +1838,7 @@ function resolveSubtitleLineBoxStyle(theme) {
     lineHeight: String(theme.lineHeight),
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
-    wordBreak: "break-word",
+    wordBreak: theme.isShortFormPortrait ? "keep-all" : "break-word",
     borderRadius: `${theme.lineBoxBorderRadiusPx}px`,
     boxShadow: theme.lineBoxBoxShadow,
     boxDecorationBreak: "clone",
@@ -1916,7 +1937,8 @@ function getSubtitleStyles(opts) {
     width: ${theme.width};
     /* Prevent long, unbroken words from overflowing and getting clipped */
     overflow-wrap: anywhere;
-    word-break: break-word;
+    word-break: ${theme.isShortFormPortrait ? "keep-all" : "break-word"};
+    text-wrap: ${theme.isShortFormPortrait ? "balance" : "wrap"};
     pointer-events: none;
     white-space: pre-wrap;
     z-index: 1000;
@@ -2110,6 +2132,16 @@ function initializeSubtitleDisplay() {
   const updateElementFromState = (state, opts = {}) => {
     const el = document.getElementById("subtitle");
     if (!el) return;
+    if (state.mode === "editorial") {
+      el.className = "";
+      el.style.cssText = "position:absolute;inset:0;width:100%;height:100%;opacity:1;transform:none;margin:0;padding:0;max-width:none;";
+      el.innerHTML = editorialCaptionHtml(
+        state,
+        opts.videoWidthPx ?? window.innerWidth
+      );
+      return;
+    }
+    el.style.cssText = "";
     const {
       stylePreset = "Default",
       fontSizePx,
@@ -2151,6 +2183,7 @@ function initializeSubtitleDisplay() {
   window.updateTimedSubtitle = (state, opts = {}) => {
     updateElementFromState(state, opts);
   };
+  window.updateEditorialSubtitle = updateElementFromState;
   window.applySubtitlePreset = applySubtitlePreset;
   console.log(
     "[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, updateTimedSubtitle, applySubtitlePreset"

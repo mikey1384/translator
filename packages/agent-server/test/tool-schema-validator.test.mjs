@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { TOOL_SCHEMAS } from '../src/packaged-mcp.mjs';
+import { TOOL_SCHEMAS, mapFields } from '../src/packaged-mcp.mjs';
 import {
   MCP_V2_TOOL_DEFINITIONS,
   WATCH_JOB_MAX_WAIT_MS,
@@ -9,6 +9,24 @@ import {
   parseToolArguments,
   validateJsonSchema,
 } from '../src/tool-schema-validator.mjs';
+
+test('MCP controls the same caption size as the editor and rejects invalid sizes', () => {
+  assert.deepEqual(
+    mapFields(
+      parseToolArguments(TOOL_SCHEMAS.app_set_subtitle_style, {
+        style: 'LineBox',
+        base_font_size_px: 35,
+      })
+    ),
+    { style: 'LineBox', baseFontSizePx: 35 }
+  );
+  assert.throws(() =>
+    parseToolArguments(TOOL_SCHEMAS.app_set_subtitle_style, {
+      style: 'LineBox',
+      base_font_size_px: 0,
+    })
+  );
+});
 
 test('packaged tool validation accepts valid arguments and applies advertised defaults', () => {
   const input = { id: 'download-1' };
@@ -233,5 +251,91 @@ test('packaged tool validation rejects duplicate values in unique arrays', () =>
         { formats: ['srt', 'srt'] }
       ),
     /must contain unique items/
+  );
+});
+
+test('highlight MCP contracts bind cue IDs and preserve supplied playback order', () => {
+  const selection = parseToolArguments(TOOL_SCHEMAS.app_highlights_set, {
+    snapshot_id: 'snapshot',
+    highlights: [
+      {
+        id: 'intro',
+        title: '직접 해보세요',
+        start_cue_id: 'cue-a',
+        end_cue_id: 'cue-b',
+      },
+    ],
+  });
+  assert.deepEqual(mapFields(selection), {
+    snapshotId: 'snapshot',
+    highlights: [
+      {
+        id: 'intro',
+        title: '직접 해보세요',
+        startCueId: 'cue-a',
+        endCueId: 'cue-b',
+      },
+    ],
+  });
+  assert.deepEqual(
+    mapFields(
+      parseToolArguments(TOOL_SCHEMAS.app_start_highlight_render, {
+        snapshot_id: 'snapshot',
+        highlight_ids: ['payoff', 'intro'],
+        operation_id: 'render-1',
+      })
+    ),
+    {
+      snapshotId: 'snapshot',
+      highlightIds: ['payoff', 'intro'],
+      operationId: 'render-1',
+      aspectMode: 'vertical_fit',
+    }
+  );
+  assert.throws(() =>
+    parseToolArguments(TOOL_SCHEMAS.app_start_highlight_render, {
+      snapshot_id: 's',
+      highlight_ids: ['a', 'a'],
+    })
+  );
+  assert.throws(() =>
+    parseToolArguments(TOOL_SCHEMAS.app_start_highlight_render, {
+      highlight_ids: ['a'],
+    })
+  );
+});
+
+test('packaged MCP preserves a structured editorial Short and rejects invalid framing', () => {
+  const input = {
+    snapshot_id: 'source-snapshot',
+    highlights: [
+      {
+        id: 'shipping',
+        title: 'AI and shipping',
+        start_cue_id: 'cue-a',
+        end_cue_id: 'cue-b',
+        editorial: {
+          label: 'Paul Graham',
+          shots: [
+            { start: 0, end: 4, centerX: 0.64, centerY: 0.48, zoom: 1.2 },
+          ],
+          captions: [
+            { start: 0, end: 4, text: 'Ideas first', emphasis: 'Ideas' },
+          ],
+        },
+      },
+    ],
+  };
+  const mapped = mapFields(
+    parseToolArguments(TOOL_SCHEMAS.app_highlights_set, input)
+  );
+  assert.deepEqual(
+    mapped.highlights[0].editorial,
+    input.highlights[0].editorial
+  );
+  assert.equal(mapped.highlights[0].startCueId, 'cue-a');
+  input.highlights[0].editorial.shots[0].centerX = 3;
+  assert.throws(() =>
+    parseToolArguments(TOOL_SCHEMAS.app_highlights_set, input)
   );
 });

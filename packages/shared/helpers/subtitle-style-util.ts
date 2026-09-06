@@ -100,7 +100,7 @@ export type SubtitleLineBoxStyle = {
   padding: string;
   WebkitBoxDecorationBreak: 'clone';
   whiteSpace: 'pre-wrap';
-  wordBreak: 'break-word';
+  wordBreak: 'break-word' | 'keep-all';
 };
 
 const SHORT_FORM_TUNING: Record<SubtitleStylePresetKey, ShortFormTuning> = {
@@ -165,19 +165,21 @@ const SHORT_FORM_TUNING: Record<SubtitleStylePresetKey, ShortFormTuning> = {
   },
   LineBox: {
     borderRadiusPx: 0,
-    bottomMultiLine: '31%',
-    bottomSingleLine: '25%',
+    // Keep one stable reading position above social-app controls. Moving
+    // multi-line captions upward covered faces and demos in Shorts Fit.
+    bottomMultiLine: '18%',
+    bottomSingleLine: '18%',
     containerPadding: '0 14px 12px 14px',
-    fontScale: 1.06,
+    fontScale: 1.08,
     fontWeight: 800,
-    horizontalInset: '6%',
-    letterSpacing: '0',
-    lineBoxBackgroundColor: 'rgba(10, 10, 12, 0.82)',
-    lineBoxBorderRadiusPx: 14,
+    horizontalInset: '7%',
+    letterSpacing: '-0.02em',
+    lineBoxBackgroundColor: 'rgba(12, 14, 18, 0.88)',
+    lineBoxBorderRadiusPx: 12,
     lineBoxBoxShadow: '0 10px 24px rgba(0, 0, 0, 0.24)',
-    lineBoxPadding: '4px 12px 5px 12px',
-    lineHeight: 1.24,
-    maxWidth: '88%',
+    lineBoxPadding: '4px 14px 5px 14px',
+    lineHeight: 1.28,
+    maxWidth: '86%',
     outlineMultiplier: 1,
     softShadowBlurPx: 8,
     softShadowColor: 'rgba(0, 0, 0, 0.28)',
@@ -380,7 +382,7 @@ export function resolveSubtitleLineBoxStyle(
     lineHeight: String(theme.lineHeight),
     whiteSpace: 'pre-wrap',
     overflowWrap: 'anywhere',
-    wordBreak: 'break-word',
+    wordBreak: theme.isShortFormPortrait ? 'keep-all' : 'break-word',
     borderRadius: `${theme.lineBoxBorderRadiusPx}px`,
     boxShadow: theme.lineBoxBoxShadow,
     boxDecorationBreak: 'clone',
@@ -503,7 +505,8 @@ export function getSubtitleStyles(opts: {
     width: ${theme.width};
     /* Prevent long, unbroken words from overflowing and getting clipped */
     overflow-wrap: anywhere;
-    word-break: break-word;
+    word-break: ${theme.isShortFormPortrait ? 'keep-all' : 'break-word'};
+    text-wrap: ${theme.isShortFormPortrait ? 'balance' : 'wrap'};
     pointer-events: none;
     white-space: pre-wrap;
     z-index: 1000;
