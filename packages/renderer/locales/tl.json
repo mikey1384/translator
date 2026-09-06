@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Pagkapribado",
+      "label": "Opsyonal na analytics",
+      "description": "Ibahagi ang paggamit, mga uri ng error at halaga ng pagbili sa Google Analytics. Walang video, subtitle o path ng file.",
+      "retention": "Naka-off bilang default. Nag-e-expire ang hindi naipadalang ulat pagkalipas ng 3 araw; nabubura ang mga ito kapag pinatay ito. Gumagana pa rin ang pagbabayad.",
+      "on": "Naka-on. Nai-save ang pinili.",
+      "off": "Naka-off. Nai-save ang pinili.",
+      "saving": "Sine-save ang pinili…",
+      "pendingOn": "Naka-pause ang mga ulat ng app. Kumonekta at subukan muli.",
+      "pendingOff": "Naka-off sa device na ito. Kumonekta upang kumpirmahin ang pinili sa server.",
+      "retry": "Subukan muli",
+      "error": "Hindi makumpirma ang pinili. Subukan muli."
+    },
     "title": "Mga Setting",
     "aiProvider": {
       "title": "Tagabigay ng AI"

@@ -516,6 +516,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privacy",
+      "label": "Optional analytics",
+      "description": "Share usage, error categories and purchase totals with Google Analytics. No videos, captions or file paths.",
+      "retention": "Off by default. Unsent reports expire after 3 days; turning this off removes them. Billing continues.",
+      "on": "On. Choice saved.",
+      "off": "Off. Choice saved.",
+      "saving": "Saving your choice…",
+      "pendingOn": "App reports paused. Connect and retry.",
+      "pendingOff": "Off on this device. Connect to confirm the server choice.",
+      "retry": "Retry",
+      "error": "Unable to confirm your choice. Retry."
+    },
     "title": "Settings",
     "aiProvider": {
       "title": "AI Provider"

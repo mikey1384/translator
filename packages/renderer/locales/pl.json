@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Prywatność",
+      "label": "Opcjonalna analityka",
+      "description": "Udostępniaj Google Analytics dane o użyciu, kategorie błędów i kwoty zakupów. Bez filmów, napisów i ścieżek plików.",
+      "retention": "Domyślnie wyłączona. Niewysłane raporty wygasają po 3 dniach; wyłączenie je usuwa. Płatności nadal działają.",
+      "on": "Włączona. Wybór zapisany.",
+      "off": "Wyłączona. Wybór zapisany.",
+      "saving": "Zapisywanie wyboru…",
+      "pendingOn": "Raporty aplikacji wstrzymane. Połącz się i spróbuj ponownie.",
+      "pendingOff": "Wyłączona na tym urządzeniu. Połącz się, aby potwierdzić wybór na serwerze.",
+      "retry": "Spróbuj ponownie",
+      "error": "Nie udało się potwierdzić wyboru. Spróbuj ponownie."
+    },
     "title": "Ustawienia",
     "aiProvider": {
       "title": "Dostawca AI"

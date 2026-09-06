@@ -7,6 +7,12 @@ declare module '@shared-types/app' {
   // === General & Utility Types
   // =========================================
 
+  export type AnalyticsPrivacyState = {
+    enabled: boolean;
+    revision: number;
+    status: 'ready' | 'saving' | 'pending';
+  };
+
   export type VideoQuality =
     | 'high'
     | 'mid'
@@ -1429,6 +1435,10 @@ declare module '@shared-types/app' {
       }
     ) => Promise<{ success: boolean; error?: string }>;
     onHeartbeatPing: (callback: () => void) => (() => void) | undefined;
+    getAnalyticsPrivacy: () => Promise<AnalyticsPrivacyState>;
+    setAnalyticsPrivacy: (enabled: boolean) => Promise<AnalyticsPrivacyState>;
+    syncAnalyticsPrivacy: () => Promise<AnalyticsPrivacyState>;
+    onAnalyticsPrivacyChanged: (callback: (state: AnalyticsPrivacyState) => void) => () => void;
     getAgentControlEnabled: () => Promise<boolean>;
     setAgentControlEnabled: (
       enabled: boolean

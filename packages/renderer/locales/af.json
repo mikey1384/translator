@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privaatheid",
+      "label": "Opsionele ontleding",
+      "description": "Deel gebruik, foutkategorieë en aankoopbedrae met Google Analytics. Geen video’s, onderskrifte of lêerpaaie nie.",
+      "retention": "By verstek af. Ongestuurde verslae verval ná 3 dae; afskakeling verwyder hulle. Betalings werk steeds.",
+      "on": "Aan. Keuse gestoor.",
+      "off": "Af. Keuse gestoor.",
+      "saving": "Stoor jou keuse…",
+      "pendingOn": "Toepverslae is onderbreek. Koppel en probeer weer.",
+      "pendingOff": "Af op hierdie toestel. Koppel om die bedienerkeuse te bevestig.",
+      "retry": "Probeer weer",
+      "error": "Kon nie jou keuse bevestig nie. Probeer weer."
+    },
     "title": "Instellings",
     "aiProvider": {
       "title": "KI-verskaffer"

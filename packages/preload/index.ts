@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent, shell } from 'electron';
 import { createHash } from 'crypto';
 import {
+  AnalyticsPrivacyState,
   AllByoSettings,
   ExposedRenderResult,
   RenderSubtitlesOptions,
@@ -872,6 +873,15 @@ const electronAPI = {
     ipcRenderer.invoke('cookies:clear', url),
 
   // yt-dlp auto-update is always on; no setting exposed
+
+  getAnalyticsPrivacy: (): Promise<AnalyticsPrivacyState> => ipcRenderer.invoke('get-analytics-privacy'),
+  setAnalyticsPrivacy: (enabled: boolean): Promise<AnalyticsPrivacyState> => ipcRenderer.invoke('set-analytics-privacy', enabled),
+  syncAnalyticsPrivacy: (): Promise<AnalyticsPrivacyState> => ipcRenderer.invoke('sync-analytics-privacy'),
+  onAnalyticsPrivacyChanged: (callback: (state: AnalyticsPrivacyState) => void) => {
+    const listener = (_event: IpcRendererEvent, state: AnalyticsPrivacyState) => callback(state);
+    ipcRenderer.on('analytics-privacy-changed', listener);
+    return () => ipcRenderer.removeListener('analytics-privacy-changed', listener);
+  },
 
   // Agent control settings
   getAgentControlEnabled: (): Promise<boolean> =>

@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Integritet",
+      "label": "Valfri analys",
+      "description": "Dela användning, felkategorier och köpesummor med Google Analytics. Inga videor, undertexter eller filsökvägar.",
+      "retention": "Av som standard. Osända rapporter löper ut efter 3 dagar; avstängning tar bort dem. Betalningar fungerar fortsatt.",
+      "on": "På. Valet sparat.",
+      "off": "Av. Valet sparat.",
+      "saving": "Sparar valet…",
+      "pendingOn": "Appens rapporter pausade. Anslut och försök igen.",
+      "pendingOff": "Av på den här enheten. Anslut för att bekräfta serverns val.",
+      "retry": "Försök igen",
+      "error": "Kunde inte bekräfta valet. Försök igen."
+    },
     "title": "Inställningar",
     "aiProvider": {
       "title": "AI-leverantör"

@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privacy",
+      "label": "Analisi facoltativa",
+      "description": "Condividi utilizzo, categorie di errori e importi degli acquisti con Google Analytics. Nessun video, sottotitolo o percorso di file.",
+      "retention": "Disattivata per impostazione predefinita. I rapporti non inviati scadono dopo 3 giorni; disattivandola vengono eliminati. I pagamenti continuano a funzionare.",
+      "on": "Attivata. Scelta salvata.",
+      "off": "Disattivata. Scelta salvata.",
+      "saving": "Salvataggio della scelta…",
+      "pendingOn": "Rapporti dell’app in pausa. Connettiti e riprova.",
+      "pendingOff": "Disattivata su questo dispositivo. Connettiti per confermare la scelta sul server.",
+      "retry": "Riprova",
+      "error": "Impossibile confermare la scelta. Riprova."
+    },
     "title": "Impostazioni",
     "aiProvider": {
       "title": "Provider IA"

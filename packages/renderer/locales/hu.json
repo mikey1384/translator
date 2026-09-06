@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Adatvédelem",
+      "label": "Választható elemzés",
+      "description": "Használati adatok, hibakategóriák és vásárlási összegek megosztása a Google Analytics szolgáltatással. Videók, feliratok és fájlútvonalak nélkül.",
+      "retention": "Alapból kikapcsolva. Az el nem küldött jelentések 3 nap után lejárnak; kikapcsoláskor törlődnek. A fizetés továbbra is működik.",
+      "on": "Bekapcsolva. Választás mentve.",
+      "off": "Kikapcsolva. Választás mentve.",
+      "saving": "Választás mentése…",
+      "pendingOn": "Az alkalmazás jelentései szünetelnek. Csatlakozz, és próbáld újra.",
+      "pendingOff": "Ezen az eszközön kikapcsolva. Csatlakozz a szerver beállításának megerősítéséhez.",
+      "retry": "Újra",
+      "error": "A választás nem erősíthető meg. Próbáld újra."
+    },
     "title": "Beállítások",
     "aiProvider": {
       "title": "AI szolgáltató"

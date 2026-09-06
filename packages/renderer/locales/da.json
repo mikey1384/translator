@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privatliv",
+      "label": "Valgfri analyse",
+      "description": "Del brug, fejlkategorier og købsbeløb med Google Analytics. Ingen videoer, undertekster eller filstier.",
+      "retention": "Fra som standard. Usendte rapporter udløber efter 3 dage; de slettes, når du slår dette fra. Betalinger virker fortsat.",
+      "on": "Til. Valg gemt.",
+      "off": "Fra. Valg gemt.",
+      "saving": "Gemmer dit valg…",
+      "pendingOn": "Appens rapporter er sat på pause. Opret forbindelse og prøv igen.",
+      "pendingOff": "Fra på denne enhed. Opret forbindelse for at bekræfte serverens valg.",
+      "retry": "Prøv igen",
+      "error": "Kunne ikke bekræfte dit valg. Prøv igen."
+    },
     "title": "Indstillinger",
     "aiProvider": {
       "title": "AI-udbyder"

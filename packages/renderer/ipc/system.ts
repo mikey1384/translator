@@ -1,4 +1,5 @@
 import type {
+  AnalyticsPrivacyState,
   AllByoSettings,
   ByoVideoSuggestionModel,
   ErrorReportContext,
@@ -631,3 +632,8 @@ export function onElevenLabsApiKeyChanged(
 ): () => void {
   return window.electron.onElevenLabsApiKeyChanged(callback);
 }
+
+export const getAnalyticsPrivacy = () => window.electron.getAnalyticsPrivacy();
+export const setAnalyticsPrivacy = (enabled: boolean) => window.electron.setAnalyticsPrivacy(enabled);
+export const syncAnalyticsPrivacy = () => window.electron.syncAnalyticsPrivacy();
+export const onAnalyticsPrivacyChanged = (callback: (state: AnalyticsPrivacyState) => void) => window.electron.onAnalyticsPrivacyChanged(callback);

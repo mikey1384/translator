@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privasi",
+      "label": "Analitik pilihan",
+      "description": "Kongsi penggunaan, kategori ralat dan jumlah pembelian dengan Google Analytics. Tiada video, sari kata atau laluan fail.",
+      "retention": "Dimatikan secara lalai. Laporan belum dihantar luput selepas 3 hari; mematikan ciri ini memadamkannya. Pembayaran tetap berfungsi.",
+      "on": "Dihidupkan. Pilihan disimpan.",
+      "off": "Dimatikan. Pilihan disimpan.",
+      "saving": "Menyimpan pilihan…",
+      "pendingOn": "Laporan aplikasi dijeda. Sambung dan cuba lagi.",
+      "pendingOff": "Dimatikan pada peranti ini. Sambung untuk mengesahkan pilihan pada pelayan.",
+      "retry": "Cuba lagi",
+      "error": "Pilihan tidak dapat disahkan. Cuba lagi."
+    },
     "title": "Tetapan",
     "aiProvider": {
       "title": "Pembekal AI"

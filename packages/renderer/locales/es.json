@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privacidad",
+      "label": "Analítica opcional",
+      "description": "Comparte el uso, las categorías de errores y los importes de compras con Google Analytics. No incluye vídeos, subtítulos ni rutas de archivos.",
+      "retention": "Desactivada por defecto. Los informes pendientes caducan a los 3 días; al desactivarla se eliminan. Los pagos siguen funcionando.",
+      "on": "Activada. Preferencia guardada.",
+      "off": "Desactivada. Preferencia guardada.",
+      "saving": "Guardando tu preferencia…",
+      "pendingOn": "Informes de la app en pausa. Conéctate y reintenta.",
+      "pendingOff": "Desactivada en este dispositivo. Conéctate para confirmar la preferencia del servidor.",
+      "retry": "Reintentar",
+      "error": "No se pudo confirmar tu preferencia. Reintenta."
+    },
     "title": "Configuración",
     "aiProvider": {
       "title": "Proveedor de IA"

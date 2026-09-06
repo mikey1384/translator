@@ -3,6 +3,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 const MAX_PENDING_FAILURES = 20;
+const MAX_PENDING_AGE_MS = 72 * 60 * 60 * 1000;
 const PLATFORMS = new Set(['darwin', 'win32', 'linux']);
 const ARCHITECTURES = new Set(['arm64', 'x64', 'ia32']);
 const STARTUP_PHASES = new Set([
@@ -72,6 +73,9 @@ function validFailure(value) {
     value &&
     typeof value === 'object' &&
     typeof value.eventId === 'string' &&
+    typeof value.occurredAt === 'string' &&
+    Date.parse(value.occurredAt) > Date.now() - MAX_PENDING_AGE_MS &&
+    Date.parse(value.occurredAt) <= Date.now() + 5 * 60 * 1000 &&
     typeof value.failureClass === 'string' &&
     typeof value.startupPhase === 'string' &&
     typeof value.failedAppVersion === 'string' &&
@@ -89,15 +93,17 @@ export function createStartupHealth({
   appVersion,
   platform,
   architecture,
+  reportingEnabled = () => false,
 }) {
   let state = readState(stateFile);
   let pendingFailures = Array.isArray(state.pendingFailures)
     ? state.pendingFailures.filter(validFailure).slice(-MAX_PENDING_FAILURES)
     : [];
 
-  if (validAttempt(state.currentAttempt)) {
+  if (reportingEnabled() && validAttempt(state.currentAttempt)) {
     pendingFailures.push({
       eventId: randomUUID(),
+      occurredAt: state.currentAttempt.startedAt || new Date().toISOString(),
       failureClass: 'startup_incomplete',
       startupPhase: safePhase(state.currentAttempt.startupPhase),
       failedAppVersion: state.currentAttempt.appVersion.slice(0, 32),
@@ -110,12 +116,13 @@ export function createStartupHealth({
     schemaVersion: 1,
     currentAttempt: {
       attemptId: randomUUID(),
+      startedAt: new Date().toISOString(),
       appVersion: String(appVersion).slice(0, 32),
       platform: String(platform),
       architecture: String(architecture),
       startupPhase: 'module_load',
     },
-    pendingFailures: pendingFailures.slice(-MAX_PENDING_FAILURES),
+    pendingFailures: reportingEnabled() ? pendingFailures.filter(validFailure).slice(-MAX_PENDING_FAILURES) : [],
   };
 
   function save() {
@@ -148,6 +155,7 @@ export function createStartupHealth({
     const current = state.currentAttempt;
     if (!current && startupPhase !== 'runtime') return;
     const failure = {
+      occurredAt: new Date().toISOString(),
       eventId: randomUUID(),
       failureClass: safeFailureClass(failureClass),
       startupPhase: safePhase(
@@ -161,7 +169,7 @@ export function createStartupHealth({
         ? { processReason: safeRendererReason(processReason) }
         : {}),
     };
-    state.pendingFailures = [...state.pendingFailures, failure].slice(
+    state.pendingFailures = (reportingEnabled() ? [...state.pendingFailures.filter(validFailure), failure] : []).slice(
       -MAX_PENDING_FAILURES
     );
     if (state.currentAttempt && startupPhase !== 'runtime') {
@@ -171,9 +179,9 @@ export function createStartupHealth({
   }
 
   function listPendingFailures() {
-    return state.pendingFailures
-      .filter(validFailure)
-      .map(value => ({ ...value }));
+    state.pendingFailures = reportingEnabled() ? state.pendingFailures.filter(validFailure) : [];
+    save();
+    return state.pendingFailures.map(value => ({ ...value }));
   }
 
   function acknowledgeFailure(eventId) {

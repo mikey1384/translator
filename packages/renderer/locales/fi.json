@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Tietosuoja",
+      "label": "Valinnainen analytiikka",
+      "description": "Jaa käyttö, virheluokat ja ostosummat Google Analyticsin kanssa. Ei videoita, tekstityksiä tai tiedostopolkuja.",
+      "retention": "Oletuksena pois. Lähettämättömät raportit vanhenevat 3 päivässä; poistaminen käytöstä poistaa ne. Maksaminen toimii edelleen.",
+      "on": "Käytössä. Valinta tallennettu.",
+      "off": "Pois käytöstä. Valinta tallennettu.",
+      "saving": "Tallennetaan valintaa…",
+      "pendingOn": "Sovelluksen raportit keskeytetty. Yhdistä ja yritä uudelleen.",
+      "pendingOff": "Pois tällä laitteella. Yhdistä vahvistaaksesi palvelimen valinnan.",
+      "retry": "Yritä uudelleen",
+      "error": "Valintaa ei voitu vahvistaa. Yritä uudelleen."
+    },
     "title": "Asetukset",
     "aiProvider": {
       "title": "Tekoälytarjoaja"

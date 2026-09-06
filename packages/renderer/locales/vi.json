@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Quyền riêng tư",
+      "label": "Phân tích tùy chọn",
+      "description": "Chia sẻ mức sử dụng, loại lỗi và tổng tiền mua hàng với Google Analytics. Không gửi video, phụ đề hoặc đường dẫn tệp.",
+      "retention": "Mặc định tắt. Báo cáo chưa gửi hết hạn sau 3 ngày; tắt tính năng sẽ xóa chúng. Thanh toán vẫn hoạt động.",
+      "on": "Đã bật. Đã lưu lựa chọn.",
+      "off": "Đã tắt. Đã lưu lựa chọn.",
+      "saving": "Đang lưu lựa chọn…",
+      "pendingOn": "Báo cáo ứng dụng đang tạm dừng. Hãy kết nối và thử lại.",
+      "pendingOff": "Đã tắt trên thiết bị này. Hãy kết nối để xác nhận lựa chọn trên máy chủ.",
+      "retry": "Thử lại",
+      "error": "Chưa xác nhận được lựa chọn. Hãy thử lại."
+    },
     "title": "Cài đặt",
     "aiProvider": {
       "title": "Nhà cung cấp AI"

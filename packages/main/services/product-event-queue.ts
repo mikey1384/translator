@@ -1,3 +1,4 @@
+import { isFreshProductEvent } from './product-event-retention.js';
 import Store from 'electron-store';
 import log from 'electron-log';
 import type { TranslationFunnelEvent } from './translation-funnel.js';
@@ -21,6 +22,8 @@ import type {
 
 type QueuedProductEvent = {
   eventId: string;
+  occurredAt: string;
+  consentRevision: number;
   event:
     | TranslationFunnelEvent
     | TranscriptionFunnelEvent
@@ -55,7 +58,7 @@ const eventQueue = new Store<ProductEventQueueStore>({
 });
 
 export function queueProductEvent(event: QueuedProductEvent): void {
-  const pending = eventQueue.get('pendingEvents') ?? [];
+  const pending = listPendingProductEvents();
 
   // Cap the queue to prevent unbounded growth
   if (pending.length >= MAX_QUEUE_SIZE) {
@@ -65,12 +68,16 @@ export function queueProductEvent(event: QueuedProductEvent): void {
     pending.shift();
   }
 
+  if (!isFreshProductEvent(event.occurredAt)) return;
   pending.push(event);
   eventQueue.set('pendingEvents', pending);
 }
 
 export function listPendingProductEvents(): QueuedProductEvent[] {
-  return eventQueue.get('pendingEvents') ?? [];
+  const stored = eventQueue.get('pendingEvents') ?? [];
+  const fresh = stored.filter(event => isFreshProductEvent(event.occurredAt));
+  if (fresh.length !== stored.length) eventQueue.set('pendingEvents', fresh);
+  return fresh;
 }
 
 export function acknowledgeProductEvent(eventId: string): void {

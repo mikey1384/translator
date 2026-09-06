@@ -29,6 +29,7 @@ export type ProcessFailureReason =
 
 export interface PendingCriticalFailure {
   eventId: string;
+  occurredAt: string;
   failureClass: CriticalFailureClass;
   startupPhase: StartupPhase;
   failedAppVersion: string;

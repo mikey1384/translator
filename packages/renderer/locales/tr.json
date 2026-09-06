@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Gizlilik",
+      "label": "İsteğe bağlı analiz",
+      "description": "Kullanımı, hata kategorilerini ve satın alma tutarlarını Google Analytics ile paylaşın. Video, altyazı veya dosya yolu gönderilmez.",
+      "retention": "Varsayılan olarak kapalıdır. Gönderilmeyen raporlar 3 gün sonra sona erer; kapatmak bunları siler. Ödemeler çalışmaya devam eder.",
+      "on": "Açık. Tercih kaydedildi.",
+      "off": "Kapalı. Tercih kaydedildi.",
+      "saving": "Tercihiniz kaydediliyor…",
+      "pendingOn": "Uygulama raporları duraklatıldı. Bağlanıp yeniden deneyin.",
+      "pendingOff": "Bu cihazda kapalı. Sunucudaki tercihi doğrulamak için bağlanın.",
+      "retry": "Yeniden dene",
+      "error": "Tercihiniz doğrulanamadı. Yeniden deneyin."
+    },
     "title": "Ayarlar",
     "aiProvider": {
       "title": "Yapay Zeka Sağlayıcısı"

@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privacy",
+      "label": "Optionele analyses",
+      "description": "Deel gebruik, foutcategorieën en aankoopbedragen met Google Analytics. Geen video’s, ondertitels of bestandspaden.",
+      "retention": "Standaard uit. Niet-verzonden rapporten verlopen na 3 dagen; uitschakelen verwijdert ze. Betalingen blijven werken.",
+      "on": "Aan. Keuze opgeslagen.",
+      "off": "Uit. Keuze opgeslagen.",
+      "saving": "Keuze opslaan…",
+      "pendingOn": "App-rapporten gepauzeerd. Maak verbinding en probeer opnieuw.",
+      "pendingOff": "Uit op dit apparaat. Maak verbinding om de serverkeuze te bevestigen.",
+      "retry": "Opnieuw proberen",
+      "error": "Keuze niet bevestigd. Probeer opnieuw."
+    },
     "title": "Instellingen",
     "aiProvider": {
       "title": "AI-provider"

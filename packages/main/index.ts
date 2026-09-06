@@ -109,9 +109,10 @@ import { suggestVideosViaChat } from './services/video-suggestions.js';
 import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-gate.js';
 import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 import {
-  flushPendingCriticalFailures,
-  flushPendingProductEvents,
-  trackAppOpen,
+  initializeProductAnalytics,
+  getAnalyticsPrivacy,
+  setAnalyticsPrivacy,
+  syncAnalyticsPrivacy,
   trackFirstMeaningfulUse,
   trackPurchaseFunnelEvent,
   trackTranslationFunnelEvent,
@@ -1361,6 +1362,10 @@ try {
     settingsHandlers.setApiKeyModeEnabled(Boolean(value))
   );
 
+  ipcMain.handle('get-analytics-privacy', () => getAnalyticsPrivacy());
+  ipcMain.handle('set-analytics-privacy', (_event, enabled: boolean) => setAnalyticsPrivacy(enabled));
+  ipcMain.handle('sync-analytics-privacy', () => syncAnalyticsPrivacy());
+
   // Agent control handlers
   ipcMain.handle('get-agent-control-enabled', () =>
     settingsHandlers.getAgentControlEnabled()
@@ -2277,9 +2282,9 @@ app
         log.info('[main.ts] Agent socket server initialized');
       }
 
-      void trackAppOpen();
-      void flushPendingCriticalFailures();
-      void flushPendingProductEvents();
+      void initializeProductAnalytics().catch(() => {
+        log.info('[product-measurement] Privacy synchronization remains pending.');
+      });
       startHungWindowMonitoring(window);
       if (isDev) {
         window.webContents.on('devtools-opened', () => {

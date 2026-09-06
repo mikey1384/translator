@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Datenschutz",
+      "label": "Optionale Nutzungsanalyse",
+      "description": "Nutzung, Fehlerkategorien und Kaufbeträge mit Google Analytics teilen. Keine Videos, Untertitel oder Dateipfade.",
+      "retention": "Standardmäßig aus. Nicht gesendete Berichte verfallen nach 3 Tagen; beim Ausschalten werden sie entfernt. Zahlungen funktionieren weiterhin.",
+      "on": "An. Auswahl gespeichert.",
+      "off": "Aus. Auswahl gespeichert.",
+      "saving": "Auswahl wird gespeichert…",
+      "pendingOn": "App-Berichte pausiert. Verbindung herstellen und erneut versuchen.",
+      "pendingOff": "Auf diesem Gerät aus. Verbindung herstellen, um die Serverauswahl zu bestätigen.",
+      "retry": "Erneut versuchen",
+      "error": "Auswahl konnte nicht bestätigt werden. Erneut versuchen."
+    },
     "title": "Einstellungen",
     "aiProvider": {
       "title": "KI-Anbieter"

@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import nodeProcess from 'node:process';
 import axios from 'axios';
-import { app } from 'electron';
+import { app, webContents } from 'electron';
+import { createAnalyticsPreferenceController } from './analytics-preference-controller.js';
+import { isFreshProductEvent } from './product-event-retention.js';
 import Store from 'electron-store';
 import log from 'electron-log';
 import { STAGE5_API_URL } from './endpoints.js';
@@ -34,6 +36,7 @@ import {
   queueProductEvent,
   listPendingProductEvents,
   acknowledgeProductEvent,
+  clearAllPendingEvents,
 } from './product-event-queue.js';
 
 type MeaningfulUseFeature = 'video_open' | 'video_download' | 'translation';
@@ -53,19 +56,84 @@ type TranslationWorkflow = 'full_srt';
 type ProductMeasurementStore = {
   meaningfulUseReported?: boolean;
   pendingMeaningfulUseEventId?: string;
+  pendingMeaningfulUseOccurredAt?: string;
 };
 
 const measurementStore = new Store<ProductMeasurementStore>({
   name: 'product-measurement',
 });
 
+const preferenceStore = new Store<{ enabled: boolean; revision: number }>({
+  name: 'product-analytics-preference', defaults: { enabled: false, revision: 0 },
+});
+
+function releaseAnalyticsAvailable() {
+  return shouldSendProductAnalytics({ isPackaged: app.isPackaged, appVersion: app.getVersion() });
+}
+
+function clearPendingAnalytics() {
+  clearAllPendingEvents();
+  for (const failure of listPendingCriticalFailures()) acknowledgeCriticalFailure(failure.eventId);
+  measurementStore.delete('pendingMeaningfulUseEventId');
+  measurementStore.delete('pendingMeaningfulUseOccurredAt');
+}
+
+const privacy = createAnalyticsPreferenceController({
+  read: () => ({ enabled: preferenceStore.get('enabled') === true, revision: preferenceStore.get('revision') }),
+  write: choice => { preferenceStore.set(choice); },
+  send: async choice => {
+    const response = await withStage5AuthRetry(headers => axios.post(
+      `${STAGE5_API_URL}/analytics/preferences`, choice, { headers, timeout: 10_000 }
+    ));
+    return response.data;
+  },
+  clearPending: clearPendingAnalytics,
+  available: releaseAnalyticsAvailable,
+  changed: state => {
+    for (const contents of webContents.getAllWebContents()) {
+      if (!contents.isDestroyed()) contents.send('analytics-privacy-changed', state);
+    }
+  },
+});
+
+export const getAnalyticsPrivacy = () => privacy.snapshot();
+export const setAnalyticsPrivacy = (enabled: boolean) => privacy.setEnabled(enabled);
+export const syncAnalyticsPrivacy = () => privacy.setEnabled(privacy.snapshot().enabled);
+
+let maintenance: ReturnType<typeof setInterval> | undefined;
+function prunePendingAnalytics() {
+  listPendingProductEvents();
+  listPendingCriticalFailures();
+  if (!isFreshProductEvent(measurementStore.get('pendingMeaningfulUseOccurredAt'))) {
+    measurementStore.delete('pendingMeaningfulUseEventId');
+    measurementStore.delete('pendingMeaningfulUseOccurredAt');
+  }
+  if (!privacy.snapshot().enabled) clearPendingAnalytics();
+}
+export async function initializeProductAnalytics() {
+  // Purge legacy untimed queues, even when analytics remains disabled.
+  prunePendingAnalytics();
+  if (!maintenance) {
+    maintenance = setInterval(() => {
+      prunePendingAnalytics();
+      void (async () => {
+        if (privacy.snapshot().status === 'pending') await privacy.sync();
+        await flushPendingCriticalFailures();
+        await flushPendingProductEvents();
+      })().catch(() => {});
+    }, 15 * 60 * 1000);
+    maintenance.unref();
+  }
+  await privacy.sync();
+  await trackAppOpen();
+  await flushPendingCriticalFailures();
+  await flushPendingProductEvents();
+}
+
 let meaningfulUseInFlight: Promise<void> | null = null;
 
 function productAnalyticsEnabled(): boolean {
-  return shouldSendProductAnalytics({
-    isPackaged: app.isPackaged,
-    appVersion: app.getVersion(),
-  });
+  return privacy.maySend();
 }
 
 function measurementErrorLabel(error: unknown): string {
@@ -100,6 +168,8 @@ function supportedArchitecture(): 'arm64' | 'x64' | 'ia32' {
 async function postProductEvent({
   eventId,
   event,
+  occurredAt = new Date().toISOString(),
+  consentRevision = privacy.snapshot().revision,
   feature,
   workflow,
   criticalFailure,
@@ -108,6 +178,8 @@ async function postProductEvent({
 }: {
   eventId: string;
   event: ProductEvent;
+  occurredAt?: string;
+  consentRevision?: number;
   feature?: MeaningfulUseFeature;
   workflow?: TranslationWorkflow;
   criticalFailure?: PendingCriticalFailure;
@@ -124,12 +196,17 @@ async function postProductEvent({
     failureReason?: PurchaseFailureReason;
   };
 }): Promise<void> {
-  await withStage5AuthRetry(headers =>
-    axios.post(
+  const signal = privacy.signal();
+  await withStage5AuthRetry(headers => {
+    if (!privacy.maySend(consentRevision) || signal.aborted || !isFreshProductEvent(occurredAt))
+      throw new Error('analytics_not_allowed');
+    return axios.post(
       `${STAGE5_API_URL}/analytics/events`,
       {
         eventId,
         event,
+        occurredAt,
+        consentRevision,
         appVersion: app.getVersion(),
         platform: supportedPlatform(),
         architecture: supportedArchitecture(),
@@ -178,18 +255,27 @@ async function postProductEvent({
       {
         headers,
         timeout: 10_000,
+        signal,
       }
-    )
-  );
+    );
+  });
 }
 
 export async function flushPendingCriticalFailures(): Promise<void> {
   if (!productAnalyticsEnabled()) return;
+  const consentRevision = privacy.snapshot().revision;
   for (const criticalFailure of listPendingCriticalFailures()) {
+    if (!privacy.maySend(consentRevision)) return;
+    if (!isFreshProductEvent(criticalFailure.occurredAt)) {
+      acknowledgeCriticalFailure(criticalFailure.eventId);
+      continue;
+    }
     try {
       await postProductEvent({
         eventId: criticalFailure.eventId,
         event: 'app_critical_failure',
+        occurredAt: criticalFailure.occurredAt,
+        consentRevision,
         criticalFailure,
       });
       acknowledgeCriticalFailure(criticalFailure.eventId);
@@ -242,22 +328,31 @@ export function trackFirstMeaningfulUse(
   }
   if (meaningfulUseInFlight) return meaningfulUseInFlight;
 
-  const existingEventId = measurementStore.get('pendingMeaningfulUseEventId');
+  const priorTime = measurementStore.get('pendingMeaningfulUseOccurredAt');
+  const fresh = isFreshProductEvent(priorTime);
+  const occurredAt = fresh ? priorTime! : new Date().toISOString();
+  const consentRevision = privacy.snapshot().revision;
+  const existingEventId = fresh ? measurementStore.get('pendingMeaningfulUseEventId') : undefined;
   const eventId =
     typeof existingEventId === 'string' && existingEventId.trim()
       ? existingEventId
       : randomUUID();
   measurementStore.set('pendingMeaningfulUseEventId', eventId);
+  measurementStore.set('pendingMeaningfulUseOccurredAt', occurredAt);
 
   meaningfulUseInFlight = (async () => {
     try {
       await postProductEvent({
         eventId,
         event: 'app_meaningful_use',
+        occurredAt,
+        consentRevision,
         feature,
       });
+      if (!privacy.maySend(consentRevision)) return;
       measurementStore.set('meaningfulUseReported', true);
       measurementStore.delete('pendingMeaningfulUseEventId');
+      measurementStore.delete('pendingMeaningfulUseOccurredAt');
     } catch (error) {
       log.info(
         `[product-measurement] First meaningful use (${feature}) remains pending for retry (${measurementErrorLabel(error)}).`
@@ -275,17 +370,22 @@ export async function trackTranslationFunnelEvent(
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
+  const occurredAt = new Date().toISOString();
+  const consentRevision = privacy.snapshot().revision;
   try {
     await postProductEvent({
       eventId,
       event,
+      occurredAt,
+      consentRevision,
       workflow: 'full_srt',
     });
   } catch (error) {
     log.info(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
-    queueProductEvent({ eventId, event, workflow: 'full_srt' });
+    if (!privacy.maySend(consentRevision)) return;
+    queueProductEvent({ eventId, occurredAt, consentRevision, event, workflow: 'full_srt' });
   }
 }
 
@@ -294,16 +394,21 @@ export async function trackTranscriptionFunnelEvent(
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
+  const occurredAt = new Date().toISOString();
+  const consentRevision = privacy.snapshot().revision;
   try {
     await postProductEvent({
       eventId,
       event,
+      occurredAt,
+      consentRevision,
     });
   } catch (error) {
     log.info(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
-    queueProductEvent({ eventId, event });
+    if (!privacy.maySend(consentRevision)) return;
+    queueProductEvent({ eventId, occurredAt, consentRevision, event });
   }
 }
 
@@ -312,16 +417,21 @@ export async function trackDubbingFunnelEvent(
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
+  const occurredAt = new Date().toISOString();
+  const consentRevision = privacy.snapshot().revision;
   try {
     await postProductEvent({
       eventId,
       event,
+      occurredAt,
+      consentRevision,
     });
   } catch (error) {
     log.info(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
-    queueProductEvent({ eventId, event });
+    if (!privacy.maySend(consentRevision)) return;
+    queueProductEvent({ eventId, occurredAt, consentRevision, event });
   }
 }
 
@@ -330,16 +440,21 @@ export async function trackSummaryFunnelEvent(
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
+  const occurredAt = new Date().toISOString();
+  const consentRevision = privacy.snapshot().revision;
   try {
     await postProductEvent({
       eventId,
       event,
+      occurredAt,
+      consentRevision,
     });
   } catch (error) {
     log.info(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
-    queueProductEvent({ eventId, event });
+    if (!privacy.maySend(consentRevision)) return;
+    queueProductEvent({ eventId, occurredAt, consentRevision, event });
   }
 }
 
@@ -348,16 +463,21 @@ export async function trackMergeFunnelEvent(
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
+  const occurredAt = new Date().toISOString();
+  const consentRevision = privacy.snapshot().revision;
   try {
     await postProductEvent({
       eventId,
       event,
+      occurredAt,
+      consentRevision,
     });
   } catch (error) {
     log.info(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
-    queueProductEvent({ eventId, event });
+    if (!privacy.maySend(consentRevision)) return;
+    queueProductEvent({ eventId, occurredAt, consentRevision, event });
   }
 }
 
@@ -373,17 +493,22 @@ export async function trackUrlDownloadFunnelEvent(
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
+  const occurredAt = new Date().toISOString();
+  const consentRevision = privacy.snapshot().revision;
   try {
     await postProductEvent({
       eventId,
       event,
+      occurredAt,
+      consentRevision,
       urlDownload: details,
     });
   } catch (error) {
     log.info(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
-    queueProductEvent({ eventId, event, urlDownload: details });
+    if (!privacy.maySend(consentRevision)) return;
+    queueProductEvent({ eventId, occurredAt, consentRevision, event, urlDownload: details });
   }
 }
 
@@ -397,10 +522,14 @@ export async function trackPurchaseFunnelEvent(
 ): Promise<void> {
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
+  const occurredAt = new Date().toISOString();
+  const consentRevision = privacy.snapshot().revision;
   try {
     await postProductEvent({
       eventId,
       event,
+      occurredAt,
+      consentRevision,
       purchase: details,
     });
     // Flush failures immediately for visibility
@@ -416,6 +545,7 @@ export async function trackPurchaseFunnelEvent(
     log.info(
       `[product-measurement] ${event} measurement queued for retry (${measurementErrorLabel(error)}).`
     );
-    queueProductEvent({ eventId, event, purchase: details });
+    if (!privacy.maySend(consentRevision)) return;
+    queueProductEvent({ eventId, occurredAt, consentRevision, event, purchase: details });
   }
 }

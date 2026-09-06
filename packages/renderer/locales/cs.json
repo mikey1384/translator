@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Soukromí",
+      "label": "Volitelná analytika",
+      "description": "Sdílejte využití, kategorie chyb a částky nákupů s Google Analytics. Bez videí, titulků a cest k souborům.",
+      "retention": "Ve výchozím stavu vypnuto. Neodeslané zprávy vyprší po 3 dnech; vypnutí je odstraní. Platby fungují dál.",
+      "on": "Zapnuto. Volba uložena.",
+      "off": "Vypnuto. Volba uložena.",
+      "saving": "Ukládání volby…",
+      "pendingOn": "Hlášení aplikace pozastavena. Připojte se a zkuste to znovu.",
+      "pendingOff": "Na tomto zařízení vypnuto. Připojte se pro potvrzení volby na serveru.",
+      "retry": "Zkusit znovu",
+      "error": "Volbu se nepodařilo potvrdit. Zkuste to znovu."
+    },
     "title": "Nastavení",
     "aiProvider": {
       "title": "Poskytovatel AI"

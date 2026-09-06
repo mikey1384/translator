@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Confidentialité",
+      "label": "Statistiques facultatives",
+      "description": "Partagez les usages, catégories d’erreurs et montants d’achats avec Google Analytics. Aucune vidéo, aucun sous-titre ni chemin de fichier.",
+      "retention": "Désactivées par défaut. Les rapports en attente expirent après 3 jours ; les désactiver supprime ces rapports. Les paiements restent disponibles.",
+      "on": "Activées. Choix enregistré.",
+      "off": "Désactivées. Choix enregistré.",
+      "saving": "Enregistrement du choix…",
+      "pendingOn": "Rapports de l’application en pause. Connectez-vous et réessayez.",
+      "pendingOff": "Désactivées sur cet appareil. Connectez-vous pour confirmer le choix sur le serveur.",
+      "retry": "Réessayer",
+      "error": "Impossible de confirmer votre choix. Réessayez."
+    },
     "title": "Paramètres",
     "aiProvider": {
       "title": "Fournisseur d'IA"

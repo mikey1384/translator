@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privacidade",
+      "label": "Análise opcional",
+      "description": "Compartilhe uso, categorias de erros e valores de compras com o Google Analytics. Sem vídeos, legendas ou caminhos de arquivos.",
+      "retention": "Desativada por padrão. Relatórios pendentes expiram após 3 dias; desativar remove esses relatórios. Os pagamentos continuam funcionando.",
+      "on": "Ativada. Preferência salva.",
+      "off": "Desativada. Preferência salva.",
+      "saving": "Salvando sua preferência…",
+      "pendingOn": "Relatórios do aplicativo pausados. Conecte-se e tente novamente.",
+      "pendingOff": "Desativada neste dispositivo. Conecte-se para confirmar a preferência no servidor.",
+      "retry": "Tentar novamente",
+      "error": "Não foi possível confirmar sua preferência. Tente novamente."
+    },
     "title": "Configurações",
     "aiProvider": {
       "title": "Provedor de IA"

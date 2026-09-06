@@ -13,6 +13,7 @@ import ByoUnlockCard from './ByoUnlockCard';
 import ApiKeyModeToggle from './ApiKeyModeToggle';
 import ByoOpenAiSection from './ByoOpenAiSection';
 import SiteConnectionSection from './SiteConnectionSection';
+import PrivacySection from './PrivacySection';
 import AgentControlSection from './AgentControlSection';
 import { hasAnyByoEntitlementUnlocked } from '../../state/byo-runtime';
 import { settingsCenterColumnStyles, settingsPageLayoutStyles } from './styles';
@@ -77,6 +78,7 @@ export default function SettingsPage() {
 
       {/* —————————————————  BYO MODE TOGGLE (if unlocked)  ————————————————— */}
       <ApiKeyModeToggle />
+      <PrivacySection />
 
       {showStage5Section && (
         <Section

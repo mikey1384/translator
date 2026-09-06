@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { createStartupHealth } from '../startup-health.mjs';
 
-function createHarness() {
+function createHarness(reportingEnabled = () => true) {
   const directory = fs.mkdtempSync(
     path.join(os.tmpdir(), 'translator-startup-')
   );
@@ -16,6 +16,7 @@ function createHarness() {
       appVersion,
       platform: 'darwin',
       architecture: 'x64',
+      reportingEnabled,
     });
   return { directory, stateFile, launch };
 }
@@ -124,4 +125,32 @@ test('renderer_window_hung persists as renderer_window_hung, not main_process_ex
     'Hung window must persist as renderer_window_hung, not be remapped to main_process_exception'
   );
   assert.equal(pending[0].startupPhase, 'runtime');
+});
+
+
+test('withdrawal removes queued diagnostics without clearing the local startup attempt', t => {
+  let enabled = true;
+  const harness = createHarness(() => enabled);
+  t.after(() => fs.rmSync(harness.directory, { recursive: true, force: true }));
+  const health = harness.launch();
+  health.recordFailure('renderer_process_gone', 'runtime', 'oom');
+  assert.equal(health.listPendingFailures().length, 1);
+  enabled = false;
+  assert.deepEqual(health.listPendingFailures(), []);
+  health.recordFailure('renderer_process_gone', 'runtime', 'oom');
+  assert.deepEqual(health.listPendingFailures(), []);
+  assert.ok(JSON.parse(fs.readFileSync(harness.stateFile, 'utf8')).currentAttempt);
+});
+
+test('old and untimed diagnostic reports expire at the next startup', t => {
+  const harness = createHarness();
+  t.after(() => fs.rmSync(harness.directory, { recursive: true, force: true }));
+  const health = harness.launch();
+  health.markSuccessful();
+  health.recordFailure('renderer_process_gone', 'runtime', 'oom');
+  const state = JSON.parse(fs.readFileSync(harness.stateFile, 'utf8'));
+  state.pendingFailures[0].occurredAt = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+  state.pendingFailures.push({ ...state.pendingFailures[0], occurredAt: undefined });
+  fs.writeFileSync(harness.stateFile, JSON.stringify(state));
+  assert.deepEqual(harness.launch().listPendingFailures(), []);
 });

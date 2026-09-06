@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Confidențialitate",
+      "label": "Analiză opțională",
+      "description": "Distribuie utilizarea, categoriile de erori și valorile achizițiilor către Google Analytics. Fără videoclipuri, subtitrări sau căi de fișiere.",
+      "retention": "Dezactivată implicit. Rapoartele netrimise expiră după 3 zile; dezactivarea le elimină. Plățile funcționează în continuare.",
+      "on": "Activată. Opțiune salvată.",
+      "off": "Dezactivată. Opțiune salvată.",
+      "saving": "Se salvează opțiunea…",
+      "pendingOn": "Rapoartele aplicației sunt suspendate. Conectează-te și reîncearcă.",
+      "pendingOff": "Dezactivată pe acest dispozitiv. Conectează-te pentru a confirma opțiunea pe server.",
+      "retry": "Reîncearcă",
+      "error": "Opțiunea nu a putut fi confirmată. Reîncearcă."
+    },
     "title": "Setări",
     "aiProvider": {
       "title": "Furnizor AI"

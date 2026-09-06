@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Faragha",
+      "label": "Uchanganuzi wa hiari",
+      "description": "Shiriki matumizi, aina za hitilafu na kiasi cha ununuzi na Google Analytics. Hakuna video, manukuu au njia za faili.",
+      "retention": "Huzimwa kwa chaguomsingi. Ripoti ambazo hazijatumwa huisha baada ya siku 3; kuzima huzifuta. Malipo yanaendelea kufanya kazi.",
+      "on": "Umewashwa. Chaguo limehifadhiwa.",
+      "off": "Umezimwa. Chaguo limehifadhiwa.",
+      "saving": "Inahifadhi chaguo…",
+      "pendingOn": "Ripoti za programu zimesitishwa. Unganisha na ujaribu tena.",
+      "pendingOff": "Umezimwa kwenye kifaa hiki. Unganisha ili kuthibitisha chaguo la seva.",
+      "retry": "Jaribu tena",
+      "error": "Imeshindwa kuthibitisha chaguo lako. Jaribu tena."
+    },
     "title": "Mipangilio",
     "aiProvider": {
       "title": "Mtoa Huduma wa AI"

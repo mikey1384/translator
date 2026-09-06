@@ -506,6 +506,19 @@
     }
   },
   "settings": {
+    "privacy": {
+      "title": "Privasi",
+      "label": "Analitik opsional",
+      "description": "Bagikan penggunaan, kategori kesalahan, dan nilai pembelian dengan Google Analytics. Tanpa video, subtitel, atau jalur berkas.",
+      "retention": "Nonaktif secara bawaan. Laporan yang belum dikirim kedaluwarsa setelah 3 hari; menonaktifkan fitur akan menghapusnya. Pembayaran tetap berjalan.",
+      "on": "Aktif. Pilihan tersimpan.",
+      "off": "Nonaktif. Pilihan tersimpan.",
+      "saving": "Menyimpan pilihan…",
+      "pendingOn": "Laporan aplikasi dijeda. Hubungkan dan coba lagi.",
+      "pendingOff": "Nonaktif di perangkat ini. Hubungkan untuk mengonfirmasi pilihan di server.",
+      "retry": "Coba lagi",
+      "error": "Pilihan belum dapat dikonfirmasi. Coba lagi."
+    },
     "title": "Pengaturan",
     "aiProvider": {
       "title": "Penyedia AI"
