@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import yaml from 'yaml';
 import {
+  assertLockfileHash,
   fileInventory,
   safeRelativePath,
   validateRun,
@@ -25,6 +27,27 @@ function temporary(t) {
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   return root;
 }
+
+test('lockfile verification allows only LF/CRLF checkout differences', () => {
+  const lf = '{\n  "version": "1.2.3"\n}\n';
+  const crlf = lf.replace(/\n/g, '\r\n');
+  const digest = contents =>
+    createHash('sha256').update(contents).digest('hex');
+  for (const local of [lf, crlf]) {
+    for (const remote of [lf, crlf]) assertLockfileHash(local, digest(remote));
+    for (const modified of [
+      lf.replace('1.2.3', '1.2.4'),
+      lf.replace('  ', ' '),
+      lf + ' ',
+    ]) {
+      assert.throws(
+        () => assertLockfileHash(local, digest(modified)),
+        /lockfile contents differ/
+      );
+    }
+    assert.throws(() => assertLockfileHash(local, undefined));
+  }
+});
 
 test('handoff rejects escaping, ambiguous, and unexpected paths', () => {
   for (const name of [
@@ -200,6 +223,16 @@ test('metadata verifier rejects unsigned-era or changed installer hashes', async
   };
   fs.writeFileSync(path.join(root, 'dist/latest.yml'), yaml.stringify(data));
   assert.equal(await verifyMetadata(root, identity), installer);
+  delete data.files[0].size;
+  fs.writeFileSync(path.join(root, 'dist/latest.yml'), yaml.stringify(data));
+  assert.equal(await verifyMetadata(root, identity), installer);
+  for (const invalidSize of [0, 15, 17, null, '16']) {
+    data.files[0].size = invalidSize;
+    fs.writeFileSync(path.join(root, 'dist/latest.yml'), yaml.stringify(data));
+    await assert.rejects(verifyMetadata(root, identity));
+  }
+  delete data.files[0].size;
+  fs.writeFileSync(path.join(root, 'dist/latest.yml'), yaml.stringify(data));
   fs.appendFileSync(installer, 'changed');
   await assert.rejects(verifyMetadata(root, identity));
 });

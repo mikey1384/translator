@@ -59,7 +59,9 @@ node scripts/windows-token-release.mjs download v1.20.1 RUN_ID RELEASE_ROOT
 ```
 
 `download` validates the GitHub run, release identity, lockfile, file inventory,
-and hashes. It refuses to overwrite an existing handoff. A failed/incomplete
+and hashes. The lockfile check permits only Git's LF/CRLF checkout differences;
+all payload files must match their exact byte hashes. It refuses to overwrite
+an existing handoff. A failed/incomplete
 download must not be used as a release candidate.
 
 ## Sign and package locally

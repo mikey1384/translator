@@ -21,6 +21,20 @@ export async function hashFile(file, algorithm = 'sha256', encoding = 'hex') {
   return hash.digest(encoding);
 }
 
+export function assertLockfileHash(contents, expected) {
+  // Git for Windows may check out CRLF even when the same clean tagged file
+  // uses LF on Linux. Accept only these two byte representations of the local
+  // lockfile; do not normalize JSON, whitespace, versions, or dependency data.
+  const lf = contents.replace(/\r\n/g, '\n');
+  const hashes = [lf, lf.replace(/\n/g, '\r\n')].map(text =>
+    createHash('sha256').update(text, 'utf8').digest('hex')
+  );
+  assert.ok(
+    hashes.includes(expected),
+    'Handoff lockfile contents differ from the release tag'
+  );
+}
+
 export function sourceIdentity(root, tag) {
   assert.match(tag, /^v\d+\.\d+\.\d+(?:-mac)?$/, 'Use an exact release tag');
   const version = tag.slice(1).replace(/-mac$/, '');
@@ -173,9 +187,9 @@ export async function verifyHandoff(root, handoff, tag, run, runId) {
   validateRun(run, manifest, runId);
   for (const key of ['tag', 'version', 'commit', 'tagObject'])
     assert.equal(manifest[key], identity[key], `Wrong ${key}`);
-  assert.equal(
-    manifest.lockfileSha256,
-    await hashFile(path.join(root, 'package-lock.json'))
+  assertLockfileHash(
+    fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'),
+    manifest.lockfileSha256
   );
   validateLayout(manifest.files);
   const actual = (await fileInventory(handoff)).filter(

@@ -99,7 +99,10 @@ export async function verifyMetadata(root, identity) {
   assert.equal(info.files.length, 1);
   assert.equal(info.files[0].url, name);
   assert.equal(info.files[0].sha512, sha512);
-  assert.equal(info.files[0].size, fs.statSync(installer).size);
+  // electron-builder may omit size when differential packages are disabled.
+  // The SHA512 remains mandatory; a size field, when present, must be exact.
+  if (Object.hasOwn(info.files[0], 'size'))
+    assert.equal(info.files[0].size, fs.statSync(installer).size);
   assert.equal(info.releaseName, identity.tag);
   assert.equal(info.releaseNotes.trim(), identity.notes);
   return installer;
