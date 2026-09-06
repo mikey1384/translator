@@ -1,6 +1,11 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 
+rem CI installs with --ignore-scripts. These runtime binaries must be installed
+rem explicitly before packaging; electron-builder does not install them for us.
+node node_modules\ffmpeg-ffprobe-static\install.js
+if errorlevel 1 exit /b !errorlevel!
+
 call npm run test:release
 if errorlevel 1 exit /b !errorlevel!
 

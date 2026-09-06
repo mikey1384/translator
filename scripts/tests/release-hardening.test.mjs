@@ -1325,6 +1325,23 @@ test(
         path.join(repoRoot, 'scripts', 'test-windows-package.bat'),
         fixtureScript
       );
+      fs.copyFileSync(
+        path.join(repoRoot, 'scripts', 'verify-windows-media.cjs'),
+        path.join(tempDir, 'scripts', 'verify-windows-media.cjs')
+      );
+      const mediaDir = path.join(
+        resourcesDir,
+        'app.asar.unpacked',
+        'node_modules',
+        'ffmpeg-ffprobe-static'
+      );
+      fs.mkdirSync(mediaDir, { recursive: true });
+      for (const name of ['ffmpeg.exe', 'ffprobe.exe']) {
+        fs.copyFileSync(
+          path.join(repoRoot, 'node_modules', 'ffmpeg-ffprobe-static', name),
+          path.join(mediaDir, name)
+        );
+      }
       fs.mkdirSync(path.dirname(nestedBinary), { recursive: true });
       fs.writeFileSync(path.join(appDir, 'Translator.exe'), 'fixture');
       fs.writeFileSync(nestedBinary, 'fixture');
@@ -1335,6 +1352,16 @@ test(
       const nested = runValidator();
       assert.equal(nested.status, 0, nested.stderr || nested.stdout);
       assert.match(nested.stdout, /Headless shell: .*win64-fixture/i);
+
+      const ffprobePath = path.join(mediaDir, 'ffprobe.exe');
+      fs.renameSync(ffprobePath, `${ffprobePath}.saved`);
+      const missingMedia = runValidator();
+      assert.notEqual(missingMedia.status, 0);
+      assert.match(
+        `${missingMedia.stdout}\n${missingMedia.stderr}`,
+        /Missing packaged ffprobe executable/
+      );
+      fs.renameSync(`${ffprobePath}.saved`, ffprobePath);
 
       fs.rmSync(nestedBinary);
       const missing = runValidator();

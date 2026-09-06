@@ -29,7 +29,7 @@
     }
   ],
 
-  "afterPack": "scripts/sign-chromium.cjs",
+  "afterPack": "scripts/after-pack.cjs",
 
   "extraResources": [
     { "from": "vendor/vision", "to": "vision-models" },
