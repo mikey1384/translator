@@ -365,7 +365,7 @@ if ($null -ne $blockmap) {
 
 # Compute SHA256 and write checksum file
 $hash = (Get-WindowsArtifactSha256Hex -FilePath $src).ToUpperInvariant()
-$hashFile = Join-Path $env:TEMP ("Translator-x64-" + [Guid]::NewGuid().ToString('N') + '.exe.sha256')
+$hashFile = Join-Path ([System.IO.Path]::GetTempPath()) ("Translator-x64-" + [Guid]::NewGuid().ToString('N') + '.exe.sha256')
 "$hash  Translator-x64.exe" | Out-File -FilePath $hashFile -Encoding ascii -Force
 Write-Host "Checksum: $hash"
 Write-Host "Checksum file: $hashFile"
@@ -435,7 +435,7 @@ function Assert-RemoteMatchesLocal {
     [string]$remotePath
   )
 
-  $verificationPath = Join-Path $env:TEMP ("translator-r2-verify-" + [Guid]::NewGuid().ToString('N'))
+  $verificationPath = Join-Path ([System.IO.Path]::GetTempPath()) ("translator-r2-verify-" + [Guid]::NewGuid().ToString('N'))
   try {
     & rclone copyto --retries 3 --retries-sleep 2s -- $remotePath $verificationPath
     if ($LASTEXITCODE -ne 0) {
@@ -472,7 +472,7 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 # Snapshot the currently published manifest before any pointer changes. The
 # generated record names the exact generation retained for interrupted clients.
 # On a retry after the new manifest is public, the existing record is reused.
-$retentionTempDir = Join-Path $env:TEMP ("translator-r2-retention-" + [Guid]::NewGuid().ToString('N'))
+$retentionTempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("translator-r2-retention-" + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $retentionTempDir | Out-Null
 $publishedManifestPath = Join-Path $retentionTempDir 'published-latest.yml'
 $existingRetentionPath = Join-Path $retentionTempDir 'existing-retention.json'
@@ -533,7 +533,7 @@ Invoke-RcloneCopyAlways -from $latestYaml -to $destLatestYaml
 Assert-RemoteMatchesLocal -localPath $latestYaml -remotePath $destLatestYaml
 
 function Remove-StaleLatestObjects {
-  $tempDir = Join-Path $env:TEMP ("translator-r2-prune-" + [Guid]::NewGuid().ToString('N'))
+  $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("translator-r2-prune-" + [Guid]::NewGuid().ToString('N'))
   New-Item -ItemType Directory -Path $tempDir | Out-Null
   try {
     $inventoryPath = Join-Path $tempDir 'inventory.txt'

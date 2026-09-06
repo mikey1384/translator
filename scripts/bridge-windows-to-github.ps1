@@ -3,7 +3,9 @@ Param(
   [string]$Version,
 
   [Parameter(Mandatory = $false)]
-  [string]$Repo = 'mikey1384/translator'
+  [string]$Repo = 'mikey1384/translator',
+
+  [switch]$VerifyOnly
 )
 
 Set-StrictMode -Version Latest
@@ -356,6 +358,11 @@ try {
       -LocalWindowsAssets $localWindowsAssets `
       -AllowMissingWindows $true
   )
+
+  if ($VerifyOnly) {
+    Write-Host 'Canonical release and immutable Windows assets verified. Nothing uploaded.' -ForegroundColor Green
+    return
+  }
 
   $missingPayloads = @($missingWindows | Where-Object { $_.Name -cne 'latest.yml' })
   if ($missingPayloads.Count -gt 0) {

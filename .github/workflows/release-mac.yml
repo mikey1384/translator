@@ -1,7 +1,12 @@
 name: Release – macOS (R2)
 
 on:
-  workflow_dispatch: # manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing annotated release tag to build for local Windows signing'
+        required: true
+        type: string
   push:
     tags:
       - 'v*-mac' # Mac-only releases
@@ -24,23 +29,56 @@ jobs:
   windows-preflight:
     runs-on: windows-2022
     timeout-minutes: 30
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: app
 
     env:
       YOUTUBE_DL_SKIP_DOWNLOAD: 'true'
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
 
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          path: release-tools
+          persist-credentials: false
+
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
+          path: app
+          fetch-depth: 0
+          persist-credentials: false
 
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '22.16.0'
           cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Verify the exact annotated release source
+        run: node ../release-tools/scripts/windows-token-handoff.mjs source . "$env:RELEASE_TAG"
 
       - name: Install JavaScript dependencies without package side effects
         run: npm ci --ignore-scripts --no-audit --fund=false
 
       - name: Build and validate the complete unsigned Windows package
         run: npm run package:win:preflight
+
+      - name: Prepare checksummed unsigned handoff (never a public release)
+        run: node ../release-tools/scripts/windows-token-handoff.mjs export . "$env:RELEASE_TAG"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: windows-unsigned-${{ env.RELEASE_TAG }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: app/dist/token-handoff/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 7
 
   mac-build:
     needs: windows-preflight

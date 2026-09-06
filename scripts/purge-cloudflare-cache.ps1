@@ -41,6 +41,9 @@ function Get-SecretsFile { return Join-Path -Path (Get-SecretsPath) -ChildPath '
 
 function Save-CloudflareCreds {
   param([string]$zoneId, [string]$apiToken)
+  # Export-Clixml encrypts SecureString using DPAPI only on Windows.
+  # On Linux it is reversible text, so never persist the token there.
+  if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) { return }
   $dir = Get-SecretsPath
   if (-not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
   $secure = ConvertTo-SecureString -String $apiToken -AsPlainText -Force
@@ -50,6 +53,7 @@ function Save-CloudflareCreds {
 }
 
 function Load-CloudflareCreds {
+  if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) { return $null }
   $file = Get-SecretsFile
   if (-not (Test-Path -LiteralPath $file)) { return $null }
   try { return Import-Clixml -Path $file } catch { return $null }
@@ -74,7 +78,10 @@ function Ensure-CloudflareCreds {
 
   # 3) Prompt if still missing and persist for next time
   if (-not $z) { $z = Read-Host -Prompt 'Enter Cloudflare Zone ID' }
-  if (-not $t) { $t = Read-Host -Prompt 'Enter Cloudflare API Token (Zone.Cache Purge permission)'}
+  if (-not $t) {
+    $secureToken = Read-Host -AsSecureString -Prompt 'Enter Cloudflare API Token (Zone.Cache Purge permission)'
+    $t = [System.Net.NetworkCredential]::new('', $secureToken).Password
+  }
   if (-not $z -or -not $t) { throw 'Cloudflare Zone ID and API Token are required' }
 
   # Persist for subsequent runs (user scope DPAPI via Export-Clixml)

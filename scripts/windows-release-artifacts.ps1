@@ -66,6 +66,22 @@ function Assert-WindowsInstallerSignature {
     [string]$InstallerPath
   )
 
+  if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
+    # The local signer verifies Authenticode, the pinned Stage5 certificate,
+    # certificate trust/revocation, and the timestamp. Never accept unsigned
+    # output merely because Get-AuthenticodeSignature is Windows-only.
+    $verifier = $env:TRANSLATOR_SIGN_COMMAND
+    if (-not $verifier) {
+      $verifier = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.local/bin/translator-sign'
+    }
+    if (-not [System.IO.Path]::IsPathRooted($verifier) -or -not (Test-Path -LiteralPath $verifier -PathType Leaf)) {
+      throw 'Install the protected translator-sign verifier or set TRANSLATOR_SIGN_COMMAND to its absolute path.'
+    }
+    & $verifier verify $InstallerPath | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "Linux Authenticode verification failed: $InstallerPath" }
+    return
+  }
+
   $signature = Get-AuthenticodeSignature -LiteralPath $InstallerPath
   if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
     throw "Installer Authenticode signature is not valid: $($signature.Status) ($InstallerPath)"

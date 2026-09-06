@@ -37,7 +37,7 @@ $args = @(
 if ($ReleaseNotesFile -and $ReleaseNotesFile.Trim().Length -gt 0) {
   $args += @('--release-notes-file', $ReleaseNotesFile)
 } elseif ($ReleaseNotes -and $ReleaseNotes.Trim().Length -gt 0) {
-  $tempPath = Join-Path -Path $env:TEMP -ChildPath ("translator-release-notes-" + [Guid]::NewGuid().ToString() + '.txt')
+  $tempPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("translator-release-notes-" + [Guid]::NewGuid().ToString() + '.txt')
   try {
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($tempPath, $ReleaseNotes, $utf8NoBom)
