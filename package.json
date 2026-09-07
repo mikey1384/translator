@@ -1,7 +1,7 @@
 {
   "name": "translator",
   "private": true,
-  "version": "1.20.2",
+  "version": "1.20.3",
   "type": "module",
   "description": "Open-source desktop video discovery, subtitle translation, editing, dubbing, and export workstation",
   "author": "Mikey Lee",
@@ -156,7 +156,7 @@
     "adm-zip": "^0.6.0",
     "tmp": "^0.2.7",
     "basic-ftp": "^5.3.1",
-    "fast-uri": "^3.1.5",
+    "fast-uri": "^3.1.7",
     "ip-address": "^10.3.1",
     "js-yaml": "^4.3.0",
     "minimatch@3": {
