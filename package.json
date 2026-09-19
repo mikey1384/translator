@@ -158,7 +158,7 @@
     "basic-ftp": "^5.3.1",
     "fast-uri": "^3.1.7",
     "ip-address": "^10.3.1",
-    "js-yaml": "^4.3.0",
+    "js-yaml": "^4.3.2",
     "minimatch@3": {
       "brace-expansion": "^1.1.18"
     },

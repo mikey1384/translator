@@ -5,6 +5,28 @@ const lock = JSON.parse(
 );
 const packages = lock.packages ?? {};
 
+const jsYamlPackages = Object.entries(packages).filter(([packagePath]) =>
+  /(^|\/)node_modules\/js-yaml$/.test(packagePath)
+);
+const unsafeJsYamlPaths = jsYamlPackages
+  .filter(([, entry]) => {
+    const [major, minor, patch] = entry.version.split('.').map(Number);
+    // CVE-2026-84375: empty merge sources must count toward the CPU budget.
+    return (
+      !/^4\.\d+\.\d+$/.test(entry.version) ||
+      major !== 4 ||
+      minor < 3 ||
+      (minor === 3 && patch < 2)
+    );
+  })
+  .map(([packagePath]) => packagePath);
+
+if (unsafeJsYamlPaths.length > 0) {
+  throw new Error(
+    `CVE-2026-84375: js-yaml requires 4.3.2 or newer within v4: ${unsafeJsYamlPaths.join(', ')}`
+  );
+}
+
 const fastUriPackages = Object.entries(packages).filter(([packagePath]) =>
   /(^|\/)node_modules\/fast-uri$/.test(packagePath)
 );
@@ -54,5 +76,6 @@ if (!electronPackage?.dependencies?.['@electron-internal/extract-zip']) {
 console.log(
   `Security dependency check passed: Electron ${electronPackage.version}, ` +
     `@puppeteer/browsers ${browserPackage.version}, no extract-zip package; ` +
-    `${fastUriPackages.length} fast-uri entries meet the v3 security floor`
+    `${fastUriPackages.length} fast-uri entries meet the v3 security floor; ` +
+    `${jsYamlPackages.length} js-yaml entries meet the v4 security floor`
 );
