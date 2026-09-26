@@ -28,6 +28,7 @@ import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
 import Button from '../components/Button';
 import CreditWarningBanner from '../containers/GenerateSubtitles/components/CreditWarningBanner';
+import WelcomeCreditsHint from '../containers/GenerateSubtitles/components/WelcomeCreditsHint';
 import ErrorBanner from '../components/ErrorBanner';
 import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
 import { useAiStore } from '../state';
@@ -170,7 +171,7 @@ export default function AppContent() {
     s => s.reconcileRuntime
   );
   const download = useUrlStore(s => s.download);
-  const { showCreditWarning } = useCreditSystem();
+  const { showCreditWarning, showWelcomeHint } = useCreditSystem();
 
   // Keep the main-process target language in sync with the renderer choice.
   useEffect(() => {
@@ -420,6 +421,12 @@ export default function AppContent() {
             <CreditWarningBanner
               onSettingsClick={() => useUIStore.getState().toggleSettings(true)}
             />
+          </div>
+        )}
+
+        {!showCreditWarning && showWelcomeHint && (
+          <div style={{ marginBottom: '12px' }}>
+            <WelcomeCreditsHint />
           </div>
         )}
 

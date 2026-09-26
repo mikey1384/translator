@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Control de agentes",
-      "description": "Permite que agentes de IA externos (Cursor, Codex, etc.) controlen esta aplicación Translator mediante una interfaz MCP local. Al habilitarlos, los agentes pueden descargar vídeos, gestionar tu biblioteca, editar subtítulos y exportar archivos a las carpetas permitidas.",
+      "description": "Permite que Claude Code, Claude Desktop, Codex u otro agente MCP controlen Translator en este ordenador. Al activarlo, los agentes pueden descargar vídeos, gestionar tu biblioteca, editar y traducir subtítulos y exportar archivos a las carpetas permitidas.",
       "enableLabel": "Permitir que agentes controlen esta aplicación",
       "enableAria": "Activar el control de agentes",
       "connection": {
-        "title": "Conectar Codex o ChatGPT",
-        "instructions": "Añade un servidor MCP STDIO llamado “translator” con esta ruta del iniciador. Guarda el servidor y reinicia Codex o ChatGPT para que aparezcan las herramientas nuevas."
+        "title": "Conectar Claude Code, Claude Desktop o Codex",
+        "instructions": "Haz clic en un botón para registrar el servidor MCP “translator”. Para otros agentes, añade un servidor MCP STDIO llamado “translator” con esta ruta del iniciador y reinicia el agente para que aparezcan las herramientas nuevas.",
+        "copyPath": "Copiar ruta",
+        "copied": "Copiada",
+        "connectClaudeCode": "Conectar Claude Code",
+        "connectCodex": "Conectar Codex",
+        "connectClaudeDesktop": "Conectar Claude Desktop",
+        "connecting": "Conectando…",
+        "connected": "{{app}} está conectado. Inicia una nueva sesión para cargar las herramientas de Translator.",
+        "alreadyConnected": "{{app}} ya tiene el servidor de Translator. Reinícialo si no aparecen las herramientas.",
+        "desktopConnected": "Translator se añadió a Claude Desktop. Cierra Claude y vuelve a abrirlo para cargarlo.",
+        "cliNotFound": "No se encontró el comando {{app}} en este ordenador. Ejecuta esto en una terminal:",
+        "cliNotFoundCopied": "No se encontró el comando {{app}} en este ordenador. Se copió el comando de configuración; pégalo en una terminal:",
+        "failed": "No se pudo conectar {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Activado",
@@ -836,7 +848,27 @@
         "update": "No se pudo actualizar el ajuste de control de agentes.",
         "addDirectory": "No se pudo añadir la carpeta.",
         "removeDirectory": "No se pudo eliminar la carpeta."
-      }
+      },
+      "pitch": "Traduce gratis con la suscripción de Claude o Codex que ya tienes."
+    },
+    "creditTransfer": {
+      "title": "Mover créditos entre ordenadores",
+      "description": "Los créditos comprados y el desbloqueo de clave de API se pueden mover a otro ordenador. Los créditos de bienvenida gratuitos se quedan en este.",
+      "moveButton": "Mover créditos a otro ordenador",
+      "receiveButton": "Recibir créditos",
+      "creating": "Creando código…",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "summaryCredits": "Se moverán {{credits}} créditos.",
+      "summaryByo": "El desbloqueo de clave de API también se moverá.",
+      "expires": "Este código funciona una sola vez y caduca en {{minutes}} minutos.",
+      "steps": "En el nuevo ordenador: instala Translator, abre Configuración, elige «Recibir créditos» e introduce este código.",
+      "inputLabel": "Código de tu otro ordenador",
+      "redeem": "Recibir",
+      "redeeming": "Recibiendo…",
+      "received": "Se recibieron {{credits}} créditos.",
+      "receivedNoCredits": "El código ha funcionado.",
+      "receivedByo": "El desbloqueo de clave de API está activo en este ordenador."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Sin créditos.",
     "rechargeLink": "Recargar →",
     "creditWarning": {
-      "message": "Compra créditos en <settingsLink>{{settingsLinkText}}</settingsLink> para usar las funciones de traducción y transcripción.",
+      "message": "Descargar, editar, exportar y traducir con tu propio Claude o Codex mediante Control de agentes es gratis. La transcripción requiere créditos o el desbloqueo de clave de API en <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Configuración"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Guarda fuera del espacio de trabajo de la app cualquier archivo fuente o contenido doblado que quieras conservar."
     },
     "calculatingCost": "Calculando costo...",
-    "notEnoughCredits": "No hay suficientes créditos disponibles"
+    "notEnoughCredits": "No hay suficientes créditos disponibles",
+    "welcomeCredits": {
+      "message": "Tienes créditos gratis para probar la transcripción y la traducción (unos 20 minutos de vídeo)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Buscar en subtítulos...",
@@ -1058,7 +1093,9 @@
       "title": "Créditos agotados",
       "message": "Tus créditos de IA se han agotado. Recarga en Configuración y luego continúa desde donde lo dejaste.",
       "openSettings": "Abrir Configuración",
-      "ok": "Aceptar"
+      "ok": "Aceptar",
+      "neverHadTitle": "La transcripción requiere créditos",
+      "neverHadMessage": "La transcripción requiere créditos o el desbloqueo de clave de API. Consigue cualquiera de los dos en Configuración. Traducir con tu propio Claude o Codex mediante Control de agentes es gratis."
     }
   },
   "progress": {

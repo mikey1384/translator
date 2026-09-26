@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Controlul agenților",
-      "description": "Permite agenților AI externi (Cursor, Codex etc.) să controleze această aplicație Translator printr-o interfață MCP locală. Când opțiunea este activată, agenții pot descărca videoclipuri, gestiona biblioteca, edita subtitrări și exporta fișiere în dosarele permise.",
+      "description": "Permite ca Claude Code, Claude Desktop, Codex sau alt agent MCP să controleze Translator pe acest calculator. Când opțiunea este activată, agenții pot descărca videoclipuri, gestiona biblioteca, edita și traduce subtitrări și exporta fișiere în dosarele permise.",
       "enableLabel": "Permite agenților să controleze această aplicație",
       "enableAria": "Activează controlul agenților",
       "connection": {
-        "title": "Conectează Codex sau ChatGPT",
-        "instructions": "Adaugă un server MCP STDIO numit „translator” folosind această cale de lansare. Salvează serverul, apoi repornește Codex sau ChatGPT pentru ca noile instrumente să apară."
+        "title": "Conectează Claude Code, Claude Desktop sau Codex",
+        "instructions": "Apasă un buton pentru a înregistra serverul MCP „translator”. Pentru alți agenți, adaugă un server MCP STDIO numit „translator” cu această cale de lansare, apoi repornește agentul ca să apară noile instrumente.",
+        "copyPath": "Copiază calea",
+        "copied": "Copiat",
+        "connectClaudeCode": "Conectează Claude Code",
+        "connectCodex": "Conectează Codex",
+        "connectClaudeDesktop": "Conectează Claude Desktop",
+        "connecting": "Se conectează…",
+        "connected": "{{app}} este conectat. Începe o sesiune nouă ca să încarci instrumentele Translator.",
+        "alreadyConnected": "{{app}} are deja serverul Translator. Repornește-l dacă instrumentele nu apar.",
+        "desktopConnected": "Translator a fost adăugat în Claude Desktop. Închide și redeschide Claude ca să-l încarci.",
+        "cliNotFound": "Comanda {{app}} nu a fost găsită pe acest calculator. Rulează asta într-un terminal:",
+        "cliNotFoundCopied": "Comanda {{app}} nu a fost găsită pe acest calculator. Comanda de configurare a fost copiată; lipește-o într-un terminal:",
+        "failed": "Nu s-a putut conecta {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Activat",
@@ -836,7 +848,27 @@
         "update": "Setarea pentru controlul agenților nu a putut fi actualizată.",
         "addDirectory": "Dosarul nu a putut fi adăugat.",
         "removeDirectory": "Dosarul nu a putut fi eliminat."
-      }
+      },
+      "pitch": "Tradu gratuit cu abonamentul Claude sau Codex pe care îl ai deja."
+    },
+    "creditTransfer": {
+      "title": "Mută creditele între calculatoare",
+      "description": "Creditele cumpărate și deblocarea cheilor API pot fi mutate pe alt calculator. Creditele gratuite de bun venit rămân pe acesta.",
+      "moveButton": "Mută creditele pe alt calculator",
+      "receiveButton": "Primește credite",
+      "creating": "Se creează codul…",
+      "copy": "Copiază",
+      "copied": "Copiat",
+      "summaryCredits": "Credite care vor fi mutate: {{credits}}.",
+      "summaryByo": "Va fi mutată și deblocarea cheilor API.",
+      "expires": "Acest cod funcționează o singură dată și expiră în {{minutes}} min.",
+      "steps": "Pe noul calculator: instalează Translator, deschide Setări, alege „Primește credite” și introdu acest cod.",
+      "inputLabel": "Codul de pe celălalt calculator",
+      "redeem": "Primește",
+      "redeeming": "Se primesc…",
+      "received": "Credite primite: {{credits}}.",
+      "receivedNoCredits": "Codul a funcționat.",
+      "receivedByo": "Deblocarea cheilor API este activă pe acest calculator."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Fără credite.",
     "rechargeLink": "Reîncarcă →",
     "creditWarning": {
-      "message": "Cumpărați credite în <settingsLink>{{settingsLinkText}}</settingsLink> pentru a folosi funcțiile de traducere și transcriere.",
+      "message": "Descărcarea, editarea, exportul și traducerea cu propriul Claude sau Codex prin Controlul agenților sunt gratuite. Transcrierea necesită credite sau deblocarea cheilor API din <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Setări"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Păstrează orice sursă sau material dublat pe care vrei să-l salvezi în afara spațiului de lucru al aplicației."
     },
     "calculatingCost": "Se calculează costul...",
-    "notEnoughCredits": "Credite insuficiente disponibile"
+    "notEnoughCredits": "Credite insuficiente disponibile",
+    "welcomeCredits": {
+      "message": "Ai credite gratuite ca să încerci transcrierea și traducerea (aproximativ 20 de minute de video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Găsește în subtitrări...",
@@ -1058,7 +1093,9 @@
       "title": "Creditele s-au epuizat",
       "message": "Creditele tale AI s-au epuizat. Reîncarcă în Setări, apoi reia de unde ai rămas.",
       "openSettings": "Deschide Setările",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Transcrierea necesită credite",
+      "neverHadMessage": "Transcrierea necesită credite sau deblocarea cheilor API. Le poți obține pe oricare din Setări. Traducerea cu propriul Claude sau Codex prin Controlul agenților este gratuită."
     }
   },
   "progress": {

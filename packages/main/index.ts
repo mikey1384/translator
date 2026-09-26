@@ -63,6 +63,9 @@ import {
   handleCreateByoUnlockSession,
   handleGetCreditSnapshot,
   handleRefreshCreditSnapshot,
+  handleCreateCreditTransferCode,
+  handleRedeemCreditTransfer,
+  handleGetCreditHistorySummary,
   handleCheckoutReturnFromBrowser,
   initializeCreditBalanceState,
   replayPendingCheckoutState,
@@ -153,6 +156,10 @@ import { installDevelopmentOwnerLeaseClient } from './development-owner-lease.js
 import { SerializedLatestState } from './utils/serialized-latest-state.js';
 import { isPathInsideAllowedDirectories } from './utils/path-containment.js';
 import { getAgentMcpOnboarding } from './utils/agent-mcp-onboarding.js';
+import {
+  connectAgentMcpClient,
+  isAgentMcpClient,
+} from './utils/agent-mcp-connect.js';
 
 const requestOwnershipFailureExit = createIdempotentShutdownRequest(
   (exitCode: number) => {
@@ -1175,6 +1182,15 @@ try {
   ipcMain.handle('refresh-credit-snapshot', (_event, force?: boolean) =>
     handleRefreshCreditSnapshot(force === true)
   );
+  ipcMain.handle('create-credit-transfer-code', () =>
+    handleCreateCreditTransferCode()
+  );
+  ipcMain.handle('redeem-credit-transfer', (_event, code: unknown) =>
+    handleRedeemCreditTransfer(code)
+  );
+  ipcMain.handle('get-credit-history-summary', () =>
+    handleGetCreditHistorySummary()
+  );
 
   // Purchase funnel tracking from renderer
   // Only allow renderer to emit: button_shown, button_clicked, and *_failed
@@ -1448,6 +1464,24 @@ try {
       connectedClients: agentSocketServer.getAuthenticatedClientCount(),
       ...onboarding,
     };
+  });
+  ipcMain.handle('agent-mcp-connect', async (_event, client: unknown) => {
+    if (!isAgentMcpClient(client)) {
+      return {
+        status: 'failed',
+        client: 'claude-code',
+        message: 'Unknown agent client.',
+      };
+    }
+    // The launcher is resolved here, never taken from the renderer.
+    const { launcherPath } = getAgentMcpOnboarding({
+      isPackaged: app.isPackaged,
+      resourcesPath: nodeProcess.resourcesPath,
+      platform: nodeProcess.platform,
+    });
+    const result = await connectAgentMcpClient({ client, launcherPath });
+    log.info(`[agent-mcp-connect] ${client}: ${result.status}`);
+    return result;
   });
   ipcMain.handle('agent-get-runtime-context', () => getAgentRuntimeContext());
   ipcMain.handle('agent-v2-probe-source', (_event, input) =>

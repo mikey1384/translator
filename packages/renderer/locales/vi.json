@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Điều khiển tác nhân",
-      "description": "Cho phép các tác nhân AI bên ngoài (Cursor, Codex, v.v.) điều khiển ứng dụng Translator này qua giao diện MCP cục bộ. Khi bật, tác nhân có thể tải video xuống, quản lý thư viện, chỉnh sửa phụ đề và xuất tệp vào các thư mục được phép.",
+      "description": "Cho phép Claude Code, Claude Desktop, Codex hoặc tác nhân MCP khác điều khiển Translator trên máy tính này. Khi bật, tác nhân có thể tải video xuống, quản lý thư viện, chỉnh sửa và dịch phụ đề, và xuất tệp vào các thư mục được phép.",
       "enableLabel": "Cho phép tác nhân điều khiển ứng dụng này",
       "enableAria": "Bật điều khiển tác nhân",
       "connection": {
-        "title": "Kết nối Codex hoặc ChatGPT",
-        "instructions": "Thêm máy chủ MCP STDIO tên “translator” bằng đường dẫn trình khởi chạy này. Lưu máy chủ, rồi khởi động lại Codex hoặc ChatGPT để các công cụ mới xuất hiện."
+        "title": "Kết nối Claude Code, Claude Desktop hoặc Codex",
+        "instructions": "Nhấp vào một nút để đăng ký máy chủ MCP “translator”. Với các tác nhân khác, hãy thêm một máy chủ STDIO MCP tên “translator” với đường dẫn trình khởi chạy này, rồi khởi động lại tác nhân để các công cụ mới xuất hiện.",
+        "copyPath": "Sao chép đường dẫn",
+        "copied": "Đã sao chép",
+        "connectClaudeCode": "Kết nối Claude Code",
+        "connectCodex": "Kết nối Codex",
+        "connectClaudeDesktop": "Kết nối Claude Desktop",
+        "connecting": "Đang kết nối…",
+        "connected": "{{app}} đã được kết nối. Hãy bắt đầu phiên mới để tải các công cụ của Translator.",
+        "alreadyConnected": "{{app}} đã có máy chủ Translator. Hãy khởi động lại nếu các công cụ không xuất hiện.",
+        "desktopConnected": "Đã thêm Translator vào Claude Desktop. Thoát và mở lại Claude để tải.",
+        "cliNotFound": "Không tìm thấy lệnh {{app}} trên máy tính này. Hãy chạy lệnh sau trong terminal:",
+        "cliNotFoundCopied": "Không tìm thấy lệnh {{app}} trên máy tính này. Lệnh thiết lập đã được sao chép; hãy dán vào terminal:",
+        "failed": "Không thể kết nối {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Đã bật",
@@ -836,7 +848,27 @@
         "update": "Không thể cập nhật cài đặt điều khiển tác nhân.",
         "addDirectory": "Không thể thêm thư mục.",
         "removeDirectory": "Không thể xóa thư mục."
-      }
+      },
+      "pitch": "Dịch miễn phí bằng gói đăng ký Claude hoặc Codex mà bạn đang có."
+    },
+    "creditTransfer": {
+      "title": "Chuyển tín dụng giữa các máy tính",
+      "description": "Tín dụng đã mua và mở khóa API key có thể chuyển sang máy tính khác. Tín dụng chào mừng miễn phí vẫn ở lại máy này.",
+      "moveButton": "Chuyển tín dụng sang máy tính khác",
+      "receiveButton": "Nhận tín dụng",
+      "creating": "Đang tạo mã…",
+      "copy": "Sao chép",
+      "copied": "Đã sao chép",
+      "summaryCredits": "{{credits}} tín dụng sẽ được chuyển.",
+      "summaryByo": "Mở khóa API key cũng sẽ được chuyển theo.",
+      "expires": "Mã này chỉ dùng được một lần và hết hạn sau {{minutes}} phút.",
+      "steps": "Trên máy tính mới: cài đặt Translator, mở Cài đặt, chọn “Nhận tín dụng” và nhập mã này.",
+      "inputLabel": "Mã từ máy tính kia của bạn",
+      "redeem": "Nhận",
+      "redeeming": "Đang nhận…",
+      "received": "Đã nhận {{credits}} tín dụng.",
+      "receivedNoCredits": "Mã đã được áp dụng.",
+      "receivedByo": "Mở khóa API key đã được kích hoạt trên máy tính này."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Không có tín dụng.",
     "rechargeLink": "Nạp thêm →",
     "creditWarning": {
-      "message": "Mua tín dụng trong <settingsLink>{{settingsLinkText}}</settingsLink> để sử dụng tính năng dịch và phiên âm.",
+      "message": "Tải xuống, chỉnh sửa, xuất tệp và dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân đều miễn phí. Phiên âm cần tín dụng hoặc mở khóa API key trong <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Cài đặt"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Hãy lưu mọi media nguồn hoặc media lồng tiếng muốn giữ ra ngoài vùng làm việc của ứng dụng."
     },
     "calculatingCost": "Đang tính toán chi phí...",
-    "notEnoughCredits": "Không đủ tín dụng"
+    "notEnoughCredits": "Không đủ tín dụng",
+    "welcomeCredits": {
+      "message": "Bạn có tín dụng miễn phí để dùng thử phiên âm và dịch (khoảng 20 phút video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Tìm trong phụ đề...",
@@ -1058,7 +1093,9 @@
       "title": "Hết tín dụng",
       "message": "Tín dụng AI của bạn đã hết. Vào Cài đặt để nạp thêm, sau đó tiếp tục từ nơi bạn dừng lại.",
       "openSettings": "Mở Cài đặt",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Phiên âm cần tín dụng",
+      "neverHadMessage": "Phiên âm cần tín dụng hoặc mở khóa API key. Bạn có thể nhận một trong hai trong Cài đặt. Dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân là miễn phí."
     }
   },
   "progress": {

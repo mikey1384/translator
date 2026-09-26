@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "エージェント制御",
-      "description": "外部のAIエージェント（Cursor、Codexなど）が、ローカルMCPインターフェースを介してこのTranslatorアプリを操作できるようにします。有効にすると、エージェントは動画のダウンロード、ライブラリの管理、字幕の編集、許可されたフォルダーへのファイルのエクスポートを行えます。",
+      "description": "このコンピューター上で、Claude Code、Claude Desktop、Codex、またはその他のMCPエージェントがTranslatorを操作できるようにします。有効にすると、エージェントは動画のダウンロード、ライブラリの管理、字幕の編集と翻訳、許可されたフォルダーへのファイルのエクスポートを行えます。",
       "enableLabel": "このアプリのエージェント制御を許可",
       "enableAria": "エージェント制御を有効にする",
       "connection": {
-        "title": "Codex または ChatGPT を接続",
-        "instructions": "このランチャーパスを使用して、「translator」という名前の STDIO MCP サーバーを追加します。サーバーを保存してから Codex または ChatGPT を再起動すると、新しいツールが表示されます。"
+        "title": "Claude Code、Claude Desktop、またはCodexを接続",
+        "instructions": "ボタンをクリックすると「translator」MCPサーバーが登録されます。その他のエージェントでは、このランチャーのパスで「translator」という名前のSTDIO MCPサーバーを追加し、新しいツールが表示されるようにエージェントを再起動してください。",
+        "copyPath": "パスをコピー",
+        "copied": "コピーしました",
+        "connectClaudeCode": "Claude Codeを接続",
+        "connectCodex": "Codexを接続",
+        "connectClaudeDesktop": "Claude Desktopを接続",
+        "connecting": "接続中…",
+        "connected": "{{app}}が接続されました。新しいセッションを開始するとTranslatorのツールが読み込まれます。",
+        "alreadyConnected": "{{app}}にはすでにTranslatorサーバーがあります。ツールが表示されない場合は再起動してください。",
+        "desktopConnected": "Claude DesktopにTranslatorを追加しました。Claudeを終了して再度開くと読み込まれます。",
+        "cliNotFound": "このコンピューターで{{app}}コマンドが見つかりませんでした。ターミナルで次を実行してください：",
+        "cliNotFoundCopied": "このコンピューターで{{app}}コマンドが見つかりませんでした。セットアップコマンドをコピーしたので、ターミナルに貼り付けてください：",
+        "failed": "{{app}}を接続できませんでした：{{message}}"
       },
       "status": {
         "enabled": "有効",
@@ -836,7 +848,27 @@
         "update": "エージェント制御設定を更新できませんでした。",
         "addDirectory": "フォルダーを追加できませんでした。",
         "removeDirectory": "フォルダーを削除できませんでした。"
-      }
+      },
+      "pitch": "すでにお持ちのClaudeまたはCodexのサブスクリプションで、無料で翻訳できます。"
+    },
+    "creditTransfer": {
+      "title": "コンピューター間でクレジットを移行",
+      "description": "購入したクレジットとAPIキーのアンロックは別のコンピューターに移行できます。無料のウェルカムクレジットはこのコンピューターに残ります。",
+      "moveButton": "クレジットを別のコンピューターに移行",
+      "receiveButton": "クレジットを受け取る",
+      "creating": "コードを作成中…",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "summaryCredits": "{{credits}}クレジットが移行されます。",
+      "summaryByo": "APIキーのアンロックも一緒に移行されます。",
+      "expires": "このコードは1回のみ使用でき、{{minutes}}分後に期限切れになります。",
+      "steps": "新しいコンピューターでTranslatorをインストールし、設定を開いて「クレジットを受け取る」を選び、このコードを入力してください。",
+      "inputLabel": "別のコンピューターで表示されたコード",
+      "redeem": "受け取る",
+      "redeeming": "受け取り中…",
+      "received": "{{credits}}クレジットを受け取りました。",
+      "receivedNoCredits": "コードが適用されました。",
+      "receivedByo": "このコンピューターでAPIキーのアンロックが有効になりました。"
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "クレジットがありません。",
     "rechargeLink": "チャージ →",
     "creditWarning": {
-      "message": "翻訳および文字起こし機能を使用するには、<settingsLink>{{settingsLinkText}}</settingsLink>でクレジットを購入してください。",
+      "message": "ダウンロード、編集、エクスポート、そしてエージェント制御を通じたご自身のClaudeまたはCodexによる翻訳は無料です。文字起こしには、クレジットまたは<settingsLink>{{settingsLinkText}}</settingsLink>でのAPIキーのアンロックが必要です。",
       "settingsLinkText": "設定"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "残しておきたいソースまたは吹き替えメディアは、アプリの作業領域の外に保存してください。"
     },
     "calculatingCost": "コストを計算中...",
-    "notEnoughCredits": "利用可能なクレジットが不足しています"
+    "notEnoughCredits": "利用可能なクレジットが不足しています",
+    "welcomeCredits": {
+      "message": "文字起こしと翻訳を試せる無料クレジットがあります（動画約20分ぶん）。"
+    }
   },
   "findBar": {
     "findPlaceholder": "字幕内を検索...",
@@ -1058,7 +1093,9 @@
       "title": "クレジットがなくなりました",
       "message": "AIクレジットがなくなりました。設定でチャージしてから、続きから再開してください。",
       "openSettings": "設定を開く",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "文字起こしにはクレジットが必要です",
+      "neverHadMessage": "文字起こしには、クレジットまたはAPIキーのアンロックが必要です。どちらも設定から入手できます。エージェント制御を通じたご自身のClaudeまたはCodexによる翻訳は無料です。"
     }
   },
   "progress": {

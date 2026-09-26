@@ -581,6 +581,31 @@ const electronAPI = {
     authoritative: boolean;
     checkoutSessionId?: string | null;
   } | null> => ipcRenderer.invoke('refresh-credit-snapshot', force === true),
+  createCreditTransferCode: (): Promise<
+    | {
+        success: true;
+        code: string;
+        expiresInMinutes: number;
+        transferableCredits: number;
+        byoUnlock: boolean;
+      }
+    | { success: false; error: string; message: string }
+  > => ipcRenderer.invoke('create-credit-transfer-code'),
+  redeemCreditTransfer: (
+    code: string
+  ): Promise<
+    | {
+        success: true;
+        transferredCredits: number;
+        creditBalance: number;
+        byoUnlock: boolean;
+      }
+    | { success: false; error: string; message: string }
+  > => ipcRenderer.invoke('redeem-credit-transfer', code),
+  getCreditHistorySummary: (): Promise<{
+    everHadCredits: boolean;
+    onlyWelcomeCredits: boolean;
+  } | null> => ipcRenderer.invoke('get-credit-history-summary'),
 
   // Listen for checkout status events
   onCheckoutPending: (callback: () => void) => {
@@ -919,6 +944,16 @@ const electronAPI = {
     launcherPath: string | null;
     restartRequired: true;
   }> => ipcRenderer.invoke('get-agent-socket-status'),
+  connectAgentMcpClient: (
+    client: 'claude-code' | 'codex' | 'claude-desktop'
+  ): Promise<{
+    status: 'connected' | 'already-connected' | 'cli-not-found' | 'failed';
+    client: 'claude-code' | 'codex' | 'claude-desktop';
+    command?: string;
+    message?: string;
+    configPath?: string;
+    backupPath?: string;
+  }> => ipcRenderer.invoke('agent-mcp-connect', client),
   getAgentRuntimeContext: () => ipcRenderer.invoke('agent-get-runtime-context'),
   agentV2ProbeSource: (input: unknown) =>
     ipcRenderer.invoke('agent-v2-probe-source', input),

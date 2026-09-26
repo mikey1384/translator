@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Agentbeheer",
-      "description": "Laat eksterne KI-agente (Cursor, Codex, ens.) toe om hierdie Translator-toepassing deur ’n plaaslike MCP-koppelvlak te beheer. Wanneer dit geaktiveer is, kan agente video’s aflaai, jou biblioteek bestuur, onderskrifte wysig en lêers na toegelate vouers uitvoer.",
+      "description": "Laat Claude Code, Claude Desktop, Codex of ’n ander MCP-agent toe om Translator op hierdie rekenaar te beheer. Wanneer dit geaktiveer is, kan agente video’s aflaai, jou biblioteek bestuur, onderskrifte wysig en vertaal, en lêers na toegelate vouers uitvoer.",
       "enableLabel": "Laat agente toe om hierdie toepassing te beheer",
       "enableAria": "Aktiveer agentbeheer",
       "connection": {
-        "title": "Koppel Codex of ChatGPT",
-        "instructions": "Voeg ’n STDIO-MCP-bediener met die naam “translator” by en gebruik hierdie lanseerderpad. Stoor die bediener en herbegin dan Codex of ChatGPT sodat die nuwe nutsgoed verskyn."
+        "title": "Koppel Claude Code, Claude Desktop of Codex",
+        "instructions": "Klik op ’n knoppie om die “translator”-MCP-bediener te registreer. Vir ander agente, voeg ’n STDIO-MCP-bediener met die naam “translator” en hierdie lanseerderpad by, en herbegin dan die agent sodat die nuwe nutsgoed verskyn.",
+        "copyPath": "Kopieer pad",
+        "copied": "Gekopieer",
+        "connectClaudeCode": "Koppel Claude Code",
+        "connectCodex": "Koppel Codex",
+        "connectClaudeDesktop": "Koppel Claude Desktop",
+        "connecting": "Koppel tans…",
+        "connected": "{{app}} is gekoppel. Begin ’n nuwe sessie om die Translator-nutsgoed te laai.",
+        "alreadyConnected": "{{app}} het reeds die Translator-bediener. Herbegin dit as die nutsgoed nie verskyn nie.",
+        "desktopConnected": "Translator is by Claude Desktop gevoeg. Sluit Claude af en maak dit weer oop om dit te laai.",
+        "cliNotFound": "Kon nie die {{app}}-opdrag op hierdie rekenaar vind nie. Voer dit in ’n terminaal uit:",
+        "cliNotFoundCopied": "Kon nie die {{app}}-opdrag op hierdie rekenaar vind nie. Die opstelopdrag is gekopieer; plak dit in ’n terminaal:",
+        "failed": "Kon nie {{app}} koppel nie: {{message}}"
       },
       "status": {
         "enabled": "Geaktiveer",
@@ -836,7 +848,27 @@
         "update": "Die agentbeheerinstelling kon nie bygewerk word nie.",
         "addDirectory": "Die vouer kon nie bygevoeg word nie.",
         "removeDirectory": "Die vouer kon nie verwyder word nie."
-      }
+      },
+      "pitch": "Vertaal gratis met die Claude- of Codex-intekening wat jy reeds het."
+    },
+    "creditTransfer": {
+      "title": "Skuif krediete tussen rekenaars",
+      "description": "Gekoopte krediete en die API-sleutel-ontsluiting kan na ’n ander rekenaar geskuif word. Gratis welkomskrediete bly op hierdie een.",
+      "moveButton": "Skuif krediete na ’n ander rekenaar",
+      "receiveButton": "Ontvang krediete",
+      "creating": "Skep tans kode…",
+      "copy": "Kopieer",
+      "copied": "Gekopieer",
+      "summaryCredits": "{{credits}} krediete sal geskuif word.",
+      "summaryByo": "Die API-sleutel-ontsluiting sal ook geskuif word.",
+      "expires": "Hierdie kode werk een keer en verval oor {{minutes}} minute.",
+      "steps": "Op die nuwe rekenaar: installeer Translator, maak Instellings oop, kies “Ontvang krediete” en voer hierdie kode in.",
+      "inputLabel": "Kode van jou ander rekenaar",
+      "redeem": "Ontvang",
+      "redeeming": "Ontvang tans…",
+      "received": "{{credits}} krediete ontvang.",
+      "receivedNoCredits": "Die kode het gewerk.",
+      "receivedByo": "Die API-sleutel-ontsluiting is aktief op hierdie rekenaar."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Geen krediete nie.",
     "rechargeLink": "Herlaai →",
     "creditWarning": {
-      "message": "Koop krediete in <settingsLink>{{settingsLinkText}}</settingsLink> om vertaal- en transkripsie-funksies te gebruik.",
+      "message": "Aflaai, redigering, uitvoer en vertaling met jou eie Claude of Codex deur Agentbeheer is gratis. Transkripsie vereis krediete of die API-sleutel-ontsluiting in <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Instellings"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Hou enige bron- of gedubde media wat jy wil bewaar buite die app-werkruimte."
     },
     "calculatingCost": "Bereken koste...",
-    "notEnoughCredits": "Nie genoeg krediete beskikbaar nie"
+    "notEnoughCredits": "Nie genoeg krediete beskikbaar nie",
+    "welcomeCredits": {
+      "message": "Jy het gratis krediete om transkripsie en vertaling te probeer (sowat 20 minute video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Vind in onderskrifte...",
@@ -1058,7 +1093,9 @@
       "title": "Krediete op",
       "message": "Jou KI-krediete is op. Herlaai in Instellings, dan hervat waar jy opgehou het.",
       "openSettings": "Open Instellings",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Transkripsie vereis krediete",
+      "neverHadMessage": "Transkripsie vereis krediete of die API-sleutel-ontsluiting. Kry enigeen in Instellings. Vertaling met jou eie Claude of Codex deur Agentbeheer is gratis."
     }
   },
   "progress": {

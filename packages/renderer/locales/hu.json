@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Ügynökvezérlés",
-      "description": "Engedélyezze, hogy külső MI-ügynökök (Cursor, Codex stb.) egy helyi MCP-felületen keresztül vezéreljék ezt a Translator alkalmazást. Bekapcsolás után az ügynökök videókat tölthetnek le, kezelhetik a médiatárat, szerkeszthetik a feliratokat, és fájlokat exportálhatnak az engedélyezett mappákba.",
+      "description": "Engedélyezze, hogy a Claude Code, a Claude Desktop, a Codex vagy egy másik MCP-ügynök vezérelje a Translatort ezen a számítógépen. Bekapcsolás után az ügynökök videókat tölthetnek le, kezelhetik a médiatárat, szerkeszthetik és fordíthatják a feliratokat, és fájlokat exportálhatnak az engedélyezett mappákba.",
       "enableLabel": "Az alkalmazás ügynökvezérlésének engedélyezése",
       "enableAria": "Ügynökvezérlés bekapcsolása",
       "connection": {
-        "title": "A Codex vagy a ChatGPT csatlakoztatása",
-        "instructions": "Adjon hozzá egy „translator” nevű STDIO MCP-kiszolgálót ezzel az indítási útvonallal. Mentse a kiszolgálót, majd indítsa újra a Codexet vagy a ChatGPT-t, hogy megjelenjenek az új eszközök."
+        "title": "A Claude Code, a Claude Desktop vagy a Codex csatlakoztatása",
+        "instructions": "Kattintson egy gombra a „translator” MCP-kiszolgáló regisztrálásához. Más ügynököknél adjon hozzá egy „translator” nevű STDIO MCP-kiszolgálót ezzel az indítási útvonallal, majd indítsa újra az ügynököt, hogy megjelenjenek az új eszközök.",
+        "copyPath": "Útvonal másolása",
+        "copied": "Másolva",
+        "connectClaudeCode": "Claude Code csatlakoztatása",
+        "connectCodex": "Codex csatlakoztatása",
+        "connectClaudeDesktop": "Claude Desktop csatlakoztatása",
+        "connecting": "Csatlakozás…",
+        "connected": "A(z) {{app}} csatlakoztatva. Indítson új munkamenetet a Translator eszközeinek betöltéséhez.",
+        "alreadyConnected": "A(z) {{app}} már tartalmazza a Translator kiszolgálót. Indítsa újra, ha az eszközök nem jelennek meg.",
+        "desktopConnected": "A Translator hozzáadva a Claude Desktophoz. Lépjen ki a Claude-ból, majd nyissa meg újra a betöltéshez.",
+        "cliNotFound": "A(z) {{app}} parancs nem található ezen a számítógépen. Futtassa ezt egy terminálban:",
+        "cliNotFoundCopied": "A(z) {{app}} parancs nem található ezen a számítógépen. A beállítási parancs a vágólapra került; illessze be egy terminálba:",
+        "failed": "A(z) {{app}} csatlakoztatása sikertelen: {{message}}"
       },
       "status": {
         "enabled": "Bekapcsolva",
@@ -836,7 +848,27 @@
         "update": "Nem sikerült frissíteni az ügynökvezérlés beállítását.",
         "addDirectory": "Nem sikerült hozzáadni a mappát.",
         "removeDirectory": "Nem sikerült eltávolítani a mappát."
-      }
+      },
+      "pitch": "Fordítson ingyen a már meglévő Claude- vagy Codex-előfizetésével."
+    },
+    "creditTransfer": {
+      "title": "Kreditek áthelyezése számítógépek között",
+      "description": "A vásárolt kreditek és az API-kulcs-feloldás áthelyezhetők egy másik számítógépre. Az ingyenes üdvözlő kreditek ezen a gépen maradnak.",
+      "moveButton": "Kreditek áthelyezése másik számítógépre",
+      "receiveButton": "Kreditek fogadása",
+      "creating": "Kód létrehozása…",
+      "copy": "Másolás",
+      "copied": "Másolva",
+      "summaryCredits": "Áthelyezendő kreditek: {{credits}}.",
+      "summaryByo": "Az API-kulcs-feloldás is átkerül.",
+      "expires": "Ez a kód egyszer használható, és {{minutes}} perc múlva lejár.",
+      "steps": "Az új számítógépen: telepítse a Translatort, nyissa meg a Beállításokat, válassza a „Kreditek fogadása” lehetőséget, és írja be ezt a kódot.",
+      "inputLabel": "A másik számítógépről kapott kód",
+      "redeem": "Fogadás",
+      "redeeming": "Fogadás folyamatban…",
+      "received": "Fogadott kreditek: {{credits}}.",
+      "receivedNoCredits": "A kód működött.",
+      "receivedByo": "Az API-kulcs-feloldás aktív ezen a számítógépen."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Nincsenek kreditek.",
     "rechargeLink": "Feltöltés →",
     "creditWarning": {
-      "message": "Vásároljon krediteket a <settingsLink>{{settingsLinkText}}</settingsLink> menüben a fordítási és átírási funkciók használatához.",
+      "message": "A letöltés, a szerkesztés, az exportálás és a fordítás a saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyenes. Az átíráshoz kreditek vagy az API-kulcs-feloldás szükséges, ezeket a <settingsLink>{{settingsLinkText}}</settingsLink> menüben érheti el.",
       "settingsLinkText": "Beállítások"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Az alkalmazás munkaterületén kívül mentse el a megtartani kívánt forrás- vagy szinkronizált médiát."
     },
     "calculatingCost": "Költség számítása...",
-    "notEnoughCredits": "Nincs elegendő kredit"
+    "notEnoughCredits": "Nincs elegendő kredit",
+    "welcomeCredits": {
+      "message": "Ingyenes kreditjei vannak az átírás és a fordítás kipróbálásához (kb. 20 percnyi videóhoz)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Keresés a feliratokban...",
@@ -1058,7 +1093,9 @@
       "title": "Kreditek elfogytak",
       "message": "Az AI kreditjeid elfogytak. Töltsd fel a Beállításokban, majd folytasd ott ahol abbahagytad.",
       "openSettings": "Beállítások megnyitása",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Az átíráshoz kreditek szükségesek",
+      "neverHadMessage": "Az átíráshoz kreditek vagy az API-kulcs-feloldás szükséges. Bármelyiket beszerezheti a Beállításokban. A fordítás a saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyenes."
     }
   },
   "progress": {

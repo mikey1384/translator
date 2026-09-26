@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "代理程式控制",
-      "description": "允許外部 AI 代理程式（Cursor、Codex 等）透過本機 MCP 介面控制此 Translator 應用程式。啟用後，代理程式可以下載影片、管理您的媒體庫、編輯字幕，並將檔案匯出至允許的資料夾。",
+      "description": "允許 Claude Code、Claude Desktop、Codex 或其他 MCP 代理程式在這台電腦上控制 Translator。啟用後，代理程式可以下載影片、管理您的媒體庫、編輯和翻譯字幕，並將檔案匯出至允許的目錄。",
       "enableLabel": "允許代理程式控制此應用程式",
       "enableAria": "啟用代理程式控制",
       "connection": {
-        "title": "連接 Codex 或 ChatGPT",
-        "instructions": "使用此啟動器路徑新增名為「translator」的 STDIO MCP 伺服器。儲存伺服器，然後重新啟動 Codex 或 ChatGPT，讓新工具顯示出來。"
+        "title": "連接 Claude Code、Claude Desktop 或 Codex",
+        "instructions": "點擊按鈕即可註冊「translator」MCP 伺服器。若是其他代理程式，請使用此啟動器路徑新增名為「translator」的 STDIO MCP 伺服器，然後重新啟動代理程式以顯示新工具。",
+        "copyPath": "複製路徑",
+        "copied": "已複製",
+        "connectClaudeCode": "連接 Claude Code",
+        "connectCodex": "連接 Codex",
+        "connectClaudeDesktop": "連接 Claude Desktop",
+        "connecting": "正在連接…",
+        "connected": "{{app}} 已連接。開始新的工作階段即可載入 Translator 工具。",
+        "alreadyConnected": "{{app}} 已有 Translator 伺服器。如果工具未顯示，請重新啟動它。",
+        "desktopConnected": "已將 Translator 新增至 Claude Desktop。結束並重新開啟 Claude 即可載入。",
+        "cliNotFound": "在這台電腦上找不到 {{app}} 指令。請在終端機中執行：",
+        "cliNotFoundCopied": "在這台電腦上找不到 {{app}} 指令。設定指令已複製，請貼到終端機中：",
+        "failed": "無法連接 {{app}}：{{message}}"
       },
       "status": {
         "enabled": "已啟用",
@@ -836,7 +848,27 @@
         "update": "無法更新代理程式控制設定。",
         "addDirectory": "無法新增資料夾。",
         "removeDirectory": "無法移除資料夾。"
-      }
+      },
+      "pitch": "使用您已有的 Claude 或 Codex 訂閱免費翻譯。"
+    },
+    "creditTransfer": {
+      "title": "在電腦之間轉移點數",
+      "description": "已購買的點數和 API 金鑰解鎖可以轉移到另一台電腦。免費的歡迎點數會保留在這台電腦上。",
+      "moveButton": "將點數轉移到另一台電腦",
+      "receiveButton": "接收點數",
+      "creating": "正在產生代碼…",
+      "copy": "複製",
+      "copied": "已複製",
+      "summaryCredits": "將轉移 {{credits}} 點數。",
+      "summaryByo": "API 金鑰解鎖也會一併轉移。",
+      "expires": "此代碼僅能使用一次，將在 {{minutes}} 分鐘後失效。",
+      "steps": "在新電腦上：安裝 Translator，開啟設定，選擇「接收點數」，然後輸入此代碼。",
+      "inputLabel": "來自另一台電腦的代碼",
+      "redeem": "接收",
+      "redeeming": "正在接收…",
+      "received": "已接收 {{credits}} 點數。",
+      "receivedNoCredits": "代碼已生效。",
+      "receivedByo": "API 金鑰解鎖已在這台電腦上啟用。"
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "沒有點數。",
     "rechargeLink": "充值 →",
     "creditWarning": {
-      "message": "在<settingsLink>{{settingsLinkText}}</settingsLink>中購買點數以使用翻譯和轉錄功能。",
+      "message": "下載、編輯、匯出，以及透過代理程式控制使用您自己的 Claude 或 Codex 進行翻譯皆為免費。轉錄需要點數，或在<settingsLink>{{settingsLinkText}}</settingsLink>中解鎖 API 金鑰。",
       "settingsLinkText": "設定"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "請將想保留的原始或配音媒體儲存到應用程式工作區之外。"
     },
     "calculatingCost": "計算費用中...",
-    "notEnoughCredits": "點數不足"
+    "notEnoughCredits": "點數不足",
+    "welcomeCredits": {
+      "message": "您有可免費試用轉錄和翻譯的點數（約 20 分鐘影片）。"
+    }
   },
   "findBar": {
     "findPlaceholder": "在字幕中查找...",
@@ -1058,7 +1093,9 @@
       "title": "積分已用完",
       "message": "您的 AI 積分已用完。請至「設定」中儲值，然後從中斷處繼續。",
       "openSettings": "開啟設定",
-      "ok": "確定"
+      "ok": "確定",
+      "neverHadTitle": "轉錄需要點數",
+      "neverHadMessage": "轉錄需要點數或 API 金鑰解鎖，兩者皆可在設定中取得。透過代理程式控制使用您自己的 Claude 或 Codex 進行翻譯是免費的。"
     }
   },
   "progress": {

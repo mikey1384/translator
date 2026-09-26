@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "בקרת סוכנים",
-      "description": "אפשר לסוכני AI חיצוניים (Cursor, Codex ואחרים) לשלוט ביישום Translator הזה דרך ממשק MCP מקומי. כשהאפשרות מופעלת, סוכנים יכולים להוריד סרטונים, לנהל את הספרייה שלך, לערוך כתוביות ולייצא קבצים לתיקיות המורשות.",
+      "description": "אפשר ל-Claude Code, ל-Claude Desktop, ל-Codex או לסוכן MCP אחר לשלוט ב-Translator במחשב הזה. כשהאפשרות מופעלת, סוכנים יכולים להוריד סרטונים, לנהל את הספרייה שלך, לערוך ולתרגם כתוביות ולייצא קבצים לתיקיות מורשות.",
       "enableLabel": "לאפשר לסוכנים לשלוט ביישום הזה",
       "enableAria": "הפעלת בקרת סוכנים",
       "connection": {
-        "title": "חיבור Codex או ChatGPT",
-        "instructions": "הוסיפו שרת MCP מסוג STDIO בשם “translator” באמצעות נתיב ההפעלה הזה. שמרו את השרת ולאחר מכן הפעילו מחדש את Codex או ChatGPT כדי שהכלים החדשים יופיעו."
+        "title": "חיבור Claude Code, Claude Desktop או Codex",
+        "instructions": "לחץ על כפתור כדי לרשום את שרת ה-MCP “translator”. עבור סוכנים אחרים, הוסף שרת MCP מסוג STDIO בשם “translator” עם נתיב ההפעלה הזה, ואז הפעל מחדש את הסוכן כדי שהכלים החדשים יופיעו.",
+        "copyPath": "העתק נתיב",
+        "copied": "הועתק",
+        "connectClaudeCode": "חבר את Claude Code",
+        "connectCodex": "חבר את Codex",
+        "connectClaudeDesktop": "חבר את Claude Desktop",
+        "connecting": "מתחבר…",
+        "connected": "{{app}} מחובר. התחל סשן חדש כדי לטעון את הכלים של Translator.",
+        "alreadyConnected": "ל-{{app}} כבר יש את שרת Translator. הפעל אותו מחדש אם הכלים לא מופיעים.",
+        "desktopConnected": "Translator נוסף ל-Claude Desktop. צא מ-Claude ופתח אותו מחדש כדי לטעון אותו.",
+        "cliNotFound": "הפקודה {{app}} לא נמצאה במחשב הזה. הרץ את זה בטרמינל:",
+        "cliNotFoundCopied": "הפקודה {{app}} לא נמצאה במחשב הזה. פקודת ההגדרה הועתקה; הדבק אותה בטרמינל:",
+        "failed": "לא ניתן לחבר את {{app}}: {{message}}"
       },
       "status": {
         "enabled": "מופעל",
@@ -836,7 +848,27 @@
         "update": "לא ניתן היה לעדכן את הגדרת בקרת הסוכנים.",
         "addDirectory": "לא ניתן היה להוסיף את התיקייה.",
         "removeDirectory": "לא ניתן היה להסיר את התיקייה."
-      }
+      },
+      "pitch": "תרגם בחינם עם מנוי Claude או Codex שכבר יש לך."
+    },
+    "creditTransfer": {
+      "title": "העברת קרדיטים בין מחשבים",
+      "description": "קרדיטים שנרכשו ופתיחת מפתחות ה-API ניתנים להעברה למחשב אחר. קרדיטי הברכה החינמיים נשארים במחשב הזה.",
+      "moveButton": "העבר קרדיטים למחשב אחר",
+      "receiveButton": "קבל קרדיטים",
+      "creating": "יוצר קוד…",
+      "copy": "העתק",
+      "copied": "הועתק",
+      "summaryCredits": "{{credits}} קרדיטים יועברו.",
+      "summaryByo": "גם פתיחת מפתחות ה-API תועבר.",
+      "expires": "הקוד הזה פועל פעם אחת ותוקפו יפוג בעוד {{minutes}} דקות.",
+      "steps": "במחשב החדש: התקן את Translator, פתח את ההגדרות, בחר “קבל קרדיטים” והזן את הקוד הזה.",
+      "inputLabel": "קוד מהמחשב האחר שלך",
+      "redeem": "קבל",
+      "redeeming": "מקבל…",
+      "received": "התקבלו {{credits}} קרדיטים.",
+      "receivedNoCredits": "הקוד עבד.",
+      "receivedByo": "פתיחת מפתחות ה-API פעילה במחשב הזה."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "אין קרדיט.",
     "rechargeLink": "טען מחדש →",
     "creditWarning": {
-      "message": "רכוש קרדיט ב<settingsLink>{{settingsLinkText}}</settingsLink> כדי להשתמש בתכונות תרגום וקטלוג.",
+      "message": "הורדה, עריכה, ייצוא ותרגום עם Claude או Codex שלך דרך בקרת סוכנים הם בחינם. תמלול דורש קרדיטים או את פתיחת מפתחות ה-API ב<settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "הגדרות"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "שמור כל מדיית מקור או מדיה מדובבת שברצונך לשמור מחוץ לסביבת העבודה של האפליקציה."
     },
     "calculatingCost": "מחשב עלות...",
-    "notEnoughCredits": "אין מספיק קרדיט זמין"
+    "notEnoughCredits": "אין מספיק קרדיט זמין",
+    "welcomeCredits": {
+      "message": "יש לך קרדיטים חינמיים לניסיון תמלול ותרגום (כ-20 דקות וידאו)."
+    }
   },
   "findBar": {
     "findPlaceholder": "חפש בכתוביות...",
@@ -1058,7 +1093,9 @@
       "title": "הקרדיטים נגמרו",
       "message": "קרדיטי ה-AI שלך נגמרו. טען מחדש בהגדרות, ואז המשך מאיפה שהפסקת.",
       "openSettings": "פתח הגדרות",
-      "ok": "אישור"
+      "ok": "אישור",
+      "neverHadTitle": "תמלול דורש קרדיטים",
+      "neverHadMessage": "תמלול דורש קרדיטים או את פתיחת מפתחות ה-API. אפשר להשיג כל אחד מהם בהגדרות. תרגום עם Claude או Codex שלך דרך בקרת סוכנים הוא בחינם."
     }
   },
   "progress": {

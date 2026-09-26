@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Ovládání agenty",
-      "description": "Povolte externím agentům AI (Cursor, Codex apod.) ovládat tuto aplikaci Translator prostřednictvím místního rozhraní MCP. Po zapnutí mohou agenti stahovat videa, spravovat vaši knihovnu, upravovat titulky a exportovat soubory do povolených složek.",
+      "description": "Povolte Claude Code, Claude Desktop, Codexu nebo jinému agentovi MCP ovládat Translator na tomto počítači. Po zapnutí mohou agenti stahovat videa, spravovat vaši knihovnu, upravovat a překládat titulky a exportovat soubory do povolených složek.",
       "enableLabel": "Povolit agentům ovládat tuto aplikaci",
       "enableAria": "Zapnout ovládání agenty",
       "connection": {
-        "title": "Připojit Codex nebo ChatGPT",
-        "instructions": "Přidejte server MCP typu STDIO s názvem „translator“ a použijte tuto cestu ke spouštěči. Server uložte a poté restartujte Codex nebo ChatGPT, aby se zobrazily nové nástroje."
+        "title": "Připojit Claude Code, Claude Desktop nebo Codex",
+        "instructions": "Kliknutím na tlačítko zaregistrujete server MCP „translator“. U jiných agentů přidejte server MCP typu STDIO s názvem „translator“ s touto cestou ke spouštěči a poté agenta restartujte, aby se zobrazily nové nástroje.",
+        "copyPath": "Kopírovat cestu",
+        "copied": "Zkopírováno",
+        "connectClaudeCode": "Připojit Claude Code",
+        "connectCodex": "Připojit Codex",
+        "connectClaudeDesktop": "Připojit Claude Desktop",
+        "connecting": "Připojování…",
+        "connected": "{{app}} je připojen. Zahajte novou relaci, aby se načetly nástroje Translatoru.",
+        "alreadyConnected": "{{app}} už server Translator má. Pokud se nástroje nezobrazí, restartujte ho.",
+        "desktopConnected": "Translator byl přidán do Claude Desktop. Ukončete Claude a znovu ho otevřete, aby se načetl.",
+        "cliNotFound": "Příkaz {{app}} nebyl na tomto počítači nalezen. Spusťte v terminálu:",
+        "cliNotFoundCopied": "Příkaz {{app}} nebyl na tomto počítači nalezen. Instalační příkaz byl zkopírován; vložte ho do terminálu:",
+        "failed": "Nepodařilo se připojit {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Zapnuto",
@@ -836,7 +848,27 @@
         "update": "Nastavení ovládání agenty se nepodařilo aktualizovat.",
         "addDirectory": "Složku se nepodařilo přidat.",
         "removeDirectory": "Složku se nepodařilo odebrat."
-      }
+      },
+      "pitch": "Překládejte zdarma s předplatným Claude nebo Codex, které už máte."
+    },
+    "creditTransfer": {
+      "title": "Přesun kreditů mezi počítači",
+      "description": "Zakoupené kredity a odemčení API klíčů lze přesunout na jiný počítač. Bezplatné uvítací kredity zůstávají na tomto počítači.",
+      "moveButton": "Přesunout kredity na jiný počítač",
+      "receiveButton": "Přijmout kredity",
+      "creating": "Vytváření kódu…",
+      "copy": "Kopírovat",
+      "copied": "Zkopírováno",
+      "summaryCredits": "Přesune se kreditů: {{credits}}.",
+      "summaryByo": "Přesune se i odemčení API klíčů.",
+      "expires": "Tento kód lze použít jednou a vyprší za {{minutes}} min.",
+      "steps": "Na novém počítači: nainstalujte Translator, otevřete Nastavení, zvolte „Přijmout kredity“ a zadejte tento kód.",
+      "inputLabel": "Kód z vašeho druhého počítače",
+      "redeem": "Přijmout",
+      "redeeming": "Přijímání…",
+      "received": "Přijato kreditů: {{credits}}.",
+      "receivedNoCredits": "Kód fungoval.",
+      "receivedByo": "Odemčení API klíčů je na tomto počítači aktivní."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Žádné kredity.",
     "rechargeLink": "Dobít →",
     "creditWarning": {
-      "message": "Nakupte kredity v <settingsLink>{{settingsLinkText}}</settingsLink> pro použití funkcí překladu a přepisu.",
+      "message": "Stahování, úpravy, export a překlad s vlastním Claude nebo Codexem přes Ovládání agenty jsou zdarma. Přepis vyžaduje kredity nebo odemčení API klíčů v <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Nastavení"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Uložte zdrojová nebo nadabovaná média mimo pracovní prostor aplikace, pokud je chcete zachovat."
     },
     "calculatingCost": "Výpočet nákladů...",
-    "notEnoughCredits": "Nedostatek kreditů"
+    "notEnoughCredits": "Nedostatek kreditů",
+    "welcomeCredits": {
+      "message": "Máte bezplatné kredity na vyzkoušení přepisu a překladu (asi 20 minut videa)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Hledat v titulcích...",
@@ -1058,7 +1093,9 @@
       "title": "Kredity došly",
       "message": "Vaše AI kredity došly. Dobijte v Nastavení a poté pokračujte tam, kde jste skončili.",
       "openSettings": "Otevřít nastavení",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Přepis vyžaduje kredity",
+      "neverHadMessage": "Přepis vyžaduje kredity nebo odemčení API klíčů. Obojí získáte v Nastavení. Překlad s vlastním Claude nebo Codexem přes Ovládání agenty je zdarma."
     }
   },
   "progress": {

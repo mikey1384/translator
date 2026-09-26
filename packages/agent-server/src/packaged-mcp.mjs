@@ -33,6 +33,7 @@ import { getPackagedSocketDiscoveryCandidates } from './packaged-socket-path.mjs
 import { PACKAGED_TOOL_MAP as TOOL_MAP } from './packaged-tool-map.mjs';
 import { PersistentJobStore } from './job-store.mjs';
 import {
+  MCP_SERVER_INSTRUCTIONS,
   MCP_SERVER_NAMES,
   MCP_SERVER_VERSION,
   MCP_V2_PROTOCOL_VERSION,
@@ -155,6 +156,83 @@ async function packagedLegacyContext() {
     };
   }
 }
+
+const PAID_LEGACY_NOTE =
+  "Spends Stage5 credits (or the user's BYO provider key) through the app's configured provider; use only when the user asks. The free path is plan_job with translation_provider agent.";
+
+// One-line descriptions for the legacy app_* tools. Paid tools also receive
+// legacyToolDescription's paid-inference preamble.
+export const LEGACY_TOOL_DESCRIPTIONS = Object.freeze({
+  app_status:
+    'Inspect the running Translator app: mounted video and subtitles, active operation, and credit status. No credits.',
+  app_navigation_list:
+    'List named Translator destinations and whether each is rendered. Does not navigate. No credits.',
+  app_navigate:
+    'Open and focus a named Translator workspace or settings section for the user. Does not submit forms. No credits.',
+  app_open_web_page:
+    "Open an explicit http/https page in the user's default browser for viewing. No credits.",
+  app_settings_show:
+    'Open or close Translator Settings and return a masked settings snapshot. No credits.',
+  app_settings_get:
+    'Read Translator settings, credit balance, provider choices, and provider-key presence (never key values). No credits.',
+  app_open_video:
+    'Open a local video in the app. Mounted subtitles are kept unless replace_subtitles allows replacing them. No credits.',
+  app_mount_subtitles:
+    'Mount a local SRT in the app. Mounted subtitles are kept unless replace_subtitles allows replacing them. No credits.',
+  app_set_subtitle_display:
+    'Show original text, translation, or both in the app. No credits.',
+  app_set_subtitle_style:
+    'Set subtitle style and optional base_font_size_px (6–96). These settings also control saved-video Shorts; LineBox at 35 is a Korean Shorts starting point.',
+  app_show_download_history:
+    'Open the Downloads library in the app. No credits.',
+  app_downloads_list:
+    'List Downloads library entries by stable ID and whether each local file is available. No credits.',
+  app_downloads_open:
+    'Open a locally available Downloads library item in the app by its ID. No credits.',
+  app_downloads_redownload:
+    "Re-download a Downloads library item from its stored source URL with the app's downloader. Poll app_status. No credits.",
+  app_video_search: `Run the app's AI YouTube recommendation search and show ranked results in the app. ${PAID_LEGACY_NOTE}`,
+  app_video_search_more: `Continue the current recommendation search with more ranked results; may call the recommendation model again. ${PAID_LEGACY_NOTE}`,
+  app_video_search_status:
+    'Inspect the current recommendation search progress and ranked result IDs without searching again. No credits.',
+  app_video_search_cancel:
+    'Cancel the active recommendation search, keeping completed results. No credits.',
+  app_video_batch_download:
+    'Queue up to 8 recommendation result IDs for sequential download into the Downloads library. No credits.',
+  app_video_batch_cancel:
+    'Stop the current recommendation download batch and cancel the active download when possible. No credits.',
+  app_video_batch_status:
+    'Inspect the recommendation download queue, active item, completions, and failures. No credits.',
+  app_start_video_download:
+    "Download a video from an explicit http/https URL into the Downloads library with the app's downloader. Poll app_status. No credits.",
+  app_start_transcription: `Transcribe the mounted video's audio. Returns immediately; poll app_processing_status. ${PAID_LEGACY_NOTE}`,
+  app_start_translation: `Translate every mounted subtitle cue into target_language. Returns immediately; poll app_processing_status. ${PAID_LEGACY_NOTE}`,
+  app_start_dubbing: `Generate dubbed audio/video from the mounted subtitles, translating first if needed. Poll app_processing_status. ${PAID_LEGACY_NOTE}`,
+  app_start_summary: `Generate a summary, sections, and optional highlights from the mounted subtitles. Poll app_processing_status. ${PAID_LEGACY_NOTE}`,
+  app_highlights_get:
+    'Read saved highlights and a snapshot ID. Read app_subtitles_get for context. No credits.',
+  app_highlights_set:
+    'Save agent-selected highlights using complete start/end cue IDs and the snapshot from app_highlights_get. Replaces highlights, preserves summaries. Optional editorial plan: clip-relative shots covering the entire interval, normalized source centerX/centerY, zoom 1–2.5, and faithful short caption phrases with exact-substring emphasis. Inspect source frames to follow speaker/camera changes; never guess framing. Authored phrase times are not word alignment. Editorial Shorts render individually in vertical_reframe. No inference or credits.',
+  app_start_highlight_render:
+    'Cut and caption saved highlight IDs in playback order. Plain clips use current subtitle display/style settings. A saved editorial plan supplies precise framing and styled phrase captions and requires one highlight in vertical_reframe. Poll app_processing_status; cancel via app_processing_cancel. Reuse a stable operation_id within this app session. vertical_fit preserves demonstrations; vertical_reframe follows subjects or the saved editorial shots. Output to a new MP4 path or omit for an app-library preview. Preserves original/translated SRT. No credits, upload or publication.',
+  app_start_cue_translation: `Translate or improve one mounted cue by ID with nearby context; the existing translation is kept unless the new one succeeds. ${PAID_LEGACY_NOTE}`,
+  app_start_cue_transcription: `Retranscribe one mounted cue by ID from the source audio; existing text is kept unless the new result succeeds. ${PAID_LEGACY_NOTE}`,
+  app_start_merge:
+    'Burn the mounted subtitles into the mounted video and save to an explicit MP4 path (existing files need confirm_overwrite=OVERWRITE). Poll app_processing_status. No credits.',
+  app_start_media_workflow: `Run the app workflow on a URL, local path, or the mounted video through download, transcription, translation, dubbing, or summary (run_to). Stopping at download is free; later steps spend credits. ${PAID_LEGACY_NOTE}`,
+  app_processing_status:
+    'Inspect the active or last app download/transcription/translation/dubbing/summary/merge operation, with progress and output paths. No credits.',
+  app_processing_cancel:
+    'Cancel the active app download or processing operation, keeping completed results. No credits.',
+  app_subtitles_get:
+    'Read a page of mounted subtitle cues with stable IDs, timing, original text, and translations. No credits.',
+  app_subtitles_update:
+    'Update mounted subtitle text or timing by cue ID; changes stay in the app until saved or exported. No credits.',
+  app_subtitles_mutate:
+    'Insert, remove (confirm=REMOVE), or shift mounted subtitle cues by ID, one mutation per call. No credits.',
+  app_subtitles_export:
+    'Export the mounted subtitles (original, translation, or dual) to an explicit local SRT path; existing files need confirm_overwrite=OVERWRITE. No credits.',
+});
 
 // JSON Schemas for each tool (hand-written from mcp.mjs, zero npm deps)
 export const TOOL_SCHEMAS = {
@@ -1314,6 +1392,7 @@ async function handleMessage(msg) {
             name: MCP_SERVER_NAMES.production,
             version: MCP_SERVER_VERSION,
           },
+          instructions: MCP_SERVER_INSTRUCTIONS,
         },
       });
       return;
@@ -1331,19 +1410,7 @@ async function handleMessage(msg) {
           name,
           description:
             v2?.description ||
-            legacyToolDescription(
-              name,
-              {
-                app_set_subtitle_style:
-                  'Set subtitle style and optional base_font_size_px (6–96). These settings also control saved-video Shorts; LineBox at 35 is a Korean Shorts starting point.',
-                app_highlights_get:
-                  'Read saved highlights and a snapshot ID. Read app_subtitles_get for context. No credits.',
-                app_highlights_set:
-                  'Save agent-selected highlights using complete start/end cue IDs and the snapshot from app_highlights_get. Replaces highlights, preserves summaries. Optional editorial plan: clip-relative shots covering the entire interval, normalized source centerX/centerY, zoom 1–2.5, and faithful short caption phrases with exact-substring emphasis. Inspect source frames to follow speaker/camera changes; never guess framing. Authored phrase times are not word alignment. Editorial Shorts render individually in vertical_reframe. No inference or credits.',
-                app_start_highlight_render:
-                  'Cut and caption saved highlight IDs in playback order. Plain clips use current subtitle display/style settings. A saved editorial plan supplies precise framing and styled phrase captions and requires one highlight in vertical_reframe. Poll app_processing_status; cancel via app_processing_cancel. Reuse a stable operation_id within this app session. vertical_fit preserves demonstrations; vertical_reframe follows subjects or the saved editorial shots. Output to a new MP4 path or omit for an app-library preview. Preserves original/translated SRT. No credits, upload or publication.',
-              }[name] || `Translator: ${TOOL_MAP[name]}`
-            ),
+            legacyToolDescription(name, LEGACY_TOOL_DESCRIPTIONS[name]),
           inputSchema: v2?.inputSchema || TOOL_SCHEMAS[name],
         };
       });

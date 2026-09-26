@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "التحكم بالوكلاء",
-      "description": "اسمح لوكلاء الذكاء الاصطناعي الخارجيين (Cursor وCodex وغيرهما) بالتحكم في تطبيق Translator هذا عبر واجهة MCP محلية. عند التمكين، يمكن للوكلاء تنزيل مقاطع الفيديو وإدارة مكتبتك وتحرير الترجمات وتصدير الملفات إلى المجلدات المسموح بها.",
+      "description": "اسمح لـ Claude Code أو Claude Desktop أو Codex أو أي وكيل MCP آخر بالتحكم في Translator على هذا الكمبيوتر. عند التمكين، يمكن للوكلاء تنزيل مقاطع الفيديو وإدارة مكتبتك وتحرير الترجمات النصية وترجمتها وتصدير الملفات إلى المجلدات المسموح بها.",
       "enableLabel": "السماح للوكلاء بالتحكم في هذا التطبيق",
       "enableAria": "تمكين التحكم بالوكلاء",
       "connection": {
-        "title": "ربط Codex أو ChatGPT",
-        "instructions": "أضف خادم MCP من نوع STDIO باسم “translator” باستخدام مسار المشغّل هذا. احفظ الخادم، ثم أعد تشغيل Codex أو ChatGPT لتظهر الأدوات الجديدة."
+        "title": "ربط Claude Code أو Claude Desktop أو Codex",
+        "instructions": "انقر على زر لتسجيل خادم MCP المسمى “translator”. للوكلاء الآخرين، أضف خادم MCP من نوع STDIO باسم “translator” باستخدام مسار المشغّل هذا، ثم أعد تشغيل الوكيل لتظهر الأدوات الجديدة.",
+        "copyPath": "نسخ المسار",
+        "copied": "تم النسخ",
+        "connectClaudeCode": "ربط Claude Code",
+        "connectCodex": "ربط Codex",
+        "connectClaudeDesktop": "ربط Claude Desktop",
+        "connecting": "جارٍ الربط…",
+        "connected": "تم ربط {{app}}. ابدأ جلسة جديدة لتحميل أدوات Translator.",
+        "alreadyConnected": "خادم Translator موجود بالفعل في {{app}}. أعد تشغيله إذا لم تظهر الأدوات.",
+        "desktopConnected": "تمت إضافة Translator إلى Claude Desktop. أغلق Claude وأعد فتحه لتحميله.",
+        "cliNotFound": "تعذّر العثور على الأمر {{app}} على هذا الكمبيوتر. شغّل هذا في الطرفية:",
+        "cliNotFoundCopied": "تعذّر العثور على الأمر {{app}} على هذا الكمبيوتر. تم نسخ أمر الإعداد؛ الصقه في الطرفية:",
+        "failed": "تعذّر ربط {{app}}: {{message}}"
       },
       "status": {
         "enabled": "مفعّل",
@@ -836,7 +848,27 @@
         "update": "تعذر تحديث إعداد التحكم بالوكلاء.",
         "addDirectory": "تعذرت إضافة المجلد.",
         "removeDirectory": "تعذرت إزالة المجلد."
-      }
+      },
+      "pitch": "ترجم مجانًا باشتراك Claude أو Codex الذي لديك بالفعل."
+    },
+    "creditTransfer": {
+      "title": "نقل النقاط بين أجهزة الكمبيوتر",
+      "description": "يمكن نقل النقاط المشتراة وفتح مفاتيح API إلى جهاز كمبيوتر آخر. تبقى نقاط الترحيب المجانية على هذا الجهاز.",
+      "moveButton": "نقل النقاط إلى جهاز كمبيوتر آخر",
+      "receiveButton": "استلام النقاط",
+      "creating": "جارٍ إنشاء الرمز…",
+      "copy": "نسخ",
+      "copied": "تم النسخ",
+      "summaryCredits": "سيتم نقل {{credits}} نقطة.",
+      "summaryByo": "سيتم نقل فتح مفاتيح API أيضًا.",
+      "expires": "يعمل هذا الرمز مرة واحدة وتنتهي صلاحيته خلال {{minutes}} دقيقة.",
+      "steps": "على الكمبيوتر الجديد: ثبّت Translator، وافتح الإعدادات، واختر “استلام النقاط”، ثم أدخل هذا الرمز.",
+      "inputLabel": "الرمز من جهاز الكمبيوتر الآخر",
+      "redeem": "استلام",
+      "redeeming": "جارٍ الاستلام…",
+      "received": "تم استلام {{credits}} نقطة.",
+      "receivedNoCredits": "نجح الرمز.",
+      "receivedByo": "فتح مفاتيح API مفعّل على هذا الكمبيوتر."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "لا توجد نقاط.",
     "rechargeLink": "إعادة الشحن ←",
     "creditWarning": {
-      "message": "اشترِ النقاط في <settingsLink>{{settingsLinkText}}</settingsLink> لاستخدام ميزات الترجمة والنسخ.",
+      "message": "التنزيل والتحرير والتصدير والترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية. يتطلب النسخ نقاطًا أو فتح مفاتيح API في <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "الإعدادات"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "احفظ أي وسائط أصلية أو مدبلجة تريد الاحتفاظ بها خارج مساحة عمل التطبيق."
     },
     "calculatingCost": "جارٍ حساب التكلفة...",
-    "notEnoughCredits": "لا توجد نقاط كافية متاحة"
+    "notEnoughCredits": "لا توجد نقاط كافية متاحة",
+    "welcomeCredits": {
+      "message": "لديك نقاط مجانية لتجربة النسخ والترجمة (حوالي 20 دقيقة من الفيديو)."
+    }
   },
   "findBar": {
     "findPlaceholder": "البحث في الترجمات...",
@@ -1058,7 +1093,9 @@
       "title": "نفدت النقاط",
       "message": "لقد نفدت نقاط الذكاء الاصطناعي لديك. أعد الشحن من الإعدادات ثم تابع من حيث توقفت.",
       "openSettings": "فتح الإعدادات",
-      "ok": "حسناً"
+      "ok": "حسناً",
+      "neverHadTitle": "يتطلب النسخ نقاطًا",
+      "neverHadMessage": "يتطلب النسخ نقاطًا أو فتح مفاتيح API. احصل على أيٍّ منهما من الإعدادات. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية."
     }
   },
   "progress": {

@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Kontrol ng Agent",
-      "description": "Payagan ang mga panlabas na AI agent (Cursor, Codex, at iba pa) na kontrolin ang Translator app na ito sa pamamagitan ng lokal na MCP interface. Kapag naka-enable, maaaring mag-download ng mga video ang mga agent, pamahalaan ang iyong library, mag-edit ng mga subtitle, at mag-export ng mga file sa mga pinapayagang folder.",
+      "description": "Payagan ang Claude Code, Claude Desktop, Codex, o ibang MCP agent na kontrolin ang Translator sa computer na ito. Kapag naka-enable, maaaring mag-download ng mga video ang mga agent, pamahalaan ang iyong library, mag-edit at magsalin ng mga subtitle, at mag-export ng mga file sa mga pinapayagang direktoryo.",
       "enableLabel": "Payagan ang mga agent na kontrolin ang app na ito",
       "enableAria": "I-enable ang kontrol ng agent",
       "connection": {
-        "title": "Ikonekta ang Codex o ChatGPT",
-        "instructions": "Magdagdag ng STDIO MCP server na pinangalanang “translator” gamit ang launcher path na ito. I-save ang server, pagkatapos ay i-restart ang Codex o ChatGPT para lumitaw ang mga bagong tool."
+        "title": "Ikonekta ang Claude Code, Claude Desktop, o Codex",
+        "instructions": "Mag-click ng button para irehistro ang “translator” MCP server. Para sa ibang agent, magdagdag ng STDIO MCP server na pinangalanang “translator” gamit ang launcher path na ito, pagkatapos ay i-restart ang agent para lumabas ang mga bagong tool.",
+        "copyPath": "Kopyahin ang path",
+        "copied": "Nakopya na",
+        "connectClaudeCode": "Ikonekta ang Claude Code",
+        "connectCodex": "Ikonekta ang Codex",
+        "connectClaudeDesktop": "Ikonekta ang Claude Desktop",
+        "connecting": "Kumokonekta…",
+        "connected": "Nakakonekta na ang {{app}}. Magsimula ng bagong session para i-load ang mga tool ng Translator.",
+        "alreadyConnected": "Mayroon nang Translator server ang {{app}}. I-restart ito kung hindi lumalabas ang mga tool.",
+        "desktopConnected": "Naidagdag ang Translator sa Claude Desktop. Isara at buksan muli ang Claude para i-load ito.",
+        "cliNotFound": "Hindi mahanap ang {{app}} command sa computer na ito. Patakbuhin ito sa terminal:",
+        "cliNotFoundCopied": "Hindi mahanap ang {{app}} command sa computer na ito. Nakopya na ang setup command; i-paste ito sa terminal:",
+        "failed": "Hindi maikonekta ang {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Naka-enable",
@@ -836,7 +848,27 @@
         "update": "Hindi na-update ang setting ng kontrol ng agent.",
         "addDirectory": "Hindi naidagdag ang folder.",
         "removeDirectory": "Hindi naalis ang folder."
-      }
+      },
+      "pitch": "Magsalin nang libre gamit ang Claude o Codex subscription na mayroon ka na."
+    },
+    "creditTransfer": {
+      "title": "Ilipat ang mga credit sa pagitan ng mga computer",
+      "description": "Maaaring ilipat sa ibang computer ang mga biniling credit at ang API-key unlock. Mananatili sa computer na ito ang mga libreng welcome credit.",
+      "moveButton": "Ilipat ang mga credit sa ibang computer",
+      "receiveButton": "Tumanggap ng mga credit",
+      "creating": "Gumagawa ng code…",
+      "copy": "Kopyahin",
+      "copied": "Nakopya na",
+      "summaryCredits": "Ililipat ang {{credits}} na credit.",
+      "summaryByo": "Ililipat din ang API-key unlock.",
+      "expires": "Isang beses lang gagana ang code na ito at mag-e-expire ito sa loob ng {{minutes}} minuto.",
+      "steps": "Sa bagong computer: i-install ang Translator, buksan ang Mga Setting, piliin ang “Tumanggap ng mga credit”, at ilagay ang code na ito.",
+      "inputLabel": "Code mula sa iyong ibang computer",
+      "redeem": "Tanggapin",
+      "redeeming": "Tinatanggap…",
+      "received": "Natanggap ang {{credits}} na credit.",
+      "receivedNoCredits": "Gumana ang code.",
+      "receivedByo": "Aktibo na ang API-key unlock sa computer na ito."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Walang credit.",
     "rechargeLink": "I-recharge →",
     "creditWarning": {
-      "message": "Bumili ng mga credit sa <settingsLink>{{settingsLinkText}}</settingsLink> para gamitin ang mga feature ng translation at transcription.",
+      "message": "Libre ang pag-download, pag-edit, pag-export, at pagsasalin gamit ang sarili mong Claude o Codex sa pamamagitan ng Kontrol ng Agent. Kailangan ng transcription ng mga credit o ng API-key unlock sa <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Mga Setting"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "I-save sa labas ng app workspace ang anumang source o dubbed media na gusto mong itago."
     },
     "calculatingCost": "Kinakalkula ang gastos...",
-    "notEnoughCredits": "Hindi sapat ang mga credit"
+    "notEnoughCredits": "Hindi sapat ang mga credit",
+    "welcomeCredits": {
+      "message": "May libre kang mga credit para subukan ang transcription at translation (mga 20 minuto ng video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Hanapin sa mga subtitle...",
@@ -1058,7 +1093,9 @@
       "title": "Naubos na ang mga credit",
       "message": "Naubos na ang iyong mga AI credit. Mag-recharge sa Settings, pagkatapos ipagpatuloy kung saan ka tumigil.",
       "openSettings": "Buksan ang Settings",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Kailangan ng mga credit para sa transcription",
+      "neverHadMessage": "Kailangan ng transcription ng mga credit o ng API-key unlock. Makukuha mo ang alinman sa Mga Setting. Libre ang pagsasalin gamit ang sarili mong Claude o Codex sa pamamagitan ng Kontrol ng Agent."
     }
   },
   "progress": {

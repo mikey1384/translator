@@ -339,3 +339,72 @@ test('translation sessions enforce bounded identities, cue counts, and known sta
     /Translation session text cannot exceed 33554432 characters/
   );
 });
+
+test('batches default to 100 segments, allow 250, and stay within the source-character budget', async t => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'translator-translation-store-')
+  );
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const store = new PersistentJobStore({ environment: 'production', root });
+  t.after(() => store.close());
+  const job = setup(store);
+  const continuous = Array.from({ length: 400 }, (_, index) => ({
+    id: `seg_${index + 1}`,
+    start: index * 2,
+    end: index * 2 + 2,
+    source: `words that keep going ${index + 1}`,
+  }));
+  store.initializeTranslationSession(job.job_id, {
+    segments: continuous,
+    targetLanguage: 'Korean',
+  });
+
+  assert.equal(store.issueTranslationBatch(job.job_id).segments.length, 100);
+  assert.equal(
+    store.issueTranslationBatch(job.job_id, { maxSegments: 250 }).segments
+      .length,
+    250
+  );
+  assert.equal(
+    store.issueTranslationBatch(job.job_id, { maxSegments: 10_000 }).segments
+      .length,
+    250,
+    'requests above the ceiling are clamped'
+  );
+
+  const longJobRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'translator-translation-store-')
+  );
+  t.after(() => fs.rm(longJobRoot, { recursive: true, force: true }));
+  const longStore = new PersistentJobStore({
+    environment: 'production',
+    root: longJobRoot,
+  });
+  t.after(() => longStore.close());
+  const longJob = setup(longStore);
+  longStore.initializeTranslationSession(longJob.job_id, {
+    segments: continuous.map(segment => ({
+      ...segment,
+      source: `${'long spoken passage '.repeat(40)}${segment.id}`,
+    })),
+    targetLanguage: 'Korean',
+  });
+  const bounded = longStore.issueTranslationBatch(longJob.job_id, {
+    maxSegments: 250,
+  });
+  const sourceCharacters = bounded.segments.reduce(
+    (total, segment) => total + segment.source.length,
+    0
+  );
+  assert.ok(bounded.segments.length < 250);
+  assert.ok(sourceCharacters <= 50_000);
+  const accepted = longStore.submitTranslationBatch(
+    longJob.job_id,
+    bounded.batch_id,
+    bounded.segments.map(segment => ({
+      id: segment.id,
+      text: `${segment.source} 번역`.repeat(3),
+    }))
+  );
+  assert.equal(accepted.session.translated_segments, bounded.segments.length);
+});

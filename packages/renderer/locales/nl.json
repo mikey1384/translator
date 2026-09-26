@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Agentbesturing",
-      "description": "Sta externe AI-agents (Cursor, Codex enz.) toe om deze Translator-app via een lokale MCP-interface te besturen. Wanneer dit is ingeschakeld, kunnen agents video's downloaden, je bibliotheek beheren, ondertitels bewerken en bestanden naar toegestane mappen exporteren.",
+      "description": "Laat Claude Code, Claude Desktop, Codex of een andere MCP-agent Translator op deze computer besturen. Wanneer dit is ingeschakeld, kunnen agents video's downloaden, je bibliotheek beheren, ondertitels bewerken en vertalen en bestanden naar toegestane mappen exporteren.",
       "enableLabel": "Agentbesturing voor deze app toestaan",
       "enableAria": "Agentbesturing inschakelen",
       "connection": {
-        "title": "Codex of ChatGPT verbinden",
-        "instructions": "Voeg met dit opstartpad een STDIO-MCP-server met de naam ‘translator’ toe. Sla de server op en start daarna Codex of ChatGPT opnieuw zodat de nieuwe hulpmiddelen verschijnen."
+        "title": "Claude Code, Claude Desktop of Codex verbinden",
+        "instructions": "Klik op een knop om de MCP-server ‘translator’ te registreren. Voeg voor andere agents een STDIO-MCP-server met de naam ‘translator’ toe met dit opstartpad en start de agent daarna opnieuw zodat de nieuwe hulpmiddelen verschijnen.",
+        "copyPath": "Pad kopiëren",
+        "copied": "Gekopieerd",
+        "connectClaudeCode": "Claude Code verbinden",
+        "connectCodex": "Codex verbinden",
+        "connectClaudeDesktop": "Claude Desktop verbinden",
+        "connecting": "Verbinden…",
+        "connected": "{{app}} is verbonden. Start een nieuwe sessie om de Translator-hulpmiddelen te laden.",
+        "alreadyConnected": "{{app}} heeft de Translator-server al. Start het opnieuw als de hulpmiddelen niet verschijnen.",
+        "desktopConnected": "Translator is toegevoegd aan Claude Desktop. Sluit Claude af en open het opnieuw om het te laden.",
+        "cliNotFound": "Kan de opdracht {{app}} niet vinden op deze computer. Voer dit uit in een terminal:",
+        "cliNotFoundCopied": "Kan de opdracht {{app}} niet vinden op deze computer. De installatieopdracht is gekopieerd; plak deze in een terminal:",
+        "failed": "Kan {{app}} niet verbinden: {{message}}"
       },
       "status": {
         "enabled": "Ingeschakeld",
@@ -836,7 +848,27 @@
         "update": "De instelling voor agentbesturing kon niet worden bijgewerkt.",
         "addDirectory": "De map kon niet worden toegevoegd.",
         "removeDirectory": "De map kon niet worden verwijderd."
-      }
+      },
+      "pitch": "Vertaal gratis met het Claude- of Codex-abonnement dat je al hebt."
+    },
+    "creditTransfer": {
+      "title": "Credits tussen computers verplaatsen",
+      "description": "Gekochte credits en de API-sleutelontgrendeling kunnen naar een andere computer worden verplaatst. Gratis welkomstcredits blijven op deze computer.",
+      "moveButton": "Credits naar een andere computer verplaatsen",
+      "receiveButton": "Credits ontvangen",
+      "creating": "Code aanmaken…",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd",
+      "summaryCredits": "Er worden {{credits}} credits verplaatst.",
+      "summaryByo": "De API-sleutelontgrendeling wordt ook verplaatst.",
+      "expires": "Deze code werkt één keer en verloopt over {{minutes}} minuten.",
+      "steps": "Op de nieuwe computer: installeer Translator, open Instellingen, kies ‘Credits ontvangen’ en voer deze code in.",
+      "inputLabel": "Code van je andere computer",
+      "redeem": "Ontvangen",
+      "redeeming": "Bezig met ontvangen…",
+      "received": "{{credits}} credits ontvangen.",
+      "receivedNoCredits": "De code heeft gewerkt.",
+      "receivedByo": "De API-sleutelontgrendeling is actief op deze computer."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Geen credits.",
     "rechargeLink": "Aanvullen →",
     "creditWarning": {
-      "message": "Koop credits in <settingsLink>{{settingsLinkText}}</settingsLink> om vertaling- en transcriptiefuncties te gebruiken.",
+      "message": "Downloaden, bewerken, exporteren en vertalen met je eigen Claude of Codex via Agentbesturing is gratis. Voor transcriptie heb je credits of de API-sleutelontgrendeling nodig in <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Instellingen"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Bewaar bron- of gedubde media die je wilt houden buiten de werkruimte van de app."
     },
     "calculatingCost": "Kosten berekenen...",
-    "notEnoughCredits": "Onvoldoende credits beschikbaar"
+    "notEnoughCredits": "Onvoldoende credits beschikbaar",
+    "welcomeCredits": {
+      "message": "Je hebt gratis credits om transcriptie en vertaling uit te proberen (ongeveer 20 minuten video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Zoeken in ondertitels...",
@@ -1058,7 +1093,9 @@
       "title": "Credits op",
       "message": "Je AI-credits zijn op. Vul aan in Instellingen en ga dan verder waar je was gebleven.",
       "openSettings": "Instellingen openen",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Transcriptie vereist credits",
+      "neverHadMessage": "Voor transcriptie heb je credits of de API-sleutelontgrendeling nodig. Beide zijn verkrijgbaar in Instellingen. Vertalen met je eigen Claude of Codex via Agentbesturing is gratis."
     }
   },
   "progress": {

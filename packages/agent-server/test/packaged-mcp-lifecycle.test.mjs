@@ -710,6 +710,36 @@ test('packaged MCP interoperates with the repository MCP SDK stdio client', asyn
       ...new Set([...Object.keys(PACKAGED_TOOL_MAP), ...MCP_V2_TOOL_NAMES]),
     ].sort()
   );
+  const instructions = client.getInstructions();
+  assert.ok(instructions && instructions.length <= 1200);
+  for (const step of [
+    'probe_source',
+    'plan_job',
+    'create_job',
+    'get_transcript_batch',
+    'submit_translation_batch',
+  ]) {
+    assert.ok(instructions.includes(step), step);
+  }
+  assert.match(instructions, /Stage5 credits/);
+  for (const tool of listed.tools) {
+    if (!Object.hasOwn(PACKAGED_TOOL_MAP, tool.name)) continue;
+    assert.doesNotMatch(tool.description, /^Translator: /, tool.name);
+    if (
+      [
+        'app_start_transcription',
+        'app_start_translation',
+        'app_start_dubbing',
+        'app_start_summary',
+        'app_start_cue_translation',
+        'app_start_cue_transcription',
+        'app_start_media_workflow',
+        'app_video_search',
+      ].includes(tool.name)
+    ) {
+      assert.match(tool.description, /Spends Stage5 credits/, tool.name);
+    }
+  }
   await client.close();
 });
 

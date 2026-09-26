@@ -5,6 +5,10 @@ import { hasApiKeyModeActiveCoverage } from '../../../state/byo-runtime';
 export function useCreditSystem() {
   const hours = useCreditStore(s => s.hours);
   const creditLoading = useCreditStore(s => s.loading);
+  const credits = useCreditStore(s => s.credits);
+  const onlyWelcomeCredits = useCreditStore(
+    s => s.history?.onlyWelcomeCredits === true
+  );
   const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
@@ -36,12 +40,22 @@ export function useCreditSystem() {
     hours !== null &&
     hours <= 0 &&
     !creditLoading;
+  // A device whose only credits are the welcome grant gets a friendly note
+  // instead of silence; the component remembers once it was dismissed.
+  const showWelcomeHint =
+    aiInitialized &&
+    !usingApiKey &&
+    !creditLoading &&
+    typeof credits === 'number' &&
+    credits > 0 &&
+    onlyWelcomeCredits;
   const isButtonDisabled = false;
 
   return {
     balance: hours,
     creditLoading,
     showCreditWarning,
+    showWelcomeHint,
     isButtonDisabled,
   };
 }

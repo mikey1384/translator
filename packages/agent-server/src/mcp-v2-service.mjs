@@ -33,6 +33,9 @@ import {
   MCP_V2_SCHEMA_VERSION,
   MCP_V2_TOOL_DEFINITIONS,
   MCP_V2_TOOL_NAMES,
+  TRANSLATION_BATCH_DEFAULT_SEGMENTS,
+  TRANSLATION_BATCH_MAX_SEGMENTS,
+  TRANSLATION_BATCH_MAX_SOURCE_CHARACTERS,
   WATCH_JOB_DEFAULT_WAIT_MS,
   WATCH_JOB_MAX_WAIT_MS,
   getMcpToolBilling,
@@ -775,20 +778,92 @@ function assertExactlyOneSource(source) {
   if (choices !== 1) throw new TypeError('Select exactly one source.');
 }
 
-function chooseCaptionTrack(tracks, kind, requestedLanguage) {
+const SIMPLIFIED_CHINESE_REGIONS = new Set(['cn', 'sg', 'my']);
+const TRADITIONAL_CHINESE_REGIONS = new Set(['tw', 'hk', 'mo']);
+
+function parseCaptionLanguage(value) {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, '-');
+  const subtags = normalized.split('-').filter(Boolean);
+  // YouTube marks the original-language speech track with an -orig suffix.
+  const meaningful = subtags.filter(subtag => subtag !== 'orig');
+  const primary = meaningful[0] || '';
+  let script = null;
+  if (primary === 'zh') {
+    if (
+      meaningful.includes('hans') ||
+      meaningful.some(subtag => SIMPLIFIED_CHINESE_REGIONS.has(subtag))
+    ) {
+      script = 'hans';
+    } else if (
+      meaningful.includes('hant') ||
+      meaningful.some(subtag => TRADITIONAL_CHINESE_REGIONS.has(subtag))
+    ) {
+      script = 'hant';
+    }
+  }
+  return { normalized, subtags: meaningful, primary, script };
+}
+
+/**
+ * Rank how closely an available caption language serves a requested one.
+ * 0 exact, 1 case/separator-insensitive, 2 one code refines the other
+ * (en ~ en-US, zh-Hans ~ zh-CN), 3 same language with a different region
+ * (en-US ~ en-GB, pt-BR ~ pt-PT). Different Chinese scripts never match.
+ */
+export function captionLanguageMatchRank(requestedLanguage, trackLanguage) {
+  const requestedText = String(requestedLanguage || '').trim();
+  const trackText = String(trackLanguage || '').trim();
+  if (!requestedText || !trackText) return null;
+  if (requestedText === trackText) return 0;
+  const requested = parseCaptionLanguage(requestedText);
+  const track = parseCaptionLanguage(trackText);
+  if (requested.normalized === track.normalized) return 1;
+  if (!requested.primary || requested.primary !== track.primary) return null;
+  if (requested.script && track.script && requested.script !== track.script) {
+    return null;
+  }
+  if (requested.script && requested.script === track.script) return 2;
+  const shorter =
+    requested.subtags.length <= track.subtags.length ? requested : track;
+  const longer = shorter === requested ? track : requested;
+  if (
+    shorter.subtags.every((subtag, index) => longer.subtags[index] === subtag)
+  ) {
+    return 2;
+  }
+  return 3;
+}
+
+export function chooseCaptionTrack(
+  tracks,
+  kind,
+  requestedLanguage,
+  { preferOriginal = false } = {}
+) {
   const eligible = (Array.isArray(tracks) ? tracks : []).filter(
     track => track?.kind === kind && String(track?.language || '').trim()
   );
   if (!eligible.length) return null;
-  const requested = String(requestedLanguage || '')
-    .trim()
-    .toLowerCase();
-  if (requested) {
-    return (
-      eligible.find(
-        track => String(track.language).trim().toLowerCase() === requested
-      ) || null
+  if (String(requestedLanguage || '').trim()) {
+    let best = null;
+    let bestRank = Infinity;
+    for (const track of eligible) {
+      const rank = captionLanguageMatchRank(requestedLanguage, track.language);
+      if (rank !== null && rank < bestRank) {
+        best = track;
+        bestRank = rank;
+      }
+    }
+    return best;
+  }
+  if (preferOriginal) {
+    const original = eligible.find(track =>
+      /[-_]orig$/i.test(String(track.language).trim())
     );
+    if (original) return original;
   }
   return (
     eligible.find(track => /^en(?:[-_]|$)/i.test(String(track.language))) ||
@@ -2085,7 +2160,10 @@ export class McpV2Service {
       limits: {
         transcript_bytes: MAX_TRANSCRIPT_BYTES,
         translation_session_text_characters: 32 * 1024 * 1024,
-        translation_batch_segments: 40,
+        translation_batch_segments: TRANSLATION_BATCH_MAX_SEGMENTS,
+        translation_batch_default_segments: TRANSLATION_BATCH_DEFAULT_SEGMENTS,
+        translation_batch_source_characters:
+          TRANSLATION_BATCH_MAX_SOURCE_CHARACTERS,
         validation_issue_details: DEFAULT_SUBTITLE_ISSUE_DETAIL_LIMIT,
         project_glossary_terms: 1000,
       },
@@ -2360,11 +2438,37 @@ export class McpV2Service {
     const durationKnown =
       Number.isFinite(durationSeconds) && durationSeconds > 0;
     const durationHours = durationKnown ? durationSeconds / 3600 : null;
+    // Without an explicit method, prefer free sources: a supplied transcript,
+    // then creator captions, then YouTube automatic captions. Paid Stage5
+    // transcription remains the last resort and still needs create_job credit
+    // authorization.
+    const transcriptionMethodDefaulted =
+      !['transcript', 'mock'].includes(probe.source.kind) &&
+      !request.transcription_method;
+    const defaultCaptionOptions = { preferOriginal: true };
     const transcriptionMethod = ['transcript', 'mock'].includes(
       probe.source.kind
     )
       ? 'imported_transcript'
-      : request.transcription_method || 'stage5';
+      : request.transcription_method ||
+        (request.imported_transcript_path
+          ? 'imported_transcript'
+          : probe.source.kind === 'url' &&
+              chooseCaptionTrack(
+                probe.metadata?.caption_tracks,
+                'creator',
+                request.caption_language
+              )
+            ? 'creator_captions'
+            : probe.source.kind === 'url' &&
+                chooseCaptionTrack(
+                  probe.metadata?.caption_tracks,
+                  'automatic',
+                  request.caption_language,
+                  defaultCaptionOptions
+                )
+              ? 'youtube_auto_captions'
+              : 'stage5');
     const translationProvider = request.translation_provider || 'agent';
     const targetLanguage =
       request.target_language || profile.target_language || null;
@@ -2542,9 +2646,42 @@ export class McpV2Service {
       ? chooseCaptionTrack(
           probe.metadata?.caption_tracks,
           captionKind,
-          request.caption_language
+          request.caption_language,
+          transcriptionMethodDefaulted ? defaultCaptionOptions : undefined
         )
       : null;
+    if (
+      captionTrack &&
+      request.caption_language &&
+      String(captionTrack.language).trim() !==
+        String(request.caption_language).trim()
+    ) {
+      compatibility.push({
+        severity: 'info',
+        code: 'caption_language_matched_closest',
+        message: `No ${captionKind} caption track is exactly ${request.caption_language}; using the closest track, ${captionTrack.language}.`,
+        requested_language: request.caption_language,
+        selected_language: captionTrack.language,
+      });
+    }
+    if (transcriptionMethodDefaulted) {
+      compatibility.push(
+        transcriptionMethod === 'stage5'
+          ? {
+              severity: 'info',
+              code: 'paid_transcription_default',
+              message:
+                'No transcription_method was given and this source has no usable caption track or transcript, so the plan uses paid Stage5 audio transcription. create_job will refuse to start unless credit_authorization explicitly accepts the estimate. Only authorize it when the user asks for paid transcription; otherwise supply imported_transcript_path, or choose byo when the app has an active BYO transcription key.',
+            }
+          : {
+              severity: 'info',
+              code: 'free_transcription_default',
+              message: captionTrack
+                ? `No transcription_method was given; using free ${captionKind} captions (${captionTrack.language}) instead of paid transcription.`
+                : `No transcription_method was given; using free ${transcriptionMethod} instead of paid transcription.`,
+            }
+      );
+    }
     if (captionKind && probe.source.kind !== 'url') {
       compatibility.push({
         severity: 'blocking',
@@ -6107,7 +6244,7 @@ export class McpV2Service {
   getTranscriptBatch({
     job_id: jobId,
     mode = 'translate',
-    max_segments: maxSegments = 16,
+    max_segments: maxSegments = TRANSLATION_BATCH_DEFAULT_SEGMENTS,
   }) {
     const job = this.store.requireJob(jobId);
     const stage = job.stages[job.stage_index];

@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Sterowanie agentami",
-      "description": "Zezwalaj zewnętrznym agentom AI (Cursor, Codex itp.) na sterowanie aplikacją Translator przez lokalny interfejs MCP. Po włączeniu agenci mogą pobierać filmy, zarządzać biblioteką, edytować napisy i eksportować pliki do dozwolonych folderów.",
+      "description": "Zezwól Claude Code, Claude Desktop, Codex lub innemu agentowi MCP na sterowanie aplikacją Translator na tym komputerze. Po włączeniu agenci mogą pobierać filmy, zarządzać biblioteką, edytować i tłumaczyć napisy oraz eksportować pliki do dozwolonych folderów.",
       "enableLabel": "Zezwalaj agentom na sterowanie tą aplikacją",
       "enableAria": "Włącz sterowanie agentami",
       "connection": {
-        "title": "Połącz Codex lub ChatGPT",
-        "instructions": "Dodaj serwer MCP typu STDIO o nazwie „translator”, używając tej ścieżki uruchamiania. Zapisz serwer, a następnie uruchom ponownie Codex lub ChatGPT, aby pojawiły się nowe narzędzia."
+        "title": "Połącz Claude Code, Claude Desktop lub Codex",
+        "instructions": "Kliknij przycisk, aby zarejestrować serwer MCP „translator”. W przypadku innych agentów dodaj serwer MCP typu STDIO o nazwie „translator” z tą ścieżką uruchamiania, a następnie uruchom agenta ponownie, aby pojawiły się nowe narzędzia.",
+        "copyPath": "Kopiuj ścieżkę",
+        "copied": "Skopiowano",
+        "connectClaudeCode": "Połącz Claude Code",
+        "connectCodex": "Połącz Codex",
+        "connectClaudeDesktop": "Połącz Claude Desktop",
+        "connecting": "Łączenie…",
+        "connected": "Połączono z {{app}}. Rozpocznij nową sesję, aby wczytać narzędzia Translator.",
+        "alreadyConnected": "{{app}} ma już serwer Translator. Uruchom go ponownie, jeśli narzędzia się nie pojawiają.",
+        "desktopConnected": "Dodano Translator do Claude Desktop. Zamknij i ponownie otwórz Claude, aby go wczytać.",
+        "cliNotFound": "Nie znaleziono polecenia {{app}} na tym komputerze. Uruchom to w terminalu:",
+        "cliNotFoundCopied": "Nie znaleziono polecenia {{app}} na tym komputerze. Polecenie konfiguracji zostało skopiowane; wklej je do terminala:",
+        "failed": "Nie udało się połączyć z {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Włączone",
@@ -836,7 +848,27 @@
         "update": "Nie udało się zaktualizować ustawienia sterowania agentami.",
         "addDirectory": "Nie udało się dodać folderu.",
         "removeDirectory": "Nie udało się usunąć folderu."
-      }
+      },
+      "pitch": "Tłumacz za darmo w ramach subskrypcji Claude lub Codex, którą już masz."
+    },
+    "creditTransfer": {
+      "title": "Przenoszenie kredytów między komputerami",
+      "description": "Kupione kredyty i odblokowanie kluczy API można przenieść na inny komputer. Darmowe kredyty powitalne pozostają na tym komputerze.",
+      "moveButton": "Przenieś kredyty na inny komputer",
+      "receiveButton": "Odbierz kredyty",
+      "creating": "Tworzenie kodu…",
+      "copy": "Kopiuj",
+      "copied": "Skopiowano",
+      "summaryCredits": "Liczba przenoszonych kredytów: {{credits}}.",
+      "summaryByo": "Odblokowanie kluczy API również zostanie przeniesione.",
+      "expires": "Ten kod działa jednorazowo i wygasa za {{minutes}} min.",
+      "steps": "Na nowym komputerze: zainstaluj Translator, otwórz Ustawienia, wybierz „Odbierz kredyty” i wpisz ten kod.",
+      "inputLabel": "Kod z drugiego komputera",
+      "redeem": "Odbierz",
+      "redeeming": "Odbieranie…",
+      "received": "Odebrano kredyty: {{credits}}.",
+      "receivedNoCredits": "Kod zadziałał.",
+      "receivedByo": "Odblokowanie kluczy API jest aktywne na tym komputerze."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Brak kredytów.",
     "rechargeLink": "Doładuj →",
     "creditWarning": {
-      "message": "Kup kredyty w <settingsLink>{{settingsLinkText}}</settingsLink>, aby korzystać z funkcji tłumaczenia i transkrypcji.",
+      "message": "Pobieranie, edycja, eksport i tłumaczenie z własnym Claude lub Codex przez Sterowanie agentami są bezpłatne. Transkrypcja wymaga kredytów lub odblokowania kluczy API w <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Ustawienia"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Zachowaj źródło lub zdubbingowane multimedia, zapisując je poza obszarem roboczym aplikacji."
     },
     "calculatingCost": "Obliczanie kosztu...",
-    "notEnoughCredits": "Brak wystarczających kredytów"
+    "notEnoughCredits": "Brak wystarczających kredytów",
+    "welcomeCredits": {
+      "message": "Masz darmowe kredyty, aby wypróbować transkrypcję i tłumaczenie (około 20 minut wideo)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Znajdź w napisach...",
@@ -1058,7 +1093,9 @@
       "title": "Kredyty wyczerpane",
       "message": "Twoje kredyty AI zostały wyczerpane. Doładuj w Ustawieniach, a następnie wznów od miejsca, w którym skończyłeś.",
       "openSettings": "Otwórz ustawienia",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Transkrypcja wymaga kredytów",
+      "neverHadMessage": "Transkrypcja wymaga kredytów lub odblokowania kluczy API. Jedno i drugie znajdziesz w Ustawieniach. Tłumaczenie z własnym Claude lub Codex przez Sterowanie agentami jest bezpłatne."
     }
   },
   "progress": {

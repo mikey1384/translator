@@ -4,7 +4,12 @@ import type {
   ByoVideoSuggestionModel,
   ErrorReportContext,
   AgentBridgeRequest,
+  AgentMcpClientId,
+  AgentMcpConnectResult,
+  CreditHistorySummary,
   CreditPackId,
+  CreditTransferCodeResult,
+  CreditTransferRedeemResult,
   PurchaseFailureReason,
   PurchaseFunnelEvent,
   PurchasePlacement,
@@ -64,6 +69,12 @@ export function getAgentSocketStatus(): Promise<{
   restartRequired: true;
 }> {
   return window.electron.getAgentSocketStatus();
+}
+
+export function connectAgentMcpClient(
+  client: AgentMcpClientId
+): Promise<AgentMcpConnectResult> {
+  return window.electron.connectAgentMcpClient(client);
 }
 
 export function getAgentRuntimeContext(): Promise<Record<string, unknown>> {
@@ -294,6 +305,20 @@ export function refreshCreditSnapshot(force?: boolean): Promise<{
   checkoutSessionId?: string | null;
 } | null> {
   return window.electron.refreshCreditSnapshot(force);
+}
+
+export function createCreditTransferCode(): Promise<CreditTransferCodeResult> {
+  return window.electron.createCreditTransferCode();
+}
+
+export function redeemCreditTransfer(
+  code: string
+): Promise<CreditTransferRedeemResult> {
+  return window.electron.redeemCreditTransfer(code);
+}
+
+export function getCreditHistorySummary(): Promise<CreditHistorySummary | null> {
+  return window.electron.getCreditHistorySummary();
 }
 
 export function onCheckoutPending(callback: () => void): () => void {

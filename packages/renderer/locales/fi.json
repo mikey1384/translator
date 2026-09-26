@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Agenttiohjaus",
-      "description": "Salli ulkoisten tekoälyagenttien (Cursor, Codex ym.) ohjata tätä Translator-sovellusta paikallisen MCP-liittymän kautta. Kun asetus on käytössä, agentit voivat ladata videoita, hallita kirjastoasi, muokata tekstityksiä ja viedä tiedostoja sallittuihin kansioihin.",
+      "description": "Anna Claude Coden, Claude Desktopin, Codexin tai muun MCP-agentin ohjata Translatoria tällä tietokoneella. Kun asetus on käytössä, agentit voivat ladata videoita, hallita kirjastoasi, muokata ja kääntää tekstityksiä sekä viedä tiedostoja sallittuihin kansioihin.",
       "enableLabel": "Salli tämän sovelluksen agenttiohjaus",
       "enableAria": "Ota agenttiohjaus käyttöön",
       "connection": {
-        "title": "Yhdistä Codex tai ChatGPT",
-        "instructions": "Lisää STDIO-MCP-palvelin nimeltä ”translator” käyttäen tätä käynnistyspolkua. Tallenna palvelin ja käynnistä sitten Codex tai ChatGPT uudelleen, jotta uudet työkalut tulevat näkyviin."
+        "title": "Yhdistä Claude Code, Claude Desktop tai Codex",
+        "instructions": "Rekisteröi ”translator”-MCP-palvelin napsauttamalla painiketta. Muita agentteja varten lisää STDIO-MCP-palvelin nimeltä ”translator” käyttäen tätä käynnistyspolkua ja käynnistä agentti sitten uudelleen, jotta uudet työkalut tulevat näkyviin.",
+        "copyPath": "Kopioi polku",
+        "copied": "Kopioitu",
+        "connectClaudeCode": "Yhdistä Claude Code",
+        "connectCodex": "Yhdistä Codex",
+        "connectClaudeDesktop": "Yhdistä Claude Desktop",
+        "connecting": "Yhdistetään…",
+        "connected": "{{app}} on yhdistetty. Aloita uusi istunto ladataksesi Translatorin työkalut.",
+        "alreadyConnected": "Sovelluksessa {{app}} on jo Translator-palvelin. Käynnistä se uudelleen, jos työkalut eivät näy.",
+        "desktopConnected": "Translator lisättiin Claude Desktopiin. Sulje Claude ja avaa se uudelleen ladataksesi sen.",
+        "cliNotFound": "Komentoa {{app}} ei löytynyt tältä tietokoneelta. Suorita tämä päätteessä:",
+        "cliNotFoundCopied": "Komentoa {{app}} ei löytynyt tältä tietokoneelta. Asennuskomento kopioitiin; liitä se päätteeseen:",
+        "failed": "Sovelluksen {{app}} yhdistäminen epäonnistui: {{message}}"
       },
       "status": {
         "enabled": "Käytössä",
@@ -836,7 +848,27 @@
         "update": "Agenttiohjauksen asetusta ei voitu päivittää.",
         "addDirectory": "Kansiota ei voitu lisätä.",
         "removeDirectory": "Kansiota ei voitu poistaa."
-      }
+      },
+      "pitch": "Käännä ilmaiseksi Claude- tai Codex-tilauksella, joka sinulla jo on."
+    },
+    "creditTransfer": {
+      "title": "Siirrä krediittejä tietokoneiden välillä",
+      "description": "Ostetut krediitit ja API-avainten avauksen voi siirtää toiselle tietokoneelle. Ilmaiset tervetuliaiskrediitit jäävät tälle koneelle.",
+      "moveButton": "Siirrä krediitit toiselle tietokoneelle",
+      "receiveButton": "Vastaanota krediittejä",
+      "creating": "Luodaan koodia…",
+      "copy": "Kopioi",
+      "copied": "Kopioitu",
+      "summaryCredits": "{{credits}} krediittiä siirretään.",
+      "summaryByo": "Myös API-avainten avaus siirretään.",
+      "expires": "Tämä koodi toimii kerran ja vanhenee {{minutes}} minuutin kuluttua.",
+      "steps": "Uudella tietokoneella: asenna Translator, avaa Asetukset, valitse ”Vastaanota krediittejä” ja syötä tämä koodi.",
+      "inputLabel": "Koodi toiselta tietokoneeltasi",
+      "redeem": "Vastaanota",
+      "redeeming": "Vastaanotetaan…",
+      "received": "Vastaanotettiin {{credits}} krediittiä.",
+      "receivedNoCredits": "Koodi toimi.",
+      "receivedByo": "API-avainten avaus on käytössä tällä tietokoneella."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Ei krediittejä.",
     "rechargeLink": "Lataa →",
     "creditWarning": {
-      "message": "Osta krediittejä <settingsLink>{{settingsLinkText}}</settingsLink> käyttääksesi käännös- ja litterointiominaisuuksia.",
+      "message": "Lataaminen, muokkaaminen, vieminen ja kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista. Litterointi vaatii krediittejä tai API-avainten avauksen kohdassa <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Asetukset"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Säilytä haluamasi lähde- tai dubattu media sovelluksen työtilan ulkopuolella."
     },
     "calculatingCost": "Lasketaan kustannuksia...",
-    "notEnoughCredits": "Ei tarpeeksi krediittejä saatavilla"
+    "notEnoughCredits": "Ei tarpeeksi krediittejä saatavilla",
+    "welcomeCredits": {
+      "message": "Sinulla on ilmaisia krediittejä litteroinnin ja käännöksen kokeilemiseen (noin 20 minuuttia videota)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Etsi tekstityksissä...",
@@ -1058,7 +1093,9 @@
       "title": "Krediitit loppuivat",
       "message": "AI-krediittisi ovat loppuneet. Lataa lisää Asetuksissa ja jatka siitä, mihin jäit.",
       "openSettings": "Avaa asetukset",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Litterointi vaatii krediittejä",
+      "neverHadMessage": "Litterointi vaatii krediittejä tai API-avainten avauksen. Saat kumman tahansa Asetuksista. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista."
     }
   },
   "progress": {

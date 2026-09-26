@@ -3,6 +3,21 @@ export const MCP_V2_SCHEMA_VERSION = 1;
 export const MCP_SERVER_VERSION = '0.2.3';
 export const WATCH_JOB_DEFAULT_WAIT_MS = 25_000;
 export const WATCH_JOB_MAX_WAIT_MS = 50_000;
+export const TRANSLATION_BATCH_DEFAULT_SEGMENTS = 100;
+export const TRANSLATION_BATCH_MAX_SEGMENTS = 250;
+// Issued source text is bounded so that even a translation several times
+// longer stays under submit_translation_batch's 200,000-character cap.
+export const TRANSLATION_BATCH_MAX_SOURCE_CHARACTERS = 50_000;
+
+export const MCP_SERVER_INSTRUCTIONS = [
+  'Translator subtitles videos. The free path spends no Stage5 credits: your own subscription does the translating.',
+  '1. probe_source to see duration and caption tracks.',
+  '2. plan_job with translation_provider "agent" and outputs {output_directory, subtitle_formats}. Leave transcription_method unset (or pick creator_captions / youtube_auto_captions) so existing captions are used; check compatibility and credit_usage.',
+  '3. create_job with the plan_hash.',
+  '4. Loop get_transcript_batch then submit_translation_batch until complete; submit every issued id.',
+  '5. The job validates (validate_translation shows issues) and writes the subtitle files; render_outputs burns them into video when presets were planned. watch_job / get_job_manifest report results.',
+  'Paid steps spend Stage5 credits: stage5 audio transcription, stage5 translation, summaries, dubbing, and the legacy app_start_* inference tools. Use them only when the user asks, and never authorize credits on your own.',
+].join('\n');
 
 export const MCP_SERVER_NAMES = Object.freeze({
   development: 'translator-development-mcp',
@@ -297,7 +312,8 @@ const planJobSchema = Object.freeze({
         'reuse',
         'none',
       ],
-      default: 'stage5',
+      description:
+        'Omit to use the free source automatically: an imported transcript, else creator captions, else YouTube automatic captions. Falls back to paid stage5 only when none exist.',
     },
     translation_provider: {
       type: 'string',
@@ -305,7 +321,13 @@ const planJobSchema = Object.freeze({
       default: 'agent',
     },
     target_language: { type: 'string', minLength: 2, maxLength: 80 },
-    caption_language: { type: 'string', minLength: 1, maxLength: 64 },
+    caption_language: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 64,
+      description:
+        'Preferred caption track language. Matches exactly, then case-insensitively, then by language (en ~ en-US, zh-Hans ~ zh-CN); the plan reports the chosen track.',
+    },
     imported_transcript_path: {
       type: 'string',
       minLength: 1,
@@ -624,7 +646,7 @@ export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
   },
   get_transcript_batch: {
     description:
-      'Return one context-aware batch for external-agent translation with stable segment IDs, context, glossary, and a submission-bound batch ID.',
+      'Return one context-aware batch for external-agent translation with stable segment IDs, context, glossary, and a submission-bound batch ID. Batches default to 100 segments (max 250) and are trimmed at a semantic boundary or 50,000 source characters.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -634,7 +656,12 @@ export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
           enum: ['translate', 'review'],
           default: 'translate',
         },
-        max_segments: { type: 'integer', minimum: 1, maximum: 40, default: 16 },
+        max_segments: {
+          type: 'integer',
+          minimum: 1,
+          maximum: TRANSLATION_BATCH_MAX_SEGMENTS,
+          default: TRANSLATION_BATCH_DEFAULT_SEGMENTS,
+        },
       },
       required: ['job_id'],
       additionalProperties: false,
@@ -652,7 +679,7 @@ export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
         translations: {
           type: 'array',
           minItems: 1,
-          maxItems: 40,
+          maxItems: TRANSLATION_BATCH_MAX_SEGMENTS,
           items: {
             type: 'object',
             properties: {

@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Kontrol Agen",
-      "description": "Izinkan agen AI eksternal (Cursor, Codex, dan lainnya) mengontrol aplikasi Translator ini melalui antarmuka MCP lokal. Jika diaktifkan, agen dapat mengunduh video, mengelola pustaka Anda, mengedit subtitel, dan mengekspor file ke folder yang diizinkan.",
+      "description": "Izinkan Claude Code, Claude Desktop, Codex, atau agen MCP lain mengontrol Translator di komputer ini. Jika diaktifkan, agen dapat mengunduh video, mengelola pustaka Anda, mengedit dan menerjemahkan subtitel, serta mengekspor file ke direktori yang diizinkan.",
       "enableLabel": "Izinkan agen mengontrol aplikasi ini",
       "enableAria": "Aktifkan kontrol agen",
       "connection": {
-        "title": "Hubungkan Codex atau ChatGPT",
-        "instructions": "Tambahkan server MCP STDIO bernama “translator” menggunakan jalur peluncur ini. Simpan server, lalu mulai ulang Codex atau ChatGPT agar alat baru muncul."
+        "title": "Hubungkan Claude Code, Claude Desktop, atau Codex",
+        "instructions": "Klik tombol untuk mendaftarkan server MCP “translator”. Untuk agen lain, tambahkan server STDIO MCP bernama “translator” dengan jalur peluncur ini, lalu mulai ulang agen agar alat baru muncul.",
+        "copyPath": "Salin jalur",
+        "copied": "Disalin",
+        "connectClaudeCode": "Hubungkan Claude Code",
+        "connectCodex": "Hubungkan Codex",
+        "connectClaudeDesktop": "Hubungkan Claude Desktop",
+        "connecting": "Menghubungkan…",
+        "connected": "{{app}} terhubung. Mulai sesi baru untuk memuat alat Translator.",
+        "alreadyConnected": "{{app}} sudah memiliki server Translator. Mulai ulang jika alat tidak muncul.",
+        "desktopConnected": "Translator ditambahkan ke Claude Desktop. Keluar lalu buka kembali Claude untuk memuatnya.",
+        "cliNotFound": "Perintah {{app}} tidak ditemukan di komputer ini. Jalankan ini di terminal:",
+        "cliNotFoundCopied": "Perintah {{app}} tidak ditemukan di komputer ini. Perintah penyiapan telah disalin; tempelkan ke terminal:",
+        "failed": "Tidak dapat menghubungkan {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Aktif",
@@ -836,7 +848,27 @@
         "update": "Pengaturan kontrol agen gagal diperbarui.",
         "addDirectory": "Folder gagal ditambahkan.",
         "removeDirectory": "Folder gagal dihapus."
-      }
+      },
+      "pitch": "Terjemahkan gratis dengan langganan Claude atau Codex yang sudah Anda miliki."
+    },
+    "creditTransfer": {
+      "title": "Pindahkan kredit antarkomputer",
+      "description": "Kredit yang dibeli dan buka kunci API dapat dipindahkan ke komputer lain. Kredit sambutan gratis tetap di komputer ini.",
+      "moveButton": "Pindahkan kredit ke komputer lain",
+      "receiveButton": "Terima kredit",
+      "creating": "Membuat kode…",
+      "copy": "Salin",
+      "copied": "Disalin",
+      "summaryCredits": "{{credits}} kredit akan dipindahkan.",
+      "summaryByo": "Buka kunci API juga akan ikut dipindahkan.",
+      "expires": "Kode ini hanya berlaku sekali dan kedaluwarsa dalam {{minutes}} menit.",
+      "steps": "Di komputer baru: instal Translator, buka Pengaturan, pilih “Terima kredit”, lalu masukkan kode ini.",
+      "inputLabel": "Kode dari komputer Anda yang lain",
+      "redeem": "Terima",
+      "redeeming": "Menerima…",
+      "received": "Menerima {{credits}} kredit.",
+      "receivedNoCredits": "Kode berhasil digunakan.",
+      "receivedByo": "Buka kunci API aktif di komputer ini."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Tidak ada kredit.",
     "rechargeLink": "Isi Ulang →",
     "creditWarning": {
-      "message": "Beli kredit di <settingsLink>{{settingsLinkText}}</settingsLink> untuk menggunakan fitur terjemahan dan transkripsi.",
+      "message": "Mengunduh, mengedit, mengekspor, dan menerjemahkan dengan Claude atau Codex Anda sendiri melalui Kontrol Agen itu gratis. Transkripsi memerlukan kredit atau buka kunci API di <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Pengaturan"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Simpan media sumber atau media dubbing yang ingin Anda pertahankan di luar ruang kerja aplikasi."
     },
     "calculatingCost": "Menghitung biaya...",
-    "notEnoughCredits": "Kredit tidak mencukupi"
+    "notEnoughCredits": "Kredit tidak mencukupi",
+    "welcomeCredits": {
+      "message": "Anda memiliki kredit gratis untuk mencoba transkripsi dan terjemahan (sekitar 20 menit video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Cari dalam subtitle...",
@@ -1058,7 +1093,9 @@
       "title": "Kredit habis",
       "message": "Kredit AI Anda telah habis. Isi ulang di Pengaturan, lalu lanjutkan dari tempat Anda berhenti.",
       "openSettings": "Buka Pengaturan",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Transkripsi memerlukan kredit",
+      "neverHadMessage": "Transkripsi memerlukan kredit atau buka kunci API. Dapatkan salah satunya di Pengaturan. Menerjemahkan dengan Claude atau Codex Anda sendiri melalui Kontrol Agen itu gratis."
     }
   },
   "progress": {

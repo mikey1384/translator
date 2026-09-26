@@ -15,6 +15,7 @@ import ByoOpenAiSection from './ByoOpenAiSection';
 import SiteConnectionSection from './SiteConnectionSection';
 import PrivacySection from './PrivacySection';
 import AgentControlSection from './AgentControlSection';
+import CreditTransferSection from './CreditTransferSection';
 import { hasAnyByoEntitlementUnlocked } from '../../state/byo-runtime';
 import { settingsCenterColumnStyles, settingsPageLayoutStyles } from './styles';
 
@@ -75,6 +76,10 @@ export default function SettingsPage() {
 
       {/* —————————————————  STAGE5 CREDITS SECTION  ————————————————— */}
       {showStage5Section && <CreditCard />}
+      <CreditTransferSection />
+
+      {/* —————————————————  AGENT CONTROL (free translation with your own agent)  ————————————————— */}
+      <AgentControlSection />
 
       {/* —————————————————  BYO MODE TOGGLE (if unlocked)  ————————————————— */}
       <ApiKeyModeToggle />
@@ -108,9 +113,6 @@ export default function SettingsPage() {
       )}
 
       {isAdmin && <SiteConnectionSection />}
-
-      {/* —————————————————  AGENT CONTROL SECTION  ————————————————— */}
-      <AgentControlSection />
 
       {/* —————————————————  BYO API KEYS SECTION (if unlocked + API-key mode ON)  ————————————————— */}
       <ByoOpenAiSection />

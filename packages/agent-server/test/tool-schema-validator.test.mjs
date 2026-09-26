@@ -56,7 +56,6 @@ test('plan validation allows a saved profile to supply the target language', () 
     {
       source: { mock: true },
       project_profile: 'stage5_korean',
-      transcription_method: 'stage5',
       translation_provider: 'agent',
       include_summary: false,
       include_highlights: false,
@@ -337,5 +336,40 @@ test('packaged MCP preserves a structured editorial Short and rejects invalid fr
   input.highlights[0].editorial.shots[0].centerX = 3;
   assert.throws(() =>
     parseToolArguments(TOOL_SCHEMAS.app_highlights_set, input)
+  );
+});
+
+test('translation batch tools accept 250-segment batches and default to 100', () => {
+  const getSchema = MCP_V2_TOOL_DEFINITIONS.get_transcript_batch.inputSchema;
+  assert.equal(
+    parseToolArguments(getSchema, { job_id: 'job_12345678' }).max_segments,
+    100
+  );
+  assert.equal(
+    parseToolArguments(getSchema, { job_id: 'job_12345678', max_segments: 250 })
+      .max_segments,
+    250
+  );
+  assert.throws(
+    () =>
+      parseToolArguments(getSchema, {
+        job_id: 'job_12345678',
+        max_segments: 251,
+      }),
+    TypeError
+  );
+  const submitSchema =
+    MCP_V2_TOOL_DEFINITIONS.submit_translation_batch.inputSchema;
+  const translations = Array.from({ length: 250 }, (_, index) => ({
+    id: `seg_${index}`,
+    text: '번역',
+  }));
+  assert.equal(
+    parseToolArguments(submitSchema, {
+      job_id: 'job_12345678',
+      batch_id: 'batch-12345678',
+      translations,
+    }).translations.length,
+    250
   );
 });

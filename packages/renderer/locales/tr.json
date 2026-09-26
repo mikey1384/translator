@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Aracı Denetimi",
-      "description": "Harici yapay zekâ aracıların (Cursor, Codex vb.) bu Translator uygulamasını yerel bir MCP arayüzü üzerinden denetlemesine izin verin. Etkinleştirildiğinde aracılar video indirebilir, kitaplığınızı yönetebilir, altyazıları düzenleyebilir ve dosyaları izin verilen klasörlere aktarabilir.",
+      "description": "Claude Code, Claude Desktop, Codex veya başka bir MCP aracısının bu bilgisayardaki Translator’ı denetlemesine izin verin. Etkinleştirildiğinde aracılar video indirebilir, kitaplığınızı yönetebilir, altyazıları düzenleyip çevirebilir ve dosyaları izin verilen klasörlere aktarabilir.",
       "enableLabel": "Aracıların bu uygulamayı denetlemesine izin ver",
       "enableAria": "Aracı denetimini etkinleştir",
       "connection": {
-        "title": "Codex veya ChatGPT’yi bağla",
-        "instructions": "Bu başlatıcı yolunu kullanarak “translator” adlı bir STDIO MCP sunucusu ekleyin. Sunucuyu kaydedin, ardından yeni araçların görünmesi için Codex’i veya ChatGPT’yi yeniden başlatın."
+        "title": "Claude Code, Claude Desktop veya Codex’i bağlayın",
+        "instructions": "“translator” MCP sunucusunu kaydetmek için bir düğmeye tıklayın. Diğer aracılar için bu başlatıcı yolunu kullanarak “translator” adlı bir STDIO MCP sunucusu ekleyin, ardından yeni araçların görünmesi için aracıyı yeniden başlatın.",
+        "copyPath": "Yolu kopyala",
+        "copied": "Kopyalandı",
+        "connectClaudeCode": "Claude Code’u bağla",
+        "connectCodex": "Codex’i bağla",
+        "connectClaudeDesktop": "Claude Desktop’ı bağla",
+        "connecting": "Bağlanıyor…",
+        "connected": "{{app}} bağlandı. Translator araçlarını yüklemek için yeni bir oturum başlatın.",
+        "alreadyConnected": "{{app}} zaten Translator sunucusuna sahip. Araçlar görünmezse yeniden başlatın.",
+        "desktopConnected": "Translator, Claude Desktop’a eklendi. Yüklemek için Claude’dan çıkıp yeniden açın.",
+        "cliNotFound": "{{app}} komutu bu bilgisayarda bulunamadı. Bunu bir terminalde çalıştırın:",
+        "cliNotFoundCopied": "{{app}} komutu bu bilgisayarda bulunamadı. Kurulum komutu kopyalandı; bir terminale yapıştırın:",
+        "failed": "{{app}} bağlanamadı: {{message}}"
       },
       "status": {
         "enabled": "Etkin",
@@ -836,7 +848,27 @@
         "update": "Aracı denetimi ayarı güncellenemedi.",
         "addDirectory": "Klasör eklenemedi.",
         "removeDirectory": "Klasör kaldırılamadı."
-      }
+      },
+      "pitch": "Zaten sahip olduğunuz Claude veya Codex aboneliğiyle ücretsiz çeviri yapın."
+    },
+    "creditTransfer": {
+      "title": "Kredileri bilgisayarlar arasında taşıyın",
+      "description": "Satın alınan krediler ve API anahtarı kilidi başka bir bilgisayara taşınabilir. Ücretsiz hoş geldin kredileri bu bilgisayarda kalır.",
+      "moveButton": "Kredileri başka bir bilgisayara taşı",
+      "receiveButton": "Kredileri al",
+      "creating": "Kod oluşturuluyor…",
+      "copy": "Kopyala",
+      "copied": "Kopyalandı",
+      "summaryCredits": "{{credits}} kredi taşınacak.",
+      "summaryByo": "API anahtarı kilidi de taşınacak.",
+      "expires": "Bu kod tek kullanımlıktır ve {{minutes}} dakika içinde geçerliliğini yitirir.",
+      "steps": "Yeni bilgisayarda: Translator’ı yükleyin, Ayarlar’ı açın, “Kredileri al” seçeneğini seçin ve bu kodu girin.",
+      "inputLabel": "Diğer bilgisayarınızdaki kod",
+      "redeem": "Al",
+      "redeeming": "Alınıyor…",
+      "received": "{{credits}} kredi alındı.",
+      "receivedNoCredits": "Kod çalıştı.",
+      "receivedByo": "API anahtarı kilidi bu bilgisayarda etkin."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Kredi yok.",
     "rechargeLink": "Yeniden Yükle →",
     "creditWarning": {
-      "message": "Çeviri ve transkripsiyon özelliklerini kullanmak için <settingsLink>{{settingsLinkText}}</settingsLink> bölümünden kredi satın alın.",
+      "message": "Aracı Denetimi üzerinden kendi Claude veya Codex’inizle indirme, düzenleme, dışa aktarma ve çeviri ücretsizdir. Transkripsiyon için kredi veya <settingsLink>{{settingsLinkText}}</settingsLink> bölümündeki API anahtarı kilidinin açılması gerekir.",
       "settingsLinkText": "Ayarlar"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Korumak istediğiniz kaynak veya dublajlı medyayı uygulama çalışma alanının dışına kaydedin."
     },
     "calculatingCost": "Maliyet hesaplanıyor...",
-    "notEnoughCredits": "Yeterli kredi yok"
+    "notEnoughCredits": "Yeterli kredi yok",
+    "welcomeCredits": {
+      "message": "Transkripsiyon ve çeviriyi denemek için ücretsiz kredileriniz var (yaklaşık 20 dakikalık video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Altyazılarda ara...",
@@ -1058,7 +1093,9 @@
       "title": "Krediler tükendi",
       "message": "Yapay zeka kredileriniz tükendi. Ayarlar'dan yeniden yükleyin, ardından kaldığınız yerden devam edin.",
       "openSettings": "Ayarları Aç",
-      "ok": "Tamam"
+      "ok": "Tamam",
+      "neverHadTitle": "Transkripsiyon için kredi gerekir",
+      "neverHadMessage": "Transkripsiyon için kredi veya API anahtarı kilidinin açılması gerekir. İkisini de Ayarlar’dan edinebilirsiniz. Aracı Denetimi üzerinden kendi Claude veya Codex’inizle çeviri ücretsizdir."
     }
   },
   "progress": {

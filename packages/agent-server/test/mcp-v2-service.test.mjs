@@ -12,6 +12,8 @@ import { PersistentJobStore } from '../src/job-store.mjs';
 import {
   bindAppObservationToPlan,
   buildAss,
+  captionLanguageMatchRank,
+  chooseCaptionTrack,
   McpV2Service,
   legacyToolDescription,
   legacyToolBilling,
@@ -1836,7 +1838,8 @@ test('planning exposes limits and blocks ambiguous or destinationless outputs', 
     capabilities.platform_limits.youtube.maximum_duration_seconds,
     43_200
   );
-  assert.equal(capabilities.limits.translation_batch_segments, 40);
+  assert.equal(capabilities.limits.translation_batch_segments, 250);
+  assert.equal(capabilities.limits.translation_batch_default_segments, 100);
   assert.equal(capabilities.active_provider_routes.translation.kind, 'stage5');
 });
 
@@ -5218,5 +5221,162 @@ test('legacy paid tools are unmistakably labeled as lacking v2 safeguards', () =
       run_to: 'download',
     }).will_consume_stage5_credits,
     false
+  );
+});
+
+function captionProbeFixture(captionTracks) {
+  return {
+    handlers: {
+      probeSource: async ({ source }) => ({
+        source: {
+          canonical_url: source.url,
+          extractor: 'youtube',
+          media_id: 'caption-default-video',
+        },
+        metadata: {
+          title: 'Caption default',
+          duration_seconds: 600,
+          caption_tracks: captionTracks,
+        },
+        compatibility: [],
+      }),
+    },
+  };
+}
+
+test('plan_job defaults to free captions and only falls back to paid transcription with a warning', async t => {
+  const creator = await setup(
+    t,
+    'production',
+    captionProbeFixture([
+      { kind: 'automatic', language: 'en' },
+      { kind: 'creator', language: 'en-US' },
+    ])
+  );
+  const creatorPlan = data(
+    await creator.service.execute('plan_job', {
+      source: { url: 'https://example.com/creator' },
+      translation_provider: 'agent',
+      target_language: 'Korean',
+    })
+  );
+  assert.equal(creatorPlan.transcription.method, 'creator_captions');
+  assert.equal(creatorPlan.transcription.caption_track.language, 'en-US');
+  assert.equal(creatorPlan.credit_usage.total_stage5_credits, 0);
+  assert.ok(
+    creatorPlan.compatibility.some(
+      item => item.code === 'free_transcription_default'
+    )
+  );
+
+  const automatic = await setup(
+    t,
+    'production',
+    captionProbeFixture([
+      { kind: 'automatic', language: 'en' },
+      { kind: 'automatic', language: 'ko-orig' },
+      { kind: 'automatic', language: 'ko' },
+    ])
+  );
+  const automaticPlan = data(
+    await automatic.service.execute('plan_job', {
+      source: { url: 'https://example.com/automatic' },
+      target_language: 'English',
+    })
+  );
+  assert.equal(automaticPlan.transcription.method, 'youtube_auto_captions');
+  assert.equal(
+    automaticPlan.transcription.caption_track.language,
+    'ko-orig',
+    'the original-language speech track beats a machine-translated one'
+  );
+  assert.equal(automaticPlan.credit_usage.total_stage5_credits, 0);
+
+  const none = await setup(t, 'production', captionProbeFixture([]));
+  const paidPlan = data(
+    await none.service.execute('plan_job', {
+      source: { url: 'https://example.com/no-captions' },
+      translation_provider: 'agent',
+      target_language: 'Korean',
+    })
+  );
+  assert.equal(paidPlan.transcription.method, 'stage5');
+  assert.ok(paidPlan.credit_usage.transcription > 0);
+  const warning = paidPlan.compatibility.find(
+    item => item.code === 'paid_transcription_default'
+  );
+  assert.match(warning.message, /credit_authorization/);
+  const refused = executionError(
+    await none.service.execute('create_job', {
+      plan_hash: paidPlan.plan_hash,
+      idempotency_key: 'paid-default-needs-authorization',
+    })
+  );
+  assert.match(refused.message, /Explicitly authorize/);
+
+  const explicit = data(
+    await creator.service.execute('plan_job', {
+      source: { url: 'https://example.com/creator' },
+      transcription_method: 'stage5',
+      translation_provider: 'agent',
+      target_language: 'Korean',
+    })
+  );
+  assert.equal(explicit.transcription.method, 'stage5');
+  assert.equal(explicit.transcription.caption_track, null);
+  assert.ok(
+    !explicit.compatibility.some(item =>
+      ['free_transcription_default', 'paid_transcription_default'].includes(
+        item.code
+      )
+    )
+  );
+});
+
+test('caption language matching falls back from exact to case-insensitive to the same language', async t => {
+  const track = (language, kind = 'creator') => ({ kind, language });
+  const pick = (tracks, requested) =>
+    chooseCaptionTrack(tracks, 'creator', requested)?.language ?? null;
+
+  assert.equal(pick([track('en-US'), track('en')], 'en'), 'en');
+  assert.equal(pick([track('EN')], 'en'), 'EN');
+  assert.equal(pick([track('en-GB'), track('en-US')], 'en'), 'en-GB');
+  assert.equal(pick([track('en-GB'), track('en')], 'en-US'), 'en');
+  assert.equal(pick([track('en-GB')], 'en_US'), 'en-GB');
+  assert.equal(pick([track('pt-BR')], 'pt'), 'pt-BR');
+  assert.equal(pick([track('pt-PT'), track('pt')], 'pt-BR'), 'pt');
+  assert.equal(pick([track('zh-TW'), track('zh-CN')], 'zh-Hans'), 'zh-CN');
+  assert.equal(pick([track('zh-Hans')], 'zh-CN'), 'zh-Hans');
+  assert.equal(pick([track('zh-Hant')], 'zh-Hans'), null);
+  assert.equal(pick([track('zh-Hant')], 'zh'), 'zh-Hant');
+  assert.equal(pick([track('es')], 'en'), null);
+  assert.equal(
+    pick([track('en', 'automatic'), track('en-US')], 'en'),
+    'en-US',
+    'only tracks of the requested kind are eligible'
+  );
+  assert.equal(captionLanguageMatchRank('en', 'en-orig'), 2);
+  assert.equal(captionLanguageMatchRank('ko', 'kok'), null);
+
+  const { service } = await setup(
+    t,
+    'production',
+    captionProbeFixture([track('en-GB'), track('fr')])
+  );
+  const plan = data(
+    await service.execute('plan_job', {
+      source: { url: 'https://example.com/closest' },
+      transcription_method: 'creator_captions',
+      caption_language: 'en',
+      target_language: 'Korean',
+    })
+  );
+  assert.equal(plan.transcription.caption_track.language, 'en-GB');
+  const matched = plan.compatibility.find(
+    item => item.code === 'caption_language_matched_closest'
+  );
+  assert.equal(matched.selected_language, 'en-GB');
+  assert.ok(
+    !plan.compatibility.some(item => item.code === 'caption_track_unavailable')
   );
 });

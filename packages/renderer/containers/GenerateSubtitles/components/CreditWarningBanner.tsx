@@ -14,7 +14,7 @@ export default function CreditWarningBanner({
   const { t } = useTranslation();
 
   return (
-    <Alert variant="warning">
+    <Alert variant="info">
       <div
         style={{
           display: 'flex',

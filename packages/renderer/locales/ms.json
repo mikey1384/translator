@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Kawalan Ejen",
-      "description": "Benarkan ejen AI luaran (Cursor, Codex dan sebagainya) mengawal aplikasi Translator ini melalui antara muka MCP setempat. Apabila didayakan, ejen boleh memuat turun video, mengurus pustaka anda, menyunting sari kata dan mengeksport fail ke folder yang dibenarkan.",
+      "description": "Benarkan Claude Code, Claude Desktop, Codex atau ejen MCP lain mengawal Translator pada komputer ini. Apabila didayakan, ejen boleh memuat turun video, mengurus pustaka anda, menyunting dan menterjemah sari kata, serta mengeksport fail ke direktori yang dibenarkan.",
       "enableLabel": "Benarkan kawalan ejen untuk aplikasi ini",
       "enableAria": "Dayakan kawalan ejen",
       "connection": {
-        "title": "Sambungkan Codex atau ChatGPT",
-        "instructions": "Tambah pelayan MCP STDIO bernama “translator” menggunakan laluan pelancar ini. Simpan pelayan, kemudian mulakan semula Codex atau ChatGPT supaya alat baharu muncul."
+        "title": "Sambungkan Claude Code, Claude Desktop atau Codex",
+        "instructions": "Klik butang untuk mendaftarkan pelayan MCP “translator”. Untuk ejen lain, tambah pelayan STDIO MCP bernama “translator” dengan laluan pelancar ini, kemudian mulakan semula ejen supaya alatan baharu muncul.",
+        "copyPath": "Salin laluan",
+        "copied": "Disalin",
+        "connectClaudeCode": "Sambungkan Claude Code",
+        "connectCodex": "Sambungkan Codex",
+        "connectClaudeDesktop": "Sambungkan Claude Desktop",
+        "connecting": "Menyambung…",
+        "connected": "{{app}} telah disambungkan. Mulakan sesi baharu untuk memuatkan alatan Translator.",
+        "alreadyConnected": "{{app}} sudah mempunyai pelayan Translator. Mulakan semula jika alatan tidak muncul.",
+        "desktopConnected": "Translator telah ditambah pada Claude Desktop. Keluar dan buka semula Claude untuk memuatkannya.",
+        "cliNotFound": "Tidak dapat menemui arahan {{app}} pada komputer ini. Jalankan ini dalam terminal:",
+        "cliNotFoundCopied": "Tidak dapat menemui arahan {{app}} pada komputer ini. Arahan persediaan telah disalin; tampalkannya ke dalam terminal:",
+        "failed": "Tidak dapat menyambungkan {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Didayakan",
@@ -836,7 +848,27 @@
         "update": "Tetapan kawalan ejen gagal dikemas kini.",
         "addDirectory": "Folder gagal ditambah.",
         "removeDirectory": "Folder gagal dialih keluar."
-      }
+      },
+      "pitch": "Terjemah secara percuma dengan langganan Claude atau Codex yang sudah anda miliki."
+    },
+    "creditTransfer": {
+      "title": "Pindahkan kredit antara komputer",
+      "description": "Kredit yang dibeli dan buka kunci API boleh dipindahkan ke komputer lain. Kredit alu-aluan percuma kekal pada komputer ini.",
+      "moveButton": "Pindahkan kredit ke komputer lain",
+      "receiveButton": "Terima kredit",
+      "creating": "Mencipta kod…",
+      "copy": "Salin",
+      "copied": "Disalin",
+      "summaryCredits": "{{credits}} kredit akan dipindahkan.",
+      "summaryByo": "Buka kunci API juga akan turut dipindahkan.",
+      "expires": "Kod ini hanya boleh digunakan sekali dan tamat tempoh dalam {{minutes}} minit.",
+      "steps": "Pada komputer baharu: pasang Translator, buka Tetapan, pilih “Terima kredit” dan masukkan kod ini.",
+      "inputLabel": "Kod daripada komputer anda yang lain",
+      "redeem": "Terima",
+      "redeeming": "Menerima…",
+      "received": "{{credits}} kredit diterima.",
+      "receivedNoCredits": "Kod berjaya digunakan.",
+      "receivedByo": "Buka kunci API kini aktif pada komputer ini."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Tiada kredit.",
     "rechargeLink": "Isi Semula →",
     "creditWarning": {
-      "message": "Beli kredit dalam <settingsLink>{{settingsLinkText}}</settingsLink> untuk menggunakan ciri terjemahan dan transkripsi.",
+      "message": "Memuat turun, menyunting, mengeksport dan menterjemah dengan Claude atau Codex anda sendiri melalui Kawalan Ejen adalah percuma. Transkripsi memerlukan kredit atau buka kunci API dalam <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Tetapan"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Simpan mana-mana media sumber atau media alih suara yang mahu anda kekalkan di luar ruang kerja aplikasi."
     },
     "calculatingCost": "Mengira kos...",
-    "notEnoughCredits": "Kredit tidak mencukupi"
+    "notEnoughCredits": "Kredit tidak mencukupi",
+    "welcomeCredits": {
+      "message": "Anda mempunyai kredit percuma untuk mencuba transkripsi dan terjemahan (kira-kira 20 minit video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Cari dalam sarikata...",
@@ -1058,7 +1093,9 @@
       "title": "Kredit habis",
       "message": "Kredit AI anda telah habis. Isi semula dalam Tetapan, kemudian teruskan dari tempat anda berhenti.",
       "openSettings": "Buka Tetapan",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Transkripsi memerlukan kredit",
+      "neverHadMessage": "Transkripsi memerlukan kredit atau buka kunci API. Dapatkan salah satunya dalam Tetapan. Menterjemah dengan Claude atau Codex anda sendiri melalui Kawalan Ejen adalah percuma."
     }
   },
   "progress": {

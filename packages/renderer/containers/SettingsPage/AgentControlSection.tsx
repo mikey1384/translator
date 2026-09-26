@@ -5,6 +5,10 @@ import Section from '../../components/Section';
 import Switch from '../../components/Switch';
 import { colors } from '../../styles';
 import * as SystemIPC from '../../ipc/system';
+import type {
+  AgentMcpClientId,
+  AgentMcpConnectResult,
+} from '@shared-types/app';
 import { settingsCenterColumnStyles } from './styles';
 
 const infoBoxStyles = css`
@@ -126,6 +130,52 @@ const launcherPathStyles = css`
   user-select: text;
 `;
 
+const pitchStyles = css`
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: ${colors.text};
+`;
+
+const connectRowStyles = css`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+`;
+
+const secondaryButtonStyles = css`
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  color: ${colors.text};
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: ${colors.grayLight};
+    border-color: ${colors.gray};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const connectMessageStyles = (tone: 'ok' | 'warn' | 'error') => css`
+  margin: 10px 0 0;
+  font-size: 0.88rem;
+  color: ${tone === 'ok'
+    ? '#22c55e'
+    : tone === 'error'
+      ? colors.danger
+      : colors.text};
+  overflow-wrap: anywhere;
+`;
+
 const permissionListStyles = css`
   padding-left: 20px;
   margin: 8px 0;
@@ -165,6 +215,134 @@ export default function AgentControlSection() {
   const [clientsConnected, setClientsConnected] = useState(0);
   const [launcherPath, setLauncherPath] = useState<string | null>(null);
   const authoritativeRevisionRef = useRef(0);
+  const [pathCopied, setPathCopied] = useState(false);
+  const [connecting, setConnecting] = useState<AgentMcpClientId | null>(null);
+  const [connectOutcome, setConnectOutcome] = useState<{
+    result: AgentMcpConnectResult;
+    commandCopied: boolean;
+  } | null>(null);
+
+  const appNameFor = (client: AgentMcpClientId) =>
+    client === 'claude-code'
+      ? 'Claude Code'
+      : client === 'codex'
+        ? 'Codex'
+        : 'Claude Desktop';
+
+  const copyText = async (text: string): Promise<boolean> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleCopyLauncherPath = async () => {
+    if (!launcherPath) return;
+    if (await copyText(launcherPath)) {
+      setPathCopied(true);
+      setTimeout(() => setPathCopied(false), 2000);
+    }
+  };
+
+  const handleConnect = async (client: AgentMcpClientId) => {
+    if (connecting) return;
+    setConnecting(client);
+    setConnectOutcome(null);
+    try {
+      const result = await SystemIPC.connectAgentMcpClient(client);
+      const commandCopied =
+        result.status === 'cli-not-found' && result.command
+          ? await copyText(result.command)
+          : false;
+      setConnectOutcome({ result, commandCopied });
+    } catch (error: any) {
+      setConnectOutcome({
+        result: {
+          status: 'failed',
+          client,
+          message: String(error?.message || error),
+        },
+        commandCopied: false,
+      });
+    } finally {
+      setConnecting(null);
+    }
+  };
+
+  const renderConnectOutcome = () => {
+    if (!connectOutcome) return null;
+    const { result, commandCopied } = connectOutcome;
+    const app = appNameFor(result.client);
+    if (
+      result.status === 'connected' ||
+      result.status === 'already-connected'
+    ) {
+      const text =
+        result.client === 'claude-desktop'
+          ? result.status === 'connected'
+            ? t(
+                'settings.agentControl.connection.desktopConnected',
+                'Added Translator to Claude Desktop. Quit and reopen Claude to load it.'
+              )
+            : t(
+                'settings.agentControl.connection.alreadyConnected',
+                '{{app}} already has the Translator server. Restart it if the tools do not appear.',
+                { app }
+              )
+          : result.status === 'connected'
+            ? t(
+                'settings.agentControl.connection.connected',
+                '{{app}} is connected. Start a new session to load the Translator tools.',
+                { app }
+              )
+            : t(
+                'settings.agentControl.connection.alreadyConnected',
+                '{{app}} already has the Translator server. Restart it if the tools do not appear.',
+                { app }
+              );
+      return <p className={connectMessageStyles('ok')}>{text}</p>;
+    }
+    if (result.status === 'cli-not-found') {
+      return (
+        <div className={connectMessageStyles('warn')}>
+          <p style={{ margin: 0 }}>
+            {commandCopied
+              ? t(
+                  'settings.agentControl.connection.cliNotFoundCopied',
+                  'Could not find the {{app}} command on this computer. The setup command was copied; paste it into a terminal:',
+                  { app }
+                )
+              : t(
+                  'settings.agentControl.connection.cliNotFound',
+                  'Could not find the {{app}} command on this computer. Run this in a terminal:',
+                  { app }
+                )}
+          </p>
+          <code className={launcherPathStyles} dir="ltr">
+            {result.command}
+          </code>
+        </div>
+      );
+    }
+    return (
+      <div className={connectMessageStyles('error')}>
+        <p style={{ margin: 0 }}>
+          {t(
+            'settings.agentControl.connection.failed',
+            'Could not connect {{app}}: {{message}}',
+            { app, message: result.message || '' }
+          )}
+        </p>
+        {result.command && (
+          <code className={launcherPathStyles} dir="ltr">
+            {result.command}
+          </code>
+        )}
+      </div>
+    );
+  };
 
   // Load authoritative settings and follow fail-closed or cross-tab changes.
   useEffect(() => {
@@ -382,10 +560,16 @@ export default function AgentControlSection() {
       }
     >
       <div className={infoBoxStyles}>
+        <p className={pitchStyles}>
+          {t(
+            'settings.agentControl.pitch',
+            'Translate for free with the Claude or Codex subscription you already have.'
+          )}
+        </p>
         <p style={{ margin: 0 }}>
           {t(
             'settings.agentControl.description',
-            'Allow external AI agents (Cursor, Codex, etc.) to control this Translator application via a local MCP interface. When enabled, agents can download videos, manage your library, edit subtitles, and export files to allowed directories.'
+            'Let Claude Code, Claude Desktop, Codex, or another MCP agent control Translator on this computer. When enabled, agents can download videos, manage your library, edit and translate subtitles, and export files to allowed directories.'
           )}
         </p>
       </div>
@@ -415,18 +599,63 @@ export default function AgentControlSection() {
               <strong>
                 {t(
                   'settings.agentControl.connection.title',
-                  'Connect Codex or ChatGPT'
+                  'Connect Claude Code, Claude Desktop, or Codex'
                 )}
               </strong>
               <p style={{ margin: '6px 0 0', color: colors.gray }}>
                 {t(
                   'settings.agentControl.connection.instructions',
-                  'Add an STDIO MCP server named “translator” using this launcher path. Save the server, then restart Codex or ChatGPT so the new tools appear.'
+                  'Click a button to register the “translator” MCP server. For other agents, add an STDIO MCP server named “translator” with this launcher path, then restart the agent so the new tools appear.'
                 )}
               </p>
+              <div className={connectRowStyles}>
+                {(['claude-code', 'codex', 'claude-desktop'] as const).map(
+                  client => (
+                    <button
+                      key={client}
+                      type="button"
+                      className={addButtonStyles}
+                      style={{ marginTop: 0 }}
+                      disabled={connecting !== null}
+                      onClick={() => void handleConnect(client)}
+                    >
+                      {connecting === client
+                        ? t(
+                            'settings.agentControl.connection.connecting',
+                            'Connecting…'
+                          )
+                        : client === 'claude-code'
+                          ? t(
+                              'settings.agentControl.connection.connectClaudeCode',
+                              'Connect Claude Code'
+                            )
+                          : client === 'codex'
+                            ? t(
+                                'settings.agentControl.connection.connectCodex',
+                                'Connect Codex'
+                              )
+                            : t(
+                                'settings.agentControl.connection.connectClaudeDesktop',
+                                'Connect Claude Desktop'
+                              )}
+                    </button>
+                  )
+                )}
+              </div>
+              {renderConnectOutcome()}
               <code className={launcherPathStyles} dir="ltr">
                 {launcherPath}
               </code>
+              <button
+                type="button"
+                className={secondaryButtonStyles}
+                style={{ marginTop: 8 }}
+                onClick={() => void handleCopyLauncherPath()}
+              >
+                {pathCopied
+                  ? t('settings.agentControl.connection.copied', 'Copied')
+                  : t('settings.agentControl.connection.copyPath', 'Copy path')}
+              </button>
             </div>
           )}
 

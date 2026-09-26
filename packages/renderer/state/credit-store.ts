@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
 import { estimateTranslatableHours } from '../utils/creditEstimates';
+import type { CreditHistorySummary } from '@shared-types/app';
 
 interface CreditState {
   credits: number | null;
@@ -12,6 +13,10 @@ interface CreditState {
   checkoutPending: boolean;
   checkoutUnresolved: boolean;
   checkoutBaselineCredits: number | null;
+  // Where the balance came from (welcome grant only, ever had any). Null until
+  // the ledger has been read, or when it could not be.
+  history: CreditHistorySummary | null;
+  refreshHistory: () => void;
   beginCheckoutPending: () => void;
   clearCheckoutPending: () => void;
   dismissUnresolvedCheckout: () => void;
@@ -128,6 +133,24 @@ export const useCreditStore = create<CreditState>((set, get) => {
     }, CHECKOUT_UNRESOLVED_REFRESH_INTERVAL_MS);
   };
 
+  let historyInFlight = false;
+  let historyRequested = false;
+  const refreshHistory = () => {
+    if (historyInFlight) return;
+    historyInFlight = true;
+    historyRequested = true;
+    void SystemIPC.getCreditHistorySummary()
+      .then(history => {
+        if (history) set({ history });
+      })
+      .catch(error => {
+        console.warn('[credit-store] Failed to read credit history:', error);
+      })
+      .finally(() => {
+        historyInFlight = false;
+      });
+  };
+
   const applyCreditSnapshot = ({
     creditBalance,
     hoursBalance,
@@ -140,6 +163,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
     authoritative?: boolean;
   }) => {
     const credits = creditBalance ?? null;
+    const previousCredits = get().credits;
     const hours =
       typeof hoursBalance === 'number'
         ? hoursBalance
@@ -158,6 +182,16 @@ export const useCreditStore = create<CreditState>((set, get) => {
 
     if (authoritative) {
       stopInitialAuthoritativeRefreshLoop();
+      // First authoritative read, or credits arrived (purchase, transfer):
+      // re-check where they came from.
+      if (
+        !historyRequested ||
+        (typeof credits === 'number' &&
+          typeof previousCredits === 'number' &&
+          credits > previousCredits)
+      ) {
+        refreshHistory();
+      }
     }
   };
 
@@ -371,6 +405,8 @@ export const useCreditStore = create<CreditState>((set, get) => {
     checkoutPending: false,
     checkoutUnresolved: false,
     checkoutBaselineCredits: null,
+    history: null,
+    refreshHistory,
     error: undefined,
     unsub: unsubCredits, // Return for external disposal (deprecated)
     beginCheckoutPending,

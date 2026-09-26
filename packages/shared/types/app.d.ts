@@ -1174,6 +1174,47 @@ declare module '@shared-types/app' {
     fetchedAt?: string;
   }
 
+  export type CreditTransferFailure = {
+    success: false;
+    error: string;
+    message: string;
+  };
+
+  export type CreditTransferCodeResult =
+    | {
+        success: true;
+        code: string;
+        expiresInMinutes: number;
+        transferableCredits: number;
+        byoUnlock: boolean;
+      }
+    | CreditTransferFailure;
+
+  export type CreditTransferRedeemResult =
+    | {
+        success: true;
+        transferredCredits: number;
+        creditBalance: number;
+        byoUnlock: boolean;
+      }
+    | CreditTransferFailure;
+
+  export type CreditHistorySummary = {
+    everHadCredits: boolean;
+    onlyWelcomeCredits: boolean;
+  };
+
+  export type AgentMcpClientId = 'claude-code' | 'codex' | 'claude-desktop';
+
+  export type AgentMcpConnectResult = {
+    status: 'connected' | 'already-connected' | 'cli-not-found' | 'failed';
+    client: AgentMcpClientId;
+    command?: string;
+    message?: string;
+    configPath?: string;
+    backupPath?: string;
+  };
+
   export interface PostInstallUpdateNotice {
     version: string;
     releaseName?: string;
@@ -1463,6 +1504,9 @@ declare module '@shared-types/app' {
       launcherPath: string | null;
       restartRequired: true;
     }>;
+    connectAgentMcpClient: (
+      client: AgentMcpClientId
+    ) => Promise<AgentMcpConnectResult>;
     getAgentRuntimeContext: () => Promise<Record<string, unknown>>;
     agentV2ProbeSource: (input: unknown) => Promise<Record<string, unknown>>;
     agentV2FetchSourceCaptions: (
@@ -1564,6 +1608,9 @@ declare module '@shared-types/app' {
       authoritative: boolean;
       checkoutSessionId?: string | null;
     } | null>;
+    createCreditTransferCode: () => Promise<CreditTransferCodeResult>;
+    redeemCreditTransfer: (code: string) => Promise<CreditTransferRedeemResult>;
+    getCreditHistorySummary: () => Promise<CreditHistorySummary | null>;
     onCheckoutPending: (callback: () => void) => () => void;
     onCheckoutConfirmed: (callback: () => void) => () => void;
     onCheckoutUnresolved: (callback: () => void) => () => void;

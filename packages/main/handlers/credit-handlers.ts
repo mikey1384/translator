@@ -35,6 +35,16 @@ import {
 import { getConfiguredAdminSecret } from '../services/admin-auth.js';
 import { trackPurchaseFunnelEvent } from '../services/product-analytics.js';
 import { classifyPurchaseFailure } from '../services/purchase-funnel.js';
+import {
+  type CreateTransferCodeResult,
+  type CreditHistorySummary,
+  type CreditTransferFailure,
+  type RedeemTransferResult,
+  normalizeTransferCodeInput,
+  parseCreateTransferCodeResponse,
+  parseRedeemTransferResponse,
+  summarizeCreditLedger,
+} from '../utils/credit-transfer.js';
 
 // Generate or retrieve device ID using proper UUID v4
 export function getDeviceId(): string {
@@ -667,6 +677,117 @@ export async function handleRefreshCreditSnapshot(
   }
 
   return currentCreditSnapshot ?? buildCachedCreditSnapshot();
+}
+
+// —— Moving purchased credits between computers ————————————————————————
+
+function transferNetworkFailure(error: any): CreditTransferFailure {
+  log.warn('[credit-handler] Credit transfer request failed:', error);
+  return {
+    success: false,
+    error: 'network_error',
+    message:
+      'Could not reach the Stage5 server. Check your connection and try again.',
+  };
+}
+
+export async function handleCreateCreditTransferCode(): Promise<CreateTransferCodeResult> {
+  const deviceId = getDeviceId();
+  try {
+    const response = await withStage5AuthRetryOnResponse(authHeaders =>
+      axios.post(
+        `${STAGE5_API_URL}/credits/${deviceId}/transfer-code`,
+        {},
+        {
+          headers: authHeaders,
+          timeout: 20_000,
+          validateStatus: () => true,
+        }
+      )
+    );
+    throwIfStage5UpdateRequiredResponse({ response, source: 'stage5-api' });
+    const result = parseCreateTransferCodeResponse(
+      response.status,
+      response.data
+    );
+    log.info(
+      `[credit-handler] POST /credits/:id/transfer-code -> ${response.status} (${
+        result.success ? 'code issued' : result.error
+      })`
+    );
+    return result;
+  } catch (error: any) {
+    if (isStage5UpdateRequiredError(error)) throw error;
+    return transferNetworkFailure(error);
+  }
+}
+
+export async function handleRedeemCreditTransfer(
+  rawCode: unknown
+): Promise<RedeemTransferResult> {
+  const code = normalizeTransferCodeInput(rawCode);
+  if (!code) {
+    return {
+      success: false,
+      error: 'invalid_code',
+      message: 'Enter the code shown on your other computer.',
+    };
+  }
+  const deviceId = getDeviceId();
+  try {
+    const response = await withStage5AuthRetryOnResponse(authHeaders =>
+      axios.post(
+        `${STAGE5_API_URL}/credits/${deviceId}/redeem-transfer`,
+        { code },
+        {
+          headers: authHeaders,
+          timeout: 30_000,
+          validateStatus: () => true,
+        }
+      )
+    );
+    throwIfStage5UpdateRequiredResponse({ response, source: 'stage5-api' });
+    const result = parseRedeemTransferResponse(response.status, response.data);
+    log.info(
+      `[credit-handler] POST /credits/:id/redeem-transfer -> ${response.status} (${
+        result.success
+          ? `moved ${result.transferredCredits} credits, byo=${result.byoUnlock}`
+          : result.error
+      })`
+    );
+    if (result.success) {
+      // Same refresh path as a settled checkout: balance, then entitlements.
+      await requestCreditBalanceHydration(getMainWindow(), { force: true });
+      await syncEntitlements({ window: getMainWindow() ?? undefined });
+    }
+    return result;
+  } catch (error: any) {
+    if (isStage5UpdateRequiredError(error)) throw error;
+    return transferNetworkFailure(error);
+  }
+}
+
+// Where this device's credits came from, for first-use messaging. Null when
+// the ledger is unavailable; callers then keep their default copy.
+export async function handleGetCreditHistorySummary(): Promise<CreditHistorySummary | null> {
+  if (getCreditSnapshotOverride()) return null;
+  const deviceId = getDeviceId();
+  try {
+    const response = await withStage5AuthRetryOnResponse(authHeaders =>
+      axios.get(`${STAGE5_API_URL}/credits/${deviceId}/ledger`, {
+        headers: authHeaders,
+        timeout: 15_000,
+        validateStatus: () => true,
+      })
+    );
+    throwIfStage5UpdateRequiredResponse({ response, source: 'stage5-api' });
+    if (response.status !== 200) return null;
+    return summarizeCreditLedger(response.data);
+  } catch (error: any) {
+    if (isStage5UpdateRequiredError(error)) throw error;
+    log.warn('[credit-handler] Failed to read credit ledger summary:', error);
+    return null;
+  }
 }
 
 function reportCheckoutClientEventInBackground({

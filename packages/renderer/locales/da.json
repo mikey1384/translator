@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Agentstyring",
-      "description": "Tillad eksterne AI-agenter (Cursor, Codex osv.) at styre denne Translator-app via en lokal MCP-grænseflade. Når dette er aktiveret, kan agenter hente videoer, administrere dit bibliotek, redigere undertekster og eksportere filer til tilladte mapper.",
+      "description": "Lad Claude Code, Claude Desktop, Codex eller en anden MCP-agent styre Translator på denne computer. Når dette er aktiveret, kan agenter hente videoer, administrere dit bibliotek, redigere og oversætte undertekster og eksportere filer til tilladte mapper.",
       "enableLabel": "Tillad agentstyring af denne app",
       "enableAria": "Aktivér agentstyring",
       "connection": {
-        "title": "Forbind Codex eller ChatGPT",
-        "instructions": "Tilføj en STDIO-MCP-server med navnet “translator” ved hjælp af denne startsti. Gem serveren, og genstart derefter Codex eller ChatGPT, så de nye værktøjer vises."
+        "title": "Forbind Claude Code, Claude Desktop eller Codex",
+        "instructions": "Klik på en knap for at registrere MCP-serveren “translator”. For andre agenter skal du tilføje en STDIO-MCP-server med navnet “translator” med denne startsti og derefter genstarte agenten, så de nye værktøjer vises.",
+        "copyPath": "Kopiér sti",
+        "copied": "Kopieret",
+        "connectClaudeCode": "Forbind Claude Code",
+        "connectCodex": "Forbind Codex",
+        "connectClaudeDesktop": "Forbind Claude Desktop",
+        "connecting": "Forbinder…",
+        "connected": "{{app}} er forbundet. Start en ny session for at indlæse Translator-værktøjerne.",
+        "alreadyConnected": "{{app}} har allerede Translator-serveren. Genstart det, hvis værktøjerne ikke vises.",
+        "desktopConnected": "Translator er føjet til Claude Desktop. Afslut og genåbn Claude for at indlæse det.",
+        "cliNotFound": "Kunne ikke finde kommandoen {{app}} på denne computer. Kør dette i en terminal:",
+        "cliNotFoundCopied": "Kunne ikke finde kommandoen {{app}} på denne computer. Opsætningskommandoen er kopieret; indsæt den i en terminal:",
+        "failed": "Kunne ikke forbinde {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Aktiveret",
@@ -836,7 +848,27 @@
         "update": "Indstillingen for agentstyring kunne ikke opdateres.",
         "addDirectory": "Mappen kunne ikke tilføjes.",
         "removeDirectory": "Mappen kunne ikke fjernes."
-      }
+      },
+      "pitch": "Oversæt gratis med det Claude- eller Codex-abonnement, du allerede har."
+    },
+    "creditTransfer": {
+      "title": "Flyt kreditter mellem computere",
+      "description": "Købte kreditter og API-nøgleoplåsningen kan flyttes til en anden computer. Gratis velkomstkreditter bliver på denne.",
+      "moveButton": "Flyt kreditter til en anden computer",
+      "receiveButton": "Modtag kreditter",
+      "creating": "Opretter kode…",
+      "copy": "Kopiér",
+      "copied": "Kopieret",
+      "summaryCredits": "{{credits}} kreditter bliver flyttet.",
+      "summaryByo": "API-nøgleoplåsningen bliver også flyttet.",
+      "expires": "Denne kode virker én gang og udløber om {{minutes}} minutter.",
+      "steps": "På den nye computer: installer Translator, åbn Indstillinger, vælg “Modtag kreditter”, og indtast denne kode.",
+      "inputLabel": "Kode fra din anden computer",
+      "redeem": "Modtag",
+      "redeeming": "Modtager…",
+      "received": "Modtog {{credits}} kreditter.",
+      "receivedNoCredits": "Koden virkede.",
+      "receivedByo": "API-nøgleoplåsningen er aktiv på denne computer."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Ingen kreditter.",
     "rechargeLink": "Genopfyld →",
     "creditWarning": {
-      "message": "Køb kreditter i <settingsLink>{{settingsLinkText}}</settingsLink> for at bruge oversættelses- og transskriptionsfunktioner.",
+      "message": "Det er gratis at hente, redigere, eksportere og oversætte med din egen Claude eller Codex via Agentstyring. Transskription kræver kreditter eller API-nøgleoplåsningen i <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Indstillinger"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Gem kildemateriale eller dubbede medier, du vil bevare, uden for appens arbejdsområde."
     },
     "calculatingCost": "Beregner omkostninger...",
-    "notEnoughCredits": "Ikke nok kreditter tilgængelige"
+    "notEnoughCredits": "Ikke nok kreditter tilgængelige",
+    "welcomeCredits": {
+      "message": "Du har gratis kreditter til at prøve transskription og oversættelse (ca. 20 minutters video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Find i undertekster...",
@@ -1058,7 +1093,9 @@
       "title": "Kreditter opbrugt",
       "message": "Dine AI-kreditter er opbrugt. Genopfyld i Indstillinger, og genoptag derefter hvor du slap.",
       "openSettings": "Åbn indstillinger",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Transskription kræver kreditter",
+      "neverHadMessage": "Transskription kræver kreditter eller API-nøgleoplåsningen. Du kan få begge dele i Indstillinger. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring."
     }
   },
   "progress": {

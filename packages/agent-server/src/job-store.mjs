@@ -9,6 +9,9 @@ import {
   ENCODING_PRESETS,
   JOB_STATUSES,
   MCP_V2_SCHEMA_VERSION,
+  TRANSLATION_BATCH_DEFAULT_SEGMENTS,
+  TRANSLATION_BATCH_MAX_SEGMENTS,
+  TRANSLATION_BATCH_MAX_SOURCE_CHARACTERS,
 } from './mcp-v2-contract.mjs';
 import {
   RENDER_CHECKPOINT_FORK_STAGES,
@@ -2052,11 +2055,20 @@ export class PersistentJobStore {
     };
   }
 
-  issueTranslationBatch(jobId, { mode = 'translate', maxSegments = 16 } = {}) {
+  issueTranslationBatch(
+    jobId,
+    {
+      mode = 'translate',
+      maxSegments = TRANSLATION_BATCH_DEFAULT_SEGMENTS,
+    } = {}
+  ) {
     if (!['translate', 'review'].includes(mode)) {
       throw new TypeError('mode must be translate or review.');
     }
-    const boundedMax = Math.min(40, Math.max(1, Number(maxSegments) || 16));
+    const boundedMax = Math.min(
+      TRANSLATION_BATCH_MAX_SEGMENTS,
+      Math.max(1, Number(maxSegments) || TRANSLATION_BATCH_DEFAULT_SEGMENTS)
+    );
     return this.transaction(() => {
       const job = this.requireJob(jobId);
       const stage = job.stages?.[Number(job.stage_index)];
@@ -2109,7 +2121,18 @@ export class PersistentJobStore {
       }
 
       let selected = eligible.slice(0, boundedMax);
-      if (eligible.length > boundedMax && selected.length >= 3) {
+      let sourceCharacters = 0;
+      const firstOverBudget = selected.findIndex((item, offset) => {
+        sourceCharacters += String(item.segment.source || '').length;
+        return (
+          offset > 0 &&
+          sourceCharacters > TRANSLATION_BATCH_MAX_SOURCE_CHARACTERS
+        );
+      });
+      if (firstOverBudget > 0) {
+        selected = selected.slice(0, firstOverBudget);
+      }
+      if (eligible.length > selected.length && selected.length >= 3) {
         const minimumBoundaryOffset = Math.max(
           1,
           Math.floor(selected.length * 0.55)

@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Udhibiti wa Mawakala",
-      "description": "Ruhusu mawakala wa nje wa AI (Cursor, Codex na wengine) kudhibiti programu hii ya Translator kupitia kiolesura cha ndani cha MCP. Ikishawashwa, mawakala wanaweza kupakua video, kusimamia maktaba yako, kuhariri manukuu na kuhamisha faili kwenye folda zinazoruhusiwa.",
+      "description": "Ruhusu Claude Code, Claude Desktop, Codex au wakala mwingine wa MCP kudhibiti Translator kwenye kompyuta hii. Ikishawashwa, mawakala wanaweza kupakua video, kusimamia maktaba yako, kuhariri na kutafsiri manukuu, na kuhamisha faili kwenye folda zinazoruhusiwa.",
       "enableLabel": "Ruhusu mawakala kudhibiti programu hii",
       "enableAria": "Washa udhibiti wa mawakala",
       "connection": {
-        "title": "Unganisha Codex au ChatGPT",
-        "instructions": "Ongeza seva ya MCP ya STDIO inayoitwa “translator” kwa kutumia njia hii ya kizindua. Hifadhi seva, kisha uanzishe upya Codex au ChatGPT ili zana mpya zionekane."
+        "title": "Unganisha Claude Code, Claude Desktop au Codex",
+        "instructions": "Bofya kitufe ili kusajili seva ya MCP ya “translator”. Kwa mawakala wengine, ongeza seva ya MCP ya STDIO inayoitwa “translator” yenye njia hii ya kizindua, kisha uanzishe upya wakala ili zana mpya zionekane.",
+        "copyPath": "Nakili njia",
+        "copied": "Imenakiliwa",
+        "connectClaudeCode": "Unganisha Claude Code",
+        "connectCodex": "Unganisha Codex",
+        "connectClaudeDesktop": "Unganisha Claude Desktop",
+        "connecting": "Inaunganisha…",
+        "connected": "{{app}} imeunganishwa. Anzisha kipindi kipya ili kupakia zana za Translator.",
+        "alreadyConnected": "{{app}} tayari ina seva ya Translator. Ianzishe upya ikiwa zana hazionekani.",
+        "desktopConnected": "Translator imeongezwa kwenye Claude Desktop. Funga Claude kabisa kisha uifungue tena ili kuipakia.",
+        "cliNotFound": "Haikuweza kupata amri ya {{app}} kwenye kompyuta hii. Endesha hii kwenye terminal:",
+        "cliNotFoundCopied": "Haikuweza kupata amri ya {{app}} kwenye kompyuta hii. Amri ya usanidi imenakiliwa; ibandike kwenye terminal:",
+        "failed": "Haikuweza kuunganisha {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Imewashwa",
@@ -836,7 +848,27 @@
         "update": "Imeshindikana kusasisha mpangilio wa udhibiti wa mawakala.",
         "addDirectory": "Imeshindikana kuongeza folda.",
         "removeDirectory": "Imeshindikana kuondoa folda."
-      }
+      },
+      "pitch": "Tafsiri bure kwa usajili wa Claude au Codex ambao tayari unao."
+    },
+    "creditTransfer": {
+      "title": "Hamisha mikopo kati ya kompyuta",
+      "description": "Mikopo iliyonunuliwa na ufunguaji wa funguo za API vinaweza kuhamishiwa kwenye kompyuta nyingine. Mikopo ya bure ya makaribisho hubaki kwenye kompyuta hii.",
+      "moveButton": "Hamisha mikopo kwenda kompyuta nyingine",
+      "receiveButton": "Pokea mikopo",
+      "creating": "Inaunda msimbo…",
+      "copy": "Nakili",
+      "copied": "Imenakiliwa",
+      "summaryCredits": "Mikopo {{credits}} itahamishwa.",
+      "summaryByo": "Ufunguaji wa funguo za API pia utahamishwa.",
+      "expires": "Msimbo huu unafanya kazi mara moja tu na unaisha muda baada ya dakika {{minutes}}.",
+      "steps": "Kwenye kompyuta mpya: sakinisha Translator, fungua Mipangilio, chagua “Pokea mikopo”, kisha uweke msimbo huu.",
+      "inputLabel": "Msimbo kutoka kompyuta yako nyingine",
+      "redeem": "Pokea",
+      "redeeming": "Inapokea…",
+      "received": "Mikopo {{credits}} imepokelewa.",
+      "receivedNoCredits": "Msimbo umefanya kazi.",
+      "receivedByo": "Ufunguaji wa funguo za API umewashwa kwenye kompyuta hii."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Hakuna mikopo.",
     "rechargeLink": "Jaza upya →",
     "creditWarning": {
-      "message": "Nunua mikopo katika <settingsLink>{{settingsLinkText}}</settingsLink> kutumia vipengele vya kutafsiri na kuandika.",
+      "message": "Kupakua, kuhariri, kuhamisha na kutafsiri kwa kutumia Claude au Codex yako mwenyewe kupitia Udhibiti wa Mawakala ni bure. Unakili unahitaji mikopo au ufunguaji wa funguo za API katika <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Mipangilio"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Hifadhi media yoyote ya chanzo au iliyodubiwa unayotaka kuhifadhi nje ya eneo kazi la programu."
     },
     "calculatingCost": "Inahesabu gharama...",
-    "notEnoughCredits": "Mikopo haitoshi"
+    "notEnoughCredits": "Mikopo haitoshi",
+    "welcomeCredits": {
+      "message": "Una mikopo ya bure ya kujaribu unakili na tafsiri (takriban dakika 20 za video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Tafuta katika manukuu...",
@@ -1058,7 +1093,9 @@
       "title": "Mikopo imeisha",
       "message": "Mikopo yako ya AI imeisha. Jaza upya katika Mipangilio, kisha endelea ulipoishia.",
       "openSettings": "Fungua Mipangilio",
-      "ok": "Sawa"
+      "ok": "Sawa",
+      "neverHadTitle": "Unakili unahitaji mikopo",
+      "neverHadMessage": "Unakili unahitaji mikopo au ufunguaji wa funguo za API. Pata chochote kati ya hivyo katika Mipangilio. Kutafsiri kwa kutumia Claude au Codex yako mwenyewe kupitia Udhibiti wa Mawakala ni bure."
     }
   },
   "progress": {

@@ -799,12 +799,24 @@
     },
     "agentControl": {
       "title": "Agentstyrning",
-      "description": "Tillåt externa AI-agenter (Cursor, Codex med flera) att styra den här Translator-appen via ett lokalt MCP-gränssnitt. När detta är aktiverat kan agenter hämta videor, hantera ditt bibliotek, redigera undertexter och exportera filer till tillåtna mappar.",
+      "description": "Låt Claude Code, Claude Desktop, Codex eller en annan MCP-agent styra Translator på den här datorn. När detta är aktiverat kan agenter hämta videor, hantera ditt bibliotek, redigera och översätta undertexter och exportera filer till tillåtna mappar.",
       "enableLabel": "Tillåt agentstyrning av den här appen",
       "enableAria": "Aktivera agentstyrning",
       "connection": {
-        "title": "Anslut Codex eller ChatGPT",
-        "instructions": "Lägg till en STDIO-MCP-server med namnet ”translator” med den här startsökvägen. Spara servern och starta sedan om Codex eller ChatGPT så att de nya verktygen visas."
+        "title": "Anslut Claude Code, Claude Desktop eller Codex",
+        "instructions": "Klicka på en knapp för att registrera MCP-servern ”translator”. För andra agenter lägger du till en STDIO-MCP-server med namnet ”translator” med den här startsökvägen och startar sedan om agenten så att de nya verktygen visas.",
+        "copyPath": "Kopiera sökväg",
+        "copied": "Kopierad",
+        "connectClaudeCode": "Anslut Claude Code",
+        "connectCodex": "Anslut Codex",
+        "connectClaudeDesktop": "Anslut Claude Desktop",
+        "connecting": "Ansluter…",
+        "connected": "{{app}} är anslutet. Starta en ny session för att läsa in Translator-verktygen.",
+        "alreadyConnected": "{{app}} har redan Translator-servern. Starta om det om verktygen inte visas.",
+        "desktopConnected": "Translator har lagts till i Claude Desktop. Avsluta och öppna Claude igen för att läsa in det.",
+        "cliNotFound": "Kunde inte hitta kommandot {{app}} på den här datorn. Kör detta i en terminal:",
+        "cliNotFoundCopied": "Kunde inte hitta kommandot {{app}} på den här datorn. Installationskommandot har kopierats; klistra in det i en terminal:",
+        "failed": "Kunde inte ansluta {{app}}: {{message}}"
       },
       "status": {
         "enabled": "Aktiverad",
@@ -836,7 +848,27 @@
         "update": "Det gick inte att uppdatera inställningen för agentstyrning.",
         "addDirectory": "Det gick inte att lägga till mappen.",
         "removeDirectory": "Det gick inte att ta bort mappen."
-      }
+      },
+      "pitch": "Översätt gratis med den Claude- eller Codex-prenumeration du redan har."
+    },
+    "creditTransfer": {
+      "title": "Flytta krediter mellan datorer",
+      "description": "Köpta krediter och API-nyckelupplåsningen kan flyttas till en annan dator. Gratis välkomstkrediter stannar på den här datorn.",
+      "moveButton": "Flytta krediter till en annan dator",
+      "receiveButton": "Ta emot krediter",
+      "creating": "Skapar kod…",
+      "copy": "Kopiera",
+      "copied": "Kopierad",
+      "summaryCredits": "{{credits}} krediter flyttas.",
+      "summaryByo": "API-nyckelupplåsningen flyttas också.",
+      "expires": "Koden fungerar en gång och upphör att gälla om {{minutes}} minuter.",
+      "steps": "På den nya datorn: installera Translator, öppna Inställningar, välj ”Ta emot krediter” och ange den här koden.",
+      "inputLabel": "Kod från din andra dator",
+      "redeem": "Ta emot",
+      "redeeming": "Tar emot…",
+      "received": "Tog emot {{credits}} krediter.",
+      "receivedNoCredits": "Koden fungerade.",
+      "receivedByo": "API-nyckelupplåsningen är aktiv på den här datorn."
     }
   },
   "credits": {
@@ -954,7 +986,7 @@
     "noCredits": "Inga krediter.",
     "rechargeLink": "Ladda på →",
     "creditWarning": {
-      "message": "Köp krediter i <settingsLink>{{settingsLinkText}}</settingsLink> för att använda översättnings- och transkriptionsfunktioner.",
+      "message": "Att hämta, redigera, exportera och översätta med din egen Claude eller Codex via Agentstyrning är gratis. Transkribering kräver krediter eller API-nyckelupplåsningen i <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Inställningar"
     },
     "validation": {
@@ -995,7 +1027,10 @@
       "saveOutputsDescription": "Spara allt käll- eller dubbat media du vill behålla utanför appens arbetsyta."
     },
     "calculatingCost": "Beräknar kostnad...",
-    "notEnoughCredits": "Inte tillräckligt med krediter"
+    "notEnoughCredits": "Inte tillräckligt med krediter",
+    "welcomeCredits": {
+      "message": "Du har gratis krediter för att prova transkribering och översättning (cirka 20 minuter video)."
+    }
   },
   "findBar": {
     "findPlaceholder": "Sök i undertexter...",
@@ -1058,7 +1093,9 @@
       "title": "Krediterna tog slut",
       "message": "Dina AI-krediter har tagit slut. Ladda på i Inställningar och återuppta sedan där du slutade.",
       "openSettings": "Öppna inställningar",
-      "ok": "OK"
+      "ok": "OK",
+      "neverHadTitle": "Transkribering kräver krediter",
+      "neverHadMessage": "Transkribering kräver krediter eller API-nyckelupplåsningen. Du kan skaffa båda i Inställningar. Att översätta med din egen Claude eller Codex via Agentstyrning är gratis."
     }
   },
   "progress": {

@@ -11,3 +11,5 @@ export const TOOL_SCHEMAS: Record<string, PackagedToolSchema>;
 export function mapFields(
   input: Record<string, unknown> | null | undefined
 ): Record<string, unknown> | null | undefined;
+
+export const LEGACY_TOOL_DESCRIPTIONS: Readonly<Record<string, string>>;
