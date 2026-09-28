@@ -115,7 +115,9 @@
     "packages/main/package.json",
     "render-host.html",
     "render-host-script.js",
-    "node_modules/**/*"
+    "node_modules/**/*",
+    "!node_modules/adm-zip/**",
+    "!node_modules/onnxruntime-node/script/**"
   ],
 
   "mac": {
