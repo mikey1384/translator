@@ -12,7 +12,7 @@ import {
   SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER,
   SUMMARY_QUALITY_MULTIPLIER,
   STAGE5_REVIEW_TRANSLATION_MODEL,
-  STAGE5_TTS_MODEL_ELEVEN_V3,
+  STAGE5_TTS_MODEL_ELEVEN_V4,
   STAGE5_TTS_MODEL_STANDARD,
   TTS_CREDITS_PER_MINUTE,
   TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
@@ -32,7 +32,7 @@ export type TranslationReviewModel =
 
 export const TTS_CREDITS_PER_CHAR: Record<TtsProvider, number> = {
   openai: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD),
-  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V3),
+  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V4),
 };
 
 const OPENAI_HIGH_END_REVIEW_USD_PER_HOUR = estimateTranslationUsdPerHour(
@@ -194,7 +194,7 @@ export function estimateDubbingCreditsFromChars(
     characters: safeCharCount,
     model:
       provider === 'elevenlabs'
-        ? STAGE5_TTS_MODEL_ELEVEN_V3
+        ? STAGE5_TTS_MODEL_ELEVEN_V4
         : STAGE5_TTS_MODEL_STANDARD,
   });
 }

@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { synthesizeElevenV4 } from './elevenlabs-dialogue.js';
 import FormData from 'form-data';
 import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
 const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
-const ELEVENLABS_TTS_MODEL_ID = 'eleven_v3';
+const ELEVENLABS_TTS_MODEL_ID = 'eleven_v4';
 const ELEVENLABS_TTS_MAX_TEXT_CHARACTERS = 5_000;
 
 // Popular ElevenLabs voices for dubbing
@@ -166,7 +167,7 @@ function usesElevenV3(modelId?: string): boolean {
   return (
     String(modelId || '')
       .trim()
-      .toLowerCase() === ELEVENLABS_TTS_MODEL_ID
+      .toLowerCase() === 'eleven_v3'
   );
 }
 
@@ -323,8 +324,9 @@ export async function synthesizeDubWithElevenLabs({
         };
       }
 
-      axios
-        .post(
+      const synthesis = modelId === 'eleven_v4'
+        ? synthesizeElevenV4({text, voiceId, outputFormat: outputSpec.apiOutputFormat, apiKey, signal}).then(data => ({data}))
+        : axios.post(
           `${ELEVENLABS_BASE_URL}/text-to-speech/${voiceId}?output_format=${encodeURIComponent(
             outputSpec.apiOutputFormat
           )}`,
@@ -338,8 +340,8 @@ export async function synthesizeDubWithElevenLabs({
             },
             signal,
           }
-        )
-        .then(res => {
+        );
+      synthesis.then(res => {
           const buffer = Buffer.from(res.data as ArrayBuffer);
           const audioBuffer = outputSpec.wrapPcmAsWav
             ? wrapPcm16LeAsWav(buffer)

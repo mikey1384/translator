@@ -13,7 +13,7 @@ import {
 import {
   normalizeAiModelId,
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
-  STAGE5_TTS_MODEL_ELEVEN_V3,
+  STAGE5_TTS_MODEL_ELEVEN_V4,
   STAGE5_TTS_MODEL_STANDARD,
   STAGE5_WHISPER_MODEL,
 } from './model-catalog';
@@ -109,7 +109,7 @@ export function estimateDubbingUsdPerHour(
 
   const hourlyValues = ELEVENLABS_PLAN_TIERS.map(
     tier =>
-      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_V3][tier] * charsPerHour
+      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_V4][tier] * charsPerHour
   );
   return toUsdRange(hourlyValues);
 }
@@ -131,7 +131,7 @@ export function estimatePreviewUsd({
 
   const values = ELEVENLABS_PLAN_TIERS.map(
     tier =>
-      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_V3][tier] *
+      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_V4][tier] *
       safeCharacters
   );
   return toUsdRange(values);

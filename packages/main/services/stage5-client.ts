@@ -15,6 +15,7 @@ import {
   AI_MODELS,
   ERROR_CODES,
   API_TIMEOUTS,
+  STAGE5_TTS_MODEL_ELEVEN_V4,
   normalizeAiModelId,
 } from '../../shared/constants/index.js';
 import { formatElevenLabsTimeRemaining } from './subtitle-processing/utils.js';
@@ -1113,9 +1114,9 @@ export async function synthesizeDub({
   }
 
   try {
-    // Stage5 backends accept `model` for TTS selection. Default to Eleven v3 when using ElevenLabs.
+    // Stage5 backends accept `model` for TTS selection. Default to Eleven v4 when using ElevenLabs.
     const effectiveModel =
-      model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
+      model ?? (ttsProvider === 'elevenlabs' ? STAGE5_TTS_MODEL_ELEVEN_V4 : undefined);
     const response = await withStage5AuthRetry(authHeaders =>
       axios.post(
         `${STAGE5_API_URL}/dub`,
@@ -2074,7 +2075,7 @@ export async function dubViaDirect({
 
   // Relay / API both support idempotent replay recovery for transient 408s.
   const effectiveModel =
-    model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
+    model ?? (ttsProvider === 'elevenlabs' ? STAGE5_TTS_MODEL_ELEVEN_V4 : undefined);
   const maxAttempts = 3;
   const hasIdempotencyKey = Boolean(String(idempotencyKey || '').trim());
   const totalChars = segments.reduce(

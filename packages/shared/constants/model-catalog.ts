@@ -11,6 +11,7 @@ export const STAGE5_ELEVENLABS_SCRIBE_MODEL = 'elevenlabs-scribe';
 export const STAGE5_TTS_MODEL_STANDARD = 'tts-1';
 export const STAGE5_TTS_MODEL_HD = 'tts-1-hd';
 export const STAGE5_TTS_MODEL_ELEVEN_V3 = 'eleven_v3';
+export const STAGE5_TTS_MODEL_ELEVEN_V4 = 'eleven_v4';
 export const STAGE5_TTS_MODEL_ELEVEN_TURBO = 'eleven_turbo_v2_5';
 
 export type Stage5ReviewProvider = 'openai' | 'anthropic';
@@ -100,6 +101,8 @@ export const STAGE5_TTS_MODEL_PRICING = {
   [STAGE5_TTS_MODEL_HD]: {
     perChar: 30 / 1_000_000,
   },
+  // Standard rate, deliberately independent of the temporary launch promotion.
+  [STAGE5_TTS_MODEL_ELEVEN_V4]: { perChar: 80 / 1_000_000 },
   [STAGE5_TTS_MODEL_ELEVEN_V3]: {
     perChar: 180 / 1_000_000,
   },

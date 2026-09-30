@@ -683,6 +683,7 @@ export async function transcribe(
 
         // Build segments by grouping words on speaker changes and sentence-ending punctuation
         const segments: Array<{
+          speaker_id?: string;
           id: number;
           start: number;
           end: number;
@@ -718,6 +719,7 @@ export async function transcribe(
           ) {
             const segWords = currentSegment.words;
             segments.push({
+              speaker_id: currentSegment.speakerId,
               id: segments.length,
               start: segWords[0].start,
               end: segWords[segWords.length - 1].end,
@@ -739,6 +741,7 @@ export async function transcribe(
         if (currentSegment.words.length > 0) {
           const segWords = currentSegment.words;
           segments.push({
+            speaker_id: currentSegment.speakerId,
             id: segments.length,
             start: segWords[0].start,
             end: segWords[segWords.length - 1].end,
@@ -1195,6 +1198,7 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
           voice: elevenLabsVoice,
           format,
           apiKey: elevenLabsKey,
+          modelId: options.model?.startsWith('eleven_') ? options.model : undefined,
           signal,
         });
         // Convert to the expected format

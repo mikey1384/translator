@@ -24,6 +24,7 @@ import {
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
   STAGE5_REVIEW_TRANSLATION_MODEL,
   STAGE5_TTS_MODEL_ELEVEN_V3,
+  STAGE5_TTS_MODEL_ELEVEN_V4,
   STAGE5_TTS_MODEL_ELEVEN_TURBO,
   STAGE5_TTS_MODEL_HD,
   STAGE5_TTS_MODEL_PRICING,
@@ -73,6 +74,7 @@ export {
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
   STAGE5_REVIEW_TRANSLATION_MODEL,
   STAGE5_TTS_MODEL_ELEVEN_V3,
+  STAGE5_TTS_MODEL_ELEVEN_V4,
   STAGE5_TTS_MODEL_ELEVEN_TURBO,
   STAGE5_TTS_MODEL_HD,
   STAGE5_TTS_MODEL_PRICING,
@@ -132,6 +134,7 @@ export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
   [AI_MODELS.CLAUDE_OPUS]: 'Claude Opus',
   [AI_MODELS.WHISPER]: 'Whisper',
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
+  [STAGE5_TTS_MODEL_ELEVEN_V4]: 'ElevenLabs v4',
 };
 
 /** Exact runtime labels for places where the concrete model matters. */
@@ -144,6 +147,7 @@ export const AI_MODEL_EXACT_DISPLAY_NAMES: Record<string, string> = {
     STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
   [AI_MODELS.WHISPER]: 'Whisper',
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
+  [STAGE5_TTS_MODEL_ELEVEN_V4]: 'ElevenLabs v4',
 };
 
 export function getExactAiModelDisplayName(model: string): string {
