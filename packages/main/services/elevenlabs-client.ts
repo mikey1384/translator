@@ -324,24 +324,32 @@ export async function synthesizeDubWithElevenLabs({
         };
       }
 
-      const synthesis = modelId === 'eleven_v4'
-        ? synthesizeElevenV4({text, voiceId, outputFormat: outputSpec.apiOutputFormat, apiKey, signal}).then(data => ({data}))
-        : axios.post(
-          `${ELEVENLABS_BASE_URL}/text-to-speech/${voiceId}?output_format=${encodeURIComponent(
-            outputSpec.apiOutputFormat
-          )}`,
-          requestBody,
-          {
-            responseType: 'arraybuffer',
-            headers: {
-              'xi-api-key': apiKey,
-              'Content-Type': 'application/json',
-              Accept: 'audio/mpeg',
-            },
-            signal,
-          }
-        );
-      synthesis.then(res => {
+      const synthesis =
+        modelId === 'eleven_v4'
+          ? synthesizeElevenV4({
+              text,
+              voiceId,
+              outputFormat: outputSpec.apiOutputFormat,
+              apiKey,
+              signal,
+            }).then(data => ({ data }))
+          : axios.post(
+              `${ELEVENLABS_BASE_URL}/text-to-speech/${voiceId}?output_format=${encodeURIComponent(
+                outputSpec.apiOutputFormat
+              )}`,
+              requestBody,
+              {
+                responseType: 'arraybuffer',
+                headers: {
+                  'xi-api-key': apiKey,
+                  'Content-Type': 'application/json',
+                  Accept: 'audio/mpeg',
+                },
+                signal,
+              }
+            );
+      synthesis
+        .then(res => {
           const buffer = Buffer.from(res.data as ArrayBuffer);
           const audioBuffer = outputSpec.wrapPcmAsWav
             ? wrapPcm16LeAsWav(buffer)

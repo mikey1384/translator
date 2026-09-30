@@ -1198,7 +1198,9 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
           voice: elevenLabsVoice,
           format,
           apiKey: elevenLabsKey,
-          modelId: options.model?.startsWith('eleven_') ? options.model : undefined,
+          modelId: options.model?.startsWith('eleven_')
+            ? options.model
+            : undefined,
           signal,
         });
         // Convert to the expected format
