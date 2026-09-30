@@ -1396,6 +1396,7 @@ var STAGE5_ELEVENLABS_SCRIBE_MODEL = "elevenlabs-scribe";
 var STAGE5_TTS_MODEL_STANDARD = "tts-1";
 var STAGE5_TTS_MODEL_HD = "tts-1-hd";
 var STAGE5_TTS_MODEL_ELEVEN_V3 = "eleven_v3";
+var STAGE5_TTS_MODEL_ELEVEN_V4 = "eleven_v4";
 var STAGE5_TTS_MODEL_ELEVEN_TURBO = "eleven_turbo_v2_5";
 var STAGE5_REVIEW_PROVIDER_OPTIONS = {
   openai: {
@@ -1457,6 +1458,8 @@ var STAGE5_TTS_MODEL_PRICING = {
   [STAGE5_TTS_MODEL_HD]: {
     perChar: 30 / 1e6
   },
+  // Standard rate, deliberately independent of the temporary launch promotion.
+  [STAGE5_TTS_MODEL_ELEVEN_V4]: { perChar: 80 / 1e6 },
   [STAGE5_TTS_MODEL_ELEVEN_V3]: {
     perChar: 180 / 1e6
   },
@@ -1486,7 +1489,7 @@ function estimateTtsCredits({
 var CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = getTranscriptionCreditsPerSecond(STAGE5_ELEVENLABS_SCRIBE_MODEL) * 3600;
 var TTS_CREDITS_PER_MINUTE = {
   openai: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD) * SPOKEN_CHARS_PER_MINUTE,
-  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V3) * SPOKEN_CHARS_PER_MINUTE
+  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V4) * SPOKEN_CHARS_PER_MINUTE
 };
 var PREVIEW_TTS_CREDITS = {
   openai: estimateTtsCredits({
@@ -1495,7 +1498,7 @@ var PREVIEW_TTS_CREDITS = {
   }),
   elevenlabs: estimateTtsCredits({
     characters: PREVIEW_TTS_SAMPLE_CHARS,
-    model: STAGE5_TTS_MODEL_ELEVEN_V3
+    model: STAGE5_TTS_MODEL_ELEVEN_V4
   })
 };
 
@@ -1521,6 +1524,11 @@ var VENDOR_TRANSCRIPTION_MODEL_PRICING = {
 };
 var VENDOR_TTS_MODEL_PRICING = {
   [STAGE5_TTS_MODEL_STANDARD]: STAGE5_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD],
+  [STAGE5_TTS_MODEL_ELEVEN_V4]: {
+    creator: 80 / 1e6,
+    pro: 80 / 1e6,
+    scaleBusiness: 80 / 1e6
+  },
   [STAGE5_TTS_MODEL_ELEVEN_V3]: {
     creator: 300 / 1e6,
     pro: 180 / 1e6,
@@ -1539,7 +1547,8 @@ var AI_MODEL_DISPLAY_NAMES = {
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet",
   [AI_MODELS.CLAUDE_OPUS]: "Claude Opus",
   [AI_MODELS.WHISPER]: "Whisper",
-  [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3"
+  [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3",
+  [STAGE5_TTS_MODEL_ELEVEN_V4]: "ElevenLabs v4"
 };
 var AI_MODEL_EXACT_DISPLAY_NAMES = {
   [AI_MODELS.GPT]: "GPT-5.1",
@@ -1547,7 +1556,8 @@ var AI_MODEL_EXACT_DISPLAY_NAMES = {
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet 5",
   [AI_MODELS.CLAUDE_OPUS]: STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
   [AI_MODELS.WHISPER]: "Whisper",
-  [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3"
+  [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3",
+  [STAGE5_TTS_MODEL_ELEVEN_V4]: "ElevenLabs v4"
 };
 var GPT5_1_USD_PER_TOKEN_IN = STAGE5_TRANSLATION_MODEL_PRICING["gpt-5.1"].in;
 var GPT5_1_USD_PER_TOKEN_OUT = STAGE5_TRANSLATION_MODEL_PRICING["gpt-5.1"].out;
