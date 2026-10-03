@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Dubbing Berkualitas",
         "modelOn": "Suara premium ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× kredit</b> • ElevenLabs TTS dengan suara premium",
         "helpWithEstimate": "<b>12× kredit</b> • Saldo Anda: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS dengan suara premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS dengan suara premium • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Saldo: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS dengan suara premium • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Model Saran Video",
@@ -596,12 +593,6 @@
       "voiceLabel": "Suara Dubbing",
       "voiceHelp": "Pilih suara default yang digunakan saat menghasilkan audio dubbing.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Kualitas",
       "summary": "Ringkasan",
       "dubbing": "Dubbing",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Saat ini tidak ada model rekomendasi video BYO yang tersedia. Aktifkan OpenAI atau Anthropic BYO untuk fitur ini.",
       "videoSuggestionModelRequiresOpenAi": "Memerlukan unlock OpenAI BYO, key, dan toggle.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs menawarkan transkripsi premium dan dubbing kloning suara. Tanpanya, OpenAI menangani tugas-tugas ini.",
-        "ttsDescription": "ElevenLabs menawarkan suara transkripsi dan dubbing premium. Tanpanya, OpenAI menangani tugas-tugas ini.",
         "step1": "Buka",
         "step2": "Daftar atau masuk ke akun Anda",
         "step3": "Klik ikon profil Anda dan pilih",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Kualitas TTS (Kredit Stage5)",
-      "openai": "Standar (OpenAI TTS)",
-      "openaiHint": "Kualitas bagus, biaya lebih rendah",
-      "openaiHintWithBalance": "Kualitas bagus · Saldo Anda: {{time}} dubbing",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Kualitas terbaik, biaya lebih tinggi (~12x)",
       "elevenlabsHintWithBalance": "Kualitas terbaik · Saldo Anda: {{time}} dubbing"

@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "నాణ్యత డబ్బింగ్",
         "modelOn": "ElevenLabs TTS ప్రీమియం వాయిసులు",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× క్రెడిట్‌లు</b> • ప్రీమియం వాయిస్‌లతో ElevenLabs TTS",
         "helpWithEstimate": "<b>12× క్రెడిట్‌లు</b> • మీ బ్యాలెన్స్: ~{{normalTime}} (సాధారణ) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× క్రెడిట్లు</b> • ప్రీమియం వాయిసులతో ElevenLabs TTS",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× క్రెడిట్లు</b> • ప్రీమియం వాయిసులతో ElevenLabs TTS • బ్యాలెన్స్: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • బ్యాలెన్స్: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× క్రెడిట్లు</b> • ప్రీమియం వాయిసులతో ElevenLabs TTS • బ్యాలెన్స్: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "వీడియో సూచన మోడల్",
@@ -596,12 +593,6 @@
       "voiceLabel": "డబ్ చేసిన వాయిస్",
       "voiceHelp": "డబ్ చేసిన ఆడియో జనరేట్ చేసేటప్పుడు ఉపయోగించే డిఫాల్ట్ వాయిస్‌ను ఎంచుకోండి.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "నాణ్యత",
       "summary": "సారాంశం",
       "dubbing": "డబ్బింగ్",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "ప్రస్తుతం BYO వీడియో సిఫారసు మోడల్ ఏదీ అందుబాటులో లేదు. ఈ ఫీచర్ కోసం OpenAI లేదా Anthropic BYOని ఎనేబుల్ చేయండి.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key మరియు toggle అవసరం.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs ప్రీమియం ట్రాన్స్‌క్రిప్షన్ మరియు వాయిస్-క్లోనింగ్ డబ్బింగ్‌ను అందిస్తుంది. ఇది లేకుండా, OpenAI ఈ టాస్క్‌లను హ్యాండిల్ చేస్తుంది.",
-        "ttsDescription": "ElevenLabs ప్రీమియం ట్రాన్స్‌క్రిప్షన్ మరియు డబ్బింగ్ వాయిస్‌లను అందిస్తుంది. అది లేకుంటే OpenAI ఈ పనులను నిర్వహిస్తుంది.",
         "step1": "వెళ్ళండి",
         "step2": "సైన్ అప్ చేయండి లేదా మీ ఖాతాలో లాగిన్ అవ్వండి",
         "step3": "మీ ప్రొఫైల్ ఐకాన్‌పై క్లిక్ చేసి ఎంచుకోండి",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS నాణ్యత (Stage5 క్రెడిట్‌లు)",
-      "openai": "స్టాండర్డ్ (OpenAI TTS)",
-      "openaiHint": "మంచి నాణ్యత, తక్కువ ఖర్చు",
-      "openaiHintWithBalance": "మంచి నాణ్యత · మీ బ్యాలెన్స్: {{time}} డబ్బింగ్",
       "elevenlabs": "ప్రీమియం (ElevenLabs)",
       "elevenlabsHint": "ఉత్తమ నాణ్యత, అధిక ఖర్చు (~12x)",
       "elevenlabsHintWithBalance": "ఉత్తమ నాణ్యత · మీ బ్యాలెన్స్: {{time}} డబ్బింగ్"

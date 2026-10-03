@@ -14,7 +14,6 @@ import {
   normalizeAiModelId,
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
   STAGE5_TTS_MODEL_ELEVEN_V4,
-  STAGE5_TTS_MODEL_STANDARD,
   STAGE5_WHISPER_MODEL,
 } from './model-catalog';
 import {
@@ -96,17 +95,14 @@ export function estimateTranscriptionUsdPerHour(
   return toUsdRange(hourlyValues);
 }
 
+/**
+ * Dubbing is ElevenLabs-only (eleven_v4). The provider argument is kept for
+ * call-site clarity; it has a single value.
+ */
 export function estimateDubbingUsdPerHour(
-  provider: 'openai' | 'elevenlabs'
+  _provider: 'elevenlabs' = 'elevenlabs'
 ): number | UsdRange {
   const charsPerHour = SPOKEN_CHARS_PER_MINUTE * 60;
-
-  if (provider === 'openai') {
-    return (
-      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD].perChar * charsPerHour
-    );
-  }
-
   const hourlyValues = ELEVENLABS_PLAN_TIERS.map(
     tier =>
       VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_V4][tier] * charsPerHour
@@ -116,19 +112,11 @@ export function estimateDubbingUsdPerHour(
 
 export function estimatePreviewUsd({
   characters,
-  provider,
 }: {
   characters: number;
-  provider: 'openai' | 'elevenlabs';
+  provider?: 'elevenlabs';
 }): number | UsdRange {
   const safeCharacters = Math.max(0, Math.ceil(Number(characters) || 0));
-  if (provider === 'openai') {
-    return (
-      VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD].perChar *
-      safeCharacters
-    );
-  }
-
   const values = ELEVENLABS_PLAN_TIERS.map(
     tier =>
       VENDOR_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_ELEVEN_V4][tier] *

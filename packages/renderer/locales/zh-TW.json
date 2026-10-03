@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "高品質配音",
         "modelOn": "ElevenLabs TTS 高級音色",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× 點數</b> · 使用 ElevenLabs TTS 和優質語音",
         "helpWithEstimate": "<b>12× 點數</b> · 您的餘額：~{{normalTime}}（一般）/ ~{{hqTime}}（高品質）",
         "helpOn": "<b>{{ratio}}×點數</b> • ElevenLabs TTS 高級音色",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}×點數</b> • ElevenLabs TTS 高級音色 • 餘額：~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • 餘額：~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}×點數</b> • ElevenLabs TTS 高級音色 • 餘額：~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "影片推薦模型",
@@ -596,12 +593,6 @@
       "voiceLabel": "配音語音",
       "voiceHelp": "選擇產生配音音軌時使用的預設語音。",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "高品質",
       "summary": "摘要",
       "dubbing": "配音",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "目前沒有可用的 BYO 影片推薦模型。請啟用 OpenAI 或 Anthropic BYO 以使用此功能。",
       "videoSuggestionModelRequiresOpenAi": "需要 OpenAI BYO 解鎖、金鑰和開關。",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs 提供優質轉錄和語音複製配音。沒有它，OpenAI 將處理這些任務。",
-        "ttsDescription": "ElevenLabs 提供高級轉錄與配音音色。沒有它時，這些工作會由 OpenAI 處理。",
         "step1": "前往",
         "step2": "註冊或登入您的帳戶",
         "step3": "點擊您的頭像並選擇",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS 品質（Stage5 點數）",
-      "openai": "標準（OpenAI TTS）",
-      "openaiHint": "良好音質，較低成本",
-      "openaiHintWithBalance": "良好音質 · 您的餘額：{{time}}配音時長",
       "elevenlabs": "高級（ElevenLabs）",
       "elevenlabsHint": "最佳音質，較高成本（約 12 倍）",
       "elevenlabsHintWithBalance": "最佳音質 · 您的餘額：{{time}}配音時長"

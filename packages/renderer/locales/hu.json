@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Minőségi szinkronizálás",
         "modelOn": "ElevenLabs TTS prémium hangok",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× kredit</b> • ElevenLabs TTS prémium hangokkal",
         "helpWithEstimate": "<b>12× kredit</b> • Egyenleged: ~{{normalTime}} (normál) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS prémium hangokkal",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS prémium hangokkal • Egyenleg: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Egyenleg: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS prémium hangokkal • Egyenleg: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Videójavaslat-modell",
@@ -596,12 +593,6 @@
       "voiceLabel": "Szinkronhang",
       "voiceHelp": "Válassza ki az alapértelmezett hangot a szinkronizált hang generálásához.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Minőség",
       "summary": "Összefoglalás",
       "dubbing": "Szinkronizálás",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Jelenleg nem érhető el BYO videóajánló modell. Engedélyezze az OpenAI vagy Anthropic BYO-t ehhez a funkcióhoz.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO feloldás, kulcs és bekapcsolt kapcsoló szükséges.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "Az ElevenLabs prémium átírást és hangklónozás szinkronizálást kínál. Nélküle az OpenAI kezeli ezeket a feladatokat.",
-        "ttsDescription": "Az ElevenLabs prémium átírást és szinkronhangokat kínál. Nélküle ezeket a feladatokat az OpenAI kezeli.",
         "step1": "Menj ide",
         "step2": "Regisztrálj vagy jelentkezz be a fiókodba",
         "step3": "Kattints a profil ikonodra és válaszd ki",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS minőség (Stage5 kreditek)",
-      "openai": "Standard (OpenAI TTS)",
-      "openaiHint": "Jó minőség, alacsonyabb költség",
-      "openaiHintWithBalance": "Jó minőség · Egyenleged: {{time}} szinkronizálás",
       "elevenlabs": "Prémium (ElevenLabs)",
       "elevenlabsHint": "Legjobb minőség, magasabb költség (~12x)",
       "elevenlabsHintWithBalance": "Legjobb minőség · Egyenleged: {{time}} szinkronizálás"

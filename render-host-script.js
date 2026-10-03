@@ -1393,8 +1393,6 @@ var AI_MODELS = {
 var STAGE5_REVIEW_TRANSLATION_MODEL = "gpt-5.5";
 var STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
 var STAGE5_ELEVENLABS_SCRIBE_MODEL = "elevenlabs-scribe";
-var STAGE5_TTS_MODEL_STANDARD = "tts-1";
-var STAGE5_TTS_MODEL_HD = "tts-1-hd";
 var STAGE5_TTS_MODEL_ELEVEN_V3 = "eleven_v3";
 var STAGE5_TTS_MODEL_ELEVEN_V4 = "eleven_v4";
 var STAGE5_TTS_MODEL_ELEVEN_TURBO = "eleven_turbo_v2_5";
@@ -1452,12 +1450,6 @@ var STAGE5_TRANSCRIPTION_MODEL_PRICING = {
   }
 };
 var STAGE5_TTS_MODEL_PRICING = {
-  [STAGE5_TTS_MODEL_STANDARD]: {
-    perChar: 15 / 1e6
-  },
-  [STAGE5_TTS_MODEL_HD]: {
-    perChar: 30 / 1e6
-  },
   // Standard rate, deliberately independent of the temporary launch promotion.
   [STAGE5_TTS_MODEL_ELEVEN_V4]: { perChar: 80 / 1e6 },
   [STAGE5_TTS_MODEL_ELEVEN_V3]: {
@@ -1488,14 +1480,9 @@ function estimateTtsCredits({
 }
 var CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = getTranscriptionCreditsPerSecond(STAGE5_ELEVENLABS_SCRIBE_MODEL) * 3600;
 var TTS_CREDITS_PER_MINUTE = {
-  openai: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD) * SPOKEN_CHARS_PER_MINUTE,
   elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V4) * SPOKEN_CHARS_PER_MINUTE
 };
 var PREVIEW_TTS_CREDITS = {
-  openai: estimateTtsCredits({
-    characters: PREVIEW_TTS_SAMPLE_CHARS,
-    model: STAGE5_TTS_MODEL_STANDARD
-  }),
   elevenlabs: estimateTtsCredits({
     characters: PREVIEW_TTS_SAMPLE_CHARS,
     model: STAGE5_TTS_MODEL_ELEVEN_V4
@@ -1523,7 +1510,6 @@ var VENDOR_TRANSCRIPTION_MODEL_PRICING = {
   }
 };
 var VENDOR_TTS_MODEL_PRICING = {
-  [STAGE5_TTS_MODEL_STANDARD]: STAGE5_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD],
   [STAGE5_TTS_MODEL_ELEVEN_V4]: {
     creator: 80 / 1e6,
     pro: 80 / 1e6,
@@ -1539,6 +1525,19 @@ var VENDOR_TTS_MODEL_PRICING = {
 // ../shared/constants/runtime-config.ts
 var BASELINE_FONT_SIZE = 30;
 var MIN_SUBTITLE_FONT_SIZE = 6;
+
+// ../shared/constants/dub-voices.ts
+var ELEVENLABS_DUB_VOICE_OPTIONS = [
+  { value: "rachel", fallback: "Rachel" },
+  { value: "adam", fallback: "Adam" },
+  { value: "josh", fallback: "Josh" },
+  { value: "sarah", fallback: "Sarah" },
+  { value: "charlie", fallback: "Charlie" },
+  { value: "emily", fallback: "Emily" },
+  { value: "matilda", fallback: "Matilda" },
+  { value: "brian", fallback: "Brian" }
+];
+var ELEVENLABS_DUB_VOICES = ELEVENLABS_DUB_VOICE_OPTIONS.map((option) => option.value);
 
 // ../shared/constants/index.ts
 var AI_MODEL_DISPLAY_NAMES = {

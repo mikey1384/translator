@@ -12,7 +12,6 @@ import {
   transcribeWithOpenAi,
   translateWithOpenAi,
   respondWithOpenAiWebSearch,
-  synthesizeDubWithOpenAi,
   testOpenAiApiKey,
 } from './openai-client.js';
 import {
@@ -30,7 +29,13 @@ import {
   ERROR_CODES,
   STAGE5_REVIEW_TRANSLATION_MODEL,
   normalizeAiModelId,
+  normalizeDubVoice,
 } from '@shared/constants';
+import {
+  API_KEY_MODE_DUBBING_BLOCKER_MESSAGES,
+  getApiKeyModeDubbingBlocker,
+  resolveDubbingRoute,
+} from './dubbing-provider-routing.js';
 import {
   normalizeVideoSuggestionModelPreference,
   resolveEffectiveVideoSuggestionModel,
@@ -416,9 +421,8 @@ export function getPreferredDubbingProvider(): DubbingProviderPref {
 export type Stage5TtsProviderPref = Stage5DubbingTtsProviderPreference;
 
 /**
- * Get the TTS provider to use when dubbing via Stage5 API.
- * 'openai' = cheaper ($15/1M chars), 'elevenlabs' = premium quality
- * (currently modeled at ElevenLabs Pro overage: $180/1M chars)
+ * Get the TTS provider to use when dubbing via Stage5 API. Always
+ * 'elevenlabs' (eleven_v4); OpenAI TTS is retired.
  */
 export function getStage5DubbingTtsProvider(): Stage5TtsProviderPref {
   if (!settingsStoreRef) return APP_SETTINGS_DEFAULTS.stage5DubbingTtsProvider;
@@ -616,12 +620,6 @@ function resolveProviderByPreference(
     return 'stage5';
   }
 
-  // Default fallback order is operation-specific.
-  if (context === 'getActiveProviderForDubbing') {
-    if (hasOpenAi) return 'openai';
-    if (hasElevenLabs) return 'elevenlabs';
-    return 'stage5';
-  }
   if (hasElevenLabs) return 'elevenlabs';
   if (hasOpenAi) return 'openai';
   return 'stage5';
@@ -638,15 +636,25 @@ export function getActiveProviderForAudio(): ProviderKind {
   );
 }
 
+function hasElevenLabsByoForDubbing(): boolean {
+  return (
+    getCachedEntitlements().byoElevenLabs &&
+    hasUserElevenLabsApiKey() &&
+    isByoElevenLabsToggleEnabled()
+  );
+}
+
 /**
- * Get the active provider for dubbing/TTS.
- * Respects user's preferred dubbing provider setting.
+ * Get the active provider for dubbing/TTS. Dubbing is ElevenLabs-only:
+ * BYO ElevenLabs when available, otherwise Stage5 credits (ElevenLabs).
+ * An OpenAI key never routes dubbing.
  */
 export function getActiveProviderForDubbing(): ProviderKind {
-  return resolveProviderByPreference(
-    getPreferredDubbingProvider(),
-    'getActiveProviderForDubbing'
-  );
+  return resolveDubbingRoute({
+    preference: getPreferredDubbingProvider(),
+    apiKeyMode: isApiKeyModeEnabled(),
+    hasElevenLabsByo: hasElevenLabsByoForDubbing(),
+  });
 }
 
 export async function transcribe(
@@ -1163,11 +1171,24 @@ export async function translateWithWebSearch(
   });
 }
 
-export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
+export async function synthesizeDub(
+  rawOptions: Stage5DubOptions
+): Promise<any> {
+  // Legacy OpenAI voice names map to their ElevenLabs replacements.
+  const normalizedVoice = normalizeDubVoice(rawOptions.voice);
+  const options: Stage5DubOptions = {
+    ...rawOptions,
+    voice: normalizedVoice || undefined,
+    // Only ElevenLabs models are valid; anything else (e.g. a legacy
+    // 'tts-1') falls back to the eleven_v4 default downstream.
+    model: rawOptions.model?.startsWith('eleven_')
+      ? rawOptions.model
+      : undefined,
+  };
   const audioProvider = getActiveProviderForDubbing();
   const apiKeyModeEnabled = isApiKeyModeEnabled();
 
-  // Use ElevenLabs TTS for highest quality dubbing
+  // BYO ElevenLabs TTS
   if (audioProvider === 'elevenlabs') {
     const elevenLabsKey = getStoredElevenLabsApiKey();
     if (!elevenLabsKey) {
@@ -1175,16 +1196,13 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
         throw new Error(ERROR_CODES.ELEVENLABS_KEY_INVALID);
       }
       log.warn(
-        '[ai-provider] ElevenLabs provider selected but API key missing. Falling back.'
+        '[ai-provider] ElevenLabs provider selected but API key missing. Falling back to Stage5.'
       );
-      // Fall through to OpenAI or Stage5
+      // Fall through to Stage5
     } else {
       const { segments, voice, signal, format } = options;
       log.debug('[ai-provider] Using ElevenLabs TTS for dubbing.');
       try {
-        // Map OpenAI voice names to ElevenLabs voice IDs (using default voices)
-        // ElevenLabs has different voice IDs, but we can use readable names
-        const elevenLabsVoice = voice || 'adam';
         const result = await synthesizeDubWithElevenLabs({
           segments: segments.map((s, idx) => ({
             index: s.index ?? idx,
@@ -1195,7 +1213,7 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
                 ? s.end - s.start
                 : undefined,
           })),
-          voice: elevenLabsVoice,
+          voice: voice || 'adam',
           format,
           apiKey: elevenLabsKey,
           modelId: options.model?.startsWith('eleven_')
@@ -1217,86 +1235,30 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
     }
   }
 
-  // Use OpenAI BYO if enabled
-  if (audioProvider === 'openai') {
-    const apiKey = getStoredApiKey();
-    if (!apiKey) {
-      if (apiKeyModeEnabled) {
-        throw new Error(ERROR_CODES.OPENAI_KEY_INVALID);
-      }
-      log.warn(
-        '[ai-provider] OpenAI provider selected but API key missing. Falling back to Stage5.'
-      );
-      return stage5Client.synthesizeDub(options as any);
-    }
-
-    const { segments, voice, model, format, signal } = options;
-    const chosenModel =
-      model || ((options as any).quality === 'high' ? 'tts-1-hd' : 'tts-1');
-
-    log.debug('[ai-provider] Using OpenAI direct TTS.');
-    try {
-      return await synthesizeDubWithOpenAi({
-        segments,
-        voice,
-        model: chosenModel,
-        format,
-        apiKey,
-        signal,
-      });
-    } catch (error) {
-      mapOpenAiError(error);
-    }
-  }
-
   if (apiKeyModeEnabled) {
-    const entitlements = getCachedEntitlements();
-    const preferredProvider = getPreferredDubbingProvider();
-
-    if (preferredProvider === 'stage5') {
-      throw new Error(
-        'Using your API keys does not allow Stage5 dubbing. Choose OpenAI or ElevenLabs in Settings.'
-      );
+    // API key mode never spends Stage5 credits, and dubbing needs ElevenLabs
+    // (an OpenAI key cannot dub). Explain what is missing.
+    const blocker = getApiKeyModeDubbingBlocker({
+      elevenLabsUnlocked: Boolean(getCachedEntitlements().byoElevenLabs),
+      elevenLabsToggleEnabled: isByoElevenLabsToggleEnabled(),
+      elevenLabsKeyPresent: hasUserElevenLabsApiKey(),
+    });
+    if (
+      blocker === 'elevenlabs-not-unlocked' ||
+      blocker === 'elevenlabs-disabled'
+    ) {
+      throw new Error(API_KEY_MODE_DUBBING_BLOCKER_MESSAGES[blocker]);
     }
-    if (preferredProvider === 'elevenlabs') {
-      if (!entitlements.byoElevenLabs) {
-        throw new Error(
-          'BYO ElevenLabs is not unlocked for this account. Switch to Stage5 credits or unlock ElevenLabs BYO to continue.'
-        );
-      }
-      if (!isByoElevenLabsToggleEnabled()) {
-        throw new Error(
-          'BYO ElevenLabs is disabled in Settings. Enable it to dub with your own API keys.'
-        );
-      }
-      if (!hasUserElevenLabsApiKey()) {
-        throw new Error(ERROR_CODES.ELEVENLABS_KEY_INVALID);
-      }
+    if (blocker === 'elevenlabs-key-missing') {
+      throw new Error(ERROR_CODES.ELEVENLABS_KEY_INVALID);
     }
-    if (preferredProvider === 'openai') {
-      if (!entitlements.byoOpenAi) {
-        throw new Error(
-          'BYO OpenAI is not unlocked for this account. Switch to Stage5 credits or unlock OpenAI BYO to continue.'
-        );
-      }
-      if (!isByoToggleEnabled()) {
-        throw new Error(
-          'BYO OpenAI is disabled in Settings. Enable it to dub with your own API keys.'
-        );
-      }
-      if (!hasUserApiKey()) {
-        throw new Error(ERROR_CODES.OPENAI_KEY_INVALID);
-      }
-    }
-
     throw new Error(
-      'Using your API keys is on, but no BYO dubbing provider is currently available.'
+      'Using your API keys is on, but no BYO dubbing provider is currently available. Dubbing needs an ElevenLabs API key.'
     );
   }
 
-  // Default: use Stage5 via direct relay with user's preferred TTS provider
-  // OpenAI: $15/1M chars (cheaper), ElevenLabs: modeled at
-  // ElevenLabs Pro overage $180/1M chars (premium quality)
+  // Default: Stage5 credits via the direct relay, synthesized with
+  // ElevenLabs eleven_v4 (OpenAI TTS is retired).
   const stage5TtsProvider = getStage5DubbingTtsProvider();
   log.debug(
     `[ai-provider] Using Stage5 direct relay with ${stage5TtsProvider} TTS provider`

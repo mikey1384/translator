@@ -425,9 +425,8 @@ function buildServer() {
           review_provider: z.enum(['openai', 'anthropic']).optional(),
           summary_quality: z.enum(['standard', 'high']).optional(),
           summary_provider: z.enum(['openai', 'anthropic']).optional(),
-          stage5_dubbing_tts_provider: z
-            .enum(['openai', 'elevenlabs'])
-            .optional(),
+          // Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06).
+          stage5_dubbing_tts_provider: z.enum(['elevenlabs']).optional(),
           stage5_video_suggestion_mode: z.enum(['standard', 'high']).optional(),
           dub_voice: z
             .enum([
@@ -458,9 +457,7 @@ function buildServer() {
           transcription_provider: z
             .enum(['stage5', 'openai', 'elevenlabs'])
             .optional(),
-          dubbing_provider: z
-            .enum(['stage5', 'openai', 'elevenlabs'])
-            .optional(),
+          dubbing_provider: z.enum(['stage5', 'elevenlabs']).optional(),
           openai_enabled: z.boolean().optional(),
           anthropic_enabled: z.boolean().optional(),
           elevenlabs_enabled: z.boolean().optional(),

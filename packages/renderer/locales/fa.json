@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "دوبله باکیفیت",
         "modelOn": "صداهای پریمیوم ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>۱۳× اعتبار</b> • TTS ElevenLabs با صداهای ممتاز",
         "helpWithEstimate": "<b>۱۳× اعتبار</b> • موجودی شما: ~{{normalTime}} (معمولی) / ~{{hqTime}} (باکیفیت)",
         "helpOn": "<b>{{ratio}}× اعتبار</b> • ElevenLabs TTS با صداهای پریمیوم",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× اعتبار</b> • ElevenLabs TTS با صداهای پریمیوم • موجودی: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • موجودی: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× اعتبار</b> • ElevenLabs TTS با صداهای پریمیوم • موجودی: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "مدل پیشنهاد ویدیو",
@@ -596,12 +593,6 @@
       "voiceLabel": "صدای دوبله",
       "voiceHelp": "صدای پیش‌فرض را برای تولید صوت دوبله انتخاب کنید.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "کیفیت",
       "summary": "خلاصه",
       "dubbing": "دوبله",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "در حال حاضر هیچ BYO video recommendation modelای در دسترس نیست. برای این قابلیت OpenAI یا Anthropic BYO را فعال کنید.",
       "videoSuggestionModelRequiresOpenAi": "به OpenAI BYO unlock، key و toggle نیاز دارد.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs رونویسی ممتاز و دوبله با شبیه‌سازی صدا ارائه می‌دهد. بدون آن، OpenAI این کارها را انجام می‌دهد.",
-        "ttsDescription": "ElevenLabs صداهای premium برای transcription و dubbing ارائه می‌دهد. بدون آن، OpenAI این کارها را انجام می‌دهد.",
         "step1": "برو به",
         "step2": "ثبت‌نام کنید یا وارد حساب خود شوید",
         "step3": "روی آیکون پروفایل خود کلیک کنید و انتخاب کنید",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "کیفیت TTS (اعتبارات Stage5)",
-      "openai": "استاندارد (OpenAI TTS)",
-      "openaiHint": "کیفیت خوب، هزینه کمتر",
-      "openaiHintWithBalance": "کیفیت خوب · موجودی شما: {{time}} دوبله",
       "elevenlabs": "ممتاز (ElevenLabs)",
       "elevenlabsHint": "بهترین کیفیت، هزینه بالاتر (~۱۳ برابر)",
       "elevenlabsHintWithBalance": "بهترین کیفیت · موجودی شما: {{time}} دوبله"

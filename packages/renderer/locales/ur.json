@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "معیاری ڈبنگ",
         "modelOn": "ElevenLabs TTS کی پریمیم آوازیں",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× کریڈٹس</b> • پریمیم آوازوں کے ساتھ ElevenLabs TTS",
         "helpWithEstimate": "<b>12× کریڈٹس</b> • آپ کا بیلنس: ~{{normalTime}} (عام) / ~{{hqTime}} (اعلیٰ معیار)",
         "helpOn": "<b>{{ratio}}× کریڈٹس</b> • پریمیم آوازوں کے ساتھ ElevenLabs TTS",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× کریڈٹس</b> • پریمیم آوازوں کے ساتھ ElevenLabs TTS • بیلنس: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • بیلنس: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× کریڈٹس</b> • پریمیم آوازوں کے ساتھ ElevenLabs TTS • بیلنس: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "ویڈیو تجویز ماڈل",
@@ -596,12 +593,6 @@
       "voiceLabel": "ڈب شدہ آواز",
       "voiceHelp": "ڈب آڈیو بناتے وقت استعمال ہونے والی ڈیفالٹ آواز منتخب کریں۔",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "کوالٹی",
       "summary": "خلاصہ",
       "dubbing": "ڈبنگ",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "فی الحال کوئی BYO video recommendation model دستیاب نہیں ہے۔ اس فیچر کے لیے OpenAI یا Anthropic BYO فعال کریں۔",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key اور toggle درکار ہیں۔",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs پریمیم ٹرانسکرپشن اور وائس کلوننگ ڈبنگ پیش کرتا ہے۔ اس کے بغیر، OpenAI ان کاموں کو سنبھالتا ہے۔",
-        "ttsDescription": "ElevenLabs پریمیم transcription اور dubbing voices فراہم کرتا ہے۔ اس کے بغیر OpenAI یہ کام سنبھالتا ہے۔",
         "step1": "جائیں",
         "step2": "اپنے اکاؤنٹ میں سائن اپ یا لاگ ان کریں",
         "step3": "اپنے پروفائل آئیکن پر کلک کریں اور منتخب کریں",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS معیار (Stage5 کریڈٹس)",
-      "openai": "معیاری (OpenAI TTS)",
-      "openaiHint": "اچھا معیار، کم لاگت",
-      "openaiHintWithBalance": "اچھا معیار · آپ کا بیلنس: {{time}} ڈبنگ",
       "elevenlabs": "پریمیم (ElevenLabs)",
       "elevenlabsHint": "بہترین معیار، زیادہ لاگت (~12x)",
       "elevenlabsHintWithBalance": "بہترین معیار · آپ کا بیلنس: {{time}} ڈبنگ"

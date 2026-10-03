@@ -1,11 +1,7 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import log from 'electron-log';
-import type {
-  ChatToolChoice,
-  ChatToolDefinition,
-  DubSegmentPayload,
-} from '@shared-types/app';
+import type { ChatToolChoice, ChatToolDefinition } from '@shared-types/app';
 import { AI_MODELS, normalizeAiModelId } from '@shared/constants';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
@@ -36,33 +32,6 @@ export interface OpenAiWebSearchOptions {
   signal?: AbortSignal;
   reasoning?: { effort?: 'low' | 'medium' | 'high' };
   onTextDelta?: (delta: string) => void;
-}
-
-export interface OpenAiDubOptions {
-  segments: Array<
-    Pick<
-      DubSegmentPayload,
-      'index' | 'translation' | 'original' | 'targetDuration'
-    >
-  >;
-  voice?: string;
-  model?: string;
-  format?: string;
-  apiKey: string;
-  signal?: AbortSignal;
-  concurrency?: number;
-}
-
-export interface OpenAiDubResult {
-  audioBase64?: string;
-  format: string;
-  voice: string;
-  model: string;
-  segments?: Array<{
-    index: number;
-    audioBase64: string;
-    targetDuration?: number;
-  }>;
 }
 
 export async function transcribeWithOpenAi({
@@ -374,120 +343,6 @@ export async function respondWithOpenAiWebSearch({
         },
       },
     ],
-  };
-}
-
-export async function synthesizeDubWithOpenAi({
-  segments,
-  voice = 'alloy',
-  model = 'tts-1',
-  format = 'mp3',
-  apiKey,
-  signal,
-  concurrency = 3,
-}: OpenAiDubOptions): Promise<OpenAiDubResult> {
-  if (!Array.isArray(segments) || segments.length === 0) {
-    throw new Error('No segments provided for dubbing.');
-  }
-
-  const limiter = Math.max(1, Math.min(5, concurrency));
-  const queue = [...segments];
-  const out: Array<{
-    index: number;
-    audioBase64: string;
-    targetDuration?: number;
-  }> = [];
-
-  let active = 0;
-  let error: any = null;
-
-  await new Promise<void>(resolve => {
-    const pump = () => {
-      if (error) {
-        if (active === 0) resolve();
-        return;
-      }
-      if (queue.length === 0) {
-        if (active === 0) resolve();
-        return;
-      }
-      if (active >= limiter) {
-        return;
-      }
-
-      const seg = queue.shift();
-      if (!seg) {
-        if (active === 0) resolve();
-        return;
-      }
-
-      const text = (seg.translation || seg.original || '').trim();
-      if (!text) {
-        out.push({
-          index: seg.index ?? out.length,
-          audioBase64: '',
-          targetDuration: seg.targetDuration,
-        });
-        pump();
-        return;
-      }
-
-      active += 1;
-
-      axios
-        .post(
-          `${OPENAI_BASE_URL}/audio/speech`,
-          {
-            model,
-            voice,
-            input: text,
-            format,
-          },
-          {
-            responseType: 'arraybuffer',
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              'Content-Type': 'application/json',
-            },
-            signal,
-          }
-        )
-        .then(res => {
-          const buffer = Buffer.from(res.data as ArrayBuffer);
-          out.push({
-            index: seg.index ?? out.length,
-            audioBase64: buffer.toString('base64'),
-            targetDuration: seg.targetDuration,
-          });
-        })
-        .catch(err => {
-          error = err;
-          log.error('[openai-client] Dub synthesis failed:', err);
-        })
-        .finally(() => {
-          active -= 1;
-          pump();
-        });
-
-      pump();
-    };
-
-    for (let i = 0; i < limiter; i++) {
-      pump();
-    }
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  out.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
-
-  return {
-    format,
-    voice,
-    model,
-    segments: out,
   };
 }
 

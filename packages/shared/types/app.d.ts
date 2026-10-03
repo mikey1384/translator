@@ -860,7 +860,7 @@ declare module '@shared-types/app' {
       error?: string;
       batchStartIndex?: number;
       operationId?: string;
-      /** AI model or provider being used (e.g., "ElevenLabs Dubbing", "OpenAI TTS") */
+      /** AI model or provider being used (e.g., "ElevenLabs Dubbing", "ElevenLabs TTS") */
       model?: string;
     });
   }
@@ -1162,8 +1162,8 @@ declare module '@shared-types/app' {
     stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
     byoVideoSuggestionModel: ByoVideoSuggestionModel;
     preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
-    preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
-    stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+    preferredDubbingProvider: 'elevenlabs' | 'stage5';
+    stage5DubbingTtsProvider: 'elevenlabs';
   }
 
   export interface EntitlementsSnapshot {
@@ -1721,17 +1721,15 @@ declare module '@shared-types/app' {
     setPreferredTranscriptionProvider: (
       provider: 'elevenlabs' | 'openai' | 'stage5'
     ) => Promise<{ success: boolean; error?: string }>;
-    getPreferredDubbingProvider: () => Promise<
-      'elevenlabs' | 'openai' | 'stage5'
-    >;
+    getPreferredDubbingProvider: () => Promise<'elevenlabs' | 'stage5'>;
     setPreferredDubbingProvider: (
-      provider: 'elevenlabs' | 'openai' | 'stage5'
+      provider: 'elevenlabs' | 'stage5'
     ) => Promise<{ success: boolean; error?: string }>;
 
     // Stage5 dubbing TTS provider
-    getStage5DubbingTtsProvider: () => Promise<'openai' | 'elevenlabs'>;
+    getStage5DubbingTtsProvider: () => Promise<'elevenlabs'>;
     setStage5DubbingTtsProvider: (
-      provider: 'openai' | 'elevenlabs'
+      provider: 'elevenlabs'
     ) => Promise<{ success: boolean; error?: string }>;
 
     // System info
@@ -1882,6 +1880,7 @@ declare module '@shared-types/app' {
           reviewProvider?: 'openai' | 'anthropic';
           summaryQuality?: 'standard' | 'high';
           summaryProvider?: 'openai' | 'anthropic';
+          /** Dubbing is ElevenLabs-only; legacy 'openai' is treated as 'elevenlabs'. */
           stage5DubbingTtsProvider?: 'openai' | 'elevenlabs';
           stage5VideoSuggestionMode?: 'standard' | 'high';
           dubVoice?: string;
@@ -1894,6 +1893,7 @@ declare module '@shared-types/app' {
             | 'claude-sonnet-5'
             | 'claude-opus-4-8';
           transcriptionProvider?: 'stage5' | 'openai' | 'elevenlabs';
+          /** Legacy 'openai' is treated as 'elevenlabs' (OpenAI TTS is retired). */
           dubbingProvider?: 'stage5' | 'openai' | 'elevenlabs';
           openAiEnabled?: boolean;
           anthropicEnabled?: boolean;

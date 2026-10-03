@@ -236,8 +236,8 @@ export default function ApiKeyGuideModal({ open, onClose, provider }: Props) {
           badgeVariant="optional"
           title={t('settings.apiKeyGuide.providers.elevenlabs', 'ElevenLabs')}
           description={t(
-            'settings.apiKeyGuide.elevenlabs.ttsDescription',
-            'ElevenLabs offers premium transcription and dubbing voices. Without it, OpenAI handles these tasks.'
+            'settings.apiKeyGuide.elevenlabs.dubbingDescription',
+            'ElevenLabs powers all dubbing and offers premium transcription. Without your own ElevenLabs key, dubbing uses Stage5 credits and OpenAI can still handle transcription.'
           )}
         >
           <ol className={cx(modalGuideListStyles, listSpacingStyles)}>

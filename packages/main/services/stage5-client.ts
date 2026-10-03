@@ -16,6 +16,7 @@ import {
   ERROR_CODES,
   API_TIMEOUTS,
   STAGE5_TTS_MODEL_ELEVEN_V4,
+  DEFAULT_DUB_VOICE,
   normalizeAiModelId,
 } from '../../shared/constants/index.js';
 import { formatElevenLabsTimeRemaining } from './subtitle-processing/utils.js';
@@ -1087,8 +1088,8 @@ export async function synthesizeDub({
   model?: string;
   format?: string;
   quality?: 'standard' | 'high';
-  /** TTS provider for Stage5 API: 'openai' (cheaper) or 'elevenlabs' (higher quality) */
-  ttsProvider?: 'openai' | 'elevenlabs';
+  /** TTS provider for Stage5 API. Dubbing is ElevenLabs-only. */
+  ttsProvider?: 'elevenlabs';
   idempotencyKey?: string;
   signal?: AbortSignal;
   /** Live per-segment progress; only honored by the direct relay path. */
@@ -1114,10 +1115,10 @@ export async function synthesizeDub({
   }
 
   try {
-    // Stage5 backends accept `model` for TTS selection. Default to Eleven v4 when using ElevenLabs.
-    const effectiveModel =
-      model ??
-      (ttsProvider === 'elevenlabs' ? STAGE5_TTS_MODEL_ELEVEN_V4 : undefined);
+    // Stage5 backends accept `model` for TTS selection. Dubbing is
+    // ElevenLabs-only, so default to Eleven v4.
+    const effectiveTtsProvider = ttsProvider ?? 'elevenlabs';
+    const effectiveModel = model ?? STAGE5_TTS_MODEL_ELEVEN_V4;
     const response = await withStage5AuthRetry(authHeaders =>
       axios.post(
         `${STAGE5_API_URL}/dub`,
@@ -1127,7 +1128,7 @@ export async function synthesizeDub({
           model: effectiveModel,
           format,
           quality,
-          ttsProvider,
+          ttsProvider: effectiveTtsProvider,
         },
         {
           headers: {
@@ -1170,8 +1171,8 @@ export async function synthesizeDub({
     return {
       audioBase64: data.audioBase64,
       format: data.format ?? 'mp3',
-      voice: data.voice ?? voice ?? 'alloy',
-      model: data.model ?? effectiveModel ?? model ?? 'tts-1',
+      voice: data.voice ?? voice ?? DEFAULT_DUB_VOICE,
+      model: data.model ?? effectiveModel,
       segments: data.segments,
       chunkCount: data.chunkCount,
       segmentCount: data.segmentCount,
@@ -2049,7 +2050,7 @@ export async function dubViaDirect({
   model?: string;
   format?: string;
   quality?: 'standard' | 'high';
-  ttsProvider?: 'openai' | 'elevenlabs';
+  ttsProvider?: 'elevenlabs';
   idempotencyKey?: string;
   signal?: AbortSignal;
   onSegmentProgress?: (completed: number, total: number) => void;
@@ -2075,9 +2076,10 @@ export async function dubViaDirect({
   }
 
   // Relay / API both support idempotent replay recovery for transient 408s.
-  const effectiveModel =
-    model ??
-    (ttsProvider === 'elevenlabs' ? STAGE5_TTS_MODEL_ELEVEN_V4 : undefined);
+  // Dubbing is ElevenLabs-only: always request Eleven v4 unless a specific
+  // ElevenLabs model was passed.
+  const effectiveTtsProvider = ttsProvider ?? 'elevenlabs';
+  const effectiveModel = model ?? STAGE5_TTS_MODEL_ELEVEN_V4;
   const maxAttempts = 3;
   const hasIdempotencyKey = Boolean(String(idempotencyKey || '').trim());
   const totalChars = segments.reduce(
@@ -2093,7 +2095,7 @@ export async function dubViaDirect({
   // concurrency 5, 3 attempts x 45s/90s + backoff per wave) as a fallback
   // for an older relay that buffers the whole response.
   const relayPoolConcurrency = 5; // mirrors relay DUB_SEGMENT_CONCURRENCY default
-  const retryBudgetPerWaveMs = ttsProvider === 'elevenlabs' ? 280_000 : 145_000;
+  const retryBudgetPerWaveMs = 280_000; // ElevenLabs retry budget per wave
   const waves = Math.max(1, Math.ceil(segments.length / relayPoolConcurrency));
   const requestTimeoutMs = Math.min(
     1_200_000,
@@ -2107,7 +2109,7 @@ export async function dubViaDirect({
       maxAttempts,
       segments: segments.length,
       chars: totalChars,
-      ttsProvider: ttsProvider ?? 'openai',
+      ttsProvider: effectiveTtsProvider,
       idempotencyKey,
       timeoutMs: requestTimeoutMs,
     });
@@ -2121,7 +2123,7 @@ export async function dubViaDirect({
             model: effectiveModel,
             format,
             quality,
-            ttsProvider,
+            ttsProvider: effectiveTtsProvider,
           },
           {
             headers: {
@@ -2181,8 +2183,8 @@ export async function dubViaDirect({
       return {
         audioBase64: data.audioBase64,
         format: data.format ?? 'mp3',
-        voice: data.voice ?? voice ?? 'alloy',
-        model: data.model ?? effectiveModel ?? model ?? 'tts-1',
+        voice: data.voice ?? voice ?? DEFAULT_DUB_VOICE,
+        model: data.model ?? effectiveModel,
         segments: data.segments,
         chunkCount: data.chunkCount,
         segmentCount: data.segmentCount,

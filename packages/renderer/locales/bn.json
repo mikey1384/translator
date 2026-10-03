@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "কোয়ালিটি ডাবিং",
         "modelOn": "ElevenLabs TTS প্রিমিয়াম ভয়েস",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× ক্রেডিট</b> • প্রিমিয়াম ভয়েসসহ ElevenLabs TTS",
         "helpWithEstimate": "<b>12× ক্রেডিট</b> • আপনার ব্যালেন্স: ~{{normalTime}} (সাধারণ) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× ক্রেডিট</b> • প্রিমিয়াম ভয়েসসহ ElevenLabs TTS",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× ক্রেডিট</b> • প্রিমিয়াম ভয়েসসহ ElevenLabs TTS • ব্যালান্স: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • ব্যালান্স: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× ক্রেডিট</b> • প্রিমিয়াম ভয়েসসহ ElevenLabs TTS • ব্যালান্স: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "ভিডিও সাজেশন মডেল",
@@ -596,12 +593,6 @@
       "voiceLabel": "ডাব করা ভয়েস",
       "voiceHelp": "ডাব করা অডিও তৈরি করার সময় ব্যবহৃত ডিফল্ট ভয়েস নির্বাচন করুন।",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "কোয়ালিটি",
       "summary": "সারসংক্ষেপ",
       "dubbing": "ডাবিং",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "এখন কোনো BYO ভিডিও recommendation model উপলভ্য নয়। এই ফিচারের জন্য OpenAI বা Anthropic BYO সক্রিয় করুন।",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key এবং toggle দরকার।",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs প্রিমিয়াম ট্রান্সক্রিপশন এবং ভয়েস-ক্লোনিং ডাবিং অফার করে। এটি ছাড়া, OpenAI এই কাজগুলো সামলায়।",
-        "ttsDescription": "ElevenLabs প্রিমিয়াম ট্রান্সক্রিপশন ও ডাবিং ভয়েস দেয়। এটি না থাকলে OpenAI এই কাজগুলো সামলায়।",
         "step1": "যান",
         "step2": "আপনার অ্যাকাউন্টে সাইন আপ বা লগ ইন করুন",
         "step3": "আপনার প্রোফাইল আইকনে ক্লিক করে নির্বাচন করুন",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS কোয়ালিটি (Stage5 ক্রেডিট)",
-      "openai": "স্ট্যান্ডার্ড (OpenAI TTS)",
-      "openaiHint": "ভালো কোয়ালিটি, কম খরচ",
-      "openaiHintWithBalance": "ভালো কোয়ালিটি · আপনার ব্যালেন্স: {{time}} ডাবিং",
       "elevenlabs": "প্রিমিয়াম (ElevenLabs)",
       "elevenlabsHint": "সেরা কোয়ালিটি, বেশি খরচ (~12x)",
       "elevenlabsHintWithBalance": "সেরা কোয়ালিটি · আপনার ব্যালেন্স: {{time}} ডাবিং"

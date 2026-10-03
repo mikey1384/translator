@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Kvalitetsdubbing",
         "modelOn": "ElevenLabs TTS-premiumstemmer",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× kreditter</b> • ElevenLabs TTS med premium-stemmer",
         "helpWithEstimate": "<b>12× kreditter</b> • Din saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS med premiumstemmer",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS med premiumstemmer • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Saldo: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS med premiumstemmer • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Videoforslagsmodel",
@@ -596,12 +593,6 @@
       "voiceLabel": "Dubbet stemme",
       "voiceHelp": "Vælg standardstemmen, der bruges ved generering af dubbet lyd.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Kvalitet",
       "summary": "Oversigt",
       "dubbing": "Dubbing",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Ingen BYO-model til videoanbefalinger er tilgængelig lige nu. Aktivér OpenAI eller Anthropic BYO for denne funktion.",
       "videoSuggestionModelRequiresOpenAi": "Kræver OpenAI BYO-oplåsning, nøgle og aktivering.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs tilbyder premium transskription og stemmekloning-dubbing. Uden den håndterer OpenAI disse opgaver.",
-        "ttsDescription": "ElevenLabs tilbyder premiumstemmer til transskribering og dubbing. Uden det håndterer OpenAI disse opgaver.",
         "step1": "Gå til",
         "step2": "Tilmeld dig eller log ind på din konto",
         "step3": "Klik på dit profilikon og vælg",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS-kvalitet (Stage5-kreditter)",
-      "openai": "Standard (OpenAI TTS)",
-      "openaiHint": "God kvalitet, lavere pris",
-      "openaiHintWithBalance": "God kvalitet · Din saldo: {{time}} dubbing",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Bedste kvalitet, højere pris (~12x)",
       "elevenlabsHintWithBalance": "Bedste kvalitet · Din saldo: {{time}} dubbing"

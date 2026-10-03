@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "การพากย์คุณภาพสูง",
         "modelOn": "เสียงพรีเมียมของ ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× เครดิต</b> • ElevenLabs TTS พร้อมเสียงพรีเมียม",
         "helpWithEstimate": "<b>12× เครดิต</b> • ยอดคงเหลือของคุณ: ~{{normalTime}} (ปกติ) / ~{{hqTime}} (คุณภาพสูง)",
         "helpOn": "<b>{{ratio}}× เครดิต</b> • ElevenLabs TTS พร้อมเสียงพรีเมียม",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× เครดิต</b> • ElevenLabs TTS พร้อมเสียงพรีเมียม • ยอดคงเหลือ: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • ยอดคงเหลือ: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× เครดิต</b> • ElevenLabs TTS พร้อมเสียงพรีเมียม • ยอดคงเหลือ: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "โมเดลแนะนำวิดีโอ",
@@ -596,12 +593,6 @@
       "voiceLabel": "เสียงพากย์",
       "voiceHelp": "เลือกเสียงเริ่มต้นที่ใช้เมื่อสร้างเสียงพากย์",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "คุณภาพ",
       "summary": "สรุป",
       "dubbing": "การพากย์",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "ขณะนี้ยังไม่มีโมเดลแนะนำวิดีโอ BYO ให้ใช้งาน เปิด OpenAI หรือ Anthropic BYO เพื่อใช้ฟีเจอร์นี้",
       "videoSuggestionModelRequiresOpenAi": "ต้องปลดล็อก OpenAI BYO พร้อมใส่คีย์และเปิดสวิตช์",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs มีการถอดความพรีเมียมและการพากย์แบบโคลนเสียง หากไม่มี OpenAI จะจัดการงานเหล่านี้",
-        "ttsDescription": "ElevenLabs มีเสียงสำหรับถอดความและพากย์ระดับพรีเมียม หากไม่มี OpenAI จะจัดการงานเหล่านี้",
         "step1": "ไปที่",
         "step2": "ลงทะเบียนหรือเข้าสู่ระบบบัญชีของคุณ",
         "step3": "คลิกไอคอนโปรไฟล์ของคุณและเลือก",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "คุณภาพ TTS (เครดิต Stage5)",
-      "openai": "มาตรฐาน (OpenAI TTS)",
-      "openaiHint": "คุณภาพดี ราคาต่ำกว่า",
-      "openaiHintWithBalance": "คุณภาพดี · ยอดคงเหลือของคุณ: {{time}} ของการพากย์",
       "elevenlabs": "พรีเมียม (ElevenLabs)",
       "elevenlabsHint": "คุณภาพดีที่สุด ราคาสูงกว่า (~12×)",
       "elevenlabsHintWithBalance": "คุณภาพดีที่สุด · ยอดคงเหลือของคุณ: {{time}} ของการพากย์"

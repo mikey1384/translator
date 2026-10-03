@@ -105,12 +105,11 @@ interface AiStoreState {
   byoVideoSuggestionModel: ByoVideoSuggestionModel;
   // Transcription provider preference
   preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
-  // Dubbing provider preference
-  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
-  // Stage5 dubbing TTS provider (when using Stage5 API for dubbing)
-  // 'openai' = cheaper ($15/1M chars), 'elevenlabs' = premium quality
-  // (currently modeled at ElevenLabs Pro overage: $180/1M chars)
-  stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+  // Dubbing provider preference. Dubbing is ElevenLabs-only: 'elevenlabs' =
+  // BYO ElevenLabs key when available, else Stage5 credits.
+  preferredDubbingProvider: 'elevenlabs' | 'stage5';
+  // Stage5 dubbing TTS provider: always ElevenLabs (eleven_v4).
+  stage5DubbingTtsProvider: 'elevenlabs';
   // OpenAI key state
   keyValue: string;
   keyPresent: boolean;
@@ -182,12 +181,12 @@ interface AiStoreState {
   // Dubbing provider preference actions
   syncDubbingPreference: () => Promise<void>;
   setPreferredDubbingProvider: (
-    value: 'elevenlabs' | 'openai' | 'stage5'
+    value: 'elevenlabs' | 'stage5'
   ) => Promise<{ success: boolean; error?: string }>;
   // Stage5 dubbing TTS provider actions
   syncStage5DubbingTtsProvider: () => Promise<void>;
   setStage5DubbingTtsProvider: (
-    value: 'openai' | 'elevenlabs'
+    value: 'elevenlabs'
   ) => Promise<{ success: boolean; error?: string }>;
   // OpenAI actions
   setKeyValue: (value: string) => void;
@@ -238,17 +237,9 @@ function getApiKeyModeTranscriptionFallback(
 }
 
 function getApiKeyModeDubbingFallback(
-  state: Pick<
-    AiStoreState,
-    | 'byoUnlocked'
-    | 'byoElevenLabsUnlocked'
-    | 'keyPresent'
-    | 'elevenLabsKeyPresent'
-  >
-): 'elevenlabs' | 'openai' | 'stage5' {
-  if (state.keyPresent && state.byoUnlocked) {
-    return 'openai';
-  }
+  state: Pick<AiStoreState, 'byoElevenLabsUnlocked' | 'elevenLabsKeyPresent'>
+): 'elevenlabs' | 'stage5' {
+  // Dubbing is ElevenLabs-only; an OpenAI key cannot dub.
   if (state.elevenLabsKeyPresent && state.byoElevenLabsUnlocked) {
     return 'elevenlabs';
   }
@@ -712,10 +703,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     videoSuggestionModelPreference: 'gpt-5.1',
     // Transcription provider preference (defaults to ElevenLabs for highest quality)
     preferredTranscriptionProvider: 'elevenlabs',
-    // Dubbing provider preference (defaults to OpenAI TTS for cost efficiency)
-    preferredDubbingProvider: 'openai',
-    // Stage5 dubbing TTS provider (defaults to OpenAI for cost efficiency)
-    stage5DubbingTtsProvider: 'openai',
+    // Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06)
+    preferredDubbingProvider: 'elevenlabs',
+    stage5DubbingTtsProvider: 'elevenlabs',
     // OpenAI state
     keyValue: '',
     keyPresent: false,
@@ -1039,14 +1029,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               );
             }
           }
-          if (state.preferredDubbingProvider === 'openai') {
-            try {
-              await SystemIPC.setPreferredDubbingProvider(fallback);
-              set({ preferredDubbingProvider: fallback });
-            } catch (err) {
-              console.error('[AiStore] Failed to reset dubbing provider:', err);
-            }
-          }
+          // Dubbing never uses the OpenAI key, so no dubbing reset is needed.
           await checkAndDisableApiKeyModeIfNeeded(get, set);
         }
         return result;
@@ -1283,14 +1266,8 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               );
             }
           }
-          if (state.preferredDubbingProvider === 'elevenlabs') {
-            try {
-              await SystemIPC.setPreferredDubbingProvider(fallback);
-              set({ preferredDubbingProvider: fallback });
-            } catch (err) {
-              console.error('[AiStore] Failed to reset dubbing provider:', err);
-            }
-          }
+          // Dubbing keeps its 'elevenlabs' preference: without a BYO key it
+          // resolves to Stage5 credits (also ElevenLabs).
           await checkAndDisableApiKeyModeIfNeeded(get, set);
         }
         return result;
@@ -1726,14 +1703,12 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       }
     },
 
-    setPreferredDubbingProvider: async (
-      value: 'elevenlabs' | 'openai' | 'stage5'
-    ) => {
+    setPreferredDubbingProvider: async (value: 'elevenlabs' | 'stage5') => {
       try {
         const result = await SystemIPC.setPreferredDubbingProvider(value);
         if (result.success) {
           set({ preferredDubbingProvider: value });
-          if (value === 'openai' || value === 'elevenlabs') {
+          if (value === 'elevenlabs') {
             await enableConfiguredByoToggles(get, set, [value]);
           }
         }
@@ -1760,7 +1735,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       }
     },
 
-    setStage5DubbingTtsProvider: async (value: 'openai' | 'elevenlabs') => {
+    setStage5DubbingTtsProvider: async (value: 'elevenlabs') => {
       try {
         const result = await SystemIPC.setStage5DubbingTtsProvider(value);
         if (result.success) {

@@ -20,7 +20,9 @@ import {
   estimateTranslationCreditsFromChars,
   formatCredits,
 } from '../../../utils/creditEstimates';
+import { TTS_CREDITS_PER_MINUTE } from '../../../../shared/constants';
 import {
+  isDubbingBlockedInApiKeyMode,
   isDubbingByo,
   isTranslationByo,
   resolveDubbingCreditProvider,
@@ -172,10 +174,11 @@ export default function SrtMountedPanel({
     }
     if (charCount === 0) return null;
 
+    // Dubbing is ElevenLabs-only (eleven_v4); the estimate uses that price.
     const ttsProvider = resolveDubbingCreditProvider(runtimeState);
     const isByo = isDubbingByo(runtimeState);
+    const blockedInApiKeyMode = isDubbingBlockedInApiKeyMode(runtimeState);
 
-    // Regular TTS: credits based on character count
     const estimatedCredits = estimateDubbingCreditsFromChars(
       charCount,
       ttsProvider
@@ -186,7 +189,10 @@ export default function SrtMountedPanel({
       ttsProvider,
       estimatedCredits,
       isByo,
-      hasEnoughCredits: isByo || credits == null || credits >= estimatedCredits,
+      blockedInApiKeyMode,
+      hasEnoughCredits:
+        !blockedInApiKeyMode &&
+        (isByo || credits == null || credits >= estimatedCredits),
     };
   }, [order, segments, credits, runtimeState]);
 
@@ -353,8 +359,26 @@ export default function SrtMountedPanel({
             {t('subtitles.dub', 'Dub Voice')}
           </Button>
           {dubbingEstimate && !isDubbing && !dubbingEstimate.isByo && (
-            <span className={dubbingCostClassName}>
-              {formatCredits(dubbingEstimate.estimatedCredits)} cr
+            <span
+              className={dubbingCostClassName}
+              title={
+                dubbingEstimate.blockedInApiKeyMode
+                  ? t(
+                      'settings.byoPreferences.dubbingRequiresElevenLabs',
+                      'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
+                    )
+                  : t(
+                      'subtitles.dubCostHint',
+                      'ElevenLabs voice: ~{{rate}} credits per minute of speech. This estimate is shown before dubbing starts.',
+                      {
+                        rate: Math.round(TTS_CREDITS_PER_MINUTE.elevenlabs),
+                      }
+                    )
+              }
+            >
+              {dubbingEstimate.blockedInApiKeyMode
+                ? 'ElevenLabs'
+                : `${formatCredits(dubbingEstimate.estimatedCredits)} cr · ElevenLabs`}
             </span>
           )}
         </div>

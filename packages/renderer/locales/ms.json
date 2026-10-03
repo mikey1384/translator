@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Alih Suara Berkualiti",
         "modelOn": "Suara premium ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× kredit</b> • TTS ElevenLabs dengan suara premium",
         "helpWithEstimate": "<b>12× kredit</b> • Baki anda: ~{{normalTime}} (biasa) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS dengan suara premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS dengan suara premium • Baki: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Baki: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS dengan suara premium • Baki: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Model Cadangan Video",
@@ -596,12 +593,6 @@
       "voiceLabel": "Suara Alih Suara",
       "voiceHelp": "Pilih suara lalai yang digunakan semasa menjana audio alih suara.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Kualiti",
       "summary": "Ringkasan",
       "dubbing": "Alih Suara",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Tiada model cadangan video BYO yang tersedia buat masa ini. Aktifkan OpenAI atau Anthropic BYO untuk ciri ini.",
       "videoSuggestionModelRequiresOpenAi": "Memerlukan unlock OpenAI BYO, key, dan toggle.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs menawarkan transkripsi premium dan alih suara pengklonan suara. Tanpanya, OpenAI mengendalikan tugas ini.",
-        "ttsDescription": "ElevenLabs menawarkan suara transkripsi dan alih suara premium. Tanpanya, OpenAI mengendalikan tugas-tugas ini.",
         "step1": "Pergi ke",
         "step2": "Daftar atau log masuk ke akaun anda",
         "step3": "Klik ikon profil anda dan pilih",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Kualiti TTS (Kredit Stage5)",
-      "openai": "Standard (OpenAI TTS)",
-      "openaiHint": "Kualiti baik, kos lebih rendah",
-      "openaiHintWithBalance": "Kualiti baik · Baki anda: {{time}} alih suara",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Kualiti terbaik, kos lebih tinggi (~12x)",
       "elevenlabsHintWithBalance": "Kualiti terbaik · Baki anda: {{time}} alih suara"

@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Якісне дублювання",
         "modelOn": "Преміальні голоси ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× кредитів</b> • ElevenLabs TTS з преміум-голосами",
         "helpWithEstimate": "<b>12× кредитів</b> • Ваш баланс: ~{{normalTime}} (звичайно) / ~{{hqTime}} (вк)",
         "helpOn": "<b>{{ratio}}× кредитів</b> • ElevenLabs TTS з преміальними голосами",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× кредитів</b> • ElevenLabs TTS з преміальними голосами • Баланс: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Баланс: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× кредитів</b> • ElevenLabs TTS з преміальними голосами • Баланс: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Модель пропозицій відео",
@@ -596,12 +593,6 @@
       "voiceLabel": "Голос дублювання",
       "voiceHelp": "Оберіть голос за замовчуванням для генерації дубльованого аудіо.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Якість",
       "summary": "Підсумок",
       "dubbing": "Дублювання",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Наразі немає доступної моделі BYO для відеорекомендацій. Увімкніть OpenAI або Anthropic BYO для цієї функції.",
       "videoSuggestionModelRequiresOpenAi": "Потрібні розблокування OpenAI BYO, ключ і ввімкнений перемикач.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs пропонує преміум-транскрипцію та дублювання з клонуванням голосу. Без нього OpenAI виконує ці завдання.",
-        "ttsDescription": "ElevenLabs пропонує преміальну транскрипцію та голоси для дубляжу. Без нього ці завдання виконує OpenAI.",
         "step1": "Перейдіть на",
         "step2": "Зареєструйтесь або увійдіть у свій акаунт",
         "step3": "Натисніть на іконку профілю та оберіть",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Якість TTS (кредити Stage5)",
-      "openai": "Стандарт (OpenAI TTS)",
-      "openaiHint": "Гарна якість, нижча вартість",
-      "openaiHintWithBalance": "Гарна якість · Ваш баланс: {{time}} дублювання",
       "elevenlabs": "Преміум (ElevenLabs)",
       "elevenlabsHint": "Найкраща якість, вища вартість (~12x)",
       "elevenlabsHintWithBalance": "Найкраща якість · Ваш баланс: {{time}} дублювання"

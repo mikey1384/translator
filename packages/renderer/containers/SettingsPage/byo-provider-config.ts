@@ -19,6 +19,9 @@ function formatUsdEstimate(value: number | UsdRange, unit: '/hr' | '/search') {
   if (typeof value === 'number') {
     return `~$${formatUsd(value)}${unit}`;
   }
+  if (value.minUsd === value.maxUsd) {
+    return `~$${formatUsd(value.minUsd)}${unit}`;
+  }
   return `~$${formatUsd(value.minUsd)}-$${formatUsd(value.maxUsd)}${unit}`;
 }
 
@@ -113,12 +116,8 @@ export const BYO_PROVIDERS = {
       },
     },
   },
+  // Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06).
   dubbing: {
-    openai: {
-      labelKey: 'settings.byoPreferences.openaiTts',
-      fallback: 'OpenAI TTS',
-      price: formatUsdEstimate(estimateDubbingUsdPerHour('openai'), '/hr'),
-    },
     elevenlabs: {
       labelKey: 'settings.byoPreferences.elevenLabsTts',
       fallback: 'ElevenLabs',

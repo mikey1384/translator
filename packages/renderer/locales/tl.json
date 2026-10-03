@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Kalidad na Dubbing",
         "modelOn": "Mga premium na boses ng ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× credits</b> • ElevenLabs TTS na may premium voices",
         "helpWithEstimate": "<b>12× credits</b> • Iyong balanse: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS na may premium na mga boses",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS na may premium na mga boses • Balanse: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Balanse: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS na may premium na mga boses • Balanse: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Model ng Mungkahi ng Video",
@@ -596,12 +593,6 @@
       "voiceLabel": "Na-dub na Boses",
       "voiceHelp": "Piliin ang default na boses na gagamitin kapag bumubuo ng dubbed audio.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Kalidad",
       "summary": "Buod",
       "dubbing": "Dubbing",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Walang available na BYO video recommendation model sa ngayon. I-enable ang OpenAI o Anthropic BYO para sa feature na ito.",
       "videoSuggestionModelRequiresOpenAi": "Kailangan ang OpenAI BYO unlock, key, at toggle.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "Nag-aalok ang ElevenLabs ng premium transcription at voice-cloning dubbing. Kung wala ito, hahawakan ng OpenAI ang mga task na ito.",
-        "ttsDescription": "Nag-aalok ang ElevenLabs ng premium na transcription at boses para sa dubbing. Kung wala ito, OpenAI ang hahawak sa mga gawaing ito.",
         "step1": "Pumunta sa",
         "step2": "Mag-sign up o mag-log in sa iyong account",
         "step3": "I-click ang iyong profile icon at piliin ang",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS Quality (Stage5 Credits)",
-      "openai": "Standard (OpenAI TTS)",
-      "openaiHint": "Magandang kalidad, mas mababang halaga",
-      "openaiHintWithBalance": "Magandang kalidad · Iyong balanse: {{time}} ng dubbing",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Pinakamahusay na kalidad, mas mataas na halaga (~12x)",
       "elevenlabsHintWithBalance": "Pinakamahusay na kalidad · Iyong balanse: {{time}} ng dubbing"

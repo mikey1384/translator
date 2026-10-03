@@ -6,7 +6,6 @@ import { useVideoStore } from '../state/video-store';
 import { useEtaCalibrationStore } from '../state/eta-calibration-store';
 import {
   resolveDubbingCreditProvider,
-  resolveDubbingProvider,
   resolveTranscriptionProvider,
   resolveTranslationDraftProvider,
   resolveTranslationReviewProvider,
@@ -92,13 +91,8 @@ function buildRunContext(operationType: OperationKind): RunContext {
         ? 'openai'
         : 'elevenlabs'
       : resolvedTranscriptionProvider;
-  const resolvedDubbingProvider = resolveDubbingProvider(runtimeState);
-  const dubbingProviderHint =
-    resolvedDubbingProvider === 'stage5'
-      ? resolveDubbingCreditProvider(runtimeState)
-      : resolvedDubbingProvider === 'elevenlabs'
-        ? 'elevenlabs'
-        : 'openai';
+  // Dubbing is ElevenLabs-only (BYO key or Stage5 credits).
+  const dubbingProviderHint = resolveDubbingCreditProvider(runtimeState);
 
   return {
     operationType,

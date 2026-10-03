@@ -5,6 +5,10 @@ import { parseSrt } from '../../../../shared/helpers';
 import type { SrtSegment, SubtitleSourceProvenance } from '@shared-types/app';
 import { i18n } from '../../../i18n';
 import { buildSrt } from '../../../../shared/helpers';
+import {
+  DEFAULT_DUB_VOICE,
+  normalizeDubVoice,
+} from '../../../../shared/constants/dub-voices';
 import { useSubStore, useUIStore, useVideoStore } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
@@ -339,7 +343,10 @@ export async function executeDubGeneration({
 
   const { dubVoice, dubAmbientMix } = useUIStore.getState();
   const quality = 'standard';
-  const selectedVoice = voice ?? dubVoice ?? 'alloy';
+  // Legacy OpenAI voice names map to ElevenLabs voices (dubbing is
+  // ElevenLabs-only).
+  const selectedVoice =
+    normalizeDubVoice(voice ?? dubVoice) || DEFAULT_DUB_VOICE;
 
   try {
     const res = await SubtitlesIPC.dubSubtitles({

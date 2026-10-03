@@ -9,8 +9,10 @@ import {
   CHECKOUT_ALREADY_PENDING,
   CREDIT_PACKS,
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
+  ELEVENLABS_DUB_VOICES,
   SUMMARY_QUALITY_MULTIPLIER,
   TTS_CREDITS_PER_MINUTE,
+  normalizeDubVoice,
 } from '../../shared/constants';
 import {
   SUBTITLE_STYLE_PRESETS,
@@ -146,22 +148,10 @@ const MEDIA_WORKFLOW_TARGETS = new Set([
   'translate',
   'dub',
 ] as const);
-const DUB_VOICES = new Set([
-  'rachel',
-  'adam',
-  'josh',
-  'sarah',
-  'charlie',
-  'emily',
-  'matilda',
-  'brian',
-  'alloy',
-  'echo',
-  'fable',
-  'onyx',
-  'nova',
-  'shimmer',
-]);
+// Dubbing is ElevenLabs-only. Agents may still send legacy OpenAI voice
+// names (alloy, echo, ...); those map to ElevenLabs voices via
+// normalizeDubVoice before this check.
+const DUB_VOICES: ReadonlySet<string> = new Set(ELEVENLABS_DUB_VOICES);
 const MAX_AGENT_HISTORY_ID_LENGTH = 512;
 
 type Provider = 'openai' | 'anthropic' | 'elevenlabs';
@@ -2159,8 +2149,9 @@ async function runAgentDubbing(
     String(input.targetLanguage || '').trim() ||
     useUIStore.getState().targetLanguage;
   if (!targetLanguage) throw new Error('A target language is required.');
-  const voice =
-    String(input.voice || '').trim() || useUIStore.getState().dubVoice;
+  const voice = normalizeDubVoice(
+    String(input.voice || '').trim() || useUIStore.getState().dubVoice
+  );
   if (!DUB_VOICES.has(voice)) throw new Error('Unsupported dubbing voice.');
   throwIfAgentCancelled();
   useUIStore.getState().setTargetLanguage(targetLanguage);
@@ -4099,7 +4090,11 @@ async function mcpContext({
   const draftProvider = ai.preferClaudeTranslation ? 'anthropic' : 'openai';
   const summaryProvider = ai.preferClaudeSummary ? 'anthropic' : 'openai';
   const transcriptionProvider = ai.preferredTranscriptionProvider;
-  const dubbingProvider = ai.preferredDubbingProvider;
+  // Dubbing is ElevenLabs-only: BYO ElevenLabs when usable, else Stage5.
+  const dubbingProvider =
+    ai.preferredDubbingProvider !== 'stage5' && elevenLabsByo
+      ? 'elevenlabs'
+      : 'stage5';
   const videoSuggestionProvider = /claude|anthropic/i.test(
     String(ai.byoVideoSuggestionModel || '')
   )
@@ -4173,7 +4168,7 @@ async function mcpContext({
         summary_standard_per_hour: CREDITS_PER_SUMMARY_AUDIO_HOUR,
         summary_high_per_hour:
           CREDITS_PER_SUMMARY_AUDIO_HOUR * SUMMARY_QUALITY_MULTIPLIER,
-        dubbing_openai_per_minute: TTS_CREDITS_PER_MINUTE.openai,
+        // Dubbing is ElevenLabs-only (eleven_v4).
         dubbing_elevenlabs_per_minute: TTS_CREDITS_PER_MINUTE.elevenlabs,
       },
     },
@@ -4418,10 +4413,11 @@ async function updateSettings(
     ui.setSummaryEffortLevel(input.summaryQuality);
   }
   if (input.dubVoice !== undefined) {
-    if (!DUB_VOICES.has(input.dubVoice)) {
+    const dubVoice = normalizeDubVoice(input.dubVoice);
+    if (!DUB_VOICES.has(dubVoice)) {
       throw new Error('Unsupported dubbing voice.');
     }
-    ui.setDubVoice(input.dubVoice);
+    ui.setDubVoice(dubVoice);
   }
   if (input.dubAmbientMix !== undefined) {
     if (!Number.isFinite(input.dubAmbientMix)) {
@@ -4442,9 +4438,10 @@ async function updateSettings(
     );
   }
   if (input.stage5DubbingTtsProvider !== undefined) {
+    // Stage5 dubbing is always ElevenLabs; legacy 'openai' maps to it.
     requireSuccess(
       'Stage5 dubbing provider',
-      await ai.setStage5DubbingTtsProvider(input.stage5DubbingTtsProvider)
+      await ai.setStage5DubbingTtsProvider('elevenlabs')
     );
   }
   if (input.stage5VideoSuggestionMode !== undefined) {
@@ -4474,9 +4471,12 @@ async function updateSettings(
     );
   }
   if (input.dubbingProvider !== undefined) {
+    // OpenAI TTS is retired; a legacy 'openai' preference maps to ElevenLabs.
     requireSuccess(
       'Dubbing provider',
-      await ai.setPreferredDubbingProvider(input.dubbingProvider)
+      await ai.setPreferredDubbingProvider(
+        input.dubbingProvider === 'stage5' ? 'stage5' : 'elevenlabs'
+      )
     );
   }
   if (input.openAiEnabled !== undefined) {

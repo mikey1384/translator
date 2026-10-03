@@ -8,8 +8,6 @@ export const AI_MODELS = {
 export const STAGE5_REVIEW_TRANSLATION_MODEL = 'gpt-5.5';
 export const STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
 export const STAGE5_ELEVENLABS_SCRIBE_MODEL = 'elevenlabs-scribe';
-export const STAGE5_TTS_MODEL_STANDARD = 'tts-1';
-export const STAGE5_TTS_MODEL_HD = 'tts-1-hd';
 export const STAGE5_TTS_MODEL_ELEVEN_V3 = 'eleven_v3';
 export const STAGE5_TTS_MODEL_ELEVEN_V4 = 'eleven_v4';
 export const STAGE5_TTS_MODEL_ELEVEN_TURBO = 'eleven_turbo_v2_5';
@@ -94,13 +92,8 @@ export const STAGE5_TRANSCRIPTION_MODEL_PRICING = {
   },
 } as const;
 
+// Dubbing is ElevenLabs-only (OpenAI tts-1/tts-1-hd retire 2027-01-06).
 export const STAGE5_TTS_MODEL_PRICING = {
-  [STAGE5_TTS_MODEL_STANDARD]: {
-    perChar: 15 / 1_000_000,
-  },
-  [STAGE5_TTS_MODEL_HD]: {
-    perChar: 30 / 1_000_000,
-  },
   // Standard rate, deliberately independent of the temporary launch promotion.
   [STAGE5_TTS_MODEL_ELEVEN_V4]: { perChar: 80 / 1_000_000 },
   [STAGE5_TTS_MODEL_ELEVEN_V3]: {

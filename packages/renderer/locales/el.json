@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Ποιοτική Μεταγλώττιση",
         "modelOn": "Premium φωνές ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× πιστώσεις</b> • ElevenLabs TTS με premium φωνές",
         "helpWithEstimate": "<b>12× πιστώσεις</b> • Το υπόλοιπό σας: ~{{normalTime}} (κανονική) / ~{{hqTime}} (υψ)",
         "helpOn": "<b>{{ratio}}× πιστώσεις</b> • ElevenLabs TTS με premium φωνές",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× πιστώσεις</b> • ElevenLabs TTS με premium φωνές • Υπόλοιπο: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Υπόλοιπο: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× πιστώσεις</b> • ElevenLabs TTS με premium φωνές • Υπόλοιπο: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Μοντέλο πρότασης βίντεο",
@@ -596,12 +593,6 @@
       "voiceLabel": "Φωνή Μεταγλώττισης",
       "voiceHelp": "Επιλέξτε την προεπιλεγμένη φωνή για τη δημιουργία μεταγλωττισμένου ήχου.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Ποιότητα",
       "summary": "Περίληψη",
       "dubbing": "Μεταγλώττιση",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Δεν υπάρχει διαθέσιμο μοντέλο BYO για προτάσεις βίντεο αυτή τη στιγμή. Ενεργοποιήστε OpenAI ή Anthropic BYO για αυτή τη δυνατότητα.",
       "videoSuggestionModelRequiresOpenAi": "Απαιτεί ξεκλείδωμα OpenAI BYO, κλειδί και ενεργοποιημένο διακόπτη.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "Το ElevenLabs προσφέρει premium απομαγνητοφώνηση και μεταγλώττιση με κλωνοποίηση φωνής. Χωρίς αυτό, το OpenAI χειρίζεται αυτές τις εργασίες.",
-        "ttsDescription": "Το ElevenLabs προσφέρει premium απομαγνητοφώνηση και φωνές μεταγλώττισης. Χωρίς αυτό, το OpenAI αναλαμβάνει αυτές τις εργασίες.",
         "step1": "Μεταβείτε στο",
         "step2": "Εγγραφείτε ή συνδεθείτε στον λογαριασμό σας",
         "step3": "Κάντε κλικ στο εικονίδιο προφίλ και επιλέξτε",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Ποιότητα TTS (Πιστώσεις Stage5)",
-      "openai": "Κανονική (OpenAI TTS)",
-      "openaiHint": "Καλή ποιότητα, χαμηλότερο κόστος",
-      "openaiHintWithBalance": "Καλή ποιότητα · Το υπόλοιπό σας: {{time}} μεταγλώττισης",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Καλύτερη ποιότητα, υψηλότερο κόστος (~12x)",
       "elevenlabsHintWithBalance": "Καλύτερη ποιότητα · Το υπόλοιπό σας: {{time}} μεταγλώττισης"

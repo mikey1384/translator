@@ -379,7 +379,8 @@
     "translateEstimateCredits": "~{{minutes}}분 영상",
     "translateEstimateByo": "BYO 키",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "자막 번역 과정을 취소하시겠습니까? 모든 진행 상황이 손실되며 다시 시작해야 합니다."
+    "cancel_confirmation": "자막 번역 과정을 취소하시겠습니까? 모든 진행 상황이 손실되며 다시 시작해야 합니다.",
+    "dubCostHint": "ElevenLabs 음성: 음성 1분당 약 {{rate}} 크레딧. 더빙을 시작하기 전에 이 예상치를 보여 드립니다."
   },
   "summary": {
     "title": "전사 요약",
@@ -580,13 +581,10 @@
       "qualityDubbing": {
         "label": "고품질 더빙",
         "modelOn": "ElevenLabs TTS 프리미엄 음성",
-        "modelOff": "OpenAI TTS",
         "help": "켜짐: ElevenLabs TTS (프리미엄 음성, ~12× 크레딧). 꺼짐: OpenAI TTS (좋은 품질).",
         "helpWithEstimate": "ElevenLabs TTS (~12× 크레딧). 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질.",
         "helpOn": "<b>{{ratio}}× 크레딧</b> • ElevenLabs TTS 프리미엄 음성",
-        "helpOff": "<b>1× 크레딧</b> • OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× 크레딧</b> • ElevenLabs TTS 프리미엄 음성 • 보유 크레딧: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× 크레딧</b> • OpenAI TTS • 보유 크레딧: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× 크레딧</b> • ElevenLabs TTS 프리미엄 음성 • 보유 크레딧: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "영상 추천 품질",
@@ -605,12 +603,6 @@
       "voiceLabel": "더빙 음성",
       "voiceHelp": "더빙을 생성할 때 기본으로 사용할 음성을 선택하세요.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -697,14 +689,14 @@
       "qualityMode": "고품질",
       "summary": "요약",
       "dubbing": "더빙",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "현재 사용 가능한 BYO 동영상 추천 모델이 없습니다. 이 기능을 사용하려면 OpenAI 또는 Anthropic BYO를 활성화하세요.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO 잠금 해제, 키, 토글이 필요합니다.",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO 잠금 해제, 키, 토글이 필요합니다.",
       "summaryRequiresOpenAi": "OpenAI BYO 이용 권한과 API 키가 필요합니다.",
       "summaryRequiresAnthropic": "Anthropic BYO 이용 권한과 API 키가 필요합니다.",
-      "translationReview": "번역 (검토)"
+      "translationReview": "번역 (검토)",
+      "dubbingRequiresElevenLabs": "더빙은 ElevenLabs만 사용합니다. 내 API 키로 더빙하려면 ElevenLabs API 키를 추가하세요. 키가 없으면 Stage5 크레딧으로 더빙하며, 내 API 키 사용 중에는 Stage5 크레딧을 쓰지 않습니다."
     },
     "apiKeyGuide": {
       "title": "API 키 받는 방법",
@@ -745,13 +737,13 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs는 프리미엄 전사 및 음성 복제 더빙을 제공합니다. 없으면 OpenAI가 이러한 작업을 처리합니다.",
-        "ttsDescription": "ElevenLabs는 프리미엄 전사 및 더빙 음성을 제공합니다. 없으면 OpenAI가 이 작업을 처리합니다.",
         "step1": "방문:",
         "step2": "계정에 가입하거나 로그인",
         "step3": "프로필 아이콘을 클릭하고 선택:",
         "step4": "구독 설정에서 결제 수단 추가 (무료 플랜 초과 API 사용에 필수)",
         "step5": "API 키를 복사하여 Stage5에 붙여넣기",
-        "note": "팁: ElevenLabs는 제한된 사용량의 무료 플랜이 있습니다. 더 많이 사용하려면 계정 설정에서 유료 플랜으로 업그레이드하세요."
+        "note": "팁: ElevenLabs는 제한된 사용량의 무료 플랜이 있습니다. 더 많이 사용하려면 계정 설정에서 유료 플랜으로 업그레이드하세요.",
+        "dubbingDescription": "모든 더빙은 ElevenLabs로 처리되며, 프리미엄 전사도 제공합니다. 내 ElevenLabs 키가 없으면 더빙은 Stage5 크레딧을 사용하고, 전사는 OpenAI로도 처리할 수 있습니다."
       }
     },
     "byoAnthropic": {
@@ -778,9 +770,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS 품질 (Stage5 크레딧)",
-      "openai": "표준 (OpenAI TTS)",
-      "openaiHint": "좋은 품질, 저렴한 비용",
-      "openaiHintWithBalance": "좋은 품질 · 잔액: {{time}} 더빙 가능",
       "elevenlabs": "프리미엄 (ElevenLabs)",
       "elevenlabsHint": "최고 품질, 높은 비용 (~12배)",
       "elevenlabsHintWithBalance": "최고 품질 · 잔액: {{time}} 더빙 가능"

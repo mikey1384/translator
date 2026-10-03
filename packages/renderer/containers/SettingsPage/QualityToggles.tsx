@@ -85,10 +85,6 @@ export default function QualityToggles() {
   const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
   const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const setPreferClaudeReview = useAiStore(s => s.setPreferClaudeReview);
-  const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
-  const setStage5DubbingTtsProvider = useAiStore(
-    s => s.setStage5DubbingTtsProvider
-  );
   const stage5VideoSuggestionMode = useAiStore(
     s => s.stage5VideoSuggestionMode
   );
@@ -146,11 +142,9 @@ export default function QualityToggles() {
     CREDITS_PER_SUMMARY_AUDIO_HOUR * SUMMARY_QUALITY_MULTIPLIER
   );
 
-  // Calculate estimated dubbing time for OpenAI (normal) and ElevenLabs (HQ)
-  const dubbingNormalHours = estimateDubbingHours(credits, 'openai');
-  const dubbingHqHours = estimateDubbingHours(credits, 'elevenlabs');
-  const dubbingNormalCreditsPerMinute = TTS_CREDITS_PER_MINUTE.openai;
-  const dubbingHqCreditsPerMinute = TTS_CREDITS_PER_MINUTE.elevenlabs;
+  // Dubbing is ElevenLabs-only (eleven_v4): one rate, shown up front.
+  const dubbingHours = estimateDubbingHours(credits);
+  const dubbingCreditsPerMinute = TTS_CREDITS_PER_MINUTE.elevenlabs;
   const defaultVideoSuggestionCredits = Math.ceil(
     (estimateVideoSuggestionUsdPerSearch(AI_MODELS.GPT) * PRICE_MARGIN) /
       USD_PER_CREDIT
@@ -212,8 +206,8 @@ export default function QualityToggles() {
 
   const row = (
     label: string,
-    checked: boolean,
-    onChange: (v: boolean) => void,
+    checked: boolean | null,
+    onChange: ((v: boolean) => void) | null,
     help?: ReactNode
   ) => (
     <div
@@ -249,7 +243,9 @@ export default function QualityToggles() {
           </div>
         ) : null}
       </div>
-      <Switch checked={checked} onChange={onChange} ariaLabel={label} />
+      {checked !== null && onChange ? (
+        <Switch checked={checked} onChange={onChange} ariaLabel={label} />
+      ) : null}
     </div>
   );
 
@@ -347,31 +343,18 @@ export default function QualityToggles() {
             })
       )}
       {row(
-        t(
-          'settings.performanceQuality.qualityDubbing.label',
-          'Quality Dubbing'
-        ),
-        stage5DubbingTtsProvider === 'elevenlabs',
-        v => setStage5DubbingTtsProvider(v ? 'elevenlabs' : 'openai'),
-        stage5DubbingTtsProvider === 'elevenlabs'
-          ? renderHelp({
-              rate: dubbingHqCreditsPerMinute,
-              unit: 'perMinute',
-              model: t(
-                'settings.performanceQuality.qualityDubbing.modelOn',
-                'ElevenLabs TTS premium voices'
-              ),
-              estimateHours: dubbingHqHours,
-            })
-          : renderHelp({
-              rate: dubbingNormalCreditsPerMinute,
-              unit: 'perMinute',
-              model: t(
-                'settings.performanceQuality.qualityDubbing.modelOff',
-                'OpenAI TTS'
-              ),
-              estimateHours: dubbingNormalHours,
-            })
+        t('settings.byoPreferences.dubbing', 'Dubbing'),
+        null,
+        null,
+        renderHelp({
+          rate: dubbingCreditsPerMinute,
+          unit: 'perMinute',
+          model: t(
+            'settings.performanceQuality.qualityDubbing.modelOn',
+            'ElevenLabs TTS premium voices'
+          ),
+          estimateHours: dubbingHours,
+        })
       )}
       {row(
         t(

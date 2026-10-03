@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Kwaliteitsdubbing",
         "modelOn": "ElevenLabs TTS-premiumstemmen",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× credits</b> • ElevenLabs TTS met premium stemmen",
         "helpWithEstimate": "<b>12× credits</b> • Je saldo: ~{{normalTime}} (normaal) / ~{{hqTime}} (hk)",
         "helpOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS met premiumstemmen",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS met premiumstemmen • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Saldo: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS met premiumstemmen • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Videosuggestiemodel",
@@ -596,12 +593,6 @@
       "voiceLabel": "Gedubde stem",
       "voiceHelp": "Kies de standaardstem voor het genereren van gedubde audio.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Kwaliteit",
       "summary": "Samenvatting",
       "dubbing": "Dubbing",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Er is momenteel geen BYO-model voor videoaanbevelingen beschikbaar. Schakel OpenAI of Anthropic BYO in voor deze functie.",
       "videoSuggestionModelRequiresOpenAi": "Vereist OpenAI BYO-ontgrendeling, sleutel en inschakeling.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs biedt premium transcriptie en stemklonen-dubbing. Zonder dit handelt OpenAI deze taken af.",
-        "ttsDescription": "ElevenLabs biedt premiumstemmen voor transcriptie en dubbing. Zonder die dienst verwerkt OpenAI deze taken.",
         "step1": "Ga naar",
         "step2": "Registreer of log in op je account",
         "step3": "Klik op je profielicoon en selecteer",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS-kwaliteit (Stage5-tegoed)",
-      "openai": "Standaard (OpenAI TTS)",
-      "openaiHint": "Goede kwaliteit, lagere kosten",
-      "openaiHintWithBalance": "Goede kwaliteit · Je saldo: {{time}} aan dubbing",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Beste kwaliteit, hogere kosten (~12x)",
       "elevenlabsHintWithBalance": "Beste kwaliteit · Je saldo: {{time}} aan dubbing"

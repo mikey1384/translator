@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "דיבוב באיכות גבוהה",
         "modelOn": "קולות פרימיום של ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× קרדיטים</b> • ElevenLabs TTS עם קולות פרימיום",
         "helpWithEstimate": "<b>12× קרדיטים</b> • היתרה שלך: ~{{normalTime}} (רגיל) / ~{{hqTime}} (איכות גבוהה)",
         "helpOn": "<b>{{ratio}}× קרדיטים</b> • ElevenLabs TTS עם קולות פרימיום",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× קרדיטים</b> • ElevenLabs TTS עם קולות פרימיום • יתרה: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • יתרה: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× קרדיטים</b> • ElevenLabs TTS עם קולות פרימיום • יתרה: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "מודל הצעת סרטונים",
@@ -596,12 +593,6 @@
       "voiceLabel": "קול מדובב",
       "voiceHelp": "בחר את הקול ברירת המחדל ליצירת אודיו מדובב.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "איכות",
       "summary": "סיכום",
       "dubbing": "דיבוב",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "כרגע אין מודל המלצות וידאו BYO זמין. הפעל OpenAI או Anthropic BYO עבור תכונה זו.",
       "videoSuggestionModelRequiresOpenAi": "נדרשים פתיחת OpenAI BYO, מפתח והפעלה.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs מציע תמלול פרימיום ודיבוב עם שכפול קול. בלעדיו, OpenAI מטפל במשימות אלו.",
-        "ttsDescription": "ElevenLabs מציעה תמלול פרימיום וקולות דיבוב. בלעדיה, OpenAI מטפלת במשימות האלה.",
         "step1": "עבור אל",
         "step2": "הירשם או התחבר לחשבון שלך",
         "step3": "לחץ על סמל הפרופיל שלך ובחר",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "איכות TTS (קרדיטים של Stage5)",
-      "openai": "רגיל (OpenAI TTS)",
-      "openaiHint": "איכות טובה, עלות נמוכה יותר",
-      "openaiHintWithBalance": "איכות טובה · היתרה שלך: {{time}} של דיבוב",
       "elevenlabs": "פרימיום (ElevenLabs)",
       "elevenlabsHint": "האיכות הטובה ביותר, עלות גבוהה יותר (~12x)",
       "elevenlabsHintWithBalance": "האיכות הטובה ביותר · היתרה שלך: {{time}} של דיבוב"

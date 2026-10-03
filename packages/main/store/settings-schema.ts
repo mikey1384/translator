@@ -22,8 +22,12 @@ export type TranscriptionProviderPreference =
   | 'elevenlabs'
   | 'openai'
   | 'stage5';
-export type DubbingProviderPreference = 'elevenlabs' | 'openai' | 'stage5';
-export type Stage5DubbingTtsProviderPreference = 'openai' | 'elevenlabs';
+// Dubbing is ElevenLabs-only. 'elevenlabs' = use the BYO ElevenLabs key when
+// it is available, otherwise Stage5 credits (which also synthesize with
+// ElevenLabs). Legacy stored 'openai' values are migrated on startup and
+// normalized to 'elevenlabs' on read.
+export type DubbingProviderPreference = 'elevenlabs' | 'stage5';
+export type Stage5DubbingTtsProviderPreference = 'elevenlabs';
 
 type PostInstallNotice = {
   targetVersion: string;
@@ -109,8 +113,8 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   videoSuggestionRecency: VIDEO_SUGGESTION_DEFAULT_RECENCY,
   videoSuggestionPreferenceTopic: VIDEO_SUGGESTION_DEFAULT_TOPIC,
   preferredTranscriptionProvider: 'elevenlabs',
-  preferredDubbingProvider: 'openai',
-  stage5DubbingTtsProvider: 'openai',
+  preferredDubbingProvider: 'elevenlabs',
+  stage5DubbingTtsProvider: 'elevenlabs',
   // Agent control off by default - requires explicit user grant
   agentControlEnabled: false,
   // Default allowlist: Downloads + Translator library (populated at runtime)
@@ -159,16 +163,18 @@ export function normalizeDubbingProviderSetting(
   value: unknown,
   fallback: DubbingProviderPreference = APP_SETTINGS_DEFAULTS.preferredDubbingProvider
 ): DubbingProviderPreference {
-  return value === 'elevenlabs' || value === 'openai' || value === 'stage5'
-    ? value
-    : fallback;
+  if (value === 'stage5') return 'stage5';
+  // Legacy 'openai' dubbing (OpenAI TTS) is retired; it maps to ElevenLabs.
+  if (value === 'elevenlabs' || value === 'openai') return 'elevenlabs';
+  return fallback;
 }
 
 export function normalizeStage5DubbingTtsProviderSetting(
-  value: unknown,
-  fallback: Stage5DubbingTtsProviderPreference = APP_SETTINGS_DEFAULTS.stage5DubbingTtsProvider
+  _value?: unknown,
+  _fallback: Stage5DubbingTtsProviderPreference = APP_SETTINGS_DEFAULTS.stage5DubbingTtsProvider
 ): Stage5DubbingTtsProviderPreference {
-  return value === 'openai' || value === 'elevenlabs' ? value : fallback;
+  // Stage5 credits always dub with ElevenLabs; legacy 'openai' is ignored.
+  return 'elevenlabs';
 }
 
 export type { ByoVideoSuggestionModel };

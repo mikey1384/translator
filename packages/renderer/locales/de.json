@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Hochwertige Synchronisation",
         "modelOn": "ElevenLabs TTS mit Premium-Stimmen",
-        "modelOff": "OpenAI TTS",
         "help": "Ein: ElevenLabs TTS (Premium-Stimmen, ~12× Credits). Aus: OpenAI TTS (gute Qualität).",
         "helpWithEstimate": "ElevenLabs TTS (~12× Credits). Ihre Credits: ~{{normalTime}} normal, ~{{hqTime}} HQ.",
         "helpOn": "<b>{{ratio}}× Credits</b> • ElevenLabs TTS mit Premium-Stimmen",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× Credits</b> • ElevenLabs TTS mit Premium-Stimmen • Guthaben: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Guthaben: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× Credits</b> • ElevenLabs TTS mit Premium-Stimmen • Guthaben: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Videovorschlag-Modell",
@@ -596,12 +593,6 @@
       "voiceLabel": "Synchronstimme",
       "voiceHelp": "Wählen Sie die Standardstimme für die Erstellung der synchronisierten Audiospur.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Qualität",
       "summary": "Zusammenfassung",
       "dubbing": "Synchronisation",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Derzeit ist kein BYO-Modell für Videoempfehlungen verfügbar. Aktiviere OpenAI oder Anthropic BYO für diese Funktion.",
       "videoSuggestionModelRequiresOpenAi": "Erfordert OpenAI-BYO-Freischaltung, Schlüssel und Aktivierung.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs bietet Premium-Transkription und Vertonung mit Stimmklonung. Ohne ElevenLabs übernimmt OpenAI diese Aufgaben.",
-        "ttsDescription": "ElevenLabs bietet Premium-Stimmen für Transkription und Synchronisierung. Ohne diesen Dienst übernimmt OpenAI diese Aufgaben.",
         "step1": "Gehen Sie zu",
         "step2": "Registrieren Sie sich oder melden Sie sich an",
         "step3": "Klicken Sie auf Ihr Profilsymbol und wählen Sie",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS-Qualität (Stage5-Guthaben)",
-      "openai": "Standard (OpenAI-TTS)",
-      "openaiHint": "Gute Qualität, geringere Kosten",
-      "openaiHintWithBalance": "Gute Qualität · Ihr Guthaben: {{time}} Synchronisation",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Beste Qualität, höhere Kosten (~12-fach)",
       "elevenlabsHintWithBalance": "Beste Qualität · Ihr Guthaben: {{time}} Synchronisation"

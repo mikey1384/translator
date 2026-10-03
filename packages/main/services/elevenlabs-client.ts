@@ -4,6 +4,7 @@ import FormData from 'form-data';
 import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
+import { normalizeDubVoice } from '../../shared/constants/dub-voices.js';
 
 const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
 const ELEVENLABS_TTS_MODEL_ID = 'eleven_v4';
@@ -115,12 +116,13 @@ export interface ElevenLabsDubResult {
   }>;
 }
 
-function resolveVoiceId(voice?: string): string {
+export function resolveVoiceId(voice?: string): string {
   if (!voice) return ELEVENLABS_VOICES.adam;
   // If it's already a voice ID (long string), use it directly
   if (voice.length > 15) return voice;
-  // Try to match by name
-  const key = voice.toLowerCase() as ElevenLabsVoiceId;
+  // Legacy OpenAI voice names (alloy, echo, ...) map to their ElevenLabs
+  // replacement via the shared table, then match by name.
+  const key = normalizeDubVoice(voice).toLowerCase() as ElevenLabsVoiceId;
   return ELEVENLABS_VOICES[key] ?? ELEVENLABS_VOICES.adam;
 }
 

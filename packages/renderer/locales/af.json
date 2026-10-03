@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Kwaliteit-nasinkronisering",
         "modelOn": "ElevenLabs TTS-premiumstemme",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× krediete</b> • ElevenLabs TTS met premium-stemme",
         "helpWithEstimate": "<b>12× krediete</b> • Jou balans: ~{{normalTime}} (normaal) / ~{{hqTime}} (hk)",
         "helpOn": "<b>{{ratio}}× krediete</b> • ElevenLabs TTS met premium-stemme",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× krediete</b> • ElevenLabs TTS met premium-stemme • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Saldo: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× krediete</b> • ElevenLabs TTS met premium-stemme • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Videovoorstel-model",
@@ -596,12 +593,6 @@
       "voiceLabel": "Nasinkroniseerstem",
       "voiceHelp": "Kies die versteekstem wat gebruik word wanneer nasinkroniseerde klank gegenereer word.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Kwaliteit",
       "summary": "Opsomming",
       "dubbing": "Nasinkronisering",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Geen BYO-video-aanbevelingsmodel is tans beskikbaar nie. Aktiveer OpenAI of Anthropic BYO vir hierdie funksie.",
       "videoSuggestionModelRequiresOpenAi": "Vereis OpenAI BYO-ontsluiting, sleutel en skakelaar.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs bied premium transkripsie en stemkloning-nasinkronisering. Sonder dit hanteer OpenAI hierdie take.",
-        "ttsDescription": "ElevenLabs bied premium transkripsie en dubbingstemme. Sonder dit hanteer OpenAI hierdie take.",
         "step1": "Gaan na",
         "step2": "Registreer of meld aan by jou rekening",
         "step3": "Klik op jou profielikoon en kies",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS-kwaliteit (Stage5-krediete)",
-      "openai": "Standaard (OpenAI TTS)",
-      "openaiHint": "Goeie kwaliteit, laer koste",
-      "openaiHintWithBalance": "Goeie kwaliteit · Jou balans: {{time}} nasinkronisering",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Beste kwaliteit, hoër koste (~12×)",
       "elevenlabsHintWithBalance": "Beste kwaliteit · Jou balans: {{time}} nasinkronisering"

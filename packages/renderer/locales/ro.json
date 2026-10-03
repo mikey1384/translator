@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Dublare de Calitate",
         "modelOn": "Voci premium ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× credite</b> • ElevenLabs TTS cu voci premium",
         "helpWithEstimate": "<b>12× credite</b> • Soldul tău: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× credite</b> • ElevenLabs TTS cu voci premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× credite</b> • ElevenLabs TTS cu voci premium • Sold: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Sold: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× credite</b> • ElevenLabs TTS cu voci premium • Sold: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Model sugestii video",
@@ -596,12 +593,6 @@
       "voiceLabel": "Voce Dublată",
       "voiceHelp": "Alegeți vocea implicită folosită la generarea audio-ului dublat.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Calitate",
       "summary": "Rezumat",
       "dubbing": "Dublare",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Niciun model BYO de recomandare video nu este disponibil acum. Activează OpenAI sau Anthropic BYO pentru această funcție.",
       "videoSuggestionModelRequiresOpenAi": "Necesită deblocarea OpenAI BYO, cheia și comutatorul activat.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs oferă transcriere premium și dublare cu clonare vocală. Fără el, OpenAI gestionează aceste sarcini.",
-        "ttsDescription": "ElevenLabs oferă transcriere premium și voci de dublare. Fără el, OpenAI se ocupă de aceste sarcini.",
         "step1": "Accesați",
         "step2": "Înregistrați-vă sau conectați-vă la contul dvs.",
         "step3": "Faceți clic pe pictograma profilului și selectați",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Calitate TTS (Credite Stage5)",
-      "openai": "Standard (OpenAI TTS)",
-      "openaiHint": "Calitate bună, cost mai mic",
-      "openaiHintWithBalance": "Calitate bună · Soldul tău: {{time}} de dublare",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Cea mai bună calitate, cost mai mare (~12x)",
       "elevenlabsHintWithBalance": "Cea mai bună calitate · Soldul tău: {{time}} de dublare"

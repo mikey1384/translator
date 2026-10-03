@@ -13,7 +13,6 @@ import {
   SUMMARY_QUALITY_MULTIPLIER,
   STAGE5_REVIEW_TRANSLATION_MODEL,
   STAGE5_TTS_MODEL_ELEVEN_V4,
-  STAGE5_TTS_MODEL_STANDARD,
   TTS_CREDITS_PER_MINUTE,
   TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
   TRANSLATION_QUALITY_MULTIPLIER,
@@ -25,13 +24,13 @@ import {
 export { PREVIEW_TTS_CREDITS };
 
 export type SummaryEffortLevel = 'standard' | 'high';
-export type TtsProvider = 'openai' | 'elevenlabs';
+// Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06).
+export type TtsProvider = 'elevenlabs';
 export type TranslationReviewModel =
   | typeof STAGE5_REVIEW_TRANSLATION_MODEL
   | typeof AI_MODELS.CLAUDE_OPUS;
 
 export const TTS_CREDITS_PER_CHAR: Record<TtsProvider, number> = {
-  openai: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD),
   elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V4),
 };
 
@@ -105,7 +104,7 @@ export function estimateTranscriptionHours(
 
 export function estimateDubbingHours(
   credits: number | null,
-  provider: TtsProvider
+  provider: TtsProvider = 'elevenlabs'
 ): number | null {
   const safeCredits = normalizeKnownCredits(credits);
   if (safeCredits === null) return null;
@@ -186,16 +185,13 @@ export function estimateSummaryCreditsFromChars(
 
 export function estimateDubbingCreditsFromChars(
   charCount: number,
-  provider: TtsProvider
+  _provider: TtsProvider = 'elevenlabs'
 ): number {
   const safeCharCount = Math.max(0, Math.ceil(charCount || 0));
   if (safeCharCount === 0) return 0;
   return estimateTtsCredits({
     characters: safeCharCount,
-    model:
-      provider === 'elevenlabs'
-        ? STAGE5_TTS_MODEL_ELEVEN_V4
-        : STAGE5_TTS_MODEL_STANDARD,
+    model: STAGE5_TTS_MODEL_ELEVEN_V4,
   });
 }
 
@@ -237,7 +233,7 @@ export function formatCredits(credits: number): string {
 
 export function formatDubbingTime(
   credits: number,
-  provider: TtsProvider
+  provider: TtsProvider = 'elevenlabs'
 ): string {
   const hours = estimateDubbingHours(credits, provider);
   if (hours == null) return '~0s';

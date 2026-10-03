@@ -380,7 +380,8 @@
     "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "BYO key",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again."
+    "cancel_confirmation": "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again.",
+    "dubCostHint": "ElevenLabs voice: ~{{rate}} credits per minute of speech. This estimate is shown before dubbing starts."
   },
   "summary": {
     "title": "Highlights",
@@ -581,13 +582,10 @@
       "qualityDubbing": {
         "label": "Quality Dubbing",
         "modelOn": "ElevenLabs TTS premium voices",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× credits</b> • ElevenLabs TTS with premium voices",
         "helpWithEstimate": "<b>12× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS with premium voices",
-        "helpOff": "<b>1× credits</b> • OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS with premium voices • Balance: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× credits</b> • OpenAI TTS • Balance: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS with premium voices • Balance: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Video Recommendation Quality",
@@ -606,12 +604,6 @@
       "voiceLabel": "Dubbed Voice",
       "voiceHelp": "Choose the default voice used when generating dubbed audio.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -698,14 +690,14 @@
       "qualityMode": "Quality",
       "summary": "Summary",
       "dubbing": "Dubbing",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "No BYO video recommendation model is currently available. Enable OpenAI or Anthropic BYO for this feature.",
       "videoSuggestionModelRequiresOpenAi": "Requires OpenAI BYO unlock, key, and toggle.",
       "videoSuggestionModelRequiresAnthropic": "Requires Anthropic BYO unlock, key, and toggle.",
       "summaryRequiresOpenAi": "Requires OpenAI BYO access and API key.",
       "summaryRequiresAnthropic": "Requires Anthropic BYO access and API key.",
-      "translationReview": "Translation (Review)"
+      "translationReview": "Translation (Review)",
+      "dubbingRequiresElevenLabs": "Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on."
     },
     "apiKeyGuide": {
       "title": "How to Get API Keys",
@@ -746,13 +738,13 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs offers premium transcription and voice-cloning dubbing. Without it, OpenAI handles these tasks.",
-        "ttsDescription": "ElevenLabs offers premium transcription and dubbing voices. Without it, OpenAI handles these tasks.",
         "step1": "Go to",
         "step2": "Sign up or log in to your account",
         "step3": "Click your profile icon and select",
         "step4": "Add a payment method in Subscription settings (required for API usage beyond free tier)",
         "step5": "Copy your API key and paste it in Stage5",
-        "note": "Tip: ElevenLabs has a free tier with limited usage. For more, upgrade to a paid plan in your account settings."
+        "note": "Tip: ElevenLabs has a free tier with limited usage. For more, upgrade to a paid plan in your account settings.",
+        "dubbingDescription": "ElevenLabs powers all dubbing and offers premium transcription. Without your own ElevenLabs key, dubbing uses Stage5 credits and OpenAI can still handle transcription."
       }
     },
     "byoAnthropic": {
@@ -779,9 +771,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS Quality (Stage5 Credits)",
-      "openai": "Standard (OpenAI TTS)",
-      "openaiHint": "Good quality, lower cost",
-      "openaiHintWithBalance": "Good quality · Your balance: {{time}} of dubbing",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Best quality, higher cost (~12x)",
       "elevenlabsHintWithBalance": "Best quality · Your balance: {{time}} of dubbing"

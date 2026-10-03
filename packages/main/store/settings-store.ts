@@ -6,6 +6,7 @@ import {
   APP_SETTINGS_DEFAULTS,
   type AppSettingsSchema,
 } from './settings-schema.js';
+import { migrateLegacyOpenAiDubbingSettings } from './dubbing-settings-migration.js';
 
 export type SettingsStoreType = Store<AppSettingsSchema>;
 
@@ -33,4 +34,17 @@ if (!settingsStore.has('preferClaudeReview')) {
     'preferClaudeReview',
     hadExistingSettingsFile ? true : APP_SETTINGS_DEFAULTS.preferClaudeReview
   );
+}
+
+// Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06): rewrite legacy
+// 'openai' dubbing preferences once. Idempotent; a no-op on later launches.
+try {
+  migrateLegacyOpenAiDubbingSettings(
+    settingsStore as unknown as {
+      get(key: string): unknown;
+      set(key: string, value: unknown): void;
+    }
+  );
+} catch {
+  // Readers normalize legacy values anyway; never block startup on this.
 }

@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Dublagem de alta qualidade",
         "modelOn": "Vozes premium do ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "Ativado: ElevenLabs TTS (vozes premium, ~12× créditos). Desativado: OpenAI TTS (boa qualidade).",
         "helpWithEstimate": "ElevenLabs TTS (~12× créditos). Seus créditos: ~{{normalTime}} normal, ~{{hqTime}} HQ.",
         "helpOn": "<b>{{ratio}}× créditos</b> • ElevenLabs TTS com vozes premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× créditos</b> • ElevenLabs TTS com vozes premium • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Saldo: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× créditos</b> • ElevenLabs TTS com vozes premium • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Modelo de sugestão de vídeo",
@@ -596,12 +593,6 @@
       "voiceLabel": "Voz dublada",
       "voiceHelp": "Escolha a voz padrão usada ao gerar o áudio dublado.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Qualidade",
       "summary": "Resumo",
       "dubbing": "Dublagem",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Nenhum modelo BYO de recomendação de vídeos está disponível no momento. Ative OpenAI ou Anthropic BYO para este recurso.",
       "videoSuggestionModelRequiresOpenAi": "Requer desbloqueio BYO da OpenAI, chave e ativação.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs oferece transcrição premium e dublagem com clonagem de voz. Sem ele, OpenAI lida com essas tarefas.",
-        "ttsDescription": "ElevenLabs oferece vozes premium para transcrição e dublagem. Sem ele, a OpenAI cuida dessas tarefas.",
         "step1": "Acesse",
         "step2": "Cadastre-se ou faça login na sua conta",
         "step3": "Clique no ícone do seu perfil e selecione",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Qualidade TTS (Créditos Stage5)",
-      "openai": "Padrão (OpenAI TTS)",
-      "openaiHint": "Boa qualidade, custo menor",
-      "openaiHintWithBalance": "Boa qualidade · Seu saldo: {{time}} de dublagem",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Melhor qualidade, custo maior (~12×)",
       "elevenlabsHintWithBalance": "Melhor qualidade · Seu saldo: {{time}} de dublagem"

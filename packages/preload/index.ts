@@ -812,19 +812,18 @@ const electronAPI = {
     ipcRenderer.invoke('set-preferred-transcription-provider', provider),
 
   // Dubbing provider preference
-  getPreferredDubbingProvider: (): Promise<
-    'elevenlabs' | 'openai' | 'stage5'
-  > => ipcRenderer.invoke('get-preferred-dubbing-provider'),
+  getPreferredDubbingProvider: (): Promise<'elevenlabs' | 'stage5'> =>
+    ipcRenderer.invoke('get-preferred-dubbing-provider'),
   setPreferredDubbingProvider: (
-    provider: 'elevenlabs' | 'openai' | 'stage5'
+    provider: 'elevenlabs' | 'stage5'
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-preferred-dubbing-provider', provider),
 
   // Stage5 dubbing TTS provider (when using Stage5 API)
-  getStage5DubbingTtsProvider: (): Promise<'openai' | 'elevenlabs'> =>
+  getStage5DubbingTtsProvider: (): Promise<'elevenlabs'> =>
     ipcRenderer.invoke('get-stage5-dubbing-tts-provider'),
   setStage5DubbingTtsProvider: (
-    provider: 'openai' | 'elevenlabs'
+    provider: 'elevenlabs'
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-stage5-dubbing-tts-provider', provider),
 

@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Doppiaggio di qualità",
         "modelOn": "Voci premium ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× crediti</b> • ElevenLabs TTS con voci premium",
         "helpWithEstimate": "<b>12× crediti</b> • Il tuo saldo: ~{{normalTime}} (normale) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× crediti</b> • ElevenLabs TTS con voci premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× crediti</b> • ElevenLabs TTS con voci premium • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Saldo: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× crediti</b> • ElevenLabs TTS con voci premium • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Modello suggerimenti video",
@@ -596,12 +593,6 @@
       "voiceLabel": "Voce doppiata",
       "voiceHelp": "Scegli la voce predefinita utilizzata durante la generazione dell'audio doppiato.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Qualità",
       "summary": "Riepilogo",
       "dubbing": "Doppiaggio",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Al momento non è disponibile alcun modello BYO per i consigli video. Abilita OpenAI o Anthropic BYO per questa funzione.",
       "videoSuggestionModelRequiresOpenAi": "Richiede sblocco BYO OpenAI, chiave e attivazione.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs offre trascrizione premium e doppiaggio con clonazione vocale. Senza di esso, OpenAI gestisce queste attività.",
-        "ttsDescription": "ElevenLabs offre voci premium per trascrizione e doppiaggio. Senza di lui, OpenAI gestisce queste attività.",
         "step1": "Vai su",
         "step2": "Registrati o accedi al tuo account",
         "step3": "Clicca sull'icona del tuo profilo e seleziona",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Qualità TTS (Crediti Stage5)",
-      "openai": "Standard (OpenAI TTS)",
-      "openaiHint": "Buona qualità, costo inferiore",
-      "openaiHintWithBalance": "Buona qualità · Il tuo saldo: {{time}} di doppiaggio",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Migliore qualità, costo superiore (~12×)",
       "elevenlabsHintWithBalance": "Migliore qualità · Il tuo saldo: {{time}} di doppiaggio"

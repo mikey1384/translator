@@ -47,8 +47,9 @@ const DEFAULT_CREDIT_RATES = Object.freeze({
   translation_quality_per_hour: 94_560,
   summary_standard_per_hour: 7_695,
   summary_high_per_hour: 30_780,
-  dubbing_openai_per_minute: 787.5,
-  dubbing_elevenlabs_per_minute: 9_450,
+  // Dubbing is ElevenLabs-only (eleven_v4 at $80/1M chars, 2x margin,
+  // 750 spoken chars/min). Translator reports the live rate in planning.
+  dubbing_elevenlabs_per_minute: 4_200,
 });
 
 const PLATFORM_LIMITS = Object.freeze({
@@ -2492,11 +2493,8 @@ export class McpV2Service {
       summaryEffort === 'high'
         ? context.providers?.summary_high
         : context.providers?.summary;
-    const dubbingDescriptor = context.providers?.dubbing || {};
-    const dubbingRoute = `${dubbingDescriptor.provider || ''}:${dubbingDescriptor.model || ''}`;
-    const dubbingRate = /eleven/i.test(dubbingRoute)
-      ? rates.dubbing_elevenlabs_per_minute
-      : rates.dubbing_openai_per_minute;
+    // Dubbing is ElevenLabs-only; every Stage5 dubbing route uses that rate.
+    const dubbingRate = rates.dubbing_elevenlabs_per_minute;
     const creditUsage = {
       transcription:
         transcriptionMethod === 'stage5' && durationKnown
@@ -3989,18 +3987,9 @@ export class McpV2Service {
         planning_expectations:
           Number(plan.credit_usage?.dubbing || 0) > 0
             ? {
-                [/eleven/i.test(
-                  `${plan.provider_snapshot?.dubbing?.provider || ''}:${plan.provider_snapshot?.dubbing?.model || ''}`
-                )
-                  ? 'dubbing_elevenlabs_per_minute'
-                  : 'dubbing_openai_per_minute']:
-                  plan.planning_snapshot?.credit_rates?.[
-                    /eleven/i.test(
-                      `${plan.provider_snapshot?.dubbing?.provider || ''}:${plan.provider_snapshot?.dubbing?.model || ''}`
-                    )
-                      ? 'dubbing_elevenlabs_per_minute'
-                      : 'dubbing_openai_per_minute'
-                  ],
+                dubbing_elevenlabs_per_minute:
+                  plan.planning_snapshot?.credit_rates
+                    ?.dubbing_elevenlabs_per_minute,
               }
             : {},
       };

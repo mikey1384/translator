@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Doublage de qualité",
         "modelOn": "Voix premium ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "Activé : ElevenLabs TTS (voix premium, ~12× crédits). Désactivé : OpenAI TTS (bonne qualité).",
         "helpWithEstimate": "ElevenLabs TTS (~12× crédits). Vos crédits : ~{{normalTime}} normal, ~{{hqTime}} HQ.",
         "helpOn": "<b>{{ratio}}× crédits</b> • ElevenLabs TTS avec voix premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× crédits</b> • ElevenLabs TTS avec voix premium • Solde : ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Solde : ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× crédits</b> • ElevenLabs TTS avec voix premium • Solde : ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Modèle de suggestion vidéo",
@@ -596,12 +593,6 @@
       "voiceLabel": "Voix de doublage",
       "voiceHelp": "Choisissez la voix par défaut utilisée lors de la génération de l'audio doublé.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Qualité",
       "summary": "Résumé",
       "dubbing": "Doublage",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Aucun modèle BYO de recommandation vidéo n'est actuellement disponible. Activez OpenAI ou Anthropic BYO pour cette fonctionnalité.",
       "videoSuggestionModelRequiresOpenAi": "Nécessite le déverrouillage BYO OpenAI, une clé et l'activation.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs offre une transcription premium et un doublage avec clonage vocal. Sans lui, OpenAI gère ces tâches.",
-        "ttsDescription": "ElevenLabs propose des voix premium pour la transcription et le doublage. Sans lui, OpenAI gère ces tâches.",
         "step1": "Allez sur",
         "step2": "Inscrivez-vous ou connectez-vous à votre compte",
         "step3": "Cliquez sur l'icône de votre profil et sélectionnez",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Qualité TTS (Crédits Stage5)",
-      "openai": "Standard (OpenAI TTS)",
-      "openaiHint": "Bonne qualité, coût réduit",
-      "openaiHintWithBalance": "Bonne qualité · Votre solde : {{time}} de doublage",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Meilleure qualité, coût plus élevé (~12×)",
       "elevenlabsHintWithBalance": "Meilleure qualité · Votre solde : {{time}} de doublage"

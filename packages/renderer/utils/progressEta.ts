@@ -18,6 +18,7 @@ export interface OperationEtaInput {
   translationDraftProvider?: ProviderHint;
   translationReviewProvider?: ProviderHint;
   transcriptionProvider?: ProviderHint;
+  // Dubbing is ElevenLabs-only; 'openai' remains only for legacy samples.
   dubbingProvider?: 'openai' | 'elevenlabs';
   nowMs?: number;
 }
@@ -202,7 +203,9 @@ function buildDubbingPhasePlan(input: OperationEtaInput): EtaPhaseDuration[] {
     positive(input.segmentCount) ?? estimateSegments(input.videoDurationSec);
   const durationSec = positive(input.videoDurationSec) ?? segmentCount * 6;
   const provider =
-    detectProviderFromModel(input.model) ?? input.dubbingProvider ?? 'openai';
+    detectProviderFromModel(input.model) ??
+    input.dubbingProvider ??
+    'elevenlabs';
   const synthRatePerSegment = provider === 'elevenlabs' ? 1.15 : 0.75;
   const prepareSeconds = clamp(segmentCount * 0.04, 2, 15);
   const synthSeconds = Math.max(8, segmentCount * synthRatePerSegment);

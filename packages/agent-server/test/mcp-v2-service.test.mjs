@@ -301,7 +301,7 @@ function fakeApp(options = {}) {
       translation: { kind: 'stage5', provider: 'openai' },
       summary: { kind: 'stage5', provider: 'openai' },
       summary_high: { kind: 'stage5', provider: 'openai' },
-      dubbing: { kind: 'stage5', provider: 'openai' },
+      dubbing: { kind: 'stage5', provider: 'stage5', model: 'elevenlabs' },
       video_suggestions: { kind: 'stage5', provider: 'openai' },
     },
     planning: { credit_rates: {}, quality_translation: false },
@@ -5379,4 +5379,52 @@ test('caption language matching falls back from exact to case-insensitive to the
   assert.ok(
     !plan.compatibility.some(item => item.code === 'caption_track_unavailable')
   );
+});
+
+test('dubbing estimates always use the ElevenLabs rate, even for a legacy openai descriptor', async t => {
+  for (const [label, dubbing, creditRates, expectedPerMinute] of [
+    [
+      'default rate',
+      { kind: 'stage5', provider: 'stage5', model: 'elevenlabs' },
+      {},
+      4_200,
+    ],
+    [
+      'reported rate, legacy descriptor',
+      { kind: 'stage5', provider: 'openai' },
+      { dubbing_elevenlabs_per_minute: 5_000 },
+      5_000,
+    ],
+  ]) {
+    const { service, store } = await setup(t, 'production', {
+      context: {
+        providers: {
+          transcription: { kind: 'stage5', provider: 'elevenlabs' },
+          translation: { kind: 'stage5', provider: 'openai' },
+          summary: { kind: 'stage5', provider: 'openai' },
+          summary_high: { kind: 'stage5', provider: 'openai' },
+          dubbing,
+          video_suggestions: { kind: 'stage5', provider: 'openai' },
+        },
+        planning: { credit_rates: creditRates, quality_translation: false },
+      },
+    });
+    const sourcePath = path.join(store.root, `dubbing-rate-${label}.mp4`);
+    await fs.writeFile(sourcePath, 'dubbing rate source');
+    const plan = data(
+      await service.execute('plan_job', {
+        source: { path: sourcePath },
+        transcription_method: 'stage5',
+        translation_provider: 'agent',
+        target_language: 'es',
+        include_dubbing: true,
+      })
+    );
+    // The fake probe reports 12 seconds of media.
+    assert.equal(
+      plan.credit_usage.dubbing,
+      Math.ceil((12 / 60) * expectedPerMinute),
+      label
+    );
+  }
 });

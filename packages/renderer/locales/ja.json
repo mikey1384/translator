@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "高品質の吹き替え",
         "modelOn": "ElevenLabs TTS プレミアム音声",
-        "modelOff": "OpenAI TTS",
         "help": "オン: ElevenLabs TTS（プレミアム音声、約12×クレジット）。オフ: OpenAI TTS（良好な品質）。",
         "helpWithEstimate": "ElevenLabs TTS（約12×クレジット）。あなたのクレジット：~{{normalTime}}通常、~{{hqTime}}高品質。",
         "helpOn": "<b>{{ratio}}×クレジット</b> • ElevenLabs TTS のプレミアム音声",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}×クレジット</b> • ElevenLabs TTS のプレミアム音声 • 残高: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • 残高: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}×クレジット</b> • ElevenLabs TTS のプレミアム音声 • 残高: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "動画提案モデル",
@@ -596,12 +593,6 @@
       "voiceLabel": "吹き替え音声",
       "voiceHelp": "吹き替え音声を生成する際に使用する既定の声を選択します。",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "高品質",
       "summary": "要約",
       "dubbing": "吹き替え",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "利用可能なBYO動画推薦モデルは現在ありません。この機能を使うにはOpenAIまたはAnthropic BYOを有効にしてください。",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYOのアンロック、キー、トグルが必要です。",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabsはプレミアム文字起こしと音声クローン吹き替えを提供します。これがない場合、OpenAIがこれらのタスクを処理します。",
-        "ttsDescription": "ElevenLabsは高品質な文字起こしと吹き替え音声を提供します。ない場合はOpenAIがこれらの処理を担当します。",
         "step1": "アクセス：",
         "step2": "アカウントを登録またはログイン",
         "step3": "プロフィールアイコンをクリックして選択：",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS品質（Stage5クレジット）",
-      "openai": "標準（OpenAI TTS）",
-      "openaiHint": "良品質、低コスト",
-      "openaiHintWithBalance": "良品質 · 残高: {{time}}の吹き替え可能",
       "elevenlabs": "プレミアム（ElevenLabs）",
       "elevenlabsHint": "最高品質、高コスト（約12倍）",
       "elevenlabsHintWithBalance": "最高品質 · 残高: {{time}}の吹き替え可能"

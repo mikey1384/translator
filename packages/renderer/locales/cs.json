@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Kvalitní dabing",
         "modelOn": "Prémiové hlasy ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× kreditů</b> • ElevenLabs TTS s prémiovými hlasy",
         "helpWithEstimate": "<b>12× kreditů</b> • Váš zůstatek: ~{{normalTime}} (normální) / ~{{hqTime}} (vk)",
         "helpOn": "<b>{{ratio}}× kredity</b> • ElevenLabs TTS s prémiovými hlasy",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredity</b> • ElevenLabs TTS s prémiovými hlasy • Zůstatek: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Zůstatek: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× kredity</b> • ElevenLabs TTS s prémiovými hlasy • Zůstatek: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Model návrhů videí",
@@ -596,12 +593,6 @@
       "voiceLabel": "Hlas pro dabing",
       "voiceHelp": "Vyberte výchozí hlas používaný při generování dabovaného zvuku.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Kvalita",
       "summary": "Souhrn",
       "dubbing": "Dabing",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Momentálně není k dispozici žádný model BYO pro doporučování videí. Pro tuto funkci povolte OpenAI nebo Anthropic BYO.",
       "videoSuggestionModelRequiresOpenAi": "Vyžaduje odemčení OpenAI BYO, klíč a zapnutý přepínač.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs nabízí prémiový přepis a dabing s klonováním hlasu. Bez něj OpenAI zpracovává tyto úlohy.",
-        "ttsDescription": "ElevenLabs nabízí prémiový přepis a dabingové hlasy. Bez něj tyto úlohy zajišťuje OpenAI.",
         "step1": "Přejděte na",
         "step2": "Zaregistrujte se nebo se přihlaste ke svému účtu",
         "step3": "Klikněte na ikonu profilu a vyberte",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Kvalita TTS (Stage5 kredity)",
-      "openai": "Standardní (OpenAI TTS)",
-      "openaiHint": "Dobrá kvalita, nižší cena",
-      "openaiHintWithBalance": "Dobrá kvalita · Váš zůstatek: {{time}} dabingu",
       "elevenlabs": "Prémiová (ElevenLabs)",
       "elevenlabsHint": "Nejlepší kvalita, vyšší cena (~12×)",
       "elevenlabsHintWithBalance": "Nejlepší kvalita · Váš zůstatek: {{time}} dabingu"

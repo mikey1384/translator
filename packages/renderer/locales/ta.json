@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "தர டப்பிங்",
         "modelOn": "ElevenLabs TTS பிரீமியம் குரல்கள்",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× கிரெடிட்கள்</b> • பிரீமியம் குரல்களுடன் ElevenLabs TTS",
         "helpWithEstimate": "<b>12× கிரெடிட்கள்</b> • உங்கள் இருப்பு: ~{{normalTime}} (சாதாரண) / ~{{hqTime}} (உயர்தரம்)",
         "helpOn": "<b>{{ratio}}× கிரெடிட்ஸ்</b> • பிரீமியம் குரல்களுடன் ElevenLabs TTS",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× கிரெடிட்ஸ்</b> • பிரீமியம் குரல்களுடன் ElevenLabs TTS • இருப்பு: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • இருப்பு: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× கிரெடிட்ஸ்</b> • பிரீமியம் குரல்களுடன் ElevenLabs TTS • இருப்பு: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "வீடியோ பரிந்துரை மாடல்",
@@ -596,12 +593,6 @@
       "voiceLabel": "டப் செய்யப்பட்ட குரல்",
       "voiceHelp": "டப் செய்யப்பட்ட ஒலியை உருவாக்கும்போது பயன்படுத்தப்படும் இயல்புநிலை குரலைத் தேர்ந்தெடுக்கவும்.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "தரம்",
       "summary": "சுருக்கம்",
       "dubbing": "டப்பிங்",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "தற்போது எந்த BYO video recommendation model-மும் இல்லை. இந்த அம்சத்திற்காக OpenAI அல்லது Anthropic BYO-ஐ செயல்படுத்துங்கள்.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO unlock, key மற்றும் toggle தேவை.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs பிரீமியம் எழுத்துப்பெயர்ப்பு மற்றும் குரல்-குளோனிங் டப்பிங் வழங்குகிறது. இது இல்லாமல், OpenAI இந்த பணிகளைக் கையாளும்.",
-        "ttsDescription": "ElevenLabs உயர்தர உரைமாற்றம் மற்றும் டப்பிங் குரல்களை வழங்குகிறது. அது இல்லையெனில் OpenAI இந்த வேலைகளை கையாளும்.",
         "step1": "செல்லவும்",
         "step2": "உங்கள் கணக்கில் பதிவுசெய்யவும் அல்லது உள்நுழையவும்",
         "step3": "உங்கள் சுயவிவர ஐகானைக் கிளிக் செய்து தேர்ந்தெடுக்கவும்",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS தரம் (Stage5 கிரெடிட்கள்)",
-      "openai": "நிலையான (OpenAI TTS)",
-      "openaiHint": "நல்ல தரம், குறைந்த செலவு",
-      "openaiHintWithBalance": "நல்ல தரம் · உங்கள் இருப்பு: {{time}} டப்பிங்",
       "elevenlabs": "பிரீமியம் (ElevenLabs)",
       "elevenlabsHint": "சிறந்த தரம், அதிக செலவு (~12x)",
       "elevenlabsHintWithBalance": "சிறந்த தரம் · உங்கள் இருப்பு: {{time}} டப்பிங்"

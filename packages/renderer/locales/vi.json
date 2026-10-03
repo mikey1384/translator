@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Lồng tiếng chất lượng cao",
         "modelOn": "Giọng premium ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× tín dụng</b> • ElevenLabs TTS với giọng cao cấp",
         "helpWithEstimate": "<b>12× tín dụng</b> • Số dư của bạn: ~{{normalTime}} (thường) / ~{{hqTime}} (hq)",
         "helpOn": "<b>{{ratio}}× tín dụng</b> • ElevenLabs TTS với giọng premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× tín dụng</b> • ElevenLabs TTS với giọng premium • Số dư: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Số dư: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× tín dụng</b> • ElevenLabs TTS với giọng premium • Số dư: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Mô hình gợi ý video",
@@ -596,12 +593,6 @@
       "voiceLabel": "Giọng lồng tiếng",
       "voiceHelp": "Chọn giọng mặc định khi tạo âm thanh lồng tiếng.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Chất lượng",
       "summary": "Tóm tắt",
       "dubbing": "Lồng tiếng",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Hiện chưa có mô hình đề xuất video BYO nào khả dụng. Hãy bật OpenAI hoặc Anthropic BYO để dùng tính năng này.",
       "videoSuggestionModelRequiresOpenAi": "Cần mở khóa OpenAI BYO, thêm key và bật công tắc.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs cung cấp phiên âm cao cấp và lồng tiếng nhân bản giọng nói. Không có nó, OpenAI sẽ xử lý các tác vụ này.",
-        "ttsDescription": "ElevenLabs cung cấp giọng chép lời và lồng tiếng cao cấp. Nếu không có, OpenAI sẽ xử lý các tác vụ này.",
         "step1": "Truy cập",
         "step2": "Đăng ký hoặc đăng nhập vào tài khoản của bạn",
         "step3": "Nhấp vào biểu tượng hồ sơ của bạn và chọn",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Chất lượng TTS (Tín dụng Stage5)",
-      "openai": "Tiêu chuẩn (OpenAI TTS)",
-      "openaiHint": "Chất lượng tốt, chi phí thấp",
-      "openaiHintWithBalance": "Chất lượng tốt · Số dư: {{time}} lồng tiếng",
       "elevenlabs": "Cao cấp (ElevenLabs)",
       "elevenlabsHint": "Chất lượng cao nhất, chi phí cao (~12×)",
       "elevenlabsHintWithBalance": "Chất lượng cao nhất · Số dư: {{time}} lồng tiếng"

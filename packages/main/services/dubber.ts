@@ -11,6 +11,10 @@ import {
 } from './ai-provider.js';
 import fs from 'fs/promises';
 import path from 'path';
+import {
+  DEFAULT_DUB_VOICE,
+  STAGE5_TTS_MODEL_ELEVEN_V4,
+} from '../../shared/constants/index.js';
 
 const MIN_DUB_SILENCE_GAP_SEC = 0.15;
 // Allow more aggressive compression for ElevenLabs which produces longer audio
@@ -51,18 +55,12 @@ export async function generateDubbedMedia({
   }
   const dubbingProvider = getActiveProviderForDubbing();
 
-  // TTS-based dubbing (OpenAI or ElevenLabs TTS)
-  // For BYO, we know the provider. For Stage5, show generic label until API returns actual model.
-  let ttsProvider =
-    dubbingProvider === 'elevenlabs'
-      ? 'ElevenLabs TTS'
-      : dubbingProvider === 'stage5'
-        ? 'Stage5 TTS'
-        : 'OpenAI TTS';
+  // TTS-based dubbing is ElevenLabs-only (BYO key or Stage5 credits).
+  const ttsProvider = 'ElevenLabs TTS';
   log.info(
     `[${operationId}] Generating dub audio (${segments.length} segments) voice=${
       voice || 'default'
-    } quality=${quality || 'standard'} provider=${ttsProvider}`
+    } quality=${quality || 'standard'} provider=${ttsProvider} route=${dubbingProvider}`
   );
 
   const originalStartByIndex = new Map<number, number>();
@@ -289,15 +287,6 @@ export async function generateDubbedMedia({
     voiceUsed = result?.voice ?? voiceUsed;
     modelUsed = result?.model ?? modelUsed;
 
-    // Update ttsProvider with actual model from API for better UI feedback
-    if (modelUsed) {
-      if (modelUsed.includes('eleven')) {
-        ttsProvider = 'ElevenLabs TTS';
-      } else if (modelUsed.includes('tts-1')) {
-        ttsProvider = 'OpenAI TTS';
-      }
-    }
-
     progressCallback?.({
       percent: Math.min(
         44,
@@ -320,8 +309,8 @@ export async function generateDubbedMedia({
   const synthResult = {
     audioBase64: undefined,
     format: formatUsed,
-    voice: voiceUsed ?? voice ?? 'alloy',
-    model: modelUsed ?? 'tts-1',
+    voice: voiceUsed ?? voice ?? DEFAULT_DUB_VOICE,
+    model: modelUsed ?? STAGE5_TTS_MODEL_ELEVEN_V4,
     segments: aggregatedClips,
     segmentCount: aggregatedClips.length,
   };

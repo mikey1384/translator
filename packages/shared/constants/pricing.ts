@@ -3,7 +3,6 @@ import {
   STAGE5_TRANSCRIPTION_MODEL_PRICING,
   STAGE5_TTS_MODEL_ELEVEN_V4,
   STAGE5_TTS_MODEL_PRICING,
-  STAGE5_TTS_MODEL_STANDARD,
   type Stage5TranscriptionModelId,
   type Stage5TtsModelId,
 } from './model-catalog';
@@ -55,20 +54,14 @@ export function estimateTtsCredits({
 export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR =
   getTranscriptionCreditsPerSecond(STAGE5_ELEVENLABS_SCRIBE_MODEL) * 3600;
 
+// Dubbing is ElevenLabs-only: every dubbing estimate uses the eleven_v4 rate.
 export const TTS_CREDITS_PER_MINUTE = {
-  openai:
-    getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD) *
-    SPOKEN_CHARS_PER_MINUTE,
   elevenlabs:
     getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_V4) *
     SPOKEN_CHARS_PER_MINUTE,
 } as const;
 
 export const PREVIEW_TTS_CREDITS = {
-  openai: estimateTtsCredits({
-    characters: PREVIEW_TTS_SAMPLE_CHARS,
-    model: STAGE5_TTS_MODEL_STANDARD,
-  }),
   elevenlabs: estimateTtsCredits({
     characters: PREVIEW_TTS_SAMPLE_CHARS,
     model: STAGE5_TTS_MODEL_ELEVEN_V4,

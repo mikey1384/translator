@@ -1,4 +1,4 @@
-import { css } from '@emotion/css';
+import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
 import { colors, selectStyles } from '../../styles';
@@ -7,38 +7,21 @@ import { useAiStore } from '../../state';
 import * as SubtitlesIPC from '../../ipc/subtitles';
 import * as SystemIPC from '../../ipc/system';
 import { PREVIEW_TTS_CREDITS } from '../../utils/creditEstimates';
+import { getDubbingActionState } from '../../state/byo-runtime';
+import {
+  DEFAULT_DUB_VOICE,
+  ELEVENLABS_DUB_VOICE_OPTIONS,
+} from '../../../shared/constants';
 
-const ELEVENLABS_VOICES = [
-  { value: 'rachel', fallback: 'Rachel' },
-  { value: 'adam', fallback: 'Adam' },
-  { value: 'josh', fallback: 'Josh' },
-  { value: 'sarah', fallback: 'Sarah' },
-  { value: 'charlie', fallback: 'Charlie' },
-  { value: 'emily', fallback: 'Emily' },
-  { value: 'matilda', fallback: 'Matilda' },
-  { value: 'brian', fallback: 'Brian' },
-] as const;
-
-const OPENAI_VOICES = [
-  { value: 'alloy', fallback: 'Alloy' },
-  { value: 'echo', fallback: 'Echo' },
-  { value: 'fable', fallback: 'Fable' },
-  { value: 'onyx', fallback: 'Onyx' },
-  { value: 'nova', fallback: 'Nova' },
-  { value: 'shimmer', fallback: 'Shimmer' },
-] as const;
-
-const DEFAULT_OPENAI_VOICE = 'alloy';
-const DEFAULT_ELEVENLABS_VOICE = 'rachel';
+// Dubbing is ElevenLabs-only; legacy OpenAI voice names are migrated to
+// ElevenLabs voices in the UI store (see LEGACY_OPENAI_DUB_VOICE_MAP).
+const ELEVENLABS_VOICES = ELEVENLABS_DUB_VOICE_OPTIONS;
 
 export default function DubbingVoiceSelector() {
   const { t } = useTranslation();
   const dubVoice = useUIStore(s => s.dubVoice);
   const setDubVoice = useUIStore(s => s.setDubVoice);
   const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
-  const byoOpenAiUnlocked = useAiStore(state => state.byoUnlocked);
-  const openAiKeyPresent = useAiStore(state => state.keyPresent);
-  const useByoOpenAi = useAiStore(state => state.useByo);
   const useByoElevenLabs = useAiStore(state => state.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(state => state.elevenLabsKeyPresent);
   const byoElevenLabsUnlocked = useAiStore(
@@ -47,57 +30,29 @@ export default function DubbingVoiceSelector() {
   const preferredDubbingProvider = useAiStore(
     state => state.preferredDubbingProvider
   );
-  const stage5DubbingTtsProvider = useAiStore(
-    state => state.stage5DubbingTtsProvider
-  );
   const [isPreviewing, setIsPreviewing] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
   const previewTokenRef = useRef(0);
 
-  const hasOpenAiByo =
-    useApiKeysMode && byoOpenAiUnlocked && openAiKeyPresent && useByoOpenAi;
-  const hasElevenLabsByo =
-    useApiKeysMode &&
-    byoElevenLabsUnlocked &&
-    elevenLabsKeyPresent &&
-    useByoElevenLabs;
+  // Same rules as the Dub button: BYO ElevenLabs is free, Stage5 is priced,
+  // API key mode without a usable ElevenLabs key is blocked (no request).
+  const previewState = getDubbingActionState({
+    useApiKeysMode,
+    useByoElevenLabs,
+    elevenLabsKeyPresent,
+    byoElevenLabsUnlocked,
+    preferredDubbingProvider,
+  });
+  const isUsingStage5Credits = previewState.kind === 'credits';
+  const isPreviewBlocked = previewState.kind === 'blocked';
+  const blockedMessage = t(
+    'settings.byoPreferences.dubbingRequiresElevenLabs',
+    'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
+  );
 
-  const activeDubbingProvider: 'stage5' | 'openai' | 'elevenlabs' =
-    useApiKeysMode
-      ? (() => {
-          if (preferredDubbingProvider === 'stage5') {
-            if (hasOpenAiByo) return 'openai';
-            if (hasElevenLabsByo) return 'elevenlabs';
-            return 'stage5';
-          }
-          if (preferredDubbingProvider === 'elevenlabs') {
-            if (hasElevenLabsByo) return 'elevenlabs';
-            if (hasOpenAiByo) return 'openai';
-            return 'stage5';
-          }
-          if (preferredDubbingProvider === 'openai') {
-            if (hasOpenAiByo) return 'openai';
-            if (hasElevenLabsByo) return 'elevenlabs';
-            return 'stage5';
-          }
-          if (hasOpenAiByo) return 'openai';
-          if (hasElevenLabsByo) return 'elevenlabs';
-          return 'stage5';
-        })()
-      : 'stage5';
-
-  const activeVoiceProvider: 'openai' | 'elevenlabs' =
-    activeDubbingProvider === 'stage5'
-      ? stage5DubbingTtsProvider
-      : activeDubbingProvider;
-  const isUsingStage5Credits = activeDubbingProvider === 'stage5';
-
-  const isUsingElevenLabs = activeVoiceProvider === 'elevenlabs';
-  const activeVoices = isUsingElevenLabs ? ELEVENLABS_VOICES : OPENAI_VOICES;
-  const defaultVoice = isUsingElevenLabs
-    ? DEFAULT_ELEVENLABS_VOICE
-    : DEFAULT_OPENAI_VOICE;
+  const activeVoices = ELEVENLABS_VOICES;
+  const defaultVoice = DEFAULT_DUB_VOICE;
   const isCurrentVoiceValid = activeVoices.some(v => v.value === dubVoice);
   const effectiveVoice = isCurrentVoiceValid ? dubVoice : defaultVoice;
 
@@ -128,6 +83,7 @@ export default function DubbingVoiceSelector() {
   }, []);
 
   const handlePreview = async () => {
+    if (isPreviewBlocked) return;
     const token = ++previewTokenRef.current;
     setIsPreviewing(true);
     try {
@@ -181,9 +137,7 @@ export default function DubbingVoiceSelector() {
     }
   };
 
-  const previewCost = isUsingElevenLabs
-    ? PREVIEW_TTS_CREDITS.elevenlabs
-    : PREVIEW_TTS_CREDITS.openai;
+  const previewCost = PREVIEW_TTS_CREDITS.elevenlabs;
 
   const selectClass = css`
     flex: 1;
@@ -210,6 +164,13 @@ export default function DubbingVoiceSelector() {
       opacity: 0.6;
       cursor: not-allowed;
     }
+  `;
+
+  // Warning state, matching the Dub button's blocked cost label.
+  const previewBlockedClass = css`
+    color: ${colors.danger};
+    border-color: ${colors.danger};
+    cursor: not-allowed;
   `;
 
   return (
@@ -250,22 +211,33 @@ export default function DubbingVoiceSelector() {
         </select>
         <button
           type="button"
-          className={previewButtonClass}
+          className={cx(
+            previewButtonClass,
+            isPreviewBlocked && previewBlockedClass
+          )}
           onClick={handlePreview}
           disabled={isPreviewing}
-          title={t('settings.dubbing.previewTooltip', 'Preview this voice')}
+          aria-disabled={isPreviewBlocked}
+          data-preview-state={previewState.kind}
+          title={
+            isPreviewBlocked
+              ? blockedMessage
+              : t('settings.dubbing.previewTooltip', 'Preview this voice')
+          }
         >
           {isPreviewing
             ? t('settings.dubbing.previewing', 'Playing...')
-            : useApiKeysMode && activeDubbingProvider !== 'stage5'
-              ? t('settings.dubbing.previewFree', 'Preview')
-              : t(
-                  'settings.dubbing.previewWithCost',
-                  'Preview ({{cost}} credits)',
-                  {
-                    cost: previewCost,
-                  }
-                )}
+            : isPreviewBlocked
+              ? 'ElevenLabs'
+              : previewState.kind === 'byo'
+                ? t('settings.dubbing.previewFree', 'Preview')
+                : t(
+                    'settings.dubbing.previewWithCost',
+                    'Preview ({{cost}} credits)',
+                    {
+                      cost: previewCost,
+                    }
+                  )}
         </button>
       </div>
 
@@ -280,6 +252,17 @@ export default function DubbingVoiceSelector() {
           'Choose the default voice for generated dubs.'
         )}
       </div>
+      {isPreviewBlocked ? (
+        <div
+          role="note"
+          className={css`
+            color: ${colors.danger};
+            font-size: 0.85rem;
+          `}
+        >
+          {blockedMessage}
+        </div>
+      ) : null}
     </div>
   );
 }

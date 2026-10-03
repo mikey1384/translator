@@ -5,6 +5,11 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 import { sameArray } from '../utils/array';
+import {
+  DUB_VOICE_STORAGE_KEY,
+  readAndMigrateStoredDubVoice,
+  resolveAllowedDubVoice,
+} from './dub-voice-storage';
 import type {
   SubtitleDisplayMode,
   SummaryEffortLevel,
@@ -98,9 +103,7 @@ const LEGACY_SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const APP_LANGUAGE_PREFERENCE_KEY = 'app_language_preference';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
-const DUB_VOICE_KEY = 'savedDubVoice';
 const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
-const DEFAULT_DUB_VOICE = 'rachel';
 const VALID_TARGET_LANGUAGES = new Set(
   TRANSLATION_LANGUAGES.map(option => option.value)
 );
@@ -213,31 +216,6 @@ function parseStoredSubtitleDisplayMode(): SubtitleDisplayMode {
     : 'translation';
 }
 
-// ElevenLabs voices (primary provider)
-const ALLOWED_DUB_VOICES = new Set([
-  'rachel',
-  'adam',
-  'josh',
-  'bella',
-  'antoni',
-  'domi',
-  'elli',
-  'arnold',
-  'sam',
-  // Additional ElevenLabs voices
-  'sarah',
-  'charlie',
-  'emily',
-  'matilda',
-  'brian',
-  // Legacy OpenAI voices (for backwards compatibility - mapped to ElevenLabs on backend)
-  'alloy',
-  'echo',
-  'fable',
-  'onyx',
-  'nova',
-  'shimmer',
-]);
 // Note: We intentionally do NOT persist panel open states across reloads.
 
 const initial: State = {
@@ -256,12 +234,8 @@ const initial: State = {
   subtitleDisplayMode: parseStoredSubtitleDisplayMode(),
   qualityTranscription: parseStoredBool(QUALITY_TRANSCRIPTION_KEY, true),
   qualityTranslation: parseStoredBool(QUALITY_TRANSLATION_KEY, false),
-  dubVoice: (() => {
-    const stored = localStorage.getItem(DUB_VOICE_KEY);
-    return stored && ALLOWED_DUB_VOICES.has(stored)
-      ? stored
-      : DEFAULT_DUB_VOICE;
-  })(),
+  // Legacy OpenAI voice names are migrated to ElevenLabs voices on load.
+  dubVoice: readAndMigrateStoredDubVoice(localStorage),
   dubAmbientMix: (() => {
     const raw = localStorage.getItem(DUB_AMBIENT_MIX_KEY);
     const parsed = raw != null ? Number(raw) : Number.NaN;
@@ -411,10 +385,8 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         },
 
         setDubVoice(voice) {
-          const next = ALLOWED_DUB_VOICES.has(voice)
-            ? voice
-            : DEFAULT_DUB_VOICE;
-          localStorage.setItem(DUB_VOICE_KEY, next);
+          const next = resolveAllowedDubVoice(voice);
+          localStorage.setItem(DUB_VOICE_STORAGE_KEY, next);
           set({ dubVoice: next });
         },
 

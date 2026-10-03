@@ -262,9 +262,6 @@ export default function ByoProviderPreferencesPanel() {
   const preferredDubbingProvider = useAiStore(
     state => state.preferredDubbingProvider
   );
-  const setPreferredDubbingProvider = useAiStore(
-    state => state.setPreferredDubbingProvider
-  );
   const preferClaudeTranslation = useAiStore(
     state => state.preferClaudeTranslation
   );
@@ -346,13 +343,14 @@ export default function ByoProviderPreferencesPanel() {
     hasOpenAiConfigured || hasAnthropicConfigured || hasElevenLabsConfigured;
   const showTranscriptionRow = hasOpenAiConfigured || hasElevenLabsConfigured;
   const showTranslationRows = hasOpenAiConfigured || hasAnthropicConfigured;
+  // Dubbing is ElevenLabs-only; show the row whenever any audio BYO key is
+  // configured so OpenAI-only users learn dubbing needs ElevenLabs.
   const showDubbingRow = hasOpenAiConfigured || hasElevenLabsConfigured;
   const showVideoSuggestionRow = hasOpenAiConfigured || hasAnthropicConfigured;
   const hasTranscriptionChoice = hasOpenAiConfigured && hasElevenLabsConfigured;
   const hasTranslationChoice = hasOpenAiConfigured && hasAnthropicConfigured;
   const hasReviewChoice = showTranslationRows;
   const hasSummaryChoice = showTranslationRows;
-  const hasDubbingChoice = hasOpenAiConfigured && hasElevenLabsConfigured;
   const canUseOpenAiVideoSuggestionModel = hasOpenAiConfigured;
   const canUseAnthropicVideoSuggestionModel = hasAnthropicConfigured;
   const hasVideoSuggestionChoice =
@@ -362,7 +360,6 @@ export default function ByoProviderPreferencesPanel() {
     hasTranslationChoice ||
     hasReviewChoice ||
     hasSummaryChoice ||
-    hasDubbingChoice ||
     hasVideoSuggestionChoice;
 
   const transcriptionProvider = resolveTranscriptionProvider(runtimeState);
@@ -544,15 +541,6 @@ export default function ByoProviderPreferencesPanel() {
     const result = await setPreferredTranscriptionProvider(provider);
     if (!result.success) {
       console.error('Failed to update transcription provider:', result.error);
-    }
-  };
-
-  const handleDubbingProviderChange = async (
-    provider: 'elevenlabs' | 'openai'
-  ) => {
-    const result = await setPreferredDubbingProvider(provider);
-    if (!result.success) {
-      console.error('Failed to update dubbing provider:', result.error);
     }
   };
 
@@ -806,34 +794,30 @@ export default function ByoProviderPreferencesPanel() {
       {showDubbingRow && (
         <PreferenceRow
           title={t('settings.byoPreferences.dubbing', 'Dubbing')}
-          hasChoice={hasDubbingChoice}
+          hasChoice={false}
           radioName="dubbingProvider"
-          options={[
-            {
-              value: 'openai',
-              label: t(
-                BYO_PROVIDERS.dubbing.openai.labelKey,
-                BYO_PROVIDERS.dubbing.openai.fallback
-              ),
-              price: BYO_PROVIDERS.dubbing.openai.price,
-              selected: preferredDubbingProvider === 'openai',
-              onSelect: () => handleDubbingProviderChange('openai'),
-            },
-            {
-              value: 'elevenlabs',
-              label: t(
-                BYO_PROVIDERS.dubbing.elevenlabs.labelKey,
-                BYO_PROVIDERS.dubbing.elevenlabs.fallback
-              ),
-              price: BYO_PROVIDERS.dubbing.elevenlabs.price,
-              selected: preferredDubbingProvider === 'elevenlabs',
-              onSelect: () => handleDubbingProviderChange('elevenlabs'),
-            },
-          ]}
-          infoProvider={getProviderInfo(t, dubbingProvider, {
-            openai: BYO_PROVIDERS.dubbing.openai,
-            elevenlabs: BYO_PROVIDERS.dubbing.elevenlabs,
-          })}
+          options={[]}
+          infoProvider={
+            hasElevenLabsConfigured
+              ? {
+                  label: t(
+                    BYO_PROVIDERS.dubbing.elevenlabs.labelKey,
+                    BYO_PROVIDERS.dubbing.elevenlabs.fallback
+                  ),
+                  price: BYO_PROVIDERS.dubbing.elevenlabs.price,
+                }
+              : getProviderInfo(t, dubbingProvider, {
+                  elevenlabs: BYO_PROVIDERS.dubbing.elevenlabs,
+                })
+          }
+          footer={
+            hasElevenLabsConfigured
+              ? null
+              : t(
+                  'settings.byoPreferences.dubbingRequiresElevenLabs',
+                  'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
+                )
+          }
         />
       )}
 

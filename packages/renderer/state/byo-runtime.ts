@@ -1,9 +1,16 @@
 import {
+  getApiKeyModeDubbingBlocker,
+  type ApiKeyModeDubbingBlocker,
+} from '../../shared/helpers/dubbing-route';
+import {
   AI_MODELS,
   STAGE5_REVIEW_TRANSLATION_MODEL,
 } from '../../shared/constants';
 
 export type ByoPreferenceProvider = 'elevenlabs' | 'openai' | 'stage5';
+// Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06).
+export type DubbingPreferenceProvider = 'elevenlabs' | 'stage5';
+export type DubbingCreditProvider = 'elevenlabs';
 export type RuntimeProvider = 'stage5' | 'openai' | 'anthropic' | 'elevenlabs';
 
 export type ByoRuntimeState = {
@@ -22,8 +29,8 @@ export type ByoRuntimeState = {
   preferClaudeReview: boolean;
   preferClaudeSummary: boolean;
   preferredTranscriptionProvider: ByoPreferenceProvider;
-  preferredDubbingProvider: ByoPreferenceProvider;
-  stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+  preferredDubbingProvider: DubbingPreferenceProvider;
+  stage5DubbingTtsProvider: DubbingCreditProvider;
 };
 
 export function hasAnyByoEntitlementUnlocked(
@@ -217,13 +224,35 @@ export function resolveTranscriptionProvider(
   );
 }
 
+/**
+ * Dubbing is ElevenLabs-only: BYO ElevenLabs when available, otherwise Stage5
+ * credits (also ElevenLabs). An OpenAI key never routes dubbing. Mirrors
+ * resolveDubbingRoute in packages/main/services/dubbing-provider-routing.ts.
+ */
 export function resolveDubbingProvider(
-  state: ByoRuntimeState
-): RuntimeProvider {
-  return resolveProviderByPreference(state.preferredDubbingProvider, state, [
-    'openai',
-    'elevenlabs',
-  ]);
+  state: Pick<
+    ByoRuntimeState,
+    | 'useApiKeysMode'
+    | 'byoElevenLabsUnlocked'
+    | 'elevenLabsKeyPresent'
+    | 'useByoElevenLabs'
+    | 'preferredDubbingProvider'
+  >
+): 'elevenlabs' | 'stage5' {
+  if (state.preferredDubbingProvider === 'stage5' && !state.useApiKeysMode) {
+    return 'stage5';
+  }
+  return hasElevenLabsByoAvailable(state) ? 'elevenlabs' : 'stage5';
+}
+
+/**
+ * API key mode never spends Stage5 credits, so dubbing there needs a usable
+ * BYO ElevenLabs key. True when dubbing would be blocked.
+ */
+export function isDubbingBlockedInApiKeyMode(
+  state: Parameters<typeof resolveDubbingProvider>[0]
+): boolean {
+  return getDubbingActionState(state).kind === 'blocked';
 }
 
 export function resolveTranslationDraftProvider(
@@ -384,16 +413,42 @@ export function isTranscriptionByo(state: ByoRuntimeState): boolean {
   return resolveTranscriptionProvider(state) !== 'stage5';
 }
 
-export function isDubbingByo(state: ByoRuntimeState): boolean {
+export type DubbingActionState =
+  | { kind: 'byo' }
+  | { kind: 'credits' }
+  | { kind: 'blocked'; blocker: ApiKeyModeDubbingBlocker };
+
+/**
+ * What a dubbing action (Dub button, voice preview) should do:
+ * 'byo' = free on the user's ElevenLabs key, 'credits' = priced in Stage5
+ * credits, 'blocked' = API key mode without a usable ElevenLabs key, so the
+ * request must not be sent.
+ */
+export function getDubbingActionState(
+  state: Parameters<typeof resolveDubbingProvider>[0]
+): DubbingActionState {
+  if (resolveDubbingProvider(state) === 'elevenlabs') return { kind: 'byo' };
+  if (!state.useApiKeysMode) return { kind: 'credits' };
+  return {
+    kind: 'blocked',
+    blocker:
+      getApiKeyModeDubbingBlocker({
+        elevenLabsUnlocked: state.byoElevenLabsUnlocked,
+        elevenLabsToggleEnabled: state.useByoElevenLabs,
+        elevenLabsKeyPresent: state.elevenLabsKeyPresent,
+      }) ?? 'elevenlabs-key-missing',
+  };
+}
+
+export function isDubbingByo(
+  state: Parameters<typeof resolveDubbingProvider>[0]
+): boolean {
   return resolveDubbingProvider(state) !== 'stage5';
 }
 
+/** Dubbing always synthesizes (and is priced) with ElevenLabs eleven_v4. */
 export function resolveDubbingCreditProvider(
-  state: ByoRuntimeState
-): 'openai' | 'elevenlabs' {
-  const provider = resolveDubbingProvider(state);
-  if (provider === 'stage5') {
-    return state.stage5DubbingTtsProvider;
-  }
-  return provider === 'elevenlabs' ? 'elevenlabs' : 'openai';
+  _state?: unknown
+): DubbingCreditProvider {
+  return 'elevenlabs';
 }

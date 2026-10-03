@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Laadukas dubbaus",
         "modelOn": "ElevenLabs TTS -premiumäänet",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× krediittiä</b> • ElevenLabs TTS premium-äänillä",
         "helpWithEstimate": "<b>12× krediittiä</b> • Saldosi: ~{{normalTime}} (normaali) / ~{{hqTime}} (kl)",
         "helpOn": "<b>{{ratio}}× krediittiä</b> • ElevenLabs TTS premium-äänillä",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× krediittiä</b> • ElevenLabs TTS premium-äänillä • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Saldo: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× krediittiä</b> • ElevenLabs TTS premium-äänillä • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Videoehdotusmalli",
@@ -596,12 +593,6 @@
       "voiceLabel": "Dubattu ääni",
       "voiceHelp": "Valitse oletusääni dubattua ääntä luotaessa.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Laatu",
       "summary": "Yhteenveto",
       "dubbing": "Dubbaus",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "BYO-videosuositusmallia ei ole tällä hetkellä saatavilla. Ota OpenAI tai Anthropic BYO käyttöön tätä ominaisuutta varten.",
       "videoSuggestionModelRequiresOpenAi": "Vaatii OpenAI BYO -avauksen, avaimen ja aktivoinnin.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs tarjoaa premium-litteroinnin ja äänikloonausdubbauksen. Ilman sitä OpenAI hoitaa nämä tehtävät.",
-        "ttsDescription": "ElevenLabs tarjoaa premium-ääniä litterointiin ja dubbaamiseen. Ilman sitä OpenAI hoitaa nämä tehtävät.",
         "step1": "Siirry osoitteeseen",
         "step2": "Rekisteröidy tai kirjaudu sisään tilillesi",
         "step3": "Napsauta profiilikuvakettasi ja valitse",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS-laatu (Stage5-krediitit)",
-      "openai": "Standardi (OpenAI TTS)",
-      "openaiHint": "Hyvä laatu, edullisempi",
-      "openaiHintWithBalance": "Hyvä laatu · Saldosi: {{time}} dubbausta",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Paras laatu, korkeampi hinta (~12×)",
       "elevenlabsHintWithBalance": "Paras laatu · Saldosi: {{time}} dubbausta"

@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Jakościowy dubbing",
         "modelOn": "Głosy premium ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× kredytów</b> • ElevenLabs TTS z głosami premium",
         "helpWithEstimate": "<b>12× kredytów</b> • Twoje saldo: ~{{normalTime}} (normalne) / ~{{hqTime}} (wj)",
         "helpOn": "<b>{{ratio}}× kredytów</b> • ElevenLabs TTS z głosami premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredytów</b> • ElevenLabs TTS z głosami premium • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Saldo: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× kredytów</b> • ElevenLabs TTS z głosami premium • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Model propozycji filmów",
@@ -596,12 +593,6 @@
       "voiceLabel": "Głos dubbingu",
       "voiceHelp": "Wybierz domyślny głos używany podczas generowania zdublowanego dźwięku.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Jakość",
       "summary": "Podsumowanie",
       "dubbing": "Dubbing",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Żaden model rekomendacji wideo BYO nie jest obecnie dostępny. Włącz OpenAI lub Anthropic BYO, aby korzystać z tej funkcji.",
       "videoSuggestionModelRequiresOpenAi": "Wymaga odblokowania OpenAI BYO, klucza i włącznika.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs oferuje premium transkrypcję i dubbing z klonowaniem głosu. Bez niego OpenAI obsługuje te zadania.",
-        "ttsDescription": "ElevenLabs oferuje transkrypcję premium i głosy do dubbingu. Bez niego tymi zadaniami zajmuje się OpenAI.",
         "step1": "Przejdź do",
         "step2": "Zarejestruj się lub zaloguj na swoje konto",
         "step3": "Kliknij ikonę profilu i wybierz",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Jakość TTS (kredyty Stage5)",
-      "openai": "Standardowa (OpenAI TTS)",
-      "openaiHint": "Dobra jakość, niższy koszt",
-      "openaiHintWithBalance": "Dobra jakość · Twoje saldo: {{time}} dubbingu",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Najlepsza jakość, wyższy koszt (~12x)",
       "elevenlabsHintWithBalance": "Najlepsza jakość · Twoje saldo: {{time}} dubbingu"

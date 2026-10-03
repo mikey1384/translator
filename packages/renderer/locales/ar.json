@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "دبلجة عالية الجودة",
         "modelOn": "أصوات ElevenLabs TTS المميزة",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× نقاط</b> • ElevenLabs TTS مع أصوات متميزة",
         "helpWithEstimate": "<b>12× نقاط</b> • رصيدك: ~{{normalTime}} (عادي) / ~{{hqTime}} (جودة عالية)",
         "helpOn": "<b>{{ratio}}× أرصدة</b> • ElevenLabs TTS بأصوات مميزة",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× أرصدة</b> • ElevenLabs TTS بأصوات مميزة • الرصيد: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • الرصيد: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× أرصدة</b> • ElevenLabs TTS بأصوات مميزة • الرصيد: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "نموذج اقتراح الفيديو",
@@ -596,12 +593,6 @@
       "voiceLabel": "صوت الدبلجة",
       "voiceHelp": "اختر الصوت الافتراضي المستخدم عند إنشاء الصوت المدبلج.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "جودة",
       "summary": "الملخص",
       "dubbing": "الدبلجة",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "لا يتوفر حاليًا نموذج BYO لتوصيات الفيديو. فعّل OpenAI أو Anthropic BYO لهذه الميزة.",
       "videoSuggestionModelRequiresOpenAi": "يتطلب فتح OpenAI BYO ومفتاحًا وتفعيل المفتاح.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "يقدم ElevenLabs نسخًا متميزًا ودبلجة باستنساخ الصوت. بدونه، يتولى OpenAI هذه المهام.",
-        "ttsDescription": "تقدم ElevenLabs تفريغًا مميزًا وأصوات دبلجة. وبدونها يتولى OpenAI هذه المهام.",
         "step1": "اذهب إلى",
         "step2": "سجّل الدخول أو أنشئ حسابًا",
         "step3": "انقر على أيقونة ملفك الشخصي واختر",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "جودة TTS (نقاط Stage5)",
-      "openai": "عادي (OpenAI TTS)",
-      "openaiHint": "جودة جيدة، تكلفة أقل",
-      "openaiHintWithBalance": "جودة جيدة · رصيدك: {{time}} من الدبلجة",
       "elevenlabs": "متميز (ElevenLabs)",
       "elevenlabsHint": "أفضل جودة، تكلفة أعلى (~12×)",
       "elevenlabsHintWithBalance": "أفضل جودة · رصيدك: {{time}} من الدبلجة"

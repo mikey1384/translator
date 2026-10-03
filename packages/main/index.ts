@@ -28,6 +28,7 @@ import * as registry from './active-processes.js';
 import { buildSettingsHandlers } from './handlers/settings-handlers.js';
 import { buildUpdateHandlers } from './handlers/update-handlers.js';
 import { settingsStore } from './store/settings-store.js';
+import { normalizeDubbingProviderSetting } from './store/settings-schema.js';
 
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
@@ -1669,8 +1670,11 @@ try {
   );
   ipcMain.handle(
     'set-preferred-dubbing-provider',
+    // Legacy 'openai' from older callers is normalized to 'elevenlabs'.
     (_event, value: 'elevenlabs' | 'openai' | 'stage5') =>
-      settingsHandlers.setPreferredDubbingProvider(value)
+      settingsHandlers.setPreferredDubbingProvider(
+        normalizeDubbingProviderSetting(value)
+      )
   );
 
   // Stage5 dubbing TTS provider handlers
@@ -1679,8 +1683,9 @@ try {
   );
   ipcMain.handle(
     'set-stage5-dubbing-tts-provider',
-    (_event, value: 'openai' | 'elevenlabs') =>
-      settingsHandlers.setStage5DubbingTtsProvider(value)
+    (_event, _value: 'openai' | 'elevenlabs') =>
+      // Stage5 dubbing is always ElevenLabs; legacy 'openai' is ignored.
+      settingsHandlers.setStage5DubbingTtsProvider('elevenlabs')
   );
 
   // Expose app.isPackaged to renderer via preload (sync)

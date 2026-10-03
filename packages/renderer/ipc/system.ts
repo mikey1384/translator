@@ -626,7 +626,9 @@ export function setPreferredTranscriptionProvider(
 }
 
 // Dubbing provider preference
-export type DubbingProvider = 'elevenlabs' | 'openai' | 'stage5';
+// Dubbing is ElevenLabs-only: 'elevenlabs' = BYO ElevenLabs key when
+// available, otherwise Stage5 credits; 'stage5' = always Stage5 credits.
+export type DubbingProvider = 'elevenlabs' | 'stage5';
 
 export function getPreferredDubbingProvider(): Promise<DubbingProvider> {
   return window.electron.getPreferredDubbingProvider();
@@ -639,8 +641,8 @@ export function setPreferredDubbingProvider(
 }
 
 // Stage5 dubbing TTS provider (when using Stage5 API)
-// 'openai' = cheaper ($15/1M chars), 'elevenlabs' = premium ($200/1M chars)
-export type Stage5TtsProvider = 'openai' | 'elevenlabs';
+// Always ElevenLabs (eleven_v4); OpenAI TTS is retired.
+export type Stage5TtsProvider = 'elevenlabs';
 
 export function getStage5DubbingTtsProvider(): Promise<Stage5TtsProvider> {
   return window.electron.getStage5DubbingTtsProvider();

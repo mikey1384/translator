@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Kaliteli Seslendirme",
         "modelOn": "ElevenLabs TTS premium sesler",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× kredi</b> • Premium seslerle ElevenLabs TTS",
         "helpWithEstimate": "<b>12× kredi</b> • Bakiyeniz: ~{{normalTime}} (normal) / ~{{hqTime}} (yk)",
         "helpOn": "<b>{{ratio}}× kredi</b> • Premium seslerle ElevenLabs TTS",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredi</b> • Premium seslerle ElevenLabs TTS • Bakiye: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Bakiye: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× kredi</b> • Premium seslerle ElevenLabs TTS • Bakiye: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Video Öneri Modeli",
@@ -596,12 +593,6 @@
       "voiceLabel": "Seslendirme Sesi",
       "voiceHelp": "Seslendirme oluştururken kullanılacak varsayılan sesi seçin.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Kalite",
       "summary": "Özet",
       "dubbing": "Seslendirme",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Şu anda kullanılabilir bir BYO video öneri modeli yok. Bu özellik için OpenAI veya Anthropic BYO'yu etkinleştirin.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO kilidi, anahtar ve açık geçiş gerekir.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs premium transkripsiyon ve ses klonlama seslendirmesi sunar. Olmadan, OpenAI bu görevleri üstlenir.",
-        "ttsDescription": "ElevenLabs premium transkripsiyon ve dublaj sesleri sunar. Bu olmadan bu işleri OpenAI yapar.",
         "step1": "Git",
         "step2": "Hesabınıza kaydolun veya giriş yapın",
         "step3": "Profil simgenize tıklayın ve seçin",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS Kalitesi (Stage5 Kredileri)",
-      "openai": "Standart (OpenAI TTS)",
-      "openaiHint": "İyi kalite, düşük maliyet",
-      "openaiHintWithBalance": "İyi kalite · Bakiyeniz: {{time}} seslendirme",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "En iyi kalite, yüksek maliyet (~12×)",
       "elevenlabsHintWithBalance": "En iyi kalite · Bakiyeniz: {{time}} seslendirme"

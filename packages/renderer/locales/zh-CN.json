@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "高质量配音",
         "modelOn": "ElevenLabs TTS 高级音色",
-        "modelOff": "OpenAI TTS",
         "help": "开启：ElevenLabs TTS（优质语音，约12×积分）。关闭：OpenAI TTS（良好质量）。",
         "helpWithEstimate": "ElevenLabs TTS（约12×积分）。您的积分可配音：~{{normalTime}}普通，~{{hqTime}}高质量。",
         "helpOn": "<b>{{ratio}}×积分</b> • ElevenLabs TTS 高级音色",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}×积分</b> • ElevenLabs TTS 高级音色 • 余额：~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • 余额：~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}×积分</b> • ElevenLabs TTS 高级音色 • 余额：~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "视频推荐模型",
@@ -596,12 +593,6 @@
       "voiceLabel": "配音语音",
       "voiceHelp": "选择生成配音音轨时使用的默认语音。",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "高质量",
       "summary": "摘要",
       "dubbing": "配音",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "当前没有可用的 BYO 视频推荐模型。请启用 OpenAI 或 Anthropic BYO 以使用此功能。",
       "videoSuggestionModelRequiresOpenAi": "需要 OpenAI BYO 解锁、密钥和开关。",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs提供优质转录和语音克隆配音。没有它，OpenAI将处理这些任务。",
-        "ttsDescription": "ElevenLabs 提供高级转录和配音音色。没有它时，这些任务将由 OpenAI 处理。",
         "step1": "访问",
         "step2": "注册或登录您的账户",
         "step3": "点击您的头像并选择",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "TTS质量（Stage5积分）",
-      "openai": "标准（OpenAI TTS）",
-      "openaiHint": "良好音质，较低成本",
-      "openaiHintWithBalance": "良好音质 · 您的余额：{{time}}配音时长",
       "elevenlabs": "高级（ElevenLabs）",
       "elevenlabsHint": "最佳音质，较高成本（约12倍）",
       "elevenlabsHintWithBalance": "最佳音质 · 您的余额：{{time}}配音时长"

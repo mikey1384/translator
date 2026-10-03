@@ -571,13 +571,10 @@
       "qualityDubbing": {
         "label": "Urekodi wa Ubora",
         "modelOn": "Sauti za premium za ElevenLabs TTS",
-        "modelOff": "OpenAI TTS",
         "help": "<b>12× mikopo</b> • ElevenLabs TTS na sauti za hali ya juu",
         "helpWithEstimate": "<b>12× mikopo</b> • Salio lako: ~{{normalTime}} (kawaida) / ~{{hqTime}} (ubora)",
         "helpOn": "<b>{{ratio}}× krediti</b> • ElevenLabs TTS yenye sauti za premium",
-        "helpOff": "OpenAI TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× krediti</b> • ElevenLabs TTS yenye sauti za premium • Salio: ~{{time}}",
-        "helpWithEstimateOff": "OpenAI TTS • Salio: ~{{time}}"
+        "helpWithEstimateOn": "<b>{{ratio}}× krediti</b> • ElevenLabs TTS yenye sauti za premium • Salio: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Modeli ya Mapendekezo ya Video",
@@ -596,12 +593,6 @@
       "voiceLabel": "Sauti ya Kurekodi",
       "voiceHelp": "Chagua sauti ya msingi inayotumika wakati wa kutengeneza sauti iliyorekodiwa.",
       "voiceOptions": {
-        "alloy": "Alloy",
-        "echo": "Echo",
-        "fable": "Fable",
-        "onyx": "Onyx",
-        "nova": "Nova",
-        "shimmer": "Shimmer",
         "rachel": "Rachel",
         "adam": "Adam",
         "josh": "Josh",
@@ -688,7 +679,6 @@
       "qualityMode": "Ubora",
       "summary": "Muhtasari",
       "dubbing": "Urekodi",
-      "openaiTts": "OpenAI TTS",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Kwa sasa hakuna model ya mapendekezo ya video ya BYO inayopatikana. Washa OpenAI au Anthropic BYO kwa kipengele hiki.",
       "videoSuggestionModelRequiresOpenAi": "Inahitaji OpenAI BYO unlock, key, na toggle.",
@@ -736,7 +726,6 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs inatoa unakili wa hali ya juu na urekodi wa kunakili sauti. Bila hiyo, OpenAI inashughulikia kazi hizi.",
-        "ttsDescription": "ElevenLabs inatoa sauti za kiwango cha juu za unakili na dubbing. Bila hiyo, OpenAI hushughulikia kazi hizi.",
         "step1": "Nenda",
         "step2": "Jiandikishe au ingia kwenye akaunti yako",
         "step3": "Bofya aikoni yako ya wasifu na uchague",
@@ -769,9 +758,6 @@
     },
     "stage5TtsProvider": {
       "label": "Ubora wa TTS (Mikopo ya Stage5)",
-      "openai": "Kawaida (OpenAI TTS)",
-      "openaiHint": "Ubora mzuri, gharama ndogo",
-      "openaiHintWithBalance": "Ubora mzuri · Salio lako: {{time}} ya urekodi",
       "elevenlabs": "Bora (ElevenLabs)",
       "elevenlabsHint": "Ubora bora zaidi, gharama kubwa (~12x)",
       "elevenlabsHintWithBalance": "Ubora bora zaidi · Salio lako: {{time}} ya urekodi"
