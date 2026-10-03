@@ -13,6 +13,7 @@ export type GenerateSubtitlesFullResult = {
   subtitles: string;
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
+  // New transcripts are always 'elevenlabs'; 'whisper' marks legacy saves.
   transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
   tempFileSaved: boolean;
   tempFilePath?: string;

@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Akun ElevenLabs Anda tidak memiliki cukup kredit. Silakan tambahkan kredit di elevenlabs.io.",
       "checkSettings": "Periksa Pengaturan",
       "genericApiError": "Permintaan API gagal. Silakan periksa kunci API dan status akun Anda."
+    },
+    "transcription": {
+      "providerUnavailable": "Transkripsi (ElevenLabs Scribe) untuk sementara tidak tersedia atau tidak dapat dijangkau setelah beberapa kali percobaan. Silakan coba lagi dalam beberapa menit.",
+      "fileTooLarge": "Audio ini terlalu panjang untuk ditranskripsi dalam satu tugas (lebih dari sekitar {{hours}} jam). Bagi video menjadi beberapa bagian yang lebih pendek dan transkripsi setiap bagian.",
+      "elevenLabsKeyRequired": "Transkripsi menggunakan ElevenLabs Scribe dan memerlukan kunci API ElevenLabs. Tambahkan kunci di Pengaturan, atau matikan mode kunci API untuk mentranskripsi dengan kredit Stage5. Kunci OpenAI atau Anthropic Anda tetap digunakan untuk terjemahan."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Gunakan kunci API saya",
       "activeKeys": "Kunci siap: {{count}}",
       "noKeys": "Belum ada kunci yang dikonfigurasi",
-      "requirement": "Perlu cakupan terjemahan + audio",
       "usingApiKeys": "Kredit Stage5 mati",
       "usingCredits": "Kredit Stage5 aktif",
       "toggleOn": "Sekarang menggunakan kunci API Anda.",
       "toggleOff": "Sekarang menggunakan kredit Stage5.",
       "toggleError": "Gagal memperbarui preferensi.",
-      "toggleAria": "Gunakan kunci API saya"
+      "toggleAria": "Gunakan kunci API saya",
+      "requirementTranslation": "Memerlukan kunci OpenAI atau Anthropic untuk terjemahan"
     },
     "creditsDescription": "Beli kredit. Jam yang ditampilkan merupakan perkiraan total durasi video yang dapat Anda transkripsi atau terjemahkan. Contoh: mentranskripsi dan menerjemahkan video 3 jam memerlukan sekitar 6 jam (≈140.000 kredit).",
     "performanceQuality": {
       "title": "Performa & Kualitas",
-      "qualityTranscription": {
-        "label": "Transkripsi Berkualitas",
-        "help": "Aktif: berurutan, menggunakan konteks baris sebelumnya. Nonaktif: mode batch lebih cepat."
-      },
       "qualityTranslation": {
         "label": "Terjemahan Berkualitas",
         "modelOn": "Draf GPT-5.1 + ulasan GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "Membuka checkout…",
       "unlockCta": "Buka seharga $10",
       "unlockHint": "Setelah dibuka, tambahkan kunci API Anda di sini kapan saja untuk mengalihkan tagihan langsung ke akun Anda.",
-      "unlockedDescription": "Masukkan kunci API OpenAI Anda di bawah. Transkripsi, terjemahan, dan dubbing akan berjalan langsung di akun OpenAI Anda ketika kunci ada.",
       "apiKeyLabel": "Kunci API OpenAI",
       "hide": "Sembunyikan",
       "show": "Tampilkan",
@@ -661,7 +661,6 @@
       "pricingHint": "Perkiraan biaya per 1 jam video",
       "pricingHintHeuristic": "Perkiraan biaya berdasarkan heuristik aplikasi saat ini",
       "transcription": "Transkripsi",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Terjemahan (Draf)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Memerlukan unlock Anthropic BYO, key, dan toggle.",
       "summaryRequiresOpenAi": "Memerlukan akses OpenAI BYO dan kunci API.",
       "summaryRequiresAnthropic": "Memerlukan akses Anthropic BYO dan kunci API.",
-      "translationReview": "Terjemahan (Peninjauan)"
+      "translationReview": "Terjemahan (Peninjauan)",
+      "transcriptionRequiresElevenLabs": "Transkripsi hanya menggunakan ElevenLabs Scribe. Tambahkan kunci API ElevenLabs untuk mentranskripsi dengan kunci Anda sendiri. Tanpa kunci tersebut, transkripsi menggunakan kredit Stage5, yang tidak digunakan selama kunci API Anda aktif. Kunci OpenAI Anda tetap digunakan untuk terjemahan."
     },
     "apiKeyGuide": {
       "title": "Cara Mendapatkan Kunci API",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profil + kunci API"
       },
       "openai": {
-        "description": "OpenAI memberdayakan transkripsi (Whisper), terjemahan (GPT), dan dubbing text-to-speech.",
         "step1": "Buka",
         "step2": "Daftar atau masuk ke akun Anda",
         "step3": "Navigasi ke",
@@ -725,13 +724,13 @@
         "note": "Tips: Anthropic menawarkan harga bayar-sesuai-penggunaan. Anda hanya membayar untuk apa yang Anda gunakan."
       },
       "elevenlabs": {
-        "description": "ElevenLabs menawarkan transkripsi premium dan dubbing kloning suara. Tanpanya, OpenAI menangani tugas-tugas ini.",
         "step1": "Buka",
         "step2": "Daftar atau masuk ke akun Anda",
         "step3": "Klik ikon profil Anda dan pilih",
         "step4": "Tambahkan metode pembayaran di pengaturan Subscription (diperlukan untuk penggunaan API di luar tier gratis)",
         "step5": "Salin kunci API Anda dan tempel di Stage5",
-        "note": "Tips: ElevenLabs memiliki tier gratis dengan penggunaan terbatas. Untuk lebih, upgrade ke paket berbayar di pengaturan akun Anda."
+        "note": "Tips: ElevenLabs memiliki tier gratis dengan penggunaan terbatas. Untuk lebih, upgrade ke paket berbayar di pengaturan akun Anda.",
+        "audioDescription": "ElevenLabs menangani semua transkripsi (Scribe) dan dubbing. Tanpa kunci ElevenLabs Anda sendiri, keduanya menggunakan kredit Stage5, yang tidak digunakan selama kunci API Anda aktif."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "Kunci API Diperlukan",
-      "message": "Untuk menggunakan kunci API Anda pada semua operasi AI, Anda memerlukan cakupan terjemahan dan cakupan audio. OpenAI mencakup keduanya. Anthropic memerlukan OpenAI atau ElevenLabs untuk audio.",
       "howToGet": "Cara mendapatkan kunci API",
-      "option1": "Opsi 1: OpenAI",
-      "option2": "Opsi 2: Anthropic + ElevenLabs",
       "enable": "Gunakan kunci API saya",
       "done": "Selesai",
       "ready": "Cakupan sudah lengkap. Sekarang Anda bisa mengaktifkan “Gunakan API key saya”.",
       "missingTranslation": "Terjemahan masih memerlukan {{providers}}.",
-      "missingAudio": "Audio masih memerlukan {{providers}}.",
-      "missingBoth": "Masih diperlukan: terjemahan ({{translationProviders}}) dan audio ({{audioProviders}})."
+      "messageElevenLabsAudio": "Untuk menggunakan kunci API Anda, Anda memerlukan kunci OpenAI atau Anthropic untuk terjemahan. Transkripsi dan dubbing hanya menggunakan ElevenLabs, jadi tambahkan juga kunci ElevenLabs untuk keduanya.",
+      "audioNeedsElevenLabs": "Tanpa kunci ElevenLabs, transkripsi dan dubbing tidak tersedia selama kunci API Anda aktif."
     },
     "saveSrtFileAs": "Simpan Berkas SRT Sebagai",
     "saveDownloadedVideoAs": "Simpan Video yang Diunduh Sebagai",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Mentranskripsi dengan ElevenLabs (~{{minutes}} menit tersisa)",
     "transcribingElevenLabsHours": "Mentranskripsi dengan ElevenLabs (~{{hours}}j {{minutes}}m tersisa)",
     "transcribingElevenLabsFinishing": "Mentranskripsi dengan ElevenLabs...",
-    "transcriptionFallbackWhisper": "Beralih ke transkripsi terpotong...",
     "transcriptionRetry": "Koneksi gagal, mencoba lagi ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Mengunggah audio untuk transkripsi...",
     "gapRepair": "Perbaikan celah #{{iteration}} ({{done}}/{{total}})",

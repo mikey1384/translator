@@ -3,7 +3,6 @@
 
 /* Rendering & Processing Timeouts */
 export const SUBTITLE_RENDER_TIMEOUT = 120_000; // 2 minutes
-export const WHISPER_PARALLEL = 3;
 export const MAX_AI_PARALLEL = 4;
 
 /* Audio Processing */

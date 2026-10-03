@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "您的ElevenLabs账户积分不足。请在elevenlabs.io添加积分。",
       "checkSettings": "检查设置",
       "genericApiError": "API请求失败。请检查您的API密钥和账户状态。"
+    },
+    "transcription": {
+      "providerUnavailable": "转录服务（ElevenLabs Scribe）暂时不可用，或多次尝试后仍无法连接。请几分钟后重试。",
+      "fileTooLarge": "此音频过长，无法在一个任务中转录（超过约 {{hours}} 小时）。请将视频拆分为较短的部分，并分别转录每个部分。",
+      "elevenLabsKeyRequired": "转录使用 ElevenLabs Scribe，需要 ElevenLabs API 密钥。请在设置中添加，或关闭 API 密钥模式以使用 Stage5 积分进行转录。您的 OpenAI 或 Anthropic 密钥仍用于翻译。"
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "使用我的 API 密钥",
       "activeKeys": "已准备 {{count}} 个密钥",
       "noKeys": "未配置密钥",
-      "requirement": "需要翻译和音频覆盖",
       "usingApiKeys": "Stage5 积分已关闭",
       "usingCredits": "正在使用 Stage5 积分",
       "toggleOn": "现在正在使用您的 API 密钥。",
       "toggleOff": "现在正在使用 Stage5 积分。",
       "toggleError": "更新偏好设置失败。",
-      "toggleAria": "使用我的 API 密钥"
+      "toggleAria": "使用我的 API 密钥",
+      "requirementTranslation": "翻译需要 OpenAI 或 Anthropic 密钥"
     },
     "creditsDescription": "购买积分。显示的小时数是您可转录或翻译的视频总时长的估算。示例：转录并翻译一段 3 小时视频，大约需要 6 小时（约 140,000 积分）。",
     "performanceQuality": {
       "title": "性能与质量",
-      "qualityTranscription": {
-        "label": "高质量转写",
-        "help": "开启：顺序处理，使用前一行上下文。关闭：更快的批处理模式。"
-      },
       "qualityTranslation": {
         "label": "高质量翻译",
         "modelOn": "GPT-5.1 草稿 + GPT-5.5 复审",
@@ -628,7 +629,6 @@
       "unlocking": "正在打开支付页面…",
       "unlockCta": "花费$10解锁",
       "unlockHint": "解锁后，您可以随时在此添加API密钥以启用账户直接计费。",
-      "unlockedDescription": "在下方输入您的OpenAI API密钥。当有密钥时，转录、翻译和配音将直接在您的OpenAI账户上运行。",
       "apiKeyLabel": "OpenAI API密钥",
       "hide": "隐藏",
       "show": "显示",
@@ -661,7 +661,6 @@
       "pricingHint": "每小时视频的预估费用",
       "pricingHintHeuristic": "基于当前应用估算规则的预计成本",
       "transcription": "转录",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "翻译（初稿）",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "需要 Anthropic BYO 解锁、密钥和开关。",
       "summaryRequiresOpenAi": "需要 OpenAI BYO 访问权限和 API 密钥。",
       "summaryRequiresAnthropic": "需要 Anthropic BYO 访问权限和 API 密钥。",
-      "translationReview": "翻译（审核）"
+      "translationReview": "翻译（审核）",
+      "transcriptionRequiresElevenLabs": "转录仅使用 ElevenLabs Scribe。添加 ElevenLabs API 密钥即可使用您自己的密钥进行转录。如果没有，转录将使用 Stage5 积分，而在使用您的 API 密钥时不会消耗 Stage5 积分。您的 OpenAI 密钥仍用于翻译。"
     },
     "apiKeyGuide": {
       "title": "如何获取API密钥",
@@ -703,7 +703,6 @@
         "profileApiKey": "个人资料 + API 密钥"
       },
       "openai": {
-        "description": "OpenAI提供转录（Whisper）、翻译（GPT）和文字转语音配音功能。",
         "step1": "访问",
         "step2": "注册或登录您的账户",
         "step3": "在左侧边栏中导航到",
@@ -725,13 +724,13 @@
         "note": "提示：Anthropic提供按需付费的定价。您只需为实际使用付费。"
       },
       "elevenlabs": {
-        "description": "ElevenLabs提供优质转录和语音克隆配音。没有它，OpenAI将处理这些任务。",
         "step1": "访问",
         "step2": "注册或登录您的账户",
         "step3": "点击您的头像并选择",
         "step4": "在订阅设置中添加付款方式（超出免费额度使用API需要）",
         "step5": "复制您的API密钥并粘贴到Stage5中",
-        "note": "提示：ElevenLabs有免费套餐但使用量有限。如需更多，请在账户设置中升级到付费计划。"
+        "note": "提示：ElevenLabs有免费套餐但使用量有限。如需更多，请在账户设置中升级到付费计划。",
+        "audioDescription": "所有转录（Scribe）和配音均由 ElevenLabs 提供。如果没有您自己的 ElevenLabs 密钥，两者都将使用 Stage5 积分，而在使用您的 API 密钥时不会消耗 Stage5 积分。"
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "需要 API 密钥",
-      "message": "要在所有 AI 操作中使用您的 API 密钥，您需要翻译覆盖和音频覆盖。OpenAI 同时覆盖两者。Anthropic 在音频方面需要 OpenAI 或 ElevenLabs。",
       "howToGet": "如何获取 API 密钥",
-      "option1": "选项 1：OpenAI",
-      "option2": "选项 2：Anthropic + ElevenLabs",
       "enable": "使用我的 API 密钥",
       "done": "完成",
       "ready": "覆盖条件已满足。现在可以启用“使用我的 API 密钥”。",
       "missingTranslation": "翻译仍需要 {{providers}}。",
-      "missingAudio": "音频仍需要 {{providers}}。",
-      "missingBoth": "仍需要：翻译（{{translationProviders}}），音频（{{audioProviders}}）。"
+      "messageElevenLabsAudio": "要使用您的 API 密钥，需要一个用于翻译的 OpenAI 或 Anthropic 密钥。转录和配音仅使用 ElevenLabs，因此也请为它们添加 ElevenLabs 密钥。",
+      "audioNeedsElevenLabs": "没有 ElevenLabs 密钥时，在使用您的 API 密钥期间无法进行转录和配音。"
     },
     "saveSrtFileAs": "另存SRT文件为",
     "saveDownloadedVideoAs": "另存下载的视频为",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "使用 ElevenLabs 转录中（约剩余 {{minutes}} 分钟）",
     "transcribingElevenLabsHours": "使用 ElevenLabs 转录中（约剩余 {{hours}} 小时 {{minutes}} 分钟）",
     "transcribingElevenLabsFinishing": "使用 ElevenLabs 转录中...",
-    "transcriptionFallbackWhisper": "正在切换到分块转录...",
     "transcriptionRetry": "连接失败，正在重试（{{attempt}}/{{maxAttempts}}）...",
     "transcribingR2Upload": "正在上传音频以进行转录...",
     "gapRepair": "间隙修复 #{{iteration}} ({{done}}/{{total}})",

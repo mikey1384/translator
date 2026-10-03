@@ -1387,11 +1387,9 @@ var TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
 var AI_MODELS = {
   GPT: "gpt-5.1",
   CLAUDE_SONNET: "claude-sonnet-5",
-  CLAUDE_OPUS: "claude-opus-4-8",
-  WHISPER: "whisper-1"
+  CLAUDE_OPUS: "claude-opus-4-8"
 };
 var STAGE5_REVIEW_TRANSLATION_MODEL = "gpt-5.5";
-var STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
 var STAGE5_ELEVENLABS_SCRIBE_MODEL = "elevenlabs-scribe";
 var STAGE5_TTS_MODEL_ELEVEN_V3 = "eleven_v3";
 var STAGE5_TTS_MODEL_ELEVEN_V4 = "eleven_v4";
@@ -1442,9 +1440,6 @@ var STAGE5_TRANSLATION_MODEL_PRICING = {
   }
 };
 var STAGE5_TRANSCRIPTION_MODEL_PRICING = {
-  [STAGE5_WHISPER_MODEL]: {
-    perSecond: 6e-3 / 60
-  },
   [STAGE5_ELEVENLABS_SCRIBE_MODEL]: {
     perSecond: 0.4 / 3600
   }
@@ -1502,7 +1497,6 @@ var VENDOR_TOKEN_MODEL_PRICING = {
   [AI_MODELS.CLAUDE_OPUS]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_OPUS]
 };
 var VENDOR_TRANSCRIPTION_MODEL_PRICING = {
-  [STAGE5_WHISPER_MODEL]: STAGE5_TRANSCRIPTION_MODEL_PRICING[STAGE5_WHISPER_MODEL],
   [STAGE5_ELEVENLABS_SCRIBE_MODEL]: {
     creator: 0.48 / 3600,
     pro: 0.4 / 3600,
@@ -1523,6 +1517,7 @@ var VENDOR_TTS_MODEL_PRICING = {
 };
 
 // ../shared/constants/runtime-config.ts
+var ASR_FAST_MODE = false;
 var BASELINE_FONT_SIZE = 30;
 var MIN_SUBTITLE_FONT_SIZE = 6;
 
@@ -1539,13 +1534,22 @@ var ELEVENLABS_DUB_VOICE_OPTIONS = [
 ];
 var ELEVENLABS_DUB_VOICES = ELEVENLABS_DUB_VOICE_OPTIONS.map((option) => option.value);
 
+// ../shared/constants/transcription-limits.ts
+var STAGE5_TRANSCRIPTION_MAX_UPLOAD_MB = 500;
+var STAGE5_TRANSCRIPTION_OPUS_KBPS = ASR_FAST_MODE ? 24 : 32;
+function maxTranscriptionAudioHours(kbps = STAGE5_TRANSCRIPTION_OPUS_KBPS, maxUploadMb = STAGE5_TRANSCRIPTION_MAX_UPLOAD_MB) {
+  if (!Number.isFinite(kbps) || kbps <= 0) return 0;
+  const bits = maxUploadMb * 1024 * 1024 * 8;
+  return Math.floor(bits / (kbps * 1e3) / 3600);
+}
+var STAGE5_TRANSCRIPTION_MAX_AUDIO_HOURS = maxTranscriptionAudioHours();
+
 // ../shared/constants/index.ts
 var AI_MODEL_DISPLAY_NAMES = {
   [AI_MODELS.GPT]: "GPT-5.1",
   [STAGE5_REVIEW_TRANSLATION_MODEL]: "GPT-5.5",
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet",
   [AI_MODELS.CLAUDE_OPUS]: "Claude Opus",
-  [AI_MODELS.WHISPER]: "Whisper",
   [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3",
   [STAGE5_TTS_MODEL_ELEVEN_V4]: "ElevenLabs v4"
 };
@@ -1554,7 +1558,6 @@ var AI_MODEL_EXACT_DISPLAY_NAMES = {
   [STAGE5_REVIEW_TRANSLATION_MODEL]: STAGE5_REVIEW_PROVIDER_OPTIONS.openai.exactModelLabel,
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet 5",
   [AI_MODELS.CLAUDE_OPUS]: STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
-  [AI_MODELS.WHISPER]: "Whisper",
   [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3",
   [STAGE5_TTS_MODEL_ELEVEN_V4]: "ElevenLabs v4"
 };

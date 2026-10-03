@@ -6,7 +6,6 @@ import { useVideoStore } from '../state/video-store';
 import { useEtaCalibrationStore } from '../state/eta-calibration-store';
 import {
   resolveDubbingCreditProvider,
-  resolveTranscriptionProvider,
   resolveTranslationDraftProvider,
   resolveTranslationReviewProvider,
   type ByoRuntimeState,
@@ -40,7 +39,6 @@ type RunContext = Pick<
   | 'segmentCount'
   | 'videoDurationSec'
   | 'qualityTranslation'
-  | 'qualityTranscription'
   | 'translationDraftProvider'
   | 'translationReviewProvider'
   | 'transcriptionProvider'
@@ -83,14 +81,8 @@ function buildRunContext(operationType: OperationKind): RunContext {
   const videoDurationSec = useVideoStore.getState().meta?.duration ?? null;
   const segmentCount = useSubStore.getState().order.length;
 
-  const resolvedTranscriptionProvider =
-    resolveTranscriptionProvider(runtimeState);
-  const transcriptionProviderHint =
-    resolvedTranscriptionProvider === 'stage5'
-      ? runtimeState.preferredTranscriptionProvider === 'openai'
-        ? 'openai'
-        : 'elevenlabs'
-      : resolvedTranscriptionProvider;
+  // Transcription is ElevenLabs Scribe only (BYO key or Stage5 credits).
+  const transcriptionProviderHint = 'elevenlabs' as const;
   // Dubbing is ElevenLabs-only (BYO key or Stage5 credits).
   const dubbingProviderHint = resolveDubbingCreditProvider(runtimeState);
 
@@ -99,7 +91,6 @@ function buildRunContext(operationType: OperationKind): RunContext {
     segmentCount,
     videoDurationSec,
     qualityTranslation: ui.qualityTranslation,
-    qualityTranscription: ui.qualityTranscription,
     translationDraftProvider: resolveTranslationDraftProvider(runtimeState),
     translationReviewProvider: resolveTranslationReviewProvider(runtimeState),
     transcriptionProvider: transcriptionProviderHint,

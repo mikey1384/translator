@@ -803,11 +803,10 @@ const electronAPI = {
     ipcRenderer.invoke('set-video-suggestion-preference-topic', value),
 
   // Transcription provider preference
-  getPreferredTranscriptionProvider: (): Promise<
-    'elevenlabs' | 'openai' | 'stage5'
-  > => ipcRenderer.invoke('get-preferred-transcription-provider'),
+  getPreferredTranscriptionProvider: (): Promise<'elevenlabs' | 'stage5'> =>
+    ipcRenderer.invoke('get-preferred-transcription-provider'),
   setPreferredTranscriptionProvider: (
-    provider: 'elevenlabs' | 'openai' | 'stage5'
+    provider: 'elevenlabs' | 'stage5'
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-preferred-transcription-provider', provider),
 

@@ -249,10 +249,8 @@ export default function QualityToggles() {
     </div>
   );
 
-  // Note: Quality Transcription toggle removed from Stage5 credits mode.
-  // Stage5 always uses ElevenLabs for transcription (not Whisper).
-  // The qualityTranscription setting only affects Whisper chunking, which is
-  // only used in BYO mode when user selects OpenAI/Whisper as their provider.
+  // Transcription is ElevenLabs Scribe only (BYO key or Stage5 credits), so
+  // there is no transcription quality switch.
 
   return (
     <div

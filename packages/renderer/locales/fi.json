@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "ElevenLabs-tililläsi ei ole riittävästi krediittejä. Lisää krediittejä osoitteessa elevenlabs.io.",
       "checkSettings": "Tarkista asetukset",
       "genericApiError": "API-pyyntö epäonnistui. Tarkista API-avaimesi ja tilisi tila."
+    },
+    "transcription": {
+      "providerUnavailable": "Litterointi (ElevenLabs Scribe) ei ole tilapäisesti käytettävissä, tai siihen ei saatu yhteyttä useista yrityksistä huolimatta. Yritä uudelleen muutaman minuutin kuluttua.",
+      "fileTooLarge": "Tämä ääni on liian pitkä litteroitavaksi yhdessä työssä (yli noin {{hours}} tuntia). Jaa video lyhyempiin osiin ja litteroi jokainen osa erikseen.",
+      "elevenLabsKeyRequired": "Litterointi käyttää ElevenLabs Scribea ja vaatii ElevenLabs API-avaimen. Lisää avain Asetuksissa tai poista API-avaintila käytöstä litteroidaksesi Stage5-krediiteillä. OpenAI- tai Anthropic-avaintasi käytetään edelleen käännökseen."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Käytä omia API-avaimiani",
       "activeKeys": "Valmiit avaimet: {{count}}",
       "noKeys": "Avaimia ei ole määritetty",
-      "requirement": "Vaatii käännös- ja äänikattavuuden",
       "usingApiKeys": "Stage5-krediitit pois",
       "usingCredits": "Stage5-krediitit käytössä",
       "toggleOn": "Käyttää nyt API-avaimiasi.",
       "toggleOff": "Käyttää nyt Stage5-krediittejä.",
       "toggleError": "Asetuksen päivittäminen epäonnistui.",
-      "toggleAria": "Käytä omia API-avaimiani"
+      "toggleAria": "Käytä omia API-avaimiani",
+      "requirementTranslation": "Vaatii OpenAI- tai Anthropic-avaimen käännökseen"
     },
     "creditsDescription": "Osta krediittejä. Näytetyt tunnit ovat arvio videon kokonaiskestosta, jonka voit puhtaaksikirjoittaa tai kääntää. Esimerkki: 3 tunnin videon transkriptio ja käännös kuluttaa noin 6 tuntia (≈140 000 krediittiä).",
     "performanceQuality": {
       "title": "Suorituskyky ja laatu",
-      "qualityTranscription": {
-        "label": "Laadukas litterointi",
-        "help": "Päällä: peräkkäinen, käyttää edellisten rivien kontekstia. Pois: nopeampi erätila."
-      },
       "qualityTranslation": {
         "label": "Laadukas käännös",
         "modelOn": "GPT-5.1-luonnos + GPT-5.5-tarkistus",
@@ -628,7 +629,6 @@
       "unlocking": "Avataan kassaa…",
       "unlockCta": "Avaa 10 dollarilla",
       "unlockHint": "Avattuna voit lisätä API-avaimesi tähän milloin tahansa vaihtaaksesi suoraan laskutukseen tileiltäsi.",
-      "unlockedDescription": "Syötä OpenAI API -avaimesi alle. Litterointi, käännös ja dubbaus suoritetaan suoraan OpenAI-tililtäsi, kun avain on annettu.",
       "apiKeyLabel": "OpenAI API -avain",
       "hide": "Piilota",
       "show": "Näytä",
@@ -661,7 +661,6 @@
       "pricingHint": "Arvioitu hinta 1 tunnin videolta",
       "pricingHintHeuristic": "Arvioitu hinta sovelluksen nykyisellä heuristiikalla",
       "transcription": "Litterointi",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Käännös (luonnos)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Vaatii Anthropic BYO -avauksen, avaimen ja aktivoinnin.",
       "summaryRequiresOpenAi": "Vaatii OpenAI BYO-käytön ja API-avaimen.",
       "summaryRequiresAnthropic": "Vaatii Anthropic BYO-käytön ja API-avaimen.",
-      "translationReview": "Käännös (tarkistus)"
+      "translationReview": "Käännös (tarkistus)",
+      "transcriptionRequiresElevenLabs": "Litterointi käyttää vain ElevenLabs Scribea. Lisää ElevenLabs API-avain litteroidaksesi omilla avaimillasi. Ilman sitä litterointi käyttää Stage5-krediittejä, joita ei käytetä, kun API-avaimesi ovat käytössä. OpenAI-avaintasi käytetään edelleen käännökseen."
     },
     "apiKeyGuide": {
       "title": "API-avainten hankkiminen",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profiili + API-avain"
       },
       "openai": {
-        "description": "OpenAI hoitaa litteroinnin (Whisper), käännöksen (GPT) ja teksti-puhe-dubbauksen.",
         "step1": "Siirry osoitteeseen",
         "step2": "Rekisteröidy tai kirjaudu sisään tilillesi",
         "step3": "Siirry kohtaan",
@@ -725,13 +724,13 @@
         "note": "Vinkki: Anthropic tarjoaa käytön mukaista hinnoittelua. Maksat vain käyttämästäsi."
       },
       "elevenlabs": {
-        "description": "ElevenLabs tarjoaa premium-litteroinnin ja äänikloonausdubbauksen. Ilman sitä OpenAI hoitaa nämä tehtävät.",
         "step1": "Siirry osoitteeseen",
         "step2": "Rekisteröidy tai kirjaudu sisään tilillesi",
         "step3": "Napsauta profiilikuvakettasi ja valitse",
         "step4": "Lisää maksutapa tilausasetuksissa (vaaditaan API-käyttöön ilmaistason yli)",
         "step5": "Kopioi API-avaimesi ja liitä se Stage5:een",
-        "note": "Vinkki: ElevenLabsilla on ilmaistaso rajoitetulla käytöllä. Lisää käyttöön päivitä maksulliseen tiliin tiliasetuksissasi."
+        "note": "Vinkki: ElevenLabsilla on ilmaistaso rajoitetulla käytöllä. Lisää käyttöön päivitä maksulliseen tiliin tiliasetuksissasi.",
+        "audioDescription": "ElevenLabs hoitaa kaiken litteroinnin (Scribe) ja dubbauksen. Ilman omaa ElevenLabs-avainta molemmat käyttävät Stage5-krediittejä, joita ei käytetä, kun API-avaimesi ovat käytössä."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "API-avaimet vaaditaan",
-      "message": "Jotta voit käyttää API-avaimiasi kaikkiin AI-toimintoihin, tarvitset käännöskattavuuden ja äänikattavuuden. OpenAI kattaa molemmat. Anthropic tarvitsee ääntä varten OpenAI:n tai ElevenLabsin.",
       "howToGet": "Miten saan API-avaimet",
-      "option1": "Vaihtoehto 1: OpenAI",
-      "option2": "Vaihtoehto 2: Anthropic + ElevenLabs",
       "enable": "Käytä omia API-avaimiani",
       "done": "Valmis",
       "ready": "Kattavuus on nyt kunnossa. Voit nyt ottaa käyttöön ”Käytä omia API-avaimiani”.",
       "missingTranslation": "Käännös tarvitsee vielä {{providers}}.",
-      "missingAudio": "Ääni tarvitsee vielä {{providers}}.",
-      "missingBoth": "Vielä tarvitaan: käännös ({{translationProviders}}) ja ääni ({{audioProviders}})."
+      "messageElevenLabsAudio": "Jotta voit käyttää omia API-avaimiasi, tarvitset OpenAI- tai Anthropic-avaimen käännöstä varten. Litterointi ja dubbaus käyttävät vain ElevenLabsia, joten lisää myös ElevenLabs-avain niitä varten.",
+      "audioNeedsElevenLabs": "Ilman ElevenLabs-avainta litterointi ja dubbaus eivät ole käytettävissä, kun API-avaimesi ovat käytössä."
     },
     "saveSrtFileAs": "Tallenna SRT-tiedosto nimellä",
     "saveDownloadedVideoAs": "Tallenna ladattu video nimellä",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Litteroidaan ElevenLabsilla (~{{minutes}} min jäljellä)",
     "transcribingElevenLabsHours": "Litteroidaan ElevenLabsilla (~{{hours}}h {{minutes}}m jäljellä)",
     "transcribingElevenLabsFinishing": "Litteroidaan ElevenLabsilla...",
-    "transcriptionFallbackWhisper": "Vaihdetaan palasteltuun litterointiin...",
     "transcriptionRetry": "Yhteys epäonnistui, yritetään uudelleen ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Ladataan ääntä litterointia varten...",
     "gapRepair": "Aukkojen korjaus #{{iteration}} ({{done}}/{{total}})",

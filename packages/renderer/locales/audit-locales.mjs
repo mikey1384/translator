@@ -35,7 +35,6 @@ const ALLOWLIST_PATTERNS = [
   /^Dailymotion$/i,
   /^Claude$/i,
   /^Anthropic \(Claude\)$/i,
-  /^Whisper$/i,
   /^Scribe$/i,
   /^GPT-?\d/i,
   /^Opus/i,
@@ -101,7 +100,6 @@ const ALLOWLIST_PATTERNS = [
   /^Claude Opus$/i,
   /^Claude Sonnet$/i,
   /^Opus 4\.5$/i,
-  /^OpenAI Whisper$/i,
   /^ElevenLabs Scribe$/i,
   /^OpenAI TTS$/i,
 

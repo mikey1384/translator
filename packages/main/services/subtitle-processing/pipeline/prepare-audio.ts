@@ -25,10 +25,11 @@ export async function prepareAudio({
 
   attachExtractAudio(services.ffmpeg);
 
-  // Use higher quality audio for ElevenLabs (better speaker diarization)
+  // Higher-bitrate audio for BYO ElevenLabs (better speaker diarization);
+  // compact speech audio for Stage5 Scribe.
   const audioProvider = getActiveProviderForAudio();
   const qualityMode: AudioQualityMode =
-    audioProvider === 'elevenlabs' ? 'elevenlabs' : 'whisper';
+    audioProvider === 'elevenlabs' ? 'elevenlabs' : 'stage5';
 
   const audioPath = await services.ffmpeg.extractAudio!({
     videoPath,

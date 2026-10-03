@@ -53,7 +53,12 @@ export function isExpectedUserFacingFailure(
     text.includes(ERROR_CODES.ANTHROPIC_INSUFFICIENT_QUOTA) ||
     text.includes(ERROR_CODES.ELEVENLABS_KEY_INVALID) ||
     text.includes(ERROR_CODES.ELEVENLABS_RATE_LIMIT) ||
-    text.includes(ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA);
+    text.includes(ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA) ||
+    text.includes(ERROR_CODES.TRANSCRIPTION_PROVIDER_UNAVAILABLE) ||
+    text.includes(ERROR_CODES.TRANSCRIPTION_FILE_TOO_LARGE) ||
+    text.includes(ERROR_CODES.ELEVENLABS_KEY_REQUIRED) ||
+    // API key mode without ElevenLabs: transcription is blocked by design.
+    text.includes('Transcription uses ElevenLabs Scribe.');
   if (containsExpectedCode) return true;
   if (BENIGN_VALIDATION_RE.some(re => re.test(text))) return true;
   if (EXPECTED_USER_STATE_RE.test(text)) return true;

@@ -136,8 +136,8 @@ export default function ApiKeyModeToggle() {
                   )
                 : t('settings.apiKeyMode.noKeys', 'No keys configured')
               : t(
-                  'settings.apiKeyMode.requirement',
-                  'Needs translation + audio coverage'
+                  'settings.apiKeyMode.requirementTranslation',
+                  'Needs an OpenAI or Anthropic key for translation'
                 )}
           </span>
           <span className={settingsMetaTextStyles}>

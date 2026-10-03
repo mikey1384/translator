@@ -568,7 +568,6 @@ async function openCreditCheckout(input?: {
 
 type SettingsUpdate = {
   qualityTranslation?: boolean;
-  qualityTranscription?: boolean;
   reviewProvider?: 'openai' | 'anthropic';
   summaryQuality?: 'standard' | 'high';
   summaryProvider?: 'openai' | 'anthropic';
@@ -583,6 +582,7 @@ type SettingsUpdate = {
     | 'gpt-5.5'
     | 'claude-sonnet-5'
     | 'claude-opus-4-8';
+  /** Legacy 'openai' (Whisper) is treated as 'elevenlabs'. */
   transcriptionProvider?: 'stage5' | 'openai' | 'elevenlabs';
   dubbingProvider?: 'stage5' | 'openai' | 'elevenlabs';
   openAiEnabled?: boolean;
@@ -1844,7 +1844,6 @@ async function runHistoryTranscription(
       streamResults: true,
       videoPath,
       operationId,
-      qualityTranscription: useUIStore.getState().qualityTranscription,
     };
     const result = await SubtitlesIPC.generate(opts);
     if (!result.success || !result.subtitles) {
@@ -3998,7 +3997,6 @@ async function settingsSnapshot({
       : null,
     performanceAndQuality: {
       qualityTranslation: ui.qualityTranslation,
-      qualityTranscription: ui.qualityTranscription,
       reviewProvider: ai.preferClaudeReview ? 'anthropic' : 'openai',
       summaryQuality: ui.summaryEffortLevel,
       summaryProvider: ai.preferClaudeSummary ? 'anthropic' : 'openai',
@@ -4089,7 +4087,12 @@ async function mcpContext({
   );
   const draftProvider = ai.preferClaudeTranslation ? 'anthropic' : 'openai';
   const summaryProvider = ai.preferClaudeSummary ? 'anthropic' : 'openai';
-  const transcriptionProvider = ai.preferredTranscriptionProvider;
+  // Transcription is ElevenLabs Scribe only: BYO ElevenLabs when usable,
+  // else Stage5 credits (also Scribe). An OpenAI key never transcribes.
+  const transcriptionProvider =
+    ai.preferredTranscriptionProvider !== 'stage5' && elevenLabsByo
+      ? 'elevenlabs'
+      : 'stage5';
   // Dubbing is ElevenLabs-only: BYO ElevenLabs when usable, else Stage5.
   const dubbingProvider =
     ai.preferredDubbingProvider !== 'stage5' && elevenLabsByo
@@ -4159,7 +4162,6 @@ async function mcpContext({
     },
     planning: {
       quality_translation: ui.qualityTranslation,
-      quality_transcription: ui.qualityTranscription,
       subtitle_rendering: currentSubtitleRenderSelection(),
       credit_rates: {
         transcription_per_hour: CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
@@ -4406,9 +4408,6 @@ async function updateSettings(
   if (input.qualityTranslation !== undefined) {
     ui.setQualityTranslation(input.qualityTranslation);
   }
-  if (input.qualityTranscription !== undefined) {
-    ui.setQualityTranscription(input.qualityTranscription);
-  }
   if (input.summaryQuality !== undefined) {
     ui.setSummaryEffortLevel(input.summaryQuality);
   }
@@ -4467,7 +4466,10 @@ async function updateSettings(
   if (input.transcriptionProvider !== undefined) {
     requireSuccess(
       'Transcription provider',
-      await ai.setPreferredTranscriptionProvider(input.transcriptionProvider)
+      // Whisper is retired; a legacy 'openai' preference maps to ElevenLabs.
+      await ai.setPreferredTranscriptionProvider(
+        input.transcriptionProvider === 'stage5' ? 'stage5' : 'elevenlabs'
+      )
     );
   }
   if (input.dubbingProvider !== undefined) {

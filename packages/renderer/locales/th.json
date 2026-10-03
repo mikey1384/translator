@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "บัญชี ElevenLabs ของคุณมีเครดิตไม่เพียงพอ กรุณาเติมเครดิตที่ elevenlabs.io",
       "checkSettings": "ตรวจสอบการตั้งค่า",
       "genericApiError": "คำขอ API ล้มเหลว กรุณาตรวจสอบคีย์ API และสถานะบัญชีของคุณ"
+    },
+    "transcription": {
+      "providerUnavailable": "การถอดความ (ElevenLabs Scribe) ไม่พร้อมใช้งานชั่วคราว หรือไม่สามารถเชื่อมต่อได้หลังจากลองหลายครั้ง โปรดลองอีกครั้งในอีกไม่กี่นาที",
+      "fileTooLarge": "เสียงนี้ยาวเกินกว่าจะถอดความในงานเดียวได้ (เกินประมาณ {{hours}} ชั่วโมง) แบ่งวิดีโอเป็นส่วนที่สั้นลงแล้วถอดความแต่ละส่วน",
+      "elevenLabsKeyRequired": "การถอดความใช้ ElevenLabs Scribe และต้องใช้คีย์ API ของ ElevenLabs เพิ่มคีย์ในการตั้งค่า หรือปิดโหมดคีย์ API เพื่อถอดความด้วยเครดิต Stage5 คีย์ OpenAI หรือ Anthropic ของคุณยังคงใช้สำหรับการแปล"
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "ใช้คีย์ API ของฉัน",
       "activeKeys": "คีย์พร้อมใช้ {{count}} รายการ",
       "noKeys": "ยังไม่ได้ตั้งค่าคีย์",
-      "requirement": "ต้องมีการครอบคลุมด้านแปล + เสียง",
       "usingApiKeys": "ปิดเครดิต Stage5",
       "usingCredits": "กำลังใช้เครดิต Stage5",
       "toggleOn": "ตอนนี้ใช้ API key ของคุณแล้ว",
       "toggleOff": "ตอนนี้ใช้เครดิต Stage5 แล้ว",
       "toggleError": "อัปเดตการตั้งค่าไม่สำเร็จ",
-      "toggleAria": "ใช้คีย์ API ของฉัน"
+      "toggleAria": "ใช้คีย์ API ของฉัน",
+      "requirementTranslation": "ต้องใช้คีย์ OpenAI หรือ Anthropic สำหรับการแปล"
     },
     "creditsDescription": "ซื้อเครดิต จำนวนชั่วโมงที่แสดงเป็นการประมาณระยะเวลารวมของวิดีโอที่คุณสามารถถอดความหรือแปลได้ ตัวอย่าง: ถอดความและแปลวิดีโอความยาว 3 ชั่วโมง จะใช้ประมาณ 6 ชั่วโมง (≈140,000 เครดิต)",
     "performanceQuality": {
       "title": "ประสิทธิภาพและคุณภาพ",
-      "qualityTranscription": {
-        "label": "การถอดความคุณภาพสูง",
-        "help": "เปิด: ทำงานตามลำดับ ใช้บริบทจากบรรทัดก่อนหน้า ปิด: โหมดแบทช์ที่เร็วกว่า"
-      },
       "qualityTranslation": {
         "label": "การแปลคุณภาพสูง",
         "modelOn": "GPT-5.1 ฉบับร่าง + GPT-5.5 รีวิว",
@@ -628,7 +629,6 @@
       "unlocking": "กำลังเปิดหน้าชำระเงิน…",
       "unlockCta": "ปลดล็อกในราคา $10",
       "unlockHint": "เมื่อปลดล็อกแล้ว เพิ่มคีย์ API ของคุณที่นี่เมื่อใดก็ได้เพื่อสลับการเรียกเก็บเงินโดยตรงในบัญชีของคุณ",
-      "unlockedDescription": "ป้อนคีย์ API ของ OpenAI ด้านล่าง การถอดความ การแปล และการพากย์จะทำงานโดยตรงกับบัญชี OpenAI ของคุณเมื่อมีคีย์",
       "apiKeyLabel": "คีย์ API ของ OpenAI",
       "hide": "ซ่อน",
       "show": "แสดง",
@@ -661,7 +661,6 @@
       "pricingHint": "ค่าใช้จ่ายโดยประมาณต่อวิดีโอ 1 ชั่วโมง",
       "pricingHintHeuristic": "ค่าใช้จ่ายโดยประมาณตามการประเมินปัจจุบันของแอป",
       "transcription": "การถอดความ",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "การแปล (ร่าง)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "ต้องปลดล็อก Anthropic BYO พร้อมใส่คีย์และเปิดสวิตช์",
       "summaryRequiresOpenAi": "ต้องมีสิทธิ์เข้าถึง OpenAI BYO และคีย์ API",
       "summaryRequiresAnthropic": "ต้องมีสิทธิ์เข้าถึง Anthropic BYO และคีย์ API",
-      "translationReview": "การแปล (ตรวจทาน)"
+      "translationReview": "การแปล (ตรวจทาน)",
+      "transcriptionRequiresElevenLabs": "การถอดความใช้ ElevenLabs Scribe เท่านั้น เพิ่มคีย์ API ของ ElevenLabs เพื่อถอดความด้วยคีย์ของคุณเอง หากไม่มีคีย์ การถอดความจะใช้เครดิต Stage5 ซึ่งจะไม่ถูกใช้ขณะเปิดใช้คีย์ API ของคุณ คีย์ OpenAI ของคุณยังคงใช้สำหรับการแปล"
     },
     "apiKeyGuide": {
       "title": "วิธีรับคีย์ API",
@@ -703,7 +703,6 @@
         "profileApiKey": "โปรไฟล์ + คีย์ API"
       },
       "openai": {
-        "description": "OpenAI ขับเคลื่อนการถอดความ (Whisper) การแปล (GPT) และการพากย์เสียงด้วยการแปลงข้อความเป็นเสียง",
         "step1": "ไปที่",
         "step2": "ลงทะเบียนหรือเข้าสู่ระบบบัญชีของคุณ",
         "step3": "ไปที่",
@@ -725,13 +724,13 @@
         "note": "เคล็ดลับ: Anthropic เสนอราคาแบบจ่ายตามการใช้งาน คุณจ่ายเฉพาะสิ่งที่คุณใช้"
       },
       "elevenlabs": {
-        "description": "ElevenLabs มีการถอดความพรีเมียมและการพากย์แบบโคลนเสียง หากไม่มี OpenAI จะจัดการงานเหล่านี้",
         "step1": "ไปที่",
         "step2": "ลงทะเบียนหรือเข้าสู่ระบบบัญชีของคุณ",
         "step3": "คลิกไอคอนโปรไฟล์ของคุณและเลือก",
         "step4": "เพิ่มวิธีการชำระเงินในการตั้งค่าการสมัครสมาชิก (จำเป็นสำหรับการใช้ API นอกเหนือจากระดับฟรี)",
         "step5": "คัดลอกคีย์ API ของคุณและวางใน Stage5",
-        "note": "เคล็ดลับ: ElevenLabs มีระดับฟรีที่มีการใช้งานจำกัด สำหรับการใช้งานเพิ่มเติม อัปเกรดเป็นแผนชำระเงินในการตั้งค่าบัญชีของคุณ"
+        "note": "เคล็ดลับ: ElevenLabs มีระดับฟรีที่มีการใช้งานจำกัด สำหรับการใช้งานเพิ่มเติม อัปเกรดเป็นแผนชำระเงินในการตั้งค่าบัญชีของคุณ",
+        "audioDescription": "ElevenLabs ขับเคลื่อนการถอดความ (Scribe) และการพากย์ทั้งหมด หากไม่มีคีย์ ElevenLabs ของคุณเอง ทั้งสองอย่างจะใช้เครดิต Stage5 ซึ่งจะไม่ถูกใช้ขณะเปิดใช้คีย์ API ของคุณ"
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "ต้องมีคีย์ API",
-      "message": "หากต้องการใช้ API key ของคุณกับงาน AI ทั้งหมด คุณต้องมีความครอบคลุมด้านการแปลและด้านเสียง โดย OpenAI ครอบคลุมได้ทั้งสองด้าน ส่วน Anthropic ต้องมี OpenAI หรือ ElevenLabs สำหรับงานเสียง",
       "howToGet": "วิธีรับคีย์ API",
-      "option1": "ตัวเลือก 1: OpenAI",
-      "option2": "ตัวเลือก 2: Anthropic + ElevenLabs",
       "enable": "ใช้คีย์ API ของฉัน",
       "done": "เสร็จสิ้น",
       "ready": "ความครอบคลุมครบแล้ว ตอนนี้คุณสามารถเปิด “ใช้ API key ของฉัน” ได้",
       "missingTranslation": "งานแปลยังต้องใช้ {{providers}}",
-      "missingAudio": "งานเสียงยังต้องใช้ {{providers}}",
-      "missingBoth": "ยังต้องมี: งานแปล ({{translationProviders}}) และงานเสียง ({{audioProviders}})"
+      "messageElevenLabsAudio": "หากต้องการใช้คีย์ API ของคุณ คุณต้องมีคีย์ OpenAI หรือ Anthropic สำหรับการแปล การถอดความและการพากย์ใช้ ElevenLabs เท่านั้น จึงควรเพิ่มคีย์ ElevenLabs สำหรับส่วนนั้นด้วย",
+      "audioNeedsElevenLabs": "หากไม่มีคีย์ ElevenLabs การถอดความและการพากย์จะไม่พร้อมใช้งานขณะเปิดใช้คีย์ API ของคุณ"
     },
     "saveSrtFileAs": "บันทึกไฟล์ SRT เป็น",
     "saveDownloadedVideoAs": "บันทึกวิดีโอที่ดาวน์โหลดเป็น",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "กำลังถอดความด้วย ElevenLabs (~{{minutes}} นาที ที่เหลือ)",
     "transcribingElevenLabsHours": "กำลังถอดความด้วย ElevenLabs (~{{hours}} ชม. {{minutes}} นาที ที่เหลือ)",
     "transcribingElevenLabsFinishing": "กำลังถอดความด้วย ElevenLabs...",
-    "transcriptionFallbackWhisper": "กำลังเปลี่ยนไปใช้การถอดความแบบแบ่งส่วน...",
     "transcriptionRetry": "การเชื่อมต่อล้มเหลว กำลังลองใหม่ ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "กำลังอัปโหลดเสียงเพื่อถอดความ...",
     "gapRepair": "การซ่อมแซมช่องว่าง #{{iteration}} ({{done}}/{{total}})",

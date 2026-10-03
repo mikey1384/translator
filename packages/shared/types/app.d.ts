@@ -185,6 +185,7 @@ declare module '@shared-types/app' {
     activeLinkedFileRole?: SubtitleDocumentLinkedFileRole | null;
     createdAt: string;
     updatedAt: string;
+    /** New transcripts are always 'elevenlabs'; 'whisper' marks legacy saves. */
     transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
   }
 
@@ -878,7 +879,6 @@ declare module '@shared-types/app' {
     filters?: { name: string; extensions: string[] }[];
     multiple?: boolean;
     sourceLang?: string;
-    qualityTranscription?: boolean; // true = sequential/contextual, false = fast/batched
   }
 
   export interface GenerateSubtitlesResult {
@@ -952,7 +952,6 @@ declare module '@shared-types/app' {
     start: number;
     end?: number;
     operationId?: string;
-    qualityTranscription?: boolean;
   }
 
   export interface TranscribeRemainingResult {
@@ -1161,7 +1160,7 @@ declare module '@shared-types/app' {
     videoSuggestionModelPreference: VideoSuggestionModelPreference;
     stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
     byoVideoSuggestionModel: ByoVideoSuggestionModel;
-    preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
+    preferredTranscriptionProvider: 'elevenlabs' | 'stage5';
     preferredDubbingProvider: 'elevenlabs' | 'stage5';
     stage5DubbingTtsProvider: 'elevenlabs';
   }
@@ -1715,11 +1714,9 @@ declare module '@shared-types/app' {
     ) => Promise<{ success: boolean; error?: string }>;
 
     // Provider preferences
-    getPreferredTranscriptionProvider: () => Promise<
-      'elevenlabs' | 'openai' | 'stage5'
-    >;
+    getPreferredTranscriptionProvider: () => Promise<'elevenlabs' | 'stage5'>;
     setPreferredTranscriptionProvider: (
-      provider: 'elevenlabs' | 'openai' | 'stage5'
+      provider: 'elevenlabs' | 'stage5'
     ) => Promise<{ success: boolean; error?: string }>;
     getPreferredDubbingProvider: () => Promise<'elevenlabs' | 'stage5'>;
     setPreferredDubbingProvider: (
@@ -1876,7 +1873,6 @@ declare module '@shared-types/app' {
         settingsSnapshot: () => Promise<Record<string, unknown>>;
         updateSettings: (input?: {
           qualityTranslation?: boolean;
-          qualityTranscription?: boolean;
           reviewProvider?: 'openai' | 'anthropic';
           summaryQuality?: 'standard' | 'high';
           summaryProvider?: 'openai' | 'anthropic';
@@ -1892,6 +1888,7 @@ declare module '@shared-types/app' {
             | 'gpt-5.5'
             | 'claude-sonnet-5'
             | 'claude-opus-4-8';
+          /** Legacy 'openai' is treated as 'elevenlabs' (Whisper is retired). */
           transcriptionProvider?: 'stage5' | 'openai' | 'elevenlabs';
           /** Legacy 'openai' is treated as 'elevenlabs' (OpenAI TTS is retired). */
           dubbingProvider?: 'stage5' | 'openai' | 'elevenlabs';

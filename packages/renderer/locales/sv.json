@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Ditt ElevenLabs-konto har otillräckliga krediter. Lägg till krediter på elevenlabs.io.",
       "checkSettings": "Kontrollera inställningar",
       "genericApiError": "API-begäran misslyckades. Kontrollera din API-nyckel och kontostatus."
+    },
+    "transcription": {
+      "providerUnavailable": "Transkribering (ElevenLabs Scribe) är tillfälligt otillgänglig eller kunde inte nås efter flera försök. Försök igen om några minuter.",
+      "fileTooLarge": "Det här ljudet är för långt för att transkriberas i ett enda jobb (mer än cirka {{hours}} timmar). Dela upp videon i kortare delar och transkribera varje del.",
+      "elevenLabsKeyRequired": "Transkribering använder ElevenLabs Scribe och kräver en ElevenLabs API-nyckel. Lägg till en i Inställningar, eller stäng av API-nyckelläget för att transkribera med Stage5-krediter. Din OpenAI- eller Anthropic-nyckel används fortfarande för översättning."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Använd mina API-nycklar",
       "activeKeys": "Nycklar redo: {{count}}",
       "noKeys": "Inga nycklar konfigurerade",
-      "requirement": "Kräver översättning + ljud",
       "usingApiKeys": "Stage5-krediter av",
       "usingCredits": "Stage5-krediter på",
       "toggleOn": "Använder nu dina API-nycklar.",
       "toggleOff": "Använder nu Stage5-krediter.",
       "toggleError": "Det gick inte att uppdatera inställningen.",
-      "toggleAria": "Använd mina API-nycklar"
+      "toggleAria": "Använd mina API-nycklar",
+      "requirementTranslation": "Kräver en OpenAI- eller Anthropic-nyckel för översättning"
     },
     "creditsDescription": "Köp krediter. Antalet timmar som visas är en uppskattning av den totala videolängd du kan transkribera eller översätta. Exempel: att transkribera och översätta en 3-timmars video använder cirka 6 timmar (cirka 140 000 krediter).",
     "performanceQuality": {
       "title": "Prestanda och kvalitet",
-      "qualityTranscription": {
-        "label": "Kvalitetstranskribering",
-        "help": "På: sekventiell, använder tidigare raders kontext. Av: snabbare batchläge."
-      },
       "qualityTranslation": {
         "label": "Kvalitetsöversättning",
         "modelOn": "GPT-5.1-utkast + GPT-5.5-granskning",
@@ -628,7 +629,6 @@
       "unlocking": "Öppnar kassan...",
       "unlockCta": "Lås upp för $10",
       "unlockHint": "När upplåst, lägg till dina API-nycklar här när som helst för att växla till direktfakturering på dina konton.",
-      "unlockedDescription": "Ange din OpenAI API-nyckel nedan. Transkribering, översättning och dubbning körs direkt mot ditt OpenAI-konto när en nyckel finns.",
       "apiKeyLabel": "OpenAI API-nyckel",
       "hide": "Dölj",
       "show": "Visa",
@@ -661,7 +661,6 @@
       "pricingHint": "Uppskattad kostnad per 1 timmes video",
       "pricingHintHeuristic": "Uppskattad kostnad enligt appens nuvarande heuristik",
       "transcription": "Transkribering",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Översättning (utkast)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Kräver Anthropic BYO-upplåsning, nyckel och aktivering.",
       "summaryRequiresOpenAi": "Kräver OpenAI BYO-åtkomst och en API-nyckel.",
       "summaryRequiresAnthropic": "Kräver Anthropic BYO-åtkomst och en API-nyckel.",
-      "translationReview": "Översättning (granskning)"
+      "translationReview": "Översättning (granskning)",
+      "transcriptionRequiresElevenLabs": "Transkribering använder endast ElevenLabs Scribe. Lägg till en ElevenLabs API-nyckel för att transkribera med dina egna nycklar. Utan en sådan använder transkriberingen Stage5-krediter, som inte används medan dina API-nycklar är på. Din OpenAI-nyckel används fortfarande för översättning."
     },
     "apiKeyGuide": {
       "title": "Hur man får API-nycklar",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profil + API-nyckel"
       },
       "openai": {
-        "description": "OpenAI driver transkribering (Whisper), översättning (GPT) och text-till-tal-dubbning.",
         "step1": "Gå till",
         "step2": "Registrera dig eller logga in på ditt konto",
         "step3": "Navigera till",
@@ -725,13 +724,13 @@
         "note": "Tips: Anthropic erbjuder betala-per-användning-prissättning. Du betalar bara för det du använder."
       },
       "elevenlabs": {
-        "description": "ElevenLabs erbjuder premiumtranskribering och röstkloning för dubbning. Utan den hanterar OpenAI dessa uppgifter.",
         "step1": "Gå till",
         "step2": "Registrera dig eller logga in på ditt konto",
         "step3": "Klicka på din profilikon och välj",
         "step4": "Lägg till en betalningsmetod i prenumerationsinställningarna (krävs för API-användning utöver gratisnivån)",
         "step5": "Kopiera din API-nyckel och klistra in den i Stage5",
-        "note": "Tips: ElevenLabs har en gratisnivå med begränsad användning. För mer, uppgradera till en betald plan i dina kontoinställningar."
+        "note": "Tips: ElevenLabs har en gratisnivå med begränsad användning. För mer, uppgradera till en betald plan i dina kontoinställningar.",
+        "audioDescription": "ElevenLabs står för all transkribering (Scribe) och dubbning. Utan din egen ElevenLabs-nyckel använder båda Stage5-krediter, som inte används medan dina API-nycklar är på."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "API-nycklar krävs",
-      "message": "För att använda dina API-nycklar för alla AI-åtgärder behöver du täckning för översättning och ljud. OpenAI täcker båda. Anthropic behöver OpenAI eller ElevenLabs för ljud.",
       "howToGet": "Hur man får API-nycklar",
-      "option1": "Alternativ 1: OpenAI",
-      "option2": "Alternativ 2: Anthropic + ElevenLabs",
       "enable": "Använd mina API-nycklar",
       "done": "Klar",
       "ready": "Täckningen är komplett. Nu kan du aktivera ”Använd mina API-nycklar”.",
       "missingTranslation": "Översättning behöver fortfarande {{providers}}.",
-      "missingAudio": "Ljud behöver fortfarande {{providers}}.",
-      "missingBoth": "Det som fortfarande behövs: översättning ({{translationProviders}}) och ljud ({{audioProviders}})."
+      "messageElevenLabsAudio": "För att använda dina API-nycklar behöver du en OpenAI- eller Anthropic-nyckel för översättning. Transkribering och dubbning använder endast ElevenLabs, så lägg även till en ElevenLabs-nyckel för dessa.",
+      "audioNeedsElevenLabs": "Utan en ElevenLabs-nyckel är transkribering och dubbning otillgängliga medan dina API-nycklar är på."
     },
     "saveSrtFileAs": "Spara SRT-fil som",
     "saveDownloadedVideoAs": "Spara nedladdad video som",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Transkriberar med ElevenLabs (~{{minutes}} min kvar)",
     "transcribingElevenLabsHours": "Transkriberar med ElevenLabs (~{{hours}}h {{minutes}}m kvar)",
     "transcribingElevenLabsFinishing": "Transkriberar med ElevenLabs...",
-    "transcriptionFallbackWhisper": "Faller tillbaka till delad transkribering...",
     "transcriptionRetry": "Anslutningen misslyckades, försöker igen ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Laddar upp ljud för transkribering...",
     "gapRepair": "Luckreparation #{{iteration}} ({{done}}/{{total}})",

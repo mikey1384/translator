@@ -1,4 +1,7 @@
-import { ERROR_CODES } from '../../shared/constants';
+import {
+  ERROR_CODES,
+  STAGE5_TRANSCRIPTION_MAX_AUDIO_HOURS,
+} from '../../shared/constants';
 import { i18n } from '../i18n';
 
 /**
@@ -20,6 +23,20 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   [ERROR_CODES.ELEVENLABS_RATE_LIMIT]: 'errors.byo.elevenlabsRateLimit',
   [ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA]:
     'errors.byo.elevenlabsInsufficientQuota',
+  // Transcription is ElevenLabs Scribe only; these replace the old Whisper
+  // fallback with clear, final errors.
+  [ERROR_CODES.TRANSCRIPTION_PROVIDER_UNAVAILABLE]:
+    'errors.transcription.providerUnavailable',
+  [ERROR_CODES.TRANSCRIPTION_FILE_TOO_LARGE]:
+    'errors.transcription.fileTooLarge',
+  [ERROR_CODES.ELEVENLABS_KEY_REQUIRED]:
+    'errors.transcription.elevenLabsKeyRequired',
+};
+
+const ERROR_CODE_I18N_PARAMS: Record<string, Record<string, unknown>> = {
+  [ERROR_CODES.TRANSCRIPTION_FILE_TOO_LARGE]: {
+    hours: STAGE5_TRANSCRIPTION_MAX_AUDIO_HOURS,
+  },
 };
 
 /**
@@ -56,7 +73,10 @@ export function getByoErrorMessage(errorMessage: string | undefined): string {
 
   const code = extractByoErrorCode(errorMessage);
   if (code && ERROR_CODE_TO_I18N_KEY[code]) {
-    return i18n.t(ERROR_CODE_TO_I18N_KEY[code]);
+    const params = ERROR_CODE_I18N_PARAMS[code];
+    return params
+      ? i18n.t(ERROR_CODE_TO_I18N_KEY[code], params)
+      : i18n.t(ERROR_CODE_TO_I18N_KEY[code]);
   }
 
   // Check for common API error patterns not covered by specific codes

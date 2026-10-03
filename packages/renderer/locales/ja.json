@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "ElevenLabsアカウントのクレジットが不足しています。elevenlabs.ioでクレジットを追加してください。",
       "checkSettings": "設定を確認",
       "genericApiError": "APIリクエストが失敗しました。APIキーとアカウントの状態を確認してください。"
+    },
+    "transcription": {
+      "providerUnavailable": "文字起こし（ElevenLabs Scribe）が一時的に利用できないか、数回試行しても接続できませんでした。数分後にもう一度お試しください。",
+      "fileTooLarge": "この音声は長すぎるため、1回のジョブで文字起こしできません（約 {{hours}} 時間を超えています）。動画を短いパートに分割し、各パートを文字起こししてください。",
+      "elevenLabsKeyRequired": "文字起こしには ElevenLabs Scribe を使用するため、ElevenLabs の API キーが必要です。設定でキーを追加するか、API キーモードをオフにして Stage5 クレジットで文字起こししてください。OpenAI または Anthropic のキーは引き続き翻訳に使用されます。"
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "自分のAPIキーを使用",
       "activeKeys": "準備できたキー {{count}} 個",
       "noKeys": "キーが設定されていません",
-      "requirement": "翻訳＋音声のカバレッジが必要です",
       "usingApiKeys": "Stage5クレジットオフ",
       "usingCredits": "Stage5クレジット使用中",
       "toggleOn": "APIキーを使用中です。",
       "toggleOff": "Stage5クレジットを使用中です。",
       "toggleError": "設定の更新に失敗しました。",
-      "toggleAria": "自分のAPIキーを使用"
+      "toggleAria": "自分のAPIキーを使用",
+      "requirementTranslation": "翻訳には OpenAI または Anthropic のキーが必要です"
     },
     "creditsDescription": "クレジットを購入してください。表示される時間は、文字起こしまたは翻訳できる動画の合計再生時間の目安です。例：3時間の動画を文字起こしして翻訳すると、約6時間（約140,000クレジット）を消費します。",
     "performanceQuality": {
       "title": "パフォーマンスと品質",
-      "qualityTranscription": {
-        "label": "高品質の書き起こし",
-        "help": "オン: 前の行の文脈を利用する逐次モード。オフ: より高速なバッチモード。"
-      },
       "qualityTranslation": {
         "label": "高品質の翻訳",
         "modelOn": "GPT-5.1ドラフト + GPT-5.5レビュー",
@@ -628,7 +629,6 @@
       "unlocking": "決済ページを開いています…",
       "unlockCta": "$10でアンロック",
       "unlockHint": "アンロック後は、いつでもここにAPIキーを追加して、アカウントへの直接請求を有効にできます。",
-      "unlockedDescription": "以下にOpenAI APIキーを入力してください。キーが設定されている場合、文字起こし、翻訳、吹き替えはOpenAIアカウントで直接実行されます。",
       "apiKeyLabel": "OpenAI APIキー",
       "hide": "非表示",
       "show": "表示",
@@ -661,7 +661,6 @@
       "pricingHint": "1時間の動画あたりの推定費用",
       "pricingHintHeuristic": "現在のアプリ推定ロジックによる概算コスト",
       "transcription": "文字起こし",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "翻訳（下書き）",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYOのアンロック、キー、トグルが必要です。",
       "summaryRequiresOpenAi": "OpenAI BYO の利用権限とAPIキーが必要です。",
       "summaryRequiresAnthropic": "Anthropic BYO の利用権限とAPIキーが必要です。",
-      "translationReview": "翻訳（レビュー）"
+      "translationReview": "翻訳（レビュー）",
+      "transcriptionRequiresElevenLabs": "文字起こしには ElevenLabs Scribe のみを使用します。自分のキーで文字起こしするには、ElevenLabs の API キーを追加してください。キーがない場合、文字起こしには Stage5 クレジットが使われますが、自分の API キーを使用中は Stage5 クレジットは使われません。OpenAI キーは引き続き翻訳に使用されます。"
     },
     "apiKeyGuide": {
       "title": "APIキーの取得方法",
@@ -703,7 +703,6 @@
         "profileApiKey": "プロフィール + APIキー"
       },
       "openai": {
-        "description": "OpenAIは文字起こし（Whisper）、翻訳（GPT）、テキスト読み上げ吹き替えを提供します。",
         "step1": "アクセス：",
         "step2": "アカウントを登録またはログイン",
         "step3": "左サイドバーの",
@@ -725,13 +724,13 @@
         "note": "ヒント：Anthropicは従量課金制です。使用した分だけ支払います。"
       },
       "elevenlabs": {
-        "description": "ElevenLabsはプレミアム文字起こしと音声クローン吹き替えを提供します。これがない場合、OpenAIがこれらのタスクを処理します。",
         "step1": "アクセス：",
         "step2": "アカウントを登録またはログイン",
         "step3": "プロフィールアイコンをクリックして選択：",
         "step4": "サブスクリプション設定で支払い方法を追加（無料プラン超過のAPI使用に必須）",
         "step5": "APIキーをコピーしてStage5に貼り付け",
-        "note": "ヒント：ElevenLabsには使用制限付きの無料プランがあります。より多く使用するには、アカウント設定で有料プランにアップグレードしてください。"
+        "note": "ヒント：ElevenLabsには使用制限付きの無料プランがあります。より多く使用するには、アカウント設定で有料プランにアップグレードしてください。",
+        "audioDescription": "文字起こし（Scribe）と吹き替えはすべて ElevenLabs で行います。自分の ElevenLabs キーがない場合はどちらも Stage5 クレジットを使用しますが、自分の API キーを使用中は Stage5 クレジットは使われません。"
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "APIキーが必要です",
-      "message": "すべてのAI処理でAPIキーを使うには、翻訳カバレッジと音声カバレッジが必要です。OpenAIは両方をカバーします。Anthropicで音声を使うにはOpenAIまたはElevenLabsが必要です。",
       "howToGet": "APIキーの取得方法",
-      "option1": "オプション1：OpenAI",
-      "option2": "オプション2：Anthropic + ElevenLabs",
       "enable": "自分のAPIキーを使用",
       "done": "完了",
       "ready": "必要なカバレッジがそろいました。これで「自分のAPIキーを使う」を有効にできます。",
       "missingTranslation": "翻訳にはまだ {{providers}} が必要です。",
-      "missingAudio": "オーディオにはまだ {{providers}} が必要です。",
-      "missingBoth": "まだ必要です: 翻訳（{{translationProviders}}）、オーディオ（{{audioProviders}}）。"
+      "messageElevenLabsAudio": "自分の API キーを使用するには、翻訳用に OpenAI または Anthropic のキーが必要です。文字起こしと吹き替えは ElevenLabs のみを使用するため、それらには ElevenLabs のキーも追加してください。",
+      "audioNeedsElevenLabs": "ElevenLabs のキーがない場合、自分の API キーを使用中は文字起こしと吹き替えを利用できません。"
     },
     "saveSrtFileAs": "SRTファイルに名前を付けて保存",
     "saveDownloadedVideoAs": "ダウンロードした動画に名前を付けて保存",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "ElevenLabsで文字起こし中（残り約{{minutes}}分）",
     "transcribingElevenLabsHours": "ElevenLabsで文字起こし中（残り約{{hours}}時間{{minutes}}分）",
     "transcribingElevenLabsFinishing": "ElevenLabsで文字起こし中...",
-    "transcriptionFallbackWhisper": "チャンク分割での文字起こしに切り替え中...",
     "transcriptionRetry": "接続に失敗しました。再試行中（{{attempt}}/{{maxAttempts}}）...",
     "transcribingR2Upload": "音声をアップロード中...",
     "gapRepair": "ギャップ修復 #{{iteration}} ({{done}}/{{total}})",

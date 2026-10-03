@@ -553,7 +553,6 @@ export default function EditSubtitles({
         sourceUrl,
         start,
         operationId,
-        qualityTranscription: useUIStore.getState().qualityTranscription,
       });
       const errorMsg = String(result?.error || '').trim();
       const cancelled = Boolean(result?.cancelled);

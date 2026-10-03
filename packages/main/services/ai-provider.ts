@@ -9,7 +9,6 @@ import {
 } from './stage5-client.js';
 import { getCachedEntitlements } from './entitlements-manager.js';
 import {
-  transcribeWithOpenAi,
   translateWithOpenAi,
   respondWithOpenAiWebSearch,
   testOpenAiApiKey,
@@ -36,6 +35,11 @@ import {
   getApiKeyModeDubbingBlocker,
   resolveDubbingRoute,
 } from './dubbing-provider-routing.js';
+import {
+  API_KEY_MODE_TRANSCRIPTION_BLOCKER_MESSAGES,
+  getApiKeyModeTranscriptionBlocker,
+  resolveTranscriptionRoute,
+} from './transcription-provider-routing.js';
 import {
   normalizeVideoSuggestionModelPreference,
   resolveEffectiveVideoSuggestionModel,
@@ -576,72 +580,48 @@ export function mustUseStage5(): boolean {
   return getActiveProvider() === 'stage5';
 }
 
-/**
- * Generic helper to resolve provider based on user preference and available BYO keys.
- * Handles fallback logic: preferred > alternative BYO > Stage5
- */
-function resolveProviderByPreference(
-  preference: 'elevenlabs' | 'openai' | 'stage5',
-  context: string
-): ProviderKind {
-  const entitlements = getCachedEntitlements();
-
-  const hasElevenLabs =
-    entitlements.byoElevenLabs &&
-    hasUserElevenLabsApiKey() &&
-    isByoElevenLabsToggleEnabled();
-  const hasOpenAi =
-    entitlements.byoOpenAi && hasUserApiKey() && isByoToggleEnabled();
-
-  log.debug(
-    `[ai-provider] ${context}: preference=${preference}, hasElevenLabs=${hasElevenLabs}, hasOpenAi=${hasOpenAi}`
-  );
-
-  // User explicitly wants Stage5
-  if (preference === 'stage5') {
-    if (!isApiKeyModeEnabled()) {
-      return 'stage5';
-    }
-  }
-
-  // User prefers ElevenLabs
-  if (preference === 'elevenlabs') {
-    if (hasElevenLabs) return 'elevenlabs';
-    // Fallback: try OpenAI, then Stage5
-    if (hasOpenAi) return 'openai';
-    return 'stage5';
-  }
-
-  // User prefers OpenAI
-  if (preference === 'openai') {
-    if (hasOpenAi) return 'openai';
-    // Fallback: try ElevenLabs, then Stage5
-    if (hasElevenLabs) return 'elevenlabs';
-    return 'stage5';
-  }
-
-  if (hasElevenLabs) return 'elevenlabs';
-  if (hasOpenAi) return 'openai';
-  return 'stage5';
-}
-
-/**
- * Get the active provider for transcription.
- * Respects user's preferred transcription provider setting.
- */
-export function getActiveProviderForAudio(): ProviderKind {
-  return resolveProviderByPreference(
-    getPreferredTranscriptionProvider(),
-    'getActiveProviderForAudio'
-  );
-}
-
-function hasElevenLabsByoForDubbing(): boolean {
+function hasElevenLabsByoAvailable(): boolean {
   return (
     getCachedEntitlements().byoElevenLabs &&
     hasUserElevenLabsApiKey() &&
     isByoElevenLabsToggleEnabled()
   );
+}
+
+/**
+ * Get the active provider for transcription. Transcription is ElevenLabs
+ * Scribe only: BYO ElevenLabs when available, otherwise Stage5 credits
+ * (Scribe). An OpenAI key never routes transcription (whisper-1 retires
+ * 2027-02-26).
+ */
+export function getActiveProviderForAudio(): 'elevenlabs' | 'stage5' {
+  return resolveTranscriptionRoute({
+    preference: getPreferredTranscriptionProvider(),
+    apiKeyMode: isApiKeyModeEnabled(),
+    hasElevenLabsByo: hasElevenLabsByoAvailable(),
+  });
+}
+
+/**
+ * English reason transcription cannot run, or null when it can. API key mode
+ * never spends Stage5 credits, so it needs a usable BYO ElevenLabs key.
+ */
+export function getTranscriptionBlockerMessage(): string | null {
+  if (!isApiKeyModeEnabled()) return null;
+  if (getActiveProviderForAudio() === 'elevenlabs') return null;
+  const blocker =
+    getApiKeyModeTranscriptionBlocker({
+      elevenLabsUnlocked: Boolean(getCachedEntitlements().byoElevenLabs),
+      elevenLabsToggleEnabled: isByoElevenLabsToggleEnabled(),
+      elevenLabsKeyPresent: hasUserElevenLabsApiKey(),
+    }) ?? 'elevenlabs-key-missing';
+  return API_KEY_MODE_TRANSCRIPTION_BLOCKER_MESSAGES[blocker];
+}
+
+/** Throws the blocker message before any audio work starts. */
+export function assertTranscriptionAvailable(): void {
+  const message = getTranscriptionBlockerMessage();
+  if (message) throw new Error(message);
 }
 
 /**
@@ -653,7 +633,7 @@ export function getActiveProviderForDubbing(): ProviderKind {
   return resolveDubbingRoute({
     preference: getPreferredDubbingProvider(),
     apiKeyMode: isApiKeyModeEnabled(),
-    hasElevenLabsByo: hasElevenLabsByoForDubbing(),
+    hasElevenLabsByo: hasElevenLabsByoAvailable(),
   });
 }
 
@@ -663,7 +643,7 @@ export async function transcribe(
   const audioProvider = getActiveProviderForAudio();
   const apiKeyModeEnabled = isApiKeyModeEnabled();
 
-  // Use ElevenLabs Scribe for highest quality transcription
+  // BYO ElevenLabs Scribe
   if (audioProvider === 'elevenlabs') {
     const elevenLabsKey = getStoredElevenLabsApiKey();
     if (!elevenLabsKey) {
@@ -671,9 +651,9 @@ export async function transcribe(
         throw new Error(ERROR_CODES.ELEVENLABS_KEY_INVALID);
       }
       log.warn(
-        '[ai-provider] ElevenLabs provider selected but API key missing. Falling back.'
+        '[ai-provider] ElevenLabs provider selected but API key missing. Falling back to Stage5.'
       );
-      // Fall through to OpenAI or Stage5
+      // Fall through to Stage5
     } else {
       const { filePath, signal, idempotencyKey } =
         options as Stage5TranscribeOptions;
@@ -685,7 +665,7 @@ export async function transcribe(
           idempotencyKey,
           signal,
         });
-        // Convert ElevenLabs result to Whisper-compatible format
+        // Convert the ElevenLabs result to the app's segment format
         // ElevenLabs returns `words` with `speaker_id` - we need to build segments
         const words = (result.words || []).filter(w => w.type === 'word');
 
@@ -705,7 +685,7 @@ export async function transcribe(
         } = { words: [], speakerId: undefined };
 
         const SENTENCE_ENDERS = /[.!?。！？]/;
-        const MAX_SEGMENT_DURATION = 8; // seconds - keep segments short like Whisper
+        const MAX_SEGMENT_DURATION = 8; // seconds - keep cues short
 
         for (const word of words) {
           const speakerChanged =
@@ -778,81 +758,17 @@ export async function transcribe(
     }
   }
 
-  // Use OpenAI BYO if enabled
-  if (audioProvider === 'openai') {
-    const apiKey = getStoredApiKey();
-    if (!apiKey) {
-      if (apiKeyModeEnabled) {
-        throw new Error(ERROR_CODES.OPENAI_KEY_INVALID);
-      }
-      log.warn(
-        '[ai-provider] OpenAI provider selected but API key missing. Falling back to Stage5.'
-      );
-      return stage5Client.transcribe(options);
-    }
-
-    const { filePath, promptContext, signal, model } =
-      options as Stage5TranscribeOptions;
-    log.debug('[ai-provider] Using OpenAI direct transcription.');
-    try {
-      return await transcribeWithOpenAi({
-        filePath,
-        promptContext,
-        model,
-        apiKey,
-        signal,
-      });
-    } catch (error) {
-      mapOpenAiError(error);
-    }
-  }
-
   if (apiKeyModeEnabled) {
-    const entitlements = getCachedEntitlements();
-    const preferredProvider = getPreferredTranscriptionProvider();
-
-    if (preferredProvider === 'stage5') {
-      throw new Error(
-        'Using your API keys does not allow Stage5 transcription. Choose OpenAI or ElevenLabs in Settings.'
-      );
-    }
-    if (preferredProvider === 'elevenlabs') {
-      if (!entitlements.byoElevenLabs) {
-        throw new Error(
-          'BYO ElevenLabs is not unlocked for this account. Switch to Stage5 credits or unlock ElevenLabs BYO to continue.'
-        );
-      }
-      if (!isByoElevenLabsToggleEnabled()) {
-        throw new Error(
-          'BYO ElevenLabs is disabled in Settings. Enable it to transcribe with your own API keys.'
-        );
-      }
-      if (!hasUserElevenLabsApiKey()) {
-        throw new Error(ERROR_CODES.ELEVENLABS_KEY_INVALID);
-      }
-    }
-    if (preferredProvider === 'openai') {
-      if (!entitlements.byoOpenAi) {
-        throw new Error(
-          'BYO OpenAI is not unlocked for this account. Switch to Stage5 credits or unlock OpenAI BYO to continue.'
-        );
-      }
-      if (!isByoToggleEnabled()) {
-        throw new Error(
-          'BYO OpenAI is disabled in Settings. Enable it to transcribe with your own API keys.'
-        );
-      }
-      if (!hasUserApiKey()) {
-        throw new Error(ERROR_CODES.OPENAI_KEY_INVALID);
-      }
-    }
-
+    // API key mode never spends Stage5 credits, and transcription needs
+    // ElevenLabs Scribe (an OpenAI key cannot transcribe). Explain what is
+    // missing.
     throw new Error(
-      'Using your API keys is on, but no BYO transcription provider is currently available.'
+      getTranscriptionBlockerMessage() ??
+        API_KEY_MODE_TRANSCRIPTION_BLOCKER_MESSAGES['elevenlabs-key-missing']
     );
   }
 
-  // Default: use Stage5 API
+  // Default: Stage5 credits, transcribed with ElevenLabs Scribe.
   return stage5Client.transcribe(options);
 }
 
@@ -862,7 +778,6 @@ export async function transcribe(
 export async function transcribeLargeFileViaR2(options: {
   filePath: string;
   language?: string;
-  qualityMode?: boolean;
   signal?: AbortSignal;
   durationSec?: number;
   onProgress?: (stage: string, percent?: number) => void;
@@ -874,8 +789,10 @@ export async function transcribeLargeFileViaR2(options: {
   recoverySourcePath?: string;
 }): Promise<any> {
   if (isApiKeyModeEnabled()) {
+    // API key mode never spends Stage5 credits.
     throw new Error(
-      'Using your API keys does not allow Stage5 relay transcription for large files.'
+      getTranscriptionBlockerMessage() ??
+        API_KEY_MODE_TRANSCRIPTION_BLOCKER_MESSAGES['elevenlabs-key-missing']
     );
   }
   return transcribeViaR2(options);

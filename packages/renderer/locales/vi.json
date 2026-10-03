@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Tài khoản ElevenLabs của bạn không đủ tín dụng. Vui lòng nạp thêm tại elevenlabs.io.",
       "checkSettings": "Kiểm tra Cài đặt",
       "genericApiError": "Yêu cầu API thất bại. Vui lòng kiểm tra API key và trạng thái tài khoản của bạn."
+    },
+    "transcription": {
+      "providerUnavailable": "Chép lời (ElevenLabs Scribe) tạm thời không khả dụng hoặc không thể kết nối sau nhiều lần thử. Vui lòng thử lại sau vài phút.",
+      "fileTooLarge": "Âm thanh này quá dài để chép lời trong một lần (hơn khoảng {{hours}} giờ). Hãy chia video thành các phần ngắn hơn và chép lời từng phần.",
+      "elevenLabsKeyRequired": "Chép lời dùng ElevenLabs Scribe và cần API key ElevenLabs. Hãy thêm key trong Cài đặt, hoặc tắt chế độ API key để chép lời bằng tín dụng Stage5. API key OpenAI hoặc Anthropic của bạn vẫn được dùng để dịch."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Dùng API key của tôi",
       "activeKeys": "Khóa sẵn sàng: {{count}}",
       "noKeys": "Chưa cấu hình khóa nào",
-      "requirement": "Cần bao phủ cho dịch + âm thanh",
       "usingApiKeys": "Tắt tín dụng Stage5",
       "usingCredits": "Đang dùng tín dụng Stage5",
       "toggleOn": "Đang dùng API key của bạn.",
       "toggleOff": "Đang dùng tín dụng Stage5.",
       "toggleError": "Không thể cập nhật tùy chọn.",
-      "toggleAria": "Dùng API key của tôi"
+      "toggleAria": "Dùng API key của tôi",
+      "requirementTranslation": "Cần key OpenAI hoặc Anthropic để dịch"
     },
     "creditsDescription": "Mua credits. Số giờ hiển thị là ước tính tổng thời lượng video bạn có thể chép lời hoặc dịch. Ví dụ: chép lời và dịch một video 3 giờ sẽ tốn khoảng 6 giờ (≈140.000 credits).",
     "performanceQuality": {
       "title": "Hiệu suất & Chất lượng",
-      "qualityTranscription": {
-        "label": "Chép lời chất lượng cao",
-        "help": "Bật: tuần tự, sử dụng ngữ cảnh dòng trước. Tắt: chế độ hàng loạt nhanh hơn."
-      },
       "qualityTranslation": {
         "label": "Dịch chất lượng cao",
         "modelOn": "Bản nháp GPT-5.1 + rà soát GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "Đang mở thanh toán…",
       "unlockCta": "Mở khóa với $10",
       "unlockHint": "Sau khi mở khóa, thêm API key của bạn vào đây bất cứ lúc nào để bật thanh toán trực tiếp trên tài khoản của bạn.",
-      "unlockedDescription": "Nhập OpenAI API key của bạn bên dưới. Chép lời, dịch và lồng tiếng sẽ chạy trực tiếp trên tài khoản OpenAI của bạn khi có key.",
       "apiKeyLabel": "OpenAI API Key",
       "hide": "Ẩn",
       "show": "Hiện",
@@ -661,7 +661,6 @@
       "pricingHint": "Chi phí ước tính cho 1 giờ video",
       "pricingHintHeuristic": "Chi phí ước tính theo cách tính hiện tại của ứng dụng",
       "transcription": "Chép lời",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Dịch (Bản nháp)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Cần mở khóa Anthropic BYO, thêm key và bật công tắc.",
       "summaryRequiresOpenAi": "Yêu cầu quyền truy cập OpenAI BYO và khóa API.",
       "summaryRequiresAnthropic": "Yêu cầu quyền truy cập Anthropic BYO và khóa API.",
-      "translationReview": "Dịch (Rà soát)"
+      "translationReview": "Dịch (Rà soát)",
+      "transcriptionRequiresElevenLabs": "Chép lời chỉ dùng ElevenLabs Scribe. Hãy thêm API key ElevenLabs để chép lời bằng key của bạn. Nếu không có, chép lời sẽ dùng tín dụng Stage5, vốn không được dùng khi API key của bạn đang bật. API key OpenAI của bạn vẫn được dùng để dịch."
     },
     "apiKeyGuide": {
       "title": "Cách lấy API Key",
@@ -703,7 +703,6 @@
         "profileApiKey": "Hồ sơ + khóa API"
       },
       "openai": {
-        "description": "OpenAI cung cấp phiên âm (Whisper), dịch thuật (GPT) và lồng tiếng chuyển văn bản thành giọng nói.",
         "step1": "Truy cập",
         "step2": "Đăng ký hoặc đăng nhập vào tài khoản của bạn",
         "step3": "Điều hướng đến",
@@ -725,13 +724,13 @@
         "note": "Mẹo: Anthropic cung cấp giá theo mức sử dụng. Bạn chỉ trả cho những gì bạn sử dụng."
       },
       "elevenlabs": {
-        "description": "ElevenLabs cung cấp phiên âm cao cấp và lồng tiếng nhân bản giọng nói. Không có nó, OpenAI sẽ xử lý các tác vụ này.",
         "step1": "Truy cập",
         "step2": "Đăng ký hoặc đăng nhập vào tài khoản của bạn",
         "step3": "Nhấp vào biểu tượng hồ sơ của bạn và chọn",
         "step4": "Thêm phương thức thanh toán trong cài đặt Đăng ký (bắt buộc để sử dụng API vượt mức miễn phí)",
         "step5": "Sao chép API key của bạn và dán vào Stage5",
-        "note": "Mẹo: ElevenLabs có gói miễn phí với mức sử dụng giới hạn. Để sử dụng nhiều hơn, nâng cấp lên gói trả phí trong cài đặt tài khoản."
+        "note": "Mẹo: ElevenLabs có gói miễn phí với mức sử dụng giới hạn. Để sử dụng nhiều hơn, nâng cấp lên gói trả phí trong cài đặt tài khoản.",
+        "audioDescription": "ElevenLabs xử lý toàn bộ chép lời (Scribe) và lồng tiếng. Nếu không có key ElevenLabs riêng, cả hai sẽ dùng tín dụng Stage5, vốn không được dùng khi API key của bạn đang bật."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "Cần API Key",
-      "message": "Để dùng khóa API của bạn cho mọi tác vụ AI, bạn cần có phạm vi bao phủ cho dịch thuật và âm thanh. OpenAI bao phủ cả hai. Anthropic cần OpenAI hoặc ElevenLabs cho âm thanh.",
       "howToGet": "Cách lấy API key",
-      "option1": "Tùy chọn 1: OpenAI",
-      "option2": "Tùy chọn 2: Anthropic + ElevenLabs",
       "enable": "Dùng API key của tôi",
       "done": "Xong",
       "ready": "Phần bao phủ đã đầy đủ. Giờ bạn có thể bật “Dùng API key của tôi”.",
       "missingTranslation": "Bản dịch vẫn cần {{providers}}.",
-      "missingAudio": "Phần âm thanh vẫn cần {{providers}}.",
-      "missingBoth": "Vẫn cần: dịch ({{translationProviders}}) và âm thanh ({{audioProviders}})."
+      "messageElevenLabsAudio": "Để dùng API key của bạn, bạn cần key OpenAI hoặc Anthropic để dịch. Chép lời và lồng tiếng chỉ dùng ElevenLabs, nên hãy thêm cả key ElevenLabs cho các tính năng này.",
+      "audioNeedsElevenLabs": "Nếu không có key ElevenLabs, chép lời và lồng tiếng sẽ không khả dụng khi API key của bạn đang bật."
     },
     "saveSrtFileAs": "Lưu Tệp SRT Dưới dạng",
     "saveDownloadedVideoAs": "Lưu Video Đã tải Dưới dạng",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Đang phiên âm với ElevenLabs (~{{minutes}} phút còn lại)",
     "transcribingElevenLabsHours": "Đang phiên âm với ElevenLabs (~{{hours}}h {{minutes}}m còn lại)",
     "transcribingElevenLabsFinishing": "Đang phiên âm với ElevenLabs...",
-    "transcriptionFallbackWhisper": "Chuyển sang phiên âm theo phần...",
     "transcriptionRetry": "Kết nối thất bại, đang thử lại ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Đang tải lên âm thanh để phiên âm...",
     "gapRepair": "Sửa chỗ trống #{{iteration}} ({{done}}/{{total}})",

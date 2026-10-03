@@ -421,7 +421,9 @@ function buildServer() {
       inputSchema: z
         .object({
           quality_translation: z.boolean().optional(),
-          quality_transcription: z.boolean().optional(),
+          // quality_transcription was removed: transcription is ElevenLabs
+          // Scribe only. Older callers that still send it alongside other
+          // settings are unaffected (unknown keys are stripped, i.e. ignored).
           review_provider: z.enum(['openai', 'anthropic']).optional(),
           summary_quality: z.enum(['standard', 'high']).optional(),
           summary_provider: z.enum(['openai', 'anthropic']).optional(),
@@ -454,9 +456,8 @@ function buildServer() {
           byo_video_suggestion_model: z
             .enum(['gpt-5.1', 'gpt-5.5', 'claude-sonnet-5', 'claude-opus-4-8'])
             .optional(),
-          transcription_provider: z
-            .enum(['stage5', 'openai', 'elevenlabs'])
-            .optional(),
+          // Transcription is ElevenLabs Scribe only (whisper-1 retires 2027-02-26).
+          transcription_provider: z.enum(['stage5', 'elevenlabs']).optional(),
           dubbing_provider: z.enum(['stage5', 'elevenlabs']).optional(),
           openai_enabled: z.boolean().optional(),
           anthropic_enabled: z.boolean().optional(),
@@ -473,7 +474,6 @@ function buildServer() {
       result(
         await app.call('updateSettings', {
           qualityTranslation: input.quality_translation,
-          qualityTranscription: input.quality_transcription,
           reviewProvider: input.review_provider,
           summaryQuality: input.summary_quality,
           summaryProvider: input.summary_provider,

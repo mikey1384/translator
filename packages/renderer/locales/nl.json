@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Je ElevenLabs-account heeft onvoldoende credits. Voeg credits toe op elevenlabs.io.",
       "checkSettings": "Instellingen controleren",
       "genericApiError": "API-verzoek mislukt. Controleer je API-sleutel en accountstatus."
+    },
+    "transcription": {
+      "providerUnavailable": "Transcriptie (ElevenLabs Scribe) is tijdelijk niet beschikbaar of kon na meerdere pogingen niet worden bereikt. Probeer het over een paar minuten opnieuw.",
+      "fileTooLarge": "Deze audio is te lang om in één taak te transcriberen (meer dan ongeveer {{hours}} uur). Splits de video in kortere delen en transcribeer elk deel.",
+      "elevenLabsKeyRequired": "Transcriptie gebruikt ElevenLabs Scribe en vereist een ElevenLabs API-sleutel. Voeg er een toe in Instellingen, of zet de API-sleutelmodus uit om met Stage5-credits te transcriberen. Je OpenAI- of Anthropic-sleutel wordt nog steeds gebruikt voor vertaling."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Mijn API-sleutels gebruiken",
       "activeKeys": "Sleutels klaar: {{count}}",
       "noKeys": "Geen sleutels geconfigureerd",
-      "requirement": "Vereist vertaling + audio",
       "usingApiKeys": "Stage5-credits uit",
       "usingCredits": "Stage5-credits aan",
       "toggleOn": "Gebruikt nu je API-sleutels.",
       "toggleOff": "Gebruikt nu Stage5-credits.",
       "toggleError": "Voorkeur bijwerken mislukt.",
-      "toggleAria": "Mijn API-sleutels gebruiken"
+      "toggleAria": "Mijn API-sleutels gebruiken",
+      "requirementTranslation": "Vereist een OpenAI- of Anthropic-sleutel voor vertaling"
     },
     "creditsDescription": "Koop credits. Het aantal getoonde uren is een schatting van de totale videoduur die je kunt transcriberen of vertalen. Voorbeeld: een video van 3 uur transcriberen en vertalen kost ongeveer 6 uur (≈140.000 credits).",
     "performanceQuality": {
       "title": "Prestaties & Kwaliteit",
-      "qualityTranscription": {
-        "label": "Kwaliteitstranscriptie",
-        "help": "Aan: sequentieel, gebruikt context van vorige regel. Uit: snellere batch-modus."
-      },
       "qualityTranslation": {
         "label": "Kwaliteitsvertaling",
         "modelOn": "GPT-5.1-concept + GPT-5.5-review",
@@ -628,7 +629,6 @@
       "unlocking": "Betaling openen…",
       "unlockCta": "Ontgrendelen voor $10",
       "unlockHint": "Na ontgrendeling kun je hier je API-sleutels toevoegen om directe facturering via je accounts in te schakelen.",
-      "unlockedDescription": "Voer hieronder je OpenAI API-sleutel in. Transcriptie, vertaling en nasynchronisatie worden rechtstreeks via je OpenAI-account uitgevoerd wanneer een sleutel aanwezig is.",
       "apiKeyLabel": "OpenAI API-sleutel",
       "hide": "Verbergen",
       "show": "Tonen",
@@ -661,7 +661,6 @@
       "pricingHint": "Geschatte kosten per 1 uur video",
       "pricingHintHeuristic": "Geschatte kosten op basis van de huidige app-heuristieken",
       "transcription": "Transcriptie",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Vertaling (Concept)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Vereist Anthropic BYO-ontgrendeling, sleutel en inschakeling.",
       "summaryRequiresOpenAi": "Vereist OpenAI BYO-toegang en een API-sleutel.",
       "summaryRequiresAnthropic": "Vereist Anthropic BYO-toegang en een API-sleutel.",
-      "translationReview": "Vertaling (Beoordeling)"
+      "translationReview": "Vertaling (Beoordeling)",
+      "transcriptionRequiresElevenLabs": "Transcriptie gebruikt alleen ElevenLabs Scribe. Voeg een ElevenLabs API-sleutel toe om met je eigen sleutels te transcriberen. Zonder sleutel gebruikt transcriptie Stage5-credits, die niet worden gebruikt zolang je API-sleutels aan staan. Je OpenAI-sleutel wordt nog steeds gebruikt voor vertaling."
     },
     "apiKeyGuide": {
       "title": "Hoe API-sleutels te verkrijgen",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profiel + API-sleutel"
       },
       "openai": {
-        "description": "OpenAI verzorgt transcriptie (Whisper), vertaling (GPT) en tekst-naar-spraak dubbing.",
         "step1": "Ga naar",
         "step2": "Registreer of log in op je account",
         "step3": "Navigeer naar",
@@ -725,13 +724,13 @@
         "note": "Tip: Anthropic biedt betaling naar gebruik. Je betaalt alleen voor wat je gebruikt."
       },
       "elevenlabs": {
-        "description": "ElevenLabs biedt premium transcriptie en stemklonen-dubbing. Zonder dit handelt OpenAI deze taken af.",
         "step1": "Ga naar",
         "step2": "Registreer of log in op je account",
         "step3": "Klik op je profielicoon en selecteer",
         "step4": "Voeg een betaalmethode toe in Abonnementsinstellingen (vereist voor API-gebruik buiten de gratis laag)",
         "step5": "Kopieer je API-sleutel en plak deze in Stage5",
-        "note": "Tip: ElevenLabs heeft een gratis laag met beperkt gebruik. Voor meer, upgrade naar een betaald abonnement in je accountinstellingen."
+        "note": "Tip: ElevenLabs heeft een gratis laag met beperkt gebruik. Voor meer, upgrade naar een betaald abonnement in je accountinstellingen.",
+        "audioDescription": "ElevenLabs verzorgt alle transcriptie (Scribe) en dubbing. Zonder eigen ElevenLabs-sleutel gebruiken beide Stage5-credits, die niet worden gebruikt zolang je API-sleutels aan staan."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "API-sleutels vereist",
-      "message": "Om je API-sleutels voor alle AI-bewerkingen te gebruiken, heb je dekking voor vertaling en audio nodig. OpenAI dekt beide. Anthropic heeft OpenAI of ElevenLabs nodig voor audio.",
       "howToGet": "Hoe API-sleutels te verkrijgen",
-      "option1": "Optie 1: OpenAI",
-      "option2": "Optie 2: Anthropic + ElevenLabs",
       "enable": "Mijn API-sleutels gebruiken",
       "done": "Klaar",
       "ready": "De dekking is compleet. Je kunt nu ‘Mijn API-sleutels gebruiken’ inschakelen.",
       "missingTranslation": "Voor vertaling is {{providers}} nog nodig.",
-      "missingAudio": "Voor audio is {{providers}} nog nodig.",
-      "missingBoth": "Nog nodig: vertaling ({{translationProviders}}) en audio ({{audioProviders}})."
+      "messageElevenLabsAudio": "Om je API-sleutels te gebruiken, heb je een OpenAI- of Anthropic-sleutel nodig voor vertaling. Transcriptie en dubbing gebruiken alleen ElevenLabs, dus voeg daarvoor ook een ElevenLabs-sleutel toe.",
+      "audioNeedsElevenLabs": "Zonder ElevenLabs-sleutel zijn transcriptie en dubbing niet beschikbaar zolang je API-sleutels aan staan."
     },
     "saveSrtFileAs": "SRT-bestand opslaan als",
     "saveDownloadedVideoAs": "Gedownloade video opslaan als",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Transcriberen met ElevenLabs (~{{minutes}} min resterend)",
     "transcribingElevenLabsHours": "Transcriberen met ElevenLabs (~{{hours}}u {{minutes}}m resterend)",
     "transcribingElevenLabsFinishing": "Transcriberen met ElevenLabs...",
-    "transcriptionFallbackWhisper": "Terugvallen op chunked transcriptie...",
     "transcriptionRetry": "Verbinding mislukt, opnieuw proberen ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Audio uploaden voor transcriptie...",
     "gapRepair": "Hiaat reparatie #{{iteration}} ({{done}}/{{total}})",

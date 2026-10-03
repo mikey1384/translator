@@ -14,6 +14,7 @@ import { openApiKeysRequired } from './modal-store';
 import {
   hasApiKeyModeActiveCoverage,
   hasApiKeyModeConfiguredCoverage,
+  normalizeTranscriptionPreference,
 } from './byo-runtime';
 
 /**
@@ -103,8 +104,10 @@ interface AiStoreState {
   stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
   // BYO model preference (direct model + migration-only legacy follow states).
   byoVideoSuggestionModel: ByoVideoSuggestionModel;
-  // Transcription provider preference
-  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
+  // Transcription provider preference. Transcription is ElevenLabs Scribe
+  // only: 'elevenlabs' = BYO ElevenLabs key when available, else Stage5
+  // credits. Legacy 'openai' (Whisper) is normalized to 'elevenlabs'.
+  preferredTranscriptionProvider: 'elevenlabs' | 'stage5';
   // Dubbing provider preference. Dubbing is ElevenLabs-only: 'elevenlabs' =
   // BYO ElevenLabs key when available, else Stage5 credits.
   preferredDubbingProvider: 'elevenlabs' | 'stage5';
@@ -176,7 +179,7 @@ interface AiStoreState {
   // Transcription provider preference actions
   syncTranscriptionPreference: () => Promise<void>;
   setPreferredTranscriptionProvider: (
-    value: 'elevenlabs' | 'openai' | 'stage5'
+    value: 'elevenlabs' | 'stage5'
   ) => Promise<{ success: boolean; error?: string }>;
   // Dubbing provider preference actions
   syncDubbingPreference: () => Promise<void>;
@@ -219,19 +222,11 @@ interface AiStoreState {
 }
 
 function getApiKeyModeTranscriptionFallback(
-  state: Pick<
-    AiStoreState,
-    | 'byoUnlocked'
-    | 'byoElevenLabsUnlocked'
-    | 'keyPresent'
-    | 'elevenLabsKeyPresent'
-  >
-): 'elevenlabs' | 'openai' | 'stage5' {
+  state: Pick<AiStoreState, 'byoElevenLabsUnlocked' | 'elevenLabsKeyPresent'>
+): 'elevenlabs' | 'stage5' {
+  // Transcription is ElevenLabs Scribe only; an OpenAI key cannot transcribe.
   if (state.elevenLabsKeyPresent && state.byoElevenLabsUnlocked) {
     return 'elevenlabs';
-  }
-  if (state.keyPresent && state.byoUnlocked) {
-    return 'openai';
   }
   return 'stage5';
 }
@@ -701,7 +696,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     stage5VideoSuggestionMode: 'high',
     byoVideoSuggestionModel: 'gpt-5.1',
     videoSuggestionModelPreference: 'gpt-5.1',
-    // Transcription provider preference (defaults to ElevenLabs for highest quality)
+    // Transcription is ElevenLabs Scribe only (whisper-1 retires 2027-02-26)
     preferredTranscriptionProvider: 'elevenlabs',
     // Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06)
     preferredDubbingProvider: 'elevenlabs',
@@ -789,8 +784,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             byoVideoSuggestionModel,
             videoSuggestionModelPreference,
             // Provider preferences
-            preferredTranscriptionProvider:
-              settings.preferredTranscriptionProvider,
+            // Legacy 'openai' (Whisper) normalizes to 'elevenlabs'.
+            preferredTranscriptionProvider: normalizeTranscriptionPreference(
+              settings.preferredTranscriptionProvider
+            ),
             preferredDubbingProvider: settings.preferredDubbingProvider,
             stage5DubbingTtsProvider: settings.stage5DubbingTtsProvider,
           });
@@ -1012,24 +1009,8 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               err
             );
           }
-          // Reset OpenAI-dependent preferences to fallback (ElevenLabs if available, else stage5)
-          const state = get();
-          const fallback =
-            state.elevenLabsKeyPresent && state.byoElevenLabsUnlocked
-              ? 'elevenlabs'
-              : 'stage5';
-          if (state.preferredTranscriptionProvider === 'openai') {
-            try {
-              await SystemIPC.setPreferredTranscriptionProvider(fallback);
-              set({ preferredTranscriptionProvider: fallback });
-            } catch (err) {
-              console.error(
-                '[AiStore] Failed to reset transcription provider:',
-                err
-              );
-            }
-          }
-          // Dubbing never uses the OpenAI key, so no dubbing reset is needed.
+          // Transcription and dubbing never use the OpenAI key, so no
+          // provider reset is needed.
           await checkAndDisableApiKeyModeIfNeeded(get, set);
         }
         return result;
@@ -1251,23 +1232,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               err
             );
           }
-          // Reset ElevenLabs-dependent preferences to defaults
-          const state = get();
-          const fallback =
-            state.keyPresent && state.byoUnlocked ? 'openai' : 'stage5';
-          if (state.preferredTranscriptionProvider === 'elevenlabs') {
-            try {
-              await SystemIPC.setPreferredTranscriptionProvider(fallback);
-              set({ preferredTranscriptionProvider: fallback });
-            } catch (err) {
-              console.error(
-                '[AiStore] Failed to reset transcription provider:',
-                err
-              );
-            }
-          }
-          // Dubbing keeps its 'elevenlabs' preference: without a BYO key it
-          // resolves to Stage5 credits (also ElevenLabs).
+          // Transcription and dubbing keep their 'elevenlabs' preference:
+          // without a BYO key they resolve to Stage5 credits (also
+          // ElevenLabs), or show a blocked state in API key mode.
           await checkAndDisableApiKeyModeIfNeeded(get, set);
         }
         return result;
@@ -1660,7 +1627,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     syncTranscriptionPreference: async () => {
       try {
         const provider = await SystemIPC.getPreferredTranscriptionProvider();
-        set({ preferredTranscriptionProvider: provider });
+        set({
+          preferredTranscriptionProvider:
+            normalizeTranscriptionPreference(provider),
+        });
       } catch (err) {
         console.error(
           '[AiStore] Failed to sync transcription preference:',
@@ -1670,13 +1640,13 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     },
 
     setPreferredTranscriptionProvider: async (
-      value: 'elevenlabs' | 'openai' | 'stage5'
+      value: 'elevenlabs' | 'stage5'
     ) => {
       try {
         const result = await SystemIPC.setPreferredTranscriptionProvider(value);
         if (result.success) {
           set({ preferredTranscriptionProvider: value });
-          if (value === 'openai' || value === 'elevenlabs') {
+          if (value === 'elevenlabs') {
             await enableConfiguredByoToggles(get, set, [value]);
           }
         }

@@ -613,7 +613,9 @@ export function setVideoSuggestionPreferenceTopic(
 }
 
 // Transcription provider preference
-export type TranscriptionProvider = 'elevenlabs' | 'openai' | 'stage5';
+// Transcription is ElevenLabs Scribe only: 'elevenlabs' = BYO ElevenLabs key
+// when available, otherwise Stage5 credits; 'stage5' = always Stage5 credits.
+export type TranscriptionProvider = 'elevenlabs' | 'stage5';
 
 export function getPreferredTranscriptionProvider(): Promise<TranscriptionProvider> {
   return window.electron.getPreferredTranscriptionProvider();

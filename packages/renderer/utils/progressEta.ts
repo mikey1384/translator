@@ -14,7 +14,6 @@ export interface OperationEtaInput {
   segmentCount?: number;
   videoDurationSec?: number | null;
   qualityTranslation?: boolean;
-  qualityTranscription?: boolean;
   translationDraftProvider?: ProviderHint;
   translationReviewProvider?: ProviderHint;
   transcriptionProvider?: ProviderHint;
@@ -91,14 +90,6 @@ function estimateSegments(videoDurationSec?: number | null): number {
   return Math.max(12, Math.round(duration / 8));
 }
 
-function estimateChunkCount(input: OperationEtaInput): number {
-  const reported = positive(input.total);
-  if (reported) return Math.round(reported);
-  const duration = positive(input.videoDurationSec);
-  if (!duration) return 4;
-  return Math.max(1, Math.ceil(duration / 90));
-}
-
 function getTranslationDraftProvider(
   input: OperationEtaInput
 ): ProviderHint | undefined {
@@ -158,43 +149,21 @@ function buildTranscriptionPhasePlan(
   const durationSec =
     positive(input.videoDurationSec) ??
     (positive(input.segmentCount) ?? 24) * 8;
-  const provider =
-    detectProviderFromModel(input.model) ?? input.transcriptionProvider;
-  const chunkCount = estimateChunkCount(input);
+  // Transcription is ElevenLabs Scribe only (BYO key or Stage5 credits), so
+  // every plan uses Scribe speed; there is no chunked Whisper phase.
   const prepareSeconds = Math.max(4, durationSec / 24);
-  const analyzeSeconds = Math.max(5, durationSec / 50);
-  const chunkAudioSeconds = clamp(chunkCount * 0.35, 2, 18);
-  const transcribeChunkSeconds = input.qualityTranscription
-    ? Math.max(18, durationSec / 3.4)
-    : Math.max(15, durationSec / 4.2);
-  const finalizeSeconds = 4;
   const vendorTotal = estimateVendorTranscriptionSeconds(durationSec);
   const includeUpload =
-    (input.phaseKey === 'upload_audio' || durationSec >= 30 * 60) &&
-    provider === 'elevenlabs';
+    input.phaseKey === 'upload_audio' || durationSec >= 30 * 60;
   const uploadSeconds = includeUpload ? clamp(vendorTotal * 0.18, 4, 45) : 0;
   const vendorProcessSeconds = Math.max(10, vendorTotal - uploadSeconds);
 
-  if (
-    input.phaseKey === 'upload_audio' ||
-    input.phaseKey === 'transcribe_vendor' ||
-    provider === 'elevenlabs'
-  ) {
-    return [
-      { phaseKey: 'prepare_audio', seconds: prepareSeconds },
-      ...(includeUpload
-        ? [{ phaseKey: 'upload_audio', seconds: uploadSeconds }]
-        : []),
-      { phaseKey: 'transcribe_vendor', seconds: vendorProcessSeconds },
-    ];
-  }
-
   return [
     { phaseKey: 'prepare_audio', seconds: prepareSeconds },
-    { phaseKey: 'analyze_audio', seconds: analyzeSeconds },
-    { phaseKey: 'chunk_audio', seconds: chunkAudioSeconds },
-    { phaseKey: 'transcribe_chunks', seconds: transcribeChunkSeconds },
-    { phaseKey: 'finalize', seconds: finalizeSeconds },
+    ...(includeUpload
+      ? [{ phaseKey: 'upload_audio', seconds: uploadSeconds }]
+      : []),
+    { phaseKey: 'transcribe_vendor', seconds: vendorProcessSeconds },
   ];
 }
 
@@ -286,15 +255,6 @@ export function getCalibrationBucketKey(
 
   if (input.operationType === 'translation') {
     parts.push(`hq:${input.qualityTranslation ? '1' : '0'}`);
-  }
-
-  if (
-    input.operationType === 'transcription' &&
-    (phaseKey === 'analyze_audio' ||
-      phaseKey === 'chunk_audio' ||
-      phaseKey === 'transcribe_chunks')
-  ) {
-    parts.push(`quality:${input.qualityTranscription ? '1' : '0'}`);
   }
 
   return parts.join('|');

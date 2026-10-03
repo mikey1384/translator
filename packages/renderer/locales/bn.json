@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "আপনার ElevenLabs অ্যাকাউন্টে পর্যাপ্ত ক্রেডিট নেই। অনুগ্রহ করে elevenlabs.io তে ক্রেডিট যোগ করুন।",
       "checkSettings": "সেটিংস দেখুন",
       "genericApiError": "API অনুরোধ ব্যর্থ হয়েছে। অনুগ্রহ করে আপনার API কী এবং অ্যাকাউন্ট স্ট্যাটাস পরীক্ষা করুন।"
+    },
+    "transcription": {
+      "providerUnavailable": "ট্রান্সক্রিপশন (ElevenLabs Scribe) সাময়িকভাবে অনুপলব্ধ অথবা কয়েকবার চেষ্টার পরেও সংযোগ করা যায়নি। অনুগ্রহ করে কয়েক মিনিট পরে আবার চেষ্টা করুন।",
+      "fileTooLarge": "এই অডিওটি একটি কাজে ট্রান্সক্রাইব করার জন্য খুব দীর্ঘ (প্রায় {{hours}} ঘণ্টার বেশি)। ভিডিওটিকে ছোট ছোট অংশে ভাগ করুন এবং প্রতিটি অংশ ট্রান্সক্রাইব করুন।",
+      "elevenLabsKeyRequired": "ট্রান্সক্রিপশন ElevenLabs Scribe ব্যবহার করে এবং এর জন্য একটি ElevenLabs API কী প্রয়োজন। সেটিংসে একটি যোগ করুন, অথবা Stage5 ক্রেডিট দিয়ে ট্রান্সক্রাইব করতে API কী মোড বন্ধ করুন। আপনার OpenAI বা Anthropic কী এখনও অনুবাদের জন্য ব্যবহৃত হয়।"
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "আমার API কী ব্যবহার করুন",
       "activeKeys": "প্রস্তুত কী: {{count}}",
       "noKeys": "কোনো কী কনফিগার করা হয়নি",
-      "requirement": "অনুবাদ + অডিও কভারেজ দরকার",
       "usingApiKeys": "Stage5 ক্রেডিট বন্ধ",
       "usingCredits": "Stage5 ক্রেডিট ব্যবহার হচ্ছে",
       "toggleOn": "এখন আপনার API কী ব্যবহার করা হচ্ছে।",
       "toggleOff": "এখন Stage5 ক্রেডিট ব্যবহার করা হচ্ছে।",
       "toggleError": "পছন্দ আপডেট করা যায়নি।",
-      "toggleAria": "আমার API কী ব্যবহার করুন"
+      "toggleAria": "আমার API কী ব্যবহার করুন",
+      "requirementTranslation": "অনুবাদের জন্য একটি OpenAI বা Anthropic কী প্রয়োজন"
     },
     "creditsDescription": "ক্রেডিট কিনুন। প্রদর্শিত ঘন্টাগুলি হলো আপনি যে মোট ভিডিও সময়সীমা ট্রান্সক্রাইব বা অনুবাদ করতে পারবেন তার একটি আনুমানিক হিসাব। উদাহরণ: ৩ ঘণ্টার ভিডিও ট্রান্সক্রাইব ও অনুবাদ করতে প্রায় ৬ ঘণ্টা (≈১,৪০,০০০ ক্রেডিট) লাগে।",
     "performanceQuality": {
       "title": "পারফরম্যান্স এবং কোয়ালিটি",
-      "qualityTranscription": {
-        "label": "কোয়ালিটি ট্রান্সক্রিপশন",
-        "help": "চালু: ক্রমানুসারে, আগের লাইনের কনটেক্সট ব্যবহার করে। বন্ধ: দ্রুত ব্যাচ মোড।"
-      },
       "qualityTranslation": {
         "label": "কোয়ালিটি অনুবাদ",
         "modelOn": "GPT-5.1 খসড়া + GPT-5.5 রিভিউ",
@@ -628,7 +629,6 @@
       "unlocking": "চেকআউট খোলা হচ্ছে…",
       "unlockCta": "$10 এ আনলক করুন",
       "unlockHint": "আনলক হলে, যেকোনো সময় এখানে আপনার API কী যোগ করুন এবং আপনার অ্যাকাউন্টে সরাসরি বিলিং টগল করুন।",
-      "unlockedDescription": "নিচে আপনার OpenAI API কী লিখুন। একটি কী থাকলে ট্রান্সক্রিপশন, অনুবাদ, এবং ডাবিং সরাসরি আপনার OpenAI অ্যাকাউন্টে চলবে।",
       "apiKeyLabel": "OpenAI API কী",
       "hide": "লুকান",
       "show": "দেখান",
@@ -661,7 +661,6 @@
       "pricingHint": "১ ঘন্টার ভিডিওর জন্য আনুমানিক খরচ",
       "pricingHintHeuristic": "বর্তমান অ্যাপ হিউরিস্টিক অনুযায়ী আনুমানিক খরচ",
       "transcription": "ট্রান্সক্রিপশন",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "অনুবাদ (ড্রাফট)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO unlock, key এবং toggle দরকার।",
       "summaryRequiresOpenAi": "OpenAI BYO-তে প্রবেশাধিকার এবং API key প্রয়োজন।",
       "summaryRequiresAnthropic": "Anthropic BYO-তে প্রবেশাধিকার এবং API key প্রয়োজন।",
-      "translationReview": "অনুবাদ (রিভিউ)"
+      "translationReview": "অনুবাদ (রিভিউ)",
+      "transcriptionRequiresElevenLabs": "ট্রান্সক্রিপশন শুধুমাত্র ElevenLabs Scribe ব্যবহার করে। নিজের কী দিয়ে ট্রান্সক্রাইব করতে একটি ElevenLabs API কী যোগ করুন। কী না থাকলে ট্রান্সক্রিপশন Stage5 ক্রেডিট ব্যবহার করে, যা আপনার API কী চালু থাকা অবস্থায় ব্যবহৃত হয় না। আপনার OpenAI কী এখনও অনুবাদের জন্য ব্যবহৃত হয়।"
     },
     "apiKeyGuide": {
       "title": "API কী কীভাবে পাবেন",
@@ -703,7 +703,6 @@
         "profileApiKey": "প্রোফাইল + API কী"
       },
       "openai": {
-        "description": "OpenAI ট্রান্সক্রিপশন (Whisper), অনুবাদ (GPT), এবং টেক্সট-টু-স্পিচ ডাবিং চালায়।",
         "step1": "যান",
         "step2": "আপনার অ্যাকাউন্টে সাইন আপ বা লগ ইন করুন",
         "step3": "নেভিগেট করুন",
@@ -725,13 +724,13 @@
         "note": "টিপ: Anthropic পে-অ্যাজ-ইউ-গো প্রাইসিং অফার করে। আপনি শুধু যা ব্যবহার করেন তার জন্য পেমেন্ট করেন।"
       },
       "elevenlabs": {
-        "description": "ElevenLabs প্রিমিয়াম ট্রান্সক্রিপশন এবং ভয়েস-ক্লোনিং ডাবিং অফার করে। এটি ছাড়া, OpenAI এই কাজগুলো সামলায়।",
         "step1": "যান",
         "step2": "আপনার অ্যাকাউন্টে সাইন আপ বা লগ ইন করুন",
         "step3": "আপনার প্রোফাইল আইকনে ক্লিক করে নির্বাচন করুন",
         "step4": "সাবস্ক্রিপশন সেটিংসে একটি পেমেন্ট মেথড যোগ করুন (ফ্রি টিয়ারের বাইরে API ব্যবহারের জন্য প্রয়োজন)",
         "step5": "আপনার API কী কপি করে Stage5 এ পেস্ট করুন",
-        "note": "টিপ: ElevenLabs এ সীমিত ব্যবহারের জন্য একটি ফ্রি টিয়ার আছে। আরো জন্য, আপনার অ্যাকাউন্ট সেটিংসে পেইড প্ল্যানে আপগ্রেড করুন।"
+        "note": "টিপ: ElevenLabs এ সীমিত ব্যবহারের জন্য একটি ফ্রি টিয়ার আছে। আরো জন্য, আপনার অ্যাকাউন্ট সেটিংসে পেইড প্ল্যানে আপগ্রেড করুন।",
+        "audioDescription": "সমস্ত ট্রান্সক্রিপশন (Scribe) ও ডাবিং ElevenLabs দ্বারা চালিত। নিজের ElevenLabs কী ছাড়া, উভয়ই Stage5 ক্রেডিট ব্যবহার করে, যা আপনার API কী চালু থাকা অবস্থায় ব্যবহৃত হয় না।"
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "API কী প্রয়োজন",
-      "message": "সব AI কাজের জন্য আপনার API কী ব্যবহার করতে অনুবাদ কভারেজ এবং অডিও কভারেজ দরকার। OpenAI দুটোই কভার করে। অডিওর জন্য Anthropic-এর সঙ্গে OpenAI বা ElevenLabs দরকার।",
       "howToGet": "API কী কীভাবে পাবেন",
-      "option1": "অপশন ১: OpenAI",
-      "option2": "অপশন ২: Anthropic + ElevenLabs",
       "enable": "আমার API কী ব্যবহার করুন",
       "done": "সম্পন্ন",
       "ready": "কভারেজ সম্পূর্ণ হয়েছে। এখন আপনি “আমার API keys ব্যবহার করুন” চালু করতে পারেন।",
       "missingTranslation": "অনুবাদের জন্য এখনও {{providers}} দরকার।",
-      "missingAudio": "অডিওর জন্য এখনও {{providers}} দরকার।",
-      "missingBoth": "এখনও দরকার: অনুবাদ ({{translationProviders}}) এবং অডিও ({{audioProviders}})।"
+      "messageElevenLabsAudio": "আপনার API কী ব্যবহার করতে অনুবাদের জন্য একটি OpenAI বা Anthropic কী প্রয়োজন। ট্রান্সক্রিপশন ও ডাবিং শুধুমাত্র ElevenLabs ব্যবহার করে, তাই সেগুলোর জন্যও একটি ElevenLabs কী যোগ করুন।",
+      "audioNeedsElevenLabs": "ElevenLabs কী ছাড়া, আপনার API কী চালু থাকা অবস্থায় ট্রান্সক্রিপশন ও ডাবিং অনুপলব্ধ।"
     },
     "saveSrtFileAs": "SRT ফাইল এভাবে সংরক্ষণ করুন",
     "saveDownloadedVideoAs": "ডাউনলোড করা ভিডিও এভাবে সংরক্ষণ করুন",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে (~{{minutes}} মিনিট বাকি)",
     "transcribingElevenLabsHours": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে (~{{hours}}ঘ {{minutes}}মি বাকি)",
     "transcribingElevenLabsFinishing": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে...",
-    "transcriptionFallbackWhisper": "চাঙ্কড ট্রান্সক্রিপশনে ফলব্যাক করা হচ্ছে...",
     "transcriptionRetry": "সংযোগ ব্যর্থ, পুনরায় চেষ্টা করা হচ্ছে ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "ট্রান্সক্রিপশনের জন্য অডিও আপলোড করা হচ্ছে...",
     "gapRepair": "গ্যাপ মেরামত #{{iteration}} ({{done}}/{{total}})",

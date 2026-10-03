@@ -28,7 +28,10 @@ import * as registry from './active-processes.js';
 import { buildSettingsHandlers } from './handlers/settings-handlers.js';
 import { buildUpdateHandlers } from './handlers/update-handlers.js';
 import { settingsStore } from './store/settings-store.js';
-import { normalizeDubbingProviderSetting } from './store/settings-schema.js';
+import {
+  normalizeDubbingProviderSetting,
+  normalizeTranscriptionProviderSetting,
+} from './store/settings-schema.js';
 
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
@@ -1660,8 +1663,11 @@ try {
   );
   ipcMain.handle(
     'set-preferred-transcription-provider',
+    // Legacy 'openai' (Whisper) from older callers is normalized to 'elevenlabs'.
     (_event, value: 'elevenlabs' | 'openai' | 'stage5') =>
-      settingsHandlers.setPreferredTranscriptionProvider(value)
+      settingsHandlers.setPreferredTranscriptionProvider(
+        normalizeTranscriptionProviderSetting(value)
+      )
   );
 
   // Dubbing provider preference handlers

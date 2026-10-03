@@ -256,9 +256,6 @@ export default function ByoProviderPreferencesPanel() {
   const preferredTranscriptionProvider = useAiStore(
     state => state.preferredTranscriptionProvider
   );
-  const setPreferredTranscriptionProvider = useAiStore(
-    state => state.setPreferredTranscriptionProvider
-  );
   const preferredDubbingProvider = useAiStore(
     state => state.preferredDubbingProvider
   );
@@ -341,13 +338,15 @@ export default function ByoProviderPreferencesPanel() {
 
   const showStackPanel =
     hasOpenAiConfigured || hasAnthropicConfigured || hasElevenLabsConfigured;
+  // Transcription is ElevenLabs Scribe only; show the row whenever any audio
+  // or translation BYO key is configured so OpenAI-only users learn
+  // transcription needs ElevenLabs.
   const showTranscriptionRow = hasOpenAiConfigured || hasElevenLabsConfigured;
   const showTranslationRows = hasOpenAiConfigured || hasAnthropicConfigured;
   // Dubbing is ElevenLabs-only; show the row whenever any audio BYO key is
   // configured so OpenAI-only users learn dubbing needs ElevenLabs.
   const showDubbingRow = hasOpenAiConfigured || hasElevenLabsConfigured;
   const showVideoSuggestionRow = hasOpenAiConfigured || hasAnthropicConfigured;
-  const hasTranscriptionChoice = hasOpenAiConfigured && hasElevenLabsConfigured;
   const hasTranslationChoice = hasOpenAiConfigured && hasAnthropicConfigured;
   const hasReviewChoice = showTranslationRows;
   const hasSummaryChoice = showTranslationRows;
@@ -356,7 +355,6 @@ export default function ByoProviderPreferencesPanel() {
   const hasVideoSuggestionChoice =
     canUseOpenAiVideoSuggestionModel || canUseAnthropicVideoSuggestionModel;
   const hasProviderChoice =
-    hasTranscriptionChoice ||
     hasTranslationChoice ||
     hasReviewChoice ||
     hasSummaryChoice ||
@@ -535,15 +533,6 @@ export default function ByoProviderPreferencesPanel() {
     videoSuggestionUsesSonnet,
   ]);
 
-  const handleTranscriptionProviderChange = async (
-    provider: 'elevenlabs' | 'openai'
-  ) => {
-    const result = await setPreferredTranscriptionProvider(provider);
-    if (!result.success) {
-      console.error('Failed to update transcription provider:', result.error);
-    }
-  };
-
   const handleTranslationProviderChange = async (value: boolean) => {
     const result = await setPreferClaudeTranslation(value);
     if (!result.success) {
@@ -609,34 +598,30 @@ export default function ByoProviderPreferencesPanel() {
       {showTranscriptionRow && (
         <PreferenceRow
           title={t('settings.byoPreferences.transcription', 'Transcription')}
-          hasChoice={hasTranscriptionChoice}
+          hasChoice={false}
           radioName="transcriptionProvider"
-          options={[
-            {
-              value: 'openai',
-              label: t(
-                BYO_PROVIDERS.transcription.openai.labelKey,
-                BYO_PROVIDERS.transcription.openai.fallback
-              ),
-              price: BYO_PROVIDERS.transcription.openai.price,
-              selected: preferredTranscriptionProvider === 'openai',
-              onSelect: () => handleTranscriptionProviderChange('openai'),
-            },
-            {
-              value: 'elevenlabs',
-              label: t(
-                BYO_PROVIDERS.transcription.elevenlabs.labelKey,
-                BYO_PROVIDERS.transcription.elevenlabs.fallback
-              ),
-              price: BYO_PROVIDERS.transcription.elevenlabs.price,
-              selected: preferredTranscriptionProvider === 'elevenlabs',
-              onSelect: () => handleTranscriptionProviderChange('elevenlabs'),
-            },
-          ]}
-          infoProvider={getProviderInfo(t, transcriptionProvider, {
-            openai: BYO_PROVIDERS.transcription.openai,
-            elevenlabs: BYO_PROVIDERS.transcription.elevenlabs,
-          })}
+          options={[]}
+          infoProvider={
+            hasElevenLabsConfigured
+              ? {
+                  label: t(
+                    BYO_PROVIDERS.transcription.elevenlabs.labelKey,
+                    BYO_PROVIDERS.transcription.elevenlabs.fallback
+                  ),
+                  price: BYO_PROVIDERS.transcription.elevenlabs.price,
+                }
+              : getProviderInfo(t, transcriptionProvider, {
+                  elevenlabs: BYO_PROVIDERS.transcription.elevenlabs,
+                })
+          }
+          footer={
+            hasElevenLabsConfigured
+              ? null
+              : t(
+                  'settings.byoPreferences.transcriptionRequiresElevenLabs',
+                  'Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses Stage5 credits, which are not used while your API keys are on. Your OpenAI key is still used for translation.'
+                )
+          }
         />
       )}
 

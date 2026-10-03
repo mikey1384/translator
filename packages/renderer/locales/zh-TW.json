@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "您的 ElevenLabs 帳戶額度不足。請至 elevenlabs.io 增加額度。",
       "checkSettings": "檢查設定",
       "genericApiError": "API 請求失敗。請檢查您的 API 金鑰和帳戶狀態。"
+    },
+    "transcription": {
+      "providerUnavailable": "轉錄服務（ElevenLabs Scribe）暫時無法使用，或多次嘗試後仍無法連線。請於幾分鐘後再試一次。",
+      "fileTooLarge": "此音訊過長，無法在單一工作中轉錄（超過約 {{hours}} 小時）。請將影片分割成較短的部分，並分別轉錄每個部分。",
+      "elevenLabsKeyRequired": "轉錄使用 ElevenLabs Scribe，需要 ElevenLabs API 金鑰。請在設定中新增，或關閉 API 金鑰模式以使用 Stage5 點數進行轉錄。您的 OpenAI 或 Anthropic 金鑰仍用於翻譯。"
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "使用我的 API 金鑰",
       "activeKeys": "已準備 {{count}} 個金鑰",
       "noKeys": "尚未設定金鑰",
-      "requirement": "需要翻譯與音訊涵蓋",
       "usingApiKeys": "Stage5 點數已關閉",
       "usingCredits": "正在使用 Stage5 點數",
       "toggleOn": "現在正在使用您的 API 金鑰。",
       "toggleOff": "現在正在使用 Stage5 點數。",
       "toggleError": "更新偏好設定失敗。",
-      "toggleAria": "使用我的 API 金鑰"
+      "toggleAria": "使用我的 API 金鑰",
+      "requirementTranslation": "翻譯需要 OpenAI 或 Anthropic 金鑰"
     },
     "creditsDescription": "購買點數。顯示的時數是您可用於轉錄或翻譯之影片總時長的估算。範例：轉錄並翻譯一支 3 小時的影片，約需 6 小時（約 140,000 點數）。",
     "performanceQuality": {
       "title": "效能與品質",
-      "qualityTranscription": {
-        "label": "高品質轉錄",
-        "help": "開啟：逐行處理，使用前一行的上下文。關閉：更快的批次模式。"
-      },
       "qualityTranslation": {
         "label": "高品質翻譯",
         "modelOn": "GPT-5.1 草稿 + GPT-5.5 複審",
@@ -628,7 +629,6 @@
       "unlocking": "正在開啟結帳頁面…",
       "unlockCta": "花費 $10 解鎖",
       "unlockHint": "解鎖後，您可以隨時在此添加 API 金鑰以啟用帳戶直接計費。",
-      "unlockedDescription": "在下方輸入您的 OpenAI API 金鑰。當有金鑰時，轉錄、翻譯和配音將直接在您的 OpenAI 帳戶上運行。",
       "apiKeyLabel": "OpenAI API 金鑰",
       "hide": "隱藏",
       "show": "顯示",
@@ -661,7 +661,6 @@
       "pricingHint": "每 1 小時影片的預估費用",
       "pricingHintHeuristic": "依目前應用程式估算規則計算的預估成本",
       "transcription": "轉錄",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "翻譯（初稿）",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "需要 Anthropic BYO 解鎖、金鑰和開關。",
       "summaryRequiresOpenAi": "需要 OpenAI BYO 存取權限和 API 金鑰。",
       "summaryRequiresAnthropic": "需要 Anthropic BYO 存取權限和 API 金鑰。",
-      "translationReview": "翻譯（複審）"
+      "translationReview": "翻譯（複審）",
+      "transcriptionRequiresElevenLabs": "轉錄僅使用 ElevenLabs Scribe。新增 ElevenLabs API 金鑰即可使用您自己的金鑰進行轉錄。若沒有，轉錄將使用 Stage5 點數，而在使用您的 API 金鑰時不會消耗 Stage5 點數。您的 OpenAI 金鑰仍用於翻譯。"
     },
     "apiKeyGuide": {
       "title": "如何取得 API 金鑰",
@@ -703,7 +703,6 @@
         "profileApiKey": "個人資料 + API 金鑰"
       },
       "openai": {
-        "description": "OpenAI 提供轉錄（Whisper）、翻譯（GPT）和文字轉語音配音功能。",
         "step1": "前往",
         "step2": "註冊或登入您的帳戶",
         "step3": "在左側邊欄中導覽至",
@@ -725,13 +724,13 @@
         "note": "提示：Anthropic 提供按需付費的定價。您只需為實際使用付費。"
       },
       "elevenlabs": {
-        "description": "ElevenLabs 提供優質轉錄和語音複製配音。沒有它，OpenAI 將處理這些任務。",
         "step1": "前往",
         "step2": "註冊或登入您的帳戶",
         "step3": "點擊您的頭像並選擇",
         "step4": "在訂閱設定中新增付款方式（超出免費額度時需要）",
         "step5": "複製您的 API 金鑰並貼上到 Stage5 中",
-        "note": "提示：ElevenLabs 有免費方案但使用量有限。如需更多，請在帳戶設定中升級到付費方案。"
+        "note": "提示：ElevenLabs 有免費方案但使用量有限。如需更多，請在帳戶設定中升級到付費方案。",
+        "audioDescription": "所有轉錄（Scribe）和配音均由 ElevenLabs 提供。若沒有您自己的 ElevenLabs 金鑰，兩者都將使用 Stage5 點數，而在使用您的 API 金鑰時不會消耗 Stage5 點數。"
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "需要 API 金鑰",
-      "message": "若要在所有 AI 操作中使用您的 API 金鑰，您需要翻譯涵蓋與音訊涵蓋。OpenAI 同時涵蓋兩者。Anthropic 在音訊方面需要 OpenAI 或 ElevenLabs。",
       "howToGet": "如何取得 API 金鑰",
-      "option1": "選項 1：OpenAI",
-      "option2": "選項 2：Anthropic + ElevenLabs",
       "enable": "使用我的 API 金鑰",
       "done": "完成",
       "ready": "覆蓋條件已滿足。現在可以啟用「使用我的 API 金鑰」。",
       "missingTranslation": "翻譯仍需要 {{providers}}。",
-      "missingAudio": "音訊仍需要 {{providers}}。",
-      "missingBoth": "仍需要：翻譯（{{translationProviders}}），音訊（{{audioProviders}}）。"
+      "messageElevenLabsAudio": "若要使用您的 API 金鑰，需要一把用於翻譯的 OpenAI 或 Anthropic 金鑰。轉錄和配音僅使用 ElevenLabs，因此也請為它們新增 ElevenLabs 金鑰。",
+      "audioNeedsElevenLabs": "沒有 ElevenLabs 金鑰時，在使用您的 API 金鑰期間無法進行轉錄和配音。"
     },
     "saveSrtFileAs": "另存SRT檔案為",
     "saveDownloadedVideoAs": "另存下載的影片為",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "使用 ElevenLabs 轉錄中（約剩餘 {{minutes}} 分鐘）",
     "transcribingElevenLabsHours": "使用 ElevenLabs 轉錄中（約剩餘 {{hours}} 小時 {{minutes}} 分鐘）",
     "transcribingElevenLabsFinishing": "使用 ElevenLabs 轉錄中...",
-    "transcriptionFallbackWhisper": "正在切換到分塊轉錄...",
     "transcriptionRetry": "連線失敗，正在重試（{{attempt}}/{{maxAttempts}}）...",
     "transcribingR2Upload": "正在上傳音訊以進行轉錄...",
     "gapRepair": "間隙修復 #{{iteration}} ({{done}}/{{total}})",

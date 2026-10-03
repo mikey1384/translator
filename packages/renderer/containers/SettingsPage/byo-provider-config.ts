@@ -36,22 +36,13 @@ const ANTHROPIC_SUMMARY_HIGH_USD =
   estimateSummaryUsdPerHour(AI_MODELS.CLAUDE_OPUS) * SUMMARY_QUALITY_MULTIPLIER;
 
 export const BYO_PROVIDERS = {
+  // Transcription is ElevenLabs Scribe only (OpenAI whisper-1 retires
+  // 2027-02-26).
   transcription: {
-    openai: {
-      labelKey: 'settings.byoPreferences.openaiWhisper',
-      fallback: 'OpenAI Whisper',
-      price: formatUsdEstimate(
-        estimateTranscriptionUsdPerHour('openai'),
-        '/hr'
-      ),
-    },
     elevenlabs: {
       labelKey: 'settings.byoPreferences.elevenLabsScribe',
       fallback: 'ElevenLabs Scribe',
-      price: formatUsdEstimate(
-        estimateTranscriptionUsdPerHour('elevenlabs'),
-        '/hr'
-      ),
+      price: formatUsdEstimate(estimateTranscriptionUsdPerHour(), '/hr'),
     },
   },
   translationDraft: {

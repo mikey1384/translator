@@ -3156,7 +3156,6 @@ export class McpV2Service {
       },
       planning_snapshot: {
         quality_translation: context.planning?.quality_translation === true,
-        quality_transcription: context.planning?.quality_transcription === true,
         credit_rates: clone(rates),
       },
       runtime_snapshot: {
@@ -3907,15 +3906,8 @@ export class McpV2Service {
         planned_descriptor: plan.provider_snapshot?.transcription,
         estimated_stage5_credits: Number(plan.credit_usage?.transcription || 0),
         planning_expectations: {
-          ...(Object.hasOwn(
-            plan.planning_snapshot || {},
-            'quality_transcription'
-          )
-            ? {
-                quality_transcription:
-                  plan.planning_snapshot.quality_transcription === true,
-              }
-            : {}),
+          // Transcription is ElevenLabs Scribe only, so the retired
+          // quality_transcription switch is no longer a planning assumption.
           ...(plan.transcription?.method === 'stage5'
             ? {
                 transcription_per_hour:
@@ -4024,6 +4016,9 @@ export class McpV2Service {
       requirement.planning_expectations || {}
     )) {
       if (expectedValue === undefined) continue;
+      // Retired setting: jobs planned by older app versions may still carry
+      // it; transcription no longer depends on it.
+      if (name === 'quality_transcription') continue;
       const currentValue = name.startsWith('quality_')
         ? context.planning?.[name] === true
         : Number(

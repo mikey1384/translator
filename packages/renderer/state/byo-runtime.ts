@@ -3,11 +3,18 @@ import {
   type ApiKeyModeDubbingBlocker,
 } from '../../shared/helpers/dubbing-route';
 import {
+  getApiKeyModeTranscriptionBlocker,
+  type ApiKeyModeTranscriptionBlocker,
+} from '../../shared/helpers/transcription-route';
+import {
   AI_MODELS,
   STAGE5_REVIEW_TRANSLATION_MODEL,
 } from '../../shared/constants';
 
 export type ByoPreferenceProvider = 'elevenlabs' | 'openai' | 'stage5';
+// Transcription is ElevenLabs Scribe only (OpenAI whisper-1 retires
+// 2027-02-26 and its replacement returns no timestamps).
+export type TranscriptionPreferenceProvider = 'elevenlabs' | 'stage5';
 // Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06).
 export type DubbingPreferenceProvider = 'elevenlabs' | 'stage5';
 export type DubbingCreditProvider = 'elevenlabs';
@@ -28,7 +35,7 @@ export type ByoRuntimeState = {
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
   preferClaudeSummary: boolean;
-  preferredTranscriptionProvider: ByoPreferenceProvider;
+  preferredTranscriptionProvider: TranscriptionPreferenceProvider;
   preferredDubbingProvider: DubbingPreferenceProvider;
   stage5DubbingTtsProvider: DubbingCreditProvider;
 };
@@ -89,20 +96,25 @@ export function hasByoTranslationConfiguredCoverage(
   );
 }
 
+/**
+ * Audio (transcription and dubbing) is ElevenLabs-only, so only an
+ * ElevenLabs key covers it. An OpenAI key no longer does (Whisper and
+ * OpenAI TTS are retired).
+ */
 export function hasByoAudioConfiguredCoverage(
-  state: Pick<
-    ByoRuntimeState,
-    | 'byoUnlocked'
-    | 'byoElevenLabsUnlocked'
-    | 'keyPresent'
-    | 'elevenLabsKeyPresent'
-  >
+  state: Pick<ByoRuntimeState, 'byoElevenLabsUnlocked' | 'elevenLabsKeyPresent'>
 ): boolean {
-  return Boolean(
-    hasOpenAiByoConfigured(state) || hasElevenLabsByoConfigured(state)
-  );
+  return hasElevenLabsByoConfigured(state);
 }
 
+/**
+ * API key mode can be turned on with translation coverage (OpenAI or
+ * Anthropic). Audio coverage is not required: without an ElevenLabs key,
+ * transcription and dubbing show a blocked state that explains what is
+ * missing, while translation keeps using the user's keys. (Requiring
+ * ElevenLabs here would silently switch OpenAI-only users out of API key
+ * mode now that an OpenAI key cannot transcribe.)
+ */
 export function hasApiKeyModeConfiguredCoverage(
   state: Pick<
     ByoRuntimeState,
@@ -114,10 +126,7 @@ export function hasApiKeyModeConfiguredCoverage(
     | 'elevenLabsKeyPresent'
   >
 ): boolean {
-  return Boolean(
-    hasByoTranslationConfiguredCoverage(state) &&
-    hasByoAudioConfiguredCoverage(state)
-  );
+  return hasByoTranslationConfiguredCoverage(state);
 }
 
 export function hasOpenAiByoAvailable(
@@ -178,50 +187,82 @@ export function hasApiKeyModeActiveCoverage(
     | 'elevenLabsKeyPresent'
   >
 ): boolean {
+  // Translation coverage only; see hasApiKeyModeConfiguredCoverage.
   return Boolean(
-    (hasOpenAiByoAvailable(state) || hasAnthropicByoAvailable(state)) &&
-    (hasOpenAiByoAvailable(state) || hasElevenLabsByoAvailable(state))
+    hasOpenAiByoAvailable(state) || hasAnthropicByoAvailable(state)
   );
 }
 
-function resolveProviderByPreference(
-  preference: ByoPreferenceProvider,
-  state: ByoRuntimeState,
-  defaultOrder: Array<'elevenlabs' | 'openai'>
-): RuntimeProvider {
-  const hasOpenAi = hasOpenAiByoAvailable(state);
-  const hasElevenLabs = hasElevenLabsByoAvailable(state);
-
-  if (preference === 'stage5') {
-    if (!state.useApiKeysMode) {
-      return 'stage5';
-    }
-  }
-  if (preference === 'elevenlabs') {
-    if (hasElevenLabs) return 'elevenlabs';
-    if (hasOpenAi) return 'openai';
-    return 'stage5';
-  }
-  if (preference === 'openai') {
-    if (hasOpenAi) return 'openai';
-    if (hasElevenLabs) return 'elevenlabs';
-    return 'stage5';
-  }
-  for (const provider of defaultOrder) {
-    if (provider === 'elevenlabs' && hasElevenLabs) return 'elevenlabs';
-    if (provider === 'openai' && hasOpenAi) return 'openai';
-  }
-  return 'stage5';
+/** Normalize a stored transcription preference ('openai' is legacy Whisper). */
+export function normalizeTranscriptionPreference(
+  value: unknown
+): TranscriptionPreferenceProvider {
+  return value === 'stage5' ? 'stage5' : 'elevenlabs';
 }
 
+type TranscriptionRuntimeState = Pick<
+  ByoRuntimeState,
+  | 'useApiKeysMode'
+  | 'byoElevenLabsUnlocked'
+  | 'elevenLabsKeyPresent'
+  | 'useByoElevenLabs'
+> & {
+  // Accepts a legacy 'openai' value from older stores; treated as 'elevenlabs'.
+  preferredTranscriptionProvider: TranscriptionPreferenceProvider | 'openai';
+};
+
+/**
+ * Transcription is ElevenLabs Scribe only: BYO ElevenLabs when available,
+ * otherwise Stage5 credits (also Scribe). An OpenAI key never routes
+ * transcription. Mirrors resolveTranscriptionRoute in
+ * packages/main/services/transcription-provider-routing.ts.
+ */
 export function resolveTranscriptionProvider(
-  state: ByoRuntimeState
-): RuntimeProvider {
-  return resolveProviderByPreference(
-    state.preferredTranscriptionProvider,
-    state,
-    ['elevenlabs', 'openai']
-  );
+  state: TranscriptionRuntimeState
+): 'elevenlabs' | 'stage5' {
+  if (
+    normalizeTranscriptionPreference(state.preferredTranscriptionProvider) ===
+      'stage5' &&
+    !state.useApiKeysMode
+  ) {
+    return 'stage5';
+  }
+  return hasElevenLabsByoAvailable(state) ? 'elevenlabs' : 'stage5';
+}
+
+export type TranscriptionActionState =
+  | { kind: 'byo' }
+  | { kind: 'credits' }
+  | { kind: 'blocked'; blocker: ApiKeyModeTranscriptionBlocker };
+
+/**
+ * What a transcription action (Transcribe / Translate from scratch /
+ * Generate) should do: 'byo' = the user's ElevenLabs key, 'credits' = Stage5
+ * credits, 'blocked' = API key mode without a usable ElevenLabs key, so the
+ * request must not be sent.
+ */
+export function getTranscriptionActionState(
+  state: TranscriptionRuntimeState
+): TranscriptionActionState {
+  if (resolveTranscriptionProvider(state) === 'elevenlabs') {
+    return { kind: 'byo' };
+  }
+  if (!state.useApiKeysMode) return { kind: 'credits' };
+  return {
+    kind: 'blocked',
+    blocker:
+      getApiKeyModeTranscriptionBlocker({
+        elevenLabsUnlocked: state.byoElevenLabsUnlocked,
+        elevenLabsToggleEnabled: state.useByoElevenLabs,
+        elevenLabsKeyPresent: state.elevenLabsKeyPresent,
+      }) ?? 'elevenlabs-key-missing',
+  };
+}
+
+export function isTranscriptionBlockedInApiKeyMode(
+  state: TranscriptionRuntimeState
+): boolean {
+  return getTranscriptionActionState(state).kind === 'blocked';
 }
 
 /**
@@ -409,7 +450,7 @@ export function isTranslationByo(state: ByoRuntimeState): boolean {
   );
 }
 
-export function isTranscriptionByo(state: ByoRuntimeState): boolean {
+export function isTranscriptionByo(state: TranscriptionRuntimeState): boolean {
   return resolveTranscriptionProvider(state) !== 'stage5';
 }
 

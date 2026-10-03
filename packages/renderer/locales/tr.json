@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "ElevenLabs hesabınızda yeterli kredi yok. Lütfen elevenlabs.io adresinden kredi ekleyin.",
       "checkSettings": "Ayarları Kontrol Et",
       "genericApiError": "API isteği başarısız. Lütfen API anahtarınızı ve hesap durumunuzu kontrol edin."
+    },
+    "transcription": {
+      "providerUnavailable": "Transkripsiyon (ElevenLabs Scribe) geçici olarak kullanılamıyor veya birkaç denemeden sonra ulaşılamadı. Lütfen birkaç dakika sonra tekrar deneyin.",
+      "fileTooLarge": "Bu ses tek bir işte transkripsiyonu yapılamayacak kadar uzun (yaklaşık {{hours}} saatten fazla). Videoyu daha kısa parçalara bölün ve her parçanın transkripsiyonunu ayrı yapın.",
+      "elevenLabsKeyRequired": "Transkripsiyon ElevenLabs Scribe kullanır ve bir ElevenLabs API anahtarı gerektirir. Ayarlar'dan bir anahtar ekleyin veya Stage5 kredileriyle transkripsiyon yapmak için API anahtarı modunu kapatın. OpenAI veya Anthropic anahtarınız çeviri için kullanılmaya devam eder."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Kendi API anahtarlarımı kullan",
       "activeKeys": "Anahtarlar hazır: {{count}}",
       "noKeys": "Yapılandırılmış anahtar yok",
-      "requirement": "Çeviri + ses kapsamı gerekir",
       "usingApiKeys": "Stage5 kredileri kapalı",
       "usingCredits": "Stage5 kredileri kullanımda",
       "toggleOn": "Artık API anahtarlarınızı kullanıyor.",
       "toggleOff": "Artık Stage5 kredilerini kullanıyor.",
       "toggleError": "Tercih güncellenemedi.",
-      "toggleAria": "Kendi API anahtarlarımı kullan"
+      "toggleAria": "Kendi API anahtarlarımı kullan",
+      "requirementTranslation": "Çeviri için OpenAI veya Anthropic anahtarı gerekir"
     },
     "creditsDescription": "Kredi satın alın. Görüntülenen saatler, transkripsiyon veya çeviri yapabileceğiniz toplam video süresinin tahminidir. Örnek: 3 saatlik bir videoyu yazıya döküp çevirmek yaklaşık 6 saat (≈140.000 kredi) kullanır.",
     "performanceQuality": {
       "title": "Performans ve Kalite",
-      "qualityTranscription": {
-        "label": "Kaliteli Transkripsiyon",
-        "help": "Açık: sıralı, önceki satır bağlamını kullanır. Kapalı: daha hızlı toplu mod."
-      },
       "qualityTranslation": {
         "label": "Kaliteli Çeviri",
         "modelOn": "GPT-5.1 taslak + GPT-5.5 inceleme",
@@ -628,7 +629,6 @@
       "unlocking": "Ödeme açılıyor…",
       "unlockCta": "$10 ile Aç",
       "unlockHint": "Açıldıktan sonra, hesaplarınızda doğrudan faturalandırmayı açmak için istediğiniz zaman API anahtarlarınızı buraya ekleyin.",
-      "unlockedDescription": "Aşağıya OpenAI API anahtarınızı girin. Anahtar mevcut olduğunda transkripsiyon, çeviri ve seslendirme doğrudan OpenAI hesabınızda çalışacak.",
       "apiKeyLabel": "OpenAI API Anahtarı",
       "hide": "Gizle",
       "show": "Göster",
@@ -661,7 +661,6 @@
       "pricingHint": "1 saatlik video başına tahmini maliyet",
       "pricingHintHeuristic": "Uygulamanın mevcut sezgisel tahminlerine göre maliyet",
       "transcription": "Transkripsiyon",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Çeviri (Taslak)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO kilidi, anahtar ve açık geçiş gerekir.",
       "summaryRequiresOpenAi": "OpenAI BYO erişimi ve API anahtarı gerekir.",
       "summaryRequiresAnthropic": "Anthropic BYO erişimi ve API anahtarı gerekir.",
-      "translationReview": "Çeviri (İnceleme)"
+      "translationReview": "Çeviri (İnceleme)",
+      "transcriptionRequiresElevenLabs": "Transkripsiyon yalnızca ElevenLabs Scribe kullanır. Kendi anahtarlarınızla transkripsiyon yapmak için bir ElevenLabs API anahtarı ekleyin. Anahtar olmadan transkripsiyon Stage5 kredilerini kullanır; bu krediler API anahtarlarınız açıkken kullanılmaz. OpenAI anahtarınız çeviri için kullanılmaya devam eder."
     },
     "apiKeyGuide": {
       "title": "API Anahtarları Nasıl Alınır",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profil + API anahtarı"
       },
       "openai": {
-        "description": "OpenAI transkripsiyon (Whisper), çeviri (GPT) ve metin-konuşma seslendirmeyi destekler.",
         "step1": "Git",
         "step2": "Hesabınıza kaydolun veya giriş yapın",
         "step3": "Sol kenar çubuğunda",
@@ -725,13 +724,13 @@
         "note": "İpucu: Anthropic kullandıkça öde fiyatlandırması sunar. Sadece kullandığınız kadar ödersiniz."
       },
       "elevenlabs": {
-        "description": "ElevenLabs premium transkripsiyon ve ses klonlama seslendirmesi sunar. Olmadan, OpenAI bu görevleri üstlenir.",
         "step1": "Git",
         "step2": "Hesabınıza kaydolun veya giriş yapın",
         "step3": "Profil simgenize tıklayın ve seçin",
         "step4": "Abonelik ayarlarına bir ödeme yöntemi ekleyin (ücretsiz seviyenin ötesinde API kullanımı için gerekli)",
         "step5": "API anahtarınızı kopyalayın ve Stage5'e yapıştırın",
-        "note": "İpucu: ElevenLabs sınırlı kullanımlı ücretsiz bir seviye sunar. Daha fazlası için hesap ayarlarınızdan ücretli plana yükseltin."
+        "note": "İpucu: ElevenLabs sınırlı kullanımlı ücretsiz bir seviye sunar. Daha fazlası için hesap ayarlarınızdan ücretli plana yükseltin.",
+        "audioDescription": "Tüm transkripsiyon (Scribe) ve seslendirme işlemleri ElevenLabs ile yapılır. Kendi ElevenLabs anahtarınız olmadan her ikisi de Stage5 kredilerini kullanır; bu krediler API anahtarlarınız açıkken kullanılmaz."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "API Anahtarları Gerekli",
-      "message": "API anahtarlarınızı tüm yapay zeka işlemlerinde kullanmak için çeviri kapsamına ve ses kapsamına ihtiyacınız var. OpenAI her ikisini de kapsar. Anthropic, ses için OpenAI veya ElevenLabs gerektirir.",
       "howToGet": "API anahtarları nasıl alınır",
-      "option1": "Seçenek 1: OpenAI",
-      "option2": "Seçenek 2: Anthropic + ElevenLabs",
       "enable": "Kendi API anahtarlarımı kullan",
       "done": "Tamamlandı",
       "ready": "Kapsam tamamlandı. Artık “API anahtarlarımı kullan” seçeneğini açabilirsiniz.",
       "missingTranslation": "Çeviri için hâlâ {{providers}} gerekiyor.",
-      "missingAudio": "Ses için hâlâ {{providers}} gerekiyor.",
-      "missingBoth": "Hâlâ gerekli: çeviri ({{translationProviders}}) ve ses ({{audioProviders}})."
+      "messageElevenLabsAudio": "Kendi API anahtarlarınızı kullanmak için çeviri amacıyla bir OpenAI veya Anthropic anahtarına ihtiyacınız var. Transkripsiyon ve seslendirme yalnızca ElevenLabs kullanır, bu yüzden bunlar için de bir ElevenLabs anahtarı ekleyin.",
+      "audioNeedsElevenLabs": "ElevenLabs anahtarı olmadan, API anahtarlarınız açıkken transkripsiyon ve seslendirme kullanılamaz."
     },
     "saveSrtFileAs": "SRT Dosyasını Farklı Kaydet",
     "saveDownloadedVideoAs": "İndirilen Videoyu Farklı Kaydet",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "ElevenLabs ile transkribe ediliyor (~{{minutes}} dakika kaldı)",
     "transcribingElevenLabsHours": "ElevenLabs ile transkribe ediliyor (~{{hours}}s {{minutes}}d kaldı)",
     "transcribingElevenLabsFinishing": "ElevenLabs ile transkribe ediliyor...",
-    "transcriptionFallbackWhisper": "Parçalı transkribe'a geçiliyor...",
     "transcriptionRetry": "Bağlantı başarısız, yeniden deneniyor ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Transkripsiyon için ses yükleniyor...",
     "gapRepair": "Boşluk onarımı #{{iteration}} ({{done}}/{{total}})",

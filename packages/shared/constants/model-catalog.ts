@@ -2,11 +2,9 @@ export const AI_MODELS = {
   GPT: 'gpt-5.1',
   CLAUDE_SONNET: 'claude-sonnet-5',
   CLAUDE_OPUS: 'claude-opus-4-8',
-  WHISPER: 'whisper-1',
 } as const;
 
 export const STAGE5_REVIEW_TRANSLATION_MODEL = 'gpt-5.5';
-export const STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
 export const STAGE5_ELEVENLABS_SCRIBE_MODEL = 'elevenlabs-scribe';
 export const STAGE5_TTS_MODEL_ELEVEN_V3 = 'eleven_v3';
 export const STAGE5_TTS_MODEL_ELEVEN_V4 = 'eleven_v4';
@@ -83,10 +81,9 @@ export const STAGE5_TRANSLATION_MODEL_PRICING = {
   },
 } as const;
 
+// Transcription is ElevenLabs Scribe only (OpenAI whisper-1 retires
+// 2027-02-26 and its replacement returns no timestamps).
 export const STAGE5_TRANSCRIPTION_MODEL_PRICING = {
-  [STAGE5_WHISPER_MODEL]: {
-    perSecond: 0.006 / 60,
-  },
   [STAGE5_ELEVENLABS_SCRIBE_MODEL]: {
     perSecond: 0.4 / 3600,
   },

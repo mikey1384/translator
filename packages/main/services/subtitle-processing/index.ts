@@ -9,6 +9,7 @@ import { GenerateSubtitlesFullResult } from './types.js';
 import { SubtitleProcessingError } from './errors.js';
 import { prepareAudio } from './pipeline/prepare-audio.js';
 import { transcribePass } from './pipeline/transcribe-pass.js';
+import { assertTranscriptionAvailable } from '../ai-provider.js';
 import { translatePass } from './pipeline/translate-pass.js';
 import { finalizePass } from './pipeline/finalize-pass.js';
 import { parseSrt } from '../../../shared/helpers/index.js';
@@ -70,6 +71,9 @@ export async function extractSubtitlesFromMedia({
   const markStage = createStageTimer(operationId);
 
   try {
+    // Transcription needs ElevenLabs Scribe; in API key mode without a usable
+    // ElevenLabs key, fail before spending time extracting audio.
+    assertTranscriptionAvailable();
     const { audioPath: extractedAudioPath } = await prepareAudio({
       videoPath: options.videoPath,
       services: { ffmpeg },
@@ -89,7 +93,6 @@ export async function extractSubtitlesFromMedia({
         progressCallback: adaptedProgress ?? progressCallback,
         operationId,
         signal,
-        qualityTranscription: options?.qualityTranscription ?? false,
       });
     markStage('transcribe');
 

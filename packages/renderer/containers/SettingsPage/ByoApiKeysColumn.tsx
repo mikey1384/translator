@@ -158,7 +158,9 @@ export default function ByoApiKeysColumn({
     elevenLabsKeyPresent,
   });
   const hasTranslationCoverage = hasOpenAiConfigured || hasAnthropicConfigured;
-  const hasAudioCoverage = hasOpenAiConfigured || hasElevenLabsConfigured;
+  // Transcription and dubbing are ElevenLabs-only; an OpenAI key no longer
+  // covers audio.
+  const hasAudioCoverage = hasElevenLabsConfigured;
 
   const translationHint = formatCoverageHint(
     [
@@ -168,11 +170,8 @@ export default function ByoApiKeysColumn({
     'OpenAI / Anthropic'
   );
   const audioHint = formatCoverageHint(
-    [
-      hasOpenAiConfigured ? 'OpenAI' : '',
-      hasElevenLabsConfigured ? 'ElevenLabs' : '',
-    ].filter(Boolean),
-    'OpenAI / ElevenLabs'
+    [hasElevenLabsConfigured ? 'ElevenLabs' : ''].filter(Boolean),
+    'ElevenLabs'
   );
 
   return (

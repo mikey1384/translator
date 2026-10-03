@@ -40,6 +40,7 @@ import {
   startTranscriptionFlow,
 } from '../GenerateSubtitles/utils/subtitleGeneration';
 import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
+import { useTranscriptionBlocker } from '../GenerateSubtitles/hooks/useTranscriptionBlocker';
 import {
   isManagedTempOriginalVideoPath,
   saveDubbedVideoFile,
@@ -131,7 +132,11 @@ export default function SideMenu({
     metadataHoursNeeded ??
     (derivedDurationSecs != null ? derivedDurationSecs / 3600 : null);
 
+  // Transcription is ElevenLabs Scribe only; API key mode without a usable
+  // ElevenLabs key cannot transcribe, so explain before anything starts.
+  const transcriptionBlockedMessage = useTranscriptionBlocker();
   const isTranscribeDisabled =
+    Boolean(transcriptionBlockedMessage) ||
     isTranscribing ||
     derivedHoursNeeded == null ||
     isMetadataPending ||
@@ -478,7 +483,11 @@ export default function SideMenu({
                 onClick={handleTranscribe}
                 isLoading={isTranscribing}
                 disabled={isTranscribeDisabled}
-                title={metadataStatusMessage ?? t('input.transcribeOnly')}
+                title={
+                  transcriptionBlockedMessage ??
+                  metadataStatusMessage ??
+                  t('input.transcribeOnly')
+                }
               >
                 <span className={sidePanelButtonContentStyles}>
                   {!isTranscribing ? <Mic size={15} strokeWidth={2.2} /> : null}
@@ -488,6 +497,25 @@ export default function SideMenu({
                 </span>
               </Button>
             )}
+            {showTranscribeButton &&
+              transcriptionBlockedMessage &&
+              !isTranscribing && (
+                <div
+                  className={sidePanelWarningStyles}
+                  role="note"
+                  data-transcription-state="blocked"
+                >
+                  <div
+                    className={sidePanelWarningIconStyles}
+                    aria-hidden="true"
+                  >
+                    <CircleAlert size={12} strokeWidth={2.2} />
+                  </div>
+                  <div className={sidePanelWarningTextStyles}>
+                    {transcriptionBlockedMessage}
+                  </div>
+                </div>
+              )}
             {showTranscribeButton &&
               metadataStatusMessage &&
               metadataErrorCode !== 'icloud-placeholder' &&

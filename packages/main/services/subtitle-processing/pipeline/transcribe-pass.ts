@@ -5,191 +5,32 @@ import fs from 'fs';
 import fsp from 'fs/promises';
 import crypto from 'crypto';
 import log from 'electron-log';
-import { dialog } from 'electron';
-import {
-  detectSpeechIntervals,
-  normalizeSpeechIntervals,
-  mergeAdjacentIntervals,
-  chunkSpeechInterval,
-} from '../audio-chunker.js';
-import { transcribeChunk } from '../transcriber.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
-import { AI_MODELS, ERROR_CODES } from '../../../../shared/constants/index.js';
-import {
-  SAVE_WHISPER_CHUNKS,
-  PRE_PAD_SEC,
-  POST_PAD_SEC,
-  MAX_SPEECHLESS_SEC,
-  MAX_CHUNK_DURATION_SEC,
-  MIN_CHUNK_DURATION_SEC,
-  MERGE_GAP_SEC,
-  MAX_PROMPT_CHARS,
-} from '../constants.js';
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
-import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
-import { getFocusedOrMainWindow } from '../../../utils/window.js';
 import { rebaseWordTimingsToSegment } from '../word-timing-normalization.js';
-
-import {
-  throwIfAborted,
-  formatElevenLabsTimeRemaining,
-  runWithConcurrency,
-} from '../utils.js';
+import { throwIfAborted, formatElevenLabsTimeRemaining } from '../utils.js';
 import {
   transcribe as transcribeAi,
   getActiveProviderForAudio,
+  assertTranscriptionAvailable,
   transcribeLargeFileViaR2,
 } from '../../ai-provider.js';
-
-// Retry configuration for transient network errors
-const ELEVENLABS_MAX_RETRIES = 3;
-const ELEVENLABS_RETRY_BASE_DELAY_MS = 2000;
-const ELEVENLABS_RETRY_MAX_DELAY_MS = 10000;
+import { STAGE5_SCRIBE_REQUEST_MODEL } from '../../stage5-client.js';
+import {
+  chooseScribeRoute,
+  isCancellationError,
+  runScribeWithRetries,
+  transcriptionTooLargeError,
+} from './scribe-runner.js';
 
 /**
- * Check if an error is a transient network error that should be retried.
- * Includes DNS failures, connection resets, timeouts, and temporary server errors.
+ * Transcribe one audio file with ElevenLabs Scribe. Transcription is
+ * Scribe-only (OpenAI whisper-1 retires 2027-02-26): BYO ElevenLabs, or Stage5
+ * credits via the direct relay (small/short audio) or the durable R2 flow
+ * (large/long audio). There is no Whisper fallback; failures end the job with
+ * a clear error.
  */
-function isTransientNetworkError(error: any): boolean {
-  if (!error) return false;
-
-  const message = String(error?.message || '').toLowerCase();
-  const code = String(error?.code || '').toUpperCase();
-
-  // DNS resolution failures
-  if (message.includes('enotfound') || message.includes('getaddrinfo')) {
-    return true;
-  }
-
-  // Connection errors
-  if (
-    code === 'ECONNRESET' ||
-    code === 'ECONNREFUSED' ||
-    code === 'ETIMEDOUT' ||
-    code === 'ECONNABORTED' ||
-    code === 'EHOSTUNREACH' ||
-    code === 'ENETUNREACH' ||
-    code === 'EPIPE' ||
-    code === 'ERR_NETWORK'
-  ) {
-    return true;
-  }
-
-  // Network-related error messages
-  if (
-    message.includes('network') ||
-    message.includes('timeout') ||
-    message.includes('connection reset') ||
-    message.includes('socket hang up') ||
-    message.includes('econnreset') ||
-    message.includes('etimedout')
-  ) {
-    return true;
-  }
-
-  // HTTP 5xx errors (server-side transient issues)
-  const status = error?.status || error?.response?.status;
-  if (typeof status === 'number' && status >= 500 && status < 600) {
-    return true;
-  }
-
-  // Rate limiting (can retry after delay)
-  if (status === 429) {
-    return true;
-  }
-
-  return false;
-}
-
-type TranscriptionFallbackConfirmationPayload = {
-  error: 'transcription-fallback-confirmation-required';
-  message: string;
-  reason: 'insufficient-credits' | 'provider-unavailable';
-  requestedModel: string;
-  fallbackModel: string;
-  requestedReserveSpend: number;
-  fallbackReserveSpend: number;
-  whisperGuardMessage?: string;
-};
-
-function getTranscriptionFallbackConfirmationPayload(
-  error: any
-): TranscriptionFallbackConfirmationPayload | null {
-  const payload = error?.response?.data;
-  if (!payload || typeof payload !== 'object') return null;
-  if (payload.error !== 'transcription-fallback-confirmation-required') {
-    return null;
-  }
-
-  if (
-    typeof payload.message !== 'string' ||
-    (payload.reason !== 'insufficient-credits' &&
-      payload.reason !== 'provider-unavailable') ||
-    typeof payload.requestedModel !== 'string' ||
-    typeof payload.fallbackModel !== 'string' ||
-    typeof payload.requestedReserveSpend !== 'number' ||
-    typeof payload.fallbackReserveSpend !== 'number'
-  ) {
-    return null;
-  }
-
-  return payload as TranscriptionFallbackConfirmationPayload;
-}
-
-function formatEstimatedCredits(value: number): string {
-  const normalized = Number.isFinite(value) ? Math.max(0, Math.ceil(value)) : 0;
-  return new Intl.NumberFormat('en-US').format(normalized);
-}
-
-async function promptForTranscriptionFallback({
-  payload,
-  signal,
-}: {
-  payload: TranscriptionFallbackConfirmationPayload;
-  signal: AbortSignal;
-}): Promise<'fallback' | 'recharge' | 'cancel'> {
-  throwIfAborted(signal);
-
-  const secondaryActionLabel =
-    payload.reason === 'insufficient-credits'
-      ? 'Recharge First'
-      : 'Retry Later';
-  const detailLines = [
-    payload.message,
-    '',
-    `ElevenLabs quality estimate: ${formatEstimatedCredits(payload.requestedReserveSpend)} credits`,
-    `Whisper estimate: ${formatEstimatedCredits(payload.fallbackReserveSpend)} credits`,
-    '',
-    'Continue with Whisper applies only to this transcription.',
-  ];
-
-  if (payload.whisperGuardMessage) {
-    detailLines.push('', payload.whisperGuardMessage);
-  }
-
-  const options = {
-    type: 'warning' as const,
-    title: 'Transcription quality change required',
-    message: 'High-quality transcription needs your confirmation',
-    detail: detailLines.join('\n'),
-    buttons: ['Continue with Whisper', secondaryActionLabel, 'Cancel'],
-    defaultId: 1,
-    cancelId: 2,
-    noLink: true,
-  };
-  const parentWindow = getFocusedOrMainWindow();
-  const { response } = parentWindow
-    ? await dialog.showMessageBox(parentWindow, options)
-    : await dialog.showMessageBox(options);
-
-  throwIfAborted(signal);
-
-  if (response === 0) return 'fallback';
-  if (response === 1) return 'recharge';
-  return 'cancel';
-}
-
 export async function transcribePass({
   audioPath,
   sourceMediaPath,
@@ -198,8 +39,6 @@ export async function transcribePass({
   progressCallback,
   operationId,
   signal,
-  promptContext,
-  qualityTranscription,
 }: {
   audioPath: string;
   sourceMediaPath?: string;
@@ -208,24 +47,22 @@ export async function transcribePass({
   progressCallback?: GenerateProgressCallback;
   operationId: string;
   signal: AbortSignal;
-  promptContext?: string;
-  qualityTranscription?: boolean;
 }): Promise<{
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
-  transcriptionEngine: 'elevenlabs' | 'whisper';
+  transcriptionEngine: 'elevenlabs';
 }> {
-  const overallSegments: SrtSegment[] = [];
   const tempDir = path.dirname(audioPath);
-  const createdChunkPaths: string[] = [];
-
-  // anti-duplicate helpers are defined below (near repair loop)
 
   try {
     if (!services?.ffmpeg) {
       throw new SubtitleProcessingError('FFmpegContext is required.');
     }
     const { ffmpeg } = services;
+
+    // API key mode without a usable BYO ElevenLabs key cannot transcribe
+    // (an OpenAI key no longer can). Fail before any upload.
+    assertTranscriptionAvailable();
 
     if (!fs.existsSync(audioPath)) {
       throw new SubtitleProcessingError(`Audio file not found: ${audioPath}`);
@@ -240,99 +77,31 @@ export async function transcribePass({
       );
     }
 
-    // Check provider and file size for transcription strategy
-    const audioProvider = getActiveProviderForAudio();
-    const useByoElevenLabs = audioProvider === 'elevenlabs';
-    const useStage5 = audioProvider === 'stage5';
-    const wantsHighQuality = !!qualityTranscription;
-
-    // Get file size for routing decision
     const audioStats = await fsp.stat(audioPath);
     const fileSizeMB = audioStats.size / (1024 * 1024);
-    const MAX_DIRECT_FILE_SIZE_MB = 95; // Stay under CF 100MB limit with buffer
-    const MAX_R2_FILE_SIZE_MB = 500; // R2 upload limit
+    const route = chooseScribeRoute({
+      useByoElevenLabs: getActiveProviderForAudio() === 'elevenlabs',
+      fileSizeMB,
+      durationSec: duration,
+    });
+    log.info(
+      `[${operationId}] Scribe route=${route} (${fileSizeMB.toFixed(1)}MB, ${(duration / 60).toFixed(1)} min)`
+    );
 
-    // ElevenLabs processes at ~8x realtime. CF Worker subrequest timeout is ~30s.
-    // Use R2 flow for any audio that would exceed this processing time threshold.
-    // Add 50% buffer for safety: 30s * 8 * 0.67 = ~160s (~2.7 min)
-    const MAX_DIRECT_DURATION_SEC = 160;
-    const exceedsDurationThreshold = duration > MAX_DIRECT_DURATION_SEC;
-
-    // Determine transcription strategy:
-    // - BYO ElevenLabs: Always try direct ElevenLabs
-    // - Stage5 + quality mode + short audio (< 2.7 min) + small file (< 95MB): direct relay
-    // - Stage5 + quality mode + long audio OR large file (95-500MB): durable R2 job flow
-    // - Stage5 + non-quality mode (or quality fallback): Whisper chunked
-    const canTryDirectElevenLabs =
-      useByoElevenLabs ||
-      (useStage5 &&
-        wantsHighQuality &&
-        fileSizeMB < MAX_DIRECT_FILE_SIZE_MB &&
-        !exceedsDurationThreshold);
-    const canTryR2ElevenLabs =
-      useStage5 &&
-      wantsHighQuality &&
-      fileSizeMB <= MAX_R2_FILE_SIZE_MB &&
-      (fileSizeMB >= MAX_DIRECT_FILE_SIZE_MB || exceedsDurationThreshold);
-    let chunkedQualityMode = qualityTranscription;
-    let userConfirmedWhisperFallback = false;
-
-    if (
-      useStage5 &&
-      wantsHighQuality &&
-      !canTryDirectElevenLabs &&
-      !canTryR2ElevenLabs
-    ) {
-      // High-quality route is unavailable (e.g., very large files), so force
-      // Whisper for chunked fallback to avoid repeatedly selecting ElevenLabs.
-      chunkedQualityMode = false;
+    if (route === 'stage5-too-large') {
+      throw transcriptionTooLargeError();
     }
-
-    if (
-      useStage5 &&
-      wantsHighQuality &&
-      exceedsDurationThreshold &&
-      fileSizeMB < MAX_DIRECT_FILE_SIZE_MB
-    ) {
-      log.info(
-        `[${operationId}] Audio duration (${(duration / 60).toFixed(1)} min) exceeds the direct relay threshold, using durable R2 flow`
-      );
-    }
-
-    const resolveTranscriptionEngineFromResult = (
-      result: any,
-      preferredEngine: 'elevenlabs' | 'whisper'
-    ): 'elevenlabs' | 'whisper' => {
-      const resolvedModel =
-        typeof result?.model === 'string' ? result.model.toLowerCase() : '';
-      const fallbackTarget =
-        typeof result?.fallback?.to === 'string'
-          ? String(result.fallback.to).toLowerCase()
-          : '';
-
-      if (
-        preferredEngine === 'elevenlabs' &&
-        (resolvedModel.includes('whisper') ||
-          fallbackTarget.includes('whisper'))
-      ) {
-        return 'whisper';
-      }
-
-      return preferredEngine;
-    };
 
     const finalizeTranscriptionResult = async ({
       result,
       completionLogLabel,
-      transcriptionEngine,
     }: {
       result: any;
       completionLogLabel: string;
-      transcriptionEngine: 'elevenlabs' | 'whisper';
     }): Promise<{
       segments: SrtSegment[];
       speechIntervals: Array<{ start: number; end: number }>;
-      transcriptionEngine: 'elevenlabs' | 'whisper';
+      transcriptionEngine: 'elevenlabs';
     }> => {
       const segments = (result?.segments || []) as Array<{
         id: number;
@@ -375,49 +144,25 @@ export async function transcribePass({
       return {
         segments: cleaned,
         speechIntervals: [],
-        transcriptionEngine,
+        transcriptionEngine: 'elevenlabs',
       };
     };
 
-    const runConfirmedWhisperFallback = async (): Promise<{
-      segments: SrtSegment[];
-      speechIntervals: Array<{ start: number; end: number }>;
-      transcriptionEngine: 'elevenlabs' | 'whisper';
-    }> => {
-      log.info(
-        `[${operationId}] Retrying transcription with explicit Whisper after user confirmation`
-      );
+    const reportRetry = (attempt: number, maxAttempts: number) => {
       progressCallback?.({
         percent: Stage.TRANSCRIBE,
-        stage: '__i18n__:transcription_fallback_whisper',
-        phaseKey: 'transcription_fallback',
-      });
-
-      const result = await transcribeAi({
-        filePath: audioPath,
-        model: AI_MODELS.WHISPER,
-        qualityMode: false,
-        durationSec: duration,
-        idempotencyKey: `${operationId}:whisper-fallback`,
-        signal,
-      });
-
-      throwIfAborted(signal);
-      return finalizeTranscriptionResult({
-        result,
-        completionLogLabel: 'Confirmed Whisper transcription complete',
-        transcriptionEngine: 'whisper',
+        stage: `__i18n__:transcription_retry:${attempt}:${maxAttempts}`,
       });
     };
+    const runnerLog = {
+      info: (msg: string) => log.info(`[${operationId}] ${msg}`),
+      warn: (msg: string) => log.warn(`[${operationId}] ${msg}`),
+    };
 
-    // Helper function for ElevenLabs transcription with progress
-    const tryElevenLabsTranscription = async (): Promise<{
-      segments: SrtSegment[];
-      speechIntervals: Array<{ start: number; end: number }>;
-      transcriptionEngine: 'elevenlabs' | 'whisper';
-    } | null> => {
+    // Direct Scribe: BYO ElevenLabs key, or small/short Stage5 audio.
+    const transcribeDirect = async () => {
       log.info(
-        `[${operationId}] Trying ElevenLabs Scribe (${fileSizeMB.toFixed(1)}MB) - best quality mode`
+        `[${operationId}] Transcribing with ElevenLabs Scribe (${fileSizeMB.toFixed(1)}MB)`
       );
 
       // ElevenLabs processes at ~8x real-time, estimate completion time
@@ -425,11 +170,9 @@ export async function transcribePass({
       const bufferMultiplier = durationMinutes > 60 ? 1.5 : 1.2;
       const estimatedProcessingTime = (duration / 8) * bufferMultiplier;
       const startTime = Date.now();
-      let progressInterval: ReturnType<typeof setInterval> | null = null;
-
-      progressInterval = setInterval(() => {
+      const progressInterval = setInterval(() => {
         if (signal?.aborted) {
-          if (progressInterval) clearInterval(progressInterval);
+          clearInterval(progressInterval);
           return;
         }
 
@@ -459,707 +202,81 @@ export async function transcribePass({
       try {
         const result = await transcribeAi({
           filePath: audioPath,
-          model: 'scribe_v2',
-          qualityMode: true,
+          model: STAGE5_SCRIBE_REQUEST_MODEL,
           durationSec: duration,
           // Use operationId as an idempotency key so retries can't double-bill.
           idempotencyKey: operationId,
           signal,
         });
-
         throwIfAborted(signal);
-
-        const transcriptionEngine = resolveTranscriptionEngineFromResult(
-          result,
-          'elevenlabs'
-        );
-        const fallbackAttempts = Number(
-          (result as any)?.fallback?.attempts || 0
-        );
-        const fellBackToWhisper = transcriptionEngine === 'whisper';
-        if (useStage5 && wantsHighQuality && fellBackToWhisper) {
-          log.warn(
-            `[${operationId}] Stage5 high-quality transcription fell back to Whisper${
-              fallbackAttempts > 0
-                ? ` after ${fallbackAttempts} ElevenLabs attempts`
-                : ''
-            }.`
-          );
-          progressCallback?.({
-            percent: Stage.TRANSCRIBE,
-            stage: '__i18n__:transcription_fallback_whisper',
-            phaseKey: 'transcription_fallback',
-          });
-        }
         return finalizeTranscriptionResult({
           result,
-          completionLogLabel:
-            transcriptionEngine === 'whisper'
-              ? 'Whisper fallback transcription complete'
-              : 'ElevenLabs transcription complete',
-          transcriptionEngine,
+          completionLogLabel: 'ElevenLabs transcription complete',
         });
       } catch (error: any) {
-        // Don't log cancellation as an error
-        if (
-          error?.name === 'AbortError' ||
-          error?.message === 'Cancelled' ||
-          signal?.aborted
-        ) {
-          throw error;
+        if (!isCancellationError(error, signal)) {
+          log.warn(
+            `[${operationId}] ElevenLabs transcription failed: ${error?.message || String(error)}`
+          );
         }
-
-        const errorMsg = error?.message || String(error);
-        log.warn(
-          `[${operationId}] ElevenLabs transcription failed: ${errorMsg}`
-        );
-
-        if (getTranscriptionFallbackConfirmationPayload(error)) {
-          throw error;
-        }
-
-        // Re-throw transient network errors so outer retry loop can handle them
-        if (isTransientNetworkError(error)) {
-          throw error;
-        }
-
-        return null; // Non-transient failure - signal to try fallback
+        throw error;
       } finally {
-        if (progressInterval) clearInterval(progressInterval);
+        clearInterval(progressInterval);
       }
     };
 
-    // Try direct ElevenLabs first if applicable (BYO key or small Stage5 files)
-    if (canTryDirectElevenLabs) {
-      let elevenLabsResult: Awaited<
-        ReturnType<typeof tryElevenLabsTranscription>
-      > = null;
-
-      // Retry loop for transient network errors
-      for (let attempt = 1; attempt <= ELEVENLABS_MAX_RETRIES; attempt++) {
-        throwIfAborted(signal);
-
-        try {
-          elevenLabsResult = await tryElevenLabsTranscription();
-          if (elevenLabsResult) {
-            break; // Success
-          }
-          // Function returned null - non-transient failure, don't retry
-          break;
-        } catch (error: any) {
-          // Re-throw cancellation errors
-          if (
-            error?.name === 'AbortError' ||
-            error?.message === 'Cancelled' ||
-            signal?.aborted
-          ) {
-            throw error;
-          }
-
-          const fallbackConfirmation =
-            getTranscriptionFallbackConfirmationPayload(error);
-          if (fallbackConfirmation) {
-            const choice = await promptForTranscriptionFallback({
-              payload: fallbackConfirmation,
-              signal,
-            });
-
-            if (choice === 'fallback') {
-              userConfirmedWhisperFallback = true;
-              chunkedQualityMode = false;
-              break;
-            }
-            if (choice === 'recharge') {
-              throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
-            }
-            throw new DOMException('Operation cancelled', 'AbortError');
-          }
-
-          const errorMsg = error?.message || String(error);
-
-          // Transient error - retry if attempts remaining
-          if (attempt < ELEVENLABS_MAX_RETRIES) {
-            const delay = Math.min(
-              ELEVENLABS_RETRY_MAX_DELAY_MS,
-              ELEVENLABS_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1)
-            );
-            log.info(
-              `[${operationId}] ElevenLabs attempt ${attempt}/${ELEVENLABS_MAX_RETRIES} failed (${errorMsg}), retrying in ${delay}ms...`
-            );
-            progressCallback?.({
-              percent: Stage.TRANSCRIBE,
-              stage: `__i18n__:transcription_retry:${attempt}:${ELEVENLABS_MAX_RETRIES}`,
-            });
-            await new Promise(resolve => setTimeout(resolve, delay));
-          } else {
-            log.warn(
-              `[${operationId}] ElevenLabs failed after ${ELEVENLABS_MAX_RETRIES} attempts: ${errorMsg}`
-            );
-          }
-        }
-      }
-
-      if (elevenLabsResult) {
-        return elevenLabsResult;
-      }
-
-      // All retries exhausted, fall back to Whisper chunked
-      if (!useByoElevenLabs) {
-        if (userConfirmedWhisperFallback) {
-          return await runConfirmedWhisperFallback();
-        }
-        log.info(
-          `[${operationId}] Falling back to Whisper chunked transcription ${
-            userConfirmedWhisperFallback
-              ? 'after explicit user confirmation'
-              : `after ${ELEVENLABS_MAX_RETRIES} attempts`
-          }`
-        );
-        chunkedQualityMode = false;
-        progressCallback?.({
-          percent: Stage.TRANSCRIBE,
-          stage: '__i18n__:transcription_fallback_whisper',
-        });
-      } else {
-        // BYO ElevenLabs failed with no fallback available
-        throw new SubtitleProcessingError(
-          'ElevenLabs transcription failed. Please check your API key and try again.'
-        );
-      }
-    }
-
-    // Try the durable R2 flow for large Stage5 files (95-500MB or long duration)
-    if (canTryR2ElevenLabs) {
+    // Durable R2 flow for large or long Stage5 audio (up to the upload limit).
+    const transcribeDurable = async () => {
       log.info(
-        `[${operationId}] Using durable R2 transcription flow for large file (${fileSizeMB.toFixed(1)}MB)`
+        `[${operationId}] Using durable R2 transcription flow (${fileSizeMB.toFixed(1)}MB)`
       );
-
-      // Retry loop for transient network errors
-      for (let attempt = 1; attempt <= ELEVENLABS_MAX_RETRIES; attempt++) {
-        throwIfAborted(signal);
-
-        try {
-          progressCallback?.({
-            percent: Stage.TRANSCRIBE,
-            stage: '__i18n__:transcribing_r2_upload',
-            phaseKey: 'upload_audio',
-          });
-
-          const result = await transcribeLargeFileViaR2({
-            filePath: audioPath,
-            qualityMode: true,
-            // The durable client derives the server upload key from stable
-            // recovery identity; operationId is only a per-run fallback.
-            idempotencyKey: operationId,
-            recoverySeed: durableRecoverySeed,
-            recoverySourcePath: sourceMediaPath || audioPath,
-            signal,
-            durationSec: duration,
-            onProgress: (stage, percent) => {
-              progressCallback?.({
-                percent: percent ?? Stage.TRANSCRIBE,
-                stage: stage || '__i18n__:transcribing_elevenlabs_finishing',
-                phaseKey: 'transcribe_vendor',
-              });
-            },
-          });
-
-          throwIfAborted(signal);
-
-          const transcriptionEngine = resolveTranscriptionEngineFromResult(
-            result,
-            'elevenlabs'
-          );
-          const fallbackAttempts = Number(
-            (result as any)?.fallback?.attempts || 0
-          );
-          if (
-            useStage5 &&
-            wantsHighQuality &&
-            transcriptionEngine === 'whisper'
-          ) {
-            log.warn(
-              `[${operationId}] Durable R2 transcription fell back to Whisper${
-                fallbackAttempts > 0
-                  ? ` after ${fallbackAttempts} ElevenLabs attempts`
-                  : ''
-              }.`
-            );
-            progressCallback?.({
-              percent: Stage.TRANSCRIBE,
-              stage: '__i18n__:transcription_fallback_whisper',
-              phaseKey: 'transcription_fallback',
-            });
-          }
-
-          return finalizeTranscriptionResult({
-            result,
-            completionLogLabel:
-              transcriptionEngine === 'whisper'
-                ? 'Durable R2 Whisper fallback transcription complete'
-                : 'Durable R2 transcription complete',
-            transcriptionEngine,
-          });
-        } catch (error: any) {
-          if (error?.code === 'DURABLE_TRANSCRIPTION_DETACHED') {
-            throw error;
-          }
-          if (error?.code === 'DURABLE_TRANSCRIPTION_RESTART_REQUIRED') {
-            throw error;
-          }
-          if (
-            error?.name === 'AbortError' ||
-            error?.message === 'Cancelled' ||
-            signal?.aborted
-          ) {
-            throw error;
-          }
-
-          const errorMsg = error?.message || String(error);
-          log.warn(
-            `[${operationId}] Durable R2 transcription failed: ${errorMsg}`
-          );
-          const fallbackConfirmation =
-            getTranscriptionFallbackConfirmationPayload(error);
-
-          if (fallbackConfirmation) {
-            const choice = await promptForTranscriptionFallback({
-              payload: fallbackConfirmation,
-              signal,
-            });
-
-            if (choice === 'fallback') {
-              userConfirmedWhisperFallback = true;
-              chunkedQualityMode = false;
-              break;
-            }
-            if (choice === 'recharge') {
-              throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
-            }
-            throw new DOMException('Operation cancelled', 'AbortError');
-          }
-
-          // Check if this is a transient error worth retrying
-          if (
-            isTransientNetworkError(error) &&
-            attempt < ELEVENLABS_MAX_RETRIES
-          ) {
-            const delay = Math.min(
-              ELEVENLABS_RETRY_MAX_DELAY_MS,
-              ELEVENLABS_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1)
-            );
-            log.warn(
-              `[${operationId}] Durable R2 attempt ${attempt}/${ELEVENLABS_MAX_RETRIES} failed (${errorMsg}), retrying in ${delay}ms...`
-            );
-            progressCallback?.({
-              percent: Stage.TRANSCRIBE,
-              stage: `__i18n__:transcription_retry:${attempt}:${ELEVENLABS_MAX_RETRIES}`,
-            });
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue;
-          }
-
-          // Non-transient error or final attempt - log and break to fallback
-          log.warn(
-            `[${operationId}] Durable R2 transcription failed: ${errorMsg}`
-          );
-          break;
-        }
-      }
-
-      // All retries exhausted, fall back to Whisper
-      log.info(
-        `[${operationId}] Falling back to Whisper chunked transcription ${
-          userConfirmedWhisperFallback
-            ? 'after explicit user confirmation'
-            : `after ${ELEVENLABS_MAX_RETRIES} attempts`
-        }`
-      );
-      chunkedQualityMode = false;
       progressCallback?.({
         percent: Stage.TRANSCRIBE,
-        stage: '__i18n__:transcription_fallback_whisper',
+        stage: '__i18n__:transcribing_r2_upload',
+        phaseKey: 'upload_audio',
       });
-    }
 
-    // Whisper chunked path: robust fallback with real progress
-    progressCallback?.({
-      percent: Stage.TRANSCRIBE,
-      stage: 'Analyzing audio for chunk boundaries...',
-      phaseKey: 'analyze_audio',
-    });
-
-    const raw = await detectSpeechIntervals({
-      inputPath: audioPath,
-      operationId,
-      signal,
-      ffmpegPath: ffmpeg.ffmpegPath,
-    });
-    if (signal?.aborted) throw new Error('Cancelled');
-
-    const cleanedIntervals = normalizeSpeechIntervals({ intervals: raw });
-    const merged = mergeAdjacentIntervals(
-      cleanedIntervals,
-      MERGE_GAP_SEC
-    ).flatMap(iv =>
-      iv.end - iv.start > MAX_SPEECHLESS_SEC
-        ? chunkSpeechInterval({ interval: iv, duration: MAX_SPEECHLESS_SEC })
-        : [iv]
-    );
-
-    let idx = 0;
-    let chunkStart: number | null = null;
-    let currEnd = 0;
-
-    const chunks: Array<{ start: number; end: number; index: number }> = [];
-    merged.sort((a, b) => a.start - b.start);
-    for (const blk of merged) {
-      const s = Math.max(0, blk.start - PRE_PAD_SEC);
-      const e = Math.min(duration, blk.end + POST_PAD_SEC);
-
-      if (e <= s) {
-        continue;
-      }
-
-      if (chunkStart === null) {
-        chunkStart = s;
-      }
-      currEnd = e;
-
-      if (currEnd - chunkStart >= MAX_CHUNK_DURATION_SEC) {
-        chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
-        chunkStart = null;
-      }
-    }
-
-    if (chunkStart !== null) {
-      if (currEnd > chunkStart) {
-        chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
-      } else {
-        log.warn(
-          `[${operationId}] Skipping final chunk due to zero/negative duration: ${chunkStart.toFixed(
-            2
-          )}-${currEnd.toFixed(2)}`
-        );
-      }
-    }
-
-    log.info(
-      `[${operationId}] VAD grouping produced ${chunks.length} chunk(s) (≥${MIN_CHUNK_DURATION_SEC}s).`
-    );
-
-    if (chunks.length === 0) {
-      log.warn(
-        `[${operationId}] No speech detected in audio - file may be silent or corrupted`
-      );
-      progressCallback?.({
-        percent: 100,
-        stage: '__i18n__:completed',
-        phaseKey: 'completed',
-      });
-      return {
-        segments: [],
-        speechIntervals: [],
-        transcriptionEngine: 'whisper',
-      };
-    }
-
-    progressCallback?.({
-      percent: Stage.TRANSCRIBE,
-      stage: `Chunked audio into ${chunks.length} parts`,
-      phaseKey: 'chunk_audio',
-      current: chunks.length,
-      total: chunks.length,
-      unit: 'chunks',
-    });
-
-    // Keep progress continuous: transcription spans 10%..70%
-    progressCallback?.({
-      percent: Stage.TRANSCRIBE,
-      stage: `Starting transcription of ${chunks.length} chunks...`,
-      phaseKey: 'transcribe_chunks',
-      current: 0,
-      total: chunks.length,
-      unit: 'chunks',
-    });
-
-    // We delay providing prompt context until at least 5 segments
-    // have been transcribed. After that, provide the previous 2 lines
-    // as context for subsequent transcriptions.
-
-    // Two chunked modes:
-    // - chunkedQualityMode=true: strictly sequential, passing previous chunk text as context
-    // - chunkedQualityMode=false: batched parallel (5 at a time) with light prior context
-    const useQuality = !!chunkedQualityMode;
-    const CONCURRENCY = useQuality ? 1 : 5;
-    let done = 0;
-
-    if (CONCURRENCY === 1) {
-      let rollingContext = promptContext || '';
-      for (const meta of chunks) {
-        throwIfAborted(signal);
-        if (meta.end <= meta.start) {
-          log.warn(
-            `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
-          );
-          done++;
-          continue;
-        }
-
-        const chunkAudioPath = mkTempAudioName(
-          path.join(tempDir, `chunk_${meta.index}_${operationId}`)
-        );
-        createdChunkPaths.push(chunkAudioPath);
-
-        await extractAudioSegment(ffmpeg, {
-          input: audioPath,
-          output: chunkAudioPath,
-          start: meta.start,
-          duration: meta.end - meta.start,
-          operationId: operationId ?? '',
-          signal,
-        });
-
-        throwIfAborted(signal);
-
-        const promptForChunk = buildPrompt(rollingContext || '');
-        const segs = await transcribeChunk({
-          chunkIndex: meta.index,
-          chunkPath: chunkAudioPath,
-          startTime: meta.start,
-          qualityMode: chunkedQualityMode,
-          signal,
-          operationId: operationId ?? '',
-          promptContext: promptForChunk,
-        });
-
-        throwIfAborted(signal);
-        const ordered = (segs || []).slice().sort((a, b) => a.start - b.start);
-        overallSegments.push(...ordered);
-
-        const thisChunkText = ordered
-          .map(s => (s.original ?? '').trim())
-          .filter(Boolean)
-          .join(' ')
-          .replace(/\s{2,}/g, ' ')
-          .trim();
-        rollingContext = thisChunkText;
-
-        done++;
-
-        const p = 10 + Math.round((done / chunks.length) * 85);
-        const partialSegs = overallSegments
-          .slice()
-          .sort((a, b) => a.start - b.start)
-          .filter(
-            s =>
-              (s.original ?? '').trim() !== '' &&
-              !isLikelyHallucination({ s, merged })
-          );
-        const intermediateSrt = buildSrt({
-          segments: partialSegs,
-          mode: 'dual',
-        });
-        log.debug(
-          `[Transcription Seq] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
-        );
-        progressCallback?.({
-          percent: Math.min(p, 95),
-          stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
-          phaseKey: 'transcribe_chunks',
-          current: done,
-          total: chunks.length,
-          unit: 'chunks',
-          partialResult: intermediateSrt,
-        });
-
-        if (signal?.aborted) {
-          throwIfAborted(signal);
-          return {
-            segments: overallSegments,
-            speechIntervals: merged.slice(),
-            transcriptionEngine: 'whisper',
-          };
-        }
-      }
-    } else {
-      // Continuous worker pool (no wave barrier): while one chunk's API call
-      // is in flight, another worker is already extracting the next slice.
-      await runWithConcurrency({
-        taskCount: chunks.length,
-        concurrency: CONCURRENCY,
-        runTask: async chunkIdx => {
-          throwIfAborted(signal);
-          const meta = chunks[chunkIdx];
-
-          if (meta.end <= meta.start) {
-            log.warn(
-              `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
-            );
-            done++;
-            return;
-          }
-
-          // Light prior context: once enough segments exist, seed the prompt
-          // with the last two transcribed lines (best-effort under concurrency).
-          const priorSegs = overallSegments
-            .filter(s => (s.original ?? '').trim() !== '')
-            .slice()
-            .sort((a, b) => a.start - b.start);
-          let basePrompt = promptContext || '';
-          if (!basePrompt && priorSegs.length >= 5) {
-            const lastTwo = priorSegs.slice(-2).map(s => s.original.trim());
-            basePrompt = buildPrompt(lastTwo.join('\n'));
-          }
-
-          try {
-            const chunkAudioPath = mkTempAudioName(
-              path.join(tempDir, `chunk_${meta.index}_${operationId}`)
-            );
-            createdChunkPaths.push(chunkAudioPath);
-
-            await extractAudioSegment(ffmpeg, {
-              input: audioPath,
-              output: chunkAudioPath,
-              start: meta.start,
-              duration: meta.end - meta.start,
-              operationId: operationId ?? '',
-              signal,
-            });
-
-            throwIfAborted(signal);
-
-            const segs = await transcribeChunk({
-              chunkIndex: meta.index,
-              chunkPath: chunkAudioPath,
-              startTime: meta.start,
-              qualityMode: chunkedQualityMode,
-              signal,
-              operationId: operationId ?? '',
-              promptContext: basePrompt,
-            });
-
-            throwIfAborted(signal);
-            const ordered = (segs || [])
-              .slice()
-              .sort((a, b) => a.start - b.start);
-            overallSegments.push(...ordered);
-            done++;
-          } catch (err: any) {
-            if (err?.message === ERROR_CODES.INSUFFICIENT_CREDITS) {
-              throw err; // propagate credit exhaustion (stops the pool)
-            }
-            if (
-              String(err?.message || err) === 'Cancelled' ||
-              err?.name === 'AbortError'
-            ) {
-              log.info(
-                `[${operationId}] Chunk ${meta.index} processing cancelled.`
-              );
-              return;
-            }
-            // Other errors skip just this chunk, as before
-            log.error(
-              `[${operationId}] Error processing chunk ${meta.index}:`,
-              err?.message || err
-            );
-            progressCallback?.({
-              percent: -1,
-              stage: `Error in chunk ${meta.index}`,
-              error: err?.message || String(err),
-            });
-            return;
-          }
-
-          const p = 10 + Math.round((done / chunks.length) * 85);
-          const partialSegs = overallSegments
-            .slice()
-            .sort((a, b) => a.start - b.start)
-            .filter(
-              s =>
-                (s.original ?? '').trim() !== '' &&
-                !isLikelyHallucination({ s, merged })
-            );
-          const intermediateSrt = buildSrt({
-            segments: partialSegs,
-            mode: 'dual',
-          });
-          log.debug(
-            `[Transcription Batch] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
-          );
+      const result = await transcribeLargeFileViaR2({
+        filePath: audioPath,
+        // The durable client derives the server upload key from stable
+        // recovery identity; operationId is only a per-run fallback.
+        idempotencyKey: operationId,
+        recoverySeed: durableRecoverySeed,
+        recoverySourcePath: sourceMediaPath || audioPath,
+        signal,
+        durationSec: duration,
+        onProgress: (stage, percent) => {
           progressCallback?.({
-            percent: Math.min(p, 95),
-            stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
-            phaseKey: 'transcribe_chunks',
-            current: done,
-            total: chunks.length,
-            unit: 'chunks',
-            partialResult: intermediateSrt,
+            percent: percent ?? Stage.TRANSCRIBE,
+            stage: stage || '__i18n__:transcribing_elevenlabs_finishing',
+            phaseKey: 'transcribe_vendor',
           });
         },
       });
 
       throwIfAborted(signal);
-    }
+      return finalizeTranscriptionResult({
+        result,
+        completionLogLabel: 'Durable R2 transcription complete',
+      });
+    };
 
-    overallSegments.sort((a, b) => a.start - b.start);
-
-    // Drop empty segments first
-    let filteredSegments = overallSegments.filter(
-      s => s.original.trim() !== ''
-    );
-    filteredSegments = filteredSegments.filter(
-      s =>
-        !isLikelyHallucination({
-          s,
-          merged,
-        })
-    );
-    overallSegments.length = 0;
-    overallSegments.push(...filteredSegments);
-
-    overallSegments.sort((a, b) => a.start - b.start);
-
-    // Legacy gap-repair phase removed: finalize after transcription/overshoot refinement
-    {
-      if (signal?.aborted) {
-        throwIfAborted(signal);
-      }
-
-      const cleaned = overallSegments
-        .filter(s => (s.original ?? '').trim() !== '')
-        .sort((a, b) => a.start - b.start)
-        .map((s, i) => ({
-          ...s,
-          index: i + 1,
-          original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
-        }));
-
-      const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
-      await fs.promises.writeFile(
-        path.join(tempDir, `${operationId}_final.srt`),
-        finalSrt,
-        'utf8'
-      );
-      log.info(
-        `[${operationId}] ✏️  Wrote debug SRT with ${cleaned.length} segments`
-      );
-      progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
-      return {
-        segments: cleaned,
-        speechIntervals: merged.slice(),
-        transcriptionEngine: 'whisper',
-      };
-    }
+    return await runScribeWithRetries({
+      run: route === 'stage5-r2' ? transcribeDurable : transcribeDirect,
+      signal,
+      label:
+        route === 'stage5-r2'
+          ? 'Durable R2 transcription'
+          : 'ElevenLabs transcription',
+      onRetry: reportRetry,
+      log: runnerLog,
+    });
   } catch (error: any) {
     console.error(
       `[${operationId}] Error in transcribePass:`,
       error?.message || error
     );
-    const isCancel =
-      error.name === 'AbortError' ||
-      error.message === 'Cancelled' ||
-      signal?.aborted;
+    const isCancel = isCancellationError(error, signal);
 
     progressCallback?.({
       percent: 100,
@@ -1172,70 +289,5 @@ export async function transcribePass({
     } else {
       throw new SubtitleProcessingError(error?.message || String(error));
     }
-  } finally {
-    log.info(
-      `[${operationId}] Cleaning up ${createdChunkPaths.length} temporary chunk files...`
-    );
-    if (!SAVE_WHISPER_CHUNKS) {
-      await Promise.allSettled(
-        createdChunkPaths.map(p =>
-          fsp.unlink(p).catch((err: any) => {
-            if (err?.code === 'ENOENT') {
-              log.debug(`[${operationId}] Temp chunk already removed: ${p}`);
-            } else {
-              log.warn(
-                `[${operationId}] Failed to delete temp chunk file ${p}:`,
-                err?.message || err
-              );
-            }
-          })
-        )
-      );
-    }
-    log.info(`[${operationId}] Finished cleaning up temporary chunk files.`);
-  }
-
-  function isLikelyHallucination({
-    s,
-    merged,
-  }: {
-    s: SrtSegment;
-    merged: Array<{ start: number; end: number }>;
-  }): boolean {
-    const text = (s.original || '').trim();
-    if (!text) return true;
-
-    const noSpeech =
-      typeof s.no_speech_prob === 'number' ? s.no_speech_prob : -1;
-    const avgLog = typeof s.avg_logprob === 'number' ? s.avg_logprob : 0;
-    const overlap = intervalOverlap(s, merged);
-
-    if (noSpeech >= 0.92 && overlap < 0.15 && avgLog <= -1.3) return true;
-
-    return false;
-  }
-
-  function intervalOverlap(
-    s: { start: number; end: number },
-    intervals: Array<{ start: number; end: number }>
-  ): number {
-    const dur = Math.max(0, s.end - s.start);
-    if (dur <= 0) return 0;
-    let ov = 0;
-    for (const iv of intervals) {
-      const a = Math.max(s.start, iv.start);
-      const b = Math.min(s.end, iv.end);
-      if (b > a) ov += b - a;
-      if (iv.start > s.end) break;
-    }
-    return ov / dur;
-  }
-
-  function buildPrompt(history: string) {
-    // Normalize whitespace but keep non-Latin scripts intact; cap by characters
-    const normalized = (history || '').replace(/\s{2,}/g, ' ').trim();
-    if (!normalized) return '';
-    if (normalized.length <= MAX_PROMPT_CHARS) return normalized;
-    return normalized.slice(-MAX_PROMPT_CHARS);
   }
 }

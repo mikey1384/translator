@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "حساب ElevenLabs الخاص بك لا يحتوي على رصيد كافٍ. يرجى إضافة رصيد على elevenlabs.io.",
       "checkSettings": "تحقق من الإعدادات",
       "genericApiError": "فشل طلب API. يرجى التحقق من مفتاح API وحالة الحساب."
+    },
+    "transcription": {
+      "providerUnavailable": "خدمة النسخ (ElevenLabs Scribe) غير متاحة مؤقتًا أو تعذّر الوصول إليها بعد عدة محاولات. يُرجى المحاولة مرة أخرى بعد بضع دقائق.",
+      "fileTooLarge": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعات تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
+      "elevenLabsKeyRequired": "يستخدم النسخ ElevenLabs Scribe ويتطلب مفتاح API من ElevenLabs. أضف مفتاحًا في الإعدادات، أو أوقف وضع مفاتيح API للنسخ باستخدام أرصدة Stage5. لا يزال مفتاح OpenAI أو Anthropic الخاص بك يُستخدم للترجمة."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "استخدام مفاتيح API الخاصة بي",
       "activeKeys": "المفاتيح الجاهزة: {{count}}",
       "noKeys": "لا توجد مفاتيح مُعدّة",
-      "requirement": "يلزم توفر الترجمة والصوت",
       "usingApiKeys": "أرصدة Stage5 متوقفة",
       "usingCredits": "أرصدة Stage5 قيد الاستخدام",
       "toggleOn": "يتم الآن استخدام مفاتيح API الخاصة بك.",
       "toggleOff": "يتم الآن استخدام أرصدة Stage5.",
       "toggleError": "فشل تحديث التفضيل.",
-      "toggleAria": "استخدام مفاتيح API الخاصة بي"
+      "toggleAria": "استخدام مفاتيح API الخاصة بي",
+      "requirementTranslation": "يتطلب مفتاح OpenAI أو Anthropic للترجمة"
     },
     "creditsDescription": "اشترِ أرصدة. الساعات المعروضة هي تقدير لإجمالي مدة الفيديو التي يمكنك تفريغها أو ترجمتها. مثال: تفريغ وترجمة فيديو مدته 3 ساعات يستهلك حوالي 6 ساعات (≈ 140,000 رصيدًا).",
     "performanceQuality": {
       "title": "الأداء والجودة",
-      "qualityTranscription": {
-        "label": "نسخ عالي الجودة",
-        "help": "تشغيل: تسلسلي، يستخدم سياق السطر السابق. إيقاف: وضع دفعات أسرع."
-      },
       "qualityTranslation": {
         "label": "ترجمة عالية الجودة",
         "modelOn": "مسودة GPT-5.1 + مراجعة GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "جارٍ فتح صفحة الدفع…",
       "unlockCta": "فتح بـ $10",
       "unlockHint": "بمجرد الفتح، أضف مفاتيح API الخاصة بك هنا في أي وقت لتفعيل الفوترة المباشرة على حساباتك.",
-      "unlockedDescription": "أدخل مفتاح OpenAI API أدناه. النسخ والترجمة والدبلجة ستعمل مباشرة على حساب OpenAI الخاص بك عند وجود مفتاح.",
       "apiKeyLabel": "مفتاح OpenAI API",
       "hide": "إخفاء",
       "show": "إظهار",
@@ -661,7 +661,6 @@
       "pricingHint": "التكلفة المقدرة لكل ساعة فيديو",
       "pricingHintHeuristic": "تكلفة تقديرية باستخدام الإرشادات الحالية للتطبيق",
       "transcription": "النسخ",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "الترجمة (مسودة)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "يتطلب فتح Anthropic BYO ومفتاحًا وتفعيل المفتاح.",
       "summaryRequiresOpenAi": "يتطلب الوصول إلى OpenAI BYO ومفتاح API.",
       "summaryRequiresAnthropic": "يتطلب الوصول إلى Anthropic BYO ومفتاح API.",
-      "translationReview": "الترجمة (مراجعة)"
+      "translationReview": "الترجمة (مراجعة)",
+      "transcriptionRequiresElevenLabs": "يستخدم النسخ ElevenLabs Scribe فقط. أضف مفتاح API من ElevenLabs للنسخ باستخدام مفاتيحك الخاصة. بدونه، يستخدم النسخ أرصدة Stage5، والتي لا تُستخدم أثناء تشغيل مفاتيح API الخاصة بك. لا يزال مفتاح OpenAI الخاص بك يُستخدم للترجمة."
     },
     "apiKeyGuide": {
       "title": "كيفية الحصول على مفاتيح API",
@@ -703,7 +703,6 @@
         "profileApiKey": "الملف الشخصي + مفتاح API"
       },
       "openai": {
-        "description": "يشغّل OpenAI النسخ (Whisper) والترجمة (GPT) ودبلجة تحويل النص إلى كلام.",
         "step1": "اذهب إلى",
         "step2": "سجّل الدخول أو أنشئ حسابًا",
         "step3": "انتقل إلى",
@@ -725,13 +724,13 @@
         "note": "نصيحة: يقدم Anthropic تسعير الدفع حسب الاستخدام. تدفع فقط مقابل ما تستخدمه."
       },
       "elevenlabs": {
-        "description": "يقدم ElevenLabs نسخًا متميزًا ودبلجة باستنساخ الصوت. بدونه، يتولى OpenAI هذه المهام.",
         "step1": "اذهب إلى",
         "step2": "سجّل الدخول أو أنشئ حسابًا",
         "step3": "انقر على أيقونة ملفك الشخصي واختر",
         "step4": "أضف طريقة دفع في إعدادات الاشتراك (مطلوب لاستخدام API بعد الطبقة المجانية)",
         "step5": "انسخ مفتاح API الخاص بك والصقه في Stage5",
-        "note": "نصيحة: لدى ElevenLabs طبقة مجانية مع استخدام محدود. للمزيد، قم بالترقية إلى خطة مدفوعة في إعدادات حسابك."
+        "note": "نصيحة: لدى ElevenLabs طبقة مجانية مع استخدام محدود. للمزيد، قم بالترقية إلى خطة مدفوعة في إعدادات حسابك.",
+        "audioDescription": "يشغّل ElevenLabs جميع عمليات النسخ (Scribe) والدبلجة. بدون مفتاح ElevenLabs الخاص بك، يستخدم كلاهما أرصدة Stage5، والتي لا تُستخدم أثناء تشغيل مفاتيح API الخاصة بك."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "مفاتيح API مطلوبة",
-      "message": "لاستخدام مفاتيح API الخاصة بك في جميع عمليات الذكاء الاصطناعي، تحتاج إلى تغطية للترجمة وتغطية للصوت. يغطي OpenAI كلاهما. يحتاج Anthropic إلى OpenAI أو ElevenLabs للصوت.",
       "howToGet": "كيفية الحصول على مفاتيح API",
-      "option1": "الخيار 1: OpenAI",
-      "option2": "الخيار 2: Anthropic + ElevenLabs",
       "enable": "استخدام مفاتيح API الخاصة بي",
       "done": "تم",
       "ready": "اكتملت التغطية. يمكنك الآن تفعيل «استخدم مفاتيح API الخاصة بي».",
       "missingTranslation": "ما زالت الترجمة تحتاج إلى {{providers}}.",
-      "missingAudio": "ما زال الصوت يحتاج إلى {{providers}}.",
-      "missingBoth": "ما زال مطلوبًا: الترجمة ({{translationProviders}}) والصوت ({{audioProviders}})."
+      "messageElevenLabsAudio": "لاستخدام مفاتيح API الخاصة بك، تحتاج إلى مفتاح OpenAI أو Anthropic للترجمة. يستخدم النسخ والدبلجة ElevenLabs فقط، لذا أضف أيضًا مفتاح ElevenLabs لهما.",
+      "audioNeedsElevenLabs": "بدون مفتاح ElevenLabs، يكون النسخ والدبلجة غير متاحين أثناء تشغيل مفاتيح API الخاصة بك."
     },
     "saveSrtFileAs": "حفظ ملف SRT باسم",
     "saveDownloadedVideoAs": "حفظ الفيديو المحمل باسم",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "جارٍ النسخ مع ElevenLabs (~{{minutes}} دقيقة متبقية)",
     "transcribingElevenLabsHours": "جارٍ النسخ مع ElevenLabs (~{{hours}}س {{minutes}}د متبقية)",
     "transcribingElevenLabsFinishing": "جارٍ النسخ مع ElevenLabs...",
-    "transcriptionFallbackWhisper": "التراجع إلى النسخ المجزأ...",
     "transcriptionRetry": "فشل الاتصال، إعادة المحاولة ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "جارٍ رفع الصوت للنسخ...",
     "gapRepair": "إصلاح الفجوات #{{iteration}} ({{done}}/{{total}})",

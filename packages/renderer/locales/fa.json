@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "حساب ElevenLabs شما اعتبار کافی ندارد. لطفاً در elevenlabs.io اعتبار اضافه کنید.",
       "checkSettings": "بررسی تنظیمات",
       "genericApiError": "درخواست API ناموفق بود. لطفاً کلید API و وضعیت حساب خود را بررسی کنید."
+    },
+    "transcription": {
+      "providerUnavailable": "رونویسی (ElevenLabs Scribe) موقتاً در دسترس نیست یا پس از چند تلاش امکان اتصال به آن وجود نداشت. لطفاً چند دقیقه دیگر دوباره امتحان کنید.",
+      "fileTooLarge": "این صدا برای رونویسی در یک کار بیش از حد طولانی است (بیش از حدود {{hours}} ساعت). ویدیو را به بخش‌های کوتاه‌تر تقسیم کنید و هر بخش را جداگانه رونویسی کنید.",
+      "elevenLabsKeyRequired": "رونویسی از ElevenLabs Scribe استفاده می‌کند و به یک کلید API از ElevenLabs نیاز دارد. یکی را در تنظیمات اضافه کنید، یا حالت کلید API را خاموش کنید تا با اعتبارهای Stage5 رونویسی شود. کلید OpenAI یا Anthropic شما همچنان برای ترجمه استفاده می‌شود."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "استفاده از کلیدهای API خودم",
       "activeKeys": "کلیدهای آماده: {{count}}",
       "noKeys": "هیچ کلیدی پیکربندی نشده است",
-      "requirement": "پوشش ترجمه + صوت لازم است",
       "usingApiKeys": "اعتبارهای Stage5 خاموش",
       "usingCredits": "اعتبارهای Stage5 روشن",
       "toggleOn": "اکنون از کلیدهای API شما استفاده می‌شود.",
       "toggleOff": "اکنون از اعتبارهای Stage5 استفاده می‌شود.",
       "toggleError": "به‌روزرسانی ترجیح انجام نشد.",
-      "toggleAria": "استفاده از کلیدهای API خودم"
+      "toggleAria": "استفاده از کلیدهای API خودم",
+      "requirementTranslation": "برای ترجمه به کلید OpenAI یا Anthropic نیاز دارد"
     },
     "creditsDescription": "اعتبار بخرید. ساعات نمایش‌داده‌شده برآوردی از مجموع مدت‌زمان ویدیویی است که می‌توانید رونویسی یا ترجمه کنید. مثال: رونویسی و ترجمه یک ویدیوی ۳ ساعته حدود ۶ ساعت (≈۱۴۰٬۰۰۰ اعتبار) مصرف می‌کند.",
     "performanceQuality": {
       "title": "عملکرد و کیفیت",
-      "qualityTranscription": {
-        "label": "رونویسی باکیفیت",
-        "help": "روشن: ترتیبی، از متن خط قبلی استفاده می‌کند. خاموش: حالت دسته‌ای سریع‌تر."
-      },
       "qualityTranslation": {
         "label": "ترجمه باکیفیت",
         "modelOn": "پیش‌نویس GPT-5.1 + بازبینی GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "در حال باز کردن پرداخت…",
       "unlockCta": "باز کردن قفل با $۱۰",
       "unlockHint": "پس از باز شدن، کلیدهای API خود را در هر زمان اینجا اضافه کنید تا صورت‌حساب مستقیم روی حساب‌های خود را فعال کنید.",
-      "unlockedDescription": "کلید API OpenAI خود را در زیر وارد کنید. رونویسی، ترجمه و دوبله مستقیماً روی حساب OpenAI شما اجرا می‌شود وقتی کلید موجود باشد.",
       "apiKeyLabel": "کلید API OpenAI",
       "hide": "پنهان",
       "show": "نمایش",
@@ -661,7 +661,6 @@
       "pricingHint": "هزینه تخمینی برای هر ۱ ساعت ویدیو",
       "pricingHintHeuristic": "هزینه تخمینی بر اساس heuristics فعلی برنامه",
       "transcription": "رونویسی",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "ترجمه (پیش‌نویس)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "به Anthropic BYO unlock، key و toggle نیاز دارد.",
       "summaryRequiresOpenAi": "به دسترسی به OpenAI BYO و API key نیاز دارد.",
       "summaryRequiresAnthropic": "به دسترسی به Anthropic BYO و API key نیاز دارد.",
-      "translationReview": "ترجمه (بازبینی)"
+      "translationReview": "ترجمه (بازبینی)",
+      "transcriptionRequiresElevenLabs": "رونویسی فقط از ElevenLabs Scribe استفاده می‌کند. برای رونویسی با کلیدهای خودتان، یک کلید API از ElevenLabs اضافه کنید. بدون آن، رونویسی از اعتبارهای Stage5 استفاده می‌کند که تا زمانی که کلیدهای API شما روشن است استفاده نمی‌شوند. کلید OpenAI شما همچنان برای ترجمه استفاده می‌شود."
     },
     "apiKeyGuide": {
       "title": "چگونه کلیدهای API بگیریم",
@@ -703,7 +703,6 @@
         "profileApiKey": "پروفایل + کلید API"
       },
       "openai": {
-        "description": "OpenAI رونویسی (Whisper)، ترجمه (GPT) و دوبله تبدیل متن به گفتار را تامین می‌کند.",
         "step1": "برو به",
         "step2": "ثبت‌نام کنید یا وارد حساب خود شوید",
         "step3": "به بخش",
@@ -725,13 +724,13 @@
         "note": "نکته: Anthropic قیمت‌گذاری به ازای مصرف ارائه می‌دهد. فقط برای آنچه استفاده می‌کنید پرداخت می‌کنید."
       },
       "elevenlabs": {
-        "description": "ElevenLabs رونویسی ممتاز و دوبله با شبیه‌سازی صدا ارائه می‌دهد. بدون آن، OpenAI این کارها را انجام می‌دهد.",
         "step1": "برو به",
         "step2": "ثبت‌نام کنید یا وارد حساب خود شوید",
         "step3": "روی آیکون پروفایل خود کلیک کنید و انتخاب کنید",
         "step4": "یک روش پرداخت در تنظیمات اشتراک اضافه کنید (برای استفاده از API فراتر از سطح رایگان الزامی است)",
         "step5": "کلید API خود را کپی کنید و در Stage5 بچسبانید",
-        "note": "نکته: ElevenLabs یک سطح رایگان با استفاده محدود دارد. برای بیشتر، به یک طرح پولی در تنظیمات حساب خود ارتقا دهید."
+        "note": "نکته: ElevenLabs یک سطح رایگان با استفاده محدود دارد. برای بیشتر، به یک طرح پولی در تنظیمات حساب خود ارتقا دهید.",
+        "audioDescription": "تمام رونویسی (Scribe) و دوبله با ElevenLabs انجام می‌شود. بدون کلید ElevenLabs خودتان، هر دو از اعتبارهای Stage5 استفاده می‌کنند که تا زمانی که کلیدهای API شما روشن است استفاده نمی‌شوند."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "کلیدهای API الزامی است",
-      "message": "برای استفاده از کلیدهای API خود در همه عملیات هوش مصنوعی، به پوشش ترجمه و پوشش صوت نیاز دارید. OpenAI هر دو را پوشش می‌دهد. Anthropic برای صوت به OpenAI یا ElevenLabs نیاز دارد.",
       "howToGet": "چگونه کلیدهای API بگیرم",
-      "option1": "گزینه ۱: OpenAI",
-      "option2": "گزینه ۲: Anthropic + ElevenLabs",
       "enable": "استفاده از کلیدهای API خودم",
       "done": "انجام شد",
       "ready": "پوشش کامل شده است. حالا می‌توانید «استفاده از کلیدهای API من» را فعال کنید.",
       "missingTranslation": "ترجمه هنوز به {{providers}} نیاز دارد.",
-      "missingAudio": "صدا هنوز به {{providers}} نیاز دارد.",
-      "missingBoth": "هنوز لازم است: ترجمه ({{translationProviders}}) و صدا ({{audioProviders}})."
+      "messageElevenLabsAudio": "برای استفاده از کلیدهای API خودتان، به یک کلید OpenAI یا Anthropic برای ترجمه نیاز دارید. رونویسی و دوبله فقط از ElevenLabs استفاده می‌کنند، پس برای آن‌ها نیز یک کلید ElevenLabs اضافه کنید.",
+      "audioNeedsElevenLabs": "بدون کلید ElevenLabs، تا زمانی که کلیدهای API شما روشن است، رونویسی و دوبله در دسترس نیستند."
     },
     "saveSrtFileAs": "ذخیره فایل SRT به عنوان",
     "saveDownloadedVideoAs": "ذخیره ویدیو دانلود شده به عنوان",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "رونویسی با ElevenLabs (~{{minutes}} دقیقه باقیمانده)",
     "transcribingElevenLabsHours": "رونویسی با ElevenLabs (~{{hours}} ساعت {{minutes}} دقیقه باقیمانده)",
     "transcribingElevenLabsFinishing": "رونویسی با ElevenLabs...",
-    "transcriptionFallbackWhisper": "بازگشت به رونویسی تکه‌ای...",
     "transcriptionRetry": "اتصال ناموفق بود، تلاش مجدد ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "آپلود صوت برای رونویسی...",
     "gapRepair": "تعمیر شکاف #{{iteration}} ({{done}}/{{total}})",

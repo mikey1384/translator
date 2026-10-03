@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Twoje konto ElevenLabs ma niewystarczające środki. Dodaj środki na elevenlabs.io.",
       "checkSettings": "Sprawdź ustawienia",
       "genericApiError": "Żądanie API nie powiodło się. Sprawdź swój klucz API i status konta."
+    },
+    "transcription": {
+      "providerUnavailable": "Transkrypcja (ElevenLabs Scribe) jest tymczasowo niedostępna lub nie udało się z nią połączyć po kilku próbach. Spróbuj ponownie za kilka minut.",
+      "fileTooLarge": "Ten dźwięk jest zbyt długi, aby przetranskrybować go w jednym zadaniu (ponad około {{hours}} godz.). Podziel wideo na krótsze części i przetranskrybuj każdą z nich.",
+      "elevenLabsKeyRequired": "Transkrypcja korzysta z ElevenLabs Scribe i wymaga klucza API ElevenLabs. Dodaj go w Ustawieniach lub wyłącz tryb kluczy API, aby transkrybować za pomocą kredytów Stage5. Twój klucz OpenAI lub Anthropic jest nadal używany do tłumaczenia."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Używaj moich kluczy API",
       "activeKeys": "Gotowe klucze: {{count}}",
       "noKeys": "Brak skonfigurowanych kluczy",
-      "requirement": "Wymaga tłumaczenia + audio",
       "usingApiKeys": "Kredyty Stage5 wyłączone",
       "usingCredits": "Kredyty Stage5 włączone",
       "toggleOn": "Teraz używa Twoich kluczy API.",
       "toggleOff": "Teraz używa kredytów Stage5.",
       "toggleError": "Nie udało się zaktualizować preferencji.",
-      "toggleAria": "Używaj moich kluczy API"
+      "toggleAria": "Używaj moich kluczy API",
+      "requirementTranslation": "Wymaga klucza OpenAI lub Anthropic do tłumaczenia"
     },
     "creditsDescription": "Kup kredyty. Wyświetlane godziny to szacunek łącznego czasu wideo, które możesz transkrybować lub tłumaczyć. Przykład: transkrypcja i tłumaczenie 3‑godzinnego wideo zużywa około 6 godzin (≈140 000 kredytów).",
     "performanceQuality": {
       "title": "Wydajność i jakość",
-      "qualityTranscription": {
-        "label": "Jakościowa transkrypcja",
-        "help": "Wł.: sekwencyjnie, wykorzystuje kontekst poprzednich linii. Wył.: szybszy tryb wsadowy."
-      },
       "qualityTranslation": {
         "label": "Jakościowe tłumaczenie",
         "modelOn": "Szkic GPT-5.1 + przegląd GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "Otwieranie płatności…",
       "unlockCta": "Odblokuj za $10",
       "unlockHint": "Po odblokowaniu dodaj tutaj swoje klucze API w dowolnym momencie, aby przełączyć się na bezpośrednie rozliczenia na twoich kontach.",
-      "unlockedDescription": "Wprowadź poniżej swój klucz API OpenAI. Transkrypcja, tłumaczenie i dubbing będą działać bezpośrednio na twoim koncie OpenAI, gdy klucz jest obecny.",
       "apiKeyLabel": "Klucz API OpenAI",
       "hide": "Ukryj",
       "show": "Pokaż",
@@ -661,7 +661,6 @@
       "pricingHint": "Szacowany koszt za 1 godzinę wideo",
       "pricingHintHeuristic": "Szacowany koszt według bieżących heurystyk aplikacji",
       "transcription": "Transkrypcja",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Tłumaczenie (wersja robocza)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Wymaga odblokowania Anthropic BYO, klucza i włącznika.",
       "summaryRequiresOpenAi": "Wymaga dostępu do OpenAI BYO i klucza API.",
       "summaryRequiresAnthropic": "Wymaga dostępu do Anthropic BYO i klucza API.",
-      "translationReview": "Tłumaczenie (weryfikacja)"
+      "translationReview": "Tłumaczenie (weryfikacja)",
+      "transcriptionRequiresElevenLabs": "Transkrypcja korzysta wyłącznie z ElevenLabs Scribe. Dodaj klucz API ElevenLabs, aby transkrybować przy użyciu własnych kluczy. Bez niego transkrypcja korzysta z kredytów Stage5, które nie są używane, gdy Twoje klucze API są włączone. Twój klucz OpenAI jest nadal używany do tłumaczenia."
     },
     "apiKeyGuide": {
       "title": "Jak uzyskać klucze API",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profil + klucz API"
       },
       "openai": {
-        "description": "OpenAI obsługuje transkrypcję (Whisper), tłumaczenie (GPT) i dubbing z syntezą mowy.",
         "step1": "Przejdź do",
         "step2": "Zarejestruj się lub zaloguj na swoje konto",
         "step3": "Przejdź do",
@@ -725,13 +724,13 @@
         "note": "Wskazówka: Anthropic oferuje cennik pay-as-you-go. Płacisz tylko za to, co zużyjesz."
       },
       "elevenlabs": {
-        "description": "ElevenLabs oferuje premium transkrypcję i dubbing z klonowaniem głosu. Bez niego OpenAI obsługuje te zadania.",
         "step1": "Przejdź do",
         "step2": "Zarejestruj się lub zaloguj na swoje konto",
         "step3": "Kliknij ikonę profilu i wybierz",
         "step4": "Dodaj metodę płatności w ustawieniach Subscription (wymagane do korzystania z API poza darmowym limitem)",
         "step5": "Skopiuj swój klucz API i wklej go w Stage5",
-        "note": "Wskazówka: ElevenLabs ma darmowy poziom z ograniczonym użyciem. Aby uzyskać więcej, ulepsz do płatnego planu w ustawieniach konta."
+        "note": "Wskazówka: ElevenLabs ma darmowy poziom z ograniczonym użyciem. Aby uzyskać więcej, ulepsz do płatnego planu w ustawieniach konta.",
+        "audioDescription": "ElevenLabs obsługuje całą transkrypcję (Scribe) i dubbing. Bez własnego klucza ElevenLabs obie funkcje korzystają z kredytów Stage5, które nie są używane, gdy Twoje klucze API są włączone."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "Wymagane klucze API",
-      "message": "Aby używać swoich kluczy API do wszystkich operacji AI, potrzebujesz pokrycia dla tłumaczenia i audio. OpenAI zapewnia oba. Anthropic wymaga OpenAI lub ElevenLabs dla audio.",
       "howToGet": "Jak uzyskać klucze API",
-      "option1": "Opcja 1: OpenAI",
-      "option2": "Opcja 2: Anthropic + ElevenLabs",
       "enable": "Używaj moich kluczy API",
       "done": "Gotowe",
       "ready": "Pokrycie jest kompletne. Możesz teraz włączyć „Używaj moich kluczy API”.",
       "missingTranslation": "Tłumaczenie nadal wymaga {{providers}}.",
-      "missingAudio": "Dźwięk nadal wymaga {{providers}}.",
-      "missingBoth": "Nadal potrzebne: tłumaczenie ({{translationProviders}}) i audio ({{audioProviders}})."
+      "messageElevenLabsAudio": "Aby używać własnych kluczy API, potrzebujesz klucza OpenAI lub Anthropic do tłumaczenia. Transkrypcja i dubbing korzystają wyłącznie z ElevenLabs, więc dodaj również klucz ElevenLabs do tych funkcji.",
+      "audioNeedsElevenLabs": "Bez klucza ElevenLabs transkrypcja i dubbing są niedostępne, gdy Twoje klucze API są włączone."
     },
     "saveSrtFileAs": "Zapisz plik SRT jako",
     "saveDownloadedVideoAs": "Zapisz pobrane wideo jako",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Transkrypcja z ElevenLabs (~{{minutes}} min pozostało)",
     "transcribingElevenLabsHours": "Transkrypcja z ElevenLabs (~{{hours}}h {{minutes}}m pozostało)",
     "transcribingElevenLabsFinishing": "Transkrypcja z ElevenLabs...",
-    "transcriptionFallbackWhisper": "Przełączanie na transkrypcję fragmentami...",
     "transcriptionRetry": "Połączenie nie powiodło się, ponawianie ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Przesyłanie dźwięku do transkrypcji...",
     "gapRepair": "Naprawa luk #{{iteration}} ({{done}}/{{total}})",

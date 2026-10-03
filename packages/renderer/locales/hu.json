@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Az ElevenLabs fiókod egyenlege elégtelen. Kérjük adj hozzá kreditet az elevenlabs.io oldalon.",
       "checkSettings": "Beállítások ellenőrzése",
       "genericApiError": "API kérés sikertelen. Kérjük ellenőrizd az API kulcsod és fiókod állapotát."
+    },
+    "transcription": {
+      "providerUnavailable": "Az átírás (ElevenLabs Scribe) átmenetileg nem érhető el, vagy több próbálkozás után sem sikerült csatlakozni hozzá. Kérjük, próbálja újra néhány perc múlva.",
+      "fileTooLarge": "Ez a hanganyag túl hosszú ahhoz, hogy egyetlen feladatban átírható legyen (több mint kb. {{hours}} óra). Ossza fel a videót rövidebb részekre, és írja át mindegyiket külön.",
+      "elevenLabsKeyRequired": "Az átírás az ElevenLabs Scribe-ot használja, és ElevenLabs API kulcsot igényel. Adjon hozzá egyet a Beállításokban, vagy kapcsolja ki az API kulcs módot, hogy Stage5 kreditekkel írjon át. Az OpenAI vagy Anthropic kulcsát továbbra is a fordításhoz használjuk."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Saját API kulcsaim használata",
       "activeKeys": "Kulcsok készen: {{count}}",
       "noKeys": "Nincs beállított kulcs",
-      "requirement": "Fordítás + hang lefedettség kell",
       "usingApiKeys": "Stage5 kreditek ki",
       "usingCredits": "Stage5 kreditek be",
       "toggleOn": "Most az API-kulcsaidat használja.",
       "toggleOff": "Most Stage5 krediteket használ.",
       "toggleError": "Nem sikerült frissíteni a beállítást.",
-      "toggleAria": "Saját API kulcsaim használata"
+      "toggleAria": "Saját API kulcsaim használata",
+      "requirementTranslation": "OpenAI vagy Anthropic kulcs szükséges a fordításhoz"
     },
     "creditsDescription": "Vásároljon krediteket. A megjelenített órák becslést jelentenek arra, hogy összesen mennyi videóidőt tud leírni vagy lefordítani. Példa: egy 3 órás videó átírása és fordítása kb. 6 órát (≈140 000 kredit) használ fel.",
     "performanceQuality": {
       "title": "Teljesítmény és minőség",
-      "qualityTranscription": {
-        "label": "Minőségi átírás",
-        "help": "Be: szekvenciális, előző sor kontextusát használja. Ki: gyorsabb kötegelt mód."
-      },
       "qualityTranslation": {
         "label": "Minőségi fordítás",
         "modelOn": "GPT-5.1-vázlat + GPT-5.5-ellenőrzés",
@@ -628,7 +629,6 @@
       "unlocking": "Fizetési oldal megnyitása…",
       "unlockCta": "Feloldás $10-ért",
       "unlockHint": "A feloldás után bármikor hozzáadhatja API kulcsait itt, hogy közvetlenül a fiókjaira számlázzon.",
-      "unlockedDescription": "Adja meg OpenAI API kulcsát alább. Az átírás, fordítás és szinkronizálás közvetlenül az OpenAI fiókján fut, ha van kulcs megadva.",
       "apiKeyLabel": "OpenAI API kulcs",
       "hide": "Elrejtés",
       "show": "Megjelenítés",
@@ -661,7 +661,6 @@
       "pricingHint": "Becsült költség 1 órás videóhoz",
       "pricingHintHeuristic": "Becsült költség az alkalmazás jelenlegi heurisztikái alapján",
       "transcription": "Átírás",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Fordítás (vázlat)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO feloldás, kulcs és bekapcsolt kapcsoló szükséges.",
       "summaryRequiresOpenAi": "OpenAI BYO hozzáférést és API-kulcsot igényel.",
       "summaryRequiresAnthropic": "Anthropic BYO hozzáférést és API-kulcsot igényel.",
-      "translationReview": "Fordítás (ellenőrzés)"
+      "translationReview": "Fordítás (ellenőrzés)",
+      "transcriptionRequiresElevenLabs": "Az átírás kizárólag az ElevenLabs Scribe-ot használja. Adjon hozzá egy ElevenLabs API kulcsot, ha saját kulcsaival szeretne átírni. Enélkül az átírás Stage5 krediteket használ, amelyek nem kerülnek felhasználásra, amíg az API kulcsai be vannak kapcsolva. Az OpenAI kulcsát továbbra is a fordításhoz használjuk."
     },
     "apiKeyGuide": {
       "title": "Hogyan szerezz API kulcsokat",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profil + API-kulcs"
       },
       "openai": {
-        "description": "Az OpenAI működteti az átírást (Whisper), fordítást (GPT) és a szövegfelolvasás szinkronizálást.",
         "step1": "Menj ide",
         "step2": "Regisztrálj vagy jelentkezz be a fiókodba",
         "step3": "Navigálj ide",
@@ -725,13 +724,13 @@
         "note": "Tipp: Az Anthropic használat alapú árazást kínál. Csak a használatért fizetsz."
       },
       "elevenlabs": {
-        "description": "Az ElevenLabs prémium átírást és hangklónozás szinkronizálást kínál. Nélküle az OpenAI kezeli ezeket a feladatokat.",
         "step1": "Menj ide",
         "step2": "Regisztrálj vagy jelentkezz be a fiókodba",
         "step3": "Kattints a profil ikonodra és válaszd ki",
         "step4": "Adj hozzá fizetési módot az Előfizetés beállításokban (szükséges az API használathoz az ingyenes szinten túl)",
         "step5": "Másold ki az API kulcsod és illeszd be a Stage5-be",
-        "note": "Tipp: Az ElevenLabs ingyenes szinttel rendelkezik korlátozott használattal. Többért frissíts fizetős csomagra a fiókbeállításokban."
+        "note": "Tipp: Az ElevenLabs ingyenes szinttel rendelkezik korlátozott használattal. Többért frissíts fizetős csomagra a fiókbeállításokban.",
+        "audioDescription": "Az összes átírást (Scribe) és szinkronizálást az ElevenLabs végzi. Saját ElevenLabs kulcs nélkül mindkettő Stage5 krediteket használ, amelyek nem kerülnek felhasználásra, amíg az API kulcsai be vannak kapcsolva."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "API kulcsok szükségesek",
-      "message": "Ahhoz, hogy az API-kulcsaidat minden AI-művelethez használd, fordítási és hangfedezetre van szükséged. Az OpenAI mindkettőt lefedi. Az Anthropic hanghoz OpenAI-t vagy ElevenLabsot igényel.",
       "howToGet": "Hogyan szerezzek API kulcsokat",
-      "option1": "1. opció: OpenAI",
-      "option2": "2. opció: Anthropic + ElevenLabs",
       "enable": "Saját API kulcsaim használata",
       "done": "Kész",
       "ready": "A lefedettség teljes. Most már bekapcsolhatja a „Saját API-kulcsaim használata” lehetőséget.",
       "missingTranslation": "A fordításhoz még {{providers}} kell.",
-      "missingAudio": "A hanghoz még {{providers}} kell.",
-      "missingBoth": "Még szükséges: fordítás ({{translationProviders}}) és hang ({{audioProviders}})."
+      "messageElevenLabsAudio": "Saját API kulcsai használatához OpenAI vagy Anthropic kulcsra van szükség a fordításhoz. Az átírás és a szinkronizálás kizárólag az ElevenLabs-et használja, ezért ezekhez is adjon hozzá egy ElevenLabs kulcsot.",
+      "audioNeedsElevenLabs": "ElevenLabs kulcs nélkül az átírás és a szinkronizálás nem érhető el, amíg az API kulcsai be vannak kapcsolva."
     },
     "saveSrtFileAs": "SRT fájl mentése másként",
     "saveDownloadedVideoAs": "Letöltött videó mentése másként",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Átírás ElevenLabs-szal (~{{minutes}} perc hátravan)",
     "transcribingElevenLabsHours": "Átírás ElevenLabs-szal (~{{hours}}ó {{minutes}}p hátravan)",
     "transcribingElevenLabsFinishing": "Átírás ElevenLabs-szal...",
-    "transcriptionFallbackWhisper": "Visszaváltás darabolós átírásra...",
     "transcriptionRetry": "Kapcsolat sikertelen, újrapróbálkozás ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Hang feltöltése átíráshoz...",
     "gapRepair": "Rés javítás #{{iteration}} ({{done}}/{{total}})",

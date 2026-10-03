@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Váš ElevenLabs účet má nedostatečné kredity. Přidejte prosím kredity na elevenlabs.io.",
       "checkSettings": "Zkontrolovat nastavení",
       "genericApiError": "API požadavek selhal. Zkontrolujte prosím svůj API klíč a stav účtu."
+    },
+    "transcription": {
+      "providerUnavailable": "Přepis (ElevenLabs Scribe) je dočasně nedostupný nebo se ani po několika pokusech nepodařilo připojit. Zkuste to prosím znovu za několik minut.",
+      "fileTooLarge": "Tento zvuk je příliš dlouhý na přepis v jedné úloze (více než přibližně {{hours}} h). Rozdělte video na kratší části a přepište každou zvlášť.",
+      "elevenLabsKeyRequired": "Přepis používá ElevenLabs Scribe a vyžaduje API klíč ElevenLabs. Přidejte jej v Nastavení, nebo vypněte režim API klíčů a přepisujte s kredity Stage5. Váš klíč OpenAI nebo Anthropic se pro překlad používá i nadále."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Použít mé API klíče",
       "activeKeys": "Připravené klíče: {{count}}",
       "noKeys": "Nejsou nastaveny žádné klíče",
-      "requirement": "Vyžaduje překlad + audio",
       "usingApiKeys": "Kredity Stage5 vypnuté",
       "usingCredits": "Kredity Stage5 zapnuté",
       "toggleOn": "Nyní používá vaše API klíče.",
       "toggleOff": "Nyní používá kredity Stage5.",
       "toggleError": "Nepodařilo se aktualizovat předvolbu.",
-      "toggleAria": "Použít mé API klíče"
+      "toggleAria": "Použít mé API klíče",
+      "requirementTranslation": "Vyžaduje klíč OpenAI nebo Anthropic pro překlad"
     },
     "creditsDescription": "Kupte kredity. Zobrazené hodiny jsou odhad celkové délky videa, které můžete přepsat nebo přeložit. Příklad: přepis a překlad 3hodinového videa spotřebuje přibližně 6 hodin (≈140 000 kreditů).",
     "performanceQuality": {
       "title": "Výkon a kvalita",
-      "qualityTranscription": {
-        "label": "Kvalitní přepis",
-        "help": "Zapnuto: sekvenční, využívá kontext předchozích řádků. Vypnuto: rychlejší dávkový režim."
-      },
       "qualityTranslation": {
         "label": "Kvalitní překlad",
         "modelOn": "Návrh GPT-5.1 + kontrola GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "Otevírání pokladny…",
       "unlockCta": "Odemknout za $10",
       "unlockHint": "Po odemknutí sem kdykoli přidejte své API klíče pro přepnutí na přímou fakturaci na vašich účtech.",
-      "unlockedDescription": "Zadejte níže svůj OpenAI API klíč. Přepis, překlad a dabing poběží přímo na vašem OpenAI účtu, když je klíč přítomen.",
       "apiKeyLabel": "OpenAI API klíč",
       "hide": "Skrýt",
       "show": "Zobrazit",
@@ -661,7 +661,6 @@
       "pricingHint": "Odhadované náklady za 1 hodinu videa",
       "pricingHintHeuristic": "Odhadovaná cena podle aktuálních heuristik aplikace",
       "transcription": "Přepis",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Překlad (koncept)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Vyžaduje odemčení Anthropic BYO, klíč a zapnutý přepínač.",
       "summaryRequiresOpenAi": "Vyžaduje přístup k OpenAI BYO a klíč API.",
       "summaryRequiresAnthropic": "Vyžaduje přístup k Anthropic BYO a klíč API.",
-      "translationReview": "Překlad (revize)"
+      "translationReview": "Překlad (revize)",
+      "transcriptionRequiresElevenLabs": "Přepis používá pouze ElevenLabs Scribe. Chcete-li přepisovat s vlastními klíči, přidejte API klíč ElevenLabs. Bez něj přepis využívá kredity Stage5, které se při zapnutých API klíčích nepoužívají. Váš klíč OpenAI se pro překlad používá i nadále."
     },
     "apiKeyGuide": {
       "title": "Jak získat API klíče",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profil + API klíč"
       },
       "openai": {
-        "description": "OpenAI zajišťuje přepis (Whisper), překlad (GPT) a dabing s převodem textu na řeč.",
         "step1": "Přejděte na",
         "step2": "Zaregistrujte se nebo se přihlaste ke svému účtu",
         "step3": "Přejděte na",
@@ -725,13 +724,13 @@
         "note": "Tip: Anthropic nabízí ceny pay-as-you-go. Platíte pouze za to, co použijete."
       },
       "elevenlabs": {
-        "description": "ElevenLabs nabízí prémiový přepis a dabing s klonováním hlasu. Bez něj OpenAI zpracovává tyto úlohy.",
         "step1": "Přejděte na",
         "step2": "Zaregistrujte se nebo se přihlaste ke svému účtu",
         "step3": "Klikněte na ikonu profilu a vyberte",
         "step4": "Přidejte platební metodu v nastavení předplatného (vyžadováno pro použití API nad rámec bezplatné úrovně)",
         "step5": "Zkopírujte svůj API klíč a vložte ho do Stage5",
-        "note": "Tip: ElevenLabs má bezplatnou úroveň s omezeným používáním. Pro více upgradujte na placený plán v nastavení účtu."
+        "note": "Tip: ElevenLabs má bezplatnou úroveň s omezeným používáním. Pro více upgradujte na placený plán v nastavení účtu.",
+        "audioDescription": "ElevenLabs zajišťuje veškerý přepis (Scribe) i dabing. Bez vlastního klíče ElevenLabs obojí využívá kredity Stage5, které se při zapnutých API klíčích nepoužívají."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "Vyžadovány API klíče",
-      "message": "Abyste mohli používat své API klíče pro všechny AI operace, potřebujete pokrytí pro překlad i audio. OpenAI pokrývá oboje. Anthropic potřebuje pro audio OpenAI nebo ElevenLabs.",
       "howToGet": "Jak získat API klíče",
-      "option1": "Možnost 1: OpenAI",
-      "option2": "Možnost 2: Anthropic + ElevenLabs",
       "enable": "Použít mé API klíče",
       "done": "Hotovo",
       "ready": "Pokrytí je kompletní. Teď můžete zapnout „Používat moje API klíče“.",
       "missingTranslation": "Překlad stále potřebuje {{providers}}.",
-      "missingAudio": "Zvuk stále potřebuje {{providers}}.",
-      "missingBoth": "Stále chybí: překlad ({{translationProviders}}) a zvuk ({{audioProviders}})."
+      "messageElevenLabsAudio": "Chcete-li používat své API klíče, potřebujete pro překlad klíč OpenAI nebo Anthropic. Přepis a dabing používají pouze ElevenLabs, proto pro ně přidejte také klíč ElevenLabs.",
+      "audioNeedsElevenLabs": "Bez klíče ElevenLabs nejsou přepis a dabing při zapnutých API klíčích k dispozici."
     },
     "saveSrtFileAs": "Uložit SRT soubor jako",
     "saveDownloadedVideoAs": "Uložit stažené video jako",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Přepisování s ElevenLabs (~{{minutes}} min zbývá)",
     "transcribingElevenLabsHours": "Přepisování s ElevenLabs (~{{hours}}h {{minutes}}m zbývá)",
     "transcribingElevenLabsFinishing": "Přepisování s ElevenLabs...",
-    "transcriptionFallbackWhisper": "Přepínání na rozdělený přepis...",
     "transcriptionRetry": "Připojení selhalo, opakování ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Nahrávání zvuku pro přepis...",
     "gapRepair": "Oprava mezer #{{iteration}} ({{done}}/{{total}})",

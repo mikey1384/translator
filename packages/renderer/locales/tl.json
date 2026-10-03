@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Hindi sapat ang credit sa iyong ElevenLabs account. Mangyaring magdagdag ng credit sa elevenlabs.io.",
       "checkSettings": "Suriin ang Settings",
       "genericApiError": "Nabigo ang API request. Mangyaring suriin ang iyong API key at status ng account."
+    },
+    "transcription": {
+      "providerUnavailable": "Pansamantalang hindi available ang transcription (ElevenLabs Scribe) o hindi ito ma-reach pagkatapos ng ilang pagsubok. Pakisubukang muli pagkalipas ng ilang minuto.",
+      "fileTooLarge": "Masyadong mahaba ang audio na ito para ma-transcribe sa iisang job (higit sa mga {{hours}} oras). Hatiin ang video sa mas maiikling bahagi at i-transcribe ang bawat bahagi.",
+      "elevenLabsKeyRequired": "Gumagamit ang transcription ng ElevenLabs Scribe at nangangailangan ng ElevenLabs API key. Magdagdag ng isa sa Mga Setting, o i-off ang API key mode para mag-transcribe gamit ang Stage5 credits. Ginagamit pa rin ang iyong OpenAI o Anthropic key para sa pagsasalin."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Gamitin ang aking mga API key",
       "activeKeys": "Handang key: {{count}}",
       "noKeys": "Walang naka-configure na key",
-      "requirement": "Kailangan ang translation + audio coverage",
       "usingApiKeys": "Naka-off ang Stage5 credits",
       "usingCredits": "Gumagamit ng Stage5 credits",
       "toggleOn": "Ginagamit na ngayon ang iyong API key.",
       "toggleOff": "Ginagamit na ngayon ang Stage5 credits.",
       "toggleError": "Hindi ma-update ang preference.",
-      "toggleAria": "Gamitin ang aking mga API key"
+      "toggleAria": "Gamitin ang aking mga API key",
+      "requirementTranslation": "Nangangailangan ng OpenAI o Anthropic key para sa pagsasalin"
     },
     "creditsDescription": "Bumili ng credits. Ang ipinapakitang oras ay tantiya ng kabuuang haba ng video na maaari mong i-transcribe o isalin. Halimbawa: ang pag-transcribe at pagsasalin ng 3-oras na video ay gagamit ng humigit‑kumulang 6 na oras (≈140,000 credits).",
     "performanceQuality": {
       "title": "Performance at Kalidad",
-      "qualityTranscription": {
-        "label": "Kalidad na Transcription",
-        "help": "On: sequential, gumagamit ng konteksto ng nakaraang linya. Off: mas mabilis na batched mode."
-      },
       "qualityTranslation": {
         "label": "Kalidad na Pagsasalin",
         "modelOn": "Burador ng GPT-5.1 + rebyu ng GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "Binubuksan ang checkout…",
       "unlockCta": "I-unlock sa $10",
       "unlockHint": "Kapag na-unlock na, idagdag ang iyong mga API key dito anumang oras para i-toggle ang direktang billing sa iyong mga account.",
-      "unlockedDescription": "Ilagay ang iyong OpenAI API key sa ibaba. Ang transcription, translation, at dubbing ay direktang tatakbo sa iyong OpenAI account kapag may key.",
       "apiKeyLabel": "OpenAI API Key",
       "hide": "Itago",
       "show": "Ipakita",
@@ -661,7 +661,6 @@
       "pricingHint": "Tinatayang halaga bawat 1 oras na video",
       "pricingHintHeuristic": "Tinatayang gastos gamit ang kasalukuyang pagtatantiya ng app",
       "transcription": "Transcription",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Translation (Draft)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Kailangan ang Anthropic BYO unlock, key, at toggle.",
       "summaryRequiresOpenAi": "Kailangan ang pag-access sa OpenAI BYO at API key.",
       "summaryRequiresAnthropic": "Kailangan ang pag-access sa Anthropic BYO at API key.",
-      "translationReview": "Translation (Review)"
+      "translationReview": "Translation (Review)",
+      "transcriptionRequiresElevenLabs": "ElevenLabs Scribe lang ang ginagamit sa transcription. Magdagdag ng ElevenLabs API key para mag-transcribe gamit ang sarili mong mga key. Kung wala nito, gagamit ang transcription ng Stage5 credits, na hindi ginagamit habang naka-on ang iyong mga API key. Ginagamit pa rin ang iyong OpenAI key para sa pagsasalin."
     },
     "apiKeyGuide": {
       "title": "Paano Makakuha ng mga API Key",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profile + susi ng API"
       },
       "openai": {
-        "description": "Pinapagana ng OpenAI ang transcription (Whisper), translation (GPT), at text-to-speech dubbing.",
         "step1": "Pumunta sa",
         "step2": "Mag-sign up o mag-log in sa iyong account",
         "step3": "Mag-navigate sa",
@@ -725,13 +724,13 @@
         "note": "Tip: Ang Anthropic ay nag-aalok ng pay-as-you-go pricing. Magbabayad ka lang sa ginagamit mo."
       },
       "elevenlabs": {
-        "description": "Nag-aalok ang ElevenLabs ng premium transcription at voice-cloning dubbing. Kung wala ito, hahawakan ng OpenAI ang mga task na ito.",
         "step1": "Pumunta sa",
         "step2": "Mag-sign up o mag-log in sa iyong account",
         "step3": "I-click ang iyong profile icon at piliin ang",
         "step4": "Magdagdag ng paraan ng pagbabayad sa Subscription settings (kinakailangan para sa API usage lampas sa free tier)",
         "step5": "Kopyahin ang iyong API key at i-paste sa Stage5",
-        "note": "Tip: May free tier ang ElevenLabs na may limitadong paggamit. Para sa higit pa, mag-upgrade sa paid plan sa iyong account settings."
+        "note": "Tip: May free tier ang ElevenLabs na may limitadong paggamit. Para sa higit pa, mag-upgrade sa paid plan sa iyong account settings.",
+        "audioDescription": "Pinapagana ng ElevenLabs ang lahat ng transcription (Scribe) at dubbing. Kung wala kang sariling ElevenLabs key, parehong gagamit ng Stage5 credits, na hindi ginagamit habang naka-on ang iyong mga API key."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "Kinakailangan ang mga API Key",
-      "message": "Para magamit ang iyong mga API key sa lahat ng AI operation, kailangan mo ng translation coverage at audio coverage. Sinasaklaw ng OpenAI ang dalawa. Kailangan ng Anthropic ang OpenAI o ElevenLabs para sa audio.",
       "howToGet": "Paano makakuha ng mga API key",
-      "option1": "Opsyon 1: OpenAI",
-      "option2": "Opsyon 2: Anthropic + ElevenLabs",
       "enable": "Gamitin ang aking mga API key",
       "done": "Tapos na",
       "ready": "Kumpleto na ang coverage. Maaari mo nang i-enable ang “Gamitin ang aking API keys”.",
       "missingTranslation": "Kailangan pa rin ng translation ang {{providers}}.",
-      "missingAudio": "Kailangan pa rin ng audio ang {{providers}}.",
-      "missingBoth": "Kailangan pa rin: translation ({{translationProviders}}) at audio ({{audioProviders}})."
+      "messageElevenLabsAudio": "Para magamit ang iyong mga API key, kailangan mo ng OpenAI o Anthropic key para sa pagsasalin. ElevenLabs lang ang ginagamit sa transcription at dubbing, kaya magdagdag din ng ElevenLabs key para sa mga iyon.",
+      "audioNeedsElevenLabs": "Kung walang ElevenLabs key, hindi available ang transcription at dubbing habang naka-on ang iyong mga API key."
     },
     "saveSrtFileAs": "I-save ang SRT File Bilang",
     "saveDownloadedVideoAs": "I-save ang Na-download na Video Bilang",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Tina-transcribe gamit ang ElevenLabs (~{{minutes}} min natitirang oras)",
     "transcribingElevenLabsHours": "Tina-transcribe gamit ang ElevenLabs (~{{hours}}h {{minutes}}m natitirang oras)",
     "transcribingElevenLabsFinishing": "Tina-transcribe gamit ang ElevenLabs...",
-    "transcriptionFallbackWhisper": "Bumabalik sa chunked transcription...",
     "transcriptionRetry": "Nabigo ang koneksyon, sinusubukan ulit ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Ina-upload ang audio para sa transcription...",
     "gapRepair": "Pag-aayos ng gap #{{iteration}} ({{done}}/{{total}})",

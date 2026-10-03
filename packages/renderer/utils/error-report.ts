@@ -241,7 +241,6 @@ function buildOperationSnapshot(): Record<string, unknown> {
       targetLanguage: uiState.targetLanguage,
       summaryLanguage: uiState.summaryLanguage,
       transcriptionLanguage: uiState.transcriptionLanguage,
-      qualityTranscription: uiState.qualityTranscription,
       qualityTranslation: uiState.qualityTranslation,
       dubVoice: uiState.dubVoice,
       dubAmbientMix: uiState.dubAmbientMix,

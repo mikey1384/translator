@@ -75,8 +75,6 @@ export function translateTranscriptionStageLabel(
     }
     case 'transcribing_elevenlabs_finishing':
       return t('progress.transcribingElevenLabsFinishing');
-    case 'transcription_fallback_whisper':
-      return t('progress.transcriptionFallbackWhisper');
     case 'transcription_retry': {
       const attempt = parseInt(parts[2], 10) || 1;
       const maxAttempts = parseInt(parts[3], 10) || 3;

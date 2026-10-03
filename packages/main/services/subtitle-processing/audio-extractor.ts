@@ -21,7 +21,9 @@ import {
   ELEVENLABS_COMPR_LEVEL,
 } from './constants.js';
 
-export type AudioQualityMode = 'whisper' | 'elevenlabs';
+// 'stage5' = compact speech audio for Stage5 Scribe (also slices);
+// 'elevenlabs' = higher-bitrate audio for BYO ElevenLabs Scribe.
+export type AudioQualityMode = 'stage5' | 'elevenlabs';
 
 export const mkTempAudioName = (stem: string): string =>
   `${stem}${ASR_OUT_EXT}`;
@@ -91,7 +93,7 @@ export async function extractAudio(
     progress,
     operationId,
     signal,
-    qualityMode = 'whisper',
+    qualityMode = 'stage5',
   } = opts;
 
   // Select quality settings based on mode
@@ -160,7 +162,7 @@ export async function extractAudio(
       throw new FFmpegError('No audio stream detected in input file');
     }
 
-    // Keep leading silence so VAD/Whisper timings stay aligned with the original media.
+    // Keep leading silence so transcript timings stay aligned with the original media.
     const ffmpegArgs = [
       '-v',
       'error',

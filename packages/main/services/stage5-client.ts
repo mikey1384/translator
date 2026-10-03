@@ -12,7 +12,6 @@ import fs from 'fs';
 import FormData from 'form-data';
 import path from 'path';
 import {
-  AI_MODELS,
   ERROR_CODES,
   API_TIMEOUTS,
   STAGE5_TTS_MODEL_ELEVEN_V4,
@@ -20,6 +19,10 @@ import {
   normalizeAiModelId,
 } from '../../shared/constants/index.js';
 import { formatElevenLabsTimeRemaining } from './subtitle-processing/utils.js';
+import {
+  formatTranscriptionFailure,
+  getStage5TranscriptionErrorCode,
+} from '../../shared/helpers/transcription-route.js';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 import {
   withStage5AuthRetry,
@@ -50,6 +53,20 @@ type DurableTranscriptionResumeRecord = {
 };
 
 // Match the current stage5-api durable job cleanup window.
+/** ElevenLabs Scribe model requested for Stage5 transcription. */
+export const STAGE5_SCRIBE_REQUEST_MODEL = 'scribe_v2';
+
+/** Error for a mapped transcription code, with a readable English message. */
+function transcriptionErrorFromCode(code: string): Error {
+  if (
+    code === ERROR_CODES.TRANSCRIPTION_PROVIDER_UNAVAILABLE ||
+    code === ERROR_CODES.ELEVENLABS_KEY_REQUIRED
+  ) {
+    return new Error(formatTranscriptionFailure(code));
+  }
+  return new Error(code);
+}
+
 const DURABLE_TRANSCRIPTION_RESUME_TTL_MS = 24 * 60 * 60 * 1_000;
 const DURABLE_TRANSCRIPTION_DETACHED_CODE = 'DURABLE_TRANSCRIPTION_DETACHED';
 const DURABLE_TRANSCRIPTION_RESTART_REQUIRED_CODE =
@@ -429,8 +446,12 @@ async function startDurableTranscriptionJob({
     }
   );
 
-  if (processResponse.status === 402) {
-    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+  const processErrorCode = getStage5TranscriptionErrorCode(
+    processResponse.status,
+    processResponse.data
+  );
+  if (processErrorCode) {
+    throw transcriptionErrorFromCode(processErrorCode);
   }
 
   const processStatus = processResponse.data?.status;
@@ -624,7 +645,10 @@ async function pollDurableTranscriptionJob({
 
     if (resultData?.status === 'failed') {
       clearDurableTranscriptionResumeJob(recoveryKey);
-      throw new Error(resultData.error || 'Transcription failed');
+      const failedCode = getStage5TranscriptionErrorCode(undefined, resultData);
+      throw failedCode
+        ? transcriptionErrorFromCode(failedCode)
+        : new Error(resultData.error || 'Transcription failed');
     }
 
     const { stage, percent } = getTranscriptionProgress(
@@ -666,11 +690,14 @@ async function pollDurableTranscriptionJob({
   );
 }
 
+/**
+ * Stage5 credits transcription via /transcribe. Always ElevenLabs Scribe:
+ * there is no Whisper route any more.
+ */
 export async function transcribe({
   filePath,
   promptContext,
-  model = AI_MODELS.WHISPER,
-  qualityMode,
+  model = STAGE5_SCRIBE_REQUEST_MODEL,
   durationSec,
   idempotencyKey,
   signal,
@@ -678,7 +705,6 @@ export async function transcribe({
   filePath: string;
   promptContext?: string;
   model?: string;
-  qualityMode?: boolean;
   durationSec?: number;
   /** Prevent double-charges on client retries / disconnects. */
   idempotencyKey?: string;
@@ -705,9 +731,9 @@ export async function transcribe({
       }
 
       fd.append('model', model);
-      if (typeof qualityMode === 'boolean') {
-        fd.append('qualityMode', String(qualityMode));
-      }
+      // Wire compatibility: servers before the Scribe-only change chose
+      // Scribe only for qualityMode=true. It is not a user setting.
+      fd.append('qualityMode', 'true');
       if (
         typeof durationSec === 'number' &&
         Number.isFinite(durationSec) &&
@@ -788,7 +814,13 @@ export async function transcribe({
 
         // Check if job failed
         if (resultData.error) {
-          throw new Error(resultData.message || 'Transcription failed');
+          const failedCode = getStage5TranscriptionErrorCode(
+            resultResponse.status,
+            resultData
+          );
+          throw failedCode
+            ? transcriptionErrorFromCode(failedCode)
+            : new Error(resultData.message || 'Transcription failed');
         }
 
         // Job still processing, wait before next poll
@@ -837,6 +869,15 @@ export async function transcribe({
       );
     } else {
       sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
+    }
+    const transcriptionErrorCode = error.response
+      ? getStage5TranscriptionErrorCode(
+          error.response.status,
+          error.response.data
+        )
+      : null;
+    if (transcriptionErrorCode) {
+      throw transcriptionErrorFromCode(transcriptionErrorCode);
     }
     throw error;
   }
@@ -1347,8 +1388,12 @@ export async function transcribeViaR2({
       }
     );
 
-    if (uploadUrlResponse.status === 402) {
-      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+    const uploadUrlErrorCode = getStage5TranscriptionErrorCode(
+      uploadUrlResponse.status,
+      uploadUrlResponse.data
+    );
+    if (uploadUrlErrorCode) {
+      throw transcriptionErrorFromCode(uploadUrlErrorCode);
     }
     if (uploadUrlResponse.status !== 200) {
       throw new Error(

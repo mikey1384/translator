@@ -91,6 +91,12 @@ interface TranscribeOnlyPanelProps {
   createHighlightDisabled?: boolean;
   processingLanguage?: string;
   statusMessage?: string | null;
+  /**
+   * Set when transcription cannot run (API key mode without a usable
+   * ElevenLabs key). Shown before anything starts; Transcribe and Translate
+   * (which transcribes first) are disabled.
+   */
+  transcriptionBlockedMessage?: string | null;
   className?: string;
 }
 
@@ -106,9 +112,11 @@ export default function TranscribeOnlyPanel({
   createHighlightDisabled = false,
   processingLanguage = 'english',
   statusMessage = null,
+  transcriptionBlockedMessage = null,
   className,
 }: TranscribeOnlyPanelProps) {
   const { t } = useTranslation();
+  const transcriptionBlocked = Boolean(transcriptionBlockedMessage);
 
   return (
     <div
@@ -135,6 +143,23 @@ export default function TranscribeOnlyPanel({
               'Transcribe, translate, or generate highlights from this video.'
             )}
           </p>
+          {transcriptionBlockedMessage && (
+            <div
+              className={workflowPanelWarningBoxStyles}
+              role="note"
+              data-transcription-state="blocked"
+            >
+              <div
+                className={workflowPanelWarningIconStyles}
+                aria-hidden="true"
+              >
+                <CircleAlert size={14} strokeWidth={2.2} />
+              </div>
+              <div className={workflowPanelWarningContentStyles}>
+                {transcriptionBlockedMessage}
+              </div>
+            </div>
+          )}
           {statusMessage && (
             <div className={workflowPanelWarningBoxStyles} role="alert">
               <div
@@ -154,7 +179,11 @@ export default function TranscribeOnlyPanel({
         <Button
           onClick={onTranscribe}
           disabled={
-            disabled || isTranscribing || isTranslating || isCreatingHighlight
+            disabled ||
+            transcriptionBlocked ||
+            isTranscribing ||
+            isTranslating ||
+            isCreatingHighlight
           }
           size="lg"
           variant="secondary"
@@ -210,6 +239,7 @@ export default function TranscribeOnlyPanel({
                     onClick={onTranslate}
                     disabled={
                       disabled ||
+                      transcriptionBlocked ||
                       isTranscribing ||
                       isTranslating ||
                       isCreatingHighlight

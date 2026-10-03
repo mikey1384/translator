@@ -1936,7 +1936,8 @@ export async function handleTranscribeOneLine(
 
   let tempAudioPath: string | null = null;
   try {
-    const { videoPath, sourceUrl, segment, promptContext } = options;
+    // promptContext was a Whisper prompt hint; Scribe does not take one.
+    const { videoPath, sourceUrl, segment } = options;
     if (!videoPath || !segment || segment.end <= segment.start) {
       throw new Error('Invalid transcribe-one-line options');
     }
@@ -1999,7 +2000,6 @@ export async function handleTranscribeOneLine(
       },
       operationId,
       signal: controller.signal,
-      promptContext,
     });
     const offset = start;
     const segsOut = res.segments.map(s => ({
@@ -2069,7 +2069,6 @@ export async function handleTranscribeRemaining(
     sourceUrl?: string | null;
     start: number;
     end?: number;
-    qualityTranscription?: boolean;
   },
   operationId: string
 ): Promise<{
@@ -2159,7 +2158,6 @@ export async function handleTranscribeRemaining(
       },
       operationId,
       signal: controller.signal,
-      qualityTranscription: options?.qualityTranscription ?? false,
     });
 
     const segsOut = res.segments.map(s => ({

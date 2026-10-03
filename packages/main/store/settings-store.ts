@@ -7,6 +7,7 @@ import {
   type AppSettingsSchema,
 } from './settings-schema.js';
 import { migrateLegacyOpenAiDubbingSettings } from './dubbing-settings-migration.js';
+import { migrateLegacyOpenAiTranscriptionSettings } from './transcription-settings-migration.js';
 
 export type SettingsStoreType = Store<AppSettingsSchema>;
 
@@ -40,6 +41,20 @@ if (!settingsStore.has('preferClaudeReview')) {
 // 'openai' dubbing preferences once. Idempotent; a no-op on later launches.
 try {
   migrateLegacyOpenAiDubbingSettings(
+    settingsStore as unknown as {
+      get(key: string): unknown;
+      set(key: string, value: unknown): void;
+    }
+  );
+} catch {
+  // Readers normalize legacy values anyway; never block startup on this.
+}
+
+// Transcription is ElevenLabs Scribe only (OpenAI whisper-1 retires
+// 2027-02-26): rewrite a legacy 'openai' transcription preference once.
+// Idempotent; a no-op on later launches.
+try {
+  migrateLegacyOpenAiTranscriptionSettings(
     settingsStore as unknown as {
       get(key: string): unknown;
       set(key: string, value: unknown): void;

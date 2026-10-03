@@ -1,23 +1,9 @@
 // --- Configuration Constants ---
-export const SAVE_WHISPER_CHUNKS = false;
+// Speech detection (dubbing timing windows)
 export const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
 export const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
-export const PRE_PAD_SEC = 0.3;
-export const POST_PAD_SEC = 0.0;
-export const MERGE_GAP_SEC = 0.5;
-export const MAX_SPEECHLESS_SEC = 15;
-export const NO_SPEECH_PROB_THRESHOLD = 0.7;
-export const MAX_PROMPT_CHARS = 600;
-
-// --- Gaps ---
-export const GAP_SEC = 3;
-
-// --- Chunking constants ---
-export const MIN_CHUNK_DURATION_SEC = 3;
-export const MAX_CHUNK_DURATION_SEC = 15;
 
 // --- Concurrency Setting ---
-export const TRANSCRIPTION_BATCH_SIZE = 5;
 // Draft-translation batches are independent (context is source text only),
 // so several LLM calls can be in flight at once.
 export const TRANSLATION_CONCURRENCY = 4;
@@ -44,8 +30,8 @@ export const REVIEW_STEP = REVIEW_BATCH_SIZE - REVIEW_OVERLAP_CTX;
 // Progress constants for transcription
 export const PROGRESS_ANALYSIS_DONE = 5;
 
-// --- Readability / Segmentation constraints (applied using Whisper word timings)
-// Aim: keep cues readable without deviating far from Whisper output.
+// --- Readability / Segmentation constraints (applied using word timings)
+// Aim: keep cues readable without deviating far from the transcript.
 export const MAX_FINAL_SEGMENT_DURATION_SEC = 6.0; // hard limit per cue
 export const TARGET_FINAL_SEGMENT_DURATION_SEC = 4.0; // preferred split point
 export const MIN_FINAL_SEGMENT_DURATION_SEC = 1.2; // avoid overly tiny cues
@@ -77,22 +63,25 @@ import {
   ASR_USE_FLAC,
   ASR_FAST_MODE,
 } from '../../../shared/constants/runtime-config.js';
+import { STAGE5_TRANSCRIPTION_OPUS_KBPS } from '../../../shared/constants/transcription-limits.js';
 
 const USE_FLAC = ASR_USE_FLAC;
 const fastMode = ASR_FAST_MODE;
 
-// --- Whisper-optimized settings (low quality, fast) ---
+// --- Stage5 transcription audio (compact speech audio for ElevenLabs
+// Scribe via Stage5 credits; also used for audio slices) ---
 export const ASR_SAMPLE_RATE = fastMode ? 12_000 : 16_000;
 export const ASR_SAMPLE_FMT = 's16';
 export const ASR_OUT_EXT = USE_FLAC ? '.flac' : '.webm';
 export const ASR_AUDIO_CODEC = USE_FLAC ? 'flac' : 'libopus';
-export const ASR_OPUS_BITRATE = fastMode ? '24k' : '32k';
+// Shared with the >500MB limit message (STAGE5_TRANSCRIPTION_MAX_AUDIO_HOURS).
+export const ASR_OPUS_BITRATE = `${STAGE5_TRANSCRIPTION_OPUS_KBPS}k`;
 export const ASR_VBR = 'on';
 export const ASR_COMPR_LEVEL = fastMode ? 6 : 8;
 
-// --- ElevenLabs-optimized settings (high quality, no chunking) ---
-// ElevenLabs Scribe benefits from higher quality audio and speaker diarization
-// which requires the full audio file (no chunking)
+// --- BYO ElevenLabs settings (higher quality, whole file) ---
+// Scribe on the user's own key gets higher-bitrate audio for speaker
+// diarization; the whole file is sent in one request.
 export const ELEVENLABS_SAMPLE_RATE = 16_000; // 16kHz for better quality
 export const ELEVENLABS_OPUS_BITRATE = '64k'; // Higher bitrate for clarity
 export const ELEVENLABS_COMPR_LEVEL = 10; // Best FLAC compression

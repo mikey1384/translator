@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "آپ کے ElevenLabs اکاؤنٹ میں ناکافی کریڈٹس ہیں۔ براہ کرم elevenlabs.io پر کریڈٹس شامل کریں۔",
       "checkSettings": "ترتیبات چیک کریں",
       "genericApiError": "API درخواست ناکام ہوئی۔ براہ کرم اپنی API کلید اور اکاؤنٹ کی حیثیت چیک کریں۔"
+    },
+    "transcription": {
+      "providerUnavailable": "ٹرانسکرپشن (ElevenLabs Scribe) عارضی طور پر دستیاب نہیں ہے یا کئی کوششوں کے بعد بھی اس سے رابطہ نہیں ہو سکا۔ براہ کرم چند منٹ بعد دوبارہ کوشش کریں۔",
+      "fileTooLarge": "یہ آڈیو ایک ہی کام میں ٹرانسکرائب کرنے کے لیے بہت لمبی ہے (تقریباً {{hours}} گھنٹے سے زیادہ)۔ ویڈیو کو چھوٹے حصوں میں تقسیم کریں اور ہر حصے کو الگ سے ٹرانسکرائب کریں۔",
+      "elevenLabsKeyRequired": "ٹرانسکرپشن ElevenLabs Scribe استعمال کرتی ہے اور اس کے لیے ElevenLabs API کلید درکار ہے۔ ترتیبات میں ایک کلید شامل کریں، یا Stage5 کریڈٹس سے ٹرانسکرائب کرنے کے لیے API کلید موڈ بند کریں۔ آپ کی OpenAI یا Anthropic کلید اب بھی ترجمے کے لیے استعمال ہوتی ہے۔"
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "میری API کلیدیں استعمال کریں",
       "activeKeys": "تیار کلیدیں: {{count}}",
       "noKeys": "کوئی کلید ترتیب نہیں دی گئی",
-      "requirement": "ترجمہ + آڈیو کوریج درکار ہے",
       "usingApiKeys": "Stage5 کریڈٹس بند",
       "usingCredits": "Stage5 کریڈٹس استعمال ہو رہے ہیں",
       "toggleOn": "اب آپ کی API کلیدیں استعمال ہو رہی ہیں۔",
       "toggleOff": "اب Stage5 کریڈٹس استعمال ہو رہے ہیں۔",
       "toggleError": "ترجیح اپڈیٹ نہیں ہو سکی۔",
-      "toggleAria": "میری API کلیدیں استعمال کریں"
+      "toggleAria": "میری API کلیدیں استعمال کریں",
+      "requirementTranslation": "ترجمے کے لیے OpenAI یا Anthropic کلید درکار ہے"
     },
     "creditsDescription": "کریڈٹس خریدیں۔ دکھائے گئے گھنٹے اس ویڈیو کے کُل دورانیے کا اندازہ ہیں جسے آپ ٹرانسکرائب یا ترجمہ کر سکتے ہیں۔ مثال: 3 گھنٹے کی ویڈیو کو ٹرانسکرائب اور ترجمہ کرنا تقریباً 6 گھنٹے (≈140,000 کریڈٹس) استعمال کرے گا۔",
     "performanceQuality": {
       "title": "کارکردگی اور معیار",
-      "qualityTranscription": {
-        "label": "معیاری ٹرانسکرپشن",
-        "help": "آن: ترتیب وار، پچھلی لائن کا سیاق استعمال کرتا ہے۔ آف: تیز بیچ موڈ۔"
-      },
       "qualityTranslation": {
         "label": "معیاری ترجمہ",
         "modelOn": "GPT-5.1 مسودہ + GPT-5.5 جائزہ",
@@ -628,7 +629,6 @@
       "unlocking": "چیک آؤٹ کھول رہا ہے…",
       "unlockCta": "$10 میں کھولیں",
       "unlockHint": "کھلنے کے بعد، کسی بھی وقت اپنی API کلیدیں یہاں شامل کریں تاکہ اپنے اکاؤنٹس پر براہ راست بلنگ ٹوگل کریں۔",
-      "unlockedDescription": "نیچے اپنی OpenAI API کلید درج کریں۔ جب کلید موجود ہو گی تو ٹرانسکرپشن، ترجمہ، اور ڈبنگ براہ راست آپ کے OpenAI اکاؤنٹ کے خلاف چلیں گے۔",
       "apiKeyLabel": "OpenAI API کلید",
       "hide": "چھپائیں",
       "show": "دکھائیں",
@@ -661,7 +661,6 @@
       "pricingHint": "فی 1 گھنٹے کی ویڈیو کا تخمینہ لاگت",
       "pricingHintHeuristic": "موجودہ ایپ heuristics کے مطابق تخمینی لاگت",
       "transcription": "ٹرانسکرپشن",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "ترجمہ (ڈرافٹ)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO unlock, key اور toggle درکار ہیں۔",
       "summaryRequiresOpenAi": "OpenAI BYO تک رسائی اور API key درکار ہیں۔",
       "summaryRequiresAnthropic": "Anthropic BYO تک رسائی اور API key درکار ہیں۔",
-      "translationReview": "ترجمہ (جائزہ)"
+      "translationReview": "ترجمہ (جائزہ)",
+      "transcriptionRequiresElevenLabs": "ٹرانسکرپشن صرف ElevenLabs Scribe استعمال کرتی ہے۔ اپنی کلیدوں سے ٹرانسکرائب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر، ٹرانسکرپشن Stage5 کریڈٹس استعمال کرتی ہے، جو آپ کی API کلیدیں آن ہونے کے دوران استعمال نہیں ہوتے۔ آپ کی OpenAI کلید اب بھی ترجمے کے لیے استعمال ہوتی ہے۔"
     },
     "apiKeyGuide": {
       "title": "API کلیدیں کیسے حاصل کریں",
@@ -703,7 +703,6 @@
         "profileApiKey": "پروفائل + API کلید"
       },
       "openai": {
-        "description": "OpenAI ٹرانسکرپشن (Whisper)، ترجمہ (GPT)، اور ٹیکسٹ ٹو سپیچ ڈبنگ کو طاقت دیتا ہے۔",
         "step1": "جائیں",
         "step2": "اپنے اکاؤنٹ میں سائن اپ یا لاگ ان کریں",
         "step3": "نیویگیٹ کریں",
@@ -725,13 +724,13 @@
         "note": "ٹپ: Anthropic استعمال کے مطابق ادائیگی کی قیمتیں پیش کرتا ہے۔ آپ صرف وہی ادا کرتے ہیں جو آپ استعمال کرتے ہیں۔"
       },
       "elevenlabs": {
-        "description": "ElevenLabs پریمیم ٹرانسکرپشن اور وائس کلوننگ ڈبنگ پیش کرتا ہے۔ اس کے بغیر، OpenAI ان کاموں کو سنبھالتا ہے۔",
         "step1": "جائیں",
         "step2": "اپنے اکاؤنٹ میں سائن اپ یا لاگ ان کریں",
         "step3": "اپنے پروفائل آئیکن پر کلک کریں اور منتخب کریں",
         "step4": "سبسکرپشن ترتیبات میں ادائیگی کا طریقہ شامل کریں (مفت ٹیئر سے آگے API استعمال کے لیے ضروری)",
         "step5": "اپنی API کلید کاپی کریں اور Stage5 میں پیسٹ کریں",
-        "note": "ٹپ: ElevenLabs کے پاس محدود استعمال کے ساتھ مفت ٹیئر ہے۔ مزید کے لیے، اپنے اکاؤنٹ کی ترتیبات میں پیڈ پلان میں اپگریڈ کریں۔"
+        "note": "ٹپ: ElevenLabs کے پاس محدود استعمال کے ساتھ مفت ٹیئر ہے۔ مزید کے لیے، اپنے اکاؤنٹ کی ترتیبات میں پیڈ پلان میں اپگریڈ کریں۔",
+        "audioDescription": "تمام ٹرانسکرپشن (Scribe) اور ڈبنگ ElevenLabs کے ذریعے ہوتی ہے۔ اپنی ElevenLabs کلید کے بغیر، دونوں Stage5 کریڈٹس استعمال کرتے ہیں، جو آپ کی API کلیدیں آن ہونے کے دوران استعمال نہیں ہوتے۔"
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "API کلیدیں ضروری ہیں",
-      "message": "تمام AI کارروائیوں کے لیے اپنی API کلیدیں استعمال کرنے کے لیے آپ کو ترجمہ کوریج اور آڈیو کوریج درکار ہے۔ OpenAI دونوں فراہم کرتا ہے۔ آڈیو کے لیے Anthropic کو OpenAI یا ElevenLabs درکار ہے۔",
       "howToGet": "API کلیدیں کیسے حاصل کریں",
-      "option1": "آپشن 1: OpenAI",
-      "option2": "آپشن 2: Anthropic + ElevenLabs",
       "enable": "میری API کلیدیں استعمال کریں",
       "done": "ہو گیا",
       "ready": "کوریج مکمل ہو گئی ہے۔ اب آپ “میری API keys استعمال کریں” کو فعال کر سکتے ہیں۔",
       "missingTranslation": "ترجمے کے لیے ابھی بھی {{providers}} درکار ہیں۔",
-      "missingAudio": "آڈیو کے لیے ابھی بھی {{providers}} درکار ہیں۔",
-      "missingBoth": "ابھی بھی درکار ہیں: ترجمہ ({{translationProviders}}) اور آڈیو ({{audioProviders}})۔"
+      "messageElevenLabsAudio": "اپنی API کلیدیں استعمال کرنے کے لیے، ترجمے کے لیے OpenAI یا Anthropic کلید درکار ہے۔ ٹرانسکرپشن اور ڈبنگ صرف ElevenLabs استعمال کرتے ہیں، اس لیے ان کے لیے بھی ElevenLabs کلید شامل کریں۔",
+      "audioNeedsElevenLabs": "ElevenLabs کلید کے بغیر، آپ کی API کلیدیں آن ہونے کے دوران ٹرانسکرپشن اور ڈبنگ دستیاب نہیں ہیں۔"
     },
     "saveSrtFileAs": "SRT فائل اس طرح محفوظ کریں",
     "saveDownloadedVideoAs": "ڈاؤن لوڈ شدہ ویڈیو اس طرح محفوظ کریں",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "ElevenLabs کے ساتھ ٹرانسکرائب ہو رہا ہے (~{{minutes}} منٹ باقی)",
     "transcribingElevenLabsHours": "ElevenLabs کے ساتھ ٹرانسکرائب ہو رہا ہے (~{{hours}} گھنٹے {{minutes}} منٹ باقی)",
     "transcribingElevenLabsFinishing": "ElevenLabs کے ساتھ ٹرانسکرائب ہو رہا ہے...",
-    "transcriptionFallbackWhisper": "حصوں میں ٹرانسکرپشن پر واپس جا رہا ہے...",
     "transcriptionRetry": "کنکشن ناکام، دوبارہ کوشش ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "ٹرانسکرپشن کے لیے آڈیو اپ لوڈ ہو رہی ہے...",
     "gapRepair": "خالی جگہ کی مرمت #{{iteration}} ({{done}}/{{total}})",

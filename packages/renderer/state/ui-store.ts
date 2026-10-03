@@ -33,7 +33,6 @@ interface State {
   summaryEffortLevel: SummaryEffortLevel;
   subtitleDisplayMode: SubtitleDisplayMode;
   // Quality toggles
-  qualityTranscription: boolean; // true = sequential/contextual
   qualityTranslation: boolean; // true = include review phase
   dubVoice: string;
   baseFontSize: number;
@@ -73,7 +72,6 @@ interface Actions {
   setSummaryLanguage(lang: string): void;
   setSummaryEffortLevel(level: SummaryEffortLevel): void;
   setSubtitleDisplayMode(mode: SubtitleDisplayMode): void;
-  setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
   setDubVoice(voice: string): void;
   setDubAmbientMix(value: number): void;
@@ -101,7 +99,8 @@ const SUMMARY_EFFORT_KEY = 'savedSummaryEffortLevel';
 const SUBTITLE_DISPLAY_MODE_KEY = 'savedSubtitleDisplayMode';
 const LEGACY_SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const APP_LANGUAGE_PREFERENCE_KEY = 'app_language_preference';
-const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
+// 'savedQualityTranscription' (the retired Quality Transcription switch) is no
+// longer read: transcription is ElevenLabs Scribe only. Old values are ignored.
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
 const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
 const VALID_TARGET_LANGUAGES = new Set(
@@ -232,7 +231,6 @@ const initial: State = {
     (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ??
     'standard',
   subtitleDisplayMode: parseStoredSubtitleDisplayMode(),
-  qualityTranscription: parseStoredBool(QUALITY_TRANSCRIPTION_KEY, true),
   qualityTranslation: parseStoredBool(QUALITY_TRANSLATION_KEY, false),
   // Legacy OpenAI voice names are migrated to ElevenLabs voices on load.
   dubVoice: readAndMigrateStoredDubVoice(localStorage),
@@ -372,11 +370,6 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           localStorage.setItem(SUBTITLE_DISPLAY_MODE_KEY, mode);
           localStorage.removeItem(LEGACY_SHOW_ORIGINAL_KEY);
           set({ subtitleDisplayMode: mode });
-        },
-
-        setQualityTranscription(v) {
-          localStorage.setItem(QUALITY_TRANSCRIPTION_KEY, JSON.stringify(v));
-          set({ qualityTranscription: v });
         },
 
         setQualityTranslation(v) {

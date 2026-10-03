@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Contul tău ElevenLabs nu are suficiente credite. Adaugă credite la elevenlabs.io.",
       "checkSettings": "Verifică Setările",
       "genericApiError": "Cererea API a eșuat. Verifică cheia API și starea contului."
+    },
+    "transcription": {
+      "providerUnavailable": "Transcrierea (ElevenLabs Scribe) este temporar indisponibilă sau nu a putut fi accesată după mai multe încercări. Te rugăm să încerci din nou peste câteva minute.",
+      "fileTooLarge": "Acest audio este prea lung pentru a fi transcris într-o singură sarcină (peste aproximativ {{hours}} ore). Împarte videoclipul în părți mai scurte și transcrie fiecare parte.",
+      "elevenLabsKeyRequired": "Transcrierea folosește ElevenLabs Scribe și necesită o cheie API ElevenLabs. Adaug-o în Setări sau dezactivează modul chei API pentru a transcrie cu credite Stage5. Cheia ta OpenAI sau Anthropic este în continuare folosită pentru traducere."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Folosește cheile mele API",
       "activeKeys": "Chei pregătite: {{count}}",
       "noKeys": "Nicio cheie configurată",
-      "requirement": "Necesită traducere + audio",
       "usingApiKeys": "Creditele Stage5 oprite",
       "usingCredits": "Creditele Stage5 pornite",
       "toggleOn": "Acum folosește cheile tale API.",
       "toggleOff": "Acum folosește creditele Stage5.",
       "toggleError": "Actualizarea preferinței a eșuat.",
-      "toggleAria": "Folosește cheile mele API"
+      "toggleAria": "Folosește cheile mele API",
+      "requirementTranslation": "Necesită o cheie OpenAI sau Anthropic pentru traducere"
     },
     "creditsDescription": "Cumpărați credite. Orele afișate sunt o estimare a duratei totale de video pe care o puteți transcrie sau traduce. Exemplu: transcrierea și traducerea unui videoclip de 3 ore consumă aproximativ 6 ore (≈140.000 credite).",
     "performanceQuality": {
       "title": "Performanță și Calitate",
-      "qualityTranscription": {
-        "label": "Transcriere de Calitate",
-        "help": "Pornit: secvențial, folosește contextul liniilor anterioare. Oprit: mod mai rapid în loturi."
-      },
       "qualityTranslation": {
         "label": "Traducere de Calitate",
         "modelOn": "Schiță GPT-5.1 + revizuire GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "Se deschide plata…",
       "unlockCta": "Deblochează pentru $10",
       "unlockHint": "Odată deblocat, adăugați cheile API aici oricând pentru a comuta facturarea directă pe conturile voastre.",
-      "unlockedDescription": "Introduceți cheia API OpenAI mai jos. Transcrierea, traducerea și dublarea vor rula direct pe contul dvs. OpenAI când o cheie este prezentă.",
       "apiKeyLabel": "Cheie API OpenAI",
       "hide": "Ascunde",
       "show": "Arată",
@@ -661,7 +661,6 @@
       "pricingHint": "Cost estimat per 1 oră de video",
       "pricingHintHeuristic": "Cost estimat folosind euristicile curente ale aplicației",
       "transcription": "Transcriere",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Traducere (Ciornă)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Necesită deblocarea Anthropic BYO, cheia și comutatorul activat.",
       "summaryRequiresOpenAi": "Necesită acces la OpenAI BYO și cheie API.",
       "summaryRequiresAnthropic": "Necesită acces la Anthropic BYO și cheie API.",
-      "translationReview": "Traducere (Revizuire)"
+      "translationReview": "Traducere (Revizuire)",
+      "transcriptionRequiresElevenLabs": "Transcrierea folosește doar ElevenLabs Scribe. Adaugă o cheie API ElevenLabs pentru a transcrie cu propriile chei. Fără ea, transcrierea folosește credite Stage5, care nu sunt utilizate cât timp cheile tale API sunt activate. Cheia ta OpenAI este în continuare folosită pentru traducere."
     },
     "apiKeyGuide": {
       "title": "Cum să Obțineți Chei API",
@@ -703,7 +703,6 @@
         "profileApiKey": "Profil + cheie API"
       },
       "openai": {
-        "description": "OpenAI alimentează transcrierea (Whisper), traducerea (GPT) și dublarea text-to-speech.",
         "step1": "Accesați",
         "step2": "Înregistrați-vă sau conectați-vă la contul dvs.",
         "step3": "Navigați la",
@@ -725,13 +724,13 @@
         "note": "Sfat: Anthropic oferă prețuri pay-as-you-go. Plătiți doar pentru ce folosiți."
       },
       "elevenlabs": {
-        "description": "ElevenLabs oferă transcriere premium și dublare cu clonare vocală. Fără el, OpenAI gestionează aceste sarcini.",
         "step1": "Accesați",
         "step2": "Înregistrați-vă sau conectați-vă la contul dvs.",
         "step3": "Faceți clic pe pictograma profilului și selectați",
         "step4": "Adăugați o metodă de plată în setările de Abonament (necesar pentru utilizarea API dincolo de nivelul gratuit)",
         "step5": "Copiați cheia API și lipiți-o în Stage5",
-        "note": "Sfat: ElevenLabs are un nivel gratuit cu utilizare limitată. Pentru mai mult, faceți upgrade la un plan plătit în setările contului."
+        "note": "Sfat: ElevenLabs are un nivel gratuit cu utilizare limitată. Pentru mai mult, faceți upgrade la un plan plătit în setările contului.",
+        "audioDescription": "ElevenLabs asigură toată transcrierea (Scribe) și dublarea. Fără propria cheie ElevenLabs, ambele folosesc credite Stage5, care nu sunt utilizate cât timp cheile tale API sunt activate."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "Chei API Necesare",
-      "message": "Pentru a folosi cheile API proprii pentru toate operațiunile AI, aveți nevoie de acoperire pentru traducere și audio. OpenAI le acoperă pe ambele. Anthropic are nevoie de OpenAI sau ElevenLabs pentru audio.",
       "howToGet": "Cum să obțineți chei API",
-      "option1": "Opțiunea 1: OpenAI",
-      "option2": "Opțiunea 2: Anthropic + ElevenLabs",
       "enable": "Folosește cheile mele API",
       "done": "Gata",
       "ready": "Acoperirea este completă. Acum poți activa „Folosește cheile mele API”.",
       "missingTranslation": "Pentru traducere mai este nevoie de {{providers}}.",
-      "missingAudio": "Pentru audio mai este nevoie de {{providers}}.",
-      "missingBoth": "Încă sunt necesare: traducere ({{translationProviders}}) și audio ({{audioProviders}})."
+      "messageElevenLabsAudio": "Pentru a folosi cheile tale API, ai nevoie de o cheie OpenAI sau Anthropic pentru traducere. Transcrierea și dublarea folosesc doar ElevenLabs, așa că adaugă și o cheie ElevenLabs pentru acestea.",
+      "audioNeedsElevenLabs": "Fără o cheie ElevenLabs, transcrierea și dublarea nu sunt disponibile cât timp cheile tale API sunt activate."
     },
     "saveSrtFileAs": "Salvează Fișierul SRT Ca",
     "saveDownloadedVideoAs": "Salvează Video Descărcat Ca",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Se transcrie cu ElevenLabs (~{{minutes}} min rămase)",
     "transcribingElevenLabsHours": "Se transcrie cu ElevenLabs (~{{hours}}h {{minutes}}m rămase)",
     "transcribingElevenLabsFinishing": "Se transcrie cu ElevenLabs...",
-    "transcriptionFallbackWhisper": "Se revine la transcrierea pe fragmente...",
     "transcriptionRetry": "Conexiunea a eșuat, se reîncearcă ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Se încarcă audio pentru transcriere...",
     "gapRepair": "Repararea golurilor #{{iteration}} ({{done}}/{{total}})",

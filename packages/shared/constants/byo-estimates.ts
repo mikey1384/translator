@@ -14,7 +14,6 @@ import {
   normalizeAiModelId,
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
   STAGE5_TTS_MODEL_ELEVEN_V4,
-  STAGE5_WHISPER_MODEL,
 } from './model-catalog';
 import {
   ANTHROPIC_WEB_SEARCH_USD_PER_CALL,
@@ -78,15 +77,13 @@ export function estimateSummaryUsdPerHour(model: string): number {
   return baseUsd * SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER;
 }
 
+/**
+ * Transcription is ElevenLabs Scribe only. The provider argument is kept for
+ * call-site clarity; it has a single value.
+ */
 export function estimateTranscriptionUsdPerHour(
-  provider: 'openai' | 'elevenlabs'
+  _provider: 'elevenlabs' = 'elevenlabs'
 ): number | UsdRange {
-  if (provider === 'openai') {
-    return (
-      VENDOR_TRANSCRIPTION_MODEL_PRICING[STAGE5_WHISPER_MODEL].perSecond * 3600
-    );
-  }
-
   const hourlyValues = ELEVENLABS_PLAN_TIERS.map(
     tier =>
       VENDOR_TRANSCRIPTION_MODEL_PRICING[STAGE5_ELEVENLABS_SCRIBE_MODEL][tier] *

@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "לחשבון ה-ElevenLabs שלך אין מספיק קרדיטים. אנא הוסף קרדיטים ב-elevenlabs.io.",
       "checkSettings": "בדוק הגדרות",
       "genericApiError": "בקשת ה-API נכשלה. אנא בדוק את מפתח ה-API ומצב החשבון שלך."
+    },
+    "transcription": {
+      "providerUnavailable": "התמלול (ElevenLabs Scribe) אינו זמין באופן זמני או שלא ניתן היה להתחבר אליו לאחר מספר ניסיונות. נסה שוב בעוד כמה דקות.",
+      "fileTooLarge": "השמע הזה ארוך מדי לתמלול במשימה אחת (יותר מכ-{{hours}} שעות). פצל את הסרטון לחלקים קצרים יותר ותמלל כל חלק בנפרד.",
+      "elevenLabsKeyRequired": "התמלול משתמש ב-ElevenLabs Scribe ודורש מפתח API של ElevenLabs. הוסף מפתח בהגדרות, או כבה את מצב מפתחות ה-API כדי לתמלל עם קרדיטי Stage5. מפתח ה-OpenAI או ה-Anthropic שלך עדיין משמש לתרגום."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "השתמש במפתחות ה-API שלי",
       "activeKeys": "מפתחות מוכנים: {{count}}",
       "noKeys": "לא הוגדרו מפתחות",
-      "requirement": "נדרש כיסוי לתרגום ולאודיו",
       "usingApiKeys": "קרדיטי Stage5 כבויים",
       "usingCredits": "קרדיטי Stage5 פעילים",
       "toggleOn": "כעת נעשה שימוש במפתחות ה-API שלך.",
       "toggleOff": "כעת נעשה שימוש בקרדיטי Stage5.",
       "toggleError": "עדכון ההעדפה נכשל.",
-      "toggleAria": "השתמש במפתחות ה-API שלי"
+      "toggleAria": "השתמש במפתחות ה-API שלי",
+      "requirementTranslation": "נדרש מפתח OpenAI או Anthropic לתרגום"
     },
     "creditsDescription": "קנו קרדיטים. השעות המוצגות הן הערכה של סך אורך הווידאו שניתן לתמלל או לתרגם. לדוגמה: תמלול ותרגום של וידאו באורך 3 שעות יעלה בערך 6 שעות (≈140,000 קרדיטים).",
     "performanceQuality": {
       "title": "ביצועים ואיכות",
-      "qualityTranscription": {
-        "label": "תמלול באיכות גבוהה",
-        "help": "פועל: רצף עם הקשר משורות קודמות. כבוי: מצב אצווה מהיר יותר."
-      },
       "qualityTranslation": {
         "label": "תרגום באיכות גבוהה",
         "modelOn": "טיוטת GPT-5.1 + סקירת GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "פותח קופה...",
       "unlockCta": "פתח ב-$10",
       "unlockHint": "לאחר הפתיחה, הוסף את מפתחות ה-API שלך כאן בכל עת כדי להפעיל חיוב ישיר על החשבונות שלך.",
-      "unlockedDescription": "הזן את מפתח ה-API של OpenAI שלך למטה. תמלול, תרגום ודיבוב ירוצו ישירות מול חשבון ה-OpenAI שלך כשמפתח קיים.",
       "apiKeyLabel": "מפתח API של OpenAI",
       "hide": "הסתר",
       "show": "הצג",
@@ -661,7 +661,6 @@
       "pricingHint": "עלות משוערת לשעת וידאו",
       "pricingHintHeuristic": "עלות משוערת לפי ההיוריסטיקות הנוכחיות של האפליקציה",
       "transcription": "תמלול",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "תרגום (טיוטה)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "נדרשים פתיחת Anthropic BYO, מפתח והפעלה.",
       "summaryRequiresOpenAi": "נדרשים גישה ל-OpenAI BYO ומפתח API.",
       "summaryRequiresAnthropic": "נדרשים גישה ל-Anthropic BYO ומפתח API.",
-      "translationReview": "תרגום (ביקורת)"
+      "translationReview": "תרגום (ביקורת)",
+      "transcriptionRequiresElevenLabs": "התמלול משתמש ב-ElevenLabs Scribe בלבד. הוסף מפתח API של ElevenLabs כדי לתמלל עם המפתחות שלך. בלעדיו, התמלול משתמש בקרדיטי Stage5, שאינם בשימוש כל עוד מפתחות ה-API שלך מופעלים. מפתח ה-OpenAI שלך עדיין משמש לתרגום."
     },
     "apiKeyGuide": {
       "title": "איך להשיג מפתחות API",
@@ -703,7 +703,6 @@
         "profileApiKey": "פרופיל + מפתח API"
       },
       "openai": {
-        "description": "OpenAI מפעיל תמלול (Whisper), תרגום (GPT) ודיבוב טקסט לדיבור.",
         "step1": "עבור אל",
         "step2": "הירשם או התחבר לחשבון שלך",
         "step3": "נווט אל",
@@ -725,13 +724,13 @@
         "note": "טיפ: Anthropic מציע תמחור לפי שימוש. אתה משלם רק על מה שאתה משתמש."
       },
       "elevenlabs": {
-        "description": "ElevenLabs מציע תמלול פרימיום ודיבוב עם שכפול קול. בלעדיו, OpenAI מטפל במשימות אלו.",
         "step1": "עבור אל",
         "step2": "הירשם או התחבר לחשבון שלך",
         "step3": "לחץ על סמל הפרופיל שלך ובחר",
         "step4": "הוסף אמצעי תשלום בהגדרות המנוי (נדרש לשימוש ב-API מעבר לשכבה החינמית)",
         "step5": "העתק את מפתח ה-API שלך והדבק אותו ב-Stage5",
-        "note": "טיפ: ל-ElevenLabs יש שכבה חינמית עם שימוש מוגבל. לעוד, שדרג לתוכנית בתשלום בהגדרות החשבון שלך."
+        "note": "טיפ: ל-ElevenLabs יש שכבה חינמית עם שימוש מוגבל. לעוד, שדרג לתוכנית בתשלום בהגדרות החשבון שלך.",
+        "audioDescription": "ElevenLabs מפעיל את כל התמלול (Scribe) והדיבוב. ללא מפתח ElevenLabs משלך, שניהם משתמשים בקרדיטי Stage5, שאינם בשימוש כל עוד מפתחות ה-API שלך מופעלים."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "נדרשים מפתחות API",
-      "message": "כדי להשתמש במפתחות ה-API שלך לכל פעולות ה-AI, אתה צריך כיסוי לתרגום וכיסוי לאודיו. OpenAI מכסה את שניהם. Anthropic צריך את OpenAI או ElevenLabs עבור אודיו.",
       "howToGet": "איך להשיג מפתחות API",
-      "option1": "אפשרות 1: OpenAI",
-      "option2": "אפשרות 2: Anthropic + ElevenLabs",
       "enable": "השתמש במפתחות ה-API שלי",
       "done": "סיום",
       "ready": "הכיסוי הושלם. עכשיו אפשר להפעיל את \"השתמש במפתחות ה-API שלי\".",
       "missingTranslation": "התרגום עדיין צריך את {{providers}}.",
-      "missingAudio": "האודיו עדיין צריך את {{providers}}.",
-      "missingBoth": "עדיין נדרש: תרגום ({{translationProviders}}) ואודיו ({{audioProviders}})."
+      "messageElevenLabsAudio": "כדי להשתמש במפתחות ה-API שלך, נדרש מפתח OpenAI או Anthropic לתרגום. התמלול והדיבוב משתמשים ב-ElevenLabs בלבד, לכן הוסף גם מפתח ElevenLabs עבורם.",
+      "audioNeedsElevenLabs": "ללא מפתח ElevenLabs, התמלול והדיבוב אינם זמינים כל עוד מפתחות ה-API שלך מופעלים."
     },
     "saveSrtFileAs": "שמור קובץ SRT בשם",
     "saveDownloadedVideoAs": "שמור וידאו שהורד בשם",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "מתמלל עם ElevenLabs (~{{minutes}} דקות נותרו)",
     "transcribingElevenLabsHours": "מתמלל עם ElevenLabs (~{{hours}} שעות {{minutes}} דקות נותרו)",
     "transcribingElevenLabsFinishing": "מתמלל עם ElevenLabs...",
-    "transcriptionFallbackWhisper": "חוזר לתמלול מחולק...",
     "transcriptionRetry": "החיבור נכשל, מנסה שוב ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "מעלה אודיו לתמלול...",
     "gapRepair": "תיקון פערים #{{iteration}} ({{done}}/{{total}})",

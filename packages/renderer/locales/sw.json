@@ -130,6 +130,11 @@
       "elevenlabsInsufficientQuota": "Akaunti yako ya ElevenLabs haina mikopo ya kutosha. Tafadhali ongeza mikopo kwenye elevenlabs.io.",
       "checkSettings": "Angalia Mipangilio",
       "genericApiError": "Ombi la API limeshindikana. Tafadhali angalia ufunguo wako wa API na hali ya akaunti."
+    },
+    "transcription": {
+      "providerUnavailable": "Unakili (ElevenLabs Scribe) haupatikani kwa muda au haukuweza kufikiwa baada ya majaribio kadhaa. Tafadhali jaribu tena baada ya dakika chache.",
+      "fileTooLarge": "Sauti hii ni ndefu mno kunakiliwa katika kazi moja (zaidi ya takriban saa {{hours}}). Gawanya video katika sehemu fupi zaidi kisha unakili kila sehemu.",
+      "elevenLabsKeyRequired": "Unakili hutumia ElevenLabs Scribe na unahitaji ufunguo wa API wa ElevenLabs. Ongeza mmoja kwenye Mipangilio, au zima hali ya funguo za API ili kunakili kwa krediti za Stage5. Ufunguo wako wa OpenAI au Anthropic bado unatumika kwa tafsiri."
     }
   },
   "input": {
@@ -527,21 +532,17 @@
       "toggleLabel": "Tumia funguo zangu za API",
       "activeKeys": "Funguo tayari: {{count}}",
       "noKeys": "Hakuna funguo zilizowekwa",
-      "requirement": "Inahitaji tafsiri + sauti",
       "usingApiKeys": "Krediti za Stage5 zimezimwa",
       "usingCredits": "Krediti za Stage5 zinatumika",
       "toggleOn": "Sasa inatumia funguo zako za API.",
       "toggleOff": "Sasa inatumia krediti za Stage5.",
       "toggleError": "Imeshindwa kusasisha upendeleo.",
-      "toggleAria": "Tumia funguo zangu za API"
+      "toggleAria": "Tumia funguo zangu za API",
+      "requirementTranslation": "Inahitaji ufunguo wa OpenAI au Anthropic kwa tafsiri"
     },
     "creditsDescription": "Nunua krediti. Saa zinazoonyeshwa ni makadirio ya muda wote wa video ambao unaweza kunakili au kutafsiri. Mfano: kunakili na kutafsiri video ya saa 3 hutumia takribani saa 6 (≈140,000 kredi).",
     "performanceQuality": {
       "title": "Utendaji na Ubora",
-      "qualityTranscription": {
-        "label": "Unakili wa Ubora",
-        "help": "Washa: mfuatano, inatumia muktadha wa mstari uliotangulia. Zima: njia ya haraka ya makundi."
-      },
       "qualityTranslation": {
         "label": "Tafsiri ya Ubora",
         "modelOn": "Rasimu ya GPT-5.1 + mapitio ya GPT-5.5",
@@ -628,7 +629,6 @@
       "unlocking": "Inafungua malipo…",
       "unlockCta": "Fungua kwa $10",
       "unlockHint": "Ukishaifungua, ongeza funguo zako za API hapa wakati wowote ili kubadilisha bili moja kwa moja kwenye akaunti zako.",
-      "unlockedDescription": "Ingiza ufunguo wako wa API wa OpenAI hapa chini. Unakili, tafsiri, na urekodi utaendeshwa moja kwa moja kwenye akaunti yako ya OpenAI wakati ufunguo upo.",
       "apiKeyLabel": "Ufunguo wa API wa OpenAI",
       "hide": "Ficha",
       "show": "Onyesha",
@@ -661,7 +661,6 @@
       "pricingHint": "Gharama inayokadiriwa kwa video ya saa 1",
       "pricingHintHeuristic": "Makadirio ya gharama kwa kutumia heuristics za sasa za programu",
       "transcription": "Unakili",
-      "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "Tafsiri (Rasimu)",
       "gptHigh": "GPT-5.5",
@@ -685,7 +684,8 @@
       "videoSuggestionModelRequiresAnthropic": "Inahitaji Anthropic BYO unlock, key, na toggle.",
       "summaryRequiresOpenAi": "Inahitaji ufikiaji wa OpenAI BYO na API key.",
       "summaryRequiresAnthropic": "Inahitaji ufikiaji wa Anthropic BYO na API key.",
-      "translationReview": "Tafsiri (Uhakiki)"
+      "translationReview": "Tafsiri (Uhakiki)",
+      "transcriptionRequiresElevenLabs": "Unakili hutumia ElevenLabs Scribe pekee. Ongeza ufunguo wa API wa ElevenLabs ili kunakili kwa funguo zako mwenyewe. Bila ufunguo huo, unakili hutumia krediti za Stage5, ambazo hazitumiki wakati funguo zako za API zimewashwa. Ufunguo wako wa OpenAI bado unatumika kwa tafsiri."
     },
     "apiKeyGuide": {
       "title": "Jinsi ya Kupata Funguo za API",
@@ -703,7 +703,6 @@
         "profileApiKey": "Wasifu + ufunguo wa API"
       },
       "openai": {
-        "description": "OpenAI inaendesha unakili (Whisper), tafsiri (GPT), na urekodi wa maandishi-kwa-sauti.",
         "step1": "Nenda",
         "step2": "Jiandikishe au ingia kwenye akaunti yako",
         "step3": "Nenda",
@@ -725,13 +724,13 @@
         "note": "Kidokezo: Anthropic inatoa bei ya kulipa-unapotumia. Unalipa tu kwa unachotumia."
       },
       "elevenlabs": {
-        "description": "ElevenLabs inatoa unakili wa hali ya juu na urekodi wa kunakili sauti. Bila hiyo, OpenAI inashughulikia kazi hizi.",
         "step1": "Nenda",
         "step2": "Jiandikishe au ingia kwenye akaunti yako",
         "step3": "Bofya aikoni yako ya wasifu na uchague",
         "step4": "Ongeza njia ya malipo katika mipangilio ya Usajili (inahitajika kwa matumizi ya API zaidi ya ngazi ya bure)",
         "step5": "Nakili ufunguo wako wa API na ubandike kwenye Stage5",
-        "note": "Kidokezo: ElevenLabs ina ngazi ya bure na matumizi machache. Kwa zaidi, boresha hadi mpango wa kulipia katika mipangilio ya akaunti yako."
+        "note": "Kidokezo: ElevenLabs ina ngazi ya bure na matumizi machache. Kwa zaidi, boresha hadi mpango wa kulipia katika mipangilio ya akaunti yako.",
+        "audioDescription": "ElevenLabs huendesha unakili wote (Scribe) na urekodi. Bila ufunguo wako mwenyewe wa ElevenLabs, vyote viwili hutumia krediti za Stage5, ambazo hazitumiki wakati funguo zako za API zimewashwa."
       }
     },
     "byoAnthropic": {
@@ -1034,16 +1033,13 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "Funguo za API Zinahitajika",
-      "message": "Ili utumie funguo zako za API kwa shughuli zote za AI, unahitaji ufunikaji wa tafsiri na ufunikaji wa sauti. OpenAI inafunika vyote viwili. Anthropic inahitaji OpenAI au ElevenLabs kwa sauti.",
       "howToGet": "Jinsi ya kupata funguo za API",
-      "option1": "Chaguo 1: OpenAI",
-      "option2": "Chaguo 2: Anthropic + ElevenLabs",
       "enable": "Tumia funguo zangu za API",
       "done": "Imekamilika",
       "ready": "Ufunikaji umekamilika. Sasa unaweza kuwasha “Tumia API key zangu”.",
       "missingTranslation": "Tafsiri bado inahitaji {{providers}}.",
-      "missingAudio": "Sauti bado inahitaji {{providers}}.",
-      "missingBoth": "Bado vinahitajika: tafsiri ({{translationProviders}}) na sauti ({{audioProviders}})."
+      "messageElevenLabsAudio": "Ili kutumia funguo zako za API, unahitaji ufunguo wa OpenAI au Anthropic kwa tafsiri. Unakili na urekodi hutumia ElevenLabs pekee, kwa hiyo ongeza pia ufunguo wa ElevenLabs kwa ajili ya hizo.",
+      "audioNeedsElevenLabs": "Bila ufunguo wa ElevenLabs, unakili na urekodi havipatikani wakati funguo zako za API zimewashwa."
     },
     "saveSrtFileAs": "Hifadhi Faili ya SRT Kama",
     "saveDownloadedVideoAs": "Hifadhi Video Iliyopakuliwa Kama",
@@ -1097,7 +1093,6 @@
     "transcribingElevenLabs": "Inanakili na ElevenLabs (~dakika {{minutes}} zimesalia)",
     "transcribingElevenLabsHours": "Inanakili na ElevenLabs (~saa {{hours}} dakika {{minutes}} zimesalia)",
     "transcribingElevenLabsFinishing": "Inanakili na ElevenLabs...",
-    "transcriptionFallbackWhisper": "Inabadilika kwa unakili wa vipande...",
     "transcriptionRetry": "Muunganisho umeshindikana, inajaribu tena ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Inapakia sauti kwa unakili...",
     "gapRepair": "Ukarabati wa pengo #{{iteration}} ({{done}}/{{total}})",

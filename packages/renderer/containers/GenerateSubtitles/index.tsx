@@ -40,6 +40,7 @@ import type {
 // Custom hooks
 import { useVideoMetadata } from './hooks/useVideoMetadata';
 import { useCreditSystem } from './hooks/useCreditSystem';
+import { useTranscriptionBlocker } from './hooks/useTranscriptionBlocker';
 import useDownloadedVideoLibrary from './hooks/useDownloadedVideoLibrary.js';
 
 // Components
@@ -257,6 +258,7 @@ export default function GenerateSubtitles() {
     isMetadataPending,
   } = useVideoMetadata(videoFilePath);
   const { isButtonDisabled } = useCreditSystem();
+  const transcriptionBlockedMessage = useTranscriptionBlocker();
 
   const metadataStatusMessage =
     metadataErrorCode === 'icloud-placeholder'
@@ -935,9 +937,14 @@ export default function GenerateSubtitles() {
                       isPreTranscriptTranslateRunning
                     }
                     createHighlightDisabled={
-                      !canCreateHighlight || isPreTranscriptTranslateRunning
+                      !canCreateHighlight ||
+                      isPreTranscriptTranslateRunning ||
+                      // Highlights from scratch transcribe first.
+                      (Boolean(transcriptionBlockedMessage) &&
+                        !isTranscriptionDone)
                     }
                     statusMessage={metadataStatusMessage}
+                    transcriptionBlockedMessage={transcriptionBlockedMessage}
                   />
                   {preTranscriptTranslateProgress ? (
                     <HighlightWorkflowProgress

@@ -200,8 +200,11 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
   const hasElevenLabsConfigured = byoElevenLabsUnlocked && elevenLabsKeyPresent;
 
   const hasTranslationCoverage = hasOpenAiConfigured || hasAnthropicConfigured;
-  const hasAudioCoverage = hasOpenAiConfigured || hasElevenLabsConfigured;
-  const conditionsMet = hasTranslationCoverage && hasAudioCoverage;
+  // Transcription and dubbing are ElevenLabs-only. API key mode needs
+  // translation coverage; without ElevenLabs, transcription and dubbing show a
+  // blocked state instead (see hasApiKeyModeConfiguredCoverage).
+  const hasAudioCoverage = hasElevenLabsConfigured;
+  const conditionsMet = hasTranslationCoverage;
   const translationHint = formatCoverageHint(
     [
       hasOpenAiConfigured ? 'OpenAI' : '',
@@ -210,21 +213,13 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
     'OpenAI / Anthropic'
   );
   const audioHint = formatCoverageHint(
-    [
-      hasOpenAiConfigured ? 'OpenAI' : '',
-      hasElevenLabsConfigured ? 'ElevenLabs' : '',
-    ].filter(Boolean),
-    'OpenAI / ElevenLabs'
+    [hasElevenLabsConfigured ? 'ElevenLabs' : ''].filter(Boolean),
+    'ElevenLabs'
   );
   const translationProviderOptions =
     [
       byoUnlocked ? 'OpenAI' : '',
       byoAnthropicUnlocked ? 'Anthropic' : '',
-    ].filter(Boolean) || [];
-  const audioProviderOptions =
-    [
-      byoUnlocked ? 'OpenAI' : '',
-      byoElevenLabsUnlocked ? 'ElevenLabs' : '',
     ].filter(Boolean) || [];
 
   const formatProviderList = (providers: string[], fallback: string[]) => {
@@ -240,36 +235,20 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
     translationProviderOptions,
     ['OpenAI', 'Anthropic']
   );
-  const audioProvidersLabel = formatProviderList(audioProviderOptions, [
-    'OpenAI',
-    'ElevenLabs',
-  ]);
   const coverageStatusMessage = !conditionsMet
-    ? !hasTranslationCoverage && !hasAudioCoverage
+    ? t(
+        'dialogs.apiKeysRequired.missingTranslation',
+        'Translation still needs {{providers}}.',
+        {
+          providers: translationProvidersLabel,
+        }
+      )
+    : !hasAudioCoverage
       ? t(
-          'dialogs.apiKeysRequired.missingBoth',
-          'Still needed: translation ({{translationProviders}}) and audio ({{audioProviders}}).',
-          {
-            translationProviders: translationProvidersLabel,
-            audioProviders: audioProvidersLabel,
-          }
+          'dialogs.apiKeysRequired.audioNeedsElevenLabs',
+          'Without an ElevenLabs key, transcription and dubbing are unavailable while your API keys are on.'
         )
-      : !hasTranslationCoverage
-        ? t(
-            'dialogs.apiKeysRequired.missingTranslation',
-            'Translation still needs {{providers}}.',
-            {
-              providers: translationProvidersLabel,
-            }
-          )
-        : t(
-            'dialogs.apiKeysRequired.missingAudio',
-            'Audio still needs {{providers}}.',
-            {
-              providers: audioProvidersLabel,
-            }
-          )
-    : null;
+      : null;
 
   const handleDone = async () => {
     if (!conditionsMet) return;
@@ -293,7 +272,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
           <div className={footerActionsStyles}>
             <div
               className={`${coverageStatusStyles} ${
-                conditionsMet
+                conditionsMet && hasAudioCoverage
                   ? coverageStatusReadyStyles
                   : coverageStatusMissingStyles
               }`}
@@ -319,8 +298,8 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
       >
         <p className={`${settingsBodyTextStyles} ${introStyles}`}>
           {t(
-            'dialogs.apiKeysRequired.message',
-            'To use your API keys for all AI operations, you need translation coverage and audio coverage. OpenAI covers both. Anthropic needs OpenAI or ElevenLabs for audio.'
+            'dialogs.apiKeysRequired.messageElevenLabsAudio',
+            'To use your API keys, you need an OpenAI or Anthropic key for translation. Transcription and dubbing use ElevenLabs only, so add an ElevenLabs key for those too.'
           )}{' '}
           <button
             onClick={() => openGuide()}

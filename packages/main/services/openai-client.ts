@@ -1,19 +1,9 @@
 import axios from 'axios';
-import FormData from 'form-data';
 import log from 'electron-log';
 import type { ChatToolChoice, ChatToolDefinition } from '@shared-types/app';
 import { AI_MODELS, normalizeAiModelId } from '@shared/constants';
-import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
-
-export interface OpenAiTranscribeOptions {
-  filePath: string;
-  promptContext?: string;
-  model?: string;
-  apiKey: string;
-  signal?: AbortSignal;
-}
 
 export interface OpenAiTranslateOptions {
   messages: any[];
@@ -32,53 +22,6 @@ export interface OpenAiWebSearchOptions {
   signal?: AbortSignal;
   reasoning?: { effort?: 'low' | 'medium' | 'high' };
   onTextDelta?: (delta: string) => void;
-}
-
-export async function transcribeWithOpenAi({
-  filePath,
-  promptContext,
-  model = AI_MODELS.WHISPER,
-  apiKey,
-  signal,
-}: OpenAiTranscribeOptions): Promise<any> {
-  const form = new FormData();
-  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
-  try {
-    form.append('file', stream);
-  } catch {
-    cleanup();
-    throw new Error('Failed to open audio file for transcription');
-  }
-  form.append('model', model);
-  form.append('response_format', 'verbose_json');
-  // Request word-level timestamps for better subtitle segmentation
-  form.append('timestamp_granularities[]', 'word');
-  form.append('timestamp_granularities[]', 'segment');
-  if (promptContext) {
-    form.append('prompt', promptContext);
-  }
-
-  const headers = {
-    ...form.getHeaders(),
-    Authorization: `Bearer ${apiKey}`,
-  };
-
-  try {
-    const response = await axios.post(
-      `${OPENAI_BASE_URL}/audio/transcriptions`,
-      form,
-      {
-        headers,
-        signal,
-        maxBodyLength: Infinity,
-        maxContentLength: Infinity,
-      }
-    );
-
-    return response.data;
-  } finally {
-    cleanup();
-  }
 }
 
 export async function translateWithOpenAi({

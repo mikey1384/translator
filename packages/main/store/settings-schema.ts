@@ -18,10 +18,12 @@ import type {
 } from '@shared-types/app';
 import type { PendingVideoSuggestionFileDeletionIntent } from '../services/video-suggestion-download-history.js';
 
-export type TranscriptionProviderPreference =
-  | 'elevenlabs'
-  | 'openai'
-  | 'stage5';
+// Transcription is ElevenLabs Scribe only (OpenAI whisper-1 retires
+// 2027-02-26). 'elevenlabs' = use the BYO ElevenLabs key when it is
+// available, otherwise Stage5 credits (which also transcribe with Scribe).
+// Legacy stored 'openai' values are migrated on startup and normalized to
+// 'elevenlabs' on read.
+export type TranscriptionProviderPreference = 'elevenlabs' | 'stage5';
 // Dubbing is ElevenLabs-only. 'elevenlabs' = use the BYO ElevenLabs key when
 // it is available, otherwise Stage5 credits (which also synthesize with
 // ElevenLabs). Legacy stored 'openai' values are migrated on startup and
@@ -154,9 +156,10 @@ export function normalizeTranscriptionProviderSetting(
   value: unknown,
   fallback: TranscriptionProviderPreference = APP_SETTINGS_DEFAULTS.preferredTranscriptionProvider
 ): TranscriptionProviderPreference {
-  return value === 'elevenlabs' || value === 'openai' || value === 'stage5'
-    ? value
-    : fallback;
+  if (value === 'stage5') return 'stage5';
+  // Legacy 'openai' transcription (Whisper) is retired; it maps to ElevenLabs.
+  if (value === 'elevenlabs' || value === 'openai') return 'elevenlabs';
+  return fallback;
 }
 
 export function normalizeDubbingProviderSetting(

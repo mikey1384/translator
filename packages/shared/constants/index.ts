@@ -29,7 +29,6 @@ import {
   STAGE5_TTS_MODEL_PRICING,
   STAGE5_TRANSCRIPTION_MODEL_PRICING,
   STAGE5_TRANSLATION_MODEL_PRICING,
-  STAGE5_WHISPER_MODEL,
 } from './model-catalog';
 import {
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR as STAGE5_SCRIBE_CREDITS_PER_AUDIO_HOUR,
@@ -77,7 +76,6 @@ export {
   STAGE5_TTS_MODEL_PRICING,
   STAGE5_TRANSCRIPTION_MODEL_PRICING,
   STAGE5_TRANSLATION_MODEL_PRICING,
-  STAGE5_WHISPER_MODEL,
 };
 export {
   CHARS_PER_TOKEN,
@@ -128,7 +126,6 @@ export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
   [STAGE5_REVIEW_TRANSLATION_MODEL]: 'GPT-5.5',
   [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet',
   [AI_MODELS.CLAUDE_OPUS]: 'Claude Opus',
-  [AI_MODELS.WHISPER]: 'Whisper',
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
   [STAGE5_TTS_MODEL_ELEVEN_V4]: 'ElevenLabs v4',
 };
@@ -141,7 +138,6 @@ export const AI_MODEL_EXACT_DISPLAY_NAMES: Record<string, string> = {
   [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet 5',
   [AI_MODELS.CLAUDE_OPUS]:
     STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
-  [AI_MODELS.WHISPER]: 'Whisper',
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
   [STAGE5_TTS_MODEL_ELEVEN_V4]: 'ElevenLabs v4',
 };
@@ -170,6 +166,13 @@ export const ERROR_CODES = {
   ELEVENLABS_KEY_INVALID: 'elevenlabs-key-invalid',
   ELEVENLABS_RATE_LIMIT: 'elevenlabs-rate-limit',
   ELEVENLABS_INSUFFICIENT_QUOTA: 'elevenlabs-insufficient-quota',
+  // Transcription is ElevenLabs Scribe only (no Whisper fallback):
+  // Scribe unavailable after server and client retries.
+  TRANSCRIPTION_PROVIDER_UNAVAILABLE: 'transcription-provider-unavailable',
+  // Stage5 audio over the durable R2 upload limit; split the video.
+  TRANSCRIPTION_FILE_TOO_LARGE: 'transcription-file-too-large',
+  // Relay was asked to transcribe with BYO keys but no ElevenLabs key.
+  ELEVENLABS_KEY_REQUIRED: 'elevenlabs-key-required',
   TRANSLATION_JOB_NOT_FOUND: 'translation-job-not-found',
 } as const;
 
@@ -237,7 +240,7 @@ const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
 // API polling intervals and timeouts (in milliseconds)
 // Used for long-running operations that require polling for completion
 export const API_TIMEOUTS = {
-  // Transcription (Whisper via Stage5 API)
+  // Transcription (ElevenLabs Scribe via Stage5 API)
   TRANSCRIPTION_POLL_INTERVAL: 1_000, // 1 second
   TRANSCRIPTION_MAX_WAIT: 300_000, // 5 minutes
 
@@ -321,3 +324,12 @@ export {
   normalizeDubVoice,
 } from './dub-voices';
 export type { ElevenLabsDubVoice, LegacyOpenAiDubVoice } from './dub-voices';
+
+export {
+  STAGE5_TRANSCRIPTION_DIRECT_MAX_DURATION_SEC,
+  STAGE5_TRANSCRIPTION_DIRECT_MAX_MB,
+  STAGE5_TRANSCRIPTION_MAX_AUDIO_HOURS,
+  STAGE5_TRANSCRIPTION_MAX_UPLOAD_MB,
+  STAGE5_TRANSCRIPTION_OPUS_KBPS,
+  maxTranscriptionAudioHours,
+} from './transcription-limits';
