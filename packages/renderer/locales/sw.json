@@ -869,7 +869,8 @@
     "buyCredits": "Nunua Mikopo",
     "redirectingToPayment": "Inafungua malipo salama...",
     "description": "Chagua kutoka kwa paketi za ${{packMicroPrice}} (masaa {{packMicroHours}}), ${{pack1Price}} (masaa {{pack1Hours}}), ${{pack2Price}} (masaa {{pack2Hours}}), au ${{pack3Price}} (masaa {{pack3Hours}})",
-    "notEnough": "Mikopo haitoshi. Tafadhali nunua mikopo zaidi ili kuendelea."
+    "notEnough": "Mikopo haitoshi. Tafadhali nunua mikopo zaidi ili kuendelea.",
+    "transcriptionMinutesShort": "dakika {{minutes}} za unakili"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Fungua Mipangilio",
       "ok": "Sawa",
       "neverHadTitle": "Unakili unahitaji mikopo",
-      "neverHadMessage": "Unakili unahitaji mikopo au ufunguaji wa funguo za API. Pata chochote kati ya hivyo katika Mipangilio. Kutafsiri kwa kutumia Claude au Codex yako mwenyewe kupitia Udhibiti wa Mawakala ni bure."
+      "neverHadMessage": "Unakili unahitaji mikopo au ufunguaji wa funguo za API. Pata chochote kati ya hivyo katika Mipangilio. Kutafsiri kwa kutumia Claude au Codex yako mwenyewe kupitia Udhibiti wa Mawakala ni bure.",
+      "notEnoughTitle": "Hakuna mikopo ya kutosha kwa video hii",
+      "notEnoughTranscriptionMessage": "Kunakili video hii kunahitaji takriban mikopo {{required}}. Una {{available}}, inayotosha kwa takriban dakika {{minutes}}. Ongeza mikopo, kisha anza tena.",
+      "notEnoughMessage": "Kazi hii inahitaji mikopo zaidi ya salio lako la {{available}}. Ongeza mikopo ili kuendelea."
     }
   },
   "progress": {

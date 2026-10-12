@@ -881,7 +881,8 @@
     "buyCredits": "Buy Credits",
     "redirectingToPayment": "Opening secure checkout…",
     "description": "Choose from ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), or ${{pack3Price}} ({{pack3Hours}}h) credit packs",
-    "notEnough": "Insufficient credits. Please purchase more credits to continue."
+    "notEnough": "Insufficient credits. Please purchase more credits to continue.",
+    "transcriptionMinutesShort": "{{minutes}} min of transcription"
   },
   "cta": {
     "generate": {
@@ -1095,7 +1096,10 @@
       "openSettings": "Open Settings",
       "ok": "OK",
       "neverHadTitle": "Transcription needs credits",
-      "neverHadMessage": "Transcription needs credits or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free."
+      "neverHadMessage": "Transcription needs credits or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.",
+      "notEnoughTitle": "Not enough credits for this video",
+      "notEnoughTranscriptionMessage": "Transcribing this video takes about {{required}} credits. You have {{available}}, enough for about {{minutes}} minutes. Add credits, then start again.",
+      "notEnoughMessage": "This task needs more credits than your balance of {{available}}. Add credits to continue."
     }
   },
   "progress": {

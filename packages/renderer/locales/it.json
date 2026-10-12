@@ -869,7 +869,8 @@
     "buyCredits": "Acquista crediti",
     "redirectingToPayment": "Apertura pagamento sicuro…",
     "description": "Scegli tra i pacchetti da ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h) o ${{pack3Price}} ({{pack3Hours}}h)",
-    "notEnough": "Crediti insufficienti. Acquista altri crediti per continuare."
+    "notEnough": "Crediti insufficienti. Acquista altri crediti per continuare.",
+    "transcriptionMinutesShort": "{{minutes}} min di trascrizione"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Apri Impostazioni",
       "ok": "OK",
       "neverHadTitle": "La trascrizione richiede crediti",
-      "neverHadMessage": "La trascrizione richiede crediti o lo sblocco chiave API. Puoi ottenere entrambi in Impostazioni. Tradurre con il tuo Claude o Codex tramite Controllo agenti è gratuito."
+      "neverHadMessage": "La trascrizione richiede crediti o lo sblocco chiave API. Puoi ottenere entrambi in Impostazioni. Tradurre con il tuo Claude o Codex tramite Controllo agenti è gratuito.",
+      "notEnoughTitle": "Crediti insufficienti per questo video",
+      "notEnoughTranscriptionMessage": "Trascrivere questo video richiede circa {{required}} crediti. Ne hai {{available}}, sufficienti per circa {{minutes}} minuti. Aggiungi crediti e ricomincia.",
+      "notEnoughMessage": "Questa attività richiede più crediti del tuo saldo di {{available}}. Aggiungi crediti per continuare."
     }
   },
   "progress": {

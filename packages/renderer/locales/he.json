@@ -869,7 +869,8 @@
     "buyCredits": "קנה קרדיט",
     "redirectingToPayment": "פותח תשלום מאובטח...",
     "description": "בחר מבין חבילות קרדיט של ${{packMicroPrice}} ({{packMicroHours}} שעות), ${{pack1Price}} ({{pack1Hours}} שעות), ${{pack2Price}} ({{pack2Hours}} שעות), או ${{pack3Price}} ({{pack3Hours}} שעות)",
-    "notEnough": "קרדיט לא מספיק. אנא רכוש קרדיט נוסף כדי להמשיך."
+    "notEnough": "קרדיט לא מספיק. אנא רכוש קרדיט נוסף כדי להמשיך.",
+    "transcriptionMinutesShort": "{{minutes}} דק׳ תמלול"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "פתח הגדרות",
       "ok": "אישור",
       "neverHadTitle": "תמלול דורש קרדיטים",
-      "neverHadMessage": "תמלול דורש קרדיטים או את פתיחת מפתחות ה-API. אפשר להשיג כל אחד מהם בהגדרות. תרגום עם Claude או Codex שלך דרך בקרת סוכנים הוא בחינם."
+      "neverHadMessage": "תמלול דורש קרדיטים או את פתיחת מפתחות ה-API. אפשר להשיג כל אחד מהם בהגדרות. תרגום עם Claude או Codex שלך דרך בקרת סוכנים הוא בחינם.",
+      "notEnoughTitle": "אין מספיק קרדיטים לסרטון הזה",
+      "notEnoughTranscriptionMessage": "תמלול הסרטון הזה דורש כ-{{required}} קרדיטים. יש לך {{available}}, מספיק לכ-{{minutes}} דקות. הוסף קרדיטים ואז התחל שוב.",
+      "notEnoughMessage": "המשימה הזו דורשת יותר קרדיטים מהיתרה שלך ({{available}}). הוסף קרדיטים כדי להמשיך."
     }
   },
   "progress": {

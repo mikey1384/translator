@@ -869,7 +869,8 @@
     "buyCredits": "购买积分",
     "redirectingToPayment": "正在打开安全支付…",
     "description": "选择 ${{packMicroPrice}}（{{packMicroHours}}小时）、${{pack1Price}}（{{pack1Hours}}小时）、${{pack2Price}}（{{pack2Hours}}小时）或 ${{pack3Price}}（{{pack3Hours}}小时）积分包",
-    "notEnough": "积分不足。请购买更多积分以继续。"
+    "notEnough": "积分不足。请购买更多积分以继续。",
+    "transcriptionMinutesShort": "{{minutes}} 分钟转写"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "打开设置",
       "ok": "确定",
       "neverHadTitle": "转录需要点数",
-      "neverHadMessage": "转录需要点数或 API 密钥解锁，两者均可在设置中获取。通过智能体控制使用您自己的 Claude 或 Codex 进行翻译是免费的。"
+      "neverHadMessage": "转录需要点数或 API 密钥解锁，两者均可在设置中获取。通过智能体控制使用您自己的 Claude 或 Codex 进行翻译是免费的。",
+      "notEnoughTitle": "积分不足，无法处理此视频",
+      "notEnoughTranscriptionMessage": "转写此视频大约需要 {{required}} 积分。您有 {{available}} 积分，约可转写 {{minutes}} 分钟。请充值后重新开始。",
+      "notEnoughMessage": "此任务所需积分超过您的余额（{{available}}）。请充值后继续。"
     }
   },
   "progress": {

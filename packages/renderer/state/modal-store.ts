@@ -2,6 +2,7 @@ import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 
 import type { UpdateRequiredNotice } from '@shared-types/app';
+import type { CreditRefusal } from '../utils/creditShortfall';
 
 type UnsavedChoice = 'save' | 'discard' | 'cancel';
 export type UnsavedSrtContext = 'transcription' | 'caption_recovery';
@@ -22,6 +23,7 @@ interface State {
   _downloadSwitchResolver?: (choice: boolean) => void;
   // Credit ran out modal
   creditRanOutOpen: boolean;
+  creditRefusal: CreditRefusal | null;
   _creditResolver?: (choice: 'settings' | 'ok') => void;
   // Change video modal
   changeVideoOpen: boolean;
@@ -48,7 +50,9 @@ interface Actions {
     context?: DownloadSwitchContext
   ) => Promise<boolean>;
   resolveDownloadSwitch: (choice: boolean) => void;
-  openCreditRanOut: () => Promise<'settings' | 'ok'>;
+  openCreditRanOut: (
+    refusal?: CreditRefusal | null
+  ) => Promise<'settings' | 'ok'>;
   resolveCreditRanOut: (choice: 'settings' | 'ok') => void;
   openChangeVideo: () => void;
   closeChangeVideo: () => void;
@@ -70,6 +74,7 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     downloadSwitchContext: 'downloaded_video',
     _downloadSwitchResolver: undefined,
     creditRanOutOpen: false,
+    creditRefusal: null,
     _creditResolver: undefined,
     changeVideoOpen: false,
     logsOpen: false,
@@ -119,10 +124,11 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
       });
     },
 
-    openCreditRanOut: () =>
+    openCreditRanOut: refusal =>
       new Promise<'settings' | 'ok'>(resolve => {
         set(s => {
           s.creditRanOutOpen = true;
+          s.creditRefusal = refusal ?? null;
           s._creditResolver = resolve;
         });
       }),
@@ -132,6 +138,7 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
       if (resolver) resolver(choice);
       set(s => {
         s.creditRanOutOpen = false;
+        s.creditRefusal = null;
         s._creditResolver = undefined;
       });
     },
@@ -220,8 +227,10 @@ export function resolveDownloadSwitch(choice: boolean) {
   return useModalStore.getState().resolveDownloadSwitch(choice);
 }
 
-export async function openCreditRanOut(): Promise<'settings' | 'ok'> {
-  return useModalStore.getState().openCreditRanOut();
+export async function openCreditRanOut(
+  refusal?: CreditRefusal | null
+): Promise<'settings' | 'ok'> {
+  return useModalStore.getState().openCreditRanOut(refusal);
 }
 
 export function resolveCreditRanOut(choice: 'settings' | 'ok') {

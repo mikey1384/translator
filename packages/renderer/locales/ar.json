@@ -869,7 +869,8 @@
     "buyCredits": "شراء النقاط",
     "redirectingToPayment": "فتح الدفع الآمن…",
     "description": "اختر من حزم ${{packMicroPrice}} ({{packMicroHours}}س)، ${{pack1Price}} ({{pack1Hours}}س)، ${{pack2Price}} ({{pack2Hours}}س)، أو ${{pack3Price}} ({{pack3Hours}}س) من النقاط",
-    "notEnough": "نقاط غير كافية. يرجى شراء المزيد من النقاط للمتابعة."
+    "notEnough": "نقاط غير كافية. يرجى شراء المزيد من النقاط للمتابعة.",
+    "transcriptionMinutesShort": "{{minutes}} دقيقة من النسخ"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "فتح الإعدادات",
       "ok": "حسناً",
       "neverHadTitle": "يتطلب النسخ نقاطًا",
-      "neverHadMessage": "يتطلب النسخ نقاطًا أو فتح مفاتيح API. احصل على أيٍّ منهما من الإعدادات. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية."
+      "neverHadMessage": "يتطلب النسخ نقاطًا أو فتح مفاتيح API. احصل على أيٍّ منهما من الإعدادات. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية.",
+      "notEnoughTitle": "لا توجد أرصدة كافية لهذا الفيديو",
+      "notEnoughTranscriptionMessage": "يتطلب نسخ هذا الفيديو نحو {{required}} رصيدًا. لديك {{available}}، وهذا يكفي لنحو {{minutes}} دقيقة. أضف أرصدة ثم ابدأ من جديد.",
+      "notEnoughMessage": "تحتاج هذه المهمة إلى أرصدة أكثر من رصيدك البالغ {{available}}. أضف أرصدة للمتابعة."
     }
   },
   "progress": {

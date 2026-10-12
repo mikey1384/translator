@@ -869,7 +869,8 @@
     "buyCredits": "Mua Tín dụng",
     "redirectingToPayment": "Đang mở thanh toán an toàn…",
     "description": "Chọn từ các gói tín dụng ${{packMicroPrice}} ({{packMicroHours}} giờ), ${{pack1Price}} ({{pack1Hours}} giờ), ${{pack2Price}} ({{pack2Hours}} giờ), hoặc ${{pack3Price}} ({{pack3Hours}} giờ)",
-    "notEnough": "Tín dụng không đủ. Vui lòng mua thêm tín dụng để tiếp tục."
+    "notEnough": "Tín dụng không đủ. Vui lòng mua thêm tín dụng để tiếp tục.",
+    "transcriptionMinutesShort": "{{minutes}} phút chép lời"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Mở Cài đặt",
       "ok": "OK",
       "neverHadTitle": "Phiên âm cần tín dụng",
-      "neverHadMessage": "Phiên âm cần tín dụng hoặc mở khóa API key. Bạn có thể nhận một trong hai trong Cài đặt. Dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân là miễn phí."
+      "neverHadMessage": "Phiên âm cần tín dụng hoặc mở khóa API key. Bạn có thể nhận một trong hai trong Cài đặt. Dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân là miễn phí.",
+      "notEnoughTitle": "Không đủ tín dụng cho video này",
+      "notEnoughTranscriptionMessage": "Chép lời video này cần khoảng {{required}} tín dụng. Bạn có {{available}}, đủ cho khoảng {{minutes}} phút. Hãy nạp thêm tín dụng rồi bắt đầu lại.",
+      "notEnoughMessage": "Tác vụ này cần nhiều tín dụng hơn số dư {{available}} của bạn. Hãy nạp thêm tín dụng để tiếp tục."
     }
   },
   "progress": {

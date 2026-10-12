@@ -869,7 +869,8 @@
     "buyCredits": "Cumpără Credite",
     "redirectingToPayment": "Se deschide plata securizată…",
     "description": "Alegeți dintre pachetele ${{packMicroPrice}} ({{packMicroHours}}o), ${{pack1Price}} ({{pack1Hours}}o), ${{pack2Price}} ({{pack2Hours}}o), sau ${{pack3Price}} ({{pack3Hours}}o)",
-    "notEnough": "Credite insuficiente. Vă rugăm să cumpărați mai multe credite pentru a continua."
+    "notEnough": "Credite insuficiente. Vă rugăm să cumpărați mai multe credite pentru a continua.",
+    "transcriptionMinutesShort": "{{minutes}} min de transcriere"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Deschide Setările",
       "ok": "OK",
       "neverHadTitle": "Transcrierea necesită credite",
-      "neverHadMessage": "Transcrierea necesită credite sau deblocarea cheilor API. Le poți obține pe oricare din Setări. Traducerea cu propriul Claude sau Codex prin Controlul agenților este gratuită."
+      "neverHadMessage": "Transcrierea necesită credite sau deblocarea cheilor API. Le poți obține pe oricare din Setări. Traducerea cu propriul Claude sau Codex prin Controlul agenților este gratuită.",
+      "notEnoughTitle": "Nu ai suficiente credite pentru acest videoclip",
+      "notEnoughTranscriptionMessage": "Transcrierea acestui videoclip necesită aproximativ {{required}} credite. Ai {{available}}, suficiente pentru aproximativ {{minutes}} minute. Adaugă credite, apoi pornește din nou.",
+      "notEnoughMessage": "Această sarcină necesită mai multe credite decât soldul tău de {{available}}. Adaugă credite pentru a continua."
     }
   },
   "progress": {

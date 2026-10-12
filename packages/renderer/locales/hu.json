@@ -869,7 +869,8 @@
     "buyCredits": "Kreditek vásárlása",
     "redirectingToPayment": "Biztonságos fizetés megnyitása…",
     "description": "Válasszon ${{packMicroPrice}} ({{packMicroHours}} óra), ${{pack1Price}} ({{pack1Hours}} óra), ${{pack2Price}} ({{pack2Hours}} óra), vagy ${{pack3Price}} ({{pack3Hours}} óra) kredit csomagokból",
-    "notEnough": "Nincs elegendő kredit. Kérjük vásároljon több kreditet a folytatáshoz."
+    "notEnough": "Nincs elegendő kredit. Kérjük vásároljon több kreditet a folytatáshoz.",
+    "transcriptionMinutesShort": "{{minutes}} perc átírás"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Beállítások megnyitása",
       "ok": "OK",
       "neverHadTitle": "Az átíráshoz kreditek szükségesek",
-      "neverHadMessage": "Az átíráshoz kreditek vagy az API-kulcs-feloldás szükséges. Bármelyiket beszerezheti a Beállításokban. A fordítás a saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyenes."
+      "neverHadMessage": "Az átíráshoz kreditek vagy az API-kulcs-feloldás szükséges. Bármelyiket beszerezheti a Beállításokban. A fordítás a saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyenes.",
+      "notEnoughTitle": "Nincs elég kredit ehhez a videóhoz",
+      "notEnoughTranscriptionMessage": "A videó átírása körülbelül {{required}} kreditbe kerül. Önnek {{available}} van, ami nagyjából {{minutes}} percre elég. Töltsön fel kreditet, majd kezdje újra.",
+      "notEnoughMessage": "Ehhez a feladathoz több kredit kell, mint a(z) {{available}} egyenlege. A folytatáshoz töltsön fel kreditet."
     }
   },
   "progress": {

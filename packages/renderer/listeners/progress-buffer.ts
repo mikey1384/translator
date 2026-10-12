@@ -9,6 +9,7 @@ import * as SystemIPC from '@ipc/system';
 import { i18n } from '../i18n';
 import { logTask, logPhase } from '../utils/logger';
 import { openCreditRanOut } from '../state/modal-store';
+import { creditRefusalForOperation } from '../utils/creditShortfall';
 import { hasApiKeyModeActiveCoverage } from '../state/byo-runtime';
 import {
   isCreditRefreshableOperation,
@@ -206,7 +207,9 @@ function flush() {
       try {
         const s = useAiStore.getState();
         const usingApiKey = hasApiKeyModeActiveCoverage(s);
-        if (!usingApiKey) openCreditRanOut();
+        if (!usingApiKey) {
+          openCreditRanOut(creditRefusalForOperation(operationId));
+        }
       } catch {
         // Do nothing
       }
@@ -560,7 +563,7 @@ SubtitlesIPC.onDubProgress(progress => {
       error.includes(ERROR_CODES.INSUFFICIENT_CREDITS)
     ) {
       try {
-        openCreditRanOut();
+        openCreditRanOut({ kind: 'other', transcriptionSeconds: null });
       } catch {
         // Do nothing
       }

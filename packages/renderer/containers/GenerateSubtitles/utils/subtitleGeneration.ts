@@ -35,6 +35,7 @@ import { preserveWordTimingsOnTranslatedSegments } from '../../../utils/preserve
 import { detachSourceLinkedSubtitleOwnership } from '../../../utils/source-linked-subtitle-ownership';
 import { registerStage5CreditRefreshOperation } from '../../../utils/creditRefreshOperations';
 import { isExplicitCancellation } from '../../../../shared/cancelled-error';
+import { registerFullTranscriptionSeconds } from '../../../utils/creditShortfall';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -756,6 +757,9 @@ export async function startTranscriptionFlow({
       // Ignore inability to clear dubbed media
     }
   }
+
+  // Whole-file run: the only kind of transcription a refusal may be quoted.
+  registerFullTranscriptionSeconds(operationId, durationSecs);
 
   return executeSubtitleGeneration({
     videoFile,

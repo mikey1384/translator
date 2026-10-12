@@ -869,7 +869,8 @@
     "buyCredits": "Credits kopen",
     "redirectingToPayment": "Veilige checkout openen…",
     "description": "Kies uit ${{packMicroPrice}} ({{packMicroHours}}u), ${{pack1Price}} ({{pack1Hours}}u), ${{pack2Price}} ({{pack2Hours}}u), of ${{pack3Price}} ({{pack3Hours}}u) creditpakketten",
-    "notEnough": "Onvoldoende credits. Koop meer credits om door te gaan."
+    "notEnough": "Onvoldoende credits. Koop meer credits om door te gaan.",
+    "transcriptionMinutesShort": "{{minutes}} min transcriptie"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Instellingen openen",
       "ok": "OK",
       "neverHadTitle": "Transcriptie vereist credits",
-      "neverHadMessage": "Voor transcriptie heb je credits of de API-sleutelontgrendeling nodig. Beide zijn verkrijgbaar in Instellingen. Vertalen met je eigen Claude of Codex via Agentbesturing is gratis."
+      "neverHadMessage": "Voor transcriptie heb je credits of de API-sleutelontgrendeling nodig. Beide zijn verkrijgbaar in Instellingen. Vertalen met je eigen Claude of Codex via Agentbesturing is gratis.",
+      "notEnoughTitle": "Niet genoeg credits voor deze video",
+      "notEnoughTranscriptionMessage": "Het transcriberen van deze video kost ongeveer {{required}} credits. Je hebt er {{available}}, genoeg voor ongeveer {{minutes}} minuten. Voeg credits toe en begin opnieuw.",
+      "notEnoughMessage": "Deze taak heeft meer credits nodig dan je saldo van {{available}}. Voeg credits toe om door te gaan."
     }
   },
   "progress": {

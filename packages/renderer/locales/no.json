@@ -869,7 +869,8 @@
     "buyCredits": "Kjøp kreditter",
     "redirectingToPayment": "Åpner sikker betaling...",
     "description": "Velg mellom ${{packMicroPrice}} ({{packMicroHours}}t), ${{pack1Price}} ({{pack1Hours}}t), ${{pack2Price}} ({{pack2Hours}}t) eller ${{pack3Price}} ({{pack3Hours}}t) kredittpakker",
-    "notEnough": "Utilstrekkelige kreditter. Vennligst kjøp flere kreditter for å fortsette."
+    "notEnough": "Utilstrekkelige kreditter. Vennligst kjøp flere kreditter for å fortsette.",
+    "transcriptionMinutesShort": "{{minutes}} min transkripsjon"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Åpne innstillinger",
       "ok": "OK",
       "neverHadTitle": "Transkribering krever kreditter",
-      "neverHadMessage": "Transkribering krever kreditter eller API-nøkkelopplåsingen. Du får begge deler i Innstillinger. Oversettelse med din egen Claude eller Codex via Agentkontroll er gratis."
+      "neverHadMessage": "Transkribering krever kreditter eller API-nøkkelopplåsingen. Du får begge deler i Innstillinger. Oversettelse med din egen Claude eller Codex via Agentkontroll er gratis.",
+      "notEnoughTitle": "Ikke nok kreditter til denne videoen",
+      "notEnoughTranscriptionMessage": "Transkribering av denne videoen krever omtrent {{required}} kreditter. Du har {{available}}, nok til omtrent {{minutes}} minutter. Legg til kreditter og start på nytt.",
+      "notEnoughMessage": "Denne oppgaven krever flere kreditter enn saldoen din på {{available}}. Legg til kreditter for å fortsette."
     }
   },
   "progress": {

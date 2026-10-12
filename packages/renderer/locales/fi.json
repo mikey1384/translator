@@ -869,7 +869,8 @@
     "buyCredits": "Osta krediittejä",
     "redirectingToPayment": "Avataan turvallinen kassa...",
     "description": "Valitse ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h) tai ${{pack3Price}} ({{pack3Hours}}h) krediittipaketeista",
-    "notEnough": "Riittämättömästi krediittejä. Osta lisää krediittejä jatkaaksesi."
+    "notEnough": "Riittämättömästi krediittejä. Osta lisää krediittejä jatkaaksesi.",
+    "transcriptionMinutesShort": "{{minutes}} min litterointia"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Avaa asetukset",
       "ok": "OK",
       "neverHadTitle": "Litterointi vaatii krediittejä",
-      "neverHadMessage": "Litterointi vaatii krediittejä tai API-avainten avauksen. Saat kumman tahansa Asetuksista. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista."
+      "neverHadMessage": "Litterointi vaatii krediittejä tai API-avainten avauksen. Saat kumman tahansa Asetuksista. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista.",
+      "notEnoughTitle": "Krediitit eivät riitä tähän videoon",
+      "notEnoughTranscriptionMessage": "Tämän videon litterointi vie noin {{required}} krediittiä. Sinulla on {{available}}, mikä riittää noin {{minutes}} minuuttiin. Lisää krediittejä ja aloita uudelleen.",
+      "notEnoughMessage": "Tämä tehtävä vaatii enemmän krediittejä kuin saldosi {{available}}. Lisää krediittejä jatkaaksesi."
     }
   },
   "progress": {

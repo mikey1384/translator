@@ -869,7 +869,8 @@
     "buyCredits": "Credits kaufen",
     "redirectingToPayment": "Sichere Zahlung öffnen…",
     "description": "Wählen Sie aus ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), oder ${{pack3Price}} ({{pack3Hours}}h) Credit-Paketen",
-    "notEnough": "Unzureichende Credits. Bitte kaufen Sie mehr Credits, um fortzufahren."
+    "notEnough": "Unzureichende Credits. Bitte kaufen Sie mehr Credits, um fortzufahren.",
+    "transcriptionMinutesShort": "{{minutes}} Min. Transkription"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Einstellungen öffnen",
       "ok": "OK",
       "neverHadTitle": "Transkription benötigt Credits",
-      "neverHadMessage": "Für die Transkription benötigen Sie Credits oder die API-Schlüssel-Freischaltung. Beides erhalten Sie in den Einstellungen. Das Übersetzen mit Ihrem eigenen Claude oder Codex über die Agentensteuerung ist kostenlos."
+      "neverHadMessage": "Für die Transkription benötigen Sie Credits oder die API-Schlüssel-Freischaltung. Beides erhalten Sie in den Einstellungen. Das Übersetzen mit Ihrem eigenen Claude oder Codex über die Agentensteuerung ist kostenlos.",
+      "notEnoughTitle": "Nicht genug Credits für dieses Video",
+      "notEnoughTranscriptionMessage": "Die Transkription dieses Videos braucht etwa {{required}} Credits. Sie haben {{available}}, genug für etwa {{minutes}} Minuten. Laden Sie Credits auf und starten Sie dann erneut.",
+      "notEnoughMessage": "Diese Aufgabe braucht mehr Credits als Ihr Guthaben von {{available}}. Laden Sie Credits auf, um fortzufahren."
     }
   },
   "progress": {

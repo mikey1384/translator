@@ -869,7 +869,8 @@
     "buyCredits": "Koupit kredity",
     "redirectingToPayment": "Otevírání zabezpečené pokladny…",
     "description": "Vyberte z balíčků ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), nebo ${{pack3Price}} ({{pack3Hours}}h)",
-    "notEnough": "Nedostatek kreditů. Prosím zakupte více kreditů pro pokračování."
+    "notEnough": "Nedostatek kreditů. Prosím zakupte více kreditů pro pokračování.",
+    "transcriptionMinutesShort": "{{minutes}} min přepisu"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Otevřít nastavení",
       "ok": "OK",
       "neverHadTitle": "Přepis vyžaduje kredity",
-      "neverHadMessage": "Přepis vyžaduje kredity nebo odemčení API klíčů. Obojí získáte v Nastavení. Překlad s vlastním Claude nebo Codexem přes Ovládání agenty je zdarma."
+      "neverHadMessage": "Přepis vyžaduje kredity nebo odemčení API klíčů. Obojí získáte v Nastavení. Překlad s vlastním Claude nebo Codexem přes Ovládání agenty je zdarma.",
+      "notEnoughTitle": "Na toto video nemáte dost kreditů",
+      "notEnoughTranscriptionMessage": "Přepis tohoto videa stojí přibližně {{required}} kreditů. Máte {{available}}, což stačí asi na {{minutes}} minut. Dobijte kredity a začněte znovu.",
+      "notEnoughMessage": "Tato úloha potřebuje více kreditů, než je váš zůstatek {{available}}. Pro pokračování dobijte kredity."
     }
   },
   "progress": {

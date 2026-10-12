@@ -869,7 +869,8 @@
     "buyCredits": "購買點數",
     "redirectingToPayment": "正在開啟安全結帳…",
     "description": "可選擇 ${{packMicroPrice}}（{{packMicroHours}} 小時）、${{pack1Price}}（{{pack1Hours}} 小時）、${{pack2Price}}（{{pack2Hours}} 小時）或 ${{pack3Price}}（{{pack3Hours}} 小時）點數包",
-    "notEnough": "點數不足。請購買更多點數以繼續。"
+    "notEnough": "點數不足。請購買更多點數以繼續。",
+    "transcriptionMinutesShort": "{{minutes}} 分鐘轉錄"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "開啟設定",
       "ok": "確定",
       "neverHadTitle": "轉錄需要點數",
-      "neverHadMessage": "轉錄需要點數或 API 金鑰解鎖，兩者皆可在設定中取得。透過代理程式控制使用您自己的 Claude 或 Codex 進行翻譯是免費的。"
+      "neverHadMessage": "轉錄需要點數或 API 金鑰解鎖，兩者皆可在設定中取得。透過代理程式控制使用您自己的 Claude 或 Codex 進行翻譯是免費的。",
+      "notEnoughTitle": "點數不足，無法處理此影片",
+      "notEnoughTranscriptionMessage": "轉錄此影片約需 {{required}} 點數。您有 {{available}} 點數，約可轉錄 {{minutes}} 分鐘。請儲值後重新開始。",
+      "notEnoughMessage": "此任務所需點數超過您的餘額（{{available}}）。請儲值後繼續。"
     }
   },
   "progress": {

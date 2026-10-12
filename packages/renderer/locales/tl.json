@@ -869,7 +869,8 @@
     "buyCredits": "Bumili ng Credit",
     "redirectingToPayment": "Binubuksan ang secure checkout…",
     "description": "Pumili mula sa mga pakete ng credit na ${{packMicroPrice}} ({{packMicroHours}} oras), ${{pack1Price}} ({{pack1Hours}} oras), ${{pack2Price}} ({{pack2Hours}} oras), o ${{pack3Price}} ({{pack3Hours}} oras)",
-    "notEnough": "Hindi sapat ang mga credit. Mangyaring bumili pa ng mga credit para magpatuloy."
+    "notEnough": "Hindi sapat ang mga credit. Mangyaring bumili pa ng mga credit para magpatuloy.",
+    "transcriptionMinutesShort": "{{minutes}} min ng transcription"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Buksan ang Settings",
       "ok": "OK",
       "neverHadTitle": "Kailangan ng mga credit para sa transcription",
-      "neverHadMessage": "Kailangan ng transcription ng mga credit o ng API-key unlock. Makukuha mo ang alinman sa Mga Setting. Libre ang pagsasalin gamit ang sarili mong Claude o Codex sa pamamagitan ng Kontrol ng Agent."
+      "neverHadMessage": "Kailangan ng transcription ng mga credit o ng API-key unlock. Makukuha mo ang alinman sa Mga Setting. Libre ang pagsasalin gamit ang sarili mong Claude o Codex sa pamamagitan ng Kontrol ng Agent.",
+      "notEnoughTitle": "Kulang ang credits para sa video na ito",
+      "notEnoughTranscriptionMessage": "Kailangan ng humigit-kumulang {{required}} credits para i-transcribe ang video na ito. Mayroon kang {{available}}, sapat para sa mga {{minutes}} minuto. Magdagdag ng credits, saka magsimula ulit.",
+      "notEnoughMessage": "Kailangan ng gawaing ito ng mas maraming credits kaysa sa balanse mong {{available}}. Magdagdag ng credits para magpatuloy."
     }
   },
   "progress": {

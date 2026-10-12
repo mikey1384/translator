@@ -869,7 +869,8 @@
     "buyCredits": "Kredi Satın Al",
     "redirectingToPayment": "Güvenli ödeme açılıyor…",
     "description": "${{packMicroPrice}} ({{packMicroHours}}s), ${{pack1Price}} ({{pack1Hours}}s), ${{pack2Price}} ({{pack2Hours}}s) veya ${{pack3Price}} ({{pack3Hours}}s) kredi paketlerinden seçin",
-    "notEnough": "Yetersiz kredi. Devam etmek için lütfen daha fazla kredi satın alın."
+    "notEnough": "Yetersiz kredi. Devam etmek için lütfen daha fazla kredi satın alın.",
+    "transcriptionMinutesShort": "{{minutes}} dk transkripsiyon"
   },
   "cta": {
     "generate": {
@@ -1077,7 +1078,10 @@
       "openSettings": "Ayarları Aç",
       "ok": "Tamam",
       "neverHadTitle": "Transkripsiyon için kredi gerekir",
-      "neverHadMessage": "Transkripsiyon için kredi veya API anahtarı kilidinin açılması gerekir. İkisini de Ayarlar’dan edinebilirsiniz. Aracı Denetimi üzerinden kendi Claude veya Codex’inizle çeviri ücretsizdir."
+      "neverHadMessage": "Transkripsiyon için kredi veya API anahtarı kilidinin açılması gerekir. İkisini de Ayarlar’dan edinebilirsiniz. Aracı Denetimi üzerinden kendi Claude veya Codex’inizle çeviri ücretsizdir.",
+      "notEnoughTitle": "Bu video için yeterli kredi yok",
+      "notEnoughTranscriptionMessage": "Bu videoyu yazıya dökmek yaklaşık {{required}} kredi gerektirir. {{available}} krediniz var; bu yaklaşık {{minutes}} dakikaya yeter. Kredi ekleyip yeniden başlatın.",
+      "notEnoughMessage": "Bu görev, {{available}} olan bakiyenizden daha fazla kredi gerektiriyor. Devam etmek için kredi ekleyin."
     }
   },
   "progress": {
