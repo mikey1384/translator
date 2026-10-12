@@ -53,6 +53,19 @@ test('NeedCookiesError retains the legacy UI message and only a safe cause', () 
   assert.deepEqual(Object.keys(error).sort(), ['causeCode', 'name']);
 });
 
+test('Instagram audience restrictions are site rejections despite command flags in Execa errors', () => {
+  const error = Object.assign(
+    new Error(
+      'Command failed: yt-dlp --socket-timeout 10 --ffmpeg-location /bin/ffmpeg'
+    ),
+    {
+      all: "ERROR: [Instagram] reel: This content isn't available to everyone: It can't be seen by certain audiences.",
+    }
+  );
+
+  assert.equal(classifyUrlDownloadFailure(error), 'site_rejected');
+});
+
 test('new YouTube sign-in auto-completes only after returning to YouTube', () => {
   assert.equal(
     shouldAutoCompleteYouTubeConnection({

@@ -56,6 +56,12 @@ export async function initPuppeteer({
   const hostHtml = getRenderHostPath();
   const hostUrl = url.pathToFileURL(hostHtml).toString();
   const renderFont = await assertSubtitleRenderFontReadable(fontRegular);
+  // Pretendard ships beside Noto Sans and leads the landscape subtitle stack.
+  const pretendardUrl = url
+    .pathToFileURL(
+      path.join(path.dirname(renderFont.path), 'PretendardVariable.woff2')
+    )
+    .toString();
 
   log.info('[Puppeteer]', { hostHtml });
   log.info(`[Puppeteer:${operationId}] Render host URL: ${hostUrl}`);
@@ -115,6 +121,12 @@ export async function initPuppeteer({
         font-family: "Noto Sans";
         src: url("${renderFont.url}") format("truetype");
         font-weight: 700;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Pretendard Variable";
+        src: url("${pretendardUrl}") format("woff2-variations");
+        font-weight: 45 920;
         font-style: normal;
       }
     `,

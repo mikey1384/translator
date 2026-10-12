@@ -101,3 +101,29 @@ test('an unknown failure never returns raw upstream diagnostics to the UI', () =
   );
   assert.doesNotMatch(result, /must-not-escape/);
 });
+
+test('Instagram audience restrictions remain source failures and explain account access safely', () => {
+  const diagnostics =
+    "ERROR: [Instagram] DIYC3Z9T6q5: This content isn't available to everyone: It can't be seen by certain audiences.";
+  const error = Object.assign(
+    new Error(
+      'Command failed: yt-dlp --socket-timeout 10 --ffmpeg-location /bin/ffmpeg'
+    ),
+    { stdout: `${diagnostics}\nsigned-media-token=must-not-escape` }
+  );
+
+  assert.deepEqual(classifyUrlDownloadFailureDetail(error), {
+    code: 'private_or_restricted',
+    phase: 'source_access',
+    httpStatus: null,
+    canAttemptPublicAutomaticCaptions: false,
+  });
+  const message = mapErrorToUserFriendly({
+    rawErrorMessage: error.message,
+    stderrContent: error.stdout,
+  });
+  assert.match(message, /restricted to certain audiences/);
+  assert.match(message, /If your account can view it/);
+  assert.match(message, /Settings/);
+  assert.doesNotMatch(message, /must-not-escape|DIYC3Z9T6q5|--socket/);
+});

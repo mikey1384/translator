@@ -8,16 +8,24 @@ import {
   MIN_SUBTITLE_FONT_SIZE,
 } from '../constants/index.js';
 
-const DEFAULT_FONT_STACK = [
-  'Noto Sans',
-  'Inter',
+// Landscape burns lead with the bundled Pretendard so Korean never falls back
+// to whatever the host system happens to have. Noto Sans stays in the stack
+// for scripts Pretendard does not cover.
+const LANDSCAPE_FONT_STACK = [
+  "'Pretendard Variable'",
+  "'Pretendard'",
+  "'Noto Sans'",
+  "'Inter'",
   '-apple-system',
   'BlinkMacSystemFont',
-  'Segoe UI',
-  'Roboto',
-  'PingFang SC',
-  'Microsoft YaHei',
-  'Noto Sans SC',
+  "'Segoe UI'",
+  "'Roboto'",
+  "'Apple SD Gothic Neo'",
+  "'Malgun Gothic'",
+  "'Noto Sans KR'",
+  "'PingFang SC'",
+  "'Microsoft YaHei'",
+  "'Noto Sans SC'",
   'sans-serif',
 ].join(', ');
 
@@ -187,6 +195,54 @@ const SHORT_FORM_TUNING: Record<SubtitleStylePresetKey, ShortFormTuning> = {
   },
 };
 
+// Landscape (16:9 and similar) tuning. Every length is a ratio of the output
+// font size so the look holds at 720p, 1080p and 4K alike.
+type LandscapeTuning = {
+  fontWeight: number;
+  letterSpacing: string;
+  lineHeight: number;
+  // Outline presets
+  outlineColor?: string;
+  outlineEm?: number;
+  shadowBlurEm?: number;
+  shadowColor?: string;
+  shadowOffsetYEm?: number;
+  // LineBox preset
+  lineBoxBackgroundColor?: string;
+  lineBoxPaddingEm?: [number, number, number];
+  lineBoxRadiusEm?: number;
+};
+
+// One stable reading position, clear of player chrome and lower-third banners.
+const LANDSCAPE_BOTTOM = '8.5%';
+
+const LANDSCAPE_TUNING: Partial<
+  Record<SubtitleStylePresetKey, LandscapeTuning>
+> = {
+  Default: {
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
+    lineHeight: 1.28,
+    outlineColor: 'rgba(0, 0, 0, 0.92)',
+    outlineEm: 0.103,
+    shadowBlurEm: 0.17,
+    shadowColor: 'rgba(0, 0, 0, 0.55)',
+    shadowOffsetYEm: 0.05,
+  },
+  LineBox: {
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
+    lineHeight: 1.48,
+    lineBoxBackgroundColor: 'rgba(12, 14, 18, 0.78)',
+    lineBoxPaddingEm: [0.09, 0.41, 0.15],
+    lineBoxRadiusEm: 0.26,
+  },
+};
+
+function emToPx(fontSizePx: number, em: number): number {
+  return Math.round(fontSizePx * em * 10) / 10;
+}
+
 export function assColorToRgba(ass: string): string {
   if (!ass?.startsWith('&H')) return 'rgba(255,255,255,1)';
   const hex = ass.substring(2).padStart(8, '0');
@@ -264,6 +320,9 @@ export function resolveSubtitleRenderTheme(opts: {
   const shortFormTuning = isShortFormPortrait
     ? SHORT_FORM_TUNING[stylePreset]
     : null;
+  const landscapeTuning = isShortFormPortrait
+    ? null
+    : (LANDSCAPE_TUNING[stylePreset] ?? null);
   const finalFontSize = Math.max(
     MIN_SUBTITLE_FONT_SIZE,
     displayFontSize * (shortFormTuning?.fontScale ?? 1)
@@ -277,10 +336,8 @@ export function resolveSubtitleRenderTheme(opts: {
     bottomValue = isMultiLine
       ? shortFormTuning?.bottomMultiLine || '30%'
       : shortFormTuning?.bottomSingleLine || '24%';
-  } else if (isMultiLine) {
-    bottomValue = isFullScreen ? '5%' : '2.5%';
   } else {
-    bottomValue = isFullScreen ? '10%' : '5%';
+    bottomValue = LANDSCAPE_BOTTOM;
   }
 
   let textShadow = 'none';
@@ -302,18 +359,31 @@ export function resolveSubtitleRenderTheme(opts: {
   } else if (style.borderStyle === 1) {
     backgroundColor = 'transparent';
     boxShadowValue = 'none';
-    const outlineSize = Math.max(
-      0.1,
-      style.outlineSize * (shortFormTuning?.outlineMultiplier ?? 1)
-    );
-    textStrokeColor = outlineRgba;
-    textStrokeWidthPx = outlineSize;
-    textShadow = buildSoftShadow(
-      shortFormTuning?.softShadowColor || shadowRgba,
-      shortFormTuning?.softShadowOffsetYPx ?? Math.max(1, style.shadowDepth),
-      shortFormTuning?.softShadowBlurPx ??
-        Math.max(2, Math.round(style.shadowDepth * 3))
-    );
+    if (landscapeTuning?.outlineEm) {
+      textStrokeColor = landscapeTuning.outlineColor || outlineRgba;
+      textStrokeWidthPx = Math.max(
+        1.5,
+        emToPx(finalFontSize, landscapeTuning.outlineEm)
+      );
+      textShadow = buildSoftShadow(
+        landscapeTuning.shadowColor || shadowRgba,
+        emToPx(finalFontSize, landscapeTuning.shadowOffsetYEm ?? 0.05),
+        emToPx(finalFontSize, landscapeTuning.shadowBlurEm ?? 0.17)
+      );
+    } else {
+      const outlineSize = Math.max(
+        0.1,
+        style.outlineSize * (shortFormTuning?.outlineMultiplier ?? 1)
+      );
+      textStrokeColor = outlineRgba;
+      textStrokeWidthPx = outlineSize;
+      textShadow = buildSoftShadow(
+        shortFormTuning?.softShadowColor || shadowRgba,
+        shortFormTuning?.softShadowOffsetYPx ?? Math.max(1, style.shadowDepth),
+        shortFormTuning?.softShadowBlurPx ??
+          Math.max(2, Math.round(style.shadowDepth * 3))
+      );
+    }
   } else if (style.borderStyle === 3 || style.borderStyle === 4) {
     backgroundColor = shortFormTuning?.backgroundColor || shadowRgba;
     boxShadowValue =
@@ -343,6 +413,16 @@ export function resolveSubtitleRenderTheme(opts: {
     : '100%';
   const margin = isShortFormPortrait || isFullScreen ? '0 auto' : '0';
 
+  const landscapeLineBoxPadding = landscapeTuning?.lineBoxPaddingEm
+    ? landscapeTuning.lineBoxPaddingEm
+        .map(em => `${emToPx(finalFontSize, em)}px`)
+        .join(' ')
+    : undefined;
+  const landscapeLineBoxRadiusPx =
+    typeof landscapeTuning?.lineBoxRadiusEm === 'number'
+      ? emToPx(finalFontSize, landscapeTuning.lineBoxRadiusEm)
+      : undefined;
+
   return {
     backgroundColor,
     borderRadiusPx: shortFormTuning?.borderRadiusPx ?? 5,
@@ -351,18 +431,29 @@ export function resolveSubtitleRenderTheme(opts: {
     containerPadding,
     fontFamily: isShortFormPortrait
       ? SHORT_FORM_FONT_STACK
-      : DEFAULT_FONT_STACK,
+      : LANDSCAPE_FONT_STACK,
     fontSizePx: finalFontSize,
-    fontWeight: shortFormTuning?.fontWeight ?? (style.isBold ? 700 : 500),
+    fontWeight:
+      shortFormTuning?.fontWeight ??
+      landscapeTuning?.fontWeight ??
+      (style.isBold ? 700 : 500),
     horizontalInset,
     isShortFormPortrait,
-    letterSpacing: shortFormTuning?.letterSpacing ?? '0.01em',
+    letterSpacing:
+      shortFormTuning?.letterSpacing ??
+      landscapeTuning?.letterSpacing ??
+      '0.01em',
     lineBoxBackgroundColor:
-      shortFormTuning?.lineBoxBackgroundColor || shadowRgba,
-    lineBoxBorderRadiusPx: shortFormTuning?.lineBoxBorderRadiusPx ?? 0,
+      shortFormTuning?.lineBoxBackgroundColor ||
+      landscapeTuning?.lineBoxBackgroundColor ||
+      shadowRgba,
+    lineBoxBorderRadiusPx:
+      shortFormTuning?.lineBoxBorderRadiusPx ?? landscapeLineBoxRadiusPx ?? 0,
     lineBoxBoxShadow: shortFormTuning?.lineBoxBoxShadow ?? 'none',
-    lineBoxPadding: shortFormTuning?.lineBoxPadding ?? '1px 6px',
-    lineHeight: shortFormTuning?.lineHeight ?? 1.35,
+    lineBoxPadding:
+      shortFormTuning?.lineBoxPadding ?? landscapeLineBoxPadding ?? '1px 6px',
+    lineHeight:
+      shortFormTuning?.lineHeight ?? landscapeTuning?.lineHeight ?? 1.35,
     margin,
     maxWidth,
     textShadow,

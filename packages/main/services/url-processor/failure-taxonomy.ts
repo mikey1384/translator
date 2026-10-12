@@ -43,6 +43,12 @@ export function getUrlDownloadErrorText(error: unknown): string {
     .join('\n');
 }
 
+export function isAudienceRestrictedError(error: unknown): boolean {
+  return /this content (?:isn['’]t|is not) available to everyone|can(?:not|['’]t) be seen by certain audiences|restricted to certain audiences/i.test(
+    getUrlDownloadErrorText(error)
+  );
+}
+
 /**
  * Classifies only stable, local failure signals. Raw yt-dlp output remains in
  * logs and is never returned as analytics content.
@@ -75,7 +81,7 @@ export function classifyUrlDownloadFailureDetail(
   const privateOrRestricted =
     /private video|this video is private|video unavailable|geo[- ]restricted|region[- ]locked/.test(
       text
-    );
+    ) || isAudienceRestrictedError(error);
   const sourceAccessFailure =
     /unable to download (?:webpage|api page|player|initial data|player api json)|extractor error|failed to extract/.test(
       text

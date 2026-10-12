@@ -39,6 +39,7 @@ import {
   WATCH_JOB_DEFAULT_WAIT_MS,
   WATCH_JOB_MAX_WAIT_MS,
   getMcpToolBilling,
+  DEFAULT_SUBTITLE_BASE_FONT_SIZE,
 } from './mcp-v2-contract.mjs';
 
 const DEFAULT_CREDIT_RATES = Object.freeze({
@@ -238,7 +239,10 @@ export function resolvePlannedSubtitleRenderSpec({
     throw new Error('The saved project profile subtitle font size is invalid.');
   }
   const baseFontSize =
-    requestedFontSize ?? previewFontSize ?? profileFontSize ?? 24;
+    requestedFontSize ??
+    previewFontSize ??
+    profileFontSize ??
+    DEFAULT_SUBTITLE_BASE_FONT_SIZE;
   if (!SUBTITLE_DISPLAY_MODES.has(displayMode)) {
     throw new Error('The resolved subtitle display mode is unsupported.');
   }

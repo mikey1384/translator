@@ -1,6 +1,9 @@
 export const MCP_V2_PROTOCOL_VERSION = '2.0.0';
 export const MCP_V2_SCHEMA_VERSION = 1;
 export const MCP_SERVER_VERSION = '0.2.3';
+// Keep in sync with DEFAULT_SUBTITLE_BASE_FONT_SIZE in
+// packages/shared/constants/runtime-config.ts.
+export const DEFAULT_SUBTITLE_BASE_FONT_SIZE = 38;
 export const WATCH_JOB_DEFAULT_WAIT_MS = 25_000;
 export const WATCH_JOB_MAX_WAIT_MS = 50_000;
 export const TRANSLATION_BATCH_DEFAULT_SEGMENTS = 100;
@@ -87,7 +90,7 @@ export const BUILTIN_PROJECT_PROFILES = Object.freeze({
     subtitle_rendering: Object.freeze({
       display_mode: 'translation',
       style: 'Default',
-      font_size: 24,
+      font_size: DEFAULT_SUBTITLE_BASE_FONT_SIZE,
       max_lines: 2,
     }),
   }),

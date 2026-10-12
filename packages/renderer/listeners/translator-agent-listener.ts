@@ -9,6 +9,7 @@ import {
   CHECKOUT_ALREADY_PENDING,
   CREDIT_PACKS,
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
+  DEFAULT_SUBTITLE_BASE_FONT_SIZE,
   ELEVENLABS_DUB_VOICES,
   SUMMARY_QUALITY_MULTIPLIER,
   TTS_CREDITS_PER_MINUTE,
@@ -74,6 +75,7 @@ import {
   storeGeneratedSubtitleArtifact,
 } from '../utils/subtitle-library';
 import { preserveWordTimingsOnTranslatedSegments } from '../utils/preserve-word-timings';
+import { shouldStoreAgentSessionTranslation } from '../utils/agent-session-library';
 import {
   CREDITS_PER_SUMMARY_AUDIO_HOUR,
   estimateTranslationCreditsPerHour,
@@ -3173,7 +3175,8 @@ async function performAgentPreview(
   const baseFontSize = normalizeSubtitleBaseFontSize(
     Number.isFinite(plannedBaseFontSize)
       ? plannedBaseFontSize
-      : Number(input?.outputs?.subtitle_font_size) || 24
+      : Number(input?.outputs?.subtitle_font_size) ||
+          DEFAULT_SUBTITLE_BASE_FONT_SIZE
   );
   const metadataResult = await SystemIPC.getVideoMetadata(videoPath);
   if (!metadataResult.success || !metadataResult.metadata) {
@@ -4364,6 +4367,15 @@ async function applyTranslationSession(input?: {
     // Do not leave the tab's previously open media attached to that job.
     await useVideoStore.getState().setFile(null);
   }
+  // Word timings live on the document this job transcribed for the same video,
+  // not in the job session, so capture them before the session replaces it.
+  const previousSubtitles = useSubStore.getState();
+  const previousSegments =
+    videoPath && previousSubtitles.sourceVideoPath === videoPath
+      ? previousSubtitles.order
+          .map(id => previousSubtitles.segments[id])
+          .filter((segment): segment is SrtSegment => Boolean(segment))
+      : [];
   useSubStore
     .getState()
     .load(segments, null, 'fresh', videoPath || null, null, null, null, {
@@ -4374,6 +4386,44 @@ async function applyTranslationSession(input?: {
       targetLanguage: String(input?.targetLanguage || '').trim() || null,
     });
   useUIStore.getState().setEditPanelOpen(true);
+  // Agent-authored translations otherwise exist only in the job store, so the
+  // video would reopen from the library as untranslated.
+  const sessionTargetLanguage = String(input?.targetLanguage || '').trim();
+  const sessionSourceUrl = String(input?.source?.url || '').trim() || null;
+  if (
+    shouldStoreAgentSessionTranslation({
+      segments,
+      targetLanguage: sessionTargetLanguage,
+      sourceVideoPath: videoPath || null,
+      sourceUrl: sessionSourceUrl,
+    })
+  ) {
+    try {
+      const storedSegments = preserveWordTimingsOnTranslatedSegments(
+        previousSegments,
+        segments
+      );
+      await storeGeneratedSubtitleArtifact({
+        content: buildSrt({
+          segments: storedSegments,
+          mode: 'dual',
+          noWrap: true,
+        }),
+        segments: storedSegments,
+        kind: 'translation',
+        targetLanguage: sessionTargetLanguage,
+        sourceVideoPath: videoPath || null,
+        sourceUrl: sessionSourceUrl,
+        titleHint: videoPath ? videoPath.split(/[\\/]/).pop() || null : null,
+      });
+    } catch (error) {
+      // The job owns the translation; a library write must not fail the stage.
+      console.warn(
+        '[agent] Could not save the job translation to the subtitle library:',
+        error
+      );
+    }
+  }
   const mountedVideo = useVideoStore.getState();
   const mountedSubtitles = useSubStore.getState();
   mountedMcpWorkspaceBinding =

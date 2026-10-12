@@ -39,3 +39,9 @@ packages/agent-server/bin/translator-owner-supervisor.exe
 uploads/
 temp/
 *.temp.* 
+
+# Local ops scratch: release staging, MCP watch transfers, ad-hoc drivers
+.local/
+.release-*/
+_watch_*/
+/run-*.py

@@ -1,5 +1,8 @@
 import log from 'electron-log';
-import { classifyUrlDownloadFailureDetail } from './failure-taxonomy.js';
+import {
+  classifyUrlDownloadFailureDetail,
+  isAudienceRestrictedError,
+} from './failure-taxonomy.js';
 
 export function mapErrorToUserFriendly({
   rawErrorMessage,
@@ -15,7 +18,14 @@ export function mapErrorToUserFriendly({
     stderr: stderrContent,
   });
 
-  if (combinedErrorText.includes('unsupported url')) {
+  if (
+    isAudienceRestrictedError({
+      message: rawErrorMessage,
+      stderr: stderrContent,
+    })
+  ) {
+    return 'This video is restricted to certain audiences. If your account can view it, connect to this site in Settings and try again.';
+  } else if (combinedErrorText.includes('unsupported url')) {
     return 'This website or URL is not supported.';
   } else if (combinedErrorText.includes('video unavailable')) {
     return 'This video is unavailable.';

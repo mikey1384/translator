@@ -4,6 +4,7 @@ import { Draft, enableMapSet } from 'immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
+import { DEFAULT_SUBTITLE_BASE_FONT_SIZE } from '../../shared/constants/runtime-config';
 import { sameArray } from '../utils/array';
 import {
   DUB_VOICE_STORAGE_KEY,
@@ -240,7 +241,8 @@ const initial: State = {
     if (!Number.isFinite(parsed)) return 0.35;
     return Math.min(1, Math.max(0, parsed));
   })(),
-  baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
+  baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) ||
+    DEFAULT_SUBTITLE_BASE_FONT_SIZE,
   subtitleStyle:
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
     'Default',

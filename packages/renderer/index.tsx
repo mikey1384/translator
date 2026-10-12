@@ -19,6 +19,11 @@ function ensureNotoSansLoaded(): void {
     baseUrl
   ).toString();
 
+  const pretendardUrl = new URL(
+    './assets/fonts/PretendardVariable.woff2',
+    baseUrl
+  ).toString();
+
   const style = document.createElement('style');
   style.id = 'noto-sans-font';
   style.textContent = `
@@ -33,6 +38,13 @@ function ensureNotoSansLoaded(): void {
       font-family: 'Noto Sans';
       src: url('${fontUrl}') format('truetype');
       font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Pretendard Variable';
+      src: url('${pretendardUrl}') format('woff2-variations');
+      font-weight: 45 920;
       font-style: normal;
       font-display: swap;
     }

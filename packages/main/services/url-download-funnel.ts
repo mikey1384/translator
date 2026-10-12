@@ -1,3 +1,5 @@
+import { classifyUrlDownloadFailureDetail } from './url-processor/failure-taxonomy.js';
+
 export type UrlSourceType = 'youtube' | 'other';
 
 export type NeedCookiesCause =
@@ -73,6 +75,9 @@ export function classifyUrlDownloadFailure(
   )}\n${String(value?.code || '')}`.toLowerCase();
 
   if (/invalid url|url format/.test(text)) return 'validation';
+  if (classifyUrlDownloadFailureDetail(error).code === 'private_or_restricted') {
+    return 'site_rejected';
+  }
   if (
     /yt-dlp binary|javascript runtime|could not find\/provide|not executable/.test(
       text

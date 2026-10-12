@@ -13,6 +13,10 @@ export const ASR_FAST_MODE = false; // Set to true for faster processing with lo
 export const BASELINE_HEIGHT = 720;
 export const BASELINE_FONT_SIZE = 30;
 export const MIN_SUBTITLE_FONT_SIZE = 6;
+// Base (720p-relative) size used when no size is saved or requested.
+// Keep in sync with DEFAULT_SUBTITLE_BASE_FONT_SIZE in
+// packages/agent-server/src/mcp-v2-contract.mjs.
+export const DEFAULT_SUBTITLE_BASE_FONT_SIZE = 38;
 
 /* Progress & UI */
 export const DEBOUNCE_DELAY_MS = 300;

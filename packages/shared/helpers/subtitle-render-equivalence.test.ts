@@ -47,20 +47,28 @@ for (const isMultiLine of [false, true]) {
     assert.deepEqual(masterSpec, previewSpec);
     assert.deepEqual(masterTheme, previewTheme);
     assert.equal(masterTheme.fontSizePx, 60);
+    assert.match(masterTheme.fontFamily, /^'Pretendard Variable'/);
     assert.match(masterTheme.fontFamily, /Noto Sans/);
-    assert.equal(masterTheme.lineBoxBackgroundColor, 'rgba(0,0,0,0.80)');
-    assert.equal(masterTheme.lineBoxPadding, '1px 6px');
+    assert.equal(masterTheme.bottom, '8.5%');
+    assert.equal(masterTheme.fontWeight, 600);
+    assert.equal(
+      masterTheme.lineBoxBackgroundColor,
+      'rgba(12, 14, 18, 0.78)'
+    );
+    assert.equal(masterTheme.lineBoxPadding, '5.4px 24.6px 9px');
+    assert.equal(masterTheme.lineBoxBorderRadiusPx, 15.6);
     assert.equal(masterTheme.textStrokeWidthPx, 0);
     assert.equal(masterTheme.textShadow, 'none');
 
     const lineBoxStyle = resolveSubtitleLineBoxStyle(masterTheme);
-    assert.equal(lineBoxStyle.backgroundColor, 'rgba(0,0,0,0.80)');
-    assert.equal(lineBoxStyle.padding, '1px 6px');
+    assert.equal(lineBoxStyle.backgroundColor, 'rgba(12, 14, 18, 0.78)');
+    assert.equal(lineBoxStyle.padding, '5.4px 24.6px 9px');
+    assert.equal(lineBoxStyle.borderRadius, '15.6px');
     assert.equal(lineBoxStyle.boxDecorationBreak, 'clone');
     assert.equal(lineBoxStyle.WebkitBoxDecorationBreak, 'clone');
     assert.match(
       subtitleLineBoxStyleToCssText(lineBoxStyle),
-      /background-color:rgba\(0,0,0,0\.80\)/
+      /background-color:rgba\(12, 14, 18, 0\.78\)/
     );
   });
 }
@@ -71,4 +79,35 @@ test('preview and master normalize LineBox edge whitespace identically', () => {
     'translated line'
   );
   assert.equal(normalizeSubtitleLineBoxLineText('   '), '\u00a0');
+});
+
+test('landscape Default uses a font-relative outline and soft shadow', () => {
+  const theme = resolveSubtitleRenderTheme({
+    displayFontSize: 58,
+    stylePreset: 'Default',
+    isMultiLine: true,
+    videoWidthPx: 1920,
+    videoHeightPx: 1080,
+  });
+
+  assert.equal(theme.fontWeight, 600);
+  assert.equal(theme.bottom, '8.5%');
+  assert.equal(theme.textStrokeWidthPx, 6);
+  assert.equal(theme.textStrokeColor, 'rgba(0, 0, 0, 0.92)');
+  assert.equal(theme.textShadow, '0 2.9px 9.9px rgba(0, 0, 0, 0.55)');
+});
+
+test('portrait short-form tuning is untouched by landscape tuning', () => {
+  const theme = resolveSubtitleRenderTheme({
+    displayFontSize: 60,
+    stylePreset: 'LineBox',
+    isMultiLine: false,
+    videoWidthPx: 1080,
+    videoHeightPx: 1920,
+  });
+
+  assert.equal(theme.bottom, '18%');
+  assert.equal(theme.lineBoxBackgroundColor, 'rgba(12, 14, 18, 0.88)');
+  assert.equal(theme.lineBoxPadding, '4px 14px 5px 14px');
+  assert.match(theme.fontFamily, /^'Pretendard Variable'/);
 });
