@@ -33,6 +33,11 @@ import type {
 } from './url-download-funnel.js';
 import { shouldSendProductAnalytics } from './product-analytics-policy.js';
 import {
+  countAnonymousAppOpen,
+  countAnonymousUsage,
+  flushAnonymousUsageCounts,
+} from './anonymous-usage-counts.js';
+import {
   queueProductEvent,
   listPendingProductEvents,
   acknowledgeProductEvent,
@@ -140,11 +145,15 @@ export async function initializeProductAnalytics() {
           await flushPendingCriticalFailures();
           await flushPendingProductEvents();
         })().catch(() => {});
+        void flushAnonymousUsageCounts();
       },
       15 * 60 * 1000
     );
     maintenance.unref();
   }
+  // Anonymous counts do not depend on the privacy sync, so count first.
+  countAnonymousAppOpen();
+  void flushAnonymousUsageCounts();
   await privacy.sync();
   await trackAppOpen();
   await flushPendingCriticalFailures();
@@ -395,6 +404,7 @@ export function trackFirstMeaningfulUse(
 export async function trackTranslationFunnelEvent(
   event: TranslationFunnelEvent
 ): Promise<void> {
+  countAnonymousUsage(event);
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
   const occurredAt = new Date().toISOString();
@@ -425,6 +435,7 @@ export async function trackTranslationFunnelEvent(
 export async function trackTranscriptionFunnelEvent(
   event: TranscriptionFunnelEvent
 ): Promise<void> {
+  countAnonymousUsage(event);
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
   const occurredAt = new Date().toISOString();
@@ -448,6 +459,7 @@ export async function trackTranscriptionFunnelEvent(
 export async function trackDubbingFunnelEvent(
   event: DubbingFunnelEvent
 ): Promise<void> {
+  countAnonymousUsage(event);
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
   const occurredAt = new Date().toISOString();
@@ -471,6 +483,7 @@ export async function trackDubbingFunnelEvent(
 export async function trackSummaryFunnelEvent(
   event: SummaryFunnelEvent
 ): Promise<void> {
+  countAnonymousUsage(event);
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
   const occurredAt = new Date().toISOString();
@@ -494,6 +507,7 @@ export async function trackSummaryFunnelEvent(
 export async function trackMergeFunnelEvent(
   event: MergeFunnelEvent
 ): Promise<void> {
+  countAnonymousUsage(event);
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
   const occurredAt = new Date().toISOString();
@@ -524,6 +538,7 @@ export async function trackUrlDownloadFunnelEvent(
     mediaFailure?: string;
   }
 ): Promise<void> {
+  countAnonymousUsage(event);
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
   const occurredAt = new Date().toISOString();
@@ -559,6 +574,7 @@ export async function trackPurchaseFunnelEvent(
     failureReason?: PurchaseFailureReason;
   } = {}
 ): Promise<void> {
+  countAnonymousUsage(event);
   if (!productAnalyticsEnabled()) return;
   const eventId = randomUUID();
   const occurredAt = new Date().toISOString();

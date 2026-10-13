@@ -522,7 +522,8 @@
       "pendingOn": "Relatórios do aplicativo pausados. Conecte-se e tente novamente.",
       "pendingOff": "Desativada neste dispositivo. Conecte-se para confirmar a preferência no servidor.",
       "retry": "Tentar novamente",
-      "error": "Não foi possível confirmar sua preferência. Tente novamente."
+      "error": "Não foi possível confirmar sua preferência. Tente novamente.",
+      "anonymousCounts": "Sempre ativo: contagens diárias anônimas de etapas do app (como app aberto ou download concluído), apenas com a etapa, o dia, a plataforma e a versão. Sem ID, conteúdo ou configurações."
     },
     "title": "Configurações",
     "aiProvider": {

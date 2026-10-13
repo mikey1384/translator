@@ -522,7 +522,8 @@
       "pendingOn": "Sovelluksen raportit keskeytetty. Yhdistä ja yritä uudelleen.",
       "pendingOff": "Pois tällä laitteella. Yhdistä vahvistaaksesi palvelimen valinnan.",
       "retry": "Yritä uudelleen",
-      "error": "Valintaa ei voitu vahvistaa. Yritä uudelleen."
+      "error": "Valintaa ei voitu vahvistaa. Yritä uudelleen.",
+      "anonymousCounts": "Aina käytössä: nimettömät päivittäiset laskennat sovelluksen vaiheista (kuten sovellus avattu tai lataus valmis), vain vaihe, päivä, alusta ja sovelluksen versio. Ei tunnistetta, sisältöä tai asetuksia."
     },
     "title": "Asetukset",
     "aiProvider": {

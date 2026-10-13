@@ -522,7 +522,8 @@
       "pendingOn": "Ripoti za programu zimesitishwa. Unganisha na ujaribu tena.",
       "pendingOff": "Umezimwa kwenye kifaa hiki. Unganisha ili kuthibitisha chaguo la seva.",
       "retry": "Jaribu tena",
-      "error": "Imeshindwa kuthibitisha chaguo lako. Jaribu tena."
+      "error": "Imeshindwa kuthibitisha chaguo lako. Jaribu tena.",
+      "anonymousCounts": "Huwa imewashwa: hesabu za kila siku zisizo na jina za hatua za programu (kama programu kufunguliwa au upakuaji kukamilika), zikiwa na hatua, siku, jukwaa na toleo la programu pekee. Hakuna kitambulisho, maudhui wala mipangilio."
     },
     "title": "Mipangilio",
     "aiProvider": {

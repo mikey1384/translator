@@ -522,7 +522,8 @@
       "pendingOn": "Appens rapporter er sat på pause. Opret forbindelse og prøv igen.",
       "pendingOff": "Fra på denne enhed. Opret forbindelse for at bekræfte serverens valg.",
       "retry": "Prøv igen",
-      "error": "Kunne ikke bekræfte dit valg. Prøv igen."
+      "error": "Kunne ikke bekræfte dit valg. Prøv igen.",
+      "anonymousCounts": "Altid slået til: anonyme daglige optællinger af trin i appen (fx app åbnet eller download fuldført) med kun trinnet, dagen, platformen og appversionen. Intet ID, indhold eller indstillinger."
     },
     "title": "Indstillinger",
     "aiProvider": {

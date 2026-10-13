@@ -522,7 +522,8 @@
       "pendingOn": "Az alkalmazás jelentései szünetelnek. Csatlakozz, és próbáld újra.",
       "pendingOff": "Ezen az eszközön kikapcsolva. Csatlakozz a szerver beállításának megerősítéséhez.",
       "retry": "Újra",
-      "error": "A választás nem erősíthető meg. Próbáld újra."
+      "error": "A választás nem erősíthető meg. Próbáld újra.",
+      "anonymousCounts": "Mindig be van kapcsolva: az alkalmazás lépéseinek névtelen napi számlálása (például alkalmazás megnyitása vagy letöltés befejezése), csak a lépéssel, nappal, platformmal és verzióval. Azonosító, tartalom és beállítás nélkül."
     },
     "title": "Beállítások",
     "aiProvider": {

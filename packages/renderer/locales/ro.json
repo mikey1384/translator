@@ -522,7 +522,8 @@
       "pendingOn": "Rapoartele aplicației sunt suspendate. Conectează-te și reîncearcă.",
       "pendingOff": "Dezactivată pe acest dispozitiv. Conectează-te pentru a confirma opțiunea pe server.",
       "retry": "Reîncearcă",
-      "error": "Opțiunea nu a putut fi confirmată. Reîncearcă."
+      "error": "Opțiunea nu a putut fi confirmată. Reîncearcă.",
+      "anonymousCounts": "Mereu activ: numărări zilnice anonime ale pașilor din aplicație (de exemplu aplicație deschisă sau descărcare finalizată), doar cu pasul, ziua, platforma și versiunea. Fără ID, conținut sau setări."
     },
     "title": "Setări",
     "aiProvider": {

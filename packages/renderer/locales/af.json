@@ -522,7 +522,8 @@
       "pendingOn": "Toepverslae is onderbreek. Koppel en probeer weer.",
       "pendingOff": "Af op hierdie toestel. Koppel om die bedienerkeuse te bevestig.",
       "retry": "Probeer weer",
-      "error": "Kon nie jou keuse bevestig nie. Probeer weer."
+      "error": "Kon nie jou keuse bevestig nie. Probeer weer.",
+      "anonymousCounts": "Altyd aan: anonieme daaglikse tellings van appstappe (soos app oopgemaak of aflaai voltooi), met net die stap, dag, platform en appweergawe. Geen ID, inhoud of instellings nie."
     },
     "title": "Instellings",
     "aiProvider": {

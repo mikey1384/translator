@@ -522,7 +522,8 @@
       "pendingOn": "Laporan aplikasi dijeda. Hubungkan dan coba lagi.",
       "pendingOff": "Nonaktif di perangkat ini. Hubungkan untuk mengonfirmasi pilihan di server.",
       "retry": "Coba lagi",
-      "error": "Pilihan belum dapat dikonfirmasi. Coba lagi."
+      "error": "Pilihan belum dapat dikonfirmasi. Coba lagi.",
+      "anonymousCounts": "Selalu aktif: hitungan harian anonim untuk langkah aplikasi (seperti aplikasi dibuka atau unduhan selesai), hanya berisi langkah, hari, platform, dan versi aplikasi. Tanpa ID, konten, atau pengaturan."
     },
     "title": "Pengaturan",
     "aiProvider": {

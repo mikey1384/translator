@@ -522,7 +522,8 @@
       "pendingOn": "Uygulama raporları duraklatıldı. Bağlanıp yeniden deneyin.",
       "pendingOff": "Bu cihazda kapalı. Sunucudaki tercihi doğrulamak için bağlanın.",
       "retry": "Yeniden dene",
-      "error": "Tercihiniz doğrulanamadı. Yeniden deneyin."
+      "error": "Tercihiniz doğrulanamadı. Yeniden deneyin.",
+      "anonymousCounts": "Her zaman açık: uygulama adımlarının anonim günlük sayıları (uygulamanın açılması veya indirmenin bitmesi gibi); yalnızca adım, gün, platform ve uygulama sürümü. Kimlik, içerik veya ayar yok."
     },
     "title": "Ayarlar",
     "aiProvider": {

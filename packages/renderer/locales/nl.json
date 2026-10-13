@@ -522,7 +522,8 @@
       "pendingOn": "App-rapporten gepauzeerd. Maak verbinding en probeer opnieuw.",
       "pendingOff": "Uit op dit apparaat. Maak verbinding om de serverkeuze te bevestigen.",
       "retry": "Opnieuw proberen",
-      "error": "Keuze niet bevestigd. Probeer opnieuw."
+      "error": "Keuze niet bevestigd. Probeer opnieuw.",
+      "anonymousCounts": "Altijd aan: anonieme dagelijkse tellingen van stappen in de app (zoals app geopend of download voltooid), met alleen de stap, dag, platform en appversie. Geen ID, inhoud of instellingen."
     },
     "title": "Instellingen",
     "aiProvider": {

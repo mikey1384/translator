@@ -522,7 +522,8 @@
       "pendingOn": "Rapporti dell’app in pausa. Connettiti e riprova.",
       "pendingOff": "Disattivata su questo dispositivo. Connettiti per confermare la scelta sul server.",
       "retry": "Riprova",
-      "error": "Impossibile confermare la scelta. Riprova."
+      "error": "Impossibile confermare la scelta. Riprova.",
+      "anonymousCounts": "Sempre attivo: conteggi giornalieri anonimi dei passaggi dell’app (come app aperta o download completato), con solo passaggio, giorno, piattaforma e versione. Nessun ID, contenuto o impostazione."
     },
     "title": "Impostazioni",
     "aiProvider": {

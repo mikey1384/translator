@@ -522,7 +522,8 @@
       "pendingOn": "App-Berichte pausiert. Verbindung herstellen und erneut versuchen.",
       "pendingOff": "Auf diesem Gerät aus. Verbindung herstellen, um die Serverauswahl zu bestätigen.",
       "retry": "Erneut versuchen",
-      "error": "Auswahl konnte nicht bestätigt werden. Erneut versuchen."
+      "error": "Auswahl konnte nicht bestätigt werden. Erneut versuchen.",
+      "anonymousCounts": "Immer aktiv: anonyme tägliche Zählungen von App-Schritten (etwa App geöffnet oder Download abgeschlossen), nur mit Schritt, Tag, Plattform und App-Version. Keine Kennung, Inhalte oder Einstellungen."
     },
     "title": "Einstellungen",
     "aiProvider": {

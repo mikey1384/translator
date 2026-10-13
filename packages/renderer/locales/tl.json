@@ -522,7 +522,8 @@
       "pendingOn": "Naka-pause ang mga ulat ng app. Kumonekta at subukan muli.",
       "pendingOff": "Naka-off sa device na ito. Kumonekta upang kumpirmahin ang pinili sa server.",
       "retry": "Subukan muli",
-      "error": "Hindi makumpirma ang pinili. Subukan muli."
+      "error": "Hindi makumpirma ang pinili. Subukan muli.",
+      "anonymousCounts": "Laging naka-on: mga anonimong pang-araw-araw na bilang ng mga hakbang sa app (gaya ng pagbukas ng app o natapos na download), na may hakbang, araw, platform at bersyon lang. Walang ID, nilalaman o setting."
     },
     "title": "Mga Setting",
     "aiProvider": {

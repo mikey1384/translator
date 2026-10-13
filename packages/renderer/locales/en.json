@@ -533,7 +533,8 @@
       "pendingOn": "App reports paused. Connect and retry.",
       "pendingOff": "Off on this device. Connect to confirm the server choice.",
       "retry": "Retry",
-      "error": "Unable to confirm your choice. Retry."
+      "error": "Unable to confirm your choice. Retry.",
+      "anonymousCounts": "Always on: anonymous daily counts of app steps (such as app opened or download finished), with only the step, day, platform and app version. No ID, content or settings."
     },
     "title": "Settings",
     "aiProvider": {

@@ -522,7 +522,8 @@
       "pendingOn": "Appens rapporter pausade. Anslut och försök igen.",
       "pendingOff": "Av på den här enheten. Anslut för att bekräfta serverns val.",
       "retry": "Försök igen",
-      "error": "Kunde inte bekräfta valet. Försök igen."
+      "error": "Kunde inte bekräfta valet. Försök igen.",
+      "anonymousCounts": "Alltid på: anonyma dagliga räkningar av steg i appen (som app öppnad eller nedladdning klar), med bara steget, dagen, plattformen och appversionen. Inget ID, innehåll eller inställningar."
     },
     "title": "Inställningar",
     "aiProvider": {

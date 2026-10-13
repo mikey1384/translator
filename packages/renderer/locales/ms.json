@@ -522,7 +522,8 @@
       "pendingOn": "Laporan aplikasi dijeda. Sambung dan cuba lagi.",
       "pendingOff": "Dimatikan pada peranti ini. Sambung untuk mengesahkan pilihan pada pelayan.",
       "retry": "Cuba lagi",
-      "error": "Pilihan tidak dapat disahkan. Cuba lagi."
+      "error": "Pilihan tidak dapat disahkan. Cuba lagi.",
+      "anonymousCounts": "Sentiasa hidup: kiraan harian tanpa nama bagi langkah aplikasi (seperti aplikasi dibuka atau muat turun selesai), dengan hanya langkah, hari, platform dan versi aplikasi. Tiada ID, kandungan atau tetapan."
     },
     "title": "Tetapan",
     "aiProvider": {

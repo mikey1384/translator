@@ -522,7 +522,8 @@
       "pendingOn": "Báo cáo ứng dụng đang tạm dừng. Hãy kết nối và thử lại.",
       "pendingOff": "Đã tắt trên thiết bị này. Hãy kết nối để xác nhận lựa chọn trên máy chủ.",
       "retry": "Thử lại",
-      "error": "Chưa xác nhận được lựa chọn. Hãy thử lại."
+      "error": "Chưa xác nhận được lựa chọn. Hãy thử lại.",
+      "anonymousCounts": "Luôn bật: số đếm ẩn danh theo ngày cho các bước trong ứng dụng (như mở ứng dụng hoặc tải xong), chỉ gồm bước, ngày, nền tảng và phiên bản. Không có ID, nội dung hay cài đặt."
     },
     "title": "Cài đặt",
     "aiProvider": {

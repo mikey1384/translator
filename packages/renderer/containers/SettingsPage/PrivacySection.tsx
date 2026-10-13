@@ -130,6 +130,9 @@ export default function PrivacySection() {
       <p style={{ lineHeight: 1.6, marginBottom: 0 }}>
         {t('settings.privacy.retention')}
       </p>
+      <p style={{ lineHeight: 1.6, marginBottom: 0 }}>
+        {t('settings.privacy.anonymousCounts')}
+      </p>
     </Section>
   );
 }

@@ -522,7 +522,8 @@
       "pendingOn": "Rapports de l’application en pause. Connectez-vous et réessayez.",
       "pendingOff": "Désactivées sur cet appareil. Connectez-vous pour confirmer le choix sur le serveur.",
       "retry": "Réessayer",
-      "error": "Impossible de confirmer votre choix. Réessayez."
+      "error": "Impossible de confirmer votre choix. Réessayez.",
+      "anonymousCounts": "Toujours actif : des comptages quotidiens anonymes des étapes de l’app (comme l’ouverture de l’app ou un téléchargement terminé), avec seulement l’étape, le jour, la plateforme et la version. Aucun identifiant, contenu ni réglage."
     },
     "title": "Paramètres",
     "aiProvider": {

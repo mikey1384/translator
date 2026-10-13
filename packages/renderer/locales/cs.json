@@ -522,7 +522,8 @@
       "pendingOn": "Hlášení aplikace pozastavena. Připojte se a zkuste to znovu.",
       "pendingOff": "Na tomto zařízení vypnuto. Připojte se pro potvrzení volby na serveru.",
       "retry": "Zkusit znovu",
-      "error": "Volbu se nepodařilo potvrdit. Zkuste to znovu."
+      "error": "Volbu se nepodařilo potvrdit. Zkuste to znovu.",
+      "anonymousCounts": "Vždy zapnuto: anonymní denní počty kroků v aplikaci (např. otevření aplikace nebo dokončené stahování), jen s krokem, dnem, platformou a verzí aplikace. Žádné ID, obsah ani nastavení."
     },
     "title": "Nastavení",
     "aiProvider": {
