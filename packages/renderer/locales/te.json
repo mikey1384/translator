@@ -870,7 +870,9 @@
     "redirectingToPayment": "సురక్షిత చెక్‌అవుట్ తెరుస్తోంది…",
     "description": "${{packMicroPrice}} ({{packMicroHours}}గంటలు), ${{pack1Price}} ({{pack1Hours}}గంటలు), ${{pack2Price}} ({{pack2Hours}}గంటలు), లేదా ${{pack3Price}} ({{pack3Hours}}గంటలు) క్రెడిట్ ప్యాక్‌లలో నుండి ఎంచుకోండి",
     "notEnough": "తగినంత క్రెడిట్‌లు లేవు. కొనసాగడానికి దయచేసి మరింత క్రెడిట్‌లను కొనుగోలు చేయండి.",
-    "transcriptionMinutesShort": "{{minutes}} నిమిషాల ట్రాన్స్‌క్రిప్షన్"
+    "transcriptionMinutesShort": "{{minutes}} నిమిషాల ట్రాన్స్‌క్రిప్షన్",
+    "transcriptionTimeShort": "{{time}} ట్రాన్స్‌క్రిప్షన్",
+    "costOfBalance": "మీ {{balance}} క్రెడిట్‌లలో {{cost}}"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "ఈ వీడియోకు సరిపడా క్రెడిట్‌లు లేవు",
       "notEnoughTranscriptionMessage": "ఈ వీడియోను ట్రాన్స్‌క్రైబ్ చేయడానికి సుమారు {{required}} క్రెడిట్‌లు అవసరం. మీ వద్ద {{available}} ఉన్నాయి, ఇవి సుమారు {{minutes}} నిమిషాలకు సరిపోతాయి. క్రెడిట్‌లు జోడించి మళ్లీ ప్రారంభించండి.",
       "notEnoughMessage": "ఈ పనికి మీ {{available}} బ్యాలెన్స్ కంటే ఎక్కువ క్రెడిట్‌లు అవసరం. కొనసాగించడానికి క్రెడిట్‌లు జోడించండి."
+    },
+    "dubCostConfirm": {
+      "title": "డబ్బింగ్ ప్రారంభించాలా?",
+      "message": "ఈ డబ్బింగ్ మీ {{balance}} క్రెడిట్‌లలో సుమారు {{cost}} ఉపయోగిస్తుంది. స్వరాలను రూపొందించడం అనువాదం కంటే చాలా ఖరీదైనది."
     }
   },
   "progress": {

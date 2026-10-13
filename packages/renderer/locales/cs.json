@@ -870,7 +870,9 @@
     "redirectingToPayment": "Otevírání zabezpečené pokladny…",
     "description": "Vyberte z balíčků ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), nebo ${{pack3Price}} ({{pack3Hours}}h)",
     "notEnough": "Nedostatek kreditů. Prosím zakupte více kreditů pro pokračování.",
-    "transcriptionMinutesShort": "{{minutes}} min přepisu"
+    "transcriptionMinutesShort": "{{minutes}} min přepisu",
+    "transcriptionTimeShort": "{{time}} přepisu",
+    "costOfBalance": "{{cost}} z vašich {{balance}} kreditů"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Na toto video nemáte dost kreditů",
       "notEnoughTranscriptionMessage": "Přepis tohoto videa stojí přibližně {{required}} kreditů. Máte {{available}}, což stačí asi na {{minutes}} minut. Dobijte kredity a začněte znovu.",
       "notEnoughMessage": "Tato úloha potřebuje více kreditů, než je váš zůstatek {{available}}. Pro pokračování dobijte kredity."
+    },
+    "dubCostConfirm": {
+      "title": "Spustit dabing?",
+      "message": "Tento dabing spotřebuje přibližně {{cost}} z vašich {{balance}} kreditů. Generování hlasů stojí mnohem víc než překlad."
     }
   },
   "progress": {

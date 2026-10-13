@@ -870,7 +870,9 @@
     "redirectingToPayment": "Inafungua malipo salama...",
     "description": "Chagua kutoka kwa paketi za ${{packMicroPrice}} (masaa {{packMicroHours}}), ${{pack1Price}} (masaa {{pack1Hours}}), ${{pack2Price}} (masaa {{pack2Hours}}), au ${{pack3Price}} (masaa {{pack3Hours}})",
     "notEnough": "Mikopo haitoshi. Tafadhali nunua mikopo zaidi ili kuendelea.",
-    "transcriptionMinutesShort": "dakika {{minutes}} za unakili"
+    "transcriptionMinutesShort": "dakika {{minutes}} za unakili",
+    "transcriptionTimeShort": "{{time}} za unakili",
+    "costOfBalance": "{{cost}} kati ya mikopo yako {{balance}}"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Hakuna mikopo ya kutosha kwa video hii",
       "notEnoughTranscriptionMessage": "Kunakili video hii kunahitaji takriban mikopo {{required}}. Una {{available}}, inayotosha kwa takriban dakika {{minutes}}. Ongeza mikopo, kisha anza tena.",
       "notEnoughMessage": "Kazi hii inahitaji mikopo zaidi ya salio lako la {{available}}. Ongeza mikopo ili kuendelea."
+    },
+    "dubCostConfirm": {
+      "title": "Anza kuweka sauti?",
+      "message": "Uwekaji sauti huu unatumia takriban {{cost}} kati ya mikopo yako {{balance}}. Kutengeneza sauti kunagharimu zaidi sana kuliko kutafsiri."
     }
   },
   "progress": {

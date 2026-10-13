@@ -870,7 +870,9 @@
     "redirectingToPayment": "Veilige checkout openen…",
     "description": "Kies uit ${{packMicroPrice}} ({{packMicroHours}}u), ${{pack1Price}} ({{pack1Hours}}u), ${{pack2Price}} ({{pack2Hours}}u), of ${{pack3Price}} ({{pack3Hours}}u) creditpakketten",
     "notEnough": "Onvoldoende credits. Koop meer credits om door te gaan.",
-    "transcriptionMinutesShort": "{{minutes}} min transcriptie"
+    "transcriptionMinutesShort": "{{minutes}} min transcriptie",
+    "transcriptionTimeShort": "{{time}} transcriptie",
+    "costOfBalance": "{{cost}} van je {{balance}} credits"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Niet genoeg credits voor deze video",
       "notEnoughTranscriptionMessage": "Het transcriberen van deze video kost ongeveer {{required}} credits. Je hebt er {{available}}, genoeg voor ongeveer {{minutes}} minuten. Voeg credits toe en begin opnieuw.",
       "notEnoughMessage": "Deze taak heeft meer credits nodig dan je saldo van {{available}}. Voeg credits toe om door te gaan."
+    },
+    "dubCostConfirm": {
+      "title": "Nasynchronisatie starten?",
+      "message": "Deze nasynchronisatie gebruikt ongeveer {{cost}} van je {{balance}} credits. Stemmen genereren kost veel meer dan vertalen."
     }
   },
   "progress": {

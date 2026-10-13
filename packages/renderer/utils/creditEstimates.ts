@@ -225,6 +225,33 @@ export function formatTime(minutes: number): string {
 /**
  * Format credits into compact string (e.g., "~5k", "~134k")
  */
+/** Credits a transcription of `seconds` of audio costs (ElevenLabs Scribe). */
+export function estimateTranscriptionCreditsForSeconds(
+  seconds: number
+): number {
+  if (!Number.isFinite(seconds) || seconds <= 0) return 0;
+  return Math.ceil((seconds * CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR) / 3600);
+}
+
+/**
+ * Audio a credit amount can transcribe, as "32m" or "5h 21m". Packs and the
+ * balance are described in transcription time because every credit path
+ * (subtitles, dubbing) starts with it, while translating with the user's own
+ * Claude or Codex is free; translation hours overstated what credits buy.
+ */
+export function formatTranscriptionTime(credits: number | null): string | null {
+  const hours = estimateTranscriptionHours(credits);
+  return hours != null && hours > 0 ? formatHours(hours) : null;
+}
+
+/** A balance without the "~" estimate marker: 850, 4.2k, 168k. */
+export function formatCreditBalance(credits: number): string {
+  const safe = Math.max(0, Math.floor(credits));
+  if (safe < 1000) return String(safe);
+  if (safe < 10000) return `${(safe / 1000).toFixed(1)}k`;
+  return `${Math.round(safe / 1000)}k`;
+}
+
 export function formatCredits(credits: number): string {
   if (credits < 1000) return `~${Math.ceil(credits)}`;
   if (credits < 10000) return `~${(credits / 1000).toFixed(1)}k`;
@@ -249,4 +276,21 @@ export function formatDubbingTime(
   const remainingMins = Math.floor(minutes % 60);
   if (remainingMins === 0) return `~${wholeHours}h`;
   return `~${wholeHours}h ${remainingMins}m`;
+}
+
+/** Share of the balance at which starting a dub asks for confirmation. */
+export const DUB_COST_CONFIRM_SHARE = 0.25;
+
+/**
+ * Whether a dub is big enough, relative to the balance, to confirm before it
+ * starts. Voices cost far more than translation (a 44-minute dub used ~132k
+ * credits on 2026-10-12, most of a just-bought pack, with no warning).
+ */
+export function shouldConfirmDubCost(
+  estimatedCredits: number,
+  balance: number | null
+): boolean {
+  if (!Number.isFinite(estimatedCredits) || estimatedCredits <= 0) return false;
+  if (balance == null || !Number.isFinite(balance)) return false;
+  return estimatedCredits >= balance * DUB_COST_CONFIRM_SHARE;
 }

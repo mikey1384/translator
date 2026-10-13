@@ -870,7 +870,9 @@
     "redirectingToPayment": "Apertura pagamento sicuro…",
     "description": "Scegli tra i pacchetti da ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h) o ${{pack3Price}} ({{pack3Hours}}h)",
     "notEnough": "Crediti insufficienti. Acquista altri crediti per continuare.",
-    "transcriptionMinutesShort": "{{minutes}} min di trascrizione"
+    "transcriptionMinutesShort": "{{minutes}} min di trascrizione",
+    "transcriptionTimeShort": "{{time}} di trascrizione",
+    "costOfBalance": "{{cost}} dei tuoi {{balance}} crediti"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Crediti insufficienti per questo video",
       "notEnoughTranscriptionMessage": "Trascrivere questo video richiede circa {{required}} crediti. Ne hai {{available}}, sufficienti per circa {{minutes}} minuti. Aggiungi crediti e ricomincia.",
       "notEnoughMessage": "Questa attività richiede più crediti del tuo saldo di {{available}}. Aggiungi crediti per continuare."
+    },
+    "dubCostConfirm": {
+      "title": "Avviare il doppiaggio?",
+      "message": "Questo doppiaggio usa circa {{cost}} dei tuoi {{balance}} crediti. Generare voci costa molto più che tradurre."
     }
   },
   "progress": {

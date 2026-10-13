@@ -870,7 +870,9 @@
     "redirectingToPayment": "Membuka checkout aman…",
     "description": "Pilih dari paket kredit ${{packMicroPrice}} ({{packMicroHours}}j), ${{pack1Price}} ({{pack1Hours}}j), ${{pack2Price}} ({{pack2Hours}}j), atau ${{pack3Price}} ({{pack3Hours}}j)",
     "notEnough": "Kredit tidak mencukupi. Silakan beli lebih banyak kredit untuk melanjutkan.",
-    "transcriptionMinutesShort": "{{minutes}} mnt transkripsi"
+    "transcriptionMinutesShort": "{{minutes}} mnt transkripsi",
+    "transcriptionTimeShort": "{{time}} transkripsi",
+    "costOfBalance": "{{cost}} dari {{balance}} kredit Anda"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Kredit tidak cukup untuk video ini",
       "notEnoughTranscriptionMessage": "Mentranskripsi video ini butuh sekitar {{required}} kredit. Anda punya {{available}}, cukup untuk sekitar {{minutes}} menit. Tambahkan kredit, lalu mulai lagi.",
       "notEnoughMessage": "Tugas ini butuh lebih banyak kredit daripada saldo Anda sebesar {{available}}. Tambahkan kredit untuk melanjutkan."
+    },
+    "dubCostConfirm": {
+      "title": "Mulai sulih suara?",
+      "message": "Sulih suara ini memakai sekitar {{cost}} dari {{balance}} kredit Anda. Membuat suara jauh lebih mahal daripada menerjemahkan."
     }
   },
   "progress": {

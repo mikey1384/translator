@@ -870,7 +870,9 @@
     "redirectingToPayment": "Öppnar säker utcheckning...",
     "description": "Välj mellan ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), eller ${{pack3Price}} ({{pack3Hours}}h) kreditpaket",
     "notEnough": "Otillräckliga krediter. Vänligen köp fler krediter för att fortsätta.",
-    "transcriptionMinutesShort": "{{minutes}} min transkribering"
+    "transcriptionMinutesShort": "{{minutes}} min transkribering",
+    "transcriptionTimeShort": "{{time}} transkribering",
+    "costOfBalance": "{{cost}} av dina {{balance}} krediter"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Inte tillräckligt med krediter för den här videon",
       "notEnoughTranscriptionMessage": "Att transkribera den här videon kräver ungefär {{required}} krediter. Du har {{available}}, vilket räcker till ungefär {{minutes}} minuter. Fyll på krediter och starta igen.",
       "notEnoughMessage": "Den här uppgiften kräver fler krediter än ditt saldo på {{available}}. Fyll på krediter för att fortsätta."
+    },
+    "dubCostConfirm": {
+      "title": "Starta dubbning?",
+      "message": "Den här dubbningen använder cirka {{cost}} av dina {{balance}} krediter. Att generera röster kostar mycket mer än att översätta."
     }
   },
   "progress": {

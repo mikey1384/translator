@@ -4,7 +4,7 @@ import { useCreditStore } from '../state';
 import BuyCreditsButton from './BuyCreditsButton';
 import { colors, surfaceCardStyles } from '../styles';
 import { CREDIT_PACKS } from '../../shared/constants';
-import { estimateTranslatableHours } from '../utils/creditEstimates';
+import { formatTranscriptionTime } from '../utils/creditEstimates';
 
 const card = css`
   padding: 24px;
@@ -31,18 +31,19 @@ export default function CreditCard() {
   const hours = useCreditStore(s => s.hours);
   const loading = useCreditStore(s => s.loading);
   const error = useCreditStore(s => s.error);
-  const translationHoursLabel = t(
-    'credits.translationHoursShort',
-    'translation hrs'
-  );
-  const fmtHours = (v: number | null | undefined) =>
-    typeof v === 'number'
-      ? v.toLocaleString(undefined, {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
+  // Credits buy transcription and dubbing; translating with the user's own
+  // Claude or Codex is free. So packs and the balance are described in
+  // transcription time, which every credit-paid path starts with, not in
+  // translation hours, which overstated what a pack buys.
+  const transcriptionTimeLabel = (amount: number | null) => {
+    const time = formatTranscriptionTime(amount);
+    return time
+      ? t('credits.transcriptionTimeShort', '{{time}} of transcription', {
+          time,
         })
-      : '';
-  const sharedHoursRemaining = estimateTranslatableHours(credits, false);
+      : null;
+  };
+  const balanceTimeLabel = transcriptionTimeLabel(credits);
   const creditPacks = [
     CREDIT_PACKS.MICRO,
     CREDIT_PACKS.STARTER,
@@ -71,10 +72,12 @@ export default function CreditCard() {
               {' '}
               {t('credits.credits')}
             </span>
-            <span style={{ fontSize: '1rem', color: colors.textDim }}>
-              {' '}
-              ({`${fmtHours(sharedHoursRemaining)} ${translationHoursLabel}`})
-            </span>
+            {balanceTimeLabel && (
+              <span style={{ fontSize: '1rem', color: colors.textDim }}>
+                {' '}
+                ({balanceTimeLabel})
+              </span>
+            )}
           </span>
 
           {/* Pack purchase options */}
@@ -85,9 +88,9 @@ export default function CreditCard() {
               <BuyCreditsButton
                 key={pack.id}
                 packId={pack.id}
-                label={`${formatUsdListPrice(pack.price)} · ${fmtHours(
-                  estimateTranslatableHours(pack.credits, false)
-                )} ${translationHoursLabel} (${pack.credits.toLocaleString()} cr)`}
+                label={`${formatUsdListPrice(pack.price)} · ${transcriptionTimeLabel(
+                  pack.credits
+                )} (${pack.credits.toLocaleString()} cr)`}
                 placement="settings-credit-card"
               />
             ))}
@@ -102,7 +105,10 @@ export default function CreditCard() {
               lineHeight: 1.4,
             }}
           >
-            {t('settings.creditsDescription')}
+            {t(
+              'settings.agentControl.pitch',
+              'Translate for free with the Claude or Codex subscription you already have.'
+            )}
           </p>
         </>
       ) : null}

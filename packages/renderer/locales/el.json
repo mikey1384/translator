@@ -870,7 +870,9 @@
     "redirectingToPayment": "Άνοιγμα ασφαλούς πληρωμής…",
     "description": "Επιλέξτε από πακέτα ${{packMicroPrice}} ({{packMicroHours}}ω), ${{pack1Price}} ({{pack1Hours}}ω), ${{pack2Price}} ({{pack2Hours}}ω), ή ${{pack3Price}} ({{pack3Hours}}ω)",
     "notEnough": "Ανεπαρκείς πιστώσεις. Παρακαλώ αγοράστε περισσότερες πιστώσεις για να συνεχίσετε.",
-    "transcriptionMinutesShort": "{{minutes}} λεπτά μεταγραφής"
+    "transcriptionMinutesShort": "{{minutes}} λεπτά μεταγραφής",
+    "transcriptionTimeShort": "{{time}} μεταγραφής",
+    "costOfBalance": "{{cost}} από τις {{balance}} πιστώσεις σας"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Δεν υπάρχουν αρκετά credits για αυτό το βίντεο",
       "notEnoughTranscriptionMessage": "Η μεταγραφή αυτού του βίντεο χρειάζεται περίπου {{required}} credits. Έχετε {{available}}, αρκετά για περίπου {{minutes}} λεπτά. Προσθέστε credits και ξεκινήστε ξανά.",
       "notEnoughMessage": "Αυτή η εργασία χρειάζεται περισσότερα credits από το υπόλοιπό σας ({{available}}). Προσθέστε credits για να συνεχίσετε."
+    },
+    "dubCostConfirm": {
+      "title": "Έναρξη μεταγλώττισης;",
+      "message": "Αυτή η μεταγλώττιση χρησιμοποιεί περίπου {{cost}} από τις {{balance}} πιστώσεις σας. Η δημιουργία φωνών κοστίζει πολύ περισσότερο από τη μετάφραση."
     }
   },
   "progress": {

@@ -18,7 +18,14 @@ import {
   workflowPanelWarningBoxStyles,
   workflowPanelWarningContentStyles,
   workflowPanelWarningIconStyles,
+  workflowPanelCostStyles,
+  workflowPanelCostWarningStyles,
 } from '../../../components/workflow-surface-styles';
+import {
+  formatCreditBalance,
+  formatCredits,
+} from '../../../utils/creditEstimates';
+import type { TranscriptionCostPreview } from '../hooks/useTranscriptionCostPreview';
 import { spacing } from '../../../components/design-system/tokens.js';
 
 const transcribeOnlyPanelShellStyles = css`
@@ -97,6 +104,8 @@ interface TranscribeOnlyPanelProps {
    * (which transcribes first) are disabled.
    */
   transcriptionBlockedMessage?: string | null;
+  /** Stage5 credits transcribing this video costs, shown before it starts. */
+  costPreview?: TranscriptionCostPreview | null;
   className?: string;
 }
 
@@ -113,6 +122,7 @@ export default function TranscribeOnlyPanel({
   processingLanguage = 'english',
   statusMessage = null,
   transcriptionBlockedMessage = null,
+  costPreview = null,
   className,
 }: TranscribeOnlyPanelProps) {
   const { t } = useTranslation();
@@ -194,6 +204,29 @@ export default function TranscribeOnlyPanel({
             ? t('subtitles.generating')
             : t('input.transcribeOnly')}
         </Button>
+        {costPreview && !isTranscribing && (
+          <span
+            className={cx(
+              workflowPanelCostStyles,
+              costPreview.availableCredits != null &&
+                costPreview.availableCredits < costPreview.requiredCredits
+                ? workflowPanelCostWarningStyles
+                : undefined
+            )}
+            data-transcription-cost={costPreview.requiredCredits}
+          >
+            {costPreview.availableCredits != null
+              ? t(
+                  'credits.costOfBalance',
+                  '{{cost}} of your {{balance}} credits',
+                  {
+                    cost: formatCredits(costPreview.requiredCredits),
+                    balance: formatCreditBalance(costPreview.availableCredits),
+                  }
+                )
+              : `${formatCredits(costPreview.requiredCredits)} cr`}
+          </span>
+        )}
         {onTranslate || onCreateHighlight ? (
           <>
             {onProcessingLanguageChange ? (

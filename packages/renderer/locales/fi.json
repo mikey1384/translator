@@ -870,7 +870,9 @@
     "redirectingToPayment": "Avataan turvallinen kassa...",
     "description": "Valitse ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h) tai ${{pack3Price}} ({{pack3Hours}}h) krediittipaketeista",
     "notEnough": "Riittämättömästi krediittejä. Osta lisää krediittejä jatkaaksesi.",
-    "transcriptionMinutesShort": "{{minutes}} min litterointia"
+    "transcriptionMinutesShort": "{{minutes}} min litterointia",
+    "transcriptionTimeShort": "{{time}} litterointia",
+    "costOfBalance": "{{cost}} {{balance}} krediitistäsi"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Krediitit eivät riitä tähän videoon",
       "notEnoughTranscriptionMessage": "Tämän videon litterointi vie noin {{required}} krediittiä. Sinulla on {{available}}, mikä riittää noin {{minutes}} minuuttiin. Lisää krediittejä ja aloita uudelleen.",
       "notEnoughMessage": "Tämä tehtävä vaatii enemmän krediittejä kuin saldosi {{available}}. Lisää krediittejä jatkaaksesi."
+    },
+    "dubCostConfirm": {
+      "title": "Aloitetaanko dubbaus?",
+      "message": "Tämä dubbaus käyttää noin {{cost}} {{balance}} krediitistäsi. Äänten luominen maksaa paljon enemmän kuin kääntäminen."
     }
   },
   "progress": {

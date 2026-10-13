@@ -870,7 +870,9 @@
     "redirectingToPayment": "Güvenli ödeme açılıyor…",
     "description": "${{packMicroPrice}} ({{packMicroHours}}s), ${{pack1Price}} ({{pack1Hours}}s), ${{pack2Price}} ({{pack2Hours}}s) veya ${{pack3Price}} ({{pack3Hours}}s) kredi paketlerinden seçin",
     "notEnough": "Yetersiz kredi. Devam etmek için lütfen daha fazla kredi satın alın.",
-    "transcriptionMinutesShort": "{{minutes}} dk transkripsiyon"
+    "transcriptionMinutesShort": "{{minutes}} dk transkripsiyon",
+    "transcriptionTimeShort": "{{time}} transkripsiyon",
+    "costOfBalance": "{{balance}} kredinizin {{cost}} kadarı"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Bu video için yeterli kredi yok",
       "notEnoughTranscriptionMessage": "Bu videoyu yazıya dökmek yaklaşık {{required}} kredi gerektirir. {{available}} krediniz var; bu yaklaşık {{minutes}} dakikaya yeter. Kredi ekleyip yeniden başlatın.",
       "notEnoughMessage": "Bu görev, {{available}} olan bakiyenizden daha fazla kredi gerektiriyor. Devam etmek için kredi ekleyin."
+    },
+    "dubCostConfirm": {
+      "title": "Seslendirme başlatılsın mı?",
+      "message": "Bu seslendirme {{balance}} kredinizin yaklaşık {{cost}} kadarını kullanır. Ses üretmek, çeviriden çok daha pahalıdır."
     }
   },
   "progress": {

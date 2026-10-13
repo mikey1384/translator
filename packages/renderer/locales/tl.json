@@ -870,7 +870,9 @@
     "redirectingToPayment": "Binubuksan ang secure checkout…",
     "description": "Pumili mula sa mga pakete ng credit na ${{packMicroPrice}} ({{packMicroHours}} oras), ${{pack1Price}} ({{pack1Hours}} oras), ${{pack2Price}} ({{pack2Hours}} oras), o ${{pack3Price}} ({{pack3Hours}} oras)",
     "notEnough": "Hindi sapat ang mga credit. Mangyaring bumili pa ng mga credit para magpatuloy.",
-    "transcriptionMinutesShort": "{{minutes}} min ng transcription"
+    "transcriptionMinutesShort": "{{minutes}} min ng transcription",
+    "transcriptionTimeShort": "{{time}} ng transcription",
+    "costOfBalance": "{{cost}} sa iyong {{balance}} credit"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Kulang ang credits para sa video na ito",
       "notEnoughTranscriptionMessage": "Kailangan ng humigit-kumulang {{required}} credits para i-transcribe ang video na ito. Mayroon kang {{available}}, sapat para sa mga {{minutes}} minuto. Magdagdag ng credits, saka magsimula ulit.",
       "notEnoughMessage": "Kailangan ng gawaing ito ng mas maraming credits kaysa sa balanse mong {{available}}. Magdagdag ng credits para magpatuloy."
+    },
+    "dubCostConfirm": {
+      "title": "Simulan ang pag-dub?",
+      "message": "Gagamit ang dub na ito ng mga {{cost}} sa iyong {{balance}} credit. Mas mahal ang paggawa ng boses kaysa sa pagsasalin."
     }
   },
   "progress": {

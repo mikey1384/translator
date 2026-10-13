@@ -870,7 +870,9 @@
     "redirectingToPayment": "安全な決済を開いています…",
     "description": "${{packMicroPrice}}（{{packMicroHours}}時間）、${{pack1Price}}（{{pack1Hours}}時間）、${{pack2Price}}（{{pack2Hours}}時間）、または${{pack3Price}}（{{pack3Hours}}時間）のクレジットパックからお選びください",
     "notEnough": "クレジットが不足しています。続行するにはクレジットを購入してください。",
-    "transcriptionMinutesShort": "文字起こし{{minutes}}分"
+    "transcriptionMinutesShort": "文字起こし{{minutes}}分",
+    "transcriptionTimeShort": "文字起こし{{time}}",
+    "costOfBalance": "残り{{balance}}クレジットのうち{{cost}}"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "この動画にはクレジットが足りません",
       "notEnoughTranscriptionMessage": "この動画の文字起こしには約{{required}}クレジットが必要です。現在の残高は{{available}}で、約{{minutes}}分ぶんです。クレジットを追加してから、もう一度開始してください。",
       "notEnoughMessage": "この処理には残高（{{available}}）を超えるクレジットが必要です。続けるにはクレジットを追加してください。"
+    },
+    "dubCostConfirm": {
+      "title": "吹き替えを開始しますか？",
+      "message": "この吹き替えは、残り{{balance}}クレジットのうち約{{cost}}を使用します。音声の生成は翻訳よりはるかにコストがかかります。"
     }
   },
   "progress": {

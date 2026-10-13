@@ -870,7 +870,9 @@
     "redirectingToPayment": "فتح الدفع الآمن…",
     "description": "اختر من حزم ${{packMicroPrice}} ({{packMicroHours}}س)، ${{pack1Price}} ({{pack1Hours}}س)، ${{pack2Price}} ({{pack2Hours}}س)، أو ${{pack3Price}} ({{pack3Hours}}س) من النقاط",
     "notEnough": "نقاط غير كافية. يرجى شراء المزيد من النقاط للمتابعة.",
-    "transcriptionMinutesShort": "{{minutes}} دقيقة من النسخ"
+    "transcriptionMinutesShort": "{{minutes}} دقيقة من النسخ",
+    "transcriptionTimeShort": "{{time}} من النسخ",
+    "costOfBalance": "{{cost}} من رصيدك البالغ {{balance}}"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "لا توجد أرصدة كافية لهذا الفيديو",
       "notEnoughTranscriptionMessage": "يتطلب نسخ هذا الفيديو نحو {{required}} رصيدًا. لديك {{available}}، وهذا يكفي لنحو {{minutes}} دقيقة. أضف أرصدة ثم ابدأ من جديد.",
       "notEnoughMessage": "تحتاج هذه المهمة إلى أرصدة أكثر من رصيدك البالغ {{available}}. أضف أرصدة للمتابعة."
+    },
+    "dubCostConfirm": {
+      "title": "بدء الدبلجة؟",
+      "message": "ستستخدم هذه الدبلجة نحو {{cost}} من رصيدك البالغ {{balance}}. توليد الأصوات يكلف أكثر بكثير من الترجمة."
     }
   },
   "progress": {

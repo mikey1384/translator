@@ -870,7 +870,9 @@
     "redirectingToPayment": "Sichere Zahlung öffnen…",
     "description": "Wählen Sie aus ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), oder ${{pack3Price}} ({{pack3Hours}}h) Credit-Paketen",
     "notEnough": "Unzureichende Credits. Bitte kaufen Sie mehr Credits, um fortzufahren.",
-    "transcriptionMinutesShort": "{{minutes}} Min. Transkription"
+    "transcriptionMinutesShort": "{{minutes}} Min. Transkription",
+    "transcriptionTimeShort": "{{time}} Transkription",
+    "costOfBalance": "{{cost}} von Ihren {{balance}} Credits"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Nicht genug Credits für dieses Video",
       "notEnoughTranscriptionMessage": "Die Transkription dieses Videos braucht etwa {{required}} Credits. Sie haben {{available}}, genug für etwa {{minutes}} Minuten. Laden Sie Credits auf und starten Sie dann erneut.",
       "notEnoughMessage": "Diese Aufgabe braucht mehr Credits als Ihr Guthaben von {{available}}. Laden Sie Credits auf, um fortzufahren."
+    },
+    "dubCostConfirm": {
+      "title": "Synchronisation starten?",
+      "message": "Diese Synchronisation verbraucht etwa {{cost}} von Ihren {{balance}} Credits. Stimmen zu erzeugen kostet deutlich mehr als Übersetzen."
     }
   },
   "progress": {

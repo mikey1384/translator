@@ -870,7 +870,9 @@
     "redirectingToPayment": "Abrindo checkout seguro…",
     "description": "Escolha entre pacotes de ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), ou ${{pack3Price}} ({{pack3Hours}}h) de créditos",
     "notEnough": "Créditos insuficientes. Por favor, compre mais créditos para continuar.",
-    "transcriptionMinutesShort": "{{minutes}} min de transcrição"
+    "transcriptionMinutesShort": "{{minutes}} min de transcrição",
+    "transcriptionTimeShort": "{{time}} de transcrição",
+    "costOfBalance": "{{cost}} dos seus {{balance}} créditos"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Créditos insuficientes para este vídeo",
       "notEnoughTranscriptionMessage": "Transcrever este vídeo exige cerca de {{required}} créditos. Você tem {{available}}, o suficiente para cerca de {{minutes}} minutos. Adicione créditos e comece de novo.",
       "notEnoughMessage": "Esta tarefa precisa de mais créditos do que seu saldo de {{available}}. Adicione créditos para continuar."
+    },
+    "dubCostConfirm": {
+      "title": "Iniciar a dublagem?",
+      "message": "Esta dublagem usa cerca de {{cost}} dos seus {{balance}} créditos. Gerar vozes custa muito mais do que traduzir."
     }
   },
   "progress": {

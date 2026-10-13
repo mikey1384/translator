@@ -870,7 +870,9 @@
     "redirectingToPayment": "در حال باز کردن تسویه حساب امن…",
     "description": "از بسته‌های اعتباری ${{packMicroPrice}} ({{packMicroHours}} ساعت)، ${{pack1Price}} ({{pack1Hours}} ساعت)، ${{pack2Price}} ({{pack2Hours}} ساعت)، یا ${{pack3Price}} ({{pack3Hours}} ساعت) انتخاب کنید",
     "notEnough": "اعتبار ناکافی. لطفاً برای ادامه اعتبار بیشتری خریداری کنید.",
-    "transcriptionMinutesShort": "{{minutes}} دقیقه رونویسی"
+    "transcriptionMinutesShort": "{{minutes}} دقیقه رونویسی",
+    "transcriptionTimeShort": "{{time}} رونویسی",
+    "costOfBalance": "{{cost}} از {{balance}} اعتبار شما"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "اعتبار کافی برای این ویدیو ندارید",
       "notEnoughTranscriptionMessage": "رونویسی این ویدیو حدود {{required}} اعتبار لازم دارد. شما {{available}} اعتبار دارید که برای حدود {{minutes}} دقیقه کافی است. اعتبار اضافه کنید و دوباره شروع کنید.",
       "notEnoughMessage": "این کار به اعتباری بیشتر از موجودی شما ({{available}}) نیاز دارد. برای ادامه، اعتبار اضافه کنید."
+    },
+    "dubCostConfirm": {
+      "title": "دوبله شروع شود؟",
+      "message": "این دوبله حدود {{cost}} از {{balance}} اعتبار شما را مصرف می‌کند. تولید صدا بسیار گران‌تر از ترجمه است."
     }
   },
   "progress": {

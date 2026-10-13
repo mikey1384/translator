@@ -882,7 +882,9 @@
     "redirectingToPayment": "Opening secure checkout…",
     "description": "Choose from ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), or ${{pack3Price}} ({{pack3Hours}}h) credit packs",
     "notEnough": "Insufficient credits. Please purchase more credits to continue.",
-    "transcriptionMinutesShort": "{{minutes}} min of transcription"
+    "transcriptionMinutesShort": "{{minutes}} min of transcription",
+    "transcriptionTimeShort": "{{time}} of transcription",
+    "costOfBalance": "{{cost}} of your {{balance}} credits"
   },
   "cta": {
     "generate": {
@@ -1100,6 +1102,10 @@
       "notEnoughTitle": "Not enough credits for this video",
       "notEnoughTranscriptionMessage": "Transcribing this video takes about {{required}} credits. You have {{available}}, enough for about {{minutes}} minutes. Add credits, then start again.",
       "notEnoughMessage": "This task needs more credits than your balance of {{available}}. Add credits to continue."
+    },
+    "dubCostConfirm": {
+      "title": "Start dubbing?",
+      "message": "This dub uses about {{cost}} of your {{balance}} credits. Generating voices costs much more than translating."
     }
   },
   "progress": {

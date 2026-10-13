@@ -9,15 +9,16 @@ type MicroOfferPlacement = 'zero-credit-banner' | 'credit-ran-out-dialog';
 interface MicroCreditCheckoutButtonProps {
   placement: MicroOfferPlacement;
   onCheckoutCreated?: () => void;
-  // What the pack is described in. Translation hours overstate what the pack
-  // buys for transcription or dubbing; 'none' shows the price alone.
+  // What the pack is described in. Defaults to transcription time, which every
+  // credit-paid path starts with; translation hours (shown only for a
+  // translation refusal) overstate what the pack buys otherwise.
   basis?: 'translation' | 'transcription' | 'none';
 }
 
 export default function MicroCreditCheckoutButton({
   placement,
   onCheckoutCreated,
-  basis = 'translation',
+  basis = 'transcription',
 }: MicroCreditCheckoutButtonProps) {
   const { t } = useTranslation();
   const pack = CREDIT_PACKS.MICRO;
@@ -36,9 +37,13 @@ export default function MicroCreditCheckoutButton({
 
   const coverageLabel =
     basis === 'transcription'
-      ? t('credits.transcriptionMinutesShort', '{{minutes}} min of transcription', {
-          minutes: transcriptionMinutesForCredits(pack.credits),
-        })
+      ? t(
+          'credits.transcriptionMinutesShort',
+          '{{minutes}} min of transcription',
+          {
+            minutes: transcriptionMinutesForCredits(pack.credits),
+          }
+        )
       : basis === 'translation'
         ? `${formattedHours} ${translationHoursLabel}`
         : null;

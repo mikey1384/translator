@@ -870,7 +870,9 @@
     "redirectingToPayment": "กำลังเปิดหน้าชำระเงินที่ปลอดภัย...",
     "description": "เลือกจากแพ็กเครดิต ${{packMicroPrice}} ({{packMicroHours}} ชม.), ${{pack1Price}} ({{pack1Hours}} ชม.), ${{pack2Price}} ({{pack2Hours}} ชม.), หรือ ${{pack3Price}} ({{pack3Hours}} ชม.)",
     "notEnough": "เครดิตไม่เพียงพอ กรุณาซื้อเครดิตเพิ่มเติมเพื่อดำเนินการต่อ",
-    "transcriptionMinutesShort": "ถอดเสียง {{minutes}} นาที"
+    "transcriptionMinutesShort": "ถอดเสียง {{minutes}} นาที",
+    "transcriptionTimeShort": "ถอดเสียง {{time}}",
+    "costOfBalance": "{{cost}} จากเครดิต {{balance}} ของคุณ"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "เครดิตไม่พอสำหรับวิดีโอนี้",
       "notEnoughTranscriptionMessage": "การถอดเสียงวิดีโอนี้ใช้ประมาณ {{required}} เครดิต คุณมี {{available}} ซึ่งพอสำหรับประมาณ {{minutes}} นาที เติมเครดิตแล้วเริ่มใหม่อีกครั้ง",
       "notEnoughMessage": "งานนี้ต้องใช้เครดิตมากกว่ายอดคงเหลือของคุณ ({{available}}) เติมเครดิตเพื่อดำเนินการต่อ"
+    },
+    "dubCostConfirm": {
+      "title": "เริ่มพากย์เสียงไหม?",
+      "message": "การพากย์นี้ใช้ประมาณ {{cost}} จากเครดิต {{balance}} ของคุณ การสร้างเสียงมีค่าใช้จ่ายสูงกว่าการแปลมาก"
     }
   },
   "progress": {

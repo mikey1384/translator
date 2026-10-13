@@ -870,7 +870,9 @@
     "redirectingToPayment": "محفوظ چیک آؤٹ کھولا جا رہا ہے…",
     "description": "${{packMicroPrice}} ({{packMicroHours}} گھنٹے)، ${{pack1Price}} ({{pack1Hours}} گھنٹے)، ${{pack2Price}} ({{pack2Hours}} گھنٹے)، یا ${{pack3Price}} ({{pack3Hours}} گھنٹے) کریڈٹ پیک میں سے انتخاب کریں",
     "notEnough": "ناکافی کریڈٹس۔ جاری رکھنے کے لیے براہ کرم مزید کریڈٹس خریدیں۔",
-    "transcriptionMinutesShort": "{{minutes}} منٹ ٹرانسکرپشن"
+    "transcriptionMinutesShort": "{{minutes}} منٹ ٹرانسکرپشن",
+    "transcriptionTimeShort": "{{time}} ٹرانسکرپشن",
+    "costOfBalance": "آپ کے {{balance}} کریڈٹس میں سے {{cost}}"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "اس ویڈیو کے لیے کافی کریڈٹس نہیں ہیں",
       "notEnoughTranscriptionMessage": "اس ویڈیو کی ٹرانسکرپشن کے لیے تقریباً {{required}} کریڈٹس درکار ہیں۔ آپ کے پاس {{available}} ہیں، جو تقریباً {{minutes}} منٹ کے لیے کافی ہیں۔ کریڈٹس شامل کریں، پھر دوبارہ شروع کریں۔",
       "notEnoughMessage": "اس کام کے لیے آپ کے {{available}} بیلنس سے زیادہ کریڈٹس درکار ہیں۔ جاری رکھنے کے لیے کریڈٹس شامل کریں۔"
+    },
+    "dubCostConfirm": {
+      "title": "ڈبنگ شروع کریں؟",
+      "message": "یہ ڈبنگ آپ کے {{balance}} کریڈٹس میں سے تقریباً {{cost}} استعمال کرے گی۔ آوازیں بنانا ترجمے سے کہیں زیادہ مہنگا ہے۔"
     }
   },
   "progress": {

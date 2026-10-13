@@ -870,7 +870,9 @@
     "redirectingToPayment": "Biztonságos fizetés megnyitása…",
     "description": "Válasszon ${{packMicroPrice}} ({{packMicroHours}} óra), ${{pack1Price}} ({{pack1Hours}} óra), ${{pack2Price}} ({{pack2Hours}} óra), vagy ${{pack3Price}} ({{pack3Hours}} óra) kredit csomagokból",
     "notEnough": "Nincs elegendő kredit. Kérjük vásároljon több kreditet a folytatáshoz.",
-    "transcriptionMinutesShort": "{{minutes}} perc átírás"
+    "transcriptionMinutesShort": "{{minutes}} perc átírás",
+    "transcriptionTimeShort": "{{time}} átírás",
+    "costOfBalance": "{{cost}} a(z) {{balance}} kreditedből"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Nincs elég kredit ehhez a videóhoz",
       "notEnoughTranscriptionMessage": "A videó átírása körülbelül {{required}} kreditbe kerül. Önnek {{available}} van, ami nagyjából {{minutes}} percre elég. Töltsön fel kreditet, majd kezdje újra.",
       "notEnoughMessage": "Ehhez a feladathoz több kredit kell, mint a(z) {{available}} egyenlege. A folytatáshoz töltsön fel kreditet."
+    },
+    "dubCostConfirm": {
+      "title": "Elindítod a szinkront?",
+      "message": "Ez a szinkron körülbelül {{cost}} kreditet használ a(z) {{balance}} kreditedből. A hangok generálása sokkal többe kerül, mint a fordítás."
     }
   },
   "progress": {

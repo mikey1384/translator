@@ -82,8 +82,13 @@ eval (()=>{const s=document.body.innerText; const i=s.indexOf("영상을 선택�
   `screencapture -x -o -l<id>` with the id from
   `win.getMediaSourceId()` (main-process eval, format `window:<id>:0`).
 
-- **UI is Korean.** Key labels: `AI로 영상 찾기` (open AI panel), `웹에서`
-  (from web), `영상 찾기` (find videos), `설정` (settings). The search
+- **UI language follows the app setting** (Korean on some dev installs,
+  English on others). Korean labels: `AI로 영상 찾기` (open AI panel), `웹에서`
+  (from web), `영상 찾기` (find videos), `설정` (settings); English uses
+  `Settings`, `Dub Voice`, `Translate`. `window.translatorAgent.openVideo({path})`
+  and `.mountSubtitles({path, replaceSubtitles: 'discard'})` load media
+  without file dialogs. Rebuild (`npm run build`) after every renderer
+  change before driving the app, or you test the old bundle. The search
   textarea is found by placeholder containing `길거리`.
 - **The home screen is an overlay.** Panel components exist in the DOM
   (hidden, zero-rect) before the panel is opened — check `offsetParent`
@@ -99,9 +104,10 @@ eval (()=>{const s=document.body.innerText; const i=s.indexOf("영상을 선택�
     -H "Content-Type: application/json" -H "X-Admin-Secret: $ADMIN" \
     -d '{"deviceId":"<from device-config.json>","pack":"STARTER"}'
   ```
-  A single review-phase (GPT-5.5) model call **reserves ~34k credits**
-  (16k max completion tokens × $30/1M × margin 2 ÷ USD_PER_CREDIT), so
-  MICRO (15k) is not enough — use STARTER (150k). A 402 at the relay's
+  Since openai-relay 30c97ed (2026-10-13) a plain translation part holds
+  credits for min(16k, 2×prompt+1024) output tokens (≈2k credits for a
+  typical GPT-5.1 part, was ~11k); deep-reasoning, tool and web-search calls
+  still hold the full 16k/32k. STARTER (150k) remains the safe grant. A 402 at the relay's
   reserve step surfaces in-app as "AI 크레딧이 소진되었습니다" with no
   relay log line after "Server model authority selected".
 - **Relay-side visibility:** `cd ../openai-relay && flyctl logs --no-tail`

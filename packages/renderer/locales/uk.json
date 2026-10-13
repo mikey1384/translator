@@ -870,7 +870,9 @@
     "redirectingToPayment": "Відкриття безпечної оплати…",
     "description": "Оберіть з пакетів ${{packMicroPrice}} ({{packMicroHours}}г), ${{pack1Price}} ({{pack1Hours}}г), ${{pack2Price}} ({{pack2Hours}}г), або ${{pack3Price}} ({{pack3Hours}}г)",
     "notEnough": "Недостатньо кредитів. Будь ласка, придбайте більше кредитів, щоб продовжити.",
-    "transcriptionMinutesShort": "{{minutes}} хв транскрипції"
+    "transcriptionMinutesShort": "{{minutes}} хв транскрипції",
+    "transcriptionTimeShort": "{{time}} транскрипції",
+    "costOfBalance": "{{cost}} з ваших {{balance}} кредитів"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Недостатньо кредитів для цього відео",
       "notEnoughTranscriptionMessage": "Транскрипція цього відео потребує близько {{required}} кредитів. У вас {{available}} — цього вистачить приблизно на {{minutes}} хв. Поповніть кредити й запустіть знову.",
       "notEnoughMessage": "Для цього завдання потрібно більше кредитів, ніж ваш баланс ({{available}}). Поповніть кредити, щоб продовжити."
+    },
+    "dubCostConfirm": {
+      "title": "Почати озвучення?",
+      "message": "Це озвучення використає близько {{cost}} з ваших {{balance}} кредитів. Генерація голосу коштує значно більше, ніж переклад."
     }
   },
   "progress": {

@@ -870,7 +870,9 @@
     "redirectingToPayment": "Åbner sikker betaling...",
     "description": "Vælg mellem ${{packMicroPrice}} ({{packMicroHours}}t), ${{pack1Price}} ({{pack1Hours}}t), ${{pack2Price}} ({{pack2Hours}}t) eller ${{pack3Price}} ({{pack3Hours}}t) kreditpakker",
     "notEnough": "Utilstrækkelige kreditter. Køb venligst flere kreditter for at fortsætte.",
-    "transcriptionMinutesShort": "{{minutes}} min transskription"
+    "transcriptionMinutesShort": "{{minutes}} min transskription",
+    "transcriptionTimeShort": "{{time}} transskription",
+    "costOfBalance": "{{cost}} af dine {{balance}} kreditter"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Ikke nok kreditter til denne video",
       "notEnoughTranscriptionMessage": "Transskription af denne video kræver omkring {{required}} kreditter. Du har {{available}}, nok til omkring {{minutes}} minutter. Tilføj kreditter, og start igen.",
       "notEnoughMessage": "Denne opgave kræver flere kreditter end din saldo på {{available}}. Tilføj kreditter for at fortsætte."
+    },
+    "dubCostConfirm": {
+      "title": "Start dubbing?",
+      "message": "Denne dubbing bruger cirka {{cost}} af dine {{balance}} kreditter. Det koster meget mere at generere stemmer end at oversætte."
     }
   },
   "progress": {

@@ -870,7 +870,9 @@
     "redirectingToPayment": "פותח תשלום מאובטח...",
     "description": "בחר מבין חבילות קרדיט של ${{packMicroPrice}} ({{packMicroHours}} שעות), ${{pack1Price}} ({{pack1Hours}} שעות), ${{pack2Price}} ({{pack2Hours}} שעות), או ${{pack3Price}} ({{pack3Hours}} שעות)",
     "notEnough": "קרדיט לא מספיק. אנא רכוש קרדיט נוסף כדי להמשיך.",
-    "transcriptionMinutesShort": "{{minutes}} דק׳ תמלול"
+    "transcriptionMinutesShort": "{{minutes}} דק׳ תמלול",
+    "transcriptionTimeShort": "{{time}} תמלול",
+    "costOfBalance": "{{cost}} מתוך {{balance}} הקרדיטים שלך"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "אין מספיק קרדיטים לסרטון הזה",
       "notEnoughTranscriptionMessage": "תמלול הסרטון הזה דורש כ-{{required}} קרדיטים. יש לך {{available}}, מספיק לכ-{{minutes}} דקות. הוסף קרדיטים ואז התחל שוב.",
       "notEnoughMessage": "המשימה הזו דורשת יותר קרדיטים מהיתרה שלך ({{available}}). הוסף קרדיטים כדי להמשיך."
+    },
+    "dubCostConfirm": {
+      "title": "להתחיל דיבוב?",
+      "message": "הדיבוב הזה ישתמש בכ-{{cost}} מתוך {{balance}} הקרדיטים שלך. יצירת קולות עולה הרבה יותר מתרגום."
     }
   },
   "progress": {

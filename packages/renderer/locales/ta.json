@@ -870,7 +870,9 @@
     "redirectingToPayment": "பாதுகாப்பான செக்அவுட்டைத் திறக்கிறது...",
     "description": "${{packMicroPrice}} ({{packMicroHours}} மணிநேரம்), ${{pack1Price}} ({{pack1Hours}} மணிநேரம்), ${{pack2Price}} ({{pack2Hours}} மணிநேரம்), அல்லது ${{pack3Price}} ({{pack3Hours}} மணிநேரம்) கிரெடிட் பேக்கேஜ்களில் இருந்து தேர்ந்தெடுக்கவும்",
     "notEnough": "போதுமான கிரெடிட்கள் இல்லை. தொடர்வதற்கு தயவுசெய்து அதிக கிரெடிட்களை வாங்கவும்.",
-    "transcriptionMinutesShort": "{{minutes}} நிமிட டிரான்ஸ்கிரிப்ஷன்"
+    "transcriptionMinutesShort": "{{minutes}} நிமிட டிரான்ஸ்கிரிப்ஷன்",
+    "transcriptionTimeShort": "{{time}} டிரான்ஸ்கிரிப்ஷன்",
+    "costOfBalance": "உங்கள் {{balance}} கிரெடிட்களில் {{cost}}"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "இந்த வீடியோவுக்குப் போதுமான கிரெடிட்கள் இல்லை",
       "notEnoughTranscriptionMessage": "இந்த வீடியோவை டிரான்ஸ்கிரைப் செய்ய சுமார் {{required}} கிரெடிட்கள் தேவை. உங்களிடம் {{available}} உள்ளது, இது சுமார் {{minutes}} நிமிடங்களுக்குப் போதுமானது. கிரெடிட்களைச் சேர்த்து மீண்டும் தொடங்குங்கள்.",
       "notEnoughMessage": "இந்தப் பணிக்கு உங்கள் இருப்பான {{available}} ஐ விட அதிக கிரெடிட்கள் தேவை. தொடர கிரெடிட்களைச் சேர்க்கவும்."
+    },
+    "dubCostConfirm": {
+      "title": "டப்பிங்கைத் தொடங்கவா?",
+      "message": "இந்த டப்பிங் உங்கள் {{balance}} கிரெடிட்களில் சுமார் {{cost}} பயன்படுத்தும். குரல்களை உருவாக்குவது மொழிபெயர்ப்பை விட மிக அதிகம் செலவாகும்."
     }
   },
   "progress": {

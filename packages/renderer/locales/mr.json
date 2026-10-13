@@ -870,7 +870,9 @@
     "redirectingToPayment": "सुरक्षित चेकआउट उघडत आहे…",
     "description": "${{packMicroPrice}} ({{packMicroHours}} तास), ${{pack1Price}} ({{pack1Hours}} तास), ${{pack2Price}} ({{pack2Hours}} तास), किंवा ${{pack3Price}} ({{pack3Hours}} तास) क्रेडिट पॅकमधून निवडा",
     "notEnough": "अपुरे क्रेडिट्स. कृपया चालू ठेवण्यासाठी अधिक क्रेडिट्स खरेदी करा.",
-    "transcriptionMinutesShort": "{{minutes}} मिनिटे ट्रान्सक्रिप्शन"
+    "transcriptionMinutesShort": "{{minutes}} मिनिटे ट्रान्सक्रिप्शन",
+    "transcriptionTimeShort": "{{time}} ट्रान्सक्रिप्शन",
+    "costOfBalance": "तुमच्या {{balance}} क्रेडिट्सपैकी {{cost}}"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "या व्हिडिओसाठी पुरेसे क्रेडिट्स नाहीत",
       "notEnoughTranscriptionMessage": "हा व्हिडिओ ट्रान्सक्राइब करण्यासाठी सुमारे {{required}} क्रेडिट्स लागतात. तुमच्याकडे {{available}} आहेत, जे सुमारे {{minutes}} मिनिटांसाठी पुरेसे आहेत. क्रेडिट्स जोडा आणि पुन्हा सुरू करा.",
       "notEnoughMessage": "या कामासाठी तुमच्या {{available}} शिल्लकपेक्षा जास्त क्रेडिट्स लागतात. पुढे जाण्यासाठी क्रेडिट्स जोडा."
+    },
+    "dubCostConfirm": {
+      "title": "डबिंग सुरू करायचे?",
+      "message": "हे डबिंग तुमच्या {{balance}} क्रेडिट्सपैकी सुमारे {{cost}} वापरेल. आवाज तयार करणे भाषांतरापेक्षा खूप महाग आहे."
     }
   },
   "progress": {

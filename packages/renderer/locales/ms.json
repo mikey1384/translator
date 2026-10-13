@@ -870,7 +870,9 @@
     "redirectingToPayment": "Membuka pembayaran selamat…",
     "description": "Pilih dari pakej ${{packMicroPrice}} ({{packMicroHours}}j), ${{pack1Price}} ({{pack1Hours}}j), ${{pack2Price}} ({{pack2Hours}}j), atau ${{pack3Price}} ({{pack3Hours}}j)",
     "notEnough": "Kredit tidak mencukupi. Sila beli lebih banyak kredit untuk meneruskan.",
-    "transcriptionMinutesShort": "{{minutes}} min transkripsi"
+    "transcriptionMinutesShort": "{{minutes}} min transkripsi",
+    "transcriptionTimeShort": "{{time}} transkripsi",
+    "costOfBalance": "{{cost}} daripada {{balance}} kredit anda"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Kredit tidak mencukupi untuk video ini",
       "notEnoughTranscriptionMessage": "Mentranskripsi video ini memerlukan kira-kira {{required}} kredit. Anda ada {{available}}, cukup untuk kira-kira {{minutes}} minit. Tambah kredit, kemudian mulakan semula.",
       "notEnoughMessage": "Tugas ini memerlukan lebih banyak kredit daripada baki anda sebanyak {{available}}. Tambah kredit untuk meneruskan."
+    },
+    "dubCostConfirm": {
+      "title": "Mulakan alih suara?",
+      "message": "Alih suara ini menggunakan kira-kira {{cost}} daripada {{balance}} kredit anda. Menjana suara jauh lebih mahal daripada menterjemah."
     }
   },
   "progress": {

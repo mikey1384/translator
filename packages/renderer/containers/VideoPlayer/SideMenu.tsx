@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Button from '../../components/Button';
 import IconButton from '../../components/IconButton';
 import {
@@ -41,6 +42,9 @@ import {
 } from '../GenerateSubtitles/utils/subtitleGeneration';
 import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
 import { useTranscriptionBlocker } from '../GenerateSubtitles/hooks/useTranscriptionBlocker';
+import { useCreditCostEstimates } from '../../hooks/useCreditCostEstimates';
+import ConfirmDubCostDialog from '../../components/ConfirmDubCostDialog';
+import { shouldConfirmDubCost } from '../../utils/creditEstimates';
 import {
   isManagedTempOriginalVideoPath,
   saveDubbedVideoFile,
@@ -263,6 +267,34 @@ export default function SideMenu({
     });
   }
 
+  // This menu has no room for an inline cost line, so a dub that would use a
+  // large share of the balance asks first, with the cost, before anything runs.
+  const { credits, dubbingEstimate } = useCreditCostEstimates();
+  const [dubCostPrompt, setDubCostPrompt] = useState<{
+    estimatedCredits: number;
+    balance: number;
+    resolve: (confirmed: boolean) => void;
+  } | null>(null);
+  function confirmDubCost(): Promise<boolean> {
+    if (
+      !dubbingEstimate ||
+      dubbingEstimate.isByo ||
+      dubbingEstimate.blockedInApiKeyMode ||
+      credits == null ||
+      !shouldConfirmDubCost(dubbingEstimate.estimatedCredits, credits)
+    ) {
+      return Promise.resolve(true);
+    }
+    const { estimatedCredits } = dubbingEstimate;
+    return new Promise(resolve =>
+      setDubCostPrompt({ estimatedCredits, balance: credits, resolve })
+    );
+  }
+  function settleDubCostPrompt(confirmed: boolean) {
+    dubCostPrompt?.resolve(confirmed);
+    setDubCostPrompt(null);
+  }
+
   async function handleDub() {
     let subtitleState = useSubStore.getState();
     let currentSegments = subtitleState.order.map(
@@ -277,6 +309,8 @@ export default function SideMenu({
         .setValidationError('No subtitles available for dubbing');
       return;
     }
+
+    if (!(await confirmDubCost())) return;
 
     // Dub the selected output language, not whatever text happens to be
     // mounted: translate first when translations are missing or were made
@@ -356,6 +390,13 @@ export default function SideMenu({
   // Render as a dedicated column next to the video (grid area); not overlayed
   return (
     <>
+      <ConfirmDubCostDialog
+        open={Boolean(dubCostPrompt)}
+        estimatedCredits={dubCostPrompt?.estimatedCredits ?? 0}
+        balance={dubCostPrompt?.balance ?? 0}
+        onConfirm={() => settleDubCostPrompt(true)}
+        onCancel={() => settleDubCostPrompt(false)}
+      />
       <div
         className={sidePanelShellStyles}
         aria-label={t('videoPlayer.sideActions', 'Video side actions')}

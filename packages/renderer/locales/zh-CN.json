@@ -870,7 +870,9 @@
     "redirectingToPayment": "正在打开安全支付…",
     "description": "选择 ${{packMicroPrice}}（{{packMicroHours}}小时）、${{pack1Price}}（{{pack1Hours}}小时）、${{pack2Price}}（{{pack2Hours}}小时）或 ${{pack3Price}}（{{pack3Hours}}小时）积分包",
     "notEnough": "积分不足。请购买更多积分以继续。",
-    "transcriptionMinutesShort": "{{minutes}} 分钟转写"
+    "transcriptionMinutesShort": "{{minutes}} 分钟转写",
+    "transcriptionTimeShort": "{{time}}转写",
+    "costOfBalance": "您 {{balance}} 积分中的 {{cost}}"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "积分不足，无法处理此视频",
       "notEnoughTranscriptionMessage": "转写此视频大约需要 {{required}} 积分。您有 {{available}} 积分，约可转写 {{minutes}} 分钟。请充值后重新开始。",
       "notEnoughMessage": "此任务所需积分超过您的余额（{{available}}）。请充值后继续。"
+    },
+    "dubCostConfirm": {
+      "title": "开始配音？",
+      "message": "此次配音将使用您 {{balance}} 积分中的约 {{cost}}。生成语音的费用远高于翻译。"
     }
   },
   "progress": {

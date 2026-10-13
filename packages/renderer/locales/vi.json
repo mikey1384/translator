@@ -870,7 +870,9 @@
     "redirectingToPayment": "Đang mở thanh toán an toàn…",
     "description": "Chọn từ các gói tín dụng ${{packMicroPrice}} ({{packMicroHours}} giờ), ${{pack1Price}} ({{pack1Hours}} giờ), ${{pack2Price}} ({{pack2Hours}} giờ), hoặc ${{pack3Price}} ({{pack3Hours}} giờ)",
     "notEnough": "Tín dụng không đủ. Vui lòng mua thêm tín dụng để tiếp tục.",
-    "transcriptionMinutesShort": "{{minutes}} phút chép lời"
+    "transcriptionMinutesShort": "{{minutes}} phút chép lời",
+    "transcriptionTimeShort": "{{time}} chép lời",
+    "costOfBalance": "{{cost}} trên {{balance}} tín dụng của bạn"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Không đủ tín dụng cho video này",
       "notEnoughTranscriptionMessage": "Chép lời video này cần khoảng {{required}} tín dụng. Bạn có {{available}}, đủ cho khoảng {{minutes}} phút. Hãy nạp thêm tín dụng rồi bắt đầu lại.",
       "notEnoughMessage": "Tác vụ này cần nhiều tín dụng hơn số dư {{available}} của bạn. Hãy nạp thêm tín dụng để tiếp tục."
+    },
+    "dubCostConfirm": {
+      "title": "Bắt đầu lồng tiếng?",
+      "message": "Lần lồng tiếng này dùng khoảng {{cost}} trên {{balance}} tín dụng của bạn. Tạo giọng nói tốn hơn nhiều so với dịch."
     }
   },
   "progress": {

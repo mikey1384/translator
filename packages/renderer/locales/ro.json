@@ -870,7 +870,9 @@
     "redirectingToPayment": "Se deschide plata securizată…",
     "description": "Alegeți dintre pachetele ${{packMicroPrice}} ({{packMicroHours}}o), ${{pack1Price}} ({{pack1Hours}}o), ${{pack2Price}} ({{pack2Hours}}o), sau ${{pack3Price}} ({{pack3Hours}}o)",
     "notEnough": "Credite insuficiente. Vă rugăm să cumpărați mai multe credite pentru a continua.",
-    "transcriptionMinutesShort": "{{minutes}} min de transcriere"
+    "transcriptionMinutesShort": "{{minutes}} min de transcriere",
+    "transcriptionTimeShort": "{{time}} de transcriere",
+    "costOfBalance": "{{cost}} din cele {{balance}} credite ale tale"
   },
   "cta": {
     "generate": {
@@ -1082,6 +1084,10 @@
       "notEnoughTitle": "Nu ai suficiente credite pentru acest videoclip",
       "notEnoughTranscriptionMessage": "Transcrierea acestui videoclip necesită aproximativ {{required}} credite. Ai {{available}}, suficiente pentru aproximativ {{minutes}} minute. Adaugă credite, apoi pornește din nou.",
       "notEnoughMessage": "Această sarcină necesită mai multe credite decât soldul tău de {{available}}. Adaugă credite pentru a continua."
+    },
+    "dubCostConfirm": {
+      "title": "Începi dublajul?",
+      "message": "Acest dublaj folosește aproximativ {{cost}} din cele {{balance}} credite ale tale. Generarea vocilor costă mult mai mult decât traducerea."
     }
   },
   "progress": {
