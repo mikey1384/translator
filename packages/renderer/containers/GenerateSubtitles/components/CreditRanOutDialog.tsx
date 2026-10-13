@@ -46,7 +46,10 @@ export default function CreditRanOutDialog({
   const formatCredits = (value: number) => numberFormat.format(value);
 
   const title = shortfall
-    ? t('dialogs.creditRanOut.notEnoughTitle', 'Not enough credits for this video')
+    ? t(
+        'dialogs.creditRanOut.notEnoughTitle',
+        'Not enough credits for this video'
+      )
     : neverHadCredits
       ? t('dialogs.creditRanOut.neverHadTitle', 'Transcription needs credits')
       : t('dialogs.creditRanOut.title', 'Credits ran out');

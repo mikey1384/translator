@@ -30,7 +30,11 @@ export function registerFullTranscriptionSeconds(
   seconds: number | null | undefined
 ): void {
   if (!operationId) return;
-  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds <= 0) {
+  if (
+    typeof seconds !== 'number' ||
+    !Number.isFinite(seconds) ||
+    seconds <= 0
+  ) {
     return;
   }
   fullTranscriptionSeconds.delete(operationId);
@@ -100,7 +104,8 @@ export function describeCreditShortfall({
   // An estimate at or under the balance cannot explain the refusal (the
   // server may have reserved more), so never quote a figure that contradicts it.
   return {
-    requiredCredits: estimate !== null && estimate > available ? estimate : null,
+    requiredCredits:
+      estimate !== null && estimate > available ? estimate : null,
     availableCredits: available,
   };
 }

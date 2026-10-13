@@ -51,10 +51,7 @@ for (const isMultiLine of [false, true]) {
     assert.match(masterTheme.fontFamily, /Noto Sans/);
     assert.equal(masterTheme.bottom, '8.5%');
     assert.equal(masterTheme.fontWeight, 600);
-    assert.equal(
-      masterTheme.lineBoxBackgroundColor,
-      'rgba(12, 14, 18, 0.78)'
-    );
+    assert.equal(masterTheme.lineBoxBackgroundColor, 'rgba(12, 14, 18, 0.78)');
     assert.equal(masterTheme.lineBoxPadding, '5.4px 24.6px 9px');
     assert.equal(masterTheme.lineBoxBorderRadiusPx, 15.6);
     assert.equal(masterTheme.textStrokeWidthPx, 0);

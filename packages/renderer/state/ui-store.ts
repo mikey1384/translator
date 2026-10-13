@@ -241,7 +241,8 @@ const initial: State = {
     if (!Number.isFinite(parsed)) return 0.35;
     return Math.min(1, Math.max(0, parsed));
   })(),
-  baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) ||
+  baseFontSize:
+    Number(localStorage.getItem('savedMergeFontSize')) ||
     DEFAULT_SUBTITLE_BASE_FONT_SIZE,
   subtitleStyle:
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||

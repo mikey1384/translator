@@ -75,7 +75,9 @@ export function classifyUrlDownloadFailure(
   )}\n${String(value?.code || '')}`.toLowerCase();
 
   if (/invalid url|url format/.test(text)) return 'validation';
-  if (classifyUrlDownloadFailureDetail(error).code === 'private_or_restricted') {
+  if (
+    classifyUrlDownloadFailureDetail(error).code === 'private_or_restricted'
+  ) {
     return 'site_rejected';
   }
   if (

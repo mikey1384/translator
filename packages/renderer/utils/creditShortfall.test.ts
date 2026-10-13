@@ -11,10 +11,15 @@ import {
 
 test('quotes required credits when a whole video needs more than the balance', () => {
   const seconds = 2622;
-  const expected = Math.ceil((seconds * CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR) / 3600);
+  const expected = Math.ceil(
+    (seconds * CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR) / 3600
+  );
   assert.ok(expected > 15_000);
   assert.deepEqual(
-    describeCreditShortfall({ availableCredits: 15_000, transcriptionSeconds: seconds }),
+    describeCreditShortfall({
+      availableCredits: 15_000,
+      transcriptionSeconds: seconds,
+    }),
     { requiredCredits: expected, availableCredits: 15_000 }
   );
   assert.equal(
@@ -30,7 +35,10 @@ test('keeps ran-out wording when balance is zero or unknown', () => {
 
 test('omits a requirement that would contradict the refusal', () => {
   assert.deepEqual(
-    describeCreditShortfall({ availableCredits: 50_000, transcriptionSeconds: 60 }),
+    describeCreditShortfall({
+      availableCredits: 50_000,
+      transcriptionSeconds: 60,
+    }),
     { requiredCredits: null, availableCredits: 50_000 }
   );
 });
@@ -51,12 +59,21 @@ test('only whole-file transcriptions carry a duration', () => {
     transcriptionSeconds: null,
   });
   registerFullTranscriptionSeconds('transcribe-3', 0);
-  assert.equal(creditRefusalForOperation('transcribe-3').transcriptionSeconds, null);
+  assert.equal(
+    creditRefusalForOperation('transcribe-3').transcriptionSeconds,
+    null
+  );
 });
 
 test('describes the $1 pack in the unit of the refused work', () => {
-  assert.equal(creditOfferBasis(creditRefusalForOperation('transcribe-9')), 'transcription');
-  assert.equal(creditOfferBasis(creditRefusalForOperation('translate-9')), 'translation');
+  assert.equal(
+    creditOfferBasis(creditRefusalForOperation('transcribe-9')),
+    'transcription'
+  );
+  assert.equal(
+    creditOfferBasis(creditRefusalForOperation('translate-9')),
+    'translation'
+  );
   assert.equal(creditOfferBasis(creditRefusalForOperation('dub-9')), 'none');
   assert.equal(creditOfferBasis(null), 'none');
 });
