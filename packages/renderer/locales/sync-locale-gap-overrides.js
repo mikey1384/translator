@@ -7,7 +7,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Verwerk navraag',
     'input.videoSuggestion.stage.planner': 'Bou soektog',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standaard konsep + gevorderde hersiening deur Anthropic',
+      'Konsep met Claude Haiku 5.5 + hersiening met Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Hersieningsverskaffer',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -26,7 +26,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'معالجة الاستعلام',
     'input.videoSuggestion.stage.planner': 'صياغة البحث',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'مسودة قياسية + مراجعة متقدمة من Anthropic',
+      'مسودة Claude Haiku 5.5 + مراجعة Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'موفر المراجعة',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -43,7 +43,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'কোয়েরি চালান',
     'input.videoSuggestion.stage.planner': 'সার্চ তৈরি',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'স্ট্যান্ডার্ড খসড়া + Anthropic প্রিমিয়াম রিভিউ',
+      'Claude Haiku 5.5 খসড়া + Claude Opus 5.5 রিভিউ',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'রিভিউ প্রদানকারী',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -61,7 +61,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Zpracování',
     'input.videoSuggestion.stage.planner': 'Hledání',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standardní návrh + pokročilá revize Anthropic',
+      'Návrh Claude Haiku 5.5 + kontrola Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Poskytovatel revize',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -79,7 +79,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Behandl forespørgsel',
     'input.videoSuggestion.stage.planner': 'Opret søgning',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standardkladde + avanceret gennemgang med Anthropic',
+      'Kladde med Claude Haiku 5.5 + review med Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Gennemgangsudbyder',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -97,7 +97,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Anfrage verarbeiten',
     'input.videoSuggestion.stage.planner': 'Suche erstellen',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standardentwurf + erweiterte Prüfung mit Anthropic',
+      'Entwurf mit Claude Haiku 5.5 + Review mit Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Prüfungsanbieter',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -115,7 +115,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Επεξεργασία',
     'input.videoSuggestion.stage.planner': 'Αναζήτηση',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Τυπικό προσχέδιο + προηγμένος έλεγχος Anthropic',
+      'Πρόχειρο Claude Haiku 5.5 + έλεγχος Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Πάροχος ελέγχου',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -133,7 +133,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Procesar consulta',
     'input.videoSuggestion.stage.planner': 'Preparar búsqueda',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Borrador estándar + revisión avanzada de Anthropic',
+      'Borrador con Claude Haiku 5.5 + revisión con Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Proveedor de revisión',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -151,7 +151,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'پردازش پرس و جو',
     'input.videoSuggestion.stage.planner': 'ساخت جستجو',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'پیش نویس استاندارد + بازبینی پیشرفته Anthropic',
+      'پیش‌نویس Claude Haiku 5.5 + بازبینی Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'ارائه دهنده بازبینی',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -169,7 +169,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Käsittele kysely',
     'input.videoSuggestion.stage.planner': 'Muodosta haku',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Vakioluonnos + Anthropicin edistynyt tarkistus',
+      'Claude Haiku 5.5 -luonnos + Claude Opus 5.5 -tarkistus',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Tarkistuksen tarjoaja',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -187,7 +187,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Traiter la requête',
     'input.videoSuggestion.stage.planner': 'Préparer la recherche',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      "Brouillon standard + révision avancée d'Anthropic",
+      'Brouillon Claude Haiku 5.5 + révision Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Fournisseur de révision',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -205,7 +205,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'עיבוד שאילתה',
     'input.videoSuggestion.stage.planner': 'בניית חיפוש',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'טיוטה רגילה + סקירה מתקדמת של Anthropic',
+      'טיוטת Claude Haiku 5.5 + סקירת Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'ספק הסקירה',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -223,7 +223,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'क्वेरी संसाधित करें',
     'input.videoSuggestion.stage.planner': 'खोज बनाएँ',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'मानक ड्राफ्ट + Anthropic प्रीमियम समीक्षा',
+      'Claude Haiku 5.5 ड्राफ्ट + Claude Opus 5.5 समीक्षा',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'समीक्षा प्रदाता',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -241,7 +241,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Feldolgozás',
     'input.videoSuggestion.stage.planner': 'Keresés',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Normál vázlat + Anthropic fejlett ellenőrzés',
+      'Claude Haiku 5.5-vázlat + Claude Opus 5.5-ellenőrzés',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Ellenőrzési szolgáltató',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -259,7 +259,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Proses kueri',
     'input.videoSuggestion.stage.planner': 'Susun pencarian',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Draf standar + review premium dari Anthropic',
+      'Draf Claude Haiku 5.5 + ulasan Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Penyedia review',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -277,7 +277,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Elabora richiesta',
     'input.videoSuggestion.stage.planner': 'Crea ricerca',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Bozza standard + revisione avanzata di Anthropic',
+      'Bozza Claude Haiku 5.5 + revisione Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Fornitore di revisione',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -294,7 +294,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': '要望を整理',
     'input.videoSuggestion.stage.planner': '検索を作成',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      '標準ドラフト + Anthropic 上位レビュー',
+      'Claude Haiku 5.5ドラフト + Claude Opus 5.5レビュー',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'レビュー提供元',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -311,7 +311,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': '요청 처리',
     'input.videoSuggestion.stage.planner': '검색 구성',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      '표준 초안 + Anthropic 고급 검토',
+      'Claude Haiku 5.5 초안 + Claude Opus 5.5 검토',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       '검토 제공업체',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -329,7 +329,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'क्वेरी प्रक्रिया',
     'input.videoSuggestion.stage.planner': 'शोध तयार करा',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'स्टँडर्ड मसुदा + Anthropic प्रीमियम समीक्षा',
+      'Claude Haiku 5.5 मसुदा + Claude Opus 5.5 पुनरावलोकन',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'समीक्षा प्रदाता',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -347,7 +347,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Proses kueri',
     'input.videoSuggestion.stage.planner': 'Bina carian',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Draf standard + semakan premium daripada Anthropic',
+      'Draf Claude Haiku 5.5 + semakan Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Penyedia semakan',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -366,7 +366,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Zoekvraag verwerken',
     'input.videoSuggestion.stage.planner': 'Zoekopdracht maken',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standaardconcept + geavanceerde review met Anthropic',
+      'Concept met Claude Haiku 5.5 + review met Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Reviewprovider',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -384,7 +384,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Behandle forespørsel',
     'input.videoSuggestion.stage.planner': 'Lag søk',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standardutkast + avansert gjennomgang med Anthropic',
+      'Utkast med Claude Haiku 5.5 + gjennomgang med Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Gjennomgangsleverandør',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -402,7 +402,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Przetwarzanie',
     'input.videoSuggestion.stage.planner': 'Wyszukiwanie',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standardowy szkic + zaawansowana weryfikacja Anthropic',
+      'Szkic Claude Haiku 5.5 + przegląd Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Dostawca weryfikacji',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -420,7 +420,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Processar consulta',
     'input.videoSuggestion.stage.planner': 'Criar pesquisa',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Rascunho padrão + revisão avançada da Anthropic',
+      'Rascunho Claude Haiku 5.5 + revisão Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Fornecedor de revisão',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -438,7 +438,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Procesare',
     'input.videoSuggestion.stage.planner': 'Căutare',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Ciornă standard + revizie avansată Anthropic',
+      'Schiță Claude Haiku 5.5 + revizuire Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Furnizor de revizie',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -456,7 +456,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Обработка',
     'input.videoSuggestion.stage.planner': 'Поиск',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Стандартный черновик + продвинутая проверка Anthropic',
+      'Черновик Claude Haiku 5.5 + проверка Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Провайдер проверки',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -474,7 +474,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Bearbeta sökfråga',
     'input.videoSuggestion.stage.planner': 'Skapa sökning',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standardutkast + avancerad granskning med Anthropic',
+      'Utkast med Claude Haiku 5.5 + granskning med Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Granskningsleverantör',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -492,7 +492,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Chakata swali',
     'input.videoSuggestion.stage.planner': 'Unda utafutaji',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Rasimu ya kawaida + uhakiki wa hali ya juu wa Anthropic',
+      'Rasimu ya Claude Haiku 5.5 + mapitio ya Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Mtoa uhakiki',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -511,7 +511,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'கேள்வி செயலாக்கம்',
     'input.videoSuggestion.stage.planner': 'தேடல் அமை',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'தரநிலை வரைவு + Anthropic பிரீமியம் மதிப்பாய்வு',
+      'Claude Haiku 5.5 வரைவு + Claude Opus 5.5 மதிப்பாய்வு',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'மதிப்பாய்வு வழங்குநர்',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -529,7 +529,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'క్వెరీ ప్రాసెస్',
     'input.videoSuggestion.stage.planner': 'శోధన రూపొందించు',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'స్టాండర్డ్ డ్రాఫ్ట్ + Anthropic ప్రీమియం సమీక్ష',
+      'Claude Haiku 5.5 డ్రాఫ్ట్ + Claude Opus 5.5 సమీక్ష',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'సమీక్ష ప్రొవైడర్',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -547,7 +547,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'ประมวลคำค้น',
     'input.videoSuggestion.stage.planner': 'ร่างการค้นหา',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'ฉบับร่างมาตรฐาน + ตรวจทานขั้นสูงของ Anthropic',
+      'Claude Haiku 5.5 ฉบับร่าง + Claude Opus 5.5 รีวิว',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'ผู้ให้บริการตรวจทาน',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -565,7 +565,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Iproseso ang query',
     'input.videoSuggestion.stage.planner': 'Bumuo ng paghahanap',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standard na draft + premium review ng Anthropic',
+      'Burador ng Claude Haiku 5.5 + rebyu ng Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Provider ng review',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -583,7 +583,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'İşleme',
     'input.videoSuggestion.stage.planner': 'Arama',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Standart taslak + Anthropic üst düzey inceleme',
+      'Claude Haiku 5.5 taslak + Claude Opus 5.5 inceleme',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'İnceleme sağlayıcısı',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -601,7 +601,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Обробка',
     'input.videoSuggestion.stage.planner': 'Пошук',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Стандартна чернетка + просунута перевірка Anthropic',
+      'Чернетка Claude Haiku 5.5 + перевірка Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Провайдер перевірки',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -619,7 +619,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'کوئری پراسیس',
     'input.videoSuggestion.stage.planner': 'تلاش بنائیں',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'معیاری ڈرافٹ + Anthropic پریمیم ریویو',
+      'Claude Haiku 5.5 مسودہ + Claude Opus 5.5 جائزہ',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'ریویو فراہم کنندہ',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -637,7 +637,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': 'Xử lý truy vấn',
     'input.videoSuggestion.stage.planner': 'Tạo truy vấn',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      'Bản nháp chuẩn + rà soát cao cấp của Anthropic',
+      'Bản nháp Claude Haiku 5.5 + rà soát Claude Opus 5.5',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       'Nhà cung cấp rà soát',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -653,7 +653,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': '处理查询',
     'input.videoSuggestion.stage.planner': '构建搜索',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      '标准草稿 + Anthropic 高阶复审',
+      'Claude Haiku 5.5 草稿 + Claude Opus 5.5 复审',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       '复审提供方',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':
@@ -669,7 +669,7 @@ const localeGapOverrides = {
     'input.videoSuggestion.stage.answerer': '處理查詢',
     'input.videoSuggestion.stage.planner': '建立搜尋',
     'settings.performanceQuality.qualityTranslation.modelOnAnthropic':
-      '標準草稿 + Anthropic 高階複審',
+      'Claude Haiku 5.5 草稿 + Claude Opus 5.5 複審',
     'settings.performanceQuality.qualityTranslation.reviewProvider':
       '複審提供方',
     'settings.performanceQuality.qualityTranslation.openAiHighEnd':

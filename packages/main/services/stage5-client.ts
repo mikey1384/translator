@@ -16,7 +16,7 @@ import {
   API_TIMEOUTS,
   STAGE5_TTS_MODEL_ELEVEN_V4,
   DEFAULT_DUB_VOICE,
-  normalizeAiModelId,
+  toStage5CreditModel,
 } from '../../shared/constants/index.js';
 import { formatElevenLabsTimeRemaining } from './subtitle-processing/utils.js';
 import {
@@ -918,7 +918,9 @@ export async function translate({
   }
 
   try {
-    const normalizedModel = model ? normalizeAiModelId(model) : undefined;
+    // Stage5 credits run Anthropic models: GPT ids from older settings or
+    // GPT-defaulting helpers map to the Claude model of the same tier.
+    const normalizedModel = model ? toStage5CreditModel(model) : undefined;
     const payload: any = { messages, reasoning };
     if (normalizedModel) {
       payload.model = normalizedModel;
@@ -1813,7 +1815,9 @@ export async function translateViaDirect({
 
   // Hoisted above the try so the catch can attribute provider throttling
   // to the routed model.
-  const normalizedModel = model ? normalizeAiModelId(model) : undefined;
+  // Stage5 credits run Anthropic models: GPT ids from older settings or
+  // GPT-defaulting helpers map to the Claude model of the same tier.
+  const normalizedModel = model ? toStage5CreditModel(model) : undefined;
 
   try {
     const payload: Record<string, unknown> = { messages, reasoning };

@@ -2,7 +2,6 @@ import { css } from '@emotion/css';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  AI_MODEL_DISPLAY_NAMES,
   AI_MODELS,
   CREDITS_PER_AUDIO_HOUR,
   estimateVideoSuggestionUsdPerSearch,
@@ -10,8 +9,7 @@ import {
   getStage5ReviewOption,
   getStage5ReviewOptionForPreference,
   PRICE_MARGIN,
-  STAGE5_REVIEW_TRANSLATION_MODEL,
-  SUMMARY_QUALITY_MULTIPLIER,
+  STAGE5_CREDIT_MODELS,
   TTS_CREDITS_PER_MINUTE,
   USD_PER_CREDIT,
 } from '../../../shared/constants';
@@ -22,6 +20,7 @@ import { useAiStore } from '../../state/ai-store';
 import Switch from '../../components/Switch';
 import {
   CREDITS_PER_SUMMARY_AUDIO_HOUR,
+  CREDITS_PER_SUMMARY_AUDIO_HOUR_HIGH,
   estimateDubbingHours,
   estimateTranslationCreditsPerHour,
   estimateSummaryHours,
@@ -93,9 +92,11 @@ export default function QualityToggles() {
   );
   const effectivePreferClaudeReview = preferClaudeReview;
   const videoSuggestionQualityEnabled = stage5VideoSuggestionMode === 'high';
-  const selectedReviewOption = getStage5ReviewOptionForPreference(
-    effectivePreferClaudeReview
-  );
+  // Stage5 credits always review on Claude Opus 5.5; the provider choice only
+  // applies to API-key mode.
+  const selectedReviewOption = useApiKeysMode
+    ? getStage5ReviewOptionForPreference(effectivePreferClaudeReview)
+    : getStage5ReviewOption('anthropic');
   const qualityTranslationModelOn = getQualityTranslationOnLabel(
     t,
     i18n,
@@ -139,19 +140,25 @@ export default function QualityToggles() {
   const summaryHqHours = estimateSummaryHours(credits, 'high');
   const summaryNormalCreditsPerHour = CREDITS_PER_SUMMARY_AUDIO_HOUR;
   const summaryHqCreditsPerHour = Math.ceil(
-    CREDITS_PER_SUMMARY_AUDIO_HOUR * SUMMARY_QUALITY_MULTIPLIER
+    CREDITS_PER_SUMMARY_AUDIO_HOUR_HIGH
   );
 
   // Dubbing is ElevenLabs-only (eleven_v4): one rate, shown up front.
   const dubbingHours = estimateDubbingHours(credits);
   const dubbingCreditsPerMinute = TTS_CREDITS_PER_MINUTE.elevenlabs;
+  // Stage5 credits run AI video search on Claude Sonnet 5.5 (standard) and
+  // Opus 5.5 (quality); API-key mode uses the user's own models.
+  const defaultVideoSuggestionModel = useApiKeysMode
+    ? AI_MODELS.GPT
+    : STAGE5_CREDIT_MODELS.STANDARD;
   const defaultVideoSuggestionCredits = Math.ceil(
-    (estimateVideoSuggestionUsdPerSearch(AI_MODELS.GPT) * PRICE_MARGIN) /
+    (estimateVideoSuggestionUsdPerSearch(defaultVideoSuggestionModel) *
+      PRICE_MARGIN) /
       USD_PER_CREDIT
   );
   const qualityVideoSuggestionModel = useApiKeysMode
     ? selectedReviewOption.model
-    : STAGE5_REVIEW_TRANSLATION_MODEL;
+    : STAGE5_CREDIT_MODELS.HIGH;
   const qualityVideoSuggestionCredits = Math.ceil(
     (estimateVideoSuggestionUsdPerSearch(qualityVideoSuggestionModel) *
       PRICE_MARGIN) /
@@ -279,12 +286,12 @@ export default function QualityToggles() {
               unit: 'perHour',
               model: t(
                 'settings.performanceQuality.qualityTranslation.modelOff',
-                'Standard draft only'
+                'Claude Haiku 5.5 draft only'
               ),
               estimateHours: translationNormalHours,
             })
       )}
-      {qualityTranslation ? (
+      {qualityTranslation && useApiKeysMode ? (
         <div className={reviewProviderCardStyles}>
           <div className={reviewProviderLabelStyles}>
             {getReviewProviderHeading(t, i18n)}
@@ -326,7 +333,7 @@ export default function QualityToggles() {
               unit: 'perHour',
               model: t(
                 'settings.performanceQuality.qualitySummary.modelOn',
-                'GPT-5.5 deep analysis + highlight clips'
+                'Claude Opus 5.5 deep analysis + highlight clips'
               ),
               estimateHours: summaryHqHours,
             })
@@ -335,7 +342,7 @@ export default function QualityToggles() {
               unit: 'perHour',
               model: t(
                 'settings.performanceQuality.qualitySummary.modelOff',
-                'GPT-5.1 standard analysis'
+                'Claude Sonnet 5.5 standard analysis'
               ),
               estimateHours: summaryNormalHours,
             })
@@ -370,7 +377,7 @@ export default function QualityToggles() {
           : renderHelp({
               rate: defaultVideoSuggestionCredits,
               unit: 'perSearch',
-              model: AI_MODEL_DISPLAY_NAMES[AI_MODELS.GPT],
+              model: getExactAiModelDisplayName(defaultVideoSuggestionModel),
             })
       )}
     </div>

@@ -7,6 +7,9 @@ import {
   SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER,
   SUMMARY_QUALITY_MULTIPLIER,
   TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
+  TRANSLATION_HOURLY_COST_CALIBRATION,
+  TRANSLATION_CHARS_COST_CALIBRATION,
+  TRANSLATION_REVIEW_PROMPT_TOKENS_PER_SOURCE_TOKEN,
   TRANSLATION_QUALITY_MULTIPLIER,
   TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION,
   TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT,
@@ -29,6 +32,8 @@ import {
   STAGE5_TTS_MODEL_PRICING,
   STAGE5_TRANSCRIPTION_MODEL_PRICING,
   STAGE5_TRANSLATION_MODEL_PRICING,
+  STAGE5_CREDIT_MODELS,
+  toStage5CreditModel,
 } from './model-catalog';
 import {
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR as STAGE5_SCRIBE_CREDITS_PER_AUDIO_HOUR,
@@ -59,9 +64,13 @@ import {
   VENDOR_TOKEN_MODEL_PRICING,
   VENDOR_TRANSCRIPTION_MODEL_PRICING,
   VENDOR_TTS_MODEL_PRICING,
+  CLAUDE_TOKENS_PER_GPT_TOKEN,
 } from './vendor-pricing';
 
 export {
+  STAGE5_CREDIT_MODELS,
+  toStage5CreditModel,
+  CLAUDE_TOKENS_PER_GPT_TOKEN,
   AI_MODELS,
   getStage5ReviewOption,
   getStage5ReviewOptionForPreference,
@@ -96,6 +105,9 @@ export {
   SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER,
   SUMMARY_QUALITY_MULTIPLIER,
   TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
+  TRANSLATION_HOURLY_COST_CALIBRATION,
+  TRANSLATION_CHARS_COST_CALIBRATION,
+  TRANSLATION_REVIEW_PROMPT_TOKENS_PER_SOURCE_TOKEN,
   TRANSLATION_QUALITY_MULTIPLIER,
   TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION,
   TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT,
@@ -122,20 +134,22 @@ export {
 
 /** User-friendly display names for AI models */
 export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
-  [AI_MODELS.GPT]: 'GPT-5.1',
+  [AI_MODELS.GPT]: 'GPT-6.1 Sol',
   [STAGE5_REVIEW_TRANSLATION_MODEL]: 'GPT-5.5',
   [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet',
   [AI_MODELS.CLAUDE_OPUS]: 'Claude Opus',
+  [AI_MODELS.CLAUDE_HAIKU]: 'Claude Haiku',
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
   [STAGE5_TTS_MODEL_ELEVEN_V4]: 'ElevenLabs v4',
 };
 
 /** Exact runtime labels for places where the concrete model matters. */
 export const AI_MODEL_EXACT_DISPLAY_NAMES: Record<string, string> = {
-  [AI_MODELS.GPT]: 'GPT-5.1',
+  [AI_MODELS.GPT]: 'GPT-6.1 Sol',
+  [AI_MODELS.CLAUDE_HAIKU]: 'Claude Haiku 5.5',
   [STAGE5_REVIEW_TRANSLATION_MODEL]:
     STAGE5_REVIEW_PROVIDER_OPTIONS.openai.exactModelLabel,
-  [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet 5',
+  [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet 5.5',
   [AI_MODELS.CLAUDE_OPUS]:
     STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
@@ -212,30 +226,26 @@ export const languages = [
 
 // Credit system constants (computed below using model pricing)
 
-// GPT-5.1 tokenizer costs (USD per token) - used for UI credit estimates
-const GPT5_1_USD_PER_TOKEN_IN = STAGE5_TRANSLATION_MODEL_PRICING['gpt-5.1'].in;
-const GPT5_1_USD_PER_TOKEN_OUT =
-  STAGE5_TRANSLATION_MODEL_PRICING['gpt-5.1'].out;
+// Credit-mode draft model costs per GPT-calibrated token (the token-per-hour
+// heuristics are GPT-calibrated; Claude counts more tokens for the same text).
+const DRAFT_USD_PER_TOKEN_IN =
+  STAGE5_TRANSLATION_MODEL_PRICING[STAGE5_CREDIT_MODELS.DRAFT].in *
+  CLAUDE_TOKENS_PER_GPT_TOKEN.prompt;
+const DRAFT_USD_PER_TOKEN_OUT =
+  STAGE5_TRANSLATION_MODEL_PRICING[STAGE5_CREDIT_MODELS.DRAFT].out *
+  CLAUDE_TOKENS_PER_GPT_TOKEN.completion;
 
 // Credits per 1k tokens (estimated)
 // Calibration factor (1.0 = no adjustment)
 export const TOKEN_CREDIT_CALIBRATION_UI = 1.0;
 export const CREDITS_PER_1K_TOKENS_PROMPT = Math.ceil(
-  ((PRICE_MARGIN * 1000 * GPT5_1_USD_PER_TOKEN_IN) / USD_PER_CREDIT) *
+  ((PRICE_MARGIN * 1000 * DRAFT_USD_PER_TOKEN_IN) / USD_PER_CREDIT) *
     TOKEN_CREDIT_CALIBRATION_UI
-); // ≈ 88 with current pricing
+); // ≈ 12 with Haiku 5.5 pricing
 export const CREDITS_PER_1K_TOKENS_COMPLETION = Math.ceil(
-  ((PRICE_MARGIN * 1000 * GPT5_1_USD_PER_TOKEN_OUT) / USD_PER_CREDIT) *
+  ((PRICE_MARGIN * 1000 * DRAFT_USD_PER_TOKEN_OUT) / USD_PER_CREDIT) *
     TOKEN_CREDIT_CALIBRATION_UI
-); // ≈ 700 with current pricing
-
-// Credits required to translate 1 hour of audio-equivalent text (prompt + completion)
-const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
-  (TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT / 1000) *
-    CREDITS_PER_1K_TOKENS_PROMPT +
-    (TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION / 1000) *
-      CREDITS_PER_1K_TOKENS_COMPLETION
-);
+); // ≈ 65 with Haiku 5.5 pricing
 
 // API polling intervals and timeouts (in milliseconds)
 // Used for long-running operations that require polling for completion
@@ -253,9 +263,12 @@ export const API_TIMEOUTS = {
   CREDIT_REFRESH_MAX_RETRIES: 3,
 } as const;
 
+// Draft-only translation per audio hour on the credit-mode draft model,
+// calibrated to measured costs (see TRANSLATION_HOURLY_COST_CALIBRATION).
 export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
-  BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR *
-    TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
+  ((estimateTranslationUsdPerHour(STAGE5_CREDIT_MODELS.DRAFT) * PRICE_MARGIN) /
+    USD_PER_CREDIT) *
+    TRANSLATION_HOURLY_COST_CALIBRATION
 );
 
 // Credits per audio hour (unified for transcription + translation)

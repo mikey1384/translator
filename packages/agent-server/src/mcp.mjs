@@ -454,7 +454,16 @@ function buildServer() {
             .enum(['openai', 'anthropic'])
             .optional(),
           byo_video_suggestion_model: z
-            .enum(['gpt-5.1', 'gpt-5.5', 'claude-sonnet-5', 'claude-opus-4-8'])
+            .enum([
+              'gpt-6.1-sol',
+              'gpt-5.5',
+              'claude-sonnet-5-5',
+              'claude-opus-5-5',
+              // Older ids are still accepted and map to the current model.
+              'gpt-5.1',
+              'claude-sonnet-5',
+              'claude-opus-4-8',
+            ])
             .optional(),
           // Transcription is ElevenLabs Scribe only (whisper-1 retires 2027-02-26).
           transcription_provider: z.enum(['stage5', 'elevenlabs']).optional(),

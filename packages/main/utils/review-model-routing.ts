@@ -1,4 +1,7 @@
-import { getStage5ReviewOption } from '../../shared/constants/index.js';
+import {
+  getStage5ReviewOption,
+  STAGE5_CREDIT_MODELS,
+} from '../../shared/constants/index.js';
 
 export type ReviewModelConfig = {
   model: string;
@@ -9,18 +12,14 @@ export type TranslationReasoning = {
   effort?: 'low' | 'medium' | 'high';
 };
 
-export function resolveStage5TranslationReviewModelConfig({
-  prefersClaude,
-}: {
+// Stage5 credits review on Claude Opus 5.5 (the servers choose it whenever
+// Anthropic is available); the review-provider preference applies to API-key
+// mode only.
+export function resolveStage5TranslationReviewModelConfig(_options: {
   prefersClaude: boolean;
   stage5AnthropicReviewAvailable?: boolean;
 }): ReviewModelConfig {
-  const openAiReview = getStage5ReviewOption('openai');
-  const anthropicReview = getStage5ReviewOption('anthropic');
-
-  return prefersClaude
-    ? { model: anthropicReview.model }
-    : { model: openAiReview.model };
+  return { model: STAGE5_CREDIT_MODELS.REVIEW };
 }
 
 export function resolveByoTranslationReviewModelConfig({

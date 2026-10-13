@@ -39,6 +39,10 @@ const ALLOWLIST_PATTERNS = [
   /^GPT-?\d/i,
   /^Opus/i,
   /^Sonnet/i,
+  /^Haiku/i,
+  // Claude model labels, e.g. "Claude Sonnet 5.5" or
+  // "Claude Sonnet 5.5 / Claude Opus 5.5"
+  /^Claude (Haiku|Sonnet|Opus)( \d+(\.\d+)?)?( \/ (Claude )?(Haiku|Sonnet|Opus)( \d+(\.\d+)?)?)?$/i,
   /^VTuber$/i,
   /^MOBA$/i,
 
@@ -96,10 +100,8 @@ const ALLOWLIST_PATTERNS = [
   /^\(deep\)$/,
 
   // Model identifiers
-  /^GPT-5\.1$/i,
-  /^Claude Opus$/i,
-  /^Claude Sonnet$/i,
-  /^Opus 4\.5$/i,
+  /^GPT-6\.1 Sol$/i,
+  /^GPT-5\.5$/i,
   /^ElevenLabs Scribe$/i,
   /^OpenAI TTS$/i,
 

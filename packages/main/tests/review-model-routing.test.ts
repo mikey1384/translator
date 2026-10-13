@@ -6,23 +6,30 @@ import {
   resolveStage5TranslationReviewModelConfig,
 } from '../utils/review-model-routing.js';
 
-test('Stage5 review model config preserves the selected Anthropic family when Claude review is preferred', () => {
+test('Stage5 credit review runs on Claude Opus 5.5 when Claude review is preferred', () => {
   assert.equal(
     resolveStage5TranslationReviewModelConfig({
       prefersClaude: true,
       stage5AnthropicReviewAvailable: true,
     }).model,
-    'claude-opus-4-8'
+    'claude-opus-5-5'
   );
 });
 
-test('Stage5 review model config keeps the selected Anthropic family even if cached capability is false', () => {
+test('Stage5 credit review runs on Claude Opus 5.5 even if cached capability is false', () => {
   assert.equal(
     resolveStage5TranslationReviewModelConfig({
       prefersClaude: true,
       stage5AnthropicReviewAvailable: false,
     }).model,
-    'claude-opus-4-8'
+    'claude-opus-5-5'
+  );
+});
+
+test('Stage5 credit review runs on Claude Opus 5.5 when GPT review is preferred', () => {
+  assert.equal(
+    resolveStage5TranslationReviewModelConfig({ prefersClaude: false }).model,
+    'claude-opus-5-5'
   );
 });
 

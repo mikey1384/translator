@@ -55,6 +55,9 @@ export function normalizeModelFamily(model?: string): string | undefined {
   if (normalized.includes('claude') && normalized.includes('sonnet')) {
     return 'claude-sonnet';
   }
+  if (normalized.includes('claude') && normalized.includes('haiku')) {
+    return 'claude-haiku';
+  }
   if (normalized.includes('gpt-5.1')) return 'gpt-5.1';
   if (normalized.includes('gpt')) return 'gpt';
   if (normalized.includes('scribe')) return 'scribe';

@@ -48,7 +48,7 @@ export const BYO_PROVIDERS = {
   translationDraft: {
     openai: {
       labelKey: 'settings.byoPreferences.gpt',
-      fallback: 'GPT-5.1',
+      fallback: 'GPT-6.1 Sol',
       price: formatUsdEstimate(
         estimateTranslationUsdPerHour(AI_MODELS.GPT),
         '/hr'
@@ -56,7 +56,7 @@ export const BYO_PROVIDERS = {
     },
     anthropic: {
       labelKey: 'settings.byoPreferences.claudeSonnet',
-      fallback: 'Claude Sonnet',
+      fallback: 'Claude Sonnet 5.5',
       price: formatUsdEstimate(
         estimateTranslationUsdPerHour(AI_MODELS.CLAUDE_SONNET),
         '/hr'
@@ -85,12 +85,12 @@ export const BYO_PROVIDERS = {
     standard: {
       openai: {
         labelKey: 'settings.byoPreferences.gpt',
-        fallback: 'GPT-5.1',
+        fallback: 'GPT-6.1 Sol',
         price: formatUsdEstimate(OPENAI_SUMMARY_STANDARD_USD, '/hr'),
       },
       anthropic: {
         labelKey: 'settings.byoPreferences.claudeSonnet',
-        fallback: 'Claude Sonnet',
+        fallback: 'Claude Sonnet 5.5',
         price: formatUsdEstimate(ANTHROPIC_SUMMARY_STANDARD_USD, '/hr'),
       },
     },
@@ -102,7 +102,7 @@ export const BYO_PROVIDERS = {
       },
       anthropic: {
         labelKey: 'settings.byoPreferences.claudeOpus',
-        fallback: 'Claude Opus',
+        fallback: 'Claude Opus 5.5',
         price: formatUsdEstimate(ANTHROPIC_SUMMARY_HIGH_USD, '/hr'),
       },
     },
@@ -118,7 +118,7 @@ export const BYO_PROVIDERS = {
   videoSuggestion: {
     gpt: {
       labelKey: 'settings.byoPreferences.gpt',
-      fallback: 'GPT-5.1',
+      fallback: 'GPT-6.1 Sol',
       price: formatUsdEstimate(
         estimateVideoSuggestionUsdPerSearch(AI_MODELS.GPT),
         '/search'
@@ -134,7 +134,7 @@ export const BYO_PROVIDERS = {
     },
     sonnet: {
       labelKey: 'settings.byoPreferences.claudeSonnet',
-      fallback: 'Claude Sonnet',
+      fallback: 'Claude Sonnet 5.5',
       price: formatUsdEstimate(
         estimateVideoSuggestionUsdPerSearch(AI_MODELS.CLAUDE_SONNET),
         '/search'
@@ -142,7 +142,7 @@ export const BYO_PROVIDERS = {
     },
     opus: {
       labelKey: 'settings.byoPreferences.claudeOpus',
-      fallback: 'Claude Opus',
+      fallback: 'Claude Opus 5.5',
       price: formatUsdEstimate(
         estimateVideoSuggestionUsdPerSearch(AI_MODELS.CLAUDE_OPUS),
         '/search'

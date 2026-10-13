@@ -141,13 +141,13 @@ export default function VideoSuggestionPanel({
   const modelLabel = useMemo(() => {
     switch (modelPreference) {
       case AI_MODELS.GPT:
-        return t('settings.byoPreferences.gpt', 'GPT-5.1');
+        return t('settings.byoPreferences.gpt', 'GPT-6.1 Sol');
       case STAGE5_REVIEW_TRANSLATION_MODEL:
         return t('settings.byoPreferences.gptHigh', 'GPT-5.5');
       case AI_MODELS.CLAUDE_SONNET:
-        return t('settings.byoPreferences.claudeSonnet', 'Claude Sonnet');
+        return t('settings.byoPreferences.claudeSonnet', 'Claude Sonnet 5.5');
       case AI_MODELS.CLAUDE_OPUS:
-        return t('settings.byoPreferences.claudeOpus', 'Claude Opus');
+        return t('settings.byoPreferences.claudeOpus', 'Claude Opus 5.5');
       case 'quality':
         return t('settings.byoPreferences.qualityMode', 'Quality');
       default:

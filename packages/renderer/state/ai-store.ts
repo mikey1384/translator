@@ -694,8 +694,8 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     // Default to the GPT-5.5 review tier for the agent's reasoning; users can
     // drop to 'standard' (GPT-5.1) as a cost downgrade.
     stage5VideoSuggestionMode: 'high',
-    byoVideoSuggestionModel: 'gpt-5.1',
-    videoSuggestionModelPreference: 'gpt-5.1',
+    byoVideoSuggestionModel: 'gpt-6.1-sol',
+    videoSuggestionModelPreference: 'gpt-6.1-sol',
     // Transcription is ElevenLabs Scribe only (whisper-1 retires 2027-02-26)
     preferredTranscriptionProvider: 'elevenlabs',
     // Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06)

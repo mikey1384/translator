@@ -8,6 +8,7 @@ import {
 } from '../../shared/helpers/transcription-route';
 import {
   AI_MODELS,
+  STAGE5_CREDIT_MODELS,
   STAGE5_REVIEW_TRANSLATION_MODEL,
 } from '../../shared/constants';
 
@@ -315,9 +316,11 @@ export function resolveTranslationDraftProvider(
 }
 
 export function resolveTranslationDraftModel(state: ByoRuntimeState): string {
-  return resolveTranslationDraftProvider(state) === 'anthropic'
-    ? AI_MODELS.CLAUDE_SONNET
-    : AI_MODELS.GPT;
+  const provider = resolveTranslationDraftProvider(state);
+  if (provider === 'anthropic') return AI_MODELS.CLAUDE_SONNET;
+  if (provider === 'openai') return AI_MODELS.GPT;
+  // Stage5 credits draft on Claude Haiku 5.5 (the servers choose it).
+  return STAGE5_CREDIT_MODELS.DRAFT;
 }
 
 export function resolveTranslationReviewProvider(
@@ -391,9 +394,10 @@ function resolveStage5TranslationReviewModel(state: ByoRuntimeState): {
   model: string;
   reasoning?: { effort: 'high' };
 } {
-  return state.preferClaudeReview
-    ? { model: AI_MODELS.CLAUDE_OPUS }
-    : { model: STAGE5_REVIEW_TRANSLATION_MODEL };
+  // Stage5 credits review on Claude Opus 5.5 regardless of the preference,
+  // which applies to API-key mode only.
+  void state;
+  return { model: STAGE5_CREDIT_MODELS.REVIEW };
 }
 
 export function resolveSummaryProvider(

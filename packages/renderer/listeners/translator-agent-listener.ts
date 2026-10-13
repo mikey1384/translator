@@ -11,7 +11,6 @@ import {
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
   DEFAULT_SUBTITLE_BASE_FONT_SIZE,
   ELEVENLABS_DUB_VOICES,
-  SUMMARY_QUALITY_MULTIPLIER,
   TTS_CREDITS_PER_MINUTE,
   normalizeDubVoice,
 } from '../../shared/constants';
@@ -78,6 +77,7 @@ import { preserveWordTimingsOnTranslatedSegments } from '../utils/preserve-word-
 import { shouldStoreAgentSessionTranslation } from '../utils/agent-session-library';
 import {
   CREDITS_PER_SUMMARY_AUDIO_HOUR,
+  CREDITS_PER_SUMMARY_AUDIO_HOUR_HIGH,
   estimateTranslationCreditsPerHour,
 } from '../utils/creditEstimates';
 import { acquireProvisionalUrlDownloadLibraryPath } from './mounted-download-leases';
@@ -580,10 +580,10 @@ type SettingsUpdate = {
   apiKeyMode?: boolean;
   translationDraftProvider?: 'openai' | 'anthropic';
   byoVideoSuggestionModel?:
-    | 'gpt-5.1'
+    | 'gpt-6.1-sol'
     | 'gpt-5.5'
-    | 'claude-sonnet-5'
-    | 'claude-opus-4-8';
+    | 'claude-sonnet-5-5'
+    | 'claude-opus-5-5';
   /** Legacy 'openai' (Whisper) is treated as 'elevenlabs'. */
   transcriptionProvider?: 'stage5' | 'openai' | 'elevenlabs';
   dubbingProvider?: 'stage5' | 'openai' | 'elevenlabs';
@@ -4171,8 +4171,7 @@ async function mcpContext({
         translation_standard_per_hour: estimateTranslationCreditsPerHour(false),
         translation_quality_per_hour: estimateTranslationCreditsPerHour(true),
         summary_standard_per_hour: CREDITS_PER_SUMMARY_AUDIO_HOUR,
-        summary_high_per_hour:
-          CREDITS_PER_SUMMARY_AUDIO_HOUR * SUMMARY_QUALITY_MULTIPLIER,
+        summary_high_per_hour: CREDITS_PER_SUMMARY_AUDIO_HOUR_HIGH,
         // Dubbing is ElevenLabs-only (eleven_v4).
         dubbing_elevenlabs_per_minute: TTS_CREDITS_PER_MINUTE.elevenlabs,
       },

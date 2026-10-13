@@ -106,7 +106,8 @@ eval (()=>{const s=document.body.innerText; const i=s.indexOf("영상을 선택�
   ```
   Since openai-relay 30c97ed (2026-10-13) a plain translation part holds
   credits for min(16k, 2×prompt+1024) output tokens (≈2k credits for a
-  typical GPT-5.1 part, was ~11k); deep-reasoning, tool and web-search calls
+  typical draft part, measured when drafts ran on GPT-5.1, was ~11k; Stage5
+  drafts now run on Claude Haiku 5.5); deep-reasoning, tool and web-search calls
   still hold the full 16k/32k. STARTER (150k) remains the safe grant. A 402 at the relay's
   reserve step surfaces in-app as "AI 크레딧이 소진되었습니다" with no
   relay log line after "Server model authority selected".

@@ -117,9 +117,15 @@ function resolveApiKeyModeVideoSuggestionFallback(
 function resolveStage5CreditModeDirectSelection(
   selected: DirectVideoSuggestionModelId
 ): DirectVideoSuggestionModelId {
-  // Stage5 credits mode routes video suggestions through Claude Sonnet;
-  // explicit GPT/Opus picks pass through unchanged.
-  return selected;
+  // Stage5 credits run video suggestions on Claude's current models: an older
+  // explicit GPT pick maps to the same tier (GPT high -> Opus, else Sonnet).
+  if (
+    selected === AI_MODELS.CLAUDE_OPUS ||
+    selected === STAGE5_REVIEW_TRANSLATION_MODEL
+  ) {
+    return AI_MODELS.CLAUDE_OPUS;
+  }
+  return AI_MODELS.CLAUDE_SONNET;
 }
 
 export function normalizeVideoSuggestionModelPreference(
@@ -288,10 +294,9 @@ export function resolveEffectiveVideoSuggestionModel({
         normalizedAvailableByoModels
       );
     }
-    // Product decision: Stage5 credits video suggestions run on Claude
-    // Sonnet — better multilingual intent-reading and native-language
-    // query formulation; quality tier deepens reasoning, not the model.
-    return AI_MODELS.CLAUDE_SONNET;
+    // Stage5 credits video suggestions run on Claude's frontier models:
+    // Sonnet 5.5 for standard searches, Opus 5.5 for the quality tier.
+    return AI_MODELS.CLAUDE_OPUS;
   }
 
   if (apiKeyModeEnabled) {

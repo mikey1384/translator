@@ -108,7 +108,7 @@ export function getQualityTranslationOnLabel(
   const openAiLabel = String(
     t(
       'settings.performanceQuality.qualityTranslation.modelOn',
-      'Standard draft + OpenAI high-end review'
+      'Claude Haiku 5.5 draft + Claude Opus 5.5 review'
     )
   );
 

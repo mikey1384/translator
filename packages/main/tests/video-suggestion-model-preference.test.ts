@@ -13,7 +13,7 @@ import {
   resolveVideoSuggestionPreferenceForMode,
 } from '../../shared/helpers/video-suggestion-model-preference.js';
 
-test('Stage5 credit quality video suggestions run on Claude Sonnet', () => {
+test('Stage5 credit quality video suggestions run on Claude Opus', () => {
   assert.equal(
     resolveEffectiveVideoSuggestionModel({
       preference: 'quality',
@@ -21,7 +21,7 @@ test('Stage5 credit quality video suggestions run on Claude Sonnet', () => {
       translationDraftModel: AI_MODELS.GPT,
       translationReviewModel: AI_MODELS.CLAUDE_OPUS,
     }),
-    AI_MODELS.CLAUDE_SONNET
+    AI_MODELS.CLAUDE_OPUS
   );
 });
 
@@ -37,7 +37,7 @@ test('Stage5 credit standard video suggestions run on Claude Sonnet', () => {
   );
 });
 
-test('Stage5 credit explicit model picks pass through unchanged', () => {
+test('Stage5 credit explicit model picks run on Claude at the same tier', () => {
   assert.equal(
     resolveEffectiveVideoSuggestionModel({
       preference: AI_MODELS.CLAUDE_OPUS,
@@ -54,7 +54,7 @@ test('Stage5 credit explicit model picks pass through unchanged', () => {
       translationDraftModel: AI_MODELS.GPT,
       translationReviewModel: AI_MODELS.CLAUDE_OPUS,
     }),
-    AI_MODELS.GPT
+    AI_MODELS.CLAUDE_SONNET
   );
 });
 

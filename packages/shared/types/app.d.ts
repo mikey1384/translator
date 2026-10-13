@@ -530,16 +530,16 @@ declare module '@shared-types/app' {
   export type VideoSuggestionModelPreference =
     | 'default'
     | 'quality'
-    | 'gpt-5.1'
+    | 'gpt-6.1-sol'
     | 'gpt-5.5'
-    | 'claude-sonnet-5'
-    | 'claude-opus-4-8';
+    | 'claude-sonnet-5-5'
+    | 'claude-opus-5-5';
   export type Stage5VideoSuggestionMode = 'standard' | 'high';
   export type ByoVideoSuggestionModel =
-    | 'gpt-5.1'
+    | 'gpt-6.1-sol'
     | 'gpt-5.5'
-    | 'claude-sonnet-5'
-    | 'claude-opus-4-8'
+    | 'claude-sonnet-5-5'
+    | 'claude-opus-5-5'
     // Migration-only compatibility states for legacy unified preferences.
     | 'follow-draft'
     | 'follow-review';
@@ -1884,10 +1884,10 @@ declare module '@shared-types/app' {
           apiKeyMode?: boolean;
           translationDraftProvider?: 'openai' | 'anthropic';
           byoVideoSuggestionModel?:
-            | 'gpt-5.1'
+            | 'gpt-6.1-sol'
             | 'gpt-5.5'
-            | 'claude-sonnet-5'
-            | 'claude-opus-4-8';
+            | 'claude-sonnet-5-5'
+            | 'claude-opus-5-5';
           /** Legacy 'openai' is treated as 'elevenlabs' (Whisper is retired). */
           transcriptionProvider?: 'stage5' | 'openai' | 'elevenlabs';
           /** Legacy 'openai' is treated as 'elevenlabs' (OpenAI TTS is retired). */

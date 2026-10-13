@@ -23,6 +23,7 @@ import {
   VENDOR_TRANSCRIPTION_MODEL_PRICING,
   VENDOR_TTS_MODEL_PRICING,
   type VendorTokenModelId,
+  CLAUDE_TOKENS_PER_GPT_TOKEN,
 } from './vendor-pricing';
 
 export type UsdRange = {
@@ -57,7 +58,15 @@ export function estimateTokenModelUsd({
   model: string;
 }): number {
   const pricing = getVendorTokenModelPricing(model);
-  return promptTokens * pricing.in + completionTokens * pricing.out;
+  const isClaude = normalizeAiModelId(model).startsWith('claude-');
+  const promptFactor = isClaude ? CLAUDE_TOKENS_PER_GPT_TOKEN.prompt : 1;
+  const completionFactor = isClaude
+    ? CLAUDE_TOKENS_PER_GPT_TOKEN.completion
+    : 1;
+  return (
+    promptTokens * promptFactor * pricing.in +
+    completionTokens * completionFactor * pricing.out
+  );
 }
 
 export function estimateTranslationUsdPerHour(model: string): number {

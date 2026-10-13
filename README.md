@@ -52,7 +52,7 @@ This repository contains the real desktop product—not a demonstration client o
 | Input              | Local video files, video URLs, subtitle files, and source-linked subtitle documents                                   |
 | Downloading        | Video and audio downloading with quality choices and a reusable in-app history for watching or reopening saved videos |
 | Transcription      | Whisper or ElevenLabs transcription paths, including higher-quality contextual workflows                              |
-| Translation        | 39 target languages, GPT-5.1 base translation, and optional second-pass review with GPT-5.5 or Claude Opus 4.8        |
+| Translation        | 39 target languages; Claude Haiku 5.5 drafts with optional Claude Opus 5.5 review, or BYO GPT-6.1 Sol/GPT-5.5         |
 | Review and editing | Original/translated comparison, video-synchronized subtitle editing, timing controls, search, and replacement         |
 | Output             | SRT export, burned-in subtitles, summaries, highlight clips, and dubbed video                                         |
 | Payment choice     | Stage5 pay-as-you-go credits or supported bring-your-own OpenAI, Anthropic, and ElevenLabs credentials                |

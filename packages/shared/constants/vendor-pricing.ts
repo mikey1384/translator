@@ -14,12 +14,22 @@ export const VENDOR_TOKEN_MODEL_PRICING = {
   [AI_MODELS.GPT]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.GPT],
   [STAGE5_REVIEW_TRANSLATION_MODEL]:
     STAGE5_TRANSLATION_MODEL_PRICING[STAGE5_REVIEW_TRANSLATION_MODEL],
-  [AI_MODELS.CLAUDE_SONNET]: {
-    in: 3 / 1_000_000,
-    out: 15 / 1_000_000,
-  },
+  [AI_MODELS.CLAUDE_SONNET]:
+    STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_SONNET],
   [AI_MODELS.CLAUDE_OPUS]:
     STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_OPUS],
+  [AI_MODELS.CLAUDE_HAIKU]:
+    STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_HAIKU],
+} as const;
+
+/**
+ * Claude tokens per GPT token for the same subtitle text. The token-per-hour
+ * heuristics are GPT-calibrated; Claude's tokenizer counted 1.64x the prompt
+ * and 1.83x the output tokens on the 2026-10-13 EN->KO trial (454 lines).
+ */
+export const CLAUDE_TOKENS_PER_GPT_TOKEN = {
+  prompt: 1.64,
+  completion: 1.83,
 } as const;
 
 export type VendorTokenModelId = keyof typeof VENDOR_TOKEN_MODEL_PRICING;

@@ -77,13 +77,16 @@ The `ai-provider.ts` module decides where to route AI requests:
 ### Translation Pipeline
 
 ```
-Audio → Transcribe (Whisper/Scribe) → Translate (GPT-5.1 draft → Claude Opus review) → Summarize → Dub (TTS)
+Audio → Transcribe (ElevenLabs Scribe) → Translate (draft → optional review) → Summarize → Dub (ElevenLabs TTS)
 ```
 
-Quality preferences controlled via settings:
-- `preferClaudeTranslation` - Use Claude Sonnet for draft instead of GPT
-- `preferClaudeReview` - Use Claude Opus for review pass (default: true)
-- `preferClaudeSummary` - Use Claude Opus for video summary
+Model routing (IDs in `packages/shared/constants/model-catalog.ts`):
+
+- **Stage5 credits** (default): drafts on Claude Haiku 5.5, review on Claude Opus 5.5; summaries and AI video search on Claude Sonnet 5.5 (standard) / Claude Opus 5.5 (high). The servers pick these models; GPT ids sent from older settings map to the Claude model of the same tier (`toStage5CreditModel`).
+- **API keys** (`useByoMaster`): OpenAI standard tier GPT-6.1 Sol, high tier GPT-5.5; Anthropic Claude Sonnet 5.5 (standard) and Claude Opus 5.5 (high). The `preferClaude*` settings only matter here:
+  - `preferClaudeTranslation` (default false) - draft on Claude Sonnet 5.5 instead of GPT-6.1 Sol
+  - `preferClaudeReview` (default false) - review on Claude Opus 5.5 instead of GPT-5.5
+  - `preferClaudeSummary` (default true) - summaries on Claude instead of GPT
 
 ## Key Files
 

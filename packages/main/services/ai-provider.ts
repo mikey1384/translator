@@ -26,6 +26,7 @@ import {
 import {
   AI_MODELS,
   ERROR_CODES,
+  STAGE5_CREDIT_MODELS,
   STAGE5_REVIEW_TRANSLATION_MODEL,
   normalizeAiModelId,
   normalizeDubVoice,
@@ -243,7 +244,8 @@ export function resolveTranslationDraftModel(): string {
   if (canUseAnthropicByo) {
     return AI_MODELS.CLAUDE_SONNET;
   }
-  return AI_MODELS.GPT;
+  // Stage5 credits draft on Claude Haiku 5.5 (the servers choose it).
+  return STAGE5_CREDIT_MODELS.DRAFT;
 }
 
 export function resolveTranslationReviewModel(): {

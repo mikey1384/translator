@@ -1,16 +1,29 @@
 import axios from 'axios';
 import log from 'electron-log';
-import type { ChatToolChoice, ChatToolDefinition } from '@shared-types/app';
+import type {
+  ChatToolCall,
+  ChatToolChoice,
+  ChatToolDefinition,
+} from '@shared-types/app';
 import { AI_MODELS, normalizeAiModelId } from '@shared/constants';
 
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
+
+type OpenAiReasoningEffort =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh'
+  | 'max';
 
 export interface OpenAiTranslateOptions {
   messages: any[];
   model?: string;
   apiKey: string;
   signal?: AbortSignal;
-  reasoning?: { effort?: 'low' | 'medium' | 'high' };
+  reasoning?: { effort?: OpenAiReasoningEffort };
   tools?: ChatToolDefinition[];
   toolChoice?: ChatToolChoice;
 }
@@ -20,8 +33,195 @@ export interface OpenAiWebSearchOptions {
   model?: string;
   apiKey: string;
   signal?: AbortSignal;
-  reasoning?: { effort?: 'low' | 'medium' | 'high' };
+  reasoning?: { effort?: OpenAiReasoningEffort };
   onTextDelta?: (delta: string) => void;
+}
+
+/**
+ * GPT-6 family (e.g. gpt-6.1-sol): always-on reasoning models. Reasoning
+ * cannot be disabled ('none'/'minimal' are rejected), and function tools are
+ * only available on the Responses API (Chat Completions has no tool calling).
+ */
+export function isGpt6FamilyModel(model?: string): boolean {
+  return /^gpt-6(?:[.-]|$)/i.test(String(model || '').trim());
+}
+
+/**
+ * Resolve the reasoning effort to send for a model. For GPT-6 models,
+ * 'none'/'minimal'/absent map to 'low' (the cheapest supported level, and the
+ * closest match to the no-reasoning default the previous GPT model had);
+ * higher efforts pass through. Other models keep the caller's value as-is.
+ */
+export function resolveOpenAiReasoningEffort(
+  model: string,
+  effort?: OpenAiReasoningEffort
+): OpenAiReasoningEffort | undefined {
+  if (!isGpt6FamilyModel(model)) return effort;
+  if (!effort || effort === 'none' || effort === 'minimal') return 'low';
+  return effort;
+}
+
+function chatContentToText(content: unknown): string {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part: any) => {
+        if (typeof part === 'string') return part;
+        if (typeof part?.text === 'string') return part.text;
+        if (typeof part?.content === 'string') return part.content;
+        return '';
+      })
+      .join('');
+  }
+  if (content == null) return '';
+  return String(content);
+}
+
+/**
+ * Map chat-completions-style messages (system/user/assistant with
+ * tool_calls, role:'tool' results) onto Responses API input items.
+ */
+export function toOpenAiResponsesInput(messages: any[]): any[] {
+  const input: any[] = [];
+  for (const msg of messages || []) {
+    if (!msg) continue;
+    const role = typeof msg.role === 'string' ? msg.role : 'user';
+
+    if (role === 'tool') {
+      input.push({
+        type: 'function_call_output',
+        call_id: String(msg.tool_call_id || ''),
+        output: chatContentToText(msg.content),
+      });
+      continue;
+    }
+
+    const text = chatContentToText(msg.content);
+    if (role === 'assistant') {
+      if (text.trim()) {
+        input.push({ role: 'assistant', content: text });
+      }
+      for (const call of Array.isArray(msg.tool_calls) ? msg.tool_calls : []) {
+        const name = String(call?.function?.name || '').trim();
+        if (!name) continue;
+        const rawArgs = call?.function?.arguments;
+        // Omit the output item `id`: replaying a function_call item id
+        // without its paired reasoning item is rejected by the API.
+        input.push({
+          type: 'function_call',
+          call_id: String(call?.id || ''),
+          name,
+          arguments:
+            typeof rawArgs === 'string'
+              ? rawArgs
+              : JSON.stringify(rawArgs ?? {}),
+        });
+      }
+      continue;
+    }
+
+    if (!text.trim()) continue;
+    input.push({
+      role:
+        role === 'system' || role === 'developer' || role === 'user'
+          ? role
+          : 'user',
+      content: text,
+    });
+  }
+  return input;
+}
+
+export function toOpenAiResponsesTools(tools: ChatToolDefinition[]): any[] {
+  return tools.map(tool => ({
+    type: 'function',
+    name: tool.function.name,
+    ...(tool.function.description
+      ? { description: tool.function.description }
+      : {}),
+    parameters: tool.function.parameters,
+    // Chat Completions function tools are non-strict by default; keep that
+    // contract (Responses defaults to strict, which rejects optional fields).
+    strict: false,
+  }));
+}
+
+/**
+ * Map a Responses API result back to the chat-completions shape callers
+ * consume (choices[0].message.content/tool_calls, usage prompt/completion).
+ */
+export function fromOpenAiResponsesResult(response: any): any {
+  const output = Array.isArray(response?.output) ? response.output : [];
+  const textParts: string[] = [];
+  const toolCalls: ChatToolCall[] = [];
+  for (const item of output) {
+    if (item?.type === 'function_call') {
+      const name = String(item?.name || '').trim();
+      if (!name) continue;
+      toolCalls.push({
+        id: String(item?.call_id || item?.id || `call_${toolCalls.length}`),
+        type: 'function',
+        function: {
+          name,
+          arguments:
+            typeof item?.arguments === 'string'
+              ? item.arguments
+              : JSON.stringify(item?.arguments ?? {}),
+        },
+      });
+      continue;
+    }
+    if (item?.type === 'message' && Array.isArray(item?.content)) {
+      for (const part of item.content) {
+        if (part?.type === 'output_text' && typeof part?.text === 'string') {
+          textParts.push(part.text);
+        }
+      }
+    }
+  }
+
+  const text =
+    textParts.join('') ||
+    (typeof response?.output_text === 'string' ? response.output_text : '');
+  const usage = response?.usage;
+  const promptTokens = Number(usage?.input_tokens) || 0;
+  const completionTokens = Number(usage?.output_tokens) || 0;
+
+  return {
+    id: response?.id,
+    object: 'chat.completion',
+    model: response?.model,
+    output_text: text,
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: 'assistant',
+          content: text || null,
+          ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
+        },
+        finish_reason:
+          toolCalls.length > 0
+            ? 'tool_calls'
+            : response?.status === 'incomplete'
+              ? 'length'
+              : 'stop',
+      },
+    ],
+    usage: {
+      prompt_tokens: promptTokens,
+      completion_tokens: completionTokens,
+      total_tokens:
+        Number(usage?.total_tokens) || promptTokens + completionTokens,
+    },
+  };
+}
+
+function openAiHeaders(apiKey: string) {
+  return {
+    Authorization: `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+  };
 }
 
 export async function translateWithOpenAi({
@@ -34,33 +234,58 @@ export async function translateWithOpenAi({
   toolChoice,
 }: OpenAiTranslateOptions): Promise<any> {
   const normalizedModel = normalizeAiModelId(model);
+  const hasTools = Array.isArray(tools) && tools.length > 0;
+  const effort = resolveOpenAiReasoningEffort(
+    normalizedModel,
+    reasoning?.effort
+  );
+
+  // GPT-6 tool calling is only available on the Responses API. No
+  // max_output_tokens is sent: reasoning tokens count toward it, so the
+  // provider default (the model maximum) leaves the needed headroom.
+  if (hasTools && isGpt6FamilyModel(normalizedModel)) {
+    const payload: Record<string, any> = {
+      model: normalizedModel,
+      input: toOpenAiResponsesInput(messages),
+      tools: toOpenAiResponsesTools(tools!),
+      tool_choice: toolChoice === 'required' ? 'required' : 'auto',
+    };
+    if (effort) {
+      payload.reasoning = { effort };
+    }
+    log.debug(
+      `[openai-client] Using Responses API tool call (model=${normalizedModel}, effort=${effort})`
+    );
+    const response = await axios.post(`${OPENAI_BASE_URL}/responses`, payload, {
+      headers: openAiHeaders(apiKey),
+      signal,
+    });
+    return fromOpenAiResponsesResult(response.data);
+  }
+
   const payload: Record<string, any> = {
     model: normalizedModel,
     messages,
   };
 
-  if (Array.isArray(tools) && tools.length > 0) {
+  if (hasTools) {
     payload.tools = tools;
     if (toolChoice === 'required') {
       payload.tool_choice = 'required';
     }
   }
 
-  // Add reasoning_effort for models that support it (e.g., GPT-5.1)
   // Chat Completions API uses flat `reasoning_effort` parameter, not nested object
-  if (reasoning?.effort) {
-    payload.reasoning_effort = reasoning.effort;
-    log.debug(`[openai-client] Using reasoning_effort: ${reasoning.effort}`);
+  if (effort) {
+    payload.reasoning_effort = effort;
+    log.debug(`[openai-client] Using reasoning_effort: ${effort}`);
   }
 
   const response = await axios.post(
     `${OPENAI_BASE_URL}/chat/completions`,
     payload,
     {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers: openAiHeaders(apiKey),
       signal,
     }
   );
@@ -68,14 +293,14 @@ export async function translateWithOpenAi({
   return response.data;
 }
 
-function buildOpenAiWebSearchPayload({
+export function buildOpenAiWebSearchPayload({
   messages,
   model,
   reasoning,
 }: {
   messages: any[];
   model: string;
-  reasoning?: { effort?: 'low' | 'medium' | 'high' };
+  reasoning?: { effort?: OpenAiReasoningEffort };
 }): Record<string, any> {
   const payload: Record<string, any> = {
     model,
@@ -99,14 +324,21 @@ function buildOpenAiWebSearchPayload({
         };
       })
       .filter(Boolean),
-    tools: [{ type: 'web_search_preview' }],
+    // OpenAI's web search tool is `web_search` for new integrations;
+    // `web_search_preview` is legacy, kept for the GPT-5.x models it was used
+    // with.
+    tools: [
+      {
+        type: isGpt6FamilyModel(model) ? 'web_search' : 'web_search_preview',
+      },
+    ],
   };
 
-  if (reasoning?.effort) {
-    payload.reasoning = { effort: reasoning.effort };
-    log.debug(
-      `[openai-client] Using web-search reasoning.effort: ${reasoning.effort}`
-    );
+  // GPT-6 reasoning cannot be disabled; resolve to a supported effort (>= low).
+  const effort = resolveOpenAiReasoningEffort(model, reasoning?.effort);
+  if (effort) {
+    payload.reasoning = { effort };
+    log.debug(`[openai-client] Using web-search reasoning.effort: ${effort}`);
   }
   return payload;
 }
@@ -293,14 +525,29 @@ export async function testOpenAiApiKey(
   apiKey: string,
   signal?: AbortSignal
 ): Promise<boolean> {
+  const requestConfig = {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+    signal,
+    timeout: 10_000,
+  };
   try {
-    await axios.get(`${OPENAI_BASE_URL}/models/gpt-5-mini`, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-      signal,
-      timeout: 10_000,
-    });
+    try {
+      // Validate against the model the app actually uses for API-key users.
+      await axios.get(
+        `${OPENAI_BASE_URL}/models/${encodeURIComponent(AI_MODELS.GPT)}`,
+        requestConfig
+      );
+    } catch (err: any) {
+      // 404 means the key authenticated but this model is not visible to the
+      // account; confirm the key itself with the model list.
+      if (err?.response?.status !== 404) throw err;
+      log.warn(
+        `[openai-client] ${AI_MODELS.GPT} not visible to this key; validating via model list.`
+      );
+      await axios.get(`${OPENAI_BASE_URL}/models`, requestConfig);
+    }
     return true;
   } catch (err: any) {
     log.warn('[openai-client] API key validation failed:', err?.message || err);
