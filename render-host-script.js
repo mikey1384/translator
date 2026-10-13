@@ -1381,15 +1381,24 @@ var SUBTITLE_STYLE_PRESETS = {
 var SPOKEN_CHARS_PER_MINUTE = 750;
 var TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT = 16e3;
 var TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION = 16e3;
-var TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
+var TRANSLATION_HOURLY_COST_CALIBRATION = 2.3;
 
 // ../shared/constants/model-catalog.ts
 var AI_MODELS = {
-  GPT: "gpt-5.1",
-  CLAUDE_SONNET: "claude-sonnet-5",
-  CLAUDE_OPUS: "claude-opus-4-8"
+  // OpenAI model for API-key users (gpt-5.1 is removed from the API on
+  // 2027-04-01; OpenAI names gpt-6-sol as its replacement).
+  GPT: "gpt-6.1-sol",
+  CLAUDE_SONNET: "claude-sonnet-5-5",
+  CLAUDE_OPUS: "claude-opus-5-5",
+  CLAUDE_HAIKU: "claude-haiku-5-5"
 };
 var STAGE5_REVIEW_TRANSLATION_MODEL = "gpt-5.5";
+var STAGE5_CREDIT_MODELS = {
+  DRAFT: AI_MODELS.CLAUDE_HAIKU,
+  REVIEW: AI_MODELS.CLAUDE_OPUS,
+  STANDARD: AI_MODELS.CLAUDE_SONNET,
+  HIGH: AI_MODELS.CLAUDE_OPUS
+};
 var STAGE5_ELEVENLABS_SCRIBE_MODEL = "elevenlabs-scribe";
 var STAGE5_TTS_MODEL_ELEVEN_V3 = "eleven_v3";
 var STAGE5_TTS_MODEL_ELEVEN_V4 = "eleven_v4";
@@ -1403,12 +1412,17 @@ var STAGE5_REVIEW_PROVIDER_OPTIONS = {
   anthropic: {
     provider: "anthropic",
     model: AI_MODELS.CLAUDE_OPUS,
-    exactModelLabel: "Claude Opus 4.8"
+    exactModelLabel: "Claude Opus 5.5"
   }
 };
 var AI_MODEL_ALIASES = {
   // Legacy GPT-5.4 values from saved settings normalize to current GPT review.
   "gpt-5.4": STAGE5_REVIEW_TRANSLATION_MODEL,
+  // GPT-5.1 (removed 2027-04-01) and older Claude ids from saved settings
+  // normalize to the current model of the same tier.
+  "gpt-5.1": AI_MODELS.GPT,
+  "claude-sonnet-5": AI_MODELS.CLAUDE_SONNET,
+  "claude-opus-4-8": AI_MODELS.CLAUDE_OPUS,
   "claude-sonnet-4-5-20250929": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4-5": AI_MODELS.CLAUDE_SONNET,
   "claude-sonnet-4.6": AI_MODELS.CLAUDE_SONNET,
@@ -1423,7 +1437,7 @@ var AI_MODEL_ALIASES = {
 };
 var STAGE5_TRANSLATION_MODEL_PRICING = {
   [AI_MODELS.GPT]: {
-    in: 1.25 / 1e6,
+    in: 2 / 1e6,
     out: 10 / 1e6
   },
   [STAGE5_REVIEW_TRANSLATION_MODEL]: {
@@ -1431,12 +1445,16 @@ var STAGE5_TRANSLATION_MODEL_PRICING = {
     out: 30 / 1e6
   },
   [AI_MODELS.CLAUDE_SONNET]: {
-    in: 3 / 1e6,
-    out: 15 / 1e6
+    in: 2 / 1e6,
+    out: 10 / 1e6
   },
   [AI_MODELS.CLAUDE_OPUS]: {
-    in: 5 / 1e6,
-    out: 25 / 1e6
+    in: 4 / 1e6,
+    out: 20 / 1e6
+  },
+  [AI_MODELS.CLAUDE_HAIKU]: {
+    in: 0.1 / 1e6,
+    out: 0.5 / 1e6
   }
 };
 var STAGE5_TRANSCRIPTION_MODEL_PRICING = {
@@ -1454,6 +1472,11 @@ var STAGE5_TTS_MODEL_PRICING = {
     perChar: 90 / 1e6
   }
 };
+function normalizeAiModelId(model) {
+  const trimmed = (model || "").trim();
+  if (!trimmed) return AI_MODELS.GPT;
+  return AI_MODEL_ALIASES[trimmed.toLowerCase()] || trimmed;
+}
 
 // ../shared/constants/pricing.ts
 var USD_PER_CREDIT = 10 / 35e4;
@@ -1490,11 +1513,13 @@ var ANTHROPIC_WEB_SEARCH_USD_PER_CALL = 10 / 1e3;
 var VENDOR_TOKEN_MODEL_PRICING = {
   [AI_MODELS.GPT]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.GPT],
   [STAGE5_REVIEW_TRANSLATION_MODEL]: STAGE5_TRANSLATION_MODEL_PRICING[STAGE5_REVIEW_TRANSLATION_MODEL],
-  [AI_MODELS.CLAUDE_SONNET]: {
-    in: 3 / 1e6,
-    out: 15 / 1e6
-  },
-  [AI_MODELS.CLAUDE_OPUS]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_OPUS]
+  [AI_MODELS.CLAUDE_SONNET]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_SONNET],
+  [AI_MODELS.CLAUDE_OPUS]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_OPUS],
+  [AI_MODELS.CLAUDE_HAIKU]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_HAIKU]
+};
+var CLAUDE_TOKENS_PER_GPT_TOKEN = {
+  prompt: 1.64,
+  completion: 1.83
 };
 var VENDOR_TRANSCRIPTION_MODEL_PRICING = {
   [STAGE5_ELEVENLABS_SCRIBE_MODEL]: {
@@ -1515,6 +1540,34 @@ var VENDOR_TTS_MODEL_PRICING = {
     scaleBusiness: 120 / 1e6
   }
 };
+
+// ../shared/constants/byo-estimates.ts
+function getVendorTokenModelPricing(model) {
+  const normalized = normalizeAiModelId(model);
+  const pricing = VENDOR_TOKEN_MODEL_PRICING[normalized];
+  if (!pricing) {
+    throw new Error(`Unsupported vendor pricing model: ${model}`);
+  }
+  return pricing;
+}
+function estimateTokenModelUsd({
+  promptTokens,
+  completionTokens,
+  model
+}) {
+  const pricing = getVendorTokenModelPricing(model);
+  const isClaude = normalizeAiModelId(model).startsWith("claude-");
+  const promptFactor = isClaude ? CLAUDE_TOKENS_PER_GPT_TOKEN.prompt : 1;
+  const completionFactor = isClaude ? CLAUDE_TOKENS_PER_GPT_TOKEN.completion : 1;
+  return promptTokens * promptFactor * pricing.in + completionTokens * completionFactor * pricing.out;
+}
+function estimateTranslationUsdPerHour(model) {
+  return estimateTokenModelUsd({
+    promptTokens: TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT,
+    completionTokens: TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION,
+    model
+  });
+}
 
 // ../shared/constants/runtime-config.ts
 var ASR_FAST_MODE = false;
@@ -1546,35 +1599,34 @@ var STAGE5_TRANSCRIPTION_MAX_AUDIO_HOURS = maxTranscriptionAudioHours();
 
 // ../shared/constants/index.ts
 var AI_MODEL_DISPLAY_NAMES = {
-  [AI_MODELS.GPT]: "GPT-5.1",
+  [AI_MODELS.GPT]: "GPT-6.1 Sol",
   [STAGE5_REVIEW_TRANSLATION_MODEL]: "GPT-5.5",
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet",
   [AI_MODELS.CLAUDE_OPUS]: "Claude Opus",
+  [AI_MODELS.CLAUDE_HAIKU]: "Claude Haiku",
   [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3",
   [STAGE5_TTS_MODEL_ELEVEN_V4]: "ElevenLabs v4"
 };
 var AI_MODEL_EXACT_DISPLAY_NAMES = {
-  [AI_MODELS.GPT]: "GPT-5.1",
+  [AI_MODELS.GPT]: "GPT-6.1 Sol",
+  [AI_MODELS.CLAUDE_HAIKU]: "Claude Haiku 5.5",
   [STAGE5_REVIEW_TRANSLATION_MODEL]: STAGE5_REVIEW_PROVIDER_OPTIONS.openai.exactModelLabel,
-  [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet 5",
+  [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet 5.5",
   [AI_MODELS.CLAUDE_OPUS]: STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
   [STAGE5_TTS_MODEL_ELEVEN_V3]: "ElevenLabs v3",
   [STAGE5_TTS_MODEL_ELEVEN_V4]: "ElevenLabs v4"
 };
-var GPT5_1_USD_PER_TOKEN_IN = STAGE5_TRANSLATION_MODEL_PRICING["gpt-5.1"].in;
-var GPT5_1_USD_PER_TOKEN_OUT = STAGE5_TRANSLATION_MODEL_PRICING["gpt-5.1"].out;
+var DRAFT_USD_PER_TOKEN_IN = STAGE5_TRANSLATION_MODEL_PRICING[STAGE5_CREDIT_MODELS.DRAFT].in * CLAUDE_TOKENS_PER_GPT_TOKEN.prompt;
+var DRAFT_USD_PER_TOKEN_OUT = STAGE5_TRANSLATION_MODEL_PRICING[STAGE5_CREDIT_MODELS.DRAFT].out * CLAUDE_TOKENS_PER_GPT_TOKEN.completion;
 var TOKEN_CREDIT_CALIBRATION_UI = 1;
 var CREDITS_PER_1K_TOKENS_PROMPT = Math.ceil(
-  PRICE_MARGIN * 1e3 * GPT5_1_USD_PER_TOKEN_IN / USD_PER_CREDIT * TOKEN_CREDIT_CALIBRATION_UI
+  PRICE_MARGIN * 1e3 * DRAFT_USD_PER_TOKEN_IN / USD_PER_CREDIT * TOKEN_CREDIT_CALIBRATION_UI
 );
 var CREDITS_PER_1K_TOKENS_COMPLETION = Math.ceil(
-  PRICE_MARGIN * 1e3 * GPT5_1_USD_PER_TOKEN_OUT / USD_PER_CREDIT * TOKEN_CREDIT_CALIBRATION_UI
-);
-var BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
-  TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT / 1e3 * CREDITS_PER_1K_TOKENS_PROMPT + TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION / 1e3 * CREDITS_PER_1K_TOKENS_COMPLETION
+  PRICE_MARGIN * 1e3 * DRAFT_USD_PER_TOKEN_OUT / USD_PER_CREDIT * TOKEN_CREDIT_CALIBRATION_UI
 );
 var CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
-  BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
+  estimateTranslationUsdPerHour(STAGE5_CREDIT_MODELS.DRAFT) * PRICE_MARGIN / USD_PER_CREDIT * TRANSLATION_HOURLY_COST_CALIBRATION
 );
 var CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSLATION_AUDIO_HOUR;
 var CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3600;
