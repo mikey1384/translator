@@ -1838,6 +1838,16 @@ export async function translateViaDirect({
         payload.toolChoice = toolChoice;
       }
     }
+    // Model trials on Stage5's own devices: the relay honors this only for
+    // devices stage5-api lists as internal and ignores it for everyone else.
+    const internalModelOverride = (
+      translationPhase === 'review'
+        ? process.env.STAGE5_INTERNAL_REVIEW_MODEL
+        : process.env.STAGE5_INTERNAL_DRAFT_MODEL
+    )?.trim();
+    if (internalModelOverride) {
+      payload.internalModelOverride = internalModelOverride;
+    }
     const response = await withStage5AuthRetry(authHeaders =>
       axios.post(`${RELAY_URL}/translate-direct`, payload, {
         headers: {
