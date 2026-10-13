@@ -32,6 +32,17 @@ Param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Signature checks use Get-AuthenticodeSignature. Fail before the long build and
+# token PIN prompts if this PowerShell can't load it (typically Windows
+# PowerShell 5.1 started from a PowerShell 7 window, inheriting its PSModulePath).
+try {
+  Import-Module Microsoft.PowerShell.Security -ErrorAction Stop
+} catch {
+  throw ("PowerShell cannot load Microsoft.PowerShell.Security, which the release " +
+    "needs to verify signatures. Run Release-Windows-OneClick.bat by double-clicking " +
+    "it or from cmd.exe, not from a PowerShell 7 window. Details: " + $_.Exception.Message)
+}
+
 function Write-Stage {
   param([string]$msg)
   Write-Host "`n=== $msg ===" -ForegroundColor Cyan
