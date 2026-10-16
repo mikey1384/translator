@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}} altyazı hazır",
     "recentSubtitlesReadyGeneric": "Altyazı hazır",
     "recentDownloaded": "İndirildi"
+  },
+  "workspace": {
+    "subtitlesTitle": "Altyazılar",
+    "editToggle": "Altyazıları düzenle",
+    "emptyList": "Translator videoyu dinlediği anda altyazılar burada görünür.",
+    "statusReady": "Hazır — {{language}} altyazılar bir tık uzakta",
+    "statusTranscribed": "{{count}} satır yazıya döküldü",
+    "statusTranslated": "{{language}} {{count}} satır · videoyla senkron",
+    "translateTo": "{{language}} diline çevir",
+    "exportVideo": "Altyazılı videoyu dışa aktar",
+    "exportTitle": "Altyazılı videoyu dışa aktar",
+    "saveSrt": ".srt kaydet",
+    "more": "Daha fazla",
+    "moreDub": "Seslendir",
+    "moreClips": "Klip oluştur",
+    "moreSummary": "Özet",
+    "moreTranslateOther": "Başka bir dile çevir",
+    "moreChangeVideo": "Videoyu değiştir",
+    "moreMountSrt": "SRT yükle",
+    "moreReplaceSrt": "Başka bir SRT yükle",
+    "moreSaveOriginal": "Orijinal videoyu kaydet",
+    "moreAllTools": "Tüm araçlar",
+    "hideTools": "Araçları gizle",
+    "noVideoTitle": "Videoyu ekleyin",
+    "noVideoBody": "Bu altyazıların videosunu açarak onları yerinde izleyin ve videoya gömün."
   }
 }

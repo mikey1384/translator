@@ -66,6 +66,7 @@ import { getNativePlayerInstance } from '../../native-player';
 import * as FileIPC from '../../ipc/file';
 import { sameArray } from '../../utils/array';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
+import { useWorkspaceActions } from '../../state/workspace-actions';
 import {
   didSaveSubtitleFile,
   saveCurrentSubtitles,
@@ -94,6 +95,8 @@ export interface EditSubtitlesProps {
     scrollToCurrentSubtitle: () => void;
     scrollToSubtitleIndex: (idx: number) => void;
   }>;
+  /** Video workspace in read-only mode: keep handlers alive, skip the list. */
+  listHidden?: boolean;
 }
 
 export default function EditSubtitles({
@@ -101,6 +104,7 @@ export default function EditSubtitles({
   onSetMergeOperationId,
   onStartPngRenderRequest,
   editorRef,
+  listHidden = false,
 }: EditSubtitlesProps) {
   const searchText = useUIStore(s => s.searchText);
   const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
@@ -296,6 +300,39 @@ export default function EditSubtitles({
       />
     ) : null;
 
+  // Let the video workspace's action bar and export sheet reuse these exact
+  // handlers. The ref keeps the registered functions pointing at the latest
+  // render's closures.
+  const latestHandlers = useRef({
+    handleSaveSrt,
+    handleSaveEditedSrtAs,
+    handleMerge,
+    handleTranslateAll,
+    handleLoadSrtLocal,
+    handleMountVideoForSubs,
+  });
+  latestHandlers.current = {
+    handleSaveSrt,
+    handleSaveEditedSrtAs,
+    handleMerge,
+    handleTranslateAll,
+    handleLoadSrtLocal,
+    handleMountVideoForSubs,
+  };
+  useEffect(() => {
+    useWorkspaceActions.getState().registerEditor({
+      save: () => latestHandlers.current.handleSaveSrt(),
+      saveAs: () => latestHandlers.current.handleSaveEditedSrtAs(),
+      merge: () => void latestHandlers.current.handleMerge(),
+      translateAll: () => void latestHandlers.current.handleTranslateAll(),
+      loadSrt: () => void latestHandlers.current.handleLoadSrtLocal(),
+      mountVideo: () => void latestHandlers.current.handleMountVideoForSubs(),
+    });
+    return () => useWorkspaceActions.getState().registerEditor(null);
+  }, []);
+
+  if (listHidden) return null;
+
   return (
     <Section
       title={t('editSubtitles.title')}
@@ -417,7 +454,7 @@ export default function EditSubtitles({
               ) : null}
               {canContinueTranscribing ? (
                 <Button
-                  variant="primary"
+                  variant="secondary"
                   size="md"
                   onClick={handleContinueTranscribing}
                   disabled={isSubtitleMutationLocked}

@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}} ఉపశీర్షికలు సిద్ధం",
     "recentSubtitlesReadyGeneric": "ఉపశీర్షికలు సిద్ధం",
     "recentDownloaded": "డౌన్‌లోడ్ అయింది"
+  },
+  "workspace": {
+    "subtitlesTitle": "ఉపశీర్షికలు",
+    "editToggle": "ఉపశీర్షికలను సవరించండి",
+    "emptyList": "Translator వీడియోను విన్న వెంటనే ఉపశీర్షికలు ఇక్కడ కనిపిస్తాయి.",
+    "statusReady": "సిద్ధం — ఒక్క క్లిక్‌తో {{language}} ఉపశీర్షికలు",
+    "statusTranscribed": "{{count}} లైన్లు లిప్యంతరీకరించబడ్డాయి",
+    "statusTranslated": "{{language}}లో {{count}} లైన్లు · వీడియోతో సమకాలీకరణ",
+    "translateTo": "{{language}}లోకి అనువదించండి",
+    "exportVideo": "ఉపశీర్షికలతో వీడియోను ఎగుమతి చేయండి",
+    "exportTitle": "ఉపశీర్షికలతో వీడియోను ఎగుమతి చేయండి",
+    "saveSrt": ".srt సేవ్ చేయండి",
+    "more": "మరిన్ని",
+    "moreDub": "డబ్ చేయండి",
+    "moreClips": "క్లిప్‌లు చేయండి",
+    "moreSummary": "సారాంశం",
+    "moreTranslateOther": "మరో భాషలోకి అనువదించండి",
+    "moreChangeVideo": "వీడియో మార్చండి",
+    "moreMountSrt": "SRT లోడ్ చేయండి",
+    "moreReplaceSrt": "మరో SRT లోడ్ చేయండి",
+    "moreSaveOriginal": "అసలు వీడియోను సేవ్ చేయండి",
+    "moreAllTools": "అన్ని సాధనాలు",
+    "hideTools": "సాధనాలను దాచండి",
+    "noVideoTitle": "వీడియోను జోడించండి",
+    "noVideoBody": "ఈ ఉపశీర్షికల వీడియోను తెరిచి, వాటిని అక్కడే చూసి వీడియోలో పొందుపరచండి."
   }
 }

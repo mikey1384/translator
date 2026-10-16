@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}}字幕已完成",
     "recentSubtitlesReadyGeneric": "字幕已完成",
     "recentDownloaded": "已下載"
+  },
+  "workspace": {
+    "subtitlesTitle": "字幕",
+    "editToggle": "編輯字幕",
+    "emptyList": "Translator 聽完影片後，字幕會出現在這裡。",
+    "statusReady": "準備就緒——一鍵產生{{language}}字幕",
+    "statusTranscribed": "已轉錄 {{count}} 行",
+    "statusTranslated": "{{language}} {{count}} 行 · 與影片同步",
+    "translateTo": "翻譯成{{language}}",
+    "exportVideo": "匯出含字幕的影片",
+    "exportTitle": "匯出含字幕的影片",
+    "saveSrt": "儲存 .srt",
+    "more": "更多",
+    "moreDub": "配音",
+    "moreClips": "製作片段",
+    "moreSummary": "摘要",
+    "moreTranslateOther": "翻譯成其他語言",
+    "moreChangeVideo": "更換影片",
+    "moreMountSrt": "載入 SRT",
+    "moreReplaceSrt": "載入另一個 SRT",
+    "moreSaveOriginal": "儲存原始影片",
+    "moreAllTools": "所有工具",
+    "hideTools": "隱藏工具",
+    "noVideoTitle": "加入影片",
+    "noVideoBody": "開啟這些字幕對應的影片，即可在原處觀看並燒錄字幕。"
   }
 }

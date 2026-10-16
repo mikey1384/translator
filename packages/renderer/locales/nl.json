@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}} ondertitels klaar",
     "recentSubtitlesReadyGeneric": "Ondertitels klaar",
     "recentDownloaded": "Gedownload"
+  },
+  "workspace": {
+    "subtitlesTitle": "Ondertitels",
+    "editToggle": "Ondertitels bewerken",
+    "emptyList": "De ondertitels verschijnen hier zodra Translator naar de video heeft geluisterd.",
+    "statusReady": "Klaar — ondertitels in het {{language}} zijn één klik verwijderd",
+    "statusTranscribed": "{{count}} regels getranscribeerd",
+    "statusTranslated": "{{count}} regels in het {{language}} · synchroon met de video",
+    "translateTo": "Vertalen naar het {{language}}",
+    "exportVideo": "Video met ondertitels exporteren",
+    "exportTitle": "Video met ondertitels exporteren",
+    "saveSrt": ".srt opslaan",
+    "more": "Meer",
+    "moreDub": "Nasynchroniseren",
+    "moreClips": "Clips maken",
+    "moreSummary": "Samenvatting",
+    "moreTranslateOther": "Naar een andere taal vertalen",
+    "moreChangeVideo": "Video wisselen",
+    "moreMountSrt": "SRT laden",
+    "moreReplaceSrt": "Andere SRT laden",
+    "moreSaveOriginal": "Originele video opslaan",
+    "moreAllTools": "Alle hulpmiddelen",
+    "hideTools": "Hulpmiddelen verbergen",
+    "noVideoTitle": "Voeg de video toe",
+    "noVideoBody": "Open de video bij deze ondertitels om ze ter plekke te bekijken en in te branden."
   }
 }

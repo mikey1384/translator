@@ -15,6 +15,7 @@ import NativeVideoPlayer from './NativeVideoPlayer';
 import SpeedMenu from './SpeedMenu';
 import SideMenu from './SideMenu';
 import {
+  dockedVideoContainerStyles,
   fixedVideoContainerStyles,
   videoPlayerAnchorStyles,
   videoPlayerGrowStyles,
@@ -56,7 +57,12 @@ type PlayerOverlayStyle = CSSProperties & {
   '--player-overlay-opacity': number;
 };
 
-export default function VideoPlayer() {
+export default function VideoPlayer({
+  docked = false,
+}: {
+  /** Video workspace: sits in its column instead of fixed at the top. */
+  docked?: boolean;
+} = {}) {
   const { t } = useTranslation();
   const videoUrl = useVideoStore(s => s.url);
   const resumeAt = useVideoStore(s => s.resumeAt);
@@ -373,12 +379,18 @@ export default function VideoPlayer() {
         onKeyDown={onKeyDown}
         className={[
           'fixed-video-container',
-          fixedVideoContainerStyles(isFullScreen),
+          docked && !isFullScreen
+            ? dockedVideoContainerStyles
+            : fixedVideoContainerStyles(isFullScreen),
           cursorHidden ? 'cursor-off' : '',
         ].join(' ')}
-        style={{ top: isFullScreen ? 0 : progressBarH }}
+        style={
+          docked && !isFullScreen
+            ? undefined
+            : { top: isFullScreen ? 0 : progressBarH }
+        }
       >
-        {!isFullScreen && (
+        {!isFullScreen && !docked && (
           <GapList key={(videoPath || videoUrl || 'none').toString()} />
         )}
         <div
@@ -409,7 +421,7 @@ export default function VideoPlayer() {
           >
             <Button
               onClick={togglePlay}
-              variant="primary"
+              variant="secondary"
               size="sm"
               className={videoPlayerIconButtonStyles(isFullScreen)}
             >
@@ -522,7 +534,7 @@ export default function VideoPlayer() {
           </div>
         </div>
 
-        <SideMenu isFullScreen={isFullScreen} />
+        {docked ? null : <SideMenu isFullScreen={isFullScreen} />}
       </div>
     </div>
   );

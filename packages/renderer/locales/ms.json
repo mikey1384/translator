@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Sari kata {{language}} siap",
     "recentSubtitlesReadyGeneric": "Sari kata siap",
     "recentDownloaded": "Dimuat turun"
+  },
+  "workspace": {
+    "subtitlesTitle": "Sari kata",
+    "editToggle": "Sunting sari kata",
+    "emptyList": "Sari kata muncul di sini sebaik sahaja Translator selesai mendengar video.",
+    "statusReady": "Sedia — sari kata {{language}} hanya satu klik",
+    "statusTranscribed": "{{count}} baris ditranskripsi",
+    "statusTranslated": "{{count}} baris dalam {{language}} · selari dengan video",
+    "translateTo": "Terjemah ke {{language}}",
+    "exportVideo": "Eksport video dengan sari kata",
+    "exportTitle": "Eksport video dengan sari kata",
+    "saveSrt": "Simpan .srt",
+    "more": "Lagi",
+    "moreDub": "Alih suara",
+    "moreClips": "Buat klip",
+    "moreSummary": "Ringkasan",
+    "moreTranslateOther": "Terjemah ke bahasa lain",
+    "moreChangeVideo": "Tukar video",
+    "moreMountSrt": "Muat SRT",
+    "moreReplaceSrt": "Muat SRT lain",
+    "moreSaveOriginal": "Simpan video asal",
+    "moreAllTools": "Semua alat",
+    "hideTools": "Sembunyikan alat",
+    "noVideoTitle": "Tambah video",
+    "noVideoBody": "Buka video sari kata ini untuk menontonnya di tempat dan membenamkannya."
   }
 }

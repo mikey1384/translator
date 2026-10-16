@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Legendas em {{language}} prontas",
     "recentSubtitlesReadyGeneric": "Legendas prontas",
     "recentDownloaded": "Baixado"
+  },
+  "workspace": {
+    "subtitlesTitle": "Legendas",
+    "editToggle": "Editar legendas",
+    "emptyList": "As legendas aparecem aqui assim que o Translator terminar de ouvir o vídeo.",
+    "statusReady": "Pronto — as legendas em {{language}} estão a um clique",
+    "statusTranscribed": "{{count}} linhas transcritas",
+    "statusTranslated": "{{count}} linhas em {{language}} · sincronizadas com o vídeo",
+    "translateTo": "Traduzir para {{language}}",
+    "exportVideo": "Exportar vídeo com legendas",
+    "exportTitle": "Exportar vídeo com legendas",
+    "saveSrt": "Salvar .srt",
+    "more": "Mais",
+    "moreDub": "Dublar",
+    "moreClips": "Criar clipes",
+    "moreSummary": "Resumo",
+    "moreTranslateOther": "Traduzir para outro idioma",
+    "moreChangeVideo": "Trocar vídeo",
+    "moreMountSrt": "Carregar SRT",
+    "moreReplaceSrt": "Carregar outro SRT",
+    "moreSaveOriginal": "Salvar vídeo original",
+    "moreAllTools": "Todas as ferramentas",
+    "hideTools": "Ocultar ferramentas",
+    "noVideoTitle": "Adicione o vídeo",
+    "noVideoBody": "Abra o vídeo destas legendas para vê-las no lugar e embuti-las."
   }
 }

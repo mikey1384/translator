@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Manukuu ya {{language}} yako tayari",
     "recentSubtitlesReadyGeneric": "Manukuu yako tayari",
     "recentDownloaded": "Imepakuliwa"
+  },
+  "workspace": {
+    "subtitlesTitle": "Manukuu",
+    "editToggle": "Hariri manukuu",
+    "emptyList": "Manukuu yataonekana hapa mara tu Translator itakapomaliza kusikiliza video.",
+    "statusReady": "Tayari — manukuu ya {{language}} ni mbofyo mmoja tu",
+    "statusTranscribed": "Mistari {{count}} imenukuliwa",
+    "statusTranslated": "Mistari {{count}} kwa {{language}} · inaendana na video",
+    "translateTo": "Tafsiri kwa {{language}}",
+    "exportVideo": "Hamisha video yenye manukuu",
+    "exportTitle": "Hamisha video yenye manukuu",
+    "saveSrt": "Hifadhi .srt",
+    "more": "Zaidi",
+    "moreDub": "Weka sauti",
+    "moreClips": "Tengeneza klipu",
+    "moreSummary": "Muhtasari",
+    "moreTranslateOther": "Tafsiri kwa lugha nyingine",
+    "moreChangeVideo": "Badilisha video",
+    "moreMountSrt": "Pakia SRT",
+    "moreReplaceSrt": "Pakia SRT nyingine",
+    "moreSaveOriginal": "Hifadhi video asili",
+    "moreAllTools": "Zana zote",
+    "hideTools": "Ficha zana",
+    "noVideoTitle": "Ongeza video",
+    "noVideoBody": "Fungua video ya manukuu haya ili uyaone mahali pake na kuyaweka kwenye video."
   }
 }

@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}}-Untertitel fertig",
     "recentSubtitlesReadyGeneric": "Untertitel fertig",
     "recentDownloaded": "Heruntergeladen"
+  },
+  "workspace": {
+    "subtitlesTitle": "Untertitel",
+    "editToggle": "Untertitel bearbeiten",
+    "emptyList": "Die Untertitel erscheinen hier, sobald Translator das Video angehört hat.",
+    "statusReady": "Bereit — Untertitel auf {{language}} sind einen Klick entfernt",
+    "statusTranscribed": "{{count}} Zeilen transkribiert",
+    "statusTranslated": "{{count}} Zeilen auf {{language}} · synchron zum Video",
+    "translateTo": "Übersetzen: {{language}}",
+    "exportVideo": "Video mit Untertiteln exportieren",
+    "exportTitle": "Video mit Untertiteln exportieren",
+    "saveSrt": ".srt speichern",
+    "more": "Mehr",
+    "moreDub": "Vertonen",
+    "moreClips": "Clips erstellen",
+    "moreSummary": "Zusammenfassung",
+    "moreTranslateOther": "In eine andere Sprache übersetzen",
+    "moreChangeVideo": "Video wechseln",
+    "moreMountSrt": "SRT laden",
+    "moreReplaceSrt": "Andere SRT laden",
+    "moreSaveOriginal": "Originalvideo speichern",
+    "moreAllTools": "Alle Werkzeuge",
+    "hideTools": "Werkzeuge ausblenden",
+    "noVideoTitle": "Video hinzufügen",
+    "noVideoBody": "Öffne das Video zu diesen Untertiteln, um sie direkt anzusehen und einzubrennen."
   }
 }

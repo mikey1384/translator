@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Субтитри ({{language}}) готові",
     "recentSubtitlesReadyGeneric": "Субтитри готові",
     "recentDownloaded": "Завантажено"
+  },
+  "workspace": {
+    "subtitlesTitle": "Субтитри",
+    "editToggle": "Редагувати субтитри",
+    "emptyList": "Субтитри з’являться тут, щойно Translator прослухає відео.",
+    "statusReady": "Готово — субтитри ({{language}}) в один клік",
+    "statusTranscribed": "Розшифровано рядків: {{count}}",
+    "statusTranslated": "{{language}}: {{count}} рядків · синхронно з відео",
+    "translateTo": "Перекласти: {{language}}",
+    "exportVideo": "Експортувати відео із субтитрами",
+    "exportTitle": "Експортувати відео із субтитрами",
+    "saveSrt": "Зберегти .srt",
+    "more": "Більше",
+    "moreDub": "Озвучити",
+    "moreClips": "Створити кліпи",
+    "moreSummary": "Підсумок",
+    "moreTranslateOther": "Перекласти іншою мовою",
+    "moreChangeVideo": "Змінити відео",
+    "moreMountSrt": "Завантажити SRT",
+    "moreReplaceSrt": "Завантажити інший SRT",
+    "moreSaveOriginal": "Зберегти оригінальне відео",
+    "moreAllTools": "Усі інструменти",
+    "hideTools": "Сховати інструменти",
+    "noVideoTitle": "Додайте відео",
+    "noVideoBody": "Відкрийте відео до цих субтитрів, щоб переглядати їх на місці та вшити у відео."
   }
 }

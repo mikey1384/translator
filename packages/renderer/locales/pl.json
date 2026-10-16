@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Napisy ({{language}}) gotowe",
     "recentSubtitlesReadyGeneric": "Napisy gotowe",
     "recentDownloaded": "Pobrano"
+  },
+  "workspace": {
+    "subtitlesTitle": "Napisy",
+    "editToggle": "Edytuj napisy",
+    "emptyList": "Napisy pojawią się tutaj, gdy tylko Translator odsłucha wideo.",
+    "statusReady": "Gotowe — napisy ({{language}}) jednym kliknięciem",
+    "statusTranscribed": "Transkrybowane wiersze: {{count}}",
+    "statusTranslated": "{{language}}: {{count}} wierszy · zsynchronizowane z wideo",
+    "translateTo": "Przetłumacz: {{language}}",
+    "exportVideo": "Eksportuj wideo z napisami",
+    "exportTitle": "Eksportuj wideo z napisami",
+    "saveSrt": "Zapisz .srt",
+    "more": "Więcej",
+    "moreDub": "Zdubbinguj",
+    "moreClips": "Utwórz klipy",
+    "moreSummary": "Podsumowanie",
+    "moreTranslateOther": "Przetłumacz na inny język",
+    "moreChangeVideo": "Zmień wideo",
+    "moreMountSrt": "Wczytaj SRT",
+    "moreReplaceSrt": "Wczytaj inny SRT",
+    "moreSaveOriginal": "Zapisz oryginalne wideo",
+    "moreAllTools": "Wszystkie narzędzia",
+    "hideTools": "Ukryj narzędzia",
+    "noVideoTitle": "Dodaj wideo",
+    "noVideoBody": "Otwórz wideo do tych napisów, aby obejrzeć je na miejscu i wtopić w obraz."
   }
 }

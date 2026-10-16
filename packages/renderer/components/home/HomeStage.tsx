@@ -399,6 +399,8 @@ export default function HomeStage() {
 
   const openEditor = () => {
     logButton('home_open_editor');
+    // Opening an existing .srt is about editing it, so the editor starts on.
+    useUIStore.getState().setSubtitleEditMode(true);
     useUIStore.getState().setEditPanelOpen(true);
   };
 

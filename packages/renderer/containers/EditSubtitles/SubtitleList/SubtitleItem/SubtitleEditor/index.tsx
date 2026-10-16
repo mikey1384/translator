@@ -404,7 +404,7 @@ export default function SubtitleEditor({
             {t('editSubtitles.item.seek')}
           </Button>
           <Button
-            variant={isPlaying ? 'danger' : 'primary'}
+            variant={isPlaying ? 'danger' : 'secondary'}
             size="sm"
             onClick={() => (isPlaying ? actions.pause() : actions.play())}
             title={
@@ -524,7 +524,7 @@ export default function SubtitleEditor({
           {subtitle.original && subtitle.original.trim() && videoPath && (
             <div className={subtitleRowSideActionStyles}>
               <Button
-                variant="primary"
+                variant="secondary"
                 size="md"
                 onClick={handleImproveTranscription}
                 disabled={
@@ -579,7 +579,7 @@ export default function SubtitleEditor({
             </div>
             <div className={subtitleRowSideActionStyles}>
               <Button
-                variant="primary"
+                variant="secondary"
                 size="md"
                 onClick={handleImproveTranslation}
                 disabled={editingLocked || isTranslatingOne || isMerging}

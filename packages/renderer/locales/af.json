@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}}-onderskrifte gereed",
     "recentSubtitlesReadyGeneric": "Onderskrifte gereed",
     "recentDownloaded": "Afgelaai"
+  },
+  "workspace": {
+    "subtitlesTitle": "Onderskrifte",
+    "editToggle": "Wysig onderskrifte",
+    "emptyList": "Die onderskrifte verskyn hier sodra Translator na die video geluister het.",
+    "statusReady": "Gereed — {{language}} onderskrifte is een klik weg",
+    "statusTranscribed": "{{count}} reëls getranskribeer",
+    "statusTranslated": "{{count}} reëls in {{language}} · in sinkronisasie met die video",
+    "translateTo": "Vertaal na {{language}}",
+    "exportVideo": "Voer video met onderskrifte uit",
+    "exportTitle": "Voer video met onderskrifte uit",
+    "saveSrt": "Stoor .srt",
+    "more": "Meer",
+    "moreDub": "Klank dit oor",
+    "moreClips": "Maak snitte",
+    "moreSummary": "Opsomming",
+    "moreTranslateOther": "Vertaal na 'n ander taal",
+    "moreChangeVideo": "Verander video",
+    "moreMountSrt": "Laai SRT",
+    "moreReplaceSrt": "Laai 'n ander SRT",
+    "moreSaveOriginal": "Stoor oorspronklike video",
+    "moreAllTools": "Alle gereedskap",
+    "hideTools": "Versteek gereedskap",
+    "noVideoTitle": "Voeg die video by",
+    "noVideoBody": "Maak die video van hierdie onderskrifte oop om hulle in plek te sien en in te brand."
   }
 }

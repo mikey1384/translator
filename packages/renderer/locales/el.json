@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Οι υπότιτλοι ({{language}}) είναι έτοιμοι",
     "recentSubtitlesReadyGeneric": "Οι υπότιτλοι είναι έτοιμοι",
     "recentDownloaded": "Λήφθηκε"
+  },
+  "workspace": {
+    "subtitlesTitle": "Υπότιτλοι",
+    "editToggle": "Επεξεργασία υποτίτλων",
+    "emptyList": "Οι υπότιτλοι εμφανίζονται εδώ μόλις το Translator ακούσει το βίντεο.",
+    "statusReady": "Έτοιμο — υπότιτλοι στα {{language}} με ένα κλικ",
+    "statusTranscribed": "Απομαγνητοφωνήθηκαν {{count}} γραμμές",
+    "statusTranslated": "{{count}} γραμμές στα {{language}} · συγχρονισμένες με το βίντεο",
+    "translateTo": "Μετάφραση στα {{language}}",
+    "exportVideo": "Εξαγωγή βίντεο με υπότιτλους",
+    "exportTitle": "Εξαγωγή βίντεο με υπότιτλους",
+    "saveSrt": "Αποθήκευση .srt",
+    "more": "Περισσότερα",
+    "moreDub": "Μεταγλώττιση",
+    "moreClips": "Δημιουργία κλιπ",
+    "moreSummary": "Περίληψη",
+    "moreTranslateOther": "Μετάφραση σε άλλη γλώσσα",
+    "moreChangeVideo": "Αλλαγή βίντεο",
+    "moreMountSrt": "Φόρτωση SRT",
+    "moreReplaceSrt": "Φόρτωση άλλου SRT",
+    "moreSaveOriginal": "Αποθήκευση αρχικού βίντεο",
+    "moreAllTools": "Όλα τα εργαλεία",
+    "hideTools": "Απόκρυψη εργαλείων",
+    "noVideoTitle": "Προσθέστε το βίντεο",
+    "noVideoBody": "Ανοίξτε το βίντεο αυτών των υποτίτλων για να τους δείτε στη θέση τους και να τους ενσωματώσετε."
   }
 }

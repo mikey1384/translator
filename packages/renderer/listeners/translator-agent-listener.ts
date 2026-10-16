@@ -435,6 +435,8 @@ async function navigateToDestination(
       ['create', 'video-search', 'downloads', 'channels'].includes(destination)
     ) {
       ui.setGeneratePanelOpen(true);
+      // In the video workspace the generate panel lives in "All tools".
+      ui.setWorkspaceToolsOpen(true, 'process');
     }
     if (destination === 'editor') ui.setEditPanelOpen(true);
     if (destination === 'downloads') {

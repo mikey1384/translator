@@ -1196,5 +1196,30 @@
     "recentSubtitlesReady": "{{language}} 자막 완성",
     "recentSubtitlesReadyGeneric": "자막 완성",
     "recentDownloaded": "다운로드됨"
+  },
+  "workspace": {
+    "subtitlesTitle": "자막",
+    "editToggle": "자막 편집",
+    "emptyList": "Translator가 영상을 다 들으면 여기에 자막이 나타나요.",
+    "statusReady": "준비 완료 — 클릭 한 번이면 {{language}} 자막이 생겨요",
+    "statusTranscribed": "{{count}}줄 받아쓰기 완료",
+    "statusTranslated": "{{language}} {{count}}줄 · 영상과 싱크 완료",
+    "translateTo": "{{language}}(으)로 번역",
+    "exportVideo": "자막 넣은 영상 내보내기",
+    "exportTitle": "자막 넣은 영상 내보내기",
+    "saveSrt": ".srt 저장",
+    "more": "더 보기",
+    "moreDub": "더빙하기",
+    "moreClips": "클립 만들기",
+    "moreSummary": "요약",
+    "moreTranslateOther": "다른 언어로 번역",
+    "moreChangeVideo": "영상 바꾸기",
+    "moreMountSrt": "SRT 불러오기",
+    "moreReplaceSrt": "다른 SRT 불러오기",
+    "moreSaveOriginal": "원본 영상 저장",
+    "moreAllTools": "모든 도구",
+    "hideTools": "도구 숨기기",
+    "noVideoTitle": "영상을 추가하세요",
+    "noVideoBody": "이 자막의 영상을 열면 제자리에서 보고 영상에 입힐 수 있어요."
   }
 }

@@ -46,6 +46,12 @@ interface State {
   // Home "Make it speak X" request, consumed by GenerateSubtitles, which owns
   // the download → transcribe → translate chain (session-only).
   homeRunRequest: HomeRunRequest | null;
+  // Video workspace: manual subtitle editing (persisted), the collapsed
+  // "All tools" area and the export sheet (session-only).
+  subtitleEditMode: boolean;
+  workspaceToolsOpen: boolean;
+  workspaceToolsFocus: WorkspaceToolsFocus | null;
+  exportSheetOpen: boolean;
   // Generate workspace tab (persisted)
   generateSubtitlesWorkspaceTab: GenerateSubtitlesWorkspaceTab;
   // Exclamation seen state (session-only; reset on video change)
@@ -56,6 +62,26 @@ interface State {
   previewSubtitleFontPx: number;
   previewDisplayHeightPx: number;
   previewVideoHeightPx: number;
+}
+
+export type WorkspaceToolsFocus = 'video' | 'process';
+
+const SUBTITLE_EDIT_MODE_KEY = 'translator.subtitleEditMode';
+
+function readSubtitleEditMode(): boolean {
+  try {
+    return window.localStorage.getItem(SUBTITLE_EDIT_MODE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeSubtitleEditMode(on: boolean): void {
+  try {
+    window.localStorage.setItem(SUBTITLE_EDIT_MODE_KEY, on ? '1' : '0');
+  } catch {
+    // Storage can be unavailable; the choice then lasts for this session.
+  }
 }
 
 export type HomeRunRequestInput =
@@ -88,6 +114,12 @@ interface Actions {
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
+  setSubtitleEditMode(on: boolean): void;
+  setWorkspaceToolsOpen(
+    open: boolean,
+    focus?: WorkspaceToolsFocus | null
+  ): void;
+  setExportSheetOpen(open: boolean): void;
   requestHomeRun(request: HomeRunRequestInput): void;
   clearHomeRunRequest(id: number): void;
   setEditPanelOpen(open: boolean): void;
@@ -262,6 +294,10 @@ const initial: State = {
   homeRunRequest: null,
   showEditPanel: false,
   generateSubtitlesWorkspaceTab: readGenerateSubtitlesWorkspaceTab(),
+  subtitleEditMode: readSubtitleEditMode(),
+  workspaceToolsOpen: false,
+  workspaceToolsFocus: null,
+  exportSheetOpen: false,
   seenGaps: new Set<string>(),
   seenLC: new Set<string>(),
   transcriptionLanguage: 'auto',
@@ -415,6 +451,22 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setGeneratePanelOpen(open) {
           set({ showGeneratePanel: open });
+        },
+
+        setSubtitleEditMode(on) {
+          writeSubtitleEditMode(on);
+          set({ subtitleEditMode: on });
+        },
+
+        setWorkspaceToolsOpen(open, focus = null) {
+          set({
+            workspaceToolsOpen: open,
+            workspaceToolsFocus: open ? focus : null,
+          });
+        },
+
+        setExportSheetOpen(open) {
+          set({ exportSheetOpen: open });
         },
 
         requestHomeRun(request) {

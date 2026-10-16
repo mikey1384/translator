@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Subtitle {{language}} siap",
     "recentSubtitlesReadyGeneric": "Subtitle siap",
     "recentDownloaded": "Diunduh"
+  },
+  "workspace": {
+    "subtitlesTitle": "Subtitle",
+    "editToggle": "Edit subtitle",
+    "emptyList": "Subtitle muncul di sini begitu Translator selesai mendengarkan video.",
+    "statusReady": "Siap — subtitle {{language}} tinggal satu klik",
+    "statusTranscribed": "{{count}} baris ditranskripsi",
+    "statusTranslated": "{{count}} baris dalam {{language}} · selaras dengan video",
+    "translateTo": "Terjemahkan ke {{language}}",
+    "exportVideo": "Ekspor video dengan subtitle",
+    "exportTitle": "Ekspor video dengan subtitle",
+    "saveSrt": "Simpan .srt",
+    "more": "Lainnya",
+    "moreDub": "Sulih suara",
+    "moreClips": "Buat klip",
+    "moreSummary": "Ringkasan",
+    "moreTranslateOther": "Terjemahkan ke bahasa lain",
+    "moreChangeVideo": "Ganti video",
+    "moreMountSrt": "Muat SRT",
+    "moreReplaceSrt": "Muat SRT lain",
+    "moreSaveOriginal": "Simpan video asli",
+    "moreAllTools": "Semua alat",
+    "hideTools": "Sembunyikan alat",
+    "noVideoTitle": "Tambahkan videonya",
+    "noVideoBody": "Buka video untuk subtitle ini agar bisa ditonton langsung dan ditanamkan."
   }
 }

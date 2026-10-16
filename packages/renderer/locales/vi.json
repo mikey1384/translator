@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Phụ đề {{language}} đã xong",
     "recentSubtitlesReadyGeneric": "Phụ đề đã xong",
     "recentDownloaded": "Đã tải xuống"
+  },
+  "workspace": {
+    "subtitlesTitle": "Phụ đề",
+    "editToggle": "Chỉnh sửa phụ đề",
+    "emptyList": "Phụ đề sẽ hiện ở đây ngay khi Translator nghe xong video.",
+    "statusReady": "Sẵn sàng — phụ đề {{language}} chỉ cách một cú nhấp",
+    "statusTranscribed": "Đã chép lời {{count}} dòng",
+    "statusTranslated": "{{count}} dòng tiếng {{language}} · khớp với video",
+    "translateTo": "Dịch sang {{language}}",
+    "exportVideo": "Xuất video có phụ đề",
+    "exportTitle": "Xuất video có phụ đề",
+    "saveSrt": "Lưu .srt",
+    "more": "Thêm",
+    "moreDub": "Lồng tiếng",
+    "moreClips": "Tạo clip",
+    "moreSummary": "Tóm tắt",
+    "moreTranslateOther": "Dịch sang ngôn ngữ khác",
+    "moreChangeVideo": "Đổi video",
+    "moreMountSrt": "Tải SRT",
+    "moreReplaceSrt": "Tải SRT khác",
+    "moreSaveOriginal": "Lưu video gốc",
+    "moreAllTools": "Tất cả công cụ",
+    "hideTools": "Ẩn công cụ",
+    "noVideoTitle": "Thêm video",
+    "noVideoBody": "Mở video của phụ đề này để xem ngay tại chỗ và ghép vào video."
   }
 }

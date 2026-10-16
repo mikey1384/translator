@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}} سب ٹائٹل تیار",
     "recentSubtitlesReadyGeneric": "سب ٹائٹل تیار",
     "recentDownloaded": "ڈاؤن لوڈ ہو گیا"
+  },
+  "workspace": {
+    "subtitlesTitle": "سب ٹائٹلز",
+    "editToggle": "سب ٹائٹلز میں ترمیم",
+    "emptyList": "Translator ویڈیو سنتے ہی سب ٹائٹلز یہاں نظر آئیں گے۔",
+    "statusReady": "تیار — {{language}} سب ٹائٹلز بس ایک کلک دور",
+    "statusTranscribed": "{{count}} سطریں ٹرانسکرائب ہو گئیں",
+    "statusTranslated": "{{language}} میں {{count}} سطریں · ویڈیو کے ساتھ ہم آہنگ",
+    "translateTo": "{{language}} میں ترجمہ کریں",
+    "exportVideo": "سب ٹائٹلز کے ساتھ ویڈیو ایکسپورٹ کریں",
+    "exportTitle": "سب ٹائٹلز کے ساتھ ویڈیو ایکسپورٹ کریں",
+    "saveSrt": ".srt محفوظ کریں",
+    "more": "مزید",
+    "moreDub": "ڈب کریں",
+    "moreClips": "کلپس بنائیں",
+    "moreSummary": "خلاصہ",
+    "moreTranslateOther": "کسی اور زبان میں ترجمہ",
+    "moreChangeVideo": "ویڈیو بدلیں",
+    "moreMountSrt": "SRT لوڈ کریں",
+    "moreReplaceSrt": "دوسری SRT لوڈ کریں",
+    "moreSaveOriginal": "اصل ویڈیو محفوظ کریں",
+    "moreAllTools": "تمام ٹولز",
+    "hideTools": "ٹولز چھپائیں",
+    "noVideoTitle": "ویڈیو شامل کریں",
+    "noVideoBody": "ان سب ٹائٹلز کی ویڈیو کھولیں تاکہ انہیں وہیں دیکھ سکیں اور ویڈیو میں شامل کر سکیں۔"
   }
 }

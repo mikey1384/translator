@@ -6,7 +6,6 @@ import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-style
 import { MIN_SUBTITLE_FONT_SIZE } from '../../../shared/constants';
 import {
   editorButtonContentStyles,
-  editorMergeButtonStyles,
   editorSaveButtonStyles,
   editorToolbarActionRowStyles,
   editorToolbarCompactInputStyles,
@@ -29,6 +28,8 @@ interface SaveAndMergeBarProps {
   isExportLocked?: boolean;
   isMergingInProgress: boolean;
   isTranslationInProgress?: boolean;
+  /** The export sheet makes Merge its one yellow action. */
+  primaryMerge?: boolean;
 }
 
 export default function SaveAndMergeBar({
@@ -41,6 +42,7 @@ export default function SaveAndMergeBar({
   isExportLocked = false,
   isMergingInProgress,
   isTranslationInProgress,
+  primaryMerge = false,
 }: SaveAndMergeBarProps) {
   const { t } = useTranslation();
 
@@ -60,7 +62,7 @@ export default function SaveAndMergeBar({
         <div className={editorToolbarActionRowStyles}>
           <Button
             onClick={onSave}
-            variant="primary"
+            variant="secondary"
             size="sm"
             disabled={!canSaveDirectly || isExportLocked}
             className={editorSaveButtonStyles}
@@ -87,7 +89,7 @@ export default function SaveAndMergeBar({
 
           <Button
             onClick={onSaveAs}
-            variant="success"
+            variant="secondary"
             size="sm"
             disabled={isExportLocked}
             className={editorSaveButtonStyles}
@@ -122,7 +124,7 @@ export default function SaveAndMergeBar({
               !!isTranslationInProgress
             }
             isLoading={isMergingInProgress}
-            className={editorMergeButtonStyles}
+            variant={primaryMerge ? 'primary' : 'secondary'}
             size="sm"
             title={
               videoFileExists

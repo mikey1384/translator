@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Kész a felirat: {{language}}",
     "recentSubtitlesReadyGeneric": "Kész a felirat",
     "recentDownloaded": "Letöltve"
+  },
+  "workspace": {
+    "subtitlesTitle": "Feliratok",
+    "editToggle": "Feliratok szerkesztése",
+    "emptyList": "A feliratok itt jelennek meg, amint a Translator meghallgatta a videót.",
+    "statusReady": "Kész — {{language}} felirat egy kattintásra",
+    "statusTranscribed": "{{count}} sor átírva",
+    "statusTranslated": "{{count}} sor {{language}} nyelven · szinkronban a videóval",
+    "translateTo": "Fordítás: {{language}}",
+    "exportVideo": "Videó exportálása felirattal",
+    "exportTitle": "Videó exportálása felirattal",
+    "saveSrt": ".srt mentése",
+    "more": "Továbbiak",
+    "moreDub": "Szinkronizálás",
+    "moreClips": "Klipek készítése",
+    "moreSummary": "Összefoglaló",
+    "moreTranslateOther": "Fordítás más nyelvre",
+    "moreChangeVideo": "Videó cseréje",
+    "moreMountSrt": "SRT betöltése",
+    "moreReplaceSrt": "Másik SRT betöltése",
+    "moreSaveOriginal": "Eredeti videó mentése",
+    "moreAllTools": "Minden eszköz",
+    "hideTools": "Eszközök elrejtése",
+    "noVideoTitle": "Add hozzá a videót",
+    "noVideoBody": "Nyisd meg a feliratokhoz tartozó videót, hogy a helyükön lásd és beégethesd őket."
   }
 }

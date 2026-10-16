@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}} வசனங்கள் தயார்",
     "recentSubtitlesReadyGeneric": "வசனங்கள் தயார்",
     "recentDownloaded": "பதிவிறக்கப்பட்டது"
+  },
+  "workspace": {
+    "subtitlesTitle": "வசனங்கள்",
+    "editToggle": "வசனங்களைத் திருத்து",
+    "emptyList": "Translator வீடியோவைக் கேட்டு முடித்ததும் வசனங்கள் இங்கே தோன்றும்.",
+    "statusReady": "தயார் — ஒரே கிளிக்கில் {{language}} வசனங்கள்",
+    "statusTranscribed": "{{count}} வரிகள் எழுத்தாக்கப்பட்டன",
+    "statusTranslated": "{{language}} மொழியில் {{count}} வரிகள் · வீடியோவுடன் ஒத்திசைவு",
+    "translateTo": "{{language}} மொழிக்கு மொழிபெயர்",
+    "exportVideo": "வசனங்களுடன் வீடியோவை ஏற்றுமதி செய்",
+    "exportTitle": "வசனங்களுடன் வீடியோவை ஏற்றுமதி செய்",
+    "saveSrt": ".srt சேமி",
+    "more": "மேலும்",
+    "moreDub": "டப் செய்",
+    "moreClips": "கிளிப்புகள் உருவாக்கு",
+    "moreSummary": "சுருக்கம்",
+    "moreTranslateOther": "வேறு மொழிக்கு மொழிபெயர்",
+    "moreChangeVideo": "வீடியோவை மாற்று",
+    "moreMountSrt": "SRT ஏற்று",
+    "moreReplaceSrt": "வேறு SRT ஏற்று",
+    "moreSaveOriginal": "மூல வீடியோவைச் சேமி",
+    "moreAllTools": "எல்லா கருவிகளும்",
+    "hideTools": "கருவிகளை மறை",
+    "noVideoTitle": "வீடியோவைச் சேர்",
+    "noVideoBody": "இந்த வசனங்களின் வீடியோவைத் திறந்து, அவற்றை அங்கேயே பார்த்து வீடியோவில் பதிக்கலாம்."
   }
 }

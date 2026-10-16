@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}} সাবটাইটেল প্রস্তুত",
     "recentSubtitlesReadyGeneric": "সাবটাইটেল প্রস্তুত",
     "recentDownloaded": "ডাউনলোড হয়েছে"
+  },
+  "workspace": {
+    "subtitlesTitle": "সাবটাইটেল",
+    "editToggle": "সাবটাইটেল সম্পাদনা",
+    "emptyList": "Translator ভিডিওটি শোনা শেষ করলেই সাবটাইটেল এখানে দেখা যাবে।",
+    "statusReady": "প্রস্তুত — এক ক্লিকেই {{language}} সাবটাইটেল",
+    "statusTranscribed": "{{count}}টি লাইন ট্রান্সক্রাইব হয়েছে",
+    "statusTranslated": "{{language}}-এ {{count}}টি লাইন · ভিডিওর সাথে মিল রেখে",
+    "translateTo": "{{language}}-এ অনুবাদ করুন",
+    "exportVideo": "সাবটাইটেলসহ ভিডিও এক্সপোর্ট করুন",
+    "exportTitle": "সাবটাইটেলসহ ভিডিও এক্সপোর্ট করুন",
+    "saveSrt": ".srt সংরক্ষণ",
+    "more": "আরও",
+    "moreDub": "ডাব করুন",
+    "moreClips": "ক্লিপ বানান",
+    "moreSummary": "সারসংক্ষেপ",
+    "moreTranslateOther": "অন্য ভাষায় অনুবাদ",
+    "moreChangeVideo": "ভিডিও বদলান",
+    "moreMountSrt": "SRT লোড করুন",
+    "moreReplaceSrt": "আরেকটি SRT লোড করুন",
+    "moreSaveOriginal": "মূল ভিডিও সংরক্ষণ",
+    "moreAllTools": "সব টুল",
+    "hideTools": "টুল লুকান",
+    "noVideoTitle": "ভিডিও যোগ করুন",
+    "noVideoBody": "এই সাবটাইটেলের ভিডিও খুলুন, জায়গামতো দেখুন এবং ভিডিওতে বসিয়ে দিন।"
   }
 }

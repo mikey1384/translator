@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Undertekster på {{language}} klare",
     "recentSubtitlesReadyGeneric": "Undertekster klare",
     "recentDownloaded": "Lastet ned"
+  },
+  "workspace": {
+    "subtitlesTitle": "Undertekster",
+    "editToggle": "Rediger undertekster",
+    "emptyList": "Undertekstene vises her så snart Translator har lyttet til videoen.",
+    "statusReady": "Klar — undertekster på {{language}} er ett klikk unna",
+    "statusTranscribed": "{{count}} linjer transkribert",
+    "statusTranslated": "{{count}} linjer på {{language}} · synkront med videoen",
+    "translateTo": "Oversett til {{language}}",
+    "exportVideo": "Eksporter video med undertekster",
+    "exportTitle": "Eksporter video med undertekster",
+    "saveSrt": "Lagre .srt",
+    "more": "Mer",
+    "moreDub": "Dubb den",
+    "moreClips": "Lag klipp",
+    "moreSummary": "Sammendrag",
+    "moreTranslateOther": "Oversett til et annet språk",
+    "moreChangeVideo": "Bytt video",
+    "moreMountSrt": "Last inn SRT",
+    "moreReplaceSrt": "Last inn en annen SRT",
+    "moreSaveOriginal": "Lagre originalvideo",
+    "moreAllTools": "Alle verktøy",
+    "hideTools": "Skjul verktøy",
+    "noVideoTitle": "Legg til videoen",
+    "noVideoBody": "Åpne videoen undertekstene hører til for å se dem på plass og brenne dem inn."
   }
 }

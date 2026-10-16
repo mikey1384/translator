@@ -418,7 +418,9 @@ export const pageWrapperStyles = css`
   background: ${gradients.page};
   color: ${colors.text};
   min-height: 100vh;
-  overflow-x: hidden;
+  /* clip, not hidden: hidden makes a scroll container and breaks the
+     video workspace's sticky video column. */
+  overflow-x: clip;
   display: flex;
   flex-direction: column;
 `;

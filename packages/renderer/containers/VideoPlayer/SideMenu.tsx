@@ -520,7 +520,7 @@ export default function SideMenu({
             {showTranscribeButton && (
               <Button
                 size="sm"
-                variant="primary"
+                variant="secondary"
                 onClick={handleTranscribe}
                 isLoading={isTranscribing}
                 disabled={isTranscribeDisabled}
@@ -644,7 +644,7 @@ export default function SideMenu({
               {showTranslateAction && (
                 <Button
                   size="sm"
-                  variant="primary"
+                  variant="secondary"
                   onClick={handleTranslateAll}
                   disabled={
                     isTranscribing || translationInProgress || isMerging

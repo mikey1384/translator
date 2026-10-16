@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}}字幕已完成",
     "recentSubtitlesReadyGeneric": "字幕已完成",
     "recentDownloaded": "已下载"
+  },
+  "workspace": {
+    "subtitlesTitle": "字幕",
+    "editToggle": "编辑字幕",
+    "emptyList": "Translator 听完视频后，字幕会出现在这里。",
+    "statusReady": "准备就绪——一键生成{{language}}字幕",
+    "statusTranscribed": "已转录 {{count}} 行",
+    "statusTranslated": "{{language}} {{count}} 行 · 与视频同步",
+    "translateTo": "翻译成{{language}}",
+    "exportVideo": "导出带字幕的视频",
+    "exportTitle": "导出带字幕的视频",
+    "saveSrt": "保存 .srt",
+    "more": "更多",
+    "moreDub": "配音",
+    "moreClips": "制作片段",
+    "moreSummary": "摘要",
+    "moreTranslateOther": "翻译成其他语言",
+    "moreChangeVideo": "更换视频",
+    "moreMountSrt": "载入 SRT",
+    "moreReplaceSrt": "载入另一个 SRT",
+    "moreSaveOriginal": "保存原始视频",
+    "moreAllTools": "全部工具",
+    "hideTools": "隐藏工具",
+    "noVideoTitle": "添加视频",
+    "noVideoBody": "打开这些字幕对应的视频，即可原地观看并压制字幕。"
   }
 }

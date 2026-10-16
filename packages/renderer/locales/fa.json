@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "زیرنویس {{language}} آماده است",
     "recentSubtitlesReadyGeneric": "زیرنویس آماده است",
     "recentDownloaded": "دانلود شد"
+  },
+  "workspace": {
+    "subtitlesTitle": "زیرنویس‌ها",
+    "editToggle": "ویرایش زیرنویس‌ها",
+    "emptyList": "به‌محض اینکه Translator ویدیو را بشنود، زیرنویس‌ها اینجا نمایش داده می‌شوند.",
+    "statusReady": "آماده — زیرنویس {{language}} با یک کلیک",
+    "statusTranscribed": "{{count}} خط رونویسی شد",
+    "statusTranslated": "{{count}} خط به {{language}} · هماهنگ با ویدیو",
+    "translateTo": "ترجمه به {{language}}",
+    "exportVideo": "خروجی ویدیو با زیرنویس",
+    "exportTitle": "خروجی ویدیو با زیرنویس",
+    "saveSrt": "ذخیرهٔ ‎.srt",
+    "more": "بیشتر",
+    "moreDub": "دوبله کنید",
+    "moreClips": "ساخت کلیپ",
+    "moreSummary": "خلاصه",
+    "moreTranslateOther": "ترجمه به زبانی دیگر",
+    "moreChangeVideo": "تغییر ویدیو",
+    "moreMountSrt": "بارگذاری SRT",
+    "moreReplaceSrt": "بارگذاری SRT دیگر",
+    "moreSaveOriginal": "ذخیرهٔ ویدیوی اصلی",
+    "moreAllTools": "همهٔ ابزارها",
+    "hideTools": "پنهان کردن ابزارها",
+    "noVideoTitle": "ویدیو را اضافه کنید",
+    "noVideoBody": "ویدیوی این زیرنویس‌ها را باز کنید تا آن‌ها را سر جایشان ببینید و روی ویدیو بنشانید."
   }
 }

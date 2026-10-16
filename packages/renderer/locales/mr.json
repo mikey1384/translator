@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}} सबटायटल तयार",
     "recentSubtitlesReadyGeneric": "सबटायटल तयार",
     "recentDownloaded": "डाउनलोड झाले"
+  },
+  "workspace": {
+    "subtitlesTitle": "सबटायटल",
+    "editToggle": "सबटायटल संपादित करा",
+    "emptyList": "Translator ने व्हिडिओ ऐकताच सबटायटल इथे दिसतील.",
+    "statusReady": "तयार — एका क्लिकवर {{language}} सबटायटल",
+    "statusTranscribed": "{{count}} ओळी लिप्यंतरित",
+    "statusTranslated": "{{language}} मध्ये {{count}} ओळी · व्हिडिओशी जुळलेल्या",
+    "translateTo": "{{language}} मध्ये भाषांतर करा",
+    "exportVideo": "सबटायटलसह व्हिडिओ एक्सपोर्ट करा",
+    "exportTitle": "सबटायटलसह व्हिडिओ एक्सपोर्ट करा",
+    "saveSrt": ".srt जतन करा",
+    "more": "अधिक",
+    "moreDub": "डब करा",
+    "moreClips": "क्लिप बनवा",
+    "moreSummary": "सारांश",
+    "moreTranslateOther": "दुसऱ्या भाषेत भाषांतर करा",
+    "moreChangeVideo": "व्हिडिओ बदला",
+    "moreMountSrt": "SRT लोड करा",
+    "moreReplaceSrt": "दुसरी SRT लोड करा",
+    "moreSaveOriginal": "मूळ व्हिडिओ जतन करा",
+    "moreAllTools": "सर्व साधने",
+    "hideTools": "साधने लपवा",
+    "noVideoTitle": "व्हिडिओ जोडा",
+    "noVideoBody": "या सबटायटलचा व्हिडिओ उघडा, म्हणजे ते जागीच पाहता येतील आणि व्हिडिओत जोडता येतील."
   }
 }

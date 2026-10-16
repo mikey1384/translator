@@ -8,11 +8,23 @@ import { useCallback, useEffect } from 'react';
 import { i18n } from '../i18n';
 import { css } from '@emotion/css';
 import { spacing } from '../components/design-system/tokens.js';
+import {
+  workspaceSubsAreaStyles,
+  workspaceToolsAreaStyles,
+} from '../components/workspace/workspace-styles';
 
-export default function MainPanels() {
+export default function MainPanels({
+  inWorkspace = false,
+}: {
+  /** Video workspace: the editor lives in the subtitles column and the
+   * generate panel inside the collapsed "All tools" area. */
+  inWorkspace?: boolean;
+}) {
   // Keep both sections mounted; panel open states live in the global UI store.
   const isGenerateOpen = useUIStore(s => s.showGeneratePanel);
   const isEditOpen = useUIStore(s => s.showEditPanel);
+  const editMode = useUIStore(s => s.subtitleEditMode);
+  const toolsOpen = useUIStore(s => s.workspaceToolsOpen);
   const hasMountedSubtitles = useSubStore(s => s.order.length > 0);
   const subtitleSourceId = useSubStore(s => s.sourceId);
   const hasMountedVideo = useVideoStore(s => Boolean(s.url || s.path));
@@ -50,30 +62,42 @@ export default function MainPanels() {
       ui.setGeneratePanelOpen(true);
   }, [hasMountedVideo]);
 
-  const showHome = !isGenerateOpen && !isEditOpen;
+  const showHome = !inWorkspace && !isGenerateOpen && !isEditOpen;
+  const showGenerate = inWorkspace ? toolsOpen : isGenerateOpen;
+  const showEditor = inWorkspace ? editMode : isEditOpen;
 
   return (
     <>
       {showHome ? <HomeStage /> : null}
 
-      {/* Both panels stay mounted: the home action runs inside them. */}
+      {/* Both panels stay mounted in the same place in every layout: the home
+          action and running jobs live inside them. */}
       <div
-        className={panelBlockStyles}
+        className={
+          inWorkspace
+            ? `${panelBlockStyles} ${workspaceToolsAreaStyles}`
+            : panelBlockStyles
+        }
         data-translator-destination="create"
-        style={{ display: isGenerateOpen ? 'block' : 'none' }}
+        style={{ display: showGenerate ? 'block' : 'none' }}
       >
         <GenerateSubtitles />
       </div>
 
       <div
-        className={panelBlockStyles}
+        className={
+          inWorkspace
+            ? `${panelBlockStyles} ${workspaceSubsAreaStyles}`
+            : panelBlockStyles
+        }
         data-translator-destination="editor"
-        style={{ display: isEditOpen ? 'block' : 'none' }}
+        style={{ display: showEditor ? 'block' : 'none' }}
       >
         <EditSubtitles
           setMergeStage={s => setMergeStage({ stage: s })}
           onSetMergeOperationId={setMergeOperationId}
           onStartPngRenderRequest={handleRenderRequest}
+          listHidden={inWorkspace && !editMode}
         />
       </div>
     </>

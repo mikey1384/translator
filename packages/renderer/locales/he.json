@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "כתוביות ב{{language}} מוכנות",
     "recentSubtitlesReadyGeneric": "הכתוביות מוכנות",
     "recentDownloaded": "הורד"
+  },
+  "workspace": {
+    "subtitlesTitle": "כתוביות",
+    "editToggle": "עריכת כתוביות",
+    "emptyList": "הכתוביות יופיעו כאן ברגע ש-Translator יסיים להאזין לסרטון.",
+    "statusReady": "מוכן — כתוביות ב{{language}} במרחק לחיצה",
+    "statusTranscribed": "תומללו {{count}} שורות",
+    "statusTranslated": "{{count}} שורות ב{{language}} · מסונכרנות עם הסרטון",
+    "translateTo": "תרגום ל{{language}}",
+    "exportVideo": "ייצוא סרטון עם כתוביות",
+    "exportTitle": "ייצוא סרטון עם כתוביות",
+    "saveSrt": "שמירת ‎.srt",
+    "more": "עוד",
+    "moreDub": "דיבוב",
+    "moreClips": "יצירת קליפים",
+    "moreSummary": "סיכום",
+    "moreTranslateOther": "תרגום לשפה אחרת",
+    "moreChangeVideo": "החלפת סרטון",
+    "moreMountSrt": "טעינת SRT",
+    "moreReplaceSrt": "טעינת SRT אחר",
+    "moreSaveOriginal": "שמירת הסרטון המקורי",
+    "moreAllTools": "כל הכלים",
+    "hideTools": "הסתרת הכלים",
+    "noVideoTitle": "הוסיפו את הסרטון",
+    "noVideoBody": "פתחו את הסרטון של הכתוביות האלה כדי לצפות בהן במקומן ולצרוב אותן."
   }
 }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   useHighlightGenerationRequestStore,
   useHighlightWorkflowStore,
+  useSubStore,
   useUIStore,
   useVideoStore,
   useTaskStore,
@@ -28,6 +29,23 @@ import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
 import Button from '../components/Button';
 import ErrorBanner from '../components/ErrorBanner';
+import { ProgressPresentationContext } from '../components/ProgressAreas/progress-presentation';
+import {
+  WorkspaceActionBar,
+  WorkspaceExportSheet,
+  WorkspaceIdleStatus,
+  useWorkspaceBusy,
+} from '../components/workspace/WorkspaceActions';
+import {
+  WorkspaceNoVideo,
+  WorkspaceReadOnlyArea,
+  WorkspaceSubtitlesHead,
+  WorkspaceToolsVideo,
+} from '../components/workspace/WorkspaceParts';
+import {
+  workspaceGridStyles,
+  workspaceVideoColumnStyles,
+} from '../components/workspace/workspace-styles';
 import { useAiStore } from '../state';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 
@@ -151,6 +169,12 @@ export default function AppContent() {
   const globalErrorKind = useUrlStore(s => s.errorKind);
   const clearGlobalError = useUrlStore(s => s.clearError);
   const videoUrl = useVideoStore(s => s.url);
+  const hasMountedSubtitles = useSubStore(s => s.order.length > 0);
+  const subtitleEditMode = useUIStore(s => s.subtitleEditMode);
+  const workspaceToolsOpen = useUIStore(s => s.workspaceToolsOpen);
+  const workspaceBusy = useWorkspaceBusy();
+  // A video or subtitles on screen means the video workspace layout.
+  const inWorkspace = Boolean(videoUrl) || hasMountedSubtitles;
   const isTranslating = useTaskStore(
     s =>
       !!s.translation.inProgress &&
@@ -408,10 +432,45 @@ export default function AppContent() {
     );
   }
 
+  const progressAreas = (
+    <>
+      <ProgressArea
+        isVisible={
+          download.inProgress && !download.stage.toLowerCase().includes('error')
+        }
+        title={t('dialogs.downloadInProgress')}
+        progress={download.percent}
+        stage={download.stage}
+        progressBarColor={
+          download.stage.toLowerCase().includes('error')
+            ? colors.danger
+            : colors.progressDownload
+        }
+        operationId={download.id}
+        onCancel={handleCancelDownload}
+        verticalOffsetPx={inWorkspace ? undefined : -13}
+        onClose={() =>
+          setDownload({
+            inProgress: false,
+            percent: 100,
+            stage: 'Completed',
+            id: null,
+          })
+        }
+      />
+
+      {mergeInProgress && <MergingProgressArea />}
+
+      {isTranscribing && <TranscriptionProgressArea />}
+
+      {isTranslating && <TranslationProgressArea />}
+
+      {isDubbing && <DubbingProgressArea />}
+    </>
+  );
+
   return (
     <div className={pageWrapperStyles}>
-      {videoUrl && <div style={{ height: 'calc(35vh + 2rem)' }} />}
-
       <FindBar />
 
       <div className={containerStyles}>
@@ -426,43 +485,26 @@ export default function AppContent() {
           </div>
         )}
 
-        {videoUrl && <VideoPlayer />}
+        {/* One wrapper in every layout so MainPanels never remounts when a
+            video appears mid-job. */}
+        <div className={inWorkspace ? workspaceGridStyles : undefined}>
+          {inWorkspace ? (
+            <div className={workspaceVideoColumnStyles}>
+              {videoUrl ? <VideoPlayer docked /> : <WorkspaceNoVideo />}
+              <ProgressPresentationContext.Provider value="inline">
+                {progressAreas}
+              </ProgressPresentationContext.Provider>
+              {workspaceBusy ? null : <WorkspaceIdleStatus />}
+              <WorkspaceActionBar />
+            </div>
+          ) : null}
+          {inWorkspace ? <WorkspaceSubtitlesHead /> : null}
+          {inWorkspace && !subtitleEditMode ? <WorkspaceReadOnlyArea /> : null}
+          {inWorkspace && workspaceToolsOpen ? <WorkspaceToolsVideo /> : null}
+          <MainPanels inWorkspace={inWorkspace} />
+        </div>
 
-        <MainPanels />
-
-        <ProgressArea
-          isVisible={
-            download.inProgress &&
-            !download.stage.toLowerCase().includes('error')
-          }
-          title={t('dialogs.downloadInProgress')}
-          progress={download.percent}
-          stage={download.stage}
-          progressBarColor={
-            download.stage.toLowerCase().includes('error')
-              ? colors.danger
-              : colors.progressDownload
-          }
-          operationId={download.id}
-          onCancel={handleCancelDownload}
-          verticalOffsetPx={-13}
-          onClose={() =>
-            setDownload({
-              inProgress: false,
-              percent: 100,
-              stage: 'Completed',
-              id: null,
-            })
-          }
-        />
-
-        {mergeInProgress && <MergingProgressArea />}
-
-        {isTranscribing && <TranscriptionProgressArea />}
-
-        {isTranslating && <TranslationProgressArea />}
-
-        {isDubbing && <DubbingProgressArea />}
+        {inWorkspace ? <WorkspaceExportSheet /> : progressAreas}
 
         <FloatingActionButtons />
       </div>

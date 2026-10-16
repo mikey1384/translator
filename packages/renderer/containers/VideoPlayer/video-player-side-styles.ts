@@ -537,3 +537,23 @@ export const videoPlayerGrowStyles = css`
 export const videoPlayerAnchorStyles = css`
   position: relative;
 `;
+
+// Video workspace: the player lives in the left column with the video as the
+// hero (16:9 box, letterboxed), not fixed to the top of the window.
+export const dockedVideoContainerStyles = css`
+  ${fixedVideoContainerBaseStyles}
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100vh - 260px);
+  min-height: 220px;
+  padding: 0;
+  border-radius: 20px;
+  background-color: #000;
+  display: flex;
+  flex-direction: column;
+`;

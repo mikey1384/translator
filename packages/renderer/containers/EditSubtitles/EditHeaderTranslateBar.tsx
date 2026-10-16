@@ -54,7 +54,7 @@ export default function EditHeaderTranslateBar({
       </select>
 
       <Button
-        variant="primary"
+        variant="secondary"
         size="sm"
         onClick={onTranslate}
         disabled={disabled}

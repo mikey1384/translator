@@ -148,6 +148,9 @@ export default function GapList() {
     r => !seenLC.has(`${r.start}-${r.end}`)
   );
 
+  // Nothing detected yet: no empty frame in the tools area.
+  if (!showContent) return null;
+
   return (
     <div className={sidePanelShellStyles}>
       {showContent ? (

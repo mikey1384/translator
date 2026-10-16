@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Handa na ang subtitle sa {{language}}",
     "recentSubtitlesReadyGeneric": "Handa na ang subtitle",
     "recentDownloaded": "Na-download"
+  },
+  "workspace": {
+    "subtitlesTitle": "Subtitle",
+    "editToggle": "I-edit ang subtitle",
+    "emptyList": "Lalabas dito ang subtitle sa sandaling marinig ng Translator ang video.",
+    "statusReady": "Handa na — isang click lang ang subtitle sa {{language}}",
+    "statusTranscribed": "{{count}} linyang na-transcribe",
+    "statusTranslated": "{{count}} linya sa {{language}} · sabay sa video",
+    "translateTo": "Isalin sa {{language}}",
+    "exportVideo": "I-export ang video na may subtitle",
+    "exportTitle": "I-export ang video na may subtitle",
+    "saveSrt": "I-save ang .srt",
+    "more": "Iba pa",
+    "moreDub": "I-dub",
+    "moreClips": "Gumawa ng clip",
+    "moreSummary": "Buod",
+    "moreTranslateOther": "Isalin sa ibang wika",
+    "moreChangeVideo": "Palitan ang video",
+    "moreMountSrt": "Mag-load ng SRT",
+    "moreReplaceSrt": "Mag-load ng ibang SRT",
+    "moreSaveOriginal": "I-save ang orihinal na video",
+    "moreAllTools": "Lahat ng tool",
+    "hideTools": "Itago ang mga tool",
+    "noVideoTitle": "Idagdag ang video",
+    "noVideoBody": "Buksan ang video ng mga subtitle na ito para mapanood sa lugar at maisama sa video."
   }
 }

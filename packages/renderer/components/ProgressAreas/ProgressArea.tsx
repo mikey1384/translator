@@ -40,6 +40,20 @@ import {
   workflowStatusUtilityRowStyles,
 } from '../workflow-surface-styles';
 import { resolveProgressOperationComplete } from './progress-operation-state';
+import { useProgressPresentation } from './progress-presentation';
+import { colors } from '../../styles';
+import {
+  inlineStatusActivityStyles,
+  inlineStatusBarStyles,
+  inlineStatusCancelStyles,
+  inlineStatusFillStyles,
+  inlineStatusMainStyles,
+  inlineStatusMetaStyles,
+  inlineStatusRowStyles,
+  inlineStatusStageStyles,
+  inlineStatusTitleStyles,
+  inlineStatusTrackStyles,
+} from '../workspace/workspace-styles';
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -80,6 +94,7 @@ export default function ProgressArea({
   verticalOffsetPx,
 }: ProgressAreaProps) {
   const { t } = useTranslation();
+  const presentation = useProgressPresentation();
   const credits = useCreditStore(s => s.credits);
   const qualityTranslation = useUIStore(s => s.qualityTranslation);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
@@ -264,6 +279,56 @@ export default function ProgressArea({
 
   if (!isVisible) {
     return null;
+  }
+
+  if (presentation === 'inline') {
+    // One accent: running work is yellow; finished and failed keep meaning.
+    const fill =
+      progressBarColor === colors.danger || progressBarColor === colors.success
+        ? progressBarColor
+        : colors.primary;
+    return (
+      <div className={inlineStatusBarStyles} role="status" aria-live="polite">
+        <div className={inlineStatusRowStyles}>
+          {!isOperationComplete ? (
+            <span className={inlineStatusActivityStyles} aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+          ) : null}
+          <div className={inlineStatusMainStyles}>
+            <span className={inlineStatusTitleStyles}>{title}</span>
+            <span className={inlineStatusStageStyles}>{stage}</span>
+          </div>
+          {progress > 0 ? (
+            <span className={inlineStatusMetaStyles}>
+              {progress.toFixed(0)}%
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className={inlineStatusCancelStyles}
+            onClick={handleCloseOrCancelClick}
+            disabled={isCancelling || (!isOperationComplete && cancelDisabled)}
+            aria-label={t(
+              'common.closeOrCancelProcess',
+              'Close or cancel process'
+            )}
+          >
+            {isCancelling ? '…' : '×'}
+          </button>
+        </div>
+        {notice}
+        {subLabel ? (
+          <p className={inlineStatusStageStyles}>{subLabel}</p>
+        ) : null}
+        <div className={inlineStatusTrackStyles}>
+          <div className={inlineStatusFillStyles(fill, progress)} />
+        </div>
+      </div>
+    );
   }
 
   return (

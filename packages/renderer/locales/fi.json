@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Tekstitys ({{language}}) valmis",
     "recentSubtitlesReadyGeneric": "Tekstitys valmis",
     "recentDownloaded": "Ladattu"
+  },
+  "workspace": {
+    "subtitlesTitle": "Tekstitykset",
+    "editToggle": "Muokkaa tekstityksiä",
+    "emptyList": "Tekstitykset näkyvät tässä heti, kun Translator on kuunnellut videon.",
+    "statusReady": "Valmis — tekstitykset kielellä {{language}} yhdellä klikkauksella",
+    "statusTranscribed": "{{count}} riviä litteroitu",
+    "statusTranslated": "{{count}} riviä kielellä {{language}} · tahdissa videon kanssa",
+    "translateTo": "Käännä kielelle {{language}}",
+    "exportVideo": "Vie video tekstityksin",
+    "exportTitle": "Vie video tekstityksin",
+    "saveSrt": "Tallenna .srt",
+    "more": "Lisää",
+    "moreDub": "Dubbaa",
+    "moreClips": "Tee klippejä",
+    "moreSummary": "Yhteenveto",
+    "moreTranslateOther": "Käännä toiselle kielelle",
+    "moreChangeVideo": "Vaihda video",
+    "moreMountSrt": "Lataa SRT",
+    "moreReplaceSrt": "Lataa toinen SRT",
+    "moreSaveOriginal": "Tallenna alkuperäinen video",
+    "moreAllTools": "Kaikki työkalut",
+    "hideTools": "Piilota työkalut",
+    "noVideoTitle": "Lisää video",
+    "noVideoBody": "Avaa näiden tekstitysten video, niin näet ne paikallaan ja voit polttaa ne kuvaan."
   }
 }

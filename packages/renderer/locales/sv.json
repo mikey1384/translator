@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Undertexter på {{language}} klara",
     "recentSubtitlesReadyGeneric": "Undertexter klara",
     "recentDownloaded": "Nedladdad"
+  },
+  "workspace": {
+    "subtitlesTitle": "Undertexter",
+    "editToggle": "Redigera undertexter",
+    "emptyList": "Undertexterna visas här så fort Translator har lyssnat på videon.",
+    "statusReady": "Klart — undertexter på {{language}} är ett klick bort",
+    "statusTranscribed": "{{count}} rader transkriberade",
+    "statusTranslated": "{{count}} rader på {{language}} · i synk med videon",
+    "translateTo": "Översätt till {{language}}",
+    "exportVideo": "Exportera video med undertexter",
+    "exportTitle": "Exportera video med undertexter",
+    "saveSrt": "Spara .srt",
+    "more": "Mer",
+    "moreDub": "Dubba den",
+    "moreClips": "Gör klipp",
+    "moreSummary": "Sammanfattning",
+    "moreTranslateOther": "Översätt till ett annat språk",
+    "moreChangeVideo": "Byt video",
+    "moreMountSrt": "Läs in SRT",
+    "moreReplaceSrt": "Läs in en annan SRT",
+    "moreSaveOriginal": "Spara originalvideo",
+    "moreAllTools": "Alla verktyg",
+    "hideTools": "Dölj verktyg",
+    "noVideoTitle": "Lägg till videon",
+    "noVideoBody": "Öppna videon som undertexterna hör till för att se dem på plats och bränna in dem."
   }
 }

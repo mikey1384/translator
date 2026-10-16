@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "{{language}}字幕が完成",
     "recentSubtitlesReadyGeneric": "字幕が完成",
     "recentDownloaded": "ダウンロード済み"
+  },
+  "workspace": {
+    "subtitlesTitle": "字幕",
+    "editToggle": "字幕を編集",
+    "emptyList": "Translatorが動画を聞き終えると、ここに字幕が表示されます。",
+    "statusReady": "準備完了 — ワンクリックで{{language}}字幕に",
+    "statusTranscribed": "{{count}}行を文字起こし",
+    "statusTranslated": "{{language}}で{{count}}行 · 動画と同期済み",
+    "translateTo": "{{language}}に翻訳",
+    "exportVideo": "字幕付き動画を書き出す",
+    "exportTitle": "字幕付き動画を書き出す",
+    "saveSrt": ".srtを保存",
+    "more": "その他",
+    "moreDub": "吹き替える",
+    "moreClips": "クリップを作る",
+    "moreSummary": "要約",
+    "moreTranslateOther": "別の言語に翻訳",
+    "moreChangeVideo": "動画を変更",
+    "moreMountSrt": "SRTを読み込む",
+    "moreReplaceSrt": "別のSRTを読み込む",
+    "moreSaveOriginal": "元の動画を保存",
+    "moreAllTools": "すべてのツール",
+    "hideTools": "ツールを隠す",
+    "noVideoTitle": "動画を追加",
+    "noVideoBody": "この字幕の動画を開くと、その場で確認して焼き込めます。"
   }
 }

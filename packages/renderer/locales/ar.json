@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "ترجمة {{language}} جاهزة",
     "recentSubtitlesReadyGeneric": "الترجمة جاهزة",
     "recentDownloaded": "تم التنزيل"
+  },
+  "workspace": {
+    "subtitlesTitle": "الترجمات",
+    "editToggle": "تعديل الترجمات",
+    "emptyList": "تظهر الترجمات هنا بمجرد أن يستمع Translator إلى الفيديو.",
+    "statusReady": "جاهز — الترجمة إلى {{language}} على بُعد نقرة",
+    "statusTranscribed": "تم تفريغ {{count}} سطرًا",
+    "statusTranslated": "{{count}} سطرًا باللغة {{language}} · متزامنة مع الفيديو",
+    "translateTo": "ترجمة إلى {{language}}",
+    "exportVideo": "تصدير الفيديو مع الترجمات",
+    "exportTitle": "تصدير الفيديو مع الترجمات",
+    "saveSrt": "حفظ ‎.srt",
+    "more": "المزيد",
+    "moreDub": "دبلجة",
+    "moreClips": "إنشاء مقاطع",
+    "moreSummary": "ملخّص",
+    "moreTranslateOther": "ترجمة إلى لغة أخرى",
+    "moreChangeVideo": "تغيير الفيديو",
+    "moreMountSrt": "تحميل SRT",
+    "moreReplaceSrt": "تحميل SRT آخر",
+    "moreSaveOriginal": "حفظ الفيديو الأصلي",
+    "moreAllTools": "كل الأدوات",
+    "hideTools": "إخفاء الأدوات",
+    "noVideoTitle": "أضف الفيديو",
+    "noVideoBody": "افتح فيديو هذه الترجمات لمشاهدتها في مكانها ودمجها في الفيديو."
   }
 }

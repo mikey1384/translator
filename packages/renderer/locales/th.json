@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "ซับไตเติล{{language}}พร้อมแล้ว",
     "recentSubtitlesReadyGeneric": "ซับไตเติลพร้อมแล้ว",
     "recentDownloaded": "ดาวน์โหลดแล้ว"
+  },
+  "workspace": {
+    "subtitlesTitle": "คำบรรยาย",
+    "editToggle": "แก้ไขคำบรรยาย",
+    "emptyList": "คำบรรยายจะปรากฏที่นี่ทันทีที่ Translator ฟังวิดีโอเสร็จ",
+    "statusReady": "พร้อมแล้ว — คำบรรยาย{{language}}แค่คลิกเดียว",
+    "statusTranscribed": "ถอดความแล้ว {{count}} บรรทัด",
+    "statusTranslated": "{{language}} {{count}} บรรทัด · ตรงจังหวะกับวิดีโอ",
+    "translateTo": "แปลเป็น{{language}}",
+    "exportVideo": "ส่งออกวิดีโอพร้อมคำบรรยาย",
+    "exportTitle": "ส่งออกวิดีโอพร้อมคำบรรยาย",
+    "saveSrt": "บันทึก .srt",
+    "more": "เพิ่มเติม",
+    "moreDub": "พากย์เสียง",
+    "moreClips": "สร้างคลิป",
+    "moreSummary": "สรุป",
+    "moreTranslateOther": "แปลเป็นภาษาอื่น",
+    "moreChangeVideo": "เปลี่ยนวิดีโอ",
+    "moreMountSrt": "โหลด SRT",
+    "moreReplaceSrt": "โหลด SRT อื่น",
+    "moreSaveOriginal": "บันทึกวิดีโอต้นฉบับ",
+    "moreAllTools": "เครื่องมือทั้งหมด",
+    "hideTools": "ซ่อนเครื่องมือ",
+    "noVideoTitle": "เพิ่มวิดีโอ",
+    "noVideoBody": "เปิดวิดีโอของคำบรรยายนี้เพื่อดูในตำแหน่งจริงและฝังลงในวิดีโอ"
   }
 }

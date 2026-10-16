@@ -48,7 +48,7 @@ export default function TranscriptionProgressArea() {
       title={t('dialogs.transcriptionInProgress', 'Transcription in progress')}
       progress={percent}
       stage={translateTranscriptionStageLabel(stage, t)}
-      progressBarColor={colors.info}
+      progressBarColor={colors.primary}
       operationId={id}
       onCancel={onCancel}
       isCancelling={

@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Subtitrări în {{language}} gata",
     "recentSubtitlesReadyGeneric": "Subtitrări gata",
     "recentDownloaded": "Descărcat"
+  },
+  "workspace": {
+    "subtitlesTitle": "Subtitrări",
+    "editToggle": "Editează subtitrările",
+    "emptyList": "Subtitrările apar aici imediat ce Translator a ascultat videoclipul.",
+    "statusReady": "Gata — subtitrările în {{language}} sunt la un clic distanță",
+    "statusTranscribed": "{{count}} rânduri transcrise",
+    "statusTranslated": "{{count}} rânduri în {{language}} · sincronizate cu videoclipul",
+    "translateTo": "Tradu în {{language}}",
+    "exportVideo": "Exportă videoclipul cu subtitrări",
+    "exportTitle": "Exportă videoclipul cu subtitrări",
+    "saveSrt": "Salvează .srt",
+    "more": "Mai mult",
+    "moreDub": "Dublează",
+    "moreClips": "Creează clipuri",
+    "moreSummary": "Rezumat",
+    "moreTranslateOther": "Tradu în altă limbă",
+    "moreChangeVideo": "Schimbă videoclipul",
+    "moreMountSrt": "Încarcă SRT",
+    "moreReplaceSrt": "Încarcă alt SRT",
+    "moreSaveOriginal": "Salvează videoclipul original",
+    "moreAllTools": "Toate instrumentele",
+    "hideTools": "Ascunde instrumentele",
+    "noVideoTitle": "Adaugă videoclipul",
+    "noVideoBody": "Deschide videoclipul acestor subtitrări pentru a le vedea pe loc și a le încorpora."
   }
 }

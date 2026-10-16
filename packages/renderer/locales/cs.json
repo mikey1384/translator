@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Titulky ({{language}}) hotové",
     "recentSubtitlesReadyGeneric": "Titulky hotové",
     "recentDownloaded": "Staženo"
+  },
+  "workspace": {
+    "subtitlesTitle": "Titulky",
+    "editToggle": "Upravit titulky",
+    "emptyList": "Titulky se zobrazí zde, jakmile Translator video poslechne.",
+    "statusReady": "Hotovo — titulky ({{language}}) na jedno kliknutí",
+    "statusTranscribed": "Přepsáno řádků: {{count}}",
+    "statusTranslated": "{{language}}: {{count}} řádků · synchronizováno s videem",
+    "translateTo": "Přeložit: {{language}}",
+    "exportVideo": "Exportovat video s titulky",
+    "exportTitle": "Exportovat video s titulky",
+    "saveSrt": "Uložit .srt",
+    "more": "Více",
+    "moreDub": "Nadabovat",
+    "moreClips": "Vytvořit klipy",
+    "moreSummary": "Shrnutí",
+    "moreTranslateOther": "Přeložit do jiného jazyka",
+    "moreChangeVideo": "Změnit video",
+    "moreMountSrt": "Načíst SRT",
+    "moreReplaceSrt": "Načíst jiné SRT",
+    "moreSaveOriginal": "Uložit původní video",
+    "moreAllTools": "Všechny nástroje",
+    "hideTools": "Skrýt nástroje",
+    "noVideoTitle": "Přidejte video",
+    "noVideoBody": "Otevřete video k těmto titulkům a sledujte je přímo na místě nebo je vypalte do obrazu."
   }
 }

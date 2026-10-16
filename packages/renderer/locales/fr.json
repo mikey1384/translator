@@ -1179,5 +1179,30 @@
     "recentSubtitlesReady": "Sous-titres en {{language}} prêts",
     "recentSubtitlesReadyGeneric": "Sous-titres prêts",
     "recentDownloaded": "Téléchargé"
+  },
+  "workspace": {
+    "subtitlesTitle": "Sous-titres",
+    "editToggle": "Modifier les sous-titres",
+    "emptyList": "Les sous-titres apparaissent ici dès que Translator a écouté la vidéo.",
+    "statusReady": "Prêt — les sous-titres en {{language}} sont à un clic",
+    "statusTranscribed": "{{count}} lignes transcrites",
+    "statusTranslated": "{{count}} lignes en {{language}} · synchronisées avec la vidéo",
+    "translateTo": "Traduire en {{language}}",
+    "exportVideo": "Exporter la vidéo sous-titrée",
+    "exportTitle": "Exporter la vidéo sous-titrée",
+    "saveSrt": "Enregistrer le .srt",
+    "more": "Plus",
+    "moreDub": "La doubler",
+    "moreClips": "Créer des clips",
+    "moreSummary": "Résumé",
+    "moreTranslateOther": "Traduire dans une autre langue",
+    "moreChangeVideo": "Changer de vidéo",
+    "moreMountSrt": "Charger un SRT",
+    "moreReplaceSrt": "Charger un autre SRT",
+    "moreSaveOriginal": "Enregistrer la vidéo d’origine",
+    "moreAllTools": "Tous les outils",
+    "hideTools": "Masquer les outils",
+    "noVideoTitle": "Ajoutez la vidéo",
+    "noVideoBody": "Ouvrez la vidéo de ces sous-titres pour les voir en place et les incruster."
   }
 }
