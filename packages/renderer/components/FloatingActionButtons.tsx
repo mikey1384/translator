@@ -57,34 +57,6 @@ const updateAttentionKeyframes = css`
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
     }
   }
-
-  @keyframes updateFabGlowAmber {
-    0%,
-    100% {
-      box-shadow:
-        0 10px 24px rgba(0, 0, 0, 0.26),
-        0 0 0 0 rgba(255, 181, 71, 0.2);
-    }
-    50% {
-      box-shadow:
-        0 18px 36px rgba(255, 181, 71, 0.24),
-        0 0 0 8px rgba(255, 181, 71, 0.12);
-    }
-  }
-
-  @keyframes updateFabGlowGreen {
-    0%,
-    100% {
-      box-shadow:
-        0 10px 24px rgba(0, 0, 0, 0.26),
-        0 0 0 0 rgba(123, 224, 165, 0.18);
-    }
-    50% {
-      box-shadow:
-        0 18px 36px rgba(123, 224, 165, 0.24),
-        0 0 0 8px rgba(123, 224, 165, 0.12);
-    }
-  }
 `;
 
 const updatePillBaseStyles = css`
@@ -118,15 +90,13 @@ const updatePillBaseStyles = css`
 `;
 
 const updatePillAvailableStyles = css`
-  color: ${colors.onPrimary};
-  background: ${colors.warning};
-  border-color: rgba(255, 181, 71, 0.4);
-  animation:
-    updateFabPulse 1.8s ease-in-out infinite,
-    updateFabGlowAmber 1.8s ease-in-out infinite;
+  color: ${colors.text};
+  background: ${colors.surfaceRaised};
+  border-color: ${colors.primary};
+  animation: updateFabPulse 1.8s ease-in-out infinite;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 14px 28px rgba(255, 181, 71, 0.24);
+    box-shadow: 0 14px 28px rgba(255, 216, 77, 0.18);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -142,14 +112,12 @@ const updatePillDownloadingStyles = css`
 
 const updatePillReadyStyles = css`
   color: ${colors.onPrimary};
-  background: ${colors.success};
-  border-color: rgba(123, 224, 165, 0.4);
-  animation:
-    updateFabPulse 1.8s ease-in-out infinite,
-    updateFabGlowGreen 1.8s ease-in-out infinite;
+  background: ${colors.primary};
+  border-color: ${colors.primary};
+  animation: updateFabPulse 1.8s ease-in-out infinite;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 14px 28px rgba(123, 224, 165, 0.24);
+    box-shadow: 0 14px 28px rgba(255, 216, 77, 0.24);
   }
 
   @media (prefers-reduced-motion: reduce) {

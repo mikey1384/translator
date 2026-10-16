@@ -302,7 +302,7 @@ export const videoPlayerCenterStateProgressTrackStyles = css`
   height: 10px;
   overflow: hidden;
   border-radius: ${borderRadius.full};
-  border: 1px solid rgba(255, 181, 71, 0.22);
+  border: 1px solid rgba(255, 216, 77, 0.22);
   background: rgba(255, 255, 255, 0.06);
 `;
 
@@ -314,9 +314,9 @@ export const videoPlayerCenterStateProgressFillStyles = css`
   border-radius: ${borderRadius.full};
   background: linear-gradient(
     90deg,
-    rgba(255, 181, 71, 0.18) 0%,
-    rgba(255, 181, 71, 0.95) 48%,
-    rgba(255, 181, 71, 0.18) 100%
+    rgba(255, 216, 77, 0.18) 0%,
+    rgba(255, 216, 77, 0.95) 48%,
+    rgba(255, 216, 77, 0.18) 100%
   );
   animation: player-waiting-progress 1.8s ease-in-out infinite;
 

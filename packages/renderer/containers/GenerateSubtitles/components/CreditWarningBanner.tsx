@@ -23,33 +23,37 @@ export default function CreditWarningBanner({
           gap: '12px',
         }}
       >
-        <Trans
-          i18nKey="generateSubtitles.creditWarning.message"
-          values={{
-            settingsLinkText: t(
-              'generateSubtitles.creditWarning.settingsLinkText'
-            ),
-          }}
-          components={{
-            settingsLink: (
-              <a
-                style={{
-                  textDecoration: 'underline',
-                  color: 'white',
-                  cursor: 'pointer',
-                }}
-                onClick={() => {
-                  try {
-                    logButton('open_settings');
-                  } catch {
-                    // Ignore logging errors
-                  }
-                  onSettingsClick();
-                }}
-              />
-            ),
-          }}
-        />
+        {/* One paragraph: in the flex column each Trans piece became its own
+            line, leaving the closing period stranded below the link. */}
+        <p style={{ margin: 0 }}>
+          <Trans
+            i18nKey="generateSubtitles.creditWarning.message"
+            values={{
+              settingsLinkText: t(
+                'generateSubtitles.creditWarning.settingsLinkText'
+              ),
+            }}
+            components={{
+              settingsLink: (
+                <a
+                  style={{
+                    textDecoration: 'underline',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => {
+                    try {
+                      logButton('open_settings');
+                    } catch {
+                      // Ignore logging errors
+                    }
+                    onSettingsClick();
+                  }}
+                />
+              ),
+            }}
+          />
+        </p>
         <MicroCreditCheckoutButton placement="zero-credit-banner" />
       </div>
     </Alert>

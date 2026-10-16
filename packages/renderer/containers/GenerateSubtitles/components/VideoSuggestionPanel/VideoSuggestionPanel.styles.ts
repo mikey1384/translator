@@ -80,9 +80,9 @@ export const toggleEyebrowStyles = css`
   min-height: 28px;
   padding: 0 ${spacing.sm};
   border-radius: ${borderRadius.full};
-  border: 1px solid rgba(255, 181, 71, 0.24);
-  background: rgba(255, 181, 71, 0.08);
-  color: ${colors.warning};
+  border: 1px solid rgba(255, 216, 77, 0.24);
+  background: rgba(255, 216, 77, 0.08);
+  color: ${colors.primary};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
   letter-spacing: 0.08em;

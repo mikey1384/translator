@@ -295,23 +295,6 @@ export const editorSaveButtonStyles = css`
   min-width: 156px;
 `;
 
-export const editorMergeButtonStyles = css`
-  color: ${colors.onPrimary} !important;
-  background: ${colors.progressMerge};
-  border-color: rgba(255, 122, 182, 0.28);
-  box-shadow: 0 10px 22px rgba(255, 122, 182, 0.2);
-
-  &:hover:not(:disabled) {
-    background: #ff9bc9;
-    border-color: rgba(255, 122, 182, 0.42);
-  }
-
-  &:active:not(:disabled) {
-    background: #f46aa8;
-    border-color: rgba(255, 122, 182, 0.5);
-  }
-`;
-
 export const editorTranslateBarStyles = css`
   ${subtleSurfaceCardStyles}
   display: flex;
@@ -319,8 +302,6 @@ export const editorTranslateBarStyles = css`
   align-items: center;
   gap: ${spacing.md};
   padding: ${spacing.md} ${spacing.lg};
-  border-color: rgba(157, 187, 255, 0.24);
-  background: rgba(157, 187, 255, 0.08);
 `;
 
 export const editorTranslateLabelStyles = css`
@@ -557,8 +538,8 @@ export const editorTextareaPlaceholderStyles = css`
 `;
 
 export const editorTextareaHighlightMatchStyles = css`
-  background: rgba(255, 181, 71, 0.9);
-  color: #19171f;
+  background: rgba(255, 216, 77, 0.9);
+  color: ${colors.onPrimary};
   border-radius: ${borderRadius.sm};
   padding: 0 1px;
 `;

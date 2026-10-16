@@ -39,6 +39,13 @@ export const workspaceGridStyles = css`
   }
 `;
 
+// A pinned video belongs beside the subtitle list only: once All tools opens
+// below, a sticky column would ride over the tools as the page scrolls.
+export const workspaceVideoColumnUnpinnedStyles = css`
+  position: relative;
+  top: 0;
+`;
+
 export const workspaceVideoColumnStyles = css`
   grid-area: video;
   position: sticky;

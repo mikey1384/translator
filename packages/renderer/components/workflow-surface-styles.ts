@@ -269,9 +269,9 @@ export const workflowStageEyebrowStyles = css`
 `;
 
 export const workflowStageEyebrowSecondaryStyles = css`
-  border-color: rgba(255, 181, 71, 0.24);
-  background: rgba(255, 181, 71, 0.08);
-  color: ${colors.warning};
+  border-color: ${colors.borderStrong};
+  background: transparent;
+  color: ${colors.textDim};
 `;
 
 export const workflowStageTitleStyles = css`
@@ -338,7 +338,7 @@ export const workflowPanelFlushStyles = css`
 `;
 
 export const workflowPanelSuccessStyles = css`
-  border-color: rgba(123, 224, 165, 0.34);
+  border-color: ${colors.borderStrong};
   background: rgba(32, 29, 39, 0.98);
 `;
 

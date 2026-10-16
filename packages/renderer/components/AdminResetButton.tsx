@@ -27,31 +27,34 @@ const adminButton = css`
 
 const addButton = css`
   ${adminButton}
-  background: ${colors.success};
-  color: ${colors.onPrimary};
+  background: ${colors.grayLight};
+  color: ${colors.text};
+  border: 1px solid ${colors.border};
 
   &:hover:not(:disabled) {
-    background: #9bebbd;
+    background: ${colors.surfaceRaised};
   }
 `;
 
 const resetButton = css`
   ${adminButton}
-  background: ${colors.danger};
-  color: ${colors.onPrimary};
+  background: ${colors.grayLight};
+  color: ${colors.danger};
+  border: 1px solid rgba(255, 122, 107, 0.32);
 
   &:hover:not(:disabled) {
-    background: #ff968a;
+    background: rgba(255, 122, 107, 0.12);
   }
 `;
 
 const previewButton = css`
   ${adminButton}
-  background: ${colors.warning};
-  color: ${colors.onPrimary};
+  background: ${colors.grayLight};
+  color: ${colors.text};
+  border: 1px solid ${colors.border};
 
   &:hover:not(:disabled) {
-    background: #ffc977;
+    background: ${colors.surfaceRaised};
   }
 `;
 

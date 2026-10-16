@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../styles.js';
 import { spacing, borderRadius, transitions } from './tokens.js';
@@ -29,12 +30,12 @@ const baseAlertStyles = css`
 // Calm tinted surfaces; body text stays in the main text color for contrast.
 const variantStyles: Record<AlertVariant, string> = {
   info: css`
-    background-color: rgba(157, 187, 255, 0.08);
-    border-color: rgba(157, 187, 255, 0.36);
+    background-color: ${colors.surfaceRaised};
+    border-color: ${colors.borderStrong};
     color: ${colors.text};
 
     a {
-      color: ${colors.info};
+      color: ${colors.primaryLight};
       text-decoration: underline;
 
       &:hover {
@@ -121,12 +122,17 @@ const closeButtonStyles = css`
   }
 `;
 
-const iconMap: Record<AlertVariant, string> = {
-  info: 'ℹ️',
-  success: '✅',
-  warning: '⚠️',
-  error: '❌',
+const iconMap: Record<AlertVariant, { Icon: typeof Info; color: string }> = {
+  info: { Icon: Info, color: colors.textDim },
+  success: { Icon: CheckCircle2, color: colors.success },
+  warning: { Icon: AlertTriangle, color: colors.warning },
+  error: { Icon: XCircle, color: colors.danger },
 };
+
+const iconStyles = css`
+  flex: none;
+  margin-top: 2px;
+`;
 
 export default function Alert({
   variant = 'info',
@@ -142,7 +148,17 @@ export default function Alert({
       className={cx(baseAlertStyles, variantStyles[variant], className)}
       role="alert"
     >
-      <span aria-hidden="true">{iconMap[variant]}</span>
+      {(() => {
+        const { Icon, color } = iconMap[variant];
+        return (
+          <Icon
+            size={18}
+            color={color}
+            className={iconStyles}
+            aria-hidden="true"
+          />
+        );
+      })()}
 
       <div className={contentStyles}>
         {title && <div className={titleStyles}>{title}</div>}
@@ -155,7 +171,7 @@ export default function Alert({
           onClick={onClose}
           aria-label={t('common.closeAlert', 'Close alert')}
         >
-          ✕
+          <X size={16} aria-hidden="true" />
         </button>
       )}
     </div>

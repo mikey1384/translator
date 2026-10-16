@@ -134,34 +134,37 @@ const buttonVariants: Record<ButtonVariant, string> = {
       color: ${colors.text};
     }
   `,
+  // Destructive actions stay quiet until hovered: red text on a dark pill.
   danger: css`
-    color: ${colors.onPrimary};
-    background: ${colors.danger};
-    border-color: rgba(255, 122, 107, 0.18);
-    box-shadow: ${shadows.button};
+    color: ${colors.danger};
+    background: ${colors.grayLight};
+    border-color: rgba(255, 122, 107, 0.32);
 
     &:hover:not(:disabled) {
-      border-color: rgba(255, 122, 107, 0.28);
+      background: rgba(255, 122, 107, 0.12);
+      border-color: rgba(255, 122, 107, 0.5);
     }
   `,
+  // Subtitle yellow is the only filled accent; these legacy variants now
+  // read as the neutral secondary button.
   warning: css`
-    color: ${colors.onPrimary};
-    background: ${colors.warning};
-    border-color: rgba(255, 181, 71, 0.2);
-    box-shadow: ${shadows.button};
+    color: ${colors.text};
+    background: ${colors.grayLight};
+    border-color: ${colors.border};
 
     &:hover:not(:disabled) {
-      border-color: rgba(255, 181, 71, 0.28);
+      background-color: ${colors.surfaceRaised};
+      border-color: ${colors.borderStrong};
     }
   `,
   success: css`
-    color: ${colors.onPrimary};
-    background: ${colors.success};
-    border-color: rgba(123, 224, 165, 0.18);
-    box-shadow: ${shadows.button};
+    color: ${colors.text};
+    background: ${colors.grayLight};
+    border-color: ${colors.border};
 
     &:hover:not(:disabled) {
-      border-color: rgba(123, 224, 165, 0.28);
+      background-color: ${colors.surfaceRaised};
+      border-color: ${colors.borderStrong};
     }
   `,
   link: css`

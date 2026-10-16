@@ -43,11 +43,11 @@ export const colors = {
   border: 'rgba(244, 241, 234, 0.10)',
   borderStrong: 'rgba(244, 241, 234, 0.18)',
   overlay: 'rgba(8, 7, 11, 0.76)',
-  // Progress bars
-  progressDownload: '#FFB547',
-  progressMerge: '#FF7AB6',
+  // Progress bars: every job shows in subtitle yellow.
+  progressDownload: '#FFD84D',
+  progressMerge: '#FFD84D',
   progressTranslate: '#FFD84D',
-  progressDub: '#FF9466',
+  progressDub: '#FFD84D',
 };
 
 // Typefaces bundled in assets/fonts (OFL); see index.tsx for @font-face.
@@ -603,92 +603,6 @@ export const linkStyles = css`
 `;
 
 // Solid fills from the palette; all fills are light, so text is onPrimary.
-export const buttonGradientStyles = {
-  base: css`
-    position: relative;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition:
-      box-shadow 0.15s ease,
-      background-color 0.15s ease,
-      border-color 0.15s ease;
-
-    &:hover:not(:disabled) {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
-    }
-
-    &:active:not(:disabled) {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    &:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-  `,
-  primary: css`
-    background: ${colors.primary} !important;
-    color: ${colors.onPrimary} !important;
-
-    &:hover:not(:disabled) {
-      background: ${colors.primaryLight} !important;
-      color: ${colors.onPrimary} !important;
-    }
-
-    &:disabled {
-      background: ${colors.primary} !important;
-      color: ${colors.onPrimary} !important;
-    }
-  `,
-  success: css`
-    background: ${colors.success} !important;
-    color: ${colors.onPrimary} !important;
-
-    &:hover:not(:disabled) {
-      background: #9bebbd !important;
-      color: ${colors.onPrimary} !important;
-    }
-
-    &:disabled {
-      background: ${colors.success} !important;
-      color: ${colors.onPrimary} !important;
-    }
-  `,
-  danger: css`
-    background: ${colors.danger} !important;
-    color: ${colors.onPrimary} !important;
-
-    &:hover:not(:disabled) {
-      background: #ff968a !important;
-      color: ${colors.onPrimary} !important;
-    }
-
-    &:disabled {
-      background: ${colors.danger} !important;
-      color: ${colors.onPrimary} !important;
-    }
-  `,
-  purple: css`
-    background: ${colors.progressMerge} !important;
-    color: ${colors.onPrimary} !important;
-
-    &:hover:not(:disabled) {
-      background: #ff9bc9 !important;
-      color: ${colors.onPrimary} !important;
-    }
-
-    &:disabled {
-      background: ${colors.progressMerge} !important;
-      color: ${colors.onPrimary} !important;
-    }
-  `,
-};
-
-export const mergeButtonStyles = css`
-  ${buttonGradientStyles.base}
-  ${buttonGradientStyles.purple}
-`;
-
 // Tasteful, dark-theme friendly accent button
 export const subtleAccentButton = css`
   position: relative;

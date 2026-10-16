@@ -44,12 +44,13 @@ import {
 } from '../components/workspace/WorkspaceParts';
 import {
   workspaceGridStyles,
+  workspaceVideoColumnUnpinnedStyles,
   workspaceVideoColumnStyles,
 } from '../components/workspace/workspace-styles';
 import { useAiStore } from '../state';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 
-import { css } from '@emotion/css';
+import { css, cx } from '@emotion/css';
 import { pageWrapperStyles, containerStyles, colors, fonts } from '../styles';
 import { ArrowLeft } from 'lucide-react';
 import * as OperationIPC from '../ipc/operation';
@@ -529,7 +530,12 @@ export default function AppContent() {
             video appears mid-job. */}
         <div className={inWorkspace ? workspaceGridStyles : undefined}>
           {inWorkspace ? (
-            <div className={workspaceVideoColumnStyles}>
+            <div
+              className={cx(
+                workspaceVideoColumnStyles,
+                workspaceToolsOpen && workspaceVideoColumnUnpinnedStyles
+              )}
+            >
               {videoUrl ? <VideoPlayer docked /> : <WorkspaceNoVideo />}
               <ProgressPresentationContext.Provider value="inline">
                 {progressAreas}
