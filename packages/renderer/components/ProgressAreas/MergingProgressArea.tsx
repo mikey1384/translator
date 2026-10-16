@@ -6,6 +6,7 @@ import subtitleRendererClient from '../../clients/subtitle-renderer-client.js';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '../../ipc/operation';
 import { cancelMergeOperation } from './merge-cancellation';
+import { renderPreparationStageLabel } from './render-preparation-stage-label';
 
 const MERGE_PROGRESS_COLOR = colors.progressMerge;
 
@@ -120,7 +121,7 @@ export default function MergingProgressArea({
       isVisible={inProgress}
       title={t('progress.mergingTitle', 'Merging Video & Subtitles')}
       progress={percent}
-      stage={stage}
+      stage={renderPreparationStageLabel(stage, t)}
       progressBarColor={progressBarColor}
       isCancelling={isCancelling}
       cancelDisabled={cancelDisabled}

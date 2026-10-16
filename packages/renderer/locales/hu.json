@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Videóexportálás előkészítése…",
+    "downloadingVideoExportTools": "Videóexportálási eszközök letöltése… {{percent}}%",
     "beginningReview": "Ellenőrzés kezdése...",
     "starting": "Indítás...",
     "completed": "Befejezve",

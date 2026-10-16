@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Préparation de l’exportation vidéo…",
+    "downloadingVideoExportTools": "Téléchargement des outils d’exportation vidéo… {{percent}} %",
     "beginningReview": "Démarrage de la relecture...",
     "starting": "Démarrage...",
     "completed": "Terminé",

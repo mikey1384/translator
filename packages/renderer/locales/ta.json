@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "வீடியோ ஏற்றுமதிக்குத் தயாராகிறது…",
+    "downloadingVideoExportTools": "வீடியோ ஏற்றுமதிக் கருவிகளைப் பதிவிறக்குகிறது… {{percent}}%",
     "beginningReview": "மதிப்பாய்வு தொடங்குகிறது...",
     "starting": "தொடங்குகிறது...",
     "completed": "முடிந்தது",

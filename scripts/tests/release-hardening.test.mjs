@@ -91,7 +91,7 @@ test('packaged apps carry each platform resource exactly once', () => {
 
   assert.equal(
     windows.filter(entry => entry.from === 'vendor/headless-x64').length,
-    1
+    0
   );
   assert.equal(
     windows.filter(
@@ -118,7 +118,7 @@ test('packaged apps carry each platform resource exactly once', () => {
   );
   assert.equal(
     combinedMac.filter(entry => entry.from === 'vendor/headless-x64').length,
-    1
+    0
   );
   for (const [platformName, resources] of [
     ['combined macOS', combinedMac],
@@ -142,24 +142,23 @@ test('packaged apps carry each platform resource exactly once', () => {
   );
 
   const verifier = read('scripts/verify-architectures.sh');
-  assert.match(verifier, /Unexpected non-target headless browser payload/);
-  assert.match(verifier, /verify_macho_arch "\$headless_binary"/);
+  assert.match(verifier, /verify-packaged-runtime\.cjs/);
 });
 
-test('packaging installs the lockfile-pinned headless browser revision', () => {
+test('packaging leaves the pinned browser to the verified runtime downloader', () => {
   const workflow = read('.github/workflows/release-mac.yml');
   const installer = read('scripts/install-pinned-headless-chrome.mjs');
   const packageJson = readJson('package.json');
 
-  assert.match(
+  assert.doesNotMatch(
     packageJson.scripts['package:mac'],
     /install-pinned-headless-chrome\.mjs mac_arm mac/
   );
-  assert.match(
+  assert.doesNotMatch(
     packageJson.scripts['package:arm'],
     /install-pinned-headless-chrome\.mjs mac_arm/
   );
-  assert.match(
+  assert.doesNotMatch(
     packageJson.scripts['package:intel'],
     /install-pinned-headless-chrome\.mjs mac/
   );
@@ -577,7 +576,7 @@ test('Windows release wrappers propagate package and upload failures', () => {
     packageJson.scripts['package:win'],
     /npm run build:owner-supervisor/
   );
-  assert.match(preflight, /npm run download:headless-win/i);
+  assert.doesNotMatch(preflight, /npm run download:headless-win/i);
   assert.match(preflight, /npm run build:owner-supervisor/i);
   assert.match(preflight, /npm run test:release/i);
   assert.match(preflight, /electron-builder\.win\.preflight\.json/i);
@@ -1247,12 +1246,8 @@ test('Windows package smoke test fails closed and checks the owner supervisor', 
 
   assert.match(script, /translator-owner-supervisor\.exe/i);
   assert.match(script, /Get-AuthenticodeSignature/);
-  assert.match(script, /!HEADLESS_BINARY!/i);
   assert.match(script, /CN=Stage5 Tools LLC/);
-  assert.match(script, /headless-arm64/i);
-  assert.match(script, /if exist "%%~fF"/i);
-  assert.match(script, /HEADLESS_BINARY_COUNT/);
-  assert.match(script, /Expected exactly one chrome-headless-shell\.exe/);
+  assert.match(script, /verify-packaged-runtime\.cjs/);
   assert.ok(
     script.indexOf('if not "!TEST_EXIT!"=="0" exit /b !TEST_EXIT!') <
       script.indexOf('if "!REQUIRE_SIGNATURES!"=="1"'),
@@ -1264,132 +1259,6 @@ test('Windows package smoke test fails closed and checks the owner supervisor', 
   assert.match(signingHook, /await packager\.signIf\(supervisorPath\)/);
   assert.match(signingHook, /signed !== true/);
 });
-
-test(
-  'Windows package smoke test resolves only real nested headless executables',
-  { skip: process.platform !== 'win32' },
-  () => {
-    const tempDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), 'translator-windows-package-smoke-')
-    );
-    const fixtureScript = path.join(
-      tempDir,
-      'scripts',
-      'test-windows-package.bat'
-    );
-    const appDir = path.join(tempDir, 'dist', 'win-unpacked');
-    const resourcesDir = path.join(appDir, 'resources');
-    const headlessDir = path.join(resourcesDir, 'headless-x64');
-    const nestedBinary = path.join(
-      headlessDir,
-      'chrome-headless-shell',
-      'win64-fixture',
-      'chrome-headless-shell-win64',
-      'chrome-headless-shell.exe'
-    );
-    const requiredResources = [
-      'packaged-mcp.mjs',
-      'transport-bound-lifecycle.mjs',
-      'native-owner-monitor.mjs',
-      'packaged-agent-protocol.mjs',
-      'stream-codecs.mjs',
-      'packaged-tool-map.mjs',
-      'canonical-json.mjs',
-      'job-store.mjs',
-      'job-owner-lease.mjs',
-      'mcp-v2-contract.mjs',
-      'mcp-v2-service.mjs',
-      'render-checkpoint-recovery.mjs',
-      'srt.mjs',
-      'subtitle-quality.mjs',
-      'tool-schema-validator.mjs',
-      'packaged-socket-path.mjs',
-      'translator-mcp.cmd',
-      'translator-owner-supervisor.exe',
-    ];
-    const runValidator = () =>
-      spawnSync(
-        'cmd.exe',
-        [
-          '/d',
-          '/s',
-          '/c',
-          'scripts\\test-windows-package.bat --no-launch --allow-unsigned',
-        ],
-        { cwd: tempDir, encoding: 'utf8' }
-      );
-
-    try {
-      fs.mkdirSync(path.dirname(fixtureScript), { recursive: true });
-      fs.copyFileSync(
-        path.join(repoRoot, 'scripts', 'test-windows-package.bat'),
-        fixtureScript
-      );
-      fs.copyFileSync(
-        path.join(repoRoot, 'scripts', 'verify-windows-media.cjs'),
-        path.join(tempDir, 'scripts', 'verify-windows-media.cjs')
-      );
-      const mediaDir = path.join(
-        resourcesDir,
-        'app.asar.unpacked',
-        'node_modules',
-        'ffmpeg-ffprobe-static'
-      );
-      fs.mkdirSync(mediaDir, { recursive: true });
-      for (const name of ['ffmpeg.exe', 'ffprobe.exe']) {
-        fs.copyFileSync(
-          path.join(repoRoot, 'node_modules', 'ffmpeg-ffprobe-static', name),
-          path.join(mediaDir, name)
-        );
-      }
-      fs.mkdirSync(path.dirname(nestedBinary), { recursive: true });
-      fs.writeFileSync(path.join(appDir, 'Translator.exe'), 'fixture');
-      fs.writeFileSync(nestedBinary, 'fixture');
-      for (const fileName of requiredResources) {
-        fs.writeFileSync(path.join(resourcesDir, fileName), 'fixture');
-      }
-
-      const nested = runValidator();
-      assert.equal(nested.status, 0, nested.stderr || nested.stdout);
-      assert.match(nested.stdout, /Headless shell: .*win64-fixture/i);
-
-      const ffprobePath = path.join(mediaDir, 'ffprobe.exe');
-      fs.renameSync(ffprobePath, `${ffprobePath}.saved`);
-      const missingMedia = runValidator();
-      assert.notEqual(missingMedia.status, 0);
-      assert.match(
-        `${missingMedia.stdout}\n${missingMedia.stderr}`,
-        /Missing packaged ffprobe executable/
-      );
-      fs.renameSync(`${ffprobePath}.saved`, ffprobePath);
-
-      fs.rmSync(nestedBinary);
-      const missing = runValidator();
-      assert.notEqual(missing.status, 0);
-      assert.match(
-        `${missing.stdout}\n${missing.stderr}`,
-        /chrome-headless-shell\.exe is missing/
-      );
-
-      fs.writeFileSync(nestedBinary, 'fixture');
-      const duplicateBinary = path.join(
-        headlessDir,
-        'duplicate',
-        'chrome-headless-shell.exe'
-      );
-      fs.mkdirSync(path.dirname(duplicateBinary), { recursive: true });
-      fs.writeFileSync(duplicateBinary, 'fixture');
-      const duplicate = runValidator();
-      assert.notEqual(duplicate.status, 0);
-      assert.match(
-        `${duplicate.stdout}\n${duplicate.stderr}`,
-        /Expected exactly one chrome-headless-shell\.exe, found 2/
-      );
-    } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
-  }
-);
 
 test('macOS release stays draft until every GitHub artifact is verified', () => {
   const workflow = read('.github/workflows/release-mac.yml');

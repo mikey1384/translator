@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "กำลังเตรียมส่งออกวิดีโอ…",
+    "downloadingVideoExportTools": "กำลังดาวน์โหลดเครื่องมือส่งออกวิดีโอ… {{percent}}%",
     "beginningReview": "เริ่มการตรวจทาน...",
     "starting": "กำลังเริ่มต้น...",
     "completed": "เสร็จสิ้น",

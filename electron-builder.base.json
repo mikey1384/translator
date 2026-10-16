@@ -116,9 +116,19 @@
     "render-host.html",
     "render-host-script.js",
     "node_modules/**/*",
+    "!packages/main/dist/main/*.map",
     "!node_modules/adm-zip/**",
-    "!node_modules/onnxruntime-node/script/**"
+    "!node_modules/onnxruntime-node/script/**",
+    "!node_modules/onnxruntime-node/bin/napi-v6/!(${platform})/**",
+    "!node_modules/onnxruntime-node/bin/napi-v6/${platform}/!(${arch})/**",
+    "!.local{,/**/*}",
+    "!.env{,.*}",
+    "!vendor/headless-*{,/**/*}"
   ],
+
+  "dmg": {
+    "format": "ULFO"
+  },
 
   "mac": {
     "publish": [
@@ -129,10 +139,6 @@
       }
     ],
     "extraResources": [
-      {
-        "from": "vendor/headless-${arch}",
-        "to": "headless-${arch}"
-      },
       {
         "from": "packages/agent-server/bin/translator-mcp",
         "to": "translator-mcp"

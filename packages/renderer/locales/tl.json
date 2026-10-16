@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Inihahanda ang pag-export ng video…",
+    "downloadingVideoExportTools": "Dina-download ang mga tool sa pag-export ng video… {{percent}}%",
     "beginningReview": "Sinisimulan ang review...",
     "starting": "Nagsisimula...",
     "completed": "Tapos na",

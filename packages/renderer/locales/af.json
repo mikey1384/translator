@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Video-uitvoer word voorberei…",
+    "downloadingVideoExportTools": "Video-uitvoernutsmiddels word afgelaai… {{percent}}%",
     "beginningReview": "Begin hersiening...",
     "starting": "Begin...",
     "completed": "Voltooi",

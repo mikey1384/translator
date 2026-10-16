@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Se pregătește exportul video…",
+    "downloadingVideoExportTools": "Se descarcă instrumentele de export video… {{percent}}%",
     "beginningReview": "Se începe revizuirea...",
     "starting": "Pornire...",
     "completed": "Finalizat",

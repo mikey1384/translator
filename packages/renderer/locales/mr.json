@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "व्हिडिओ निर्यातीची तयारी सुरू आहे…",
+    "downloadingVideoExportTools": "व्हिडिओ निर्यातीची साधने डाउनलोड होत आहेत… {{percent}}%",
     "beginningReview": "पुनरावलोकन सुरू करत आहे...",
     "starting": "सुरू करत आहे...",
     "completed": "पूर्ण झाले",

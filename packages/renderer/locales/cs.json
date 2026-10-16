@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Příprava exportu videa…",
+    "downloadingVideoExportTools": "Stahování nástrojů pro export videa… {{percent}} %",
     "beginningReview": "Začíná kontrola...",
     "starting": "Spouštění...",
     "completed": "Dokončeno",

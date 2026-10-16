@@ -2363,6 +2363,17 @@ app
           log.warn('[main.ts] Download pipeline prewarm failed:', err)
         );
     }, 4_000);
+
+    // Keep the first window responsive. A render can join this same download.
+    if (app.isPackaged) {
+      setTimeout(() => {
+        import('./services/headless-chrome-installer.js')
+          .then(({ prefetchHeadlessChrome }) => prefetchHeadlessChrome())
+          .catch(err =>
+            log.warn('[main.ts] Video export tools prefetch deferred:', err)
+          );
+      }, 10_000).unref();
+    }
   })
   .catch(error => {
     recordCriticalFailure('startup_initialization_failed');

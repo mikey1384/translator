@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Подготовка экспорта видео…",
+    "downloadingVideoExportTools": "Загрузка инструментов экспорта видео… {{percent}}%",
     "beginningReview": "Начало проверки...",
     "starting": "Запуск...",
     "completed": "Готово",

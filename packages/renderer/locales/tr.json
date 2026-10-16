@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Video dışa aktarma hazırlanıyor…",
+    "downloadingVideoExportTools": "Video dışa aktarma araçları indiriliyor… {{percent}}%",
     "beginningReview": "İnceleme başlıyor...",
     "starting": "Başlıyor...",
     "completed": "Tamamlandı",

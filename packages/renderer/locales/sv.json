@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Förbereder videoexport…",
+    "downloadingVideoExportTools": "Laddar ned verktyg för videoexport… {{percent}} %",
     "beginningReview": "Påbörjar granskning...",
     "starting": "Startar...",
     "completed": "Slutförd",

@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Forbereder videoeksport…",
+    "downloadingVideoExportTools": "Downloader værktøjer til videoeksport… {{percent}} %",
     "beginningReview": "Starter gennemgang...",
     "starting": "Starter...",
     "completed": "Fuldført",

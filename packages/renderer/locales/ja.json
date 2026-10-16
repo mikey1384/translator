@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "動画の書き出しを準備中…",
+    "downloadingVideoExportTools": "動画書き出しツールをダウンロード中… {{percent}}%",
     "beginningReview": "レビューを開始しています...",
     "starting": "開始中...",
     "completed": "完了",

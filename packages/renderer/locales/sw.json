@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Inaandaa uhamishaji wa video…",
+    "downloadingVideoExportTools": "Inapakua zana za uhamishaji wa video… {{percent}}%",
     "beginningReview": "Inaanza uhakiki...",
     "starting": "Inaanza...",
     "completed": "Imekamilika",

@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Video-export voorbereiden…",
+    "downloadingVideoExportTools": "Hulpmiddelen voor video-export downloaden… {{percent}}%",
     "beginningReview": "Beoordeling starten...",
     "starting": "Starten...",
     "completed": "Voltooid",

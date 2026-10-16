@@ -1,0 +1,21 @@
+{
+  "buildId": "151.0.7922.77",
+  "baseUrl": "https://downloads.stage5.tools/chrome-for-testing",
+  "archives": {
+    "mac_arm": {
+      "path": "151.0.7922.77/mac-arm64/chrome-headless-shell-mac-arm64.zip",
+      "sha256": "44a2ab4206fc5d5d33974adbc3fd2a80966e7a88167914794f524fa29a3d8e8e",
+      "size": 98976279
+    },
+    "mac": {
+      "path": "151.0.7922.77/mac-x64/chrome-headless-shell-mac-x64.zip",
+      "sha256": "49a638c1cdc5c58f8f5df976e9845239237f2dd3feabd0945db2cd5ef9fd1de2",
+      "size": 103781870
+    },
+    "win64": {
+      "path": "151.0.7922.77/win64/chrome-headless-shell-win64.zip",
+      "sha256": "24f22654f82abd4ff7defce511ae84ebcd7a6c4845aefa516e0c53e3af615ecd",
+      "size": 120099925
+    }
+  }
+}

@@ -1109,6 +1109,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "동영상 내보내기 준비 중…",
+    "downloadingVideoExportTools": "동영상 내보내기 도구 다운로드 중… {{percent}}%",
     "beginningReview": "리뷰 시작 중...",
     "starting": "시작 중...",
     "completed": "완료",

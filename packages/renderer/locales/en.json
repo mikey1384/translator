@@ -1110,6 +1110,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Preparing video export…",
+    "downloadingVideoExportTools": "Downloading video export tools… {{percent}}%",
     "beginningReview": "Beginning review...",
     "starting": "Starting...",
     "completed": "Completed",

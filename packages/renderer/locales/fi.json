@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Valmistellaan videon vientiä…",
+    "downloadingVideoExportTools": "Ladataan videon vientityökaluja… {{percent}} %",
     "beginningReview": "Aloitetaan tarkistus...",
     "starting": "Aloitetaan...",
     "completed": "Valmis",

@@ -439,6 +439,21 @@ export function initializeRenderWindowHandlers({
           fontRegular,
           fontSizePx: options.fontSizePx,
           stylePreset: options.stylePreset,
+          signal: controller.signal,
+          onPreparationProgress: progress => {
+            if (controller.signal.aborted || progress.stage === 'ready') return;
+            const percent = Math.min(
+              100,
+              Math.floor(
+                (100 * progress.downloadedBytes) /
+                  Math.max(1, progress.totalBytes)
+              )
+            );
+            sendProgress({
+              percent: 0,
+              stage: `render-tools:${progress.stage}:${percent}`,
+            });
+          },
         });
         browser = br;
         activeRenderJobs.get(operationId)!.browser = browser;

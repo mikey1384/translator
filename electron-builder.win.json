@@ -2,6 +2,7 @@
   "extends": "./electron-builder.base.json",
   "buildDependenciesFromSource": true,
   "npmRebuild": true,
+  "compression": "maximum",
   "artifactName": "Translator-${version}-win32-${arch}.${ext}",
   "win": {
     "publish": [
@@ -11,7 +12,6 @@
       }
     ],
     "extraResources": [
-      { "from": "vendor/headless-x64", "to": "headless-x64" },
       {
         "from": "packages/agent-server/bin/translator-mcp.cmd",
         "to": "translator-mcp.cmd"

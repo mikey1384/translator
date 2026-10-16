@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Menyediakan eksport video…",
+    "downloadingVideoExportTools": "Memuat turun alat eksport video… {{percent}}%",
     "beginningReview": "Memulakan semakan...",
     "starting": "Memulakan...",
     "completed": "Selesai",

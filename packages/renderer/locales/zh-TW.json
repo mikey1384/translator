@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "正在準備匯出影片…",
+    "downloadingVideoExportTools": "正在下載影片匯出工具… {{percent}}%",
     "beginningReview": "開始審閱...",
     "starting": "開始中...",
     "completed": "已完成",

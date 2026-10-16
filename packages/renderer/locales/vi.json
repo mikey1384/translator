@@ -1092,6 +1092,8 @@
     }
   },
   "progress": {
+    "preparingVideoExport": "Đang chuẩn bị xuất video…",
+    "downloadingVideoExportTools": "Đang tải công cụ xuất video… {{percent}}%",
     "beginningReview": "Bắt đầu rà soát...",
     "starting": "Đang bắt đầu...",
     "completed": "Hoàn tất",

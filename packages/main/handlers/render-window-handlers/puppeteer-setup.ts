@@ -6,6 +6,7 @@ import type { Browser, Page } from 'puppeteer-core';
 import { app } from 'electron';
 import log from 'electron-log';
 import { getHeadlessChromePath } from '../../services/headless-chrome-installer.js';
+import type { HeadlessChromeProgress } from '../../services/headless-chrome-installer.js';
 import { assertSubtitleRenderFontReadable } from '../../utils/subtitle-render-font.js';
 
 /* ───────── helpers ───────── */
@@ -45,6 +46,8 @@ export async function initPuppeteer({
   fontRegular,
   fontSizePx: _fontSizePx, // Reserved for future use
   stylePreset,
+  signal,
+  onPreparationProgress,
 }: {
   operationId: string;
   videoWidth: number;
@@ -52,6 +55,8 @@ export async function initPuppeteer({
   fontRegular: string;
   fontSizePx?: number;
   stylePreset?: unknown;
+  signal?: AbortSignal;
+  onPreparationProgress?: (progress: HeadlessChromeProgress) => void;
 }): Promise<{ browser: Browser; page: Page }> {
   const hostHtml = getRenderHostPath();
   const hostUrl = url.pathToFileURL(hostHtml).toString();
@@ -75,7 +80,11 @@ export async function initPuppeteer({
     ? await import('puppeteer')
     : await import('puppeteer-core');
 
-  const executablePath = await getHeadlessChromePath();
+  const executablePath = await getHeadlessChromePath({
+    signal,
+    onProgress: onPreparationProgress,
+  });
+  signal?.throwIfAborted();
   // ----------------------------------------------------------------------
 
   if (executablePath)
@@ -98,6 +107,11 @@ export async function initPuppeteer({
       '--disable-web-security',
     ],
   })) as Browser;
+
+  if (signal?.aborted) {
+    await browser.close();
+    signal.throwIfAborted();
+  }
 
   const page = (await browser.newPage()) as Page;
   page.on('console', msg =>
