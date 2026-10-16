@@ -17,63 +17,63 @@ export const breakpoints = {
   desktopMaxWidth: '1200px',
 };
 
-// Colors system
+// Colors system: cinema subtitle yellow on warm black (2026-10 redesign).
 export const colors = {
-  primary: '#7da7ff',
-  primaryLight: '#abc8ff',
-  primaryDark: '#5d83de',
-  secondary: '#62d0c4',
-  success: '#39c887',
-  info: '#57b6da',
-  warning: '#f0b44b',
-  danger: '#ff6d72',
-  text: '#edf2fb',
-  textDim: '#9aa8bd',
-  surface: '#141b26',
-  surfaceRaised: '#192231',
-  surfaceSoft: '#101723',
-  bg: '#090d14',
-  gray: '#7f8ca3',
-  grayLight: '#1b2432',
-  grayMedium: '#4f5f78',
-  grayDark: '#d7e0ee',
-  muted: '#b6c1d2',
-  border: 'rgba(150, 165, 191, 0.18)',
-  borderStrong: 'rgba(167, 183, 210, 0.3)',
-  overlay: 'rgba(6, 10, 17, 0.72)',
+  primary: '#FFD84D',
+  primaryLight: '#FFE680',
+  primaryDark: '#E8BE2A',
+  // Text and icons drawn on a primary (yellow) fill.
+  onPrimary: '#17140A',
+  secondary: '#7BE0A5',
+  success: '#7BE0A5',
+  info: '#9DBBFF',
+  warning: '#FFB547',
+  danger: '#FF7A6B',
+  text: '#F4F1EA',
+  textDim: '#A39FAD',
+  surface: '#19171F',
+  surfaceRaised: '#201D27',
+  surfaceSoft: '#15131A',
+  bg: '#0F0E13',
+  gray: '#8C8796',
+  grayLight: '#1C1A22',
+  grayMedium: '#4A4553',
+  grayDark: '#E2DED6',
+  muted: '#C9C4CE',
+  border: 'rgba(244, 241, 234, 0.10)',
+  borderStrong: 'rgba(244, 241, 234, 0.18)',
+  overlay: 'rgba(8, 7, 11, 0.76)',
   // Progress bars
-  progressDownload: '#FCBF49',
-  progressMerge: '#F7559A',
-  progressTranslate: '#5876F5',
-  progressDub: '#FF8C42',
+  progressDownload: '#FFB547',
+  progressMerge: '#FF7AB6',
+  progressTranslate: '#FFD84D',
+  progressDub: '#FF9466',
+};
+
+// Typefaces bundled in assets/fonts (OFL); see index.tsx for @font-face.
+export const fonts = {
+  display:
+    "'Bricolage Grotesque', 'Pretendard Variable', system-ui, sans-serif",
+  body: "'Instrument Sans', 'Pretendard Variable', 'Noto Sans', system-ui, sans-serif",
+  mono: "ui-monospace, 'SF Mono', Menlo, monospace",
 };
 
 export const gradients = {
-  page: `
-    radial-gradient(circle at top left, rgba(125, 167, 255, 0.18), transparent 32%),
-    radial-gradient(circle at top right, rgba(98, 208, 196, 0.08), transparent 26%),
-    linear-gradient(180deg, #0b1019 0%, ${colors.bg} 100%)
-  `,
-  surface: `
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-    ${colors.grayLight}
-  `,
-  surfaceRaised: `
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
-    ${colors.surface}
-  `,
+  page: colors.bg,
+  surface: colors.grayLight,
+  surfaceRaised: colors.surface,
 };
 
 export const shadows = {
   sm: tokenShadows.sm,
   md: tokenShadows.md,
-  lg: '0 12px 28px rgba(4, 9, 18, 0.22)',
-  xl: '0 18px 36px rgba(4, 9, 18, 0.28)',
-  inner: 'inset 0 1px 0 rgba(255, 255, 255, 0.04)',
-  button: '0 10px 22px rgba(13, 28, 56, 0.26)',
-  buttonHover: '0 16px 32px rgba(13, 28, 56, 0.32)',
-  section: '0 10px 24px rgba(5, 10, 19, 0.2)',
-  sectionHover: '0 14px 28px rgba(5, 10, 19, 0.24)',
+  lg: '0 12px 28px rgba(0, 0, 0, 0.32)',
+  xl: '0 18px 36px rgba(0, 0, 0, 0.4)',
+  inner: 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+  button: '0 8px 20px rgba(0, 0, 0, 0.28)',
+  buttonHover: '0 12px 26px rgba(0, 0, 0, 0.34)',
+  section: '0 10px 24px rgba(0, 0, 0, 0.24)',
+  sectionHover: '0 14px 28px rgba(0, 0, 0, 0.3)',
 };
 
 // Form input styles - Dark Theme
@@ -100,7 +100,7 @@ export const inputStyles = css`
     border-color: ${colors.primaryLight};
     box-shadow:
       ${shadows.sm},
-      0 0 0 3px rgba(125, 167, 255, 0.16);
+      0 0 0 3px rgba(255, 216, 77, 0.16);
   }
 
   &::placeholder {
@@ -193,7 +193,7 @@ export const containerStyles = css`
 export const videoContainerStyles = css`
   position: relative;
   z-index: 1;
-  background-color: rgba(30, 30, 30, 0.9);
+  background-color: rgba(25, 23, 31, 0.9);
   padding: 15px;
   border-radius: 8px;
   border: 1px solid ${colors.border};
@@ -218,6 +218,7 @@ export const videoContainerStyles = css`
 
 // Title Styles - Dark Theme
 export const titleStyles = css`
+  font-family: ${fonts.display};
   font-size: clamp(2.25rem, 4vw, 3.35rem);
   color: ${colors.text};
   margin-bottom: ${spacing.xl};
@@ -257,6 +258,7 @@ export const sectionStyles = css`
 `;
 
 export const sectionTitleStyles = css`
+  font-family: ${fonts.display};
   font-size: clamp(1.25rem, 2vw, 1.6rem);
   font-weight: ${fontWeight.semibold};
   color: ${colors.text};
@@ -285,8 +287,8 @@ export const shellEyebrowStyles = css`
   gap: ${spacing.sm};
   padding: ${spacing.xs} ${spacing.md};
   border-radius: ${borderRadius.full};
-  border: 1px solid rgba(125, 167, 255, 0.22);
-  background: rgba(125, 167, 255, 0.08);
+  border: 1px solid rgba(255, 216, 77, 0.22);
+  background: rgba(255, 216, 77, 0.08);
   color: ${colors.primaryLight};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
@@ -295,6 +297,7 @@ export const shellEyebrowStyles = css`
 `;
 
 export const shellTitleStyles = css`
+  font-family: ${fonts.display};
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: ${fontWeight.bold};
   line-height: 1.02;
@@ -552,7 +555,7 @@ export const statusLoadingStyles = css`
   margin-left: 12px;
   vertical-align: middle;
   border: 1px solid ${colors.gray};
-  background-color: rgba(138, 138, 138, 0.1);
+  background-color: rgba(140, 135, 150, 0.1);
   color: ${colors.gray};
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -596,123 +599,84 @@ export const linkStyles = css`
   }
 `;
 
+// Solid fills from the palette; all fills are light, so text is onPrimary.
 export const buttonGradientStyles = {
   base: css`
     position: relative;
-    font-weight: 500;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition:
       box-shadow 0.15s ease,
       background-color 0.15s ease,
       border-color 0.15s ease;
-    color: white !important;
 
     &:hover:not(:disabled) {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      color: white !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
     }
 
     &:active:not(:disabled) {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      color: white !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     &:disabled {
-      opacity: 0.65;
+      opacity: 0.55;
       cursor: not-allowed;
-      color: rgba(255, 255, 255, 0.9) !important;
     }
   `,
   primary: css`
-    background: linear-gradient(
-      135deg,
-      rgba(0, 123, 255, 0.9),
-      rgba(0, 80, 188, 0.9)
-    ) !important;
+    background: ${colors.primary} !important;
+    color: ${colors.onPrimary} !important;
 
     &:hover:not(:disabled) {
-      background: linear-gradient(
-        135deg,
-        rgba(0, 143, 255, 0.95),
-        rgba(0, 103, 204, 0.95)
-      ) !important;
+      background: ${colors.primaryLight} !important;
+      color: ${colors.onPrimary} !important;
     }
 
     &:disabled {
-      background: linear-gradient(
-        135deg,
-        rgba(0, 123, 255, 0.6),
-        rgba(0, 80, 188, 0.6)
-      ) !important;
+      background: ${colors.primary} !important;
+      color: ${colors.onPrimary} !important;
     }
   `,
   success: css`
-    background: linear-gradient(
-      135deg,
-      rgba(40, 167, 69, 0.9),
-      rgba(30, 126, 52, 0.9)
-    ) !important;
+    background: ${colors.success} !important;
+    color: ${colors.onPrimary} !important;
 
     &:hover:not(:disabled) {
-      background: linear-gradient(
-        135deg,
-        rgba(50, 187, 79, 0.95),
-        rgba(40, 146, 62, 0.95)
-      ) !important;
+      background: #9bebbd !important;
+      color: ${colors.onPrimary} !important;
     }
 
     &:disabled {
-      background: linear-gradient(
-        135deg,
-        rgba(40, 167, 69, 0.6),
-        rgba(30, 126, 52, 0.6)
-      ) !important;
+      background: ${colors.success} !important;
+      color: ${colors.onPrimary} !important;
     }
   `,
   danger: css`
-    background: linear-gradient(
-      135deg,
-      rgba(220, 53, 69, 0.9),
-      rgba(189, 33, 48, 0.9)
-    ) !important;
+    background: ${colors.danger} !important;
+    color: ${colors.onPrimary} !important;
 
     &:hover:not(:disabled) {
-      background: linear-gradient(
-        135deg,
-        rgba(240, 73, 89, 0.95),
-        rgba(209, 53, 68, 0.95)
-      ) !important;
+      background: #ff968a !important;
+      color: ${colors.onPrimary} !important;
     }
 
     &:disabled {
-      background: linear-gradient(
-        135deg,
-        rgba(220, 53, 69, 0.6),
-        rgba(189, 33, 48, 0.6)
-      ) !important;
+      background: ${colors.danger} !important;
+      color: ${colors.onPrimary} !important;
     }
   `,
   purple: css`
-    background: linear-gradient(
-      135deg,
-      rgba(130, 71, 229, 0.9),
-      rgba(91, 31, 193, 0.9)
-    ) !important;
+    background: ${colors.progressMerge} !important;
+    color: ${colors.onPrimary} !important;
 
     &:hover:not(:disabled) {
-      background: linear-gradient(
-        135deg,
-        rgba(150, 91, 249, 0.95),
-        rgba(111, 51, 213, 0.95)
-      ) !important;
+      background: #ff9bc9 !important;
+      color: ${colors.onPrimary} !important;
     }
 
     &:disabled {
-      background: linear-gradient(
-        135deg,
-        rgba(130, 71, 229, 0.6),
-        rgba(91, 31, 193, 0.6)
-      ) !important;
+      background: ${colors.progressMerge} !important;
+      color: ${colors.onPrimary} !important;
     }
   `,
 };
@@ -726,11 +690,9 @@ export const mergeButtonStyles = css`
 export const subtleAccentButton = css`
   position: relative;
   color: ${colors.text} !important;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.12)),
-    rgba(28, 28, 28, 0.85);
-  /* Always show a faint blue edge */
-  border: 1px solid ${colors.primary}2A; /* subtle blue trace */
+  background: ${colors.surfaceRaised};
+  /* A faint accent edge */
+  border: 1px solid ${colors.primary}2A;
   border-radius: 10px;
   padding: 10px 16px;
   box-shadow:

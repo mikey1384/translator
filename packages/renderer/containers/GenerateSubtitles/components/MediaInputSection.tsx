@@ -91,7 +91,7 @@ const autoRunSegmentStyles = (active: boolean) => css`
   cursor: pointer;
   white-space: nowrap;
   color: ${active ? colors.text : colors.textDim};
-  background: ${active ? 'rgba(125, 167, 255, 0.16)' : 'transparent'};
+  background: ${active ? 'rgba(255, 216, 77, 0.16)' : 'transparent'};
   transition:
     background-color 120ms ease,
     color 120ms ease;
@@ -99,7 +99,7 @@ const autoRunSegmentStyles = (active: boolean) => css`
   &:hover:not(:disabled) {
     color: ${colors.text};
     background: ${active
-      ? 'rgba(125, 167, 255, 0.22)'
+      ? 'rgba(255, 216, 77, 0.22)'
       : 'rgba(255, 255, 255, 0.06)'};
   }
 
@@ -156,13 +156,9 @@ const optionCardStyles = css`
 
   &:hover {
     border-color: ${colors.primary};
-    background: linear-gradient(
-      180deg,
-      rgba(125, 167, 255, 0.05),
-      rgba(255, 255, 255, 0.01)
-    );
+    background: rgba(255, 216, 77, 0.05);
     box-shadow:
-      0 0 0 1px rgba(125, 167, 255, 0.16),
+      0 0 0 1px rgba(255, 216, 77, 0.16),
       0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
@@ -208,7 +204,7 @@ const iconPlaceholderStyles = css`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: ${colors.onPrimary};
 
   & > svg {
     width: 18px;
@@ -283,7 +279,7 @@ const recentItemButtonStyles = css`
 
   &:hover:not(:disabled) {
     border-color: ${colors.primary};
-    background: rgba(125, 167, 255, 0.08);
+    background: rgba(255, 216, 77, 0.08);
   }
 
   &:disabled {

@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "اختر موقعًا آخر",
     "continue": "متابعة",
     "send": "إرسال",
-    "dismiss": "إغلاق"
+    "dismiss": "إغلاق",
+    "moreActions": "إجراءات أخرى"
   },
   "errors": {
     "needCookies": "طلب YouTube التحقق البشري. انقر على اتصال للمتابعة.",
@@ -873,7 +874,15 @@
     "notEnough": "نقاط غير كافية. يرجى شراء المزيد من النقاط للمتابعة.",
     "transcriptionMinutesShort": "{{minutes}} دقيقة من النسخ",
     "transcriptionTimeShort": "{{time}} من النسخ",
-    "costOfBalance": "{{cost}} من رصيدك البالغ {{balance}}"
+    "costOfBalance": "{{cost}} من رصيدك البالغ {{balance}}",
+    "pill": {
+      "freeBack": "تعود الدقائق المجانية في {{date}}",
+      "empty": "احصل على دقائق",
+      "freeThisMonth": "{{count}} دقيقة مجانية هذا الشهر",
+      "freeWelcome": "{{count}} دقيقة مجانية",
+      "minutes": "{{count}} دقيقة نسخ",
+      "title": "الأرصدة والخطط"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "حدث خطأ ما. أبلغ المطوّر لإصلاح سريع.",
     "preparingReport": "جارٍ إعداد حزمة التشخيص...",
     "reportContextWarning": "تعذر تحميل بعض سياق التشخيص. سيظل التقرير يتضمن تفاصيل من هذا التطبيق."
+  },
+  "home": {
+    "headline": "يمكن لأي فيديو أن يتحدث <lang>{{language}}</lang>.",
+    "stageLabel": "إضافة فيديو",
+    "linkLabel": "رابط الفيديو",
+    "linkPlaceholder": "الصق رابط فيديو",
+    "dropHere": "أفلته ليتحدث {{language}}",
+    "makeItSpeak": "اجعله يتحدث {{language}}",
+    "helper": "الصق رابطًا من YouTube أو TikTok أو Instagram أو X — أو أفلت ملف فيديو هنا",
+    "chooseFile": "اختر ملفًا",
+    "into": "إلى",
+    "dropNotMedia": "أفلت ملف فيديو أو صوت لترجمته.",
+    "dropOpenFailed": "تعذّر فتح هذا الملف.",
+    "downloadQuality": "جودة التنزيل",
+    "hideOptions": "إخفاء الخيارات",
+    "options": "الخيارات",
+    "editSrt": "تعديل ملف .srt موجود",
+    "burnSubtitles": "دمج الترجمة في فيديو",
+    "findLabel": "ابحث عن فيديو",
+    "findPlaceholder": "لا تعرف ماذا تشاهد؟ صِف ما تريد — مثلًا مدونات فيديو عن طعام الشارع الكوري",
+    "findButton": "ابحث عن فيديوهات",
+    "goHome": "الرئيسية",
+    "allLanguages": "كل اللغات ({{count}})",
+    "languagePickerTitle": "بأي لغة؟",
+    "languageSearchPlaceholder": "ابحث عن لغة — مثلًا العربية، 한국어، Deutsch",
+    "languageSearchLabel": "ابحث عن لغة",
+    "languageSearchEmpty": "لا توجد لغة مطابقة.",
+    "languagePickerCommon": "الشائعة",
+    "recent": "الأخيرة",
+    "seeAll": "عرض الكل",
+    "recentSubtitlesReady": "ترجمة {{language}} جاهزة",
+    "recentSubtitlesReadyGeneric": "الترجمة جاهزة",
+    "recentDownloaded": "تم التنزيل"
   }
 }

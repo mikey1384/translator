@@ -135,7 +135,7 @@ export default function HighlightEditorialEditor({
         <fieldset
           disabled={disabled || saving}
           style={{
-            border: '1px solid #555',
+            border: '1px solid #4a4553',
             borderRadius: 12,
             padding: 16,
             marginTop: 12,
@@ -152,7 +152,7 @@ export default function HighlightEditorialEditor({
               position: 'relative',
               width: 270,
               height: 480,
-              background: '#171717',
+              background: '#15131a',
               margin: '12px auto',
             }}
           >
@@ -300,7 +300,7 @@ export default function HighlightEditorialEditor({
               <div
                 key={i}
                 style={{
-                  borderTop: '1px solid #555',
+                  borderTop: '1px solid #4a4553',
                   padding: '12px 0',
                   display: 'grid',
                   gap: 6,

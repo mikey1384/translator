@@ -27,10 +27,7 @@ import DubbingProgressArea from '../components/ProgressAreas/DubbingProgressArea
 import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
 import Button from '../components/Button';
-import CreditWarningBanner from '../containers/GenerateSubtitles/components/CreditWarningBanner';
-import WelcomeCreditsHint from '../containers/GenerateSubtitles/components/WelcomeCreditsHint';
 import ErrorBanner from '../components/ErrorBanner';
-import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
 import { useAiStore } from '../state';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 
@@ -126,6 +123,20 @@ export default function AppContent() {
     };
   }, []);
 
+  // Files dropped outside a drop zone must not navigate the app to them;
+  // drop zones (home) handle their own events before this.
+  useEffect(() => {
+    const block = (event: DragEvent) => {
+      if (event.dataTransfer?.types?.includes('Files')) event.preventDefault();
+    };
+    window.addEventListener('dragover', block);
+    window.addEventListener('drop', block);
+    return () => {
+      window.removeEventListener('dragover', block);
+      window.removeEventListener('drop', block);
+    };
+  }, []);
+
   // Initialize BYO/OpenAI state at app load so pills reflect "Using API Key"
   useEffect(() => {
     try {
@@ -171,7 +182,6 @@ export default function AppContent() {
     s => s.reconcileRuntime
   );
   const download = useUrlStore(s => s.download);
-  const { showCreditWarning, showWelcomeHint } = useCreditSystem();
 
   // Keep the main-process target language in sync with the renderer choice.
   useEffect(() => {
@@ -413,20 +423,6 @@ export default function AppContent() {
               message={globalError}
               onClose={() => clearGlobalError()}
             />
-          </div>
-        )}
-
-        {showCreditWarning && (
-          <div style={{ marginBottom: '12px' }}>
-            <CreditWarningBanner
-              onSettingsClick={() => useUIStore.getState().toggleSettings(true)}
-            />
-          </div>
-        )}
-
-        {!showCreditWarning && showWelcomeHint && (
-          <div style={{ marginBottom: '12px' }}>
-            <WelcomeCreditsHint />
           </div>
         )}
 

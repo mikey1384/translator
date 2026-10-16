@@ -43,6 +43,9 @@ interface State {
   // Panel open states (session-only; not persisted)
   showGeneratePanel: boolean;
   showEditPanel: boolean;
+  // Home "Make it speak X" request, consumed by GenerateSubtitles, which owns
+  // the download → transcribe → translate chain (session-only).
+  homeRunRequest: HomeRunRequest | null;
   // Generate workspace tab (persisted)
   generateSubtitlesWorkspaceTab: GenerateSubtitlesWorkspaceTab;
   // Exclamation seen state (session-only; reset on video change)
@@ -54,6 +57,12 @@ interface State {
   previewDisplayHeightPx: number;
   previewVideoHeightPx: number;
 }
+
+export type HomeRunRequestInput =
+  | { kind: 'url'; url: string }
+  | { kind: 'mounted'; path: string };
+export type HomeRunRequest = HomeRunRequestInput & { id: number };
+let homeRunRequestSeq = 0;
 
 // Enable Set/Map support in Immer (used for seenGaps/seenLC)
 enableMapSet();
@@ -79,6 +88,8 @@ interface Actions {
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
+  requestHomeRun(request: HomeRunRequestInput): void;
+  clearHomeRunRequest(id: number): void;
   setEditPanelOpen(open: boolean): void;
   setGenerateSubtitlesWorkspaceTab(tab: GenerateSubtitlesWorkspaceTab): void;
   // Exclamation helpers (session-only)
@@ -248,6 +259,7 @@ const initial: State = {
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
     'Default',
   showGeneratePanel: false,
+  homeRunRequest: null,
   showEditPanel: false,
   generateSubtitlesWorkspaceTab: readGenerateSubtitlesWorkspaceTab(),
   seenGaps: new Set<string>(),
@@ -403,6 +415,18 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setGeneratePanelOpen(open) {
           set({ showGeneratePanel: open });
+        },
+
+        requestHomeRun(request) {
+          homeRunRequestSeq += 1;
+          set({
+            homeRunRequest: { ...request, id: homeRunRequestSeq },
+            showGeneratePanel: true,
+          });
+        },
+
+        clearHomeRunRequest(id) {
+          if (get().homeRunRequest?.id === id) set({ homeRunRequest: null });
         },
 
         setEditPanelOpen(open) {

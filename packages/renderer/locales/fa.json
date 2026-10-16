@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "مکان دیگری را انتخاب کنید",
     "continue": "ادامه",
     "send": "ارسال",
-    "dismiss": "بستن"
+    "dismiss": "بستن",
+    "moreActions": "کارهای بیشتر"
   },
   "errors": {
     "needCookies": "YouTube درخواست تأیید انسانی کرد. برای ادامه روی اتصال کلیک کنید.",
@@ -873,7 +874,15 @@
     "notEnough": "اعتبار ناکافی. لطفاً برای ادامه اعتبار بیشتری خریداری کنید.",
     "transcriptionMinutesShort": "{{minutes}} دقیقه رونویسی",
     "transcriptionTimeShort": "{{time}} رونویسی",
-    "costOfBalance": "{{cost}} از {{balance}} اعتبار شما"
+    "costOfBalance": "{{cost}} از {{balance}} اعتبار شما",
+    "pill": {
+      "freeBack": "دقیقه‌های رایگان در {{date}} برمی‌گردند",
+      "empty": "دریافت دقیقه",
+      "freeThisMonth": "{{count}} دقیقه رایگان این ماه",
+      "freeWelcome": "{{count}} دقیقه رایگان",
+      "minutes": "{{count}} دقیقه رونویسی",
+      "title": "اعتبار و طرح‌ها"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "مشکلی پیش آمد. برای رفع سریع به سازنده گزارش دهید.",
     "preparingReport": "در حال آماده‌سازی بستهٔ تشخیصی...",
     "reportContextWarning": "بارگیری بخشی از زمینهٔ عیب‌یابی ممکن نشد. گزارش همچنان جزئیات این برنامه را شامل می‌شود."
+  },
+  "home": {
+    "headline": "هر ویدیویی می‌تواند <lang>{{language}}</lang> حرف بزند.",
+    "stageLabel": "افزودن ویدیو",
+    "linkLabel": "پیوند ویدیو",
+    "linkPlaceholder": "پیوند ویدیو را بچسبانید",
+    "dropHere": "رها کنید تا {{language}} حرف بزند",
+    "makeItSpeak": "{{language}} حرف بزند",
+    "helper": "پیوندی از YouTube، TikTok، Instagram یا X بچسبانید — یا فایل ویدیو را اینجا رها کنید",
+    "chooseFile": "انتخاب فایل",
+    "into": "به",
+    "dropNotMedia": "برای ترجمه، فایل ویدیو یا صدا را رها کنید.",
+    "dropOpenFailed": "این فایل باز نشد.",
+    "downloadQuality": "کیفیت دانلود",
+    "hideOptions": "پنهان کردن گزینه‌ها",
+    "options": "گزینه‌ها",
+    "editSrt": "ویرایش یک ‎.srt موجود",
+    "burnSubtitles": "چسباندن زیرنویس روی ویدیو",
+    "findLabel": "یافتن ویدیو",
+    "findPlaceholder": "نمی‌دانید چه ببینید؟ توصیف کنید — مثلاً ولاگ غذای خیابانی کره‌ای",
+    "findButton": "یافتن ویدیوها",
+    "goHome": "خانه",
+    "allLanguages": "همه {{count}} زبان",
+    "languagePickerTitle": "به چه زبانی؟",
+    "languageSearchPlaceholder": "جست‌وجوی زبان — مثلاً عربی، 한국어، Deutsch",
+    "languageSearchLabel": "جست‌وجوی زبان",
+    "languageSearchEmpty": "زبانی پیدا نشد.",
+    "languagePickerCommon": "رایج",
+    "recent": "اخیر",
+    "seeAll": "دیدن همه",
+    "recentSubtitlesReady": "زیرنویس {{language}} آماده است",
+    "recentSubtitlesReadyGeneric": "زیرنویس آماده است",
+    "recentDownloaded": "دانلود شد"
   }
 }

@@ -25,9 +25,9 @@ type HighlightWorkflowProgressProps = {
 const shellStyles = css`
   margin-top: ${spacing.md};
   padding: ${spacing.lg};
-  border: 1px solid rgba(125, 167, 255, 0.26);
+  border: 1px solid rgba(255, 216, 77, 0.26);
   border-radius: ${borderRadius.xl};
-  background: rgba(20, 30, 46, 0.72);
+  background: rgba(32, 29, 39, 0.72);
   display: grid;
   gap: ${spacing.sm};
 `;

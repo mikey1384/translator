@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "کوئی اور مقام منتخب کریں",
     "continue": "جاری رکھیں",
     "send": "بھیجیں",
-    "dismiss": "بند کریں"
+    "dismiss": "بند کریں",
+    "moreActions": "مزید اقدامات"
   },
   "errors": {
     "needCookies": "YouTube نے انسانی تصدیق کی درخواست کی۔ جاری رکھنے کے لیے کنیکٹ پر کلک کریں۔",
@@ -873,7 +874,15 @@
     "notEnough": "ناکافی کریڈٹس۔ جاری رکھنے کے لیے براہ کرم مزید کریڈٹس خریدیں۔",
     "transcriptionMinutesShort": "{{minutes}} منٹ ٹرانسکرپشن",
     "transcriptionTimeShort": "{{time}} ٹرانسکرپشن",
-    "costOfBalance": "آپ کے {{balance}} کریڈٹس میں سے {{cost}}"
+    "costOfBalance": "آپ کے {{balance}} کریڈٹس میں سے {{cost}}",
+    "pill": {
+      "freeBack": "مفت منٹ {{date}} کو واپس آئیں گے",
+      "empty": "منٹ حاصل کریں",
+      "freeThisMonth": "اس مہینے {{count}} مفت منٹ",
+      "freeWelcome": "{{count}} مفت منٹ",
+      "minutes": "{{count}} منٹ ٹرانسکرپشن",
+      "title": "کریڈٹس اور پلان"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "کچھ غلط ہو گیا۔ فوری حل کے لیے تخلیق کار کو اطلاع دیں۔",
     "preparingReport": "تشخیصی بنڈل تیار کیا جا رہا ہے...",
     "reportContextWarning": "کچھ تشخیصی تناظر لوڈ نہیں ہو سکا۔ رپورٹ میں پھر بھی اس ایپ کی تفصیلات شامل ہوں گی۔"
+  },
+  "home": {
+    "headline": "ہر ویڈیو <lang>{{language}}</lang> بول سکتی ہے۔",
+    "stageLabel": "ویڈیو شامل کریں",
+    "linkLabel": "ویڈیو لنک",
+    "linkPlaceholder": "ویڈیو لنک پیسٹ کریں",
+    "dropHere": "چھوڑیں، یہ {{language}} بولے گی",
+    "makeItSpeak": "{{language}} میں بدلیں",
+    "helper": "YouTube، TikTok، Instagram یا X کا لنک پیسٹ کریں — یا ویڈیو فائل یہاں چھوڑیں",
+    "chooseFile": "فائل منتخب کریں",
+    "into": "زبان",
+    "dropNotMedia": "ترجمے کے لیے ویڈیو یا آڈیو فائل چھوڑیں۔",
+    "dropOpenFailed": "وہ فائل نہیں کھل سکی۔",
+    "downloadQuality": "ڈاؤن لوڈ کوالٹی",
+    "hideOptions": "اختیارات چھپائیں",
+    "options": "اختیارات",
+    "editSrt": "موجودہ .srt میں ترمیم کریں",
+    "burnSubtitles": "ویڈیو میں سب ٹائٹل شامل کریں",
+    "findLabel": "ویڈیو تلاش کریں",
+    "findPlaceholder": "سمجھ نہیں آ رہا کیا دیکھیں؟ بتائیں — مثلاً کورین اسٹریٹ فوڈ ولاگز",
+    "findButton": "ویڈیوز تلاش کریں",
+    "goHome": "ہوم",
+    "allLanguages": "تمام {{count}} زبانیں",
+    "languagePickerTitle": "کس زبان میں؟",
+    "languageSearchPlaceholder": "زبان تلاش کریں — مثلاً عربی، 한국어، Deutsch",
+    "languageSearchLabel": "زبان تلاش کریں",
+    "languageSearchEmpty": "کوئی زبان میل نہیں کھاتی۔",
+    "languagePickerCommon": "عام",
+    "recent": "حالیہ",
+    "seeAll": "سب دیکھیں",
+    "recentSubtitlesReady": "{{language}} سب ٹائٹل تیار",
+    "recentSubtitlesReadyGeneric": "سب ٹائٹل تیار",
+    "recentDownloaded": "ڈاؤن لوڈ ہو گیا"
   }
 }

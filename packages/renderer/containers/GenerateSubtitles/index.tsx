@@ -40,6 +40,8 @@ import type {
 // Custom hooks
 import { useVideoMetadata } from './hooks/useVideoMetadata';
 import { useCreditSystem } from './hooks/useCreditSystem';
+import CreditWarningBanner from './components/CreditWarningBanner';
+import WelcomeCreditsHint from './components/WelcomeCreditsHint';
 import { useTranscriptionBlocker } from './hooks/useTranscriptionBlocker';
 import { useTranscriptionCostPreview } from './hooks/useTranscriptionCostPreview';
 import useDownloadedVideoLibrary from './hooks/useDownloadedVideoLibrary.js';
@@ -112,9 +114,9 @@ const workspaceTabsRowStyles = css`
 const workspaceTabButtonStyles = (active: boolean, disabled = false) => css`
   padding: 0.72rem 1rem;
   border-radius: ${borderRadius.full};
-  border: 1px solid ${active ? 'rgba(125, 167, 255, 0.26)' : colors.border};
+  border: 1px solid ${active ? 'rgba(255, 216, 77, 0.26)' : colors.border};
   background: ${active
-    ? 'rgba(125, 167, 255, 0.14)'
+    ? 'rgba(255, 216, 77, 0.14)'
     : 'rgba(255, 255, 255, 0.03)'};
   color: ${active ? colors.text : colors.textDim};
   font-weight: ${active ? fontWeight.semibold : fontWeight.medium};
@@ -128,7 +130,7 @@ const workspaceTabButtonStyles = (active: boolean, disabled = false) => css`
   &:hover {
     border-color: ${disabled
       ? active
-        ? 'rgba(125, 167, 255, 0.26)'
+        ? 'rgba(255, 216, 77, 0.26)'
         : colors.border
       : colors.borderStrong};
     color: ${disabled ? (active ? colors.text : colors.textDim) : colors.text};
@@ -258,7 +260,8 @@ export default function GenerateSubtitles() {
     metadataErrorMessage,
     isMetadataPending,
   } = useVideoMetadata(videoFilePath);
-  const { isButtonDisabled } = useCreditSystem();
+  const { isButtonDisabled, showCreditWarning, showWelcomeHint } =
+    useCreditSystem();
   const transcriptionBlockedMessage = useTranscriptionBlocker();
   const transcriptionCostPreview = useTranscriptionCostPreview(durationSecs);
 
@@ -728,9 +731,11 @@ export default function GenerateSubtitles() {
   // download doesn't produce a mounted video, disarm + mark the session errored
   // so the effect never fires stale and the strip stops spinning.
   async function runDownloadWithAutoRun(
-    downloadFn: () => Promise<ProcessUrlResult | void>
+    downloadFn: () => Promise<ProcessUrlResult | void>,
+    override?: { target: AutoRunTarget; language: string }
   ) {
-    const target = autoRunTarget;
+    const target = override?.target ?? autoRunTarget;
+    const chainLanguage = override?.language ?? autoRunLanguage;
     // Bind to a source only after the download mounts (below). Until then the
     // continuation is unbound and cannot fire against whatever is currently
     // mounted, even if that source's metadata becomes ready mid-download.
@@ -740,7 +745,7 @@ export default function GenerateSubtitles() {
       setAutoRunSession(null);
     } else {
       if (target === 'translate') {
-        setPreTranscriptProcessingLanguage(autoRunLanguage);
+        setPreTranscriptProcessingLanguage(chainLanguage);
       }
       pendingAutoRunTargetRef.current = target;
       setAutoRunSession({ target, phase: 'downloading' });
@@ -784,6 +789,36 @@ export default function GenerateSubtitles() {
     if (isSourceChangeBlocked) return;
     await runDownloadWithAutoRun(() => downloadMedia());
   }
+
+  // Home "Make it speak X": the same chain as the auto-run option, always to
+  // translation, in the home screen's language. A URL downloads first; a file
+  // the home screen already mounted continues straight to transcription.
+  const homeRunRequest = useUIStore(s => s.homeRunRequest);
+  useEffect(() => {
+    if (!homeRunRequest) return;
+    const request = homeRunRequest;
+    const ui = useUIStore.getState();
+    ui.clearHomeRunRequest(request.id);
+    ui.setGenerateSubtitlesWorkspaceTab('main');
+    if (isSourceChangeBlocked) return;
+    const language = ui.targetLanguage;
+    setAutoRunLanguage(language);
+    if (request.kind === 'url') {
+      setUrlInput(request.url);
+      void runDownloadWithAutoRun(() => downloadMedia({ url: request.url }), {
+        target: 'translate',
+        language,
+      });
+      return;
+    }
+    setPreTranscriptProcessingLanguage(language);
+    pendingAutoRunTargetRef.current = 'translate';
+    setAutoRunSession({ target: 'translate', phase: 'transcribing' });
+    // Bound to the exact file the home screen mounted; the auto-run effect
+    // starts once that file's metadata is ready.
+    setAutoRunBoundSource(request.path);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeRunRequest]);
 
   function handleRemoveRecentMedia(path: string) {
     removeRecentLocalMedia(path);
@@ -831,6 +866,19 @@ export default function GenerateSubtitles() {
           display: activeWorkspaceTab === 'main' ? 'block' : 'none',
         }}
       >
+        {/* Credit context belongs where paid work starts, not on home. */}
+        {showCreditWarning ? (
+          <div style={{ marginBottom: '12px' }}>
+            <CreditWarningBanner
+              onSettingsClick={() => useUIStore.getState().toggleSettings(true)}
+            />
+          </div>
+        ) : showWelcomeHint ? (
+          <div style={{ marginBottom: '12px' }}>
+            <WelcomeCreditsHint />
+          </div>
+        ) : null}
+
         {autoRunSession ? (
           <AutoRunProgress
             target={autoRunSession.target}

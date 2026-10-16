@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Välj en annan plats",
     "continue": "Fortsätt",
     "send": "Skicka",
-    "dismiss": "Stäng"
+    "dismiss": "Stäng",
+    "moreActions": "Fler åtgärder"
   },
   "errors": {
     "needCookies": "YouTube begärde en mänsklig verifiering. Klicka på Anslut för att fortsätta.",
@@ -873,7 +874,15 @@
     "notEnough": "Otillräckliga krediter. Vänligen köp fler krediter för att fortsätta.",
     "transcriptionMinutesShort": "{{minutes}} min transkribering",
     "transcriptionTimeShort": "{{time}} transkribering",
-    "costOfBalance": "{{cost}} av dina {{balance}} krediter"
+    "costOfBalance": "{{cost}} av dina {{balance}} krediter",
+    "pill": {
+      "freeBack": "Gratisminuter tillbaka {{date}}",
+      "empty": "Skaffa minuter",
+      "freeThisMonth": "{{count}} gratis min den här månaden",
+      "freeWelcome": "{{count}} gratis min",
+      "minutes": "{{count}} min transkribering",
+      "title": "Krediter och abonnemang"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Något gick fel. Rapportera detta till skaparen för en snabb fix.",
     "preparingReport": "Förbereder diagnostikpaket...",
     "reportContextWarning": "Viss diagnostisk kontext kunde inte läsas in. Rapporten kommer fortfarande att innehålla detaljer från den här appen."
+  },
+  "home": {
+    "headline": "Varje video kan tala <lang>{{language}}</lang>.",
+    "stageLabel": "Lägg till video",
+    "linkLabel": "Videolänk",
+    "linkPlaceholder": "Klistra in en videolänk",
+    "dropHere": "Släpp den så talar den {{language}}",
+    "makeItSpeak": "Låt den tala {{language}}",
+    "helper": "Klistra in en länk från YouTube, TikTok, Instagram eller X – eller släpp en videofil här",
+    "chooseFile": "Välj fil",
+    "into": "Till",
+    "dropNotMedia": "Släpp en video- eller ljudfil för att översätta den.",
+    "dropOpenFailed": "Det gick inte att öppna filen.",
+    "downloadQuality": "Nedladdningskvalitet",
+    "hideOptions": "Dölj alternativ",
+    "options": "Alternativ",
+    "editSrt": "Redigera en befintlig .srt",
+    "burnSubtitles": "Bränn in undertexter i en video",
+    "findLabel": "Hitta en video",
+    "findPlaceholder": "Vet du inte vad du vill se? Beskriv det – t.ex. koreanska streetfood-vloggar",
+    "findButton": "Hitta videor",
+    "goHome": "Hem",
+    "allLanguages": "Alla {{count}} språk",
+    "languagePickerTitle": "Låt den tala…",
+    "languageSearchPlaceholder": "Sök språk – t.ex. arabiska, 한국어, Deutsch",
+    "languageSearchLabel": "Sök språk",
+    "languageSearchEmpty": "Inget språk matchar.",
+    "languagePickerCommon": "Vanliga",
+    "recent": "Senaste",
+    "seeAll": "Visa alla",
+    "recentSubtitlesReady": "Undertexter på {{language}} klara",
+    "recentSubtitlesReadyGeneric": "Undertexter klara",
+    "recentDownloaded": "Nedladdad"
   }
 }

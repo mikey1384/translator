@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Choose another location",
     "continue": "Continue",
     "send": "Send",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "moreActions": "More actions"
   },
   "errors": {
     "needCookies": "YouTube asked for a human check. Click Connect to continue.",
@@ -885,7 +886,15 @@
     "notEnough": "Insufficient credits. Please purchase more credits to continue.",
     "transcriptionMinutesShort": "{{minutes}} min of transcription",
     "transcriptionTimeShort": "{{time}} of transcription",
-    "costOfBalance": "{{cost}} of your {{balance}} credits"
+    "costOfBalance": "{{cost}} of your {{balance}} credits",
+    "pill": {
+      "freeBack": "Free minutes back on {{date}}",
+      "empty": "Get minutes",
+      "freeThisMonth": "{{count}} free min this month",
+      "freeWelcome": "{{count}} free min",
+      "minutes": "{{count}} min of transcription",
+      "title": "Credits and plans"
+    }
   },
   "cta": {
     "generate": {
@@ -1155,5 +1164,38 @@
     "reportPrompt": "Something went wrong. Report this to the creator for a quick fix.",
     "preparingReport": "Preparing diagnostic bundle...",
     "reportContextWarning": "Some diagnostic context could not be loaded. The report will still include details from this app."
+  },
+  "home": {
+    "headline": "Every video can speak <lang>{{language}}</lang>.",
+    "stageLabel": "Add a video",
+    "linkLabel": "Video link",
+    "linkPlaceholder": "Paste a video link",
+    "dropHere": "Drop it to make it speak {{language}}",
+    "makeItSpeak": "Make it speak {{language}}",
+    "helper": "Paste a link from YouTube, TikTok, Instagram or X — or drop a video file here",
+    "chooseFile": "Choose file",
+    "into": "Into",
+    "dropNotMedia": "Drop a video or audio file to translate it.",
+    "dropOpenFailed": "That file could not be opened.",
+    "downloadQuality": "Download quality",
+    "hideOptions": "Hide options",
+    "options": "Options",
+    "editSrt": "Edit an existing .srt",
+    "burnSubtitles": "Burn subtitles into a video",
+    "findLabel": "Find a video",
+    "findPlaceholder": "Not sure what to watch? Describe it — e.g. Korean street food vlogs",
+    "findButton": "Find videos",
+    "goHome": "Home",
+    "allLanguages": "All {{count}} languages",
+    "languagePickerTitle": "Make it speak…",
+    "languageSearchPlaceholder": "Search languages — e.g. Arabic, 한국어, Deutsch",
+    "languageSearchLabel": "Search languages",
+    "languageSearchEmpty": "No language matches that.",
+    "languagePickerCommon": "Common",
+    "recent": "Recent",
+    "seeAll": "See all",
+    "recentSubtitlesReady": "{{language}} subtitles ready",
+    "recentSubtitlesReadyGeneric": "Subtitles ready",
+    "recentDownloaded": "Downloaded"
   }
 }

@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Wybierz inną lokalizację",
     "continue": "Kontynuuj",
     "send": "Wyślij",
-    "dismiss": "Zamknij"
+    "dismiss": "Zamknij",
+    "moreActions": "Więcej działań"
   },
   "errors": {
     "needCookies": "YouTube poprosił o weryfikację człowieka. Kliknij Połącz, aby kontynuować.",
@@ -873,7 +874,15 @@
     "notEnough": "Niewystarczające kredyty. Kup więcej kredytów, aby kontynuować.",
     "transcriptionMinutesShort": "{{minutes}} min transkrypcji",
     "transcriptionTimeShort": "{{time}} transkrypcji",
-    "costOfBalance": "{{cost}} z Twoich {{balance}} kredytów"
+    "costOfBalance": "{{cost}} z Twoich {{balance}} kredytów",
+    "pill": {
+      "freeBack": "Darmowe minuty wrócą {{date}}",
+      "empty": "Zdobądź minuty",
+      "freeThisMonth": "{{count}} darmowych min w tym miesiącu",
+      "freeWelcome": "{{count}} darmowych min",
+      "minutes": "{{count}} min transkrypcji",
+      "title": "Kredyty i plany"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Coś poszło nie tak. Zgłoś to twórcy, aby szybko naprawić problem.",
     "preparingReport": "Przygotowywanie pakietu diagnostycznego...",
     "reportContextWarning": "Nie udało się wczytać części kontekstu diagnostycznego. Raport nadal będzie zawierał szczegóły z tej aplikacji."
+  },
+  "home": {
+    "headline": "Każde wideo może mówić po <lang>{{language}}</lang>.",
+    "stageLabel": "Dodaj wideo",
+    "linkLabel": "Link do wideo",
+    "linkPlaceholder": "Wklej link do wideo",
+    "dropHere": "Upuść, aby mówiło po {{language}}",
+    "makeItSpeak": "Niech mówi po {{language}}",
+    "helper": "Wklej link z YouTube, TikTok, Instagrama lub X — albo upuść tu plik wideo",
+    "chooseFile": "Wybierz plik",
+    "into": "Na",
+    "dropNotMedia": "Upuść plik wideo lub audio, aby go przetłumaczyć.",
+    "dropOpenFailed": "Nie udało się otworzyć tego pliku.",
+    "downloadQuality": "Jakość pobierania",
+    "hideOptions": "Ukryj opcje",
+    "options": "Opcje",
+    "editSrt": "Edytuj istniejący plik .srt",
+    "burnSubtitles": "Wypal napisy w wideo",
+    "findLabel": "Znajdź wideo",
+    "findPlaceholder": "Nie wiesz, co obejrzeć? Opisz to — np. vlogi o koreańskim street foodzie",
+    "findButton": "Znajdź filmy",
+    "goHome": "Start",
+    "allLanguages": "Wszystkie języki ({{count}})",
+    "languagePickerTitle": "Niech mówi po…",
+    "languageSearchPlaceholder": "Szukaj języka — np. arabski, 한국어, Deutsch",
+    "languageSearchLabel": "Szukaj języka",
+    "languageSearchEmpty": "Żaden język nie pasuje.",
+    "languagePickerCommon": "Popularne",
+    "recent": "Ostatnie",
+    "seeAll": "Zobacz wszystko",
+    "recentSubtitlesReady": "Napisy ({{language}}) gotowe",
+    "recentSubtitlesReadyGeneric": "Napisy gotowe",
+    "recentDownloaded": "Pobrano"
   }
 }

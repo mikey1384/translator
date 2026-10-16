@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Επιλέξτε άλλη τοποθεσία",
     "continue": "Συνέχεια",
     "send": "Αποστολή",
-    "dismiss": "Κλείσιμο"
+    "dismiss": "Κλείσιμο",
+    "moreActions": "Περισσότερες ενέργειες"
   },
   "errors": {
     "needCookies": "Το YouTube ζήτησε επαλήθευση ανθρώπου. Κάντε κλικ στο Σύνδεση για να συνεχίσετε.",
@@ -873,7 +874,15 @@
     "notEnough": "Ανεπαρκείς πιστώσεις. Παρακαλώ αγοράστε περισσότερες πιστώσεις για να συνεχίσετε.",
     "transcriptionMinutesShort": "{{minutes}} λεπτά μεταγραφής",
     "transcriptionTimeShort": "{{time}} μεταγραφής",
-    "costOfBalance": "{{cost}} από τις {{balance}} πιστώσεις σας"
+    "costOfBalance": "{{cost}} από τις {{balance}} πιστώσεις σας",
+    "pill": {
+      "freeBack": "Τα δωρεάν λεπτά επιστρέφουν στις {{date}}",
+      "empty": "Απόκτηση λεπτών",
+      "freeThisMonth": "{{count}} δωρεάν λεπτά αυτόν τον μήνα",
+      "freeWelcome": "{{count}} δωρεάν λεπτά",
+      "minutes": "{{count}} λεπτά απομαγνητοφώνησης",
+      "title": "Μονάδες και πακέτα"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Κάτι πήγε στραβά. Αναφέρετέ το στον δημιουργό για γρήγορη επιδιόρθωση.",
     "preparingReport": "Προετοιμασία διαγνωστικού πακέτου...",
     "reportContextWarning": "Δεν ήταν δυνατή η φόρτωση μέρους του διαγνωστικού πλαισίου. Η αναφορά θα περιλαμβάνει και πάλι λεπτομέρειες από αυτή την εφαρμογή."
+  },
+  "home": {
+    "headline": "Κάθε βίντεο μπορεί να μιλήσει <lang>{{language}}</lang>.",
+    "stageLabel": "Προσθήκη βίντεο",
+    "linkLabel": "Σύνδεσμος βίντεο",
+    "linkPlaceholder": "Επικολλήστε έναν σύνδεσμο βίντεο",
+    "dropHere": "Αφήστε το για να μιλήσει {{language}}",
+    "makeItSpeak": "Να μιλήσει {{language}}",
+    "helper": "Επικολλήστε σύνδεσμο από YouTube, TikTok, Instagram ή X — ή αφήστε εδώ ένα αρχείο βίντεο",
+    "chooseFile": "Επιλογή αρχείου",
+    "into": "Σε",
+    "dropNotMedia": "Αφήστε ένα αρχείο βίντεο ή ήχου για μετάφραση.",
+    "dropOpenFailed": "Δεν ήταν δυνατό να ανοίξει το αρχείο.",
+    "downloadQuality": "Ποιότητα λήψης",
+    "hideOptions": "Απόκρυψη επιλογών",
+    "options": "Επιλογές",
+    "editSrt": "Επεξεργασία υπάρχοντος .srt",
+    "burnSubtitles": "Ενσωμάτωση υποτίτλων σε βίντεο",
+    "findLabel": "Εύρεση βίντεο",
+    "findPlaceholder": "Δεν ξέρετε τι να δείτε; Περιγράψτε το — π.χ. vlogs με κορεατικό street food",
+    "findButton": "Εύρεση βίντεο",
+    "goHome": "Αρχική",
+    "allLanguages": "Όλες οι {{count}} γλώσσες",
+    "languagePickerTitle": "Σε ποια γλώσσα;",
+    "languageSearchPlaceholder": "Αναζήτηση γλώσσας — π.χ. αραβικά, 한국어, Deutsch",
+    "languageSearchLabel": "Αναζήτηση γλώσσας",
+    "languageSearchEmpty": "Καμία γλώσσα δεν ταιριάζει.",
+    "languagePickerCommon": "Συνήθεις",
+    "recent": "Πρόσφατα",
+    "seeAll": "Προβολή όλων",
+    "recentSubtitlesReady": "Οι υπότιτλοι ({{language}}) είναι έτοιμοι",
+    "recentSubtitlesReadyGeneric": "Οι υπότιτλοι είναι έτοιμοι",
+    "recentDownloaded": "Λήφθηκε"
   }
 }

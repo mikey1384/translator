@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Vybrat jiné umístění",
     "continue": "Pokračovat",
     "send": "Odeslat",
-    "dismiss": "Zavřít"
+    "dismiss": "Zavřít",
+    "moreActions": "Další akce"
   },
   "errors": {
     "needCookies": "YouTube požádal o ověření člověka. Klikněte na Připojit pro pokračování.",
@@ -873,7 +874,15 @@
     "notEnough": "Nedostatek kreditů. Prosím zakupte více kreditů pro pokračování.",
     "transcriptionMinutesShort": "{{minutes}} min přepisu",
     "transcriptionTimeShort": "{{time}} přepisu",
-    "costOfBalance": "{{cost}} z vašich {{balance}} kreditů"
+    "costOfBalance": "{{cost}} z vašich {{balance}} kreditů",
+    "pill": {
+      "freeBack": "Minuty zdarma znovu {{date}}",
+      "empty": "Získat minuty",
+      "freeThisMonth": "{{count}} min zdarma tento měsíc",
+      "freeWelcome": "{{count}} min zdarma",
+      "minutes": "{{count}} min přepisu",
+      "title": "Kredity a tarify"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Něco se pokazilo. Nahlaste to vývojáři pro rychlou opravu.",
     "preparingReport": "Příprava diagnostického balíčku...",
     "reportContextWarning": "Část diagnostického kontextu se nepodařilo načíst. Zpráva bude stále obsahovat podrobnosti z této aplikace."
+  },
+  "home": {
+    "headline": "Každé video může mluvit jazykem <lang>{{language}}</lang>.",
+    "stageLabel": "Přidat video",
+    "linkLabel": "Odkaz na video",
+    "linkPlaceholder": "Vložte odkaz na video",
+    "dropHere": "Pusťte ho a bude mluvit jazykem {{language}}",
+    "makeItSpeak": "Ať mluví jazykem {{language}}",
+    "helper": "Vložte odkaz z YouTube, TikToku, Instagramu nebo X — nebo sem přetáhněte videosoubor",
+    "chooseFile": "Vybrat soubor",
+    "into": "Do",
+    "dropNotMedia": "Přetáhněte video nebo zvukový soubor k překladu.",
+    "dropOpenFailed": "Soubor se nepodařilo otevřít.",
+    "downloadQuality": "Kvalita stahování",
+    "hideOptions": "Skrýt možnosti",
+    "options": "Možnosti",
+    "editSrt": "Upravit existující .srt",
+    "burnSubtitles": "Vypálit titulky do videa",
+    "findLabel": "Najít video",
+    "findPlaceholder": "Nevíte, na co se dívat? Popište to — např. korejské vlogy o pouličním jídle",
+    "findButton": "Najít videa",
+    "goHome": "Domů",
+    "allLanguages": "Všech {{count}} jazyků",
+    "languagePickerTitle": "Jakým jazykem?",
+    "languageSearchPlaceholder": "Hledat jazyk — např. arabština, 한국어, Deutsch",
+    "languageSearchLabel": "Hledat jazyk",
+    "languageSearchEmpty": "Žádný jazyk neodpovídá.",
+    "languagePickerCommon": "Časté",
+    "recent": "Nedávné",
+    "seeAll": "Zobrazit vše",
+    "recentSubtitlesReady": "Titulky ({{language}}) hotové",
+    "recentSubtitlesReadyGeneric": "Titulky hotové",
+    "recentDownloaded": "Staženo"
   }
 }

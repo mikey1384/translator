@@ -68,7 +68,7 @@ interface CreditBalanceProps {
  * Determine what provider is being used for a specific operation type.
  * Returns: 'credits' | 'openai' | 'anthropic' | 'elevenlabs' | 'mixed'
  */
-function useActiveProvider(
+export function useActiveProvider(
   operationType: OperationType
 ): 'credits' | 'openai' | 'anthropic' | 'elevenlabs' | 'mixed' {
   const useApiKeysMode = useAiStore(s => s.useApiKeysMode);

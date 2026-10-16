@@ -279,6 +279,11 @@ export async function createTab({
     showInspectElement: opts.isDev,
   });
 
+  // A file dropped outside the home drop zone must not replace the app with
+  // a file:// page; the renderer handles drops itself.
+  view.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('file:')) event.preventDefault();
+  });
   view.webContents.on('render-process-gone', (_e, details) => {
     log.error(
       `[tab-manager] Tab ${tab.id} renderer gone (${details.reason}); closing tab.`

@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Вибрати інше розташування",
     "continue": "Продовжити",
     "send": "Надіслати",
-    "dismiss": "Закрити"
+    "dismiss": "Закрити",
+    "moreActions": "Інші дії"
   },
   "errors": {
     "needCookies": "YouTube запросив перевірку. Натисніть «Підключити», щоб продовжити.",
@@ -873,7 +874,15 @@
     "notEnough": "Недостатньо кредитів. Будь ласка, придбайте більше кредитів, щоб продовжити.",
     "transcriptionMinutesShort": "{{minutes}} хв транскрипції",
     "transcriptionTimeShort": "{{time}} транскрипції",
-    "costOfBalance": "{{cost}} з ваших {{balance}} кредитів"
+    "costOfBalance": "{{cost}} з ваших {{balance}} кредитів",
+    "pill": {
+      "freeBack": "Безкоштовні хвилини повернуться {{date}}",
+      "empty": "Отримати хвилини",
+      "freeThisMonth": "{{count}} безкоштовних хв цього місяця",
+      "freeWelcome": "{{count}} безкоштовних хв",
+      "minutes": "{{count}} хв транскрипції",
+      "title": "Кредити й тарифи"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Щось пішло не так. Повідомте про це розробнику для швидкого виправлення.",
     "preparingReport": "Підготовка діагностичного пакета...",
     "reportContextWarning": "Частину діагностичного контексту не вдалося завантажити. Звіт усе одно міститиме деталі з цього застосунку."
+  },
+  "home": {
+    "headline": "Кожне відео може заговорити мовою <lang>{{language}}</lang>.",
+    "stageLabel": "Додати відео",
+    "linkLabel": "Посилання на відео",
+    "linkPlaceholder": "Вставте посилання на відео",
+    "dropHere": "Відпустіть — і воно заговорить: {{language}}",
+    "makeItSpeak": "Озвучити: {{language}}",
+    "helper": "Вставте посилання з YouTube, TikTok, Instagram чи X — або перетягніть сюди відеофайл",
+    "chooseFile": "Вибрати файл",
+    "into": "Мовою",
+    "dropNotMedia": "Перетягніть відео- або аудіофайл для перекладу.",
+    "dropOpenFailed": "Не вдалося відкрити файл.",
+    "downloadQuality": "Якість завантаження",
+    "hideOptions": "Сховати параметри",
+    "options": "Параметри",
+    "editSrt": "Редагувати наявний .srt",
+    "burnSubtitles": "Вшити субтитри у відео",
+    "findLabel": "Знайти відео",
+    "findPlaceholder": "Не знаєте, що подивитися? Опишіть — наприклад, влоги про корейську вуличну їжу",
+    "findButton": "Знайти відео",
+    "goHome": "Головна",
+    "allLanguages": "Усі {{count}} мов",
+    "languagePickerTitle": "Якою мовою?",
+    "languageSearchPlaceholder": "Пошук мови — наприклад, арабська, 한국어, Deutsch",
+    "languageSearchLabel": "Пошук мови",
+    "languageSearchEmpty": "Жодна мова не підходить.",
+    "languagePickerCommon": "Поширені",
+    "recent": "Нещодавні",
+    "seeAll": "Показати все",
+    "recentSubtitlesReady": "Субтитри ({{language}}) готові",
+    "recentSubtitlesReadyGeneric": "Субтитри готові",
+    "recentDownloaded": "Завантажено"
   }
 }

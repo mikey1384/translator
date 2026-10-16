@@ -37,9 +37,9 @@ export const tabsRowStyles = css`
 export const tabButtonStyles = (active: boolean) => css`
   ${metaPillStyles}
   cursor: pointer;
-  border-color: ${active ? 'rgba(125, 167, 255, 0.24)' : colors.border};
+  border-color: ${active ? 'rgba(255, 216, 77, 0.24)' : colors.border};
   background: ${active
-    ? 'rgba(125, 167, 255, 0.12)'
+    ? 'rgba(255, 216, 77, 0.12)'
     : 'rgba(255, 255, 255, 0.03)'};
   color: ${active ? colors.text : colors.textDim};
 `;
@@ -165,8 +165,8 @@ export const cancelButtonStyles = css`
   justify-content: center;
 
   &:hover:not(:disabled) {
-    background: rgba(255, 109, 114, 0.12);
-    border-color: rgba(255, 109, 114, 0.26);
+    background: rgba(255, 122, 107, 0.12);
+    border-color: rgba(255, 122, 107, 0.26);
     color: ${colors.text};
   }
 
@@ -388,7 +388,7 @@ export const aspectModeToggleStyles = css`
 
 export const aspectModeButtonStyles = (active: boolean) => css`
   border: none;
-  background: ${active ? 'rgba(125, 167, 255, 0.16)' : 'transparent'};
+  background: ${active ? 'rgba(255, 216, 77, 0.16)' : 'transparent'};
   color: ${active ? colors.text : colors.textDim};
   padding: ${spacing.sm} ${spacing.md};
   font-size: ${fontSize.xs};
@@ -401,7 +401,7 @@ export const aspectModeButtonStyles = (active: boolean) => css`
 
   &:hover:not(:disabled) {
     background: ${active
-      ? 'rgba(125, 167, 255, 0.18)'
+      ? 'rgba(255, 216, 77, 0.18)'
       : 'rgba(255, 255, 255, 0.05)'};
   }
 

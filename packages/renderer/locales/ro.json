@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Alege o altă locație",
     "continue": "Continuă",
     "send": "Trimite",
-    "dismiss": "Închide"
+    "dismiss": "Închide",
+    "moreActions": "Mai multe acțiuni"
   },
   "errors": {
     "needCookies": "YouTube a solicitat verificare umană. Faceți clic pe Conectare pentru a continua.",
@@ -873,7 +874,15 @@
     "notEnough": "Credite insuficiente. Vă rugăm să cumpărați mai multe credite pentru a continua.",
     "transcriptionMinutesShort": "{{minutes}} min de transcriere",
     "transcriptionTimeShort": "{{time}} de transcriere",
-    "costOfBalance": "{{cost}} din cele {{balance}} credite ale tale"
+    "costOfBalance": "{{cost}} din cele {{balance}} credite ale tale",
+    "pill": {
+      "freeBack": "Minutele gratuite revin pe {{date}}",
+      "empty": "Obține minute",
+      "freeThisMonth": "{{count}} min gratuite luna aceasta",
+      "freeWelcome": "{{count}} min gratuite",
+      "minutes": "{{count}} min de transcriere",
+      "title": "Credite și planuri"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Ceva nu a funcționat. Raportează acest lucru creatorului pentru o rezolvare rapidă.",
     "preparingReport": "Se pregătește pachetul de diagnostic...",
     "reportContextWarning": "O parte din contextul de diagnostic nu a putut fi încărcată. Raportul va include în continuare detalii din această aplicație."
+  },
+  "home": {
+    "headline": "Orice video poate vorbi <lang>{{language}}</lang>.",
+    "stageLabel": "Adaugă un video",
+    "linkLabel": "Linkul videoclipului",
+    "linkPlaceholder": "Lipește linkul unui video",
+    "dropHere": "Plasează-l ca să vorbească {{language}}",
+    "makeItSpeak": "Să vorbească {{language}}",
+    "helper": "Lipește un link de pe YouTube, TikTok, Instagram sau X — sau trage aici un fișier video",
+    "chooseFile": "Alege fișierul",
+    "into": "În",
+    "dropNotMedia": "Trage un fișier video sau audio pentru a-l traduce.",
+    "dropOpenFailed": "Fișierul nu a putut fi deschis.",
+    "downloadQuality": "Calitatea descărcării",
+    "hideOptions": "Ascunde opțiunile",
+    "options": "Opțiuni",
+    "editSrt": "Editează un .srt existent",
+    "burnSubtitles": "Imprimă subtitrări într-un video",
+    "findLabel": "Găsește un video",
+    "findPlaceholder": "Nu știi ce să vezi? Descrie — ex. vloguri cu street food coreean",
+    "findButton": "Găsește videoclipuri",
+    "goHome": "Acasă",
+    "allLanguages": "Toate cele {{count}} limbi",
+    "languagePickerTitle": "Să vorbească…",
+    "languageSearchPlaceholder": "Caută limbi — ex. arabă, 한국어, Deutsch",
+    "languageSearchLabel": "Caută limbi",
+    "languageSearchEmpty": "Nicio limbă nu se potrivește.",
+    "languagePickerCommon": "Frecvente",
+    "recent": "Recente",
+    "seeAll": "Vezi tot",
+    "recentSubtitlesReady": "Subtitrări în {{language}} gata",
+    "recentSubtitlesReadyGeneric": "Subtitrări gata",
+    "recentDownloaded": "Descărcat"
   }
 }

@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Anderen Speicherort wählen",
     "continue": "Weiter",
     "send": "Senden",
-    "dismiss": "Schließen"
+    "dismiss": "Schließen",
+    "moreActions": "Weitere Aktionen"
   },
   "errors": {
     "needCookies": "YouTube hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren.",
@@ -873,7 +874,15 @@
     "notEnough": "Unzureichende Credits. Bitte kaufen Sie mehr Credits, um fortzufahren.",
     "transcriptionMinutesShort": "{{minutes}} Min. Transkription",
     "transcriptionTimeShort": "{{time}} Transkription",
-    "costOfBalance": "{{cost}} von Ihren {{balance}} Credits"
+    "costOfBalance": "{{cost}} von Ihren {{balance}} Credits",
+    "pill": {
+      "freeBack": "Freiminuten wieder am {{date}}",
+      "empty": "Minuten holen",
+      "freeThisMonth": "{{count}} Freiminuten diesen Monat",
+      "freeWelcome": "{{count}} Freiminuten",
+      "minutes": "{{count}} Min. Transkription",
+      "title": "Credits und Tarife"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Etwas ist schiefgelaufen. Melde dies dem Entwickler für eine schnelle Behebung.",
     "preparingReport": "Diagnosepaket wird vorbereitet...",
     "reportContextWarning": "Ein Teil des Diagnosekontexts konnte nicht geladen werden. Der Bericht enthält weiterhin Details aus dieser App."
+  },
+  "home": {
+    "headline": "Jedes Video kann <lang>{{language}}</lang> sprechen.",
+    "stageLabel": "Video hinzufügen",
+    "linkLabel": "Videolink",
+    "linkPlaceholder": "Videolink einfügen",
+    "dropHere": "Hier ablegen, damit es {{language}} spricht",
+    "makeItSpeak": "Auf {{language}} sprechen lassen",
+    "helper": "Füge einen Link von YouTube, TikTok, Instagram oder X ein – oder lege hier eine Videodatei ab",
+    "chooseFile": "Datei wählen",
+    "into": "Auf",
+    "dropNotMedia": "Lege eine Video- oder Audiodatei ab, um sie zu übersetzen.",
+    "dropOpenFailed": "Diese Datei konnte nicht geöffnet werden.",
+    "downloadQuality": "Downloadqualität",
+    "hideOptions": "Optionen ausblenden",
+    "options": "Optionen",
+    "editSrt": "Vorhandene .srt bearbeiten",
+    "burnSubtitles": "Untertitel in ein Video einbrennen",
+    "findLabel": "Video finden",
+    "findPlaceholder": "Du weißt nicht, was du schauen willst? Beschreib es – z. B. koreanische Streetfood-Vlogs",
+    "findButton": "Videos finden",
+    "goHome": "Start",
+    "allLanguages": "Alle {{count}} Sprachen",
+    "languagePickerTitle": "Auf welcher Sprache?",
+    "languageSearchPlaceholder": "Sprachen suchen – z. B. Arabisch, 한국어, Deutsch",
+    "languageSearchLabel": "Sprachen suchen",
+    "languageSearchEmpty": "Keine Sprache passt.",
+    "languagePickerCommon": "Häufig",
+    "recent": "Zuletzt",
+    "seeAll": "Alle ansehen",
+    "recentSubtitlesReady": "{{language}}-Untertitel fertig",
+    "recentSubtitlesReadyGeneric": "Untertitel fertig",
+    "recentDownloaded": "Heruntergeladen"
   }
 }

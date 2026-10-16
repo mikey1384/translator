@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "เลือกตำแหน่งอื่น",
     "continue": "ดำเนินการต่อ",
     "send": "ส่ง",
-    "dismiss": "ปิด"
+    "dismiss": "ปิด",
+    "moreActions": "การดำเนินการอื่น"
   },
   "errors": {
     "needCookies": "YouTube ขอการยืนยันตัวตน คลิกเชื่อมต่อเพื่อดำเนินการต่อ",
@@ -873,7 +874,15 @@
     "notEnough": "เครดิตไม่เพียงพอ กรุณาซื้อเครดิตเพิ่มเติมเพื่อดำเนินการต่อ",
     "transcriptionMinutesShort": "ถอดเสียง {{minutes}} นาที",
     "transcriptionTimeShort": "ถอดเสียง {{time}}",
-    "costOfBalance": "{{cost}} จากเครดิต {{balance}} ของคุณ"
+    "costOfBalance": "{{cost}} จากเครดิต {{balance}} ของคุณ",
+    "pill": {
+      "freeBack": "นาทีฟรีจะกลับมาวันที่ {{date}}",
+      "empty": "รับนาทีเพิ่ม",
+      "freeThisMonth": "ฟรี {{count}} นาทีเดือนนี้",
+      "freeWelcome": "ฟรี {{count}} นาที",
+      "minutes": "ถอดเสียง {{count}} นาที",
+      "title": "เครดิตและแพ็กเกจ"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "เกิดข้อผิดพลาด แจ้งผู้พัฒนาเพื่อแก้ไขอย่างรวดเร็ว",
     "preparingReport": "กำลังเตรียมชุดข้อมูลวินิจฉัย...",
     "reportContextWarning": "บริบทการวินิจฉัยบางส่วนไม่สามารถโหลดได้ รายงานจะยังคงรวมรายละเอียดจากแอปนี้"
+  },
+  "home": {
+    "headline": "ทุกวิดีโอพูด<lang>{{language}}</lang>ได้",
+    "stageLabel": "เพิ่มวิดีโอ",
+    "linkLabel": "ลิงก์วิดีโอ",
+    "linkPlaceholder": "วางลิงก์วิดีโอ",
+    "dropHere": "วางไฟล์เพื่อให้พูด{{language}}",
+    "makeItSpeak": "ให้พูด{{language}}",
+    "helper": "วางลิงก์จาก YouTube, TikTok, Instagram หรือ X — หรือลากไฟล์วิดีโอมาวางที่นี่",
+    "chooseFile": "เลือกไฟล์",
+    "into": "เป็น",
+    "dropNotMedia": "ลากไฟล์วิดีโอหรือเสียงมาวางเพื่อแปล",
+    "dropOpenFailed": "เปิดไฟล์นี้ไม่ได้",
+    "downloadQuality": "คุณภาพการดาวน์โหลด",
+    "hideOptions": "ซ่อนตัวเลือก",
+    "options": "ตัวเลือก",
+    "editSrt": "แก้ไขไฟล์ .srt ที่มีอยู่",
+    "burnSubtitles": "ฝังซับไตเติลลงในวิดีโอ",
+    "findLabel": "ค้นหาวิดีโอ",
+    "findPlaceholder": "ไม่รู้จะดูอะไร? ลองอธิบายดู — เช่น วล็อกสตรีทฟู้ดเกาหลี",
+    "findButton": "ค้นหาวิดีโอ",
+    "goHome": "หน้าแรก",
+    "allLanguages": "ทั้งหมด {{count}} ภาษา",
+    "languagePickerTitle": "ให้พูดภาษาอะไร?",
+    "languageSearchPlaceholder": "ค้นหาภาษา — เช่น อาหรับ, 한국어, Deutsch",
+    "languageSearchLabel": "ค้นหาภาษา",
+    "languageSearchEmpty": "ไม่มีภาษาที่ตรงกัน",
+    "languagePickerCommon": "ที่ใช้บ่อย",
+    "recent": "ล่าสุด",
+    "seeAll": "ดูทั้งหมด",
+    "recentSubtitlesReady": "ซับไตเติล{{language}}พร้อมแล้ว",
+    "recentSubtitlesReadyGeneric": "ซับไตเติลพร้อมแล้ว",
+    "recentDownloaded": "ดาวน์โหลดแล้ว"
   }
 }

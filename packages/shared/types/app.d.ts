@@ -456,6 +456,13 @@ declare module '@shared-types/app' {
     error?: string;
   }
 
+  /** Monthly free top-up from the Stage5 API (/credits monthlyFree). */
+  export interface MonthlyFreeCreditsInfo {
+    credits: number;
+    month: string;
+    refreshesOn: string;
+  }
+
   export interface VideoSuggestionDownloadHistoryItem {
     id: string;
     sourceUrl: string;
@@ -1591,6 +1598,7 @@ declare module '@shared-types/app' {
         creditsPerHour?: number;
         authoritative?: boolean;
         checkoutSessionId?: string | null;
+        monthlyFree?: MonthlyFreeCreditsInfo | null;
       }) => void
     ) => () => void;
     getCreditSnapshot: () => Promise<{
@@ -1599,6 +1607,7 @@ declare module '@shared-types/app' {
       creditsPerHour: number;
       authoritative: boolean;
       checkoutSessionId?: string | null;
+      monthlyFree?: MonthlyFreeCreditsInfo | null;
     } | null>;
     refreshCreditSnapshot: (force?: boolean) => Promise<{
       creditBalance: number;
@@ -1606,6 +1615,7 @@ declare module '@shared-types/app' {
       creditsPerHour: number;
       authoritative: boolean;
       checkoutSessionId?: string | null;
+      monthlyFree?: MonthlyFreeCreditsInfo | null;
     } | null>;
     createCreditTransferCode: () => Promise<CreditTransferCodeResult>;
     redeemCreditTransfer: (code: string) => Promise<CreditTransferRedeemResult>;
@@ -1803,6 +1813,7 @@ declare module '@shared-types/app' {
       fileApi: {
         readText: (p: string) => Promise<string>;
         writeText: (p: string, data: string) => Promise<void>;
+        getPathForFile: (file: File) => string;
         fileExists: (p: string) => Promise<boolean>;
       };
       appShell: {

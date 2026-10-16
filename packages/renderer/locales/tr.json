@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Başka bir konum seç",
     "continue": "Devam et",
     "send": "Gönder",
-    "dismiss": "Kapat"
+    "dismiss": "Kapat",
+    "moreActions": "Diğer işlemler"
   },
   "errors": {
     "needCookies": "YouTube insan doğrulaması istedi. Devam etmek için Bağlan'a tıklayın.",
@@ -873,7 +874,15 @@
     "notEnough": "Yetersiz kredi. Devam etmek için lütfen daha fazla kredi satın alın.",
     "transcriptionMinutesShort": "{{minutes}} dk transkripsiyon",
     "transcriptionTimeShort": "{{time}} transkripsiyon",
-    "costOfBalance": "{{balance}} kredinizin {{cost}} kadarı"
+    "costOfBalance": "{{balance}} kredinizin {{cost}} kadarı",
+    "pill": {
+      "freeBack": "Ücretsiz dakikalar {{date}} tarihinde yenilenir",
+      "empty": "Dakika al",
+      "freeThisMonth": "Bu ay {{count}} ücretsiz dk",
+      "freeWelcome": "{{count}} ücretsiz dk",
+      "minutes": "{{count}} dk transkripsiyon",
+      "title": "Krediler ve planlar"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Bir şeyler ters gitti. Hızlı düzeltme için bunu geliştiriciye bildirin.",
     "preparingReport": "Tanılama paketi hazırlanıyor...",
     "reportContextWarning": "Tanılama bağlamının bir kısmı yüklenemedi. Rapor yine de bu uygulamaya ait ayrıntıları içerecek."
+  },
+  "home": {
+    "headline": "Her video <lang>{{language}}</lang> konuşabilir.",
+    "stageLabel": "Video ekle",
+    "linkLabel": "Video bağlantısı",
+    "linkPlaceholder": "Bir video bağlantısı yapıştırın",
+    "dropHere": "Bırakın, {{language}} konuşsun",
+    "makeItSpeak": "{{language}} konuştur",
+    "helper": "YouTube, TikTok, Instagram veya X bağlantısı yapıştırın — ya da bir video dosyasını buraya bırakın",
+    "chooseFile": "Dosya seç",
+    "into": "Dil",
+    "dropNotMedia": "Çevirmek için bir video veya ses dosyası bırakın.",
+    "dropOpenFailed": "Dosya açılamadı.",
+    "downloadQuality": "İndirme kalitesi",
+    "hideOptions": "Seçenekleri gizle",
+    "options": "Seçenekler",
+    "editSrt": "Mevcut bir .srt dosyasını düzenle",
+    "burnSubtitles": "Altyazıları videoya göm",
+    "findLabel": "Video bul",
+    "findPlaceholder": "Ne izleyeceğinizden emin değil misiniz? Anlatın — ör. Kore sokak yemeği vlogları",
+    "findButton": "Video bul",
+    "goHome": "Ana sayfa",
+    "allLanguages": "{{count}} dilin tamamı",
+    "languagePickerTitle": "Hangi dilde konuşsun?",
+    "languageSearchPlaceholder": "Dil ara — ör. Arapça, 한국어, Deutsch",
+    "languageSearchLabel": "Dil ara",
+    "languageSearchEmpty": "Eşleşen dil yok.",
+    "languagePickerCommon": "Sık kullanılanlar",
+    "recent": "Son",
+    "seeAll": "Tümünü gör",
+    "recentSubtitlesReady": "{{language}} altyazı hazır",
+    "recentSubtitlesReadyGeneric": "Altyazı hazır",
+    "recentDownloaded": "İndirildi"
   }
 }

@@ -83,16 +83,16 @@ const iconByStatusStyles: Record<StepStatus, string> = {
     color: ${colors.textDim};
   `,
   active: css`
-    background: rgba(125, 167, 255, 0.16);
+    background: rgba(255, 216, 77, 0.16);
     color: ${colors.primary};
   `,
   done: css`
     background: ${colors.success};
-    color: #fff;
+    color: ${colors.onPrimary};
   `,
   error: css`
     background: ${colors.danger};
-    color: #fff;
+    color: ${colors.onPrimary};
   `,
 };
 

@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "कोई अन्य स्थान चुनें",
     "continue": "जारी रखें",
     "send": "भेजें",
-    "dismiss": "खारिज करें"
+    "dismiss": "खारिज करें",
+    "moreActions": "और कार्रवाइयाँ"
   },
   "errors": {
     "needCookies": "YouTube ने मानव जाँच का अनुरोध किया है। जारी रखने के लिए कनेक्ट पर क्लिक करें।",
@@ -873,7 +874,15 @@
     "notEnough": "अपर्याप्त क्रेडिट। जारी रखने के लिए कृपया अधिक क्रेडिट खरीदें।",
     "transcriptionMinutesShort": "{{minutes}} मिनट ट्रांसक्रिप्शन",
     "transcriptionTimeShort": "{{time}} ट्रांसक्रिप्शन",
-    "costOfBalance": "आपके {{balance}} क्रेडिट में से {{cost}}"
+    "costOfBalance": "आपके {{balance}} क्रेडिट में से {{cost}}",
+    "pill": {
+      "freeBack": "मुफ़्त मिनट {{date}} को वापस मिलेंगे",
+      "empty": "मिनट लें",
+      "freeThisMonth": "इस महीने {{count}} मुफ़्त मिनट",
+      "freeWelcome": "{{count}} मुफ़्त मिनट",
+      "minutes": "{{count}} मिनट ट्रांसक्रिप्शन",
+      "title": "क्रेडिट और प्लान"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "कुछ गलत हो गया। जल्दी समाधान के लिए इसे निर्माता को रिपोर्ट करें।",
     "preparingReport": "डायग्नोस्टिक बंडल तैयार किया जा रहा है...",
     "reportContextWarning": "कुछ डायग्नोस्टिक संदर्भ लोड नहीं हो सका। रिपोर्ट में फिर भी इस ऐप के विवरण शामिल होंगे।"
+  },
+  "home": {
+    "headline": "हर वीडियो <lang>{{language}}</lang> बोल सकता है।",
+    "stageLabel": "वीडियो जोड़ें",
+    "linkLabel": "वीडियो लिंक",
+    "linkPlaceholder": "वीडियो लिंक पेस्ट करें",
+    "dropHere": "छोड़ें और यह {{language}} बोलेगा",
+    "makeItSpeak": "{{language}} में बदलें",
+    "helper": "YouTube, TikTok, Instagram या X का लिंक पेस्ट करें — या वीडियो फ़ाइल यहाँ छोड़ें",
+    "chooseFile": "फ़ाइल चुनें",
+    "into": "भाषा",
+    "dropNotMedia": "अनुवाद के लिए वीडियो या ऑडियो फ़ाइल छोड़ें।",
+    "dropOpenFailed": "वह फ़ाइल खुल नहीं सकी।",
+    "downloadQuality": "डाउनलोड गुणवत्ता",
+    "hideOptions": "विकल्प छिपाएँ",
+    "options": "विकल्प",
+    "editSrt": "मौजूदा .srt संपादित करें",
+    "burnSubtitles": "वीडियो में सबटाइटल जोड़ें",
+    "findLabel": "वीडियो खोजें",
+    "findPlaceholder": "समझ नहीं आ रहा क्या देखें? बताइए — जैसे कोरियाई स्ट्रीट फ़ूड व्लॉग",
+    "findButton": "वीडियो खोजें",
+    "goHome": "होम",
+    "allLanguages": "सभी {{count}} भाषाएँ",
+    "languagePickerTitle": "किस भाषा में?",
+    "languageSearchPlaceholder": "भाषा खोजें — जैसे अरबी, 한국어, Deutsch",
+    "languageSearchLabel": "भाषा खोजें",
+    "languageSearchEmpty": "कोई भाषा मेल नहीं खाती।",
+    "languagePickerCommon": "आम",
+    "recent": "हाल के",
+    "seeAll": "सब देखें",
+    "recentSubtitlesReady": "{{language}} सबटाइटल तैयार",
+    "recentSubtitlesReadyGeneric": "सबटाइटल तैयार",
+    "recentDownloaded": "डाउनलोड हो गया"
   }
 }

@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "வேறு இடத்தைத் தேர்ந்தெடுக்கவும்",
     "continue": "தொடரவும்",
     "send": "அனுப்பு",
-    "dismiss": "மூடு"
+    "dismiss": "மூடு",
+    "moreActions": "மேலும் செயல்கள்"
   },
   "errors": {
     "needCookies": "YouTube மனித சரிபார்ப்பைக் கேட்டது. தொடர இணைக்கவும் என்பதைக் கிளிக் செய்யவும்.",
@@ -873,7 +874,15 @@
     "notEnough": "போதுமான கிரெடிட்கள் இல்லை. தொடர்வதற்கு தயவுசெய்து அதிக கிரெடிட்களை வாங்கவும்.",
     "transcriptionMinutesShort": "{{minutes}} நிமிட டிரான்ஸ்கிரிப்ஷன்",
     "transcriptionTimeShort": "{{time}} டிரான்ஸ்கிரிப்ஷன்",
-    "costOfBalance": "உங்கள் {{balance}} கிரெடிட்களில் {{cost}}"
+    "costOfBalance": "உங்கள் {{balance}} கிரெடிட்களில் {{cost}}",
+    "pill": {
+      "freeBack": "இலவச நிமிடங்கள் {{date}} அன்று மீண்டும் கிடைக்கும்",
+      "empty": "நிமிடங்களைப் பெறு",
+      "freeThisMonth": "இந்த மாதம் {{count}} இலவச நிமி",
+      "freeWelcome": "{{count}} இலவச நிமி",
+      "minutes": "{{count}} நிமி படியெடுப்பு",
+      "title": "கிரெடிட்கள் மற்றும் திட்டங்கள்"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "ஏதோ தவறு நடந்தது. விரைவான தீர்வுக்கு உருவாக்குநரிடம் புகாரளிக்கவும்.",
     "preparingReport": "டயக்னோஸ்டிக் பண்டில் தயாராகிறது...",
     "reportContextWarning": "சில டயக்னோஸ்டிக் சூழல் தகவலை ஏற்ற முடியவில்லை. அறிக்கையில் இருந்தாலும் இந்த பயன்பாட்டின் விவரங்கள் சேர்க்கப்படும்."
+  },
+  "home": {
+    "headline": "ஒவ்வொரு வீடியோவும் <lang>{{language}}</lang> பேசலாம்.",
+    "stageLabel": "வீடியோவைச் சேர்",
+    "linkLabel": "வீடியோ இணைப்பு",
+    "linkPlaceholder": "வீடியோ இணைப்பை ஒட்டவும்",
+    "dropHere": "விடுங்கள், அது {{language}} பேசும்",
+    "makeItSpeak": "{{language}} பேச வை",
+    "helper": "YouTube, TikTok, Instagram அல்லது X இணைப்பை ஒட்டவும் — அல்லது வீடியோ கோப்பை இங்கே விடவும்",
+    "chooseFile": "கோப்பைத் தேர்ந்தெடு",
+    "into": "மொழி",
+    "dropNotMedia": "மொழிபெயர்க்க வீடியோ அல்லது ஆடியோ கோப்பை விடவும்.",
+    "dropOpenFailed": "அந்தக் கோப்பைத் திறக்க முடியவில்லை.",
+    "downloadQuality": "பதிவிறக்கத் தரம்",
+    "hideOptions": "விருப்பங்களை மறை",
+    "options": "விருப்பங்கள்",
+    "editSrt": "உள்ள .srt-ஐத் திருத்து",
+    "burnSubtitles": "வீடியோவில் வசனங்களைப் பதி",
+    "findLabel": "வீடியோவைத் தேடு",
+    "findPlaceholder": "என்ன பார்ப்பது என்று தெரியவில்லையா? விவரியுங்கள் — எ.கா. கொரிய தெரு உணவு வ்லாக்",
+    "findButton": "வீடியோக்களைத் தேடு",
+    "goHome": "முகப்பு",
+    "allLanguages": "அனைத்து {{count}} மொழிகள்",
+    "languagePickerTitle": "எந்த மொழியில்?",
+    "languageSearchPlaceholder": "மொழியைத் தேடு — எ.கா. அரபு, 한국어, Deutsch",
+    "languageSearchLabel": "மொழியைத் தேடு",
+    "languageSearchEmpty": "பொருந்தும் மொழி இல்லை.",
+    "languagePickerCommon": "பொதுவானவை",
+    "recent": "சமீபத்தியவை",
+    "seeAll": "அனைத்தையும் காண்",
+    "recentSubtitlesReady": "{{language}} வசனங்கள் தயார்",
+    "recentSubtitlesReadyGeneric": "வசனங்கள் தயார்",
+    "recentDownloaded": "பதிவிறக்கப்பட்டது"
   }
 }

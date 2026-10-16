@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Pumili ng ibang lokasyon",
     "continue": "Magpatuloy",
     "send": "Ipadala",
-    "dismiss": "Isara"
+    "dismiss": "Isara",
+    "moreActions": "Iba pang aksyon"
   },
   "errors": {
     "needCookies": "Humiling ang YouTube ng human check. I-click ang Connect para magpatuloy.",
@@ -873,7 +874,15 @@
     "notEnough": "Hindi sapat ang mga credit. Mangyaring bumili pa ng mga credit para magpatuloy.",
     "transcriptionMinutesShort": "{{minutes}} min ng transcription",
     "transcriptionTimeShort": "{{time}} ng transcription",
-    "costOfBalance": "{{cost}} sa iyong {{balance}} credit"
+    "costOfBalance": "{{cost}} sa iyong {{balance}} credit",
+    "pill": {
+      "freeBack": "Babalik ang libreng minuto sa {{date}}",
+      "empty": "Kumuha ng minuto",
+      "freeThisMonth": "{{count}} libreng min ngayong buwan",
+      "freeWelcome": "{{count}} libreng min",
+      "minutes": "{{count}} min ng transcription",
+      "title": "Mga credit at plano"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "May nangyaring mali. Iulat ito sa developer para sa mabilis na ayos.",
     "preparingReport": "Inihahanda ang diagnostic bundle...",
     "reportContextWarning": "May ilang konteksto ng pagsusuri na hindi na-load. Isasama pa rin sa ulat ang mga detalye mula sa app na ito."
+  },
+  "home": {
+    "headline": "Kayang magsalita ng <lang>{{language}}</lang> ang bawat video.",
+    "stageLabel": "Magdagdag ng video",
+    "linkLabel": "Link ng video",
+    "linkPlaceholder": "I-paste ang link ng video",
+    "dropHere": "Bitawan para magsalita ito ng {{language}}",
+    "makeItSpeak": "Pagsalitain ng {{language}}",
+    "helper": "Mag-paste ng link mula sa YouTube, TikTok, Instagram o X — o i-drop dito ang video file",
+    "chooseFile": "Pumili ng file",
+    "into": "Sa",
+    "dropNotMedia": "Mag-drop ng video o audio file para isalin ito.",
+    "dropOpenFailed": "Hindi mabuksan ang file na iyon.",
+    "downloadQuality": "Kalidad ng download",
+    "hideOptions": "Itago ang mga opsyon",
+    "options": "Mga opsyon",
+    "editSrt": "I-edit ang kasalukuyang .srt",
+    "burnSubtitles": "Ilagay nang permanente ang subtitle sa video",
+    "findLabel": "Maghanap ng video",
+    "findPlaceholder": "Hindi sigurado kung ano ang panonoorin? Ilarawan ito — hal. mga vlog ng Korean street food",
+    "findButton": "Maghanap ng mga video",
+    "goHome": "Tahanan",
+    "allLanguages": "Lahat ng {{count}} wika",
+    "languagePickerTitle": "Pagsalitain ng…",
+    "languageSearchPlaceholder": "Maghanap ng wika — hal. Arabic, 한국어, Deutsch",
+    "languageSearchLabel": "Maghanap ng wika",
+    "languageSearchEmpty": "Walang tumugmang wika.",
+    "languagePickerCommon": "Karaniwan",
+    "recent": "Kamakailan",
+    "seeAll": "Tingnan lahat",
+    "recentSubtitlesReady": "Handa na ang subtitle sa {{language}}",
+    "recentSubtitlesReadyGeneric": "Handa na ang subtitle",
+    "recentDownloaded": "Na-download"
   }
 }

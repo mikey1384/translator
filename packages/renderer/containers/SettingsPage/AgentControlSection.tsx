@@ -89,7 +89,7 @@ const addButtonStyles = css`
   background: ${colors.primary};
   border: none;
   border-radius: 6px;
-  color: white;
+  color: ${colors.onPrimary};
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
@@ -169,7 +169,7 @@ const connectMessageStyles = (tone: 'ok' | 'warn' | 'error') => css`
   margin: 10px 0 0;
   font-size: 0.88rem;
   color: ${tone === 'ok'
-    ? '#22c55e'
+    ? colors.success
     : tone === 'error'
       ? colors.danger
       : colors.text};
@@ -194,16 +194,16 @@ const statusIndicatorStyles = (active: boolean) => css`
   border-radius: 4px;
   font-size: 0.85rem;
   font-weight: 600;
-  background: ${active ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)'};
-  color: ${active ? '#22c55e' : colors.gray};
-  border: 1px solid ${active ? '#22c55e' : colors.border};
+  background: ${active ? 'rgba(34, 197, 94, 0.1)' : 'rgba(140, 135, 150, 0.1)'};
+  color: ${active ? colors.success : colors.gray};
+  border: 1px solid ${active ? colors.success : colors.border};
 `;
 
 const statusDotStyles = (active: boolean) => css`
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: ${active ? '#22c55e' : colors.gray};
+  background: ${active ? colors.success : colors.gray};
 `;
 
 export default function AgentControlSection() {

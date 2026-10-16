@@ -37,23 +37,15 @@ export const toggleButtonStyles = css`
 
   &:hover:not(:disabled) {
     border-color: ${colors.primary};
-    background: linear-gradient(
-      180deg,
-      rgba(125, 167, 255, 0.05),
-      rgba(255, 255, 255, 0.01)
-    );
+    background: rgba(255, 216, 77, 0.05);
     box-shadow:
-      0 0 0 1px rgba(125, 167, 255, 0.16),
+      0 0 0 1px rgba(255, 216, 77, 0.16),
       0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   &[aria-expanded='true'] {
     border-color: ${colors.primary};
-    background: linear-gradient(
-      180deg,
-      rgba(125, 167, 255, 0.04),
-      rgba(255, 255, 255, 0.01)
-    );
+    background: rgba(255, 216, 77, 0.04);
   }
 
   &:disabled {
@@ -88,8 +80,8 @@ export const toggleEyebrowStyles = css`
   min-height: 28px;
   padding: 0 ${spacing.sm};
   border-radius: ${borderRadius.full};
-  border: 1px solid rgba(240, 180, 75, 0.24);
-  background: rgba(240, 180, 75, 0.08);
+  border: 1px solid rgba(255, 181, 71, 0.24);
+  background: rgba(255, 181, 71, 0.08);
   color: ${colors.warning};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
@@ -125,8 +117,8 @@ export const toggleMetaPillStyles = css`
 export const toggleMetaPillAccentStyles = css`
   ${metaPillStyles}
   color: ${colors.primaryLight};
-  border-color: rgba(125, 167, 255, 0.24);
-  background: rgba(125, 167, 255, 0.08);
+  border-color: rgba(255, 216, 77, 0.24);
+  background: rgba(255, 216, 77, 0.08);
 `;
 
 export const panelStyles = css`
@@ -146,11 +138,7 @@ export const panelIntroStyles = css`
   gap: ${spacing.lg};
   padding: ${spacing.xl};
   border-bottom: 1px solid ${colors.border};
-  background: linear-gradient(
-    180deg,
-    rgba(125, 167, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+  background: rgba(255, 216, 77, 0.08);
 
   @media (max-width: 980px) {
     grid-template-columns: 1fr;
@@ -189,8 +177,8 @@ export const panelIntroPillStyles = css`
 export const panelIntroPillAccentStyles = css`
   ${metaPillStyles}
   color: ${colors.primaryLight};
-  border-color: rgba(125, 167, 255, 0.24);
-  background: rgba(125, 167, 255, 0.08);
+  border-color: rgba(255, 216, 77, 0.24);
+  background: rgba(255, 216, 77, 0.08);
 `;
 
 export const technicalDetailsStyles = css`
@@ -340,8 +328,8 @@ export const chatEmptyEyebrowStyles = css`
   min-height: 28px;
   padding: 0 ${spacing.sm};
   border-radius: ${borderRadius.full};
-  border: 1px solid rgba(125, 167, 255, 0.22);
-  background: rgba(125, 167, 255, 0.08);
+  border: 1px solid rgba(255, 216, 77, 0.22);
+  background: rgba(255, 216, 77, 0.08);
   color: ${colors.primaryLight};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
@@ -418,13 +406,9 @@ export const assistantRichTextStyles = css`
 export const userBubbleStyles = css`
   ${bubbleStyles};
   align-self: flex-end;
-  background: linear-gradient(
-    135deg,
-    rgba(125, 167, 255, 0.94),
-    rgba(93, 131, 222, 0.92)
-  );
-  color: white;
-  border: 1px solid rgba(171, 200, 255, 0.24);
+  background: ${colors.primary};
+  color: ${colors.onPrimary};
+  border: 1px solid rgba(255, 230, 128, 0.24);
 `;
 
 export const inputWrapStyles = css`
@@ -432,11 +416,7 @@ export const inputWrapStyles = css`
   gap: ${spacing.md};
   padding: ${spacing.lg};
   border-top: 1px solid ${colors.border};
-  background: linear-gradient(
-    180deg,
-    rgba(125, 167, 255, 0.04),
-    rgba(255, 255, 255, 0.01)
-  );
+  background: rgba(255, 216, 77, 0.04);
 `;
 
 export const composerHeaderStyles = css`
@@ -460,18 +440,14 @@ export const composerSurfaceStyles = css`
   padding: ${spacing.md};
   border: 1px solid ${colors.borderStrong};
   border-radius: ${borderRadius.xl};
-  background: linear-gradient(
-    180deg,
-    rgba(20, 27, 38, 0.98),
-    rgba(16, 23, 35, 0.98)
-  );
+  background: rgba(25, 23, 31, 0.98);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
   &:focus-within {
     border-color: ${colors.primary};
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      0 0 0 1px rgba(125, 167, 255, 0.14);
+      0 0 0 1px rgba(255, 216, 77, 0.14);
   }
 `;
 
@@ -552,11 +528,7 @@ export const suggestedFollowUpButtonStyles = css`
   padding: ${spacing.md} ${spacing.lg};
   border-radius: ${borderRadius.lg};
   border: 1px solid ${colors.border};
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0.01)
-  );
+  background: rgba(255, 255, 255, 0.03);
   color: ${colors.text};
   font-size: ${fontSize.sm};
   line-height: ${lineHeight.relaxed};
@@ -567,15 +539,15 @@ export const suggestedFollowUpButtonStyles = css`
     transform 0.15s ease;
 
   &:hover:not(:disabled) {
-    border-color: rgba(125, 167, 255, 0.3);
-    background: rgba(125, 167, 255, 0.08);
+    border-color: rgba(255, 216, 77, 0.3);
+    background: rgba(255, 216, 77, 0.08);
     transform: translateY(-1px);
   }
 
   &:focus-visible {
     outline: none;
     border-color: ${colors.primary};
-    box-shadow: 0 0 0 3px rgba(125, 167, 255, 0.16);
+    box-shadow: 0 0 0 3px rgba(255, 216, 77, 0.16);
   }
 
   &:disabled {
@@ -821,7 +793,7 @@ export const stageRowRunningStyles = css`
 `;
 
 export const stageRowClearedStyles = css`
-  border-color: #1f8f4d;
+  border-color: ${colors.success};
   background: rgba(31, 143, 77, 0.12);
 `;
 
@@ -861,7 +833,7 @@ export const stageProgressFillStyles = css`
 `;
 
 export const stageProgressFillClearedStyles = css`
-  background: linear-gradient(90deg, #2bbf6a 0%, #1f8f4d 100%);
+  background: ${colors.success};
 `;
 
 export const stageOutcomeStyles = css`
@@ -874,8 +846,8 @@ export const stageOutcomeStyles = css`
 
 export const liveActivityPanelStyles = css`
   margin: ${spacing.lg} ${spacing.lg} ${spacing.xs};
-  border: 1px solid rgba(125, 167, 255, 0.24);
-  background: rgba(125, 167, 255, 0.06);
+  border: 1px solid rgba(255, 216, 77, 0.24);
+  background: rgba(255, 216, 77, 0.06);
   border-radius: ${borderRadius.xl};
   padding: ${spacing.md} ${spacing.lg};
   display: grid;
@@ -948,9 +920,9 @@ export const liveActivityTraceLineStyles = css`
 
 export const liveActivityTraceBadgeStyles = css`
   flex: 0 0 auto;
-  border: 1px solid rgba(125, 167, 255, 0.22);
+  border: 1px solid rgba(255, 216, 77, 0.22);
   border-radius: 999px;
-  background: rgba(125, 167, 255, 0.1);
+  background: rgba(255, 216, 77, 0.1);
   font-size: ${fontSize.xs};
   color: ${colors.textDim};
   line-height: 1;
@@ -1018,7 +990,7 @@ export const rightTabsStyles = css`
   gap: ${spacing.sm};
   padding: ${spacing.lg};
   border-bottom: 1px solid ${colors.border};
-  background: rgba(20, 27, 38, 0.98);
+  background: rgba(25, 23, 31, 0.98);
 `;
 
 export const rightTabButtonStyles = css`
@@ -1038,9 +1010,9 @@ export const rightTabButtonStyles = css`
 `;
 
 export const rightTabButtonActiveStyles = css`
-  border-color: rgba(125, 167, 255, 0.24);
+  border-color: rgba(255, 216, 77, 0.24);
   color: ${colors.text};
-  background: rgba(125, 167, 255, 0.12);
+  background: rgba(255, 216, 77, 0.12);
 `;
 
 export const rightTabBodyStyles = css`
@@ -1121,15 +1093,15 @@ export const historyStatusPillStyles = css`
 export const historyStatusSavedPillStyles = css`
   ${metaPillStyles}
   color: ${colors.success};
-  border-color: rgba(57, 200, 135, 0.24);
-  background: rgba(57, 200, 135, 0.08);
+  border-color: rgba(123, 224, 165, 0.24);
+  background: rgba(123, 224, 165, 0.08);
 `;
 
 export const historyStatusTempPillStyles = css`
   ${metaPillStyles}
   color: ${colors.warning};
-  border-color: rgba(240, 180, 75, 0.24);
-  background: rgba(240, 180, 75, 0.08);
+  border-color: rgba(255, 181, 71, 0.24);
+  background: rgba(255, 181, 71, 0.08);
 `;
 
 export const cardActionsStyles = css`

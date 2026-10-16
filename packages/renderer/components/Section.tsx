@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
 import { sectionStyles } from '../styles.js';
-import { colors } from '../styles.js';
+import { colors, fonts } from '../styles.js';
 import {
   borderRadius,
   fontSize,
@@ -63,6 +63,7 @@ const headerRowStyles = css`
 `;
 
 const titleStyles = css`
+  font-family: ${fonts.display};
   font-size: clamp(1.2rem, 1.4vw, 1.5rem);
   font-weight: ${fontWeight.semibold};
   color: ${colors.text};

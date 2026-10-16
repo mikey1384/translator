@@ -48,7 +48,7 @@ const coverageCardStyles = css`
 
 const coverageSatisfiedStyles = css`
   border-color: ${colors.primary};
-  background: rgba(125, 167, 255, 0.06);
+  background: rgba(255, 216, 77, 0.06);
 `;
 
 const coverageHeaderStyles = css`
@@ -75,7 +75,7 @@ const coverageCheckStyles = css`
 const coverageCheckSatisfiedStyles = css`
   border-color: ${colors.primary};
   background: ${colors.primary};
-  color: #fff;
+  color: ${colors.onPrimary};
 `;
 
 const coverageLabelStyles = css`

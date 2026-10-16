@@ -135,7 +135,7 @@ const dropdownOptionStyles = css`
 
 const selectedOptionStyle = css`
   background-color: ${colors.primary};
-  color: white;
+  color: ${colors.onPrimary};
   &:hover {
     background-color: ${colors.primary};
   }

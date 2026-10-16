@@ -1,7 +1,8 @@
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
+import { colors, fonts } from '../styles.js';
 
-const logoTextColor = '#FAF0E6';
+const logoTextColor = colors.text;
 
 const logoContainerStyles = css`
   display: flex;
@@ -10,9 +11,10 @@ const logoContainerStyles = css`
 `;
 
 const translatorTextStyles = css`
-  font-family: 'Montserrat', 'Nunito Sans', 'Poppins', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-family: ${fonts.display};
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
   color: ${logoTextColor};
   margin: 0;
   line-height: 1.1;
@@ -20,7 +22,7 @@ const translatorTextStyles = css`
 `;
 
 const bylineTextStyles = css`
-  font-family: 'Montserrat', 'Nunito Sans', 'Poppins', sans-serif;
+  font-family: ${fonts.body};
   font-weight: 500;
   font-size: 0.7rem;
   color: ${logoTextColor};

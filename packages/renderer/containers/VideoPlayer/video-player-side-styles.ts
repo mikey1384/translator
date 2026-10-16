@@ -19,8 +19,8 @@ export const sidePanelShellStyles = css`
   flex-direction: column;
   justify-content: flex-start;
   gap: ${spacing.sm};
-  background: rgba(12, 17, 27, 0.86);
-  border-color: rgba(167, 183, 210, 0.22);
+  background: rgba(21, 19, 26, 0.86);
+  border-color: rgba(244, 241, 234, 0.132);
   padding: ${spacing.sm};
   height: 100%;
   overflow: auto;
@@ -46,8 +46,8 @@ export const sidePanelWarningStyles = css`
   gap: ${spacing.xs};
   padding: ${spacing.sm};
   border-radius: ${borderRadius.lg};
-  border: 1px solid rgba(240, 180, 75, 0.3);
-  background: rgba(240, 180, 75, 0.1);
+  border: 1px solid rgba(255, 181, 71, 0.3);
+  background: rgba(255, 181, 71, 0.1);
   color: ${colors.text};
 `;
 
@@ -61,7 +61,7 @@ export const sidePanelWarningIconStyles = css`
   align-items: center;
   justify-content: center;
   color: ${colors.warning};
-  background: rgba(240, 180, 75, 0.16);
+  background: rgba(255, 181, 71, 0.16);
 `;
 
 export const sidePanelWarningTextStyles = css`
@@ -93,10 +93,8 @@ export const sidePanelTabButtonStyles = (active: boolean) => css`
   ${metaPillStyles}
   cursor: pointer;
   justify-content: center;
-  border-color: ${active ? 'rgba(125, 167, 255, 0.24)' : colors.border};
-  background: ${active
-    ? 'rgba(125, 167, 255, 0.12)'
-    : 'rgba(255,255,255,0.03)'};
+  border-color: ${active ? 'rgba(255, 216, 77, 0.24)' : colors.border};
+  background: ${active ? 'rgba(255, 216, 77, 0.12)' : 'rgba(255,255,255,0.03)'};
   color: ${active ? colors.text : colors.textDim};
 `;
 
@@ -128,7 +126,7 @@ export const sidePanelItemButtonStyles = css`
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px rgba(125, 167, 255, 0.18);
+    box-shadow: 0 0 0 2px rgba(255, 216, 77, 0.18);
   }
 `;
 
@@ -211,7 +209,7 @@ export const speedMenuItemStyles = (active: boolean) => css`
   font-weight: ${active ? fontWeight.semibold : fontWeight.normal};
   font-size: ${fontSize.xs};
   cursor: pointer;
-  background: ${active ? 'rgba(125, 167, 255, 0.12)' : 'transparent'};
+  background: ${active ? 'rgba(255, 216, 77, 0.12)' : 'transparent'};
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);
@@ -242,12 +240,12 @@ export const videoPlayerCenterStateStyles = (
   padding: ${spacing.xl} ${spacing['2xl']};
   border-radius: ${borderRadius['2xl']};
   border: 1px solid
-    ${tone === 'warning' ? 'rgba(240, 180, 75, 0.36)' : colors.danger};
+    ${tone === 'warning' ? 'rgba(255, 181, 71, 0.36)' : colors.danger};
   background: ${tone === 'warning'
-    ? 'rgba(19, 22, 29, 0.96)'
+    ? 'rgba(25, 23, 31, 0.96)'
     : 'rgba(24, 12, 16, 0.94)'};
   color: ${colors.text};
-  box-shadow: 0 18px 42px rgba(4, 9, 18, 0.3);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.3);
   box-sizing: border-box;
 `;
 
@@ -269,8 +267,8 @@ export const videoPlayerCenterStateIconStyles = (
   justify-content: center;
   color: ${tone === 'warning' ? colors.warning : colors.danger};
   background: ${tone === 'warning'
-    ? 'rgba(240, 180, 75, 0.16)'
-    : 'rgba(255, 109, 114, 0.14)'};
+    ? 'rgba(255, 181, 71, 0.16)'
+    : 'rgba(255, 122, 107, 0.14)'};
 `;
 
 export const videoPlayerCenterStateCopyStyles = css`
@@ -304,7 +302,7 @@ export const videoPlayerCenterStateProgressTrackStyles = css`
   height: 10px;
   overflow: hidden;
   border-radius: ${borderRadius.full};
-  border: 1px solid rgba(240, 180, 75, 0.22);
+  border: 1px solid rgba(255, 181, 71, 0.22);
   background: rgba(255, 255, 255, 0.06);
 `;
 
@@ -316,9 +314,9 @@ export const videoPlayerCenterStateProgressFillStyles = css`
   border-radius: ${borderRadius.full};
   background: linear-gradient(
     90deg,
-    rgba(240, 180, 75, 0.18) 0%,
-    rgba(240, 180, 75, 0.95) 48%,
-    rgba(240, 180, 75, 0.18) 100%
+    rgba(255, 181, 71, 0.18) 0%,
+    rgba(255, 181, 71, 0.95) 48%,
+    rgba(255, 181, 71, 0.18) 100%
   );
   animation: player-waiting-progress 1.8s ease-in-out infinite;
 
@@ -462,7 +460,7 @@ const fixedVideoContainerBaseStyles = css`
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  background-color: rgba(20, 24, 33, 0.94);
+  background-color: rgba(25, 23, 31, 0.94);
   border: 1px solid ${colors.border};
   overflow: hidden;
 

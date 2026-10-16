@@ -28,40 +28,40 @@ const adminButton = css`
 const addButton = css`
   ${adminButton}
   background: ${colors.success};
-  color: white;
+  color: ${colors.onPrimary};
 
   &:hover:not(:disabled) {
-    background: #059669;
+    background: #9bebbd;
   }
 `;
 
 const resetButton = css`
   ${adminButton}
   background: ${colors.danger};
-  color: white;
+  color: ${colors.onPrimary};
 
   &:hover:not(:disabled) {
-    background: #dc2626;
+    background: #ff968a;
   }
 `;
 
 const previewButton = css`
   ${adminButton}
   background: ${colors.warning};
-  color: white;
+  color: ${colors.onPrimary};
 
   &:hover:not(:disabled) {
-    background: #d97706;
+    background: #ffc977;
   }
 `;
 
 const previewActiveButton = css`
   ${adminButton}
   background: ${colors.primary};
-  color: white;
+  color: ${colors.onPrimary};
 
   &:hover:not(:disabled) {
-    background: #2563eb;
+    background: ${colors.primaryLight};
   }
 `;
 

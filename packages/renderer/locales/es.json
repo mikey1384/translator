@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Elegir otra ubicación",
     "continue": "Continuar",
     "send": "Enviar",
-    "dismiss": "Descartar"
+    "dismiss": "Descartar",
+    "moreActions": "Más acciones"
   },
   "errors": {
     "needCookies": "YouTube solicitó una verificación humana. Haz clic en Conectar para continuar.",
@@ -873,7 +874,15 @@
     "notEnough": "Créditos insuficientes. Por favor, compra más créditos para continuar.",
     "transcriptionMinutesShort": "{{minutes}} min de transcripción",
     "transcriptionTimeShort": "{{time}} de transcripción",
-    "costOfBalance": "{{cost}} de tus {{balance}} créditos"
+    "costOfBalance": "{{cost}} de tus {{balance}} créditos",
+    "pill": {
+      "freeBack": "Minutos gratis de nuevo el {{date}}",
+      "empty": "Conseguir minutos",
+      "freeThisMonth": "{{count}} min gratis este mes",
+      "freeWelcome": "{{count}} min gratis",
+      "minutes": "{{count}} min de transcripción",
+      "title": "Créditos y planes"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Algo salió mal. Reporta esto al creador para una solución rápida.",
     "preparingReport": "Preparando paquete de diagnóstico...",
     "reportContextWarning": "No se pudo cargar parte del contexto de diagnóstico. El informe seguirá incluyendo detalles de esta aplicación."
+  },
+  "home": {
+    "headline": "Cualquier video puede hablar <lang>{{language}}</lang>.",
+    "stageLabel": "Añadir un video",
+    "linkLabel": "Enlace del video",
+    "linkPlaceholder": "Pega el enlace de un video",
+    "dropHere": "Suéltalo para que hable {{language}}",
+    "makeItSpeak": "Que hable {{language}}",
+    "helper": "Pega un enlace de YouTube, TikTok, Instagram o X, o suelta aquí un archivo de video",
+    "chooseFile": "Elegir archivo",
+    "into": "En",
+    "dropNotMedia": "Suelta un archivo de video o audio para traducirlo.",
+    "dropOpenFailed": "No se pudo abrir ese archivo.",
+    "downloadQuality": "Calidad de descarga",
+    "hideOptions": "Ocultar opciones",
+    "options": "Opciones",
+    "editSrt": "Editar un .srt existente",
+    "burnSubtitles": "Grabar subtítulos en un video",
+    "findLabel": "Buscar un video",
+    "findPlaceholder": "¿No sabes qué ver? Descríbelo — p. ej. vlogs de comida callejera coreana",
+    "findButton": "Buscar videos",
+    "goHome": "Inicio",
+    "allLanguages": "Los {{count}} idiomas",
+    "languagePickerTitle": "Que hable…",
+    "languageSearchPlaceholder": "Buscar idiomas — p. ej. árabe, 한국어, Deutsch",
+    "languageSearchLabel": "Buscar idiomas",
+    "languageSearchEmpty": "Ningún idioma coincide.",
+    "languagePickerCommon": "Frecuentes",
+    "recent": "Recientes",
+    "seeAll": "Ver todo",
+    "recentSubtitlesReady": "Subtítulos en {{language}} listos",
+    "recentSubtitlesReadyGeneric": "Subtítulos listos",
+    "recentDownloaded": "Descargado"
   }
 }

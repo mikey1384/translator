@@ -27,7 +27,7 @@ const contentStyles = css`
   border-radius: ${borderRadius['2xl']};
   width: min(560px, 100%);
   padding: ${spacing['2xl']};
-  box-shadow: 0 16px 32px rgba(5, 10, 19, 0.28);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
   position: relative;
   box-sizing: border-box;
   display: flex;

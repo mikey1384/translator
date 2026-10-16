@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "选择其他位置",
     "continue": "继续",
     "send": "发送",
-    "dismiss": "关闭"
+    "dismiss": "关闭",
+    "moreActions": "更多操作"
   },
   "errors": {
     "needCookies": "YouTube 要求进行人机验证。点击「连接」继续。",
@@ -873,7 +874,15 @@
     "notEnough": "积分不足。请购买更多积分以继续。",
     "transcriptionMinutesShort": "{{minutes}} 分钟转写",
     "transcriptionTimeShort": "{{time}}转写",
-    "costOfBalance": "您 {{balance}} 积分中的 {{cost}}"
+    "costOfBalance": "您 {{balance}} 积分中的 {{cost}}",
+    "pill": {
+      "freeBack": "免费时长将于{{date}}恢复",
+      "empty": "获取时长",
+      "freeThisMonth": "本月免费 {{count}} 分钟",
+      "freeWelcome": "免费 {{count}} 分钟",
+      "minutes": "转录 {{count}} 分钟",
+      "title": "额度与套餐"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "出了点问题。请向开发者报告以便快速修复。",
     "preparingReport": "正在准备诊断包...",
     "reportContextWarning": "部分诊断上下文无法加载。报告仍将包含此应用中的详细信息。"
+  },
+  "home": {
+    "headline": "每个视频都能说<lang>{{language}}</lang>。",
+    "stageLabel": "添加视频",
+    "linkLabel": "视频链接",
+    "linkPlaceholder": "粘贴视频链接",
+    "dropHere": "松开即可变成{{language}}",
+    "makeItSpeak": "变成{{language}}",
+    "helper": "粘贴 YouTube、TikTok、Instagram 或 X 链接，或把视频文件拖到这里",
+    "chooseFile": "选择文件",
+    "into": "译成",
+    "dropNotMedia": "请拖入要翻译的视频或音频文件。",
+    "dropOpenFailed": "无法打开该文件。",
+    "downloadQuality": "下载画质",
+    "hideOptions": "隐藏选项",
+    "options": "选项",
+    "editSrt": "编辑已有的 .srt",
+    "burnSubtitles": "把字幕压进视频",
+    "findLabel": "查找视频",
+    "findPlaceholder": "不知道看什么？描述一下 — 例如：韩国街头美食 Vlog",
+    "findButton": "查找视频",
+    "goHome": "首页",
+    "allLanguages": "全部 {{count}} 种语言",
+    "languagePickerTitle": "要变成哪种语言？",
+    "languageSearchPlaceholder": "搜索语言 — 例如：阿拉伯语、한국어、Deutsch",
+    "languageSearchLabel": "搜索语言",
+    "languageSearchEmpty": "没有匹配的语言。",
+    "languagePickerCommon": "常用",
+    "recent": "最近",
+    "seeAll": "查看全部",
+    "recentSubtitlesReady": "{{language}}字幕已完成",
+    "recentSubtitlesReadyGeneric": "字幕已完成",
+    "recentDownloaded": "已下载"
   }
 }

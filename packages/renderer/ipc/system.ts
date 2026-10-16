@@ -1,3 +1,4 @@
+import type { MonthlyFreeCreditsInfo } from '@shared-types/app';
 import type {
   AnalyticsPrivacyState,
   AllByoSettings,
@@ -282,6 +283,7 @@ export function onCreditsUpdated(
     creditsPerHour?: number;
     authoritative?: boolean;
     checkoutSessionId?: string | null;
+    monthlyFree?: MonthlyFreeCreditsInfo | null;
   }) => void
 ): () => void {
   return window.electron.onCreditsUpdated(callback);
@@ -293,6 +295,7 @@ export function getCreditSnapshot(): Promise<{
   creditsPerHour: number;
   authoritative: boolean;
   checkoutSessionId?: string | null;
+  monthlyFree?: MonthlyFreeCreditsInfo | null;
 } | null> {
   return window.electron.getCreditSnapshot();
 }
@@ -303,6 +306,7 @@ export function refreshCreditSnapshot(force?: boolean): Promise<{
   creditsPerHour: number;
   authoritative: boolean;
   checkoutSessionId?: string | null;
+  monthlyFree?: MonthlyFreeCreditsInfo | null;
 } | null> {
   return window.electron.refreshCreditSnapshot(force);
 }

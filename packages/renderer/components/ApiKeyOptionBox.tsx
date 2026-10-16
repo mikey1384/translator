@@ -26,7 +26,7 @@ const optionBoxStyles = css`
 
 const optionBoxSatisfiedStyles = css`
   border-color: ${colors.primary};
-  background: rgba(125, 167, 255, 0.06);
+  background: rgba(255, 216, 77, 0.06);
 `;
 
 const optionHeaderStyles = css`
@@ -52,7 +52,7 @@ const optionBadgeStyles = css`
 
 const optionBadgeSatisfiedStyles = css`
   background: ${colors.primary};
-  color: #fff;
+  color: ${colors.onPrimary};
 `;
 
 const optionTitleStyles = css`
@@ -71,12 +71,12 @@ const dividerStyles = css`
 
 const inputWrapperStyles = css`
   padding: ${spacing.md};
-  background: rgba(40, 40, 40, 0.1);
+  background: rgba(32, 29, 39, 0.1);
   border-radius: ${borderRadius.lg};
 `;
 
 const inputWrapperSatisfiedStyles = css`
-  background: rgba(125, 167, 255, 0.06);
+  background: rgba(255, 216, 77, 0.06);
 `;
 
 export function ApiKeyOptionBox({

@@ -72,7 +72,11 @@ function sendNetLog(
   }
 }
 
-const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
+const store = new Store<{
+  balanceCredits: number;
+  creditsPerHour: number;
+  monthlyFree?: unknown;
+}>({
   name: 'credit-balance',
   defaults: { balanceCredits: 0, creditsPerHour: CREDITS_PER_AUDIO_HOUR },
 });
@@ -116,12 +120,41 @@ interface StripeSettlementResult {
   status: StripeSettlementStatus;
 }
 
+interface MonthlyFreeCredits {
+  credits: number;
+  month: string;
+  refreshesOn: string;
+}
+
 interface CreditSnapshotPayload {
   creditBalance: number;
   hoursBalance: number;
   creditsPerHour: number;
   authoritative: boolean;
   checkoutSessionId?: string | null;
+  monthlyFree?: MonthlyFreeCredits | null;
+}
+
+/** The API's monthly free top-up info, or null when absent or malformed. */
+function parseMonthlyFree(raw: unknown): MonthlyFreeCredits | null {
+  const value = raw as Partial<MonthlyFreeCredits> | null | undefined;
+  if (
+    !value ||
+    typeof value.credits !== 'number' ||
+    !Number.isFinite(value.credits) ||
+    value.credits <= 0 ||
+    typeof value.month !== 'string' ||
+    !/^\d{4}-\d{2}$/.test(value.month) ||
+    typeof value.refreshesOn !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value.refreshesOn)
+  ) {
+    return null;
+  }
+  return {
+    credits: value.credits,
+    month: value.month,
+    refreshesOn: value.refreshesOn,
+  };
 }
 
 type CheckoutMode = 'credits' | 'byo';
@@ -469,11 +502,13 @@ function buildCreditSnapshotPayload({
   perHour,
   authoritative,
   checkoutSessionId = null,
+  monthlyFree = parseMonthlyFree(store.get('monthlyFree')),
 }: {
   credits: number;
   perHour: number;
   authoritative: boolean;
   checkoutSessionId?: string | null;
+  monthlyFree?: MonthlyFreeCredits | null;
 }): CreditSnapshotPayload {
   return {
     creditBalance: credits,
@@ -481,6 +516,7 @@ function buildCreditSnapshotPayload({
     creditsPerHour: perHour,
     authoritative,
     checkoutSessionId,
+    monthlyFree,
   };
 }
 
@@ -567,10 +603,13 @@ async function syncCreditBalanceFromServer(
     status: response.status,
   });
 
+  const monthlyFree = parseMonthlyFree(response.data?.monthlyFree);
+  store.set('monthlyFree', monthlyFree);
   const snapshot = buildCreditSnapshotPayload({
     credits: Number(response.data.creditBalance) || 0,
     perHour: resolveCreditsPerHour(response.data?.creditsPerHour),
     authoritative: true,
+    monthlyFree,
   });
 
   publishCreditSnapshot({ snapshot, targetWindow });

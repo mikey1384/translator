@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Kies een andere locatie",
     "continue": "Doorgaan",
     "send": "Versturen",
-    "dismiss": "Sluiten"
+    "dismiss": "Sluiten",
+    "moreActions": "Meer acties"
   },
   "errors": {
     "needCookies": "YouTube heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan.",
@@ -873,7 +874,15 @@
     "notEnough": "Onvoldoende credits. Koop meer credits om door te gaan.",
     "transcriptionMinutesShort": "{{minutes}} min transcriptie",
     "transcriptionTimeShort": "{{time}} transcriptie",
-    "costOfBalance": "{{cost}} van je {{balance}} credits"
+    "costOfBalance": "{{cost}} van je {{balance}} credits",
+    "pill": {
+      "freeBack": "Gratis minuten weer op {{date}}",
+      "empty": "Minuten krijgen",
+      "freeThisMonth": "{{count}} gratis min deze maand",
+      "freeWelcome": "{{count}} gratis min",
+      "minutes": "{{count}} min transcriptie",
+      "title": "Tegoed en abonnementen"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Er is iets misgegaan. Meld dit aan de maker voor een snelle oplossing.",
     "preparingReport": "Diagnosebundel wordt voorbereid...",
     "reportContextWarning": "Een deel van de diagnostische context kon niet worden geladen. Het rapport bevat nog steeds details van deze app."
+  },
+  "home": {
+    "headline": "Elke video kan <lang>{{language}}</lang> spreken.",
+    "stageLabel": "Video toevoegen",
+    "linkLabel": "Videolink",
+    "linkPlaceholder": "Plak een videolink",
+    "dropHere": "Loslaten om het {{language}} te laten spreken",
+    "makeItSpeak": "Laat het {{language}} spreken",
+    "helper": "Plak een link van YouTube, TikTok, Instagram of X — of sleep hier een videobestand naartoe",
+    "chooseFile": "Bestand kiezen",
+    "into": "Naar",
+    "dropNotMedia": "Sleep een video- of audiobestand om het te vertalen.",
+    "dropOpenFailed": "Dat bestand kon niet worden geopend.",
+    "downloadQuality": "Downloadkwaliteit",
+    "hideOptions": "Opties verbergen",
+    "options": "Opties",
+    "editSrt": "Een bestaand .srt-bestand bewerken",
+    "burnSubtitles": "Ondertitels in een video branden",
+    "findLabel": "Een video zoeken",
+    "findPlaceholder": "Weet je niet wat je wilt kijken? Beschrijf het — bv. Koreaanse streetfoodvlogs",
+    "findButton": "Video’s zoeken",
+    "goHome": "Start",
+    "allLanguages": "Alle {{count}} talen",
+    "languagePickerTitle": "Laat het spreken in…",
+    "languageSearchPlaceholder": "Talen zoeken — bv. Arabisch, 한국어, Deutsch",
+    "languageSearchLabel": "Talen zoeken",
+    "languageSearchEmpty": "Geen taal komt overeen.",
+    "languagePickerCommon": "Veelgebruikt",
+    "recent": "Onlangs",
+    "seeAll": "Alles bekijken",
+    "recentSubtitlesReady": "{{language}} ondertitels klaar",
+    "recentSubtitlesReadyGeneric": "Ondertitels klaar",
+    "recentDownloaded": "Gedownload"
   }
 }

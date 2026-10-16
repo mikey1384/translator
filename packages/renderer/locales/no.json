@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Velg en annen plassering",
     "continue": "Fortsett",
     "send": "Send inn",
-    "dismiss": "Lukk"
+    "dismiss": "Lukk",
+    "moreActions": "Flere handlinger"
   },
   "errors": {
     "needCookies": "YouTube ba om menneskelig verifisering. Klikk på Koble til for å fortsette.",
@@ -873,7 +874,15 @@
     "notEnough": "Utilstrekkelige kreditter. Vennligst kjøp flere kreditter for å fortsette.",
     "transcriptionMinutesShort": "{{minutes}} min transkripsjon",
     "transcriptionTimeShort": "{{time}} transkripsjon",
-    "costOfBalance": "{{cost}} av dine {{balance}} kreditter"
+    "costOfBalance": "{{cost}} av dine {{balance}} kreditter",
+    "pill": {
+      "freeBack": "Gratisminutter tilbake {{date}}",
+      "empty": "Skaff minutter",
+      "freeThisMonth": "{{count}} gratis min denne måneden",
+      "freeWelcome": "{{count}} gratis min",
+      "minutes": "{{count}} min transkribering",
+      "title": "Kreditter og abonnementer"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Noe gikk galt. Rapporter dette til utvikleren for en rask løsning.",
     "preparingReport": "Forbereder diagnostikkpakke...",
     "reportContextWarning": "Noe diagnostikkontekst kunne ikke lastes inn. Rapporten vil fortsatt inneholde detaljer fra denne appen."
+  },
+  "home": {
+    "headline": "Hver video kan snakke <lang>{{language}}</lang>.",
+    "stageLabel": "Legg til video",
+    "linkLabel": "Videolenke",
+    "linkPlaceholder": "Lim inn en videolenke",
+    "dropHere": "Slipp den, så snakker den {{language}}",
+    "makeItSpeak": "La den snakke {{language}}",
+    "helper": "Lim inn en lenke fra YouTube, TikTok, Instagram eller X – eller slipp en videofil her",
+    "chooseFile": "Velg fil",
+    "into": "Til",
+    "dropNotMedia": "Slipp en video- eller lydfil for å oversette den.",
+    "dropOpenFailed": "Kunne ikke åpne filen.",
+    "downloadQuality": "Nedlastingskvalitet",
+    "hideOptions": "Skjul alternativer",
+    "options": "Alternativer",
+    "editSrt": "Rediger en eksisterende .srt",
+    "burnSubtitles": "Brenn inn undertekster i en video",
+    "findLabel": "Finn en video",
+    "findPlaceholder": "Usikker på hva du vil se? Beskriv det – f.eks. koreanske gatemat-vlogger",
+    "findButton": "Finn videoer",
+    "goHome": "Hjem",
+    "allLanguages": "Alle {{count}} språk",
+    "languagePickerTitle": "La den snakke…",
+    "languageSearchPlaceholder": "Søk etter språk – f.eks. arabisk, 한국어, Deutsch",
+    "languageSearchLabel": "Søk etter språk",
+    "languageSearchEmpty": "Ingen språk passer.",
+    "languagePickerCommon": "Vanlige",
+    "recent": "Nylige",
+    "seeAll": "Se alle",
+    "recentSubtitlesReady": "Undertekster på {{language}} klare",
+    "recentSubtitlesReadyGeneric": "Undertekster klare",
+    "recentDownloaded": "Lastet ned"
   }
 }

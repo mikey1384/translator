@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Pilih lokasi lain",
     "continue": "Lanjutkan",
     "send": "Kirim",
-    "dismiss": "Tutup"
+    "dismiss": "Tutup",
+    "moreActions": "Tindakan lainnya"
   },
   "errors": {
     "needCookies": "YouTube meminta verifikasi manusia. Klik Hubungkan untuk melanjutkan.",
@@ -873,7 +874,15 @@
     "notEnough": "Kredit tidak mencukupi. Silakan beli lebih banyak kredit untuk melanjutkan.",
     "transcriptionMinutesShort": "{{minutes}} mnt transkripsi",
     "transcriptionTimeShort": "{{time}} transkripsi",
-    "costOfBalance": "{{cost}} dari {{balance}} kredit Anda"
+    "costOfBalance": "{{cost}} dari {{balance}} kredit Anda",
+    "pill": {
+      "freeBack": "Menit gratis kembali pada {{date}}",
+      "empty": "Dapatkan menit",
+      "freeThisMonth": "{{count}} mnt gratis bulan ini",
+      "freeWelcome": "{{count}} mnt gratis",
+      "minutes": "{{count}} mnt transkripsi",
+      "title": "Kredit dan paket"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Terjadi kesalahan. Laporkan ini ke pembuat untuk perbaikan cepat.",
     "preparingReport": "Menyiapkan paket diagnostik...",
     "reportContextWarning": "Beberapa konteks diagnostik tidak dapat dimuat. Laporan tetap akan menyertakan detail dari aplikasi ini."
+  },
+  "home": {
+    "headline": "Setiap video bisa berbicara <lang>{{language}}</lang>.",
+    "stageLabel": "Tambah video",
+    "linkLabel": "Tautan video",
+    "linkPlaceholder": "Tempel tautan video",
+    "dropHere": "Lepaskan agar berbicara {{language}}",
+    "makeItSpeak": "Jadikan berbicara {{language}}",
+    "helper": "Tempel tautan dari YouTube, TikTok, Instagram, atau X — atau letakkan file video di sini",
+    "chooseFile": "Pilih file",
+    "into": "Ke",
+    "dropNotMedia": "Letakkan file video atau audio untuk diterjemahkan.",
+    "dropOpenFailed": "File itu tidak bisa dibuka.",
+    "downloadQuality": "Kualitas unduhan",
+    "hideOptions": "Sembunyikan opsi",
+    "options": "Opsi",
+    "editSrt": "Edit .srt yang sudah ada",
+    "burnSubtitles": "Tanamkan subtitle ke video",
+    "findLabel": "Cari video",
+    "findPlaceholder": "Bingung mau menonton apa? Jelaskan — mis. vlog jajanan kaki lima Korea",
+    "findButton": "Cari video",
+    "goHome": "Beranda",
+    "allLanguages": "Semua {{count}} bahasa",
+    "languagePickerTitle": "Jadikan berbicara…",
+    "languageSearchPlaceholder": "Cari bahasa — mis. Arab, 한국어, Deutsch",
+    "languageSearchLabel": "Cari bahasa",
+    "languageSearchEmpty": "Tidak ada bahasa yang cocok.",
+    "languagePickerCommon": "Umum",
+    "recent": "Terbaru",
+    "seeAll": "Lihat semua",
+    "recentSubtitlesReady": "Subtitle {{language}} siap",
+    "recentSubtitlesReadyGeneric": "Subtitle siap",
+    "recentDownloaded": "Diunduh"
   }
 }

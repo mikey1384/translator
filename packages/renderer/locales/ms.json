@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Pilih lokasi lain",
     "continue": "Teruskan",
     "send": "Hantar",
-    "dismiss": "Tutup"
+    "dismiss": "Tutup",
+    "moreActions": "Lagi tindakan"
   },
   "errors": {
     "needCookies": "YouTube meminta pengesahan manusia. Klik Sambung untuk meneruskan.",
@@ -873,7 +874,15 @@
     "notEnough": "Kredit tidak mencukupi. Sila beli lebih banyak kredit untuk meneruskan.",
     "transcriptionMinutesShort": "{{minutes}} min transkripsi",
     "transcriptionTimeShort": "{{time}} transkripsi",
-    "costOfBalance": "{{cost}} daripada {{balance}} kredit anda"
+    "costOfBalance": "{{cost}} daripada {{balance}} kredit anda",
+    "pill": {
+      "freeBack": "Minit percuma kembali pada {{date}}",
+      "empty": "Dapatkan minit",
+      "freeThisMonth": "{{count}} min percuma bulan ini",
+      "freeWelcome": "{{count}} min percuma",
+      "minutes": "{{count}} min transkripsi",
+      "title": "Kredit dan pelan"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Sesuatu tidak kena. Laporkan kepada pembangun untuk pembaikan segera.",
     "preparingReport": "Sedang menyiapkan pakej diagnostik...",
     "reportContextWarning": "Sesetengah konteks diagnostik tidak dapat dimuatkan. Laporan masih akan menyertakan butiran daripada aplikasi ini."
+  },
+  "home": {
+    "headline": "Setiap video boleh bertutur <lang>{{language}}</lang>.",
+    "stageLabel": "Tambah video",
+    "linkLabel": "Pautan video",
+    "linkPlaceholder": "Tampal pautan video",
+    "dropHere": "Lepaskan supaya ia bertutur {{language}}",
+    "makeItSpeak": "Jadikan ia bertutur {{language}}",
+    "helper": "Tampal pautan YouTube, TikTok, Instagram atau X — atau lepaskan fail video di sini",
+    "chooseFile": "Pilih fail",
+    "into": "Ke",
+    "dropNotMedia": "Lepaskan fail video atau audio untuk diterjemah.",
+    "dropOpenFailed": "Fail itu tidak dapat dibuka.",
+    "downloadQuality": "Kualiti muat turun",
+    "hideOptions": "Sembunyikan pilihan",
+    "options": "Pilihan",
+    "editSrt": "Sunting .srt sedia ada",
+    "burnSubtitles": "Bakar sari kata ke dalam video",
+    "findLabel": "Cari video",
+    "findPlaceholder": "Tak pasti nak tonton apa? Terangkan — cth. vlog makanan jalanan Korea",
+    "findButton": "Cari video",
+    "goHome": "Laman utama",
+    "allLanguages": "Semua {{count}} bahasa",
+    "languagePickerTitle": "Jadikan ia bertutur…",
+    "languageSearchPlaceholder": "Cari bahasa — cth. Arab, 한국어, Deutsch",
+    "languageSearchLabel": "Cari bahasa",
+    "languageSearchEmpty": "Tiada bahasa yang sepadan.",
+    "languagePickerCommon": "Biasa",
+    "recent": "Terkini",
+    "seeAll": "Lihat semua",
+    "recentSubtitlesReady": "Sari kata {{language}} siap",
+    "recentSubtitlesReadyGeneric": "Sari kata siap",
+    "recentDownloaded": "Dimuat turun"
   }
 }

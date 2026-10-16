@@ -35,7 +35,7 @@ export const workflowStatusCardStyles = css`
   padding: ${spacing.lg} ${spacing.xl};
   border-radius: ${borderRadius['2xl']};
   border: 1px solid ${colors.borderStrong};
-  background: rgba(12, 17, 27, 0.96);
+  background: rgba(21, 19, 26, 0.96);
   box-shadow: ${shadows.lg};
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -123,8 +123,8 @@ export const workflowStatusNoticeShellStyles = css`
   gap: ${spacing.sm};
   padding: ${spacing.md} ${spacing.lg};
   border-radius: ${borderRadius.xl};
-  border: 1px solid rgba(240, 180, 75, 0.28);
-  background: rgba(240, 180, 75, 0.08);
+  border: 1px solid rgba(255, 181, 71, 0.28);
+  background: rgba(255, 181, 71, 0.08);
 `;
 
 export const workflowStatusNoticeIconStyles = css`
@@ -136,7 +136,7 @@ export const workflowStatusNoticeIconStyles = css`
   align-items: center;
   justify-content: center;
   color: ${colors.warning};
-  background: rgba(240, 180, 75, 0.16);
+  background: rgba(255, 181, 71, 0.16);
 `;
 
 export const workflowStatusNoticeContentStyles = css`
@@ -237,7 +237,7 @@ export const workflowStageShellStyles = css`
 `;
 
 export const workflowStageShellSecondaryStyles = css`
-  background: rgba(18, 24, 35, 0.9);
+  background: rgba(25, 23, 31, 0.9);
   border-color: rgba(255, 255, 255, 0.08);
 `;
 
@@ -259,8 +259,8 @@ export const workflowStageEyebrowStyles = css`
   min-height: 28px;
   padding: 0 ${spacing.sm};
   border-radius: ${borderRadius.full};
-  border: 1px solid rgba(125, 167, 255, 0.24);
-  background: rgba(125, 167, 255, 0.08);
+  border: 1px solid rgba(255, 216, 77, 0.24);
+  background: rgba(255, 216, 77, 0.08);
   color: ${colors.primaryLight};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
@@ -269,8 +269,8 @@ export const workflowStageEyebrowStyles = css`
 `;
 
 export const workflowStageEyebrowSecondaryStyles = css`
-  border-color: rgba(240, 180, 75, 0.24);
-  background: rgba(240, 180, 75, 0.08);
+  border-color: rgba(255, 181, 71, 0.24);
+  background: rgba(255, 181, 71, 0.08);
   color: ${colors.warning};
 `;
 
@@ -338,8 +338,8 @@ export const workflowPanelFlushStyles = css`
 `;
 
 export const workflowPanelSuccessStyles = css`
-  border-color: rgba(57, 200, 135, 0.34);
-  background: rgba(25, 34, 49, 0.98);
+  border-color: rgba(123, 224, 165, 0.34);
+  background: rgba(32, 29, 39, 0.98);
 `;
 
 export const workflowPanelMutedStyles = css`
@@ -366,7 +366,7 @@ export const workflowPanelLeadIconStyles = css`
 `;
 
 export const workflowPanelLeadIconSuccessStyles = css`
-  background: rgba(57, 200, 135, 0.14);
+  background: rgba(123, 224, 165, 0.14);
   color: ${colors.success};
 `;
 
@@ -404,8 +404,8 @@ export const workflowPanelWarningBoxStyles = css`
   gap: ${spacing.sm};
   padding: ${spacing.sm} ${spacing.md};
   border-radius: ${borderRadius.xl};
-  border: 1px solid rgba(240, 180, 75, 0.3);
-  background: rgba(240, 180, 75, 0.1);
+  border: 1px solid rgba(255, 181, 71, 0.3);
+  background: rgba(255, 181, 71, 0.1);
   color: ${colors.text};
 `;
 
@@ -419,7 +419,7 @@ export const workflowPanelWarningIconStyles = css`
   align-items: center;
   justify-content: center;
   color: ${colors.warning};
-  background: rgba(240, 180, 75, 0.16);
+  background: rgba(255, 181, 71, 0.16);
 `;
 
 export const workflowPanelWarningContentStyles = css`

@@ -5,22 +5,29 @@
 <title>Stage5 Translator</title>
 <style>
   :root {
-    --bg: #090d14;
-    --surface: #141b26;
-    --surface-raised: #192231;
-    --text: #edf2fb;
-    --text-dim: #9aa8bd;
-    --primary: #7da7ff;
-    --success: #39c887;
-    --danger: #ff6d72;
-    --border: rgba(150, 165, 191, 0.18);
+    --bg: #0f0e13;
+    --surface: #19171f;
+    --surface-raised: #201d27;
+    --text: #f4f1ea;
+    --text-dim: #a39fad;
+    --primary: #ffd84d;
+    --success: #7be0a5;
+    --danger: #ff7a6b;
+    --border: rgba(244, 241, 234, 0.1);
+  }
+  /* dist/shell/shell.html -> renderer's bundled fonts, same layout in dev and asar */
+  @font-face {
+    font-family: 'Instrument Sans';
+    src: url('../../../renderer/dist/assets/fonts/InstrumentSans-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-display: swap;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     height: 100%;
     overflow: hidden;
     background: var(--bg);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     user-select: none;
   }
   #strip {
@@ -49,7 +56,7 @@
     cursor: default;
     position: relative;
   }
-  .tab:hover { background: rgba(150, 165, 191, 0.08); }
+  .tab:hover { background: rgba(244, 241, 234, 0.06); }
   .tab.dragging { opacity: 0.4; }
   .tab.active {
     background: var(--surface);
@@ -85,7 +92,7 @@
     height: 14px;
     transform: rotate(-90deg);
   }
-  .ring .track { stroke: rgba(125, 167, 255, 0.22); }
+  .ring .track { stroke: rgba(255, 216, 77, 0.22); }
   .ring .bar {
     stroke: var(--primary);
     transition: stroke-dashoffset 0.35s ease;
@@ -96,8 +103,8 @@
     height: 8px;
     border-radius: 50%;
   }
-  .dot.done { background: var(--success); box-shadow: 0 0 6px rgba(57, 200, 135, 0.7); }
-  .dot.error { background: var(--danger); box-shadow: 0 0 6px rgba(255, 109, 114, 0.7); }
+  .dot.done { background: var(--success); box-shadow: 0 0 6px rgba(123, 224, 165, 0.7); }
+  .dot.error { background: var(--danger); box-shadow: 0 0 6px rgba(255, 122, 107, 0.7); }
   .close {
     flex: none;
     width: 18px;
@@ -113,7 +120,7 @@
     align-items: center;
     justify-content: center;
   }
-  .close:hover { background: rgba(255, 109, 114, 0.2); color: var(--text); }
+  .close:hover { background: rgba(255, 122, 107, 0.2); color: var(--text); }
   #new-tab {
     flex: none;
     width: 26px;
@@ -127,7 +134,7 @@
     line-height: 1;
     cursor: pointer;
   }
-  #new-tab:hover { background: rgba(150, 165, 191, 0.12); color: var(--text); }
+  #new-tab:hover { background: rgba(244, 241, 234, 0.1); color: var(--text); }
   #spacer { flex: 100 1 0; }
 </style>
 </head>

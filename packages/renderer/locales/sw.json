@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Chagua eneo jingine",
     "continue": "Endelea",
     "send": "Tuma",
-    "dismiss": "Funga"
+    "dismiss": "Funga",
+    "moreActions": "Vitendo zaidi"
   },
   "errors": {
     "needCookies": "YouTube iliomba uthibitisho wa binadamu. Bofya Unganisha kuendelea.",
@@ -873,7 +874,15 @@
     "notEnough": "Mikopo haitoshi. Tafadhali nunua mikopo zaidi ili kuendelea.",
     "transcriptionMinutesShort": "dakika {{minutes}} za unakili",
     "transcriptionTimeShort": "{{time}} za unakili",
-    "costOfBalance": "{{cost}} kati ya mikopo yako {{balance}}"
+    "costOfBalance": "{{cost}} kati ya mikopo yako {{balance}}",
+    "pill": {
+      "freeBack": "Dakika za bure zitarudi {{date}}",
+      "empty": "Pata dakika",
+      "freeThisMonth": "Dakika {{count}} za bure mwezi huu",
+      "freeWelcome": "Dakika {{count}} za bure",
+      "minutes": "Dakika {{count}} za unukuzi",
+      "title": "Salio na mipango"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Kuna tatizo. Ripoti kwa muundaji kwa marekebisho ya haraka.",
     "preparingReport": "Kifurushi cha uchunguzi kinaandaliwa...",
     "reportContextWarning": "Baadhi ya muktadha wa uchunguzi haukuweza kupakiwa. Ripoti bado itajumuisha maelezo kutoka kwenye programu hii."
+  },
+  "home": {
+    "headline": "Kila video inaweza kuongea <lang>{{language}}</lang>.",
+    "stageLabel": "Ongeza video",
+    "linkLabel": "Kiungo cha video",
+    "linkPlaceholder": "Bandika kiungo cha video",
+    "dropHere": "Iachilie ili iongee {{language}}",
+    "makeItSpeak": "Ifanye iongee {{language}}",
+    "helper": "Bandika kiungo kutoka YouTube, TikTok, Instagram au X — au dondosha faili la video hapa",
+    "chooseFile": "Chagua faili",
+    "into": "Kwa",
+    "dropNotMedia": "Dondosha faili la video au sauti ili kulitafsiri.",
+    "dropOpenFailed": "Faili hilo halikuweza kufunguliwa.",
+    "downloadQuality": "Ubora wa kupakua",
+    "hideOptions": "Ficha chaguo",
+    "options": "Chaguo",
+    "editSrt": "Hariri .srt iliyopo",
+    "burnSubtitles": "Weka manukuu ndani ya video",
+    "findLabel": "Tafuta video",
+    "findPlaceholder": "Hujui utazame nini? Elezea — k.m. vlogu za vyakula vya mitaani vya Korea",
+    "findButton": "Tafuta video",
+    "goHome": "Nyumbani",
+    "allLanguages": "Lugha zote {{count}}",
+    "languagePickerTitle": "Iongee lugha gani?",
+    "languageSearchPlaceholder": "Tafuta lugha — k.m. Kiarabu, 한국어, Deutsch",
+    "languageSearchLabel": "Tafuta lugha",
+    "languageSearchEmpty": "Hakuna lugha inayolingana.",
+    "languagePickerCommon": "Za kawaida",
+    "recent": "Za hivi karibuni",
+    "seeAll": "Ona zote",
+    "recentSubtitlesReady": "Manukuu ya {{language}} yako tayari",
+    "recentSubtitlesReadyGeneric": "Manukuu yako tayari",
+    "recentDownloaded": "Imepakuliwa"
   }
 }

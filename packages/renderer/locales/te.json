@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "మరొక స్థానాన్ని ఎంచుకోండి",
     "continue": "కొనసాగించండి",
     "send": "పంపు",
-    "dismiss": "మూసివేయి"
+    "dismiss": "మూసివేయి",
+    "moreActions": "మరిన్ని చర్యలు"
   },
   "errors": {
     "needCookies": "YouTube మానవ ధృవీకరణ కోరింది. కొనసాగించడానికి కనెక్ట్ క్లిక్ చేయండి.",
@@ -873,7 +874,15 @@
     "notEnough": "తగినంత క్రెడిట్‌లు లేవు. కొనసాగడానికి దయచేసి మరింత క్రెడిట్‌లను కొనుగోలు చేయండి.",
     "transcriptionMinutesShort": "{{minutes}} నిమిషాల ట్రాన్స్‌క్రిప్షన్",
     "transcriptionTimeShort": "{{time}} ట్రాన్స్‌క్రిప్షన్",
-    "costOfBalance": "మీ {{balance}} క్రెడిట్‌లలో {{cost}}"
+    "costOfBalance": "మీ {{balance}} క్రెడిట్‌లలో {{cost}}",
+    "pill": {
+      "freeBack": "ఉచిత నిమిషాలు {{date}}న తిరిగి వస్తాయి",
+      "empty": "నిమిషాలు పొందండి",
+      "freeThisMonth": "ఈ నెల {{count}} ఉచిత నిమి",
+      "freeWelcome": "{{count}} ఉచిత నిమి",
+      "minutes": "{{count}} నిమి ట్రాన్స్‌క్రిప్షన్",
+      "title": "క్రెడిట్‌లు మరియు ప్లాన్‌లు"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "ఏదో తప్పు జరిగింది. త్వరిత పరిష్కారం కోసం డెవలపర్‌కు నివేదించండి.",
     "preparingReport": "డయాగ్నస్టిక్ బండిల్ సిద్ధం అవుతోంది...",
     "reportContextWarning": "కొంత డయాగ్నస్టిక్ సందర్భ సమాచారం లోడ్ కాలేదు. అయినప్పటికీ రిపోర్ట్‌లో ఈ యాప్ వివరాలు ఉంటాయి."
+  },
+  "home": {
+    "headline": "ప్రతి వీడియో <lang>{{language}}</lang> మాట్లాడగలదు.",
+    "stageLabel": "వీడియో జోడించండి",
+    "linkLabel": "వీడియో లింక్",
+    "linkPlaceholder": "వీడియో లింక్ పేస్ట్ చేయండి",
+    "dropHere": "వదలండి, అది {{language}} మాట్లాడుతుంది",
+    "makeItSpeak": "{{language}} మాట్లాడేలా చేయి",
+    "helper": "YouTube, TikTok, Instagram లేదా X లింక్ పేస్ట్ చేయండి — లేదా వీడియో ఫైల్‌ను ఇక్కడ వదలండి",
+    "chooseFile": "ఫైల్ ఎంచుకోండి",
+    "into": "భాష",
+    "dropNotMedia": "అనువదించడానికి వీడియో లేదా ఆడియో ఫైల్‌ను వదలండి.",
+    "dropOpenFailed": "ఆ ఫైల్ తెరవలేకపోయాం.",
+    "downloadQuality": "డౌన్‌లోడ్ నాణ్యత",
+    "hideOptions": "ఎంపికలను దాచు",
+    "options": "ఎంపికలు",
+    "editSrt": "ఉన్న .srt‌ను సవరించండి",
+    "burnSubtitles": "వీడియోలో ఉపశీర్షికలను పొందుపరచండి",
+    "findLabel": "వీడియో వెతకండి",
+    "findPlaceholder": "ఏమి చూడాలో తెలియదా? వివరించండి — ఉదా. కొరియన్ స్ట్రీట్ ఫుడ్ వ్లాగ్‌లు",
+    "findButton": "వీడియోలు వెతకండి",
+    "goHome": "హోమ్",
+    "allLanguages": "మొత్తం {{count}} భాషలు",
+    "languagePickerTitle": "ఏ భాషలో?",
+    "languageSearchPlaceholder": "భాష వెతకండి — ఉదా. అరబిక్, 한국어, Deutsch",
+    "languageSearchLabel": "భాష వెతకండి",
+    "languageSearchEmpty": "సరిపోలే భాష లేదు.",
+    "languagePickerCommon": "సాధారణమైనవి",
+    "recent": "ఇటీవలివి",
+    "seeAll": "అన్నీ చూడండి",
+    "recentSubtitlesReady": "{{language}} ఉపశీర్షికలు సిద్ధం",
+    "recentSubtitlesReadyGeneric": "ఉపశీర్షికలు సిద్ధం",
+    "recentDownloaded": "డౌన్‌లోడ్ అయింది"
   }
 }

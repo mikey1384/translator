@@ -68,7 +68,7 @@ const baseButtonStyles = css`
     outline: none;
     box-shadow:
       ${shadows.sm},
-      0 0 0 3px rgba(125, 167, 255, 0.2);
+      0 0 0 3px rgba(255, 216, 77, 0.2);
   }
 
   &:disabled {
@@ -100,28 +100,20 @@ const buttonSizes: Record<ButtonSize, string> = {
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary: css`
-    color: ${colors.bg};
-    background: linear-gradient(
-      135deg,
-      ${colors.primaryLight},
-      ${colors.primary}
-    );
-    border-color: rgba(171, 200, 255, 0.18);
+    color: ${colors.onPrimary};
+    background: ${colors.primary};
+    border-color: ${colors.primary};
+    font-weight: 600;
     box-shadow: ${shadows.button};
 
     &:hover:not(:disabled) {
-      background: linear-gradient(135deg, #bfd5ff, ${colors.primary});
-      border-color: rgba(171, 200, 255, 0.28);
+      background: ${colors.primaryLight};
+      border-color: ${colors.primaryLight};
     }
   `,
   secondary: css`
     color: ${colors.text};
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.03),
-      rgba(255, 255, 255, 0)
-    );
-    background-color: ${colors.grayLight};
+    background: ${colors.grayLight};
     border-color: ${colors.border};
 
     &:hover:not(:disabled) {
@@ -138,38 +130,38 @@ const buttonVariants: Record<ButtonVariant, string> = {
     padding-right: ${spacing.md};
 
     &:hover:not(:disabled) {
-      background-color: rgba(125, 167, 255, 0.08);
+      background-color: rgba(255, 216, 77, 0.08);
       color: ${colors.text};
     }
   `,
   danger: css`
-    color: ${colors.bg};
-    background: linear-gradient(135deg, #ff8b90, ${colors.danger});
-    border-color: rgba(255, 109, 114, 0.18);
+    color: ${colors.onPrimary};
+    background: ${colors.danger};
+    border-color: rgba(255, 122, 107, 0.18);
     box-shadow: ${shadows.button};
 
     &:hover:not(:disabled) {
-      border-color: rgba(255, 109, 114, 0.28);
+      border-color: rgba(255, 122, 107, 0.28);
     }
   `,
   warning: css`
-    color: #261700;
-    background: linear-gradient(135deg, #ffd58e, ${colors.warning});
-    border-color: rgba(240, 180, 75, 0.2);
+    color: ${colors.onPrimary};
+    background: ${colors.warning};
+    border-color: rgba(255, 181, 71, 0.2);
     box-shadow: ${shadows.button};
 
     &:hover:not(:disabled) {
-      border-color: rgba(240, 180, 75, 0.28);
+      border-color: rgba(255, 181, 71, 0.28);
     }
   `,
   success: css`
-    color: ${colors.bg};
-    background: linear-gradient(135deg, #6de0a4, ${colors.success});
-    border-color: rgba(57, 200, 135, 0.18);
+    color: ${colors.onPrimary};
+    background: ${colors.success};
+    border-color: rgba(123, 224, 165, 0.18);
     box-shadow: ${shadows.button};
 
     &:hover:not(:disabled) {
-      border-color: rgba(57, 200, 135, 0.28);
+      border-color: rgba(123, 224, 165, 0.28);
     }
   `,
   link: css`
@@ -195,7 +187,7 @@ const fullWidthStyle = css`
 const loadingOverlayStyles = css`
   position: absolute;
   inset: 0;
-  background: rgba(9, 13, 20, 0.22);
+  background: rgba(15, 14, 19, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;

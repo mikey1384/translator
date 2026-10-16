@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "別の場所を選択",
     "continue": "続行",
     "send": "送信",
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "moreActions": "その他の操作"
   },
   "errors": {
     "needCookies": "YouTubeが認証を求めています。「接続」をクリックして続行してください。",
@@ -873,7 +874,15 @@
     "notEnough": "クレジットが不足しています。続行するにはクレジットを購入してください。",
     "transcriptionMinutesShort": "文字起こし{{minutes}}分",
     "transcriptionTimeShort": "文字起こし{{time}}",
-    "costOfBalance": "残り{{balance}}クレジットのうち{{cost}}"
+    "costOfBalance": "残り{{balance}}クレジットのうち{{cost}}",
+    "pill": {
+      "freeBack": "{{date}}に無料分が復活します",
+      "empty": "時間を追加",
+      "freeThisMonth": "今月の無料 {{count}}分",
+      "freeWelcome": "無料 {{count}}分",
+      "minutes": "文字起こし {{count}}分",
+      "title": "クレジットとプラン"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "問題が発生しました。迅速な修正のために開発者に報告してください。",
     "preparingReport": "診断バンドルを準備しています...",
     "reportContextWarning": "一部の診断コンテキストを読み込めませんでした。レポートには引き続きこのアプリの詳細が含まれます。"
+  },
+  "home": {
+    "headline": "どんな動画も<lang>{{language}}</lang>で話せる。",
+    "stageLabel": "動画を追加",
+    "linkLabel": "動画のリンク",
+    "linkPlaceholder": "動画のリンクを貼り付け",
+    "dropHere": "ドロップして{{language}}にする",
+    "makeItSpeak": "{{language}}にする",
+    "helper": "YouTube・TikTok・Instagram・X のリンクを貼り付けるか、動画ファイルをここにドロップ",
+    "chooseFile": "ファイルを選択",
+    "into": "言語",
+    "dropNotMedia": "翻訳する動画または音声ファイルをドロップしてください。",
+    "dropOpenFailed": "そのファイルを開けませんでした。",
+    "downloadQuality": "ダウンロード画質",
+    "hideOptions": "オプションを隠す",
+    "options": "オプション",
+    "editSrt": "既存の .srt を編集",
+    "burnSubtitles": "動画に字幕を焼き込む",
+    "findLabel": "動画を探す",
+    "findPlaceholder": "何を観るか迷ったら説明してみて — 例：韓国の屋台グルメVlog",
+    "findButton": "動画を探す",
+    "goHome": "ホーム",
+    "allLanguages": "全{{count}}言語",
+    "languagePickerTitle": "何語にしますか？",
+    "languageSearchPlaceholder": "言語を検索 — 例：アラビア語、한국어、Deutsch",
+    "languageSearchLabel": "言語を検索",
+    "languageSearchEmpty": "一致する言語がありません。",
+    "languagePickerCommon": "よく使う言語",
+    "recent": "最近",
+    "seeAll": "すべて表示",
+    "recentSubtitlesReady": "{{language}}字幕が完成",
+    "recentSubtitlesReadyGeneric": "字幕が完成",
+    "recentDownloaded": "ダウンロード済み"
   }
 }

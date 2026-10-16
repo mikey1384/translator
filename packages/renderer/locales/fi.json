@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Valitse toinen sijainti",
     "continue": "Jatka",
     "send": "Lähetä",
-    "dismiss": "Sulje"
+    "dismiss": "Sulje",
+    "moreActions": "Lisää toimintoja"
   },
   "errors": {
     "needCookies": "YouTube pyysi ihmisen vahvistusta. Jatka napsauttamalla Yhdistä.",
@@ -873,7 +874,15 @@
     "notEnough": "Riittämättömästi krediittejä. Osta lisää krediittejä jatkaaksesi.",
     "transcriptionMinutesShort": "{{minutes}} min litterointia",
     "transcriptionTimeShort": "{{time}} litterointia",
-    "costOfBalance": "{{cost}} {{balance}} krediitistäsi"
+    "costOfBalance": "{{cost}} {{balance}} krediitistäsi",
+    "pill": {
+      "freeBack": "Ilmaiset minuutit palaavat {{date}}",
+      "empty": "Hanki minuutteja",
+      "freeThisMonth": "{{count}} ilmaista min tässä kuussa",
+      "freeWelcome": "{{count}} ilmaista min",
+      "minutes": "{{count}} min litterointia",
+      "title": "Krediitit ja paketit"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Jokin meni pieleen. Ilmoita tästä kehittäjälle nopeaa korjausta varten.",
     "preparingReport": "Valmistellaan diagnostiikkapakettia...",
     "reportContextWarning": "Osaa diagnostiikkakontekstista ei voitu ladata. Raportti sisältää silti tämän sovelluksen tiedot."
+  },
+  "home": {
+    "headline": "Jokainen video voi puhua kieltä <lang>{{language}}</lang>.",
+    "stageLabel": "Lisää video",
+    "linkLabel": "Videolinkki",
+    "linkPlaceholder": "Liitä videolinkki",
+    "dropHere": "Pudota, niin se puhuu kieltä {{language}}",
+    "makeItSpeak": "Puhumaan kieltä {{language}}",
+    "helper": "Liitä linkki YouTubesta, TikTokista, Instagramista tai X:stä – tai pudota videotiedosto tähän",
+    "chooseFile": "Valitse tiedosto",
+    "into": "Kieleen",
+    "dropNotMedia": "Pudota käännettävä video- tai äänitiedosto.",
+    "dropOpenFailed": "Tiedostoa ei voitu avata.",
+    "downloadQuality": "Latauksen laatu",
+    "hideOptions": "Piilota asetukset",
+    "options": "Asetukset",
+    "editSrt": "Muokkaa olemassa olevaa .srt-tiedostoa",
+    "burnSubtitles": "Polta tekstitykset videoon",
+    "findLabel": "Etsi video",
+    "findPlaceholder": "Et tiedä mitä katsoa? Kuvaile se – esim. korealaiset katuruokavlogit",
+    "findButton": "Etsi videoita",
+    "goHome": "Koti",
+    "allLanguages": "Kaikki {{count}} kieltä",
+    "languagePickerTitle": "Mille kielelle?",
+    "languageSearchPlaceholder": "Hae kieltä – esim. arabia, 한국어, Deutsch",
+    "languageSearchLabel": "Hae kieltä",
+    "languageSearchEmpty": "Mikään kieli ei vastaa hakua.",
+    "languagePickerCommon": "Yleiset",
+    "recent": "Viimeisimmät",
+    "seeAll": "Näytä kaikki",
+    "recentSubtitlesReady": "Tekstitys ({{language}}) valmis",
+    "recentSubtitlesReadyGeneric": "Tekstitys valmis",
+    "recentDownloaded": "Ladattu"
   }
 }

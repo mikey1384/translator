@@ -75,7 +75,7 @@ const errorText = css`
 
 const successText = css`
   margin: 0;
-  color: #22c55e;
+  color: ${colors.success};
   font-weight: 600;
 `;
 

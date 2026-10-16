@@ -80,7 +80,7 @@ export const settingsInlineLinkButtonStyles = css`
   }
 
   &:focus-visible {
-    outline: 2px solid rgba(125, 167, 255, 0.28);
+    outline: 2px solid rgba(255, 216, 77, 0.28);
     outline-offset: 2px;
     border-radius: ${borderRadius.sm};
   }
@@ -92,7 +92,7 @@ export const settingsCalloutStyles = css`
   padding: ${spacing.lg};
   border-radius: ${borderRadius.xl};
   border: 1px solid ${colors.border};
-  background: rgba(125, 167, 255, 0.06);
+  background: rgba(255, 216, 77, 0.06);
 `;
 
 export const settingsCalloutTitleStyles = css`
@@ -116,8 +116,8 @@ export const settingsDangerCalloutStyles = css`
   gap: ${spacing.sm};
   padding: ${spacing.lg};
   border-radius: ${borderRadius.lg};
-  border: 1px solid rgba(255, 109, 114, 0.34);
-  background: rgba(255, 109, 114, 0.1);
+  border: 1px solid rgba(255, 122, 107, 0.34);
+  background: rgba(255, 122, 107, 0.1);
   color: ${colors.danger};
 `;
 
@@ -168,7 +168,7 @@ export const byoSidebarCardStyles = css`
   padding: ${spacing.lg};
   border-radius: ${borderRadius.xl};
   border: 1px solid ${colors.border};
-  background: rgba(125, 167, 255, 0.05);
+  background: rgba(255, 216, 77, 0.05);
   overflow: hidden;
 
   @media (max-width: ${breakpoints.tabletMaxWidth}) {
@@ -197,7 +197,7 @@ export const apiKeyModeToggleCardStyles = css`
 `;
 
 export const apiKeyModeToggleCardActiveStyles = css`
-  background: rgba(125, 167, 255, 0.08);
+  background: rgba(255, 216, 77, 0.08);
   border-color: ${colors.borderStrong};
 `;
 
@@ -267,9 +267,9 @@ export const modalGuideTagStyles = css`
 `;
 
 export const modalGuideTagRequiredStyles = css`
-  background: rgba(125, 167, 255, 0.16);
+  background: rgba(255, 216, 77, 0.16);
   color: ${colors.primaryLight};
-  border: 1px solid rgba(125, 167, 255, 0.24);
+  border: 1px solid rgba(255, 216, 77, 0.24);
 `;
 
 export const modalGuideTagOptionalStyles = css`

@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "অন্য একটি অবস্থান বেছে নিন",
     "continue": "চালিয়ে যান",
     "send": "পাঠান",
-    "dismiss": "বন্ধ করুন"
+    "dismiss": "বন্ধ করুন",
+    "moreActions": "আরও কাজ"
   },
   "errors": {
     "needCookies": "YouTube মানব যাচাইয়ের জন্য অনুরোধ করেছে। চালিয়ে যেতে সংযোগ করুন ক্লিক করুন।",
@@ -873,7 +874,15 @@
     "notEnough": "অপর্যাপ্ত ক্রেডিট। অব্যাহত রাখতে অনুগ্রহ করে আরো ক্রেডিট কিনুন।",
     "transcriptionMinutesShort": "{{minutes}} মিনিট ট্রান্সক্রিপশন",
     "transcriptionTimeShort": "{{time}} ট্রান্সক্রিপশন",
-    "costOfBalance": "আপনার {{balance}} ক্রেডিটের মধ্যে {{cost}}"
+    "costOfBalance": "আপনার {{balance}} ক্রেডিটের মধ্যে {{cost}}",
+    "pill": {
+      "freeBack": "ফ্রি মিনিট ফিরবে {{date}}-এ",
+      "empty": "মিনিট নিন",
+      "freeThisMonth": "এই মাসে {{count}} ফ্রি মিনিট",
+      "freeWelcome": "{{count}} ফ্রি মিনিট",
+      "minutes": "{{count}} মিনিট ট্রান্সক্রিপশন",
+      "title": "ক্রেডিট ও প্ল্যান"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "কিছু একটা সমস্যা হয়েছে। দ্রুত সমাধানের জন্য ডেভেলপারকে রিপোর্ট করুন।",
     "preparingReport": "ডায়াগনস্টিক বান্ডেল প্রস্তুত করা হচ্ছে...",
     "reportContextWarning": "কিছু ডায়াগনস্টিক প্রেক্ষাপট লোড করা যায়নি। রিপোর্টে তবুও এই অ্যাপের বিবরণ থাকবে।"
+  },
+  "home": {
+    "headline": "প্রতিটি ভিডিও <lang>{{language}}</lang> বলতে পারে।",
+    "stageLabel": "ভিডিও যোগ করুন",
+    "linkLabel": "ভিডিওর লিংক",
+    "linkPlaceholder": "ভিডিওর লিংক পেস্ট করুন",
+    "dropHere": "ছেড়ে দিন, এটি {{language}} বলবে",
+    "makeItSpeak": "{{language}}-এ রূপান্তর",
+    "helper": "YouTube, TikTok, Instagram বা X-এর লিংক পেস্ট করুন — অথবা ভিডিও ফাইল এখানে ছাড়ুন",
+    "chooseFile": "ফাইল বেছে নিন",
+    "into": "ভাষা",
+    "dropNotMedia": "অনুবাদের জন্য ভিডিও বা অডিও ফাইল ছাড়ুন।",
+    "dropOpenFailed": "ফাইলটি খোলা যায়নি।",
+    "downloadQuality": "ডাউনলোডের মান",
+    "hideOptions": "বিকল্প লুকান",
+    "options": "বিকল্প",
+    "editSrt": "বিদ্যমান .srt সম্পাদনা করুন",
+    "burnSubtitles": "ভিডিওতে সাবটাইটেল বসান",
+    "findLabel": "ভিডিও খুঁজুন",
+    "findPlaceholder": "কী দেখবেন বুঝতে পারছেন না? বর্ণনা দিন — যেমন কোরিয়ান স্ট্রিট ফুড ভ্লগ",
+    "findButton": "ভিডিও খুঁজুন",
+    "goHome": "হোম",
+    "allLanguages": "সব {{count}}টি ভাষা",
+    "languagePickerTitle": "কোন ভাষায়?",
+    "languageSearchPlaceholder": "ভাষা খুঁজুন — যেমন আরবি, 한국어, Deutsch",
+    "languageSearchLabel": "ভাষা খুঁজুন",
+    "languageSearchEmpty": "কোনো ভাষা মেলেনি।",
+    "languagePickerCommon": "সাধারণ",
+    "recent": "সাম্প্রতিক",
+    "seeAll": "সব দেখুন",
+    "recentSubtitlesReady": "{{language}} সাবটাইটেল প্রস্তুত",
+    "recentSubtitlesReadyGeneric": "সাবটাইটেল প্রস্তুত",
+    "recentDownloaded": "ডাউনলোড হয়েছে"
   }
 }

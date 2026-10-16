@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "בחר מיקום אחר",
     "continue": "המשך",
     "send": "שלח",
-    "dismiss": "סגור"
+    "dismiss": "סגור",
+    "moreActions": "פעולות נוספות"
   },
   "errors": {
     "needCookies": "YouTube ביקש אימות אנושי. לחץ על התחבר כדי להמשיך.",
@@ -873,7 +874,15 @@
     "notEnough": "קרדיט לא מספיק. אנא רכוש קרדיט נוסף כדי להמשיך.",
     "transcriptionMinutesShort": "{{minutes}} דק׳ תמלול",
     "transcriptionTimeShort": "{{time}} תמלול",
-    "costOfBalance": "{{cost}} מתוך {{balance}} הקרדיטים שלך"
+    "costOfBalance": "{{cost}} מתוך {{balance}} הקרדיטים שלך",
+    "pill": {
+      "freeBack": "הדקות החינמיות חוזרות ב-{{date}}",
+      "empty": "קבלת דקות",
+      "freeThisMonth": "{{count}} דקות חינם החודש",
+      "freeWelcome": "{{count}} דקות חינם",
+      "minutes": "{{count}} דקות תמלול",
+      "title": "קרדיטים ותוכניות"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "משהו השתבש. דווח ליוצר לתיקון מהיר.",
     "preparingReport": "חבילת האבחון בהכנה...",
     "reportContextWarning": "לא ניתן היה לטעון חלק מהקשר האבחון. הדוח עדיין יכלול פרטים מהיישום הזה."
+  },
+  "home": {
+    "headline": "כל סרטון יכול לדבר <lang>{{language}}</lang>.",
+    "stageLabel": "הוספת סרטון",
+    "linkLabel": "קישור לסרטון",
+    "linkPlaceholder": "הדביקו קישור לסרטון",
+    "dropHere": "שחררו כדי שידבר {{language}}",
+    "makeItSpeak": "לגרום לו לדבר {{language}}",
+    "helper": "הדביקו קישור מ-YouTube,‏ TikTok,‏ Instagram או X — או גררו לכאן קובץ וידאו",
+    "chooseFile": "בחירת קובץ",
+    "into": "ל",
+    "dropNotMedia": "גררו קובץ וידאו או שמע כדי לתרגם אותו.",
+    "dropOpenFailed": "לא ניתן לפתוח את הקובץ.",
+    "downloadQuality": "איכות הורדה",
+    "hideOptions": "הסתרת אפשרויות",
+    "options": "אפשרויות",
+    "editSrt": "עריכת קובץ ‎.srt קיים",
+    "burnSubtitles": "צריבת כתוביות בסרטון",
+    "findLabel": "חיפוש סרטון",
+    "findPlaceholder": "לא בטוחים מה לראות? תארו — למשל וולוגים על אוכל רחוב קוריאני",
+    "findButton": "חיפוש סרטונים",
+    "goHome": "בית",
+    "allLanguages": "כל {{count}} השפות",
+    "languagePickerTitle": "באיזו שפה?",
+    "languageSearchPlaceholder": "חיפוש שפה — למשל ערבית, 한국어, Deutsch",
+    "languageSearchLabel": "חיפוש שפה",
+    "languageSearchEmpty": "אין שפה מתאימה.",
+    "languagePickerCommon": "נפוצות",
+    "recent": "אחרונים",
+    "seeAll": "הצג הכול",
+    "recentSubtitlesReady": "כתוביות ב{{language}} מוכנות",
+    "recentSubtitlesReadyGeneric": "הכתוביות מוכנות",
+    "recentDownloaded": "הורד"
   }
 }

@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Válassz másik helyet",
     "continue": "Folytatás",
     "send": "Küldés",
-    "dismiss": "Bezárás"
+    "dismiss": "Bezárás",
+    "moreActions": "További műveletek"
   },
   "errors": {
     "needCookies": "A YouTube emberi ellenőrzést kért. Kattintson a Csatlakozás gombra a folytatáshoz.",
@@ -873,7 +874,15 @@
     "notEnough": "Nincs elegendő kredit. Kérjük vásároljon több kreditet a folytatáshoz.",
     "transcriptionMinutesShort": "{{minutes}} perc átírás",
     "transcriptionTimeShort": "{{time}} átírás",
-    "costOfBalance": "{{cost}} a(z) {{balance}} kreditedből"
+    "costOfBalance": "{{cost}} a(z) {{balance}} kreditedből",
+    "pill": {
+      "freeBack": "Az ingyenes percek {{date}}-n térnek vissza",
+      "empty": "Percek szerzése",
+      "freeThisMonth": "{{count}} ingyenes perc ebben a hónapban",
+      "freeWelcome": "{{count}} ingyenes perc",
+      "minutes": "{{count}} perc átírás",
+      "title": "Kreditek és csomagok"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Valami hiba történt. Jelentsd a fejlesztőnek a gyors javításért.",
     "preparingReport": "Diagnosztikai csomag előkészítése...",
     "reportContextWarning": "A diagnosztikai környezet egy részét nem sikerült betölteni. A jelentés így is tartalmazni fogja ennek az alkalmazásnak a részleteit."
+  },
+  "home": {
+    "headline": "Minden videó beszélhet ezen a nyelven: <lang>{{language}}</lang>.",
+    "stageLabel": "Videó hozzáadása",
+    "linkLabel": "Videó linkje",
+    "linkPlaceholder": "Illessz be egy videólinket",
+    "dropHere": "Engedd el, és ezen a nyelven szól: {{language}}",
+    "makeItSpeak": "Szólaljon meg: {{language}}",
+    "helper": "Illessz be egy YouTube-, TikTok-, Instagram- vagy X-linket – vagy húzz ide egy videófájlt",
+    "chooseFile": "Fájl kiválasztása",
+    "into": "Nyelv",
+    "dropNotMedia": "Húzz ide egy fordítandó videó- vagy hangfájlt.",
+    "dropOpenFailed": "A fájlt nem sikerült megnyitni.",
+    "downloadQuality": "Letöltési minőség",
+    "hideOptions": "Beállítások elrejtése",
+    "options": "Beállítások",
+    "editSrt": "Meglévő .srt szerkesztése",
+    "burnSubtitles": "Feliratok égetése videóba",
+    "findLabel": "Videó keresése",
+    "findPlaceholder": "Nem tudod, mit nézz? Írd le – pl. koreai utcai kajás vlogok",
+    "findButton": "Videók keresése",
+    "goHome": "Kezdőlap",
+    "allLanguages": "Mind a(z) {{count}} nyelv",
+    "languagePickerTitle": "Milyen nyelven szóljon?",
+    "languageSearchPlaceholder": "Nyelv keresése – pl. arab, 한국어, Deutsch",
+    "languageSearchLabel": "Nyelv keresése",
+    "languageSearchEmpty": "Nincs egyező nyelv.",
+    "languagePickerCommon": "Gyakori",
+    "recent": "Legutóbbi",
+    "seeAll": "Összes megtekintése",
+    "recentSubtitlesReady": "Kész a felirat: {{language}}",
+    "recentSubtitlesReadyGeneric": "Kész a felirat",
+    "recentDownloaded": "Letöltve"
   }
 }

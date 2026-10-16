@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Chọn vị trí khác",
     "continue": "Tiếp tục",
     "send": "Gửi",
-    "dismiss": "Đóng"
+    "dismiss": "Đóng",
+    "moreActions": "Thao tác khác"
   },
   "errors": {
     "needCookies": "YouTube yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
@@ -873,7 +874,15 @@
     "notEnough": "Tín dụng không đủ. Vui lòng mua thêm tín dụng để tiếp tục.",
     "transcriptionMinutesShort": "{{minutes}} phút chép lời",
     "transcriptionTimeShort": "{{time}} chép lời",
-    "costOfBalance": "{{cost}} trên {{balance}} tín dụng của bạn"
+    "costOfBalance": "{{cost}} trên {{balance}} tín dụng của bạn",
+    "pill": {
+      "freeBack": "Phút miễn phí trở lại vào {{date}}",
+      "empty": "Nhận thêm phút",
+      "freeThisMonth": "{{count}} phút miễn phí tháng này",
+      "freeWelcome": "{{count}} phút miễn phí",
+      "minutes": "{{count}} phút chép lời",
+      "title": "Tín dụng và gói"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Đã xảy ra lỗi. Báo cáo cho nhà phát triển để sửa nhanh.",
     "preparingReport": "Đang chuẩn bị gói chẩn đoán...",
     "reportContextWarning": "Không thể tải một phần ngữ cảnh chẩn đoán. Báo cáo vẫn sẽ bao gồm chi tiết từ ứng dụng này."
+  },
+  "home": {
+    "headline": "Mọi video đều có thể nói <lang>{{language}}</lang>.",
+    "stageLabel": "Thêm video",
+    "linkLabel": "Liên kết video",
+    "linkPlaceholder": "Dán liên kết video",
+    "dropHere": "Thả vào để video nói {{language}}",
+    "makeItSpeak": "Cho video nói {{language}}",
+    "helper": "Dán liên kết YouTube, TikTok, Instagram hoặc X — hoặc thả tệp video vào đây",
+    "chooseFile": "Chọn tệp",
+    "into": "Sang",
+    "dropNotMedia": "Hãy thả tệp video hoặc âm thanh để dịch.",
+    "dropOpenFailed": "Không mở được tệp đó.",
+    "downloadQuality": "Chất lượng tải xuống",
+    "hideOptions": "Ẩn tùy chọn",
+    "options": "Tùy chọn",
+    "editSrt": "Sửa tệp .srt có sẵn",
+    "burnSubtitles": "Ghép phụ đề vào video",
+    "findLabel": "Tìm video",
+    "findPlaceholder": "Chưa biết xem gì? Hãy mô tả — vd. vlog ẩm thực đường phố Hàn Quốc",
+    "findButton": "Tìm video",
+    "goHome": "Trang chủ",
+    "allLanguages": "Tất cả {{count}} ngôn ngữ",
+    "languagePickerTitle": "Cho video nói…",
+    "languageSearchPlaceholder": "Tìm ngôn ngữ — vd. tiếng Ả Rập, 한국어, Deutsch",
+    "languageSearchLabel": "Tìm ngôn ngữ",
+    "languageSearchEmpty": "Không có ngôn ngữ phù hợp.",
+    "languagePickerCommon": "Thường dùng",
+    "recent": "Gần đây",
+    "seeAll": "Xem tất cả",
+    "recentSubtitlesReady": "Phụ đề {{language}} đã xong",
+    "recentSubtitlesReadyGeneric": "Phụ đề đã xong",
+    "recentDownloaded": "Đã tải xuống"
   }
 }

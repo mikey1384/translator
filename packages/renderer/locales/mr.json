@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "इतर ठिकाण निवडा",
     "continue": "सुरू ठेवा",
     "send": "पाठवा",
-    "dismiss": "बंद करा"
+    "dismiss": "बंद करा",
+    "moreActions": "आणखी क्रिया"
   },
   "errors": {
     "needCookies": "YouTube ने मानवी पडताळणी विनंती केली. सुरू ठेवण्यासाठी कनेक्ट क्लिक करा.",
@@ -873,7 +874,15 @@
     "notEnough": "अपुरे क्रेडिट्स. कृपया चालू ठेवण्यासाठी अधिक क्रेडिट्स खरेदी करा.",
     "transcriptionMinutesShort": "{{minutes}} मिनिटे ट्रान्सक्रिप्शन",
     "transcriptionTimeShort": "{{time}} ट्रान्सक्रिप्शन",
-    "costOfBalance": "तुमच्या {{balance}} क्रेडिट्सपैकी {{cost}}"
+    "costOfBalance": "तुमच्या {{balance}} क्रेडिट्सपैकी {{cost}}",
+    "pill": {
+      "freeBack": "मोफत मिनिटे {{date}} रोजी परत मिळतील",
+      "empty": "मिनिटे मिळवा",
+      "freeThisMonth": "या महिन्यात {{count}} मोफत मिनिटे",
+      "freeWelcome": "{{count}} मोफत मिनिटे",
+      "minutes": "{{count}} मिनिटे ट्रान्सक्रिप्शन",
+      "title": "क्रेडिट आणि प्लॅन"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "काहीतरी चूक झाली. लवकर निराकरणासाठी निर्मात्याला कळवा.",
     "preparingReport": "डायग्नॉस्टिक बंडल तयार केले जात आहे...",
     "reportContextWarning": "काही निदान-संदर्भ लोड करता आला नाही. अहवालात तरीही या अॅपचे तपशील समाविष्ट असतील."
+  },
+  "home": {
+    "headline": "प्रत्येक व्हिडिओ <lang>{{language}}</lang> बोलू शकतो.",
+    "stageLabel": "व्हिडिओ जोडा",
+    "linkLabel": "व्हिडिओ लिंक",
+    "linkPlaceholder": "व्हिडिओ लिंक पेस्ट करा",
+    "dropHere": "सोडा, तो {{language}} बोलेल",
+    "makeItSpeak": "{{language}} मध्ये बदला",
+    "helper": "YouTube, TikTok, Instagram किंवा X ची लिंक पेस्ट करा — किंवा व्हिडिओ फाइल इथे सोडा",
+    "chooseFile": "फाइल निवडा",
+    "into": "भाषा",
+    "dropNotMedia": "भाषांतरासाठी व्हिडिओ किंवा ऑडिओ फाइल सोडा.",
+    "dropOpenFailed": "ती फाइल उघडता आली नाही.",
+    "downloadQuality": "डाउनलोड गुणवत्ता",
+    "hideOptions": "पर्याय लपवा",
+    "options": "पर्याय",
+    "editSrt": "विद्यमान .srt संपादित करा",
+    "burnSubtitles": "व्हिडिओमध्ये सबटायटल जोडा",
+    "findLabel": "व्हिडिओ शोधा",
+    "findPlaceholder": "काय पाहायचे सुचत नाही? वर्णन करा — उदा. कोरियन स्ट्रीट फूड व्लॉग",
+    "findButton": "व्हिडिओ शोधा",
+    "goHome": "होम",
+    "allLanguages": "सर्व {{count}} भाषा",
+    "languagePickerTitle": "कोणत्या भाषेत?",
+    "languageSearchPlaceholder": "भाषा शोधा — उदा. अरबी, 한국어, Deutsch",
+    "languageSearchLabel": "भाषा शोधा",
+    "languageSearchEmpty": "कोणतीही भाषा जुळत नाही.",
+    "languagePickerCommon": "नेहमीच्या",
+    "recent": "अलीकडील",
+    "seeAll": "सर्व पहा",
+    "recentSubtitlesReady": "{{language}} सबटायटल तयार",
+    "recentSubtitlesReadyGeneric": "सबटायटल तयार",
+    "recentDownloaded": "डाउनलोड झाले"
   }
 }

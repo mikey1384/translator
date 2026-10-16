@@ -3,10 +3,13 @@ import { css, cx } from '@emotion/css';
 import IconButton from './IconButton.js';
 import { useTranslation } from 'react-i18next';
 import { useTaskStore, useUpdateStore } from '../state';
-import { openLogs } from '../state/modal-store';
 import { logButton } from '../utils/logger';
 import subtitleRendererClient from '../clients/subtitle-renderer-client.js';
 import { useUrlStore } from '../state/url-store';
+import { colors } from '../styles.js';
+
+/** Dispatched on window by the header menu's Reload item. */
+export const RELOAD_REQUEST_EVENT = 'translator:request-reload';
 
 interface FloatingActionButtonsProps {
   scrollThreshold?: number;
@@ -43,15 +46,15 @@ const updateAttentionKeyframes = css`
   @keyframes updateFabPulse {
     0% {
       transform: scale(1);
-      box-shadow: 0 10px 24px rgba(5, 10, 19, 0.26);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
     }
     50% {
       transform: scale(1.03);
-      box-shadow: 0 16px 34px rgba(5, 10, 19, 0.34);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
     }
     100% {
       transform: scale(1);
-      box-shadow: 0 10px 24px rgba(5, 10, 19, 0.26);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
     }
   }
 
@@ -59,13 +62,13 @@ const updateAttentionKeyframes = css`
     0%,
     100% {
       box-shadow:
-        0 10px 24px rgba(5, 10, 19, 0.26),
-        0 0 0 0 rgba(240, 180, 75, 0.2);
+        0 10px 24px rgba(0, 0, 0, 0.26),
+        0 0 0 0 rgba(255, 181, 71, 0.2);
     }
     50% {
       box-shadow:
-        0 18px 36px rgba(217, 138, 22, 0.28),
-        0 0 0 8px rgba(240, 180, 75, 0.12);
+        0 18px 36px rgba(255, 181, 71, 0.24),
+        0 0 0 8px rgba(255, 181, 71, 0.12);
     }
   }
 
@@ -73,13 +76,13 @@ const updateAttentionKeyframes = css`
     0%,
     100% {
       box-shadow:
-        0 10px 24px rgba(5, 10, 19, 0.26),
-        0 0 0 0 rgba(57, 200, 135, 0.18);
+        0 10px 24px rgba(0, 0, 0, 0.26),
+        0 0 0 0 rgba(123, 224, 165, 0.18);
     }
     50% {
       box-shadow:
-        0 18px 36px rgba(28, 165, 106, 0.28),
-        0 0 0 8px rgba(57, 200, 135, 0.12);
+        0 18px 36px rgba(123, 224, 165, 0.24),
+        0 0 0 8px rgba(123, 224, 165, 0.12);
     }
   }
 `;
@@ -96,7 +99,7 @@ const updatePillBaseStyles = css`
   border-radius: 999px;
   box-sizing: border-box;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(5, 10, 19, 0.26);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
   transition:
     background-color 120ms ease,
     border-color 120ms ease,
@@ -115,15 +118,15 @@ const updatePillBaseStyles = css`
 `;
 
 const updatePillAvailableStyles = css`
-  color: #fff7ea;
-  background: linear-gradient(135deg, #f0b44b, #d98a16);
-  border-color: rgba(255, 219, 154, 0.32);
+  color: ${colors.onPrimary};
+  background: ${colors.warning};
+  border-color: rgba(255, 181, 71, 0.4);
   animation:
     updateFabPulse 1.8s ease-in-out infinite,
     updateFabGlowAmber 1.8s ease-in-out infinite;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 14px 28px rgba(217, 138, 22, 0.28);
+    box-shadow: 0 14px 28px rgba(255, 181, 71, 0.24);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -132,21 +135,21 @@ const updatePillAvailableStyles = css`
 `;
 
 const updatePillDownloadingStyles = css`
-  color: #edf6ff;
-  background: linear-gradient(135deg, #5a90ff, #376ce6);
-  border-color: rgba(171, 200, 255, 0.28);
+  color: ${colors.onPrimary};
+  background: ${colors.primary};
+  border-color: rgba(255, 230, 128, 0.4);
 `;
 
 const updatePillReadyStyles = css`
-  color: #f3fff8;
-  background: linear-gradient(135deg, #39c887, #1ca56a);
-  border-color: rgba(136, 236, 188, 0.3);
+  color: ${colors.onPrimary};
+  background: ${colors.success};
+  border-color: rgba(123, 224, 165, 0.4);
   animation:
     updateFabPulse 1.8s ease-in-out infinite,
     updateFabGlowGreen 1.8s ease-in-out infinite;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 14px 28px rgba(28, 165, 106, 0.28);
+    box-shadow: 0 14px 28px rgba(123, 224, 165, 0.24);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -182,7 +185,7 @@ const updatePillProgressBadgeStyles = css`
   margin-left: auto;
   padding: 4px 8px;
   border-radius: 999px;
-  background: rgba(9, 13, 20, 0.18);
+  background: rgba(15, 14, 19, 0.18);
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
@@ -558,71 +561,18 @@ export default function FloatingActionButtons({
     };
   };
 
+  // The header "…" menu asks for a reload; reuse the merge-safe handler here.
+  const reloadRef = useRef(handleReloadClick);
+  reloadRef.current = handleReloadClick;
+  useEffect(() => {
+    const onRequest = () => void reloadRef.current();
+    window.addEventListener(RELOAD_REQUEST_EVENT, onRequest);
+    return () => window.removeEventListener(RELOAD_REQUEST_EVENT, onRequest);
+  }, []);
+
   const buttonProps = getButtonProps();
   return (
     <div className={buttonContainerStyles}>
-      <IconButton
-        onClick={() => {
-          logButton('report_issue');
-          openLogs();
-        }}
-        title={t('common.reportIssue', 'Report issue or feedback')}
-        aria-label={t(
-          'common.reportIssueAria',
-          'Open the issue report and logs dialog'
-        )}
-        size="lg"
-        variant="secondary"
-        icon={
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M8 9h8"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M9.5 14.5h5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M10 4.5 8.5 3M14 4.5 15.5 3"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <rect
-              x="6"
-              y="6"
-              width="12"
-              height="12"
-              rx="5"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M6 11H4M20 11h-2M6.5 15.5 5 17M17.5 15.5 19 17"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle cx="10" cy="11" r="1" fill="currentColor" />
-            <circle cx="14" cy="11" r="1" fill="currentColor" />
-          </svg>
-        }
-      />
       {buttonProps &&
         (buttonProps.kind === 'update' ? (
           <button
@@ -649,18 +599,7 @@ export default function FloatingActionButtons({
               ) : null}
             </div>
           </button>
-        ) : (
-          <IconButton
-            onClick={handleReloadClick}
-            title={buttonProps.title}
-            aria-label={buttonProps['aria-label'] ?? buttonProps.title}
-            size="lg"
-            variant={buttonProps.variant}
-            disabled={downloading || installing}
-            icon={buttonProps.icon}
-            className={buttonProps.className}
-          />
-        ))}
+        ) : null)}
       {showScrollToTopButton && (
         <IconButton
           variant="secondary"

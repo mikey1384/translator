@@ -63,7 +63,7 @@ const iconButtonSizes = {
 const iconButtonVariants = {
   primary: css`
     background-color: ${colors.primary};
-    color: #ffffff;
+    color: ${colors.onPrimary};
 
     &:hover:not(:disabled) {
       background-color: ${colors.primaryDark};
@@ -88,15 +88,15 @@ const iconButtonVariants = {
     }
   `,
   transparent: css`
-    background: rgba(42, 42, 42, 0.8);
+    background: rgba(32, 29, 39, 0.8);
     color: ${colors.text};
 
     &:hover:not(:disabled) {
-      background: rgba(42, 42, 42, 0.95);
+      background: rgba(32, 29, 39, 0.95);
     }
 
     &:active:not(:disabled) {
-      background: rgba(42, 42, 42, 0.95);
+      background: rgba(32, 29, 39, 0.95);
     }
   `,
 };

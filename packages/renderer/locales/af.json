@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "Kies 'n ander ligging",
     "continue": "Gaan voort",
     "send": "Stuur",
-    "dismiss": "Maak toe"
+    "dismiss": "Maak toe",
+    "moreActions": "Meer aksies"
   },
   "errors": {
     "needCookies": "YouTube het 'n menslike verifikasie gevra. Klik op Verbind om voort te gaan.",
@@ -873,7 +874,15 @@
     "notEnough": "Onvoldoende krediete. Koop asseblief meer krediete om voort te gaan.",
     "transcriptionMinutesShort": "{{minutes}} min transkripsie",
     "transcriptionTimeShort": "{{time}} transkripsie",
-    "costOfBalance": "{{cost}} van jou {{balance}} krediete"
+    "costOfBalance": "{{cost}} van jou {{balance}} krediete",
+    "pill": {
+      "freeBack": "Gratis minute weer op {{date}}",
+      "empty": "Kry minute",
+      "freeThisMonth": "{{count}} gratis min hierdie maand",
+      "freeWelcome": "{{count}} gratis min",
+      "minutes": "{{count}} min transkripsie",
+      "title": "Krediete en planne"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "Iets het fout gegaan. Rapporteer dit aan die skepper vir 'n vinnige regstelling.",
     "preparingReport": "Diagnostiese bondel word voorberei...",
     "reportContextWarning": "Sommige diagnostiese konteks kon nie gelaai word nie. Die verslag sal steeds besonderhede uit hierdie toepassing insluit."
+  },
+  "home": {
+    "headline": "Elke video kan <lang>{{language}}</lang> praat.",
+    "stageLabel": "Voeg ’n video by",
+    "linkLabel": "Videoskakel",
+    "linkPlaceholder": "Plak ’n videoskakel",
+    "dropHere": "Los dit sodat dit {{language}} praat",
+    "makeItSpeak": "Laat dit {{language}} praat",
+    "helper": "Plak ’n skakel van YouTube, TikTok, Instagram of X — of los ’n videolêer hier",
+    "chooseFile": "Kies lêer",
+    "into": "Na",
+    "dropNotMedia": "Los ’n video- of klanklêer om dit te vertaal.",
+    "dropOpenFailed": "Daardie lêer kon nie oopgemaak word nie.",
+    "downloadQuality": "Aflaaigehalte",
+    "hideOptions": "Versteek opsies",
+    "options": "Opsies",
+    "editSrt": "Wysig ’n bestaande .srt",
+    "burnSubtitles": "Brand onderskrifte in ’n video in",
+    "findLabel": "Vind ’n video",
+    "findPlaceholder": "Weet nie wat om te kyk nie? Beskryf dit — bv. Koreaanse straatkos-vlogs",
+    "findButton": "Vind video’s",
+    "goHome": "Tuis",
+    "allLanguages": "Al {{count}} tale",
+    "languagePickerTitle": "Laat dit praat in…",
+    "languageSearchPlaceholder": "Soek tale — bv. Arabies, 한국어, Deutsch",
+    "languageSearchLabel": "Soek tale",
+    "languageSearchEmpty": "Geen taal pas nie.",
+    "languagePickerCommon": "Algemeen",
+    "recent": "Onlangs",
+    "seeAll": "Sien alles",
+    "recentSubtitlesReady": "{{language}}-onderskrifte gereed",
+    "recentSubtitlesReadyGeneric": "Onderskrifte gereed",
+    "recentDownloaded": "Afgelaai"
   }
 }

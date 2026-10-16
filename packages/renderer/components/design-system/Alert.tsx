@@ -26,63 +26,64 @@ const baseAlertStyles = css`
   margin-bottom: ${spacing.lg};
 `;
 
+// Calm tinted surfaces; body text stays in the main text color for contrast.
 const variantStyles: Record<AlertVariant, string> = {
   info: css`
-    background-color: rgba(91, 192, 222, 0.1);
-    border-color: ${colors.info};
-    color: ${colors.info};
+    background-color: rgba(157, 187, 255, 0.08);
+    border-color: rgba(157, 187, 255, 0.36);
+    color: ${colors.text};
 
     a {
       color: ${colors.info};
       text-decoration: underline;
 
       &:hover {
-        color: ${colors.primaryDark};
+        color: ${colors.text};
       }
     }
   `,
 
   success: css`
-    background-color: rgba(76, 224, 179, 0.1);
-    border-color: ${colors.success};
-    color: ${colors.success};
+    background-color: rgba(123, 224, 165, 0.08);
+    border-color: rgba(123, 224, 165, 0.36);
+    color: ${colors.text};
 
     a {
       color: ${colors.success};
       text-decoration: underline;
 
       &:hover {
-        color: #218838;
+        color: ${colors.text};
       }
     }
   `,
 
   warning: css`
-    background-color: rgba(247, 85, 154, 0.1);
-    border-color: ${colors.warning};
-    color: ${colors.warning};
+    background-color: rgba(255, 181, 71, 0.08);
+    border-color: rgba(255, 181, 71, 0.36);
+    color: ${colors.text};
 
     a {
-      color: ${colors.primary};
+      color: ${colors.warning};
       text-decoration: underline;
 
       &:hover {
-        color: ${colors.primaryDark};
+        color: ${colors.text};
       }
     }
   `,
 
   error: css`
-    background-color: rgba(230, 94, 106, 0.1);
-    border-color: ${colors.danger};
-    color: ${colors.danger};
+    background-color: rgba(255, 122, 107, 0.08);
+    border-color: rgba(255, 122, 107, 0.36);
+    color: ${colors.text};
 
     a {
       color: ${colors.danger};
       text-decoration: underline;
 
       &:hover {
-        color: #c82333;
+        color: ${colors.text};
       }
     }
   `,

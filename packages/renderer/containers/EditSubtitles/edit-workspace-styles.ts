@@ -286,19 +286,19 @@ export const editorSaveButtonStyles = css`
 `;
 
 export const editorMergeButtonStyles = css`
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #ff8bc0, ${colors.progressMerge});
-  border-color: rgba(247, 85, 154, 0.28);
-  box-shadow: 0 10px 22px rgba(247, 85, 154, 0.2);
+  color: ${colors.onPrimary} !important;
+  background: ${colors.progressMerge};
+  border-color: rgba(255, 122, 182, 0.28);
+  box-shadow: 0 10px 22px rgba(255, 122, 182, 0.2);
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #ff9ccc, #e0488a);
-    border-color: rgba(247, 85, 154, 0.42);
+    background: #ff9bc9;
+    border-color: rgba(255, 122, 182, 0.42);
   }
 
   &:active:not(:disabled) {
-    background: linear-gradient(135deg, #f86aaa, #c7407b);
-    border-color: rgba(247, 85, 154, 0.5);
+    background: #f46aa8;
+    border-color: rgba(255, 122, 182, 0.5);
   }
 `;
 
@@ -309,8 +309,8 @@ export const editorTranslateBarStyles = css`
   align-items: center;
   gap: ${spacing.md};
   padding: ${spacing.md} ${spacing.lg};
-  border-color: rgba(87, 182, 218, 0.24);
-  background: rgba(87, 182, 218, 0.08);
+  border-color: rgba(157, 187, 255, 0.24);
+  background: rgba(157, 187, 255, 0.08);
 `;
 
 export const editorTranslateLabelStyles = css`
@@ -514,7 +514,7 @@ export const editorTextareaInputStyles = (
   &:focus {
     outline: none;
     border-color: ${readOnly ? 'transparent' : colors.primary};
-    box-shadow: ${readOnly ? 'none' : `0 0 0 3px rgba(125, 167, 255, 0.12)`};
+    box-shadow: ${readOnly ? 'none' : `0 0 0 3px rgba(255, 216, 77, 0.12)`};
   }
 `;
 
@@ -523,7 +523,7 @@ export const editorTextareaLockedBadgeStyles = css`
   top: ${spacing.sm};
   right: ${spacing.sm};
   z-index: 3;
-  background: rgba(9, 13, 20, 0.88);
+  background: rgba(15, 14, 19, 0.88);
   color: ${colors.textDim};
   border: 1px solid ${colors.border};
   border-radius: ${borderRadius.full};
@@ -547,8 +547,8 @@ export const editorTextareaPlaceholderStyles = css`
 `;
 
 export const editorTextareaHighlightMatchStyles = css`
-  background: rgba(240, 180, 75, 0.9);
-  color: #141b26;
+  background: rgba(255, 181, 71, 0.9);
+  color: #19171f;
   border-radius: ${borderRadius.sm};
   padding: 0 1px;
 `;
@@ -606,8 +606,8 @@ export const editorFindMatchCountStyles = css`
 
 export const editorFindMatchCountErrorStyles = css`
   color: ${colors.danger};
-  border-color: rgba(255, 109, 114, 0.26);
-  background: rgba(255, 109, 114, 0.08);
+  border-color: rgba(255, 122, 107, 0.26);
+  background: rgba(255, 122, 107, 0.08);
 `;
 
 export const editorFindIconButtonStyles = css`

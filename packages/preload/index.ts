@@ -1,4 +1,10 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent, shell } from 'electron';
+import {
+  contextBridge,
+  ipcRenderer,
+  IpcRendererEvent,
+  shell,
+  webUtils,
+} from 'electron';
 import { createHash } from 'crypto';
 import {
   AnalyticsPrivacyState,
@@ -557,6 +563,11 @@ const electronAPI = {
       creditsPerHour?: number;
       authoritative?: boolean;
       checkoutSessionId?: string | null;
+      monthlyFree?: {
+        credits: number;
+        month: string;
+        refreshesOn: string;
+      } | null;
     }) => void
   ) => {
     const handler = (_: any, payload: any) => {
@@ -571,6 +582,11 @@ const electronAPI = {
     creditsPerHour: number;
     authoritative: boolean;
     checkoutSessionId?: string | null;
+    monthlyFree?: {
+      credits: number;
+      month: string;
+      refreshesOn: string;
+    } | null;
   } | null> => ipcRenderer.invoke('get-credit-snapshot'),
   refreshCreditSnapshot: (
     force?: boolean
@@ -580,6 +596,11 @@ const electronAPI = {
     creditsPerHour: number;
     authoritative: boolean;
     checkoutSessionId?: string | null;
+    monthlyFree?: {
+      credits: number;
+      month: string;
+      refreshesOn: string;
+    } | null;
   } | null> => ipcRenderer.invoke('refresh-credit-snapshot', force === true),
   createCreditTransferCode: (): Promise<
     | {
@@ -1036,6 +1057,14 @@ try {
 }
 
 contextBridge.exposeInMainWorld('fileApi', {
+  // A dropped File's absolute path; '' for non-file drops.
+  getPathForFile: (file: File): string => {
+    try {
+      return webUtils.getPathForFile(file) || '';
+    } catch {
+      return '';
+    }
+  },
   readText: (p: string) => fs.readFile(p, 'utf8'),
   writeText: (p: string, data: string) => fs.writeFile(p, data, 'utf8'),
   fileExists: async (p: string): Promise<boolean> => {

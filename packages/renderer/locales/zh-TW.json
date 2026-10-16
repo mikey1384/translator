@@ -91,7 +91,8 @@
     "chooseAnotherLocation": "選擇其他位置",
     "continue": "繼續",
     "send": "傳送",
-    "dismiss": "關閉"
+    "dismiss": "關閉",
+    "moreActions": "更多操作"
   },
   "errors": {
     "needCookies": "YouTube 要求進行人機驗證。點擊「連接」繼續。",
@@ -873,7 +874,15 @@
     "notEnough": "點數不足。請購買更多點數以繼續。",
     "transcriptionMinutesShort": "{{minutes}} 分鐘轉錄",
     "transcriptionTimeShort": "{{time}}轉錄",
-    "costOfBalance": "您 {{balance}} 積分中的 {{cost}}"
+    "costOfBalance": "您 {{balance}} 積分中的 {{cost}}",
+    "pill": {
+      "freeBack": "免費時數將於{{date}}恢復",
+      "empty": "取得時數",
+      "freeThisMonth": "本月免費 {{count}} 分鐘",
+      "freeWelcome": "免費 {{count}} 分鐘",
+      "minutes": "轉錄 {{count}} 分鐘",
+      "title": "點數與方案"
+    }
   },
   "cta": {
     "generate": {
@@ -1137,5 +1146,38 @@
     "reportPrompt": "發生錯誤。請向開發者回報以便快速修復。",
     "preparingReport": "正在準備診斷包...",
     "reportContextWarning": "部分診斷內容無法載入。報告仍會包含此應用程式的詳細資訊。"
+  },
+  "home": {
+    "headline": "每部影片都能說<lang>{{language}}</lang>。",
+    "stageLabel": "新增影片",
+    "linkLabel": "影片連結",
+    "linkPlaceholder": "貼上影片連結",
+    "dropHere": "放開即可變成{{language}}",
+    "makeItSpeak": "變成{{language}}",
+    "helper": "貼上 YouTube、TikTok、Instagram 或 X 連結，或把影片檔拖到這裡",
+    "chooseFile": "選擇檔案",
+    "into": "譯成",
+    "dropNotMedia": "請拖入要翻譯的影片或音訊檔。",
+    "dropOpenFailed": "無法開啟這個檔案。",
+    "downloadQuality": "下載畫質",
+    "hideOptions": "隱藏選項",
+    "options": "選項",
+    "editSrt": "編輯現有的 .srt",
+    "burnSubtitles": "把字幕燒進影片",
+    "findLabel": "尋找影片",
+    "findPlaceholder": "不知道看什麼？描述一下 — 例如：韓國街頭小吃 Vlog",
+    "findButton": "尋找影片",
+    "goHome": "首頁",
+    "allLanguages": "全部 {{count}} 種語言",
+    "languagePickerTitle": "要變成哪種語言？",
+    "languageSearchPlaceholder": "搜尋語言 — 例如：阿拉伯語、한국어、Deutsch",
+    "languageSearchLabel": "搜尋語言",
+    "languageSearchEmpty": "沒有符合的語言。",
+    "languagePickerCommon": "常用",
+    "recent": "最近",
+    "seeAll": "查看全部",
+    "recentSubtitlesReady": "{{language}}字幕已完成",
+    "recentSubtitlesReadyGeneric": "字幕已完成",
+    "recentDownloaded": "已下載"
   }
 }

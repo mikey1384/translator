@@ -1,12 +1,17 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
 import { estimateTranslatableHours } from '../utils/creditEstimates';
-import type { CreditHistorySummary } from '@shared-types/app';
+import type {
+  CreditHistorySummary,
+  MonthlyFreeCreditsInfo,
+} from '@shared-types/app';
 
 interface CreditState {
   credits: number | null;
   hours: number | null;
   creditsPerHour: number | null;
+  // This month's free top-up allowance (null when the API doesn't report one).
+  monthlyFree: MonthlyFreeCreditsInfo | null;
   authoritative: boolean;
   loading: boolean;
   error?: string;
@@ -156,11 +161,13 @@ export const useCreditStore = create<CreditState>((set, get) => {
     hoursBalance,
     creditsPerHour,
     authoritative,
+    monthlyFree,
   }: {
     creditBalance: number;
     hoursBalance?: number | null;
     creditsPerHour?: number | null;
     authoritative?: boolean;
+    monthlyFree?: MonthlyFreeCreditsInfo | null;
   }) => {
     const credits = creditBalance ?? null;
     const previousCredits = get().credits;
@@ -173,6 +180,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
       hours,
       creditsPerHour:
         typeof creditsPerHour === 'number' ? creditsPerHour : null,
+      monthlyFree: monthlyFree === undefined ? state.monthlyFree : monthlyFree,
       authoritative: Boolean(authoritative),
       loading: false,
       error: undefined,
@@ -196,12 +204,19 @@ export const useCreditStore = create<CreditState>((set, get) => {
   };
 
   const unsubCredits = SystemIPC.onCreditsUpdated(
-    ({ creditBalance, hoursBalance, creditsPerHour, authoritative }) => {
+    ({
+      creditBalance,
+      hoursBalance,
+      creditsPerHour,
+      authoritative,
+      monthlyFree,
+    }) => {
       applyCreditSnapshot({
         creditBalance,
         hoursBalance,
         creditsPerHour,
         authoritative,
+        monthlyFree,
       });
     }
   );
@@ -399,6 +414,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
   return {
     credits: null,
     hours: null,
+    monthlyFree: null,
     creditsPerHour: null,
     authoritative: false,
     loading: true,

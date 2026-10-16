@@ -74,7 +74,7 @@ const radioLabelDisabled = css`
 `;
 
 const radioLabelSelected = css`
-  background: rgba(67, 97, 238, 0.1);
+  background: rgba(255, 216, 77, 0.1);
 `;
 
 const infoText = css`

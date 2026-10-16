@@ -121,7 +121,7 @@ const inputStyles = css`
     border-color: ${colors.primaryLight};
     box-shadow:
       ${shadows.sm},
-      0 0 0 3px rgba(125, 167, 255, 0.16);
+      0 0 0 3px rgba(255, 216, 77, 0.16);
   }
 
   &::placeholder {
