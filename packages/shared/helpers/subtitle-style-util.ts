@@ -2,6 +2,7 @@ import { css } from '@emotion/css';
 import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
+  subtitleStyleUsesLineBox,
 } from '../constants/subtitle-styles.js';
 import {
   BASELINE_FONT_SIZE,
@@ -171,6 +172,64 @@ const SHORT_FORM_TUNING: Record<SubtitleStylePresetKey, ShortFormTuning> = {
     softShadowColor: 'rgba(0, 0, 0, 0.22)',
     softShadowOffsetYPx: 4,
   },
+  Cinema: {
+    borderRadiusPx: 10,
+    bottomMultiLine: '29.5%',
+    bottomSingleLine: '23.5%',
+    containerPadding: '10px 22px',
+    fontScale: 1.08,
+    fontWeight: 800,
+    horizontalInset: '5.5%',
+    letterSpacing: '-0.01em',
+    lineBoxBorderRadiusPx: 0,
+    lineBoxBoxShadow: 'none',
+    lineBoxPadding: '1px 6px',
+    lineHeight: 1.2,
+    maxWidth: '89%',
+    outlineMultiplier: 2.1,
+    softShadowBlurPx: 18,
+    softShadowColor: 'rgba(0, 0, 0, 0.6)',
+    softShadowOffsetYPx: 6,
+  },
+  Clean: {
+    borderRadiusPx: 10,
+    bottomMultiLine: '29.5%',
+    bottomSingleLine: '23.5%',
+    containerPadding: '10px 22px',
+    fontScale: 1.08,
+    fontWeight: 800,
+    horizontalInset: '5.5%',
+    letterSpacing: '-0.01em',
+    lineBoxBorderRadiusPx: 0,
+    lineBoxBoxShadow: 'none',
+    lineBoxPadding: '1px 6px',
+    lineHeight: 1.22,
+    maxWidth: '89%',
+    outlineMultiplier: 0,
+    softShadowBlurPx: 16,
+    softShadowColor: 'rgba(0, 0, 0, 0.78)',
+    softShadowOffsetYPx: 3,
+  },
+  Highlight: {
+    borderRadiusPx: 0,
+    bottomMultiLine: '18%',
+    bottomSingleLine: '18%',
+    containerPadding: '0 14px 12px 14px',
+    fontScale: 1.08,
+    fontWeight: 800,
+    horizontalInset: '7%',
+    letterSpacing: '-0.02em',
+    lineBoxBackgroundColor: 'rgba(255, 216, 77, 1)',
+    lineBoxBorderRadiusPx: 10,
+    lineBoxBoxShadow: '0 8px 20px rgba(0, 0, 0, 0.28)',
+    lineBoxPadding: '3px 12px 4px 12px',
+    lineHeight: 1.3,
+    maxWidth: '86%',
+    outlineMultiplier: 0,
+    softShadowBlurPx: 0,
+    softShadowColor: 'transparent',
+    softShadowOffsetYPx: 0,
+  },
   LineBox: {
     borderRadiusPx: 0,
     // Keep one stable reading position above social-app controls. Moving
@@ -201,9 +260,11 @@ type LandscapeTuning = {
   fontWeight: number;
   letterSpacing: string;
   lineHeight: number;
-  // Outline presets
+  // Outline presets (outlineEm 0 = no stroke)
   outlineColor?: string;
   outlineEm?: number;
+  // Layered shadows, each [offsetYEm, blurEm, color]; replaces the single one.
+  shadowLayersEm?: Array<[number, number, string]>;
   shadowBlurEm?: number;
   shadowColor?: string;
   shadowOffsetYEm?: number;
@@ -228,6 +289,34 @@ const LANDSCAPE_TUNING: Partial<
     shadowBlurEm: 0.17,
     shadowColor: 'rgba(0, 0, 0, 0.55)',
     shadowOffsetYEm: 0.05,
+  },
+  Cinema: {
+    fontWeight: 650,
+    letterSpacing: '-0.005em',
+    lineHeight: 1.26,
+    outlineColor: 'rgba(10, 9, 12, 0.88)',
+    outlineEm: 0.08,
+    shadowBlurEm: 0.22,
+    shadowColor: 'rgba(0, 0, 0, 0.6)',
+    shadowOffsetYEm: 0.04,
+  },
+  Clean: {
+    fontWeight: 600,
+    letterSpacing: '-0.005em',
+    lineHeight: 1.28,
+    outlineEm: 0,
+    shadowLayersEm: [
+      [0.02, 0.06, 'rgba(0, 0, 0, 0.6)'],
+      [0.05, 0.3, 'rgba(0, 0, 0, 0.55)'],
+    ],
+  },
+  Highlight: {
+    fontWeight: 650,
+    letterSpacing: '-0.01em',
+    lineHeight: 1.5,
+    lineBoxBackgroundColor: 'rgba(255, 216, 77, 1)',
+    lineBoxPaddingEm: [0.06, 0.34, 0.12],
+    lineBoxRadiusEm: 0.18,
   },
   LineBox: {
     fontWeight: 600,
@@ -347,28 +436,47 @@ export function resolveSubtitleRenderTheme(opts: {
   let boxShadowValue = 'none';
   let containerPadding = shortFormTuning?.containerPadding || '10px 20px';
 
-  if (stylePreset === 'LineBox') {
+  if (subtitleStyleUsesLineBox(stylePreset)) {
     backgroundColor = 'transparent';
     boxShadowValue = 'none';
     containerPadding = shortFormTuning?.containerPadding || '0 12px 10px 12px';
-    textShadow = isShortFormPortrait
-      ? `0 ${shortFormTuning?.softShadowOffsetYPx || 2}px ${
-          shortFormTuning?.softShadowBlurPx || 8
-        }px ${shortFormTuning?.softShadowColor || 'rgba(0, 0, 0, 0.28)'}`
-      : 'none';
+    textShadow =
+      isShortFormPortrait && shortFormTuning?.softShadowBlurPx !== 0
+        ? `0 ${shortFormTuning?.softShadowOffsetYPx || 2}px ${
+            shortFormTuning?.softShadowBlurPx || 8
+          }px ${shortFormTuning?.softShadowColor || 'rgba(0, 0, 0, 0.28)'}`
+        : 'none';
   } else if (style.borderStyle === 1) {
     backgroundColor = 'transparent';
     boxShadowValue = 'none';
-    if (landscapeTuning?.outlineEm) {
-      textStrokeColor = landscapeTuning.outlineColor || outlineRgba;
-      textStrokeWidthPx = Math.max(
-        1.5,
-        emToPx(finalFontSize, landscapeTuning.outlineEm)
-      );
+    if (typeof landscapeTuning?.outlineEm === 'number') {
+      if (landscapeTuning.outlineEm > 0) {
+        textStrokeColor = landscapeTuning.outlineColor || outlineRgba;
+        textStrokeWidthPx = Math.max(
+          1.5,
+          emToPx(finalFontSize, landscapeTuning.outlineEm)
+        );
+      }
+      textShadow = landscapeTuning.shadowLayersEm
+        ? landscapeTuning.shadowLayersEm
+            .map(([offsetEm, blurEm, color]) =>
+              buildSoftShadow(
+                color,
+                emToPx(finalFontSize, offsetEm),
+                emToPx(finalFontSize, blurEm)
+              )
+            )
+            .join(', ')
+        : buildSoftShadow(
+            landscapeTuning.shadowColor || shadowRgba,
+            emToPx(finalFontSize, landscapeTuning.shadowOffsetYEm ?? 0.05),
+            emToPx(finalFontSize, landscapeTuning.shadowBlurEm ?? 0.17)
+          );
+    } else if (shortFormTuning?.outlineMultiplier === 0) {
       textShadow = buildSoftShadow(
-        landscapeTuning.shadowColor || shadowRgba,
-        emToPx(finalFontSize, landscapeTuning.shadowOffsetYEm ?? 0.05),
-        emToPx(finalFontSize, landscapeTuning.shadowBlurEm ?? 0.17)
+        shortFormTuning.softShadowColor,
+        shortFormTuning.softShadowOffsetYPx,
+        shortFormTuning.softShadowBlurPx
       );
     } else {
       const outlineSize = Math.max(
@@ -561,7 +669,7 @@ export function getSubtitleStyles(opts: {
     max-width 0.3s ease-out
   `;
 
-  if (stylePreset === 'LineBox') {
+  if (subtitleStyleUsesLineBox(stylePreset)) {
     transitionValue = `
       font-size 0.1s linear,
       color 0.2s linear,

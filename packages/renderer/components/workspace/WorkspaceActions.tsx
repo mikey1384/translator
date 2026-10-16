@@ -5,6 +5,7 @@ import {
   Download,
   FileText,
   FileUp,
+  Film,
   Languages,
   LayoutGrid,
   MoreHorizontal,
@@ -108,7 +109,13 @@ export function WorkspaceIdleStatus() {
   );
 }
 
-function MoreMenu({ hasSubs }: { hasSubs: boolean }) {
+function MoreMenu({
+  hasSubs,
+  showExport,
+}: {
+  hasSubs: boolean;
+  showExport: boolean;
+}) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -150,6 +157,21 @@ function MoreMenu({ hasSubs }: { hasSubs: boolean }) {
       </Button>
       {open ? (
         <div className={moreMenuStyles} role="menu">
+          {showExport ? (
+            <button
+              type="button"
+              role="menuitem"
+              className={moreMenuItemStyles}
+              onClick={() => {
+                logButton('workspace_more_export');
+                setOpen(false);
+                useUIStore.getState().setExportSheetOpen(true);
+              }}
+            >
+              <Film aria-hidden="true" />
+              {t('workspace.exportVideo', 'Export video with subtitles')}
+            </button>
+          ) : null}
           <button
             type="button"
             role="menuitem"
@@ -319,7 +341,16 @@ export function WorkspaceActionBar() {
           {t('workspace.saveSrt', 'Save .srt')}
         </Button>
       ) : null}
-      <MoreMenu hasSubs={hasSubs} />
+      <MoreMenu
+        hasSubs={hasSubs}
+        showExport={
+          hasSubs &&
+          !!videoPath &&
+          !busy &&
+          primary?.label !==
+            t('workspace.exportVideo', 'Export video with subtitles')
+        }
+      />
     </div>
   );
 }

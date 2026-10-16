@@ -373,7 +373,15 @@ function assertProfileShape(profile) {
     }
     if (
       rendering.style !== undefined &&
-      !['Default', 'Classic', 'Boxed', 'LineBox'].includes(rendering.style)
+      ![
+        'Default',
+        'Classic',
+        'Boxed',
+        'LineBox',
+        'Cinema',
+        'Clean',
+        'Highlight',
+      ].includes(rendering.style)
     ) {
       throw new TypeError('profile.subtitle_rendering.style is unsupported.');
     }

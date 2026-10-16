@@ -2,7 +2,7 @@ import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../../state/ui-store.js';
 import type { SubtitleDisplayMode } from '@shared-types/app';
-import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
+import SubtitleStylePicker from './SubtitleStylePicker.js';
 import { MIN_SUBTITLE_FONT_SIZE } from '../../../shared/constants';
 import {
   editorButtonContentStyles,
@@ -11,11 +11,13 @@ import {
   editorToolbarCompactInputStyles,
   editorToolbarFieldGridStyles,
   editorToolbarFieldStyles,
+  editorToolbarFullRowStyles,
   editorToolbarGridStyles,
   editorToolbarLabelStyles,
   editorToolbarPrimarySectionStyles,
   editorToolbarSectionStyles,
   editorToolbarSelectStyles,
+  editorToolbarStyleFieldStyles,
 } from './edit-workspace-styles';
 
 interface SaveAndMergeBarProps {
@@ -195,35 +197,6 @@ export default function SaveAndMergeBar({
           <div className={editorToolbarFieldStyles}>
             <label
               className={editorToolbarLabelStyles}
-              htmlFor="mergeStylePresetSelect"
-            >
-              {t('editSubtitles.mergeControls.styleLabel')}
-            </label>
-            <select
-              id="mergeStylePresetSelect"
-              className={editorToolbarSelectStyles}
-              value={stylePreset}
-              onChange={e =>
-                setStylePreset(e.target.value as SubtitleStylePresetKey)
-              }
-            >
-              {(
-                [
-                  'Default',
-                  'Classic',
-                  'Boxed',
-                  'LineBox',
-                ] as SubtitleStylePresetKey[]
-              ).map(key => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={editorToolbarFieldStyles}>
-            <label
-              className={editorToolbarLabelStyles}
               htmlFor="subtitleDisplayModeSelect"
             >
               {t('subtitles.displayModeLabel', 'Subtitle display')}
@@ -250,6 +223,17 @@ export default function SaveAndMergeBar({
               </option>
             </select>
           </div>
+        </div>
+      </div>
+
+      <div
+        className={`${editorToolbarSectionStyles} ${editorToolbarFullRowStyles}`}
+      >
+        <div className={editorToolbarStyleFieldStyles}>
+          <span className={editorToolbarLabelStyles}>
+            {t('editSubtitles.mergeControls.styleLabel')}
+          </span>
+          <SubtitleStylePicker value={stylePreset} onChange={setStylePreset} />
         </div>
       </div>
     </div>

@@ -13,6 +13,9 @@ const SUBTITLE_STYLE_PRESETS = new Set([
   'Classic',
   'Boxed',
   'LineBox',
+  'Cinema',
+  'Clean',
+  'Highlight',
 ]);
 const SUBTITLE_DISPLAY_MODES = new Set(['original', 'translation', 'dual']);
 const SUBTITLE_FONT_FAMILY = 'Noto Sans';

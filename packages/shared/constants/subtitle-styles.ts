@@ -129,9 +129,108 @@ export const SUBTITLE_STYLE_PRESETS: Record<string, SubtitleStyle> = {
     marginVertical: 15,
     encoding: 1,
   },
+  // Subtitle yellow (#FFD84D) with a fine dark edge: the app's own look.
+  Cinema: {
+    name: 'Cinema',
+    fontName: DEFAULT_FONT,
+    fontSizePlaceholder: '%FONTSIZE%',
+    primaryColor: '&H004DD8FF', // #FFD84D
+    secondaryColor: '&H000000FF',
+    outlineColor: '&H000C090A',
+    backColor: '&H66000000',
+    isBold: true,
+    isItalic: false,
+    isUnderline: false,
+    isStrikeout: false,
+    scaleX: 100,
+    scaleY: 100,
+    spacing: 0,
+    angle: 0,
+    borderStyle: 1,
+    outlineSize: 1.2,
+    shadowDepth: 0.6,
+    alignment: 2,
+    marginLeft: 10,
+    marginRight: 10,
+    marginVertical: 15,
+    encoding: 1,
+  },
+  // Streaming-service white: no outline, legibility from a layered soft shadow.
+  Clean: {
+    name: 'Clean',
+    fontName: DEFAULT_FONT,
+    fontSizePlaceholder: '%FONTSIZE%',
+    primaryColor: '&H00FFFFFF',
+    secondaryColor: '&H000000FF',
+    outlineColor: '&HFF000000', // Fully transparent: no stroke
+    backColor: '&H73000000',
+    isBold: true,
+    isItalic: false,
+    isUnderline: false,
+    isStrikeout: false,
+    scaleX: 100,
+    scaleY: 100,
+    spacing: 0,
+    angle: 0,
+    borderStyle: 1,
+    outlineSize: 0,
+    shadowDepth: 1,
+    alignment: 2,
+    marginLeft: 10,
+    marginRight: 10,
+    marginVertical: 15,
+    encoding: 1,
+  },
+  // Dark text on a solid yellow band per line, the short-video look.
+  Highlight: {
+    name: 'Highlight',
+    fontName: DEFAULT_FONT,
+    fontSizePlaceholder: '%FONTSIZE%',
+    primaryColor: '&H00130E0F', // #0F0E13
+    secondaryColor: '&H000000FF',
+    outlineColor: '&H004DD8FF',
+    backColor: '&H004DD8FF', // #FFD84D band
+    isBold: true,
+    isItalic: false,
+    isUnderline: false,
+    isStrikeout: false,
+    scaleX: 100,
+    scaleY: 100,
+    spacing: 0,
+    angle: 0,
+    borderStyle: 3,
+    outlineSize: 0,
+    shadowDepth: 0,
+    alignment: 2,
+    marginLeft: 10,
+    marginRight: 10,
+    marginVertical: 15,
+    encoding: 1,
+  },
 };
 
 export type SubtitleStylePresetKey = keyof typeof SUBTITLE_STYLE_PRESETS;
+
+// What a new install shows in the player and burns into exports.
+export const DEFAULT_SUBTITLE_STYLE_PRESET: SubtitleStylePresetKey = 'Cinema';
+
+// Picker order: the new looks first, the long-standing ones after.
+export const SUBTITLE_STYLE_PRESET_ORDER: SubtitleStylePresetKey[] = [
+  'Cinema',
+  'Clean',
+  'Highlight',
+  'LineBox',
+  'Boxed',
+  'Default',
+  'Classic',
+];
+
+// Presets drawn as one background band per line instead of an outline.
+const LINE_BOX_PRESETS = new Set<string>(['LineBox', 'Highlight']);
+
+export function subtitleStyleUsesLineBox(preset: string | undefined): boolean {
+  return LINE_BOX_PRESETS.has(String(preset || ''));
+}
 
 // Helper function to get the style line with font size replaced
 export function getAssStyleLine(

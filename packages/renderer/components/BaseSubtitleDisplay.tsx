@@ -6,7 +6,10 @@ import {
   resolveSubtitleRenderTheme,
   subtitleTextUsesMultipleLines,
 } from '../../shared/helpers/subtitle-style-util.js';
-import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles.js';
+import {
+  SubtitleStylePresetKey,
+  subtitleStyleUsesLineBox,
+} from '../../shared/constants/subtitle-styles.js';
 
 interface BaseSubtitleDisplayProps {
   text: string;
@@ -80,7 +83,7 @@ export default function BaseSubtitleDisplay({
 
   return (
     <div ref={subtitleRef} className={combinedClassName}>
-      {stylePreset === 'LineBox'
+      {subtitleStyleUsesLineBox(stylePreset)
         ? text.split('\n').map((line, index, arr) => (
             <React.Fragment key={index}>
               <span style={lineBoxStyle}>

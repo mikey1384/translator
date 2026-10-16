@@ -177,7 +177,15 @@ const outputOptionsSchema = Object.freeze({
     },
     subtitle_style: {
       type: 'string',
-      enum: ['Default', 'Classic', 'Boxed', 'LineBox'],
+      enum: [
+        'Default',
+        'Classic',
+        'Boxed',
+        'LineBox',
+        'Cinema',
+        'Clean',
+        'Highlight',
+      ],
     },
     subtitle_font_size: {
       type: 'number',
@@ -264,7 +272,15 @@ const projectProfileSchema = Object.freeze({
         },
         style: {
           type: 'string',
-          enum: ['Default', 'Classic', 'Boxed', 'LineBox'],
+          enum: [
+            'Default',
+            'Classic',
+            'Boxed',
+            'LineBox',
+            'Cinema',
+            'Clean',
+            'Highlight',
+          ],
         },
         font_size: { type: 'number', minimum: 12, maximum: 96 },
         max_lines: { type: 'integer', minimum: 1, maximum: 4 },
@@ -437,7 +453,15 @@ const renderCheckpointForkOverrideSchema = Object.freeze({
   properties: {
     style: {
       type: 'string',
-      enum: ['Default', 'Classic', 'Boxed', 'LineBox'],
+      enum: [
+        'Default',
+        'Classic',
+        'Boxed',
+        'LineBox',
+        'Cinema',
+        'Clean',
+        'Highlight',
+      ],
     },
     base_font_size_px: { type: 'number', minimum: 12, maximum: 96 },
   },

@@ -592,7 +592,15 @@ function buildServer() {
       description:
         'Choose subtitle style and optional base font size. These settings also control highlight renders; LineBox at 35 is a good Korean Shorts starting point.',
       inputSchema: z.object({
-        style: z.enum(['Default', 'Classic', 'Boxed', 'LineBox']),
+        style: z.enum([
+          'Default',
+          'Classic',
+          'Boxed',
+          'LineBox',
+          'Cinema',
+          'Clean',
+          'Highlight',
+        ]),
         base_font_size_px: z.number().min(6).max(96).optional(),
       }),
     },

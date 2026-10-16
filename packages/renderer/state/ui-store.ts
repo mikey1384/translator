@@ -3,7 +3,11 @@ import { immer } from 'zustand/middleware/immer';
 import { Draft, enableMapSet } from 'immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
-import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
+import {
+  DEFAULT_SUBTITLE_STYLE_PRESET,
+  SUBTITLE_STYLE_PRESETS,
+  SubtitleStylePresetKey,
+} from '../../shared/constants/subtitle-styles';
 import { DEFAULT_SUBTITLE_BASE_FONT_SIZE } from '../../shared/constants/runtime-config';
 import { sameArray } from '../utils/array';
 import {
@@ -261,6 +265,26 @@ function parseStoredSubtitleDisplayMode(): SubtitleDisplayMode {
 
 // Note: We intentionally do NOT persist panel open states across reloads.
 
+// The style used to be saved on every store change, so a stored 'Default'
+// almost never meant a choice. Move those installs to the yellow default once;
+// anything picked after that is kept as is.
+const SUBTITLE_STYLE_DEFAULT_MIGRATION_KEY = 'subtitleStyleDefaultCinema';
+
+function readSavedSubtitleStyle(): SubtitleStylePresetKey {
+  try {
+    const saved = localStorage.getItem('savedMergeStylePreset');
+    if (!localStorage.getItem(SUBTITLE_STYLE_DEFAULT_MIGRATION_KEY)) {
+      localStorage.setItem(SUBTITLE_STYLE_DEFAULT_MIGRATION_KEY, '1');
+      if (!saved || saved === 'Default') return DEFAULT_SUBTITLE_STYLE_PRESET;
+    }
+    return saved && Object.hasOwn(SUBTITLE_STYLE_PRESETS, saved)
+      ? saved
+      : DEFAULT_SUBTITLE_STYLE_PRESET;
+  } catch {
+    return DEFAULT_SUBTITLE_STYLE_PRESET;
+  }
+}
+
 const initial: State = {
   showSettings: false,
   isFindBarVisible: false,
@@ -287,9 +311,7 @@ const initial: State = {
   baseFontSize:
     Number(localStorage.getItem('savedMergeFontSize')) ||
     DEFAULT_SUBTITLE_BASE_FONT_SIZE,
-  subtitleStyle:
-    (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
-    'Default',
+  subtitleStyle: readSavedSubtitleStyle(),
   showGeneratePanel: false,
   homeRunRequest: null,
   showEditPanel: false,

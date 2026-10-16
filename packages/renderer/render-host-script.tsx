@@ -10,6 +10,7 @@ import {
 import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
+  subtitleStyleUsesLineBox,
 } from '../shared/constants/subtitle-styles.js';
 import type {
   SubtitleRenderPart,
@@ -76,7 +77,7 @@ function renderPlainSubtitleHtml(
     return '';
   }
 
-  if (stylePreset === 'LineBox') {
+  if (subtitleStyleUsesLineBox(stylePreset)) {
     return text
       .split('\n')
       .map(line =>
@@ -118,7 +119,7 @@ function renderTimedSubtitleHtml(
     line.map(part => renderTimedPartHtml(part)).join('')
   );
 
-  if (stylePreset === 'LineBox') {
+  if (subtitleStyleUsesLineBox(stylePreset)) {
     return renderedLines
       .map(line => renderLineBoxLineHtml(line, renderTheme))
       .join('<br/>');

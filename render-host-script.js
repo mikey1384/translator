@@ -1374,8 +1374,94 @@ var SUBTITLE_STYLE_PRESETS = {
     marginRight: 10,
     marginVertical: 15,
     encoding: 1
+  },
+  // Subtitle yellow (#FFD84D) with a fine dark edge: the app's own look.
+  Cinema: {
+    name: "Cinema",
+    fontName: DEFAULT_FONT,
+    fontSizePlaceholder: "%FONTSIZE%",
+    primaryColor: "&H004DD8FF",
+    // #FFD84D
+    secondaryColor: "&H000000FF",
+    outlineColor: "&H000C090A",
+    backColor: "&H66000000",
+    isBold: true,
+    isItalic: false,
+    isUnderline: false,
+    isStrikeout: false,
+    scaleX: 100,
+    scaleY: 100,
+    spacing: 0,
+    angle: 0,
+    borderStyle: 1,
+    outlineSize: 1.2,
+    shadowDepth: 0.6,
+    alignment: 2,
+    marginLeft: 10,
+    marginRight: 10,
+    marginVertical: 15,
+    encoding: 1
+  },
+  // Streaming-service white: no outline, legibility from a layered soft shadow.
+  Clean: {
+    name: "Clean",
+    fontName: DEFAULT_FONT,
+    fontSizePlaceholder: "%FONTSIZE%",
+    primaryColor: "&H00FFFFFF",
+    secondaryColor: "&H000000FF",
+    outlineColor: "&HFF000000",
+    // Fully transparent: no stroke
+    backColor: "&H73000000",
+    isBold: true,
+    isItalic: false,
+    isUnderline: false,
+    isStrikeout: false,
+    scaleX: 100,
+    scaleY: 100,
+    spacing: 0,
+    angle: 0,
+    borderStyle: 1,
+    outlineSize: 0,
+    shadowDepth: 1,
+    alignment: 2,
+    marginLeft: 10,
+    marginRight: 10,
+    marginVertical: 15,
+    encoding: 1
+  },
+  // Dark text on a solid yellow band per line, the short-video look.
+  Highlight: {
+    name: "Highlight",
+    fontName: DEFAULT_FONT,
+    fontSizePlaceholder: "%FONTSIZE%",
+    primaryColor: "&H00130E0F",
+    // #0F0E13
+    secondaryColor: "&H000000FF",
+    outlineColor: "&H004DD8FF",
+    backColor: "&H004DD8FF",
+    // #FFD84D band
+    isBold: true,
+    isItalic: false,
+    isUnderline: false,
+    isStrikeout: false,
+    scaleX: 100,
+    scaleY: 100,
+    spacing: 0,
+    angle: 0,
+    borderStyle: 3,
+    outlineSize: 0,
+    shadowDepth: 0,
+    alignment: 2,
+    marginLeft: 10,
+    marginRight: 10,
+    marginVertical: 15,
+    encoding: 1
   }
 };
+var LINE_BOX_PRESETS = /* @__PURE__ */ new Set(["LineBox", "Highlight"]);
+function subtitleStyleUsesLineBox(preset) {
+  return LINE_BOX_PRESETS.has(String(preset || ""));
+}
 
 // ../shared/constants/estimate-heuristics.ts
 var SPOKEN_CHARS_PER_MINUTE = 750;
@@ -1758,6 +1844,64 @@ var SHORT_FORM_TUNING = {
     softShadowColor: "rgba(0, 0, 0, 0.22)",
     softShadowOffsetYPx: 4
   },
+  Cinema: {
+    borderRadiusPx: 10,
+    bottomMultiLine: "29.5%",
+    bottomSingleLine: "23.5%",
+    containerPadding: "10px 22px",
+    fontScale: 1.08,
+    fontWeight: 800,
+    horizontalInset: "5.5%",
+    letterSpacing: "-0.01em",
+    lineBoxBorderRadiusPx: 0,
+    lineBoxBoxShadow: "none",
+    lineBoxPadding: "1px 6px",
+    lineHeight: 1.2,
+    maxWidth: "89%",
+    outlineMultiplier: 2.1,
+    softShadowBlurPx: 18,
+    softShadowColor: "rgba(0, 0, 0, 0.6)",
+    softShadowOffsetYPx: 6
+  },
+  Clean: {
+    borderRadiusPx: 10,
+    bottomMultiLine: "29.5%",
+    bottomSingleLine: "23.5%",
+    containerPadding: "10px 22px",
+    fontScale: 1.08,
+    fontWeight: 800,
+    horizontalInset: "5.5%",
+    letterSpacing: "-0.01em",
+    lineBoxBorderRadiusPx: 0,
+    lineBoxBoxShadow: "none",
+    lineBoxPadding: "1px 6px",
+    lineHeight: 1.22,
+    maxWidth: "89%",
+    outlineMultiplier: 0,
+    softShadowBlurPx: 16,
+    softShadowColor: "rgba(0, 0, 0, 0.78)",
+    softShadowOffsetYPx: 3
+  },
+  Highlight: {
+    borderRadiusPx: 0,
+    bottomMultiLine: "18%",
+    bottomSingleLine: "18%",
+    containerPadding: "0 14px 12px 14px",
+    fontScale: 1.08,
+    fontWeight: 800,
+    horizontalInset: "7%",
+    letterSpacing: "-0.02em",
+    lineBoxBackgroundColor: "rgba(255, 216, 77, 1)",
+    lineBoxBorderRadiusPx: 10,
+    lineBoxBoxShadow: "0 8px 20px rgba(0, 0, 0, 0.28)",
+    lineBoxPadding: "3px 12px 4px 12px",
+    lineHeight: 1.3,
+    maxWidth: "86%",
+    outlineMultiplier: 0,
+    softShadowBlurPx: 0,
+    softShadowColor: "transparent",
+    softShadowOffsetYPx: 0
+  },
   LineBox: {
     borderRadiusPx: 0,
     // Keep one stable reading position above social-app controls. Moving
@@ -1792,6 +1936,34 @@ var LANDSCAPE_TUNING = {
     shadowBlurEm: 0.17,
     shadowColor: "rgba(0, 0, 0, 0.55)",
     shadowOffsetYEm: 0.05
+  },
+  Cinema: {
+    fontWeight: 650,
+    letterSpacing: "-0.005em",
+    lineHeight: 1.26,
+    outlineColor: "rgba(10, 9, 12, 0.88)",
+    outlineEm: 0.08,
+    shadowBlurEm: 0.22,
+    shadowColor: "rgba(0, 0, 0, 0.6)",
+    shadowOffsetYEm: 0.04
+  },
+  Clean: {
+    fontWeight: 600,
+    letterSpacing: "-0.005em",
+    lineHeight: 1.28,
+    outlineEm: 0,
+    shadowLayersEm: [
+      [0.02, 0.06, "rgba(0, 0, 0, 0.6)"],
+      [0.05, 0.3, "rgba(0, 0, 0, 0.55)"]
+    ]
+  },
+  Highlight: {
+    fontWeight: 650,
+    letterSpacing: "-0.01em",
+    lineHeight: 1.5,
+    lineBoxBackgroundColor: "rgba(255, 216, 77, 1)",
+    lineBoxPaddingEm: [0.06, 0.34, 0.12],
+    lineBoxRadiusEm: 0.18
   },
   LineBox: {
     fontWeight: 600,
@@ -1860,24 +2032,38 @@ function resolveSubtitleRenderTheme(opts) {
   let backgroundColor = "transparent";
   let boxShadowValue = "none";
   let containerPadding = shortFormTuning?.containerPadding || "10px 20px";
-  if (stylePreset === "LineBox") {
+  if (subtitleStyleUsesLineBox(stylePreset)) {
     backgroundColor = "transparent";
     boxShadowValue = "none";
     containerPadding = shortFormTuning?.containerPadding || "0 12px 10px 12px";
-    textShadow = isShortFormPortrait ? `0 ${shortFormTuning?.softShadowOffsetYPx || 2}px ${shortFormTuning?.softShadowBlurPx || 8}px ${shortFormTuning?.softShadowColor || "rgba(0, 0, 0, 0.28)"}` : "none";
+    textShadow = isShortFormPortrait && shortFormTuning?.softShadowBlurPx !== 0 ? `0 ${shortFormTuning?.softShadowOffsetYPx || 2}px ${shortFormTuning?.softShadowBlurPx || 8}px ${shortFormTuning?.softShadowColor || "rgba(0, 0, 0, 0.28)"}` : "none";
   } else if (style.borderStyle === 1) {
     backgroundColor = "transparent";
     boxShadowValue = "none";
-    if (landscapeTuning?.outlineEm) {
-      textStrokeColor = landscapeTuning.outlineColor || outlineRgba;
-      textStrokeWidthPx = Math.max(
-        1.5,
-        emToPx(finalFontSize, landscapeTuning.outlineEm)
-      );
-      textShadow = buildSoftShadow(
+    if (typeof landscapeTuning?.outlineEm === "number") {
+      if (landscapeTuning.outlineEm > 0) {
+        textStrokeColor = landscapeTuning.outlineColor || outlineRgba;
+        textStrokeWidthPx = Math.max(
+          1.5,
+          emToPx(finalFontSize, landscapeTuning.outlineEm)
+        );
+      }
+      textShadow = landscapeTuning.shadowLayersEm ? landscapeTuning.shadowLayersEm.map(
+        ([offsetEm, blurEm, color]) => buildSoftShadow(
+          color,
+          emToPx(finalFontSize, offsetEm),
+          emToPx(finalFontSize, blurEm)
+        )
+      ).join(", ") : buildSoftShadow(
         landscapeTuning.shadowColor || shadowRgba,
         emToPx(finalFontSize, landscapeTuning.shadowOffsetYEm ?? 0.05),
         emToPx(finalFontSize, landscapeTuning.shadowBlurEm ?? 0.17)
+      );
+    } else if (shortFormTuning?.outlineMultiplier === 0) {
+      textShadow = buildSoftShadow(
+        shortFormTuning.softShadowColor,
+        shortFormTuning.softShadowOffsetYPx,
+        shortFormTuning.softShadowBlurPx
       );
     } else {
       const outlineSize = Math.max(
@@ -2010,7 +2196,7 @@ function getSubtitleStyles(opts) {
     left 0.3s ease-out,
     max-width 0.3s ease-out
   `;
-  if (stylePreset === "LineBox") {
+  if (subtitleStyleUsesLineBox(stylePreset)) {
     transitionValue = `
       font-size 0.1s linear,
       color 0.2s linear,
@@ -2124,7 +2310,7 @@ function renderPlainSubtitleHtml(text, stylePreset, renderTheme) {
   if (!text.trim()) {
     return "";
   }
-  if (stylePreset === "LineBox") {
+  if (subtitleStyleUsesLineBox(stylePreset)) {
     return text.split("\n").map(
       (line2) => renderLineBoxLineHtml(
         escapeHtml(normalizeSubtitleLineBoxLineText(line2)),
@@ -2152,7 +2338,7 @@ function renderTimedSubtitleHtml(state, stylePreset, renderTheme) {
   const renderedLines = lines.map(
     (line2) => line2.map((part) => renderTimedPartHtml(part)).join("")
   );
-  if (stylePreset === "LineBox") {
+  if (subtitleStyleUsesLineBox(stylePreset)) {
     return renderedLines.map((line2) => renderLineBoxLineHtml(line2, renderTheme)).join("<br/>");
   }
   return renderedLines.join("<br/>");

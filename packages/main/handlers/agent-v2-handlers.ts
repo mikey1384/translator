@@ -354,7 +354,14 @@ type RepresentativeFrameInput = {
   protectedPaths?: string[];
   srtContent?: string;
   requireSubtitles?: boolean;
-  subtitleStyle?: 'Default' | 'Classic' | 'Boxed' | 'LineBox';
+  subtitleStyle?:
+    | 'Default'
+    | 'Classic'
+    | 'Boxed'
+    | 'LineBox'
+    | 'Cinema'
+    | 'Clean'
+    | 'Highlight';
   subtitleFontSize?: number;
   receiptKindPrefix?: string;
 };
@@ -410,6 +417,10 @@ async function renderRepresentativeFrames(
     Classic: 'Outline=3,Shadow=2,BorderStyle=1',
     Boxed: 'Outline=1,Shadow=0,BorderStyle=3,BackColour=&H90000000',
     LineBox: 'Outline=2,Shadow=0,BorderStyle=3,BackColour=&H70000000',
+    Cinema: 'PrimaryColour=&H004DD8FF,Outline=1.5,Shadow=1,BorderStyle=1',
+    Clean: 'Outline=0,Shadow=1.5,BorderStyle=1,BackColour=&H73000000',
+    Highlight:
+      'PrimaryColour=&H00130E0F,OutlineColour=&H004DD8FF,BackColour=&H004DD8FF,Outline=2,Shadow=0,BorderStyle=3',
   }[subtitleStyle];
   if (!styleDetails) throw new Error('Unsupported subtitle preview style.');
   const fontSize = Math.max(

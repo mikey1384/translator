@@ -150,6 +150,9 @@ const SUBTITLE_STYLE_PRESETS = new Set([
   'Classic',
   'Boxed',
   'LineBox',
+  'Cinema',
+  'Clean',
+  'Highlight',
 ]);
 const SUBTITLE_RENDER_SPEC_VERSION = 1;
 const SUBTITLE_FONT_FAMILY = 'Noto Sans';
@@ -1451,6 +1454,30 @@ const ASS_STYLE_PRESETS = Object.freeze({
     primary: '&H00FFFFFF',
     outline: '&H00FFFFFF',
     back: '&H33000000',
+    border: 3,
+    outlineSize: 0,
+    shadow: 0,
+  }),
+  Cinema: Object.freeze({
+    primary: '&H004DD8FF',
+    outline: '&H000C090A',
+    back: '&H66000000',
+    border: 1,
+    outlineSize: 1.2,
+    shadow: 0.6,
+  }),
+  Clean: Object.freeze({
+    primary: '&H00FFFFFF',
+    outline: '&HFF000000',
+    back: '&H73000000',
+    border: 1,
+    outlineSize: 0,
+    shadow: 1,
+  }),
+  Highlight: Object.freeze({
+    primary: '&H00130E0F',
+    outline: '&H004DD8FF',
+    back: '&H004DD8FF',
     border: 3,
     outlineSize: 0,
     shadow: 0,

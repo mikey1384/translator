@@ -4818,7 +4818,7 @@ function installAgentBridge() {
       const style = String(input?.style || '').trim();
       if (!Object.hasOwn(SUBTITLE_STYLE_PRESETS, style)) {
         throw new Error(
-          'Subtitle style must be Default, Classic, Boxed, or LineBox.'
+          `Subtitle style must be one of: ${Object.keys(SUBTITLE_STYLE_PRESETS).join(', ')}.`
         );
       }
       const size = input?.baseFontSizePx;

@@ -215,6 +215,16 @@ export const editorToolbarFieldStyles = css`
   min-width: 0;
 `;
 
+export const editorToolbarFullRowStyles = css`
+  flex: 1 1 100%;
+`;
+
+export const editorToolbarStyleFieldStyles = css`
+  display: grid;
+  gap: ${spacing.sm};
+  width: 100%;
+`;
+
 export const editorToolbarLabelStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};

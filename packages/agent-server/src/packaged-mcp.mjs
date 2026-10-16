@@ -330,7 +330,15 @@ export const TOOL_SCHEMAS = {
     properties: {
       style: {
         type: 'string',
-        enum: ['Default', 'Classic', 'Boxed', 'LineBox'],
+        enum: [
+          'Default',
+          'Classic',
+          'Boxed',
+          'LineBox',
+          'Cinema',
+          'Clean',
+          'Highlight',
+        ],
       },
       base_font_size_px: { type: 'number', minimum: 6, maximum: 96 },
     },
