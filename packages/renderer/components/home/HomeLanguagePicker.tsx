@@ -97,6 +97,7 @@ const closeButton = css`
 `;
 
 const searchInput = css`
+  flex: none;
   height: 46px;
   box-sizing: border-box;
   padding: 0 16px;

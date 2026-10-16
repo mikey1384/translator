@@ -54,7 +54,9 @@ export default function DubbingMixSlider() {
           aria-label={t('settings.dubbing.mixLabel', 'Ambient vs Dub Balance')}
           className={css`
             flex: 1 1 180px;
+            min-height: 28px;
             accent-color: ${colors.primary};
+            cursor: pointer;
           `}
         />
         <span

@@ -836,7 +836,8 @@
         "addDirectory": "Složku se nepodařilo přidat.",
         "removeDirectory": "Složku se nepodařilo odebrat."
       },
-      "pitch": "Překládejte zdarma s předplatným Claude nebo Codex, které už máte."
+      "pitch": "Překládejte zdarma s předplatným Claude nebo Codex, které už máte.",
+      "freeTitle": "Překládejte zdarma s vlastní AI"
     },
     "creditTransfer": {
       "title": "Přesun kreditů mezi počítači",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} min zdarma",
       "minutes": "{{count}} min přepisu",
       "title": "Kredity a tarify"
-    }
+    },
+    "yourMinutes": "Vaše minuty",
+    "balanceNone": "Nezbývají žádné minuty",
+    "balanceTime": "{{time}} videa",
+    "monthlyFreeNote": "{{minutes}} minut zdarma každý měsíc · další {{date}}",
+    "packAria": "{{price}} za přibližně {{time}} videa",
+    "badgePopular": "Nejoblíbenější",
+    "badgeValue": "Nejvýhodnější",
+    "ofVideo": "videa",
+    "moreMinutesPerDollar": "{{multiplier}}× více minut za dolar",
+    "checkoutWaiting": "Dokončete platbu v prohlížeči. Minuty se tu objeví samy.",
+    "checkoutNote": "Jednorázová platba přes Stripe v prohlížeči. Bez účtu a bez předplatného. Minuty dorazí samy.",
+    "dubbingNote": "Překlad s kredity přidává asi 10 % za minutu; dabing spotřebuje víc."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Skrýt nástroje",
     "noVideoTitle": "Přidejte video",
     "noVideoBody": "Otevřete video k těmto titulkům a sledujte je přímo na místě nebo je vypalte do obrazu."
+  },
+  "subtitleStyles": {
+    "Cinema": "Kino žlutá",
+    "Clean": "Čisté",
+    "Highlight": "Zvýraznění",
+    "LineBox": "Rámeček na řádek",
+    "Boxed": "Rámeček",
+    "Default": "Obrys",
+    "Classic": "Tučná žlutá",
+    "sample": "Ahoj"
   }
 }

@@ -836,7 +836,8 @@
         "addDirectory": "Dosarul nu a putut fi adăugat.",
         "removeDirectory": "Dosarul nu a putut fi eliminat."
       },
-      "pitch": "Tradu gratuit cu abonamentul Claude sau Codex pe care îl ai deja."
+      "pitch": "Tradu gratuit cu abonamentul Claude sau Codex pe care îl ai deja.",
+      "freeTitle": "Tradu gratuit cu propria ta AI"
     },
     "creditTransfer": {
       "title": "Mută creditele între calculatoare",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} min gratuite",
       "minutes": "{{count}} min de transcriere",
       "title": "Credite și planuri"
-    }
+    },
+    "yourMinutes": "Minutele tale",
+    "balanceNone": "Nu mai ai minute",
+    "balanceTime": "{{time}} de video",
+    "monthlyFreeNote": "{{minutes}} minute gratuite în fiecare lună · următoarele pe {{date}}",
+    "packAria": "{{price}} pentru aproximativ {{time}} de video",
+    "badgePopular": "Cel mai popular",
+    "badgeValue": "Cel mai avantajos",
+    "ofVideo": "de video",
+    "moreMinutesPerDollar": "{{multiplier}}× minutele pe dolar",
+    "checkoutWaiting": "Finalizează plata în browser. Minutele tale apar aici de la sine.",
+    "checkoutNote": "Plată unică prin Stripe, în browser. Fără cont sau abonament. Minutele sosesc de la sine.",
+    "dubbingNote": "Traducerea cu credite adaugă aproximativ 10% pe minut; dublajul consumă mai mult."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Ascunde instrumentele",
     "noVideoTitle": "Adaugă videoclipul",
     "noVideoBody": "Deschide videoclipul acestor subtitrări pentru a le vedea pe loc și a le încorpora."
+  },
+  "subtitleStyles": {
+    "Cinema": "Galben cinema",
+    "Clean": "Curat",
+    "Highlight": "Evidențiere",
+    "LineBox": "Casetă pe rând",
+    "Boxed": "Casetă",
+    "Default": "Contur",
+    "Classic": "Galben îngroșat",
+    "sample": "Salut"
   }
 }

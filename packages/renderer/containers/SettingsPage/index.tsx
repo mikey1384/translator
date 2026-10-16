@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import CreditCard from '../../components/CreditCard';
 import AdminResetButton from '../../components/AdminResetButton';
-import { shellHeaderBlockStyles, shellTitleStyles } from '../../styles';
 import { useAiStore } from '../../state';
 import { SystemIPC } from '../../ipc';
 import Section from '../../components/Section';
@@ -70,20 +69,13 @@ export default function SettingsPage() {
       className={settingsPageLayoutStyles}
       data-translator-destination="settings"
     >
-      <header className={shellHeaderBlockStyles}>
-        <h1 className={shellTitleStyles}>{t('settings.title')}</h1>
-      </header>
-
-      {/* —————————————————  STAGE5 CREDITS SECTION  ————————————————— */}
+      {/* Ordered by what people come here to do: get minutes, translate
+          free with their own AI, then tune quality. Everything else follows. */}
       {showStage5Section && <CreditCard />}
-      <CreditTransferSection />
 
-      {/* —————————————————  AGENT CONTROL (free translation with your own agent)  ————————————————— */}
-      <AgentControlSection />
-
-      {/* —————————————————  BYO MODE TOGGLE (if unlocked)  ————————————————— */}
       <ApiKeyModeToggle />
-      <PrivacySection />
+
+      <AgentControlSection />
 
       {showStage5Section && (
         <Section
@@ -100,8 +92,11 @@ export default function SettingsPage() {
         </Section>
       )}
 
-      {/* —————————————————  BYO UNLOCK (if not unlocked)  ————————————————— */}
+      <CreditTransferSection />
+
       <ByoUnlockCard />
+
+      <PrivacySection />
 
       {isAdmin && (
         <Section

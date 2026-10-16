@@ -836,7 +836,8 @@
         "addDirectory": "無法新增資料夾。",
         "removeDirectory": "無法移除資料夾。"
       },
-      "pitch": "使用您已有的 Claude 或 Codex 訂閱免費翻譯。"
+      "pitch": "使用您已有的 Claude 或 Codex 訂閱免費翻譯。",
+      "freeTitle": "用你自己的 AI 免費翻譯"
     },
     "creditTransfer": {
       "title": "在電腦之間轉移點數",
@@ -882,7 +883,19 @@
       "freeWelcome": "免費 {{count}} 分鐘",
       "minutes": "轉錄 {{count}} 分鐘",
       "title": "點數與方案"
-    }
+    },
+    "yourMinutes": "你的時數",
+    "balanceNone": "時數已用完",
+    "balanceTime": "{{time}} 影片",
+    "monthlyFreeNote": "每月免費 {{minutes}} 分鐘 · 下次發放於 {{date}}",
+    "packAria": "{{price}} 約可處理 {{time}} 影片",
+    "badgePopular": "最受歡迎",
+    "badgeValue": "最划算",
+    "ofVideo": "影片",
+    "moreMinutesPerDollar": "每美元 {{multiplier}}× 時數",
+    "checkoutWaiting": "請在瀏覽器中完成付款。時數會自動顯示在這裡。",
+    "checkoutNote": "透過 Stripe 在瀏覽器中一次性付款。無需帳號或訂閱。時數會自動入帳。",
+    "dubbingNote": "使用點數翻譯每分鐘約多耗用 10%；配音耗用更多。"
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "隱藏工具",
     "noVideoTitle": "加入影片",
     "noVideoBody": "開啟這些字幕對應的影片，即可在原處觀看並燒錄字幕。"
+  },
+  "subtitleStyles": {
+    "Cinema": "影院黃",
+    "Clean": "簡潔",
+    "Highlight": "醒目標示",
+    "LineBox": "逐行底框",
+    "Boxed": "底框",
+    "Default": "描邊",
+    "Classic": "粗體黃",
+    "sample": "你好"
   }
 }

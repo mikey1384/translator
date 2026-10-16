@@ -836,7 +836,8 @@
         "addDirectory": "Det gick inte att lägga till mappen.",
         "removeDirectory": "Det gick inte att ta bort mappen."
       },
-      "pitch": "Översätt gratis med den Claude- eller Codex-prenumeration du redan har."
+      "pitch": "Översätt gratis med den Claude- eller Codex-prenumeration du redan har.",
+      "freeTitle": "Översätt gratis med din egen AI"
     },
     "creditTransfer": {
       "title": "Flytta krediter mellan datorer",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} gratis min",
       "minutes": "{{count}} min transkribering",
       "title": "Krediter och abonnemang"
-    }
+    },
+    "yourMinutes": "Dina minuter",
+    "balanceNone": "Inga minuter kvar",
+    "balanceTime": "{{time}} video",
+    "monthlyFreeNote": "{{minutes}} gratis minuter varje månad · nästa {{date}}",
+    "packAria": "{{price}} för ungefär {{time}} video",
+    "badgePopular": "Populärast",
+    "badgeValue": "Bäst värde",
+    "ofVideo": "video",
+    "moreMinutesPerDollar": "{{multiplier}}× minuterna per dollar",
+    "checkoutWaiting": "Slutför betalningen i webbläsaren. Dina minuter dyker upp här av sig själva.",
+    "checkoutNote": "Engångsbetalning via Stripe i webbläsaren. Inget konto eller abonnemang. Minuterna kommer av sig själva.",
+    "dubbingNote": "Översättning med krediter lägger till cirka 10 % per minut; dubbning använder mer."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Dölj verktyg",
     "noVideoTitle": "Lägg till videon",
     "noVideoBody": "Öppna videon som undertexterna hör till för att se dem på plats och bränna in dem."
+  },
+  "subtitleStyles": {
+    "Cinema": "Biogul",
+    "Clean": "Ren",
+    "Highlight": "Markering",
+    "LineBox": "Ruta per rad",
+    "Boxed": "Ruta",
+    "Default": "Kontur",
+    "Classic": "Fet gul",
+    "sample": "Hej där"
   }
 }

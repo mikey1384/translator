@@ -836,7 +836,8 @@
         "addDirectory": "Die vouer kon nie bygevoeg word nie.",
         "removeDirectory": "Die vouer kon nie verwyder word nie."
       },
-      "pitch": "Vertaal gratis met die Claude- of Codex-intekening wat jy reeds het."
+      "pitch": "Vertaal gratis met die Claude- of Codex-intekening wat jy reeds het.",
+      "freeTitle": "Vertaal gratis met jou eie KI"
     },
     "creditTransfer": {
       "title": "Skuif krediete tussen rekenaars",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} gratis min",
       "minutes": "{{count}} min transkripsie",
       "title": "Krediete en planne"
-    }
+    },
+    "yourMinutes": "Jou minute",
+    "balanceNone": "Geen minute oor nie",
+    "balanceTime": "{{time}} video",
+    "monthlyFreeNote": "{{minutes}} gratis minute elke maand · volgende op {{date}}",
+    "packAria": "{{price}} vir ongeveer {{time}} video",
+    "badgePopular": "Gewildste",
+    "badgeValue": "Beste waarde",
+    "ofVideo": "video",
+    "moreMinutesPerDollar": "{{multiplier}}× die minute per dollar",
+    "checkoutWaiting": "Voltooi die betaling in jou blaaier. Jou minute verskyn vanself hier.",
+    "checkoutNote": "Eenmalige betaling deur Stripe, in jou blaaier. Geen rekening of intekening nie. Minute kom vanself by.",
+    "dubbingNote": "Vertaling met krediete kos sowat 10% ekstra per minuut; oorklanking gebruik meer."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Versteek gereedskap",
     "noVideoTitle": "Voeg die video by",
     "noVideoBody": "Maak die video van hierdie onderskrifte oop om hulle in plek te sien en in te brand."
+  },
+  "subtitleStyles": {
+    "Cinema": "Bioskoopgeel",
+    "Clean": "Skoon",
+    "Highlight": "Uitlig",
+    "LineBox": "Reëlblok",
+    "Boxed": "Blok",
+    "Default": "Omlyning",
+    "Classic": "Vet geel",
+    "sample": "Hallo daar"
   }
 }

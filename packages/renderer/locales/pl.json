@@ -836,7 +836,8 @@
         "addDirectory": "Nie udało się dodać folderu.",
         "removeDirectory": "Nie udało się usunąć folderu."
       },
-      "pitch": "Tłumacz za darmo w ramach subskrypcji Claude lub Codex, którą już masz."
+      "pitch": "Tłumacz za darmo w ramach subskrypcji Claude lub Codex, którą już masz.",
+      "freeTitle": "Tłumacz za darmo z własną AI"
     },
     "creditTransfer": {
       "title": "Przenoszenie kredytów między komputerami",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} darmowych min",
       "minutes": "{{count}} min transkrypcji",
       "title": "Kredyty i plany"
-    }
+    },
+    "yourMinutes": "Twoje minuty",
+    "balanceNone": "Brak minut",
+    "balanceTime": "{{time}} wideo",
+    "monthlyFreeNote": "{{minutes}} darmowych minut co miesiąc · kolejne {{date}}",
+    "packAria": "{{price}} za około {{time}} wideo",
+    "badgePopular": "Najpopularniejszy",
+    "badgeValue": "Najlepsza wartość",
+    "ofVideo": "wideo",
+    "moreMinutesPerDollar": "{{multiplier}}× więcej minut za dolara",
+    "checkoutWaiting": "Dokończ płatność w przeglądarce. Minuty pojawią się tu same.",
+    "checkoutNote": "Jednorazowa płatność przez Stripe w przeglądarce. Bez konta i subskrypcji. Minuty dotrą same.",
+    "dubbingNote": "Tłumaczenie z kredytami dodaje około 10% na minutę; dubbing zużywa więcej."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Ukryj narzędzia",
     "noVideoTitle": "Dodaj wideo",
     "noVideoBody": "Otwórz wideo do tych napisów, aby obejrzeć je na miejscu i wtopić w obraz."
+  },
+  "subtitleStyles": {
+    "Cinema": "Kinowy żółty",
+    "Clean": "Czysty",
+    "Highlight": "Wyróżnienie",
+    "LineBox": "Ramka na wiersz",
+    "Boxed": "Ramka",
+    "Default": "Obrys",
+    "Classic": "Pogrubiony żółty",
+    "sample": "Cześć"
   }
 }

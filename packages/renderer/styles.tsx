@@ -175,7 +175,8 @@ export const fileInputWrapperStyles = css`
 
 export const containerStyles = css`
   width: 100%;
-  max-width: 1240px;
+  /* Grow with big displays so the video is not a postage stamp at 1440p+. */
+  max-width: min(1680px, max(1240px, 86vw));
   margin: 0 auto;
   padding: ${spacing['3xl']} ${spacing['2xl']} ${spacing['5xl']};
   box-sizing: border-box;

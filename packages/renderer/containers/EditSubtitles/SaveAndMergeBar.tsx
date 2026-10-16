@@ -2,7 +2,13 @@ import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../../state/ui-store.js';
 import type { SubtitleDisplayMode } from '@shared-types/app';
-import SubtitleStylePicker from './SubtitleStylePicker.js';
+import SubtitleStylePicker, {
+  subtitleStyleLabel,
+} from './SubtitleStylePicker.js';
+import {
+  SUBTITLE_STYLE_PRESET_ORDER,
+  type SubtitleStylePresetKey,
+} from '../../../shared/constants/subtitle-styles.js';
 import { MIN_SUBTITLE_FONT_SIZE } from '../../../shared/constants';
 import {
   editorButtonContentStyles,
@@ -194,6 +200,30 @@ export default function SaveAndMergeBar({
             />
           </div>
 
+          {primaryMerge ? null : (
+            <div className={editorToolbarFieldStyles}>
+              <label
+                className={editorToolbarLabelStyles}
+                htmlFor="mergeStylePresetSelect"
+              >
+                {t('editSubtitles.mergeControls.styleLabel')}
+              </label>
+              <select
+                id="mergeStylePresetSelect"
+                className={editorToolbarSelectStyles}
+                value={stylePreset}
+                onChange={e =>
+                  setStylePreset(e.target.value as SubtitleStylePresetKey)
+                }
+              >
+                {SUBTITLE_STYLE_PRESET_ORDER.map(key => (
+                  <option key={key} value={key}>
+                    {subtitleStyleLabel(t, key)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className={editorToolbarFieldStyles}>
             <label
               className={editorToolbarLabelStyles}
@@ -226,16 +256,21 @@ export default function SaveAndMergeBar({
         </div>
       </div>
 
-      <div
-        className={`${editorToolbarSectionStyles} ${editorToolbarFullRowStyles}`}
-      >
-        <div className={editorToolbarStyleFieldStyles}>
-          <span className={editorToolbarLabelStyles}>
-            {t('editSubtitles.mergeControls.styleLabel')}
-          </span>
-          <SubtitleStylePicker value={stylePreset} onChange={setStylePreset} />
+      {primaryMerge ? (
+        <div
+          className={`${editorToolbarSectionStyles} ${editorToolbarFullRowStyles}`}
+        >
+          <div className={editorToolbarStyleFieldStyles}>
+            <span className={editorToolbarLabelStyles}>
+              {t('editSubtitles.mergeControls.styleLabel')}
+            </span>
+            <SubtitleStylePicker
+              value={stylePreset}
+              onChange={setStylePreset}
+            />
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

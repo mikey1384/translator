@@ -97,6 +97,8 @@ export interface EditSubtitlesProps {
   }>;
   /** Video workspace in read-only mode: keep handlers alive, skip the list. */
   listHidden?: boolean;
+  /** The video workspace owns Export and Save .srt; no docked footer bar. */
+  inWorkspace?: boolean;
 }
 
 export default function EditSubtitles({
@@ -105,6 +107,7 @@ export default function EditSubtitles({
   onStartPngRenderRequest,
   editorRef,
   listHidden = false,
+  inWorkspace = false,
 }: EditSubtitlesProps) {
   const searchText = useUIStore(s => s.searchText);
   const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
@@ -495,7 +498,7 @@ export default function EditSubtitles({
         </>
       )}
 
-      {hasSubtitles && (
+      {hasSubtitles && !inWorkspace && (
         <div className={editorFooterDockStyles}>
           <div className={editorFooterInnerStyles}>
             <SaveAndMergeBar

@@ -836,7 +836,8 @@
         "addDirectory": "Folder gagal ditambahkan.",
         "removeDirectory": "Folder gagal dihapus."
       },
-      "pitch": "Terjemahkan gratis dengan langganan Claude atau Codex yang sudah Anda miliki."
+      "pitch": "Terjemahkan gratis dengan langganan Claude atau Codex yang sudah Anda miliki.",
+      "freeTitle": "Terjemahkan gratis dengan AI Anda sendiri"
     },
     "creditTransfer": {
       "title": "Pindahkan kredit antarkomputer",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} mnt gratis",
       "minutes": "{{count}} mnt transkripsi",
       "title": "Kredit dan paket"
-    }
+    },
+    "yourMinutes": "Menit Anda",
+    "balanceNone": "Menit habis",
+    "balanceTime": "{{time}} video",
+    "monthlyFreeNote": "{{minutes}} menit gratis setiap bulan · berikutnya pada {{date}}",
+    "packAria": "{{price}} untuk sekitar {{time}} video",
+    "badgePopular": "Paling populer",
+    "badgeValue": "Paling hemat",
+    "ofVideo": "video",
+    "moreMinutesPerDollar": "{{multiplier}}× menit per dolar",
+    "checkoutWaiting": "Selesaikan pembayaran di browser Anda. Menit Anda akan muncul di sini dengan sendirinya.",
+    "checkoutNote": "Pembayaran sekali melalui Stripe, di browser Anda. Tanpa akun atau langganan. Menit masuk dengan sendirinya.",
+    "dubbingNote": "Menerjemahkan dengan kredit menambah sekitar 10% per menit; sulih suara memakai lebih banyak."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Sembunyikan alat",
     "noVideoTitle": "Tambahkan videonya",
     "noVideoBody": "Buka video untuk subtitle ini agar bisa ditonton langsung dan ditanamkan."
+  },
+  "subtitleStyles": {
+    "Cinema": "Kuning bioskop",
+    "Clean": "Bersih",
+    "Highlight": "Sorotan",
+    "LineBox": "Kotak per baris",
+    "Boxed": "Kotak",
+    "Default": "Garis tepi",
+    "Classic": "Kuning tebal",
+    "sample": "Halo"
   }
 }

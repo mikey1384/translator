@@ -155,7 +155,7 @@ export default function ByoUnlockCard() {
       <Button
         onClick={handleUnlock}
         disabled={unlockPending || unlockUnresolved || loading}
-        variant="primary"
+        variant="secondary"
       >
         {unlockPending
           ? t('settings.byoOpenAi.unlocking', 'Opening checkout…')

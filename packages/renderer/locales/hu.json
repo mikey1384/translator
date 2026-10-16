@@ -836,7 +836,8 @@
         "addDirectory": "Nem sikerült hozzáadni a mappát.",
         "removeDirectory": "Nem sikerült eltávolítani a mappát."
       },
-      "pitch": "Fordítson ingyen a már meglévő Claude- vagy Codex-előfizetésével."
+      "pitch": "Fordítson ingyen a már meglévő Claude- vagy Codex-előfizetésével.",
+      "freeTitle": "Fordíts ingyen a saját AI-oddal"
     },
     "creditTransfer": {
       "title": "Kreditek áthelyezése számítógépek között",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} ingyenes perc",
       "minutes": "{{count}} perc átírás",
       "title": "Kreditek és csomagok"
-    }
+    },
+    "yourMinutes": "Perceid",
+    "balanceNone": "Nincs több perc",
+    "balanceTime": "{{time}} videó",
+    "monthlyFreeNote": "{{minutes}} ingyenes perc minden hónapban · legközelebb: {{date}}",
+    "packAria": "{{price}} kb. {{time}} videóhoz",
+    "badgePopular": "Legnépszerűbb",
+    "badgeValue": "Legjobb ár",
+    "ofVideo": "videó",
+    "moreMinutesPerDollar": "{{multiplier}}× annyi perc dolláronként",
+    "checkoutWaiting": "Fejezd be a fizetést a böngészőben. A perceid maguktól megjelennek itt.",
+    "checkoutNote": "Egyszeri fizetés a Stripe-on keresztül, a böngésződben. Nincs fiók vagy előfizetés. A percek maguktól megérkeznek.",
+    "dubbingNote": "A kreditekkel való fordítás percenként kb. 10%-ot tesz hozzá; a szinkron többet fogyaszt."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Eszközök elrejtése",
     "noVideoTitle": "Add hozzá a videót",
     "noVideoBody": "Nyisd meg a feliratokhoz tartozó videót, hogy a helyükön lásd és beégethesd őket."
+  },
+  "subtitleStyles": {
+    "Cinema": "Mozisárga",
+    "Clean": "Letisztult",
+    "Highlight": "Kiemelés",
+    "LineBox": "Soronkénti doboz",
+    "Boxed": "Doboz",
+    "Default": "Körvonal",
+    "Classic": "Vastag sárga",
+    "sample": "Szia"
   }
 }

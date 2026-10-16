@@ -50,7 +50,8 @@ import { useAiStore } from '../state';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 
 import { css } from '@emotion/css';
-import { pageWrapperStyles, containerStyles, colors } from '../styles';
+import { pageWrapperStyles, containerStyles, colors, fonts } from '../styles';
+import { ArrowLeft } from 'lucide-react';
 import * as OperationIPC from '../ipc/operation';
 import { logProgress, logButton, logError } from '../utils/logger';
 import {
@@ -72,9 +73,32 @@ const settingsHeader = css`
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: ${colors.bg};
-  padding: 1.5rem;
+  background-color: rgba(15, 14, 19, 0.92);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid ${colors.border};
+`;
+
+const settingsHeaderInner = css`
+  box-sizing: border-box;
+  max-width: 808px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  @media (max-width: 640px) {
+    padding: 10px 16px;
+  }
+`;
+
+const settingsHeaderTitle = css`
+  margin: 0;
+  font-family: ${fonts.display};
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: ${colors.text};
 `;
 
 const settingsPageWrapper = css`
@@ -164,6 +188,18 @@ export default function AppContent() {
     }
   }, []);
   const showSettings = useUIStore(s => s.showSettings);
+  useEffect(() => {
+    if (!showSettings) return;
+    // Escape leaves Settings, unless a dialog on top of it owns the key.
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      if (document.querySelector('[role="dialog"], [aria-modal="true"]'))
+        return;
+      useUIStore.getState().toggleSettings(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showSettings]);
   const setDownload = useUrlStore(s => s.setDownload);
   const globalError = useUrlStore(s => s.error);
   const globalErrorKind = useUrlStore(s => s.errorKind);
@@ -408,20 +444,24 @@ export default function AppContent() {
       <>
         <div className={settingsPageWrapper}>
           <div className={settingsHeader}>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                try {
-                  logButton('close_settings');
-                } catch {
-                  // Ignore logging errors
-                }
-                useUIStore.getState().toggleSettings(false);
-              }}
-            >
-              {t('common.backToApp')}
-            </Button>
+            <div className={settingsHeaderInner}>
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<ArrowLeft size={16} aria-hidden="true" />}
+                onClick={() => {
+                  try {
+                    logButton('close_settings');
+                  } catch {
+                    // Ignore logging errors
+                  }
+                  useUIStore.getState().toggleSettings(false);
+                }}
+              >
+                {t('common.backToApp')}
+              </Button>
+              <h1 className={settingsHeaderTitle}>{t('settings.title')}</h1>
+            </div>
           </div>
           <div className={containerStyles}>
             <SettingsPage />

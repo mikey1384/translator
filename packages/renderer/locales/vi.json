@@ -836,7 +836,8 @@
         "addDirectory": "Không thể thêm thư mục.",
         "removeDirectory": "Không thể xóa thư mục."
       },
-      "pitch": "Dịch miễn phí bằng gói đăng ký Claude hoặc Codex mà bạn đang có."
+      "pitch": "Dịch miễn phí bằng gói đăng ký Claude hoặc Codex mà bạn đang có.",
+      "freeTitle": "Dịch miễn phí bằng AI của riêng bạn"
     },
     "creditTransfer": {
       "title": "Chuyển tín dụng giữa các máy tính",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} phút miễn phí",
       "minutes": "{{count}} phút chép lời",
       "title": "Tín dụng và gói"
-    }
+    },
+    "yourMinutes": "Số phút của bạn",
+    "balanceNone": "Hết phút",
+    "balanceTime": "{{time}} video",
+    "monthlyFreeNote": "{{minutes}} phút miễn phí mỗi tháng · lần tới vào {{date}}",
+    "packAria": "{{price}} cho khoảng {{time}} video",
+    "badgePopular": "Phổ biến nhất",
+    "badgeValue": "Đáng giá nhất",
+    "ofVideo": "video",
+    "moreMinutesPerDollar": "{{multiplier}}× số phút mỗi đô la",
+    "checkoutWaiting": "Hoàn tất thanh toán trong trình duyệt. Số phút sẽ tự hiện ở đây.",
+    "checkoutNote": "Thanh toán một lần qua Stripe, trong trình duyệt của bạn. Không cần tài khoản hay gói đăng ký. Số phút sẽ tự được cộng.",
+    "dubbingNote": "Dịch bằng tín dụng tốn thêm khoảng 10% mỗi phút; lồng tiếng tốn nhiều hơn."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Ẩn công cụ",
     "noVideoTitle": "Thêm video",
     "noVideoBody": "Mở video của phụ đề này để xem ngay tại chỗ và ghép vào video."
+  },
+  "subtitleStyles": {
+    "Cinema": "Vàng điện ảnh",
+    "Clean": "Gọn",
+    "Highlight": "Làm nổi bật",
+    "LineBox": "Khung từng dòng",
+    "Boxed": "Khung",
+    "Default": "Viền",
+    "Classic": "Vàng đậm",
+    "sample": "Xin chào"
   }
 }

@@ -836,7 +836,8 @@
         "addDirectory": "לא ניתן היה להוסיף את התיקייה.",
         "removeDirectory": "לא ניתן היה להסיר את התיקייה."
       },
-      "pitch": "תרגם בחינם עם מנוי Claude או Codex שכבר יש לך."
+      "pitch": "תרגם בחינם עם מנוי Claude או Codex שכבר יש לך.",
+      "freeTitle": "תרגמו בחינם עם הבינה המלאכותית שלכם"
     },
     "creditTransfer": {
       "title": "העברת קרדיטים בין מחשבים",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} דקות חינם",
       "minutes": "{{count}} דקות תמלול",
       "title": "קרדיטים ותוכניות"
-    }
+    },
+    "yourMinutes": "הדקות שלך",
+    "balanceNone": "לא נותרו דקות",
+    "balanceTime": "{{time}} של וידאו",
+    "monthlyFreeNote": "{{minutes}} דקות חינם בכל חודש · הבאות ב-{{date}}",
+    "packAria": "{{price}} עבור כ-{{time}} של וידאו",
+    "badgePopular": "הכי פופולרי",
+    "badgeValue": "המשתלם ביותר",
+    "ofVideo": "של וידאו",
+    "moreMinutesPerDollar": "פי {{multiplier}}× דקות לכל דולר",
+    "checkoutWaiting": "השלימו את התשלום בדפדפן. הדקות יופיעו כאן מעצמן.",
+    "checkoutNote": "תשלום חד-פעמי דרך Stripe בדפדפן. ללא חשבון או מנוי. הדקות מגיעות מעצמן.",
+    "dubbingNote": "תרגום עם קרדיטים מוסיף כ-10% לכל דקה; דיבוב צורך יותר."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "הסתרת הכלים",
     "noVideoTitle": "הוסיפו את הסרטון",
     "noVideoBody": "פתחו את הסרטון של הכתוביות האלה כדי לצפות בהן במקומן ולצרוב אותן."
+  },
+  "subtitleStyles": {
+    "Cinema": "צהוב קולנוע",
+    "Clean": "נקי",
+    "Highlight": "הדגשה",
+    "LineBox": "תיבה לכל שורה",
+    "Boxed": "תיבה",
+    "Default": "קו מתאר",
+    "Classic": "צהוב מודגש",
+    "sample": "שלום"
   }
 }

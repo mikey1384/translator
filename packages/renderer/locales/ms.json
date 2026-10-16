@@ -836,7 +836,8 @@
         "addDirectory": "Folder gagal ditambah.",
         "removeDirectory": "Folder gagal dialih keluar."
       },
-      "pitch": "Terjemah secara percuma dengan langganan Claude atau Codex yang sudah anda miliki."
+      "pitch": "Terjemah secara percuma dengan langganan Claude atau Codex yang sudah anda miliki.",
+      "freeTitle": "Terjemah percuma dengan AI anda sendiri"
     },
     "creditTransfer": {
       "title": "Pindahkan kredit antara komputer",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} min percuma",
       "minutes": "{{count}} min transkripsi",
       "title": "Kredit dan pelan"
-    }
+    },
+    "yourMinutes": "Minit anda",
+    "balanceNone": "Tiada minit lagi",
+    "balanceTime": "{{time}} video",
+    "monthlyFreeNote": "{{minutes}} minit percuma setiap bulan · seterusnya pada {{date}}",
+    "packAria": "{{price}} untuk kira-kira {{time}} video",
+    "badgePopular": "Paling popular",
+    "badgeValue": "Nilai terbaik",
+    "ofVideo": "video",
+    "moreMinutesPerDollar": "{{multiplier}}× minit setiap dolar",
+    "checkoutWaiting": "Selesaikan pembayaran dalam pelayar anda. Minit anda akan muncul di sini dengan sendirinya.",
+    "checkoutNote": "Bayaran sekali melalui Stripe, dalam pelayar anda. Tiada akaun atau langganan. Minit masuk dengan sendirinya.",
+    "dubbingNote": "Menterjemah dengan kredit menambah kira-kira 10% setiap minit; alih suara menggunakan lebih banyak."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Sembunyikan alat",
     "noVideoTitle": "Tambah video",
     "noVideoBody": "Buka video sari kata ini untuk menontonnya di tempat dan membenamkannya."
+  },
+  "subtitleStyles": {
+    "Cinema": "Kuning pawagam",
+    "Clean": "Bersih",
+    "Highlight": "Serlahan",
+    "LineBox": "Kotak baris",
+    "Boxed": "Kotak",
+    "Default": "Garis luar",
+    "Classic": "Kuning tebal",
+    "sample": "Helo"
   }
 }

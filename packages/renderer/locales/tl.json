@@ -836,7 +836,8 @@
         "addDirectory": "Hindi naidagdag ang folder.",
         "removeDirectory": "Hindi naalis ang folder."
       },
-      "pitch": "Magsalin nang libre gamit ang Claude o Codex subscription na mayroon ka na."
+      "pitch": "Magsalin nang libre gamit ang Claude o Codex subscription na mayroon ka na.",
+      "freeTitle": "Magsalin nang libre gamit ang sarili mong AI"
     },
     "creditTransfer": {
       "title": "Ilipat ang mga credit sa pagitan ng mga computer",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} libreng min",
       "minutes": "{{count}} min ng transcription",
       "title": "Mga credit at plano"
-    }
+    },
+    "yourMinutes": "Ang iyong mga minuto",
+    "balanceNone": "Wala nang natitirang minuto",
+    "balanceTime": "{{time}} ng video",
+    "monthlyFreeNote": "{{minutes}} libreng minuto bawat buwan · susunod sa {{date}}",
+    "packAria": "{{price}} para sa mga {{time}} ng video",
+    "badgePopular": "Pinakasikat",
+    "badgeValue": "Pinakasulit",
+    "ofVideo": "ng video",
+    "moreMinutesPerDollar": "{{multiplier}}× ang minuto bawat dolyar",
+    "checkoutWaiting": "Tapusin ang pagbabayad sa iyong browser. Kusang lalabas dito ang iyong mga minuto.",
+    "checkoutNote": "Isang beses na bayad sa pamamagitan ng Stripe, sa iyong browser. Walang account o subscription. Kusang darating ang mga minuto.",
+    "dubbingNote": "Ang pagsasalin gamit ang credits ay nagdadagdag ng mga 10% bawat minuto; mas marami ang nagagamit ng dubbing."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Itago ang mga tool",
     "noVideoTitle": "Idagdag ang video",
     "noVideoBody": "Buksan ang video ng mga subtitle na ito para mapanood sa lugar at maisama sa video."
+  },
+  "subtitleStyles": {
+    "Cinema": "Dilaw na pang-sinehan",
+    "Clean": "Malinis",
+    "Highlight": "Highlight",
+    "LineBox": "Kahon bawat linya",
+    "Boxed": "Kahon",
+    "Default": "Balangkas",
+    "Classic": "Makapal na dilaw",
+    "sample": "Kumusta"
   }
 }

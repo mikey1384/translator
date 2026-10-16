@@ -836,7 +836,8 @@
         "addDirectory": "Kunne ikke legge til mappen.",
         "removeDirectory": "Kunne ikke fjerne mappen."
       },
-      "pitch": "Oversett gratis med Claude- eller Codex-abonnementet du allerede har."
+      "pitch": "Oversett gratis med Claude- eller Codex-abonnementet du allerede har.",
+      "freeTitle": "Oversett gratis med din egen KI"
     },
     "creditTransfer": {
       "title": "Flytt kreditter mellom datamaskiner",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} gratis min",
       "minutes": "{{count}} min transkribering",
       "title": "Kreditter og abonnementer"
-    }
+    },
+    "yourMinutes": "Dine minutter",
+    "balanceNone": "Ingen minutter igjen",
+    "balanceTime": "{{time}} video",
+    "monthlyFreeNote": "{{minutes}} gratis minutter hver måned · neste {{date}}",
+    "packAria": "{{price}} for omtrent {{time}} video",
+    "badgePopular": "Mest populær",
+    "badgeValue": "Best verdi",
+    "ofVideo": "video",
+    "moreMinutesPerDollar": "{{multiplier}}× minuttene per dollar",
+    "checkoutWaiting": "Fullfør betalingen i nettleseren. Minuttene dine dukker opp her av seg selv.",
+    "checkoutNote": "Engangsbetaling via Stripe i nettleseren. Ingen konto eller abonnement. Minuttene kommer av seg selv.",
+    "dubbingNote": "Oversettelse med kreditter legger til omtrent 10 % per minutt; dubbing bruker mer."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Skjul verktøy",
     "noVideoTitle": "Legg til videoen",
     "noVideoBody": "Åpne videoen undertekstene hører til for å se dem på plass og brenne dem inn."
+  },
+  "subtitleStyles": {
+    "Cinema": "Kinogul",
+    "Clean": "Ren",
+    "Highlight": "Utheving",
+    "LineBox": "Boks per linje",
+    "Boxed": "Boks",
+    "Default": "Kontur",
+    "Classic": "Fet gul",
+    "sample": "Hei der"
   }
 }

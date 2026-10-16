@@ -836,7 +836,8 @@
         "addDirectory": "De map kon niet worden toegevoegd.",
         "removeDirectory": "De map kon niet worden verwijderd."
       },
-      "pitch": "Vertaal gratis met het Claude- of Codex-abonnement dat je al hebt."
+      "pitch": "Vertaal gratis met het Claude- of Codex-abonnement dat je al hebt.",
+      "freeTitle": "Gratis vertalen met je eigen AI"
     },
     "creditTransfer": {
       "title": "Credits tussen computers verplaatsen",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} gratis min",
       "minutes": "{{count}} min transcriptie",
       "title": "Tegoed en abonnementen"
-    }
+    },
+    "yourMinutes": "Je minuten",
+    "balanceNone": "Geen minuten meer",
+    "balanceTime": "{{time}} video",
+    "monthlyFreeNote": "{{minutes}} gratis minuten per maand · volgende op {{date}}",
+    "packAria": "{{price}} voor ongeveer {{time}} video",
+    "badgePopular": "Populairst",
+    "badgeValue": "Voordeligst",
+    "ofVideo": "video",
+    "moreMinutesPerDollar": "{{multiplier}}× de minuten per dollar",
+    "checkoutWaiting": "Rond de betaling af in je browser. Je minuten verschijnen hier vanzelf.",
+    "checkoutNote": "Eenmalige betaling via Stripe, in je browser. Geen account of abonnement. Minuten komen vanzelf binnen.",
+    "dubbingNote": "Vertalen met tegoed kost ongeveer 10% extra per minuut; nasynchronisatie verbruikt meer."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Hulpmiddelen verbergen",
     "noVideoTitle": "Voeg de video toe",
     "noVideoBody": "Open de video bij deze ondertitels om ze ter plekke te bekijken en in te branden."
+  },
+  "subtitleStyles": {
+    "Cinema": "Bioscoopgeel",
+    "Clean": "Strak",
+    "Highlight": "Markering",
+    "LineBox": "Regelvak",
+    "Boxed": "Vak",
+    "Default": "Omlijning",
+    "Classic": "Vet geel",
+    "sample": "Hallo daar"
   }
 }

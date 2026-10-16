@@ -278,6 +278,9 @@ export const moreMenuStyles = css`
   bottom: calc(100% + 8px);
   z-index: 200;
   min-width: 240px;
+  max-width: calc(100vw - 32px);
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
   padding: 6px;
   border-radius: 16px;
   background: ${colors.surfaceRaised};

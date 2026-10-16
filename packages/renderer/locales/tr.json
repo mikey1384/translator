@@ -836,7 +836,8 @@
         "addDirectory": "Klasör eklenemedi.",
         "removeDirectory": "Klasör kaldırılamadı."
       },
-      "pitch": "Zaten sahip olduğunuz Claude veya Codex aboneliğiyle ücretsiz çeviri yapın."
+      "pitch": "Zaten sahip olduğunuz Claude veya Codex aboneliğiyle ücretsiz çeviri yapın.",
+      "freeTitle": "Kendi yapay zekânızla ücretsiz çevirin"
     },
     "creditTransfer": {
       "title": "Kredileri bilgisayarlar arasında taşıyın",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} ücretsiz dk",
       "minutes": "{{count}} dk transkripsiyon",
       "title": "Krediler ve planlar"
-    }
+    },
+    "yourMinutes": "Dakikalarınız",
+    "balanceNone": "Dakikanız kalmadı",
+    "balanceTime": "{{time}} video",
+    "monthlyFreeNote": "Her ay {{minutes}} ücretsiz dakika · sonraki {{date}}",
+    "packAria": "Yaklaşık {{time}} video için {{price}}",
+    "badgePopular": "En popüler",
+    "badgeValue": "En avantajlı",
+    "ofVideo": "video",
+    "moreMinutesPerDollar": "Dolar başına {{multiplier}}× dakika",
+    "checkoutWaiting": "Ödemeyi tarayıcınızda tamamlayın. Dakikalarınız burada kendiliğinden görünür.",
+    "checkoutNote": "Tarayıcınızda Stripe üzerinden tek seferlik ödeme. Hesap veya abonelik yok. Dakikalar kendiliğinden gelir.",
+    "dubbingNote": "Kredilerle çeviri dakika başına yaklaşık %10 ekler; seslendirme daha fazla kullanır."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Araçları gizle",
     "noVideoTitle": "Videoyu ekleyin",
     "noVideoBody": "Bu altyazıların videosunu açarak onları yerinde izleyin ve videoya gömün."
+  },
+  "subtitleStyles": {
+    "Cinema": "Sinema sarısı",
+    "Clean": "Sade",
+    "Highlight": "Vurgu",
+    "LineBox": "Satır kutusu",
+    "Boxed": "Kutu",
+    "Default": "Kontur",
+    "Classic": "Kalın sarı",
+    "sample": "Merhaba"
   }
 }

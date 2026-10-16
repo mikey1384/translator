@@ -98,6 +98,7 @@ export default function MainPanels({
           onSetMergeOperationId={setMergeOperationId}
           onStartPngRenderRequest={handleRenderRequest}
           listHidden={inWorkspace && !editMode}
+          inWorkspace={inWorkspace}
         />
       </div>
     </>

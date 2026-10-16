@@ -12,12 +12,14 @@ interface BuyCreditsButtonProps {
   fullWidth?: boolean;
   dataLog?: string;
   className?: string;
-  placement?:
-    | 'zero-credit-banner'
-    | 'credit-ran-out-dialog'
-    | 'settings-credit-card';
+  placement?: CheckoutPlacement;
   onCheckoutCreated?: () => void;
 }
+
+type CheckoutPlacement =
+  | 'zero-credit-banner'
+  | 'credit-ran-out-dialog'
+  | 'settings-credit-card';
 
 export default function BuyCreditsButton({
   packId,
@@ -31,6 +33,38 @@ export default function BuyCreditsButton({
   onCheckoutCreated,
 }: BuyCreditsButtonProps) {
   const { t } = useTranslation();
+  const { loading, start: handleClick } = useCreditCheckout({
+    packId,
+    placement,
+    onCheckoutCreated,
+  });
+  const isDisabled = loading;
+
+  return (
+    <Button
+      onClick={handleClick}
+      disabled={isDisabled}
+      variant={variant}
+      size={size}
+      fullWidth={fullWidth}
+      className={className}
+      data-log={dataLog}
+    >
+      {loading ? t('credits.redirectingToPayment') : label}
+    </Button>
+  );
+}
+
+/** Starts Stripe checkout for a pack, with the purchase funnel events. */
+export function useCreditCheckout({
+  packId,
+  placement,
+  onCheckoutCreated,
+}: {
+  packId: BuyCreditsButtonProps['packId'];
+  placement?: CheckoutPlacement;
+  onCheckoutCreated?: () => void;
+}) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -102,19 +136,5 @@ export default function BuyCreditsButton({
     }
   }
 
-  const isDisabled = loading;
-
-  return (
-    <Button
-      onClick={handleClick}
-      disabled={isDisabled}
-      variant={variant}
-      size={size}
-      fullWidth={fullWidth}
-      className={className}
-      data-log={dataLog}
-    >
-      {loading ? t('credits.redirectingToPayment') : label}
-    </Button>
-  );
+  return { loading, start: handleClick };
 }

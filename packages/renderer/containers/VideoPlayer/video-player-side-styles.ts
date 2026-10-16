@@ -408,6 +408,11 @@ const playerSeekbarBaseStyles = css`
 export const videoPlayerSeekbarStyles = (isFullScreen: boolean) => css`
   ${playerSeekbarBaseStyles}
   height: ${isFullScreen ? '12px' : '8px'};
+  /* A thin track with a 24px+ grab area around it. */
+  box-sizing: content-box;
+  padding: ${isFullScreen ? '10px' : '8px'} 0;
+  background-clip: content-box;
+  background-origin: content-box;
 
   &::-webkit-slider-thumb {
     width: ${isFullScreen ? '24px' : '16px'};
@@ -447,6 +452,7 @@ const videoPlayerIconButtonBaseStyles = css`
 
 export const videoPlayerIconButtonStyles = (isFullScreen: boolean) => css`
   ${videoPlayerIconButtonBaseStyles}
+  min-width: ${isFullScreen ? '44px' : '36px'};
 
   svg {
     width: ${isFullScreen ? '32px' : '24px'};
@@ -549,8 +555,10 @@ export const dockedVideoContainerStyles = css`
   z-index: 1;
   width: 100%;
   aspect-ratio: 16 / 9;
-  max-height: calc(100vh - 260px);
-  min-height: 220px;
+  /* Leave room for the header, status row and action bar, so the primary
+     action is on screen without scrolling. */
+  max-height: calc(100vh - 310px);
+  min-height: 200px;
   padding: 0;
   border-radius: 20px;
   background-color: #000;

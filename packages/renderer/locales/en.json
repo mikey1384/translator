@@ -836,7 +836,8 @@
         "addDirectory": "Failed to add directory.",
         "removeDirectory": "Failed to remove directory."
       },
-      "pitch": "Translate for free with the Claude or Codex subscription you already have."
+      "pitch": "Translate for free with the Claude or Codex subscription you already have.",
+      "freeTitle": "Translate free with your own AI"
     },
     "siteConnection": {
       "title": "Website connection",
@@ -894,7 +895,19 @@
       "freeWelcome": "{{count}} free min",
       "minutes": "{{count}} min of transcription",
       "title": "Credits and plans"
-    }
+    },
+    "yourMinutes": "Your minutes",
+    "balanceNone": "No minutes left",
+    "balanceTime": "{{time}} of video",
+    "monthlyFreeNote": "{{minutes}} free minutes every month · next on {{date}}",
+    "packAria": "{{price}} for about {{time}} of video",
+    "badgePopular": "Most popular",
+    "badgeValue": "Best value",
+    "ofVideo": "of video",
+    "moreMinutesPerDollar": "{{multiplier}}× the minutes per dollar",
+    "checkoutWaiting": "Finish paying in your browser. Your minutes appear here on their own.",
+    "checkoutNote": "One-time payment through Stripe, in your browser. No account or subscription. Minutes arrive on their own.",
+    "dubbingNote": "Translating with credits adds about 10% per minute; dubbing uses more."
   },
   "cta": {
     "generate": {
@@ -1222,5 +1235,15 @@
     "hideTools": "Hide tools",
     "noVideoTitle": "Add the video",
     "noVideoBody": "Open the video these subtitles belong to, to watch them in place and burn them in."
+  },
+  "subtitleStyles": {
+    "Cinema": "Cinema yellow",
+    "Clean": "Clean",
+    "Highlight": "Highlight",
+    "LineBox": "Line box",
+    "Boxed": "Boxed",
+    "Default": "Outline",
+    "Classic": "Bold yellow",
+    "sample": "Hello there"
   }
 }

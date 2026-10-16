@@ -198,9 +198,12 @@ const intoGroup = css`
 `;
 
 const textLink = css`
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
   background: none;
   border: 0;
-  padding: 2px 0;
+  padding: 0 2px;
   font: inherit;
   font-size: 0.86rem;
   color: ${colors.textDim};

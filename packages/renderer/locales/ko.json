@@ -847,7 +847,8 @@
         "addDirectory": "폴더를 추가하지 못했습니다.",
         "removeDirectory": "폴더를 제거하지 못했습니다."
       },
-      "pitch": "이미 사용 중인 Claude 또는 Codex 구독으로 무료로 번역하세요."
+      "pitch": "이미 사용 중인 Claude 또는 Codex 구독으로 무료로 번역하세요.",
+      "freeTitle": "내 AI로 무료 번역"
     },
     "creditTransfer": {
       "title": "컴퓨터 간 크레딧 이동",
@@ -893,7 +894,19 @@
       "freeWelcome": "무료 {{count}}분",
       "minutes": "전사 {{count}}분",
       "title": "크레딧 및 요금제"
-    }
+    },
+    "yourMinutes": "내 시간",
+    "balanceNone": "남은 시간 없음",
+    "balanceTime": "영상 {{time}}",
+    "monthlyFreeNote": "매달 무료 {{minutes}}분 · 다음 지급일 {{date}}",
+    "packAria": "{{price}}로 영상 약 {{time}}",
+    "badgePopular": "가장 인기",
+    "badgeValue": "최고 가성비",
+    "ofVideo": "영상",
+    "moreMinutesPerDollar": "1달러당 {{multiplier}}× 더 많은 시간",
+    "checkoutWaiting": "브라우저에서 결제를 완료하세요. 시간은 자동으로 여기에 표시됩니다.",
+    "checkoutNote": "브라우저에서 Stripe로 한 번만 결제합니다. 계정이나 구독이 필요 없습니다. 시간은 자동으로 충전됩니다.",
+    "dubbingNote": "크레딧으로 번역하면 분당 약 10%가 추가되며, 더빙은 더 많이 사용합니다."
   },
   "cta": {
     "generate": {
@@ -1221,5 +1234,15 @@
     "hideTools": "도구 숨기기",
     "noVideoTitle": "영상을 추가하세요",
     "noVideoBody": "이 자막의 영상을 열면 제자리에서 보고 영상에 입힐 수 있어요."
+  },
+  "subtitleStyles": {
+    "Cinema": "시네마 옐로",
+    "Clean": "깔끔",
+    "Highlight": "하이라이트",
+    "LineBox": "줄 상자",
+    "Boxed": "상자",
+    "Default": "외곽선",
+    "Classic": "굵은 노랑",
+    "sample": "안녕하세요"
   }
 }

@@ -836,7 +836,8 @@
         "addDirectory": "Kansiota ei voitu lisätä.",
         "removeDirectory": "Kansiota ei voitu poistaa."
       },
-      "pitch": "Käännä ilmaiseksi Claude- tai Codex-tilauksella, joka sinulla jo on."
+      "pitch": "Käännä ilmaiseksi Claude- tai Codex-tilauksella, joka sinulla jo on.",
+      "freeTitle": "Käännä ilmaiseksi omalla tekoälylläsi"
     },
     "creditTransfer": {
       "title": "Siirrä krediittejä tietokoneiden välillä",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} ilmaista min",
       "minutes": "{{count}} min litterointia",
       "title": "Krediitit ja paketit"
-    }
+    },
+    "yourMinutes": "Minuuttisi",
+    "balanceNone": "Minuutteja ei ole jäljellä",
+    "balanceTime": "{{time}} videota",
+    "monthlyFreeNote": "{{minutes}} ilmaista minuuttia joka kuukausi · seuraavat {{date}}",
+    "packAria": "{{price}} noin {{time}} videosta",
+    "badgePopular": "Suosituin",
+    "badgeValue": "Edullisin",
+    "ofVideo": "videota",
+    "moreMinutesPerDollar": "{{multiplier}}× minuutteja dollarilla",
+    "checkoutWaiting": "Viimeistele maksu selaimessa. Minuuttisi ilmestyvät tähän itsestään.",
+    "checkoutNote": "Kertamaksu Stripen kautta selaimessa. Ei tiliä eikä tilausta. Minuutit tulevat itsestään.",
+    "dubbingNote": "Kääntäminen krediiteillä lisää noin 10 % minuuttia kohden; jälkiäänitys kuluttaa enemmän."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Piilota työkalut",
     "noVideoTitle": "Lisää video",
     "noVideoBody": "Avaa näiden tekstitysten video, niin näet ne paikallaan ja voit polttaa ne kuvaan."
+  },
+  "subtitleStyles": {
+    "Cinema": "Elokuvakeltainen",
+    "Clean": "Selkeä",
+    "Highlight": "Korostus",
+    "LineBox": "Rivilaatikko",
+    "Boxed": "Laatikko",
+    "Default": "Ääriviiva",
+    "Classic": "Lihava keltainen",
+    "sample": "Hei vaan"
   }
 }

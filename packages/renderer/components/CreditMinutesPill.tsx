@@ -19,6 +19,8 @@ const pill = css`
   font: inherit;
   font-size: 0.85rem;
   white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
   cursor: pointer;
 
   &:hover {
@@ -30,6 +32,11 @@ const pill = css`
     outline: 2px solid ${colors.primaryLight};
     outline-offset: 2px;
   }
+`;
+
+const pillText = css`
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const dot = (color: string) => css`
@@ -124,7 +131,7 @@ export default function CreditMinutesPill() {
       title={t('credits.pill.title', 'Credits and plans')}
     >
       <span className={dot(tone)} aria-hidden="true" />
-      {text}
+      <span className={pillText}>{text}</span>
     </button>
   );
 }

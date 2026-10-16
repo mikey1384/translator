@@ -836,7 +836,8 @@
         "addDirectory": "Imeshindikana kuongeza folda.",
         "removeDirectory": "Imeshindikana kuondoa folda."
       },
-      "pitch": "Tafsiri bure kwa usajili wa Claude au Codex ambao tayari unao."
+      "pitch": "Tafsiri bure kwa usajili wa Claude au Codex ambao tayari unao.",
+      "freeTitle": "Tafsiri bure kwa AI yako mwenyewe"
     },
     "creditTransfer": {
       "title": "Hamisha mikopo kati ya kompyuta",
@@ -882,7 +883,19 @@
       "freeWelcome": "Dakika {{count}} za bure",
       "minutes": "Dakika {{count}} za unukuzi",
       "title": "Salio na mipango"
-    }
+    },
+    "yourMinutes": "Dakika zako",
+    "balanceNone": "Hakuna dakika zilizobaki",
+    "balanceTime": "{{time}} za video",
+    "monthlyFreeNote": "Dakika {{minutes}} za bure kila mwezi · zinazofuata {{date}}",
+    "packAria": "{{price}} kwa takriban {{time}} za video",
+    "badgePopular": "Maarufu zaidi",
+    "badgeValue": "Thamani bora",
+    "ofVideo": "za video",
+    "moreMinutesPerDollar": "{{multiplier}}× dakika kwa kila dola",
+    "checkoutWaiting": "Maliza kulipa kwenye kivinjari chako. Dakika zako zitaonekana hapa zenyewe.",
+    "checkoutNote": "Malipo ya mara moja kupitia Stripe, kwenye kivinjari chako. Hakuna akaunti wala usajili. Dakika zinafika zenyewe.",
+    "dubbingNote": "Kutafsiri kwa salio kunaongeza takriban 10% kwa dakika; kuweka sauti kunatumia zaidi."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Ficha zana",
     "noVideoTitle": "Ongeza video",
     "noVideoBody": "Fungua video ya manukuu haya ili uyaone mahali pake na kuyaweka kwenye video."
+  },
+  "subtitleStyles": {
+    "Cinema": "Njano ya sinema",
+    "Clean": "Safi",
+    "Highlight": "Kuangazia",
+    "LineBox": "Kisanduku kwa mstari",
+    "Boxed": "Kisanduku",
+    "Default": "Mpaka",
+    "Classic": "Njano nzito",
+    "sample": "Habari"
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   AudioLines,
@@ -119,7 +119,29 @@ function MoreMenu({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [placement, setPlacement] = useState<{
+    alignLeft: boolean;
+    below: boolean;
+  }>({ alignLeft: false, below: false });
   const editor = useWorkspaceActions(s => s.editor);
+
+  // Open toward whichever side has room: the bar wraps on narrow windows and
+  // the page may be scrolled, so a fixed up-and-left menu can leave the view.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const anchor = anchorRef.current?.getBoundingClientRect();
+    const menu = menuRef.current;
+    if (!anchor || !menu) return;
+    const width = menu.offsetWidth;
+    const height = menu.offsetHeight;
+    setPlacement({
+      alignLeft: anchor.right - width < 8,
+      below:
+        anchor.top - height - 8 < 8 &&
+        anchor.bottom + height + 8 <= window.innerHeight,
+    });
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -156,7 +178,17 @@ function MoreMenu({
         {t('workspace.more', 'More')}
       </Button>
       {open ? (
-        <div className={moreMenuStyles} role="menu">
+        <div
+          ref={menuRef}
+          className={moreMenuStyles}
+          role="menu"
+          style={{
+            ...(placement.alignLeft ? { left: 0, right: 'auto' } : null),
+            ...(placement.below
+              ? { top: 'calc(100% + 8px)', bottom: 'auto' }
+              : null),
+          }}
+        >
           {showExport ? (
             <button
               type="button"

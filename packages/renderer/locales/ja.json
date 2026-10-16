@@ -836,7 +836,8 @@
         "addDirectory": "フォルダーを追加できませんでした。",
         "removeDirectory": "フォルダーを削除できませんでした。"
       },
-      "pitch": "すでにお持ちのClaudeまたはCodexのサブスクリプションで、無料で翻訳できます。"
+      "pitch": "すでにお持ちのClaudeまたはCodexのサブスクリプションで、無料で翻訳できます。",
+      "freeTitle": "自分のAIで無料翻訳"
     },
     "creditTransfer": {
       "title": "コンピューター間でクレジットを移行",
@@ -882,7 +883,19 @@
       "freeWelcome": "無料 {{count}}分",
       "minutes": "文字起こし {{count}}分",
       "title": "クレジットとプラン"
-    }
+    },
+    "yourMinutes": "あなたの時間",
+    "balanceNone": "残り時間がありません",
+    "balanceTime": "動画 {{time}}",
+    "monthlyFreeNote": "毎月 {{minutes}}分 無料 · 次回は {{date}}",
+    "packAria": "{{price}}で動画 約{{time}}",
+    "badgePopular": "一番人気",
+    "badgeValue": "お得",
+    "ofVideo": "動画",
+    "moreMinutesPerDollar": "1ドルあたり {{multiplier}}× の時間",
+    "checkoutWaiting": "ブラウザでお支払いを完了してください。時間は自動的にここに反映されます。",
+    "checkoutNote": "ブラウザで Stripe による1回限りのお支払い。アカウントやサブスクリプションは不要です。時間は自動的に追加されます。",
+    "dubbingNote": "クレジットでの翻訳は1分あたり約10%追加されます。吹き替えはさらに多く使います。"
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "ツールを隠す",
     "noVideoTitle": "動画を追加",
     "noVideoBody": "この字幕の動画を開くと、その場で確認して焼き込めます。"
+  },
+  "subtitleStyles": {
+    "Cinema": "シネマイエロー",
+    "Clean": "クリーン",
+    "Highlight": "ハイライト",
+    "LineBox": "行ボックス",
+    "Boxed": "ボックス",
+    "Default": "縁取り",
+    "Classic": "太字イエロー",
+    "sample": "こんにちは"
   }
 }

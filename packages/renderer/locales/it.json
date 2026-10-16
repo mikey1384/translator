@@ -836,7 +836,8 @@
         "addDirectory": "Impossibile aggiungere la cartella.",
         "removeDirectory": "Impossibile rimuovere la cartella."
       },
-      "pitch": "Traduci gratis con l’abbonamento Claude o Codex che hai già."
+      "pitch": "Traduci gratis con l’abbonamento Claude o Codex che hai già.",
+      "freeTitle": "Traduci gratis con la tua IA"
     },
     "creditTransfer": {
       "title": "Trasferisci crediti tra computer",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} min gratis",
       "minutes": "{{count}} min di trascrizione",
       "title": "Crediti e piani"
-    }
+    },
+    "yourMinutes": "I tuoi minuti",
+    "balanceNone": "Nessun minuto rimasto",
+    "balanceTime": "{{time}} di video",
+    "monthlyFreeNote": "{{minutes}} minuti gratis ogni mese · prossimi il {{date}}",
+    "packAria": "{{price}} per circa {{time}} di video",
+    "badgePopular": "Più popolare",
+    "badgeValue": "Miglior valore",
+    "ofVideo": "di video",
+    "moreMinutesPerDollar": "{{multiplier}}× i minuti per dollaro",
+    "checkoutWaiting": "Completa il pagamento nel browser. I tuoi minuti appariranno qui da soli.",
+    "checkoutNote": "Pagamento unico tramite Stripe, nel browser. Nessun account o abbonamento. I minuti arrivano da soli.",
+    "dubbingNote": "Tradurre con i crediti aggiunge circa il 10% al minuto; il doppiaggio consuma di più."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "Nascondi strumenti",
     "noVideoTitle": "Aggiungi il video",
     "noVideoBody": "Apri il video di questi sottotitoli per vederli sul posto e imprimerli."
+  },
+  "subtitleStyles": {
+    "Cinema": "Giallo cinema",
+    "Clean": "Pulito",
+    "Highlight": "Evidenziato",
+    "LineBox": "Riquadro per riga",
+    "Boxed": "Riquadro",
+    "Default": "Contorno",
+    "Classic": "Giallo grassetto",
+    "sample": "Ciao a tutti"
   }
 }

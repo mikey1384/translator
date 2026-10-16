@@ -9,10 +9,23 @@ import {
 } from '../../components/design-system/tokens.js';
 
 export const settingsPageLayoutStyles = css`
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: ${spacing['4xl']};
-  padding: ${spacing.md} 0 ${spacing['4xl']};
+  gap: ${spacing['2xl']};
+  padding: 0 0 ${spacing['4xl']};
+
+  /* One column width for every card, whatever width each section asks for. */
+  && > * {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+  }
 `;
 
 export const settingsCenterColumnStyles = css`

@@ -75,7 +75,15 @@ const selectedLabelStyles = css`
   color: ${colors.text};
 `;
 
+export function subtitleStyleLabel(
+  t: (key: string, fallback: string) => string,
+  preset: SubtitleStylePresetKey
+): string {
+  return t(`subtitleStyles.${preset}`, STYLE_LABELS[preset] ?? preset);
+}
+
 function StyleSample({ preset }: { preset: SubtitleStylePresetKey }) {
+  const { t } = useTranslation();
   const theme = resolveSubtitleRenderTheme({
     displayFontSize: 14,
     stylePreset: preset,
@@ -84,7 +92,7 @@ function StyleSample({ preset }: { preset: SubtitleStylePresetKey }) {
     videoHeightPx: 1080,
   });
   const color = assColorToRgba(SUBTITLE_STYLE_PRESETS[preset].primaryColor);
-  const text = 'Hello there';
+  const text = t('subtitleStyles.sample', 'Hello there');
   const boxed = theme.backgroundColor !== 'transparent';
   return (
     <span
@@ -148,7 +156,7 @@ export default function SubtitleStylePicker({
               <StyleSample preset={preset} />
             </div>
             <span className={selected ? selectedLabelStyles : undefined}>
-              {t(`subtitleStyles.${preset}`, STYLE_LABELS[preset] ?? preset)}
+              {subtitleStyleLabel(t, preset)}
             </span>
           </button>
         );

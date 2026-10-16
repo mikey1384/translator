@@ -836,7 +836,8 @@
         "addDirectory": "تعذرت إضافة المجلد.",
         "removeDirectory": "تعذرت إزالة المجلد."
       },
-      "pitch": "ترجم مجانًا باشتراك Claude أو Codex الذي لديك بالفعل."
+      "pitch": "ترجم مجانًا باشتراك Claude أو Codex الذي لديك بالفعل.",
+      "freeTitle": "ترجم مجانًا باستخدام الذكاء الاصطناعي الخاص بك"
     },
     "creditTransfer": {
       "title": "نقل النقاط بين أجهزة الكمبيوتر",
@@ -882,7 +883,19 @@
       "freeWelcome": "{{count}} دقيقة مجانية",
       "minutes": "{{count}} دقيقة نسخ",
       "title": "الأرصدة والخطط"
-    }
+    },
+    "yourMinutes": "دقائقك",
+    "balanceNone": "لم تتبقَّ دقائق",
+    "balanceTime": "{{time}} من الفيديو",
+    "monthlyFreeNote": "{{minutes}} دقيقة مجانية كل شهر · التالية في {{date}}",
+    "packAria": "{{price}} مقابل نحو {{time}} من الفيديو",
+    "badgePopular": "الأكثر شيوعًا",
+    "badgeValue": "أفضل قيمة",
+    "ofVideo": "من الفيديو",
+    "moreMinutesPerDollar": "{{multiplier}}× الدقائق لكل دولار",
+    "checkoutWaiting": "أكمل الدفع في متصفحك. ستظهر دقائقك هنا تلقائيًا.",
+    "checkoutNote": "دفعة لمرة واحدة عبر Stripe في متصفحك. بلا حساب أو اشتراك. تصل الدقائق تلقائيًا.",
+    "dubbingNote": "الترجمة بالأرصدة تضيف نحو 10% لكل دقيقة؛ والدبلجة تستهلك أكثر."
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "إخفاء الأدوات",
     "noVideoTitle": "أضف الفيديو",
     "noVideoBody": "افتح فيديو هذه الترجمات لمشاهدتها في مكانها ودمجها في الفيديو."
+  },
+  "subtitleStyles": {
+    "Cinema": "أصفر سينمائي",
+    "Clean": "نظيف",
+    "Highlight": "تمييز",
+    "LineBox": "مربع لكل سطر",
+    "Boxed": "مربع",
+    "Default": "حدود",
+    "Classic": "أصفر عريض",
+    "sample": "مرحبًا"
   }
 }

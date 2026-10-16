@@ -16,7 +16,11 @@ const headerRow = css`
   gap: ${spacing.lg};
   padding: ${spacing.md} ${spacing.xs};
   margin-bottom: ${spacing.md};
-  flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    gap: ${spacing.sm};
+    padding: ${spacing.sm} 0;
+  }
 `;
 
 const homeButton = css`
@@ -43,8 +47,36 @@ const rightGroup = css`
   display: flex;
   align-items: center;
   gap: ${spacing.md};
-  flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: 0;
+  flex: 0 1 auto;
+
+  & > * {
+    flex: none;
+  }
+  & > :first-child {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  @media (max-width: 640px) {
+    gap: ${spacing.sm};
+  }
+`;
+
+// Below this width Settings becomes a gear so the header stays one row.
+const wideOnly = css`
+  @media (max-width: 720px) {
+    display: none;
+  }
+`;
+
+const narrowOnly = css`
+  display: none;
+
+  @media (max-width: 720px) {
+    display: inline-flex;
+  }
 `;
 
 /** Home is the panels-closed state; only reachable when nothing is loaded. */
@@ -87,7 +119,12 @@ export default function Header() {
       <div className={rightGroup}>
         <CreditMinutesPill />
         <LanguageSwitcher />
-        <SettingsButton />
+        <span className={wideOnly}>
+          <SettingsButton />
+        </span>
+        <span className={narrowOnly}>
+          <SettingsButton variant="icon" />
+        </span>
         <HeaderMenu />
       </div>
     </div>

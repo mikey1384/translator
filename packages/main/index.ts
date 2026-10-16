@@ -13,6 +13,7 @@ import log from 'electron-log';
 import {
   app,
   BrowserWindow,
+  screen,
   ipcMain,
   Menu,
   dialog,
@@ -1862,9 +1863,14 @@ app.on('child-process-gone', (_event, details) => {
 async function createWindow(): Promise<BrowserWindow> {
   setStartupPhase('window_creation');
   log.info('[main.ts] Creating main window...');
+  // Fit the default to small laptop screens (1366×768 work areas are ~720px
+  // tall); keep a floor below which the layout stops making sense.
+  const workArea = screen.getPrimaryDisplay().workAreaSize;
   const window = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: Math.min(1200, Math.round(workArea.width * 0.92)),
+    height: Math.min(800, Math.round(workArea.height * 0.92)),
+    minWidth: 560,
+    minHeight: 480,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,

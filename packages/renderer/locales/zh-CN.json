@@ -836,7 +836,8 @@
         "addDirectory": "无法添加文件夹。",
         "removeDirectory": "无法移除文件夹。"
       },
-      "pitch": "使用您已有的 Claude 或 Codex 订阅免费翻译。"
+      "pitch": "使用您已有的 Claude 或 Codex 订阅免费翻译。",
+      "freeTitle": "用你自己的 AI 免费翻译"
     },
     "creditTransfer": {
       "title": "在电脑之间转移点数",
@@ -882,7 +883,19 @@
       "freeWelcome": "免费 {{count}} 分钟",
       "minutes": "转录 {{count}} 分钟",
       "title": "额度与套餐"
-    }
+    },
+    "yourMinutes": "你的时长",
+    "balanceNone": "时长已用完",
+    "balanceTime": "{{time}} 视频",
+    "monthlyFreeNote": "每月免费 {{minutes}} 分钟 · 下次发放于 {{date}}",
+    "packAria": "{{price}} 约可处理 {{time}} 视频",
+    "badgePopular": "最受欢迎",
+    "badgeValue": "最划算",
+    "ofVideo": "视频",
+    "moreMinutesPerDollar": "每美元 {{multiplier}}× 时长",
+    "checkoutWaiting": "请在浏览器中完成付款。时长会自动显示在这里。",
+    "checkoutNote": "通过 Stripe 在浏览器中一次性付款。无需账户或订阅。时长会自动到账。",
+    "dubbingNote": "使用额度翻译每分钟约多消耗 10%；配音消耗更多。"
   },
   "cta": {
     "generate": {
@@ -1204,5 +1217,15 @@
     "hideTools": "隐藏工具",
     "noVideoTitle": "添加视频",
     "noVideoBody": "打开这些字幕对应的视频，即可原地观看并压制字幕。"
+  },
+  "subtitleStyles": {
+    "Cinema": "影院黄",
+    "Clean": "简洁",
+    "Highlight": "高亮",
+    "LineBox": "逐行底框",
+    "Boxed": "底框",
+    "Default": "描边",
+    "Classic": "粗体黄",
+    "sample": "你好"
   }
 }

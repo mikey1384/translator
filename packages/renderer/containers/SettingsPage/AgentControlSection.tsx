@@ -251,6 +251,11 @@ export default function AgentControlSection() {
     setConnecting(client);
     setConnectOutcome(null);
     try {
+      // One click from the free pitch: turn agent control on, then connect.
+      if (!enabled) {
+        const toggled = await SystemIPC.setAgentControlEnabled(true);
+        setEnabled(toggled.enabled);
+      }
       const result = await SystemIPC.connectAgentMcpClient(client);
       const commandCopied =
         result.status === 'cli-not-found' && result.command
@@ -536,7 +541,10 @@ export default function AgentControlSection() {
   return (
     <Section
       destination="settings-agent-control"
-      title={t('settings.agentControl.title', 'Agent Control')}
+      title={t(
+        'settings.agentControl.freeTitle',
+        'Translate free with your own AI'
+      )}
       className={settingsCenterColumnStyles}
       headerRight={
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -574,6 +582,75 @@ export default function AgentControlSection() {
         </p>
       </div>
 
+      {window.env.isPackaged && (
+        <div className={infoBoxStyles}>
+          <strong>
+            {t(
+              'settings.agentControl.connection.title',
+              'Connect Claude Code, Claude Desktop, or Codex'
+            )}
+          </strong>
+          <p style={{ margin: '6px 0 0', color: colors.gray }}>
+            {t(
+              'settings.agentControl.connection.instructions',
+              'Click a button to register the “translator” MCP server. For other agents, add an STDIO MCP server named “translator” with this launcher path, then restart the agent so the new tools appear.'
+            )}
+          </p>
+          <div className={connectRowStyles}>
+            {(['claude-code', 'codex', 'claude-desktop'] as const).map(
+              client => (
+                <button
+                  key={client}
+                  type="button"
+                  className={addButtonStyles}
+                  style={{ marginTop: 0 }}
+                  disabled={connecting !== null}
+                  onClick={() => void handleConnect(client)}
+                >
+                  {connecting === client
+                    ? t(
+                        'settings.agentControl.connection.connecting',
+                        'Connecting…'
+                      )
+                    : client === 'claude-code'
+                      ? t(
+                          'settings.agentControl.connection.connectClaudeCode',
+                          'Connect Claude Code'
+                        )
+                      : client === 'codex'
+                        ? t(
+                            'settings.agentControl.connection.connectCodex',
+                            'Connect Codex'
+                          )
+                        : t(
+                            'settings.agentControl.connection.connectClaudeDesktop',
+                            'Connect Claude Desktop'
+                          )}
+                </button>
+              )
+            )}
+          </div>
+          {renderConnectOutcome()}
+          {launcherPath ? (
+            <>
+              <code className={launcherPathStyles} dir="ltr">
+                {launcherPath}
+              </code>
+              <button
+                type="button"
+                className={secondaryButtonStyles}
+                style={{ marginTop: 8 }}
+                onClick={() => void handleCopyLauncherPath()}
+              >
+                {pathCopied
+                  ? t('settings.agentControl.connection.copied', 'Copied')
+                  : t('settings.agentControl.connection.copyPath', 'Copy path')}
+              </button>
+            </>
+          ) : null}
+        </div>
+      )}
+
       <div className={toggleRowStyles}>
         <div className={toggleLabelStyles}>
           {t(
@@ -594,71 +671,6 @@ export default function AgentControlSection() {
 
       {enabled && (
         <>
-          {window.env.isPackaged && launcherPath && (
-            <div className={infoBoxStyles}>
-              <strong>
-                {t(
-                  'settings.agentControl.connection.title',
-                  'Connect Claude Code, Claude Desktop, or Codex'
-                )}
-              </strong>
-              <p style={{ margin: '6px 0 0', color: colors.gray }}>
-                {t(
-                  'settings.agentControl.connection.instructions',
-                  'Click a button to register the “translator” MCP server. For other agents, add an STDIO MCP server named “translator” with this launcher path, then restart the agent so the new tools appear.'
-                )}
-              </p>
-              <div className={connectRowStyles}>
-                {(['claude-code', 'codex', 'claude-desktop'] as const).map(
-                  client => (
-                    <button
-                      key={client}
-                      type="button"
-                      className={addButtonStyles}
-                      style={{ marginTop: 0 }}
-                      disabled={connecting !== null}
-                      onClick={() => void handleConnect(client)}
-                    >
-                      {connecting === client
-                        ? t(
-                            'settings.agentControl.connection.connecting',
-                            'Connecting…'
-                          )
-                        : client === 'claude-code'
-                          ? t(
-                              'settings.agentControl.connection.connectClaudeCode',
-                              'Connect Claude Code'
-                            )
-                          : client === 'codex'
-                            ? t(
-                                'settings.agentControl.connection.connectCodex',
-                                'Connect Codex'
-                              )
-                            : t(
-                                'settings.agentControl.connection.connectClaudeDesktop',
-                                'Connect Claude Desktop'
-                              )}
-                    </button>
-                  )
-                )}
-              </div>
-              {renderConnectOutcome()}
-              <code className={launcherPathStyles} dir="ltr">
-                {launcherPath}
-              </code>
-              <button
-                type="button"
-                className={secondaryButtonStyles}
-                style={{ marginTop: 8 }}
-                onClick={() => void handleCopyLauncherPath()}
-              >
-                {pathCopied
-                  ? t('settings.agentControl.connection.copied', 'Copied')
-                  : t('settings.agentControl.connection.copyPath', 'Copy path')}
-              </button>
-            </div>
-          )}
-
           <div className={labelStyles}>
             {t('settings.agentControl.permissions', 'What agents can do:')}
           </div>
