@@ -74,7 +74,7 @@ export function translateTranslationStageLabel(
     case 'error':
       return t('progress.error');
     case 'insufficient_credits':
-      return t('progress.legacy.insufficientCredits', 'Not enough credits');
+      return t('progress.legacy.insufficientCredits', 'Not enough minutes');
     default:
       return stage;
   }

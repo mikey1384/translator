@@ -26,7 +26,9 @@ import {
 } from '../../state/modal-store';
 import { logButton, logVideo, logError } from '../../utils/logger';
 import { useTranslation } from 'react-i18next';
+import { useModalStore } from '../../state/modal-store';
 import { openSubtitleFileIntoStore } from '../../utils/open-subtitle-file';
+import { subtitleFileErrorMessage } from '../EditSubtitles/subtitle-file-error';
 import {
   TRANSLATION_LANGUAGES_BASE,
   TRANSLATION_LANGUAGE_GROUPS,
@@ -189,6 +191,14 @@ export default function SideMenu({
       useSubStore.getState().scrollToCurrent();
     } else if (res.status === 'error') {
       logError('srt_load', res.error);
+      // Tell the user too, in their language (the raw text stays in the log).
+      void useModalStore.getState().openNotice({
+        title: t('errors.failedToLoadSRT', 'Failed to load SRT file'),
+        message: subtitleFileErrorMessage(res.error, t, 'open'),
+        buttons: [
+          { id: 'ok', label: t('common.ok', 'OK'), variant: 'primary' },
+        ],
+      });
     }
   }
   async function handleTranscribe() {

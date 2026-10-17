@@ -262,14 +262,14 @@ const TASK_FAILED_DEFAULTS: Record<ErrorTask, string> = {
 };
 
 const CREDITS_DEFAULTS: Record<ErrorTask, string> = {
-  transcription: 'Not enough credits to transcribe this.',
-  translation: 'Not enough credits to translate this.',
-  dubbing: 'Not enough credits to dub this.',
-  summary: 'Not enough credits for the summary.',
-  videoSearch: 'Not enough credits to search for videos.',
-  download: 'Not enough credits.',
-  export: 'Not enough credits.',
-  other: 'Not enough credits.',
+  transcription: 'Not enough minutes to transcribe this.',
+  translation: 'Not enough minutes to translate this.',
+  dubbing: 'Not enough minutes to dub this.',
+  summary: 'Not enough minutes for the summary.',
+  videoSearch: 'Not enough minutes to search for videos.',
+  download: 'Not enough minutes.',
+  export: 'Not enough minutes.',
+  other: 'Not enough minutes.',
 };
 
 function build(

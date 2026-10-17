@@ -23,10 +23,10 @@
       "unexpectedSave": "Der opstod en uventet fejl under gemning.",
       "unexpectedLoad": "Der opstod en uventet fejl under indlæsning.",
       "renderFailed": "Rendering mislykkedes",
-      "creditReservationFailed": "Kreditreservation mislykkedes",
+      "creditReservationFailed": "Minutterne kunne ikke reserveres",
       "invalidRenderOptions": "Ugyldige renderingsindstillinger angivet",
       "missingVideoMetadata": "Manglende videometadata ({{missing}})",
-      "insufficientDiskSpace": "Ikke nok diskplads til at fuldføre sammenfletningen. Frigør venligst plads og prøv igen.",
+      "insufficientDiskSpace": "Ikke nok diskplads til at eksportere videoen. Frigør plads, og prøv igen.",
       "noSourceVideo": "Ingen kildevideo",
       "noSubtitlesLoaded": "Ingen undertekster indlæst",
       "failedToLoadSRT": "Kunne ikke indlæse SRT-fil",
@@ -112,7 +112,8 @@
     "updateAvailableDownloading": "Opdatering fundet. Den downloades i baggrunden.",
     "updateReadyToInstall": "Opdateringen er downloadet. Genstart for at installere.",
     "updateCheckFailed": "Kunne ikke søge efter opdateringer. Prøv igen senere.",
-    "aboutVersion": "Translator v{{version}}"
+    "aboutVersion": "Translator v{{version}}",
+    "updateVersionAvailable": "v{{version}} er tilgængelig"
   },
   "errors": {
     "needCookies": "YouTube bad om menneskelig verifikation. Klik på Forbind for at fortsætte.",
@@ -125,7 +126,7 @@
     "unexpectedSave": "Der opstod en uventet fejl under gemning.",
     "unexpectedLoad": "Der opstod en uventet fejl under indlæsning.",
     "renderFailed": "Rendering mislykkedes",
-    "creditReservationFailed": "Kreditreservation mislykkedes",
+    "creditReservationFailed": "Minutterne kunne ikke reserveres",
     "invalidRenderOptions": "Ugyldige renderingsindstillinger angivet",
     "missingVideoMetadata": "Manglende videometadata ({{missing}})",
     "noSourceVideo": "Ingen kildevideo",
@@ -133,7 +134,7 @@
     "noSubtitlesLoaded": "Ingen undertekster indlæst",
     "failedToLoadSRT": "Kunne ikke indlæse SRT-fil",
     "cancelTranslationFailed": "Kunne ikke annullere oversættelsen: {{message}}",
-    "cancelDubbingFailed": "Kunne ikke annullere dubbing: {{message}}",
+    "cancelDubbingFailed": "Kunne ikke annullere eftersynkroniseringen: {{message}}",
     "cancelSummaryFailed": "Kunne ikke annullere generering af resumé: {{message}}",
     "adminCreditAddFailed": "Kunne ikke tilføje kreditter: {{message}}",
     "adminCreditAddError": "Fejl ved tilføjelse af kreditter: {{message}}",
@@ -155,18 +156,18 @@
     "transcription": {
       "providerUnavailable": "Transskription (ElevenLabs Scribe) er midlertidigt utilgængelig eller kunne ikke nås efter flere forsøg. Prøv igen om et par minutter.",
       "fileTooLarge": "Denne lyd er for lang til at blive transskriberet i én opgave (mere end ca. {{hours}} timer). Del videoen op i kortere dele, og transskriber hver del.",
-      "elevenLabsKeyRequired": "Transskription bruger ElevenLabs Scribe og kræver en ElevenLabs API-nøgle. Tilføj en i Indstillinger, eller slå API-nøgletilstand fra for at transskribere med Stage5-kreditter. Din OpenAI- eller Anthropic-nøgle bruges stadig til oversættelse.",
+      "elevenLabsKeyRequired": "Transskription bruger ElevenLabs Scribe og kræver en ElevenLabs API-nøgle. Tilføj en i Indstillinger, eller slå API-nøgletilstand fra for at transskribere med Stage5-minutter. Din OpenAI- eller Anthropic-nøgle bruges stadig til oversættelse.",
       "fileTooLarge_one": "Denne lyd er for lang til at blive transskriberet i én opgave (mere end ca. {{hours}} time). Del videoen op i kortere dele, og transskriber hver del."
     },
     "credits": {
-      "transcription": "Ikke nok kreditter til at transskribere.",
-      "translation": "Ikke nok kreditter til at oversætte.",
-      "dubbing": "Ikke nok kreditter til at eftersynkronisere.",
-      "summary": "Ikke nok kreditter til resuméet.",
-      "videoSearch": "Ikke nok kreditter til at søge efter videoer.",
-      "download": "Ikke nok kreditter.",
-      "export": "Ikke nok kreditter.",
-      "other": "Ikke nok kreditter."
+      "transcription": "Ikke nok minutter til at transskribere.",
+      "translation": "Ikke nok minutter til at oversætte.",
+      "dubbing": "Ikke nok minutter til at eftersynkronisere.",
+      "summary": "Ikke nok minutter til resuméet.",
+      "videoSearch": "Ikke nok minutter til at søge efter videoer.",
+      "download": "Ikke nok minutter.",
+      "export": "Ikke nok minutter.",
+      "other": "Ikke nok minutter."
     },
     "failed": {
       "transcription": "Transskriptionen stoppede på grund af et uventet problem. Linjer, der allerede er transskriberet, bliver gemt.",
@@ -175,7 +176,8 @@
       "summary": "Resuméet stoppede på grund af et uventet problem.",
       "videoSearch": "Videosøgningen stoppede på grund af et uventet problem.",
       "export": "Videoen kunne ikke laves færdig på grund af et uventet problem.",
-      "other": "Noget gik galt. Prøv igen."
+      "other": "Noget gik galt. Prøv igen.",
+      "download": "Videoen kunne ikke downloades. Prøv igen, eller brug et andet link."
     },
     "server": {
       "transcription": "Vores server havde et problem. Prøv igen om et minut.",
@@ -184,7 +186,8 @@
       "summary": "Vores server havde et problem. Prøv igen om et minut.",
       "videoSearch": "Vores server havde et problem. Prøv igen om et minut.",
       "export": "Vores server havde et problem. Prøv igen om et minut.",
-      "other": "Vores server havde et problem. Prøv igen om et minut."
+      "other": "Vores server havde et problem. Prøv igen om et minut.",
+      "download": "Vores server havde et problem. Prøv igen om et minut."
     },
     "download": {
       "invalid_url": "Det ligner ikke et videolink. Indsæt hele linket.",
@@ -210,7 +213,9 @@
     "network": "Kunne ikke få forbindelse til serveren. Tjek din internetforbindelse, og prøv igen.",
     "busy": "Tjenesten har travlt lige nu. Vent et minut, og prøv igen.",
     "diskFull": "Din disk er fuld. Frigør lidt plads, og prøv igen.",
-    "cancelDubbingFailedPlain": "Eftersynkroniseringen kunne ikke stoppes. Prøv igen."
+    "cancelDubbingFailedPlain": "Eftersynkroniseringen kunne ikke stoppes. Prøv igen.",
+    "cancelTranslationFailedPlain": "Oversættelsen kunne ikke stoppes. Prøv igen.",
+    "cancelSummaryFailedPlain": "Resuméet kunne ikke stoppes. Prøv igen."
   },
   "input": {
     "connect": "Forbind",
@@ -247,7 +252,7 @@
     "srtFileLoaded": "SRT indlæst",
     "featuresUnlockAfterTranscription": "Transskriber eller oversæt videoen, eller find dens højdepunkter.",
     "preSubtitleActionsHint": "Transskriber, oversæt eller opret højdepunkter fra denne video.",
-    "saveDubbedVideo": "Gem dubbet video",
+    "saveDubbedVideo": "Gem eftersynkroniseret video",
     "downloadFinishedSwitchTitle": "Se den downloadede video?",
     "downloadFinishedSwitchPrompt": "Din download er klar. Se den nu, eller behold din nuværende video og åbn den senere fra historikken.",
     "downloadFinishedWatchNow": "Se nu",
@@ -430,7 +435,8 @@
       "freeSearchRunning": "Søger på YouTube…",
       "freeSearchResults": "Her er YouTube-resultater for “{{query}}”. Søgningen var gratis. Fortæl mig mere om, hvad du leder efter, så forfiner jeg den med AI.",
       "freeSearchEmpty": "YouTube fandt intet for “{{query}}”. Beskriv, hvad du leder efter, så søger jeg med AI.",
-      "openOriginalPage": "Åbn den originale side"
+      "openOriginalPage": "Åbn den originale side",
+      "modelPill": "Søge-AI: {{model}}"
     },
     "downloadAndTranslate": "Download og oversæt",
     "downloadAndTranscribe": "Download og transskriber",
@@ -461,7 +467,8 @@
     },
     "dropWhileDownloading": "En download er i gang. Slip filen igen, når den er færdig.",
     "dropWhileBusy": "Translator arbejder på denne video. Slip filen igen, når den er færdig.",
-    "dropNotSupported": "Slip en video, en lydfil eller en .srt-undertekstfil."
+    "dropNotSupported": "Slip en video, en lydfil eller en .srt-undertekstfil.",
+    "batchDownloadRunning": "Translator downloader flere videoer. Vent, til de er færdige, eller annuller downloaden."
   },
   "subtitles": {
     "outputLanguage": "Outputsprog",
@@ -476,18 +483,18 @@
     "improveTranscription": "Forbedre transskription",
     "improveTranslation": "Forbedre oversættelse",
     "chooseSrtFile": "Vælg SRT-fil",
-    "dub": "Dub stemme",
-    "dubEstimateCredits": "{{credits}} kr (~{{minutes}}m)",
+    "dub": "Eftersynkroniser",
+    "dubEstimateCredits": "{{credits}} kreditter (~{{minutes}} min)",
     "dubEstimateByo": "~{{minutes}}m lyd",
     "voiceCloningRequiresTranslation": "Stemmekloning kræver et målsprog",
     "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "BYO-nøgle",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "Er du sikker på, at du vil annullere undertekstoversættelsesprocessen? Ethvert fremskridt vil gå tabt, og du skal starte forfra.",
-    "dubCostHint": "ElevenLabs-stemme: ~{{rate}} kreditter pr. minut tale. Dette skøn vises, før dubbingen starter.",
+    "dubCostHint": "ElevenLabs-stemme: ~{{rate}} kreditter pr. minut tale. Skønnet vises, før eftersynkroniseringen starter.",
     "unreadableCues_one": "{{count}} linje i filen kunne ikke læses og blev udeladt. Tjek dens tidskode.",
     "unreadableCues": "{{count}} linjer i filen kunne ikke læses og blev udeladt. Tjek deres tidskoder.",
-    "addCreditsToTranslate": "Tilføj kreditter for at oversætte",
+    "addCreditsToTranslate": "Tilføj minutter for at oversætte",
     "dubInto": "Eftersynkroniser til {{language}}",
     "dubIntro": "En stemme læser underteksterne op på det sprog, du vælger, oven på den originale baggrundslyd.",
     "dubNeedsSubtitles": "Ved eftersynkronisering bliver underteksterne læst op, så videoen skal have undertekster først. Transskriber den, og vælg så en stemme her.",
@@ -496,17 +503,29 @@
     "dubTranslatesFirst": "Underteksterne bliver først oversat til {{language}} og derefter læst op.",
     "dubCostWithTranslation": "Oversættelse og stemme: {{cost}}",
     "dubUsesOwnKeys": "Bruger dine egne API-nøgler.",
-    "dubNotEnoughCredits": "Ikke nok kreditter til denne eftersynkronisering.",
-    "addCreditsToDub": "Tilføj kreditter for at eftersynkronisere",
+    "dubNotEnoughCredits": "Ikke nok minutter til denne eftersynkronisering.",
+    "addCreditsToDub": "Tilføj minutter for at eftersynkronisere",
     "noSubtitlesToDub": "Lav eller åbn undertekster til videoen først, og eftersynkroniser den så.",
-    "noSubtitlesToTranslate": "Åbn eller lav undertekster først, og oversæt dem så."
+    "noSubtitlesToTranslate": "Åbn eller lav undertekster først, og oversæt dem så.",
+    "dubVoiceHelp": "Stemmen til denne eftersynkronisering. Den er også valgt næste gang.",
+    "addMinutesToDub": "Tilføj minutter for at eftersynkronisere",
+    "dubNotEnoughMinutes": "Ikke nok minutter tilbage til denne eftersynkronisering.",
+    "addMinutesToTranslate": "Tilføj minutter for at oversætte",
+    "transcriptEmptyForTranslation": "Transskriptionen har ingen linjer at oversætte.",
+    "dubCostHintMinutes": "ElevenLabs-stemme: ~{{time}} af dine minutter pr. minut tale. Skønnet vises, før eftersynkroniseringen starter.",
+    "fileError": {
+      "openPermission": "Translator har ikke adgang til at læse filen. Tjek dens tilladelser, eller kopiér den til en anden mappe, og prøv igen.",
+      "openMissing": "Undertekstfilen er her ikke længere. Den er måske flyttet eller slettet.",
+      "openFailed": "Translator kunne ikke åbne undertekstfilen. Sørg for, at det er en .srt-fil, og prøv igen.",
+      "saveFailed": "Translator kunne ikke gemme underteksterne. Prøv igen, eller vælg “Gem undertekster som...” for at vælge en anden mappe."
+    }
   },
   "summary": {
     "title": "Højdepunkter",
     "ctaHelper": "Find de bedste øjeblikke.",
     "languageLabel": "Outputsprog",
     "tab": {
-      "summary": "Oversigt",
+      "summary": "Resumé",
       "sections": "Noter",
       "highlights": "Højdepunkter"
     },
@@ -515,18 +534,18 @@
     "estimateCredits": "{{credits}} kreditter",
     "estimateByo": "BYO-nøgle",
     "highEffortBadge": "(dybdegående)",
-    "placeholder": "Din AI-oversigt vil blive vist her, når den er genereret.",
-    "insufficientCredits": "Ikke nok kreditter til at finde højdepunkter.",
+    "placeholder": "Dit AI-resumé vises her, når det er lavet.",
+    "insufficientCredits": "Ikke nok minutter til at finde højdepunkter.",
     "error": "Vi kunne ikke finde højdepunkter. {{message}}",
     "cancel": "Annuller",
-    "copy": "Kopier oversigt",
+    "copy": "Kopiér resumé",
     "copied": "Kopieret!",
-    "copyError": "Kunne ikke kopiere oversigt til udklipsholder.",
+    "copyError": "Resuméet kunne ikke kopieres til udklipsholderen.",
     "noHighlights": "Ingen højdepunkter endnu. Find højdepunkter for at se de bedste øjeblikke.",
     "noVideoForHighlights": "Åbn kildevideoen for at klippe højdepunktsklip.",
     "summaryRequiredForHighlights": "Find højdepunkter først, så bliver transskriptionen analyseret.",
     "highlight": "Højdepunkt",
-    "cutHighlightClip": "Klip dette highlight-klip",
+    "cutHighlightClip": "Klip dette højdepunkt",
     "cuttingHighlightClip": "Klipper…",
     "highlightPlaceholder": "Klip er ikke skåret endnu.",
     "clipFormat": "Klipformat:",
@@ -541,7 +560,7 @@
     "highlightSaved": "Gemt!",
     "highlightSaveError": "Gemning mislykkedes",
     "downloadHighlightFailed": "Kunne ikke gemme højdepunktsklip: {{message}}",
-    "highlightsSelectionFailed": "Kunne ikke vælge highlight-øjeblikke: {{message}}",
+    "highlightsSelectionFailed": "Kunne ikke vælge højdepunkter: {{message}}",
     "saveHighlightDialogTitle": "Gem højdepunktsklip",
     "noSections": "Ingen sektionsnoter endnu.",
     "sectionHeading": "Sektion {{index}}",
@@ -569,9 +588,9 @@
     "downloadCombined": "Download kombineret klip",
     "saveCombinedDialogTitle": "Gem kombineret højdepunktsklip",
     "combinedCutFailed": "Kunne ikke klippe kombinerede højdepunkter: {{message}}",
-    "highlightsInsufficientCredits": "Oversigten blev genereret, men udtrækningen af højdepunkter stoppede, fordi kreditterne slap op.",
+    "highlightsInsufficientCredits": "Resuméet blev lavet, men udtrækningen af højdepunkter stoppede, fordi minutterne slap op.",
     "highlightsPartialWarning": "Udtrækningen af højdepunkter var delvis. Disse højdepunkter kan være ufuldstændige. Generér igen for at opdatere.",
-    "highlightsPartialWithReason": "Oversigten blev genereret, men udtrækningen af højdepunkter var delvis: {{message}}",
+    "highlightsPartialWithReason": "Resuméet blev lavet, men udtrækningen af højdepunkter var delvis: {{message}}",
     "estimateOwnKey": "Bruger din API-nøgle",
     "generateSummary": "Lav resumé",
     "regenerateSummary": "Lav resumé igen",
@@ -594,7 +613,17 @@
       "subtitlesNotSaved": "Klippet blev lavet, men dets undertekster kunne ikke gemmes.",
       "generic": "Klippet kunne ikke klippes ud af videoen. Prøv igen."
     },
-    "cutCombinedCount_one": "Klip {{count}} sammen"
+    "cutCombinedCount_one": "Klip {{count}} sammen",
+    "addMinutesToSummarize": "Tilføj minutter for at lave resumé",
+    "addMinutesForHighlights": "Tilføj minutter for at finde højdepunkter",
+    "qualityLabel": "Kvalitet",
+    "qualityStandard": "Standard",
+    "qualityDeep": "Dybdegående (koster mere)",
+    "subtitlesChangedSinceAnalysis": "Underteksterne er ændret, siden dette blev lavet. Højdepunkter med ændrede linjer er markeret; resten passer stadig.",
+    "highlightCuesChanged": "Du har redigeret linjer i dette højdepunkt, efter det blev fundet. Tjek, at det stadig passer.",
+    "clipCaptionsChangedAny": "Underteksterne er ændret, siden klippet blev lavet (tekst, stil eller størrelse).",
+    "notEnoughForRun": "Ikke nok minutter tilbage til resumé og højdepunkter.",
+    "clipsUseOriginalAudio": "Klip bruger den originale lyd, ikke eftersynkroniseringen."
   },
   "panel": {
     "new": "ny",
@@ -617,19 +646,19 @@
       "dualMode": "Dobbelt tekst",
       "translationMode": "Oversættelse",
       "videoMounted": "Forhåndsvideo monteret",
-      "videoNeeded": "Montér en kildevideo for forhåndsvisning og sammenfletning",
+      "videoNeeded": "Montér en kildevideo for at se forhåndsvisning og brænde undertekster ind",
       "readyTitle": "Underteksteditor klar",
       "emptyTitle": "Indlæs undertekster for at komme i gang",
       "readyCopy": "Finjustér timing, linjeskift og oversættelser her, før du gemmer SRT-filen eller brænder undertekster ind i kildemediet.",
       "emptyCopy": "Åbn en eksisterende SRT for at redigere den direkte. Genererede transskriptioner fra hovedforløbet vises også her, når de er klar.",
       "rowsLoaded": "{{count}} rækker indlæst",
       "loadAnotherSrt": "Indlæs en anden SRT",
-      "mountVideoTitle": "Montér kildevideoen til forhåndsvisning og burn-in-eksport",
-      "mountVideoCopy": "Du kan fortsætte med at redigere uden video, men forhåndsvisning, søgning og sammenfletning fungerer bedst, når kildemediet er tilknyttet.",
+      "mountVideoTitle": "Montér kildevideoen for at se forhåndsvisning og eksportere med indbrændte undertekster",
+      "mountVideoCopy": "Du kan fortsætte med at redigere uden video, men forhåndsvisning, søgning og indbrænding fungerer bedst, når kildemediet er tilknyttet.",
       "listCopy": "Redigér kildetekst, oversættelse, timing og linjehandlinger direkte på stedet.",
       "originalLabel": "Originaltekst",
       "translationLabel": "Oversættelse",
-      "mergeNeedsVideoCopy": "Montér en kildevideo, før du starter en burn-in-eksport.",
+      "mergeNeedsVideoCopy": "Montér en kildevideo, før du eksporterer med indbrændte undertekster.",
       "automaticCaptionsCopy": "Videodownloaden blev blokeret (HTTP 403). Dette er YouTubes automatiske undertekster – ikke en ny transskription. Du kan redigere, oversætte og eksportere SRT nu. Tilknyt medier for at se en forhåndsvisning eller brænde undertekster ind.",
       "automaticCaptionsCopyWithMedia": "Download af videoen fra URL'en blev blokeret (HTTP 403). Dette er YouTubes automatiske undertekster – ikke en ny transskription. De tilknyttede medier kan bruges til forhåndsvisning og indbrænding.",
       "automaticCaptionsPill": "YouTubes automatiske undertekster",
@@ -652,7 +681,11 @@
       "confirmRemove": "Er du sikker på, at du vil fjerne denne undertekstblok? Denne handling kan ikke fortrydes.",
       "transcribeThisLine": "Transskriber linje",
       "timeEndBeforeStart": "Sluttiden skal ligge efter starttiden. Linjen beholder sin tidligere tid.",
-      "timeUnreadable": "Skriv en tid som 00:01:23,450 eller 1:23.45. Linjen beholder sin tidligere tid."
+      "timeUnreadable": "Skriv en tid som 00:01:23,450 eller 1:23.45. Linjen beholder sin tidligere tid.",
+      "startTimeAria": "Starttid for linje {{index}}",
+      "endTimeAria": "Sluttid for linje {{index}}",
+      "splitTitle": "Del linjen ved markøren",
+      "mergeTitle": "Slå sammen med næste linje"
     },
     "header": {
       "save": "Gem undertekster",
@@ -663,8 +696,8 @@
     "mergeControls": {
       "fontSizeLabel": "Skriftstørrelse:",
       "styleLabel": "Stil:",
-      "mergeButton": "Flet undertekster",
-      "mergingButton": "Fletter..."
+      "mergeButton": "Brænd undertekster ind",
+      "mergingButton": "Brænder ind…"
     },
     "undo": {
       "removed": "Linjen er slettet.",
@@ -672,7 +705,10 @@
       "replaced": "Erstattet i alle linjer.",
       "shifted": "Tiderne er flyttet.",
       "improved": "Linjen er transskriberet igen.",
-      "action": "Fortryd"
+      "action": "Fortryd",
+      "split": "Linjen er delt i to.",
+      "merged": "Linjerne er slået sammen.",
+      "shortcut": "Fortryd ({{keys}})"
     }
   },
   "settings": {
@@ -688,7 +724,9 @@
       "pendingOff": "Fra på denne enhed. Opret forbindelse for at bekræfte serverens valg.",
       "retry": "Prøv igen",
       "error": "Kunne ikke bekræfte dit valg. Prøv igen.",
-      "anonymousCounts": "Altid slået til: anonyme daglige optællinger af trin i appen (fx app åbnet eller download fuldført) med kun trinnet, dagen, platformen og appversionen. Intet ID, indhold eller indstillinger."
+      "anonymousCounts": "Altid slået til: anonyme daglige optællinger af trin i appen (fx app åbnet eller download fuldført) med kun trinnet, dagen, platformen og appversionen. Intet ID, indhold eller indstillinger.",
+      "pendingOffPlain": "Fra. Vi bekræfter det med serveren, næste gang du er online.",
+      "pendingOnPlain": "Til. Rapporterne venter, til du er online igen."
     },
     "title": "Indstillinger",
     "aiProvider": {
@@ -698,51 +736,51 @@
       "toggleLabel": "Brug mine API-nøgler",
       "activeKeys": "{{count}} nøgler klar",
       "noKeys": "Ingen nøgler konfigureret",
-      "usingApiKeys": "Stage5-kreditter slået fra",
-      "usingCredits": "Stage5-kreditter slået til",
+      "usingApiKeys": "Stage5-minutter slået fra",
+      "usingCredits": "Stage5-minutter slået til",
       "toggleOn": "Bruger nu dine API-nøgler.",
-      "toggleOff": "Bruger nu Stage5-kreditter.",
+      "toggleOff": "Bruger nu Stage5-minutter.",
       "toggleError": "Kunne ikke opdatere indstillingen.",
       "toggleAria": "Brug mine API-nøgler",
       "requirementTranslation": "Kræver en OpenAI- eller Anthropic-nøgle til oversættelse",
       "activeKeys_one": "{{count}} nøgle klar"
     },
-    "creditsDescription": "Køb kreditter. De viste timer er et estimat af den samlede videolængde, du kan transskribere eller oversætte. Eksempel: at transskribere og oversætte en 3-timers video bruger ca. 6 timer (≈140.000 kreditter).",
+    "creditsDescription": "Køb minutter. De viste timer er et skøn over den samlede videolængde, du kan transskribere eller oversætte. Eksempel: At transskribere og oversætte en video på 3 timer bruger ca. 6 timer.",
     "performanceQuality": {
       "title": "Ydelse og kvalitet",
       "qualityTranslation": {
         "label": "Kvalitetsoversættelse",
-        "modelOn": "Kladde med Claude Haiku 5.5 + review med Claude Opus 5.5",
-        "modelOnAnthropic": "Kladde med Claude Haiku 5.5 + review med Claude Opus 5.5",
-        "modelOff": "Kun kladde med Claude Haiku 5.5",
+        "modelOn": "Udkast med Claude Haiku 5.5 + gennemgang med Claude Opus 5.5",
+        "modelOnAnthropic": "Udkast med Claude Haiku 5.5 + gennemgang med Claude Opus 5.5",
+        "modelOff": "Kun udkast med Claude Haiku 5.5",
         "reviewProvider": "Gennemgangsudbyder",
         "openAiHighEnd": "Avanceret gennemgang med OpenAI",
         "anthropicHighEnd": "Avanceret gennemgang med Anthropic",
-        "help": "<b>5× kreditter</b> • Tilføjer gennemgangsfase for højere kvalitet",
-        "helpWithEstimate": "<b>5× kreditter</b> • Din saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>5× kreditter</b> • Udkast med Claude Haiku 5.5 + gennemgang med Claude Opus 5.5",
-        "helpOff": "<b>1× kreditter</b> • Kun udkast med Claude Haiku 5.5",
-        "helpWithEstimateOn": "<b>5× kreditter</b> • Udkast med Claude Haiku 5.5 + gennemgang med Claude Opus 5.5 • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× kreditter</b> • Kun udkast med Claude Haiku 5.5 • Saldo: ~{{time}}"
+        "help": "<b>5× forbrug</b> • Tilføjer gennemgangsfase for højere kvalitet",
+        "helpWithEstimate": "<b>5× forbrug</b> • Din saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
+        "helpOn": "<b>5× forbrug</b> • Udkast med Claude Haiku 5.5 + gennemgang med Claude Opus 5.5",
+        "helpOff": "<b>1× forbrug</b> • Kun udkast med Claude Haiku 5.5",
+        "helpWithEstimateOn": "<b>5× forbrug</b> • Udkast med Claude Haiku 5.5 + gennemgang med Claude Opus 5.5 • Saldo: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× forbrug</b> • Kun udkast med Claude Haiku 5.5 • Saldo: ~{{time}}"
       },
       "qualitySummary": {
-        "label": "Kvalitetsoversigt",
-        "modelOn": "Dybdeanalyse med Claude Opus 5.5 + highlight-klip",
+        "label": "Kvalitetsresumé",
+        "modelOn": "Dybdeanalyse med Claude Opus 5.5 + højdepunktsklip",
         "modelOff": "Standardanalyse med Claude Sonnet 5.5",
-        "help": "<b>4× kreditter</b> • Dybdegående analyse + højdepunktsklip med Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× kreditter</b> • Din saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>4× kreditter</b> • Dybdeanalyse med Claude Opus 5.5 + highlight-klip",
+        "help": "<b>4× forbrug</b> • Dybdegående analyse + højdepunktsklip med Claude Opus 5.5",
+        "helpWithEstimate": "<b>4× forbrug</b> • Din saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
+        "helpOn": "<b>4× forbrug</b> • Dybdeanalyse med Claude Opus 5.5 + højdepunktsklip",
         "helpOff": "Hurtig analyse med Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× kreditter</b> • Dybdeanalyse med Claude Opus 5.5 + highlight-klip • Saldo: ~{{time}}",
+        "helpWithEstimateOn": "<b>4× forbrug</b> • Dybdeanalyse med Claude Opus 5.5 + højdepunktsklip • Saldo: ~{{time}}",
         "helpWithEstimateOff": "Hurtig analyse med Claude Sonnet 5.5 • Saldo: ~{{time}}"
       },
       "qualityDubbing": {
-        "label": "Kvalitetsdubbing",
+        "label": "Eftersynkronisering i høj kvalitet",
         "modelOn": "ElevenLabs TTS-premiumstemmer",
-        "help": "<b>12× kreditter</b> • ElevenLabs TTS med premium-stemmer",
-        "helpWithEstimate": "<b>12× kreditter</b> • Din saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS med premiumstemmer",
-        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS med premiumstemmer • Saldo: ~{{time}}"
+        "help": "<b>12× forbrug</b> • ElevenLabs TTS med premiumstemmer",
+        "helpWithEstimate": "<b>12× forbrug</b> • Din saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
+        "helpOn": "<b>{{ratio}}× forbrug</b> • ElevenLabs TTS med premiumstemmer",
+        "helpWithEstimateOn": "<b>{{ratio}}× forbrug</b> • ElevenLabs TTS med premiumstemmer • Saldo: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "Videoforslagsmodel",
@@ -753,7 +791,7 @@
       "rate": {
         "perHour": "~{{credits}} kreditter/time",
         "perMinute": "~{{credits}} kreditter/min",
-        "perSearch": "~{{credits}} kreditter/sogning",
+        "perSearch": "~{{credits}} kreditter/søgning",
         "balance": "Saldo: ~{{time}}",
         "minutesPerHour": "~{{time}} af dine minutter pr. times video",
         "minutesPerDubMinute": "~{{time}} af dine minutter pr. minut eftersynkronisering",
@@ -761,8 +799,8 @@
       }
     },
     "dubbing": {
-      "voiceLabel": "Dubbet stemme",
-      "voiceHelp": "Vælg standardstemmen, der bruges ved generering af dubbet lyd.",
+      "voiceLabel": "Stemme til eftersynkronisering",
+      "voiceHelp": "Vælg den stemme, der som standard bruges til eftersynkronisering.",
       "voiceOptions": {
         "rachel": "Rachel",
         "adam": "Adam",
@@ -777,25 +815,27 @@
       "previewing": "Afspiller...",
       "previewFree": "Forhåndsvis",
       "previewWithCost": "Forhåndsvis ({{cost}} kreditter)",
-      "mixLabel": "Dubbing-lydstyrke vs original video-lydstyrke",
-      "mixHelp": "Kontroller hvor meget af den originale lyd, der afspilles under den dubbede stemme.",
+      "mixLabel": "Stemmens lydstyrke vs. videoens originale lyd",
+      "mixHelp": "Styr, hvor meget af den originale lyd der afspilles under den eftersynkroniserede stemme.",
       "mixAmbient": "Mere baggrundslyd",
       "mixVoice": "Mere stemme",
       "voiceCloning": "Klon original stemme",
-      "voiceCloningDesc": "Bevar den originale talers stemme i dubbet lyd",
-      "voiceCloningInsufficientCredits": "Kræver mindst 1 minuts kreditter",
-      "voiceCloningEnabled": "Stemmekloning er aktiveret med ElevenLabs. Den originale talers stemme bevares i den dubbede lyd.",
+      "voiceCloningDesc": "Bevar den originale talers stemme i eftersynkroniseringen",
+      "voiceCloningInsufficientCredits": "Kræver mindst 1 minut på saldoen",
+      "voiceCloningEnabled": "Stemmekloning er aktiveret med ElevenLabs. Den originale talers stemme bevares i eftersynkroniseringen.",
       "voiceCloningInfo": "Stemmekloning bruger ElevenLabs Dubbing API til at analysere og genskabe den originale talers stemme.",
       "costPerMinute": "Pris per minut",
       "credits": "kreditter",
       "yourBalance": "Din saldo",
       "canClone": "Du kan klone",
       "upToMinutes": "op til {{minutes}} min",
-      "loading": "Indlæser..."
+      "loading": "Indlæser...",
+      "previewWithMinutes": "Forhåndsvis ({{cost}})",
+      "previewFailed": "Stemmeprøven kunne ikke afspilles. Prøv igen."
     },
     "byoOpenAi": {
       "title": "Brug dine egne API-nøgler",
-      "description": "Lås op for en engangspopgradering til at bruge dine egne API-nøgler. Når låst op, kører alle transskriptioner, oversættelser, dubbinger eller oversigter direkte på dine konti i stedet for at forbruge Stage5-kreditter.",
+      "description": "Lås op for en engangsopgradering, så du kan bruge dine egne API-nøgler. Derefter kører al transskription, oversættelse, eftersynkronisering og alle resuméer direkte på dine konti i stedet for at bruge Stage5-minutter.",
       "unlocking": "Åbner betaling…",
       "unlockCta": "Lås op for $10",
       "unlockHint": "Når låst op, kan du tilføje dine API-nøgler her når som helst for at skifte til direkte fakturering på dine konti.",
@@ -813,16 +853,16 @@
       "test": "Test nøgle",
       "lastSynced": "Sidst synkroniseret",
       "toggleLabel": "Brug min OpenAI-nøgle",
-      "toggleHelp": "Når slået fra, bruges AI-kreditter.",
+      "toggleHelp": "Når den er slået fra, bruges dine minutter.",
       "toggleAria": "Skift til at bruge din OpenAI-nøgle",
       "toggleOn": "Bruger din OpenAI-nøgle til AI-opgaver.",
-      "toggleOff": "Bruger Stage5-kreditter til AI-opgaver.",
+      "toggleOff": "Bruger Stage5-minutter til AI-opgaver.",
       "toggleError": "Kunne ikke opdatere præference.",
       "howToGetKeys": "Hvordan får jeg API-nøgler?",
       "option1Title": "Mulighed 1: OpenAI",
       "option2Title": "Mulighed 2: Anthropic + ElevenLabs",
       "economicsTitle": "Hvorfor det er det værd",
-      "economicsBody": "Stage5-kreditter optimerer for bekvemmelighed (ingen opsætning). BYO betaler udbydere direkte—normalt ~30–50% billigere afhængigt af din pakke.",
+      "economicsBody": "Stage5-minutter er det nemme valg (ingen opsætning). BYO betaler udbyderne direkte – som regel ~30–50 % billigere afhængigt af din pakke.",
       "encryptionUnavailable": "Sikker lagring er ikke tilgængelig på dette system. API-nøgler kan ikke gemmes.",
       "checkoutOpen": "Betaling åben i browseren…",
       "checkoutOpenHint": "Gennemfør betalingen i din browser. Vi låser BYO op automatisk, når betalingen er gennemført.",
@@ -831,7 +871,7 @@
     },
     "byoPreferences": {
       "title": "Udbyderpreferencer",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Stage5-minutter",
       "pricingHint": "Estimeret pris per 1 times video",
       "pricingHintHeuristic": "Estimeret pris ud fra appens nuværende heuristik",
       "transcription": "Transskription",
@@ -850,8 +890,8 @@
       "on": "Til",
       "defaultMode": "Standard",
       "qualityMode": "Kvalitet",
-      "summary": "Oversigt",
-      "dubbing": "Dubbing",
+      "summary": "Resumé",
+      "dubbing": "Eftersynkronisering",
       "elevenLabsTts": "ElevenLabs",
       "videoSuggestionModelUnavailable": "Ingen BYO-model til videoanbefalinger er tilgængelig lige nu. Aktivér OpenAI eller Anthropic BYO for denne funktion.",
       "videoSuggestionModelRequiresOpenAi": "Kræver OpenAI BYO-oplåsning, nøgle og aktivering.",
@@ -859,8 +899,8 @@
       "summaryRequiresOpenAi": "Kræver OpenAI BYO-adgang og en API-nøgle.",
       "summaryRequiresAnthropic": "Kræver Anthropic BYO-adgang og en API-nøgle.",
       "translationReview": "Oversættelse (gennemgang)",
-      "transcriptionRequiresElevenLabs": "Transskription bruger kun ElevenLabs Scribe. Tilføj en ElevenLabs API-nøgle for at transskribere med dine egne nøgler. Uden en bruger transskription Stage5-kreditter, som ikke bruges, mens dine API-nøgler er slået til. Din OpenAI-nøgle bruges stadig til oversættelse.",
-      "dubbingRequiresElevenLabs": "Dubbing bruger kun ElevenLabs. Tilføj en ElevenLabs-API-nøgle for at dubbe med dine egne nøgler. Uden en bruger dubbing Stage5-kreditter, som ikke bruges, mens dine API-nøgler er slået til.",
+      "transcriptionRequiresElevenLabs": "Transskription bruger kun ElevenLabs Scribe. Tilføj en ElevenLabs API-nøgle for at transskribere med dine egne nøgler. Uden en bruger transskription Stage5-minutter, som ikke bruges, mens dine API-nøgler er slået til. Din OpenAI-nøgle bruges stadig til oversættelse.",
+      "dubbingRequiresElevenLabs": "Eftersynkronisering bruger kun ElevenLabs. Tilføj en ElevenLabs-API-nøgle for at eftersynkronisere med dine egne nøgler. Uden en bruger eftersynkronisering Stage5-minutter, som ikke bruges, mens dine API-nøgler er slået til.",
       "runtimeFallback": "Runtime-fallback i API-nøgletilstand",
       "videoSuggestionLegacyFollowDraft": "Ældre BYO-indstilling bevaret: følger din kladdeoversættelsesmodel, indtil du vælger en direkte model.",
       "videoSuggestionLegacyFollowReview": "Ældre BYO-indstilling bevaret: følger din gennemgangsoversættelsesmodel, indtil du vælger en direkte model."
@@ -908,7 +948,7 @@
         "step4": "Tilføj en betalingsmetode i Abonnementsindstillinger (påkrævet for API-brug ud over gratis niveau)",
         "step5": "Kopier din API-nøgle og indsæt den i Stage5",
         "note": "Tip: ElevenLabs har et gratis niveau med begrænset brug. For mere, opgrader til en betalt plan i dine kontoindstillinger.",
-        "audioDescription": "ElevenLabs driver al transskription (Scribe) og dubbing. Uden din egen ElevenLabs-nøgle bruger begge Stage5-kreditter, som ikke bruges, mens dine API-nøgler er slået til."
+        "audioDescription": "ElevenLabs står for al transskription (Scribe) og eftersynkronisering. Uden din egen ElevenLabs-nøgle bruger begge Stage5-minutter, som ikke bruges, mens dine API-nøgler er slået til."
       }
     },
     "byoAnthropic": {
@@ -927,24 +967,26 @@
       "testing": "Tester…",
       "test": "Test nøgle",
       "toggleLabel": "Brug min Anthropic-nøgle",
-      "toggleHelp": "Når slået fra, bruger Claude-anmodninger Stage5-kreditter.",
+      "toggleHelp": "Når den er slået fra, bruger Claude-anmodninger Stage5-minutter.",
       "toggleAria": "Skift til at bruge din Anthropic-nøgle",
       "toggleOn": "Bruger din Anthropic-nøgle til Claude-modeller.",
-      "toggleOff": "Bruger Stage5-kreditter til Claude-modeller.",
+      "toggleOff": "Bruger Stage5-minutter til Claude-modeller.",
       "toggleError": "Kunne ikke opdatere Anthropic-præference."
     },
     "stage5TtsProvider": {
-      "label": "TTS-kvalitet (Stage5-kreditter)",
+      "label": "TTS-kvalitet (Stage5-minutter)",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Bedste kvalitet, højere pris (~12x)",
-      "elevenlabsHintWithBalance": "Bedste kvalitet · Din saldo: {{time}} dubbing"
+      "elevenlabsHintWithBalance": "Bedste kvalitet · Din saldo: {{time}} eftersynkronisering"
     },
     "apiKey": {
       "saved": "API-nøgle gemt.",
       "cleared": "API-nøgle ryddet.",
       "invalid": "Validering af API-nøgle mislykkedes.",
       "howToGet": "Sådan får du denne nøgle",
-      "missing": "Indsæt en API-nøgle først."
+      "missing": "Indsæt en API-nøgle først.",
+      "savedEnding": "Gemt nøgle, der ender på {{last4}}",
+      "savedHidden": "Gemt nøgle (skjult)"
     },
     "byoStack": {
       "title": "Din AI-stack"
@@ -986,7 +1028,9 @@
         "failedWrite": "Kunne ikke forbinde {{app}}: Translator kunne ikke skrive indstillingsfilen.",
         "failedLauncher": "{{app}} kan kun forbindes i den installerede Translator-app.",
         "failedCli": "Kunne ikke forbinde {{app}} automatisk. Kør dette i en terminal:",
-        "failedGeneric": "Kunne ikke forbinde {{app}}. Prøv igen."
+        "failedGeneric": "Kunne ikke forbinde {{app}}. Prøv igen.",
+        "appNotFound": "{{app}} er ikke installeret på denne computer. Installer det, åbn det én gang, og forbind så igen.",
+        "download": "Hent {{app}}"
       },
       "status": {
         "enabled": "Aktiveret",
@@ -1009,7 +1053,7 @@
       },
       "allowedDirectories": {
         "title": "Tilladte mapper til filskrivning:",
-        "description": "Agenter kan kun skrive filer (eksporter, sammenflettede videoer) til disse mapper. Konfigurer mindst én mappe for at aktivere fileksport.",
+        "description": "Agenter kan kun skrive filer (eksporter, videoer med indbrændte undertekster) til disse mapper. Konfigurer mindst én mappe for at aktivere fileksport.",
         "empty": "Der er ikke konfigureret nogen tilladte mapper. Tilføj mindst én for at aktivere fileksport."
       },
       "selectDirectory": "Vælg en mappe, som agenter må skrive filer til",
@@ -1024,17 +1068,17 @@
       "freeTitle": "Oversæt gratis med din egen AI"
     },
     "creditTransfer": {
-      "title": "Flyt kreditter mellem computere",
-      "description": "Købte kreditter og API-nøgleoplåsningen kan flyttes til en anden computer. Gratis velkomstkreditter bliver på denne.",
-      "moveButton": "Flyt kreditter til en anden computer",
-      "receiveButton": "Modtag kreditter",
+      "title": "Flyt minutter mellem computere",
+      "description": "Købte minutter og API-nøgleoplåsningen kan flyttes til en anden computer. Gratis minutter bliver på denne.",
+      "moveButton": "Flyt minutter til en anden computer",
+      "receiveButton": "Modtag minutter",
       "creating": "Opretter kode…",
       "copy": "Kopiér",
       "copied": "Kopieret",
       "summaryCredits": "{{credits}} kreditter bliver flyttet.",
       "summaryByo": "API-nøgleoplåsningen bliver også flyttet.",
       "expires": "Denne kode virker én gang og udløber om {{minutes}} minutter.",
-      "steps": "På den nye computer: installer Translator, åbn Indstillinger, vælg “Modtag kreditter”, og indtast denne kode.",
+      "steps": "På den nye computer: Installer Translator, åbn Indstillinger, vælg “Modtag minutter”, og indtast denne kode.",
       "inputLabel": "Kode fra din anden computer",
       "redeem": "Modtag",
       "redeeming": "Modtager…",
@@ -1045,18 +1089,27 @@
       "summaryCredits_one": "{{credits}} kredit bliver flyttet.",
       "received_one": "Modtog {{credits}} kredit.",
       "errors": {
-        "nothing_to_transfer": "Intet at flytte endnu: Denne computer har ingen købte kreditter eller API-nøgleoplåsning. Vælg “Modtag kreditter” for at hente kreditter hertil fra en anden computer.",
+        "nothing_to_transfer": "Intet at flytte endnu: Denne computer har ingen købte minutter eller API-nøgleoplåsning. Vælg “Modtag minutter” for at hente minutter hertil fra en anden computer.",
         "too_many_codes": "For mange overførselskoder i denne time. Prøv igen om lidt.",
         "jobs_running": "En transskription eller oversættelse er stadig i gang. Prøv igen, når den er færdig.",
         "invalid_code": "Koden er forkert, allerede brugt eller udløbet. Lav en ny på den anden computer.",
         "same_device": "Indtast koden på den anden computer, ikke på den, der lavede den.",
         "network_error": "Kunne ikke få forbindelse til Stage5-serveren. Tjek din forbindelse, og prøv igen.",
-        "transfer_failed": "Kreditterne kunne ikke flyttes. Tjek din forbindelse, og prøv igen."
-      }
+        "transfer_failed": "Minutterne kunne ikke flyttes. Tjek din forbindelse, og prøv igen.",
+        "nothing_to_transfer_minutes": "Intet at flytte endnu: Denne computer har ingen købte minutter eller API-nøgleoplåsning. Vælg “Modtag minutter” for at hente minutter hertil fra en anden computer.",
+        "transfer_failed_minutes": "Minutterne kunne ikke flyttes. Tjek din forbindelse, og prøv igen."
+      },
+      "titleMinutes": "Flyt minutter mellem computere",
+      "descriptionMinutes": "Købte minutter og API-nøgleoplåsningen kan flyttes til en anden computer. Gratis minutter bliver på denne.",
+      "moveButtonMinutes": "Flyt minutter til en anden computer",
+      "receiveButtonMinutes": "Modtag minutter",
+      "summaryMinutes": "{{time}} video bliver flyttet.",
+      "stepsMinutes": "På den nye computer: Installer Translator, åbn Indstillinger, vælg “Modtag minutter”, og indtast denne kode.",
+      "receivedMinutes": "Modtog {{time}} video."
     }
   },
   "credits": {
-    "title": "AI-kreditter",
+    "title": "AI-minutter",
     "loading": "Indlæser...",
     "credits": "kreditter",
     "usingApiKey": "Bruger API-nøgle",
@@ -1065,10 +1118,10 @@
     "usingElevenLabs": "Bruger ElevenLabs",
     "hours": "timer",
     "translationHoursShort": "oversættelsestimer",
-    "buyCredits": "Køb kreditter",
+    "buyCredits": "Køb minutter",
     "redirectingToPayment": "Åbner sikker betaling...",
-    "description": "Vælg mellem ${{packMicroPrice}} ({{packMicroHours}}t), ${{pack1Price}} ({{pack1Hours}}t), ${{pack2Price}} ({{pack2Hours}}t) eller ${{pack3Price}} ({{pack3Hours}}t) kreditpakker",
-    "notEnough": "Utilstrækkelige kreditter. Køb venligst flere kreditter for at fortsætte.",
+    "description": "Vælg mellem minutpakker til ${{packMicroPrice}} ({{packMicroHours}} t), ${{pack1Price}} ({{pack1Hours}} t), ${{pack2Price}} ({{pack2Hours}} t) eller ${{pack3Price}} ({{pack3Hours}} t)",
+    "notEnough": "Ikke nok minutter. Køb flere for at fortsætte.",
     "transcriptionMinutesShort": "{{minutes}} min transskription",
     "transcriptionTimeShort": "{{time}} transskription",
     "costOfBalance": "{{cost}} af dine {{balance}} kreditter",
@@ -1078,7 +1131,12 @@
       "freeThisMonth": "{{count}} gratis min denne måned",
       "freeWelcome": "{{count}} gratis min",
       "minutes": "{{count}} min tilbage",
-      "title": "Minutter og pakker"
+      "title": "Minutter og pakker",
+      "neutral": "Minutter",
+      "welcomePending": "Gratis minutter på vej",
+      "freeTimeThisMonth": "{{time}} gratis denne måned",
+      "freeTime": "{{time}} gratis",
+      "offline": "Minutter · offline"
     },
     "yourMinutes": "Dine minutter",
     "balanceNone": "Ingen minutter tilbage",
@@ -1096,7 +1154,23 @@
     "checkoutStartFailed": "Betalingen kunne ikke startes. Tjek din forbindelse, og prøv igen.",
     "monthlyFreeNote_one": "{{minutes}} gratis minut hver måned · næste gang den {{date}}",
     "loadFailed": "Din saldo kunne ikke indlæses. Tjek din forbindelse, og prøv igen.",
-    "estimateAmount": "{{credits}} kreditter"
+    "estimateAmount": "{{credits}} kreditter",
+    "costOfBalanceMinutes": "{{cost}} af dine {{balance}}",
+    "timeLeft": "{{time}} tilbage",
+    "success": {
+      "added": "+{{time}} tilføjet",
+      "arrived": "Dine minutter er her",
+      "addedLong": "Betaling modtaget. +{{time}} er føjet til dine minutter.",
+      "arrivedLong": "Betaling modtaget. Dine minutter er her."
+    },
+    "waitingForPayment": "Venter på betaling…",
+    "chooseAnotherPack": "Fortrudt? Vælg en anden pakke",
+    "balanceNoneYet": "Ingen minutter endnu",
+    "welcomePendingNote": "Dine gratis minutter er på vej. De kommer som regel, næste gang du åbner Translator.",
+    "balanceOffline": "Dine minutter kan ikke tjekkes lige nu",
+    "offlineNote": "Translator kan ikke få forbindelse til Stage5. Din saldo vises igen, når du er online.",
+    "microPackLabelNoTime": "Køb minutter – {{price}}",
+    "microPackLabel": "Køb minutter – {{price}} · ≈ {{time}} video"
   },
   "cta": {
     "generate": {
@@ -1107,7 +1181,7 @@
       "title": "Rediger en eksisterende undertekst",
       "subtitle": "Indlæs, rediger og eksporter SRT",
       "pillOpen": "Åbn .srt",
-      "pillMerge": "Flet til video"
+      "pillMerge": "Brænd ind i video"
     }
   },
   "branding": {
@@ -1131,12 +1205,20 @@
     "useThisVideo": "Brug denne video",
     "useDownloadedVideo": "Brug denne video",
     "useOriginalAudio": "Brug original lyd",
-    "useDubbedAudio": "Brug dubbet lyd",
+    "useDubbedAudio": "Brug eftersynkroniseret lyd",
     "changeVideoKeepSubtitles": "Behold de nuværende undertekster på den nye video (til en anden kopi af samme video). Fjern markeringen ved en anden video.",
     "mute": "Slå lyd fra (M)",
     "unmute": "Slå lyd til (M)",
     "volume": "Lydstyrke",
-    "unreadableFile": "Translator kan ikke læse filen. Den er måske beskadiget eller i et format, der ikke understøttes."
+    "unreadableFile": "Translator kan ikke læse filen. Den er måske beskadiget eller i et format, der ikke understøttes.",
+    "play": "Afspil (mellemrum)",
+    "pause": "Pause (mellemrum)",
+    "seekBar": "Position i videoen",
+    "seekBarValue": "{{current}} af {{total}}",
+    "enterFullscreenShortcut": "Fuld skærm (F)",
+    "exitFullscreenShortcut": "Afslut fuld skærm (F)",
+    "changeVideoKeepSubtitlesSameVideo": "Behold de nuværende undertekster. Kun til en anden kopi af den samme video – en anden video starter uden dem.",
+    "audioOnly": "Lydfil"
   },
   "admin": {
     "title": "Administrator",
@@ -1200,17 +1282,17 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "Ingen kreditter.",
+    "noCredits": "Ingen minutter.",
     "rechargeLink": "Genopfyld →",
     "creditWarning": {
-      "message": "Det er gratis at hente, redigere, eksportere og oversætte med din egen Claude eller Codex via Agentstyring. Transskription kræver kreditter eller API-nøgleoplåsningen i <settingsLink>{{settingsLinkText}}</settingsLink>.",
+      "message": "Det er gratis at hente, redigere, eksportere og oversætte med din egen Claude eller Codex via Agentstyring. Transskription kræver minutter eller API-nøgleoplåsningen i <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Indstillinger"
     },
     "validation": {
       "pleaseSelectVideo": "Vælg venligst en video",
       "processingDuration": "Videovarighed behandles. Prøv igen om lidt.",
       "icloudPlaceholder": "Denne fil er gemt i iCloud. I Finder skal du klikke på 'Download' og vente på, at sky-ikonet er færdigt, og derefter prøve igen.",
-      "insufficientCreditsForVoiceCloning": "Utilstrækkelige kreditter til stemmekloning. Videoen er {{duration}} min, men du har kun råd til {{affordable}} min. Tilføj venligst kreditter eller deaktiver stemmekloning.",
+      "insufficientCreditsForVoiceCloning": "Ikke nok minutter til stemmekloning. Videoen er {{duration}} min, men du har kun nok til {{affordable}} min. Tilføj minutter, eller slå stemmekloning fra.",
       "fileTooLargeForVoiceCloning": "Videofilen er for stor til stemmekloning ({{size}}MB). Maksimum tilladt er {{max}}MB. Brug venligst en kortere video eller deaktiver stemmekloning."
     },
     "status": {
@@ -1220,7 +1302,7 @@
       "error": "Fejl"
     },
     "buttons": {
-      "buyCredits": "Køb kreditter",
+      "buyCredits": "Køb minutter",
       "redirectingToPayment": "Omdirigerer til betaling..."
     },
     "workflow": {
@@ -1235,18 +1317,18 @@
       "sourceReadyDescription": "Det valgte medie er klar til næste trin.",
       "transcribeTitle": "Behandl video",
       "processVideoTitle": "Behandl video",
-      "transcribeDescription": "Gør kildemediet til et redigerbart undertekstspor, før du går videre til oversættelse eller dubbing.",
-      "translateDubTitle": "Oversæt eller dub",
-      "translateDubDescription": "Din transskription er indlæst. Vælg derefter outputsprog, oversættelsestilstand eller dubbing.",
+      "transcribeDescription": "Gør kildemediet til et redigerbart undertekstspor, før du går videre til oversættelse eller eftersynkronisering.",
+      "translateDubTitle": "Oversæt eller eftersynkroniser",
+      "translateDubDescription": "Din transskription er indlæst. Vælg derefter outputsprog, oversættelsestilstand eller eftersynkronisering.",
       "availableOutputs": "Tilgængelige filer",
-      "availableOutputsDescription": "Downloadede og dubbede medier forbliver tilgængelige her, indtil du gemmer de versioner, du vil beholde.",
+      "availableOutputsDescription": "Downloadede og eftersynkroniserede medier forbliver tilgængelige her, indtil du gemmer de versioner, du vil beholde.",
       "saveOutputsTitle": "Gem filer",
-      "saveOutputsDescription": "Gem kildemateriale eller dubbede medier, du vil bevare, uden for appens arbejdsområde."
+      "saveOutputsDescription": "Gem kildemateriale eller eftersynkroniserede medier, du vil bevare, uden for appens arbejdsområde."
     },
     "calculatingCost": "Beregner omkostninger...",
-    "notEnoughCredits": "Ikke nok kreditter tilgængelige",
+    "notEnoughCredits": "Ikke nok minutter",
     "welcomeCredits": {
-      "message": "Du har gratis kreditter til at prøve transskription og oversættelse (ca. 20 minutters video)."
+      "message": "Du har gratis minutter til at prøve transskription og oversættelse (ca. 20 minutters video)."
     }
   },
   "findBar": {
@@ -1274,12 +1356,12 @@
       "done": "Færdig",
       "ready": "Dækningen er klar. Du kan nu slå “Brug mine API-nøgler” til.",
       "missingTranslation": "Oversættelse mangler stadig {{providers}}.",
-      "messageElevenLabsAudio": "For at bruge dine API-nøgler skal du have en OpenAI- eller Anthropic-nøgle til oversættelse. Transskription og dubbing bruger kun ElevenLabs, så tilføj også en ElevenLabs-nøgle til dem.",
-      "audioNeedsElevenLabs": "Uden en ElevenLabs-nøgle er transskription og dubbing ikke tilgængelige, mens dine API-nøgler er slået til."
+      "messageElevenLabsAudio": "For at bruge dine API-nøgler skal du have en OpenAI- eller Anthropic-nøgle til oversættelse. Transskription og eftersynkronisering bruger kun ElevenLabs, så tilføj også en ElevenLabs-nøgle til dem.",
+      "audioNeedsElevenLabs": "Uden en ElevenLabs-nøgle er transskription og eftersynkronisering ikke tilgængelige, mens dine API-nøgler er slået til."
     },
     "saveSrtFileAs": "Gem SRT-fil som",
     "saveDownloadedVideoAs": "Gem downloadet video som",
-    "saveDubbedVideoAs": "Gem dubbet video som",
+    "saveDubbedVideoAs": "Gem eftersynkroniseret video som",
     "unsavedSrtOnTranscribe": {
       "title": "Gem nuværende undertekster før transskription?",
       "message": "Du har allerede undertekster indlæst. Transskribering vil erstatte dem. Hvad vil du gøre?",
@@ -1291,13 +1373,13 @@
     "saveDownloadedFile": "Gem den downloadede fil: {{path}}",
     "transcriptionInProgress": "Transskription i gang",
     "translationInProgress": "Oversættelse i gang",
-    "dubbingInProgress": "Dubbing i gang",
-    "dubbingWorking": "Genererer dubbet lyd…",
+    "dubbingInProgress": "Eftersynkronisering i gang",
+    "dubbingWorking": "Laver eftersynkroniseret lyd…",
     "cancelTranslationConfirm": "Annuller oversættelse? Fremskridt vil gå tabt og du skal starte forfra.",
     "cancelSummaryConfirm": "Annuller generering af resumé?",
-    "cancelDubbingConfirm": "Annuller dubbing? Fremskridt vil gå tabt og du skal starte forfra.",
+    "cancelDubbingConfirm": "Annuller eftersynkroniseringen? Fremskridt går tabt, og du skal starte forfra.",
     "cancelDownloadConfirm": "Annuller download? Fremskridt vil gå tabt og du skal starte forfra.",
-    "mergeLowDiskSpaceConfirm": "Lavt diskplads registreret. Denne sammenfletning kan kræve ~{{need}} ledig plads, men kun ~{{free}} er tilgængelig. Fortsæt alligevel?",
+    "mergeLowDiskSpaceConfirm": "Der er ikke meget diskplads. Eksporten kan kræve ~{{need}} ledig plads, men kun ~{{free}} er tilgængelig. Fortsæt alligevel?",
     "slowProcessingBanner": {
       "title": "Behandling tager længere tid end normalt.",
       "description": "Dette skyldes muligvis høj efterspørgsel eller problemer med OpenAI's servere. Processen kører stadig i baggrunden.",
@@ -1308,44 +1390,80 @@
       "description": "Dette kan skyldes video platform ændringer eller nye beskyttelsesforanstaltninger. Du skal muligvis vente på den næste app version for at håndtere nyere videoer."
     },
     "creditRanOut": {
-      "title": "Kreditter opbrugt",
-      "message": "Dine AI-kreditter er opbrugt. Genopfyld i Indstillinger, og genoptag derefter hvor du slap.",
-      "openSettings": "Åbn indstillinger",
+      "title": "Minutterne er brugt op",
+      "message": "Dine minutter er brugt op. Tilføj flere i Indstillinger, og fortsæt, hvor du slap.",
+      "openSettings": "Åbn Indstillinger",
       "ok": "OK",
-      "neverHadTitle": "Transskription kræver kreditter",
-      "neverHadMessage": "Transskription kræver kreditter eller API-nøgleoplåsningen. Du kan få begge dele i Indstillinger. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring.",
-      "notEnoughTitle": "Ikke nok kreditter til denne video",
+      "neverHadTitle": "Transskription kræver minutter",
+      "neverHadMessage": "Transskription kræver minutter eller API-nøgleoplåsningen. Du kan få begge dele i Indstillinger. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring.",
+      "notEnoughTitle": "Ikke nok minutter til denne video",
       "notEnoughTranscriptionMessage": "Transskription af denne video kræver omkring {{required}} kreditter. Du har {{available}}, nok til omkring {{minutes}} minutter. Tilføj kreditter, og start igen.",
       "notEnoughMessage": "Denne opgave kræver flere kreditter end din saldo på {{available}}. Tilføj kreditter for at fortsætte.",
       "task": {
         "transcription": {
-          "title": "Transskription kræver kreditter",
-          "message": "Din saldo rækker ikke til at transskribere dette. Tilføj kreditter, og start igen. Linjer, der allerede er transskriberet, bliver gemt."
+          "title": "Transskription kræver minutter",
+          "message": "Din saldo rækker ikke til at transskribere dette. Tilføj minutter, og start igen. Linjer, der allerede er transskriberet, bliver gemt.",
+          "messageNothingYet": "Din saldo rækker ikke til at transskribere dette. Tilføj minutter, og start igen."
         },
         "translation": {
-          "title": "Oversættelse kræver kreditter",
-          "message": "Din saldo rækker ikke til at oversætte dette. Tilføj kreditter, og prøv igen. Linjer, der allerede er oversat, bliver gemt. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring."
+          "title": "Oversættelse kræver minutter",
+          "message": "Din saldo rækker ikke til at oversætte dette. Tilføj minutter, og prøv igen. Linjer, der allerede er oversat, bliver gemt. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring.",
+          "messageNothingYet": "Din saldo rækker ikke til at oversætte dette. Tilføj minutter, og prøv igen. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring."
         },
         "dubbing": {
-          "title": "Eftersynkronisering kræver kreditter",
-          "message": "Din saldo rækker ikke til at eftersynkronisere denne video. Tilføj kreditter, og prøv igen."
+          "title": "Eftersynkronisering kræver minutter",
+          "message": "Din saldo rækker ikke til at eftersynkronisere denne video. Tilføj minutter, og prøv igen."
         },
         "summary": {
-          "title": "Resuméet kræver kreditter",
-          "message": "Din saldo rækker ikke til resumé og højdepunkter. Tilføj kreditter, og prøv igen."
+          "title": "Resuméet kræver minutter",
+          "message": "Din saldo rækker ikke til resumé og højdepunkter. Tilføj minutter, og prøv igen."
         },
         "videoSearch": {
-          "title": "AI-videosøgning kræver kreditter",
-          "message": "Din saldo rækker ikke til en AI-videosøgning. Tilføj kreditter, og søg igen."
+          "title": "AI-videosøgning kræver minutter",
+          "message": "Din saldo rækker ikke til en AI-videosøgning. Tilføj minutter, og søg igen."
         },
         "other": {
-          "title": "Det her kræver kreditter"
+          "title": "Det her kræver minutter"
         }
+      },
+      "minutes": {
+        "transcription": {
+          "title": "Transskription kræver minutter",
+          "message": "Dine minutter rækker ikke til at transskribere dette. Tilføj minutter, og start igen. Linjer, der allerede er transskriberet, bliver gemt.",
+          "messageNothingYet": "Dine minutter rækker ikke til at transskribere dette. Tilføj minutter, og start igen."
+        },
+        "translation": {
+          "title": "Oversættelse kræver minutter",
+          "message": "Dine minutter rækker ikke til at oversætte dette. Tilføj minutter, og prøv igen. Linjer, der allerede er oversat, bliver gemt. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring.",
+          "messageNothingYet": "Dine minutter rækker ikke til at oversætte dette. Tilføj minutter, og prøv igen. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring."
+        },
+        "dubbing": {
+          "title": "Eftersynkronisering kræver minutter",
+          "message": "Dine minutter rækker ikke til at eftersynkronisere denne video. Tilføj minutter, og prøv igen."
+        },
+        "summary": {
+          "title": "Resuméet kræver minutter",
+          "message": "Dine minutter rækker ikke til resumé og højdepunkter. Tilføj minutter, og prøv igen."
+        },
+        "videoSearch": {
+          "title": "AI-videosøgning kræver minutter",
+          "message": "Dine minutter rækker ikke til en AI-videosøgning. Tilføj minutter, og søg igen."
+        },
+        "other": {
+          "title": "Det her kræver minutter"
+        },
+        "title": "Minutterne er brugt op",
+        "neverHadMessage": "Transskription kræver minutter eller API-nøgleoplåsningen. Du kan få begge dele i Indstillinger. Det er gratis at oversætte med din egen Claude eller Codex via Agentstyring.",
+        "message": "Dine minutter er brugt op. Tilføj flere i Indstillinger, og fortsæt, hvor du slap.",
+        "notEnoughTitle": "Ikke nok minutter til denne video",
+        "notEnoughTranscriptionMessage": "Det kræver {{required}} at transskribere denne video, og du har {{available}} tilbage. Tilføj minutter, og start igen.",
+        "notEnoughMessage": "Det her kræver mere end de {{available}}, du har tilbage. Tilføj minutter for at fortsætte."
       }
     },
     "dubCostConfirm": {
       "title": "Start eftersynkronisering?",
-      "message": "Denne dubbing bruger cirka {{cost}} af dine {{balance}} kreditter. Det koster meget mere at generere stemmer end at oversætte."
+      "message": "Denne eftersynkronisering bruger cirka {{cost}} af dine {{balance}} kreditter. Det koster meget mere at generere stemmer end at oversætte.",
+      "messageMinutes": "Denne eftersynkronisering bruger {{cost}}. Det koster meget mere at generere stemmer end at oversætte."
     },
     "unsavedSrtOnCaptionRecovery": {
       "discardAndOpen": "Kassér og åbn undertekster",
@@ -1367,7 +1485,7 @@
         "export": "En videoeksport er stadig i gang.",
         "summary": "Et resumé er stadig ved at blive skrevet.",
         "download": "En download er stadig i gang.",
-        "highlight": "Der bliver stadig lavet highlight-klip.",
+        "highlight": "Der bliver stadig lavet højdepunktsklip.",
         "search": "En videosøgning er stadig i gang.",
         "generic": "En opgave er stadig i gang."
       },
@@ -1389,7 +1507,8 @@
       "quitAnyway": "Afslut alligevel",
       "closeAnyway": "Luk alligevel",
       "saveFailed": "Underteksterne i {{title}} kunne ikke gemmes, så intet blev lukket. Gem dem i editoren, og prøv så igen.",
-      "ok": "OK"
+      "ok": "OK",
+      "unsavedOnlyDetail": "Vil du gemme dine ændringer i underteksterne først?"
     },
     "exportSaveDialogTitle": "Gem video som",
     "exportVideoFilterName": "MP4-video",
@@ -1403,7 +1522,22 @@
     "exportSameAsSource": "Så ville den originale video blive erstattet. Vælg et andet navn.",
     "keepDubbing": "Fortsæt eftersynkronisering",
     "stopDubbing": "Stop eftersynkronisering",
-    "cancelDubbingBody": "Den lyd, der er lavet indtil nu, bliver kasseret."
+    "cancelDubbingBody": "Den lyd, der er lavet indtil nu, bliver kasseret.",
+    "cancelTranslationTitle": "Stop oversættelsen?",
+    "keepTranslating": "Fortsæt oversættelsen",
+    "stopTranslating": "Stop oversættelsen",
+    "fatal": {
+      "startTitle": "Translator kunne ikke starte",
+      "startBody": "Noget gik galt under opstarten. Detaljer: {{message}}",
+      "loadBody": "Appvinduet kunne ikke indlæses. Detaljer: {{message}}",
+      "crashTitle": "Translator skal lukkes",
+      "crashBody": "Der skete en uventet fejl, så Translator lukker nu. Detaljer: {{message}}",
+      "backgroundCrashBody": "Der skete en uventet fejl i baggrunden, så Translator lukker nu."
+    },
+    "cancelSummaryTitle": "Stop resuméet?",
+    "keepSummarizing": "Fortsæt",
+    "stopSummarizing": "Stop",
+    "cancelSummaryBody": "Det resumé og de højdepunkter, der er lavet indtil nu, bliver ikke gemt."
   },
   "progress": {
     "preparingVideoExport": "Forbereder videoeksport…",
@@ -1412,7 +1546,7 @@
     "starting": "Starter...",
     "completed": "Fuldført",
     "processCancelled": "Proces annulleret",
-    "mergingTitle": "Fletter video og undertekster",
+    "mergingTitle": "Brænder underteksterne ind i videoen",
     "extractingAudio": "Udtrækker lyd...",
     "transcribingOf": "Transskriberer {{done}}/{{total}}",
     "error": "Fejl",
@@ -1445,8 +1579,8 @@
       "downloadVerifying": "Downloadet, tjekker filen…",
       "drawingFrames": "Tegner undertekstbilleder {{done}}/{{total}}…",
       "dubAudioReady": "Stemmespor klar",
-      "dubComplete": "Dubbing fuldført",
-      "dubbedVideoReady": "Dubbet video klar",
+      "dubComplete": "Eftersynkronisering fuldført",
+      "dubbedVideoReady": "Eftersynkroniseret video klar",
       "encodingComplete": "Video klar",
       "encodingVideo": "Laver videoen…",
       "errorRecovery": "Retter nogle få linjer…",
@@ -1463,14 +1597,14 @@
       "postProcessing": "Gør færdig…",
       "preparingAudioExtraction": "Forbereder lyden ({{minutes}} min. video)…",
       "preparingDownload": "Forbereder download…",
-      "preparingDubLines": "Forbereder {{count}} linjer til dubbing…",
+      "preparingDubLines": "Forbereder {{count}} linjer til eftersynkronisering…",
       "preparingHighlights": "Gør klar til at vælge højdepunkter…",
       "preparingOutput": "Forbereder outputmappen…",
       "preparingTranscript": "Læser transskriptionen…",
       "preparingVideoEngine": "Gør videoværktøjerne klar…",
       "preparingVoiceClips": "Forbereder {{count}} stemmeklip…",
       "rateLimited": "Optaget lige nu, prøver igen…",
-      "reusingSummary": "Bruger oversigten til at vælge højdepunkter…",
+      "reusingSummary": "Bruger resuméet til at vælge højdepunkter…",
       "saving": "Gemmer…",
       "sectionAnalyzed": "Del {{done}} tjekket",
       "sectionHighlights": "Højdepunkter fundet i del {{done}}",
@@ -1482,7 +1616,7 @@
       "startingDownload": "Starter download…",
       "subtitleLayerReady": "Undertekstlag klar",
       "summarizingSection": "Opsummerer del {{done}} af {{total}}…",
-      "summaryReady": "Oversigt klar",
+      "summaryReady": "Resumé klar",
       "transcribingParts": "Transskriberer {{done}}/{{total}}…",
       "transcriptionComplete": "Transskription fuldført",
       "translatingLines": "Oversætter {{done}}/{{total}}…",
@@ -1491,8 +1625,8 @@
       "videoBlockedCaptions": "Videoen kunne ikke downloades; tjekker i stedet for YouTube-undertekster…",
       "voiceTrackAssembled": "Stemmespor samlet",
       "voiceTrackReady": "Stemmespor klar",
-      "writingSummary": "Skriver oversigten…",
-      "preparingDubLines_one": "Forbereder {{count}} linje til dubbing…",
+      "writingSummary": "Skriver resuméet…",
+      "preparingDubLines_one": "Forbereder {{count}} linje til eftersynkronisering…",
       "completed": "Færdig",
       "cancelled": "Annulleret",
       "cancelling": "Annullerer…",
@@ -1503,12 +1637,12 @@
       "startingExport": "Gør videoen klar…",
       "captionsAvailable": "Videoen kunne ikke downloades, men der findes YouTube-undertekster",
       "captionsNotOpened": "YouTube-underteksterne er klar, men blev ikke åbnet",
-      "insufficientCredits": "Ikke nok kreditter"
+      "insufficientCredits": "Ikke nok minutter"
     },
     "listening": "Lytter til videoen…",
-    "mergeFinishSaveBeforeReload": "Gør gemningen af den flettede video færdig, før du genindlæser.",
+    "mergeFinishSaveBeforeReload": "Vent, til videoen med undertekster er gemt, før du genindlæser.",
     "mergeSavePhaseNoCancel": "Dette gemmetrin kan ikke annulleres nu.",
-    "mergeWaitForCancelBeforeReload": "Vent på, at annulleringen af fletningen bliver færdig, før du genindlæser.",
+    "mergeWaitForCancelBeforeReload": "Vent, til eksporten er annulleret, før du genindlæser.",
     "preparingTranscription": "Gør klar til at lytte…",
     "restartingTranscription": "Starter transskriptionen igen…",
     "resumingTranscription": "Fortsætter, hvor den slap…",
@@ -1517,7 +1651,7 @@
   "messages": {
     "fileSaved": "Fil gemt:\n{{path}}",
     "videoSaved": "Video gemt til:\n{{path}}",
-    "dubbedVideoSaved": "Dubbet video gemt til:\n{{path}}"
+    "dubbedVideoSaved": "Eftersynkroniseret video gemt i:\n{{path}}"
   },
   "logs": {
     "title": "Seneste logfiler",
@@ -1586,7 +1720,18 @@
     "recentSubtitlesReadyGeneric": "Undertekster klar",
     "recentDownloaded": "Downloadet",
     "recentLocalFile": "På denne computer",
-    "recentLocalMissing": "Filen er flyttet eller slettet"
+    "recentLocalMissing": "Filen er flyttet eller slettet",
+    "leaveSaveFailed": {
+      "title": "Dine undertekster kunne ikke gemmes",
+      "message": "Translator kunne ikke gemme underteksterne i dit bibliotek, så de er der ikke, næste gang du åbner videoen. Gem dem som en .srt-fil først, eller bliv her.",
+      "leave": "Gå uden at gemme",
+      "stay": "Bliv her",
+      "saveSrt": "Gem .srt og gå"
+    },
+    "burnChooseVideo": "Vælg videoen",
+    "burnChooseSubtitles": "Vælg de undertekster, der skal brændes ind",
+    "runBlockedBusy": "Translator arbejder stadig på den nuværende video. Prøv igen, når den er færdig.",
+    "downloadCancelled": "Download annulleret."
   },
   "workspace": {
     "subtitlesTitle": "Undertekster",
@@ -1636,7 +1781,16 @@
     "statusPartlyTranslated_one": "{{translated}} af {{count}} linje på {{language}} · {{missing}} ikke oversat",
     "statusPartlyTranslatedUnknown_one": "{{translated}} af {{count}} linje oversat · {{missing}} ikke oversat",
     "statusTranslatedUnknown_one": "{{count}} oversat linje · synkront med videoen",
-    "translateMissing_one": "Oversæt {{count}} manglende linje til {{language}}"
+    "translateMissing_one": "Oversæt {{count}} manglende linje til {{language}}",
+    "statusLinesIn": "{{count}} linjer på {{language}}",
+    "statusLinesIn_one": "{{count}} linje på {{language}}",
+    "statusTranslatedUnknownNoVideo": "{{count}} oversatte linjer",
+    "statusTranslatedUnknownNoVideo_one": "{{count}} oversat linje",
+    "statusLines": "{{count}} undertekstlinjer",
+    "statusLines_one": "{{count}} undertekstlinje",
+    "checkingFile": "Læser filen…",
+    "statusLoaded": "{{count}} linjer indlæst",
+    "statusLoaded_one": "{{count}} linje indlæst"
   },
   "subtitleStyles": {
     "Cinema": "Biografgul",
@@ -1677,7 +1831,8 @@
     "offerBodyLong_one": "Pakken til {{price}} dækker det meste af resten ({{remaining}} minut).",
     "failedNeedMinutes": "Alt, hvad der allerede er oversat, bliver gemt. Du skal bruge flere minutter til de resterende {{remaining}} minutter.",
     "failedNetwork": "Forbindelsen blev afbrudt. Alt, hvad der allerede er oversat, bliver gemt. Prøv igen, når du er online igen.",
-    "failedNeedMinutes_one": "Alt, hvad der allerede er oversat, bliver gemt. Du skal bruge flere minutter til det resterende {{remaining}} minut."
+    "failedNeedMinutes_one": "Alt, hvad der allerede er oversat, bliver gemt. Du skal bruge flere minutter til det resterende {{remaining}} minut.",
+    "noneBodyNextFree": "Der kommer nye gratis minutter den {{date}}, eller oversæt til {{language}} nu for {{price}}."
   },
   "videoCost": {
     "covered": "Dækket af dine minutter",
@@ -1748,7 +1903,8 @@
   "tabs": {
     "newTab": "Ny fane",
     "newTabWithShortcut": "Ny fane ({{shortcut}})",
-    "closeTab": "Luk fane"
+    "closeTab": "Luk fane",
+    "tabList": "Åbne faner"
   },
   "menu": {
     "about": "Om {{app}}",
@@ -1799,6 +1955,15 @@
     "copyImage": "Kopiér billede",
     "copyImageAddress": "Kopiér billedadresse",
     "copyVideoAddress": "Kopiér videoadresse",
-    "inspect": "Undersøg element"
+    "inspect": "Undersøg element",
+    "focusTabStrip": "Fokusér på fanelinjen"
+  },
+  "startupNotice": {
+    "title": "Nogle indstillinger er nulstillet",
+    "settingsReset": "Translators indstillingsfil var beskadiget, så dine valg er nulstillet: sprog for appen og underteksterne, API-nøgler og andre indstillinger. Der er gemt en kopi af den beskadigede fil. Tjek Indstillinger.",
+    "deviceIdReplaced": "Filen, der forbinder denne computer med dine minutter, var beskadiget, så Translator har lavet en ny forbindelse. Minutter, du har købt, vises måske ikke her. Kontakt support med din kvittering, så flytter vi dem tilbage.",
+    "contactSupport": "Kontakt support",
+    "openSettings": "Åbn Indstillinger",
+    "supportSubject": "Mine minutter mangler, efter Translator nulstillede denne computer"
   }
 }

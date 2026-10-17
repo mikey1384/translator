@@ -12,7 +12,7 @@ test('privacy controls cover all 39 bundled locales without missing or fallback 
   assert.equal(files.length, 39);
   const english = JSON.parse(readFileSync(join(directory, 'en.json'), 'utf8'))
     .settings.privacy;
-  assert.equal(Object.keys(english).length, 12);
+  assert.equal(Object.keys(english).length, 14);
   for (const file of files) {
     const copy = JSON.parse(readFileSync(join(directory, file), 'utf8'))
       .settings.privacy;
@@ -34,6 +34,7 @@ test('privacy controls cover all 39 bundled locales without missing or fallback 
         assert.notEqual(copy[key], english[key], `${file}: ${key}`);
     }
     assert.ok(copy.description.includes('Google Analytics'), file);
-    assert.match(copy.retention, /3|۳|৩/, file);
+    // "3" in Latin, Persian, Arabic-Indic, Bengali or Devanagari digits.
+    assert.match(copy.retention, /3|۳|٣|৩|३/, file);
   }
 });

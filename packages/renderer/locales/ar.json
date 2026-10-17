@@ -112,7 +112,8 @@
     "updateAvailableDownloading": "يتوفر تحديث. جارٍ تنزيله في الخلفية.",
     "updateReadyToInstall": "نُزّل التحديث. أعد التشغيل لتثبيته.",
     "updateCheckFailed": "تعذّر التحقق من وجود تحديثات. حاول لاحقًا.",
-    "aboutVersion": "Translator v{{version}}"
+    "aboutVersion": "Translator v{{version}}",
+    "updateVersionAvailable": "الإصدار {{version}} متاح"
   },
   "errors": {
     "needCookies": "طلب YouTube التحقق البشري. انقر على اتصال للمتابعة.",
@@ -155,20 +156,20 @@
     "transcription": {
       "providerUnavailable": "خدمة النسخ (ElevenLabs Scribe) غير متاحة مؤقتًا أو تعذّر الوصول إليها بعد عدة محاولات. يُرجى المحاولة مرة أخرى بعد بضع دقائق.",
       "fileTooLarge": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعة تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
-      "elevenLabsKeyRequired": "يستخدم النسخ ElevenLabs Scribe ويتطلب مفتاح API من ElevenLabs. أضف مفتاحًا في الإعدادات، أو أوقف وضع مفاتيح API للنسخ باستخدام أرصدة Stage5. لا يزال مفتاح OpenAI أو Anthropic الخاص بك يُستخدم للترجمة.",
+      "elevenLabsKeyRequired": "يستخدم النسخ ElevenLabs Scribe ويتطلب مفتاح API من ElevenLabs. أضف مفتاحًا في الإعدادات، أو أوقف وضع مفاتيح API للنسخ باستخدام دقائق Stage5. لا يزال مفتاح OpenAI أو Anthropic الخاص بك يُستخدم للترجمة.",
       "fileTooLarge_one": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من ساعة تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
       "fileTooLarge_two": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من ساعتين تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
       "fileTooLarge_few": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعات تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة."
     },
     "credits": {
-      "transcription": "رصيدك لا يكفي لنسخ هذا.",
-      "translation": "رصيدك لا يكفي لترجمة هذا.",
-      "dubbing": "رصيدك لا يكفي لدبلجة هذا.",
-      "summary": "رصيدك لا يكفي للملخص.",
-      "videoSearch": "رصيدك لا يكفي للبحث عن فيديوهات.",
-      "download": "رصيدك لا يكفي.",
-      "export": "رصيدك لا يكفي.",
-      "other": "رصيدك لا يكفي."
+      "transcription": "دقائقك لا تكفي لنسخ هذا.",
+      "translation": "دقائقك لا تكفي لترجمة هذا.",
+      "dubbing": "دقائقك لا تكفي لدبلجة هذا.",
+      "summary": "دقائقك لا تكفي للملخص.",
+      "videoSearch": "دقائقك لا تكفي للبحث عن فيديوهات.",
+      "download": "دقائقك لا تكفي.",
+      "export": "دقائقك لا تكفي.",
+      "other": "دقائقك لا تكفي."
     },
     "failed": {
       "transcription": "توقف النسخ بسبب مشكلة غير متوقعة. الأسطر التي نُسخت محفوظة.",
@@ -177,7 +178,8 @@
       "summary": "توقف الملخص بسبب مشكلة غير متوقعة.",
       "videoSearch": "توقف البحث عن الفيديوهات بسبب مشكلة غير متوقعة.",
       "export": "توقف إنشاء الفيديو بسبب مشكلة غير متوقعة.",
-      "other": "حدث خطأ ما. حاول مرة أخرى."
+      "other": "حدث خطأ ما. حاول مرة أخرى.",
+      "download": "تعذّر تنزيل الفيديو. حاول مرة أخرى أو استخدم رابطًا آخر."
     },
     "server": {
       "transcription": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
@@ -186,7 +188,8 @@
       "summary": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
       "videoSearch": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
       "export": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
-      "other": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة."
+      "other": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
+      "download": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة."
     },
     "download": {
       "invalid_url": "لا يبدو هذا رابط فيديو. الصق الرابط كاملًا.",
@@ -197,22 +200,24 @@
       "region_locked": "هذا الفيديو غير متاح في بلدك.",
       "audience_restricted": "هذا الفيديو يظهر لبعض المشاهدين فقط. إن كان حسابك يستطيع مشاهدته، ففعّل اتصال الموقع من الإعدادات ثم حاول مرة أخرى.",
       "login_required": "يتطلب هذا الفيديو تسجيل الدخول. فعّل اتصال الموقع من الإعدادات ثم حاول مرة أخرى.",
-      "media_blocked": "منع الموقع تنزيل الفيديو، ولم نتمكن من استرجاع أي ترجمة مصاحبة.",
+      "media_blocked": "منع الموقع تنزيل الفيديو، ولم نتمكن من استرجاع أي ترجمة.",
       "access_refused": "رفض هذا الموقع تسليم الفيديو إلى Translator.",
       "video_data_failed": "تعذّر تنزيل الفيديو. ربما يكون مقيّدًا ببلدان معيّنة أو يتطلب تسجيل الدخول.",
       "rate_limited": "يحدّ YouTube الآن من التنزيلات من شبكتك. انتظر بضع دقائق ثم حاول مرة أخرى.",
       "network": "تعذّر الاتصال. تحقق من اتصالك بالإنترنت ثم حاول مرة أخرى.",
-      "captions_unreadable": "وجدنا ترجمة YouTube المصاحبة، لكن Translator لم يتمكن من قراءتها.",
+      "captions_unreadable": "وجدنا ترجمة YouTube، لكن Translator لم يتمكن من قراءتها.",
       "save_failed": "نُزّل الفيديو لكن تعذّر حفظه. حاول مرة أخرى.",
       "downloader_failed": "تعذّر تشغيل أداة تنزيل الفيديو. أعد تشغيل Translator ثم حاول مرة أخرى.",
       "generic": "تعذّر تنزيل الفيديو. حاول مرة أخرى أو استخدم رابطًا آخر.",
-      "subtitlesNotSaved": "تعذّر حفظ ترجمتك الحالية، لذا لم تُفتح ترجمة YouTube المصاحبة.",
+      "subtitlesNotSaved": "تعذّر حفظ ترجمتك الحالية، لذا لم تُفتح ترجمة YouTube.",
       "openFailed": "نُزّل الفيديو لكن تعذّر فتحه. افتحه من سجل التنزيلات."
     },
     "network": "تعذّر الوصول إلى الخادم. تحقق من اتصالك بالإنترنت ثم حاول مرة أخرى.",
     "busy": "الخدمة مشغولة الآن. انتظر دقيقة ثم حاول مرة أخرى.",
     "diskFull": "القرص ممتلئ. أفرغ بعض المساحة ثم حاول مرة أخرى.",
-    "cancelDubbingFailedPlain": "تعذّر إيقاف الدبلجة. حاول مرة أخرى."
+    "cancelDubbingFailedPlain": "تعذّر إيقاف الدبلجة. حاول مرة أخرى.",
+    "cancelTranslationFailedPlain": "تعذّر إيقاف الترجمة. حاول مرة أخرى.",
+    "cancelSummaryFailedPlain": "تعذّر إيقاف الملخص. حاول مرة أخرى."
   },
   "input": {
     "connect": "اتصال",
@@ -248,7 +253,7 @@
     "srtLoaded": "اكتمل النسخ",
     "srtFileLoaded": "تم تحميل SRT",
     "featuresUnlockAfterTranscription": "انسخ هذا الفيديو أو ترجمه أو استخرج لقطاته المميزة.",
-    "preSubtitleActionsHint": "انسخ الفيديو أو ترجمه أو أنشئ لقطات مميزة منه.",
+    "preSubtitleActionsHint": "انسخ الفيديو أو ترجمه أو استخرج منه اللقطات المميزة.",
     "saveDubbedVideo": "حفظ الفيديو المدبلج",
     "downloadFinishedSwitchTitle": "مشاهدة الفيديو الذي تم تنزيله؟",
     "downloadFinishedSwitchPrompt": "التنزيل جاهز. شاهده الآن، أو احتفظ بالفيديو الحالي وافتحه لاحقًا من السجل.",
@@ -435,13 +440,14 @@
       "freeSearchRunning": "جارٍ البحث في YouTube…",
       "freeSearchResults": "هذه نتائج YouTube لـ “{{query}}”. كان هذا البحث مجانيًا. أخبرني أكثر عمّا تريده وسأحسّن النتائج بالذكاء الاصطناعي.",
       "freeSearchEmpty": "لم يجد YouTube شيئًا لـ “{{query}}”. صف ما تريده وسأبحث لك بالذكاء الاصطناعي.",
-      "openOriginalPage": "فتح الصفحة الأصلية"
+      "openOriginalPage": "فتح الصفحة الأصلية",
+      "modelPill": "نموذج البحث: {{model}}"
     },
     "downloadAndTranslate": "تنزيل وترجمة",
     "downloadAndTranscribe": "تنزيل ونسخ",
     "autoRunLabel": "بعد التنزيل، التنفيذ حتى",
     "autoRunStopDownload": "تنزيل",
-    "autoRunStopTranscribe": "+ ترجمة نصية",
+    "autoRunStopTranscribe": "+ الترجمة",
     "autoRunStopTranslate": "+ ترجمة",
     "autoRunStepDownload": "تنزيل",
     "autoRunStepTranscribe": "نسخ",
@@ -466,12 +472,13 @@
     },
     "dropWhileDownloading": "هناك تنزيل جارٍ. أفلت الملف مرة أخرى بعد انتهائه.",
     "dropWhileBusy": "يعمل Translator على هذا الفيديو. أفلت الملف مرة أخرى بعد انتهائه.",
-    "dropNotSupported": "أفلت فيديو أو ملفًا صوتيًا أو ملف ترجمة ‎.srt."
+    "dropNotSupported": "أفلت فيديو أو ملفًا صوتيًا أو ملف ترجمة ‎.srt.",
+    "batchDownloadRunning": "يُنزّل Translator عدة فيديوهات الآن. انتظر حتى تنتهي، أو ألغِ التنزيل."
   },
   "subtitles": {
     "outputLanguage": "لغة الإخراج",
     "showOriginalText": "عرض النص الأصلي",
-    "displayModeLabel": "عرض الترجمة النصية",
+    "displayModeLabel": "عرض الترجمة",
     "translate": "ترجم",
     "continueTranscribing": "متابعة النسخ",
     "generate": "إنشاء الترجمات",
@@ -507,7 +514,19 @@
     "dubNotEnoughCredits": "رصيدك لا يكفي لهذه الدبلجة.",
     "addCreditsToDub": "أضف نقاطًا للدبلجة",
     "noSubtitlesToDub": "أنشئ ترجمة لهذا الفيديو أو افتحها أولًا، ثم دبلجه.",
-    "noSubtitlesToTranslate": "افتح ملف ترجمة أو أنشئ الترجمة أولًا، ثم ترجمها."
+    "noSubtitlesToTranslate": "افتح ملف ترجمة أو أنشئ الترجمة أولًا، ثم ترجمها.",
+    "dubVoiceHelp": "الصوت المستخدم في هذه الدبلجة، ويبقى مختارًا لدبلجاتك القادمة.",
+    "addMinutesToDub": "أضف دقائق للدبلجة",
+    "dubNotEnoughMinutes": "دقائقك لا تكفي لهذه الدبلجة.",
+    "addMinutesToTranslate": "أضف دقائق للترجمة",
+    "transcriptEmptyForTranslation": "لا يحتوي النص المنسوخ على أسطر لترجمتها.",
+    "dubCostHintMinutes": "صوت ElevenLabs: نحو {{time}} من دقائقك لكل دقيقة كلام. يظهر هذا التقدير قبل بدء الدبلجة.",
+    "fileError": {
+      "openPermission": "لا يملك Translator إذنًا بقراءة هذا الملف. تحقق من أذوناته، أو انسخه إلى مجلد آخر وحاول مرة أخرى.",
+      "openMissing": "ملف الترجمة هذا لم يعد موجودًا، فربما نُقل أو حُذف.",
+      "openFailed": "تعذّر على Translator فتح ملف الترجمة هذا. تأكد أنه ملف ‎.srt وحاول مرة أخرى.",
+      "saveFailed": "تعذّر على Translator حفظ الترجمة. حاول مرة أخرى، أو اختر “حفظ الترجمة باسم...” لتحديد مجلد آخر."
+    }
   },
   "summary": {
     "title": "اللقطات المميزة",
@@ -524,7 +543,7 @@
     "estimateByo": "مفتاح BYO",
     "highEffortBadge": "(معمّق)",
     "placeholder": "سيظهر ملخص الذكاء الاصطناعي هنا بمجرد إنشائه.",
-    "insufficientCredits": "رصيدك لا يكفي لاستخراج اللقطات المميزة.",
+    "insufficientCredits": "دقائقك لا تكفي لاستخراج اللقطات المميزة.",
     "error": "تعذّر استخراج اللقطات المميزة. {{message}}",
     "cancel": "إلغاء",
     "copy": "نسخ الملخص",
@@ -534,7 +553,7 @@
     "noVideoForHighlights": "افتح الفيديو المصدر لقص مقاطع اللقطات المميزة.",
     "summaryRequiredForHighlights": "استخرج اللقطات المميزة أولًا لتحليل النص.",
     "highlight": "لقطة مميزة",
-    "cutHighlightClip": "قص هذا المقطع البارز",
+    "cutHighlightClip": "قص هذه اللقطة المميزة",
     "cuttingHighlightClip": "جارٍ القص…",
     "highlightPlaceholder": "لم يتم قص المقطع بعد.",
     "clipFormat": "تنسيق المقطع:",
@@ -577,7 +596,7 @@
     "downloadCombined": "تنزيل المقطع المدمج",
     "saveCombinedDialogTitle": "حفظ مقطع اللقطة المميزة المدمجة",
     "combinedCutFailed": "فشل قص اللقطات المميزة المدمجة: {{message}}",
-    "highlightsInsufficientCredits": "تم إنشاء الملخص، لكن استخراج اللقطات المميزة توقف بسبب نفاد النقاط.",
+    "highlightsInsufficientCredits": "تم إنشاء الملخص، لكن استخراج اللقطات المميزة توقف بسبب نفاد الدقائق.",
     "highlightsPartialWarning": "كان استخراج اللقطات المميزة جزئيًا. قد تكون هذه اللقطات غير مكتملة. أعد الإنشاء للتحديث.",
     "highlightsPartialWithReason": "تم إنشاء الملخص، لكن استخراج اللقطات المميزة كان جزئيًا: {{message}}",
     "estimateOwnKey": "يستخدم مفتاح API الخاص بك",
@@ -605,7 +624,17 @@
       "untranslated": "بعض الأسطر في هذا المقطع لم تُترجم بعد. ترجمها، أو اجعل عرض الترجمة يُظهر النص الأصلي.",
       "subtitlesNotSaved": "قُصّ المقطع، لكن تعذّر حفظ ترجمته.",
       "generic": "تعذّر قصّ هذا المقطع من الفيديو. حاول مرة أخرى."
-    }
+    },
+    "addMinutesToSummarize": "أضف دقائق للتلخيص",
+    "addMinutesForHighlights": "أضف دقائق لاستخراج اللقطات المميزة",
+    "qualityLabel": "الجودة",
+    "qualityStandard": "عادية",
+    "qualityDeep": "معمّقة (تكلفة أعلى)",
+    "subtitlesChangedSinceAnalysis": "تغيّرت الترجمة منذ إنشاء هذه النتيجة. عُلِّمت اللقطات المميزة التي تغيّرت أسطرها، والباقي لا يزال مطابقًا.",
+    "highlightCuesChanged": "عدّلت أسطرًا في هذه اللقطة بعد العثور عليها. تأكد أنها لا تزال مناسبة.",
+    "clipCaptionsChangedAny": "تغيّرت ترجمة المقطع منذ قصّه (نصها أو نمطها أو حجمها).",
+    "notEnoughForRun": "دقائقك لا تكفي للملخص واللقطات المميزة.",
+    "clipsUseOriginalAudio": "تستخدم المقاطع الصوت الأصلي، لا الدبلجة."
   },
   "panel": {
     "new": "جديد",
@@ -669,7 +698,11 @@
       "confirmRemove": "هل أنت متأكد أنك تريد إزالة كتلة الترجمة هذه؟ لا يمكن التراجع عن هذا الإجراء.",
       "transcribeThisLine": "نسخ هذا السطر",
       "timeEndBeforeStart": "يجب أن يأتي وقت النهاية بعد وقت البداية. أبقينا السطر على وقته السابق.",
-      "timeUnreadable": "اكتب الوقت بهذا الشكل: 00:01:23,450 أو 1:23.45. أبقينا السطر على وقته السابق."
+      "timeUnreadable": "اكتب الوقت بهذا الشكل: 00:01:23,450 أو 1:23.45. أبقينا السطر على وقته السابق.",
+      "startTimeAria": "وقت بداية السطر {{index}}",
+      "endTimeAria": "وقت نهاية السطر {{index}}",
+      "splitTitle": "تقسيم هذا السطر عند المؤشر",
+      "mergeTitle": "دمج مع السطر التالي"
     },
     "header": {
       "save": "حفظ الترجمة",
@@ -689,7 +722,10 @@
       "replaced": "تم الاستبدال في كل الأسطر.",
       "shifted": "تم تحريك التوقيت.",
       "improved": "أُعيد نسخ السطر.",
-      "action": "تراجع"
+      "action": "تراجع",
+      "split": "قُسِّم السطر إلى سطرين.",
+      "merged": "دُمج السطران.",
+      "shortcut": "تراجع ({{keys}})"
     }
   },
   "settings": {
@@ -705,7 +741,9 @@
       "pendingOff": "متوقفة على هذا الجهاز. اتصل لتأكيد الاختيار على الخادم.",
       "retry": "إعادة المحاولة",
       "error": "تعذّر تأكيد اختيارك. أعد المحاولة.",
-      "anonymousCounts": "مفعّل دائمًا: أعداد يومية مجهولة لخطوات التطبيق (مثل فتح التطبيق أو اكتمال التنزيل)، تتضمن الخطوة واليوم والنظام وإصدار التطبيق فقط. دون أي معرّف أو محتوى أو إعدادات."
+      "anonymousCounts": "مفعّل دائمًا: أعداد يومية مجهولة لخطوات التطبيق (مثل فتح التطبيق أو اكتمال التنزيل)، تتضمن الخطوة واليوم والنظام وإصدار التطبيق فقط. دون أي معرّف أو محتوى أو إعدادات.",
+      "pendingOffPlain": "متوقف. سنؤكد ذلك مع الخادم في المرة القادمة التي تتصل فيها بالإنترنت.",
+      "pendingOnPlain": "مفعّل. تنتظر التقارير حتى يعود اتصالك بالإنترنت."
     },
     "title": "الإعدادات",
     "aiProvider": {
@@ -715,10 +753,10 @@
       "toggleLabel": "استخدام مفاتيح API الخاصة بي",
       "activeKeys": "المفاتيح الجاهزة: {{count}}",
       "noKeys": "لا توجد مفاتيح مُعدّة",
-      "usingApiKeys": "أرصدة Stage5 متوقفة",
-      "usingCredits": "أرصدة Stage5 قيد الاستخدام",
+      "usingApiKeys": "دقائق Stage5 متوقفة",
+      "usingCredits": "دقائق Stage5 قيد الاستخدام",
       "toggleOn": "يتم الآن استخدام مفاتيح API الخاصة بك.",
-      "toggleOff": "يتم الآن استخدام أرصدة Stage5.",
+      "toggleOff": "يتم الآن استخدام دقائق Stage5.",
       "toggleError": "فشل تحديث التفضيل.",
       "toggleAria": "استخدام مفاتيح API الخاصة بي",
       "requirementTranslation": "يتطلب مفتاح OpenAI أو Anthropic للترجمة"
@@ -743,7 +781,7 @@
       },
       "qualitySummary": {
         "label": "ملخص عالي الجودة",
-        "modelOn": "تحليل عميق بـ Claude Opus 5.5 + مقاطع مميزة",
+        "modelOn": "تحليل عميق بـ Claude Opus 5.5 + مقاطع اللقطات المميزة",
         "modelOff": "تحليل قياسي بـ Claude Sonnet 5.5",
         "help": "<b>4× نقاط</b> • تحليل معمق + مقاطع مميزة مع Claude Opus 5.5",
         "helpWithEstimate": "<b>4× نقاط</b> • رصيدك: ~{{normalTime}} (عادي) / ~{{hqTime}} (جودة عالية)",
@@ -807,11 +845,13 @@
       "yourBalance": "رصيدك",
       "canClone": "يمكنك الاستنساخ",
       "upToMinutes": "حتى {{minutes}} دقيقة",
-      "loading": "جارٍ التحميل..."
+      "loading": "جارٍ التحميل...",
+      "previewWithMinutes": "معاينة ({{cost}})",
+      "previewFailed": "تعذّر تشغيل معاينة الصوت. حاول مرة أخرى."
     },
     "byoOpenAi": {
       "title": "استخدم مفاتيح API الخاصة بك",
-      "description": "افتح ترقية لمرة واحدة لاستخدام مفاتيح API الخاصة بك. بمجرد الفتح، أي نسخ أو ترجمة أو دبلجة أو ملخص يعمل مباشرة على حساباتك بدلاً من استهلاك نقاط Stage5.",
+      "description": "افتح ترقية لمرة واحدة لاستخدام مفاتيح API الخاصة بك. بعد الفتح، يعمل أي نسخ أو ترجمة أو دبلجة أو ملخص مباشرة على حساباتك بدلًا من استهلاك دقائق Stage5.",
       "unlocking": "جارٍ فتح صفحة الدفع…",
       "unlockCta": "فتح بـ $10",
       "unlockHint": "بمجرد الفتح، أضف مفاتيح API الخاصة بك هنا في أي وقت لتفعيل الفوترة المباشرة على حساباتك.",
@@ -838,16 +878,16 @@
       "option1Title": "الخيار 1: OpenAI",
       "option2Title": "الخيار 2: Anthropic + ElevenLabs",
       "economicsTitle": "لماذا يستحق الأمر",
-      "economicsBody": "نقاط Stage5 مُحسّنة للراحة (بدون إعداد). BYO يدفع للمزودين مباشرة—عادة أرخص بـ ~30–50% حسب الحزمة.",
+      "economicsBody": "دقائق Stage5 مصممة للراحة (بلا إعداد). أما مفاتيحك الخاصة فتدفع للمزوّدين مباشرة، وهي عادةً أرخص بنحو 30–50% حسب الباقة.",
       "encryptionUnavailable": "التخزين الآمن غير متاح على هذا النظام. لا يمكن حفظ مفاتيح API.",
       "checkoutOpen": "صفحة الدفع مفتوحة في المتصفح…",
-      "checkoutOpenHint": "أكمل الدفع في متصفحك. سنفتح BYO تلقائيًا عند تأكيد الدفع.",
+      "checkoutOpenHint": "أكمل الدفع في متصفحك. سنفتح استخدام مفاتيحك الخاصة تلقائيًا عند تأكيد الدفع.",
       "entitlementsLoadFailed": "تعذّر التحقق من حالة فتح المفاتيح. تحقق من اتصالك ثم أعد المحاولة.",
       "unlockFailed": "تعذّر بدء الدفع. تحقق من اتصالك ثم حاول مرة أخرى."
     },
     "byoPreferences": {
       "title": "تفضيلات المزود",
-      "stage5Credits": "نقاط Stage5",
+      "stage5Credits": "دقائق Stage5",
       "pricingHint": "التكلفة المقدرة لكل ساعة فيديو",
       "pricingHintHeuristic": "تكلفة تقديرية باستخدام الإرشادات الحالية للتطبيق",
       "transcription": "النسخ",
@@ -869,17 +909,17 @@
       "summary": "الملخص",
       "dubbing": "الدبلجة",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "لا يتوفر حاليًا نموذج BYO لتوصيات الفيديو. فعّل OpenAI أو Anthropic BYO لهذه الميزة.",
-      "videoSuggestionModelRequiresOpenAi": "يتطلب فتح OpenAI BYO ومفتاحًا وتفعيل المفتاح.",
-      "videoSuggestionModelRequiresAnthropic": "يتطلب فتح Anthropic BYO ومفتاحًا وتفعيل المفتاح.",
-      "summaryRequiresOpenAi": "يتطلب الوصول إلى OpenAI BYO ومفتاح API.",
-      "summaryRequiresAnthropic": "يتطلب الوصول إلى Anthropic BYO ومفتاح API.",
+      "videoSuggestionModelUnavailable": "لا يتوفر حاليًا نموذج لتوصيات الفيديو بمفاتيحك الخاصة. فعّل مفتاح OpenAI أو Anthropic الخاص بك لهذه الميزة.",
+      "videoSuggestionModelRequiresOpenAi": "يتطلب فتح مفاتيحك الخاصة ومفتاح OpenAI وتفعيله.",
+      "videoSuggestionModelRequiresAnthropic": "يتطلب فتح مفاتيحك الخاصة ومفتاح Anthropic وتفعيله.",
+      "summaryRequiresOpenAi": "يتطلب فتح مفاتيحك الخاصة ومفتاح API من OpenAI.",
+      "summaryRequiresAnthropic": "يتطلب فتح مفاتيحك الخاصة ومفتاح API من Anthropic.",
       "translationReview": "الترجمة (مراجعة)",
-      "transcriptionRequiresElevenLabs": "يستخدم النسخ ElevenLabs Scribe فقط. أضف مفتاح API من ElevenLabs للنسخ باستخدام مفاتيحك الخاصة. بدونه، يستخدم النسخ أرصدة Stage5، والتي لا تُستخدم أثناء تشغيل مفاتيح API الخاصة بك. لا يزال مفتاح OpenAI الخاص بك يُستخدم للترجمة.",
-      "dubbingRequiresElevenLabs": "تستخدم الدبلجة ElevenLabs فقط. أضف مفتاح API من ElevenLabs للدبلجة بمفاتيحك الخاصة. بدونه، تستخدم الدبلجة نقاط Stage5، والتي لا تُستخدم أثناء تفعيل مفاتيح API الخاصة بك.",
+      "transcriptionRequiresElevenLabs": "يستخدم النسخ ElevenLabs Scribe فقط. أضف مفتاح API من ElevenLabs للنسخ باستخدام مفاتيحك الخاصة. بدونه، يستخدم النسخ دقائق Stage5، والتي لا تُستخدم أثناء تشغيل مفاتيح API الخاصة بك. لا يزال مفتاح OpenAI الخاص بك يُستخدم للترجمة.",
+      "dubbingRequiresElevenLabs": "تستخدم الدبلجة ElevenLabs فقط. أضف مفتاح API من ElevenLabs للدبلجة بمفاتيحك الخاصة. بدونه، تستخدم الدبلجة دقائق Stage5، والتي لا تُستخدم أثناء تفعيل مفاتيح API الخاصة بك.",
       "runtimeFallback": "البديل الاحتياطي أثناء التشغيل في وضع مفتاح API",
-      "videoSuggestionLegacyFollowDraft": "تم الإبقاء على إعداد BYO القديم: يتبع نموذج المسودة للترجمة حتى تختار نموذجًا مباشرًا.",
-      "videoSuggestionLegacyFollowReview": "تم الإبقاء على إعداد BYO القديم: يتبع نموذج المراجعة للترجمة حتى تختار نموذجًا مباشرًا."
+      "videoSuggestionLegacyFollowDraft": "أبقينا على إعداد قديم لمفاتيحك الخاصة: يتبع نموذج مسودة الترجمة حتى تختار نموذجًا مباشرًا.",
+      "videoSuggestionLegacyFollowReview": "أبقينا على إعداد قديم لمفاتيحك الخاصة: يتبع نموذج مراجعة الترجمة حتى تختار نموذجًا مباشرًا."
     },
     "apiKeyGuide": {
       "title": "كيفية الحصول على مفاتيح API",
@@ -924,7 +964,7 @@
         "step4": "أضف طريقة دفع في إعدادات الاشتراك (مطلوب لاستخدام API بعد الطبقة المجانية)",
         "step5": "انسخ مفتاح API الخاص بك والصقه في Stage5",
         "note": "نصيحة: لدى ElevenLabs طبقة مجانية مع استخدام محدود. للمزيد، قم بالترقية إلى خطة مدفوعة في إعدادات حسابك.",
-        "audioDescription": "يشغّل ElevenLabs جميع عمليات النسخ (Scribe) والدبلجة. بدون مفتاح ElevenLabs الخاص بك، يستخدم كلاهما أرصدة Stage5، والتي لا تُستخدم أثناء تشغيل مفاتيح API الخاصة بك."
+        "audioDescription": "يشغّل ElevenLabs جميع عمليات النسخ (Scribe) والدبلجة. بدون مفتاح ElevenLabs الخاص بك، يستخدم كلاهما دقائق Stage5، والتي لا تُستخدم أثناء تشغيل مفاتيح API الخاصة بك."
       }
     },
     "byoAnthropic": {
@@ -960,7 +1000,9 @@
       "cleared": "تم مسح مفتاح API.",
       "invalid": "فشل التحقق من مفتاح API.",
       "howToGet": "كيفية الحصول على هذا المفتاح",
-      "missing": "الصق مفتاح API أولًا."
+      "missing": "الصق مفتاح API أولًا.",
+      "savedEnding": "مفتاح محفوظ ينتهي بـ {{last4}}",
+      "savedHidden": "مفتاح محفوظ (مخفي)"
     },
     "byoStack": {
       "title": "حزمة الذكاء الاصطناعي الخاصة بك"
@@ -1002,7 +1044,9 @@
         "failedWrite": "تعذّر ربط {{app}}: لم يتمكن Translator من الكتابة في ملف إعداداته.",
         "failedLauncher": "ربط {{app}} متاح فقط في تطبيق Translator المثبّت.",
         "failedCli": "تعذّر ربط {{app}} تلقائيًا. شغّل هذا الأمر في الطرفية:",
-        "failedGeneric": "تعذّر ربط {{app}}. حاول مرة أخرى."
+        "failedGeneric": "تعذّر ربط {{app}}. حاول مرة أخرى.",
+        "appNotFound": "التطبيق {{app}} غير مثبّت على هذا الكمبيوتر. ثبّته وافتحه مرة واحدة، ثم أعد الاتصال.",
+        "download": "تنزيل {{app}}"
       },
       "status": {
         "enabled": "مفعّل",
@@ -1066,14 +1110,23 @@
       "received_two": "تم استلام نقطتين.",
       "received_few": "تم استلام {{credits}} نقاط.",
       "errors": {
-        "nothing_to_transfer": "لا شيء لنقله بعد: لا توجد على هذا الكمبيوتر نقاط مشتراة ولا فتح لمفاتيح API. لنقل النقاط إلى هنا من كمبيوتر آخر، اختر “استلام النقاط”.",
+        "nothing_to_transfer": "لا شيء لنقله بعد: لا توجد على هذا الكمبيوتر دقائق مشتراة ولا فتح لمفاتيح API. لنقل الدقائق إلى هنا من كمبيوتر آخر، اختر “استلام الدقائق”.",
         "too_many_codes": "أنشأت رموز نقل كثيرة خلال هذه الساعة. حاول مرة أخرى بعد قليل.",
         "jobs_running": "لا يزال نسخ أو ترجمة قيد التشغيل. حاول مرة أخرى بعد انتهائه.",
         "invalid_code": "هذا الرمز غير صحيح أو استُخدم من قبل أو انتهت صلاحيته. أنشئ رمزًا جديدًا على الكمبيوتر الآخر.",
         "same_device": "أدخل الرمز على الكمبيوتر الآخر، لا على الكمبيوتر الذي أنشأه.",
         "network_error": "تعذّر الوصول إلى خادم Stage5. تحقق من اتصالك ثم حاول مرة أخرى.",
-        "transfer_failed": "تعذّر نقل النقاط. تحقق من اتصالك ثم حاول مرة أخرى."
-      }
+        "transfer_failed": "تعذّر نقل الدقائق. تحقق من اتصالك ثم حاول مرة أخرى.",
+        "nothing_to_transfer_minutes": "لا شيء لنقله بعد: لا توجد على هذا الكمبيوتر دقائق مشتراة ولا فتح لمفاتيح API. لنقل الدقائق إلى هنا من كمبيوتر آخر، اختر “استلام الدقائق”.",
+        "transfer_failed_minutes": "تعذّر نقل الدقائق. تحقق من اتصالك ثم حاول مرة أخرى."
+      },
+      "titleMinutes": "نقل الدقائق بين أجهزة الكمبيوتر",
+      "descriptionMinutes": "يمكن نقل الدقائق المشتراة وفتح مفاتيح API إلى كمبيوتر آخر، أما الدقائق المجانية فتبقى على هذا الكمبيوتر.",
+      "moveButtonMinutes": "نقل الدقائق إلى كمبيوتر آخر",
+      "receiveButtonMinutes": "استلام الدقائق",
+      "summaryMinutes": "سيُنقل {{time}} من الفيديو.",
+      "stepsMinutes": "على الكمبيوتر الجديد: ثبّت Translator، وافتح الإعدادات، واختر “استلام الدقائق”، ثم أدخل هذا الرمز.",
+      "receivedMinutes": "تم استلام {{time}} من الفيديو."
     }
   },
   "credits": {
@@ -1099,7 +1152,12 @@
       "freeThisMonth": "{{count}} د مجانًا هذا الشهر",
       "freeWelcome": "{{count}} د مجانًا",
       "minutes": "المتبقي: {{count}} د",
-      "title": "الدقائق والباقات"
+      "title": "الدقائق والباقات",
+      "neutral": "الدقائق",
+      "welcomePending": "دقائقك المجانية في الطريق",
+      "freeTimeThisMonth": "{{time}} مجانًا هذا الشهر",
+      "freeTime": "{{time}} مجانًا",
+      "offline": "الدقائق · دون اتصال"
     },
     "yourMinutes": "دقائقك",
     "balanceNone": "لم تتبقَّ دقائق",
@@ -1112,11 +1170,27 @@
     "moreMinutesPerDollar": "{{multiplier}}× دقائق أكثر لكل دولار",
     "checkoutWaiting": "أكمل الدفع في المتصفح، وستُضاف دقائقك هنا تلقائيًا.",
     "checkoutNote": "دفعة واحدة عبر Stripe في المتصفح. بلا حساب ولا اشتراك، وتُضاف الدقائق تلقائيًا.",
-    "dubbingNote": "الترجمة من رصيدك تستهلك نحو 10% إضافية لكل دقيقة، والدبلجة تستهلك أكثر.",
+    "dubbingNote": "الترجمة بدقائقك تضيف نحو 10% لكل دقيقة، والدبلجة تستهلك أكثر.",
     "iCancelledCheckout": "لقد ألغيت عملية الدفع",
     "checkoutStartFailed": "تعذّر بدء الدفع. تحقّق من اتصالك وحاول مجددًا.",
     "loadFailed": "تعذّر تحميل رصيدك. تحقق من اتصالك ثم حاول مرة أخرى.",
-    "estimateAmount": "{{credits}} نقطة"
+    "estimateAmount": "{{credits}} نقطة",
+    "costOfBalanceMinutes": "{{cost}} من أصل {{balance}}",
+    "timeLeft": "تبقّى {{time}}",
+    "success": {
+      "added": "تمت إضافة +{{time}}",
+      "arrived": "وصلت دقائقك",
+      "addedLong": "تم استلام الدفع، وتمت إضافة +{{time}} إلى دقائقك.",
+      "arrivedLong": "تم استلام الدفع، ووصلت دقائقك."
+    },
+    "waitingForPayment": "بانتظار الدفع…",
+    "chooseAnotherPack": "غيّرت رأيك؟ اختر باقة أخرى",
+    "balanceNoneYet": "لا دقائق بعد",
+    "welcomePendingNote": "دقائقك المجانية في الطريق، وعادةً تصل في المرة التالية التي تفتح فيها Translator.",
+    "balanceOffline": "تعذّر التحقق من دقائقك الآن",
+    "offlineNote": "لا يستطيع Translator الوصول إلى Stage5. سيظهر رصيدك مجددًا عند عودة الاتصال.",
+    "microPackLabelNoTime": "شراء دقائق — {{price}}",
+    "microPackLabel": "شراء دقائق — {{price}} · ≈ {{time}} من الفيديو"
   },
   "cta": {
     "generate": {
@@ -1156,7 +1230,15 @@
     "mute": "كتم الصوت (M)",
     "unmute": "إلغاء الكتم (M)",
     "volume": "مستوى الصوت",
-    "unreadableFile": "لا يستطيع Translator قراءة هذا الملف. ربما يكون تالفًا أو بتنسيق غير مدعوم."
+    "unreadableFile": "لا يستطيع Translator قراءة هذا الملف. ربما يكون تالفًا أو بتنسيق غير مدعوم.",
+    "play": "تشغيل (Space)",
+    "pause": "إيقاف مؤقت (Space)",
+    "seekBar": "موضع التشغيل في الفيديو",
+    "seekBarValue": "{{current}} من {{total}}",
+    "enterFullscreenShortcut": "ملء الشاشة (F)",
+    "exitFullscreenShortcut": "الخروج من ملء الشاشة (F)",
+    "changeVideoKeepSubtitlesSameVideo": "الإبقاء على الترجمة الحالية. لنسخة أخرى من الفيديو نفسه فقط؛ أما الفيديو المختلف فيبدأ بدونها.",
+    "audioOnly": "ملف صوتي"
   },
   "admin": {
     "title": "المسؤول",
@@ -1223,7 +1305,7 @@
     "noCredits": "لا توجد نقاط.",
     "rechargeLink": "إعادة الشحن ←",
     "creditWarning": {
-      "message": "التنزيل والتحرير والتصدير والترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية. يتطلب النسخ نقاطًا أو فتح مفاتيح API في <settingsLink>{{settingsLinkText}}</settingsLink>.",
+      "message": "التنزيل والتحرير والتصدير والترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية. يتطلب النسخ دقائق أو فتح مفاتيح API في <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "الإعدادات"
     },
     "validation": {
@@ -1266,7 +1348,7 @@
     "calculatingCost": "جارٍ حساب التكلفة...",
     "notEnoughCredits": "لا توجد نقاط كافية متاحة",
     "welcomeCredits": {
-      "message": "لديك نقاط مجانية لتجربة النسخ والترجمة (حوالي 20 دقيقة من الفيديو)."
+      "message": "لديك نحو 20 دقيقة مجانية من الفيديو لتجربة النسخ والترجمة."
     }
   },
   "findBar": {
@@ -1340,11 +1422,13 @@
       "task": {
         "transcription": {
           "title": "النسخ يحتاج إلى نقاط",
-          "message": "رصيدك لا يغطي نسخ هذا. أضف نقاطًا، ثم ابدأ من جديد. الأسطر التي نُسخت محفوظة."
+          "message": "رصيدك لا يغطي نسخ هذا. أضف نقاطًا، ثم ابدأ من جديد. الأسطر التي نُسخت محفوظة.",
+          "messageNothingYet": "دقائقك لا تكفي لنسخ هذا. أضف دقائق، ثم ابدأ من جديد."
         },
         "translation": {
           "title": "الترجمة تحتاج إلى نقاط",
-          "message": "رصيدك لا يغطي ترجمة هذا. أضف نقاطًا، ثم حاول مرة أخرى. الأسطر التي تُرجمت محفوظة. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية."
+          "message": "رصيدك لا يغطي ترجمة هذا. أضف نقاطًا، ثم حاول مرة أخرى. الأسطر التي تُرجمت محفوظة. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية.",
+          "messageNothingYet": "دقائقك لا تكفي لترجمة هذا. أضف دقائق، ثم حاول مرة أخرى. الترجمة مجانية باشتراك Claude أو Codex الخاص بك عبر التحكم بالوكلاء."
         },
         "dubbing": {
           "title": "الدبلجة تحتاج إلى نقاط",
@@ -1361,11 +1445,45 @@
         "other": {
           "title": "هذا يحتاج إلى نقاط"
         }
+      },
+      "minutes": {
+        "transcription": {
+          "title": "النسخ يحتاج إلى دقائق",
+          "message": "دقائقك لا تكفي لنسخ هذا. أضف دقائق، ثم ابدأ من جديد. الأسطر التي نُسخت محفوظة.",
+          "messageNothingYet": "دقائقك لا تكفي لنسخ هذا. أضف دقائق، ثم ابدأ من جديد."
+        },
+        "translation": {
+          "title": "الترجمة تحتاج إلى دقائق",
+          "message": "دقائقك لا تكفي لترجمة هذا. أضف دقائق، ثم حاول مرة أخرى. الأسطر التي تُرجمت محفوظة. الترجمة مجانية باشتراك Claude أو Codex الخاص بك عبر التحكم بالوكلاء.",
+          "messageNothingYet": "دقائقك لا تكفي لترجمة هذا. أضف دقائق، ثم حاول مرة أخرى. الترجمة مجانية باشتراك Claude أو Codex الخاص بك عبر التحكم بالوكلاء."
+        },
+        "dubbing": {
+          "title": "الدبلجة تحتاج إلى دقائق",
+          "message": "دقائقك لا تكفي لدبلجة هذا الفيديو. أضف دقائق، ثم حاول مرة أخرى."
+        },
+        "summary": {
+          "title": "الملخص يحتاج إلى دقائق",
+          "message": "دقائقك لا تكفي للملخص واللقطات المميزة. أضف دقائق، ثم حاول مرة أخرى."
+        },
+        "videoSearch": {
+          "title": "البحث عن الفيديوهات بالذكاء الاصطناعي يحتاج إلى دقائق",
+          "message": "دقائقك لا تكفي للبحث عن الفيديوهات بالذكاء الاصطناعي. أضف دقائق، ثم ابحث مرة أخرى."
+        },
+        "other": {
+          "title": "هذا يحتاج إلى دقائق"
+        },
+        "title": "نفدت دقائقك",
+        "neverHadMessage": "النسخ يحتاج إلى دقائق أو إلى فتح مفاتيح API، ويمكنك الحصول على أيٍّ منهما من الإعدادات. الترجمة مجانية باشتراك Claude أو Codex الخاص بك عبر التحكم بالوكلاء.",
+        "message": "نفدت دقائقك. أضف دقائق من الإعدادات، ثم تابع من حيث توقفت.",
+        "notEnoughTitle": "دقائقك لا تكفي لهذا الفيديو",
+        "notEnoughTranscriptionMessage": "نسخ هذا الفيديو يحتاج إلى {{required}}، والمتبقي لديك {{available}}. أضف دقائق، ثم ابدأ من جديد.",
+        "notEnoughMessage": "يحتاج هذا إلى أكثر من {{available}} المتبقية لديك. أضف دقائق للمتابعة."
       }
     },
     "dubCostConfirm": {
       "title": "بدء الدبلجة؟",
-      "message": "ستستخدم هذه الدبلجة نحو {{cost}} من رصيدك البالغ {{balance}}. توليد الأصوات يكلف أكثر بكثير من الترجمة."
+      "message": "ستستخدم هذه الدبلجة نحو {{cost}} من رصيدك البالغ {{balance}}. توليد الأصوات يكلف أكثر بكثير من الترجمة.",
+      "messageMinutes": "تستهلك هذه الدبلجة {{cost}}. توليد الأصوات أعلى تكلفة بكثير من الترجمة."
     },
     "unsavedSrtOnCaptionRecovery": {
       "discardAndOpen": "تجاهل وفتح الترجمات",
@@ -1387,7 +1505,7 @@
         "export": "لا يزال تصدير الفيديو جاريًا.",
         "summary": "لا يزال الملخص قيد الكتابة.",
         "download": "لا يزال التنزيل جاريًا.",
-        "highlight": "لا يزال إنشاء المقاطع المميزة جاريًا.",
+        "highlight": "لا يزال إنشاء مقاطع اللقطات المميزة جاريًا.",
         "search": "لا يزال البحث عن الفيديوهات جاريًا.",
         "generic": "لا تزال هناك مهمة جارية."
       },
@@ -1409,7 +1527,8 @@
       "quitAnyway": "إنهاء على أي حال",
       "closeAnyway": "إغلاق على أي حال",
       "saveFailed": "تعذّر حفظ الترجمة في {{title}}، لذا لم يُغلق شيء. احفظها من المحرر، ثم حاول مرة أخرى.",
-      "ok": "حسنًا"
+      "ok": "حسنًا",
+      "unsavedOnlyDetail": "هل تريد حفظ تعديلات الترجمة أولًا؟"
     },
     "exportSaveDialogTitle": "حفظ الفيديو باسم",
     "exportVideoFilterName": "فيديو MP4",
@@ -1423,7 +1542,22 @@
     "exportSameAsSource": "سيؤدي هذا إلى استبدال الفيديو الأصلي. اختر اسمًا آخر.",
     "keepDubbing": "متابعة الدبلجة",
     "stopDubbing": "إيقاف الدبلجة",
-    "cancelDubbingBody": "سيُحذف الصوت المدبلج الذي أُنشئ حتى الآن."
+    "cancelDubbingBody": "سيُحذف الصوت المدبلج الذي أُنشئ حتى الآن.",
+    "cancelTranslationTitle": "إيقاف الترجمة؟",
+    "keepTranslating": "متابعة الترجمة",
+    "stopTranslating": "إيقاف الترجمة",
+    "fatal": {
+      "startTitle": "تعذّر تشغيل Translator",
+      "startBody": "حدث خطأ أثناء التشغيل. التفاصيل: {{message}}",
+      "loadBody": "تعذّر تحميل نافذة التطبيق. التفاصيل: {{message}}",
+      "crashTitle": "يجب إغلاق Translator",
+      "crashBody": "حدث خطأ غير متوقع، لذا سيُغلَق Translator الآن. التفاصيل: {{message}}",
+      "backgroundCrashBody": "حدث خطأ غير متوقع في الخلفية، لذا سيُغلَق Translator الآن."
+    },
+    "cancelSummaryTitle": "إيقاف الملخص؟",
+    "keepSummarizing": "متابعة",
+    "stopSummarizing": "إيقاف",
+    "cancelSummaryBody": "لن يُحتفظ بالملخص واللقطات المميزة التي أُنشئت حتى الآن."
   },
   "progress": {
     "preparingVideoExport": "جارٍ تجهيز تصدير الفيديو…",
@@ -1444,8 +1578,8 @@
     "transcribingR2Upload": "جارٍ رفع الصوت…",
     "gapRepair": "إصلاح الفجوات #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "إصلاح الترجمات المفقودة (التكرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
-    "scrubbingHallucinations": "تنظيف التعليقات ({{done}}/{{total}})",
-    "translationCleanup": "تنظيف التعليقات المترجمة ({{done}}/{{total}})",
+    "scrubbingHallucinations": "تنقيح الترجمة ({{done}}/{{total}})",
+    "translationCleanup": "تنقيح الأسطر المترجمة ({{done}}/{{total}})",
     "reviewingSlow": "جارٍ المراجعة (قد يستغرق هذا بعض الوقت...) {{done}}/{{total}}",
     "reviewingRange": "جارٍ مراجعة {{start}}–{{end}} (من {{total}})",
     "legacy": {
@@ -1486,7 +1620,7 @@
       "preparingDubLines": "جارٍ تحضير {{count}} سطر للدبلجة…",
       "preparingHighlights": "جارٍ الاستعداد لاختيار اللقطات المميزة…",
       "preparingOutput": "جارٍ تحضير مجلد الإخراج…",
-      "preparingTranscript": "جارٍ قراءة النص المفرّغ…",
+      "preparingTranscript": "جارٍ قراءة النص المنسوخ…",
       "preparingVideoEngine": "جارٍ تجهيز أدوات الفيديو…",
       "preparingVoiceClips": "جارٍ تحضير {{count}} مقطع صوتي…",
       "rateLimited": "الخدمة مشغولة الآن، جارٍ إعادة المحاولة…",
@@ -1528,9 +1662,9 @@
       "downloadingAudio": "جارٍ تنزيل الصوت…",
       "transcribingLine": "جارٍ نسخ السطر…",
       "startingExport": "جارٍ بدء إنشاء الفيديو…",
-      "captionsAvailable": "تعذّر تنزيل الفيديو، لكن ترجمة YouTube المصاحبة متاحة",
-      "captionsNotOpened": "ترجمة YouTube المصاحبة جاهزة لكنها لم تُفتح",
-      "insufficientCredits": "الرصيد لا يكفي"
+      "captionsAvailable": "تعذّر تنزيل الفيديو، لكن ترجمة YouTube متاحة",
+      "captionsNotOpened": "ترجمة YouTube جاهزة لكنها لم تُفتح",
+      "insufficientCredits": "دقائقك لا تكفي"
     },
     "listening": "جارٍ الاستماع إلى الفيديو…",
     "mergeFinishSaveBeforeReload": "أكمل حفظ الفيديو المدمج قبل إعادة التحميل.",
@@ -1613,7 +1747,18 @@
     "recentSubtitlesReadyGeneric": "الترجمة جاهزة",
     "recentDownloaded": "تم التنزيل",
     "recentLocalFile": "على هذا الكمبيوتر",
-    "recentLocalMissing": "نُقل الملف أو حُذف"
+    "recentLocalMissing": "نُقل الملف أو حُذف",
+    "leaveSaveFailed": {
+      "title": "تعذّر حفظ الترجمة",
+      "message": "لم يتمكن Translator من حفظ هذه الترجمة في مكتبتك، لذا لن تظهر عندما تفتح هذا الفيديو مرة أخرى. احفظها أولًا كملف ‎.srt، أو ابقَ هنا.",
+      "leave": "المغادرة دون حفظ",
+      "stay": "البقاء هنا",
+      "saveSrt": "حفظ ‎.srt ثم المغادرة"
+    },
+    "burnChooseVideo": "اختر الفيديو",
+    "burnChooseSubtitles": "اختر الترجمة التي تريد دمجها",
+    "runBlockedBusy": "لا يزال Translator يعمل على الفيديو الحالي. حاول مرة أخرى بعد انتهائه.",
+    "downloadCancelled": "أُلغي التنزيل."
   },
   "workspace": {
     "subtitlesTitle": "الترجمة",
@@ -1676,7 +1821,28 @@
     "translateMissing_few": "ترجمة الأسطر المتبقية ({{count}}) إلى {{language}}",
     "translateMissing_many": "ترجمة الأسطر المتبقية ({{count}}) إلى {{language}}",
     "moreRevealVideo": "إظهار ملف الفيديو",
-    "chooseAnotherFile": "اختيار ملف آخر"
+    "chooseAnotherFile": "اختيار ملف آخر",
+    "statusLinesIn": "{{count}} سطر باللغة {{language}}",
+    "statusLinesIn_one": "سطر واحد باللغة {{language}}",
+    "statusLinesIn_two": "سطران باللغة {{language}}",
+    "statusLinesIn_few": "{{count}} أسطر باللغة {{language}}",
+    "statusLinesIn_many": "{{count}} سطرًا باللغة {{language}}",
+    "statusTranslatedUnknownNoVideo": "{{count}} سطر مترجم",
+    "statusTranslatedUnknownNoVideo_one": "سطر واحد مترجم",
+    "statusTranslatedUnknownNoVideo_two": "سطران مترجمان",
+    "statusTranslatedUnknownNoVideo_few": "{{count}} أسطر مترجمة",
+    "statusTranslatedUnknownNoVideo_many": "{{count}} سطرًا مترجمًا",
+    "statusLines": "{{count}} سطر في الترجمة",
+    "statusLines_one": "سطر واحد في الترجمة",
+    "statusLines_two": "سطران في الترجمة",
+    "statusLines_few": "{{count}} أسطر في الترجمة",
+    "statusLines_many": "{{count}} سطرًا في الترجمة",
+    "checkingFile": "جارٍ قراءة الملف…",
+    "statusLoaded": "تم تحميل {{count}} سطر",
+    "statusLoaded_one": "تم تحميل سطر واحد",
+    "statusLoaded_two": "تم تحميل سطرين",
+    "statusLoaded_few": "تم تحميل {{count}} أسطر",
+    "statusLoaded_many": "تم تحميل {{count}} سطرًا"
   },
   "subtitleStyles": {
     "Cinema": "أصفر سينمائي",
@@ -1719,7 +1885,8 @@
     "failedNeedMinutes_two": "كل ما تُرجم حتى الآن محفوظ. تحتاج إلى دقائق إضافية لترجمة الدقيقتين المتبقيتين.",
     "failedNeedMinutes_few": "كل ما تُرجم حتى الآن محفوظ. تحتاج إلى دقائق إضافية لترجمة ما تبقى ({{remaining}} د).",
     "failedNeedMinutes_many": "كل ما تُرجم حتى الآن محفوظ. تحتاج إلى دقائق إضافية لترجمة ما تبقى ({{remaining}} د).",
-    "failedNetwork": "انقطع الاتصال. كل ما تُرجم حتى الآن محفوظ. حاول مرة أخرى عند عودة الاتصال."
+    "failedNetwork": "انقطع الاتصال. كل ما تُرجم حتى الآن محفوظ. حاول مرة أخرى عند عودة الاتصال.",
+    "noneBodyNextFree": "تتجدد الدقائق المجانية في {{date}}، أو حوّله إلى {{language}} الآن مقابل {{price}}."
   },
   "videoCost": {
     "covered": "تكفيه دقائقك",
@@ -1790,7 +1957,8 @@
   "tabs": {
     "newTab": "علامة تبويب جديدة",
     "newTabWithShortcut": "علامة تبويب جديدة ({{shortcut}})",
-    "closeTab": "إغلاق علامة التبويب"
+    "closeTab": "إغلاق علامة التبويب",
+    "tabList": "علامات التبويب المفتوحة"
   },
   "menu": {
     "about": "حول {{app}}",
@@ -1841,6 +2009,15 @@
     "copyImage": "نسخ الصورة",
     "copyImageAddress": "نسخ عنوان الصورة",
     "copyVideoAddress": "نسخ عنوان الفيديو",
-    "inspect": "فحص العنصر"
+    "inspect": "فحص العنصر",
+    "focusTabStrip": "التركيز على شريط علامات التبويب"
+  },
+  "startupNotice": {
+    "title": "أُعيد ضبط بعض الإعدادات",
+    "settingsReset": "تلف ملف إعدادات Translator، لذا أُعيد ضبط تفضيلاتك: لغة الواجهة ولغة الترجمة ومفاتيح API وخيارات أخرى. احتفظنا بنسخة من الملف التالف. راجع الإعدادات من فضلك.",
+    "deviceIdReplaced": "تلف الملف الذي يربط هذا الكمبيوتر بدقائقك، لذا أنشأ Translator ربطًا جديدًا. قد لا تظهر هنا الدقائق التي اشتريتها. راسل الدعم مع إيصال الشراء وسنعيدها إليك.",
+    "contactSupport": "مراسلة الدعم",
+    "openSettings": "فتح الإعدادات",
+    "supportSubject": "اختفت دقائقي بعد أن أعاد Translator ضبط هذا الكمبيوتر"
   }
 }

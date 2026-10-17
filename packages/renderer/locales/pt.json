@@ -112,7 +112,8 @@
     "updateAvailableDownloading": "Atualização encontrada. Baixando em segundo plano.",
     "updateReadyToInstall": "Atualização baixada. Reinicie para instalar.",
     "updateCheckFailed": "Não foi possível verificar atualizações. Tente de novo mais tarde.",
-    "aboutVersion": "Translator v{{version}}"
+    "aboutVersion": "Translator v{{version}}",
+    "updateVersionAvailable": "v{{version}} disponível"
   },
   "errors": {
     "needCookies": "O YouTube solicitou uma verificação humana. Clique em Conectar para continuar.",
@@ -155,18 +156,18 @@
     "transcription": {
       "providerUnavailable": "A transcrição (ElevenLabs Scribe) está temporariamente indisponível ou não pôde ser acessada após várias tentativas. Tente novamente em alguns minutos.",
       "fileTooLarge": "Este áudio é longo demais para ser transcrito em uma única tarefa (mais de cerca de {{hours}} horas). Divida o vídeo em partes menores e transcreva cada parte.",
-      "elevenLabsKeyRequired": "A transcrição usa o ElevenLabs Scribe e precisa de uma chave de API da ElevenLabs. Adicione uma em Configurações ou desative o modo de chaves de API para transcrever com créditos Stage5. Sua chave da OpenAI ou da Anthropic continua sendo usada para tradução.",
+      "elevenLabsKeyRequired": "A transcrição usa o ElevenLabs Scribe e precisa de uma chave de API da ElevenLabs. Adicione uma em Configurações ou desative o modo de chaves de API para transcrever com seus minutos do Stage5. Sua chave da OpenAI ou da Anthropic continua sendo usada para tradução.",
       "fileTooLarge_one": "Este áudio é longo demais para ser transcrito em uma única tarefa (mais de cerca de {{hours}} hora). Divida o vídeo em partes menores e transcreva cada parte."
     },
     "credits": {
-      "transcription": "Créditos insuficientes para transcrever isto.",
-      "translation": "Créditos insuficientes para traduzir isto.",
-      "dubbing": "Créditos insuficientes para dublar isto.",
-      "summary": "Créditos insuficientes para o resumo.",
-      "videoSearch": "Créditos insuficientes para buscar vídeos.",
-      "download": "Créditos insuficientes.",
-      "export": "Créditos insuficientes.",
-      "other": "Créditos insuficientes."
+      "transcription": "Minutos insuficientes para transcrever isto.",
+      "translation": "Minutos insuficientes para traduzir isto.",
+      "dubbing": "Minutos insuficientes para dublar isto.",
+      "summary": "Minutos insuficientes para o resumo.",
+      "videoSearch": "Minutos insuficientes para buscar vídeos.",
+      "download": "Minutos insuficientes.",
+      "export": "Minutos insuficientes.",
+      "other": "Minutos insuficientes."
     },
     "failed": {
       "transcription": "A transcrição parou por causa de um problema inesperado. As linhas já transcritas foram mantidas.",
@@ -175,7 +176,8 @@
       "summary": "O resumo parou por causa de um problema inesperado.",
       "videoSearch": "A busca de vídeos parou por causa de um problema inesperado.",
       "export": "A criação do vídeo parou por causa de um problema inesperado.",
-      "other": "Algo deu errado. Tente de novo."
+      "other": "Algo deu errado. Tente de novo.",
+      "download": "Não foi possível baixar o vídeo. Tente de novo ou use outro link."
     },
     "server": {
       "transcription": "Nosso servidor teve um problema. Tente de novo em um minuto.",
@@ -184,7 +186,8 @@
       "summary": "Nosso servidor teve um problema. Tente de novo em um minuto.",
       "videoSearch": "Nosso servidor teve um problema. Tente de novo em um minuto.",
       "export": "Nosso servidor teve um problema. Tente de novo em um minuto.",
-      "other": "Nosso servidor teve um problema. Tente de novo em um minuto."
+      "other": "Nosso servidor teve um problema. Tente de novo em um minuto.",
+      "download": "Nosso servidor teve um problema. Tente de novo em um minuto."
     },
     "download": {
       "invalid_url": "Isso não parece um link de vídeo. Cole o link completo.",
@@ -210,7 +213,9 @@
     "network": "Não foi possível acessar o servidor. Verifique sua conexão com a internet e tente de novo.",
     "busy": "O serviço está sobrecarregado agora. Aguarde um minuto e tente de novo.",
     "diskFull": "Seu disco está cheio. Libere espaço e tente de novo.",
-    "cancelDubbingFailedPlain": "Não foi possível parar a dublagem. Tente de novo."
+    "cancelDubbingFailedPlain": "Não foi possível parar a dublagem. Tente de novo.",
+    "cancelTranslationFailedPlain": "Não foi possível parar a tradução. Tente de novo.",
+    "cancelSummaryFailedPlain": "Não foi possível parar o resumo. Tente de novo."
   },
   "input": {
     "connect": "Conectar",
@@ -430,7 +435,8 @@
       "freeSearchRunning": "Buscando no YouTube…",
       "freeSearchResults": "Aqui estão os resultados do YouTube para “{{query}}”. Esta busca foi gratuita. Conte mais sobre o que você procura e eu refino com IA.",
       "freeSearchEmpty": "O YouTube não encontrou nada para “{{query}}”. Descreva o que você procura e eu busco com IA.",
-      "openOriginalPage": "Abrir página original"
+      "openOriginalPage": "Abrir página original",
+      "modelPill": "IA da busca: {{model}}"
     },
     "downloadAndTranslate": "Baixar e traduzir",
     "downloadAndTranscribe": "Baixar e transcrever",
@@ -461,7 +467,8 @@
     },
     "dropWhileDownloading": "Há um download em andamento. Solte o arquivo de novo quando ele terminar.",
     "dropWhileBusy": "O Translator está trabalhando neste vídeo. Solte o arquivo de novo quando ele terminar.",
-    "dropNotSupported": "Solte um vídeo, um arquivo de áudio ou um arquivo de legenda .srt."
+    "dropNotSupported": "Solte um vídeo, um arquivo de áudio ou um arquivo de legenda .srt.",
+    "batchDownloadRunning": "O Translator está baixando vários vídeos. Espere terminarem ou cancele o download."
   },
   "subtitles": {
     "outputLanguage": "Idioma de Saída",
@@ -500,7 +507,19 @@
     "dubNotEnoughCredits": "Créditos insuficientes para esta dublagem.",
     "addCreditsToDub": "Adicionar créditos para dublar",
     "noSubtitlesToDub": "Crie ou abra legendas para este vídeo e depois faça a dublagem.",
-    "noSubtitlesToTranslate": "Abra ou crie legendas e depois traduza."
+    "noSubtitlesToTranslate": "Abra ou crie legendas e depois traduza.",
+    "dubVoiceHelp": "A voz desta dublagem. Ela continua escolhida para as próximas dublagens.",
+    "addMinutesToDub": "Adicionar minutos para dublar",
+    "dubNotEnoughMinutes": "Minutos insuficientes para esta dublagem.",
+    "addMinutesToTranslate": "Adicionar minutos para traduzir",
+    "transcriptEmptyForTranslation": "A transcrição não tem linhas para traduzir.",
+    "dubCostHintMinutes": "Voz da ElevenLabs: ~{{time}} dos seus minutos por minuto de fala. Esta estimativa aparece antes de a dublagem começar.",
+    "fileError": {
+      "openPermission": "O Translator não tem permissão para ler esse arquivo. Verifique as permissões dele ou copie-o para outra pasta e tente de novo.",
+      "openMissing": "Esse arquivo de legendas não está mais lá. Ele pode ter sido movido ou excluído.",
+      "openFailed": "O Translator não conseguiu abrir esse arquivo de legendas. Confira se é um arquivo .srt e tente de novo.",
+      "saveFailed": "O Translator não conseguiu salvar as legendas. Tente de novo ou escolha “Salvar legendas como...” para usar outra pasta."
+    }
   },
   "summary": {
     "title": "Destaques",
@@ -517,7 +536,7 @@
     "estimateByo": "Chave BYO",
     "highEffortBadge": "(aprofundado)",
     "placeholder": "O resumo da IA aparecerá aqui assim que for gerado.",
-    "insufficientCredits": "Créditos insuficientes para criar destaques.",
+    "insufficientCredits": "Minutos insuficientes para criar destaques.",
     "error": "Não conseguimos criar os destaques. {{message}}",
     "cancel": "Cancelar",
     "copy": "Copiar resumo",
@@ -570,7 +589,7 @@
     "downloadCombined": "Baixar clip combinado",
     "saveCombinedDialogTitle": "Salvar clip de destaques combinado",
     "combinedCutFailed": "Falha ao cortar destaques combinados: {{message}}",
-    "highlightsInsufficientCredits": "Resumo gerado, mas a extração de destaques parou porque os créditos acabaram.",
+    "highlightsInsufficientCredits": "Resumo gerado, mas a extração de destaques parou porque seus minutos acabaram.",
     "highlightsPartialWarning": "A extração de destaques foi parcial. Estes destaques podem estar incompletos. Gere novamente para atualizar.",
     "highlightsPartialWithReason": "Resumo gerado, mas a extração de destaques foi parcial: {{message}}",
     "estimateOwnKey": "Usa sua chave de API",
@@ -596,7 +615,17 @@
       "untranslated": "Algumas linhas deste clipe ainda não foram traduzidas. Traduza-as ou mude a exibição das legendas para mostrar o original.",
       "subtitlesNotSaved": "O clipe foi cortado, mas não foi possível salvar as legendas dele.",
       "generic": "Não foi possível cortar este clipe do vídeo. Tente de novo."
-    }
+    },
+    "addMinutesToSummarize": "Adicionar minutos para resumir",
+    "addMinutesForHighlights": "Adicionar minutos para encontrar destaques",
+    "qualityLabel": "Qualidade",
+    "qualityStandard": "Padrão",
+    "qualityDeep": "Profunda (custa mais)",
+    "subtitlesChangedSinceAnalysis": "As legendas mudaram depois desta análise. Os destaques com linhas alteradas estão marcados; os demais continuam corretos.",
+    "highlightCuesChanged": "Você editou linhas deste destaque depois que ele foi encontrado. Confira se ele ainda faz sentido.",
+    "clipCaptionsChangedAny": "As legendas mudaram desde que este clipe foi cortado (texto, estilo ou tamanho).",
+    "notEnoughForRun": "Minutos insuficientes para o resumo e os destaques.",
+    "clipsUseOriginalAudio": "Os clipes usam o áudio original, não a dublagem."
   },
   "panel": {
     "new": "novo",
@@ -654,7 +683,11 @@
       "confirmRemove": "Tem certeza que deseja remover este bloco de legendas? Esta ação não pode ser desfeita.",
       "transcribeThisLine": "Transcrever linha",
       "timeEndBeforeStart": "O fim precisa vir depois do início. A linha mantém o tempo anterior.",
-      "timeUnreadable": "Digite um tempo como 00:01:23,450 ou 1:23.45. A linha mantém o tempo anterior."
+      "timeUnreadable": "Digite um tempo como 00:01:23,450 ou 1:23.45. A linha mantém o tempo anterior.",
+      "startTimeAria": "Início da linha {{index}}",
+      "endTimeAria": "Fim da linha {{index}}",
+      "splitTitle": "Dividir esta linha no cursor",
+      "mergeTitle": "Juntar com a próxima linha"
     },
     "header": {
       "save": "Salvar legendas",
@@ -674,7 +707,10 @@
       "replaced": "Substituído em todas as linhas.",
       "shifted": "Tempos deslocados.",
       "improved": "Linha transcrita de novo.",
-      "action": "Desfazer"
+      "action": "Desfazer",
+      "split": "Linha dividida em duas.",
+      "merged": "Linhas unidas.",
+      "shortcut": "Desfazer ({{keys}})"
     }
   },
   "settings": {
@@ -690,7 +726,9 @@
       "pendingOff": "Desativada neste dispositivo. Conecte-se para confirmar a preferência no servidor.",
       "retry": "Tentar novamente",
       "error": "Não foi possível confirmar sua preferência. Tente novamente.",
-      "anonymousCounts": "Sempre ativo: contagens diárias anônimas de etapas do app (como app aberto ou download concluído), apenas com a etapa, o dia, a plataforma e a versão. Sem ID, conteúdo ou configurações."
+      "anonymousCounts": "Sempre ativo: contagens diárias anônimas de etapas do app (como app aberto ou download concluído), apenas com a etapa, o dia, a plataforma e a versão. Sem ID, conteúdo ou configurações.",
+      "pendingOffPlain": "Desativada. Vamos confirmar com o servidor na próxima vez que você estiver online.",
+      "pendingOnPlain": "Ativada. Os relatórios esperam até você voltar a ficar online."
     },
     "title": "Configurações",
     "aiProvider": {
@@ -700,10 +738,10 @@
       "toggleLabel": "Usar minhas chaves de API",
       "activeKeys": "{{count}} chaves prontas",
       "noKeys": "Nenhuma chave configurada",
-      "usingApiKeys": "Créditos Stage5 desligados",
-      "usingCredits": "Créditos Stage5 ligados",
+      "usingApiKeys": "Minutos do Stage5 desligados",
+      "usingCredits": "Minutos do Stage5 ligados",
       "toggleOn": "Agora usa suas chaves API.",
-      "toggleOff": "Agora usa créditos Stage5.",
+      "toggleOff": "Agora usa seus minutos do Stage5.",
       "toggleError": "Falha ao atualizar a preferência.",
       "toggleAria": "Usar minhas chaves de API",
       "requirementTranslation": "Requer uma chave da OpenAI ou da Anthropic para tradução",
@@ -793,11 +831,13 @@
       "yourBalance": "Seu saldo",
       "canClone": "Você pode clonar",
       "upToMinutes": "até {{minutes}} min",
-      "loading": "Carregando..."
+      "loading": "Carregando...",
+      "previewWithMinutes": "Pré-visualizar ({{cost}})",
+      "previewFailed": "Não foi possível tocar a prévia da voz. Tente de novo."
     },
     "byoOpenAi": {
       "title": "Use suas próprias chaves de API",
-      "description": "Desbloqueie uma atualização única para usar suas próprias chaves de API. Uma vez desbloqueado, qualquer transcrição, tradução, dublagem ou resumo será executado diretamente em suas contas em vez de consumir créditos Stage5.",
+      "description": "Desbloqueie com um pagamento único o uso das suas próprias chaves de API. Depois disso, transcrições, traduções, dublagens e resumos rodam direto nas suas contas, sem gastar seus minutos do Stage5.",
       "unlocking": "Abrindo pagamento…",
       "unlockCta": "Desbloquear por $10",
       "unlockHint": "Uma vez desbloqueado, adicione suas chaves de API aqui a qualquer momento para ativar a cobrança direta em suas contas.",
@@ -824,16 +864,16 @@
       "option1Title": "Opção 1: OpenAI",
       "option2Title": "Opção 2: Anthropic + ElevenLabs",
       "economicsTitle": "Por que vale a pena",
-      "economicsBody": "Os créditos Stage5 otimizam a conveniência (sem configuração). BYO paga diretamente aos provedores—geralmente ~30–50% mais barato dependendo do seu pacote.",
+      "economicsBody": "Os minutos do Stage5 priorizam a praticidade (sem configuração). Com suas próprias chaves, você paga direto aos provedores — geralmente ~30–50% mais barato, dependendo do seu pacote.",
       "encryptionUnavailable": "O armazenamento seguro não está disponível neste sistema. As chaves de API não podem ser salvas.",
       "checkoutOpen": "Pagamento aberto no navegador…",
-      "checkoutOpenHint": "Conclua o pagamento no navegador. Vamos desbloquear o BYO automaticamente quando o pagamento for confirmado.",
+      "checkoutOpenHint": "Conclua o pagamento no navegador. Vamos desbloquear suas chaves de API automaticamente quando o pagamento for confirmado.",
       "entitlementsLoadFailed": "Não foi possível verificar o status do seu desbloqueio. Verifique sua conexão e tente de novo.",
       "unlockFailed": "Não foi possível iniciar o pagamento. Verifique sua conexão e tente de novo."
     },
     "byoPreferences": {
       "title": "Preferências de provedor",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Minutos do Stage5",
       "pricingHint": "Custo estimado por 1 hora de vídeo",
       "pricingHintHeuristic": "Custo estimado usando as heurísticas atuais do app",
       "transcription": "Transcrição",
@@ -855,17 +895,17 @@
       "summary": "Resumo",
       "dubbing": "Dublagem",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Nenhum modelo BYO de recomendação de vídeos está disponível no momento. Ative OpenAI ou Anthropic BYO para este recurso.",
-      "videoSuggestionModelRequiresOpenAi": "Requer desbloqueio BYO da OpenAI, chave e ativação.",
-      "videoSuggestionModelRequiresAnthropic": "Requer desbloqueio BYO da Anthropic, chave e ativação.",
-      "summaryRequiresOpenAi": "Requer acesso BYO da OpenAI e uma chave de API.",
-      "summaryRequiresAnthropic": "Requer acesso BYO da Anthropic e uma chave de API.",
+      "videoSuggestionModelUnavailable": "Nenhum modelo de recomendação de vídeos está disponível com suas chaves de API no momento. Ative sua chave da OpenAI ou da Anthropic para este recurso.",
+      "videoSuggestionModelRequiresOpenAi": "Requer o desbloqueio de chaves de API e uma chave da OpenAI ativada.",
+      "videoSuggestionModelRequiresAnthropic": "Requer o desbloqueio de chaves de API e uma chave da Anthropic ativada.",
+      "summaryRequiresOpenAi": "Requer o desbloqueio de chaves de API e uma chave da OpenAI.",
+      "summaryRequiresAnthropic": "Requer o desbloqueio de chaves de API e uma chave da Anthropic.",
       "translationReview": "Tradução (Revisão)",
-      "transcriptionRequiresElevenLabs": "A transcrição usa apenas o ElevenLabs Scribe. Adicione uma chave de API da ElevenLabs para transcrever com suas próprias chaves. Sem ela, a transcrição usa créditos Stage5, que não são usados enquanto suas chaves de API estão ativadas. Sua chave da OpenAI continua sendo usada para tradução.",
-      "dubbingRequiresElevenLabs": "A dublagem usa apenas a ElevenLabs. Adicione uma chave de API da ElevenLabs para dublar com suas próprias chaves. Sem ela, a dublagem usa créditos Stage5, que não são usados enquanto suas chaves de API estão ativadas.",
+      "transcriptionRequiresElevenLabs": "A transcrição usa apenas o ElevenLabs Scribe. Adicione uma chave de API da ElevenLabs para transcrever com suas próprias chaves. Sem ela, a transcrição usa seus minutos do Stage5, que não são usados enquanto suas chaves de API estão ativadas. Sua chave da OpenAI continua sendo usada para tradução.",
+      "dubbingRequiresElevenLabs": "A dublagem usa apenas a ElevenLabs. Adicione uma chave de API da ElevenLabs para dublar com suas próprias chaves. Sem ela, a dublagem usa seus minutos do Stage5, que não são usados enquanto suas chaves de API estão ativadas.",
       "runtimeFallback": "Alternativa em tempo de execução no modo de chave de API",
-      "videoSuggestionLegacyFollowDraft": "Configuração BYO antiga mantida: segue seu modelo de tradução de rascunho até você escolher um modelo direto.",
-      "videoSuggestionLegacyFollowReview": "Configuração BYO antiga mantida: segue seu modelo de tradução de revisão até você escolher um modelo direto."
+      "videoSuggestionLegacyFollowDraft": "Configuração antiga de chaves de API mantida: segue seu modelo de tradução de rascunho até você escolher um modelo específico.",
+      "videoSuggestionLegacyFollowReview": "Configuração antiga de chaves de API mantida: segue seu modelo de tradução de revisão até você escolher um modelo específico."
     },
     "apiKeyGuide": {
       "title": "Como obter chaves de API",
@@ -910,7 +950,7 @@
         "step4": "Adicione um método de pagamento nas configurações de assinatura (necessário para uso da API além do plano gratuito)",
         "step5": "Copie sua chave de API e cole no Stage5",
         "note": "Dica: ElevenLabs tem um plano gratuito com uso limitado. Para mais, faça upgrade para um plano pago nas configurações da sua conta.",
-        "audioDescription": "A ElevenLabs realiza toda a transcrição (Scribe) e a dublagem. Sem sua própria chave da ElevenLabs, ambas usam créditos Stage5, que não são usados enquanto suas chaves de API estão ativadas."
+        "audioDescription": "A ElevenLabs realiza toda a transcrição (Scribe) e a dublagem. Sem sua própria chave da ElevenLabs, ambas usam seus minutos do Stage5, que não são usados enquanto suas chaves de API estão ativadas."
       }
     },
     "byoAnthropic": {
@@ -946,7 +986,9 @@
       "cleared": "Chave de API removida.",
       "invalid": "Falha na validação da chave de API.",
       "howToGet": "Como obter esta chave",
-      "missing": "Cole uma chave de API primeiro."
+      "missing": "Cole uma chave de API primeiro.",
+      "savedEnding": "Chave salva terminando em {{last4}}",
+      "savedHidden": "Chave salva (oculta)"
     },
     "byoStack": {
       "title": "Seu stack de IA"
@@ -988,7 +1030,9 @@
         "failedWrite": "Não foi possível conectar o {{app}}: o Translator não conseguiu gravar o arquivo de configurações dele.",
         "failedLauncher": "Conectar o {{app}} só funciona no app Translator instalado.",
         "failedCli": "Não foi possível conectar o {{app}} automaticamente. Execute isto em um terminal:",
-        "failedGeneric": "Não foi possível conectar o {{app}}. Tente de novo."
+        "failedGeneric": "Não foi possível conectar o {{app}}. Tente de novo.",
+        "appNotFound": "O {{app}} não está instalado neste computador. Instale, abra uma vez e conecte de novo.",
+        "download": "Baixar {{app}}"
       },
       "status": {
         "enabled": "Ativado",
@@ -1047,18 +1091,27 @@
       "summaryCredits_one": "{{credits}} crédito será transferido.",
       "received_one": "{{credits}} crédito recebido.",
       "errors": {
-        "nothing_to_transfer": "Ainda não há nada para transferir: este computador não tem créditos comprados nem desbloqueio de chave de API. Para trazer créditos de outro computador, escolha “Receber créditos”.",
+        "nothing_to_transfer": "Ainda não há nada para transferir: este computador não tem minutos comprados nem o desbloqueio de chaves de API. Para trazer minutos de outro computador, escolha “Receber minutos”.",
         "too_many_codes": "Muitos códigos de transferência na última hora. Tente de novo daqui a pouco.",
         "jobs_running": "Uma transcrição ou tradução ainda está em andamento. Tente de novo quando ela terminar.",
         "invalid_code": "Esse código está errado, já foi usado ou expirou. Gere um novo no outro computador.",
         "same_device": "Digite o código no outro computador, não no que o gerou.",
         "network_error": "Não foi possível acessar o servidor da Stage5. Verifique sua conexão e tente de novo.",
-        "transfer_failed": "Não foi possível transferir os créditos. Verifique sua conexão e tente de novo."
-      }
+        "transfer_failed": "Não foi possível transferir os minutos. Verifique sua conexão e tente de novo.",
+        "nothing_to_transfer_minutes": "Ainda não há nada para transferir: este computador não tem minutos comprados nem o desbloqueio de chaves de API. Para trazer minutos de outro computador, escolha “Receber minutos”.",
+        "transfer_failed_minutes": "Não foi possível transferir os minutos. Verifique sua conexão e tente de novo."
+      },
+      "titleMinutes": "Transferir minutos entre computadores",
+      "descriptionMinutes": "Os minutos comprados e o desbloqueio de chaves de API podem ir para outro computador. Os minutos grátis ficam neste.",
+      "moveButtonMinutes": "Transferir minutos para outro computador",
+      "receiveButtonMinutes": "Receber minutos",
+      "summaryMinutes": "{{time}} de vídeo serão transferidos.",
+      "stepsMinutes": "No computador novo: instale o Translator, abra Configurações, escolha “Receber minutos” e digite este código.",
+      "receivedMinutes": "{{time}} de vídeo recebidos."
     }
   },
   "credits": {
-    "title": "Créditos de IA",
+    "title": "Seus minutos",
     "loading": "Carregando...",
     "credits": "créditos",
     "usingApiKey": "Usando chave de API",
@@ -1081,7 +1134,12 @@
       "freeWelcome": "{{count}} min grátis",
       "minutes": "{{count}} min restantes",
       "title": "Minutos e pacotes",
-      "minutes_one": "{{count}} min restante"
+      "minutes_one": "{{count}} min restante",
+      "neutral": "Minutos",
+      "welcomePending": "Minutos grátis a caminho",
+      "freeTimeThisMonth": "{{time}} grátis este mês",
+      "freeTime": "{{time}} grátis",
+      "offline": "Minutos · offline"
     },
     "yourMinutes": "Seus minutos",
     "balanceNone": "Seus minutos acabaram",
@@ -1099,7 +1157,23 @@
     "checkoutStartFailed": "Não foi possível iniciar o pagamento. Verifique sua conexão e tente novamente.",
     "monthlyFreeNote_one": "{{minutes}} minuto grátis todo mês · o próximo em {{date}}",
     "loadFailed": "Não foi possível carregar seu saldo. Verifique sua conexão e tente de novo.",
-    "estimateAmount": "{{credits}} créditos"
+    "estimateAmount": "{{credits}} créditos",
+    "costOfBalanceMinutes": "{{cost}} dos seus {{balance}}",
+    "timeLeft": "{{time}} restantes",
+    "success": {
+      "added": "+{{time}} adicionados",
+      "arrived": "Seus minutos chegaram",
+      "addedLong": "Pagamento recebido. +{{time}} adicionados aos seus minutos.",
+      "arrivedLong": "Pagamento recebido. Seus minutos chegaram."
+    },
+    "waitingForPayment": "Aguardando o pagamento…",
+    "chooseAnotherPack": "Mudou de ideia? Escolha outro pacote",
+    "balanceNoneYet": "Ainda sem minutos",
+    "welcomePendingNote": "Seus minutos grátis estão a caminho. Normalmente eles chegam na próxima vez que você abre o Translator.",
+    "balanceOffline": "Não dá para verificar seus minutos agora",
+    "offlineNote": "O Translator não consegue se conectar ao Stage5. Seu saldo volta a aparecer quando você estiver online de novo.",
+    "microPackLabelNoTime": "Comprar minutos — {{price}}",
+    "microPackLabel": "Comprar minutos — {{price}} · ≈ {{time}} de vídeo"
   },
   "cta": {
     "generate": {
@@ -1126,7 +1200,7 @@
     "icloudWaitingHint": "O vídeo será carregado automaticamente quando o download terminar.",
     "mediaPlaybackError": "Erro na reprodução de mídia",
     "sideActions": "Ações laterais do vídeo",
-    "scrollToCurrentSubtitle": "Ir para o subtítulo atual",
+    "scrollToCurrentSubtitle": "Ir para a legenda atual",
     "changeVideo": "Alterar vídeo",
     "findVideoWithAi": "Buscar vídeo com IA",
     "mountSrt": "Carregar SRT",
@@ -1139,7 +1213,15 @@
     "mute": "Silenciar (M)",
     "unmute": "Ativar som (M)",
     "volume": "Volume",
-    "unreadableFile": "O Translator não consegue ler este arquivo. Ele pode estar danificado ou em um formato não compatível."
+    "unreadableFile": "O Translator não consegue ler este arquivo. Ele pode estar danificado ou em um formato não compatível.",
+    "play": "Reproduzir (Espaço)",
+    "pause": "Pausar (Espaço)",
+    "seekBar": "Posição no vídeo",
+    "seekBarValue": "{{current}} de {{total}}",
+    "enterFullscreenShortcut": "Tela cheia (F)",
+    "exitFullscreenShortcut": "Sair da tela cheia (F)",
+    "changeVideoKeepSubtitlesSameVideo": "Manter as legendas atuais. Só para outra cópia deste mesmo vídeo; um vídeo diferente começa sem elas.",
+    "audioOnly": "Arquivo de áudio"
   },
   "admin": {
     "title": "Administrador",
@@ -1206,7 +1288,7 @@
     "noCredits": "Sem créditos.",
     "rechargeLink": "Recarregar →",
     "creditWarning": {
-      "message": "Baixar, editar, exportar e traduzir com seu próprio Claude ou Codex pelo Controle de agentes é gratuito. A transcrição requer créditos ou o desbloqueio de chave de API em <settingsLink>{{settingsLinkText}}</settingsLink>.",
+      "message": "Baixar, editar, exportar e traduzir com seu próprio Claude ou Codex pelo Controle de agentes é gratuito. A transcrição requer minutos ou o desbloqueio de chaves de API em <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Configurações"
     },
     "validation": {
@@ -1249,7 +1331,7 @@
     "calculatingCost": "Calculando custo...",
     "notEnoughCredits": "Créditos insuficientes disponíveis",
     "welcomeCredits": {
-      "message": "Você tem créditos gratuitos para experimentar a transcrição e a tradução (cerca de 20 minutos de vídeo)."
+      "message": "Você tem minutos grátis para experimentar a transcrição e a tradução (cerca de 20 minutos de vídeo)."
     }
   },
   "findBar": {
@@ -1323,11 +1405,13 @@
       "task": {
         "transcription": {
           "title": "Transcrever exige créditos",
-          "message": "Seu saldo não cobre esta transcrição. Adicione créditos e comece de novo. As linhas já transcritas foram mantidas."
+          "message": "Seu saldo não cobre esta transcrição. Adicione créditos e comece de novo. As linhas já transcritas foram mantidas.",
+          "messageNothingYet": "Seu saldo não cobre a transcrição disto. Adicione minutos e comece de novo."
         },
         "translation": {
           "title": "Traduzir exige créditos",
-          "message": "Seu saldo não cobre esta tradução. Adicione créditos e tente de novo. As linhas já traduzidas foram mantidas. Traduzir com seu próprio Claude ou Codex pelo Controle de agentes é gratuito."
+          "message": "Seu saldo não cobre esta tradução. Adicione créditos e tente de novo. As linhas já traduzidas foram mantidas. Traduzir com seu próprio Claude ou Codex pelo Controle de agentes é gratuito.",
+          "messageNothingYet": "Seu saldo não cobre a tradução disto. Adicione minutos e tente de novo. Traduzir com seu próprio Claude ou Codex pelo Controle de agentes é gratuito."
         },
         "dubbing": {
           "title": "Dublar exige créditos",
@@ -1344,11 +1428,45 @@
         "other": {
           "title": "Isto exige créditos"
         }
+      },
+      "minutes": {
+        "transcription": {
+          "title": "A transcrição precisa de minutos",
+          "message": "Seus minutos não cobrem a transcrição disto. Adicione minutos e comece de novo. As linhas já transcritas foram mantidas.",
+          "messageNothingYet": "Seus minutos não cobrem a transcrição disto. Adicione minutos e comece de novo."
+        },
+        "translation": {
+          "title": "A tradução precisa de minutos",
+          "message": "Seus minutos não cobrem a tradução disto. Adicione minutos e tente de novo. As linhas já traduzidas foram mantidas. Traduzir com seu próprio Claude ou Codex pelo Controle de agentes é gratuito.",
+          "messageNothingYet": "Seus minutos não cobrem a tradução disto. Adicione minutos e tente de novo. Traduzir com seu próprio Claude ou Codex pelo Controle de agentes é gratuito."
+        },
+        "dubbing": {
+          "title": "A dublagem precisa de minutos",
+          "message": "Seus minutos não cobrem a dublagem deste vídeo. Adicione minutos e tente de novo."
+        },
+        "summary": {
+          "title": "O resumo precisa de minutos",
+          "message": "Seus minutos não cobrem o resumo e os destaques. Adicione minutos e tente de novo."
+        },
+        "videoSearch": {
+          "title": "A busca de vídeos com IA precisa de minutos",
+          "message": "Seus minutos não cobrem uma busca de vídeos com IA. Adicione minutos e busque de novo."
+        },
+        "other": {
+          "title": "Isto precisa de minutos"
+        },
+        "title": "Seus minutos acabaram",
+        "neverHadMessage": "A transcrição precisa de minutos ou do desbloqueio de chaves de API. Consiga um dos dois em Configurações. Traduzir com seu próprio Claude ou Codex pelo Controle de agentes é gratuito.",
+        "message": "Seus minutos acabaram. Adicione mais em Configurações e continue de onde parou.",
+        "notEnoughTitle": "Minutos insuficientes para este vídeo",
+        "notEnoughTranscriptionMessage": "Transcrever este vídeo precisa de {{required}}, e você tem {{available}}. Adicione minutos e comece de novo.",
+        "notEnoughMessage": "Isto precisa de mais do que os {{available}} que você tem. Adicione minutos para continuar."
       }
     },
     "dubCostConfirm": {
       "title": "Iniciar a dublagem?",
-      "message": "Esta dublagem usa cerca de {{cost}} dos seus {{balance}} créditos. Gerar vozes custa muito mais do que traduzir."
+      "message": "Esta dublagem usa cerca de {{cost}} dos seus {{balance}} créditos. Gerar vozes custa muito mais do que traduzir.",
+      "messageMinutes": "Esta dublagem usa {{cost}}. Gerar vozes custa muito mais do que traduzir."
     },
     "unsavedSrtOnCaptionRecovery": {
       "discardAndOpen": "Descartar e abrir legendas",
@@ -1392,7 +1510,8 @@
       "quitAnyway": "Sair mesmo assim",
       "closeAnyway": "Fechar mesmo assim",
       "saveFailed": "Não foi possível salvar as legendas de {{title}}, então nada foi fechado. Salve-as pelo editor e tente de novo.",
-      "ok": "OK"
+      "ok": "OK",
+      "unsavedOnlyDetail": "Salvar antes as alterações nas legendas?"
     },
     "exportSaveDialogTitle": "Salvar vídeo como",
     "exportVideoFilterName": "Vídeo MP4",
@@ -1406,7 +1525,22 @@
     "exportSameAsSource": "Isso substituiria o vídeo original. Escolha outro nome.",
     "keepDubbing": "Continuar dublando",
     "stopDubbing": "Parar a dublagem",
-    "cancelDubbingBody": "O áudio dublado até agora será descartado."
+    "cancelDubbingBody": "O áudio dublado até agora será descartado.",
+    "cancelTranslationTitle": "Parar a tradução?",
+    "keepTranslating": "Continuar traduzindo",
+    "stopTranslating": "Parar a tradução",
+    "fatal": {
+      "startTitle": "Não foi possível iniciar o Translator",
+      "startBody": "Algo deu errado ao iniciar. Detalhes: {{message}}",
+      "loadBody": "Não foi possível carregar a janela do app. Detalhes: {{message}}",
+      "crashTitle": "O Translator precisa fechar",
+      "crashBody": "Algo inesperado deu errado, então o Translator vai fechar agora. Detalhes: {{message}}",
+      "backgroundCrashBody": "Algo inesperado deu errado em segundo plano, então o Translator vai fechar agora."
+    },
+    "cancelSummaryTitle": "Parar o resumo?",
+    "keepSummarizing": "Continuar",
+    "stopSummarizing": "Parar",
+    "cancelSummaryBody": "O resumo e os destaques feitos até agora não serão mantidos."
   },
   "progress": {
     "preparingVideoExport": "Preparando a exportação de vídeo…",
@@ -1507,7 +1641,7 @@
       "startingExport": "Preparando o vídeo…",
       "captionsAvailable": "Não foi possível baixar o vídeo, mas há legendas do YouTube disponíveis",
       "captionsNotOpened": "As legendas do YouTube estão prontas, mas não foram abertas",
-      "insufficientCredits": "Créditos insuficientes"
+      "insufficientCredits": "Minutos insuficientes"
     },
     "listening": "Ouvindo o vídeo…",
     "mergeFinishSaveBeforeReload": "Termine de salvar o vídeo combinado antes de recarregar.",
@@ -1590,7 +1724,18 @@
     "recentSubtitlesReadyGeneric": "Legendas prontas",
     "recentDownloaded": "Baixado",
     "recentLocalFile": "Neste computador",
-    "recentLocalMissing": "Arquivo movido ou excluído"
+    "recentLocalMissing": "Arquivo movido ou excluído",
+    "leaveSaveFailed": {
+      "title": "Não foi possível salvar suas legendas",
+      "message": "O Translator não conseguiu salvar estas legendas na sua biblioteca, então elas não vão voltar quando você abrir este vídeo de novo. Salve-as primeiro como arquivo .srt ou fique aqui.",
+      "leave": "Sair sem salvar",
+      "stay": "Ficar",
+      "saveSrt": "Salvar .srt e sair"
+    },
+    "burnChooseVideo": "Escolha o vídeo",
+    "burnChooseSubtitles": "Escolha as legendas para embutir",
+    "runBlockedBusy": "O Translator ainda está trabalhando no vídeo atual. Tente de novo quando ele terminar.",
+    "downloadCancelled": "Download cancelado."
   },
   "workspace": {
     "subtitlesTitle": "Legendas",
@@ -1645,7 +1790,20 @@
     "translateMissing_one": "Traduzir a linha que falta para {{language}}",
     "translateMissing_many": "Traduzir as {{count}} de linhas que faltam para {{language}}",
     "moreRevealVideo": "Mostrar arquivo de vídeo",
-    "chooseAnotherFile": "Escolher outro arquivo"
+    "chooseAnotherFile": "Escolher outro arquivo",
+    "statusLinesIn": "{{count}} linhas em {{language}}",
+    "statusLinesIn_one": "{{count}} linha em {{language}}",
+    "statusLinesIn_many": "{{count}} de linhas em {{language}}",
+    "statusTranslatedUnknownNoVideo": "{{count}} linhas traduzidas",
+    "statusTranslatedUnknownNoVideo_one": "{{count}} linha traduzida",
+    "statusTranslatedUnknownNoVideo_many": "{{count}} de linhas traduzidas",
+    "statusLines": "{{count}} linhas de legenda",
+    "statusLines_one": "{{count}} linha de legenda",
+    "statusLines_many": "{{count}} de linhas de legenda",
+    "checkingFile": "Lendo o arquivo…",
+    "statusLoaded": "{{count}} linhas carregadas",
+    "statusLoaded_one": "{{count}} linha carregada",
+    "statusLoaded_many": "{{count}} de linhas carregadas"
   },
   "subtitleStyles": {
     "Cinema": "Amarelo cinema",
@@ -1687,7 +1845,8 @@
     "failedNeedMinutes": "O que já foi traduzido continua salvo. Você precisa de mais minutos para traduzir os {{remaining}} minutos que faltam.",
     "failedNeedMinutes_one": "O que já foi traduzido continua salvo. Você precisa de mais minutos para traduzir o que falta ({{remaining}} minuto).",
     "failedNeedMinutes_many": "O que já foi traduzido continua salvo. Você precisa de mais minutos para traduzir os {{remaining}} de minutos que faltam.",
-    "failedNetwork": "A conexão caiu. O que já foi traduzido continua salvo. Tente de novo quando estiver online."
+    "failedNetwork": "A conexão caiu. O que já foi traduzido continua salvo. Tente de novo quando estiver online.",
+    "noneBodyNextFree": "Os minutos grátis voltam em {{date}} — ou veja em {{language}} agora por {{price}}."
   },
   "videoCost": {
     "covered": "Incluído nos seus minutos",
@@ -1758,7 +1917,8 @@
   "tabs": {
     "newTab": "Nova aba",
     "newTabWithShortcut": "Nova aba ({{shortcut}})",
-    "closeTab": "Fechar aba"
+    "closeTab": "Fechar aba",
+    "tabList": "Abas abertas"
   },
   "menu": {
     "about": "Sobre o {{app}}",
@@ -1809,6 +1969,15 @@
     "copyImage": "Copiar Imagem",
     "copyImageAddress": "Copiar Endereço da Imagem",
     "copyVideoAddress": "Copiar Endereço do Vídeo",
-    "inspect": "Inspecionar Elemento"
+    "inspect": "Inspecionar Elemento",
+    "focusTabStrip": "Ir para a Barra de Abas"
+  },
+  "startupNotice": {
+    "title": "Algumas configurações foram redefinidas",
+    "settingsReset": "O arquivo de configurações do Translator estava corrompido, então suas preferências foram redefinidas: idioma da interface e das legendas, chaves de API e outras opções. Uma cópia do arquivo corrompido foi guardada. Confira as Configurações.",
+    "deviceIdReplaced": "O arquivo que liga este computador aos seus minutos estava corrompido, então o Translator criou um novo vínculo. Os minutos que você comprou podem não aparecer aqui. Fale com o suporte, envie o recibo da compra e nós devolvemos seus minutos.",
+    "contactSupport": "Falar com o suporte",
+    "openSettings": "Abrir Configurações",
+    "supportSubject": "Meus minutos sumiram depois que o Translator redefiniu este computador"
   }
 }

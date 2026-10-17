@@ -26,7 +26,7 @@
       "creditReservationFailed": "Đặt chỗ tín dụng thất bại",
       "invalidRenderOptions": "Các tùy chọn render không hợp lệ",
       "missingVideoMetadata": "Thiếu metadata video ({{missing}})",
-      "insufficientDiskSpace": "Không đủ dung lượng ổ đĩa để hoàn tất việc ghép. Vui lòng giải phóng dung lượng và thử lại.",
+      "insufficientDiskSpace": "Không đủ dung lượng ổ đĩa để hoàn tất việc ghép. Hãy giải phóng dung lượng và thử lại.",
       "noSourceVideo": "Không có video nguồn",
       "noSubtitlesLoaded": "Không có phụ đề nào được tải",
       "failedToLoadSRT": "Không thể tải tệp SRT",
@@ -82,7 +82,7 @@
     "splitScrollButtonAria": "Cuộn lên đầu (nửa trên) hoặc xuống cuối (nửa dưới)",
     "updateRequiredBody": "Phiên bản Translator này không còn được backend hỗ trợ. Hãy cập nhật ứng dụng để tiếp tục.",
     "updateRequiredTitle": "Yêu cầu cập nhật",
-    "wait": "Vui lòng đợi…",
+    "wait": "Đợi một chút…",
     "whatsNewTitle": "Có gì mới",
     "whatsNewVersionTitle": "Có gì mới trong v{{version}}",
     "fileFilters": {
@@ -112,13 +112,14 @@
     "updateAvailableDownloading": "Đã có bản cập nhật. Đang tải xuống ở chế độ nền.",
     "updateReadyToInstall": "Đã tải xong bản cập nhật. Khởi động lại để cài đặt.",
     "updateCheckFailed": "Không kiểm tra được bản cập nhật. Hãy thử lại sau.",
-    "aboutVersion": "Translator v{{version}}"
+    "aboutVersion": "Translator v{{version}}",
+    "updateVersionAvailable": "Đã có v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
     "needCookiesYouTube": "YouTube yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
     "needCookiesGeneric": "Trang web này yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
-    "connectFailed": "Không thể kết nối. Vui lòng thử lại.",
+    "connectFailed": "Không thể kết nối. Hãy thử lại.",
     "invalidUrl": "Định dạng URL có vẻ không hợp lệ.",
     "unexpected": "Đã xảy ra lỗi không mong muốn.",
     "unexpectedRemove": "Đã xảy ra lỗi không mong muốn khi xóa key.",
@@ -140,32 +141,32 @@
     "adminCreditResetFailed": "Không thể đặt lại tín dụng về 0: {{message}}",
     "adminCreditResetError": "Lỗi khi đặt lại tín dụng về 0: {{message}}",
     "byo": {
-      "openaiKeyInvalid": "OpenAI API key của bạn không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra key trong Cài đặt.",
-      "openaiRateLimit": "Đã đạt giới hạn tốc độ OpenAI. Vui lòng đợi một chút và thử lại.",
-      "openaiInsufficientQuota": "Tài khoản OpenAI của bạn không đủ tín dụng. Vui lòng nạp thêm tại platform.openai.com.",
-      "anthropicKeyInvalid": "Anthropic API key của bạn không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra key trong Cài đặt.",
-      "anthropicRateLimit": "Đã đạt giới hạn tốc độ Anthropic. Vui lòng đợi một chút và thử lại.",
-      "anthropicInsufficientQuota": "Tài khoản Anthropic của bạn không đủ tín dụng. Vui lòng nạp thêm tại console.anthropic.com.",
-      "elevenlabsKeyInvalid": "ElevenLabs API key của bạn không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra key trong Cài đặt.",
-      "elevenlabsRateLimit": "Đã đạt giới hạn tốc độ ElevenLabs. Vui lòng đợi một chút và thử lại.",
-      "elevenlabsInsufficientQuota": "Tài khoản ElevenLabs của bạn không đủ tín dụng. Vui lòng nạp thêm tại elevenlabs.io.",
+      "openaiKeyInvalid": "OpenAI API key của bạn không hợp lệ hoặc đã hết hạn. Hãy kiểm tra key trong Cài đặt.",
+      "openaiRateLimit": "Đã đạt giới hạn tốc độ OpenAI. Hãy đợi một chút rồi thử lại.",
+      "openaiInsufficientQuota": "Tài khoản OpenAI của bạn không đủ tín dụng. Hãy nạp thêm tại platform.openai.com.",
+      "anthropicKeyInvalid": "Anthropic API key của bạn không hợp lệ hoặc đã hết hạn. Hãy kiểm tra key trong Cài đặt.",
+      "anthropicRateLimit": "Đã đạt giới hạn tốc độ Anthropic. Hãy đợi một chút rồi thử lại.",
+      "anthropicInsufficientQuota": "Tài khoản Anthropic của bạn không đủ tín dụng. Hãy nạp thêm tại console.anthropic.com.",
+      "elevenlabsKeyInvalid": "ElevenLabs API key của bạn không hợp lệ hoặc đã hết hạn. Hãy kiểm tra key trong Cài đặt.",
+      "elevenlabsRateLimit": "Đã đạt giới hạn tốc độ ElevenLabs. Hãy đợi một chút rồi thử lại.",
+      "elevenlabsInsufficientQuota": "Tài khoản ElevenLabs của bạn không đủ tín dụng. Hãy nạp thêm tại elevenlabs.io.",
       "checkSettings": "Kiểm tra Cài đặt",
-      "genericApiError": "Yêu cầu API thất bại. Vui lòng kiểm tra API key và trạng thái tài khoản của bạn."
+      "genericApiError": "Yêu cầu API thất bại. Hãy kiểm tra API key và trạng thái tài khoản của bạn."
     },
     "transcription": {
-      "providerUnavailable": "Chép lời (ElevenLabs Scribe) tạm thời không khả dụng hoặc không thể kết nối sau nhiều lần thử. Vui lòng thử lại sau vài phút.",
+      "providerUnavailable": "Chép lời (ElevenLabs Scribe) tạm thời không khả dụng hoặc không thể kết nối sau nhiều lần thử. Hãy thử lại sau vài phút.",
       "fileTooLarge": "Âm thanh này quá dài để chép lời trong một lần (hơn khoảng {{hours}} giờ). Hãy chia video thành các phần ngắn hơn và chép lời từng phần.",
-      "elevenLabsKeyRequired": "Chép lời dùng ElevenLabs Scribe và cần API key ElevenLabs. Hãy thêm key trong Cài đặt, hoặc tắt chế độ API key để chép lời bằng tín dụng Stage5. API key OpenAI hoặc Anthropic của bạn vẫn được dùng để dịch."
+      "elevenLabsKeyRequired": "Chép lời dùng ElevenLabs Scribe và cần API key ElevenLabs. Hãy thêm key trong Cài đặt, hoặc tắt chế độ API key để chép lời bằng số phút của bạn. API key OpenAI hoặc Anthropic của bạn vẫn được dùng để dịch."
     },
     "credits": {
-      "transcription": "Không đủ tín dụng để chép lời.",
-      "translation": "Không đủ tín dụng để dịch.",
-      "dubbing": "Không đủ tín dụng để lồng tiếng.",
-      "summary": "Không đủ tín dụng để tạo bản tóm tắt.",
-      "videoSearch": "Không đủ tín dụng để tìm video.",
-      "download": "Không đủ tín dụng.",
-      "export": "Không đủ tín dụng.",
-      "other": "Không đủ tín dụng."
+      "transcription": "Không đủ phút để chép lời video này.",
+      "translation": "Không đủ phút để dịch video này.",
+      "dubbing": "Không đủ phút để lồng tiếng.",
+      "summary": "Không đủ phút để tạo bản tóm tắt.",
+      "videoSearch": "Không đủ phút để tìm video.",
+      "download": "Không đủ phút.",
+      "export": "Không đủ phút.",
+      "other": "Không đủ phút."
     },
     "failed": {
       "transcription": "Quá trình chép lời bị dừng do sự cố ngoài dự kiến. Những dòng đã chép lời vẫn được giữ lại.",
@@ -174,7 +175,8 @@
       "summary": "Việc tạo bản tóm tắt bị dừng do sự cố ngoài dự kiến.",
       "videoSearch": "Việc tìm video bị dừng do sự cố ngoài dự kiến.",
       "export": "Việc tạo video bị dừng do sự cố ngoài dự kiến.",
-      "other": "Đã xảy ra lỗi. Vui lòng thử lại."
+      "other": "Đã xảy ra lỗi. Hãy thử lại.",
+      "download": "Không tải được video. Hãy thử lại hoặc dùng liên kết khác."
     },
     "server": {
       "transcription": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
@@ -183,7 +185,8 @@
       "summary": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
       "videoSearch": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
       "export": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
-      "other": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút."
+      "other": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
+      "download": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút."
     },
     "download": {
       "invalid_url": "Đây có vẻ không phải liên kết video. Hãy dán liên kết đầy đủ.",
@@ -209,7 +212,9 @@
     "network": "Không kết nối được tới máy chủ. Hãy kiểm tra kết nối internet rồi thử lại.",
     "busy": "Dịch vụ đang bận. Hãy đợi một phút rồi thử lại.",
     "diskFull": "Ổ đĩa đã đầy. Hãy giải phóng bớt dung lượng rồi thử lại.",
-    "cancelDubbingFailedPlain": "Không dừng được lồng tiếng. Hãy thử lại."
+    "cancelDubbingFailedPlain": "Không dừng được lồng tiếng. Hãy thử lại.",
+    "cancelTranslationFailedPlain": "Không dừng được việc dịch. Hãy thử lại.",
+    "cancelSummaryFailedPlain": "Không dừng được việc tóm tắt. Hãy thử lại."
   },
   "input": {
     "connect": "Kết nối",
@@ -245,7 +250,7 @@
     "srtLoaded": "Chép lời hoàn tất",
     "srtFileLoaded": "Đã tải SRT",
     "featuresUnlockAfterTranscription": "Chép lời, dịch hoặc tạo điểm nổi bật từ video này.",
-    "preSubtitleActionsHint": "Chép lời, dịch hoặc tạo các đoạn nổi bật từ video này.",
+    "preSubtitleActionsHint": "Chép lời, dịch hoặc tìm điểm nổi bật từ video này.",
     "saveDubbedVideo": "Lưu video lồng tiếng",
     "downloadFinishedSwitchTitle": "Xem video đã tải xuống?",
     "downloadFinishedSwitchPrompt": "Bản tải xuống của bạn đã sẵn sàng. Xem ngay hoặc giữ video hiện tại và mở lại sau từ lịch sử.",
@@ -261,7 +266,7 @@
       "introCopy": "Bắt đầu với chủ đề, tâm trạng, nhà sáng tạo hoặc đối tượng xem. Chỉ thêm quốc gia hoặc khoảng thời gian khi thật sự cần.",
       "starterQuestion": "Bạn đang tìm loại video nào?",
       "defaultFollowUp": "Cho tôi biết thêm và tôi sẽ cải thiện kết quả tìm kiếm.",
-      "errorMessage": "Đã xảy ra lỗi. Vui lòng thử lại.",
+      "errorMessage": "Đã xảy ra lỗi. Hãy thử lại.",
       "composerTitle": "Nói AI cần tìm gì",
       "composerHint": "Bất kỳ ngôn ngữ nào",
       "composerMeta": "Nhấn Enter để tìm",
@@ -428,7 +433,8 @@
       "freeSearchRunning": "Đang tìm trên YouTube…",
       "freeSearchResults": "Đây là kết quả YouTube cho “{{query}}”. Lượt tìm này miễn phí. Hãy cho tôi biết thêm bạn muốn gì, tôi sẽ dùng AI để tìm sát hơn.",
       "freeSearchEmpty": "YouTube không tìm thấy gì cho “{{query}}”. Hãy mô tả điều bạn muốn, tôi sẽ tìm bằng AI.",
-      "openOriginalPage": "Mở trang gốc"
+      "openOriginalPage": "Mở trang gốc",
+      "modelPill": "AI tìm kiếm: {{model}}"
     },
     "downloadAndTranslate": "Tải xuống & dịch",
     "downloadAndTranscribe": "Tải xuống & chép lời",
@@ -459,7 +465,8 @@
     },
     "dropWhileDownloading": "Đang có video được tải xuống. Hãy thả lại tệp khi tải xong.",
     "dropWhileBusy": "Translator đang xử lý video này. Hãy thả lại tệp khi xử lý xong.",
-    "dropNotSupported": "Hãy thả tệp video, tệp âm thanh hoặc tệp phụ đề .srt."
+    "dropNotSupported": "Hãy thả tệp video, tệp âm thanh hoặc tệp phụ đề .srt.",
+    "batchDownloadRunning": "Translator đang tải nhiều video cùng lúc. Hãy đợi tải xong, hoặc hủy lượt tải."
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
@@ -496,7 +503,19 @@
     "dubNotEnoughCredits": "Không đủ tín dụng để lồng tiếng.",
     "addCreditsToDub": "Nạp tín dụng để lồng tiếng",
     "noSubtitlesToDub": "Hãy tạo hoặc mở phụ đề cho video này trước, rồi lồng tiếng.",
-    "noSubtitlesToTranslate": "Hãy mở hoặc tạo phụ đề trước, rồi dịch."
+    "noSubtitlesToTranslate": "Hãy mở hoặc tạo phụ đề trước, rồi dịch.",
+    "dubVoiceHelp": "Giọng đọc cho bản lồng tiếng này. Lựa chọn sẽ được giữ cho những lần lồng tiếng sau.",
+    "addMinutesToDub": "Thêm phút để lồng tiếng",
+    "dubNotEnoughMinutes": "Không đủ phút cho bản lồng tiếng này.",
+    "addMinutesToTranslate": "Thêm phút để dịch",
+    "transcriptEmptyForTranslation": "Bản chép lời không có dòng nào để dịch.",
+    "dubCostHintMinutes": "Giọng ElevenLabs: ~{{time}} trong số phút của bạn cho mỗi phút lời nói. Ước tính này hiện trước khi bắt đầu lồng tiếng.",
+    "fileError": {
+      "openPermission": "Translator không có quyền đọc tệp đó. Hãy kiểm tra quyền truy cập của tệp, hoặc chép tệp sang thư mục khác rồi thử lại.",
+      "openMissing": "Tệp phụ đề đó không còn ở đây nữa. Có thể tệp đã bị di chuyển hoặc xóa.",
+      "openFailed": "Translator không mở được tệp phụ đề đó. Hãy chắc chắn đó là tệp .srt rồi thử lại.",
+      "saveFailed": "Translator không lưu được phụ đề. Hãy thử lại, hoặc chọn “Lưu phụ đề thành...” để chọn thư mục khác."
+    }
   },
   "summary": {
     "title": "Điểm nổi bật",
@@ -513,17 +532,17 @@
     "estimateByo": "Khóa BYO",
     "highEffortBadge": "(chi tiết)",
     "placeholder": "Tóm tắt AI của bạn sẽ xuất hiện ở đây sau khi được tạo.",
-    "insufficientCredits": "Không đủ tín dụng để tạo điểm nổi bật.",
+    "insufficientCredits": "Không đủ phút để tạo điểm nổi bật.",
     "error": "Không thể tạo điểm nổi bật. {{message}}",
     "cancel": "Hủy",
     "copy": "Sao chép tóm tắt",
     "copied": "Đã sao chép!",
     "copyError": "Không thể sao chép tóm tắt vào clipboard.",
     "noHighlights": "Chưa có điểm nổi bật. Hãy tạo để tìm những khoảnh khắc hay nhất.",
-    "noVideoForHighlights": "Mở video nguồn để cắt các clip highlight.",
+    "noVideoForHighlights": "Mở video nguồn để cắt các clip nổi bật.",
     "summaryRequiredForHighlights": "Hãy tạo điểm nổi bật để phân tích bản chép lời trước.",
-    "highlight": "Highlight",
-    "cutHighlightClip": "Cắt đoạn nổi bật này",
+    "highlight": "Điểm nổi bật",
+    "cutHighlightClip": "Cắt điểm nổi bật này",
     "cuttingHighlightClip": "Đang cắt…",
     "highlightPlaceholder": "Clip chưa được cắt.",
     "clipFormat": "Định dạng clip:",
@@ -537,9 +556,9 @@
     "downloadingHighlight": "Đang lưu…",
     "highlightSaved": "Đã lưu!",
     "highlightSaveError": "Lưu thất bại",
-    "downloadHighlightFailed": "Không thể lưu clip highlight: {{message}}",
+    "downloadHighlightFailed": "Không lưu được clip nổi bật: {{message}}",
     "highlightsSelectionFailed": "Chọn đoạn nổi bật thất bại: {{message}}",
-    "saveHighlightDialogTitle": "Lưu clip highlight",
+    "saveHighlightDialogTitle": "Lưu clip nổi bật",
     "noSections": "Chưa có ghi chú phần.",
     "sectionHeading": "Phần {{index}}",
     "highlightsInProgress": "Đang chuẩn bị các clip highlight…",
@@ -547,8 +566,8 @@
       "preparing": "Đang phân tích bản chép lời…",
       "chunk": "Đang viết tóm tắt {{current}}/{{total}}",
       "selectingHighlights": "Đang chọn điểm nổi bật…",
-      "cuttingHighlight": "Đang cắt highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Đang cắt các clip highlight…",
+      "cuttingHighlight": "Đang cắt điểm nổi bật {{current}}/{{total}}…",
+      "cuttingHighlights": "Đang cắt các clip nổi bật…",
       "synthesizing": "Đang hoàn tất…",
       "ready": "Điểm nổi bật đã sẵn sàng",
       "error": "Tạo điểm nổi bật thất bại",
@@ -562,11 +581,11 @@
     "reorderHint": "Kéo để sắp xếp lại:",
     "cutCombined": "Cắt kết hợp",
     "cuttingCombined": "Đang cắt...",
-    "combinedHighlightReady": "Highlight kết hợp đã sẵn sàng",
+    "combinedHighlightReady": "Clip ghép đã sẵn sàng",
     "downloadCombined": "Tải clip kết hợp",
-    "saveCombinedDialogTitle": "Lưu clip highlight kết hợp",
-    "combinedCutFailed": "Không thể cắt các highlight kết hợp: {{message}}",
-    "highlightsInsufficientCredits": "Đã tạo bản tóm tắt, nhưng việc trích xuất điểm nổi bật dừng lại vì hết tín dụng.",
+    "saveCombinedDialogTitle": "Lưu clip nổi bật đã ghép",
+    "combinedCutFailed": "Không cắt gộp được các điểm nổi bật: {{message}}",
+    "highlightsInsufficientCredits": "Đã tạo bản tóm tắt, nhưng việc tìm điểm nổi bật dừng lại vì hết phút.",
     "highlightsPartialWarning": "Chỉ trích xuất được một phần điểm nổi bật. Các điểm nổi bật này có thể chưa đầy đủ. Hãy tạo lại để làm mới.",
     "highlightsPartialWithReason": "Đã tạo bản tóm tắt, nhưng chỉ trích xuất được một phần điểm nổi bật: {{message}}",
     "estimateOwnKey": "Dùng API key của bạn",
@@ -590,7 +609,17 @@
       "untranslated": "Một số dòng trong clip này chưa được dịch. Hãy dịch các dòng đó, hoặc chuyển chế độ hiển thị phụ đề sang bản gốc.",
       "subtitlesNotSaved": "Đã cắt xong clip nhưng không lưu được phụ đề của clip.",
       "generic": "Không cắt được clip này từ video. Hãy thử lại."
-    }
+    },
+    "addMinutesToSummarize": "Thêm phút để tóm tắt",
+    "addMinutesForHighlights": "Thêm phút để tìm điểm nổi bật",
+    "qualityLabel": "Chất lượng",
+    "qualityStandard": "Tiêu chuẩn",
+    "qualityDeep": "Chuyên sâu (tốn thêm phút)",
+    "subtitlesChangedSinceAnalysis": "Phụ đề đã thay đổi sau khi tạo kết quả này. Những điểm nổi bật có dòng bị sửa đã được đánh dấu; phần còn lại vẫn khớp.",
+    "highlightCuesChanged": "Bạn đã sửa các dòng trong điểm nổi bật này sau khi nó được tìm ra. Hãy xem lại xem còn phù hợp không.",
+    "clipCaptionsChangedAny": "Phụ đề đã thay đổi kể từ khi cắt clip này (nội dung, kiểu hoặc cỡ chữ).",
+    "notEnoughForRun": "Không đủ phút để tạo bản tóm tắt và điểm nổi bật.",
+    "clipsUseOriginalAudio": "Clip dùng âm thanh gốc, không dùng bản lồng tiếng."
   },
   "panel": {
     "new": "mới",
@@ -625,15 +654,15 @@
       "originalLabel": "Gốc",
       "translationLabel": "Bản dịch",
       "mergeNeedsVideoCopy": "Gắn video nguồn trước khi bắt đầu xuất chèn cứng.",
-      "automaticCaptionsCopy": "Tải video bị chặn (HTTP 403). Đây là phụ đề tự động của YouTube, không phải bản chép lời mới. Bạn có thể chỉnh sửa, dịch và xuất SRT ngay. Gắn media để xem trước hoặc ghi phụ đề vào video.",
-      "automaticCaptionsCopyWithMedia": "Tải video từ URL bị chặn (HTTP 403). Đây là phụ đề tự động của YouTube, không phải bản chép lời mới. Media đã gắn có thể dùng để xem trước và ghi phụ đề.",
+      "automaticCaptionsCopy": "Tải video bị chặn (HTTP 403). Đây là phụ đề tự động của YouTube, không phải bản chép lời mới. Bạn có thể chỉnh sửa, dịch và xuất SRT ngay. Gắn media để xem trước hoặc chèn phụ đề vào video.",
+      "automaticCaptionsCopyWithMedia": "Tải video từ URL bị chặn (HTTP 403). Đây là phụ đề tự động của YouTube, không phải bản chép lời mới. Media đã gắn có thể dùng để xem trước và chèn phụ đề vào video.",
       "automaticCaptionsPill": "Phụ đề tự động YouTube",
       "automaticCaptionsTitle": "Phụ đề tự động YouTube",
       "highlightEditingLocked": "Đang tạo điểm nổi bật, đã khóa chỉnh sửa"
     },
     "item": {
-      "seek": "Tìm kiếm",
-      "seekTitle": "Tìm kiếm video đến thời điểm bắt đầu",
+      "seek": "Tua đến",
+      "seekTitle": "Tua video đến thời điểm bắt đầu",
       "playSnippet": "Phát đoạn",
       "pauseSnippet": "Dừng đoạn",
       "insertTitle": "Chèn khối phụ đề mới sau khối này",
@@ -646,13 +675,17 @@
       "confirmRemove": "Bạn có chắc chắn muốn xóa khối phụ đề này không? Hành động này không thể hoàn tác.",
       "transcribeThisLine": "Chép lời dòng này",
       "timeEndBeforeStart": "Thời gian kết thúc phải sau thời gian bắt đầu. Dòng này giữ nguyên thời gian cũ.",
-      "timeUnreadable": "Hãy nhập thời gian dạng 00:01:23,450 hoặc 1:23.45. Dòng này giữ nguyên thời gian cũ."
+      "timeUnreadable": "Hãy nhập thời gian dạng 00:01:23,450 hoặc 1:23.45. Dòng này giữ nguyên thời gian cũ.",
+      "startTimeAria": "Thời điểm bắt đầu của dòng {{index}}",
+      "endTimeAria": "Thời điểm kết thúc của dòng {{index}}",
+      "splitTitle": "Tách dòng này tại vị trí con trỏ",
+      "mergeTitle": "Gộp với dòng tiếp theo"
     },
     "header": {
       "save": "Lưu phụ đề",
       "saveAs": "Lưu phụ đề thành...",
       "saveTooltip": "Lưu thay đổi vào tệp gốc",
-      "saveAsTooltip": "Lưu như trước để bật lưu trực tiếp"
+      "saveAsTooltip": "Hãy dùng “Lưu phụ đề thành...” trước để bật lưu trực tiếp"
     },
     "mergeControls": {
       "fontSizeLabel": "Cỡ chữ:",
@@ -666,7 +699,10 @@
       "replaced": "Đã thay thế ở tất cả các dòng.",
       "shifted": "Đã dời thời gian.",
       "improved": "Đã chép lời lại dòng này.",
-      "action": "Hoàn tác"
+      "action": "Hoàn tác",
+      "split": "Đã tách dòng làm hai.",
+      "merged": "Đã gộp dòng.",
+      "shortcut": "Hoàn tác ({{keys}})"
     }
   },
   "settings": {
@@ -682,7 +718,9 @@
       "pendingOff": "Đã tắt trên thiết bị này. Hãy kết nối để xác nhận lựa chọn trên máy chủ.",
       "retry": "Thử lại",
       "error": "Chưa xác nhận được lựa chọn. Hãy thử lại.",
-      "anonymousCounts": "Luôn bật: số đếm ẩn danh theo ngày cho các bước trong ứng dụng (như mở ứng dụng hoặc tải xong), chỉ gồm bước, ngày, nền tảng và phiên bản. Không có ID, nội dung hay cài đặt."
+      "anonymousCounts": "Luôn bật: số đếm ẩn danh theo ngày cho các bước trong ứng dụng (như mở ứng dụng hoặc tải xong), chỉ gồm bước, ngày, nền tảng và phiên bản. Không có ID, nội dung hay cài đặt.",
+      "pendingOffPlain": "Đã tắt. Lần tới khi có mạng, chúng tôi sẽ xác nhận với máy chủ.",
+      "pendingOnPlain": "Đã bật. Báo cáo sẽ chờ đến khi bạn có mạng trở lại."
     },
     "title": "Cài đặt",
     "aiProvider": {
@@ -692,10 +730,10 @@
       "toggleLabel": "Dùng API key của tôi",
       "activeKeys": "Khóa sẵn sàng: {{count}}",
       "noKeys": "Chưa cấu hình khóa nào",
-      "usingApiKeys": "Tắt tín dụng Stage5",
-      "usingCredits": "Đang dùng tín dụng Stage5",
+      "usingApiKeys": "Không dùng số phút Stage5",
+      "usingCredits": "Đang dùng số phút Stage5",
       "toggleOn": "Đang dùng API key của bạn.",
-      "toggleOff": "Đang dùng tín dụng Stage5.",
+      "toggleOff": "Đang dùng số phút Stage5.",
       "toggleError": "Không thể cập nhật tùy chọn.",
       "toggleAria": "Dùng API key của tôi",
       "requirementTranslation": "Cần key OpenAI hoặc Anthropic để dịch"
@@ -784,11 +822,13 @@
       "yourBalance": "Số dư của bạn",
       "canClone": "Bạn có thể sao chép",
       "upToMinutes": "tối đa {{minutes}} phút",
-      "loading": "Đang tải..."
+      "loading": "Đang tải...",
+      "previewWithMinutes": "Nghe thử ({{cost}})",
+      "previewFailed": "Không phát được bản nghe thử giọng. Hãy thử lại."
     },
     "byoOpenAi": {
       "title": "Sử dụng API Key của bạn",
-      "description": "Mở khóa nâng cấp một lần để sử dụng API key của riêng bạn. Sau khi mở khóa, mọi chép lời, dịch, lồng tiếng hoặc tóm tắt sẽ chạy trực tiếp trên tài khoản của bạn thay vì tiêu tốn tín dụng Stage5.",
+      "description": "Mở khóa nâng cấp một lần để dùng API key của riêng bạn. Sau khi mở khóa, mọi việc chép lời, dịch, lồng tiếng hoặc tóm tắt sẽ chạy thẳng trên tài khoản của bạn thay vì trừ vào số phút Stage5.",
       "unlocking": "Đang mở thanh toán…",
       "unlockCta": "Mở khóa với $10",
       "unlockHint": "Sau khi mở khóa, thêm API key của bạn vào đây bất cứ lúc nào để bật thanh toán trực tiếp trên tài khoản của bạn.",
@@ -815,16 +855,16 @@
       "option1Title": "Tùy chọn 1: OpenAI",
       "option2Title": "Tùy chọn 2: Anthropic + ElevenLabs",
       "economicsTitle": "Tại sao đáng giá",
-      "economicsBody": "Tín dụng Stage5 tối ưu hóa sự tiện lợi (không cần cài đặt). BYO thanh toán trực tiếp cho nhà cung cấp—thường rẻ hơn ~30–50% tùy thuộc vào gói của bạn.",
+      "economicsBody": "Số phút Stage5 thì tiện (không cần cài đặt). Dùng API key riêng là trả thẳng cho nhà cung cấp — thường rẻ hơn ~30–50% tùy gói bạn mua.",
       "encryptionUnavailable": "Hệ thống này không có lưu trữ bảo mật. Không thể lưu API key.",
       "checkoutOpen": "Trang thanh toán đang mở trong trình duyệt…",
-      "checkoutOpenHint": "Hoàn tất thanh toán trong trình duyệt. Chúng tôi sẽ tự động mở khóa BYO khi thanh toán được xác nhận.",
+      "checkoutOpenHint": "Hoàn tất thanh toán trong trình duyệt. Tính năng dùng API key riêng sẽ tự mở khóa khi thanh toán được xác nhận.",
       "entitlementsLoadFailed": "Không kiểm tra được trạng thái mở khóa. Hãy kiểm tra kết nối rồi thử lại.",
       "unlockFailed": "Không thể bắt đầu thanh toán. Hãy kiểm tra kết nối rồi thử lại."
     },
     "byoPreferences": {
       "title": "Tùy chọn Nhà cung cấp",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Số phút Stage5",
       "pricingHint": "Chi phí ước tính cho 1 giờ video",
       "pricingHintHeuristic": "Chi phí ước tính theo cách tính hiện tại của ứng dụng",
       "transcription": "Chép lời",
@@ -846,17 +886,17 @@
       "summary": "Tóm tắt",
       "dubbing": "Lồng tiếng",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Hiện chưa có mô hình đề xuất video BYO nào khả dụng. Hãy bật OpenAI hoặc Anthropic BYO để dùng tính năng này.",
-      "videoSuggestionModelRequiresOpenAi": "Cần mở khóa OpenAI BYO, thêm key và bật công tắc.",
-      "videoSuggestionModelRequiresAnthropic": "Cần mở khóa Anthropic BYO, thêm key và bật công tắc.",
-      "summaryRequiresOpenAi": "Yêu cầu quyền truy cập OpenAI BYO và khóa API.",
-      "summaryRequiresAnthropic": "Yêu cầu quyền truy cập Anthropic BYO và khóa API.",
+      "videoSuggestionModelUnavailable": "Hiện chưa có mô hình gợi ý video nào chạy bằng API key riêng. Hãy bật API key OpenAI hoặc Anthropic của bạn để dùng tính năng này.",
+      "videoSuggestionModelRequiresOpenAi": "Cần mở khóa API key, thêm key OpenAI và bật công tắc.",
+      "videoSuggestionModelRequiresAnthropic": "Cần mở khóa API key, thêm key Anthropic và bật công tắc.",
+      "summaryRequiresOpenAi": "Cần mở khóa API key và key OpenAI.",
+      "summaryRequiresAnthropic": "Cần mở khóa API key và key Anthropic.",
       "translationReview": "Dịch (Rà soát)",
-      "transcriptionRequiresElevenLabs": "Chép lời chỉ dùng ElevenLabs Scribe. Hãy thêm API key ElevenLabs để chép lời bằng key của bạn. Nếu không có, chép lời sẽ dùng tín dụng Stage5, vốn không được dùng khi API key của bạn đang bật. API key OpenAI của bạn vẫn được dùng để dịch.",
-      "dubbingRequiresElevenLabs": "Lồng tiếng chỉ dùng ElevenLabs. Thêm API key ElevenLabs để lồng tiếng bằng key của bạn. Nếu không có, lồng tiếng sẽ dùng tín dụng Stage5, vốn không được dùng khi API key của bạn đang bật.",
+      "transcriptionRequiresElevenLabs": "Chép lời chỉ dùng ElevenLabs Scribe. Hãy thêm API key ElevenLabs để chép lời bằng key của bạn. Nếu không có, chép lời sẽ dùng số phút Stage5 — số phút này không bị trừ khi API key của bạn đang bật. API key OpenAI của bạn vẫn được dùng để dịch.",
+      "dubbingRequiresElevenLabs": "Lồng tiếng chỉ dùng ElevenLabs. Hãy thêm API key ElevenLabs để lồng tiếng bằng key của bạn. Nếu không có, lồng tiếng sẽ dùng số phút Stage5 — số phút này không bị trừ khi API key của bạn đang bật.",
       "runtimeFallback": "Phương án dự phòng khi chạy ở chế độ API key",
-      "videoSuggestionLegacyFollowDraft": "Đã giữ thiết lập BYO cũ: theo mô hình dịch nháp của bạn cho đến khi bạn chọn một mô hình cụ thể.",
-      "videoSuggestionLegacyFollowReview": "Đã giữ thiết lập BYO cũ: theo mô hình dịch rà soát của bạn cho đến khi bạn chọn một mô hình cụ thể."
+      "videoSuggestionLegacyFollowDraft": "Đã giữ thiết lập API key cũ: theo mô hình dịch nháp của bạn cho đến khi bạn chọn một mô hình cụ thể.",
+      "videoSuggestionLegacyFollowReview": "Đã giữ thiết lập API key cũ: theo mô hình rà soát bản dịch của bạn cho đến khi bạn chọn một mô hình cụ thể."
     },
     "apiKeyGuide": {
       "title": "Cách lấy API Key",
@@ -901,7 +941,7 @@
         "step4": "Thêm phương thức thanh toán trong cài đặt Đăng ký (bắt buộc để sử dụng API vượt mức miễn phí)",
         "step5": "Sao chép API key của bạn và dán vào Stage5",
         "note": "Mẹo: ElevenLabs có gói miễn phí với mức sử dụng giới hạn. Để sử dụng nhiều hơn, nâng cấp lên gói trả phí trong cài đặt tài khoản.",
-        "audioDescription": "ElevenLabs xử lý toàn bộ chép lời (Scribe) và lồng tiếng. Nếu không có key ElevenLabs riêng, cả hai sẽ dùng tín dụng Stage5, vốn không được dùng khi API key của bạn đang bật."
+        "audioDescription": "ElevenLabs xử lý toàn bộ việc chép lời (Scribe) và lồng tiếng. Nếu không có key ElevenLabs riêng, cả hai sẽ dùng số phút Stage5 — số phút này không bị trừ khi API key của bạn đang bật."
       }
     },
     "byoAnthropic": {
@@ -937,7 +977,9 @@
       "cleared": "Đã xóa API key.",
       "invalid": "Xác thực API key thất bại.",
       "howToGet": "Cách lấy key này",
-      "missing": "Hãy dán API key trước."
+      "missing": "Hãy dán API key trước.",
+      "savedEnding": "Đã lưu key có đuôi {{last4}}",
+      "savedHidden": "Đã lưu key (ẩn)"
     },
     "byoStack": {
       "title": "AI Stack của bạn"
@@ -979,7 +1021,9 @@
         "failedWrite": "Không thể kết nối {{app}}: Translator không ghi được tệp cài đặt của ứng dụng này.",
         "failedLauncher": "Chỉ có thể kết nối {{app}} từ ứng dụng Translator đã cài đặt.",
         "failedCli": "Không thể tự động kết nối {{app}}. Hãy chạy lệnh này trong Terminal:",
-        "failedGeneric": "Không thể kết nối {{app}}. Hãy thử lại."
+        "failedGeneric": "Không thể kết nối {{app}}. Hãy thử lại.",
+        "appNotFound": "Máy tính này chưa cài {{app}}. Hãy cài đặt, mở ứng dụng một lần rồi kết nối lại.",
+        "download": "Tải {{app}}"
       },
       "status": {
         "enabled": "Đã bật",
@@ -1034,14 +1078,23 @@
       "receivedNoCredits": "Mã đã được áp dụng.",
       "receivedByo": "Mở khóa API key đã được kích hoạt trên máy tính này.",
       "errors": {
-        "nothing_to_transfer": "Chưa có gì để chuyển: máy tính này chưa có tín dụng đã mua hay mở khóa API key. Để chuyển tín dụng từ máy tính khác sang đây, hãy chọn “Nhận tín dụng”.",
+        "nothing_to_transfer": "Chưa có gì để chuyển: máy tính này chưa có phút đã mua hay mở khóa API key. Để chuyển phút từ máy tính khác sang đây, hãy chọn “Nhận phút”.",
         "too_many_codes": "Bạn đã tạo quá nhiều mã chuyển trong giờ này. Hãy thử lại sau một lúc.",
         "jobs_running": "Đang có tác vụ chép lời hoặc dịch chạy. Hãy thử lại khi tác vụ xong.",
         "invalid_code": "Mã này sai, đã được dùng hoặc đã hết hạn. Hãy tạo mã mới trên máy tính kia.",
         "same_device": "Hãy nhập mã trên máy tính kia, không phải máy đã tạo ra mã.",
         "network_error": "Không kết nối được tới máy chủ Stage5. Hãy kiểm tra kết nối rồi thử lại.",
-        "transfer_failed": "Không chuyển được tín dụng. Hãy kiểm tra kết nối rồi thử lại."
-      }
+        "transfer_failed": "Không chuyển được số phút. Hãy kiểm tra kết nối rồi thử lại.",
+        "nothing_to_transfer_minutes": "Chưa có gì để chuyển: máy tính này chưa có phút đã mua hay mở khóa API key. Để chuyển phút từ máy tính khác sang đây, hãy chọn “Nhận phút”.",
+        "transfer_failed_minutes": "Không chuyển được số phút. Hãy kiểm tra kết nối rồi thử lại."
+      },
+      "titleMinutes": "Chuyển phút giữa các máy tính",
+      "descriptionMinutes": "Số phút đã mua và mở khóa API key có thể chuyển sang máy tính khác. Phút miễn phí sẽ ở lại máy này.",
+      "moveButtonMinutes": "Chuyển phút sang máy khác",
+      "receiveButtonMinutes": "Nhận phút",
+      "summaryMinutes": "Sẽ chuyển {{time}} video.",
+      "stepsMinutes": "Trên máy tính mới: cài Translator, mở Cài đặt, chọn “Nhận phút” rồi nhập mã này.",
+      "receivedMinutes": "Đã nhận {{time}} video."
     }
   },
   "credits": {
@@ -1067,7 +1120,12 @@
       "freeThisMonth": "{{count}} phút miễn phí tháng này",
       "freeWelcome": "{{count}} phút miễn phí",
       "minutes": "Còn {{count}} phút",
-      "title": "Số phút và gói"
+      "title": "Số phút và gói",
+      "neutral": "Số phút",
+      "welcomePending": "Phút miễn phí sắp có",
+      "freeTimeThisMonth": "{{time}} miễn phí tháng này",
+      "freeTime": "{{time}} miễn phí",
+      "offline": "Số phút · ngoại tuyến"
     },
     "yourMinutes": "Số phút của bạn",
     "balanceNone": "Đã hết phút",
@@ -1080,11 +1138,27 @@
     "moreMinutesPerDollar": "Gấp {{multiplier}} lần số phút mỗi đô la",
     "checkoutWaiting": "Hoàn tất thanh toán trên trình duyệt. Số phút sẽ tự hiện ở đây.",
     "checkoutNote": "Thanh toán một lần qua Stripe trên trình duyệt. Không cần tài khoản, không thu phí định kỳ. Số phút sẽ tự được cộng.",
-    "dubbingNote": "Dịch bằng tín dụng tốn thêm khoảng 10% mỗi phút; lồng tiếng tốn nhiều hơn.",
+    "dubbingNote": "Dịch bằng số phút của bạn tốn thêm khoảng 10% mỗi phút video; lồng tiếng tốn nhiều hơn.",
     "iCancelledCheckout": "Tôi đã hủy thanh toán",
     "checkoutStartFailed": "Không thể bắt đầu thanh toán. Hãy kiểm tra kết nối và thử lại.",
     "loadFailed": "Không tải được số dư. Hãy kiểm tra kết nối rồi thử lại.",
-    "estimateAmount": "{{credits}} tín dụng"
+    "estimateAmount": "{{credits}} tín dụng",
+    "costOfBalanceMinutes": "{{cost}} trên {{balance}} của bạn",
+    "timeLeft": "Còn {{time}}",
+    "success": {
+      "added": "Đã cộng +{{time}}",
+      "arrived": "Số phút đã được cộng",
+      "addedLong": "Đã nhận thanh toán. Đã cộng +{{time}} vào số phút của bạn.",
+      "arrivedLong": "Đã nhận thanh toán. Số phút đã được cộng."
+    },
+    "waitingForPayment": "Đang chờ thanh toán…",
+    "chooseAnotherPack": "Đổi ý? Chọn gói khác",
+    "balanceNoneYet": "Chưa có phút nào",
+    "welcomePendingNote": "Phút miễn phí của bạn đang được gửi tới. Thường thì lần tới bạn mở Translator là sẽ có.",
+    "balanceOffline": "Chưa kiểm tra được số phút lúc này",
+    "offlineNote": "Translator không kết nối được tới Stage5. Số dư sẽ hiện lại khi bạn có mạng.",
+    "microPackLabelNoTime": "Mua phút — {{price}}",
+    "microPackLabel": "Mua phút — {{price}} · ≈ {{time}} video"
   },
   "cta": {
     "generate": {
@@ -1124,7 +1198,15 @@
     "mute": "Tắt tiếng (M)",
     "unmute": "Bật tiếng (M)",
     "volume": "Âm lượng",
-    "unreadableFile": "Translator không đọc được tệp này. Tệp có thể bị hỏng hoặc ở định dạng chưa được hỗ trợ."
+    "unreadableFile": "Translator không đọc được tệp này. Tệp có thể bị hỏng hoặc ở định dạng chưa được hỗ trợ.",
+    "play": "Phát (Space)",
+    "pause": "Tạm dừng (Space)",
+    "seekBar": "Vị trí trong video",
+    "seekBarValue": "{{current}} / {{total}}",
+    "enterFullscreenShortcut": "Toàn màn hình (F)",
+    "exitFullscreenShortcut": "Thoát toàn màn hình (F)",
+    "changeVideoKeepSubtitlesSameVideo": "Giữ phụ đề hiện tại. Chỉ dùng khi đây là một bản khác của cùng video này; video khác sẽ bắt đầu mà không có phụ đề.",
+    "audioOnly": "Tệp âm thanh"
   },
   "admin": {
     "title": "Quản trị viên",
@@ -1191,12 +1273,12 @@
     "noCredits": "Không có tín dụng.",
     "rechargeLink": "Nạp thêm →",
     "creditWarning": {
-      "message": "Tải xuống, chỉnh sửa, xuất tệp và dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân đều miễn phí. Phiên âm cần tín dụng hoặc mở khóa API key trong <settingsLink>{{settingsLinkText}}</settingsLink>.",
+      "message": "Tải xuống, chỉnh sửa, xuất tệp và dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân đều miễn phí. Chép lời cần số phút hoặc mở khóa API key trong <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Cài đặt"
     },
     "validation": {
-      "pleaseSelectVideo": "Vui lòng chọn video",
-      "processingDuration": "Thời lượng video đang được xử lý. Vui lòng thử lại sau ít phút.",
+      "pleaseSelectVideo": "Hãy chọn video",
+      "processingDuration": "Đang xử lý thời lượng video. Hãy thử lại sau giây lát.",
       "icloudPlaceholder": "Tệp này được lưu trữ trên iCloud. Trong Finder, nhấp \"Tải xuống\" và đợi biểu tượng đám mây hoàn tất, sau đó thử lại.",
       "insufficientCreditsForVoiceCloning": "Không đủ tín dụng cho sao chép giọng. Video dài {{duration}} phút nhưng bạn chỉ đủ tín dụng cho {{affordable}} phút. Vui lòng nạp thêm tín dụng hoặc tắt sao chép giọng.",
       "fileTooLargeForVoiceCloning": "Tệp video quá lớn cho sao chép giọng ({{size}}MB). Tối đa cho phép là {{max}}MB. Vui lòng sử dụng video ngắn hơn hoặc tắt sao chép giọng."
@@ -1234,7 +1316,7 @@
     "calculatingCost": "Đang tính toán chi phí...",
     "notEnoughCredits": "Không đủ tín dụng",
     "welcomeCredits": {
-      "message": "Bạn có tín dụng miễn phí để dùng thử phiên âm và dịch (khoảng 20 phút video)."
+      "message": "Bạn có khoảng 20 phút miễn phí để dùng thử chép lời và dịch."
     }
   },
   "findBar": {
@@ -1269,10 +1351,10 @@
     "saveDownloadedVideoAs": "Lưu Video Đã tải Dưới dạng",
     "saveDubbedVideoAs": "Lưu video lồng tiếng thành",
     "unsavedSrtOnTranscribe": {
-      "title": "Lưu phụ đề hiện tại trước khi chuyển âm?",
-      "message": "Bạn đã có phụ đề được tải. Việc chuyển âm sẽ thay thế chúng. Bạn muốn làm gì?",
-      "saveAndTranscribe": "Lưu và chuyển âm",
-      "discardAndTranscribe": "Không lưu và chuyển âm",
+      "title": "Lưu phụ đề hiện tại trước khi chép lời?",
+      "message": "Bạn đang mở phụ đề. Chép lời sẽ thay thế phụ đề này. Bạn muốn làm gì?",
+      "saveAndTranscribe": "Lưu rồi chép lời",
+      "discardAndTranscribe": "Bỏ và chép lời",
       "cancel": "Hủy"
     },
     "downloadInProgress": "Đang Tải xuống",
@@ -1301,18 +1383,20 @@
       "openSettings": "Mở Cài đặt",
       "ok": "OK",
       "neverHadTitle": "Phiên âm cần tín dụng",
-      "neverHadMessage": "Phiên âm cần tín dụng hoặc mở khóa API key. Bạn có thể nhận một trong hai trong Cài đặt. Dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân là miễn phí.",
+      "neverHadMessage": "Chép lời cần số phút hoặc mở khóa API key. Bạn có thể có một trong hai trong Cài đặt. Dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân thì miễn phí.",
       "notEnoughTitle": "Không đủ tín dụng cho video này",
       "notEnoughTranscriptionMessage": "Chép lời video này cần khoảng {{required}} tín dụng. Bạn có {{available}}, đủ cho khoảng {{minutes}} phút. Hãy nạp thêm tín dụng rồi bắt đầu lại.",
       "notEnoughMessage": "Tác vụ này cần nhiều tín dụng hơn số dư {{available}} của bạn. Hãy nạp thêm tín dụng để tiếp tục.",
       "task": {
         "transcription": {
           "title": "Cần tín dụng để chép lời",
-          "message": "Số dư không đủ để chép lời phần này. Hãy nạp thêm tín dụng rồi bắt đầu lại. Những dòng đã chép lời vẫn được giữ lại."
+          "message": "Số dư không đủ để chép lời phần này. Hãy nạp thêm tín dụng rồi bắt đầu lại. Những dòng đã chép lời vẫn được giữ lại.",
+          "messageNothingYet": "Số phút hiện có không đủ để chép lời phần này. Hãy thêm phút rồi bắt đầu lại."
         },
         "translation": {
           "title": "Cần tín dụng để dịch",
-          "message": "Số dư không đủ để dịch phần này. Hãy nạp thêm tín dụng rồi thử lại. Những dòng đã dịch vẫn được giữ lại. Dịch bằng Claude hoặc Codex của riêng bạn qua Điều khiển tác nhân thì miễn phí."
+          "message": "Số dư không đủ để dịch phần này. Hãy nạp thêm tín dụng rồi thử lại. Những dòng đã dịch vẫn được giữ lại. Dịch bằng Claude hoặc Codex của riêng bạn qua Điều khiển tác nhân thì miễn phí.",
+          "messageNothingYet": "Số phút hiện có không đủ để dịch phần này. Hãy thêm phút rồi thử lại. Dịch bằng Claude hoặc Codex của riêng bạn qua Điều khiển tác nhân thì miễn phí."
         },
         "dubbing": {
           "title": "Cần tín dụng để lồng tiếng",
@@ -1329,11 +1413,45 @@
         "other": {
           "title": "Tác vụ này cần tín dụng"
         }
+      },
+      "minutes": {
+        "transcription": {
+          "title": "Cần thêm phút để chép lời",
+          "message": "Số phút hiện có không đủ để chép lời phần này. Hãy thêm phút rồi bắt đầu lại. Những dòng đã chép lời vẫn được giữ lại.",
+          "messageNothingYet": "Số phút hiện có không đủ để chép lời phần này. Hãy thêm phút rồi bắt đầu lại."
+        },
+        "translation": {
+          "title": "Cần thêm phút để dịch",
+          "message": "Số phút hiện có không đủ để dịch phần này. Hãy thêm phút rồi thử lại. Những dòng đã dịch vẫn được giữ lại. Dịch bằng Claude hoặc Codex của riêng bạn qua Điều khiển tác nhân thì miễn phí.",
+          "messageNothingYet": "Số phút hiện có không đủ để dịch phần này. Hãy thêm phút rồi thử lại. Dịch bằng Claude hoặc Codex của riêng bạn qua Điều khiển tác nhân thì miễn phí."
+        },
+        "dubbing": {
+          "title": "Cần thêm phút để lồng tiếng",
+          "message": "Số phút hiện có không đủ để lồng tiếng video này. Hãy thêm phút rồi thử lại."
+        },
+        "summary": {
+          "title": "Cần thêm phút để tóm tắt",
+          "message": "Số phút hiện có không đủ để tạo bản tóm tắt và điểm nổi bật. Hãy thêm phút rồi thử lại."
+        },
+        "videoSearch": {
+          "title": "Cần thêm phút để tìm video bằng AI",
+          "message": "Số phút hiện có không đủ cho một lượt tìm video bằng AI. Hãy thêm phút rồi tìm lại."
+        },
+        "other": {
+          "title": "Cần thêm phút"
+        },
+        "title": "Đã hết phút",
+        "neverHadMessage": "Chép lời cần số phút hoặc mở khóa API key. Bạn có thể có một trong hai trong Cài đặt. Dịch bằng Claude hoặc Codex của riêng bạn qua Điều khiển tác nhân thì miễn phí.",
+        "message": "Bạn đã dùng hết số phút. Hãy thêm phút trong Cài đặt rồi tiếp tục từ chỗ đã dừng.",
+        "notEnoughTitle": "Không đủ phút cho video này",
+        "notEnoughTranscriptionMessage": "Chép lời video này cần {{required}}, mà bạn chỉ còn {{available}}. Hãy thêm phút rồi bắt đầu lại.",
+        "notEnoughMessage": "Việc này cần nhiều hơn {{available}} bạn đang còn. Hãy thêm phút để tiếp tục."
       }
     },
     "dubCostConfirm": {
       "title": "Bắt đầu lồng tiếng?",
-      "message": "Lần lồng tiếng này dùng khoảng {{cost}} trên {{balance}} tín dụng của bạn. Tạo giọng nói tốn hơn nhiều so với dịch."
+      "message": "Lần lồng tiếng này dùng khoảng {{cost}} trên {{balance}} tín dụng của bạn. Tạo giọng nói tốn hơn nhiều so với dịch.",
+      "messageMinutes": "Bản lồng tiếng này dùng {{cost}}. Tạo giọng đọc tốn hơn nhiều so với dịch."
     },
     "unsavedSrtOnCaptionRecovery": {
       "discardAndOpen": "Bỏ và mở phụ đề",
@@ -1377,7 +1495,8 @@
       "quitAnyway": "Vẫn thoát",
       "closeAnyway": "Vẫn đóng",
       "saveFailed": "Không lưu được phụ đề trong {{title}} nên chưa có gì bị đóng. Hãy lưu từ trình chỉnh sửa rồi thử lại.",
-      "ok": "OK"
+      "ok": "OK",
+      "unsavedOnlyDetail": "Lưu chỉnh sửa phụ đề trước?"
     },
     "exportSaveDialogTitle": "Lưu video thành",
     "exportVideoFilterName": "Video MP4",
@@ -1391,7 +1510,22 @@
     "exportSameAsSource": "Làm vậy sẽ ghi đè video gốc. Hãy chọn tên khác.",
     "keepDubbing": "Tiếp tục lồng tiếng",
     "stopDubbing": "Dừng lồng tiếng",
-    "cancelDubbingBody": "Phần âm thanh lồng tiếng đã tạo sẽ bị bỏ."
+    "cancelDubbingBody": "Phần âm thanh lồng tiếng đã tạo sẽ bị bỏ.",
+    "cancelTranslationTitle": "Dừng dịch?",
+    "keepTranslating": "Tiếp tục dịch",
+    "stopTranslating": "Dừng dịch",
+    "fatal": {
+      "startTitle": "Translator không khởi động được",
+      "startBody": "Đã xảy ra lỗi khi khởi động. Chi tiết: {{message}}",
+      "loadBody": "Không tải được cửa sổ ứng dụng. Chi tiết: {{message}}",
+      "crashTitle": "Translator cần đóng lại",
+      "crashBody": "Đã xảy ra lỗi ngoài dự kiến nên Translator sẽ đóng ngay bây giờ. Chi tiết: {{message}}",
+      "backgroundCrashBody": "Đã xảy ra lỗi ngoài dự kiến khi chạy nền nên Translator sẽ đóng ngay bây giờ."
+    },
+    "cancelSummaryTitle": "Dừng tóm tắt?",
+    "keepSummarizing": "Tiếp tục",
+    "stopSummarizing": "Dừng",
+    "cancelSummaryBody": "Bản tóm tắt và điểm nổi bật đã tạo đến giờ sẽ không được giữ lại."
   },
   "progress": {
     "preparingVideoExport": "Đang chuẩn bị xuất video…",
@@ -1405,9 +1539,9 @@
     "transcribingOf": "Đang chép lời {{done}}/{{total}}",
     "error": "Lỗi",
     "transcribedChunks": "Đã chép lời {{done}}/{{total}} đoạn",
-    "transcribingElevenLabs": "Đang phiên âm với ElevenLabs (~{{minutes}} phút còn lại)",
-    "transcribingElevenLabsHours": "Đang phiên âm với ElevenLabs (~{{hours}}h {{minutes}}m còn lại)",
-    "transcribingElevenLabsFinishing": "Đang phiên âm với ElevenLabs...",
+    "transcribingElevenLabs": "Đang chép lời bằng ElevenLabs (còn ~{{minutes}} phút)",
+    "transcribingElevenLabsHours": "Đang chép lời bằng ElevenLabs (còn ~{{hours}} giờ {{minutes}} phút)",
+    "transcribingElevenLabsFinishing": "Đang chép lời bằng ElevenLabs...",
     "transcriptionRetry": "Kết nối thất bại, đang thử lại ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Đang tải âm thanh lên…",
     "gapRepair": "Sửa chỗ trống #{{iteration}} ({{done}}/{{total}})",
@@ -1490,7 +1624,7 @@
       "startingExport": "Đang bắt đầu tạo video…",
       "captionsAvailable": "Không tải được video, nhưng đã có sẵn phụ đề YouTube",
       "captionsNotOpened": "Phụ đề YouTube đã sẵn sàng nhưng chưa được mở",
-      "insufficientCredits": "Không đủ tín dụng"
+      "insufficientCredits": "Không đủ phút"
     },
     "listening": "Đang nghe video…",
     "mergeFinishSaveBeforeReload": "Hãy lưu xong video đã ghép trước khi tải lại.",
@@ -1573,7 +1707,18 @@
     "recentSubtitlesReadyGeneric": "Phụ đề đã xong",
     "recentDownloaded": "Đã tải về",
     "recentLocalFile": "Trên máy tính này",
-    "recentLocalMissing": "Tệp đã bị di chuyển hoặc xóa"
+    "recentLocalMissing": "Tệp đã bị di chuyển hoặc xóa",
+    "leaveSaveFailed": {
+      "title": "Không lưu được phụ đề",
+      "message": "Translator không lưu được phụ đề này vào thư viện, nên lần sau mở lại video này sẽ không còn phụ đề. Hãy lưu thành tệp .srt trước, hoặc ở lại đây.",
+      "leave": "Rời đi, không lưu",
+      "stay": "Ở lại",
+      "saveSrt": "Lưu .srt rồi rời đi"
+    },
+    "burnChooseVideo": "Chọn video",
+    "burnChooseSubtitles": "Chọn phụ đề để chèn vào video",
+    "runBlockedBusy": "Translator vẫn đang xử lý video hiện tại. Hãy thử lại khi xong.",
+    "downloadCancelled": "Đã hủy tải xuống."
   },
   "workspace": {
     "subtitlesTitle": "Phụ đề",
@@ -1616,7 +1761,12 @@
     "interruptedResume": "Tiếp tục từ chỗ đã dừng",
     "translateMissing": "Dịch {{count}} dòng còn thiếu sang {{language}}",
     "moreRevealVideo": "Hiện tệp video",
-    "chooseAnotherFile": "Chọn tệp khác"
+    "chooseAnotherFile": "Chọn tệp khác",
+    "statusLinesIn": "{{count}} dòng {{language}}",
+    "statusTranslatedUnknownNoVideo": "{{count}} dòng đã dịch",
+    "statusLines": "{{count}} dòng phụ đề",
+    "checkingFile": "Đang đọc tệp…",
+    "statusLoaded": "Đã tải {{count}} dòng"
   },
   "subtitleStyles": {
     "Cinema": "Vàng điện ảnh",
@@ -1652,7 +1802,8 @@
     "noneCta": "Chuyển sang {{language}} · {{price}}",
     "notNow": "Để sau",
     "failedNeedMinutes": "Phần đã xong vẫn được giữ lại. Bạn cần thêm phút để dịch nốt {{remaining}} phút còn lại.",
-    "failedNetwork": "Mất kết nối. Phần đã xong vẫn được giữ lại. Hãy thử lại khi có mạng."
+    "failedNetwork": "Mất kết nối. Phần đã xong vẫn được giữ lại. Hãy thử lại khi có mạng.",
+    "noneBodyNextFree": "Phút miễn phí sẽ có lại vào ngày {{date}}, hoặc chuyển sang {{language}} ngay với giá {{price}}."
   },
   "videoCost": {
     "covered": "Đủ phút để dịch",
@@ -1717,13 +1868,14 @@
     "error": {
       "permission": "Translator không ghi được các tệp tạm của video. Hãy kiểm tra tài khoản của bạn có quyền ghi vào thư mục tạm rồi thử lại.",
       "tools": "Không thiết lập được công cụ xuất video. Hãy kiểm tra kết nối internet rồi thử lại.",
-      "generic": "Đã xảy ra lỗi khi tạo video. Vui lòng thử lại."
+      "generic": "Đã xảy ra lỗi khi tạo video. Hãy thử lại."
     }
   },
   "tabs": {
     "newTab": "Tab mới",
     "newTabWithShortcut": "Tab mới ({{shortcut}})",
-    "closeTab": "Đóng tab"
+    "closeTab": "Đóng tab",
+    "tabList": "Các tab đang mở"
   },
   "menu": {
     "about": "Giới thiệu về {{app}}",
@@ -1774,6 +1926,15 @@
     "copyImage": "Sao chép hình ảnh",
     "copyImageAddress": "Sao chép địa chỉ hình ảnh",
     "copyVideoAddress": "Sao chép địa chỉ video",
-    "inspect": "Kiểm tra phần tử"
+    "inspect": "Kiểm tra phần tử",
+    "focusTabStrip": "Chuyển tiêu điểm đến thanh tab"
+  },
+  "startupNotice": {
+    "title": "Một số cài đặt đã được đặt lại",
+    "settingsReset": "Tệp cài đặt của Translator bị hỏng nên các tùy chọn của bạn đã được đặt lại: ngôn ngữ giao diện và phụ đề, API key và các tùy chọn khác. Bản sao của tệp bị hỏng vẫn được giữ lại. Hãy kiểm tra lại trong Cài đặt.",
+    "deviceIdReplaced": "Tệp liên kết máy tính này với số phút của bạn bị hỏng, nên Translator đã tạo liên kết mới. Số phút bạn đã mua có thể không hiện ở đây. Hãy liên hệ hỗ trợ kèm biên lai mua hàng, chúng tôi sẽ chuyển lại cho bạn.",
+    "contactSupport": "Liên hệ hỗ trợ",
+    "openSettings": "Mở Cài đặt",
+    "supportSubject": "Số phút của tôi bị mất sau khi Translator đặt lại máy tính này"
   }
 }

@@ -112,7 +112,8 @@
     "updateAvailableDownloading": "Päivitys löytyi. Ladataan taustalla.",
     "updateReadyToInstall": "Päivitys ladattu. Asenna käynnistämällä uudelleen.",
     "updateCheckFailed": "Päivityksiä ei voitu tarkistaa. Yritä myöhemmin uudelleen.",
-    "aboutVersion": "Translator v{{version}}"
+    "aboutVersion": "Translator v{{version}}",
+    "updateVersionAvailable": "v{{version}} saatavilla"
   },
   "errors": {
     "needCookies": "YouTube pyysi ihmisen vahvistusta. Jatka napsauttamalla Yhdistä.",
@@ -159,14 +160,14 @@
       "fileTooLarge_one": "Tämä ääni on liian pitkä litteroitavaksi yhdessä työssä (yli noin {{hours}} tunnin). Jaa video lyhyempiin osiin ja litteroi jokainen osa erikseen."
     },
     "credits": {
-      "transcription": "Krediitit eivät riitä litterointiin.",
-      "translation": "Krediitit eivät riitä kääntämiseen.",
-      "dubbing": "Krediitit eivät riitä dubbaukseen.",
-      "summary": "Krediitit eivät riitä yhteenvetoon.",
-      "videoSearch": "Krediitit eivät riitä videohakuun.",
-      "download": "Krediitit eivät riitä.",
-      "export": "Krediitit eivät riitä.",
-      "other": "Krediitit eivät riitä."
+      "transcription": "Minuutit eivät riitä litterointiin.",
+      "translation": "Minuutit eivät riitä kääntämiseen.",
+      "dubbing": "Minuutit eivät riitä dubbaukseen.",
+      "summary": "Minuutit eivät riitä yhteenvetoon.",
+      "videoSearch": "Minuutit eivät riitä videohakuun.",
+      "download": "Minuutit eivät riitä.",
+      "export": "Minuutit eivät riitä.",
+      "other": "Minuutit eivät riitä."
     },
     "failed": {
       "transcription": "Litterointi keskeytyi odottamattoman ongelman vuoksi. Jo litteroidut rivit säilyvät.",
@@ -175,7 +176,8 @@
       "summary": "Yhteenveto keskeytyi odottamattoman ongelman vuoksi.",
       "videoSearch": "Videohaku keskeytyi odottamattoman ongelman vuoksi.",
       "export": "Videon tekeminen keskeytyi odottamattoman ongelman vuoksi.",
-      "other": "Jokin meni pieleen. Yritä uudelleen."
+      "other": "Jokin meni pieleen. Yritä uudelleen.",
+      "download": "Videota ei voitu ladata. Yritä uudelleen tai käytä toista linkkiä."
     },
     "server": {
       "transcription": "Palvelimellamme oli ongelma. Yritä uudelleen hetken päästä.",
@@ -184,7 +186,8 @@
       "summary": "Palvelimellamme oli ongelma. Yritä uudelleen hetken päästä.",
       "videoSearch": "Palvelimellamme oli ongelma. Yritä uudelleen hetken päästä.",
       "export": "Palvelimellamme oli ongelma. Yritä uudelleen hetken päästä.",
-      "other": "Palvelimellamme oli ongelma. Yritä uudelleen hetken päästä."
+      "other": "Palvelimellamme oli ongelma. Yritä uudelleen hetken päästä.",
+      "download": "Palvelimellamme oli ongelma. Yritä uudelleen hetken päästä."
     },
     "download": {
       "invalid_url": "Tämä ei näytä videolinkiltä. Liitä koko linkki.",
@@ -210,7 +213,9 @@
     "network": "Palvelimeen ei saatu yhteyttä. Tarkista internetyhteys ja yritä uudelleen.",
     "busy": "Palvelu on juuri nyt ruuhkainen. Odota hetki ja yritä uudelleen.",
     "diskFull": "Levy on täynnä. Vapauta tilaa ja yritä uudelleen.",
-    "cancelDubbingFailedPlain": "Dubbausta ei voitu keskeyttää. Yritä uudelleen."
+    "cancelDubbingFailedPlain": "Dubbausta ei voitu keskeyttää. Yritä uudelleen.",
+    "cancelTranslationFailedPlain": "Kääntämistä ei voitu keskeyttää. Yritä uudelleen.",
+    "cancelSummaryFailedPlain": "Yhteenvetoa ei voitu keskeyttää. Yritä uudelleen."
   },
   "input": {
     "connect": "Yhdistä",
@@ -246,7 +251,7 @@
     "srtLoaded": "Litterointi valmis",
     "srtFileLoaded": "SRT ladattu",
     "featuresUnlockAfterTranscription": "Litteroi tai käännä video tai poimi siitä kohokohdat.",
-    "preSubtitleActionsHint": "Literoi, käännä tai luo kohokohdat tästä videosta.",
+    "preSubtitleActionsHint": "Litteroi, käännä tai etsi kohokohdat tästä videosta.",
     "saveDubbedVideo": "Tallenna dubattu video",
     "downloadFinishedSwitchTitle": "Katsoa ladattu video?",
     "downloadFinishedSwitchPrompt": "Latauksesi on valmis. Katso se nyt tai pidä nykyinen videosi ja avaa se myöhemmin historiasta.",
@@ -430,7 +435,8 @@
       "freeSearchRunning": "Haetaan YouTubesta…",
       "freeSearchResults": "Tässä YouTube-tulokset haulle ”{{query}}”. Haku oli ilmainen. Kerro tarkemmin, mitä etsit, niin tarkennan hakua tekoälyn avulla.",
       "freeSearchEmpty": "YouTube ei löytänyt mitään haulle ”{{query}}”. Kuvaile, mitä etsit, niin haen tekoälyn avulla.",
-      "openOriginalPage": "Avaa alkuperäinen sivu"
+      "openOriginalPage": "Avaa alkuperäinen sivu",
+      "modelPill": "Haun tekoäly: {{model}}"
     },
     "downloadAndTranslate": "Lataa ja käännä",
     "downloadAndTranscribe": "Lataa ja litteroi",
@@ -461,7 +467,8 @@
     },
     "dropWhileDownloading": "Lataus on käynnissä. Pudota tiedosto uudelleen, kun se on valmis.",
     "dropWhileBusy": "Translator työstää tätä videota. Pudota tiedosto uudelleen, kun työ on valmis.",
-    "dropNotSupported": "Pudota video, äänitiedosto tai .srt-tekstitystiedosto."
+    "dropNotSupported": "Pudota video, äänitiedosto tai .srt-tekstitystiedosto.",
+    "batchDownloadRunning": "Translator lataa useita videoita. Odota, että ne valmistuvat, tai peruuta lataus."
   },
   "subtitles": {
     "outputLanguage": "Tulostuskieli",
@@ -476,7 +483,7 @@
     "improveTranscription": "Paranna litterointia",
     "improveTranslation": "Paranna käännöstä",
     "chooseSrtFile": "Valitse SRT-tiedosto",
-    "dub": "Dubaa ääni",
+    "dub": "Dubbaa",
     "dubEstimateCredits": "{{credits}} kr (~{{minutes}}m)",
     "dubEstimateByo": "~{{minutes}}m ääntä",
     "voiceCloningRequiresTranslation": "Äänikloonaus vaatii kohdekielen",
@@ -487,19 +494,31 @@
     "dubCostHint": "ElevenLabs-ääni: ~{{rate}} krediittiä puheminuuttia kohden. Tämä arvio näytetään ennen dubbauksen alkua.",
     "unreadableCues_one": "Tiedostosta jäi pois {{count}} rivi, jota ei voitu lukea. Tarkista sen aikakoodi.",
     "unreadableCues": "Tiedostosta jäi pois {{count}} riviä, joita ei voitu lukea. Tarkista niiden aikakoodit.",
-    "addCreditsToTranslate": "Lisää krediittejä kääntääksesi",
-    "dubInto": "Dubbaa kielelle {{language}}",
+    "addCreditsToTranslate": "Lisää minuutteja kääntämiseen",
+    "dubInto": "Dubbaa {{languageInto}}",
     "dubIntro": "Ääni lukee tekstityksen valitsemallasi kielellä alkuperäisten taustaäänten päälle.",
     "dubNeedsSubtitles": "Dubbaus lukee tekstityksen ääneen, joten video tarvitsee ensin tekstityksen. Litteroi video ja valitse sitten ääni täällä.",
     "dubLanguageLabel": "Äänen kieli",
-    "dubSameLanguage": "Tekstitys on jo kielellä {{language}}, joten ääni lukee sen sellaisenaan.",
-    "dubTranslatesFirst": "Tekstitys käännetään ensin kielelle {{language}} ja luetaan sitten ääneen.",
+    "dubSameLanguage": "Tekstitys on jo {{languageInto}}, joten ääni lukee sen sellaisenaan.",
+    "dubTranslatesFirst": "Tekstitys käännetään ensin {{languageInto}} ja luetaan sitten ääneen.",
     "dubCostWithTranslation": "Käännös ja ääni: {{cost}}",
     "dubUsesOwnKeys": "Käyttää omia API-avaimiasi.",
-    "dubNotEnoughCredits": "Krediitit eivät riitä tähän dubbaukseen.",
-    "addCreditsToDub": "Lisää krediittejä dubataksesi",
+    "dubNotEnoughCredits": "Minuutit eivät riitä tähän dubbaukseen.",
+    "addCreditsToDub": "Lisää minuutteja dubbaukseen",
     "noSubtitlesToDub": "Tee tai avaa videolle ensin tekstitys ja dubbaa se sitten.",
-    "noSubtitlesToTranslate": "Avaa tai tee ensin tekstitys ja käännä se sitten."
+    "noSubtitlesToTranslate": "Avaa tai tee ensin tekstitys ja käännä se sitten.",
+    "dubVoiceHelp": "Tämän dubbauksen ääni. Valinta säilyy seuraaviin dubbauksiin.",
+    "addMinutesToDub": "Lisää minuutteja dubbaukseen",
+    "dubNotEnoughMinutes": "Minuutit eivät riitä tähän dubbaukseen.",
+    "addMinutesToTranslate": "Lisää minuutteja kääntämiseen",
+    "transcriptEmptyForTranslation": "Litteroinnissa ei ole käännettäviä rivejä.",
+    "dubCostHintMinutes": "ElevenLabs-ääni: ~{{time}} minuuteistasi puheminuuttia kohden. Arvio näytetään ennen dubbauksen alkua.",
+    "fileError": {
+      "openPermission": "Translatorilla ei ole lupaa lukea tiedostoa. Tarkista sen käyttöoikeudet tai kopioi se toiseen kansioon ja yritä uudelleen.",
+      "openMissing": "Tekstitystiedostoa ei enää löydy. Se on ehkä siirretty tai poistettu.",
+      "openFailed": "Translator ei voinut avata tekstitystiedostoa. Varmista, että se on .srt-tiedosto, ja yritä uudelleen.",
+      "saveFailed": "Translator ei voinut tallentaa tekstitystä. Yritä uudelleen tai valitse toinen kansio kohdasta ”Tallenna tekstitykset nimellä...”."
+    }
   },
   "summary": {
     "title": "Kohokohdat",
@@ -516,7 +535,7 @@
     "estimateByo": "BYO-avain",
     "highEffortBadge": "(syvä)",
     "placeholder": "Tekoälyn yhteenvetosi näkyy tässä, kun se on luotu.",
-    "insufficientCredits": "Krediitit eivät riitä kohokohtien etsimiseen.",
+    "insufficientCredits": "Minuutit eivät riitä kohokohtien etsimiseen.",
     "error": "Kohokohtia ei saatu luotua. {{message}}",
     "cancel": "Peruuta",
     "copy": "Kopioi yhteenveto",
@@ -526,7 +545,7 @@
     "noVideoForHighlights": "Avaa lähdevideo leikataksesi kohokohtaleikkeitä.",
     "summaryRequiredForHighlights": "Etsi ensin kohokohdat, jotta litterointi analysoidaan.",
     "highlight": "Kohokohta",
-    "cutHighlightClip": "Leikkaa tämä highlight-leike",
+    "cutHighlightClip": "Leikkaa tämä kohokohtaleike",
     "cuttingHighlightClip": "Leikataan…",
     "highlightPlaceholder": "Leikettä ei ole vielä leikattu.",
     "clipFormat": "Leikkeen muoto:",
@@ -541,7 +560,7 @@
     "highlightSaved": "Tallennettu!",
     "highlightSaveError": "Tallennus epäonnistui",
     "downloadHighlightFailed": "Kohokohtaleikkeen tallennus epäonnistui: {{message}}",
-    "highlightsSelectionFailed": "Highlight-kohtien valinta epäonnistui: {{message}}",
+    "highlightsSelectionFailed": "Kohokohtien valinta epäonnistui: {{message}}",
     "saveHighlightDialogTitle": "Tallenna kohokohtaleike",
     "noSections": "Ei osiomuistiinpanoja vielä.",
     "sectionHeading": "Osio {{index}}",
@@ -569,14 +588,14 @@
     "downloadCombined": "Lataa yhdistetty leike",
     "saveCombinedDialogTitle": "Tallenna yhdistetty kohokohtaleike",
     "combinedCutFailed": "Yhdistettyjen kohokohtien leikkaus epäonnistui: {{message}}",
-    "highlightsInsufficientCredits": "Yhteenveto luotiin, mutta kohokohtien poiminta pysähtyi, koska krediitit loppuivat.",
+    "highlightsInsufficientCredits": "Yhteenveto tehtiin, mutta kohokohtien poiminta pysähtyi, koska minuutit loppuivat.",
     "highlightsPartialWarning": "Kohokohtien poiminta jäi osittaiseksi. Nämä kohokohdat voivat olla puutteellisia. Päivitä luomalla ne uudelleen.",
     "highlightsPartialWithReason": "Yhteenveto luotiin, mutta kohokohtien poiminta jäi osittaiseksi: {{message}}",
     "estimateOwnKey": "Käyttää omaa API-avaintasi",
     "generateSummary": "Tee yhteenveto",
     "regenerateSummary": "Tee yhteenveto uudelleen",
-    "showingSavedLanguage": "Näytetään tallennettu tulos kielellä {{language}}. Paina painiketta, niin saat uuden kielellä {{current}}.",
-    "showingSavedVariant": "Näytetään tallennettu tulos kielellä {{language}}, tehty eri yhteenvetotasolla. Paina painiketta, niin saat uuden.",
+    "showingSavedLanguage": "Näytetään tallennettu tulos {{languageInto}}. Paina painiketta, niin saat uuden {{currentInto}}.",
+    "showingSavedVariant": "Näytetään tallennettu tulos {{languageInto}}, tehty eri laatutasolla. Paina painiketta, niin saat uuden.",
     "noSummaryYet": "Yhteenvetoa ei ole vielä. Valitse kieli ja paina ”Tee yhteenveto”, niin saat videon pääkohdat.",
     "noSummaryWithHighlights": "Näiden kohokohtien mukana ei tullut yhteenvetoa. Paina ”Tee yhteenveto”, niin se kirjoitetaan.",
     "clipCaptionsChanged": "Tekstitys on muuttunut leikkeen leikkaamisen jälkeen.",
@@ -594,7 +613,17 @@
       "untranslated": "Osaa tämän leikkeen riveistä ei ole vielä käännetty. Käännä ne tai vaihda tekstityksen näyttötavaksi alkuperäinen.",
       "subtitlesNotSaved": "Leike leikattiin, mutta sen tekstitystä ei voitu tallentaa.",
       "generic": "Leikettä ei voitu leikata videosta. Yritä uudelleen."
-    }
+    },
+    "addMinutesToSummarize": "Lisää minuutteja yhteenvetoon",
+    "addMinutesForHighlights": "Lisää minuutteja kohokohtiin",
+    "qualityLabel": "Laatu",
+    "qualityStandard": "Tavallinen",
+    "qualityDeep": "Syvällinen (maksaa enemmän)",
+    "subtitlesChangedSinceAnalysis": "Tekstitys on muuttunut tämän jälkeen. Kohokohdat, joiden rivejä muutettiin, on merkitty; muut täsmäävät yhä.",
+    "highlightCuesChanged": "Muokkasit tämän kohokohdan rivejä sen löytymisen jälkeen. Tarkista, että se toimii yhä.",
+    "clipCaptionsChangedAny": "Tekstitys on muuttunut leikkeen leikkaamisen jälkeen (teksti, tyyli tai koko).",
+    "notEnoughForRun": "Minuutit eivät riitä yhteenvetoon ja kohokohtiin.",
+    "clipsUseOriginalAudio": "Leikkeissä on alkuperäinen ääni, ei dubbausta."
   },
   "panel": {
     "new": "uusi",
@@ -621,7 +650,7 @@
       "readyTitle": "Tekstityseditori valmis",
       "emptyTitle": "Lataa tekstitykset aloittaaksesi",
       "readyCopy": "Hienosäädä täällä ajoitus, rivinvaihdot ja käännökset ennen kuin tallennat SRT:n tai poltat tekstitykset lähdemediaan.",
-      "emptyCopy": "Avaa olemassa oleva SRT muokataksesi sitä suoraan. Päätyönkulun luodut transkriptiot näkyvät täällä myös, kun ne ovat valmiit.",
+      "emptyCopy": "Avaa olemassa oleva SRT, niin voit muokata sitä suoraan. Myös päänäkymässä tehdyt litteroinnit näkyvät täällä, kun ne ovat valmiita.",
       "rowsLoaded": "{{count}} riviä ladattu",
       "loadAnotherSrt": "Lataa toinen SRT",
       "mountVideoTitle": "Liitä lähdevideo esikatselua ja poltettua vientiä varten",
@@ -652,7 +681,11 @@
       "confirmRemove": "Haluatko varmasti poistaa tämän tekstityslohkon? Tätä toimintoa ei voi kumota.",
       "transcribeThisLine": "Litteroi rivi",
       "timeEndBeforeStart": "Loppuajan pitää olla alkuajan jälkeen. Rivin aiempi aika säilyy.",
-      "timeUnreadable": "Kirjoita aika muodossa 00:01:23,450 tai 1:23.45. Rivin aiempi aika säilyy."
+      "timeUnreadable": "Kirjoita aika muodossa 00:01:23,450 tai 1:23.45. Rivin aiempi aika säilyy.",
+      "startTimeAria": "Rivin {{index}} alkuaika",
+      "endTimeAria": "Rivin {{index}} loppuaika",
+      "splitTitle": "Jaa rivi kursorin kohdalta",
+      "mergeTitle": "Yhdistä seuraavaan riviin"
     },
     "header": {
       "save": "Tallenna tekstitykset",
@@ -672,7 +705,10 @@
       "replaced": "Korvattu kaikilta riveiltä.",
       "shifted": "Ajoitus siirretty.",
       "improved": "Rivi litteroitu uudelleen.",
-      "action": "Kumoa"
+      "action": "Kumoa",
+      "split": "Rivi jaettu kahtia.",
+      "merged": "Rivit yhdistetty.",
+      "shortcut": "Kumoa ({{keys}})"
     }
   },
   "settings": {
@@ -688,7 +724,9 @@
       "pendingOff": "Pois tällä laitteella. Yhdistä vahvistaaksesi palvelimen valinnan.",
       "retry": "Yritä uudelleen",
       "error": "Valintaa ei voitu vahvistaa. Yritä uudelleen.",
-      "anonymousCounts": "Aina käytössä: nimettömät päivittäiset laskennat sovelluksen vaiheista (kuten sovellus avattu tai lataus valmis), vain vaihe, päivä, alusta ja sovelluksen versio. Ei tunnistetta, sisältöä tai asetuksia."
+      "anonymousCounts": "Aina käytössä: nimettömät päivittäiset laskennat sovelluksen vaiheista (kuten sovellus avattu tai lataus valmis), vain vaihe, päivä, alusta ja sovelluksen versio. Ei tunnistetta, sisältöä tai asetuksia.",
+      "pendingOffPlain": "Pois käytöstä. Vahvistamme valinnan palvelimelta, kun olet seuraavan kerran verkossa.",
+      "pendingOnPlain": "Käytössä. Raportit odottavat, kunnes olet taas verkossa."
     },
     "title": "Asetukset",
     "aiProvider": {
@@ -704,9 +742,10 @@
       "toggleOff": "Käyttää nyt Stage5-krediittejä.",
       "toggleError": "Asetuksen päivittäminen epäonnistui.",
       "toggleAria": "Käytä omia API-avaimiani",
-      "requirementTranslation": "Vaatii OpenAI- tai Anthropic-avaimen käännökseen"
+      "requirementTranslation": "Vaatii OpenAI- tai Anthropic-avaimen käännökseen",
+      "activeKeys_one": "Valmiit avaimet: {{count}}"
     },
-    "creditsDescription": "Osta krediittejä. Näytetyt tunnit ovat arvio videon kokonaiskestosta, jonka voit puhtaaksikirjoittaa tai kääntää. Esimerkki: 3 tunnin videon transkriptio ja käännös kuluttaa noin 6 tuntia (≈140 000 krediittiä).",
+    "creditsDescription": "Osta minuutteja. Näytetyt tunnit ovat arvio siitä, kuinka paljon videota voit litteroida tai kääntää. Esimerkki: 3 tunnin videon litterointi ja kääntäminen kuluttaa noin 6 tuntia (≈140 000 krediittiä).",
     "performanceQuality": {
       "title": "Suorituskyky ja laatu",
       "qualityTranslation": {
@@ -726,7 +765,7 @@
       },
       "qualitySummary": {
         "label": "Laadukas yhteenveto",
-        "modelOn": "Claude Opus 5.5 -syväanalyysi + kohokohtaklipit",
+        "modelOn": "Claude Opus 5.5 -syväanalyysi + kohokohtaleikkeet",
         "modelOff": "Claude Sonnet 5.5 -perusanalyysi",
         "help": "<b>4× krediittiä</b> • Syvällinen analyysi + kohokohtaleikkeet Claude Opus 5.5 -mallilla",
         "helpWithEstimate": "<b>4× krediittiä</b> • Saldosi: ~{{normalTime}} (normaali) / ~{{hqTime}} (kl)",
@@ -782,7 +821,7 @@
       "mixVoice": "Enemmän ääntä",
       "voiceCloning": "Kloonaa alkuperäinen ääni",
       "voiceCloningDesc": "Säilytä alkuperäisen puhujan ääni dubatussa äänessä",
-      "voiceCloningInsufficientCredits": "Vaatii vähintään 1 minuutin krediittejä",
+      "voiceCloningInsufficientCredits": "Vaatii vähintään 1 minuutin saldoa",
       "voiceCloningEnabled": "Äänikloonaus on käytössä ElevenLabsin kanssa. Alkuperäisen puhujan ääni säilytetään dubatussa äänessä.",
       "voiceCloningInfo": "Äänikloonaus käyttää ElevenLabs Dubbing API:a analysoimaan ja luomaan uudelleen alkuperäisen puhujan äänen.",
       "costPerMinute": "Hinta per minuutti",
@@ -790,7 +829,9 @@
       "yourBalance": "Saldosi",
       "canClone": "Voit kloonata",
       "upToMinutes": "enintään {{minutes}} min",
-      "loading": "Ladataan..."
+      "loading": "Ladataan...",
+      "previewWithMinutes": "Esikuuntele ({{cost}})",
+      "previewFailed": "Ääninäytettä ei voitu toistaa. Yritä uudelleen."
     },
     "byoOpenAi": {
       "title": "Tuo omat API-avaimet",
@@ -812,7 +853,7 @@
       "test": "Testaa avain",
       "lastSynced": "Viimeksi synkronoitu",
       "toggleLabel": "Käytä OpenAI-avaintani",
-      "toggleHelp": "Pois päältä käytetään AI-krediittejä.",
+      "toggleHelp": "Pois päältä käytetään Stage5-minuutteja.",
       "toggleAria": "Vaihda OpenAI-avaimen käyttöä",
       "toggleOn": "Käytetään OpenAI-avaintasi tekoälytehtäviin.",
       "toggleOff": "Käytetään Stage5-krediittejä tekoälytehtäviin.",
@@ -943,7 +984,9 @@
       "cleared": "API-avain poistettu.",
       "invalid": "API-avaimen vahvistus epäonnistui.",
       "howToGet": "Kuinka saat tämän avaimen",
-      "missing": "Liitä ensin API-avain."
+      "missing": "Liitä ensin API-avain.",
+      "savedEnding": "Tallennettu avain (…{{last4}})",
+      "savedHidden": "Tallennettu avain (piilotettu)"
     },
     "byoStack": {
       "title": "AI-stackisi"
@@ -985,7 +1028,9 @@
         "failedWrite": "Yhdistäminen sovellukseen {{app}} epäonnistui: Translator ei voinut kirjoittaa sen asetustiedostoa.",
         "failedLauncher": "Sovelluksen {{app}} yhdistäminen toimii vain asennetussa Translator-sovelluksessa.",
         "failedCli": "Sovellusta {{app}} ei voitu yhdistää automaattisesti. Suorita tämä päätteessä:",
-        "failedGeneric": "Yhdistäminen sovellukseen {{app}} epäonnistui. Yritä uudelleen."
+        "failedGeneric": "Yhdistäminen sovellukseen {{app}} epäonnistui. Yritä uudelleen.",
+        "appNotFound": "Sovellusta {{app}} ei ole asennettu tälle tietokoneelle. Asenna se, avaa se kerran ja yhdistä sitten uudelleen.",
+        "download": "Lataa {{app}}"
       },
       "status": {
         "enabled": "Käytössä",
@@ -1023,17 +1068,17 @@
       "freeTitle": "Käännä ilmaiseksi omalla tekoälylläsi"
     },
     "creditTransfer": {
-      "title": "Siirrä krediittejä tietokoneiden välillä",
-      "description": "Ostetut krediitit ja API-avainten avauksen voi siirtää toiselle tietokoneelle. Ilmaiset tervetuliaiskrediitit jäävät tälle koneelle.",
-      "moveButton": "Siirrä krediitit toiselle tietokoneelle",
-      "receiveButton": "Vastaanota krediittejä",
+      "title": "Siirrä minuutteja tietokoneiden välillä",
+      "description": "Ostetut minuutit ja API-avainten avauksen voi siirtää toiselle tietokoneelle. Ilmaiset minuutit jäävät tälle koneelle.",
+      "moveButton": "Siirrä minuutit toiselle tietokoneelle",
+      "receiveButton": "Vastaanota minuutteja",
       "creating": "Luodaan koodia…",
       "copy": "Kopioi",
       "copied": "Kopioitu",
       "summaryCredits": "{{credits}} krediittiä siirretään.",
       "summaryByo": "Myös API-avainten avaus siirretään.",
       "expires": "Tämä koodi toimii kerran ja vanhenee {{minutes}} minuutin kuluttua.",
-      "steps": "Uudella tietokoneella: asenna Translator, avaa Asetukset, valitse ”Vastaanota krediittejä” ja syötä tämä koodi.",
+      "steps": "Uudella tietokoneella: asenna Translator, avaa Asetukset, valitse ”Vastaanota minuutteja” ja syötä tämä koodi.",
       "inputLabel": "Koodi toiselta tietokoneeltasi",
       "redeem": "Vastaanota",
       "redeeming": "Vastaanotetaan…",
@@ -1043,18 +1088,28 @@
       "summaryCredits_one": "{{credits}} krediitti siirretään.",
       "received_one": "Vastaanotettiin {{credits}} krediitti.",
       "errors": {
-        "nothing_to_transfer": "Ei vielä siirrettävää: tällä tietokoneella ei ole ostettuja krediittejä eikä API-avainten avausta. Jos haluat tuoda krediittejä toiselta tietokoneelta, valitse ”Vastaanota krediittejä”.",
+        "nothing_to_transfer": "Ei vielä siirrettävää: tällä tietokoneella ei ole ostettuja minuutteja eikä API-avainten avausta. Jos haluat tuoda minuutteja toiselta tietokoneelta, valitse ”Vastaanota minuutteja”.",
         "too_many_codes": "Liian monta siirtokoodia tämän tunnin aikana. Yritä hetken päästä uudelleen.",
         "jobs_running": "Litterointi tai käännös on vielä kesken. Yritä uudelleen, kun se on valmis.",
         "invalid_code": "Koodi on väärä, jo käytetty tai vanhentunut. Luo uusi koodi toisella tietokoneella.",
         "same_device": "Syötä koodi toisella tietokoneella, ei sillä, jolla se luotiin.",
         "network_error": "Stage5-palvelimeen ei saatu yhteyttä. Tarkista yhteys ja yritä uudelleen.",
-        "transfer_failed": "Krediittejä ei voitu siirtää. Tarkista yhteys ja yritä uudelleen."
-      }
+        "transfer_failed": "Minuutteja ei voitu siirtää. Tarkista yhteys ja yritä uudelleen.",
+        "nothing_to_transfer_minutes": "Ei vielä siirrettävää: tällä tietokoneella ei ole ostettuja minuutteja eikä API-avainten avausta. Jos haluat tuoda minuutteja toiselta tietokoneelta, valitse ”Vastaanota minuutteja”.",
+        "transfer_failed_minutes": "Minuutteja ei voitu siirtää. Tarkista yhteys ja yritä uudelleen."
+      },
+      "titleMinutes": "Siirrä minuutteja tietokoneiden välillä",
+      "descriptionMinutes": "Ostetut minuutit ja API-avainten avauksen voi siirtää toiselle tietokoneelle. Ilmaiset minuutit jäävät tälle koneelle.",
+      "moveButtonMinutes": "Siirrä minuutit toiselle tietokoneelle",
+      "receiveButtonMinutes": "Vastaanota minuutteja",
+      "summaryMinutes": "Siirretään {{time}} videota.",
+      "stepsMinutes": "Uudella tietokoneella: asenna Translator, avaa Asetukset, valitse ”Vastaanota minuutteja” ja syötä tämä koodi.",
+      "receivedMinutes": "Vastaanotettiin {{time}} videota.",
+      "expires_one": "Tämä koodi toimii kerran ja vanhenee {{minutes}} minuutin kuluttua."
     }
   },
   "credits": {
-    "title": "AI-krediitit",
+    "title": "Minuuttisi",
     "loading": "Ladataan...",
     "credits": "krediittiä",
     "usingApiKey": "Käytetään API-avainta",
@@ -1063,10 +1118,10 @@
     "usingElevenLabs": "Käytössä ElevenLabs",
     "hours": "tuntia",
     "translationHoursShort": "käännöstuntia",
-    "buyCredits": "Osta krediittejä",
+    "buyCredits": "Osta minuutteja",
     "redirectingToPayment": "Avataan turvallinen kassa...",
-    "description": "Valitse ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h) tai ${{pack3Price}} ({{pack3Hours}}h) krediittipaketeista",
-    "notEnough": "Riittämättömästi krediittejä. Osta lisää krediittejä jatkaaksesi.",
+    "description": "Valitse paketti: ${{packMicroPrice}} ({{packMicroHours}} h), ${{pack1Price}} ({{pack1Hours}} h), ${{pack2Price}} ({{pack2Hours}} h) tai ${{pack3Price}} ({{pack3Hours}} h)",
+    "notEnough": "Minuutit eivät riitä. Osta lisää jatkaaksesi.",
     "transcriptionMinutesShort": "{{minutes}} min litterointia",
     "transcriptionTimeShort": "{{time}} litterointia",
     "costOfBalance": "{{cost}} {{balance}} krediitistäsi",
@@ -1076,7 +1131,12 @@
       "freeThisMonth": "{{count}} min ilmaiseksi tässä kuussa",
       "freeWelcome": "{{count}} min ilmaiseksi",
       "minutes": "{{count}} min jäljellä",
-      "title": "Minuutit ja paketit"
+      "title": "Minuutit ja paketit",
+      "neutral": "Minuutit",
+      "welcomePending": "Ilmaiset minuutit tulossa",
+      "freeTimeThisMonth": "{{time}} ilmaiseksi tässä kuussa",
+      "freeTime": "{{time}} ilmaiseksi",
+      "offline": "Minuutit · ei yhteyttä"
     },
     "yourMinutes": "Minuuttisi",
     "balanceNone": "Minuutteja ei ole jäljellä",
@@ -1089,11 +1149,28 @@
     "moreMinutesPerDollar": "{{multiplier}}× enemmän minuutteja dollarilla",
     "checkoutWaiting": "Viimeistele maksu selaimessa. Minuutit ilmestyvät tähän itsestään.",
     "checkoutNote": "Kertamaksu Stripen kautta selaimessa. Ei tiliä eikä tilausta. Minuutit lisätään automaattisesti.",
-    "dubbingNote": "Kääntäminen krediiteillä vie noin 10 % lisää minuuttia kohden; dubbaus kuluttaa enemmän.",
+    "dubbingNote": "Kääntäminen vie noin 10 % lisää minuuttia kohden; dubbaus kuluttaa enemmän.",
     "iCancelledCheckout": "Peruutin maksun",
     "checkoutStartFailed": "Maksua ei voitu aloittaa. Tarkista yhteys ja yritä uudelleen.",
     "loadFailed": "Saldoa ei voitu ladata. Tarkista yhteys ja yritä uudelleen.",
-    "estimateAmount": "{{credits}} krediittiä"
+    "estimateAmount": "{{credits}} krediittiä",
+    "costOfBalanceMinutes": "{{cost}} (saldo {{balance}})",
+    "timeLeft": "{{time}} jäljellä",
+    "success": {
+      "added": "+{{time}} lisätty",
+      "arrived": "Minuuttisi ovat perillä",
+      "addedLong": "Maksu vastaanotettu. Minuutteihisi lisättiin +{{time}}.",
+      "arrivedLong": "Maksu vastaanotettu. Minuuttisi ovat perillä."
+    },
+    "waitingForPayment": "Odotetaan maksua…",
+    "chooseAnotherPack": "Muutitko mielesi? Valitse toinen paketti",
+    "balanceNoneYet": "Ei vielä minuutteja",
+    "welcomePendingNote": "Ilmaiset minuuttisi ovat tulossa. Ne saapuvat yleensä, kun avaat Translatorin seuraavan kerran.",
+    "balanceOffline": "Minuutteja ei voi tarkistaa juuri nyt",
+    "offlineNote": "Translator ei saa yhteyttä Stage5:een. Saldosi näkyy taas, kun olet verkossa.",
+    "microPackLabelNoTime": "Osta minuutteja – {{price}}",
+    "microPackLabel": "Osta minuutteja – {{price}} · ≈ {{time}} videota",
+    "monthlyFreeNote_one": "Joka kuukausi {{minutes}} min ilmaiseksi · seuraava {{date}}"
   },
   "cta": {
     "generate": {
@@ -1133,7 +1210,15 @@
     "mute": "Mykistä (M)",
     "unmute": "Poista mykistys (M)",
     "volume": "Äänenvoimakkuus",
-    "unreadableFile": "Translator ei pysty lukemaan tätä tiedostoa. Se voi olla vioittunut tai muodossa, jota ei tueta."
+    "unreadableFile": "Translator ei pysty lukemaan tätä tiedostoa. Se voi olla vioittunut tai muodossa, jota ei tueta.",
+    "play": "Toista (välilyönti)",
+    "pause": "Tauko (välilyönti)",
+    "seekBar": "Kohta videossa",
+    "seekBarValue": "{{current}} / {{total}}",
+    "enterFullscreenShortcut": "Koko näyttö (F)",
+    "exitFullscreenShortcut": "Poistu koko näytöstä (F)",
+    "changeVideoKeepSubtitlesSameVideo": "Pidä nykyinen tekstitys. Vain saman videon toiselle kopiolle – eri video alkaa ilman sitä.",
+    "audioOnly": "Äänitiedosto"
   },
   "admin": {
     "title": "Ylläpitäjä",
@@ -1197,17 +1282,17 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "Ei krediittejä.",
+    "noCredits": "Ei minuutteja.",
     "rechargeLink": "Lataa →",
     "creditWarning": {
-      "message": "Lataaminen, muokkaaminen, vieminen ja kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista. Litterointi vaatii krediittejä tai API-avainten avauksen kohdassa <settingsLink>{{settingsLinkText}}</settingsLink>.",
+      "message": "Lataaminen, muokkaaminen, vieminen ja kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista. Litterointiin tarvitaan minuutteja tai API-avainten avaus kohdassa <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Asetukset"
     },
     "validation": {
       "pleaseSelectVideo": "Valitse video",
       "processingDuration": "Videon kestoa käsitellään. Yritä hetken kuluttua uudelleen.",
       "icloudPlaceholder": "Tämä tiedosto on tallennettu iCloudiin. Napsauta Finderissa \"Lataa\" ja odota pilvi-kuvakkeen valmistumista, sitten yritä uudelleen.",
-      "insufficientCreditsForVoiceCloning": "Riittämättömästi krediittejä äänikloonaukseen. Video on {{duration}} min, mutta sinulla on varaa vain {{affordable}} minuuttiin. Lisää krediittejä tai poista äänikloonaus käytöstä.",
+      "insufficientCreditsForVoiceCloning": "Minuutit eivät riitä äänikloonaukseen. Video kestää {{duration}} min, mutta saldosi riittää vain {{affordable}} minuuttiin. Lisää minuutteja tai poista äänikloonaus käytöstä.",
       "fileTooLargeForVoiceCloning": "Videotiedosto on liian suuri äänikloonaukseen ({{size}}MB). Suurin sallittu koko on {{max}}MB. Käytä lyhyempää videota tai poista äänikloonaus käytöstä."
     },
     "status": {
@@ -1217,7 +1302,7 @@
       "error": "Virhe"
     },
     "buttons": {
-      "buyCredits": "Osta krediittejä",
+      "buyCredits": "Osta minuutteja",
       "redirectingToPayment": "Ohjataan maksuun..."
     },
     "workflow": {
@@ -1241,9 +1326,9 @@
       "saveOutputsDescription": "Säilytä haluamasi lähde- tai dubattu media sovelluksen työtilan ulkopuolella."
     },
     "calculatingCost": "Lasketaan kustannuksia...",
-    "notEnoughCredits": "Ei tarpeeksi krediittejä saatavilla",
+    "notEnoughCredits": "Minuutit eivät riitä",
     "welcomeCredits": {
-      "message": "Sinulla on ilmaisia krediittejä litteroinnin ja käännöksen kokeilemiseen (noin 20 minuuttia videota)."
+      "message": "Sinulla on ilmaisia minuutteja litteroinnin ja kääntämisen kokeiluun (noin 20 minuuttia videota)."
     }
   },
   "findBar": {
@@ -1278,15 +1363,15 @@
     "saveDownloadedVideoAs": "Tallenna ladattu video nimellä",
     "saveDubbedVideoAs": "Tallenna dubattu video nimellä",
     "unsavedSrtOnTranscribe": {
-      "title": "Tallennetaanko nykyiset tekstitykset ennen transkribointia?",
-      "message": "Sinulla on jo tekstitykset ladattuina. Transkriptio korvaa ne. Mitä haluat tehdä?",
-      "saveAndTranscribe": "Tallenna ja transkriboi",
-      "discardAndTranscribe": "Hylkää ja transkriboi",
+      "title": "Tallennetaanko nykyinen tekstitys ennen litterointia?",
+      "message": "Sinulla on jo tekstitys ladattuna. Litterointi korvaa sen. Mitä haluat tehdä?",
+      "saveAndTranscribe": "Tallenna ja litteroi",
+      "discardAndTranscribe": "Hylkää ja litteroi",
       "cancel": "Peruuta"
     },
     "downloadInProgress": "Lataus meneillään",
     "saveDownloadedFile": "Tallenna ladattu tiedosto: {{path}}",
-    "transcriptionInProgress": "Transkriptio meneillään",
+    "transcriptionInProgress": "Litterointi on käynnissä",
     "translationInProgress": "Käännös meneillään",
     "dubbingInProgress": "Dubbaus meneillään",
     "dubbingWorking": "Luodaan dubattua ääntä…",
@@ -1305,44 +1390,80 @@
       "description": "Tämä voi johtua videopalvelun muutoksista tai uusista suojaustoimista. Saatat joutua odottamaan seuraavaa sovellusversiota uudempien videoiden käsittelyä varten."
     },
     "creditRanOut": {
-      "title": "Krediitit loppuivat",
-      "message": "AI-krediittisi ovat loppuneet. Lataa lisää Asetuksissa ja jatka siitä, mihin jäit.",
+      "title": "Minuutit loppuivat",
+      "message": "Minuuttisi ovat loppuneet. Lisää niitä Asetuksissa ja jatka siitä, mihin jäit.",
       "openSettings": "Avaa asetukset",
       "ok": "OK",
-      "neverHadTitle": "Litterointi vaatii krediittejä",
-      "neverHadMessage": "Litterointi vaatii krediittejä tai API-avainten avauksen. Saat kumman tahansa Asetuksista. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista.",
-      "notEnoughTitle": "Krediitit eivät riitä tähän videoon",
+      "neverHadTitle": "Litterointiin tarvitaan minuutteja",
+      "neverHadMessage": "Litterointiin tarvitaan minuutteja tai API-avainten avaus. Saat kumman tahansa Asetuksista. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista.",
+      "notEnoughTitle": "Minuutit eivät riitä tähän videoon",
       "notEnoughTranscriptionMessage": "Tämän videon litterointi vie noin {{required}} krediittiä. Sinulla on {{available}}, mikä riittää noin {{minutes}} minuuttiin. Lisää krediittejä ja aloita uudelleen.",
-      "notEnoughMessage": "Tämä tehtävä vaatii enemmän krediittejä kuin saldosi {{available}}. Lisää krediittejä jatkaaksesi.",
+      "notEnoughMessage": "Tähän tarvitaan enemmän kuin saldosi {{available}}. Lisää minuutteja jatkaaksesi.",
       "task": {
         "transcription": {
-          "title": "Litterointiin tarvitaan krediittejä",
-          "message": "Saldosi ei riitä tämän videon litterointiin. Lisää krediittejä ja aloita sitten uudelleen. Jo litteroidut rivit säilyvät."
+          "title": "Litterointiin tarvitaan minuutteja",
+          "message": "Saldosi ei riitä tämän videon litterointiin. Lisää minuutteja ja aloita sitten uudelleen. Jo litteroidut rivit säilyvät.",
+          "messageNothingYet": "Saldosi ei riitä tämän videon litterointiin. Lisää minuutteja ja aloita sitten uudelleen."
         },
         "translation": {
-          "title": "Kääntämiseen tarvitaan krediittejä",
-          "message": "Saldosi ei riitä tämän videon kääntämiseen. Lisää krediittejä ja yritä uudelleen. Jo käännetyt rivit säilyvät. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista."
+          "title": "Kääntämiseen tarvitaan minuutteja",
+          "message": "Saldosi ei riitä tämän videon kääntämiseen. Lisää minuutteja ja yritä uudelleen. Jo käännetyt rivit säilyvät. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista.",
+          "messageNothingYet": "Saldosi ei riitä tämän videon kääntämiseen. Lisää minuutteja ja yritä uudelleen. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista."
         },
         "dubbing": {
-          "title": "Dubbaukseen tarvitaan krediittejä",
-          "message": "Saldosi ei riitä tämän videon dubbaukseen. Lisää krediittejä ja yritä uudelleen."
+          "title": "Dubbaukseen tarvitaan minuutteja",
+          "message": "Saldosi ei riitä tämän videon dubbaukseen. Lisää minuutteja ja yritä uudelleen."
         },
         "summary": {
-          "title": "Yhteenvetoon tarvitaan krediittejä",
-          "message": "Saldosi ei riitä yhteenvetoon ja kohokohtiin. Lisää krediittejä ja yritä uudelleen."
+          "title": "Yhteenvetoon tarvitaan minuutteja",
+          "message": "Saldosi ei riitä yhteenvetoon ja kohokohtiin. Lisää minuutteja ja yritä uudelleen."
         },
         "videoSearch": {
-          "title": "Tekoälyhaku vaatii krediittejä",
-          "message": "Saldosi ei riitä tekoälyhakuun. Lisää krediittejä ja hae sitten uudelleen."
+          "title": "Tekoälyhakuun tarvitaan minuutteja",
+          "message": "Saldosi ei riitä tekoälyhakuun. Lisää minuutteja ja hae sitten uudelleen."
         },
         "other": {
-          "title": "Tähän tarvitaan krediittejä"
+          "title": "Tähän tarvitaan minuutteja"
         }
+      },
+      "minutes": {
+        "transcription": {
+          "title": "Litterointiin tarvitaan minuutteja",
+          "message": "Minuuttisi eivät riitä tämän videon litterointiin. Lisää minuutteja ja aloita sitten uudelleen. Jo litteroidut rivit säilyvät.",
+          "messageNothingYet": "Minuuttisi eivät riitä tämän videon litterointiin. Lisää minuutteja ja aloita sitten uudelleen."
+        },
+        "translation": {
+          "title": "Kääntämiseen tarvitaan minuutteja",
+          "message": "Minuuttisi eivät riitä tämän videon kääntämiseen. Lisää minuutteja ja yritä uudelleen. Jo käännetyt rivit säilyvät. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista.",
+          "messageNothingYet": "Minuuttisi eivät riitä tämän videon kääntämiseen. Lisää minuutteja ja yritä uudelleen. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista."
+        },
+        "dubbing": {
+          "title": "Dubbaukseen tarvitaan minuutteja",
+          "message": "Minuuttisi eivät riitä tämän videon dubbaukseen. Lisää minuutteja ja yritä uudelleen."
+        },
+        "summary": {
+          "title": "Yhteenvetoon tarvitaan minuutteja",
+          "message": "Minuuttisi eivät riitä yhteenvetoon ja kohokohtiin. Lisää minuutteja ja yritä uudelleen."
+        },
+        "videoSearch": {
+          "title": "Tekoälyhakuun tarvitaan minuutteja",
+          "message": "Minuuttisi eivät riitä tekoälyhakuun. Lisää minuutteja ja hae sitten uudelleen."
+        },
+        "other": {
+          "title": "Tähän tarvitaan minuutteja"
+        },
+        "title": "Minuutit loppuivat",
+        "neverHadMessage": "Litterointiin tarvitaan minuutteja tai API-avainten avaus. Saat kumman tahansa Asetuksista. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista.",
+        "message": "Minuuttisi ovat loppuneet. Lisää niitä Asetuksissa ja jatka siitä, mihin jäit.",
+        "notEnoughTitle": "Minuutit eivät riitä tähän videoon",
+        "notEnoughTranscriptionMessage": "Tämän videon litterointiin tarvitaan {{required}}, ja sinulla on jäljellä {{available}}. Lisää minuutteja ja aloita sitten uudelleen.",
+        "notEnoughMessage": "Tähän tarvitaan enemmän kuin jäljellä olevat {{available}}. Lisää minuutteja jatkaaksesi."
       }
     },
     "dubCostConfirm": {
       "title": "Aloitetaanko dubbaus?",
-      "message": "Tämä dubbaus käyttää noin {{cost}} {{balance}} krediitistäsi. Äänten luominen maksaa paljon enemmän kuin kääntäminen."
+      "message": "Tämä dubbaus käyttää noin {{cost}} {{balance}} krediitistäsi. Äänten luominen maksaa paljon enemmän kuin kääntäminen.",
+      "messageMinutes": "Tämä dubbaus käyttää {{cost}}. Äänten luominen maksaa paljon enemmän kuin kääntäminen."
     },
     "unsavedSrtOnCaptionRecovery": {
       "discardAndOpen": "Hylkää ja avaa tekstitykset",
@@ -1386,7 +1507,8 @@
       "quitAnyway": "Lopeta silti",
       "closeAnyway": "Sulje silti",
       "saveFailed": "Välilehden {{title}} tekstitystä ei voitu tallentaa, joten mitään ei suljettu. Tallenna se editorissa ja yritä sitten uudelleen.",
-      "ok": "OK"
+      "ok": "OK",
+      "unsavedOnlyDetail": "Tallennetaanko tekstityksen muutokset ensin?"
     },
     "exportSaveDialogTitle": "Tallenna video nimellä",
     "exportVideoFilterName": "MP4-video",
@@ -1400,7 +1522,22 @@
     "exportSameAsSource": "Tämä korvaisi alkuperäisen videon. Valitse toinen nimi.",
     "keepDubbing": "Jatka dubbausta",
     "stopDubbing": "Keskeytä dubbaus",
-    "cancelDubbingBody": "Tähän mennessä tehty dubattu ääni hylätään."
+    "cancelDubbingBody": "Tähän mennessä tehty dubattu ääni hylätään.",
+    "cancelTranslationTitle": "Keskeytetäänkö kääntäminen?",
+    "keepTranslating": "Jatka kääntämistä",
+    "stopTranslating": "Keskeytä kääntäminen",
+    "fatal": {
+      "startTitle": "Translator ei käynnistynyt",
+      "startBody": "Käynnistyksessä tapahtui virhe. Tiedot: {{message}}",
+      "loadBody": "Sovelluksen ikkunaa ei voitu ladata. Tiedot: {{message}}",
+      "crashTitle": "Translator joutuu sulkeutumaan",
+      "crashBody": "Tapahtui odottamaton virhe, joten Translator sulkeutuu nyt. Tiedot: {{message}}",
+      "backgroundCrashBody": "Taustalla tapahtui odottamaton virhe, joten Translator sulkeutuu nyt."
+    },
+    "cancelSummaryTitle": "Keskeytetäänkö yhteenveto?",
+    "keepSummarizing": "Jatka",
+    "stopSummarizing": "Keskeytä",
+    "cancelSummaryBody": "Tähän mennessä tehtyä yhteenvetoa ja kohokohtia ei säilytetä."
   },
   "progress": {
     "preparingVideoExport": "Valmistellaan videon vientiä…",
@@ -1501,7 +1638,7 @@
       "startingExport": "Aloitetaan videon tekeminen…",
       "captionsAvailable": "Videota ei voitu ladata, mutta YouTube-tekstitykset ovat saatavilla",
       "captionsNotOpened": "YouTube-tekstitykset ovat valmiina, mutta niitä ei avattu",
-      "insufficientCredits": "Krediitit eivät riitä"
+      "insufficientCredits": "Minuutit eivät riitä"
     },
     "listening": "Kuunnellaan videota…",
     "mergeFinishSaveBeforeReload": "Viimeistele yhdistetyn videon tallennus ennen uudelleenlatausta.",
@@ -1584,7 +1721,18 @@
     "recentSubtitlesReadyGeneric": "Tekstitys valmis",
     "recentDownloaded": "Ladattu",
     "recentLocalFile": "Tällä tietokoneella",
-    "recentLocalMissing": "Tiedosto siirretty tai poistettu"
+    "recentLocalMissing": "Tiedosto siirretty tai poistettu",
+    "leaveSaveFailed": {
+      "title": "Tekstitystä ei voitu tallentaa",
+      "message": "Translator ei voinut tallentaa tätä tekstitystä kirjastoosi, joten se ei palaa, kun avaat videon uudelleen. Tallenna se ensin .srt-tiedostoksi tai jää tähän.",
+      "leave": "Poistu tallentamatta",
+      "stay": "Jää tähän",
+      "saveSrt": "Tallenna .srt ja poistu"
+    },
+    "burnChooseVideo": "Valitse video",
+    "burnChooseSubtitles": "Valitse upotettava tekstitys",
+    "runBlockedBusy": "Translator käsittelee vielä nykyistä videota. Yritä uudelleen, kun se on valmis.",
+    "downloadCancelled": "Lataus peruttu."
   },
   "workspace": {
     "subtitlesTitle": "Tekstitys",
@@ -1634,7 +1782,16 @@
     "translateMissing": "Käännä puuttuvat {{count}} riviä {{languageInto}}",
     "translateMissing_one": "Käännä puuttuva rivi {{languageInto}}",
     "moreRevealVideo": "Näytä videotiedosto",
-    "chooseAnotherFile": "Valitse toinen tiedosto"
+    "chooseAnotherFile": "Valitse toinen tiedosto",
+    "statusLinesIn": "{{count}} riviä {{languageInto}}",
+    "statusLinesIn_one": "{{count}} rivi {{languageInto}}",
+    "statusTranslatedUnknownNoVideo": "{{count}} käännettyä riviä",
+    "statusTranslatedUnknownNoVideo_one": "{{count}} käännetty rivi",
+    "statusLines": "{{count}} tekstitysriviä",
+    "statusLines_one": "{{count}} tekstitysrivi",
+    "checkingFile": "Luetaan tiedostoa…",
+    "statusLoaded": "{{count}} riviä ladattu",
+    "statusLoaded_one": "{{count}} rivi ladattu"
   },
   "subtitleStyles": {
     "Cinema": "Elokuvakeltainen",
@@ -1674,7 +1831,9 @@
     "offerBodyLong_one": "Paketti hintaan {{price}} kattaa suurimman osan jäljellä olevasta {{remaining}} minuutista.",
     "failedNeedMinutes": "Kaikki tähän asti valmistunut säilyy. Jäljellä oleviin {{remaining}} minuuttiin tarvitset lisää minuutteja.",
     "failedNeedMinutes_one": "Kaikki tähän asti valmistunut säilyy. Viimeiseen minuuttiin tarvitset lisää minuutteja.",
-    "failedNetwork": "Yhteys katkesi. Kaikki tähän asti valmistunut säilyy. Yritä uudelleen, kun olet taas verkossa."
+    "failedNetwork": "Yhteys katkesi. Kaikki tähän asti valmistunut säilyy. Yritä uudelleen, kun olet taas verkossa.",
+    "noneBodyNextFree": "Ilmaiset minuutit täyttyvät taas {{date}} – tai käännä video heti {{languageInto}} hintaan {{price}}.",
+    "enoughBody_one": "Minuuttisi riittävät viimeisen minuutin kääntämiseen saman tien."
   },
   "videoCost": {
     "covered": "Minuuttisi riittävät",
@@ -1745,7 +1904,8 @@
   "tabs": {
     "newTab": "Uusi välilehti",
     "newTabWithShortcut": "Uusi välilehti ({{shortcut}})",
-    "closeTab": "Sulje välilehti"
+    "closeTab": "Sulje välilehti",
+    "tabList": "Avoimet välilehdet"
   },
   "menu": {
     "about": "Tietoja: {{app}}",
@@ -1796,6 +1956,15 @@
     "copyImage": "Kopioi kuva",
     "copyImageAddress": "Kopioi kuvan osoite",
     "copyVideoAddress": "Kopioi videon osoite",
-    "inspect": "Tarkastele elementtiä"
+    "inspect": "Tarkastele elementtiä",
+    "focusTabStrip": "Siirry välilehtipalkkiin"
+  },
+  "startupNotice": {
+    "title": "Osa asetuksista palautettiin",
+    "settingsReset": "Translatorin asetustiedosto oli vioittunut, joten asetuksesi palautettiin oletuksiin: käyttöliittymän ja tekstityksen kieli, API-avaimet ja muut valinnat. Vioittuneesta tiedostosta jäi talteen kopio. Tarkista Asetukset.",
+    "deviceIdReplaced": "Tiedosto, joka liittää tämän tietokoneen minuutteihisi, oli vioittunut, joten Translator loi uuden liitoksen. Ostamasi minuutit eivät ehkä näy täällä. Ota yhteyttä tukeen ja liitä mukaan ostokuitti, niin siirrämme ne takaisin.",
+    "contactSupport": "Ota yhteyttä tukeen",
+    "openSettings": "Avaa Asetukset",
+    "supportSubject": "Minuuttini katosivat, kun Translator nollasi tämän tietokoneen"
   }
 }

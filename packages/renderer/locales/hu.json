@@ -26,7 +26,7 @@
       "creditReservationFailed": "Kredit foglalás sikertelen",
       "invalidRenderOptions": "Érvénytelen renderelési beállítások",
       "missingVideoMetadata": "Hiányzó videó metaadatok ({{missing}})",
-      "insufficientDiskSpace": "Nincs elegendő lemezterület az egyesítés befejezéséhez. Kérjük szabadítson fel helyet és próbálja újra.",
+      "insufficientDiskSpace": "Nincs elég lemezterület az egyesítés befejezéséhez. Szabadíts fel helyet, és próbáld újra.",
       "noSourceVideo": "Nincs forrásvideó",
       "noSubtitlesLoaded": "Nincsenek betöltött feliratok",
       "failedToLoadSRT": "SRT fájl betöltése sikertelen",
@@ -52,10 +52,10 @@
     "reloadPageAria": "Oldal újratöltése",
     "backToTop": "Vissza a tetejére",
     "backToTopAria": "Görgetés vissza a tetejére",
-    "confirmReload": "Biztosan újra szeretné tölteni az oldalt? A nem mentett változtatások elveszhetnek.",
+    "confirmReload": "Biztosan újratöltöd az oldalt? A nem mentett változtatások elveszhetnek.",
     "installUpdate": "Újraindítás frissítéshez",
     "confirmInstallUpdate": "Telepíti a frissítést és újraindítja?",
-    "downloadUpdate": "Kattintson a frissítés letöltéséhez",
+    "downloadUpdate": "Kattints a frissítés letöltéséhez",
     "dismissError": "Hiba bezárása",
     "closeAlert": "Figyelmeztetés bezárása",
     "closeBanner": "Szalag bezárása",
@@ -68,7 +68,7 @@
     "downloadingUpdateShort": "LETÖLTÉS",
     "downloadUpdateNow": "Frissítés letöltése",
     "hide": "Elrejtés",
-    "installUpdateAria": "Telepítse a frissítést és indítsa újra az alkalmazást",
+    "installUpdateAria": "Frissítés telepítése és az alkalmazás újraindítása",
     "installUpdateNow": "Frissítés telepítése",
     "installUpdateShort": "FRISSÍTÉS TELEPÍTÉSE",
     "locked": "Zárolva",
@@ -80,9 +80,9 @@
     "openDownloadPage": "Letöltési oldal megnyitása",
     "show": "Megjelenítés",
     "splitScrollButtonAria": "Görgetés felülre (felső fél) vagy alulra (alsó fél)",
-    "updateRequiredBody": "A Translator ezen verzióját a backend már nem támogatja. A folytatáshoz frissítse az alkalmazást.",
+    "updateRequiredBody": "A Translator ezen verzióját a szerver már nem támogatja. A folytatáshoz frissítsd az alkalmazást.",
     "updateRequiredTitle": "Frissítés szükséges",
-    "wait": "Kérem, várjon…",
+    "wait": "Egy pillanat…",
     "whatsNewTitle": "Újdonságok",
     "whatsNewVersionTitle": "Újdonságok a v{{version}} verzióban",
     "fileFilters": {
@@ -112,13 +112,14 @@
     "updateAvailableDownloading": "Van frissítés. Letöltés a háttérben.",
     "updateReadyToInstall": "A frissítés letöltődött. Indítsd újra az alkalmazást a telepítéshez.",
     "updateCheckFailed": "Nem sikerült frissítést keresni. Próbáld újra később.",
-    "aboutVersion": "Translator v{{version}}"
+    "aboutVersion": "Translator v{{version}}",
+    "updateVersionAvailable": "Elérhető: v{{version}}"
   },
   "errors": {
     "needCookies": "A YouTube emberi ellenőrzést kért. Kattintson a Csatlakozás gombra a folytatáshoz.",
-    "needCookiesYouTube": "A YouTube emberi ellenőrzést kért. Kattintson a Csatlakozás gombra a folytatáshoz.",
-    "needCookiesGeneric": "Ez a webhely emberi ellenőrzést kért. Kattintson a Csatlakozás gombra a folytatáshoz.",
-    "connectFailed": "Nem sikerült csatlakozni. Kérjük próbálja újra.",
+    "needCookiesYouTube": "A YouTube emberi ellenőrzést kért. A folytatáshoz kattints a Csatlakozás gombra.",
+    "needCookiesGeneric": "Ez a webhely emberi ellenőrzést kért. A folytatáshoz kattints a Csatlakozás gombra.",
+    "connectFailed": "Nem sikerült csatlakozni. Próbáld újra.",
     "invalidUrl": "Az URL formátuma érvénytelennek tűnik.",
     "unexpected": "Váratlan hiba történt.",
     "unexpectedRemove": "Váratlan hiba történt a kulcs eltávolítása közben.",
@@ -140,32 +141,32 @@
     "adminCreditResetFailed": "A kreditek 0-ra állítása nem sikerült: {{message}}",
     "adminCreditResetError": "Hiba a kreditek 0-ra állításakor: {{message}}",
     "byo": {
-      "openaiKeyInvalid": "Az OpenAI API kulcsod érvénytelen vagy lejárt. Kérjük ellenőrizd a kulcsot a Beállításokban.",
-      "openaiRateLimit": "OpenAI sebességkorlát elérve. Kérjük várj egy pillanatot és próbáld újra.",
-      "openaiInsufficientQuota": "Az OpenAI fiókod egyenlege elégtelen. Kérjük adj hozzá kreditet a platform.openai.com oldalon.",
-      "anthropicKeyInvalid": "Az Anthropic API kulcsod érvénytelen vagy lejárt. Kérjük ellenőrizd a kulcsot a Beállításokban.",
-      "anthropicRateLimit": "Anthropic sebességkorlát elérve. Kérjük várj egy pillanatot és próbáld újra.",
-      "anthropicInsufficientQuota": "Az Anthropic fiókod egyenlege elégtelen. Kérjük adj hozzá kreditet a console.anthropic.com oldalon.",
-      "elevenlabsKeyInvalid": "Az ElevenLabs API kulcsod érvénytelen vagy lejárt. Kérjük ellenőrizd a kulcsot a Beállításokban.",
-      "elevenlabsRateLimit": "ElevenLabs sebességkorlát elérve. Kérjük várj egy pillanatot és próbáld újra.",
-      "elevenlabsInsufficientQuota": "Az ElevenLabs fiókod egyenlege elégtelen. Kérjük adj hozzá kreditet az elevenlabs.io oldalon.",
+      "openaiKeyInvalid": "Az OpenAI API-kulcsod érvénytelen vagy lejárt. Ellenőrizd a kulcsot a Beállításokban.",
+      "openaiRateLimit": "Elérted az OpenAI sebességkorlátját. Várj egy kicsit, és próbáld újra.",
+      "openaiInsufficientQuota": "Az OpenAI-fiókod egyenlege nem elég. Tölts fel kreditet a platform.openai.com oldalon.",
+      "anthropicKeyInvalid": "Az Anthropic API-kulcsod érvénytelen vagy lejárt. Ellenőrizd a kulcsot a Beállításokban.",
+      "anthropicRateLimit": "Elérted az Anthropic sebességkorlátját. Várj egy kicsit, és próbáld újra.",
+      "anthropicInsufficientQuota": "Az Anthropic-fiókod egyenlege nem elég. Tölts fel kreditet a console.anthropic.com oldalon.",
+      "elevenlabsKeyInvalid": "Az ElevenLabs API-kulcsod érvénytelen vagy lejárt. Ellenőrizd a kulcsot a Beállításokban.",
+      "elevenlabsRateLimit": "Elérted az ElevenLabs sebességkorlátját. Várj egy kicsit, és próbáld újra.",
+      "elevenlabsInsufficientQuota": "Az ElevenLabs-fiókod egyenlege nem elég. Tölts fel kreditet az elevenlabs.io oldalon.",
       "checkSettings": "Beállítások ellenőrzése",
-      "genericApiError": "API kérés sikertelen. Kérjük ellenőrizd az API kulcsod és fiókod állapotát."
+      "genericApiError": "Az API-kérés nem sikerült. Ellenőrizd az API-kulcsodat és a fiókod állapotát."
     },
     "transcription": {
-      "providerUnavailable": "Az átírás (ElevenLabs Scribe) átmenetileg nem érhető el, vagy több próbálkozás után sem sikerült csatlakozni hozzá. Kérjük, próbálja újra néhány perc múlva.",
-      "fileTooLarge": "Ez a hanganyag túl hosszú ahhoz, hogy egyetlen feladatban átírható legyen (több mint kb. {{hours}} óra). Ossza fel a videót rövidebb részekre, és írja át mindegyiket külön.",
-      "elevenLabsKeyRequired": "Az átírás az ElevenLabs Scribe-ot használja, és ElevenLabs API kulcsot igényel. Adjon hozzá egyet a Beállításokban, vagy kapcsolja ki az API kulcs módot, hogy Stage5 kreditekkel írjon át. Az OpenAI vagy Anthropic kulcsát továbbra is a fordításhoz használjuk."
+      "providerUnavailable": "Az átírás (ElevenLabs Scribe) átmenetileg nem érhető el, vagy több próbálkozás után sem sikerült csatlakozni hozzá. Próbáld újra néhány perc múlva.",
+      "fileTooLarge": "Ez a hanganyag túl hosszú egyetlen átíráshoz (több mint kb. {{hours}} óra). Oszd fel a videót rövidebb részekre, és írd át őket külön.",
+      "elevenLabsKeyRequired": "Az átírás az ElevenLabs Scribe-ot használja, ehhez ElevenLabs API-kulcs kell. Add meg a Beállításokban, vagy kapcsold ki az API-kulcs módot, és írj át Stage5-percekkel. Az OpenAI- vagy Anthropic-kulcsodat továbbra is a fordításhoz használjuk."
     },
     "credits": {
-      "transcription": "Nincs elég kredit az átíráshoz.",
-      "translation": "Nincs elég kredit a fordításhoz.",
-      "dubbing": "Nincs elég kredit a szinkronhoz.",
-      "summary": "Nincs elég kredit az összefoglalóhoz.",
-      "videoSearch": "Nincs elég kredit a videókereséshez.",
-      "download": "Nincs elég kredit.",
-      "export": "Nincs elég kredit.",
-      "other": "Nincs elég kredit."
+      "transcription": "Nincs elég perced az átíráshoz.",
+      "translation": "Nincs elég perced a fordításhoz.",
+      "dubbing": "Nincs elég perced a szinkronhoz.",
+      "summary": "Nincs elég perced az összefoglalóhoz.",
+      "videoSearch": "Nincs elég perced a videókereséshez.",
+      "download": "Nincs elég perced.",
+      "export": "Nincs elég perced.",
+      "other": "Nincs elég perced."
     },
     "failed": {
       "transcription": "Az átírás egy váratlan hiba miatt leállt. A már átírt sorok megmaradnak.",
@@ -174,7 +175,8 @@
       "summary": "Az összefoglaló készítése egy váratlan hiba miatt leállt.",
       "videoSearch": "A videókeresés egy váratlan hiba miatt leállt.",
       "export": "A videó elkészítése egy váratlan hiba miatt leállt.",
-      "other": "Valami hiba történt. Próbáld újra."
+      "other": "Valami hiba történt. Próbáld újra.",
+      "download": "Nem sikerült letölteni a videót. Próbáld újra, vagy használj másik linket."
     },
     "server": {
       "transcription": "Hiba történt a szerverünkön. Próbáld újra egy perc múlva.",
@@ -183,7 +185,8 @@
       "summary": "Hiba történt a szerverünkön. Próbáld újra egy perc múlva.",
       "videoSearch": "Hiba történt a szerverünkön. Próbáld újra egy perc múlva.",
       "export": "Hiba történt a szerverünkön. Próbáld újra egy perc múlva.",
-      "other": "Hiba történt a szerverünkön. Próbáld újra egy perc múlva."
+      "other": "Hiba történt a szerverünkön. Próbáld újra egy perc múlva.",
+      "download": "Hiba történt a szerverünkön. Próbáld újra egy perc múlva."
     },
     "download": {
       "invalid_url": "Ez nem tűnik videólinknek. Illeszd be a teljes linket.",
@@ -209,12 +212,14 @@
     "network": "Nem érhető el a szerver. Ellenőrizd az internetkapcsolatot, és próbáld újra.",
     "busy": "A szolgáltatás most túlterhelt. Várj egy percet, és próbáld újra.",
     "diskFull": "Megtelt a lemez. Szabadíts fel egy kis helyet, és próbáld újra.",
-    "cancelDubbingFailedPlain": "Nem sikerült leállítani a szinkront. Próbáld újra."
+    "cancelDubbingFailedPlain": "Nem sikerült leállítani a szinkront. Próbáld újra.",
+    "cancelTranslationFailedPlain": "Nem sikerült leállítani a fordítást. Próbáld újra.",
+    "cancelSummaryFailedPlain": "Nem sikerült leállítani az összefoglalót. Próbáld újra."
   },
   "input": {
     "connect": "Csatlakozás",
     "connecting": "Csatlakozás...",
-    "connectTip": "Tipp: A csatlakozási ablakban jelentkezzen be vagy végezze el az ellenőrzést, majd zárja be az ablakot a folytatáshoz.",
+    "connectTip": "Tipp: a csatlakozási ablakban jelentkezz be vagy végezd el az ellenőrzést, aztán a folytatáshoz zárd be az ablakot.",
     "fromDevice": "Az eszközödről",
     "fromWeb": "A webről",
     "downloadVideo": "Videó letöltése",
@@ -245,7 +250,7 @@
     "srtLoaded": "Átírás kész",
     "srtFileLoaded": "SRT betöltve",
     "featuresUnlockAfterTranscription": "Írd át vagy fordítsd le ezt a videót, vagy keresd meg benne a kiemelt pillanatokat.",
-    "preSubtitleActionsHint": "Készíts átiratot, fordítást vagy kiemeléseket ebből a videóból.",
+    "preSubtitleActionsHint": "Írd át, fordítsd le, vagy keresd meg a kiemelt pillanatokat ebben a videóban.",
     "saveDubbedVideo": "Szinkronizált videó mentése",
     "downloadFinishedSwitchTitle": "Megnézed a letöltött videót?",
     "downloadFinishedSwitchPrompt": "A letöltés elkészült. Nézd meg most, vagy tartsd meg a jelenlegi videót, és nyisd meg később az előzményekből.",
@@ -261,10 +266,10 @@
       "introCopy": "Kezdd egy témával, hangulattal, alkotóval vagy közönséggel. Országot vagy időszakot csak akkor adj meg, ha fontos.",
       "starterQuestion": "Milyen videókat keresel?",
       "defaultFollowUp": "Mondj egy kicsit többet, és finomítom a keresést.",
-      "errorMessage": "Valami hiba történt. Kérjük, próbáld újra.",
-      "composerTitle": "Mondja meg az AI-nak, mit keressen",
+      "errorMessage": "Valami hiba történt. Próbáld újra.",
+      "composerTitle": "Mondd meg az AI-nak, mit keressen",
       "composerHint": "Bármilyen nyelv",
-      "composerMeta": "A kereséshez nyomja meg az Entert",
+      "composerMeta": "A kereséshez nyomd meg az Entert",
       "placeholder": "pl. nyugodt japán éjszakai utcai séták",
       "thinking": "Gondolkodom...",
       "resultsFor": "Találatok erre",
@@ -385,14 +390,14 @@
       "countryDefaultEnglish": "Célország: alapértelmezett az angol",
       "emptyCopy": "Írd le a keresett videó témáját, közönségét, alkotói stílusát vagy hangulatát. Országot vagy időbeliséget csak akkor adj meg, ha számít.",
       "emptyEyebrow": "Keresés asszisztenssel",
-      "emptyTitle": "Írja le, milyen videót keres",
+      "emptyTitle": "Írd le, milyen videót keresel",
       "languageHint": "Kimeneti nyelv",
-      "noMoreResults": "Nem található több eltérő találat. Próbálja módosítani az országot vagy az időbeliséget.",
+      "noMoreResults": "Nincs több eltérő találat. Próbáld módosítani az országot vagy az időszakot.",
       "aiVideoRecommendation": "AI videóajánlás",
       "optionalDiscovery": "Opcionális felfedezés",
       "recencyAny": "Bármikor (régebbi videókkal együtt)",
       "recencyDay": "Utolsó 24 óra",
-      "recencyHint": "Akkor használja, ha az újabb videók kerüljenek előrébb.",
+      "recencyHint": "Kapcsold be, ha az újabb videókat szeretnéd előrébb látni.",
       "recencyLabel": "Időbeliség",
       "recencyMonth": "Utolsó 30 nap",
       "recencyWeek": "Utolsó 7 nap",
@@ -428,7 +433,8 @@
       "freeSearchRunning": "Keresés a YouTube-on…",
       "freeSearchResults": "Itt vannak a YouTube találatai erre: „{{query}}”. Ez a keresés ingyenes volt. Mondd el részletesebben, mit szeretnél, és AI segítségével pontosítom.",
       "freeSearchEmpty": "A YouTube semmit sem talált erre: „{{query}}”. Írd le, mit keresel, és AI segítségével keresek.",
-      "openOriginalPage": "Eredeti oldal megnyitása"
+      "openOriginalPage": "Eredeti oldal megnyitása",
+      "modelPill": "Kereső AI: {{model}}"
     },
     "downloadAndTranslate": "Letöltés és fordítás",
     "downloadAndTranscribe": "Letöltés és átírás",
@@ -459,7 +465,8 @@
     },
     "dropWhileDownloading": "Letöltés folyik. Ha befejeződött, húzd ide újra a fájlt.",
     "dropWhileBusy": "A Translator épp ezen a videón dolgozik. Ha végzett, húzd ide újra a fájlt.",
-    "dropNotSupported": "Videót, hangfájlt vagy .srt feliratfájlt húzz ide."
+    "dropNotSupported": "Videót, hangfájlt vagy .srt feliratfájlt húzz ide.",
+    "batchDownloadRunning": "A Translator több videót tölt le. Várd meg, amíg végez, vagy szakítsd meg a letöltést."
   },
   "subtitles": {
     "outputLanguage": "Kimeneti nyelv",
@@ -474,7 +481,7 @@
     "improveTranscription": "Átírás javítása",
     "improveTranslation": "Fordítás javítása",
     "chooseSrtFile": "SRT fájl kiválasztása",
-    "dub": "Hang szinkronizálás",
+    "dub": "Szinkronizálás",
     "dubEstimateCredits": "{{credits}} kr (~{{minutes}}p)",
     "dubEstimateByo": "~{{minutes}}p hang",
     "voiceCloningRequiresTranslation": "A hangklónozáshoz célnyelv szükséges",
@@ -497,16 +504,28 @@
     "dubNotEnoughCredits": "Nincs elég kredit ehhez a szinkronhoz.",
     "addCreditsToDub": "Kreditfeltöltés a szinkronhoz",
     "noSubtitlesToDub": "Előbb készíts vagy nyiss meg feliratot ehhez a videóhoz, aztán szinkronizáld.",
-    "noSubtitlesToTranslate": "Előbb nyiss meg vagy készíts feliratot, aztán fordítsd le."
+    "noSubtitlesToTranslate": "Előbb nyiss meg vagy készíts feliratot, aztán fordítsd le.",
+    "dubVoiceHelp": "Ennek a szinkronnak a hangja. A következő szinkronoknál is ez marad kiválasztva.",
+    "addMinutesToDub": "Percek feltöltése a szinkronhoz",
+    "dubNotEnoughMinutes": "Nincs elég perced ehhez a szinkronhoz.",
+    "addMinutesToTranslate": "Percek feltöltése a fordításhoz",
+    "transcriptEmptyForTranslation": "Az átiratban nincs lefordítható sor.",
+    "dubCostHintMinutes": "ElevenLabs-hang: beszédpercenként ~{{time}} a perceidből. Ezt a becslést a szinkron indítása előtt látod.",
+    "fileError": {
+      "openPermission": "A Translatornak nincs engedélye a fájl olvasására. Ellenőrizd a jogosultságait, vagy másold egy másik mappába, és próbáld újra.",
+      "openMissing": "Ez a feliratfájl már nincs meg. Lehet, hogy áthelyezték vagy törölték.",
+      "openFailed": "A Translator nem tudta megnyitni ezt a feliratfájlt. Ellenőrizd, hogy .srt fájl-e, és próbáld újra.",
+      "saveFailed": "A Translator nem tudta menteni a feliratokat. Próbáld újra, vagy válaszd a „Feliratok mentése másként...” lehetőséget, és adj meg másik mappát."
+    }
   },
   "summary": {
     "title": "Kiemelt pillanatok",
     "ctaHelper": "Megkeressük a legjobb pillanatokat.",
     "languageLabel": "Kimenet nyelve",
     "tab": {
-      "summary": "Összefoglalás",
+      "summary": "Összefoglaló",
       "sections": "Jegyzetek",
-      "highlights": "Kiemelések"
+      "highlights": "Kiemelt pillanatok"
     },
     "generate": "Kiemelt pillanatok keresése",
     "regenerate": "Kiemelt pillanatok újrakeresése",
@@ -514,17 +533,17 @@
     "estimateByo": "BYO-kulcs",
     "highEffortBadge": "(mély)",
     "placeholder": "Az AI összefoglalásod itt jelenik meg a generálás után.",
-    "insufficientCredits": "Nincs elég kredit a kiemelt pillanatok kereséséhez.",
+    "insufficientCredits": "Nincs elég perced a kiemelt pillanatok kereséséhez.",
     "error": "Nem sikerült megtalálni a kiemelt pillanatokat. {{message}}",
     "cancel": "Mégse",
-    "copy": "Összefoglalás másolása",
+    "copy": "Összefoglaló másolása",
     "copied": "Másolva!",
-    "copyError": "Nem sikerült az összefoglalást a vágólapra másolni.",
+    "copyError": "Nem sikerült az összefoglalót a vágólapra másolni.",
     "noHighlights": "Még nincsenek kiemelt pillanatok. Indítsd el a keresést, és megtaláljuk a legjobb részeket.",
-    "noVideoForHighlights": "Nyisd meg a forrásvideót a kiemelés klipek vágásához.",
+    "noVideoForHighlights": "Nyisd meg a forrásvideót a kiemelt klipek kivágásához.",
     "summaryRequiredForHighlights": "Előbb keresd meg a kiemelt pillanatokat, hogy az átirat elemzése megtörténjen.",
-    "highlight": "Kiemelés",
-    "cutHighlightClip": "E kiemelés kivágása",
+    "highlight": "Kiemelt pillanat",
+    "cutHighlightClip": "Kiemelt pillanat kivágása",
     "cuttingHighlightClip": "Vágás…",
     "highlightPlaceholder": "A klip még nincs kivágva.",
     "clipFormat": "Klip formátuma:",
@@ -538,9 +557,9 @@
     "downloadingHighlight": "Mentés…",
     "highlightSaved": "Mentve!",
     "highlightSaveError": "Mentés sikertelen",
-    "downloadHighlightFailed": "Nem sikerült menteni a kiemelés klipet: {{message}}",
+    "downloadHighlightFailed": "Nem sikerült menteni a kiemelt klipet: {{message}}",
     "highlightsSelectionFailed": "Nem sikerült kiválasztani a kiemelt pillanatokat: {{message}}",
-    "saveHighlightDialogTitle": "Kiemelés klip mentése",
+    "saveHighlightDialogTitle": "Kiemelt klip mentése",
     "noSections": "Még nincsenek szakasz jegyzetek.",
     "sectionHeading": "{{index}}. szakasz",
     "highlightsInProgress": "Kiemelés klipek előkészítése…",
@@ -548,12 +567,12 @@
       "preparing": "Az átirat elemzése…",
       "chunk": "Összefoglaló írása: {{current}}/{{total}}",
       "selectingHighlights": "Kiemelt pillanatok kiválasztása…",
-      "cuttingHighlight": "{{current}}/{{total}} kiemelés vágása…",
-      "cuttingHighlights": "Kiemelés klipek vágása…",
+      "cuttingHighlight": "{{current}}/{{total}}. kiemelt pillanat kivágása…",
+      "cuttingHighlights": "Kiemelt klipek kivágása…",
       "synthesizing": "Befejezés…",
       "ready": "A kiemelt pillanatok elkészültek",
-      "error": "A kiemelések keresése nem sikerült",
-      "cancelled": "A kiemelések keresése megszakítva",
+      "error": "Nem sikerült megtalálni a kiemelt pillanatokat",
+      "cancelled": "A kiemelt pillanatok keresése megszakítva",
       "inProgress": "Kiemelt pillanatok keresése…",
       "cuttingClip": "Klip kivágása…",
       "renderingClipSubtitles": "Feliratok hozzáadása a kliphez…"
@@ -563,13 +582,13 @@
     "reorderHint": "Húzd az átrendezéshez:",
     "cutCombined": "Kombinált vágása",
     "cuttingCombined": "Vágás...",
-    "combinedHighlightReady": "Kombinált kiemelés kész",
+    "combinedHighlightReady": "Az összevont klip kész",
     "downloadCombined": "Kombinált klip letöltése",
-    "saveCombinedDialogTitle": "Kombinált kiemelés klip mentése",
-    "combinedCutFailed": "Nem sikerült a kombinált kiemeléseket vágni: {{message}}",
-    "highlightsInsufficientCredits": "Az összefoglalás elkészült, de a kiemelések kinyerése leállt, mert elfogytak a kreditek.",
-    "highlightsPartialWarning": "A kiemelések kinyerése csak részleges volt. Ezek a kiemelések hiányosak lehetnek. Frissítéshez generáld újra.",
-    "highlightsPartialWithReason": "Az összefoglalás elkészült, de a kiemelések kinyerése csak részleges volt: {{message}}",
+    "saveCombinedDialogTitle": "Összevont kiemelt klip mentése",
+    "combinedCutFailed": "Nem sikerült kivágni az összevont kiemelt pillanatokat: {{message}}",
+    "highlightsInsufficientCredits": "Az összefoglaló elkészült, de a kiemelt pillanatok keresése leállt, mert elfogytak a perceid.",
+    "highlightsPartialWarning": "Csak a kiemelt pillanatok egy része lett meg, ezért hiányosak lehetnek. A frissítéshez keresd meg őket újra.",
+    "highlightsPartialWithReason": "Az összefoglaló elkészült, de csak a kiemelt pillanatok egy része lett meg: {{message}}",
     "estimateOwnKey": "A saját API-kulcsodat használja",
     "generateSummary": "Összefoglalás",
     "regenerateSummary": "Új összefoglaló",
@@ -592,7 +611,17 @@
       "untranslated": "A klip néhány sora még nincs lefordítva. Fordítsd le őket, vagy állítsd a feliratmegjelenítést az eredetire.",
       "subtitlesNotSaved": "A klip elkészült, de a feliratait nem sikerült menteni.",
       "generic": "Nem sikerült kivágni ezt a klipet a videóból. Próbáld újra."
-    }
+    },
+    "addMinutesToSummarize": "Percek feltöltése az összefoglalóhoz",
+    "addMinutesForHighlights": "Percek feltöltése a kiemelt pillanatokhoz",
+    "qualityLabel": "Minőség",
+    "qualityStandard": "Normál",
+    "qualityDeep": "Alapos (többe kerül)",
+    "subtitlesChangedSinceAnalysis": "A feliratok megváltoztak az elemzés óta. Megjelöltük azokat a kiemelt pillanatokat, amelyeknek a sorai változtak; a többi továbbra is egyezik.",
+    "highlightCuesChanged": "Ennek a kiemelt pillanatnak a sorait a megtalálása után módosítottad. Nézd meg, hogy még mindig passzol-e.",
+    "clipCaptionsChangedAny": "A klip kivágása óta megváltoztak a feliratai (szöveg, stílus vagy méret).",
+    "notEnoughForRun": "Nincs elég perced az összefoglalóhoz és a kiemelt pillanatokhoz.",
+    "clipsUseOriginalAudio": "A klipekben az eredeti hang szól, nem a szinkron."
   },
   "panel": {
     "new": "új",
@@ -631,7 +660,7 @@
       "automaticCaptionsCopyWithMedia": "Az URL-ről történő videóletöltés le lett tiltva (HTTP 403). Ezek a YouTube automatikus feliratai, nem friss átírás. A csatolt média elérhető az előnézethez és a beégetéshez.",
       "automaticCaptionsPill": "YouTube automatikus feliratok",
       "automaticCaptionsTitle": "YouTube automatikus feliratok",
-      "highlightEditingLocked": "Kiemelések generálása folyamatban, a szerkesztés zárolva"
+      "highlightEditingLocked": "A kiemelt pillanatok keresése közben a szerkesztés zárolva van"
     },
     "item": {
       "seek": "Ugrás",
@@ -648,13 +677,17 @@
       "confirmRemove": "Biztosan el szeretné távolítani ezt a feliratblokkot? Ez a művelet nem vonható vissza.",
       "transcribeThisLine": "Sor átírása",
       "timeEndBeforeStart": "A befejezésnek a kezdés után kell lennie. A sor megtartja a korábbi idejét.",
-      "timeUnreadable": "Így add meg az időt: 00:01:23,450 vagy 1:23.45. A sor megtartja a korábbi idejét."
+      "timeUnreadable": "Így add meg az időt: 00:01:23,450 vagy 1:23.45. A sor megtartja a korábbi idejét.",
+      "startTimeAria": "A(z) {{index}}. sor kezdete",
+      "endTimeAria": "A(z) {{index}}. sor vége",
+      "splitTitle": "Sor kettévágása a kurzornál",
+      "mergeTitle": "Összevonás a következő sorral"
     },
     "header": {
       "save": "Feliratok mentése",
       "saveAs": "Feliratok mentése másként...",
       "saveTooltip": "Változtatások mentése az eredeti fájlba",
-      "saveAsTooltip": "Először mentse másként a közvetlen mentés engedélyezéséhez"
+      "saveAsTooltip": "Előbb mentsd másként, hogy a közvetlen mentés is működjön"
     },
     "mergeControls": {
       "fontSizeLabel": "Betűméret:",
@@ -667,8 +700,11 @@
       "inserted": "Sor hozzáadva.",
       "replaced": "Csere minden sorban.",
       "shifted": "Időzítés eltolva.",
-      "improved": "Sor újra lejegyezve.",
-      "action": "Visszavonás"
+      "improved": "A sor újra átírva.",
+      "action": "Visszavonás",
+      "split": "A sor kettévált.",
+      "merged": "A sorok összevonva.",
+      "shortcut": "Visszavonás ({{keys}})"
     }
   },
   "settings": {
@@ -684,7 +720,9 @@
       "pendingOff": "Ezen az eszközön kikapcsolva. Csatlakozz a szerver beállításának megerősítéséhez.",
       "retry": "Újra",
       "error": "A választás nem erősíthető meg. Próbáld újra.",
-      "anonymousCounts": "Mindig be van kapcsolva: az alkalmazás lépéseinek névtelen napi számlálása (például alkalmazás megnyitása vagy letöltés befejezése), csak a lépéssel, nappal, platformmal és verzióval. Azonosító, tartalom és beállítás nélkül."
+      "anonymousCounts": "Mindig be van kapcsolva: az alkalmazás lépéseinek névtelen napi számlálása (például alkalmazás megnyitása vagy letöltés befejezése), csak a lépéssel, nappal, platformmal és verzióval. Azonosító, tartalom és beállítás nélkül.",
+      "pendingOffPlain": "Kikapcsolva. A szerverrel akkor erősítjük meg, amikor legközelebb online leszel.",
+      "pendingOnPlain": "Bekapcsolva. A jelentések megvárják, amíg újra online leszel."
     },
     "title": "Beállítások",
     "aiProvider": {
@@ -694,10 +732,10 @@
       "toggleLabel": "Saját API kulcsaim használata",
       "activeKeys": "Kulcsok készen: {{count}}",
       "noKeys": "Nincs beállított kulcs",
-      "usingApiKeys": "Stage5 kreditek ki",
-      "usingCredits": "Stage5 kreditek be",
+      "usingApiKeys": "Stage5-percek kikapcsolva",
+      "usingCredits": "Stage5-percek bekapcsolva",
       "toggleOn": "Most az API-kulcsaidat használja.",
-      "toggleOff": "Most Stage5 krediteket használ.",
+      "toggleOff": "Most Stage5-perceket használ.",
       "toggleError": "Nem sikerült frissíteni a beállítást.",
       "toggleAria": "Saját API kulcsaim használata",
       "requirementTranslation": "OpenAI vagy Anthropic kulcs szükséges a fordításhoz"
@@ -721,7 +759,7 @@
         "helpWithEstimateOff": "<b>1× kredit</b> • Csak Claude Haiku 5.5 vázlat • Egyenleg: ~{{time}}"
       },
       "qualitySummary": {
-        "label": "Minőségi összefoglalás",
+        "label": "Alapos összefoglaló",
         "modelOn": "Claude Opus 5.5 mélyelemzés + kiemelt klipek",
         "modelOff": "Claude Sonnet 5.5 standard elemzés",
         "help": "<b>4× kredit</b> • Mélyebb elemzés + kiemelésklipek Claude Opus 5.5 modellel",
@@ -757,7 +795,7 @@
     },
     "dubbing": {
       "voiceLabel": "Szinkronhang",
-      "voiceHelp": "Válassza ki az alapértelmezett hangot a szinkronizált hang generálásához.",
+      "voiceHelp": "Válaszd ki a szinkron alapértelmezett hangját.",
       "voiceOptions": {
         "rachel": "Rachel",
         "adam": "Adam",
@@ -773,7 +811,7 @@
       "previewFree": "Előnézet",
       "previewWithCost": "Előnézet ({{cost}} kredit)",
       "mixLabel": "Szinkronhang hangereje vs eredeti videó hangereje",
-      "mixHelp": "Állítsa be, hogy az eredeti hangsáv mennyire hallatszik a szinkronizált hang alatt.",
+      "mixHelp": "Állítsd be, mennyire hallatszik az eredeti hangsáv a szinkron alatt.",
       "mixAmbient": "Több háttérhang",
       "mixVoice": "Több szinkronhang",
       "voiceCloning": "Eredeti hang klónozása",
@@ -786,11 +824,13 @@
       "yourBalance": "Egyenleged",
       "canClone": "Klónozhat",
       "upToMinutes": "legfeljebb {{minutes}} percet",
-      "loading": "Betöltés..."
+      "loading": "Betöltés...",
+      "previewWithMinutes": "Meghallgatás ({{cost}})",
+      "previewFailed": "Nem sikerült lejátszani a hangmintát. Próbáld újra."
     },
     "byoOpenAi": {
       "title": "Saját API kulcsok használata",
-      "description": "Oldja fel az egyszeri frissítést a saját API kulcsai használatához. A feloldás után minden átírás, fordítás, szinkronizálás vagy összefoglalás közvetlenül a fiókjain fut a Stage5 kreditek helyett.",
+      "description": "Egyszeri feloldással a saját API-kulcsaidat használhatod. Ezután minden átírás, fordítás, szinkronizálás és összefoglaló közvetlenül a fiókjaidon fut, és nem fogyaszt Stage5-perceket.",
       "unlocking": "Fizetési oldal megnyitása…",
       "unlockCta": "Feloldás $10-ért",
       "unlockHint": "A feloldás után bármikor hozzáadhatja API kulcsait itt, hogy közvetlenül a fiókjaira számlázzon.",
@@ -817,7 +857,7 @@
       "option1Title": "1. opció: OpenAI",
       "option2Title": "2. opció: Anthropic + ElevenLabs",
       "economicsTitle": "Miért éri meg",
-      "economicsBody": "A Stage5 kreditek a kényelemre optimalizálnak (nincs beállítás). A BYO közvetlenül fizet a szolgáltatóknak – általában ~30–50%-kal olcsóbb a csomagtól függően.",
+      "economicsBody": "A Stage5-percek kényelmesek, nincs mit beállítani. Saját kulcsokkal közvetlenül a szolgáltatóknak fizetsz – a csomagtól függően általában ~30–50%-kal olcsóbban.",
       "encryptionUnavailable": "A biztonságos tárolás nem érhető el ezen a rendszeren. Az API-kulcsok nem menthetők.",
       "checkoutOpen": "A fizetés megnyitva a böngészőben…",
       "checkoutOpenHint": "Fejezd be a fizetést a böngésződben. A BYO automatikusan feloldódik, amint a fizetés teljesül.",
@@ -845,17 +885,17 @@
       "on": "Bekapcsolva",
       "defaultMode": "Alapértelmezett",
       "qualityMode": "Minőség",
-      "summary": "Összefoglalás",
+      "summary": "Összefoglaló",
       "dubbing": "Szinkronizálás",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Jelenleg nem érhető el BYO videóajánló modell. Engedélyezze az OpenAI vagy Anthropic BYO-t ehhez a funkcióhoz.",
+      "videoSuggestionModelUnavailable": "Most nincs elérhető videóajánló modell a saját kulcsaidhoz. Kapcsold be az OpenAI- vagy Anthropic-kulcsot ehhez a funkcióhoz.",
       "videoSuggestionModelRequiresOpenAi": "OpenAI BYO feloldás, kulcs és bekapcsolt kapcsoló szükséges.",
       "videoSuggestionModelRequiresAnthropic": "Anthropic BYO feloldás, kulcs és bekapcsolt kapcsoló szükséges.",
       "summaryRequiresOpenAi": "OpenAI BYO hozzáférést és API-kulcsot igényel.",
       "summaryRequiresAnthropic": "Anthropic BYO hozzáférést és API-kulcsot igényel.",
       "translationReview": "Fordítás (ellenőrzés)",
-      "transcriptionRequiresElevenLabs": "Az átírás kizárólag az ElevenLabs Scribe-ot használja. Adjon hozzá egy ElevenLabs API kulcsot, ha saját kulcsaival szeretne átírni. Enélkül az átírás Stage5 krediteket használ, amelyek nem kerülnek felhasználásra, amíg az API kulcsai be vannak kapcsolva. Az OpenAI kulcsát továbbra is a fordításhoz használjuk.",
-      "dubbingRequiresElevenLabs": "A szinkronizálás csak ElevenLabs-t használ. Adj meg egy ElevenLabs API kulcsot, ha saját kulcsokkal szeretnél szinkronizálni. Enélkül a szinkronizálás Stage5 krediteket használ, amelyek nem fogynak, amíg az API kulcsaid be vannak kapcsolva.",
+      "transcriptionRequiresElevenLabs": "Az átírás kizárólag az ElevenLabs Scribe-ot használja. Adj meg egy ElevenLabs API-kulcsot, ha saját kulcsokkal szeretnél átírni. Enélkül az átírás Stage5-perceket használ, amelyek nem fogynak, amíg az API-kulcsaid be vannak kapcsolva. Az OpenAI-kulcsodat továbbra is a fordításhoz használjuk.",
+      "dubbingRequiresElevenLabs": "A szinkronizálás csak ElevenLabs-t használ. Adj meg egy ElevenLabs API-kulcsot, ha saját kulcsokkal szeretnél szinkronizálni. Enélkül a szinkronizálás Stage5-perceket használ, amelyek nem fogynak, amíg az API-kulcsaid be vannak kapcsolva.",
       "runtimeFallback": "Futásidejű tartalék API kulcs módban",
       "videoSuggestionLegacyFollowDraft": "Korábbi BYO beállítás megőrizve: a vázlatfordítási modelledet követi, amíg nem választasz közvetlen modellt.",
       "videoSuggestionLegacyFollowReview": "Korábbi BYO beállítás megőrizve: az ellenőrző fordítási modelledet követi, amíg nem választasz közvetlen modellt."
@@ -903,7 +943,7 @@
         "step4": "Adj hozzá fizetési módot az Előfizetés beállításokban (szükséges az API használathoz az ingyenes szinten túl)",
         "step5": "Másold ki az API kulcsod és illeszd be a Stage5-be",
         "note": "Tipp: Az ElevenLabs ingyenes szinttel rendelkezik korlátozott használattal. Többért frissíts fizetős csomagra a fiókbeállításokban.",
-        "audioDescription": "Az összes átírást (Scribe) és szinkronizálást az ElevenLabs végzi. Saját ElevenLabs kulcs nélkül mindkettő Stage5 krediteket használ, amelyek nem kerülnek felhasználásra, amíg az API kulcsai be vannak kapcsolva."
+        "audioDescription": "Az összes átírást (Scribe) és szinkronizálást az ElevenLabs végzi. Saját ElevenLabs-kulcs nélkül mindkettő Stage5-perceket használ, amelyek nem fogynak, amíg az API-kulcsaid be vannak kapcsolva."
       }
     },
     "byoAnthropic": {
@@ -939,10 +979,12 @@
       "cleared": "Az API-kulcs törölve.",
       "invalid": "Az API-kulcs ellenőrzése sikertelen.",
       "howToGet": "Hogyan szerezhető be ez a kulcs",
-      "missing": "Előbb illessz be egy API-kulcsot."
+      "missing": "Előbb illessz be egy API-kulcsot.",
+      "savedEnding": "Mentett kulcs, vége: {{last4}}",
+      "savedHidden": "Mentett kulcs (rejtett)"
     },
     "byoStack": {
-      "title": "Az Ön AI stackje"
+      "title": "Az AI-eszközeid"
     },
     "siteConnection": {
       "title": "Weboldal-kapcsolat",
@@ -951,37 +993,39 @@
       "connected": "Csatlakoztatva",
       "connectedSignedIn": "Csatlakoztatva (bejelentkezve)",
       "notConnected": "Nincs csatlakoztatva",
-      "invalidUrl": "Adjon meg érvényes URL-t",
+      "invalidUrl": "Adj meg érvényes URL-t",
       "unavailable": "Nem érhető el",
       "thisSite": "ez az oldal",
       "clearConfirm": "Ez kijelentkezteti a {{site}} oldalról a Translatorban. Folytatja?"
     },
     "agentControl": {
       "title": "Ügynökvezérlés",
-      "description": "Engedélyezze, hogy a Claude Code, a Claude Desktop, a Codex vagy egy másik MCP-ügynök vezérelje a Translatort ezen a számítógépen. Bekapcsolás után az ügynökök videókat tölthetnek le, kezelhetik a médiatárat, szerkeszthetik és fordíthatják a feliratokat, és fájlokat exportálhatnak az engedélyezett mappákba.",
+      "description": "Engedélyezd, hogy a Claude Code, a Claude Desktop, a Codex vagy egy másik MCP-ügynök vezérelje a Translatort ezen a gépen. Bekapcsolás után az ügynökök videókat tölthetnek le, kezelhetik a médiatárat, szerkeszthetik és fordíthatják a feliratokat, és fájlokat exportálhatnak az engedélyezett mappákba.",
       "enableLabel": "Az alkalmazás ügynökvezérlésének engedélyezése",
       "enableAria": "Ügynökvezérlés bekapcsolása",
       "connection": {
         "title": "A Claude Code, a Claude Desktop vagy a Codex csatlakoztatása",
-        "instructions": "Kattintson egy gombra a „translator” MCP-kiszolgáló regisztrálásához. Más ügynököknél adjon hozzá egy „translator” nevű STDIO MCP-kiszolgálót ezzel az indítási útvonallal, majd indítsa újra az ügynököt, hogy megjelenjenek az új eszközök.",
+        "instructions": "Kattints egy gombra a „translator” MCP-kiszolgáló regisztrálásához. Más ügynököknél adj hozzá egy „translator” nevű STDIO MCP-kiszolgálót ezzel az indítási útvonallal, majd indítsd újra az ügynököt, hogy megjelenjenek az új eszközök.",
         "copyPath": "Útvonal másolása",
         "copied": "Másolva",
         "connectClaudeCode": "Claude Code csatlakoztatása",
         "connectCodex": "Codex csatlakoztatása",
         "connectClaudeDesktop": "Claude Desktop csatlakoztatása",
         "connecting": "Csatlakozás…",
-        "connected": "A(z) {{app}} csatlakoztatva. Indítson új munkamenetet a Translator eszközeinek betöltéséhez.",
-        "alreadyConnected": "A(z) {{app}} már tartalmazza a Translator kiszolgálót. Indítsa újra, ha az eszközök nem jelennek meg.",
-        "desktopConnected": "A Translator hozzáadva a Claude Desktophoz. Lépjen ki a Claude-ból, majd nyissa meg újra a betöltéshez.",
-        "cliNotFound": "A(z) {{app}} parancs nem található ezen a számítógépen. Futtassa ezt egy terminálban:",
-        "cliNotFoundCopied": "A(z) {{app}} parancs nem található ezen a számítógépen. A beállítási parancs a vágólapra került; illessze be egy terminálba:",
+        "connected": "A(z) {{app}} csatlakoztatva. Indíts új munkamenetet a Translator eszközeinek betöltéséhez.",
+        "alreadyConnected": "A(z) {{app}} már tartalmazza a Translator kiszolgálót. Indítsd újra, ha az eszközök nem jelennek meg.",
+        "desktopConnected": "A Translator bekerült a Claude Desktopba. A betöltéshez lépj ki a Claude-ból, majd nyisd meg újra.",
+        "cliNotFound": "A(z) {{app}} parancs nem található ezen a gépen. Futtasd ezt egy terminálban:",
+        "cliNotFoundCopied": "A(z) {{app}} parancs nem található ezen a gépen. A beállító parancs a vágólapra került; illeszd be egy terminálba:",
         "failed": "A(z) {{app}} csatlakoztatása sikertelen: {{message}}",
         "details": "Részletek",
         "failedConfigInvalid": "Nem sikerült csatlakoztatni: {{app}}. A beállításfájlja érvénytelen, ezért a Translator nem módosította. Javítsd vagy töröld a fájlt, aztán próbáld újra.",
         "failedWrite": "Nem sikerült csatlakoztatni: {{app}}. A Translator nem tudta írni a beállításfájlját.",
         "failedLauncher": "{{app}} csatlakoztatása csak a telepített Translator alkalmazásban működik.",
         "failedCli": "Nem sikerült automatikusan csatlakoztatni: {{app}}. Futtasd ezt egy terminálban:",
-        "failedGeneric": "Nem sikerült csatlakoztatni: {{app}}. Próbáld újra."
+        "failedGeneric": "Nem sikerült csatlakoztatni: {{app}}. Próbáld újra.",
+        "appNotFound": "A(z) {{app}} nincs telepítve ezen a gépen. Telepítsd, nyisd meg egyszer, aztán csatlakozz újra.",
+        "download": "{{app}} letöltése"
       },
       "status": {
         "enabled": "Bekapcsolva",
@@ -1003,10 +1047,10 @@
       },
       "allowedDirectories": {
         "title": "Fájlírásra engedélyezett mappák:",
-        "description": "Az ügynökök csak ezekbe a mappákba írhatnak fájlokat (exportokat, egyesített videókat). A fájlexport engedélyezéséhez állítson be legalább egy mappát.",
-        "empty": "Nincs engedélyezett mappa beállítva. A fájlexport engedélyezéséhez adjon hozzá legalább egyet."
+        "description": "Az ügynökök csak ezekbe a mappákba írhatnak fájlokat (exportokat, egyesített videókat). A fájlexporthoz állíts be legalább egy mappát.",
+        "empty": "Nincs engedélyezett mappa. A fájlexporthoz adj meg legalább egyet."
       },
-      "selectDirectory": "Válassza ki a mappát, amelybe az ügynökök fájlokat írhatnak",
+      "selectDirectory": "Válaszd ki a mappát, amelybe az ügynökök fájlokat írhatnak",
       "removeDirectory": "Eltávolítás",
       "addDirectory": "+ Mappa hozzáadása",
       "errors": {
@@ -1014,7 +1058,7 @@
         "addDirectory": "Nem sikerült hozzáadni a mappát.",
         "removeDirectory": "Nem sikerült eltávolítani a mappát."
       },
-      "pitch": "Fordítson ingyen a már meglévő Claude- vagy Codex-előfizetésével.",
+      "pitch": "Fordíts ingyen a már meglévő Claude- vagy Codex-előfizetéseddel.",
       "freeTitle": "Fordíts ingyen a saját AI-oddal"
     },
     "creditTransfer": {
@@ -1036,14 +1080,23 @@
       "receivedNoCredits": "A kód működött.",
       "receivedByo": "Az API-kulcs-feloldás aktív ezen a számítógépen.",
       "errors": {
-        "nothing_to_transfer": "Egyelőre nincs mit áthelyezni: ezen a számítógépen nincs vásárolt kredit vagy API-kulcs-feloldás. Ha egy másik gépről hoznál ide kreditet, válaszd a „Kreditek fogadása” lehetőséget.",
+        "nothing_to_transfer": "Egyelőre nincs mit áthelyezni: ezen a gépen nincs vásárolt perc vagy API-kulcs-feloldás. Ha egy másik gépről hoznál ide perceket, válaszd a „Percek fogadása” lehetőséget.",
         "too_many_codes": "Ebben az órában túl sok átviteli kód készült. Próbáld újra kicsit később.",
         "jobs_running": "Még fut egy átírás vagy fordítás. Próbáld újra, ha befejeződött.",
         "invalid_code": "Ez a kód hibás, már felhasznált vagy lejárt. Készíts újat a másik gépen.",
         "same_device": "A kódot a másik gépen add meg, ne azon, amelyik létrehozta.",
         "network_error": "Nem érhető el a Stage5 szervere. Ellenőrizd a kapcsolatot, és próbáld újra.",
-        "transfer_failed": "Nem sikerült áthelyezni a krediteket. Ellenőrizd a kapcsolatot, és próbáld újra."
-      }
+        "transfer_failed": "Nem sikerült áthelyezni a perceket. Ellenőrizd a kapcsolatot, és próbáld újra.",
+        "nothing_to_transfer_minutes": "Egyelőre nincs mit áthelyezni: ezen a gépen nincs vásárolt perc vagy API-kulcs-feloldás. Ha egy másik gépről hoznál ide perceket, válaszd a „Percek fogadása” lehetőséget.",
+        "transfer_failed_minutes": "Nem sikerült áthelyezni a perceket. Ellenőrizd a kapcsolatot, és próbáld újra."
+      },
+      "titleMinutes": "Percek áthelyezése gépek között",
+      "descriptionMinutes": "A vásárolt percek és az API-kulcs-feloldás átvihető egy másik számítógépre. Az ingyenes percek ezen a gépen maradnak.",
+      "moveButtonMinutes": "Percek áthelyezése másik gépre",
+      "receiveButtonMinutes": "Percek fogadása",
+      "summaryMinutes": "{{time}} videóidő kerül át.",
+      "stepsMinutes": "Az új gépen: telepítsd a Translatort, nyisd meg a Beállításokat, válaszd a „Percek fogadása” lehetőséget, és add meg ezt a kódot.",
+      "receivedMinutes": "{{time}} videóidő megérkezett."
     }
   },
   "credits": {
@@ -1069,7 +1122,12 @@
       "freeThisMonth": "{{count}} ingyenes perc ebben a hónapban",
       "freeWelcome": "{{count}} ingyenes perc",
       "minutes": "{{count}} perc maradt",
-      "title": "Percek és csomagok"
+      "title": "Percek és csomagok",
+      "neutral": "Percek",
+      "welcomePending": "Úton az ingyenes percek",
+      "freeTimeThisMonth": "{{time}} ingyen ebben a hónapban",
+      "freeTime": "{{time}} ingyen",
+      "offline": "Percek · offline"
     },
     "yourMinutes": "A perceid",
     "balanceNone": "Elfogytak a perceid",
@@ -1082,11 +1140,27 @@
     "moreMinutesPerDollar": "{{multiplier}}× annyi perc dolláronként",
     "checkoutWaiting": "Fejezd be a fizetést a böngészőben. A perceid maguktól megjelennek itt.",
     "checkoutNote": "Egyszeri fizetés a Stripe-on keresztül, a böngésződben. Nem kell fiók, sem előfizetés. A percek maguktól jóváíródnak.",
-    "dubbingNote": "Kreditből fordítva percenként kb. 10% a felár, a szinkron ennél többe kerül.",
+    "dubbingNote": "A fordítás percenként kb. 10%-ot tesz hozzá, a szinkron ennél többet használ.",
     "iCancelledCheckout": "Megszakítottam a fizetést",
     "checkoutStartFailed": "A fizetést nem sikerült elindítani. Ellenőrizd a kapcsolatot, és próbáld újra.",
     "loadFailed": "Nem sikerült betölteni az egyenlegedet. Ellenőrizd a kapcsolatot, és próbáld újra.",
-    "estimateAmount": "{{credits}} kredit"
+    "estimateAmount": "{{credits}} kredit",
+    "costOfBalanceMinutes": "{{cost}} a(z) {{balance}} egyenlegedből",
+    "timeLeft": "{{time}} maradt",
+    "success": {
+      "added": "+{{time}} jóváírva",
+      "arrived": "Megjöttek a perceid",
+      "addedLong": "A fizetés megérkezett. +{{time}} jóváírva a perceidhez.",
+      "arrivedLong": "A fizetés megérkezett. Megjöttek a perceid."
+    },
+    "waitingForPayment": "Várakozás a fizetésre…",
+    "chooseAnotherPack": "Meggondoltad magad? Válassz másik csomagot",
+    "balanceNoneYet": "Még nincsenek perceid",
+    "welcomePendingNote": "Az ingyenes perceid már úton vannak. Általában a Translator következő megnyitásakor érkeznek meg.",
+    "balanceOffline": "A perceidet most nem lehet ellenőrizni",
+    "offlineNote": "A Translator nem éri el a Stage5-öt. Az egyenleged újra megjelenik, amint online leszel.",
+    "microPackLabelNoTime": "Percek vásárlása – {{price}}",
+    "microPackLabel": "Percek vásárlása – {{price}} · ≈ {{time}} videó"
   },
   "cta": {
     "generate": {
@@ -1109,7 +1183,7 @@
     "exitFullscreen": "Kilépés a teljes képernyős módból",
     "playbackSpeed": "Lejátszási sebesség",
     "icloudWaitingTitle": "Letöltés az iCloudból",
-    "icloudWaitingBody": "Ez a fájl még nincs helyben tárolva. A Finderben kattintson a „Download” gombra, és várja meg, amíg a felhő ikon eltűnik.",
+    "icloudWaitingBody": "Ez a fájl még nincs letöltve a gépre. A Finderben kattints a „Download” gombra, és várd meg, amíg eltűnik a felhő ikon.",
     "icloudWaitingHint": "A videó automatikusan betöltődik, amikor a letöltés befejeződik.",
     "mediaPlaybackError": "Médialejátszási hiba",
     "sideActions": "Videó oldalsó műveletek",
@@ -1126,7 +1200,15 @@
     "mute": "Némítás (M)",
     "unmute": "Némítás feloldása (M)",
     "volume": "Hangerő",
-    "unreadableFile": "A Translator nem tudja beolvasni ezt a fájlt. Lehet, hogy sérült, vagy nem támogatott a formátuma."
+    "unreadableFile": "A Translator nem tudja beolvasni ezt a fájlt. Lehet, hogy sérült, vagy nem támogatott a formátuma.",
+    "play": "Lejátszás (Szóköz)",
+    "pause": "Szünet (Szóköz)",
+    "seekBar": "Pozíció a videóban",
+    "seekBarValue": "{{current}} / {{total}}",
+    "enterFullscreenShortcut": "Teljes képernyő (F)",
+    "exitFullscreenShortcut": "Kilépés a teljes képernyőből (F)",
+    "changeVideoKeepSubtitlesSameVideo": "A jelenlegi feliratok megtartása. Csak ugyanennek a videónak egy másik példányához; egy másik videó feliratok nélkül indul.",
+    "audioOnly": "Hangfájl"
   },
   "admin": {
     "title": "Adminisztrátor",
@@ -1193,12 +1275,12 @@
     "noCredits": "Nincsenek kreditek.",
     "rechargeLink": "Feltöltés →",
     "creditWarning": {
-      "message": "A letöltés, a szerkesztés, az exportálás és a fordítás a saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyenes. Az átíráshoz kreditek vagy az API-kulcs-feloldás szükséges, ezeket a <settingsLink>{{settingsLinkText}}</settingsLink> menüben érheti el.",
+      "message": "A letöltés, a szerkesztés, az exportálás és a fordítás a saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyenes. Az átíráshoz percek vagy API-kulcs-feloldás kell, ezeket itt éred el: <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Beállítások"
     },
     "validation": {
-      "pleaseSelectVideo": "Kérjük válasszon egy videót",
-      "processingDuration": "A videó hossza feldolgozás alatt. Kérjük próbálja újra rövidesen.",
+      "pleaseSelectVideo": "Válassz egy videót",
+      "processingDuration": "A videó hosszának feldolgozása még tart. Próbáld újra egy kicsit később.",
       "icloudPlaceholder": "Ez a fájl az iCloudban van tárolva. A Finderben kattints a \"Letöltés\" gombra, várd meg amíg a felhő ikon befejezi, majd próbáld újra.",
       "insufficientCreditsForVoiceCloning": "Nincs elegendő kredit a hangklónozáshoz. A videó {{duration}} perc, de csak {{affordable}} percre van elég. Kérjük adj hozzá kreditet vagy kapcsold ki a hangklónozást.",
       "fileTooLargeForVoiceCloning": "A videófájl túl nagy a hangklónozáshoz ({{size}}MB). A maximális megengedett {{max}}MB. Kérjük használj rövidebb videót vagy kapcsold ki a hangklónozást."
@@ -1236,7 +1318,7 @@
     "calculatingCost": "Költség számítása...",
     "notEnoughCredits": "Nincs elegendő kredit",
     "welcomeCredits": {
-      "message": "Ingyenes kreditjei vannak az átírás és a fordítás kipróbálásához (kb. 20 percnyi videóhoz)."
+      "message": "Vannak ingyenes perceid az átírás és a fordítás kipróbálásához (kb. 20 percnyi videóhoz)."
     }
   },
   "findBar": {
@@ -1264,28 +1346,28 @@
       "done": "Kész",
       "ready": "A lefedettség teljes. Most már bekapcsolhatja a „Saját API-kulcsaim használata” lehetőséget.",
       "missingTranslation": "A fordításhoz még {{providers}} kell.",
-      "messageElevenLabsAudio": "Saját API kulcsai használatához OpenAI vagy Anthropic kulcsra van szükség a fordításhoz. Az átírás és a szinkronizálás kizárólag az ElevenLabs-et használja, ezért ezekhez is adjon hozzá egy ElevenLabs kulcsot.",
-      "audioNeedsElevenLabs": "ElevenLabs kulcs nélkül az átírás és a szinkronizálás nem érhető el, amíg az API kulcsai be vannak kapcsolva."
+      "messageElevenLabsAudio": "A saját API-kulcsaid használatához OpenAI- vagy Anthropic-kulcs kell a fordításhoz. Az átírás és a szinkronizálás kizárólag az ElevenLabs-t használja, ezért ezekhez adj meg egy ElevenLabs-kulcsot is.",
+      "audioNeedsElevenLabs": "ElevenLabs-kulcs nélkül az átírás és a szinkronizálás nem érhető el, amíg az API-kulcsaid be vannak kapcsolva."
     },
     "saveSrtFileAs": "SRT fájl mentése másként",
     "saveDownloadedVideoAs": "Letöltött videó mentése másként",
     "saveDubbedVideoAs": "Szinkronizált videó mentése másként",
     "unsavedSrtOnTranscribe": {
-      "title": "Elmenti a jelenlegi feliratokat a leírás előtt?",
-      "message": "Már vannak betöltött feliratok. A leírás ezeket felülírja. Mit szeretne tenni?",
+      "title": "Mented a jelenlegi feliratokat az átírás előtt?",
+      "message": "Már vannak betöltött feliratok. Az átírás felülírja őket. Mit szeretnél tenni?",
       "saveAndTranscribe": "Mentés és átírás",
       "discardAndTranscribe": "Elvetés és átírás",
       "cancel": "Mégse"
     },
     "downloadInProgress": "Letöltés folyamatban",
     "saveDownloadedFile": "A letöltött fájl mentése: {{path}}",
-    "transcriptionInProgress": "Átirat készítése folyamatban",
+    "transcriptionInProgress": "Átírás folyamatban",
     "translationInProgress": "Fordítás folyamatban",
     "dubbingInProgress": "Szinkronizálás folyamatban",
     "dubbingWorking": "Szinkronizált hang generálása…",
-    "cancelTranslationConfirm": "Megszakítja a fordítást? A haladás elvész és újra kell kezdenie.",
+    "cancelTranslationConfirm": "Megszakítod a fordítást? Az eddigi munka elvész, és elölről kell kezdened.",
     "cancelSummaryConfirm": "Megszakítja az összefoglaló készítését?",
-    "cancelDubbingConfirm": "Megszakítja a szinkronizálást? A haladás elvész és újra kell kezdenie.",
+    "cancelDubbingConfirm": "Megszakítod a szinkronizálást? Az eddigi munka elvész, és elölről kell kezdened.",
     "cancelDownloadConfirm": "Megszakítja a letöltést? A haladás elvész és újra kell kezdenie.",
     "mergeLowDiskSpaceConfirm": "Alacsony lemezterület észlelve. Ez az egyesítés ~{{need}} szabad helyet igényelhet, de csak ~{{free}} érhető el. Folytatja?",
     "slowProcessingBanner": {
@@ -1310,11 +1392,13 @@
       "task": {
         "transcription": {
           "title": "Az átíráshoz kredit kell",
-          "message": "Az egyenleged nem elég ehhez az átíráshoz. Tölts fel kreditet, aztán indítsd újra. A már átírt sorok megmaradnak."
+          "message": "Az egyenleged nem elég ehhez az átíráshoz. Tölts fel kreditet, aztán indítsd újra. A már átírt sorok megmaradnak.",
+          "messageNothingYet": "Az egyenleged nem elég ennek az átírásához. Tölts fel perceket, aztán indítsd újra."
         },
         "translation": {
           "title": "A fordításhoz kredit kell",
-          "message": "Az egyenleged nem elég ehhez a fordításhoz. Tölts fel kreditet, aztán próbáld újra. A már lefordított sorok megmaradnak. A saját Claude-oddal vagy Codexeddel az Ügynökvezérlésen keresztül ingyen fordíthatsz."
+          "message": "Az egyenleged nem elég ehhez a fordításhoz. Tölts fel kreditet, aztán próbáld újra. A már lefordított sorok megmaradnak. A saját Claude-oddal vagy Codexeddel az Ügynökvezérlésen keresztül ingyen fordíthatsz.",
+          "messageNothingYet": "Az egyenleged nem elég ennek a fordításához. Tölts fel perceket, aztán próbáld újra. A saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyen fordíthatsz."
         },
         "dubbing": {
           "title": "A szinkronhoz kredit kell",
@@ -1331,11 +1415,45 @@
         "other": {
           "title": "Ehhez kredit kell"
         }
+      },
+      "minutes": {
+        "transcription": {
+          "title": "Az átíráshoz percek kellenek",
+          "message": "A perceid nem elegendők ennek az átírásához. Tölts fel perceket, aztán indítsd újra. A már átírt sorok megmaradnak.",
+          "messageNothingYet": "A perceid nem elegendők ennek az átírásához. Tölts fel perceket, aztán indítsd újra."
+        },
+        "translation": {
+          "title": "A fordításhoz percek kellenek",
+          "message": "A perceid nem elegendők ennek a fordításához. Tölts fel perceket, aztán próbáld újra. A már lefordított sorok megmaradnak. A saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyen fordíthatsz.",
+          "messageNothingYet": "A perceid nem elegendők ennek a fordításához. Tölts fel perceket, aztán próbáld újra. A saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyen fordíthatsz."
+        },
+        "dubbing": {
+          "title": "A szinkronhoz percek kellenek",
+          "message": "A perceid nem elegendők a videó szinkronizálásához. Tölts fel perceket, aztán próbáld újra."
+        },
+        "summary": {
+          "title": "Az összefoglalóhoz percek kellenek",
+          "message": "A perceid nem elegendők az összefoglalóhoz és a kiemelt pillanatokhoz. Tölts fel perceket, aztán próbáld újra."
+        },
+        "videoSearch": {
+          "title": "Az AI-videókereséshez percek kellenek",
+          "message": "A perceid nem elegendők egy AI-videókereséshez. Tölts fel perceket, aztán keress újra."
+        },
+        "other": {
+          "title": "Ehhez percek kellenek"
+        },
+        "title": "Elfogytak a perceid",
+        "neverHadMessage": "Az átíráshoz percek vagy API-kulcs-feloldás kell. Bármelyiket beszerezheted a Beállításokban. A saját Claude-dal vagy Codexszel az Ügynökvezérlésen keresztül ingyen fordíthatsz.",
+        "message": "Elfogytak a perceid. Tölts fel a Beállításokban, és folytasd ott, ahol abbahagytad.",
+        "notEnoughTitle": "Nincs elég perced ehhez a videóhoz",
+        "notEnoughTranscriptionMessage": "A videó átírásához {{required}} kell, és {{available}} maradt. Tölts fel perceket, aztán indítsd újra.",
+        "notEnoughMessage": "Ehhez több kell, mint a megmaradt {{available}}. Tölts fel perceket a folytatáshoz."
       }
     },
     "dubCostConfirm": {
       "title": "Elindítod a szinkront?",
-      "message": "Ez a szinkron körülbelül {{cost}} kreditet használ a(z) {{balance}} kreditedből. A hangok generálása sokkal többe kerül, mint a fordítás."
+      "message": "Ez a szinkron körülbelül {{cost}} kreditet használ a(z) {{balance}} kreditedből. A hangok generálása sokkal többe kerül, mint a fordítás.",
+      "messageMinutes": "Ez a szinkron ennyit használ: {{cost}}. A hangok generálása sokkal többe kerül, mint a fordítás."
     },
     "unsavedSrtOnCaptionRecovery": {
       "discardAndOpen": "Elvetés és a feliratok megnyitása",
@@ -1379,7 +1497,8 @@
       "quitAnyway": "Kilépés mindenképp",
       "closeAnyway": "Bezárás mindenképp",
       "saveFailed": "Nem sikerült menteni a feliratokat itt: {{title}}, ezért semmi sem zárult be. Mentsd őket a szerkesztőben, aztán próbáld újra.",
-      "ok": "OK"
+      "ok": "OK",
+      "unsavedOnlyDetail": "Előbb mented a felirat módosításait?"
     },
     "exportSaveDialogTitle": "Videó mentése másként",
     "exportVideoFilterName": "MP4-videó",
@@ -1393,7 +1512,22 @@
     "exportSameAsSource": "Ezzel felülírnád az eredeti videót. Válassz másik nevet.",
     "keepDubbing": "Szinkron folytatása",
     "stopDubbing": "Szinkron leállítása",
-    "cancelDubbingBody": "Az eddig elkészült szinkronhang elvész."
+    "cancelDubbingBody": "Az eddig elkészült szinkronhang elvész.",
+    "cancelTranslationTitle": "Leállítod a fordítást?",
+    "keepTranslating": "Fordítás folytatása",
+    "stopTranslating": "Fordítás leállítása",
+    "fatal": {
+      "startTitle": "A Translatort nem sikerült elindítani",
+      "startBody": "Valami hiba történt indításkor. Részletek: {{message}}",
+      "loadBody": "Az alkalmazás ablakát nem sikerült betölteni. Részletek: {{message}}",
+      "crashTitle": "A Translatornak be kell zárnia",
+      "crashBody": "Váratlan hiba történt, ezért a Translator most bezárul. Részletek: {{message}}",
+      "backgroundCrashBody": "Váratlan hiba történt a háttérben, ezért a Translator most bezárul."
+    },
+    "cancelSummaryTitle": "Leállítod az összefoglalót?",
+    "keepSummarizing": "Folytatás",
+    "stopSummarizing": "Leállítás",
+    "cancelSummaryBody": "Az eddig elkészült összefoglaló és kiemelt pillanatok nem maradnak meg."
   },
   "progress": {
     "preparingVideoExport": "Videóexportálás előkészítése…",
@@ -1420,7 +1554,7 @@
     "reviewingRange": "Ellenőrzés {{start}}–{{end}} (összesen {{total}})",
     "legacy": {
       "aligningVoices": "Hangok igazítása {{done}}/{{total}}…",
-      "analyzingSection": "Kiemelések keresése a(z) {{done}}/{{total}}. részben…",
+      "analyzingSection": "Kiemelt pillanatok keresése a(z) {{done}}/{{total}}. részben…",
       "analyzingVideo": "A videó ellenőrzése…",
       "assemblingOverlay": "Feliratok rajzolása a videóra…",
       "audioExtracted": "A hang kész",
@@ -1454,25 +1588,25 @@
       "preparingAudioExtraction": "A hang előkészítése ({{minutes}} perc videó)…",
       "preparingDownload": "Letöltés előkészítése…",
       "preparingDubLines": "{{count}} sor előkészítése a szinkronhoz…",
-      "preparingHighlights": "Felkészülés a kiemelések kiválasztására…",
+      "preparingHighlights": "Felkészülés a kiemelt pillanatok kiválasztására…",
       "preparingOutput": "A kimeneti mappa előkészítése…",
       "preparingTranscript": "Az átirat beolvasása…",
       "preparingVideoEngine": "A videóeszközök előkészítése…",
       "preparingVoiceClips": "{{count}} hangklip előkészítése…",
       "rateLimited": "Most foglalt, újrapróbálkozás…",
-      "reusingSummary": "Az összefoglalás használata a kiemelésekhez…",
+      "reusingSummary": "Kiemelt pillanatok kiválasztása az összefoglaló alapján…",
       "saving": "Mentés…",
       "sectionAnalyzed": "{{done}}. rész ellenőrizve",
-      "sectionHighlights": "Kiemelések megtalálva a(z) {{done}}. részben",
+      "sectionHighlights": "Kiemelt pillanatok a(z) {{done}}. részben megtalálva",
       "sectionSummarized": "{{done}}/{{total}}. rész összefoglalva",
-      "selectingHighlights": "Kiemelések kiválasztása a(z) {{done}}/{{total}}. részben…",
+      "selectingHighlights": "Kiemelt pillanatok kiválasztása a(z) {{done}}/{{total}}. részben…",
       "settingUpDownloader": "A letöltő beállítása…",
       "skippingSameLanguage": "Már ezen a nyelven van, nincs szükség fordításra",
       "starting": "Indítás…",
       "startingDownload": "Letöltés indítása…",
       "subtitleLayerReady": "A felirat réteg kész",
       "summarizingSection": "A(z) {{done}}/{{total}}. rész összefoglalása…",
-      "summaryReady": "Az összefoglalás kész",
+      "summaryReady": "Az összefoglaló kész",
       "transcribingParts": "Átírás {{done}}/{{total}}…",
       "transcriptionComplete": "Átírás kész",
       "translatingLines": "Fordítás {{done}}/{{total}}…",
@@ -1481,18 +1615,18 @@
       "videoBlockedCaptions": "A videót nem sikerült letölteni; helyette YouTube-feliratokat keresünk…",
       "voiceTrackAssembled": "A hangsáv összeállt",
       "voiceTrackReady": "A hangsáv kész",
-      "writingSummary": "Az összefoglalás megírása…",
+      "writingSummary": "Az összefoglaló megírása…",
       "completed": "Kész",
       "cancelled": "Megszakítva",
       "cancelling": "Megszakítás…",
       "failed": "Valami hiba történt",
       "downloading": "Letöltés…",
       "downloadingAudio": "Hang letöltése…",
-      "transcribingLine": "Sor lejegyzése…",
+      "transcribingLine": "Sor átírása…",
       "startingExport": "A videó készítésének indítása…",
       "captionsAvailable": "A videót nem sikerült letölteni, de vannak YouTube-feliratok",
       "captionsNotOpened": "A YouTube-feliratok készen vannak, de nem nyíltak meg",
-      "insufficientCredits": "Nincs elég kredit"
+      "insufficientCredits": "Nincs elég perc"
     },
     "listening": "A videó meghallgatása…",
     "mergeFinishSaveBeforeReload": "Újratöltés előtt fejezd be az egyesített videó mentését.",
@@ -1575,14 +1709,25 @@
     "recentSubtitlesReadyGeneric": "Kész a felirat",
     "recentDownloaded": "Letöltve",
     "recentLocalFile": "Ezen a számítógépen",
-    "recentLocalMissing": "A fájlt áthelyezték vagy törölték"
+    "recentLocalMissing": "A fájlt áthelyezték vagy törölték",
+    "leaveSaveFailed": {
+      "title": "Nem sikerült menteni a feliratokat",
+      "message": "A Translator nem tudta menteni ezeket a feliratokat a könyvtáradba, így nem lesznek meg, amikor legközelebb megnyitod ezt a videót. Előbb mentsd el őket .srt fájlként, vagy maradj itt.",
+      "leave": "Kilépés mentés nélkül",
+      "stay": "Maradok",
+      "saveSrt": ".srt mentése és kilépés"
+    },
+    "burnChooseVideo": "Válaszd ki a videót",
+    "burnChooseSubtitles": "Válaszd ki a beégetendő feliratot",
+    "runBlockedBusy": "A Translator még az aktuális videón dolgozik. Próbáld újra, ha végzett.",
+    "downloadCancelled": "Letöltés megszakítva."
   },
   "workspace": {
     "subtitlesTitle": "Feliratok",
     "editToggle": "Feliratok szerkesztése",
     "emptyList": "A feliratok itt jelennek meg, amint a Translator meghallgatta a videót.",
     "statusReady": "Kész – {{language}} felirat egy kattintásra",
-    "statusTranscribed": "{{count}} sor lejegyezve",
+    "statusTranscribed": "{{count}} sor átírva",
     "statusTranslated": "{{count}} sor {{language}} nyelven · időzítve a videóhoz",
     "translateTo": "Fordítás {{language}} nyelvre",
     "exportVideo": "Videó mentése felirattal",
@@ -1623,7 +1768,16 @@
     "translateMissing": "{{count}} hiányzó sor fordítása {{language}} nyelvre",
     "translateMissing_one": "{{count}} hiányzó sor fordítása {{language}} nyelvre",
     "moreRevealVideo": "Videófájl megjelenítése",
-    "chooseAnotherFile": "Másik fájl választása"
+    "chooseAnotherFile": "Másik fájl választása",
+    "statusLinesIn": "{{count}} sor {{language}} nyelven",
+    "statusLinesIn_one": "{{count}} sor {{language}} nyelven",
+    "statusTranslatedUnknownNoVideo": "{{count}} lefordított sor",
+    "statusTranslatedUnknownNoVideo_one": "{{count}} lefordított sor",
+    "statusLines": "{{count}} feliratsor",
+    "statusLines_one": "{{count}} feliratsor",
+    "checkingFile": "A fájl beolvasása…",
+    "statusLoaded": "{{count}} sor betöltve",
+    "statusLoaded_one": "{{count}} sor betöltve"
   },
   "subtitleStyles": {
     "Cinema": "Mozisárga",
@@ -1660,7 +1814,8 @@
     "notNow": "Most nem",
     "failedNeedMinutes": "Ami eddig elkészült, megmarad. A hátralévő {{remaining}} perchez több percre van szükséged.",
     "failedNeedMinutes_one": "Ami eddig elkészült, megmarad. A hátralévő {{remaining}} perchez több percre van szükséged.",
-    "failedNetwork": "Megszakadt a kapcsolat. Ami eddig elkészült, megmarad. Próbáld újra, ha újra online vagy."
+    "failedNetwork": "Megszakadt a kapcsolat. Ami eddig elkészült, megmarad. Próbáld újra, ha újra online vagy.",
+    "noneBodyNextFree": "Az ingyenes percek {{date}} újra feltöltődnek – vagy fordítsd le most {{language}} nyelvre {{price}} áron."
   },
   "videoCost": {
     "covered": "Van rá elég perced",
@@ -1731,7 +1886,8 @@
   "tabs": {
     "newTab": "Új lap",
     "newTabWithShortcut": "Új lap ({{shortcut}})",
-    "closeTab": "Lap bezárása"
+    "closeTab": "Lap bezárása",
+    "tabList": "Megnyitott lapok"
   },
   "menu": {
     "about": "{{app}} névjegye",
@@ -1782,6 +1938,15 @@
     "copyImage": "Kép másolása",
     "copyImageAddress": "Képcím másolása",
     "copyVideoAddress": "Videócím másolása",
-    "inspect": "Elem vizsgálata"
+    "inspect": "Elem vizsgálata",
+    "focusTabStrip": "Ugrás a lapsávra"
+  },
+  "startupNotice": {
+    "title": "Néhány beállítás visszaállt",
+    "settingsReset": "A Translator beállításfájlja megsérült, ezért a beállításaid visszaálltak az alapértékekre: a felület és a feliratok nyelve, az API-kulcsok és más opciók. A sérült fájlról megmaradt egy másolat. Nézd át a Beállításokat.",
+    "deviceIdReplaced": "Megsérült az a fájl, amely ezt a számítógépet a perceidhez köti, ezért a Translator új kapcsolatot hozott létre. Előfordulhat, hogy a vásárolt perceid itt nem látszanak. Írj az ügyfélszolgálatnak a vásárlási nyugtáddal, és visszahelyezzük őket.",
+    "contactSupport": "Írok az ügyfélszolgálatnak",
+    "openSettings": "Beállítások megnyitása",
+    "supportSubject": "Eltűntek a perceim, miután a Translator visszaállította ezt a gépet"
   }
 }

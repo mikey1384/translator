@@ -305,7 +305,7 @@ const FINAL_TOKENS: Record<string, Literal> = {
   error: { key: 'failed', en: 'Something went wrong' },
   insufficient_credits: {
     key: 'insufficientCredits',
-    en: 'Not enough credits',
+    en: 'Not enough minutes',
   },
   starting: { key: 'starting', en: 'Starting…' },
 };
