@@ -73,6 +73,8 @@ describe('IPC Allowlist (Renderer Event Validation)', () => {
   it('should allow renderer to emit free-preview lifecycle events', () => {
     for (const event of [
       'free_preview_ready',
+      'free_preview_offer_clicked',
+      'free_preview_resumed',
       'free_preview_dismissed',
       'free_preview_completed',
       'free_preview_failed',
@@ -81,8 +83,8 @@ describe('IPC Allowlist (Renderer Event Validation)', () => {
     }
   });
 
-  it('should have exactly 10 allowed renderer events', () => {
-    assert.strictEqual(RENDERER_PURCHASE_FUNNEL_EVENTS.length, 10);
+  it('should have exactly 12 allowed renderer events', () => {
+    assert.strictEqual(RENDERER_PURCHASE_FUNNEL_EVENTS.length, 12);
   });
 
   it('should have exactly 8 restricted main-only events', () => {

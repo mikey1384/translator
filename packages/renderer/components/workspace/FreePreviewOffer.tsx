@@ -226,6 +226,10 @@ export default function FreePreviewOffer() {
   };
   const buy = () => {
     logButton('free_preview_finish_buy', { packId: pack.id });
+    void SystemIPC.trackPurchaseEvent('free_preview_offer_clicked', {
+      packId: pack.id,
+      placement: 'free-preview-offer',
+    }).catch(() => {});
     void start();
   };
   const notNow = () => {

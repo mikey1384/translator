@@ -93,7 +93,10 @@ export function useCreditCheckout({
 
     try {
       setLoading(true);
-      const checkoutSessionId = await SystemIPC.createCheckoutSession(packId);
+      const checkoutSessionId = await SystemIPC.createCheckoutSession(
+        packId,
+        placement
+      );
       if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
         // A checkout is already in flight (possibly from another tab); the
         // re-broadcast pending/unresolved event drives the UI — no error.

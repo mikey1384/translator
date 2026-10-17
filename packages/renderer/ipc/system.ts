@@ -225,9 +225,10 @@ export function getVideoMetadata(
 }
 
 export function createCheckoutSession(
-  packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
+  packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO',
+  placement?: PurchasePlacement
 ): Promise<string | null> {
-  return window.electron.createCheckoutSession(packId);
+  return window.electron.createCheckoutSession(packId, placement);
 }
 
 export function createByoUnlockSession(): Promise<void> {

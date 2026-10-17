@@ -480,8 +480,10 @@ const electronAPI = {
     ipcRenderer.invoke('get-video-playback-position', filePath),
   // --- END ADD MAPPINGS ---
 
-  createCheckoutSession: (packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO') =>
-    ipcRenderer.invoke('create-checkout-session', packId),
+  createCheckoutSession: (
+    packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO',
+    placement?: string
+  ) => ipcRenderer.invoke('create-checkout-session', packId, placement),
   createByoUnlockSession: (): Promise<void> =>
     ipcRenderer.invoke('create-byo-unlock-session'),
 

@@ -34,7 +34,10 @@ import {
 } from '../services/stage5-version-gate.js';
 import { getConfiguredAdminSecret } from '../services/admin-auth.js';
 import { trackPurchaseFunnelEvent } from '../services/product-analytics.js';
-import { classifyPurchaseFailure } from '../services/purchase-funnel.js';
+import {
+  classifyPurchaseFailure,
+  isPurchasePlacement,
+} from '../services/purchase-funnel.js';
 import {
   type CreateTransferCodeResult,
   type CreditHistorySummary,
@@ -925,8 +928,14 @@ export function replayPendingCheckoutState(wc: Electron.WebContents): void {
 
 export async function handleCreateCheckoutSession(
   _evt: Electron.IpcMainInvokeEvent,
-  packId: CreditPackId
+  packId: CreditPackId,
+  placementInput?: unknown
 ): Promise<string | null> {
+  // Where the purchase started, stored with the session server-side so a
+  // fulfilled payment can be traced back to the feature that asked for it.
+  const placement = isPurchasePlacement(placementInput)
+    ? placementInput
+    : undefined;
   // One checkout at a time: reserved synchronously so two tabs clicking Buy
   // during the create POST can't both open Stripe sessions.
   if (!tryBeginCheckoutCreation('credits')) {
@@ -966,6 +975,7 @@ export async function handleCreateCheckoutSession(
           deviceId: getDeviceId(),
           locale: getCheckoutLocaleHint(),
           country: getCheckoutCountryHint() ?? undefined,
+          placement,
         },
         {
           headers: authHeaders,

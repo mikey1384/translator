@@ -98,6 +98,9 @@ export async function resumeFreePreview(key: string): Promise<boolean> {
   resumeInFlight = true;
   const store = useFreePreviewStore.getState();
   store.setStatus(key, 'resuming');
+  void SystemIPC.trackPurchaseEvent('free_preview_resumed', {
+    placement: 'free-preview-offer',
+  }).catch(() => {});
 
   try {
     const subs = useSubStore.getState();

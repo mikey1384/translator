@@ -525,7 +525,10 @@ async function openCreditCheckout(input?: {
   await navigateToDestination('settings-credits');
 
   try {
-    const checkoutSessionId = await SystemIPC.createCheckoutSession(packId);
+    const checkoutSessionId = await SystemIPC.createCheckoutSession(
+      packId,
+      'agent'
+    );
     if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
       // already_pending is not a failure, so no failed event
       return {

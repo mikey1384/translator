@@ -27,6 +27,8 @@ export const RENDERER_PURCHASE_FUNNEL_EVENTS = Object.freeze([
   // Free preview lifecycle; the offer's checkout clicks use the credit events
   // with placement 'free-preview-offer'.
   'free_preview_ready',
+  'free_preview_offer_clicked',
+  'free_preview_resumed',
   'free_preview_dismissed',
   'free_preview_completed',
   'free_preview_failed',
@@ -57,6 +59,15 @@ const purchaseFailureReasons = new Set<PurchaseFailureReason>([
   'already_pending',
   'unknown',
 ]);
+
+export function isPurchasePlacement(
+  value: unknown
+): value is PurchasePlacement {
+  return (
+    typeof value === 'string' &&
+    purchasePlacements.has(value as PurchasePlacement)
+  );
+}
 
 /** Terminal checkout events are main-owned and cannot be asserted by a renderer. */
 export function isRendererPurchaseFunnelEvent(

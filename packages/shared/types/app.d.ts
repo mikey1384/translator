@@ -42,6 +42,8 @@ declare module '@shared-types/app' {
     | 'byo_unlock_failed'
     | 'byo_unlock_cancelled'
     | 'free_preview_ready'
+    | 'free_preview_offer_clicked'
+    | 'free_preview_resumed'
     | 'free_preview_dismissed'
     | 'free_preview_completed'
     | 'free_preview_failed';
@@ -1481,7 +1483,10 @@ declare module '@shared-types/app' {
       }) => void
     ) => () => void;
 
-    createCheckoutSession: (packId: CreditPackId) => Promise<string | null>;
+    createCheckoutSession: (
+      packId: CreditPackId,
+      placement?: PurchasePlacement
+    ) => Promise<string | null>;
     createByoUnlockSession: () => Promise<void>;
     trackPurchaseEvent: (
       event: PurchaseFunnelEvent,
