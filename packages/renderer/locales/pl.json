@@ -355,7 +355,9 @@
       "removeFromHistoryConfirm": "Usunąć ten element z historii pobierania? Pliki zapisane poza biblioteką aplikacji pozostaną na urządzeniu.",
       "deleteLocalFileHistoryPending": "Plik został usunięty, ale Translator nie zdołał dokończyć aktualizacji historii pobierania. Spróbuje ponownie automatycznie.",
       "removeHistoryFailed": "Nie udało się usunąć tego pobrania z historii.",
-      "storedInAppLibrary": "Zapisano w bibliotece aplikacji"
+      "storedInAppLibrary": "Zapisano w bibliotece aplikacji",
+      "savedPreferencesCount_one": "{{count}} zapisana preferencja",
+      "savedPreferencesCount_few": "{{count}} zapisane preferencje"
     },
     "downloadAndTranslate": "Pobierz i przetłumacz",
     "downloadAndTranscribe": "Pobierz i transkrybuj",
@@ -473,7 +475,9 @@
     "confidence": {
       "title": "Niska pewność",
       "none": "Nie wykryto linii o niskiej pewności",
-      "count": "{{count}} linii"
+      "count": "{{count}} linii",
+      "count_one": "{{count}} linia",
+      "count_few": "{{count}} linie"
     }
   },
   "editSubtitles": {
@@ -501,7 +505,9 @@
       "automaticCaptionsCopyWithMedia": "Pobieranie wideo z adresu URL zostało zablokowane (HTTP 403). To automatyczne napisy YouTube, a nie nowa transkrypcja. Podłączone multimedia są dostępne do podglądu i wypalania napisów.",
       "automaticCaptionsPill": "Automatyczne napisy YouTube",
       "automaticCaptionsTitle": "Automatyczne napisy YouTube",
-      "highlightEditingLocked": "Trwa generowanie najważniejszych momentów, edycja zablokowana"
+      "highlightEditingLocked": "Trwa generowanie najważniejszych momentów, edycja zablokowana",
+      "rowsLoaded_one": "Załadowano {{count}} wiersz",
+      "rowsLoaded_few": "Załadowano {{count}} wiersze"
     },
     "item": {
       "seek": "Przejdź",
@@ -560,7 +566,10 @@
       "toggleOff": "Teraz używa kredytów Stage5.",
       "toggleError": "Nie udało się zaktualizować preferencji.",
       "toggleAria": "Używaj moich kluczy API",
-      "requirementTranslation": "Wymaga klucza OpenAI lub Anthropic do tłumaczenia"
+      "requirementTranslation": "Wymaga klucza OpenAI lub Anthropic do tłumaczenia",
+      "activeKeys_one": "{{count}} gotowy klucz",
+      "activeKeys_few": "{{count}} gotowe klucze",
+      "activeKeys_many": "{{count}} gotowych kluczy"
     },
     "creditsDescription": "Kup kredyty. Wyświetlane godziny to szacunek łącznego czasu wideo, które możesz transkrybować lub tłumaczyć. Przykład: transkrypcja i tłumaczenie 3‑godzinnego wideo zużywa około 6 godzin (≈140 000 kredytów).",
     "performanceQuality": {
@@ -882,7 +891,13 @@
       "redeeming": "Odbieranie…",
       "received": "Odebrano kredyty: {{credits}}.",
       "receivedNoCredits": "Kod zadziałał.",
-      "receivedByo": "Odblokowanie kluczy API jest aktywne na tym komputerze."
+      "receivedByo": "Odblokowanie kluczy API jest aktywne na tym komputerze.",
+      "summaryCredits_one": "Zostanie przeniesiony {{credits}} kredyt.",
+      "summaryCredits_few": "Zostaną przeniesione {{credits}} kredyty.",
+      "summaryCredits_many": "Zostanie przeniesionych {{credits}} kredytów.",
+      "received_one": "Odebrano {{credits}} kredyt.",
+      "received_few": "Odebrano {{credits}} kredyty.",
+      "received_many": "Odebrano {{credits}} kredytów."
     }
   },
   "credits": {
@@ -1233,7 +1248,10 @@
       "videoBlockedCaptions": "Nie udało się pobrać wideo; zamiast tego szukam napisów YouTube…",
       "voiceTrackAssembled": "Ścieżka głosowa złożona",
       "voiceTrackReady": "Ścieżka głosowa gotowa",
-      "writingSummary": "Pisanie podsumowania…"
+      "writingSummary": "Pisanie podsumowania…",
+      "preparingVoiceClips_one": "Przygotowywanie {{count}} klipu głosowego…",
+      "preparingVoiceClips_few": "Przygotowywanie {{count}} klipów głosowych…",
+      "preparingVoiceClips_many": "Przygotowywanie {{count}} klipów głosowych…"
     },
     "listening": "Słuchanie wideo…",
     "mergeFinishSaveBeforeReload": "Dokończ zapisywanie scalonego wideo przed ponownym załadowaniem.",
@@ -1327,7 +1345,10 @@
     "showTranslation": "Tłumaczenie",
     "showOriginal": "Oryginał",
     "showBoth": "Oba",
-    "textSize": "Rozmiar tekstu"
+    "textSize": "Rozmiar tekstu",
+    "statusTranscribed_one": "Spisano {{count}} wiersz",
+    "statusTranscribed_few": "Spisano {{count}} wiersze",
+    "statusTranscribed_many": "Spisano {{count}} wierszy"
   },
   "subtitleStyles": {
     "Cinema": "Kinowy żółty",
@@ -1361,7 +1382,12 @@
     "retry": "Spróbuj ponownie",
     "finishCta": "Przetłumacz do końca · {{price}}",
     "noneCta": "Przetłumacz na {{language}} · {{price}}",
-    "notNow": "Nie teraz"
+    "notNow": "Nie teraz",
+    "enoughBody_one": "Masz dość minut, żeby od razu przetłumaczyć pozostałą {{remaining}} min.",
+    "enoughBody_many": "Masz dość minut, żeby od razu przetłumaczyć pozostałych {{remaining}} min.",
+    "offerBody_one": "Za {{price}} przetłumaczymy cały film. Wystarczy na pozostałą {{remaining}} min, a to, co zostanie, przyda się przy kolejnym.",
+    "offerBody_many": "Za {{price}} przetłumaczymy cały film. Wystarczy na pozostałych {{remaining}} min, a to, co zostanie, przyda się przy kolejnym.",
+    "offerBodyLong_one": "Pakiet za {{price}} wystarczy na większość pozostałej {{remaining}} min."
   },
   "videoCost": {
     "covered": "Masz na to dość minut",

@@ -355,7 +355,9 @@
       "removeFromHistoryConfirm": "Удалить этот элемент из истории загрузок? Файлы, сохранённые вне библиотеки приложения, останутся на устройстве.",
       "deleteLocalFileHistoryPending": "Файл удалён, но Translator не смог до конца обновить историю загрузок. Повторная попытка будет выполнена автоматически.",
       "removeHistoryFailed": "Не удалось удалить эту загрузку из истории.",
-      "storedInAppLibrary": "Хранится в библиотеке приложения"
+      "storedInAppLibrary": "Хранится в библиотеке приложения",
+      "savedPreferencesCount_one": "{{count}} сохранённое предпочтение",
+      "savedPreferencesCount_few": "{{count}} сохранённых предпочтения"
     },
     "downloadAndTranslate": "Скачать и перевести",
     "downloadAndTranscribe": "Скачать и расшифровать",
@@ -473,7 +475,9 @@
     "confidence": {
       "title": "Низкая уверенность",
       "none": "Строк с низкой уверенностью не найдено",
-      "count": "{{count}} строк"
+      "count": "{{count}} строк",
+      "count_one": "{{count}} строка",
+      "count_few": "{{count}} строки"
     }
   },
   "editSubtitles": {
@@ -501,7 +505,10 @@
       "automaticCaptionsCopyWithMedia": "Загрузка видео по URL заблокирована (HTTP 403). Это автоматические субтитры YouTube, а не новая транскрипция. Подключённый медиафайл доступен для предпросмотра и прожига.",
       "automaticCaptionsPill": "Автоматические субтитры YouTube",
       "automaticCaptionsTitle": "Автоматические субтитры YouTube",
-      "highlightEditingLocked": "Идёт создание ярких моментов, редактирование заблокировано"
+      "highlightEditingLocked": "Идёт создание ярких моментов, редактирование заблокировано",
+      "rowsLoaded_one": "Загружена {{count}} строка",
+      "rowsLoaded_few": "Загружены {{count}} строки",
+      "rowsLoaded_many": "Загружено {{count}} строк"
     },
     "item": {
       "seek": "Перейти",
@@ -560,7 +567,10 @@
       "toggleOff": "Теперь используются кредиты Stage5.",
       "toggleError": "Не удалось обновить настройку.",
       "toggleAria": "Использовать мои API-ключи",
-      "requirementTranslation": "Нужен ключ OpenAI или Anthropic для перевода"
+      "requirementTranslation": "Нужен ключ OpenAI или Anthropic для перевода",
+      "activeKeys_one": "{{count}} ключ готов",
+      "activeKeys_few": "{{count}} ключа готовы",
+      "activeKeys_many": "{{count}} ключей готово"
     },
     "creditsDescription": "Купите кредиты. Отображаемые часы — это оценка общей продолжительности видео, которое вы можете транскрибировать или переводить. Пример: транскрибация и перевод 3‑часового видео займут около 6 часов (≈140 000 кредитов).",
     "performanceQuality": {
@@ -834,7 +844,10 @@
       "status": {
         "enabled": "Включено",
         "disabled": "Отключено",
-        "connected": "Подключено клиентов: {{count}}"
+        "connected": "Подключено клиентов: {{count}}",
+        "connected_one": "Подключён {{count}} клиент",
+        "connected_few": "Подключено {{count}} клиента",
+        "connected_many": "Подключено {{count}} клиентов"
       },
       "permissions": "Что агенты могут делать:",
       "permission": {
@@ -882,7 +895,13 @@
       "redeeming": "Получение…",
       "received": "Получено кредитов: {{credits}}.",
       "receivedNoCredits": "Код сработал.",
-      "receivedByo": "Разблокировка API-ключей активна на этом компьютере."
+      "receivedByo": "Разблокировка API-ключей активна на этом компьютере.",
+      "summaryCredits_one": "Будет перенесён {{credits}} кредит.",
+      "summaryCredits_few": "Будут перенесены {{credits}} кредита.",
+      "summaryCredits_many": "Будет перенесено {{credits}} кредитов.",
+      "received_one": "Получен {{credits}} кредит.",
+      "received_few": "Получено {{credits}} кредита.",
+      "received_many": "Получено {{credits}} кредитов."
     }
   },
   "credits": {
@@ -1233,7 +1252,13 @@
       "videoBlockedCaptions": "Видео загрузить не удалось; ищем субтитры YouTube…",
       "voiceTrackAssembled": "Голосовая дорожка собрана",
       "voiceTrackReady": "Голосовая дорожка готова",
-      "writingSummary": "Составление сводки…"
+      "writingSummary": "Составление сводки…",
+      "preparingDubLines_one": "Подготовка {{count}} строки для дубляжа…",
+      "preparingDubLines_few": "Подготовка {{count}} строк для дубляжа…",
+      "preparingDubLines_many": "Подготовка {{count}} строк для дубляжа…",
+      "preparingVoiceClips_one": "Подготовка {{count}} голосового фрагмента…",
+      "preparingVoiceClips_few": "Подготовка {{count}} голосовых фрагментов…",
+      "preparingVoiceClips_many": "Подготовка {{count}} голосовых фрагментов…"
     },
     "listening": "Прослушивание видео…",
     "mergeFinishSaveBeforeReload": "Дождитесь сохранения объединённого видео перед перезагрузкой.",
@@ -1327,7 +1352,13 @@
     "showTranslation": "Перевод",
     "showOriginal": "Оригинал",
     "showBoth": "Оба",
-    "textSize": "Размер текста"
+    "textSize": "Размер текста",
+    "statusTranscribed_one": "{{count}} строка расшифрована",
+    "statusTranscribed_few": "{{count}} строки расшифрованы",
+    "statusTranscribed_many": "{{count}} строк расшифровано",
+    "statusTranslated_one": "{{count}} строка · перевод на {{language}} · синхронно с видео",
+    "statusTranslated_few": "{{count}} строки · перевод на {{language}} · синхронно с видео",
+    "statusTranslated_many": "{{count}} строк · перевод на {{language}} · синхронно с видео"
   },
   "subtitleStyles": {
     "Cinema": "Киношный жёлтый",
@@ -1361,7 +1392,10 @@
     "retry": "Повторить",
     "finishCta": "Перевести до конца · {{price}}",
     "noneCta": "Перевести на {{language}} · {{price}}",
-    "notNow": "Не сейчас"
+    "notNow": "Не сейчас",
+    "enoughBody_one": "Ваших минут хватит, чтобы перевести оставшуюся {{remaining}} мин прямо сейчас.",
+    "offerBody_one": "За {{price}} переведём всё видео: хватит на оставшуюся {{remaining}} мин, а остаток пригодится для следующего.",
+    "offerBodyLong_one": "Пакета за {{price}} хватит на большую часть оставшейся {{remaining}} мин."
   },
   "videoCost": {
     "covered": "Хватит ваших минут",

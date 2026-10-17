@@ -139,7 +139,8 @@
     "transcription": {
       "providerUnavailable": "Transkribering (ElevenLabs Scribe) er midlertidig utilgjengelig eller kunne ikke nås etter flere forsøk. Prøv igjen om noen minutter.",
       "fileTooLarge": "Denne lyden er for lang til å transkriberes i én jobb (mer enn omtrent {{hours}} timer). Del videoen opp i kortere deler og transkriber hver del.",
-      "elevenLabsKeyRequired": "Transkribering bruker ElevenLabs Scribe og krever en ElevenLabs API-nøkkel. Legg til en i Innstillinger, eller slå av API-nøkkelmodus for å transkribere med Stage5-kreditter. OpenAI- eller Anthropic-nøkkelen din brukes fortsatt til oversettelse."
+      "elevenLabsKeyRequired": "Transkribering bruker ElevenLabs Scribe og krever en ElevenLabs API-nøkkel. Legg til en i Innstillinger, eller slå av API-nøkkelmodus for å transkribere med Stage5-kreditter. OpenAI- eller Anthropic-nøkkelen din brukes fortsatt til oversettelse.",
+      "fileTooLarge_one": "Denne lyden er for lang til å transkriberes i én jobb (mer enn omtrent {{hours}} time). Del videoen opp i kortere deler og transkriber hver del."
     }
   },
   "input": {
@@ -355,7 +356,8 @@
       "removeFromHistoryConfirm": "Vil du fjerne dette elementet fra nedlastingshistorikken? Filer lagret utenfor appbiblioteket blir værende på enheten.",
       "deleteLocalFileHistoryPending": "Filen ble slettet, men Translator kunne ikke fullføre oppdateringen av nedlastingsloggen. Det prøves igjen automatisk.",
       "removeHistoryFailed": "Kunne ikke fjerne denne nedlastingen fra loggen.",
-      "storedInAppLibrary": "Lagret i appbiblioteket"
+      "storedInAppLibrary": "Lagret i appbiblioteket",
+      "savedPreferencesCount_one": "{{count}} lagret preferanse"
     },
     "downloadAndTranslate": "Last ned og oversett",
     "downloadAndTranscribe": "Last ned og transkriber",
@@ -473,7 +475,8 @@
     "confidence": {
       "title": "Lav tillit",
       "none": "Ingen linjer med lav tillit oppdaget",
-      "count": "{{count}} linjer"
+      "count": "{{count}} linjer",
+      "count_one": "{{count}} linje"
     }
   },
   "editSubtitles": {
@@ -501,7 +504,8 @@
       "automaticCaptionsCopyWithMedia": "Nedlasting av videoen fra URL-en ble blokkert (HTTP 403). Dette er automatiske YouTube-undertekster, ikke en ny transkribering. Det monterte mediet er tilgjengelig for forhåndsvisning og innbrenning.",
       "automaticCaptionsPill": "Automatiske YouTube-undertekster",
       "automaticCaptionsTitle": "Automatiske YouTube-undertekster",
-      "highlightEditingLocked": "Høydepunkter genereres, redigering er låst"
+      "highlightEditingLocked": "Høydepunkter genereres, redigering er låst",
+      "rowsLoaded_one": "{{count}} rad lastet inn"
     },
     "item": {
       "seek": "Søk",
@@ -552,7 +556,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "Bruk mine API-nøkler",
-      "activeKeys": "Nøkler klare: {{count}}",
+      "activeKeys": "{{count}} nøkler klare",
       "noKeys": "Ingen nøkler konfigurert",
       "usingApiKeys": "Stage5-kreditter av",
       "usingCredits": "Stage5-kreditter på",
@@ -560,7 +564,8 @@
       "toggleOff": "Bruker nå Stage5-kreditter.",
       "toggleError": "Kunne ikke oppdatere innstillingen.",
       "toggleAria": "Bruk mine API-nøkler",
-      "requirementTranslation": "Krever en OpenAI- eller Anthropic-nøkkel for oversettelse"
+      "requirementTranslation": "Krever en OpenAI- eller Anthropic-nøkkel for oversettelse",
+      "activeKeys_one": "{{count}} nøkkel klar"
     },
     "creditsDescription": "Kjøp kreditter. Timene som vises er et estimat av total videovarighet du kan transkribere eller oversette. Eksempel: å transkribere og oversette en 3-timers video bruker omtrent 6 timer (≈140 000 kreditter).",
     "performanceQuality": {
@@ -834,7 +839,8 @@
       "status": {
         "enabled": "Aktivert",
         "disabled": "Deaktivert",
-        "connected": "Tilkoblede klienter: {{count}}"
+        "connected": "{{count}} klienter tilkoblet",
+        "connected_one": "{{count}} klient tilkoblet"
       },
       "permissions": "Dette kan agenter gjøre:",
       "permission": {
@@ -882,7 +888,10 @@
       "redeeming": "Mottar…",
       "received": "Mottok {{credits}} kreditter.",
       "receivedNoCredits": "Koden virket.",
-      "receivedByo": "API-nøkkelopplåsingen er aktiv på denne datamaskinen."
+      "receivedByo": "API-nøkkelopplåsingen er aktiv på denne datamaskinen.",
+      "expires_one": "Denne koden virker én gang og utløper om {{minutes}} minutt.",
+      "summaryCredits_one": "{{credits}} kreditt blir flyttet.",
+      "received_one": "Mottok {{credits}} kreditt."
     }
   },
   "credits": {
@@ -923,7 +932,8 @@
     "checkoutNote": "Engangsbetaling via Stripe i nettleseren. Ingen konto eller abonnement. Minuttene kommer av seg selv.",
     "dubbingNote": "Oversettelse med minutter koster omtrent 10 % ekstra per minutt; dubbing bruker mer.",
     "iCancelledCheckout": "Jeg avbrøt betalingen",
-    "checkoutStartFailed": "Betalingen kunne ikke startes. Sjekk tilkoblingen og prøv igjen."
+    "checkoutStartFailed": "Betalingen kunne ikke startes. Sjekk tilkoblingen og prøv igjen.",
+    "monthlyFreeNote_one": "{{minutes}} gratisminutt hver måned · neste gang {{date}}"
   },
   "cta": {
     "generate": {
@@ -1233,7 +1243,8 @@
       "videoBlockedCaptions": "Videoen kunne ikke lastes ned; ser etter YouTube-undertekster i stedet…",
       "voiceTrackAssembled": "Stemmespor satt sammen",
       "voiceTrackReady": "Stemmespor klart",
-      "writingSummary": "Skriver sammendraget…"
+      "writingSummary": "Skriver sammendraget…",
+      "preparingDubLines_one": "Forbereder {{count}} linje for dubbing…"
     },
     "listening": "Lytter til videoen…",
     "mergeFinishSaveBeforeReload": "Fullfør lagringen av den sammenslåtte videoen før du laster inn på nytt.",
@@ -1327,7 +1338,9 @@
     "showTranslation": "Oversettelse",
     "showOriginal": "Original",
     "showBoth": "Begge",
-    "textSize": "Tekststørrelse"
+    "textSize": "Tekststørrelse",
+    "statusTranscribed_one": "{{count}} linje skrevet ned",
+    "statusTranslated_one": "{{count}} linje på {{language}} · synkront med videoen"
   },
   "subtitleStyles": {
     "Cinema": "Kinogul",
@@ -1361,7 +1374,11 @@
     "retry": "Prøv igjen",
     "finishCta": "Oversett resten · {{price}}",
     "noneCta": "Oversett til {{language}} · {{price}}",
-    "notNow": "Ikke nå"
+    "notNow": "Ikke nå",
+    "noneTitle_one": "Videoen er {{total}} minutt lang.",
+    "enoughBody_one": "Du har nok minutter til å oversette resten ({{remaining}} minutt) nå.",
+    "offerBody_one": "Oversett hele videoen for {{price}}. Det dekker resten ({{remaining}} minutt), og det som blir til overs, kan du bruke på neste video.",
+    "offerBodyLong_one": "Pakken til {{price}} dekker det meste av resten ({{remaining}} minutt)."
   },
   "videoCost": {
     "covered": "Dekket av minuttene dine",

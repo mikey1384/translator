@@ -355,7 +355,8 @@
       "removeFromHistoryConfirm": "Uondoe kipengee hiki kwenye historia ya vipakuliwa? Faili zilizohifadhiwa nje ya maktaba ya programu zitabaki kwenye kifaa.",
       "deleteLocalFileHistoryPending": "Faili imefutwa, lakini Translator haikuweza kumaliza kusasisha historia ya vipakuliwa. Itajaribu tena kiotomatiki.",
       "removeHistoryFailed": "Imeshindikana kuondoa kipakuliwa hiki kwenye historia.",
-      "storedInAppLibrary": "Imehifadhiwa kwenye maktaba ya programu"
+      "storedInAppLibrary": "Imehifadhiwa kwenye maktaba ya programu",
+      "savedPreferencesCount_one": "Pendeleo {{count}} lililohifadhiwa"
     },
     "downloadAndTranslate": "Pakua na utafsiri",
     "downloadAndTranscribe": "Pakua na unukuu",
@@ -473,7 +474,8 @@
     "confidence": {
       "title": "Uhakika wa Chini",
       "none": "Hakuna mistari ya uhakika wa chini iliyogunduliwa",
-      "count": "mistari {{count}}"
+      "count": "mistari {{count}}",
+      "count_one": "mstari {{count}}"
     }
   },
   "editSubtitles": {
@@ -489,7 +491,7 @@
       "emptyTitle": "Pakia manukuu kuanza kuhariri",
       "readyCopy": "Boresha muda, migawanyo ya mistari na tafsiri hapa kabla ya kuhifadhi SRT au kuchoma manukuu kwenye media chanzo.",
       "emptyCopy": "Fungua SRT iliyopo uihariri moja kwa moja. Transkripti zilizotengenezwa kwenye mtiririko mkuu pia zitaonekana hapa zikishakuwa tayari.",
-      "rowsLoaded": "{{count}} mistari imepakiwa",
+      "rowsLoaded": "Mistari {{count}} imepakiwa",
       "loadAnotherSrt": "Pakia SRT nyingine",
       "mountVideoTitle": "Ambatanisha video chanzo kwa hakikisho na eksporti ya burn-in",
       "mountVideoCopy": "Unaweza kuendelea kuhariri bila video, lakini hakikisho, kutafuta sehemu na kuunganisha hufanya kazi vizuri zaidi media chanzo ikiambatanishwa.",
@@ -501,7 +503,8 @@
       "automaticCaptionsCopyWithMedia": "Upakuaji wa video kutoka URL ulizuiwa (HTTP 403). Haya ni manukuu ya kiotomatiki ya YouTube, si unakili mpya. Media iliyowekwa inapatikana kwa uhakiki na kuchoma manukuu.",
       "automaticCaptionsPill": "Manukuu ya kiotomatiki ya YouTube",
       "automaticCaptionsTitle": "Manukuu ya kiotomatiki ya YouTube",
-      "highlightEditingLocked": "Vivutio vinatengenezwa, uhariri umefungwa"
+      "highlightEditingLocked": "Vivutio vinatengenezwa, uhariri umefungwa",
+      "rowsLoaded_one": "Mstari {{count}} umepakiwa"
     },
     "item": {
       "seek": "Tafuta",
@@ -873,16 +876,18 @@
       "creating": "Inaunda msimbo…",
       "copy": "Nakili",
       "copied": "Imenakiliwa",
-      "summaryCredits": "Mikopo {{credits}} itahamishwa.",
+      "summaryCredits": "Krediti {{credits}} zitahamishwa.",
       "summaryByo": "Ufunguaji wa funguo za API pia utahamishwa.",
       "expires": "Msimbo huu unafanya kazi mara moja tu na unaisha muda baada ya dakika {{minutes}}.",
       "steps": "Kwenye kompyuta mpya: sakinisha Translator, fungua Mipangilio, chagua “Pokea mikopo”, kisha uweke msimbo huu.",
       "inputLabel": "Msimbo kutoka kompyuta yako nyingine",
       "redeem": "Pokea",
       "redeeming": "Inapokea…",
-      "received": "Mikopo {{credits}} imepokelewa.",
+      "received": "Krediti {{credits}} zimepokelewa.",
       "receivedNoCredits": "Msimbo umefanya kazi.",
-      "receivedByo": "Ufunguaji wa funguo za API umewashwa kwenye kompyuta hii."
+      "receivedByo": "Ufunguaji wa funguo za API umewashwa kwenye kompyuta hii.",
+      "summaryCredits_one": "Krediti {{credits}} itahamishwa.",
+      "received_one": "Krediti {{credits}} imepokelewa."
     }
   },
   "credits": {
@@ -908,7 +913,10 @@
       "freeThisMonth": "Dakika {{count}} za bure mwezi huu",
       "freeWelcome": "Dakika {{count}} za bure",
       "minutes": "Dakika {{count}} zimebaki",
-      "title": "Dakika na vifurushi"
+      "title": "Dakika na vifurushi",
+      "freeThisMonth_one": "Dakika {{count}} ya bure mwezi huu",
+      "freeWelcome_one": "Dakika {{count}} ya bure",
+      "minutes_one": "Dakika {{count}} imebaki"
     },
     "yourMinutes": "Dakika zako",
     "balanceNone": "Hakuna dakika zilizobaki",
@@ -923,7 +931,8 @@
     "checkoutNote": "Malipo ya mara moja kupitia Stripe, kwenye kivinjari chako. Hakuna akaunti wala usajili. Dakika zinafika zenyewe.",
     "dubbingNote": "Kutafsiri kwa salio kunaongeza takriban 10% kwa dakika; kuweka sauti kunatumia zaidi.",
     "iCancelledCheckout": "Nimeghairi malipo",
-    "checkoutStartFailed": "Malipo hayakuweza kuanza. Angalia muunganisho wako kisha ujaribu tena."
+    "checkoutStartFailed": "Malipo hayakuweza kuanza. Angalia muunganisho wako kisha ujaribu tena.",
+    "monthlyFreeNote_one": "Dakika {{minutes}} ya bure kila mwezi · inayofuata {{date}}"
   },
   "cta": {
     "generate": {
@@ -1233,7 +1242,9 @@
       "videoBlockedCaptions": "Video haikuweza kupakuliwa; inatafuta manukuu ya YouTube badala yake…",
       "voiceTrackAssembled": "Wimbo wa sauti umeunganishwa",
       "voiceTrackReady": "Wimbo wa sauti uko tayari",
-      "writingSummary": "Inaandika muhtasari…"
+      "writingSummary": "Inaandika muhtasari…",
+      "preparingDubLines_one": "Inaandaa mstari {{count}} kwa dubbing…",
+      "preparingVoiceClips_one": "Inaandaa kipande {{count}} cha sauti…"
     },
     "listening": "Inasikiliza video…",
     "mergeFinishSaveBeforeReload": "Maliza kuhifadhi video iliyounganishwa kabla ya kupakia upya.",
@@ -1327,7 +1338,9 @@
     "showTranslation": "Tafsiri",
     "showOriginal": "Asili",
     "showBoth": "Zote mbili",
-    "textSize": "Ukubwa wa maandishi"
+    "textSize": "Ukubwa wa maandishi",
+    "statusTranscribed_one": "Mstari {{count}} umeandikwa",
+    "statusTranslated_one": "Mstari {{count}} kwa {{language}} · unaendana na video"
   },
   "subtitleStyles": {
     "Cinema": "Njano ya sinema",
@@ -1361,7 +1374,10 @@
     "retry": "Jaribu tena",
     "finishCta": "Tafsiri hadi mwisho · {{price}}",
     "noneCta": "Tafsiri kwa {{language}} · {{price}}",
-    "notNow": "Baadaye"
+    "notNow": "Baadaye",
+    "enoughBody_one": "Una dakika za kutosha kutafsiri dakika {{remaining}} iliyobaki sasa hivi.",
+    "offerBody_one": "Tafsiri video nzima kwa {{price}}. Inatosha dakika {{remaining}} iliyobaki, na dakika za ziada zitakusubiri kwa video yako ijayo.",
+    "offerBodyLong_one": "Kifurushi cha {{price}} kinatosha sehemu kubwa ya dakika {{remaining}} iliyobaki."
   },
   "videoCost": {
     "covered": "Dakika zako zinatosha",

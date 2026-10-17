@@ -355,7 +355,8 @@
       "removeFromHistoryConfirm": "इस आइटम को डाउनलोड इतिहास से हटाएँ? ऐप लाइब्रेरी के बाहर सहेजी गई फ़ाइलें आपके डिवाइस पर रहेंगी।",
       "deleteLocalFileHistoryPending": "फ़ाइल हटा दी गई, लेकिन Translator डाउनलोड इतिहास का अपडेट पूरा नहीं कर सका। यह अपने आप फिर से कोशिश करेगा।",
       "removeHistoryFailed": "इस डाउनलोड को इतिहास से हटाया नहीं जा सका।",
-      "storedInAppLibrary": "ऐप लाइब्रेरी में सहेजा गया"
+      "storedInAppLibrary": "ऐप लाइब्रेरी में सहेजा गया",
+      "savedPreferencesCount_one": "{{count}} सहेजी गई पसंद"
     },
     "downloadAndTranslate": "डाउनलोड और अनुवाद करें",
     "downloadAndTranscribe": "डाउनलोड और ट्रांसक्राइब करें",
@@ -473,7 +474,8 @@
     "confidence": {
       "title": "कम विश्वास",
       "none": "कोई कम-विश्वास वाली पंक्तियाँ नहीं मिलीं",
-      "count": "{{count}} पंक्तियाँ"
+      "count": "{{count}} पंक्तियाँ",
+      "count_one": "{{count}} पंक्ति"
     }
   },
   "editSubtitles": {
@@ -501,7 +503,8 @@
       "automaticCaptionsCopyWithMedia": "URL से वीडियो डाउनलोड ब्लॉक हो गया (HTTP 403)। ये YouTube के स्वचालित कैप्शन हैं, नया ट्रांसक्रिप्शन नहीं। माउंट किया गया मीडिया प्रीव्यू और बर्न-इन के लिए उपलब्ध है।",
       "automaticCaptionsPill": "YouTube स्वचालित कैप्शन",
       "automaticCaptionsTitle": "YouTube स्वचालित कैप्शन",
-      "highlightEditingLocked": "हाइलाइट बनाए जा रहे हैं, संपादन लॉक है"
+      "highlightEditingLocked": "हाइलाइट बनाए जा रहे हैं, संपादन लॉक है",
+      "rowsLoaded_one": "{{count}} पंक्ति लोड हुई"
     },
     "item": {
       "seek": "खोजें",
@@ -882,7 +885,9 @@
       "redeeming": "प्राप्त कर रहा है…",
       "received": "{{credits}} क्रेडिट प्राप्त हुए।",
       "receivedNoCredits": "कोड काम कर गया।",
-      "receivedByo": "इस कंप्यूटर पर API कुंजी अनलॉक सक्रिय है।"
+      "receivedByo": "इस कंप्यूटर पर API कुंजी अनलॉक सक्रिय है।",
+      "summaryCredits_one": "{{credits}} क्रेडिट स्थानांतरित होगा।",
+      "received_one": "{{credits}} क्रेडिट प्राप्त हुआ।"
     }
   },
   "credits": {
@@ -1233,7 +1238,9 @@
       "videoBlockedCaptions": "वीडियो डाउनलोड नहीं हो सका; इसके बजाय YouTube कैप्शन खोजे जा रहे हैं…",
       "voiceTrackAssembled": "वॉइस ट्रैक जोड़ा गया",
       "voiceTrackReady": "वॉइस ट्रैक तैयार",
-      "writingSummary": "सारांश लिखा जा रहा है…"
+      "writingSummary": "सारांश लिखा जा रहा है…",
+      "preparingDubLines_one": "डबिंग के लिए {{count}} पंक्ति तैयार की जा रही है…",
+      "preparingVoiceClips_one": "{{count}} वॉइस क्लिप तैयार की जा रही है…"
     },
     "listening": "वीडियो सुना जा रहा है…",
     "mergeFinishSaveBeforeReload": "रीलोड करने से पहले मर्ज किया गया वीडियो सहेजना पूरा करें।",
@@ -1327,7 +1334,9 @@
     "showTranslation": "अनुवाद",
     "showOriginal": "मूल",
     "showBoth": "दोनों",
-    "textSize": "टेक्स्ट साइज़"
+    "textSize": "टेक्स्ट साइज़",
+    "statusTranscribed_one": "{{count}} लाइन लिख ली गई",
+    "statusTranslated_one": "{{language}} में {{count}} लाइन · वीडियो के साथ सिंक"
   },
   "subtitleStyles": {
     "Cinema": "सिनेमा पीला",

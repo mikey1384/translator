@@ -33,12 +33,17 @@ function getAgentControl(locale: JsonObject): JsonObject | undefined {
   return agentControl as JsonObject;
 }
 
+// Plural forms vary by language (English "_one", Arabic "_two"…); the
+// completeness test checks them against each language's categories.
+const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
+
 function flattenStrings(
   value: JsonObject,
   prefix = '',
   result = new Map<string, string>()
 ): Map<string, string> {
   for (const [key, child] of Object.entries(value)) {
+    if (PLURAL_SUFFIX.test(key)) continue;
     const fullKey = prefix ? `${prefix}.${key}` : key;
     if (typeof child === 'string') {
       result.set(fullKey, child);

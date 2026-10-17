@@ -139,7 +139,8 @@
     "transcription": {
       "providerUnavailable": "ट्रान्सक्रिप्शन (ElevenLabs Scribe) तात्पुरते अनुपलब्ध आहे किंवा अनेक प्रयत्नांनंतरही त्याच्याशी संपर्क होऊ शकला नाही. कृपया काही मिनिटांनी पुन्हा प्रयत्न करा.",
       "fileTooLarge": "हा ऑडिओ एकाच कामात ट्रान्सक्राइब करण्यासाठी खूप मोठा आहे (सुमारे {{hours}} तासांपेक्षा जास्त). व्हिडिओ छोट्या भागांमध्ये विभागा आणि प्रत्येक भाग ट्रान्सक्राइब करा.",
-      "elevenLabsKeyRequired": "ट्रान्सक्रिप्शन ElevenLabs Scribe वापरते आणि त्यासाठी ElevenLabs API की आवश्यक आहे. सेटिंग्जमध्ये एक की जोडा, किंवा Stage5 क्रेडिट्सने ट्रान्सक्राइब करण्यासाठी API की मोड बंद करा. तुमची OpenAI किंवा Anthropic की अजूनही अनुवादासाठी वापरली जाते."
+      "elevenLabsKeyRequired": "ट्रान्सक्रिप्शन ElevenLabs Scribe वापरते आणि त्यासाठी ElevenLabs API की आवश्यक आहे. सेटिंग्जमध्ये एक की जोडा, किंवा Stage5 क्रेडिट्सने ट्रान्सक्राइब करण्यासाठी API की मोड बंद करा. तुमची OpenAI किंवा Anthropic की अजूनही अनुवादासाठी वापरली जाते.",
+      "fileTooLarge_one": "हा ऑडिओ एकाच कामात ट्रान्सक्राइब करण्यासाठी खूप मोठा आहे (सुमारे {{hours}} तासापेक्षा जास्त). व्हिडिओ छोट्या भागांमध्ये विभागा आणि प्रत्येक भाग ट्रान्सक्राइब करा."
     }
   },
   "input": {
@@ -355,7 +356,8 @@
       "removeFromHistoryConfirm": "हा आयटम डाउनलोड इतिहासातून काढायचा? ॲप लायब्ररीबाहेर जतन केलेल्या फाइल्स डिव्हाइसवर राहतील.",
       "deleteLocalFileHistoryPending": "फाईल हटवली गेली, पण Translator डाउनलोड इतिहास अपडेट पूर्ण करू शकले नाही. ते आपोआप पुन्हा प्रयत्न करेल.",
       "removeHistoryFailed": "हे डाउनलोड इतिहासातून काढता आले नाही.",
-      "storedInAppLibrary": "अॅप लायब्ररीत जतन केले"
+      "storedInAppLibrary": "अॅप लायब्ररीत जतन केले",
+      "savedPreferencesCount_one": "{{count}} सेव्ह केलेली पसंती"
     },
     "downloadAndTranslate": "डाउनलोड करा आणि भाषांतर करा",
     "downloadAndTranscribe": "डाउनलोड करा आणि लिप्यंतरण करा",
@@ -473,7 +475,8 @@
     "confidence": {
       "title": "कमी आत्मविश्वास",
       "none": "कमी आत्मविश्वासाच्या ओळी आढळल्या नाहीत",
-      "count": "{{count}} ओळी"
+      "count": "{{count}} ओळी",
+      "count_one": "{{count}} ओळ"
     }
   },
   "editSubtitles": {
@@ -501,7 +504,8 @@
       "automaticCaptionsCopyWithMedia": "URL व्हिडिओ डाउनलोड ब्लॉक झाले (HTTP 403). ही YouTube स्वयंचलित कॅप्शन्स आहेत—नवीन ट्रान्सक्रिप्शन नाही. जोडलेला मीडिया प्रीव्ह्यू आणि burn-in साठी उपलब्ध आहे.",
       "automaticCaptionsPill": "YouTube स्वयंचलित कॅप्शन्स",
       "automaticCaptionsTitle": "YouTube स्वयंचलित कॅप्शन्स",
-      "highlightEditingLocked": "हायलाइट्स तयार होत आहेत, संपादन लॉक आहे"
+      "highlightEditingLocked": "हायलाइट्स तयार होत आहेत, संपादन लॉक आहे",
+      "rowsLoaded_one": "{{count}} ओळ लोड झाली"
     },
     "item": {
       "seek": "शोधा",
@@ -882,7 +886,10 @@
       "redeeming": "प्राप्त करत आहे…",
       "received": "{{credits}} क्रेडिट्स प्राप्त झाले.",
       "receivedNoCredits": "कोड यशस्वी झाला.",
-      "receivedByo": "या संगणकावर API की अनलॉक सक्रिय आहे."
+      "receivedByo": "या संगणकावर API की अनलॉक सक्रिय आहे.",
+      "expires_one": "हा कोड एकदाच काम करतो आणि {{minutes}} मिनिटात कालबाह्य होतो.",
+      "summaryCredits_one": "{{credits}} क्रेडिट हलवले जाईल.",
+      "received_one": "{{credits}} क्रेडिट प्राप्त झाले."
     }
   },
   "credits": {
@@ -908,7 +915,10 @@
       "freeThisMonth": "या महिन्यात {{count}} मोफत मिनिटे",
       "freeWelcome": "{{count}} मोफत मिनिटे",
       "minutes": "{{count}} मिनिटे शिल्लक",
-      "title": "मिनिटे आणि पॅक"
+      "title": "मिनिटे आणि पॅक",
+      "freeThisMonth_one": "या महिन्यात {{count}} मोफत मिनिट",
+      "freeWelcome_one": "{{count}} मोफत मिनिट",
+      "minutes_one": "{{count}} मिनिट शिल्लक"
     },
     "yourMinutes": "तुमची मिनिटे",
     "balanceNone": "एकही मिनिट शिल्लक नाही",
@@ -923,7 +933,8 @@
     "checkoutNote": "ब्राउझरमध्ये Stripe द्वारे एकदाच पेमेंट. खाते किंवा सबस्क्रिप्शन नाही. मिनिटे आपोआप जमा होतात.",
     "dubbingNote": "क्रेडिटने भाषांतर केल्यास दर मिनिटाला सुमारे 10% जास्त लागते; डबिंगला त्याहून जास्त.",
     "iCancelledCheckout": "मी चेकआउट रद्द केले",
-    "checkoutStartFailed": "पेमेंट सुरू होऊ शकले नाही. इंटरनेट कनेक्शन तपासा आणि पुन्हा प्रयत्न करा."
+    "checkoutStartFailed": "पेमेंट सुरू होऊ शकले नाही. इंटरनेट कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.",
+    "monthlyFreeNote_one": "दर महिन्याला {{minutes}} मोफत मिनिट · पुढच्या वेळी {{date}} रोजी"
   },
   "cta": {
     "generate": {
@@ -1233,7 +1244,9 @@
       "videoBlockedCaptions": "व्हिडिओ डाउनलोड होऊ शकला नाही; त्याऐवजी YouTube कॅप्शन्स तपासत आहे…",
       "voiceTrackAssembled": "आवाज ट्रॅक जोडला",
       "voiceTrackReady": "आवाज ट्रॅक तयार",
-      "writingSummary": "सारांश लिहित आहे…"
+      "writingSummary": "सारांश लिहित आहे…",
+      "preparingDubLines_one": "डबिंगसाठी {{count}} ओळ तयार करत आहे…",
+      "preparingVoiceClips_one": "{{count}} आवाज क्लिप तयार करत आहे…"
     },
     "listening": "व्हिडिओ ऐकत आहे…",
     "mergeFinishSaveBeforeReload": "रीलोड करण्यापूर्वी मर्ज केलेला व्हिडिओ सेव्ह करणे पूर्ण करा.",
@@ -1327,7 +1340,9 @@
     "showTranslation": "भाषांतर",
     "showOriginal": "मूळ",
     "showBoth": "दोन्ही",
-    "textSize": "अक्षरांचा आकार"
+    "textSize": "अक्षरांचा आकार",
+    "statusTranscribed_one": "{{count}} ओळ लिहून झाली",
+    "statusTranslated_one": "{{language}}मध्ये {{count}} ओळ · व्हिडिओशी जुळलेली"
   },
   "subtitleStyles": {
     "Cinema": "सिनेमा पिवळा",
@@ -1361,7 +1376,11 @@
     "retry": "पुन्हा प्रयत्न करा",
     "finishCta": "पूर्ण भाषांतर करा · {{price}}",
     "noneCta": "{{language}}मध्ये बदला · {{price}}",
-    "notNow": "आत्ता नको"
+    "notNow": "आत्ता नको",
+    "noneTitle_one": "हा व्हिडिओ {{total}} मिनिटाचा आहे.",
+    "enoughBody_one": "तुमच्याकडे पुरेशी मिनिटे आहेत — उरलेल्या {{remaining}} मिनिटाचे भाषांतर आत्ताच होऊ शकते.",
+    "offerBody_one": "{{price}} मध्ये उरलेल्या {{remaining}} मिनिटाचेही भाषांतर होईल. जी मिनिटे वाचतील ती पुढच्या व्हिडिओसाठी वापरता येतील.",
+    "offerBodyLong_one": "{{price}} पॅकमध्ये उरलेल्या {{remaining}} मिनिटापैकी बहुतेक भागाचे भाषांतर होईल."
   },
   "videoCost": {
     "covered": "तुमच्या मिनिटांत होईल",

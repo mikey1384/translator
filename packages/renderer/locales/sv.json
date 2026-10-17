@@ -139,7 +139,8 @@
     "transcription": {
       "providerUnavailable": "Transkribering (ElevenLabs Scribe) är tillfälligt otillgänglig eller kunde inte nås efter flera försök. Försök igen om några minuter.",
       "fileTooLarge": "Det här ljudet är för långt för att transkriberas i ett enda jobb (mer än cirka {{hours}} timmar). Dela upp videon i kortare delar och transkribera varje del.",
-      "elevenLabsKeyRequired": "Transkribering använder ElevenLabs Scribe och kräver en ElevenLabs API-nyckel. Lägg till en i Inställningar, eller stäng av API-nyckelläget för att transkribera med Stage5-krediter. Din OpenAI- eller Anthropic-nyckel används fortfarande för översättning."
+      "elevenLabsKeyRequired": "Transkribering använder ElevenLabs Scribe och kräver en ElevenLabs API-nyckel. Lägg till en i Inställningar, eller stäng av API-nyckelläget för att transkribera med Stage5-krediter. Din OpenAI- eller Anthropic-nyckel används fortfarande för översättning.",
+      "fileTooLarge_one": "Det här ljudet är för långt för att transkriberas i ett enda jobb (mer än cirka {{hours}} timme). Dela upp videon i kortare delar och transkribera varje del."
     }
   },
   "input": {
@@ -355,7 +356,8 @@
       "removeFromHistoryConfirm": "Vill du ta bort objektet från nedladdningshistoriken? Filer som sparats utanför appbiblioteket blir kvar på enheten.",
       "deleteLocalFileHistoryPending": "Filen togs bort, men Translator kunde inte uppdatera nedladdningshistoriken. Det görs ett nytt försök automatiskt.",
       "removeHistoryFailed": "Det gick inte att ta bort nedladdningen från historiken.",
-      "storedInAppLibrary": "Sparad i appbiblioteket"
+      "storedInAppLibrary": "Sparad i appbiblioteket",
+      "savedPreferencesCount_one": "{{count}} sparad preferens"
     },
     "downloadAndTranslate": "Ladda ner och översätt",
     "downloadAndTranscribe": "Ladda ner och transkribera",
@@ -473,7 +475,8 @@
     "confidence": {
       "title": "Låg tillförlitlighet",
       "none": "Inga rader med låg tillförlitlighet upptäckta",
-      "count": "{{count}} rader"
+      "count": "{{count}} rader",
+      "count_one": "{{count}} rad"
     }
   },
   "editSubtitles": {
@@ -501,7 +504,8 @@
       "automaticCaptionsCopyWithMedia": "Nedladdningen av videon från URL:en blockerades (HTTP 403). Det här är YouTubes automatiska textning, inte en ny transkribering. Den monterade median kan användas för förhandsvisning och inbränning.",
       "automaticCaptionsPill": "YouTubes automatiska textning",
       "automaticCaptionsTitle": "YouTubes automatiska textning",
-      "highlightEditingLocked": "Höjdpunkter skapas, redigering är låst"
+      "highlightEditingLocked": "Höjdpunkter skapas, redigering är låst",
+      "rowsLoaded_one": "{{count}} rad inläst"
     },
     "item": {
       "seek": "Sök",
@@ -552,7 +556,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "Använd mina API-nycklar",
-      "activeKeys": "Nycklar redo: {{count}}",
+      "activeKeys": "{{count}} nycklar redo",
       "noKeys": "Inga nycklar konfigurerade",
       "usingApiKeys": "Stage5-krediter av",
       "usingCredits": "Stage5-krediter på",
@@ -560,7 +564,8 @@
       "toggleOff": "Använder nu Stage5-krediter.",
       "toggleError": "Det gick inte att uppdatera inställningen.",
       "toggleAria": "Använd mina API-nycklar",
-      "requirementTranslation": "Kräver en OpenAI- eller Anthropic-nyckel för översättning"
+      "requirementTranslation": "Kräver en OpenAI- eller Anthropic-nyckel för översättning",
+      "activeKeys_one": "{{count}} nyckel redo"
     },
     "creditsDescription": "Köp krediter. Antalet timmar som visas är en uppskattning av den totala videolängd du kan transkribera eller översätta. Exempel: att transkribera och översätta en 3-timmars video använder cirka 6 timmar (cirka 140 000 krediter).",
     "performanceQuality": {
@@ -834,7 +839,8 @@
       "status": {
         "enabled": "Aktiverad",
         "disabled": "Inaktiverad",
-        "connected": "Anslutna klienter: {{count}}"
+        "connected": "{{count}} klienter anslutna",
+        "connected_one": "{{count}} klient ansluten"
       },
       "permissions": "Vad agenter kan göra:",
       "permission": {
@@ -882,7 +888,10 @@
       "redeeming": "Tar emot…",
       "received": "Tog emot {{credits}} krediter.",
       "receivedNoCredits": "Koden fungerade.",
-      "receivedByo": "API-nyckelupplåsningen är aktiv på den här datorn."
+      "receivedByo": "API-nyckelupplåsningen är aktiv på den här datorn.",
+      "expires_one": "Koden fungerar en gång och upphör att gälla om {{minutes}} minut.",
+      "summaryCredits_one": "{{credits}} kredit flyttas.",
+      "received_one": "Tog emot {{credits}} kredit."
     }
   },
   "credits": {
@@ -923,7 +932,8 @@
     "checkoutNote": "Engångsbetalning via Stripe i webbläsaren. Inget konto eller abonnemang. Minuterna kommer automatiskt.",
     "dubbingNote": "Översättning med minuter kostar ungefär 10 % extra per minut; dubbning drar mer.",
     "iCancelledCheckout": "Jag avbröt betalningen",
-    "checkoutStartFailed": "Betalningen kunde inte startas. Kontrollera anslutningen och försök igen."
+    "checkoutStartFailed": "Betalningen kunde inte startas. Kontrollera anslutningen och försök igen.",
+    "monthlyFreeNote_one": "{{minutes}} gratisminut varje månad · nästa gång {{date}}"
   },
   "cta": {
     "generate": {
@@ -1233,7 +1243,8 @@
       "videoBlockedCaptions": "Videon kunde inte laddas ned, letar efter YouTube-textning i stället…",
       "voiceTrackAssembled": "Röstspåret är sammansatt",
       "voiceTrackReady": "Röstspåret är klart",
-      "writingSummary": "Skriver sammanfattningen…"
+      "writingSummary": "Skriver sammanfattningen…",
+      "preparingDubLines_one": "Förbereder {{count}} rad för dubbning…"
     },
     "listening": "Lyssnar på videon…",
     "mergeFinishSaveBeforeReload": "Vänta tills den sammanfogade videon har sparats innan du laddar om.",
@@ -1327,7 +1338,9 @@
     "showTranslation": "Översättning",
     "showOriginal": "Original",
     "showBoth": "Båda",
-    "textSize": "Textstorlek"
+    "textSize": "Textstorlek",
+    "statusTranscribed_one": "{{count}} rad nedskriven",
+    "statusTranslated_one": "{{count}} rad på {{language}} · i synk med videon"
   },
   "subtitleStyles": {
     "Cinema": "Biogul",
@@ -1361,7 +1374,11 @@
     "retry": "Försök igen",
     "finishCta": "Översätt resten · {{price}}",
     "noneCta": "Översätt till {{language}} · {{price}}",
-    "notNow": "Inte nu"
+    "notNow": "Inte nu",
+    "noneTitle_one": "Den här videon är {{total}} minut lång.",
+    "enoughBody_one": "Du har tillräckligt med minuter för att översätta resten ({{remaining}} minut) nu.",
+    "offerBody_one": "Översätt hela videon för {{price}}. Det täcker resten ({{remaining}} minut), och det som blir över sparas till nästa video.",
+    "offerBodyLong_one": "Paketet på {{price}} täcker det mesta av resten ({{remaining}} minut)."
   },
   "videoCost": {
     "covered": "Ryms i dina minuter",

@@ -138,8 +138,10 @@
     },
     "transcription": {
       "providerUnavailable": "Transcrierea (ElevenLabs Scribe) este temporar indisponibilă sau nu a putut fi accesată după mai multe încercări. Te rugăm să încerci din nou peste câteva minute.",
-      "fileTooLarge": "Acest audio este prea lung pentru a fi transcris într-o singură sarcină (peste aproximativ {{hours}} ore). Împarte videoclipul în părți mai scurte și transcrie fiecare parte.",
-      "elevenLabsKeyRequired": "Transcrierea folosește ElevenLabs Scribe și necesită o cheie API ElevenLabs. Adaug-o în Setări sau dezactivează modul chei API pentru a transcrie cu credite Stage5. Cheia ta OpenAI sau Anthropic este în continuare folosită pentru traducere."
+      "fileTooLarge": "Acest audio este prea lung pentru a fi transcris într-o singură sarcină (peste aproximativ {{hours}} de ore). Împarte videoclipul în părți mai scurte și transcrie fiecare parte.",
+      "elevenLabsKeyRequired": "Transcrierea folosește ElevenLabs Scribe și necesită o cheie API ElevenLabs. Adaug-o în Setări sau dezactivează modul chei API pentru a transcrie cu credite Stage5. Cheia ta OpenAI sau Anthropic este în continuare folosită pentru traducere.",
+      "fileTooLarge_one": "Acest audio este prea lung pentru a fi transcris într-o singură sarcină (peste aproximativ {{hours}} oră). Împarte videoclipul în părți mai scurte și transcrie fiecare parte.",
+      "fileTooLarge_few": "Acest audio este prea lung pentru a fi transcris într-o singură sarcină (peste aproximativ {{hours}} ore). Împarte videoclipul în părți mai scurte și transcrie fiecare parte."
     }
   },
   "input": {
@@ -334,7 +336,7 @@
       "retrievalReady": "Rezultatele sunt gata.",
       "savedDownloads": "Descărcări salvate",
       "savedDownloadsCount": "{{count}} descărcări salvate",
-      "savedPreferencesCount": "{{count}} preferințe salvate",
+      "savedPreferencesCount": "{{count}} de preferințe salvate",
       "searchingLong": "Încă se caută și se sortează videoclipuri...",
       "searchingVeryLong": "Durează mai mult decât de obicei, dar încă rulează.",
       "stillWorking": "Încă lucrează...",
@@ -355,7 +357,9 @@
       "removeFromHistoryConfirm": "Eliminați acest element din istoricul descărcărilor? Fișierele salvate în afara bibliotecii aplicației vor rămâne pe dispozitiv.",
       "deleteLocalFileHistoryPending": "Fișierul a fost șters, dar Translator nu a putut termina actualizarea istoricului de descărcări. Va reîncerca automat.",
       "removeHistoryFailed": "Această descărcare nu a putut fi eliminată din istoric.",
-      "storedInAppLibrary": "Stocat în biblioteca aplicației"
+      "storedInAppLibrary": "Stocat în biblioteca aplicației",
+      "savedPreferencesCount_one": "{{count}} preferință salvată",
+      "savedPreferencesCount_few": "{{count}} preferințe salvate"
     },
     "downloadAndTranslate": "Descarcă și tradu",
     "downloadAndTranscribe": "Descarcă și transcrie",
@@ -473,7 +477,9 @@
     "confidence": {
       "title": "Încredere Scăzută",
       "none": "Nu s-au detectat linii cu încredere scăzută",
-      "count": "{{count}} linii"
+      "count": "{{count}} de linii",
+      "count_one": "{{count}} linie",
+      "count_few": "{{count}} linii"
     }
   },
   "editSubtitles": {
@@ -489,7 +495,7 @@
       "emptyTitle": "Încărcați subtitrări pentru a începe editarea",
       "readyCopy": "Ajustați aici timingul, întreruperile de rând și traducerile înainte de a salva SRT-ul sau de a inscripționa subtitrările în media sursă.",
       "emptyCopy": "Deschideți un SRT existent pentru a-l edita direct. Transcrierile generate din fluxul principal vor apărea și ele aici când sunt gata.",
-      "rowsLoaded": "{{count}} rânduri încărcate",
+      "rowsLoaded": "{{count}} de rânduri încărcate",
       "loadAnotherSrt": "Încărcați alt SRT",
       "mountVideoTitle": "Atașați videoclipul sursă pentru previzualizare și export burn-in",
       "mountVideoCopy": "Puteți continua să editați fără videoclip, dar previzualizarea, căutarea poziției și îmbinarea funcționează cel mai bine după ce media sursă este atașată.",
@@ -501,7 +507,9 @@
       "automaticCaptionsCopyWithMedia": "Descărcarea videoclipului de la URL a fost blocată (HTTP 403). Acestea sunt subtitrări automate YouTube, nu o transcriere nouă. Media atașată este disponibilă pentru previzualizare și burn-in.",
       "automaticCaptionsPill": "Subtitrări automate YouTube",
       "automaticCaptionsTitle": "Subtitrări automate YouTube",
-      "highlightEditingLocked": "Se generează momentele importante, editarea este blocată"
+      "highlightEditingLocked": "Se generează momentele importante, editarea este blocată",
+      "rowsLoaded_one": "{{count}} rând încărcat",
+      "rowsLoaded_few": "{{count}} rânduri încărcate"
     },
     "item": {
       "seek": "Caută",
@@ -908,7 +916,10 @@
       "freeThisMonth": "{{count}} min gratuite luna aceasta",
       "freeWelcome": "{{count}} min gratuite",
       "minutes": "{{count}} min rămase",
-      "title": "Minute și pachete"
+      "title": "Minute și pachete",
+      "freeThisMonth_one": "{{count}} min gratuit luna aceasta",
+      "freeWelcome_one": "{{count}} min gratuit",
+      "minutes_one": "{{count}} min rămas"
     },
     "yourMinutes": "Minutele tale",
     "balanceNone": "Nu mai ai minute",
@@ -923,7 +934,8 @@
     "checkoutNote": "Plată unică prin Stripe, în browser. Fără cont și fără abonament. Minutele apar automat.",
     "dubbingNote": "Traducerea cu minutele tale costă cu aproximativ 10% mai mult pe minut; dublajul, mai mult.",
     "iCancelledCheckout": "Am anulat plata",
-    "checkoutStartFailed": "Plata nu a putut începe. Verifică conexiunea și încearcă din nou."
+    "checkoutStartFailed": "Plata nu a putut începe. Verifică conexiunea și încearcă din nou.",
+    "monthlyFreeNote_one": "{{minutes}} min gratuit în fiecare lună · următorul pe {{date}}"
   },
   "cta": {
     "generate": {
@@ -1205,12 +1217,12 @@
       "postProcessing": "Se finalizează…",
       "preparingAudioExtraction": "Se pregătește audio ({{minutes}} min de video)…",
       "preparingDownload": "Se pregătește descărcarea…",
-      "preparingDubLines": "Se pregătesc {{count}} rânduri pentru dublare…",
+      "preparingDubLines": "Se pregătesc {{count}} de rânduri pentru dublare…",
       "preparingHighlights": "Se pregătește alegerea momentelor importante…",
       "preparingOutput": "Se pregătește folderul de ieșire…",
       "preparingTranscript": "Se citește transcrierea…",
       "preparingVideoEngine": "Se pregătesc instrumentele video…",
-      "preparingVoiceClips": "Se pregătesc {{count}} clipuri vocale…",
+      "preparingVoiceClips": "Se pregătesc {{count}} de clipuri vocale…",
       "rateLimited": "Ocupat momentan, se reîncearcă…",
       "reusingSummary": "Se folosește rezumatul pentru alegerea momentelor importante…",
       "saving": "Se salvează…",
@@ -1233,7 +1245,11 @@
       "videoBlockedCaptions": "Videoclipul nu a putut fi descărcat; se caută în schimb subtitrări YouTube…",
       "voiceTrackAssembled": "Pista vocală a fost asamblată",
       "voiceTrackReady": "Pista vocală este gata",
-      "writingSummary": "Se scrie rezumatul…"
+      "writingSummary": "Se scrie rezumatul…",
+      "preparingDubLines_one": "Se pregătește {{count}} rând pentru dublare…",
+      "preparingDubLines_few": "Se pregătesc {{count}} rânduri pentru dublare…",
+      "preparingVoiceClips_one": "Se pregătește {{count}} clip vocal…",
+      "preparingVoiceClips_few": "Se pregătesc {{count}} clipuri vocale…"
     },
     "listening": "Se ascultă videoclipul…",
     "mergeFinishSaveBeforeReload": "Termină de salvat videoclipul îmbinat înainte de reîncărcare.",
@@ -1304,7 +1320,7 @@
     "editToggle": "Editează subtitrările",
     "emptyList": "Subtitrările apar aici imediat ce Translator termină de ascultat videoclipul.",
     "statusReady": "Gata — subtitrările în {{language}} sunt la un clic distanță",
-    "statusTranscribed": "Rânduri transcrise: {{count}}",
+    "statusTranscribed": "{{count}} de rânduri transcrise",
     "statusTranslated": "Rânduri în {{language}}: {{count}} · sincronizate cu videoclipul",
     "translateTo": "Tradu în {{language}}",
     "exportVideo": "Exportă videoclipul cu subtitrări",
@@ -1327,7 +1343,9 @@
     "showTranslation": "Traducere",
     "showOriginal": "Original",
     "showBoth": "Ambele",
-    "textSize": "Mărimea textului"
+    "textSize": "Mărimea textului",
+    "statusTranscribed_one": "{{count}} rând transcris",
+    "statusTranscribed_few": "{{count}} rânduri transcrise"
   },
   "subtitleStyles": {
     "Cinema": "Galben cinema",

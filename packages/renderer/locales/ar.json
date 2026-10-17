@@ -138,8 +138,11 @@
     },
     "transcription": {
       "providerUnavailable": "خدمة النسخ (ElevenLabs Scribe) غير متاحة مؤقتًا أو تعذّر الوصول إليها بعد عدة محاولات. يُرجى المحاولة مرة أخرى بعد بضع دقائق.",
-      "fileTooLarge": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعات تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
-      "elevenLabsKeyRequired": "يستخدم النسخ ElevenLabs Scribe ويتطلب مفتاح API من ElevenLabs. أضف مفتاحًا في الإعدادات، أو أوقف وضع مفاتيح API للنسخ باستخدام أرصدة Stage5. لا يزال مفتاح OpenAI أو Anthropic الخاص بك يُستخدم للترجمة."
+      "fileTooLarge": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعة تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
+      "elevenLabsKeyRequired": "يستخدم النسخ ElevenLabs Scribe ويتطلب مفتاح API من ElevenLabs. أضف مفتاحًا في الإعدادات، أو أوقف وضع مفاتيح API للنسخ باستخدام أرصدة Stage5. لا يزال مفتاح OpenAI أو Anthropic الخاص بك يُستخدم للترجمة.",
+      "fileTooLarge_one": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من ساعة تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
+      "fileTooLarge_two": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من ساعتين تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
+      "fileTooLarge_few": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعات تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة."
     }
   },
   "input": {
@@ -334,7 +337,7 @@
       "retrievalReady": "النتائج جاهزة.",
       "savedDownloads": "التنزيلات المحفوظة",
       "savedDownloadsCount": "{{count}} تنزيلات محفوظة",
-      "savedPreferencesCount": "{{count}} تفضيلات محفوظة",
+      "savedPreferencesCount": "{{count}} تفضيل محفوظ",
       "searchingLong": "ما زال يتم البحث عن الفيديوهات وترتيبها...",
       "searchingVeryLong": "يستغرق وقتًا أطول من المعتاد، لكنه ما زال يعمل.",
       "stillWorking": "ما زال يعمل...",
@@ -355,7 +358,11 @@
       "removeFromHistoryConfirm": "هل تريد إزالة هذا العنصر من سجل التنزيلات؟ سيبقى أي ملف محفوظ خارج مكتبة التطبيق على جهازك.",
       "deleteLocalFileHistoryPending": "تم حذف الملف، لكن تعذّر على Translator إكمال تحديث سجل التنزيلات. ستتم إعادة المحاولة تلقائيًا.",
       "removeHistoryFailed": "تعذّرت إزالة هذا التنزيل من السجل.",
-      "storedInAppLibrary": "محفوظ في مكتبة التطبيق"
+      "storedInAppLibrary": "محفوظ في مكتبة التطبيق",
+      "savedPreferencesCount_one": "تفضيل واحد محفوظ",
+      "savedPreferencesCount_two": "تفضيلان محفوظان",
+      "savedPreferencesCount_few": "{{count}} تفضيلات محفوظة",
+      "savedPreferencesCount_many": "{{count}} تفضيلًا محفوظًا"
     },
     "downloadAndTranslate": "تنزيل وترجمة",
     "downloadAndTranscribe": "تنزيل ونسخ",
@@ -473,7 +480,11 @@
     "confidence": {
       "title": "ثقة منخفضة",
       "none": "لم يتم اكتشاف أسطر منخفضة الثقة",
-      "count": "{{count}} أسطر"
+      "count": "{{count}} سطر",
+      "count_one": "سطر واحد",
+      "count_two": "سطران",
+      "count_few": "{{count}} أسطر",
+      "count_many": "{{count}} سطرًا"
     }
   },
   "editSubtitles": {
@@ -501,7 +512,11 @@
       "automaticCaptionsCopyWithMedia": "تم حظر تنزيل الفيديو من الرابط (HTTP 403). هذه ترجمات YouTube التلقائية، وليست نسخًا صوتيًا جديدًا. الوسائط المرفقة متاحة للمعاينة والدمج.",
       "automaticCaptionsPill": "ترجمات YouTube التلقائية",
       "automaticCaptionsTitle": "ترجمات YouTube التلقائية",
-      "highlightEditingLocked": "جارٍ إنشاء اللقطات المميزة، التعديل مقفل"
+      "highlightEditingLocked": "جارٍ إنشاء اللقطات المميزة، التعديل مقفل",
+      "rowsLoaded_one": "تم تحميل سطر واحد",
+      "rowsLoaded_two": "تم تحميل سطرين",
+      "rowsLoaded_few": "تم تحميل {{count}} أسطر",
+      "rowsLoaded_many": "تم تحميل {{count}} سطرًا"
     },
     "item": {
       "seek": "بحث",
@@ -882,7 +897,16 @@
       "redeeming": "جارٍ الاستلام…",
       "received": "تم استلام {{credits}} نقطة.",
       "receivedNoCredits": "نجح الرمز.",
-      "receivedByo": "فتح مفاتيح API مفعّل على هذا الكمبيوتر."
+      "receivedByo": "فتح مفاتيح API مفعّل على هذا الكمبيوتر.",
+      "expires_one": "يعمل هذا الرمز مرة واحدة وتنتهي صلاحيته خلال دقيقة واحدة.",
+      "expires_two": "يعمل هذا الرمز مرة واحدة وتنتهي صلاحيته خلال دقيقتين.",
+      "expires_few": "يعمل هذا الرمز مرة واحدة وتنتهي صلاحيته خلال {{minutes}} دقائق.",
+      "summaryCredits_one": "سيتم نقل نقطة واحدة.",
+      "summaryCredits_two": "سيتم نقل نقطتين.",
+      "summaryCredits_few": "سيتم نقل {{credits}} نقاط.",
+      "received_one": "تم استلام نقطة واحدة.",
+      "received_two": "تم استلام نقطتين.",
+      "received_few": "تم استلام {{credits}} نقاط."
     }
   },
   "credits": {
@@ -1205,12 +1229,12 @@
       "postProcessing": "جارٍ الإنهاء…",
       "preparingAudioExtraction": "جارٍ تحضير الصوت ({{minutes}} دقيقة من الفيديو)…",
       "preparingDownload": "جارٍ تحضير التنزيل…",
-      "preparingDubLines": "جارٍ تحضير {{count}} سطرًا للدبلجة…",
+      "preparingDubLines": "جارٍ تحضير {{count}} سطر للدبلجة…",
       "preparingHighlights": "جارٍ الاستعداد لاختيار اللقطات المميزة…",
       "preparingOutput": "جارٍ تحضير مجلد الإخراج…",
       "preparingTranscript": "جارٍ قراءة النص المفرّغ…",
       "preparingVideoEngine": "جارٍ تجهيز أدوات الفيديو…",
-      "preparingVoiceClips": "جارٍ تحضير {{count}} مقطعًا صوتيًا…",
+      "preparingVoiceClips": "جارٍ تحضير {{count}} مقطع صوتي…",
       "rateLimited": "الخدمة مشغولة الآن، جارٍ إعادة المحاولة…",
       "reusingSummary": "جارٍ استخدام الملخص لاختيار اللقطات المميزة…",
       "saving": "جارٍ الحفظ…",
@@ -1233,7 +1257,15 @@
       "videoBlockedCaptions": "تعذّر تنزيل الفيديو؛ جارٍ البحث عن ترجمات YouTube بدلًا من ذلك…",
       "voiceTrackAssembled": "تم تجميع المسار الصوتي",
       "voiceTrackReady": "المسار الصوتي جاهز",
-      "writingSummary": "جارٍ كتابة الملخص…"
+      "writingSummary": "جارٍ كتابة الملخص…",
+      "preparingDubLines_one": "جارٍ تحضير سطر واحد للدبلجة…",
+      "preparingDubLines_two": "جارٍ تحضير سطرين للدبلجة…",
+      "preparingDubLines_few": "جارٍ تحضير {{count}} أسطر للدبلجة…",
+      "preparingDubLines_many": "جارٍ تحضير {{count}} سطرًا للدبلجة…",
+      "preparingVoiceClips_one": "جارٍ تحضير مقطع صوتي واحد…",
+      "preparingVoiceClips_two": "جارٍ تحضير مقطعين صوتيين…",
+      "preparingVoiceClips_few": "جارٍ تحضير {{count}} مقاطع صوتية…",
+      "preparingVoiceClips_many": "جارٍ تحضير {{count}} مقطعًا صوتيًا…"
     },
     "listening": "جارٍ الاستماع إلى الفيديو…",
     "mergeFinishSaveBeforeReload": "أكمل حفظ الفيديو المدمج قبل إعادة التحميل.",
@@ -1351,7 +1383,7 @@
     "resumingBody": "نتابع من {{time}} ونترجم البقية إلى {{language}}…",
     "failedTitle": "توقفت الترجمة في المنتصف",
     "offerTitle": "عرضنا لك الدقائق الأولى: {{covered}} من أصل {{total}}.",
-    "noneTitle": "مدة هذا الفيديو بالدقائق: {{total}}.",
+    "noneTitle": "مدة هذا الفيديو {{total}} دقيقة.",
     "failedBody": "كل ما تُرجم حتى الآن محفوظ. أعد المحاولة لنكمل الباقي.",
     "enoughBody": "دقائقك تكفي الآن لترجمة بقية الفيديو ({{remaining}} د).",
     "offerBody": "مقابل {{price}} نترجم لك بقية الفيديو كاملةً ({{remaining}} د)، وما يزيد من الدقائق يبقى لفيديوك التالي.",
@@ -1361,7 +1393,10 @@
     "retry": "إعادة المحاولة",
     "finishCta": "إكمال الترجمة · {{price}}",
     "noneCta": "حوّله إلى {{language}} · {{price}}",
-    "notNow": "ليس الآن"
+    "notNow": "ليس الآن",
+    "noneTitle_one": "مدة هذا الفيديو دقيقة واحدة.",
+    "noneTitle_two": "مدة هذا الفيديو دقيقتان.",
+    "noneTitle_few": "مدة هذا الفيديو {{total}} دقائق."
   },
   "videoCost": {
     "covered": "تكفيه دقائقك",

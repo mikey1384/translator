@@ -139,7 +139,8 @@
     "transcription": {
       "providerUnavailable": "Transcription (ElevenLabs Scribe) is temporarily unavailable or could not be reached after several attempts. Please try again in a few minutes.",
       "fileTooLarge": "This audio is too long to transcribe in one job (more than about {{hours}} hours). Split the video into shorter parts and transcribe each part.",
-      "elevenLabsKeyRequired": "Transcription uses ElevenLabs Scribe and needs an ElevenLabs API key. Add one in Settings, or turn off API key mode to transcribe with Stage5 credits. Your OpenAI or Anthropic key is still used for translation."
+      "elevenLabsKeyRequired": "Transcription uses ElevenLabs Scribe and needs an ElevenLabs API key. Add one in Settings, or turn off API key mode to transcribe with Stage5 credits. Your OpenAI or Anthropic key is still used for translation.",
+      "fileTooLarge_one": "This audio is too long to transcribe in one job (more than about {{hours}} hour). Split the video into shorter parts and transcribe each part."
     }
   },
   "input": {
@@ -359,7 +360,8 @@
         "planner": "Form search",
         "retrieval": "Load results"
       },
-      "removeHistoryFailed": "Could not remove this download from history."
+      "removeHistoryFailed": "Could not remove this download from history.",
+      "savedPreferencesCount_one": "{{count}} saved preference"
     },
     "downloadAndTranslate": "Download & Translate",
     "downloadAndTranscribe": "Download & Transcribe",
@@ -473,7 +475,8 @@
     "confidence": {
       "title": "Low Confidence",
       "none": "No low-confidence lines detected",
-      "count": "{{count}} lines"
+      "count": "{{count}} lines",
+      "count_one": "{{count}} line"
     }
   },
   "editSubtitles": {
@@ -501,7 +504,8 @@
       "automaticCaptionsPill": "YouTube automatic captions",
       "automaticCaptionsCopy": "Video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. You can edit, translate, and export SRT now. Mount media to preview or burn in subtitles.",
       "automaticCaptionsCopyWithMedia": "The URL video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. The mounted media is available for preview and burn-in.",
-      "highlightEditingLocked": "Highlight generation active, editing locked"
+      "highlightEditingLocked": "Highlight generation active, editing locked",
+      "rowsLoaded_one": "{{count}} row loaded"
     },
     "item": {
       "seek": "Seek",
@@ -552,7 +556,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "Use my API keys",
-      "activeKeys": "{{count}} key(s) ready",
+      "activeKeys": "{{count}} keys ready",
       "noKeys": "No keys configured",
       "usingApiKeys": "Stage5 credits off",
       "usingCredits": "Stage5 credits on",
@@ -560,7 +564,8 @@
       "toggleOff": "Now using Stage5 credits.",
       "toggleError": "Failed to update preference.",
       "toggleAria": "Use my API keys",
-      "requirementTranslation": "Needs an OpenAI or Anthropic key for translation"
+      "requirementTranslation": "Needs an OpenAI or Anthropic key for translation",
+      "activeKeys_one": "{{count}} key ready"
     },
     "creditsDescription": "Buy credits. The hours shown are an estimate of the total video duration you can transcribe or translate. Example: transcribing and translating a 3‑hour video uses about 6 hours (≈140,000 credits).",
     "performanceQuality": {
@@ -822,7 +827,8 @@
       "status": {
         "enabled": "Enabled",
         "disabled": "Disabled",
-        "connected": "{{count}} client(s) connected"
+        "connected": "{{count}} clients connected",
+        "connected_one": "{{count}} client connected"
       },
       "permissions": "What agents can do:",
       "permission": {
@@ -882,7 +888,10 @@
       "redeeming": "Receiving…",
       "received": "Received {{credits}} credits.",
       "receivedNoCredits": "The code worked.",
-      "receivedByo": "The API-key unlock is active on this computer."
+      "receivedByo": "The API-key unlock is active on this computer.",
+      "expires_one": "This code works once and expires in {{minutes}} minute.",
+      "summaryCredits_one": "{{credits}} credit will move.",
+      "received_one": "Received {{credits}} credit."
     }
   },
   "credits": {
@@ -923,7 +932,8 @@
     "checkoutNote": "One-time payment through Stripe, in your browser. No account or subscription. Minutes arrive on their own.",
     "dubbingNote": "Translating with credits adds about 10% per minute; dubbing uses more.",
     "iCancelledCheckout": "I cancelled checkout",
-    "checkoutStartFailed": "Checkout couldn’t start. Check your connection and try again."
+    "checkoutStartFailed": "Checkout couldn’t start. Check your connection and try again.",
+    "monthlyFreeNote_one": "{{minutes}} free minute every month · next on {{date}}"
   },
   "cta": {
     "generate": {
@@ -1240,7 +1250,9 @@
       "selectingHighlights": "Picking highlights in part {{done}} of {{total}}…",
       "summarizingSection": "Summarizing part {{done}} of {{total}}…",
       "translatingLines": "Translating {{done}}/{{total}}…",
-      "transcribingParts": "Transcribing {{done}}/{{total}}…"
+      "transcribingParts": "Transcribing {{done}}/{{total}}…",
+      "preparingDubLines_one": "Preparing {{count}} line for dubbing…",
+      "preparingVoiceClips_one": "Preparing {{count}} voice clip…"
     }
   },
   "messages": {
@@ -1327,7 +1339,9 @@
     "showTranslation": "Translation",
     "showOriginal": "Original",
     "showBoth": "Both",
-    "textSize": "Text size"
+    "textSize": "Text size",
+    "statusTranscribed_one": "{{count}} line transcribed",
+    "statusTranslated_one": "{{count}} line in {{language}} · in sync with the video"
   },
   "subtitleStyles": {
     "Cinema": "Cinema yellow",
@@ -1361,7 +1375,11 @@
     "retry": "Try again",
     "finishCta": "Finish the video · {{price}}",
     "noneCta": "Make it speak {{language}} · {{price}}",
-    "notNow": "Not now"
+    "notNow": "Not now",
+    "noneTitle_one": "This video is {{total}} minute long.",
+    "enoughBody_one": "You have enough minutes to finish the remaining {{remaining}} minute now.",
+    "offerBody_one": "Finish the whole video for {{price}}. It covers the remaining {{remaining}} minute, and what’s left over stays for your next video.",
+    "offerBodyLong_one": "The {{price}} pack covers most of the remaining {{remaining}} minute."
   },
   "videoCost": {
     "covered": "Covered by your minutes",

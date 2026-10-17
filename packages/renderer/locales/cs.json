@@ -355,7 +355,9 @@
       "removeFromHistoryConfirm": "Odebrat tuto položku z historie stahování? Soubor uložený mimo knihovnu aplikace zůstane v zařízení.",
       "deleteLocalFileHistoryPending": "Soubor byl smazán, ale Translator nedokončil aktualizaci historie stahování. Zkusí to automaticky znovu.",
       "removeHistoryFailed": "Toto stažení se nepodařilo odebrat z historie.",
-      "storedInAppLibrary": "Uloženo v knihovně aplikace"
+      "storedInAppLibrary": "Uloženo v knihovně aplikace",
+      "savedPreferencesCount_one": "{{count}} uložená předvolba",
+      "savedPreferencesCount_few": "{{count}} uložené předvolby"
     },
     "downloadAndTranslate": "Stáhnout a přeložit",
     "downloadAndTranscribe": "Stáhnout a přepsat",
@@ -473,7 +475,9 @@
     "confidence": {
       "title": "Nízká spolehlivost",
       "none": "Žádné řádky s nízkou spolehlivostí nebyly detekovány",
-      "count": "{{count}} řádků"
+      "count": "{{count}} řádků",
+      "count_one": "{{count}} řádek",
+      "count_few": "{{count}} řádky"
     }
   },
   "editSubtitles": {
@@ -501,7 +505,9 @@
       "automaticCaptionsCopyWithMedia": "Stažení videa z URL bylo zablokováno (HTTP 403). Toto jsou automatické titulky YouTube – ne nový přepis. Připojené médium je k dispozici pro náhled a vypálení.",
       "automaticCaptionsPill": "Automatické titulky YouTube",
       "automaticCaptionsTitle": "Automatické titulky YouTube",
-      "highlightEditingLocked": "Probíhá generování výběrů, úpravy jsou uzamčeny"
+      "highlightEditingLocked": "Probíhá generování výběrů, úpravy jsou uzamčeny",
+      "rowsLoaded_one": "Načten {{count}} řádek",
+      "rowsLoaded_few": "Načteny {{count}} řádky"
     },
     "item": {
       "seek": "Přejít",
@@ -552,7 +558,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "Použít mé API klíče",
-      "activeKeys": "Připravené klíče: {{count}}",
+      "activeKeys": "{{count}} připravených klíčů",
       "noKeys": "Nejsou nastaveny žádné klíče",
       "usingApiKeys": "Kredity Stage5 vypnuté",
       "usingCredits": "Kredity Stage5 zapnuté",
@@ -560,7 +566,9 @@
       "toggleOff": "Nyní používá kredity Stage5.",
       "toggleError": "Nepodařilo se aktualizovat předvolbu.",
       "toggleAria": "Použít mé API klíče",
-      "requirementTranslation": "Vyžaduje klíč OpenAI nebo Anthropic pro překlad"
+      "requirementTranslation": "Vyžaduje klíč OpenAI nebo Anthropic pro překlad",
+      "activeKeys_one": "{{count}} připravený klíč",
+      "activeKeys_few": "{{count}} připravené klíče"
     },
     "creditsDescription": "Kupte kredity. Zobrazené hodiny jsou odhad celkové délky videa, které můžete přepsat nebo přeložit. Příklad: přepis a překlad 3hodinového videa spotřebuje přibližně 6 hodin (≈140 000 kreditů).",
     "performanceQuality": {
@@ -834,7 +842,9 @@
       "status": {
         "enabled": "Zapnuto",
         "disabled": "Vypnuto",
-        "connected": "Připojení klienti: {{count}}"
+        "connected": "{{count}} připojených klientů",
+        "connected_one": "{{count}} připojený klient",
+        "connected_few": "{{count}} připojení klienti"
       },
       "permissions": "Co mohou agenti dělat:",
       "permission": {
@@ -873,16 +883,20 @@
       "creating": "Vytváření kódu…",
       "copy": "Kopírovat",
       "copied": "Zkopírováno",
-      "summaryCredits": "Přesune se kreditů: {{credits}}.",
+      "summaryCredits": "Přesune se {{credits}} kreditů.",
       "summaryByo": "Přesune se i odemčení API klíčů.",
       "expires": "Tento kód lze použít jednou a vyprší za {{minutes}} min.",
       "steps": "Na novém počítači: nainstalujte Translator, otevřete Nastavení, zvolte „Přijmout kredity“ a zadejte tento kód.",
       "inputLabel": "Kód z vašeho druhého počítače",
       "redeem": "Přijmout",
       "redeeming": "Přijímání…",
-      "received": "Přijato kreditů: {{credits}}.",
+      "received": "Přijato {{credits}} kreditů.",
       "receivedNoCredits": "Kód fungoval.",
-      "receivedByo": "Odemčení API klíčů je na tomto počítači aktivní."
+      "receivedByo": "Odemčení API klíčů je na tomto počítači aktivní.",
+      "summaryCredits_one": "Přesune se {{credits}} kredit.",
+      "summaryCredits_few": "Přesunou se {{credits}} kredity.",
+      "received_one": "Přijat {{credits}} kredit.",
+      "received_few": "Přijaty {{credits}} kredity."
     }
   },
   "credits": {
@@ -1233,7 +1247,9 @@
       "videoBlockedCaptions": "Video se nepodařilo stáhnout; místo toho se hledají titulky YouTube…",
       "voiceTrackAssembled": "Hlasová stopa sestavena",
       "voiceTrackReady": "Hlasová stopa připravena",
-      "writingSummary": "Psaní souhrnu…"
+      "writingSummary": "Psaní souhrnu…",
+      "preparingDubLines_one": "Příprava {{count}} řádku pro dabing…",
+      "preparingVoiceClips_one": "Příprava {{count}} hlasového klipu…"
     },
     "listening": "Poslech videa…",
     "mergeFinishSaveBeforeReload": "Před opětovným načtením dokončete ukládání sloučeného videa.",
@@ -1304,7 +1320,7 @@
     "editToggle": "Upravit titulky",
     "emptyList": "Titulky se tu objeví, jakmile si Translator video poslechne.",
     "statusReady": "Vše připraveno — překlad do {{languageInto}} na jedno kliknutí",
-    "statusTranscribed": "Přepsáno řádků: {{count}}",
+    "statusTranscribed": "Přepsáno {{count}} řádků",
     "statusTranslated": "Řádků: {{count}} · přeloženo do {{languageInto}} · synchronizováno s videem",
     "translateTo": "Přeložit do {{languageInto}}",
     "exportVideo": "Uložit video s titulky",
@@ -1327,7 +1343,9 @@
     "showTranslation": "Překlad",
     "showOriginal": "Originál",
     "showBoth": "Obojí",
-    "textSize": "Velikost textu"
+    "textSize": "Velikost textu",
+    "statusTranscribed_one": "Přepsán {{count}} řádek",
+    "statusTranscribed_few": "Přepsány {{count}} řádky"
   },
   "subtitleStyles": {
     "Cinema": "Filmová žlutá",

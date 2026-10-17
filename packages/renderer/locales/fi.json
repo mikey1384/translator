@@ -139,7 +139,8 @@
     "transcription": {
       "providerUnavailable": "Litterointi (ElevenLabs Scribe) ei ole tilapäisesti käytettävissä, tai siihen ei saatu yhteyttä useista yrityksistä huolimatta. Yritä uudelleen muutaman minuutin kuluttua.",
       "fileTooLarge": "Tämä ääni on liian pitkä litteroitavaksi yhdessä työssä (yli noin {{hours}} tuntia). Jaa video lyhyempiin osiin ja litteroi jokainen osa erikseen.",
-      "elevenLabsKeyRequired": "Litterointi käyttää ElevenLabs Scribea ja vaatii ElevenLabs API-avaimen. Lisää avain Asetuksissa tai poista API-avaintila käytöstä litteroidaksesi Stage5-krediiteillä. OpenAI- tai Anthropic-avaintasi käytetään edelleen käännökseen."
+      "elevenLabsKeyRequired": "Litterointi käyttää ElevenLabs Scribea ja vaatii ElevenLabs API-avaimen. Lisää avain Asetuksissa tai poista API-avaintila käytöstä litteroidaksesi Stage5-krediiteillä. OpenAI- tai Anthropic-avaintasi käytetään edelleen käännökseen.",
+      "fileTooLarge_one": "Tämä ääni on liian pitkä litteroitavaksi yhdessä työssä (yli noin {{hours}} tunnin). Jaa video lyhyempiin osiin ja litteroi jokainen osa erikseen."
     }
   },
   "input": {
@@ -355,7 +356,8 @@
       "removeFromHistoryConfirm": "Poistetaanko tämä kohde lataushistoriasta? Sovelluskirjaston ulkopuolelle tallennetut tiedostot säilyvät laitteella.",
       "deleteLocalFileHistoryPending": "Tiedosto poistettiin, mutta Translator ei saanut lataushistorian päivitystä valmiiksi. Se yrittää automaattisesti uudelleen.",
       "removeHistoryFailed": "Tätä latausta ei voitu poistaa historiasta.",
-      "storedInAppLibrary": "Tallennettu sovelluskirjastoon"
+      "storedInAppLibrary": "Tallennettu sovelluskirjastoon",
+      "savedPreferencesCount_one": "{{count}} tallennettu mieltymys"
     },
     "downloadAndTranslate": "Lataa ja käännä",
     "downloadAndTranscribe": "Lataa ja litteroi",
@@ -473,7 +475,8 @@
     "confidence": {
       "title": "Matala luotettavuus",
       "none": "Matalan luotettavuuden rivejä ei havaittu",
-      "count": "{{count}} riviä"
+      "count": "{{count}} riviä",
+      "count_one": "{{count}} rivi"
     }
   },
   "editSubtitles": {
@@ -501,7 +504,8 @@
       "automaticCaptionsCopyWithMedia": "URL-osoitteen videon lataus estettiin (HTTP 403). Nämä ovat YouTuben automaattiset tekstitykset – eivät uusi litterointi. Liitetty media on käytettävissä esikatseluun ja polttamiseen.",
       "automaticCaptionsPill": "YouTuben automaattiset tekstitykset",
       "automaticCaptionsTitle": "YouTuben automaattiset tekstitykset",
-      "highlightEditingLocked": "Kohokohtia luodaan, muokkaus lukittu"
+      "highlightEditingLocked": "Kohokohtia luodaan, muokkaus lukittu",
+      "rowsLoaded_one": "{{count}} rivi ladattu"
     },
     "item": {
       "seek": "Siirry",
@@ -834,7 +838,8 @@
       "status": {
         "enabled": "Käytössä",
         "disabled": "Ei käytössä",
-        "connected": "Yhdistettyjä asiakkaita: {{count}}"
+        "connected": "{{count}} asiakasta yhdistetty",
+        "connected_one": "{{count}} asiakas yhdistetty"
       },
       "permissions": "Mitä agentit voivat tehdä:",
       "permission": {
@@ -882,7 +887,9 @@
       "redeeming": "Vastaanotetaan…",
       "received": "Vastaanotettiin {{credits}} krediittiä.",
       "receivedNoCredits": "Koodi toimi.",
-      "receivedByo": "API-avainten avaus on käytössä tällä tietokoneella."
+      "receivedByo": "API-avainten avaus on käytössä tällä tietokoneella.",
+      "summaryCredits_one": "{{credits}} krediitti siirretään.",
+      "received_one": "Vastaanotettiin {{credits}} krediitti."
     }
   },
   "credits": {
@@ -1233,7 +1240,9 @@
       "videoBlockedCaptions": "Videota ei voitu ladata; etsitään sen sijaan YouTube-tekstityksiä…",
       "voiceTrackAssembled": "Ääniraita koottu",
       "voiceTrackReady": "Ääniraita valmis",
-      "writingSummary": "Kirjoitetaan yhteenvetoa…"
+      "writingSummary": "Kirjoitetaan yhteenvetoa…",
+      "preparingDubLines_one": "Valmistellaan {{count}} rivi dubbausta varten…",
+      "preparingVoiceClips_one": "Valmistellaan {{count}} ääniklippi…"
     },
     "listening": "Kuunnellaan videota…",
     "mergeFinishSaveBeforeReload": "Viimeistele yhdistetyn videon tallennus ennen uudelleenlatausta.",
@@ -1327,7 +1336,9 @@
     "showTranslation": "Käännös",
     "showOriginal": "Alkuperäinen",
     "showBoth": "Molemmat",
-    "textSize": "Tekstin koko"
+    "textSize": "Tekstin koko",
+    "statusTranscribed_one": "Puhe kirjoitettu tekstiksi · {{count}} rivi",
+    "statusTranslated_one": "{{count}} rivi {{languageInto}} · ajoitettu videoon"
   },
   "subtitleStyles": {
     "Cinema": "Elokuvakeltainen",
@@ -1351,17 +1362,20 @@
     "resumingBody": "Jatketaan kohdasta {{time}} ja käännetään loppu {{languageInto}}…",
     "failedTitle": "Kääntäminen keskeytyi",
     "offerTitle": "Näit videon {{total}} minuutista ensimmäiset {{covered}}.",
-    "noneTitle": "Video kestää {{total}} min.",
+    "noneTitle": "Video kestää {{total}} minuuttia.",
     "failedBody": "Tähän asti käännetty säilyy. Yritä uudelleen, niin loppu käännetään.",
     "enoughBody": "Minuuttisi riittävät loppujen {{remaining}} minuutin kääntämiseen saman tien.",
-    "offerBody": "Käännä koko video hintaan {{price}}. Se kattaa loput {{remaining}} min, ja ylimääräiset minuutit jäävät seuraavaan videoon.",
+    "offerBody": "Käännä koko video hintaan {{price}}. Se kattaa loput {{remaining}} minuuttia, ja ylimääräiset minuutit jäävät seuraavaan videoon.",
     "offerBodyLong": "Paketti hintaan {{price}} kattaa suurimman osan jäljellä olevista {{remaining}} minuutista.",
     "noneBodyMonthly": "Tämän kuun ilmaiset minuutit on käytetty. Uudet tulevat {{date}} – tai käännä video heti {{languageInto}} hintaan {{price}}.",
     "noneBody": "Käännä koko video {{languageInto}} hintaan {{price}}.",
     "retry": "Yritä uudelleen",
     "finishCta": "Käännä loppuun · {{price}}",
     "noneCta": "Käännä {{languageInto}} · {{price}}",
-    "notNow": "Ei nyt"
+    "notNow": "Ei nyt",
+    "noneTitle_one": "Video kestää {{total}} minuutin.",
+    "offerBody_one": "Käännä koko video hintaan {{price}}. Se kattaa jäljellä olevan {{remaining}} minuutin, ja ylimääräiset minuutit jäävät seuraavaan videoon.",
+    "offerBodyLong_one": "Paketti hintaan {{price}} kattaa suurimman osan jäljellä olevasta {{remaining}} minuutista."
   },
   "videoCost": {
     "covered": "Minuuttisi riittävät",

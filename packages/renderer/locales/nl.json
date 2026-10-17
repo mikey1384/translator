@@ -355,7 +355,8 @@
       "removeFromHistoryConfirm": "Dit item uit de downloadgeschiedenis verwijderen? Bestanden die buiten de appbibliotheek zijn opgeslagen, blijven op het apparaat staan.",
       "deleteLocalFileHistoryPending": "Het bestand is verwijderd, maar Translator kon de downloadgeschiedenis niet volledig bijwerken. Dit wordt automatisch opnieuw geprobeerd.",
       "removeHistoryFailed": "Kon deze download niet uit de geschiedenis verwijderen.",
-      "storedInAppLibrary": "Opgeslagen in de app-bibliotheek"
+      "storedInAppLibrary": "Opgeslagen in de app-bibliotheek",
+      "savedPreferencesCount_one": "{{count}} opgeslagen voorkeur"
     },
     "downloadAndTranslate": "Downloaden en vertalen",
     "downloadAndTranscribe": "Downloaden en transcriberen",
@@ -473,7 +474,8 @@
     "confidence": {
       "title": "Lage betrouwbaarheid",
       "none": "Geen regels met lage betrouwbaarheid gedetecteerd",
-      "count": "{{count}} regels"
+      "count": "{{count}} regels",
+      "count_one": "{{count}} regel"
     }
   },
   "editSubtitles": {
@@ -501,7 +503,8 @@
       "automaticCaptionsCopyWithMedia": "Het downloaden van de video via de URL is geblokkeerd (HTTP 403). Dit zijn automatische YouTube-ondertitels, geen nieuwe transcriptie. De gekoppelde media is beschikbaar voor voorbeeld en inbranden.",
       "automaticCaptionsPill": "Automatische YouTube-ondertitels",
       "automaticCaptionsTitle": "Automatische YouTube-ondertitels",
-      "highlightEditingLocked": "Hoogtepunten worden gegenereerd, bewerken vergrendeld"
+      "highlightEditingLocked": "Hoogtepunten worden gegenereerd, bewerken vergrendeld",
+      "rowsLoaded_one": "{{count}} regel geladen"
     },
     "item": {
       "seek": "Zoeken",
@@ -552,7 +555,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "Mijn API-sleutels gebruiken",
-      "activeKeys": "Sleutels klaar: {{count}}",
+      "activeKeys": "{{count}} sleutels klaar",
       "noKeys": "Geen sleutels geconfigureerd",
       "usingApiKeys": "Stage5-credits uit",
       "usingCredits": "Stage5-credits aan",
@@ -560,7 +563,8 @@
       "toggleOff": "Gebruikt nu Stage5-credits.",
       "toggleError": "Voorkeur bijwerken mislukt.",
       "toggleAria": "Mijn API-sleutels gebruiken",
-      "requirementTranslation": "Vereist een OpenAI- of Anthropic-sleutel voor vertaling"
+      "requirementTranslation": "Vereist een OpenAI- of Anthropic-sleutel voor vertaling",
+      "activeKeys_one": "{{count}} sleutel klaar"
     },
     "creditsDescription": "Koop credits. Het aantal getoonde uren is een schatting van de totale videoduur die je kunt transcriberen of vertalen. Voorbeeld: een video van 3 uur transcriberen en vertalen kost ongeveer 6 uur (≈140.000 credits).",
     "performanceQuality": {
@@ -834,7 +838,8 @@
       "status": {
         "enabled": "Ingeschakeld",
         "disabled": "Uitgeschakeld",
-        "connected": "Verbonden clients: {{count}}"
+        "connected": "{{count}} clients verbonden",
+        "connected_one": "{{count}} client verbonden"
       },
       "permissions": "Wat agents kunnen doen:",
       "permission": {
@@ -882,7 +887,10 @@
       "redeeming": "Bezig met ontvangen…",
       "received": "{{credits}} credits ontvangen.",
       "receivedNoCredits": "De code heeft gewerkt.",
-      "receivedByo": "De API-sleutelontgrendeling is actief op deze computer."
+      "receivedByo": "De API-sleutelontgrendeling is actief op deze computer.",
+      "expires_one": "Deze code werkt één keer en verloopt over {{minutes}} minuut.",
+      "summaryCredits_one": "Er wordt {{credits}} credit verplaatst.",
+      "received_one": "{{credits}} credit ontvangen."
     }
   },
   "credits": {
@@ -923,7 +931,8 @@
     "checkoutNote": "Eenmalige betaling via Stripe, in je browser. Geen account of abonnement. Minuten komen vanzelf binnen.",
     "dubbingNote": "Vertalen met minuten kost ongeveer 10% extra per minuut; nasynchroniseren kost meer.",
     "iCancelledCheckout": "Ik heb de betaling geannuleerd",
-    "checkoutStartFailed": "De betaling kon niet worden gestart. Controleer je verbinding en probeer het opnieuw."
+    "checkoutStartFailed": "De betaling kon niet worden gestart. Controleer je verbinding en probeer het opnieuw.",
+    "monthlyFreeNote_one": "Elke maand {{minutes}} gratis minuut · volgende op {{date}}"
   },
   "cta": {
     "generate": {
@@ -1233,7 +1242,9 @@
       "videoBlockedCaptions": "De video kon niet worden gedownload; in plaats daarvan zoeken naar YouTube-ondertitels…",
       "voiceTrackAssembled": "Stemspoor samengesteld",
       "voiceTrackReady": "Stemspoor klaar",
-      "writingSummary": "Samenvatting schrijven…"
+      "writingSummary": "Samenvatting schrijven…",
+      "preparingDubLines_one": "{{count}} regel voorbereiden voor dubben…",
+      "preparingVoiceClips_one": "{{count}} stemfragment voorbereiden…"
     },
     "listening": "Naar de video luisteren…",
     "mergeFinishSaveBeforeReload": "Rond het opslaan van de samengevoegde video af voordat je herlaadt.",
@@ -1327,7 +1338,9 @@
     "showTranslation": "Vertaling",
     "showOriginal": "Origineel",
     "showBoth": "Beide",
-    "textSize": "Tekstgrootte"
+    "textSize": "Tekstgrootte",
+    "statusTranscribed_one": "{{count}} regel uitgeschreven",
+    "statusTranslated_one": "{{count}} regel in het {{language}} · synchroon met de video"
   },
   "subtitleStyles": {
     "Cinema": "Bioscoopgeel",
@@ -1361,7 +1374,11 @@
     "retry": "Opnieuw proberen",
     "finishCta": "Helemaal vertalen · {{price}}",
     "noneCta": "Vertalen naar het {{language}} · {{price}}",
-    "notNow": "Niet nu"
+    "notNow": "Niet nu",
+    "noneTitle_one": "Deze video duurt {{total}} minuut.",
+    "enoughBody_one": "Je hebt genoeg minuten om de resterende {{remaining}} minuut nu te vertalen.",
+    "offerBody_one": "Laat de hele video vertalen voor {{price}}. Daarmee is de resterende {{remaining}} minuut gedekt, en wat overblijft, kun je voor je volgende video gebruiken.",
+    "offerBodyLong_one": "Het pakket van {{price}} dekt het grootste deel van de resterende {{remaining}} minuut."
   },
   "videoCost": {
     "covered": "Past binnen je minuten",

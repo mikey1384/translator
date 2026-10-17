@@ -355,7 +355,9 @@
       "removeFromHistoryConfirm": "Видалити цей елемент з історії завантажень? Файли, збережені поза бібліотекою застосунку, залишаться на пристрої.",
       "deleteLocalFileHistoryPending": "Файл видалено, але Translator не вдалося завершити оновлення історії завантажень. Буде виконано повторну спробу автоматично.",
       "removeHistoryFailed": "Не вдалося видалити це завантаження з історії.",
-      "storedInAppLibrary": "Збережено в бібліотеці застосунку"
+      "storedInAppLibrary": "Збережено в бібліотеці застосунку",
+      "savedPreferencesCount_one": "{{count}} збережене вподобання",
+      "savedPreferencesCount_few": "{{count}} збережені вподобання"
     },
     "downloadAndTranslate": "Завантажити та перекласти",
     "downloadAndTranscribe": "Завантажити та транскрибувати",
@@ -473,7 +475,9 @@
     "confidence": {
       "title": "Низька впевненість",
       "none": "Рядків з низькою впевненістю не виявлено",
-      "count": "{{count}} рядків"
+      "count": "{{count}} рядків",
+      "count_one": "{{count}} рядок",
+      "count_few": "{{count}} рядки"
     }
   },
   "editSubtitles": {
@@ -501,7 +505,9 @@
       "automaticCaptionsCopyWithMedia": "Завантаження відео за URL заблоковано (HTTP 403). Це автоматичні субтитри YouTube, а не нова транскрипція. Підключене медіа доступне для перегляду й вбудовування.",
       "automaticCaptionsPill": "Автоматичні субтитри YouTube",
       "automaticCaptionsTitle": "Автоматичні субтитри YouTube",
-      "highlightEditingLocked": "Створюються ключові моменти, редагування заблоковано"
+      "highlightEditingLocked": "Створюються ключові моменти, редагування заблоковано",
+      "rowsLoaded_one": "Завантажено {{count}} рядок",
+      "rowsLoaded_few": "Завантажено {{count}} рядки"
     },
     "item": {
       "seek": "Перейти",
@@ -560,7 +566,10 @@
       "toggleOff": "Тепер використовуються кредити Stage5.",
       "toggleError": "Не вдалося оновити налаштування.",
       "toggleAria": "Використовувати мої API-ключі",
-      "requirementTranslation": "Потрібен ключ OpenAI або Anthropic для перекладу"
+      "requirementTranslation": "Потрібен ключ OpenAI або Anthropic для перекладу",
+      "activeKeys_one": "{{count}} ключ готовий",
+      "activeKeys_few": "{{count}} ключі готові",
+      "activeKeys_many": "{{count}} ключів готово"
     },
     "creditsDescription": "Купуйте кредити. Показані години — це оцінка загальної тривалості відео, яке ви можете транскрибувати або перекладати. Приклад: транскрибування та переклад 3‑годинного відео коштуватиме приблизно 6 годин (≈140 000 кредитів).",
     "performanceQuality": {
@@ -882,7 +891,13 @@
       "redeeming": "Отримання…",
       "received": "Отримано кредитів: {{credits}}.",
       "receivedNoCredits": "Код спрацював.",
-      "receivedByo": "Розблокування API-ключів активне на цьому комп’ютері."
+      "receivedByo": "Розблокування API-ключів активне на цьому комп’ютері.",
+      "summaryCredits_one": "Буде перенесено {{credits}} кредит.",
+      "summaryCredits_few": "Буде перенесено {{credits}} кредити.",
+      "summaryCredits_many": "Буде перенесено {{credits}} кредитів.",
+      "received_one": "Отримано {{credits}} кредит.",
+      "received_few": "Отримано {{credits}} кредити.",
+      "received_many": "Отримано {{credits}} кредитів."
     }
   },
   "credits": {
@@ -1233,7 +1248,11 @@
       "videoBlockedCaptions": "Відео не вдалося завантажити; натомість шукаємо субтитри YouTube…",
       "voiceTrackAssembled": "Голосову доріжку зібрано",
       "voiceTrackReady": "Голосова доріжка готова",
-      "writingSummary": "Написання підсумку…"
+      "writingSummary": "Написання підсумку…",
+      "preparingDubLines_one": "Підготовка {{count}} рядка для дубляжу…",
+      "preparingVoiceClips_one": "Підготовка {{count}} голосового кліпу…",
+      "preparingVoiceClips_few": "Підготовка {{count}} голосових кліпів…",
+      "preparingVoiceClips_many": "Підготовка {{count}} голосових кліпів…"
     },
     "listening": "Прослуховування відео…",
     "mergeFinishSaveBeforeReload": "Дочекайтеся збереження об’єднаного відео перед перезавантаженням.",
@@ -1327,7 +1346,13 @@
     "showTranslation": "Переклад",
     "showOriginal": "Оригінал",
     "showBoth": "Обидва",
-    "textSize": "Розмір тексту"
+    "textSize": "Розмір тексту",
+    "statusTranscribed_one": "{{count}} рядок розшифровано",
+    "statusTranscribed_few": "{{count}} рядки розшифровано",
+    "statusTranscribed_many": "{{count}} рядків розшифровано",
+    "statusTranslated_one": "{{count}} рядок · перекладено на {{languageInto}} · синхронно з відео",
+    "statusTranslated_few": "{{count}} рядки · перекладено на {{languageInto}} · синхронно з відео",
+    "statusTranslated_many": "{{count}} рядків · перекладено на {{languageInto}} · синхронно з відео"
   },
   "subtitleStyles": {
     "Cinema": "Кіношний жовтий",

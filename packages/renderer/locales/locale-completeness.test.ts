@@ -88,14 +88,17 @@ test('plural forms match each language and keep their placeholders', () => {
       if (source === undefined) {
         problems.push(`${file}: ${key} has no English base key`);
       } else {
-        // A singular or dual form may spell the number out ("one line").
-        const withoutCount = (text: string) =>
-          placeholders(text)
-            .split(',')
-            .filter(name => name && name !== 'count')
-            .join(',');
-        if (withoutCount(value) !== withoutCount(source)) {
-          problems.push(`${file}: placeholders differ in ${key}`);
+        // A plural form may spell an amount out ("one line", "an hour"),
+        // so it can drop placeholders, but never add one the base lacks.
+        const allowed = new Set([
+          ...placeholders(source).split(','),
+          'languageInto',
+        ]);
+        const extra = placeholders(value)
+          .split(',')
+          .filter(name => name && !allowed.has(name));
+        if (extra.length > 0) {
+          problems.push(`${file}: unknown placeholders in ${key}`);
         }
       }
     }

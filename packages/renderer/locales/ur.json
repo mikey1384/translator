@@ -355,7 +355,8 @@
       "removeFromHistoryConfirm": "اس آئٹم کو ڈاؤن لوڈ تاریخ سے ہٹائیں؟ ایپ لائبریری سے باہر محفوظ فائلیں ڈیوائس پر رہیں گی۔",
       "deleteLocalFileHistoryPending": "فائل حذف ہو گئی، لیکن Translator ڈاؤن لوڈ تاریخ کو اپ ڈیٹ کرنا مکمل نہ کر سکا۔ یہ خود بخود دوبارہ کوشش کرے گا۔",
       "removeHistoryFailed": "اس ڈاؤن لوڈ کو تاریخ سے ہٹایا نہیں جا سکا۔",
-      "storedInAppLibrary": "ایپ لائبریری میں محفوظ"
+      "storedInAppLibrary": "ایپ لائبریری میں محفوظ",
+      "savedPreferencesCount_one": "{{count}} محفوظ شدہ ترجیح"
     },
     "downloadAndTranslate": "ڈاؤن لوڈ اور ترجمہ کریں",
     "downloadAndTranscribe": "ڈاؤن لوڈ اور نقل کریں",
@@ -473,7 +474,8 @@
     "confidence": {
       "title": "کم اعتماد",
       "none": "کوئی کم اعتماد والی لائنیں نہیں ملیں",
-      "count": "{{count}} لائنیں"
+      "count": "{{count}} لائنیں",
+      "count_one": "{{count}} لائن"
     }
   },
   "editSubtitles": {
@@ -501,7 +503,8 @@
       "automaticCaptionsCopyWithMedia": "URL والی ویڈیو کا ڈاؤن لوڈ روک دیا گیا (HTTP 403)۔ یہ YouTube کے خودکار کیپشنز ہیں—نئی ٹرانسکرپشن نہیں۔ ماؤنٹ شدہ میڈیا پیش نظارہ اور برن اِن کے لیے دستیاب ہے۔",
       "automaticCaptionsPill": "YouTube کے خودکار کیپشنز",
       "automaticCaptionsTitle": "YouTube کے خودکار کیپشنز",
-      "highlightEditingLocked": "ہائی لائٹس بن رہی ہیں، ترمیم مقفل ہے"
+      "highlightEditingLocked": "ہائی لائٹس بن رہی ہیں، ترمیم مقفل ہے",
+      "rowsLoaded_one": "{{count}} سطر لوڈ ہوئی"
     },
     "item": {
       "seek": "تلاش کریں",
@@ -882,7 +885,9 @@
       "redeeming": "وصول کیا جا رہا ہے…",
       "received": "{{credits}} کریڈٹس وصول ہو گئے۔",
       "receivedNoCredits": "کوڈ کام کر گیا۔",
-      "receivedByo": "API کلید ان لاک اس کمپیوٹر پر فعال ہے۔"
+      "receivedByo": "API کلید ان لاک اس کمپیوٹر پر فعال ہے۔",
+      "summaryCredits_one": "{{credits}} کریڈٹ منتقل ہوگا۔",
+      "received_one": "{{credits}} کریڈٹ وصول ہو گیا۔"
     }
   },
   "credits": {
@@ -1233,7 +1238,9 @@
       "videoBlockedCaptions": "ویڈیو ڈاؤن لوڈ نہیں ہو سکی؛ اس کے بجائے YouTube کیپشنز تلاش کیے جا رہے ہیں…",
       "voiceTrackAssembled": "آواز کا ٹریک جوڑ دیا گیا",
       "voiceTrackReady": "آواز کا ٹریک تیار ہے",
-      "writingSummary": "خلاصہ لکھا جا رہا ہے…"
+      "writingSummary": "خلاصہ لکھا جا رہا ہے…",
+      "preparingDubLines_one": "ڈبنگ کے لیے {{count}} لائن تیار کی جا رہی ہے…",
+      "preparingVoiceClips_one": "{{count}} آواز کلپ تیار کیا جا رہا ہے…"
     },
     "listening": "ویڈیو سنی جا رہی ہے…",
     "mergeFinishSaveBeforeReload": "دوبارہ لوڈ کرنے سے پہلے ضم شدہ ویڈیو کو محفوظ ہونے دیں۔",
@@ -1327,7 +1334,9 @@
     "showTranslation": "ترجمہ",
     "showOriginal": "اصل",
     "showBoth": "دونوں",
-    "textSize": "متن کا سائز"
+    "textSize": "متن کا سائز",
+    "statusTranscribed_one": "{{count}} سطر لکھی جا چکی ہے",
+    "statusTranslated_one": "{{language}} میں {{count}} سطر · ویڈیو کے ساتھ ہم آہنگ"
   },
   "subtitleStyles": {
     "Cinema": "سنیما پیلا",
@@ -1361,7 +1370,8 @@
     "retry": "دوبارہ کوشش کریں",
     "finishCta": "آخر تک ترجمہ · {{price}}",
     "noneCta": "{{language}} میں بدلیں · {{price}}",
-    "notNow": "ابھی نہیں"
+    "notNow": "ابھی نہیں",
+    "offerBody_one": "{{price}} میں باقی {{remaining}} منٹ بھی ترجمہ ہو جائے گا، اور جو منٹ بچیں گے وہ آپ کی اگلی ویڈیو کے کام آئیں گے۔"
   },
   "videoCost": {
     "covered": "آپ کے منٹ کافی ہیں",

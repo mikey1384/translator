@@ -139,7 +139,8 @@
     "transcription": {
       "providerUnavailable": "La transcripción (ElevenLabs Scribe) no está disponible temporalmente o no se pudo conectar tras varios intentos. Vuelve a intentarlo en unos minutos.",
       "fileTooLarge": "Este audio es demasiado largo para transcribirlo en un solo trabajo (más de unas {{hours}} horas). Divide el video en partes más cortas y transcribe cada una.",
-      "elevenLabsKeyRequired": "La transcripción usa ElevenLabs Scribe y necesita una clave API de ElevenLabs. Agrega una en Configuración o desactiva el modo de claves API para transcribir con créditos de Stage5. Tu clave de OpenAI o Anthropic se sigue usando para la traducción."
+      "elevenLabsKeyRequired": "La transcripción usa ElevenLabs Scribe y necesita una clave API de ElevenLabs. Agrega una en Configuración o desactiva el modo de claves API para transcribir con créditos de Stage5. Tu clave de OpenAI o Anthropic se sigue usando para la traducción.",
+      "fileTooLarge_one": "Este audio es demasiado largo para transcribirlo en un solo trabajo (más de {{hours}} hora, aproximadamente). Divide el video en partes más cortas y transcribe cada una."
     }
   },
   "input": {
@@ -355,7 +356,8 @@
       "removeFromHistoryConfirm": "¿Quitar este elemento del historial de descargas? Los archivos guardados fuera de la biblioteca de la aplicación permanecerán en el dispositivo.",
       "deleteLocalFileHistoryPending": "El archivo se eliminó, pero Translator no pudo terminar de actualizar el historial de descargas. Lo volverá a intentar automáticamente.",
       "removeHistoryFailed": "No se pudo quitar esta descarga del historial.",
-      "storedInAppLibrary": "Guardado en la biblioteca de la aplicación"
+      "storedInAppLibrary": "Guardado en la biblioteca de la aplicación",
+      "savedPreferencesCount_one": "{{count}} preferencia guardada"
     },
     "downloadAndTranslate": "Descargar y traducir",
     "downloadAndTranscribe": "Descargar y transcribir",
@@ -473,7 +475,8 @@
     "confidence": {
       "title": "Baja confianza",
       "none": "No se detectaron líneas de baja confianza",
-      "count": "{{count}} líneas"
+      "count": "{{count}} líneas",
+      "count_one": "{{count}} línea"
     }
   },
   "editSubtitles": {
@@ -501,7 +504,8 @@
       "automaticCaptionsCopyWithMedia": "Se bloqueó la descarga del video desde la URL (HTTP 403). Estos son subtítulos automáticos de YouTube, no una transcripción nueva. El archivo multimedia montado está disponible para previsualizar e incrustar.",
       "automaticCaptionsPill": "Subtítulos automáticos de YouTube",
       "automaticCaptionsTitle": "Subtítulos automáticos de YouTube",
-      "highlightEditingLocked": "Generando momentos destacados, edición bloqueada"
+      "highlightEditingLocked": "Generando momentos destacados, edición bloqueada",
+      "rowsLoaded_one": "{{count}} fila cargada"
     },
     "item": {
       "seek": "Buscar",
@@ -552,7 +556,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "Usar mis claves API",
-      "activeKeys": "Claves listas: {{count}}",
+      "activeKeys": "{{count}} claves listas",
       "noKeys": "No hay claves configuradas",
       "usingApiKeys": "Créditos de Stage5 desactivados",
       "usingCredits": "Créditos de Stage5 activados",
@@ -560,7 +564,8 @@
       "toggleOff": "Ahora se usan créditos de Stage5.",
       "toggleError": "No se pudo actualizar la preferencia.",
       "toggleAria": "Usar mis claves API",
-      "requirementTranslation": "Requiere una clave de OpenAI o Anthropic para la traducción"
+      "requirementTranslation": "Requiere una clave de OpenAI o Anthropic para la traducción",
+      "activeKeys_one": "{{count}} clave lista"
     },
     "creditsDescription": "Compra créditos. Las horas mostradas son una estimación de la duración total de video que puedes transcribir o traducir. Ejemplo: transcribir y traducir un video de 3 horas consume aproximadamente 6 horas (≈140.000 créditos).",
     "performanceQuality": {
@@ -834,7 +839,8 @@
       "status": {
         "enabled": "Activado",
         "disabled": "Desactivado",
-        "connected": "Clientes conectados: {{count}}"
+        "connected": "{{count}} clientes conectados",
+        "connected_one": "{{count}} cliente conectado"
       },
       "permissions": "Qué pueden hacer los agentes:",
       "permission": {
@@ -882,7 +888,10 @@
       "redeeming": "Recibiendo…",
       "received": "Se recibieron {{credits}} créditos.",
       "receivedNoCredits": "El código ha funcionado.",
-      "receivedByo": "El desbloqueo de clave de API está activo en este ordenador."
+      "receivedByo": "El desbloqueo de clave de API está activo en este ordenador.",
+      "expires_one": "Este código funciona una sola vez y caduca en {{minutes}} minuto.",
+      "summaryCredits_one": "Se moverá {{credits}} crédito.",
+      "received_one": "Se recibió {{credits}} crédito."
     }
   },
   "credits": {
@@ -908,7 +917,8 @@
       "freeThisMonth": "{{count}} min gratis este mes",
       "freeWelcome": "{{count}} min gratis",
       "minutes": "{{count}} min restantes",
-      "title": "Minutos y paquetes"
+      "title": "Minutos y paquetes",
+      "minutes_one": "{{count}} min restante"
     },
     "yourMinutes": "Tus minutos",
     "balanceNone": "No te quedan minutos",
@@ -923,7 +933,8 @@
     "checkoutNote": "Pago único con Stripe, en tu navegador. Sin cuenta ni suscripción. Los minutos se suman solos.",
     "dubbingNote": "Traducir con tus minutos cuesta cerca de un 10 % más por minuto; el doblaje, más.",
     "iCancelledCheckout": "Cancelé el pago",
-    "checkoutStartFailed": "No se pudo iniciar el pago. Revisa tu conexión y vuelve a intentarlo."
+    "checkoutStartFailed": "No se pudo iniciar el pago. Revisa tu conexión y vuelve a intentarlo.",
+    "monthlyFreeNote_one": "{{minutes}} minuto gratis cada mes · el próximo, el {{date}}"
   },
   "cta": {
     "generate": {
@@ -1233,7 +1244,9 @@
       "videoBlockedCaptions": "No se pudo descargar el video; buscando subtítulos de YouTube en su lugar…",
       "voiceTrackAssembled": "Pista de voz ensamblada",
       "voiceTrackReady": "Pista de voz lista",
-      "writingSummary": "Escribiendo el resumen…"
+      "writingSummary": "Escribiendo el resumen…",
+      "preparingDubLines_one": "Preparando {{count}} línea para el doblaje…",
+      "preparingVoiceClips_one": "Preparando {{count}} clip de voz…"
     },
     "listening": "Escuchando el video…",
     "mergeFinishSaveBeforeReload": "Termina de guardar el video combinado antes de recargar.",
@@ -1327,7 +1340,9 @@
     "showTranslation": "Traducción",
     "showOriginal": "Original",
     "showBoth": "Ambos",
-    "textSize": "Tamaño del texto"
+    "textSize": "Tamaño del texto",
+    "statusTranscribed_one": "{{count}} línea transcrita",
+    "statusTranslated_one": "{{count}} línea en {{language}} · sincronizada con el video"
   },
   "subtitleStyles": {
     "Cinema": "Amarillo cine",
@@ -1361,7 +1376,11 @@
     "retry": "Reintentar",
     "finishCta": "Traducir el resto · {{price}}",
     "noneCta": "Ponlo en {{language}} · {{price}}",
-    "notNow": "Ahora no"
+    "notNow": "Ahora no",
+    "noneTitle_one": "Este video dura {{total}} minuto.",
+    "enoughBody_one": "Tienes minutos suficientes para traducir ya lo que falta ({{remaining}} minuto).",
+    "offerBody_one": "Traduce el video completo por {{price}}. Cubre lo que falta ({{remaining}} minuto), y lo que sobre te queda para el próximo video.",
+    "offerBodyLong_one": "El paquete de {{price}} cubre la mayor parte de lo que falta ({{remaining}} minuto)."
   },
   "videoCost": {
     "covered": "Incluido en tus minutos",

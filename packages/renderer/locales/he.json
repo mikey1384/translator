@@ -139,7 +139,8 @@
     "transcription": {
       "providerUnavailable": "התמלול (ElevenLabs Scribe) אינו זמין באופן זמני או שלא ניתן היה להתחבר אליו לאחר מספר ניסיונות. נסה שוב בעוד כמה דקות.",
       "fileTooLarge": "השמע הזה ארוך מדי לתמלול במשימה אחת (יותר מכ-{{hours}} שעות). פצל את הסרטון לחלקים קצרים יותר ותמלל כל חלק בנפרד.",
-      "elevenLabsKeyRequired": "התמלול משתמש ב-ElevenLabs Scribe ודורש מפתח API של ElevenLabs. הוסף מפתח בהגדרות, או כבה את מצב מפתחות ה-API כדי לתמלל עם קרדיטי Stage5. מפתח ה-OpenAI או ה-Anthropic שלך עדיין משמש לתרגום."
+      "elevenLabsKeyRequired": "התמלול משתמש ב-ElevenLabs Scribe ודורש מפתח API של ElevenLabs. הוסף מפתח בהגדרות, או כבה את מצב מפתחות ה-API כדי לתמלל עם קרדיטי Stage5. מפתח ה-OpenAI או ה-Anthropic שלך עדיין משמש לתרגום.",
+      "fileTooLarge_one": "השמע הזה ארוך מדי לתמלול במשימה אחת (יותר מכ-{{hours}} שעה). פצל את הסרטון לחלקים קצרים יותר ותמלל כל חלק בנפרד."
     }
   },
   "input": {
@@ -355,7 +356,8 @@
       "removeFromHistoryConfirm": "להסיר פריט זה מהיסטוריית ההורדות? קבצים שנשמרו מחוץ לספריית היישום יישארו במכשיר.",
       "deleteLocalFileHistoryPending": "הקובץ נמחק, אבל Translator לא הצליח לסיים לעדכן את היסטוריית ההורדות. הוא ינסה שוב אוטומטית.",
       "removeHistoryFailed": "לא ניתן היה להסיר את ההורדה הזו מההיסטוריה.",
-      "storedInAppLibrary": "נשמר בספריית היישום"
+      "storedInAppLibrary": "נשמר בספריית היישום",
+      "savedPreferencesCount_one": "{{count}} העדפה שמורה"
     },
     "downloadAndTranslate": "הורד ותרגם",
     "downloadAndTranscribe": "הורד ותמלל",
@@ -473,7 +475,8 @@
     "confidence": {
       "title": "ביטחון נמוך",
       "none": "לא זוהו שורות עם ביטחון נמוך",
-      "count": "{{count}} שורות"
+      "count": "{{count}} שורות",
+      "count_one": "{{count}} שורה"
     }
   },
   "editSubtitles": {
@@ -501,7 +504,8 @@
       "automaticCaptionsCopyWithMedia": "הורדת הסרטון מה-URL נחסמה (HTTP 403). אלה הכתוביות האוטומטיות של YouTube, לא תמלול חדש. המדיה המחוברת זמינה לתצוגה מקדימה ולצריבה.",
       "automaticCaptionsPill": "כתוביות אוטומטיות של YouTube",
       "automaticCaptionsTitle": "כתוביות אוטומטיות של YouTube",
-      "highlightEditingLocked": "יצירת נקודות מרכזיות פעילה, העריכה נעולה"
+      "highlightEditingLocked": "יצירת נקודות מרכזיות פעילה, העריכה נעולה",
+      "rowsLoaded_one": "{{count}} שורה נטענה"
     },
     "item": {
       "seek": "חפש",
@@ -882,7 +886,10 @@
       "redeeming": "מקבל…",
       "received": "התקבלו {{credits}} קרדיטים.",
       "receivedNoCredits": "הקוד עבד.",
-      "receivedByo": "פתיחת מפתחות ה-API פעילה במחשב הזה."
+      "receivedByo": "פתיחת מפתחות ה-API פעילה במחשב הזה.",
+      "expires_one": "הקוד הזה פועל פעם אחת ותוקפו יפוג בעוד {{minutes}} דקה.",
+      "summaryCredits_one": "{{credits}} קרדיט יועבר.",
+      "received_one": "התקבל {{credits}} קרדיט."
     }
   },
   "credits": {
@@ -908,7 +915,9 @@
       "freeThisMonth": "{{count}} דקות חינם החודש",
       "freeWelcome": "{{count}} דקות חינם",
       "minutes": "נותרו {{count}} דק׳",
-      "title": "דקות וחבילות"
+      "title": "דקות וחבילות",
+      "freeThisMonth_one": "{{count}} דקה חינם החודש",
+      "freeWelcome_one": "{{count}} דקה חינם"
     },
     "yourMinutes": "הדקות שלכם",
     "balanceNone": "לא נותרו דקות",
@@ -923,7 +932,8 @@
     "checkoutNote": "תשלום חד-פעמי דרך Stripe, בדפדפן. בלי חשבון ובלי מנוי. הדקות מתווספות מעצמן.",
     "dubbingNote": "תרגום על חשבון הדקות מוסיף כ-10% לכל דקה; דיבוב צורך יותר.",
     "iCancelledCheckout": "ביטלתי את התשלום",
-    "checkoutStartFailed": "לא הצלחנו להתחיל את התשלום. כדאי לבדוק את החיבור ולנסות שוב."
+    "checkoutStartFailed": "לא הצלחנו להתחיל את התשלום. כדאי לבדוק את החיבור ולנסות שוב.",
+    "monthlyFreeNote_one": "{{minutes}} דקה חינם בכל חודש · החידוש הבא ב-{{date}}"
   },
   "cta": {
     "generate": {
@@ -1233,7 +1243,9 @@
       "videoBlockedCaptions": "לא ניתן היה להוריד את הסרטון; מחפש במקום זאת כתוביות YouTube…",
       "voiceTrackAssembled": "רצועת הקול הורכבה",
       "voiceTrackReady": "רצועת הקול מוכנה",
-      "writingSummary": "כותב את הסיכום…"
+      "writingSummary": "כותב את הסיכום…",
+      "preparingDubLines_one": "מכין {{count}} שורה לדיבוב…",
+      "preparingVoiceClips_one": "מכין {{count}} קטע קול…"
     },
     "listening": "מאזין לסרטון…",
     "mergeFinishSaveBeforeReload": "סיים לשמור את הסרטון הממוזג לפני הטעינה מחדש.",
@@ -1327,7 +1339,9 @@
     "showTranslation": "תרגום",
     "showOriginal": "מקור",
     "showBoth": "שניהם",
-    "textSize": "גודל טקסט"
+    "textSize": "גודל טקסט",
+    "statusTranscribed_one": "{{count}} שורה תומללה",
+    "statusTranslated_one": "{{count}} שורה ב{{language}} · מסונכרנת לסרטון"
   },
   "subtitleStyles": {
     "Cinema": "צהוב קולנוע",
@@ -1361,7 +1375,11 @@
     "retry": "לנסות שוב",
     "finishCta": "תרגום עד הסוף · {{price}}",
     "noneCta": "תרגום ל{{language}} · {{price}}",
-    "notNow": "לא עכשיו"
+    "notNow": "לא עכשיו",
+    "noneTitle_one": "הסרטון הזה באורך {{total}} דקה.",
+    "enoughBody_one": "יש לכם מספיק דקות כדי לתרגם עכשיו גם את מה שנותר ({{remaining}} דקה).",
+    "offerBody_one": "ב-{{price}} מתרגמים גם את מה שנותר ({{remaining}} דקה), ומה שיישאר מהחבילה נשמר לסרטון הבא.",
+    "offerBodyLong_one": "החבילה של {{price}} מספיקה לרוב מה שנותר ({{remaining}} דקה)."
   },
   "videoCost": {
     "covered": "מכוסה בדקות שלכם",

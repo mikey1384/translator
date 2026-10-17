@@ -355,7 +355,8 @@
       "removeFromHistoryConfirm": "Verwyder hierdie item uit die aflaaigeskiedenis? Enige lêer wat buite die toepassingbiblioteek gestoor is, sal op jou toestel bly.",
       "deleteLocalFileHistoryPending": "Die lêer is uitgevee, maar Translator kon nie klaar die aflaaigeskiedenis bywerk nie. Dit sal outomaties weer probeer.",
       "removeHistoryFailed": "Kon nie hierdie aflaai uit die geskiedenis verwyder nie.",
-      "storedInAppLibrary": "Gestoor in toepassingbiblioteek"
+      "storedInAppLibrary": "Gestoor in toepassingbiblioteek",
+      "savedPreferencesCount_one": "{{count}} gestoorde voorkeur"
     },
     "downloadAndTranslate": "Laai af en vertaal",
     "downloadAndTranscribe": "Laai af en transkribeer",
@@ -473,7 +474,8 @@
     "confidence": {
       "title": "Lae Vertroue",
       "none": "Geen lae-vertroue lyne opgespoor nie",
-      "count": "{{count}} lyne"
+      "count": "{{count}} reëls",
+      "count_one": "{{count}} reël"
     }
   },
   "editSubtitles": {
@@ -501,7 +503,8 @@
       "automaticCaptionsCopyWithMedia": "Die aflaai van die video vanaf die URL is geblokkeer (HTTP 403). Dit is YouTube se outomatiese onderskrifte – nie 'n nuwe transkripsie nie. Die aangehegte media is beskikbaar vir voorskou en inbranding.",
       "automaticCaptionsPill": "YouTube se outomatiese onderskrifte",
       "automaticCaptionsTitle": "YouTube se outomatiese onderskrifte",
-      "highlightEditingLocked": "Hoogtepunte word gegenereer, redigering gesluit"
+      "highlightEditingLocked": "Hoogtepunte word gegenereer, redigering gesluit",
+      "rowsLoaded_one": "{{count}} ry gelaai"
     },
     "item": {
       "seek": "Soek",
@@ -552,7 +555,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "Gebruik my API-sleutels",
-      "activeKeys": "Sleutels gereed: {{count}}",
+      "activeKeys": "{{count}} sleutels gereed",
       "noKeys": "Geen sleutels opgestel nie",
       "usingApiKeys": "Stage5-krediete af",
       "usingCredits": "Stage5-krediete aan",
@@ -560,7 +563,8 @@
       "toggleOff": "Gebruik nou Stage5-krediete.",
       "toggleError": "Kon nie voorkeur opdateer nie.",
       "toggleAria": "Gebruik my API-sleutels",
-      "requirementTranslation": "Benodig 'n OpenAI- of Anthropic-sleutel vir vertaling"
+      "requirementTranslation": "Benodig 'n OpenAI- of Anthropic-sleutel vir vertaling",
+      "activeKeys_one": "{{count}} sleutel gereed"
     },
     "creditsDescription": "Koop krediete. Die getoonde ure is 'n skatting van die totale videoduur wat jy kan transkribeer of vertaal. Voorbeeld: om 'n 3-uur video te transkribeer en te vertaal gebruik ongeveer 6 uur (≈140 000 krediete).",
     "performanceQuality": {
@@ -834,7 +838,8 @@
       "status": {
         "enabled": "Geaktiveer",
         "disabled": "Gedeaktiveer",
-        "connected": "Gekoppelde kliënte: {{count}}"
+        "connected": "{{count}} kliënte gekoppel",
+        "connected_one": "{{count}} kliënt gekoppel"
       },
       "permissions": "Wat agente kan doen:",
       "permission": {
@@ -882,7 +887,10 @@
       "redeeming": "Ontvang tans…",
       "received": "{{credits}} krediete ontvang.",
       "receivedNoCredits": "Die kode het gewerk.",
-      "receivedByo": "Die API-sleutel-ontsluiting is aktief op hierdie rekenaar."
+      "receivedByo": "Die API-sleutel-ontsluiting is aktief op hierdie rekenaar.",
+      "expires_one": "Hierdie kode werk een keer en verval oor {{minutes}} minuut.",
+      "summaryCredits_one": "{{credits}} krediet sal geskuif word.",
+      "received_one": "{{credits}} krediet ontvang."
     }
   },
   "credits": {
@@ -923,7 +931,8 @@
     "checkoutNote": "Eenmalige betaling deur Stripe, in jou blaaier. Geen rekening of intekening nie. Minute kom vanself by.",
     "dubbingNote": "Vertaling met krediete kos sowat 10% ekstra per minuut; oorklanking kos meer.",
     "iCancelledCheckout": "Ek het die betaling gekanselleer",
-    "checkoutStartFailed": "Betaling kon nie begin nie. Kontroleer jou verbinding en probeer weer."
+    "checkoutStartFailed": "Betaling kon nie begin nie. Kontroleer jou verbinding en probeer weer.",
+    "monthlyFreeNote_one": "{{minutes}} gratis minuut elke maand · volgende op {{date}}"
   },
   "cta": {
     "generate": {
@@ -1233,7 +1242,9 @@
       "videoBlockedCaptions": "Die video kon nie afgelaai word nie; soek eerder na YouTube-onderskrifte…",
       "voiceTrackAssembled": "Stemsnit saamgestel",
       "voiceTrackReady": "Stemsnit gereed",
-      "writingSummary": "Skryf die opsomming…"
+      "writingSummary": "Skryf die opsomming…",
+      "preparingDubLines_one": "Berei {{count}} reël vir nasinkronisering voor…",
+      "preparingVoiceClips_one": "Berei {{count}} stemsnit voor…"
     },
     "listening": "Luister na die video…",
     "mergeFinishSaveBeforeReload": "Voltooi die stoor van die saamgevoegde video voordat jy herlaai.",
@@ -1327,7 +1338,9 @@
     "showTranslation": "Vertaling",
     "showOriginal": "Oorspronklik",
     "showBoth": "Albei",
-    "textSize": "Teksgrootte"
+    "textSize": "Teksgrootte",
+    "statusTranscribed_one": "{{count}} reël uitgeskryf",
+    "statusTranslated_one": "{{count}} reël in {{language}} · in pas met die video"
   },
   "subtitleStyles": {
     "Cinema": "Bioskoopgeel",
@@ -1361,7 +1374,11 @@
     "retry": "Probeer weer",
     "finishCta": "Vertaal die res · {{price}}",
     "noneCta": "Vertaal na {{language}} · {{price}}",
-    "notNow": "Nie nou nie"
+    "notNow": "Nie nou nie",
+    "noneTitle_one": "Hierdie video is {{total}} minuut lank.",
+    "enoughBody_one": "Jy het genoeg minute om die oorblywende {{remaining}} minuut nou te vertaal.",
+    "offerBody_one": "Vertaal die hele video vir {{price}}. Dit dek die oorblywende {{remaining}} minuut, en wat oorbly, is vir jou volgende video.",
+    "offerBodyLong_one": "Die {{price}}-pakket dek die meeste van die oorblywende {{remaining}} minuut."
   },
   "videoCost": {
     "covered": "Jou minute is genoeg",
