@@ -237,7 +237,7 @@
     "selectVideoFile": "選擇影片檔案",
     "selectVideoAudioFile": "選擇影片/音訊檔案",
     "saveOriginalVideo": "儲存原始影片",
-    "localFileDescription": "從您的電腦上傳影片或音訊檔案",
+    "localFileDescription": "從你的電腦上傳影片或音訊檔案",
     "selectLocalFile": "從電腦上傳",
     "downloadFromUrl": "從網路下載",
     "recentMedia": "最近檔案",
@@ -484,7 +484,7 @@
     "voiceCloningRequiresTranslation": "語音複製需要目標語言",
     "translateEstimateCredits": "~{{minutes}}分鐘影片",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。",
+    "cancel_confirmation": "確定要取消字幕翻譯嗎？目前的進度將會遺失，你需要重新開始。",
     "unreadableCues": "這個檔案中有 {{count}} 行無法讀取，已略過。請檢查時間碼。",
     "dubInto": "配成{{language}}",
     "dubIntro": "用你選的語言把字幕唸出來，並保留原本的背景音。",
@@ -791,8 +791,8 @@
       "voiceCloningEnabled": "已啟用 ElevenLabs 語音複製。原說話者的聲音將保留在配音音訊中。",
       "voiceCloningInfo": "語音複製使用 ElevenLabs 配音 API 來分析和重現原說話者的聲音。",
       "costPerMinute": "每分鐘費用",
-      "yourBalance": "您的餘額",
-      "canClone": "您可以複製",
+      "yourBalance": "你的餘額",
+      "canClone": "你可以複製",
       "upToMinutes": "最多 {{minutes}} 分鐘",
       "loading": "載入中...",
       "previewWithMinutes": "預覽（{{cost}}）",
@@ -803,7 +803,7 @@
       "description": "一次性解鎖，就能使用你自己的 API 金鑰。解鎖後，轉錄、翻譯、配音和摘要都會透過你自己的 AI 帳戶執行，不會使用你的 Stage5 時數。",
       "unlocking": "正在開啟結帳頁面…",
       "unlockCta": "花費 $10 解鎖",
-      "unlockHint": "解鎖後，您可以隨時在此添加 API 金鑰以啟用帳戶直接計費。",
+      "unlockHint": "解鎖後，你可以隨時在這裡新增 API 金鑰，改為直接由你自己的帳戶計費。",
       "apiKeyLabel": "OpenAI API 金鑰",
       "hide": "隱藏",
       "show": "顯示",
@@ -818,8 +818,8 @@
       "test": "測試金鑰",
       "lastSynced": "上次同步",
       "toggleLabel": "使用我的 OpenAI 金鑰",
-      "toggleAria": "切換使用您的 OpenAI 金鑰",
-      "toggleOn": "正在使用您的 OpenAI 金鑰執行 AI 任務。",
+      "toggleAria": "切換是否使用你的 OpenAI 金鑰",
+      "toggleOn": "正在使用你的 OpenAI 金鑰處理 AI 任務。",
       "toggleError": "更新設定失敗。",
       "howToGetKeys": "如何取得 API 金鑰？",
       "option1Title": "選項 1：OpenAI",
@@ -901,7 +901,7 @@
         "step4": "點擊",
         "step5": "在方案和帳單中新增付款方式（使用 API 必要）",
         "step6": "複製金鑰（以 sk-ant- 開頭）並貼上到 Stage5 中",
-        "note": "提示：Anthropic 提供按需付費的定價。您只需為實際使用付費。"
+        "note": "提示：Anthropic 採用按量計費，用多少付多少。"
       },
       "elevenlabs": {
         "step1": "前往",
@@ -915,7 +915,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API 金鑰（選用）",
-      "description": "新增您的 Anthropic API 金鑰，即可在翻譯複審階段直接使用 Claude 模型。沒有此金鑰時，GPT-5.5 會負責複審流程。",
+      "description": "新增你的 Anthropic API 金鑰，即可在翻譯複審階段直接使用 Anthropic 的高階複審模型。沒有這個金鑰時，會由 OpenAI 的高階複審模型負責複審。",
       "apiKeyLabel": "Anthropic API 金鑰",
       "hide": "隱藏",
       "show": "顯示",
@@ -929,14 +929,14 @@
       "testing": "測試中…",
       "test": "測試金鑰",
       "toggleLabel": "使用我的 Anthropic 金鑰",
-      "toggleAria": "切換使用您的 Anthropic 金鑰",
-      "toggleOn": "正在使用您的 Anthropic 金鑰執行 Claude 模型。",
+      "toggleAria": "切換是否使用你的 Anthropic 金鑰",
+      "toggleOn": "正在用你的 Anthropic 金鑰執行 Claude 模型。",
       "toggleError": "更新 Anthropic 設定失敗。"
     },
     "stage5TtsProvider": {
       "elevenlabs": "高級（ElevenLabs）",
       "elevenlabsHint": "最佳音質，較高成本（約 12 倍）",
-      "elevenlabsHintWithBalance": "最佳音質 · 您的餘額：{{time}}配音時長"
+      "elevenlabsHintWithBalance": "最佳音質 · 你的餘額：{{time}}配音時長"
     },
     "apiKey": {
       "saved": "API 金鑰已儲存。",
@@ -1317,7 +1317,7 @@
     "cancelTranslationConfirm": "要取消翻譯嗎？進度將會遺失，你需要重新開始。",
     "cancelSummaryConfirm": "取消產生摘要？",
     "cancelDubbingConfirm": "要取消配音嗎？進度將會遺失，你需要重新開始。",
-    "cancelDownloadConfirm": "取消下載？進度將遺失，您需要重新開始。",
+    "cancelDownloadConfirm": "取消下載？進度將會遺失，你需要重新開始。",
     "mergeLowDiskSpaceConfirm": "偵測到磁碟空間不足。此合併可能需要約 ~{{need}} 的可用空間，但目前只有 ~{{free}} 可用。仍要繼續嗎？",
     "slowProcessingBanner": {
       "title": "處理時間比平常更長。",
@@ -1326,7 +1326,7 @@
     },
     "slowDownloadBanner": {
       "title": "下載時間比平時更長。",
-      "description": "這可能是由於影片平台變更或新的保護措施造成的。您可能需要等待下一個應用程式版本來處理較新的影片。"
+      "description": "這可能是因為影片平台有所變更或採用了新的保護措施。你可能需要等下一個應用程式版本，才能處理較新的影片。"
     },
     "creditRanOut": {
       "openSettings": "開啟設定",
@@ -1571,7 +1571,7 @@
     "copied": "記錄已複製到剪貼簿",
     "copyFailed": "複製失敗",
     "emailSubject": "Stage5 除錯記錄",
-    "emailBodyPrefix": "您好，\n\n以下是我最近的記錄，供除錯參考。\n\n",
+    "emailBodyPrefix": "你好，\n\n以下是我最近的記錄，供除錯參考。\n\n",
     "deviceInfoHeader": "裝置資訊",
     "optionalMessage": "附加訊息",
     "optionalMessagePlaceholder": "你當時在做什麼？",

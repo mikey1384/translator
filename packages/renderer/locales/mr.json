@@ -1062,7 +1062,7 @@
     }
   },
   "credits": {
-    "title": "AI क्रेडिट्स",
+    "title": "तुमची मिनिटे",
     "loading": "लोड करत आहे...",
     "usingApiKey": "API की वापरत आहे",
     "usingOpenAi": "OpenAI वापरात",

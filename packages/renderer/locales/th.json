@@ -1224,7 +1224,7 @@
     "afrikaans": "แอฟริกานส์"
   },
   "generateSubtitles": {
-    "rechargeLink": "เติมเครดิต →",
+    "rechargeLink": "เติมนาที →",
     "creditWarning": {
       "message": "การดาวน์โหลด แก้ไข ส่งออก และแปลด้วย Claude หรือ Codex ของคุณเองผ่านการควบคุมโดยเอเจนต์นั้นฟรี การถอดเสียงต้องใช้นาทีหรือการปลดล็อกคีย์ API ใน <settingsLink>{{settingsLinkText}}</settingsLink>",
       "settingsLinkText": "การตั้งค่า"

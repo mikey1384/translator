@@ -25,12 +25,12 @@
       "renderFailed": "העיבוד נכשל",
       "invalidRenderOptions": "אפשרויות עיבוד לא תקינות סופקו",
       "missingVideoMetadata": "נתוני וידאו חסרים ({{missing}})",
-      "insufficientDiskSpace": "אין מספיק מקום בדיסק להשלמת המיזוג. אנא פנה מקום ונסה שוב.",
+      "insufficientDiskSpace": "אין מספיק מקום בדיסק כדי להשלים את המיזוג. פנו מקום ונסו שוב.",
       "noSourceVideo": "אין וידאו מקור",
       "noSubtitlesLoaded": "לא נטענו כתוביות",
       "failedToLoadSRT": "נכשל בטעינת קובץ SRT",
       "sourceVideoUnavailable": "הסרטון המקורי הוסר או שאינו נגיש עוד. פתחו אותו שוב ונסו שוב.",
-      "unknown": "משהו השתבש. נסה שוב."
+      "unknown": "משהו השתבש. נסו שוב."
     },
     "success": "הצלחה",
     "settings": "הגדרות",
@@ -72,9 +72,9 @@
     "installUpdateShort": "התקן עדכון",
     "locked": "נעול",
     "lockedWhileProcessing": "נעול בזמן העיבוד",
-    "logs": "פתח יומנים",
+    "logs": "פתיחת היומנים",
     "reportIssue": "דווח על בעיה או משוב",
-    "reportIssueAria": "פתח את חלון הדיווח על בעיה והיומנים",
+    "reportIssueAria": "פתיחת חלון הדיווח על בעיה והיומנים",
     "minimumVersionLabel": "גרסה מינימלית נתמכת",
     "openDownloadPage": "פתיחת דף ההורדה",
     "show": "הצגה",
@@ -128,7 +128,7 @@
     "invalidRenderOptions": "אפשרויות עיבוד לא תקינות סופקו",
     "missingVideoMetadata": "נתוני וידאו חסרים ({{missing}})",
     "noSourceVideo": "אין וידאו מקור",
-    "sourceVideoUnavailable": "הווידאו המקורי הוסר או שאינו זמין עוד. פתח אותו שוב ונסה שוב.",
+    "sourceVideoUnavailable": "הסרטון המקורי הוסר או שכבר אין אליו גישה. פתחו אותו שוב ונסו שוב.",
     "noSubtitlesLoaded": "לא נטענו כתוביות",
     "failedToLoadSRT": "נכשל בטעינת קובץ SRT",
     "cancelTranslationFailed": "ביטול התרגום נכשל: {{message}}",
@@ -148,7 +148,7 @@
       "elevenlabsKeyInvalid": "מפתח ה-API של ElevenLabs שלכם לא תקף או שפג תוקפו. בדקו את המפתח בהגדרות.",
       "elevenlabsRateLimit": "הגעתם למגבלת הבקשות של ElevenLabs. חכו רגע ונסו שוב.",
       "elevenlabsInsufficientQuota": "בחשבון ה-ElevenLabs שלכם אין מספיק קרדיטים. הוסיפו קרדיטים ב-elevenlabs.io.",
-      "checkSettings": "בדוק הגדרות",
+      "checkSettings": "בדיקת ההגדרות",
       "genericApiError": "בקשת ה-API נכשלה. בדקו את מפתח ה-API ואת מצב החשבון שלכם."
     },
     "transcription": {
@@ -234,15 +234,15 @@
     "qualityMedium": "בינונית",
     "qualityLow": "נמוכה",
     "downloading": "מוריד...",
-    "selectFile": "בחר קובץ",
-    "selectVideoFile": "בחר קובץ וידאו",
+    "selectFile": "בחירת קובץ",
+    "selectVideoFile": "בחירת קובץ וידאו",
     "selectVideoAudioFile": "בחירת קובץ וידאו או אודיו",
     "saveOriginalVideo": "שמירת הסרטון המקורי",
-    "localFileDescription": "העלה קובץ וידאו או אודיו מהמחשב שלך",
+    "localFileDescription": "העלו קובץ וידאו או אודיו מהמחשב שלכם",
     "selectLocalFile": "העלאה מהמחשב",
     "downloadFromUrl": "הורדה מהאינטרנט",
     "recentMedia": "קבצים אחרונים",
-    "webDescription": "הדבק קישורים מ-YouTube, TikTok, Instagram או כתובות URL ישירות של קבצי וידאו מדפי אינטרנט",
+    "webDescription": "הדביקו קישורים מ-YouTube, TikTok, Instagram או כתובות URL ישירות של קבצי וידאו מדפי אינטרנט",
     "chooseFile": "בחירת קובץ",
     "fileSelected": "קובץ נבחר",
     "transcribeOnly": "תמלול האודיו",
@@ -307,7 +307,7 @@
       "preference": {
         "noPreset": "ללא פריסט (ציין בצ'אט)",
         "savedValue": "נשמר: {{value}}",
-        "useSavedValue": "השתמש בשמור: {{value}}",
+        "useSavedValue": "שימוש בערך השמור: {{value}}",
         "removeSaved": "הסרה מהשמורים",
         "noneForSearch": "ללא העדפה עבור חיפוש זה",
         "topicLabel": "נושא מועדף",
@@ -319,10 +319,10 @@
         }
       },
       "searchFailed": "לא הצלחתי לחפש כרגע. נסו שוב בעוד רגע.",
-      "noMatches": "אין התאמות חזקות עדיין. הוסף נושא, אווירה או יוצר ואנסה שוב.",
+      "noMatches": "עדיין אין התאמות טובות. הוסיפו נושא, אווירה או עוד פרט אחד, ואנסה שוב.",
       "lowConfidenceNoScoredResults": "לא נשארו התאמות אמינות אחרי הדירוג. נסו נושא רחב יותר, הוסיפו רמז ליוצר או שנו את העדכניות.",
       "lowConfidenceGeneric": "רמת הביטחון בחיפוש הייתה נמוכה. הוסיפו עוד פרט אחד ונסו שוב.",
-      "genericError": "משהו השתבש. נסה שוב.",
+      "genericError": "משהו השתבש. נסו שוב.",
       "platformLabel": "פלטפורמת החיפוש",
       "platformHint": "הגדרה זו קובעת במדויק באיזו פלטפורמה יתבצע החיפוש.",
       "platform": {
@@ -486,7 +486,7 @@
     "voiceCloningRequiresTranslation": "שכפול קול דורש שפת יעד",
     "translateEstimateCredits": "~{{minutes}} דקות וידאו",
     "qualityBadge": "(איכות גבוהה)",
-    "cancel_confirmation": "האם אתה בטוח שברצונך לבטל את תהליך תרגום הכתוביות? כל התקדמות תאבד ותצטרך להתחיל מחדש.",
+    "cancel_confirmation": "לבטל את תרגום הכתוביות? כל ההתקדמות תאבד ותצטרכו להתחיל מחדש.",
     "unreadableCues_one": "לא ניתן היה לקרוא שורה אחת בקובץ, והיא הושמטה. בדקו את קוד הזמן שלה.",
     "unreadableCues_two": "לא ניתן היה לקרוא שתי שורות בקובץ, והן הושמטו. בדקו את קודי הזמן שלהן.",
     "unreadableCues": "לא ניתן היה לקרוא {{count}} שורות בקובץ, והן הושמטו. בדקו את קודי הזמן שלהן.",
@@ -525,7 +525,7 @@
     "generate": "מציאת רגעים בולטים",
     "regenerate": "מציאת רגעים בולטים מחדש",
     "highEffortBadge": "(מעמיק)",
-    "placeholder": "סיכום ה-AI שלך יופיע כאן לאחר היצירה.",
+    "placeholder": "סיכום ה-AI שלכם יופיע כאן אחרי שייווצר.",
     "insufficientCredits": "לא נשארו מספיק דקות כדי למצוא רגעים בולטים.",
     "error": "לא הצלחנו למצוא רגעים בולטים. {{message}}",
     "cancel": "ביטול",
@@ -645,7 +645,7 @@
       "readyTitle": "עורך הכתוביות מוכן",
       "emptyTitle": "טען כתוביות כדי להתחיל לערוך",
       "readyCopy": "כוונן כאן תזמון, שבירות שורה ותרגומים לפני שמירת ה-SRT או צריבת הכתוביות לתוך המדיה המקורית.",
-      "emptyCopy": "פתח קובץ SRT קיים כדי לערוך אותו ישירות. תמלילים שנוצרו מהזרימה הראשית יופיעו כאן גם כשהם יהיו מוכנים.",
+      "emptyCopy": "פתחו קובץ SRT קיים כדי לערוך אותו ישירות. גם תמלילים שנוצרים בתהליך הראשי יופיעו כאן כשיהיו מוכנים.",
       "rowsLoaded": "{{count}} שורות נטענו",
       "loadAnotherSrt": "טעינת SRT נוסף",
       "mountVideoTitle": "טען את וידאו המקור לתצוגה מקדימה ולייצוא צרוב",
@@ -673,7 +673,7 @@
       "applyShift": "החלת ההזזה",
       "originalTextPrefix": "מקור:",
       "subtitlePlaceholder": "טקסט כתובית",
-      "confirmRemove": "האם אתה בטוח שברצונך להסיר בלוק כתוביות זה? פעולה זו אינה ניתנת לביטול.",
+      "confirmRemove": "להסיר את בלוק הכתוביות הזה? אי אפשר לבטל את הפעולה.",
       "transcribeThisLine": "תמלל שורה",
       "timeEndBeforeStart": "זמן הסיום חייב להיות אחרי זמן ההתחלה. השורה נשארת עם הזמן הקודם שלה.",
       "timeUnreadable": "הקלידו זמן כמו 00:01:23,450 או 1:23.45. השורה נשארת עם הזמן הקודם שלה.",
@@ -795,11 +795,11 @@
       "mixAmbient": "יותר רקע",
       "mixVoice": "יותר קול",
       "voiceCloning": "שכפול קול מקורי",
-      "voiceCloningDesc": "שמור על קול הדובר המקורי באודיו המדובב",
+      "voiceCloningDesc": "שמירה על קול הדובר המקורי באודיו המדובב",
       "voiceCloningEnabled": "שכפול קול מופעל עם ElevenLabs. קול הדובר המקורי יישמר באודיו המדובב.",
       "voiceCloningInfo": "שכפול קול משתמש בשירות הדיבוב של ElevenLabs כדי לנתח את קול הדובר המקורי ולשחזר אותו.",
       "costPerMinute": "עלות לדקה",
-      "yourBalance": "היתרה שלך",
+      "yourBalance": "היתרה שלכם",
       "canClone": "ניתן לשכפל",
       "upToMinutes": "עד {{minutes}} דקות",
       "loading": "טוען...",
@@ -811,7 +811,7 @@
       "description": "פתיחה חד-פעמית לשימוש במפתחות API משלכם. אחרי הפתיחה, תמלול, תרגום, דיבוב וסיכומים רצים על חשבונות הבינה המלאכותית שלכם במקום על הדקות של Stage5.",
       "unlocking": "פותח קופה...",
       "unlockCta": "פתיחה ב-$10",
-      "unlockHint": "לאחר הפתיחה, הוסף את מפתחות ה-API שלך כאן בכל עת כדי להפעיל חיוב ישיר על החשבונות שלך.",
+      "unlockHint": "אחרי הפתיחה, אפשר להוסיף כאן בכל עת את מפתחות ה-API שלכם ולהפעיל חיוב ישיר בחשבונות שלכם.",
       "apiKeyLabel": "מפתח API של OpenAI",
       "hide": "הסתר",
       "show": "הצג",
@@ -823,11 +823,11 @@
       "keyValid": "מפתח ה-API של OpenAI אומת בהצלחה.",
       "keyInvalid": "אימות מפתח ה-API של OpenAI נכשל.",
       "testing": "בודק...",
-      "test": "בדוק מפתח",
+      "test": "בדיקת המפתח",
       "lastSynced": "סונכרן לאחרונה",
-      "toggleLabel": "השתמש במפתח ה-OpenAI שלי",
-      "toggleAria": "החלף לשימוש במפתח ה-OpenAI שלך",
-      "toggleOn": "משתמש במפתח ה-OpenAI שלך למשימות AI.",
+      "toggleLabel": "שימוש במפתח ה-OpenAI שלי",
+      "toggleAria": "הפעלה או כיבוי של השימוש במפתח ה-OpenAI שלכם",
+      "toggleOn": "מפתח ה-OpenAI שלכם משמש כעת למשימות AI.",
       "toggleError": "עדכון ההעדפה נכשל.",
       "howToGetKeys": "איך משיגים מפתחות API?",
       "option1Title": "אפשרות 1: OpenAI",
@@ -909,7 +909,7 @@
         "step4": "לחצו על",
         "step5": "הוסיפו אמצעי תשלום בתוכניות וחיוב (נדרש לשימוש ב-API)",
         "step6": "העתיקו את המפתח (מתחיל ב-sk-ant-) והדביקו אותו ב-Stage5",
-        "note": "טיפ: Anthropic מציע תמחור לפי שימוש. אתה משלם רק על מה שאתה משתמש."
+        "note": "טיפ: Anthropic מציעה תמחור לפי שימוש. משלמים רק על מה שמשתמשים בו."
       },
       "elevenlabs": {
         "step1": "היכנסו אל",
@@ -917,13 +917,13 @@
         "step3": "לחצו על סמל הפרופיל שלכם ובחרו",
         "step4": "הוסיפו אמצעי תשלום בהגדרות המנוי (נדרש לשימוש ב-API מעבר לשכבה החינמית)",
         "step5": "העתיקו את מפתח ה-API שלכם והדביקו אותו ב-Stage5",
-        "note": "טיפ: ל-ElevenLabs יש שכבה חינמית עם שימוש מוגבל. לעוד, שדרג לתוכנית בתשלום בהגדרות החשבון שלך.",
+        "note": "טיפ: ל-ElevenLabs יש שכבה חינמית עם שימוש מוגבל. לשימוש נרחב יותר, שדרגו לתוכנית בתשלום בהגדרות החשבון שלכם.",
         "audioDescription": "‏ElevenLabs מפעיל את כל התמלול (Scribe) והדיבוב. בלי מפתח ElevenLabs משלכם, שניהם משתמשים בדקות של Stage5, שלא נעשה בהן שימוש כל עוד המפתחות שלכם מופעלים."
       }
     },
     "byoAnthropic": {
       "title": "מפתח API של Anthropic (אופציונלי)",
-      "description": "הוסף את מפתח ה-API של Anthropic שלך כדי להשתמש במודלים של Claude ישירות לשלב ביקורת התרגום. בלי המפתח הזה, GPT-5.5 יבצע במקום זאת את שלב הביקורת.",
+      "description": "הוסיפו את מפתח ה-API של Anthropic שלכם כדי להשתמש ישירות במודל הביקורת המתקדם של Anthropic בשלב ביקורת התרגום. בלי המפתח הזה, מודל הביקורת המתקדם של OpenAI יבצע את שלב הביקורת במקומו.",
       "apiKeyLabel": "מפתח API של Anthropic",
       "hide": "הסתר",
       "show": "הצג",
@@ -935,16 +935,16 @@
       "keyValid": "מפתח ה-API של Anthropic אומת בהצלחה.",
       "keyInvalid": "אימות מפתח ה-API של Anthropic נכשל.",
       "testing": "בודק...",
-      "test": "בדוק מפתח",
-      "toggleLabel": "השתמש במפתח ה-Anthropic שלי",
-      "toggleAria": "החלף לשימוש במפתח ה-Anthropic שלך",
-      "toggleOn": "משתמש במפתח ה-Anthropic שלך למודלים של Claude.",
+      "test": "בדיקת המפתח",
+      "toggleLabel": "שימוש במפתח ה-Anthropic שלי",
+      "toggleAria": "הפעלה או כיבוי של השימוש במפתח ה-Anthropic שלכם",
+      "toggleOn": "מפתח ה-Anthropic שלכם משמש כעת למודלים של Claude.",
       "toggleError": "עדכון העדפת Anthropic נכשל."
     },
     "stage5TtsProvider": {
       "elevenlabs": "פרימיום (ElevenLabs)",
       "elevenlabsHint": "האיכות הטובה ביותר, עלות גבוהה יותר (~12x)",
-      "elevenlabsHintWithBalance": "האיכות הטובה ביותר · היתרה שלך: {{time}} של דיבוב"
+      "elevenlabsHintWithBalance": "האיכות הטובה ביותר · היתרה שלכם: {{time}} של דיבוב"
     },
     "apiKey": {
       "saved": "מפתח ה-API נשמר.",
@@ -986,7 +986,7 @@
         "connecting": "מתחבר…",
         "connected": "‏{{app}} מחובר. פתחו סשן חדש כדי לטעון את הכלים של Translator.",
         "alreadyConnected": "ל-{{app}} כבר יש את שרת Translator. אם הכלים לא מופיעים, הפעילו אותו מחדש.",
-        "desktopConnected": "Translator נוסף ל-Claude Desktop. צא מ-Claude ופתח אותו מחדש כדי לטעון אותו.",
+        "desktopConnected": "Translator נוסף ל-Claude Desktop. צאו מ-Claude ופתחו אותו מחדש כדי לטעון אותו.",
         "cliNotFound": "הפקודה {{app}} לא נמצאה במחשב הזה. הרץ את זה בטרמינל:",
         "cliNotFoundCopied": "הפקודה {{app}} לא נמצאה במחשב הזה. פקודת ההגדרה הועתקה – הדביקו אותה בטרמינל:",
         "failed": "לא ניתן לחבר את {{app}}: {{message}}",
@@ -1134,7 +1134,7 @@
     "edit": {
       "title": "ערוך כתוביות קיימות",
       "subtitle": "טען, ערוך וייצא SRT",
-      "pillOpen": "פתח .srt",
+      "pillOpen": "פתיחת ‎.srt",
       "pillMerge": "מזג לוידאו"
     }
   },
@@ -1156,8 +1156,8 @@
     "findVideoWithAi": "מצא וידאו עם AI",
     "mountSrt": "פתיחת קובץ SRT",
     "changeSrt": "החלף SRT",
-    "useThisVideo": "השתמש בווידאו הזה",
-    "useDownloadedVideo": "השתמש בווידאו הזה",
+    "useThisVideo": "שימוש בסרטון הזה",
+    "useDownloadedVideo": "שימוש בסרטון הזה",
     "useOriginalAudio": "שימוש באודיו המקורי",
     "useDubbedAudio": "שימוש באודיו המדובב",
     "changeVideoKeepSubtitles": "להשאיר את הכתוביות הנוכחיות על הסרטון החדש (אם זה עותק אחר של אותו סרטון). בטלו את הסימון אם זה סרטון אחר.",
@@ -1245,7 +1245,7 @@
       "pleaseSelectVideo": "בחרו סרטון",
       "processingDuration": "משך הסרטון עדיין מחושב. נסו שוב בעוד רגע.",
       "icloudPlaceholder": "הקובץ הזה מאוחסן ב-iCloud. ב-Finder, לחצו על “הורדה” וחכו שסמל הענן ייעלם, ואז נסו שוב.",
-      "fileTooLargeForVoiceCloning": "קובץ הוידאו גדול מדי לשכפול קול ({{size}}MB). המקסימום המותר הוא {{max}}MB. אנא השתמש בוידאו קצר יותר או בטל שכפול קול."
+      "fileTooLargeForVoiceCloning": "קובץ הסרטון גדול מדי לשכפול קול ({{size}}MB). הגודל המרבי הוא {{max}}MB. השתמשו בסרטון קצר יותר או כבו את שכפול הקול."
     },
     "status": {
       "starting": "מתחיל...",
@@ -1270,11 +1270,11 @@
       "processVideoTitle": "עיבוד וידאו",
       "transcribeDescription": "הפוך את מדיית המקור למסלול כתוביות ניתן לעריכה לפני המעבר לתרגום או דיבוב.",
       "translateDubTitle": "תרגום או דיבוב",
-      "translateDubDescription": "התמלול נטען. בחר שפת פלט, מצב תרגום או דיבוב.",
+      "translateDubDescription": "התמליל נטען. עכשיו בחרו שפת פלט, מצב תרגום או דיבוב.",
       "availableOutputs": "פלטים זמינים",
-      "availableOutputsDescription": "המדיה שהורדה ודובבה תישאר זמינה כאן עד שתשמור את הגרסאות שברצונך לשמור.",
-      "saveOutputsTitle": "שמור פלטים",
-      "saveOutputsDescription": "שמור כל מדיית מקור או מדיה מדובבת שברצונך לשמור מחוץ לסביבת העבודה של האפליקציה."
+      "availableOutputsDescription": "המדיה שהורדה ודובבה תישאר זמינה כאן עד שתשמרו את הגרסאות שתרצו להשאיר.",
+      "saveOutputsTitle": "שמירת הקבצים",
+      "saveOutputsDescription": "שמרו מחוץ לסביבת העבודה של האפליקציה כל מדיית מקור או מדיה מדובבת שתרצו להשאיר."
     },
     "calculatingCost": "מחשב עלות...",
     "welcomeCredits": {
@@ -1305,7 +1305,7 @@
       "howToGet": "איך להשיג מפתחות API",
       "enable": "שימוש במפתחות ה-API שלי",
       "done": "סיום",
-      "ready": "הכיסוי הושלם. עכשיו אפשר להפעיל את \"השתמש במפתחות ה-API שלי\".",
+      "ready": "כל המפתחות הנדרשים מוכנים. עכשיו אפשר להפעיל את “שימוש במפתחות ה-API שלי”.",
       "missingTranslation": "התרגום עדיין צריך את {{providers}}.",
       "messageElevenLabsAudio": "כדי להשתמש במפתחות ה-API שלכם, צריך מפתח OpenAI או Anthropic לתרגום. התמלול והדיבוב משתמשים ב-ElevenLabs בלבד, אז הוסיפו גם מפתח ElevenLabs.",
       "audioNeedsElevenLabs": "בלי מפתח ElevenLabs, התמלול והדיבוב לא זמינים כל עוד מפתחות ה-API שלכם מופעלים."
@@ -1321,7 +1321,7 @@
       "cancel": "ביטול"
     },
     "downloadInProgress": "הורדה בתהליך",
-    "saveDownloadedFile": "שמור את הקובץ שהורד: {{path}}",
+    "saveDownloadedFile": "שמירת הקובץ שהורד: {{path}}",
     "transcriptionInProgress": "תמלול בתהליך",
     "translationInProgress": "תרגום בתהליך",
     "dubbingInProgress": "דיבוב בתהליך",
@@ -1329,7 +1329,7 @@
     "cancelTranslationConfirm": "לבטל את התרגום? ההתקדמות תאבד ותצטרכו להתחיל מחדש.",
     "cancelSummaryConfirm": "לבטל את יצירת הסיכום?",
     "cancelDubbingConfirm": "לבטל את הדיבוב? ההתקדמות תאבד ותצטרכו להתחיל מחדש.",
-    "cancelDownloadConfirm": "בטל הורדה? ההתקדמות תאבד ותצטרך להתחיל מחדש.",
+    "cancelDownloadConfirm": "לבטל את ההורדה? ההתקדמות תאבד ותצטרכו להתחיל מחדש.",
     "mergeLowDiskSpaceConfirm": "זוהה מקום נמוך בדיסק. מיזוג זה עשוי להצריך ~{{need}} מקום פנוי, אבל רק ~{{free}} זמין. להמשיך בכל זאת?",
     "slowProcessingBanner": {
       "title": "העיבוד לוקח יותר זמן מהרגיל.",
@@ -1338,7 +1338,7 @@
     },
     "slowDownloadBanner": {
       "title": "ההורדה לוקחת יותר זמן מהרגיל.",
-      "description": "זה עשוי להיות בגלל שינויים בפלטפורמת הוידאו או אמצעי הגנה חדשים. ייתכן שתצטרך להמתין לגרסת האפליקציה הבאה כדי לטפל בוידאואים חדשים יותר."
+      "description": "זה עשוי לנבוע משינויים בפלטפורמת הווידאו או מאמצעי הגנה חדשים. ייתכן שתצטרכו לחכות לגרסה הבאה של האפליקציה כדי לטפל בסרטונים חדשים יותר."
     },
     "creditRanOut": {
       "openSettings": "פתיחת ההגדרות",
@@ -1563,7 +1563,7 @@
       "insufficientCredits": "אין מספיק דקות"
     },
     "listening": "מאזינים לסרטון…",
-    "mergeFinishSaveBeforeReload": "סיים לשמור את הסרטון הממוזג לפני הטעינה מחדש.",
+    "mergeFinishSaveBeforeReload": "סיימו לשמור את הסרטון הממוזג לפני הטעינה מחדש.",
     "mergeSavePhaseNoCancel": "אי אפשר לבטל את שלב השמירה הזה עכשיו.",
     "mergeWaitForCancelBeforeReload": "חכו לסיום ביטול המיזוג לפני הטעינה מחדש.",
     "preparingTranscription": "מתכוננים להאזנה…",

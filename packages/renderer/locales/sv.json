@@ -390,7 +390,7 @@
       "emptyCopy": "Nämn ämnet, målgruppen, kreatörens stil eller känslan i videon du vill hitta. Lägg till land eller aktualitet bara när det spelar roll.",
       "emptyEyebrow": "Sök med hjälp av assistenten",
       "emptyTitle": "Beskriv videon du vill hitta",
-      "languageHint": "Utdataspråk",
+      "languageHint": "Målspråk",
       "noMoreResults": "Inga fler unika resultat hittades. Försök justera land eller aktualitet.",
       "aiVideoRecommendation": "AI-videoförslag",
       "optionalDiscovery": "Valfri upptäckt",
@@ -469,7 +469,7 @@
     "batchDownloadRunning": "Translator laddar ner flera videor. Vänta tills de är klara eller avbryt nedladdningen."
   },
   "subtitles": {
-    "outputLanguage": "Utmatningsspråk",
+    "outputLanguage": "Målspråk",
     "showOriginalText": "Visa originaltext",
     "displayModeLabel": "Undertextvisning",
     "translate": "Översätt",
@@ -515,7 +515,7 @@
   "summary": {
     "title": "Höjdpunkter",
     "ctaHelper": "Hitta de bästa stunderna.",
-    "languageLabel": "Utdataspråk",
+    "languageLabel": "Målspråk",
     "tab": {
       "summary": "Sammanfattning",
       "sections": "Anteckningar",
@@ -1268,7 +1268,7 @@
       "processVideoTitle": "Bearbeta video",
       "transcribeDescription": "Gör om källmediet till ett redigerbart undertextspår innan du går vidare till översättning eller dubbning.",
       "translateDubTitle": "Översätt eller dubba",
-      "translateDubDescription": "Ditt transkript är laddat. Välj sedan utdataspråk, översättningsläge eller dubbning.",
+      "translateDubDescription": "Ditt transkript är laddat. Välj sedan målspråk, översättningsläge eller dubbning.",
       "availableOutputs": "Tillgängliga filer",
       "availableOutputsDescription": "Nedladdade och dubbade medier finns kvar här tills du sparar versionerna du vill behålla.",
       "saveOutputsTitle": "Spara filer",

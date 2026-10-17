@@ -237,7 +237,7 @@
     "selectVideoFile": "选择视频文件",
     "selectVideoAudioFile": "选择视频/音频文件",
     "saveOriginalVideo": "保存原始视频",
-    "localFileDescription": "从您的电脑上传视频或音频文件",
+    "localFileDescription": "从你的电脑上传视频或音频文件",
     "selectLocalFile": "从电脑上传",
     "downloadFromUrl": "从网络下载",
     "recentMedia": "最近文件",
@@ -484,7 +484,7 @@
     "voiceCloningRequiresTranslation": "语音克隆需要目标语言",
     "translateEstimateCredits": "~{{minutes}}分钟视频",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "确定要取消字幕翻译过程吗？所有进度将丢失，您需要重新开始。",
+    "cancel_confirmation": "确定要取消字幕翻译吗？当前进度将会丢失，你需要重新开始。",
     "unreadableCues": "此文件中有 {{count}} 行无法读取，已被跳过。请检查它们的时间码。",
     "dubInto": "用{{language}}配音",
     "dubIntro": "用你选择的语言朗读字幕，同时保留原视频的背景声。",
@@ -791,8 +791,8 @@
       "voiceCloningEnabled": "已启用ElevenLabs语音克隆。原说话者的声音将保留在配音音频中。",
       "voiceCloningInfo": "语音克隆使用ElevenLabs配音API来分析和重现原说话者的声音。",
       "costPerMinute": "每分钟费用",
-      "yourBalance": "您的余额",
-      "canClone": "您可以克隆",
+      "yourBalance": "你的余额",
+      "canClone": "你可以克隆",
       "upToMinutes": "最多{{minutes}}分钟",
       "loading": "加载中...",
       "previewWithMinutes": "预览（{{cost}}）",
@@ -803,7 +803,7 @@
       "description": "一次性解锁后，即可使用你自己的 API 密钥。解锁后，转录、翻译、配音和摘要都会通过你自己的 AI 账户运行，不消耗你的 Stage5 时长。",
       "unlocking": "正在打开支付页面…",
       "unlockCta": "花费$10解锁",
-      "unlockHint": "解锁后，您可以随时在此添加API密钥以启用账户直接计费。",
+      "unlockHint": "解锁后，你可以随时在这里添加 API 密钥，改为直接由你自己的账户计费。",
       "apiKeyLabel": "OpenAI API密钥",
       "hide": "隐藏",
       "show": "显示",
@@ -818,8 +818,8 @@
       "test": "测试密钥",
       "lastSynced": "上次同步",
       "toggleLabel": "使用我的OpenAI密钥",
-      "toggleAria": "切换使用您的OpenAI密钥",
-      "toggleOn": "正在使用您的OpenAI密钥执行AI任务。",
+      "toggleAria": "切换是否使用你的 OpenAI 密钥",
+      "toggleOn": "正在使用你的 OpenAI 密钥处理 AI 任务。",
       "toggleError": "更新设置失败。",
       "howToGetKeys": "如何获取API密钥？",
       "option1Title": "选项1：OpenAI",
@@ -901,7 +901,7 @@
         "step4": "点击",
         "step5": "在计划和账单中添加付款方式（使用API必需）",
         "step6": "复制密钥（以sk-ant-开头）并粘贴到Stage5中",
-        "note": "提示：Anthropic提供按需付费的定价。您只需为实际使用付费。"
+        "note": "提示：Anthropic 采用按量付费，用多少付多少。"
       },
       "elevenlabs": {
         "step1": "访问",
@@ -915,7 +915,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API密钥（可选）",
-      "description": "添加您的 Anthropic API 密钥即可在翻译审校阶段直接使用 Claude 模型。没有此密钥时，GPT-5.5 会负责审校流程。",
+      "description": "添加你的 Anthropic API 密钥，即可在翻译审核阶段直接使用 Anthropic 的高端审核模型。没有这个密钥时，将由 OpenAI 的高端审核模型负责审核。",
       "apiKeyLabel": "Anthropic API密钥",
       "hide": "隐藏",
       "show": "显示",
@@ -929,14 +929,14 @@
       "testing": "测试中…",
       "test": "测试密钥",
       "toggleLabel": "使用我的Anthropic密钥",
-      "toggleAria": "切换使用您的Anthropic密钥",
-      "toggleOn": "正在使用您的Anthropic密钥执行Claude模型。",
+      "toggleAria": "切换是否使用你的 Anthropic 密钥",
+      "toggleOn": "正在用你的 Anthropic 密钥运行 Claude 模型。",
       "toggleError": "更新Anthropic设置失败。"
     },
     "stage5TtsProvider": {
       "elevenlabs": "高级（ElevenLabs）",
       "elevenlabsHint": "最佳音质，较高成本（约12倍）",
-      "elevenlabsHintWithBalance": "最佳音质 · 您的余额：{{time}}配音时长"
+      "elevenlabsHintWithBalance": "最佳音质 · 你的余额：{{time}}配音时长"
     },
     "apiKey": {
       "saved": "API 密钥已保存。",
@@ -1317,7 +1317,7 @@
     "cancelTranslationConfirm": "取消翻译？进度将丢失，你需要重新开始。",
     "cancelSummaryConfirm": "取消生成摘要？",
     "cancelDubbingConfirm": "要取消配音吗？进度将丢失，你需要重新开始。",
-    "cancelDownloadConfirm": "取消下载？进度将丢失，您需要重新开始。",
+    "cancelDownloadConfirm": "取消下载？进度将会丢失，你需要重新开始。",
     "mergeLowDiskSpaceConfirm": "检测到磁盘空间不足。此合并可能需要约 {{need}} 可用空间，但目前只有约 {{free}} 可用。是否仍要继续？",
     "slowProcessingBanner": {
       "title": "处理时间比平常更长。",
@@ -1326,7 +1326,7 @@
     },
     "slowDownloadBanner": {
       "title": "下载时间比平时更长。",
-      "description": "这可能是由于视频平台变更或新的保护措施造成的。您可能需要等待下一个应用版本来处理较新的视频。"
+      "description": "这可能是因为视频平台有所变化或采用了新的保护措施。你可能需要等下一个应用版本才能处理较新的视频。"
     },
     "creditRanOut": {
       "openSettings": "打开设置",
@@ -1571,7 +1571,7 @@
     "copied": "日志已复制到剪贴板",
     "copyFailed": "复制失败",
     "emailSubject": "Stage5 调试日志",
-    "emailBodyPrefix": "您好，\n\n以下为最近的日志以便排查问题。\n\n",
+    "emailBodyPrefix": "你好，\n\n以下是我最近的日志，方便排查问题。\n\n",
     "deviceInfoHeader": "设备信息",
     "optionalMessage": "附加信息",
     "optionalMessagePlaceholder": "你当时在做什么？",
