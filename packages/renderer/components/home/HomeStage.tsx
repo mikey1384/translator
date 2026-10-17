@@ -428,6 +428,15 @@ export default function HomeStage() {
   const openRecent = async (
     item: Parameters<typeof library.openDownloadedVideo>[0]
   ) => {
+    // A file that was moved or deleted downloads again, like Downloads does.
+    const exists = item.localPath
+      ? await window.fileApi.fileExists(item.localPath).catch(() => true)
+      : false;
+    if (!exists && item.sourceUrl) {
+      logButton('home_redownload_recent');
+      await library.redownloadHistoryItem(item);
+      return;
+    }
     logButton('home_open_recent');
     await library.openDownloadedVideo(item);
   };

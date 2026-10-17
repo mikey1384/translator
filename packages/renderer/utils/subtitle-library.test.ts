@@ -138,7 +138,7 @@ test('document auto-mount preserves stored-library linkage when matching history
   }
 });
 
-test('fallback document auto-mount keeps the requested subtitle variant filters', async () => {
+test('fallback document auto-mount falls back to the transcript, never another language', async () => {
   const restoreBrowserGlobals = installBrowserGlobals();
   const documentLookupCalls: any[] = [];
   const restoreWindow = installElectronMock({
@@ -184,12 +184,12 @@ test('fallback document auto-mount keeps the requested subtitle variant filters'
       subtitleKind: 'translation',
       targetLanguage: 'spanish',
     });
+    // The fallback is the video's own transcript, never another language.
     assert.deepEqual(documentLookupCalls[1], {
       sourceVideoPath: '/Users/test/Videos/interview.mp4',
       sourceVideoAssetIdentity: 'asset:123',
       sourceUrl: null,
-      subtitleKind: 'translation',
-      targetLanguage: 'spanish',
+      subtitleKind: 'transcription',
     });
   } finally {
     restoreWindow();

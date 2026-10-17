@@ -7,6 +7,11 @@ import SettingsButton from '../components/SettingsButton';
 import HeaderMenu from '../components/HeaderMenu';
 import { useSubStore, useTaskStore, useUIStore, useVideoStore } from '../state';
 import { useUrlStore } from '../state/url-store';
+import {
+  rememberLeftDocument,
+  saveMountedSubtitleDocument,
+} from '../utils/subtitle-documents';
+import { logButton } from '../utils/logger';
 import { spacing } from '../components/design-system/tokens.js';
 
 const headerRow = css`
@@ -79,7 +84,11 @@ const narrowOnly = css`
   }
 `;
 
-/** Home is the panels-closed state; only reachable when nothing is loaded. */
+/**
+ * The logo always leads home, except while a job is running (leaving would
+ * cut it off). With a video open, its subtitles are saved to the library
+ * first, so opening it again from Recent brings everything back.
+ */
 function useCanGoHome(): boolean {
   const hasVideo = useVideoStore(s => Boolean(s.url || s.path));
   const hasSubtitles = useSubStore(s => s.order.length > 0);
@@ -93,7 +102,37 @@ function useCanGoHome(): boolean {
   );
   const downloading = useUrlStore(s => s.download.inProgress);
   const panelsOpen = useUIStore(s => s.showGeneratePanel || s.showEditPanel);
-  return panelsOpen && !hasVideo && !hasSubtitles && !busy && !downloading;
+  if (busy || downloading) return false;
+  return panelsOpen || hasVideo || hasSubtitles;
+}
+
+async function goHome(): Promise<void> {
+  if (useSubStore.getState().order.length > 0) {
+    const saved = await saveMountedSubtitleDocument();
+    // Never drop subtitles that couldn't be saved.
+    if (!saved.success || !saved.documentId) {
+      console.warn(
+        '[home] Staying put; subtitles were not saved:',
+        saved.error
+      );
+      return;
+    }
+    const video = useVideoStore.getState();
+    rememberLeftDocument(
+      { path: video.originalPath ?? video.path, url: video.sourceUrl },
+      saved.documentId
+    );
+  }
+  if (useVideoStore.getState().url || useVideoStore.getState().path) {
+    await useVideoStore.getState().setFile(null);
+  }
+  if (useSubStore.getState().order.length > 0) {
+    useSubStore.getState().load([], null, 'fresh', null);
+  }
+  const ui = useUIStore.getState();
+  ui.setWorkspaceToolsOpen(false);
+  ui.setGeneratePanelOpen(false);
+  ui.setEditPanelOpen(false);
 }
 
 export default function Header() {
@@ -106,9 +145,8 @@ export default function Header() {
         className={homeButton}
         onClick={() => {
           if (!canGoHome) return;
-          const ui = useUIStore.getState();
-          ui.setGeneratePanelOpen(false);
-          ui.setEditPanelOpen(false);
+          logButton('header_logo_home');
+          void goHome();
         }}
         disabled={!canGoHome}
         aria-label={t('home.goHome', 'Home')}

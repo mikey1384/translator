@@ -6,6 +6,7 @@ import type {
 import { parseSrt } from '../../shared/helpers';
 import * as SubtitleLibraryIPC from '../ipc/subtitle-library';
 import * as FileIPC from '../ipc/file';
+import { takeLeftDocument } from './subtitle-documents';
 import { useSubStore } from '../state/subtitle-store';
 import { useUIStore } from '../state/ui-store';
 import { useVideoStore } from '../state/video-store';
@@ -171,6 +172,39 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
     useUIStore.getState().targetLanguage || null
   );
 
+  // Back from home via the logo: restore exactly what was on screen.
+  const leftDocumentId = takeLeftDocument({
+    path: sourceVideoPath,
+    url: args.sourceUrl ?? null,
+  });
+  if (leftDocumentId) {
+    const left = await FileIPC.readSubtitleDocument({
+      documentId: leftDocumentId,
+    });
+    if (
+      left.success &&
+      left.document &&
+      Array.isArray(left.segments) &&
+      left.segments.length > 0 &&
+      matchesCurrentVideoRequest(args)
+    ) {
+      useSubStore
+        .getState()
+        .load(
+          left.segments,
+          left.document.importFilePath ?? null,
+          left.document.importFilePath ? 'disk' : 'fresh',
+          sourceVideoPath,
+          left.document.transcriptionEngine ?? null,
+          null,
+          sourceVideoAssetIdentity,
+          left.document
+        );
+      restoreDocumentActiveFileTarget(left.document);
+      return null;
+    }
+  }
+
   const documentResult = await FileIPC.findSubtitleDocumentForSource({
     sourceVideoPath,
     sourceVideoAssetIdentity,
@@ -246,12 +280,15 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
     (!result.content?.trim() &&
       (!Array.isArray(result.segments) || result.segments.length === 0))
   ) {
+    // Last resort: the video's own transcript. A transcript-only video used
+    // to open empty even though its Recent card said "subtitles ready".
+    // Another language's translation is never mounted in place of the
+    // requested one.
     const fallbackDocumentResult = await FileIPC.findSubtitleDocumentForSource({
       sourceVideoPath,
       sourceVideoAssetIdentity,
       sourceUrl: args.sourceUrl ?? null,
-      subtitleKind: preferredVariant.subtitleKind,
-      targetLanguage: preferredVariant.targetLanguage ?? null,
+      subtitleKind: 'transcription',
     });
     if (
       fallbackDocumentResult.success &&

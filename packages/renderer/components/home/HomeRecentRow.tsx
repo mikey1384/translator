@@ -131,7 +131,26 @@ function formatDuration(seconds?: number): string | null {
     : `${m}:${String(s).padStart(2, '0')}`;
 }
 
-type SubtitleState = { ready: boolean; language: string | null };
+type SubtitleState = {
+  ready: boolean;
+  language: string | null;
+  // The downloaded file was moved or deleted; opening it downloads it again.
+  missing?: boolean;
+};
+
+/** Newest first, one card per video. */
+function uniqueRecent(items: VideoSuggestionDownloadHistoryItem[]) {
+  const seen = new Set<string>();
+  const out: VideoSuggestionDownloadHistoryItem[] = [];
+  for (const item of items) {
+    const key = item.sourceUrl || item.localPath || item.id;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+    if (out.length === 3) break;
+  }
+  return out;
+}
 
 interface HomeRecentRowProps {
   items: VideoSuggestionDownloadHistoryItem[];
@@ -145,7 +164,7 @@ export default function HomeRecentRow({
   onSeeAll,
 }: HomeRecentRowProps) {
   const { t, i18n } = useTranslation();
-  const recent = items.slice(0, 3);
+  const recent = uniqueRecent(items);
   const previews = useFreePreviewStore(s => s.items);
   const [subtitleStates, setSubtitleStates] = useState<
     Record<string, SubtitleState>
@@ -156,6 +175,9 @@ export default function HomeRecentRow({
     let cancelled = false;
     void Promise.all(
       recent.map(async item => {
+        const missing = item.localPath
+          ? !(await window.fileApi.fileExists(item.localPath).catch(() => true))
+          : true;
         try {
           const found = await FileIPC.findSubtitleDocumentForSource({
             sourceVideoPath: item.localPath ?? null,
@@ -166,10 +188,11 @@ export default function HomeRecentRow({
             {
               ready: Boolean(found?.success && found.found && found.document),
               language: found?.document?.targetLanguage || null,
+              missing,
             },
           ] as const;
         } catch {
-          return [item.id, { ready: false, language: null }] as const;
+          return [item.id, { ready: false, language: null, missing }] as const;
         }
       })
     ).then(entries => {
@@ -208,6 +231,13 @@ export default function HomeRecentRow({
       };
     }
     const subtitles = subtitleStates[item.id];
+    if (subtitles?.missing && item.sourceUrl) {
+      return {
+        ready: false,
+        accent: true,
+        text: t('input.videoSuggestion.downloadAgain', 'Download again'),
+      };
+    }
     if (
       subtitles?.ready &&
       subtitles.language &&

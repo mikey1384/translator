@@ -45,3 +45,30 @@ export async function saveMountedSubtitleDocument(): Promise<{
   useSubStore.getState().setDocumentMeta(result.document);
   return { success: true, documentId: result.document.id };
 }
+
+// Documents saved when the user left a video for home (logo), keyed by the
+// video's path and link. Opening that video again in this session restores
+// exactly what was on screen, whatever its kind or language.
+const leftDocuments = new Map<string, string>();
+const leftKeys = (source: { path?: string | null; url?: string | null }) =>
+  [source.path, source.url].filter((key): key is string => Boolean(key));
+
+export function rememberLeftDocument(
+  source: { path?: string | null; url?: string | null },
+  documentId: string
+): void {
+  for (const key of leftKeys(source)) leftDocuments.set(key, documentId);
+}
+
+export function takeLeftDocument(source: {
+  path?: string | null;
+  url?: string | null;
+}): string | null {
+  const keys = leftKeys(source);
+  const documentId = keys.map(key => leftDocuments.get(key)).find(Boolean);
+  if (!documentId) return null;
+  for (const [key, id] of leftDocuments) {
+    if (id === documentId) leftDocuments.delete(key);
+  }
+  return documentId;
+}
