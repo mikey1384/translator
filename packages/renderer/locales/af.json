@@ -1392,5 +1392,12 @@
     "to": "tot",
     "saving": "Stoor…",
     "save": "Stoor Short-redigering"
+  },
+  "subtitleFonts": {
+    "label": "Font",
+    "sans": "Modern",
+    "classic": "Klassiek",
+    "serif": "Serif",
+    "display": "Vet"
   }
 }

@@ -1392,5 +1392,12 @@
     "to": "到",
     "saving": "正在儲存…",
     "save": "儲存 Short 編輯"
+  },
+  "subtitleFonts": {
+    "label": "字型",
+    "sans": "現代",
+    "classic": "經典",
+    "serif": "明體",
+    "display": "粗體"
   }
 }

@@ -1392,5 +1392,12 @@
     "to": "til",
     "saving": "Gemmer…",
     "save": "Gem Short-redigering"
+  },
+  "subtitleFonts": {
+    "label": "Skrift",
+    "sans": "Moderne",
+    "classic": "Klassisk",
+    "serif": "Serif",
+    "display": "Fed"
   }
 }

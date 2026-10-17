@@ -34,6 +34,7 @@ export async function generateStatePngs({
   fps,
   fontSizePx,
   stylePreset,
+  typeface,
   operationId,
   progress,
   signal,
@@ -48,6 +49,7 @@ export async function generateStatePngs({
   fps: number;
   fontSizePx?: number;
   stylePreset?: unknown;
+  typeface?: string;
   operationId: string;
   progress: (d: { percent: number; stage: string }) => void;
   signal?: AbortSignal;
@@ -123,10 +125,18 @@ export async function generateStatePngs({
         const scaledSize = fontSizePx ? Math.round(fontSizePx) : fontSizePx;
 
         await page.evaluate(
-          ({ state, size, preset, displayWidth: dw, displayHeight: dh }) => {
+          ({
+            state,
+            size,
+            preset,
+            face,
+            displayWidth: dw,
+            displayHeight: dh,
+          }) => {
             const options = {
               fontSizePx: size,
               stylePreset: preset,
+              typeface: face,
               videoWidthPx: dw,
               videoHeightPx: dh,
             };
@@ -149,6 +159,7 @@ export async function generateStatePngs({
             state: ev.state,
             size: scaledSize,
             preset: stylePreset,
+            face: typeface,
             displayWidth,
             displayHeight,
           }

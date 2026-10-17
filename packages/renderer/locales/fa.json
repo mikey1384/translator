@@ -1392,5 +1392,12 @@
     "to": "تا",
     "saving": "در حال ذخیره…",
     "save": "ذخیرهٔ ویرایش Short"
+  },
+  "subtitleFonts": {
+    "label": "فونت",
+    "sans": "مدرن",
+    "classic": "کلاسیک",
+    "serif": "سریف",
+    "display": "پررنگ"
   }
 }

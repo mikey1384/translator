@@ -8,6 +8,7 @@ import {
 } from '../../shared/helpers/subtitle-style-util.js';
 import {
   SubtitleStylePresetKey,
+  type SubtitleTypeface,
   subtitleStyleUsesLineBox,
 } from '../../shared/constants/subtitle-styles.js';
 
@@ -19,6 +20,7 @@ interface BaseSubtitleDisplayProps {
   stylePreset?: SubtitleStylePresetKey;
   videoWidthPx?: number;
   videoHeightPx?: number;
+  typeface?: SubtitleTypeface;
 }
 
 export default function BaseSubtitleDisplay({
@@ -29,6 +31,7 @@ export default function BaseSubtitleDisplay({
   stylePreset,
   videoWidthPx,
   videoHeightPx,
+  typeface,
 }: BaseSubtitleDisplayProps): React.ReactElement {
   const subtitleRef = useRef<HTMLDivElement>(null);
   const [isMultiLine, setIsMultiLine] = useState(false);
@@ -55,6 +58,7 @@ export default function BaseSubtitleDisplay({
     stylePreset,
     videoWidthPx,
     videoHeightPx,
+    typeface,
   ]);
 
   const dynamicStyles = getSubtitleStyles({
@@ -64,6 +68,7 @@ export default function BaseSubtitleDisplay({
     isMultiLine,
     videoWidthPx,
     videoHeightPx,
+    typeface,
   });
   const combinedClassName = `${dynamicStyles} ${isVisible ? 'visible' : ''}`;
 
@@ -74,6 +79,7 @@ export default function BaseSubtitleDisplay({
     isMultiLine,
     videoWidthPx,
     videoHeightPx,
+    typeface,
   });
   const lineBoxStyle = resolveSubtitleLineBoxStyle(renderTheme);
 

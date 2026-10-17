@@ -1392,5 +1392,12 @@
     "to": "bitiş",
     "saving": "Kaydediliyor…",
     "save": "Short düzenlemesini kaydet"
+  },
+  "subtitleFonts": {
+    "label": "Yazı tipi",
+    "sans": "Modern",
+    "classic": "Klasik",
+    "serif": "Serifli",
+    "display": "Kalın"
   }
 }

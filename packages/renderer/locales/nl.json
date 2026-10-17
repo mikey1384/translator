@@ -1392,5 +1392,12 @@
     "to": "tot",
     "saving": "Opslaan…",
     "save": "Short-bewerking opslaan"
+  },
+  "subtitleFonts": {
+    "label": "Lettertype",
+    "sans": "Modern",
+    "classic": "Klassiek",
+    "serif": "Schreef",
+    "display": "Vet"
   }
 }

@@ -1392,5 +1392,12 @@
     "to": "hadi",
     "saving": "Inahifadhi…",
     "save": "Hifadhi uhariri wa Short"
+  },
+  "subtitleFonts": {
+    "label": "Fonti",
+    "sans": "Kisasa",
+    "classic": "Klasiki",
+    "serif": "Serif",
+    "display": "Nzito"
   }
 }

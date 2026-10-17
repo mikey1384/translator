@@ -1392,5 +1392,12 @@
     "to": "sampai",
     "saving": "Menyimpan…",
     "save": "Simpan edit Short"
+  },
+  "subtitleFonts": {
+    "label": "Font",
+    "sans": "Modern",
+    "classic": "Klasik",
+    "serif": "Serif",
+    "display": "Tebal"
   }
 }

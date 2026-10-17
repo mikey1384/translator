@@ -4,14 +4,19 @@ import { useTranslation } from 'react-i18next';
 import {
   SUBTITLE_STYLE_PRESETS,
   SUBTITLE_STYLE_PRESET_ORDER,
+  SUBTITLE_TYPEFACES,
   SubtitleStylePresetKey,
+  type SubtitleTypeface,
   subtitleStyleUsesLineBox,
 } from '../../../shared/constants/subtitle-styles.js';
 import {
   assColorToRgba,
   resolveSubtitleLineBoxStyle,
   resolveSubtitleRenderTheme,
+  subtitleTypefaceFontStack,
 } from '../../../shared/helpers/subtitle-style-util.js';
+import { useUIStore } from '../../state/ui-store.js';
+import { logButton } from '../../utils/logger.js';
 import { colors } from '../../styles.js';
 
 const STYLE_LABELS: Record<string, string> = {
@@ -23,6 +28,108 @@ const STYLE_LABELS: Record<string, string> = {
   Default: 'Outline',
   Classic: 'Bold yellow',
 };
+
+const TYPEFACE_LABELS: Record<SubtitleTypeface, string> = {
+  sans: 'Modern',
+  classic: 'Classic',
+  serif: 'Serif',
+  display: 'Bold',
+};
+
+const typefaceRowStyles = css`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  color: ${colors.textDim};
+`;
+
+const typefaceChipStyles = css`
+  border: 1px solid ${colors.border};
+  background: transparent;
+  color: ${colors.text};
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: ${colors.borderStrong};
+  }
+
+  &[aria-checked='true'] {
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 1px ${colors.primary};
+  }
+`;
+
+/** Modern · Classic · Serif · Bold — each label drawn in its own face. */
+function TypefaceRow() {
+  const { t } = useTranslation();
+  const typeface = useUIStore(s => s.subtitleTypeface);
+  const setTypeface = useUIStore(s => s.setSubtitleTypeface);
+  const label = t('subtitleFonts.label', 'Font');
+  return (
+    <div className={typefaceRowStyles}>
+      <span>{label}</span>
+      <div
+        role="radiogroup"
+        aria-label={label}
+        style={{ display: 'contents' }}
+        onKeyDown={event => {
+          if (event.key !== 'Escape' && event.key !== 'Tab')
+            event.stopPropagation();
+          const step =
+            event.key === 'ArrowRight' || event.key === 'ArrowDown'
+              ? 1
+              : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+                ? -1
+                : 0;
+          if (!step) return;
+          event.preventDefault();
+          const rtl =
+            (event.key === 'ArrowRight' || event.key === 'ArrowLeft') &&
+            getComputedStyle(event.currentTarget).direction === 'rtl';
+          const index = Math.max(0, SUBTITLE_TYPEFACES.indexOf(typeface));
+          const next =
+            SUBTITLE_TYPEFACES[
+              (index + (rtl ? -step : step) + SUBTITLE_TYPEFACES.length) %
+                SUBTITLE_TYPEFACES.length
+            ];
+          setTypeface(next);
+          event.currentTarget
+            .querySelectorAll<HTMLButtonElement>('[role="radio"]')
+            [SUBTITLE_TYPEFACES.indexOf(next)]?.focus();
+        }}
+      >
+        {SUBTITLE_TYPEFACES.map(face => (
+          <button
+            key={face}
+            type="button"
+            role="radio"
+            aria-checked={typeface === face}
+            tabIndex={typeface === face ? 0 : -1}
+            className={typefaceChipStyles}
+            style={{
+              fontFamily: subtitleTypefaceFontStack(face),
+              fontWeight: face === 'display' ? 800 : 600,
+            }}
+            onClick={() => {
+              logButton('subtitle_typeface_pick', { typeface: face });
+              setTypeface(face);
+            }}
+          >
+            {t(`subtitleFonts.${face}`, TYPEFACE_LABELS[face])}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const gridStyles = css`
   display: grid;
@@ -84,7 +191,9 @@ export function subtitleStyleLabel(
 
 function StyleSample({ preset }: { preset: SubtitleStylePresetKey }) {
   const { t } = useTranslation();
+  const typeface = useUIStore(s => s.subtitleTypeface);
   const theme = resolveSubtitleRenderTheme({
+    typeface,
     displayFontSize: 14,
     stylePreset: preset,
     isMultiLine: false,
@@ -134,59 +243,62 @@ export default function SubtitleStylePicker({
 }) {
   const { t } = useTranslation();
   return (
-    <div
-      className={gridStyles}
-      role="radiogroup"
-      onKeyDown={event => {
-        if (event.key !== 'Escape' && event.key !== 'Tab')
-          event.stopPropagation();
-        const step =
-          event.key === 'ArrowRight' || event.key === 'ArrowDown'
-            ? 1
-            : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-              ? -1
-              : 0;
-        if (!step) return;
-        event.preventDefault();
-        const order = SUBTITLE_STYLE_PRESET_ORDER;
-        const rtl =
-          (event.key === 'ArrowRight' || event.key === 'ArrowLeft') &&
-          getComputedStyle(event.currentTarget).direction === 'rtl';
-        const index = Math.max(0, order.indexOf(value));
-        const next =
-          order[(index + (rtl ? -step : step) + order.length) % order.length];
-        onChange(next);
-        event.currentTarget
-          .querySelectorAll<HTMLButtonElement>('[role="radio"]')
-          [order.indexOf(next)]?.focus();
-      }}
-      aria-label={t('editSubtitles.mergeControls.styleLabel')
-        .replace(/[:：]\s*$/u, '')
-        .trim()}
-    >
-      {SUBTITLE_STYLE_PRESET_ORDER.map(preset => {
-        const selected = preset === value;
-        return (
-          <button
-            key={preset}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            tabIndex={selected ? 0 : -1}
-            className={tileStyles}
-            onClick={() => onChange(preset)}
-          >
-            <div
-              className={`${frameStyles} ${selected ? selectedFrameStyles : ''}`}
+    <>
+      <TypefaceRow />
+      <div
+        className={gridStyles}
+        role="radiogroup"
+        onKeyDown={event => {
+          if (event.key !== 'Escape' && event.key !== 'Tab')
+            event.stopPropagation();
+          const step =
+            event.key === 'ArrowRight' || event.key === 'ArrowDown'
+              ? 1
+              : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+                ? -1
+                : 0;
+          if (!step) return;
+          event.preventDefault();
+          const order = SUBTITLE_STYLE_PRESET_ORDER;
+          const rtl =
+            (event.key === 'ArrowRight' || event.key === 'ArrowLeft') &&
+            getComputedStyle(event.currentTarget).direction === 'rtl';
+          const index = Math.max(0, order.indexOf(value));
+          const next =
+            order[(index + (rtl ? -step : step) + order.length) % order.length];
+          onChange(next);
+          event.currentTarget
+            .querySelectorAll<HTMLButtonElement>('[role="radio"]')
+            [order.indexOf(next)]?.focus();
+        }}
+        aria-label={t('editSubtitles.mergeControls.styleLabel')
+          .replace(/[:：]\s*$/u, '')
+          .trim()}
+      >
+        {SUBTITLE_STYLE_PRESET_ORDER.map(preset => {
+          const selected = preset === value;
+          return (
+            <button
+              key={preset}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              tabIndex={selected ? 0 : -1}
+              className={tileStyles}
+              onClick={() => onChange(preset)}
             >
-              <StyleSample preset={preset} />
-            </div>
-            <span className={selected ? selectedLabelStyles : undefined}>
-              {subtitleStyleLabel(t, preset)}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+              <div
+                className={`${frameStyles} ${selected ? selectedFrameStyles : ''}`}
+              >
+                <StyleSample preset={preset} />
+              </div>
+              <span className={selected ? selectedLabelStyles : undefined}>
+                {subtitleStyleLabel(t, preset)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }

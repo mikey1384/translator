@@ -1392,5 +1392,12 @@
     "to": "eddig",
     "saving": "Mentés…",
     "save": "Short szerkesztésének mentése"
+  },
+  "subtitleFonts": {
+    "label": "Betűtípus",
+    "sans": "Modern",
+    "classic": "Klasszikus",
+    "serif": "Talpas",
+    "display": "Vastag"
   }
 }

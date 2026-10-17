@@ -23,6 +23,7 @@ import * as LibraryIPC from '../ipc/subtitle-library';
 import * as SystemIPC from '../ipc/system';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import { useTaskStore } from '../state/task-store';
+import { useUIStore } from '../state/ui-store';
 import { CancelledError } from '../../shared/cancelled-error';
 
 export type HighlightRenderInput = {
@@ -193,6 +194,7 @@ async function runHighlightRender(input: HighlightRenderInput) {
   const spec = resolveSubtitleRenderSpec({
     displayMode: input.displayMode,
     stylePreset: input.style,
+    typeface: useUIStore.getState().subtitleTypeface,
     baseFontSizePx: input.fontSize,
     videoWidthPx: meta.width,
     videoHeightPx: meta.height,

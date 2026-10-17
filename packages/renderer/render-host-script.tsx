@@ -11,6 +11,7 @@ import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
   subtitleStyleUsesLineBox,
+  type SubtitleTypeface,
 } from '../shared/constants/subtitle-styles.js';
 import type {
   SubtitleRenderPart,
@@ -144,12 +145,14 @@ function applyPresetStyles(
     isMultiLine = false,
     videoWidthPx = renderTarget.width,
     videoHeightPx = renderTarget.height,
+    typeface,
   }: {
     fontSizePx?: number;
     stylePreset?: SubtitleStylePresetKey;
     isMultiLine?: boolean;
     videoWidthPx?: number;
     videoHeightPx?: number;
+    typeface?: SubtitleTypeface;
   } = {}
 ) {
   if (!el) return;
@@ -160,6 +163,7 @@ function applyPresetStyles(
     isMultiLine,
     videoWidthPx,
     videoHeightPx,
+    typeface,
   });
   const dynamicClass = getSubtitleStyles({
     displayFontSize: fontSizePx,
@@ -168,6 +172,7 @@ function applyPresetStyles(
     isMultiLine,
     videoWidthPx,
     videoHeightPx,
+    typeface,
   });
   el.className = dynamicClass;
   el.style.fontSize = theme.fontSizePx + 'px';
@@ -230,6 +235,7 @@ function initializeSubtitleDisplay() {
       fontSizePx?: number;
       videoWidthPx?: number;
       videoHeightPx?: number;
+      typeface?: SubtitleTypeface;
     } = {}
   ) => {
     const el = document.getElementById('subtitle');
@@ -251,6 +257,7 @@ function initializeSubtitleDisplay() {
       fontSizePx,
       videoWidthPx,
       videoHeightPx,
+      typeface,
     } = opts;
     const renderWithLineState = (isMultiLine: boolean) => {
       const renderTheme = resolveSubtitleRenderTheme({
@@ -260,6 +267,7 @@ function initializeSubtitleDisplay() {
         isMultiLine,
         videoWidthPx,
         videoHeightPx,
+        typeface,
       });
 
       el.innerHTML =
@@ -273,6 +281,7 @@ function initializeSubtitleDisplay() {
         isMultiLine,
         videoWidthPx,
         videoHeightPx,
+        typeface,
       });
     };
 

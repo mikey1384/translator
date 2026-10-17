@@ -7,6 +7,9 @@ import {
   DEFAULT_SUBTITLE_STYLE_PRESET,
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
+  DEFAULT_SUBTITLE_TYPEFACE,
+  isSubtitleTypeface,
+  type SubtitleTypeface,
 } from '../../shared/constants/subtitle-styles';
 import { DEFAULT_SUBTITLE_BASE_FONT_SIZE } from '../../shared/constants/runtime-config';
 import { sameArray } from '../utils/array';
@@ -42,6 +45,7 @@ interface State {
   dubVoice: string;
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
+  subtitleTypeface: SubtitleTypeface;
   dubAmbientMix: number;
   navTick: number;
   // Panel open states (session-only; not persisted)
@@ -127,6 +131,7 @@ interface Actions {
   setDubAmbientMix(value: number): void;
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
+  setSubtitleTypeface(typeface: SubtitleTypeface): void;
   setGeneratePanelOpen(open: boolean): void;
   setSubtitleEditMode(on: boolean): void;
   setWorkspaceToolsOpen(
@@ -322,6 +327,14 @@ const initial: State = {
     Number(localStorage.getItem('savedMergeFontSize')) ||
     DEFAULT_SUBTITLE_BASE_FONT_SIZE,
   subtitleStyle: readSavedSubtitleStyle(),
+  subtitleTypeface: (() => {
+    try {
+      const saved = localStorage.getItem('savedSubtitleTypeface');
+      return isSubtitleTypeface(saved) ? saved : DEFAULT_SUBTITLE_TYPEFACE;
+    } catch {
+      return DEFAULT_SUBTITLE_TYPEFACE;
+    }
+  })(),
   showGeneratePanel: false,
   homeRunRequest: null,
   showEditPanel: false,
@@ -477,6 +490,9 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           set({ baseFontSize: size });
         },
 
+        setSubtitleTypeface(typeface) {
+          if (isSubtitleTypeface(typeface)) set({ subtitleTypeface: typeface });
+        },
         setSubtitleStyle(p) {
           set({ subtitleStyle: p });
         },
@@ -572,16 +588,19 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 useUIStore.subscribe(s => {
   localStorage.setItem('savedMergeFontSize', String(s.baseFontSize));
   localStorage.setItem('savedMergeStylePreset', s.subtitleStyle);
+  localStorage.setItem('savedSubtitleTypeface', s.subtitleTypeface);
 });
 
 export const useSubtitlePrefs = () => {
   const baseFontSize = useUIStore(s => s.baseFontSize);
   const subtitleStyle = useUIStore(s => s.subtitleStyle);
   const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
+  const subtitleTypeface = useUIStore(s => s.subtitleTypeface);
 
   return {
     baseFontSize,
     subtitleStyle,
     subtitleDisplayMode,
+    subtitleTypeface,
   };
 };

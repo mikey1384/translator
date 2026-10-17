@@ -1392,5 +1392,12 @@
     "to": "do",
     "saving": "Ukládání…",
     "save": "Uložit úpravy Short"
+  },
+  "subtitleFonts": {
+    "label": "Písmo",
+    "sans": "Moderní",
+    "classic": "Klasické",
+    "serif": "Patkové",
+    "display": "Tučné"
   }
 }

@@ -1392,5 +1392,12 @@
     "to": "終了",
     "saving": "保存中…",
     "save": "ショートの編集を保存"
+  },
+  "subtitleFonts": {
+    "label": "フォント",
+    "sans": "モダン",
+    "classic": "クラシック",
+    "serif": "明朝",
+    "display": "太字"
   }
 }

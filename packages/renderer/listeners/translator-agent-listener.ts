@@ -17,6 +17,7 @@ import {
 } from '../../shared/constants';
 import {
   SUBTITLE_STYLE_PRESETS,
+  isSubtitleTypeface,
   type SubtitleStylePresetKey,
 } from '../../shared/constants/subtitle-styles';
 import type {
@@ -2065,6 +2066,7 @@ async function runHistoryMerge(
     const subtitleRenderSpec = resolveSubtitleRenderSpec({
       displayMode: ui.subtitleDisplayMode,
       stylePreset: ui.subtitleStyle,
+      typeface: ui.subtitleTypeface,
       baseFontSizePx: ui.baseFontSize,
       videoWidthPx: videoMeta.width,
       videoHeightPx: videoMeta.height,
@@ -2714,6 +2716,7 @@ async function runAgentMerge(
   const subtitleRenderSpec = resolveSubtitleRenderSpec({
     displayMode,
     stylePreset: subtitleStyle,
+    typeface: useUIStore.getState().subtitleTypeface,
     baseFontSizePx: baseFontSize,
     videoWidthPx: video.meta?.width,
     videoHeightPx: video.meta?.height,
@@ -3262,6 +3265,10 @@ async function performAgentPreview(
   const subtitleRenderSpec = resolveSubtitleRenderSpec({
     displayMode,
     stylePreset,
+    // A planned job keeps the face it was planned with.
+    typeface: isSubtitleTypeface(input?.outputs?.subtitle_render_spec?.typeface)
+      ? input.outputs.subtitle_render_spec.typeface
+      : useUIStore.getState().subtitleTypeface,
     baseFontSizePx: baseFontSize,
     videoWidthPx: metadata.width,
     videoHeightPx: metadata.height,

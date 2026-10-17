@@ -1392,5 +1392,12 @@
     "to": "até",
     "saving": "Salvando…",
     "save": "Salvar edição do Short"
+  },
+  "subtitleFonts": {
+    "label": "Fonte",
+    "sans": "Moderna",
+    "classic": "Clássica",
+    "serif": "Serifada",
+    "display": "Negrito"
   }
 }

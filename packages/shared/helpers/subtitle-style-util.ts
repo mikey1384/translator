@@ -3,6 +3,9 @@ import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
   subtitleStyleUsesLineBox,
+  DEFAULT_SUBTITLE_TYPEFACE,
+  isSubtitleTypeface,
+  type SubtitleTypeface,
 } from '../constants/subtitle-styles.js';
 import {
   BASELINE_FONT_SIZE,
@@ -49,6 +52,56 @@ const SHORT_FORM_FONT_STACK = [
   "'Noto Sans SC'",
   'sans-serif',
 ].join(', ');
+
+// Script fallbacks after a typeface's Latin face: Korean, Japanese, Chinese,
+// then the system's own font for everything else (Arabic, Devanagari, Thai…).
+const SANS_SCRIPT_FALLBACKS = [
+  "'Pretendard Variable'",
+  "'Apple SD Gothic Neo'",
+  "'Malgun Gothic'",
+  "'Hiragino Sans'",
+  "'Yu Gothic'",
+  "'PingFang SC'",
+  "'Microsoft YaHei'",
+  "'Noto Sans'",
+  'sans-serif',
+];
+
+const TYPEFACE_FONT_STACKS: Record<
+  Exclude<SubtitleTypeface, 'sans'>,
+  string
+> = {
+  // The familiar broadcast subtitle face.
+  classic: [
+    "'Helvetica Neue'",
+    'Helvetica',
+    'Arial',
+    ...SANS_SCRIPT_FALLBACKS,
+  ].join(', '),
+  serif: [
+    'Georgia',
+    "'Times New Roman'",
+    "'AppleMyungjo'",
+    "'Nanum Myeongjo'",
+    "'Batang'",
+    "'Hiragino Mincho ProN'",
+    "'Yu Mincho'",
+    "'Songti SC'",
+    "'SimSun'",
+    "'Noto Serif'",
+    'serif',
+  ].join(', '),
+  // Bundled, so it looks the same on every machine.
+  display: ["'Bricolage Grotesque'", ...SANS_SCRIPT_FALLBACKS].join(', '),
+};
+
+export function subtitleTypefaceFontStack(
+  typeface: SubtitleTypeface,
+  isShortFormPortrait = false
+): string {
+  if (typeface !== 'sans') return TYPEFACE_FONT_STACKS[typeface];
+  return isShortFormPortrait ? SHORT_FORM_FONT_STACK : LANDSCAPE_FONT_STACK;
+}
 
 type ShortFormTuning = {
   backgroundColor?: string;
@@ -389,6 +442,7 @@ export function resolveSubtitleRenderTheme(opts: {
   isMultiLine: boolean;
   videoWidthPx?: number;
   videoHeightPx?: number;
+  typeface?: SubtitleTypeface;
 }): SubtitleRenderTheme {
   const {
     displayFontSize = BASELINE_FONT_SIZE,
@@ -397,6 +451,7 @@ export function resolveSubtitleRenderTheme(opts: {
     isMultiLine,
     videoWidthPx,
     videoHeightPx,
+    typeface = DEFAULT_SUBTITLE_TYPEFACE,
   } = opts;
 
   const style =
@@ -537,14 +592,17 @@ export function resolveSubtitleRenderTheme(opts: {
     bottom: bottomValue,
     boxShadow: boxShadowValue,
     containerPadding,
-    fontFamily: isShortFormPortrait
-      ? SHORT_FORM_FONT_STACK
-      : LANDSCAPE_FONT_STACK,
+    fontFamily: subtitleTypefaceFontStack(
+      isSubtitleTypeface(typeface) ? typeface : DEFAULT_SUBTITLE_TYPEFACE,
+      isShortFormPortrait
+    ),
     fontSizePx: finalFontSize,
     fontWeight:
-      shortFormTuning?.fontWeight ??
-      landscapeTuning?.fontWeight ??
-      (style.isBold ? 700 : 500),
+      typeface === 'display'
+        ? 800
+        : (shortFormTuning?.fontWeight ??
+          landscapeTuning?.fontWeight ??
+          (style.isBold ? 700 : 500)),
     horizontalInset,
     isShortFormPortrait,
     letterSpacing:
@@ -651,6 +709,7 @@ export function getSubtitleStyles(opts: {
   isMultiLine: boolean;
   videoWidthPx?: number;
   videoHeightPx?: number;
+  typeface?: SubtitleTypeface;
 }): string {
   const { isFullScreen = false, stylePreset = 'Default' } = opts;
   const style =

@@ -1392,5 +1392,12 @@
     "to": "עד",
     "saving": "שומר…",
     "save": "שמור עריכת Short"
+  },
+  "subtitleFonts": {
+    "label": "גופן",
+    "sans": "מודרני",
+    "classic": "קלאסי",
+    "serif": "סריף",
+    "display": "מודגש"
   }
 }

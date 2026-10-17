@@ -1392,5 +1392,12 @@
     "to": "đến",
     "saving": "Đang lưu…",
     "save": "Lưu chỉnh sửa Short"
+  },
+  "subtitleFonts": {
+    "label": "Phông chữ",
+    "sans": "Hiện đại",
+    "classic": "Cổ điển",
+    "serif": "Có chân",
+    "display": "Đậm"
   }
 }

@@ -1392,5 +1392,12 @@
     "to": "à",
     "saving": "Enregistrement…",
     "save": "Enregistrer les modifications du Short"
+  },
+  "subtitleFonts": {
+    "label": "Police",
+    "sans": "Moderne",
+    "classic": "Classique",
+    "serif": "Serif",
+    "display": "Gras"
   }
 }

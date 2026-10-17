@@ -1392,5 +1392,12 @@
     "to": "to",
     "saving": "Saving…",
     "save": "Save Short edit"
+  },
+  "subtitleFonts": {
+    "label": "Font",
+    "sans": "Modern",
+    "classic": "Classic",
+    "serif": "Serif",
+    "display": "Bold"
   }
 }

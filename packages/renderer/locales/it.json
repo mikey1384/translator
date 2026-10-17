@@ -1392,5 +1392,12 @@
     "to": "a",
     "saving": "Salvataggio…",
     "save": "Salva modifica dello Short"
+  },
+  "subtitleFonts": {
+    "label": "Carattere",
+    "sans": "Moderno",
+    "classic": "Classico",
+    "serif": "Graziato",
+    "display": "Grassetto"
   }
 }

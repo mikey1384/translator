@@ -18,6 +18,7 @@ import {
 } from '../../native-player';
 
 import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
+import type { SubtitleTypeface } from '../../../shared/constants/subtitle-styles';
 import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
 import {
   videoPlayerCenterStateBodyStyles,
@@ -87,6 +88,7 @@ export interface NativeVideoPlayerProps {
   isFullyExpanded?: boolean;
   baseFontSize: number;
   stylePreset: SubtitleStylePresetKey;
+  typeface?: SubtitleTypeface;
   subtitleDisplayMode: SubtitleDisplayMode;
   isAudioOnly: boolean;
   videoHeight?: number | null;
@@ -100,6 +102,7 @@ export default function NativeVideoPlayer({
   isFullyExpanded = false,
   baseFontSize,
   stylePreset,
+  typeface,
   subtitleDisplayMode,
   isAudioOnly,
   videoHeight,
@@ -521,6 +524,7 @@ export default function NativeVideoPlayer({
               displayFontSize={canonicalFontSize}
               isFullScreen={false}
               stylePreset={stylePreset}
+              typeface={typeface}
               videoWidthPx={exportLayer.width}
               videoHeightPx={exportLayer.height}
             />
@@ -532,6 +536,7 @@ export default function NativeVideoPlayer({
             displayFontSize={effFontSize}
             isFullScreen={isFullyExpanded}
             stylePreset={stylePreset}
+            typeface={typeface}
             videoWidthPx={subtitleCanvasWidth}
             videoHeightPx={subtitleCanvasHeight}
           />

@@ -37,6 +37,14 @@ function getRenderHostPath(): string {
   throw new Error(`render-host.html not found in any expected location`);
 }
 
+// Same subsets and ranges as the renderer's own @font-face rules.
+const BRICOLAGE_LATIN =
+  'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD';
+const BRICOLAGE_LATIN_EXT =
+  'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF';
+const BRICOLAGE_VIETNAMESE =
+  'U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB';
+
 /* ───────── main entry ───────── */
 
 export async function initPuppeteer({
@@ -67,6 +75,31 @@ export async function initPuppeteer({
       path.join(path.dirname(renderFont.path), 'PretendardVariable.woff2')
     )
     .toString();
+  // The bundled "Bold" subtitle face, registered exactly as the app does so
+  // the burned-in text matches the player.
+  const fontDir = path.dirname(renderFont.path);
+  const bricolageFaces = (
+    [
+      ['latin', BRICOLAGE_LATIN],
+      ['latin-ext', BRICOLAGE_LATIN_EXT],
+      ['vietnamese', BRICOLAGE_VIETNAMESE],
+    ] as const
+  )
+    .map(
+      ([subset, range]) => `
+      @font-face {
+        font-family: "Bricolage Grotesque";
+        src: url("${url
+          .pathToFileURL(
+            path.join(fontDir, `BricolageGrotesque-${subset}.woff2`)
+          )
+          .toString()}") format("woff2");
+        font-weight: 200 800;
+        font-style: normal;
+        unicode-range: ${range};
+      }`
+    )
+    .join('\n');
 
   log.info('[Puppeteer]', { hostHtml });
   log.info(`[Puppeteer:${operationId}] Render host URL: ${hostUrl}`);
@@ -137,6 +170,7 @@ export async function initPuppeteer({
         font-weight: 700;
         font-style: normal;
       }
+      ${bricolageFaces}
       @font-face {
         font-family: "Pretendard Variable";
         src: url("${pretendardUrl}") format("woff2-variations");

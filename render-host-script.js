@@ -1462,6 +1462,16 @@ var LINE_BOX_PRESETS = /* @__PURE__ */ new Set(["LineBox", "Highlight"]);
 function subtitleStyleUsesLineBox(preset) {
   return LINE_BOX_PRESETS.has(String(preset || ""));
 }
+var SUBTITLE_TYPEFACES = [
+  "sans",
+  "classic",
+  "serif",
+  "display"
+];
+var DEFAULT_SUBTITLE_TYPEFACE = "sans";
+function isSubtitleTypeface(value) {
+  return typeof value === "string" && SUBTITLE_TYPEFACES.includes(value);
+}
 
 // ../shared/constants/estimate-heuristics.ts
 var SPOKEN_CHARS_PER_MINUTE = 750;
@@ -1784,6 +1794,45 @@ var SHORT_FORM_FONT_STACK = [
   "'Noto Sans SC'",
   "sans-serif"
 ].join(", ");
+var SANS_SCRIPT_FALLBACKS = [
+  "'Pretendard Variable'",
+  "'Apple SD Gothic Neo'",
+  "'Malgun Gothic'",
+  "'Hiragino Sans'",
+  "'Yu Gothic'",
+  "'PingFang SC'",
+  "'Microsoft YaHei'",
+  "'Noto Sans'",
+  "sans-serif"
+];
+var TYPEFACE_FONT_STACKS = {
+  // The familiar broadcast subtitle face.
+  classic: [
+    "'Helvetica Neue'",
+    "Helvetica",
+    "Arial",
+    ...SANS_SCRIPT_FALLBACKS
+  ].join(", "),
+  serif: [
+    "Georgia",
+    "'Times New Roman'",
+    "'AppleMyungjo'",
+    "'Nanum Myeongjo'",
+    "'Batang'",
+    "'Hiragino Mincho ProN'",
+    "'Yu Mincho'",
+    "'Songti SC'",
+    "'SimSun'",
+    "'Noto Serif'",
+    "serif"
+  ].join(", "),
+  // Bundled, so it looks the same on every machine.
+  display: ["'Bricolage Grotesque'", ...SANS_SCRIPT_FALLBACKS].join(", ")
+};
+function subtitleTypefaceFontStack(typeface, isShortFormPortrait = false) {
+  if (typeface !== "sans") return TYPEFACE_FONT_STACKS[typeface];
+  return isShortFormPortrait ? SHORT_FORM_FONT_STACK : LANDSCAPE_FONT_STACK;
+}
 var SHORT_FORM_TUNING = {
   Default: {
     borderRadiusPx: 10,
@@ -2005,7 +2054,8 @@ function resolveSubtitleRenderTheme(opts) {
     stylePreset = "Default",
     isMultiLine,
     videoWidthPx,
-    videoHeightPx
+    videoHeightPx,
+    typeface = DEFAULT_SUBTITLE_TYPEFACE
   } = opts;
   const style = SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
   const isShortFormPortrait = isShortFormPortraitCanvas(
@@ -2104,9 +2154,12 @@ function resolveSubtitleRenderTheme(opts) {
     bottom: bottomValue,
     boxShadow: boxShadowValue,
     containerPadding,
-    fontFamily: isShortFormPortrait ? SHORT_FORM_FONT_STACK : LANDSCAPE_FONT_STACK,
+    fontFamily: subtitleTypefaceFontStack(
+      isSubtitleTypeface(typeface) ? typeface : DEFAULT_SUBTITLE_TYPEFACE,
+      isShortFormPortrait
+    ),
     fontSizePx: finalFontSize,
-    fontWeight: shortFormTuning?.fontWeight ?? landscapeTuning?.fontWeight ?? (style.isBold ? 700 : 500),
+    fontWeight: typeface === "display" ? 800 : shortFormTuning?.fontWeight ?? landscapeTuning?.fontWeight ?? (style.isBold ? 700 : 500),
     horizontalInset,
     isShortFormPortrait,
     letterSpacing: shortFormTuning?.letterSpacing ?? landscapeTuning?.letterSpacing ?? "0.01em",
@@ -2355,7 +2408,8 @@ function applyPresetStyles(el, {
   stylePreset = "Default",
   isMultiLine = false,
   videoWidthPx = renderTarget.width,
-  videoHeightPx = renderTarget.height
+  videoHeightPx = renderTarget.height,
+  typeface
 } = {}) {
   if (!el) return;
   const theme = resolveSubtitleRenderTheme({
@@ -2364,7 +2418,8 @@ function applyPresetStyles(el, {
     stylePreset,
     isMultiLine,
     videoWidthPx,
-    videoHeightPx
+    videoHeightPx,
+    typeface
   });
   const dynamicClass = getSubtitleStyles({
     displayFontSize: fontSizePx,
@@ -2373,7 +2428,8 @@ function applyPresetStyles(el, {
     stylePreset,
     isMultiLine,
     videoWidthPx,
-    videoHeightPx
+    videoHeightPx,
+    typeface
   });
   el.className = dynamicClass;
   el.style.fontSize = theme.fontSizePx + "px";
@@ -2439,7 +2495,8 @@ function initializeSubtitleDisplay() {
       stylePreset = "Default",
       fontSizePx,
       videoWidthPx,
-      videoHeightPx
+      videoHeightPx,
+      typeface
     } = opts;
     const renderWithLineState = (isMultiLine2) => {
       const renderTheme = resolveSubtitleRenderTheme({
@@ -2448,7 +2505,8 @@ function initializeSubtitleDisplay() {
         stylePreset,
         isMultiLine: isMultiLine2,
         videoWidthPx,
-        videoHeightPx
+        videoHeightPx,
+        typeface
       });
       el.innerHTML = state.mode === "timed" ? renderTimedSubtitleHtml(state, stylePreset, renderTheme) : renderPlainSubtitleHtml(state.text, stylePreset, renderTheme);
       applyPresetStyles(el, {
@@ -2456,7 +2514,8 @@ function initializeSubtitleDisplay() {
         stylePreset,
         isMultiLine: isMultiLine2,
         videoWidthPx,
-        videoHeightPx
+        videoHeightPx,
+        typeface
       });
     };
     let isMultiLine = state.text.includes("\n");

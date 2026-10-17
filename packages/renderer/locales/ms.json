@@ -1392,5 +1392,12 @@
     "to": "hingga",
     "saving": "Menyimpan…",
     "save": "Simpan suntingan Short"
+  },
+  "subtitleFonts": {
+    "label": "Fon",
+    "sans": "Moden",
+    "classic": "Klasik",
+    "serif": "Serif",
+    "display": "Tebal"
   }
 }

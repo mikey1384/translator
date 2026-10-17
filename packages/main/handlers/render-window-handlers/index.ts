@@ -534,6 +534,10 @@ export function initializeRenderWindowHandlers({
           fps: realFps,
           fontSizePx: options.fontSizePx,
           stylePreset: options.stylePreset,
+          // The face travels in the render spec (omitted = default).
+          typeface: options.subtitleRenderSpec
+            ? parseSubtitleRenderSpec(options.subtitleRenderSpec).typeface
+            : undefined,
           progress: sendProgress,
           signal: controller.signal,
         });

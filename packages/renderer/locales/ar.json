@@ -1392,5 +1392,12 @@
     "to": "إلى",
     "saving": "جارٍ الحفظ…",
     "save": "حفظ تعديل Short"
+  },
+  "subtitleFonts": {
+    "label": "الخط",
+    "sans": "عصري",
+    "classic": "كلاسيكي",
+    "serif": "مذيّل",
+    "display": "عريض"
   }
 }

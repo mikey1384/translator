@@ -1392,5 +1392,12 @@
     "to": "loppu",
     "saving": "Tallennetaan…",
     "save": "Tallenna Shortin muokkaus"
+  },
+  "subtitleFonts": {
+    "label": "Fontti",
+    "sans": "Moderni",
+    "classic": "Klassinen",
+    "serif": "Antiikva",
+    "display": "Lihava"
   }
 }

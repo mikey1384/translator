@@ -1392,5 +1392,12 @@
     "to": "til",
     "saving": "Lagrer…",
     "save": "Lagre Short-redigering"
+  },
+  "subtitleFonts": {
+    "label": "Skrift",
+    "sans": "Moderne",
+    "classic": "Klassisk",
+    "serif": "Serif",
+    "display": "Fet"
   }
 }

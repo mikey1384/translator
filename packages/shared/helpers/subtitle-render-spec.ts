@@ -5,8 +5,11 @@ import {
   fontScale,
 } from '../constants/runtime-config.js';
 import {
+  DEFAULT_SUBTITLE_TYPEFACE,
   SUBTITLE_STYLE_PRESETS,
+  isSubtitleTypeface,
   type SubtitleStylePresetKey,
+  type SubtitleTypeface,
 } from '../constants/subtitle-styles.js';
 
 export const SUBTITLE_RENDER_SPEC_VERSION = 1 as const;
@@ -23,6 +26,8 @@ export type SubtitleRenderSelection = {
   displayMode: SubtitleRenderDisplayMode;
   stylePreset: SubtitleStylePresetKey;
   baseFontSizePx: number;
+  /** Omitted means the default face, so older specs stay valid. */
+  typeface?: SubtitleTypeface;
 };
 
 export type SubtitleRenderSelectionField =
@@ -31,6 +36,7 @@ export type SubtitleRenderSelectionField =
   | 'base_font_size_px';
 
 export type ResolvedSubtitleRenderSpec = SubtitleRenderSelection & {
+  typeface: SubtitleTypeface;
   schemaVersion: typeof SUBTITLE_RENDER_SPEC_VERSION;
   outputFontSizePx: number;
   videoWidthPx: number;
@@ -82,6 +88,7 @@ export function resolveSubtitleRenderSpec({
   displayMode,
   stylePreset,
   baseFontSizePx,
+  typeface = DEFAULT_SUBTITLE_TYPEFACE,
   videoWidthPx,
   videoHeightPx,
   displayWidthPx,
@@ -100,6 +107,9 @@ export function resolveSubtitleRenderSpec({
   if (!Object.hasOwn(SUBTITLE_STYLE_PRESETS, stylePreset)) {
     throw new Error(`Unsupported subtitle style preset: ${stylePreset}`);
   }
+  if (!isSubtitleTypeface(typeface)) {
+    throw new Error(`Unsupported subtitle typeface: ${typeface}`);
+  }
 
   const height = finitePositive(videoHeightPx, BASELINE_HEIGHT);
   const width = finitePositive(videoWidthPx, Math.round((height * 16) / 9));
@@ -111,6 +121,7 @@ export function resolveSubtitleRenderSpec({
     schemaVersion: SUBTITLE_RENDER_SPEC_VERSION,
     displayMode,
     stylePreset,
+    typeface,
     baseFontSizePx: base,
     outputFontSizePx: resolveSubtitleOutputFontSize({
       baseFontSizePx: base,
@@ -145,6 +156,9 @@ export function serializeSubtitleRenderSpec(
     font_family: spec.fontFamily,
     font_asset: spec.fontAsset,
     scale_rule: spec.scaleRule,
+    ...(spec.typeface !== DEFAULT_SUBTITLE_TYPEFACE
+      ? { typeface: spec.typeface }
+      : {}),
   };
 }
 
@@ -168,6 +182,7 @@ export function parseSubtitleRenderSpec(
   const spec = resolveSubtitleRenderSpec({
     displayMode: value.display_mode as SubtitleRenderDisplayMode,
     stylePreset: value.style as SubtitleStylePresetKey,
+    typeface: (value.typeface ?? DEFAULT_SUBTITLE_TYPEFACE) as SubtitleTypeface,
     baseFontSizePx: requiredNumber('base_font_size_px'),
     videoWidthPx: requiredNumber('video_width_px'),
     videoHeightPx: requiredNumber('video_height_px'),

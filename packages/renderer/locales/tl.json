@@ -1392,5 +1392,12 @@
     "to": "hanggang",
     "saving": "Sine-save…",
     "save": "I-save ang edit ng Short"
+  },
+  "subtitleFonts": {
+    "label": "Font",
+    "sans": "Moderno",
+    "classic": "Klasiko",
+    "serif": "Serif",
+    "display": "Makapal"
   }
 }

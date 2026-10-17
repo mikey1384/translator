@@ -1392,5 +1392,12 @@
     "to": "到",
     "saving": "正在保存…",
     "save": "保存 Short 编辑"
+  },
+  "subtitleFonts": {
+    "label": "字体",
+    "sans": "现代",
+    "classic": "经典",
+    "serif": "宋体",
+    "display": "粗体"
   }
 }

@@ -1392,5 +1392,12 @@
     "to": "până la",
     "saving": "Se salvează…",
     "save": "Salvează editarea Short"
+  },
+  "subtitleFonts": {
+    "label": "Font",
+    "sans": "Modern",
+    "classic": "Clasic",
+    "serif": "Serif",
+    "display": "Îngroșat"
   }
 }

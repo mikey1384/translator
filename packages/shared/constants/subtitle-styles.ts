@@ -269,3 +269,24 @@ export function getAssStyleLine(
 
   return parts.join(',');
 }
+
+/**
+ * Typefaces for subtitles. Each is a font stack that reaches every script the
+ * app supports (bundled faces first, then the system's own per script), and
+ * the export renders with the same stack, so the player matches the burn-in.
+ */
+export const SUBTITLE_TYPEFACES = [
+  'sans',
+  'classic',
+  'serif',
+  'display',
+] as const;
+export type SubtitleTypeface = (typeof SUBTITLE_TYPEFACES)[number];
+export const DEFAULT_SUBTITLE_TYPEFACE: SubtitleTypeface = 'sans';
+
+export function isSubtitleTypeface(value: unknown): value is SubtitleTypeface {
+  return (
+    typeof value === 'string' &&
+    (SUBTITLE_TYPEFACES as readonly string[]).includes(value)
+  );
+}

@@ -1392,5 +1392,12 @@
     "to": "do",
     "saving": "Zapisywanie…",
     "save": "Zapisz edycję Shorta"
+  },
+  "subtitleFonts": {
+    "label": "Czcionka",
+    "sans": "Nowoczesna",
+    "classic": "Klasyczna",
+    "serif": "Szeryfowa",
+    "display": "Pogrubiona"
   }
 }

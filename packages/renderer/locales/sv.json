@@ -1392,5 +1392,12 @@
     "to": "till",
     "saving": "Sparar…",
     "save": "Spara Short-redigering"
+  },
+  "subtitleFonts": {
+    "label": "Typsnitt",
+    "sans": "Modern",
+    "classic": "Klassisk",
+    "serif": "Serif",
+    "display": "Fet"
   }
 }

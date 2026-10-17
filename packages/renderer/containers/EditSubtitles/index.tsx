@@ -846,10 +846,12 @@ export default function EditSubtitles({
         noWrap: true,
       });
 
-      const { baseFontSize, subtitleStyle } = useUIStore.getState();
+      const { baseFontSize, subtitleStyle, subtitleTypeface } =
+        useUIStore.getState();
       const subtitleRenderSpec = resolveSubtitleRenderSpec({
         displayMode: subtitleDisplayMode,
         stylePreset: subtitleStyle,
+        typeface: subtitleTypeface,
         baseFontSizePx: baseFontSize,
         videoWidthPx: meta?.width,
         videoHeightPx: meta?.height,

@@ -1392,5 +1392,12 @@
     "to": "bis",
     "saving": "Wird gespeichert…",
     "save": "Short-Bearbeitung speichern"
+  },
+  "subtitleFonts": {
+    "label": "Schrift",
+    "sans": "Modern",
+    "classic": "Klassisch",
+    "serif": "Serif",
+    "display": "Fett"
   }
 }

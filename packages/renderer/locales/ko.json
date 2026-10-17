@@ -1392,5 +1392,12 @@
     "to": "끝",
     "saving": "저장 중…",
     "save": "쇼츠 편집 저장"
+  },
+  "subtitleFonts": {
+    "label": "글꼴",
+    "sans": "모던",
+    "classic": "클래식",
+    "serif": "명조",
+    "display": "볼드"
   }
 }
