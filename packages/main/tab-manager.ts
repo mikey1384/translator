@@ -113,7 +113,7 @@ export async function refreshShellStrings(): Promise<void> {
     shellStrings = {
       lang,
       dir: isRtlLanguage(lang) ? 'rtl' : 'ltr',
-      newTab: t('tabs.newTab', undefined, 'New Tab'),
+      newTab: t('tabs.newTab', undefined, 'New tab'),
       newTabButton: t(
         'tabs.newTabWithShortcut',
         { shortcut: newTabShortcutLabel(process.platform) },
@@ -557,7 +557,7 @@ async function confirmClose(
   const pending = targets.filter(tab => needsCloseGuard(tab.status));
   if (pending.length === 0) return true;
   const t = await getUiT();
-  const untitled = t('tabs.newTab', undefined, 'New Tab');
+  const untitled = t('tabs.newTab', undefined, 'New tab');
   const prompt = buildCloseGuardPrompt(
     scope,
     pending.map(tab => ({

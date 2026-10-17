@@ -3,8 +3,8 @@
     "cancel": "لغو",
     "save": "ذخیره",
     "or": "یا",
-    "saving": "در حال ذخیره...",
-    "validating": "در حال اعتبارسنجی...",
+    "saving": "در حال ذخیره…",
+    "validating": "در حال اعتبارسنجی…",
     "delete": "حذف",
     "confirm": "تایید",
     "apply": "اعمال",
@@ -16,7 +16,7 @@
     "done": "انجام شد",
     "gotIt": "متوجه شدم",
     "close": "بستن",
-    "loading": "در حال بارگذاری...",
+    "loading": "در حال بارگذاری…",
     "error": {
       "unexpected": "خطای غیرمنتظره‌ای رخ داد.",
       "unexpectedRemove": "هنگام حذف کلید خطای غیرمنتظره‌ای رخ داد.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "بررسی به‌روزرسانی",
     "clear": "پاک کردن",
     "currentVersionLabel": "نسخه فعلی",
-    "downloadingUpdate": "در حال دانلود به‌روزرسانی...",
+    "downloadingUpdate": "در حال دانلود به‌روزرسانی…",
     "downloadingUpdateProgress": "در حال دانلود به‌روزرسانی: {{percent}} درصد",
     "downloadingUpdateShort": "در حال دانلود",
     "downloadUpdateNow": "دانلود به‌روزرسانی",
@@ -82,8 +82,8 @@
     "updateRequiredBody": "سرور دیگر از این نسخهٔ Translator پشتیبانی نمی‌کند. برای ادامه، برنامه را به‌روزرسانی کنید.",
     "updateRequiredTitle": "به‌روزرسانی لازم است",
     "wait": "صبر کنید…",
-    "whatsNewTitle": "چه چیز جدید است",
-    "whatsNewVersionTitle": "چه چیز در v{{version}} جدید است",
+    "whatsNewTitle": "تازه‌ها",
+    "whatsNewVersionTitle": "تازه‌های v{{version}}",
     "fileFilters": {
       "srtFiles": "فایل‌های SRT",
       "mediaFiles": "فایل‌های رسانه",
@@ -97,7 +97,7 @@
     "send": "ارسال",
     "dismiss": "بستن",
     "moreActions": "کارهای بیشتر",
-    "installingUpdate": "در حال نصب به‌روزرسانی...",
+    "installingUpdate": "در حال نصب به‌روزرسانی…",
     "installingUpdateShort": "در حال نصب",
     "ok": "باشه",
     "minimumVersionValue": "حداقل نسخهٔ پشتیبانی‌شده: v{{version}}",
@@ -216,7 +216,7 @@
   },
   "input": {
     "connect": "اتصال",
-    "connecting": "در حال اتصال...",
+    "connecting": "در حال اتصال…",
     "connectTip": "نکته: در پنجره اتصال، وارد شوید یا تأیید را کامل کنید، سپس پنجره را ببندید تا ادامه دهید.",
     "fromDevice": "از دستگاه شما",
     "fromWeb": "از وب",
@@ -232,7 +232,7 @@
     "qualityHigh": "بالا",
     "qualityMedium": "متوسط",
     "qualityLow": "پایین",
-    "downloading": "در حال دانلود...",
+    "downloading": "در حال دانلود…",
     "selectFile": "انتخاب فایل",
     "selectVideoFile": "انتخاب فایل ویدیو",
     "selectVideoAudioFile": "انتخاب فایل ویدیو یا صدا",
@@ -255,7 +255,7 @@
     "downloadFinishedWatchNow": "همین حالا تماشا کن",
     "downloadFinishedWatchLater": "بعداً تماشا کن",
     "videoSuggestion": {
-      "show": "یک ویدیو پیشنهاد بده",
+      "show": "پیدا کردن ویدیو با هوش مصنوعی",
       "hide": "پنهان کردن پیشنهادات ویدیو",
       "modelHint": "مدل فعلی",
       "sourceHint": "منبع جستجو",
@@ -269,7 +269,7 @@
       "composerHint": "هر زبانی",
       "composerMeta": "برای جستجو Enter را بزنید",
       "placeholder": "مثلاً پیاده‌روی آرام در خیابان‌های ژاپن در شب",
-      "thinking": "در حال فکر کردن...",
+      "thinking": "در حال فکر کردن…",
       "resultsFor": "نتایج برای",
       "downloadThis": "دانلود این",
       "failedToStart": "شروع پیشنهادات ناموفق بود",
@@ -344,11 +344,11 @@
       "activityComplete": "فعالیت جستجو کامل شد.",
       "nextActionHint": "یک ویدیو انتخاب کنید، سپس آن را دانلود کنید یا در YouTube باز کنید.",
       "stagePending": "در انتظار",
-      "stageRunning": "در حال اجرا...",
+      "stageRunning": "در حال اجرا…",
       "stageCleared": "تکمیل شد",
       "searchQueryLabel": "عبارت جستجو",
       "searchMore": "جستجوی بیشتر",
-      "searchMoreLoading": "در حال جستجوی بیشتر...",
+      "searchMoreLoading": "در حال جستجوی بیشتر…",
       "resetChat": "بازنشانی چت",
       "useLastSearch": "استفاده از تنظیمات قبلی",
       "showFollowUps": "پیشنهادهای ادامه",
@@ -407,9 +407,9 @@
       "savedDownloads": "دانلودهای ذخیره‌شده",
       "savedDownloadsCount": "{{count}} دانلود ذخیره‌شده",
       "savedPreferencesCount": "{{count}} ترجیح ذخیره‌شده",
-      "searchingLong": "هنوز در حال جستجوی ویدیوها...",
+      "searchingLong": "هنوز در حال جستجوی ویدیوها…",
       "searchingVeryLong": "بیشتر از حالت معمول طول کشیده، اما هنوز در حال اجراست.",
-      "stillWorking": "هنوز در حال کار است...",
+      "stillWorking": "هنوز در حال کار است…",
       "toggleCopy": "به زبان خودتان بپرسید؛ هوش مصنوعی ویدیوهای مناسب YouTube را پیدا می‌کند.",
       "stage": {
         "answerer": "پردازش پرس و جو",
@@ -473,7 +473,7 @@
     "translate": "ترجمه",
     "continueTranscribing": "ادامه رونویسی",
     "generate": "تولید زیرنویس",
-    "generating": "در حال تولید...",
+    "generating": "در حال تولید…",
     "generateNow": "تولید زیرنویس اکنون",
     "translation": "ترجمه",
     "improveTranscription": "بهبود رونویسی",
@@ -507,7 +507,7 @@
       "openPermission": "Translator اجازهٔ خواندن این فایل را ندارد. دسترسی‌های آن را بررسی کنید، یا آن را در پوشهٔ دیگری کپی کنید و دوباره امتحان کنید.",
       "openMissing": "این فایل زیرنویس دیگر آنجا نیست. شاید جابه‌جا یا حذف شده باشد.",
       "openFailed": "Translator نتوانست این فایل زیرنویس را باز کند. مطمئن شوید فایل ‎.srt است و دوباره امتحان کنید.",
-      "saveFailed": "Translator نتوانست زیرنویس‌ها را ذخیره کند. دوباره امتحان کنید، یا «ذخیره زیرنویس‌ها با نام...» را انتخاب کنید تا پوشهٔ دیگری برگزینید."
+      "saveFailed": "Translator نتوانست زیرنویس‌ها را ذخیره کند. دوباره امتحان کنید، یا «ذخیره زیرنویس‌ها با نام…» را انتخاب کنید تا پوشهٔ دیگری برگزینید."
     }
   },
   "summary": {
@@ -571,7 +571,7 @@
     "exitCombineMode": "خروج از ترکیب",
     "reorderHint": "برای تغییر ترتیب بکشید:",
     "cutCombined": "برش ترکیبی",
-    "cuttingCombined": "در حال برش...",
+    "cuttingCombined": "در حال برش…",
     "combinedHighlightReady": "کلیپ ترکیبی لحظات برجسته آماده است",
     "downloadCombined": "دانلود کلیپ ترکیبی",
     "saveCombinedDialogTitle": "ذخیرهٔ کلیپ ترکیبی لحظات برجسته",
@@ -681,15 +681,15 @@
     },
     "header": {
       "save": "ذخیرهٔ زیرنویس",
-      "saveAs": "ذخیرهٔ زیرنویس با نام...",
+      "saveAs": "ذخیرهٔ زیرنویس با نام…",
       "saveTooltip": "ذخیره تغییرات در فایل اصلی",
-      "saveAsTooltip": "ابتدا ذخیره به عنوان را انجام دهید تا ذخیره مستقیم فعال شود"
+      "saveAsTooltip": "برای فعال شدن ذخیرهٔ مستقیم، ابتدا از «ذخیرهٔ زیرنویس با نام…» استفاده کنید"
     },
     "mergeControls": {
       "fontSizeLabel": "اندازه فونت:",
       "styleLabel": "سبک:",
       "mergeButton": "ادغام زیرنویس‌ها",
-      "mergingButton": "در حال ادغام..."
+      "mergingButton": "در حال ادغام…"
     },
     "undo": {
       "removed": "خط حذف شد.",
@@ -743,7 +743,7 @@
         "modelOn": "پیش‌نویس Claude Haiku 5.5 + بازبینی Claude Opus 5.5",
         "modelOnAnthropic": "پیش‌نویس Claude Haiku 5.5 + بازبینی Claude Opus 5.5",
         "modelOff": "فقط پیش‌نویس Claude Haiku 5.5",
-        "reviewProvider": "ارائه دهنده بازبینی",
+        "reviewProvider": "ارائه‌دهندهٔ بازبینی",
         "openAiHighEnd": "بازبینی پیشرفته OpenAI",
         "anthropicHighEnd": "بازبینی پیشرفته Anthropic"
       },
@@ -756,7 +756,7 @@
         "modelOn": "صداهای پریمیوم ElevenLabs TTS"
       },
       "videoSuggestionModel": {
-        "label": "مدل پیشنهاد ویدیو",
+        "label": "کیفیت پیشنهاد ویدیو",
         "help": "از همان سطح مدلِ ترجمه استفاده می‌کند.",
         "default": "پیش‌فرض (همان پیش‌فرض ترجمه)",
         "quality": "کیفیت (همان کیفیت ترجمه)"
@@ -782,7 +782,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "پیش‌نمایش این صدا",
-      "previewing": "در حال پخش...",
+      "previewing": "در حال پخش…",
       "previewFree": "پیش‌نمایش",
       "mixLabel": "حجم دوبله در مقابل حجم ویدیو اصلی",
       "mixHelp": "کنترل کنید که چقدر از صدای اصلی زیر صدای دوبله پخش شود.",
@@ -796,7 +796,7 @@
       "yourBalance": "موجودی شما",
       "canClone": "می‌توانید شبیه‌سازی کنید",
       "upToMinutes": "تا {{minutes}} دقیقه",
-      "loading": "در حال بارگذاری...",
+      "loading": "در حال بارگذاری…",
       "previewWithMinutes": "پیش‌نمایش ({{cost}})",
       "previewFailed": "پیش‌نمایش صدا پخش نشد. دوباره امتحان کنید."
     },
@@ -947,7 +947,8 @@
       "howToGet": "چطور این کلید را بگیرم",
       "missing": "اول یک کلید API جای‌گذاری کنید.",
       "savedEnding": "کلید ذخیره‌شده با پایان {{last4}}",
-      "savedHidden": "کلید ذخیره‌شده (پنهان)"
+      "savedHidden": "کلید ذخیره‌شده (پنهان)",
+      "providerLabel": "کلید API {{provider}}"
     },
     "byoStack": {
       "title": "ابزارهای هوش مصنوعی شما"
@@ -1058,7 +1059,7 @@
   },
   "credits": {
     "title": "دقیقه‌های شما",
-    "loading": "در حال بارگذاری...",
+    "loading": "در حال بارگذاری…",
     "usingApiKey": "استفاده از کلید API",
     "usingOpenAi": "در حال استفاده از OpenAI",
     "usingAnthropic": "در حال استفاده از Claude",
@@ -1170,9 +1171,9 @@
     "resetCreditsToZeroTitle": "مدیر: بازنشانی اعتبار به 0",
     "toggleByoPreviewTitle": "مدیر: تغییر حالت پیش‌نمایش BYO (نمایش رابط مثل زمانی که BYO خریداری نشده)",
     "addCredits": "افزودن 350k اعتبار",
-    "adding": "در حال افزودن...",
+    "adding": "در حال افزودن…",
     "resetToZero": "بازنشانی به 0",
-    "resetting": "در حال بازنشانی...",
+    "resetting": "در حال بازنشانی…",
     "byoPreview": "پیش‌نمایش BYO",
     "byoPreviewOn": "پیش‌نمایش BYO روشن",
     "confirmResetCreditsToZero": "آیا مطمئن هستید که می‌خواهید اعتبار را به 0 بازنشانی کنید؟ این عمل قابل بازگشت نیست."
@@ -1238,13 +1239,13 @@
       "fileTooLargeForVoiceCloning": "فایل ویدیو برای شبیه‌سازی صدا بسیار بزرگ است ({{size}}MB). حداکثر مجاز {{max}}MB است. لطفاً از ویدیو کوتاه‌تر استفاده کنید یا شبیه‌سازی صدا را غیرفعال کنید."
     },
     "status": {
-      "starting": "در حال شروع...",
+      "starting": "در حال شروع…",
       "completed": "تکمیل شد",
       "cancelled": "لغو شد",
       "error": "خطا"
     },
     "buttons": {
-      "redirectingToPayment": "هدایت به پرداخت..."
+      "redirectingToPayment": "هدایت به پرداخت…"
     },
     "workflow": {
       "stepOne": "مرحله ۱",
@@ -1266,14 +1267,14 @@
       "saveOutputsTitle": "ذخیره خروجی‌ها",
       "saveOutputsDescription": "هر ویدیوی منبع یا دوبله‌شده‌ای را که می‌خواهید نگه دارید، بیرون از فضای کاری برنامه ذخیره کنید."
     },
-    "calculatingCost": "در حال محاسبه هزینه...",
+    "calculatingCost": "در حال محاسبه هزینه…",
     "welcomeCredits": {
       "message": "دقیقه‌های رایگان برای امتحان رونویسی و ترجمه دارید (حدود ۲۰ دقیقه ویدیو)."
     }
   },
   "findBar": {
-    "findPlaceholder": "جستجو در زیرنویس‌ها...",
-    "replacePlaceholder": "جایگزینی با...",
+    "findPlaceholder": "جستجو در زیرنویس‌ها…",
+    "replacePlaceholder": "جایگزینی با…",
     "replaceAll": "جایگزینی همه",
     "nextMatch": "مورد بعدی (Enter)",
     "previousMatch": "مورد قبلی (Shift+Enter)",
@@ -1295,7 +1296,7 @@
       "howToGet": "چگونه کلیدهای API بگیرم",
       "enable": "استفاده از کلیدهای API خودم",
       "done": "انجام شد",
-      "ready": "پوشش کامل شده است. حالا می‌توانید «استفاده از کلیدهای API من» را فعال کنید.",
+      "ready": "همهٔ کلیدهای لازم آماده است. حالا می‌توانید از کلیدهای API خودتان استفاده کنید.",
       "missingTranslation": "ترجمه هنوز به {{providers}} نیاز دارد.",
       "messageElevenLabsAudio": "برای استفاده از کلیدهای API خودتان، به یک کلید OpenAI یا Anthropic برای ترجمه نیاز دارید. رونویسی و دوبله فقط از ElevenLabs استفاده می‌کنند، پس برای آن‌ها نیز یک کلید ElevenLabs اضافه کنید.",
       "audioNeedsElevenLabs": "بدون کلید ElevenLabs، تا زمانی که کلیدهای API شما روشن است، رونویسی و دوبله در دسترس نیستند."
@@ -1454,25 +1455,25 @@
   "progress": {
     "preparingVideoExport": "در حال آماده‌سازی خروجی ویدیو…",
     "downloadingVideoExportTools": "در حال دانلود ابزارهای خروجی ویدیو… {{percent}}٪",
-    "beginningReview": "شروع بازبینی...",
-    "starting": "در حال شروع...",
+    "beginningReview": "شروع بازبینی…",
+    "starting": "در حال شروع…",
     "completed": "تکمیل شد",
     "processCancelled": "فرآیند لغو شد",
     "mergingTitle": "ادغام ویدیو و زیرنویس‌ها",
-    "extractingAudio": "استخراج صوت...",
+    "extractingAudio": "استخراج صوت…",
     "transcribingOf": "رونویسی {{done}}/{{total}}",
     "error": "خطا",
     "transcribedChunks": "رونویسی شده {{done}}/{{total}} قطعه",
     "transcribingElevenLabs": "رونویسی با ElevenLabs (~{{minutes}} دقیقه باقیمانده)",
     "transcribingElevenLabsHours": "رونویسی با ElevenLabs (~{{hours}} ساعت {{minutes}} دقیقه باقیمانده)",
-    "transcribingElevenLabsFinishing": "رونویسی با ElevenLabs...",
-    "transcriptionRetry": "اتصال ناموفق بود، تلاش مجدد ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "رونویسی با ElevenLabs…",
+    "transcriptionRetry": "اتصال ناموفق بود، تلاش مجدد ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "در حال آپلود صدا…",
     "gapRepair": "تعمیر شکاف #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "تعمیر زیرنویس‌های گمشده (تکرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "پاکسازی زیرنویس‌ها ({{done}}/{{total}})",
     "translationCleanup": "پاکسازی زیرنویس‌های ترجمه‌شده ({{done}}/{{total}})",
-    "reviewingSlow": "بازبینی (این ممکن است کمی طول بکشد...) {{done}}/{{total}}",
+    "reviewingSlow": "بازبینی (این ممکن است کمی طول بکشد…) {{done}}/{{total}}",
     "reviewingRange": "بازبینی {{start}}–{{end}} (از {{total}})",
     "legacy": {
       "aligningVoices": "در حال هم‌تراز کردن صداها {{done}}/{{total}}…",
@@ -1579,7 +1580,7 @@
     "optionalMessagePlaceholder": "داشتید چه کاری انجام می‌دادید؟",
     "sendReport": "ارسال گزارش",
     "reportPrompt": "مشکلی پیش آمد. برای رفع سریع به سازنده گزارش دهید.",
-    "preparingReport": "در حال آماده‌سازی بستهٔ تشخیصی...",
+    "preparingReport": "در حال آماده‌سازی بستهٔ تشخیصی…",
     "reportContextWarning": "بارگیری بخشی از زمینهٔ عیب‌یابی ممکن نشد. گزارش همچنان جزئیات این برنامه را شامل می‌شود.",
     "reportPromptTask": {
       "transcription": "رونویسی به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. این گزارش را بفرستید تا مشکل را رفع کنیم.",
@@ -1870,6 +1871,7 @@
     "deviceIdReplaced": "فایلی که این رایانه را به دقیقه‌های شما وصل می‌کند خراب شده بود، برای همین Translator اتصال تازه‌ای ساخت. ممکن است دقیقه‌هایی که خریده‌اید اینجا نمایش داده نشوند. با رسید خرید به پشتیبانی پیام دهید تا آن‌ها را برگردانیم.",
     "contactSupport": "تماس با پشتیبانی",
     "openSettings": "باز کردن تنظیمات",
-    "supportSubject": "بعد از بازنشانی این رایانه توسط Translator، دقیقه‌هایم ناپدید شده‌اند"
+    "supportSubject": "بعد از بازنشانی این رایانه توسط Translator، دقیقه‌هایم ناپدید شده‌اند",
+    "settingsResetKeptLanguage": "فایل تنظیمات Translator خراب شده بود، برای همین ترجیحات شما بازنشانی شد: زبان زیرنویس، کلیدهای API و گزینه‌های دیگر. زبان رابط بدون تغییر ماند. یک نسخه از فایل خراب نگه داشته شد. لطفاً تنظیمات را بررسی کنید."
   }
 }

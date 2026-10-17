@@ -3,8 +3,8 @@
     "cancel": "Avbryt",
     "save": "Spara",
     "or": "ELLER",
-    "saving": "Sparar...",
-    "validating": "Validerar...",
+    "saving": "Sparar…",
+    "validating": "Validerar…",
     "delete": "Radera",
     "confirm": "Bekräfta",
     "apply": "Tillämpa",
@@ -16,7 +16,7 @@
     "done": "Klar",
     "gotIt": "Uppfattat",
     "close": "Stäng",
-    "loading": "Laddar...",
+    "loading": "Laddar…",
     "error": {
       "unexpected": "Ett oväntat fel inträffade.",
       "unexpectedRemove": "Ett oväntat fel inträffade vid borttagning av nyckeln.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Sök efter uppdateringar",
     "clear": "Rensa",
     "currentVersionLabel": "Nuvarande version",
-    "downloadingUpdate": "Laddar ned uppdatering...",
+    "downloadingUpdate": "Laddar ned uppdatering…",
     "downloadingUpdateProgress": "Laddar ned uppdatering: {{percent}} %",
     "downloadingUpdateShort": "LADDAR NED",
     "downloadUpdateNow": "Ladda ned uppdatering",
@@ -97,7 +97,7 @@
     "send": "Skicka",
     "dismiss": "Stäng",
     "moreActions": "Fler åtgärder",
-    "installingUpdate": "Installerar uppdatering...",
+    "installingUpdate": "Installerar uppdatering…",
     "installingUpdateShort": "Installerar",
     "ok": "OK",
     "minimumVersionValue": "Lägsta version som stöds: v{{version}}",
@@ -217,7 +217,7 @@
   },
   "input": {
     "connect": "Anslut",
-    "connecting": "Ansluter...",
+    "connecting": "Ansluter…",
     "connectTip": "Tips: I anslutningsfönstret, logga in eller slutför verifieringen och stäng sedan fönstret för att fortsätta.",
     "fromDevice": "Från din enhet",
     "fromWeb": "Från webben",
@@ -233,7 +233,7 @@
     "qualityHigh": "Hög",
     "qualityMedium": "Mellan",
     "qualityLow": "Låg",
-    "downloading": "Laddar ner...",
+    "downloading": "Laddar ner…",
     "selectFile": "Välj fil",
     "selectVideoFile": "Välj videofil",
     "selectVideoAudioFile": "Välj video- eller ljudfil",
@@ -270,7 +270,7 @@
       "composerHint": "Valfritt språk",
       "composerMeta": "Tryck på Enter för att söka",
       "placeholder": "t.ex. lugna japanska gatupromenader på natten",
-      "thinking": "Tänker...",
+      "thinking": "Tänker…",
       "resultsFor": "Resultat för",
       "downloadThis": "Ladda ner denna",
       "failedToStart": "Kunde inte starta förslag",
@@ -345,11 +345,11 @@
       "activityComplete": "Sökaktivitet slutförd.",
       "nextActionHint": "Välj en video och ladda sedan ner den eller öppna den på YouTube.",
       "stagePending": "Väntar",
-      "stageRunning": "Kör...",
+      "stageRunning": "Kör…",
       "stageCleared": "Klar",
       "searchQueryLabel": "Sökfråga",
       "searchMore": "Sök mer",
-      "searchMoreLoading": "Söker vidare...",
+      "searchMoreLoading": "Söker vidare…",
       "resetChat": "Återställ chatt",
       "useLastSearch": "Använd senaste inställningen",
       "showFollowUps": "Föreslagna följdidéer",
@@ -410,7 +410,7 @@
       "savedPreferencesCount": "{{count}} sparade preferenser",
       "searchingLong": "Söker fortfarande efter videor…",
       "searchingVeryLong": "Det tar längre tid än vanligt, men kör fortfarande.",
-      "stillWorking": "Jobbar fortfarande...",
+      "stillWorking": "Jobbar fortfarande…",
       "toggleCopy": "Sök på YouTube efter en källvideo utan att lämna arbetsflödet.",
       "stage": {
         "answerer": "Bearbeta sökfråga",
@@ -475,7 +475,7 @@
     "translate": "Översätt",
     "continueTranscribing": "Fortsätt transkribera",
     "generate": "Generera undertexter",
-    "generating": "Genererar...",
+    "generating": "Genererar…",
     "generateNow": "Generera undertexter nu",
     "translation": "Översättning",
     "improveTranscription": "Förbättra transkribering",
@@ -509,7 +509,7 @@
       "openPermission": "Translator får inte läsa filen. Kontrollera behörigheterna, eller kopiera den till en annan mapp och försök igen.",
       "openMissing": "Undertextfilen finns inte kvar. Den kan ha flyttats eller raderats.",
       "openFailed": "Translator kunde inte öppna undertextfilen. Kontrollera att det är en .srt-fil och försök igen.",
-      "saveFailed": "Translator kunde inte spara undertexterna. Försök igen, eller välj ”Spara undertexter som...” för att välja en annan mapp."
+      "saveFailed": "Translator kunde inte spara undertexterna. Försök igen, eller välj ”Spara undertexter som…” för att välja en annan mapp."
     }
   },
   "summary": {
@@ -546,7 +546,7 @@
     "verticalFitFormat": "Shorts-passning",
     "verticalFitFormatDesc": "Anpassa den ursprungliga bilden i en 9:16-duk",
     "downloadHighlight": "Ladda ner klipp",
-    "downloadingHighlight": "Sparar...",
+    "downloadingHighlight": "Sparar…",
     "highlightSaved": "Sparad!",
     "highlightSaveError": "Sparande misslyckades",
     "downloadHighlightFailed": "Misslyckades att spara höjdpunktsklipp: {{message}}",
@@ -554,13 +554,13 @@
     "saveHighlightDialogTitle": "Spara höjdpunktsklipp",
     "noSections": "Inga sektionsanteckningar ännu.",
     "sectionHeading": "Sektion {{index}}",
-    "highlightsInProgress": "Förbereder höjdpunktsklipp...",
+    "highlightsInProgress": "Förbereder höjdpunktsklipp…",
     "status": {
       "preparing": "Analyserar transkriptet…",
       "chunk": "Skriver sammanfattning {{current}}/{{total}}",
       "selectingHighlights": "Väljer höjdpunkter…",
-      "cuttingHighlight": "Klipper höjdpunkt {{current}}/{{total}}...",
-      "cuttingHighlights": "Klipper höjdpunktsklipp...",
+      "cuttingHighlight": "Klipper höjdpunkt {{current}}/{{total}}…",
+      "cuttingHighlights": "Klipper höjdpunktsklipp…",
       "synthesizing": "Gör klart…",
       "ready": "Höjdpunkterna är klara",
       "error": "Höjdpunkterna misslyckades",
@@ -573,7 +573,7 @@
     "exitCombineMode": "Avsluta kombinera",
     "reorderHint": "Dra för att ordna om:",
     "cutCombined": "Klipp kombinerad",
-    "cuttingCombined": "Klipper...",
+    "cuttingCombined": "Klipper…",
     "combinedHighlightReady": "Kombinerad höjdpunkt klar",
     "downloadCombined": "Ladda ner kombinerat klipp",
     "saveCombinedDialogTitle": "Spara kombinerat höjdpunktsklipp",
@@ -685,15 +685,15 @@
     },
     "header": {
       "save": "Spara undertexter",
-      "saveAs": "Spara undertexter som...",
+      "saveAs": "Spara undertexter som…",
       "saveTooltip": "Spara ändringar till originalfilen",
-      "saveAsTooltip": "Spara som först för att aktivera direktsparande"
+      "saveAsTooltip": "Använd ”Spara undertexter som…” först för att kunna spara direkt"
     },
     "mergeControls": {
       "fontSizeLabel": "Teckenstorlek:",
       "styleLabel": "Stil:",
       "mergeButton": "Sammanfoga undertexter",
-      "mergingButton": "Sammanfogar..."
+      "mergingButton": "Sammanfogar…"
     },
     "undo": {
       "removed": "Raden har tagits bort.",
@@ -787,7 +787,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "Förhandsgranska denna röst",
-      "previewing": "Spelar...",
+      "previewing": "Spelar…",
       "previewFree": "Förhandsgranska",
       "mixLabel": "Dubbningsvolym vs originalvideovolym",
       "mixHelp": "Kontrollera hur mycket av originalljudet som spelas under den dubbade rösten.",
@@ -801,27 +801,27 @@
       "yourBalance": "Ditt saldo",
       "canClone": "Du kan klona",
       "upToMinutes": "upp till {{minutes}} min",
-      "loading": "Laddar...",
+      "loading": "Laddar…",
       "previewWithMinutes": "Förhandsgranska ({{cost}})",
       "previewFailed": "Det gick inte att spela upp röstprovet. Försök igen."
     },
     "byoOpenAi": {
       "title": "Ta med egna API-nycklar",
       "description": "En engångsupplåsning för att använda dina egna API-nycklar. När den är upplåst körs transkribering, översättning, dubbning och sammanfattningar på dina egna AI-konton i stället för att dra av dina Stage5-minuter.",
-      "unlocking": "Öppnar kassan...",
+      "unlocking": "Öppnar kassan…",
       "unlockCta": "Lås upp för $10",
       "unlockHint": "När upplåst, lägg till dina API-nycklar här när som helst för att växla till direktfakturering på dina konton.",
       "apiKeyLabel": "OpenAI API-nyckel",
       "hide": "Dölj",
       "show": "Visa",
-      "saving": "Sparar...",
+      "saving": "Sparar…",
       "clear": "Rensa nyckel",
-      "loadingKey": "Laddar sparad nyckel...",
+      "loadingKey": "Laddar sparad nyckel…",
       "keySaved": "OpenAI API-nyckel sparad.",
       "keyCleared": "OpenAI API-nyckel rensad.",
       "keyValid": "OpenAI API-nyckel validerad.",
       "keyInvalid": "OpenAI API-nyckel validering misslyckades.",
-      "testing": "Testar...",
+      "testing": "Testar…",
       "test": "Testa nyckel",
       "lastSynced": "Senast synkad",
       "toggleLabel": "Använd min OpenAI-nyckel",
@@ -926,14 +926,14 @@
       "apiKeyLabel": "Anthropic API-nyckel",
       "hide": "Dölj",
       "show": "Visa",
-      "saving": "Sparar...",
+      "saving": "Sparar…",
       "clear": "Rensa nyckel",
-      "loadingKey": "Laddar sparad Anthropic-nyckel...",
+      "loadingKey": "Laddar sparad Anthropic-nyckel…",
       "keySaved": "Anthropic API-nyckel sparad.",
       "keyCleared": "Anthropic API-nyckel rensad.",
       "keyValid": "Anthropic API-nyckel validerad.",
       "keyInvalid": "Anthropic API-nyckel validering misslyckades.",
-      "testing": "Testar...",
+      "testing": "Testar…",
       "test": "Testa nyckel",
       "toggleLabel": "Använd min Anthropic-nyckel",
       "toggleAria": "Växla användning av din Anthropic-nyckel",
@@ -952,7 +952,8 @@
       "howToGet": "Så får du den här nyckeln",
       "missing": "Klistra in en API-nyckel först.",
       "savedEnding": "Sparad nyckel som slutar på {{last4}}",
-      "savedHidden": "Sparad nyckel (dold)"
+      "savedHidden": "Sparad nyckel (dold)",
+      "providerLabel": "{{provider}} API-nyckel"
     },
     "byoStack": {
       "title": "Din AI-stack"
@@ -1065,14 +1066,14 @@
   },
   "credits": {
     "title": "Minuter",
-    "loading": "Laddar...",
+    "loading": "Laddar…",
     "usingApiKey": "Använder API-nyckel",
     "usingOpenAi": "Använder OpenAI",
     "usingAnthropic": "Använder Claude",
     "usingElevenLabs": "Använder ElevenLabs",
     "hours": "timmar",
     "translationHoursShort": "översättningstimmar",
-    "redirectingToPayment": "Öppnar säker utcheckning...",
+    "redirectingToPayment": "Öppnar säker utcheckning…",
     "transcriptionMinutesShort": "{{minutes}} min transkribering",
     "transcriptionTimeShort": "{{time}} transkribering",
     "pill": {
@@ -1178,9 +1179,9 @@
     "resetCreditsToZeroTitle": "Admin: återställ krediter till 0",
     "toggleByoPreviewTitle": "Admin: växla BYO-förhandsvisning (visa UI som om BYO inte är köpt)",
     "addCredits": "Lägg till 350k krediter",
-    "adding": "Lägger till...",
+    "adding": "Lägger till…",
     "resetToZero": "Återställ till 0",
-    "resetting": "Återställer...",
+    "resetting": "Återställer…",
     "byoPreview": "BYO-förhandsvisning",
     "byoPreviewOn": "BYO-förhandsvisning PÅ",
     "confirmResetCreditsToZero": "Är du säker på att du vill återställa krediter till 0? Detta kan inte ångras."
@@ -1246,13 +1247,13 @@
       "fileTooLargeForVoiceCloning": "Videofilen är för stor för röstkloning ({{size}}MB). Maximal tillåten storlek är {{max}}MB. Använd en kortare video eller inaktivera röstkloning."
     },
     "status": {
-      "starting": "Startar...",
+      "starting": "Startar…",
       "completed": "Slutförd",
       "cancelled": "Avbruten",
       "error": "Fel"
     },
     "buttons": {
-      "redirectingToPayment": "Omdirigerar till betalning..."
+      "redirectingToPayment": "Omdirigerar till betalning…"
     },
     "workflow": {
       "stepOne": "Steg 1",
@@ -1274,14 +1275,14 @@
       "saveOutputsTitle": "Spara filer",
       "saveOutputsDescription": "Spara allt käll- eller dubbat media du vill behålla utanför appens arbetsyta."
     },
-    "calculatingCost": "Beräknar kostnad...",
+    "calculatingCost": "Beräknar kostnad…",
     "welcomeCredits": {
       "message": "Du har gratisminuter för att prova transkribering och översättning (cirka 20 minuter video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Sök i undertexter...",
-    "replacePlaceholder": "Ersätt med...",
+    "findPlaceholder": "Sök i undertexter…",
+    "replacePlaceholder": "Ersätt med…",
     "replaceAll": "Ersätt alla",
     "nextMatch": "Nästa träff (Enter)",
     "previousMatch": "Föregående träff (Shift+Enter)",
@@ -1303,7 +1304,7 @@
       "howToGet": "Hur man får API-nycklar",
       "enable": "Använd mina API-nycklar",
       "done": "Klar",
-      "ready": "Täckningen är komplett. Nu kan du aktivera ”Använd mina API-nycklar”.",
+      "ready": "Allt är klart. Nu kan du använda dina egna API-nycklar.",
       "missingTranslation": "Översättning behöver fortfarande {{providers}}.",
       "messageElevenLabsAudio": "För att använda dina API-nycklar behöver du en OpenAI- eller Anthropic-nyckel för översättning. Transkribering och dubbning använder endast ElevenLabs, så lägg även till en ElevenLabs-nyckel för dessa.",
       "audioNeedsElevenLabs": "Utan en ElevenLabs-nyckel är transkribering och dubbning otillgängliga medan dina API-nycklar är på."
@@ -1323,7 +1324,7 @@
     "transcriptionInProgress": "Transkribering pågår",
     "translationInProgress": "Översättning pågår",
     "dubbingInProgress": "Dubbning pågår",
-    "dubbingWorking": "Genererar dubbat ljud...",
+    "dubbingWorking": "Genererar dubbat ljud…",
     "cancelTranslationConfirm": "Avbryt översättning? Framstegen kommer att gå förlorade och du måste börja om.",
     "cancelSummaryConfirm": "Avbryt sammanfattningsgenereringen?",
     "cancelDubbingConfirm": "Avbryt dubbning? Framstegen kommer att gå förlorade och du måste börja om.",
@@ -1462,25 +1463,25 @@
   "progress": {
     "preparingVideoExport": "Förbereder videoexport…",
     "downloadingVideoExportTools": "Laddar ned verktyg för videoexport… {{percent}} %",
-    "beginningReview": "Påbörjar granskning...",
-    "starting": "Startar...",
+    "beginningReview": "Påbörjar granskning…",
+    "starting": "Startar…",
     "completed": "Slutförd",
     "processCancelled": "Processen avbruten",
     "mergingTitle": "Sammanfogar video och undertexter",
-    "extractingAudio": "Extraherar ljud...",
+    "extractingAudio": "Extraherar ljud…",
     "transcribingOf": "Transkriberar {{done}}/{{total}}",
     "error": "Fel",
     "transcribedChunks": "Transkriberade {{done}}/{{total}} delar",
     "transcribingElevenLabs": "Transkriberar med ElevenLabs (~{{minutes}} min kvar)",
     "transcribingElevenLabsHours": "Transkriberar med ElevenLabs (~{{hours}}h {{minutes}}m kvar)",
-    "transcribingElevenLabsFinishing": "Transkriberar med ElevenLabs...",
-    "transcriptionRetry": "Anslutningen misslyckades, försöker igen ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Transkriberar med ElevenLabs…",
+    "transcriptionRetry": "Anslutningen misslyckades, försöker igen ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Laddar upp ljud…",
     "gapRepair": "Luckreparation #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparerar saknade undertexter (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Rensar undertexter ({{done}}/{{total}})",
     "translationCleanup": "Rensar översatta undertexter ({{done}}/{{total}})",
-    "reviewingSlow": "Granskar (detta kan ta ett tag...) {{done}}/{{total}}",
+    "reviewingSlow": "Granskar (detta kan ta ett tag…) {{done}}/{{total}}",
     "reviewingRange": "Granskar {{start}}–{{end}} (av {{total}})",
     "legacy": {
       "aligningVoices": "Synkar röster {{done}}/{{total}}…",
@@ -1588,7 +1589,7 @@
     "optionalMessagePlaceholder": "Vad försökte du göra?",
     "sendReport": "Skicka rapport",
     "reportPrompt": "Något gick fel. Rapportera detta till skaparen för en snabb fix.",
-    "preparingReport": "Förbereder diagnostikpaket...",
+    "preparingReport": "Förbereder diagnostikpaket…",
     "reportContextWarning": "Viss diagnostisk kontext kunde inte läsas in. Rapporten kommer fortfarande att innehålla detaljer från den här appen.",
     "reportPromptTask": {
       "transcription": "Transkriberingen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
@@ -1885,6 +1886,7 @@
     "deviceIdReplaced": "Filen som kopplar den här datorn till dina minuter var skadad, så Translator har skapat en ny koppling. Minuter du har köpt kanske inte syns här. Kontakta supporten med ditt kvitto, så flyttar vi tillbaka dem.",
     "contactSupport": "Kontakta supporten",
     "openSettings": "Öppna Inställningar",
-    "supportSubject": "Mina minuter saknas efter att Translator återställde den här datorn"
+    "supportSubject": "Mina minuter saknas efter att Translator återställde den här datorn",
+    "settingsResetKeptLanguage": "Translators inställningsfil var skadad, så dina inställningar har återställts: undertextspråk, API-nycklar och andra alternativ. Gränssnittsspråket är oförändrat. En kopia av den skadade filen har sparats. Gå igenom Inställningar."
   }
 }

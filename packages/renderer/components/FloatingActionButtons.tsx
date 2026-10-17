@@ -407,8 +407,8 @@ export default function FloatingActionButtons({
         ),
         kind: 'update' as const,
         className: updatePillReadyStyles,
-        label: t('common.installUpdateNow', 'Install Update'),
-        meta: t('common.installUpdate', 'Restart to Update'),
+        label: t('common.installUpdateNow', 'Install update'),
+        meta: t('common.installUpdate', 'Restart to update'),
         icon: (
           <svg
             width="18"
@@ -488,10 +488,10 @@ export default function FloatingActionButtons({
 
       return {
         title: t('common.downloadUpdate', 'Click to download update'),
-        'aria-label': t('common.downloadUpdateNow', 'Download Update'),
+        'aria-label': t('common.downloadUpdateNow', 'Download update'),
         kind: 'update' as const,
         className: updatePillAvailableStyles,
-        label: t('common.downloadUpdateNow', 'Download Update'),
+        label: t('common.downloadUpdateNow', 'Download update'),
         // The second line names what is waiting, not a different action.
         meta: availableVersion
           ? t('common.updateVersionAvailable', 'v{{version}} available', {
@@ -625,7 +625,7 @@ export default function FloatingActionButtons({
             }
           }}
           className={scrollTopButtonStyles}
-          title={t('common.backToTop', 'Back to Top')}
+          title={t('common.backToTop', 'Back to top')}
           aria-label={t('common.backToTopAria', 'Scroll back to top')}
           size="lg"
           icon={

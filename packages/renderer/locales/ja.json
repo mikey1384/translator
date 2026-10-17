@@ -255,7 +255,7 @@
     "downloadFinishedWatchNow": "今すぐ見る",
     "downloadFinishedWatchLater": "後で見る",
     "videoSuggestion": {
-      "show": "動画を提案してもらう",
+      "show": "AIで動画を探す",
       "hide": "動画の提案を非表示",
       "modelHint": "現在のモデル",
       "sourceHint": "検索元",
@@ -410,7 +410,7 @@
       "searchingLong": "まだ動画を検索しています…",
       "searchingVeryLong": "通常より時間がかかっていますが、まだ処理中です。",
       "stillWorking": "まだ処理中…",
-      "toggleCopy": "ワークフローを離れずにYouTubeでソース動画を検索します。",
+      "toggleCopy": "自分の言葉で聞けば、AIがぴったりのYouTube動画を見つけます。",
       "stage": {
         "answerer": "要望を整理",
         "planner": "検索を作成",
@@ -681,7 +681,7 @@
       "save": "字幕を保存",
       "saveAs": "字幕に名前を付けて保存…",
       "saveTooltip": "変更を元のファイルに保存",
-      "saveAsTooltip": "直接保存を有効にするには、まず名前を付けて保存してください"
+      "saveAsTooltip": "直接保存するには、まず「字幕に名前を付けて保存…」で保存してください"
     },
     "mergeControls": {
       "fontSizeLabel": "フォントサイズ:",
@@ -754,7 +754,7 @@
         "modelOn": "ElevenLabs TTS プレミアム音声"
       },
       "videoSuggestionModel": {
-        "label": "動画提案モデル",
+        "label": "動画提案の品質",
         "help": "自動 = 通常の翻訳下書きと同じモデル",
         "default": "デフォルト（翻訳のデフォルトと同じ）",
         "quality": "高品質（翻訳の高品質と同じ）"
@@ -945,7 +945,8 @@
       "howToGet": "このキーの取得方法",
       "missing": "先にAPIキーを貼り付けてください。",
       "savedEnding": "保存済みのキー（末尾 {{last4}}）",
-      "savedHidden": "保存済みのキー（非表示）"
+      "savedHidden": "保存済みのキー（非表示）",
+      "providerLabel": "{{provider}} APIキー"
     },
     "byoStack": {
       "title": "使用中のAI"
@@ -1293,7 +1294,7 @@
       "howToGet": "APIキーの取得方法",
       "enable": "自分のAPIキーを使用",
       "done": "完了",
-      "ready": "必要なカバレッジがそろいました。これで「自分のAPIキーを使う」を有効にできます。",
+      "ready": "必要なキーがそろいました。これで自分のAPIキーを使えます。",
       "missingTranslation": "翻訳にはまだ {{providers}} が必要です。",
       "messageElevenLabsAudio": "自分の API キーを使用するには、翻訳用に OpenAI または Anthropic のキーが必要です。文字起こしと吹き替えは ElevenLabs のみを使用するため、それらには ElevenLabs のキーも追加してください。",
       "audioNeedsElevenLabs": "ElevenLabs のキーがない場合、自分の API キーを使用中は文字起こしと吹き替えを利用できません。"
@@ -1858,6 +1859,7 @@
     "deviceIdReplaced": "このコンピューターと残り時間をひも付けるファイルが破損していたため、Translatorがひも付けを作り直しました。購入した時間がここに表示されない場合があります。購入時の領収書を添えてサポートにご連絡いただければ、元に戻します。",
     "contactSupport": "サポートに連絡",
     "openSettings": "設定を開く",
-    "supportSubject": "Translatorのリセット後、購入した時間が見当たりません"
+    "supportSubject": "Translatorのリセット後、購入した時間が見当たりません",
+    "settingsResetKeptLanguage": "Translatorの設定ファイルが破損していたため、設定をリセットしました（字幕の言語、APIキー、その他のオプション）。表示言語はそのままです。破損したファイルのコピーは残してあります。設定をご確認ください。"
   }
 }

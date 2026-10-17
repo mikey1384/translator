@@ -219,7 +219,7 @@ export default function CreditBalance({
         break;
       case 'mixed':
       default:
-        badgeText = t('credits.usingApiKey', 'Using API Keys');
+        badgeText = t('credits.usingApiKey', 'Using API key');
         break;
     }
 

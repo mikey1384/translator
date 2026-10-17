@@ -3,20 +3,20 @@
     "cancel": "İptal",
     "save": "Kaydet",
     "or": "VEYA",
-    "saving": "Kaydediliyor...",
-    "validating": "Doğrulanıyor...",
+    "saving": "Kaydediliyor…",
+    "validating": "Doğrulanıyor…",
     "delete": "Sil",
     "confirm": "Onayla",
     "apply": "Uygula",
     "back": "←",
     "to": "Geri dön",
     "app": "Uygulama",
-    "backToApp": "Uygulamaya Geri Dön",
+    "backToApp": "Uygulamaya geri dön",
     "next": "İleri",
     "done": "Tamamlandı",
     "gotIt": "Anladım",
     "close": "Kapat",
-    "loading": "Yükleniyor...",
+    "loading": "Yükleniyor…",
     "error": {
       "unexpected": "Beklenmeyen bir hata oluştu.",
       "unexpectedRemove": "Anahtar kaldırılırken beklenmeyen bir hata oluştu.",
@@ -46,13 +46,13 @@
     "video": "Video",
     "selected": "Seçildi",
     "retry": "Tekrar Dene",
-    "uiLanguage": "Arayüz Dili",
-    "reloadPage": "Sayfayı Yenile",
+    "uiLanguage": "Arayüz dili",
+    "reloadPage": "Sayfayı yenile",
     "reloadPageAria": "Sayfayı yenile",
-    "backToTop": "Başa Dön",
+    "backToTop": "Başa dön",
     "backToTopAria": "Sayfanın başına dön",
     "confirmReload": "Sayfayı yenilemek istediğinizden emin misiniz? Kaydedilmemiş değişiklikler kaybolabilir.",
-    "installUpdate": "Güncellemek için Yeniden Başlat",
+    "installUpdate": "Güncellemek için yeniden başlat",
     "confirmInstallUpdate": "Güncellemeyi yükleyip yeniden başlatılsın mı?",
     "downloadUpdate": "Güncellemeyi indirmek için tıklayın",
     "dismissError": "Hatayı kapat",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Güncellemeyi denetle",
     "clear": "Temizle",
     "currentVersionLabel": "Mevcut sürüm",
-    "downloadingUpdate": "Güncelleme indiriliyor...",
+    "downloadingUpdate": "Güncelleme indiriliyor…",
     "downloadingUpdateProgress": "Güncelleme indiriliyor: yüzde {{percent}}",
     "downloadingUpdateShort": "İNDİRİLİYOR",
     "downloadUpdateNow": "Güncellemeyi indir",
@@ -85,19 +85,19 @@
     "whatsNewTitle": "Yenilikler",
     "whatsNewVersionTitle": "v{{version}} sürümündeki yenilikler",
     "fileFilters": {
-      "srtFiles": "SRT Dosyaları",
-      "mediaFiles": "Medya Dosyaları",
-      "videoFiles": "Video Dosyaları",
-      "textFiles": "Metin Dosyaları",
-      "allFiles": "Tüm Dosyalar",
-      "subtitleFiles": "Altyazı Dosyaları"
+      "srtFiles": "SRT dosyaları",
+      "mediaFiles": "Medya dosyaları",
+      "videoFiles": "Video dosyaları",
+      "textFiles": "Metin dosyaları",
+      "allFiles": "Tüm dosyalar",
+      "subtitleFiles": "Altyazı dosyaları"
     },
     "chooseAnotherLocation": "Başka bir konum seç",
     "continue": "Devam et",
     "send": "Gönder",
     "dismiss": "Kapat",
     "moreActions": "Diğer işlemler",
-    "installingUpdate": "Güncelleme yükleniyor...",
+    "installingUpdate": "Güncelleme yükleniyor…",
     "installingUpdateShort": "Yükleniyor",
     "ok": "Tamam",
     "minimumVersionValue": "Desteklenen en düşük sürüm: v{{version}}",
@@ -216,11 +216,11 @@
   },
   "input": {
     "connect": "Bağlan",
-    "connecting": "Bağlanıyor...",
+    "connecting": "Bağlanıyor…",
     "connectTip": "İpucu: Bağlantı penceresinde oturum açın veya doğrulamayı tamamlayın, ardından devam etmek için pencereyi kapatın.",
     "fromDevice": "Cihazınızdan",
     "fromWeb": "Web'den",
-    "downloadVideo": "Video İndir",
+    "downloadVideo": "Video indir",
     "enterVideoUrl": "Video URL'sini girin",
     "quality": "Kalite",
     "qualityPresets": "Ön ayarlar",
@@ -232,9 +232,9 @@
     "qualityHigh": "Yüksek",
     "qualityMedium": "Orta",
     "qualityLow": "Düşük",
-    "downloading": "İndiriliyor...",
-    "selectFile": "Dosya Seç",
-    "selectVideoFile": "Video Dosyası Seç",
+    "downloading": "İndiriliyor…",
+    "selectFile": "Dosya seç",
+    "selectVideoFile": "Video dosyası seç",
     "selectVideoAudioFile": "Video veya ses dosyası seç",
     "saveOriginalVideo": "Orijinal videoyu kaydet",
     "localFileDescription": "Bilgisayarınızdan bir video veya ses dosyası yükleyin",
@@ -246,7 +246,7 @@
     "fileSelected": "Dosya seçildi",
     "transcribeOnly": "Sesi yazıya dök",
     "srtLoaded": "Yazıya dökme tamamlandı",
-    "srtFileLoaded": "SRT Yüklendi",
+    "srtFileLoaded": "SRT yüklendi",
     "featuresUnlockAfterTranscription": "Bu videoyu yazıya dökün, çevirin ya da öne çıkan anlarını bulun.",
     "preSubtitleActionsHint": "Bu videoyu yazıya dökün, çevirin ya da öne çıkan anlarını bulun.",
     "saveDubbedVideo": "Seslendirilmiş videoyu kaydet",
@@ -269,7 +269,7 @@
       "composerHint": "Herhangi bir dil",
       "composerMeta": "Aramak için Enter'a basın",
       "placeholder": "ör. gece sakin Japon sokak yürüyüşleri",
-      "thinking": "Düşünüyor...",
+      "thinking": "Düşünüyor…",
       "resultsFor": "Sonuçlar:",
       "downloadThis": "Bunu indir",
       "failedToStart": "Öneriler başlatılamadı",
@@ -344,11 +344,11 @@
       "activityComplete": "Arama etkinliği tamamlandı.",
       "nextActionHint": "Bir video seç, sonra indir veya YouTube’da aç.",
       "stagePending": "Bekliyor",
-      "stageRunning": "Çalışıyor...",
+      "stageRunning": "Çalışıyor…",
       "stageCleared": "Tamamlandı",
       "searchQueryLabel": "Arama sorgusu",
       "searchMore": "Daha fazla ara",
-      "searchMoreLoading": "Daha fazla aranıyor...",
+      "searchMoreLoading": "Daha fazla aranıyor…",
       "resetChat": "Sohbeti sıfırla",
       "useLastSearch": "Son ayarı kullan",
       "showFollowUps": "Önerilen devam fikirleri",
@@ -407,9 +407,9 @@
       "savedDownloads": "Kaydedilen indirmeler",
       "savedDownloadsCount": "{{count}} kaydedilen indirme",
       "savedPreferencesCount": "{{count}} kaydedilen tercih",
-      "searchingLong": "Videolar hâlâ aranıyor...",
+      "searchingLong": "Videolar hâlâ aranıyor…",
       "searchingVeryLong": "Her zamankinden uzun sürüyor ama hâlâ çalışıyor.",
-      "stillWorking": "Hâlâ çalışıyor...",
+      "stillWorking": "Hâlâ çalışıyor…",
       "toggleCopy": "İş akışından çıkmadan YouTube'da kaynak video arayın.",
       "stage": {
         "answerer": "İşleme",
@@ -473,8 +473,8 @@
     "translate": "Çevir",
     "continueTranscribing": "Yazıya dökmeye devam et",
     "generate": "Altyazı oluştur",
-    "generating": "Oluşturuluyor...",
-    "generateNow": "Şimdi Altyazı Oluştur",
+    "generating": "Oluşturuluyor…",
+    "generateNow": "Şimdi altyazı oluştur",
     "translation": "Çeviri",
     "improveTranscription": "Yazıya dökme kalitesini artır",
     "improveTranslation": "Çeviri kalitesini artır",
@@ -507,7 +507,7 @@
       "openPermission": "Translator’ın bu dosyayı okuma izni yok. Dosyanın izinlerini kontrol edin ya da dosyayı başka bir klasöre kopyalayıp yeniden deneyin.",
       "openMissing": "Bu altyazı dosyası artık orada değil. Taşınmış ya da silinmiş olabilir.",
       "openFailed": "Translator bu altyazı dosyasını açamadı. Bir .srt dosyası olduğundan emin olup yeniden deneyin.",
-      "saveFailed": "Translator altyazıları kaydedemedi. Yeniden deneyin ya da başka bir klasör seçmek için “Altyazıları farklı kaydet...” seçeneğini kullanın."
+      "saveFailed": "Translator altyazıları kaydedemedi. Yeniden deneyin ya da başka bir klasör seçmek için “Altyazıları farklı kaydet…” seçeneğini kullanın."
     }
   },
   "summary": {
@@ -568,12 +568,12 @@
       "renderingClipSubtitles": "Klibe altyazılar ekleniyor…"
     },
     "combineMode": "Birleştir",
-    "exitCombineMode": "Birleştirmeden Çık",
+    "exitCombineMode": "Birleştirmeden çık",
     "reorderHint": "Sıralamak için sürükleyin:",
-    "cutCombined": "Birleştirileni Kes",
-    "cuttingCombined": "Kesiliyor...",
-    "combinedHighlightReady": "Birleştirilmiş Öne Çıkan Hazır",
-    "downloadCombined": "Birleştirilmiş Klibi İndir",
+    "cutCombined": "Birleştirileni kes",
+    "cuttingCombined": "Kesiliyor…",
+    "combinedHighlightReady": "Birleştirilmiş öne çıkan hazır",
+    "downloadCombined": "Birleştirilmiş klibi indir",
     "saveCombinedDialogTitle": "Birleştirilmiş öne çıkan klibi kaydet",
     "combinedCutFailed": "Birleştirilmiş öne çıkanlar kesilemedi: {{message}}",
     "highlightsInsufficientCredits": "Özet hazır, ancak dakikalarınız bittiği için öne çıkanları bulma işlemi durdu.",
@@ -681,15 +681,15 @@
     },
     "header": {
       "save": "Altyazıları kaydet",
-      "saveAs": "Altyazıları farklı kaydet...",
+      "saveAs": "Altyazıları farklı kaydet…",
       "saveTooltip": "Değişiklikleri orijinal dosyaya kaydet",
-      "saveAsTooltip": "Doğrudan kaydetmeyi etkinleştirmek için önce Farklı Kaydet"
+      "saveAsTooltip": "Doğrudan kaydetmek için önce “Altyazıları farklı kaydet…” seçeneğini kullanın"
     },
     "mergeControls": {
-      "fontSizeLabel": "Yazı Boyutu:",
+      "fontSizeLabel": "Yazı boyutu:",
       "styleLabel": "Stil:",
-      "mergeButton": "Altyazıları Birleştir",
-      "mergingButton": "Birleştiriliyor..."
+      "mergeButton": "Altyazıları birleştir",
+      "mergingButton": "Birleştiriliyor…"
     },
     "undo": {
       "removed": "Satır silindi.",
@@ -722,7 +722,7 @@
     },
     "title": "Ayarlar",
     "aiProvider": {
-      "title": "Yapay Zeka Sağlayıcısı"
+      "title": "Yapay zekâ sağlayıcısı"
     },
     "apiKeyMode": {
       "toggleLabel": "Kendi API anahtarlarımı kullan",
@@ -738,9 +738,9 @@
       "activeKeys_one": "Anahtarlar hazır: {{count}}"
     },
     "performanceQuality": {
-      "title": "Performans ve Kalite",
+      "title": "Performans ve kalite",
       "qualityTranslation": {
-        "label": "Kaliteli Çeviri",
+        "label": "Kaliteli çeviri",
         "modelOn": "Claude Haiku 5.5 taslak + Claude Opus 5.5 inceleme",
         "modelOnAnthropic": "Claude Haiku 5.5 taslak + Claude Opus 5.5 inceleme",
         "modelOff": "Yalnızca Claude Haiku 5.5 taslak",
@@ -749,7 +749,7 @@
         "anthropicHighEnd": "Anthropic üst düzey inceleme"
       },
       "qualitySummary": {
-        "label": "Kaliteli Özet",
+        "label": "Kaliteli özet",
         "modelOn": "Claude Opus 5.5 derin analiz + öne çıkan klipler",
         "modelOff": "Claude Sonnet 5.5 standart analiz"
       },
@@ -757,7 +757,7 @@
         "modelOn": "ElevenLabs TTS premium sesler"
       },
       "videoSuggestionModel": {
-        "label": "Video Öneri Modeli",
+        "label": "Video önerisi kalitesi",
         "help": "Otomatik = normal çeviri taslağıyla aynı model",
         "default": "Varsayılan (çeviri varsayılanı ile aynı)",
         "quality": "Kalite (çeviri kalite modu ile aynı)"
@@ -770,7 +770,7 @@
       }
     },
     "dubbing": {
-      "voiceLabel": "Seslendirme Sesi",
+      "voiceLabel": "Seslendirme sesi",
       "voiceHelp": "Seslendirme oluştururken kullanılacak varsayılan sesi seçin.",
       "voiceOptions": {
         "rachel": "Rachel",
@@ -783,13 +783,13 @@
         "brian": "Brian"
       },
       "previewTooltip": "Bu sesi önizle",
-      "previewing": "Oynatılıyor...",
+      "previewing": "Oynatılıyor…",
       "previewFree": "Önizle",
-      "mixLabel": "Seslendirme Ses Düzeyi / Orijinal Video Ses Düzeyi",
+      "mixLabel": "Seslendirme ses düzeyi / orijinal video ses düzeyi",
       "mixHelp": "Seslendirmenin altında ne kadar orijinal ses çalacağını kontrol edin.",
       "mixAmbient": "Daha fazla ortam sesi",
       "mixVoice": "Daha fazla ses",
-      "voiceCloning": "Orijinal Sesi Klonla",
+      "voiceCloning": "Orijinal sesi klonla",
       "voiceCloningDesc": "Seslendirmede orijinal konuşmacının sesini koruyun",
       "voiceCloningEnabled": "ElevenLabs ile ses klonlama etkin. Orijinal konuşmacının sesi seslendirmede korunacak.",
       "voiceCloningInfo": "Ses klonlama, orijinal konuşmacının sesini analiz edip yeniden oluşturmak için ElevenLabs Seslendirme API'sini kullanır.",
@@ -797,28 +797,28 @@
       "yourBalance": "Bakiyeniz",
       "canClone": "Klonlayabilirsiniz",
       "upToMinutes": "{{minutes}} dakikaya kadar",
-      "loading": "Yükleniyor...",
+      "loading": "Yükleniyor…",
       "previewWithMinutes": "Önizle ({{cost}})",
       "previewFailed": "Ses önizlemesi oynatılamadı. Yeniden deneyin."
     },
     "byoOpenAi": {
-      "title": "Kendi API Anahtarlarınızı Getirin",
+      "title": "Kendi API anahtarlarınızı kullanın",
       "description": "Tek seferlik ödemeyle kendi API anahtarlarınızı kullanabilirsiniz. Kilit açıldıktan sonra yazıya dökme, çeviri, seslendirme ve özetler Stage5 dakikalarınızı kullanmak yerine kendi yapay zekâ hesaplarınızda çalışır.",
       "unlocking": "Ödeme açılıyor…",
       "unlockCta": "$10 ile Aç",
       "unlockHint": "Açıldıktan sonra, hesaplarınızda doğrudan faturalandırmayı açmak için istediğiniz zaman API anahtarlarınızı buraya ekleyin.",
-      "apiKeyLabel": "OpenAI API Anahtarı",
+      "apiKeyLabel": "OpenAI API anahtarı",
       "hide": "Gizle",
       "show": "Göster",
       "saving": "Kaydediliyor…",
-      "clear": "Anahtarı Temizle",
+      "clear": "Anahtarı temizle",
       "loadingKey": "Kayıtlı anahtar yükleniyor…",
       "keySaved": "OpenAI API anahtarı kaydedildi.",
       "keyCleared": "OpenAI API anahtarı temizlendi.",
       "keyValid": "OpenAI API anahtarı başarıyla doğrulandı.",
       "keyInvalid": "OpenAI API anahtarı doğrulaması başarısız.",
       "testing": "Test ediliyor…",
-      "test": "Anahtarı Test Et",
+      "test": "Anahtarı test et",
       "lastSynced": "Son senkronizasyon",
       "toggleLabel": "OpenAI anahtarımı kullan",
       "toggleAria": "OpenAI anahtarınızı kullanmayı aç/kapat",
@@ -836,7 +836,7 @@
       "unlockFailed": "Ödeme başlatılamadı. Bağlantınızı kontrol edip yeniden deneyin."
     },
     "byoPreferences": {
-      "title": "Sağlayıcı Tercihleri",
+      "title": "Sağlayıcı tercihleri",
       "stage5Credits": "Stage5 dakikaları",
       "pricingHint": "1 saatlik video başına tahmini maliyet",
       "pricingHintHeuristic": "Uygulamanın mevcut sezgisel tahminlerine göre maliyet",
@@ -872,7 +872,7 @@
       "videoSuggestionLegacyFollowReview": "Önceki ayarınız korundu: siz burada bir model seçene kadar bu ayar inceleme çeviri modelinizi izler."
     },
     "apiKeyGuide": {
-      "title": "API Anahtarları Nasıl Alınır",
+      "title": "API anahtarları nasıl alınır",
       "required": "Gerekli",
       "optional": "İsteğe Bağlı",
       "providers": {
@@ -917,20 +917,20 @@
       }
     },
     "byoAnthropic": {
-      "title": "Anthropic API Anahtarı (İsteğe Bağlı)",
+      "title": "Anthropic API anahtarı (isteğe bağlı)",
       "description": "Çeviri inceleme aşamasında Claude modellerini doğrudan kullanmak için Anthropic API anahtarınızı ekleyin. Bu anahtar olmadan inceleme geçişini GPT-5.5 üstlenir.",
-      "apiKeyLabel": "Anthropic API Anahtarı",
+      "apiKeyLabel": "Anthropic API anahtarı",
       "hide": "Gizle",
       "show": "Göster",
       "saving": "Kaydediliyor…",
-      "clear": "Anahtarı Temizle",
+      "clear": "Anahtarı temizle",
       "loadingKey": "Kayıtlı Anthropic anahtarı yükleniyor…",
       "keySaved": "Anthropic API anahtarı kaydedildi.",
       "keyCleared": "Anthropic API anahtarı temizlendi.",
       "keyValid": "Anthropic API anahtarı başarıyla doğrulandı.",
       "keyInvalid": "Anthropic API anahtarı doğrulaması başarısız.",
       "testing": "Test ediliyor…",
-      "test": "Anahtarı Test Et",
+      "test": "Anahtarı test et",
       "toggleLabel": "Anthropic anahtarımı kullan",
       "toggleAria": "Anthropic anahtarınızı kullanmayı aç/kapat",
       "toggleOn": "Claude modelleri için Anthropic anahtarınız kullanılıyor.",
@@ -948,7 +948,8 @@
       "howToGet": "Bu anahtar nasıl alınır",
       "missing": "Önce bir API anahtarı yapıştırın.",
       "savedEnding": "Sonu {{last4}} ile biten kayıtlı anahtar",
-      "savedHidden": "Kayıtlı anahtar (gizli)"
+      "savedHidden": "Kayıtlı anahtar (gizli)",
+      "providerLabel": "{{provider}} API anahtarı"
     },
     "byoStack": {
       "title": "AI yığınınız"
@@ -1019,7 +1020,7 @@
       },
       "selectDirectory": "Aracıların dosya yazmasına izin verilecek klasörü seçin",
       "removeDirectory": "Kaldır",
-      "addDirectory": "+ Klasör Ekle",
+      "addDirectory": "+ Klasör ekle",
       "errors": {
         "update": "Aracı denetimi ayarı güncellenemedi.",
         "addDirectory": "Klasör eklenemedi.",
@@ -1060,8 +1061,8 @@
   },
   "credits": {
     "title": "Dakikalarınız",
-    "loading": "Yükleniyor...",
-    "usingApiKey": "API Anahtarı Kullanılıyor",
+    "loading": "Yükleniyor…",
+    "usingApiKey": "API anahtarı kullanılıyor",
     "usingOpenAi": "OpenAI kullanılıyor",
     "usingAnthropic": "Claude kullanılıyor",
     "usingElevenLabs": "ElevenLabs kullanılıyor",
@@ -1136,8 +1137,8 @@
     "byStage5": "by stage_5"
   },
   "videoPlayer": {
-    "enterFullscreen": "Tam Ekrana Geç",
-    "exitFullscreen": "Tam Ekrandan Çık",
+    "enterFullscreen": "Tam ekrana geç",
+    "exitFullscreen": "Tam ekrandan çık",
     "playbackSpeed": "Oynatma hızı",
     "icloudWaitingTitle": "iCloud'dan indiriliyor",
     "icloudWaitingBody": "Bu dosya henüz yerel olarak saklanmıyor. Finder'da “Download” seçeneğine tıklayın ve bulut simgesi kaybolana kadar bekleyin.",
@@ -1173,9 +1174,9 @@
     "resetCreditsToZeroTitle": "Yönetici: kredileri 0'a sıfırla",
     "toggleByoPreviewTitle": "Yönetici: BYO önizleme modunu değiştir (BYO satın alınmamış gibi arayüzü gör)",
     "addCredits": "350k kredi ekle",
-    "adding": "Ekleniyor...",
+    "adding": "Ekleniyor…",
     "resetToZero": "0'a sıfırla",
-    "resetting": "Sıfırlanıyor...",
+    "resetting": "Sıfırlanıyor…",
     "byoPreview": "BYO önizleme",
     "byoPreviewOn": "BYO önizleme AÇIK",
     "confirmResetCreditsToZero": "Kredileri 0'a sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz."
@@ -1187,7 +1188,7 @@
     "middleEastAfrica": "Orta Doğu / Afrika"
   },
   "languages": {
-    "original": "Ses ile Aynı",
+    "original": "Sesle aynı",
     "english": "İngilizce",
     "korean": "Korece",
     "japanese": "Japonca",
@@ -1241,13 +1242,13 @@
       "fileTooLargeForVoiceCloning": "Video dosyası ses klonlama için çok büyük ({{size}}MB). İzin verilen maksimum {{max}}MB. Lütfen daha kısa bir video kullanın veya ses klonlamayı devre dışı bırakın."
     },
     "status": {
-      "starting": "Başlıyor...",
+      "starting": "Başlıyor…",
       "completed": "Tamamlandı",
       "cancelled": "İptal edildi",
       "error": "Hata"
     },
     "buttons": {
-      "redirectingToPayment": "Ödemeye yönlendiriliyor..."
+      "redirectingToPayment": "Ödemeye yönlendiriliyor…"
     },
     "workflow": {
       "stepOne": "Adım 1",
@@ -1269,14 +1270,14 @@
       "saveOutputsTitle": "Çıktıları kaydet",
       "saveOutputsDescription": "Saklamak istediğiniz kaynak veya seslendirilmiş medyayı uygulama çalışma alanının dışına kaydedin."
     },
-    "calculatingCost": "Maliyet hesaplanıyor...",
+    "calculatingCost": "Maliyet hesaplanıyor…",
     "welcomeCredits": {
       "message": "Yazıya dökme ve çeviriyi denemek için ücretsiz dakikalarınız var (yaklaşık 20 dakikalık video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Altyazılarda ara...",
-    "replacePlaceholder": "Şununla değiştir...",
+    "findPlaceholder": "Altyazılarda ara…",
+    "replacePlaceholder": "Şununla değiştir…",
     "replaceAll": "Tümünü değiştir",
     "nextMatch": "Sonraki eşleşme (Enter)",
     "previousMatch": "Önceki eşleşme (Shift+Enter)",
@@ -1294,17 +1295,17 @@
   },
   "dialogs": {
     "apiKeysRequired": {
-      "title": "API Anahtarları Gerekli",
+      "title": "API anahtarları gerekli",
       "howToGet": "API anahtarları nasıl alınır",
       "enable": "Kendi API anahtarlarımı kullan",
       "done": "Tamamlandı",
-      "ready": "Kapsam tamamlandı. Artık “API anahtarlarımı kullan” seçeneğini açabilirsiniz.",
+      "ready": "Kapsam tamamlandı. Artık kendi API anahtarlarınızı kullanabilirsiniz.",
       "missingTranslation": "Çeviri için hâlâ {{providers}} gerekiyor.",
       "messageElevenLabsAudio": "Kendi API anahtarlarınızı kullanmak için çeviri amacıyla bir OpenAI veya Anthropic anahtarına ihtiyacınız var. Yazıya dökme ve seslendirme yalnızca ElevenLabs kullanır, bu yüzden bunlar için de bir ElevenLabs anahtarı ekleyin.",
       "audioNeedsElevenLabs": "ElevenLabs anahtarı olmadan, API anahtarlarınız açıkken yazıya dökme ve seslendirme kullanılamaz."
     },
-    "saveSrtFileAs": "SRT Dosyasını Farklı Kaydet",
-    "saveDownloadedVideoAs": "İndirilen Videoyu Farklı Kaydet",
+    "saveSrtFileAs": "SRT dosyasını farklı kaydet",
+    "saveDownloadedVideoAs": "İndirilen videoyu farklı kaydet",
     "saveDubbedVideoAs": "Seslendirilmiş videoyu farklı kaydet",
     "unsavedSrtOnTranscribe": {
       "title": "Yazıya dökmeden önce mevcut altyazılar kaydedilsin mi?",
@@ -1313,7 +1314,7 @@
       "discardAndTranscribe": "Kaydetmeden yazıya dök",
       "cancel": "İptal"
     },
-    "downloadInProgress": "İndirme Devam Ediyor",
+    "downloadInProgress": "İndirme devam ediyor",
     "saveDownloadedFile": "İndirilen dosyayı kaydet: {{path}}",
     "transcriptionInProgress": "Yazıya dökme sürüyor",
     "translationInProgress": "Çeviri sürüyor",
@@ -1457,25 +1458,25 @@
   "progress": {
     "preparingVideoExport": "Video dışa aktarma hazırlanıyor…",
     "downloadingVideoExportTools": "Video dışa aktarma araçları indiriliyor… {{percent}}%",
-    "beginningReview": "İnceleme başlıyor...",
-    "starting": "Başlıyor...",
+    "beginningReview": "İnceleme başlıyor…",
+    "starting": "Başlıyor…",
     "completed": "Tamamlandı",
     "processCancelled": "İşlem iptal edildi",
-    "mergingTitle": "Video ve Altyazılar Birleştiriliyor",
-    "extractingAudio": "Ses çıkarılıyor...",
+    "mergingTitle": "Video ve altyazılar birleştiriliyor",
+    "extractingAudio": "Ses çıkarılıyor…",
     "transcribingOf": "Yazıya dökülüyor {{done}}/{{total}}",
     "error": "Hata",
     "transcribedChunks": "{{done}}/{{total}} parça yazıya döküldü",
     "transcribingElevenLabs": "ElevenLabs ile yazıya dökülüyor (~{{minutes}} dk kaldı)",
     "transcribingElevenLabsHours": "ElevenLabs ile yazıya dökülüyor (~{{hours}} sa {{minutes}} dk kaldı)",
     "transcribingElevenLabsFinishing": "ElevenLabs ile yazıya dökülüyor…",
-    "transcriptionRetry": "Bağlantı başarısız, yeniden deneniyor ({{attempt}}/{{maxAttempts}})...",
+    "transcriptionRetry": "Bağlantı başarısız, yeniden deneniyor ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Ses yükleniyor…",
     "gapRepair": "Boşluk onarımı #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Eksik altyazılar onarılıyor (Tekrar {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Altyazılar temizleniyor ({{done}}/{{total}})",
     "translationCleanup": "Çevrilmiş altyazılar temizleniyor ({{done}}/{{total}})",
-    "reviewingSlow": "İnceleniyor (bu biraz zaman alabilir...) {{done}}/{{total}}",
+    "reviewingSlow": "İnceleniyor (bu biraz zaman alabilir…) {{done}}/{{total}}",
     "reviewingRange": "İnceleniyor {{start}}–{{end}} (toplam {{total}})",
     "legacy": {
       "aligningVoices": "Sesler hizalanıyor {{done}}/{{total}}…",
@@ -1568,21 +1569,21 @@
     "dubbedVideoSaved": "Seslendirilmiş video şuraya kaydedildi:\n{{path}}"
   },
   "logs": {
-    "title": "Son Kayıtlar",
+    "title": "Son kayıtlar",
     "copy": "Kopyala",
-    "email": "Geliştiriciye E-posta Gönder",
+    "email": "Geliştiriciye e-posta gönder",
     "close": "Kapat",
     "empty": "Henüz log yok.",
     "copied": "Kayıtlar panoya kopyalandı",
     "copyFailed": "Kopyalama başarısız",
-    "emailSubject": "Stage5 Hata Ayıklama Kayıtları",
+    "emailSubject": "Stage5 hata ayıklama kayıtları",
     "emailBodyPrefix": "Merhaba,\n\nSorunu gidermeye yardımcı olmak için son kayıtlarımı aşağıda bulabilirsiniz.\n\n",
-    "deviceInfoHeader": "Cihaz Bilgisi",
+    "deviceInfoHeader": "Cihaz bilgisi",
     "optionalMessage": "İsteğe bağlı mesaj",
     "optionalMessagePlaceholder": "Ne yapmaya çalışıyordunuz?",
     "sendReport": "Rapor gönder",
     "reportPrompt": "Bir şeyler ters gitti. Hızlı düzeltme için bunu geliştiriciye bildirin.",
-    "preparingReport": "Tanılama paketi hazırlanıyor...",
+    "preparingReport": "Tanılama paketi hazırlanıyor…",
     "reportContextWarning": "Tanılama bağlamının bir kısmı yüklenemedi. Rapor yine de bu uygulamaya ait ayrıntıları içerecek.",
     "reportPromptTask": {
       "transcription": "Yazıya dökme beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
@@ -1811,7 +1812,7 @@
     }
   },
   "tabs": {
-    "newTab": "Yeni Sekme",
+    "newTab": "Yeni sekme",
     "newTabWithShortcut": "Yeni sekme ({{shortcut}})",
     "closeTab": "Sekmeyi kapat",
     "tabList": "Açık sekmeler"
@@ -1874,6 +1875,7 @@
     "deviceIdReplaced": "Bu bilgisayarı dakikalarınıza bağlayan dosya bozulduğu için Translator yeni bir bağlantı oluşturdu. Satın aldığınız dakikalar burada görünmeyebilir. Satın alma makbuzunuzla destek ekibine yazın, dakikalarınızı geri taşıyalım.",
     "contactSupport": "Destekle iletişime geç",
     "openSettings": "Ayarlar’ı aç",
-    "supportSubject": "Translator bu bilgisayarı sıfırladıktan sonra dakikalarım kayboldu"
+    "supportSubject": "Translator bu bilgisayarı sıfırladıktan sonra dakikalarım kayboldu",
+    "settingsResetKeptLanguage": "Translator’ın ayar dosyası bozulduğu için tercihleriniz sıfırlandı: altyazı dili, API anahtarları ve diğer seçenekler. Arayüz diliniz korundu. Bozuk dosyanın bir kopyası saklandı. Lütfen Ayarlar’ı kontrol edin."
   }
 }

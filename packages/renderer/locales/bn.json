@@ -3,8 +3,8 @@
     "cancel": "বাতিল",
     "save": "সংরক্ষণ",
     "or": "অথবা",
-    "saving": "সংরক্ষণ করা হচ্ছে...",
-    "validating": "যাচাই করা হচ্ছে...",
+    "saving": "সংরক্ষণ করা হচ্ছে…",
+    "validating": "যাচাই করা হচ্ছে…",
     "delete": "মুছুন",
     "confirm": "নিশ্চিত করুন",
     "apply": "প্রয়োগ করুন",
@@ -16,7 +16,7 @@
     "done": "সম্পন্ন",
     "gotIt": "বুঝেছি",
     "close": "বন্ধ করুন",
-    "loading": "লোড হচ্ছে...",
+    "loading": "লোড হচ্ছে…",
     "error": {
       "unexpected": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
       "unexpectedRemove": "কী অপসারণ করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "আপডেট দেখুন",
     "clear": "মুছুন",
     "currentVersionLabel": "বর্তমান সংস্করণ",
-    "downloadingUpdate": "আপডেট ডাউনলোড হচ্ছে...",
+    "downloadingUpdate": "আপডেট ডাউনলোড হচ্ছে…",
     "downloadingUpdateProgress": "আপডেট {{percent}} শতাংশ ডাউনলোড হচ্ছে",
     "downloadingUpdateShort": "ডাউনলোড হচ্ছে",
     "downloadUpdateNow": "আপডেট ডাউনলোড করুন",
@@ -97,7 +97,7 @@
     "send": "পাঠান",
     "dismiss": "বন্ধ করুন",
     "moreActions": "আরও কাজ",
-    "installingUpdate": "আপডেট ইনস্টল হচ্ছে...",
+    "installingUpdate": "আপডেট ইনস্টল হচ্ছে…",
     "installingUpdateShort": "ইনস্টল হচ্ছে",
     "ok": "ঠিক আছে",
     "minimumVersionValue": "সমর্থিত সর্বনিম্ন সংস্করণ: v{{version}}",
@@ -216,7 +216,7 @@
   },
   "input": {
     "connect": "সংযোগ করুন",
-    "connecting": "সংযোগ হচ্ছে...",
+    "connecting": "সংযোগ হচ্ছে…",
     "connectTip": "পরামর্শ: সংযোগ উইন্ডোতে সাইন ইন করুন বা যাচাই সম্পূর্ণ করুন, তারপর চালিয়ে যেতে উইন্ডো বন্ধ করুন।",
     "fromDevice": "আপনার ডিভাইস থেকে",
     "fromWeb": "ওয়েব থেকে",
@@ -232,7 +232,7 @@
     "qualityHigh": "উচ্চ",
     "qualityMedium": "মাঝারি",
     "qualityLow": "নিম্ন",
-    "downloading": "ডাউনলোড হচ্ছে...",
+    "downloading": "ডাউনলোড হচ্ছে…",
     "selectFile": "ফাইল নির্বাচন করুন",
     "selectVideoFile": "ভিডিও ফাইল নির্বাচন করুন",
     "selectVideoAudioFile": "ভিডিও বা অডিও ফাইল নির্বাচন করুন",
@@ -255,7 +255,7 @@
     "downloadFinishedWatchNow": "এখনই দেখুন",
     "downloadFinishedWatchLater": "পরে দেখুন",
     "videoSuggestion": {
-      "show": "আমাকে একটি ভিডিও সাজেস্ট করুন",
+      "show": "AI দিয়ে ভিডিও খুঁজুন",
       "hide": "ভিডিও সাজেশন লুকান",
       "modelHint": "বর্তমান মডেল",
       "sourceHint": "উৎস খুঁজুন",
@@ -269,7 +269,7 @@
       "composerHint": "যেকোনো ভাষা",
       "composerMeta": "অনুসন্ধানে Enter চাপুন",
       "placeholder": "যেমন রাতে শান্ত জাপানি রাস্তায় হাঁটা",
-      "thinking": "ভাবছি...",
+      "thinking": "ভাবছি…",
       "resultsFor": "ফলাফল",
       "downloadThis": "ডাউনলোড করুন",
       "failedToStart": "সাজেশন শুরু করা যায়নি",
@@ -344,11 +344,11 @@
       "activityComplete": "খোঁজের কার্যক্রম সম্পন্ন।",
       "nextActionHint": "একটি ভিডিও বাছুন, তারপর ডাউনলোড করুন বা YouTube-এ খুলুন।",
       "stagePending": "অপেক্ষমাণ",
-      "stageRunning": "চলছে...",
+      "stageRunning": "চলছে…",
       "stageCleared": "সম্পন্ন",
       "searchQueryLabel": "সার্চ কুয়েরি",
       "searchMore": "আরও খুঁজুন",
-      "searchMoreLoading": "আরও খোঁজা হচ্ছে...",
+      "searchMoreLoading": "আরও খোঁজা হচ্ছে…",
       "resetChat": "চ্যাট রিসেট করুন",
       "useLastSearch": "শেষ সেটআপ ব্যবহার করুন",
       "showFollowUps": "পরবর্তী প্রস্তাবনা",
@@ -407,10 +407,10 @@
       "savedDownloads": "সংরক্ষিত ডাউনলোড",
       "savedDownloadsCount": "{{count}}টি সংরক্ষিত ডাউনলোড",
       "savedPreferencesCount": "{{count}}টি সংরক্ষিত পছন্দ",
-      "searchingLong": "এখনও ভিডিও খোঁজা হচ্ছে...",
+      "searchingLong": "এখনও ভিডিও খোঁজা হচ্ছে…",
       "searchingVeryLong": "সাধারণের চেয়ে বেশি সময় লাগছে, তবে এখনও চলছে।",
-      "stillWorking": "এখনও কাজ চলছে...",
-      "toggleCopy": "ওয়ার্কফ্লো ছাড়াই সোর্স ভিডিও খুঁজতে YouTube-এ অনুসন্ধান করুন।",
+      "stillWorking": "এখনও কাজ চলছে…",
+      "toggleCopy": "নিজের ভাষায় জিজ্ঞেস করুন। AI ঠিক YouTube ভিডিওগুলো খুঁজে দেবে।",
       "stage": {
         "answerer": "কোয়েরি চালান",
         "planner": "সার্চ তৈরি",
@@ -473,7 +473,7 @@
     "translate": "অনুবাদ করুন",
     "continueTranscribing": "ট্রান্সক্রিপশন চালিয়ে যান",
     "generate": "সাবটাইটেল তৈরি করুন",
-    "generating": "তৈরি করা হচ্ছে...",
+    "generating": "তৈরি করা হচ্ছে…",
     "generateNow": "এখন সাবটাইটেল তৈরি করুন",
     "translation": "অনুবাদ",
     "improveTranscription": "ট্রান্সক্রিপশন উন্নত করুন",
@@ -507,7 +507,7 @@
       "openPermission": "ফাইলটি পড়ার অনুমতি Translator-এর নেই। ফাইলের পারমিশন দেখুন, অথবা অন্য ফোল্ডারে কপি করে আবার চেষ্টা করুন।",
       "openMissing": "সাবটাইটেল ফাইলটি আর সেখানে নেই। হয়তো সরানো বা মুছে ফেলা হয়েছে।",
       "openFailed": "Translator সাবটাইটেল ফাইলটি খুলতে পারেনি। এটি .srt ফাইল কি না দেখে আবার চেষ্টা করুন।",
-      "saveFailed": "Translator সাবটাইটেল সেভ করতে পারেনি। আবার চেষ্টা করুন, অথবা “সাবটাইটেল অন্য নামে সংরক্ষণ করুন...” দিয়ে অন্য ফোল্ডারে রাখুন।"
+      "saveFailed": "Translator সাবটাইটেল সেভ করতে পারেনি। আবার চেষ্টা করুন, অথবা “সাবটাইটেল অন্য নামে সংরক্ষণ করুন…” দিয়ে অন্য ফোল্ডারে রাখুন।"
     }
   },
   "summary": {
@@ -571,7 +571,7 @@
     "exitCombineMode": "একত্রীকরণ থেকে বের হন",
     "reorderHint": "পুনর্বিন্যাস করতে টানুন:",
     "cutCombined": "একত্রিত কাটুন",
-    "cuttingCombined": "কাটা হচ্ছে...",
+    "cuttingCombined": "কাটা হচ্ছে…",
     "combinedHighlightReady": "একত্রিত হাইলাইট প্রস্তুত",
     "downloadCombined": "একত্রিত ক্লিপ ডাউনলোড করুন",
     "saveCombinedDialogTitle": "একত্রিত হাইলাইট ক্লিপ সংরক্ষণ করুন",
@@ -680,15 +680,15 @@
     },
     "header": {
       "save": "সাবটাইটেল সংরক্ষণ করুন",
-      "saveAs": "সাবটাইটেল অন্য নামে সংরক্ষণ করুন...",
+      "saveAs": "সাবটাইটেল অন্য নামে সংরক্ষণ করুন…",
       "saveTooltip": "মূল ফাইলে পরিবর্তনগুলি সংরক্ষণ করুন",
-      "saveAsTooltip": "সরাসরি সংরক্ষণ সক্ষম করতে প্রথমে নতুন নামে সংরক্ষণ করুন"
+      "saveAsTooltip": "সরাসরি সেভ করতে আগে “সাবটাইটেল অন্য নামে সংরক্ষণ করুন…” ব্যবহার করুন"
     },
     "mergeControls": {
       "fontSizeLabel": "ফন্ট আকার:",
       "styleLabel": "স্টাইল:",
       "mergeButton": "সাবটাইটেলগুলি একত্রিত করুন",
-      "mergingButton": "একত্রিত করা হচ্ছে..."
+      "mergingButton": "একত্রিত করা হচ্ছে…"
     },
     "undo": {
       "removed": "লাইন মুছে ফেলা হয়েছে।",
@@ -755,7 +755,7 @@
         "modelOn": "ElevenLabs TTS প্রিমিয়াম ভয়েস"
       },
       "videoSuggestionModel": {
-        "label": "ভিডিও সাজেশন মডেল",
+        "label": "ভিডিও সাজেশনের মান",
         "help": "অটো = সাধারণ অনুবাদ ড্রাফটের মতো একই মডেল",
         "default": "ডিফল্ট (অনুবাদের ডিফল্টের মতো)",
         "quality": "কোয়ালিটি (অনুবাদের কোয়ালিটির মতো)"
@@ -781,7 +781,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "এই ভয়েস প্রিভিউ করুন",
-      "previewing": "চালানো হচ্ছে...",
+      "previewing": "চালানো হচ্ছে…",
       "previewFree": "প্রিভিউ",
       "mixLabel": "ডাবিং ভলিউম বনাম মূল ভিডিও ভলিউম",
       "mixHelp": "ডাব করা ভয়েসের নিচে মূল সাউন্ডট্র্যাক কতটা বাজবে তা নিয়ন্ত্রণ করুন।",
@@ -795,7 +795,7 @@
       "yourBalance": "আপনার ব্যালান্স",
       "canClone": "আপনি ক্লোন করতে পারবেন",
       "upToMinutes": "{{minutes}} মিনিট পর্যন্ত",
-      "loading": "লোড হচ্ছে...",
+      "loading": "লোড হচ্ছে…",
       "previewWithMinutes": "প্রিভিউ ({{cost}})",
       "previewFailed": "ভয়েস প্রিভিউ চালানো যায়নি। আবার চেষ্টা করুন।"
     },
@@ -946,7 +946,8 @@
       "howToGet": "এই কী কীভাবে পাবেন",
       "missing": "আগে একটি API কী পেস্ট করুন।",
       "savedEnding": "সেভ করা কী (শেষে {{last4}})",
-      "savedHidden": "সেভ করা কী (লুকানো)"
+      "savedHidden": "সেভ করা কী (লুকানো)",
+      "providerLabel": "{{provider}} API কী"
     },
     "byoStack": {
       "title": "আপনার AI সেটআপ"
@@ -1057,14 +1058,14 @@
   },
   "credits": {
     "title": "আপনার মিনিট",
-    "loading": "লোড হচ্ছে...",
+    "loading": "লোড হচ্ছে…",
     "usingApiKey": "API কী ব্যবহার করা হচ্ছে",
     "usingOpenAi": "OpenAI ব্যবহার হচ্ছে",
     "usingAnthropic": "Claude ব্যবহার হচ্ছে",
     "usingElevenLabs": "ElevenLabs ব্যবহার হচ্ছে",
     "hours": "ঘণ্টা",
     "translationHoursShort": "অনুবাদ ঘণ্টা",
-    "redirectingToPayment": "নিরাপদ চেকআউট খোলা হচ্ছে...",
+    "redirectingToPayment": "নিরাপদ চেকআউট খোলা হচ্ছে…",
     "transcriptionMinutesShort": "{{minutes}} মিনিট ট্রান্সক্রিপশন",
     "transcriptionTimeShort": "{{time}} ট্রান্সক্রিপশন",
     "pill": {
@@ -1169,9 +1170,9 @@
     "resetCreditsToZeroTitle": "অ্যাডমিন: ক্রেডিট ০-এ রিসেট করুন",
     "toggleByoPreviewTitle": "অ্যাডমিন: BYO প্রিভিউ মোড টগল করুন (BYO কেনা হয়নি এমন UI দেখুন)",
     "addCredits": "৩৫০k ক্রেডিট যোগ করুন",
-    "adding": "যোগ করা হচ্ছে...",
+    "adding": "যোগ করা হচ্ছে…",
     "resetToZero": "০-এ রিসেট করুন",
-    "resetting": "রিসেট করা হচ্ছে...",
+    "resetting": "রিসেট করা হচ্ছে…",
     "byoPreview": "BYO প্রিভিউ",
     "byoPreviewOn": "BYO প্রিভিউ চালু",
     "confirmResetCreditsToZero": "আপনি কি নিশ্চিত যে ক্রেডিট ০-এ রিসেট করতে চান? এই কাজটি ফিরিয়ে আনা যাবে না।"
@@ -1183,7 +1184,7 @@
     "middleEastAfrica": "মধ্যপ্রাচ্য / আফ্রিকা"
   },
   "languages": {
-    "original": "অডিও এর মতো",
+    "original": "অডিওর মতো",
     "english": "ইংরেজি",
     "korean": "কোরিয়ান",
     "japanese": "জাপানি",
@@ -1237,13 +1238,13 @@
       "fileTooLargeForVoiceCloning": "ভয়েস ক্লোনিংয়ের জন্য ভিডিও ফাইল অনেক বড় ({{size}}MB)। সর্বোচ্চ অনুমোদিত {{max}}MB। অনুগ্রহ করে ছোট ভিডিও ব্যবহার করুন বা ভয়েস ক্লোনিং বন্ধ করুন।"
     },
     "status": {
-      "starting": "শুরু হচ্ছে...",
+      "starting": "শুরু হচ্ছে…",
       "completed": "সম্পন্ন",
       "cancelled": "বাতিল",
       "error": "ত্রুটি"
     },
     "buttons": {
-      "redirectingToPayment": "পেমেন্টে পুনর্নির্দেশ করা হচ্ছে..."
+      "redirectingToPayment": "পেমেন্টে পুনর্নির্দেশ করা হচ্ছে…"
     },
     "workflow": {
       "stepOne": "ধাপ ১",
@@ -1265,14 +1266,14 @@
       "saveOutputsTitle": "আউটপুট সেভ করুন",
       "saveOutputsDescription": "যে কোনো সোর্স বা ডাব করা মিডিয়া সংরক্ষণ করতে চাইলে অ্যাপের ওয়ার্কস্পেসের বাইরে রাখুন।"
     },
-    "calculatingCost": "খরচ গণনা করা হচ্ছে...",
+    "calculatingCost": "খরচ গণনা করা হচ্ছে…",
     "welcomeCredits": {
       "message": "ট্রান্সক্রিপশন আর অনুবাদ চেষ্টা করে দেখার জন্য আপনার ফ্রি মিনিট আছে (প্রায় ২০ মিনিটের ভিডিও)।"
     }
   },
   "findBar": {
-    "findPlaceholder": "সাবটাইটেলে খুঁজুন...",
-    "replacePlaceholder": "এটি দিয়ে প্রতিস্থাপন করুন...",
+    "findPlaceholder": "সাবটাইটেলে খুঁজুন…",
+    "replacePlaceholder": "এটি দিয়ে প্রতিস্থাপন করুন…",
     "replaceAll": "সব প্রতিস্থাপন করুন",
     "nextMatch": "পরবর্তী মিল (Enter)",
     "previousMatch": "পূর্ববর্তী মিল (Shift+Enter)",
@@ -1294,7 +1295,7 @@
       "howToGet": "API কী কীভাবে পাবেন",
       "enable": "আমার API কী ব্যবহার করুন",
       "done": "সম্পন্ন",
-      "ready": "সব কাজের জন্য কী তৈরি। এখন “আমার API কী ব্যবহার করুন” চালু করতে পারেন।",
+      "ready": "দরকারি সব কী তৈরি। এখন নিজের API কী ব্যবহার করতে পারেন।",
       "missingTranslation": "অনুবাদের জন্য এখনও {{providers}} দরকার।",
       "messageElevenLabsAudio": "আপনার API কী ব্যবহার করতে অনুবাদের জন্য একটি OpenAI বা Anthropic কী প্রয়োজন। ট্রান্সক্রিপশন ও ডাবিং শুধুমাত্র ElevenLabs ব্যবহার করে, তাই সেগুলোর জন্যও একটি ElevenLabs কী যোগ করুন।",
       "audioNeedsElevenLabs": "ElevenLabs কী ছাড়া, আপনার API কী চালু থাকা অবস্থায় ট্রান্সক্রিপশন ও ডাবিং অনুপলব্ধ।"
@@ -1453,25 +1454,25 @@
   "progress": {
     "preparingVideoExport": "ভিডিও এক্সপোর্টের প্রস্তুতি চলছে…",
     "downloadingVideoExportTools": "ভিডিও এক্সপোর্টের সরঞ্জাম ডাউনলোড হচ্ছে… {{percent}}%",
-    "beginningReview": "রিভিউ শুরু হচ্ছে...",
-    "starting": "শুরু হচ্ছে...",
+    "beginningReview": "রিভিউ শুরু হচ্ছে…",
+    "starting": "শুরু হচ্ছে…",
     "completed": "সম্পন্ন",
     "processCancelled": "প্রক্রিয়া বাতিল হয়েছে",
     "mergingTitle": "ভিডিও এবং সাবটাইটেল মার্জ করা হচ্ছে",
-    "extractingAudio": "অডিও এক্সট্র্যাক্ট করা হচ্ছে...",
+    "extractingAudio": "অডিও এক্সট্র্যাক্ট করা হচ্ছে…",
     "transcribingOf": "ট্রান্সক্রাইব করা হচ্ছে {{done}}/{{total}}",
     "error": "ত্রুটি",
     "transcribedChunks": "ট্রান্সক্রাইব করা হয়েছে {{done}}/{{total}} অংশ",
     "transcribingElevenLabs": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে (~{{minutes}} মিনিট বাকি)",
     "transcribingElevenLabsHours": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে (~{{hours}}ঘ {{minutes}}মি বাকি)",
-    "transcribingElevenLabsFinishing": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে...",
-    "transcriptionRetry": "সংযোগ ব্যর্থ, পুনরায় চেষ্টা করা হচ্ছে ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে…",
+    "transcriptionRetry": "সংযোগ ব্যর্থ, পুনরায় চেষ্টা করা হচ্ছে ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "অডিও আপলোড হচ্ছে…",
     "gapRepair": "গ্যাপ মেরামত #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "অনুপস্থিত সাবটাইটেল মেরামত করা হচ্ছে (পুনরাবৃত্তি {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "সাবটাইটেল পরিষ্কার করা হচ্ছে ({{done}}/{{total}})",
     "translationCleanup": "অনূদিত সাবটাইটেল পরিষ্কার করা হচ্ছে ({{done}}/{{total}})",
-    "reviewingSlow": "রিভিউ করা হচ্ছে (এতে কিছু সময় লাগতে পারে...) {{done}}/{{total}}",
+    "reviewingSlow": "রিভিউ করা হচ্ছে (এতে কিছু সময় লাগতে পারে…) {{done}}/{{total}}",
     "reviewingRange": "রিভিউ করা হচ্ছে {{start}}–{{end}} ({{total}} এর মধ্যে)",
     "legacy": {
       "aligningVoices": "কণ্ঠস্বর মেলানো হচ্ছে {{done}}/{{total}}…",
@@ -1578,7 +1579,7 @@
     "optionalMessagePlaceholder": "আপনি কী করার চেষ্টা করছিলেন?",
     "sendReport": "রিপোর্ট পাঠান",
     "reportPrompt": "কিছু একটা সমস্যা হয়েছে। দ্রুত সমাধানের জন্য ডেভেলপারকে রিপোর্ট করুন।",
-    "preparingReport": "ডায়াগনস্টিক বান্ডেল প্রস্তুত করা হচ্ছে...",
+    "preparingReport": "ডায়াগনস্টিক বান্ডেল প্রস্তুত করা হচ্ছে…",
     "reportContextWarning": "কিছু ডায়াগনস্টিক প্রেক্ষাপট লোড করা যায়নি। রিপোর্টে তবুও এই অ্যাপের বিবরণ থাকবে।",
     "reportPromptTask": {
       "transcription": "অপ্রত্যাশিত একটি সমস্যায় ট্রান্সক্রিপশন থেমে গেছে। রিপোর্টটি পাঠান, আমরা ঠিক করে দেব।",
@@ -1864,6 +1865,7 @@
     "deviceIdReplaced": "যে ফাইলটি এই কম্পিউটারকে আপনার মিনিটের সাথে যুক্ত রাখে, সেটি নষ্ট হয়ে গিয়েছিল, তাই Translator নতুন একটি সংযোগ তৈরি করেছে। কেনা মিনিট হয়তো এখানে দেখা যাবে না। কেনার রসিদসহ সাপোর্টে যোগাযোগ করুন, আমরা মিনিটগুলো ফিরিয়ে দেব।",
     "contactSupport": "সাপোর্টে যোগাযোগ করুন",
     "openSettings": "সেটিংস খুলুন",
-    "supportSubject": "Translator এই কম্পিউটারটি রিসেট করার পর আমার মিনিট খুঁজে পাচ্ছি না"
+    "supportSubject": "Translator এই কম্পিউটারটি রিসেট করার পর আমার মিনিট খুঁজে পাচ্ছি না",
+    "settingsResetKeptLanguage": "Translator-এর সেটিংস ফাইল নষ্ট হয়ে গিয়েছিল, তাই আপনার পছন্দগুলো রিসেট করা হয়েছে: সাবটাইটেলের ভাষা, API কী এবং অন্যান্য অপশন। ইন্টারফেসের ভাষা আগের মতোই আছে। নষ্ট ফাইলটির একটি কপি রেখে দেওয়া হয়েছে। একবার সেটিংস দেখে নিন।"
   }
 }

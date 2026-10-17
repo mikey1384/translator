@@ -266,7 +266,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
     <>
       <Modal
         open={open}
-        title={t('dialogs.apiKeysRequired.title', 'API Keys Required')}
+        title={t('dialogs.apiKeysRequired.title', 'API keys required')}
         titleId="api-keys-required-title"
         onClose={onClose}
         contentClassName={contentStyles}
@@ -292,7 +292,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
                 disabled={!conditionsMet}
               >
                 {conditionsMet
-                  ? t('dialogs.apiKeysRequired.enable', 'Use My API Keys')
+                  ? t('dialogs.apiKeysRequired.enable', 'Use my API keys')
                   : t('dialogs.apiKeysRequired.done', 'Done')}
               </Button>
             </div>

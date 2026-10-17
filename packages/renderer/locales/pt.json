@@ -3,20 +3,20 @@
     "cancel": "Cancelar",
     "save": "Salvar",
     "or": "OU",
-    "saving": "Salvando...",
-    "validating": "Validando...",
+    "saving": "Salvando…",
+    "validating": "Validando…",
     "delete": "Excluir",
     "confirm": "Confirmar",
     "apply": "Aplicar",
     "back": "←",
     "to": "Voltar para",
     "app": "App",
-    "backToApp": "Voltar para o App",
+    "backToApp": "Voltar para o app",
     "next": "Próximo",
     "done": "Concluído",
     "gotIt": "Entendi",
     "close": "Fechar",
-    "loading": "Carregando...",
+    "loading": "Carregando…",
     "error": {
       "unexpected": "Ocorreu um erro inesperado.",
       "unexpectedRemove": "Ocorreu um erro inesperado ao remover a chave.",
@@ -46,13 +46,13 @@
     "video": "Vídeo",
     "selected": "Selecionado",
     "retry": "Tentar novamente",
-    "uiLanguage": "Idioma da Interface",
-    "reloadPage": "Recarregar Página",
+    "uiLanguage": "Idioma da interface",
+    "reloadPage": "Recarregar página",
     "reloadPageAria": "Recarregar a página",
-    "backToTop": "Voltar ao Topo",
+    "backToTop": "Voltar ao topo",
     "backToTopAria": "Rolar de volta ao topo",
     "confirmReload": "Tem certeza que deseja recarregar a página? Quaisquer alterações não salvas podem ser perdidas.",
-    "installUpdate": "Reiniciar para Atualizar",
+    "installUpdate": "Reiniciar para atualizar",
     "confirmInstallUpdate": "Instalar atualização e reiniciar?",
     "downloadUpdate": "Clique para baixar atualização",
     "dismissError": "Fechar erro",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Verificar atualizações",
     "clear": "Limpar",
     "currentVersionLabel": "Versão atual",
-    "downloadingUpdate": "Baixando atualização...",
+    "downloadingUpdate": "Baixando atualização…",
     "downloadingUpdateProgress": "Baixando atualização: {{percent}}%",
     "downloadingUpdateShort": "BAIXANDO",
     "downloadUpdateNow": "Baixar atualização",
@@ -86,8 +86,8 @@
     "whatsNewVersionTitle": "Novidades na v{{version}}",
     "fileFilters": {
       "srtFiles": "Arquivos SRT",
-      "mediaFiles": "Arquivos de Mídia",
-      "videoFiles": "Arquivos de Vídeo",
+      "mediaFiles": "Arquivos de mídia",
+      "videoFiles": "Arquivos de vídeo",
       "textFiles": "Arquivos de texto",
       "allFiles": "Todos os arquivos",
       "subtitleFiles": "Arquivos de legenda"
@@ -97,7 +97,7 @@
     "send": "Enviar",
     "dismiss": "Dispensar",
     "moreActions": "Mais ações",
-    "installingUpdate": "Instalando atualização...",
+    "installingUpdate": "Instalando atualização…",
     "installingUpdateShort": "Instalando",
     "ok": "OK",
     "minimumVersionValue": "Versão mínima compatível: v{{version}}",
@@ -217,11 +217,11 @@
   },
   "input": {
     "connect": "Conectar",
-    "connecting": "Conectando...",
+    "connecting": "Conectando…",
     "connectTip": "Dica: Na janela de conexão, faça login ou complete a verificação e feche a janela para continuar.",
     "fromDevice": "Do seu dispositivo",
     "fromWeb": "Da web",
-    "downloadVideo": "Baixar Vídeo",
+    "downloadVideo": "Baixar vídeo",
     "enterVideoUrl": "Inserir URL do vídeo",
     "quality": "Qualidade",
     "qualityPresets": "Predefinições",
@@ -233,9 +233,9 @@
     "qualityHigh": "Alta",
     "qualityMedium": "Média",
     "qualityLow": "Baixa",
-    "downloading": "Baixando...",
-    "selectFile": "Selecionar Arquivo",
-    "selectVideoFile": "Selecionar Arquivo de Vídeo",
+    "downloading": "Baixando…",
+    "selectFile": "Selecionar arquivo",
+    "selectVideoFile": "Selecionar arquivo de vídeo",
     "selectVideoAudioFile": "Selecionar arquivo de vídeo ou áudio",
     "saveOriginalVideo": "Salvar vídeo original",
     "localFileDescription": "Envie um arquivo de vídeo ou áudio do seu computador",
@@ -247,7 +247,7 @@
     "fileSelected": "Arquivo selecionado",
     "transcribeOnly": "Transcrever áudio",
     "srtLoaded": "Transcrição concluída",
-    "srtFileLoaded": "SRT Carregado",
+    "srtFileLoaded": "SRT carregado",
     "featuresUnlockAfterTranscription": "Transcreva, traduza ou crie destaques deste vídeo.",
     "preSubtitleActionsHint": "Transcreva, traduza ou gere destaques deste vídeo.",
     "saveDubbedVideo": "Salvar vídeo dublado",
@@ -270,7 +270,7 @@
       "composerHint": "Qualquer idioma",
       "composerMeta": "Pressione Enter para buscar",
       "placeholder": "ex. passeios calmos por ruas japonesas à noite",
-      "thinking": "Pensando...",
+      "thinking": "Pensando…",
       "resultsFor": "Resultados para",
       "downloadThis": "Baixar",
       "failedToStart": "Não foi possível iniciar as sugestões",
@@ -345,11 +345,11 @@
       "activityComplete": "Atividade de pesquisa concluída.",
       "nextActionHint": "Escolha um vídeo e depois baixe-o ou abra no YouTube.",
       "stagePending": "Pendente",
-      "stageRunning": "Em execução...",
+      "stageRunning": "Em execução…",
       "stageCleared": "Concluída",
       "searchQueryLabel": "Consulta de busca",
       "searchMore": "Buscar mais",
-      "searchMoreLoading": "Buscando mais...",
+      "searchMoreLoading": "Buscando mais…",
       "resetChat": "Redefinir chat",
       "useLastSearch": "Usar a última configuração",
       "showFollowUps": "Sugestões de continuação",
@@ -408,9 +408,9 @@
       "savedDownloads": "Downloads salvos",
       "savedDownloadsCount": "{{count}} downloads salvos",
       "savedPreferencesCount": "{{count}} preferências salvas",
-      "searchingLong": "Ainda buscando vídeos...",
+      "searchingLong": "Ainda buscando vídeos…",
       "searchingVeryLong": "Está demorando mais que o normal, mas ainda está em andamento.",
-      "stillWorking": "Ainda trabalhando...",
+      "stillWorking": "Ainda trabalhando…",
       "toggleCopy": "Pesquise no YouTube um vídeo de origem sem sair do fluxo.",
       "stage": {
         "answerer": "Processar consulta",
@@ -475,8 +475,8 @@
     "translate": "Traduzir",
     "continueTranscribing": "Continuar transcrevendo",
     "generate": "Gerar legendas",
-    "generating": "Gerando...",
-    "generateNow": "Gerar Legendas Agora",
+    "generating": "Gerando…",
+    "generateNow": "Gerar legendas agora",
     "translation": "Tradução",
     "improveTranscription": "Melhorar transcrição",
     "improveTranslation": "Melhorar tradução",
@@ -510,7 +510,7 @@
       "openPermission": "O Translator não tem permissão para ler esse arquivo. Verifique as permissões dele ou copie-o para outra pasta e tente de novo.",
       "openMissing": "Esse arquivo de legendas não está mais lá. Ele pode ter sido movido ou excluído.",
       "openFailed": "O Translator não conseguiu abrir esse arquivo de legendas. Confira se é um arquivo .srt e tente de novo.",
-      "saveFailed": "O Translator não conseguiu salvar as legendas. Tente de novo ou escolha “Salvar legendas como...” para usar outra pasta."
+      "saveFailed": "O Translator não conseguiu salvar as legendas. Tente de novo ou escolha “Salvar legendas como…” para usar outra pasta."
     }
   },
   "summary": {
@@ -574,9 +574,9 @@
     "exitCombineMode": "Sair de combinar",
     "reorderHint": "Arraste para reordenar:",
     "cutCombined": "Cortar combinado",
-    "cuttingCombined": "Cortando...",
+    "cuttingCombined": "Cortando…",
     "combinedHighlightReady": "Destaque combinado pronto",
-    "downloadCombined": "Baixar clip combinado",
+    "downloadCombined": "Baixar clipe combinado",
     "saveCombinedDialogTitle": "Salvar clip de destaques combinado",
     "combinedCutFailed": "Falha ao cortar destaques combinados: {{message}}",
     "highlightsInsufficientCredits": "O resumo está pronto, mas a busca por destaques parou porque seus minutos acabaram.",
@@ -687,15 +687,15 @@
     },
     "header": {
       "save": "Salvar legendas",
-      "saveAs": "Salvar legendas como...",
+      "saveAs": "Salvar legendas como…",
       "saveTooltip": "Salvar alterações no arquivo original",
-      "saveAsTooltip": "Salvar Como primeiro para habilitar salvamento direto"
+      "saveAsTooltip": "Use primeiro “Salvar legendas como…” para ativar o salvamento direto"
     },
     "mergeControls": {
-      "fontSizeLabel": "Tamanho da Fonte:",
+      "fontSizeLabel": "Tamanho da fonte:",
       "styleLabel": "Estilo:",
-      "mergeButton": "Mesclar Legendas",
-      "mergingButton": "Mesclando..."
+      "mergeButton": "Mesclar legendas",
+      "mergingButton": "Mesclando…"
     },
     "undo": {
       "removed": "Linha excluída.",
@@ -750,7 +750,7 @@
         "modelOn": "Rascunho Claude Haiku 5.5 + revisão Claude Opus 5.5",
         "modelOnAnthropic": "Rascunho Claude Haiku 5.5 + revisão Claude Opus 5.5",
         "modelOff": "Apenas rascunho Claude Haiku 5.5",
-        "reviewProvider": "Fornecedor de revisão",
+        "reviewProvider": "Provedor de revisão",
         "openAiHighEnd": "Revisão avançada da OpenAI",
         "anthropicHighEnd": "Revisão avançada da Anthropic"
       },
@@ -789,7 +789,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "Pré-visualizar esta voz",
-      "previewing": "Reproduzindo...",
+      "previewing": "Reproduzindo…",
       "previewFree": "Pré-visualizar",
       "mixLabel": "Volume da dublagem vs volume do vídeo original",
       "mixHelp": "Controle quanto da trilha sonora original toca sob a voz dublada.",
@@ -803,7 +803,7 @@
       "yourBalance": "Seu saldo",
       "canClone": "Você pode clonar",
       "upToMinutes": "até {{minutes}} min",
-      "loading": "Carregando...",
+      "loading": "Carregando…",
       "previewWithMinutes": "Pré-visualizar ({{cost}})",
       "previewFailed": "Não foi possível tocar a prévia da voz. Tente de novo."
     },
@@ -857,7 +857,7 @@
       "claudeOpus": "Claude Opus 5.5",
       "anthropicHighEnd": "Modelo avançado da Anthropic",
       "claudeSummaryStack": "Claude Sonnet 5.5 / Claude Opus 5.5",
-      "reviewPass": "Tradução (Revisão)",
+      "reviewPass": "Tradução (revisão)",
       "off": "Desativado",
       "on": "Ativado",
       "defaultMode": "Padrão",
@@ -923,7 +923,7 @@
       }
     },
     "byoAnthropic": {
-      "title": "Chave de API Anthropic (Opcional)",
+      "title": "Chave de API Anthropic (opcional)",
       "description": "Adicione sua chave de API da Anthropic para usar os modelos Claude diretamente na fase de revisão da tradução. Sem essa chave, o GPT-5.5 cuidará da etapa de revisão.",
       "apiKeyLabel": "Chave de API Anthropic",
       "hide": "Ocultar",
@@ -954,7 +954,8 @@
       "howToGet": "Como obter esta chave",
       "missing": "Cole uma chave de API primeiro.",
       "savedEnding": "Chave salva terminando em {{last4}}",
-      "savedHidden": "Chave salva (oculta)"
+      "savedHidden": "Chave salva (oculta)",
+      "providerLabel": "Chave de API {{provider}}"
     },
     "byoStack": {
       "title": "Seu stack de IA"
@@ -1067,7 +1068,7 @@
   },
   "credits": {
     "title": "Seus minutos",
-    "loading": "Carregando...",
+    "loading": "Carregando…",
     "usingApiKey": "Usando chave de API",
     "usingOpenAi": "Usando OpenAI",
     "usingAnthropic": "Usando Claude",
@@ -1144,8 +1145,8 @@
     "byStage5": "by stage_5"
   },
   "videoPlayer": {
-    "enterFullscreen": "Entrar em Tela Cheia",
-    "exitFullscreen": "Sair da Tela Cheia",
+    "enterFullscreen": "Entrar em tela cheia",
+    "exitFullscreen": "Sair da tela cheia",
     "playbackSpeed": "Velocidade de reprodução",
     "icloudWaitingTitle": "Baixando do iCloud",
     "icloudWaitingBody": "Este arquivo ainda não está armazenado localmente. No Finder, clique em 'Baixar' e aguarde até o ícone de nuvem desaparecer.",
@@ -1181,9 +1182,9 @@
     "resetCreditsToZeroTitle": "Admin: redefinir créditos para 0",
     "toggleByoPreviewTitle": "Admin: alternar modo de prévia BYO (ver UI como se BYO não estivesse comprado)",
     "addCredits": "Adicionar 350k créditos",
-    "adding": "Adicionando...",
+    "adding": "Adicionando…",
     "resetToZero": "Redefinir para 0",
-    "resetting": "Redefinindo...",
+    "resetting": "Redefinindo…",
     "byoPreview": "Prévia BYO",
     "byoPreviewOn": "Prévia BYO ATIVADA",
     "confirmResetCreditsToZero": "Tem certeza de que deseja redefinir os créditos para 0? Esta ação não pode ser desfeita."
@@ -1195,7 +1196,7 @@
     "middleEastAfrica": "Oriente Médio / África"
   },
   "languages": {
-    "original": "Igual ao Áudio",
+    "original": "Igual ao áudio",
     "english": "Inglês",
     "korean": "Coreano",
     "japanese": "Japonês",
@@ -1249,13 +1250,13 @@
       "fileTooLargeForVoiceCloning": "O arquivo de vídeo é muito grande para clonagem de voz ({{size}}MB). O máximo permitido é {{max}}MB. Por favor, use um vídeo mais curto ou desative a clonagem de voz."
     },
     "status": {
-      "starting": "Iniciando...",
+      "starting": "Iniciando…",
       "completed": "Concluído",
       "cancelled": "Cancelado",
       "error": "Erro"
     },
     "buttons": {
-      "redirectingToPayment": "Redirecionando para pagamento..."
+      "redirectingToPayment": "Redirecionando para pagamento…"
     },
     "workflow": {
       "stepOne": "Etapa 1",
@@ -1277,14 +1278,14 @@
       "saveOutputsTitle": "Salvar arquivos",
       "saveOutputsDescription": "Guarde fora do espaço de trabalho do app qualquer mídia original ou dublada que você queira preservar."
     },
-    "calculatingCost": "Calculando custo...",
+    "calculatingCost": "Calculando custo…",
     "welcomeCredits": {
       "message": "Você tem minutos grátis para experimentar a transcrição e a tradução (cerca de 20 minutos de vídeo)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Encontrar nas legendas...",
-    "replacePlaceholder": "Substituir por...",
+    "findPlaceholder": "Encontrar nas legendas…",
+    "replacePlaceholder": "Substituir por…",
     "replaceAll": "Substituir tudo",
     "nextMatch": "Próxima correspondência (Enter)",
     "previousMatch": "Correspondência anterior (Shift+Enter)",
@@ -1306,13 +1307,13 @@
       "howToGet": "Como obter chaves de API",
       "enable": "Usar minhas chaves de API",
       "done": "Concluído",
-      "ready": "A cobertura está completa. Agora você pode ativar “Usar minhas chaves de API”.",
+      "ready": "Tudo certo. Agora você pode usar suas próprias chaves de API.",
       "missingTranslation": "A tradução ainda precisa de {{providers}}.",
       "messageElevenLabsAudio": "Para usar suas chaves de API, você precisa de uma chave da OpenAI ou da Anthropic para tradução. A transcrição e a dublagem usam apenas a ElevenLabs, então adicione também uma chave da ElevenLabs para elas.",
       "audioNeedsElevenLabs": "Sem uma chave da ElevenLabs, a transcrição e a dublagem ficam indisponíveis enquanto suas chaves de API estão ativadas."
     },
-    "saveSrtFileAs": "Salvar Arquivo SRT Como",
-    "saveDownloadedVideoAs": "Salvar Vídeo Baixado Como",
+    "saveSrtFileAs": "Salvar arquivo SRT como",
+    "saveDownloadedVideoAs": "Salvar vídeo baixado como",
     "saveDubbedVideoAs": "Salvar vídeo dublado como",
     "unsavedSrtOnTranscribe": {
       "title": "Salvar as legendas atuais antes de transcrever?",
@@ -1321,7 +1322,7 @@
       "discardAndTranscribe": "Descartar e transcrever",
       "cancel": "Cancelar"
     },
-    "downloadInProgress": "Download em Progresso",
+    "downloadInProgress": "Download em andamento",
     "saveDownloadedFile": "Salvar o arquivo baixado: {{path}}",
     "transcriptionInProgress": "Transcrição em andamento",
     "translationInProgress": "Tradução em andamento",
@@ -1465,25 +1466,25 @@
   "progress": {
     "preparingVideoExport": "Preparando a exportação de vídeo…",
     "downloadingVideoExportTools": "Baixando as ferramentas de exportação de vídeo… {{percent}}%",
-    "beginningReview": "Iniciando revisão...",
-    "starting": "Iniciando...",
+    "beginningReview": "Iniciando revisão…",
+    "starting": "Iniciando…",
     "completed": "Concluído",
     "processCancelled": "Processo cancelado",
     "mergingTitle": "Combinando vídeo e legendas",
-    "extractingAudio": "Extraindo áudio...",
+    "extractingAudio": "Extraindo áudio…",
     "transcribingOf": "Transcrevendo {{done}}/{{total}}",
     "error": "Erro",
     "transcribedChunks": "{{done}}/{{total}} trechos transcritos",
     "transcribingElevenLabs": "Transcrevendo com ElevenLabs (~{{minutes}} min restantes)",
     "transcribingElevenLabsHours": "Transcrevendo com ElevenLabs (~{{hours}}h {{minutes}}m restantes)",
-    "transcribingElevenLabsFinishing": "Transcrevendo com ElevenLabs...",
-    "transcriptionRetry": "Conexão falhou, tentando novamente ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Transcrevendo com ElevenLabs…",
+    "transcriptionRetry": "Conexão falhou, tentando novamente ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Enviando o áudio…",
     "gapRepair": "Reparo de lacunas #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparando legendas ausentes (Iteração {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Limpando legendas ({{done}}/{{total}})",
     "translationCleanup": "Limpando legendas traduzidas ({{done}}/{{total}})",
-    "reviewingSlow": "Revisando (isso pode demorar um pouco...) {{done}}/{{total}}",
+    "reviewingSlow": "Revisando (isso pode demorar um pouco…) {{done}}/{{total}}",
     "reviewingRange": "Revisando {{start}}–{{end}} (de {{total}})",
     "legacy": {
       "aligningVoices": "Alinhando vozes {{done}}/{{total}}…",
@@ -1592,7 +1593,7 @@
     "optionalMessagePlaceholder": "O que você estava tentando fazer?",
     "sendReport": "Enviar relatório",
     "reportPrompt": "Algo deu errado. Reporte ao desenvolvedor para uma correção rápida.",
-    "preparingReport": "Preparando pacote de diagnóstico...",
+    "preparingReport": "Preparando pacote de diagnóstico…",
     "reportContextWarning": "Não foi possível carregar parte do contexto de diagnóstico. O relatório ainda incluirá detalhes desta aplicação.",
     "reportPromptTask": {
       "transcription": "A transcrição parou por causa de um problema inesperado. Envie este relatório para podermos corrigir.",
@@ -1899,6 +1900,7 @@
     "deviceIdReplaced": "O arquivo que liga este computador aos seus minutos estava corrompido, então o Translator criou um novo vínculo. Os minutos que você comprou podem não aparecer aqui. Fale com o suporte, envie o recibo da compra e nós devolvemos seus minutos.",
     "contactSupport": "Falar com o suporte",
     "openSettings": "Abrir Configurações",
-    "supportSubject": "Meus minutos sumiram depois que o Translator redefiniu este computador"
+    "supportSubject": "Meus minutos sumiram depois que o Translator redefiniu este computador",
+    "settingsResetKeptLanguage": "O arquivo de configurações do Translator estava corrompido, então suas preferências foram redefinidas: idioma das legendas, chaves de API e outras opções. O idioma da interface foi mantido. Uma cópia do arquivo corrompido foi guardada. Confira as Configurações."
   }
 }

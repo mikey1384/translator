@@ -3,8 +3,8 @@
     "cancel": "取消",
     "save": "保存",
     "or": "或",
-    "saving": "保存中...",
-    "validating": "验证中...",
+    "saving": "保存中…",
+    "validating": "验证中…",
     "delete": "删除",
     "confirm": "确认",
     "apply": "应用",
@@ -16,7 +16,7 @@
     "done": "完成",
     "gotIt": "知道了",
     "close": "关闭",
-    "loading": "加载中...",
+    "loading": "加载中…",
     "error": {
       "unexpected": "发生了意外错误。",
       "unexpectedRemove": "移除密钥时发生了意外错误。",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "检查更新",
     "clear": "清除",
     "currentVersionLabel": "当前版本",
-    "downloadingUpdate": "正在下载更新...",
+    "downloadingUpdate": "正在下载更新…",
     "downloadingUpdateProgress": "正在下载更新 {{percent}}%",
     "downloadingUpdateShort": "下载中",
     "downloadUpdateNow": "下载更新",
@@ -97,7 +97,7 @@
     "send": "发送",
     "dismiss": "关闭",
     "moreActions": "更多操作",
-    "installingUpdate": "正在安装更新...",
+    "installingUpdate": "正在安装更新…",
     "installingUpdateShort": "正在安装",
     "ok": "确定",
     "minimumVersionValue": "最低支持版本：v{{version}}",
@@ -216,7 +216,7 @@
   },
   "input": {
     "connect": "连接",
-    "connecting": "连接中...",
+    "connecting": "连接中…",
     "connectTip": "提示：在连接窗口中登录或完成验证，然后关闭窗口继续。",
     "fromDevice": "从你的设备",
     "fromWeb": "从网络",
@@ -232,7 +232,7 @@
     "qualityHigh": "高",
     "qualityMedium": "中",
     "qualityLow": "低",
-    "downloading": "下载中...",
+    "downloading": "下载中…",
     "selectFile": "选择文件",
     "selectVideoFile": "选择视频文件",
     "selectVideoAudioFile": "选择视频/音频文件",
@@ -255,7 +255,7 @@
     "downloadFinishedWatchNow": "现在观看",
     "downloadFinishedWatchLater": "稍后观看",
     "videoSuggestion": {
-      "show": "推荐视频",
+      "show": "用 AI 找视频",
       "hide": "隐藏视频推荐",
       "modelHint": "当前模型",
       "sourceHint": "搜索来源",
@@ -269,7 +269,7 @@
       "composerHint": "任意语言",
       "composerMeta": "按 Enter 搜索",
       "placeholder": "例如：夜晚宁静的日本街头漫步",
-      "thinking": "思考中...",
+      "thinking": "思考中…",
       "resultsFor": "搜索结果：",
       "downloadThis": "下载",
       "failedToStart": "无法启动推荐",
@@ -344,11 +344,11 @@
       "activityComplete": "搜索活动已完成。",
       "nextActionHint": "先选一个视频，然后下载或打开原始链接。",
       "stagePending": "等待中",
-      "stageRunning": "进行中...",
+      "stageRunning": "进行中…",
       "stageCleared": "已完成",
       "searchQueryLabel": "搜索词",
       "searchMore": "继续查找",
-      "searchMoreLoading": "正在继续查找...",
+      "searchMoreLoading": "正在继续查找…",
       "resetChat": "重置聊天",
       "useLastSearch": "使用上次设置",
       "showFollowUps": "推荐的后续想法",
@@ -409,8 +409,8 @@
       "savedPreferencesCount": "{{count}} 个已保存偏好",
       "searchingLong": "仍在搜索视频…",
       "searchingVeryLong": "比平时更久，但仍在处理中。",
-      "stillWorking": "仍在处理中...",
-      "toggleCopy": "无需离开当前流程，直接在 YouTube 搜索来源视频。",
+      "stillWorking": "仍在处理中…",
+      "toggleCopy": "用你的语言提问，AI 帮你找到合适的 YouTube 视频。",
       "stage": {
         "answerer": "处理查询",
         "planner": "构建搜索",
@@ -473,7 +473,7 @@
     "translate": "翻译",
     "continueTranscribing": "继续转录",
     "generate": "生成字幕",
-    "generating": "生成中...",
+    "generating": "生成中…",
     "generateNow": "立即生成字幕",
     "translation": "翻译",
     "improveTranscription": "改进转录",
@@ -506,7 +506,7 @@
       "openPermission": "Translator 没有读取该文件的权限。请检查文件权限，或将它复制到其他文件夹后重试。",
       "openMissing": "找不到这个字幕文件了，它可能已被移动或删除。",
       "openFailed": "Translator 无法打开这个字幕文件。请确认它是 .srt 文件，然后重试。",
-      "saveFailed": "Translator 无法保存字幕。请重试，或选择“字幕另存为...”换一个文件夹。"
+      "saveFailed": "Translator 无法保存字幕。请重试，或选择“字幕另存为…”换一个文件夹。"
     }
   },
   "summary": {
@@ -570,7 +570,7 @@
     "exitCombineMode": "退出合并",
     "reorderHint": "拖动以重新排序：",
     "cutCombined": "合并剪辑",
-    "cuttingCombined": "剪辑中...",
+    "cuttingCombined": "剪辑中…",
     "combinedHighlightReady": "合并精彩片段准备就绪",
     "downloadCombined": "下载合并剪辑",
     "saveCombinedDialogTitle": "保存合并的精彩片段",
@@ -679,15 +679,15 @@
     },
     "header": {
       "save": "保存字幕",
-      "saveAs": "字幕另存为...",
+      "saveAs": "字幕另存为…",
       "saveTooltip": "将更改保存到原始文件",
-      "saveAsTooltip": "先另存为以启用直接保存"
+      "saveAsTooltip": "先用“字幕另存为…”保存一次，之后即可直接保存"
     },
     "mergeControls": {
       "fontSizeLabel": "字体大小:",
       "styleLabel": "样式:",
       "mergeButton": "合并字幕",
-      "mergingButton": "合并中..."
+      "mergingButton": "合并中…"
     },
     "undo": {
       "removed": "已删除该行。",
@@ -754,7 +754,7 @@
         "modelOn": "ElevenLabs TTS 高级音色"
       },
       "videoSuggestionModel": {
-        "label": "视频推荐模型",
+        "label": "视频推荐质量",
         "help": "自动 = 与普通翻译草稿相同的模型",
         "default": "默认（与翻译默认一致）",
         "quality": "质量（与翻译质量一致）"
@@ -780,7 +780,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "预览此语音",
-      "previewing": "播放中...",
+      "previewing": "播放中…",
       "previewFree": "预览",
       "mixLabel": "配音音量 vs 原视频音量",
       "mixHelp": "调节在配音声音下方播放的原始音轨的音量比例。",
@@ -794,7 +794,7 @@
       "yourBalance": "你的余额",
       "canClone": "你可以克隆",
       "upToMinutes": "最多{{minutes}}分钟",
-      "loading": "加载中...",
+      "loading": "加载中…",
       "previewWithMinutes": "预览（{{cost}}）",
       "previewFailed": "无法播放语音预览。请重试。"
     },
@@ -945,7 +945,8 @@
       "howToGet": "如何获取此密钥",
       "missing": "请先粘贴 API 密钥。",
       "savedEnding": "已保存密钥（尾号 {{last4}}）",
-      "savedHidden": "已保存密钥（已隐藏）"
+      "savedHidden": "已保存密钥（已隐藏）",
+      "providerLabel": "{{provider}} API 密钥"
     },
     "byoStack": {
       "title": "你的 AI 栈"
@@ -1056,7 +1057,7 @@
   },
   "credits": {
     "title": "你的时长",
-    "loading": "加载中...",
+    "loading": "加载中…",
     "usingApiKey": "正在使用 API 密钥",
     "usingOpenAi": "使用OpenAI",
     "usingAnthropic": "使用Claude",
@@ -1168,9 +1169,9 @@
     "resetCreditsToZeroTitle": "管理员：将积分重置为 0",
     "toggleByoPreviewTitle": "管理员：切换 BYO 预览模式（查看未购买 BYO 时的界面）",
     "addCredits": "添加 35 万积分",
-    "adding": "添加中...",
+    "adding": "添加中…",
     "resetToZero": "重置为 0",
-    "resetting": "重置中...",
+    "resetting": "重置中…",
     "byoPreview": "BYO 预览",
     "byoPreviewOn": "BYO 预览已开启",
     "confirmResetCreditsToZero": "确定要将积分重置为 0 吗？此操作无法撤销。"
@@ -1236,13 +1237,13 @@
       "fileTooLargeForVoiceCloning": "视频文件过大，无法进行语音克隆（{{size}}MB）。最大允许为 {{max}}MB。请使用较短的视频或禁用语音克隆。"
     },
     "status": {
-      "starting": "正在启动...",
+      "starting": "正在启动…",
       "completed": "已完成",
       "cancelled": "已取消",
       "error": "错误"
     },
     "buttons": {
-      "redirectingToPayment": "正在跳转到支付..."
+      "redirectingToPayment": "正在跳转到支付…"
     },
     "workflow": {
       "stepOne": "第 1 步",
@@ -1264,14 +1265,14 @@
       "saveOutputsTitle": "保存文件",
       "saveOutputsDescription": "请将想保留的原始或配音媒体保存到应用工作区之外。"
     },
-    "calculatingCost": "正在计算费用...",
+    "calculatingCost": "正在计算费用…",
     "welcomeCredits": {
       "message": "你有免费时长，可以试试转录和翻译（约 20 分钟视频）。"
     }
   },
   "findBar": {
-    "findPlaceholder": "在字幕中查找...",
-    "replacePlaceholder": "替换为...",
+    "findPlaceholder": "在字幕中查找…",
+    "replacePlaceholder": "替换为…",
     "replaceAll": "全部替换",
     "nextMatch": "下一个匹配 (Enter)",
     "previousMatch": "上一个匹配 (Shift+Enter)",
@@ -1293,7 +1294,7 @@
       "howToGet": "如何获取 API 密钥",
       "enable": "使用我的 API 密钥",
       "done": "完成",
-      "ready": "覆盖条件已满足。现在可以启用“使用我的 API 密钥”。",
+      "ready": "所需的密钥已齐全，现在可以使用你自己的 API 密钥了。",
       "missingTranslation": "翻译仍需要 {{providers}}。",
       "messageElevenLabsAudio": "要使用你的 API 密钥，需要一个用于翻译的 OpenAI 或 Anthropic 密钥。转录和配音仅使用 ElevenLabs，因此也请为它们添加 ElevenLabs 密钥。",
       "audioNeedsElevenLabs": "没有 ElevenLabs 密钥时，在使用你的 API 密钥期间无法进行转录和配音。"
@@ -1452,19 +1453,19 @@
   "progress": {
     "preparingVideoExport": "正在准备导出视频…",
     "downloadingVideoExportTools": "正在下载视频导出工具… {{percent}}%",
-    "beginningReview": "开始审阅...",
-    "starting": "开始中...",
+    "beginningReview": "开始审阅…",
+    "starting": "开始中…",
     "completed": "已完成",
     "processCancelled": "进程已取消",
     "mergingTitle": "正在合并视频与字幕",
-    "extractingAudio": "正在提取音频...",
+    "extractingAudio": "正在提取音频…",
     "transcribingOf": "转录 {{done}}/{{total}}",
     "error": "错误",
     "transcribedChunks": "已转录 {{done}}/{{total}} 个片段",
     "transcribingElevenLabs": "使用 ElevenLabs 转录中（约剩余 {{minutes}} 分钟）",
     "transcribingElevenLabsHours": "使用 ElevenLabs 转录中（约剩余 {{hours}} 小时 {{minutes}} 分钟）",
-    "transcribingElevenLabsFinishing": "使用 ElevenLabs 转录中...",
-    "transcriptionRetry": "连接失败，正在重试（{{attempt}}/{{maxAttempts}}）...",
+    "transcribingElevenLabsFinishing": "使用 ElevenLabs 转录中…",
+    "transcriptionRetry": "连接失败，正在重试（{{attempt}}/{{maxAttempts}}）…",
     "transcribingR2Upload": "正在上传音频…",
     "gapRepair": "间隙修复 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "修复缺失字幕（第{{iteration}}/{{maxIterations}}次迭代）{{done}} / {{total}}",
@@ -1577,7 +1578,7 @@
     "optionalMessagePlaceholder": "你当时在做什么？",
     "sendReport": "发送报告",
     "reportPrompt": "出了点问题。请向开发者报告以便快速修复。",
-    "preparingReport": "正在准备诊断包...",
+    "preparingReport": "正在准备诊断包…",
     "reportContextWarning": "部分诊断上下文无法加载。报告仍将包含此应用中的详细信息。",
     "reportPromptTask": {
       "transcription": "转录因意外问题中断。请发送这份报告，帮助我们修复问题。",
@@ -1858,6 +1859,7 @@
     "deviceIdReplaced": "这台电脑上用于关联你时长的文件已损坏，Translator 已重新建立关联。你购买的时长可能不会显示在这里。请带上购买收据联系客服，我们会帮你转回来。",
     "contactSupport": "联系客服",
     "openSettings": "打开设置",
-    "supportSubject": "Translator 重置这台电脑后，我的时长不见了"
+    "supportSubject": "Translator 重置这台电脑后，我的时长不见了",
+    "settingsResetKeptLanguage": "Translator 的设置文件已损坏，你的偏好设置已被重置，包括字幕语言、API 密钥和其他选项。界面语言保持不变。损坏的文件已保留一份副本。请到设置中检查一下。"
   }
 }

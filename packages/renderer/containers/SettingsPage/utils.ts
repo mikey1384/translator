@@ -64,7 +64,7 @@ export function getReviewPassLabel(t: TFunction, i18n: I18nInstance): string {
   return getLocalizedSettingCopy(
     i18n,
     ['settings.byoPreferences.reviewPass'],
-    String(t('settings.byoPreferences.reviewPass', 'Review Pass'))
+    String(t('settings.byoPreferences.reviewPass', 'Review pass'))
   );
 }
 

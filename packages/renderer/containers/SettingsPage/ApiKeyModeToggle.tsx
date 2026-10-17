@@ -110,7 +110,7 @@ export default function ApiKeyModeToggle() {
       data-translator-destination="settings-provider"
     >
       <h2 className={settingsCardTitleStyles}>
-        {t('settings.aiProvider.title', 'AI Provider')}
+        {t('settings.aiProvider.title', 'AI provider')}
       </h2>
 
       <div

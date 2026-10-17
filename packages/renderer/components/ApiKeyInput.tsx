@@ -39,10 +39,10 @@ const placeholders: Record<string, string> = {
   elevenlabs: 'sk_...',
 };
 
-const labels: Record<string, string> = {
-  openai: 'OpenAI API Key',
-  anthropic: 'Anthropic API Key',
-  elevenlabs: 'ElevenLabs API Key',
+const providerNames: Record<string, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  elevenlabs: 'ElevenLabs',
 };
 
 const rootStyles = css`
@@ -262,7 +262,9 @@ export default function ApiKeyInput({
     <div className={`${rootStyles} ${compact ? compactRootStyles : ''}`}>
       <label className={labelStyles}>
         <span className={labelTextRowStyles}>
-          {labels[provider]}
+          {t('settings.apiKey.providerLabel', '{{provider}} API key', {
+            provider: providerNames[provider] ?? provider,
+          })}
           {onHelpClick && (
             <button
               type="button"

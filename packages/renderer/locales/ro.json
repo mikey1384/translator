@@ -3,20 +3,20 @@
     "cancel": "Anulare",
     "save": "Salvare",
     "or": "SAU",
-    "saving": "Se salvează...",
-    "validating": "Se validează...",
+    "saving": "Se salvează…",
+    "validating": "Se validează…",
     "delete": "Ștergere",
     "confirm": "Confirmare",
     "apply": "Aplicare",
     "back": "←",
     "to": "Înapoi la",
     "app": "Aplicație",
-    "backToApp": "Înapoi la Aplicație",
+    "backToApp": "Înapoi la aplicație",
     "next": "Următorul",
     "done": "Terminat",
     "gotIt": "Am înțeles",
     "close": "Închide",
-    "loading": "Se încarcă...",
+    "loading": "Se încarcă…",
     "error": {
       "unexpected": "A apărut o eroare neașteptată.",
       "unexpectedRemove": "A apărut o eroare neașteptată la eliminarea cheii.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Verifică actualizarea",
     "clear": "Șterge",
     "currentVersionLabel": "Versiunea curentă",
-    "downloadingUpdate": "Se descarcă actualizarea...",
+    "downloadingUpdate": "Se descarcă actualizarea…",
     "downloadingUpdateProgress": "Se descarcă actualizarea: {{percent}} la sută",
     "downloadingUpdateShort": "DESCĂRCARE",
     "downloadUpdateNow": "Descarcă actualizarea",
@@ -86,8 +86,8 @@
     "whatsNewVersionTitle": "Noutăți în v{{version}}",
     "fileFilters": {
       "srtFiles": "Fișiere SRT",
-      "mediaFiles": "Fișiere Media",
-      "videoFiles": "Fișiere Video",
+      "mediaFiles": "Fișiere media",
+      "videoFiles": "Fișiere video",
       "textFiles": "Fișiere text",
       "allFiles": "Toate fișierele",
       "subtitleFiles": "Fișiere de subtitrare"
@@ -97,7 +97,7 @@
     "send": "Trimite",
     "dismiss": "Închide",
     "moreActions": "Mai multe acțiuni",
-    "installingUpdate": "Se instalează actualizarea...",
+    "installingUpdate": "Se instalează actualizarea…",
     "installingUpdateShort": "Se instalează",
     "ok": "OK",
     "minimumVersionValue": "Versiunea minimă acceptată: v{{version}}",
@@ -218,11 +218,11 @@
   },
   "input": {
     "connect": "Conectare",
-    "connecting": "Se conectează...",
+    "connecting": "Se conectează…",
     "connectTip": "Sfat: în fereastra de conectare, autentifică-te sau finalizează verificarea, apoi închide fereastra ca să continui.",
     "fromDevice": "De pe dispozitivul tău",
     "fromWeb": "De pe web",
-    "downloadVideo": "Descarcă Video",
+    "downloadVideo": "Descarcă video",
     "enterVideoUrl": "Introdu URL-ul videoclipului",
     "quality": "Calitate",
     "qualityPresets": "Presetări",
@@ -234,9 +234,9 @@
     "qualityHigh": "Înaltă",
     "qualityMedium": "Medie",
     "qualityLow": "Joasă",
-    "downloading": "Se descarcă...",
-    "selectFile": "Selectează Fișier",
-    "selectVideoFile": "Selectează Fișier Video",
+    "downloading": "Se descarcă…",
+    "selectFile": "Selectează fișier",
+    "selectVideoFile": "Selectează fișier video",
     "selectVideoAudioFile": "Selectează un fișier video sau audio",
     "saveOriginalVideo": "Salvează videoclipul original",
     "localFileDescription": "Încărcați un fișier video sau audio de pe computer",
@@ -271,7 +271,7 @@
       "composerHint": "Orice limbă",
       "composerMeta": "Apasă Enter pentru căutare",
       "placeholder": "ex. plimbări liniștite pe străzile japoneze noaptea",
-      "thinking": "Se procesează...",
+      "thinking": "Se procesează…",
       "resultsFor": "Rezultate pentru",
       "downloadThis": "Descarcă",
       "failedToStart": "Sugestiile nu au putut fi pornite",
@@ -346,11 +346,11 @@
       "activityComplete": "Activitatea de căutare s-a încheiat.",
       "nextActionHint": "Alege un videoclip, apoi descarcă-l sau deschide-l pe YouTube.",
       "stagePending": "În așteptare",
-      "stageRunning": "Rulează...",
+      "stageRunning": "Rulează…",
       "stageCleared": "Finalizat",
       "searchQueryLabel": "Interogare de căutare",
       "searchMore": "Caută mai mult",
-      "searchMoreLoading": "Se caută mai mult...",
+      "searchMoreLoading": "Se caută mai mult…",
       "resetChat": "Resetează chatul",
       "useLastSearch": "Folosește ultima configurare",
       "showFollowUps": "Idei de continuare sugerate",
@@ -409,9 +409,9 @@
       "savedDownloads": "Descărcări salvate",
       "savedDownloadsCount": "{{count}} descărcări salvate",
       "savedPreferencesCount": "{{count}} de preferințe salvate",
-      "searchingLong": "Încă se caută videoclipuri...",
+      "searchingLong": "Încă se caută videoclipuri…",
       "searchingVeryLong": "Durează mai mult decât de obicei, dar încă rulează.",
-      "stillWorking": "Încă lucrează...",
+      "stillWorking": "Încă lucrează…",
       "toggleCopy": "Caută un videoclip sursă pe YouTube fără să părăsești fluxul.",
       "stage": {
         "answerer": "Procesare",
@@ -477,8 +477,8 @@
     "translate": "Traduce",
     "continueTranscribing": "Continuă transcrierea",
     "generate": "Generează subtitrări",
-    "generating": "Se generează...",
-    "generateNow": "Generează Subtitrări Acum",
+    "generating": "Se generează…",
+    "generateNow": "Generează subtitrări acum",
     "translation": "Traducere",
     "improveTranscription": "Îmbunătățește transcrierea",
     "improveTranslation": "Îmbunătățește traducerea",
@@ -512,7 +512,7 @@
       "openPermission": "Translator nu are permisiunea să citească acel fișier. Verifică-i permisiunile sau copiază-l în alt dosar și încearcă din nou.",
       "openMissing": "Fișierul de subtitrare nu mai este acolo. Poate a fost mutat sau șters.",
       "openFailed": "Translator nu a putut deschide fișierul de subtitrare. Asigură-te că este un fișier .srt și încearcă din nou.",
-      "saveFailed": "Translator nu a putut salva subtitrările. Încearcă din nou sau alege „Salvează subtitrările ca...” ca să folosești alt dosar."
+      "saveFailed": "Translator nu a putut salva subtitrările. Încearcă din nou sau alege „Salvează subtitrările ca…” ca să folosești alt dosar."
     }
   },
   "summary": {
@@ -573,12 +573,12 @@
       "renderingClipSubtitles": "Se adaugă subtitrările în clip…"
     },
     "combineMode": "Combină",
-    "exitCombineMode": "Ieși din Combină",
+    "exitCombineMode": "Ieși din combinare",
     "reorderHint": "Trage pentru a reordona:",
-    "cutCombined": "Taie Combinat",
-    "cuttingCombined": "Se taie...",
-    "combinedHighlightReady": "Clip Combinat Gata",
-    "downloadCombined": "Descarcă Clipul Combinat",
+    "cutCombined": "Taie combinat",
+    "cuttingCombined": "Se taie…",
+    "combinedHighlightReady": "Clip combinat gata",
+    "downloadCombined": "Descarcă clipul combinat",
     "saveCombinedDialogTitle": "Salvează clipul combinat cu momente importante",
     "combinedCutFailed": "Tăierea momentelor importante combinate a eșuat: {{message}}",
     "highlightsInsufficientCredits": "Rezumatul este gata, dar căutarea momentelor importante s-a oprit pentru că ți s-au terminat minutele.",
@@ -691,15 +691,15 @@
     },
     "header": {
       "save": "Salvează subtitrările",
-      "saveAs": "Salvează subtitrările ca...",
+      "saveAs": "Salvează subtitrările ca…",
       "saveTooltip": "Salvează modificările în fișierul original",
-      "saveAsTooltip": "Salvează mai întâi ca pentru a activa salvarea directă"
+      "saveAsTooltip": "Folosește mai întâi „Salvează subtitrările ca…” ca să poți salva direct"
     },
     "mergeControls": {
       "fontSizeLabel": "Dimensiune font:",
       "styleLabel": "Stil:",
-      "mergeButton": "Îmbină Subtitrările",
-      "mergingButton": "Se îmbină..."
+      "mergeButton": "Îmbină subtitrările",
+      "mergingButton": "Se îmbină…"
     },
     "undo": {
       "removed": "Rând șters.",
@@ -747,9 +747,9 @@
       "requirementTranslation": "Necesită o cheie OpenAI sau Anthropic pentru traducere"
     },
     "performanceQuality": {
-      "title": "Performanță și Calitate",
+      "title": "Performanță și calitate",
       "qualityTranslation": {
-        "label": "Traducere de Calitate",
+        "label": "Traducere de calitate",
         "modelOn": "Schiță Claude Haiku 5.5 + revizuire Claude Opus 5.5",
         "modelOnAnthropic": "Schiță Claude Haiku 5.5 + revizuire Claude Opus 5.5",
         "modelOff": "Doar schiță Claude Haiku 5.5",
@@ -758,7 +758,7 @@
         "anthropicHighEnd": "Revizie avansată Anthropic"
       },
       "qualitySummary": {
-        "label": "Rezumat de Calitate",
+        "label": "Rezumat de calitate",
         "modelOn": "Analiză profundă Claude Opus 5.5 + clipuri cu momente importante",
         "modelOff": "Analiză standard Claude Sonnet 5.5"
       },
@@ -779,7 +779,7 @@
       }
     },
     "dubbing": {
-      "voiceLabel": "Voce Dublată",
+      "voiceLabel": "Voce dublată",
       "voiceHelp": "Alege vocea implicită folosită la generarea sunetului dublat.",
       "voiceOptions": {
         "rachel": "Rachel",
@@ -792,13 +792,13 @@
         "brian": "Brian"
       },
       "previewTooltip": "Previzualizează această voce",
-      "previewing": "Se redă...",
+      "previewing": "Se redă…",
       "previewFree": "Previzualizare",
-      "mixLabel": "Volum Dublare vs Volum Video Original",
+      "mixLabel": "Volum dublare vs. volum video original",
       "mixHelp": "Controlează cât din coloana sonoră originală se aude sub vocea dublată.",
       "mixAmbient": "Mai mult ambient",
       "mixVoice": "Mai multă voce",
-      "voiceCloning": "Clonează Vocea Originală",
+      "voiceCloning": "Clonează vocea originală",
       "voiceCloningDesc": "Păstrează vocea vorbitorului original în audio-ul dublat",
       "voiceCloningEnabled": "Clonarea vocii este activată cu ElevenLabs. Vocea vorbitorului original va fi păstrată în audio-ul dublat.",
       "voiceCloningInfo": "Clonarea vocii folosește ElevenLabs Dubbing API pentru a analiza și recrea vocea vorbitorului original.",
@@ -806,12 +806,12 @@
       "yourBalance": "Soldul tău",
       "canClone": "Poți clona",
       "upToMinutes": "până la {{minutes}} min",
-      "loading": "Se încarcă...",
+      "loading": "Se încarcă…",
       "previewWithMinutes": "Previzualizare ({{cost}})",
       "previewFailed": "Previzualizarea vocii nu a putut fi redată. Încearcă din nou."
     },
     "byoOpenAi": {
-      "title": "Folosește-ți Propriile Chei API",
+      "title": "Folosește-ți propriile chei API",
       "description": "O deblocare unică pentru a folosi propriile chei API. După deblocare, transcrierea, traducerea, dublarea și rezumatele rulează pe propriile tale conturi AI, în loc să folosească minutele tale Stage5.",
       "unlocking": "Se deschide plata…",
       "unlockCta": "Deblochează pentru $10",
@@ -820,14 +820,14 @@
       "hide": "Ascunde",
       "show": "Arată",
       "saving": "Se salvează…",
-      "clear": "Șterge Cheia",
+      "clear": "Șterge cheia",
       "loadingKey": "Se încarcă cheia salvată…",
       "keySaved": "Cheia API OpenAI a fost salvată.",
       "keyCleared": "Cheia API OpenAI a fost ștearsă.",
       "keyValid": "Cheia API OpenAI a fost validată cu succes.",
       "keyInvalid": "Validarea cheii API OpenAI a eșuat.",
       "testing": "Se testează…",
-      "test": "Testează Cheia",
+      "test": "Testează cheia",
       "lastSynced": "Ultima sincronizare",
       "toggleLabel": "Folosește cheia mea OpenAI",
       "toggleAria": "Comutare folosire cheie OpenAI proprie",
@@ -845,7 +845,7 @@
       "unlockFailed": "Plata nu a putut începe. Verifică-ți conexiunea și încearcă din nou."
     },
     "byoPreferences": {
-      "title": "Preferințe Furnizor",
+      "title": "Preferințe furnizor",
       "stage5Credits": "Minute Stage5",
       "pricingHint": "Cost estimat per 1 oră de video",
       "pricingHintHeuristic": "Cost estimat folosind euristicile curente ale aplicației",
@@ -926,20 +926,20 @@
       }
     },
     "byoAnthropic": {
-      "title": "Cheie API Anthropic (Opțional)",
+      "title": "Cheie API Anthropic (opțională)",
       "description": "Adăugați cheia API Anthropic pentru a folosi direct modelele Claude în faza de revizuire a traducerii. Fără această cheie, GPT-5.5 va gestiona etapa de revizuire.",
       "apiKeyLabel": "Cheie API Anthropic",
       "hide": "Ascunde",
       "show": "Arată",
       "saving": "Se salvează…",
-      "clear": "Șterge Cheia",
+      "clear": "Șterge cheia",
       "loadingKey": "Se încarcă cheia Anthropic salvată…",
       "keySaved": "Cheia API Anthropic a fost salvată.",
       "keyCleared": "Cheia API Anthropic a fost ștearsă.",
       "keyValid": "Cheia API Anthropic a fost validată cu succes.",
       "keyInvalid": "Validarea cheii API Anthropic a eșuat.",
       "testing": "Se testează…",
-      "test": "Testează Cheia",
+      "test": "Testează cheia",
       "toggleLabel": "Folosește cheia mea Anthropic",
       "toggleAria": "Comutare folosire cheie Anthropic proprie",
       "toggleOn": "Se folosește cheia ta Anthropic pentru modelele Claude.",
@@ -957,7 +957,8 @@
       "howToGet": "Cum obții această cheie",
       "missing": "Lipește mai întâi o cheie API.",
       "savedEnding": "Cheie salvată care se termină în {{last4}}",
-      "savedHidden": "Cheie salvată (ascunsă)"
+      "savedHidden": "Cheie salvată (ascunsă)",
+      "providerLabel": "Cheie API {{provider}}"
     },
     "byoStack": {
       "title": "Stack-ul tău AI"
@@ -1068,8 +1069,8 @@
   },
   "credits": {
     "title": "Minutele tale",
-    "loading": "Se încarcă...",
-    "usingApiKey": "Se folosește Cheia API",
+    "loading": "Se încarcă…",
+    "usingApiKey": "Se folosește cheia API",
     "usingOpenAi": "Se folosește OpenAI",
     "usingAnthropic": "Se folosește Claude",
     "usingElevenLabs": "Se folosește ElevenLabs",
@@ -1184,9 +1185,9 @@
     "resetCreditsToZeroTitle": "Admin: resetează creditele la 0",
     "toggleByoPreviewTitle": "Admin: comută modul previzualizare BYO (afișează UI ca și cum BYO nu e cumpărat)",
     "addCredits": "Adaugă 350k credite",
-    "adding": "Se adaugă...",
+    "adding": "Se adaugă…",
     "resetToZero": "Resetează la 0",
-    "resetting": "Se resetează...",
+    "resetting": "Se resetează…",
     "byoPreview": "Previzualizare BYO",
     "byoPreviewOn": "Previzualizare BYO PORNIT",
     "confirmResetCreditsToZero": "Sigur vrei să resetezi creditele la 0? Această acțiune nu poate fi anulată."
@@ -1198,7 +1199,7 @@
     "middleEastAfrica": "Orientul Mijlociu / Africa"
   },
   "languages": {
-    "original": "La fel ca Audio",
+    "original": "La fel ca audio",
     "english": "Engleză",
     "korean": "Coreeană",
     "japanese": "Japoneză",
@@ -1252,13 +1253,13 @@
       "fileTooLargeForVoiceCloning": "Fișierul video este prea mare pentru clonarea vocii ({{size}}MB). Maximul permis este {{max}}MB. Te rugăm să folosești un video mai scurt sau să dezactivezi clonarea vocii."
     },
     "status": {
-      "starting": "Pornire...",
+      "starting": "Pornire…",
       "completed": "Completat",
       "cancelled": "Anulat",
       "error": "Eroare"
     },
     "buttons": {
-      "redirectingToPayment": "Redirecționare către plată..."
+      "redirectingToPayment": "Redirecționare către plată…"
     },
     "workflow": {
       "stepOne": "Pasul 1",
@@ -1280,14 +1281,14 @@
       "saveOutputsTitle": "Salvează ieșirile",
       "saveOutputsDescription": "Păstrează orice sursă sau material dublat pe care vrei să-l salvezi în afara spațiului de lucru al aplicației."
     },
-    "calculatingCost": "Se calculează costul...",
+    "calculatingCost": "Se calculează costul…",
     "welcomeCredits": {
       "message": "Ai minute gratuite ca să încerci transcrierea și traducerea (aproximativ 20 de minute de video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Găsește în subtitrări...",
-    "replacePlaceholder": "Înlocuiește cu...",
+    "findPlaceholder": "Găsește în subtitrări…",
+    "replacePlaceholder": "Înlocuiește cu…",
     "replaceAll": "Înlocuiește tot",
     "nextMatch": "Următoarea potrivire (Enter)",
     "previousMatch": "Potrivirea anterioară (Shift+Enter)",
@@ -1305,18 +1306,18 @@
   },
   "dialogs": {
     "apiKeysRequired": {
-      "title": "Chei API Necesare",
+      "title": "Chei API necesare",
       "howToGet": "Cum obții chei API",
       "enable": "Folosește cheile mele API",
       "done": "Gata",
-      "ready": "Acoperirea este completă. Acum poți activa „Folosește cheile mele API”.",
+      "ready": "Totul e pregătit. Acum îți poți folosi propriile chei API.",
       "missingTranslation": "Pentru traducere mai este nevoie de {{providers}}.",
       "messageElevenLabsAudio": "Pentru a folosi cheile tale API, ai nevoie de o cheie OpenAI sau Anthropic pentru traducere. Transcrierea și dublarea folosesc doar ElevenLabs, așa că adaugă și o cheie ElevenLabs pentru acestea.",
       "audioNeedsElevenLabs": "Fără o cheie ElevenLabs, transcrierea și dublarea nu sunt disponibile cât timp cheile tale API sunt activate."
     },
-    "saveSrtFileAs": "Salvează Fișierul SRT Ca",
-    "saveDownloadedVideoAs": "Salvează Video Descărcat Ca",
-    "saveDubbedVideoAs": "Salvează Video Dublat Ca",
+    "saveSrtFileAs": "Salvează fișierul SRT ca",
+    "saveDownloadedVideoAs": "Salvează videoclipul descărcat ca",
+    "saveDubbedVideoAs": "Salvează videoclipul dublat ca",
     "unsavedSrtOnTranscribe": {
       "title": "Salvezi subtitrările curente înainte de transcriere?",
       "message": "Ai deja subtitrări încărcate. Transcrierea le va înlocui. Ce vrei să faci?",
@@ -1324,7 +1325,7 @@
       "discardAndTranscribe": "Renunță și transcrie",
       "cancel": "Anulați"
     },
-    "downloadInProgress": "Descărcare în Curs",
+    "downloadInProgress": "Descărcare în curs",
     "saveDownloadedFile": "Salvează fișierul descărcat: {{path}}",
     "transcriptionInProgress": "Transcriere în curs",
     "translationInProgress": "Traducere în curs",
@@ -1468,25 +1469,25 @@
   "progress": {
     "preparingVideoExport": "Se pregătește exportul video…",
     "downloadingVideoExportTools": "Se descarcă instrumentele de export video… {{percent}}%",
-    "beginningReview": "Se începe revizuirea...",
-    "starting": "Pornire...",
+    "beginningReview": "Se începe revizuirea…",
+    "starting": "Pornire…",
     "completed": "Finalizat",
     "processCancelled": "Proces anulat",
-    "mergingTitle": "Se îmbină Video și Subtitrări",
-    "extractingAudio": "Se extrage audio...",
+    "mergingTitle": "Se îmbină videoclipul și subtitrările",
+    "extractingAudio": "Se extrage audio…",
     "transcribingOf": "Se transcrie {{done}}/{{total}}",
     "error": "Eroare",
     "transcribedChunks": "Transcrise {{done}}/{{total}} fragmente",
     "transcribingElevenLabs": "Se transcrie cu ElevenLabs (~{{minutes}} min rămase)",
     "transcribingElevenLabsHours": "Se transcrie cu ElevenLabs (~{{hours}}h {{minutes}}m rămase)",
-    "transcribingElevenLabsFinishing": "Se transcrie cu ElevenLabs...",
-    "transcriptionRetry": "Conexiunea a eșuat, se reîncearcă ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Se transcrie cu ElevenLabs…",
+    "transcriptionRetry": "Conexiunea a eșuat, se reîncearcă ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Se încarcă sunetul…",
     "gapRepair": "Repararea golurilor #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repararea subtitrărilor lipsă (Iterația {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Se curăță subtitrările ({{done}}/{{total}})",
     "translationCleanup": "Se curăță subtitrările traduse ({{done}}/{{total}})",
-    "reviewingSlow": "Se revizuiește (poate dura ceva timp...) {{done}}/{{total}}",
+    "reviewingSlow": "Se revizuiește (poate dura ceva timp…) {{done}}/{{total}}",
     "reviewingRange": "Se revizuiește {{start}}–{{end}} (din {{total}})",
     "legacy": {
       "aligningVoices": "Se aliniază vocile {{done}}/{{total}}…",
@@ -1583,21 +1584,21 @@
     "dubbedVideoSaved": "Video dublat salvat în:\n{{path}}"
   },
   "logs": {
-    "title": "Jurnale Recente",
+    "title": "Jurnale recente",
     "copy": "Copiază",
-    "email": "Trimite Email la Dezvoltator",
+    "email": "Trimite e-mail dezvoltatorului",
     "close": "Închide",
     "empty": "Încă nu există jurnale.",
     "copied": "Jurnalele au fost copiate în clipboard",
     "copyFailed": "Copierea a eșuat",
-    "emailSubject": "Jurnale Debug Stage5",
+    "emailSubject": "Jurnale de depanare Stage5",
     "emailBodyPrefix": "Bună,\n\nVă rog să găsiți mai jos jurnalele mele recente pentru a ajuta la depanare.\n\n",
-    "deviceInfoHeader": "Informații Dispozitiv",
+    "deviceInfoHeader": "Informații dispozitiv",
     "optionalMessage": "Mesaj opțional",
     "optionalMessagePlaceholder": "Ce încercai să faci?",
     "sendReport": "Trimite raportul",
     "reportPrompt": "Ceva nu a funcționat. Raportează acest lucru creatorului pentru o rezolvare rapidă.",
-    "preparingReport": "Se pregătește pachetul de diagnostic...",
+    "preparingReport": "Se pregătește pachetul de diagnostic…",
     "reportContextWarning": "O parte din contextul de diagnostic nu a putut fi încărcată. Raportul va include în continuare detalii din această aplicație.",
     "reportPromptTask": {
       "transcription": "Transcrierea s-a oprit din cauza unei probleme neprevăzute. Trimite acest raport ca să putem rezolva problema.",
@@ -1900,6 +1901,7 @@
     "deviceIdReplaced": "Fișierul care leagă acest calculator de minutele tale era deteriorat, așa că Translator a creat o legătură nouă. Este posibil ca minutele cumpărate să nu apară aici. Scrie-ne la asistență cu chitanța de plată și le mutăm înapoi.",
     "contactSupport": "Contactează asistența",
     "openSettings": "Deschide Setările",
-    "supportSubject": "Minutele mele au dispărut după ce Translator a resetat acest calculator"
+    "supportSubject": "Minutele mele au dispărut după ce Translator a resetat acest calculator",
+    "settingsResetKeptLanguage": "Fișierul de setări al Translator era deteriorat, așa că preferințele tale au fost resetate: limba subtitrărilor, cheile API și alte opțiuni. Limba interfeței a rămas neschimbată. Am păstrat o copie a fișierului deteriorat. Verifică Setările."
   }
 }

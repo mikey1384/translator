@@ -3,20 +3,20 @@
     "cancel": "Batal",
     "save": "Simpan",
     "or": "ATAU",
-    "saving": "Menyimpan...",
-    "validating": "Mengesahkan...",
+    "saving": "Menyimpan…",
+    "validating": "Mengesahkan…",
     "delete": "Padam",
     "confirm": "Sahkan",
     "apply": "Guna",
     "back": "←",
     "to": "Kembali ke",
     "app": "Aplikasi",
-    "backToApp": "Kembali ke Aplikasi",
+    "backToApp": "Kembali ke aplikasi",
     "next": "Seterusnya",
     "done": "Selesai",
     "gotIt": "Faham",
     "close": "Tutup",
-    "loading": "Memuatkan...",
+    "loading": "Memuatkan…",
     "error": {
       "unexpected": "Ralat tidak dijangka telah berlaku.",
       "unexpectedRemove": "Ralat tidak dijangka telah berlaku semasa membuang kunci.",
@@ -46,10 +46,10 @@
     "video": "Video",
     "selected": "Dipilih",
     "retry": "Cuba Semula",
-    "uiLanguage": "Bahasa Antara Muka",
-    "reloadPage": "Muat Semula Halaman",
+    "uiLanguage": "Bahasa antara muka",
+    "reloadPage": "Muat semula halaman",
     "reloadPageAria": "Muat semula halaman",
-    "backToTop": "Kembali ke Atas",
+    "backToTop": "Kembali ke atas",
     "backToTopAria": "Skrol kembali ke atas",
     "confirmReload": "Adakah anda pasti mahu memuat semula halaman? Sebarang perubahan yang tidak disimpan mungkin hilang.",
     "installUpdate": "Mula semula untuk kemas kini",
@@ -59,16 +59,16 @@
     "closeAlert": "Tutup amaran",
     "closeBanner": "Tutup banner",
     "closeOrCancelProcess": "Tutup atau batalkan proses",
-    "checkForUpdateNow": "Semak Kemas Kini",
+    "checkForUpdateNow": "Semak kemas kini",
     "clear": "Kosongkan",
     "currentVersionLabel": "Versi semasa",
-    "downloadingUpdate": "Sedang memuat turun kemas kini...",
+    "downloadingUpdate": "Sedang memuat turun kemas kini…",
     "downloadingUpdateProgress": "Sedang memuat turun kemas kini {{percent}}%",
     "downloadingUpdateShort": "Memuat turun",
-    "downloadUpdateNow": "Muat Turun Kemas Kini",
+    "downloadUpdateNow": "Muat turun kemas kini",
     "hide": "Sembunyikan",
     "installUpdateAria": "Pasang kemas kini dan mulakan semula aplikasi",
-    "installUpdateNow": "Pasang Kemas Kini",
+    "installUpdateNow": "Pasang kemas kini",
     "installUpdateShort": "Pasang Kemas Kini",
     "locked": "Dikunci",
     "lockedWhileProcessing": "Dikunci semasa pemprosesan",
@@ -80,24 +80,24 @@
     "show": "Tunjukkan",
     "splitScrollButtonAria": "Tatal ke atas (bahagian atas) atau bawah (bahagian bawah)",
     "updateRequiredBody": "Versi Translator ini tidak lagi disokong oleh backend. Kemas kini aplikasi untuk teruskan.",
-    "updateRequiredTitle": "Kemas Kini Diperlukan",
+    "updateRequiredTitle": "Kemas kini diperlukan",
     "wait": "Tunggu…",
-    "whatsNewTitle": "Apa yang Baharu",
-    "whatsNewVersionTitle": "Apa yang Baharu dalam v{{version}}",
+    "whatsNewTitle": "Apa yang baharu",
+    "whatsNewVersionTitle": "Apa yang baharu dalam v{{version}}",
     "fileFilters": {
       "srtFiles": "Fail SRT",
-      "mediaFiles": "Fail Media",
-      "videoFiles": "Fail Video",
-      "textFiles": "Fail Teks",
-      "allFiles": "Semua Fail",
-      "subtitleFiles": "Fail Sari Kata"
+      "mediaFiles": "Fail media",
+      "videoFiles": "Fail video",
+      "textFiles": "Fail teks",
+      "allFiles": "Semua fail",
+      "subtitleFiles": "Fail sari kata"
     },
     "chooseAnotherLocation": "Pilih lokasi lain",
     "continue": "Teruskan",
     "send": "Hantar",
     "dismiss": "Tutup",
     "moreActions": "Lagi tindakan",
-    "installingUpdate": "Memasang kemas kini...",
+    "installingUpdate": "Memasang kemas kini…",
     "installingUpdateShort": "Memasang",
     "ok": "OK",
     "minimumVersionValue": "Versi minimum yang disokong: v{{version}}",
@@ -216,11 +216,11 @@
   },
   "input": {
     "connect": "Sambung",
-    "connecting": "Menyambung...",
+    "connecting": "Menyambung…",
     "connectTip": "Petua: Dalam tetingkap sambungan, log masuk atau selesaikan pengesahan, kemudian tutup tetingkap untuk meneruskan.",
     "fromDevice": "Dari peranti anda",
     "fromWeb": "Dari web",
-    "downloadVideo": "Muat Turun Video",
+    "downloadVideo": "Muat turun video",
     "enterVideoUrl": "Masukkan URL video",
     "quality": "Kualiti",
     "qualityPresets": "Praset",
@@ -232,9 +232,9 @@
     "qualityHigh": "Tinggi",
     "qualityMedium": "Sederhana",
     "qualityLow": "Rendah",
-    "downloading": "Memuat turun...",
-    "selectFile": "Pilih Fail",
-    "selectVideoFile": "Pilih Fail Video",
+    "downloading": "Memuat turun…",
+    "selectFile": "Pilih fail",
+    "selectVideoFile": "Pilih fail video",
     "selectVideoAudioFile": "Pilih fail video atau audio",
     "saveOriginalVideo": "Simpan video asal",
     "localFileDescription": "Muat naik fail video atau audio dari komputer anda",
@@ -246,7 +246,7 @@
     "fileSelected": "Fail dipilih",
     "transcribeOnly": "Transkripsi audio",
     "srtLoaded": "Transkripsi selesai",
-    "srtFileLoaded": "SRT Dimuat",
+    "srtFileLoaded": "SRT dimuatkan",
     "featuresUnlockAfterTranscription": "Transkripsi, terjemah atau jana sorotan daripada video ini.",
     "preSubtitleActionsHint": "Transkripsikan, terjemahkan atau jana sorotan daripada video ini.",
     "saveDubbedVideo": "Simpan video alih suara",
@@ -269,7 +269,7 @@
       "composerHint": "Sebarang bahasa",
       "composerMeta": "Tekan Enter untuk mencari",
       "placeholder": "cth. jalan-jalan malam yang tenang di Jepun",
-      "thinking": "Sedang berfikir...",
+      "thinking": "Sedang berfikir…",
       "resultsFor": "Hasil untuk",
       "downloadThis": "Muat turun ini",
       "failedToStart": "Gagal memulakan cadangan",
@@ -344,11 +344,11 @@
       "activityComplete": "Aktiviti carian selesai.",
       "nextActionHint": "Pilih video, kemudian muat turun atau buka di YouTube.",
       "stagePending": "Menunggu",
-      "stageRunning": "Sedang berjalan...",
+      "stageRunning": "Sedang berjalan…",
       "stageCleared": "Selesai",
       "searchQueryLabel": "Pertanyaan carian",
       "searchMore": "Cari lagi",
-      "searchMoreLoading": "Sedang mencari lagi...",
+      "searchMoreLoading": "Sedang mencari lagi…",
       "resetChat": "Set semula chat",
       "useLastSearch": "Guna tetapan terakhir",
       "showFollowUps": "Cadangan susulan",
@@ -407,9 +407,9 @@
       "savedDownloads": "Muat turun tersimpan",
       "savedDownloadsCount": "{{count}} muat turun tersimpan",
       "savedPreferencesCount": "{{count}} keutamaan tersimpan",
-      "searchingLong": "Masih mencari video...",
+      "searchingLong": "Masih mencari video…",
       "searchingVeryLong": "Mengambil masa lebih lama daripada biasa, tetapi masih berjalan.",
-      "stillWorking": "Masih berjalan...",
+      "stillWorking": "Masih berjalan…",
       "toggleCopy": "Cari video sumber di YouTube tanpa meninggalkan aliran kerja ini.",
       "stage": {
         "answerer": "Proses kueri",
@@ -473,8 +473,8 @@
     "translate": "Terjemah",
     "continueTranscribing": "Teruskan transkripsi",
     "generate": "Jana sari kata",
-    "generating": "Menjana...",
-    "generateNow": "Jana Sarikata Sekarang",
+    "generating": "Menjana…",
+    "generateNow": "Jana sari kata sekarang",
     "translation": "Terjemahan",
     "improveTranscription": "Perbaiki transkripsi",
     "improveTranslation": "Perbaiki terjemahan",
@@ -506,7 +506,7 @@
       "openPermission": "Translator tidak dibenarkan membaca fail itu. Semak kebenarannya, atau salin ke folder lain dan cuba lagi.",
       "openMissing": "Fail sari kata itu sudah tiada. Ia mungkin telah dipindahkan atau dipadam.",
       "openFailed": "Translator tidak dapat membuka fail sari kata itu. Pastikan ia fail .srt dan cuba lagi.",
-      "saveFailed": "Translator tidak dapat menyimpan sari kata. Cuba lagi, atau pilih “Simpan sari kata sebagai...” untuk memilih folder lain."
+      "saveFailed": "Translator tidak dapat menyimpan sari kata. Cuba lagi, atau pilih “Simpan sari kata sebagai…” untuk memilih folder lain."
     }
   },
   "summary": {
@@ -567,12 +567,12 @@
       "renderingClipSubtitles": "Menambah sari kata pada klip…"
     },
     "combineMode": "Gabung",
-    "exitCombineMode": "Keluar Gabung",
+    "exitCombineMode": "Keluar mod gabung",
     "reorderHint": "Seret untuk susun semula:",
-    "cutCombined": "Potong Gabungan",
-    "cuttingCombined": "Memotong...",
-    "combinedHighlightReady": "Sorotan Gabungan Sedia",
-    "downloadCombined": "Muat Turun Klip Gabungan",
+    "cutCombined": "Potong gabungan",
+    "cuttingCombined": "Memotong…",
+    "combinedHighlightReady": "Sorotan gabungan sedia",
+    "downloadCombined": "Muat turun klip gabungan",
     "saveCombinedDialogTitle": "Simpan klip sorotan gabungan",
     "combinedCutFailed": "Gagal memotong sorotan gabungan: {{message}}",
     "highlightsInsufficientCredits": "Ringkasan sudah siap, tetapi pencarian sorotan terhenti kerana minit anda habis.",
@@ -679,15 +679,15 @@
     },
     "header": {
       "save": "Simpan sari kata",
-      "saveAs": "Simpan sari kata sebagai...",
+      "saveAs": "Simpan sari kata sebagai…",
       "saveTooltip": "Simpan perubahan ke fail asal",
-      "saveAsTooltip": "Simpan Sebagai dahulu untuk mengaktifkan simpanan langsung"
+      "saveAsTooltip": "Gunakan “Simpan sari kata sebagai…” dahulu untuk membolehkan simpanan terus"
     },
     "mergeControls": {
-      "fontSizeLabel": "Saiz Fon:",
+      "fontSizeLabel": "Saiz fon:",
       "styleLabel": "Gaya:",
-      "mergeButton": "Gabungkan Sarikata",
-      "mergingButton": "Menggabungkan..."
+      "mergeButton": "Gabungkan sari kata",
+      "mergingButton": "Menggabungkan…"
     },
     "undo": {
       "removed": "Baris dipadam.",
@@ -735,18 +735,18 @@
       "requirementTranslation": "Memerlukan kunci OpenAI atau Anthropic untuk terjemahan"
     },
     "performanceQuality": {
-      "title": "Prestasi & Kualiti",
+      "title": "Prestasi & kualiti",
       "qualityTranslation": {
-        "label": "Terjemahan Berkualiti",
+        "label": "Terjemahan berkualiti",
         "modelOn": "Draf Claude Haiku 5.5 + semakan Claude Opus 5.5",
         "modelOnAnthropic": "Draf Claude Haiku 5.5 + semakan Claude Opus 5.5",
         "modelOff": "Draf Claude Haiku 5.5 sahaja",
-        "reviewProvider": "Penyedia semakan",
+        "reviewProvider": "Pembekal semakan",
         "openAiHighEnd": "Semakan premium daripada OpenAI",
         "anthropicHighEnd": "Semakan premium daripada Anthropic"
       },
       "qualitySummary": {
-        "label": "Ringkasan Berkualiti",
+        "label": "Ringkasan berkualiti",
         "modelOn": "Analisis mendalam Claude Opus 5.5 + klip sorotan",
         "modelOff": "Analisis standard Claude Sonnet 5.5"
       },
@@ -754,7 +754,7 @@
         "modelOn": "Suara premium ElevenLabs TTS"
       },
       "videoSuggestionModel": {
-        "label": "Model Cadangan Video",
+        "label": "Kualiti cadangan video",
         "help": "Auto = model sama seperti draf terjemahan biasa",
         "default": "Lalai (sama seperti lalai terjemahan)",
         "quality": "Kualiti (sama seperti kualiti terjemahan)"
@@ -767,7 +767,7 @@
       }
     },
     "dubbing": {
-      "voiceLabel": "Suara Alih Suara",
+      "voiceLabel": "Suara alih suara",
       "voiceHelp": "Pilih suara lalai yang digunakan semasa menjana audio alih suara.",
       "voiceOptions": {
         "rachel": "Rachel",
@@ -780,13 +780,13 @@
         "brian": "Brian"
       },
       "previewTooltip": "Pratonton suara ini",
-      "previewing": "Memainkan...",
+      "previewing": "Memainkan…",
       "previewFree": "Pratonton",
-      "mixLabel": "Kelantangan Alih Suara vs Kelantangan Video Asal",
+      "mixLabel": "Kelantangan alih suara berbanding kelantangan video asal",
       "mixHelp": "Kawal berapa banyak trek bunyi asal dimainkan di bawah suara alih suara.",
       "mixAmbient": "Lebih ambien",
       "mixVoice": "Lebih suara",
-      "voiceCloning": "Klon Suara Asal",
+      "voiceCloning": "Klon suara asal",
       "voiceCloningDesc": "Kekalkan suara penutur asal dalam audio alih suara",
       "voiceCloningEnabled": "Pengklonan suara diaktifkan dengan ElevenLabs. Suara penutur asal akan dikekalkan dalam audio alih suara.",
       "voiceCloningInfo": "Pengklonan suara menggunakan API Alih Suara ElevenLabs untuk menganalisis dan mencipta semula suara penutur asal.",
@@ -794,12 +794,12 @@
       "yourBalance": "Baki anda",
       "canClone": "Anda boleh klon",
       "upToMinutes": "sehingga {{minutes}} min",
-      "loading": "Memuatkan...",
+      "loading": "Memuatkan…",
       "previewWithMinutes": "Pratonton ({{cost}})",
       "previewFailed": "Pratonton suara tidak dapat dimainkan. Cuba lagi."
     },
     "byoOpenAi": {
-      "title": "Bawa Kunci API Sendiri",
+      "title": "Gunakan kunci API sendiri",
       "description": "Buka kunci sekali bayar untuk menggunakan kunci API anda sendiri. Setelah dibuka, transkripsi, terjemahan, alih suara dan ringkasan berjalan pada akaun AI anda sendiri tanpa menggunakan minit Stage5 anda.",
       "unlocking": "Membuka pembayaran…",
       "unlockCta": "Buka kunci dengan $10",
@@ -808,14 +808,14 @@
       "hide": "Sembunyi",
       "show": "Tunjuk",
       "saving": "Menyimpan…",
-      "clear": "Padam Kunci",
+      "clear": "Padam kunci",
       "loadingKey": "Memuatkan kunci yang disimpan…",
       "keySaved": "Kunci API OpenAI disimpan.",
       "keyCleared": "Kunci API OpenAI dipadam.",
       "keyValid": "Kunci API OpenAI berjaya disahkan.",
       "keyInvalid": "Pengesahan kunci API OpenAI gagal.",
       "testing": "Menguji…",
-      "test": "Uji Kunci",
+      "test": "Uji kunci",
       "lastSynced": "Sinkron terakhir",
       "toggleLabel": "Gunakan kunci OpenAI saya",
       "toggleAria": "Togol penggunaan kunci OpenAI anda",
@@ -833,7 +833,7 @@
       "unlockFailed": "Pembayaran tidak dapat dimulakan. Semak sambungan anda dan cuba lagi."
     },
     "byoPreferences": {
-      "title": "Keutamaan Pembekal",
+      "title": "Keutamaan pembekal",
       "stage5Credits": "Minit Stage5",
       "pricingHint": "Anggaran kos per 1 jam video",
       "pricingHintHeuristic": "Anggaran kos berdasarkan heuristik aplikasi semasa",
@@ -869,7 +869,7 @@
       "videoSuggestionLegacyFollowReview": "Tetapan anda sebelum ini dikekalkan: ini mengikut model terjemahan semakan anda sehingga anda memilih model di sini."
     },
     "apiKeyGuide": {
-      "title": "Cara Mendapatkan Kunci API",
+      "title": "Cara mendapatkan kunci API",
       "required": "Diperlukan",
       "optional": "Pilihan",
       "providers": {
@@ -914,20 +914,20 @@
       }
     },
     "byoAnthropic": {
-      "title": "Kunci API Anthropic (Pilihan)",
+      "title": "Kunci API Anthropic (pilihan)",
       "description": "Tambah kunci API Anthropic anda untuk menggunakan model Claude secara langsung bagi fasa semakan terjemahan. Tanpa kunci ini, GPT-5.5 akan mengendalikan laluan semakan.",
       "apiKeyLabel": "Kunci API Anthropic",
       "hide": "Sembunyi",
       "show": "Tunjuk",
       "saving": "Menyimpan…",
-      "clear": "Padam Kunci",
+      "clear": "Padam kunci",
       "loadingKey": "Memuatkan kunci Anthropic yang disimpan…",
       "keySaved": "Kunci API Anthropic disimpan.",
       "keyCleared": "Kunci API Anthropic dipadam.",
       "keyValid": "Kunci API Anthropic berjaya disahkan.",
       "keyInvalid": "Pengesahan kunci API Anthropic gagal.",
       "testing": "Menguji…",
-      "test": "Uji Kunci",
+      "test": "Uji kunci",
       "toggleLabel": "Gunakan kunci Anthropic saya",
       "toggleAria": "Togol penggunaan kunci Anthropic anda",
       "toggleOn": "Menggunakan kunci Anthropic anda untuk model Claude.",
@@ -945,10 +945,11 @@
       "howToGet": "Cara mendapatkan key ini",
       "missing": "Tampal kunci API dahulu.",
       "savedEnding": "Kunci disimpan, berakhir dengan {{last4}}",
-      "savedHidden": "Kunci disimpan (tersembunyi)"
+      "savedHidden": "Kunci disimpan (tersembunyi)",
+      "providerLabel": "Kunci API {{provider}}"
     },
     "byoStack": {
-      "title": "AI Stack Anda"
+      "title": "AI stack anda"
     },
     "siteConnection": {
       "title": "Sambungan laman web",
@@ -1016,7 +1017,7 @@
       },
       "selectDirectory": "Pilih folder untuk membenarkan penulisan fail oleh ejen",
       "removeDirectory": "Alih keluar",
-      "addDirectory": "+ Tambah Folder",
+      "addDirectory": "+ Tambah folder",
       "errors": {
         "update": "Tetapan kawalan ejen gagal dikemas kini.",
         "addDirectory": "Folder gagal ditambah.",
@@ -1056,8 +1057,8 @@
   },
   "credits": {
     "title": "Minit anda",
-    "loading": "Memuatkan...",
-    "usingApiKey": "Menggunakan Kunci API",
+    "loading": "Memuatkan…",
+    "usingApiKey": "Menggunakan kunci API",
     "usingOpenAi": "Menggunakan OpenAI",
     "usingAnthropic": "Menggunakan Claude",
     "usingElevenLabs": "Menggunakan ElevenLabs",
@@ -1131,8 +1132,8 @@
     "byStage5": "by stage_5"
   },
   "videoPlayer": {
-    "enterFullscreen": "Masuk Skrin Penuh",
-    "exitFullscreen": "Keluar Skrin Penuh",
+    "enterFullscreen": "Masuk skrin penuh",
+    "exitFullscreen": "Keluar skrin penuh",
     "playbackSpeed": "Kelajuan main balik",
     "icloudWaitingTitle": "Memuat turun dari iCloud",
     "icloudWaitingBody": "Fail ini belum disimpan secara setempat. Dalam Finder, klik 'Download' dan tunggu sehingga ikon awan hilang.",
@@ -1168,9 +1169,9 @@
     "resetCreditsToZeroTitle": "Admin: tetapkan semula kredit kepada 0",
     "toggleByoPreviewTitle": "Admin: tukar mod pratonton BYO (lihat UI seolah-olah BYO belum dibeli)",
     "addCredits": "Tambah 350k kredit",
-    "adding": "Sedang menambah...",
+    "adding": "Sedang menambah…",
     "resetToZero": "Tetapkan semula ke 0",
-    "resetting": "Sedang menetapkan semula...",
+    "resetting": "Sedang menetapkan semula…",
     "byoPreview": "Pratonton BYO",
     "byoPreviewOn": "Pratonton BYO AKTIF",
     "confirmResetCreditsToZero": "Adakah anda pasti mahu menetapkan semula kredit kepada 0? Tindakan ini tidak boleh dibatalkan."
@@ -1182,7 +1183,7 @@
     "middleEastAfrica": "Timur Tengah / Afrika"
   },
   "languages": {
-    "original": "Sama seperti Audio",
+    "original": "Sama seperti audio",
     "english": "Bahasa Inggeris",
     "korean": "Bahasa Korea",
     "japanese": "Bahasa Jepun",
@@ -1236,13 +1237,13 @@
       "fileTooLargeForVoiceCloning": "Fail video terlalu besar untuk pengklonan suara ({{size}}MB). Maksimum yang dibenarkan ialah {{max}}MB. Sila gunakan video yang lebih pendek atau matikan pengklonan suara."
     },
     "status": {
-      "starting": "Memulakan...",
+      "starting": "Memulakan…",
       "completed": "Selesai",
       "cancelled": "Dibatalkan",
       "error": "Ralat"
     },
     "buttons": {
-      "redirectingToPayment": "Mengalihkan ke pembayaran..."
+      "redirectingToPayment": "Mengalihkan ke pembayaran…"
     },
     "workflow": {
       "stepOne": "Langkah 1",
@@ -1254,7 +1255,7 @@
       "localSourceReady": "Fail tempatan sedia",
       "webSourceReady": "Sumber web sedia",
       "sourceReadyDescription": "Media pilihan anda sedia untuk langkah seterusnya.",
-      "transcribeTitle": "Proses Video",
+      "transcribeTitle": "Proses video",
       "processVideoTitle": "Proses video",
       "transcribeDescription": "Tukar media sumber kepada trek sarikata yang boleh diedit sebelum beralih ke terjemahan atau alih suara.",
       "translateDubTitle": "Terjemah atau alih suara",
@@ -1264,14 +1265,14 @@
       "saveOutputsTitle": "Simpan Output",
       "saveOutputsDescription": "Simpan mana-mana media sumber atau media alih suara yang mahu anda kekalkan di luar ruang kerja aplikasi."
     },
-    "calculatingCost": "Mengira kos...",
+    "calculatingCost": "Mengira kos…",
     "welcomeCredits": {
       "message": "Anda mempunyai minit percuma untuk mencuba transkripsi dan terjemahan (kira-kira 20 minit video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Cari dalam sarikata...",
-    "replacePlaceholder": "Ganti dengan...",
+    "findPlaceholder": "Cari dalam sarikata…",
+    "replacePlaceholder": "Ganti dengan…",
     "replaceAll": "Ganti semua",
     "nextMatch": "Padanan seterusnya (Enter)",
     "previousMatch": "Padanan sebelumnya (Shift+Enter)",
@@ -1289,18 +1290,18 @@
   },
   "dialogs": {
     "apiKeysRequired": {
-      "title": "Kunci API Diperlukan",
+      "title": "Kunci API diperlukan",
       "howToGet": "Cara mendapatkan kunci API",
       "enable": "Gunakan kunci API saya",
       "done": "Selesai",
-      "ready": "Liputan sudah lengkap. Kini anda boleh menghidupkan “Guna API key saya”.",
+      "ready": "Liputan sudah lengkap. Kini anda boleh menggunakan kunci API anda sendiri.",
       "missingTranslation": "Terjemahan masih memerlukan {{providers}}.",
       "messageElevenLabsAudio": "Untuk menggunakan kunci API anda, anda memerlukan kunci OpenAI atau Anthropic untuk terjemahan. Transkripsi dan alih suara hanya menggunakan ElevenLabs, jadi tambahkan juga kunci ElevenLabs untuknya.",
       "audioNeedsElevenLabs": "Tanpa kunci ElevenLabs, transkripsi dan alih suara tidak tersedia semasa kunci API anda dihidupkan."
     },
-    "saveSrtFileAs": "Simpan Fail SRT Sebagai",
-    "saveDownloadedVideoAs": "Simpan Video yang Dimuat Turun Sebagai",
-    "saveDubbedVideoAs": "Simpan Video Alih Suara Sebagai",
+    "saveSrtFileAs": "Simpan fail SRT sebagai",
+    "saveDownloadedVideoAs": "Simpan video yang dimuat turun sebagai",
+    "saveDubbedVideoAs": "Simpan video alih suara sebagai",
     "unsavedSrtOnTranscribe": {
       "title": "Simpan sari kata semasa sebelum transkripsi?",
       "message": "Anda sudah mempunyai sari kata dimuatkan. Transkripsi akan menggantikannya. Apa yang anda mahu lakukan?",
@@ -1308,7 +1309,7 @@
       "discardAndTranscribe": "Buang dan transkripsi",
       "cancel": "Batal"
     },
-    "downloadInProgress": "Muat Turun Sedang Berlangsung",
+    "downloadInProgress": "Muat turun sedang berjalan",
     "saveDownloadedFile": "Simpan fail yang dimuat turun: {{path}}",
     "transcriptionInProgress": "Transkripsi sedang berlangsung",
     "translationInProgress": "Terjemahan sedang berlangsung",
@@ -1452,25 +1453,25 @@
   "progress": {
     "preparingVideoExport": "Menyediakan eksport video…",
     "downloadingVideoExportTools": "Memuat turun alat eksport video… {{percent}}%",
-    "beginningReview": "Memulakan semakan...",
-    "starting": "Memulakan...",
+    "beginningReview": "Memulakan semakan…",
+    "starting": "Memulakan…",
     "completed": "Selesai",
     "processCancelled": "Proses dibatalkan",
-    "mergingTitle": "Menggabungkan Video & Sarikata",
-    "extractingAudio": "Mengekstrak audio...",
+    "mergingTitle": "Menggabungkan video & sari kata",
+    "extractingAudio": "Mengekstrak audio…",
     "transcribingOf": "Mentranskripsi {{done}}/{{total}}",
     "error": "Ralat",
     "transcribedChunks": "Ditranskripsi {{done}}/{{total}} bahagian",
     "transcribingElevenLabs": "Mentranskripsi dengan ElevenLabs (~{{minutes}} min lagi)",
     "transcribingElevenLabsHours": "Mentranskripsi dengan ElevenLabs (~{{hours}}j {{minutes}}m lagi)",
-    "transcribingElevenLabsFinishing": "Mentranskripsi dengan ElevenLabs...",
-    "transcriptionRetry": "Sambungan gagal, mencuba semula ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Mentranskripsi dengan ElevenLabs…",
+    "transcriptionRetry": "Sambungan gagal, mencuba semula ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Memuat naik audio…",
     "gapRepair": "Pembaikan jurang #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Membaiki sarikata yang hilang (Iterasi {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Membersihkan sarikata ({{done}}/{{total}})",
     "translationCleanup": "Membersihkan sarikata yang diterjemah ({{done}}/{{total}})",
-    "reviewingSlow": "Menyemak (ini mungkin mengambil masa...) {{done}}/{{total}}",
+    "reviewingSlow": "Menyemak (ini mungkin mengambil masa…) {{done}}/{{total}}",
     "reviewingRange": "Menyemak {{start}}–{{end}} (daripada {{total}})",
     "legacy": {
       "aligningVoices": "Menyelaraskan suara {{done}}/{{total}}…",
@@ -1563,21 +1564,21 @@
     "dubbedVideoSaved": "Video alih suara disimpan ke:\n{{path}}"
   },
   "logs": {
-    "title": "Log Terkini",
+    "title": "Log terkini",
     "copy": "Salin",
-    "email": "Emel kepada Pembangun",
+    "email": "E-mel kepada pembangun",
     "close": "Tutup",
     "empty": "Belum ada log.",
     "copied": "Log disalin ke papan klip",
     "copyFailed": "Salin gagal",
     "emailSubject": "Log Debug Stage5",
     "emailBodyPrefix": "Hai,\n\nSila lihat log terkini saya di bawah untuk membantu debug masalah ini.\n\n",
-    "deviceInfoHeader": "Maklumat Peranti",
+    "deviceInfoHeader": "Maklumat peranti",
     "optionalMessage": "Mesej pilihan",
     "optionalMessagePlaceholder": "Apa yang anda cuba lakukan?",
     "sendReport": "Hantar laporan",
     "reportPrompt": "Sesuatu tidak kena. Laporkan kepada pembangun untuk pembaikan segera.",
-    "preparingReport": "Sedang menyiapkan pakej diagnostik...",
+    "preparingReport": "Sedang menyiapkan pakej diagnostik…",
     "reportContextWarning": "Sesetengah konteks diagnostik tidak dapat dimuatkan. Laporan masih akan menyertakan butiran daripada aplikasi ini.",
     "reportPromptTask": {
       "transcription": "Transkripsi terhenti kerana masalah yang tidak dijangka. Hantar laporan ini supaya kami boleh membaikinya.",
@@ -1795,7 +1796,7 @@
     }
   },
   "tabs": {
-    "newTab": "Tab Baharu",
+    "newTab": "Tab baharu",
     "newTabWithShortcut": "Tab baharu ({{shortcut}})",
     "closeTab": "Tutup tab",
     "tabList": "Tab yang dibuka"
@@ -1858,6 +1859,7 @@
     "deviceIdReplaced": "Fail yang memautkan komputer ini dengan minit anda telah rosak, jadi Translator mencipta pautan baharu. Minit yang anda beli mungkin tidak dipaparkan di sini. Hubungi sokongan dengan resit pembelian anda dan kami akan memindahkannya semula.",
     "contactSupport": "Hubungi sokongan",
     "openSettings": "Buka Tetapan",
-    "supportSubject": "Minit saya hilang selepas Translator menetapkan semula komputer ini"
+    "supportSubject": "Minit saya hilang selepas Translator menetapkan semula komputer ini",
+    "settingsResetKeptLanguage": "Fail tetapan Translator telah rosak, jadi pilihan anda ditetapkan semula: bahasa sari kata, kunci API dan pilihan lain. Bahasa antara muka anda dikekalkan. Salinan fail yang rosak telah disimpan. Sila semak Tetapan."
   }
 }

@@ -249,7 +249,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         ...(options?.title ? { title: options.title } : {}),
         filters: [
           {
-            name: i18n.t('common.fileFilters.mediaFiles', 'Media Files'),
+            name: i18n.t('common.fileFilters.mediaFiles', 'Media files'),
             extensions: [...MEDIA_FILE_EXTENSIONS],
           },
         ],

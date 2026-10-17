@@ -15,9 +15,11 @@ import {
 } from '../../state/free-preview-store';
 import {
   creditsToFinish,
+  offerNoneBodyKind,
   packToFinish,
   previewMinuteSplit,
 } from '../../utils/freePreview';
+import { resolveCreditBalanceState } from '../../utils/creditBalanceState';
 import {
   freePreviewPlanningCredits,
   resumeFreePreview,
@@ -156,6 +158,9 @@ export default function FreePreviewOffer() {
   const credits = useCreditStore(s => s.credits);
   const authoritative = useCreditStore(s => s.authoritative);
   const monthlyFree = useCreditStore(s => s.monthlyFree);
+  const creditsLoading = useCreditStore(s => s.loading);
+  const history = useCreditStore(s => s.history);
+  const offline = useCreditStore(s => s.offline);
   const checkoutPending = useCreditStore(s => s.checkoutPending);
   const checkoutUnresolved = useCreditStore(s => s.checkoutUnresolved);
   const quality = useUIStore(s => s.qualityTranslation);
@@ -348,6 +353,17 @@ export default function FreePreviewOffer() {
           count: total,
         });
 
+  const noneBodyKind = offerNoneBodyKind({
+    // The same balance reading as the minutes pill and Settings.
+    balanceState: resolveCreditBalanceState({
+      credits,
+      loading: creditsLoading,
+      monthlyFree,
+      history,
+      offline,
+    }),
+    hasMonthlyFree: Boolean(monthlyFree),
+  });
   let detail: string;
   if (failed && !canFinishNow) {
     detail = t(
@@ -383,7 +399,13 @@ export default function FreePreviewOffer() {
           'The {{price}} pack covers most of the remaining {{remaining}} minutes.',
           { price, remaining, count: remaining }
         );
-  } else if (monthlyFree) {
+  } else if (noneBodyKind === 'welcomePending') {
+    // The same words as Settings; the button below carries the price.
+    detail = t(
+      'credits.welcomePendingNote',
+      'Your free minutes are on the way. They usually arrive the next time you open Translator.'
+    );
+  } else if (noneBodyKind === 'nextFree' && monthlyFree) {
     // Not "your free minutes are used up": someone who bought minutes may
     // never have had this month's top-up. A low balance does get the next one.
     detail = t(

@@ -3,8 +3,8 @@
     "cancel": "रद्द करें",
     "save": "सहेजें",
     "or": "या",
-    "saving": "सहेज रहा है...",
-    "validating": "सत्यापित हो रहा है...",
+    "saving": "सहेज रहा है…",
+    "validating": "सत्यापित हो रहा है…",
     "delete": "हटाएं",
     "confirm": "पुष्टि करें",
     "apply": "लागू करें",
@@ -16,7 +16,7 @@
     "done": "हो गया",
     "gotIt": "समझ गया",
     "close": "बंद करें",
-    "loading": "लोड हो रहा है...",
+    "loading": "लोड हो रहा है…",
     "error": {
       "unexpected": "एक अनपेक्षित त्रुटि हुई।",
       "unexpectedRemove": "कुंजी हटाते समय एक अनपेक्षित त्रुटि हुई।",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "अपडेट जांचें",
     "clear": "साफ़ करें",
     "currentVersionLabel": "वर्तमान संस्करण",
-    "downloadingUpdate": "अपडेट डाउनलोड हो रहा है...",
+    "downloadingUpdate": "अपडेट डाउनलोड हो रहा है…",
     "downloadingUpdateProgress": "अपडेट {{percent}} प्रतिशत डाउनलोड हो रहा है",
     "downloadingUpdateShort": "डाउनलोड हो रहा है",
     "downloadUpdateNow": "अपडेट डाउनलोड करें",
@@ -97,7 +97,7 @@
     "send": "भेजें",
     "dismiss": "खारिज करें",
     "moreActions": "और कार्रवाइयाँ",
-    "installingUpdate": "अपडेट इंस्टॉल हो रहा है...",
+    "installingUpdate": "अपडेट इंस्टॉल हो रहा है…",
     "installingUpdateShort": "इंस्टॉल हो रहा है",
     "ok": "ठीक है",
     "minimumVersionValue": "कम से कम ज़रूरी वर्ज़न: v{{version}}",
@@ -216,7 +216,7 @@
   },
   "input": {
     "connect": "कनेक्ट करें",
-    "connecting": "कनेक्ट हो रहा है...",
+    "connecting": "कनेक्ट हो रहा है…",
     "connectTip": "सुझाव: कनेक्ट विंडो में साइन इन करें या जाँच पूरी करें, फिर जारी रखने के लिए विंडो बंद करें।",
     "fromDevice": "आपके डिवाइस से",
     "fromWeb": "वेब से",
@@ -232,7 +232,7 @@
     "qualityHigh": "उच्च",
     "qualityMedium": "मध्यम",
     "qualityLow": "निम्न",
-    "downloading": "डाउनलोड हो रहा है...",
+    "downloading": "डाउनलोड हो रहा है…",
     "selectFile": "फ़ाइल चुनें",
     "selectVideoFile": "वीडियो फ़ाइल चुनें",
     "selectVideoAudioFile": "वीडियो या ऑडियो फ़ाइल चुनें",
@@ -255,7 +255,7 @@
     "downloadFinishedWatchNow": "अभी देखें",
     "downloadFinishedWatchLater": "बाद में देखें",
     "videoSuggestion": {
-      "show": "मुझे एक वीडियो सुझाएँ",
+      "show": "AI से वीडियो खोजें",
       "hide": "वीडियो सुझाव छुपाएँ",
       "modelHint": "वर्तमान मॉडल",
       "sourceHint": "स्रोत खोजें",
@@ -269,7 +269,7 @@
       "composerHint": "कोई भी भाषा",
       "composerMeta": "खोजने के लिए Enter दबाएं",
       "placeholder": "जैसे रात में शांत जापानी सड़कों पर सैर",
-      "thinking": "सोच रहा हूँ...",
+      "thinking": "सोच रहा हूँ…",
       "resultsFor": "परिणाम",
       "downloadThis": "डाउनलोड करें",
       "failedToStart": "सुझाव शुरू नहीं हो सके",
@@ -344,11 +344,11 @@
       "activityComplete": "खोज गतिविधि पूरी हुई.",
       "nextActionHint": "एक वीडियो चुनें, फिर उसे डाउनलोड करें या YouTube पर खोलें।",
       "stagePending": "लंबित",
-      "stageRunning": "चल रहा है...",
+      "stageRunning": "चल रहा है…",
       "stageCleared": "पूरा",
       "searchQueryLabel": "खोज क्वेरी",
       "searchMore": "और खोजें",
-      "searchMoreLoading": "और खोजा जा रहा है...",
+      "searchMoreLoading": "और खोजा जा रहा है…",
       "resetChat": "चैट रीसेट करें",
       "useLastSearch": "पिछला सेटअप इस्तेमाल करें",
       "showFollowUps": "आगे के सुझाए गए आइडिया",
@@ -407,9 +407,9 @@
       "savedDownloads": "सहेजे गए डाउनलोड",
       "savedDownloadsCount": "{{count}} सहेजे गए डाउनलोड",
       "savedPreferencesCount": "{{count}} सहेजी गई पसंदें",
-      "searchingLong": "अभी भी वीडियो खोजे जा रहे हैं...",
+      "searchingLong": "अभी भी वीडियो खोजे जा रहे हैं…",
       "searchingVeryLong": "सामान्य से ज़्यादा समय लग रहा है, लेकिन यह अभी भी चल रहा है।",
-      "stillWorking": "अभी भी काम चल रहा है...",
+      "stillWorking": "अभी भी काम चल रहा है…",
       "toggleCopy": "अपनी भाषा में पूछें। AI सही YouTube वीडियो ढूँढ देगा।",
       "stage": {
         "answerer": "क्वेरी संसाधित करें",
@@ -474,7 +474,7 @@
     "translate": "अनुवाद करें",
     "continueTranscribing": "ट्रांसक्राइबिंग जारी रखें",
     "generate": "सबटाइटल बनाएँ",
-    "generating": "उत्पन्न कर रहा है...",
+    "generating": "उत्पन्न कर रहा है…",
     "generateNow": "अभी सबटाइटल उत्पन्न करें",
     "translation": "अनुवाद",
     "improveTranscription": "ट्रांसक्रिप्शन सुधारें",
@@ -508,7 +508,7 @@
       "openPermission": "Translator को वह फ़ाइल पढ़ने की अनुमति नहीं है। उसकी अनुमतियाँ जाँचें, या उसे किसी दूसरे फ़ोल्डर में कॉपी करके फिर कोशिश करें।",
       "openMissing": "वह सबटाइटल फ़ाइल अब वहाँ नहीं है। शायद उसे कहीं और ले जाया गया या हटा दिया गया।",
       "openFailed": "Translator वह सबटाइटल फ़ाइल नहीं खोल सका। पक्का करें कि यह .srt फ़ाइल है, फिर कोशिश करें।",
-      "saveFailed": "Translator सबटाइटल सहेज नहीं सका। फिर कोशिश करें, या दूसरा फ़ोल्डर चुनने के लिए “सबटाइटल इस नाम से सहेजें...” चुनें।"
+      "saveFailed": "Translator सबटाइटल सहेज नहीं सका। फिर कोशिश करें, या दूसरा फ़ोल्डर चुनने के लिए “सबटाइटल इस नाम से सहेजें…” चुनें।"
     }
   },
   "summary": {
@@ -572,7 +572,7 @@
     "exitCombineMode": "संयोजन से बाहर निकलें",
     "reorderHint": "क्रम बदलने के लिए खींचें:",
     "cutCombined": "संयुक्त काटें",
-    "cuttingCombined": "काट रहा है...",
+    "cuttingCombined": "काट रहा है…",
     "combinedHighlightReady": "संयुक्त हाइलाइट तैयार",
     "downloadCombined": "संयुक्त क्लिप डाउनलोड करें",
     "saveCombinedDialogTitle": "संयुक्त हाइलाइट क्लिप सहेजें",
@@ -683,15 +683,15 @@
     },
     "header": {
       "save": "सबटाइटल सहेजें",
-      "saveAs": "सबटाइटल इस नाम से सहेजें...",
+      "saveAs": "सबटाइटल इस नाम से सहेजें…",
       "saveTooltip": "मूल फ़ाइल में परिवर्तन सहेजें",
-      "saveAsTooltip": "सीधे सहेजने को सक्षम करने के लिए पहले 'इस रूप में सहेजें'"
+      "saveAsTooltip": "सीधे सहेजने के लिए पहले “सबटाइटल इस नाम से सहेजें…” इस्तेमाल करें"
     },
     "mergeControls": {
       "fontSizeLabel": "फ़ॉन्ट आकार:",
       "styleLabel": "शैली:",
       "mergeButton": "सबटाइटल मिलाएं",
-      "mergingButton": "मिला रहा है..."
+      "mergingButton": "मिला रहा है…"
     },
     "undo": {
       "removed": "लाइन हटा दी गई।",
@@ -759,7 +759,7 @@
         "modelOn": "ElevenLabs TTS प्रीमियम आवाज़ें"
       },
       "videoSuggestionModel": {
-        "label": "वीडियो सुझाव मॉडल",
+        "label": "वीडियो सुझाव की गुणवत्ता",
         "help": "ऑटो = सामान्य अनुवाद ड्राफ़्ट वाला मॉडल",
         "default": "डिफ़ॉल्ट (अनुवाद डिफ़ॉल्ट जैसा)",
         "quality": "क्वालिटी (अनुवाद क्वालिटी जैसा)"
@@ -785,7 +785,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "इस आवाज़ का प्रीव्यू करें",
-      "previewing": "चल रहा है...",
+      "previewing": "चल रहा है…",
       "previewFree": "प्रीव्यू",
       "mixLabel": "डबिंग वॉल्यूम बनाम मूल वीडियो वॉल्यूम",
       "mixHelp": "डब की गई आवाज़ के नीचे चलने वाले मूल साउंडट्रैक की मात्रा नियंत्रित करें।",
@@ -799,7 +799,7 @@
       "yourBalance": "आपका बैलेंस",
       "canClone": "आप क्लोन कर सकते हैं",
       "upToMinutes": "{{minutes}} मिनट तक",
-      "loading": "लोड हो रहा है...",
+      "loading": "लोड हो रहा है…",
       "previewWithMinutes": "प्रीव्यू ({{cost}})",
       "previewFailed": "आवाज़ का प्रीव्यू नहीं चल सका। फिर कोशिश करें।"
     },
@@ -950,7 +950,8 @@
       "howToGet": "यह कुंजी कैसे पाएँ",
       "missing": "पहले API कुंजी पेस्ट करें।",
       "savedEnding": "सहेजी गई कुंजी (आख़िरी अक्षर: {{last4}})",
-      "savedHidden": "सहेजी गई कुंजी (छिपी हुई)"
+      "savedHidden": "सहेजी गई कुंजी (छिपी हुई)",
+      "providerLabel": "{{provider}} API कुंजी"
     },
     "byoStack": {
       "title": "आपका AI सेटअप"
@@ -1062,7 +1063,7 @@
   },
   "credits": {
     "title": "आपके मिनट",
-    "loading": "लोड हो रहा है...",
+    "loading": "लोड हो रहा है…",
     "usingApiKey": "API कुंजी का उपयोग",
     "usingOpenAi": "OpenAI उपयोग में",
     "usingAnthropic": "Claude उपयोग में",
@@ -1174,9 +1175,9 @@
     "resetCreditsToZeroTitle": "एडमिन: क्रेडिट 0 पर रीसेट करें",
     "toggleByoPreviewTitle": "एडमिन: BYO प्रीव्यू मोड टॉगल करें (UI ऐसे देखें जैसे BYO खरीदा न हो)",
     "addCredits": "350k क्रेडिट जोड़ें",
-    "adding": "जोड़ा जा रहा है...",
+    "adding": "जोड़ा जा रहा है…",
     "resetToZero": "0 पर रीसेट करें",
-    "resetting": "रीसेट हो रहा है...",
+    "resetting": "रीसेट हो रहा है…",
     "byoPreview": "BYO प्रीव्यू",
     "byoPreviewOn": "BYO प्रीव्यू चालू",
     "confirmResetCreditsToZero": "क्या आप वाकई क्रेडिट को 0 पर रीसेट करना चाहते हैं? यह क्रिया वापस नहीं की जा सकती।"
@@ -1242,13 +1243,13 @@
       "fileTooLargeForVoiceCloning": "वॉइस क्लोनिंग के लिए वीडियो फ़ाइल बहुत बड़ी है ({{size}}MB)। अधिकतम अनुमत {{max}}MB है। कृपया छोटा वीडियो उपयोग करें या वॉइस क्लोनिंग अक्षम करें।"
     },
     "status": {
-      "starting": "शुरू हो रहा है...",
+      "starting": "शुरू हो रहा है…",
       "completed": "पूर्ण",
       "cancelled": "रद्द",
       "error": "त्रुटि"
     },
     "buttons": {
-      "redirectingToPayment": "भुगतान पर भेजा जा रहा है..."
+      "redirectingToPayment": "भुगतान पर भेजा जा रहा है…"
     },
     "workflow": {
       "stepOne": "चरण 1",
@@ -1270,14 +1271,14 @@
       "saveOutputsTitle": "आउटपुट सेव करें",
       "saveOutputsDescription": "जिस स्रोत या डब किए गए मीडिया को सुरक्षित रखना है, उसे ऐप वर्कस्पेस के बाहर रखें।"
     },
-    "calculatingCost": "लागत गणना की जा रही है...",
+    "calculatingCost": "लागत गणना की जा रही है…",
     "welcomeCredits": {
       "message": "ट्रांसक्रिप्शन और अनुवाद आज़माने के लिए आपके पास मुफ़्त मिनट हैं (करीब 20 मिनट का वीडियो)।"
     }
   },
   "findBar": {
-    "findPlaceholder": "सबटाइटल में खोजें...",
-    "replacePlaceholder": "इससे बदलें...",
+    "findPlaceholder": "सबटाइटल में खोजें…",
+    "replacePlaceholder": "इससे बदलें…",
     "replaceAll": "सभी बदलें",
     "nextMatch": "अगला मिलान (Enter)",
     "previousMatch": "पिछला मिलान (Shift+Enter)",
@@ -1299,7 +1300,7 @@
       "howToGet": "API कुंजियाँ कैसे प्राप्त करें",
       "enable": "मेरी API कुंजियाँ उपयोग करें",
       "done": "हो गया",
-      "ready": "सब कुछ तैयार है। अब आप “मेरी API कुंजियाँ उपयोग करें” चालू कर सकते हैं।",
+      "ready": "सभी ज़रूरी कुंजियाँ तैयार हैं। अब आप अपनी API कुंजियाँ इस्तेमाल कर सकते हैं।",
       "missingTranslation": "अनुवाद के लिए अभी भी {{providers}} चाहिए।",
       "messageElevenLabsAudio": "अपनी API कुंजियाँ उपयोग करने के लिए, अनुवाद हेतु OpenAI या Anthropic कुंजी आवश्यक है। ट्रांसक्रिप्शन और डबिंग केवल ElevenLabs का उपयोग करते हैं, इसलिए उनके लिए भी ElevenLabs कुंजी जोड़ें।",
       "audioNeedsElevenLabs": "ElevenLabs कुंजी के बिना, आपकी API कुंजियाँ चालू रहने पर ट्रांसक्रिप्शन और डबिंग उपलब्ध नहीं हैं।"
@@ -1458,25 +1459,25 @@
   "progress": {
     "preparingVideoExport": "वीडियो एक्सपोर्ट की तैयारी हो रही है…",
     "downloadingVideoExportTools": "वीडियो एक्सपोर्ट टूल डाउनलोड हो रहे हैं… {{percent}}%",
-    "beginningReview": "समीक्षा शुरू हो रही है...",
-    "starting": "शुरू हो रहा है...",
+    "beginningReview": "समीक्षा शुरू हो रही है…",
+    "starting": "शुरू हो रहा है…",
     "completed": "पूर्ण",
     "processCancelled": "प्रक्रिया रद्द",
     "mergingTitle": "वीडियो और सबटाइटल मर्ज हो रहे हैं",
-    "extractingAudio": "ऑडियो निकाला जा रहा है...",
+    "extractingAudio": "ऑडियो निकाला जा रहा है…",
     "transcribingOf": "ट्रांसक्राइब हो रहा है {{done}}/{{total}}",
     "error": "त्रुटि",
     "transcribedChunks": "ट्रांसक्राइब्ड {{done}}/{{total}} चंक्स",
     "transcribingElevenLabs": "ElevenLabs से ट्रांसक्राइब हो रहा है (~{{minutes}} मिनट शेष)",
     "transcribingElevenLabsHours": "ElevenLabs से ट्रांसक्राइब हो रहा है (~{{hours}}घं {{minutes}}मि शेष)",
-    "transcribingElevenLabsFinishing": "ElevenLabs से ट्रांसक्राइब हो रहा है...",
-    "transcriptionRetry": "कनेक्शन असफल, फिर से कोशिश ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "ElevenLabs से ट्रांसक्राइब हो रहा है…",
+    "transcriptionRetry": "कनेक्शन असफल, फिर से कोशिश ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "ऑडियो अपलोड हो रहा है…",
     "gapRepair": "गैप रिपेयर #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "लापता कैप्शन की मरम्मत (पुनरावृत्ति {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "कैप्शन साफ़ हो रहे हैं ({{done}}/{{total}})",
     "translationCleanup": "अनुवादित कैप्शन साफ़ हो रहे हैं ({{done}}/{{total}})",
-    "reviewingSlow": "समीक्षा हो रही है (इसमें कुछ समय लग सकता है...) {{done}}/{{total}}",
+    "reviewingSlow": "समीक्षा हो रही है (इसमें कुछ समय लग सकता है…) {{done}}/{{total}}",
     "reviewingRange": "समीक्षा हो रही है {{start}}–{{end}} ({{total}} में से)",
     "legacy": {
       "aligningVoices": "आवाज़ें मिलाई जा रही हैं {{done}}/{{total}}…",
@@ -1585,7 +1586,7 @@
     "optionalMessagePlaceholder": "आप क्या करने की कोशिश कर रहे थे?",
     "sendReport": "रिपोर्ट भेजें",
     "reportPrompt": "कुछ गलत हो गया। जल्दी समाधान के लिए इसे निर्माता को रिपोर्ट करें।",
-    "preparingReport": "डायग्नोस्टिक बंडल तैयार किया जा रहा है...",
+    "preparingReport": "डायग्नोस्टिक बंडल तैयार किया जा रहा है…",
     "reportContextWarning": "कुछ डायग्नोस्टिक संदर्भ लोड नहीं हो सका। रिपोर्ट में फिर भी इस ऐप के विवरण शामिल होंगे।",
     "reportPromptTask": {
       "transcription": "किसी अनचाही दिक्कत से ट्रांसक्रिप्शन रुक गया। यह रिपोर्ट भेजें ताकि हम इसे ठीक कर सकें।",
@@ -1876,6 +1877,7 @@
     "deviceIdReplaced": "इस कंप्यूटर को आपके मिनटों से जोड़ने वाली फ़ाइल ख़राब हो गई थी, इसलिए Translator ने नया लिंक बना दिया। हो सकता है आपके खरीदे हुए मिनट यहाँ न दिखें। खरीद की रसीद के साथ सपोर्ट से संपर्क करें, हम उन्हें वापस ले आएँगे।",
     "contactSupport": "सपोर्ट से संपर्क करें",
     "openSettings": "सेटिंग्स खोलें",
-    "supportSubject": "Translator के इस कंप्यूटर को रीसेट करने के बाद मेरे मिनट गायब हैं"
+    "supportSubject": "Translator के इस कंप्यूटर को रीसेट करने के बाद मेरे मिनट गायब हैं",
+    "settingsResetKeptLanguage": "Translator की सेटिंग्स फ़ाइल ख़राब हो गई थी, इसलिए आपकी पसंद रीसेट हो गई: सबटाइटल की भाषा, API कुंजियाँ और बाकी विकल्प। इंटरफ़ेस की भाषा पहले जैसी ही है। ख़राब फ़ाइल की एक कॉपी रख ली गई है। कृपया सेटिंग्स एक बार देख लें।"
   }
 }

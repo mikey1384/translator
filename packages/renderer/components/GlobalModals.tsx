@@ -400,10 +400,10 @@ export default function GlobalModals() {
         open={updateNotesOpen}
         title={
           updateNotes?.version
-            ? t('common.whatsNewVersionTitle', "What's New in v{{version}}", {
+            ? t('common.whatsNewVersionTitle', "What's new in v{{version}}", {
                 version: updateNotes.version,
               })
-            : t('common.whatsNewTitle', "What's New")
+            : t('common.whatsNewTitle', "What's new")
         }
         onClose={() => void handleCloseUpdateNotes()}
         actions={
@@ -453,7 +453,7 @@ export default function GlobalModals() {
       />
       <Modal
         open={requiredUpdateOpen}
-        title={t('common.updateRequiredTitle', 'Update Required')}
+        title={t('common.updateRequiredTitle', 'Update required')}
         titleId="required-update-title"
         actions={
           <>
@@ -464,7 +464,7 @@ export default function GlobalModals() {
                   window.appShell.openExternal(requiredUpdate.downloadUrl!)
                 }
               >
-                {t('common.openDownloadPage', 'Open Download Page')}
+                {t('common.openDownloadPage', 'Open download page')}
               </Button>
             )}
             <Button
@@ -476,10 +476,10 @@ export default function GlobalModals() {
               {updateInstalling
                 ? t('common.installingUpdate', 'Installing update...')
                 : updateDownloaded
-                  ? t('common.installUpdateNow', 'Install Update')
+                  ? t('common.installUpdateNow', 'Install update')
                   : updateAvailable
-                    ? t('common.downloadUpdateNow', 'Download Update')
-                    : t('common.checkForUpdateNow', 'Check for Update')}
+                    ? t('common.downloadUpdateNow', 'Download update')
+                    : t('common.checkForUpdateNow', 'Check for update')}
             </Button>
           </>
         }

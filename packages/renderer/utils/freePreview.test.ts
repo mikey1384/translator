@@ -152,3 +152,19 @@ test('a retry after the tail was transcribed only translates', () => {
     true
   );
 });
+
+test('the offer never promises a top-up date while the welcome grant is pending', async () => {
+  const { offerNoneBodyKind } = await import('./freePreview');
+  assert.equal(
+    offerNoneBodyKind({ balanceState: 'welcomePending', hasMonthlyFree: true }),
+    'welcomePending'
+  );
+  assert.equal(
+    offerNoneBodyKind({ balanceState: 'freeBack', hasMonthlyFree: true }),
+    'nextFree'
+  );
+  assert.equal(
+    offerNoneBodyKind({ balanceState: 'empty', hasMonthlyFree: false }),
+    'plain'
+  );
+});

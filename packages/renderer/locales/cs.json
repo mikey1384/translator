@@ -3,8 +3,8 @@
     "cancel": "Zrušit",
     "save": "Uložit",
     "or": "NEBO",
-    "saving": "Ukládání...",
-    "validating": "Ověřování...",
+    "saving": "Ukládání…",
+    "validating": "Ověřování…",
     "delete": "Smazat",
     "confirm": "Potvrdit",
     "apply": "Použít",
@@ -16,7 +16,7 @@
     "done": "Hotovo",
     "gotIt": "Rozumím",
     "close": "Zavřít",
-    "loading": "Načítání...",
+    "loading": "Načítání…",
     "error": {
       "unexpected": "Došlo k neočekávané chybě.",
       "unexpectedRemove": "Došlo k neočekávané chybě při odstraňování klíče.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Zkontrolovat aktualizace",
     "clear": "Vymazat",
     "currentVersionLabel": "Aktuální verze",
-    "downloadingUpdate": "Stahování aktualizace...",
+    "downloadingUpdate": "Stahování aktualizace…",
     "downloadingUpdateProgress": "Stahování aktualizace: {{percent}} procent",
     "downloadingUpdateShort": "STAHOVÁNÍ",
     "downloadUpdateNow": "Stáhnout aktualizaci",
@@ -97,7 +97,7 @@
     "send": "Odeslat",
     "dismiss": "Zavřít",
     "moreActions": "Další akce",
-    "installingUpdate": "Instalace aktualizace...",
+    "installingUpdate": "Instalace aktualizace…",
     "installingUpdateShort": "Instalace",
     "ok": "OK",
     "minimumVersionValue": "Minimální podporovaná verze: v{{version}}",
@@ -216,7 +216,7 @@
   },
   "input": {
     "connect": "Připojit",
-    "connecting": "Připojování...",
+    "connecting": "Připojování…",
     "connectTip": "Tip: V okně připojení se přihlaste nebo dokončete ověření a poté zavřete okno pro pokračování.",
     "fromDevice": "Z vašeho zařízení",
     "fromWeb": "Z webu",
@@ -232,7 +232,7 @@
     "qualityHigh": "Vysoká",
     "qualityMedium": "Střední",
     "qualityLow": "Nízká",
-    "downloading": "Stahování...",
+    "downloading": "Stahování…",
     "selectFile": "Vybrat soubor",
     "selectVideoFile": "Vybrat video soubor",
     "selectVideoAudioFile": "Vybrat video nebo zvukový soubor",
@@ -269,7 +269,7 @@
       "composerHint": "Libovolný jazyk",
       "composerMeta": "Stiskněte Enter pro hledání",
       "placeholder": "např. klidné japonské noční procházky ulicemi",
-      "thinking": "Přemýšlím...",
+      "thinking": "Přemýšlím…",
       "resultsFor": "Výsledky pro",
       "downloadThis": "Stáhnout toto",
       "failedToStart": "Nepodařilo se spustit návrhy",
@@ -344,11 +344,11 @@
       "activityComplete": "Aktivita vyhledávání dokončena.",
       "nextActionHint": "Vyberte video a pak ho stáhněte nebo otevřete na YouTube.",
       "stagePending": "Čeká",
-      "stageRunning": "Probíhá...",
+      "stageRunning": "Probíhá…",
       "stageCleared": "Dokončeno",
       "searchQueryLabel": "Vyhledávací dotaz",
       "searchMore": "Hledat více",
-      "searchMoreLoading": "Vyhledávám dál...",
+      "searchMoreLoading": "Vyhledávám dál…",
       "resetChat": "Resetovat chat",
       "useLastSearch": "Použít poslední nastavení",
       "showFollowUps": "Navrhovaná pokračování",
@@ -409,7 +409,7 @@
       "savedPreferencesCount": "{{count}} uložených předvoleb",
       "searchingLong": "Videa se pořád hledají…",
       "searchingVeryLong": "Trvá to déle než obvykle, ale stále běží.",
-      "stillWorking": "Stále pracuje...",
+      "stillWorking": "Stále pracuje…",
       "toggleCopy": "Vyhledejte zdrojové video na YouTube bez opuštění tohoto postupu.",
       "stage": {
         "answerer": "Zpracování",
@@ -475,7 +475,7 @@
     "translate": "Přeložit",
     "continueTranscribing": "Pokračovat v přepisu",
     "generate": "Generovat titulky",
-    "generating": "Generování...",
+    "generating": "Generování…",
     "generateNow": "Generovat titulky nyní",
     "translation": "Překlad",
     "improveTranscription": "Zlepšit přepis",
@@ -511,7 +511,7 @@
       "openPermission": "Translator nemá oprávnění tento soubor číst. Zkontrolujte jeho oprávnění, nebo ho zkopírujte do jiné složky a zkuste to znovu.",
       "openMissing": "Ten soubor s titulky už tam není. Možná byl přesunut nebo smazán.",
       "openFailed": "Translator nemohl ten soubor s titulky otevřít. Ověřte, že jde o soubor .srt, a zkuste to znovu.",
-      "saveFailed": "Translator nemohl titulky uložit. Zkuste to znovu, nebo zvolte „Uložit titulky jako...“ a vyberte jinou složku."
+      "saveFailed": "Translator nemohl titulky uložit. Zkuste to znovu, nebo zvolte „Uložit titulky jako…“ a vyberte jinou složku."
     }
   },
   "summary": {
@@ -575,7 +575,7 @@
     "exitCombineMode": "Ukončit kombinování",
     "reorderHint": "Přetáhněte pro změnu pořadí:",
     "cutCombined": "Vystřihnout kombinované",
-    "cuttingCombined": "Stříhání...",
+    "cuttingCombined": "Stříhání…",
     "combinedHighlightReady": "Spojený klip je připravený",
     "downloadCombined": "Stáhnout kombinovaný klip",
     "saveCombinedDialogTitle": "Uložit spojený klip s nejlepšími momenty",
@@ -691,15 +691,15 @@
     },
     "header": {
       "save": "Uložit titulky",
-      "saveAs": "Uložit titulky jako...",
+      "saveAs": "Uložit titulky jako…",
       "saveTooltip": "Uložit změny do původního souboru",
-      "saveAsTooltip": "Nejprve uložte jako pro povolení přímého ukládání"
+      "saveAsTooltip": "Nejdřív použijte „Uložit titulky jako…“, pak půjde ukládat přímo"
     },
     "mergeControls": {
       "fontSizeLabel": "Velikost písma:",
       "styleLabel": "Styl:",
       "mergeButton": "Sloučit titulky",
-      "mergingButton": "Slučování..."
+      "mergingButton": "Slučování…"
     },
     "undo": {
       "removed": "Řádek smazán.",
@@ -794,7 +794,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "Náhled tohoto hlasu",
-      "previewing": "Přehrávání...",
+      "previewing": "Přehrávání…",
       "previewFree": "Náhled",
       "mixLabel": "Hlasitost dabingu vs. hlasitost původního videa",
       "mixHelp": "Ovládejte, kolik z původní zvukové stopy se přehrává pod dabovaným hlasem.",
@@ -808,7 +808,7 @@
       "yourBalance": "Váš zůstatek",
       "canClone": "Můžete klonovat",
       "upToMinutes": "až {{minutes}} min",
-      "loading": "Načítání...",
+      "loading": "Načítání…",
       "previewWithMinutes": "Ukázka ({{cost}})",
       "previewFailed": "Ukázku hlasu se nepodařilo přehrát. Zkuste to znovu."
     },
@@ -959,7 +959,8 @@
       "howToGet": "Jak získat tento klíč",
       "missing": "Nejdřív vložte API klíč.",
       "savedEnding": "Uložený klíč končící na {{last4}}",
-      "savedHidden": "Uložený klíč (skrytý)"
+      "savedHidden": "Uložený klíč (skrytý)",
+      "providerLabel": "{{provider}} API klíč"
     },
     "byoStack": {
       "title": "Váš AI stack"
@@ -1072,7 +1073,7 @@
   },
   "credits": {
     "title": "Vaše minuty",
-    "loading": "Načítání...",
+    "loading": "Načítání…",
     "usingApiKey": "Používá se API klíč",
     "usingOpenAi": "Používá se OpenAI",
     "usingAnthropic": "Používá se Claude",
@@ -1184,9 +1185,9 @@
     "resetCreditsToZeroTitle": "Admin: resetovat kredity na 0",
     "toggleByoPreviewTitle": "Admin: přepnout režim náhledu BYO (zobrazit UI jako bez zakoupeného BYO)",
     "addCredits": "Přidat 350k kreditů",
-    "adding": "Přidávání...",
+    "adding": "Přidávání…",
     "resetToZero": "Resetovat na 0",
-    "resetting": "Resetování...",
+    "resetting": "Resetování…",
     "byoPreview": "Náhled BYO",
     "byoPreviewOn": "Náhled BYO ZAP",
     "confirmResetCreditsToZero": "Opravdu chcete resetovat kredity na 0? Tuto akci nelze vrátit zpět."
@@ -1252,13 +1253,13 @@
       "fileTooLargeForVoiceCloning": "Video soubor je příliš velký pro klonování hlasu ({{size}}MB). Maximum je {{max}}MB. Použijte prosím kratší video nebo vypněte klonování hlasu."
     },
     "status": {
-      "starting": "Spouštění...",
+      "starting": "Spouštění…",
       "completed": "Dokončeno",
       "cancelled": "Zrušeno",
       "error": "Chyba"
     },
     "buttons": {
-      "redirectingToPayment": "Přesměrování na platbu..."
+      "redirectingToPayment": "Přesměrování na platbu…"
     },
     "workflow": {
       "stepOne": "Krok 1",
@@ -1280,14 +1281,14 @@
       "saveOutputsTitle": "Uložit výstupy",
       "saveOutputsDescription": "Uložte zdrojová nebo nadabovaná média mimo pracovní prostor aplikace, pokud je chcete zachovat."
     },
-    "calculatingCost": "Výpočet nákladů...",
+    "calculatingCost": "Výpočet nákladů…",
     "welcomeCredits": {
       "message": "Máte minuty zdarma na vyzkoušení přepisu a překladu (asi 20 minut videa)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Hledat v titulcích...",
-    "replacePlaceholder": "Nahradit za...",
+    "findPlaceholder": "Hledat v titulcích…",
+    "replacePlaceholder": "Nahradit za…",
     "replaceAll": "Nahradit vše",
     "nextMatch": "Další shoda (Enter)",
     "previousMatch": "Předchozí shoda (Shift+Enter)",
@@ -1309,7 +1310,7 @@
       "howToGet": "Jak získat API klíče",
       "enable": "Použít mé API klíče",
       "done": "Hotovo",
-      "ready": "Pokrytí je kompletní. Teď můžete zapnout „Používat moje API klíče“.",
+      "ready": "Vše je připraveno. Teď můžete používat vlastní API klíče.",
       "missingTranslation": "Překlad stále potřebuje {{providers}}.",
       "messageElevenLabsAudio": "Chcete-li používat své API klíče, potřebujete pro překlad klíč OpenAI nebo Anthropic. Přepis a dabing používají pouze ElevenLabs, proto pro ně přidejte také klíč ElevenLabs.",
       "audioNeedsElevenLabs": "Bez klíče ElevenLabs nejsou přepis a dabing při zapnutých API klíčích k dispozici."
@@ -1468,25 +1469,25 @@
   "progress": {
     "preparingVideoExport": "Příprava exportu videa…",
     "downloadingVideoExportTools": "Stahování nástrojů pro export videa… {{percent}} %",
-    "beginningReview": "Začíná kontrola...",
-    "starting": "Spouštění...",
+    "beginningReview": "Začíná kontrola…",
+    "starting": "Spouštění…",
     "completed": "Dokončeno",
     "processCancelled": "Proces zrušen",
     "mergingTitle": "Slučování videa a titulků",
-    "extractingAudio": "Extrahování zvuku...",
+    "extractingAudio": "Extrahování zvuku…",
     "transcribingOf": "Přepisování {{done}}/{{total}}",
     "error": "Chyba",
     "transcribedChunks": "Přepsáno {{done}}/{{total}} úseků",
     "transcribingElevenLabs": "Přepisování s ElevenLabs (~{{minutes}} min zbývá)",
     "transcribingElevenLabsHours": "Přepisování s ElevenLabs (~{{hours}}h {{minutes}}m zbývá)",
-    "transcribingElevenLabsFinishing": "Přepisování s ElevenLabs...",
-    "transcriptionRetry": "Připojení selhalo, opakování ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Přepisování s ElevenLabs…",
+    "transcriptionRetry": "Připojení selhalo, opakování ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Nahrávání zvuku…",
     "gapRepair": "Oprava mezer #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Oprava chybějících titulků (Iterace {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Čištění titulků ({{done}}/{{total}})",
     "translationCleanup": "Čištění přeložených titulků ({{done}}/{{total}})",
-    "reviewingSlow": "Kontrola (může to chvíli trvat...) {{done}}/{{total}}",
+    "reviewingSlow": "Kontrola (může to chvíli trvat…) {{done}}/{{total}}",
     "reviewingRange": "Kontrola {{start}}–{{end}} (z {{total}})",
     "legacy": {
       "aligningVoices": "Zarovnávání hlasů {{done}}/{{total}}…",
@@ -1595,7 +1596,7 @@
     "optionalMessagePlaceholder": "Co jste se pokoušeli udělat?",
     "sendReport": "Odeslat hlášení",
     "reportPrompt": "Něco se pokazilo. Nahlaste to vývojáři pro rychlou opravu.",
-    "preparingReport": "Příprava diagnostického balíčku...",
+    "preparingReport": "Příprava diagnostického balíčku…",
     "reportContextWarning": "Část diagnostického kontextu se nepodařilo načíst. Zpráva bude stále obsahovat podrobnosti z této aplikace.",
     "reportPromptTask": {
       "transcription": "Přepis se zastavil kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
@@ -1911,6 +1912,7 @@
     "deviceIdReplaced": "Soubor, který propojuje tento počítač s vašimi minutami, byl poškozený, a tak Translator vytvořil nové propojení. Zakoupené minuty se tu nemusí zobrazovat. Napište podpoře a přiložte doklad o nákupu — minuty vám vrátíme.",
     "contactSupport": "Napsat podpoře",
     "openSettings": "Otevřít Nastavení",
-    "supportSubject": "Po obnovení tohoto počítače v Translatoru mi chybí minuty"
+    "supportSubject": "Po obnovení tohoto počítače v Translatoru mi chybí minuty",
+    "settingsResetKeptLanguage": "Soubor s nastavením Translatoru byl poškozený, a tak se vaše předvolby vrátily na výchozí: jazyk titulků, API klíče a další volby. Jazyk rozhraní se nezměnil. Kopie poškozeného souboru zůstala zachována. Zkontrolujte prosím Nastavení."
   }
 }

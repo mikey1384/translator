@@ -3,20 +3,20 @@
     "cancel": "Annuleren",
     "save": "Opslaan",
     "or": "OF",
-    "saving": "Opslaan...",
-    "validating": "Valideren...",
+    "saving": "Opslaan…",
+    "validating": "Valideren…",
     "delete": "Verwijderen",
     "confirm": "Bevestigen",
     "apply": "Toepassen",
     "back": "←",
     "to": "Terug naar",
     "app": "App",
-    "backToApp": "Terug naar de App",
+    "backToApp": "Terug naar de app",
     "next": "Volgende",
     "done": "Klaar",
     "gotIt": "Begrepen",
     "close": "Sluiten",
-    "loading": "Laden...",
+    "loading": "Laden…",
     "error": {
       "unexpected": "Er is een onverwachte fout opgetreden.",
       "unexpectedRemove": "Er is een onverwachte fout opgetreden bij het verwijderen van de sleutel.",
@@ -46,13 +46,13 @@
     "video": "Video",
     "selected": "Geselecteerd",
     "retry": "Opnieuw proberen",
-    "uiLanguage": "UI Taal",
+    "uiLanguage": "UI-taal",
     "reloadPage": "Pagina herladen",
     "reloadPageAria": "Herlaad de pagina",
     "backToTop": "Terug naar boven",
     "backToTopAria": "Scroll terug naar boven",
     "confirmReload": "Weet je zeker dat je de pagina wilt herladen? Niet-opgeslagen wijzigingen kunnen verloren gaan.",
-    "installUpdate": "Herstart voor Update",
+    "installUpdate": "Herstarten om bij te werken",
     "confirmInstallUpdate": "Update installeren en herstarten?",
     "downloadUpdate": "Klik om update te downloaden",
     "dismissError": "Fout sluiten",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Controleren op updates",
     "clear": "Wissen",
     "currentVersionLabel": "Huidige versie",
-    "downloadingUpdate": "Update downloaden...",
+    "downloadingUpdate": "Update downloaden…",
     "downloadingUpdateProgress": "Update downloaden: {{percent}}%",
     "downloadingUpdateShort": "DOWNLOADEN",
     "downloadUpdateNow": "Update downloaden",
@@ -97,7 +97,7 @@
     "send": "Versturen",
     "dismiss": "Sluiten",
     "moreActions": "Meer acties",
-    "installingUpdate": "Update installeren...",
+    "installingUpdate": "Update installeren…",
     "installingUpdateShort": "Installeren",
     "ok": "OK",
     "minimumVersionValue": "Minimaal vereiste versie: v{{version}}",
@@ -217,7 +217,7 @@
   },
   "input": {
     "connect": "Verbinden",
-    "connecting": "Verbinden...",
+    "connecting": "Verbinden…",
     "connectTip": "Tip: Log in of voltooi de verificatie in het verbindingsvenster en sluit het venster om door te gaan.",
     "fromDevice": "Van je apparaat",
     "fromWeb": "Van het web",
@@ -233,7 +233,7 @@
     "qualityHigh": "Hoog",
     "qualityMedium": "Gemiddeld",
     "qualityLow": "Laag",
-    "downloading": "Downloaden...",
+    "downloading": "Downloaden…",
     "selectFile": "Selecteer bestand",
     "selectVideoFile": "Selecteer videobestand",
     "selectVideoAudioFile": "Video- of audiobestand kiezen",
@@ -270,7 +270,7 @@
       "composerHint": "Elke taal",
       "composerMeta": "Druk op Enter om te zoeken",
       "placeholder": "bijv. rustige Japanse straatwandelingen 's nachts",
-      "thinking": "Bezig met nadenken...",
+      "thinking": "Bezig met nadenken…",
       "resultsFor": "Resultaten voor",
       "downloadThis": "Dit downloaden",
       "failedToStart": "Suggesties konden niet worden gestart",
@@ -345,11 +345,11 @@
       "activityComplete": "Zoekactiviteit voltooid.",
       "nextActionHint": "Kies een video en download deze, of open hem op YouTube.",
       "stagePending": "In afwachting",
-      "stageRunning": "Bezig...",
+      "stageRunning": "Bezig…",
       "stageCleared": "Voltooid",
       "searchQueryLabel": "Zoekopdracht",
       "searchMore": "Zoek verder",
-      "searchMoreLoading": "Verder zoeken...",
+      "searchMoreLoading": "Verder zoeken…",
       "resetChat": "Chat resetten",
       "useLastSearch": "Laatste configuratie gebruiken",
       "showFollowUps": "Vervolgideeën",
@@ -410,7 +410,7 @@
       "savedPreferencesCount": "{{count}} opgeslagen voorkeuren",
       "searchingLong": "Nog steeds video’s aan het zoeken…",
       "searchingVeryLong": "Het duurt langer dan normaal, maar het loopt nog.",
-      "stillWorking": "Nog bezig...",
+      "stillWorking": "Nog bezig…",
       "toggleCopy": "Zoek op YouTube naar een bronvideo zonder de workflow te verlaten.",
       "stage": {
         "answerer": "Zoekvraag verwerken",
@@ -475,7 +475,7 @@
     "translate": "Vertalen",
     "continueTranscribing": "Doorgaan met uitschrijven",
     "generate": "Ondertitels genereren",
-    "generating": "Genereren...",
+    "generating": "Genereren…",
     "generateNow": "Genereer ondertitels nu",
     "translation": "Vertaling",
     "improveTranscription": "Uitgeschreven tekst verbeteren",
@@ -509,7 +509,7 @@
       "openPermission": "Translator mag dat bestand niet lezen. Controleer de rechten, of kopieer het naar een andere map en probeer het opnieuw.",
       "openMissing": "Dat ondertitelbestand staat er niet meer. Misschien is het verplaatst of verwijderd.",
       "openFailed": "Translator kon dat ondertitelbestand niet openen. Controleer of het een .srt-bestand is en probeer het opnieuw.",
-      "saveFailed": "Translator kon de ondertitels niet opslaan. Probeer het opnieuw, of kies ‘Ondertitels opslaan als...’ om een andere map te kiezen."
+      "saveFailed": "Translator kon de ondertitels niet opslaan. Probeer het opnieuw, of kies ‘Ondertitels opslaan als…’ om een andere map te kiezen."
     }
   },
   "summary": {
@@ -573,7 +573,7 @@
     "exitCombineMode": "Combineren afsluiten",
     "reorderHint": "Sleep om te herschikken:",
     "cutCombined": "Gecombineerd knippen",
-    "cuttingCombined": "Knippen...",
+    "cuttingCombined": "Knippen…",
     "combinedHighlightReady": "Gecombineerd hoogtepunt klaar",
     "downloadCombined": "Gecombineerde clip downloaden",
     "saveCombinedDialogTitle": "Gecombineerde hoogtepuntclip opslaan",
@@ -685,15 +685,15 @@
     },
     "header": {
       "save": "Ondertitels opslaan",
-      "saveAs": "Ondertitels opslaan als...",
+      "saveAs": "Ondertitels opslaan als…",
       "saveTooltip": "Wijzigingen opslaan in origineel bestand",
-      "saveAsTooltip": "Eerst opslaan als om direct opslaan mogelijk te maken"
+      "saveAsTooltip": "Gebruik eerst ‘Ondertitels opslaan als…’ om direct te kunnen opslaan"
     },
     "mergeControls": {
       "fontSizeLabel": "Lettergrootte:",
       "styleLabel": "Stijl:",
       "mergeButton": "Ondertitels samenvoegen",
-      "mergingButton": "Samenvoegen..."
+      "mergingButton": "Samenvoegen…"
     },
     "undo": {
       "removed": "Regel verwijderd.",
@@ -742,7 +742,7 @@
       "activeKeys_one": "{{count}} sleutel klaar"
     },
     "performanceQuality": {
-      "title": "Prestaties & Kwaliteit",
+      "title": "Prestaties & kwaliteit",
       "qualityTranslation": {
         "label": "Kwaliteitsvertaling",
         "modelOn": "Concept met Claude Haiku 5.5 + review met Claude Opus 5.5",
@@ -787,7 +787,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "Voorbeeld van deze stem",
-      "previewing": "Afspelen...",
+      "previewing": "Afspelen…",
       "previewFree": "Voorbeeld",
       "mixLabel": "Volume nasynchronisatie vs. origineel geluid",
       "mixHelp": "Bepaal hoeveel van het originele geluid onder de nieuwe stem doorklinkt.",
@@ -801,7 +801,7 @@
       "yourBalance": "Je saldo",
       "canClone": "Je kunt klonen",
       "upToMinutes": "tot {{minutes}} min",
-      "loading": "Laden...",
+      "loading": "Laden…",
       "previewWithMinutes": "Voorbeeld ({{cost}})",
       "previewFailed": "Kan het stemvoorbeeld niet afspelen. Probeer het opnieuw."
     },
@@ -855,7 +855,7 @@
       "claudeOpus": "Claude Opus 5.5",
       "anthropicHighEnd": "Geavanceerd Anthropic-model",
       "claudeSummaryStack": "Claude Sonnet 5.5 / Claude Opus 5.5",
-      "reviewPass": "Vertaling (Beoordeling)",
+      "reviewPass": "Vertaling (beoordeling)",
       "off": "Uit",
       "on": "Aan",
       "defaultMode": "Standaard",
@@ -921,7 +921,7 @@
       }
     },
     "byoAnthropic": {
-      "title": "Anthropic API-sleutel (Optioneel)",
+      "title": "Anthropic API-sleutel (optioneel)",
       "description": "Voeg je Anthropic API-sleutel toe om Claude-modellen rechtstreeks te gebruiken voor de vertaalcontrolefase. Zonder deze sleutel verzorgt GPT-5.5 de controlepassage.",
       "apiKeyLabel": "Anthropic API-sleutel",
       "hide": "Verbergen",
@@ -952,7 +952,8 @@
       "howToGet": "Hoe je deze sleutel krijgt",
       "missing": "Plak eerst een API-sleutel.",
       "savedEnding": "Opgeslagen sleutel, eindigt op {{last4}}",
-      "savedHidden": "Opgeslagen sleutel (verborgen)"
+      "savedHidden": "Opgeslagen sleutel (verborgen)",
+      "providerLabel": "{{provider}} API-sleutel"
     },
     "byoStack": {
       "title": "Jouw AI-stack"
@@ -1065,7 +1066,7 @@
   },
   "credits": {
     "title": "Je minuten",
-    "loading": "Laden...",
+    "loading": "Laden…",
     "usingApiKey": "API-sleutel in gebruik",
     "usingOpenAi": "Gebruikt OpenAI",
     "usingAnthropic": "Gebruikt Claude",
@@ -1178,9 +1179,9 @@
     "resetCreditsToZeroTitle": "Admin: credits resetten naar 0",
     "toggleByoPreviewTitle": "Admin: BYO-previewmodus schakelen (UI tonen alsof BYO niet is gekocht)",
     "addCredits": "350k credits toevoegen",
-    "adding": "Toevoegen...",
+    "adding": "Toevoegen…",
     "resetToZero": "Reset naar 0",
-    "resetting": "Resetten...",
+    "resetting": "Resetten…",
     "byoPreview": "BYO-preview",
     "byoPreviewOn": "BYO-preview AAN",
     "confirmResetCreditsToZero": "Weet je zeker dat je credits wilt resetten naar 0? Dit kan niet ongedaan worden gemaakt."
@@ -1246,13 +1247,13 @@
       "fileTooLargeForVoiceCloning": "Videobestand is te groot voor stemklonen ({{size}}MB). Maximum toegestaan is {{max}}MB. Gebruik een kortere video of schakel stemklonen uit."
     },
     "status": {
-      "starting": "Starten...",
+      "starting": "Starten…",
       "completed": "Voltooid",
       "cancelled": "Geannuleerd",
       "error": "Fout"
     },
     "buttons": {
-      "redirectingToPayment": "Doorverwijzen naar betaling..."
+      "redirectingToPayment": "Doorverwijzen naar betaling…"
     },
     "workflow": {
       "stepOne": "Stap 1",
@@ -1274,14 +1275,14 @@
       "saveOutputsTitle": "Bestanden opslaan",
       "saveOutputsDescription": "Bewaar bron- of nagesynchroniseerde media die je wilt houden buiten de werkruimte van de app."
     },
-    "calculatingCost": "Kosten berekenen...",
+    "calculatingCost": "Kosten berekenen…",
     "welcomeCredits": {
       "message": "Je hebt gratis minuten om uitschrijven en vertalen uit te proberen (ongeveer 20 minuten video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Zoeken in ondertitels...",
-    "replacePlaceholder": "Vervangen door...",
+    "findPlaceholder": "Zoeken in ondertitels…",
+    "replacePlaceholder": "Vervangen door…",
     "replaceAll": "Alles vervangen",
     "nextMatch": "Volgende overeenkomst (Enter)",
     "previousMatch": "Vorige overeenkomst (Shift+Enter)",
@@ -1303,7 +1304,7 @@
       "howToGet": "Hoe API-sleutels te verkrijgen",
       "enable": "Mijn API-sleutels gebruiken",
       "done": "Klaar",
-      "ready": "De dekking is compleet. Je kunt nu ‘Mijn API-sleutels gebruiken’ inschakelen.",
+      "ready": "Alles is klaar. Je kunt nu je eigen API-sleutels gebruiken.",
       "missingTranslation": "Voor vertaling is {{providers}} nog nodig.",
       "messageElevenLabsAudio": "Om je API-sleutels te gebruiken, heb je een OpenAI- of Anthropic-sleutel nodig voor vertaling. Uitschrijven en nasynchroniseren gebeuren alleen met ElevenLabs, dus voeg daarvoor ook een ElevenLabs-sleutel toe.",
       "audioNeedsElevenLabs": "Zonder ElevenLabs-sleutel zijn uitschrijven en nasynchroniseren niet beschikbaar zolang je API-sleutels aan staan."
@@ -1462,25 +1463,25 @@
   "progress": {
     "preparingVideoExport": "Video-export voorbereiden…",
     "downloadingVideoExportTools": "Hulpmiddelen voor video-export downloaden… {{percent}}%",
-    "beginningReview": "Beoordeling starten...",
-    "starting": "Starten...",
+    "beginningReview": "Beoordeling starten…",
+    "starting": "Starten…",
     "completed": "Voltooid",
     "processCancelled": "Proces geannuleerd",
     "mergingTitle": "Video & ondertitels samenvoegen",
-    "extractingAudio": "Audio extraheren...",
+    "extractingAudio": "Audio extraheren…",
     "transcribingOf": "Uitschrijven {{done}}/{{total}}",
     "error": "Fout",
     "transcribedChunks": "{{done}}/{{total}} delen uitgeschreven",
     "transcribingElevenLabs": "Uitschrijven met ElevenLabs (~{{minutes}} min resterend)",
     "transcribingElevenLabsHours": "Uitschrijven met ElevenLabs (~{{hours}}u {{minutes}}m resterend)",
-    "transcribingElevenLabsFinishing": "Uitschrijven met ElevenLabs...",
-    "transcriptionRetry": "Verbinding mislukt, opnieuw proberen ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Uitschrijven met ElevenLabs…",
+    "transcriptionRetry": "Verbinding mislukt, opnieuw proberen ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Audio uploaden…",
     "gapRepair": "Hiaat reparatie #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Ontbrekende ondertitels repareren (Iteratie {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Ondertitels opschonen ({{done}}/{{total}})",
     "translationCleanup": "Vertaalde ondertitels opruimen ({{done}}/{{total}})",
-    "reviewingSlow": "Beoordelen (dit kan even duren...) {{done}}/{{total}}",
+    "reviewingSlow": "Beoordelen (dit kan even duren…) {{done}}/{{total}}",
     "reviewingRange": "Beoordelen {{start}}–{{end}} (van {{total}})",
     "legacy": {
       "aligningVoices": "Stemmen uitlijnen {{done}}/{{total}}…",
@@ -1589,7 +1590,7 @@
     "optionalMessagePlaceholder": "Wat probeerde je te doen?",
     "sendReport": "Rapport versturen",
     "reportPrompt": "Er is iets misgegaan. Meld dit aan de maker voor een snelle oplossing.",
-    "preparingReport": "Diagnosebundel wordt voorbereid...",
+    "preparingReport": "Diagnosebundel wordt voorbereid…",
     "reportContextWarning": "Een deel van de diagnostische context kon niet worden geladen. Het rapport bevat nog steeds details van deze app.",
     "reportPromptTask": {
       "transcription": "Het uitschrijven is gestopt door een onverwacht probleem. Stuur dit rapport, dan kunnen we het oplossen.",
@@ -1886,6 +1887,7 @@
     "deviceIdReplaced": "Het bestand dat deze computer aan je minuten koppelt, was beschadigd, dus Translator heeft een nieuwe koppeling gemaakt. Gekochte minuten zie je hier misschien niet. Neem contact op met support en stuur je aankoopbewijs mee, dan zetten we ze terug.",
     "contactSupport": "Contact opnemen",
     "openSettings": "Instellingen openen",
-    "supportSubject": "Mijn minuten zijn weg na een reset van Translator op deze computer"
+    "supportSubject": "Mijn minuten zijn weg na een reset van Translator op deze computer",
+    "settingsResetKeptLanguage": "Het instellingenbestand van Translator was beschadigd, dus je voorkeuren zijn teruggezet: de taal van de ondertitels, API-sleutels en andere opties. De taal van de app is behouden. Er is een kopie van het beschadigde bestand bewaard. Kijk even in Instellingen."
   }
 }

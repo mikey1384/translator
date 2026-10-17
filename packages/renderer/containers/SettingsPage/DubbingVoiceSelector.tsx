@@ -223,7 +223,7 @@ export default function DubbingVoiceSelector({
           color: ${colors.text};
         `}
       >
-        {t('settings.dubbing.voiceLabel', 'Dubbed Voice')}
+        {t('settings.dubbing.voiceLabel', 'Dubbed voice')}
       </div>
 
       <div

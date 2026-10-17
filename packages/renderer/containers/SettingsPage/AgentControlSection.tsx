@@ -868,7 +868,7 @@ export default function AgentControlSection() {
             onClick={handleAddDirectory}
             disabled={!enabled}
           >
-            {t('settings.agentControl.addDirectory', '+ Add Directory')}
+            {t('settings.agentControl.addDirectory', '+ Add directory')}
           </button>
         </>
       )}

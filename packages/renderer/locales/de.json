@@ -3,8 +3,8 @@
     "cancel": "Abbrechen",
     "save": "Speichern",
     "or": "ODER",
-    "saving": "Speichern...",
-    "validating": "Überprüfen...",
+    "saving": "Speichern…",
+    "validating": "Überprüfen…",
     "delete": "Löschen",
     "confirm": "Bestätigen",
     "apply": "Anwenden",
@@ -16,7 +16,7 @@
     "done": "Fertig",
     "gotIt": "Verstanden",
     "close": "Schließen",
-    "loading": "Wird geladen...",
+    "loading": "Wird geladen…",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten.",
       "unexpectedRemove": "Beim Entfernen des Schlüssels ist ein unerwarteter Fehler aufgetreten.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Nach Updates suchen",
     "clear": "Löschen",
     "currentVersionLabel": "Aktuelle Version",
-    "downloadingUpdate": "Update wird heruntergeladen...",
+    "downloadingUpdate": "Update wird heruntergeladen…",
     "downloadingUpdateProgress": "Update wird heruntergeladen: {{percent}} Prozent",
     "downloadingUpdateShort": "WIRD GELADEN",
     "downloadUpdateNow": "Update herunterladen",
@@ -97,7 +97,7 @@
     "send": "Senden",
     "dismiss": "Schließen",
     "moreActions": "Weitere Aktionen",
-    "installingUpdate": "Update wird installiert...",
+    "installingUpdate": "Update wird installiert…",
     "installingUpdateShort": "Wird installiert",
     "ok": "OK",
     "minimumVersionValue": "Mindestens erforderliche Version: v{{version}}",
@@ -217,7 +217,7 @@
   },
   "input": {
     "connect": "Verbinden",
-    "connecting": "Verbindung wird hergestellt...",
+    "connecting": "Verbindung wird hergestellt…",
     "connectTip": "Tipp: Melde dich im Verbindungsfenster an oder schließ die Überprüfung ab und schließ dann das Fenster, um fortzufahren.",
     "fromDevice": "Von deinem Gerät",
     "fromWeb": "Aus dem Web",
@@ -233,7 +233,7 @@
     "qualityHigh": "Hoch",
     "qualityMedium": "Mittel",
     "qualityLow": "Niedrig",
-    "downloading": "Wird heruntergeladen...",
+    "downloading": "Wird heruntergeladen…",
     "selectFile": "Datei auswählen",
     "selectVideoFile": "Videodatei auswählen",
     "selectVideoAudioFile": "Video- oder Audiodatei auswählen",
@@ -270,7 +270,7 @@
       "composerHint": "Beliebige Sprache",
       "composerMeta": "Zum Suchen Enter drücken",
       "placeholder": "z.B. ruhige japanische Straßenspaziergänge bei Nacht",
-      "thinking": "Denke nach...",
+      "thinking": "Denke nach…",
       "resultsFor": "Ergebnisse für",
       "downloadThis": "Herunterladen",
       "failedToStart": "Vorschläge konnten nicht gestartet werden",
@@ -345,11 +345,11 @@
       "activityComplete": "Suchaktivität abgeschlossen.",
       "nextActionHint": "Wähle ein Video und lade es dann herunter oder öffne es auf YouTube.",
       "stagePending": "Ausstehend",
-      "stageRunning": "Läuft...",
+      "stageRunning": "Läuft…",
       "stageCleared": "Abgeschlossen",
       "searchQueryLabel": "Suchanfrage",
       "searchMore": "Mehr suchen",
-      "searchMoreLoading": "Suche weiter...",
+      "searchMoreLoading": "Suche weiter…",
       "resetChat": "Chat zurücksetzen",
       "useLastSearch": "Letzte Konfiguration verwenden",
       "showFollowUps": "Vorgeschlagene Anschlussideen",
@@ -410,7 +410,7 @@
       "savedPreferencesCount": "{{count}} gespeicherte Präferenzen",
       "searchingLong": "Videos werden noch gesucht…",
       "searchingVeryLong": "Dauert länger als gewöhnlich, läuft aber noch.",
-      "stillWorking": "Noch in Arbeit...",
+      "stillWorking": "Noch in Arbeit…",
       "toggleCopy": "Durchsuche YouTube nach einem Quellvideo, ohne den Workflow zu verlassen.",
       "stage": {
         "answerer": "Anfrage verarbeiten",
@@ -475,7 +475,7 @@
     "translate": "Übersetzen",
     "continueTranscribing": "Transkription fortsetzen",
     "generate": "Untertitel generieren",
-    "generating": "Wird generiert...",
+    "generating": "Wird generiert…",
     "generateNow": "Untertitel jetzt generieren",
     "translation": "Übersetzung",
     "improveTranscription": "Transkription verbessern",
@@ -573,7 +573,7 @@
     "exitCombineMode": "Kombinieren beenden",
     "reorderHint": "Zum Neuordnen ziehen:",
     "cutCombined": "Kombiniert schneiden",
-    "cuttingCombined": "Wird geschnitten...",
+    "cuttingCombined": "Wird geschnitten…",
     "combinedHighlightReady": "Kombiniertes Highlight bereit",
     "downloadCombined": "Kombinierten Clip herunterladen",
     "saveCombinedDialogTitle": "Kombinierten Highlight-Clip speichern",
@@ -687,13 +687,13 @@
       "save": "Untertitel speichern",
       "saveAs": "Untertitel speichern unter…",
       "saveTooltip": "Änderungen in Originaldatei speichern",
-      "saveAsTooltip": "Zuerst 'Speichern unter' verwenden, um direktes Speichern zu aktivieren"
+      "saveAsTooltip": "Nutze zuerst „Untertitel speichern unter…“, dann kannst du direkt speichern"
     },
     "mergeControls": {
       "fontSizeLabel": "Schriftgröße:",
       "styleLabel": "Stil:",
       "mergeButton": "Untertitel zusammenführen",
-      "mergingButton": "Wird zusammengeführt..."
+      "mergingButton": "Wird zusammengeführt…"
     },
     "undo": {
       "removed": "Zeile gelöscht.",
@@ -786,9 +786,9 @@
         "brian": "Brian"
       },
       "previewTooltip": "Diese Stimme vorhören",
-      "previewing": "Wird abgespielt...",
+      "previewing": "Wird abgespielt…",
       "previewFree": "Vorhören",
-      "mixLabel": "Synchronstimme-Lautstärke vs Originalvideolautstärke",
+      "mixLabel": "Lautstärke der Synchronstimme vs. Originalton",
       "mixHelp": "Leg fest, wie viel vom Originalton unter der Synchronstimme zu hören ist.",
       "mixAmbient": "Mehr Umgebungsgeräusch",
       "mixVoice": "Mehr Stimme",
@@ -800,7 +800,7 @@
       "yourBalance": "Dein Guthaben",
       "canClone": "Du kannst klonen",
       "upToMinutes": "bis zu {{minutes}} Min",
-      "loading": "Laden...",
+      "loading": "Laden…",
       "previewWithMinutes": "Vorhören ({{cost}})",
       "previewFailed": "Die Stimmprobe ließ sich nicht abspielen. Versuch es noch mal."
     },
@@ -810,7 +810,7 @@
       "unlocking": "Zahlungsseite wird geöffnet…",
       "unlockCta": "Für 10$ freischalten",
       "unlockHint": "Nach der Freischaltung kannst du hier jederzeit deine API-Schlüssel hinzufügen und direkt über deine Konten abrechnen.",
-      "apiKeyLabel": "OpenAI API-Schlüssel",
+      "apiKeyLabel": "OpenAI-API-Schlüssel",
       "hide": "Verbergen",
       "show": "Anzeigen",
       "saving": "Speichern…",
@@ -920,9 +920,9 @@
       }
     },
     "byoAnthropic": {
-      "title": "Anthropic API-Schlüssel (Optional)",
+      "title": "Anthropic-API-Schlüssel (optional)",
       "description": "Füge deinen Anthropic-API-Schlüssel hinzu, um Claude-Modelle direkt für die Übersetzungsprüfung zu verwenden. Ohne diesen Schlüssel übernimmt GPT-5.5 die Prüfung.",
-      "apiKeyLabel": "Anthropic API-Schlüssel",
+      "apiKeyLabel": "Anthropic-API-Schlüssel",
       "hide": "Verbergen",
       "show": "Anzeigen",
       "saving": "Speichern…",
@@ -951,7 +951,8 @@
       "howToGet": "So erhältst du diesen Schlüssel",
       "missing": "Füge zuerst einen API-Schlüssel ein.",
       "savedEnding": "Gespeicherter Schlüssel, endet auf {{last4}}",
-      "savedHidden": "Gespeicherter Schlüssel (verborgen)"
+      "savedHidden": "Gespeicherter Schlüssel (verborgen)",
+      "providerLabel": "{{provider}}-API-Schlüssel"
     },
     "byoStack": {
       "title": "Dein KI-Stack"
@@ -1064,7 +1065,7 @@
   },
   "credits": {
     "title": "Deine Minuten",
-    "loading": "Lädt...",
+    "loading": "Lädt…",
     "usingApiKey": "API‑Schlüssel wird verwendet",
     "usingOpenAi": "Nutzt OpenAI",
     "usingAnthropic": "Nutzt Claude",
@@ -1179,9 +1180,9 @@
     "resetCreditsToZeroTitle": "Admin: Credits auf 0 zurücksetzen",
     "toggleByoPreviewTitle": "Admin: BYO-Vorschaumodus umschalten (UI wie ohne BYO-Kauf anzeigen)",
     "addCredits": "350k Credits hinzufügen",
-    "adding": "Wird hinzugefügt...",
+    "adding": "Wird hinzugefügt…",
     "resetToZero": "Auf 0 zurücksetzen",
-    "resetting": "Wird zurückgesetzt...",
+    "resetting": "Wird zurückgesetzt…",
     "byoPreview": "BYO-Vorschau",
     "byoPreviewOn": "BYO-Vorschau AN",
     "confirmResetCreditsToZero": "Möchtest du die Credits wirklich auf 0 zurücksetzen? Dies kann nicht rückgängig gemacht werden."
@@ -1247,13 +1248,13 @@
       "fileTooLargeForVoiceCloning": "Die Videodatei ist zu groß für Stimmklonen ({{size}} MB). Erlaubt sind höchstens {{max}} MB. Nimm ein kürzeres Video oder deaktiviere das Stimmklonen."
     },
     "status": {
-      "starting": "Startet...",
+      "starting": "Startet…",
       "completed": "Abgeschlossen",
       "cancelled": "Abgebrochen",
       "error": "Fehler"
     },
     "buttons": {
-      "redirectingToPayment": "Weiterleitung zur Zahlung..."
+      "redirectingToPayment": "Weiterleitung zur Zahlung…"
     },
     "workflow": {
       "stepOne": "Schritt 1",
@@ -1275,14 +1276,14 @@
       "saveOutputsTitle": "Dateien speichern",
       "saveOutputsDescription": "Speichere Quell- oder synchronisierte Medien, die du behalten möchtest, außerhalb des App-Arbeitsbereichs."
     },
-    "calculatingCost": "Kosten werden berechnet...",
+    "calculatingCost": "Kosten werden berechnet…",
     "welcomeCredits": {
       "message": "Du hast Freiminuten, um Transkription und Übersetzung auszuprobieren (etwa 20 Minuten Video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "In Untertiteln suchen...",
-    "replacePlaceholder": "Ersetzen durch...",
+    "findPlaceholder": "In Untertiteln suchen…",
+    "replacePlaceholder": "Ersetzen durch…",
     "replaceAll": "Alle ersetzen",
     "nextMatch": "Nächste Übereinstimmung (Enter)",
     "previousMatch": "Vorherige Übereinstimmung (Shift+Enter)",
@@ -1304,7 +1305,7 @@
       "howToGet": "So bekommst du API-Schlüssel",
       "enable": "Meine API-Schlüssel verwenden",
       "done": "Fertig",
-      "ready": "Alles abgedeckt. Du kannst jetzt „Meine API-Schlüssel verwenden“ aktivieren.",
+      "ready": "Alles bereit. Du kannst jetzt deine eigenen API-Schlüssel verwenden.",
       "missingTranslation": "Für die Übersetzung fehlt noch {{providers}}.",
       "messageElevenLabsAudio": "Um deine API-Schlüssel zu verwenden, brauchst du einen OpenAI- oder Anthropic-Schlüssel für die Übersetzung. Transkription und Synchronfassung laufen nur über ElevenLabs, füge dafür also auch einen ElevenLabs-Schlüssel hinzu.",
       "audioNeedsElevenLabs": "Ohne ElevenLabs-Schlüssel sind Transkription und Synchronfassung nicht verfügbar, solange deine API-Schlüssel aktiv sind."
@@ -1463,25 +1464,25 @@
   "progress": {
     "preparingVideoExport": "Videoexport wird vorbereitet…",
     "downloadingVideoExportTools": "Werkzeuge für den Videoexport werden heruntergeladen… {{percent}}%",
-    "beginningReview": "Überprüfung wird gestartet...",
-    "starting": "Startet...",
+    "beginningReview": "Überprüfung wird gestartet…",
+    "starting": "Startet…",
     "completed": "Abgeschlossen",
     "processCancelled": "Vorgang abgebrochen",
     "mergingTitle": "Video und Untertitel werden zusammengeführt",
-    "extractingAudio": "Audio wird extrahiert...",
+    "extractingAudio": "Audio wird extrahiert…",
     "transcribingOf": "Transkribiere {{done}}/{{total}}",
     "error": "Fehler",
     "transcribedChunks": "{{done}}/{{total}} Abschnitte transkribiert",
     "transcribingElevenLabs": "Transkription mit ElevenLabs (~{{minutes}} Min. verbleibend)",
     "transcribingElevenLabsHours": "Transkription mit ElevenLabs (~{{hours}}h {{minutes}}m verbleibend)",
-    "transcribingElevenLabsFinishing": "Transkription mit ElevenLabs...",
-    "transcriptionRetry": "Verbindung fehlgeschlagen, erneuter Versuch ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Transkription mit ElevenLabs…",
+    "transcriptionRetry": "Verbindung fehlgeschlagen, erneuter Versuch ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Audio wird hochgeladen…",
     "gapRepair": "Lückenreparatur #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Fehlende Untertitel werden repariert (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Untertitel bereinigen ({{done}}/{{total}})",
     "translationCleanup": "Übersetzte Untertitel bereinigen ({{done}}/{{total}})",
-    "reviewingSlow": "Überprüfung (dies kann etwas dauern...) {{done}}/{{total}}",
+    "reviewingSlow": "Überprüfung (dies kann etwas dauern…) {{done}}/{{total}}",
     "reviewingRange": "Überprüfung {{start}}–{{end}} (von {{total}})",
     "legacy": {
       "aligningVoices": "Stimmen werden ausgerichtet {{done}}/{{total}}…",
@@ -1590,7 +1591,7 @@
     "optionalMessagePlaceholder": "Was hast du versucht zu tun?",
     "sendReport": "Bericht senden",
     "reportPrompt": "Etwas ist schiefgelaufen. Melde dies dem Entwickler für eine schnelle Behebung.",
-    "preparingReport": "Diagnosepaket wird vorbereitet...",
+    "preparingReport": "Diagnosepaket wird vorbereitet…",
     "reportContextWarning": "Ein Teil des Diagnosekontexts konnte nicht geladen werden. Der Bericht enthält weiterhin Details aus dieser App.",
     "reportPromptTask": {
       "transcription": "Die Transkription wurde durch einen unerwarteten Fehler abgebrochen. Schick uns diesen Bericht, damit wir das beheben können.",
@@ -1887,6 +1888,7 @@
     "deviceIdReplaced": "Die Datei, die diesen Computer mit deinen Minuten verknüpft, war beschädigt. Translator hat deshalb eine neue Verknüpfung erstellt. Gekaufte Minuten werden hier vielleicht nicht angezeigt. Schreib unserem Support und schick den Kaufbeleg mit – dann holen wir sie zurück.",
     "contactSupport": "Support kontaktieren",
     "openSettings": "Einstellungen öffnen",
-    "supportSubject": "Meine Minuten fehlen, seit Translator diesen Computer zurückgesetzt hat"
+    "supportSubject": "Meine Minuten fehlen, seit Translator diesen Computer zurückgesetzt hat",
+    "settingsResetKeptLanguage": "Die Einstellungsdatei von Translator war beschädigt, deshalb wurden deine Einstellungen zurückgesetzt: Untertitelsprache, API-Schlüssel und weitere Optionen. Die Sprache der Oberfläche wurde beibehalten. Eine Kopie der beschädigten Datei wurde aufbewahrt. Sieh bitte in den Einstellungen nach."
   }
 }

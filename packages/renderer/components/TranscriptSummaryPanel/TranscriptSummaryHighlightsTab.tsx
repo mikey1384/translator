@@ -16,7 +16,7 @@ import {
   useVideoStore,
 } from '../../state';
 import { mapUiLanguageToTargetLanguage } from '../../state/ui-store';
-import { detectTextLanguage } from '../../utils/detectTextLanguage';
+import { chooseMissingLinesTarget } from '../../utils/missingLinesTarget';
 import { translateMissingUntranslated } from '../../utils/translateMissing';
 import { persistMountedTranslation } from '../../containers/GenerateSubtitles/utils/subtitleGeneration';
 import { logButton } from '../../utils/logger';
@@ -217,19 +217,24 @@ function useHasUntranslatedLines(): boolean {
 
 /**
  * Translate the lines that have none yet (the same run as the workspace's
- * "Translate missing lines"), into the language the other lines are in.
+ * "Translate missing lines"), into the language the other lines are in, or
+ * the workspace's target language. When that is the language the lines are
+ * already written in, there is nothing to translate them into yet: open the
+ * language choice instead of a run that would do nothing.
  */
 async function translateUntranslatedLines(uiLanguage: string): Promise<void> {
   const { order, segments } = useSubStore.getState();
-  const translations = order
-    .map(id => segments[id]?.translation ?? '')
-    .filter(text => text.trim());
   const target = useUIStore.getState().targetLanguage;
-  const language =
-    detectTextLanguage(translations) ??
-    (target && target !== 'original'
+  const language = chooseMissingLinesTarget(
+    order.map(id => segments[id]),
+    target && target !== 'original'
       ? target
-      : mapUiLanguageToTargetLanguage(uiLanguage));
+      : mapUiLanguageToTargetLanguage(uiLanguage)
+  );
+  if (!language) {
+    useUIStore.getState().setWorkspaceToolsOpen(true, 'translate');
+    return;
+  }
   useUIStore.getState().setTargetLanguage(language);
   const ok = await translateMissingUntranslated();
   if (ok) await persistMountedTranslation(language);
@@ -437,7 +442,7 @@ export default function TranscriptSummaryHighlightsTab({
             disabled={combineSelectionLocked}
           >
             {combineMode
-              ? t('summary.exitCombineMode', 'Exit Combine')
+              ? t('summary.exitCombineMode', 'Exit combine')
               : t('summary.combineMode', 'Combine')}
           </Button>
         </div>
@@ -533,7 +538,7 @@ export default function TranscriptSummaryHighlightsTab({
       {combineCutState.status === 'ready' && combineCutState.outputPath ? (
         <div className={combinedResultStyles}>
           <h4>
-            {t('summary.combinedHighlightReady', 'Combined Highlight Ready')}
+            {t('summary.combinedHighlightReady', 'Combined highlight ready')}
           </h4>
           {combinedClipStale ? (
             <StaleClipNote
@@ -552,7 +557,7 @@ export default function TranscriptSummaryHighlightsTab({
             size="sm"
             onClick={() => onDownloadCombined(combineCutState.outputPath!)}
           >
-            {t('summary.downloadCombined', 'Download Combined Clip')}
+            {t('summary.downloadCombined', 'Download combined clip')}
           </Button>
         </div>
       ) : null}

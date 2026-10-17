@@ -269,3 +269,22 @@ export function shouldConfirmDubCost(
   if (balance == null || !Number.isFinite(balance)) return false;
   return estimatedCredits >= balance * DUB_COST_CONFIRM_SHARE;
 }
+
+/**
+ * What the "Start dubbing?" confirm should show for this dub, or null when
+ * the dub can start without asking (paid with the user's own keys, blocked
+ * elsewhere, balance unknown, or a small share of the balance).
+ */
+export function dubCostConfirmPrompt(
+  estimate: {
+    estimatedCredits: number;
+    isByo: boolean;
+    blockedInApiKeyMode: boolean;
+  } | null,
+  balance: number | null
+): { estimatedCredits: number; balance: number } | null {
+  if (!estimate || estimate.isByo || estimate.blockedInApiKeyMode) return null;
+  if (balance == null) return null;
+  if (!shouldConfirmDubCost(estimate.estimatedCredits, balance)) return null;
+  return { estimatedCredits: estimate.estimatedCredits, balance };
+}

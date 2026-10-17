@@ -3,8 +3,8 @@
     "cancel": "Avbryt",
     "save": "Lagre",
     "or": "ELLER",
-    "saving": "Lagrer...",
-    "validating": "Validerer...",
+    "saving": "Lagrer…",
+    "validating": "Validerer…",
     "delete": "Slett",
     "confirm": "Bekreft",
     "apply": "Bruk",
@@ -16,7 +16,7 @@
     "done": "Ferdig",
     "gotIt": "Forstått",
     "close": "Lukk",
-    "loading": "Laster...",
+    "loading": "Laster…",
     "error": {
       "unexpected": "En uventet feil oppstod.",
       "unexpectedRemove": "En uventet feil oppstod under fjerning av nøkkelen.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Se etter oppdateringer",
     "clear": "Tøm",
     "currentVersionLabel": "Nåværende versjon",
-    "downloadingUpdate": "Laster ned oppdatering...",
+    "downloadingUpdate": "Laster ned oppdatering…",
     "downloadingUpdateProgress": "Laster ned oppdatering: {{percent}} %",
     "downloadingUpdateShort": "LASTER NED",
     "downloadUpdateNow": "Last ned oppdatering",
@@ -97,7 +97,7 @@
     "send": "Send inn",
     "dismiss": "Lukk",
     "moreActions": "Flere handlinger",
-    "installingUpdate": "Installerer oppdatering...",
+    "installingUpdate": "Installerer oppdatering…",
     "installingUpdateShort": "Installerer",
     "ok": "OK",
     "minimumVersionValue": "Laveste støttede versjon: v{{version}}",
@@ -217,7 +217,7 @@
   },
   "input": {
     "connect": "Koble til",
-    "connecting": "Kobler til...",
+    "connecting": "Kobler til…",
     "connectTip": "Tips: I tilkoblingsvinduet, logg inn eller fullfør verifiseringen, og lukk deretter vinduet for å fortsette.",
     "fromDevice": "Fra enheten din",
     "fromWeb": "Fra nettet",
@@ -233,7 +233,7 @@
     "qualityHigh": "Høy",
     "qualityMedium": "Medium",
     "qualityLow": "Lav",
-    "downloading": "Laster ned...",
+    "downloading": "Laster ned…",
     "selectFile": "Velg fil",
     "selectVideoFile": "Velg videofil",
     "selectVideoAudioFile": "Velg video- eller lydfil",
@@ -270,7 +270,7 @@
       "composerHint": "Valgfritt språk",
       "composerMeta": "Trykk Enter for å søke",
       "placeholder": "f.eks. rolige japanske gatevandringer om natten",
-      "thinking": "Tenker...",
+      "thinking": "Tenker…",
       "resultsFor": "Resultater for",
       "downloadThis": "Last ned denne",
       "failedToStart": "Kunne ikke starte forslag",
@@ -345,11 +345,11 @@
       "activityComplete": "Søkeaktiviteten er fullført.",
       "nextActionHint": "Velg en video, og last den ned eller åpne den på YouTube.",
       "stagePending": "Venter",
-      "stageRunning": "Kjører...",
+      "stageRunning": "Kjører…",
       "stageCleared": "Fullført",
       "searchQueryLabel": "Søkestreng",
       "searchMore": "Søk mer",
-      "searchMoreLoading": "Søker videre...",
+      "searchMoreLoading": "Søker videre…",
       "resetChat": "Nullstill chat",
       "useLastSearch": "Bruk forrige oppsett",
       "showFollowUps": "Foreslåtte oppfølgingsideer",
@@ -410,7 +410,7 @@
       "savedPreferencesCount": "{{count}} lagrede preferanser",
       "searchingLong": "Søker fortsatt etter videoer…",
       "searchingVeryLong": "Det tar lengre tid enn vanlig, men kjører fortsatt.",
-      "stillWorking": "Jobber fortsatt...",
+      "stillWorking": "Jobber fortsatt…",
       "toggleCopy": "Søk på YouTube etter en kildevideo uten å forlate arbeidsflyten.",
       "stage": {
         "answerer": "Behandle forespørsel",
@@ -475,7 +475,7 @@
     "translate": "Oversett",
     "continueTranscribing": "Fortsett transkribering",
     "generate": "Generer undertekster",
-    "generating": "Genererer...",
+    "generating": "Genererer…",
     "generateNow": "Generer undertekster nå",
     "translation": "Oversettelse",
     "improveTranscription": "Forbedre transkribering",
@@ -509,7 +509,7 @@
       "openPermission": "Translator har ikke tilgang til å lese den filen. Sjekk tillatelsene, eller kopier den til en annen mappe og prøv igjen.",
       "openMissing": "Undertekstfilen finnes ikke der lenger. Den kan ha blitt flyttet eller slettet.",
       "openFailed": "Translator kunne ikke åpne undertekstfilen. Sjekk at det er en .srt-fil, og prøv igjen.",
-      "saveFailed": "Translator kunne ikke lagre undertekstene. Prøv igjen, eller velg «Lagre undertekster som...» for å velge en annen mappe."
+      "saveFailed": "Translator kunne ikke lagre undertekstene. Prøv igjen, eller velg «Lagre undertekster som…» for å velge en annen mappe."
     }
   },
   "summary": {
@@ -573,7 +573,7 @@
     "exitCombineMode": "Avslutt kombinering",
     "reorderHint": "Dra for å omorganisere:",
     "cutCombined": "Klipp kombinert",
-    "cuttingCombined": "Klipper...",
+    "cuttingCombined": "Klipper…",
     "combinedHighlightReady": "Kombinert høydepunkt klart",
     "downloadCombined": "Last ned kombinert klipp",
     "saveCombinedDialogTitle": "Lagre kombinert høydepunktsklipp",
@@ -685,15 +685,15 @@
     },
     "header": {
       "save": "Lagre undertekster",
-      "saveAs": "Lagre undertekster som...",
+      "saveAs": "Lagre undertekster som…",
       "saveTooltip": "Lagre endringer til originalfil",
-      "saveAsTooltip": "Lagre som først for å aktivere direkte lagring"
+      "saveAsTooltip": "Bruk «Lagre undertekster som…» først for å kunne lagre direkte"
     },
     "mergeControls": {
       "fontSizeLabel": "Skriftstørrelse:",
       "styleLabel": "Stil:",
       "mergeButton": "Slå sammen undertekster",
-      "mergingButton": "Slår sammen..."
+      "mergingButton": "Slår sammen…"
     },
     "undo": {
       "removed": "Linjen er slettet.",
@@ -787,7 +787,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "Forhåndsvis denne stemmen",
-      "previewing": "Spiller av...",
+      "previewing": "Spiller av…",
       "previewFree": "Forhåndsvis",
       "mixLabel": "Dubbingvolum vs. original videolyd",
       "mixHelp": "Kontroller hvor mye av originallydsporet som spilles under den dubbede stemmen.",
@@ -801,7 +801,7 @@
       "yourBalance": "Din saldo",
       "canClone": "Du kan klone",
       "upToMinutes": "opptil {{minutes}} min",
-      "loading": "Laster...",
+      "loading": "Laster…",
       "previewWithMinutes": "Forhåndsvis ({{cost}})",
       "previewFailed": "Kunne ikke spille av stemmeprøven. Prøv igjen."
     },
@@ -952,7 +952,8 @@
       "howToGet": "Slik får du denne nøkkelen",
       "missing": "Lim inn en API-nøkkel først.",
       "savedEnding": "Lagret nøkkel som slutter på {{last4}}",
-      "savedHidden": "Lagret nøkkel (skjult)"
+      "savedHidden": "Lagret nøkkel (skjult)",
+      "providerLabel": "{{provider}} API-nøkkel"
     },
     "byoStack": {
       "title": "Din AI-stack"
@@ -1065,14 +1066,14 @@
   },
   "credits": {
     "title": "Minutter",
-    "loading": "Laster...",
+    "loading": "Laster…",
     "usingApiKey": "Bruker API-nøkkel",
     "usingOpenAi": "Bruker OpenAI",
     "usingAnthropic": "Bruker Claude",
     "usingElevenLabs": "Bruker ElevenLabs",
     "hours": "timer",
     "translationHoursShort": "oversettelsestimer",
-    "redirectingToPayment": "Åpner sikker betaling...",
+    "redirectingToPayment": "Åpner sikker betaling…",
     "transcriptionMinutesShort": "{{minutes}} min transkribering",
     "transcriptionTimeShort": "{{time}} transkribering",
     "pill": {
@@ -1178,9 +1179,9 @@
     "resetCreditsToZeroTitle": "Admin: tilbakestill kreditter til 0",
     "toggleByoPreviewTitle": "Admin: bytt BYO-forhåndsvisning (vis UI som om BYO ikke er kjøpt)",
     "addCredits": "Legg til 350k kreditter",
-    "adding": "Legger til...",
+    "adding": "Legger til…",
     "resetToZero": "Tilbakestill til 0",
-    "resetting": "Tilbakestiller...",
+    "resetting": "Tilbakestiller…",
     "byoPreview": "BYO-forhåndsvisning",
     "byoPreviewOn": "BYO-forhåndsvisning PÅ",
     "confirmResetCreditsToZero": "Er du sikker på at du vil tilbakestille kreditter til 0? Dette kan ikke angres."
@@ -1246,13 +1247,13 @@
       "fileTooLargeForVoiceCloning": "Videofilen er for stor for stemmekloning ({{size}}MB). Maksimalt tillatt er {{max}}MB. Bruk en kortere video, eller slå av stemmekloning."
     },
     "status": {
-      "starting": "Starter...",
+      "starting": "Starter…",
       "completed": "Fullført",
       "cancelled": "Avbrutt",
       "error": "Feil"
     },
     "buttons": {
-      "redirectingToPayment": "Omdirigerer til betaling..."
+      "redirectingToPayment": "Omdirigerer til betaling…"
     },
     "workflow": {
       "stepOne": "Trinn 1",
@@ -1274,14 +1275,14 @@
       "saveOutputsTitle": "Lagre filer",
       "saveOutputsDescription": "Behold kilde- eller dubbet media du vil ta vare på utenfor appens arbeidsområde."
     },
-    "calculatingCost": "Beregner kostnad...",
+    "calculatingCost": "Beregner kostnad…",
     "welcomeCredits": {
       "message": "Du har gratisminutter til å prøve transkribering og oversettelse (omtrent 20 minutter video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Finn i undertekster...",
-    "replacePlaceholder": "Erstatt med...",
+    "findPlaceholder": "Finn i undertekster…",
+    "replacePlaceholder": "Erstatt med…",
     "replaceAll": "Erstatt alle",
     "nextMatch": "Neste treff (Enter)",
     "previousMatch": "Forrige treff (Shift+Enter)",
@@ -1303,7 +1304,7 @@
       "howToGet": "Hvordan få API-nøkler",
       "enable": "Bruk mine API-nøkler",
       "done": "Ferdig",
-      "ready": "Dekningen er komplett. Nå kan du aktivere «Bruk mine API-nøkler».",
+      "ready": "Alt er klart. Nå kan du bruke dine egne API-nøkler.",
       "missingTranslation": "Oversettelse trenger fortsatt {{providers}}.",
       "messageElevenLabsAudio": "For å bruke API-nøklene dine trenger du en OpenAI- eller Anthropic-nøkkel for oversettelse. Transkribering og dubbing bruker kun ElevenLabs, så legg også til en ElevenLabs-nøkkel for disse.",
       "audioNeedsElevenLabs": "Uten en ElevenLabs-nøkkel er transkribering og dubbing utilgjengelig mens API-nøklene dine er slått på."
@@ -1462,25 +1463,25 @@
   "progress": {
     "preparingVideoExport": "Forbereder videoeksport…",
     "downloadingVideoExportTools": "Laster ned verktøy for videoeksport… {{percent}} %",
-    "beginningReview": "Starter gjennomgang...",
-    "starting": "Starter...",
+    "beginningReview": "Starter gjennomgang…",
+    "starting": "Starter…",
     "completed": "Fullført",
     "processCancelled": "Prosess avbrutt",
     "mergingTitle": "Slår sammen video og undertekster",
-    "extractingAudio": "Henter ut lyd...",
+    "extractingAudio": "Henter ut lyd…",
     "transcribingOf": "Transkriberer {{done}}/{{total}}",
     "error": "Feil",
     "transcribedChunks": "Transkribert {{done}}/{{total}} deler",
     "transcribingElevenLabs": "Transkriberer med ElevenLabs (~{{minutes}} min gjenstår)",
     "transcribingElevenLabsHours": "Transkriberer med ElevenLabs (~{{hours}}t {{minutes}}m gjenstår)",
-    "transcribingElevenLabsFinishing": "Transkriberer med ElevenLabs...",
-    "transcriptionRetry": "Tilkobling mislyktes, prøver igjen ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Transkriberer med ElevenLabs…",
+    "transcriptionRetry": "Tilkobling mislyktes, prøver igjen ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Laster opp lyd…",
     "gapRepair": "Gap-reparasjon #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparerer manglende undertekster (Iterasjon {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Renser undertekster ({{done}}/{{total}})",
     "translationCleanup": "Rydder opp i oversatte undertekster ({{done}}/{{total}})",
-    "reviewingSlow": "Gjennomgår (dette kan ta litt tid...) {{done}}/{{total}}",
+    "reviewingSlow": "Gjennomgår (dette kan ta litt tid…) {{done}}/{{total}}",
     "reviewingRange": "Gjennomgår {{start}}–{{end}} (av {{total}})",
     "legacy": {
       "aligningVoices": "Justerer stemmer {{done}}/{{total}}…",
@@ -1588,7 +1589,7 @@
     "optionalMessagePlaceholder": "Hva prøvde du å gjøre?",
     "sendReport": "Send rapport",
     "reportPrompt": "Noe gikk galt. Rapporter dette til utvikleren for en rask løsning.",
-    "preparingReport": "Forbereder diagnostikkpakke...",
+    "preparingReport": "Forbereder diagnostikkpakke…",
     "reportContextWarning": "Noe diagnostikkontekst kunne ikke lastes inn. Rapporten vil fortsatt inneholde detaljer fra denne appen.",
     "reportPromptTask": {
       "transcription": "Transkriberingen stoppet på grunn av et uventet problem. Send denne rapporten, så kan vi fikse det.",
@@ -1885,6 +1886,7 @@
     "deviceIdReplaced": "Filen som knytter denne datamaskinen til minuttene dine, var skadet, så Translator laget en ny kobling. Minutter du har kjøpt, vises kanskje ikke her. Kontakt kundestøtte med kjøpskvitteringen, så flytter vi dem tilbake.",
     "contactSupport": "Kontakt kundestøtte",
     "openSettings": "Åpne Innstillinger",
-    "supportSubject": "Minuttene mine er borte etter at Translator tilbakestilte denne datamaskinen"
+    "supportSubject": "Minuttene mine er borte etter at Translator tilbakestilte denne datamaskinen",
+    "settingsResetKeptLanguage": "Innstillingsfilen til Translator var skadet, så innstillingene dine ble tilbakestilt: språk for undertekstene, API-nøkler og andre valg. Språket i appen er beholdt. En kopi av den skadede filen er tatt vare på. Ta en titt i Innstillinger."
   }
 }

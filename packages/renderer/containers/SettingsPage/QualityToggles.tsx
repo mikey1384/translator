@@ -259,7 +259,7 @@ export default function QualityToggles() {
       {row(
         t(
           'settings.performanceQuality.qualityTranslation.label',
-          'Quality Translation'
+          'Quality translation'
         ),
         qualityTranslation,
         setQualityTranslation,
@@ -310,7 +310,7 @@ export default function QualityToggles() {
       {row(
         t(
           'settings.performanceQuality.qualitySummary.label',
-          'Quality Summary'
+          'Quality summary'
         ),
         summaryEffortLevel === 'high',
         v => setSummaryEffortLevel(v ? 'high' : 'standard'),
@@ -348,7 +348,7 @@ export default function QualityToggles() {
       {row(
         t(
           'settings.performanceQuality.videoSuggestionModel.label',
-          'Video Recommendation Quality'
+          'Video recommendation quality'
         ),
         videoSuggestionQualityEnabled,
         v => void setStage5VideoSuggestionMode(v ? 'high' : 'standard'),

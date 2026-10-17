@@ -3,8 +3,8 @@
     "cancel": "ביטול",
     "save": "שמירה",
     "or": "או",
-    "saving": "שומר...",
-    "validating": "מאמת...",
+    "saving": "שומר…",
+    "validating": "מאמת…",
     "delete": "מחיקה",
     "confirm": "אישור",
     "apply": "החל",
@@ -16,7 +16,7 @@
     "done": "סיום",
     "gotIt": "הבנתי",
     "close": "סגירה",
-    "loading": "טוען...",
+    "loading": "טוען…",
     "error": {
       "unexpected": "אירעה שגיאה בלתי צפויה.",
       "unexpectedRemove": "אירעה שגיאה בלתי צפויה בעת הסרת המפתח.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "בדיקת עדכונים",
     "clear": "ניקוי",
     "currentVersionLabel": "גרסה נוכחית",
-    "downloadingUpdate": "מוריד עדכון...",
+    "downloadingUpdate": "מוריד עדכון…",
     "downloadingUpdateProgress": "מוריד עדכון: {{percent}} אחוז",
     "downloadingUpdateShort": "מוריד",
     "downloadUpdateNow": "הורדת העדכון",
@@ -97,7 +97,7 @@
     "send": "שליחה",
     "dismiss": "סגירה",
     "moreActions": "פעולות נוספות",
-    "installingUpdate": "מתקין עדכון...",
+    "installingUpdate": "מתקין עדכון…",
     "installingUpdateShort": "מתקין",
     "ok": "אישור",
     "minimumVersionValue": "הגרסה המינימלית הנתמכת: v{{version}}",
@@ -217,11 +217,11 @@
   },
   "input": {
     "connect": "התחברות",
-    "connecting": "מתחבר...",
+    "connecting": "מתחבר…",
     "connectTip": "טיפ: בחלון ההתחברות, התחברו או השלימו את האימות, ואז סגרו את החלון כדי להמשיך.",
     "fromDevice": "מהמכשיר שלכם",
     "fromWeb": "מהאינטרנט",
-    "downloadVideo": "הורד וידאו",
+    "downloadVideo": "הורדת וידאו",
     "enterVideoUrl": "כתובת URL של הסרטון",
     "quality": "איכות",
     "qualityPresets": "קביעות מראש",
@@ -233,7 +233,7 @@
     "qualityHigh": "גבוהה",
     "qualityMedium": "בינונית",
     "qualityLow": "נמוכה",
-    "downloading": "מוריד...",
+    "downloading": "מוריד…",
     "selectFile": "בחירת קובץ",
     "selectVideoFile": "בחירת קובץ וידאו",
     "selectVideoAudioFile": "בחירת קובץ וידאו או אודיו",
@@ -256,7 +256,7 @@
     "downloadFinishedWatchNow": "לצפייה עכשיו",
     "downloadFinishedWatchLater": "לצפייה אחר כך",
     "videoSuggestion": {
-      "show": "הצע לי סרטון",
+      "show": "חיפוש סרטונים עם AI",
       "hide": "הסתרת חיפוש הסרטונים עם AI",
       "modelHint": "מודל נוכחי",
       "sourceHint": "מקור החיפוש",
@@ -270,7 +270,7 @@
       "composerHint": "כל שפה",
       "composerMeta": "לחצו Enter כדי לחפש",
       "placeholder": "למשל: הליכות רגועות ברחובות יפן בלילה",
-      "thinking": "חושב...",
+      "thinking": "חושב…",
       "resultsFor": "תוצאות עבור",
       "downloadThis": "הורדה",
       "failedToStart": "ההצעות לא הצליחו להתחיל",
@@ -345,11 +345,11 @@
       "activityComplete": "פעילות החיפוש הושלמה.",
       "nextActionHint": "בחרו סרטון, ואז הורידו אותו או פתחו אותו ב-YouTube.",
       "stagePending": "ממתין",
-      "stageRunning": "פועל...",
+      "stageRunning": "פועל…",
       "stageCleared": "הושלם",
       "searchQueryLabel": "שאילתת חיפוש",
       "searchMore": "חיפוש נוסף",
-      "searchMoreLoading": "מחפש עוד...",
+      "searchMoreLoading": "מחפש עוד…",
       "resetChat": "איפוס השיחה",
       "useLastSearch": "שימוש בהגדרה האחרונה",
       "showFollowUps": "הצעות המשך",
@@ -408,9 +408,9 @@
       "savedDownloads": "הורדות שמורות",
       "savedDownloadsCount": "{{count}} הורדות שמורות",
       "savedPreferencesCount": "{{count}} העדפות שמורות",
-      "searchingLong": "עדיין מחפשים סרטונים...",
+      "searchingLong": "עדיין מחפשים סרטונים…",
       "searchingVeryLong": "זה לוקח יותר זמן מהרגיל, אבל עדיין פועל.",
-      "stillWorking": "עדיין עובד...",
+      "stillWorking": "עדיין עובד…",
       "toggleCopy": "שאלו בשפה שלכם, וה-AI ימצא את הסרטונים המתאימים ב-YouTube.",
       "stage": {
         "answerer": "עיבוד שאילתה",
@@ -475,8 +475,8 @@
     "translate": "תרגום",
     "continueTranscribing": "המשך תמלול",
     "generate": "יצירת כתוביות",
-    "generating": "יוצר כתוביות...",
-    "generateNow": "צור כתוביות עכשיו",
+    "generating": "יוצר כתוביות…",
+    "generateNow": "יצירת כתוביות עכשיו",
     "translation": "תרגום",
     "improveTranscription": "שיפור התמלול",
     "improveTranslation": "שיפור התרגום",
@@ -510,7 +510,7 @@
       "openPermission": "ל-Translator אין הרשאה לקרוא את הקובץ הזה. בדקו את ההרשאות שלו, או העתיקו אותו לתיקייה אחרת ונסו שוב.",
       "openMissing": "קובץ הכתוביות הזה כבר לא נמצא שם. ייתכן שהוא הועבר או נמחק.",
       "openFailed": "Translator לא הצליח לפתוח את קובץ הכתוביות הזה. ודאו שזה קובץ ‎.srt ונסו שוב.",
-      "saveFailed": "Translator לא הצליח לשמור את הכתוביות. נסו שוב, או בחרו “שמירת הכתוביות בשם...” כדי לבחור תיקייה אחרת."
+      "saveFailed": "Translator לא הצליח לשמור את הכתוביות. נסו שוב, או בחרו “שמירת הכתוביות בשם…” כדי לבחור תיקייה אחרת."
     }
   },
   "summary": {
@@ -547,7 +547,7 @@
     "verticalFitFormat": "התאמה לשורטס",
     "verticalFitFormatDesc": "התאמת הפריים המקורי לתוך קנבס 9:16",
     "downloadHighlight": "הורדת הקליפ",
-    "downloadingHighlight": "שומר...",
+    "downloadingHighlight": "שומר…",
     "highlightSaved": "נשמר!",
     "highlightSaveError": "השמירה נכשלה",
     "downloadHighlightFailed": "שמירת הקליפ של הרגע הבולט נכשלה: {{message}}",
@@ -555,7 +555,7 @@
     "saveHighlightDialogTitle": "שמירת קליפ של רגע בולט",
     "noSections": "אין עדיין הערות סעיף.",
     "sectionHeading": "סעיף {{index}}",
-    "highlightsInProgress": "מכין קליפים של נקודות מרכזיות...",
+    "highlightsInProgress": "מכין קליפים של נקודות מרכזיות…",
     "status": {
       "preparing": "מנתחים את התמליל…",
       "chunk": "כותבים סיכום {{current}}/{{total}}",
@@ -571,9 +571,9 @@
       "renderingClipSubtitles": "מוסיפים כתוביות לקליפ…"
     },
     "combineMode": "שלב",
-    "exitCombineMode": "צא משילוב",
+    "exitCombineMode": "יציאה משילוב",
     "reorderHint": "גררו כדי לשנות את הסדר:",
-    "cutCombined": "חתוך משולב",
+    "cutCombined": "חיתוך משולב",
     "cuttingCombined": "חותכים…",
     "combinedHighlightReady": "קליפ משולב של רגעים בולטים מוכן",
     "downloadCombined": "הורדת הקליפ המשולב",
@@ -687,15 +687,15 @@
     },
     "header": {
       "save": "שמירת הכתוביות",
-      "saveAs": "שמירת הכתוביות בשם...",
+      "saveAs": "שמירת הכתוביות בשם…",
       "saveTooltip": "שמירת השינויים בקובץ המקורי",
-      "saveAsTooltip": "שמרו קודם בשם כדי לאפשר שמירה ישירה"
+      "saveAsTooltip": "השתמשו קודם ב“שמירת הכתוביות בשם…” כדי לאפשר שמירה ישירה"
     },
     "mergeControls": {
       "fontSizeLabel": "גודל גופן:",
       "styleLabel": "סגנון:",
-      "mergeButton": "מזג כתוביות",
-      "mergingButton": "ממזג..."
+      "mergeButton": "מיזוג כתוביות",
+      "mergingButton": "ממזג…"
     },
     "undo": {
       "removed": "השורה נמחקה.",
@@ -762,7 +762,7 @@
         "modelOn": "קולות פרימיום של ElevenLabs TTS"
       },
       "videoSuggestionModel": {
-        "label": "מודל הצעת סרטונים",
+        "label": "איכות הצעות הסרטונים",
         "help": "משתמש באותה רמת מודל כמו התרגום.",
         "default": "ברירת מחדל (זהה לברירת המחדל של התרגום)",
         "quality": "איכות (זהה למצב האיכות של התרגום)"
@@ -788,7 +788,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "האזנה לקול הזה",
-      "previewing": "מנגן...",
+      "previewing": "מנגן…",
       "previewFree": "האזנה",
       "mixLabel": "עוצמת דיבוב לעומת עוצמת וידאו מקורי",
       "mixHelp": "שלוט כמה מפסקול הקול המקורי יישמע מתחת לקול המדובב.",
@@ -802,27 +802,27 @@
       "yourBalance": "היתרה שלכם",
       "canClone": "ניתן לשכפל",
       "upToMinutes": "עד {{minutes}} דקות",
-      "loading": "טוען...",
+      "loading": "טוען…",
       "previewWithMinutes": "האזנה ({{cost}})",
       "previewFailed": "לא הצלחנו להשמיע את דוגמת הקול. נסו שוב."
     },
     "byoOpenAi": {
       "title": "שימוש במפתחות API משלכם",
       "description": "פתיחה חד-פעמית לשימוש במפתחות API משלכם. אחרי הפתיחה, תמלול, תרגום, דיבוב וסיכומים רצים על חשבונות הבינה המלאכותית שלכם במקום על הדקות של Stage5.",
-      "unlocking": "פותח קופה...",
+      "unlocking": "פותח קופה…",
       "unlockCta": "פתיחה ב-$10",
       "unlockHint": "אחרי הפתיחה, אפשר להוסיף כאן בכל עת את מפתחות ה-API שלכם ולהפעיל חיוב ישיר בחשבונות שלכם.",
       "apiKeyLabel": "מפתח API של OpenAI",
       "hide": "הסתר",
       "show": "הצג",
-      "saving": "שומר...",
-      "clear": "נקה מפתח",
-      "loadingKey": "טוען מפתח שמור...",
+      "saving": "שומר…",
+      "clear": "ניקוי המפתח",
+      "loadingKey": "טוען מפתח שמור…",
       "keySaved": "מפתח ה-API של OpenAI נשמר.",
       "keyCleared": "מפתח ה-API של OpenAI נמחק.",
       "keyValid": "מפתח ה-API של OpenAI אומת בהצלחה.",
       "keyInvalid": "אימות מפתח ה-API של OpenAI נכשל.",
-      "testing": "בודק...",
+      "testing": "בודק…",
       "test": "בדיקת המפתח",
       "lastSynced": "סונכרן לאחרונה",
       "toggleLabel": "שימוש במפתח ה-OpenAI שלי",
@@ -927,14 +927,14 @@
       "apiKeyLabel": "מפתח API של Anthropic",
       "hide": "הסתר",
       "show": "הצג",
-      "saving": "שומר...",
-      "clear": "נקה מפתח",
-      "loadingKey": "טוען מפתח Anthropic שמור...",
+      "saving": "שומר…",
+      "clear": "ניקוי המפתח",
+      "loadingKey": "טוען מפתח Anthropic שמור…",
       "keySaved": "מפתח ה-API של Anthropic נשמר.",
       "keyCleared": "מפתח ה-API של Anthropic נמחק.",
       "keyValid": "מפתח ה-API של Anthropic אומת בהצלחה.",
       "keyInvalid": "אימות מפתח ה-API של Anthropic נכשל.",
-      "testing": "בודק...",
+      "testing": "בודק…",
       "test": "בדיקת המפתח",
       "toggleLabel": "שימוש במפתח ה-Anthropic שלי",
       "toggleAria": "הפעלה או כיבוי של השימוש במפתח ה-Anthropic שלכם",
@@ -953,7 +953,8 @@
       "howToGet": "איך לקבל את המפתח הזה",
       "missing": "הדביקו קודם מפתח API.",
       "savedEnding": "מפתח שמור שמסתיים ב-{{last4}}",
-      "savedHidden": "מפתח שמור (מוסתר)"
+      "savedHidden": "מפתח שמור (מוסתר)",
+      "providerLabel": "מפתח API של {{provider}}"
     },
     "byoStack": {
       "title": "ערכת ה-AI שלכם"
@@ -1065,14 +1066,14 @@
   },
   "credits": {
     "title": "הדקות שלכם",
-    "loading": "טוען...",
-    "usingApiKey": "משתמש במפתח API",
+    "loading": "טוען…",
+    "usingApiKey": "נעשה שימוש במפתח API",
     "usingOpenAi": "משתמש ב-OpenAI",
     "usingAnthropic": "משתמש ב-Claude",
     "usingElevenLabs": "משתמש ב-ElevenLabs",
     "hours": "שעות",
     "translationHoursShort": "שעות תרגום",
-    "redirectingToPayment": "פותח תשלום מאובטח...",
+    "redirectingToPayment": "פותח תשלום מאובטח…",
     "transcriptionMinutesShort": "{{minutes}} דק׳ תמלול",
     "transcriptionTimeShort": "{{time}} תמלול",
     "pill": {
@@ -1143,8 +1144,8 @@
     "byStage5": "by stage_5"
   },
   "videoPlayer": {
-    "enterFullscreen": "היכנס למסך מלא",
-    "exitFullscreen": "צא ממסך מלא",
+    "enterFullscreen": "מסך מלא",
+    "exitFullscreen": "יציאה ממסך מלא",
     "playbackSpeed": "מהירות ניגון",
     "icloudWaitingTitle": "מוריד מ-iCloud",
     "icloudWaitingBody": "הקובץ הזה עדיין לא שמור במחשב. ב-Finder, לחצו על “הורדה” וחכו שסמל הענן ייעלם.",
@@ -1180,9 +1181,9 @@
     "resetCreditsToZeroTitle": "מנהל: אפס קרדיטים ל-0",
     "toggleByoPreviewTitle": "מנהל: החלף מצב תצוגה מקדימה BYO (הצג ממשק כאילו BYO לא נרכש)",
     "addCredits": "הוסף 350k קרדיטים",
-    "adding": "מוסיף...",
+    "adding": "מוסיף…",
     "resetToZero": "אפס ל-0",
-    "resetting": "מאפס...",
+    "resetting": "מאפס…",
     "byoPreview": "תצוגה מקדימה BYO",
     "byoPreviewOn": "תצוגה מקדימה BYO פעילה",
     "confirmResetCreditsToZero": "האם אתה בטוח שברצונך לאפס את הקרדיטים ל-0? לא ניתן לבטל פעולה זו."
@@ -1248,13 +1249,13 @@
       "fileTooLargeForVoiceCloning": "קובץ הסרטון גדול מדי לשכפול קול ({{size}}MB). הגודל המרבי הוא {{max}}MB. השתמשו בסרטון קצר יותר או כבו את שכפול הקול."
     },
     "status": {
-      "starting": "מתחיל...",
+      "starting": "מתחיל…",
       "completed": "הושלם",
       "cancelled": "בוטל",
       "error": "שגיאה"
     },
     "buttons": {
-      "redirectingToPayment": "מפנה לתשלום..."
+      "redirectingToPayment": "מפנה לתשלום…"
     },
     "workflow": {
       "stepOne": "שלב 1",
@@ -1276,14 +1277,14 @@
       "saveOutputsTitle": "שמירת הקבצים",
       "saveOutputsDescription": "שמרו מחוץ לסביבת העבודה של האפליקציה כל מדיית מקור או מדיה מדובבת שתרצו להשאיר."
     },
-    "calculatingCost": "מחשב עלות...",
+    "calculatingCost": "מחשב עלות…",
     "welcomeCredits": {
       "message": "יש לכם דקות חינם לניסיון תמלול ותרגום (כ-20 דקות של סרטון)."
     }
   },
   "findBar": {
-    "findPlaceholder": "חיפוש בכתוביות...",
-    "replacePlaceholder": "החלף ב...",
+    "findPlaceholder": "חיפוש בכתוביות…",
+    "replacePlaceholder": "החלף ב…",
     "replaceAll": "החלפת הכול",
     "nextMatch": "התאמה הבאה (Enter)",
     "previousMatch": "התאמה קודמת (Shift+Enter)",
@@ -1305,7 +1306,7 @@
       "howToGet": "איך להשיג מפתחות API",
       "enable": "שימוש במפתחות ה-API שלי",
       "done": "סיום",
-      "ready": "כל המפתחות הנדרשים מוכנים. עכשיו אפשר להפעיל את “שימוש במפתחות ה-API שלי”.",
+      "ready": "כל המפתחות הנדרשים מוכנים. עכשיו אפשר להשתמש במפתחות ה-API שלכם.",
       "missingTranslation": "התרגום עדיין צריך את {{providers}}.",
       "messageElevenLabsAudio": "כדי להשתמש במפתחות ה-API שלכם, צריך מפתח OpenAI או Anthropic לתרגום. התמלול והדיבוב משתמשים ב-ElevenLabs בלבד, אז הוסיפו גם מפתח ElevenLabs.",
       "audioNeedsElevenLabs": "בלי מפתח ElevenLabs, התמלול והדיבוב לא זמינים כל עוד מפתחות ה-API שלכם מופעלים."
@@ -1325,7 +1326,7 @@
     "transcriptionInProgress": "תמלול בתהליך",
     "translationInProgress": "תרגום בתהליך",
     "dubbingInProgress": "דיבוב בתהליך",
-    "dubbingWorking": "יוצרים אודיו מדובב...",
+    "dubbingWorking": "יוצרים אודיו מדובב…",
     "cancelTranslationConfirm": "לבטל את התרגום? ההתקדמות תאבד ותצטרכו להתחיל מחדש.",
     "cancelSummaryConfirm": "לבטל את יצירת הסיכום?",
     "cancelDubbingConfirm": "לבטל את הדיבוב? ההתקדמות תאבד ותצטרכו להתחיל מחדש.",
@@ -1464,25 +1465,25 @@
   "progress": {
     "preparingVideoExport": "מכינים את ייצוא הסרטון…",
     "downloadingVideoExportTools": "מורידים כלים לייצוא הסרטון… {{percent}}%",
-    "beginningReview": "מתחילים בבדיקה...",
-    "starting": "מתחילים...",
+    "beginningReview": "מתחילים בבדיקה…",
+    "starting": "מתחילים…",
     "completed": "הושלם",
     "processCancelled": "התהליך בוטל",
     "mergingTitle": "ממזג וידאו וכתוביות",
-    "extractingAudio": "מחלצים את האודיו...",
+    "extractingAudio": "מחלצים את האודיו…",
     "transcribingOf": "מתמללים {{done}}/{{total}}",
     "error": "שגיאה",
     "transcribedChunks": "תומללו {{done}}/{{total}} חלקים",
     "transcribingElevenLabs": "מתמללים עם ElevenLabs (נותרו ~{{minutes}} דקות)",
     "transcribingElevenLabsHours": "מתמללים עם ElevenLabs (נותרו ~{{hours}} שעות {{minutes}} דקות)",
-    "transcribingElevenLabsFinishing": "מתמללים עם ElevenLabs...",
-    "transcriptionRetry": "החיבור נכשל, מנסה שוב ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "מתמללים עם ElevenLabs…",
+    "transcriptionRetry": "החיבור נכשל, מנסה שוב ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "מעלים את האודיו…",
     "gapRepair": "תיקון פערים #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "מתקנים כתוביות חסרות (סבב {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "מנקים את הכתוביות ({{done}}/{{total}})",
     "translationCleanup": "מנקים את הכתוביות המתורגמות ({{done}}/{{total}})",
-    "reviewingSlow": "בודק (זה עשוי לקחת זמן...) {{done}}/{{total}}",
+    "reviewingSlow": "בודק (זה עשוי לקחת זמן…) {{done}}/{{total}}",
     "reviewingRange": "בודקים {{start}}–{{end}} (מתוך {{total}})",
     "legacy": {
       "aligningVoices": "מיישרים קולות {{done}}/{{total}}…",
@@ -1579,7 +1580,7 @@
   "logs": {
     "title": "יומנים אחרונים",
     "copy": "העתקה",
-    "email": "שלח למפתח",
+    "email": "שליחה למפתח",
     "close": "סגירה",
     "empty": "אין עדיין לוגים.",
     "copied": "היומנים הועתקו ללוח",
@@ -1591,7 +1592,7 @@
     "optionalMessagePlaceholder": "מה ניסית לעשות?",
     "sendReport": "שלח דוח",
     "reportPrompt": "משהו השתבש. דווח ליוצר לתיקון מהיר.",
-    "preparingReport": "חבילת האבחון בהכנה...",
+    "preparingReport": "חבילת האבחון בהכנה…",
     "reportContextWarning": "לא ניתן היה לטעון חלק מהקשר האבחון. הדוח עדיין יכלול פרטים מהיישום הזה.",
     "reportPromptTask": {
       "transcription": "התמלול נעצר בגלל תקלה לא צפויה. שלחו את הדוח הזה כדי שנוכל לתקן אותה.",
@@ -1898,6 +1899,7 @@
     "deviceIdReplaced": "הקובץ שמקשר את המחשב הזה לדקות שלכם נפגם, ולכן Translator יצר קישור חדש. ייתכן שדקות שקניתם לא יופיעו כאן. פנו לתמיכה עם קבלת הרכישה, ונחזיר אותן.",
     "contactSupport": "פנייה לתמיכה",
     "openSettings": "פתיחת ההגדרות",
-    "supportSubject": "הדקות שלי נעלמו אחרי ש-Translator איפס את המחשב הזה"
+    "supportSubject": "הדקות שלי נעלמו אחרי ש-Translator איפס את המחשב הזה",
+    "settingsResetKeptLanguage": "קובץ ההגדרות של Translator נפגם, ולכן ההעדפות שלכם אופסו: שפת הכתוביות, מפתחות ה-API ואפשרויות אחרות. שפת הממשק נשארה כפי שהייתה. שמרנו עותק של הקובץ הפגום. כדאי לבדוק את ההגדרות."
   }
 }

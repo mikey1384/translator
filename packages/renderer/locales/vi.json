@@ -3,20 +3,20 @@
     "cancel": "Hủy",
     "save": "Lưu",
     "or": "HOẶC",
-    "saving": "Đang lưu...",
-    "validating": "Đang xác thực...",
+    "saving": "Đang lưu…",
+    "validating": "Đang xác thực…",
     "delete": "Xóa",
     "confirm": "Xác nhận",
     "apply": "Áp dụng",
     "back": "←",
     "to": "Quay lại",
     "app": "Ứng dụng",
-    "backToApp": "Quay lại Ứng dụng",
+    "backToApp": "Quay lại ứng dụng",
     "next": "Tiếp theo",
     "done": "Hoàn tất",
     "gotIt": "Đã hiểu",
     "close": "Đóng",
-    "loading": "Đang tải...",
+    "loading": "Đang tải…",
     "error": {
       "unexpected": "Đã xảy ra lỗi không mong muốn.",
       "unexpectedRemove": "Đã xảy ra lỗi không mong muốn khi xóa khóa.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Kiểm tra cập nhật",
     "clear": "Xóa",
     "currentVersionLabel": "Phiên bản hiện tại",
-    "downloadingUpdate": "Đang tải bản cập nhật...",
+    "downloadingUpdate": "Đang tải bản cập nhật…",
     "downloadingUpdateProgress": "Đang tải bản cập nhật {{percent}}%",
     "downloadingUpdateShort": "Đang tải",
     "downloadUpdateNow": "Tải bản cập nhật",
@@ -86,8 +86,8 @@
     "whatsNewVersionTitle": "Có gì mới trong v{{version}}",
     "fileFilters": {
       "srtFiles": "Tệp SRT",
-      "mediaFiles": "Tệp Media",
-      "videoFiles": "Tệp Video",
+      "mediaFiles": "Tệp media",
+      "videoFiles": "Tệp video",
       "textFiles": "Tệp văn bản",
       "allFiles": "Tất cả tệp",
       "subtitleFiles": "Tệp phụ đề"
@@ -97,7 +97,7 @@
     "send": "Gửi",
     "dismiss": "Đóng",
     "moreActions": "Thao tác khác",
-    "installingUpdate": "Đang cài đặt bản cập nhật...",
+    "installingUpdate": "Đang cài đặt bản cập nhật…",
     "installingUpdateShort": "Đang cài đặt",
     "ok": "OK",
     "minimumVersionValue": "Phiên bản tối thiểu được hỗ trợ: v{{version}}",
@@ -216,11 +216,11 @@
   },
   "input": {
     "connect": "Kết nối",
-    "connecting": "Đang kết nối...",
+    "connecting": "Đang kết nối…",
     "connectTip": "Mẹo: Trong cửa sổ kết nối, đăng nhập hoặc hoàn thành xác minh, sau đó đóng cửa sổ để tiếp tục.",
     "fromDevice": "Từ thiết bị của bạn",
     "fromWeb": "Từ web",
-    "downloadVideo": "Tải xuống Video",
+    "downloadVideo": "Tải xuống video",
     "enterVideoUrl": "Nhập URL video",
     "quality": "Chất lượng",
     "qualityPresets": "Cài sẵn",
@@ -232,9 +232,9 @@
     "qualityHigh": "Cao",
     "qualityMedium": "Trung bình",
     "qualityLow": "Thấp",
-    "downloading": "Đang tải xuống...",
-    "selectFile": "Chọn Tệp",
-    "selectVideoFile": "Chọn Tệp Video",
+    "downloading": "Đang tải xuống…",
+    "selectFile": "Chọn tệp",
+    "selectVideoFile": "Chọn tệp video",
     "selectVideoAudioFile": "Chọn tệp video hoặc âm thanh",
     "saveOriginalVideo": "Lưu video gốc",
     "localFileDescription": "Tải lên video hoặc tệp âm thanh từ máy tính của bạn",
@@ -255,7 +255,7 @@
     "downloadFinishedWatchNow": "Xem ngay",
     "downloadFinishedWatchLater": "Xem sau",
     "videoSuggestion": {
-      "show": "Gợi ý video cho tôi",
+      "show": "Tìm video bằng AI",
       "hide": "Ẩn gợi ý video",
       "modelHint": "Mô hình hiện tại",
       "sourceHint": "Nguồn tìm kiếm",
@@ -269,7 +269,7 @@
       "composerHint": "Bất kỳ ngôn ngữ nào",
       "composerMeta": "Nhấn Enter để tìm",
       "placeholder": "vd: dạo phố Nhật Bản yên tĩnh vào ban đêm",
-      "thinking": "Đang suy nghĩ...",
+      "thinking": "Đang suy nghĩ…",
       "resultsFor": "Kết quả cho",
       "downloadThis": "Tải xuống",
       "failedToStart": "Không thể bắt đầu gợi ý",
@@ -344,11 +344,11 @@
       "activityComplete": "Hoạt động tìm kiếm đã hoàn tất.",
       "nextActionHint": "Chọn một video, rồi tải xuống hoặc mở trên YouTube.",
       "stagePending": "Đang chờ",
-      "stageRunning": "Đang chạy...",
+      "stageRunning": "Đang chạy…",
       "stageCleared": "Hoàn tất",
       "searchQueryLabel": "Truy vấn tìm kiếm",
       "searchMore": "Tìm thêm",
-      "searchMoreLoading": "Đang tìm thêm...",
+      "searchMoreLoading": "Đang tìm thêm…",
       "resetChat": "Đặt lại chat",
       "useLastSearch": "Dùng thiết lập lần trước",
       "showFollowUps": "Gợi ý tiếp theo",
@@ -407,10 +407,10 @@
       "savedDownloads": "Bản tải xuống đã lưu",
       "savedDownloadsCount": "{{count}} bản tải xuống đã lưu",
       "savedPreferencesCount": "{{count}} tùy chọn đã lưu",
-      "searchingLong": "Vẫn đang tìm video...",
+      "searchingLong": "Vẫn đang tìm video…",
       "searchingVeryLong": "Mất lâu hơn bình thường, nhưng vẫn đang chạy.",
-      "stillWorking": "Vẫn đang xử lý...",
-      "toggleCopy": "Tìm video nguồn trên YouTube mà không rời khỏi quy trình này.",
+      "stillWorking": "Vẫn đang xử lý…",
+      "toggleCopy": "Hỏi bằng ngôn ngữ của bạn, AI sẽ tìm đúng video YouTube.",
       "stage": {
         "answerer": "Xử lý truy vấn",
         "planner": "Tạo truy vấn",
@@ -473,8 +473,8 @@
     "translate": "Dịch",
     "continueTranscribing": "Tiếp tục chép lời",
     "generate": "Tạo phụ đề",
-    "generating": "Đang tạo...",
-    "generateNow": "Tạo Phụ đề Ngay",
+    "generating": "Đang tạo…",
+    "generateNow": "Tạo phụ đề ngay",
     "translation": "Dịch",
     "improveTranscription": "Cải thiện chép lời",
     "improveTranslation": "Cải thiện bản dịch",
@@ -506,7 +506,7 @@
       "openPermission": "Translator không có quyền đọc tệp đó. Hãy kiểm tra quyền truy cập của tệp, hoặc chép tệp sang thư mục khác rồi thử lại.",
       "openMissing": "Tệp phụ đề đó không còn ở đây nữa. Có thể tệp đã bị di chuyển hoặc xóa.",
       "openFailed": "Translator không mở được tệp phụ đề đó. Hãy chắc chắn đó là tệp .srt rồi thử lại.",
-      "saveFailed": "Translator không lưu được phụ đề. Hãy thử lại, hoặc chọn “Lưu phụ đề thành...” để chọn thư mục khác."
+      "saveFailed": "Translator không lưu được phụ đề. Hãy thử lại, hoặc chọn “Lưu phụ đề thành…” để chọn thư mục khác."
     }
   },
   "summary": {
@@ -570,7 +570,7 @@
     "exitCombineMode": "Thoát kết hợp",
     "reorderHint": "Kéo để sắp xếp lại:",
     "cutCombined": "Cắt kết hợp",
-    "cuttingCombined": "Đang cắt...",
+    "cuttingCombined": "Đang cắt…",
     "combinedHighlightReady": "Clip ghép đã sẵn sàng",
     "downloadCombined": "Tải clip kết hợp",
     "saveCombinedDialogTitle": "Lưu clip nổi bật đã ghép",
@@ -679,15 +679,15 @@
     },
     "header": {
       "save": "Lưu phụ đề",
-      "saveAs": "Lưu phụ đề thành...",
+      "saveAs": "Lưu phụ đề thành…",
       "saveTooltip": "Lưu thay đổi vào tệp gốc",
-      "saveAsTooltip": "Hãy dùng “Lưu phụ đề thành...” trước để bật lưu trực tiếp"
+      "saveAsTooltip": "Hãy dùng “Lưu phụ đề thành…” trước để bật lưu trực tiếp"
     },
     "mergeControls": {
       "fontSizeLabel": "Cỡ chữ:",
       "styleLabel": "Kiểu:",
-      "mergeButton": "Gộp Phụ đề",
-      "mergingButton": "Đang gộp..."
+      "mergeButton": "Gộp phụ đề",
+      "mergingButton": "Đang gộp…"
     },
     "undo": {
       "removed": "Đã xóa dòng.",
@@ -735,7 +735,7 @@
       "requirementTranslation": "Cần key OpenAI hoặc Anthropic để dịch"
     },
     "performanceQuality": {
-      "title": "Hiệu suất & Chất lượng",
+      "title": "Hiệu suất & chất lượng",
       "qualityTranslation": {
         "label": "Dịch chất lượng cao",
         "modelOn": "Bản nháp Claude Haiku 5.5 + rà soát Claude Opus 5.5",
@@ -754,7 +754,7 @@
         "modelOn": "Giọng premium ElevenLabs TTS"
       },
       "videoSuggestionModel": {
-        "label": "Mô hình gợi ý video",
+        "label": "Chất lượng gợi ý video",
         "help": "Auto = cùng mô hình với bản nháp dịch thông thường",
         "default": "Mặc định (giống mặc định của bản dịch)",
         "quality": "Chất lượng (giống chế độ chất lượng của bản dịch)"
@@ -780,9 +780,9 @@
         "brian": "Brian"
       },
       "previewTooltip": "Nghe thử giọng này",
-      "previewing": "Đang phát...",
+      "previewing": "Đang phát…",
       "previewFree": "Nghe thử",
-      "mixLabel": "Âm lượng lồng tiếng vs Âm lượng video gốc",
+      "mixLabel": "Âm lượng lồng tiếng so với âm lượng video gốc",
       "mixHelp": "Điều chỉnh mức âm thanh gốc phát bên dưới giọng lồng tiếng.",
       "mixAmbient": "Nhiều âm nền hơn",
       "mixVoice": "Nhiều giọng nói hơn",
@@ -794,28 +794,28 @@
       "yourBalance": "Số dư của bạn",
       "canClone": "Bạn có thể sao chép",
       "upToMinutes": "tối đa {{minutes}} phút",
-      "loading": "Đang tải...",
+      "loading": "Đang tải…",
       "previewWithMinutes": "Nghe thử ({{cost}})",
       "previewFailed": "Không phát được bản nghe thử giọng. Hãy thử lại."
     },
     "byoOpenAi": {
-      "title": "Sử dụng API Key của bạn",
+      "title": "Dùng API key của riêng bạn",
       "description": "Mở khóa một lần để dùng API key của riêng bạn. Sau khi mở khóa, việc chép lời, dịch, lồng tiếng và tóm tắt sẽ chạy trên tài khoản AI của bạn thay vì dùng số phút Stage5.",
       "unlocking": "Đang mở thanh toán…",
       "unlockCta": "Mở khóa với $10",
       "unlockHint": "Sau khi mở khóa, thêm API key của bạn vào đây bất cứ lúc nào để bật thanh toán trực tiếp trên tài khoản của bạn.",
-      "apiKeyLabel": "OpenAI API Key",
+      "apiKeyLabel": "OpenAI API key",
       "hide": "Ẩn",
       "show": "Hiện",
       "saving": "Đang lưu…",
-      "clear": "Xóa Key",
+      "clear": "Xóa key",
       "loadingKey": "Đang tải key đã lưu…",
       "keySaved": "Đã lưu OpenAI API key.",
       "keyCleared": "Đã xóa OpenAI API key.",
       "keyValid": "OpenAI API key hợp lệ.",
       "keyInvalid": "OpenAI API key không hợp lệ.",
       "testing": "Đang kiểm tra…",
-      "test": "Kiểm tra Key",
+      "test": "Kiểm tra key",
       "lastSynced": "Đồng bộ lần cuối",
       "toggleLabel": "Dùng OpenAI key của tôi",
       "toggleAria": "Bật/tắt sử dụng OpenAI key của bạn",
@@ -833,7 +833,7 @@
       "unlockFailed": "Không thể bắt đầu thanh toán. Hãy kiểm tra kết nối rồi thử lại."
     },
     "byoPreferences": {
-      "title": "Tùy chọn Nhà cung cấp",
+      "title": "Tùy chọn nhà cung cấp",
       "stage5Credits": "Số phút Stage5",
       "pricingHint": "Chi phí ước tính cho 1 giờ video",
       "pricingHintHeuristic": "Chi phí ước tính theo cách tính hiện tại của ứng dụng",
@@ -869,7 +869,7 @@
       "videoSuggestionLegacyFollowReview": "Đã giữ thiết lập trước đây của bạn: mục này theo mô hình rà soát bản dịch cho đến khi bạn chọn một mô hình ở đây."
     },
     "apiKeyGuide": {
-      "title": "Cách lấy API Key",
+      "title": "Cách lấy API key",
       "required": "Bắt buộc",
       "optional": "Tùy chọn",
       "providers": {
@@ -914,20 +914,20 @@
       }
     },
     "byoAnthropic": {
-      "title": "Anthropic API Key (Tùy chọn)",
+      "title": "Anthropic API key (tùy chọn)",
       "description": "Thêm khóa API Anthropic của bạn để dùng trực tiếp các mô hình Claude cho giai đoạn rà soát bản dịch. Nếu không có khóa này, GPT-5.5 sẽ xử lý lượt rà soát.",
-      "apiKeyLabel": "Anthropic API Key",
+      "apiKeyLabel": "Anthropic API key",
       "hide": "Ẩn",
       "show": "Hiện",
       "saving": "Đang lưu…",
-      "clear": "Xóa Key",
+      "clear": "Xóa key",
       "loadingKey": "Đang tải Anthropic key đã lưu…",
       "keySaved": "Đã lưu Anthropic API key.",
       "keyCleared": "Đã xóa Anthropic API key.",
       "keyValid": "Anthropic API key hợp lệ.",
       "keyInvalid": "Anthropic API key không hợp lệ.",
       "testing": "Đang kiểm tra…",
-      "test": "Kiểm tra Key",
+      "test": "Kiểm tra key",
       "toggleLabel": "Dùng Anthropic key của tôi",
       "toggleAria": "Bật/tắt sử dụng Anthropic key của bạn",
       "toggleOn": "Đang sử dụng Anthropic key của bạn cho các mô hình Claude.",
@@ -945,10 +945,11 @@
       "howToGet": "Cách lấy key này",
       "missing": "Hãy dán API key trước.",
       "savedEnding": "Đã lưu key có đuôi {{last4}}",
-      "savedHidden": "Đã lưu key (ẩn)"
+      "savedHidden": "Đã lưu key (ẩn)",
+      "providerLabel": "{{provider}} API key"
     },
     "byoStack": {
-      "title": "AI Stack của bạn"
+      "title": "AI stack của bạn"
     },
     "siteConnection": {
       "title": "Kết nối trang web",
@@ -1056,8 +1057,8 @@
   },
   "credits": {
     "title": "Số phút của bạn",
-    "loading": "Đang tải...",
-    "usingApiKey": "Đang sử dụng API Key",
+    "loading": "Đang tải…",
+    "usingApiKey": "Đang dùng API key",
     "usingOpenAi": "Đang dùng OpenAI",
     "usingAnthropic": "Đang dùng Claude",
     "usingElevenLabs": "Đang dùng ElevenLabs",
@@ -1131,8 +1132,8 @@
     "byStage5": "by stage_5"
   },
   "videoPlayer": {
-    "enterFullscreen": "Vào Toàn màn hình",
-    "exitFullscreen": "Thoát Toàn màn hình",
+    "enterFullscreen": "Vào toàn màn hình",
+    "exitFullscreen": "Thoát toàn màn hình",
     "playbackSpeed": "Tốc độ phát",
     "icloudWaitingTitle": "Đang tải từ iCloud",
     "icloudWaitingBody": "Tệp này chưa được lưu trên máy. Trong Finder, nhấp 'Download' và đợi biểu tượng đám mây biến mất.",
@@ -1168,9 +1169,9 @@
     "resetCreditsToZeroTitle": "Quản trị: đặt lại tín dụng về 0",
     "toggleByoPreviewTitle": "Quản trị: bật/tắt chế độ xem trước BYO (xem UI như chưa mua BYO)",
     "addCredits": "Thêm 350k tín dụng",
-    "adding": "Đang thêm...",
+    "adding": "Đang thêm…",
     "resetToZero": "Đặt lại về 0",
-    "resetting": "Đang đặt lại...",
+    "resetting": "Đang đặt lại…",
     "byoPreview": "Xem trước BYO",
     "byoPreviewOn": "Xem trước BYO BẬT",
     "confirmResetCreditsToZero": "Bạn có chắc muốn đặt lại tín dụng về 0 không? Hành động này không thể hoàn tác."
@@ -1182,7 +1183,7 @@
     "middleEastAfrica": "Trung Đông / Châu Phi"
   },
   "languages": {
-    "original": "Giống như Âm thanh",
+    "original": "Giống âm thanh gốc",
     "english": "Tiếng Anh",
     "korean": "Tiếng Hàn",
     "japanese": "Tiếng Nhật",
@@ -1236,13 +1237,13 @@
       "fileTooLargeForVoiceCloning": "Tệp video quá lớn cho sao chép giọng ({{size}}MB). Tối đa cho phép là {{max}}MB. Vui lòng sử dụng video ngắn hơn hoặc tắt sao chép giọng."
     },
     "status": {
-      "starting": "Đang bắt đầu...",
+      "starting": "Đang bắt đầu…",
       "completed": "Hoàn thành",
       "cancelled": "Đã hủy",
       "error": "Lỗi"
     },
     "buttons": {
-      "redirectingToPayment": "Đang chuyển hướng đến thanh toán..."
+      "redirectingToPayment": "Đang chuyển hướng đến thanh toán…"
     },
     "workflow": {
       "stepOne": "Bước 1",
@@ -1264,14 +1265,14 @@
       "saveOutputsTitle": "Lưu đầu ra",
       "saveOutputsDescription": "Hãy lưu mọi media nguồn hoặc media lồng tiếng muốn giữ ra ngoài vùng làm việc của ứng dụng."
     },
-    "calculatingCost": "Đang tính toán chi phí...",
+    "calculatingCost": "Đang tính toán chi phí…",
     "welcomeCredits": {
       "message": "Bạn có khoảng 20 phút miễn phí để dùng thử chép lời và dịch."
     }
   },
   "findBar": {
-    "findPlaceholder": "Tìm trong phụ đề...",
-    "replacePlaceholder": "Thay thế bằng...",
+    "findPlaceholder": "Tìm trong phụ đề…",
+    "replacePlaceholder": "Thay thế bằng…",
     "replaceAll": "Thay thế tất cả",
     "nextMatch": "Kết quả tiếp theo (Enter)",
     "previousMatch": "Kết quả trước (Shift+Enter)",
@@ -1289,17 +1290,17 @@
   },
   "dialogs": {
     "apiKeysRequired": {
-      "title": "Cần API Key",
+      "title": "Cần API key",
       "howToGet": "Cách lấy API key",
       "enable": "Dùng API key của tôi",
       "done": "Xong",
-      "ready": "Phần bao phủ đã đầy đủ. Giờ bạn có thể bật “Dùng API key của tôi”.",
+      "ready": "Đã đủ các key cần thiết. Giờ bạn có thể dùng API key của riêng mình.",
       "missingTranslation": "Bản dịch vẫn cần {{providers}}.",
       "messageElevenLabsAudio": "Để dùng API key của bạn, bạn cần key OpenAI hoặc Anthropic để dịch. Chép lời và lồng tiếng chỉ dùng ElevenLabs, nên hãy thêm cả key ElevenLabs cho các tính năng này.",
       "audioNeedsElevenLabs": "Nếu không có key ElevenLabs, chép lời và lồng tiếng sẽ không khả dụng khi API key của bạn đang bật."
     },
-    "saveSrtFileAs": "Lưu Tệp SRT Dưới dạng",
-    "saveDownloadedVideoAs": "Lưu Video Đã tải Dưới dạng",
+    "saveSrtFileAs": "Lưu tệp SRT thành",
+    "saveDownloadedVideoAs": "Lưu video đã tải thành",
     "saveDubbedVideoAs": "Lưu video lồng tiếng thành",
     "unsavedSrtOnTranscribe": {
       "title": "Lưu phụ đề hiện tại trước khi chép lời?",
@@ -1308,7 +1309,7 @@
       "discardAndTranscribe": "Bỏ và chép lời",
       "cancel": "Hủy"
     },
-    "downloadInProgress": "Đang Tải xuống",
+    "downloadInProgress": "Đang tải xuống",
     "saveDownloadedFile": "Lưu tệp đã tải xuống: {{path}}",
     "transcriptionInProgress": "Đang chép lời",
     "translationInProgress": "Đang dịch",
@@ -1452,25 +1453,25 @@
   "progress": {
     "preparingVideoExport": "Đang chuẩn bị xuất video…",
     "downloadingVideoExportTools": "Đang tải công cụ xuất video… {{percent}}%",
-    "beginningReview": "Bắt đầu rà soát...",
-    "starting": "Đang bắt đầu...",
+    "beginningReview": "Bắt đầu rà soát…",
+    "starting": "Đang bắt đầu…",
     "completed": "Hoàn tất",
     "processCancelled": "Quá trình đã bị hủy",
-    "mergingTitle": "Đang ghép Video & Phụ đề",
-    "extractingAudio": "Đang trích xuất âm thanh...",
+    "mergingTitle": "Đang ghép video & phụ đề",
+    "extractingAudio": "Đang trích xuất âm thanh…",
     "transcribingOf": "Đang chép lời {{done}}/{{total}}",
     "error": "Lỗi",
     "transcribedChunks": "Đã chép lời {{done}}/{{total}} đoạn",
     "transcribingElevenLabs": "Đang chép lời bằng ElevenLabs (còn ~{{minutes}} phút)",
     "transcribingElevenLabsHours": "Đang chép lời bằng ElevenLabs (còn ~{{hours}} giờ {{minutes}} phút)",
-    "transcribingElevenLabsFinishing": "Đang chép lời bằng ElevenLabs...",
-    "transcriptionRetry": "Kết nối thất bại, đang thử lại ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Đang chép lời bằng ElevenLabs…",
+    "transcriptionRetry": "Kết nối thất bại, đang thử lại ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Đang tải âm thanh lên…",
     "gapRepair": "Sửa chỗ trống #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Đang sửa phụ đề bị thiếu (Lần {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Đang làm sạch phụ đề ({{done}}/{{total}})",
     "translationCleanup": "Đang dọn dẹp phụ đề đã dịch ({{done}}/{{total}})",
-    "reviewingSlow": "Đang rà soát (có thể mất một lúc...) {{done}}/{{total}}",
+    "reviewingSlow": "Đang rà soát (có thể mất một lúc…) {{done}}/{{total}}",
     "reviewingRange": "Đang rà soát {{start}}–{{end}} (của {{total}})",
     "legacy": {
       "aligningVoices": "Đang căn chỉnh giọng {{done}}/{{total}}…",
@@ -1565,19 +1566,19 @@
   "logs": {
     "title": "Nhật ký gần đây",
     "copy": "Sao chép",
-    "email": "Gửi email cho Dev",
+    "email": "Gửi email cho dev",
     "close": "Đóng",
     "empty": "Chưa có nhật ký.",
     "copied": "Đã sao chép nhật ký vào clipboard",
     "copyFailed": "Sao chép thất bại",
-    "emailSubject": "Nhật ký Debug Stage5",
+    "emailSubject": "Nhật ký debug Stage5",
     "emailBodyPrefix": "Xin chào,\n\nDưới đây là nhật ký gần đây của tôi để hỗ trợ debug.\n\n",
     "deviceInfoHeader": "Thông tin thiết bị",
     "optionalMessage": "Tin nhắn tùy chọn",
     "optionalMessagePlaceholder": "Bạn đang cố làm gì?",
     "sendReport": "Gửi báo cáo",
     "reportPrompt": "Đã xảy ra lỗi. Báo cáo cho nhà phát triển để sửa nhanh.",
-    "preparingReport": "Đang chuẩn bị gói chẩn đoán...",
+    "preparingReport": "Đang chuẩn bị gói chẩn đoán…",
     "reportContextWarning": "Không thể tải một phần ngữ cảnh chẩn đoán. Báo cáo vẫn sẽ bao gồm chi tiết từ ứng dụng này.",
     "reportPromptTask": {
       "transcription": "Quá trình chép lời bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
@@ -1858,6 +1859,7 @@
     "deviceIdReplaced": "Tệp liên kết máy tính này với số phút của bạn bị hỏng, nên Translator đã tạo liên kết mới. Số phút bạn đã mua có thể không hiện ở đây. Hãy liên hệ hỗ trợ kèm biên lai mua hàng, chúng tôi sẽ chuyển lại cho bạn.",
     "contactSupport": "Liên hệ hỗ trợ",
     "openSettings": "Mở Cài đặt",
-    "supportSubject": "Số phút của tôi bị mất sau khi Translator đặt lại máy tính này"
+    "supportSubject": "Số phút của tôi bị mất sau khi Translator đặt lại máy tính này",
+    "settingsResetKeptLanguage": "Tệp cài đặt của Translator bị hỏng nên các tùy chọn của bạn đã được đặt lại: ngôn ngữ phụ đề, API key và các tùy chọn khác. Ngôn ngữ giao diện không thay đổi. Bản sao của tệp bị hỏng vẫn được giữ lại. Hãy kiểm tra lại trong Cài đặt."
   }
 }

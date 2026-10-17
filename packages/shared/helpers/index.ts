@@ -426,7 +426,7 @@ export async function openSubtitleWithElectron(
     } else {
       const result = await openFileIPC({
         filters: [
-          { name: options.filterName ?? 'Subtitle Files', extensions: ['srt'] },
+          { name: options.filterName ?? 'Subtitle files', extensions: ['srt'] },
         ],
         title: options.dialogTitle ?? 'Open Subtitle File',
       });

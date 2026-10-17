@@ -3,8 +3,8 @@
     "cancel": "Annuller",
     "save": "Gem",
     "or": "ELLER",
-    "saving": "Gemmer...",
-    "validating": "Validerer...",
+    "saving": "Gemmer…",
+    "validating": "Validerer…",
     "delete": "Slet",
     "confirm": "Bekræft",
     "apply": "Anvend",
@@ -16,7 +16,7 @@
     "done": "Færdig",
     "gotIt": "Forstået",
     "close": "Luk",
-    "loading": "Indlæser...",
+    "loading": "Indlæser…",
     "error": {
       "unexpected": "Der opstod en uventet fejl.",
       "unexpectedRemove": "Der opstod en uventet fejl under fjernelse af nøglen.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Søg efter opdateringer",
     "clear": "Ryd",
     "currentVersionLabel": "Nuværende version",
-    "downloadingUpdate": "Downloader opdatering...",
+    "downloadingUpdate": "Downloader opdatering…",
     "downloadingUpdateProgress": "Downloader opdatering: {{percent}} %",
     "downloadingUpdateShort": "DOWNLOADER",
     "downloadUpdateNow": "Download opdatering",
@@ -97,7 +97,7 @@
     "send": "Afsend",
     "dismiss": "Luk",
     "moreActions": "Flere handlinger",
-    "installingUpdate": "Installerer opdatering...",
+    "installingUpdate": "Installerer opdatering…",
     "installingUpdateShort": "Installerer",
     "ok": "OK",
     "minimumVersionValue": "Laveste understøttede version: v{{version}}",
@@ -217,7 +217,7 @@
   },
   "input": {
     "connect": "Forbind",
-    "connecting": "Forbinder...",
+    "connecting": "Forbinder…",
     "connectTip": "Tip: I forbindelsesvinduet skal du logge ind eller fuldføre verifikationen og derefter lukke vinduet for at fortsætte.",
     "fromDevice": "Fra din enhed",
     "fromWeb": "Fra nettet",
@@ -233,7 +233,7 @@
     "qualityHigh": "Høj",
     "qualityMedium": "Medium",
     "qualityLow": "Lav",
-    "downloading": "Downloader...",
+    "downloading": "Downloader…",
     "selectFile": "Vælg fil",
     "selectVideoFile": "Vælg videofil",
     "selectVideoAudioFile": "Vælg video- eller lydfil",
@@ -270,7 +270,7 @@
       "composerHint": "Valgfrit sprog",
       "composerMeta": "Tryk Enter for at søge",
       "placeholder": "f.eks. rolige japanske gåture om natten",
-      "thinking": "Tænker...",
+      "thinking": "Tænker…",
       "resultsFor": "Resultater for",
       "downloadThis": "Download denne",
       "failedToStart": "Kunne ikke starte forslag",
@@ -345,11 +345,11 @@
       "activityComplete": "Søgeaktiviteten er fuldført.",
       "nextActionHint": "Vælg en video, og download den eller åbn den på YouTube.",
       "stagePending": "Afventer",
-      "stageRunning": "Kører...",
+      "stageRunning": "Kører…",
       "stageCleared": "Gennemført",
       "searchQueryLabel": "Søgeforespørgsel",
       "searchMore": "Søg mere",
-      "searchMoreLoading": "Søger videre...",
+      "searchMoreLoading": "Søger videre…",
       "resetChat": "Nulstil chat",
       "useLastSearch": "Brug seneste opsætning",
       "showFollowUps": "Foreslåede opfølgninger",
@@ -410,7 +410,7 @@
       "savedPreferencesCount": "{{count}} gemte præferencer",
       "searchingLong": "Søger stadig efter videoer…",
       "searchingVeryLong": "Det tager længere tid end normalt, men kører stadig.",
-      "stillWorking": "Arbejder stadig...",
+      "stillWorking": "Arbejder stadig…",
       "toggleCopy": "Søg på YouTube efter en kildevideo uden at forlade workflowet.",
       "stage": {
         "answerer": "Behandl forespørgsel",
@@ -475,7 +475,7 @@
     "translate": "Oversæt",
     "continueTranscribing": "Fortsæt transskribering",
     "generate": "Generer undertekster",
-    "generating": "Genererer...",
+    "generating": "Genererer…",
     "generateNow": "Generer undertekster nu",
     "translation": "Oversættelse",
     "improveTranscription": "Forbedre transskription",
@@ -509,7 +509,7 @@
       "openPermission": "Translator har ikke adgang til at læse filen. Tjek dens tilladelser, eller kopiér den til en anden mappe, og prøv igen.",
       "openMissing": "Undertekstfilen er her ikke længere. Den er måske flyttet eller slettet.",
       "openFailed": "Translator kunne ikke åbne undertekstfilen. Sørg for, at det er en .srt-fil, og prøv igen.",
-      "saveFailed": "Translator kunne ikke gemme underteksterne. Prøv igen, eller vælg “Gem undertekster som...” for at vælge en anden mappe."
+      "saveFailed": "Translator kunne ikke gemme underteksterne. Prøv igen, eller vælg “Gem undertekster som…” for at vælge en anden mappe."
     }
   },
   "summary": {
@@ -573,7 +573,7 @@
     "exitCombineMode": "Afslut kombination",
     "reorderHint": "Træk for at omorganisere:",
     "cutCombined": "Klip kombineret",
-    "cuttingCombined": "Klipper...",
+    "cuttingCombined": "Klipper…",
     "combinedHighlightReady": "Kombineret højdepunkt klar",
     "downloadCombined": "Download kombineret klip",
     "saveCombinedDialogTitle": "Gem kombineret højdepunktsklip",
@@ -685,9 +685,9 @@
     },
     "header": {
       "save": "Gem undertekster",
-      "saveAs": "Gem undertekster som...",
+      "saveAs": "Gem undertekster som…",
       "saveTooltip": "Gem ændringer til originalfil",
-      "saveAsTooltip": "Gem som først for at aktivere direkte gem"
+      "saveAsTooltip": "Brug “Gem undertekster som…” først for at kunne gemme direkte"
     },
     "mergeControls": {
       "fontSizeLabel": "Skriftstørrelse:",
@@ -787,7 +787,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "Forhåndsvis denne stemme",
-      "previewing": "Afspiller...",
+      "previewing": "Afspiller…",
       "previewFree": "Forhåndsvis",
       "mixLabel": "Stemmens lydstyrke vs. videoens originale lyd",
       "mixHelp": "Styr, hvor meget af den originale lyd der afspilles under den eftersynkroniserede stemme.",
@@ -801,7 +801,7 @@
       "yourBalance": "Din saldo",
       "canClone": "Du kan klone",
       "upToMinutes": "op til {{minutes}} min",
-      "loading": "Indlæser...",
+      "loading": "Indlæser…",
       "previewWithMinutes": "Forhåndsvis ({{cost}})",
       "previewFailed": "Stemmeprøven kunne ikke afspilles. Prøv igen."
     },
@@ -952,7 +952,8 @@
       "howToGet": "Sådan får du denne nøgle",
       "missing": "Indsæt en API-nøgle først.",
       "savedEnding": "Gemt nøgle, der ender på {{last4}}",
-      "savedHidden": "Gemt nøgle (skjult)"
+      "savedHidden": "Gemt nøgle (skjult)",
+      "providerLabel": "{{provider}} API-nøgle"
     },
     "byoStack": {
       "title": "Din AI-stack"
@@ -1065,14 +1066,14 @@
   },
   "credits": {
     "title": "AI-minutter",
-    "loading": "Indlæser...",
+    "loading": "Indlæser…",
     "usingApiKey": "Bruger API-nøgle",
     "usingOpenAi": "Bruger OpenAI",
     "usingAnthropic": "Bruger Claude",
     "usingElevenLabs": "Bruger ElevenLabs",
     "hours": "timer",
     "translationHoursShort": "oversættelsestimer",
-    "redirectingToPayment": "Åbner sikker betaling...",
+    "redirectingToPayment": "Åbner sikker betaling…",
     "transcriptionMinutesShort": "{{minutes}} min transskription",
     "transcriptionTimeShort": "{{time}} transskription",
     "pill": {
@@ -1178,9 +1179,9 @@
     "resetCreditsToZeroTitle": "Admin: nulstil kreditter til 0",
     "toggleByoPreviewTitle": "Admin: skift BYO-forhåndsvisning (se UI som om BYO ikke er købt)",
     "addCredits": "Tilføj 350k kreditter",
-    "adding": "Tilføjer...",
+    "adding": "Tilføjer…",
     "resetToZero": "Nulstil til 0",
-    "resetting": "Nulstiller...",
+    "resetting": "Nulstiller…",
     "byoPreview": "BYO-forhåndsvisning",
     "byoPreviewOn": "BYO-forhåndsvisning TIL",
     "confirmResetCreditsToZero": "Er du sikker på, at du vil nulstille kreditter til 0? Dette kan ikke fortrydes."
@@ -1246,13 +1247,13 @@
       "fileTooLargeForVoiceCloning": "Videofilen er for stor til stemmekloning ({{size}}MB). Maksimum tilladt er {{max}}MB. Brug venligst en kortere video eller deaktiver stemmekloning."
     },
     "status": {
-      "starting": "Starter...",
+      "starting": "Starter…",
       "completed": "Fuldført",
       "cancelled": "Annulleret",
       "error": "Fejl"
     },
     "buttons": {
-      "redirectingToPayment": "Omdirigerer til betaling..."
+      "redirectingToPayment": "Omdirigerer til betaling…"
     },
     "workflow": {
       "stepOne": "Trin 1",
@@ -1274,14 +1275,14 @@
       "saveOutputsTitle": "Gem filer",
       "saveOutputsDescription": "Gem kildemateriale eller eftersynkroniserede medier, du vil bevare, uden for appens arbejdsområde."
     },
-    "calculatingCost": "Beregner omkostninger...",
+    "calculatingCost": "Beregner omkostninger…",
     "welcomeCredits": {
       "message": "Du har gratis minutter til at prøve transskription og oversættelse (ca. 20 minutters video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Find i undertekster...",
-    "replacePlaceholder": "Erstat med...",
+    "findPlaceholder": "Find i undertekster…",
+    "replacePlaceholder": "Erstat med…",
     "replaceAll": "Erstat alle",
     "nextMatch": "Næste match (Enter)",
     "previousMatch": "Forrige match (Shift+Enter)",
@@ -1303,7 +1304,7 @@
       "howToGet": "Sådan får du API-nøgler",
       "enable": "Brug mine API-nøgler",
       "done": "Færdig",
-      "ready": "Dækningen er klar. Du kan nu slå “Brug mine API-nøgler” til.",
+      "ready": "Alt er klar. Nu kan du bruge dine egne API-nøgler.",
       "missingTranslation": "Oversættelse mangler stadig {{providers}}.",
       "messageElevenLabsAudio": "For at bruge dine API-nøgler skal du have en OpenAI- eller Anthropic-nøgle til oversættelse. Transskription og eftersynkronisering bruger kun ElevenLabs, så tilføj også en ElevenLabs-nøgle til dem.",
       "audioNeedsElevenLabs": "Uden en ElevenLabs-nøgle er transskription og eftersynkronisering ikke tilgængelige, mens dine API-nøgler er slået til."
@@ -1462,25 +1463,25 @@
   "progress": {
     "preparingVideoExport": "Forbereder videoeksport…",
     "downloadingVideoExportTools": "Downloader værktøjer til videoeksport… {{percent}} %",
-    "beginningReview": "Starter gennemgang...",
-    "starting": "Starter...",
+    "beginningReview": "Starter gennemgang…",
+    "starting": "Starter…",
     "completed": "Fuldført",
     "processCancelled": "Proces annulleret",
     "mergingTitle": "Brænder underteksterne ind i videoen",
-    "extractingAudio": "Udtrækker lyd...",
+    "extractingAudio": "Udtrækker lyd…",
     "transcribingOf": "Transskriberer {{done}}/{{total}}",
     "error": "Fejl",
     "transcribedChunks": "Transskriberet {{done}}/{{total}} dele",
     "transcribingElevenLabs": "Transskriberer med ElevenLabs (~{{minutes}} min tilbage)",
     "transcribingElevenLabsHours": "Transskriberer med ElevenLabs (~{{hours}}t {{minutes}}m tilbage)",
-    "transcribingElevenLabsFinishing": "Transskriberer med ElevenLabs...",
-    "transcriptionRetry": "Forbindelse mislykkedes, prøver igen ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Transskriberer med ElevenLabs…",
+    "transcriptionRetry": "Forbindelse mislykkedes, prøver igen ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Uploader lyd…",
     "gapRepair": "Hul-reparation #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparerer manglende undertekster (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Renser undertekster ({{done}}/{{total}})",
     "translationCleanup": "Renser oversatte undertekster ({{done}}/{{total}})",
-    "reviewingSlow": "Gennemgår (dette kan tage et stykke tid...) {{done}}/{{total}}",
+    "reviewingSlow": "Gennemgår (dette kan tage et stykke tid…) {{done}}/{{total}}",
     "reviewingRange": "Gennemgår {{start}}–{{end}} (af {{total}})",
     "legacy": {
       "aligningVoices": "Afstemmer stemmer {{done}}/{{total}}…",
@@ -1588,7 +1589,7 @@
     "optionalMessagePlaceholder": "Hvad prøvede du at gøre?",
     "sendReport": "Send rapport",
     "reportPrompt": "Noget gik galt. Rapportér dette til udvikleren for en hurtig løsning.",
-    "preparingReport": "Forbereder diagnosepakke...",
+    "preparingReport": "Forbereder diagnosepakke…",
     "reportContextWarning": "Noget diagnostisk kontekst kunne ikke indlæses. Rapporten vil stadig indeholde detaljer fra denne app.",
     "reportPromptTask": {
       "transcription": "Transskriptionen stoppede på grund af et uventet problem. Send denne rapport, så vi kan rette det.",
@@ -1885,6 +1886,7 @@
     "deviceIdReplaced": "Filen, der forbinder denne computer med dine minutter, var beskadiget, så Translator har lavet en ny forbindelse. Minutter, du har købt, vises måske ikke her. Kontakt support med din kvittering, så flytter vi dem tilbage.",
     "contactSupport": "Kontakt support",
     "openSettings": "Åbn Indstillinger",
-    "supportSubject": "Mine minutter mangler, efter Translator nulstillede denne computer"
+    "supportSubject": "Mine minutter mangler, efter Translator nulstillede denne computer",
+    "settingsResetKeptLanguage": "Translators indstillingsfil var beskadiget, så dine valg er nulstillet: sprog for underteksterne, API-nøgler og andre indstillinger. Appens sprog er bevaret. Der er gemt en kopi af den beskadigede fil. Tjek Indstillinger."
   }
 }

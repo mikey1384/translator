@@ -3,8 +3,8 @@
     "cancel": "Отмена",
     "save": "Сохранить",
     "or": "ИЛИ",
-    "saving": "Сохранение...",
-    "validating": "Проверка...",
+    "saving": "Сохранение…",
+    "validating": "Проверка…",
     "delete": "Удалить",
     "confirm": "Подтвердить",
     "apply": "Применить",
@@ -16,7 +16,7 @@
     "done": "Готово",
     "gotIt": "Понятно",
     "close": "Закрыть",
-    "loading": "Загрузка...",
+    "loading": "Загрузка…",
     "error": {
       "unexpected": "Произошла непредвиденная ошибка.",
       "unexpectedRemove": "Произошла непредвиденная ошибка при удалении ключа.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Проверить обновление",
     "clear": "Очистить",
     "currentVersionLabel": "Текущая версия",
-    "downloadingUpdate": "Загрузка обновления...",
+    "downloadingUpdate": "Загрузка обновления…",
     "downloadingUpdateProgress": "Загрузка обновления: {{percent}} процентов",
     "downloadingUpdateShort": "ЗАГРУЗКА",
     "downloadUpdateNow": "Скачать обновление",
@@ -85,7 +85,7 @@
     "whatsNewTitle": "Что нового",
     "whatsNewVersionTitle": "Что нового в v{{version}}",
     "fileFilters": {
-      "srtFiles": "SRT файлы",
+      "srtFiles": "SRT-файлы",
       "mediaFiles": "Медиафайлы",
       "videoFiles": "Видеофайлы",
       "textFiles": "Текстовые файлы",
@@ -97,7 +97,7 @@
     "send": "Отправить",
     "dismiss": "Закрыть",
     "moreActions": "Другие действия",
-    "installingUpdate": "Установка обновления...",
+    "installingUpdate": "Установка обновления…",
     "installingUpdateShort": "Установка",
     "ok": "ОК",
     "minimumVersionValue": "Минимальная поддерживаемая версия: {{version}}",
@@ -216,7 +216,7 @@
   },
   "input": {
     "connect": "Подключить",
-    "connecting": "Подключение...",
+    "connecting": "Подключение…",
     "connectTip": "Совет: В окне подключения войдите в систему или пройдите проверку, затем закройте окно, чтобы продолжить.",
     "fromDevice": "С вашего устройства",
     "fromWeb": "Из интернета",
@@ -232,7 +232,7 @@
     "qualityHigh": "Высокое",
     "qualityMedium": "Среднее",
     "qualityLow": "Низкое",
-    "downloading": "Скачивание...",
+    "downloading": "Скачивание…",
     "selectFile": "Выбрать файл",
     "selectVideoFile": "Выбрать видеофайл",
     "selectVideoAudioFile": "Выбрать видео- или аудиофайл",
@@ -269,7 +269,7 @@
       "composerHint": "Любой язык",
       "composerMeta": "Нажмите Enter для поиска",
       "placeholder": "напр. спокойные прогулки по японским улицам ночью",
-      "thinking": "Думаю...",
+      "thinking": "Думаю…",
       "resultsFor": "Результаты по запросу",
       "downloadThis": "Скачать",
       "failedToStart": "Не удалось запустить предложения",
@@ -344,11 +344,11 @@
       "activityComplete": "Активность поиска завершена.",
       "nextActionHint": "Выберите видео, затем скачайте его или откройте в YouTube.",
       "stagePending": "Ожидание",
-      "stageRunning": "Выполняется...",
+      "stageRunning": "Выполняется…",
       "stageCleared": "Завершено",
       "searchQueryLabel": "Поисковый запрос",
       "searchMore": "Искать еще",
-      "searchMoreLoading": "Ищу дальше...",
+      "searchMoreLoading": "Ищу дальше…",
       "resetChat": "Сбросить чат",
       "useLastSearch": "Использовать прошлую настройку",
       "showFollowUps": "Предлагаемые продолжения",
@@ -409,7 +409,7 @@
       "savedPreferencesCount": "{{count}} сохранённых предпочтений",
       "searchingLong": "Всё ещё ищем видео…",
       "searchingVeryLong": "Это занимает больше времени, чем обычно, но процесс всё ещё идёт.",
-      "stillWorking": "Всё ещё работает...",
+      "stillWorking": "Всё ещё работает…",
       "toggleCopy": "Ищите исходное видео на YouTube, не покидая этот процесс.",
       "stage": {
         "answerer": "Обработка",
@@ -475,7 +475,7 @@
     "translate": "Перевести",
     "continueTranscribing": "Продолжить расшифровку",
     "generate": "Создать субтитры",
-    "generating": "Создание...",
+    "generating": "Создание…",
     "generateNow": "Создать субтитры сейчас",
     "translation": "Перевод",
     "improveTranscription": "Улучшить расшифровку",
@@ -511,7 +511,7 @@
       "openPermission": "У Translator нет доступа к этому файлу. Проверьте права доступа или скопируйте файл в другую папку и попробуйте снова.",
       "openMissing": "Этого файла субтитров больше нет на месте. Возможно, его переместили или удалили.",
       "openFailed": "Translator не смог открыть этот файл субтитров. Убедитесь, что это файл .srt, и попробуйте снова.",
-      "saveFailed": "Translator не смог сохранить субтитры. Попробуйте снова или выберите «Сохранить субтитры как...», чтобы указать другую папку."
+      "saveFailed": "Translator не смог сохранить субтитры. Попробуйте снова или выберите «Сохранить субтитры как…», чтобы указать другую папку."
     }
   },
   "summary": {
@@ -575,7 +575,7 @@
     "exitCombineMode": "Выйти из объединения",
     "reorderHint": "Перетащите для изменения порядка:",
     "cutCombined": "Вырезать объединённое",
-    "cuttingCombined": "Вырезаем...",
+    "cuttingCombined": "Вырезаем…",
     "combinedHighlightReady": "Объединённый момент готов",
     "downloadCombined": "Скачать объединённый клип",
     "saveCombinedDialogTitle": "Сохранить объединённый клип моментов",
@@ -692,15 +692,15 @@
     },
     "header": {
       "save": "Сохранить субтитры",
-      "saveAs": "Сохранить субтитры как...",
+      "saveAs": "Сохранить субтитры как…",
       "saveTooltip": "Сохранить изменения в исходный файл",
-      "saveAsTooltip": "Сначала сохраните как, чтобы включить прямое сохранение"
+      "saveAsTooltip": "Сначала используйте «Сохранить субтитры как…», чтобы сохранять напрямую"
     },
     "mergeControls": {
       "fontSizeLabel": "Размер шрифта:",
       "styleLabel": "Стиль:",
       "mergeButton": "Объединить субтитры",
-      "mergingButton": "Объединение..."
+      "mergingButton": "Объединение…"
     },
     "undo": {
       "removed": "Строка удалена.",
@@ -796,7 +796,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "Прослушать этот голос",
-      "previewing": "Воспроизведение...",
+      "previewing": "Воспроизведение…",
       "previewFree": "Прослушать",
       "mixLabel": "Громкость озвучки и оригинала",
       "mixHelp": "Настройте, насколько громко оригинальная дорожка звучит под озвучкой.",
@@ -810,7 +810,7 @@
       "yourBalance": "Ваш баланс",
       "canClone": "Можно клонировать",
       "upToMinutes": "до {{minutes}} мин",
-      "loading": "Загрузка...",
+      "loading": "Загрузка…",
       "previewWithMinutes": "Прослушать ({{cost}})",
       "previewFailed": "Не удалось воспроизвести образец голоса. Попробуйте снова."
     },
@@ -930,7 +930,7 @@
       }
     },
     "byoAnthropic": {
-      "title": "API-ключ Anthropic (Необязательно)",
+      "title": "API-ключ Anthropic (необязательно)",
       "description": "Добавьте свой API-ключ Anthropic, чтобы использовать модели Claude напрямую на этапе проверки перевода. Без этого ключа этап проверки будет выполнять GPT-5.5.",
       "apiKeyLabel": "API-ключ Anthropic",
       "hide": "Скрыть",
@@ -961,7 +961,8 @@
       "howToGet": "Как получить этот ключ",
       "missing": "Сначала вставьте API-ключ.",
       "savedEnding": "Ключ сохранён, заканчивается на {{last4}}",
-      "savedHidden": "Ключ сохранён (скрыт)"
+      "savedHidden": "Ключ сохранён (скрыт)",
+      "providerLabel": "API-ключ {{provider}}"
     },
     "byoStack": {
       "title": "Ваш стек ИИ"
@@ -1075,7 +1076,7 @@
   },
   "credits": {
     "title": "Ваши минуты",
-    "loading": "Загрузка...",
+    "loading": "Загрузка…",
     "usingApiKey": "Используется API‑ключ",
     "usingOpenAi": "Используется OpenAI",
     "usingAnthropic": "Используется Claude",
@@ -1187,9 +1188,9 @@
     "resetCreditsToZeroTitle": "Админ: сбросить кредиты до 0",
     "toggleByoPreviewTitle": "Админ: переключить режим предпросмотра BYO (показать UI как без покупки BYO)",
     "addCredits": "Добавить 350k кредитов",
-    "adding": "Добавление...",
+    "adding": "Добавление…",
     "resetToZero": "Сбросить до 0",
-    "resetting": "Сброс...",
+    "resetting": "Сброс…",
     "byoPreview": "Предпросмотр BYO",
     "byoPreviewOn": "Предпросмотр BYO ВКЛ",
     "confirmResetCreditsToZero": "Вы уверены, что хотите сбросить кредиты до 0? Это действие нельзя отменить."
@@ -1255,13 +1256,13 @@
       "fileTooLargeForVoiceCloning": "Видеофайл слишком большой для клонирования голоса ({{size}}МБ). Максимум {{max}}МБ. Используйте более короткое видео или отключите клонирование голоса."
     },
     "status": {
-      "starting": "Запуск...",
+      "starting": "Запуск…",
       "completed": "Завершено",
       "cancelled": "Отменено",
       "error": "Ошибка"
     },
     "buttons": {
-      "redirectingToPayment": "Перенаправление на оплату..."
+      "redirectingToPayment": "Перенаправление на оплату…"
     },
     "workflow": {
       "stepOne": "Шаг 1",
@@ -1283,14 +1284,14 @@
       "saveOutputsTitle": "Сохранить файлы",
       "saveOutputsDescription": "Сохраните исходные или дублированные медиа, которые хотите оставить, вне рабочего пространства приложения."
     },
-    "calculatingCost": "Расчет стоимости...",
+    "calculatingCost": "Расчет стоимости…",
     "welcomeCredits": {
       "message": "У вас есть бесплатные минуты, чтобы попробовать расшифровку и перевод (примерно 20 минут видео)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Найти в субтитрах...",
-    "replacePlaceholder": "Заменить на...",
+    "findPlaceholder": "Найти в субтитрах…",
+    "replacePlaceholder": "Заменить на…",
     "replaceAll": "Заменить все",
     "nextMatch": "Следующее совпадение (Enter)",
     "previousMatch": "Предыдущее совпадение (Shift+Enter)",
@@ -1312,12 +1313,12 @@
       "howToGet": "Как получить API-ключи",
       "enable": "Использовать мои API-ключи",
       "done": "Готово",
-      "ready": "Покрытие уже полное. Теперь можно включить «Использовать мои API-ключи».",
+      "ready": "Всё готово. Теперь можно пользоваться своими API-ключами.",
       "missingTranslation": "Для перевода всё ещё требуется {{providers}}.",
       "messageElevenLabsAudio": "Чтобы работать со своими API-ключами, нужен ключ OpenAI или Anthropic для перевода. Расшифровка и озвучка работают только через ElevenLabs, поэтому добавьте и ключ ElevenLabs.",
       "audioNeedsElevenLabs": "Без ключа ElevenLabs расшифровка и озвучка недоступны, пока включены ваши API-ключи."
     },
-    "saveSrtFileAs": "Сохранить SRT файл как",
+    "saveSrtFileAs": "Сохранить SRT-файл как",
     "saveDownloadedVideoAs": "Сохранить скачанное видео как",
     "saveDubbedVideoAs": "Сохранить озвученное видео как",
     "unsavedSrtOnTranscribe": {
@@ -1471,25 +1472,25 @@
   "progress": {
     "preparingVideoExport": "Подготовка экспорта видео…",
     "downloadingVideoExportTools": "Загрузка инструментов экспорта видео… {{percent}}%",
-    "beginningReview": "Начало проверки...",
-    "starting": "Запуск...",
+    "beginningReview": "Начало проверки…",
+    "starting": "Запуск…",
     "completed": "Готово",
     "processCancelled": "Процесс отменён",
     "mergingTitle": "Объединение видео и субтитров",
-    "extractingAudio": "Извлечение аудио...",
+    "extractingAudio": "Извлечение аудио…",
     "transcribingOf": "Расшифровка {{done}}/{{total}}",
     "error": "Ошибка",
     "transcribedChunks": "Расшифровано фрагментов: {{done}}/{{total}}",
     "transcribingElevenLabs": "Расшифровка через ElevenLabs (осталось ~{{minutes}} мин)",
     "transcribingElevenLabsHours": "Расшифровка через ElevenLabs (осталось ~{{hours}} ч {{minutes}} мин)",
     "transcribingElevenLabsFinishing": "Расшифровка через ElevenLabs…",
-    "transcriptionRetry": "Соединение не удалось, повтор ({{attempt}}/{{maxAttempts}})...",
+    "transcriptionRetry": "Соединение не удалось, повтор ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Загружаем аудио…",
     "gapRepair": "Восстановление пропусков #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Восстановление отсутствующих субтитров (Итерация {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Очистка субтитров ({{done}}/{{total}})",
     "translationCleanup": "Очистка переведённых субтитров ({{done}}/{{total}})",
-    "reviewingSlow": "Проверка (это может занять время...) {{done}}/{{total}}",
+    "reviewingSlow": "Проверка (это может занять время…) {{done}}/{{total}}",
     "reviewingRange": "Проверка {{start}}–{{end}} (из {{total}})",
     "legacy": {
       "aligningVoices": "Выравнивание голосов {{done}}/{{total}}…",
@@ -1602,7 +1603,7 @@
     "optionalMessagePlaceholder": "Что вы пытались сделать?",
     "sendReport": "Отправить отчёт",
     "reportPrompt": "Что-то пошло не так. Сообщите разработчику для быстрого исправления.",
-    "preparingReport": "Подготовка диагностического пакета...",
+    "preparingReport": "Подготовка диагностического пакета…",
     "reportContextWarning": "Часть диагностического контекста не удалось загрузить. Отчёт всё равно будет содержать сведения из этого приложения.",
     "reportPromptTask": {
       "transcription": "Расшифровка остановилась из-за непредвиденной ошибки. Отправьте этот отчёт, чтобы мы могли всё исправить.",
@@ -1922,6 +1923,7 @@
     "deviceIdReplaced": "Файл, который связывает этот компьютер с вашими минутами, был повреждён, поэтому Translator создал новую привязку. Купленные минуты могут здесь не отображаться. Напишите в поддержку и приложите чек об оплате — мы вернём их.",
     "contactSupport": "Написать в поддержку",
     "openSettings": "Открыть Настройки",
-    "supportSubject": "Пропали минуты после того, как Translator сбросил привязку компьютера"
+    "supportSubject": "Пропали минуты после того, как Translator сбросил привязку компьютера",
+    "settingsResetKeptLanguage": "Файл настроек Translator был повреждён, поэтому настройки сброшены: язык субтитров, API-ключи и другие параметры. Язык интерфейса остался прежним. Копия повреждённого файла сохранена. Проверьте Настройки."
   }
 }

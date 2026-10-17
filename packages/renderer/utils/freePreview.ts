@@ -197,3 +197,19 @@ export function needsTailTranscription({
   if (!transcribedToEnd) return true;
   return transcriptStopsEarlyAt({ durationSecs, lastEndSecs }) !== null;
 }
+
+/**
+ * Which "nothing covered yet" line the offer shows. A device still waiting
+ * for its welcome grant gets the same "on the way" state as the minutes pill
+ * and Settings, never a monthly top-up date that doesn't apply to it yet.
+ */
+export function offerNoneBodyKind({
+  balanceState,
+  hasMonthlyFree,
+}: {
+  balanceState: string;
+  hasMonthlyFree: boolean;
+}): 'welcomePending' | 'nextFree' | 'plain' {
+  if (balanceState === 'welcomePending') return 'welcomePending';
+  return hasMonthlyFree ? 'nextFree' : 'plain';
+}

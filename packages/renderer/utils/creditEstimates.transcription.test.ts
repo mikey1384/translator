@@ -43,3 +43,28 @@ test('a dub asks first when it would use a quarter or more of the balance', () =
   assert.equal(shouldConfirmDubCost(5_000, null), false);
   assert.equal(shouldConfirmDubCost(0, 1_000), false);
 });
+
+test('the dub confirm asks only for a large credit-paid dub', () => {
+  const { dubCostConfirmPrompt } = creditEstimatesModule;
+  const big = {
+    estimatedCredits: 20_000,
+    isByo: false,
+    blockedInApiKeyMode: false,
+  };
+  assert.deepEqual(dubCostConfirmPrompt(big, 80_000), {
+    estimatedCredits: 20_000,
+    balance: 80_000,
+  });
+  assert.equal(
+    dubCostConfirmPrompt({ ...big, estimatedCredits: 1_000 }, 80_000),
+    null
+  );
+  // Own keys pay for it, or the run is refused elsewhere: no minutes question.
+  assert.equal(dubCostConfirmPrompt({ ...big, isByo: true }, 80_000), null);
+  assert.equal(
+    dubCostConfirmPrompt({ ...big, blockedInApiKeyMode: true }, 80_000),
+    null
+  );
+  assert.equal(dubCostConfirmPrompt(big, null), null);
+  assert.equal(dubCostConfirmPrompt(null, 80_000), null);
+});

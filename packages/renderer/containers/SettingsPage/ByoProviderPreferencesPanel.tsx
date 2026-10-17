@@ -585,8 +585,8 @@ export default function ByoProviderPreferencesPanel() {
     >
       <h3 className={settingsCardTitleStyles}>
         {hasProviderChoice
-          ? t('settings.byoPreferences.title', 'Provider Preferences')
-          : t('settings.byoStack.title', 'Your AI Stack')}
+          ? t('settings.byoPreferences.title', 'Provider preferences')
+          : t('settings.byoStack.title', 'Your AI stack')}
       </h3>
       <p className={settingsMetaTextStyles}>
         {t(

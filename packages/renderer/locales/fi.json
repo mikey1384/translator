@@ -3,8 +3,8 @@
     "cancel": "Peruuta",
     "save": "Tallenna",
     "or": "TAI",
-    "saving": "Tallennetaan...",
-    "validating": "Vahvistetaan...",
+    "saving": "Tallennetaan…",
+    "validating": "Vahvistetaan…",
     "delete": "Poista",
     "confirm": "Vahvista",
     "apply": "Käytä",
@@ -16,7 +16,7 @@
     "done": "Valmis",
     "gotIt": "Selvä",
     "close": "Sulje",
-    "loading": "Ladataan...",
+    "loading": "Ladataan…",
     "error": {
       "unexpected": "Tapahtui odottamaton virhe.",
       "unexpectedRemove": "Tapahtui odottamaton virhe avainta poistettaessa.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "Tarkista päivitykset",
     "clear": "Tyhjennä",
     "currentVersionLabel": "Nykyinen versio",
-    "downloadingUpdate": "Päivitystä ladataan...",
+    "downloadingUpdate": "Päivitystä ladataan…",
     "downloadingUpdateProgress": "Päivitystä ladataan: {{percent}} %",
     "downloadingUpdateShort": "LADATAAN",
     "downloadUpdateNow": "Lataa päivitys",
@@ -97,7 +97,7 @@
     "send": "Lähetä",
     "dismiss": "Sulje",
     "moreActions": "Lisää toimintoja",
-    "installingUpdate": "Asennetaan päivitystä...",
+    "installingUpdate": "Asennetaan päivitystä…",
     "installingUpdateShort": "Asennetaan",
     "ok": "OK",
     "minimumVersionValue": "Vanhin tuettu versio: v{{version}}",
@@ -217,7 +217,7 @@
   },
   "input": {
     "connect": "Yhdistä",
-    "connecting": "Yhdistetään...",
+    "connecting": "Yhdistetään…",
     "connectTip": "Vinkki: Kirjaudu sisään tai suorita vahvistus yhteysikkunassa ja sulje sitten ikkuna jatkaaksesi.",
     "fromDevice": "Laitteeltasi",
     "fromWeb": "Verkosta",
@@ -233,7 +233,7 @@
     "qualityHigh": "Korkea",
     "qualityMedium": "Keskitaso",
     "qualityLow": "Matala",
-    "downloading": "Ladataan...",
+    "downloading": "Ladataan…",
     "selectFile": "Valitse tiedosto",
     "selectVideoFile": "Valitse videotiedosto",
     "selectVideoAudioFile": "Valitse video- tai äänitiedosto",
@@ -270,7 +270,7 @@
       "composerHint": "Mikä tahansa kieli",
       "composerMeta": "Hae painamalla Enter",
       "placeholder": "esim. rauhallisia japanilaisia katukävelyitä yöllä",
-      "thinking": "Mietitään...",
+      "thinking": "Mietitään…",
       "resultsFor": "Tulokset haulle",
       "downloadThis": "Lataa tämä",
       "failedToStart": "Ehdotusten käynnistys epäonnistui",
@@ -345,11 +345,11 @@
       "activityComplete": "Hakutoiminta valmis.",
       "nextActionHint": "Valitse video ja lataa se tai avaa se YouTubessa.",
       "stagePending": "Odottaa",
-      "stageRunning": "Käynnissä...",
+      "stageRunning": "Käynnissä…",
       "stageCleared": "Valmis",
       "searchQueryLabel": "Hakukysely",
       "searchMore": "Hae lisää",
-      "searchMoreLoading": "Haetaan lisää...",
+      "searchMoreLoading": "Haetaan lisää…",
       "resetChat": "Nollaa chat",
       "useLastSearch": "Käytä viime asetuksia",
       "showFollowUps": "Ehdotetut jatkoideat",
@@ -408,9 +408,9 @@
       "savedDownloads": "Tallennetut lataukset",
       "savedDownloadsCount": "{{count}} tallennettua latausta",
       "savedPreferencesCount": "{{count}} tallennettua mieltymystä",
-      "searchingLong": "Etsitään yhä videoita...",
+      "searchingLong": "Etsitään yhä videoita…",
       "searchingVeryLong": "Tämä kestää tavallista kauemmin, mutta on yhä käynnissä.",
-      "stillWorking": "Työstetään edelleen...",
+      "stillWorking": "Työstetään edelleen…",
       "toggleCopy": "Hae lähdevideo YouTubesta poistumatta työnkulusta.",
       "stage": {
         "answerer": "Käsittele kysely",
@@ -475,7 +475,7 @@
     "translate": "Käännä",
     "continueTranscribing": "Jatka litterointia",
     "generate": "Luo tekstitykset",
-    "generating": "Luodaan...",
+    "generating": "Luodaan…",
     "generateNow": "Luo tekstitykset nyt",
     "translation": "Käännös",
     "improveTranscription": "Paranna litterointia",
@@ -509,7 +509,7 @@
       "openPermission": "Translatorilla ei ole lupaa lukea tiedostoa. Tarkista sen käyttöoikeudet tai kopioi se toiseen kansioon ja yritä uudelleen.",
       "openMissing": "Tekstitystiedostoa ei enää löydy. Se on ehkä siirretty tai poistettu.",
       "openFailed": "Translator ei voinut avata tekstitystiedostoa. Varmista, että se on .srt-tiedosto, ja yritä uudelleen.",
-      "saveFailed": "Translator ei voinut tallentaa tekstitystä. Yritä uudelleen tai valitse toinen kansio kohdasta ”Tallenna tekstitykset nimellä...”."
+      "saveFailed": "Translator ei voinut tallentaa tekstitystä. Yritä uudelleen tai valitse toinen kansio kohdasta ”Tallenna tekstitykset nimellä…”."
     }
   },
   "summary": {
@@ -573,7 +573,7 @@
     "exitCombineMode": "Poistu yhdistämisestä",
     "reorderHint": "Vedä järjestääksesi uudelleen:",
     "cutCombined": "Leikkaa yhdistetty",
-    "cuttingCombined": "Leikataan...",
+    "cuttingCombined": "Leikataan…",
     "combinedHighlightReady": "Yhdistetty kohokohta valmis",
     "downloadCombined": "Lataa yhdistetty leike",
     "saveCombinedDialogTitle": "Tallenna yhdistetty kohokohtaleike",
@@ -685,15 +685,15 @@
     },
     "header": {
       "save": "Tallenna tekstitykset",
-      "saveAs": "Tallenna tekstitykset nimellä...",
+      "saveAs": "Tallenna tekstitykset nimellä…",
       "saveTooltip": "Tallenna muutokset alkuperäiseen tiedostoon",
-      "saveAsTooltip": "Tallenna ensin nimellä ottaaksesi käyttöön suoran tallennuksen"
+      "saveAsTooltip": "Käytä ensin toimintoa ”Tallenna tekstitykset nimellä…”, niin voit tallentaa suoraan"
     },
     "mergeControls": {
       "fontSizeLabel": "Fonttikoko:",
       "styleLabel": "Tyyli:",
       "mergeButton": "Yhdistä tekstitykset",
-      "mergingButton": "Yhdistetään..."
+      "mergingButton": "Yhdistetään…"
     },
     "undo": {
       "removed": "Rivi poistettu.",
@@ -761,7 +761,7 @@
         "modelOn": "ElevenLabs TTS -premiumäänet"
       },
       "videoSuggestionModel": {
-        "label": "Videoehdotusmalli",
+        "label": "Videosuositusten laatu",
         "help": "Auto = sama malli kuin normaali käännösluonnos",
         "default": "Oletus (sama kuin käännöksen oletus)",
         "quality": "Laatu (sama kuin käännöksen laatu)"
@@ -787,7 +787,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "Esikuuntele tämä ääni",
-      "previewing": "Toistetaan...",
+      "previewing": "Toistetaan…",
       "previewFree": "Esikuuntele",
       "mixLabel": "Dubbauksen äänenvoimakkuus vs. alkuperäisen videon äänenvoimakkuus",
       "mixHelp": "Säädä kuinka paljon alkuperäistä ääniraitaa kuuluu dubatun äänen alla.",
@@ -801,7 +801,7 @@
       "yourBalance": "Saldosi",
       "canClone": "Voit kloonata",
       "upToMinutes": "enintään {{minutes}} min",
-      "loading": "Ladataan...",
+      "loading": "Ladataan…",
       "previewWithMinutes": "Esikuuntele ({{cost}})",
       "previewFailed": "Ääninäytettä ei voitu toistaa. Yritä uudelleen."
     },
@@ -952,7 +952,8 @@
       "howToGet": "Kuinka saat tämän avaimen",
       "missing": "Liitä ensin API-avain.",
       "savedEnding": "Tallennettu avain (…{{last4}})",
-      "savedHidden": "Tallennettu avain (piilotettu)"
+      "savedHidden": "Tallennettu avain (piilotettu)",
+      "providerLabel": "{{provider}} API -avain"
     },
     "byoStack": {
       "title": "AI-stackisi"
@@ -1065,14 +1066,14 @@
   },
   "credits": {
     "title": "Minuuttisi",
-    "loading": "Ladataan...",
+    "loading": "Ladataan…",
     "usingApiKey": "Käytetään API-avainta",
     "usingOpenAi": "Käytössä OpenAI",
     "usingAnthropic": "Käytössä Claude",
     "usingElevenLabs": "Käytössä ElevenLabs",
     "hours": "tuntia",
     "translationHoursShort": "käännöstuntia",
-    "redirectingToPayment": "Avataan turvallinen kassa...",
+    "redirectingToPayment": "Avataan turvallinen kassa…",
     "transcriptionMinutesShort": "{{minutes}} min litterointia",
     "transcriptionTimeShort": "{{time}} litterointia",
     "pill": {
@@ -1178,9 +1179,9 @@
     "resetCreditsToZeroTitle": "Ylläpitäjä: nollaa krediitit arvoon 0",
     "toggleByoPreviewTitle": "Ylläpitäjä: vaihda BYO-esikatselutilaa (näytä UI kuin BYO:tä ei olisi ostettu)",
     "addCredits": "Lisää 350k krediittiä",
-    "adding": "Lisätään...",
+    "adding": "Lisätään…",
     "resetToZero": "Nollaa arvoon 0",
-    "resetting": "Nollataan...",
+    "resetting": "Nollataan…",
     "byoPreview": "BYO-esikatselu",
     "byoPreviewOn": "BYO-esikatselu PÄÄLLÄ",
     "confirmResetCreditsToZero": "Haluatko varmasti nollata krediitit arvoon 0? Tätä ei voi kumota."
@@ -1246,13 +1247,13 @@
       "fileTooLargeForVoiceCloning": "Videotiedosto on liian suuri äänikloonaukseen ({{size}}MB). Suurin sallittu koko on {{max}}MB. Käytä lyhyempää videota tai poista äänikloonaus käytöstä."
     },
     "status": {
-      "starting": "Aloitetaan...",
+      "starting": "Aloitetaan…",
       "completed": "Valmis",
       "cancelled": "Peruutettu",
       "error": "Virhe"
     },
     "buttons": {
-      "redirectingToPayment": "Ohjataan maksuun..."
+      "redirectingToPayment": "Ohjataan maksuun…"
     },
     "workflow": {
       "stepOne": "Vaihe 1",
@@ -1274,14 +1275,14 @@
       "saveOutputsTitle": "Tallenna tiedostot",
       "saveOutputsDescription": "Säilytä haluamasi lähde- tai dubattu media sovelluksen työtilan ulkopuolella."
     },
-    "calculatingCost": "Lasketaan kustannuksia...",
+    "calculatingCost": "Lasketaan kustannuksia…",
     "welcomeCredits": {
       "message": "Sinulla on ilmaisia minuutteja litteroinnin ja kääntämisen kokeiluun (noin 20 minuuttia videota)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Etsi tekstityksissä...",
-    "replacePlaceholder": "Korvaa tällä...",
+    "findPlaceholder": "Etsi tekstityksissä…",
+    "replacePlaceholder": "Korvaa tällä…",
     "replaceAll": "Korvaa kaikki",
     "nextMatch": "Seuraava osuma (Enter)",
     "previousMatch": "Edellinen osuma (Shift+Enter)",
@@ -1303,7 +1304,7 @@
       "howToGet": "Miten saan API-avaimet",
       "enable": "Käytä omia API-avaimiani",
       "done": "Valmis",
-      "ready": "Kattavuus on nyt kunnossa. Voit nyt ottaa käyttöön ”Käytä omia API-avaimiani”.",
+      "ready": "Kattavuus on kunnossa. Voit nyt käyttää omia API-avaimiasi.",
       "missingTranslation": "Käännös tarvitsee vielä {{providers}}.",
       "messageElevenLabsAudio": "Jotta voit käyttää omia API-avaimiasi, tarvitset OpenAI- tai Anthropic-avaimen käännöstä varten. Litterointi ja dubbaus käyttävät vain ElevenLabsia, joten lisää myös ElevenLabs-avain niitä varten.",
       "audioNeedsElevenLabs": "Ilman ElevenLabs-avainta litterointi ja dubbaus eivät ole käytettävissä, kun API-avaimesi ovat käytössä."
@@ -1462,25 +1463,25 @@
   "progress": {
     "preparingVideoExport": "Valmistellaan videon vientiä…",
     "downloadingVideoExportTools": "Ladataan videon vientityökaluja… {{percent}} %",
-    "beginningReview": "Aloitetaan tarkistus...",
-    "starting": "Aloitetaan...",
+    "beginningReview": "Aloitetaan tarkistus…",
+    "starting": "Aloitetaan…",
     "completed": "Valmis",
     "processCancelled": "Prosessi peruutettu",
     "mergingTitle": "Yhdistetään videota ja tekstityksiä",
-    "extractingAudio": "Puretaan ääntä...",
+    "extractingAudio": "Puretaan ääntä…",
     "transcribingOf": "Litteroidaan {{done}}/{{total}}",
     "error": "Virhe",
     "transcribedChunks": "Litteroitu {{done}}/{{total}} osaa",
     "transcribingElevenLabs": "Litteroidaan ElevenLabsilla (~{{minutes}} min jäljellä)",
     "transcribingElevenLabsHours": "Litteroidaan ElevenLabsilla (~{{hours}}h {{minutes}}m jäljellä)",
-    "transcribingElevenLabsFinishing": "Litteroidaan ElevenLabsilla...",
-    "transcriptionRetry": "Yhteys epäonnistui, yritetään uudelleen ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Litteroidaan ElevenLabsilla…",
+    "transcriptionRetry": "Yhteys epäonnistui, yritetään uudelleen ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Lähetetään ääntä…",
     "gapRepair": "Aukkojen korjaus #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Korjataan puuttuvia tekstityksiä (Kierros {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Siivotaan tekstityksiä ({{done}}/{{total}})",
     "translationCleanup": "Siivotaan käännettyjä tekstityksiä ({{done}}/{{total}})",
-    "reviewingSlow": "Tarkistetaan (tämä voi kestää hetken...) {{done}}/{{total}}",
+    "reviewingSlow": "Tarkistetaan (tämä voi kestää hetken…) {{done}}/{{total}}",
     "reviewingRange": "Tarkistetaan {{start}}–{{end}} (yhteensä {{total}})",
     "legacy": {
       "aligningVoices": "Kohdistetaan ääniä {{done}}/{{total}}…",
@@ -1589,7 +1590,7 @@
     "optionalMessagePlaceholder": "Mitä yritit tehdä?",
     "sendReport": "Lähetä raportti",
     "reportPrompt": "Jokin meni pieleen. Ilmoita tästä kehittäjälle nopeaa korjausta varten.",
-    "preparingReport": "Valmistellaan diagnostiikkapakettia...",
+    "preparingReport": "Valmistellaan diagnostiikkapakettia…",
     "reportContextWarning": "Osaa diagnostiikkakontekstista ei voitu ladata. Raportti sisältää silti tämän sovelluksen tiedot.",
     "reportPromptTask": {
       "transcription": "Litterointi keskeytyi odottamattoman ongelman vuoksi. Lähetä tämä raportti, niin voimme korjata vian.",
@@ -1886,6 +1887,7 @@
     "deviceIdReplaced": "Tiedosto, joka liittää tämän tietokoneen minuutteihisi, oli vioittunut, joten Translator loi uuden liitoksen. Ostamasi minuutit eivät ehkä näy täällä. Ota yhteyttä tukeen ja liitä mukaan ostokuitti, niin siirrämme ne takaisin.",
     "contactSupport": "Ota yhteyttä tukeen",
     "openSettings": "Avaa Asetukset",
-    "supportSubject": "Minuuttini katosivat, kun Translator nollasi tämän tietokoneen"
+    "supportSubject": "Minuuttini katosivat, kun Translator nollasi tämän tietokoneen",
+    "settingsResetKeptLanguage": "Translatorin asetustiedosto oli vioittunut, joten asetuksesi palautettiin oletuksiin: tekstityksen kieli, API-avaimet ja muut valinnat. Käyttöliittymän kieli säilyi ennallaan. Vioittuneesta tiedostosta jäi talteen kopio. Tarkista Asetukset."
   }
 }

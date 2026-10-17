@@ -106,7 +106,7 @@ export default function ApiKeyGuideModal({ open, onClose, provider }: Props) {
   return (
     <Modal
       open={open}
-      title={t('settings.apiKeyGuide.title', 'How to Get API Keys')}
+      title={t('settings.apiKeyGuide.title', 'How to get API keys')}
       onClose={onClose}
       contentClassName={modalGuideContentStyles}
       bodyClassName={modalGuideBodyStyles}

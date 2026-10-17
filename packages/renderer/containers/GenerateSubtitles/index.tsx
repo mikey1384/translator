@@ -59,7 +59,7 @@ import {
   executeSrtTranslation,
 } from './utils/subtitleGeneration';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
-import { runMountedDub } from '../../utils/runDub';
+import { useConfirmedDub } from '../../hooks/useConfirmedDub';
 import {
   buildSemanticSummarySourceIdentity,
   buildSummaryRequestOwnerKey,
@@ -175,6 +175,8 @@ export default function GenerateSubtitles() {
     s.workspaceToolsOpen ? s.workspaceToolsFocus : null
   );
   const workspaceToolsOpen = useUIStore(s => s.workspaceToolsOpen);
+  // Every Dub button here asks before a dub that uses much of the balance.
+  const { startDub, confirmDialog: dubCostConfirm } = useConfirmedDub();
   const setActiveWorkspaceTab = useUIStore(
     s => s.setGenerateSubtitlesWorkspaceTab
   );
@@ -928,6 +930,7 @@ export default function GenerateSubtitles() {
         noShadow={focusedView}
       >
         {/* Global confirmations are rendered via <GlobalModals /> */}
+        {dubCostConfirm}
 
         <nav
           className={workspaceTabsRowStyles}
@@ -1795,7 +1798,7 @@ export default function GenerateSubtitles() {
 
   async function handleDub() {
     if (isStepTwoMutationLocked) return;
-    await runMountedDub({
+    await startDub({
       videoDurationSeconds: durationSecs,
       fallbackVideoPath: videoFilePath,
     });

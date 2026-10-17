@@ -3,20 +3,20 @@
     "cancel": "Cancel",
     "save": "Save",
     "or": "OR",
-    "saving": "Saving...",
-    "validating": "Validating...",
+    "saving": "Saving…",
+    "validating": "Validating…",
     "delete": "Delete",
     "confirm": "Confirm",
     "apply": "Apply",
     "back": "←",
     "to": "Back to",
     "app": "App",
-    "backToApp": "Back to App",
+    "backToApp": "Back to app",
     "next": "Next",
     "done": "Done",
     "gotIt": "Got it",
     "close": "Close",
-    "loading": "Loading...",
+    "loading": "Loading…",
     "error": {
       "unexpected": "An unexpected error occurred.",
       "unexpectedRemove": "An unexpected error occurred while removing the key.",
@@ -46,29 +46,29 @@
     "video": "Video",
     "selected": "Selected",
     "retry": "Retry",
-    "uiLanguage": "UI Language",
-    "reloadPage": "Reload Page",
+    "uiLanguage": "UI language",
+    "reloadPage": "Reload page",
     "reloadPageAria": "Reload the page",
-    "backToTop": "Back to Top",
+    "backToTop": "Back to top",
     "backToTopAria": "Scroll back to top",
     "confirmReload": "Are you sure you want to reload the page? Any unsaved changes might be lost.",
-    "installUpdate": "Restart to Update",
+    "installUpdate": "Restart to update",
     "confirmInstallUpdate": "Install update and restart?",
     "downloadUpdate": "Click to download update",
     "dismissError": "Dismiss error",
     "closeAlert": "Close alert",
     "closeBanner": "Close banner",
     "closeOrCancelProcess": "Close or cancel process",
-    "checkForUpdateNow": "Check for Update",
+    "checkForUpdateNow": "Check for update",
     "clear": "Clear",
     "currentVersionLabel": "Current version",
-    "downloadingUpdate": "Downloading update...",
+    "downloadingUpdate": "Downloading update…",
     "downloadingUpdateProgress": "Downloading update {{percent}} percent",
     "downloadingUpdateShort": "DOWNLOADING",
-    "downloadUpdateNow": "Download Update",
+    "downloadUpdateNow": "Download update",
     "hide": "Hide",
     "installUpdateAria": "Install update and restart application",
-    "installUpdateNow": "Install Update",
+    "installUpdateNow": "Install update",
     "installUpdateShort": "INSTALL UPDATE",
     "locked": "Locked",
     "lockedWhileProcessing": "Locked while processing",
@@ -76,28 +76,28 @@
     "reportIssue": "Report issue or feedback",
     "reportIssueAria": "Open the issue report and logs dialog",
     "minimumVersionLabel": "Minimum supported version",
-    "openDownloadPage": "Open Download Page",
+    "openDownloadPage": "Open download page",
     "show": "Show",
     "splitScrollButtonAria": "Scroll to top (upper half) or bottom (lower half)",
     "updateRequiredBody": "This version of Translator is no longer supported by the backend. Update the app to continue.",
-    "updateRequiredTitle": "Update Required",
+    "updateRequiredTitle": "Update required",
     "wait": "Wait…",
-    "whatsNewTitle": "What's New",
-    "whatsNewVersionTitle": "What's New in v{{version}}",
+    "whatsNewTitle": "What's new",
+    "whatsNewVersionTitle": "What's new in v{{version}}",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files",
-      "textFiles": "Text Files",
-      "allFiles": "All Files",
-      "subtitleFiles": "Subtitle Files"
+      "srtFiles": "SRT files",
+      "mediaFiles": "Media files",
+      "videoFiles": "Video files",
+      "textFiles": "Text files",
+      "allFiles": "All files",
+      "subtitleFiles": "Subtitle files"
     },
     "chooseAnotherLocation": "Choose another location",
     "continue": "Continue",
     "send": "Send",
     "dismiss": "Dismiss",
     "moreActions": "More actions",
-    "installingUpdate": "Installing update...",
+    "installingUpdate": "Installing update…",
     "installingUpdateShort": "Installing",
     "ok": "OK",
     "minimumVersionValue": "Minimum supported version: v{{version}}",
@@ -217,11 +217,11 @@
   },
   "input": {
     "connect": "Connect",
-    "connecting": "Connecting...",
+    "connecting": "Connecting…",
     "connectTip": "Tip: In the Connect window, sign in or complete the check, then close the window to continue.",
     "fromDevice": "From your device",
     "fromWeb": "From the web",
-    "downloadVideo": "Download Video",
+    "downloadVideo": "Download video",
     "enterVideoUrl": "Enter video URL",
     "quality": "Quality",
     "qualityPresets": "Presets",
@@ -233,9 +233,9 @@
     "qualityHigh": "High",
     "qualityMedium": "Medium",
     "qualityLow": "Low",
-    "downloading": "Downloading...",
-    "selectFile": "Select File",
-    "selectVideoFile": "Select Video File",
+    "downloading": "Downloading…",
+    "selectFile": "Select file",
+    "selectVideoFile": "Select video file",
     "selectVideoAudioFile": "Select video or audio file",
     "saveOriginalVideo": "Save original video",
     "localFileDescription": "Upload a video or audio file from your computer",
@@ -247,7 +247,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe audio",
     "srtLoaded": "Transcription complete",
-    "srtFileLoaded": "SRT Loaded",
+    "srtFileLoaded": "SRT loaded",
     "featuresUnlockAfterTranscription": "Transcribe, translate, or generate highlights from this video.",
     "preSubtitleActionsHint": "Transcribe, translate, or generate highlights from this video.",
     "saveDubbedVideo": "Save dubbed video",
@@ -274,7 +274,7 @@
       "composerHint": "Any language",
       "composerMeta": "Press Enter to search",
       "placeholder": "e.g. street interviews about AI policy",
-      "thinking": "Thinking...",
+      "thinking": "Thinking…",
       "resultsFor": "Results for",
       "downloadThis": "Download this",
       "failedToStart": "Failed to start suggestions",
@@ -350,11 +350,11 @@
       "activityComplete": "Search activity complete.",
       "nextActionHint": "Pick a video, then download it or open it on YouTube.",
       "stagePending": "Pending",
-      "stageRunning": "Running...",
+      "stageRunning": "Running…",
       "stageCleared": "Cleared",
       "searchQueryLabel": "Search query",
       "searchMore": "Search more",
-      "searchMoreLoading": "Searching more...",
+      "searchMoreLoading": "Searching more…",
       "resetChat": "Reset chat",
       "useLastSearch": "Use last setup",
       "showFollowUps": "Suggested follow-ups",
@@ -423,9 +423,9 @@
       "savedDownloads": "Saved downloads",
       "savedDownloadsCount": "{{count}} saved downloads",
       "savedPreferencesCount": "{{count}} saved preferences",
-      "searchingLong": "Still searching videos...",
+      "searchingLong": "Still searching videos…",
       "searchingVeryLong": "Taking longer than usual, but still running.",
-      "stillWorking": "Still working...",
+      "stillWorking": "Still working…",
       "toggleCopy": "Ask in your language. AI finds the right YouTube videos.",
       "stage": {
         "answerer": "Process query",
@@ -475,8 +475,8 @@
     "translate": "Translate",
     "continueTranscribing": "Continue transcribing",
     "generate": "Generate subtitles",
-    "generating": "Generating...",
-    "generateNow": "Generate Subtitles Now",
+    "generating": "Generating…",
+    "generateNow": "Generate subtitles now",
     "translation": "Translation",
     "improveTranscription": "Improve transcription",
     "improveTranslation": "Improve translation",
@@ -509,7 +509,7 @@
       "openPermission": "Translator isn’t allowed to read that file. Check its permissions, or copy it to another folder and try again.",
       "openMissing": "That subtitle file isn’t there anymore. It may have been moved or deleted.",
       "openFailed": "Translator couldn’t open that subtitle file. Make sure it is an .srt file and try again.",
-      "saveFailed": "Translator couldn’t save the subtitles. Try again, or choose “Save Subtitles As…” to pick another folder."
+      "saveFailed": "Translator couldn’t save the subtitles. Try again, or choose “Save subtitles as…” to pick another folder."
     }
   },
   "summary": {
@@ -570,12 +570,12 @@
       "renderingClipSubtitles": "Adding subtitles to the clip…"
     },
     "combineMode": "Combine",
-    "exitCombineMode": "Exit Combine",
+    "exitCombineMode": "Exit combine",
     "reorderHint": "Drag to reorder:",
-    "cutCombined": "Cut Combined",
-    "cuttingCombined": "Cutting...",
-    "combinedHighlightReady": "Combined Highlight Ready",
-    "downloadCombined": "Download Combined Clip",
+    "cutCombined": "Cut combined",
+    "cuttingCombined": "Cutting…",
+    "combinedHighlightReady": "Combined highlight ready",
+    "downloadCombined": "Download combined clip",
     "saveCombinedDialogTitle": "Save combined highlight clip",
     "combinedCutFailed": "Failed to cut combined highlights: {{message}}",
     "highlightsInsufficientCredits": "The summary is done, but finding highlights stopped because your minutes ran out.",
@@ -684,15 +684,15 @@
     },
     "header": {
       "save": "Save subtitles",
-      "saveAs": "Save subtitles as...",
+      "saveAs": "Save subtitles as…",
       "saveTooltip": "Save changes to original file",
-      "saveAsTooltip": "Save As first to enable direct save"
+      "saveAsTooltip": "Use “Save subtitles as…” first to enable direct save"
     },
     "mergeControls": {
-      "fontSizeLabel": "Font Size:",
+      "fontSizeLabel": "Font size:",
       "styleLabel": "Style:",
-      "mergeButton": "Merge Subtitles",
-      "mergingButton": "Merging..."
+      "mergeButton": "Merge subtitles",
+      "mergingButton": "Merging…"
     },
     "undo": {
       "removed": "Line deleted.",
@@ -725,7 +725,7 @@
     },
     "title": "Settings",
     "aiProvider": {
-      "title": "AI Provider"
+      "title": "AI provider"
     },
     "apiKeyMode": {
       "toggleLabel": "Use my API keys",
@@ -741,18 +741,18 @@
       "activeKeys_one": "{{count}} key ready"
     },
     "performanceQuality": {
-      "title": "Performance & Quality",
+      "title": "Performance & quality",
       "qualityTranslation": {
-        "label": "Quality Translation",
+        "label": "Quality translation",
         "modelOn": "Claude Haiku 5.5 draft + Claude Opus 5.5 review",
         "modelOnAnthropic": "Claude Haiku 5.5 draft + Claude Opus 5.5 review",
         "modelOff": "Claude Haiku 5.5 draft only",
-        "reviewProvider": "Review Provider",
+        "reviewProvider": "Review provider",
         "openAiHighEnd": "OpenAI high-end review",
         "anthropicHighEnd": "Anthropic high-end review"
       },
       "qualitySummary": {
-        "label": "Quality Summary",
+        "label": "Quality summary",
         "modelOn": "Claude Opus 5.5 deep analysis + highlight clips",
         "modelOff": "Claude Sonnet 5.5 standard analysis"
       },
@@ -760,7 +760,7 @@
         "modelOn": "ElevenLabs TTS premium voices"
       },
       "videoSuggestionModel": {
-        "label": "Video Recommendation Quality",
+        "label": "Video recommendation quality",
         "help": "Uses the same backend model tier as translation.",
         "default": "Default (same as translation default)",
         "quality": "Quality (same as translation quality)"
@@ -773,7 +773,7 @@
       }
     },
     "dubbing": {
-      "voiceLabel": "Dubbed Voice",
+      "voiceLabel": "Dubbed voice",
       "voiceHelp": "Choose the default voice used when generating dubbed audio.",
       "voiceOptions": {
         "rachel": "Rachel",
@@ -786,13 +786,13 @@
         "brian": "Brian"
       },
       "previewTooltip": "Preview this voice",
-      "previewing": "Playing...",
+      "previewing": "Playing…",
       "previewFree": "Preview",
-      "mixLabel": "Dubbing Volume vs Original Video Volume",
+      "mixLabel": "Dubbing volume vs original video volume",
       "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
       "mixAmbient": "More ambient",
       "mixVoice": "More voice",
-      "voiceCloning": "Clone Original Voice",
+      "voiceCloning": "Clone original voice",
       "voiceCloningDesc": "Preserve the original speaker's voice in dubbed audio",
       "voiceCloningEnabled": "Voice cloning is enabled with ElevenLabs. The original speaker's voice will be preserved in the dubbed audio.",
       "voiceCloningInfo": "Voice cloning uses ElevenLabs Dubbing API to analyze and recreate the original speaker's voice.",
@@ -800,28 +800,28 @@
       "yourBalance": "Your balance",
       "canClone": "You can clone",
       "upToMinutes": "up to {{minutes}} min",
-      "loading": "Loading...",
+      "loading": "Loading…",
       "previewWithMinutes": "Preview ({{cost}})",
       "previewFailed": "Couldn't play the voice preview. Try again."
     },
     "byoOpenAi": {
-      "title": "Bring Your Own API Keys",
+      "title": "Bring your own API keys",
       "description": "A one-time unlock to use your own API keys. Once unlocked, transcription, translation, dubbing and summaries run on your own AI accounts instead of using your Stage5 minutes.",
       "unlocking": "Opening checkout…",
       "unlockCta": "Unlock for $10",
       "unlockHint": "Once unlocked, add your API keys here at any time to toggle direct billing on your accounts.",
-      "apiKeyLabel": "OpenAI API Key",
+      "apiKeyLabel": "OpenAI API key",
       "hide": "Hide",
       "show": "Show",
       "saving": "Saving…",
-      "clear": "Clear Key",
+      "clear": "Clear key",
       "loadingKey": "Loading saved key…",
       "keySaved": "OpenAI API key saved.",
       "keyCleared": "OpenAI API key cleared.",
       "keyValid": "OpenAI API key validated successfully.",
       "keyInvalid": "OpenAI API key validation failed.",
       "testing": "Testing…",
-      "test": "Test Key",
+      "test": "Test key",
       "lastSynced": "Last synced",
       "toggleLabel": "Use my OpenAI key",
       "toggleAria": "Toggle using your OpenAI key",
@@ -839,7 +839,7 @@
       "unlockFailed": "Checkout couldn’t start. Check your connection and try again."
     },
     "byoPreferences": {
-      "title": "Provider Preferences",
+      "title": "Provider preferences",
       "stage5Credits": "Stage5 minutes",
       "pricingHint": "Estimated cost per 1 hour video",
       "pricingHintHeuristic": "Estimated cost using current app heuristics",
@@ -854,7 +854,7 @@
       "claudeOpus": "Claude Opus 5.5",
       "anthropicHighEnd": "Anthropic high-end model",
       "claudeSummaryStack": "Claude Sonnet 5.5 / Claude Opus 5.5",
-      "reviewPass": "Review Pass",
+      "reviewPass": "Review pass",
       "off": "Off",
       "on": "On",
       "defaultMode": "Default",
@@ -875,7 +875,7 @@
       "videoSuggestionLegacyFollowReview": "Your earlier setting is kept: this follows your review translation model until you choose a model here."
     },
     "apiKeyGuide": {
-      "title": "How to Get API Keys",
+      "title": "How to get API keys",
       "required": "Required",
       "optional": "Optional",
       "providers": {
@@ -920,20 +920,20 @@
       }
     },
     "byoAnthropic": {
-      "title": "Anthropic API Key (Optional)",
+      "title": "Anthropic API key (optional)",
       "description": "Add your Anthropic API key to use Anthropic's high-end reviewer directly for the translation review phase. Without this key, the OpenAI high-end reviewer handles the review pass instead.",
-      "apiKeyLabel": "Anthropic API Key",
+      "apiKeyLabel": "Anthropic API key",
       "hide": "Hide",
       "show": "Show",
       "saving": "Saving…",
-      "clear": "Clear Key",
+      "clear": "Clear key",
       "loadingKey": "Loading saved Anthropic key…",
       "keySaved": "Anthropic API key saved.",
       "keyCleared": "Anthropic API key cleared.",
       "keyValid": "Anthropic API key validated successfully.",
       "keyInvalid": "Anthropic API key validation failed.",
       "testing": "Testing…",
-      "test": "Test Key",
+      "test": "Test key",
       "toggleLabel": "Use my Anthropic key",
       "toggleAria": "Toggle using your Anthropic key",
       "toggleOn": "Using your Anthropic key for Claude models.",
@@ -951,10 +951,11 @@
       "howToGet": "How to get this key",
       "missing": "Paste an API key first.",
       "savedEnding": "Saved key ending in {{last4}}",
-      "savedHidden": "Saved key (hidden)"
+      "savedHidden": "Saved key (hidden)",
+      "providerLabel": "{{provider}} API key"
     },
     "byoStack": {
-      "title": "Your AI Stack"
+      "title": "Your AI stack"
     },
     "agentControl": {
       "title": "Agent Control",
@@ -1011,7 +1012,7 @@
       },
       "selectDirectory": "Select directory to allow agent file writes",
       "removeDirectory": "Remove",
-      "addDirectory": "+ Add Directory",
+      "addDirectory": "+ Add directory",
       "errors": {
         "update": "Failed to update agent control setting.",
         "addDirectory": "Failed to add directory.",
@@ -1064,8 +1065,8 @@
   },
   "credits": {
     "title": "Your minutes",
-    "loading": "Loading...",
-    "usingApiKey": "Using API Key",
+    "loading": "Loading…",
+    "usingApiKey": "Using API key",
     "usingOpenAi": "Using OpenAI",
     "usingAnthropic": "Using Claude",
     "usingElevenLabs": "Using ElevenLabs",
@@ -1140,8 +1141,8 @@
     "byStage5": "by stage_5"
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Enter fullscreen",
+    "exitFullscreen": "Exit fullscreen",
     "playbackSpeed": "Playback speed",
     "icloudWaitingTitle": "Downloading from iCloud",
     "icloudWaitingBody": "This file is not stored locally yet. In Finder, click 'Download' and wait for the cloud icon to disappear.",
@@ -1177,9 +1178,9 @@
     "resetCreditsToZeroTitle": "Admin: Reset credits to 0",
     "toggleByoPreviewTitle": "Admin: Toggle BYO preview mode (see UI as if BYO not purchased)",
     "addCredits": "Add 350k Credits",
-    "adding": "Adding...",
+    "adding": "Adding…",
     "resetToZero": "Reset to 0",
-    "resetting": "Resetting...",
+    "resetting": "Resetting…",
     "byoPreview": "BYO Preview",
     "byoPreviewOn": "BYO Preview ON",
     "confirmResetCreditsToZero": "Are you sure you want to reset credits to 0? This cannot be undone."
@@ -1191,7 +1192,7 @@
     "middleEastAfrica": "Middle East / Africa"
   },
   "languages": {
-    "original": "Same as Audio",
+    "original": "Same as audio",
     "english": "English",
     "korean": "Korean",
     "japanese": "Japanese",
@@ -1245,13 +1246,13 @@
       "fileTooLargeForVoiceCloning": "Video file is too large for voice cloning ({{size}}MB). Maximum allowed is {{max}}MB. Please use a shorter video or disable voice cloning."
     },
     "status": {
-      "starting": "Starting...",
+      "starting": "Starting…",
       "completed": "Completed",
       "cancelled": "Cancelled",
       "error": "Error"
     },
     "buttons": {
-      "redirectingToPayment": "Redirecting to payment..."
+      "redirectingToPayment": "Redirecting to payment…"
     },
     "workflow": {
       "stepOne": "Step 1",
@@ -1263,7 +1264,7 @@
       "localSourceReady": "Local file ready",
       "webSourceReady": "Web source ready",
       "sourceReadyDescription": "Your selected media is ready for the next step.",
-      "transcribeTitle": "Process Video",
+      "transcribeTitle": "Process video",
       "processVideoTitle": "Process video",
       "transcribeDescription": "Turn the source media into an editable subtitle track before moving on to translation or dubbing.",
       "translateDubTitle": "Translate or dub",
@@ -1273,14 +1274,14 @@
       "saveOutputsTitle": "Save files",
       "saveOutputsDescription": "Keep any source or dubbed media you want to preserve outside the app workspace."
     },
-    "calculatingCost": "Calculating cost...",
+    "calculatingCost": "Calculating cost…",
     "welcomeCredits": {
       "message": "You have free minutes to try transcription and translation (about 20 minutes of video)."
     }
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
+    "findPlaceholder": "Find in subtitles…",
+    "replacePlaceholder": "Replace with…",
     "replaceAll": "Replace all",
     "nextMatch": "Next match (Enter)",
     "previousMatch": "Previous match (Shift+Enter)",
@@ -1298,18 +1299,18 @@
   },
   "dialogs": {
     "apiKeysRequired": {
-      "title": "API Keys Required",
+      "title": "API keys required",
       "howToGet": "How to get API keys",
-      "enable": "Use My API Keys",
+      "enable": "Use my API keys",
       "done": "Done",
-      "ready": "Coverage complete. You can enable My API keys now.",
+      "ready": "Coverage complete. You can use your own API keys now.",
       "missingTranslation": "Translation still needs {{providers}}.",
       "messageElevenLabsAudio": "To use your API keys, you need an OpenAI or Anthropic key for translation. Transcription and dubbing use ElevenLabs only, so add an ElevenLabs key for those too.",
       "audioNeedsElevenLabs": "Without an ElevenLabs key, transcription and dubbing are unavailable while your API keys are on."
     },
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "saveDubbedVideoAs": "Save Dubbed Video As",
+    "saveSrtFileAs": "Save SRT file as",
+    "saveDownloadedVideoAs": "Save downloaded video as",
+    "saveDubbedVideoAs": "Save dubbed video as",
     "unsavedSrtOnTranscribe": {
       "title": "Save current subtitles before transcribing?",
       "message": "You already have subtitles mounted. Transcribing will replace them. What would you like to do?",
@@ -1323,7 +1324,7 @@
       "saveAndOpen": "Save and open captions",
       "discardAndOpen": "Discard and open captions"
     },
-    "downloadInProgress": "Download in Progress",
+    "downloadInProgress": "Download in progress",
     "saveDownloadedFile": "Save the downloaded file: {{path}}",
     "transcriptionInProgress": "Transcription in progress",
     "translationInProgress": "Translation in progress",
@@ -1461,25 +1462,25 @@
   "progress": {
     "preparingVideoExport": "Preparing video export…",
     "downloadingVideoExportTools": "Downloading video export tools… {{percent}}%",
-    "beginningReview": "Beginning review...",
-    "starting": "Starting...",
+    "beginningReview": "Beginning review…",
+    "starting": "Starting…",
     "completed": "Completed",
     "processCancelled": "Process cancelled",
-    "mergingTitle": "Merging Video & Subtitles",
-    "extractingAudio": "Extracting audio...",
+    "mergingTitle": "Merging video & subtitles",
+    "extractingAudio": "Extracting audio…",
     "transcribingOf": "Transcribing {{done}}/{{total}}",
     "error": "Error",
     "transcribedChunks": "Transcribed {{done}}/{{total}} chunks",
     "transcribingElevenLabs": "Transcribing with ElevenLabs (~{{minutes}} min remaining)",
     "transcribingElevenLabsHours": "Transcribing with ElevenLabs (~{{hours}}h {{minutes}}m remaining)",
-    "transcribingElevenLabsFinishing": "Transcribing with ElevenLabs...",
-    "transcriptionRetry": "Connection failed, retrying ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "Transcribing with ElevenLabs…",
+    "transcriptionRetry": "Connection failed, retrying ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "Uploading audio…",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
     "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
-    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}",
+    "reviewingSlow": "Reviewing (this may take a while…) {{done}}/{{total}}",
     "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})",
     "preparingTranscription": "Getting ready to listen…",
     "resumingTranscription": "Picking up where it left off…",
@@ -1574,21 +1575,21 @@
     "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "logs": {
-    "title": "Recent Logs",
+    "title": "Recent logs",
     "copy": "Copy",
-    "email": "Email to Dev",
+    "email": "Email to dev",
     "close": "Close",
     "empty": "No logs yet.",
     "copied": "Logs copied to clipboard",
     "copyFailed": "Copy failed",
-    "emailSubject": "Stage5 Debug Logs",
+    "emailSubject": "Stage5 debug logs",
     "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
-    "deviceInfoHeader": "Device Info",
+    "deviceInfoHeader": "Device info",
     "optionalMessage": "Optional message",
     "optionalMessagePlaceholder": "What were you trying to do?",
     "sendReport": "Send report",
     "reportPrompt": "Something went wrong. Report this to the creator for a quick fix.",
-    "preparingReport": "Preparing diagnostic bundle...",
+    "preparingReport": "Preparing diagnostic bundle…",
     "reportContextWarning": "Some diagnostic context could not be loaded. The report will still include details from this app.",
     "reportPromptTask": {
       "transcription": "Transcription stopped because of an unexpected problem. Send this report so we can fix it.",
@@ -1821,7 +1822,7 @@
     }
   },
   "tabs": {
-    "newTab": "New Tab",
+    "newTab": "New tab",
     "newTabWithShortcut": "New tab ({{shortcut}})",
     "closeTab": "Close tab",
     "tabList": "Open tabs"
@@ -1884,6 +1885,7 @@
     "deviceIdReplaced": "The file that links this computer to your minutes was damaged, so Translator created a new link. Minutes you bought may not show here. Contact support with your purchase receipt and we'll move them back.",
     "contactSupport": "Contact support",
     "openSettings": "Open Settings",
-    "supportSubject": "My minutes are missing after Translator reset this computer"
+    "supportSubject": "My minutes are missing after Translator reset this computer",
+    "settingsResetKeptLanguage": "Translator's settings file was damaged, so your preferences were reset: subtitle language, API keys, and other options. Your interface language was kept. A copy of the damaged file was kept. Please check Settings."
   }
 }

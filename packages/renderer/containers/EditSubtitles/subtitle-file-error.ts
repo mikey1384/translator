@@ -53,6 +53,6 @@ export function subtitleFileErrorMessage(
       })
     : t('subtitles.fileError.saveFailed', {
         defaultValue:
-          'Translator couldn’t save the subtitles. Try again, or choose “Save Subtitles As…” to pick another folder.',
+          'Translator couldn’t save the subtitles. Try again, or choose “Save subtitles as…” to pick another folder.',
       });
 }

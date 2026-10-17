@@ -1324,7 +1324,7 @@ export default function useTranscriptHighlightsFlow({
           defaultPath: defaultName,
           filters: [
             {
-              name: t('common.fileFilters.videoFiles', 'Video Files'),
+              name: t('common.fileFilters.videoFiles', 'Video files'),
               extensions: ['mp4'],
             },
           ],
@@ -1852,7 +1852,7 @@ export default function useTranscriptHighlightsFlow({
           defaultPath: defaultName,
           filters: [
             {
-              name: t('common.fileFilters.videoFiles', 'Video Files'),
+              name: t('common.fileFilters.videoFiles', 'Video files'),
               extensions: ['mp4'],
             },
           ],

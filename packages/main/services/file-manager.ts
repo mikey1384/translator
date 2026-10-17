@@ -92,11 +92,11 @@ export class FileManager {
           defaultPath,
           filters: filters || [
             {
-              name: t('common.fileFilters.textFiles', undefined, 'Text Files'),
+              name: t('common.fileFilters.textFiles', undefined, 'Text files'),
               extensions: ['txt', 'srt'],
             },
             {
-              name: t('common.fileFilters.allFiles', undefined, 'All Files'),
+              name: t('common.fileFilters.allFiles', undefined, 'All files'),
               extensions: ['*'],
             },
           ],
@@ -163,19 +163,19 @@ export class FileManager {
         title: options.title,
         filters: options.filters || [
           {
-            name: t('common.fileFilters.mediaFiles', undefined, 'Media Files'),
+            name: t('common.fileFilters.mediaFiles', undefined, 'Media files'),
             extensions: [...MEDIA_FILE_EXTENSIONS],
           },
           {
             name: t(
               'common.fileFilters.subtitleFiles',
               undefined,
-              'Subtitle Files'
+              'Subtitle files'
             ),
             extensions: ['srt', 'ass', 'vtt'],
           },
           {
-            name: t('common.fileFilters.allFiles', undefined, 'All Files'),
+            name: t('common.fileFilters.allFiles', undefined, 'All files'),
             extensions: ['*'],
           },
         ],

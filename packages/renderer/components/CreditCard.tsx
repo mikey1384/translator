@@ -15,6 +15,7 @@ import {
 } from '../utils/formatCostInMinutes';
 import { resolveCreditBalanceState } from '../utils/creditBalanceState';
 import { formatUsd } from '../utils/formatUsd';
+import { isPackCheckoutLocked } from '../utils/packCheckoutLock';
 
 type Pack = (typeof CREDIT_PACKS)[keyof typeof CREDIT_PACKS];
 
@@ -115,12 +116,23 @@ const featuredPack = css`
   border-color: ${colors.primary};
 `;
 
-// The pack whose Stripe page is open: clearly marked while the others stay
-// clickable, so changing your mind is one click.
+// The pack whose Stripe page is open, clearly marked. No pack starts another
+// checkout while it waits (a second payment); "Choose another pack" frees them.
 const waitingPack = css`
   border-color: ${colors.primary};
   background: ${colors.surfaceRaised};
   box-shadow: 0 0 0 2px ${colors.primary};
+
+  &:disabled {
+    cursor: default;
+    opacity: 1;
+  }
+`;
+
+const lockedPack = css`
+  &:disabled {
+    cursor: default;
+  }
 `;
 
 const waitingRow = css`
@@ -261,11 +273,14 @@ function PackCard({
   pack,
   locale,
   waiting,
+  locked,
   unresolved,
 }: {
   pack: Pack;
   locale: string;
   waiting: boolean;
+  // A checkout is open or being checked: no pack may start another one.
+  locked: boolean;
   // The app stopped hearing back about this payment; it may already be paid.
   unresolved: boolean;
 }) {
@@ -290,11 +305,15 @@ function PackCard({
       className={cx(
         packCard,
         kind === 'popular' && featuredPack,
+        locked && lockedPack,
         waiting && waitingPack
       )}
-      onClick={() => void start()}
-      disabled={loading}
+      onClick={() => {
+        if (!locked) void start();
+      }}
+      disabled={loading || locked}
       aria-current={waiting ? 'true' : undefined}
+      aria-describedby={waiting ? CHECKOUT_STATUS_ID : undefined}
       aria-label={t(
         'credits.packAria',
         '{{price}} for about {{time}} of video',
@@ -344,6 +363,8 @@ function PackCard({
   );
 }
 
+const CHECKOUT_STATUS_ID = 'settings-credits-checkout-status';
+
 function scrollToAgentControl() {
   document
     .querySelector<HTMLElement>(
@@ -368,7 +389,10 @@ export default function CreditCard() {
   const checkPaymentNow = useCreditStore(s => s.checkPaymentNow);
   const history = useCreditStore(s => s.history);
   const offline = useCreditStore(s => s.offline);
-  const waitingForPayment = checkoutPending || checkoutUnresolved;
+  const waitingForPayment = isPackCheckoutLocked({
+    checkoutPending,
+    checkoutUnresolved,
+  });
 
   useEffect(() => {
     // One "shown" per card view, not one per pack (L9).
@@ -476,6 +500,7 @@ export default function CreditCard() {
                 pack={pack}
                 locale={locale}
                 waiting={waitingForPayment && checkoutPackId === pack.id}
+                locked={waitingForPayment}
                 unresolved={checkoutUnresolved}
               />
             ))}
@@ -500,7 +525,7 @@ export default function CreditCard() {
                   )}
             </p>
           ) : waitingForPayment ? (
-            <p className={waitingRow} role="status">
+            <p className={waitingRow} role="status" id={CHECKOUT_STATUS_ID}>
               <span className={spinner} aria-hidden="true" />
               <span>
                 {checkoutUnresolved

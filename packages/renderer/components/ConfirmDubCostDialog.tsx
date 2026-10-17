@@ -32,7 +32,7 @@ export default function ConfirmDubCostDialog({
             {t('common.cancel')}
           </Button>
           <Button variant="primary" onClick={onConfirm}>
-            {t('subtitles.dub', 'Dub Voice')}
+            {t('subtitles.dub', 'Dub voice')}
           </Button>
         </>
       }

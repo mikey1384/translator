@@ -120,7 +120,7 @@ export default function ByoUnlockCard() {
       data-translator-destination="settings-byo"
     >
       <h2 className={settingsCardTitleStyles}>
-        {t('settings.byoOpenAi.title', 'Bring Your Own API Keys')}
+        {t('settings.byoOpenAi.title', 'Bring your own API keys')}
       </h2>
 
       <p className={settingsBodyTextStyles}>

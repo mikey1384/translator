@@ -173,15 +173,15 @@ export class SaveFileService {
           defaultPath: dialogDefaultPath,
           filters: filters || [
             {
-              name: t('common.fileFilters.srtFiles', undefined, 'SRT Files'),
+              name: t('common.fileFilters.srtFiles', undefined, 'SRT files'),
               extensions: ['srt'],
             },
             {
-              name: t('common.fileFilters.textFiles', undefined, 'Text Files'),
+              name: t('common.fileFilters.textFiles', undefined, 'Text files'),
               extensions: ['txt'],
             },
             {
-              name: t('common.fileFilters.allFiles', undefined, 'All Files'),
+              name: t('common.fileFilters.allFiles', undefined, 'All files'),
               extensions: ['*'],
             },
           ],

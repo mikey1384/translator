@@ -82,7 +82,7 @@ export default function SettingsPage() {
           destination="settings-quality"
           title={t(
             'settings.performanceQuality.title',
-            'Performance & Quality'
+            'Performance & quality'
           )}
           className={settingsCenterColumnStyles}
         >

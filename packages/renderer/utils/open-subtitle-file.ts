@@ -25,7 +25,7 @@ export async function openSubtitleFileIntoStore({
     filePath,
     dialogTitle:
       dialogTitle ?? i18n.t('subtitles.chooseSrtFile', 'Choose SRT File'),
-    filterName: i18n.t('common.fileFilters.subtitleFiles', 'Subtitle Files'),
+    filterName: i18n.t('common.fileFilters.subtitleFiles', 'Subtitle files'),
   });
   if (res.error && !res.cancelled) return { status: 'error', error: res.error };
   if (!res.segments) return { status: 'cancelled' };

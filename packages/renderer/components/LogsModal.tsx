@@ -173,7 +173,7 @@ export default function LogsModal({
       return;
     }
     setBusyAction('send');
-    const subject = t('logs.emailSubject', 'Stage5 Debug Logs');
+    const subject = t('logs.emailSubject', 'Stage5 debug logs');
     const intro = `${resolvedPrompt || defaultIntro}\n\n${t(
       'logs.emailBodyPrefix',
       'Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n'

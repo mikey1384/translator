@@ -298,7 +298,7 @@ export default function SrtMountedPanel({
               disabled={isDubDisabled}
               isLoading={isDubbing}
             >
-              {t('subtitles.dub', 'Dub Voice')}
+              {t('subtitles.dub', 'Dub voice')}
             </Button>
             {dubbingEstimate && !isDubbing && !dubbingEstimate.isByo && (
               <span

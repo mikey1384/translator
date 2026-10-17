@@ -760,7 +760,7 @@ export default function VideoSuggestionPanel({
               <div className={toggleTitleStyles}>
                 {open
                   ? t('input.videoSuggestion.hide', 'Hide video suggestions')
-                  : t('input.videoSuggestion.show', 'Suggest me a video')}
+                  : t('input.videoSuggestion.show', 'Find videos with AI')}
               </div>
               <p className={toggleDescriptionStyles}>
                 {t(

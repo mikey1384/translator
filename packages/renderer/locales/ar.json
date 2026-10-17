@@ -3,8 +3,8 @@
     "cancel": "إلغاء",
     "save": "حفظ",
     "or": "أو",
-    "saving": "جارٍ الحفظ...",
-    "validating": "جارٍ التحقق...",
+    "saving": "جارٍ الحفظ…",
+    "validating": "جارٍ التحقق…",
     "delete": "حذف",
     "confirm": "تأكيد",
     "apply": "تطبيق",
@@ -16,7 +16,7 @@
     "done": "تم",
     "gotIt": "فهمت",
     "close": "إغلاق",
-    "loading": "جارٍ التحميل...",
+    "loading": "جارٍ التحميل…",
     "error": {
       "unexpected": "حدث خطأ غير متوقع.",
       "unexpectedRemove": "حدث خطأ غير متوقع أثناء إزالة المفتاح.",
@@ -62,7 +62,7 @@
     "checkForUpdateNow": "التحقق من التحديث",
     "clear": "مسح",
     "currentVersionLabel": "الإصدار الحالي",
-    "downloadingUpdate": "جارٍ تنزيل التحديث...",
+    "downloadingUpdate": "جارٍ تنزيل التحديث…",
     "downloadingUpdateProgress": "جارٍ تنزيل التحديث: {{percent}} بالمئة",
     "downloadingUpdateShort": "جارِ التنزيل",
     "downloadUpdateNow": "تنزيل التحديث",
@@ -97,7 +97,7 @@
     "send": "إرسال",
     "dismiss": "إغلاق",
     "moreActions": "إجراءات أخرى",
-    "installingUpdate": "جارٍ تثبيت التحديث...",
+    "installingUpdate": "جارٍ تثبيت التحديث…",
     "installingUpdateShort": "جارٍ التثبيت",
     "ok": "حسنًا",
     "minimumVersionValue": "أدنى إصدار مدعوم: v{{version}}",
@@ -219,7 +219,7 @@
   },
   "input": {
     "connect": "اتصال",
-    "connecting": "جارٍ الاتصال...",
+    "connecting": "جارٍ الاتصال…",
     "connectTip": "نصيحة: في نافذة الاتصال، قم بتسجيل الدخول أو أكمل التحقق، ثم أغلق النافذة للمتابعة.",
     "fromDevice": "من جهازك",
     "fromWeb": "من الويب",
@@ -235,7 +235,7 @@
     "qualityHigh": "عالية",
     "qualityMedium": "متوسطة",
     "qualityLow": "منخفضة",
-    "downloading": "جارٍ التنزيل...",
+    "downloading": "جارٍ التنزيل…",
     "selectFile": "اختر ملف",
     "selectVideoFile": "اختر ملف الفيديو",
     "selectVideoAudioFile": "اختر ملف فيديو أو صوت",
@@ -258,7 +258,7 @@
     "downloadFinishedWatchNow": "شاهد الآن",
     "downloadFinishedWatchLater": "شاهد لاحقًا",
     "videoSuggestion": {
-      "show": "اقترح لي فيديو",
+      "show": "ابحث عن فيديوهات بالذكاء الاصطناعي",
       "hide": "إخفاء اقتراحات الفيديو",
       "modelHint": "النموذج الحالي",
       "sourceHint": "مصدر البحث",
@@ -272,7 +272,7 @@
       "composerHint": "أي لغة",
       "composerMeta": "اضغط Enter للبحث",
       "placeholder": "مثلاً: جولات هادئة في شوارع يابانية ليلاً",
-      "thinking": "جارٍ التفكير...",
+      "thinking": "جارٍ التفكير…",
       "resultsFor": "نتائج لـ",
       "downloadThis": "تحميل هذا",
       "failedToStart": "فشل بدء الاقتراحات",
@@ -347,11 +347,11 @@
       "activityComplete": "اكتمل نشاط البحث.",
       "nextActionHint": "اختر فيديو ثم نزّله أو افتحه على YouTube.",
       "stagePending": "قيد الانتظار",
-      "stageRunning": "جارٍ التشغيل...",
+      "stageRunning": "جارٍ التشغيل…",
       "stageCleared": "تم الإنجاز",
       "searchQueryLabel": "عبارة البحث",
       "searchMore": "ابحث أكثر",
-      "searchMoreLoading": "جارٍ البحث أكثر...",
+      "searchMoreLoading": "جارٍ البحث أكثر…",
       "resetChat": "إعادة تعيين الدردشة",
       "useLastSearch": "استخدام آخر إعداد",
       "showFollowUps": "اقتراحات متابعة",
@@ -410,9 +410,9 @@
       "savedDownloads": "التنزيلات المحفوظة",
       "savedDownloadsCount": "{{count}} تنزيلات محفوظة",
       "savedPreferencesCount": "{{count}} تفضيل محفوظ",
-      "searchingLong": "ما زلنا نبحث عن الفيديوهات...",
+      "searchingLong": "ما زلنا نبحث عن الفيديوهات…",
       "searchingVeryLong": "يستغرق وقتًا أطول من المعتاد، لكنه ما زال يعمل.",
-      "stillWorking": "ما زال يعمل...",
+      "stillWorking": "ما زال يعمل…",
       "toggleCopy": "اسأل بلغتك، ويجد الذكاء الاصطناعي فيديوهات YouTube المناسبة.",
       "stage": {
         "answerer": "معالجة الاستعلام",
@@ -480,7 +480,7 @@
     "translate": "ترجم",
     "continueTranscribing": "متابعة النسخ",
     "generate": "إنشاء الترجمة",
-    "generating": "جارٍ الإنشاء...",
+    "generating": "جارٍ الإنشاء…",
     "generateNow": "إنشاء الترجمات الآن",
     "translation": "الترجمة",
     "improveTranscription": "تحسين النسخ",
@@ -517,7 +517,7 @@
       "openPermission": "لا يملك Translator إذنًا بقراءة هذا الملف. تحقق من أذوناته، أو انسخه إلى مجلد آخر وحاول مرة أخرى.",
       "openMissing": "ملف الترجمة هذا لم يعد موجودًا، فربما نُقل أو حُذف.",
       "openFailed": "تعذّر على Translator فتح ملف الترجمة هذا. تأكد أنه ملف ‎.srt وحاول مرة أخرى.",
-      "saveFailed": "تعذّر على Translator حفظ الترجمة. حاول مرة أخرى، أو اختر “حفظ الترجمة باسم...” لتحديد مجلد آخر."
+      "saveFailed": "تعذّر على Translator حفظ الترجمة. حاول مرة أخرى، أو اختر “حفظ الترجمة باسم…” لتحديد مجلد آخر."
     }
   },
   "summary": {
@@ -581,7 +581,7 @@
     "exitCombineMode": "الخروج من الدمج",
     "reorderHint": "اسحب لإعادة الترتيب:",
     "cutCombined": "قص المدمج",
-    "cuttingCombined": "جارٍ القص...",
+    "cuttingCombined": "جارٍ القص…",
     "combinedHighlightReady": "اللقطة المميزة المدمجة جاهزة",
     "downloadCombined": "تنزيل المقطع المدمج",
     "saveCombinedDialogTitle": "حفظ مقطع اللقطة المميزة المدمجة",
@@ -702,15 +702,15 @@
     },
     "header": {
       "save": "حفظ الترجمة",
-      "saveAs": "حفظ الترجمة باسم...",
+      "saveAs": "حفظ الترجمة باسم…",
       "saveTooltip": "حفظ التغييرات في الملف الأصلي",
-      "saveAsTooltip": "حفظ باسم أولاً لتمكين الحفظ المباشر"
+      "saveAsTooltip": "استخدم «حفظ الترجمة باسم…» أولاً لتفعيل الحفظ المباشر"
     },
     "mergeControls": {
       "fontSizeLabel": "حجم الخط:",
       "styleLabel": "النمط:",
       "mergeButton": "دمج الترجمات",
-      "mergingButton": "جارٍ الدمج..."
+      "mergingButton": "جارٍ الدمج…"
     },
     "undo": {
       "removed": "حُذف السطر.",
@@ -777,7 +777,7 @@
         "modelOn": "أصوات ElevenLabs TTS المميزة"
       },
       "videoSuggestionModel": {
-        "label": "نموذج اقتراح الفيديو",
+        "label": "جودة اقتراح الفيديو",
         "help": "يستخدم مستوى النموذج نفسه المستخدم في الترجمة.",
         "default": "افتراضي (مثل افتراضي الترجمة)",
         "quality": "جودة (مثل جودة الترجمة)"
@@ -803,7 +803,7 @@
         "brian": "Brian"
       },
       "previewTooltip": "معاينة هذا الصوت",
-      "previewing": "جارٍ التشغيل...",
+      "previewing": "جارٍ التشغيل…",
       "previewFree": "معاينة",
       "mixLabel": "مستوى صوت الدبلجة مقابل مستوى صوت الفيديو الأصلي",
       "mixHelp": "تحكّم في مقدار تشغيل المسار الصوتي الأصلي تحت الصوت المُدبلج.",
@@ -817,7 +817,7 @@
       "yourBalance": "رصيدك",
       "canClone": "يمكنك الاستنساخ",
       "upToMinutes": "حتى {{minutes}} دقيقة",
-      "loading": "جارٍ التحميل...",
+      "loading": "جارٍ التحميل…",
       "previewWithMinutes": "معاينة ({{cost}})",
       "previewFailed": "تعذّر تشغيل معاينة الصوت. حاول مرة أخرى."
     },
@@ -968,7 +968,8 @@
       "howToGet": "كيفية الحصول على هذا المفتاح",
       "missing": "الصق مفتاح API أولًا.",
       "savedEnding": "مفتاح محفوظ ينتهي بـ {{last4}}",
-      "savedHidden": "مفتاح محفوظ (مخفي)"
+      "savedHidden": "مفتاح محفوظ (مخفي)",
+      "providerLabel": "مفتاح {{provider}} API"
     },
     "byoStack": {
       "title": "حزمة الذكاء الاصطناعي الخاصة بك"
@@ -1082,7 +1083,7 @@
   },
   "credits": {
     "title": "دقائقك",
-    "loading": "جارٍ التحميل...",
+    "loading": "جارٍ التحميل…",
     "usingApiKey": "يتم استخدام مفتاح API",
     "usingOpenAi": "يتم استخدام OpenAI",
     "usingAnthropic": "يتم استخدام Claude",
@@ -1194,9 +1195,9 @@
     "resetCreditsToZeroTitle": "المسؤول: إعادة تعيين الأرصدة إلى 0",
     "toggleByoPreviewTitle": "المسؤول: تبديل وضع معاينة BYO (عرض الواجهة كما لو لم يتم شراء BYO)",
     "addCredits": "إضافة 350k رصيد",
-    "adding": "جارٍ الإضافة...",
+    "adding": "جارٍ الإضافة…",
     "resetToZero": "إعادة التعيين إلى 0",
-    "resetting": "جارٍ إعادة التعيين...",
+    "resetting": "جارٍ إعادة التعيين…",
     "byoPreview": "معاينة BYO",
     "byoPreviewOn": "معاينة BYO مفعلة",
     "confirmResetCreditsToZero": "هل أنت متأكد من إعادة تعيين الأرصدة إلى 0؟ لا يمكن التراجع عن هذا الإجراء."
@@ -1262,13 +1263,13 @@
       "fileTooLargeForVoiceCloning": "ملف الفيديو كبير جدًا لاستنساخ الصوت ({{size}}MB). الحد الأقصى المسموح به {{max}}MB. يرجى استخدام فيديو أقصر أو تعطيل استنساخ الصوت."
     },
     "status": {
-      "starting": "جارٍ البدء...",
+      "starting": "جارٍ البدء…",
       "completed": "مكتمل",
       "cancelled": "ملغى",
       "error": "خطأ"
     },
     "buttons": {
-      "redirectingToPayment": "إعادة التوجيه للدفع..."
+      "redirectingToPayment": "إعادة التوجيه للدفع…"
     },
     "workflow": {
       "stepOne": "الخطوة 1",
@@ -1290,14 +1291,14 @@
       "saveOutputsTitle": "حفظ الملفات",
       "saveOutputsDescription": "احفظ أي وسائط أصلية أو مدبلجة تريد الاحتفاظ بها خارج مساحة عمل التطبيق."
     },
-    "calculatingCost": "جارٍ حساب التكلفة...",
+    "calculatingCost": "جارٍ حساب التكلفة…",
     "welcomeCredits": {
       "message": "لديك دقائق مجانية لتجربة النسخ والترجمة (نحو 20 دقيقة من الفيديو)."
     }
   },
   "findBar": {
-    "findPlaceholder": "البحث في الترجمات...",
-    "replacePlaceholder": "استبدال بـ...",
+    "findPlaceholder": "البحث في الترجمات…",
+    "replacePlaceholder": "استبدال بـ…",
     "replaceAll": "استبدال الكل",
     "nextMatch": "التطابق التالي (Enter)",
     "previousMatch": "التطابق السابق (Shift+Enter)",
@@ -1319,7 +1320,7 @@
       "howToGet": "كيفية الحصول على مفاتيح API",
       "enable": "استخدام مفاتيح API الخاصة بي",
       "done": "تم",
-      "ready": "اكتملت التغطية. يمكنك الآن تفعيل «استخدم مفاتيح API الخاصة بي».",
+      "ready": "اكتملت المفاتيح المطلوبة. يمكنك الآن استخدام مفاتيح API الخاصة بك.",
       "missingTranslation": "ما زالت الترجمة تحتاج إلى {{providers}}.",
       "messageElevenLabsAudio": "لاستخدام مفاتيح API الخاصة بك، تحتاج إلى مفتاح OpenAI أو Anthropic للترجمة. يستخدم النسخ والدبلجة ElevenLabs فقط، لذا أضف أيضًا مفتاح ElevenLabs لهما.",
       "audioNeedsElevenLabs": "بدون مفتاح ElevenLabs، يكون النسخ والدبلجة غير متاحين أثناء تشغيل مفاتيح API الخاصة بك."
@@ -1478,25 +1479,25 @@
   "progress": {
     "preparingVideoExport": "جارٍ تجهيز تصدير الفيديو…",
     "downloadingVideoExportTools": "جارٍ تنزيل أدوات تصدير الفيديو… {{percent}}٪",
-    "beginningReview": "بدء المراجعة...",
-    "starting": "جارٍ البدء...",
+    "beginningReview": "بدء المراجعة…",
+    "starting": "جارٍ البدء…",
     "completed": "مكتمل",
     "processCancelled": "تم إلغاء العملية",
     "mergingTitle": "جارٍ دمج الفيديو والترجمات",
-    "extractingAudio": "جارٍ استخراج الصوت...",
+    "extractingAudio": "جارٍ استخراج الصوت…",
     "transcribingOf": "جارٍ النسخ {{done}}/{{total}}",
     "error": "خطأ",
     "transcribedChunks": "تم نسخ {{done}}/{{total}} من المقاطع",
     "transcribingElevenLabs": "جارٍ النسخ مع ElevenLabs (~{{minutes}} دقيقة متبقية)",
     "transcribingElevenLabsHours": "جارٍ النسخ مع ElevenLabs (~{{hours}}س {{minutes}}د متبقية)",
-    "transcribingElevenLabsFinishing": "جارٍ النسخ مع ElevenLabs...",
-    "transcriptionRetry": "فشل الاتصال، إعادة المحاولة ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabsFinishing": "جارٍ النسخ مع ElevenLabs…",
+    "transcriptionRetry": "فشل الاتصال، إعادة المحاولة ({{attempt}}/{{maxAttempts}})…",
     "transcribingR2Upload": "جارٍ رفع الصوت…",
     "gapRepair": "إصلاح الفجوات #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "إصلاح الترجمات المفقودة (التكرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "تنقيح الترجمة ({{done}}/{{total}})",
     "translationCleanup": "تنقيح الأسطر المترجمة ({{done}}/{{total}})",
-    "reviewingSlow": "جارٍ المراجعة (قد يستغرق هذا بعض الوقت...) {{done}}/{{total}}",
+    "reviewingSlow": "جارٍ المراجعة (قد يستغرق هذا بعض الوقت…) {{done}}/{{total}}",
     "reviewingRange": "جارٍ مراجعة {{start}}–{{end}} (من {{total}})",
     "legacy": {
       "aligningVoices": "جارٍ مواءمة الأصوات {{done}}/{{total}}…",
@@ -1611,7 +1612,7 @@
     "optionalMessagePlaceholder": "ماذا كنت تحاول أن تفعل؟",
     "sendReport": "إرسال تقرير",
     "reportPrompt": "حدث خطأ ما. أبلغ المطوّر لإصلاح سريع.",
-    "preparingReport": "جارٍ إعداد حزمة التشخيص...",
+    "preparingReport": "جارٍ إعداد حزمة التشخيص…",
     "reportContextWarning": "تعذر تحميل بعض سياق التشخيص. سيظل التقرير يتضمن تفاصيل من هذا التطبيق.",
     "reportPromptTask": {
       "transcription": "توقف النسخ بسبب مشكلة غير متوقعة. أرسل هذا التقرير لنتمكن من إصلاحها.",
@@ -1935,6 +1936,7 @@
     "deviceIdReplaced": "تلف الملف الذي يربط هذا الكمبيوتر بدقائقك، لذا أنشأ Translator ربطًا جديدًا. قد لا تظهر هنا الدقائق التي اشتريتها. راسل الدعم مع إيصال الشراء وسنعيدها إليك.",
     "contactSupport": "مراسلة الدعم",
     "openSettings": "فتح الإعدادات",
-    "supportSubject": "اختفت دقائقي بعد أن أعاد Translator ضبط هذا الكمبيوتر"
+    "supportSubject": "اختفت دقائقي بعد أن أعاد Translator ضبط هذا الكمبيوتر",
+    "settingsResetKeptLanguage": "تلف ملف إعدادات Translator، لذا أُعيد ضبط تفضيلاتك: لغة الترجمة ومفاتيح API وخيارات أخرى. أبقينا لغة الواجهة كما هي، واحتفظنا بنسخة من الملف التالف. راجع الإعدادات من فضلك."
   }
 }
