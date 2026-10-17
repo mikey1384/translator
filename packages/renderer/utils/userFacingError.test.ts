@@ -177,11 +177,11 @@ test('credit transfer errors come from the code, never the server sentence', () 
       } as any,
       t
     ),
-    'settings.creditTransfer.errors.nothing_to_transfer'
+    'settings.creditTransfer.errors.nothing_to_transfer_minutes'
   );
   assert.equal(
     creditTransferErrorMessage({ error: 'something_new' }, t),
-    'settings.creditTransfer.errors.transfer_failed'
+    'settings.creditTransfer.errors.transfer_failed_minutes'
   );
   assert.equal(
     creditTransferThrownMessage(new Error('fetch failed'), t),

@@ -1,3 +1,4 @@
+import { refreshStage5CreditsAfterPaidCall } from '../utils/creditRefreshOperations';
 import type {
   VideoSuggestionChatRequest,
   VideoSuggestionChatResult,
@@ -9,7 +10,11 @@ import type {
 export function suggestVideos(
   request: VideoSuggestionChatRequest
 ): Promise<VideoSuggestionChatResult> {
-  return window.electron.suggestVideos(request);
+  // A search spends credits whether it succeeds, fails late or is
+  // cancelled, so the balance is re-read once it settles either way.
+  return window.electron
+    .suggestVideos(request)
+    .finally(refreshStage5CreditsAfterPaidCall);
 }
 
 export function onVideoSuggestionProgress(

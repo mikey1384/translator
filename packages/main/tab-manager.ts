@@ -10,6 +10,7 @@ import {
 import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import { registerAppTabProviders } from './utils/window.js';
+import { shouldBlockFileNavigation } from './utils/file-navigation-guard.js';
 import { newTabShortcutLabel } from './app-menu.js';
 import { getUiLanguage, getUiT, isRtlLanguage } from './utils/ui-language.js';
 import {
@@ -37,6 +38,8 @@ interface Tab {
   status: TabStatus;
   mediaPlaying: boolean;
   lastSurfaceRefreshAt: number;
+  /** The page asked for full screen (the player): cover the tab strip. */
+  htmlFullScreen?: boolean;
 }
 
 interface TabManagerOptions {
@@ -91,6 +94,7 @@ interface ShellStrings {
   newTab: string;
   newTabButton: string;
   closeTab: string;
+  tabList: string;
 }
 
 let shellStrings: ShellStrings | null = null;
@@ -116,6 +120,7 @@ export async function refreshShellStrings(): Promise<void> {
         'New tab ({{shortcut}})'
       ),
       closeTab: t('tabs.closeTab', undefined, 'Close tab'),
+      tabList: t('tabs.tabList', undefined, 'Open tabs'),
     };
     pushStringsToShell();
   } catch (err) {
@@ -149,7 +154,7 @@ function layoutTabs(): void {
     height: Math.max(0, height - TAB_BAR_HEIGHT),
   };
   for (const t of tabs) {
-    t.view.setBounds(bounds);
+    t.view.setBounds(t.htmlFullScreen ? { x: 0, y: 0, width, height } : bounds);
   }
 }
 
@@ -350,9 +355,12 @@ export async function createTab({
   });
 
   // A file dropped outside the home drop zone must not replace the app with
-  // a file:// page; the renderer handles drops itself.
+  // a file:// page; the renderer handles drops itself. Reloading the app's
+  // own document (Reload in the ⋯ menu) must still go through.
   view.webContents.on('will-navigate', (event, url) => {
-    if (url.startsWith('file:')) event.preventDefault();
+    if (shouldBlockFileNavigation(url, view.webContents.getURL())) {
+      event.preventDefault();
+    }
   });
   view.webContents.on('render-process-gone', (_e, details) => {
     log.error(
@@ -370,6 +378,16 @@ export async function createTab({
   });
   view.webContents.on('media-paused', () => {
     tab.mediaPlaying = false;
+  });
+  // The player's full screen covers the whole window (the window itself goes
+  // full screen too), not just the area under the tab strip.
+  view.webContents.on('enter-html-full-screen', () => {
+    tab.htmlFullScreen = true;
+    layoutTabs();
+  });
+  view.webContents.on('leave-html-full-screen', () => {
+    tab.htmlFullScreen = false;
+    layoutTabs();
   });
 
   win.contentView.addChildView(view);
@@ -448,7 +466,35 @@ export function closeTab(id: number): void {
 }
 
 export function closeActiveTab(): void {
+  // Cmd/Ctrl+W while a tab in the strip has keyboard focus closes that tab,
+  // which may not be the active one.
+  const shell = shellWebContents();
+  if (
+    shellFocusedTabId != null &&
+    shell?.isFocused() &&
+    tabs.some(t => t.id === shellFocusedTabId)
+  ) {
+    void requestCloseTab(shellFocusedTabId);
+    return;
+  }
   if (activeTabId != null) void requestCloseTab(activeTabId);
+}
+
+// --- Keyboard access to the tab strip ---------------------------------------
+// The strip is its own page, so Tab from the app never reaches it. F6 (menu)
+// moves focus there and back; the strip reports which tab holds focus.
+
+let shellFocusedTabId: number | null = null;
+
+export function toggleTabStripFocus(): void {
+  const shell = shellWebContents();
+  if (!shell) return;
+  if (shell.isFocused()) {
+    getActiveTabWebContents()?.focus();
+    return;
+  }
+  shell.focus();
+  shell.send('tabs:focus-strip');
 }
 
 // --- Close guard -----------------------------------------------------------
@@ -762,6 +808,17 @@ ipcMain.on('tabs:close', (event, id: number) => {
 ipcMain.on('tabs:reorder', (event, id: number, index: number) => {
   if (!shellOnly(event)) return;
   reorderTab(Number(id), Number(index));
+});
+
+ipcMain.on('tabs:focused', (event, id: number | null) => {
+  if (!shellOnly(event)) return;
+  shellFocusedTabId = id == null ? null : Number(id);
+});
+
+ipcMain.on('tabs:focus-app', event => {
+  if (!shellOnly(event)) return;
+  shellFocusedTabId = null;
+  getActiveTabWebContents()?.focus();
 });
 
 ipcMain.on('tabs:request-state', event => {

@@ -22,6 +22,7 @@ import {
   normalizeVideoUrlInput,
 } from '../../shared/helpers/video-url.js';
 import {
+  readLocalVideoSuggestionHistory,
   rollbackLocalVideoSuggestionHistoryUpsert,
   upsertLocalVideoSuggestionHistoryItem,
 } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
@@ -34,6 +35,8 @@ import {
   saveCurrentSubtitles,
 } from '../utils/saveSubtitles';
 import { describeDownloadFailure } from '../utils/taskFailure';
+import { historyCopiesForUrl } from '../utils/localDownloadCopy';
+import { acquireProvisionalUrlDownloadLibraryPath } from '../listeners/mounted-download-leases.js';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -71,6 +74,7 @@ export type DownloadRequest = {
   url: string;
   mountOnComplete: boolean;
   preserveSubtitles: boolean;
+  replaceCurrent?: boolean;
 };
 
 /** Why a link was refused before downloading, in the UI language. */
@@ -117,6 +121,13 @@ interface UrlState {
   errorKind: UrlErrorKind | null;
   inputMode: 'url' | 'file';
   needCookies: boolean;
+  /**
+   * An agent batch is downloading videos one after another. Other downloads
+   * wait for it: one started between two batch items would be replaced by
+   * the batch's next download.
+   */
+  batchDownloadActive: boolean;
+  setBatchDownloadActive: (active: boolean) => void;
   /** The last download started, so "Connect & retry" can repeat it exactly. */
   lastDownloadRequest: DownloadRequest | null;
   /** Set by the cookie banner; the workspace re-runs it with its auto-run chain. */
@@ -143,6 +154,13 @@ type DownloadMediaOptions = {
   url?: string;
   /** Skip the long-video confirmation (the user already confirmed). */
   allowLongVideo?: boolean;
+  /**
+   * The user asked to replace the open video with this link (Change Video):
+   * the finished download opens without asking "Watch now?".
+   */
+  replaceCurrent?: boolean;
+  /** One video of an agent batch; the batch lock does not apply to it. */
+  fromBatch?: boolean;
 };
 
 let cookieRetryRequestSeq = 0;
@@ -164,6 +182,8 @@ export const useUrlStore = create<UrlState>()(
     errorKind: null as UrlErrorKind | null,
     inputMode: 'url',
     needCookies: false,
+    batchDownloadActive: false,
+    setBatchDownloadActive: active => set({ batchDownloadActive: active }),
     lastDownloadRequest: null,
     cookieRetryRequest: null,
 
@@ -242,6 +262,7 @@ async function downloadMediaInternal(
   // else goes to main as typed and comes back as an invalid-URL error.
   const requestedUrl = normalizeVideoUrlInput(rawUrl) ?? rawUrl;
   const preserveSubtitles = Boolean(options?.preserveSubtitles);
+  const fromBatch = options?.fromBatch === true;
   const mountOnComplete = options?.mountOnComplete !== false;
   const opId = `download-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   let shouldDiscardPendingResult = false;
@@ -320,6 +341,16 @@ async function downloadMediaInternal(
     const { originalPath, path, url, file } = useVideoStore.getState();
     return Boolean(String(originalPath || path || url || '').trim() || file);
   };
+  if (get().batchDownloadActive && !fromBatch) {
+    set((state: UrlState) => {
+      state.error = i18n.t(
+        'input.batchDownloadRunning',
+        'Translator is downloading several videos. Wait for them to finish, or cancel the download.'
+      );
+      state.errorKind = 'validation';
+    });
+    return { success: false, error: 'batch_running' };
+  }
   if (!requestedUrl) {
     set((state: UrlState) => {
       state.error = i18n.t('errors.invalidUrl');
@@ -339,11 +370,32 @@ async function downloadMediaInternal(
       rejection: { code: 'collection_url' },
     };
   }
+  // Never fetch a video again while a copy of it is on this device: a
+  // re-pasted link opens that copy (no second file, no orphaned download).
+  if (mountOnComplete) {
+    const reused = await openExistingLocalCopy({
+      requestedUrl,
+      operationId: opId,
+      preserveSubtitles,
+      replaceCurrent: options?.replaceCurrent === true,
+      hasMountedSource: hasMountedVideo(),
+    });
+    if (reused) {
+      set((state: UrlState) => {
+        state.needCookies = false;
+        state.error = null;
+        state.errorKind = null;
+        if (reused.success) state.urlInput = '';
+      });
+      return reused;
+    }
+  }
   set((state: UrlState) => {
     state.lastDownloadRequest = {
       url: requestedUrl,
       mountOnComplete,
       preserveSubtitles,
+      replaceCurrent: options?.replaceCurrent === true,
     };
   });
   set((state: UrlState) => {
@@ -354,7 +406,7 @@ async function downloadMediaInternal(
       percent: 0,
       inProgress: true,
     };
-    state.urlInput = requestedUrl;
+    if (!fromBatch) state.urlInput = requestedUrl;
     state.error = null;
     state.errorKind = null;
   });
@@ -636,11 +688,17 @@ async function downloadMediaInternal(
     const preserveMountedDiskSubs =
       existingSubs.length > 0 && subsOrigin === 'disk' && !libraryEntryId;
     const hasMountedSource = hasMountedVideo();
+    const replaceCurrent = options?.replaceCurrent === true;
+    // The Change Video dialog asked for this; close it so the unsaved-edits
+    // question (if any) and the new video are not hidden behind it.
+    if (replaceCurrent && mountOnComplete) closeChangeVideo();
     // Unsaved subtitle edits are never dropped silently; declining keeps the
     // current video and leaves the download in the library.
     const shouldSwitchToDownloaded =
       mountOnComplete &&
-      (!hasMountedSource || (await openDownloadSwitchConfirm())) &&
+      (!hasMountedSource ||
+        replaceCurrent ||
+        (await openDownloadSwitchConfirm())) &&
       (preserveSubtitles ||
         preserveMountedDiskSubs ||
         (await confirmReplaceUnsavedSubtitles()));
@@ -778,7 +836,7 @@ async function downloadMediaInternal(
       state.download.completedFilePath = finalPath;
       state.error = null;
       state.errorKind = null;
-      state.urlInput = '';
+      if (!fromBatch) state.urlInput = '';
     });
 
     if (shouldSwitchToDownloaded) {
@@ -859,5 +917,88 @@ async function downloadMediaInternal(
     });
   } finally {
     offProgress();
+  }
+}
+
+async function openExistingLocalCopy({
+  requestedUrl,
+  operationId,
+  preserveSubtitles,
+  replaceCurrent,
+  hasMountedSource,
+}: {
+  requestedUrl: string;
+  operationId: string;
+  preserveSubtitles: boolean;
+  replaceCurrent: boolean;
+  hasMountedSource: boolean;
+}): Promise<ProcessUrlResult | null> {
+  let copy: { localPath: string; sourceUrl?: string; title?: string } | null =
+    null;
+  for (const candidate of historyCopiesForUrl(
+    readLocalVideoSuggestionHistory(),
+    requestedUrl
+  )) {
+    try {
+      if (await window.fileApi.fileExists(candidate.localPath)) {
+        copy = candidate;
+        break;
+      }
+    } catch {
+      // An unreadable path is not a usable copy.
+    }
+  }
+  if (!copy) return null;
+
+  const filePath = copy.localPath;
+  const filename = filePath.split(/[\\/]/).pop() || copy.title || 'video';
+  const result: ProcessUrlResult = {
+    success: true,
+    videoPath: filePath,
+    filePath,
+    filename,
+    title: copy.title,
+    operationId,
+  };
+  const declined: ProcessUrlResult = {
+    success: false,
+    cancelled: true,
+    operationId,
+  };
+  if (useVideoStore.getState().path === filePath) {
+    if (replaceCurrent) closeChangeVideo();
+    return result;
+  }
+  if (replaceCurrent) closeChangeVideo();
+  else if (hasMountedSource && !(await openDownloadSwitchConfirm())) {
+    return declined;
+  }
+  if (!preserveSubtitles && !(await confirmReplaceUnsavedSubtitles())) {
+    return declined;
+  }
+
+  let releaseLease: (() => Promise<void>) | null = null;
+  try {
+    releaseLease = await acquireProvisionalUrlDownloadLibraryPath(filePath);
+    const payload = {
+      path: filePath,
+      name: filename,
+      sourceUrl: copy.sourceUrl || requestedUrl,
+    };
+    if (preserveSubtitles) {
+      await useVideoStore.getState().mountFilePreserveSubs(payload);
+    } else {
+      await useVideoStore.getState().setFile(payload);
+    }
+    useUIStore.getState().setInputMode('file');
+    return result;
+  } catch (err) {
+    console.warn('[url-store] Opening the local copy failed:', err);
+    // Fall back to downloading it again.
+    return null;
+  } finally {
+    await releaseLease?.().catch(error => {
+      console.warn('[url-store] Failed to release local copy lease:', error);
+    });
   }
 }

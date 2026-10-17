@@ -68,13 +68,19 @@ const typefaceChipStyles = css`
 `;
 
 /** Modern · Classic · Serif · Bold — each label drawn in its own face. */
-function TypefaceRow() {
+function TypefaceRow({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
   const typeface = useUIStore(s => s.subtitleTypeface);
   const setTypeface = useUIStore(s => s.setSubtitleTypeface);
   const label = t('subtitleFonts.label', 'Font');
   return (
-    <div className={typefaceRowStyles}>
+    <div
+      className={
+        compact
+          ? `${typefaceRowStyles} ${compactTypefaceRowStyles}`
+          : typefaceRowStyles
+      }
+    >
       <span>{label}</span>
       <div
         role="radiogroup"
@@ -130,6 +136,32 @@ function TypefaceRow() {
     </div>
   );
 }
+
+// Short windows: one scrolling row of smaller tiles, so the picker stays a
+// strip and the video (where the change shows live) stays visible.
+const compactTypefaceRowStyles = css`
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  margin-bottom: 8px;
+
+  & button {
+    padding: 3px 10px;
+    font-size: 0.85rem;
+  }
+`;
+
+const compactGridStyles = css`
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 104px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+
+  & > button > div {
+    height: 44px;
+    padding-bottom: 6px;
+  }
+`;
 
 const gridStyles = css`
   display: grid;
@@ -237,16 +269,19 @@ function StyleSample({ preset }: { preset: SubtitleStylePresetKey }) {
 export default function SubtitleStylePicker({
   value,
   onChange,
+  compact = false,
 }: {
   value: SubtitleStylePresetKey;
   onChange: (preset: SubtitleStylePresetKey) => void;
+  /** One scrolling row, for short windows. */
+  compact?: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <>
-      <TypefaceRow />
+      <TypefaceRow compact={compact} />
       <div
-        className={gridStyles}
+        className={compact ? `${gridStyles} ${compactGridStyles}` : gridStyles}
         role="radiogroup"
         onKeyDown={event => {
           if (event.key !== 'Escape' && event.key !== 'Tab')

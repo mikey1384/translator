@@ -83,3 +83,24 @@ test('an unknown job kind still gets a sentence', () => {
     /dialogs\.closeGuard\.job\.generic\|A job is still running\./
   );
 });
+
+test('quitting with only unsaved edits does not mention running jobs', () => {
+  const prompt = buildCloseGuardPrompt(
+    'quit',
+    [{ ...idle, title: 'two.mp4', unsaved: true }],
+    t,
+    'Translator'
+  )!;
+  assert.match(prompt.detail, /dialogs\.closeGuard\.unsavedOnlyDetail/);
+  assert.doesNotMatch(prompt.detail, /unsavedWithJobsDetail|jobsDetail/);
+  const withJob = buildCloseGuardPrompt(
+    'window',
+    [
+      { ...idle, title: 'one.mp4', running: true, job: 'dubbing' },
+      { ...idle, title: 'two.mp4', unsaved: true },
+    ],
+    t,
+    'Translator'
+  )!;
+  assert.match(withJob.detail, /dialogs\.closeGuard\.unsavedWithJobsDetail/);
+});

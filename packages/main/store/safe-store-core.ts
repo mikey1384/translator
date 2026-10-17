@@ -125,14 +125,50 @@ export function resolveDeviceId({
   mirror: unknown;
   salvaged?: Array<string | null | undefined>;
   generate: () => string;
-}): { id: string; writePrimary: boolean; writeMirror: boolean } {
+}): {
+  id: string;
+  writePrimary: boolean;
+  writeMirror: boolean;
+  /** No copy survived: the id was just minted. */
+  generated: boolean;
+} {
   const primaryId = cleanId(primary);
   const mirrorId = cleanId(mirror);
   const salvagedId = (salvaged || []).map(cleanId).find(Boolean) || null;
-  const id = primaryId || mirrorId || salvagedId || generate();
+  const existing = primaryId || mirrorId || salvagedId;
+  const id = existing || generate();
   return {
     id,
+    generated: !existing,
     writePrimary: primaryId !== id,
     writeMirror: mirrorId !== id,
   };
+}
+
+/** One-time notices the renderer shows after a damaged store was reset. */
+export type StartupNotice = 'settingsReset' | 'deviceIdReplaced';
+
+/**
+ * Which resets the user must hear about: preferences lost with a damaged
+ * app-settings file, and a device id minted because every copy of the old
+ * one was damaged (purchased minutes stay on the old id). A first launch
+ * also mints an id, but no store was quarantined then, so it stays silent.
+ */
+export function startupNoticesFor({
+  quarantinedStores,
+  deviceIdGenerated,
+}: {
+  quarantinedStores: Iterable<string>;
+  deviceIdGenerated: boolean;
+}): StartupNotice[] {
+  const names = new Set(quarantinedStores);
+  const notices: StartupNotice[] = [];
+  if (names.has('app-settings')) notices.push('settingsReset');
+  if (
+    deviceIdGenerated &&
+    (names.has('device-config') || names.has('stage5-auth'))
+  ) {
+    notices.push('deviceIdReplaced');
+  }
+  return notices;
 }

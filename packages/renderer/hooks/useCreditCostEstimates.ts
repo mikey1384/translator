@@ -7,9 +7,8 @@ import { useUIStore } from '../state/ui-store';
 import {
   estimateDubbingCreditsFromChars,
   estimateTranslationCreditsFromChars,
-  formatCreditBalance,
-  formatCredits,
 } from '../utils/creditEstimates';
+import { formatCostOfBalanceInMinutes } from '../utils/formatCostInMinutes';
 import {
   isDubbingBlockedInApiKeyMode,
   isDubbingByo,
@@ -158,17 +157,11 @@ export function useCreditCostEstimates() {
     };
   }, [order, segments, credits, qualityTranslation, runtimeState]);
 
-  // Cost next to the balance it comes out of: a bare "~132k cr" did not tell
-  // anyone that a dub would use most of what they had just bought.
+  // Cost next to the balance it comes out of, in minutes of video (what
+  // users buy): a bare "~132k cr" did not tell anyone that a dub would use
+  // most of what they had just bought.
   const formatCostLabel = (estimatedCredits: number) =>
-    credits != null
-      ? t('credits.costOfBalance', '{{cost}} of your {{balance}} credits', {
-          cost: formatCredits(estimatedCredits, locale),
-          balance: formatCreditBalance(credits, locale),
-        })
-      : t('credits.estimateAmount', '{{credits}} credits', {
-          credits: formatCredits(estimatedCredits, locale),
-        });
+    formatCostOfBalanceInMinutes(t, estimatedCredits, credits, locale);
 
   return {
     credits,

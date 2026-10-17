@@ -564,10 +564,17 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         requestHomeRun(request) {
           homeRunRequestSeq += 1;
-          set({
-            homeRunRequest: { ...request, id: homeRunRequestSeq },
-            showGeneratePanel: true,
-          });
+          // A link stays on home until its download mounts (MainPanels then
+          // opens the workspace), so a refused, failed or cancelled link
+          // leaves the user on home with their language still chosen.
+          set(
+            request.kind === 'url'
+              ? { homeRunRequest: { ...request, id: homeRunRequestSeq } }
+              : {
+                  homeRunRequest: { ...request, id: homeRunRequestSeq },
+                  showGeneratePanel: true,
+                }
+          );
         },
 
         clearHomeRunRequest(id) {

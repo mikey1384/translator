@@ -85,6 +85,51 @@ export function resolveSubtitleOutputFontSize({
   return Math.max(MIN_SUBTITLE_FONT_SIZE, Math.round(base * fontScale(height)));
 }
 
+/**
+ * The frame subtitles are laid out on, and their font size there. The export
+ * draws on this frame, and the player lays its overlay out on the same frame
+ * and scales it to the picture. Without a frame size (an audio-only file),
+ * both use 1280x720.
+ */
+export function resolveSubtitleRenderFrame({
+  baseFontSizePx,
+  videoWidthPx,
+  videoHeightPx,
+  displayWidthPx,
+  displayHeightPx,
+  isAudioOnly = false,
+}: {
+  baseFontSizePx: number;
+  videoWidthPx?: number | null;
+  videoHeightPx?: number | null;
+  displayWidthPx?: number | null;
+  displayHeightPx?: number | null;
+  isAudioOnly?: boolean;
+}): {
+  videoWidthPx: number;
+  videoHeightPx: number;
+  displayWidthPx: number;
+  displayHeightPx: number;
+  fontSizePx: number;
+} {
+  const height = finitePositive(videoHeightPx ?? undefined, BASELINE_HEIGHT);
+  const width = finitePositive(
+    videoWidthPx ?? undefined,
+    Math.round((height * 16) / 9)
+  );
+  return {
+    videoWidthPx: width,
+    videoHeightPx: height,
+    displayWidthPx: finitePositive(displayWidthPx ?? undefined, width),
+    displayHeightPx: finitePositive(displayHeightPx ?? undefined, height),
+    fontSizePx: resolveSubtitleOutputFontSize({
+      baseFontSizePx,
+      videoHeightPx: height,
+      isAudioOnly,
+    }),
+  };
+}
+
 export function resolveSubtitleRenderSpec({
   displayMode,
   stylePreset,
@@ -112,27 +157,26 @@ export function resolveSubtitleRenderSpec({
     throw new Error(`Unsupported subtitle typeface: ${typeface}`);
   }
 
-  const height = finitePositive(videoHeightPx, BASELINE_HEIGHT);
-  const width = finitePositive(videoWidthPx, Math.round((height * 16) / 9));
-  const resolvedDisplayHeight = finitePositive(displayHeightPx, height);
-  const resolvedDisplayWidth = finitePositive(displayWidthPx, width);
-  const base = normalizeSubtitleBaseFontSize(baseFontSizePx);
+  const frame = resolveSubtitleRenderFrame({
+    baseFontSizePx,
+    videoWidthPx,
+    videoHeightPx,
+    displayWidthPx,
+    displayHeightPx,
+    isAudioOnly,
+  });
 
   return {
     schemaVersion: SUBTITLE_RENDER_SPEC_VERSION,
     displayMode,
     stylePreset,
     typeface,
-    baseFontSizePx: base,
-    outputFontSizePx: resolveSubtitleOutputFontSize({
-      baseFontSizePx: base,
-      videoHeightPx: height,
-      isAudioOnly,
-    }),
-    videoWidthPx: width,
-    videoHeightPx: height,
-    displayWidthPx: resolvedDisplayWidth,
-    displayHeightPx: resolvedDisplayHeight,
+    baseFontSizePx: normalizeSubtitleBaseFontSize(baseFontSizePx),
+    outputFontSizePx: frame.fontSizePx,
+    videoWidthPx: frame.videoWidthPx,
+    videoHeightPx: frame.videoHeightPx,
+    displayWidthPx: frame.displayWidthPx,
+    displayHeightPx: frame.displayHeightPx,
     isAudioOnly,
     fontFamily: SUBTITLE_FONT_FAMILY,
     fontAsset: SUBTITLE_FONT_ASSET,

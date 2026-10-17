@@ -2,6 +2,8 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../styles';
 import ProgressArea from './ProgressArea';
+import Button from '../Button';
+import Modal from '../Modal';
 import ProcessingBanner from '../ProcessingBanner';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
@@ -74,31 +76,41 @@ export default function TranslationProgressArea({
     devLog('[TransPA] op id →', id);
   }, [id]);
 
+  // The app's own dialog, in the UI language: native confirm() buttons follow
+  // the OS language and don't match the app's dialogs.
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [stopError, setStopError] = useState<string | null>(null);
+
   const handleCancel = useCallback(async () => {
     if (!id) {
       console.warn('[TransPA] no operation id – nothing to cancel');
       patchTranslation({ inProgress: false });
       return;
     }
+    setStopError(null);
+    setConfirmOpen(true);
+  }, [id, patchTranslation]);
 
-    if (!window.confirm(t('dialogs.cancelTranslationConfirm'))) return;
-
+  const stopTranslating = useCallback(async () => {
+    if (!id) return;
     setIsCancelling(true);
-
+    setStopError(null);
     try {
       devLog('[TransPA] cancelling', id);
       await OperationIPC.cancel(id);
+      // Only a confirmed cancel ends the job here; a failed one keeps going.
+      patchTranslation({ inProgress: false });
+      setConfirmOpen(false);
     } catch (err: any) {
       devError('[TransPA] cancel failed', err);
-      alert(
-        t('errors.cancelTranslationFailed', {
-          defaultValue: 'Failed to cancel translation: {{message}}',
-          message: err?.message || String(err),
-        })
+      setStopError(
+        t(
+          'errors.cancelTranslationFailedPlain',
+          "Couldn't stop translating. Try again."
+        )
       );
     } finally {
       setIsCancelling(false);
-      patchTranslation({ inProgress: false });
     }
   }, [id, patchTranslation, t]);
 
@@ -128,31 +140,67 @@ export default function TranslationProgressArea({
   if (!inProgress) return null;
 
   return (
-    <ProgressArea
-      isVisible={inProgress}
-      title={t('dialogs.translationInProgress')}
-      progress={percent}
-      stage={displayStage}
-      progressBarColor={progressBarColor}
-      isCancelling={isCancelling}
-      operationId={id ?? null}
-      onCancel={handleCancel}
-      onClose={handleClose}
-      notice={
-        <ProcessingBanner
-          isVisible={showSlowProgressBanner}
-          titleKey="dialogs.slowProcessingBanner.title"
-          descriptionKey="dialogs.slowProcessingBanner.description"
-          linkHref="https://status.openai.com"
-          linkTextKey="dialogs.slowProcessingBanner.checkStatus"
-          onClose={handleCloseBanner}
-        />
-      }
-      autoCloseDelay={
-        percent >= 100 && !stage.toLowerCase().includes('error')
-          ? autoCloseDelay
-          : undefined
-      }
-    />
+    <>
+      <ProgressArea
+        isVisible={inProgress}
+        title={t('dialogs.translationInProgress')}
+        progress={percent}
+        stage={displayStage}
+        progressBarColor={progressBarColor}
+        isCancelling={isCancelling}
+        operationId={id ?? null}
+        onCancel={handleCancel}
+        onClose={handleClose}
+        notice={
+          <ProcessingBanner
+            isVisible={showSlowProgressBanner}
+            titleKey="dialogs.slowProcessingBanner.title"
+            descriptionKey="dialogs.slowProcessingBanner.description"
+            linkHref="https://status.openai.com"
+            linkTextKey="dialogs.slowProcessingBanner.checkStatus"
+            onClose={handleCloseBanner}
+          />
+        }
+        autoCloseDelay={
+          percent >= 100 && !stage.toLowerCase().includes('error')
+            ? autoCloseDelay
+            : undefined
+        }
+      />
+      <Modal
+        open={confirmOpen}
+        title={t('dialogs.cancelTranslationTitle', 'Stop translating?')}
+        titleId="confirm-cancel-translation-title"
+        onClose={() => {
+          if (!isCancelling) setConfirmOpen(false);
+        }}
+        actions={
+          <>
+            <Button
+              variant="text"
+              onClick={() => setConfirmOpen(false)}
+              disabled={isCancelling}
+            >
+              {t('dialogs.keepTranslating', 'Keep translating')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => void stopTranslating()}
+              isLoading={isCancelling}
+            >
+              {t('dialogs.stopTranslating', 'Stop translating')}
+            </Button>
+          </>
+        }
+      >
+        <p style={{ margin: 0 }}>
+          {stopError ??
+            t(
+              'dialogs.cancelTranslationConfirm',
+              "Cancel translation? Progress will be lost and you'll need to start again."
+            )}
+        </p>
+      </Modal>
+    </>
   );
 }

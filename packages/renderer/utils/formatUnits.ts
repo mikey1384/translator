@@ -47,6 +47,15 @@ function formatUnit(value: number, unit: DurationUnit, locale: string): string {
   return format.format(value);
 }
 
+/** A bare minute count in the UI language's unit: "0m", "0분". */
+export function formatMinuteUnit(
+  minutes: number,
+  locale = currentUiLocale()
+): string {
+  const safe = Number.isFinite(minutes) ? Math.max(0, Math.floor(minutes)) : 0;
+  return formatUnit(safe, 'minute', locale);
+}
+
 /** Whole minutes as "45m" / "2h 30m"; under a minute reads "<1m". */
 export function formatDurationMinutes(
   totalMinutes: number,

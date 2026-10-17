@@ -3,11 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
 import { colors, selectStyles } from '../../styles';
 import { useUIStore } from '../../state/ui-store';
-import { useAiStore } from '../../state';
+import { useAiStore, useCreditStore } from '../../state';
 import * as SubtitlesIPC from '../../ipc/subtitles';
 import * as SystemIPC from '../../ipc/system';
 import { PREVIEW_TTS_CREDITS } from '../../utils/creditEstimates';
 import { getDubbingActionState } from '../../state/byo-runtime';
+import { formatCostInMinutes } from '../../utils/formatCostInMinutes';
+import {
+  notifyIfCreditsRefused,
+  notifyInsufficientCredits,
+} from '../../utils/taskFailure';
 import {
   DEFAULT_DUB_VOICE,
   ELEVENLABS_DUB_VOICE_OPTIONS,
@@ -17,8 +22,15 @@ import {
 // ElevenLabs voices in the UI store (see LEGACY_OPENAI_DUB_VOICE_MAP).
 const ELEVENLABS_VOICES = ELEVENLABS_DUB_VOICE_OPTIONS;
 
-export default function DubbingVoiceSelector() {
-  const { t } = useTranslation();
+export default function DubbingVoiceSelector({
+  helpText,
+}: {
+  /** Replaces the Settings description where the picker sits in a tool. */
+  helpText?: string;
+} = {}) {
+  const { t, i18n } = useTranslation();
+  const credits = useCreditStore(state => state.credits);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const dubVoice = useUIStore(s => s.dubVoice);
   const setDubVoice = useUIStore(s => s.setDubVoice);
   const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
@@ -46,6 +58,10 @@ export default function DubbingVoiceSelector() {
   });
   const isUsingStage5Credits = previewState.kind === 'credits';
   const isPreviewBlocked = previewState.kind === 'blocked';
+  const previewFailedMessage = t(
+    'settings.dubbing.previewFailed',
+    "Couldn't play the voice preview. Try again."
+  );
   const blockedMessage = t(
     'settings.byoPreferences.dubbingRequiresElevenLabs',
     'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
@@ -82,8 +98,24 @@ export default function DubbingVoiceSelector() {
     };
   }, []);
 
+  const previewCost = PREVIEW_TTS_CREDITS.elevenlabs;
+  // Too few credits: a preview request would only be refused, so the button
+  // goes straight to the credits dialog instead of failing silently.
+  const previewShortOfCredits =
+    isUsingStage5Credits &&
+    typeof credits === 'number' &&
+    credits < previewCost;
+
   const handlePreview = async () => {
     if (isPreviewBlocked) return;
+    setPreviewError(null);
+    if (previewShortOfCredits) {
+      notifyInsufficientCredits({
+        kind: 'dubbing',
+        transcriptionSeconds: null,
+      });
+      return;
+    }
     const token = ++previewTokenRef.current;
     setIsPreviewing(true);
     try {
@@ -125,10 +157,16 @@ export default function DubbingVoiceSelector() {
         });
       } else if (result?.error) {
         console.warn('[SettingsPage] Voice preview error:', result.error);
+        if (!notifyIfCreditsRefused(result.error, 'dubbing')) {
+          setPreviewError(previewFailedMessage);
+        }
       }
     } catch (err) {
       if (previewTokenRef.current === token) {
         console.warn('[SettingsPage] Voice preview failed:', err);
+        if (!notifyIfCreditsRefused(err as any, 'dubbing')) {
+          setPreviewError(previewFailedMessage);
+        }
       }
     } finally {
       if (previewTokenRef.current === token) {
@@ -136,8 +174,6 @@ export default function DubbingVoiceSelector() {
       }
     }
   };
-
-  const previewCost = PREVIEW_TTS_CREDITS.elevenlabs;
 
   const selectClass = css`
     flex: 1;
@@ -232,10 +268,13 @@ export default function DubbingVoiceSelector() {
               : previewState.kind === 'byo'
                 ? t('settings.dubbing.previewFree', 'Preview')
                 : t(
-                    'settings.dubbing.previewWithCost',
-                    'Preview ({{cost}} credits)',
+                    'settings.dubbing.previewWithMinutes',
+                    'Preview ({{cost}})',
                     {
-                      cost: previewCost,
+                      cost: formatCostInMinutes(previewCost, {
+                        kind: 'estimate',
+                        locale: i18n.language,
+                      }),
                     }
                   )}
         </button>
@@ -247,11 +286,23 @@ export default function DubbingVoiceSelector() {
           font-size: 0.85rem;
         `}
       >
-        {t(
-          'settings.dubbing.voiceHelp',
-          'Choose the default voice for generated dubs.'
-        )}
+        {helpText ??
+          t(
+            'settings.dubbing.voiceHelp',
+            'Choose the default voice for generated dubs.'
+          )}
       </div>
+      {previewError ? (
+        <div
+          role="alert"
+          className={css`
+            color: ${colors.danger};
+            font-size: 0.85rem;
+          `}
+        >
+          {previewError}
+        </div>
+      ) : null}
       {isPreviewBlocked ? (
         <div
           role="note"

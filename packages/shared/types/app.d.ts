@@ -776,6 +776,14 @@ declare module '@shared-types/app' {
     category?: string;
     justification?: string;
     videoPath?: string; // populated when server cuts clips
+    /**
+     * Signature of the subtitle lines this highlight covered when it was
+     * found (see highlightSourceCueSignature). Lets an analysis survive
+     * subtitle edits: only highlights whose own lines changed are marked.
+     */
+    sourceCueSignature?: string;
+    /** UI only, never saved: this highlight's lines changed since then. */
+    cuesChanged?: boolean;
     lineStart?: number;
     lineEnd?: number;
   }
@@ -1239,17 +1247,31 @@ declare module '@shared-types/app' {
       }
     | CreditTransferFailure;
 
+  /** A saved API key as the renderer sees it: never the key itself. */
+  export type StoredApiKeySummary = { present: boolean; last4: string | null };
+
+  /** Which pack a credit checkout broadcast is about, when main knows it. */
+  export type CheckoutTransitionInfo = { packId?: string };
+
   export type CreditHistorySummary = {
     everHadCredits: boolean;
     onlyWelcomeCredits: boolean;
+    everPaid?: boolean;
   };
 
   export type AgentMcpClientId = 'claude-code' | 'codex' | 'claude-desktop';
 
   export type AgentMcpConnectResult = {
-    status: 'connected' | 'already-connected' | 'cli-not-found' | 'failed';
+    status:
+      | 'connected'
+      | 'already-connected'
+      | 'app-not-found'
+      | 'cli-not-found'
+      | 'failed';
     client: AgentMcpClientId;
     command?: string;
+    /** Where to get the app when status is 'app-not-found'. */
+    downloadUrl?: string;
     /** Failure reason; `message` is raw detail for the "Details" disclosure. */
     reason?:
       | 'cli_failed'
@@ -1408,10 +1430,12 @@ declare module '@shared-types/app' {
       sourceUrl?: string | null;
       libraryEntryId?: string | null;
       allowOtherVariant?: boolean;
+      allowOtherTranscript?: boolean;
     }) => Promise<{
       success: boolean;
       entry?: StoredTranscriptAnalysisEntry | null;
       analysis?: StoredTranscriptAnalysisArtifact;
+      transcriptChanged?: boolean;
       error?: string;
     }>;
     recordHighlightClip: (options: {
@@ -1527,6 +1551,16 @@ declare module '@shared-types/app' {
     setLanguagePreference: (
       lang: string
     ) => Promise<{ success: boolean; error?: string }>;
+    listRunningSubtitleJobs: () => {
+      records: import('@shared/helpers/running-subtitle-jobs').RunningJobRecord[];
+      session: string;
+    };
+    applyRunningSubtitleJobOp: (
+      op: import('@shared/helpers/running-subtitle-jobs').RunningJobOp
+    ) => {
+      records: import('@shared/helpers/running-subtitle-jobs').RunningJobRecord[];
+      session: string;
+    };
     getSubtitleTargetLanguage: () => Promise<string>;
     setSubtitleTargetLanguage: (
       lang: string
@@ -1553,6 +1587,7 @@ declare module '@shared-types/app' {
       placement?: PurchasePlacement
     ) => Promise<string | null>;
     createByoUnlockSession: () => Promise<void>;
+    abandonCheckoutSession: () => Promise<void>;
     trackPurchaseEvent: (
       event: PurchaseFunnelEvent,
       context?: {
@@ -1659,7 +1694,7 @@ declare module '@shared-types/app' {
       error?: string;
     }>;
     isAdminMode: () => Promise<boolean>;
-    getOpenAiApiKey: () => Promise<string | null>;
+    getOpenAiApiKey: () => Promise<StoredApiKeySummary>;
     setOpenAiApiKey: (
       apiKey: string
     ) => Promise<{ success: boolean; error?: string }>;
@@ -1677,6 +1712,7 @@ declare module '@shared-types/app' {
         hoursBalance: number;
         creditsPerHour?: number;
         authoritative?: boolean;
+        offline?: boolean;
         checkoutSessionId?: string | null;
         monthlyFree?: MonthlyFreeCreditsInfo | null;
       }) => void
@@ -1686,6 +1722,7 @@ declare module '@shared-types/app' {
       hoursBalance: number;
       creditsPerHour: number;
       authoritative: boolean;
+      offline?: boolean;
       checkoutSessionId?: string | null;
       monthlyFree?: MonthlyFreeCreditsInfo | null;
     } | null>;
@@ -1694,15 +1731,22 @@ declare module '@shared-types/app' {
       hoursBalance: number;
       creditsPerHour: number;
       authoritative: boolean;
+      offline?: boolean;
       checkoutSessionId?: string | null;
       monthlyFree?: MonthlyFreeCreditsInfo | null;
     } | null>;
     createCreditTransferCode: () => Promise<CreditTransferCodeResult>;
     redeemCreditTransfer: (code: string) => Promise<CreditTransferRedeemResult>;
     getCreditHistorySummary: () => Promise<CreditHistorySummary | null>;
-    onCheckoutPending: (callback: () => void) => () => void;
-    onCheckoutConfirmed: (callback: () => void) => () => void;
-    onCheckoutUnresolved: (callback: () => void) => () => void;
+    onCheckoutPending: (
+      callback: (info?: CheckoutTransitionInfo) => void
+    ) => () => void;
+    onCheckoutConfirmed: (
+      callback: (info?: CheckoutTransitionInfo) => void
+    ) => () => void;
+    onCheckoutUnresolved: (
+      callback: (info?: CheckoutTransitionInfo) => void
+    ) => () => void;
     onCheckoutCancelled: (callback: () => void) => () => void;
     getEntitlements: () => Promise<EntitlementsSnapshot>;
     refreshEntitlements: () => Promise<EntitlementsSnapshot>;
@@ -1726,7 +1770,7 @@ declare module '@shared-types/app' {
     ) => () => void;
 
     // Anthropic API key methods
-    getAnthropicApiKey: () => Promise<string | null>;
+    getAnthropicApiKey: () => Promise<StoredApiKeySummary>;
     setAnthropicApiKey: (
       apiKey: string
     ) => Promise<{ success: boolean; error?: string }>;
@@ -1743,7 +1787,7 @@ declare module '@shared-types/app' {
     ) => () => void;
 
     // ElevenLabs API key methods
-    getElevenLabsApiKey: () => Promise<string | null>;
+    getElevenLabsApiKey: () => Promise<StoredApiKeySummary>;
     setElevenLabsApiKey: (
       apiKey: string
     ) => Promise<{ success: boolean; error?: string }>;
@@ -1875,6 +1919,10 @@ declare module '@shared-types/app' {
     updateCheck: () => Promise<{ available: boolean; version?: string }>;
     updateDownload: () => Promise<void>;
     updateInstall: () => Promise<void>;
+    /** Damaged-store resets to tell the user about (once per launch). */
+    takeStartupNotices: () => Promise<
+      Array<'settingsReset' | 'deviceIdReplaced'>
+    >;
     updateGetPostInstallNotice: () => Promise<PostInstallUpdateNotice | null>;
     updateClearPostInstallNotice: (version?: string) => Promise<void>;
     updateGetRequiredNotice: () => Promise<UpdateRequiredNotice | null>;

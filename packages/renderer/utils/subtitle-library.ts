@@ -195,6 +195,44 @@ async function findFallbackDocumentForSource(
   });
 }
 
+/**
+ * Puts a saved subtitle document back on screen for the current video.
+ * False when it can't be read, is empty, or the video changed meanwhile.
+ */
+export async function mountSubtitleDocument(
+  documentId: string,
+  args: {
+    sourceVideoPath?: string | null;
+    sourceUrl?: string | null;
+    sourceVideoAssetIdentity?: string | null;
+  }
+): Promise<boolean> {
+  const saved = await FileIPC.readSubtitleDocument({ documentId });
+  if (
+    !saved.success ||
+    !saved.document ||
+    !Array.isArray(saved.segments) ||
+    saved.segments.length === 0 ||
+    !matchesCurrentVideoRequest(args)
+  ) {
+    return false;
+  }
+  useSubStore
+    .getState()
+    .load(
+      saved.segments,
+      saved.document.importFilePath ?? null,
+      saved.document.importFilePath ? 'disk' : 'fresh',
+      args.sourceVideoPath ?? null,
+      saved.document.transcriptionEngine ?? null,
+      null,
+      args.sourceVideoAssetIdentity ?? null,
+      saved.document
+    );
+  restoreDocumentActiveFileTarget(saved.document);
+  return true;
+}
+
 export async function maybeAutoMountStoredSubtitleForVideo(args: {
   sourceVideoPath?: string | null;
   sourceUrl?: string | null;
@@ -220,32 +258,15 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
     path: sourceVideoPath,
     url: args.sourceUrl ?? null,
   });
-  if (leftDocumentId) {
-    const left = await FileIPC.readSubtitleDocument({
-      documentId: leftDocumentId,
-    });
-    if (
-      left.success &&
-      left.document &&
-      Array.isArray(left.segments) &&
-      left.segments.length > 0 &&
-      matchesCurrentVideoRequest(args)
-    ) {
-      useSubStore
-        .getState()
-        .load(
-          left.segments,
-          left.document.importFilePath ?? null,
-          left.document.importFilePath ? 'disk' : 'fresh',
-          sourceVideoPath,
-          left.document.transcriptionEngine ?? null,
-          null,
-          sourceVideoAssetIdentity,
-          left.document
-        );
-      restoreDocumentActiveFileTarget(left.document);
-      return null;
-    }
+  if (
+    leftDocumentId &&
+    (await mountSubtitleDocument(leftDocumentId, {
+      ...args,
+      sourceVideoPath,
+      sourceVideoAssetIdentity,
+    }))
+  ) {
+    return null;
   }
 
   const documentResult = await FileIPC.findSubtitleDocumentForSource({

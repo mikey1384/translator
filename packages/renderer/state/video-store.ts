@@ -139,6 +139,8 @@ interface State {
 interface Actions {
   openLocalMedia(options?: {
     preserveSubtitles?: boolean;
+    /** The open dialog's title, already translated. */
+    title?: string;
   }): Promise<{ canceled: boolean; selectedPath?: string }>;
   openRecentLocalMedia(
     path: string,
@@ -244,6 +246,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       }
       const res = await FileIPC.open({
         properties: ['openFile'],
+        ...(options?.title ? { title: options.title } : {}),
         filters: [
           {
             name: i18n.t('common.fileFilters.mediaFiles', 'Media Files'),
@@ -354,7 +357,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (prev.path) {
         clearMetadataRetry(prev.path);
       }
-      set(initial);
+      set({ ...initial, recentLocalMedia: prev.recentLocalMedia });
       // Reset session-only UI state for exclamation markers when video changes
       try {
         useUIStore.getState().resetExclamationState();
@@ -393,6 +396,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.dubbedAudioPath = null;
           s.dubbedUrl = null;
           s.activeTrack = 'original';
+          // Every way a local file opens (dialog, drop, Recent, agent) lands
+          // in Home > Recent right away.
+          s.recentLocalMedia = rememberRecentLocalMedia(fd.path);
         });
         await analyse(fd.path);
         if (!isCurrentMount()) return;
@@ -848,7 +854,8 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (prev.path) {
         clearMetadataRetry(prev.path);
       }
-      set(initial);
+      // `initial` was captured at module load; keep the files opened since.
+      set({ ...initial, recentLocalMedia: prev.recentLocalMedia });
       if (currentSaver) {
         currentSaver.cancel();
         currentSaver = null;
@@ -1016,11 +1023,15 @@ async function analyse(path: string) {
       });
       clearMetadataRetry(path);
     }
-    if (!metaRes.success) {
+    if (!metaRes.success || !metaRes.metadata) {
       scheduleMetadataRetry(path, 1);
     }
   } catch (err) {
     console.error('[video-store] analyse error', err);
+    // The workspace waits for a probe result; never leave it waiting.
+    if (useVideoStore.getState().path === path) {
+      scheduleMetadataRetry(path, 1);
+    }
   }
 }
 

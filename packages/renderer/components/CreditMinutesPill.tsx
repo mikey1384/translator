@@ -2,7 +2,8 @@ import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { useCreditStore, useUIStore } from '../state';
 import { colors } from '../styles';
-import { estimateTranscriptionHours } from '../utils/creditEstimates';
+import { formatCostInMinutes } from '../utils/formatCostInMinutes';
+import { resolveCreditBalanceState } from '../utils/creditBalanceState';
 import { logButton } from '../utils/logger';
 import CreditBalance, { useActiveProvider } from './CreditBalance';
 
@@ -74,53 +75,86 @@ function openCreditsSettings() {
 }
 
 /**
- * The header's calm balance: credits as transcription minutes, with the
- * monthly free allowance named as such. API-key users keep the provider badge.
+ * The header's calm balance, in the same words as the Settings card ("4h 17m
+ * left"), with free minutes named as such only for devices that never paid.
+ * It never disappears: while the balance loads (or can't) it reads
+ * "Minutes", so there is always a way to get more. API-key users keep the
+ * provider badge.
  */
 export default function CreditMinutesPill() {
   const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage || i18n.language;
   const provider = useActiveProvider('general');
   const credits = useCreditStore(s => s.credits);
   const loading = useCreditStore(s => s.loading);
   const monthlyFree = useCreditStore(s => s.monthlyFree);
-  const onlyWelcomeCredits = useCreditStore(
-    s => s.history?.onlyWelcomeCredits === true
-  );
+  const history = useCreditStore(s => s.history);
+  const offline = useCreditStore(s => s.offline);
+  const checkoutSuccess = useCreditStore(s => s.checkoutSuccess);
 
   if (provider !== 'credits') return <CreditBalance />;
-  if (loading || credits === null) return null;
 
-  const minutes = Math.floor((estimateTranscriptionHours(credits) ?? 0) * 60);
-  const withinMonthlyFree =
-    monthlyFree !== null && credits <= monthlyFree.credits;
+  const state = resolveCreditBalanceState({
+    credits,
+    loading,
+    monthlyFree,
+    history,
+    offline,
+  });
+  const time = formatCostInMinutes(credits, { kind: 'balance', locale });
 
   let text: string;
   let tone: string;
-  if (credits <= 0 || minutes < 1) {
-    tone = colors.gray;
-    text = monthlyFree
-      ? t('credits.pill.freeBack', 'Free minutes back on {{date}}', {
-          date: formatRefreshDate(
-            monthlyFree.refreshesOn,
-            i18n.resolvedLanguage || i18n.language
-          ),
-        })
-      : t('credits.pill.empty', 'Get minutes');
-  } else if (withinMonthlyFree) {
+  if (checkoutSuccess) {
     tone = colors.success;
-    text = t('credits.pill.freeThisMonth', '{{count}} free min this month', {
-      count: minutes,
-    });
-  } else if (onlyWelcomeCredits) {
-    tone = colors.success;
-    text = t('credits.pill.freeWelcome', '{{count}} free min', {
-      count: minutes,
-    });
+    text =
+      checkoutSuccess.creditsAdded && checkoutSuccess.creditsAdded > 0
+        ? t('credits.success.added', '+{{time}} added', {
+            time: formatCostInMinutes(checkoutSuccess.creditsAdded, {
+              kind: 'exact',
+              locale,
+            }),
+          })
+        : t('credits.success.arrived', 'Your minutes are here');
   } else {
-    tone = colors.primary;
-    text = t('credits.pill.minutes', '{{count}} min of transcription', {
-      count: minutes,
-    });
+    switch (state) {
+      case 'loading':
+      case 'unavailable':
+        tone = colors.gray;
+        text = t('credits.pill.neutral', 'Minutes');
+        break;
+      case 'offline':
+        tone = colors.gray;
+        text = t('credits.pill.offline', 'Minutes · offline');
+        break;
+      case 'welcomePending':
+        tone = colors.gray;
+        text = t('credits.pill.welcomePending', 'Free minutes on the way');
+        break;
+      case 'freeBack':
+        tone = colors.gray;
+        text = t('credits.pill.freeBack', 'Free minutes back on {{date}}', {
+          date: formatRefreshDate(monthlyFree?.refreshesOn ?? '', locale),
+        });
+        break;
+      case 'empty':
+        tone = colors.gray;
+        text = t('credits.pill.empty', 'Get minutes');
+        break;
+      case 'freeThisMonth':
+        tone = colors.success;
+        text = t('credits.pill.freeTimeThisMonth', '{{time}} free this month', {
+          time,
+        });
+        break;
+      case 'free':
+        tone = colors.success;
+        text = t('credits.pill.freeTime', '{{time}} free', { time });
+        break;
+      default:
+        tone = colors.primary;
+        text = t('credits.timeLeft', '{{time}} left', { time });
+    }
   }
 
   return (
@@ -131,7 +165,9 @@ export default function CreditMinutesPill() {
       title={t('credits.pill.title', 'Credits and plans')}
     >
       <span className={dot(tone)} aria-hidden="true" />
-      <span className={pillText}>{text}</span>
+      <span className={pillText}>
+        <bdi>{text}</bdi>
+      </span>
     </button>
   );
 }

@@ -21,7 +21,6 @@ import {
   type ByoRuntimeState,
 } from '../../state/byo-runtime';
 import CreditBalance, { type OperationType } from '../CreditBalance';
-import SettingsButton from '../SettingsButton';
 import {
   workflowStatusBodyStyles,
   workflowStatusCardStyles,
@@ -55,6 +54,7 @@ import {
   inlineStatusTitleStyles,
   inlineStatusTrackStyles,
 } from '../workspace/workspace-styles';
+import { formatPercent } from '../../utils/formatNumbers';
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -310,7 +310,7 @@ export default function ProgressArea({
           </div>
           {progress > 0 ? (
             <span className={inlineStatusMetaStyles}>
-              {progress.toFixed(0)}%
+              {formatPercent(progress)}
             </span>
           ) : null}
           <button
@@ -358,7 +358,6 @@ export default function ProgressArea({
                   operationType={operationType}
                   suffixText={coverageText}
                 />
-                <SettingsButton variant="icon" />
               </div>
             </div>
             <button
@@ -382,7 +381,7 @@ export default function ProgressArea({
               <span className={workflowStatusStageTextStyles}>{stageText}</span>
               {progress > 0 && (
                 <span className={workflowStatusPercentStyles}>
-                  {progress.toFixed(1)}%
+                  {formatPercent(progress, undefined, 1)}
                 </span>
               )}
             </div>

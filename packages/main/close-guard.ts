@@ -119,11 +119,17 @@ export function buildCloseGuardPrompt(
       )
     );
     const consequence = anyUnsaved
-      ? t(
-          'dialogs.closeGuard.unsavedWithJobsDetail',
-          undefined,
-          'Running jobs stop. Save your subtitle edits first?'
-        )
+      ? anyRunning
+        ? t(
+            'dialogs.closeGuard.unsavedWithJobsDetail',
+            undefined,
+            'Running jobs stop. Save your subtitle edits first?'
+          )
+        : t(
+            'dialogs.closeGuard.unsavedOnlyDetail',
+            undefined,
+            'Save your subtitle edits first?'
+          )
       : t(
           'dialogs.closeGuard.jobsDetail',
           undefined,

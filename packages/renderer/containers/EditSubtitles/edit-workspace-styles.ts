@@ -357,6 +357,13 @@ export const subtitleRowHeaderActionsStyles = css`
   flex-wrap: wrap;
   gap: ${spacing.sm};
   align-items: center;
+
+  /* Stay one compact icon row on narrow windows (buttons go full width
+     there by default). */
+  & > button {
+    width: auto;
+    flex: none;
+  }
 `;
 
 export const subtitleRowContentStyles = css`

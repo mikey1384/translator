@@ -40,6 +40,10 @@ function getCandidateLocalePaths(lang: string): string[] {
     candidates.push(
       path.join(base, 'packages', 'renderer', 'dist', 'locales', `${lang}.json`)
     );
+    // Launched with packages/main as the app path (dev tools, tests).
+    candidates.push(
+      path.join(base, '..', 'renderer', 'locales', `${lang}.json`)
+    );
   }
   return candidates;
 }

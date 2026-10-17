@@ -8,6 +8,7 @@ import type {
 } from '@shared-types/app';
 import { Scissors } from 'lucide-react';
 import Button from '../Button';
+import { useVideoStore } from '../../state';
 import HighlightEditorialEditor from './HighlightEditorialEditor';
 import {
   formatClipLength,
@@ -18,6 +19,7 @@ import {
 } from './TranscriptSummaryPanel.helpers';
 import {
   clipStaleNoteStyles,
+  clipsAudioNoteStyles,
   aspectModeButtonStyles,
   aspectModeIconStyles,
   aspectModeLabelStyles,
@@ -31,6 +33,7 @@ import {
   highlightActions,
   highlightCard,
   highlightCheckboxStyles,
+  highlightCuesChangedStyles,
   highlightCutProgressFill,
   highlightCutProgressTrack,
   highlightDesc,
@@ -172,8 +175,8 @@ function StaleClipNote({
     <div className={clipStaleNoteStyles} role="status">
       <span>
         {t(
-          'summary.clipCaptionsChanged',
-          'The subtitles changed since this clip was cut.'
+          'summary.clipCaptionsChangedAny',
+          'The captions changed since this clip was cut (their text, style or size).'
         )}
       </span>
       {onRecut ? (
@@ -336,9 +339,20 @@ export default function TranscriptSummaryHighlightsTab({
   const { i18n } = useTranslation();
   const locale = i18n.language || 'en';
   const combineSelectionLocked = combineCutState.status === 'cutting';
+  // Clips are cut from the original video; with a dub playing, say so
+  // rather than hand back a clip that sounds different from the player.
+  const hasDubbedTrack = useVideoStore(state => Boolean(state.dubbedUrl));
 
   return (
     <div className={highlightsTabStyles}>
+      {hasSummaryResult && highlights.length > 0 && hasDubbedTrack ? (
+        <p className={clipsAudioNoteStyles} role="note">
+          {t(
+            'summary.clipsUseOriginalAudio',
+            'Clips use the original audio, not the dub.'
+          )}
+        </p>
+      ) : null}
       {hasSummaryResult && highlights.length > 1 ? (
         <div className={aspectModeRowStyles}>
           <Button
@@ -643,6 +657,15 @@ export default function TranscriptSummaryHighlightsTab({
 
                 {highlight.description ? (
                   <div className={highlightDesc}>{highlight.description}</div>
+                ) : null}
+
+                {highlight.cuesChanged ? (
+                  <p className={highlightCuesChangedStyles} role="note">
+                    {t(
+                      'summary.highlightCuesChanged',
+                      'You edited lines in this highlight after it was found. Check that it still fits.'
+                    )}
+                  </p>
                 ) : null}
 
                 {highlight.videoPath ? (

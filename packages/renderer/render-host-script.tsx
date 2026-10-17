@@ -1,16 +1,13 @@
 import { editorialCaptionHtml } from '../shared/helpers/editorial-caption-html.js';
 import {
   getSubtitleStyles,
-  normalizeSubtitleLineBoxLineText,
-  resolveSubtitleLineBoxStyle,
   resolveSubtitleRenderTheme,
-  subtitleLineBoxStyleToCssText,
+  subtitleCueHtml,
   subtitleTextUsesMultipleLines,
 } from '../shared/helpers/subtitle-style-util.js';
 import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
-  subtitleStyleUsesLineBox,
   type SubtitleTypeface,
 } from '../shared/constants/subtitle-styles.js';
 import type { SubtitleRenderState } from '@shared-types/app';
@@ -19,47 +16,6 @@ const renderTarget = {
   width: undefined as number | undefined,
   height: undefined as number | undefined,
 };
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-function renderLineBoxLineHtml(
-  lineHtml: string,
-  renderTheme: ReturnType<typeof resolveSubtitleRenderTheme>
-): string {
-  const style = subtitleLineBoxStyleToCssText(
-    resolveSubtitleLineBoxStyle(renderTheme)
-  );
-  return `<span style="${style}">${lineHtml || '&nbsp;'}</span>`;
-}
-
-function renderPlainSubtitleHtml(
-  text: string,
-  stylePreset: SubtitleStylePresetKey,
-  renderTheme: ReturnType<typeof resolveSubtitleRenderTheme>
-): string {
-  if (!text.trim()) {
-    return '';
-  }
-
-  if (subtitleStyleUsesLineBox(stylePreset)) {
-    return text
-      .split('\n')
-      .map(line =>
-        renderLineBoxLineHtml(
-          escapeHtml(normalizeSubtitleLineBoxLineText(line)),
-          renderTheme
-        )
-      )
-      .join('<br/>');
-  }
-
-  return escapeHtml(text);
-}
 
 function setSubtitleVisibility(el: HTMLElement, text: string) {
   if (text.trim()) {
@@ -202,11 +158,7 @@ function initializeSubtitleDisplay() {
         typeface,
       });
 
-      el.innerHTML = renderPlainSubtitleHtml(
-        state.text,
-        stylePreset,
-        renderTheme
-      );
+      el.innerHTML = subtitleCueHtml(state.text, stylePreset, renderTheme);
 
       applyPresetStyles(el, {
         fontSizePx,

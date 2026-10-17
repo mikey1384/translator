@@ -1,5 +1,6 @@
 import { useAiStore } from '../state/ai-store';
 import { hasApiKeyModeActiveCoverage } from '../state/byo-runtime';
+import * as SystemIPC from '../ipc/system';
 import { BoundedRecentMap } from './bounded-recent-map';
 
 const MAX_RECENT_CREDIT_REFRESH_OPERATIONS = 2048;
@@ -51,4 +52,16 @@ export function shouldRefreshStage5CreditsForOperation(
   const shouldRefresh = !shouldSkipStage5CreditRefresh();
   stage5CreditRefreshOperations.set(operationId, shouldRefresh);
   return shouldRefresh;
+}
+
+/**
+ * Refresh the balance after a paid call that has no operation id of its own
+ * (AI video search, the most expensive single action), so the pill and card
+ * don't keep showing the pre-search balance. Skipped when API keys pay.
+ */
+export function refreshStage5CreditsAfterPaidCall(): void {
+  if (shouldSkipStage5CreditRefresh()) return;
+  void SystemIPC.refreshCreditSnapshot(true).catch(error => {
+    console.warn('[credits] Balance refresh after a paid call failed:', error);
+  });
 }

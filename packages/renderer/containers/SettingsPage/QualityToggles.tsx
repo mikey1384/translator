@@ -21,9 +21,8 @@ import {
   CREDITS_PER_SUMMARY_AUDIO_HOUR,
   CREDITS_PER_SUMMARY_AUDIO_HOUR_HIGH,
   estimateTranslationCreditsPerHour,
-  creditsToVideoMinutes,
-  formatTime,
 } from '../../utils/creditEstimates';
+import { formatCostInMinutes } from '../../utils/formatCostInMinutes';
 import {
   getQualityTranslationOnLabel,
   getReviewProviderHeading,
@@ -155,7 +154,11 @@ export default function QualityToggles() {
     value: number,
     unit: 'perHour' | 'perMinute' | 'perSearch'
   ) => {
-    const time = formatTime(creditsToVideoMinutes(value), i18n.language);
+    // The copy carries the "~"; the helper's exact form avoids "~~".
+    const time = formatCostInMinutes(value, {
+      kind: 'exact',
+      locale: i18n.language,
+    });
     if (unit === 'perHour') {
       return t(
         'settings.performanceQuality.rate.minutesPerHour',

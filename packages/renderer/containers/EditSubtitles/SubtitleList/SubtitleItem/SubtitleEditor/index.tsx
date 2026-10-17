@@ -1,4 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { FoldVertical, Scissors } from 'lucide-react';
+import { flushPendingEdits } from '../../../../../utils/pending-edits.js';
+import {
+  precheckTranscriptionCredits,
+  precheckTranslationCredits,
+} from '../../../../../utils/credit-precheck.js';
 import Button from '../../../../../components/Button.js';
 import SubtitleEditTextarea from './SubtitleEditTextarea.js';
 import { useTranslation } from 'react-i18next';
@@ -82,6 +88,13 @@ export default function SubtitleEditor({
     error: TimecodeEditError;
   } | null>(null);
   const [isTranslatingOne, setIsTranslatingOne] = useState(false);
+  // Last caret position in either text field, for "Split at cursor".
+  const caretRef = useRef<{
+    field: 'original' | 'translation';
+    caret: number;
+  } | null>(null);
+  // Line numbers follow list order, so a next line exists below `order.length`.
+  const lineCount = useSubStore(s => s.order.length);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isTranslatingGlobal = useTaskStore(s => !!s.translation.inProgress);
   const isMerging = useTaskStore(s => !!s.merge.inProgress);
@@ -108,6 +121,15 @@ export default function SubtitleEditor({
   if (!subtitle) {
     return null;
   }
+
+  const splitLabel = t(
+    'editSubtitles.item.splitTitle',
+    'Split this line at the cursor'
+  );
+  const mergeLabel = t(
+    'editSubtitles.item.mergeTitle',
+    'Merge with the next line'
+  );
 
   const commitTimeChange = (field: 'start' | 'end', value: string) => {
     if (editingLocked) return;
@@ -149,6 +171,20 @@ export default function SubtitleEditor({
     actions.remove();
   };
 
+  const handleSplit = () => {
+    if (editingLocked) return;
+    // Typed text first, so the caret position matches the stored text.
+    flushPendingEdits();
+    useSubStore.getState().split(id, caretRef.current ?? undefined);
+    caretRef.current = null;
+  };
+
+  const handleMergeWithNext = () => {
+    if (editingLocked) return;
+    flushPendingEdits();
+    useSubStore.getState().mergeWithNext(id);
+  };
+
   const handleInsertAfter = () => {
     if (editingLocked) return;
     actions.insertAfter();
@@ -159,6 +195,8 @@ export default function SubtitleEditor({
     range?: { start: number; end: number }
   ) {
     if (!videoPath || !subtitle || editingLocked || isMerging) return;
+    // Out of minutes: the credits dialog now, not a progress window first.
+    if (!precheckTranscriptionCredits()) return;
     try {
       setIsTranscribingOne(true);
       const operationId = `transcribe-${Date.now()}-${id}`;
@@ -315,6 +353,7 @@ export default function SubtitleEditor({
     if (editingLocked || isMerging) return;
     if (!subtitle?.original?.trim()) return;
     if (useTaskStore.getState().transcription.inProgress) return;
+    if (!precheckTranslationCredits()) return;
     try {
       setIsTranslatingOne(true);
       const operationId = `translate-missing-${Date.now()}-${id}`;
@@ -435,6 +474,11 @@ export default function SubtitleEditor({
                 ? t('editSubtitles.item.pauseSnippet')
                 : t('editSubtitles.item.playSnippet')
             }
+            aria-label={
+              isPlaying
+                ? t('editSubtitles.item.pauseSnippet')
+                : t('editSubtitles.item.playSnippet')
+            }
           >
             {isPlaying ? (
               <svg
@@ -456,12 +500,34 @@ export default function SubtitleEditor({
               </svg>
             )}
           </Button>
-          {/* Removed small translate button next to the seek button */}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleSplit}
+            title={splitLabel}
+            aria-label={splitLabel}
+            disabled={editingLocked || subtitle.end - subtitle.start < 0.2}
+            data-testid={`subtitle-split-${id}`}
+          >
+            <Scissors size={14} aria-hidden="true" />
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleMergeWithNext}
+            title={mergeLabel}
+            aria-label={mergeLabel}
+            disabled={editingLocked || subtitle.index >= lineCount}
+            data-testid={`subtitle-merge-${id}`}
+          >
+            <FoldVertical size={14} aria-hidden="true" />
+          </Button>
           <Button
             variant="secondary"
             size="sm"
             onClick={handleInsertAfter}
             title={t('editSubtitles.item.insertTitle')}
+            aria-label={t('editSubtitles.item.insertTitle')}
             disabled={editingLocked}
           >
             <svg
@@ -484,6 +550,7 @@ export default function SubtitleEditor({
             size="sm"
             onClick={handleRemove}
             title={t('editSubtitles.item.removeTitle')}
+            aria-label={t('editSubtitles.item.removeTitle')}
             disabled={editingLocked}
           >
             <svg
@@ -517,6 +584,9 @@ export default function SubtitleEditor({
               value={subtitle.original}
               searchTerm={searchText || ''}
               onChange={v => actions.update({ original: v })}
+              onCaretChange={caret => {
+                caretRef.current = { field: 'original', caret };
+              }}
               rows={4}
               placeholder={t('editSubtitles.item.subtitlePlaceholder')}
               readOnly={editingLocked}
@@ -595,6 +665,9 @@ export default function SubtitleEditor({
                 value={subtitle.translation ?? ''}
                 searchTerm={searchText || ''}
                 onChange={v => actions.update({ translation: v })}
+                onCaretChange={caret => {
+                  caretRef.current = { field: 'translation', caret };
+                }}
                 rows={4}
                 placeholder={t('editSubtitles.item.subtitlePlaceholder')}
                 readOnly={editingLocked}
@@ -643,7 +716,11 @@ export default function SubtitleEditor({
               aria-describedby={
                 timeError ? `subtitle-time-error-${id}` : undefined
               }
-              aria-label={`Start time for subtitle ${id}`}
+              aria-label={t(
+                'editSubtitles.item.startTimeAria',
+                'Start time of line {{index}}',
+                { index: subtitle.index }
+              )}
               data-testid={`subtitle-start-${id}`}
               disabled={editingLocked}
             />
@@ -667,7 +744,11 @@ export default function SubtitleEditor({
               aria-describedby={
                 timeError ? `subtitle-time-error-${id}` : undefined
               }
-              aria-label={`End time for subtitle ${id}`}
+              aria-label={t(
+                'editSubtitles.item.endTimeAria',
+                'End time of line {{index}}',
+                { index: subtitle.index }
+              )}
               data-testid={`subtitle-end-${id}`}
               disabled={editingLocked}
             />
@@ -680,6 +761,7 @@ export default function SubtitleEditor({
               className={subtitleRowTimeInputStyles}
               placeholder="0.5"
               title={t('editSubtitles.item.shiftTitle')}
+              aria-label={t('editSubtitles.item.shiftTitle')}
               data-testid={`subtitle-shift-input-${id}`}
               disabled={editingLocked}
             />

@@ -10,6 +10,7 @@ import {
   spacing,
   zIndex,
 } from './design-system/tokens.js';
+import { useReturnFocusWhenClosed } from '../utils/focusReturn';
 
 const overlayStyles = css`
   position: fixed;
@@ -145,12 +146,11 @@ export default function Modal({
   // Move focus into the dialog when it opens and hand it back to whatever
   // opened it when it closes, so keyboard and screen-reader users never
   // land on the page behind the overlay.
+  // (An opener that unmounted, like a ⋯ menu item, hands over to its menu's
+  // trigger; see utils/focusReturn.)
+  useReturnFocusWhenClosed(open, contentRef);
   useEffect(() => {
     if (!open) return;
-    const opener =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
     const frame = window.requestAnimationFrame(() => {
       const node = contentRef.current;
       if (!node || node.contains(document.activeElement)) return;
@@ -159,12 +159,7 @@ export default function Modal({
         focusables.find(el => !el.dataset.modalClose) ?? focusables[0];
       (preferred ?? node).focus();
     });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      if (opener && opener.isConnected) {
-        opener.focus();
-      }
-    };
+    return () => window.cancelAnimationFrame(frame);
   }, [open]);
 
   const handleTabKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {

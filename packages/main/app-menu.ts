@@ -12,6 +12,8 @@ export interface AppMenuActions {
   selectRelativeTab: (delta: number) => void;
   selectTabAtIndex: (index: number) => void;
   showFindBar: () => void;
+  /** Move keyboard focus to the tab strip, or back to the page (F6). */
+  focusTabStrip: () => void;
 }
 
 export interface AppMenuOptions {
@@ -170,6 +172,15 @@ export function buildAppMenuTemplate({
             click: () => actions.selectTabAtIndex(i === 8 ? -1 : i),
           })
         ),
+        {
+          // Browser convention: F6 moves between the tab strip and the page,
+          // so keyboard users can reach, switch and close tabs.
+          label: t('menu.focusTabStrip', undefined, 'Focus Tab Bar'),
+          accelerator: 'F6',
+          visible: false,
+          acceleratorWorksWhenHidden: true,
+          click: () => actions.focusTabStrip(),
+        },
         role('minimize', 'menu.minimize', 'Minimize'),
         role('zoom', 'menu.zoom', 'Zoom'),
         ...(isMac

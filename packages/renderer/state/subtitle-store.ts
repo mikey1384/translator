@@ -15,6 +15,11 @@ import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
 import { secondsToSrtTime } from '../../shared/helpers';
 import { replaceMatches, type FindOptions } from '../utils/subtitleFind.js';
 import {
+  mergeCues,
+  splitCue,
+  type SplitField,
+} from '../utils/subtitle-split-merge.js';
+import {
   applySegmentPatchWithWordTimings,
   sanitizeRelativeWordTimings,
 } from '../../shared/helpers/word-timing.js';
@@ -79,7 +84,9 @@ export type UndoableEditKind =
   | 'replaceAll'
   | 'shift'
   | 'shiftAll'
-  | 'improve';
+  | 'improve'
+  | 'split'
+  | 'merge';
 
 interface Actions {
   /** Clears `dirty` when no edit happened after `revision` was read. */
@@ -122,6 +129,13 @@ interface Actions {
   update: (id: string, patch: Partial<SrtSegment>) => void;
   insertAfter: (id: string) => string | null;
   remove: (id: string) => void;
+  /** Splits a line at the caret (see `splitCue`); returns the new line's id. */
+  split: (
+    id: string,
+    options?: { field?: SplitField; caret?: number | null }
+  ) => string | null;
+  /** Merges a line with the one after it. Returns false when there is none. */
+  mergeWithNext: (id: string) => boolean;
   shift: (id: string, secs: number) => void;
   shiftAll: (offsetSeconds: number) => void;
   scrollToCurrent: () => void;
@@ -194,7 +208,11 @@ const initialState: State = {
 // Snapshots of (immutable, structurally shared) segments/order taken before
 // structural edits. Kept outside the store so Immer never drafts them.
 const UNDO_LIMIT = 30;
-let undoStack: Array<{ segments: SegmentMap; order: string[] }> = [];
+let undoStack: Array<{
+  segments: SegmentMap;
+  order: string[];
+  kind: UndoableEditKind;
+}> = [];
 
 /** Forget undo history (subtitles unmounted outside `load`). */
 export function clearSubtitleUndoHistory(): void {
@@ -203,7 +221,7 @@ export function clearSubtitleUndoHistory(): void {
 
 function rememberForUndo(kind: UndoableEditKind): void {
   const { segments, order } = useSubStore.getState();
-  undoStack.push({ segments, order });
+  undoStack.push({ segments, order, kind });
   if (undoStack.length > UNDO_LIMIT) undoStack = undoStack.slice(-UNDO_LIMIT);
   useSubStore.setState({
     undoDepth: undoStack.length,
@@ -281,7 +299,12 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.order = snapshot.order;
           s.sourceId += 1;
           s.undoDepth = undoStack.length;
-          s.lastUndoable = null;
+          // Keep offering Undo for the step before, so several edits can
+          // be taken back one after another.
+          const previous = undoStack[undoStack.length - 1];
+          s.lastUndoable = previous
+            ? { kind: previous.kind, at: Date.now() }
+            : null;
           markEdited(s);
         });
         return true;
@@ -682,6 +705,54 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           }
           markEdited(s);
         });
+      },
+
+      split: (id, options) => {
+        const cue = get().segments[id];
+        if (!cue) return null;
+        const pieces = splitCue(cue, {
+          field: options?.field,
+          caret: options?.caret,
+          newId: crypto.randomUUID(),
+        });
+        if (!pieces) return null;
+        rememberForUndo('split');
+        const [first, second] = pieces;
+        set(s => {
+          const i = s.order.indexOf(id);
+          if (i === -1) return;
+          s.segments[id] = first;
+          s.segments[second.id] = second;
+          s.order.splice(i + 1, 0, second.id);
+          s.order = [...s.order];
+          for (let j = i; j < s.order.length; j++) {
+            s.segments[s.order[j]].index = j + 1;
+          }
+          markEdited(s);
+        });
+        return second.id;
+      },
+
+      mergeWithNext: id => {
+        const { order, segments } = get();
+        const i = order.indexOf(id);
+        const nextId = i === -1 ? undefined : order[i + 1];
+        if (!nextId || !segments[id] || !segments[nextId]) return false;
+        rememberForUndo('merge');
+        const merged = mergeCues(segments[id], segments[nextId]);
+        set(s => {
+          const at = s.order.indexOf(id);
+          if (at === -1) return;
+          s.segments[id] = merged;
+          delete s.segments[nextId];
+          s.order.splice(at + 1, 1);
+          s.order = [...s.order];
+          for (let j = at; j < s.order.length; j++) {
+            s.segments[s.order[j]].index = j + 1;
+          }
+          markEdited(s);
+        });
+        return true;
       },
 
       shift: (id, secs) => {

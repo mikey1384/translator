@@ -2,14 +2,19 @@ import { createWithEqualityFn } from 'zustand/traditional';
 import { useTaskStore } from './task-store';
 import { useUIStore } from './ui-store';
 import { useVideoStore } from './video-store';
+import { useSubStore } from './subtitle-store';
 import { useStepTwoWorkflowStore } from './step-two-workflow-store';
 import { freePreviewKey } from './free-preview-store';
 import {
+  applyRunningJobOp,
+  sanitizeRunningJobRecords,
   STALE_AFTER_MS,
   staleRecords,
   type InterruptedJobKind,
+  type RunningJobOp,
   type RunningJobRecord,
-} from './interrupted-job-records';
+} from '../../shared/helpers/running-subtitle-jobs';
+import { saveMountedSubtitleDocument } from '../utils/subtitle-documents';
 
 export type { InterruptedJobKind, RunningJobRecord };
 
@@ -17,38 +22,75 @@ export type { InterruptedJobKind, RunningJobRecord };
  * Paid subtitle jobs that were still running when Translator quit or
  * crashed. Each running transcription/translation leaves a small record per
  * source; a clean finish, failure or cancel removes it. A record whose tab
- * stopped refreshing it is a job the user never saw finish, so the workspace
- * can say so and offer to resume (which reuses the durable transcription).
+ * stopped refreshing it (or that belongs to an earlier app run) is a job the
+ * user never saw finish, so the workspace can say so and offer to resume
+ * (which reuses the durable transcription).
+ *
+ * Main keeps the records on disk: renderer localStorage is lost when the app
+ * is killed or crashes, which is exactly when the notice matters.
  */
 
-const STORAGE_KEY = 'runningSubtitleJobs.v1';
+const FALLBACK_KEY = 'runningSubtitleJobs.v1';
 const HEARTBEAT_MS = 10_000;
 
 const owner = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-function readRecords(): RunningJobRecord[] {
+type Snapshot = { records: RunningJobRecord[]; session: string | null };
+
+function bridge() {
+  const api = (globalThis as any).window?.electron;
+  return api &&
+    typeof api.listRunningSubtitleJobs === 'function' &&
+    typeof api.applyRunningSubtitleJobOp === 'function'
+    ? api
+    : null;
+}
+
+function readFallback(): RunningJobRecord[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed)
-      ? parsed.filter(
-          (r: any): r is RunningJobRecord =>
-            r &&
-            typeof r.key === 'string' &&
-            (r.kind === 'transcribe' || r.kind === 'translate') &&
-            typeof r.language === 'string' &&
-            typeof r.aliveAt === 'number' &&
-            typeof r.owner === 'string'
-        )
-      : [];
+    const raw = localStorage.getItem(FALLBACK_KEY);
+    return sanitizeRunningJobRecords(raw ? JSON.parse(raw) : []);
   } catch {
     return [];
   }
 }
 
-function writeRecords(records: RunningJobRecord[]): void {
+function toSnapshot(value: any): Snapshot {
+  return {
+    records: sanitizeRunningJobRecords(value?.records),
+    session: typeof value?.session === 'string' ? value.session : null,
+  };
+}
+
+function readSnapshot(): Snapshot {
+  const api = bridge();
+  if (api) {
+    try {
+      return toSnapshot(api.listRunningSubtitleJobs());
+    } catch {
+      // Fall through to the local copy.
+    }
+  }
+  return { records: readFallback(), session: null };
+}
+
+const readRecords = () => readSnapshot().records;
+
+function apply(op: RunningJobOp): void {
+  const api = bridge();
+  if (api) {
+    try {
+      api.applyRunningSubtitleJobOp(op);
+      return;
+    } catch {
+      // Fall through to the local copy.
+    }
+  }
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    localStorage.setItem(
+      FALLBACK_KEY,
+      JSON.stringify(applyRunningJobOp(readFallback(), op))
+    );
   } catch {
     // Storage is a convenience; nothing else depends on it.
   }
@@ -64,13 +106,12 @@ export const useInterruptedJobsStore =
   createWithEqualityFn<InterruptedJobsState>()(set => ({
     items: {},
     refresh() {
-      const found = staleRecords(readRecords(), Date.now(), owner);
+      const { records, session } = readSnapshot();
+      const found = staleRecords(records, Date.now(), owner, session);
       set({ items: Object.fromEntries(found.map(r => [r.key, r])) });
     },
     dismiss(key) {
-      writeRecords(
-        readRecords().filter(r => r.key !== key || r.owner === owner)
-      );
+      apply({ type: 'dismiss', key, keepOwner: owner });
       set(state => {
         if (!state.items[key]) return state;
         const items = { ...state.items };
@@ -95,10 +136,7 @@ function syncHeartbeat(): void {
   const mine = readRecords().some(r => r.owner === owner);
   if (mine && !heartbeat) {
     heartbeat = setInterval(() => {
-      const now = Date.now();
-      writeRecords(
-        readRecords().map(r => (r.owner === owner ? { ...r, aliveAt: now } : r))
-      );
+      apply({ type: 'heartbeat', owner, now: Date.now() });
     }, HEARTBEAT_MS);
   } else if (!mine && heartbeat) {
     clearInterval(heartbeat);
@@ -115,11 +153,30 @@ function jobStarted(kind: InterruptedJobKind): void {
     (workflow.kind === 'translate' && workflow.language) ||
     useUIStore.getState().targetLanguage;
   // A new run for this source replaces any leftover record and notice.
-  const records = readRecords().filter(r => r.key !== key);
-  records.push({ key, kind, language, startedAt: now, aliveAt: now, owner });
-  writeRecords(records);
+  apply({
+    type: 'start',
+    record: { key, kind, language, startedAt: now, aliveAt: now, owner },
+  });
   useInterruptedJobsStore.getState().dismiss(key);
   syncHeartbeat();
+  // A translation of subtitles already on screen: keep a copy of them so
+  // picking the job up after a crash starts from the same lines.
+  if (kind === 'translate' && useSubStore.getState().order.length > 0) {
+    void saveMountedSubtitleDocument({ keepDirty: true })
+      .then(saved => {
+        if (saved.success && saved.documentId) {
+          apply({
+            type: 'attachDocument',
+            key,
+            owner,
+            documentId: saved.documentId,
+          });
+        }
+      })
+      .catch(() => {
+        // Without the copy, picking up starts from the video instead.
+      });
+  }
 }
 
 function jobEnded(): void {
@@ -128,7 +185,7 @@ function jobEnded(): void {
   // A transcription that hands off to translation ends and the translation
   // starts in a later tick; keep the record across that gap.
   if (useStepTwoWorkflowStore.getState().kind === 'translate') return;
-  writeRecords(readRecords().filter(r => r.owner !== owner));
+  apply({ type: 'end', owner });
   syncHeartbeat();
 }
 

@@ -41,6 +41,9 @@ const replaceRowStyles = css`
   flex-wrap: wrap;
 `;
 
+// First-strong isolate (U+2068) … pop isolate (U+2069).
+const isolateBidi = (value: number) => `\u2068${value}\u2069`;
+
 export default function FindBar() {
   const { t } = useTranslation();
   const isVisible = useUIStore(state => state.isFindBarVisible);
@@ -111,16 +114,19 @@ export default function FindBar() {
   }
 
   const hasMatches = matchCount > 0;
+  // Each number is bidi-isolated so "1 of 12" never reorders in RTL.
   const showMatchInfo = t('findBar.matchCount', '{{current}} of {{total}}', {
-    current: searchText.length > 0 && hasMatches ? activeMatchIndex + 1 : 0,
-    total: searchText.length > 0 ? matchCount : 0,
+    current: isolateBidi(
+      searchText.length > 0 && hasMatches ? activeMatchIndex + 1 : 0
+    ),
+    total: isolateBidi(searchText.length > 0 ? matchCount : 0),
   });
   const matchCaseLabel = t('findBar.matchCase', 'Match case');
   const wholeWordLabel = t('findBar.wholeWord', 'Whole word');
   const replaceToggleLabel = t('findBar.showReplace', 'Replace');
 
   return (
-    <div className={editorFindBarStyles}>
+    <div className={editorFindBarStyles} data-find-bar>
       <input
         ref={inputRef}
         type="text"
@@ -152,6 +158,7 @@ export default function FindBar() {
       </button>
       <span
         aria-live="polite"
+        dir="auto"
         className={cx(
           editorFindMatchCountStyles,
           matchCountNoClipStyles,

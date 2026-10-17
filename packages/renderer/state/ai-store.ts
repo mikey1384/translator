@@ -114,8 +114,10 @@ interface AiStoreState {
   // Stage5 dubbing TTS provider: always ElevenLabs (eleven_v4).
   stage5DubbingTtsProvider: 'elevenlabs';
   // OpenAI key state
+  // What the user is typing; saved keys stay in main (L11).
   keyValue: string;
   keyPresent: boolean;
+  keyLast4: string | null;
   keyLoading: boolean;
   savingKey: boolean;
   validatingKey: boolean;
@@ -123,6 +125,7 @@ interface AiStoreState {
   // Anthropic key state
   anthropicKeyValue: string;
   anthropicKeyPresent: boolean;
+  anthropicKeyLast4: string | null;
   anthropicKeyLoading: boolean;
   savingAnthropicKey: boolean;
   validatingAnthropicKey: boolean;
@@ -130,6 +133,7 @@ interface AiStoreState {
   // ElevenLabs key state
   elevenLabsKeyValue: string;
   elevenLabsKeyPresent: boolean;
+  elevenLabsKeyLast4: string | null;
   elevenLabsKeyLoading: boolean;
   savingElevenLabsKey: boolean;
   validatingElevenLabsKey: boolean;
@@ -574,7 +578,7 @@ function ensureSubscriptions(
       }
       try {
         const key = await SystemIPC.getOpenAiApiKey();
-        set({ keyPresent: Boolean(key), keyValue: key ?? '' });
+        set({ keyPresent: key.present, keyLast4: key.last4, keyValue: '' });
         await enableConfiguredByoToggles(get, set, ['openai']);
       } catch {
         set({ keyPresent: true });
@@ -604,8 +608,9 @@ function ensureSubscriptions(
       try {
         const key = await SystemIPC.getAnthropicApiKey();
         set({
-          anthropicKeyPresent: Boolean(key),
-          anthropicKeyValue: key ?? '',
+          anthropicKeyPresent: key.present,
+          anthropicKeyLast4: key.last4,
+          anthropicKeyValue: '',
         });
         await enableConfiguredByoToggles(get, set, ['anthropic']);
       } catch {
@@ -636,8 +641,9 @@ function ensureSubscriptions(
       try {
         const key = await SystemIPC.getElevenLabsApiKey();
         set({
-          elevenLabsKeyPresent: Boolean(key),
-          elevenLabsKeyValue: key ?? '',
+          elevenLabsKeyPresent: key.present,
+          elevenLabsKeyLast4: key.last4,
+          elevenLabsKeyValue: '',
         });
         await enableConfiguredByoToggles(get, set, ['elevenlabs']);
       } catch {
@@ -645,6 +651,12 @@ function ensureSubscriptions(
       }
     })
   );
+}
+
+/** Same rule as main's summarizeStoredApiKey: no tail for short values. */
+function lastFour(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed.length >= 12 ? trimmed.slice(-4) : null;
 }
 
 export const useAiStore = create<AiStoreState>((set, get) => {
@@ -704,6 +716,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     // OpenAI state
     keyValue: '',
     keyPresent: false,
+    keyLast4: null,
     keyLoading: false,
     savingKey: false,
     validatingKey: false,
@@ -711,6 +724,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     // Anthropic state
     anthropicKeyValue: '',
     anthropicKeyPresent: false,
+    anthropicKeyLast4: null,
     anthropicKeyLoading: false,
     savingAnthropicKey: false,
     validatingAnthropicKey: false,
@@ -718,6 +732,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     // ElevenLabs state
     elevenLabsKeyValue: '',
     elevenLabsKeyPresent: false,
+    elevenLabsKeyLast4: null,
     elevenLabsKeyLoading: false,
     savingElevenLabsKey: false,
     validatingElevenLabsKey: false,
@@ -970,8 +985,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({ keyLoading: true });
         const key = await SystemIPC.getOpenAiApiKey();
         set({
-          keyValue: key ?? '',
-          keyPresent: Boolean(key),
+          keyValue: '',
+          keyPresent: key.present,
+          keyLast4: key.last4,
           keyLoading: false,
         });
       } catch {
@@ -985,7 +1001,12 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({ savingKey: true });
         const result = await SystemIPC.setOpenAiApiKey(value);
         if (result.success) {
-          set({ keyPresent: Boolean(value.trim()) });
+          // Don't keep the saved key in renderer state.
+          set({
+            keyPresent: Boolean(value.trim()),
+            keyLast4: lastFour(value),
+            keyValue: '',
+          });
           await enableConfiguredByoToggles(get, set, ['openai']);
         }
         return result;
@@ -1069,8 +1090,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({ anthropicKeyLoading: true });
         const key = await SystemIPC.getAnthropicApiKey();
         set({
-          anthropicKeyValue: key ?? '',
-          anthropicKeyPresent: Boolean(key),
+          anthropicKeyValue: '',
+          anthropicKeyPresent: key.present,
+          anthropicKeyLast4: key.last4,
           anthropicKeyLoading: false,
         });
       } catch {
@@ -1084,7 +1106,11 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({ savingAnthropicKey: true });
         const result = await SystemIPC.setAnthropicApiKey(value);
         if (result.success) {
-          set({ anthropicKeyPresent: Boolean(value.trim()) });
+          set({
+            anthropicKeyPresent: Boolean(value.trim()),
+            anthropicKeyLast4: lastFour(value),
+            anthropicKeyValue: '',
+          });
           await enableConfiguredByoToggles(get, set, ['anthropic']);
         }
         return result;
@@ -1193,8 +1219,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({ elevenLabsKeyLoading: true });
         const key = await SystemIPC.getElevenLabsApiKey();
         set({
-          elevenLabsKeyValue: key ?? '',
-          elevenLabsKeyPresent: Boolean(key),
+          elevenLabsKeyValue: '',
+          elevenLabsKeyPresent: key.present,
+          elevenLabsKeyLast4: key.last4,
           elevenLabsKeyLoading: false,
         });
       } catch {
@@ -1208,7 +1235,11 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({ savingElevenLabsKey: true });
         const result = await SystemIPC.setElevenLabsApiKey(value);
         if (result.success) {
-          set({ elevenLabsKeyPresent: Boolean(value.trim()) });
+          set({
+            elevenLabsKeyPresent: Boolean(value.trim()),
+            elevenLabsKeyLast4: lastFour(value),
+            elevenLabsKeyValue: '',
+          });
           await enableConfiguredByoToggles(get, set, ['elevenlabs']);
         }
         return result;

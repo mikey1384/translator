@@ -11,6 +11,7 @@ import {
   openStoreSafely,
   resolveDeviceId,
   salvageDeviceId,
+  startupNoticesFor,
 } from '../store/safe-store-core.js';
 
 const silent = { warn: () => {}, error: () => {} };
@@ -140,16 +141,21 @@ test('resolveDeviceId prefers primary, then mirror, then salvaged, then new', ()
   const gen = () => 'new-id-000';
   assert.deepEqual(
     resolveDeviceId({ primary: 'aaaaaaaa', mirror: 'aaaaaaaa', generate: gen }),
-    { id: 'aaaaaaaa', writePrimary: false, writeMirror: false }
+    {
+      id: 'aaaaaaaa',
+      generated: false,
+      writePrimary: false,
+      writeMirror: false,
+    }
   );
   assert.deepEqual(
     resolveDeviceId({ primary: 'aaaaaaaa', mirror: undefined, generate: gen }),
-    { id: 'aaaaaaaa', writePrimary: false, writeMirror: true }
+    { id: 'aaaaaaaa', generated: false, writePrimary: false, writeMirror: true }
   );
   // device-config.json was corrupt and reset: recover from stage5-auth.json.
   assert.deepEqual(
     resolveDeviceId({ primary: undefined, mirror: 'bbbbbbbb', generate: gen }),
-    { id: 'bbbbbbbb', writePrimary: true, writeMirror: false }
+    { id: 'bbbbbbbb', generated: false, writePrimary: true, writeMirror: false }
   );
   assert.deepEqual(
     resolveDeviceId({
@@ -158,10 +164,39 @@ test('resolveDeviceId prefers primary, then mirror, then salvaged, then new', ()
       salvaged: [null, 'cccccccc'],
       generate: gen,
     }),
-    { id: 'cccccccc', writePrimary: true, writeMirror: true }
+    { id: 'cccccccc', generated: false, writePrimary: true, writeMirror: true }
   );
   assert.deepEqual(
     resolveDeviceId({ primary: '', mirror: '  ', generate: gen }),
-    { id: 'new-id-000', writePrimary: true, writeMirror: true }
+    { id: 'new-id-000', generated: true, writePrimary: true, writeMirror: true }
+  );
+});
+
+test('startupNoticesFor reports lost settings and a replaced device id only', () => {
+  assert.deepEqual(
+    startupNoticesFor({ quarantinedStores: [], deviceIdGenerated: true }),
+    []
+  );
+  assert.deepEqual(
+    startupNoticesFor({
+      quarantinedStores: ['app-settings'],
+      deviceIdGenerated: false,
+    }),
+    ['settingsReset']
+  );
+  assert.deepEqual(
+    startupNoticesFor({
+      quarantinedStores: ['device-config', 'stage5-auth'],
+      deviceIdGenerated: true,
+    }),
+    ['deviceIdReplaced']
+  );
+  // The id was recovered from the mirror: nothing to report.
+  assert.deepEqual(
+    startupNoticesFor({
+      quarantinedStores: ['device-config', 'credit-balance'],
+      deviceIdGenerated: false,
+    }),
+    []
   );
 });

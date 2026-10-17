@@ -103,6 +103,8 @@ export default function ByoApiKeysColumn({
   const { t } = useTranslation();
 
   const keyValue = useAiStore(state => state.keyValue);
+
+  const keyLast4 = useAiStore(state => state.keyLast4);
   const keyPresent = useAiStore(state => state.keyPresent);
   const keyLoading = useAiStore(state => state.keyLoading);
   const savingKey = useAiStore(state => state.savingKey);
@@ -114,6 +116,8 @@ export default function ByoApiKeysColumn({
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
 
   const anthropicKeyValue = useAiStore(state => state.anthropicKeyValue);
+
+  const anthropicKeyLast4 = useAiStore(state => state.anthropicKeyLast4);
   const anthropicKeyPresent = useAiStore(state => state.anthropicKeyPresent);
   const anthropicKeyLoading = useAiStore(state => state.anthropicKeyLoading);
   const savingAnthropicKey = useAiStore(state => state.savingAnthropicKey);
@@ -127,6 +131,8 @@ export default function ByoApiKeysColumn({
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
 
   const elevenLabsKeyValue = useAiStore(state => state.elevenLabsKeyValue);
+
+  const elevenLabsKeyLast4 = useAiStore(state => state.elevenLabsKeyLast4);
   const elevenLabsKeyPresent = useAiStore(state => state.elevenLabsKeyPresent);
   const elevenLabsKeyLoading = useAiStore(state => state.elevenLabsKeyLoading);
   const savingElevenLabsKey = useAiStore(state => state.savingElevenLabsKey);
@@ -228,6 +234,7 @@ export default function ByoApiKeysColumn({
             onValidate={validateKey}
             onClear={clearKey}
             keyPresent={keyPresent}
+            keyLast4={keyLast4}
             loading={keyLoading}
             saving={savingKey}
             validating={validatingKey}
@@ -245,6 +252,7 @@ export default function ByoApiKeysColumn({
             onValidate={validateAnthropicKey}
             onClear={clearAnthropicKey}
             keyPresent={anthropicKeyPresent}
+            keyLast4={anthropicKeyLast4}
             loading={anthropicKeyLoading}
             saving={savingAnthropicKey}
             validating={validatingAnthropicKey}
@@ -262,6 +270,7 @@ export default function ByoApiKeysColumn({
             onValidate={validateElevenLabsKey}
             onClear={clearElevenLabsKey}
             keyPresent={elevenLabsKeyPresent}
+            keyLast4={elevenLabsKeyLast4}
             loading={elevenLabsKeyLoading}
             saving={savingElevenLabsKey}
             validating={validatingElevenLabsKey}

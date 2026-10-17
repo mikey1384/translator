@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { cx } from '@emotion/css';
+import { css, cx } from '@emotion/css';
 import { FileCheck2 } from 'lucide-react';
 import type { SubtitleDisplayMode } from '@shared-types/app';
 import { selectStyles } from '../../../styles.js';
@@ -33,6 +33,10 @@ import {
   workflowPanelTextBlockStyles,
   workflowPanelTitleStyles,
 } from '../../../components/workflow-surface-styles';
+
+const costWarningLineStyles = css`
+  display: block;
+`;
 
 interface SrtMountedPanelProps {
   srtPath?: string | null;
@@ -252,7 +256,7 @@ export default function SrtMountedPanel({
               onClick={() => useUIStore.getState().toggleSettings(true)}
               disabled={isDisabled}
             >
-              {t('subtitles.addCreditsToTranslate', 'Add credits to translate')}
+              {t('subtitles.addMinutesToTranslate', 'Add minutes to translate')}
             </Button>
           ) : (
             <Button
@@ -269,7 +273,9 @@ export default function SrtMountedPanel({
             !isTranslating &&
             !translationEstimate.isByo && (
               <span className={translationCostClassName}>
-                {formatCostLabel(translationEstimate.estimatedCredits)}
+                <bdi>
+                  {formatCostLabel(translationEstimate.estimatedCredits)}
+                </bdi>
                 {translationEstimate.qualityEnabled && (
                   <span className={workflowPanelBadgeStyles}>
                     {t('subtitles.qualityBadge', '(hq)')}
@@ -307,14 +313,22 @@ export default function SrtMountedPanel({
                     )
               }
             >
-              {dubbingEstimate.blockedInApiKeyMode
-                ? 'ElevenLabs'
-                : formatCostLabel(
-                    dubEstimate?.total ?? dubbingEstimate.estimatedCredits
+              <bdi>
+                {dubbingEstimate.blockedInApiKeyMode
+                  ? 'ElevenLabs'
+                  : formatCostLabel(
+                      dubEstimate?.total ?? dubbingEstimate.estimatedCredits
+                    )}
+              </bdi>
+              {cannotAffordDub ? (
+                // Its own line, so cost and warning never run together.
+                <span className={costWarningLineStyles}>
+                  {t(
+                    'subtitles.dubNotEnoughMinutes',
+                    'Not enough minutes left for this dub.'
                   )}
-              {cannotAffordDub
-                ? ` ${t('subtitles.dubNotEnoughCredits', 'Not enough credits for this dub.')}`
-                : null}
+                </span>
+              ) : null}
             </span>
           )}
         </div>

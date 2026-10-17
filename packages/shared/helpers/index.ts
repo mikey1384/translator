@@ -23,9 +23,14 @@ export class SubtitleProcessingError extends Error {
   }
 }
 
-function flattenCueText(input?: string): string {
+/** Tidies a cue's spacing but keeps the line breaks its author chose. */
+function normalizeCueLines(input?: string): string {
   if (!input) return '';
-  return input.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+  return input
+    .split(/\r?\n/)
+    .map(line => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 function normalizeComparableSrtText(input: string): string {
@@ -204,10 +209,10 @@ export function parseSrtWithReport(srtString: string): {
 export function shapeImportedSrtSegments(segments: SrtSegment[]): SrtSegment[] {
   return autoSplitBilingualCues(segments).map(seg => ({
     ...seg,
-    original: flattenCueText(seg.original),
+    original: normalizeCueLines(seg.original),
     translation:
       typeof seg.translation === 'string'
-        ? flattenCueText(seg.translation)
+        ? normalizeCueLines(seg.translation)
         : seg.translation,
   }));
 }
@@ -382,7 +387,12 @@ export function formatTimeForDisplay(seconds: number): string {
  * dropped on the window).
  */
 export async function openSubtitleWithElectron(
-  options: { filePath?: string } = {}
+  options: {
+    filePath?: string;
+    /** The open dialog's title and file-type name, already translated. */
+    dialogTitle?: string;
+    filterName?: string;
+  } = {}
 ): Promise<{
   file?: File;
   content?: string;
@@ -415,8 +425,10 @@ export async function openSubtitleWithElectron(
       content = read.content;
     } else {
       const result = await openFileIPC({
-        filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
-        title: 'Open Subtitle File',
+        filters: [
+          { name: options.filterName ?? 'Subtitle Files', extensions: ['srt'] },
+        ],
+        title: options.dialogTitle ?? 'Open Subtitle File',
       });
 
       if (

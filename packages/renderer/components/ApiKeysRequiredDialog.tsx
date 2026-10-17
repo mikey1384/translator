@@ -164,6 +164,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
 
   // OpenAI state
   const keyValue = useAiStore(s => s.keyValue);
+  const keyLast4 = useAiStore(s => s.keyLast4);
   const keyPresent = useAiStore(s => s.keyPresent);
   const setKeyValue = useAiStore(s => s.setKeyValue);
   const saveKey = useAiStore(s => s.saveKey);
@@ -175,6 +176,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
 
   // Anthropic state
   const anthropicKeyValue = useAiStore(s => s.anthropicKeyValue);
+  const anthropicKeyLast4 = useAiStore(s => s.anthropicKeyLast4);
   const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
   const setAnthropicKeyValue = useAiStore(s => s.setAnthropicKeyValue);
   const saveAnthropicKey = useAiStore(s => s.saveAnthropicKey);
@@ -186,6 +188,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
 
   // ElevenLabs state
   const elevenLabsKeyValue = useAiStore(s => s.elevenLabsKeyValue);
+  const elevenLabsKeyLast4 = useAiStore(s => s.elevenLabsKeyLast4);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
   const setElevenLabsKeyValue = useAiStore(s => s.setElevenLabsKeyValue);
   const saveElevenLabsKey = useAiStore(s => s.saveElevenLabsKey);
@@ -361,6 +364,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
               onValidate={validateKey}
               onClear={clearKey}
               keyPresent={keyPresent}
+              keyLast4={keyLast4}
               saving={savingKey}
               validating={validatingKey}
               compact
@@ -377,6 +381,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
               onValidate={validateAnthropicKey}
               onClear={clearAnthropicKey}
               keyPresent={anthropicKeyPresent}
+              keyLast4={anthropicKeyLast4}
               saving={savingAnthropicKey}
               validating={validatingAnthropicKey}
               compact
@@ -393,6 +398,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
               onValidate={validateElevenLabsKey}
               onClear={clearElevenLabsKey}
               keyPresent={elevenLabsKeyPresent}
+              keyLast4={elevenLabsKeyLast4}
               saving={savingElevenLabsKey}
               validating={validatingElevenLabsKey}
               compact

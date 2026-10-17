@@ -115,9 +115,21 @@ export default function PrivacySection() {
         />
       </div>
       <p role="status" aria-live="polite" style={{ lineHeight: 1.6 }}>
-        {t(`settings.privacy.${status}`)}
+        {status === 'pendingOff'
+          ? t(
+              'settings.privacy.pendingOffPlain',
+              'Off. We’ll confirm with the server next time you’re online.'
+            )
+          : status === 'pendingOn'
+            ? t(
+                'settings.privacy.pendingOnPlain',
+                'On. Reports wait until you’re back online.'
+              )
+            : t(`settings.privacy.${status}`)}
       </p>
-      {(error || state?.status === 'pending') && (
+      {/* Off is already in effect locally, so it needs no Retry; "on" and
+          errors keep one so reports can resume. */}
+      {(error || status === 'pendingOn') && (
         <button
           type="button"
           className={retryStyles}

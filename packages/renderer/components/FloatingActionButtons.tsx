@@ -7,6 +7,7 @@ import { logButton } from '../utils/logger';
 import subtitleRendererClient from '../clients/subtitle-renderer-client.js';
 import { useUrlStore } from '../state/url-store';
 import { colors } from '../styles.js';
+import { formatPercent } from '../utils/formatNumbers';
 
 /** Dispatched on window by the header menu's Reload item. */
 export const RELOAD_REQUEST_EVENT = 'translator:request-reload';
@@ -23,6 +24,26 @@ const buttonContainerStyles = css`
   z-index: 1000;
   display: flex;
   gap: 10px;
+
+  /* Narrow windows: a small button tucked in the corner so it covers as
+     little of the subtitle rows as possible. */
+  @media (max-width: 576px) {
+    bottom: 12px;
+    inset-inline-end: 12px;
+  }
+`;
+
+const scrollTopButtonStyles = css`
+  @media (max-width: 576px) {
+    width: 40px;
+    height: 40px;
+    opacity: 0.85;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
 `;
 
 const spinKeyframes = css`
@@ -184,6 +205,9 @@ export default function FloatingActionButtons({
   const installing = useUpdateStore(s => s.installing);
   const install = useUpdateStore(s => s.install);
   const check = useUpdateStore(s => s.check);
+  const availableVersion = useUpdateStore(s =>
+    typeof s.updateInfo?.version === 'string' ? s.updateInfo.version : null
+  );
   const doDownload = () => useUpdateStore.getState().download();
 
   useEffect(() => {
@@ -430,7 +454,7 @@ export default function FloatingActionButtons({
           className: updatePillDownloadingStyles,
           label: t('common.downloadingUpdateShort', 'DOWNLOADING'),
           meta: t('common.downloadingUpdate', 'Downloading update...'),
-          progressLabel: `${progressPercent}%`,
+          progressLabel: formatPercent(progressPercent),
           icon: (
             <svg
               width="16"
@@ -465,7 +489,12 @@ export default function FloatingActionButtons({
         kind: 'update' as const,
         className: updatePillAvailableStyles,
         label: t('common.downloadUpdateNow', 'Download Update'),
-        meta: t('common.checkForUpdateNow', 'Check for Update'),
+        // The second line names what is waiting, not a different action.
+        meta: availableVersion
+          ? t('common.updateVersionAvailable', 'v{{version}} available', {
+              version: availableVersion,
+            })
+          : undefined,
         icon: (
           <svg
             width="18"
@@ -565,7 +594,11 @@ export default function FloatingActionButtons({
                 <span className={updatePillLabelStyles}>
                   {buttonProps.label}
                 </span>
-                <span className={updatePillMetaStyles}>{buttonProps.meta}</span>
+                {buttonProps.meta ? (
+                  <span className={updatePillMetaStyles}>
+                    <bdi>{buttonProps.meta}</bdi>
+                  </span>
+                ) : null}
               </div>
               {buttonProps.progressLabel ? (
                 <span className={updatePillProgressBadgeStyles}>
@@ -588,6 +621,7 @@ export default function FloatingActionButtons({
               handleBackToTopClick();
             }
           }}
+          className={scrollTopButtonStyles}
           title={t('common.backToTop', 'Back to Top')}
           aria-label={t('common.backToTopAria', 'Scroll back to top')}
           size="lg"

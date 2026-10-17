@@ -22,7 +22,6 @@ import {
   historyActionsStyles,
   historyCardsStyles,
   historySectionStyles,
-  historyTitleStyles,
   metaStyles,
   thumbnailStyles,
   titleStyles,
@@ -35,6 +34,8 @@ import {
   historyRemovalDeletesManagedFile,
 } from './download-history-actions.js';
 import { youtubeVideoIdFromUrl } from '../../../../../shared/helpers/video-url.js';
+import { useVideoStore } from '../../../../state/video-store.js';
+import { openNotice } from '../../../../state/modal-store.js';
 
 type VideoSuggestionHistoryTabProps = {
   disabled: boolean;
@@ -81,6 +82,32 @@ export default function VideoSuggestionHistoryTab({
       ? t('input.videoSuggestion.openOnYoutube', 'Open on YouTube')
       : t('input.videoSuggestion.openOriginalPage', 'Open original page');
 
+  // The open video's file can't be deleted; say so before asking to confirm.
+  const openPath = useVideoStore(s => s.originalPath || s.path);
+  const isOpenNow = (item: VideoSuggestionDownloadHistoryItem) =>
+    Boolean(item.localPath && openPath && item.localPath === openPath);
+  const explainInUse = () =>
+    openNotice({
+      title: t(
+        'input.videoSuggestion.deleteLocalFile',
+        'Delete file from device'
+      ),
+      message: t(
+        'input.videoSuggestion.deleteLocalFileInUse',
+        'This video is currently open. Open another video before deleting it.'
+      ),
+      buttons: [{ id: 'ok', label: t('common.ok', 'OK'), variant: 'primary' }],
+    });
+  const confirmDanger = async (title: string, message: string) =>
+    (await openNotice({
+      title,
+      message,
+      buttons: [
+        { id: 'cancel', label: t('common.cancel', 'Cancel') },
+        { id: 'confirm', label: title, variant: 'danger' },
+      ],
+    })) === 'confirm';
+
   if (downloadHistory.length === 0) {
     return (
       <div className={emptyTabStateStyles}>
@@ -91,9 +118,6 @@ export default function VideoSuggestionHistoryTab({
 
   return (
     <div className={historySectionStyles}>
-      <div className={historyTitleStyles}>
-        {t('input.videoSuggestion.downloadHistoryTitle', 'Download history')}
-      </div>
       <div className={historyCardsStyles}>
         {downloadHistory.map(item => {
           const historyMeta = buildVideoMetaDetails({
@@ -267,17 +291,22 @@ export default function VideoSuggestionHistoryTab({
                     <div className={historyActionsStyles}>
                       {canDeleteLocalFile ? (
                         <Button
-                          onClick={() => {
-                            if (
-                              !window.confirm(
-                                t(
-                                  'input.videoSuggestion.deleteLocalFileConfirm',
-                                  'Permanently delete this downloaded file from this device? Its history entry and source link will stay.'
-                                )
-                              )
-                            ) {
+                          onClick={async () => {
+                            if (isOpenNow(item)) {
+                              await explainInUse();
                               return;
                             }
+                            const confirmed = await confirmDanger(
+                              t(
+                                'input.videoSuggestion.deleteLocalFile',
+                                'Delete file from device'
+                              ),
+                              t(
+                                'input.videoSuggestion.deleteLocalFileConfirm',
+                                'Permanently delete this downloaded file from this device? Its history entry and source link will stay.'
+                              )
+                            );
+                            if (!confirmed) return;
                             onDeleteHistoryFile(item);
                           }}
                           disabled={isTranslationInProgress}
@@ -293,8 +322,13 @@ export default function VideoSuggestionHistoryTab({
                         </Button>
                       ) : null}
                       <Button
-                        onClick={() => {
-                          const confirmed = window.confirm(
+                        onClick={async () => {
+                          if (removeDeletesManagedFile && isOpenNow(item)) {
+                            await explainInUse();
+                            return;
+                          }
+                          const confirmed = await confirmDanger(
+                            removeHistoryLabel,
                             removeDeletesManagedFile
                               ? t(
                                   'input.videoSuggestion.deleteFileAndHistoryConfirm',

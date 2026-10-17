@@ -24,6 +24,8 @@ interface ApiKeyInputProps {
   onValidate: () => Promise<{ ok: boolean; error?: string }>;
   onClear: () => Promise<{ success: boolean; error?: string }>;
   keyPresent: boolean;
+  // Last 4 characters of the saved key; the key itself stays in main.
+  keyLast4?: string | null;
   loading?: boolean;
   saving?: boolean;
   validating?: boolean;
@@ -161,6 +163,7 @@ export default function ApiKeyInput({
   onValidate,
   onClear,
   keyPresent,
+  keyLast4 = null,
   loading = false,
   saving = false,
   validating = false,
@@ -292,7 +295,19 @@ export default function ApiKeyInput({
             type={showKey ? 'text' : 'password'}
             value={value}
             onChange={e => onChange(e.target.value)}
-            placeholder={placeholders[provider]}
+            placeholder={
+              keyPresent
+                ? keyLast4
+                  ? t(
+                      'settings.apiKey.savedEnding',
+                      'Saved key ending in {{last4}}',
+                      {
+                        last4: keyLast4,
+                      }
+                    )
+                  : t('settings.apiKey.savedHidden', 'Saved key (hidden)')
+                : placeholders[provider]
+            }
             disabled={loading || saving}
             className={`${inputStyles} ${compact ? '' : roomyInputStyles}`}
           />

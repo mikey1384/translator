@@ -1,3 +1,4 @@
+import { transcriptStopsEarlyAt } from './transcriptCoverage';
 import {
   CREDIT_PACKS,
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
@@ -113,6 +114,32 @@ export function wholeMinutes(seconds: number): number {
   return Math.max(1, Math.round(seconds / 60));
 }
 
+/**
+ * Covered, total and remaining whole minutes that add up (covered +
+ * remaining = total) however the seconds round. Covered rounds down, like
+ * the preview's own "first N min"; remaining is never zero while some is left.
+ */
+export function previewMinuteSplit({
+  coveredSecs,
+  durationSecs,
+}: {
+  coveredSecs: number;
+  durationSecs: number;
+}): { covered: number; total: number; remaining: number } {
+  const coveredClamped = Math.min(
+    Math.max(0, coveredSecs),
+    Math.max(0, durationSecs)
+  );
+  const left = Math.max(0, durationSecs - coveredClamped);
+  const covered =
+    coveredClamped > 0 ? Math.max(1, Math.floor(coveredClamped / 60)) : 0;
+  const total = Math.max(
+    wholeMinutes(durationSecs),
+    covered + (left > 0 ? 1 : 0)
+  );
+  return { covered, total, remaining: total - covered };
+}
+
 export type VideoCost =
   | { kind: 'covered' }
   | { kind: 'preview'; previewMinutes: number; wholeVideoPrice: number }
@@ -151,4 +178,22 @@ export function describeVideoCost({
         wholeVideoPrice: pack.price,
       }
     : { kind: 'offer', wholeVideoPrice: pack.price };
+}
+
+/**
+ * Whether finishing a preview still has to transcribe the rest. After the
+ * tail was transcribed once, a retry only translates, unless those lines
+ * were lost (a restart before they were saved).
+ */
+export function needsTailTranscription({
+  transcribedToEnd,
+  durationSecs,
+  lastEndSecs,
+}: {
+  transcribedToEnd?: boolean;
+  durationSecs: number;
+  lastEndSecs: number | null;
+}): boolean {
+  if (!transcribedToEnd) return true;
+  return transcriptStopsEarlyAt({ durationSecs, lastEndSecs }) !== null;
 }

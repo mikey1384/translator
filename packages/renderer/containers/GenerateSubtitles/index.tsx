@@ -827,6 +827,7 @@ export default function GenerateSubtitles() {
           url: request.url,
           mountOnComplete: request.mountOnComplete,
           preserveSubtitles: request.preserveSubtitles,
+          replaceCurrent: request.replaceCurrent,
         }),
       chain ?? { target: 'download', language: autoRunLanguage }
     );
@@ -848,7 +849,18 @@ export default function GenerateSubtitles() {
     const ui = useUIStore.getState();
     ui.clearHomeRunRequest(request.id);
     ui.setGenerateSubtitlesWorkspaceTab('main');
-    if (isSourceChangeBlocked) return;
+    if (isSourceChangeBlocked) {
+      // Say why nothing starts instead of dropping the request.
+      useUrlStore
+        .getState()
+        .setValidationError(
+          t(
+            'home.runBlockedBusy',
+            'Translator is still working on the current video. Try again when it finishes.'
+          )
+        );
+      return;
+    }
     const language = ui.targetLanguage;
     setAutoRunLanguage(language);
     if (request.kind === 'url') {
@@ -1711,7 +1723,12 @@ export default function GenerateSubtitles() {
       if (!finalSegments || !hasUsableTranscriptSegments(finalSegments)) {
         useUrlStore
           .getState()
-          .setValidationError('No SRT file available for translation');
+          .setValidationError(
+            t(
+              'subtitles.transcriptEmptyForTranslation',
+              'The transcription has no lines to translate.'
+            )
+          );
         return false;
       }
 
@@ -1779,7 +1796,12 @@ export default function GenerateSubtitles() {
       onNoSubtitles: () =>
         useUrlStore
           .getState()
-          .setValidationError('No SRT file available for translation'),
+          .setValidationError(
+            t(
+              'subtitles.noSubtitlesToTranslate',
+              'Open or make subtitles first, then translate them.'
+            )
+          ),
     });
   }
 

@@ -41,9 +41,29 @@ export function getUiLanguage(): string {
   return ln.split('-')[0] || 'en';
 }
 
+let lastUiT: MainT | null = null;
+
 /** A translator for the current UI language (reads the renderer locales). */
-export function getUiT(): Promise<MainT> {
-  return getMainT(getUiLanguage());
+export async function getUiT(): Promise<MainT> {
+  const t = await getMainT(getUiLanguage());
+  lastUiT = t;
+  return t;
+}
+
+/**
+ * Synchronous text for places that can't wait for the locale files, like
+ * the crash dialogs shown right before quitting: the last loaded UI
+ * language (the menu loads it at startup and on every switch), else English.
+ */
+export function uiTextNow(
+  key: string,
+  defaultValue: string,
+  vars?: Record<string, string | number | null | undefined>
+): string {
+  if (lastUiT) return lastUiT(key, vars, defaultValue);
+  return defaultValue.replace(/\{\{(\w+)\}\}/g, (_m, name) =>
+    String(vars?.[name] ?? '')
+  );
 }
 
 type Listener = (lang: string) => void;

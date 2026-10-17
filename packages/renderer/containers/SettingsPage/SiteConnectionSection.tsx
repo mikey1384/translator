@@ -240,6 +240,7 @@ export default function SiteConnectionSection() {
           </label>
           <input
             type="url"
+            dir="ltr"
             value={targetUrl}
             onChange={e => setTargetUrl(e.target.value)}
             disabled={!canManage || busy}

@@ -45,6 +45,9 @@ export function TranscriptSummaryPanel({
   const summaryLanguage = useUIStore(state => state.summaryLanguage);
   const setSummaryLanguage = useUIStore(state => state.setSummaryLanguage);
   const summaryEffortLevel = useUIStore(state => state.summaryEffortLevel);
+  const setSummaryEffortLevel = useUIStore(
+    state => state.setSummaryEffortLevel
+  );
   const originalVideoPath = useVideoStore(state => state.originalPath);
   const sourceAssetIdentity = useVideoStore(state => state.sourceAssetIdentity);
   const sourceUrl = useVideoStore(state => state.sourceUrl);
@@ -323,6 +326,7 @@ export function TranscriptSummaryPanel({
           });
         }}
         onSummaryLanguageChange={setSummaryLanguage}
+        onSummaryEffortLevelChange={setSummaryEffortLevel}
         summaryEffortLevel={summaryEffortLevel}
         summaryEstimate={summaryEstimate}
         summaryLanguage={summaryLanguage}

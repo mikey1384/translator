@@ -1,15 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   getSubtitleStyles,
-  normalizeSubtitleLineBoxLineText,
-  resolveSubtitleLineBoxStyle,
   resolveSubtitleRenderTheme,
+  subtitleCueHtml,
   subtitleTextUsesMultipleLines,
 } from '../../shared/helpers/subtitle-style-util.js';
 import {
   SubtitleStylePresetKey,
   type SubtitleTypeface,
-  subtitleStyleUsesLineBox,
 } from '../../shared/constants/subtitle-styles.js';
 
 interface BaseSubtitleDisplayProps {
@@ -81,24 +79,20 @@ export default function BaseSubtitleDisplay({
     videoHeightPx,
     typeface,
   });
-  const lineBoxStyle = resolveSubtitleLineBoxStyle(renderTheme);
 
   if (!text && !isVisible) {
     return <></>;
   }
 
   return (
-    <div ref={subtitleRef} className={combinedClassName}>
-      {subtitleStyleUsesLineBox(stylePreset)
-        ? text.split('\n').map((line, index, arr) => (
-            <React.Fragment key={index}>
-              <span style={lineBoxStyle}>
-                {normalizeSubtitleLineBoxLineText(line)}
-              </span>
-              {index < arr.length - 1 && <br />}
-            </React.Fragment>
-          ))
-        : text}
-    </div>
+    <div
+      ref={subtitleRef}
+      className={combinedClassName}
+      // The export's markup, so line breaks, line boxes and each line's
+      // reading direction match the burned-in video.
+      dangerouslySetInnerHTML={{
+        __html: subtitleCueHtml(text, stylePreset ?? 'Default', renderTheme),
+      }}
+    />
   );
 }

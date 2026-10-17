@@ -22,6 +22,8 @@ interface SubtitleEditTextareaProps {
   rows?: number;
   placeholder?: string;
   readOnly?: boolean;
+  /** Where the caret is, for "Split at cursor". */
+  onCaretChange?: (position: number) => void;
 }
 
 export default function SubtitleEditTextarea({
@@ -31,6 +33,7 @@ export default function SubtitleEditTextarea({
   rows = 5,
   placeholder = '',
   readOnly = false,
+  onCaretChange,
 }: SubtitleEditTextareaProps) {
   const { t } = useTranslation();
   const matchCase = useFindOptions(s => s.matchCase);
@@ -197,6 +200,7 @@ export default function SubtitleEditTextarea({
         onFocus={handleFocus}
         onKeyUp={handleKeyUp}
         onScroll={handleScroll}
+        onSelect={e => onCaretChange?.(e.currentTarget.selectionStart)}
         readOnly={readOnly}
         aria-readonly={readOnly}
         title={

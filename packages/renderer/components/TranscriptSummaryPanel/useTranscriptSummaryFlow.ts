@@ -19,6 +19,10 @@ import type {
 } from '@shared-types/app';
 import { ERROR_CODES } from '../../../shared/constants';
 import {
+  markHighlightCueChanges,
+  stampHighlightSourceCues,
+} from '../../../shared/helpers/highlight-clips';
+import {
   useAiStore,
   useCreditStore,
   useHighlightGenerationRequestStore,
@@ -99,8 +103,8 @@ type UseTranscriptSummaryFlowResult = {
   progressLabel: string;
   progressPercent: number;
   /**
-   * Set when the shown analysis was saved for another language or quality
-   * (nothing is saved for the current ones yet); null when it matches.
+   * Set when the shown analysis was saved for another language or quality,
+   * or from an earlier version of the subtitles; null when it matches.
    */
   restoredVariant: RestoredAnalysisVariant | null;
   sections: TranscriptSummarySection[];
@@ -112,6 +116,8 @@ type UseTranscriptSummaryFlowResult = {
 export type RestoredAnalysisVariant = {
   summaryLanguage: string;
   effortLevel: SummaryEffortLevel;
+  /** Made before the subtitles were edited; see highlight.cuesChanged. */
+  transcriptChanged: boolean;
 };
 
 type ActiveSummaryRun = {
@@ -167,7 +173,11 @@ function sanitizeHighlightsForStorage(
   if (!Array.isArray(highlights)) return [];
   return highlights
     .map(highlight => {
-      const { videoPath: _videoPath, ...rest } = highlight;
+      const {
+        videoPath: _videoPath,
+        cuesChanged: _cuesChanged,
+        ...rest
+      } = highlight;
       return rest;
     })
     .filter(
@@ -547,7 +557,12 @@ export default function useTranscriptSummaryFlow({
             );
           });
           // The run's catch opens the credits dialog for the summary.
-          setError(t('summary.insufficientCredits'));
+          setError(
+            t(
+              'summary.notEnoughForRun',
+              'Not enough minutes left for the summary and highlights.'
+            )
+          );
         } else if (isByoError(message)) {
           setError(getByoErrorMessage(message));
         } else {
@@ -714,8 +729,11 @@ export default function useTranscriptSummaryFlow({
           const persistedSections = Array.isArray(result?.sections)
             ? (result.sections as TranscriptSummarySection[])
             : [];
-          const generatedHighlights = sanitizeHighlightsForStorage(
-            result?.highlights
+          // Each highlight remembers the lines it was found in, so a later
+          // subtitle edit marks only the highlights it touched.
+          const generatedHighlights = stampHighlightSourceCues(
+            sanitizeHighlightsForStorage(result?.highlights),
+            requestedSegments
           );
 
           const transcriptHash = await transcriptHashPromise;
@@ -778,7 +796,9 @@ export default function useTranscriptSummaryFlow({
           }
 
           setHighlightStatus(displayHighlightStatus);
-          onReplaceHighlights(displayHighlights);
+          onReplaceHighlights(
+            markHighlightCueChanges(displayHighlights, requestedSegments)
+          );
           setError(null);
           if (displayHighlightStatus === 'complete') {
             setHighlightWarningMessage(null);
@@ -847,7 +867,10 @@ export default function useTranscriptSummaryFlow({
           const handled = handleTaskFailure(err, { task: 'summary' });
           const friendlyMessage =
             handled.kind === 'insufficient-credits'
-              ? t('summary.insufficientCredits')
+              ? t(
+                  'summary.notEnoughForRun',
+                  'Not enough minutes left for the summary and highlights.'
+                )
               : handled.message;
           setError(friendlyMessage);
           setHighlightWarningMessage(null);
@@ -1066,6 +1089,8 @@ export default function useTranscriptSummaryFlow({
           sourceUrl,
           libraryEntryId,
           allowOtherVariant: true,
+          // Editing a line must not hide a paid summary and its highlights.
+          allowOtherTranscript: true,
         });
 
         if (disposed) return;
@@ -1099,7 +1124,11 @@ export default function useTranscriptSummaryFlow({
         const restoredHighlights =
           restoredHighlightStatus === 'not_requested'
             ? []
-            : sanitizeHighlightsForStorage(result.analysis.highlights);
+            : markHighlightCueChanges(
+                sanitizeHighlightsForStorage(result.analysis.highlights),
+                usableSegments
+              );
+        const transcriptChanged = Boolean(result.transcriptChanged);
 
         const entryLanguage = String(result.entry?.summaryLanguage || '')
           .trim()
@@ -1107,9 +1136,14 @@ export default function useTranscriptSummaryFlow({
         const entryEffort = result.entry?.effortLevel ?? summaryEffortLevel;
         setRestoredVariant(
           entryLanguage &&
-            (entryLanguage !== summaryLanguage.trim().toLowerCase() ||
+            (transcriptChanged ||
+              entryLanguage !== summaryLanguage.trim().toLowerCase() ||
               entryEffort !== summaryEffortLevel)
-            ? { summaryLanguage: entryLanguage, effortLevel: entryEffort }
+            ? {
+                summaryLanguage: entryLanguage,
+                effortLevel: entryEffort,
+                transcriptChanged,
+              }
             : null
         );
         setSummary(restoredSummary);

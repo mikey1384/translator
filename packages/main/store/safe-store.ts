@@ -7,8 +7,18 @@ import {
   openStoreSafely,
   resolveDeviceId,
   salvageDeviceId,
+  startupNoticesFor,
   type QuarantinedStoreFile,
+  type StartupNotice,
 } from './safe-store-core.js';
+
+export type { StartupNotice };
+
+// Stores reset this launch, and whether the device id had to be minted anew;
+// the renderer turns these into a one-time notice.
+const quarantinedStoreNames = new Set<string>();
+let deviceIdGenerated = false;
+let startupNoticesTaken = false;
 
 type StoreOptions<T extends Record<string, any>> = ConstructorParameters<
   typeof Store<T>
@@ -34,7 +44,10 @@ export function createSafeStore<T extends Record<string, any>>(
     filePath: storeFilePath(options),
     create: () => new Store<T>(options),
     logger: log,
-    onQuarantined: hooks.onQuarantined,
+    onQuarantined: info => {
+      quarantinedStoreNames.add(options.name);
+      hooks.onQuarantined?.(info);
+    },
   });
 }
 
@@ -71,6 +84,7 @@ export function getPersistentDeviceId(): string {
     salvaged: salvagedDeviceIds,
     generate: uuidv4,
   });
+  if (resolved.generated) deviceIdGenerated = true;
   if (resolved.writePrimary) primary.set('deviceId', resolved.id);
   if (resolved.writeMirror) mirror.set('deviceId', resolved.id);
   return resolved.id;
@@ -79,4 +93,23 @@ export function getPersistentDeviceId(): string {
 /** Records an id salvaged from another quarantined store file. */
 export function noteSalvagedDeviceId(info: QuarantinedStoreFile): void {
   rememberSalvaged(info);
+}
+
+/**
+ * The resets to tell the user about, once per launch: the first window that
+ * asks gets them, later tabs and reloads get none.
+ */
+export function takeStartupNotices(): StartupNotice[] {
+  if (startupNoticesTaken) return [];
+  startupNoticesTaken = true;
+  try {
+    // Resolve the id now so a reset device id is known before the answer.
+    getPersistentDeviceId();
+  } catch (error) {
+    log.warn('[safe-store] Device id check for startup notices failed:', error);
+  }
+  return startupNoticesFor({
+    quarantinedStores: quarantinedStoreNames,
+    deviceIdGenerated,
+  });
 }

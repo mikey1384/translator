@@ -20,11 +20,15 @@ import {
   collectMatchIndices,
 } from './edit-subtitles-helpers';
 
-import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
+import { buildSrt } from '../../../shared/helpers';
+import { openSubtitleFileIntoStore } from '../../utils/open-subtitle-file';
 import { useFindOptions } from '../../utils/subtitleFind.js';
 import { flushPendingEdits } from '../../utils/pending-edits.js';
 import SubtitleUndoBar from './SubtitleUndoBar.js';
-import { confirmReplaceUnsavedSubtitles } from '../../utils/unsaved-subtitles.js';
+import {
+  isStructuralUndoKey,
+  shouldTakeStructuralUndo,
+} from './structural-undo.js';
 import { transcriptStopsEarlyAt } from '../../utils/transcriptCoverage.js';
 import { flashReviewedSegment, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
@@ -66,7 +70,6 @@ import {
   useHighlightWorkflowStore,
 } from '../../state';
 import { useUrlStore } from '../../state/url-store';
-import { reportUnreadableCues } from '../../utils/subtitleImportNotice';
 
 import {
   RenderSubtitlesOptions,
@@ -86,6 +89,7 @@ import {
 } from '../../utils/saveSubtitles';
 import { logButton, logTask, logError } from '../../utils/logger.js';
 import { resolveTaskFailure } from '../../utils/taskFailure';
+import { refuseShortTranscription } from '../../utils/transcriptionPreflight';
 import {
   CancelledError,
   isExplicitCancellation,
@@ -213,6 +217,21 @@ export default function EditSubtitles({
     return () => window.removeEventListener('keydown', onKeyDown as any);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isExportLocked, subtitles]);
+
+  // Cmd/Ctrl+Z takes back line edits (delete, insert, split, merge, replace
+  // all, shift) when focus isn't in a text field, whose own undo wins.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!isStructuralUndoKey(e)) return;
+      if (isSubtitleMutationLocked) return;
+      if (!shouldTakeStructuralUndo(e.target as Element | null)) return;
+      if (useSubStore.getState().undoDepth === 0) return;
+      e.preventDefault();
+      useSubStore.getState().undo();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isSubtitleMutationLocked]);
 
   useEffect(() => {
     if (editorRef?.current) {
@@ -366,6 +385,10 @@ export default function EditSubtitles({
     return () => useWorkspaceActions.getState().registerEditor(null);
   }, []);
 
+  useEffect(() => {
+    useWorkspaceActions.getState().setExportLocked(isExportLocked);
+  }, [isExportLocked]);
+
   if (listHidden) return null;
 
   return (
@@ -384,8 +407,9 @@ export default function EditSubtitles({
       {!hasSubtitles ? (
         <div className={editorEmptyStateStyles}>
           <div className={editorEmptyActionsStyles}>
+            {/* Secondary: the page's one yellow action is the main CTA. */}
             <Button
-              variant="primary"
+              variant="secondary"
               size="lg"
               className={editorEmptyPrimaryButtonStyles}
               onClick={handleLoadSrtLocal}
@@ -655,6 +679,14 @@ export default function EditSubtitles({
         return;
       }
       const start = subtitles[subtitles.length - 1].end;
+      // Say "needs credits" now, not after extracting and uploading audio.
+      const duration = videoState.meta?.duration;
+      if (
+        typeof duration === 'number' &&
+        refuseShortTranscription(duration - start)
+      ) {
+        return;
+      }
       const operationId = `transcribe-${Date.now()}-tail`;
 
       // Initialize progress so the UI reflects live updates (like full transcription)
@@ -988,45 +1020,11 @@ export default function EditSubtitles({
       // Do nothing
     }
     setSaveError('');
-    const res = await openSubtitleWithElectron({ filePath });
-    if (res.error && !res.cancelled) {
+    const res = await openSubtitleFileIntoStore({ filePath });
+    if (res.status === 'error') {
       setSaveError(res.error);
       try {
         logError('open_srt', res.error as any);
-      } catch {
-        // Do nothing
-      }
-      return;
-    }
-    if (res.segments && !(await confirmReplaceUnsavedSubtitles())) return;
-    if (res.segments) {
-      useSubStore
-        .getState()
-        .load(
-          res.segments,
-          res.filePath ?? null,
-          'disk',
-          res.document?.sourceVideoPath ?? null,
-          res.document?.transcriptionEngine,
-          null,
-          res.document?.sourceVideoAssetIdentity,
-          res.document ?? null
-        );
-      useSubStore.getState().setActiveFileTarget({
-        filePath: res.filePath ?? null,
-        mode: res.fileMode ?? null,
-        role: res.fileRole ?? 'import',
-      });
-      reportUnreadableCues(res.unreadableCues);
-      // Reset the 'Transcription Complete' state when user mounts a different SRT from disk
-      try {
-        useTaskStore.getState().setTranscription({
-          isCompleted: false,
-          inProgress: false,
-          id: null,
-          stage: '',
-          percent: 0,
-        });
       } catch {
         // Do nothing
       }

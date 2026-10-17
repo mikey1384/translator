@@ -17,6 +17,13 @@ export type AgentMcpConnectResult =
       backupPath?: string;
     }
   | {
+      // Claude Desktop isn't installed: nothing was written, and the UI
+      // offers the download page instead of claiming a connection.
+      status: 'app-not-found';
+      client: AgentMcpClient;
+      downloadUrl: string;
+    }
+  | {
       // The CLI is not installed where we can find it; the user can paste this.
       status: 'cli-not-found';
       client: AgentMcpClient;
@@ -39,6 +46,8 @@ export type AgentMcpConnectFailureReason =
   | 'launcher_missing';
 
 export const TRANSLATOR_MCP_SERVER_NAME = 'translator';
+
+export const CLAUDE_DESKTOP_DOWNLOAD_URL = 'https://claude.ai/download';
 
 type CliName = 'claude' | 'codex';
 
@@ -288,6 +297,50 @@ export function getClaudeDesktopConfigPath({
   );
 }
 
+/**
+ * Whether Claude Desktop is installed: its config folder exists (the app
+ * creates it on first launch) or its app bundle / install folder is present.
+ */
+export function isClaudeDesktopInstalled({
+  platform,
+  env,
+  homeDir,
+  configPath,
+  exists,
+}: {
+  platform: NodeJS.Platform;
+  env: NodeJS.ProcessEnv;
+  homeDir: string;
+  configPath: string;
+  exists: (p: string) => boolean;
+}): boolean {
+  const configDir =
+    platform === 'win32'
+      ? path.win32.dirname(configPath)
+      : path.posix.dirname(configPath);
+  const candidates: string[] = [configDir];
+  if (platform === 'darwin') {
+    candidates.push(
+      '/Applications/Claude.app',
+      path.posix.join(homeDir, 'Applications', 'Claude.app')
+    );
+  } else if (platform === 'win32') {
+    const localAppData =
+      env.LOCALAPPDATA || path.win32.join(homeDir, 'AppData', 'Local');
+    candidates.push(
+      path.win32.join(localAppData, 'AnthropicClaude'),
+      path.win32.join(localAppData, 'Programs', 'Claude')
+    );
+  }
+  return candidates.some(candidate => {
+    try {
+      return exists(candidate);
+    } catch {
+      return false;
+    }
+  });
+}
+
 export class ClaudeDesktopConfigError extends Error {}
 
 // Adds (or points) the translator server at the launcher, leaving everything
@@ -371,13 +424,24 @@ export function connectClaudeDesktop({
   launcherPath,
   configPath,
   fsApi = defaultConfigFs,
+  isInstalled = () => true,
 }: {
   launcherPath: string;
   configPath: string;
   fsApi?: ConfigFs;
+  isInstalled?: () => boolean;
 }): AgentMcpConnectResult {
   try {
     const existing = fsApi.readFile(configPath);
+    // Writing a config for an app that isn't there would report "connected"
+    // while nothing can ever load it.
+    if (existing === null && !isInstalled()) {
+      return {
+        status: 'app-not-found',
+        client: 'claude-desktop',
+        downloadUrl: CLAUDE_DESKTOP_DOWNLOAD_URL,
+      };
+    }
     const merged = mergeClaudeDesktopConfig(existing, launcherPath);
     if (!merged.changed) {
       return {
@@ -431,13 +495,22 @@ export async function connectAgentMcpClient({
   }
   const homeDir = os.homedir();
   if (client === 'claude-desktop') {
+    const configPath = getClaudeDesktopConfigPath({
+      platform: process.platform,
+      env: process.env,
+      homeDir,
+    });
     return connectClaudeDesktop({
       launcherPath,
-      configPath: getClaudeDesktopConfigPath({
-        platform: process.platform,
-        env: process.env,
-        homeDir,
-      }),
+      configPath,
+      isInstalled: () =>
+        isClaudeDesktopInstalled({
+          platform: process.platform,
+          env: process.env,
+          homeDir,
+          configPath,
+          exists: p => fs.existsSync(p),
+        }),
     });
   }
   return connectAgentCli({

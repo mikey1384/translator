@@ -26,7 +26,7 @@ export function forgetChosenExportPath(filePath: string): void {
   chosenPaths.delete(path.resolve(filePath));
 }
 
-async function isWritableDirectory(dir: string): Promise<boolean> {
+export async function isWritableDirectory(dir: string): Promise<boolean> {
   try {
     const stat = await fs.stat(dir);
     if (!stat.isDirectory()) return false;

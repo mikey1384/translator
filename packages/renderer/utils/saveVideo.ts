@@ -97,9 +97,12 @@ export function isManagedTempOriginalVideoPath(
     normalizedPath.includes('/translator-electron-dev-work/') ||
     normalizedPath.includes('/translator-electron-monorepo/') ||
     normalizedPath.includes('/downloaded-media/');
+  // Promoted downloads in the library are named after the video's title.
   const isManagedDownloadName =
     /^download_\d+_.+\.[a-z0-9]+$/i.test(fileName) ||
-    /^ytdl_.+\.[a-z0-9]+$/i.test(fileName);
+    /^ytdl_.+\.[a-z0-9]+$/i.test(fileName) ||
+    (normalizedPath.includes('/downloaded-media/') &&
+      /\.[a-z0-9]+$/i.test(fileName));
 
   return isManagedTempDir && isManagedDownloadName;
 }
@@ -124,7 +127,9 @@ export async function saveOriginalVideoFile(
     return false;
   }
   if (!(await isSourceVideoPathAccessible(originalVideoPath))) {
-    await SystemIPC.showMessage(getSourceVideoUnavailableMessage());
+    await SystemIPC.showMessage(getSourceVideoUnavailableMessage(), {
+      type: 'error',
+    });
     return false;
   }
 

@@ -56,10 +56,14 @@ export function getUrlDownloadErrorText(error: unknown): string {
 }
 
 // yt-dlp: "This video is unavailable", "Video unavailable", "… has been
-// removed by the uploader", "The uploader has not made this video available
-// in your country".
+// removed by the uploader", "This live stream recording is not available"
+// (an ended stream without a replay).
 export const VIDEO_UNAVAILABLE_RE =
-  /\b(?:this )?video (?:is )?(?:unavailable|no longer available)|has been removed by the uploader|removed by (?:the )?uploader|video has been removed|account associated with this video has been terminated/i;
+  /\b(?:this )?video (?:is )?(?:unavailable|no longer available)|has been removed by the uploader|removed by (?:the )?uploader|video has been removed|account associated with this video has been terminated|live stream recording is not available/i;
+// A premiere or scheduled live stream that hasn't started: yt-dlp stops at
+// extraction, so the live_status guard never prints.
+export const UPCOMING_LIVE_RE =
+  /premieres in |premiere will begin|this live event will begin|live event will begin in|will begin in a few moments/i;
 export const REGION_LOCKED_RE =
   /not made this video available in your country|not available in your (?:country|region)|geo[- ]?(?:restricted|blocked)|region[- ]locked/i;
 

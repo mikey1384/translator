@@ -101,6 +101,12 @@ export const summarySelectStyles = css`
   text-align: start;
 `;
 
+export const qualitySelectStyles = css`
+  ${selectStyles}
+  min-height: 40px;
+  text-align: start;
+`;
+
 export const summaryGenerateWrapStyles = css`
   display: flex;
   flex-direction: column;
@@ -116,11 +122,6 @@ export const summaryEstimateStyles = css`
 
 export const summaryEstimateWarningStyles = css`
   color: ${colors.danger};
-`;
-
-export const summaryEstimateBadgeStyles = css`
-  color: ${colors.primaryLight};
-  margin-inline-start: ${spacing.xs};
 `;
 
 export const progressWrapperStyles = css`
@@ -555,6 +556,18 @@ export const combinedResultStyles = css`
 /** "Showing the saved result in English…" under the header controls. */
 export const restoredNoteStyles = css`
   flex-basis: 100%;
+  margin: 0;
+  font-size: ${fontSize.xs};
+  color: ${colors.textDim};
+`;
+
+export const highlightCuesChangedStyles = css`
+  margin: 0;
+  font-size: ${fontSize.xs};
+  color: ${colors.warning};
+`;
+
+export const clipsAudioNoteStyles = css`
   margin: 0;
   font-size: ${fontSize.xs};
   color: ${colors.textDim};

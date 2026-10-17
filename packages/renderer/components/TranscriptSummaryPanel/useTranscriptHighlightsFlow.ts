@@ -1223,7 +1223,10 @@ export default function useTranscriptHighlightsFlow({
             [stateKey]: {
               status,
               percent: status === 'ready' ? 100 : clampedPercent,
-              error: progress.error || undefined,
+              // Shown in the clip's own card, in the UI language.
+              error: progress.error
+                ? describeClipCutError(new Error(progress.error), t)
+                : undefined,
               operationId: progress.operationId,
             },
           };
@@ -1262,7 +1265,9 @@ export default function useTranscriptHighlightsFlow({
             );
           });
           setError(t('summary.insufficientCredits'));
-        } else {
+        } else if (!stateKey) {
+          // A clip's failure shows in its card; only one without a card
+          // needs the panel banner.
           setError(
             t('summary.cutHighlightFailed', {
               defaultValue: "Couldn't cut the clip: {{message}}",
@@ -1484,16 +1489,11 @@ export default function useTranscriptHighlightsFlow({
         if (
           currentArtifactSourceIdentityRef.current === operationSourceIdentity
         ) {
+          // Shown once, in the clip's card.
           setHighlightCutState(prev => ({
             ...prev,
             [stateKey]: { status: 'error', percent: 0, error: friendlyMessage },
           }));
-          setError(
-            t('summary.cutHighlightFailed', {
-              defaultValue: "Couldn't cut the clip: {{message}}",
-              message: friendlyMessage,
-            })
-          );
         }
       } finally {
         delete highlightCutSourceByOperationRef.current[operationId];

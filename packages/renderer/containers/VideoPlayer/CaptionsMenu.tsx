@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { css } from '@emotion/css';
 import { listenClose } from '../../utils/closeOnOutside';
+import { useReturnFocusWhenClosed } from '../../utils/focusReturn';
 import {
   SubtitleDisplaySwitch,
   SubtitleSizeStepper,
@@ -34,6 +35,8 @@ const menuStyles = css`
  */
 export default function CaptionsMenu({ onClose }: { onClose: () => void }) {
   const menuRef = useRef<HTMLDivElement>(null);
+  // Esc or a pick hands focus back to the button that opened the menu.
+  useReturnFocusWhenClosed(true, menuRef);
   const [shift, setShift] = useState<{ x: number; maxWidth?: number }>({
     x: 0,
   });

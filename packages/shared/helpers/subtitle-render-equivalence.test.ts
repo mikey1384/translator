@@ -5,10 +5,12 @@ import {
   normalizeSubtitleLineBoxLineText,
   resolveSubtitleLineBoxStyle,
   resolveSubtitleRenderTheme,
+  subtitleCueHtml,
   subtitleLineBoxStyleToCssText,
 } from './subtitle-style-util.js';
 import {
   parseSubtitleRenderSpec,
+  resolveSubtitleRenderFrame,
   resolveSubtitleRenderSpec,
   serializeSubtitleRenderSpec,
   subtitleRenderGeometry,
@@ -153,4 +155,119 @@ test('portrait text is smaller than the raw height-scaled size', () => {
   assert.equal(spec.outputFontSizePx, 68);
   // 68 × 1.08 × 0.72 ≈ 53px on a 720px-wide frame (was 73px).
   assert.ok(Math.abs(theme.fontSizePx - 52.88) < 0.01, `${theme.fontSizePx}`);
+});
+
+for (const [label, meta] of [
+  ['no frame size', { width: undefined, height: undefined }],
+  ['zero frame size', { width: 0, height: 0 }],
+] as const) {
+  test(`audio-only player overlay uses the export's frame (${label})`, () => {
+    // The export request (EditSubtitles): the spec from the file's metadata.
+    const exportSpec = resolveSubtitleRenderSpec({
+      displayMode: 'original',
+      stylePreset: 'Default',
+      baseFontSizePx: 38,
+      videoWidthPx: meta.width,
+      videoHeightPx: meta.height,
+      displayWidthPx: meta.width,
+      displayHeightPx: meta.height,
+      isAudioOnly: true,
+    });
+    const exportGeometry = subtitleRenderGeometry(exportSpec);
+    // The player overlay (NativeVideoPlayer): the same metadata as props.
+    const playerFrame = resolveSubtitleRenderFrame({
+      baseFontSizePx: 38,
+      videoWidthPx: meta.width ?? null,
+      videoHeightPx: meta.height ?? null,
+      displayWidthPx: meta.width ?? null,
+      displayHeightPx: meta.height ?? null,
+      isAudioOnly: true,
+    });
+
+    assert.equal(playerFrame.displayWidthPx, exportGeometry.displayWidth);
+    assert.equal(playerFrame.displayHeightPx, exportGeometry.displayHeight);
+    assert.equal(playerFrame.fontSizePx, exportGeometry.fontSizePx);
+    assert.equal(playerFrame.displayWidthPx, 1280);
+    assert.equal(playerFrame.displayHeightPx, 720);
+    assert.equal(playerFrame.fontSizePx, 38);
+
+    for (const isMultiLine of [false, true]) {
+      const playerTheme = resolveSubtitleRenderTheme({
+        displayFontSize: playerFrame.fontSizePx,
+        stylePreset: 'Default',
+        isMultiLine,
+        videoWidthPx: playerFrame.displayWidthPx,
+        videoHeightPx: playerFrame.displayHeightPx,
+      });
+      const exportTheme = resolveSubtitleRenderTheme({
+        displayFontSize: exportGeometry.fontSizePx,
+        stylePreset: exportGeometry.stylePreset,
+        isMultiLine,
+        videoWidthPx: exportGeometry.displayWidth,
+        videoHeightPx: exportGeometry.displayHeight,
+      });
+      assert.deepEqual(playerTheme, exportTheme);
+    }
+  });
+}
+
+test('player and export frames agree for video, including display size', () => {
+  const props = {
+    videoWidthPx: 1920,
+    videoHeightPx: 1080,
+    displayWidthPx: 1080,
+    displayHeightPx: 1920,
+  };
+  const spec = resolveSubtitleRenderSpec({
+    displayMode: 'dual',
+    stylePreset: 'Cinema',
+    baseFontSizePx: 32,
+    ...props,
+  });
+  const frame = resolveSubtitleRenderFrame({ baseFontSizePx: 32, ...props });
+  const geometry = subtitleRenderGeometry(spec);
+  assert.equal(frame.displayWidthPx, geometry.displayWidth);
+  assert.equal(frame.displayHeightPx, geometry.displayHeight);
+  assert.equal(frame.fontSizePx, geometry.fontSizePx);
+});
+
+test('cue markup gives every line its own reading direction', () => {
+  const theme = resolveSubtitleRenderTheme({
+    displayFontSize: 40,
+    stylePreset: 'Default',
+    isMultiLine: true,
+    videoWidthPx: 1280,
+    videoHeightPx: 720,
+  });
+  const html = subtitleCueHtml(
+    'مرحبا بالعالم، هذا اختبار 123 مع English كلمات\nHello <b> & "you"',
+    'Default',
+    theme
+  );
+  assert.equal(
+    html,
+    '<span dir="auto">مرحبا بالعالم، هذا اختبار 123 مع English كلمات</span>' +
+      '<br/><span dir="auto">Hello &lt;b&gt; &amp; &quot;you&quot;</span>'
+  );
+  assert.equal(subtitleCueHtml('   ', 'Default', theme), '');
+});
+
+test('LineBox cue markup keeps one box per line, each with dir="auto"', () => {
+  const theme = resolveSubtitleRenderTheme({
+    displayFontSize: 40,
+    stylePreset: 'LineBox',
+    isMultiLine: true,
+    videoWidthPx: 1280,
+    videoHeightPx: 720,
+  });
+  const css = subtitleLineBoxStyleToCssText(resolveSubtitleLineBoxStyle(theme));
+  const html = subtitleCueHtml('  one  \n\nthree', 'LineBox', theme);
+  assert.equal(
+    html,
+    [
+      `<span dir="auto" style="${css}">one</span>`,
+      `<span dir="auto" style="${css}">\u00a0</span>`,
+      `<span dir="auto" style="${css}">three</span>`,
+    ].join('<br/>')
+  );
 });

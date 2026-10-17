@@ -4,6 +4,7 @@ import { i18n } from '../i18n';
 import * as SystemIPC from '@ipc/system';
 import { CHECKOUT_ALREADY_PENDING } from '../../shared/constants';
 import Button, { type ButtonSize, type ButtonVariant } from './Button';
+import { useCreditStore } from '../state/credit-store';
 
 interface BuyCreditsButtonProps {
   packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
@@ -62,14 +63,18 @@ export function useCreditCheckout({
   packId,
   placement,
   onCheckoutCreated,
+  trackShown = true,
 }: {
   packId: BuyCreditsButtonProps['packId'];
   placement?: CheckoutPlacement;
   onCheckoutCreated?: () => void;
+  // Off when a surface with several packs records one "shown" itself.
+  trackShown?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!trackShown) return;
     // Track button shown once on mount
     void SystemIPC.trackPurchaseEvent('credit_checkout_button_shown', {
       packId,
@@ -77,7 +82,7 @@ export function useCreditCheckout({
     }).catch(() => {
       // Ignore tracking errors
     });
-  }, [packId, placement]);
+  }, [packId, placement, trackShown]);
 
   async function handleClick() {
     if (loading) {
@@ -94,13 +99,17 @@ export function useCreditCheckout({
 
     try {
       setLoading(true);
+      // Marks this pack as the one being paid for right away; main's
+      // pending/cancelled broadcasts confirm or clear it.
+      useCreditStore.getState().noteCheckoutPack(packId);
       const checkoutSessionId = await SystemIPC.createCheckoutSession(
         packId,
         placement
       );
       if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
-        // A checkout is already in flight (possibly from another tab); the
-        // re-broadcast pending/unresolved event drives the UI — no error.
+        // This pack's checkout is already open (main reopens its Stripe
+        // page) or another tab is creating one; the re-broadcast
+        // pending/unresolved event marks the waiting pack — no error.
         // already_pending is not a failure, so we don't emit *_failed event
         onCheckoutCreated?.();
         return;
@@ -118,7 +127,8 @@ export function useCreditCheckout({
           i18n.t(
             'credits.checkoutStartFailed',
             'Checkout couldn’t start. Check your connection and try again.'
-          )
+          ),
+          { type: 'error' }
         );
         return;
       }
@@ -140,7 +150,8 @@ export function useCreditCheckout({
         i18n.t(
           'credits.checkoutStartFailed',
           'Checkout couldn’t start. Check your connection and try again.'
-        )
+        ),
+        { type: 'error' }
       );
     } finally {
       setLoading(false);

@@ -131,6 +131,18 @@ const launcherPathStyles = css`
   user-select: text;
 `;
 
+const inlineLinkButtonStyles = css`
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: ${colors.primaryLight};
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  cursor: pointer;
+`;
+
 const pitchStyles = css`
   margin: 0 0 8px;
   font-weight: 600;
@@ -348,6 +360,34 @@ export default function AgentControlSection() {
                 { app }
               );
       return <p className={connectMessageStyles('ok')}>{text}</p>;
+    }
+    if (result.status === 'app-not-found') {
+      return (
+        <div className={connectMessageStyles('warn')}>
+          <p style={{ margin: 0 }}>
+            {t(
+              'settings.agentControl.connection.appNotFound',
+              '{{app}} isn’t installed on this computer. Install it, open it once, then connect again.',
+              { app }
+            )}{' '}
+            {result.downloadUrl ? (
+              <button
+                type="button"
+                className={inlineLinkButtonStyles}
+                onClick={() =>
+                  void window.appShell.openExternal(result.downloadUrl!)
+                }
+              >
+                {t(
+                  'settings.agentControl.connection.download',
+                  'Download {{app}}',
+                  { app }
+                )}
+              </button>
+            ) : null}
+          </p>
+        </div>
+      );
     }
     if (result.status === 'cli-not-found') {
       return (
@@ -593,12 +633,14 @@ export default function AgentControlSection() {
       className={settingsCenterColumnStyles}
       headerRight={
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <div className={statusIndicatorStyles(enabled)}>
-            <span className={statusDotStyles(enabled)} />
-            {enabled
-              ? t('settings.agentControl.status.enabled', 'Enabled')
-              : t('settings.agentControl.status.disabled', 'Disabled')}
-          </div>
+          {/* Only the "on" state earns a badge: a grey "Disabled" on the
+              section the free-translation link lands on read as broken. */}
+          {enabled && (
+            <div className={statusIndicatorStyles(true)}>
+              <span className={statusDotStyles(true)} />
+              {t('settings.agentControl.status.enabled', 'Enabled')}
+            </div>
+          )}
           {enabled && clientsConnected > 0 && (
             <div className={statusIndicatorStyles(true)}>
               <span className={statusDotStyles(true)} />

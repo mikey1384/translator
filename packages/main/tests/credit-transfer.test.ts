@@ -79,18 +79,18 @@ test('ledger summary tells welcome-only devices apart', () => {
       { delta: -300, reason: 'TRANSCRIBE' },
       { delta: 6300, reason: 'WELCOME' },
     ]),
-    { everHadCredits: true, onlyWelcomeCredits: true }
+    { everHadCredits: true, onlyWelcomeCredits: true, everPaid: false }
   );
   assert.deepEqual(
     summarizeCreditLedger([
       { delta: 15000, reason: 'PACK_MICRO' },
       { delta: 6300, reason: 'WELCOME' },
     ]),
-    { everHadCredits: true, onlyWelcomeCredits: false }
+    { everHadCredits: true, onlyWelcomeCredits: false, everPaid: true }
   );
   assert.deepEqual(
     summarizeCreditLedger([{ delta: 9000, reason: 'TRANSFER_IN' }]),
-    { everHadCredits: true, onlyWelcomeCredits: false }
+    { everHadCredits: true, onlyWelcomeCredits: false, everPaid: true }
   );
   // A reservation refund is not a purchase.
   assert.deepEqual(
@@ -99,11 +99,12 @@ test('ledger summary tells welcome-only devices apart', () => {
       { delta: -500, reason: 'TRANSLATE' },
       { delta: 6300, reason: 'WELCOME' },
     ]),
-    { everHadCredits: true, onlyWelcomeCredits: true }
+    { everHadCredits: true, onlyWelcomeCredits: true, everPaid: false }
   );
   assert.deepEqual(summarizeCreditLedger([]), {
     everHadCredits: false,
     onlyWelcomeCredits: false,
+    everPaid: false,
   });
   assert.equal(summarizeCreditLedger({ error: 'nope' }), null);
 });
@@ -114,4 +115,5 @@ test('a full ledger page never claims welcome-only', () => {
     { delta: 6300, reason: 'WELCOME' },
   ];
   assert.equal(summarizeCreditLedger(rows)?.onlyWelcomeCredits, false);
+  assert.equal(summarizeCreditLedger(rows)?.everPaid, true);
 });

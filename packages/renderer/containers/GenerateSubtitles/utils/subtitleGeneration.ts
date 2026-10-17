@@ -784,7 +784,7 @@ export async function startTranscriptionFlow({
   ) {
     const message = getSourceVideoUnavailableMessage();
     useUrlStore.getState().setOperationError(message);
-    await SystemIPC.showMessage(message);
+    await SystemIPC.showMessage(message, { type: 'error' });
     return { success: false };
   }
 
@@ -800,7 +800,7 @@ export async function startTranscriptionFlow({
   if (!validation.isValid) {
     const msg =
       validation.errorMessage || i18n.t('generateSubtitles.calculatingCost');
-    await SystemIPC.showMessage(msg);
+    await SystemIPC.showMessage(msg, { type: 'warning' });
     return { success: false };
   }
 

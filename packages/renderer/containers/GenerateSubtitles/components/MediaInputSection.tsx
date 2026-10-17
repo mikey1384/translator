@@ -466,8 +466,14 @@ export default function MediaInputSection({
                       disabled={isTranslationInProgress}
                       title={item.path}
                     >
-                      <div className={recentItemNameStyles}>{item.name}</div>
-                      <div className={recentItemMetaStyles}>{item.path}</div>
+                      {/* File names and paths keep their own direction in
+                          RTL (a path's slashes must not be reordered). */}
+                      <div className={recentItemNameStyles}>
+                        <bdi>{item.name}</bdi>
+                      </div>
+                      <div className={recentItemMetaStyles}>
+                        <bdi dir="ltr">{item.path}</bdi>
+                      </div>
                     </button>
                     <button
                       type="button"

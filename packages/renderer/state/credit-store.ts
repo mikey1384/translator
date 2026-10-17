@@ -1,10 +1,20 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
 import { estimateTranslatableHours } from '../utils/creditEstimates';
+import { CREDIT_PACKS } from '../../shared/constants';
 import type {
+  CheckoutTransitionInfo,
   CreditHistorySummary,
+  CreditPackId,
   MonthlyFreeCreditsInfo,
 } from '@shared-types/app';
+
+/** A payment that just landed, shown as "+32m added" for a short while. */
+export type CheckoutSuccess = {
+  // Credits the payment added, when known (pack size or balance change).
+  creditsAdded: number | null;
+  at: number;
+};
 
 interface CreditState {
   credits: number | null;
@@ -13,21 +23,35 @@ interface CreditState {
   // This month's free top-up allowance (null when the API doesn't report one).
   monthlyFree: MonthlyFreeCreditsInfo | null;
   authoritative: boolean;
+  // The last refresh couldn't reach the server: `credits` is only the cached
+  // value (a fresh profile's 0), so screens must not present it as known.
+  offline: boolean;
   loading: boolean;
   // An i18n key (rendered with t()); never English text.
   error?: string;
   checkoutPending: boolean;
   checkoutUnresolved: boolean;
   checkoutBaselineCredits: number | null;
+  // The pack being paid for, so its card can say "Waiting for payment…".
+  checkoutPackId: CreditPackId | null;
+  checkoutSuccess: CheckoutSuccess | null;
   // Where the balance came from (welcome grant only, ever had any). Null until
   // the ledger has been read, or when it could not be.
   history: CreditHistorySummary | null;
   refreshHistory: () => void;
   /** Try loading the balance again after a failed first load. */
   retryLoad: () => void;
-  beginCheckoutPending: () => void;
+  beginCheckoutPending: (packId?: CreditPackId | null) => void;
   clearCheckoutPending: () => void;
   dismissUnresolvedCheckout: () => void;
+  /** Mark the pack the user just clicked, before main confirms the session. */
+  noteCheckoutPack: (packId: CreditPackId) => void;
+  /**
+   * "Choose another pack": stop waiting on the open checkout here and in main,
+   * so the next pack click starts a fresh session.
+   */
+  chooseAnotherPack: () => void;
+  dismissCheckoutSuccess: () => void;
   cleanup: () => void;
   unsub?: () => void;
 }
@@ -37,10 +61,12 @@ export const CREDITS_LOAD_FAILED = 'credits.loadFailed';
 const CHECKOUT_UNRESOLVED_REFRESH_INTERVAL_MS = 2_500;
 const CHECKOUT_UNRESOLVED_REFRESH_MAX_MS = 10 * 60_000;
 const CHECKOUT_UNRESOLVED_FOCUS_REFRESH_DEBOUNCE_MS = 1_000;
+const CHECKOUT_SUCCESS_VISIBLE_MS = 12_000;
 const INITIAL_AUTHORITATIVE_REFRESH_INTERVAL_MS = 5_000;
 const INITIAL_AUTHORITATIVE_REFRESH_MAX_MS = 60_000;
 const INITIAL_AUTHORITATIVE_REFRESH_MAX_ATTEMPTS = 12;
 
+let checkoutSuccessTimer: ReturnType<typeof setTimeout> | null = null;
 let checkoutRefreshInterval: ReturnType<typeof setInterval> | null = null;
 let checkoutRefreshStartedAt: number | null = null;
 let checkoutRefreshInFlight = false;
@@ -59,6 +85,11 @@ function stopCheckoutRefreshLoop() {
   checkoutRefreshInFlight = false;
 }
 
+function packIdFrom(info?: CheckoutTransitionInfo): CreditPackId | null {
+  const id = info?.packId;
+  return id && id in CREDIT_PACKS ? (id as CreditPackId) : null;
+}
+
 function stopInitialAuthoritativeRefreshLoop() {
   if (initialAuthoritativeRefreshInterval) {
     clearInterval(initialAuthoritativeRefreshInterval);
@@ -70,6 +101,26 @@ function stopInitialAuthoritativeRefreshLoop() {
 }
 
 export const useCreditStore = create<CreditState>((set, get) => {
+  const showCheckoutSuccess = (creditsAdded: number | null) => {
+    set({ checkoutSuccess: { creditsAdded, at: Date.now() } });
+    if (checkoutSuccessTimer) clearTimeout(checkoutSuccessTimer);
+    checkoutSuccessTimer = setTimeout(() => {
+      checkoutSuccessTimer = null;
+      set({ checkoutSuccess: null });
+    }, CHECKOUT_SUCCESS_VISIBLE_MS);
+  };
+
+  const stopWaitingOnCheckout = () => {
+    set({
+      checkoutPending: false,
+      checkoutUnresolved: false,
+      checkoutBaselineCredits: null,
+      checkoutPackId: null,
+    });
+    checkoutRefreshStartedAt = null;
+    stopCheckoutRefreshLoop();
+  };
+
   const refreshUnresolvedCheckout = () => {
     const state = get();
     if (!state.checkoutUnresolved) {
@@ -82,8 +133,11 @@ export const useCreditStore = create<CreditState>((set, get) => {
       checkoutRefreshStartedAt &&
       Date.now() - checkoutRefreshStartedAt > CHECKOUT_UNRESOLVED_REFRESH_MAX_MS
     ) {
-      checkoutRefreshStartedAt = null;
-      stopCheckoutRefreshLoop();
+      // Ten minutes without a payment: treat it as abandoned instead of
+      // telling the user to "finish paying" for the rest of the session.
+      // Main keeps reconciling, so a late payment still adds its minutes.
+      stopWaitingOnCheckout();
+      void SystemIPC.abandonCheckoutSession().catch(() => {});
       return;
     }
 
@@ -102,13 +156,8 @@ export const useCreditStore = create<CreditState>((set, get) => {
           snapshot &&
           snapshot.creditBalance > baseline
         ) {
-          set({
-            checkoutPending: false,
-            checkoutUnresolved: false,
-            checkoutBaselineCredits: null,
-          });
-          checkoutRefreshStartedAt = null;
-          stopCheckoutRefreshLoop();
+          stopWaitingOnCheckout();
+          showCheckoutSuccess(snapshot.creditBalance - baseline);
         }
       })
       .catch(error => {
@@ -166,12 +215,14 @@ export const useCreditStore = create<CreditState>((set, get) => {
     hoursBalance,
     creditsPerHour,
     authoritative,
+    offline,
     monthlyFree,
   }: {
     creditBalance: number;
     hoursBalance?: number | null;
     creditsPerHour?: number | null;
     authoritative?: boolean;
+    offline?: boolean;
     monthlyFree?: MonthlyFreeCreditsInfo | null;
   }) => {
     const credits = creditBalance ?? null;
@@ -187,6 +238,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
         typeof creditsPerHour === 'number' ? creditsPerHour : null,
       monthlyFree: monthlyFree === undefined ? state.monthlyFree : monthlyFree,
       authoritative: Boolean(authoritative),
+      offline: Boolean(offline),
       loading: false,
       error: undefined,
       checkoutPending: state.checkoutPending,
@@ -214,6 +266,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
       hoursBalance,
       creditsPerHour,
       authoritative,
+      offline,
       monthlyFree,
     }) => {
       applyCreditSnapshot({
@@ -221,6 +274,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
         hoursBalance,
         creditsPerHour,
         authoritative,
+        offline,
         monthlyFree,
       });
     }
@@ -291,9 +345,10 @@ export const useCreditStore = create<CreditState>((set, get) => {
     );
   };
 
-  const beginCheckoutPending = () => {
+  const beginCheckoutPending = (packId?: CreditPackId | null) => {
     const state = get();
     set({
+      checkoutPackId: packId ?? state.checkoutPackId,
       checkoutPending: true,
       checkoutUnresolved: false,
       checkoutBaselineCredits:
@@ -306,13 +361,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
   };
 
   const clearCheckoutPending = () => {
-    set({
-      checkoutPending: false,
-      checkoutUnresolved: false,
-      checkoutBaselineCredits: null,
-    });
-    checkoutRefreshStartedAt = null;
-    stopCheckoutRefreshLoop();
+    stopWaitingOnCheckout();
   };
 
   const refreshUnresolvedCheckoutAfterReturn = () => {
@@ -338,8 +387,22 @@ export const useCreditStore = create<CreditState>((set, get) => {
     }
   };
 
+  // Back online after the balance couldn't be read: read it again now rather
+  // than waiting for the next job to refresh it.
+  const onBackOnline = () => {
+    if (!get().offline) return;
+    void SystemIPC.refreshCreditSnapshot(true)
+      .then(snapshot => {
+        if (snapshot) applyCreditSnapshot(snapshot);
+      })
+      .catch(error => {
+        console.warn('[credit-store] Refresh after reconnect failed:', error);
+      });
+  };
+
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     window.addEventListener('focus', onWindowFocus);
+    window.addEventListener('online', onBackOnline);
     document.addEventListener('visibilitychange', onVisibilityChange);
   }
 
@@ -371,16 +434,19 @@ export const useCreditStore = create<CreditState>((set, get) => {
     });
 
   // Set up listeners for checkout status
-  const unsubPending = SystemIPC.onCheckoutPending(() => {
-    beginCheckoutPending();
+  const unsubPending = SystemIPC.onCheckoutPending(info => {
+    beginCheckoutPending(packIdFrom(info));
   });
 
-  const unsubConfirmed = SystemIPC.onCheckoutConfirmed(() => {
+  const unsubConfirmed = SystemIPC.onCheckoutConfirmed(info => {
+    const packId = packIdFrom(info) ?? get().checkoutPackId;
     clearCheckoutPending();
+    showCheckoutSuccess(packId ? CREDIT_PACKS[packId].credits : null);
   });
 
-  const unsubUnresolved = SystemIPC.onCheckoutUnresolved(() => {
+  const unsubUnresolved = SystemIPC.onCheckoutUnresolved(info => {
     set(state => ({
+      checkoutPackId: packIdFrom(info) ?? state.checkoutPackId,
       checkoutPending: false,
       checkoutUnresolved: true,
       checkoutBaselineCredits:
@@ -403,6 +469,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
     import.meta.hot.dispose(() => {
       if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         window.removeEventListener('focus', onWindowFocus);
+        window.removeEventListener('online', onBackOnline);
         document.removeEventListener('visibilitychange', onVisibilityChange);
       }
       checkoutRefreshStartedAt = null;
@@ -422,10 +489,13 @@ export const useCreditStore = create<CreditState>((set, get) => {
     monthlyFree: null,
     creditsPerHour: null,
     authoritative: false,
+    offline: false,
     loading: true,
     checkoutPending: false,
     checkoutUnresolved: false,
     checkoutBaselineCredits: null,
+    checkoutPackId: null,
+    checkoutSuccess: null,
     history: null,
     refreshHistory,
     retryLoad: () => {
@@ -452,9 +522,22 @@ export const useCreditStore = create<CreditState>((set, get) => {
       checkoutRefreshStartedAt = null;
       stopCheckoutRefreshLoop();
     },
+    noteCheckoutPack: packId => set({ checkoutPackId: packId }),
+    chooseAnotherPack: () => {
+      stopWaitingOnCheckout();
+      void SystemIPC.abandonCheckoutSession().catch(error => {
+        console.warn('[credit-store] Abandoning the checkout failed:', error);
+      });
+    },
+    dismissCheckoutSuccess: () => {
+      if (checkoutSuccessTimer) clearTimeout(checkoutSuccessTimer);
+      checkoutSuccessTimer = null;
+      set({ checkoutSuccess: null });
+    },
     cleanup: () => {
       if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         window.removeEventListener('focus', onWindowFocus);
+        window.removeEventListener('online', onBackOnline);
         document.removeEventListener('visibilitychange', onVisibilityChange);
       }
       checkoutRefreshStartedAt = null;

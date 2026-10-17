@@ -74,6 +74,10 @@
       .tab.dragging {
         opacity: 0.4;
       }
+      .tab:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: -2px;
+      }
       .tab.active {
         background: var(--surface);
         border-color: var(--border);
@@ -164,6 +168,10 @@
         line-height: 1;
         cursor: pointer;
       }
+      #new-tab:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 1px;
+      }
       #new-tab:hover {
         background: rgba(244, 241, 234, 0.1);
         color: var(--text);
@@ -174,7 +182,7 @@
     </style>
   </head>
   <body>
-    <div id="strip">
+    <div id="strip" role="tablist">
       <button id="new-tab" type="button">
         <span aria-hidden="true">+</span>
       </button>
@@ -192,6 +200,7 @@
         newTab: 'New Tab',
         newTabButton: 'New tab',
         closeTab: 'Close tab',
+        tabList: 'Open tabs',
       };
       let lastState = null;
 
@@ -201,6 +210,7 @@
         document.documentElement.dir = next.dir === 'rtl' ? 'rtl' : 'ltr';
         newTabBtn.title = strings.newTabButton;
         newTabBtn.setAttribute('aria-label', strings.newTabButton);
+        strip.setAttribute('aria-label', strings.tabList);
         if (lastState) render(lastState);
       }
       applyStrings({});
@@ -289,12 +299,86 @@
         return document.documentElement.dir === 'rtl';
       }
 
+      function formatPercent(percent) {
+        try {
+          return new Intl.NumberFormat(document.documentElement.lang || 'en', {
+            style: 'percent',
+          }).format(percent / 100);
+        } catch {
+          return `${percent}%`;
+        }
+      }
+
+      // --- keyboard ----------------------------------------------------
+      // Roving focus like a browser's tab strip: one tab is in the Tab
+      // order, arrows move between tabs, Enter opens one, Delete closes it,
+      // Escape (or F6, handled by the app menu) goes back to the page.
+      let keyboardTabId = null;
+
+      function tabEls() {
+        return [...strip.querySelectorAll('.tab')];
+      }
+
+      function focusTab(el) {
+        if (!el) return;
+        keyboardTabId = Number(el.dataset.tabId);
+        tabEls().forEach(other => (other.tabIndex = other === el ? 0 : -1));
+        el.focus();
+      }
+
+      strip.addEventListener('keydown', e => {
+        const el = e.target.closest?.('.tab');
+        if (!el || e.target !== el) return;
+        const els = tabEls();
+        const index = els.indexOf(el);
+        const id = Number(el.dataset.tabId);
+        const forward = isRtl() ? 'ArrowLeft' : 'ArrowRight';
+        const backward = isRtl() ? 'ArrowRight' : 'ArrowLeft';
+        if (e.key === forward) focusTab(els[(index + 1) % els.length]);
+        else if (e.key === backward)
+          focusTab(els[(index - 1 + els.length) % els.length]);
+        else if (e.key === 'Home') focusTab(els[0]);
+        else if (e.key === 'End') focusTab(els[els.length - 1]);
+        else if (e.key === 'Enter' || e.key === ' ') window.tabs.select(id);
+        else if (e.key === 'Delete' || e.key === 'Backspace')
+          window.tabs.close(id);
+        else if (e.key === 'Escape') window.tabs.focusApp();
+        else return;
+        e.preventDefault();
+      });
+
+      strip.addEventListener('focusin', e => {
+        const el = e.target.closest?.('.tab');
+        if (el && e.target === el) {
+          keyboardTabId = Number(el.dataset.tabId);
+          window.tabs.focused(keyboardTabId);
+        }
+      });
+
+      strip.addEventListener('focusout', e => {
+        const next = e.relatedTarget?.closest?.('.tab');
+        if (!next) window.tabs.focused(null);
+      });
+
+      window.tabs.onFocusStrip(() => {
+        const els = tabEls();
+        focusTab(els.find(el => el.classList.contains('active')) ?? els[0]);
+      });
+      // -----------------------------------------------------------------
+
       function render(state) {
         lastState = state;
         if (draggedEl) {
           pendingState = state;
           return;
         }
+        // Progress re-renders rebuild every tab; keep keyboard focus put.
+        const focusedEl = document.activeElement?.closest?.('.tab');
+        const hadFocus = Boolean(focusedEl);
+        const focusedId = focusedEl ? Number(focusedEl.dataset.tabId) : null;
+        if (!state.some(t => t.id === keyboardTabId)) keyboardTabId = null;
+        const rovingId =
+          keyboardTabId ?? state.find(t => t.active)?.id ?? state[0]?.id;
         strip.querySelectorAll('.tab').forEach(el => el.remove());
         for (const t of state) {
           const el = document.createElement('div');
@@ -303,13 +387,16 @@
           el.title = title;
           el.dataset.tabId = t.id;
           el.draggable = true;
+          el.setAttribute('role', 'tab');
+          el.setAttribute('aria-selected', t.active ? 'true' : 'false');
+          el.tabIndex = t.id === rovingId ? 0 : -1;
 
           let indicator = '';
           if (t.running) {
             indicator =
               ringSvg(t.percent) +
               (t.percent != null
-                ? `<span class="pct">${t.percent}%</span>`
+                ? `<span class="pct">${formatPercent(t.percent)}</span>`
                 : '');
           } else if (t.badge === 'done') {
             indicator = '<span class="dot done"></span>';
@@ -323,6 +410,8 @@
             `<button class="close" type="button"><span aria-hidden="true">×</span></button>`;
           el.querySelector('.title').textContent = title;
           const closeBtn = el.querySelector('.close');
+          // Keyboard users close with Delete; the × stays a mouse target.
+          closeBtn.tabIndex = -1;
           closeBtn.title = strings.closeTab;
           closeBtn.setAttribute('aria-label', `${strings.closeTab}: ${title}`);
 
@@ -347,6 +436,14 @@
           el.addEventListener('dragend', commitDrag);
 
           strip.insertBefore(el, newTabBtn);
+        }
+        if (hadFocus) {
+          const els = tabEls();
+          focusTab(
+            els.find(el => Number(el.dataset.tabId) === focusedId) ??
+              els.find(el => el.classList.contains('active')) ??
+              els[0]
+          );
         }
       }
 

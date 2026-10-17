@@ -36,6 +36,7 @@ import {
   exportBaseName,
   forgetChosenExportPath,
   isChosenExportPath,
+  isWritableDirectory,
   registerChosenExportPath,
   rememberExportDirectory,
   resolveDefaultExportDirectory,
@@ -896,9 +897,14 @@ export function initializeRenderWindowHandlers({
                   `[${operationId}] Failed to save merged video to ${selectedPath}`,
                   saveErr
                 );
-                if (explicitOutputPath) throw saveErr;
-                await showSaveFailed(selectedPath, saveErr);
-                continue;
+                // macOS reports the same device for firmlinked system
+                // volumes (e.g. /System/Library) and then refuses the rename.
+                // Copying instead gives the real reason (no permission).
+                if (saveErr?.code !== 'EXDEV') {
+                  if (explicitOutputPath) throw saveErr;
+                  await showSaveFailed(selectedPath, saveErr);
+                  continue;
+                }
               }
             }
 
@@ -1167,6 +1173,38 @@ export function initializeRenderWindowHandlers({
           if (win) await dialog.showMessageBox(win, box);
           else await dialog.showMessageBox(box);
           defaultPath = chosen;
+          continue;
+        }
+        // Check the folder now, not after the whole render.
+        if (!(await isWritableDirectory(path.dirname(chosen)))) {
+          const box = {
+            type: 'warning' as const,
+            title: app.getName(),
+            message: t(
+              'dialogs.exportSaveFailed',
+              { folder: path.dirname(chosen) },
+              'Couldn’t save the video in {{folder}}.'
+            ),
+            detail: t(
+              'dialogs.exportSaveFailedPermission',
+              undefined,
+              'You don’t have permission to save in this folder.'
+            ),
+            buttons: [
+              t(
+                'common.chooseAnotherLocation',
+                undefined,
+                'Choose another location'
+              ),
+            ],
+            noLink: true,
+          };
+          if (win) await dialog.showMessageBox(win, box);
+          else await dialog.showMessageBox(box);
+          defaultPath = path.join(
+            await resolveDefaultExportDirectory(sourcePath || null),
+            path.basename(chosen)
+          );
           continue;
         }
         registerChosenExportPath(chosen);

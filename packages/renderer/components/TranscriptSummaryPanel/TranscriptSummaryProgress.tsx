@@ -10,6 +10,7 @@ import {
   progressBarBackgroundStyles,
   progressBarFillStyles,
 } from '../../styles';
+import { formatPercent } from '../../utils/formatNumbers';
 
 type TranscriptSummaryProgressProps = {
   isCancelling: boolean;
@@ -36,7 +37,7 @@ export default function TranscriptSummaryProgress({
         <span>{progressLabel || t('summary.status.inProgress')}</span>
         <div className={progressRightStyles}>
           <span className={progressPercentStyles}>
-            {Math.round(progressPercent)}%
+            {formatPercent(Math.round(progressPercent))}
           </span>
           <button
             className={cancelButtonStyles}

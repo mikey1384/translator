@@ -52,6 +52,7 @@ import {
 } from '../components/workspace/workspace-styles';
 import { useAiStore } from '../state';
 import { useHeartbeat } from '../hooks/useHeartbeat';
+import { showStartupNotices } from '../utils/startup-notices';
 
 import { css, cx } from '@emotion/css';
 import { pageWrapperStyles, containerStyles, colors, fonts } from '../styles';
@@ -123,6 +124,10 @@ const settingsPageWrapper = css`
 export default function AppContent() {
   const { t } = useTranslation();
   useHeartbeat();
+  useEffect(() => {
+    // A damaged settings or device file was reset at launch: say so once.
+    void showStartupNotices();
+  }, []);
   useEffect(() => {
     if (!window.env.isPackaged) return;
 
@@ -229,6 +234,10 @@ export default function AppContent() {
   const workspaceBusy = useWorkspaceBusy();
   // A video or subtitles on screen means the video workspace layout.
   const inWorkspace = Boolean(videoUrl) || hasMountedSubtitles;
+  const showGeneratePanel = useUIStore(s => s.showGeneratePanel);
+  const showEditPanel = useUIStore(s => s.showEditPanel);
+  // Home shows link errors under its own link field (HomeStage).
+  const onHome = !inWorkspace && !showGeneratePanel && !showEditPanel;
   const isTranslating = useTaskStore(
     s =>
       !!s.translation.inProgress &&
@@ -259,13 +268,6 @@ export default function AppContent() {
   // Keep the main-process target language in sync with the renderer choice.
   useEffect(() => {
     (async () => {
-      const savedRendererTarget = String(
-        localStorage.getItem('savedTargetLanguage') || ''
-      )
-        .trim()
-        .toLowerCase();
-      const rendererHasExplicitSavedTarget =
-        savedRendererTarget.length > 0 && savedRendererTarget !== 'original';
       let current = useUIStore.getState().targetLanguage;
       let savedSubtitleTargetLanguage: string | null = null;
 
@@ -278,28 +280,23 @@ export default function AppContent() {
         // Do nothing
       }
 
-      if (!rendererHasExplicitSavedTarget) {
-        if (
-          savedSubtitleTargetLanguage &&
-          savedSubtitleTargetLanguage !== current
-        ) {
-          useUIStore.getState().setTargetLanguage(savedSubtitleTargetLanguage);
-          current = savedSubtitleTargetLanguage;
-        } else {
-          try {
-            const savedAppLanguage = await SystemIPC.getLanguagePreference();
-            const defaultTargetLanguage = mapUiLanguageToTargetLanguage(
-              savedAppLanguage ||
-                localStorage.getItem('app_language_preference') ||
-                navigator.language
-            );
-            if (defaultTargetLanguage !== current) {
-              useUIStore.getState().setTargetLanguage(defaultTargetLanguage);
-              current = defaultTargetLanguage;
-            }
-          } catch {
-            // Do nothing
+      // Until the user picks an output language it follows the UI language;
+      // main's stored value is only a mirror of the renderer's, so it never
+      // overrides that (it may predate a UI language change).
+      if (!useUIStore.getState().targetLanguageExplicit) {
+        try {
+          const savedAppLanguage = await SystemIPC.getLanguagePreference();
+          const defaultTargetLanguage = mapUiLanguageToTargetLanguage(
+            savedAppLanguage ||
+              localStorage.getItem('app_language_preference') ||
+              navigator.language
+          );
+          if (defaultTargetLanguage !== current) {
+            useUIStore.getState().setTargetLanguage(defaultTargetLanguage);
+            current = defaultTargetLanguage;
           }
+        } catch {
+          // Do nothing
         }
       }
 
@@ -490,7 +487,7 @@ export default function AppContent() {
       <div className={containerStyles}>
         <Header />
 
-        {globalError && (
+        {globalError && !onHome && (
           <div style={{ marginBottom: '12px' }}>
             <ErrorBanner
               message={globalError}
@@ -502,6 +499,14 @@ export default function AppContent() {
         {/* Wherever a download started (home, workspace, Change Video), a
             human check is answered here. */}
         <UrlCookieBanner />
+
+        {/* Home: a link's download shows in the page flow, under the
+            header, never as a floating card over the header controls. */}
+        {onHome ? (
+          <ProgressPresentationContext.Provider value="inline">
+            {progressAreas}
+          </ProgressPresentationContext.Provider>
+        ) : null}
 
         {/* One wrapper in every layout so MainPanels never remounts when a
             video appears mid-job. */}
@@ -530,7 +535,7 @@ export default function AppContent() {
           <MainPanels inWorkspace={inWorkspace} />
         </div>
 
-        {inWorkspace ? <WorkspaceExportSheet /> : progressAreas}
+        {inWorkspace ? <WorkspaceExportSheet /> : onHome ? null : progressAreas}
 
         <FloatingActionButtons />
       </div>

@@ -364,7 +364,22 @@ function main() {
       if (!enValue) continue;
       const enTokens = extractTokens(enValue);
       const localeTokens = extractTokens(localeValue);
-      if (enTokens.join('|') !== localeTokens.join('|')) {
+      // The renderer passes `languageInto` (the language name in the form a
+      // sentence like "translate into X" needs) wherever it passes
+      // `language` (utils/languageName.ts), so either spelling is fine.
+      const aliasedTokens = extractTokens(
+        localeValue.replace(/\{\{\s*languageInto\s*\}\}/g, '{{language}}')
+      );
+      // A singular plural form may say "one line" instead of "{{count}}
+      // line(s)": dropping a variable there is fine, inventing one is not.
+      const singularForm = /_(zero|one|two)$/.test(key);
+      const droppedOnly =
+        singularForm && aliasedTokens.every(token => enTokens.includes(token));
+      if (
+        enTokens.join('|') !== localeTokens.join('|') &&
+        enTokens.join('|') !== aliasedTokens.join('|') &&
+        !droppedOnly
+      ) {
         tokenMismatches.push({
           key,
           enTokens,

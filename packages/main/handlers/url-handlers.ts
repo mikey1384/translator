@@ -289,6 +289,7 @@ export async function handleProcessUrl(
     void trackUrlDownloadFunnelEvent('url_download_completed', { sourceType });
 
     registerPendingUrlResult(operationId, event.sender, result.videoPath);
+    rememberPendingUrlTitle(operationId, result.title);
     if (controller.signal.aborted) {
       return await finalizeCancelledUrlOperation({
         operationId,
@@ -414,6 +415,29 @@ export async function handleProcessUrl(
   }
 }
 
+// Titles of finished downloads awaiting acceptance; the promoted file is
+// named after the video. Bounded: entries are dropped once accepted or
+// discarded, and the oldest go first if many are never answered.
+const pendingUrlTitles = new Map<string, string>();
+const MAX_PENDING_URL_TITLES = 50;
+
+function rememberPendingUrlTitle(operationId: string, title: unknown): void {
+  const text = String(title || '').trim();
+  if (!text) return;
+  pendingUrlTitles.set(operationId, text);
+  while (pendingUrlTitles.size > MAX_PENDING_URL_TITLES) {
+    const oldest = pendingUrlTitles.keys().next().value;
+    if (oldest === undefined) break;
+    pendingUrlTitles.delete(oldest);
+  }
+}
+
+function takePendingUrlTitle(operationId: string): string | null {
+  const title = pendingUrlTitles.get(operationId) ?? null;
+  pendingUrlTitles.delete(operationId);
+  return title;
+}
+
 export async function handleAcceptProcessedUrl(
   event: IpcMainInvokeEvent,
   operationId: string
@@ -423,6 +447,7 @@ export async function handleAcceptProcessedUrl(
   }
 
   const pendingFilePath = acceptPendingUrlResult(operationId);
+  const title = takePendingUrlTitle(operationId);
   if (!pendingFilePath) {
     return {
       success: false,
@@ -446,6 +471,7 @@ export async function handleAcceptProcessedUrl(
       sourcePath: pendingFilePath,
       libraryDir: downloadLibraryDir,
       operationId,
+      title,
       persistDestinationOwnership: async destinationPath => {
         if (!downloadHistoryManager) {
           throw new Error('Persistent download ownership is not available');
@@ -498,6 +524,7 @@ export async function handleDiscardProcessedUrl(
     return { success: false, error: 'Operation ID is required' };
   }
 
+  pendingUrlTitles.delete(operationId);
   const success = await discardPendingUrlResult(operationId);
   if (!success) {
     return {

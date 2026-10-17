@@ -408,6 +408,12 @@ export default function VideoSuggestionPanel({
           ),
     [t, targetCountryValue]
   );
+  // Say what "Quality" or a model name in the pill refers to.
+  const modelPillLabel = t(
+    'input.videoSuggestion.modelPill',
+    'Search AI: {{model}}',
+    { model: displayModelLabel }
+  );
   const savedPreferenceCount = useMemo(
     () => savedPrefTopics.length,
     [savedPrefTopics.length]
@@ -664,21 +670,42 @@ export default function VideoSuggestionPanel({
   // free search for their words, and put the cursor in the chat box.
   const homeSearchRequest = useVideoSuggestionStore(s => s.homeSearchRequest);
   const panelRef = useRef<HTMLDivElement>(null);
+  const focusChatAfterHomeSearchRef = useRef(false);
   useEffect(() => {
     if (!homeSearchRequest) return;
     const { id, query } = homeSearchRequest;
     useVideoSuggestionStore.getState().clearHomeSearchRequest(id);
     setOpen(true);
+    focusChatAfterHomeSearchRef.current = true;
     if (query) void runFreeSearch(query);
-    const timer = window.setTimeout(() => {
+    // The workspace panel becomes visible a few frames after home hides;
+    // scroll once it has a layout box, or the scroll is a no-op.
+    let frame = 0;
+    let attempts = 0;
+    const scrollWhenVisible = () => {
       const panel = panelRef.current;
-      if (!panel) return;
-      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      panel.querySelector<HTMLTextAreaElement>('textarea')?.focus();
-    }, 80);
-    return () => window.clearTimeout(timer);
+      if (panel && panel.getClientRects().length > 0) {
+        panel.scrollIntoView({ block: 'start' });
+        return;
+      }
+      attempts += 1;
+      if (attempts < 60)
+        frame = window.requestAnimationFrame(scrollWhenVisible);
+    };
+    frame = window.requestAnimationFrame(scrollWhenVisible);
+    return () => window.cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeSearchRequest]);
+  // The chat box is disabled while the search runs; put the cursor there as
+  // soon as it can take input, so the user can refine the search.
+  useEffect(() => {
+    if (!focusChatAfterHomeSearchRef.current || loading || !open) return;
+    const textarea =
+      panelRef.current?.querySelector<HTMLTextAreaElement>('textarea');
+    if (!textarea || textarea.disabled) return;
+    focusChatAfterHomeSearchRef.current = false;
+    textarea.focus({ preventScroll: true });
+  });
 
   useEffect(() => {
     if (hideToggle || restoredSessionRef.current) return;
@@ -751,8 +778,11 @@ export default function VideoSuggestionPanel({
               <div className={toggleMetaPillAccentStyles}>
                 {VIDEO_SUGGESTION_SOURCE_LABEL}
               </div>
-              <div className={toggleMetaPillStyles}>{displayModelLabel}</div>
-              <div className={toggleMetaPillStyles}>{countryScopeLabel}</div>
+              <div className={toggleMetaPillStyles}>{modelPillLabel}</div>
+              {/* Only a country the user chose; "no country" needs no pill. */}
+              {targetCountryValue ? (
+                <div className={toggleMetaPillStyles}>{countryScopeLabel}</div>
+              ) : null}
               {targetRecency !== 'any' ? (
                 <div className={toggleMetaPillStyles}>
                   {selectedRecencyLabel}
@@ -783,8 +813,13 @@ export default function VideoSuggestionPanel({
                 <div className={panelIntroPillAccentStyles}>
                   {VIDEO_SUGGESTION_SOURCE_LABEL}
                 </div>
-                <div className={panelIntroPillStyles}>{displayModelLabel}</div>
-                <div className={panelIntroPillStyles}>{countryScopeLabel}</div>
+                <div className={panelIntroPillStyles}>{modelPillLabel}</div>
+                {/* Only a country the user chose; "no country" needs no pill. */}
+                {targetCountryValue ? (
+                  <div className={panelIntroPillStyles}>
+                    {countryScopeLabel}
+                  </div>
+                ) : null}
                 {targetRecency !== 'any' ? (
                   <div className={panelIntroPillStyles}>
                     {selectedRecencyLabel}

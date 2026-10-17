@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import {
+  friendlyDownloadFileName,
   cleanupInterruptedUrlDownloadPromotions,
   cleanupLegacyUrlDownloadScratchDir,
   getUrlDownloadLibraryDir,
@@ -485,5 +486,32 @@ test('an attached sender frame remains eligible for IPC handoff', () => {
       senderFrame: { detached: false },
     } as any),
     false
+  );
+});
+
+test('promoted downloads are named after the video title', () => {
+  assert.equal(
+    friendlyDownloadFileName(
+      'download_1792232943072_jNQXAC9IVRw.mp4',
+      'Me at the zoo'
+    ),
+    'Me at the zoo [jNQXAC9IVRw].mp4'
+  );
+  assert.equal(
+    friendlyDownloadFileName('download_1_abc.webm', 'A/B: "C"?  '),
+    'A B C [abc].webm'
+  );
+  assert.equal(
+    friendlyDownloadFileName('download_1_abc.mp4', '   '),
+    'download_1_abc.mp4'
+  );
+  assert.equal(
+    friendlyDownloadFileName('download_1_abc.mp4', '...'),
+    'download_1_abc.mp4'
+  );
+  assert.equal(
+    Array.from(friendlyDownloadFileName('download_1_abc.mp4', 'x'.repeat(300)))
+      .length,
+    80 + ' [abc].mp4'.length
   );
 });

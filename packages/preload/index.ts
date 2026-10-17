@@ -435,6 +435,13 @@ const electronAPI = {
   setLanguagePreference: (lang: string) =>
     ipcRenderer.invoke('set-language-preference', lang),
 
+  // Running paid subtitle jobs, kept by main so a crash can't lose them.
+  // Synchronous: the change is on disk when the call returns.
+  listRunningSubtitleJobs: () =>
+    ipcRenderer.sendSync('running-subtitle-jobs:list'),
+  applyRunningSubtitleJobOp: (op: unknown) =>
+    ipcRenderer.sendSync('running-subtitle-jobs:op', op),
+
   // --- ADD THESE LINES for Subtitle Target Language ---
   getSubtitleTargetLanguage: (): Promise<string> =>
     ipcRenderer.invoke('get-subtitle-target-language'),
@@ -521,6 +528,8 @@ const electronAPI = {
     packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO',
     placement?: string
   ) => ipcRenderer.invoke('create-checkout-session', packId, placement),
+  abandonCheckoutSession: (): Promise<void> =>
+    ipcRenderer.invoke('abandon-checkout-session'),
   createByoUnlockSession: (): Promise<void> =>
     ipcRenderer.invoke('create-byo-unlock-session'),
 
@@ -545,7 +554,7 @@ const electronAPI = {
   getAllByoSettings: (): Promise<AllByoSettings> =>
     ipcRenderer.invoke('get-all-byo-settings'),
 
-  getOpenAiApiKey: (): Promise<string | null> =>
+  getOpenAiApiKey: (): Promise<{ present: boolean; last4: string | null }> =>
     ipcRenderer.invoke('get-openai-api-key'),
   setOpenAiApiKey: (
     apiKey: string
@@ -565,7 +574,7 @@ const electronAPI = {
     ipcRenderer.invoke('set-byo-provider-enabled', enabled),
 
   // Anthropic API key functions
-  getAnthropicApiKey: (): Promise<string | null> =>
+  getAnthropicApiKey: (): Promise<{ present: boolean; last4: string | null }> =>
     ipcRenderer.invoke('get-anthropic-api-key'),
   setAnthropicApiKey: (
     apiKey: string
@@ -601,6 +610,7 @@ const electronAPI = {
       hoursBalance: number;
       creditsPerHour?: number;
       authoritative?: boolean;
+      offline?: boolean;
       checkoutSessionId?: string | null;
       monthlyFree?: {
         credits: number;
@@ -620,6 +630,7 @@ const electronAPI = {
     hoursBalance: number;
     creditsPerHour: number;
     authoritative: boolean;
+    offline?: boolean;
     checkoutSessionId?: string | null;
     monthlyFree?: {
       credits: number;
@@ -634,6 +645,7 @@ const electronAPI = {
     hoursBalance: number;
     creditsPerHour: number;
     authoritative: boolean;
+    offline?: boolean;
     checkoutSessionId?: string | null;
     monthlyFree?: {
       credits: number;
@@ -665,22 +677,23 @@ const electronAPI = {
   getCreditHistorySummary: (): Promise<{
     everHadCredits: boolean;
     onlyWelcomeCredits: boolean;
+    everPaid?: boolean;
   } | null> => ipcRenderer.invoke('get-credit-history-summary'),
 
   // Listen for checkout status events
-  onCheckoutPending: (callback: () => void) => {
-    const handler = () => callback();
+  onCheckoutPending: (callback: (info?: { packId?: string }) => void) => {
+    const handler = (_e: unknown, info?: { packId?: string }) => callback(info);
     ipcRenderer.on('checkout-pending', handler);
     return () => ipcRenderer.removeListener('checkout-pending', handler);
   },
 
-  onCheckoutConfirmed: (callback: () => void) => {
-    const handler = () => callback();
+  onCheckoutConfirmed: (callback: (info?: { packId?: string }) => void) => {
+    const handler = (_e: unknown, info?: { packId?: string }) => callback(info);
     ipcRenderer.on('checkout-confirmed', handler);
     return () => ipcRenderer.removeListener('checkout-confirmed', handler);
   },
-  onCheckoutUnresolved: (callback: () => void) => {
-    const handler = () => callback();
+  onCheckoutUnresolved: (callback: (info?: { packId?: string }) => void) => {
+    const handler = (_e: unknown, info?: { packId?: string }) => callback(info);
     ipcRenderer.on('checkout-unresolved', handler);
     return () => ipcRenderer.removeListener('checkout-unresolved', handler);
   },
@@ -774,8 +787,10 @@ const electronAPI = {
   },
 
   // ElevenLabs API key functions
-  getElevenLabsApiKey: (): Promise<string | null> =>
-    ipcRenderer.invoke('get-elevenlabs-api-key'),
+  getElevenLabsApiKey: (): Promise<{
+    present: boolean;
+    last4: string | null;
+  }> => ipcRenderer.invoke('get-elevenlabs-api-key'),
   setElevenLabsApiKey: (
     apiKey: string
   ): Promise<{ success: boolean; error?: string }> =>
@@ -906,6 +921,7 @@ const electronAPI = {
   updateCheck: () => ipcRenderer.invoke('update:check'),
   updateDownload: () => ipcRenderer.invoke('update:download'),
   updateInstall: () => ipcRenderer.invoke('update:install'),
+  takeStartupNotices: () => ipcRenderer.invoke('app:take-startup-notices'),
   updateGetPostInstallNotice: () =>
     ipcRenderer.invoke('update:get-post-install-notice'),
   updateClearPostInstallNotice: (version?: string) =>

@@ -20,14 +20,13 @@ import {
   useUIStore,
   useVideoStore,
 } from '../../state';
-import { reportUnreadableCues } from '../../utils/subtitleImportNotice';
 import {
   openChangeVideo,
   openUnsavedSrtConfirm,
 } from '../../state/modal-store';
 import { logButton, logVideo, logError } from '../../utils/logger';
 import { useTranslation } from 'react-i18next';
-import { openSubtitleWithElectron } from '../../../shared/helpers';
+import { openSubtitleFileIntoStore } from '../../utils/open-subtitle-file';
 import {
   TRANSLATION_LANGUAGES_BASE,
   TRANSLATION_LANGUAGE_GROUPS,
@@ -50,7 +49,6 @@ import {
   unmountCurrentSubtitles,
 } from '../../utils/subtitle-library';
 import { saveCurrentSubtitles } from '../../utils/saveSubtitles';
-import { confirmReplaceUnsavedSubtitles } from '../../utils/unsaved-subtitles';
 import { didSaveSubtitleFile } from '../../utils/saveSubtitles';
 import {
   sidePanelButtonContentStyles,
@@ -183,55 +181,13 @@ export default function SideMenu({
 
   async function handleMountOrChangeSrt() {
     logButton('mount_or_change_srt');
-    const res = await openSubtitleWithElectron();
-    if (res?.segments && !(await confirmReplaceUnsavedSubtitles())) return;
-    if (res?.segments) {
-      // SRT loaded from disk; mark origin accordingly
-      useSubStore
-        .getState()
-        .load(
-          res.segments,
-          res.filePath ?? null,
-          'disk',
-          res.document?.sourceVideoPath ?? null,
-          res.document?.transcriptionEngine,
-          null,
-          res.document?.sourceVideoAssetIdentity,
-          res.document ?? null
-        );
-      useSubStore.getState().setActiveFileTarget({
-        filePath: res.filePath ?? null,
-        mode: res.fileMode ?? null,
-        role: res.fileRole ?? 'import',
-      });
-      reportUnreadableCues(res.unreadableCues);
-      // Reset transcription completion state so Generate panel doesn't show stale 'Transcription Complete'
-      try {
-        useTaskStore.getState().setTranscription({
-          isCompleted: false,
-          inProgress: false,
-          id: null,
-          stage: '',
-          percent: 0,
-        });
-      } catch {
-        // Do nothing
-      }
+    const res = await openSubtitleFileIntoStore();
+    if (res.status === 'loaded') {
       logVideo('srt_loaded', { path: res.filePath ?? '' });
-      // Ensure the Edit Subtitles panel is visible so users immediately see loaded SRT
-      try {
-        useUIStore.getState().setEditPanelOpen(true);
-      } catch {
-        // Do nothing
-      }
-      // Optionally scroll to current cue for immediate context
-      try {
-        useSubStore.getState().scrollToCurrent();
-      } catch {
-        // Do nothing
-      }
-    }
-    if (res?.error) {
+      // Show the loaded lines right away, at the current cue.
+      useUIStore.getState().setEditPanelOpen(true);
+      useSubStore.getState().scrollToCurrent();
+    } else if (res.status === 'error') {
       logError('srt_load', res.error);
     }
   }

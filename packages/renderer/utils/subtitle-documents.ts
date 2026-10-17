@@ -10,7 +10,13 @@ function getMountedSegments() {
     .map(segment => ({ ...segment }));
 }
 
-export async function saveMountedSubtitleDocument(): Promise<{
+/**
+ * Saves what is on screen as the app's subtitle document. `keepDirty` keeps
+ * the unsaved-changes state (a background snapshot, not a user save).
+ */
+export async function saveMountedSubtitleDocument(
+  options: { keepDirty?: boolean } = {}
+): Promise<{
   success: boolean;
   documentId?: string;
   error?: string;
@@ -46,7 +52,7 @@ export async function saveMountedSubtitleDocument(): Promise<{
   }
 
   useSubStore.getState().setDocumentMeta(result.document);
-  useSubStore.getState().markSaved(savedRevision);
+  if (!options.keepDirty) useSubStore.getState().markSaved(savedRevision);
   return { success: true, documentId: result.document.id };
 }
 

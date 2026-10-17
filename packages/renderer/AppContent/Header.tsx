@@ -12,6 +12,9 @@ import {
   saveMountedSubtitleDocument,
 } from '../utils/subtitle-documents';
 import { logButton } from '../utils/logger';
+import { openNotice } from '../state/modal-store';
+import { didSaveSubtitleFile, saveSubtitlesAs } from '../utils/saveSubtitles';
+import { i18n } from '../i18n';
 import { spacing } from '../components/design-system/tokens.js';
 
 const headerRow = css`
@@ -106,22 +109,82 @@ function useCanGoHome(): boolean {
   return panelsOpen || hasVideo || hasSubtitles;
 }
 
-async function goHome(): Promise<void> {
+/** Same rule as the logo, read outside React (agent navigation). */
+export function homeBlockedByRunningJob(): boolean {
+  const task = useTaskStore.getState();
+  return Boolean(
+    task.transcription.inProgress ||
+    task.translation.inProgress ||
+    task.dubbing.inProgress ||
+    task.merge.inProgress ||
+    task.summary.inProgress ||
+    useUrlStore.getState().download.inProgress
+  );
+}
+
+/** The home hero is what's on screen: no video, subtitles or panel open. */
+export function isHomeShowing(): boolean {
+  const ui = useUIStore.getState();
+  const video = useVideoStore.getState();
+  return (
+    !ui.showSettings &&
+    !ui.showGeneratePanel &&
+    !ui.showEditPanel &&
+    !video.url &&
+    !video.path &&
+    useSubStore.getState().order.length === 0
+  );
+}
+
+/**
+ * The library save failed: say so, and let the user keep the subtitles as an
+ * .srt, leave without them, or stay. Resolves true when it's fine to leave.
+ */
+async function confirmLeaveUnsaved(): Promise<boolean> {
+  const t = i18n.t.bind(i18n);
+  const choice = await openNotice({
+    title: t('home.leaveSaveFailed.title', "Your subtitles couldn't be saved"),
+    message: t(
+      'home.leaveSaveFailed.message',
+      "Translator couldn't save these subtitles to your library, so they won't come back when you open this video again. Save them as an .srt file first, or stay here."
+    ),
+    buttons: [
+      {
+        id: 'leave',
+        label: t('home.leaveSaveFailed.leave', 'Leave without saving'),
+        variant: 'danger',
+      },
+      { id: 'stay', label: t('home.leaveSaveFailed.stay', 'Stay') },
+      {
+        id: 'saveSrt',
+        label: t('home.leaveSaveFailed.saveSrt', 'Save .srt and leave'),
+        variant: 'primary',
+      },
+    ],
+  });
+  if (choice === 'leave') return true;
+  if (choice !== 'saveSrt') return false;
+  return didSaveSubtitleFile(await saveSubtitlesAs());
+}
+
+/**
+ * Leave the video for the home screen, exactly like clicking the logo.
+ * Resolves false when the user chose to stay (unsaved subtitles).
+ */
+export async function goHome(): Promise<boolean> {
   if (useSubStore.getState().order.length > 0) {
     const saved = await saveMountedSubtitleDocument();
-    // Never drop subtitles that couldn't be saved.
-    if (!saved.success || !saved.documentId) {
-      console.warn(
-        '[home] Staying put; subtitles were not saved:',
-        saved.error
+    if (saved.success && saved.documentId) {
+      const video = useVideoStore.getState();
+      rememberLeftDocument(
+        { path: video.originalPath ?? video.path, url: video.sourceUrl },
+        saved.documentId
       );
-      return;
+    } else {
+      // Never drop subtitles silently: the user decides.
+      console.warn('[home] Library save failed:', saved.error);
+      if (!(await confirmLeaveUnsaved())) return false;
     }
-    const video = useVideoStore.getState();
-    rememberLeftDocument(
-      { path: video.originalPath ?? video.path, url: video.sourceUrl },
-      saved.documentId
-    );
   }
   if (useVideoStore.getState().url || useVideoStore.getState().path) {
     await useVideoStore.getState().setFile(null);
@@ -133,6 +196,7 @@ async function goHome(): Promise<void> {
   ui.setWorkspaceToolsOpen(false);
   ui.setGeneratePanelOpen(false);
   ui.setEditPanelOpen(false);
+  return true;
 }
 
 export default function Header() {

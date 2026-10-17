@@ -6,7 +6,8 @@ export type PlayerShortcut =
   | 'volume-down'
   | 'toggle-mute'
   | 'speed-up'
-  | 'speed-down';
+  | 'speed-down'
+  | 'toggle-fullscreen';
 
 /** The slice of a DOM element the shortcut checks read. */
 export interface ShortcutTarget {
@@ -43,6 +44,9 @@ export function resolvePlayerShortcut(key: string): PlayerShortcut | null {
     case 'm':
     case 'M':
       return 'toggle-mute';
+    case 'f':
+    case 'F':
+      return 'toggle-fullscreen';
     case '>':
     case '.':
       return 'speed-up';
@@ -99,16 +103,35 @@ const isSpace = (key: string) => key === ' ' || key === 'Spacebar';
 /**
  * Whether a window keydown should drive the player. Player keys work wherever
  * focus is, except while typing, inside widgets that use the same keys, or
- * while a modal is open.
+ * while a modal is open. Volume arrows only work on the player.
  */
 export function shouldHandlePlayerShortcut(
   event: ShortcutKeyEvent,
-  { modalOpen = false }: { modalOpen?: boolean } = {}
+  {
+    modalOpen = false,
+    inPlayer = false,
+    fullscreen = false,
+  }: {
+    modalOpen?: boolean;
+    /** Focus is on the player or one of its controls. */
+    inPlayer?: boolean;
+    fullscreen?: boolean;
+  } = {}
 ): boolean {
   if (event.defaultPrevented) return false;
   if (event.metaKey || event.ctrlKey || event.altKey) return false;
-  if (!resolvePlayerShortcut(event.key)) return false;
+  const action = resolvePlayerShortcut(event.key);
+  if (!action) return false;
   if (modalOpen) return false;
+  // ↑/↓ scroll the page and the subtitle list everywhere else; they change
+  // the volume only on the player itself or in full screen.
+  if (
+    (action === 'volume-up' || action === 'volume-down') &&
+    !inPlayer &&
+    !fullscreen
+  ) {
+    return false;
+  }
   const target = event.target ?? null;
   if (isTextEntryTarget(target)) return false;
   if (target?.closest?.(OWN_ALL_KEYS_SELECTOR)) return false;

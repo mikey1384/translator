@@ -3,6 +3,7 @@ import { CREDIT_PACKS } from '../../shared/constants';
 import { estimateTranslatableHours } from '../utils/creditEstimates';
 import { transcriptionMinutesForCredits } from '../utils/creditShortfall';
 import BuyCreditsButton from './BuyCreditsButton';
+import { formatUsd } from '../utils/formatUsd';
 
 type MicroOfferPlacement = 'zero-credit-banner' | 'credit-ran-out-dialog';
 
@@ -20,12 +21,12 @@ export default function MicroCreditCheckoutButton({
   onCheckoutCreated,
   basis = 'transcription',
 }: MicroCreditCheckoutButtonProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const pack = CREDIT_PACKS.MICRO;
   const translationHours = estimateTranslatableHours(pack.credits, false);
   const formattedHours =
     typeof translationHours === 'number'
-      ? translationHours.toLocaleString(undefined, {
+      ? translationHours.toLocaleString(i18n.language, {
           minimumFractionDigits: 1,
           maximumFractionDigits: 1,
         })
@@ -51,7 +52,7 @@ export default function MicroCreditCheckoutButton({
   return (
     <BuyCreditsButton
       packId="MICRO"
-      label={`${t('credits.buyCredits', 'Buy Credits')} — US$${pack.price}${
+      label={`${t('credits.buyCredits', 'Buy Credits')} — ${formatUsd(pack.price, i18n.language)}${
         coverageLabel ? ` · ${coverageLabel}` : ''
       }`}
       variant="primary"

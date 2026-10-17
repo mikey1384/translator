@@ -102,6 +102,11 @@ import { useUIStore } from '../state/ui-store';
 import { useUrlStore } from '../state/url-store';
 import { useVideoStore } from '../state/video-store';
 import {
+  goHome,
+  homeBlockedByRunningJob,
+  isHomeShowing,
+} from '../AppContent/Header';
+import {
   ensureVideoSuggestionStoreRuntime,
   useVideoSuggestionStore,
 } from '../state/video-suggestion-store';
@@ -432,12 +437,41 @@ function waitForRenderedDestination(): Promise<void> {
   });
 }
 
+// The header (marked "home") is always rendered, so its presence proves
+// nothing: leave the same way the logo does, then check the hero is shown.
+async function navigateHome(): Promise<Record<string, unknown>> {
+  useUIStore.getState().toggleSettings(false);
+  let blockedNote: string | null = null;
+  if (!isHomeShowing()) {
+    if (homeBlockedByRunningJob()) {
+      blockedNote =
+        'A job is running, so Translator stays on it (leaving would stop it). Wait for it to finish or cancel it, then navigate home.';
+    } else if (!(await goHome())) {
+      blockedNote =
+        'The user chose to stay because the subtitles could not be saved to the library.';
+    }
+  }
+  await waitForRenderedDestination();
+  const opened = isHomeShowing();
+  if (opened) window.scrollTo({ top: 0, behavior: 'smooth' });
+  return {
+    destination: 'home',
+    opened,
+    settingsOpen: useUIStore.getState().showSettings,
+    workspaceTab: useUIStore.getState().generateSubtitlesWorkspaceTab,
+    note: opened
+      ? 'The Translator home screen is visible.'
+      : (blockedNote ?? 'Translator could not leave the current screen.'),
+  };
+}
+
 async function navigateToDestination(
   destination: AppDestination
 ): Promise<Record<string, unknown>> {
   if (!APP_DESTINATIONS.includes(destination)) {
     throw new Error('Unsupported Translator destination.');
   }
+  if (destination === 'home') return navigateHome();
   const ui = useUIStore.getState();
   const settingsDestination = destination.startsWith('settings');
   ui.toggleSettings(settingsDestination);
@@ -467,13 +501,11 @@ async function navigateToDestination(
     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     target.setAttribute('tabindex', '-1');
     target.focus({ preventScroll: true });
-  } else if (destination === 'home') {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   return {
     destination,
-    opened: Boolean(target) || destination === 'home',
+    opened: Boolean(target),
     settingsOpen: useUIStore.getState().showSettings,
     workspaceTab: useUIStore.getState().generateSubtitlesWorkspaceTab,
     note: target
@@ -1201,6 +1233,18 @@ async function runSuggestedVideoBatch(
   items: VideoSuggestionResultItem[],
   quality: VideoQuality
 ): Promise<void> {
+  useUrlStore.getState().setBatchDownloadActive(true);
+  try {
+    await runSuggestedVideoBatchItems(items, quality);
+  } finally {
+    useUrlStore.getState().setBatchDownloadActive(false);
+  }
+}
+
+async function runSuggestedVideoBatchItems(
+  items: VideoSuggestionResultItem[],
+  quality: VideoQuality
+): Promise<void> {
   for (const item of items) {
     if (agentBatchDownloadState.cancelRequested) break;
     const entry = { id: item.id, title: item.title || item.url };
@@ -1209,7 +1253,6 @@ async function runSuggestedVideoBatch(
       current: entry,
     };
     const urlState = useUrlStore.getState();
-    urlState.setUrlInput(item.url);
     urlState.setDownloadQuality(quality);
     const result = await urlState.downloadMedia({
       url: item.url,
@@ -1217,7 +1260,18 @@ async function runSuggestedVideoBatch(
       allowLongVideo: true,
       preserveSubtitles: false,
       mountOnComplete: false,
+      fromBatch: true,
     });
+    // The user's × on the progress card stops the whole batch, not only
+    // this video.
+    if (result && 'cancelled' in result && result.cancelled) {
+      agentBatchDownloadState = {
+        ...agentBatchDownloadState,
+        cancelRequested: true,
+        current: null,
+      };
+      break;
+    }
     const finalUrlState = useUrlStore.getState();
     if (
       result?.success &&

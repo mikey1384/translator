@@ -2,6 +2,7 @@ import { SPEED_STEPS } from '../VideoPlayer';
 import { useEffect, useRef, startTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 import { listenClose } from '../../utils/closeOnOutside';
+import { useReturnFocusWhenClosed } from '../../utils/focusReturn';
 import {
   speedMenuItemStyles,
   speedMenuStyles,
@@ -22,6 +23,8 @@ export default function SpeedMenu({
 }: Props) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLUListElement>(null);
+  // Esc or a pick hands focus back to the button that opened the menu.
+  useReturnFocusWhenClosed(true, menuRef);
   const selectedItemRef = useRef<HTMLLIElement>(null);
   const currentRateRef = useRef<(typeof SPEED_STEPS)[number]>(current);
 

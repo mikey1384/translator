@@ -9,6 +9,8 @@ import {
   ElementType,
 } from 'react';
 import { css } from '@emotion/css';
+import { Music } from 'lucide-react';
+import { colors } from '../../styles';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -39,7 +41,7 @@ import {
   BASELINE_HEIGHT,
   MIN_SUBTITLE_FONT_SIZE,
 } from '../../../shared/constants';
-import { resolveSubtitleOutputFontSize } from '../../../shared/helpers/subtitle-render-spec';
+import { resolveSubtitleRenderFrame } from '../../../shared/helpers/subtitle-render-spec';
 import type { SubtitleDisplayMode } from '@shared-types/app';
 
 import { cueText } from '../../../shared/helpers';
@@ -123,6 +125,9 @@ export default function NativeVideoPlayer({
   const videoUrl = useVideoStore(s => s.url);
   const videoPath = useVideoStore(s => s.path);
   const togglePlay = useVideoStore(s => s.togglePlay);
+  const audioFileName = videoPath
+    ? videoPath.split(/[\\/]/).pop() || null
+    : null;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorTimer = useRef<NodeJS.Timeout | null>(null);
@@ -155,6 +160,17 @@ export default function NativeVideoPlayer({
   const showPlaybackErrorState =
     Boolean(errorMessage) && !suppressGenericPlaybackError;
 
+  // The export's own frame and font size (an audio-only file renders on a
+  // 1280x720 black frame). The overlay is laid out on this frame and then
+  // scaled to the picture, so it matches the burned-in video.
+  const renderFrame = resolveSubtitleRenderFrame({
+    baseFontSizePx: baseFontSize,
+    videoWidthPx: videoWidth,
+    videoHeightPx: videoHeight,
+    displayWidthPx: displayWidth ?? videoWidth,
+    displayHeightPx: displayHeight ?? videoHeight,
+    isAudioOnly,
+  });
   const targetVideoHeight = !isAudioOnly
     ? Math.max(videoHeight ?? BASELINE_HEIGHT, 1)
     : null;
@@ -162,19 +178,9 @@ export default function NativeVideoPlayer({
     !isAudioOnly && targetVideoHeight
       ? Math.max(videoWidth ?? Math.round((targetVideoHeight * 16) / 9), 1)
       : null;
-  const subtitleCanvasWidth =
-    !isAudioOnly && (displayWidth || videoWidth || targetVideoWidth)
-      ? (displayWidth ?? videoWidth ?? targetVideoWidth ?? undefined)
-      : undefined;
-  const subtitleCanvasHeight =
-    !isAudioOnly && (displayHeight || videoHeight || targetVideoHeight)
-      ? (displayHeight ?? videoHeight ?? targetVideoHeight ?? undefined)
-      : undefined;
-  const canonicalFontSize = resolveSubtitleOutputFontSize({
-    baseFontSizePx: baseFontSize,
-    videoHeightPx: targetVideoHeight ?? BASELINE_HEIGHT,
-    isAudioOnly,
-  });
+  const subtitleCanvasWidth = renderFrame.displayWidthPx;
+  const subtitleCanvasHeight = renderFrame.displayHeightPx;
+  const canonicalFontSize = renderFrame.fontSizePx;
 
   const recomputeScale = useCallback(() => {
     const v = videoRef.current;
@@ -183,29 +189,28 @@ export default function NativeVideoPlayer({
     const cssWidth = Math.max(rect.width, 1);
     const cssHeight = Math.max(rect.height, 1);
 
-    let contentHeight = cssHeight;
-    if (!isAudioOnly) {
-      const intrinsicWidth = v.videoWidth || targetVideoWidth || cssWidth || 1;
-      const intrinsicHeight =
-        v.videoHeight || targetVideoHeight || cssHeight || 1;
-      const scaleFactor = Math.min(
-        cssWidth / intrinsicWidth,
-        cssHeight / intrinsicHeight
-      );
-      contentHeight = Math.max(1, intrinsicHeight * scaleFactor);
-      const contentWidth = Math.max(1, intrinsicWidth * scaleFactor);
-      // Relative to the positioned parent the overlay lives in; the <video>
-      // itself can sit centered inside it.
-      const parentRect = v.parentElement?.getBoundingClientRect() ?? rect;
-      setPictureBox({
-        left: rect.left - parentRect.left + (cssWidth - contentWidth) / 2,
-        top: rect.top - parentRect.top + (cssHeight - contentHeight) / 2,
-        width: contentWidth,
-        height: contentHeight,
-      });
-    } else if (rect.height === 0) {
-      contentHeight = 180;
-    }
+    // Audio has no picture: the export's black frame is fitted instead.
+    const intrinsicWidth = isAudioOnly
+      ? subtitleCanvasWidth
+      : v.videoWidth || targetVideoWidth || cssWidth || 1;
+    const intrinsicHeight = isAudioOnly
+      ? subtitleCanvasHeight
+      : v.videoHeight || targetVideoHeight || cssHeight || 1;
+    const scaleFactor = Math.min(
+      cssWidth / intrinsicWidth,
+      cssHeight / intrinsicHeight
+    );
+    const contentHeight = Math.max(1, intrinsicHeight * scaleFactor);
+    const contentWidth = Math.max(1, intrinsicWidth * scaleFactor);
+    // Relative to the positioned parent the overlay lives in; the <video>
+    // itself can sit centered inside it.
+    const parentRect = v.parentElement?.getBoundingClientRect() ?? rect;
+    setPictureBox({
+      left: rect.left - parentRect.left + (cssWidth - contentWidth) / 2,
+      top: rect.top - parentRect.top + (cssHeight - contentHeight) / 2,
+      width: contentWidth,
+      height: contentHeight,
+    });
 
     const rounded = Math.round(contentHeight);
     setDisplayHeightPx(rounded);
@@ -214,7 +219,13 @@ export default function NativeVideoPlayer({
     } else {
       setScale(1);
     }
-  }, [isAudioOnly, targetVideoHeight, targetVideoWidth]);
+  }, [
+    isAudioOnly,
+    targetVideoHeight,
+    targetVideoWidth,
+    subtitleCanvasWidth,
+    subtitleCanvasHeight,
+  ]);
 
   const flash = useCallback((state: 'play' | 'pause') => {
     setIndicator(state);
@@ -304,12 +315,10 @@ export default function NativeVideoPlayer({
   useLayoutEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (!isAudioOnly) {
-      const ro = new ResizeObserver(recomputeScale);
-      ro.observe(v);
-      return () => ro.disconnect();
-    }
-  }, [recomputeScale, isAudioOnly]);
+    const ro = new ResizeObserver(recomputeScale);
+    ro.observe(v);
+    return () => ro.disconnect();
+  }, [recomputeScale]);
 
   useEffect(() => {
     recomputeScale();
@@ -376,17 +385,16 @@ export default function NativeVideoPlayer({
     }
   }, [effFontSize, displayHeightPx, targetVideoHeight, isAudioOnly]);
 
-  const exportLayer =
-    !isAudioOnly && pictureBox && subtitleCanvasWidth && subtitleCanvasHeight
-      ? {
-          width: subtitleCanvasWidth,
-          height: subtitleCanvasHeight,
-          // Per axis: a non-square-pixel source is shown wider than it is
-          // stored, and players stretch the burned-in frame the same way.
-          scaleX: pictureBox.width / subtitleCanvasWidth,
-          scaleY: pictureBox.height / subtitleCanvasHeight,
-        }
-      : null;
+  const exportLayer = pictureBox
+    ? {
+        width: subtitleCanvasWidth,
+        height: subtitleCanvasHeight,
+        // Per axis: a non-square-pixel source is shown wider than it is
+        // stored, and players stretch the burned-in frame the same way.
+        scaleX: pictureBox.width / subtitleCanvasWidth,
+        scaleY: pictureBox.height / subtitleCanvasHeight,
+      }
+    : null;
 
   if (!videoUrl) return null;
 
@@ -472,6 +480,20 @@ export default function NativeVideoPlayer({
         }}
       />
 
+      {isAudioOnly ? (
+        // No picture to show: say what this is instead of an empty box. The
+        // black frame stays, since that is what an export of audio looks like.
+        <div className={audioOnlyBadgeStyles}>
+          <Music size={28} aria-hidden="true" />
+          <span>{t('videoPlayer.audioOnly', 'Audio file')}</span>
+          {audioFileName ? (
+            <span className={audioOnlyNameStyles} dir="auto">
+              {audioFileName}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
       <div
         className={css`
           position: absolute;
@@ -480,7 +502,7 @@ export default function NativeVideoPlayer({
           transform: translateZ(0);
         `}
         style={
-          pictureBox && !isAudioOnly
+          pictureBox
             ? {
                 left: pictureBox.left,
                 top: pictureBox.top,
@@ -650,3 +672,28 @@ export default function NativeVideoPlayer({
     </div>
   );
 }
+
+const audioOnlyBadgeStyles = css`
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 80%;
+  color: ${colors.textDim};
+  font-size: 0.9rem;
+  text-align: center;
+  pointer-events: none;
+`;
+
+const audioOnlyNameStyles = css`
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: ${colors.gray};
+  font-size: 0.8rem;
+`;

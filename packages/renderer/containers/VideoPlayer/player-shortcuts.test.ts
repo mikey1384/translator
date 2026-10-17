@@ -154,3 +154,36 @@ test('volume clamps, toggles and persists', () => {
     writeStoredVolume({ volume: 1, muted: false }, throwing)
   );
 });
+
+test('F toggles full screen', () => {
+  assert.equal(resolvePlayerShortcut('f'), 'toggle-fullscreen');
+  assert.equal(resolvePlayerShortcut('F'), 'toggle-fullscreen');
+  assert.equal(
+    shouldHandlePlayerShortcut({ key: 'f', target: el('INPUT') }),
+    false
+  );
+});
+
+test('↑/↓ change the volume only on the player or in full screen', () => {
+  const row = el('BUTTON', { matches: [] });
+  // Elsewhere they scroll the page and the subtitle list.
+  assert.equal(press('ArrowDown', el('BODY')), false);
+  assert.equal(press('ArrowUp', row), false);
+  assert.equal(press('ArrowDown', null), false);
+  assert.equal(
+    shouldHandlePlayerShortcut(
+      { key: 'ArrowDown', target: el('DIV') },
+      { inPlayer: true }
+    ),
+    true
+  );
+  assert.equal(
+    shouldHandlePlayerShortcut(
+      { key: 'ArrowUp', target: el('BODY') },
+      { fullscreen: true }
+    ),
+    true
+  );
+  // Seeking with ←/→ still works from a subtitle row.
+  assert.equal(press('ArrowRight', row), true);
+});

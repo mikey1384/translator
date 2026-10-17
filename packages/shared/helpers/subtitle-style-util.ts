@@ -659,6 +659,42 @@ export function normalizeSubtitleLineBoxLineText(value: string): string {
   return String(value || '').trim() || '\u00a0';
 }
 
+function escapeSubtitleHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * A cue's markup. The player overlay and the burned-in export both use it, so
+ * they lay a cue out the same way. Each line takes its base direction from its
+ * own first strong character (`dir="auto"`). That way an Arabic-first line
+ * reads right to left even when it contains English words or digits.
+ */
+export function subtitleCueHtml(
+  text: string,
+  stylePreset: SubtitleStylePresetKey,
+  theme: SubtitleRenderTheme
+): string {
+  if (!text.trim()) return '';
+  const lineBox = subtitleStyleUsesLineBox(stylePreset);
+  const lineBoxCss = lineBox
+    ? subtitleLineBoxStyleToCssText(resolveSubtitleLineBoxStyle(theme))
+    : '';
+  return text
+    .split('\n')
+    .map(line =>
+      lineBox
+        ? `<span dir="auto" style="${lineBoxCss}">${escapeSubtitleHtml(
+            normalizeSubtitleLineBoxLineText(line)
+          )}</span>`
+        : `<span dir="auto">${escapeSubtitleHtml(line)}</span>`
+    )
+    .join('<br/>');
+}
+
 export function subtitleTextUsesMultipleLines(
   element: HTMLElement,
   text: string

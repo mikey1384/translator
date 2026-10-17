@@ -18,6 +18,7 @@ import {
 import { i18n } from '../i18n';
 import {
   describeVideoCost,
+  needsTailTranscription,
   planFreePreview,
   type FreePreviewPlan,
   type VideoCost,
@@ -124,6 +125,88 @@ export function classifyFreePreviewFailure(error: unknown): FreePreviewFailure {
 }
 
 /**
+ * Transcribe from the last preview line (the cut may have clipped it) to the
+ * end and append it. Marks the preview as transcribed to the end, so a retry
+ * after a failed translation doesn't pay for the tail again.
+ */
+async function transcribePreviewTail(
+  key: string,
+  preview: FreePreview,
+  videoPath: string
+): Promise<void> {
+  const subs = useSubStore.getState();
+  const video = useVideoStore.getState();
+  const last = subs.segments[subs.order[subs.order.length - 1]];
+  let start = preview.coveredSecs;
+  // The cut may have clipped the last line: redo it, but only drop the old
+  // copy once the new transcription is in hand.
+  let replaceId: string | null = null;
+  if (last) {
+    if (last.end >= preview.coveredSecs - 2) {
+      start = Math.max(0, last.start);
+      replaceId = last.id;
+    } else {
+      start = last.end;
+    }
+  }
+
+  const operationId = `transcribe-${Date.now()}-tail`;
+  registerStage5CreditRefreshOperation(operationId);
+  useTaskStore.getState().setTranscription({
+    id: operationId,
+    stage: i18n.t('generateSubtitles.status.starting', 'Starting...'),
+    percent: 0,
+    inProgress: true,
+    isCompleted: false,
+  });
+  logTask('start', 'transcription', {
+    operationId,
+    mode: 'free-preview-finish',
+    start,
+  });
+
+  const result = await SubtitlesIPC.transcribeRemaining({
+    videoPath,
+    sourceUrl: video.sourceUrl,
+    start,
+    operationId,
+  });
+  if (!result?.success) {
+    // Opens the credits dialog when the balance ran short mid-finish.
+    const failure = resolveTaskFailure({
+      error: result?.error,
+      cancelled: result?.cancelled,
+      operationId,
+      task: 'transcription',
+    });
+    useTaskStore.getState().setTranscription({
+      stage: failure.stage,
+      percent: 100,
+      inProgress: false,
+      isCompleted: false,
+    });
+    throw new Error(result?.error || 'Transcription stopped');
+  }
+  const added = result.segments ?? [];
+  if (replaceId && added.length > 0) useSubStore.getState().remove(replaceId);
+  if (added.length > 0) useSubStore.getState().appendSegments(added);
+  useTaskStore.getState().setTranscription({
+    stage: i18n.t('generateSubtitles.status.completed', 'Completed'),
+    percent: 100,
+    inProgress: false,
+    isCompleted: true,
+  });
+  const current = useFreePreviewStore.getState().items[key];
+  if (current) {
+    useFreePreviewStore.getState().save({
+      ...current,
+      coveredSecs: current.durationSecs,
+      transcribedToEnd: true,
+    });
+  }
+}
+
+/**
  * Finish a previewed video after a purchase: transcribe from the last
  * preview line (the cut may have clipped it) to the end, append, translate
  * only the new lines, and save the whole thing like a normal run.
@@ -155,67 +238,18 @@ export async function resumeFreePreview(key: string): Promise<boolean> {
       return true;
     }
     if (!videoPath) throw new Error('No video to finish');
-
-    const last = subs.segments[subs.order[subs.order.length - 1]];
-    let start = preview.coveredSecs;
-    // The cut may have clipped the last line: redo it, but only drop the old
-    // copy once the new transcription is in hand.
-    let replaceId: string | null = null;
-    if (last) {
-      if (last.end >= preview.coveredSecs - 2) {
-        start = Math.max(0, last.start);
-        replaceId = last.id;
-      } else {
-        start = last.end;
-      }
+    // A retry after the rest was already transcribed only translates; the
+    // paid tail is never transcribed (or charged) twice.
+    const lastId = subs.order[subs.order.length - 1];
+    if (
+      needsTailTranscription({
+        transcribedToEnd: preview.transcribedToEnd,
+        durationSecs: preview.durationSecs,
+        lastEndSecs: lastId ? (subs.segments[lastId]?.end ?? null) : null,
+      })
+    ) {
+      await transcribePreviewTail(key, preview, videoPath);
     }
-
-    const operationId = `transcribe-${Date.now()}-tail`;
-    registerStage5CreditRefreshOperation(operationId);
-    useTaskStore.getState().setTranscription({
-      id: operationId,
-      stage: i18n.t('generateSubtitles.status.starting', 'Starting...'),
-      percent: 0,
-      inProgress: true,
-      isCompleted: false,
-    });
-    logTask('start', 'transcription', {
-      operationId,
-      mode: 'free-preview-finish',
-      start,
-    });
-
-    const result = await SubtitlesIPC.transcribeRemaining({
-      videoPath,
-      sourceUrl: video.sourceUrl,
-      start,
-      operationId,
-    });
-    if (!result?.success) {
-      // Opens the credits dialog when the balance ran short mid-finish.
-      const failure = resolveTaskFailure({
-        error: result?.error,
-        cancelled: result?.cancelled,
-        operationId,
-        task: 'transcription',
-      });
-      useTaskStore.getState().setTranscription({
-        stage: failure.stage,
-        percent: 100,
-        inProgress: false,
-        isCompleted: false,
-      });
-      throw new Error(result?.error || 'Transcription stopped');
-    }
-    const added = result.segments ?? [];
-    if (replaceId && added.length > 0) useSubStore.getState().remove(replaceId);
-    if (added.length > 0) useSubStore.getState().appendSegments(added);
-    useTaskStore.getState().setTranscription({
-      stage: i18n.t('generateSubtitles.status.completed', 'Completed'),
-      percent: 100,
-      inProgress: false,
-      isCompleted: true,
-    });
 
     useUIStore.getState().setTargetLanguage(preview.language);
     const translated = await translateMissingUntranslated();

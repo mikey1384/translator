@@ -1,4 +1,7 @@
-import type { HighlightEditorialPlan } from '@shared-types/app';
+import type {
+  HighlightEditorialPlan,
+  SummaryEffortLevel,
+} from '@shared-types/app';
 import {
   validateHighlightEditorialPlan,
   editorialSourceSignature,
@@ -15,6 +18,10 @@ import {
   toUsableTranscriptSegments,
 } from '../components/TranscriptSummaryPanel/transcript-usable-segments';
 import { selectHighlightsByCue } from '../../shared/helpers/highlight-selection';
+import {
+  markHighlightCueChanges,
+  stampHighlightSourceCues,
+} from '../../shared/helpers/highlight-clips';
 
 export const HIGHLIGHT_ANALYSIS_CHANGED =
   'translator-highlight-analysis-changed';
@@ -30,7 +37,7 @@ export async function saveMountedHighlightEditorial(
     throw new Error(
       'The video or captions changed. Reopen the edit before saving.'
     );
-  const stored = await findStoredTranscriptAnalysis(context.lookup);
+  const stored = await findStoredTranscriptAnalysis(context.savedLookup);
   if (!stored.success || !stored.analysis)
     throw new Error('The saved highlight is no longer available.');
   const selected = stored.analysis.highlights.find(h => h.id === id);
@@ -54,7 +61,7 @@ export async function saveMountedHighlightEditorial(
   if ((await mountedHighlightContext()).snapshotId !== expectedSnapshotId)
     throw new Error('The source changed while saving the edit.');
   const saved = await saveStoredTranscriptAnalysis({
-    ...context.lookup,
+    ...lookupForSave(context.lookup, stored.entry),
     summary: stored.analysis.summary,
     sections: stored.analysis.sections,
     highlights,
@@ -120,21 +127,53 @@ export async function mountedHighlightContext() {
     segments,
     snapshotId,
     lookup,
+    // What the Highlights panel shows: the saved analysis in another
+    // language or quality, or from before a subtitle edit, when nothing
+    // matches exactly.
+    savedLookup: {
+      ...lookup,
+      allowOtherVariant: true,
+      allowOtherTranscript: true,
+    },
     ui,
     targetLanguage: subtitles.targetLanguage || ui.targetLanguage,
   };
 }
 
+/**
+ * Save next to the analysis that was found: its language and quality (so a
+ * summary is never filed under a language it isn't in), this transcript.
+ */
+function lookupForSave(
+  lookup: Awaited<ReturnType<typeof mountedHighlightContext>>['lookup'],
+  entry:
+    | { summaryLanguage: string; effortLevel: SummaryEffortLevel }
+    | null
+    | undefined
+) {
+  return entry
+    ? {
+        ...lookup,
+        summaryLanguage: entry.summaryLanguage,
+        effortLevel: entry.effortLevel,
+      }
+    : lookup;
+}
+
 export async function getMountedHighlights() {
   const context = await mountedHighlightContext();
-  const stored = await findStoredTranscriptAnalysis(context.lookup);
+  const stored = await findStoredTranscriptAnalysis(context.savedLookup);
   if (!stored.success)
     throw new Error(stored.error || 'Cannot read saved highlights.');
   return {
     snapshot_id: context.snapshotId,
     source_video_path: context.videoPath,
     cue_count: context.segments.length,
-    highlights: stored.analysis?.highlights || [],
+    highlights: markHighlightCueChanges(
+      stored.analysis?.highlights || [],
+      toUsableTranscriptSegments(context.segments)
+    ),
+    subtitles_changed_since_analysis: Boolean(stored.transcriptChanged),
     analysis_path: stored.entry?.filePath || null,
     guidance:
       'Read app_subtitles_get including surrounding context. Select complete ideas with an immediate hook and a resolved ending. Use stable cue IDs for both boundaries. Do not fill a quota or invent quotes. Then app_highlights_set and app_start_highlight_render. These steps consume no Stage5 credit.',
@@ -158,14 +197,17 @@ export async function setMountedHighlights(input: {
     throw new Error(
       'The source or transcript changed. Read app_highlights_get again.'
     );
-  const highlights = selectHighlightsByCue(context.segments, input.highlights);
-  const stored = await findStoredTranscriptAnalysis(context.lookup);
+  const highlights = stampHighlightSourceCues(
+    selectHighlightsByCue(context.segments, input.highlights),
+    toUsableTranscriptSegments(context.segments)
+  );
+  const stored = await findStoredTranscriptAnalysis(context.savedLookup);
   if (!stored.success)
     throw new Error(stored.error || 'Cannot read saved analysis.');
   if ((await mountedHighlightContext()).snapshotId !== context.snapshotId)
     throw new Error('The source changed while saving highlights.');
   const saved = await saveStoredTranscriptAnalysis({
-    ...context.lookup,
+    ...lookupForSave(context.lookup, stored.entry),
     summary: stored.analysis?.summary || '',
     sections: stored.analysis?.sections || [],
     highlights,
@@ -201,7 +243,7 @@ export async function resolveMountedHighlightRender(input: {
       'Choose 1–20 distinct saved highlight IDs in playback order.'
     );
   }
-  const stored = await findStoredTranscriptAnalysis(context.lookup);
+  const stored = await findStoredTranscriptAnalysis(context.savedLookup);
   if (!stored.success)
     throw new Error(stored.error || 'Cannot read saved highlights.');
   const highlights = input.highlightIds.map(id => {

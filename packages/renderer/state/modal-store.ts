@@ -15,6 +15,17 @@ export type LongDownloadDetails = {
   durationSec?: number;
   estimatedBytes?: number;
 };
+/** A plain in-app message with its own buttons (see `openNotice`). */
+export type AppNoticeButton = {
+  id: string;
+  label: string;
+  variant?: 'primary' | 'secondary' | 'danger';
+};
+export type AppNotice = {
+  title: string;
+  message: string;
+  buttons: AppNoticeButton[];
+};
 type PostInstallUpdateNotice = {
   version: string;
   releaseName?: string;
@@ -50,6 +61,9 @@ interface State {
   // Mandatory update modal
   requiredUpdateOpen: boolean;
   requiredUpdate: UpdateRequiredNotice | null;
+  // Generic notice; resolves with the chosen button id (null = dismissed).
+  notice: AppNotice | null;
+  _noticeResolver?: (choice: string | null) => void;
 }
 
 interface Actions {
@@ -76,6 +90,8 @@ interface Actions {
   closeUpdateNotes: () => void;
   openRequiredUpdate: (payload: UpdateRequiredNotice) => void;
   closeRequiredUpdate: () => void;
+  openNotice: (notice: AppNotice) => Promise<string | null>;
+  resolveNotice: (choice: string | null) => void;
 }
 
 export const useModalStore = createWithEqualityFn<State & Actions>()(
@@ -100,6 +116,8 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     updateNotes: null,
     requiredUpdateOpen: false,
     requiredUpdate: null,
+    notice: null,
+    _noticeResolver: undefined,
 
     openUnsavedSrtConfirm: (context = 'transcription') =>
       new Promise<UnsavedChoice>(resolve => {
@@ -229,6 +247,23 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
         s.requiredUpdateOpen = false;
         s.requiredUpdate = null;
       }),
+    openNotice: notice =>
+      new Promise<string | null>(resolve => {
+        // A newer notice replaces one still on screen.
+        get()._noticeResolver?.(null);
+        set(s => {
+          s.notice = notice;
+          s._noticeResolver = resolve;
+        });
+      }),
+    resolveNotice: choice => {
+      const resolver = get()._noticeResolver;
+      set(s => {
+        s.notice = null;
+        s._noticeResolver = undefined;
+      });
+      resolver?.(choice);
+    },
     // API keys required modal controls
     openApiKeysRequired: () =>
       set(s => {
@@ -323,4 +358,8 @@ export function openApiKeysRequired() {
 
 export function closeApiKeysRequired() {
   return (useModalStore.getState() as any).closeApiKeysRequired();
+}
+
+export function openNotice(notice: AppNotice): Promise<string | null> {
+  return useModalStore.getState().openNotice(notice);
 }

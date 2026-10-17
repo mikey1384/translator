@@ -15,6 +15,7 @@ const actions = {
   selectRelativeTab: noop,
   selectTabAtIndex: noop,
   showFindBar: noop,
+  focusTabStrip: noop,
 };
 
 // A fake translator that marks every string it produced.
@@ -81,4 +82,21 @@ test('context menu labels are translated', () => {
 test('the new-tab shortcut matches the platform', () => {
   assert.equal(newTabShortcutLabel('darwin'), '⌘T');
   assert.equal(newTabShortcutLabel('win32'), 'Ctrl+T');
+});
+
+test('F6 moves focus to the tab strip on every platform', () => {
+  for (const platform of ['darwin', 'win32'] as const) {
+    let calls = 0;
+    const template = buildAppMenuTemplate({
+      platform,
+      isDev: false,
+      appName: 'Translator',
+      t,
+      actions: { ...actions, focusTabStrip: () => calls++ },
+    });
+    const item = walk(template).find(entry => entry.accelerator === 'F6');
+    assert.ok(item, `no F6 item on ${platform}`);
+    (item!.click as () => void)();
+    assert.equal(calls, 1);
+  }
 });

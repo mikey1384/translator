@@ -6,9 +6,16 @@ import {
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;
 
+// Codes whose wording now talks in minutes (the unit users buy) use a new
+// key so older "credits" translations aren't shown for the new text.
+const TRANSFER_ERROR_KEYS: Record<string, string> = {
+  nothing_to_transfer: 'nothing_to_transfer_minutes',
+  transfer_failed: 'transfer_failed_minutes',
+};
+
 const TRANSFER_ERRORS: Record<string, string> = {
   nothing_to_transfer:
-    'Nothing to move yet: this computer has no purchased credits or API-key unlock. To bring credits here from another computer, choose “Receive credits”.',
+    'Nothing to move yet: this computer has no purchased minutes or API-key unlock. To bring minutes here from another computer, choose “Receive minutes”.',
   too_many_codes:
     'Too many transfer codes this hour. Try again in a little while.',
   jobs_running:
@@ -20,8 +27,15 @@ const TRANSFER_ERRORS: Record<string, string> = {
   network_error:
     'Couldn’t reach the Stage5 server. Check your connection and try again.',
   transfer_failed:
-    'The credits couldn’t be moved. Check your connection and try again.',
+    'The minutes couldn’t be moved. Check your connection and try again.',
 };
+
+/** "Nothing to move" is an expected state, not a failure: show it neutrally. */
+export function isNothingToTransfer(
+  result: { error?: unknown } | null | undefined
+): boolean {
+  return result?.error === 'nothing_to_transfer';
+}
 
 /**
  * The credit-transfer result carries a stable `error` code; the server's
@@ -35,7 +49,8 @@ export function creditTransferErrorMessage(
   const known = Object.prototype.hasOwnProperty.call(TRANSFER_ERRORS, code)
     ? code
     : 'transfer_failed';
-  return t(`settings.creditTransfer.errors.${known}`, {
+  const key = TRANSFER_ERROR_KEYS[known] ?? known;
+  return t(`settings.creditTransfer.errors.${key}`, {
     defaultValue: TRANSFER_ERRORS[known],
   });
 }

@@ -97,3 +97,52 @@ test('undo restores a deleted line, a replace-all and a shift', async () => {
     restore();
   }
 });
+
+test('split and merge are undoable, and Undo keeps offering earlier steps', async () => {
+  const restore = installGlobals();
+  try {
+    const { useSubStore } = await import('./subtitle-store');
+    const store = useSubStore.getState();
+    store.load([
+      {
+        id: 'a',
+        index: 1,
+        start: 0,
+        end: 4,
+        original: 'hello there friend',
+        translation: 'hola amigo',
+      },
+      { id: 'b', index: 2, start: 4, end: 6, original: 'bye', translation: '' },
+    ] as any);
+
+    const newId = store.split('a', { field: 'original', caret: 6 });
+    assert.ok(newId);
+    let s = useSubStore.getState();
+    assert.deepEqual(s.order, ['a', newId, 'b']);
+    assert.equal(s.segments.a.original, 'hello');
+    assert.equal(s.segments[newId!].original, 'there friend');
+    assert.equal(s.segments.a.end, s.segments[newId!].start);
+    assert.equal(s.segments[newId!].end, 4);
+    assert.equal(s.segments.b.index, 3);
+    assert.equal(s.lastUndoable?.kind, 'split');
+
+    assert.equal(store.mergeWithNext(newId!), true);
+    s = useSubStore.getState();
+    assert.deepEqual(s.order, ['a', newId]);
+    assert.equal(s.segments[newId!].original, 'there friend bye');
+    assert.equal(s.segments[newId!].end, 6);
+    assert.equal(store.mergeWithNext(newId!), false);
+
+    // Undo the merge; the bar then offers the split.
+    assert.equal(store.undo(), true);
+    assert.equal(useSubStore.getState().order.length, 3);
+    assert.equal(useSubStore.getState().lastUndoable?.kind, 'split');
+    assert.equal(store.undo(), true);
+    s = useSubStore.getState();
+    assert.deepEqual(s.order, ['a', 'b']);
+    assert.equal(s.segments.a.original, 'hello there friend');
+    assert.equal(s.lastUndoable, null);
+  } finally {
+    restore();
+  }
+});

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '../../../components/Modal';
 import Button from '../../../components/Button';
 import MicroCreditCheckoutButton from '../../../components/MicroCreditCheckoutButton';
-import { useCreditStore } from '../../../state';
+import { useCreditStore, useSubStore } from '../../../state';
 import { useModalStore } from '../../../state/modal-store';
 import {
   creditOfferBasis,
@@ -44,6 +44,11 @@ export default function CreditRanOutDialog({
     [i18n.language]
   );
   const formatCredits = (value: number) => numberFormat.format(value);
+
+  const hasLines = useSubStore(s => s.order.length > 0);
+  const hasTranslatedLines = useSubStore(s =>
+    s.order.some(id => Boolean(s.segments[id]?.translation?.trim()))
+  );
 
   // Worded for what the user started; a refusal is never "transcription"
   // when they asked for a translation or a dub.
@@ -89,15 +94,26 @@ export default function CreditRanOutDialog({
               'dialogs.creditRanOut.neverHadMessage',
               'Transcription needs credits or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.'
             )
-          : t(
-              'dialogs.creditRanOut.task.transcription.message',
-              'Your balance doesn’t cover transcribing this. Add credits, then start again. Lines already transcribed are kept.'
-            );
+          : hasLines
+            ? t(
+                'dialogs.creditRanOut.task.transcription.message',
+                'Your balance doesn’t cover transcribing this. Add credits, then start again. Lines already transcribed are kept.'
+              )
+            : t(
+                'dialogs.creditRanOut.task.transcription.messageNothingYet',
+                'Your balance doesn’t cover transcribing this. Add credits, then start again.'
+              );
       case 'translation':
-        return t(
-          'dialogs.creditRanOut.task.translation.message',
-          'Your balance doesn’t cover translating this. Add credits, then try again. Lines already translated are kept. Translating with your own Claude or Codex through Agent Control is free.'
-        );
+        // Only promise kept lines when some exist.
+        return hasTranslatedLines
+          ? t(
+              'dialogs.creditRanOut.task.translation.message',
+              'Your balance doesn’t cover translating this. Add credits, then try again. Lines already translated are kept. Translating with your own Claude or Codex through Agent Control is free.'
+            )
+          : t(
+              'dialogs.creditRanOut.task.translation.messageNothingYet',
+              'Your balance doesn’t cover translating this. Add credits, then try again. Translating with your own Claude or Codex through Agent Control is free.'
+            );
       case 'dubbing':
         return t(
           'dialogs.creditRanOut.task.dubbing.message',
@@ -152,6 +168,8 @@ export default function CreditRanOutDialog({
       open={open}
       title={title}
       titleId="credit-ran-out-title"
+      // Escape and the close button mean "OK", like every other dialog.
+      onClose={onOk}
       actions={
         <>
           <Button variant="secondary" onClick={onOk}>

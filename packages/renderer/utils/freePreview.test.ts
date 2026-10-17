@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {
   MIN_PREVIEW_SEC,
   creditsToFinish,
+  needsTailTranscription,
   packToFinish,
   planFreePreview,
+  previewMinuteSplit,
 } from './freePreview';
 
 test('a balance that covers the video runs it whole', () => {
@@ -106,5 +108,47 @@ test('video cost reads covered, preview-then-pack, or pack', async () => {
       qualityEnabled: false,
     }),
     { kind: 'offer', wholeVideoPrice: 5 }
+  );
+});
+
+test('offer minutes add up however the seconds round', () => {
+  // The audit's case: a 90 s preview of a 734 s video read "2 of 12 … 11".
+  const split = previewMinuteSplit({ coveredSecs: 90, durationSecs: 734 });
+  assert.equal(split.covered + split.remaining, split.total);
+  assert.deepEqual(split, { covered: 1, total: 12, remaining: 11 });
+  for (const [coveredSecs, durationSecs] of [
+    [150, 720],
+    [45, 61],
+    [599, 600],
+    [0, 300],
+    [300, 300],
+  ]) {
+    const s = previewMinuteSplit({ coveredSecs, durationSecs });
+    assert.equal(s.covered + s.remaining, s.total);
+    if (coveredSecs < durationSecs) assert.ok(s.remaining >= 1);
+  }
+});
+
+test('a retry after the tail was transcribed only translates', () => {
+  assert.equal(
+    needsTailTranscription({ durationSecs: 734, lastEndSecs: 90 }),
+    true
+  );
+  assert.equal(
+    needsTailTranscription({
+      transcribedToEnd: true,
+      durationSecs: 734,
+      lastEndSecs: 730,
+    }),
+    false
+  );
+  // The tail lines were lost (restart before saving): transcribe again.
+  assert.equal(
+    needsTailTranscription({
+      transcribedToEnd: true,
+      durationSecs: 734,
+      lastEndSecs: 90,
+    }),
+    true
   );
 });

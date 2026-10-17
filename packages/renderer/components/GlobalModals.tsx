@@ -65,8 +65,22 @@ const keepSubtitlesStyles = css`
   line-height: 1.4;
   cursor: pointer;
   input {
-    margin-top: 3px;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 2px 0 0;
+    accent-color: ${colors.primary};
+    cursor: pointer;
   }
+  input:focus-visible {
+    outline: 2px solid ${colors.primary};
+    outline-offset: 2px;
+  }
+`;
+
+const noticeMessageStyles = css`
+  white-space: pre-line;
+  line-height: 1.5;
 `;
 
 export default function GlobalModals() {
@@ -85,6 +99,8 @@ export default function GlobalModals() {
   const updateNotes = useModalStore(s => s.updateNotes);
   const requiredUpdateOpen = useModalStore(s => s.requiredUpdateOpen);
   const requiredUpdate = useModalStore(s => s.requiredUpdate);
+  const notice = useModalStore(s => s.notice);
+  const resolveNotice = useModalStore(s => s.resolveNotice);
   const toggleSettings = useUIStore(s => s.toggleSettings);
   const updateAvailable = useUpdateStore(s => s.available);
   const updateDownloading = useUpdateStore(s => s.downloading);
@@ -119,9 +135,12 @@ export default function GlobalModals() {
   // source, not only translation.
   const workspaceBusy = useWorkspaceBusy();
   const hasMountedSubtitles = useSubStore(s => s.order.length > 0);
-  // Change Video keeps the current subtitles (re-linking another copy of the
-  // same video) unless the user says this is a different video.
-  const [keepSubtitles, setKeepSubtitles] = useState(true);
+  // A different video starts without the current subtitles; keeping them is
+  // an explicit choice for another copy of the same video. Reset on every open.
+  const [keepSubtitles, setKeepSubtitles] = useState(false);
+  useEffect(() => {
+    if (changeVideoOpen) setKeepSubtitles(false);
+  }, [changeVideoOpen]);
   const preserveSubtitles = hasMountedSubtitles && keepSubtitles;
   const recentLocalMedia = useVideoStore(s => s.recentLocalMedia);
   const openLocalMedia = useVideoStore(s => s.openLocalMedia);
@@ -254,6 +273,30 @@ export default function GlobalModals() {
               )}
         </div>
       </Modal>
+      <Modal
+        open={Boolean(notice)}
+        title={notice?.title ?? ''}
+        titleId="app-notice-title"
+        onClose={() => resolveNotice(null)}
+        hideCloseButton
+        actions={
+          <>
+            {notice?.buttons.map(button => (
+              <Button
+                key={button.id}
+                variant={button.variant ?? 'secondary'}
+                onClick={() => resolveNotice(button.id)}
+              >
+                {button.label}
+              </Button>
+            ))}
+          </>
+        }
+      >
+        <div className={noticeMessageStyles} dir="auto">
+          {notice?.message}
+        </div>
+      </Modal>
       <LongDownloadConfirmDialog />
       <CreditRanOutDialog
         open={creditOpen}
@@ -283,15 +326,15 @@ export default function GlobalModals() {
             />
             <span>
               {t(
-                'videoPlayer.changeVideoKeepSubtitles',
-                'Keep the current subtitles on the new video (for another copy of the same video). Uncheck for a different video.'
+                'videoPlayer.changeVideoKeepSubtitlesSameVideo',
+                'Keep the current subtitles. Only for another copy of this same video; a different video starts without them.'
               )}
             </span>
           </label>
         ) : null}
         <MediaInputSection
           videoFile={null}
-          recentMedia={recentLocalMedia}
+          recentMedia={recentLocalMedia.filter(item => item.path !== videoPath)}
           onOpenFileDialog={async () => {
             const res = await openLocalMedia({ preserveSubtitles });
             if (!res.canceled) closeChangeVideo();
@@ -311,7 +354,9 @@ export default function GlobalModals() {
           downloadQuality={downloadQuality}
           setDownloadQuality={setDownloadQuality}
           handleProcessUrl={async () => {
-            await downloadMedia({ preserveSubtitles });
+            // Downloading here is an explicit replace: the finished video
+            // opens without a "Watch now?" question hidden behind the dialog.
+            await downloadMedia({ preserveSubtitles, replaceCurrent: true });
           }}
         />
       </Modal>

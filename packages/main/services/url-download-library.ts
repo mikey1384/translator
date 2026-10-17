@@ -240,13 +240,52 @@ async function tryReserveDestinationPath(
   return { destinationPath, reservationPath };
 }
 
+const MAX_FRIENDLY_TITLE_CHARS = 80;
+
+/**
+ * The name a promoted download is saved under: "<title> [<id>].<ext>" in
+ * place of yt-dlp's "download_<timestamp>_<id>.<ext>", so Finder, Recent
+ * files and default export names read like the video. Falls back to the
+ * scratch name when there is no usable title.
+ */
+export function friendlyDownloadFileName(
+  scratchName: string,
+  title: string | null | undefined
+): string {
+  const extension = path.extname(scratchName);
+  const stem = path.basename(scratchName, extension);
+  const idMatch = /^download_\d+_(.+)$/.exec(stem);
+  const cleanTitle = Array.from(
+    String(title || '')
+      // Path separators, characters Windows refuses, and control characters.
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\\/:*?"<>|\u0000-\u001f\u007f]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  )
+    .slice(0, MAX_FRIENDLY_TITLE_CHARS)
+    .join('')
+    .replace(/[\s.]+$/, '')
+    .replace(/^\.+/, '');
+  if (!cleanTitle) return scratchName;
+  const id = idMatch?.[1]?.trim();
+  // Windows device names can't be file names, even with an extension.
+  if (!id && /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(cleanTitle)) {
+    return scratchName;
+  }
+  return id && !cleanTitle.includes(id)
+    ? `${cleanTitle} [${id}]${extension}`
+    : `${cleanTitle}${extension}`;
+}
+
 async function reserveDestinationPath(
   libraryDir: string,
   sourcePath: string,
   operationId: string,
-  partialDir: string
+  partialDir: string,
+  preferredName?: string
 ): Promise<DestinationReservation> {
-  const sourceName = path.basename(sourcePath);
+  const sourceName = preferredName || path.basename(sourcePath);
   const extension = path.extname(sourceName);
   const stem = path.basename(sourceName, extension);
   const operationSuffix = sanitizeOperationId(operationId);
@@ -274,6 +313,8 @@ export async function promoteUrlDownload(options: {
   sourcePath: string;
   libraryDir: string;
   operationId: string;
+  /** The video's title; the saved file is named after it. */
+  title?: string | null;
   persistDestinationOwnership: (
     destinationPath: string
   ) => Promise<UrlDownloadPromotionOwnership>;
@@ -329,7 +370,8 @@ export async function promoteUrlDownload(options: {
       libraryDir,
       sourcePath,
       operationId,
-      partialDir
+      partialDir,
+      friendlyDownloadFileName(path.basename(sourcePath), options.title)
     );
     // Persist the reclaim claim only after staging is complete, but before
     // the final path becomes visible. A crash can now leave a startup-cleaned

@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import type { TranscriptHighlight } from '@shared-types/app';
 import {
+  markHighlightCueChanges,
   rankDistinctHighlights,
   rebaseClipSubtitles,
   resolveClipRanges,
+  stampHighlightSourceCues,
 } from './highlight-clips.js';
 
 test('invalid or unverified ranges never become unrelated fallback clips', () => {
@@ -82,4 +85,56 @@ test('ranking removes overlapping weaker moments and never manufactures filler',
     result.map(h => h.id),
     ['strong', 'other']
   );
+});
+
+const analysisCues = [
+  { start: 0, end: 2, text: 'Hello there' },
+  { start: 2, end: 4, text: 'This is the hook' },
+  { start: 10, end: 12, text: 'Unrelated later line' },
+];
+
+test('editing a line outside a highlight leaves it unmarked', () => {
+  const [stamped] = stampHighlightSourceCues(
+    [{ id: 'h1', start: 0, end: 4 }] as TranscriptHighlight[],
+    analysisCues
+  );
+  assert.ok(stamped.sourceCueSignature?.startsWith('cues1:'));
+  const edited = analysisCues.map(cue =>
+    cue.start === 10 ? { ...cue, text: 'Unrelated, fixed line' } : cue
+  );
+  const [marked] = markHighlightCueChanges([stamped], edited);
+  assert.equal(marked.cuesChanged, false);
+});
+
+test('editing a line inside a highlight marks only that highlight', () => {
+  const stamped = stampHighlightSourceCues(
+    [
+      { id: 'h1', start: 0, end: 4 },
+      { id: 'h2', start: 10, end: 12 },
+    ] as TranscriptHighlight[],
+    analysisCues
+  );
+  const edited = analysisCues.map(cue =>
+    cue.start === 2 ? { ...cue, text: 'This is the fixed hook' } : cue
+  );
+  const marked = markHighlightCueChanges(stamped, edited);
+  assert.deepEqual(
+    marked.map(h => h.cuesChanged),
+    [true, false]
+  );
+});
+
+test('stamping keeps the signature a highlight was found with', () => {
+  const [kept] = stampHighlightSourceCues(
+    [
+      { id: 'h1', start: 0, end: 4, sourceCueSignature: 'cues1:old' },
+    ] as TranscriptHighlight[],
+    analysisCues
+  );
+  assert.equal(kept.sourceCueSignature, 'cues1:old');
+  const [legacy] = markHighlightCueChanges(
+    [{ id: 'h2', start: 0, end: 4 }] as TranscriptHighlight[],
+    analysisCues
+  );
+  assert.equal(legacy.cuesChanged, false);
 });

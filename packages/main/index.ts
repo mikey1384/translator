@@ -56,6 +56,7 @@ import { createFFmpegContext } from './services/ffmpeg-runner.js';
 import type { FFmpegContext } from './services/ffmpeg-runner.js';
 import {
   handleCreateCheckoutSession,
+  handleAbandonCheckoutSession,
   handleResetCredits,
   handleResetCreditsToZero,
   handleCreateByoUnlockSession,
@@ -68,6 +69,7 @@ import {
   initializeCreditBalanceState,
   replayPendingCheckoutState,
 } from './handlers/credit-handlers.js';
+import { summarizeStoredApiKey } from './utils/api-key-summary.js';
 import {
   initEntitlementsManager,
   getCachedEntitlements,
@@ -119,6 +121,7 @@ import {
   getUiT,
   notifyUiLanguageChanged,
   onUiLanguageChanged,
+  uiTextNow,
 } from './utils/ui-language.js';
 import { suggestVideosViaChat } from './services/video-suggestions.js';
 import { runYoutubeYtDlpSearch } from './services/video-suggestions/retrieval.js';
@@ -169,6 +172,8 @@ import { installDevelopmentOwnerLeaseClient } from './development-owner-lease.js
 import { SerializedLatestState } from './utils/serialized-latest-state.js';
 import { isPathInsideAllowedDirectories } from './utils/path-containment.js';
 import { getAgentMcpOnboarding } from './utils/agent-mcp-onboarding.js';
+import { registerRunningSubtitleJobHandlers } from './services/running-subtitle-jobs.js';
+import { takeStartupNotices } from './store/safe-store.js';
 import {
   connectAgentMcpClient,
   isAgentMcpClient,
@@ -616,6 +621,7 @@ try {
   });
 
   ipcMain.handle('get-locale-url', settingsHandlers.getLocaleUrl);
+  ipcMain.handle('app:take-startup-notices', () => takeStartupNotices());
   ipcMain.handle(
     'get-language-preference',
     settingsHandlers.getLanguagePreference
@@ -1244,6 +1250,9 @@ try {
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
 
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
+  ipcMain.handle('abandon-checkout-session', () =>
+    handleAbandonCheckoutSession()
+  );
   ipcMain.handle('create-byo-unlock-session', () =>
     handleCreateByoUnlockSession()
   );
@@ -1335,7 +1344,12 @@ try {
     settingsHandlers.getAllByoSettings()
   );
 
-  ipcMain.handle('get-openai-api-key', () => settingsHandlers.getApiKey());
+  // The renderer only learns that a key is saved and its last 4 characters;
+  // the key itself never leaves the main process (validation and every
+  // provider call read it here).
+  ipcMain.handle('get-openai-api-key', () =>
+    summarizeStoredApiKey(settingsHandlers.getApiKey())
+  );
   ipcMain.handle('set-openai-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setApiKey(event, apiKey);
     broadcastToApp('openai-api-key-changed', {
@@ -1365,7 +1379,7 @@ try {
 
   // Anthropic API key handlers
   ipcMain.handle('get-anthropic-api-key', () =>
-    settingsHandlers.getAnthropicApiKey()
+    summarizeStoredApiKey(settingsHandlers.getAnthropicApiKey())
   );
   ipcMain.handle('set-anthropic-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setAnthropicApiKey(event, apiKey);
@@ -1399,7 +1413,7 @@ try {
 
   // ElevenLabs API key handlers
   ipcMain.handle('get-elevenlabs-api-key', () =>
-    settingsHandlers.getElevenLabsApiKey()
+    summarizeStoredApiKey(settingsHandlers.getElevenLabsApiKey())
   );
   ipcMain.handle('set-elevenlabs-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setElevenLabsApiKey(event, apiKey);
@@ -1764,8 +1778,25 @@ try {
     event.returnValue = app.isPackaged;
   });
   ipcMain.on('app-version', event => {
-    event.returnValue = app.getVersion();
+    // Dev runs from packages/main, whose package.json says 0.0.0; show the
+    // real product version (the root package.json) instead.
+    let version = app.getVersion();
+    if (!app.isPackaged) {
+      try {
+        const root = JSON.parse(
+          fs.readFileSync(
+            path.join(app.getAppPath(), '..', '..', 'package.json'),
+            'utf8'
+          )
+        );
+        if (typeof root?.version === 'string') version = root.version;
+      } catch {
+        // keep app.getVersion()
+      }
+    }
+    event.returnValue = version;
   });
+  registerRunningSubtitleJobHandlers();
   ipcMain.handle('update:get-required-notice', () =>
     getPendingStage5UpdateRequiredNotice()
   );
@@ -1777,12 +1808,16 @@ try {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   app
     .whenReady()
+    // Load the UI language first; the box itself can't wait once shown.
+    .then(() => getUiT().catch(() => null))
     .then(() => {
       dialog.showErrorBox(
-        'Initialization Error',
-        `Failed to initialize. Check logs. Error: ${
-          error instanceof Error ? error.message : String(error)
-        }`
+        uiTextNow('dialogs.fatal.startTitle', 'Translator couldn’t start'),
+        uiTextNow(
+          'dialogs.fatal.startBody',
+          'Something went wrong while starting. Details: {{message}}',
+          { message: error instanceof Error ? error.message : String(error) }
+        )
       );
       setTimeout(() => {
         app.quit();
@@ -1910,8 +1945,12 @@ nodeProcess.on('uncaughtException', error => {
   log.error('[main.ts] UNCAUGHT EXCEPTION:', error);
   if (!isDev) {
     dialog.showErrorBox(
-      'Unhandled Error',
-      `Unexpected error: ${error.message}\nApp will now quit.`
+      uiTextNow('dialogs.fatal.crashTitle', 'Translator has to close'),
+      uiTextNow(
+        'dialogs.fatal.crashBody',
+        'Something unexpected went wrong, so Translator will close now. Details: {{message}}',
+        { message: error.message }
+      )
     );
     app.quit();
     nodeProcess.exit(1);
@@ -1925,8 +1964,11 @@ nodeProcess.on('unhandledRejection', reason => {
   log.error('[main.ts] UNHANDLED REJECTION:', reason);
   if (!isDev) {
     dialog.showErrorBox(
-      'Unhandled Error',
-      'An unexpected background error occurred. The app will now quit.'
+      uiTextNow('dialogs.fatal.crashTitle', 'Translator has to close'),
+      uiTextNow(
+        'dialogs.fatal.backgroundCrashBody',
+        'Something unexpected went wrong in the background, so Translator will close now.'
+      )
     );
     app.quit();
     nodeProcess.exit(1);
@@ -2088,8 +2130,12 @@ async function createWindow(): Promise<BrowserWindow> {
   } catch (loadError: any) {
     log.error('[main.ts] Error loading renderer:', loadError);
     dialog.showErrorBox(
-      'Load Error',
-      `Failed to load UI: ${loadError.message}`
+      uiTextNow('dialogs.fatal.startTitle', 'Translator couldn’t start'),
+      uiTextNow(
+        'dialogs.fatal.loadBody',
+        'The app window couldn’t load. Details: {{message}}',
+        { message: loadError.message }
+      )
     );
     app.quit();
     return window;
@@ -2175,6 +2221,7 @@ async function createApplicationMenu(): Promise<void> {
       selectRelativeTab: delta => tabManager.selectRelativeTab(delta),
       selectTabAtIndex: index => tabManager.selectTabAtIndex(index),
       showFindBar: () => getActiveAppWebContents()?.send('show-find-bar'),
+      focusTabStrip: () => tabManager.toggleTabStripFocus(),
     },
   });
 
@@ -2375,8 +2422,12 @@ app
     recordCriticalFailure('startup_initialization_failed');
     log.error('[main.ts] Error during app.whenReady:', error);
     dialog.showErrorBox(
-      'Application Error',
-      `Failed to start: ${error.message}`
+      uiTextNow('dialogs.fatal.startTitle', 'Translator couldn’t start'),
+      uiTextNow(
+        'dialogs.fatal.startBody',
+        'Something went wrong while starting. Details: {{message}}',
+        { message: error.message }
+      )
     );
     app.quit();
     nodeProcess.exit(1);

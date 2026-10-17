@@ -258,15 +258,39 @@ export default function VideoPlayer({
 
   const seek = (val: number) => nativeSeek(val);
 
-  const toggleFullscreen = () => {
-    setIsFullScreen(f => {
-      const next = !f;
-      document.body.style.overflow = next ? 'hidden' : '';
-      setTimeout(() => playerDivRef.current?.focus(), 0);
-      window.dispatchEvent(new Event('resize'));
-      return next;
-    });
+  // Full screen fills the screen, not only the window: the player layout
+  // goes full-viewport and the window enters the OS full screen with it.
+  const setFullscreen = (next: boolean) => {
+    if (next === isFullScreenRef.current) return;
+    isFullScreenRef.current = next;
+    setIsFullScreen(next);
+    document.body.style.overflow = next ? 'hidden' : '';
+    setTimeout(() => playerDivRef.current?.focus(), 0);
+    window.dispatchEvent(new Event('resize'));
+    try {
+      if (next && !document.fullscreenElement) {
+        void document.documentElement.requestFullscreen?.().catch(() => {});
+      } else if (!next && document.fullscreenElement) {
+        void document.exitFullscreen?.().catch(() => {});
+      }
+    } catch {
+      // The window stays as it is; the player still fills it.
+    }
   };
+  const toggleFullscreen = () => setFullscreen(!isFullScreenRef.current);
+
+  // Leaving the OS full screen (Esc, the window's green button) leaves the
+  // player's full screen too.
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement && isFullScreenRef.current) {
+        setFullscreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Player keys work wherever focus is (a clicked subtitle line, the display
   // switch, the page), not only on the player box; typing is never taken.
@@ -297,7 +321,13 @@ export default function VideoPlayer({
           defaultPrevented: e.defaultPrevented,
           target: e.target instanceof Element ? e.target : null,
         },
-        { modalOpen }
+        {
+          modalOpen,
+          inPlayer:
+            e.target instanceof Node &&
+            Boolean(playerDivRef.current?.contains(e.target)),
+          fullscreen: isFullScreenRef.current,
+        }
       )
     ) {
       return;
@@ -308,6 +338,9 @@ export default function VideoPlayer({
     switch (action) {
       case 'toggle-play':
         togglePlay();
+        break;
+      case 'toggle-fullscreen':
+        toggleFullscreen();
         break;
       case 'speed-up':
         stepRate('up');
@@ -422,6 +455,12 @@ export default function VideoPlayer({
   if (!videoUrl) return null;
 
   const pct = duration ? (currentTime / duration) * 100 : 0;
+  const playPauseLabel = isPlaying
+    ? t('videoPlayer.pause', 'Pause (Space)')
+    : t('videoPlayer.play', 'Play (Space)');
+  const fullscreenLabel = isFullScreen
+    ? t('videoPlayer.exitFullscreenShortcut', 'Exit full screen (F)')
+    : t('videoPlayer.enterFullscreenShortcut', 'Full screen (F)');
 
   const applyRate = (rate: (typeof SPEED_STEPS)[number]) => {
     const v = getNativePlayerInstance();
@@ -469,6 +508,13 @@ export default function VideoPlayer({
           }}
           onMouseLeave={() => setShowOverlay(false)}
           onMouseMove={() => restartHideTimer()}
+          onDoubleClick={e => {
+            // Double-click the picture (not a control) for full screen.
+            const target = e.target as Element | null;
+            if (target?.closest('button, input, [role="menu"], .captions-menu'))
+              return;
+            toggleFullscreen();
+          }}
         >
           <NativeVideoPlayer
             parentRef={playerDivRef}
@@ -493,6 +539,8 @@ export default function VideoPlayer({
               variant="secondary"
               size="sm"
               className={videoPlayerIconButtonStyles(isFullScreen)}
+              title={playPauseLabel}
+              aria-label={playPauseLabel}
             >
               {isPlaying ? (
                 <svg
@@ -528,6 +576,12 @@ export default function VideoPlayer({
                   seek(+e.target.value)
                 }
                 className={videoPlayerSeekbarStyles(isFullScreen)}
+                aria-label={t('videoPlayer.seekBar', 'Position in video')}
+                aria-valuetext={t(
+                  'videoPlayer.seekBarValue',
+                  '{{current}} of {{total}}',
+                  { current: fmt(currentTime), total: fmt(duration) }
+                )}
                 style={{ '--seek-before-width': `${pct}%` } as any}
               />
             </div>
@@ -606,11 +660,8 @@ export default function VideoPlayer({
               variant="secondary"
               size="sm"
               className={videoPlayerIconButtonStyles(isFullScreen)}
-              title={
-                isFullScreen
-                  ? t('videoPlayer.exitFullscreen')
-                  : t('videoPlayer.enterFullscreen')
-              }
+              title={fullscreenLabel}
+              aria-label={fullscreenLabel}
             >
               {isFullScreen ? (
                 <svg

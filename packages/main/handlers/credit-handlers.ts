@@ -36,6 +36,7 @@ import { trackPurchaseFunnelEvent } from '../services/product-analytics.js';
 import {
   classifyPurchaseFailure,
   isPurchasePlacement,
+  type PurchasePlacement,
 } from '../services/purchase-funnel.js';
 import {
   type CreateTransferCodeResult,
@@ -125,6 +126,8 @@ interface CreditSnapshotPayload {
   hoursBalance: number;
   creditsPerHour: number;
   authoritative: boolean;
+  // The server couldn't be reached; the balance is the last one cached.
+  offline?: boolean;
   checkoutSessionId?: string | null;
   monthlyFree?: MonthlyFreeCredits | null;
 }
@@ -157,6 +160,42 @@ const checkoutVisibilityFollowUps = new Set<string>();
 const checkoutSettlementFollowUps = new Set<string>();
 const externalCheckoutSettlementFollowUps = new Set<string>();
 const activeCheckoutSessions: Partial<Record<CheckoutMode, string>> = {};
+// What the active credit checkout is for: the renderer marks that pack as
+// "waiting for payment", a click on the same pack reopens its Stripe page,
+// and the funnel events carry where the purchase started.
+type ActiveCreditCheckout = {
+  sessionId: string;
+  packId: CreditPackId;
+  placement?: PurchasePlacement;
+  url: string;
+};
+let activeCreditCheckout: ActiveCreditCheckout | null = null;
+
+/** Payload for checkout-pending / checkout-unresolved broadcasts. */
+function checkoutTransitionPayload(
+  mode: CheckoutMode
+): { packId: CreditPackId } | undefined {
+  if (mode !== 'credits' || !activeCreditCheckout) return undefined;
+  if (activeCreditCheckout.sessionId !== getActiveCheckoutSessionId(mode)) {
+    return undefined;
+  }
+  return { packId: activeCreditCheckout.packId };
+}
+
+/** Funnel details (pack and placement) for the active credit checkout. */
+function activeCreditCheckoutFunnelDetails(sessionId?: string | null): {
+  packId?: CreditPackId;
+  placement?: PurchasePlacement;
+} {
+  if (!activeCreditCheckout) return {};
+  if (sessionId && activeCreditCheckout.sessionId !== sessionId) return {};
+  return {
+    packId: activeCreditCheckout.packId,
+    ...(activeCreditCheckout.placement
+      ? { placement: activeCreditCheckout.placement }
+      : {}),
+  };
+}
 // The last UI transition emitted for each mode. Replays to late-created tabs
 // and duplicate-request guards must reproduce the CURRENT state — after
 // settlement polling goes unresolved, replaying "pending" would clear the
@@ -194,7 +233,10 @@ function checkoutTransitionEvent(
 /** Re-broadcast the current transition for a mode (guards against dupes). */
 function reassertCheckoutTransition(mode: CheckoutMode): void {
   const transition = checkoutUiTransitions[mode] ?? 'pending';
-  broadcastToApp(checkoutTransitionEvent(mode, transition));
+  broadcastToApp(
+    checkoutTransitionEvent(mode, transition),
+    checkoutTransitionPayload(mode)
+  );
 }
 
 // Synchronous reservation for session creation. The tracked session ID is
@@ -210,16 +252,39 @@ const checkoutCreationInFlight: Partial<Record<CheckoutMode, boolean>> = {};
  * until Stripe expires the session or the app restarts. Returns true and
  * takes the in-flight reservation when creation may proceed.
  */
-function tryBeginCheckoutCreation(mode: CheckoutMode): boolean {
+function tryBeginCheckoutCreation(
+  mode: CheckoutMode,
+  requestedPackId?: CreditPackId
+): boolean {
   if (checkoutCreationInFlight[mode]) {
     reassertCheckoutTransition(mode);
     return false;
   }
   const existingSessionId = getActiveCheckoutSessionId(mode);
   if (existingSessionId) {
-    if (checkoutUiTransitions[mode] === 'unresolved') {
+    const activePackId =
+      mode === 'credits' &&
+      activeCreditCheckout?.sessionId === existingSessionId
+        ? activeCreditCheckout.packId
+        : null;
+    // The user picked a different pack while one was waiting: they changed
+    // their mind, so the new pack replaces the old session.
+    const choseAnotherPack =
+      requestedPackId != null &&
+      activePackId != null &&
+      requestedPackId !== activePackId;
+    const replace =
+      checkoutUiTransitions[mode] === 'unresolved' || choseAnotherPack;
+    if (!replace && activePackId != null && activeCreditCheckout) {
+      // Same pack again: the Stripe tab was probably closed. Reopen it.
+      const { url } = activeCreditCheckout;
+      void shell.openExternal(url).catch(error => {
+        log.warn('[credit-handler] Reopening the checkout page failed:', error);
+      });
+    }
+    if (replace) {
       log.info(
-        `[credit-handler] Replacing stale unresolved ${mode} checkout session before starting a new one.`
+        `[credit-handler] Replacing ${choseAnotherPack ? 'pending' : 'stale unresolved'} ${mode} checkout session before starting a new one.`
       );
       clearActiveCheckoutSession(mode, existingSessionId);
       markCheckoutTransition(mode, null);
@@ -316,6 +381,9 @@ function clearActiveCheckoutSession(
   }
 
   delete activeCheckoutSessions[mode];
+  if (mode === 'credits' && activeCreditCheckout?.sessionId === sessionId) {
+    activeCreditCheckout = null;
+  }
   log.info(`[credit-handler] Cleared active ${mode} checkout ${sessionId}.`);
   return true;
 }
@@ -364,6 +432,7 @@ function emitCheckoutCancelled(
     return;
   }
 
+  const funnelDetails = activeCreditCheckoutFunnelDetails(sessionId);
   clearActiveCheckoutSession(mode, sessionId);
   markCheckoutTransition(mode, null);
   void targetWindow; // checkout events go to every tab
@@ -375,7 +444,7 @@ function emitCheckoutCancelled(
   }
 
   broadcastToApp('checkout-cancelled');
-  void trackPurchaseFunnelEvent('credit_checkout_cancelled');
+  void trackPurchaseFunnelEvent('credit_checkout_cancelled', funnelDetails);
 }
 
 function emitCheckoutUnresolved(
@@ -390,7 +459,8 @@ function emitCheckoutUnresolved(
   markCheckoutTransition(mode, 'unresolved');
 
   broadcastToApp(
-    mode === 'byo' ? 'byo-unlock-unresolved' : 'checkout-unresolved'
+    mode === 'byo' ? 'byo-unlock-unresolved' : 'checkout-unresolved',
+    checkoutTransitionPayload(mode)
   );
 
   // Unresolved is not a failure - checkout is still open in browser.
@@ -405,14 +475,18 @@ function emitCheckoutConfirmed(
     return;
   }
 
+  const funnelDetails = activeCreditCheckoutFunnelDetails(sessionId);
   clearActiveCheckoutSession('credits', sessionId);
   markCheckoutTransition('credits', null);
   void targetWindow; // checkout events go to every tab
 
-  broadcastToApp('checkout-confirmed');
+  broadcastToApp(
+    'checkout-confirmed',
+    funnelDetails.packId ? { packId: funnelDetails.packId } : undefined
+  );
 
   // Track successful checkout completion
-  void trackPurchaseFunnelEvent('credit_checkout_completed');
+  void trackPurchaseFunnelEvent('credit_checkout_completed', funnelDetails);
 }
 
 function emitByoUnlockConfirmed(
@@ -495,12 +569,15 @@ function buildCreditSnapshotPayload({
   credits,
   perHour,
   authoritative,
+  offline = false,
   checkoutSessionId = null,
   monthlyFree = parseMonthlyFree(store.get('monthlyFree')),
 }: {
   credits: number;
   perHour: number;
   authoritative: boolean;
+  // The server couldn't be reached; the balance is the last one cached.
+  offline?: boolean;
   checkoutSessionId?: string | null;
   monthlyFree?: MonthlyFreeCredits | null;
 }): CreditSnapshotPayload {
@@ -509,11 +586,15 @@ function buildCreditSnapshotPayload({
     hoursBalance: credits / perHour,
     creditsPerHour: perHour,
     authoritative,
+    ...(offline ? { offline: true } : {}),
     checkoutSessionId,
     monthlyFree,
   };
 }
 
+// Only used when the server can't be reached, so it says so: the renderer
+// shows "can't reach Stage5" instead of presenting the cached number (often
+// a fresh profile's 0) as a known balance.
 function buildCachedCreditSnapshot(): CreditSnapshotPayload {
   const credits = Math.max(0, Number(store.get('balanceCredits', 0)) || 0);
   const perHour = resolveCreditsPerHour(
@@ -524,6 +605,7 @@ function buildCachedCreditSnapshot(): CreditSnapshotPayload {
     credits,
     perHour,
     authoritative: false,
+    offline: true,
   });
 }
 
@@ -579,6 +661,9 @@ async function syncCreditBalanceFromServer(
   const response = await withStage5AuthRetry(authHeaders =>
     axios.get(url, {
       headers: authHeaders,
+      // A hung server must not leave the balance blank forever; on timeout
+      // the cached, offline-marked snapshot is shown instead.
+      timeout: CREDIT_HYDRATION_TIMEOUT_MS,
     })
   );
 
@@ -622,6 +707,7 @@ async function syncCreditBalanceFromServer(
 // after it rather than joining it.
 let lastCreditHydrationAt = 0;
 const CREDIT_HYDRATION_TTL_MS = 2_000;
+const CREDIT_HYDRATION_TIMEOUT_MS = 15_000;
 
 function startCreditBalanceHydration(
   targetWindow?: BrowserWindow | null
@@ -709,7 +795,10 @@ export async function handleRefreshCreditSnapshot(
     return refreshedSnapshot;
   }
 
-  return currentCreditSnapshot ?? buildCachedCreditSnapshot();
+  // The server didn't answer: whatever we return is cached, so mark it.
+  return currentCreditSnapshot
+    ? { ...currentCreditSnapshot, offline: true }
+    : buildCachedCreditSnapshot();
 }
 
 // —— Moving purchased credits between computers ————————————————————————
@@ -913,8 +1002,29 @@ export function replayPendingCheckoutState(wc: Electron.WebContents): void {
     // Replay the CURRENT transition — after settlement polling has gone
     // unresolved, replaying "pending" would hide the recovery UI.
     const transition = checkoutUiTransitions[mode] ?? 'pending';
-    wc.send(checkoutTransitionEvent(mode, transition));
+    wc.send(
+      checkoutTransitionEvent(mode, transition),
+      checkoutTransitionPayload(mode)
+    );
   }
+}
+
+/**
+ * "Choose another pack": the user closed or abandoned the Stripe page. The
+ * app stops waiting for it (settlement follow-ups keep running, so a payment
+ * that does land still adds its minutes) and a new pack can start at once.
+ */
+export function handleAbandonCheckoutSession(): void {
+  const sessionId = getActiveCheckoutSessionId('credits');
+  if (!sessionId) {
+    markCheckoutTransition('credits', null);
+    broadcastToApp('checkout-cancelled');
+    return;
+  }
+  log.info(
+    `[credit-handler] User chose another pack; no longer waiting on checkout ${sessionId}.`
+  );
+  emitCheckoutCancelled('credits', null, sessionId);
 }
 
 export async function handleCreateCheckoutSession(
@@ -929,7 +1039,7 @@ export async function handleCreateCheckoutSession(
     : undefined;
   // One checkout at a time: reserved synchronously so two tabs clicking Buy
   // during the create POST can't both open Stripe sessions.
-  if (!tryBeginCheckoutCreation('credits')) {
+  if (!tryBeginCheckoutCreation('credits', packId)) {
     return CHECKOUT_ALREADY_PENDING;
   }
 
@@ -991,12 +1101,21 @@ export async function handleCreateCheckoutSession(
 
       // Emit checkout-pending event so UI can show "syncing balance..." until webhook lands
       setActiveCheckoutSession('credits', checkoutSessionId);
+      activeCreditCheckout = checkoutSessionId
+        ? {
+            sessionId: checkoutSessionId,
+            packId,
+            placement,
+            url: response.data.url,
+          }
+        : null;
       markCheckoutTransition('credits', 'pending');
-      broadcastToApp('checkout-pending');
+      broadcastToApp('checkout-pending', checkoutTransitionPayload('credits'));
 
       // Track checkout session created
       void trackPurchaseFunnelEvent('credit_checkout_session_created', {
         packId,
+        ...(placement ? { placement } : {}),
       });
 
       if (checkoutSessionId && !shouldUseEmbeddedCheckoutWindow()) {
@@ -1501,6 +1620,9 @@ async function openStripeCheckoutInExternalBrowser(
     const event =
       mode === 'byo' ? 'byo_unlock_opened' : 'credit_checkout_opened';
     void trackPurchaseFunnelEvent(event, {
+      ...(mode === 'credits'
+        ? activeCreditCheckoutFunnelDetails(sessionId)
+        : {}),
       ...(options.packId ? { packId: options.packId } : {}),
     });
   } catch (error) {

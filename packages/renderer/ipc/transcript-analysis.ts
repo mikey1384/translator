@@ -34,10 +34,13 @@ export function findStoredTranscriptAnalysis(options: {
   sourceUrl?: string | null;
   libraryEntryId?: string | null;
   allowOtherVariant?: boolean;
+  allowOtherTranscript?: boolean;
 }): Promise<{
   success: boolean;
   entry?: StoredTranscriptAnalysisEntry | null;
   analysis?: StoredTranscriptAnalysisArtifact;
+  /** The analysis was made from an earlier version of the subtitles. */
+  transcriptChanged?: boolean;
   error?: string;
 }> {
   return window.electron.findStoredTranscriptAnalysis(options);

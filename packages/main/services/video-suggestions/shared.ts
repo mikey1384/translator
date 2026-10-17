@@ -610,3 +610,31 @@ export function normalizeUploadedAt(input: unknown): string | undefined {
   if (!Number.isFinite(timestamp)) return undefined;
   return new Date(timestamp).toISOString().slice(0, 10);
 }
+
+export const YOUTUBE_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+const YOUTUBE_NON_VIDEO_PATH_RE =
+  /^\/(?:(?:playlist|channel|c|user|feed|results|hashtag)(?:\/|$)|@)/i;
+
+/**
+ * Flat search pages mix playlists and channels in with videos. Those rows
+ * carry playlist (`PL…`) or channel (`UC…`) ids, which must not be turned
+ * into `watch?v=` links that cannot be downloaded.
+ */
+export function isYoutubeVideoEntry(entry: Record<string, unknown>): boolean {
+  const type = compactText(entry._type).toLowerCase();
+  if (type === 'playlist' || type === 'multi_video') return false;
+  const ieKey = compactText(entry.ie_key);
+  if (ieKey && ieKey.toLowerCase() !== 'youtube') return false;
+  for (const raw of [entry.url, entry.webpage_url]) {
+    const candidate = compactText(raw);
+    if (!candidate) continue;
+    try {
+      const parsed = new URL(candidate, 'https://www.youtube.com');
+      if (YOUTUBE_NON_VIDEO_PATH_RE.test(parsed.pathname)) return false;
+    } catch {
+      // Not a URL; the id check below decides.
+    }
+  }
+  const id = compactText(entry.id);
+  return !id || YOUTUBE_VIDEO_ID_RE.test(id);
+}

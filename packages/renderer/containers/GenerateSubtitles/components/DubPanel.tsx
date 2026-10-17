@@ -23,6 +23,10 @@ import { useDubEstimate } from '../../../hooks/useDubEstimate';
 import { saveDubbedVideoFile } from '../../../utils/saveVideo';
 import { logButton } from '../../../utils/logger';
 import {
+  intoLanguageName,
+  sentenceLanguageName,
+} from '../../../utils/languageName';
+import {
   workflowPanelCostStyles,
   workflowPanelCostWarningStyles,
   workflowPanelFlushStyles,
@@ -98,7 +102,7 @@ export default function DubPanel({
   transcribeSlot,
   className,
 }: DubPanelProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const targetLanguage = useUIStore(s => s.targetLanguage);
   const setTargetLanguage = useUIStore(s => s.chooseTargetLanguage);
   const dubVoice = useUIStore(s => s.dubVoice);
@@ -125,10 +129,19 @@ export default function DubPanel({
     isMerging ||
     isSummarizing ||
     isDownloading;
-  const targetName = languageLabel(targetLanguage, t) ?? targetLanguage;
+  // Sentences need the language as it reads mid-sentence, and the "into X"
+  // form for UI languages that inflect it.
+  const targetName = sentenceLanguageName(
+    languageLabel(targetLanguage, t) ?? targetLanguage,
+    i18n.language
+  );
+  const languageValues = {
+    language: targetName,
+    languageInto: intoLanguageName(targetLanguage, targetName, i18n.language),
+  };
   const dubLabel = t('subtitles.dubInto', {
     defaultValue: 'Dub into {{language}}',
-    language: targetName,
+    ...languageValues,
   });
   const shortOfCredits = Boolean(
     estimate && !estimate.blocked && !estimate.hasEnoughCredits
@@ -195,19 +208,24 @@ export default function DubPanel({
                 ? t('subtitles.dubSameLanguage', {
                     defaultValue:
                       'The subtitles are already in {{language}}, so the voice reads them as they are.',
-                    language: targetName,
+                    ...languageValues,
                   })
                 : plan === 'translate'
                   ? t('subtitles.dubTranslatesFirst', {
                       defaultValue:
                         'The subtitles are translated into {{language}} first, then voiced.',
-                      language: targetName,
+                      ...languageValues,
                     })
                   : null}
             </span>
           </label>
 
-          <DubbingVoiceSelector />
+          <DubbingVoiceSelector
+            helpText={t(
+              'subtitles.dubVoiceHelp',
+              'The voice for this dub. It stays chosen for your next dubs.'
+            )}
+          />
           <DubbingMixSlider />
 
           <div className={actionRowStyles}>
@@ -222,7 +240,7 @@ export default function DubPanel({
                   useUIStore.getState().toggleSettings(true);
                 }}
               >
-                {t('subtitles.addCreditsToDub', 'Add credits to dub')}
+                {t('subtitles.addMinutesToDub', 'Add minutes to dub')}
               </Button>
             ) : (
               <Button
@@ -240,7 +258,7 @@ export default function DubPanel({
             )}
           </div>
           {estimate && !isDubbing ? (
-            <span
+            <div
               className={cx(
                 workflowPanelCostStyles,
                 costLineStyles,
@@ -266,10 +284,17 @@ export default function DubPanel({
                     : formatCostLabel(estimate.total)}
                 </bdi>
               )}
-              {shortOfCredits
-                ? ` ${t('subtitles.dubNotEnoughCredits', 'Not enough credits for this dub.')}`
-                : null}
-            </span>
+              {shortOfCredits ? (
+                // Its own line: run together with the cost (and in RTL)
+                // the two read as one garbled sentence.
+                <div>
+                  {t(
+                    'subtitles.dubNotEnoughMinutes',
+                    'Not enough minutes left for this dub.'
+                  )}
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </>
       )}

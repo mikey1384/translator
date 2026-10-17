@@ -10,6 +10,11 @@ import type {
 } from '@shared-types/app';
 import { normalizeYoutubeWatchUrl } from './video-suggestions/shared.js';
 import { withLock } from './async-lock.js';
+import {
+  rankStoredAnalysisCandidates,
+  type AnalysisLookup,
+  type StoredTranscriptAnalysisEntry,
+} from './transcript-analysis-ranking.js';
 
 export interface StoredTranscriptAnalysisArtifact {
   summary: string;
@@ -18,18 +23,7 @@ export interface StoredTranscriptAnalysisArtifact {
   highlightStatus: TranscriptHighlightStatus;
 }
 
-export interface StoredTranscriptAnalysisEntry {
-  id: string;
-  transcriptHash: string;
-  summaryLanguage: string;
-  effortLevel: SummaryEffortLevel;
-  filePath: string;
-  sourceVideoPaths: string[];
-  sourceUrls: string[];
-  libraryEntryIds: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+export type { StoredTranscriptAnalysisEntry };
 
 interface StoredTranscriptAnalysisIndex {
   version: 1;
@@ -62,6 +56,12 @@ interface FindStoredTranscriptAnalysisArgs {
    * so switching the output language does not hide a paid summary.
    */
   allowOtherVariant?: boolean;
+  /**
+   * With nothing saved for this exact transcript, return the newest analysis
+   * of the same video (path, URL or library entry) made from an earlier
+   * version of its subtitles.
+   */
+  allowOtherTranscript?: boolean;
 }
 
 const INDEX_VERSION = 1 as const;
@@ -235,6 +235,10 @@ function sanitizeHighlight(input: unknown): TranscriptHighlight | null {
       typeof raw.editorialSourceSignature === 'string'
         ? raw.editorialSourceSignature
         : undefined,
+    sourceCueSignature:
+      typeof raw.sourceCueSignature === 'string' && raw.sourceCueSignature
+        ? raw.sourceCueSignature
+        : undefined,
     editorial: raw.editorial
       ? validateHighlightEditorialPlan(raw.editorial, end - start)
       : undefined,
@@ -368,33 +372,6 @@ function mergeAlias(values: string[], nextValue: string): string[] {
   return [...values, nextValue];
 }
 
-function entryPreferenceScore(
-  entry: StoredTranscriptAnalysisEntry,
-  preferred: {
-    sourceVideoPath: string;
-    sourceUrl: string;
-    libraryEntryId: string;
-  }
-): number {
-  let score = 0;
-  if (
-    preferred.libraryEntryId &&
-    entry.libraryEntryIds.includes(preferred.libraryEntryId)
-  ) {
-    score += 4;
-  }
-  if (preferred.sourceUrl && entry.sourceUrls.includes(preferred.sourceUrl)) {
-    score += 2;
-  }
-  if (
-    preferred.sourceVideoPath &&
-    entry.sourceVideoPaths.includes(preferred.sourceVideoPath)
-  ) {
-    score += 1;
-  }
-  return score;
-}
-
 async function saveStoredTranscriptAnalysisUnlocked(
   args: SaveStoredTranscriptAnalysisArgs
 ): Promise<StoredTranscriptAnalysisEntry> {
@@ -478,56 +455,37 @@ async function findStoredTranscriptAnalysisUnlocked(
 ): Promise<{
   entry: StoredTranscriptAnalysisEntry | null;
   analysis?: StoredTranscriptAnalysisArtifact;
+  /** The analysis was made from an earlier version of these subtitles. */
+  transcriptChanged?: boolean;
 }> {
-  const transcriptHash = normalizeTranscriptHash(args.transcriptHash);
-  const summaryLanguage = normalizeSummaryLanguage(args.summaryLanguage);
-  const effortLevel = normalizeEffortLevel(args.effortLevel);
-  const sourceVideoPath = normalizeVideoPath(args.sourceVideoPath);
-  const sourceUrl = normalizeSourceUrl(args.sourceUrl);
-  const libraryEntryId = normalizeLibraryEntryId(args.libraryEntryId);
+  const lookup: AnalysisLookup = {
+    transcriptHash: normalizeTranscriptHash(args.transcriptHash),
+    summaryLanguage: normalizeSummaryLanguage(args.summaryLanguage),
+    effortLevel: normalizeEffortLevel(args.effortLevel),
+    sourceVideoPath: normalizeVideoPath(args.sourceVideoPath),
+    sourceUrl: normalizeSourceUrl(args.sourceUrl),
+    libraryEntryId: normalizeLibraryEntryId(args.libraryEntryId),
+    allowOtherVariant: Boolean(args.allowOtherVariant),
+    allowOtherTranscript: Boolean(args.allowOtherTranscript),
+  };
 
-  if (!transcriptHash || !summaryLanguage) {
+  if (!lookup.transcriptHash || !lookup.summaryLanguage) {
     return { entry: null };
   }
 
   const index = await readIndex();
-  const exactEntries: StoredTranscriptAnalysisEntry[] = [];
-  const otherVariantEntries: StoredTranscriptAnalysisEntry[] = [];
+  const candidates = rankStoredAnalysisCandidates(index.entries, lookup);
   const missingIds = new Set<string>();
+  let found: {
+    entry: StoredTranscriptAnalysisEntry;
+    analysis: StoredTranscriptAnalysisArtifact;
+  } | null = null;
 
-  for (const entry of index.entries) {
-    if (entry.transcriptHash !== transcriptHash) continue;
-    const exact =
-      entry.summaryLanguage === summaryLanguage &&
-      entry.effortLevel === effortLevel;
-    if (!exact && !args.allowOtherVariant) continue;
-    if (!(await fileExists(entry.filePath))) {
-      missingIds.add(entry.id);
+  for (const candidate of candidates) {
+    if (!(await fileExists(candidate.filePath))) {
+      missingIds.add(candidate.id);
       continue;
     }
-    (exact ? exactEntries : otherVariantEntries).push(entry);
-  }
-
-  if (missingIds.size > 0) {
-    index.entries = index.entries.filter(entry => !missingIds.has(entry.id));
-    await writeIndex(index);
-  }
-
-  const availableEntries =
-    exactEntries.length > 0 ? exactEntries : otherVariantEntries;
-  if (availableEntries.length === 0) {
-    return { entry: null };
-  }
-
-  availableEntries.sort((a, b) => {
-    const scoreDiff =
-      entryPreferenceScore(b, { sourceVideoPath, sourceUrl, libraryEntryId }) -
-      entryPreferenceScore(a, { sourceVideoPath, sourceUrl, libraryEntryId });
-    if (scoreDiff !== 0) return scoreDiff;
-    return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
-  });
-
-  for (const candidate of availableEntries) {
     try {
       const raw = await fs.readFile(candidate.filePath, 'utf8');
       const parsed = JSON.parse(raw);
@@ -540,13 +498,23 @@ async function findStoredTranscriptAnalysisUnlocked(
       ) {
         continue;
       }
-      return { entry: candidate, analysis };
+      found = { entry: candidate, analysis };
+      break;
     } catch {
       continue;
     }
   }
 
-  return { entry: null };
+  if (missingIds.size > 0) {
+    index.entries = index.entries.filter(entry => !missingIds.has(entry.id));
+    await writeIndex(index);
+  }
+
+  if (!found) return { entry: null };
+  return {
+    ...found,
+    transcriptChanged: found.entry.transcriptHash !== lookup.transcriptHash,
+  };
 }
 
 // ---------------------------------------------------------------------------

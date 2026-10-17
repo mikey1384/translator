@@ -140,3 +140,31 @@ export function transcriptionMinutesForCredits(credits: number): number {
   if (!Number.isFinite(credits) || credits <= 0) return 0;
   return Math.floor((credits / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR) * 60);
 }
+
+// The server holds transcription for the audio length plus two seconds.
+// The server holds transcription for the audio length plus two seconds.
+const HOLD_PAD_SEC = 2;
+
+/**
+ * True when a known balance can't cover transcribing `seconds` of audio, so
+ * the run would only be refused after extracting and uploading the audio.
+ * Unknown balances (offline, not loaded) let the server decide.
+ */
+export function transcriptionBalanceIsShort({
+  seconds,
+  credits,
+  authoritative,
+}: {
+  seconds: number;
+  credits: number | null | undefined;
+  authoritative: boolean;
+}): boolean {
+  if (!authoritative || typeof credits !== 'number') return false;
+  if (!Number.isFinite(seconds) || seconds <= 0) return false;
+  return (
+    Math.floor(credits) <
+    Math.ceil(
+      ((seconds + HOLD_PAD_SEC) * CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR) / 3600
+    )
+  );
+}

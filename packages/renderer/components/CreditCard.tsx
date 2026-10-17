@@ -1,5 +1,7 @@
 import { css, cx } from '@emotion/css';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import * as SystemIPC from '@ipc/system';
 import { formatDurationHours } from '../utils/formatUnits';
 import { useCreditStore } from '../state';
 import Button from './Button';
@@ -7,6 +9,11 @@ import { useCreditCheckout } from './BuyCreditsButton';
 import { colors, fonts, surfaceCardStyles } from '../styles';
 import { CREDIT_PACKS } from '../../shared/constants';
 import { estimateTranscriptionHours } from '../utils/creditEstimates';
+import {
+  creditsToWholeMinutes,
+  formatCostInMinutes,
+} from '../utils/formatCostInMinutes';
+import { resolveCreditBalanceState } from '../utils/creditBalanceState';
 import { formatUsd } from '../utils/formatUsd';
 
 type Pack = (typeof CREDIT_PACKS)[keyof typeof CREDIT_PACKS];
@@ -108,6 +115,51 @@ const featuredPack = css`
   border-color: ${colors.primary};
 `;
 
+// The pack whose Stripe page is open: clearly marked while the others stay
+// clickable, so changing your mind is one click.
+const waitingPack = css`
+  border-color: ${colors.primary};
+  background: ${colors.surfaceRaised};
+  box-shadow: 0 0 0 2px ${colors.primary};
+`;
+
+const waitingRow = css`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 0.9rem;
+  color: ${colors.text};
+`;
+
+const spinner = css`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid ${colors.borderStrong};
+  border-top-color: ${colors.primary};
+  animation: credit-card-spin 0.9s linear infinite;
+  flex: none;
+
+  @keyframes credit-card-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
+const successRow = css`
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: ${colors.success};
+`;
+
 const badge = css`
   position: absolute;
   top: -10px;
@@ -205,11 +257,21 @@ function formatRefreshDate(isoDay: string, locale: string): string {
   }
 }
 
-function PackCard({ pack, locale }: { pack: Pack; locale: string }) {
+function PackCard({
+  pack,
+  locale,
+  waiting,
+}: {
+  pack: Pack;
+  locale: string;
+  waiting: boolean;
+}) {
   const { t } = useTranslation();
   const { loading, start } = useCreditCheckout({
     packId: pack.id,
     placement: 'settings-credit-card',
+    // The card records one "shown" for all four packs.
+    trackShown: false,
   });
   const kind = PACK_BADGES[pack.id];
   const time = formatDuration(
@@ -222,9 +284,14 @@ function PackCard({ pack, locale }: { pack: Pack; locale: string }) {
   return (
     <button
       type="button"
-      className={cx(packCard, kind === 'popular' && featuredPack)}
+      className={cx(
+        packCard,
+        kind === 'popular' && featuredPack,
+        waiting && waitingPack
+      )}
       onClick={() => void start()}
       disabled={loading}
+      aria-current={waiting ? 'true' : undefined}
       aria-label={t(
         'credits.packAria',
         '{{price}} for about {{time}} of video',
@@ -248,6 +315,8 @@ function PackCard({ pack, locale }: { pack: Pack; locale: string }) {
       <span className={amountStyles}>
         {loading ? (
           t('credits.redirectingToPayment')
+        ) : waiting ? (
+          t('credits.waitingForPayment', 'Waiting for payment…')
         ) : (
           <bdi dir="auto">≈ {time}</bdi>
         )}
@@ -286,21 +355,56 @@ export default function CreditCard() {
   const monthlyFree = useCreditStore(s => s.monthlyFree);
   const checkoutUnresolved = useCreditStore(s => s.checkoutUnresolved);
   const checkoutPending = useCreditStore(s => s.checkoutPending);
+  const checkoutPackId = useCreditStore(s => s.checkoutPackId);
+  const checkoutSuccess = useCreditStore(s => s.checkoutSuccess);
+  const chooseAnotherPack = useCreditStore(s => s.chooseAnotherPack);
+  const history = useCreditStore(s => s.history);
+  const offline = useCreditStore(s => s.offline);
+  const waitingForPayment = checkoutPending || checkoutUnresolved;
+
+  useEffect(() => {
+    // One "shown" per card view, not one per pack (L9).
+    void SystemIPC.trackPurchaseEvent('credit_checkout_button_shown', {
+      placement: 'settings-credit-card',
+    }).catch(() => {});
+  }, []);
 
   // Credits buy transcription and dubbing; translating with the user's own
   // Claude or Codex is free. So packs and the balance are described in
-  // transcription time, which every credit-paid path starts with.
-  const balanceHours = estimateTranscriptionHours(credits) ?? 0;
-  const balanceMinutes = Math.floor(balanceHours * 60);
+  // transcription time, which every credit-paid path starts with. Same
+  // words as the header pill: "4h 17m left".
+  const balanceState = resolveCreditBalanceState({
+    credits,
+    loading,
+    monthlyFree,
+    history,
+    offline,
+  });
   const balanceText =
-    balanceMinutes < 1
-      ? t('credits.balanceNone', 'No minutes left')
-      : t('credits.balanceTime', '{{time}} of video', {
-          time: formatDuration(balanceHours, locale),
-        });
+    balanceState === 'offline'
+      ? t('credits.balanceOffline', 'Can’t check your minutes right now')
+      : balanceState === 'welcomePending'
+        ? t('credits.balanceNoneYet', 'No minutes yet')
+        : creditsToWholeMinutes(credits, 'balance') < 1
+          ? t('credits.balanceNone', 'No minutes left')
+          : t('credits.timeLeft', '{{time}} left', {
+              time: formatCostInMinutes(credits, { kind: 'balance', locale }),
+            });
 
   let meta: string | null = null;
-  if (monthlyFree) {
+  if (balanceState === 'offline') {
+    meta = t(
+      'credits.offlineNote',
+      'Translator can’t reach Stage5. Your balance shows again once you’re back online.'
+    );
+  } else if (balanceState === 'welcomePending') {
+    // The server didn't create this device yet (welcome grants are capped
+    // per network), so no monthly top-up date applies to it.
+    meta = t(
+      'credits.welcomePendingNote',
+      'Your free minutes are on the way. They usually arrive the next time you open Translator.'
+    );
+  } else if (monthlyFree) {
     const freeMinutes = Math.floor(
       (estimateTranscriptionHours(monthlyFree.credits) ?? 0) * 60
     );
@@ -359,20 +463,60 @@ export default function CreditCard() {
 
           <div className={packGrid}>
             {packs.map(pack => (
-              <PackCard key={pack.id} pack={pack} locale={locale} />
+              <PackCard
+                key={pack.id}
+                pack={pack}
+                locale={locale}
+                waiting={waitingForPayment && checkoutPackId === pack.id}
+              />
             ))}
           </div>
 
-          <p className={footStyles}>
-            {checkoutPending || checkoutUnresolved
-              ? t(
+          {checkoutSuccess ? (
+            <p className={successRow} role="status">
+              {checkoutSuccess.creditsAdded && checkoutSuccess.creditsAdded > 0
+                ? t(
+                    'credits.success.addedLong',
+                    'Payment received. +{{time}} added to your minutes.',
+                    {
+                      time: formatCostInMinutes(checkoutSuccess.creditsAdded, {
+                        kind: 'exact',
+                        locale,
+                      }),
+                    }
+                  )
+                : t(
+                    'credits.success.arrivedLong',
+                    'Payment received. Your minutes are here.'
+                  )}
+            </p>
+          ) : waitingForPayment ? (
+            <p className={waitingRow} role="status">
+              <span className={spinner} aria-hidden="true" />
+              <span>
+                {t(
                   'credits.checkoutWaiting',
                   'Finish paying in your browser. Your minutes appear here on their own.'
-                )
-              : t(
-                  'credits.checkoutNote',
-                  'One-time payment through Stripe, in your browser. No account or subscription. Minutes arrive on their own.'
-                )}{' '}
+                )}
+              </span>
+              <button
+                type="button"
+                className={freeLink}
+                onClick={chooseAnotherPack}
+              >
+                {t(
+                  'credits.chooseAnotherPack',
+                  'Changed your mind? Choose another pack'
+                )}
+              </button>
+            </p>
+          ) : null}
+
+          <p className={footStyles}>
+            {t(
+              'credits.checkoutNote',
+              'One-time payment through Stripe, in your browser. No account or subscription. Minutes arrive on their own.'
+            )}{' '}
             {t(
               'credits.dubbingNote',
               'Translating with credits adds about 10% per minute; dubbing uses more.'
@@ -382,9 +526,11 @@ export default function CreditCard() {
               className={freeLink}
               onClick={scrollToAgentControl}
             >
+              {/* Names the section it scrolls to; the section itself carries
+                  the pitch sentence, so it isn't shown twice. */}
               {t(
-                'settings.agentControl.pitch',
-                'Translate for free with the Claude or Codex subscription you already have.'
+                'settings.agentControl.freeTitle',
+                'Translate free with your own AI'
               )}
             </button>
           </p>

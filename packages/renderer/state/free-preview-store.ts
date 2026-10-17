@@ -27,6 +27,8 @@ export interface FreePreview {
   language: string;
   status: FreePreviewStatus;
   failure?: FreePreviewFailure;
+  /** The rest was transcribed; only translating it is left. */
+  transcribedToEnd?: boolean;
   updatedAt: number;
 }
 

@@ -12,6 +12,7 @@ import {
   fontWeight,
   spacing,
 } from '../../../components/design-system/tokens.js';
+import { formatPercent } from '../../../utils/formatNumbers';
 
 type HighlightWorkflowProgressProps = {
   title: string;
@@ -95,7 +96,9 @@ export default function HighlightWorkflowProgress({
       </div>
       <div className={stageRowStyles}>
         <span className={stageTextStyles}>{stage}</span>
-        <span className={percentStyles}>{Math.round(safeProgress)}%</span>
+        <span className={percentStyles}>
+          {formatPercent(Math.round(safeProgress))}
+        </span>
       </div>
       <div className={progressBarBackgroundStyles}>
         <div className={progressBarFillStyles(safeProgress)} />

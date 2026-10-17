@@ -22,6 +22,33 @@ export function useMountedFileUnreadable(): boolean {
 }
 
 /**
+ * True while the mounted file's first probe is still out: until then nobody
+ * knows whether it can be read, so no "Ready" and no run action yet.
+ */
+export function useMountedFileChecking(): boolean {
+  return useVideoStore(s =>
+    Boolean(
+      s.path &&
+      s.metaPath !== s.path &&
+      !(s.metaError && s.metaError.path === s.path)
+    )
+  );
+}
+
+/** The calm line shown while a just-opened file is being read. */
+export function CheckingFileNotice() {
+  const { t } = useTranslation();
+  return (
+    <div className={idleStatusStyles}>
+      <span className={idleDotStyles(colors.gray)} aria-hidden="true" />
+      <span className={messageStyles} role="status">
+        {t('workspace.checkingFile', 'Reading the file…')}
+      </span>
+    </div>
+  );
+}
+
+/**
  * Replaces the "Ready" line for a damaged or unsupported file: nothing can
  * run on it, so say so and offer another file.
  */

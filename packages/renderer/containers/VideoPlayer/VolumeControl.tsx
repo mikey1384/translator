@@ -8,6 +8,7 @@ import {
   videoPlayerIconButtonStyles,
   videoPlayerSeekbarStyles,
 } from './video-player-side-styles';
+import { formatPercent } from '../../utils/formatNumbers';
 
 const groupStyles = css`
   display: inline-flex;
@@ -82,8 +83,8 @@ export default function VolumeControl({
           step={0.05}
           value={shown}
           aria-label={volumeLabel}
-          aria-valuetext={`${Math.round(shown * 100)}%`}
-          title={`${volumeLabel} ${Math.round(shown * 100)}%`}
+          aria-valuetext={formatPercent(Math.round(shown * 100))}
+          title={`${volumeLabel} ${formatPercent(Math.round(shown * 100))}`}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setVolume(Number(e.target.value))
           }

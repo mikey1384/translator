@@ -15,6 +15,7 @@ import {
   resolveTranslationReviewProvider,
   type ByoRuntimeState,
 } from '../state/byo-runtime';
+import { formatUiInteger } from '../utils/formatNumbers';
 
 const creditBalanceContainer = css`
   display: flex;
@@ -280,7 +281,7 @@ export default function CreditBalance({
         >
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
-        <span className={creditText}>{credits.toLocaleString()}</span>
+        <span className={creditText}>{formatUiInteger(credits)}</span>
         {suffixText && (
           <span
             className={css`

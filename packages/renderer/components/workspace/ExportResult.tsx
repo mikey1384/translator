@@ -20,6 +20,34 @@ const folderOf = (filePath: string) => {
   return parts.join(filePath.includes('\\') ? '\\' : '/') || filePath;
 };
 
+/** A path inside translated text: always left to right, as one unit. */
+const isolateLtr = (text: string) => `\u2066${text}\u2069`;
+
+const pathTextStyles = css`
+  unicode-bidi: isolate;
+  overflow-wrap: break-word;
+  word-break: normal;
+`;
+
+/**
+ * A file path shown left to right in every UI language (an RTL layout would
+ * otherwise move the leading "/" and reorder the folders), wrapping only
+ * after a separator.
+ */
+function PathText({ path }: { path: string }) {
+  const parts = path.split(/(?<=[\\/])/);
+  return (
+    <bdi dir="ltr" className={pathTextStyles}>
+      {parts.map((part, index) => (
+        <span key={index}>
+          {part}
+          {index < parts.length - 1 ? <wbr /> : null}
+        </span>
+      ))}
+    </bdi>
+  );
+}
+
 const cardStyles = (tone: 'success' | 'error') => css`
   display: flex;
   align-items: flex-start;
@@ -128,8 +156,8 @@ export function ExportOutcomeNotice({
           </span>
           <span className={detailStyles} title={outputPath}>
             {t('export.savedIn', '{{file}} in {{folder}}', {
-              file: baseName(outputPath),
-              folder: folderOf(outputPath),
+              file: isolateLtr(baseName(outputPath)),
+              folder: isolateLtr(folderOf(outputPath)),
             })}
           </span>
           <div className={actionsStyles}>
@@ -205,16 +233,14 @@ const destinationPathStyles = css`
   display: grid;
   gap: 2px;
 
-  strong {
+  > strong {
     font-weight: 600;
     color: ${colors.text};
-    overflow-wrap: anywhere;
   }
 
-  span {
+  > span {
     color: ${colors.textDim};
     font-size: 0.85rem;
-    overflow-wrap: anywhere;
   }
 `;
 
@@ -243,8 +269,12 @@ export function ExportDestinationField({
       <div className={destinationPathStyles} title={destinationPath ?? ''}>
         {destinationPath ? (
           <>
-            <strong>{baseName(destinationPath)}</strong>
-            <span>{folderOf(destinationPath)}</span>
+            <strong>
+              <PathText path={baseName(destinationPath)} />
+            </strong>
+            <span>
+              <PathText path={folderOf(destinationPath)} />
+            </span>
           </>
         ) : (
           <span>…</span>

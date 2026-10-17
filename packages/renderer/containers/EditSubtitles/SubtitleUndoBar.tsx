@@ -6,6 +6,12 @@ import { subtitleUndoBarStyles } from './edit-workspace-styles';
 
 const VISIBLE_MS = 10_000;
 
+export function undoShortcutLabel(): string {
+  return /mac/i.test(navigator.platform || navigator.userAgent)
+    ? '⌘Z'
+    : 'Ctrl+Z';
+}
+
 /** "Line deleted · Undo" after a structural edit, for a few seconds. */
 export default function SubtitleUndoBar() {
   const { t } = useTranslation();
@@ -32,6 +38,8 @@ export default function SubtitleUndoBar() {
     shift: t('editSubtitles.undo.shifted', 'Timing shifted.'),
     shiftAll: t('editSubtitles.undo.shifted', 'Timing shifted.'),
     improve: t('editSubtitles.undo.improved', 'Line transcribed again.'),
+    split: t('editSubtitles.undo.split', 'Line split in two.'),
+    merge: t('editSubtitles.undo.merged', 'Lines merged.'),
   };
 
   return (
@@ -41,6 +49,9 @@ export default function SubtitleUndoBar() {
         variant="secondary"
         size="sm"
         onClick={() => useSubStore.getState().undo()}
+        title={t('editSubtitles.undo.shortcut', 'Undo ({{keys}})', {
+          keys: undoShortcutLabel(),
+        })}
       >
         {t('editSubtitles.undo.action', 'Undo')}
       </Button>

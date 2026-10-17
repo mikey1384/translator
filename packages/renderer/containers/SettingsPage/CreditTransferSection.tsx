@@ -14,7 +14,9 @@ import { settingsCenterColumnStyles } from './styles';
 import {
   creditTransferErrorMessage,
   creditTransferThrownMessage,
+  isNothingToTransfer,
 } from '../../utils/creditTransferErrors';
+import { formatCostInMinutes } from '../../utils/formatCostInMinutes';
 
 const mutedText = css`
   margin: 0;
@@ -85,7 +87,12 @@ const successText = css`
 type Mode = 'idle' | 'send' | 'receive';
 
 export default function CreditTransferSection() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage || i18n.language;
+  // Transfers are described in minutes of video, like the rest of the money
+  // UI.
+  const minutes = (credits: number) =>
+    formatCostInMinutes(credits, { kind: 'exact', locale });
   const [mode, setMode] = useState<Mode>('idle');
   const [busy, setBusy] = useState(false);
   const [issued, setIssued] = useState<Extract<
@@ -99,12 +106,15 @@ export default function CreditTransferSection() {
     { success: true }
   > | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Expected, non-error outcomes (nothing to move yet), shown neutrally.
+  const [notice, setNotice] = useState<string | null>(null);
 
   const reset = (next: Mode) => {
     setMode(next);
     setIssued(null);
     setReceived(null);
     setError(null);
+    setNotice(null);
     setCopied(false);
     setCodeInputValue('');
   };
@@ -115,7 +125,9 @@ export default function CreditTransferSection() {
     try {
       const result = await SystemIPC.createCreditTransferCode();
       if (result.success) setIssued(result);
-      else setError(creditTransferErrorMessage(result, t));
+      else if (isNothingToTransfer(result)) {
+        setNotice(creditTransferErrorMessage(result, t));
+      } else setError(creditTransferErrorMessage(result, t));
     } catch (err: any) {
       setError(creditTransferThrownMessage(err, t));
     } finally {
@@ -161,15 +173,15 @@ export default function CreditTransferSection() {
     <Section
       destination="settings-credit-transfer"
       title={t(
-        'settings.creditTransfer.title',
-        'Move credits between computers'
+        'settings.creditTransfer.titleMinutes',
+        'Move minutes between computers'
       )}
       className={settingsCenterColumnStyles}
     >
       <p className={mutedText}>
         {t(
-          'settings.creditTransfer.description',
-          'Purchased credits and the API-key unlock can move to another computer. Free welcome credits stay on this one.'
+          'settings.creditTransfer.descriptionMinutes',
+          'Purchased minutes and the API-key unlock can move to another computer. Free minutes stay on this one.'
         )}
       </p>
 
@@ -181,8 +193,8 @@ export default function CreditTransferSection() {
           disabled={busy}
         >
           {t(
-            'settings.creditTransfer.moveButton',
-            'Move credits to another computer'
+            'settings.creditTransfer.moveButtonMinutes',
+            'Move minutes to another computer'
           )}
         </Button>
         <Button
@@ -191,7 +203,7 @@ export default function CreditTransferSection() {
           onClick={() => reset('receive')}
           disabled={busy}
         >
-          {t('settings.creditTransfer.receiveButton', 'Receive credits')}
+          {t('settings.creditTransfer.receiveButtonMinutes', 'Receive minutes')}
         </Button>
       </div>
 
@@ -217,12 +229,9 @@ export default function CreditTransferSection() {
               <p style={{ margin: 0 }}>
                 {issued.transferableCredits > 0 &&
                   t(
-                    'settings.creditTransfer.summaryCredits',
-                    '{{credits}} credits will move.',
-                    {
-                      credits: issued.transferableCredits.toLocaleString(),
-                      count: issued.transferableCredits,
-                    }
+                    'settings.creditTransfer.summaryMinutes',
+                    '{{time}} of video will move.',
+                    { time: minutes(issued.transferableCredits) }
                   )}{' '}
                 {issued.byoUnlock &&
                   t(
@@ -242,11 +251,16 @@ export default function CreditTransferSection() {
               </p>
               <p className={mutedText}>
                 {t(
-                  'settings.creditTransfer.steps',
-                  'On the new computer: install Translator, open Settings, choose “Receive credits”, and enter this code.'
+                  'settings.creditTransfer.stepsMinutes',
+                  'On the new computer: install Translator, open Settings, choose “Receive minutes”, and enter this code.'
                 )}
               </p>
             </>
+          )}
+          {notice && (
+            <p className={mutedText} role="status">
+              {notice}
+            </p>
           )}
           {error && <p className={errorText}>{error}</p>}
         </div>
@@ -294,12 +308,9 @@ export default function CreditTransferSection() {
               <p className={successText}>
                 {received.transferredCredits > 0
                   ? t(
-                      'settings.creditTransfer.received',
-                      'Received {{credits}} credits.',
-                      {
-                        credits: received.transferredCredits.toLocaleString(),
-                        count: received.transferredCredits,
-                      }
+                      'settings.creditTransfer.receivedMinutes',
+                      'Received {{time}} of video.',
+                      { time: minutes(received.transferredCredits) }
                     )
                   : t(
                       'settings.creditTransfer.receivedNoCredits',

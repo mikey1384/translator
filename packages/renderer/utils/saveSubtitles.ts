@@ -12,6 +12,30 @@ import { i18n } from '../i18n';
 import { buildSavedSubtitleSrt } from './canonical-subtitle-srt';
 import { saveMountedSubtitleDocument } from './subtitle-documents';
 import { flushPendingEdits } from './pending-edits';
+import { suggestSubtitleFilePath } from './subtitle-file-name';
+import { isManagedTempOriginalVideoPath } from './saveVideo';
+import { useVideoStore } from '../state/video-store';
+
+/** `<video>.<language>.srt` next to the video, for subtitles with no file. */
+function suggestNewSubtitleFilePath(mode: SubtitleDisplayMode): string {
+  const subs = useSubStore.getState();
+  const video = useVideoStore.getState();
+  const videoPath =
+    subs.sourceVideoPath || video.originalPath || video.path || null;
+  // Only the original text is written: no translation language in the name.
+  const language =
+    mode === 'original'
+      ? null
+      : subs.subtitleKind === 'translation' || subs.targetLanguage
+        ? subs.targetLanguage
+        : null;
+  return suggestSubtitleFilePath({
+    videoPath,
+    title: subs.documentTitle,
+    language,
+    videoInTempFolder: isManagedTempOriginalVideoPath(videoPath),
+  });
+}
 
 export type SubtitleSaveResult = {
   status: 'success' | 'warning' | 'cancelled' | 'error';
@@ -30,7 +54,7 @@ export function didSaveSubtitleFile(result: SubtitleSaveResult): boolean {
 
 async function showSaveWarning(warning: string): Promise<void> {
   try {
-    await SystemIPC.showMessage(warning);
+    await SystemIPC.showMessage(warning, { type: 'warning' });
   } catch (error) {
     console.error('[saveSubtitles] Failed to show save warning:', error);
   }
@@ -188,7 +212,9 @@ export async function saveSubtitlesAs(): Promise<SubtitleSaveResult> {
     getCurrentSubtitleExportMode()
   );
   const saveMode = getCurrentSubtitleExportMode();
-  const suggestion = getCurrentSubtitleFileTarget()?.path || 'subtitles.srt';
+  const suggestion =
+    getCurrentSubtitleFileTarget()?.path ||
+    suggestNewSubtitleFilePath(saveMode);
   const result = await FileIPC.saveSubtitleDocument({
     ...getExportContext(),
     segments,

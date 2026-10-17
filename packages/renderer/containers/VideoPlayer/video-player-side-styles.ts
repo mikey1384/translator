@@ -171,8 +171,12 @@ export const sidePanelButtonRowStyles = css`
 `;
 
 export const sidePanelButtonWithIconsRowStyles = css`
+  /* Columns only for the icon buttons that are there: empty fixed tracks
+     still took their gaps and made the row narrower than its siblings. */
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-auto-flow: column;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-columns: auto;
   gap: ${spacing.sm};
   align-items: center;
 `;

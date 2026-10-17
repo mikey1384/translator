@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  buildSrt,
+  inferSubtitleDisplayModeFromSrtContent,
   parseSrt,
+  parseSrtOriginalOnly,
   parseSrtOriginalOnlyWithReport,
+  shapeImportedSrtSegments,
   parseSrtWithReport,
   srtTimeToSeconds,
 } from './index.js';
@@ -91,4 +95,29 @@ test('well-formed SRT parses as before', () => {
   assert.equal(segments[0].translation, 'Hola');
   assert.equal(segments[1].start, 1.5);
   assert.equal(parseSrt('').length, 0);
+});
+
+test('opening an .srt keeps the line breaks its author chose', () => {
+  const srt = [
+    '1',
+    '00:00:20,000 --> 00:00:23,000',
+    'Line one',
+    '  Line   two ',
+    'Line three',
+    'Line four',
+    '',
+  ].join('\n');
+  const segments = shapeImportedSrtSegments(parseSrtOriginalOnly(srt));
+  assert.equal(segments.length, 1);
+  assert.equal(
+    segments[0].original,
+    'Line one\nLine two\nLine three\nLine four'
+  );
+  // Saving writes the same layout back, and the file reads as one language.
+  const saved = buildSrt({ segments, mode: 'original', noWrap: true });
+  assert.match(saved, /Line one\nLine two\nLine three\nLine four$/);
+  assert.equal(
+    inferSubtitleDisplayModeFromSrtContent({ segments, srtContent: saved }),
+    'original'
+  );
 });

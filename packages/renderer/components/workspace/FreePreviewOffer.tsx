@@ -16,7 +16,7 @@ import {
 import {
   creditsToFinish,
   packToFinish,
-  wholeMinutes,
+  previewMinuteSplit,
 } from '../../utils/freePreview';
 import {
   freePreviewPlanningCredits,
@@ -205,9 +205,7 @@ export default function FreePreviewOffer() {
 
   if (!preview) return null;
 
-  const covered = wholeMinutes(preview.coveredSecs);
-  const total = wholeMinutes(preview.durationSecs);
-  const remaining = wholeMinutes(remainingSecs);
+  const { covered, total, remaining } = previewMinuteSplit(preview);
   const price = formatUsd(pack.price, locale);
   const languageName = sentenceLanguageName(
     t(`languages.${preview.language}`, { defaultValue: preview.language }),
@@ -385,9 +383,11 @@ export default function FreePreviewOffer() {
           { price, remaining, count: remaining }
         );
   } else if (monthlyFree) {
+    // Not "your free minutes are used up": someone who bought minutes may
+    // never have had this month's top-up. A low balance does get the next one.
     detail = t(
-      'freePreview.noneBodyMonthly',
-      'Your free minutes for this month are used up. They come back on {{date}}, or make it speak {{language}} now for {{price}}.',
+      'freePreview.noneBodyNextFree',
+      'Free minutes top up again on {{date}}, or make it speak {{language}} now for {{price}}.',
       {
         date: formatRefreshDate(monthlyFree.refreshesOn, locale),
         language: languageName,

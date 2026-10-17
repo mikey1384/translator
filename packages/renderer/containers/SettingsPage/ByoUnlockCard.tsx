@@ -21,16 +21,25 @@ import {
   hasFullByoBundleUnlocked,
 } from '../../state/byo-runtime';
 import { localizeErrorOr } from '../../utils/userFacingError';
+import { formatUsd } from '../../utils/formatUsd';
 import * as SystemIPC from '../../ipc/system';
 
-const BYO_UNLOCK_USD_PRICE_LABEL = 'US$10';
+const BYO_UNLOCK_USD_PRICE = 10;
 
-function preserveLocalizedUnlockCopyWithUsdPrice(copy: string): string {
-  return copy.replace(/\$10|10\$/g, BYO_UNLOCK_USD_PRICE_LABEL);
+// The copy carries the price as "$10" / "10$" (any digits); show it as a
+// US-dollar price in the UI language's own digits and symbol placement.
+function preserveLocalizedUnlockCopyWithUsdPrice(
+  copy: string,
+  locale: string
+): string {
+  return copy.replace(
+    /\$\s?(?:10|۱۰|১০|१०|١٠)|(?:10|۱۰|১০|१०|١٠)\s?\$/g,
+    formatUsd(BYO_UNLOCK_USD_PRICE, locale)
+  );
 }
 
 export default function ByoUnlockCard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [guideOpen, setGuideOpen] = useState(false);
 
   const initialized = useAiStore(state => state.initialized);
@@ -93,7 +102,8 @@ export default function ByoUnlockCard() {
   };
 
   const unlockPriceLabel = preserveLocalizedUnlockCopyWithUsdPrice(
-    t('settings.byoOpenAi.unlockCta', 'Unlock for $10')
+    t('settings.byoOpenAi.unlockCta', 'Unlock for $10'),
+    i18n.language
   );
 
   // Hide the purchase CTA only after the full Stage5 BYO bundle is unlocked.

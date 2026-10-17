@@ -22,6 +22,8 @@ import {
   normalizeYoutubeChannelUrl,
   normalizeYoutubeWatchUrl,
   isYoutubeVideoSuggestionUrl,
+  isYoutubeVideoEntry,
+  YOUTUBE_VIDEO_ID_RE,
   isSuggestionAbortError,
   sanitizeSearchKeywords,
   throwIfSuggestionAborted,
@@ -146,7 +148,7 @@ function normalizeYoutubePathUrl(value: string): string {
 
 function normalizeYoutubeIdentifierUrl(entry: YtDlpEntry): string {
   const rawId = compactText(entry.id).replace(/^\/+|\/+$/g, '');
-  if (!rawId || /\s/.test(rawId)) return '';
+  if (!YOUTUBE_VIDEO_ID_RE.test(rawId)) return '';
 
   const normalized = normalizeYoutubeWatchUrl(
     `${YOUTUBE_ROOT_URL}/watch?v=${rawId}`
@@ -174,6 +176,7 @@ function normalizeYoutubeYtDlpResult(
   entry: YtDlpEntry,
   index: number
 ): VideoSuggestionResultItem | null {
+  if (!isYoutubeVideoEntry(entry)) return null;
   const url = normalizeYoutubeYtDlpUrl(entry);
   if (!url) return null;
 

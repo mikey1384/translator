@@ -12,6 +12,10 @@ import {
   uiLanguageEndonym,
   type LanguageOption,
 } from '../constants/ui-languages.js';
+import {
+  createTypeaheadBuffer,
+  findTypeaheadMatch,
+} from '../utils/typeahead.js';
 
 const languageSwitcherContainer = css`
   position: relative;
@@ -148,6 +152,7 @@ export default function LanguageSwitcher() {
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const typeahead = useRef(createTypeaheadBuffer());
   const options = allUiLanguageOptions();
   const currentOption =
     options.find(opt => opt.value === currentLanguage) ?? options[0];
@@ -178,6 +183,7 @@ export default function LanguageSwitcher() {
   }, [isOpen, activeValue]);
 
   const openList = () => {
+    typeahead.current.reset();
     setActiveValue(currentOption.value);
     setIsOpen(true);
   };
@@ -227,13 +233,28 @@ export default function LanguageSwitcher() {
         closeList(false);
         break;
       default:
-        // Type-ahead on the language's own name.
-        if (event.key.length === 1) {
-          const key = event.key.toLocaleLowerCase();
-          const match = options.find(opt =>
-            uiLanguageEndonym(opt).toLocaleLowerCase().startsWith(key)
+        // Type-ahead on the language's own name, its name in the UI
+        // language, or its English name; keystrokes accumulate ("deu").
+        if (
+          event.key.length === 1 &&
+          !event.metaKey &&
+          !event.ctrlKey &&
+          !event.altKey
+        ) {
+          const query = typeahead.current.push(event.key);
+          const match = findTypeaheadMatch(
+            options.map(opt => ({
+              value: opt.value,
+              names: [
+                uiLanguageEndonym(opt),
+                t(opt.label, uiLanguageEndonym(opt)),
+                t(opt.label, { lng: 'en', defaultValue: opt.value }),
+              ],
+            })),
+            query,
+            activeValue
           );
-          if (match) setActiveValue(match.value);
+          if (match) setActiveValue(match);
         }
     }
   };

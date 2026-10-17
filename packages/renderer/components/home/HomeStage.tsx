@@ -3,7 +3,7 @@ import {
   sentenceLanguageName,
 } from '../../utils/languageName';
 import { css, cx } from '@emotion/css';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import type { VideoQuality } from '@shared-types/app';
 import { colors, fonts, selectStyles } from '../../styles';
@@ -18,6 +18,7 @@ import {
   rememberRecentTargetLanguage,
 } from '../../constants/translation-language-native-names';
 import { logButton } from '../../utils/logger';
+import { openSubtitleFileIntoStore } from '../../utils/open-subtitle-file';
 import HomeLanguagePicker from './HomeLanguagePicker';
 import HomeRecentRow from './HomeRecentRow';
 import { pickDroppedFile } from '../../utils/droppedFiles';
@@ -32,12 +33,18 @@ const page = css`
   width: 100%;
   max-width: 920px;
   margin: 0 auto;
-  padding: 28px 0 40px;
+  /* The bottom room lets every row scroll clear of the floating
+     scroll-to-top button (56px + 30px inset; 40px + 12px when narrow). */
+  padding: 28px 0 96px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 26px;
   box-sizing: border-box;
+
+  @media (max-width: 576px) {
+    padding-bottom: 64px;
+  }
 `;
 
 const headline = css`
@@ -220,6 +227,11 @@ const dropMessage = css`
   color: ${colors.warning};
 `;
 
+const cancelNote = css`
+  font-size: 0.86rem;
+  color: ${colors.textDim};
+`;
+
 const quietLinks = css`
   display: flex;
   flex-wrap: wrap;
@@ -276,10 +288,19 @@ export default function HomeStage() {
   const downloadQuality = useUrlStore(s => s.downloadQuality);
   const setDownloadQuality = useUrlStore(s => s.setDownloadQuality);
   const downloadInProgress = useUrlStore(s => s.download.inProgress);
+  const linkError = useUrlStore(s => s.error);
+  const downloadCancelled = useUrlStore(
+    s => s.download.stage === 'Cancelled' && Boolean(s.download.id)
+  );
   const library = useDownloadedVideoLibrary(
     i18n.resolvedLanguage || i18n.language || 'en'
   );
   const recentLocalMedia = useVideoStore(s => s.recentLocalMedia);
+  useEffect(() => {
+    // Home is where Recent shows: re-read it (files opened in this session
+    // included) and drop files that are gone.
+    void useVideoStore.getState().refreshRecentLocalMedia();
+  }, []);
   const recentItems = useMemo(
     () => mergeHomeRecentItems(library.downloadHistory, recentLocalMedia),
     [library.downloadHistory, recentLocalMedia]
@@ -399,6 +420,33 @@ export default function HomeStage() {
     // Opening an existing .srt is about editing it, so the editor starts on.
     useUIStore.getState().setSubtitleEditMode(true);
     useUIStore.getState().setEditPanelOpen(true);
+  };
+
+  // "Burn subtitles into a video": the video, then its .srt, then straight
+  // to the export sheet.
+  const burnSubtitles = async () => {
+    logButton('home_burn_subtitles');
+    const video = await useVideoStore.getState().openLocalMedia({
+      preserveSubtitles: false,
+      title: t('home.burnChooseVideo', 'Choose the video'),
+    });
+    if (video?.canceled) return;
+    const subtitles = await openSubtitleFileIntoStore({
+      dialogTitle: t(
+        'home.burnChooseSubtitles',
+        'Choose the subtitles to burn in'
+      ),
+    });
+    if (subtitles.status === 'error') {
+      useUrlStore
+        .getState()
+        .setValidationError(
+          t('common.error.failedToLoadSRT', 'Failed to load SRT file')
+        );
+      return;
+    }
+    if (subtitles.status !== 'loaded') return;
+    useUIStore.getState().setExportSheetOpen(true);
   };
 
   const findVideos = () => {
@@ -531,9 +579,13 @@ export default function HomeStage() {
           </div>
         </div>
 
-        {dropError ? (
+        {dropError || linkError ? (
           <span className={dropMessage} role="alert">
-            {dropError}
+            {dropError || linkError}
+          </span>
+        ) : downloadCancelled ? (
+          <span className={cancelNote} role="status">
+            {t('home.downloadCancelled', 'Download cancelled.')}
           </span>
         ) : null}
 
@@ -592,7 +644,11 @@ export default function HomeStage() {
         <button type="button" className={textLink} onClick={openEditor}>
           {t('home.editSrt', 'Edit an existing .srt')}
         </button>
-        <button type="button" className={textLink} onClick={openEditor}>
+        <button
+          type="button"
+          className={textLink}
+          onClick={() => void burnSubtitles()}
+        >
           {t('home.burnSubtitles', 'Burn subtitles into a video')}
         </button>
       </div>

@@ -105,6 +105,9 @@ export type CreditHistorySummary = {
   everHadCredits: boolean;
   // Every credit the device ever received came from the one-time welcome grant.
   onlyWelcomeCredits: boolean;
+  // The device bought, received or was granted paid credits (or the ledger is
+  // too long to tell). Free-minute wording never applies then.
+  everPaid: boolean;
 };
 
 // GET /credits/:deviceId/ledger returns the newest rows first, capped at 100.
@@ -141,5 +144,6 @@ export function summarizeCreditLedger(
   return {
     everHadCredits: hasMovement,
     onlyWelcomeCredits: hasWelcome && !hasPaid && !truncated,
+    everPaid: hasPaid || truncated,
   };
 }

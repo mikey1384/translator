@@ -7,6 +7,10 @@ import {
   allTranslationLanguageValues,
   nativeLanguageName,
 } from '../../constants/translation-language-native-names';
+import {
+  captureFocusReturnTarget,
+  restoreFocus,
+} from '../../utils/focusReturn';
 
 const chipRow = css`
   display: inline-flex;
@@ -23,9 +27,11 @@ const chip = (active: boolean) => css`
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  /* The chosen language is outlined, not filled: the one filled yellow
+     button on Home is the main action. */
   border: 1px solid ${active ? colors.primary : colors.borderStrong};
-  background: ${active ? colors.primary : 'transparent'};
-  color: ${active ? colors.onPrimary : colors.muted};
+  background: ${active ? 'rgba(255, 216, 77, 0.12)' : 'transparent'};
+  color: ${active ? colors.primary : colors.muted};
   transition:
     background 0.12s ease,
     border-color 0.12s ease;
@@ -194,12 +200,17 @@ export default function HomeLanguagePicker({
 
   useEffect(() => {
     if (!open) return;
+    // Back to "All languages" (or wherever focus was) when it closes.
+    const returnTo = captureFocusReturnTarget();
     searchRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.setTimeout(() => restoreFocus(returnTo), 0);
+    };
   }, [open]);
 
   const groups = useMemo(() => {

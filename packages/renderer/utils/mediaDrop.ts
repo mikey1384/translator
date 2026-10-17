@@ -1,6 +1,9 @@
 import { i18n } from '../i18n';
 import { pickDroppedFile } from './droppedFiles';
 import { useTaskStore, useUIStore, useVideoStore } from '../state';
+import { useSubStore } from '../state/subtitle-store';
+import * as VideoIPC from '../ipc/video';
+import { durationsLookLikeSameVideo } from './sameVideo';
 import { useUrlStore } from '../state/url-store';
 import { useWorkspaceActions } from '../state/workspace-actions';
 
@@ -40,11 +43,29 @@ export function dropNotSupportedMessage() {
   );
 }
 
+async function shouldKeepSubtitlesForDroppedVideo(
+  nextPath: string
+): Promise<boolean> {
+  const video = useVideoStore.getState();
+  if (!(video.path || video.file)) return false;
+  if (useSubStore.getState().order.length === 0) return false;
+  if (video.path && video.path === nextPath) return true;
+  try {
+    const next = await VideoIPC.getMetadata(nextPath);
+    return durationsLookLikeSameVideo(
+      video.meta?.duration,
+      next.success ? next.metadata?.duration : null
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Drops anywhere outside a dedicated drop zone (the workspace, the Change
  * Video dialog, home outside its box): a video replaces the current video
- * the way Change Video does, an .srt opens in the editor, anything else says
- * what can be dropped. Returns false when the drop held no files.
+ * (keeping its subtitles only for another copy of the same video), an .srt
+ * opens in the editor, anything else says what can be dropped. Returns false when the drop held no files.
  */
 export async function handleWindowFileDrop(
   files: readonly File[]
@@ -85,11 +106,12 @@ export async function handleWindowFileDrop(
 
   url.clearError();
   const video = useVideoStore.getState();
-  const hasSource = Boolean(video.path || video.file);
-  // Same as Change Video: a mounted video is replaced and its subtitles
-  // follow; with nothing mounted the file simply opens.
+  // Subtitles only follow another copy of the same video. A different video
+  // goes through the normal replace path: unsaved edits are asked about and
+  // the old video's subtitles are released.
+  const preserveSubtitles = await shouldKeepSubtitlesForDroppedVideo(path);
   const opened = await video.openRecentLocalMedia(path, {
-    preserveSubtitles: hasSource,
+    preserveSubtitles,
   });
   if (!opened.opened) {
     fail(i18n.t('home.dropOpenFailed', 'That file could not be opened.'));

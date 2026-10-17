@@ -2,6 +2,7 @@ import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../styles';
 import { useUIStore } from '../../state/ui-store';
+import { formatPercent } from '../../utils/formatNumbers';
 
 export default function DubbingMixSlider() {
   const { t } = useTranslation();
@@ -42,7 +43,8 @@ export default function DubbingMixSlider() {
             min-width: 80px;
           `}
         >
-          {t('settings.dubbing.mixVoice', 'More voice')} ({voicePercent}%)
+          {t('settings.dubbing.mixVoice', 'More voice')} (
+          {formatPercent(voicePercent)})
         </span>
         <input
           type="range"
@@ -67,7 +69,8 @@ export default function DubbingMixSlider() {
             text-align: end;
           `}
         >
-          {t('settings.dubbing.mixAmbient', 'More ambient')} ({percent}%)
+          {t('settings.dubbing.mixAmbient', 'More ambient')} (
+          {formatPercent(percent)})
         </span>
       </div>
 

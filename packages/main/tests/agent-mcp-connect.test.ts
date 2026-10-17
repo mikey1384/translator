@@ -4,6 +4,7 @@ import {
   buildMcpAddArgs,
   connectAgentCli,
   connectClaudeDesktop,
+  isClaudeDesktopInstalled,
   findAgentCli,
   formatCommandForCopy,
   getClaudeDesktopConfigPath,
@@ -300,4 +301,46 @@ test('Claude Desktop connect reports a broken config without writing', () => {
   assert.equal(result.status, 'failed');
   assert.deepEqual(mem.ops, []);
   assert.equal(mem.files[configPath], '{oops');
+});
+
+test('Claude Desktop connect writes nothing when the app is not installed', () => {
+  const configPath = '/cfg/Claude/claude_desktop_config.json';
+  const mem = memoryFs({});
+  const result = connectClaudeDesktop({
+    launcherPath: LAUNCHER,
+    configPath,
+    fsApi: mem.api,
+    isInstalled: () => false,
+  });
+  assert.equal(result.status, 'app-not-found');
+  assert.deepEqual(mem.ops, []);
+});
+
+test('Claude Desktop counts as installed by its config folder or app bundle', () => {
+  const configPath =
+    '/Users/me/Library/Application Support/Claude/claude_desktop_config.json';
+  const base = {
+    platform: 'darwin' as const,
+    env: {},
+    homeDir: '/Users/me',
+    configPath,
+  };
+  assert.equal(
+    isClaudeDesktopInstalled({ ...base, exists: () => false }),
+    false
+  );
+  assert.equal(
+    isClaudeDesktopInstalled({
+      ...base,
+      exists: p => p === '/Applications/Claude.app',
+    }),
+    true
+  );
+  assert.equal(
+    isClaudeDesktopInstalled({
+      ...base,
+      exists: p => p === '/Users/me/Library/Application Support/Claude',
+    }),
+    true
+  );
 });

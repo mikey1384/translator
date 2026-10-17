@@ -15,6 +15,7 @@ import {
 } from '../../listeners/agent-highlights';
 import { toFileUrl } from './TranscriptSummaryPanel.helpers';
 import Button from '../Button';
+import { formatUiDecimal } from '../../utils/formatNumbers';
 
 // The editor sits inside the dark clip card: native controls get the app's
 // surfaces, borders and yellow accent instead of white OS widgets.
@@ -96,7 +97,7 @@ const phraseStyles = css`
 `;
 
 function seconds(value: number | undefined): string {
-  return (value ?? 0).toFixed(2);
+  return formatUiDecimal(value ?? 0, 2);
 }
 
 export default function HighlightEditorialEditor({
@@ -351,7 +352,7 @@ export default function HighlightEditorialEditor({
                     zoom: t('highlightEditor.zoom', 'Zoom'),
                   }[key]
                 }{' '}
-                · {shot[key].toFixed(2)}
+                · {formatUiDecimal(shot[key], 2)}
                 <input
                   type="range"
                   min={key === 'zoom' ? 1 : 0}

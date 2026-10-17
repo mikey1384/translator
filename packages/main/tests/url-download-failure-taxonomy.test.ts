@@ -4,7 +4,10 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { classifyUrlDownloadFailureDetail } from '../services/url-processor/failure-taxonomy.js';
+import {
+  UPCOMING_LIVE_RE,
+  classifyUrlDownloadFailureDetail,
+} from '../services/url-processor/failure-taxonomy.js';
 import {
   mapDownloadError,
   mapErrorToUserFriendly,
@@ -186,4 +189,40 @@ test('region locks and removed videos get their own codes', () => {
     }).code,
     'unavailable'
   );
+});
+
+test('an ended live stream without a replay is unavailable, not a bug report', () => {
+  const stderr =
+    'ERROR: [youtube] abcdefghijk: This live stream recording is not available.';
+  assert.equal(
+    mapDownloadError({
+      rawErrorMessage: 'yt-dlp exited 1',
+      stderrContent: stderr,
+    }).code,
+    'unavailable'
+  );
+});
+
+test('members-only videos ask the user to connect the site', () => {
+  const stderr =
+    'ERROR: [youtube] abcdefghijk: Join this channel to get access to members-only content like this video, and other exclusive perks.';
+  assert.equal(
+    mapDownloadError({
+      rawErrorMessage: 'yt-dlp exited 1',
+      stderrContent: stderr,
+    }).code,
+    'login_required'
+  );
+});
+
+test('premieres and scheduled streams are recognised as upcoming live', () => {
+  assert.ok(
+    UPCOMING_LIVE_RE.test('ERROR: [youtube] abcdefghijk: Premieres in 3 hours')
+  );
+  assert.ok(
+    UPCOMING_LIVE_RE.test(
+      'ERROR: [youtube] abcdefghijk: This live event will begin in 2 days.'
+    )
+  );
+  assert.ok(!UPCOMING_LIVE_RE.test('ERROR: This video is unavailable'));
 });

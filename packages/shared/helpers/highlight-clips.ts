@@ -81,6 +81,70 @@ export function highlightClipCaptionSignature(
   )}`;
 }
 
+/** A subtitle line as the analysis read it: times and original text. */
+export type AnalysisCue = { start: number; end: number; text: string };
+
+function overlaps(cue: AnalysisCue, start: number, end: number): boolean {
+  return Math.min(cue.end, end) > Math.max(cue.start, start);
+}
+
+/**
+ * The subtitle lines one highlight covers, as the analysis read them (times
+ * and original text, the same input as the transcript hash). Translating or
+ * restyling leaves it unchanged; editing a line inside the highlight does not.
+ */
+export function highlightSourceCueSignature(
+  cues: readonly AnalysisCue[],
+  start: number,
+  end: number
+): string {
+  const covered = cues
+    .filter(cue => overlaps(cue, start, end))
+    .map(cue => [cue.start.toFixed(3), cue.end.toFixed(3), cue.text.trim()]);
+  return `cues1:${hashSignature(JSON.stringify(covered))}`;
+}
+
+/**
+ * Record which lines each highlight was found in, for highlights that don't
+ * say yet. Existing signatures are kept: they describe the transcript the
+ * highlight came from, which may be older than `cues`.
+ */
+export function stampHighlightSourceCues<T extends TranscriptHighlight>(
+  highlights: readonly T[],
+  cues: readonly AnalysisCue[]
+): T[] {
+  return highlights.map(highlight =>
+    highlight.sourceCueSignature
+      ? highlight
+      : {
+          ...highlight,
+          sourceCueSignature: highlightSourceCueSignature(
+            cues,
+            highlight.start,
+            highlight.end
+          ),
+        }
+  );
+}
+
+/**
+ * Mark the highlights whose own lines changed since the analysis. One saved
+ * by an older build has no signature and can't be checked; it stays unmarked
+ * (the panel still says the subtitles changed since the analysis).
+ */
+export function markHighlightCueChanges<T extends TranscriptHighlight>(
+  highlights: readonly T[],
+  cues: readonly AnalysisCue[]
+): T[] {
+  return highlights.map(highlight => ({
+    ...highlight,
+    cuesChanged: highlight.sourceCueSignature
+      ? highlight.sourceCueSignature !==
+        highlightSourceCueSignature(cues, highlight.start, highlight.end)
+      : false,
+  }));
+}
+
 export function normalizeHighlightSourcePath(
   value: string | null | undefined
 ): string {

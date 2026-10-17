@@ -3,6 +3,7 @@ import path from 'path';
 import fsp from 'fs/promises';
 import log from 'electron-log';
 import { spawn } from 'child_process';
+import { audioStreamMapSpecifier } from './audio-stream-map.js';
 import {
   FFmpegError,
   AudioSliceOpts,
@@ -171,7 +172,7 @@ export async function extractAudio(
       '-i',
       videoPath,
       '-map',
-      `0:a:${audioIdx}?`,
+      audioStreamMapSpecifier(audioIdx),
       '-ar',
       String(sampleRate),
       '-sample_fmt',
@@ -260,7 +261,7 @@ export async function extractAudioSegment(
     '-i',
     input,
     '-map',
-    `0:a:${audioIdx}?`,
+    audioStreamMapSpecifier(audioIdx),
     '-vn',
     '-ar',
     String(ASR_SAMPLE_RATE),

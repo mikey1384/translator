@@ -21,7 +21,11 @@ import {
 import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapDownloadError } from './error-map.js';
-import { classifyUrlDownloadFailureDetail } from './failure-taxonomy.js';
+import {
+  UPCOMING_LIVE_RE,
+  classifyUrlDownloadFailureDetail,
+  stripYtDlpDiagnosticEcho,
+} from './failure-taxonomy.js';
 import {
   recoverPublicYouTubeAutomaticCaptions,
   type AutomaticCaptionCommandRunner,
@@ -1531,6 +1535,17 @@ export async function downloadVideoFromPlatform(
     log.error(
       `[URLprocessor] Handling non-termination error for Op ID ${operationId}`
     );
+
+    if (
+      UPCOMING_LIVE_RE.test(
+        stripYtDlpDiagnosticEcho(
+          `${rawErrorMessage}\n${String(error?.stderr || '')}`
+        )
+      )
+    ) {
+      await cleanupPartialDownloads(outputDir, safeTimestamp, operationId);
+      throw new UrlSourceRejectedError('live_stream');
+    }
 
     const failureDetail = classifyUrlDownloadFailureDetail(error);
     if (isYouTube && failureDetail.canAttemptPublicAutomaticCaptions) {

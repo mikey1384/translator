@@ -17,12 +17,19 @@ export interface WorkspaceEditorActions {
 
 interface WorkspaceActionsState {
   editor: WorkspaceEditorActions | null;
+  /** Save/export are blocked (a job or the export preflight is running). */
+  exportLocked: boolean;
   registerEditor(actions: WorkspaceEditorActions | null): void;
+  setExportLocked(locked: boolean): void;
 }
 
 export const useWorkspaceActions = create<WorkspaceActionsState>(set => ({
   editor: null,
+  exportLocked: false,
   registerEditor(actions) {
     set({ editor: actions });
+  },
+  setExportLocked(locked) {
+    set({ exportLocked: locked });
   },
 }));

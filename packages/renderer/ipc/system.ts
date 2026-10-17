@@ -7,6 +7,8 @@ import type {
   AgentBridgeRequest,
   AgentMcpClientId,
   AgentMcpConnectResult,
+  CheckoutTransitionInfo,
+  StoredApiKeySummary,
   CreditHistorySummary,
   CreditPackId,
   CreditTransferCodeResult,
@@ -234,6 +236,11 @@ export function createCheckoutSession(
   return window.electron.createCheckoutSession(packId, placement);
 }
 
+/** Stop waiting on the open checkout so another pack can be chosen. */
+export function abandonCheckoutSession(): Promise<void> {
+  return window.electron.abandonCheckoutSession();
+}
+
 export function createByoUnlockSession(): Promise<void> {
   return window.electron.createByoUnlockSession();
 }
@@ -247,7 +254,7 @@ export function getAllByoSettings(): Promise<AllByoSettings> {
   return window.electron.getAllByoSettings();
 }
 
-export function getOpenAiApiKey(): Promise<string | null> {
+export function getOpenAiApiKey(): Promise<StoredApiKeySummary> {
   return window.electron.getOpenAiApiKey();
 }
 
@@ -286,6 +293,7 @@ export function onCreditsUpdated(
     hoursBalance: number;
     creditsPerHour?: number;
     authoritative?: boolean;
+    offline?: boolean;
     checkoutSessionId?: string | null;
     monthlyFree?: MonthlyFreeCreditsInfo | null;
   }) => void
@@ -298,6 +306,7 @@ export function getCreditSnapshot(): Promise<{
   hoursBalance: number;
   creditsPerHour: number;
   authoritative: boolean;
+  offline?: boolean;
   checkoutSessionId?: string | null;
   monthlyFree?: MonthlyFreeCreditsInfo | null;
 } | null> {
@@ -309,6 +318,7 @@ export function refreshCreditSnapshot(force?: boolean): Promise<{
   hoursBalance: number;
   creditsPerHour: number;
   authoritative: boolean;
+  offline?: boolean;
   checkoutSessionId?: string | null;
   monthlyFree?: MonthlyFreeCreditsInfo | null;
 } | null> {
@@ -329,15 +339,21 @@ export function getCreditHistorySummary(): Promise<CreditHistorySummary | null> 
   return window.electron.getCreditHistorySummary();
 }
 
-export function onCheckoutPending(callback: () => void): () => void {
+export function onCheckoutPending(
+  callback: (info?: CheckoutTransitionInfo) => void
+): () => void {
   return window.electron.onCheckoutPending(callback);
 }
 
-export function onCheckoutConfirmed(callback: () => void): () => void {
+export function onCheckoutConfirmed(
+  callback: (info?: CheckoutTransitionInfo) => void
+): () => void {
   return window.electron.onCheckoutConfirmed(callback);
 }
 
-export function onCheckoutUnresolved(callback: () => void): () => void {
+export function onCheckoutUnresolved(
+  callback: (info?: CheckoutTransitionInfo) => void
+): () => void {
   return window.electron.onCheckoutUnresolved(callback);
 }
 
@@ -420,7 +436,7 @@ export function onOpenAiApiKeyChanged(
 }
 
 // Anthropic API key functions
-export function getAnthropicApiKey(): Promise<string | null> {
+export function getAnthropicApiKey(): Promise<StoredApiKeySummary> {
   return window.electron.getAnthropicApiKey();
 }
 
@@ -483,7 +499,7 @@ export function resetCreditsToZero(): Promise<{
 }
 
 // ElevenLabs API key functions
-export function getElevenLabsApiKey(): Promise<string | null> {
+export function getElevenLabsApiKey(): Promise<StoredApiKeySummary> {
   return window.electron.getElevenLabsApiKey();
 }
 
@@ -678,3 +694,10 @@ export const syncAnalyticsPrivacy = () =>
 export const onAnalyticsPrivacyChanged = (
   callback: (state: AnalyticsPrivacyState) => void
 ) => window.electron.onAnalyticsPrivacyChanged(callback);
+
+/** Damaged-store resets main noticed at launch (given once per launch). */
+export function takeStartupNotices(): Promise<
+  Array<'settingsReset' | 'deviceIdReplaced'>
+> {
+  return window.electron.takeStartupNotices?.() ?? Promise.resolve([]);
+}
