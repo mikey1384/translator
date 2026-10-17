@@ -38,14 +38,14 @@ const unsafeFastUriPaths = fastUriPackages
       !/^3\.\d+\.\d+$/.test(entry.version) ||
       major !== 3 ||
       minor < 1 ||
-      (minor === 1 && patch < 7)
+      (minor === 1 && patch < 8)
     );
   })
   .map(([packagePath]) => packagePath);
 
 if (unsafeFastUriPaths.length > 0) {
   throw new Error(
-    `fast-uri security fixes require 3.1.7 or newer within v3: ${unsafeFastUriPaths.join(', ')}`
+    `fast-uri security fixes require 3.1.8 or newer within v3: ${unsafeFastUriPaths.join(', ')}`
   );
 }
 
@@ -73,9 +73,63 @@ if (!electronPackage?.dependencies?.['@electron-internal/extract-zip']) {
   );
 }
 
+const ELECTRON_SECURITY_FLOOR = [41, 10, 6];
+const electronVersion = (electronPackage.version ?? '')
+  .split(/[.-]/)
+  .slice(0, 3)
+  .map(Number);
+const electronComparison = ELECTRON_SECURITY_FLOOR.map(
+  (floor, index) => (electronVersion[index] ?? Number.NaN) - floor
+).find(difference => difference !== 0);
+const electronBelowFloor = !(
+  electronComparison === undefined || electronComparison > 0
+);
+if (electronBelowFloor) {
+  throw new Error(
+    // GHSA-j84w-jfhq-vhvj, GHSA-gr2m-v5gq-v685, GHSA-9qh4-3jw8-366w.
+    `Electron ${electronPackage.version} is below the ${ELECTRON_SECURITY_FLOOR.join('.')} security floor`
+  );
+}
+
+// adm-zip is only an install-time dependency of onnxruntime-node (Linux CUDA
+// downloads). Keep it patched and out of the packaged app, where its
+// symlink-following extraction (GHSA-vwc7-r8mq-g2x9, no fixed release) cannot run.
+const unsafeAdmZipPaths = Object.entries(packages)
+  .filter(([packagePath]) => /(^|\/)node_modules\/adm-zip$/.test(packagePath))
+  .filter(([, entry]) => {
+    const [major, minor, patch] = entry.version.split('.').map(Number);
+    return major === 0 && (minor < 6 || (minor === 6 && patch < 1));
+  })
+  .map(([packagePath]) => packagePath);
+if (unsafeAdmZipPaths.length > 0) {
+  throw new Error(
+    `adm-zip security fixes require 0.6.1 or newer: ${unsafeAdmZipPaths.join(', ')}`
+  );
+}
+const builderConfig = JSON.parse(
+  fs.readFileSync(
+    new URL('../electron-builder.base.json', import.meta.url),
+    'utf8'
+  )
+);
+if (!builderConfig.files?.includes('!node_modules/adm-zip/**')) {
+  throw new Error(
+    'electron-builder.base.json must exclude node_modules/adm-zip from the packaged app'
+  );
+}
+
+const sprintfPaths = Object.keys(packages).filter(packagePath =>
+  /(^|\/)node_modules\/sprintf-js$/.test(packagePath)
+);
+if (sprintfPaths.length > 0) {
+  throw new Error(
+    `GHSA-hp3w-g68c-fv3c: sprintf-js (no fixed release) remains in the lockfile at: ${sprintfPaths.join(', ')}`
+  );
+}
+
 console.log(
   `Security dependency check passed: Electron ${electronPackage.version}, ` +
-    `@puppeteer/browsers ${browserPackage.version}, no extract-zip package; ` +
+    `@puppeteer/browsers ${browserPackage.version}, no extract-zip or sprintf-js package; ` +
     `${fastUriPackages.length} fast-uri entries meet the v3 security floor; ` +
     `${jsYamlPackages.length} js-yaml entries meet the v4 security floor`
 );

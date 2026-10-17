@@ -81,9 +81,9 @@
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
     "chokidar-cli": "^3.0.0",
-    "concurrently": "^9.1.2",
+    "concurrently": "^9.2.5",
     "cross-env": "^7.0.3",
-    "electron": "^41.10.3",
+    "electron": "^41.10.7",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.25.5",
     "eslint": "^8.57.0",
@@ -106,7 +106,7 @@
     "@emotion/css": "^11.13.5",
     "@emotion/react": "^11.14.0",
     "@puppeteer/browsers": "^3.2.0",
-    "axios": "^1.18.1",
+    "axios": "^1.20.0",
     "combined-stream": "^1.0.8",
     "dotenv": "^16.5.0",
     "electron-context-menu": "^4.1.0",
@@ -153,28 +153,28 @@
     "youtube-dl-exec"
   ],
   "overrides": {
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "tmp": "^0.2.7",
     "basic-ftp": "^5.3.1",
-    "fast-uri": "^3.1.7",
+    "fast-uri": "^3.1.8",
     "ip-address": "^10.3.1",
     "js-yaml": "^4.3.2",
     "minimatch@3": {
-      "brace-expansion": "^1.1.18"
+      "brace-expansion": "^1.1.21"
     },
     "minimatch@5": {
-      "brace-expansion": "^2.1.4"
+      "brace-expansion": "^2.1.7"
     },
     "minimatch@9": {
-      "brace-expansion": "^2.1.4"
+      "brace-expansion": "^2.1.7"
     },
     "minimatch@10": {
-      "brace-expansion": "^5.0.9"
+      "brace-expansion": "^5.0.12"
     },
     "qs": "^6.15.2",
     "tar": "^7.5.21",
     "tar-fs": "^3.1.1",
-    "undici": "^6.28.0",
+    "undici": "^6.28.1",
     "ws": "^8.21.0",
     "prebuild-install": {
       "tar-fs": "^3.1.1"
@@ -182,6 +182,6 @@
     "@puppeteer/browsers": {
       "tar-fs": "^3.1.1"
     },
-    "shell-quote": "1.10.0"
+    "global-agent": "^4.1.3"
   }
 }
