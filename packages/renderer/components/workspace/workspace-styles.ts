@@ -200,9 +200,6 @@ export const readRowStyles = css`
   transition:
     border-color 0.15s ease,
     background 0.15s ease;
-  /* Off-screen rows skip rendering, so long videos stay fast. */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 72px;
 
   &:hover {
     border-color: ${colors.borderStrong};
@@ -497,6 +494,41 @@ export const idleStatusStyles = css`
     color: ${colors.text};
     font-weight: 600;
   }
+`;
+
+export const styleButtonStyles = css`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid ${colors.border};
+  background: transparent;
+  color: ${colors.text};
+  font: inherit;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    border-color: ${colors.borderStrong};
+    background: ${colors.surfaceSoft};
+  }
+`;
+
+export const stylePopoverStyles = css`
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc(100% + 10px);
+  z-index: 200;
+  width: min(560px, calc(100vw - 32px));
+  padding: 14px;
+  border-radius: 16px;
+  background: ${colors.surfaceRaised};
+  border: 1px solid ${colors.borderStrong};
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45);
 `;
 
 export const idleDotStyles = (color: string) => css`

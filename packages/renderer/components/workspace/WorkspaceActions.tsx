@@ -13,6 +13,7 @@ import {
   Languages,
   LayoutGrid,
   MoreHorizontal,
+  Palette,
   Scissors,
   Video,
 } from 'lucide-react';
@@ -20,6 +21,9 @@ import Button from '../Button';
 import Modal from '../Modal';
 import { useFreePreviewOfferShowing } from './FreePreviewOffer';
 import SaveAndMergeBar from '../../containers/EditSubtitles/SaveAndMergeBar';
+import SubtitleStylePicker, {
+  subtitleStyleLabel,
+} from '../../containers/EditSubtitles/SubtitleStylePicker';
 import {
   useSubStore,
   useTaskStore,
@@ -38,6 +42,8 @@ import {
   actionPrimaryStyles,
   exportSheetBodyStyles,
   idleDotStyles,
+  styleButtonStyles,
+  stylePopoverStyles,
   idleStatusStyles,
   moreMenuAnchorStyles,
   moreMenuDividerStyles,
@@ -120,6 +126,68 @@ export function WorkspaceIdleStatus() {
         aria-hidden="true"
       />
       <span>{text}</span>
+      {count > 0 ? <SubtitleStyleButton /> : null}
+    </div>
+  );
+}
+
+/** The current subtitle look, one click from the video; changes show live. */
+function SubtitleStyleButton() {
+  const { t } = useTranslation();
+  const style = useUIStore(s => s.subtitleStyle);
+  const setStyle = useUIStore(s => s.setSubtitleStyle);
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const label = t('editSubtitles.mergeControls.styleLabel', 'Style:')
+    .replace(/[:：]\s*$/u, '')
+    .trim();
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (event: MouseEvent) => {
+      if (!anchorRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div
+      ref={anchorRef}
+      style={{ position: 'relative', marginInlineStart: 'auto' }}
+    >
+      <button
+        type="button"
+        className={styleButtonStyles}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`${label}: ${subtitleStyleLabel(t, style)}`}
+        onClick={() => {
+          logButton('workspace_subtitle_style');
+          setOpen(value => !value);
+        }}
+      >
+        <Palette size={15} aria-hidden="true" />
+        <span>{subtitleStyleLabel(t, style)}</span>
+      </button>
+      {open ? (
+        <div className={stylePopoverStyles} role="dialog" aria-label={label}>
+          <SubtitleStylePicker
+            value={style}
+            onChange={preset => {
+              logButton('workspace_subtitle_style_pick', { preset });
+              setStyle(preset);
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

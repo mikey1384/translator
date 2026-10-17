@@ -208,12 +208,17 @@ export default function ReadOnlySubtitleList() {
       `[data-cue-id="${rows[activeIndex]?.id}"]`
     );
     if (!list || !row) return;
-    const top = row.offsetTop - list.offsetTop;
-    if (
-      top < list.scrollTop ||
-      top + row.offsetHeight > list.scrollTop + list.clientHeight
-    ) {
-      list.scrollTo({ top: Math.max(0, top - list.clientHeight / 3) });
+    // Measure against the list itself: offsetTop is relative to whichever
+    // ancestor is positioned, which made every follow-scroll land off target.
+    const listRect = list.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    const top = rowRect.top - listRect.top;
+    // Only move when the line leaves the comfortable middle of the list, then
+    // bring it to the upper third so the next lines stay visible.
+    if (top < 0 || top + rowRect.height > list.clientHeight * 0.8) {
+      list.scrollTo({
+        top: Math.max(0, list.scrollTop + top - list.clientHeight / 3),
+      });
     }
   }, [activeIndex, rows]);
 
@@ -242,6 +247,12 @@ export default function ReadOnlySubtitleList() {
       className={readListStyles}
       onWheel={() => (userScrolledAt.current = Date.now())}
       onTouchMove={() => (userScrolledAt.current = Date.now())}
+      // Dragging the scrollbar or using the keyboard is reading too.
+      onPointerDown={event => {
+        if (event.target === event.currentTarget)
+          userScrolledAt.current = Date.now();
+      }}
+      onKeyDown={() => (userScrolledAt.current = Date.now())}
       aria-label={t('workspace.subtitlesTitle', 'Subtitles')}
     >
       {rows.map((row, index) => (
