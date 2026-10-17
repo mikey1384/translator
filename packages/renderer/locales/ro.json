@@ -1323,7 +1323,11 @@
     "hideTools": "Ascunde instrumentele",
     "noVideoTitle": "Adaugă videoclipul",
     "noVideoBody": "Deschide videoclipul acestor subtitrări ca să le vezi direct pe imagine și să le încorporezi.",
-    "showAllTools": "Arată toate instrumentele"
+    "showAllTools": "Arată toate instrumentele",
+    "showTranslation": "Traducere",
+    "showOriginal": "Original",
+    "showBoth": "Ambele",
+    "textSize": "Mărimea textului"
   },
   "subtitleStyles": {
     "Cinema": "Galben cinema",

@@ -1323,7 +1323,11 @@
     "hideTools": "Ẩn công cụ",
     "noVideoTitle": "Thêm video",
     "noVideoBody": "Mở video gốc của phụ đề này để xem phụ đề ngay trên video và chèn thẳng vào.",
-    "showAllTools": "Hiện tất cả công cụ"
+    "showAllTools": "Hiện tất cả công cụ",
+    "showTranslation": "Bản dịch",
+    "showOriginal": "Bản gốc",
+    "showBoth": "Cả hai",
+    "textSize": "Cỡ chữ"
   },
   "subtitleStyles": {
     "Cinema": "Vàng điện ảnh",

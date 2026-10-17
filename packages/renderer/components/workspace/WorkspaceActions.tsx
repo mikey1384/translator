@@ -22,6 +22,10 @@ import Button from '../Button';
 import Modal from '../Modal';
 import { useFreePreviewOfferShowing } from './FreePreviewOffer';
 import SaveAndMergeBar from '../../containers/EditSubtitles/SaveAndMergeBar';
+import {
+  SubtitleDisplaySwitch,
+  SubtitleSizeStepper,
+} from '../SubtitleViewControls';
 import SubtitleStylePicker, {
   subtitleStyleLabel,
 } from '../../containers/EditSubtitles/SubtitleStylePicker';
@@ -43,6 +47,7 @@ import {
   actionPrimaryStyles,
   exportSheetBodyStyles,
   idleDotStyles,
+  watchControlsStyles,
   styleButtonStyles,
   stylePopoverStyles,
   idleStatusStyles,
@@ -127,7 +132,23 @@ export function WorkspaceIdleStatus() {
         aria-hidden="true"
       />
       <span role="status">{text}</span>
-      {count > 0 ? <SubtitleStyleButton /> : null}
+      {count > 0 ? <WatchControls /> : null}
+    </div>
+  );
+}
+
+const stripColon = (text: string) => text.replace(/[:：]\s*$/u, '').trim();
+
+/**
+ * What people change while watching: which lines show, how big they are, and
+ * the look. Always on the line under the video, never only in Export.
+ */
+function WatchControls() {
+  return (
+    <div className={watchControlsStyles}>
+      <SubtitleDisplaySwitch />
+      <SubtitleSizeStepper />
+      <SubtitleStyleButton />
     </div>
   );
 }
@@ -146,9 +167,9 @@ function SubtitleStyleButton() {
   } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const label = t('editSubtitles.mergeControls.styleLabel', 'Style:')
-    .replace(/[:：]\s*$/u, '')
-    .trim();
+  const label = stripColon(
+    t('editSubtitles.mergeControls.styleLabel', 'Style:')
+  );
 
   // Fixed to the window and clamped inside it, so it never runs off-screen
   // at narrow widths or under the sticky video column; opens upward when
@@ -225,7 +246,6 @@ function SubtitleStyleButton() {
         ref={buttonRef}
         type="button"
         className={styleButtonStyles}
-        style={{ marginInlineStart: 'auto' }}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`${label}: ${subtitleStyleLabel(t, style)}`}

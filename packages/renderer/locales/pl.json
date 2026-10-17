@@ -1323,7 +1323,11 @@
     "hideTools": "Ukryj narzędzia",
     "noVideoTitle": "Dodaj film",
     "noVideoBody": "Otwórz film, do którego należą te napisy — zobaczysz je na obrazie i wtopisz w film.",
-    "showAllTools": "Pokaż wszystkie narzędzia"
+    "showAllTools": "Pokaż wszystkie narzędzia",
+    "showTranslation": "Tłumaczenie",
+    "showOriginal": "Oryginał",
+    "showBoth": "Oba",
+    "textSize": "Rozmiar tekstu"
   },
   "subtitleStyles": {
     "Cinema": "Kinowy żółty",

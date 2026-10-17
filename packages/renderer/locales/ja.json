@@ -1323,7 +1323,11 @@
     "hideTools": "ツールを閉じる",
     "noVideoTitle": "動画を追加",
     "noVideoBody": "この字幕の元の動画を開くと、映像に重ねて確認したり、そのまま字幕を入れたりできます。",
-    "showAllTools": "すべてのツールを表示"
+    "showAllTools": "すべてのツールを表示",
+    "showTranslation": "翻訳",
+    "showOriginal": "原文",
+    "showBoth": "両方",
+    "textSize": "文字サイズ"
   },
   "subtitleStyles": {
     "Cinema": "シネマイエロー",

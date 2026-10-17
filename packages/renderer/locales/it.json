@@ -1323,7 +1323,11 @@
     "hideTools": "Nascondi strumenti",
     "noVideoTitle": "Aggiungi il video",
     "noVideoBody": "Apri il video di questi sottotitoli per vederli sullo schermo e incorporarli.",
-    "showAllTools": "Mostra tutti gli strumenti"
+    "showAllTools": "Mostra tutti gli strumenti",
+    "showTranslation": "Traduzione",
+    "showOriginal": "Originale",
+    "showBoth": "Entrambi",
+    "textSize": "Dimensione testo"
   },
   "subtitleStyles": {
     "Cinema": "Giallo cinema",

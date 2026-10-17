@@ -1323,7 +1323,11 @@
     "hideTools": "टूल छिपाएँ",
     "noVideoTitle": "वीडियो जोड़ें",
     "noVideoBody": "इन सबटाइटल वाला वीडियो खोलें — वहीं चलाकर देख सकेंगे और वीडियो पर लगा भी सकेंगे।",
-    "showAllTools": "सभी टूल दिखाएँ"
+    "showAllTools": "सभी टूल दिखाएँ",
+    "showTranslation": "अनुवाद",
+    "showOriginal": "मूल",
+    "showBoth": "दोनों",
+    "textSize": "टेक्स्ट साइज़"
   },
   "subtitleStyles": {
     "Cinema": "सिनेमा पीला",

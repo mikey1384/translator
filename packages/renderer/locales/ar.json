@@ -1323,7 +1323,11 @@
     "hideTools": "إخفاء الأدوات",
     "noVideoTitle": "أضف الفيديو",
     "noVideoBody": "افتح الفيديو الأصلي لهذه الترجمة لتشاهدها عليه وتدمجها فيه مباشرة.",
-    "showAllTools": "عرض كل الأدوات"
+    "showAllTools": "عرض كل الأدوات",
+    "showTranslation": "الترجمة",
+    "showOriginal": "الأصل",
+    "showBoth": "كلاهما",
+    "textSize": "حجم الخط"
   },
   "subtitleStyles": {
     "Cinema": "أصفر سينمائي",

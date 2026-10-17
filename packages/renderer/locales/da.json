@@ -1323,7 +1323,11 @@
     "hideTools": "Skjul værktøjer",
     "noVideoTitle": "Tilføj videoen",
     "noVideoBody": "Åbn den video, underteksterne hører til, så du kan se dem direkte i billedet og brænde dem ind.",
-    "showAllTools": "Vis alle værktøjer"
+    "showAllTools": "Vis alle værktøjer",
+    "showTranslation": "Oversættelse",
+    "showOriginal": "Original",
+    "showBoth": "Begge",
+    "textSize": "Tekststørrelse"
   },
   "subtitleStyles": {
     "Cinema": "Biografgul",

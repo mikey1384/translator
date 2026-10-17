@@ -1323,7 +1323,11 @@
     "hideTools": "Ocultar herramientas",
     "noVideoTitle": "Añade el video",
     "noVideoBody": "Abre el video de estos subtítulos para verlos en pantalla e incrustarlos.",
-    "showAllTools": "Mostrar todas las herramientas"
+    "showAllTools": "Mostrar todas las herramientas",
+    "showTranslation": "Traducción",
+    "showOriginal": "Original",
+    "showBoth": "Ambos",
+    "textSize": "Tamaño del texto"
   },
   "subtitleStyles": {
     "Cinema": "Amarillo cine",

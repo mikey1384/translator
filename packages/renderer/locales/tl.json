@@ -1323,7 +1323,11 @@
     "hideTools": "Itago ang mga tool",
     "noVideoTitle": "Idagdag ang video",
     "noVideoBody": "Buksan ang orihinal na video ng subtitle na ito para makita mo ito mismo sa video at ma-burn ito.",
-    "showAllTools": "Ipakita ang lahat ng tool"
+    "showAllTools": "Ipakita ang lahat ng tool",
+    "showTranslation": "Salin",
+    "showOriginal": "Orihinal",
+    "showBoth": "Pareho",
+    "textSize": "Laki ng teksto"
   },
   "subtitleStyles": {
     "Cinema": "Dilaw na pang-sine",

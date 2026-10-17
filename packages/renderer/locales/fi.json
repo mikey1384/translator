@@ -1323,7 +1323,11 @@
     "hideTools": "Piilota työkalut",
     "noVideoTitle": "Lisää video",
     "noVideoBody": "Avaa video, johon tämä tekstitys kuuluu, niin näet sen paikallaan ja voit upottaa sen kuvaan.",
-    "showAllTools": "Näytä kaikki työkalut"
+    "showAllTools": "Näytä kaikki työkalut",
+    "showTranslation": "Käännös",
+    "showOriginal": "Alkuperäinen",
+    "showBoth": "Molemmat",
+    "textSize": "Tekstin koko"
   },
   "subtitleStyles": {
     "Cinema": "Elokuvakeltainen",

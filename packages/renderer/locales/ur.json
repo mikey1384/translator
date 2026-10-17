@@ -1323,7 +1323,11 @@
     "hideTools": "ٹولز چھپائیں",
     "noVideoTitle": "ویڈیو شامل کریں",
     "noVideoBody": "ان سب ٹائٹلز کی اصل ویڈیو کھولیں، تاکہ انہیں ویڈیو پر دیکھ سکیں اور اسی میں مستقل شامل کر سکیں۔",
-    "showAllTools": "تمام ٹولز دکھائیں"
+    "showAllTools": "تمام ٹولز دکھائیں",
+    "showTranslation": "ترجمہ",
+    "showOriginal": "اصل",
+    "showBoth": "دونوں",
+    "textSize": "متن کا سائز"
   },
   "subtitleStyles": {
     "Cinema": "سنیما پیلا",

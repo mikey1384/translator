@@ -1323,7 +1323,11 @@
     "hideTools": "Skjul verktøy",
     "noVideoTitle": "Legg til videoen",
     "noVideoBody": "Åpne videoen undertekstene hører til, så kan du se dem rett i bildet og brenne dem inn.",
-    "showAllTools": "Vis alle verktøy"
+    "showAllTools": "Vis alle verktøy",
+    "showTranslation": "Oversettelse",
+    "showOriginal": "Original",
+    "showBoth": "Begge",
+    "textSize": "Tekststørrelse"
   },
   "subtitleStyles": {
     "Cinema": "Kinogul",

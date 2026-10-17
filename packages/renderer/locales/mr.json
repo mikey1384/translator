@@ -1323,7 +1323,11 @@
     "hideTools": "टूल्स लपवा",
     "noVideoTitle": "व्हिडिओ जोडा",
     "noVideoBody": "या सबटायटलचा व्हिडिओ उघडा — तिथेच पाहता येतील आणि व्हिडिओवर लावताही येतील.",
-    "showAllTools": "सर्व टूल्स दाखवा"
+    "showAllTools": "सर्व टूल्स दाखवा",
+    "showTranslation": "भाषांतर",
+    "showOriginal": "मूळ",
+    "showBoth": "दोन्ही",
+    "textSize": "अक्षरांचा आकार"
   },
   "subtitleStyles": {
     "Cinema": "सिनेमा पिवळा",

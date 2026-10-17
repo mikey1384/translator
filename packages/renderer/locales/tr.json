@@ -1323,7 +1323,11 @@
     "hideTools": "Araçları gizle",
     "noVideoTitle": "Videoyu ekleyin",
     "noVideoBody": "Bu altyazıların ait olduğu videoyu açın; altyazıları video üzerinde izleyip videoya gömebilirsiniz.",
-    "showAllTools": "Tüm araçları göster"
+    "showAllTools": "Tüm araçları göster",
+    "showTranslation": "Çeviri",
+    "showOriginal": "Orijinal",
+    "showBoth": "İkisi de",
+    "textSize": "Yazı boyutu"
   },
   "subtitleStyles": {
     "Cinema": "Sinema sarısı",

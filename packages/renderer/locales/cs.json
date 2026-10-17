@@ -1323,7 +1323,11 @@
     "hideTools": "Skrýt nástroje",
     "noVideoTitle": "Přidejte video",
     "noVideoBody": "Otevřete video, ke kterému titulky patří — uvidíte je přímo v obraze a můžete je do něj vypálit.",
-    "showAllTools": "Zobrazit všechny nástroje"
+    "showAllTools": "Zobrazit všechny nástroje",
+    "showTranslation": "Překlad",
+    "showOriginal": "Originál",
+    "showBoth": "Obojí",
+    "textSize": "Velikost textu"
   },
   "subtitleStyles": {
     "Cinema": "Filmová žlutá",

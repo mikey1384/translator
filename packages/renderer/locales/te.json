@@ -1323,7 +1323,11 @@
     "hideTools": "టూల్స్ దాచండి",
     "noVideoTitle": "వీడియోను జోడించండి",
     "noVideoBody": "ఈ సబ్‌టైటిల్స్‌కు సంబంధించిన వీడియోను తెరవండి — అక్కడే చూడొచ్చు, వీడియోపై వేయొచ్చు కూడా.",
-    "showAllTools": "అన్ని టూల్స్ చూపించండి"
+    "showAllTools": "అన్ని టూల్స్ చూపించండి",
+    "showTranslation": "అనువాదం",
+    "showOriginal": "అసలు",
+    "showBoth": "రెండూ",
+    "textSize": "అక్షరాల సైజు"
   },
   "subtitleStyles": {
     "Cinema": "సినిమా పసుపు",

@@ -1323,7 +1323,11 @@
     "hideTools": "Скрыть инструменты",
     "noVideoTitle": "Добавьте видео",
     "noVideoBody": "Откройте видео к этим субтитрам — сможете смотреть их прямо на нём и вшить в кадр.",
-    "showAllTools": "Показать все инструменты"
+    "showAllTools": "Показать все инструменты",
+    "showTranslation": "Перевод",
+    "showOriginal": "Оригинал",
+    "showBoth": "Оба",
+    "textSize": "Размер текста"
   },
   "subtitleStyles": {
     "Cinema": "Киношный жёлтый",

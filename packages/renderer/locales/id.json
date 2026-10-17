@@ -1323,7 +1323,11 @@
     "hideTools": "Sembunyikan alat",
     "noVideoTitle": "Tambahkan videonya",
     "noVideoBody": "Buka video aslinya untuk menonton subtitle ini langsung di video dan menggabungkannya.",
-    "showAllTools": "Tampilkan semua alat"
+    "showAllTools": "Tampilkan semua alat",
+    "showTranslation": "Terjemahan",
+    "showOriginal": "Asli",
+    "showBoth": "Keduanya",
+    "textSize": "Ukuran teks"
   },
   "subtitleStyles": {
     "Cinema": "Kuning bioskop",

@@ -1323,7 +1323,11 @@
     "hideTools": "Tools verbergen",
     "noVideoTitle": "Video toevoegen",
     "noVideoBody": "Open de video die bij deze ondertitels hoort, dan zie je ze direct in beeld en kun je ze inbranden.",
-    "showAllTools": "Alle tools tonen"
+    "showAllTools": "Alle tools tonen",
+    "showTranslation": "Vertaling",
+    "showOriginal": "Origineel",
+    "showBoth": "Beide",
+    "textSize": "Tekstgrootte"
   },
   "subtitleStyles": {
     "Cinema": "Bioscoopgeel",

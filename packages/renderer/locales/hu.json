@@ -1323,7 +1323,11 @@
     "hideTools": "Eszközök elrejtése",
     "noVideoTitle": "Add hozzá a videót",
     "noVideoBody": "Nyisd meg a videót, amelyhez ezek a feliratok tartoznak – így a helyükön láthatod, és be is égetheted őket.",
-    "showAllTools": "Összes eszköz megjelenítése"
+    "showAllTools": "Összes eszköz megjelenítése",
+    "showTranslation": "Fordítás",
+    "showOriginal": "Eredeti",
+    "showBoth": "Mindkettő",
+    "textSize": "Szövegméret"
   },
   "subtitleStyles": {
     "Cinema": "Mozisárga",

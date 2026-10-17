@@ -1323,7 +1323,11 @@
     "hideTools": "收起工具",
     "noVideoTitle": "加入影片",
     "noVideoBody": "開啟這些字幕對應的影片，就能邊看邊確認，也能直接把字幕加進影片。",
-    "showAllTools": "顯示所有工具"
+    "showAllTools": "顯示所有工具",
+    "showTranslation": "譯文",
+    "showOriginal": "原文",
+    "showBoth": "雙語",
+    "textSize": "字體大小"
   },
   "subtitleStyles": {
     "Cinema": "電影黃",

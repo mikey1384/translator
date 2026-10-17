@@ -1323,7 +1323,11 @@
     "hideTools": "Sembunyikan alat",
     "noVideoTitle": "Tambah video",
     "noVideoBody": "Buka video asal sari kata ini untuk menontonnya bersama sari kata dan melekatkannya pada video.",
-    "showAllTools": "Tunjukkan semua alat"
+    "showAllTools": "Tunjukkan semua alat",
+    "showTranslation": "Terjemahan",
+    "showOriginal": "Asal",
+    "showBoth": "Kedua-dua",
+    "textSize": "Saiz teks"
   },
   "subtitleStyles": {
     "Cinema": "Kuning pawagam",

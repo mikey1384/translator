@@ -481,6 +481,7 @@ export const inlineStatusFillStyles = (color: string, progress: number) => css`
 
 export const idleStatusStyles = css`
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
@@ -529,6 +530,78 @@ export const stylePopoverStyles = css`
   background: ${colors.surfaceRaised};
   border: 1px solid ${colors.borderStrong};
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45);
+`;
+
+export const watchControlsStyles = css`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-inline-start: auto;
+`;
+
+export const sizeStepperStyles = css`
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid ${colors.border};
+  font-size: 0.85rem;
+
+  button {
+    min-width: 34px;
+    height: 28px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: ${colors.text};
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button:hover:not(:disabled) {
+    background: ${colors.surfaceSoft};
+  }
+
+  button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+`;
+
+export const lookValueStyles = css`
+  min-width: 2ch;
+  color: ${colors.text};
+  font-variant-numeric: tabular-nums;
+`;
+
+export const lookSegmentStyles = css`
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: ${colors.surface};
+  border: 1px solid ${colors.border};
+
+  button {
+    border: 0;
+    background: transparent;
+    color: ${colors.textDim};
+    font: inherit;
+    font-size: 0.82rem;
+    padding: 5px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  button[aria-checked='true'] {
+    background: ${colors.primary};
+    color: #15130d;
+    font-weight: 600;
+  }
 `;
 
 export const idleDotStyles = (color: string) => css`

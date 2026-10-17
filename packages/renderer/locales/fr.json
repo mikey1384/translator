@@ -1323,7 +1323,11 @@
     "hideTools": "Masquer les outils",
     "noVideoTitle": "Ajoutez la vidéo",
     "noVideoBody": "Ouvrez la vidéo de ces sous-titres pour les voir à l’image et les incruster.",
-    "showAllTools": "Afficher tous les outils"
+    "showAllTools": "Afficher tous les outils",
+    "showTranslation": "Traduction",
+    "showOriginal": "Original",
+    "showBoth": "Les deux",
+    "textSize": "Taille du texte"
   },
   "subtitleStyles": {
     "Cinema": "Jaune cinéma",

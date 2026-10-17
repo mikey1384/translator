@@ -13,6 +13,8 @@ import GapList from './GapList';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
 import SpeedMenu from './SpeedMenu';
+import CaptionsMenu from './CaptionsMenu';
+import { Captions } from 'lucide-react';
 import SideMenu from './SideMenu';
 import {
   dockedVideoContainerStyles,
@@ -117,6 +119,8 @@ export default function VideoPlayer({
   const activityTimeout = useRef<NodeJS.Timeout | null>(null);
   const playerDivRef = useRef<HTMLDivElement>(null);
   const speedBtnRef = useRef<HTMLButtonElement>(null);
+  const [showCaptionsMenu, setShowCaptionsMenu] = useState(false);
+  const captionsBtnRef = useRef<HTMLButtonElement>(null);
 
   const [progressBarH, setProgressBarH] = useState(0);
   const isFullScreenRef = useRef(false);
@@ -467,6 +471,30 @@ export default function VideoPlayer({
             <span className={videoPlayerTimeStyles(isFullScreen)}>
               {fmt(duration)}
             </span>
+
+            <div className={videoPlayerAnchorStyles}>
+              <Button
+                ref={captionsBtnRef}
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowCaptionsMenu(m => !m)}
+                className={`captions-btn ${videoPlayerIconButtonStyles(
+                  isFullScreen
+                )}`}
+                title={t('workspace.subtitlesTitle', 'Subtitles')}
+                aria-expanded={showCaptionsMenu}
+              >
+                <Captions size={18} aria-hidden="true" />
+              </Button>
+              {showCaptionsMenu && (
+                <CaptionsMenu
+                  onClose={() => {
+                    setShowCaptionsMenu(false);
+                    captionsBtnRef.current?.focus();
+                  }}
+                />
+              )}
+            </div>
 
             <div className={videoPlayerAnchorStyles}>
               <Button

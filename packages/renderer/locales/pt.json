@@ -1323,7 +1323,11 @@
     "hideTools": "Ocultar ferramentas",
     "noVideoTitle": "Adicione o vídeo",
     "noVideoBody": "Abra o vídeo destas legendas para vê-las na tela e embuti-las.",
-    "showAllTools": "Mostrar todas as ferramentas"
+    "showAllTools": "Mostrar todas as ferramentas",
+    "showTranslation": "Tradução",
+    "showOriginal": "Original",
+    "showBoth": "Ambos",
+    "textSize": "Tamanho do texto"
   },
   "subtitleStyles": {
     "Cinema": "Amarelo cinema",

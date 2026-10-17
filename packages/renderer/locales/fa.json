@@ -1323,7 +1323,11 @@
     "hideTools": "پنهان کردن ابزارها",
     "noVideoTitle": "ویدیو را اضافه کنید",
     "noVideoBody": "ویدیوی اصلی این زیرنویس را باز کنید تا زیرنویس را روی آن ببینید و همان‌جا به ویدیو بچسبانید.",
-    "showAllTools": "نمایش همهٔ ابزارها"
+    "showAllTools": "نمایش همهٔ ابزارها",
+    "showTranslation": "ترجمه",
+    "showOriginal": "اصلی",
+    "showBoth": "هر دو",
+    "textSize": "اندازه متن"
   },
   "subtitleStyles": {
     "Cinema": "زرد سینمایی",

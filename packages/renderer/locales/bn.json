@@ -1323,7 +1323,11 @@
     "hideTools": "টুল লুকান",
     "noVideoTitle": "ভিডিও যোগ করুন",
     "noVideoBody": "এই সাবটাইটেলের ভিডিওটি খুলুন — সেখানেই চালিয়ে দেখতে আর ভিডিওতে বসাতে পারবেন।",
-    "showAllTools": "সব টুল দেখান"
+    "showAllTools": "সব টুল দেখান",
+    "showTranslation": "অনুবাদ",
+    "showOriginal": "মূল",
+    "showBoth": "দুটোই",
+    "textSize": "লেখার আকার"
   },
   "subtitleStyles": {
     "Cinema": "সিনেমা হলুদ",

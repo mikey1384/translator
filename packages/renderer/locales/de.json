@@ -1323,7 +1323,11 @@
     "hideTools": "Werkzeuge ausblenden",
     "noVideoTitle": "Video hinzufügen",
     "noVideoBody": "Öffne das passende Video, um die Untertitel direkt darin zu sehen und einzubrennen.",
-    "showAllTools": "Alle Werkzeuge anzeigen"
+    "showAllTools": "Alle Werkzeuge anzeigen",
+    "showTranslation": "Übersetzung",
+    "showOriginal": "Original",
+    "showBoth": "Beides",
+    "textSize": "Textgröße"
   },
   "subtitleStyles": {
     "Cinema": "Kinogelb",

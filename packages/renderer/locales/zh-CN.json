@@ -1323,7 +1323,11 @@
     "hideTools": "收起工具",
     "noVideoTitle": "添加视频",
     "noVideoBody": "打开这些字幕对应的视频，就能边看边检查，还能直接把字幕加到视频里。",
-    "showAllTools": "显示全部工具"
+    "showAllTools": "显示全部工具",
+    "showTranslation": "译文",
+    "showOriginal": "原文",
+    "showBoth": "双语",
+    "textSize": "字号"
   },
   "subtitleStyles": {
     "Cinema": "影院黄",

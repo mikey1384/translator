@@ -1323,7 +1323,11 @@
     "hideTools": "Ficha zana",
     "noVideoTitle": "Ongeza video",
     "noVideoBody": "Fungua video ya manukuu haya ili uyaone mahali pake na kuyaweka kwenye video.",
-    "showAllTools": "Onyesha zana zote"
+    "showAllTools": "Onyesha zana zote",
+    "showTranslation": "Tafsiri",
+    "showOriginal": "Asili",
+    "showBoth": "Zote mbili",
+    "textSize": "Ukubwa wa maandishi"
   },
   "subtitleStyles": {
     "Cinema": "Njano ya sinema",

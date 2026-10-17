@@ -1323,7 +1323,11 @@
     "hideTools": "Versteek gereedskap",
     "noVideoTitle": "Voeg die video by",
     "noVideoBody": "Maak die video oop waarby hierdie onderskrifte hoort, om hulle op die video te sien en in te brand.",
-    "showAllTools": "Wys alle gereedskap"
+    "showAllTools": "Wys alle gereedskap",
+    "showTranslation": "Vertaling",
+    "showOriginal": "Oorspronklik",
+    "showBoth": "Albei",
+    "textSize": "Teksgrootte"
   },
   "subtitleStyles": {
     "Cinema": "Bioskoopgeel",

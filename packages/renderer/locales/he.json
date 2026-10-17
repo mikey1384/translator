@@ -1323,7 +1323,11 @@
     "hideTools": "הסתרת כלים",
     "noVideoTitle": "הוסיפו את הסרטון",
     "noVideoBody": "פתחו את הסרטון המקורי של הכתוביות כדי לראות אותן עליו ולצרוב אותן ישירות.",
-    "showAllTools": "הצגת כל הכלים"
+    "showAllTools": "הצגת כל הכלים",
+    "showTranslation": "תרגום",
+    "showOriginal": "מקור",
+    "showBoth": "שניהם",
+    "textSize": "גודל טקסט"
   },
   "subtitleStyles": {
     "Cinema": "צהוב קולנוע",

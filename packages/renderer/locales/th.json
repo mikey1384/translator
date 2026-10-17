@@ -1323,7 +1323,11 @@
     "hideTools": "ซ่อนเครื่องมือ",
     "noVideoTitle": "เพิ่มวิดีโอ",
     "noVideoBody": "เปิดวิดีโอของซับนี้ เพื่อดูซับบนวิดีโอจริงและฝังลงไปได้เลย",
-    "showAllTools": "แสดงเครื่องมือทั้งหมด"
+    "showAllTools": "แสดงเครื่องมือทั้งหมด",
+    "showTranslation": "คำแปล",
+    "showOriginal": "ต้นฉบับ",
+    "showBoth": "ทั้งคู่",
+    "textSize": "ขนาดตัวอักษร"
   },
   "subtitleStyles": {
     "Cinema": "เหลืองโรงหนัง",

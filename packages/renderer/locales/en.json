@@ -1323,7 +1323,11 @@
     "hideTools": "Hide tools",
     "noVideoTitle": "Add the video",
     "noVideoBody": "Open the video these subtitles belong to, to watch them in place and burn them in.",
-    "showAllTools": "Show all tools"
+    "showAllTools": "Show all tools",
+    "showTranslation": "Translation",
+    "showOriginal": "Original",
+    "showBoth": "Both",
+    "textSize": "Text size"
   },
   "subtitleStyles": {
     "Cinema": "Cinema yellow",

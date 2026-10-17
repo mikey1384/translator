@@ -1323,7 +1323,11 @@
     "hideTools": "Dölj verktyg",
     "noVideoTitle": "Lägg till videon",
     "noVideoBody": "Öppna videon som hör till undertexterna för att se dem direkt i bild och bränna in dem.",
-    "showAllTools": "Visa alla verktyg"
+    "showAllTools": "Visa alla verktyg",
+    "showTranslation": "Översättning",
+    "showOriginal": "Original",
+    "showBoth": "Båda",
+    "textSize": "Textstorlek"
   },
   "subtitleStyles": {
     "Cinema": "Biogul",
