@@ -50,6 +50,12 @@ export const workspaceVideoColumnStyles = css`
   grid-area: video;
   position: sticky;
   top: 12px;
+
+  /* The full-screen player lives in this column; lift the whole column so
+     the subtitle list and toggles can't paint over it. */
+  html.player-fullscreen & {
+    z-index: 10000;
+  }
   display: flex;
   flex-direction: column;
   gap: 12px;

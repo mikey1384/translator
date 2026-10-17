@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SubtitleDisplayMode } from '@shared-types/app';
 import { useSubStore, useUIStore } from '../state';
@@ -8,7 +9,40 @@ import {
   sizeStepperStyles,
 } from './workspace/workspace-styles';
 
-const FONT_SIZE_RANGE = { min: 16, max: 72 };
+// Steps stay inside what the export and the agent accept; the number shown
+// is always the size actually used.
+const FONT_SIZE_RANGE = { min: 12, max: 96 };
+const SIZE_STEP = 2;
+
+// Radios: arrows move the choice, and keys never reach the player's
+// shortcuts (Space = play, arrows = seek).
+function radioKeys<T>(
+  event: KeyboardEvent<HTMLDivElement>,
+  values: T[],
+  current: T,
+  select: (value: T) => void
+) {
+  const delta =
+    event.key === 'ArrowRight' || event.key === 'ArrowDown'
+      ? 1
+      : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+        ? -1
+        : 0;
+  // Escape and Tab keep working as usual (close menus, move focus).
+  if (event.key !== 'Escape' && event.key !== 'Tab') event.stopPropagation();
+  if (!delta) return;
+  event.preventDefault();
+  const rtl =
+    (event.key === 'ArrowRight' || event.key === 'ArrowLeft') &&
+    getComputedStyle(event.currentTarget).direction === 'rtl';
+  const index = Math.max(0, values.indexOf(current));
+  const next =
+    values[(index + (rtl ? -delta : delta) + values.length) % values.length];
+  select(next);
+  const buttons =
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]');
+  buttons[values.indexOf(next)]?.focus();
+}
 
 /**
  * Translation / Original / Both, one click while watching. Shown only once
@@ -34,6 +68,17 @@ export function SubtitleDisplaySwitch() {
   return (
     <div
       className={lookSegmentStyles}
+      onKeyDown={event =>
+        radioKeys(
+          event,
+          modes.map(option => option.value),
+          mode,
+          value => {
+            logButton('workspace_subtitle_display', { mode: value });
+            setMode(value);
+          }
+        )
+      }
       role="radiogroup"
       aria-label={t('subtitles.displayModeLabel', 'Subtitle display')
         .replace(/[:：]\s*$/u, '')
@@ -45,6 +90,7 @@ export function SubtitleDisplaySwitch() {
           type="button"
           role="radio"
           aria-checked={mode === option.value}
+          tabIndex={mode === option.value ? 0 : -1}
           onClick={() => {
             logButton('workspace_subtitle_display', { mode: option.value });
             setMode(option.value);
@@ -62,26 +108,32 @@ export function SubtitleSizeStepper() {
   const { t } = useTranslation();
   const fontSize = useUIStore(s => s.baseFontSize);
   const setFontSize = useUIStore(s => s.setBaseFontSize);
-  const size = Math.min(
-    FONT_SIZE_RANGE.max,
-    Math.max(FONT_SIZE_RANGE.min, fontSize || FONT_SIZE_RANGE.min)
-  );
+  const size = Math.round(fontSize) || FONT_SIZE_RANGE.min;
   const label = t('workspace.textSize', 'Text size');
-  const nudge = (delta: number) => {
+  const nudge = (direction: 1 | -1) => {
     const next = Math.min(
       FONT_SIZE_RANGE.max,
-      Math.max(FONT_SIZE_RANGE.min, size + delta)
+      Math.max(FONT_SIZE_RANGE.min, size + direction * SIZE_STEP)
     );
     logButton('workspace_subtitle_size', { size: next });
     setFontSize(next);
   };
   return (
-    <div className={sizeStepperStyles} role="group" aria-label={label}>
+    <div
+      className={sizeStepperStyles}
+      role="group"
+      aria-label={label}
+      // Space/Enter press the button here, not play/pause.
+      onKeyDown={event => {
+        if (event.key !== 'Escape' && event.key !== 'Tab')
+          event.stopPropagation();
+      }}
+    >
       <button
         type="button"
         aria-label={`${label} −`}
         disabled={size <= FONT_SIZE_RANGE.min}
-        onClick={() => nudge(-2)}
+        onClick={() => nudge(-1)}
       >
         <span style={{ fontSize: '0.78em' }}>A</span>−
       </button>
@@ -92,7 +144,7 @@ export function SubtitleSizeStepper() {
         type="button"
         aria-label={`${label} +`}
         disabled={size >= FONT_SIZE_RANGE.max}
-        onClick={() => nudge(2)}
+        onClick={() => nudge(1)}
       >
         <span style={{ fontSize: '1.05em' }}>A</span>+
       </button>

@@ -10,6 +10,7 @@ import {
   type SubtitleStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
 import { MIN_SUBTITLE_FONT_SIZE } from '../../../shared/constants';
+import { MAX_SUBTITLE_BASE_FONT_SIZE } from '../../../shared/helpers/subtitle-render-spec.js';
 import {
   editorButtonContentStyles,
   editorSaveButtonStyles,
@@ -193,7 +194,7 @@ export default function SaveAndMergeBar({
                   useUIStore.getState().baseFontSize || MIN_SUBTITLE_FONT_SIZE;
                 const clamped = Math.max(
                   MIN_SUBTITLE_FONT_SIZE,
-                  Math.min(size, 72)
+                  Math.min(size, MAX_SUBTITLE_BASE_FONT_SIZE)
                 );
                 useUIStore.getState().setBaseFontSize(clamped);
               }}

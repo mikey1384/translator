@@ -410,7 +410,7 @@ export async function createFFmpegContext(
           '-v',
           'error',
           '-show_entries',
-          'stream=index,codec_type,width,height,r_frame_rate,tags=rotate,side_data_list:format=duration',
+          'stream=index,codec_type,width,height,r_frame_rate:stream_tags=rotate:stream_side_data=rotation:format=duration',
           '-of',
           'json',
           file,

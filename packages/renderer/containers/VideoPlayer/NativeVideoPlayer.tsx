@@ -389,6 +389,15 @@ export default function NativeVideoPlayer({
     }
   }, [effFontSize, displayHeightPx, targetVideoHeight, isAudioOnly]);
 
+  const exportLayer =
+    !isAudioOnly && pictureBox && subtitleCanvasWidth && subtitleCanvasHeight
+      ? {
+          width: subtitleCanvasWidth,
+          height: subtitleCanvasHeight,
+          scale: pictureBox.width / subtitleCanvasWidth,
+        }
+      : null;
+
   if (!videoUrl) return null;
 
   const onVideoClick = () => {
@@ -405,6 +414,8 @@ export default function NativeVideoPlayer({
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    // A focused control (captions menu, radios) already handled this key.
+    if (e.defaultPrevented) return;
     const v = videoRef.current;
     if (!v) return;
 
@@ -489,15 +500,42 @@ export default function NativeVideoPlayer({
             : { inset: 0 }
         }
       >
-        <BaseSubtitleDisplay
-          text={activeSubtitle}
-          isVisible={subtitleVisible}
-          displayFontSize={effFontSize}
-          isFullScreen={isFullyExpanded}
-          stylePreset={stylePreset}
-          videoWidthPx={subtitleCanvasWidth}
-          videoHeightPx={subtitleCanvasHeight}
-        />
+        {exportLayer ? (
+          // Laid out at the export's own frame size with the export's theme,
+          // then scaled to the picture: wrapping, padding, outline and
+          // position match the burned-in video exactly.
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: exportLayer.width,
+              height: exportLayer.height,
+              transform: `scale(${exportLayer.scale})`,
+              transformOrigin: '0 0',
+            }}
+          >
+            <BaseSubtitleDisplay
+              text={activeSubtitle}
+              isVisible={subtitleVisible}
+              displayFontSize={canonicalFontSize}
+              isFullScreen={false}
+              stylePreset={stylePreset}
+              videoWidthPx={exportLayer.width}
+              videoHeightPx={exportLayer.height}
+            />
+          </div>
+        ) : (
+          <BaseSubtitleDisplay
+            text={activeSubtitle}
+            isVisible={subtitleVisible}
+            displayFontSize={effFontSize}
+            isFullScreen={isFullyExpanded}
+            stylePreset={stylePreset}
+            videoWidthPx={subtitleCanvasWidth}
+            videoHeightPx={subtitleCanvasHeight}
+          />
+        )}
       </div>
 
       {showInd && (

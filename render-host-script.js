@@ -2092,10 +2092,10 @@ function resolveSubtitleRenderTheme(opts) {
       );
     }
   }
-  const horizontalInset = isShortFormPortrait ? shortFormTuning?.horizontalInset || "5.5%" : isFullScreen ? "5%" : "0";
-  const width = isShortFormPortrait || isFullScreen ? "auto" : "100%";
+  const horizontalInset = isShortFormPortrait ? shortFormTuning?.horizontalInset || "5.5%" : "5%";
+  const width = "auto";
   const maxWidth = isShortFormPortrait ? shortFormTuning?.maxWidth || "89%" : "100%";
-  const margin = isShortFormPortrait || isFullScreen ? "0 auto" : "0";
+  const margin = "0 auto";
   const landscapeLineBoxPadding = landscapeTuning?.lineBoxPaddingEm ? landscapeTuning.lineBoxPaddingEm.map((em) => `${emToPx(finalFontSize, em)}px`).join(" ") : void 0;
   const landscapeLineBoxRadiusPx = typeof landscapeTuning?.lineBoxRadiusEm === "number" ? emToPx(finalFontSize, landscapeTuning.lineBoxRadiusEm) : void 0;
   return {

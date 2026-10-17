@@ -137,6 +137,29 @@ export default function SubtitleStylePicker({
     <div
       className={gridStyles}
       role="radiogroup"
+      onKeyDown={event => {
+        if (event.key !== 'Escape' && event.key !== 'Tab')
+          event.stopPropagation();
+        const step =
+          event.key === 'ArrowRight' || event.key === 'ArrowDown'
+            ? 1
+            : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+              ? -1
+              : 0;
+        if (!step) return;
+        event.preventDefault();
+        const order = SUBTITLE_STYLE_PRESET_ORDER;
+        const rtl =
+          (event.key === 'ArrowRight' || event.key === 'ArrowLeft') &&
+          getComputedStyle(event.currentTarget).direction === 'rtl';
+        const index = Math.max(0, order.indexOf(value));
+        const next =
+          order[(index + (rtl ? -step : step) + order.length) % order.length];
+        onChange(next);
+        event.currentTarget
+          .querySelectorAll<HTMLButtonElement>('[role="radio"]')
+          [order.indexOf(next)]?.focus();
+      }}
       aria-label={t('editSubtitles.mergeControls.styleLabel')
         .replace(/[:：]\s*$/u, '')
         .trim()}
@@ -149,6 +172,7 @@ export default function SubtitleStylePicker({
             type="button"
             role="radio"
             aria-checked={selected}
+            tabIndex={selected ? 0 : -1}
             className={tileStyles}
             onClick={() => onChange(preset)}
           >

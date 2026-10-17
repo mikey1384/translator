@@ -432,10 +432,12 @@ export function initializeRenderWindowHandlers({
           }
         }
 
+        // Overlay frames are drawn in the picture's display orientation
+        // (rotated phone clips are taller than their coded size).
         const { browser: br, page } = await initPuppeteer({
           operationId,
-          videoWidth: options.videoWidth,
-          videoHeight: options.videoHeight,
+          videoWidth: options.displayWidth ?? options.videoWidth,
+          videoHeight: options.displayHeight ?? options.videoHeight,
           fontRegular,
           fontSizePx: options.fontSizePx,
           stylePreset: options.stylePreset,
@@ -525,8 +527,8 @@ export function initializeRenderWindowHandlers({
           events: uniqueEventsMs,
           operationId,
           tempDirPath,
-          videoWidth: options.videoWidth,
-          videoHeight: options.videoHeight,
+          videoWidth: options.displayWidth ?? options.videoWidth,
+          videoHeight: options.displayHeight ?? options.videoHeight,
           displayWidth: options.displayWidth ?? options.videoWidth,
           displayHeight: options.displayHeight ?? options.videoHeight,
           fps: realFps,
@@ -580,8 +582,8 @@ export function initializeRenderWindowHandlers({
               ? options.originalVideoPath
               : undefined,
           outputSavePath: tempMerged,
-          videoWidth: options.videoWidth,
-          videoHeight: options.videoHeight,
+          videoWidth: options.displayWidth ?? options.videoWidth,
+          videoHeight: options.displayHeight ?? options.videoHeight,
           videoDuration: options.videoDuration,
           operationId,
           ffmpegPath: ffmpeg.ffmpegPath,

@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { css } from '@emotion/css';
 import { listenClose } from '../../utils/closeOnOutside';
 import {
@@ -13,6 +14,8 @@ const menuStyles = css`
   bottom: calc(100% + 8px);
   z-index: 99999;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
   padding: 10px;
@@ -21,31 +24,63 @@ const menuStyles = css`
   border: 1px solid ${colors.borderStrong};
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
-
-  [dir='rtl'] & {
-    right: auto;
-    left: 0;
-  }
 `;
 
 /**
  * Which lines show and how big, from the player's own controls, so it works
- * in full screen where the line under the video is hidden.
+ * in full screen where the line under the video is hidden. Kept inside the
+ * player box at any width or language.
  */
 export default function CaptionsMenu({ onClose }: { onClose: () => void }) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [shift, setShift] = useState<{ x: number; maxWidth?: number }>({
+    x: 0,
+  });
+
   useEffect(
     () => listenClose('.captions-menu', onClose, '.captions-btn'),
     [onClose]
   );
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    const host = menu?.closest('.fixed-video-container');
+    if (!menu || !host) return;
+    const place = () => {
+      const box = host.getBoundingClientRect();
+      const maxWidth = Math.max(160, box.width - 16);
+      menu.style.maxWidth = `${maxWidth}px`;
+      menu.style.transform = '';
+      const r = menu.getBoundingClientRect();
+      let x = 0;
+      if (r.right > box.right - 8) x = box.right - 8 - r.right;
+      if (r.left + x < box.left + 8) x = box.left + 8 - r.left;
+      setShift({ x, maxWidth });
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, []);
+
+  // Escape closes only the menu (not full screen); keys stay in the menu.
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onClose();
+    }
+    event.stopPropagation();
+  };
+
   return (
-    <div className={`captions-menu ${menuStyles}`}>
+    <div
+      ref={menuRef}
+      className={`captions-menu ${menuStyles}`}
+      style={{
+        transform: shift.x ? `translateX(${shift.x}px)` : undefined,
+        maxWidth: shift.maxWidth,
+      }}
+      onKeyDown={onKeyDown}
+    >
       <SubtitleDisplaySwitch />
       <SubtitleSizeStepper />
     </div>

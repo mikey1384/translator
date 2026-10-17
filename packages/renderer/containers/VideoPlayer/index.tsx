@@ -33,7 +33,12 @@ import Button from '../../components/Button';
 import { PROGRESS_BAR_HEIGHT } from '../../components/ProgressAreas/ProgressArea';
 import { BASELINE_HEIGHT } from '../../../shared/constants';
 
-import { useVideoStore, useTaskStore, useSubtitlePrefs } from '../../state';
+import {
+  useSubStore,
+  useVideoStore,
+  useTaskStore,
+  useSubtitlePrefs,
+} from '../../state';
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
 import { useUrlStore } from '../../state/url-store';
@@ -120,6 +125,7 @@ export default function VideoPlayer({
   const playerDivRef = useRef<HTMLDivElement>(null);
   const speedBtnRef = useRef<HTMLButtonElement>(null);
   const [showCaptionsMenu, setShowCaptionsMenu] = useState(false);
+  const hasCues = useSubStore(s => s.order.length > 0);
   const captionsBtnRef = useRef<HTMLButtonElement>(null);
 
   const [progressBarH, setProgressBarH] = useState(0);
@@ -256,6 +262,14 @@ export default function VideoPlayer({
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
+    // A focused control (captions menu, radios) already handled this key.
+    if (e.defaultPrevented) return;
+    // One Escape closes the captions menu first, then full screen.
+    if (e.key === 'Escape' && showCaptionsMenu) {
+      setShowCaptionsMenu(false);
+      e.preventDefault();
+      return;
+    }
     if (e.key === 'Escape' && isFullScreen) {
       toggleFullscreen();
       e.preventDefault();
@@ -290,6 +304,14 @@ export default function VideoPlayer({
       e.preventDefault();
     }
   };
+
+  useEffect(() => {
+    document.documentElement.classList.toggle(
+      'player-fullscreen',
+      isFullScreen
+    );
+    return () => document.documentElement.classList.remove('player-fullscreen');
+  }, [isFullScreen]);
 
   useEffect(() => {
     if (isFullScreen) {
@@ -473,20 +495,24 @@ export default function VideoPlayer({
             </span>
 
             <div className={videoPlayerAnchorStyles}>
-              <Button
-                ref={captionsBtnRef}
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowCaptionsMenu(m => !m)}
-                className={`captions-btn ${videoPlayerIconButtonStyles(
-                  isFullScreen
-                )}`}
-                title={t('workspace.subtitlesTitle', 'Subtitles')}
-                aria-expanded={showCaptionsMenu}
-              >
-                <Captions size={18} aria-hidden="true" />
-              </Button>
-              {showCaptionsMenu && (
+              {hasCues ? (
+                <Button
+                  ref={captionsBtnRef}
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowCaptionsMenu(m => !m)}
+                  className={`captions-btn ${videoPlayerIconButtonStyles(
+                    isFullScreen
+                  )}`}
+                  title={t('subtitles.displayModeLabel', 'Subtitle display')
+                    .replace(/[:：]\s*$/u, '')
+                    .trim()}
+                  aria-expanded={showCaptionsMenu}
+                >
+                  <Captions size={18} aria-hidden="true" />
+                </Button>
+              ) : null}
+              {hasCues && showCaptionsMenu && (
                 <CaptionsMenu
                   onClose={() => {
                     setShowCaptionsMenu(false);
