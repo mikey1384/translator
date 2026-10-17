@@ -446,7 +446,6 @@ export function resolveSubtitleRenderTheme(opts: {
 }): SubtitleRenderTheme {
   const {
     displayFontSize = BASELINE_FONT_SIZE,
-    isFullScreen = false,
     stylePreset = 'Default',
     isMultiLine,
     videoWidthPx,
