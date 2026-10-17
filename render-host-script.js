@@ -2194,6 +2194,19 @@ function resolveSubtitleLineBoxStyle(theme) {
 function normalizeSubtitleLineBoxLineText(value) {
   return String(value || "").trim() || "\xA0";
 }
+function escapeSubtitleHtml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function subtitleCueHtml(text, stylePreset, theme) {
+  if (!text.trim()) return "";
+  const lineBox = subtitleStyleUsesLineBox(stylePreset);
+  const lineBoxCss = lineBox ? subtitleLineBoxStyleToCssText(resolveSubtitleLineBoxStyle(theme)) : "";
+  return text.split("\n").map(
+    (line2) => lineBox ? `<span dir="auto" style="${lineBoxCss}">${escapeSubtitleHtml(
+      normalizeSubtitleLineBoxLineText(line2)
+    )}</span>` : `<span dir="auto">${escapeSubtitleHtml(line2)}</span>`
+  ).join("<br/>");
+}
 function subtitleTextUsesMultipleLines(element, text) {
   if (text.includes("\n")) return true;
   if (!text) return false;
@@ -2309,29 +2322,6 @@ var renderTarget = {
   width: void 0,
   height: void 0
 };
-function escapeHtml(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-function renderLineBoxLineHtml(lineHtml, renderTheme) {
-  const style = subtitleLineBoxStyleToCssText(
-    resolveSubtitleLineBoxStyle(renderTheme)
-  );
-  return `<span style="${style}">${lineHtml || "&nbsp;"}</span>`;
-}
-function renderPlainSubtitleHtml(text, stylePreset, renderTheme) {
-  if (!text.trim()) {
-    return "";
-  }
-  if (subtitleStyleUsesLineBox(stylePreset)) {
-    return text.split("\n").map(
-      (line2) => renderLineBoxLineHtml(
-        escapeHtml(normalizeSubtitleLineBoxLineText(line2)),
-        renderTheme
-      )
-    ).join("<br/>");
-  }
-  return escapeHtml(text);
-}
 function setSubtitleVisibility(el, text) {
   if (text.trim()) {
     el.classList.add("visible");
@@ -2444,11 +2434,7 @@ function initializeSubtitleDisplay() {
         videoHeightPx,
         typeface
       });
-      el.innerHTML = renderPlainSubtitleHtml(
-        state.text,
-        stylePreset,
-        renderTheme
-      );
+      el.innerHTML = subtitleCueHtml(state.text, stylePreset, renderTheme);
       applyPresetStyles(el, {
         fontSizePx,
         stylePreset,
