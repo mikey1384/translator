@@ -256,8 +256,8 @@
     "downloadFinishedWatchLater": "Obejrzyj później",
     "videoSuggestion": {
       "show": "Znajdź filmy z AI",
-      "hide": "Ukryj propozycje filmów",
-      "modelHint": "Bieżący model",
+      "hide": "Ukryj wyszukiwanie filmów z AI",
+      "modelHint": "Model",
       "sourceHint": "Źródło wyszukiwania",
       "searchDetails": "Szczegóły wyszukiwania",
       "introTitle": "Opisz, jakiego rodzaju wideo chcesz.",
@@ -268,7 +268,7 @@
       "composerTitle": "Powiedz AI, czego szukać",
       "composerHint": "Dowolny język",
       "composerMeta": "Naciśnij Enter, aby wyszukać",
-      "placeholder": "np. spokojne japońskie spacery ulicami nocą",
+      "placeholder": "np. sondy uliczne o regulacjach AI",
       "thinking": "Myślę…",
       "resultsFor": "Wyniki dla",
       "downloadThis": "Pobierz to",
@@ -292,7 +292,7 @@
       "tempFileAvailable": "Tymczasowa kopia jest nadal dostępna",
       "localFileAvailable": "Plik jest dostępny",
       "findVideos": "Znajdź filmy",
-      "resultsEmpty": "Brak wyników. Poproś o film, a wyszukam.",
+      "resultsEmpty": "Napisz zwykłymi słowami, czego szukasz, a znajdę pasujące filmy na YouTube.",
       "historyEmpty": "Nie ma jeszcze pobranych filmów.",
       "channelsEmpty": "Nie ma jeszcze skrótów kanałów. Pobierz polecany film, aby dodać skrót.",
       "playLocal": "Odtwórz",
@@ -333,7 +333,7 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "Opisz, czego chcesz, prostym angielskim. Następnie wybierz wynik i pobierz go.",
+      "workflowHint": "Opisz własnymi słowami, czego chcesz. Następnie wybierz wynik i pobierz go.",
       "currentStep": "Bieżący krok",
       "liveActivityTitle": "Postęp wyszukiwania",
       "liveActivityProgress": "{{cleared}}/4 etapy ukończone • {{seconds}}s",
@@ -354,9 +354,9 @@
       "showFollowUps": "Sugerowane kolejne pomysły",
       "hideFollowUps": "Ukryj propozycje",
       "includeDownloadHistoryLabel": "Uwzględnij moją historię pobierania",
-      "includeDownloadHistoryHint": "Pozwól AI używać tytułów ostatnio pobranych filmów jako lekkiego kontekstu do lepszych sugestii.",
+      "includeDownloadHistoryHint": "Pozwól AI używać tytułów ostatnio pobranych filmów jako lekkiego kontekstu.",
       "includeWatchedChannelsLabel": "Uwzględnij oglądane przeze mnie kanały",
-      "includeWatchedChannelsHint": "Pozwól AI używać twojej ostatniej historii kanałów jako lekkiego kontekstu do lepszych sugestii.",
+      "includeWatchedChannelsHint": "Pozwól AI używać twojej ostatniej historii kanałów jako lekkiego kontekstu.",
       "followUpChooserLabel": "Wybierz punkt wyjścia i edytuj go, jeśli chcesz.",
       "starterQuestionWithMemory": "Ostatnio szukano {{summary}}. Chcesz, żebym zaczął od tego ponownie?",
       "quickStartUserMessage": "Użyj moich ostatnio zapisanych preferencji, aby teraz znaleźć filmy: {{summary}}",
@@ -375,7 +375,7 @@
         "channelFromHistory": "Filmy z kanałów takich jak {{channel}}"
       },
       "stillRunning": "Nadal trwa",
-      "liveDetailsToggle": "Szczegóły na żywo",
+      "liveDetailsToggle": "Szczegóły postępu",
       "moreActions": "Więcej działań",
       "recentEvents": "Ostatnie wydarzenia",
       "cancelFailed": "Nie udało się anulować bieżącego wyszukiwania.",
@@ -552,7 +552,7 @@
     "highlightSaved": "Zapisano!",
     "highlightSaveError": "Zapisywanie nie powiodło się",
     "downloadHighlightFailed": "Nie udało się zapisać klipu z najważniejszym momentem: {{message}}",
-    "highlightsSelectionFailed": "Nie udało się wybrać momentów wyróżnienia: {{message}}",
+    "highlightsSelectionFailed": "Nie udało się wybrać najważniejszych momentów: {{message}}",
     "saveHighlightDialogTitle": "Zapisz klip z najważniejszym momentem",
     "noSections": "Brak jeszcze notatek sekcji.",
     "sectionHeading": "Sekcja {{index}}",
@@ -592,7 +592,7 @@
     "noSummaryWithHighlights": "Te najważniejsze momenty nie mają podsumowania. Naciśnij „Podsumuj”, aby je utworzyć.",
     "clipCaptionsChanged": "Napisy zmieniły się od wycięcia tego klipu.",
     "recutClip": "Wytnij ponownie",
-    "cutCombinedCount": "Połącz {{count}} momentu",
+    "cutCombinedCount": "Połącz razem: {{count}}",
     "cutCombinedCount_one": "Połącz {{count}} moment",
     "cutCombinedCount_few": "Połącz {{count}} momenty",
     "cutCombinedCount_many": "Połącz {{count}} momentów",
@@ -651,12 +651,12 @@
       "emptyCopy": "Otwórz istniejący plik SRT, aby edytować go bezpośrednio. Wygenerowane transkrypty z głównego przepływu też pojawią się tutaj, gdy będą gotowe.",
       "rowsLoaded": "Załadowano {{count}} wierszy",
       "loadAnotherSrt": "Załaduj inny SRT",
-      "mountVideoTitle": "Podłącz wideo źródłowe do podglądu i eksportu burn-in",
+      "mountVideoTitle": "Podłącz wideo źródłowe do podglądu i eksportu z wtopionymi napisami",
       "mountVideoCopy": "Możesz dalej edytować bez wideo, ale podgląd, wyszukiwanie pozycji i łączenie działają najlepiej po podłączeniu źródłowego materiału.",
       "listCopy": "Edytuj tekst źródłowy, tłumaczenie, timing i działania dla poszczególnych wierszy bezpośrednio na miejscu.",
       "originalLabel": "Oryginał",
       "translationLabel": "Tłumaczenie",
-      "mergeNeedsVideoCopy": "Podłącz wideo źródłowe przed rozpoczęciem eksportu burn-in.",
+      "mergeNeedsVideoCopy": "Podłącz wideo źródłowe, zanim zaczniesz eksport z wtopionymi napisami.",
       "automaticCaptionsCopy": "Pobieranie filmu zostało zablokowane (HTTP 403). To automatyczne napisy YouTube, a nie nowa transkrypcja. Możesz je już edytować, tłumaczyć i eksportować do SRT. Podłącz plik multimedialny, aby oglądać napisy na filmie lub je wtopić.",
       "automaticCaptionsCopyWithMedia": "Pobieranie filmu z linku zostało zablokowane (HTTP 403). To automatyczne napisy YouTube, a nie nowa transkrypcja. Podłączony plik multimedialny możesz oglądać z napisami i je w niego wtopić.",
       "automaticCaptionsPill": "Automatyczne napisy YouTube",
@@ -678,7 +678,7 @@
       "originalTextPrefix": "Oryginał:",
       "subtitlePlaceholder": "Tekst napisu",
       "confirmRemove": "Czy na pewno chcesz usunąć ten blok napisów? Tej akcji nie można cofnąć.",
-      "transcribeThisLine": "Transkrybuj linię",
+      "transcribeThisLine": "Transkrybuj wiersz",
       "timeEndBeforeStart": "Koniec musi być później niż początek. Wiersz zachowuje poprzedni czas.",
       "timeUnreadable": "Wpisz czas w formacie 00:01:23,450 lub 1:23.45. Wiersz zachowuje poprzedni czas.",
       "startTimeAria": "Początek wiersza {{index}}",
@@ -814,7 +814,7 @@
       "previewFailed": "Nie udało się odtworzyć próbki głosu. Spróbuj ponownie."
     },
     "byoOpenAi": {
-      "title": "Przynieś własne klucze API",
+      "title": "Własne klucze API",
       "description": "Jednorazowe odblokowanie pozwala używać własnych kluczy API. Potem transkrypcja, tłumaczenie, dubbing i podsumowania działają na twoich własnych kontach AI i nie zużywają minut Stage5.",
       "unlocking": "Otwieranie płatności…",
       "unlockCta": "Odblokuj za $10",
@@ -916,7 +916,7 @@
         "step4": "Kliknij",
         "step5": "Dodaj metodę płatności w Plans & Billing (wymagane do korzystania z API)",
         "step6": "Skopiuj klucz (zaczyna się od sk-ant-) i wklej go w Stage5",
-        "note": "Wskazówka: Anthropic oferuje cennik pay-as-you-go. Płacisz tylko za to, co zużyjesz."
+        "note": "Wskazówka: Anthropic rozlicza według faktycznego użycia. Płacisz tylko za to, co zużyjesz."
       },
       "elevenlabs": {
         "step1": "Przejdź do",
@@ -976,7 +976,7 @@
       "invalidUrl": "Wprowadź prawidłowy URL",
       "unavailable": "Niedostępne",
       "thisSite": "ta strona",
-      "clearConfirm": "To wyloguje cię z {{site}} w Translatorze. Kontynuować?"
+      "clearConfirm": "Wylogujesz się w Translatorze ({{site}}). Kontynuować?"
     },
     "agentControl": {
       "title": "Sterowanie agentami",
@@ -1246,7 +1246,7 @@
       "settingsLinkText": "Ustawienia"
     },
     "validation": {
-      "pleaseSelectVideo": "Proszę wybrać wideo",
+      "pleaseSelectVideo": "Wybierz film",
       "processingDuration": "Czas trwania wideo jest przetwarzany. Spróbuj ponownie za chwilę.",
       "icloudPlaceholder": "Ten plik jest przechowywany w iCloud. W Finderze kliknij «Pobierz» i poczekaj, aż ikona chmury zniknie, a następnie spróbuj ponownie.",
       "fileTooLargeForVoiceCloning": "Plik wideo jest za duży do klonowania głosu ({{size}}MB). Maksymalnie dozwolone to {{max}}MB. Użyj krótszego wideo lub wyłącz klonowanie głosu."
@@ -1810,8 +1810,8 @@
     "closeEdit": "Zamknij edycję",
     "editFraming": "Edytuj kadrowanie i napisy",
     "styleShort": "Styl tego Shorta",
-    "horizontalFocus": "Ostrość w poziomie",
-    "verticalFocus": "Ostrość w pionie",
+    "horizontalFocus": "Pozycja w poziomie",
+    "verticalFocus": "Pozycja w pionie",
     "zoom": "Powiększenie",
     "from": "Od",
     "to": "do",

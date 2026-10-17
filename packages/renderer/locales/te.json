@@ -258,8 +258,8 @@
     "videoSuggestion": {
       "show": "AIతో వీడియోలు వెతకండి",
       "hide": "AI వీడియో వెతుకులాట దాచండి",
-      "modelHint": "ప్రస్తుత మోడల్",
-      "sourceHint": "మూలాన్ని శోధించండి",
+      "modelHint": "మోడల్",
+      "sourceHint": "శోధన మూలం",
       "searchDetails": "శోధన వివరాలు",
       "introTitle": "మీకు కావలసిన వీడియో రకాన్ని వివరించండి.",
       "introCopy": "ఒక అంశం, మూడ్ లేదా ప్రేక్షకులతో ప్రారంభించండి. అవసరమైతే మాత్రమే దేశం లేదా తాజాదనాన్ని జోడించండి.",
@@ -269,7 +269,7 @@
       "composerTitle": "AI ఏమి కనుగొనాలో చెప్పండి",
       "composerHint": "ఏ భాషైనా",
       "composerMeta": "సెర్చ్ చేయడానికి Enter నొక్కండి",
-      "placeholder": "ఉదా. రాత్రి ప్రశాంతమైన జపనీస్ వీధుల్లో నడక",
+      "placeholder": "ఉదా. AI విధానంపై వీధి ఇంటర్వ్యూలు",
       "thinking": "ఆలోచిస్తున్నాను…",
       "resultsFor": "ఫలితాలు",
       "downloadThis": "డౌన్‌లోడ్ చేయండి",
@@ -293,7 +293,7 @@
       "tempFileAvailable": "తాత్కాలిక కాపీ ఇంకా అందుబాటులో ఉంది",
       "localFileAvailable": "ఫైల్ అందుబాటులో ఉంది",
       "findVideos": "వీడియోలను కనుగొనండి",
-      "resultsEmpty": "ఇంకా ఫలితాలు లేవు. వీడియో అడగండి, నేను వెతుకుతాను.",
+      "resultsEmpty": "మామూలు మాటల్లో అడగండి, YouTubeలో సరిపోయే వీడియోలు వెతుకుతాను.",
       "historyEmpty": "ఇంకా డౌన్‌లోడ్ చేసిన వీడియోలు లేవు.",
       "channelsEmpty": "ఇంకా ఛానెల్ షార్ట్‌కట్‌లు లేవు. ఒక సూచించిన వీడియోని డౌన్‌లోడ్ చేసి ఒకటి జోడించండి.",
       "playLocal": "ప్లే",
@@ -334,7 +334,7 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "మీకు కావలసినదాన్ని సులభమైన ఇంగ్లీషులో వివరించండి. తర్వాత ఒక ఫలితాన్ని ఎంచుకుని డౌన్‌లోడ్ చేయండి.",
+      "workflowHint": "మీకు కావలసినదాన్ని మామూలు మాటల్లో వివరించండి. తర్వాత ఒక ఫలితాన్ని ఎంచుకుని డౌన్‌లోడ్ చేయండి.",
       "currentStep": "ప్రస్తుత దశ",
       "liveActivityTitle": "శోధన పురోగతి",
       "liveActivityProgress": "{{cleared}}/4 దశలు పూర్తి • {{seconds}}సె",
@@ -355,9 +355,9 @@
       "showFollowUps": "సూచించిన తదుపరి ఆలోచనలు",
       "hideFollowUps": "తదుపరి ఆలోచనలు దాచండి",
       "includeDownloadHistoryLabel": "నా డౌన్‌లోడ్ చరిత్రను చేర్చు",
-      "includeDownloadHistoryHint": "మెరుగైన సూచనల కోసం ఇటీవల డౌన్‌లోడ్ చేసిన వీడియో శీర్షికలను AI తేలికపాటి సందర్భంగా ఉపయోగించనివ్వండి.",
+      "includeDownloadHistoryHint": "ఇటీవల డౌన్‌లోడ్ చేసిన వీడియో శీర్షికలను AI తేలికపాటి సందర్భంగా ఉపయోగించనివ్వండి.",
       "includeWatchedChannelsLabel": "నేను చూసిన ఛానళ్లను చేర్చు",
-      "includeWatchedChannelsHint": "మెరుగైన సూచనల కోసం మీ ఇటీవలి ఛానల్ చరిత్రను AI తేలికపాటి సందర్భంగా ఉపయోగించనివ్వండి.",
+      "includeWatchedChannelsHint": "మీ ఇటీవలి ఛానల్ చరిత్రను AI తేలికపాటి సందర్భంగా ఉపయోగించనివ్వండి.",
       "followUpChooserLabel": "ఒక ప్రారంభ బిందువును ఎంచుకుని, కావాలంటే దాన్ని సవరించండి.",
       "starterQuestionWithMemory": "గతసారి మీరు {{summary}} కోసం శోధించారు. మళ్లీ అక్కడి నుంచే ప్రారంభించాలా?",
       "quickStartUserMessage": "నేను చివరిసారిగా సేవ్ చేసిన సెట్టింగ్స్‌ను ఉపయోగించి ఇప్పుడే వీడియోలను కనుగొను: {{summary}}",
@@ -376,7 +376,7 @@
         "channelFromHistory": "{{channel}}లాంటి ఛానళ్ల నుండి వీడియోలు"
       },
       "stillRunning": "ఇంకా నడుస్తోంది",
-      "liveDetailsToggle": "లైవ్ వివరాలు",
+      "liveDetailsToggle": "పురోగతి వివరాలు",
       "moreActions": "మరిన్ని చర్యలు",
       "recentEvents": "ఇటీవలి సంఘటనలు",
       "cancelFailed": "ప్రస్తుత సెర్చ్‌ను రద్దు చేయలేకపోయాం.",
@@ -523,7 +523,7 @@
     },
     "generate": "హైలైట్‌లు తీయండి",
     "regenerate": "మళ్ళీ హైలైట్‌లు తీయండి",
-    "highEffortBadge": "(లోతు)",
+    "highEffortBadge": "(లోతుగా)",
     "placeholder": "జనరేట్ అయిన తర్వాత మీ AI సారాంశం ఇక్కడ కనిపిస్తుంది.",
     "insufficientCredits": "హైలైట్‌లు వెతకడానికి సరిపడా నిమిషాలు మిగల్లేదు.",
     "error": "హైలైట్‌లు తీయలేకపోయాం. {{message}}",
@@ -595,7 +595,7 @@
     "clipError": {
       "busy": "ప్రస్తుత పని పూర్తయ్యే వరకు ఆగి, తర్వాత క్లిప్ కట్ చేయండి.",
       "noHighlight": "ముందు ఒక హైలైట్ ఎంచుకోండి.",
-      "editorialSingle": "స్టైల్ చేసిన ప్రతి షార్ట్‌ను Shorts ఫార్మాట్‌లో విడిగా కట్ చేయండి.",
+      "editorialSingle": "స్టైల్ చేసిన ప్రతి షార్ట్‌ను Shorts రీఫ్రేమ్‌లో విడిగా కట్ చేయండి.",
       "editorialStale": "ఈ షార్ట్‌లోని సబ్‌టైటిల్స్ మారాయి. “ఈ షార్ట్‌ను స్టైల్ చేయండి” తెరిచి, చూసి సేవ్ చేయండి, తర్వాత మళ్ళీ కట్ చేయండి.",
       "noTranscript": "క్లిప్ కట్ చేసే ముందు ఈ వీడియో సబ్‌టైటిల్స్ తెరవండి.",
       "noCues": "వీడియోలోని ఈ భాగంలో సబ్‌టైటిల్స్ లేవు.",
@@ -1080,7 +1080,7 @@
       "empty": "నిమిషాలు పొందండి",
       "freeThisMonth": "ఈ నెల {{count}} ఉచిత నిమి",
       "freeWelcome": "{{count}} ఉచిత నిమి",
-      "minutes": "{{count}} నిమి మిగిలాయి",
+      "minutes": "{{count}} నిమి ట్రాన్స్‌క్రిప్షన్",
       "title": "మీ నిమిషాలు, ప్యాక్‌లు",
       "minutes_one": "{{count}} నిమి మిగిలింది",
       "neutral": "నిమిషాలు",
@@ -1146,7 +1146,7 @@
     "exitFullscreen": "పూర్తి స్క్రీన్ నుండి నిష్క్రమించండి",
     "playbackSpeed": "ప్లేబ్యాక్ వేగం",
     "icloudWaitingTitle": "iCloud నుండి డౌన్‌లోడ్ అవుతోంది",
-    "icloudWaitingBody": "ఈ ఫైల్ ఇంకా ఈ కంప్యూటర్‌లోకి రాలేదు. Finderలో ఫైల్ పక్కన ఉన్న మేఘం గుర్తుపై క్లిక్ చేసి, ఆ గుర్తు మాయమయ్యే వరకు ఆగండి.",
+    "icloudWaitingBody": "ఈ ఫైల్ ఇంకా ఈ కంప్యూటర్‌లోకి రాలేదు. Finderలో 'Download' క్లిక్ చేసి, మేఘం గుర్తు మాయమయ్యే వరకు ఆగండి.",
     "icloudWaitingHint": "డౌన్‌లోడ్ పూర్తయ్యాక వీడియో ఆటోమేటిక్‌గా లోడ్ అవుతుంది.",
     "mediaPlaybackError": "మీడియా ప్లేబ్యాక్ లోపం",
     "sideActions": "వీడియో సైడ్ చర్యలు",
@@ -1253,7 +1253,7 @@
       "error": "లోపం"
     },
     "buttons": {
-      "redirectingToPayment": "చెల్లింపుకు దారిమార్పం చేస్తోంది…"
+      "redirectingToPayment": "చెల్లింపు పేజీకి తీసుకెళ్తోంది…"
     },
     "workflow": {
       "stepOne": "దశ 1",
@@ -1270,9 +1270,9 @@
       "transcribeDescription": "అనువాదం లేదా డబ్బింగ్‌కు వెళ్లే ముందు అసలు మీడియాను ఎడిట్ చేయగల సబ్‌టైటిల్స్‌గా మార్చండి.",
       "translateDubTitle": "అనువదించండి లేదా డబ్ చేయండి",
       "translateDubDescription": "మీ ట్రాన్స్‌క్రిప్ట్ మౌంట్ అయింది. ఇప్పుడు అవుట్‌పుట్ భాష, అనువాద మోడ్ లేదా డబ్బింగ్‌ను ఎంచుకోండి.",
-      "availableOutputs": "అందుబాటులో ఉన్న అవుట్‌పుట్‌లు",
+      "availableOutputs": "అందుబాటులో ఉన్న ఫైల్‌లు",
       "availableOutputsDescription": "మీరు ఉంచుకోవాలనుకున్న వెర్షన్‌లను సేవ్ చేసే వరకు డౌన్‌లోడ్ చేసిన మరియు డబ్ చేసిన మీడియా ఇక్కడే అందుబాటులో ఉంటుంది.",
-      "saveOutputsTitle": "అవుట్‌పుట్‌లను సేవ్ చేయండి",
+      "saveOutputsTitle": "ఫైల్‌లను సేవ్ చేయండి",
       "saveOutputsDescription": "దాచుకోవాలనుకునే అసలు లేదా డబ్ చేసిన మీడియాను యాప్ పని ఫోల్డర్ బయట ఉంచండి."
     },
     "calculatingCost": "ఖర్చును లెక్కిస్తోంది…",
@@ -1471,7 +1471,7 @@
     "extractingAudio": "ఆడియో సంగ్రహిస్తోంది…",
     "transcribingOf": "ట్రాన్స్‌క్రైబ్ చేస్తోంది {{done}}/{{total}}",
     "error": "లోపం",
-    "transcribedChunks": "ట్రాన్స్‌క్రైబ్ చేయబడింది {{done}}/{{total}} భాగాలు",
+    "transcribedChunks": "{{done}}/{{total}} భాగాలు ట్రాన్స్‌క్రైబ్ అయ్యాయి",
     "transcribingElevenLabs": "ElevenLabsతో ట్రాన్స్‌క్రైబ్ చేస్తోంది (~{{minutes}} నిమి మిగిలింది)",
     "transcribingElevenLabsHours": "ElevenLabsతో ట్రాన్స్‌క్రైబ్ చేస్తోంది (~{{hours}} గం {{minutes}} నిమి మిగిలింది)",
     "transcribingElevenLabsFinishing": "ElevenLabs తో ట్రాన్స్‌క్రైబ్ చేస్తోంది…",
@@ -1711,7 +1711,9 @@
     "checkingFile": "ఫైల్ చదువుతోంది…",
     "statusLoaded": "{{count}} లైన్లు లోడ్ అయ్యాయి",
     "statusLoaded_one": "{{count}} లైన్ లోడ్ అయింది",
-    "interruptedTranslateSubtitles": "Translator మూతపడటంతో ఈ సబ్‌టైటిల్స్‌ను {{language}}లోకి అనువదించడం ఆగిపోయింది."
+    "interruptedTranslateSubtitles": "Translator మూతపడటంతో ఈ సబ్‌టైటిల్స్‌ను {{language}}లోకి అనువదించడం ఆగిపోయింది.",
+    "statusPartlyTranslated_one": "{{count}}లో {{translated}} లైన్ {{language}}లో · {{missing}} అనువదించలేదు",
+    "statusPartlyTranslatedUnknown_one": "{{count}}లో {{translated}} లైన్ అనువాదమైంది · {{missing}} మిగిలింది"
   },
   "subtitleStyles": {
     "Cinema": "సినిమా పసుపు",
@@ -1793,7 +1795,7 @@
     "phraseEnd": "పదబంధం {{index}} ముగింపు (సె.)",
     "phraseText": "పదబంధం {{index}} టెక్స్ట్",
     "phraseEmphasis": "పదబంధం {{index}}లో నొక్కి చెప్పే పదం",
-    "saveNote": "సేవ్ చేస్తే ఈ క్లిప్ మీ సబ్‌టైటిల్ స్టైల్‌కు బదులు ఈ పదబంధ క్యాప్షన్‌లతో Shorts ఫార్మాట్‌కు మారుతుంది."
+    "saveNote": "సేవ్ చేస్తే ఈ క్లిప్ మీ సబ్‌టైటిల్ స్టైల్‌కు బదులు ఈ పదబంధ క్యాప్షన్‌లతో Shorts రీఫ్రేమ్‌కు మారుతుంది."
   },
   "subtitleFonts": {
     "label": "ఫాంట్",

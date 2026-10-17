@@ -154,7 +154,8 @@
     "transcription": {
       "providerUnavailable": "Yazıya dökme hizmeti (ElevenLabs Scribe) geçici olarak kullanılamıyor ya da birkaç denemeden sonra ulaşılamadı. Lütfen birkaç dakika sonra yeniden deneyin.",
       "fileTooLarge": "Bu ses tek seferde yazıya dökülemeyecek kadar uzun (yaklaşık {{hours}} saatten fazla). Videoyu daha kısa parçalara bölün ve her parçayı ayrı ayrı yazıya dökün.",
-      "elevenLabsKeyRequired": "Yazıya dökme ElevenLabs Scribe kullanır ve bir ElevenLabs API anahtarı gerektirir. Ayarlar’dan bir anahtar ekleyin ya da Stage5 dakikalarınızla yazıya dökmek için “Kendi API anahtarlarımı kullan” seçeneğini kapatın. OpenAI veya Anthropic anahtarınız çeviri için kullanılmaya devam eder."
+      "elevenLabsKeyRequired": "Yazıya dökme ElevenLabs Scribe kullanır ve bir ElevenLabs API anahtarı gerektirir. Ayarlar’dan bir anahtar ekleyin ya da Stage5 dakikalarınızla yazıya dökmek için “Kendi API anahtarlarımı kullan” seçeneğini kapatın. OpenAI veya Anthropic anahtarınız çeviri için kullanılmaya devam eder.",
+      "fileTooLarge_one": "Bu ses tek seferde yazıya dökülemeyecek kadar uzun (yaklaşık {{hours}} saatten fazla). Videoyu daha kısa parçalara bölün ve her parçayı ayrı ayrı yazıya dökün."
     },
     "credits": {
       "transcription": "Yazıya dökmek için dakikanız yetmiyor.",
@@ -256,19 +257,19 @@
     "downloadFinishedWatchLater": "Daha sonra izle",
     "videoSuggestion": {
       "show": "Yapay zekâyla video bul",
-      "hide": "Video önerilerini gizle",
+      "hide": "Yapay zekâyla video aramayı gizle",
       "modelHint": "Mevcut model",
       "sourceHint": "Arama kaynağı",
       "searchDetails": "Arama ayrıntıları",
-      "introTitle": "İstediğin video türünü açıkla.",
+      "introTitle": "Nasıl bir video istediğinizi anlatın.",
       "introCopy": "Bir konu, ruh hali veya kitleyle başlayın. Ülke ya da zaman filtresini yalnızca önemliyse ekleyin.",
       "starterQuestion": "Nasıl bir video istediğinizi anlatın. Konu, ruh hali, kitle veya hedef ülke belirtebilirsiniz.",
-      "defaultFollowUp": "Biraz daha anlat, aramayı daraltayım.",
+      "defaultFollowUp": "Bir ayrıntı daha ekleyin, aramayı daraltayım.",
       "errorMessage": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
-      "composerTitle": "AI'ya ne bulacağını söyle",
+      "composerTitle": "Yapay zekâya ne aradığınızı söyleyin",
       "composerHint": "Herhangi bir dil",
       "composerMeta": "Aramak için Enter'a basın",
-      "placeholder": "ör. gece sakin Japon sokak yürüyüşleri",
+      "placeholder": "ör. yapay zekâ politikası üzerine sokak röportajları",
       "thinking": "Düşünüyor…",
       "resultsFor": "Sonuçlar:",
       "downloadThis": "Bunu indir",
@@ -292,7 +293,7 @@
       "tempFileAvailable": "Geçici kopya hâlâ kullanılabilir",
       "localFileAvailable": "Dosya kullanılabilir",
       "findVideos": "Video bul",
-      "resultsEmpty": "Henüz sonuç yok. Bir video isteyin, ben arayayım.",
+      "resultsEmpty": "Ne aradığınızı sade bir dille yazın, YouTube’da size uygun videoları bulayım.",
       "historyEmpty": "Henüz indirilen video yok.",
       "channelsEmpty": "Henüz kanal kısayolu yok. Eklemek için önerilen bir videoyu indirin.",
       "playLocal": "Oynat",
@@ -320,7 +321,7 @@
       "searchFailed": "Şu anda arama yapamıyorum. Biraz sonra tekrar deneyin.",
       "noMatches": "Henüz güçlü bir eşleşme yok. Konu, ruh hali ya da bir ayrıntı daha ekleyin, tekrar deneyeyim.",
       "lowConfidenceNoScoredResults": "Aramadan güvenilir bir eşleşme çıkmadı. Daha geniş bir konu deneyin, bir ayrıntı daha ekleyin ya da zaman filtresini değiştirin.",
-      "lowConfidenceGeneric": "Arama güveni düşüktü. Bir ayrıntı daha ekleyip yeniden dene.",
+      "lowConfidenceGeneric": "Arama güveni düşüktü. Bir ayrıntı daha ekleyip yeniden deneyin.",
       "genericError": "Bir şeyler ters gitti. Tekrar deneyin.",
       "platformLabel": "Arama platformu",
       "platformHint": "Bu ayar, hangi platformda arama yapılacağını kesin olarak belirler.",
@@ -333,7 +334,7 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "Ne istediğinizi sade İngilizceyle açıklayın. Sonra bir sonuç seçip indirin.",
+      "workflowHint": "Ne istediğinizi sade bir dille anlatın. Sonra bir sonuç seçip indirin.",
       "currentStep": "Geçerli adım",
       "liveActivityTitle": "Arama ilerlemesi",
       "liveActivityProgress": "{{cleared}}/4 aşama tamamlandı • {{seconds}}sn",
@@ -342,7 +343,7 @@
       "minimizeActivity": "Küçült",
       "expandActivity": "Genişlet",
       "activityComplete": "Arama etkinliği tamamlandı.",
-      "nextActionHint": "Bir video seç, sonra indir veya YouTube’da aç.",
+      "nextActionHint": "Bir video seçin, sonra indirin ya da YouTube’da açın.",
       "stagePending": "Bekliyor",
       "stageRunning": "Çalışıyor…",
       "stageCleared": "Tamamlandı",
@@ -354,11 +355,11 @@
       "showFollowUps": "Önerilen devam fikirleri",
       "hideFollowUps": "Devam fikirlerini gizle",
       "includeDownloadHistoryLabel": "İndirme geçmişimi dahil et",
-      "includeDownloadHistoryHint": "Daha iyi öneriler için AI'nin son indirilen video başlıklarınızı hafif bağlam olarak kullanmasına izin verin.",
+      "includeDownloadHistoryHint": "Yapay zekâ, son indirdiğiniz videoların başlıklarını hafif bir bağlam olarak kullanabilsin.",
       "includeWatchedChannelsLabel": "İzlediğim kanalları dahil et",
-      "includeWatchedChannelsHint": "Daha iyi öneriler için AI'nin son kanal geçmişinizi hafif bağlam olarak kullanmasına izin verin.",
-      "followUpChooserLabel": "Bir başlangıç noktası seç, sonra istersen düzenle.",
-      "starterQuestionWithMemory": "Geçen sefer {{summary}} için arama yaptın. Oradan yeniden başlamamı ister misin?",
+      "includeWatchedChannelsHint": "Yapay zekâ, son kanal geçmişinizi hafif bir bağlam olarak kullanabilsin.",
+      "followUpChooserLabel": "Bir başlangıç noktası seçin, isterseniz düzenleyin.",
+      "starterQuestionWithMemory": "Geçen sefer {{summary}} aradınız. Oradan yeniden başlayayım mı?",
       "quickStartUserMessage": "Son kaydettiğim ayarları kullanarak şimdi video bul: {{summary}}",
       "defaultSearchUserMessage": "Benim için şimdi videolar bul.",
       "followUp": {
@@ -375,7 +376,7 @@
         "channelFromHistory": "{{channel}} gibi kanallardan videolar"
       },
       "stillRunning": "Hâlâ çalışıyor",
-      "liveDetailsToggle": "Canlı ayrıntılar",
+      "liveDetailsToggle": "İlerleme ayrıntıları",
       "moreActions": "Daha fazla işlem",
       "recentEvents": "Son olaylar",
       "cancelFailed": "Geçerli arama iptal edilemedi.",
@@ -389,9 +390,9 @@
       "emptyCopy": "Bir konu, kitle veya ruh hali belirtin. Ülke ya da zaman filtresini yalnızca önemliyse ekleyin.",
       "emptyEyebrow": "Asistan yardımıyla arama",
       "emptyTitle": "Bulmak istediğiniz videoyu tarif edin",
-      "languageHint": "Çıkış dili",
+      "languageHint": "Çıktı dili",
       "noMoreResults": "Başka farklı sonuç bulunamadı. Ülke veya zaman filtresini değiştirmeyi deneyin.",
-      "aiVideoRecommendation": "AI video önerisi",
+      "aiVideoRecommendation": "Yapay zekâ video önerisi",
       "optionalDiscovery": "İsteğe bağlı keşif",
       "recencyAny": "Her zaman (eski videolar dahil)",
       "recencyDay": "Son 24 saat",
@@ -412,8 +413,8 @@
       "stillWorking": "Hâlâ çalışıyor…",
       "toggleCopy": "Kendi dilinizde sorun. Yapay zekâ doğru YouTube videolarını bulur.",
       "stage": {
-        "answerer": "İşleme",
-        "planner": "Arama",
+        "answerer": "Sorguyu işle",
+        "planner": "Aramayı oluştur",
         "retrieval": "Sonuçları yükle"
       },
       "deleteLocalFile": "Dosyayı cihazdan sil",
@@ -432,7 +433,8 @@
       "freeSearchResults": "“{{query}}” için YouTube sonuçları burada. Bu arama ücretsizdi. Ne aradığınızı biraz daha anlatırsanız yapay zekâ ile aramayı daraltırım.",
       "freeSearchEmpty": "YouTube’da “{{query}}” için hiçbir şey bulunamadı. Ne istediğinizi anlatın, yapay zekâ ile arayayım.",
       "openOriginalPage": "Orijinal sayfayı aç",
-      "modelPill": "Arama yapay zekâsı: {{model}}"
+      "modelPill": "Arama yapay zekâsı: {{model}}",
+      "savedPreferencesCount_one": "{{count}} kaydedilen tercih"
     },
     "downloadAndTranslate": "İndir ve çevir",
     "downloadAndTranscribe": "İndir ve yazıya dök",
@@ -480,14 +482,14 @@
     "improveTranslation": "Çeviri kalitesini artır",
     "chooseSrtFile": "SRT dosyası seç",
     "dub": "Seslendir",
-    "dubEstimateByo": "~{{minutes}}d ses",
+    "dubEstimateByo": "~{{minutes}} dk ses",
     "voiceCloningRequiresTranslation": "Ses klonlama için hedef dil gereklidir",
-    "translateEstimateCredits": "~{{minutes}}d video",
+    "translateEstimateCredits": "~{{minutes}} dk video",
     "qualityBadge": "(yk)",
     "cancel_confirmation": "Altyazı çeviri işlemini iptal etmek istediğinizden emin misiniz? Tüm ilerleme kaybedilecek ve yeniden başlamanız gerekecek.",
     "unreadableCues_one": "Bu dosyadaki {{count}} satır okunamadığı için alınmadı. Zaman kodunu kontrol edin.",
     "unreadableCues": "Bu dosyadaki {{count}} satır okunamadığı için alınmadı. Zaman kodlarını kontrol edin.",
-    "dubInto": "{{language}} seslendir",
+    "dubInto": "{{language}} dilinde seslendir",
     "dubIntro": "Seçtiğiniz dilde bir ses, orijinal arka plan sesinin üzerine altyazıları okur.",
     "dubNeedsSubtitles": "Seslendirme altyazıları sesli okur, bu yüzden bu videonun önce altyazıya ihtiyacı var. Videoyu yazıya dökün, sonra buradan bir ses seçin.",
     "dubLanguageLabel": "Seslendirme dili",
@@ -522,7 +524,7 @@
     "generate": "Öne çıkanları bul",
     "regenerate": "Öne çıkanları yeniden bul",
     "highEffortBadge": "(derin)",
-    "placeholder": "Yapay zeka özetiniz oluşturulduktan sonra burada görünecek.",
+    "placeholder": "Yapay zekâ özetiniz oluşturulduktan sonra burada görünecek.",
     "insufficientCredits": "Öne çıkanları bulmak için yeterli dakika kalmadı.",
     "error": "Öne çıkanlar oluşturulamadı. {{message}}",
     "cancel": "İptal",
@@ -625,7 +627,8 @@
     "confidence": {
       "title": "Düşük güvenilirlik",
       "none": "Düşük güvenilirlikli satır tespit edilmedi",
-      "count": "{{count}} satır"
+      "count": "{{count}} satır",
+      "count_one": "{{count}} satır"
     }
   },
   "editSubtitles": {
@@ -639,21 +642,22 @@
       "videoNeeded": "Önizleme ve birleştirme için bir kaynak video bağlayın",
       "readyTitle": "Altyazı düzenleyici hazır",
       "emptyTitle": "Düzenlemeye başlamak için altyazıları yükleyin",
-      "readyCopy": "SRT'yi kaydetmeden veya altyazıları kaynak medyaya burn-in yapmadan önce zamanlama, satır sonları ve çevirileri burada ince ayarlayın.",
+      "readyCopy": "SRT’yi kaydetmeden veya altyazıları kaynak videoya gömmeden önce zamanlamayı, satır sonlarını ve çevirileri burada ince ayarlayın.",
       "emptyCopy": "Doğrudan düzenlemek için mevcut bir SRT açın. Ana ekranda yazıya dökülen altyazılar da hazır olduğunda burada görünür.",
       "rowsLoaded": "{{count}} satır yüklendi",
       "loadAnotherSrt": "Başka bir SRT yükle",
-      "mountVideoTitle": "Önizleme ve burn-in dışa aktarma için kaynak videoyu bağlayın",
+      "mountVideoTitle": "Önizleme ve altyazılı video dışa aktarma için kaynak videoyu bağlayın",
       "mountVideoCopy": "Videonuz olmadan düzenlemeye devam edebilirsiniz, ancak önizleme, konum arama ve birleştirme kaynak medya bağlandığında en iyi çalışır.",
       "listCopy": "Kaynak metni, çeviriyi, zamanlamayı ve satır düzeyi işlemleri doğrudan yerinde düzenleyin.",
       "originalLabel": "Orijinal",
       "translationLabel": "Çeviri",
-      "mergeNeedsVideoCopy": "Burn-in dışa aktarma başlatmadan önce kaynak videoyu bağlayın.",
+      "mergeNeedsVideoCopy": "Altyazıları videoya gömmeden önce kaynak videoyu bağlayın.",
       "automaticCaptionsCopy": "Video indirme engellendi (HTTP 403). Bunlar YouTube otomatik altyazılarıdır, yeniden yazıya dökülmüş değildir. Şimdi düzenleyebilir, çevirebilir ve SRT olarak dışa aktarabilirsiniz. Önizlemek veya altyazıları gömmek için medya bağlayın.",
       "automaticCaptionsCopyWithMedia": "URL'deki videonun indirilmesi engellendi (HTTP 403). Bunlar YouTube otomatik altyazılarıdır, yeniden yazıya dökülmüş değildir. Bağlı medya önizleme ve gömme için kullanılabilir.",
       "automaticCaptionsPill": "YouTube otomatik altyazıları",
       "automaticCaptionsTitle": "YouTube otomatik altyazıları",
-      "highlightEditingLocked": "Öne çıkanlar oluşturuluyor, düzenleme kilitli"
+      "highlightEditingLocked": "Öne çıkanlar oluşturuluyor, düzenleme kilitli",
+      "rowsLoaded_one": "{{count}} satır yüklendi"
     },
     "item": {
       "seek": "Git",
@@ -730,7 +734,7 @@
       "noKeys": "Yapılandırılmış anahtar yok",
       "usingApiKeys": "Stage5 dakikalarınız kullanılmıyor",
       "usingCredits": "Stage5 dakikalarınız kullanılıyor",
-      "toggleOn": "Artık API anahtarlarınızı kullanıyor.",
+      "toggleOn": "Artık API anahtarlarınız kullanılıyor.",
       "toggleOff": "Artık Stage5 dakikalarınız kullanılıyor.",
       "toggleError": "Tercih güncellenemedi.",
       "toggleAria": "Kendi API anahtarlarımı kullan",
@@ -805,7 +809,7 @@
       "title": "Kendi API anahtarlarınızı kullanın",
       "description": "Tek seferlik ödemeyle kendi API anahtarlarınızı kullanabilirsiniz. Kilit açıldıktan sonra yazıya dökme, çeviri, seslendirme ve özetler Stage5 dakikalarınızı kullanmak yerine kendi yapay zekâ hesaplarınızda çalışır.",
       "unlocking": "Ödeme açılıyor…",
-      "unlockCta": "$10 ile Aç",
+      "unlockCta": "$10 karşılığında kilidi aç",
       "unlockHint": "Açıldıktan sonra, hesaplarınızda doğrudan faturalandırmayı açmak için istediğiniz zaman API anahtarlarınızı buraya ekleyin.",
       "apiKeyLabel": "OpenAI API anahtarı",
       "hide": "Gizle",
@@ -822,7 +826,7 @@
       "lastSynced": "Son senkronizasyon",
       "toggleLabel": "OpenAI anahtarımı kullan",
       "toggleAria": "OpenAI anahtarınızı kullanmayı aç/kapat",
-      "toggleOn": "Yapay zeka görevleri için OpenAI anahtarınız kullanılıyor.",
+      "toggleOn": "Yapay zekâ görevleri için OpenAI anahtarınız kullanılıyor.",
       "toggleError": "Tercih güncellenemedi.",
       "howToGetKeys": "API anahtarlarını nasıl edinebilirim?",
       "option1Title": "Seçenek 1: OpenAI",
@@ -887,29 +891,29 @@
         "profileApiKey": "Profil + API anahtarı"
       },
       "openai": {
-        "step1": "Git",
+        "step1": "Şu adrese gidin:",
         "step2": "Hesabınıza kaydolun veya giriş yapın",
         "step3": "Sol kenar çubuğunda",
         "step3b": "bölümüne gidin",
-        "step4": "Tıkla",
+        "step4": "Tıklayın:",
         "step5": "Fatura ayarlarına bir ödeme yöntemi ekleyin (API'yi kullanmak için gerekli)",
         "step6": "Anahtarı kopyalayın (sk- ile başlar) ve Stage5'e yapıştırın"
       },
       "anthropic": {
-        "description": "Claude daha yüksek kaliteli çeviri incelemeleri sağlar. Olmadan, GPT tüm çeviri görevlerini üstlenir.",
-        "step1": "Git",
+        "description": "Claude daha yüksek kaliteli çeviri incelemeleri sağlar. Bu anahtar olmadan tüm çeviri işlerini GPT üstlenir.",
+        "step1": "Şu adrese gidin:",
         "step2": "Hesabınıza kaydolun veya giriş yapın",
         "step3": "Ayarlarda",
         "step3b": "bölümüne gidin",
-        "step4": "Tıkla",
+        "step4": "Tıklayın:",
         "step5": "Planlar ve Faturalama'ya bir ödeme yöntemi ekleyin (API'yi kullanmak için gerekli)",
         "step6": "Anahtarı kopyalayın (sk-ant- ile başlar) ve Stage5'e yapıştırın",
         "note": "İpucu: Anthropic kullandıkça öde fiyatlandırması sunar. Sadece kullandığınız kadar ödersiniz."
       },
       "elevenlabs": {
-        "step1": "Git",
+        "step1": "Şu adrese gidin:",
         "step2": "Hesabınıza kaydolun veya giriş yapın",
-        "step3": "Profil simgenize tıklayın ve seçin",
+        "step3": "Profil simgenize tıklayın ve şunu seçin:",
         "step4": "Abonelik ayarlarına bir ödeme yöntemi ekleyin (ücretsiz seviyenin ötesinde API kullanımı için gerekli)",
         "step5": "API anahtarınızı kopyalayın ve Stage5'e yapıştırın",
         "note": "İpucu: ElevenLabs sınırlı kullanımlı ücretsiz bir seviye sunar. Daha fazlası için hesap ayarlarınızdan ücretli plana yükseltin.",
@@ -952,10 +956,10 @@
       "providerLabel": "{{provider}} API anahtarı"
     },
     "byoStack": {
-      "title": "AI yığınınız"
+      "title": "Yapay zekâ altyapınız"
     },
     "siteConnection": {
-      "title": "Website bağlantısı",
+      "title": "Web sitesi bağlantısı",
       "siteUrlLabel": "Site URL'si",
       "checking": "Kontrol ediliyor…",
       "connected": "Bağlandı",
@@ -998,7 +1002,8 @@
       "status": {
         "enabled": "Etkin",
         "disabled": "Devre dışı",
-        "connected": "Bağlı istemci sayısı: {{count}}"
+        "connected": "Bağlı istemci sayısı: {{count}}",
+        "connected_one": "Bağlı istemci sayısı: {{count}}"
       },
       "permissions": "Aracıların yapabilecekleri:",
       "permission": {
@@ -1141,13 +1146,13 @@
     "exitFullscreen": "Tam ekrandan çık",
     "playbackSpeed": "Oynatma hızı",
     "icloudWaitingTitle": "iCloud'dan indiriliyor",
-    "icloudWaitingBody": "Bu dosya henüz yerel olarak saklanmıyor. Finder'da “Download” seçeneğine tıklayın ve bulut simgesi kaybolana kadar bekleyin.",
+    "icloudWaitingBody": "Bu dosya henüz bu bilgisayarda değil. Finder’da “İndir”e tıklayın ve bulut simgesi kaybolana kadar bekleyin.",
     "icloudWaitingHint": "İndirme bittiğinde video otomatik olarak yüklenecek.",
     "mediaPlaybackError": "Medya oynatma hatası",
     "sideActions": "Video yan işlemleri",
     "scrollToCurrentSubtitle": "Geçerli altyazıya kaydır",
     "changeVideo": "Videoyu değiştir",
-    "findVideoWithAi": "AI ile video bul",
+    "findVideoWithAi": "Yapay zekâyla video bul",
     "mountSrt": "SRT yükle",
     "changeSrt": "SRT değiştir",
     "useThisVideo": "Bu videoyu kullan",
@@ -1230,7 +1235,7 @@
     "afrikaans": "Afrikaanca"
   },
   "generateSubtitles": {
-    "rechargeLink": "Yeniden Yükle →",
+    "rechargeLink": "Dakika ekle →",
     "creditWarning": {
       "message": "Aracı Denetimi üzerinden kendi Claude veya Codex’inizle indirme, düzenleme, dışa aktarma ve çeviri ücretsizdir. Yazıya dökmek için dakika ya da <settingsLink>{{settingsLinkText}}</settingsLink> bölümündeki API anahtarı kilidinin açılması gerekir.",
       "settingsLinkText": "Ayarlar"
@@ -1264,10 +1269,10 @@
       "processVideoTitle": "Videoyu işle",
       "transcribeDescription": "Çeviriye veya seslendirmeye geçmeden önce kaynak medyayı düzenlenebilir bir altyazıya dönüştürün.",
       "translateDubTitle": "Çevir veya seslendir",
-      "translateDubDescription": "Altyazı yüklendi. Çıkış dilini, çeviri modunu veya seslendirmeyi seçin.",
-      "availableOutputs": "Kullanılabilir çıktılar",
+      "translateDubDescription": "Altyazı yüklendi. Sırada çıktı dilini, çeviri modunu veya seslendirmeyi seçmek var.",
+      "availableOutputs": "Kullanılabilir dosyalar",
       "availableOutputsDescription": "İndirilen ve seslendirilmiş medya, saklamak istediğiniz sürümleri kaydedene kadar burada kalır.",
-      "saveOutputsTitle": "Çıktıları kaydet",
+      "saveOutputsTitle": "Dosyaları kaydet",
       "saveOutputsDescription": "Saklamak istediğiniz kaynak veya seslendirilmiş medyayı uygulama çalışma alanının dışına kaydedin."
     },
     "calculatingCost": "Maliyet hesaplanıyor…",
@@ -1380,7 +1385,7 @@
       "messageMinutes": "Bu seslendirme {{cost}} kullanır. Ses üretmek, çeviriden çok daha pahalıdır."
     },
     "unsavedSrtOnCaptionRecovery": {
-      "discardAndOpen": "Vazgeç ve altyazıları aç",
+      "discardAndOpen": "Kaydetmeden altyazıları aç",
       "message": "Zaten açık altyazılarınız var. YouTube otomatik altyazılarıyla değiştirmeden önce bunları kaydedin veya silin.",
       "saveAndOpen": "Kaydet ve altyazıları aç",
       "title": "Kurtarılan otomatik altyazılar açılsın mı?"
@@ -1457,7 +1462,7 @@
   },
   "progress": {
     "preparingVideoExport": "Video dışa aktarma hazırlanıyor…",
-    "downloadingVideoExportTools": "Video dışa aktarma araçları indiriliyor… {{percent}}%",
+    "downloadingVideoExportTools": "Video dışa aktarma araçları indiriliyor… %{{percent}}",
     "beginningReview": "İnceleme başlıyor…",
     "starting": "Başlıyor…",
     "completed": "Tamamlandı",
@@ -1552,7 +1557,9 @@
       "startingExport": "Video hazırlanmaya başlıyor…",
       "captionsAvailable": "Video indirilemedi ama YouTube altyazıları mevcut",
       "captionsNotOpened": "YouTube altyazıları hazır ama açılmadı",
-      "insufficientCredits": "Dakikanız yetmiyor"
+      "insufficientCredits": "Dakikanız yetmiyor",
+      "preparingDubLines_one": "Seslendirme için {{count}} satır hazırlanıyor…",
+      "preparingVoiceClips_one": "{{count}} ses klibi hazırlanıyor…"
     },
     "listening": "Video dinleniyor…",
     "mergeFinishSaveBeforeReload": "Yeniden yüklemeden önce birleştirilmiş videonun kaydedilmesini bekleyin.",
@@ -1573,7 +1580,7 @@
     "copy": "Kopyala",
     "email": "Geliştiriciye e-posta gönder",
     "close": "Kapat",
-    "empty": "Henüz log yok.",
+    "empty": "Henüz kayıt yok.",
     "copied": "Kayıtlar panoya kopyalandı",
     "copyFailed": "Kopyalama başarısız",
     "emailSubject": "Stage5 hata ayıklama kayıtları",
@@ -1704,7 +1711,9 @@
     "checkingFile": "Dosya okunuyor…",
     "statusLoaded": "{{count}} satır yüklendi",
     "statusLoaded_one": "{{count}} satır yüklendi",
-    "interruptedTranslateSubtitles": "Bu altyazıların {{language}} diline çevirisi Translator kapandığında yarıda kaldı."
+    "interruptedTranslateSubtitles": "Bu altyazıların {{language}} diline çevirisi Translator kapandığında yarıda kaldı.",
+    "statusTranscribed_one": "{{count}} satır yazıya döküldü",
+    "statusTranslated_one": "{{language}} {{count}} satır · videoyla eş zamanlı"
   },
   "subtitleStyles": {
     "Cinema": "Sinema sarısı",
@@ -1743,7 +1752,10 @@
     "failedNeedMinutes_one": "Şimdiye kadar biten her şey korunur. Kalan {{remaining}} dakikayı tamamlamak için daha fazla dakikaya ihtiyacınız var.",
     "failedNetwork": "Bağlantı koptu. Şimdiye kadar biten her şey korunur. İnternete yeniden bağlandığınızda tekrar deneyin.",
     "noneBodyNextFree": "Ücretsiz dakikalar {{date}} tarihinde yenilenir; isterseniz şimdi {{price}} ile {{language}} diline çevirebilirsiniz.",
-    "enoughBody_one": "Kalan {{remaining}} dakikayı hemen çevirmeye yetecek kadar dakikanız var."
+    "enoughBody_one": "Kalan {{remaining}} dakikayı hemen çevirmeye yetecek kadar dakikanız var.",
+    "noneTitle_one": "Bu video {{total}} dakika.",
+    "offerBody_one": "Videonun tamamını {{price}} ile çevirin. Kalan {{remaining}} dakikayı karşılar; artan dakikalar sonraki videonuz için kalır.",
+    "offerBodyLong_one": "{{price}} paketi kalan {{remaining}} dakikanın çoğunu karşılar."
   },
   "videoCost": {
     "covered": "Dakikalarınız yetiyor",

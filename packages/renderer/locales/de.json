@@ -54,7 +54,7 @@
     "confirmReload": "Willst du die Seite wirklich neu laden? Nicht gespeicherte Änderungen können verloren gehen.",
     "installUpdate": "Neu starten für Update",
     "confirmInstallUpdate": "Update installieren und neu starten?",
-    "downloadUpdate": "Klicken zum Update herunterladen",
+    "downloadUpdate": "Klicken, um das Update herunterzuladen",
     "dismissError": "Fehler schließen",
     "closeAlert": "Hinweis schließen",
     "closeBanner": "Banner schließen",
@@ -257,8 +257,8 @@
     "downloadFinishedWatchLater": "Später ansehen",
     "videoSuggestion": {
       "show": "Videos mit KI finden",
-      "hide": "Videovorschläge ausblenden",
-      "modelHint": "Aktuelles Modell",
+      "hide": "KI-Videosuche ausblenden",
+      "modelHint": "Modell",
       "sourceHint": "Suchquelle",
       "searchDetails": "Suchdetails",
       "introTitle": "Beschreibe die Art von Video, die du möchtest.",
@@ -269,7 +269,7 @@
       "composerTitle": "Der KI sagen, was sie finden soll",
       "composerHint": "Beliebige Sprache",
       "composerMeta": "Zum Suchen Enter drücken",
-      "placeholder": "z.B. ruhige japanische Straßenspaziergänge bei Nacht",
+      "placeholder": "z. B. Straßeninterviews zur KI-Politik",
       "thinking": "Denke nach…",
       "resultsFor": "Ergebnisse für",
       "downloadThis": "Herunterladen",
@@ -293,7 +293,7 @@
       "tempFileAvailable": "Temporäre Kopie noch verfügbar",
       "localFileAvailable": "Datei verfügbar",
       "findVideos": "Videos finden",
-      "resultsEmpty": "Noch keine Ergebnisse. Bitte frag nach einem Video, dann suche ich.",
+      "resultsEmpty": "Beschreib mit eigenen Worten, was du suchst, dann suche ich auf YouTube nach passenden Videos.",
       "historyEmpty": "Noch keine heruntergeladenen Videos.",
       "channelsEmpty": "Noch keine Kanal-Verknüpfungen. Lade ein empfohlenes Video herunter, um eine hinzuzufügen.",
       "playLocal": "Abspielen",
@@ -334,7 +334,7 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "Beschreibe in einfachem Englisch, was du möchtest. Wähle dann ein Ergebnis aus und lade es herunter.",
+      "workflowHint": "Beschreib mit eigenen Worten, was du möchtest. Wähle dann ein Ergebnis aus und lade es herunter.",
       "currentStep": "Aktueller Schritt",
       "liveActivityTitle": "Suchfortschritt",
       "liveActivityProgress": "{{cleared}}/4 Phasen abgeschlossen • {{seconds}}s",
@@ -355,9 +355,9 @@
       "showFollowUps": "Vorgeschlagene Anschlussideen",
       "hideFollowUps": "Anschlussideen ausblenden",
       "includeDownloadHistoryLabel": "Meinen Downloadverlauf einbeziehen",
-      "includeDownloadHistoryHint": "Lass die KI die Titel deiner zuletzt heruntergeladenen Videos als weichen Kontext für bessere Vorschläge nutzen.",
+      "includeDownloadHistoryHint": "Lass die KI die Titel deiner zuletzt heruntergeladenen Videos als Anhaltspunkt nutzen.",
       "includeWatchedChannelsLabel": "Meine angesehenen Kanäle einbeziehen",
-      "includeWatchedChannelsHint": "Lass die KI deinen jüngsten Kanalverlauf als weichen Kontext für bessere Vorschläge nutzen.",
+      "includeWatchedChannelsHint": "Lass die KI deinen jüngsten Kanalverlauf als Anhaltspunkt nutzen.",
       "followUpChooserLabel": "Wähle einen Einstieg und passe ihn bei Bedarf an.",
       "starterQuestionWithMemory": "Zuletzt hast du nach {{summary}} gesucht. Soll ich dort wieder anfangen?",
       "quickStartUserMessage": "Nutze meine zuletzt gespeicherten Einstellungen, um jetzt Videos zu finden: {{summary}}",
@@ -376,7 +376,7 @@
         "channelFromHistory": "Videos von Kanälen wie {{channel}}"
       },
       "stillRunning": "Läuft noch",
-      "liveDetailsToggle": "Live-Details",
+      "liveDetailsToggle": "Fortschrittsdetails",
       "moreActions": "Weitere Aktionen",
       "recentEvents": "Aktuelle Ereignisse",
       "cancelFailed": "Die aktuelle Suche konnte nicht abgebrochen werden.",
@@ -482,9 +482,9 @@
     "improveTranslation": "Übersetzung verbessern",
     "chooseSrtFile": "SRT-Datei auswählen",
     "dub": "Stimme synchronisieren",
-    "dubEstimateByo": "~{{minutes}}min Audio",
+    "dubEstimateByo": "~{{minutes}} Min. Audio",
     "voiceCloningRequiresTranslation": "Stimmklonen erfordert eine Zielsprache",
-    "translateEstimateCredits": "~{{minutes}}m Video",
+    "translateEstimateCredits": "~{{minutes}} Min. Video",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "Willst du die Übersetzung der Untertitel wirklich abbrechen? Der Fortschritt geht verloren und du musst neu beginnen.",
     "unreadableCues_one": "{{count}} Zeile in dieser Datei war nicht lesbar und wurde ausgelassen. Prüf ihren Zeitcode.",
@@ -738,7 +738,8 @@
       "toggleOff": "Verwendet jetzt deine Stage5-Minuten.",
       "toggleError": "Die Präferenz konnte nicht aktualisiert werden.",
       "toggleAria": "Meine API-Schlüssel verwenden",
-      "requirementTranslation": "Benötigt einen OpenAI- oder Anthropic-Schlüssel für die Übersetzung"
+      "requirementTranslation": "Benötigt einen OpenAI- oder Anthropic-Schlüssel für die Übersetzung",
+      "activeKeys_one": "{{count}} Schlüssel bereit"
     },
     "performanceQuality": {
       "title": "Leistung & Qualität",
@@ -915,7 +916,7 @@
         "step3": "Klick auf dein Profilsymbol und wähl",
         "step4": "Füge in den Abo-Einstellungen eine Zahlungsmethode hinzu (für die API-Nutzung über das kostenlose Kontingent hinaus erforderlich)",
         "step5": "Kopier deinen API-Schlüssel und füge ihn in Stage5 ein",
-        "note": "Tipp: ElevenLabs hat einen kostenlosen Tarif mit begrenzter Nutzung. Für mehr brauchst du einen kostenpflichtigen Tarif.",
+        "note": "Tipp: ElevenLabs hat einen kostenlosen Tarif mit begrenzter Nutzung. Für mehr kannst du in deinen Kontoeinstellungen auf einen kostenpflichtigen Tarif upgraden.",
         "audioDescription": "ElevenLabs übernimmt die gesamte Transkription (Scribe) und alle Synchronfassungen. Ohne eigenen ElevenLabs-Schlüssel nutzen beide deine Stage5-Minuten, die nicht verwendet werden, solange deine eigenen Schlüssel aktiv sind."
       }
     },
@@ -1018,7 +1019,7 @@
         "admin": "Administratoraktionen oder Zurücksetzungen auf Werkseinstellungen durchführen"
       },
       "allowedDirectories": {
-        "title": "Zulässige Ordner für Dateizugriffe:",
+        "title": "Zulässige Ordner zum Speichern von Dateien:",
         "description": "Agenten können Dateien (Exporte, zusammengeführte Videos) nur in diese Ordner schreiben. Konfiguriere mindestens einen Ordner, um Dateiexporte zu aktivieren.",
         "empty": "Es sind keine zulässigen Ordner konfiguriert. Füge mindestens einen hinzu, um Dateiexporte zu aktivieren."
       },

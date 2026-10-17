@@ -256,9 +256,9 @@
     "downloadFinishedWatchLater": "পরে দেখুন",
     "videoSuggestion": {
       "show": "AI দিয়ে ভিডিও খুঁজুন",
-      "hide": "ভিডিও সাজেশন লুকান",
-      "modelHint": "বর্তমান মডেল",
-      "sourceHint": "উৎস খুঁজুন",
+      "hide": "AI ভিডিও খোঁজা লুকান",
+      "modelHint": "মডেল",
+      "sourceHint": "খোঁজার উৎস",
       "searchDetails": "খোঁজের বিস্তারিত",
       "introTitle": "আপনি কেমন ভিডিও চান, তা বর্ণনা করুন।",
       "introCopy": "একটি বিষয়, মুড বা দর্শক দিয়ে শুরু করুন। দেশ বা সাম্প্রতিকতা শুধু দরকার হলে যোগ করুন।",
@@ -268,7 +268,7 @@
       "composerTitle": "AI-কে কী খুঁজতে হবে বলুন",
       "composerHint": "যেকোনো ভাষা",
       "composerMeta": "অনুসন্ধানে Enter চাপুন",
-      "placeholder": "যেমন রাতে শান্ত জাপানি রাস্তায় হাঁটা",
+      "placeholder": "যেমন AI নীতি নিয়ে রাস্তার সাক্ষাৎকার",
       "thinking": "ভাবছি…",
       "resultsFor": "ফলাফল",
       "downloadThis": "ডাউনলোড করুন",
@@ -292,7 +292,7 @@
       "tempFileAvailable": "টেম্প কপি এখনও উপলব্ধ",
       "localFileAvailable": "ফাইল উপলব্ধ",
       "findVideos": "ভিডিও খুঁজুন",
-      "resultsEmpty": "এখনও কোনো ফলাফল নেই। একটি ভিডিও চাইলে আমি খুঁজব।",
+      "resultsEmpty": "সহজ ভাষায় লিখুন, আমি YouTube-এ মানানসই ভিডিও খুঁজে দেব।",
       "historyEmpty": "এখনও কোনো ডাউনলোড করা ভিডিও নেই।",
       "channelsEmpty": "এখনও কোনো চ্যানেল শর্টকাট নেই। একটি প্রস্তাবিত ভিডিও ডাউনলোড করে একটি যোগ করুন।",
       "playLocal": "প্লে",
@@ -333,10 +333,10 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "আপনি কী চান, তা সহজ ইংরেজিতে লিখুন। তারপর একটি ফল বেছে নিয়ে ডাউনলোড করুন।",
+      "workflowHint": "আপনি কী চান, তা সহজ ভাষায় লিখুন। তারপর একটি ফল বেছে নিয়ে ডাউনলোড করুন।",
       "currentStep": "বর্তমান ধাপ",
       "liveActivityTitle": "অনুসন্ধানের অগ্রগতি",
-      "liveActivityProgress": "{{cleared}}/৪ ধাপ সম্পন্ন • {{seconds}}স",
+      "liveActivityProgress": "{{cleared}}/৪ ধাপ সম্পন্ন • {{seconds}} সে.",
       "lastActivityTitle": "শেষ খোঁজ",
       "lastActivityProgress": "{{cleared}}/৪ ধাপ সম্পন্ন • {{seconds}} সেকেন্ডে শেষ",
       "minimizeActivity": "সংকুচিত করুন",
@@ -354,9 +354,9 @@
       "showFollowUps": "পরবর্তী প্রস্তাবনা",
       "hideFollowUps": "পরবর্তী প্রস্তাবনা লুকান",
       "includeDownloadHistoryLabel": "আমার ডাউনলোড ইতিহাস অন্তর্ভুক্ত করুন",
-      "includeDownloadHistoryHint": "আরও ভালো পরামর্শের জন্য AI-কে আপনার সাম্প্রতিক ডাউনলোড করা ভিডিওর শিরোনামগুলো হালকা প্রসঙ্গ হিসেবে ব্যবহার করতে দিন।",
+      "includeDownloadHistoryHint": "AI-কে আপনার সাম্প্রতিক ডাউনলোড করা ভিডিওর শিরোনামগুলো হালকা প্রসঙ্গ হিসেবে ব্যবহার করতে দিন।",
       "includeWatchedChannelsLabel": "আমি যেসব চ্যানেল দেখেছি সেগুলো অন্তর্ভুক্ত করুন",
-      "includeWatchedChannelsHint": "আরও ভালো পরামর্শের জন্য AI-কে আপনার সাম্প্রতিক চ্যানেল ইতিহাস হালকা প্রসঙ্গ হিসেবে ব্যবহার করতে দিন।",
+      "includeWatchedChannelsHint": "AI-কে আপনার সাম্প্রতিক চ্যানেল ইতিহাস হালকা প্রসঙ্গ হিসেবে ব্যবহার করতে দিন।",
       "followUpChooserLabel": "একটি শুরুর দিক বেছে নিন, তারপর চাইলে সেটি সম্পাদনা করুন।",
       "starterQuestionWithMemory": "গতবার আপনি {{summary}} খুঁজেছিলেন। আমি কি আবার সেখান থেকেই শুরু করব?",
       "quickStartUserMessage": "আমার শেষ সংরক্ষিত সেটিংস ব্যবহার করে এখনই ভিডিও খুঁজুন: {{summary}}",
@@ -375,7 +375,7 @@
         "channelFromHistory": "{{channel}}-এর মতো চ্যানেল থেকে ভিডিও"
       },
       "stillRunning": "এখনও চলছে",
-      "liveDetailsToggle": "লাইভ বিবরণ",
+      "liveDetailsToggle": "অগ্রগতির বিবরণ",
       "moreActions": "আরও অ্যাকশন",
       "recentEvents": "সাম্প্রতিক ঘটনাবলি",
       "cancelFailed": "বর্তমান অনুসন্ধান বাতিল করা যায়নি।",
@@ -436,7 +436,7 @@
     },
     "downloadAndTranslate": "ডাউনলোড ও অনুবাদ",
     "downloadAndTranscribe": "ডাউনলোড ও ট্রান্সক্রাইব",
-    "autoRunLabel": "ডাউনলোডের পরে চালান পর্যন্ত",
+    "autoRunLabel": "ডাউনলোডের পর এই পর্যন্ত চালান",
     "autoRunStopDownload": "ডাউনলোড",
     "autoRunStopTranscribe": "+ সাবটাইটেল",
     "autoRunStopTranslate": "+ অনুবাদ",
@@ -480,7 +480,7 @@
     "improveTranslation": "অনুবাদ উন্নত করুন",
     "chooseSrtFile": "SRT ফাইল বেছে নিন",
     "dub": "ভয়েস ডাব করুন",
-    "dubEstimateByo": "~{{minutes}}m অডিও",
+    "dubEstimateByo": "~{{minutes}}মি অডিও",
     "voiceCloningRequiresTranslation": "ভয়েস ক্লোনিংয়ের জন্য একটি টার্গেট ভাষা প্রয়োজন",
     "translateEstimateCredits": "~{{minutes}}মি ভিডিও",
     "qualityBadge": "(hq)",
@@ -593,7 +593,7 @@
     "clipError": {
       "busy": "এখনকার কাজটি শেষ হলে ক্লিপ কাটুন।",
       "noHighlight": "আগে একটি হাইলাইট বেছে নিন।",
-      "editorialSingle": "স্টাইল করা প্রতিটি শর্ট আলাদা করে, Shorts ফরম্যাটে কাটুন।",
+      "editorialSingle": "স্টাইল করা প্রতিটি শর্ট আলাদা করে, Shorts রিফ্রেমে কাটুন।",
       "editorialStale": "এই শর্টের সাবটাইটেল বদলেছে। “এই শর্টটি সাজান” খুলে দেখে নিয়ে সেভ করুন, তারপর আবার কাটুন।",
       "noTranscript": "ক্লিপ কাটার আগে এই ভিডিওর সাবটাইটেল খুলুন।",
       "noCues": "ভিডিওর এই অংশে কোনো সাবটাইটেল নেই।",
@@ -687,8 +687,8 @@
     "mergeControls": {
       "fontSizeLabel": "ফন্ট আকার:",
       "styleLabel": "স্টাইল:",
-      "mergeButton": "সাবটাইটেলগুলি একত্রিত করুন",
-      "mergingButton": "একত্রিত করা হচ্ছে…"
+      "mergeButton": "ভিডিওতে সাবটাইটেল বসান",
+      "mergingButton": "ভিডিওতে বসানো হচ্ছে…"
     },
     "undo": {
       "removed": "লাইন মুছে ফেলা হয়েছে।",
@@ -910,7 +910,7 @@
         "step3": "আপনার প্রোফাইল আইকনে ক্লিক করে নির্বাচন করুন",
         "step4": "সাবস্ক্রিপশন সেটিংসে একটি পেমেন্ট মেথড যোগ করুন (ফ্রি টিয়ারের বাইরে API ব্যবহারের জন্য প্রয়োজন)",
         "step5": "আপনার API কী কপি করে Stage5 এ পেস্ট করুন",
-        "note": "টিপ: ElevenLabs এ সীমিত ব্যবহারের জন্য একটি ফ্রি টিয়ার আছে। আরো জন্য, আপনার অ্যাকাউন্ট সেটিংসে পেইড প্ল্যানে আপগ্রেড করুন।",
+        "note": "টিপ: ElevenLabs-এ সীমিত ব্যবহারের একটি ফ্রি টিয়ার আছে। আরও বেশি ব্যবহার করতে আপনার অ্যাকাউন্ট সেটিংসে পেইড প্ল্যানে আপগ্রেড করুন।",
         "audioDescription": "সব ট্রান্সক্রিপশন (Scribe) আর ডাবিং ElevenLabs দিয়ে চলে। নিজের ElevenLabs কী না থাকলে দুটোতেই আপনার Stage5 মিনিট লাগে, যা নিজের কী চালু থাকলে ব্যবহার হয় না।"
       }
     },
@@ -1073,7 +1073,7 @@
       "empty": "মিনিট নিন",
       "freeThisMonth": "এই মাসে {{count}} ফ্রি মিনিট",
       "freeWelcome": "{{count}} ফ্রি মিনিট",
-      "minutes": "{{count}} মিনিট বাকি",
+      "minutes": "{{count}} মিনিট ট্রান্সক্রিপশন",
       "title": "আপনার মিনিট ও প্যাক",
       "neutral": "মিনিট",
       "welcomePending": "ফ্রি মিনিট আসছে",
@@ -1137,7 +1137,7 @@
     "exitFullscreen": "পূর্ণস্ক্রীন থেকে বেরিয়ে আসুন",
     "playbackSpeed": "প্লেব্যাক গতি",
     "icloudWaitingTitle": "iCloud থেকে ডাউনলোড হচ্ছে",
-    "icloudWaitingBody": "ফাইলটি এখনও এই কম্পিউটারে নামানো হয়নি। Finder-এ ফাইলটির পাশের ক্লাউড আইকনে ক্লিক করুন এবং আইকনটি মিলিয়ে যাওয়া পর্যন্ত অপেক্ষা করুন।",
+    "icloudWaitingBody": "ফাইলটি এখনও এই কম্পিউটারে নামানো হয়নি। Finder-এ 'Download'-এ ক্লিক করুন এবং ক্লাউড আইকনটি মিলিয়ে যাওয়া পর্যন্ত অপেক্ষা করুন।",
     "icloudWaitingHint": "ডাউনলোড শেষ হলে ভিডিওটি স্বয়ংক্রিয়ভাবে লোড হবে।",
     "mediaPlaybackError": "মিডিয়া প্লেব্যাক ত্রুটি",
     "sideActions": "ভিডিও সাইড অ্যাকশন",
@@ -1234,7 +1234,7 @@
     "validation": {
       "pleaseSelectVideo": "অনুগ্রহ করে একটি ভিডিও নির্বাচন করুন",
       "processingDuration": "ভিডিওর দৈর্ঘ্য প্রক্রিয়াজাত করা হচ্ছে। অনুগ্রহ করে শীঘ্রই আবার চেষ্টা করুন।",
-      "icloudPlaceholder": "ফাইলটি iCloud-এ রাখা আছে। Finder-এ ফাইলটির পাশের ক্লাউড আইকনে ক্লিক করে ডাউনলোড শেষ হওয়া পর্যন্ত অপেক্ষা করুন, তারপর আবার চেষ্টা করুন।",
+      "icloudPlaceholder": "ফাইলটি iCloud-এ রাখা আছে। Finder-এ 'Download'-এ ক্লিক করে ক্লাউড আইকনের ডাউনলোড শেষ হওয়া পর্যন্ত অপেক্ষা করুন, তারপর আবার চেষ্টা করুন।",
       "fileTooLargeForVoiceCloning": "ভয়েস ক্লোনিংয়ের জন্য ভিডিও ফাইল অনেক বড় ({{size}}MB)। সর্বোচ্চ অনুমোদিত {{max}}MB। অনুগ্রহ করে ছোট ভিডিও ব্যবহার করুন বা ভয়েস ক্লোনিং বন্ধ করুন।"
     },
     "status": {
@@ -1261,9 +1261,9 @@
       "transcribeDescription": "অনুবাদ বা ডাবিংয়ের আগে সোর্স মিডিয়াকে সম্পাদনাযোগ্য সাবটাইটেল ট্র্যাকে রূপান্তর করুন।",
       "translateDubTitle": "অনুবাদ বা ডাব",
       "translateDubDescription": "আপনার ট্রান্সক্রিপ্ট মাউন্ট করা হয়েছে। এবার আউটপুট ভাষা, অনুবাদ মোড বা ডাবিং বেছে নিন।",
-      "availableOutputs": "উপলভ্য আউটপুট",
+      "availableOutputs": "উপলভ্য ফাইল",
       "availableOutputsDescription": "আপনি রাখতে চান এমন সংস্করণ সেভ করা পর্যন্ত ডাউনলোড করা ও ডাব করা মিডিয়া এখানে উপলভ্য থাকবে।",
-      "saveOutputsTitle": "আউটপুট সেভ করুন",
+      "saveOutputsTitle": "ফাইল সেভ করুন",
       "saveOutputsDescription": "যে কোনো সোর্স বা ডাব করা মিডিয়া সংরক্ষণ করতে চাইলে অ্যাপের ওয়ার্কস্পেসের বাইরে রাখুন।"
     },
     "calculatingCost": "খরচ গণনা করা হচ্ছে…",
@@ -1462,7 +1462,7 @@
     "extractingAudio": "অডিও এক্সট্র্যাক্ট করা হচ্ছে…",
     "transcribingOf": "ট্রান্সক্রাইব করা হচ্ছে {{done}}/{{total}}",
     "error": "ত্রুটি",
-    "transcribedChunks": "ট্রান্সক্রাইব করা হয়েছে {{done}}/{{total}} অংশ",
+    "transcribedChunks": "{{done}}/{{total}} অংশ ট্রান্সক্রাইব করা হয়েছে",
     "transcribingElevenLabs": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে (~{{minutes}} মিনিট বাকি)",
     "transcribingElevenLabsHours": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে (~{{hours}}ঘ {{minutes}}মি বাকি)",
     "transcribingElevenLabsFinishing": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে…",
@@ -1773,7 +1773,7 @@
     "phraseEnd": "অংশ {{index}} শেষ (সে.)",
     "phraseText": "অংশ {{index}}-এর লেখা",
     "phraseEmphasis": "অংশ {{index}}-এ জোর দেওয়া শব্দ",
-    "saveNote": "সেভ করলে ক্লিপটি আপনার সাবটাইটেল স্টাইলের বদলে এই ক্যাপশনগুলো নিয়ে Shorts ফরম্যাটে চলে যাবে।"
+    "saveNote": "সেভ করলে ক্লিপটি আপনার সাবটাইটেল স্টাইলের বদলে এই ক্যাপশনগুলো নিয়ে Shorts রিফ্রেমে চলে যাবে।"
   },
   "subtitleFonts": {
     "label": "ফন্ট",

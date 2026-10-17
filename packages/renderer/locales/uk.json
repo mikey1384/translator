@@ -73,7 +73,7 @@
     "locked": "Заблоковано",
     "lockedWhileProcessing": "Заблоковано під час обробки",
     "logs": "Відкрити логи",
-    "reportIssue": "Повідомити про проблему або відгук",
+    "reportIssue": "Повідомити про проблему або залишити відгук",
     "reportIssueAria": "Відкрити діалог повідомлення про проблему та логів",
     "minimumVersionLabel": "Мінімальна підтримувана версія",
     "openDownloadPage": "Відкрити сторінку завантаження",
@@ -256,8 +256,8 @@
     "downloadFinishedWatchLater": "Переглянути пізніше",
     "videoSuggestion": {
       "show": "Знайти відео за допомогою ШІ",
-      "hide": "Сховати пропозиції відео",
-      "modelHint": "Поточна модель",
+      "hide": "Сховати пошук відео з ШІ",
+      "modelHint": "Модель",
       "sourceHint": "Джерело пошуку",
       "searchDetails": "Деталі пошуку",
       "introTitle": "Опишіть, яке відео ви хочете.",
@@ -268,7 +268,7 @@
       "composerTitle": "Скажіть ШІ, що знайти",
       "composerHint": "Будь-яка мова",
       "composerMeta": "Натисніть Enter для пошуку",
-      "placeholder": "напр. спокійні нічні прогулянки японськими вулицями",
+      "placeholder": "напр. вуличні опитування про регулювання ШІ",
       "thinking": "Обробка…",
       "resultsFor": "Результати для",
       "downloadThis": "Завантажити",
@@ -292,7 +292,7 @@
       "tempFileAvailable": "Тимчасова копія все ще доступна",
       "localFileAvailable": "Файл доступний",
       "findVideos": "Знайти відео",
-      "resultsEmpty": "Поки немає результатів. Попросіть відео, і я пошукаю.",
+      "resultsEmpty": "Опишіть своїми словами, що шукаєте, і я підберу відповідні відео на YouTube.",
       "historyEmpty": "Поки немає завантажених відео.",
       "channelsEmpty": "Поки немає ярликів каналів. Завантажте рекомендоване відео, щоб додати ярлик.",
       "playLocal": "Відтворити",
@@ -333,7 +333,7 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "Опишіть, що ви хочете, простою англійською. Потім виберіть результат і завантажте його.",
+      "workflowHint": "Опишіть своїми словами, що ви хочете. Потім виберіть результат і завантажте його.",
       "currentStep": "Поточний крок",
       "liveActivityTitle": "Прогрес пошуку",
       "liveActivityProgress": "{{cleared}}/4 етапи завершено • {{seconds}}с",
@@ -354,9 +354,9 @@
       "showFollowUps": "Запропоновані продовження",
       "hideFollowUps": "Сховати продовження",
       "includeDownloadHistoryLabel": "Додати мою історію завантажень",
-      "includeDownloadHistoryHint": "Дозволь ШІ використовувати назви нещодавно завантажених відео як легкий контекст для кращих рекомендацій.",
+      "includeDownloadHistoryHint": "Дозвольте ШІ використовувати назви нещодавно завантажених відео як легкий контекст.",
       "includeWatchedChannelsLabel": "Додати канали, які я дивився",
-      "includeWatchedChannelsHint": "Дозволь ШІ використовувати вашу недавню історію каналів як легкий контекст для кращих рекомендацій.",
+      "includeWatchedChannelsHint": "Дозвольте ШІ використовувати вашу нещодавню історію каналів як легкий контекст.",
       "followUpChooserLabel": "Виберіть відправну точку й за бажанням відредагуйте її.",
       "starterQuestionWithMemory": "Минулого разу ви шукали {{summary}}. Хочете знову почати з цього?",
       "quickStartUserMessage": "Використай мої останні збережені налаштування, щоб знайти відео просто зараз: {{summary}}",
@@ -375,7 +375,7 @@
         "channelFromHistory": "Відео з каналів на кшталт {{channel}}"
       },
       "stillRunning": "Ще виконується",
-      "liveDetailsToggle": "Деталі в реальному часі",
+      "liveDetailsToggle": "Деталі виконання",
       "moreActions": "Більше дій",
       "recentEvents": "Останні події",
       "cancelFailed": "Не вдалося скасувати поточний пошук.",
@@ -526,7 +526,7 @@
     "generate": "Знайти яскраві моменти",
     "regenerate": "Знайти яскраві моменти знову",
     "highEffortBadge": "(глибокий)",
-    "placeholder": "Ваш ШІ-підсумок з'явиться тут після генерації.",
+    "placeholder": "Короткий зміст від ШІ з’явиться тут, щойно буде готовий.",
     "insufficientCredits": "Не вистачає хвилин, щоб знайти яскраві моменти.",
     "error": "Не вдалося знайти яскраві моменти. {{message}}",
     "cancel": "Скасувати",
@@ -552,7 +552,7 @@
     "highlightSaved": "Збережено!",
     "highlightSaveError": "Помилка збереження",
     "downloadHighlightFailed": "Не вдалося зберегти кліп моменту: {{message}}",
-    "highlightsSelectionFailed": "Не вдалося вибрати ключові моменти: {{message}}",
+    "highlightsSelectionFailed": "Не вдалося вибрати яскраві моменти: {{message}}",
     "saveHighlightDialogTitle": "Зберегти кліп моменту",
     "noSections": "Нотаток розділів ще немає.",
     "sectionHeading": "Розділ {{index}}",
@@ -592,7 +592,7 @@
     "noSummaryWithHighlights": "Яскраві моменти є, а короткого змісту немає. Натисніть «Підсумувати», щоб його отримати.",
     "clipCaptionsChanged": "Субтитри змінилися відтоді, як кліп було вирізано.",
     "recutClip": "Вирізати знову",
-    "cutCombinedCount": "Склеїти {{count}} моменту",
+    "cutCombinedCount": "Склеїти разом: {{count}}",
     "cutCombinedCount_one": "Склеїти {{count}} момент",
     "cutCombinedCount_few": "Склеїти {{count}} моменти",
     "cutCombinedCount_many": "Склеїти {{count}} моментів",
@@ -678,7 +678,7 @@
       "originalTextPrefix": "Оригінал:",
       "subtitlePlaceholder": "Текст субтитрів",
       "confirmRemove": "Ви впевнені, що хочете видалити цей блок субтитрів? Цю дію неможливо скасувати.",
-      "transcribeThisLine": "Транскрибувати рядок",
+      "transcribeThisLine": "Розшифрувати рядок",
       "timeEndBeforeStart": "Кінець має бути пізніше за початок. У рядка лишився попередній час.",
       "timeUnreadable": "Введіть час у форматі 00:01:23,450 або 1:23.45. У рядка лишився попередній час.",
       "startTimeAria": "Початок рядка {{index}}",
@@ -976,7 +976,7 @@
       "invalidUrl": "Введіть дійсний URL",
       "unavailable": "Недоступно",
       "thisSite": "цей сайт",
-      "clearConfirm": "Це виведе вас із {{site}} у Translator. Продовжити?"
+      "clearConfirm": "Translator вийде з вашого акаунта ({{site}}). Продовжити?"
     },
     "agentControl": {
       "title": "Керування агентами",
@@ -1080,8 +1080,8 @@
     "hours": "години",
     "translationHoursShort": "год перекл.",
     "redirectingToPayment": "Відкриття безпечної оплати…",
-    "transcriptionMinutesShort": "{{minutes}} хв транскрипції",
-    "transcriptionTimeShort": "{{time}} транскрипції",
+    "transcriptionMinutesShort": "{{minutes}} хв розшифрування",
+    "transcriptionTimeShort": "{{time}} розшифрування",
     "pill": {
       "freeBack": "Безкоштовні хвилини повернуться {{date}}",
       "empty": "Поповнити хвилини",
@@ -1133,7 +1133,7 @@
   "cta": {
     "generate": {
       "title": "Отримати субтитри з відео",
-      "subtitle": "Транскрибувати/перекласти з пристрою або посилання"
+      "subtitle": "Розшифрувати/перекласти з пристрою або за посиланням"
     },
     "edit": {
       "title": "Редагувати існуючі субтитри",
@@ -1266,19 +1266,19 @@
       "stepThree": "Крок 3",
       "chooseSourceTitle": "Вибрати джерело",
       "sourceLoading": "Отримання джерела",
-      "sourceLoadingDescription": "Завантажене джерело готується до транскрипції.",
+      "sourceLoadingDescription": "Завантажене джерело готується до розшифрування.",
       "localSourceReady": "Локальний файл готовий",
       "webSourceReady": "Вебджерело готове",
       "sourceReadyDescription": "Вибрані медіа готові до наступного кроку.",
       "transcribeTitle": "Обробити відео",
       "processVideoTitle": "Обробити відео",
-      "transcribeDescription": "Перетворіть вихідне медіа на редаговану доріжку субтитрів перед перекладом або дубляжем.",
+      "transcribeDescription": "Перетворіть вихідне медіа на редаговану доріжку субтитрів перед перекладом або озвученням.",
       "translateDubTitle": "Переклад або озвучення",
-      "translateDubDescription": "Транскрипт підключено. Виберіть мову виводу, режим перекладу або дубляж.",
+      "translateDubDescription": "Розшифровку підключено. Тепер виберіть мову виводу, режим перекладу або озвучення.",
       "availableOutputs": "Доступні результати",
-      "availableOutputsDescription": "Завантажені й дубльовані медіа будуть доступні тут, доки ви не збережете версії, які хочете залишити.",
+      "availableOutputsDescription": "Завантажені й озвучені медіа будуть доступні тут, доки ви не збережете версії, які хочете залишити.",
       "saveOutputsTitle": "Зберегти результати",
-      "saveOutputsDescription": "Збережіть будь-які вихідні або дубльовані медіа, які хочете залишити, поза робочим простором застосунку."
+      "saveOutputsDescription": "Збережіть вихідні або озвучені медіа, які хочете залишити, поза робочим простором застосунку."
     },
     "calculatingCost": "Розрахунок вартості…",
     "welcomeCredits": {
@@ -1331,7 +1331,7 @@
     "dubbingInProgress": "Триває озвучення",
     "dubbingWorking": "Створюємо озвучення…",
     "cancelTranslationConfirm": "Скасувати переклад? Прогрес буде втрачено, і доведеться почати спочатку.",
-    "cancelSummaryConfirm": "Скасувати створення підсумку?",
+    "cancelSummaryConfirm": "Скасувати створення короткого змісту?",
     "cancelDubbingConfirm": "Скасувати озвучення? Прогрес буде втрачено, і доведеться почати спочатку.",
     "cancelDownloadConfirm": "Скасувати завантаження? Прогрес буде втрачено, і доведеться почати спочатку.",
     "mergeLowDiskSpaceConfirm": "Виявлено мало місця на диску. Для об'єднання може знадобитися ~{{need}} вільного місця, але доступно лише ~{{free}}. Продовжити?",
@@ -1580,7 +1580,7 @@
   "messages": {
     "fileSaved": "Файл збережено:\n{{path}}",
     "videoSaved": "Відео збережено до:\n{{path}}",
-    "dubbedVideoSaved": "Дубльоване відео збережено до:\n{{path}}"
+    "dubbedVideoSaved": "Озвучене відео збережено до:\n{{path}}"
   },
   "logs": {
     "title": "Останні журнали",
@@ -1591,7 +1591,7 @@
     "copied": "Журнали скопійовано до буфера обміну",
     "copyFailed": "Помилка копіювання",
     "emailSubject": "Журнали налагодження Stage5",
-    "emailBodyPrefix": "Привіт,\n\nБудь ласка, знайдіть мої останні журнали нижче для допомоги у вирішенні проблеми.\n\n",
+    "emailBodyPrefix": "Привіт,\n\nНижче — мої останні журнали, щоб допомогти розібратися з проблемою.\n\n",
     "deviceInfoHeader": "Інформація про пристрій",
     "optionalMessage": "Додаткове повідомлення",
     "optionalMessagePlaceholder": "Що ви намагалися зробити?",
@@ -1802,7 +1802,7 @@
     "removePhrase": "Видалити фразу",
     "addPhrase": "Додати фразу",
     "removeStyling": "Прибрати стилізацію",
-    "saveSelectionFirst": "Спочатку збережіть вибір ключових моментів.",
+    "saveSelectionFirst": "Спочатку збережіть вибір яскравих моментів.",
     "closeEdit": "Закрити редагування",
     "editFraming": "Редагувати кадрування й субтитри",
     "styleShort": "Оформити ролик для Shorts",

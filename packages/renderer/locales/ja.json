@@ -19,7 +19,7 @@
     "loading": "読み込み中…",
     "error": {
       "unexpected": "予期しないエラーが発生しました。",
-      "unexpectedRemove": "削除中に予期しないエラーが発生しました。",
+      "unexpectedRemove": "キーの削除中に予期しないエラーが発生しました。",
       "unexpectedSave": "保存中に予期しないエラーが発生しました。",
       "unexpectedLoad": "読み込み中に予期しないエラーが発生しました。",
       "renderFailed": "レンダリングに失敗しました",
@@ -132,7 +132,7 @@
     "noSubtitlesLoaded": "字幕が読み込まれていません",
     "failedToLoadSRT": "SRTファイルの読み込みに失敗しました",
     "cancelTranslationFailed": "翻訳のキャンセルに失敗しました: {{message}}",
-    "cancelDubbingFailed": "ダビングのキャンセルに失敗しました: {{message}}",
+    "cancelDubbingFailed": "吹き替えのキャンセルに失敗しました: {{message}}",
     "cancelSummaryFailed": "要約生成のキャンセルに失敗しました: {{message}}",
     "adminCreditAddFailed": "クレジット追加に失敗しました: {{message}}",
     "adminCreditAddError": "クレジット追加エラー: {{message}}",
@@ -256,7 +256,7 @@
     "downloadFinishedWatchLater": "後で見る",
     "videoSuggestion": {
       "show": "AIで動画を探す",
-      "hide": "動画の提案を非表示",
+      "hide": "AI動画検索を非表示",
       "modelHint": "現在のモデル",
       "sourceHint": "検索元",
       "searchDetails": "検索の詳細",
@@ -275,8 +275,8 @@
       "failedToStart": "提案を開始できませんでした",
       "requestFailed": "提案リクエストが失敗しました",
       "untitledVideo": "無題の動画",
-      "openOnYoutube": "リンクを開く",
-      "openFailed": "元動画リンクを開けません",
+      "openOnYoutube": "YouTubeで開く",
+      "openFailed": "YouTubeの動画リンクを開けませんでした",
       "uploadedOn": "公開日: {{date}}",
       "durationLabel": "再生時間: {{duration}}",
       "downloadHistoryTitle": "ダウンロード履歴",
@@ -292,7 +292,7 @@
       "tempFileAvailable": "一時コピーはまだ利用できます",
       "localFileAvailable": "ファイルを利用できます",
       "findVideos": "動画を探す",
-      "resultsEmpty": "まだ結果がありません。見たい動画を伝えると検索します。",
+      "resultsEmpty": "見たい動画をふだんの言葉で伝えてください。YouTubeからぴったりの動画を探します。",
       "historyEmpty": "まだダウンロードした動画はありません。",
       "channelsEmpty": "まだチャンネルのショートカットがありません。まずはおすすめ動画をダウンロードしてください。",
       "playLocal": "再生",
@@ -333,7 +333,7 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "やりたいことを簡単な英語で入力し、結果を選んでダウンロードしてください。",
+      "workflowHint": "探したい動画をふだんの言葉で入力し、結果を選んでダウンロードしてください。",
       "currentStep": "現在のステップ",
       "liveActivityTitle": "検索の進行状況",
       "liveActivityProgress": "{{cleared}}/4 ステージ完了 • {{seconds}}秒",
@@ -342,7 +342,7 @@
       "minimizeActivity": "最小化",
       "expandActivity": "展開",
       "activityComplete": "検索アクティビティが完了しました。",
-      "nextActionHint": "動画を選んで、ダウンロードするか元リンクを開いてください。",
+      "nextActionHint": "動画を選んで、ダウンロードするかYouTubeで開いてください。",
       "stagePending": "保留中",
       "stageRunning": "実行中…",
       "stageCleared": "完了",
@@ -354,9 +354,9 @@
       "showFollowUps": "おすすめの続き",
       "hideFollowUps": "続きの候補を隠す",
       "includeDownloadHistoryLabel": "自分のダウンロード履歴を含める",
-      "includeDownloadHistoryHint": "より良い提案のために、最近ダウンロードした動画タイトルをAIが軽い文脈として使えるようにします。",
+      "includeDownloadHistoryHint": "最近ダウンロードした動画のタイトルを、AIが参考程度に使えるようにします。",
       "includeWatchedChannelsLabel": "自分が見たチャンネルを含める",
-      "includeWatchedChannelsHint": "より良い提案のために、最近のチャンネル履歴をAIが軽い文脈として使えるようにします。",
+      "includeWatchedChannelsHint": "最近のチャンネル履歴を、AIが参考程度に使えるようにします。",
       "followUpChooserLabel": "出発点を選んで、必要なら編集してください。",
       "starterQuestionWithMemory": "前回は「{{summary}}」で検索しました。今回も同じ条件で検索しますか？",
       "quickStartUserMessage": "前回保存した設定を使って、今すぐ動画を探して: {{summary}}",
@@ -642,7 +642,7 @@
       "rowsLoaded": "{{count}}行を読み込み済み",
       "loadAnotherSrt": "別のSRTを読み込む",
       "mountVideoTitle": "プレビューと焼き込み書き出しのため元動画を読み込んでください",
-      "mountVideoCopy": "動画なしでも編集は続けられますが、プレビュー、シーク、結合は元メディアを読み込むと最適に動作します。",
+      "mountVideoCopy": "動画なしでも編集は続けられますが、プレビュー、シーク、字幕付き動画の書き出しは、元のメディアを読み込むと快適に使えます。",
       "listCopy": "原文、翻訳、タイミング、行ごとの操作をその場で編集できます。",
       "originalLabel": "原文",
       "translationLabel": "翻訳",
@@ -760,7 +760,7 @@
         "quality": "高品質（翻訳の高品質と同じ）"
       },
       "rate": {
-        "balance": "残高: ~{{time}}",
+        "balance": "残り時間: 約{{time}}",
         "minutesPerHour": "動画1時間あたり残り時間を約{{time}}使用",
         "minutesPerDubMinute": "吹き替え1分あたり残り時間を約{{time}}使用",
         "minutesPerSearch": "検索1回あたり残り時間を約{{time}}使用"
@@ -791,7 +791,7 @@
       "voiceCloningEnabled": "ElevenLabsでボイスクローニングが有効です。元の話者の声が吹き替え音声で保持されます。",
       "voiceCloningInfo": "ボイスクローニングはElevenLabs吹き替えAPIを使用して、元の話者の声を分析・再現します。",
       "costPerMinute": "1分あたりのコスト",
-      "yourBalance": "残高",
+      "yourBalance": "残り時間",
       "canClone": "クローン可能",
       "upToMinutes": "最大{{minutes}}分",
       "loading": "読み込み中…",
@@ -936,7 +936,7 @@
     "stage5TtsProvider": {
       "elevenlabs": "プレミアム（ElevenLabs）",
       "elevenlabsHint": "最高品質、高コスト（約12倍）",
-      "elevenlabsHintWithBalance": "最高品質 · 残高: {{time}}の吹き替え可能"
+      "elevenlabsHintWithBalance": "最高品質 · 残り時間で吹き替え{{time}}ぶん"
     },
     "apiKey": {
       "saved": "APIキーを保存しました。",
@@ -1072,7 +1072,7 @@
       "empty": "時間をチャージ",
       "freeThisMonth": "今月あと{{count}}分無料",
       "freeWelcome": "{{count}}分無料",
-      "minutes": "残り{{count}}分",
+      "minutes": "文字起こし{{count}}分",
       "title": "残り時間とパック",
       "neutral": "残り時間",
       "welcomePending": "無料の時間を準備中",
@@ -1118,7 +1118,7 @@
   "cta": {
     "generate": {
       "title": "動画から字幕を取得",
-      "subtitle": "デバイスまたはリンクからの書き起こし/翻訳"
+      "subtitle": "デバイスまたはリンクから文字起こし/翻訳"
     },
     "edit": {
       "title": "既存の字幕を編集",
@@ -1301,7 +1301,7 @@
     },
     "saveSrtFileAs": "SRTファイルに名前を付けて保存",
     "saveDownloadedVideoAs": "ダウンロードした動画に名前を付けて保存",
-    "saveDubbedVideoAs": "吹き替え動画として保存",
+    "saveDubbedVideoAs": "吹き替え動画に名前を付けて保存",
     "unsavedSrtOnTranscribe": {
       "title": "文字起こしの前に現在の字幕を保存しますか？",
       "message": "すでに字幕が読み込まれています。文字起こしを開始すると、現在の字幕は置き換えられます。どうしますか？",

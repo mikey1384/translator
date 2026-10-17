@@ -73,7 +73,7 @@
     "locked": "Заблокировано",
     "lockedWhileProcessing": "Заблокировано во время обработки",
     "logs": "Открыть логи",
-    "reportIssue": "Сообщить о проблеме или отзыве",
+    "reportIssue": "Сообщить о проблеме или оставить отзыв",
     "reportIssueAria": "Открыть диалог сообщения о проблеме и логов",
     "minimumVersionLabel": "Минимальная поддерживаемая версия",
     "openDownloadPage": "Открыть страницу загрузки",
@@ -256,8 +256,8 @@
     "downloadFinishedWatchLater": "Посмотреть позже",
     "videoSuggestion": {
       "show": "Найти видео с помощью ИИ",
-      "hide": "Скрыть предложения видео",
-      "modelHint": "Текущая модель",
+      "hide": "Скрыть поиск видео с ИИ",
+      "modelHint": "Модель",
       "sourceHint": "Источник поиска",
       "searchDetails": "Детали поиска",
       "introTitle": "Опишите, какое видео вы хотите.",
@@ -268,7 +268,7 @@
       "composerTitle": "Скажите ИИ, что искать",
       "composerHint": "Любой язык",
       "composerMeta": "Нажмите Enter для поиска",
-      "placeholder": "напр. спокойные прогулки по японским улицам ночью",
+      "placeholder": "напр. уличные опросы о регулировании ИИ",
       "thinking": "Думаю…",
       "resultsFor": "Результаты по запросу",
       "downloadThis": "Скачать",
@@ -292,7 +292,7 @@
       "tempFileAvailable": "Временная копия всё ещё доступна",
       "localFileAvailable": "Файл доступен",
       "findVideos": "Найти видео",
-      "resultsEmpty": "Пока нет результатов. Запросите видео, и я поищу.",
+      "resultsEmpty": "Опишите своими словами, что ищете, и я подберу подходящие видео на YouTube.",
       "historyEmpty": "Пока нет загруженных видео.",
       "channelsEmpty": "Пока нет ярлыков каналов. Скачайте рекомендованное видео, чтобы добавить один.",
       "playLocal": "Воспроизвести",
@@ -333,7 +333,7 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "Опишите, что вам нужно, простым английским. Затем выберите результат и скачайте его.",
+      "workflowHint": "Опишите своими словами, что вам нужно. Затем выберите результат и скачайте его.",
       "currentStep": "Текущий шаг",
       "liveActivityTitle": "Ход поиска",
       "liveActivityProgress": "{{cleared}}/4 этапа завершено • {{seconds}}с",
@@ -354,9 +354,9 @@
       "showFollowUps": "Предлагаемые продолжения",
       "hideFollowUps": "Скрыть продолжения",
       "includeDownloadHistoryLabel": "Включить мою историю загрузок",
-      "includeDownloadHistoryHint": "Разрешить ИИ использовать названия недавно загруженных видео как лёгкий контекст для лучших рекомендаций.",
+      "includeDownloadHistoryHint": "Разрешить ИИ использовать названия недавно загруженных видео как лёгкий контекст.",
       "includeWatchedChannelsLabel": "Включить каналы, которые я смотрел",
-      "includeWatchedChannelsHint": "Разрешить ИИ использовать вашу недавнюю историю каналов как лёгкий контекст для лучших рекомендаций.",
+      "includeWatchedChannelsHint": "Разрешить ИИ использовать вашу недавнюю историю каналов как лёгкий контекст.",
       "followUpChooserLabel": "Выберите отправную точку и при желании отредактируйте ее.",
       "starterQuestionWithMemory": "В прошлый раз вы искали {{summary}}. Хотите снова начать с этого?",
       "quickStartUserMessage": "Используй мои последние сохранённые настройки, чтобы найти видео прямо сейчас: {{summary}}",
@@ -375,7 +375,7 @@
         "channelFromHistory": "Видео с каналов вроде {{channel}}"
       },
       "stillRunning": "Все еще выполняется",
-      "liveDetailsToggle": "Детали в реальном времени",
+      "liveDetailsToggle": "Подробности выполнения",
       "moreActions": "Больше действий",
       "recentEvents": "Недавние события",
       "cancelFailed": "Не удалось отменить текущий поиск.",
@@ -526,7 +526,7 @@
     "generate": "Найти яркие моменты",
     "regenerate": "Найти яркие моменты заново",
     "highEffortBadge": "(глубокий)",
-    "placeholder": "Когда сводка ИИ будет готова, она появится здесь.",
+    "placeholder": "Краткое содержание от ИИ появится здесь, когда будет готово.",
     "insufficientCredits": "Не хватает минут, чтобы найти яркие моменты.",
     "error": "Не удалось найти яркие моменты. {{message}}",
     "cancel": "Отменить",
@@ -552,7 +552,7 @@
     "highlightSaved": "Сохранено!",
     "highlightSaveError": "Не удалось сохранить",
     "downloadHighlightFailed": "Не удалось сохранить клип с моментом: {{message}}",
-    "highlightsSelectionFailed": "Не удалось выбрать моменты хайлайтов: {{message}}",
+    "highlightsSelectionFailed": "Не удалось выбрать яркие моменты: {{message}}",
     "saveHighlightDialogTitle": "Сохранить клип с моментом",
     "noSections": "Заметок по разделам пока нет.",
     "sectionHeading": "Раздел {{index}}",
@@ -592,7 +592,7 @@
     "noSummaryWithHighlights": "Яркие моменты есть, а краткого содержания нет. Нажмите «Кратко пересказать», чтобы его получить.",
     "clipCaptionsChanged": "Субтитры изменились после того, как клип был вырезан.",
     "recutClip": "Вырезать заново",
-    "cutCombinedCount": "Склеить {{count}} момента",
+    "cutCombinedCount": "Склеить вместе: {{count}}",
     "cutCombinedCount_one": "Склеить {{count}} момент",
     "cutCombinedCount_few": "Склеить {{count}} момента",
     "cutCombinedCount_many": "Склеить {{count}} моментов",
@@ -977,7 +977,7 @@
       "invalidUrl": "Введите действительный URL",
       "unavailable": "Недоступно",
       "thisSite": "этот сайт",
-      "clearConfirm": "Это выйдет из {{site}} внутри Translator. Продолжить?"
+      "clearConfirm": "Translator выйдет из вашего аккаунта ({{site}}). Продолжить?"
     },
     "agentControl": {
       "title": "Управление агентами",
@@ -1084,8 +1084,8 @@
     "hours": "часы",
     "translationHoursShort": "ч перевода",
     "redirectingToPayment": "Открытие безопасной оплаты…",
-    "transcriptionMinutesShort": "{{minutes}} мин транскрипции",
-    "transcriptionTimeShort": "{{time}} транскрипции",
+    "transcriptionMinutesShort": "{{minutes}} мин расшифровки",
+    "transcriptionTimeShort": "{{time}} расшифровки",
     "pill": {
       "freeBack": "Бесплатные минуты вернутся {{date}}",
       "empty": "Пополнить минуты",
@@ -1137,7 +1137,7 @@
   "cta": {
     "generate": {
       "title": "Получить субтитры из видео",
-      "subtitle": "Транскрибировать/перевести с устройства или по ссылке"
+      "subtitle": "Расшифровать/перевести с устройства или по ссылке"
     },
     "edit": {
       "title": "Редактировать существующие субтитры",
@@ -1270,19 +1270,19 @@
       "stepThree": "Шаг 3",
       "chooseSourceTitle": "Выбрать источник",
       "sourceLoading": "Получение источника",
-      "sourceLoadingDescription": "Загруженный источник подготавливается к транскрибации.",
+      "sourceLoadingDescription": "Загруженный источник готовится к расшифровке.",
       "localSourceReady": "Локальный файл готов",
       "webSourceReady": "Веб-источник готов",
       "sourceReadyDescription": "Выбранный медиафайл готов к следующему шагу.",
       "transcribeTitle": "Обработать видео",
       "processVideoTitle": "Обработать видео",
-      "transcribeDescription": "Превратите исходный медиафайл в редактируемую дорожку субтитров перед переводом или дубляжом.",
+      "transcribeDescription": "Превратите исходный медиафайл в редактируемую дорожку субтитров перед переводом или озвучкой.",
       "translateDubTitle": "Перевод или озвучка",
-      "translateDubDescription": "Транскрипт подключён. Выберите язык вывода, режим перевода или дубляж.",
+      "translateDubDescription": "Расшифровка подключена. Теперь выберите язык вывода, режим перевода или озвучку.",
       "availableOutputs": "Доступные файлы",
-      "availableOutputsDescription": "Загруженные и дублированные медиа будут доступны здесь, пока вы не сохраните версии, которые хотите оставить.",
+      "availableOutputsDescription": "Скачанные и озвученные медиафайлы будут доступны здесь, пока вы не сохраните версии, которые хотите оставить.",
       "saveOutputsTitle": "Сохранить файлы",
-      "saveOutputsDescription": "Сохраните исходные или дублированные медиа, которые хотите оставить, вне рабочего пространства приложения."
+      "saveOutputsDescription": "Сохраните исходные или озвученные медиафайлы, которые хотите оставить, вне рабочего пространства приложения."
     },
     "calculatingCost": "Расчет стоимости…",
     "welcomeCredits": {
@@ -1335,7 +1335,7 @@
     "dubbingInProgress": "Идёт озвучка",
     "dubbingWorking": "Создаём озвучку…",
     "cancelTranslationConfirm": "Отменить перевод? Прогресс будет потерян, и вам нужно будет начать заново.",
-    "cancelSummaryConfirm": "Отменить создание сводки?",
+    "cancelSummaryConfirm": "Отменить создание краткого содержания?",
     "cancelDubbingConfirm": "Отменить озвучку? Прогресс будет потерян, и придётся начать заново.",
     "cancelDownloadConfirm": "Отменить загрузку? Прогресс будет потерян, и вам придется начать заново.",
     "mergeLowDiskSpaceConfirm": "Обнаружено мало места на диске. Для объединения может потребоваться ~{{need}} свободного места, но доступно только ~{{free}}. Продолжить?",
@@ -1586,7 +1586,7 @@
   "messages": {
     "fileSaved": "Файл сохранен:\n{{path}}",
     "videoSaved": "Видео сохранено в:\n{{path}}",
-    "dubbedVideoSaved": "Дубляж видео сохранен по адресу:\n{{path}}"
+    "dubbedVideoSaved": "Озвученное видео сохранено в:\n{{path}}"
   },
   "logs": {
     "title": "Последние логи",

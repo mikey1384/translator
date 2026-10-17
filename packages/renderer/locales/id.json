@@ -28,7 +28,7 @@
       "insufficientDiskSpace": "Ruang disk tidak cukup untuk menyelesaikan penggabungan. Harap kosongkan ruang dan coba lagi.",
       "noSourceVideo": "Tidak ada video sumber",
       "noSubtitlesLoaded": "Tidak ada subtitle yang dimuat",
-      "failedToLoadSRT": "Gagal memuat berkas SRT",
+      "failedToLoadSRT": "Gagal memuat file SRT",
       "sourceVideoUnavailable": "Video asli telah dihapus atau tidak dapat diakses lagi. Buka lagi lalu coba lagi.",
       "unknown": "Terjadi kesalahan. Silakan coba lagi."
     },
@@ -37,7 +37,7 @@
     "generate": "Hasilkan",
     "download": "Unduh",
     "upload": "Unggah",
-    "file": "Berkas",
+    "file": "File",
     "url": "URL",
     "search": "Cari",
     "find": "Temukan",
@@ -55,7 +55,7 @@
     "installUpdate": "Mulai ulang untuk memperbarui",
     "confirmInstallUpdate": "Instal pembaruan dan mulai ulang?",
     "downloadUpdate": "Klik untuk mengunduh pembaruan",
-    "dismissError": "Tutup error",
+    "dismissError": "Tutup pesan kesalahan",
     "closeAlert": "Tutup peringatan",
     "closeBanner": "Tutup banner",
     "closeOrCancelProcess": "Tutup atau batalkan proses",
@@ -130,7 +130,7 @@
     "noSourceVideo": "Tidak ada video sumber",
     "sourceVideoUnavailable": "Video asli telah dihapus atau sudah tidak dapat diakses. Buka lagi dan coba lagi.",
     "noSubtitlesLoaded": "Tidak ada subtitle yang dimuat",
-    "failedToLoadSRT": "Gagal memuat berkas SRT",
+    "failedToLoadSRT": "Gagal memuat file SRT",
     "cancelTranslationFailed": "Gagal membatalkan terjemahan: {{message}}",
     "cancelDubbingFailed": "Gagal membatalkan sulih suara: {{message}}",
     "cancelSummaryFailed": "Gagal membatalkan pembuatan ringkasan: {{message}}",
@@ -237,13 +237,13 @@
     "selectVideoFile": "Pilih file video",
     "selectVideoAudioFile": "Pilih file video atau audio",
     "saveOriginalVideo": "Simpan video asli",
-    "localFileDescription": "Unggah berkas video atau audio dari komputer Anda",
+    "localFileDescription": "Unggah file video atau audio dari komputer Anda",
     "selectLocalFile": "Unggah dari komputer",
     "downloadFromUrl": "Unduh dari web",
     "recentMedia": "File terbaru",
-    "webDescription": "Tempel tautan video YouTube, TikTok, Instagram, atau URL berkas video langsung dari halaman web",
+    "webDescription": "Tempel tautan video YouTube, TikTok, Instagram, atau URL file video langsung dari halaman web",
     "chooseFile": "Pilih file",
-    "fileSelected": "Berkas dipilih",
+    "fileSelected": "File dipilih",
     "transcribeOnly": "Transkripsikan audio",
     "srtLoaded": "Transkripsi selesai",
     "srtFileLoaded": "SRT dimuat",
@@ -256,8 +256,8 @@
     "downloadFinishedWatchLater": "Tonton nanti",
     "videoSuggestion": {
       "show": "Cari video dengan AI",
-      "hide": "Sembunyikan saran video",
-      "modelHint": "Model saat ini",
+      "hide": "Sembunyikan pencarian video AI",
+      "modelHint": "Model",
       "sourceHint": "Sumber pencarian",
       "searchDetails": "Detail pencarian",
       "introTitle": "Jelaskan jenis video yang Anda inginkan.",
@@ -268,7 +268,7 @@
       "composerTitle": "Beri tahu AI apa yang harus dicari",
       "composerHint": "Bahasa apa pun",
       "composerMeta": "Tekan Enter untuk mencari",
-      "placeholder": "mis. jalan-jalan malam yang tenang di Jepang",
+      "placeholder": "mis. wawancara jalanan soal kebijakan AI",
       "thinking": "Memproses…",
       "resultsFor": "Hasil untuk",
       "downloadThis": "Unduh ini",
@@ -292,7 +292,7 @@
       "tempFileAvailable": "Salinan sementara masih tersedia",
       "localFileAvailable": "File tersedia",
       "findVideos": "Cari video",
-      "resultsEmpty": "Belum ada hasil. Minta video dan saya akan mencari.",
+      "resultsEmpty": "Mulai dengan permintaan sederhana, dan saya akan mencari video yang cocok di YouTube.",
       "historyEmpty": "Belum ada video yang diunduh.",
       "channelsEmpty": "Belum ada pintasan channel. Unduh video rekomendasi untuk menambahkan satu.",
       "playLocal": "Putar",
@@ -333,7 +333,7 @@
         "bilibili": "Bilibili",
         "dailymotion": "Dailymotion"
       },
-      "workflowHint": "Jelaskan yang Anda inginkan dengan bahasa Inggris sederhana, lalu pilih hasil dan unduh.",
+      "workflowHint": "Jelaskan yang Anda inginkan dengan kata-kata sederhana, lalu pilih hasil dan unduh.",
       "currentStep": "Langkah saat ini",
       "liveActivityTitle": "Progres pencarian",
       "liveActivityProgress": "{{cleared}}/4 tahap selesai • {{seconds}}d",
@@ -354,9 +354,9 @@
       "showFollowUps": "Saran lanjutan",
       "hideFollowUps": "Sembunyikan saran lanjutan",
       "includeDownloadHistoryLabel": "Sertakan riwayat unduhan saya",
-      "includeDownloadHistoryHint": "Biarkan AI menggunakan judul video yang baru Anda unduh sebagai konteks ringan untuk saran yang lebih baik.",
+      "includeDownloadHistoryHint": "Biarkan AI menggunakan judul video yang baru Anda unduh sebagai konteks ringan.",
       "includeWatchedChannelsLabel": "Sertakan channel yang saya tonton",
-      "includeWatchedChannelsHint": "Biarkan AI menggunakan riwayat channel terbaru Anda sebagai konteks ringan untuk saran yang lebih baik.",
+      "includeWatchedChannelsHint": "Biarkan AI menggunakan riwayat channel terbaru Anda sebagai konteks ringan.",
       "followUpChooserLabel": "Pilih titik awal, lalu edit jika mau.",
       "starterQuestionWithMemory": "Terakhir kali Anda mencari {{summary}}. Mau saya mulai dari sana lagi?",
       "quickStartUserMessage": "Gunakan preferensi terakhir yang saya simpan untuk mencari video sekarang: {{summary}}",
@@ -375,7 +375,7 @@
         "channelFromHistory": "Video dari channel seperti {{channel}}"
       },
       "stillRunning": "Masih berjalan",
-      "liveDetailsToggle": "Detail langsung",
+      "liveDetailsToggle": "Detail progres",
       "moreActions": "Tindakan lainnya",
       "recentEvents": "Peristiwa terkini",
       "cancelFailed": "Gagal membatalkan pencarian saat ini.",
@@ -385,21 +385,21 @@
       "countryLabel": "Negara tujuan",
       "countryPlaceholder": "mis. AS, Jepang, Spanyol, Brasil",
       "countryScope": "Negara tujuan: {{country}}",
-      "countryDefaultEnglish": "Negara target: default ke bahasa Inggris",
+      "countryDefaultEnglish": "Negara tujuan: bawaan bahasa Inggris",
       "emptyCopy": "Sebutkan topik, audiens, atau suasana. Tambahkan negara atau rentang waktu hanya jika perlu.",
       "emptyEyebrow": "Penelusuran dengan bantuan asisten",
       "emptyTitle": "Jelaskan video yang ingin Anda cari sebagai sumber",
-      "languageHint": "Bahasa output",
+      "languageHint": "Bahasa hasil",
       "noMoreResults": "Tidak ada hasil berbeda lagi. Coba ubah negara atau rentang waktu.",
       "aiVideoRecommendation": "Rekomendasi video dari AI",
-      "optionalDiscovery": "Opsi penelusuran",
+      "optionalDiscovery": "Penelusuran opsional",
       "recencyAny": "Kapan saja (termasuk video lama)",
       "recencyDay": "24 jam terakhir",
       "recencyHint": "Gunakan ini jika Anda ingin video yang lebih baru mendapat peringkat lebih tinggi.",
       "recencyLabel": "Rentang waktu",
       "recencyMonth": "30 hari terakhir",
       "recencyWeek": "7 hari terakhir",
-      "recencyYear": "Tahun lalu",
+      "recencyYear": "12 bulan terakhir",
       "removeChannelItem": "Hapus channel",
       "removeHistoryItem": "Hapus",
       "resultsReadyCount": "{{count}} siap",
@@ -438,7 +438,7 @@
     "downloadAndTranscribe": "Unduh & transkripsikan",
     "autoRunLabel": "Setelah unduh, jalankan hingga",
     "autoRunStopDownload": "Unduh",
-    "autoRunStopTranscribe": "+ Subtitel",
+    "autoRunStopTranscribe": "+ Subtitle",
     "autoRunStopTranslate": "+ Terjemahkan",
     "autoRunStepDownload": "Unduh",
     "autoRunStepTranscribe": "Transkripsikan",
@@ -637,18 +637,18 @@
       "videoNeeded": "Pasang video sumber untuk pratinjau dan gabung",
       "readyTitle": "Editor subtitle siap",
       "emptyTitle": "Muat subtitle untuk mulai mengedit",
-      "readyCopy": "Sesuaikan timing, jeda baris, dan terjemahan di sini sebelum menyimpan SRT atau membakar subtitle ke media sumber.",
+      "readyCopy": "Sesuaikan waktu, jeda baris, dan terjemahan di sini sebelum menyimpan SRT atau menggabungkan subtitle ke media sumber.",
       "emptyCopy": "Buka SRT yang ada untuk langsung mengedit. Transkrip yang dibuat dari alur utama juga akan muncul di sini saat siap.",
       "rowsLoaded": "{{count}} baris dimuat",
       "loadAnotherSrt": "Muat SRT lain",
-      "mountVideoTitle": "Pasang video sumber untuk pratinjau dan ekspor burn-in",
+      "mountVideoTitle": "Pasang video sumber untuk pratinjau dan ekspor video bersubtitle",
       "mountVideoCopy": "Anda tetap bisa mengedit tanpa video, tetapi pratinjau, pindah posisi, dan gabung bekerja paling baik setelah media sumber dipasang.",
-      "listCopy": "Edit teks sumber, terjemahan, timing, dan aksi per baris langsung di tempat.",
+      "listCopy": "Edit teks sumber, terjemahan, waktu, dan aksi per baris langsung di tempat.",
       "originalLabel": "Asli",
       "translationLabel": "Terjemahan",
-      "mergeNeedsVideoCopy": "Pasang video sumber sebelum memulai ekspor burn-in.",
-      "automaticCaptionsCopy": "Unduhan video diblokir (HTTP 403). Ini adalah teks otomatis YouTube, bukan transkripsi baru. Anda bisa mengedit, menerjemahkan, dan mengekspor SRT sekarang. Pasang media untuk pratinjau atau burn-in subtitle.",
-      "automaticCaptionsCopyWithMedia": "Unduhan video dari URL diblokir (HTTP 403). Ini adalah teks otomatis YouTube, bukan transkripsi baru. Media yang terpasang tersedia untuk pratinjau dan burn-in.",
+      "mergeNeedsVideoCopy": "Pasang video sumber sebelum mengekspor video bersubtitle.",
+      "automaticCaptionsCopy": "Unduhan video diblokir (HTTP 403). Ini adalah teks otomatis YouTube, bukan transkripsi baru. Anda bisa mengedit, menerjemahkan, dan mengekspor SRT sekarang. Pasang media untuk pratinjau atau untuk menggabungkan subtitle ke video.",
+      "automaticCaptionsCopyWithMedia": "Unduhan video dari URL diblokir (HTTP 403). Ini adalah teks otomatis YouTube, bukan transkripsi baru. Media yang terpasang tersedia untuk pratinjau dan penggabungan subtitle ke video.",
       "automaticCaptionsPill": "Teks otomatis YouTube",
       "automaticCaptionsTitle": "Teks otomatis YouTube",
       "highlightEditingLocked": "Pembuatan sorotan sedang berjalan, pengeditan dikunci"
@@ -680,7 +680,7 @@
     "header": {
       "save": "Simpan subtitle",
       "saveAs": "Simpan subtitle sebagai…",
-      "saveTooltip": "Simpan perubahan ke berkas asli",
+      "saveTooltip": "Simpan perubahan ke file asli",
       "saveAsTooltip": "Gunakan “Simpan subtitle sebagai…” dulu agar bisa menyimpan langsung"
     },
     "mergeControls": {
@@ -705,7 +705,7 @@
     "privacy": {
       "title": "Privasi",
       "label": "Analitik opsional",
-      "description": "Bagikan penggunaan, kategori kesalahan, dan nilai pembelian dengan Google Analytics. Tanpa video, subtitel, atau jalur berkas.",
+      "description": "Bagikan penggunaan, kategori kesalahan, dan nilai pembelian dengan Google Analytics. Tanpa video, subtitle, atau jalur file.",
       "retention": "Nonaktif secara bawaan. Laporan yang belum dikirim kedaluwarsa setelah 3 hari; menonaktifkan fitur akan menghapusnya. Pembayaran tetap berjalan.",
       "on": "Aktif. Pilihan tersimpan.",
       "off": "Nonaktif. Pilihan tersimpan.",
@@ -738,12 +738,12 @@
       "title": "Performa & kualitas",
       "qualityTranslation": {
         "label": "Terjemahan berkualitas",
-        "modelOn": "Draf Claude Haiku 5.5 + ulasan Claude Opus 5.5",
-        "modelOnAnthropic": "Draf Claude Haiku 5.5 + ulasan Claude Opus 5.5",
+        "modelOn": "Draf Claude Haiku 5.5 + peninjauan Claude Opus 5.5",
+        "modelOnAnthropic": "Draf Claude Haiku 5.5 + peninjauan Claude Opus 5.5",
         "modelOff": "Hanya draf Claude Haiku 5.5",
-        "reviewProvider": "Penyedia review",
-        "openAiHighEnd": "Review premium dari OpenAI",
-        "anthropicHighEnd": "Review premium dari Anthropic"
+        "reviewProvider": "Penyedia peninjauan",
+        "openAiHighEnd": "Peninjauan premium dari OpenAI",
+        "anthropicHighEnd": "Peninjauan premium dari Anthropic"
       },
       "qualitySummary": {
         "label": "Ringkasan berkualitas",
@@ -826,7 +826,7 @@
       "option2Title": "Opsi 2: Anthropic + ElevenLabs",
       "economicsTitle": "Mengapa ini sepadan",
       "economicsBody": "Menit Stage5 adalah pilihan termudah: tidak perlu mengatur apa pun. Dengan kunci sendiri, Anda membayar penyedia AI secara langsung, biasanya sekitar 30–50% lebih hemat, tergantung paketnya.",
-      "encryptionUnavailable": "Penyimpanan aman tidak tersedia di sistem ini. API key tidak dapat disimpan.",
+      "encryptionUnavailable": "Penyimpanan aman tidak tersedia di sistem ini. Kunci API tidak dapat disimpan.",
       "checkoutOpen": "Checkout terbuka di browser…",
       "checkoutOpenHint": "Selesaikan pembayaran di browser Anda. Penggunaan kunci sendiri akan terbuka otomatis setelah pembayaran berhasil.",
       "entitlementsLoadFailed": "Status buka kunci Anda tidak bisa diperiksa. Periksa koneksi Anda, lalu coba lagi.",
@@ -866,7 +866,7 @@
       "dubbingRequiresElevenLabs": "Sulih suara hanya menggunakan ElevenLabs. Tambahkan kunci API ElevenLabs untuk sulih suara dengan kunci Anda sendiri. Tanpa kunci itu, sulih suara memakai menit Stage5 Anda, yang tidak dipakai selama kunci Anda sendiri aktif.",
       "runtimeFallback": "Cadangan runtime dalam mode kunci API",
       "videoSuggestionLegacyFollowDraft": "Pengaturan Anda sebelumnya tetap dipakai: ini mengikuti model terjemahan draf Anda sampai Anda memilih model di sini.",
-      "videoSuggestionLegacyFollowReview": "Pengaturan Anda sebelumnya tetap dipakai: ini mengikuti model terjemahan tinjauan Anda sampai Anda memilih model di sini."
+      "videoSuggestionLegacyFollowReview": "Pengaturan Anda sebelumnya tetap dipakai: ini mengikuti model peninjauan terjemahan Anda sampai Anda memilih model di sini."
     },
     "apiKeyGuide": {
       "title": "Cara mendapatkan kunci API",
@@ -909,7 +909,7 @@
         "step3": "Klik ikon profil Anda dan pilih",
         "step4": "Tambahkan metode pembayaran di pengaturan Subscription (diperlukan untuk penggunaan API di luar tier gratis)",
         "step5": "Salin kunci API Anda dan tempel di Stage5",
-        "note": "Tips: ElevenLabs memiliki tier gratis dengan penggunaan terbatas. Untuk lebih, upgrade ke paket berbayar di pengaturan akun Anda.",
+        "note": "Tips: ElevenLabs memiliki tier gratis dengan penggunaan terbatas. Untuk pemakaian lebih banyak, tingkatkan ke paket berbayar di pengaturan akun Anda.",
         "audioDescription": "ElevenLabs menangani semua transkripsi (Scribe) dan sulih suara. Tanpa kunci ElevenLabs Anda sendiri, keduanya memakai menit Stage5 Anda, yang tidak dipakai selama kunci Anda sendiri aktif."
       }
     },
@@ -939,10 +939,10 @@
       "elevenlabsHintWithBalance": "Kualitas terbaik · Saldo Anda: {{time}} sulih suara"
     },
     "apiKey": {
-      "saved": "API key disimpan.",
-      "cleared": "API key dihapus.",
-      "invalid": "Validasi API key gagal.",
-      "howToGet": "Cara mendapatkan key ini",
+      "saved": "Kunci API disimpan.",
+      "cleared": "Kunci API dihapus.",
+      "invalid": "Validasi kunci API gagal.",
+      "howToGet": "Cara mendapatkan kunci ini",
       "missing": "Tempel kunci API terlebih dahulu.",
       "savedEnding": "Kunci tersimpan berakhiran {{last4}}",
       "savedHidden": "Kunci tersimpan (disembunyikan)",
@@ -1000,7 +1000,7 @@
       "permissions": "Yang dapat dilakukan agen:",
       "permission": {
         "download": "Mengunduh dan mengelola video",
-        "subtitles": "Membuat, mengedit, dan menerjemahkan subtitel",
+        "subtitles": "Membuat, mengedit, dan menerjemahkan subtitle",
         "export": "Mengekspor file ke folder yang diizinkan",
         "settings": "Membaca dan mengubah pengaturan aplikasi"
       },
@@ -1118,7 +1118,7 @@
   "cta": {
     "generate": {
       "title": "Dapatkan subtitle dari video",
-      "subtitle": "Transkripsi/terjemahkan dari perangkat atau tautan"
+      "subtitle": "Transkripsikan/terjemahkan dari perangkat atau tautan"
     },
     "edit": {
       "title": "Edit subtitle yang ada",
@@ -1233,8 +1233,8 @@
     "validation": {
       "pleaseSelectVideo": "Silakan pilih video",
       "processingDuration": "Durasi video sedang diproses. Silakan coba lagi sebentar.",
-      "icloudPlaceholder": "Berkas ini disimpan di iCloud. Di Finder, klik 'Unduh' dan tunggu hingga ikon cloud selesai, lalu coba lagi.",
-      "fileTooLargeForVoiceCloning": "Berkas video terlalu besar untuk kloning suara ({{size}}MB). Maksimum yang diizinkan adalah {{max}}MB. Silakan gunakan video yang lebih pendek atau nonaktifkan kloning suara."
+      "icloudPlaceholder": "File ini disimpan di iCloud. Di Finder, klik 'Unduh' dan tunggu hingga ikon awan selesai, lalu coba lagi.",
+      "fileTooLargeForVoiceCloning": "File video terlalu besar untuk kloning suara ({{size}}MB). Maksimum yang diizinkan adalah {{max}}MB. Silakan gunakan video yang lebih pendek atau nonaktifkan kloning suara."
     },
     "status": {
       "starting": "Memulai…",
@@ -1260,9 +1260,9 @@
       "transcribeDescription": "Ubah media sumber menjadi subtitle yang bisa diedit sebelum lanjut ke terjemahan atau sulih suara.",
       "translateDubTitle": "Terjemahkan atau sulih suara",
       "translateDubDescription": "Transkripsi Anda sudah dimuat. Selanjutnya, pilih bahasa, mode terjemahan, atau sulih suara.",
-      "availableOutputs": "Output tersedia",
+      "availableOutputs": "File tersedia",
       "availableOutputsDescription": "Media yang diunduh dan hasil sulih suara tetap tersedia di sini sampai Anda menyimpan versi yang ingin dipertahankan.",
-      "saveOutputsTitle": "Simpan Output",
+      "saveOutputsTitle": "Simpan file",
       "saveOutputsDescription": "Simpan media sumber atau hasil sulih suara yang ingin Anda pertahankan di luar ruang kerja aplikasi."
     },
     "calculatingCost": "Menghitung biaya…",
@@ -1310,7 +1310,7 @@
       "cancel": "Batal"
     },
     "downloadInProgress": "Unduhan sedang berlangsung",
-    "saveDownloadedFile": "Simpan berkas yang diunduh: {{path}}",
+    "saveDownloadedFile": "Simpan file yang diunduh: {{path}}",
     "transcriptionInProgress": "Transkripsi sedang berjalan",
     "translationInProgress": "Terjemahan sedang berjalan",
     "dubbingInProgress": "Sulih suara sedang berjalan",
@@ -1559,7 +1559,7 @@
     "hqModeEstimate": "(kualitas tinggi: ~{{time}})"
   },
   "messages": {
-    "fileSaved": "Berkas disimpan:\n{{path}}",
+    "fileSaved": "File disimpan:\n{{path}}",
     "videoSaved": "Video disimpan ke:\n{{path}}",
     "dubbedVideoSaved": "Video sulih suara disimpan ke:\n{{path}}"
   },

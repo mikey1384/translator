@@ -154,7 +154,8 @@
     "transcription": {
       "providerUnavailable": "Pansamantalang hindi available ang transcription (ElevenLabs Scribe) o hindi ito ma-reach pagkatapos ng ilang pagsubok. Pakisubukang muli pagkalipas ng ilang minuto.",
       "fileTooLarge": "Masyadong mahaba ang audio na ito para ma-transcribe sa iisang job (higit sa mga {{hours}} oras). Hatiin ang video sa mas maiikling bahagi at i-transcribe ang bawat bahagi.",
-      "elevenLabsKeyRequired": "Gumagamit ang transcription ng ElevenLabs Scribe at kailangan nito ng ElevenLabs API key. Magdagdag ng isa sa Mga Setting, o i-off ang “Gamitin ang aking mga API key” para mag-transcribe gamit ang minuto mo sa Stage5. Ginagamit pa rin ang iyong OpenAI o Anthropic key para sa pagsasalin."
+      "elevenLabsKeyRequired": "Gumagamit ang transcription ng ElevenLabs Scribe at kailangan nito ng ElevenLabs API key. Magdagdag ng isa sa Mga Setting, o i-off ang “Gamitin ang aking mga API key” para mag-transcribe gamit ang minuto mo sa Stage5. Ginagamit pa rin ang iyong OpenAI o Anthropic key para sa pagsasalin.",
+      "fileTooLarge_one": "Masyadong mahaba ang audio na ito para ma-transcribe sa iisang job (higit sa mga {{hours}} oras). Hatiin ang video sa mas maiikling bahagi at i-transcribe ang bawat bahagi."
     },
     "credits": {
       "transcription": "Kulang ang minuto para i-transcribe ito.",
@@ -256,8 +257,8 @@
     "downloadFinishedWatchLater": "Panoorin mamaya",
     "videoSuggestion": {
       "show": "Maghanap ng video gamit ang AI",
-      "hide": "Itago ang mga mungkahi ng video",
-      "modelHint": "Kasalukuyang model",
+      "hide": "Itago ang paghahanap ng video gamit ang AI",
+      "modelHint": "Model",
       "sourceHint": "Pinagmulan ng paghahanap",
       "searchDetails": "Mga detalye ng paghahanap",
       "introTitle": "Ilarawan ang uri ng video na gusto mo.",
@@ -268,7 +269,7 @@
       "composerTitle": "Sabihin sa AI kung ano ang hahanapin",
       "composerHint": "Anumang wika",
       "composerMeta": "Pindutin ang Enter para maghanap",
-      "placeholder": "hal. mahinahong paglalakad sa mga kalye ng Japan sa gabi",
+      "placeholder": "hal. mga street interview tungkol sa patakaran sa AI",
       "thinking": "Nag-iisip…",
       "resultsFor": "Mga resulta para sa",
       "downloadThis": "I-download ito",
@@ -292,7 +293,7 @@
       "tempFileAvailable": "Available pa rin ang temp copy",
       "localFileAvailable": "Available ang file",
       "findVideos": "Maghanap ng mga video",
-      "resultsEmpty": "Wala pang resulta. Humingi ng video at maghahanap ako.",
+      "resultsEmpty": "Magsimula sa simpleng hiling at hahanapin ko sa YouTube ang mga swak na video.",
       "historyEmpty": "Wala pang na-download na video.",
       "channelsEmpty": "Wala pang shortcut ng channel. Mag-download ng inirekomendang video para makadagdag ng isa.",
       "playLocal": "I-play",
@@ -354,9 +355,9 @@
       "showFollowUps": "Mga mungkahing kasunod",
       "hideFollowUps": "Itago ang mga mungkahing kasunod",
       "includeDownloadHistoryLabel": "Isama ang history ng mga download ko",
-      "includeDownloadHistoryHint": "Payagan ang AI na gamitin ang mga pamagat ng mga video na na-download mo kamakailan bilang magaan na konteksto para sa mas magandang mungkahi.",
+      "includeDownloadHistoryHint": "Payagan ang AI na gamitin ang mga pamagat ng mga video na na-download mo kamakailan bilang magaan na konteksto.",
       "includeWatchedChannelsLabel": "Isama ang mga channel na pinanood ko",
-      "includeWatchedChannelsHint": "Payagan ang AI na gamitin ang kamakailan mong history ng mga channel bilang magaan na konteksto para sa mas magandang mungkahi.",
+      "includeWatchedChannelsHint": "Payagan ang AI na gamitin ang kamakailan mong history ng mga channel bilang magaan na konteksto.",
       "followUpChooserLabel": "Pumili ng panimulang punto, tapos i-edit mo kung gusto mo.",
       "starterQuestionWithMemory": "Noong huli, naghanap ka ng {{summary}}. Gusto mo bang doon ulit ako magsimula?",
       "quickStartUserMessage": "Gamitin ang huli kong naka-save na setting para maghanap ng video ngayon: {{summary}}",
@@ -375,7 +376,7 @@
         "channelFromHistory": "Mga video mula sa mga channel na tulad ng {{channel}}"
       },
       "stillRunning": "Tumatakbo pa",
-      "liveDetailsToggle": "Live na detalye",
+      "liveDetailsToggle": "Detalye ng progreso",
       "moreActions": "Higit pang aksyon",
       "recentEvents": "Mga kamakailang pangyayari",
       "cancelFailed": "Nabigong kanselahin ang kasalukuyang paghahanap.",
@@ -390,7 +391,7 @@
       "emptyEyebrow": "Pagtuklas na may gabay ng assistant",
       "emptyTitle": "Ilarawan ang video na gusto mong hanapin",
       "languageHint": "Wika ng output",
-      "noMoreResults": "Wala nang ibang natatanging resulta. Subukang baguhin ang bansa o recency.",
+      "noMoreResults": "Wala nang ibang natatanging resulta. Subukang baguhin ang bansa o ang pagkakabago.",
       "aiVideoRecommendation": "Mungkahi ng video gamit ang AI",
       "optionalDiscovery": "Opsyonal na paghahanap",
       "recencyAny": "Anumang oras (kasama ang mas lumang mga video)",
@@ -432,7 +433,8 @@
       "freeSearchResults": "Narito ang mga resulta sa YouTube para sa “{{query}}”. Libre ang paghahanap na ito. Sabihin mo pa kung ano ang gusto mo at pipinuhin ko ito gamit ang AI.",
       "freeSearchEmpty": "Walang nakita ang YouTube para sa “{{query}}”. Ilarawan kung ano ang gusto mo at maghahanap ako gamit ang AI.",
       "openOriginalPage": "Buksan ang orihinal na page",
-      "modelPill": "AI sa paghahanap: {{model}}"
+      "modelPill": "AI sa paghahanap: {{model}}",
+      "savedPreferencesCount_one": "{{count}} naka-save na preference"
     },
     "downloadAndTranslate": "I-download at isalin",
     "downloadAndTranscribe": "I-download at i-transcribe",
@@ -522,7 +524,7 @@
     "generate": "Gumawa ng mga highlight",
     "regenerate": "Gawin ulit ang mga highlight",
     "highEffortBadge": "(malalim)",
-    "placeholder": "Lalabas dito ang iyong AI summary kapag nabuo na.",
+    "placeholder": "Lalabas dito ang buod mula sa AI kapag nabuo na.",
     "insufficientCredits": "Kulang ang minuto para maghanap ng mga highlight.",
     "error": "Hindi namin magawa ang mga highlight. {{message}}",
     "cancel": "Kanselahin",
@@ -625,7 +627,8 @@
     "confidence": {
       "title": "Hindi sigurado",
       "none": "Walang nakitang linya na may mababang confidence",
-      "count": "{{count}} linya"
+      "count": "{{count}} linya",
+      "count_one": "{{count}} linya"
     }
   },
   "editSubtitles": {
@@ -653,7 +656,8 @@
       "automaticCaptionsCopyWithMedia": "Na-block ang pag-download ng video mula sa URL (HTTP 403). Ito ay automatic captions ng YouTube—hindi bagong transcription. Magagamit ang naka-mount na media para sa preview at burn-in.",
       "automaticCaptionsPill": "Automatic captions ng YouTube",
       "automaticCaptionsTitle": "Automatic captions ng YouTube",
-      "highlightEditingLocked": "Gumagawa ng highlights, naka-lock ang pag-edit"
+      "highlightEditingLocked": "Gumagawa ng highlights, naka-lock ang pag-edit",
+      "rowsLoaded_one": "{{count}} row ang na-load"
     },
     "item": {
       "seek": "Pumunta",
@@ -734,7 +738,8 @@
       "toggleOff": "Ginagamit na ngayon ang minuto mo sa Stage5.",
       "toggleError": "Hindi ma-update ang preference.",
       "toggleAria": "Gamitin ang aking mga API key",
-      "requirementTranslation": "Nangangailangan ng OpenAI o Anthropic key para sa pagsasalin"
+      "requirementTranslation": "Nangangailangan ng OpenAI o Anthropic key para sa pagsasalin",
+      "activeKeys_one": "Handang key: {{count}}"
     },
     "performanceQuality": {
       "title": "Performance at kalidad",
@@ -841,7 +846,7 @@
       "pricingHintHeuristic": "Tinatayang gastos gamit ang kasalukuyang pagtatantiya ng app",
       "transcription": "Transcription",
       "elevenLabsScribe": "ElevenLabs Scribe",
-      "translationDraft": "Translation (Draft)",
+      "translationDraft": "Pagsasalin (Draft)",
       "gptHigh": "GPT-5.5",
       "openAiHighEnd": "Premium model ng OpenAI",
       "gpt": "GPT-6.1 Sol",
@@ -863,7 +868,7 @@
       "videoSuggestionModelRequiresAnthropic": "Kailangan ang API-key unlock, ang iyong Anthropic key, at naka-on ang Anthropic switch.",
       "summaryRequiresOpenAi": "Kailangan ang API-key unlock at ang iyong OpenAI key.",
       "summaryRequiresAnthropic": "Kailangan ang API-key unlock at ang iyong Anthropic key.",
-      "translationReview": "Translation (Review)",
+      "translationReview": "Pagsasalin (Review)",
       "transcriptionRequiresElevenLabs": "ElevenLabs Scribe lang ang ginagamit sa transcription. Magdagdag ng ElevenLabs API key para mag-transcribe gamit ang sarili mong mga key. Kung wala nito, gagamitin ng transcription ang minuto mo sa Stage5, na hindi ginagamit habang naka-on ang sarili mong mga key. Ginagamit pa rin ang iyong OpenAI key para sa pagsasalin.",
       "dubbingRequiresElevenLabs": "ElevenLabs lang ang ginagamit sa dubbing. Magdagdag ng ElevenLabs API key para mag-dub gamit ang sarili mong mga key. Kung wala nito, gagamitin ng dubbing ang minuto mo sa Stage5, na hindi ginagamit habang naka-on ang sarili mong mga key.",
       "runtimeFallback": "Runtime fallback sa API key mode",
@@ -883,7 +888,7 @@
         "apiKeys": "Mga API key",
         "createNewSecretKey": "Gumawa ng bagong secret key",
         "createKey": "Gumawa ng key",
-        "profileApiKey": "Profile + susi ng API"
+        "profileApiKey": "Profile + API key"
       },
       "openai": {
         "step1": "Pumunta sa",
@@ -1055,7 +1060,8 @@
       "receiveButtonMinutes": "Tumanggap ng minuto",
       "summaryMinutes": "Ililipat ang {{time}} ng video.",
       "stepsMinutes": "Sa bagong computer: i-install ang Translator, buksan ang Mga Setting, piliin ang “Tumanggap ng minuto”, at ilagay ang code na ito.",
-      "receivedMinutes": "Natanggap ang {{time}} ng video."
+      "receivedMinutes": "Natanggap ang {{time}} ng video.",
+      "expires_one": "Isang beses lang gagana ang code na ito at mag-e-expire ito sa loob ng {{minutes}} minuto."
     }
   },
   "credits": {
@@ -1075,7 +1081,7 @@
       "empty": "Mag-load ng minuto",
       "freeThisMonth": "{{count}} libreng min ngayong buwan",
       "freeWelcome": "{{count}} libreng min",
-      "minutes": "{{count}} min na natitira",
+      "minutes": "{{count}} min ng transcription",
       "title": "Ang minuto at mga pack mo",
       "neutral": "Minuto",
       "welcomePending": "Paparating na ang libreng minuto",
@@ -1116,7 +1122,8 @@
     "microPackLabel": "Bumili ng minuto — {{price}} · ≈ {{time}} ng video",
     "checkingPayment": "Tinitingnan ang bayad mo…",
     "checkoutUnresolved": "Kung nakapagbayad ka na, lalabas dito ang minuto mo maya-maya. Nagbabayad ka pa? Tapusin ito sa browser mo.",
-    "checkPaymentNow": "Tingnan ngayon"
+    "checkPaymentNow": "Tingnan ngayon",
+    "monthlyFreeNote_one": "{{minutes}} libreng minuto bawat buwan · susunod sa {{date}}"
   },
   "cta": {
     "generate": {
@@ -1263,9 +1270,9 @@
       "transcribeDescription": "Gawing nae-edit na subtitle track ang source media bago magpatuloy sa translation o dubbing.",
       "translateDubTitle": "Isalin o i-dub",
       "translateDubDescription": "Handa na ang transcription mo. Susunod, piliin ang output language, translation mode, o dubbing.",
-      "availableOutputs": "Mga available na output",
+      "availableOutputs": "Mga available na file",
       "availableOutputsDescription": "Mananatiling available dito ang na-download at na-dub na media hanggang mai-save mo ang mga bersyong gusto mong itago.",
-      "saveOutputsTitle": "I-save ang Mga Output",
+      "saveOutputsTitle": "I-save ang mga file",
       "saveOutputsDescription": "I-save sa labas ng app workspace ang anumang source o dubbed media na gusto mong itago."
     },
     "calculatingCost": "Kinakalkula ang gastos…",
@@ -1550,7 +1557,9 @@
       "startingExport": "Sinisimulan ang video…",
       "captionsAvailable": "Hindi ma-download ang video, pero may YouTube captions",
       "captionsNotOpened": "Handa na ang YouTube captions pero hindi binuksan",
-      "insufficientCredits": "Kulang ang minuto"
+      "insufficientCredits": "Kulang ang minuto",
+      "preparingDubLines_one": "Inihahanda ang {{count}} linya para sa dubbing…",
+      "preparingVoiceClips_one": "Inihahanda ang {{count}} voice clip…"
     },
     "listening": "Pinakikinggan ang video…",
     "mergeFinishSaveBeforeReload": "Tapusin muna ang pag-save ng pinagsamang video bago mag-reload.",
@@ -1702,7 +1711,9 @@
     "checkingFile": "Binabasa ang file…",
     "statusLoaded": "{{count}} linya ang na-load",
     "statusLoaded_one": "{{count}} linya ang na-load",
-    "interruptedTranslateSubtitles": "Naputol ang pagsasalin ng mga subtitle na ito sa {{language}} nang isara ang Translator."
+    "interruptedTranslateSubtitles": "Naputol ang pagsasalin ng mga subtitle na ito sa {{language}} nang isara ang Translator.",
+    "statusTranscribed_one": "Naisulat na ang {{count}} linya",
+    "statusTranslated_one": "{{count}} linya sa {{language}} · sabay sa video"
   },
   "subtitleStyles": {
     "Cinema": "Dilaw na pang-sine",
@@ -1740,7 +1751,11 @@
     "failedNeedMinutes": "Naka-save ang lahat ng natapos na. Kailangan mo ng dagdag na minuto para matapos ang natitirang {{remaining}} minuto.",
     "failedNeedMinutes_one": "Naka-save ang lahat ng natapos na. Kailangan mo ng dagdag na minuto para matapos ang natitirang {{remaining}} minuto.",
     "failedNetwork": "Naputol ang connection. Naka-save ang lahat ng natapos na. Subukan ulit kapag online ka na.",
-    "noneBodyNextFree": "Madadagdagan ulit ang libreng minuto sa {{date}}, o gawing {{language}} na ito ngayon sa {{price}}."
+    "noneBodyNextFree": "Madadagdagan ulit ang libreng minuto sa {{date}}, o gawing {{language}} na ito ngayon sa {{price}}.",
+    "noneTitle_one": "{{total}} minuto ang video na ito.",
+    "enoughBody_one": "Sapat ang minuto mo para isalin na ngayon ang natitirang {{remaining}} minuto.",
+    "offerBody_one": "Isalin ang buong video sa {{price}}. Sakop nito ang natitirang {{remaining}} minuto, at magagamit mo pa ang sobra sa susunod na video.",
+    "offerBodyLong_one": "Kaya ng {{price}} na pack ang karamihan ng natitirang {{remaining}} minuto."
   },
   "videoCost": {
     "covered": "Sapat ang minuto mo",
