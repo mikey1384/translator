@@ -1251,5 +1251,10 @@
     "finishCta": "Завершить видео · {{price}}",
     "noneCta": "Перевести на {{language}} · {{price}}",
     "notNow": "Не сейчас"
+  },
+  "videoCost": {
+    "covered": "Покрыто вашими минутами",
+    "preview": "Первые {{minutes}} мин бесплатно · всё видео {{price}}",
+    "pack": "Всё видео {{price}}"
   }
 }

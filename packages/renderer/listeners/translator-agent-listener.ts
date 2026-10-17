@@ -1,3 +1,4 @@
+import { currentVideoCost } from '../utils/freePreviewRun';
 import {
   getMountedHighlights,
   setMountedHighlights,
@@ -57,7 +58,10 @@ import {
   transcribeOneLine,
   translateOneLine,
 } from '../ipc/subtitles';
-import { suggestVideos } from '../ipc/video-suggestions';
+import {
+  suggestVideos,
+  youtubeQuickSearch as runYoutubeQuickSearch,
+} from '../ipc/video-suggestions';
 import {
   executeDubGeneration,
   executeSrtTranslation,
@@ -683,6 +687,71 @@ async function requireDownloadHistoryItem(input?: {
     );
   }
   return item;
+}
+
+function youtubeVideoKey(url: string | null | undefined): string | null {
+  const text = String(url || '');
+  const match =
+    text.match(/[?&]v=([A-Za-z0-9_-]{6,})/) ||
+    text.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/) ||
+    text.match(/\/shorts\/([A-Za-z0-9_-]{6,})/);
+  return match ? match[1] : text.trim() || null;
+}
+
+/**
+ * Free YouTube search for agents: yt-dlp results, no model. Each result says
+ * whether it is already in the library and what subtitling it would cost.
+ */
+async function youtubeQuickSearch(input?: {
+  query?: string;
+  maxResults?: number;
+  recency?: string;
+}): Promise<Record<string, unknown>> {
+  const query = String(input?.query || '').trim();
+  if (!query) throw new Error('A search query is required.');
+  const response = await runYoutubeQuickSearch({
+    query,
+    maxResults: input?.maxResults,
+    recency: input?.recency as any,
+  });
+  if (!response?.success) {
+    throw new Error(response?.error || 'YouTube search failed.');
+  }
+  const history = await getDownloadHistory();
+  const inLibrary = new Set(
+    history
+      .map(item => youtubeVideoKey(item.sourceUrl))
+      .filter((key): key is string => Boolean(key))
+  );
+  const results = (response.results || []).map(item => {
+    const cost = currentVideoCost(item.durationSec);
+    return {
+      title: item.title,
+      url: item.url,
+      channel: item.channel ?? null,
+      duration_sec: item.durationSec ?? null,
+      uploaded_at: item.uploadedAt ?? null,
+      view_count: item.viewCount ?? null,
+      in_library: inLibrary.has(youtubeVideoKey(item.url) || ''),
+      subtitle_cost: cost
+        ? cost.kind === 'covered'
+          ? { kind: 'covered_by_balance' }
+          : cost.kind === 'preview'
+            ? {
+                kind: 'free_preview_then_pack',
+                free_minutes: cost.previewMinutes,
+                whole_video_usd: cost.wholeVideoPrice,
+              }
+            : { kind: 'pack_required', whole_video_usd: cost.wholeVideoPrice }
+        : null,
+    };
+  });
+  return {
+    query,
+    count: results.length,
+    results,
+    note: 'Free search: no Stage5 credits were used. subtitle_cost is null in API-key mode or before the balance is known.',
+  };
 }
 
 async function downloadHistorySnapshot(input?: {
@@ -4857,6 +4926,10 @@ function installAgentBridge() {
 
     async searchVideos(input) {
       return runVideoSearch(input, 'search');
+    },
+
+    async youtubeSearch(input) {
+      return youtubeQuickSearch(input);
     },
 
     async searchMoreVideos() {

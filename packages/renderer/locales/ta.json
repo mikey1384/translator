@@ -1251,5 +1251,10 @@
     "finishCta": "வீடியோவை முடி · {{price}}",
     "noneCta": "{{language}} பேச வை · {{price}}",
     "notNow": "இப்போது வேண்டாம்"
+  },
+  "videoCost": {
+    "covered": "உங்கள் நிமிடங்களில் அடங்கும்",
+    "preview": "முதல் {{minutes}} நிமி இலவசம் · முழு வீடியோ {{price}}",
+    "pack": "முழு வீடியோ {{price}}"
   }
 }

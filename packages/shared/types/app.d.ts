@@ -1449,6 +1449,15 @@ declare module '@shared-types/app' {
     suggestVideos: (
       request: VideoSuggestionChatRequest
     ) => Promise<VideoSuggestionChatResult>;
+    youtubeQuickSearch: (request: {
+      query: string;
+      maxResults?: number;
+      recency?: VideoSuggestionRecency;
+    }) => Promise<{
+      success: boolean;
+      results?: VideoSuggestionResultItem[];
+      error?: string;
+    }>;
     onVideoSuggestionProgress: (
       callback: (progress: VideoSuggestionProgress) => void
     ) => () => void;
@@ -1960,6 +1969,11 @@ declare module '@shared-types/app' {
           id?: string;
           quality?: VideoQuality;
           replaceSubtitles?: 'fail' | 'discard' | 'save';
+        }) => Promise<Record<string, unknown>>;
+        youtubeSearch: (input?: {
+          query?: string;
+          maxResults?: number;
+          recency?: string;
         }) => Promise<Record<string, unknown>>;
         searchVideos: (input?: {
           prompt?: string;

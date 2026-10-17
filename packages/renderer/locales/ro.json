@@ -1251,5 +1251,10 @@
     "finishCta": "Finalizează videoclipul · {{price}}",
     "noneCta": "Fă-l să vorbească {{language}} · {{price}}",
     "notNow": "Nu acum"
+  },
+  "videoCost": {
+    "covered": "Acoperit de minutele tale",
+    "preview": "Primele {{minutes}} min gratuite · tot videoclipul {{price}}",
+    "pack": "Tot videoclipul {{price}}"
   }
 }

@@ -1251,5 +1251,10 @@
     "finishCta": "Dokončit video · {{price}}",
     "noneCta": "Ať mluví jazykem {{language}} · {{price}}",
     "notNow": "Teď ne"
+  },
+  "videoCost": {
+    "covered": "Pokryto vašimi minutami",
+    "preview": "Prvních {{minutes}} min zdarma · celé video {{price}}",
+    "pack": "Celé video {{price}}"
   }
 }

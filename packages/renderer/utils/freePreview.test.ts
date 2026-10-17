@@ -51,6 +51,14 @@ test('quality review needs far more headroom, so small balances offer only', () 
   assert.deepEqual(plan, { kind: 'none' });
 });
 
+test('the $1 pack finishes a 28-minute video, matching "$1 ≈ 32m" in Settings', () => {
+  assert.equal(
+    packToFinish({ remainingSecs: 28 * 60, credits: 0, qualityEnabled: false })
+      .pack.id,
+    'MICRO'
+  );
+});
+
 test('the offer names the smallest pack that finishes the video', () => {
   assert.equal(
     packToFinish({ remainingSecs: 24 * 60, credits: 0, qualityEnabled: false })
@@ -69,4 +77,34 @@ test('the offer names the smallest pack that finishes the video', () => {
   });
   assert.equal(huge.pack.id, 'PRO');
   assert.equal(huge.coversAll, false);
+});
+
+test('video cost reads covered, preview-then-pack, or pack', async () => {
+  const { describeVideoCost } = await import('./freePreview');
+  assert.deepEqual(
+    describeVideoCost({
+      durationSecs: 600,
+      credits: 150_000,
+      qualityEnabled: false,
+    }),
+    { kind: 'covered' }
+  );
+  const preview = describeVideoCost({
+    durationSecs: 28 * 60,
+    credits: 2500,
+    qualityEnabled: false,
+  });
+  assert.equal(preview.kind, 'preview');
+  if (preview.kind === 'preview') {
+    assert.ok(preview.previewMinutes >= 3 && preview.previewMinutes <= 5);
+    assert.equal(preview.wholeVideoPrice, 1);
+  }
+  assert.deepEqual(
+    describeVideoCost({
+      durationSecs: 2 * 3600,
+      credits: 0,
+      qualityEnabled: false,
+    }),
+    { kind: 'offer', wholeVideoPrice: 5 }
+  );
 });

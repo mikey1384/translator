@@ -40,10 +40,11 @@ export function creditsToFinish(
 ): number {
   if (!(seconds > 0)) return 0;
   const r = rates(qualityEnabled);
+  // Translation runs after transcription, so what is left then must cover
+  // the larger of its real cost and a single call's hold.
   return Math.ceil(
     (seconds + TRANSCRIPTION_HOLD_PAD_SEC) * r.transcribe +
-      seconds * r.translate +
-      r.headroom
+      Math.max(seconds * r.translate, r.headroom)
   );
 }
 
@@ -66,9 +67,13 @@ export function planFreePreview({
     return { kind: 'full' };
   }
   const r = rates(qualityEnabled);
-  const usable =
-    balance - r.headroom - TRANSCRIPTION_HOLD_PAD_SEC * r.transcribe;
-  const raw = (usable / (r.transcribe + r.translate)) * SAFETY;
+  // Invert creditsToFinish: short spans are bounded by the hold, long ones
+  // by the real translation cost.
+  const afterPad = balance - TRANSCRIPTION_HOLD_PAD_SEC * r.transcribe;
+  const holdBound = (afterPad - r.headroom) / r.transcribe;
+  const costBound = afterPad / (r.transcribe + r.translate);
+  const exact = costBound * r.translate >= r.headroom ? costBound : holdBound;
+  const raw = exact * SAFETY;
   const previewSecs =
     Math.floor(Math.min(raw, durationSecs) / PREVIEW_STEP_SEC) *
     PREVIEW_STEP_SEC;
@@ -106,4 +111,44 @@ export function packToFinish({
 /** "4" or "28": whole minutes for copy, never zero for a non-empty span. */
 export function wholeMinutes(seconds: number): number {
   return Math.max(1, Math.round(seconds / 60));
+}
+
+export type VideoCost =
+  | { kind: 'covered' }
+  | { kind: 'preview'; previewMinutes: number; wholeVideoPrice: number }
+  | { kind: 'offer'; wholeVideoPrice: number };
+
+/**
+ * What subtitling a video of this length costs the user right now: covered
+ * by their minutes, the first N minutes free then a pack, or a pack.
+ */
+export function describeVideoCost({
+  durationSecs,
+  credits,
+  qualityEnabled,
+}: {
+  durationSecs: number;
+  credits: number;
+  qualityEnabled: boolean;
+}): VideoCost {
+  const plan = planFreePreview({ durationSecs, credits, qualityEnabled });
+  if (plan.kind === 'full') return { kind: 'covered' };
+  const covered = plan.kind === 'preview' ? plan.previewSecs : 0;
+  // What is left after the preview spends its share of the balance.
+  const leftover = Math.max(
+    0,
+    credits - (covered > 0 ? creditsToFinish(covered, qualityEnabled) : 0)
+  );
+  const { pack } = packToFinish({
+    remainingSecs: durationSecs - covered,
+    credits: leftover,
+    qualityEnabled,
+  });
+  return plan.kind === 'preview'
+    ? {
+        kind: 'preview',
+        previewMinutes: Math.max(1, Math.floor(covered / 60)),
+        wholeVideoPrice: pack.price,
+      }
+    : { kind: 'offer', wholeVideoPrice: pack.price };
 }

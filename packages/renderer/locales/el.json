@@ -1251,5 +1251,10 @@
     "finishCta": "Ολοκλήρωση βίντεο · {{price}}",
     "noneCta": "Να μιλήσει {{language}} · {{price}}",
     "notNow": "Όχι τώρα"
+  },
+  "videoCost": {
+    "covered": "Καλύπτεται από τα λεπτά σας",
+    "preview": "Πρώτα {{minutes}} λεπτά δωρεάν · όλο το βίντεο {{price}}",
+    "pack": "Όλο το βίντεο {{price}}"
   }
 }

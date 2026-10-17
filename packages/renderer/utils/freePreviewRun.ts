@@ -15,7 +15,12 @@ import {
   type FreePreview,
 } from '../state/free-preview-store';
 import { i18n } from '../i18n';
-import { planFreePreview, type FreePreviewPlan } from './freePreview';
+import {
+  describeVideoCost,
+  planFreePreview,
+  type FreePreviewPlan,
+  type VideoCost,
+} from './freePreview';
 import { translateMissingUntranslated } from './translateMissing';
 import { persistMountedTranslation } from '../containers/GenerateSubtitles/utils/subtitleGeneration';
 import { registerStage5CreditRefreshOperation } from './creditRefreshOperations';
@@ -62,6 +67,26 @@ export function decideFreePreview(
   const { credits, authoritative } = useCreditStore.getState();
   if (!authoritative || typeof credits !== 'number') return { kind: 'full' };
   return planFreePreview({
+    durationSecs,
+    credits: freePreviewPlanningCredits(credits),
+    qualityEnabled: Boolean(useUIStore.getState().qualityTranslation),
+  });
+}
+
+/**
+ * The cost of subtitling a video of this length for this user right now, or
+ * null when it isn't paid in Stage5 credits (API keys) or the balance is
+ * unknown.
+ */
+export function currentVideoCost(
+  durationSecs: number | null | undefined
+): VideoCost | null {
+  if (!durationSecs || durationSecs <= 0) return null;
+  const ai = useAiStore.getState() as any;
+  if (resolveTranscriptionProvider(ai) !== 'stage5') return null;
+  const { credits, authoritative } = useCreditStore.getState();
+  if (!authoritative || typeof credits !== 'number') return null;
+  return describeVideoCost({
     durationSecs,
     credits: freePreviewPlanningCredits(credits),
     qualityEnabled: Boolean(useUIStore.getState().qualityTranslation),

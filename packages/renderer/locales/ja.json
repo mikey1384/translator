@@ -1251,5 +1251,10 @@
     "finishCta": "動画を仕上げる · {{price}}",
     "noneCta": "{{language}}にする · {{price}}",
     "notNow": "今はしない"
+  },
+  "videoCost": {
+    "covered": "残りの分数で対応",
+    "preview": "最初の{{minutes}}分は無料 · 動画全体 {{price}}",
+    "pack": "動画全体 {{price}}"
   }
 }

@@ -154,7 +154,7 @@ function buildServer() {
     },
     {
       instructions:
-        "Use translation sessions to translate or review SRT cues with the connected LLM subscription. That local session path has no Translator inference charge because the client model supplies the text. The development-app tools are local-only and require app_launch first. app_start_media_workflow provides complete URL/path -> transcription -> summary/highlights, translation, or dubbing orchestration; the individual app_start_transcription, app_start_translation, app_start_dubbing, and app_start_summary tools operate on mounted media or subtitles. These app processing tools use Translator's configured Stage5 credits or BYO providers exactly like the visible UI, return immediately, and must be followed with app_processing_status. Mounted cues can be inspected, edited, and exported with the app_subtitles tools. app_video_search and app_video_search_more also invoke the configured Stage5-credit or BYO model; status, library, and download-only tools do not. Batch downloads use current recommendation IDs and are bounded to eight items. Navigation can open visible app sections or explicit web pages but cannot interact with forms. app_open_credit_checkout may create and open a Stripe checkout session, but payment entry and submission remain manual. Settings never return stored secret values; completed purchases, entitlement checkout submission, cookie/login verification, and admin resets remain manual-only.",
+        "Use translation sessions to translate or review SRT cues with the connected LLM subscription. That local session path has no Translator inference charge because the client model supplies the text. The development-app tools are local-only and require app_launch first. app_start_media_workflow provides complete URL/path -> transcription -> summary/highlights, translation, or dubbing orchestration; the individual app_start_transcription, app_start_translation, app_start_dubbing, and app_start_summary tools operate on mounted media or subtitles. These app processing tools use Translator's configured Stage5 credits or BYO providers exactly like the visible UI, return immediately, and must be followed with app_processing_status. Mounted cues can be inspected, edited, and exported with the app_subtitles tools. app_video_search and app_video_search_more also invoke the configured Stage5-credit or BYO model (app_youtube_search is the free plain search); status, library, and download-only tools do not. Batch downloads use current recommendation IDs and are bounded to eight items. Navigation can open visible app sections or explicit web pages but cannot interact with forms. app_open_credit_checkout may create and open a Stripe checkout session, but payment entry and submission remain manual. Settings never return stored secret values; completed purchases, entitlement checkout submission, cookie/login verification, and admin resets remain manual-only.",
     }
   );
 
@@ -1222,10 +1222,31 @@ function buildServer() {
   );
 
   server.registerTool(
+    'app_youtube_search',
+    {
+      description:
+        'Search YouTube for a query and return plain results with title, URL, channel, duration, upload date and views. Free: no model and no credits. Each result also says whether it is already in the Downloads library and what subtitling it would cost the user (covered by their balance, free first minutes then a pack, or a pack). Prefer this over app_video_search when you already know what to look for.',
+      inputSchema: z.object({
+        query: z.string().min(1).max(200),
+        max_results: z.number().int().min(1).max(20).optional(),
+        recency: z.enum(['any', 'day', 'week', 'month', 'year']).optional(),
+      }),
+    },
+    async input =>
+      result(
+        await app.call('youtubeSearch', {
+          query: input.query,
+          maxResults: input.max_results,
+          recency: input.recency,
+        })
+      )
+  );
+
+  server.registerTool(
     'app_video_search',
     {
       description:
-        "Run Translator's built-in ranked YouTube recommendation/search agent and place its results in the visible app. This invokes the active Stage5-credit or BYO model and may incur the corresponding model/search cost.",
+        "Run Translator's built-in ranked YouTube recommendation/search agent and place its results in the visible app. This invokes the active Stage5-credit or BYO model and may incur the corresponding model/search cost. Only for open-ended discovery; for a known query use the free app_youtube_search.",
       inputSchema: z.object({
         prompt: z.string().min(1).max(2000),
         preferred_language: z.string().min(2).max(24).optional(),

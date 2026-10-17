@@ -295,6 +295,11 @@ const electronAPI = {
     ipcRenderer.invoke('process-url:set-mounted-library-paths', options),
   suggestVideos: (request: any) =>
     ipcRenderer.invoke('suggest-videos', request),
+  youtubeQuickSearch: (request: {
+    query: string;
+    maxResults?: number;
+    recency?: string;
+  }) => ipcRenderer.invoke('youtube-quick-search', request),
   onVideoSuggestionProgress: (callback: (progress: any) => void) => {
     if (typeof callback !== 'function') return () => void 0;
     const listener = (_: any, progress: any) => {

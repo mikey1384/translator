@@ -1251,5 +1251,10 @@
     "finishCta": "Hoàn tất video · {{price}}",
     "noneCta": "Cho video nói {{language}} · {{price}}",
     "notNow": "Để sau"
+  },
+  "videoCost": {
+    "covered": "Đã gồm trong số phút của bạn",
+    "preview": "{{minutes}} phút đầu miễn phí · cả video {{price}}",
+    "pack": "Cả video {{price}}"
   }
 }

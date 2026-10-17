@@ -1251,5 +1251,10 @@
     "finishCta": "Gjør ferdig videoen · {{price}}",
     "noneCta": "Få den til å snakke {{language}} · {{price}}",
     "notNow": "Ikke nå"
+  },
+  "videoCost": {
+    "covered": "Dekket av minuttene dine",
+    "preview": "Første {{minutes}} min gratis · hele videoen {{price}}",
+    "pack": "Hele videoen {{price}}"
   }
 }

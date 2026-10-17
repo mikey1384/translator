@@ -191,7 +191,9 @@ export const LEGACY_TOOL_DESCRIPTIONS = Object.freeze({
     'Open a locally available Downloads library item in the app by its ID. No credits.',
   app_downloads_redownload:
     "Re-download a Downloads library item from its stored source URL with the app's downloader. Poll app_status. No credits.",
-  app_video_search: `Run the app's AI YouTube recommendation search and show ranked results in the app. ${PAID_LEGACY_NOTE}`,
+  app_youtube_search:
+    'Search YouTube for a query and return plain results with title, URL, channel, duration, upload date and views. Free: no model and no credits. Each result also says whether it is already in the Downloads library and what subtitling it would cost the user (covered by their balance, free first minutes then a pack, or a pack). Prefer this over app_video_search when you already know what to look for.',
+  app_video_search: `Run the app's AI YouTube recommendation search and show ranked results in the app. Only for open-ended discovery; for a known query use the free app_youtube_search. ${PAID_LEGACY_NOTE}`,
   app_video_search_more: `Continue the current recommendation search with more ranked results; may call the recommendation model again. ${PAID_LEGACY_NOTE}`,
   app_video_search_status:
     'Inspect the current recommendation search progress and ranked result IDs without searching again. No credits.',
@@ -404,6 +406,20 @@ export const TOOL_SCHEMAS = {
       },
     },
     required: ['id'],
+    additionalProperties: false,
+  },
+  app_youtube_search: {
+    type: 'object',
+    properties: {
+      query: { type: 'string', minLength: 1, maxLength: 200 },
+      max_results: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
+      recency: {
+        type: 'string',
+        enum: ['any', 'day', 'week', 'month', 'year'],
+        default: 'any',
+      },
+    },
+    required: ['query'],
     additionalProperties: false,
   },
   app_video_search: {

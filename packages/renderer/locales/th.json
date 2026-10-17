@@ -1251,5 +1251,10 @@
     "finishCta": "ทำวิดีโอให้เสร็จ · {{price}}",
     "noneCta": "ทำให้พูด{{language}} · {{price}}",
     "notNow": "ไว้ทีหลัง"
+  },
+  "videoCost": {
+    "covered": "ครอบคลุมด้วยนาทีของคุณ",
+    "preview": "ฟรี {{minutes}} นาทีแรก · ทั้งวิดีโอ {{price}}",
+    "pack": "ทั้งวิดีโอ {{price}}"
   }
 }

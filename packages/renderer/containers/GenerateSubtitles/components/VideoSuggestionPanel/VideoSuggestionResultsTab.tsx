@@ -1,3 +1,4 @@
+import VideoCostLine from '../../../../components/VideoCostLine';
 import type { TFunction } from 'i18next';
 import Button from '../../../../components/Button.js';
 import {
@@ -128,6 +129,7 @@ export default function VideoSuggestionResultsTab({
                         {extraMeta.join(' • ')}
                       </div>
                     ) : null}
+                    <VideoCostLine durationSec={item.durationSec} />
                     <div className={cardActionsStyles}>
                       <Button
                         onClick={() => onDownloadFromSuggestion(item)}

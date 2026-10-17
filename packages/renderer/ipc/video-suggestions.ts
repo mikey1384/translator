@@ -2,6 +2,8 @@ import type {
   VideoSuggestionChatRequest,
   VideoSuggestionChatResult,
   VideoSuggestionProgress,
+  VideoSuggestionRecency,
+  VideoSuggestionResultItem,
 } from '@shared-types/app';
 
 export function suggestVideos(
@@ -14,4 +16,17 @@ export function onVideoSuggestionProgress(
   callback: (progress: VideoSuggestionProgress) => void
 ): () => void {
   return window.electron.onVideoSuggestionProgress(callback);
+}
+
+/** Plain yt-dlp YouTube search: no model, no credits. */
+export function youtubeQuickSearch(request: {
+  query: string;
+  maxResults?: number;
+  recency?: VideoSuggestionRecency;
+}): Promise<{
+  success: boolean;
+  results?: VideoSuggestionResultItem[];
+  error?: string;
+}> {
+  return window.electron.youtubeQuickSearch(request);
 }

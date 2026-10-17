@@ -1251,5 +1251,10 @@
     "finishCta": "إكمال الفيديو · {{price}}",
     "noneCta": "اجعله يتحدث {{language}} · {{price}}",
     "notNow": "ليس الآن"
+  },
+  "videoCost": {
+    "covered": "مشمول بدقائقك",
+    "preview": "أول {{minutes}} دقيقة مجانًا · الفيديو كاملًا {{price}}",
+    "pack": "الفيديو كاملًا {{price}}"
   }
 }

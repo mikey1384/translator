@@ -1251,5 +1251,10 @@
     "finishCta": "Terminar el video · {{price}}",
     "noneCta": "Que hable {{language}} · {{price}}",
     "notNow": "Ahora no"
+  },
+  "videoCost": {
+    "covered": "Cubierto por tus minutos",
+    "preview": "Primeros {{minutes}} min gratis · video completo {{price}}",
+    "pack": "Video completo {{price}}"
   }
 }

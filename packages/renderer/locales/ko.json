@@ -1268,5 +1268,10 @@
     "finishCta": "영상 완성하기 · {{price}}",
     "noneCta": "{{language}}로 바꾸기 · {{price}}",
     "notNow": "나중에"
+  },
+  "videoCost": {
+    "covered": "보유 시간으로 충분해요",
+    "preview": "처음 {{minutes}}분 무료 · 영상 전체 {{price}}",
+    "pack": "영상 전체 {{price}}"
   }
 }

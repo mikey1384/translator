@@ -1251,5 +1251,10 @@
     "finishCta": "ভিডিওটি শেষ করুন · {{price}}",
     "noneCta": "{{language}}-এ বলান · {{price}}",
     "notNow": "এখন নয়"
+  },
+  "videoCost": {
+    "covered": "আপনার মিনিটে কভার করা",
+    "preview": "প্রথম {{minutes}} মিনিট ফ্রি · পুরো ভিডিও {{price}}",
+    "pack": "পুরো ভিডিও {{price}}"
   }
 }

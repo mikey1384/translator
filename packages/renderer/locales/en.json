@@ -1269,5 +1269,10 @@
     "finishCta": "Finish the video · {{price}}",
     "noneCta": "Make it speak {{language}} · {{price}}",
     "notNow": "Not now"
+  },
+  "videoCost": {
+    "covered": "Covered by your minutes",
+    "preview": "First {{minutes}} min free · whole video {{price}}",
+    "pack": "Whole video {{price}}"
   }
 }

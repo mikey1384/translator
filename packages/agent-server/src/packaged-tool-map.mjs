@@ -18,6 +18,7 @@ export const PACKAGED_TOOL_MAP = Object.freeze({
   app_downloads_list: 'listDownloadHistory',
   app_downloads_open: 'openDownloadHistoryItem',
   app_downloads_redownload: 'redownloadHistoryItem',
+  app_youtube_search: 'youtubeSearch',
   app_video_search: 'searchVideos',
   app_video_search_more: 'searchMoreVideos',
   app_video_search_status: 'videoSearchStatus',

@@ -1251,5 +1251,10 @@
     "finishCta": "Gör klart videon · {{price}}",
     "noneCta": "Låt den tala {{language}} · {{price}}",
     "notNow": "Inte nu"
+  },
+  "videoCost": {
+    "covered": "Täcks av dina minuter",
+    "preview": "Första {{minutes}} min gratis · hela videon {{price}}",
+    "pack": "Hela videon {{price}}"
   }
 }

@@ -7379,6 +7379,7 @@ export function legacyToolBilling(toolName, args = {}, context = null) {
     'app_set_subtitle_style',
     'app_show_download_history',
     'app_downloads_list',
+    'app_youtube_search',
     'app_downloads_open',
     'app_downloads_redownload',
     'app_video_search_status',

@@ -1251,5 +1251,10 @@
     "finishCta": "Завершити відео · {{price}}",
     "noneCta": "Мовою {{language}} · {{price}}",
     "notNow": "Не зараз"
+  },
+  "videoCost": {
+    "covered": "Покрито вашими хвилинами",
+    "preview": "Перші {{minutes}} хв безкоштовно · усе відео {{price}}",
+    "pack": "Усе відео {{price}}"
   }
 }

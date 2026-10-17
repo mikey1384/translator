@@ -1251,5 +1251,10 @@
     "finishCta": "تکمیل ویدیو · {{price}}",
     "noneCta": "به {{language}} درآوردن · {{price}}",
     "notNow": "الان نه"
+  },
+  "videoCost": {
+    "covered": "با دقیقه‌های شما پوشش داده می‌شود",
+    "preview": "{{minutes}} دقیقهٔ اول رایگان · کل ویدیو {{price}}",
+    "pack": "کل ویدیو {{price}}"
   }
 }

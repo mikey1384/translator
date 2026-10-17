@@ -1251,5 +1251,10 @@
     "finishCta": "Siapkan video · {{price}}",
     "noneCta": "Jadikan bercakap {{language}} · {{price}}",
     "notNow": "Bukan sekarang"
+  },
+  "videoCost": {
+    "covered": "Diliputi oleh minit anda",
+    "preview": "{{minutes}} min pertama percuma · seluruh video {{price}}",
+    "pack": "Seluruh video {{price}}"
   }
 }

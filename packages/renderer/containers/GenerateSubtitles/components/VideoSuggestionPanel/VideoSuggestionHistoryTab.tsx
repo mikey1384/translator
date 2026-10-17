@@ -1,3 +1,4 @@
+import VideoCostLine from '../../../../components/VideoCostLine';
 import type { TFunction } from 'i18next';
 import Button from '../../../../components/Button.js';
 import IconButton from '../../../../components/IconButton.js';
@@ -199,6 +200,7 @@ export default function VideoSuggestionHistoryTab({
                     {historyMeta.join(' • ')}
                   </div>
                 ) : null}
+                <VideoCostLine durationSec={item.durationSec} />
                 <div className={cardActionsStyles}>
                   {canPlay ? (
                     <Button

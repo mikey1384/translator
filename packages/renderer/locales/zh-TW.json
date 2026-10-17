@@ -1251,5 +1251,10 @@
     "finishCta": "完成整部影片 · {{price}}",
     "noneCta": "讓它說{{language}} · {{price}}",
     "notNow": "暫時不要"
+  },
+  "videoCost": {
+    "covered": "您的分鐘數已涵蓋",
+    "preview": "前 {{minutes}} 分鐘免費 · 整部影片 {{price}}",
+    "pack": "整部影片 {{price}}"
   }
 }

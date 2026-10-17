@@ -1251,5 +1251,10 @@
     "finishCta": "השלמת הסרטון · {{price}}",
     "noneCta": "שידבר {{language}} · {{price}}",
     "notNow": "לא עכשיו"
+  },
+  "videoCost": {
+    "covered": "מכוסה בדקות שלך",
+    "preview": "{{minutes}} הדק׳ הראשונות חינם · כל הסרטון {{price}}",
+    "pack": "כל הסרטון {{price}}"
   }
 }

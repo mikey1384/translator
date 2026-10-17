@@ -1251,5 +1251,10 @@
     "finishCta": "Videó befejezése · {{price}}",
     "noneCta": "Megszólaltatás: {{language}} · {{price}}",
     "notNow": "Most nem"
+  },
+  "videoCost": {
+    "covered": "A perceid fedezik",
+    "preview": "Első {{minutes}} perc ingyenes · teljes videó {{price}}",
+    "pack": "Teljes videó {{price}}"
   }
 }

@@ -114,6 +114,7 @@ import {
 } from './utils/window.js';
 import * as tabManager from './tab-manager.js';
 import { suggestVideosViaChat } from './services/video-suggestions.js';
+import { runYoutubeYtDlpSearch } from './services/video-suggestions/retrieval.js';
 import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-gate.js';
 import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 import {
@@ -1077,6 +1078,40 @@ try {
     'process-url:set-mounted-library-paths',
     handleSetMountedUrlDownloadLibraryPaths
   );
+  // Plain YouTube search with yt-dlp: no model, no credits. Agents use it
+  // through app_youtube_search before choosing what to subtitle.
+  ipcMain.handle('youtube-quick-search', async (_event, request) => {
+    const query = String(request?.query ?? '')
+      .trim()
+      .slice(0, 200);
+    if (!query) return { success: false, error: 'A search query is required.' };
+    const maxResults = Math.min(
+      20,
+      Math.max(1, Math.floor(Number(request?.maxResults) || 10))
+    );
+    const recency = ['any', 'day', 'week', 'month', 'year'].includes(
+      request?.recency
+    )
+      ? request.recency
+      : 'any';
+    try {
+      const outcome = await runYoutubeYtDlpSearch({
+        searchQuery: query,
+        retrievalQueries: [query],
+        retrievalSeedUrls: [],
+        recency,
+        maxResults,
+        excludeUrls: new Set<string>(),
+        operationId: `youtube-quick-${Date.now()}`,
+        startedAt: Date.now(),
+      });
+      return { success: true, results: outcome.results.slice(0, maxResults) };
+    } catch (error: any) {
+      log.warn('[youtube-quick-search] failed:', error?.message || error);
+      return { success: false, error: error?.message || String(error) };
+    }
+  });
+
   ipcMain.handle('suggest-videos', async (event, request) => {
     const operationId =
       request?.operationId ||

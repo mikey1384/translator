@@ -1,3 +1,4 @@
+import VideoCostLine from '../VideoCostLine';
 import { css } from '@emotion/css';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -259,6 +260,9 @@ export default function HomeRecentRow({
               >
                 {status.text}
               </span>
+              {!status.ready && !('accent' in status && status.accent) ? (
+                <VideoCostLine durationSec={item.durationSec} />
+              ) : null}
             </button>
           );
         })}

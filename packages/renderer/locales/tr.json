@@ -1251,5 +1251,10 @@
     "finishCta": "Videoyu tamamla · {{price}}",
     "noneCta": "{{language}} konuşsun · {{price}}",
     "notNow": "Şimdi değil"
+  },
+  "videoCost": {
+    "covered": "Dakikalarınız karşılıyor",
+    "preview": "İlk {{minutes}} dk ücretsiz · videonun tamamı {{price}}",
+    "pack": "Videonun tamamı {{price}}"
   }
 }

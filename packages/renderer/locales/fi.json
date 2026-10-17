@@ -1251,5 +1251,10 @@
     "finishCta": "Viimeistele video · {{price}}",
     "noneCta": "Puhumaan kieltä {{language}} · {{price}}",
     "notNow": "Ei nyt"
+  },
+  "videoCost": {
+    "covered": "Kuuluu minuutteihisi",
+    "preview": "Ensimmäiset {{minutes}} min ilmaiseksi · koko video {{price}}",
+    "pack": "Koko video {{price}}"
   }
 }

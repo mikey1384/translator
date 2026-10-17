@@ -1251,5 +1251,10 @@
     "finishCta": "Tapusin ang video · {{price}}",
     "noneCta": "Pasalitain ng {{language}} · {{price}}",
     "notNow": "Hindi muna"
+  },
+  "videoCost": {
+    "covered": "Sakop ng iyong mga minuto",
+    "preview": "Libre ang unang {{minutes}} min · buong video {{price}}",
+    "pack": "Buong video {{price}}"
   }
 }

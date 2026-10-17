@@ -1251,5 +1251,10 @@
     "finishCta": "Voltooi die video · {{price}}",
     "noneCta": "Laat dit {{language}} praat · {{price}}",
     "notNow": "Nie nou nie"
+  },
+  "videoCost": {
+    "covered": "Gedek deur jou minute",
+    "preview": "Eerste {{minutes}} min gratis · hele video {{price}}",
+    "pack": "Hele video {{price}}"
   }
 }

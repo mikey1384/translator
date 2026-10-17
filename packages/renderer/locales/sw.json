@@ -1251,5 +1251,10 @@
     "finishCta": "Kamilisha video · {{price}}",
     "noneCta": "Ifanye izungumze {{language}} · {{price}}",
     "notNow": "Si sasa"
+  },
+  "videoCost": {
+    "covered": "Imelipiwa na dakika zako",
+    "preview": "Dakika {{minutes}} za kwanza bure · video nzima {{price}}",
+    "pack": "Video nzima {{price}}"
   }
 }

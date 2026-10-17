@@ -1251,5 +1251,10 @@
     "finishCta": "वीडियो पूरा करें · {{price}}",
     "noneCta": "{{language}} में बुलवाएँ · {{price}}",
     "notNow": "अभी नहीं"
+  },
+  "videoCost": {
+    "covered": "आपके मिनटों में शामिल",
+    "preview": "पहले {{minutes}} मिनट मुफ़्त · पूरा वीडियो {{price}}",
+    "pack": "पूरा वीडियो {{price}}"
   }
 }
