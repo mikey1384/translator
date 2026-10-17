@@ -1350,7 +1350,17 @@
     "attachDiagnostics": "Adjuntar datos de diagnóstico (recomendado si hay un problema)",
     "attachDiagnosticsHint": "Registros recientes, versión de la app e información del sistema. Sin videos ni subtítulos.",
     "showDetails": "Ver qué se enviará",
-    "feedbackEmailSubject": "Comentarios sobre Translator"
+    "feedbackEmailSubject": "Comentarios sobre Translator",
+    "reportPromptTask": {
+      "transcription": "La transcripción se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "translation": "La traducción se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "dubbing": "El doblaje se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "summary": "El resumen se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "videoSearch": "La búsqueda de videos se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "download": "La descarga del video falló por un motivo que no reconocemos. Envía este informe para que podamos solucionarlo.",
+      "export": "La creación del video se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "other": "Algo salió mal. Envía este informe para que podamos solucionarlo."
+    }
   },
   "home": {
     "headline": "Cualquier video, en <lang>{{language}}</lang>.",

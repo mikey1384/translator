@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Liitä vianmääritystiedot (suositeltavaa ongelmissa)",
     "attachDiagnosticsHint": "Sovelluksen viimeisimmät lokit, versio ja järjestelmätiedot. Ei videoita eikä tekstityksiä.",
     "showDetails": "Näytä, mitä lähetetään",
-    "feedbackEmailSubject": "Palautetta Translatorista"
+    "feedbackEmailSubject": "Palautetta Translatorista",
+    "reportPromptTask": {
+      "transcription": "Litterointi keskeytyi odottamattoman ongelman vuoksi. Lähetä tämä raportti, niin voimme korjata vian.",
+      "translation": "Käännös keskeytyi odottamattoman ongelman vuoksi. Lähetä tämä raportti, niin voimme korjata vian.",
+      "dubbing": "Dubbaus keskeytyi odottamattoman ongelman vuoksi. Lähetä tämä raportti, niin voimme korjata vian.",
+      "summary": "Yhteenveto keskeytyi odottamattoman ongelman vuoksi. Lähetä tämä raportti, niin voimme korjata vian.",
+      "videoSearch": "Videohaku keskeytyi odottamattoman ongelman vuoksi. Lähetä tämä raportti, niin voimme korjata vian.",
+      "download": "Videon lataus epäonnistui tuntemattomasta syystä. Lähetä tämä raportti, niin voimme korjata vian.",
+      "export": "Videon tekeminen keskeytyi odottamattoman ongelman vuoksi. Lähetä tämä raportti, niin voimme korjata vian.",
+      "other": "Jokin meni pieleen. Lähetä tämä raportti, niin voimme korjata vian."
+    }
   },
   "home": {
     "headline": "Mikä tahansa video <lang>{{languageInto}}</lang>.",

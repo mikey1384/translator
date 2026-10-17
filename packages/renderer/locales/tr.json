@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Tanılama bilgilerini ekle (sorunlar için önerilir)",
     "attachDiagnosticsHint": "Son uygulama günlükleri, uygulama sürümü ve sistem bilgileri. Video veya altyazı içermez.",
     "showDetails": "Neyin gönderileceğini göster",
-    "feedbackEmailSubject": "Translator geri bildirimi"
+    "feedbackEmailSubject": "Translator geri bildirimi",
+    "reportPromptTask": {
+      "transcription": "Yazıya dökme beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "translation": "Çeviri beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "dubbing": "Seslendirme beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "summary": "Özet beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "videoSearch": "Video araması beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "download": "Video indirme, tanımadığımız bir nedenle başarısız oldu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "export": "Video hazırlanırken beklenmedik bir sorun oluştu ve işlem durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "other": "Bir sorun oluştu. Düzeltebilmemiz için bu raporu gönderin."
+    }
   },
   "home": {
     "headline": "Her videoyu <lang>{{language}}</lang> izleyin.",

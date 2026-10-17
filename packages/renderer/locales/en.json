@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Attach diagnostic details (recommended for problems)",
     "attachDiagnosticsHint": "Recent app logs, app version and system info. No videos or subtitles.",
     "showDetails": "Show what will be sent",
-    "feedbackEmailSubject": "Translator feedback"
+    "feedbackEmailSubject": "Translator feedback",
+    "reportPromptTask": {
+      "transcription": "Transcription stopped because of an unexpected problem. Send this report so we can fix it.",
+      "translation": "Translation stopped because of an unexpected problem. Send this report so we can fix it.",
+      "dubbing": "Dubbing stopped because of an unexpected problem. Send this report so we can fix it.",
+      "summary": "The summary stopped because of an unexpected problem. Send this report so we can fix it.",
+      "videoSearch": "The video search stopped because of an unexpected problem. Send this report so we can fix it.",
+      "download": "The video download failed for a reason we don’t recognize. Send this report so we can fix it.",
+      "export": "Making the video stopped because of an unexpected problem. Send this report so we can fix it.",
+      "other": "Something went wrong. Send this report so we can fix it."
+    }
   },
   "home": {
     "headline": "Every video can speak <lang>{{language}}</lang>.",

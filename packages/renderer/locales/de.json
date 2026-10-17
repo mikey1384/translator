@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Diagnosedaten anhängen (empfohlen bei Problemen)",
     "attachDiagnosticsHint": "Aktuelle App-Protokolle, App-Version und Systeminfos. Keine Videos oder Untertitel.",
     "showDetails": "Anzeigen, was gesendet wird",
-    "feedbackEmailSubject": "Feedback zu Translator"
+    "feedbackEmailSubject": "Feedback zu Translator",
+    "reportPromptTask": {
+      "transcription": "Die Transkription wurde durch einen unerwarteten Fehler abgebrochen. Schick uns diesen Bericht, damit wir das beheben können.",
+      "translation": "Die Übersetzung wurde durch einen unerwarteten Fehler abgebrochen. Schick uns diesen Bericht, damit wir das beheben können.",
+      "dubbing": "Die Synchronfassung wurde durch einen unerwarteten Fehler abgebrochen. Schick uns diesen Bericht, damit wir das beheben können.",
+      "summary": "Die Zusammenfassung wurde durch einen unerwarteten Fehler abgebrochen. Schick uns diesen Bericht, damit wir das beheben können.",
+      "videoSearch": "Die Videosuche wurde durch einen unerwarteten Fehler abgebrochen. Schick uns diesen Bericht, damit wir das beheben können.",
+      "download": "Der Download ist aus einem uns unbekannten Grund fehlgeschlagen. Schick uns diesen Bericht, damit wir das beheben können.",
+      "export": "Das Erstellen des Videos wurde durch einen unerwarteten Fehler abgebrochen. Schick uns diesen Bericht, damit wir das beheben können.",
+      "other": "Etwas ist schiefgelaufen. Schick uns diesen Bericht, damit wir das beheben können."
+    }
   },
   "home": {
     "headline": "Jedes Video auf <lang>{{language}}</lang>.",

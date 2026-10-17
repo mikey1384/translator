@@ -1336,7 +1336,17 @@
     "attachDiagnostics": "Đính kèm thông tin chẩn đoán (nên bật khi báo lỗi)",
     "attachDiagnosticsHint": "Nhật ký gần đây, phiên bản ứng dụng và thông tin hệ thống. Không gồm video hay phụ đề.",
     "showDetails": "Xem nội dung sẽ gửi",
-    "feedbackEmailSubject": "Góp ý về Translator"
+    "feedbackEmailSubject": "Góp ý về Translator",
+    "reportPromptTask": {
+      "transcription": "Quá trình chép lời bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "translation": "Quá trình dịch bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "dubbing": "Quá trình lồng tiếng bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "summary": "Việc tạo bản tóm tắt bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "videoSearch": "Việc tìm video bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "download": "Không tải được video vì một lỗi chúng tôi chưa nhận diện được. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "export": "Việc tạo video bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "other": "Đã xảy ra lỗi. Hãy gửi báo cáo này để chúng tôi khắc phục."
+    }
   },
   "home": {
     "headline": "Xem mọi video bằng <lang>{{language}}</lang>.",

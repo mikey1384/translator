@@ -1350,7 +1350,17 @@
     "attachDiagnostics": "Joindre les données de diagnostic (recommandé en cas de problème)",
     "attachDiagnosticsHint": "Journaux récents de l’app, version de l’app et infos système. Aucune vidéo ni aucun sous-titre.",
     "showDetails": "Voir ce qui sera envoyé",
-    "feedbackEmailSubject": "Avis sur Translator"
+    "feedbackEmailSubject": "Avis sur Translator",
+    "reportPromptTask": {
+      "transcription": "La transcription s’est arrêtée à cause d’un problème inattendu. Envoyez ce rapport pour que nous puissions le corriger.",
+      "translation": "La traduction s’est arrêtée à cause d’un problème inattendu. Envoyez ce rapport pour que nous puissions le corriger.",
+      "dubbing": "Le doublage s’est arrêté à cause d’un problème inattendu. Envoyez ce rapport pour que nous puissions le corriger.",
+      "summary": "Le résumé s’est arrêté à cause d’un problème inattendu. Envoyez ce rapport pour que nous puissions le corriger.",
+      "videoSearch": "La recherche de vidéos s’est arrêtée à cause d’un problème inattendu. Envoyez ce rapport pour que nous puissions le corriger.",
+      "download": "Le téléchargement de la vidéo a échoué pour une raison que nous ne reconnaissons pas. Envoyez ce rapport pour que nous puissions le corriger.",
+      "export": "La création de la vidéo s’est arrêtée à cause d’un problème inattendu. Envoyez ce rapport pour que nous puissions le corriger.",
+      "other": "Un problème est survenu. Envoyez ce rapport pour que nous puissions le corriger."
+    }
   },
   "home": {
     "headline": "Toutes les vidéos, en <lang>{{language}}</lang>.",

@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Ilakip ang diagnostic details (inirerekomenda kapag may problema)",
     "attachDiagnosticsHint": "Mga bagong app log, bersyon ng app, at system info. Walang video o subtitle.",
     "showDetails": "Ipakita ang ipapadala",
-    "feedbackEmailSubject": "Feedback sa Translator"
+    "feedbackEmailSubject": "Feedback sa Translator",
+    "reportPromptTask": {
+      "transcription": "Huminto ang transcription dahil sa hindi inaasahang problema. Ipadala ang report na ito para maayos namin.",
+      "translation": "Huminto ang pagsasalin dahil sa hindi inaasahang problema. Ipadala ang report na ito para maayos namin.",
+      "dubbing": "Huminto ang dubbing dahil sa hindi inaasahang problema. Ipadala ang report na ito para maayos namin.",
+      "summary": "Huminto ang buod dahil sa hindi inaasahang problema. Ipadala ang report na ito para maayos namin.",
+      "videoSearch": "Huminto ang paghahanap ng video dahil sa hindi inaasahang problema. Ipadala ang report na ito para maayos namin.",
+      "download": "Nabigo ang pag-download ng video sa dahilang hindi namin alam. Ipadala ang report na ito para maayos namin.",
+      "export": "Huminto ang paggawa ng video dahil sa hindi inaasahang problema. Ipadala ang report na ito para maayos namin.",
+      "other": "Nagkaproblema. Ipadala ang report na ito para maayos namin."
+    }
   },
   "home": {
     "headline": "Kahit anong video, sa <lang>{{language}}</lang>.",

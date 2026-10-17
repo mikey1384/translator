@@ -1354,7 +1354,17 @@
     "attachDiagnostics": "Přiložit diagnostické údaje (doporučeno při problémech)",
     "attachDiagnosticsHint": "Nedávné protokoly aplikace, její verze a informace o systému. Žádná videa ani titulky.",
     "showDetails": "Zobrazit, co se odešle",
-    "feedbackEmailSubject": "Zpětná vazba k aplikaci Translator"
+    "feedbackEmailSubject": "Zpětná vazba k aplikaci Translator",
+    "reportPromptTask": {
+      "transcription": "Přepis se zastavil kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "translation": "Překlad se zastavil kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "dubbing": "Dabing se zastavil kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "summary": "Shrnutí se zastavilo kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "videoSearch": "Hledání videí se zastavilo kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "download": "Stažení videa selhalo z důvodu, který neznáme. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "export": "Vytváření videa se zastavilo kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "other": "Něco se pokazilo. Pošlete nám tuto zprávu, ať to můžeme opravit."
+    }
   },
   "home": {
     "headline": "Přeložíme jakékoli video do <lang>{{languageInto}}</lang>.",

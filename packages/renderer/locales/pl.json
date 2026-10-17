@@ -1354,7 +1354,17 @@
     "attachDiagnostics": "Dołącz dane diagnostyczne (zalecane przy problemach)",
     "attachDiagnosticsHint": "Ostatnie logi aplikacji, jej wersja i informacje o systemie. Bez filmów i napisów.",
     "showDetails": "Pokaż, co zostanie wysłane",
-    "feedbackEmailSubject": "Opinia o aplikacji Translator"
+    "feedbackEmailSubject": "Opinia o aplikacji Translator",
+    "reportPromptTask": {
+      "transcription": "Transkrypcja zatrzymała się przez nieoczekiwany problem. Wyślij ten raport, żebyśmy mogli to naprawić.",
+      "translation": "Tłumaczenie zatrzymało się przez nieoczekiwany problem. Wyślij ten raport, żebyśmy mogli to naprawić.",
+      "dubbing": "Dubbing zatrzymał się przez nieoczekiwany problem. Wyślij ten raport, żebyśmy mogli to naprawić.",
+      "summary": "Tworzenie podsumowania zatrzymało się przez nieoczekiwany problem. Wyślij ten raport, żebyśmy mogli to naprawić.",
+      "videoSearch": "Wyszukiwanie filmów zatrzymało się przez nieoczekiwany problem. Wyślij ten raport, żebyśmy mogli to naprawić.",
+      "download": "Pobieranie filmu nie powiodło się z nieznanego nam powodu. Wyślij ten raport, żebyśmy mogli to naprawić.",
+      "export": "Tworzenie filmu zatrzymało się przez nieoczekiwany problem. Wyślij ten raport, żebyśmy mogli to naprawić.",
+      "other": "Coś poszło nie tak. Wyślij ten raport, żebyśmy mogli to naprawić."
+    }
   },
   "home": {
     "headline": "Każdy film przetłumaczysz na <lang>{{language}}</lang>.",

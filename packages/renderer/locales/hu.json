@@ -1338,7 +1338,17 @@
     "attachDiagnostics": "Diagnosztikai adatok csatolása (hibáknál ajánlott)",
     "attachDiagnosticsHint": "Friss alkalmazásnaplók, az alkalmazás verziója és rendszeradatok. Videók és feliratok nélkül.",
     "showDetails": "Mutasd, mi lesz elküldve",
-    "feedbackEmailSubject": "Visszajelzés a Translatorról"
+    "feedbackEmailSubject": "Visszajelzés a Translatorról",
+    "reportPromptTask": {
+      "transcription": "Az átírás egy váratlan hiba miatt leállt. Küldd el ezt a jelentést, hogy kijavíthassuk.",
+      "translation": "A fordítás egy váratlan hiba miatt leállt. Küldd el ezt a jelentést, hogy kijavíthassuk.",
+      "dubbing": "A szinkronizálás egy váratlan hiba miatt leállt. Küldd el ezt a jelentést, hogy kijavíthassuk.",
+      "summary": "Az összefoglaló készítése egy váratlan hiba miatt leállt. Küldd el ezt a jelentést, hogy kijavíthassuk.",
+      "videoSearch": "A videókeresés egy váratlan hiba miatt leállt. Küldd el ezt a jelentést, hogy kijavíthassuk.",
+      "download": "A videó letöltése ismeretlen okból nem sikerült. Küldd el ezt a jelentést, hogy kijavíthassuk.",
+      "export": "A videó elkészítése egy váratlan hiba miatt leállt. Küldd el ezt a jelentést, hogy kijavíthassuk.",
+      "other": "Valami hiba történt. Küldd el ezt a jelentést, hogy kijavíthassuk."
+    }
   },
   "home": {
     "headline": "Bármilyen videó – <lang>{{language}}</lang> nyelven.",

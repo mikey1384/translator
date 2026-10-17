@@ -1336,7 +1336,17 @@
     "attachDiagnostics": "Lampirkan detail diagnostik (disarankan untuk masalah)",
     "attachDiagnosticsHint": "Log aplikasi terbaru, versi aplikasi, dan info sistem. Tanpa video atau subtitle.",
     "showDetails": "Tampilkan yang akan dikirim",
-    "feedbackEmailSubject": "Masukan untuk Translator"
+    "feedbackEmailSubject": "Masukan untuk Translator",
+    "reportPromptTask": {
+      "transcription": "Transkripsi berhenti karena masalah tak terduga. Kirim laporan ini agar kami bisa memperbaikinya.",
+      "translation": "Terjemahan berhenti karena masalah tak terduga. Kirim laporan ini agar kami bisa memperbaikinya.",
+      "dubbing": "Sulih suara berhenti karena masalah tak terduga. Kirim laporan ini agar kami bisa memperbaikinya.",
+      "summary": "Ringkasan berhenti karena masalah tak terduga. Kirim laporan ini agar kami bisa memperbaikinya.",
+      "videoSearch": "Pencarian video berhenti karena masalah tak terduga. Kirim laporan ini agar kami bisa memperbaikinya.",
+      "download": "Unduhan video gagal karena alasan yang tidak kami kenali. Kirim laporan ini agar kami bisa memperbaikinya.",
+      "export": "Pembuatan video berhenti karena masalah tak terduga. Kirim laporan ini agar kami bisa memperbaikinya.",
+      "other": "Terjadi kesalahan. Kirim laporan ini agar kami bisa memperbaikinya."
+    }
   },
   "home": {
     "headline": "Video apa pun, dalam <lang>{{language}}</lang>.",

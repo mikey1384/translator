@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Vedhæft diagnosticeringsoplysninger (anbefales ved problemer)",
     "attachDiagnosticsHint": "Seneste app-logfiler, appversion og systemoplysninger. Ingen videoer eller undertekster.",
     "showDetails": "Vis, hvad der bliver sendt",
-    "feedbackEmailSubject": "Feedback om Translator"
+    "feedbackEmailSubject": "Feedback om Translator",
+    "reportPromptTask": {
+      "transcription": "Transskriptionen stoppede på grund af et uventet problem. Send denne rapport, så vi kan rette det.",
+      "translation": "Oversættelsen stoppede på grund af et uventet problem. Send denne rapport, så vi kan rette det.",
+      "dubbing": "Eftersynkroniseringen stoppede på grund af et uventet problem. Send denne rapport, så vi kan rette det.",
+      "summary": "Resuméet stoppede på grund af et uventet problem. Send denne rapport, så vi kan rette det.",
+      "videoSearch": "Videosøgningen stoppede på grund af et uventet problem. Send denne rapport, så vi kan rette det.",
+      "download": "Downloaden mislykkedes af en grund, vi ikke kender. Send denne rapport, så vi kan rette det.",
+      "export": "Videoen kunne ikke laves færdig på grund af et uventet problem. Send denne rapport, så vi kan rette det.",
+      "other": "Noget gik galt. Send denne rapport, så vi kan rette det."
+    }
   },
   "home": {
     "headline": "Enhver video, på <lang>{{language}}</lang>.",

@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Diagnostische gegevens bijvoegen (aanbevolen bij problemen)",
     "attachDiagnosticsHint": "Recente app-logs, appversie en systeeminfo. Geen video’s of ondertitels.",
     "showDetails": "Bekijk wat er wordt verstuurd",
-    "feedbackEmailSubject": "Feedback over Translator"
+    "feedbackEmailSubject": "Feedback over Translator",
+    "reportPromptTask": {
+      "transcription": "Het uitschrijven is gestopt door een onverwacht probleem. Stuur dit rapport, dan kunnen we het oplossen.",
+      "translation": "De vertaling is gestopt door een onverwacht probleem. Stuur dit rapport, dan kunnen we het oplossen.",
+      "dubbing": "De nasynchronisatie is gestopt door een onverwacht probleem. Stuur dit rapport, dan kunnen we het oplossen.",
+      "summary": "De samenvatting is gestopt door een onverwacht probleem. Stuur dit rapport, dan kunnen we het oplossen.",
+      "videoSearch": "Het zoeken naar video’s is gestopt door een onverwacht probleem. Stuur dit rapport, dan kunnen we het oplossen.",
+      "download": "De download is mislukt om een reden die we niet herkennen. Stuur dit rapport, dan kunnen we het oplossen.",
+      "export": "Het maken van de video is gestopt door een onverwacht probleem. Stuur dit rapport, dan kunnen we het oplossen.",
+      "other": "Er ging iets mis. Stuur dit rapport, dan kunnen we het oplossen."
+    }
   },
   "home": {
     "headline": "Elke video in het <lang>{{language}}</lang>.",

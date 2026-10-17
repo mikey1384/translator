@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Heg diagnostiese besonderhede aan (aanbeveel by probleme)",
     "attachDiagnosticsHint": "Onlangse app-logboeke, app-weergawe en stelselinligting. Geen video’s of onderskrifte nie.",
     "showDetails": "Wys wat gestuur gaan word",
-    "feedbackEmailSubject": "Translator-terugvoer"
+    "feedbackEmailSubject": "Translator-terugvoer",
+    "reportPromptTask": {
+      "transcription": "Transkripsie het weens ’n onverwagte probleem gestop. Stuur hierdie verslag sodat ons dit kan regmaak.",
+      "translation": "Vertaling het weens ’n onverwagte probleem gestop. Stuur hierdie verslag sodat ons dit kan regmaak.",
+      "dubbing": "Oorklanking het weens ’n onverwagte probleem gestop. Stuur hierdie verslag sodat ons dit kan regmaak.",
+      "summary": "Die opsomming het weens ’n onverwagte probleem gestop. Stuur hierdie verslag sodat ons dit kan regmaak.",
+      "videoSearch": "Die videosoektog het weens ’n onverwagte probleem gestop. Stuur hierdie verslag sodat ons dit kan regmaak.",
+      "download": "Die aflaai het misluk om ’n rede wat ons nie herken nie. Stuur hierdie verslag sodat ons dit kan regmaak.",
+      "export": "Die maak van die video het weens ’n onverwagte probleem gestop. Stuur hierdie verslag sodat ons dit kan regmaak.",
+      "other": "Iets het verkeerd geloop. Stuur hierdie verslag sodat ons dit kan regmaak."
+    }
   },
   "home": {
     "headline": "Elke video, in <lang>{{language}}</lang>.",

@@ -1350,7 +1350,17 @@
     "attachDiagnostics": "Anexar dados de diagnóstico (recomendado em caso de problema)",
     "attachDiagnosticsHint": "Logs recentes do app, versão do app e informações do sistema. Nenhum vídeo ou legenda.",
     "showDetails": "Ver o que será enviado",
-    "feedbackEmailSubject": "Feedback sobre o Translator"
+    "feedbackEmailSubject": "Feedback sobre o Translator",
+    "reportPromptTask": {
+      "transcription": "A transcrição parou por causa de um problema inesperado. Envie este relatório para podermos corrigir.",
+      "translation": "A tradução parou por causa de um problema inesperado. Envie este relatório para podermos corrigir.",
+      "dubbing": "A dublagem parou por causa de um problema inesperado. Envie este relatório para podermos corrigir.",
+      "summary": "O resumo parou por causa de um problema inesperado. Envie este relatório para podermos corrigir.",
+      "videoSearch": "A busca de vídeos parou por causa de um problema inesperado. Envie este relatório para podermos corrigir.",
+      "download": "O download do vídeo falhou por um motivo que não reconhecemos. Envie este relatório para podermos corrigir.",
+      "export": "A criação do vídeo parou por causa de um problema inesperado. Envie este relatório para podermos corrigir.",
+      "other": "Algo deu errado. Envie este relatório para podermos corrigir."
+    }
   },
   "home": {
     "headline": "Qualquer vídeo, em <lang>{{language}}</lang>.",

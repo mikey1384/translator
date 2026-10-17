@@ -1336,7 +1336,17 @@
     "attachDiagnostics": "附上诊断信息（遇到问题时建议勾选）",
     "attachDiagnosticsHint": "包括最近的应用日志、应用版本和系统信息，不含视频或字幕。",
     "showDetails": "查看将发送的内容",
-    "feedbackEmailSubject": "Translator 反馈"
+    "feedbackEmailSubject": "Translator 反馈",
+    "reportPromptTask": {
+      "transcription": "转录因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "translation": "翻译因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "dubbing": "配音因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "summary": "摘要生成因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "videoSearch": "视频搜索因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "download": "视频下载因未知原因失败。请发送这份报告，帮助我们修复问题。",
+      "export": "视频生成因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "other": "出了点问题。请发送这份报告，帮助我们修复问题。"
+    }
   },
   "home": {
     "headline": "任何视频，都能用<lang>{{language}}</lang>看懂。",

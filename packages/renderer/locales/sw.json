@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Ambatisha maelezo ya uchunguzi (inapendekezwa kwa matatizo)",
     "attachDiagnosticsHint": "Kumbukumbu za karibuni za programu, toleo la programu na maelezo ya mfumo. Hakuna video wala manukuu.",
     "showDetails": "Onyesha kitakachotumwa",
-    "feedbackEmailSubject": "Maoni kuhusu Translator"
+    "feedbackEmailSubject": "Maoni kuhusu Translator",
+    "reportPromptTask": {
+      "transcription": "Unakili umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "translation": "Tafsiri imesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "dubbing": "Uwekaji sauti umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "summary": "Muhtasari umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "videoSearch": "Utafutaji wa video umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "download": "Upakuaji wa video umeshindwa kwa sababu tusiyoitambua. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "export": "Utengenezaji wa video umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "other": "Hitilafu fulani imetokea. Tuma ripoti hii ili tuweze kuirekebisha."
+    }
   },
   "home": {
     "headline": "Kila video, kwa <lang>{{language}}</lang>.",

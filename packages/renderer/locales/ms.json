@@ -1336,7 +1336,17 @@
     "attachDiagnostics": "Lampirkan butiran diagnostik (disyorkan untuk masalah)",
     "attachDiagnosticsHint": "Log aplikasi terkini, versi aplikasi dan maklumat sistem. Tiada video atau sari kata.",
     "showDetails": "Tunjukkan apa yang akan dihantar",
-    "feedbackEmailSubject": "Maklum balas Translator"
+    "feedbackEmailSubject": "Maklum balas Translator",
+    "reportPromptTask": {
+      "transcription": "Transkripsi terhenti kerana masalah yang tidak dijangka. Hantar laporan ini supaya kami boleh membaikinya.",
+      "translation": "Terjemahan terhenti kerana masalah yang tidak dijangka. Hantar laporan ini supaya kami boleh membaikinya.",
+      "dubbing": "Alih suara terhenti kerana masalah yang tidak dijangka. Hantar laporan ini supaya kami boleh membaikinya.",
+      "summary": "Ringkasan terhenti kerana masalah yang tidak dijangka. Hantar laporan ini supaya kami boleh membaikinya.",
+      "videoSearch": "Carian video terhenti kerana masalah yang tidak dijangka. Hantar laporan ini supaya kami boleh membaikinya.",
+      "download": "Muat turun video gagal atas sebab yang tidak kami kenal pasti. Hantar laporan ini supaya kami boleh membaikinya.",
+      "export": "Penghasilan video terhenti kerana masalah yang tidak dijangka. Hantar laporan ini supaya kami boleh membaikinya.",
+      "other": "Ada sesuatu yang tidak kena. Hantar laporan ini supaya kami boleh membaikinya."
+    }
   },
   "home": {
     "headline": "Mana-mana video, dalam <lang>{{language}}</lang>.",

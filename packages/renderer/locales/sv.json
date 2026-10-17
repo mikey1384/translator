@@ -1348,7 +1348,17 @@
     "attachDiagnostics": "Bifoga diagnostikinformation (rekommenderas vid problem)",
     "attachDiagnosticsHint": "Senaste apploggar, appversion och systeminformation. Inga videor eller undertexter.",
     "showDetails": "Visa vad som skickas",
-    "feedbackEmailSubject": "Feedback om Translator"
+    "feedbackEmailSubject": "Feedback om Translator",
+    "reportPromptTask": {
+      "transcription": "Transkriberingen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "translation": "Översättningen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "dubbing": "Dubbningen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "summary": "Sammanfattningen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "videoSearch": "Videosökningen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "download": "Nedladdningen misslyckades av en anledning vi inte känner igen. Skicka den här rapporten så att vi kan åtgärda det.",
+      "export": "Det gick inte att skapa videon på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "other": "Något gick fel. Skicka den här rapporten så att vi kan åtgärda det."
+    }
   },
   "home": {
     "headline": "Vilken video som helst, på <lang>{{language}}</lang>.",

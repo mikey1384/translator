@@ -1356,7 +1356,17 @@
     "attachDiagnostics": "Atașează detalii de diagnostic (recomandat pentru probleme)",
     "attachDiagnosticsHint": "Jurnale recente ale aplicației, versiunea aplicației și informații despre sistem. Fără videoclipuri sau subtitrări.",
     "showDetails": "Arată ce se va trimite",
-    "feedbackEmailSubject": "Feedback despre Translator"
+    "feedbackEmailSubject": "Feedback despre Translator",
+    "reportPromptTask": {
+      "transcription": "Transcrierea s-a oprit din cauza unei probleme neprevăzute. Trimite acest raport ca să putem rezolva problema.",
+      "translation": "Traducerea s-a oprit din cauza unei probleme neprevăzute. Trimite acest raport ca să putem rezolva problema.",
+      "dubbing": "Dublarea s-a oprit din cauza unei probleme neprevăzute. Trimite acest raport ca să putem rezolva problema.",
+      "summary": "Rezumatul s-a oprit din cauza unei probleme neprevăzute. Trimite acest raport ca să putem rezolva problema.",
+      "videoSearch": "Căutarea de videoclipuri s-a oprit din cauza unei probleme neprevăzute. Trimite acest raport ca să putem rezolva problema.",
+      "download": "Descărcarea videoclipului a eșuat dintr-un motiv pe care nu-l recunoaștem. Trimite acest raport ca să putem rezolva problema.",
+      "export": "Crearea videoclipului s-a oprit din cauza unei probleme neprevăzute. Trimite acest raport ca să putem rezolva problema.",
+      "other": "Ceva nu a mers. Trimite acest raport ca să putem rezolva problema."
+    }
   },
   "home": {
     "headline": "Orice videoclip, în <lang>{{language}}</lang>.",

@@ -1336,7 +1336,17 @@
     "attachDiagnostics": "附上診斷資訊（回報問題時建議勾選）",
     "attachDiagnosticsHint": "包含最近的應用程式記錄、版本和系統資訊，不含任何影片或字幕。",
     "showDetails": "查看將傳送的內容",
-    "feedbackEmailSubject": "Translator 意見回饋"
+    "feedbackEmailSubject": "Translator 意見回饋",
+    "reportPromptTask": {
+      "transcription": "轉錄因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "translation": "翻譯因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "dubbing": "配音因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "summary": "摘要因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "videoSearch": "影片搜尋因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "download": "影片下載失敗，原因不明。請傳送這份報告，讓我們修正問題。",
+      "export": "影片製作因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "other": "出了點問題。請傳送這份報告，讓我們修正問題。"
+    }
   },
   "home": {
     "headline": "任何影片，都能用<lang>{{language}}</lang>看懂。",

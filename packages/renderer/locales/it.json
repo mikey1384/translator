@@ -1350,7 +1350,17 @@
     "attachDiagnostics": "Allega i dati diagnostici (consigliato in caso di problemi)",
     "attachDiagnosticsHint": "Log recenti dell’app, versione dell’app e informazioni di sistema. Nessun video o sottotitolo.",
     "showDetails": "Mostra cosa verrà inviato",
-    "feedbackEmailSubject": "Feedback su Translator"
+    "feedbackEmailSubject": "Feedback su Translator",
+    "reportPromptTask": {
+      "transcription": "La trascrizione si è interrotta per un problema imprevisto. Invia questa segnalazione così possiamo risolverlo.",
+      "translation": "La traduzione si è interrotta per un problema imprevisto. Invia questa segnalazione così possiamo risolverlo.",
+      "dubbing": "Il doppiaggio si è interrotto per un problema imprevisto. Invia questa segnalazione così possiamo risolverlo.",
+      "summary": "Il riassunto si è interrotto per un problema imprevisto. Invia questa segnalazione così possiamo risolverlo.",
+      "videoSearch": "La ricerca video si è interrotta per un problema imprevisto. Invia questa segnalazione così possiamo risolverlo.",
+      "download": "Il download del video non è riuscito per un motivo che non riconosciamo. Invia questa segnalazione così possiamo risolverlo.",
+      "export": "La creazione del video si è interrotta per un problema imprevisto. Invia questa segnalazione così possiamo risolverlo.",
+      "other": "Qualcosa è andato storto. Invia questa segnalazione così possiamo risolverlo."
+    }
   },
   "home": {
     "headline": "Qualsiasi video, in <lang>{{language}}</lang>.",
