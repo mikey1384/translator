@@ -1227,5 +1227,29 @@
     "Default": "Contur",
     "Classic": "Galben îngroșat",
     "sample": "Salut"
+  },
+  "freePreview": {
+    "quietPreview": "Previzualizare · {{covered}} din {{total}} min",
+    "quietNone": "Încă fără subtitrări · {{total}} min",
+    "finishShort": "Finalizează videoclipul",
+    "finishShortPrice": "Finalizează pentru {{price}}",
+    "checkoutTitle": "Finalizează plata în browser",
+    "checkoutBody": "Am deschis o plată Stripe securizată pentru pachetul de {{price}}. Translator continuă exact de unde a rămas imediat ce termini. Nu trebuie să dai clic pe nimic aici.",
+    "checkoutBack": "Înapoi",
+    "resumingTitle": "Se finalizează videoclipul",
+    "resumingBody": "Continuăm de la {{time}} ca și restul să vorbească {{language}}…",
+    "failedTitle": "Finalizarea s-a oprit",
+    "offerTitle": "Acestea au fost primele {{covered}} din {{total}} minute.",
+    "noneTitle": "Acest videoclip are {{total}} minute.",
+    "failedBody": "Tot ce s-a terminat până acum se păstrează. Încearcă din nou pentru a finaliza restul.",
+    "enoughBody": "Ai suficiente minute pentru a finaliza acum cele {{remaining}} minute rămase.",
+    "offerBody": "Finalizează tot videoclipul pentru {{price}}. Acoperă cele {{remaining}} minute rămase, iar ce rămâne îți rămâne pentru următorul videoclip.",
+    "offerBodyLong": "Pachetul de {{price}} acoperă majoritatea celor {{remaining}} minute rămase.",
+    "noneBodyMonthly": "Minutele gratuite din această lună s-au terminat. Revin pe {{date}}, sau fă-l să vorbească {{language}} acum pentru {{price}}.",
+    "noneBody": "Fă tot videoclipul să vorbească {{language}} pentru {{price}}.",
+    "retry": "Reîncearcă",
+    "finishCta": "Finalizează videoclipul · {{price}}",
+    "noneCta": "Fă-l să vorbească {{language}} · {{price}}",
+    "notNow": "Nu acum"
   }
 }

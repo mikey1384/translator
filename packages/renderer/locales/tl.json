@@ -1227,5 +1227,29 @@
     "Default": "Balangkas",
     "Classic": "Makapal na dilaw",
     "sample": "Kumusta"
+  },
+  "freePreview": {
+    "quietPreview": "Preview · {{covered}} sa {{total}} min",
+    "quietNone": "Wala pang subtitle · {{total}} min",
+    "finishShort": "Tapusin ang video",
+    "finishShortPrice": "Tapusin sa halagang {{price}}",
+    "checkoutTitle": "Tapusin ang pagbabayad sa iyong browser",
+    "checkoutBody": "Nagbukas kami ng secure na Stripe checkout para sa {{price}} na pack. Itutuloy ng Translator kung saan ito huminto pagkatapos mo. Hindi mo kailangang mag-click ng kahit ano rito.",
+    "checkoutBack": "Bumalik",
+    "resumingTitle": "Tinatapos ang video",
+    "resumingBody": "Itinutuloy mula {{time}} para ang natitira ay magsalita rin ng {{language}}…",
+    "failedTitle": "Huminto ang pagtatapos",
+    "offerTitle": "Iyon ang unang {{covered}} sa {{total}} minuto.",
+    "noneTitle": "Ang video na ito ay {{total}} minuto.",
+    "failedBody": "Nakatabi ang lahat ng natapos na. Subukan muli para tapusin ang natitira.",
+    "enoughBody": "May sapat kang minuto para tapusin ngayon ang natitirang {{remaining}} minuto.",
+    "offerBody": "Tapusin ang buong video sa halagang {{price}}. Sakop nito ang natitirang {{remaining}} minuto, at ang sobra ay maiiwan para sa susunod mong video.",
+    "offerBodyLong": "Sakop ng {{price}} na pack ang karamihan sa natitirang {{remaining}} minuto.",
+    "noneBodyMonthly": "Naubos na ang libreng minuto mo ngayong buwan. Babalik ang mga ito sa {{date}}, o pasalitain ito ng {{language}} ngayon sa halagang {{price}}.",
+    "noneBody": "Pasalitain ng {{language}} ang buong video sa halagang {{price}}.",
+    "retry": "Subukan Muli",
+    "finishCta": "Tapusin ang video · {{price}}",
+    "noneCta": "Pasalitain ng {{language}} · {{price}}",
+    "notNow": "Hindi muna"
   }
 }

@@ -1227,5 +1227,29 @@
     "Default": "Kontur",
     "Classic": "Fett gelb",
     "sample": "Hallo zusammen"
+  },
+  "freePreview": {
+    "quietPreview": "Vorschau · {{covered}} von {{total}} Min.",
+    "quietNone": "Noch keine Untertitel · {{total}} Min.",
+    "finishShort": "Video fertigstellen",
+    "finishShortPrice": "Für {{price}} fertigstellen",
+    "checkoutTitle": "Schließe die Zahlung im Browser ab",
+    "checkoutBody": "Wir haben einen sicheren Stripe-Checkout für das {{price}}-Paket geöffnet. Sobald du fertig bist, macht Translator genau dort weiter, wo es aufgehört hat. Hier musst du nichts anklicken.",
+    "checkoutBack": "Zurück",
+    "resumingTitle": "Video wird fertiggestellt",
+    "resumingBody": "Es geht bei {{time}} weiter, und der Rest spricht bald {{language}}…",
+    "failedTitle": "Fertigstellung angehalten",
+    "offerTitle": "Das waren die ersten {{covered}} von {{total}} Minuten.",
+    "noneTitle": "Dieses Video ist {{total}} Minuten lang.",
+    "failedBody": "Alles bisher Fertige bleibt erhalten. Versuche es erneut, um den Rest fertigzustellen.",
+    "enoughBody": "Du hast genug Minuten, um die restlichen {{remaining}} Minuten jetzt fertigzustellen.",
+    "offerBody": "Stelle das ganze Video für {{price}} fertig. Das deckt die restlichen {{remaining}} Minuten ab, und was übrig bleibt, bleibt für dein nächstes Video.",
+    "offerBodyLong": "Das {{price}}-Paket deckt den Großteil der restlichen {{remaining}} Minuten ab.",
+    "noneBodyMonthly": "Deine Freiminuten für diesen Monat sind aufgebraucht. Sie kommen am {{date}} wieder – oder lass es jetzt für {{price}} {{language}} sprechen.",
+    "noneBody": "Lass das ganze Video für {{price}} {{language}} sprechen.",
+    "retry": "Erneut versuchen",
+    "finishCta": "Video fertigstellen · {{price}}",
+    "noneCta": "{{language}} sprechen lassen · {{price}}",
+    "notNow": "Nicht jetzt"
   }
 }

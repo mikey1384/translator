@@ -1227,5 +1227,29 @@
     "Default": "Omlijning",
     "Classic": "Vet geel",
     "sample": "Hallo daar"
+  },
+  "freePreview": {
+    "quietPreview": "Voorvertoning · {{covered}} van {{total}} min",
+    "quietNone": "Nog geen ondertitels · {{total}} min",
+    "finishShort": "Video afmaken",
+    "finishShortPrice": "Afmaken voor {{price}}",
+    "checkoutTitle": "Rond de betaling af in je browser",
+    "checkoutBody": "We hebben een veilige Stripe-betaling geopend voor het pakket van {{price}}. Zodra je klaar bent, gaat Translator verder waar het gebleven was. Je hoeft hier niets aan te klikken.",
+    "checkoutBack": "Terug",
+    "resumingTitle": "Video wordt afgemaakt",
+    "resumingBody": "Verder vanaf {{time}}, zodat de rest ook {{language}} spreekt…",
+    "failedTitle": "Afmaken is gestopt",
+    "offerTitle": "Dat waren de eerste {{covered}} van {{total}} minuten.",
+    "noneTitle": "Deze video duurt {{total}} minuten.",
+    "failedBody": "Alles wat al klaar is, blijft bewaard. Probeer het opnieuw om de rest af te maken.",
+    "enoughBody": "Je hebt genoeg minuten om de resterende {{remaining}} minuten nu af te maken.",
+    "offerBody": "Maak de hele video af voor {{price}}. Dat dekt de resterende {{remaining}} minuten, en wat overblijft houd je voor je volgende video.",
+    "offerBodyLong": "Het pakket van {{price}} dekt het grootste deel van de resterende {{remaining}} minuten.",
+    "noneBodyMonthly": "Je gratis minuten voor deze maand zijn op. Ze komen terug op {{date}}, of laat de video nu {{language}} spreken voor {{price}}.",
+    "noneBody": "Laat de hele video {{language}} spreken voor {{price}}.",
+    "retry": "Opnieuw proberen",
+    "finishCta": "Video afmaken · {{price}}",
+    "noneCta": "Laat hem {{language}} spreken · {{price}}",
+    "notNow": "Niet nu"
   }
 }

@@ -1227,5 +1227,29 @@
     "Default": "حاشیه",
     "Classic": "زرد پررنگ",
     "sample": "سلام"
+  },
+  "freePreview": {
+    "quietPreview": "پیش‌نمایش · {{covered}} از {{total}} دقیقه",
+    "quietNone": "هنوز زیرنویس ندارد · {{total}} دقیقه",
+    "finishShort": "تکمیل ویدیو",
+    "finishShortPrice": "تکمیل با {{price}}",
+    "checkoutTitle": "پرداخت را در مرورگر تمام کنید",
+    "checkoutBody": "یک صفحهٔ پرداخت امن Stripe برای بستهٔ {{price}} باز کردیم. به‌محض اینکه تمام شود، Translator از همان جایی که مانده بود ادامه می‌دهد. لازم نیست اینجا روی چیزی کلیک کنید.",
+    "checkoutBack": "بازگشت",
+    "resumingTitle": "در حال تکمیل ویدیو",
+    "resumingBody": "ادامه از {{time}} تا بقیه هم {{language}} صحبت کند…",
+    "failedTitle": "تکمیل متوقف شد",
+    "offerTitle": "این {{covered}} دقیقهٔ اول از {{total}} دقیقه بود.",
+    "noneTitle": "این ویدیو {{total}} دقیقه است.",
+    "failedBody": "هرچه تا اینجا تمام شده حفظ می‌شود. برای تکمیل بقیه دوباره تلاش کنید.",
+    "enoughBody": "دقیقهٔ کافی دارید تا {{remaining}} دقیقهٔ باقی‌مانده را همین حالا تکمیل کنید.",
+    "offerBody": "کل ویدیو را با {{price}} تکمیل کنید. این مبلغ {{remaining}} دقیقهٔ باقی‌مانده را پوشش می‌دهد و هرچه بماند برای ویدیوی بعدی‌تان می‌ماند.",
+    "offerBodyLong": "بستهٔ {{price}} بیشترِ {{remaining}} دقیقهٔ باقی‌مانده را پوشش می‌دهد.",
+    "noneBodyMonthly": "دقیقه‌های رایگان این ماه تمام شده است. در {{date}} برمی‌گردند، یا همین حالا با {{price}} آن را به {{language}} درآورید.",
+    "noneBody": "کل ویدیو را با {{price}} به {{language}} درآورید.",
+    "retry": "تلاش مجدد",
+    "finishCta": "تکمیل ویدیو · {{price}}",
+    "noneCta": "به {{language}} درآوردن · {{price}}",
+    "notNow": "الان نه"
   }
 }

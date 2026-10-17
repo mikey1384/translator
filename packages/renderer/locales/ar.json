@@ -1227,5 +1227,29 @@
     "Default": "حدود",
     "Classic": "أصفر عريض",
     "sample": "مرحبًا"
+  },
+  "freePreview": {
+    "quietPreview": "معاينة · {{covered}} من {{total}} دقيقة",
+    "quietNone": "بلا ترجمات بعد · {{total}} دقيقة",
+    "finishShort": "إكمال الفيديو",
+    "finishShortPrice": "إكمال مقابل {{price}}",
+    "checkoutTitle": "أكمل الدفع في متصفحك",
+    "checkoutBody": "فتحنا صفحة دفع آمنة عبر Stripe لباقة {{price}}. سيتابع Translator من حيث توقف فور انتهائك. لا داعي للنقر على أي شيء هنا.",
+    "checkoutBack": "رجوع",
+    "resumingTitle": "جارٍ إكمال الفيديو",
+    "resumingBody": "نتابع من {{time}} ونجعل البقية تتحدث {{language}}…",
+    "failedTitle": "توقف الإكمال",
+    "offerTitle": "كانت هذه أول {{covered}} من {{total}} دقيقة.",
+    "noneTitle": "مدة هذا الفيديو {{total}} دقيقة.",
+    "failedBody": "كل ما اكتمل حتى الآن محفوظ. حاول مجددًا لإكمال البقية.",
+    "enoughBody": "لديك دقائق كافية لإكمال الدقائق المتبقية ({{remaining}}) الآن.",
+    "offerBody": "أكمل الفيديو كاملًا مقابل {{price}}. تغطي الباقة الدقائق المتبقية ({{remaining}})، وما يتبقى يبقى لفيديوك التالي.",
+    "offerBodyLong": "تغطي باقة {{price}} معظم الدقائق المتبقية ({{remaining}}).",
+    "noneBodyMonthly": "نفدت دقائقك المجانية لهذا الشهر. تعود في {{date}}، أو اجعله يتحدث {{language}} الآن مقابل {{price}}.",
+    "noneBody": "اجعل الفيديو كاملًا يتحدث {{language}} مقابل {{price}}.",
+    "retry": "إعادة المحاولة",
+    "finishCta": "إكمال الفيديو · {{price}}",
+    "noneCta": "اجعله يتحدث {{language}} · {{price}}",
+    "notNow": "ليس الآن"
   }
 }

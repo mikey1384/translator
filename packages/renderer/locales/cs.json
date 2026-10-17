@@ -1227,5 +1227,29 @@
     "Default": "Obrys",
     "Classic": "Tučná žlutá",
     "sample": "Ahoj"
+  },
+  "freePreview": {
+    "quietPreview": "Ukázka · {{covered}} z {{total}} min",
+    "quietNone": "Zatím bez titulků · {{total}} min",
+    "finishShort": "Dokončit video",
+    "finishShortPrice": "Dokončit za {{price}}",
+    "checkoutTitle": "Dokončete platbu v prohlížeči",
+    "checkoutBody": "Otevřeli jsme zabezpečenou platbu Stripe za balíček {{price}}. Jakmile ji dokončíte, Translator naváže přesně tam, kde skončil. Tady nemusíte nic klikat.",
+    "checkoutBack": "Zpět",
+    "resumingTitle": "Dokončování videa",
+    "resumingBody": "Navazujeme od {{time}} a zbytek bude mluvit jazykem {{language}}…",
+    "failedTitle": "Dokončování se zastavilo",
+    "offerTitle": "To bylo prvních {{covered}} z {{total}} minut.",
+    "noneTitle": "Toto video má {{total}} minut.",
+    "failedBody": "Vše, co je zatím hotové, zůstává. Zkuste to znovu a dokončete zbytek.",
+    "enoughBody": "Máte dost minut na dokončení zbývajících {{remaining}} minut hned teď.",
+    "offerBody": "Dokončete celé video za {{price}}. Pokryje zbývajících {{remaining}} minut a co zbude, zůstane na další video.",
+    "offerBodyLong": "Balíček za {{price}} pokryje většinu zbývajících {{remaining}} minut.",
+    "noneBodyMonthly": "Minuty zdarma na tento měsíc jsou vyčerpané. Vrátí se {{date}}, nebo ať video mluví jazykem {{language}} hned teď za {{price}}.",
+    "noneBody": "Ať celé video mluví jazykem {{language}} za {{price}}.",
+    "retry": "Zkusit znovu",
+    "finishCta": "Dokončit video · {{price}}",
+    "noneCta": "Ať mluví jazykem {{language}} · {{price}}",
+    "notNow": "Teď ne"
   }
 }

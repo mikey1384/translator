@@ -1227,5 +1227,29 @@
     "Default": "Ääriviiva",
     "Classic": "Lihava keltainen",
     "sample": "Hei vaan"
+  },
+  "freePreview": {
+    "quietPreview": "Esikatselu · {{covered}}/{{total}} min",
+    "quietNone": "Ei vielä tekstitystä · {{total}} min",
+    "finishShort": "Viimeistele video",
+    "finishShortPrice": "Viimeistele hintaan {{price}}",
+    "checkoutTitle": "Viimeistele maksu selaimessa",
+    "checkoutBody": "Avasimme turvallisen Stripe-maksun {{price}}:n paketille. Translator jatkaa siitä, mihin jäi, heti kun maksu on valmis. Täällä ei tarvitse klikata mitään.",
+    "checkoutBack": "Takaisin",
+    "resumingTitle": "Videota viimeistellään",
+    "resumingBody": "Jatketaan kohdasta {{time}}, ja loppu puhuu pian kieltä {{language}}…",
+    "failedTitle": "Viimeistely pysähtyi",
+    "offerTitle": "Siinä olivat ensimmäiset {{covered}}/{{total}} minuuttia.",
+    "noneTitle": "Tämä video on {{total}} minuuttia pitkä.",
+    "failedBody": "Kaikki tähän mennessä valmistunut säilyy. Yritä uudelleen viimeistelläksesi loput.",
+    "enoughBody": "Sinulla on tarpeeksi minuutteja jäljellä olevien {{remaining}} minuutin viimeistelyyn nyt.",
+    "offerBody": "Viimeistele koko video hintaan {{price}}. Se kattaa jäljellä olevat {{remaining}} minuuttia, ja ylijäämä jää seuraavaa videotasi varten.",
+    "offerBodyLong": "{{price}}:n paketti kattaa suurimman osan jäljellä olevista {{remaining}} minuutista.",
+    "noneBodyMonthly": "Tämän kuun ilmaiset minuutit on käytetty. Ne palaavat {{date}}, tai anna videon puhua kieltä {{language}} nyt hintaan {{price}}.",
+    "noneBody": "Anna koko videon puhua kieltä {{language}} hintaan {{price}}.",
+    "retry": "Yritä uudelleen",
+    "finishCta": "Viimeistele video · {{price}}",
+    "noneCta": "Puhumaan kieltä {{language}} · {{price}}",
+    "notNow": "Ei nyt"
   }
 }

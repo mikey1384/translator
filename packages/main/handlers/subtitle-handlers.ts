@@ -147,7 +147,7 @@ function buildDurableTranscriptionRecoverySeed({
   sourceIdentity: string;
   start: number;
   end: number;
-  mode: 'slice-fill' | 'remaining';
+  mode: 'slice-fill' | 'remaining' | 'preview';
 }): string {
   return [
     'durable-transcription-range-v1',
@@ -389,7 +389,41 @@ export async function handleGenerateSubtitles(
       });
     };
 
+    // Free preview: cut the opening slice first. Its recovery key names the
+    // range, so a later full run can never pick the preview up as finished.
+    let previewAudioPath: string | null = null;
+    const previewEndSec = Number(finalOptions.previewEndSec);
+    if (Number.isFinite(previewEndSec) && previewEndSec > 0) {
+      const sourceIdentity = await resolveDurableTranscriptionSourceIdentity({
+        videoPath: finalOptions.sourceMediaPath || finalOptions.videoPath,
+      });
+      const baseName = mkTempAudioName(`${operationId}_preview`);
+      previewAudioPath = path.isAbsolute(baseName)
+        ? baseName
+        : path.join(ffmpeg.tempDir, baseName);
+      progressCallback({
+        percent: 5,
+        stage: 'Extracting audio segment...',
+        phaseKey: 'prepare_audio',
+      });
+      await extractAudioSegment(ffmpeg, {
+        input: finalOptions.videoPath,
+        output: previewAudioPath,
+        start: 0,
+        duration: previewEndSec,
+        operationId,
+        signal: controller.signal,
+      });
+      finalOptions.durableRecoverySeed = buildDurableTranscriptionRecoverySeed({
+        sourceIdentity,
+        start: 0,
+        end: previewEndSec,
+        mode: 'preview',
+      });
+    }
+
     const result = await extractSubtitlesFromMedia({
+      preparedAudioPath: previewAudioPath,
       options: finalOptions,
       operationId,
       signal: controller.signal,

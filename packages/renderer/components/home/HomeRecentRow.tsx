@@ -1,6 +1,8 @@
 import { css } from '@emotion/css';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useFreePreviewStore } from '../../state/free-preview-store';
+import { wholeMinutes } from '../../utils/freePreview';
 import type { VideoSuggestionDownloadHistoryItem } from '../../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import * as FileIPC from '../../ipc/file';
 import { colors } from '../../styles';
@@ -108,9 +110,9 @@ const title = css`
   overflow: hidden;
 `;
 
-const state = (ready: boolean) => css`
+const state = (ready: boolean, accent = false) => css`
   font-size: 0.8rem;
-  color: ${ready ? colors.success : colors.textDim};
+  color: ${accent ? colors.primary : ready ? colors.success : colors.textDim};
 `;
 
 function formatDuration(seconds?: number): string | null {
@@ -139,6 +141,7 @@ export default function HomeRecentRow({
 }: HomeRecentRowProps) {
   const { t } = useTranslation();
   const recent = items.slice(0, 3);
+  const previews = useFreePreviewStore(s => s.items);
   const [subtitleStates, setSubtitleStates] = useState<
     Record<string, SubtitleState>
   >({});
@@ -176,6 +179,29 @@ export default function HomeRecentRow({
   if (recent.length === 0) return null;
 
   const describe = (item: VideoSuggestionDownloadHistoryItem) => {
+    const preview =
+      (item.localPath && previews[item.localPath]) ||
+      (item.sourceUrl && previews[item.sourceUrl]) ||
+      null;
+    if (preview) {
+      return {
+        ready: false,
+        accent: true,
+        text:
+          preview.coveredSecs > 0
+            ? t(
+                'freePreview.quietPreview',
+                'Preview · {{covered}} of {{total}} min',
+                {
+                  covered: wholeMinutes(preview.coveredSecs),
+                  total: wholeMinutes(preview.durationSecs),
+                }
+              )
+            : t('freePreview.quietNone', 'Not subtitled yet · {{total}} min', {
+                total: wholeMinutes(preview.durationSecs),
+              }),
+      };
+    }
     const subtitles = subtitleStates[item.id];
     if (subtitles?.ready && subtitles.language) {
       const languageName = t(`languages.${subtitles.language}`, {
@@ -225,7 +251,14 @@ export default function HomeRecentRow({
                 {length ? <span className={duration}>{length}</span> : null}
               </div>
               <span className={title}>{item.title}</span>
-              <span className={state(status.ready)}>{status.text}</span>
+              <span
+                className={state(
+                  status.ready,
+                  'accent' in status && Boolean(status.accent)
+                )}
+              >
+                {status.text}
+              </span>
             </button>
           );
         })}

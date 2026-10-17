@@ -14,10 +14,10 @@ import { isExplicitCancellation } from '../../shared/cancelled-error';
  * Uses operationId starting with `translate-missing-` so progress-buffer applies
  * partial updates by timecode to the correct items during both translate and review phases.
  */
-export async function translateMissingUntranslated(): Promise<void> {
+export async function translateMissingUntranslated(): Promise<boolean> {
   // Guard: do not allow translation while transcription is active
   if (useTaskStore.getState().transcription.inProgress) {
-    return;
+    return false;
   }
   useUrlStore.getState().clearError();
   const targetLanguage = useUIStore.getState().targetLanguage || 'english';
@@ -27,7 +27,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     .map(id => store.segments[id])
     .filter(s => (s.original || '').trim() && !(s.translation || '').trim());
 
-  if (!missing.length) return;
+  if (!missing.length) return true;
 
   // Collapse multi-line original into a single line; avoid re-wrapping on output
   const flattened = missing.map(seg => ({
@@ -84,7 +84,7 @@ export async function translateMissingUntranslated(): Promise<void> {
         inProgress: false,
         isCompleted: true,
       });
-      return;
+      return true;
     }
 
     const cancelled = Boolean(res?.cancelled);
@@ -103,6 +103,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     if (shouldSurfaceTranslationFailure({ error: res?.error, cancelled })) {
       useUrlStore.getState().setOperationError(friendlyError);
     }
+    return false;
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
     const cancelled = isExplicitCancellation(err);
@@ -121,5 +122,6 @@ export async function translateMissingUntranslated(): Promise<void> {
     if (shouldSurfaceTranslationFailure({ error: errorMsg, cancelled })) {
       useUrlStore.getState().setOperationError(friendlyError);
     }
+    return false;
   }
 }

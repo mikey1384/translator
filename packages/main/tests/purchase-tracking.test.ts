@@ -70,8 +70,19 @@ describe('IPC Allowlist (Renderer Event Validation)', () => {
     assert.ok(!isRendererPurchaseFunnelEvent('byo_unlock_cancelled'));
   });
 
-  it('should have exactly 6 allowed renderer events', () => {
-    assert.strictEqual(RENDERER_PURCHASE_FUNNEL_EVENTS.length, 6);
+  it('should allow renderer to emit free-preview lifecycle events', () => {
+    for (const event of [
+      'free_preview_ready',
+      'free_preview_dismissed',
+      'free_preview_completed',
+      'free_preview_failed',
+    ] as const) {
+      assert.ok(isRendererPurchaseFunnelEvent(event), event);
+    }
+  });
+
+  it('should have exactly 10 allowed renderer events', () => {
+    assert.strictEqual(RENDERER_PURCHASE_FUNNEL_EVENTS.length, 10);
   });
 
   it('should have exactly 8 restricted main-only events', () => {

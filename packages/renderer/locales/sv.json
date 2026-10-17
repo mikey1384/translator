@@ -1227,5 +1227,29 @@
     "Default": "Kontur",
     "Classic": "Fet gul",
     "sample": "Hej där"
+  },
+  "freePreview": {
+    "quietPreview": "Förhandsvisning · {{covered}} av {{total}} min",
+    "quietNone": "Inga undertexter än · {{total}} min",
+    "finishShort": "Gör klart videon",
+    "finishShortPrice": "Gör klart för {{price}}",
+    "checkoutTitle": "Slutför betalningen i webbläsaren",
+    "checkoutBody": "Vi har öppnat en säker Stripe-betalning för {{price}}-paketet. Translator fortsätter där det slutade så snart du är klar. Du behöver inte klicka på något här.",
+    "checkoutBack": "Tillbaka",
+    "resumingTitle": "Gör klart videon",
+    "resumingBody": "Fortsätter från {{time}} och låter resten tala {{language}}…",
+    "failedTitle": "Färdigställandet stoppades",
+    "offerTitle": "Det var de första {{covered}} av {{total}} minuter.",
+    "noneTitle": "Den här videon är {{total}} minuter.",
+    "failedBody": "Allt som är klart hittills sparas. Försök igen för att göra klart resten.",
+    "enoughBody": "Du har tillräckligt med minuter för att göra klart de återstående {{remaining}} minuterna nu.",
+    "offerBody": "Gör klart hela videon för {{price}}. Det täcker de återstående {{remaining}} minuterna, och det som blir över sparas till din nästa video.",
+    "offerBodyLong": "{{price}}-paketet täcker det mesta av de återstående {{remaining}} minuterna.",
+    "noneBodyMonthly": "Månadens gratisminuter är slut. De kommer tillbaka {{date}}, eller låt den tala {{language}} nu för {{price}}.",
+    "noneBody": "Låt hela videon tala {{language}} för {{price}}.",
+    "retry": "Försök igen",
+    "finishCta": "Gör klart videon · {{price}}",
+    "noneCta": "Låt den tala {{language}} · {{price}}",
+    "notNow": "Inte nu"
   }
 }

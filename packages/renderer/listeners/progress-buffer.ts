@@ -231,7 +231,10 @@ function flush() {
           try {
             const partSegs = parseSrt(partialResult);
             if (partSegs.length) {
-              useSubStore.getState().applyTranslations(partSegs);
+              // A missing-lines pass is a numbered subset: match by time only.
+              useSubStore.getState().applyTranslations(partSegs, {
+                matchByIndex: !isTranslateMissing,
+              });
             }
           } catch {
             // Ignore parse/apply errors for partial updates

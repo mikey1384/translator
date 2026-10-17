@@ -1227,5 +1227,29 @@
     "Default": "Omlyning",
     "Classic": "Vet geel",
     "sample": "Hallo daar"
+  },
+  "freePreview": {
+    "quietPreview": "Voorskou · {{covered}} van {{total}} min",
+    "quietNone": "Nog nie onderskrifte nie · {{total}} min",
+    "finishShort": "Voltooi die video",
+    "finishShortPrice": "Voltooi vir {{price}}",
+    "checkoutTitle": "Voltooi die betaling in jou blaaier",
+    "checkoutBody": "Ons het 'n veilige Stripe-betaalblad vir die {{price}}-pakket oopgemaak. Translator gaan voort waar dit opgehou het sodra jy klaar is. Jy hoef niks hier te klik nie.",
+    "checkoutBack": "Terug",
+    "resumingTitle": "Voltooi die video",
+    "resumingBody": "Gaan voort by {{time}} en laat die res {{language}} praat…",
+    "failedTitle": "Voltooiing het gestop",
+    "offerTitle": "Dit was die eerste {{covered}} van {{total}} minute.",
+    "noneTitle": "Hierdie video is {{total}} minute.",
+    "failedBody": "Alles wat reeds klaar is, word gehou. Probeer weer om die res te voltooi.",
+    "enoughBody": "Jy het genoeg minute om die oorblywende {{remaining}} minute nou te voltooi.",
+    "offerBody": "Voltooi die hele video vir {{price}}. Dit dek die oorblywende {{remaining}} minute, en wat oorbly, bly vir jou volgende video.",
+    "offerBodyLong": "Die {{price}}-pakket dek die meeste van die oorblywende {{remaining}} minute.",
+    "noneBodyMonthly": "Jou gratis minute vir hierdie maand is opgebruik. Hulle kom terug op {{date}}, of laat dit nou {{language}} praat vir {{price}}.",
+    "noneBody": "Laat die hele video {{language}} praat vir {{price}}.",
+    "retry": "Probeer weer",
+    "finishCta": "Voltooi die video · {{price}}",
+    "noneCta": "Laat dit {{language}} praat · {{price}}",
+    "notNow": "Nie nou nie"
   }
 }

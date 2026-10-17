@@ -19,7 +19,8 @@ interface BuyCreditsButtonProps {
 type CheckoutPlacement =
   | 'zero-credit-banner'
   | 'credit-ran-out-dialog'
-  | 'settings-credit-card';
+  | 'settings-credit-card'
+  | 'free-preview-offer';
 
 export default function BuyCreditsButton({
   packId,

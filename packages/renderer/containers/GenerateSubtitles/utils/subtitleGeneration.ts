@@ -43,6 +43,8 @@ export interface GenerateSubtitlesParams {
   targetLanguage: string;
   operationId: string;
   workflowOwner?: 'default' | 'highlight';
+  /** Free preview: transcribe only the first N seconds. */
+  previewEndSec?: number;
 }
 
 export interface GenerateSubtitlesResult {
@@ -458,12 +460,62 @@ export async function executeDubGeneration({
   }
 }
 
+/**
+ * Save what is mounted as the source's translated document and library
+ * artifact, the way a whole-video run does. Used when a free preview is
+ * finished in place: the cues were appended and translated piecemeal.
+ */
+export async function persistMountedTranslation(
+  targetLanguage: string
+): Promise<void> {
+  const store = useSubStore.getState();
+  const segments = store.order.map(id => store.segments[id]).filter(Boolean);
+  if (segments.length === 0) return;
+  const { sourceVideoPath, sourceUrl, sourceProvenance, titleHint } =
+    resolveTranslationSourceAssociation();
+  try {
+    await FileIPC.saveSubtitleDocumentRecord({
+      segments,
+      title: titleHint,
+      sourceVideoPath: sourceVideoPath ?? null,
+      sourceVideoAssetIdentity:
+        useVideoStore.getState().sourceAssetIdentity ?? null,
+      sourceUrl,
+      sourceProvenance,
+      subtitleKind: 'translation',
+      targetLanguage,
+    });
+  } catch (error) {
+    console.error(
+      '[subtitleGeneration] Failed to save finished preview:',
+      error
+    );
+  }
+  try {
+    await storeGeneratedSubtitleArtifact({
+      content: buildSrt({ segments, mode: 'dual' }),
+      segments,
+      kind: 'translation',
+      targetLanguage,
+      sourceVideoPath: sourceVideoPath ?? null,
+      sourceUrl,
+      titleHint,
+    });
+  } catch (error) {
+    console.error(
+      '[subtitleGeneration] Failed to store finished preview:',
+      error
+    );
+  }
+}
+
 export async function executeSubtitleGeneration({
   videoFile,
   videoFilePath,
   targetLanguage,
   operationId,
   workflowOwner = 'default',
+  previewEndSec,
 }: GenerateSubtitlesParams): Promise<GenerateSubtitlesResult> {
   const { setTranscription } = useTaskStore.getState();
   // Ensure translation slice is not considered active during transcription-only
@@ -513,6 +565,9 @@ export async function executeSubtitleGeneration({
       opts.videoFile = videoFile;
     }
     opts.operationId = operationId;
+    if (previewEndSec && previewEndSec > 0) {
+      opts.previewEndSec = previewEndSec;
+    }
 
     // Generate subtitles
     const result = await SubtitlesIPC.generate(opts);
@@ -680,6 +735,7 @@ export async function startTranscriptionFlow({
   metadataStatus,
   workflowOwner = 'default',
   openEditPanelOnStart = true,
+  previewEndSec,
 }: {
   videoFile: File | null;
   videoFilePath: string | null;
@@ -693,6 +749,8 @@ export async function startTranscriptionFlow({
   };
   workflowOwner?: 'default' | 'highlight';
   openEditPanelOnStart?: boolean;
+  /** Free preview: transcribe only the first N seconds the balance covers. */
+  previewEndSec?: number;
 }): Promise<GenerateSubtitlesResult> {
   const videoState = useVideoStore.getState();
   const sourceVideoPath =
@@ -759,7 +817,9 @@ export async function startTranscriptionFlow({
   }
 
   // Whole-file run: the only kind of transcription a refusal may be quoted.
-  registerFullTranscriptionSeconds(operationId, durationSecs);
+  if (!previewEndSec) {
+    registerFullTranscriptionSeconds(operationId, durationSecs);
+  }
 
   return executeSubtitleGeneration({
     videoFile,
@@ -767,6 +827,7 @@ export async function startTranscriptionFlow({
     targetLanguage: 'original',
     operationId,
     workflowOwner,
+    previewEndSec,
   });
 }
 

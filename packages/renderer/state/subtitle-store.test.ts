@@ -239,3 +239,48 @@ test('setExportPath updates the active file target after an explicit export', ()
   assert.equal(state.activeFileMode, 'translation');
   assert.equal(state.activeFileRole, 'export');
 });
+
+test('a numbered subset of translations never lands on other rows by index', () => {
+  useSubStore.getState().load(
+    [
+      {
+        id: 'a',
+        index: 1,
+        start: 0,
+        end: 1,
+        original: 'one',
+        translation: '하나',
+      },
+      {
+        id: 'b',
+        index: 2,
+        start: 1,
+        end: 2,
+        original: 'two',
+        translation: '둘',
+      },
+      {
+        id: 'c',
+        index: 3,
+        start: 200,
+        end: 201,
+        original: 'three',
+        translation: '',
+      },
+    ],
+    null,
+    'fresh',
+    null,
+    null
+  );
+  // A missing-lines pass numbers its own cues from 1.
+  useSubStore
+    .getState()
+    .applyTranslations(
+      [{ index: 1, start: 200, end: 201, translation: '셋' }],
+      { matchByIndex: false }
+    );
+  const s = useSubStore.getState();
+  assert.equal(s.segments.a.translation, '하나');
+  assert.equal(s.segments.c.translation, '셋');
+});

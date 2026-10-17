@@ -1227,5 +1227,29 @@
     "Default": "Obrys",
     "Classic": "Pogrubiony żółty",
     "sample": "Cześć"
+  },
+  "freePreview": {
+    "quietPreview": "Podgląd · {{covered}} z {{total}} min",
+    "quietNone": "Jeszcze bez napisów · {{total}} min",
+    "finishShort": "Dokończ wideo",
+    "finishShortPrice": "Dokończ za {{price}}",
+    "checkoutTitle": "Dokończ płatność w przeglądarce",
+    "checkoutBody": "Otworzyliśmy bezpieczną płatność Stripe za pakiet {{price}}. Gdy tylko skończysz, Translator wznowi pracę dokładnie tam, gdzie przerwał. Nie musisz tu nic klikać.",
+    "checkoutBack": "Wstecz",
+    "resumingTitle": "Kończenie wideo",
+    "resumingBody": "Wznawiamy od {{time}}, aby reszta też mówiła po {{language}}…",
+    "failedTitle": "Kończenie zostało przerwane",
+    "offerTitle": "To było pierwsze {{covered}} z {{total}} min.",
+    "noneTitle": "To wideo trwa {{total}} min.",
+    "failedBody": "Wszystko, co już gotowe, zostaje zachowane. Spróbuj ponownie, aby dokończyć resztę.",
+    "enoughBody": "Masz wystarczająco minut, aby teraz dokończyć pozostałe {{remaining}} min.",
+    "offerBody": "Dokończ całe wideo za {{price}}. Pokrywa to pozostałe {{remaining}} min, a to, co zostanie, zostaje na kolejne wideo.",
+    "offerBodyLong": "Pakiet za {{price}} pokrywa większość pozostałych {{remaining}} min.",
+    "noneBodyMonthly": "Darmowe minuty na ten miesiąc się skończyły. Wrócą {{date}}, albo niech wideo mówi po {{language}} już teraz za {{price}}.",
+    "noneBody": "Niech całe wideo mówi po {{language}} za {{price}}.",
+    "retry": "Spróbuj ponownie",
+    "finishCta": "Dokończ wideo · {{price}}",
+    "noneCta": "Niech mówi po {{language}} · {{price}}",
+    "notNow": "Nie teraz"
   }
 }

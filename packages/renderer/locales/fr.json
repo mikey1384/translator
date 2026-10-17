@@ -1227,5 +1227,29 @@
     "Default": "Contour",
     "Classic": "Jaune gras",
     "sample": "Bonjour"
+  },
+  "freePreview": {
+    "quietPreview": "Aperçu · {{covered}} sur {{total}} min",
+    "quietNone": "Pas encore de sous-titres · {{total}} min",
+    "finishShort": "Terminer la vidéo",
+    "finishShortPrice": "Terminer pour {{price}}",
+    "checkoutTitle": "Finalisez le paiement dans votre navigateur",
+    "checkoutBody": "Nous avons ouvert un paiement Stripe sécurisé pour le pack à {{price}}. Translator reprendra là où il s’était arrêté dès que ce sera fait. Inutile de cliquer sur quoi que ce soit ici.",
+    "checkoutBack": "Retour",
+    "resumingTitle": "Finalisation de la vidéo",
+    "resumingBody": "Reprise à {{time}} pour que le reste parle {{language}}…",
+    "failedTitle": "La finalisation s’est arrêtée",
+    "offerTitle": "C’étaient les {{covered}} premières minutes sur {{total}}.",
+    "noneTitle": "Cette vidéo dure {{total}} minutes.",
+    "failedBody": "Tout ce qui est déjà terminé est conservé. Réessayez pour terminer le reste.",
+    "enoughBody": "Vous avez assez de minutes pour terminer dès maintenant les {{remaining}} minutes restantes.",
+    "offerBody": "Terminez toute la vidéo pour {{price}}. Cela couvre les {{remaining}} minutes restantes, et le surplus reste pour votre prochaine vidéo.",
+    "offerBodyLong": "Le pack à {{price}} couvre la plupart des {{remaining}} minutes restantes.",
+    "noneBodyMonthly": "Vos minutes gratuites de ce mois sont épuisées. Elles reviennent le {{date}}, ou faites-la parler {{language}} dès maintenant pour {{price}}.",
+    "noneBody": "Faites parler {{language}} à toute la vidéo pour {{price}}.",
+    "retry": "Réessayer",
+    "finishCta": "Terminer la vidéo · {{price}}",
+    "noneCta": "La faire parler {{language}} · {{price}}",
+    "notNow": "Pas maintenant"
   }
 }

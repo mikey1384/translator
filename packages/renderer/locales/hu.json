@@ -1227,5 +1227,29 @@
     "Default": "Körvonal",
     "Classic": "Vastag sárga",
     "sample": "Szia"
+  },
+  "freePreview": {
+    "quietPreview": "Előnézet · {{covered}}/{{total}} perc",
+    "quietNone": "Még nincs felirat · {{total}} perc",
+    "finishShort": "Videó befejezése",
+    "finishShortPrice": "Befejezés {{price}} áron",
+    "checkoutTitle": "Fejezd be a fizetést a böngészőben",
+    "checkoutBody": "Megnyitottunk egy biztonságos Stripe-fizetést a(z) {{price}} árú csomaghoz. Amint végeztél, a Translator ott folytatja, ahol abbahagyta. Itt nem kell semmire kattintanod.",
+    "checkoutBack": "Vissza",
+    "resumingTitle": "A videó befejezése",
+    "resumingBody": "Folytatás innen: {{time}}, és a többi is ezen a nyelven szól: {{language}}…",
+    "failedTitle": "A befejezés leállt",
+    "offerTitle": "Ez volt az első {{covered}} perc a(z) {{total}} percből.",
+    "noneTitle": "Ez a videó {{total}} perces.",
+    "failedBody": "Minden eddig elkészült rész megmarad. Próbáld újra a többi befejezéséhez.",
+    "enoughBody": "Van elég perced, hogy most befejezd a hátralévő {{remaining}} percet.",
+    "offerBody": "Fejezd be az egész videót {{price}} áron. Ez fedezi a hátralévő {{remaining}} percet, a maradék pedig megmarad a következő videódhoz.",
+    "offerBodyLong": "A(z) {{price}} árú csomag a hátralévő {{remaining}} perc nagy részét fedezi.",
+    "noneBodyMonthly": "Az e havi ingyenes perceid elfogytak. {{date}}-n térnek vissza, vagy szólaljon meg most ezen a nyelven {{price}} áron: {{language}}.",
+    "noneBody": "Az egész videó szólaljon meg {{price}} áron ezen a nyelven: {{language}}.",
+    "retry": "Próbáld újra",
+    "finishCta": "Videó befejezése · {{price}}",
+    "noneCta": "Megszólaltatás: {{language}} · {{price}}",
+    "notNow": "Most nem"
   }
 }

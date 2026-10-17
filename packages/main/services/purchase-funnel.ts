@@ -24,6 +24,12 @@ export const RENDERER_PURCHASE_FUNNEL_EVENTS = Object.freeze([
   'byo_unlock_button_shown',
   'byo_unlock_button_clicked',
   'byo_unlock_failed',
+  // Free preview lifecycle; the offer's checkout clicks use the credit events
+  // with placement 'free-preview-offer'.
+  'free_preview_ready',
+  'free_preview_dismissed',
+  'free_preview_completed',
+  'free_preview_failed',
 ] as const satisfies readonly PurchaseFunnelEvent[]);
 
 const rendererPurchaseFunnelEventSet = new Set<PurchaseFunnelEvent>(
@@ -41,6 +47,7 @@ const purchasePlacements = new Set<PurchasePlacement>([
   'settings-credit-card',
   'settings-byo',
   'agent',
+  'free-preview-offer',
 ]);
 const purchaseFailureReasons = new Set<PurchaseFailureReason>([
   'network_error',

@@ -1227,5 +1227,29 @@
     "Default": "Garis tepi",
     "Classic": "Kuning tebal",
     "sample": "Halo"
+  },
+  "freePreview": {
+    "quietPreview": "Pratinjau · {{covered}} dari {{total}} mnt",
+    "quietNone": "Belum ada subtitle · {{total}} mnt",
+    "finishShort": "Selesaikan video",
+    "finishShortPrice": "Selesaikan seharga {{price}}",
+    "checkoutTitle": "Selesaikan pembayaran di browser",
+    "checkoutBody": "Kami membuka checkout Stripe yang aman untuk paket {{price}}. Translator akan melanjutkan dari titik terakhir begitu pembayaran selesai. Tidak perlu mengeklik apa pun di sini.",
+    "checkoutBack": "Kembali",
+    "resumingTitle": "Menyelesaikan video",
+    "resumingBody": "Melanjutkan dari {{time}} agar sisanya berbicara {{language}}…",
+    "failedTitle": "Penyelesaian terhenti",
+    "offerTitle": "Itu tadi {{covered}} menit pertama dari {{total}} menit.",
+    "noneTitle": "Video ini berdurasi {{total}} menit.",
+    "failedBody": "Semua yang sudah selesai tetap tersimpan. Coba lagi untuk menyelesaikan sisanya.",
+    "enoughBody": "Menit Anda cukup untuk menyelesaikan sisa {{remaining}} menit sekarang.",
+    "offerBody": "Selesaikan seluruh video seharga {{price}}. Ini mencakup sisa {{remaining}} menit, dan sisanya tetap tersimpan untuk video berikutnya.",
+    "offerBodyLong": "Paket {{price}} mencakup sebagian besar sisa {{remaining}} menit.",
+    "noneBodyMonthly": "Menit gratis bulan ini sudah habis. Menit kembali pada {{date}}, atau buat video ini berbicara {{language}} sekarang seharga {{price}}.",
+    "noneBody": "Buat seluruh video berbicara {{language}} seharga {{price}}.",
+    "retry": "Coba lagi",
+    "finishCta": "Selesaikan video · {{price}}",
+    "noneCta": "Buat berbicara {{language}} · {{price}}",
+    "notNow": "Nanti saja"
   }
 }

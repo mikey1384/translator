@@ -1227,5 +1227,29 @@
     "Default": "آؤٹ لائن",
     "Classic": "موٹا پیلا",
     "sample": "ہیلو"
+  },
+  "freePreview": {
+    "quietPreview": "پیش نظارہ · {{total}} میں سے {{covered}} منٹ",
+    "quietNone": "ابھی سب ٹائٹلز نہیں · {{total}} منٹ",
+    "finishShort": "ویڈیو مکمل کریں",
+    "finishShortPrice": "{{price}} میں مکمل کریں",
+    "checkoutTitle": "اپنے براؤزر میں ادائیگی مکمل کریں",
+    "checkoutBody": "ہم نے {{price}} پیک کے لیے ایک محفوظ Stripe چیک آؤٹ کھول دیا ہے۔ جیسے ہی یہ مکمل ہو، Translator وہیں سے آگے بڑھے گا جہاں رکا تھا۔ یہاں کچھ بھی کلک کرنے کی ضرورت نہیں۔",
+    "checkoutBack": "واپس",
+    "resumingTitle": "ویڈیو مکمل ہو رہی ہے",
+    "resumingBody": "{{time}} سے آگے بڑھتے ہوئے باقی حصے کو {{language}} میں بلوا رہے ہیں…",
+    "failedTitle": "مکمل کرنا رک گیا",
+    "offerTitle": "یہ {{total}} میں سے پہلے {{covered}} منٹ تھے۔",
+    "noneTitle": "یہ ویڈیو {{total}} منٹ کی ہے۔",
+    "failedBody": "اب تک جو مکمل ہوا وہ محفوظ ہے۔ باقی مکمل کرنے کے لیے دوبارہ کوشش کریں۔",
+    "enoughBody": "باقی {{remaining}} منٹ ابھی مکمل کرنے کے لیے آپ کے پاس کافی منٹ ہیں۔",
+    "offerBody": "پوری ویڈیو {{price}} میں مکمل کریں۔ اس سے باقی {{remaining}} منٹ پورے ہو جائیں گے، اور جو بچے گا وہ آپ کی اگلی ویڈیو کے لیے رہے گا۔",
+    "offerBodyLong": "{{price}} پیک باقی {{remaining}} منٹ کا زیادہ تر حصہ پورا کرتا ہے۔",
+    "noneBodyMonthly": "اس مہینے کے مفت منٹ ختم ہو گئے ہیں۔ یہ {{date}} کو واپس آئیں گے، یا ابھی {{price}} میں اسے {{language}} میں بلوائیں۔",
+    "noneBody": "پوری ویڈیو کو {{price}} میں {{language}} میں بلوائیں۔",
+    "retry": "دوبارہ کوشش کریں",
+    "finishCta": "ویڈیو مکمل کریں · {{price}}",
+    "noneCta": "{{language}} میں بلوائیں · {{price}}",
+    "notNow": "ابھی نہیں"
   }
 }

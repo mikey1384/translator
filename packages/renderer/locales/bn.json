@@ -1227,5 +1227,29 @@
     "Default": "আউটলাইন",
     "Classic": "মোটা হলুদ",
     "sample": "হ্যালো"
+  },
+  "freePreview": {
+    "quietPreview": "প্রিভিউ · {{total}} মিনিটের {{covered}}",
+    "quietNone": "এখনও সাবটাইটেল নেই · {{total}} মিনিট",
+    "finishShort": "ভিডিওটি শেষ করুন",
+    "finishShortPrice": "{{price}}-এ শেষ করুন",
+    "checkoutTitle": "আপনার ব্রাউজারে পেমেন্ট শেষ করুন",
+    "checkoutBody": "{{price}} প্যাকের জন্য আমরা একটি নিরাপদ Stripe চেকআউট খুলেছি। শেষ হলেই Translator যেখানে থেমেছিল সেখান থেকে আবার শুরু করবে। এখানে কিছু ক্লিক করার দরকার নেই।",
+    "checkoutBack": "ফিরে যান",
+    "resumingTitle": "ভিডিওটি শেষ করা হচ্ছে",
+    "resumingBody": "{{time}} থেকে আবার শুরু করে বাকিটা {{language}}-এ বলানো হচ্ছে…",
+    "failedTitle": "শেষ করা থেমে গেছে",
+    "offerTitle": "এটি ছিল {{total}} মিনিটের প্রথম {{covered}} মিনিট।",
+    "noneTitle": "এই ভিডিওটি {{total}} মিনিটের।",
+    "failedBody": "এখন পর্যন্ত যা শেষ হয়েছে সব রাখা আছে। বাকিটা শেষ করতে আবার চেষ্টা করুন।",
+    "enoughBody": "বাকি {{remaining}} মিনিট এখনই শেষ করার মতো যথেষ্ট মিনিট আপনার আছে।",
+    "offerBody": "{{price}}-এ পুরো ভিডিওটি শেষ করুন। এতে বাকি {{remaining}} মিনিট কভার হবে, আর যা বাঁচবে তা আপনার পরের ভিডিওর জন্য থাকবে।",
+    "offerBodyLong": "{{price}} প্যাকে বাকি {{remaining}} মিনিটের বেশিরভাগ কভার হয়।",
+    "noneBodyMonthly": "এই মাসের ফ্রি মিনিট শেষ। সেগুলো {{date}}-এ ফিরবে, অথবা এখনই {{price}}-এ এটিকে {{language}}-এ বলান।",
+    "noneBody": "{{price}}-এ পুরো ভিডিওটিকে {{language}}-এ বলান।",
+    "retry": "আবার চেষ্টা করুন",
+    "finishCta": "ভিডিওটি শেষ করুন · {{price}}",
+    "noneCta": "{{language}}-এ বলান · {{price}}",
+    "notNow": "এখন নয়"
   }
 }

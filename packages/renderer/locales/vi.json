@@ -1227,5 +1227,29 @@
     "Default": "Viền",
     "Classic": "Vàng đậm",
     "sample": "Xin chào"
+  },
+  "freePreview": {
+    "quietPreview": "Xem trước · {{covered}}/{{total}} phút",
+    "quietNone": "Chưa có phụ đề · {{total}} phút",
+    "finishShort": "Hoàn tất video",
+    "finishShortPrice": "Hoàn tất với {{price}}",
+    "checkoutTitle": "Hoàn tất thanh toán trong trình duyệt",
+    "checkoutBody": "Chúng tôi đã mở trang thanh toán Stripe an toàn cho gói {{price}}. Ngay khi xong, Translator sẽ tiếp tục từ chỗ đã dừng. Bạn không cần bấm gì ở đây.",
+    "checkoutBack": "Quay lại",
+    "resumingTitle": "Đang hoàn tất video",
+    "resumingBody": "Tiếp tục từ {{time}} để phần còn lại nói {{language}}…",
+    "failedTitle": "Quá trình hoàn tất đã dừng",
+    "offerTitle": "Đó là {{covered}} phút đầu trong {{total}} phút.",
+    "noneTitle": "Video này dài {{total}} phút.",
+    "failedBody": "Mọi phần đã xong đều được giữ lại. Hãy thử lại để hoàn tất phần còn lại.",
+    "enoughBody": "Bạn có đủ phút để hoàn tất {{remaining}} phút còn lại ngay bây giờ.",
+    "offerBody": "Hoàn tất toàn bộ video với {{price}}. Gói này đủ cho {{remaining}} phút còn lại, phần dư sẽ được giữ cho video tiếp theo.",
+    "offerBodyLong": "Gói {{price}} đủ cho phần lớn {{remaining}} phút còn lại.",
+    "noneBodyMonthly": "Bạn đã dùng hết phút miễn phí tháng này. Phút sẽ trở lại vào {{date}}, hoặc cho video nói {{language}} ngay với {{price}}.",
+    "noneBody": "Cho toàn bộ video nói {{language}} với {{price}}.",
+    "retry": "Thử lại",
+    "finishCta": "Hoàn tất video · {{price}}",
+    "noneCta": "Cho video nói {{language}} · {{price}}",
+    "notNow": "Để sau"
   }
 }

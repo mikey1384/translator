@@ -39,7 +39,10 @@ export async function extractSubtitlesFromMedia({
   signal,
   progressCallback,
   services,
+  preparedAudioPath = null,
 }: {
+  /** Audio already extracted by the caller (free-preview slice). */
+  preparedAudioPath?: string | null;
   options: GenerateSubtitlesOptions;
   operationId: string;
   signal: AbortSignal;
@@ -74,14 +77,18 @@ export async function extractSubtitlesFromMedia({
     // Transcription needs ElevenLabs Scribe; in API key mode without a usable
     // ElevenLabs key, fail before spending time extracting audio.
     assertTranscriptionAvailable();
-    const { audioPath: extractedAudioPath } = await prepareAudio({
-      videoPath: options.videoPath,
-      services: { ffmpeg },
-      progressCallback: adaptedProgress ?? progressCallback,
-      operationId,
-      signal,
-    });
-    audioPath = extractedAudioPath;
+    if (preparedAudioPath) {
+      audioPath = preparedAudioPath;
+    } else {
+      const { audioPath: extractedAudioPath } = await prepareAudio({
+        videoPath: options.videoPath,
+        services: { ffmpeg },
+        progressCallback: adaptedProgress ?? progressCallback,
+        operationId,
+        signal,
+      });
+      audioPath = extractedAudioPath;
+    }
     markStage('prepare_audio');
 
     const { segments, speechIntervals, transcriptionEngine } =

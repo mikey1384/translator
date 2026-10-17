@@ -620,7 +620,11 @@ export default function EditSubtitles({
         }
         return;
       }
-      // Tail segments are appended via progress listener (appendSegments payload)
+      // The tail pass sends no partial results, so the listener never appends:
+      // add the returned cues here, or the paid-for tail is lost.
+      if (result.segments?.length) {
+        useSubStore.getState().appendSegments(result.segments);
+      }
       // Mark completion explicitly (progress-buffer will also send final 100%)
       try {
         useTaskStore.getState().setTranscription({

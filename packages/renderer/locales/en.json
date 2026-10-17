@@ -1245,5 +1245,29 @@
     "Default": "Outline",
     "Classic": "Bold yellow",
     "sample": "Hello there"
+  },
+  "freePreview": {
+    "quietPreview": "Preview · {{covered}} of {{total}} min",
+    "quietNone": "Not subtitled yet · {{total}} min",
+    "finishShort": "Finish the video",
+    "finishShortPrice": "Finish for {{price}}",
+    "checkoutTitle": "Finish paying in your browser",
+    "checkoutBody": "We opened a secure Stripe checkout for the {{price}} pack. Translator picks up right where it left off as soon as it’s done. No need to click anything here.",
+    "checkoutBack": "Back",
+    "resumingTitle": "Finishing the video",
+    "resumingBody": "Picking up at {{time}} and making the rest speak {{language}}…",
+    "failedTitle": "Finishing stopped",
+    "offerTitle": "That was the first {{covered}} of {{total}} minutes.",
+    "noneTitle": "This video is {{total}} minutes.",
+    "failedBody": "Everything finished so far is kept. Try again to finish the rest.",
+    "enoughBody": "You have enough minutes to finish the remaining {{remaining}} minutes now.",
+    "offerBody": "Finish the whole video for {{price}}. It covers the remaining {{remaining}} minutes, and what’s left over stays for your next video.",
+    "offerBodyLong": "The {{price}} pack covers most of the remaining {{remaining}} minutes.",
+    "noneBodyMonthly": "Your free minutes for this month are used up. They come back on {{date}}, or make it speak {{language}} now for {{price}}.",
+    "noneBody": "Make the whole video speak {{language}} for {{price}}.",
+    "retry": "Try again",
+    "finishCta": "Finish the video · {{price}}",
+    "noneCta": "Make it speak {{language}} · {{price}}",
+    "notNow": "Not now"
   }
 }

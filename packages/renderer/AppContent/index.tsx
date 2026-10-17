@@ -53,6 +53,9 @@ import { useHeartbeat } from '../hooks/useHeartbeat';
 import { css, cx } from '@emotion/css';
 import { pageWrapperStyles, containerStyles, colors, fonts } from '../styles';
 import { ArrowLeft } from 'lucide-react';
+import FreePreviewOffer, {
+  useFreePreviewOfferShowing,
+} from '../components/workspace/FreePreviewOffer';
 import * as OperationIPC from '../ipc/operation';
 import { logProgress, logButton, logError } from '../utils/logger';
 import {
@@ -209,6 +212,7 @@ export default function AppContent() {
   const hasMountedSubtitles = useSubStore(s => s.order.length > 0);
   const subtitleEditMode = useUIStore(s => s.subtitleEditMode);
   const workspaceToolsOpen = useUIStore(s => s.workspaceToolsOpen);
+  const freePreviewOfferShowing = useFreePreviewOfferShowing();
   const workspaceBusy = useWorkspaceBusy();
   // A video or subtitles on screen means the video workspace layout.
   const inWorkspace = Boolean(videoUrl) || hasMountedSubtitles;
@@ -540,7 +544,10 @@ export default function AppContent() {
               <ProgressPresentationContext.Provider value="inline">
                 {progressAreas}
               </ProgressPresentationContext.Provider>
-              {workspaceBusy ? null : <WorkspaceIdleStatus />}
+              <FreePreviewOffer />
+              {workspaceBusy || freePreviewOfferShowing ? null : (
+                <WorkspaceIdleStatus />
+              )}
               <WorkspaceActionBar />
             </div>
           ) : null}

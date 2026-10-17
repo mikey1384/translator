@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Button from '../Button';
 import Modal from '../Modal';
+import { useFreePreviewOfferShowing } from './FreePreviewOffer';
 import SaveAndMergeBar from '../../containers/EditSubtitles/SaveAndMergeBar';
 import {
   useSubStore,
@@ -305,10 +306,14 @@ export function WorkspaceActionBar() {
   const editor = useWorkspaceActions(s => s.editor);
   const hasSubs = count > 0;
   const hasTranslation = translated > 0;
+  // While a free-preview offer stands it carries the screen's yellow action.
+  const offerShowing = useFreePreviewOfferShowing();
 
   let primary: { label: string; run: () => void } | null = null;
   if (!busy) {
-    if (!hasSubs && videoPath) {
+    if (!hasSubs && videoPath && offerShowing) {
+      primary = null;
+    } else if (!hasSubs && videoPath) {
       primary = {
         label: t('home.makeItSpeak', 'Make it speak {{language}}', {
           language: language.name,
@@ -355,7 +360,7 @@ export function WorkspaceActionBar() {
     <div className={actionBarStyles}>
       {primary ? (
         <Button
-          variant="primary"
+          variant={offerShowing ? 'secondary' : 'primary'}
           size="lg"
           className={actionPrimaryStyles}
           onClick={primary.run}

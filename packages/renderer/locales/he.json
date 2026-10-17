@@ -1227,5 +1227,29 @@
     "Default": "קו מתאר",
     "Classic": "צהוב מודגש",
     "sample": "שלום"
+  },
+  "freePreview": {
+    "quietPreview": "תצוגה מקדימה · {{covered}} מתוך {{total}} דק׳",
+    "quietNone": "עדיין בלי כתוביות · {{total}} דק׳",
+    "finishShort": "השלמת הסרטון",
+    "finishShortPrice": "השלמה ב-{{price}}",
+    "checkoutTitle": "השלימו את התשלום בדפדפן",
+    "checkoutBody": "פתחנו תשלום מאובטח ב-Stripe עבור החבילה של {{price}}. Translator ימשיך בדיוק מאיפה שעצר ברגע שתסיימו. אין צורך ללחוץ כאן על שום דבר.",
+    "checkoutBack": "חזרה",
+    "resumingTitle": "משלימים את הסרטון",
+    "resumingBody": "ממשיכים מ-{{time}} כדי שגם השאר ידבר {{language}}…",
+    "failedTitle": "ההשלמה נעצרה",
+    "offerTitle": "אלה היו {{covered}} הדקות הראשונות מתוך {{total}}.",
+    "noneTitle": "הסרטון הזה באורך {{total}} דקות.",
+    "failedBody": "כל מה שהושלם עד עכשיו נשמר. נסו שוב כדי להשלים את השאר.",
+    "enoughBody": "יש לכם מספיק דקות כדי להשלים עכשיו את {{remaining}} הדקות שנותרו.",
+    "offerBody": "השלימו את כל הסרטון ב-{{price}}. זה מכסה את {{remaining}} הדקות שנותרו, ומה שנשאר נשמר לסרטון הבא.",
+    "offerBodyLong": "החבילה של {{price}} מכסה את רוב {{remaining}} הדקות שנותרו.",
+    "noneBodyMonthly": "הדקות החינמיות של החודש נוצלו. הן חוזרות ב-{{date}}, או שתנו לסרטון לדבר {{language}} עכשיו ב-{{price}}.",
+    "noneBody": "תנו לכל הסרטון לדבר {{language}} ב-{{price}}.",
+    "retry": "נסה שוב",
+    "finishCta": "השלמת הסרטון · {{price}}",
+    "noneCta": "שידבר {{language}} · {{price}}",
+    "notNow": "לא עכשיו"
   }
 }

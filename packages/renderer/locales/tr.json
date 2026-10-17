@@ -1227,5 +1227,29 @@
     "Default": "Kontur",
     "Classic": "Kalın sarı",
     "sample": "Merhaba"
+  },
+  "freePreview": {
+    "quietPreview": "Önizleme · {{total}} dk'nın {{covered}} dk'sı",
+    "quietNone": "Henüz altyazı yok · {{total}} dk",
+    "finishShort": "Videoyu tamamla",
+    "finishShortPrice": "{{price}} karşılığında tamamla",
+    "checkoutTitle": "Ödemeyi tarayıcında tamamla",
+    "checkoutBody": "{{price}} paketi için güvenli bir Stripe ödeme sayfası açtık. İşlem biter bitmez Translator kaldığı yerden devam eder. Burada hiçbir şeye tıklamana gerek yok.",
+    "checkoutBack": "Geri",
+    "resumingTitle": "Video tamamlanıyor",
+    "resumingBody": "{{time}} noktasından devam ediliyor, kalan kısım da {{language}} konuşacak…",
+    "failedTitle": "Tamamlama durdu",
+    "offerTitle": "Bu, {{total}} dakikanın ilk {{covered}} dakikasıydı.",
+    "noneTitle": "Bu video {{total}} dakika.",
+    "failedBody": "Şimdiye kadar tamamlanan her şey korunuyor. Kalanını tamamlamak için tekrar dene.",
+    "enoughBody": "Kalan {{remaining}} dakikayı şimdi tamamlamaya yetecek kadar dakikan var.",
+    "offerBody": "Videonun tamamını {{price}} karşılığında bitir. Kalan {{remaining}} dakikayı karşılar, artan kısım bir sonraki videon için kalır.",
+    "offerBodyLong": "{{price}} paketi kalan {{remaining}} dakikanın çoğunu karşılar.",
+    "noneBodyMonthly": "Bu ayki ücretsiz dakikaların bitti. {{date}} tarihinde yenilenir; ya da şimdi {{price}} karşılığında {{language}} konuşmasını sağla.",
+    "noneBody": "Videonun tamamının {{language}} konuşmasını {{price}} karşılığında sağla.",
+    "retry": "Tekrar Dene",
+    "finishCta": "Videoyu tamamla · {{price}}",
+    "noneCta": "{{language}} konuşsun · {{price}}",
+    "notNow": "Şimdi değil"
   }
 }

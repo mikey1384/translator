@@ -1,4 +1,9 @@
 import { css } from '@emotion/css';
+import {
+  clearFreePreviewForCurrentVideo,
+  decideFreePreview,
+  recordFreePreview,
+} from '../../utils/freePreviewRun';
 import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -1493,6 +1498,25 @@ export default function GenerateSubtitles() {
     if (!tryAcquireStepTwoActionLaunchLock()) return false;
 
     const requestedLanguage = preTranscriptProcessingLanguage;
+
+    // Free preview: when the balance doesn't cover the video, subtitle the
+    // opening minutes it does cover (or none) and offer to finish in place.
+    const previewPlan = decideFreePreview(durationSecs);
+    if (previewPlan.kind === 'none' && durationSecs) {
+      releaseStepTwoActionLaunchLock();
+      setTargetLanguage(requestedLanguage);
+      recordFreePreview({
+        durationSecs,
+        coveredSecs: 0,
+        language: requestedLanguage,
+        status: 'offer',
+      });
+      return true;
+    }
+    const previewEndSec =
+      previewPlan.kind === 'preview' ? previewPlan.previewSecs : undefined;
+    if (previewPlan.kind === 'full') clearFreePreviewForCurrentVideo();
+
     const transcriptionOperationId = `transcribe-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const stepTwoRunToken = startStepTwoWorkflow({
       kind: 'translate',
@@ -1508,6 +1532,7 @@ export default function GenerateSubtitles() {
         durationSecs,
         hoursNeeded,
         operationId: transcriptionOperationId,
+        previewEndSec,
         metadataStatus: {
           status: metadataStatus,
           code: metadataErrorCode,
@@ -1559,6 +1584,14 @@ export default function GenerateSubtitles() {
         targetLanguage: requestedLanguage,
         operationId: translationOperationId,
       });
+      if (translationResult?.success && previewEndSec && durationSecs) {
+        recordFreePreview({
+          durationSecs,
+          coveredSecs: previewEndSec,
+          language: requestedLanguage,
+          status: 'offer',
+        });
+      }
       return Boolean(translationResult?.success);
     } finally {
       clearStepTwoWorkflow({ expectedRunToken: stepTwoRunToken });

@@ -1227,5 +1227,29 @@
     "Default": "描边",
     "Classic": "粗体黄",
     "sample": "你好"
+  },
+  "freePreview": {
+    "quietPreview": "预览 · {{covered}}/{{total}} 分钟",
+    "quietNone": "尚无字幕 · {{total}} 分钟",
+    "finishShort": "完成整个视频",
+    "finishShortPrice": "{{price}} 完成",
+    "checkoutTitle": "请在浏览器中完成付款",
+    "checkoutBody": "我们已为 {{price}} 套餐打开安全的 Stripe 付款页面。付款完成后，Translator 会从中断处自动继续。这里无需任何操作。",
+    "checkoutBack": "返回",
+    "resumingTitle": "正在完成视频",
+    "resumingBody": "从 {{time}} 继续，让剩余部分也说{{language}}…",
+    "failedTitle": "完成已中断",
+    "offerTitle": "以上是 {{total}} 分钟中的前 {{covered}} 分钟。",
+    "noneTitle": "此视频时长 {{total}} 分钟。",
+    "failedBody": "已完成的部分都会保留。请重试以完成剩余部分。",
+    "enoughBody": "你的时长足够现在完成剩余的 {{remaining}} 分钟。",
+    "offerBody": "只需 {{price}} 即可完成整个视频。它可覆盖剩余的 {{remaining}} 分钟，多出的时长留给你的下一个视频。",
+    "offerBodyLong": "{{price}} 套餐可覆盖剩余 {{remaining}} 分钟中的大部分。",
+    "noneBodyMonthly": "本月免费时长已用完。将于{{date}}恢复，或现在花 {{price}} 让它说{{language}}。",
+    "noneBody": "花 {{price}} 让整个视频说{{language}}。",
+    "retry": "重试",
+    "finishCta": "完成整个视频 · {{price}}",
+    "noneCta": "让它说{{language}} · {{price}}",
+    "notNow": "暂不"
   }
 }

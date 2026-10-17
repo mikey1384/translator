@@ -124,7 +124,12 @@ interface Actions {
       end: number;
       translation?: string | undefined;
       index?: number;
-    }>
+    }>,
+    /**
+     * Match by line number when times differ. Only safe when the update
+     * covers the whole list; a subset numbered 1..N would hit the wrong rows.
+     */
+    options?: { matchByIndex?: boolean }
   ) => void;
   // Append-only progress for transcription partials (no full reloads)
   applyTranscriptionProgress: (segs: SrtSegment[]) => void;
@@ -829,8 +834,9 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         }),
 
       // Batch-apply translations using timecode matching, with index fallback
-      applyTranslations: segs =>
+      applyTranslations: (segs, options) =>
         set(s => {
+          const matchByIndex = options?.matchByIndex !== false;
           if (!Array.isArray(segs) || segs.length === 0) return;
           // Build quick lookups for incoming translations by time key and by index
           const byTime = new Map<string, string>();
@@ -852,7 +858,12 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             if (!cue) continue;
             const key = `${secondsToSrtTime(cue.start)}-->${secondsToSrtTime(cue.end)}`;
             let next = byTime.get(key);
-            if (!next && typeof cue.index === 'number' && cue.index > 0) {
+            if (
+              !next &&
+              matchByIndex &&
+              typeof cue.index === 'number' &&
+              cue.index > 0
+            ) {
               next = byIndex.get(cue.index);
             }
             if (next && (cue.translation ?? '').trim() !== next) {

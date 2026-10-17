@@ -40,7 +40,11 @@ declare module '@shared-types/app' {
     | 'byo_unlock_opened'
     | 'byo_unlock_completed'
     | 'byo_unlock_failed'
-    | 'byo_unlock_cancelled';
+    | 'byo_unlock_cancelled'
+    | 'free_preview_ready'
+    | 'free_preview_dismissed'
+    | 'free_preview_completed'
+    | 'free_preview_failed';
 
   export type CreditPackId = 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
 
@@ -49,7 +53,8 @@ declare module '@shared-types/app' {
     | 'credit-ran-out-dialog'
     | 'settings-credit-card'
     | 'settings-byo'
-    | 'agent';
+    | 'agent'
+    | 'free-preview-offer';
 
   export type PurchaseFailureReason =
     | 'network_error'
@@ -881,6 +886,11 @@ declare module '@shared-types/app' {
     sourceMediaPath?: string;
     /** Stable fallback identity used when the source has no reusable filesystem path. */
     durableRecoverySeed?: string;
+    /**
+     * Free preview: transcribe only the first N seconds, the part the
+     * balance covers. The rest is transcribed later with transcribeRemaining.
+     */
+    previewEndSec?: number;
     targetLanguage: string;
     streamResults?: boolean;
     filters?: { name: string; extensions: string[] }[];

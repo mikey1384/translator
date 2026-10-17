@@ -1227,5 +1227,29 @@
     "Default": "Mpaka",
     "Classic": "Njano nzito",
     "sample": "Habari"
+  },
+  "freePreview": {
+    "quietPreview": "Onyesho · dakika {{covered}} kati ya {{total}}",
+    "quietNone": "Bado hakuna manukuu · dakika {{total}}",
+    "finishShort": "Kamilisha video",
+    "finishShortPrice": "Kamilisha kwa {{price}}",
+    "checkoutTitle": "Kamilisha malipo kwenye kivinjari chako",
+    "checkoutBody": "Tumefungua malipo salama ya Stripe kwa kifurushi cha {{price}}. Translator itaendelea pale ilipoishia mara tu utakapomaliza. Huhitaji kubofya chochote hapa.",
+    "checkoutBack": "Rudi",
+    "resumingTitle": "Inakamilisha video",
+    "resumingBody": "Inaendelea kutoka {{time}} ili sehemu iliyobaki izungumze {{language}}…",
+    "failedTitle": "Ukamilishaji umesimama",
+    "offerTitle": "Hizo zilikuwa dakika {{covered}} za kwanza kati ya {{total}}.",
+    "noneTitle": "Video hii ina dakika {{total}}.",
+    "failedBody": "Kila kilichokamilika hadi sasa kimehifadhiwa. Jaribu tena ili kukamilisha kilichobaki.",
+    "enoughBody": "Una dakika za kutosha kukamilisha dakika {{remaining}} zilizobaki sasa.",
+    "offerBody": "Kamilisha video nzima kwa {{price}}. Inashughulikia dakika {{remaining}} zilizobaki, na kitakachobaki kitakusubiri kwa video yako ijayo.",
+    "offerBodyLong": "Kifurushi cha {{price}} kinashughulikia sehemu kubwa ya dakika {{remaining}} zilizobaki.",
+    "noneBodyMonthly": "Dakika zako za bure za mwezi huu zimekwisha. Zitarudi {{date}}, au ifanye izungumze {{language}} sasa kwa {{price}}.",
+    "noneBody": "Fanya video nzima izungumze {{language}} kwa {{price}}.",
+    "retry": "Jaribu tena",
+    "finishCta": "Kamilisha video · {{price}}",
+    "noneCta": "Ifanye izungumze {{language}} · {{price}}",
+    "notNow": "Si sasa"
   }
 }

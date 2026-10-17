@@ -1227,5 +1227,29 @@
     "Default": "縁取り",
     "Classic": "太字イエロー",
     "sample": "こんにちは"
+  },
+  "freePreview": {
+    "quietPreview": "プレビュー · {{total}}分中{{covered}}分",
+    "quietNone": "字幕はまだありません · {{total}}分",
+    "finishShort": "動画を仕上げる",
+    "finishShortPrice": "{{price}}で仕上げる",
+    "checkoutTitle": "ブラウザでお支払いを完了してください",
+    "checkoutBody": "{{price}}パックの安全なStripe決済ページを開きました。完了すると、Translatorが中断したところから自動で再開します。ここで操作する必要はありません。",
+    "checkoutBack": "戻る",
+    "resumingTitle": "動画を仕上げています",
+    "resumingBody": "{{time}}から再開し、残りを{{language}}にしています…",
+    "failedTitle": "仕上げが止まりました",
+    "offerTitle": "ここまでは{{total}}分中、最初の{{covered}}分でした。",
+    "noneTitle": "この動画は{{total}}分です。",
+    "failedBody": "ここまで完了した分はすべて保存されています。もう一度試して残りを仕上げましょう。",
+    "enoughBody": "残り{{remaining}}分を今すぐ仕上げるのに十分な時間があります。",
+    "offerBody": "{{price}}で動画全体を仕上げましょう。残り{{remaining}}分をカバーし、余った分は次の動画に使えます。",
+    "offerBodyLong": "{{price}}パックで残り{{remaining}}分の大部分をカバーできます。",
+    "noneBodyMonthly": "今月の無料分は使い切りました。{{date}}に復活します。または今すぐ{{price}}で{{language}}にできます。",
+    "noneBody": "{{price}}で動画全体を{{language}}にする。",
+    "retry": "再試行",
+    "finishCta": "動画を仕上げる · {{price}}",
+    "noneCta": "{{language}}にする · {{price}}",
+    "notNow": "今はしない"
   }
 }
