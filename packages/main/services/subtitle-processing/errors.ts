@@ -52,6 +52,30 @@ export function isProviderRateLimitError(err: unknown): boolean {
   );
 }
 
+/** True when the server refused the call for credits (402 / insufficient-credits). */
+export function isInsufficientCreditsError(err: unknown): boolean {
+  const anyErr = err as any;
+  if (anyErr?.response?.status === 402 || anyErr?.status === 402) return true;
+  return String(anyErr?.message || err || '').includes(
+    ERROR_CODES.INSUFFICIENT_CREDITS
+  );
+}
+
+/**
+ * Serial-phase retry policy shared by draft and review passes: admission
+ * slots and provider rate limits clear with time, so they wait and retry.
+ * Insufficient credits never does: a retry cannot fund itself and only
+ * delays the credits dialog.
+ */
+export function shouldRetrySerialBatch(
+  err: unknown,
+  signal?: AbortSignal | null
+): boolean {
+  if (signal?.aborted) return false;
+  if (isInsufficientCreditsError(err)) return false;
+  return isTranslationAdmissionLimitError(err) || isProviderRateLimitError(err);
+}
+
 /**
  * Normalize an admission-limit error to the shape the retry pool expects:
  * marker in `message`, server `retryAfterSec` preserved when known. An

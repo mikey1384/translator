@@ -22,7 +22,9 @@ import type {
   SummaryEstimate,
 } from './TranscriptSummaryLogic.types';
 import useTranscriptHighlightsFlow from './useTranscriptHighlightsFlow';
-import useTranscriptSummaryFlow from './useTranscriptSummaryFlow';
+import useTranscriptSummaryFlow, {
+  type RestoredAnalysisVariant,
+} from './useTranscriptSummaryFlow';
 
 export type {
   CombineCutState,
@@ -41,6 +43,7 @@ type UseTranscriptSummaryLogicResult = {
   combineAspectMode: HighlightAspectMode;
   combineCutState: CombineCutState;
   combineMode: boolean;
+  combinedClipStale: boolean;
   copyStatus: 'idle' | 'copied';
   downloadStatus: Record<string, 'idle' | 'saving' | 'saved' | 'error'>;
   error: string | null;
@@ -76,9 +79,11 @@ type UseTranscriptSummaryLogicResult = {
   isCancelling: boolean;
   isGenerating: boolean;
   isHighlightCutting: (highlight: TranscriptHighlight) => boolean;
+  isHighlightClipStale: (highlight: TranscriptHighlight) => boolean;
   orderedSelection: TranscriptHighlight[];
   progressLabel: string;
   progressPercent: number;
+  restoredVariant: RestoredAnalysisVariant | null;
   sections: TranscriptSummarySection[];
   selectedHighlights: Set<string>;
   setCombineAspectMode: (mode: HighlightAspectMode) => void;
@@ -160,6 +165,7 @@ export default function useTranscriptSummaryLogic({
     combineAspectMode: highlightsFlow.combineAspectMode,
     combineCutState: highlightsFlow.combineCutState,
     combineMode: highlightsFlow.combineMode,
+    combinedClipStale: highlightsFlow.combinedClipStale,
     copyStatus: summaryFlow.copyStatus,
     downloadStatus: highlightsFlow.downloadStatus,
     error,
@@ -186,9 +192,11 @@ export default function useTranscriptSummaryLogic({
     isCancelling: summaryFlow.isCancelling,
     isGenerating: summaryFlow.isGenerating,
     isHighlightCutting: highlightsFlow.isHighlightCutting,
+    isHighlightClipStale: highlightsFlow.isHighlightClipStale,
     orderedSelection: highlightsFlow.orderedSelection,
     progressLabel: summaryFlow.progressLabel,
     progressPercent: summaryFlow.progressPercent,
+    restoredVariant: summaryFlow.restoredVariant,
     sections: summaryFlow.sections,
     selectedHighlights: highlightsFlow.selectedHighlights,
     setCombineAspectMode: highlightsFlow.setCombineAspectMode,

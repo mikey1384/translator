@@ -46,10 +46,14 @@ type VideoSuggestionState = {
   lastRequestPreferences: VideoSuggestionPreferenceSlots;
   lastTraceKey: string;
   resultsBeforeOperation: VideoSuggestionResultItem[];
+  /** Home "Find videos": open the panel and search for this query. */
+  homeSearchRequest: { id: number; query: string } | null;
 };
 
 type VideoSuggestionActions = {
   setInput: (value: string) => void;
+  requestHomeSearch: (query: string) => void;
+  clearHomeSearchRequest: (id: number) => void;
   setError: (value: string | null) => void;
   setMessages: (value: Updater<VideoSuggestionMessage[]>) => void;
   setResults: (value: Updater<VideoSuggestionResultItem[]>) => void;
@@ -107,6 +111,7 @@ const initialState: VideoSuggestionState = {
   lastRequestPreferences: {},
   lastTraceKey: '',
   resultsBeforeOperation: [],
+  homeSearchRequest: null,
 };
 
 function resolveUpdater<T>(value: Updater<T>, prev: T): T {
@@ -136,6 +141,21 @@ export const useVideoSuggestionStore =
       setInput: value =>
         set(state => {
           state.input = value;
+        }),
+
+      requestHomeSearch: query =>
+        set(state => {
+          state.homeSearchRequest = {
+            id: (state.homeSearchRequest?.id ?? 0) + 1,
+            query: query.trim(),
+          };
+        }),
+
+      clearHomeSearchRequest: id =>
+        set(state => {
+          if (state.homeSearchRequest?.id === id) {
+            state.homeSearchRequest = null;
+          }
         }),
 
       setError: value =>

@@ -621,3 +621,35 @@ export const editorFindIconButtonStyles = css`
     opacity: 0.6;
   }
 `;
+
+export const subtitleRowTimeInputInvalidStyles = css`
+  border-color: ${colors.danger};
+`;
+
+export const subtitleRowTimeErrorStyles = css`
+  flex-basis: 100%;
+  margin: 0;
+  color: ${colors.danger};
+  font-size: ${fontSize.sm};
+  line-height: ${lineHeight.normal};
+`;
+
+export const subtitleUndoBarStyles = css`
+  position: sticky;
+  bottom: ${spacing.md};
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${spacing.md};
+  width: fit-content;
+  max-width: 100%;
+  margin: ${spacing.sm} auto 0;
+  padding: ${spacing.sm} ${spacing.md};
+  border: 1px solid ${colors.borderStrong};
+  border-radius: ${borderRadius.lg};
+  background: ${colors.surfaceRaised};
+  color: ${colors.text};
+  font-size: ${fontSize.sm};
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+`;

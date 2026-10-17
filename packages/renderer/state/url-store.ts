@@ -14,19 +14,26 @@ import { useUIStore } from './ui-store';
 import {
   closeChangeVideo,
   openDownloadSwitchConfirm,
+  openLongDownloadConfirm,
   openUnsavedSrtConfirm,
 } from './modal-store';
+import {
+  classifyVideoCollectionUrl,
+  normalizeVideoUrlInput,
+} from '../../shared/helpers/video-url.js';
 import {
   rollbackLocalVideoSuggestionHistoryUpsert,
   upsertLocalVideoSuggestionHistoryItem,
 } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 import { mountedSubtitleMatchesVideoSource } from '../utils/subtitle-source-association';
+import { confirmReplaceUnsavedSubtitles } from '../utils/unsaved-subtitles';
 import { handoffPromotedDownloadHistory } from '../../shared/helpers/url-download-history-handoff.js';
 import { parseSrt } from '../../shared/helpers';
 import {
   didSaveSubtitleFile,
   saveCurrentSubtitles,
 } from '../utils/saveSubtitles';
+import { describeDownloadFailure } from '../utils/taskFailure';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -60,6 +67,27 @@ type DownloadTask = {
 
 export type UrlErrorKind = 'validation' | 'operation' | 'unknown';
 
+export type DownloadRequest = {
+  url: string;
+  mountOnComplete: boolean;
+  preserveSubtitles: boolean;
+};
+
+/** Why a link was refused before downloading, in the UI language. */
+export function sourceRejectionMessage(
+  code: 'collection_url' | 'live_stream'
+): string {
+  return code === 'collection_url'
+    ? i18n.t(
+        'input.urlRejected.collection',
+        'This is a channel or playlist link. Paste a link to a single video, or use Find videos.'
+      )
+    : i18n.t(
+        'input.urlRejected.live',
+        'This is a live stream. Translator can download it after the broadcast ends.'
+      );
+}
+
 const VALIDATION_ERROR_HINTS: RegExp[] = [
   /\bplease enter a valid url\b/i,
   /\binvalid url\b/i,
@@ -89,21 +117,35 @@ interface UrlState {
   errorKind: UrlErrorKind | null;
   inputMode: 'url' | 'file';
   needCookies: boolean;
+  /** The last download started, so "Connect & retry" can repeat it exactly. */
+  lastDownloadRequest: DownloadRequest | null;
+  /** Set by the cookie banner; the workspace re-runs it with its auto-run chain. */
+  cookieRetryRequest: { id: number; request: DownloadRequest } | null;
+  requestCookieRetry: () => boolean;
+  clearCookieRetryRequest: (id: number) => void;
   setUrlInput: (urlInput: string) => void;
   setDownloadQuality: (downloadQuality: VideoQuality) => void;
   clearError: () => void;
   setError: (msg: string, kind?: UrlErrorKind) => void;
   setValidationError: (msg: string) => void;
   setOperationError: (msg: string) => void;
-  downloadMedia: (options?: {
-    mountOnComplete?: boolean;
-    preserveSubtitles?: boolean;
-    url?: string;
-  }) => Promise<ProcessUrlResult | void>;
+  downloadMedia: (
+    options?: DownloadMediaOptions
+  ) => Promise<ProcessUrlResult | void>;
   setDownload: (patch: Partial<DownloadTask>) => void;
   setInputMode: (mode: 'url' | 'file') => void;
   setNeedCookies: (v: boolean) => void;
 }
+
+type DownloadMediaOptions = {
+  mountOnComplete?: boolean;
+  preserveSubtitles?: boolean;
+  url?: string;
+  /** Skip the long-video confirmation (the user already confirmed). */
+  allowLongVideo?: boolean;
+};
+
+let cookieRetryRequestSeq = 0;
 
 const initialDownload: DownloadTask = {
   id: null,
@@ -122,6 +164,25 @@ export const useUrlStore = create<UrlState>()(
     errorKind: null as UrlErrorKind | null,
     inputMode: 'url',
     needCookies: false,
+    lastDownloadRequest: null,
+    cookieRetryRequest: null,
+
+    requestCookieRetry: () => {
+      const request = get().lastDownloadRequest;
+      if (!request) return false;
+      cookieRetryRequestSeq += 1;
+      set(state => {
+        state.needCookies = false;
+        state.cookieRetryRequest = { id: cookieRetryRequestSeq, request };
+      });
+      return true;
+    },
+    clearCookieRetryRequest: id =>
+      set(state => {
+        if (state.cookieRetryRequest?.id === id) {
+          state.cookieRetryRequest = null;
+        }
+      }),
 
     setUrlInput: urlInput => {
       set(state => {
@@ -173,14 +234,13 @@ export const useUrlStore = create<UrlState>()(
 async function downloadMediaInternal(
   set: any,
   get: any,
-  options?: {
-    mountOnComplete?: boolean;
-    preserveSubtitles?: boolean;
-    url?: string;
-  }
+  options?: DownloadMediaOptions
 ): Promise<ProcessUrlResult | void> {
   const { urlInput, downloadQuality } = get();
-  const requestedUrl = String(options?.url ?? urlInput ?? '').trim();
+  const rawUrl = String(options?.url ?? urlInput ?? '').trim();
+  // Bare domains and links inside shared text become plain links; anything
+  // else goes to main as typed and comes back as an invalid-URL error.
+  const requestedUrl = normalizeVideoUrlInput(rawUrl) ?? rawUrl;
   const preserveSubtitles = Boolean(options?.preserveSubtitles);
   const mountOnComplete = options?.mountOnComplete !== false;
   const opId = `download-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -262,11 +322,30 @@ async function downloadMediaInternal(
   };
   if (!requestedUrl) {
     set((state: UrlState) => {
-      state.error = 'Please enter a valid URL';
+      state.error = i18n.t('errors.invalidUrl');
       state.errorKind = 'validation';
     });
     return;
   }
+  if (classifyVideoCollectionUrl(requestedUrl)) {
+    set((state: UrlState) => {
+      state.urlInput = requestedUrl;
+      state.error = sourceRejectionMessage('collection_url');
+      state.errorKind = 'validation';
+    });
+    return {
+      success: false,
+      error: 'collection_url',
+      rejection: { code: 'collection_url' },
+    };
+  }
+  set((state: UrlState) => {
+    state.lastDownloadRequest = {
+      url: requestedUrl,
+      mountOnComplete,
+      preserveSubtitles,
+    };
+  });
   set((state: UrlState) => {
     state.download = {
       ...state.download,
@@ -317,9 +396,12 @@ async function downloadMediaInternal(
     });
     if (p.error)
       set((state: UrlState) => {
-        const message = `Download error: ${p.error}`;
-        state.error = message;
-        state.errorKind = inferErrorKind(message);
+        // Main's reason code, in the UI language.
+        state.error = describeDownloadFailure({
+          error: p.error,
+          errorCode: p.errorCode,
+        });
+        state.errorKind = 'operation';
       });
   });
 
@@ -328,6 +410,7 @@ async function downloadMediaInternal(
       url: requestedUrl,
       quality: downloadQuality,
       operationId: opId,
+      allowLongVideo: options?.allowLongVideo === true,
     });
 
     // User cancellation should always win, even if the backend eventually
@@ -339,6 +422,46 @@ async function downloadMediaInternal(
       return cancelledResult();
     }
 
+    if (res.rejection) {
+      const rejection = res.rejection;
+      if (rejection.code === 'long_video') {
+        set((state: UrlState) => {
+          state.needCookies = false;
+          state.download.inProgress = false;
+          state.download.stage = '';
+          state.download.percent = 0;
+        });
+        const confirmed = await openLongDownloadConfirm({
+          durationSec: rejection.durationSec,
+          estimatedBytes: rejection.estimatedBytes,
+        });
+        // A download the user started meanwhile owns the state now.
+        if (get().download.id !== opId) return cancelledResult();
+        if (!confirmed) {
+          set((state: UrlState) => {
+            state.download.stage = 'Cancelled';
+            state.download.percent = 100;
+          });
+          return cancelledResult();
+        }
+        return downloadMediaInternal(set, get, {
+          ...options,
+          url: requestedUrl,
+          allowLongVideo: true,
+        });
+      }
+      const message = sourceRejectionMessage(rejection.code);
+      set((state: UrlState) => {
+        state.needCookies = false;
+        state.download.inProgress = false;
+        state.download.stage = 'Error';
+        state.download.percent = 100;
+        state.error = message;
+        state.errorKind = 'validation';
+      });
+      return res;
+    }
+
     if (
       res.success &&
       res.captionRecovery?.kind === 'youtube_automatic_captions' &&
@@ -346,8 +469,9 @@ async function downloadMediaInternal(
     ) {
       const recoveredSegments = parseSrt(String(res.subtitles || ''));
       if (recoveredSegments.length === 0) {
-        const message =
-          'Public automatic captions were found, but Translator could not read them.';
+        const message = describeDownloadFailure({
+          errorCode: 'captions_unreadable',
+        });
         set((state: UrlState) => {
           state.needCookies = false;
           state.download.inProgress = false;
@@ -413,9 +537,16 @@ async function downloadMediaInternal(
         if (choice === 'save') {
           const saveResult = await saveCurrentSubtitles();
           if (!didSaveSubtitleFile(saveResult)) {
-            const message =
-              saveResult.error ||
-              'Existing subtitles could not be saved. Automatic captions were not opened.';
+            if (saveResult.error) {
+              console.warn(
+                '[url-store] Saving subtitles failed:',
+                saveResult.error
+              );
+            }
+            const message = i18n.t(
+              'errors.download.subtitlesNotSaved',
+              'Your current subtitles couldn’t be saved, so the YouTube captions weren’t opened.'
+            );
             set((state: UrlState) => {
               state.needCookies = false;
               state.download.inProgress = false;
@@ -466,6 +597,15 @@ async function downloadMediaInternal(
     const filename = res.filename;
 
     if (res.cancelled || !finalPath || !filename) {
+      // One report per failure: the progress event only formats the text.
+      const downloadFailureMessage =
+        res.cancelled || res.error === 'NeedCookies'
+          ? ''
+          : describeDownloadFailure({
+              error: res.error,
+              errorCode: res.errorCode,
+              report: true,
+            });
       set((state: UrlState) => {
         state.needCookies = res.error === 'NeedCookies';
         state.download.inProgress = false;
@@ -481,9 +621,8 @@ async function downloadMediaInternal(
           state.errorKind = null;
         } else {
           state.needCookies = false;
-          const message = res.error || 'Failed to process URL';
-          state.error = message;
-          state.errorKind = inferErrorKind(message);
+          state.error = downloadFailureMessage;
+          state.errorKind = 'operation';
         }
       });
       return res;
@@ -497,9 +636,14 @@ async function downloadMediaInternal(
     const preserveMountedDiskSubs =
       existingSubs.length > 0 && subsOrigin === 'disk' && !libraryEntryId;
     const hasMountedSource = hasMountedVideo();
+    // Unsaved subtitle edits are never dropped silently; declining keeps the
+    // current video and leaves the download in the library.
     const shouldSwitchToDownloaded =
       mountOnComplete &&
-      (!hasMountedSource || (await openDownloadSwitchConfirm()));
+      (!hasMountedSource || (await openDownloadSwitchConfirm())) &&
+      (preserveSubtitles ||
+        preserveMountedDiskSubs ||
+        (await confirmReplaceUnsavedSubtitles()));
 
     if (isCurrentDownloadCancelledOrStale()) {
       await discardProcessedUrl();
@@ -517,7 +661,13 @@ async function downloadMediaInternal(
       // scratch result in main. If IPC itself failed before that happened,
       // this best-effort discard prevents the completed scratch file leaking.
       await discardProcessedUrl();
-      const message = acceptance.error || 'Downloaded video could not be saved';
+      if (acceptance.error) {
+        console.warn(
+          '[url-store] Download promotion failed:',
+          acceptance.error
+        );
+      }
+      const message = describeDownloadFailure({ errorCode: 'save_failed' });
       set((state: UrlState) => {
         state.needCookies = false;
         state.download.inProgress = false;
@@ -667,9 +817,11 @@ async function downloadMediaInternal(
         }
         useUIStore.getState().setInputMode('file');
       } catch (err: any) {
-        mountErrorMessage =
-          err?.message ||
-          'Downloaded file was saved but could not be opened automatically.';
+        console.warn('[url-store] Opening the downloaded video failed:', err);
+        mountErrorMessage = i18n.t(
+          'errors.download.openFailed',
+          'The video downloaded but couldn’t be opened. Open it from Download history.'
+        );
       }
     }
 
@@ -689,12 +841,17 @@ async function downloadMediaInternal(
       return;
     }
 
+    const message =
+      err?.message === 'NeedCookies'
+        ? null
+        : describeDownloadFailure({
+            error: err?.message || String(err),
+            report: true,
+          });
     set((state: UrlState) => {
       state.needCookies = err?.message === 'NeedCookies';
-      const message =
-        err?.message === 'NeedCookies' ? null : err?.message || String(err);
       state.error = message;
-      state.errorKind = message ? inferErrorKind(message) : null;
+      state.errorKind = message ? 'operation' : null;
       state.download.stage =
         err?.message === 'NeedCookies' ? 'NeedCookies' : 'Error';
       state.download.percent = 100;

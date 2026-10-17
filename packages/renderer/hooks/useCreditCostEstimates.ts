@@ -25,7 +25,8 @@ import {
  * menu) so no entry point starts a paid job without showing what it costs.
  */
 export function useCreditCostEstimates() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
   // Dubbing cost estimation
   const segments = useSubStore(s => s.segments);
   const order = useSubStore(s => s.order);
@@ -162,10 +163,12 @@ export function useCreditCostEstimates() {
   const formatCostLabel = (estimatedCredits: number) =>
     credits != null
       ? t('credits.costOfBalance', '{{cost}} of your {{balance}} credits', {
-          cost: formatCredits(estimatedCredits),
-          balance: formatCreditBalance(credits),
+          cost: formatCredits(estimatedCredits, locale),
+          balance: formatCreditBalance(credits, locale),
         })
-      : `${formatCredits(estimatedCredits)} cr`;
+      : t('credits.estimateAmount', '{{credits}} credits', {
+          credits: formatCredits(estimatedCredits, locale),
+        });
 
   return {
     credits,

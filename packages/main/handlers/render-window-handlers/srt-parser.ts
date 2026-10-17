@@ -3,11 +3,10 @@ import type {
   SrtSegment,
   SubtitleDisplayMode,
   SubtitleRenderEvent,
-  SubtitleRenderPart,
   SubtitleRenderState,
-  TimedSubtitlePartState,
 } from '@shared-types/app';
 import { cueText } from '../../../shared/helpers/index.js';
+import { buildCueTimeline } from '../../../shared/helpers/subtitle-cue-timeline.js';
 
 const ms = (sec: number) => Math.round(sec * 1000);
 
@@ -17,17 +16,7 @@ function createPlainState(text: string): SubtitleRenderState {
 
 function getRenderStateKey(state: SubtitleRenderState): string {
   if (state.mode === 'editorial') return JSON.stringify(state);
-  if (state.mode === 'plain') {
-    return `plain:${state.text}`;
-  }
-
-  return `timed:${state.parts
-    .map(part =>
-      part.kind === 'whitespace'
-        ? `space:${part.text}`
-        : `word:${part.state}:${part.text}`
-    )
-    .join('|')}`;
+  return `plain:${state.text}`;
 }
 
 function finalizeRenderEvents(
@@ -55,6 +44,10 @@ function finalizeRenderEvents(
   return final;
 }
 
+/**
+ * The burned-in subtitle states, using exactly the cue times the player uses
+ * (no stretching or gap filling) and the player's overlap rule.
+ */
 export function generateSubtitleEvents({
   segments,
   outputMode,
@@ -66,71 +59,34 @@ export function generateSubtitleEvents({
   videoDuration: number;
   operationId: string;
 }): SubtitleRenderEvent[] {
-  interface Interval {
-    start: number;
-    end: number;
-    text: string;
-  }
-
-  const mergedSegments: Interval[] = [];
   log.info(
     `[srt-parser ${operationId}] received ${segments.length} subtitle segments`
   );
 
-  const segmentTiming = (segment: SrtSegment) =>
-    JSON.stringify({
-      id: segment.id,
-      index: segment.index,
-      start: segment.start,
-      end: segment.end,
-    });
-
-  for (const segment of segments) {
-    const start = ms(segment.start);
-    const end = ms(segment.end);
-    const text = cueText(segment, outputMode);
-    const clampedEnd = Math.min(end, ms(videoDuration));
-
-    if (start >= clampedEnd) {
-      log.warn(
-        `[srt-parser ${operationId}] Skipping segment with zero/negative duration or past video duration: ${segmentTiming(segment)}`
-      );
-      continue;
-    }
-
-    const last = mergedSegments.at(-1);
-    if (last && last.text === text && start <= last.end) {
-      last.end = Math.max(last.end, clampedEnd);
-      continue;
-    }
-
-    const adjustedStart = last && start < last.end ? last.end : start;
-    if (adjustedStart < clampedEnd) {
-      mergedSegments.push({ start: adjustedStart, end: clampedEnd, text });
-      continue;
-    }
-
-    log.warn(
-      `[srt-parser ${operationId}] Skipping segment after start time adjustment due to overlap: ${segmentTiming(segment)}`
-    );
-  }
-
-  log.info(
-    `[srt-parser ${operationId}] created ${mergedSegments.length} merged segments`
-  );
+  const cues = segments.map(segment => ({
+    start: ms(segment.start),
+    end: ms(segment.end),
+  }));
+  const spans = buildCueTimeline(cues, ms(videoDuration));
 
   const events: SubtitleRenderEvent[] = [
     { timeMs: 0, state: createPlainState('') },
   ];
-
-  for (const segment of mergedSegments) {
-    const state = createPlainState(segment.text);
-    if (segment.start === 0) {
-      events[0].state = state;
+  let previousEnd = -1;
+  let previousText = '';
+  for (const span of spans) {
+    const text = cueText(segments[span.cueIndex], outputMode);
+    // Back-to-back cues with the same text read as one line.
+    if (span.start === previousEnd && text === previousText) {
+      events.pop();
+    } else if (span.start === 0) {
+      events[0].state = createPlainState(text);
     } else {
-      events.push({ timeMs: segment.start, state });
+      events.push({ timeMs: span.start, state: createPlainState(text) });
     }
-    events.push({ timeMs: segment.end, state: createPlainState('') });
+    events.push({ timeMs: span.end, state: createPlainState('') });
+    previousEnd = span.end;
+    previousText = text;
   }
 
   return finalizeRenderEvents(
@@ -138,552 +94,5 @@ export function generateSubtitleEvents({
     videoDuration,
     operationId,
     'subtitle events generated'
-  );
-}
-
-export function shouldUseTimedOriginalSubtitleRender({
-  segments,
-  outputMode,
-  isVertical,
-}: {
-  segments: SrtSegment[];
-  outputMode?: SubtitleDisplayMode | null;
-  isVertical: boolean;
-}): boolean {
-  if (!isVertical) {
-    return false;
-  }
-
-  const hasWordTimings = segments.some(
-    segment => Array.isArray(segment.words) && segment.words.length > 0
-  );
-  if (!hasWordTimings) {
-    return false;
-  }
-
-  if ((outputMode ?? 'dual') === 'original') {
-    return true;
-  }
-
-  return !segments.some(segment => Boolean(segment.translation?.trim()));
-}
-
-type TimedWordLayout =
-  | {
-      kind: 'whitespace';
-      text: string;
-    }
-  | {
-      kind: 'word';
-      text: string;
-      wordIndex: number;
-    };
-
-type TimedWordMatch = {
-  wordIndex: number;
-  text: string;
-  start: number;
-  end: number;
-};
-
-type TimedWordLayoutResult =
-  | {
-      ok: true;
-      layout: TimedWordLayout[];
-      words: NonNullable<SrtSegment['words']>;
-      text: string;
-      mode: 'matched' | 'loose';
-      reason?: string;
-    }
-  | {
-      ok: false;
-      reason: string;
-    };
-
-const WORDISH_TEXT_RX = /[\p{L}\p{N}\p{M}]/u;
-const WORDISH_RUN_RX = /[\p{L}\p{N}\p{M}]+(?:['’\-‑–—][\p{L}\p{N}\p{M}]+)*/gu;
-
-function containsRenderableWordText(text: string): boolean {
-  return WORDISH_TEXT_RX.test(text);
-}
-
-function buildTimedText(layout: TimedWordLayout[]): string {
-  return layout.map(part => part.text).join('');
-}
-
-function removeEmptyWrapperPairs(text: string): string {
-  let current = text;
-  let previous = '';
-
-  while (current !== previous) {
-    previous = current;
-    current = current
-      .replace(/\(\s*\)/gu, '')
-      .replace(/\[\s*\]/gu, '')
-      .replace(/\{\s*\}/gu, '')
-      .replace(/"\s*"/gu, '')
-      .replace(/'\s*'/gu, '')
-      .replace(/“\s*”/gu, '')
-      .replace(/‘\s*’/gu, '')
-      .replace(/«\s*»/gu, '')
-      .replace(/「\s*」/gu, '')
-      .replace(/『\s*』/gu, '');
-  }
-
-  return current;
-}
-
-function synthesizeClippedGapText(
-  gapText: string,
-  position: 'leading' | 'between' | 'trailing'
-): string {
-  if (!gapText) {
-    return '';
-  }
-
-  let text = gapText.replace(WORDISH_RUN_RX, '');
-  text = removeEmptyWrapperPairs(text);
-  text = text.replace(/([,;:])\s+(?=[.?!…])/gu, '');
-  text = text.replace(/\s*([—–-])\s*\1+\s*/gu, ' $1 ');
-  text = text.replace(/[^\S\r\n]+/gu, ' ');
-  text = text.replace(/ *\n */gu, '\n');
-  text = text.replace(/([([{«“‘])\s+/gu, '$1');
-  text = text.replace(/[ \t]+([,.;:!?…)\]}»”’،，。！？؛：、])/gu, '$1');
-  text = text.replace(/\n{3,}/gu, '\n\n');
-
-  if (position === 'leading') {
-    text = text.replace(/^[\t ]+/u, '');
-    text = text.replace(/^[,;:!?…،，。！？؛：、]+[ \t]*/u, '');
-    text = text.replace(/^[\t ]+/u, '');
-  } else if (position === 'trailing') {
-    text = text.replace(/[ \t]+$/u, '');
-    text = text.replace(/[ \t]*[,;:،，؛：、-]+$/u, '');
-  }
-
-  text = text.replace(/[^\S\r\n]+/gu, ' ');
-  text = text.replace(/ *\n */gu, '\n');
-
-  if (text.includes('\n')) {
-    return text;
-  }
-
-  if (/[^\s]/u.test(text)) {
-    return text;
-  }
-
-  return position === 'between' && /\s/u.test(gapText) ? ' ' : '';
-}
-
-function buildSyntheticTimedWordLayout(args: {
-  sourceText: string;
-  matches: TimedWordMatch[];
-  words: NonNullable<SrtSegment['words']>;
-}): {
-  layout: TimedWordLayout[];
-  words: NonNullable<SrtSegment['words']>;
-  text: string;
-} | null {
-  const { sourceText, matches, words } = args;
-  if (matches.length === 0) {
-    return null;
-  }
-
-  const layout: TimedWordLayout[] = [];
-  const leadingGap = synthesizeClippedGapText(
-    sourceText.slice(0, matches[0].start),
-    'leading'
-  );
-  if (leadingGap) {
-    layout.push({ kind: 'whitespace', text: leadingGap });
-  }
-
-  for (let index = 0; index < matches.length; index += 1) {
-    const match = matches[index];
-    if (index > 0) {
-      const previous = matches[index - 1];
-      const separator = synthesizeClippedGapText(
-        sourceText.slice(previous.end, match.start),
-        'between'
-      );
-      if (separator) {
-        layout.push({ kind: 'whitespace', text: separator });
-      }
-    }
-
-    layout.push({
-      kind: 'word',
-      text: match.text,
-      wordIndex: match.wordIndex,
-    });
-  }
-
-  const trailingGap = synthesizeClippedGapText(
-    sourceText.slice(matches.at(-1)!.end),
-    'trailing'
-  );
-  if (trailingGap) {
-    layout.push({ kind: 'whitespace', text: trailingGap });
-  }
-
-  return {
-    layout,
-    words,
-    text: buildTimedText(layout),
-  };
-}
-
-function buildLooseTimedWordLayout(words: NonNullable<SrtSegment['words']>): {
-  layout: TimedWordLayout[];
-  words: NonNullable<SrtSegment['words']>;
-  text: string;
-} | null {
-  if (words.length === 0) {
-    return null;
-  }
-
-  const hasCjk = words.some(word =>
-    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(
-      String(word.word ?? '')
-    )
-  );
-  const layout: TimedWordLayout[] = [];
-  let previousToken = '';
-
-  for (let wordIndex = 0; wordIndex < words.length; wordIndex += 1) {
-    const token = String(words[wordIndex]?.word ?? '').trim();
-    if (!token) {
-      return null;
-    }
-
-    if (layout.length > 0) {
-      const noSpaceBefore = /^(?:[.,!?…:;%)\]}])/.test(token);
-      const previousEndsAscii = /[A-Za-z0-9]$/.test(previousToken);
-      const nextStartsAscii = /^[A-Za-z0-9]/.test(token);
-      const shouldInsertSpace = hasCjk
-        ? !noSpaceBefore && previousEndsAscii && nextStartsAscii
-        : !noSpaceBefore;
-      if (shouldInsertSpace) {
-        layout.push({ kind: 'whitespace', text: ' ' });
-      }
-    }
-
-    layout.push({
-      kind: 'word',
-      text: token,
-      wordIndex,
-    });
-    previousToken = token;
-  }
-
-  return {
-    layout,
-    words,
-    text: buildTimedText(layout),
-  };
-}
-
-function buildTimedWordLayout(segment: SrtSegment): TimedWordLayoutResult {
-  if (!Array.isArray(segment.words) || segment.words.length === 0) {
-    return { ok: false, reason: 'no-word-timings' };
-  }
-
-  const sourceText = segment.original ?? '';
-  if (!sourceText) {
-    const looseLayout = buildLooseTimedWordLayout(segment.words);
-    return looseLayout
-      ? {
-          ok: true,
-          ...looseLayout,
-          mode: 'loose',
-          reason: 'empty-original-text',
-        }
-      : { ok: false, reason: 'empty-original-text' };
-  }
-
-  const lowerSourceText = sourceText.toLocaleLowerCase();
-  const matches: TimedWordMatch[] = [];
-  let cursor = 0;
-
-  for (let wordIndex = 0; wordIndex < segment.words.length; wordIndex += 1) {
-    const word = segment.words[wordIndex];
-    const token = String(word.word ?? '').trim();
-    if (!token) {
-      return { ok: false, reason: 'empty-word-token' };
-    }
-
-    let matchIndex = sourceText.indexOf(token, cursor);
-    if (matchIndex === -1) {
-      matchIndex = lowerSourceText.indexOf(token.toLocaleLowerCase(), cursor);
-    }
-    if (matchIndex === -1) {
-      const looseLayout = buildLooseTimedWordLayout(segment.words);
-      return looseLayout
-        ? {
-            ok: true,
-            ...looseLayout,
-            mode: 'loose',
-            reason: 'word-token-not-found-in-original',
-          }
-        : { ok: false, reason: 'word-token-not-found-in-original' };
-    }
-
-    matches.push({
-      wordIndex,
-      text: sourceText.slice(matchIndex, matchIndex + token.length),
-      start: matchIndex,
-      end: matchIndex + token.length,
-    });
-    cursor = matchIndex + token.length;
-  }
-
-  const layout: TimedWordLayout[] = [];
-  const leadingGap = sourceText.slice(0, matches[0]!.start);
-  if (containsRenderableWordText(leadingGap)) {
-    const syntheticLayout = buildSyntheticTimedWordLayout({
-      sourceText,
-      matches,
-      words: segment.words,
-    });
-    return syntheticLayout
-      ? {
-          ok: true,
-          ...syntheticLayout,
-          mode: 'matched',
-        }
-      : { ok: false, reason: 'failed-to-build-synthetic-layout' };
-  }
-  if (leadingGap && !containsRenderableWordText(leadingGap)) {
-    layout.push({
-      kind: 'whitespace',
-      text: leadingGap,
-    });
-  }
-
-  for (let index = 0; index < matches.length; index += 1) {
-    const match = matches[index]!;
-    if (index > 0) {
-      const previous = matches[index - 1]!;
-      const gap = sourceText.slice(previous.end, match.start);
-      if (containsRenderableWordText(gap)) {
-        const syntheticLayout = buildSyntheticTimedWordLayout({
-          sourceText,
-          matches,
-          words: segment.words,
-        });
-        return syntheticLayout
-          ? {
-              ok: true,
-              ...syntheticLayout,
-              mode: 'matched',
-            }
-          : { ok: false, reason: 'failed-to-build-synthetic-layout' };
-      }
-      if (gap) {
-        layout.push({
-          kind: 'whitespace',
-          text: gap,
-        });
-      }
-    }
-
-    layout.push({
-      kind: 'word',
-      text: match.text,
-      wordIndex: match.wordIndex,
-    });
-  }
-
-  const trailingGap = sourceText.slice(matches.at(-1)!.end);
-  if (containsRenderableWordText(trailingGap)) {
-    const syntheticLayout = buildSyntheticTimedWordLayout({
-      sourceText,
-      matches,
-      words: segment.words,
-    });
-    return syntheticLayout
-      ? {
-          ok: true,
-          ...syntheticLayout,
-          mode: 'matched',
-        }
-      : { ok: false, reason: 'failed-to-build-synthetic-layout' };
-  }
-  if (trailingGap && !containsRenderableWordText(trailingGap)) {
-    layout.push({
-      kind: 'whitespace',
-      text: trailingGap,
-    });
-  }
-
-  return {
-    ok: true,
-    layout,
-    words: segment.words,
-    text: buildTimedText(layout),
-    mode: 'matched',
-  };
-}
-
-function buildTimedParts(
-  layout: TimedWordLayout[],
-  wordStates: TimedSubtitlePartState[]
-): SubtitleRenderPart[] {
-  return layout.map(part => {
-    if (part.kind === 'whitespace') {
-      return part;
-    }
-
-    return {
-      kind: 'word',
-      text: part.text,
-      state: wordStates[part.wordIndex] ?? 'upcoming',
-    };
-  });
-}
-
-function createTimedState(
-  text: string,
-  wordStates: TimedSubtitlePartState[],
-  layout: TimedWordLayout[]
-): SubtitleRenderState {
-  return {
-    mode: 'timed',
-    text,
-    parts: buildTimedParts(layout, wordStates),
-  };
-}
-
-type TimedWordBoundaryAction = {
-  timeMs: number;
-  type: 'start' | 'end';
-  wordIndex: number;
-};
-
-export function generateTimedOriginalSubtitleEvents({
-  segments,
-  videoDuration,
-  operationId,
-}: {
-  segments: SrtSegment[];
-  videoDuration: number;
-  operationId: string;
-}): SubtitleRenderEvent[] {
-  const events: SubtitleRenderEvent[] = [
-    { timeMs: 0, state: createPlainState('') },
-  ];
-
-  for (const segment of segments) {
-    const start = ms(segment.start);
-    const end = Math.min(ms(segment.end), ms(videoDuration));
-    if (start >= end) {
-      continue;
-    }
-
-    const timedLayout = buildTimedWordLayout(segment);
-    if (!timedLayout.ok) {
-      const text = cueText(segment, 'original');
-      const state = createPlainState(text);
-      if (start === 0) {
-        events[0].state = state;
-      } else {
-        events.push({ timeMs: start, state });
-      }
-      events.push({ timeMs: end, state: createPlainState('') });
-      continue;
-    }
-
-    const { layout, words, text } = timedLayout;
-    const boundaryActions: TimedWordBoundaryAction[] = [];
-
-    for (let wordIndex = 0; wordIndex < words.length; wordIndex += 1) {
-      const word = words[wordIndex];
-      const absWordStart = Math.min(
-        end,
-        Math.max(start, start + ms(word.start))
-      );
-      const absWordEnd = Math.min(
-        end,
-        Math.max(absWordStart, start + ms(word.end))
-      );
-
-      if (absWordStart < end) {
-        boundaryActions.push({
-          timeMs: absWordStart,
-          type: 'start',
-          wordIndex,
-        });
-      }
-
-      if (absWordEnd < end) {
-        boundaryActions.push({
-          timeMs: absWordEnd,
-          type: 'end',
-          wordIndex,
-        });
-      }
-    }
-
-    if (!boundaryActions.length) {
-      const state = createPlainState(cueText(segment, 'original'));
-      if (start === 0) {
-        events[0].state = state;
-      } else {
-        events.push({ timeMs: start, state });
-      }
-    } else {
-      const wordStates = words.map(() => 'upcoming' as TimedSubtitlePartState);
-      const sortedActions = boundaryActions.sort((left, right) => {
-        if (left.timeMs !== right.timeMs) {
-          return left.timeMs - right.timeMs;
-        }
-        if (left.type !== right.type) {
-          return left.type === 'end' ? -1 : 1;
-        }
-        return left.wordIndex - right.wordIndex;
-      });
-
-      if (sortedActions[0].timeMs > start) {
-        const state = createTimedState(text, wordStates, layout);
-        if (start === 0 && events[0].state.text === '') {
-          events[0].state = state;
-        } else {
-          events.push({ timeMs: start, state });
-        }
-      }
-
-      let actionIndex = 0;
-      while (actionIndex < sortedActions.length) {
-        const boundaryTimeMs = sortedActions[actionIndex].timeMs;
-
-        while (
-          actionIndex < sortedActions.length &&
-          sortedActions[actionIndex].timeMs === boundaryTimeMs
-        ) {
-          const action = sortedActions[actionIndex];
-          wordStates[action.wordIndex] =
-            action.type === 'start' ? 'active' : 'spoken';
-          actionIndex += 1;
-        }
-
-        const state = createTimedState(text, wordStates, layout);
-        if (boundaryTimeMs === 0 && events[0].state.text === '') {
-          events[0].state = state;
-        } else {
-          events.push({
-            timeMs: boundaryTimeMs,
-            state,
-          });
-        }
-      }
-    }
-
-    events.push({ timeMs: end, state: createPlainState('') });
-  }
-
-  return finalizeRenderEvents(
-    events,
-    videoDuration,
-    operationId,
-    'timed subtitle events generated'
   );
 }

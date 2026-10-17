@@ -15,7 +15,9 @@ import {
   errorWrapperStyles,
   panelStyles,
 } from './TranscriptSummaryPanel.styles';
-import TranscriptSummaryHeader from './TranscriptSummaryHeader';
+import TranscriptSummaryHeader, {
+  type TranscriptSummaryView,
+} from './TranscriptSummaryHeader';
 import TranscriptSummaryHighlightsTab from './TranscriptSummaryHighlightsTab';
 import TranscriptSummaryProgress from './TranscriptSummaryProgress';
 import TranscriptSummarySectionsTab from './TranscriptSummarySectionsTab';
@@ -30,11 +32,14 @@ import useTranscriptSummaryLogic from './useTranscriptSummaryLogic';
 interface TranscriptSummaryPanelProps {
   generationLocked?: boolean;
   segments: SrtSegment[];
+  /** "Summary" opens on the summary; "Make clips" (the default) on clips. */
+  view?: TranscriptSummaryView;
 }
 
 export function TranscriptSummaryPanel({
   generationLocked = false,
   segments,
+  view = 'clips',
 }: TranscriptSummaryPanelProps): JSX.Element | null {
   const { t } = useTranslation();
   const summaryLanguage = useUIStore(state => state.summaryLanguage);
@@ -53,7 +58,11 @@ export function TranscriptSummaryPanel({
   );
   const [activeTab, setActiveTab] = useState<
     'summary' | 'sections' | 'highlights'
-  >('highlights');
+  >(view === 'summary' ? 'summary' : 'highlights');
+  // Opening the panel from another task switches to that task's tab.
+  useEffect(() => {
+    setActiveTab(view === 'summary' ? 'summary' : 'highlights');
+  }, [view]);
   const pendingHighlightRequests = useHighlightGenerationRequestStore(
     state => state.pendingRequests
   );
@@ -76,6 +85,7 @@ export function TranscriptSummaryPanel({
     combineAspectMode,
     combineCutState,
     combineMode,
+    combinedClipStale,
     copyStatus,
     downloadStatus,
     error,
@@ -101,9 +111,11 @@ export function TranscriptSummaryPanel({
     isCancelling,
     isGenerating,
     isHighlightCutting,
+    isHighlightClipStale,
     orderedSelection,
     progressLabel,
     progressPercent,
+    restoredVariant,
     sections,
     selectedHighlights,
     setCombineAspectMode,
@@ -202,8 +214,10 @@ export function TranscriptSummaryPanel({
 
   const isGenerateBusy =
     isGenerating || activeRequestForThisTranscriptId != null;
+  // A saved result in another language does not answer a new request.
   const canSatisfyGenerateSubtitlesHighlightRequest =
     hasSummaryResult &&
+    !restoredVariant &&
     (highlightStatus === 'complete' ||
       (highlightStatus === 'degraded' && highlights.length > 0));
 
@@ -296,6 +310,9 @@ export function TranscriptSummaryPanel({
     <div className={panelStyles}>
       <TranscriptSummaryHeader
         generationLocked={generationLocked}
+        hasResult={Boolean(summary.trim()) || highlights.length > 0}
+        restoredVariant={restoredVariant}
+        view={view}
         isGenerating={isGenerateBusy}
         isMergeInProgress={isMergeInProgress}
         isTranslationInProgress={isTranslationInProgress}
@@ -306,7 +323,6 @@ export function TranscriptSummaryPanel({
           });
         }}
         onSummaryLanguageChange={setSummaryLanguage}
-        summary={summary}
         summaryEffortLevel={summaryEffortLevel}
         summaryEstimate={summaryEstimate}
         summaryLanguage={summaryLanguage}
@@ -340,6 +356,8 @@ export function TranscriptSummaryPanel({
       {activeTab === 'summary' ? (
         <TranscriptSummarySummaryTab
           copyStatus={copyStatus}
+          hasOtherResults={highlights.length > 0 || sections.length > 0}
+          isGenerating={isGenerateBusy}
           onCopy={() => {
             void handleCopy();
           }}
@@ -358,11 +376,13 @@ export function TranscriptSummaryPanel({
           combineAspectMode={combineAspectMode}
           combineCutState={combineCutState}
           combineMode={combineMode}
+          combinedClipStale={combinedClipStale}
           downloadStatus={downloadStatus}
           getHighlightAspectMode={getHighlightAspectMode}
           getHighlightStateKey={getHighlightStateKey}
           hasSummaryResult={hasSummaryResult}
           isHighlightCutting={isHighlightCutting}
+          isHighlightClipStale={isHighlightClipStale}
           highlightWarningMessage={highlightWarningMessage}
           highlightStatus={highlightStatus}
           highlightCutState={highlightCutState}

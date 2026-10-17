@@ -23,6 +23,8 @@ import {
 import type { VideoSuggestionDownloadHistoryItem } from '../components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import type { VideoSuggestionResultItem } from '@shared-types/app';
 import { acquireProvisionalUrlDownloadLibraryPath } from '../../../listeners/mounted-download-leases.js';
+import { canonicalVideoSourceKey } from '../../../../shared/helpers/video-url.js';
+import { confirmReplaceUnsavedSubtitles } from '../../../utils/unsaved-subtitles.js';
 
 type RecentDownloadedChannel = {
   key: string;
@@ -224,6 +226,7 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
 
   const openDownloadedVideo = useCallback(
     async (item: VideoSuggestionDownloadHistoryItem) => {
+      setError(null);
       const filePath = sanitizeVideoSuggestionHistoryPath(item.localPath);
       if (!filePath) {
         setError(
@@ -253,8 +256,12 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
           return;
         }
 
+        if (!(await confirmReplaceUnsavedSubtitles())) return;
+
         const fallbackName =
           filePath.split(/[\\/]/).pop() || item.title || 'video';
+        // setFile restores this video's own stored subtitles and drops the
+        // previous video's, so they never show over an unrelated video.
         await useVideoStore.getState().setFile({
           name: fallbackName,
           path: filePath,
@@ -286,9 +293,57 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
     [t]
   );
 
+  // The entry itself, or another entry for the same video, whose file is
+  // still on disk. Older histories can hold several copies of one video.
+  const findLocalCopy = useCallback(
+    async (
+      item: VideoSuggestionDownloadHistoryItem
+    ): Promise<VideoSuggestionDownloadHistoryItem | null> => {
+      const sourceKey = canonicalVideoSourceKey(item.sourceUrl);
+      const candidates = [
+        item,
+        ...downloadHistory.filter(
+          other =>
+            other.id !== item.id &&
+            sourceKey !== null &&
+            canonicalVideoSourceKey(other.sourceUrl) === sourceKey
+        ),
+      ];
+      for (const candidate of candidates) {
+        const filePath = sanitizeVideoSuggestionHistoryPath(
+          candidate.localPath
+        );
+        if (!filePath) continue;
+        try {
+          if (await window.fileApi.fileExists(filePath)) return candidate;
+        } catch {
+          // An unreadable path is not a usable copy.
+        }
+      }
+      return null;
+    },
+    [downloadHistory]
+  );
+
   const redownloadHistoryItem = useCallback(
     async (item: VideoSuggestionDownloadHistoryItem) => {
       try {
+        // Never fetch a video again while a copy is already on this device.
+        const localCopy = await findLocalCopy(item);
+        if (localCopy) {
+          await openDownloadedVideo(localCopy);
+          return;
+        }
+        if (!item.sourceUrl) {
+          setError(
+            t(
+              'input.videoSuggestion.downloadedFileMissing',
+              'The local file is no longer available at its saved path.'
+            )
+          );
+          return;
+        }
+        setError(null);
         await useUrlStore.getState().downloadMedia({
           url: item.sourceUrl,
         });
@@ -302,7 +357,7 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
         );
       }
     },
-    [t]
+    [findLocalCopy, openDownloadedVideo, t]
   );
 
   const removeHistoryItem = useCallback(
@@ -475,6 +530,8 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
     playablePathMap,
     recentDownloadedChannels,
     redownloadHistoryItem,
+    // Opens a local copy when one exists, downloads only when none does.
+    openOrDownloadHistoryItem: redownloadHistoryItem,
     removeChannelHistoryItem,
     removeHistoryItem,
     setError,

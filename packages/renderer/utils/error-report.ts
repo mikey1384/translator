@@ -6,6 +6,7 @@ import { useSubStore } from '../state/subtitle-store';
 import { useTaskStore, type TranslationTask } from '../state/task-store';
 import { useUIStore } from '../state/ui-store';
 import { useUrlStore } from '../state/url-store';
+import { getLastReportedFailure, type ReportedFailure } from './taskFailure';
 import { useVideoStore } from '../state/video-store';
 
 export type ErrorReportBundle = {
@@ -135,15 +136,14 @@ function buildSummaryLines(args: {
     'summary',
   ]
     .map(name => ({ name, value: tasks[name] }))
-    .find(
-      item =>
-        item.value &&
-        (item.value.inProgress || item.value.id || item.value.stage)
-    );
+    // Only a running task: a finished one ("merge 100% Merge complete!")
+    // misleads whoever reads the report.
+    .find(item => item.value?.inProgress);
   const currentError = (operationSnapshot.currentError || {}) as Record<
     string,
     any
   >;
+  const failure = operationSnapshot.lastFailure as ReportedFailure | null;
   const video = (operationSnapshot.video || {}) as Record<string, any>;
   const ai = (operationSnapshot.ai || {}) as Record<string, any>;
 
@@ -157,6 +157,12 @@ function buildSummaryLines(args: {
       mainContext
         ? `${mainContext.system.platform} ${mainContext.system.arch} ${mainContext.system.release || ''}`.trim()
         : 'unknown'
+    }`,
+    // What the report dialog was opened for, named by the failed task.
+    `- failed task: ${
+      failure
+        ? `${failure.task} (${failure.kind}${failure.code ? ` ${failure.code}` : ''}) at ${failure.at}: ${trimText(failure.detail || 'no detail', 240)}`
+        : 'none'
     }`,
     `- active task: ${
       activeTask?.value
@@ -207,6 +213,7 @@ function buildOperationSnapshot(): Record<string, unknown> {
       message: urlState.error || null,
       kind: urlState.errorKind || null,
     },
+    lastFailure: getLastReportedFailure(),
     tasks: {
       transcription: pickTaskSnapshot(tasksState.transcription),
       translation: pickTaskSnapshot(tasksState.translation),

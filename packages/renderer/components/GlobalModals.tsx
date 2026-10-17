@@ -17,8 +17,12 @@ import { useUrlStore } from '../state/url-store';
 import { useVideoStore, useTaskStore, useUpdateStore } from '../state';
 import { css } from '@emotion/css';
 import { colors } from '../styles';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSubStore } from '../state/subtitle-store';
+import { useWorkspaceBusy } from './workspace/WorkspaceActions';
 import LogsModal from './LogsModal';
+import LongDownloadConfirmDialog from './LongDownloadConfirmDialog';
+import UrlCookieBanner from '../containers/GenerateSubtitles/UrlCookieBanner';
 import Modal from './Modal';
 import Button from './Button';
 import { useTranslation } from 'react-i18next';
@@ -52,8 +56,22 @@ const changeVideoBodyStyles = css`
   overflow-y: auto;
 `;
 
+const keepSubtitlesStyles = css`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: ${colors.textDim};
+  line-height: 1.4;
+  cursor: pointer;
+  input {
+    margin-top: 3px;
+  }
+`;
+
 export default function GlobalModals() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isEnglishUi = /^en\b/i.test(i18n.language || 'en');
   const unsavedOpen = useModalStore(s => s.unsavedSrtOpen);
   const unsavedContext = useModalStore(s => s.unsavedSrtContext);
   const downloadSwitchOpen = useModalStore(s => s.downloadSwitchOpen);
@@ -72,14 +90,21 @@ export default function GlobalModals() {
   const updateDownloading = useUpdateStore(s => s.downloading);
   const updateDownloaded = useUpdateStore(s => s.downloaded);
   const updateInstalling = useUpdateStore(s => s.installing);
-  const updateError = useUpdateStore(s => s.error);
+  const updateCheckStatus = useUpdateStore(s => s.checkStatus);
   const checkForUpdates = useUpdateStore(s => s.check);
   const installUpdate = useUpdateStore(s => s.install);
   const formattedReleaseDate = (() => {
     const raw = updateNotes?.releaseDate;
     if (!raw) return null;
     const parsed = Date.parse(raw);
-    return Number.isNaN(parsed) ? raw : new Date(parsed).toLocaleDateString();
+    if (Number.isNaN(parsed)) return null;
+    try {
+      return new Intl.DateTimeFormat(i18n.language, {
+        dateStyle: 'long',
+      }).format(new Date(parsed));
+    } catch {
+      return new Date(parsed).toLocaleDateString();
+    }
   })();
 
   // Reuse existing stores for MediaInputSection
@@ -90,6 +115,14 @@ export default function GlobalModals() {
   const download = useUrlStore(s => s.download);
   const downloadMedia = useUrlStore(s => s.downloadMedia);
   const isTranslationInProgress = useTaskStore(s => s.translation.inProgress);
+  // Any running job (transcription, dubbing, export…) blocks swapping the
+  // source, not only translation.
+  const workspaceBusy = useWorkspaceBusy();
+  const hasMountedSubtitles = useSubStore(s => s.order.length > 0);
+  // Change Video keeps the current subtitles (re-linking another copy of the
+  // same video) unless the user says this is a different video.
+  const [keepSubtitles, setKeepSubtitles] = useState(true);
+  const preserveSubtitles = hasMountedSubtitles && keepSubtitles;
   const recentLocalMedia = useVideoStore(s => s.recentLocalMedia);
   const openLocalMedia = useVideoStore(s => s.openLocalMedia);
   const openRecentLocalMedia = useVideoStore(s => s.openRecentLocalMedia);
@@ -133,18 +166,26 @@ export default function GlobalModals() {
       return;
     }
 
-    try {
-      if (updateAvailable && !updateDownloading) {
-        await useUpdateStore.getState().download();
-        return;
-      }
-
-      await checkForUpdates();
-    } catch (err) {
-      console.warn('[GlobalModals] Required update action failed:', err);
+    const openDownloadPage = async () => {
       if (requiredUpdate?.downloadUrl) {
         await window.appShell.openExternal(requiredUpdate.downloadUrl);
       }
+    };
+
+    if (updateAvailable && !updateDownloading) {
+      await useUpdateStore.getState().download();
+      if (useUpdateStore.getState().error && !updateDownloaded) {
+        await openDownloadPage();
+      }
+      return;
+    }
+
+    // The updater swallows its own errors, so decide from the result: when
+    // it finds nothing (feed unreachable, or the Windows release lags), send
+    // the user to the download page instead of leaving a dead button.
+    const status = await checkForUpdates();
+    if (status !== 'available') {
+      await openDownloadPage();
     }
   };
 
@@ -213,6 +254,7 @@ export default function GlobalModals() {
               )}
         </div>
       </Modal>
+      <LongDownloadConfirmDialog />
       <CreditRanOutDialog
         open={creditOpen}
         onOk={() => resolveCreditRanOut('ok')}
@@ -229,29 +271,47 @@ export default function GlobalModals() {
         contentClassName={changeVideoContentStyles}
         bodyClassName={changeVideoBodyStyles}
       >
+        {/* A link from this dialog that needs a human check is answered
+            here; the app-level banner sits behind the dialog. */}
+        <UrlCookieBanner />
+        {hasMountedSubtitles ? (
+          <label className={keepSubtitlesStyles}>
+            <input
+              type="checkbox"
+              checked={keepSubtitles}
+              onChange={e => setKeepSubtitles(e.target.checked)}
+            />
+            <span>
+              {t(
+                'videoPlayer.changeVideoKeepSubtitles',
+                'Keep the current subtitles on the new video (for another copy of the same video). Uncheck for a different video.'
+              )}
+            </span>
+          </label>
+        ) : null}
         <MediaInputSection
           videoFile={null}
           recentMedia={recentLocalMedia}
           onOpenFileDialog={async () => {
-            const res = await openLocalMedia({ preserveSubtitles: true });
+            const res = await openLocalMedia({ preserveSubtitles });
             if (!res.canceled) closeChangeVideo();
             return res;
           }}
           onOpenRecentFile={async path => {
             const res = await openRecentLocalMedia(path, {
-              preserveSubtitles: true,
+              preserveSubtitles,
             });
             if (res.opened) closeChangeVideo();
           }}
           onRemoveRecentFile={removeRecentLocalMedia}
           isDownloadInProgress={download.inProgress}
-          isTranslationInProgress={isTranslationInProgress}
+          isTranslationInProgress={isTranslationInProgress || workspaceBusy}
           urlInput={urlInput}
           setUrlInput={setUrlInput}
           downloadQuality={downloadQuality}
           setDownloadQuality={setDownloadQuality}
           handleProcessUrl={async () => {
-            await downloadMedia({ preserveSubtitles: true });
+            await downloadMedia({ preserveSubtitles });
           }}
         />
       </Modal>
@@ -264,12 +324,11 @@ export default function GlobalModals() {
       <Modal
         open={updateNotesOpen}
         title={
-          updateNotes?.releaseName?.trim() ||
-          (updateNotes?.version
+          updateNotes?.version
             ? t('common.whatsNewVersionTitle', "What's New in v{{version}}", {
                 version: updateNotes.version,
               })
-            : t('common.whatsNewTitle', "What's New"))
+            : t('common.whatsNewTitle', "What's New")
         }
         onClose={() => void handleCloseUpdateNotes()}
         actions={
@@ -285,9 +344,32 @@ export default function GlobalModals() {
           {formattedReleaseDate && (
             <div className={updateNotesDateStyles}>{formattedReleaseDate}</div>
           )}
-          <div className={updateNotesBodyStyles}>
-            {updateNotes?.notes ?? ''}
-          </div>
+          {updateNotes?.version ? (
+            <div>
+              {t(
+                'common.whatsNewLead',
+                'Translator has been updated to v{{version}}.',
+                { version: updateNotes.version }
+              )}
+            </div>
+          ) : null}
+          {/* Release notes are written once, in English (the tag body).
+              Other languages get the localized lead above and can open the
+              notes on purpose instead of being shown a wall of English. */}
+          {isEnglishUi ? (
+            <div className={updateNotesBodyStyles}>
+              {updateNotes?.notes ?? ''}
+            </div>
+          ) : updateNotes?.notes ? (
+            <details>
+              <summary className={updateNotesDateStyles}>
+                {t('common.whatsNewNotesInEnglish', 'Release notes (English)')}
+              </summary>
+              <div className={updateNotesBodyStyles} lang="en" dir="ltr">
+                {updateNotes.notes}
+              </div>
+            </details>
+          ) : null}
         </div>
       </Modal>
       <ApiKeysRequiredDialog
@@ -329,28 +411,42 @@ export default function GlobalModals() {
         hideCloseButton
       >
         <div className={updateNotesDetailsStyles}>
+          {/* Always the translated body: the server and main process send
+              one English sentence, which is for logs only. */}
           <div>
-            {requiredUpdate?.message ||
-              t(
-                'common.updateRequiredBody',
-                'This version of Translator is no longer supported by the backend. Update the app to continue.'
-              )}
+            {t(
+              'common.updateRequiredBody',
+              'This version of Translator is no longer supported by the backend. Update the app to continue.'
+            )}
           </div>
           {requiredUpdate?.minVersion && (
             <div className={updateNotesDateStyles}>
-              {t('common.minimumVersionLabel', 'Minimum supported version')}: v
-              {requiredUpdate.minVersion}
+              {t(
+                'common.minimumVersionValue',
+                'Minimum supported version: v{{version}}',
+                { version: requiredUpdate.minVersion }
+              )}
             </div>
           )}
           {requiredUpdate?.clientVersion && (
             <div className={updateNotesDateStyles}>
-              {t('common.currentVersionLabel', 'Current version')}: v
-              {requiredUpdate.clientVersion}
+              {t(
+                'common.currentVersionValue',
+                'Current version: v{{version}}',
+                {
+                  version: requiredUpdate.clientVersion,
+                }
+              )}
             </div>
           )}
-          {updateError && (
-            <div className={updateNotesDateStyles}>{String(updateError)}</div>
-          )}
+          {updateCheckStatus === 'error' || updateCheckStatus === 'none' ? (
+            <div className={updateNotesDateStyles} role="status">
+              {t(
+                'common.updateNotFoundUseDownloadPage',
+                'The update couldn’t be downloaded here. Get the latest version from the download page.'
+              )}
+            </div>
+          ) : null}
         </div>
       </Modal>
     </>

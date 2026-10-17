@@ -123,10 +123,36 @@ test('old English progress sentences are turned into translated keys', () => {
     'progress.legacy.selectingHighlights',
     'progress.legacy.settingUpDownloader',
   ]);
-  // Unknown text passes through; i18n codes are left to their own helpers.
+  // Unknown text passes through; task-specific i18n codes are left to their
+  // own helpers.
   assert.equal(localizeLegacyStage('Something new', t), 'Something new');
   assert.equal(
-    localizeLegacyStage('__i18n__:completed', t),
-    '__i18n__:completed'
+    localizeLegacyStage('__i18n__:reviewing_range:1:2:3', t),
+    '__i18n__:reviewing_range:1:2:3'
   );
+});
+
+test('bare status words and final tokens never reach the UI in English', () => {
+  const seen: string[] = [];
+  const t = ((key: string) => {
+    seen.push(key);
+    return key;
+  }) as any;
+  for (const stage of [
+    'Starting...',
+    'Completed',
+    'Process cancelled',
+    'Cancelling...',
+    'Downloading...',
+    'Downloading audio...',
+    'Failed',
+    'Error: Request failed with status code 500',
+    '__i18n__:completed',
+    '__i18n__:process_cancelled',
+    '__i18n__:error',
+    '__i18n__:insufficient_credits',
+  ]) {
+    assert.match(localizeLegacyStage(stage, t), /^progress\.legacy\./, stage);
+  }
+  assert.ok(seen.includes('progress.legacy.insufficientCredits'));
 });

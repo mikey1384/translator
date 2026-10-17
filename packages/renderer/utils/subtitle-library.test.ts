@@ -138,7 +138,7 @@ test('document auto-mount preserves stored-library linkage when matching history
   }
 });
 
-test('fallback document auto-mount falls back to the transcript, never another language', async () => {
+test('fallback lookup asks for the most recent document of any kind', async () => {
   const restoreBrowserGlobals = installBrowserGlobals();
   const documentLookupCalls: any[] = [];
   const restoreWindow = installElectronMock({
@@ -163,7 +163,10 @@ test('fallback document auto-mount falls back to the transcript, never another l
     const { useUIStore } = await import('../state/ui-store');
     const { useVideoStore } = await import('../state/video-store');
 
-    useUIStore.setState({ targetLanguage: 'spanish' } as any);
+    useUIStore.setState({
+      targetLanguage: 'spanish',
+      homeRunRequest: null,
+    } as any);
     useVideoStore.setState({
       path: '/Users/test/Videos/interview.mp4',
       originalPath: '/Users/test/Videos/interview.mp4',
@@ -184,15 +187,156 @@ test('fallback document auto-mount falls back to the transcript, never another l
       subtitleKind: 'translation',
       targetLanguage: 'spanish',
     });
-    // The fallback is the video's own transcript, never another language.
+    // Nothing for Spanish: any document for this video, of any kind.
     assert.deepEqual(documentLookupCalls[1], {
       sourceVideoPath: '/Users/test/Videos/interview.mp4',
       sourceVideoAssetIdentity: 'asset:123',
       sourceUrl: null,
-      subtitleKind: 'transcription',
     });
   } finally {
     restoreWindow();
+    restoreBrowserGlobals();
+  }
+});
+
+function fallbackDocument(overrides: Record<string, unknown>) {
+  return {
+    id: 'doc-fallback',
+    title: 'clip.srt',
+    subtitleKind: null,
+    targetLanguage: null,
+    sourceVideoPath: '/Users/test/Videos/clip.mp4',
+    sourceVideoAssetIdentity: 'asset:clip',
+    importFilePath: '/Users/test/Subtitles/clip.srt',
+    lastExportPath: null,
+    activeLinkedFilePath: null,
+    activeLinkedFileMode: null,
+    activeLinkedFileRole: null,
+    createdAt: new Date(0).toISOString(),
+    updatedAt: new Date(0).toISOString(),
+    transcriptionEngine: null,
+    ...overrides,
+  };
+}
+
+async function runFallbackScenario(args: {
+  latest: Record<string, unknown>;
+  homeRunRequest: unknown;
+}) {
+  const restoreBrowserGlobals = installBrowserGlobals();
+  const calls: any[] = [];
+  const restoreWindow = installElectronMock({
+    findSubtitleDocumentForSource: async (options: any) => {
+      calls.push(options);
+      if (options.subtitleKind === 'translation') {
+        return { success: true, found: false };
+      }
+      if (options.subtitleKind === 'transcription') {
+        return {
+          success: true,
+          found: true,
+          document: fallbackDocument({
+            id: 'doc-transcript',
+            subtitleKind: 'transcription',
+            importFilePath: null,
+          }),
+          segments: [
+            { id: 't1', index: 1, start: 0, end: 1, original: 'Hola' },
+          ],
+        };
+      }
+      return {
+        success: true,
+        found: true,
+        document: fallbackDocument(args.latest),
+        segments: [
+          { id: 'l1', index: 1, start: 0, end: 1, original: 'Edited line' },
+        ],
+      };
+    },
+    findStoredSubtitleForVideo: async () => ({
+      success: true,
+      entry: null,
+    }),
+  });
+  try {
+    const { maybeAutoMountStoredSubtitleForVideo } =
+      await import('./subtitle-library');
+    const { useSubStore } = await import('../state/subtitle-store');
+    const { useUIStore } = await import('../state/ui-store');
+    const { useVideoStore } = await import('../state/video-store');
+    useUIStore.setState({
+      targetLanguage: 'english',
+      homeRunRequest: args.homeRunRequest,
+    } as any);
+    useVideoStore.setState({
+      path: '/Users/test/Videos/clip.mp4',
+      originalPath: '/Users/test/Videos/clip.mp4',
+      sourceAssetIdentity: 'asset:clip',
+      sourceUrl: null,
+    } as any);
+    await maybeAutoMountStoredSubtitleForVideo({
+      sourceVideoPath: '/Users/test/Videos/clip.mp4',
+      sourceUrl: null,
+    });
+    return { calls, documentId: useSubStore.getState().documentId };
+  } finally {
+    restoreWindow();
+    restoreBrowserGlobals();
+  }
+}
+
+test('an edited imported .srt comes back when the video is reopened', async () => {
+  const { documentId } = await runFallbackScenario({
+    latest: { id: 'doc-imported' },
+    homeRunRequest: null,
+  });
+  assert.equal(documentId, 'doc-imported');
+});
+
+test('another language comes back when nothing more specific exists', async () => {
+  const { documentId } = await runFallbackScenario({
+    latest: {
+      id: 'doc-korean',
+      subtitleKind: 'translation',
+      targetLanguage: 'korean',
+    },
+    homeRunRequest: null,
+  });
+  assert.equal(documentId, 'doc-korean');
+});
+
+test('an explicit "Make it speak" target never gets another language mounted', async () => {
+  const { documentId, calls } = await runFallbackScenario({
+    latest: {
+      id: 'doc-korean',
+      subtitleKind: 'translation',
+      targetLanguage: 'korean',
+    },
+    homeRunRequest: {
+      id: 1,
+      kind: 'mounted',
+      path: '/Users/test/Videos/clip.mp4',
+    },
+  });
+  assert.equal(documentId, 'doc-transcript');
+  assert.equal(calls[calls.length - 1].subtitleKind, 'transcription');
+});
+
+test('a document left via the logo is remembered across tabs (localStorage)', async () => {
+  const restoreBrowserGlobals = installBrowserGlobals();
+  try {
+    const { rememberLeftDocument, takeLeftDocument } =
+      await import('./subtitle-documents');
+    rememberLeftDocument({ path: '/v/a.mp4', url: 'https://x/a' }, 'doc-a');
+    // A different module instance (new tab) reads the same storage.
+    assert.match(
+      String(localStorage.getItem('stage5.leftSubtitleDocuments.v1')),
+      /doc-a/
+    );
+    assert.equal(takeLeftDocument({ url: 'https://x/a' }), 'doc-a');
+    assert.equal(takeLeftDocument({ path: '/v/a.mp4' }), null);
+  } finally {
     restoreBrowserGlobals();
   }
 });

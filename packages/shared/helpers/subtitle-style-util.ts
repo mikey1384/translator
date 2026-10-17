@@ -165,6 +165,14 @@ export type SubtitleLineBoxStyle = {
   wordBreak: 'break-word' | 'keep-all';
 };
 
+/**
+ * Output size scales with the frame height, so a 9:16 frame would get type
+ * ~1.8x larger than the same setting on 16:9, and Dual text covered most of
+ * the picture. Portrait frames are narrow too; bring them back to a size
+ * that leaves the picture visible. Player and export both read this.
+ */
+export const PORTRAIT_FONT_FACTOR = 0.72;
+
 const SHORT_FORM_TUNING: Record<SubtitleStylePresetKey, ShortFormTuning> = {
   Default: {
     borderRadiusPx: 10,
@@ -468,7 +476,8 @@ export function resolveSubtitleRenderTheme(opts: {
     : (LANDSCAPE_TUNING[stylePreset] ?? null);
   const finalFontSize = Math.max(
     MIN_SUBTITLE_FONT_SIZE,
-    displayFontSize * (shortFormTuning?.fontScale ?? 1)
+    displayFontSize *
+      (shortFormTuning ? shortFormTuning.fontScale * PORTRAIT_FONT_FACTOR : 1)
   );
 
   const outlineRgba = assColorToRgba(style.outlineColor);

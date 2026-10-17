@@ -1,7 +1,8 @@
 import { css, cx } from '@emotion/css';
 import { colors, gradients } from '../styles';
-import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   borderRadius,
   fontSize,
@@ -34,6 +35,10 @@ const contentStyles = css`
   flex-direction: column;
   max-height: calc(100vh - ${spacing.xl} * 2);
   overflow: hidden;
+
+  &:focus {
+    outline: none;
+  }
 `;
 
 const titleStyles = css`
@@ -42,6 +47,11 @@ const titleStyles = css`
   font-weight: ${fontWeight.semibold};
   letter-spacing: -0.02em;
   color: ${colors.text};
+`;
+
+// Keeps the title clear of the close button on whichever side it sits.
+const titleWithCloseStyles = css`
+  padding-inline-end: 44px;
 `;
 
 const messageStyles = css`
@@ -63,7 +73,7 @@ const actionsStyles = css`
 const closeButtonStyles = css`
   position: absolute;
   top: ${spacing.lg};
-  right: ${spacing.lg};
+  inset-inline-end: ${spacing.lg};
   width: 34px;
   height: 34px;
   border-radius: ${borderRadius.full};
@@ -77,7 +87,27 @@ const closeButtonStyles = css`
     border-color: ${colors.borderStrong};
     background: rgba(255, 255, 255, 0.06);
   }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.primaryLight};
+    outline-offset: 2px;
+  }
 `;
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled]):not([type="hidden"])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+export function getFocusableElements(root: HTMLElement): HTMLElement[] {
+  return Array.from(
+    root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+  ).filter(el => !el.hasAttribute('inert') && el.getClientRects().length > 0);
+}
 
 interface ModalProps {
   open: boolean;
@@ -105,9 +135,63 @@ export default function Modal({
   contentClassName,
   bodyClassName,
   actionsClassName,
-  closeLabel = 'Close modal',
+  closeLabel,
   hideCloseButton = false,
 }: ModalProps) {
+  const { t } = useTranslation();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const showCloseButton = Boolean(onClose) && !hideCloseButton;
+
+  // Move focus into the dialog when it opens and hand it back to whatever
+  // opened it when it closes, so keyboard and screen-reader users never
+  // land on the page behind the overlay.
+  useEffect(() => {
+    if (!open) return;
+    const opener =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const frame = window.requestAnimationFrame(() => {
+      const node = contentRef.current;
+      if (!node || node.contains(document.activeElement)) return;
+      const focusables = getFocusableElements(node);
+      const preferred =
+        focusables.find(el => !el.dataset.modalClose) ?? focusables[0];
+      (preferred ?? node).focus();
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (opener && opener.isConnected) {
+        opener.focus();
+      }
+    };
+  }, [open]);
+
+  const handleTabKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Tab') return;
+    const node = contentRef.current;
+    if (!node) return;
+    const focusables = getFocusableElements(node);
+    if (focusables.length === 0) {
+      event.preventDefault();
+      node.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || active === node)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    } else if (!node.contains(active)) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   useEffect(() => {
     if (!open || !onClose) return;
 
@@ -132,20 +216,27 @@ export default function Modal({
       onClick={onClose}
     >
       <div
+        ref={contentRef}
+        tabIndex={-1}
         className={cx(contentStyles, contentClassName)}
         onClick={e => e.stopPropagation()}
+        onKeyDown={handleTabKey}
       >
-        {onClose && !hideCloseButton && (
+        {showCloseButton && (
           <button
             type="button"
             className={closeButtonStyles}
             onClick={onClose}
-            aria-label={closeLabel}
+            aria-label={closeLabel || t('common.close', 'Close')}
+            data-modal-close="true"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         )}
-        <h3 id={titleId} className={titleStyles}>
+        <h3
+          id={titleId}
+          className={cx(titleStyles, showCloseButton && titleWithCloseStyles)}
+        >
           {title}
         </h3>
         <div className={cx(messageStyles, bodyClassName)}>{children}</div>

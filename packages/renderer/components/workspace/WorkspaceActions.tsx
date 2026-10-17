@@ -1,4 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
+import type { TFunction } from 'i18next';
+import { css } from '@emotion/css';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,6 +20,7 @@ import {
   FileText,
   FileUp,
   Film,
+  FolderOpen,
   Languages,
   LayoutGrid,
   MoreHorizontal,
@@ -20,7 +30,32 @@ import {
 } from 'lucide-react';
 import Button from '../Button';
 import Modal from '../Modal';
-import { useFreePreviewOfferShowing } from './FreePreviewOffer';
+import {
+  useActiveFreePreview,
+  useFreePreviewOfferShowing,
+} from './FreePreviewOffer';
+import { chooseWorkspacePrimary } from './workspace-primary';
+import { detectTextLanguage } from '../../utils/detectTextLanguage';
+import {
+  formatClockTime,
+  transcriptStopsEarlyAt,
+} from '../../utils/transcriptCoverage';
+import { translateMissingUntranslated } from '../../utils/translateMissing';
+import { currentVideoCost } from '../../utils/freePreviewRun';
+import { persistMountedTranslation } from '../../containers/GenerateSubtitles/utils/subtitleGeneration';
+import { formatUsd } from '../../utils/formatUsd';
+import {
+  isManagedTempOriginalVideoPath,
+  saveOriginalVideoFile,
+} from '../../utils/saveVideo';
+import {
+  installInterruptedJobTracking,
+  useInterruptedJobsStore,
+} from '../../state/interrupted-jobs';
+import { freePreviewKey } from '../../state/free-preview-store';
+import UnreadableFileNotice, {
+  useMountedFileUnreadable,
+} from './UnreadableFileNotice';
 import SaveAndMergeBar from '../../containers/EditSubtitles/SaveAndMergeBar';
 import {
   SubtitleDisplaySwitch,
@@ -30,6 +65,7 @@ import SubtitleStylePicker, {
   subtitleStyleLabel,
 } from '../../containers/EditSubtitles/SubtitleStylePicker';
 import {
+  useCreditStore,
   useSubStore,
   useTaskStore,
   useUIStore,
@@ -57,22 +93,30 @@ import {
   moreMenuStyles,
 } from './workspace-styles';
 
-export function useWorkspaceLanguage(): {
-  value: string;
-  name: string;
-  into: string;
-} {
+installInterruptedJobTracking();
+
+type LanguageLabel = { value: string; name: string; into: string };
+
+function describeLanguage(
+  value: string,
+  t: TFunction,
+  uiLanguage: string
+): LanguageLabel {
+  const name = sentenceLanguageName(
+    t(`languages.${value}`, { defaultValue: value }),
+    uiLanguage
+  );
+  return { value, name, into: intoLanguageName(value, name, uiLanguage) };
+}
+
+export function useWorkspaceLanguage(): LanguageLabel {
   const { t, i18n } = useTranslation();
   const targetLanguage = useUIStore(s => s.targetLanguage);
   const value =
     targetLanguage && targetLanguage !== 'original'
       ? targetLanguage
       : mapUiLanguageToTargetLanguage(i18n.language);
-  const name = sentenceLanguageName(
-    t(`languages.${value}`, { defaultValue: value }),
-    i18n.language
-  );
-  return { value, name, into: intoLanguageName(value, name, i18n.language) };
+  return describeLanguage(value, t, i18n.language);
 }
 
 export function useWorkspaceBusy(): boolean {
@@ -84,55 +128,295 @@ export function useWorkspaceBusy(): boolean {
   return download || transcription || translation || dubbing || merge;
 }
 
+/**
+ * What the mounted subtitles hold, and which languages they are actually
+ * written in (detected from the text; the recorded target language is only a
+ * fallback, since an imported file may be in anything).
+ */
 function useSubtitleSummary() {
-  return useSubStore(
-    s => {
-      let translated = 0;
-      for (const id of s.order) {
-        if (s.segments[id]?.translation?.trim()) translated += 1;
+  const order = useSubStore(s => s.order);
+  const segments = useSubStore(s => s.segments);
+  const recordedLanguage = useSubStore(s => s.targetLanguage);
+  return useMemo(() => {
+    let translated = 0;
+    let missing = 0;
+    const originals: string[] = [];
+    const translations: string[] = [];
+    for (const id of order) {
+      const seg = segments[id];
+      const original = seg?.original?.trim() ?? '';
+      const translation = seg?.translation?.trim() ?? '';
+      if (original) originals.push(original);
+      if (translation) {
+        translated += 1;
+        translations.push(translation);
+      } else if (original) {
+        missing += 1;
       }
-      return { count: s.order.length, translated };
-    },
-    (a, b) => a.count === b.count && a.translated === b.translated
+    }
+    const recorded =
+      recordedLanguage && recordedLanguage !== 'original'
+        ? recordedLanguage
+        : null;
+    const lastId = order[order.length - 1];
+    return {
+      count: order.length,
+      translated,
+      missing,
+      lastEnd: lastId ? (segments[lastId]?.end ?? null) : null,
+      sourceLanguage: detectTextLanguage(originals),
+      translationLanguage:
+        translated > 0 ? (detectTextLanguage(translations) ?? recorded) : null,
+    };
+  }, [order, segments, recordedLanguage]);
+}
+
+/** Translate the lines that have none yet, then save like a normal run. */
+async function translateMissingLines(language: string): Promise<void> {
+  useUIStore.getState().setTargetLanguage(language);
+  const ok = await translateMissingUntranslated();
+  if (ok) await persistMountedTranslation(language);
+}
+
+function useCurrentSourceKey(): string | null {
+  return useVideoStore(s =>
+    freePreviewKey({
+      originalPath: s.originalPath,
+      path: s.path,
+      sourceUrl: s.sourceUrl,
+    })
   );
 }
 
 /** The calm line under the video when nothing is running. */
 export function WorkspaceIdleStatus() {
-  const { t } = useTranslation();
-  const language = useWorkspaceLanguage();
-  const { count, translated } = useSubtitleSummary();
-  const done = count > 0 && translated > 0;
-  const text = done
-    ? t(
-        'workspace.statusTranslated',
-        '{{count}} lines in {{language}} · in sync with the video',
-        {
-          count: translated,
-          language: language.name,
-          languageInto: language.into,
-        }
-      )
-    : count > 0
-      ? t('workspace.statusTranscribed', '{{count}} lines transcribed', {
-          count,
-        })
-      : t(
-          'workspace.statusReady',
-          'Ready — {{language}} subtitles are one click away',
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage || i18n.language || 'en';
+  const target = useWorkspaceLanguage();
+  const summary = useSubtitleSummary();
+  const { count, translated, missing } = summary;
+  const videoPath = useVideoStore(s => s.path);
+  const duration = useVideoStore(s => s.meta?.duration ?? null);
+  const editor = useWorkspaceActions(s => s.editor);
+  const preview = useActiveFreePreview();
+  const unreadable = useMountedFileUnreadable();
+  // Re-render when the balance changes: the ready line names the price.
+  useCreditStore(s => s.credits);
+  useCreditStore(s => s.authoritative);
+
+  const named = (value: string | null) =>
+    value ? describeLanguage(value, t, i18n.language) : null;
+  const sourceLanguage = named(summary.sourceLanguage);
+  const translationLanguage = named(summary.translationLanguage);
+  const alreadyInTarget =
+    translated === 0 && summary.sourceLanguage === target.value;
+
+  // While an offer stands for an empty video, it says what happens next.
+  if (count === 0 && preview) return <InterruptedJobNotice />;
+  // Nothing can run on a file that cannot be read; say so instead of "Ready".
+  if (count === 0 && unreadable) return <UnreadableFileNotice />;
+
+  let done = false;
+  let text: string;
+  if (count === 0) {
+    const cost = currentVideoCost(duration);
+    text =
+      cost?.kind === 'offer'
+        ? t(
+            'workspace.statusReadyPrice',
+            'Ready — {{language}} subtitles for this video: {{price}}',
+            {
+              language: target.name,
+              languageInto: target.into,
+              price: formatUsd(cost.wholeVideoPrice, locale),
+            }
+          )
+        : cost?.kind === 'preview'
+          ? t(
+              'workspace.statusReadyPreview',
+              'Ready — your minutes cover the first {{minutes}} min in {{language}}',
+              {
+                minutes: cost.previewMinutes,
+                count: cost.previewMinutes,
+                language: target.name,
+                languageInto: target.into,
+              }
+            )
+          : t(
+              'workspace.statusReady',
+              'Ready — {{language}} subtitles are one click away',
+              { language: target.name, languageInto: target.into }
+            );
+  } else if (alreadyInTarget && sourceLanguage) {
+    done = true;
+    text = t(
+      'workspace.statusTranslated',
+      '{{count}} lines in {{language}} · in sync with the video',
+      {
+        count,
+        language: sourceLanguage.name,
+        languageInto: sourceLanguage.into,
+      }
+    );
+  } else if (translated === 0) {
+    text = t('workspace.statusTranscribed', '{{count}} lines transcribed', {
+      count,
+    });
+  } else if (missing > 0) {
+    text = translationLanguage
+      ? t(
+          'workspace.statusPartlyTranslated',
+          '{{translated}} of {{count}} lines in {{language}} · {{missing}} not translated',
           {
-            language: language.name,
-            languageInto: language.into,
+            translated,
+            count: translated + missing,
+            missing,
+            language: translationLanguage.name,
+            languageInto: translationLanguage.into,
           }
+        )
+      : t(
+          'workspace.statusPartlyTranslatedUnknown',
+          '{{translated}} of {{count}} lines translated · {{missing}} not translated',
+          { translated, count: translated + missing, missing }
         );
+  } else {
+    done = true;
+    text = translationLanguage
+      ? t(
+          'workspace.statusTranslated',
+          '{{count}} lines in {{language}} · in sync with the video',
+          {
+            count: translated,
+            language: translationLanguage.name,
+            languageInto: translationLanguage.into,
+          }
+        )
+      : t(
+          'workspace.statusTranslatedUnknown',
+          '{{count}} translated lines · in sync with the video',
+          { count: translated }
+        );
+  }
+
+  const stopsAt =
+    videoPath && editor && count > 0
+      ? transcriptStopsEarlyAt({
+          durationSecs: duration,
+          lastEndSecs: summary.lastEnd,
+        })
+      : null;
+
   return (
-    <div className={idleStatusStyles}>
-      <span
-        className={idleDotStyles(done ? colors.success : colors.gray)}
-        aria-hidden="true"
-      />
-      <span role="status">{text}</span>
-      {count > 0 ? <WatchControls /> : null}
+    <>
+      <InterruptedJobNotice />
+      <div className={idleStatusStyles}>
+        <span
+          className={idleDotStyles(done ? colors.success : colors.gray)}
+          aria-hidden="true"
+        />
+        <span role="status">{text}</span>
+        {stopsAt !== null && editor ? (
+          <span className={stopsEarlyStyles}>
+            <span>
+              {t('workspace.stopsEarly', 'Subtitles stop at {{time}}', {
+                time: formatClockTime(stopsAt),
+              })}
+            </span>
+            <Button
+              variant="text"
+              size="sm"
+              onClick={() => {
+                logButton('workspace_continue_transcribing');
+                editor.continueTranscribing();
+              }}
+            >
+              {t('subtitles.continueTranscribing', 'Continue transcribing')}
+            </Button>
+          </span>
+        ) : null}
+        {count > 0 ? <WatchControls /> : null}
+      </div>
+    </>
+  );
+}
+
+const stopsEarlyStyles = css`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+/**
+ * A paid job for this video was still running when Translator quit or
+ * crashed: say so, and pick it up again in one click.
+ */
+function InterruptedJobNotice() {
+  const { t, i18n } = useTranslation();
+  const key = useCurrentSourceKey();
+  const record = useInterruptedJobsStore(s => (key ? s.items[key] : null));
+  const busy = useWorkspaceBusy();
+  const videoPath = useVideoStore(s => s.path);
+  const duration = useVideoStore(s => s.meta?.duration ?? null);
+  const editor = useWorkspaceActions(s => s.editor);
+  const summary = useSubtitleSummary();
+  if (!record || !key || busy) return null;
+
+  const language = describeLanguage(record.language, t, i18n.language);
+  const dismiss = () => useInterruptedJobsStore.getState().dismiss(key);
+  const resume = () => {
+    logButton('workspace_resume_interrupted', { kind: record.kind });
+    dismiss();
+    if (summary.count === 0) {
+      if (!videoPath) return;
+      useUIStore.getState().setTargetLanguage(record.language);
+      useUIStore.getState().requestHomeRun({
+        kind: 'mounted',
+        path: videoPath,
+        target: record.kind,
+      });
+      return;
+    }
+    const stopsAt = transcriptStopsEarlyAt({
+      durationSecs: duration,
+      lastEndSecs: summary.lastEnd,
+    });
+    if (stopsAt !== null && editor) {
+      editor.continueTranscribing();
+      return;
+    }
+    if (record.kind !== 'translate') return;
+    if (summary.translated === 0) {
+      useUIStore.getState().setTargetLanguage(record.language);
+      editor?.translateAll();
+    } else if (summary.missing > 0) {
+      void translateMissingLines(record.language);
+    }
+  };
+
+  return (
+    <div className={idleStatusStyles} role="status">
+      <span className={idleDotStyles(colors.primary)} aria-hidden="true" />
+      <span>
+        {record.kind === 'translate'
+          ? t(
+              'workspace.interruptedTranslate',
+              'Making this video speak {{language}} stopped when Translator closed.',
+              { language: language.name, languageInto: language.into }
+            )
+          : t(
+              'workspace.interruptedTranscribe',
+              'Transcribing this video stopped when Translator closed.'
+            )}
+      </span>
+      <span className={stopsEarlyStyles}>
+        <Button variant="text" size="sm" onClick={resume}>
+          {t('workspace.interruptedResume', 'Pick up where it stopped')}
+        </Button>
+        <Button variant="text" size="sm" onClick={dismiss}>
+          {t('common.dismiss', 'Dismiss')}
+        </Button>
+      </span>
     </div>
   );
 }
@@ -298,30 +582,63 @@ function MoreMenu({
   showExport: boolean;
 }) {
   const { t } = useTranslation();
+  // Swapping the source mid-job would reset the job's state while main keeps
+  // working on the old file.
+  const busy = useWorkspaceBusy();
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [placement, setPlacement] = useState<{
-    alignLeft: boolean;
-    below: boolean;
-  }>({ alignLeft: false, below: false });
+  const [menuBox, setMenuBox] = useState<CSSProperties | null>(null);
   const editor = useWorkspaceActions(s => s.editor);
+  const originalVideoPath = useVideoStore(s => s.originalPath);
+  const mountedVideoPath = useVideoStore(s => s.path);
+  // Downloads live in a temp folder until saved; a file the user opened is
+  // already on disk, so the menu shows where it is instead.
+  const canSaveOriginal = isManagedTempOriginalVideoPath(originalVideoPath);
+  const localVideoPath = originalVideoPath || mountedVideoPath || null;
 
-  // Open toward whichever side has room: the bar wraps on narrow windows and
-  // the page may be scrolled, so a fixed up-and-left menu can leave the view.
+  // Clamp the menu to the window: open toward the side with more room and
+  // scroll inside it when neither side fits (small windows, scrolled page).
   useLayoutEffect(() => {
     if (!open) return;
-    const anchor = anchorRef.current?.getBoundingClientRect();
-    const menu = menuRef.current;
-    if (!anchor || !menu) return;
-    const width = menu.offsetWidth;
-    const height = menu.offsetHeight;
-    setPlacement({
-      alignLeft: anchor.right - width < 8,
-      below:
-        anchor.top - height - 8 < 8 &&
-        anchor.bottom + height + 8 <= window.innerHeight,
-    });
+    const place = () => {
+      const anchor = anchorRef.current?.getBoundingClientRect();
+      const menu = menuRef.current;
+      if (!anchor || !menu) return;
+      const margin = 8;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const width = Math.min(menu.offsetWidth, vw - margin * 2);
+      const natural = menu.scrollHeight;
+      const spaceAbove = anchor.top - margin * 2;
+      const spaceBelow = vh - anchor.bottom - margin * 2;
+      const below = spaceBelow >= natural || spaceBelow > spaceAbove;
+      const rtl = document.documentElement.dir === 'rtl';
+      const preferredLeft = rtl ? anchor.left : anchor.right - width;
+      const left = Math.max(
+        margin,
+        Math.min(preferredLeft, vw - width - margin)
+      );
+      setMenuBox({
+        position: 'fixed',
+        left,
+        right: 'auto',
+        top: below ? anchor.bottom + margin : 'auto',
+        bottom: below ? 'auto' : vh - anchor.top + margin,
+        maxHeight: Math.max(
+          120,
+          Math.min(natural, below ? spaceBelow : spaceAbove)
+        ),
+      });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+      setMenuBox(null);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -363,12 +680,8 @@ function MoreMenu({
           ref={menuRef}
           className={moreMenuStyles}
           role="menu"
-          style={{
-            ...(placement.alignLeft ? { left: 0, right: 'auto' } : null),
-            ...(placement.below
-              ? { top: 'calc(100% + 8px)', bottom: 'auto' }
-              : null),
-          }}
+          // Hidden until measured so it never flashes off-screen.
+          style={menuBox ?? { visibility: 'hidden' }}
         >
           {showExport ? (
             <button
@@ -426,6 +739,7 @@ function MoreMenu({
             type="button"
             role="menuitem"
             className={moreMenuItemStyles}
+            disabled={busy}
             onClick={() => {
               logButton('workspace_more_change_video');
               setOpen(false);
@@ -451,15 +765,35 @@ function MoreMenu({
               ? t('workspace.moreReplaceSrt', 'Load another SRT')
               : t('workspace.moreMountSrt', 'Mount SRT')}
           </button>
-          <button
-            type="button"
-            role="menuitem"
-            className={moreMenuItemStyles}
-            onClick={() => openTools('video', 'save_original')}
-          >
-            <Download aria-hidden="true" />
-            {t('workspace.moreSaveOriginal', 'Save original video')}
-          </button>
+          {canSaveOriginal ? (
+            <button
+              type="button"
+              role="menuitem"
+              className={moreMenuItemStyles}
+              onClick={() => {
+                logButton('workspace_more_save_original');
+                setOpen(false);
+                void saveOriginalVideoFile(originalVideoPath);
+              }}
+            >
+              <Download aria-hidden="true" />
+              {t('workspace.moreSaveOriginal', 'Save original video')}
+            </button>
+          ) : localVideoPath ? (
+            <button
+              type="button"
+              role="menuitem"
+              className={moreMenuItemStyles}
+              onClick={() => {
+                logButton('workspace_more_reveal_video');
+                setOpen(false);
+                window.appShell.showItemInFolder(localVideoPath);
+              }}
+            >
+              <FolderOpen aria-hidden="true" />
+              {t('workspace.moreRevealVideo', 'Show video file')}
+            </button>
+          ) : null}
           <div className={moreMenuDividerStyles} />
           <button
             type="button"
@@ -478,61 +812,96 @@ function MoreMenu({
 
 /** One primary action that fits where the user is, plus Save and More. */
 export function WorkspaceActionBar() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const busy = useWorkspaceBusy();
   const language = useWorkspaceLanguage();
-  const { count, translated } = useSubtitleSummary();
+  const summary = useSubtitleSummary();
+  const { count, translated, missing } = summary;
   const videoPath = useVideoStore(s => s.path);
   const editor = useWorkspaceActions(s => s.editor);
   const hasSubs = count > 0;
-  const hasTranslation = translated > 0;
   // While a free-preview offer stands it carries the screen's yellow action.
   const offerShowing = useFreePreviewOfferShowing();
+  const previewStands = Boolean(useActiveFreePreview());
+  // A tools panel open beside the video has its own yellow action.
+  const toolsOpen = useUIStore(s => s.workspaceToolsOpen);
+
+  const unreadable = useMountedFileUnreadable();
+  const kind = chooseWorkspacePrimary({
+    busy,
+    // An unreadable file offers "Choose another file" instead of a run.
+    hasVideo: Boolean(videoPath) && !unreadable,
+    hasEditor: Boolean(editor),
+    previewStands,
+    count,
+    translated,
+    missing,
+    sourceLanguage: summary.sourceLanguage,
+    targetLanguage: language.value,
+  });
+  // Missing lines are finished in the language the others are already in.
+  const missingLanguage = describeLanguage(
+    summary.translationLanguage ?? language.value,
+    t,
+    i18n.language
+  );
 
   let primary: { label: string; run: () => void } | null = null;
-  if (!busy) {
-    if (!hasSubs && videoPath && offerShowing) {
-      primary = null;
-    } else if (!hasSubs && videoPath) {
-      primary = {
-        label: t('home.makeItSpeak', 'Make it speak {{language}}', {
-          language: language.name,
-          languageInto: language.into,
-        }),
-        run: () => {
-          logButton('workspace_make_it_speak');
-          useUIStore.getState().setTargetLanguage(language.value);
-          useUIStore
-            .getState()
-            .requestHomeRun({ kind: 'mounted', path: videoPath });
-        },
-      };
-    } else if (hasSubs && !hasTranslation && editor) {
-      primary = {
-        label: t('workspace.translateTo', 'Translate to {{language}}', {
-          language: language.name,
-          languageInto: language.into,
-        }),
-        run: () => {
-          logButton('workspace_translate_all');
-          useUIStore.getState().setTargetLanguage(language.value);
-          editor.translateAll();
-        },
-      };
-    } else if (hasSubs && videoPath) {
-      primary = {
-        label: t('workspace.exportVideo', 'Export video with subtitles'),
-        run: () => {
-          logButton('workspace_export_open');
-          useUIStore.getState().setExportSheetOpen(true);
-        },
-      };
-    } else if (hasSubs && editor) {
-      primary = {
-        label: t('workspace.saveSrt', 'Save .srt'),
-        run: () => void editor.save(),
-      };
-    }
+  if (kind === 'makeItSpeak' && videoPath) {
+    primary = {
+      label: t('home.makeItSpeak', 'Make it speak {{language}}', {
+        language: language.name,
+        languageInto: language.into,
+      }),
+      run: () => {
+        logButton('workspace_make_it_speak');
+        useUIStore.getState().setTargetLanguage(language.value);
+        useUIStore
+          .getState()
+          .requestHomeRun({ kind: 'mounted', path: videoPath });
+      },
+    };
+  } else if (kind === 'translate' && editor) {
+    primary = {
+      label: t('workspace.translateTo', 'Translate to {{language}}', {
+        language: language.name,
+        languageInto: language.into,
+      }),
+      run: () => {
+        logButton('workspace_translate_all');
+        useUIStore.getState().setTargetLanguage(language.value);
+        editor.translateAll();
+      },
+    };
+  } else if (kind === 'translateMissing') {
+    primary = {
+      label: t(
+        'workspace.translateMissing',
+        'Translate {{count}} missing lines into {{language}}',
+        {
+          count: missing,
+          language: missingLanguage.name,
+          languageInto: missingLanguage.into,
+        }
+      ),
+      run: () => {
+        logButton('workspace_translate_missing', { missing });
+        void translateMissingLines(missingLanguage.value);
+      },
+    };
+  } else if (kind === 'export') {
+    primary = {
+      label: t('workspace.exportVideo', 'Export video with subtitles'),
+      run: () => {
+        logButton('workspace_export_open');
+        useUIStore.getState().setExportSheetOpen(true);
+      },
+    };
+  } else if (kind === 'save' && editor) {
+    primary = {
+      label: t('workspace.saveSrt', 'Save .srt'),
+      run: () => void editor.save(),
+    };
   }
 
   const showSecondarySave =
@@ -542,7 +911,7 @@ export function WorkspaceActionBar() {
     <div className={actionBarStyles}>
       {primary ? (
         <Button
-          variant={offerShowing ? 'secondary' : 'primary'}
+          variant={offerShowing || toolsOpen ? 'secondary' : 'primary'}
           size="lg"
           className={actionPrimaryStyles}
           onClick={primary.run}

@@ -19,7 +19,7 @@ export default function ConfirmDubCostDialog({
   onConfirm,
   onCancel,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (
     <Modal
       open={open}
@@ -42,8 +42,8 @@ export default function ConfirmDubCostDialog({
           'dialogs.dubCostConfirm.message',
           'This dub uses about {{cost}} of your {{balance}} credits. Generating voices costs much more than translating.',
           {
-            cost: formatCreditBalance(estimatedCredits),
-            balance: formatCreditBalance(balance),
+            cost: formatCreditBalance(estimatedCredits, i18n.language),
+            balance: formatCreditBalance(balance, i18n.language),
           }
         )}
       </p>

@@ -51,6 +51,7 @@ export const headerRowStyles = css`
 
   @media (min-width: 720px) {
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
   }
@@ -382,8 +383,6 @@ export const aspectModeToggleStyles = css`
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0;
-  align-self: center;
-  margin-inline: auto;
   width: fit-content;
   max-width: 100%;
   border-radius: ${borderRadius.full};
@@ -423,9 +422,19 @@ export const aspectModeButtonStyles = (active: boolean) => css`
 
 export const highlightFormatRowStyles = css`
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: ${spacing.xs};
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${spacing.xs} ${spacing.sm};
+`;
+
+/** "Captions changed since this clip was cut" above a still-usable clip. */
+export const clipStaleNoteStyles = css`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${spacing.sm};
+  font-size: ${fontSize.xs};
+  color: ${colors.warning};
 `;
 
 export const aspectModeIconStyles = css`
@@ -541,4 +550,12 @@ export const combinedResultStyles = css`
     color: ${colors.text};
     font-size: ${fontSize.md};
   }
+`;
+
+/** "Showing the saved result in English…" under the header controls. */
+export const restoredNoteStyles = css`
+  flex-basis: 100%;
+  margin: 0;
+  font-size: ${fontSize.xs};
+  color: ${colors.textDim};
 `;

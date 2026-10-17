@@ -259,11 +259,23 @@ export default function FreePreviewOffer() {
           onClick={canFinishNow ? finishNow : buy}
           disabled={loading}
         >
-          {canFinishNow
-            ? t('freePreview.finishShort', 'Finish the video')
-            : t('freePreview.finishShortPrice', 'Finish for {{price}}', {
-                price,
-              })}
+          {preview.coveredSecs > 0
+            ? canFinishNow
+              ? t('freePreview.finishShort', 'Finish the video')
+              : t('freePreview.finishShortPrice', 'Finish for {{price}}', {
+                  price,
+                })
+            : // Nothing was started, so there is nothing to "finish".
+              canFinishNow
+              ? t('home.makeItSpeak', 'Make it speak {{language}}', {
+                  language: languageName,
+                  languageInto,
+                })
+              : t(
+                  'freePreview.noneCta',
+                  'Make it speak {{language}} · {{price}}',
+                  { language: languageName, languageInto, price }
+                )}
         </Button>
       </div>
     );
@@ -338,7 +350,18 @@ export default function FreePreviewOffer() {
         });
 
   let detail: string;
-  if (failed) {
+  if (failed && !canFinishNow) {
+    detail = t(
+      'freePreview.failedNeedMinutes',
+      'Everything finished so far is kept. You need more minutes to finish the remaining {{remaining}} minutes.',
+      { remaining, count: remaining }
+    );
+  } else if (failed && preview.failure === 'network') {
+    detail = t(
+      'freePreview.failedNetwork',
+      'The connection dropped. Everything finished so far is kept. Try again when you’re back online.'
+    );
+  } else if (failed) {
     detail = t(
       'freePreview.failedBody',
       'Everything finished so far is kept. Try again to finish the rest.'
@@ -407,11 +430,9 @@ export default function FreePreviewOffer() {
         >
           {loading ? t('credits.redirectingToPayment') : primaryLabel}
         </Button>
-        {failed ? null : (
-          <Button variant="secondary" size="lg" onClick={notNow}>
-            {t('freePreview.notNow', 'Not now')}
-          </Button>
-        )}
+        <Button variant="secondary" size="lg" onClick={notNow}>
+          {t('freePreview.notNow', 'Not now')}
+        </Button>
       </div>
     </div>
   );

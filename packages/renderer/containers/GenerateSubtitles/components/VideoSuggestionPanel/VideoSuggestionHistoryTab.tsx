@@ -34,6 +34,7 @@ import {
   canDeleteDownloadHistoryFile,
   historyRemovalDeletesManagedFile,
 } from './download-history-actions.js';
+import { youtubeVideoIdFromUrl } from '../../../../../shared/helpers/video-url.js';
 
 type VideoSuggestionHistoryTabProps = {
   disabled: boolean;
@@ -74,6 +75,12 @@ export default function VideoSuggestionHistoryTab({
   onDeleteHistoryFileAndHistory,
   onRemoveHistoryItem,
 }: VideoSuggestionHistoryTabProps) {
+  // Name the site the video came from; not every download is from YouTube.
+  const openSourceLabel = (url: string) =>
+    youtubeVideoIdFromUrl(url)
+      ? t('input.videoSuggestion.openOnYoutube', 'Open on YouTube')
+      : t('input.videoSuggestion.openOriginalPage', 'Open original page');
+
   if (downloadHistory.length === 0) {
     return (
       <div className={emptyTabStateStyles}>
@@ -225,52 +232,25 @@ export default function VideoSuggestionHistoryTab({
                       {t('input.videoSuggestion.moreActions', 'More actions')}
                     </summary>
                     <div className={historyActionIconRowStyles}>
-                      {canPlay ? (
-                        <IconButton
-                          onClick={() => onRedownloadHistoryItem(item)}
-                          disabled={disabled || isDownloadInProgress}
-                          variant="secondary"
-                          size="sm"
-                          icon={<Download size={16} />}
-                          title={t(
-                            'input.videoSuggestion.downloadAgain',
-                            'Download again'
-                          )}
-                          aria-label={t(
-                            'input.videoSuggestion.downloadAgain',
-                            'Download again'
-                          )}
-                        ></IconButton>
-                      ) : (
-                        <IconButton
-                          onClick={() => onOpenDownloadedVideo(item)}
-                          disabled={isTranslationInProgress || !canPlay}
-                          variant="secondary"
-                          size="sm"
-                          icon={<Play size={16} />}
-                          title={localPrimaryActionLabel}
-                          aria-label={localPrimaryActionLabel}
-                        ></IconButton>
-                      )}
                       <IconButton
                         onClick={() => onOpenVideoExternally(item.sourceUrl)}
                         variant="secondary"
                         size="sm"
                         icon={<ExternalLink size={16} />}
-                        title={t(
-                          'input.videoSuggestion.openOnYoutube',
-                          'Open on YouTube'
-                        )}
-                        aria-label={t(
-                          'input.videoSuggestion.openOnYoutube',
-                          'Open on YouTube'
-                        )}
+                        title={openSourceLabel(item.sourceUrl)}
+                        aria-label={openSourceLabel(item.sourceUrl)}
                       ></IconButton>
                       <IconButton
                         onClick={() =>
                           onOpenChannelExternally(item.channelUrl, item.channel)
                         }
-                        disabled={!item.channelUrl && !item.channel}
+                        // Without a channel link, only YouTube can be
+                        // searched by channel name.
+                        disabled={
+                          !item.channelUrl &&
+                          (!item.channel ||
+                            !youtubeVideoIdFromUrl(item.sourceUrl))
+                        }
                         variant="secondary"
                         size="sm"
                         icon={<UserRound size={16} />}

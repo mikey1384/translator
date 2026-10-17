@@ -17,12 +17,16 @@ export type FreePreviewStatus =
   | 'resuming'
   | 'failed';
 
+/** Why finishing stopped, so the card can say what to do. */
+export type FreePreviewFailure = 'network' | 'other';
+
 export interface FreePreview {
   key: string;
   durationSecs: number;
   coveredSecs: number;
   language: string;
   status: FreePreviewStatus;
+  failure?: FreePreviewFailure;
   updatedAt: number;
 }
 
@@ -71,7 +75,11 @@ function write(items: Record<string, FreePreview>) {
 interface FreePreviewState {
   items: Record<string, FreePreview>;
   save: (item: Omit<FreePreview, 'updatedAt'>) => void;
-  setStatus: (key: string, status: FreePreviewStatus) => void;
+  setStatus: (
+    key: string,
+    status: FreePreviewStatus,
+    failure?: FreePreviewFailure
+  ) => void;
   clear: (key: string) => void;
 }
 
@@ -87,13 +95,18 @@ export const useFreePreviewStore = createWithEqualityFn<FreePreviewState>()(
         write(items);
         return { items };
       }),
-    setStatus: (key, status) =>
+    setStatus: (key, status, failure) =>
       set(state => {
         const current = state.items[key];
         if (!current) return state;
         const items = {
           ...state.items,
-          [key]: { ...current, status, updatedAt: Date.now() },
+          [key]: {
+            ...current,
+            status,
+            failure: status === 'failed' ? failure : undefined,
+            updatedAt: Date.now(),
+          },
         };
         write(items);
         return { items };

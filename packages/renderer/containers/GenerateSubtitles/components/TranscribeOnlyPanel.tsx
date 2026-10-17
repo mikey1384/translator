@@ -125,7 +125,8 @@ export default function TranscribeOnlyPanel({
   costPreview = null,
   className,
 }: TranscribeOnlyPanelProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
   const transcriptionBlocked = Boolean(transcriptionBlockedMessage);
 
   return (
@@ -220,11 +221,16 @@ export default function TranscribeOnlyPanel({
                   'credits.costOfBalance',
                   '{{cost}} of your {{balance}} credits',
                   {
-                    cost: formatCredits(costPreview.requiredCredits),
-                    balance: formatCreditBalance(costPreview.availableCredits),
+                    cost: formatCredits(costPreview.requiredCredits, locale),
+                    balance: formatCreditBalance(
+                      costPreview.availableCredits,
+                      locale
+                    ),
                   }
                 )
-              : `${formatCredits(costPreview.requiredCredits)} cr`}
+              : t('credits.estimateAmount', '{{credits}} credits', {
+                  credits: formatCredits(costPreview.requiredCredits, locale),
+                })}
           </span>
         )}
         {onTranslate || onCreateHighlight ? (

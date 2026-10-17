@@ -2,12 +2,11 @@ import { buildSrt, parseSrt, secondsToSrtTime } from '../../shared/helpers';
 import * as SubtitlesIPC from '../ipc/subtitles';
 import { useSubStore, useTaskStore, useUIStore } from '../state';
 import { useUrlStore } from '../state/url-store';
-import {
-  getTranslationFailureMessage,
-  shouldSurfaceTranslationFailure,
-} from './translationFailure';
+import { resolveTranslationFailure } from './translationFailure';
+import { i18n } from '../i18n';
 import { registerStage5CreditRefreshOperation } from './creditRefreshOperations';
 import { isExplicitCancellation } from '../../shared/cancelled-error';
+import { isTextInLanguage } from './detectTextLanguage';
 
 /**
  * Translates only untranslated subtitle items using the existing streaming pipeline.
@@ -28,6 +27,15 @@ export async function translateMissingUntranslated(): Promise<boolean> {
     .filter(s => (s.original || '').trim() && !(s.translation || '').trim());
 
   if (!missing.length) return true;
+  // Lines already in the target language need no (paid) translation.
+  if (
+    isTextInLanguage(
+      missing.map(seg => seg.original),
+      targetLanguage
+    )
+  ) {
+    return true;
+  }
 
   // Collapse multi-line original into a single line; avoid re-wrapping on output
   const flattened = missing.map(seg => ({
@@ -45,7 +53,7 @@ export async function translateMissingUntranslated(): Promise<boolean> {
   // Initialize translation task progress
   useTaskStore.getState().setTranslation({
     id: operationId,
-    stage: 'Starting...',
+    stage: i18n.t('generateSubtitles.status.starting'),
     percent: 0,
     inProgress: true,
     isCompleted: false,
@@ -79,7 +87,7 @@ export async function translateMissingUntranslated(): Promise<boolean> {
       }
 
       useTaskStore.getState().setTranslation({
-        stage: 'Completed',
+        stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
         inProgress: false,
         isCompleted: true,
@@ -87,40 +95,39 @@ export async function translateMissingUntranslated(): Promise<boolean> {
       return true;
     }
 
-    const cancelled = Boolean(res?.cancelled);
-    const friendlyError = getTranslationFailureMessage({
+    const failure = resolveTranslationFailure({
       error: res?.error,
-      cancelled,
+      cancelled: Boolean(res?.cancelled),
+      operationId,
     });
 
     useTaskStore.getState().setTranslation({
-      stage: friendlyError,
+      stage: failure.stage,
       percent: 100,
       inProgress: false,
       isCompleted: false,
     });
 
-    if (shouldSurfaceTranslationFailure({ error: res?.error, cancelled })) {
-      useUrlStore.getState().setOperationError(friendlyError);
+    if (failure.banner) {
+      useUrlStore.getState().setOperationError(failure.banner);
     }
     return false;
   } catch (err: any) {
-    const errorMsg = err?.message || String(err);
-    const cancelled = isExplicitCancellation(err);
-    const friendlyError = getTranslationFailureMessage({
-      error: errorMsg,
-      cancelled,
+    const failure = resolveTranslationFailure({
+      error: err,
+      cancelled: isExplicitCancellation(err),
+      operationId,
     });
 
     useTaskStore.getState().setTranslation({
-      stage: friendlyError,
+      stage: failure.stage,
       percent: 100,
       inProgress: false,
       isCompleted: false,
     });
 
-    if (shouldSurfaceTranslationFailure({ error: errorMsg, cancelled })) {
-      useUrlStore.getState().setOperationError(friendlyError);
+    if (failure.banner) {
+      useUrlStore.getState().setOperationError(failure.banner);
     }
     return false;
   }

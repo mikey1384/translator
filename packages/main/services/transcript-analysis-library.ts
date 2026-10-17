@@ -56,6 +56,12 @@ interface FindStoredTranscriptAnalysisArgs {
   sourceVideoPath?: string | null;
   sourceUrl?: string | null;
   libraryEntryId?: string | null;
+  /**
+   * With no analysis in this language and quality, return the newest one for
+   * the same transcript in any language or quality (the entry says which),
+   * so switching the output language does not hide a paid summary.
+   */
+  allowOtherVariant?: boolean;
 }
 
 const INDEX_VERSION = 1 as const;
@@ -485,36 +491,30 @@ async function findStoredTranscriptAnalysisUnlocked(
   }
 
   const index = await readIndex();
-  const availableEntries: StoredTranscriptAnalysisEntry[] = [];
-  let pruned = false;
+  const exactEntries: StoredTranscriptAnalysisEntry[] = [];
+  const otherVariantEntries: StoredTranscriptAnalysisEntry[] = [];
+  const missingIds = new Set<string>();
 
   for (const entry of index.entries) {
-    if (
-      entry.transcriptHash !== transcriptHash ||
-      entry.summaryLanguage !== summaryLanguage ||
-      entry.effortLevel !== effortLevel
-    ) {
-      continue;
-    }
+    if (entry.transcriptHash !== transcriptHash) continue;
+    const exact =
+      entry.summaryLanguage === summaryLanguage &&
+      entry.effortLevel === effortLevel;
+    if (!exact && !args.allowOtherVariant) continue;
     if (!(await fileExists(entry.filePath))) {
-      pruned = true;
+      missingIds.add(entry.id);
       continue;
     }
-    availableEntries.push(entry);
+    (exact ? exactEntries : otherVariantEntries).push(entry);
   }
 
-  if (pruned) {
-    const availableIds = new Set(availableEntries.map(entry => entry.id));
-    index.entries = index.entries.filter(
-      entry =>
-        entry.transcriptHash !== transcriptHash ||
-        entry.summaryLanguage !== summaryLanguage ||
-        entry.effortLevel !== effortLevel ||
-        availableIds.has(entry.id)
-    );
+  if (missingIds.size > 0) {
+    index.entries = index.entries.filter(entry => !missingIds.has(entry.id));
     await writeIndex(index);
   }
 
+  const availableEntries =
+    exactEntries.length > 0 ? exactEntries : otherVariantEntries;
   if (availableEntries.length === 0) {
     return { entry: null };
   }

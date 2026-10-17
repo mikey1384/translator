@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
+import { colors, fonts } from '../../styles';
+import { borderRadius, fontSize, spacing } from '../design-system/tokens.js';
 import type {
   HighlightEditorialPlan,
   TranscriptHighlight,
@@ -12,6 +15,89 @@ import {
 } from '../../listeners/agent-highlights';
 import { toFileUrl } from './TranscriptSummaryPanel.helpers';
 import Button from '../Button';
+
+// The editor sits inside the dark clip card: native controls get the app's
+// surfaces, borders and yellow accent instead of white OS widgets.
+const editorStyles = css`
+  border: 1px solid ${colors.borderStrong};
+  border-radius: ${borderRadius.xl};
+  padding: ${spacing.lg};
+  margin: ${spacing.md} 0 0;
+  min-width: 0;
+  display: grid;
+  gap: ${spacing.md};
+  color: ${colors.text};
+  font-size: ${fontSize.sm};
+
+  legend {
+    padding: 0 ${spacing.xs};
+    font-weight: 600;
+  }
+  p {
+    margin: 0;
+    color: ${colors.textDim};
+  }
+  label {
+    display: grid;
+    gap: ${spacing.xs};
+    color: ${colors.textDim};
+  }
+  input:not([type='range']),
+  textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid ${colors.border};
+    border-radius: ${borderRadius.md};
+    background: ${colors.surfaceSoft};
+    color: ${colors.text};
+    font: inherit;
+    font-family: ${fonts.body};
+  }
+  input:not([type='range']):focus,
+  textarea:focus {
+    outline: none;
+    border-color: ${colors.primary};
+  }
+  textarea {
+    resize: vertical;
+  }
+  input[type='range'] {
+    width: 100%;
+    accent-color: ${colors.primary};
+  }
+  input[type='number'] {
+    width: 88px;
+  }
+`;
+
+const timeRowStyles = css`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: ${spacing.sm};
+
+  label {
+    display: grid;
+  }
+`;
+
+const buttonRowStyles = css`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${spacing.sm};
+`;
+
+const phraseStyles = css`
+  border-top: 1px solid ${colors.border};
+  padding: ${spacing.md} 0;
+  display: grid;
+  gap: ${spacing.sm};
+`;
+
+function seconds(value: number | undefined): string {
+  return (value ?? 0).toFixed(2);
+}
 
 export default function HighlightEditorialEditor({
   highlight,
@@ -93,7 +179,13 @@ export default function HighlightEditorialEditor({
             }
       );
     } catch (e) {
-      setError((e as Error).message);
+      console.error('[HighlightEditorialEditor] open failed', e);
+      setError(
+        t(
+          'highlightEditor.openFailed',
+          "Couldn't open this clip for styling. Make sure the video and its subtitles are open."
+        )
+      );
     }
   }
   async function save(remove = false) {
@@ -117,7 +209,13 @@ export default function HighlightEditorialEditor({
       onSaved();
       setPlan(null);
     } catch (e) {
-      setError((e as Error).message);
+      console.error('[HighlightEditorialEditor] save failed', e);
+      setError(
+        t(
+          'highlightEditor.saveFailed',
+          "Couldn't save the Short edit. Check that each phrase has text and its times are inside the clip."
+        )
+      );
     } finally {
       setSaving(false);
     }
@@ -137,17 +235,13 @@ export default function HighlightEditorialEditor({
             ? t('highlightEditor.editFraming', 'Edit framing & captions')
             : t('highlightEditor.styleShort', 'Style this Short')}
       </Button>
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p role="alert" style={{ color: colors.danger, margin: '8px 0 0' }}>
+          {error}
+        </p>
+      )}
       {plan && (
-        <fieldset
-          disabled={disabled || saving}
-          style={{
-            border: '1px solid #4a4553',
-            borderRadius: 12,
-            padding: 16,
-            marginTop: 12,
-          }}
-        >
+        <fieldset disabled={disabled || saving} className={editorStyles}>
           <legend>
             {t('highlightEditor.legend', 'Shorts framing & captions')}
           </legend>
@@ -162,8 +256,10 @@ export default function HighlightEditorialEditor({
               position: 'relative',
               width: 270,
               height: 480,
-              background: '#15131a',
-              margin: '12px auto',
+              background: colors.surfaceSoft,
+              borderRadius: 8,
+              overflow: 'hidden',
+              margin: '0 auto',
             }}
           >
             <canvas
@@ -199,7 +295,10 @@ export default function HighlightEditorialEditor({
             onSeeked={drawFrame}
           />
           <label>
-            Preview · {time.toFixed(2)}s
+            {t('highlightEditor.previewAt', {
+              defaultValue: 'Preview at {{seconds}} s',
+              seconds: seconds(time),
+            })}
             <input
               aria-label={t(
                 'highlightEditor.previewTime',
@@ -210,12 +309,11 @@ export default function HighlightEditorialEditor({
               max={Math.max(0, duration - 0.05)}
               step={0.04}
               value={time}
-              style={{ width: '100%' }}
               onChange={e => setTime(Number(e.target.value))}
             />
           </label>
           <label>
-            Speaker / topic
+            {t('highlightEditor.speakerLabel', 'Speaker or topic label')}
             <input
               aria-label={t(
                 'highlightEditor.speakerLabel',
@@ -224,16 +322,22 @@ export default function HighlightEditorialEditor({
               value={plan.label || ''}
               maxLength={60}
               onChange={e => setPlan({ ...plan, label: e.target.value })}
-              style={{ display: 'block', width: '100%' }}
             />
           </label>
           <p>
-            Shot {Math.max(0, shotIndex) + 1} of {plan.shots.length} ·{' '}
-            {shot?.start.toFixed(2)}–{shot?.end.toFixed(2)}s
+            {t('highlightEditor.shotPosition', {
+              defaultValue: 'Shot {{current}} of {{total}}',
+              current: Math.max(0, shotIndex) + 1,
+              total: plan.shots.length,
+            })}{' '}
+            ·{' '}
+            <bdi dir="ltr">
+              {seconds(shot?.start)}–{seconds(shot?.end)}
+            </bdi>
           </p>
           {shot &&
             (['centerX', 'centerY', 'zoom'] as const).map(key => (
-              <label key={key} style={{ display: 'block' }}>
+              <label key={key}>
                 {
                   {
                     centerX: t(
@@ -249,7 +353,6 @@ export default function HighlightEditorialEditor({
                 }{' '}
                 · {shot[key].toFixed(2)}
                 <input
-                  aria-label={key}
                   type="range"
                   min={key === 'zoom' ? 1 : 0}
                   max={key === 'zoom' ? 2.5 : 1}
@@ -265,83 +368,88 @@ export default function HighlightEditorialEditor({
                       ),
                     })
                   }
-                  style={{ width: '100%' }}
                 />
               </label>
             ))}
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={
-              !shot ||
-              time - shot.start < 0.08 ||
-              shot.end - time < 0.08 ||
-              plan.shots.length >= 40
-            }
-            onClick={() => {
-              if (shot)
+          <div className={buttonRowStyles}>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={
+                !shot ||
+                time - shot.start < 0.08 ||
+                shot.end - time < 0.08 ||
+                plan.shots.length >= 40
+              }
+              onClick={() => {
+                if (shot)
+                  setPlan({
+                    ...plan,
+                    shots: plan.shots.flatMap((s, i) =>
+                      i === shotIndex
+                        ? [
+                            { ...s, end: time },
+                            { ...s, start: time },
+                          ]
+                        : [s]
+                    ),
+                  });
+              }}
+            >
+              {t('highlightEditor.splitShot', 'Split shot at playhead')}
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={shotIndex <= 0}
+              onClick={() =>
                 setPlan({
                   ...plan,
                   shots: plan.shots.flatMap((s, i) =>
-                    i === shotIndex
-                      ? [
-                          { ...s, end: time },
-                          { ...s, start: time },
-                        ]
-                      : [s]
+                    i === shotIndex - 1
+                      ? [{ ...s, end: plan.shots[i + 1].end }]
+                      : i === shotIndex
+                        ? []
+                        : [s]
                   ),
-                });
-            }}
-          >
-            {t('highlightEditor.splitShot', 'Split shot at playhead')}
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={shotIndex <= 0}
-            onClick={() =>
-              setPlan({
-                ...plan,
-                shots: plan.shots.flatMap((s, i) =>
-                  i === shotIndex - 1
-                    ? [{ ...s, end: plan.shots[i + 1].end }]
-                    : i === shotIndex
-                      ? []
-                      : [s]
-                ),
-              })
-            }
-          >
-            {t('highlightEditor.joinShot', 'Join previous shot')}
-          </Button>
+                })
+              }
+            >
+              {t('highlightEditor.joinShot', 'Join previous shot')}
+            </Button>
+          </div>
           <p>
-            Caption phrases · emphasize an exact word or phrase from the text.
+            {t(
+              'highlightEditor.phrasesHint',
+              'Caption phrases: to highlight a word, type the exact word or phrase from the text in its box.'
+            )}
           </p>
           <div style={{ maxHeight: 320, overflowY: 'auto' }}>
             {plan.captions.map((c, i) => (
-              <div
-                key={i}
-                style={{
-                  borderTop: '1px solid #4a4553',
-                  padding: '12px 0',
-                  display: 'grid',
-                  gap: 6,
-                }}
-              >
-                <div>
+              <div key={i} className={phraseStyles}>
+                <div className={timeRowStyles}>
                   {(['start', 'end'] as const).map(key => (
                     <label key={key}>
                       {key === 'start'
-                        ? t('highlightEditor.from', 'From') + ' '
-                        : ' ' + t('highlightEditor.to', 'to') + ' '}
+                        ? t('highlightEditor.from', 'From')
+                        : t('highlightEditor.to', 'to')}
                       <input
-                        aria-label={`Caption ${i + 1} ${key}`}
+                        aria-label={
+                          key === 'start'
+                            ? t('highlightEditor.phraseStart', {
+                                defaultValue: 'Phrase {{index}} start (s)',
+                                index: i + 1,
+                              })
+                            : t('highlightEditor.phraseEnd', {
+                                defaultValue: 'Phrase {{index}} end (s)',
+                                index: i + 1,
+                              })
+                        }
                         type="number"
                         min={0}
                         max={duration}
                         step={0.01}
                         value={c[key]}
-                        style={{ width: 76 }}
                         onChange={e =>
                           setPlan({
                             ...plan,
@@ -354,14 +462,20 @@ export default function HighlightEditorialEditor({
                         }
                       />
                     </label>
-                  ))}{' '}
-                  s{' '}
-                  <button type="button" onClick={() => setTime(c.start)}>
+                  ))}
+                  <Button
+                    size="sm"
+                    variant="text"
+                    onClick={() => setTime(c.start)}
+                  >
                     {t('highlightEditor.preview', 'Preview')}
-                  </button>
+                  </Button>
                 </div>
                 <textarea
-                  aria-label={`Caption ${i + 1} text`}
+                  aria-label={t('highlightEditor.phraseText', {
+                    defaultValue: 'Phrase {{index}} text',
+                    index: i + 1,
+                  })}
                   value={c.text}
                   rows={2}
                   onChange={e =>
@@ -374,7 +488,10 @@ export default function HighlightEditorialEditor({
                   }
                 />
                 <input
-                  aria-label={`Caption ${i + 1} emphasis`}
+                  aria-label={t('highlightEditor.phraseEmphasis', {
+                    defaultValue: 'Phrase {{index}} emphasis',
+                    index: i + 1,
+                  })}
                   placeholder={t(
                     'highlightEditor.emphasize',
                     'Emphasize this phrase'
@@ -389,9 +506,10 @@ export default function HighlightEditorialEditor({
                     })
                   }
                 />
-                <div>
-                  <button
-                    type="button"
+                <div className={buttonRowStyles}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
                     disabled={plan.captions.length >= 160}
                     onClick={() => {
                       const words = c.text.split(/\s+/);
@@ -419,9 +537,10 @@ export default function HighlightEditorialEditor({
                     }}
                   >
                     {t('highlightEditor.splitPhrase', 'Split phrase')}
-                  </button>{' '}
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="text"
                     onClick={() =>
                       setPlan({
                         ...plan,
@@ -430,7 +549,7 @@ export default function HighlightEditorialEditor({
                     }
                   >
                     {t('highlightEditor.removePhrase', 'Remove phrase')}
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -451,7 +570,13 @@ export default function HighlightEditorialEditor({
           >
             {t('highlightEditor.addPhrase', 'Add phrase')}
           </Button>
-          <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+          <p>
+            {t(
+              'highlightEditor.saveNote',
+              'Saving switches this clip to Shorts Reframe with these phrase captions instead of your subtitle style.'
+            )}
+          </p>
+          <div className={buttonRowStyles}>
             <Button size="sm" variant="primary" onClick={() => void save()}>
               {saving
                 ? t('highlightEditor.saving', 'Saving…')

@@ -140,6 +140,32 @@ export function resolveSubtitleRenderSpec({
   };
 }
 
+/**
+ * The render request's geometry, taken from the spec itself so the two can
+ * never disagree (e.g. an audio-only file with no frame size).
+ */
+export function subtitleRenderGeometry(spec: ResolvedSubtitleRenderSpec): {
+  videoWidth: number;
+  videoHeight: number;
+  displayWidth: number;
+  displayHeight: number;
+  fontSizePx: number;
+  stylePreset: SubtitleStylePresetKey;
+  outputMode: SubtitleRenderDisplayMode;
+  overlayMode: 'overlayOnVideo' | 'blackVideo';
+} {
+  return {
+    videoWidth: spec.videoWidthPx,
+    videoHeight: spec.videoHeightPx,
+    displayWidth: spec.displayWidthPx,
+    displayHeight: spec.displayHeightPx,
+    fontSizePx: spec.outputFontSizePx,
+    stylePreset: spec.stylePreset,
+    outputMode: spec.displayMode,
+    overlayMode: spec.isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
+  };
+}
+
 export function serializeSubtitleRenderSpec(
   spec: ResolvedSubtitleRenderSpec
 ): Record<string, unknown> {

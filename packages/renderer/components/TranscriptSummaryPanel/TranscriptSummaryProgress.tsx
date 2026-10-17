@@ -43,6 +43,7 @@ export default function TranscriptSummaryProgress({
             onClick={onCancel}
             disabled={isCancelling || progressPercent >= 100}
             title={t('summary.cancel', 'Cancel')}
+            aria-label={t('summary.cancel', 'Cancel')}
           >
             {isCancelling ? '...' : '×'}
           </button>

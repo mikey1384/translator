@@ -4,7 +4,7 @@ import axios from 'axios';
 import { app, webContents } from 'electron';
 import { createAnalyticsPreferenceController } from './analytics-preference-controller.js';
 import { isFreshProductEvent } from './product-event-retention.js';
-import Store from 'electron-store';
+import { createSafeStore } from '../store/safe-store.js';
 import log from 'electron-log';
 import { STAGE5_API_URL } from './endpoints.js';
 import { withStage5AuthRetry } from './stage5-auth.js';
@@ -64,14 +64,16 @@ type ProductMeasurementStore = {
   pendingMeaningfulUseOccurredAt?: string;
 };
 
-const measurementStore = new Store<ProductMeasurementStore>({
+const measurementStore = createSafeStore<ProductMeasurementStore>({
   name: 'product-measurement',
 });
 
-const preferenceStore = new Store<{ enabled: boolean; revision: number }>({
-  name: 'product-analytics-preference',
-  defaults: { enabled: false, revision: 0 },
-});
+const preferenceStore = createSafeStore<{ enabled: boolean; revision: number }>(
+  {
+    name: 'product-analytics-preference',
+    defaults: { enabled: false, revision: 0 },
+  }
+);
 
 function releaseAnalyticsAvailable() {
   return shouldSendProductAnalytics({

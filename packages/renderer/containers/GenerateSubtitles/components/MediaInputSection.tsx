@@ -219,15 +219,13 @@ const fileInputAreaStyles = css`
   flex-wrap: wrap;
 `;
 
+// Wraps on the card's own width (it also lives in the narrower Change Video
+// dialog), so the file button never runs into the recent list.
 const deviceCardBodyStyles = css`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.86fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: ${spacing.lg};
   align-items: start;
-
-  @media (max-width: 1180px) {
-    grid-template-columns: 1fr;
-  }
 `;
 
 const devicePrimaryColumnStyles = css`
@@ -264,7 +262,8 @@ const recentItemButtonStyles = css`
   text-align: start;
   display: grid;
   gap: 2px;
-  padding: ${spacing.sm} ${spacing.xl} ${spacing.sm} ${spacing.md};
+  padding-block: ${spacing.sm};
+  padding-inline: ${spacing.md} ${spacing.xl};
   border-radius: ${borderRadius.xl};
   border: 1px solid ${colors.border};
   background: rgba(255, 255, 255, 0.03);
@@ -308,7 +307,7 @@ const recentItemMetaStyles = css`
 const recentItemRemoveButtonStyles = css`
   position: absolute;
   top: ${spacing.xs};
-  right: ${spacing.xs};
+  inset-inline-end: ${spacing.xs};
   width: 24px;
   height: 24px;
   display: inline-flex;
@@ -519,6 +518,25 @@ export default function MediaInputSection({
               placeholder={t('input.enterVideoUrl')}
               value={urlInput}
               onChange={e => setUrlInput(e.target.value)}
+              onKeyDown={e => {
+                // Enter starts the download, as on home; IME composition
+                // (Korean/Japanese/Chinese) confirms its text first.
+                if (
+                  e.key !== 'Enter' ||
+                  e.nativeEvent.isComposing ||
+                  e.keyCode === 229
+                ) {
+                  return;
+                }
+                e.preventDefault();
+                if (
+                  urlInput.trim() &&
+                  !isDownloadInProgress &&
+                  !isTranslationInProgress
+                ) {
+                  handleProcessUrl();
+                }
+              }}
               disabled={isTranslationInProgress || isDownloadInProgress}
             />
             <div className={urlControlsRowStyles}>

@@ -5,6 +5,14 @@ import { useTaskStore } from '../state/task-store';
 import { useVideoStore } from '../state/video-store';
 import { useUrlStore } from '../state/url-store';
 import { useVideoSuggestionStore } from '../state/video-suggestion-store';
+import { useSubStore } from '../state/subtitle-store';
+import { subscribePendingEdits } from '../utils/pending-edits';
+import { hasUnsavedSubtitleEdits } from '../utils/unsaved-subtitles';
+import {
+  saveCurrentSubtitles,
+  didSaveSubtitleFile,
+} from '../utils/saveSubtitles';
+import { resolveTabVideoTitle } from '../utils/tabVideoTitle';
 
 const THROTTLE_MS = 250;
 
@@ -86,16 +94,24 @@ function highlightRunning(): boolean {
   return true;
 }
 
-function basename(p: string): string {
-  const parts = p.split(/[\\/]/);
-  return parts[parts.length - 1] || p;
-}
+/** What a running tab is doing, so the close prompt can name it. */
+export type TabJobKind =
+  | 'transcription'
+  | 'translation'
+  | 'dubbing'
+  | 'export'
+  | 'summary'
+  | 'download'
+  | 'highlight'
+  | 'search';
 
 function computeStatus(): {
   title: string;
   percent: number | null;
   running: boolean;
   error: boolean;
+  unsaved: boolean;
+  job: TabJobKind | null;
 } {
   const tasks = useTaskStore.getState();
   const video = useVideoStore.getState();
@@ -140,24 +156,50 @@ function computeStatus(): {
   }
   wasRunning = running;
 
+  const job: TabJobKind | null = tasks.transcription.inProgress
+    ? 'transcription'
+    : tasks.translation.inProgress
+      ? 'translation'
+      : tasks.dubbing.inProgress
+        ? 'dubbing'
+        : tasks.merge.inProgress
+          ? 'export'
+          : tasks.summary.inProgress
+            ? 'summary'
+            : activeDownload
+              ? 'download'
+              : activeHighlight
+                ? 'highlight'
+                : suggesting
+                  ? 'search'
+                  : null;
+
   const percentSource = activeTask ?? activeDownload ?? activeHighlight;
-  const title = video.path
-    ? basename(video.path)
-    : video.file?.name || 'New Tab';
+  const videoTitle = resolveTabVideoTitle({
+    path: video.path,
+    originalPath: video.originalPath,
+    sourceUrl: video.sourceUrl,
+    fileName: video.file?.name,
+  });
+  const title = videoTitle || ''; // the tab strip shows its translated "New Tab"
 
   return {
     title,
     percent: percentSource ? Math.round(percentSource.percent ?? 0) : null,
     running,
     error: sawJobError,
+    unsaved: hasUnsavedSubtitleEdits(),
+    job,
   };
 }
 
 let lastReportedRunning = false;
+let lastReportedUnsaved = false;
 
 function send(): void {
   const status = computeStatus();
   lastReportedRunning = status.running;
+  lastReportedUnsaved = status.unsaved;
   const key = JSON.stringify(status);
   if (key === lastSent) return;
   lastSent = key;
@@ -184,7 +226,12 @@ function scheduleSend(): void {
     useVideoSuggestionStore.getState().loading ||
     highlightRunning()
   );
-  if (runningNow !== lastReportedRunning) {
+  // Unsaved edits are reported at once too: Cmd+W right after typing must
+  // already find the tab marked unsaved.
+  if (
+    runningNow !== lastReportedRunning ||
+    hasUnsavedSubtitleEdits() !== lastReportedUnsaved
+  ) {
     if (timer) {
       clearTimeout(timer);
       timer = null;
@@ -203,6 +250,18 @@ useTaskStore.subscribe(scheduleSend);
 useVideoStore.subscribe(scheduleSend);
 useUrlStore.subscribe(scheduleSend);
 useVideoSuggestionStore.subscribe(scheduleSend);
+useSubStore.subscribe(
+  s => s.dirty && s.order.length > 0,
+  () => scheduleSend()
+);
+subscribePendingEdits(scheduleSend);
+
+// "Save" in the close prompt: commit pending typing and save like Cmd+S
+// (to the linked .srt, or the app's subtitle library when there is none).
+api?.onSaveBeforeClose?.(async () => {
+  if (!hasUnsavedSubtitleEdits()) return true;
+  return didSaveSubtitleFile(await saveCurrentSubtitles());
+});
 
 // Initial report so the tab gets a title as soon as it loads.
 send();

@@ -1,8 +1,6 @@
-import Store from 'electron-store';
 import { app, BrowserWindow, shell } from 'electron';
 import axios from 'axios';
 import log from 'electron-log';
-import { v4 as uuidv4 } from 'uuid';
 import {
   setByoUnlocked,
   syncEntitlements,
@@ -26,6 +24,7 @@ import {
 } from '../../shared/constants/index.js';
 import { getMainWindow, broadcastToApp } from '../utils/window.js';
 import { settingsStore } from '../store/settings-store.js';
+import { createSafeStore, getPersistentDeviceId } from '../store/safe-store.js';
 import {
   getStage5VersionHeaders,
   isStage5UpdateRequiredError,
@@ -51,15 +50,7 @@ import {
 
 // Generate or retrieve device ID using proper UUID v4
 export function getDeviceId(): string {
-  const deviceIdStore = new Store<{ deviceId?: string }>({
-    name: 'device-config',
-  });
-  let id = deviceIdStore.get('deviceId');
-  if (!id) {
-    id = uuidv4(); // ✅ valid RFC 4122 v4
-    deviceIdStore.set('deviceId', id);
-  }
-  return id;
+  return getPersistentDeviceId();
 }
 
 function sendNetLog(
@@ -75,7 +66,7 @@ function sendNetLog(
   }
 }
 
-const store = new Store<{
+const store = createSafeStore<{
   balanceCredits: number;
   creditsPerHour: number;
   monthlyFree?: unknown;

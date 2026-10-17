@@ -25,7 +25,10 @@ const electronAPI = {
   // ---------------------- Basic / Test Methods ----------------------
   ping: async (): Promise<string> => ipcRenderer.invoke('ping'),
   test: () => 'Electron API is working',
-  showMessage: (message: string) => ipcRenderer.invoke('show-message', message),
+  showMessage: (
+    message: string,
+    options?: { type?: 'info' | 'warning' | 'error' }
+  ) => ipcRenderer.invoke('show-message', message, options),
 
   // ---------------------- Heartbeat ----------------------
   onHeartbeatPing: (callback: () => void) => {
@@ -92,8 +95,27 @@ const electronAPI = {
     percent: number | null;
     running: boolean;
     error: boolean;
+    unsaved?: boolean;
+    job?: string | null;
   }) => {
     ipcRenderer.send('tab:status-report', status);
+  },
+
+  // Main asks the tab to save its subtitle edits before it is closed (the
+  // user picked "Save" in the close prompt); the reply carries the outcome.
+  onSaveBeforeClose: (callback: () => Promise<boolean> | boolean) => {
+    if (typeof callback !== 'function') return;
+    const listener = async (_: any, requestId: string) => {
+      let ok = false;
+      try {
+        ok = Boolean(await callback());
+      } catch (error) {
+        console.error('[preload] tab:save-before-close error:', error);
+      }
+      ipcRenderer.send('tab:save-before-close-result', requestId, ok);
+    };
+    ipcRenderer.on('tab:save-before-close', listener);
+    return () => ipcRenderer.removeListener('tab:save-before-close', listener);
   },
 
   onTabVisibilityChanged: (callback: (info: { visible: boolean }) => void) => {
@@ -445,6 +467,12 @@ const electronAPI = {
       console.error('[Preload] Error sending PngRenderRequest:', error);
     }
   },
+  getDefaultExportVideoPath: (sourcePath: string) =>
+    ipcRenderer.invoke('export-video-destination:default', { sourcePath }),
+  chooseExportVideoPath: (options: {
+    sourcePath: string;
+    currentPath?: string;
+  }) => ipcRenderer.invoke('export-video-destination:choose', options),
   cancelPngRender: (operationId: string): void => {
     console.log('[Preload] Cancelling render job:', operationId);
     ipcRenderer.send('render-subtitles-cancel', { operationId });
@@ -1092,6 +1120,7 @@ contextBridge.exposeInMainWorld('fileApi', {
 contextBridge.exposeInMainWorld('appShell', {
   openExternal: (url: string): Promise<void> => shell.openExternal(url),
   openPath: (path: string): Promise<string> => shell.openPath(path),
+  showItemInFolder: (path: string): void => shell.showItemInFolder(path),
 });
 
 const isPackaged = ipcRenderer.sendSync('is-packaged');
@@ -1101,7 +1130,10 @@ const agentModeEnabled = isPackaged
   ? false // Will be determined dynamically in renderer after settings load
   : process.env.TRANSLATOR_AGENT_DEV === '1';
 
+const appVersion = String(ipcRenderer.sendSync('app-version') ?? '');
+
 contextBridge.exposeInMainWorld('env', {
   isPackaged,
+  appVersion,
   agentMode: agentModeEnabled,
 });

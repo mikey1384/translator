@@ -20,17 +20,23 @@ export default function ConfirmReplaceSrtDialog({
 }: Props) {
   const { t } = useTranslation();
   const isCaptionRecovery = context === 'caption_recovery';
+  const isReplace = context === 'replace';
 
   return (
     <Modal
       open={open}
       title={
-        isCaptionRecovery
+        isReplace
           ? t(
-              'dialogs.unsavedSrtOnCaptionRecovery.title',
-              'Open recovered automatic captions?'
+              'dialogs.unsavedSrtOnReplace.title',
+              'Save your subtitle edits first?'
             )
-          : t('dialogs.unsavedSrtOnTranscribe.title')
+          : isCaptionRecovery
+            ? t(
+                'dialogs.unsavedSrtOnCaptionRecovery.title',
+                'Open recovered automatic captions?'
+              )
+            : t('dialogs.unsavedSrtOnTranscribe.title')
       }
       titleId="confirm-replace-srt-title"
       onClose={onCancel}
@@ -40,31 +46,46 @@ export default function ConfirmReplaceSrtDialog({
             {t('common.cancel')}
           </Button>
           <Button variant="secondary" onClick={onDiscardAndTranscribe}>
-            {isCaptionRecovery
+            {isReplace
               ? t(
-                  'dialogs.unsavedSrtOnCaptionRecovery.discardAndOpen',
-                  'Discard and open captions'
+                  'dialogs.unsavedSrtOnReplace.discardAndContinue',
+                  'Discard edits and continue'
                 )
-              : t('dialogs.unsavedSrtOnTranscribe.discardAndTranscribe')}
+              : isCaptionRecovery
+                ? t(
+                    'dialogs.unsavedSrtOnCaptionRecovery.discardAndOpen',
+                    'Discard and open captions'
+                  )
+                : t('dialogs.unsavedSrtOnTranscribe.discardAndTranscribe')}
           </Button>
           <Button variant="primary" onClick={onSaveAndTranscribe}>
-            {isCaptionRecovery
+            {isReplace
               ? t(
-                  'dialogs.unsavedSrtOnCaptionRecovery.saveAndOpen',
-                  'Save and open captions'
+                  'dialogs.unsavedSrtOnReplace.saveAndContinue',
+                  'Save and continue'
                 )
-              : t('dialogs.unsavedSrtOnTranscribe.saveAndTranscribe')}
+              : isCaptionRecovery
+                ? t(
+                    'dialogs.unsavedSrtOnCaptionRecovery.saveAndOpen',
+                    'Save and open captions'
+                  )
+                : t('dialogs.unsavedSrtOnTranscribe.saveAndTranscribe')}
           </Button>
         </>
       }
     >
       <p style={{ margin: 0 }}>
-        {isCaptionRecovery
+        {isReplace
           ? t(
-              'dialogs.unsavedSrtOnCaptionRecovery.message',
-              'You already have subtitles open. Save or discard them before replacing them with YouTube automatic captions.'
+              'dialogs.unsavedSrtOnReplace.message',
+              'You changed these subtitles since they were last saved. Save your edits before replacing them?'
             )
-          : t('dialogs.unsavedSrtOnTranscribe.message')}
+          : isCaptionRecovery
+            ? t(
+                'dialogs.unsavedSrtOnCaptionRecovery.message',
+                'You already have subtitles open. Save or discard them before replacing them with YouTube automatic captions.'
+              )
+            : t('dialogs.unsavedSrtOnTranscribe.message')}
       </p>
     </Modal>
   );

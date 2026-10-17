@@ -376,6 +376,8 @@ declare module '@shared-types/app' {
     aspectMode: StoredHighlightClipAspectMode;
     videoPath: string;
     createdAt: string;
+    /** The captions burned into the clip; absent on clips from older builds. */
+    captionSignature?: string;
   }
 
   export interface StoredTranscriptAnalysisArtifact {
@@ -445,6 +447,18 @@ declare module '@shared-types/app' {
     url: string;
     quality?: VideoQuality;
     operationId?: string;
+    /** The user confirmed downloading a video over the long-video limit. */
+    allowLongVideo?: boolean;
+  }
+
+  /**
+   * A link refused before any media was fetched: a channel or playlist, a
+   * live broadcast, or a long video that needs the user's confirmation.
+   */
+  export interface ProcessUrlRejection {
+    code: 'collection_url' | 'live_stream' | 'long_video';
+    durationSec?: number;
+    estimatedBytes?: number;
   }
 
   export interface ProcessUrlResult {
@@ -468,6 +482,9 @@ declare module '@shared-types/app' {
     fileUrl?: string;
     originalVideoPath?: string;
     error?: string;
+    /** Why the download failed (UrlDownloadErrorCode); localize this, not `error`. */
+    errorCode?: string;
+    rejection?: ProcessUrlRejection;
     operationId?: string;
     cancelled?: boolean;
   }
@@ -551,6 +568,7 @@ declare module '@shared-types/app' {
     percent: number;
     stage: string;
     error?: string;
+    errorCode?: string;
     operationId?: string;
     current?: number;
     total?: number;
@@ -888,6 +906,8 @@ declare module '@shared-types/app' {
       /** Numeric remaining-time hint from the backend when available. */
       etaSeconds?: number;
       error?: string;
+      /** Final packet of a job the user stopped (not a failure). */
+      cancelled?: boolean;
       batchStartIndex?: number;
       operationId?: string;
       /** AI model or provider being used (e.g., "ElevenLabs Dubbing", "ElevenLabs TTS") */
@@ -1096,19 +1116,6 @@ declare module '@shared-types/app' {
   // === Subtitle Rendering
   // =========================================
 
-  export type TimedSubtitlePartState = 'spoken' | 'active' | 'upcoming';
-
-  export type SubtitleRenderPart =
-    | {
-        kind: 'word';
-        text: string;
-        state: TimedSubtitlePartState;
-      }
-    | {
-        kind: 'whitespace';
-        text: string;
-      };
-
   export type SubtitleRenderState =
     | {
         mode: 'editorial';
@@ -1120,11 +1127,6 @@ declare module '@shared-types/app' {
     | {
         mode: 'plain';
         text: string;
-      }
-    | {
-        mode: 'timed';
-        text: string;
-        parts: SubtitleRenderPart[];
       };
 
   export interface SubtitleRenderEvent {
@@ -1145,6 +1147,11 @@ declare module '@shared-types/app' {
     outputToLibrary?: boolean;
     /** Explicitly authorize replacing an existing automation output file. */
     outputOverwrite?: boolean;
+    /**
+     * Where the export sheet saves: the default folder, or a path the user
+     * picked in the app's own save dialog. Omitted: ask after rendering.
+     */
+    exportDestination?: { mode: 'default' } | { mode: 'chosen'; path: string };
     videoDuration: number;
     videoWidth: number;
     videoHeight: number;
@@ -1243,6 +1250,12 @@ declare module '@shared-types/app' {
     status: 'connected' | 'already-connected' | 'cli-not-found' | 'failed';
     client: AgentMcpClientId;
     command?: string;
+    /** Failure reason; `message` is raw detail for the "Details" disclosure. */
+    reason?:
+      | 'cli_failed'
+      | 'config_invalid'
+      | 'write_failed'
+      | 'launcher_missing';
     message?: string;
     configPath?: string;
     backupPath?: string;
@@ -1394,6 +1407,7 @@ declare module '@shared-types/app' {
       sourceVideoPath?: string | null;
       sourceUrl?: string | null;
       libraryEntryId?: string | null;
+      allowOtherVariant?: boolean;
     }) => Promise<{
       success: boolean;
       entry?: StoredTranscriptAnalysisEntry | null;
@@ -1406,6 +1420,7 @@ declare module '@shared-types/app' {
       artifactKey: string;
       aspectMode: StoredHighlightClipAspectMode;
       videoPath: string;
+      captionSignature?: string;
     }) => Promise<{
       success: boolean;
       clip?: StoredHighlightClip;
@@ -1456,6 +1471,13 @@ declare module '@shared-types/app' {
     ) => Promise<TranscribeRemainingResult>;
 
     sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
+    getDefaultExportVideoPath: (
+      sourcePath: string
+    ) => Promise<{ path: string }>;
+    chooseExportVideoPath: (options: {
+      sourcePath: string;
+      currentPath?: string;
+    }) => Promise<{ path?: string; canceled?: boolean }>;
     onPngRenderResult: (
       callback: (result: ExposedRenderResult) => void
     ) => () => void;
@@ -1496,7 +1518,10 @@ declare module '@shared-types/app' {
     cancelOperation: (operationId: string) => Promise<CancelOperationResult>;
 
     ping: () => Promise<string>;
-    showMessage: (message: string) => Promise<void>;
+    showMessage: (
+      message: string,
+      options?: { type?: 'info' | 'warning' | 'error' }
+    ) => Promise<void>;
     getLocaleUrl: (lang: string) => Promise<string>;
     getLanguagePreference: () => Promise<string>;
     setLanguagePreference: (
@@ -1847,7 +1872,7 @@ declare module '@shared-types/app' {
     ) => () => void;
 
     // Update System
-    updateCheck: () => Promise<any>;
+    updateCheck: () => Promise<{ available: boolean; version?: string }>;
     updateDownload: () => Promise<void>;
     updateInstall: () => Promise<void>;
     updateGetPostInstallNotice: () => Promise<PostInstallUpdateNotice | null>;
@@ -1874,9 +1899,12 @@ declare module '@shared-types/app' {
       appShell: {
         openExternal: (url: string) => Promise<void>;
         openPath: (path: string) => Promise<string>;
+        showItemInFolder: (path: string) => void;
       };
       env: {
         isPackaged: boolean;
+        /** The running app version, e.g. "1.27.0". */
+        appVersion: string;
         agentMode: boolean;
       };
       translatorAgent?: {

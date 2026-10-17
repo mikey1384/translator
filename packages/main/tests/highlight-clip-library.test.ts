@@ -7,10 +7,12 @@ import {
   highlightClipSourceKey,
   listHighlightClips,
   recordHighlightClip,
+  sweepOrphanHighlightClips,
 } from '../services/highlight-clip-library.js';
 import {
   highlightCaptionSignature,
   highlightClipArtifactKey,
+  highlightClipCaptionSignature,
   highlightClipSourceIdentity,
 } from '../../shared/helpers/highlight-clips.js';
 
@@ -134,7 +136,7 @@ test('clips whose file was deleted are forgotten but nothing is deleted', async 
   });
 });
 
-test('a re-render replaces the entry, newest first, and keeps the old file', async () => {
+test('a re-render replaces the entry, newest first, and deletes the old file', async () => {
   await withTempDir(async rootDir => {
     const first = await writeClip(rootDir, 'first.mp4');
     const second = await writeClip(rootDir, 'second.mp4');
@@ -165,7 +167,8 @@ test('a re-render replaces the entry, newest first, and keeps the old file', asy
         ['combined', combined],
       ]
     );
-    assert.equal(await fs.readFile(first, 'utf8'), 'mp4');
+    await assert.rejects(fs.stat(first));
+    assert.equal(await fs.readFile(second, 'utf8'), 'mp4');
   });
 });
 
@@ -261,5 +264,166 @@ test('reparsed captions keep the same clip key; edits and faces do not', () => {
   assert.equal(
     highlightClipArtifactKey({ start: 1.0004, end: 2.5 }),
     '1000-2500|null'
+  );
+});
+
+test('the clip keeps its caption signature and a re-cut with new captions replaces it', async () => {
+  await withTempDir(async rootDir => {
+    const before = await writeClip(rootDir, 'before.mp4');
+    const after = await writeClip(rootDir, 'after.mp4');
+    const base = {
+      sourceIdentity: 'path:/videos/talk.mp4',
+      kind: 'single' as const,
+      artifactKey: '1000-5000|null',
+      aspectMode: 'vertical_reframe' as const,
+    };
+    await recordHighlightClip(
+      { ...base, videoPath: before, captionSignature: 'clip1:aaa' },
+      rootDir
+    );
+    let clips = await listHighlightClips(
+      { sourceIdentity: base.sourceIdentity },
+      rootDir
+    );
+    assert.equal(clips[0].captionSignature, 'clip1:aaa');
+
+    await recordHighlightClip(
+      { ...base, videoPath: after, captionSignature: 'clip1:bbb' },
+      rootDir
+    );
+    clips = await listHighlightClips(
+      { sourceIdentity: base.sourceIdentity },
+      rootDir
+    );
+    assert.deepEqual(
+      clips.map(clip => [clip.videoPath, clip.captionSignature]),
+      [[after, 'clip1:bbb']]
+    );
+    await assert.rejects(fs.stat(before));
+  });
+});
+
+test('files outside the clips folder are never deleted', async () => {
+  await withTempDir(async rootDir => {
+    const outsideDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'stage5-outside-')
+    );
+    try {
+      const outside = path.join(outsideDir, 'user.mp4');
+      await fs.writeFile(outside, 'mp4');
+      const inside = await writeClip(rootDir, 'inside.mp4');
+      const base = {
+        sourceIdentity: SOURCE,
+        kind: 'single' as const,
+        artifactKey: '0-1000|null',
+        aspectMode: 'original' as const,
+      };
+      await recordHighlightClip({ ...base, videoPath: outside }, rootDir);
+      await recordHighlightClip({ ...base, videoPath: inside }, rootDir);
+      assert.equal(await fs.readFile(outside, 'utf8'), 'mp4');
+    } finally {
+      await fs.rm(outsideDir, { recursive: true, force: true });
+    }
+  });
+});
+
+test('the sweep removes old unreferenced clip files only', async () => {
+  await withTempDir(async rootDir => {
+    const referenced = await writeClip(rootDir, 'referenced.mp4');
+    const orphanOld = await writeClip(rootDir, 'orphan-old.mp4');
+    const orphanNew = await writeClip(rootDir, 'orphan-new.mp4');
+    await fs.writeFile(path.join(rootDir, 'notes.txt'), 'keep');
+    await recordHighlightClip(
+      {
+        sourceIdentity: SOURCE,
+        kind: 'single',
+        artifactKey: '0-1000|null',
+        aspectMode: 'original',
+        videoPath: referenced,
+      },
+      rootDir
+    );
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    for (const file of [referenced, orphanOld]) {
+      await fs.utimes(file, twoHoursAgo, twoHoursAgo);
+    }
+
+    const removed = await sweepOrphanHighlightClips(rootDir);
+    assert.deepEqual(removed, [path.resolve(orphanOld)]);
+    assert.equal(await fs.readFile(referenced, 'utf8'), 'mp4');
+    // A file this young may belong to a render that is finishing now.
+    assert.equal(await fs.readFile(orphanNew, 'utf8'), 'mp4');
+    assert.equal(
+      await fs.readFile(path.join(rootDir, 'notes.txt'), 'utf8'),
+      'keep'
+    );
+  });
+});
+
+test('a clip signature covers only the cues inside the clip', () => {
+  const cue = (id: string, start: number, end: number, original: string) => ({
+    id,
+    index: 1,
+    start,
+    end,
+    original,
+    translation: '',
+  });
+  const transcript = [cue('a', 0, 2, 'Hello'), cue('b', 10, 12, 'Later')];
+  const clip = [{ start: 0, end: 5 }];
+  const signature = highlightClipCaptionSignature(
+    transcript,
+    clip,
+    'dual',
+    'Cinema',
+    38
+  );
+  // An edit outside the clip leaves it current.
+  assert.equal(
+    signature,
+    highlightClipCaptionSignature(
+      [transcript[0], cue('b', 10, 12, 'Changed later line')],
+      clip,
+      'dual',
+      'Cinema',
+      38
+    )
+  );
+  // An edit inside it, or a new size or face, does not.
+  assert.notEqual(
+    signature,
+    highlightClipCaptionSignature(
+      [cue('a', 0, 2, 'Hi'), transcript[1]],
+      clip,
+      'dual',
+      'Cinema',
+      38
+    )
+  );
+  assert.notEqual(
+    signature,
+    highlightClipCaptionSignature(transcript, clip, 'dual', 'Cinema', 40)
+  );
+  assert.notEqual(
+    signature,
+    highlightClipCaptionSignature(
+      transcript,
+      clip,
+      'dual',
+      'Cinema',
+      38,
+      'serif'
+    )
+  );
+  // Reparsed cue ids do not matter.
+  assert.equal(
+    signature,
+    highlightClipCaptionSignature(
+      [cue('x', 0, 2, 'Hello'), transcript[1]],
+      clip,
+      'dual',
+      'Cinema',
+      38
+    )
   );
 });

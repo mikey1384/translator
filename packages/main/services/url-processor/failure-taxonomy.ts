@@ -29,19 +29,39 @@ type ErrorLike = {
   userFriendly?: unknown;
 };
 
+// yt-dlp --verbose echoes its own argv ("--socket-timeout 30 …") and config
+// on the first attempt. Classifying that echo mislabels every failure, so it
+// is dropped before any pattern runs.
+const YT_DLP_ECHO_LINE_RE =
+  /^\s*\[debug\]\s+(?:command-line config|user config|system config|portable config|home config|custom config|encodings|yt-dlp version|python version|exe versions|optional libraries|proxy map|request handlers|plugin directories|loaded \d+ extractors)\b.*$/gim;
+
+export function stripYtDlpDiagnosticEcho(text: string): string {
+  return String(text || '').replace(YT_DLP_ECHO_LINE_RE, '');
+}
+
 export function getUrlDownloadErrorText(error: unknown): string {
   const value = error as ErrorLike;
-  return [
-    value?.message,
-    value?.stderr,
-    value?.stdout,
-    value?.all,
-    value?.userFriendly,
-  ]
-    .map(part => String(part || '').trim())
-    .filter(Boolean)
-    .join('\n');
+  return stripYtDlpDiagnosticEcho(
+    [
+      value?.message,
+      value?.stderr,
+      value?.stdout,
+      value?.all,
+      value?.userFriendly,
+    ]
+      .map(part => String(part || '').trim())
+      .filter(Boolean)
+      .join('\n')
+  );
 }
+
+// yt-dlp: "This video is unavailable", "Video unavailable", "… has been
+// removed by the uploader", "The uploader has not made this video available
+// in your country".
+export const VIDEO_UNAVAILABLE_RE =
+  /\b(?:this )?video (?:is )?(?:unavailable|no longer available)|has been removed by the uploader|removed by (?:the )?uploader|video has been removed|account associated with this video has been terminated/i;
+export const REGION_LOCKED_RE =
+  /not made this video available in your country|not available in your (?:country|region)|geo[- ]?(?:restricted|blocked)|region[- ]locked/i;
 
 export function isAudienceRestrictedError(error: unknown): boolean {
   return /this content (?:isn['’]t|is not) available to everyone|can(?:not|['’]t) be seen by certain audiences|restricted to certain audiences/i.test(
@@ -79,9 +99,10 @@ export function classifyUrlDownloadFailureDetail(
       text
     );
   const privateOrRestricted =
-    /private video|this video is private|video unavailable|geo[- ]restricted|region[- ]locked/.test(
-      text
-    ) || isAudienceRestrictedError(error);
+    /private video|this video is private/.test(text) ||
+    VIDEO_UNAVAILABLE_RE.test(text) ||
+    REGION_LOCKED_RE.test(text) ||
+    isAudienceRestrictedError(error);
   const sourceAccessFailure =
     /unable to download (?:webpage|api page|player|initial data|player api json)|extractor error|failed to extract/.test(
       text
@@ -148,7 +169,7 @@ export function classifyUrlDownloadFailureDetail(
     };
   }
   if (
-    /failed to resolve|could not resolve host|getaddrinfo|network is unreachable|econn|enet|socket|timed?\s*out/.test(
+    /failed to resolve|could not resolve host|getaddrinfo|network is unreachable|\beconn(?:reset|refused|aborted)\b|\benet(?:unreach|down)\b|\bsocket (?:error|timeout|hang up)\b|connection (?:reset|refused|timed out)|\btimed out\b|read operation timed out/.test(
       text
     )
   ) {

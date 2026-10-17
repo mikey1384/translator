@@ -9,7 +9,10 @@ import { useSubStore } from './subtitle-store';
 import {
   maybeAutoMountStoredSubtitleForVideo,
   rememberStoredSubtitleSourcePath,
+  unmountCurrentSubtitles,
 } from '../utils/subtitle-library';
+import { subtitlesBelongToOtherSource } from '../utils/subtitle-source-release';
+import { confirmReplaceUnsavedSubtitles } from '../utils/unsaved-subtitles';
 import {
   basename as recentMediaBasename,
   filterExistingRecentLocalMedia,
@@ -19,7 +22,32 @@ import {
   type RecentLocalMediaItem,
 } from './recent-local-media';
 import throttle from 'lodash/throttle';
+import { MEDIA_FILE_EXTENSIONS } from '../../shared/constants/media-extensions.js';
 import { logButton, logVideo } from '../utils/logger';
+import { i18n } from '../i18n';
+
+// Opening a different video: restore the subtitles stored for it, and never
+// leave the previous video's subtitles showing over it (or burned into its
+// export) when it has none.
+async function mountSubtitlesForNewSource(
+  isCurrentMount: () => boolean,
+  args: { sourceVideoPath: string | null; sourceUrl: string | null }
+): Promise<void> {
+  try {
+    await maybeAutoMountStoredSubtitleForVideo(args);
+  } finally {
+    if (
+      isCurrentMount() &&
+      subtitlesBelongToOtherSource(useSubStore.getState(), {
+        sourceVideoPath: args.sourceVideoPath,
+        sourceVideoAssetIdentity: useVideoStore.getState().sourceAssetIdentity,
+        sourceUrl: args.sourceUrl,
+      })
+    ) {
+      unmountCurrentSubtitles();
+    }
+  }
+}
 
 function toFileUrl(p: string): string {
   if (!p) return p;
@@ -93,6 +121,11 @@ interface State {
   activeTrack: 'original' | 'dubbed';
   meta: Meta;
   metaPath: string | null;
+  /**
+   * Set when this file's metadata cannot be read (damaged, truncated or an
+   * unsupported format), so the workspace says so instead of waiting.
+   */
+  metaError: { path: string; code: string } | null;
   isAudioOnly: boolean;
   isReady: boolean;
   recentLocalMedia: RecentLocalMediaItem[];
@@ -110,7 +143,7 @@ interface Actions {
   openRecentLocalMedia(
     path: string,
     options?: { preserveSubtitles?: boolean }
-  ): Promise<{ opened: boolean; missing?: boolean }>;
+  ): Promise<{ opened: boolean; missing?: boolean; declined?: boolean }>;
   removeRecentLocalMedia(path: string): void;
   refreshRecentLocalMedia(): Promise<void>;
   setFile(
@@ -156,6 +189,7 @@ const initial: State = {
   activeTrack: 'original',
   meta: null,
   metaPath: null,
+  metaError: null,
   isAudioOnly: false,
   isReady: false,
   recentLocalMedia: readRecentLocalMedia(),
@@ -212,19 +246,8 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         properties: ['openFile'],
         filters: [
           {
-            name: 'Media',
-            extensions: [
-              'mp4',
-              'mkv',
-              'avi',
-              'mov',
-              'webm',
-              'mp3',
-              'wav',
-              'aac',
-              'ogg',
-              'flac',
-            ],
+            name: i18n.t('common.fileFilters.mediaFiles', 'Media Files'),
+            extensions: [...MEDIA_FILE_EXTENSIONS],
           },
         ],
       });
@@ -236,6 +259,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         logVideo('video_selected', { path });
       } catch {
         // Do nothing
+      }
+      if (!preserveSubtitles && !(await confirmReplaceUnsavedSubtitles())) {
+        return { canceled: true } as const;
       }
       try {
         const payload = {
@@ -273,6 +299,12 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (!exists) {
         set({ recentLocalMedia: removeRecentLocalMedia(trimmed) });
         return { opened: false, missing: true } as const;
+      }
+      if (
+        !options?.preserveSubtitles &&
+        !(await confirmReplaceUnsavedSubtitles())
+      ) {
+        return { opened: false, declined: true } as const;
       }
 
       try {
@@ -386,7 +418,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         if (!skipStoredSubtitleAutoMount) {
           if (!isCurrentMount()) return;
           try {
-            await maybeAutoMountStoredSubtitleForVideo({
+            await mountSubtitlesForNewSource(isCurrentMount, {
               sourceVideoPath: fd.path,
               sourceUrl,
             });
@@ -445,7 +477,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         if (!skipStoredSubtitleAutoMount) {
           if (!isCurrentMount()) return;
           try {
-            await maybeAutoMountStoredSubtitleForVideo({
+            await mountSubtitlesForNewSource(isCurrentMount, {
               sourceVideoPath: b._originalPath ?? null,
               sourceUrl: null,
             });
@@ -511,7 +543,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         if (!skipStoredSubtitleAutoMount) {
           if (!isCurrentMount()) return;
           try {
-            await maybeAutoMountStoredSubtitleForVideo({
+            await mountSubtitlesForNewSource(isCurrentMount, {
               sourceVideoPath: sourcePath,
               sourceUrl: null,
             });
@@ -977,7 +1009,11 @@ async function analyse(path: string) {
     }
     useVideoStore.setState({ isAudioOnly: !hasVideo });
     if (metaRes.success && metaRes.metadata) {
-      useVideoStore.setState({ meta: metaRes.metadata, metaPath: path });
+      useVideoStore.setState({
+        meta: metaRes.metadata,
+        metaPath: path,
+        metaError: null,
+      });
       clearMetadataRetry(path);
     }
     if (!metaRes.success) {
@@ -987,6 +1023,9 @@ async function analyse(path: string) {
     console.error('[video-store] analyse error', err);
   }
 }
+
+/** Probe retries before a non-iCloud metadata failure counts as unreadable. */
+const UNREADABLE_PROBE_ATTEMPTS = 2;
 
 function clearMetadataRetry(path: string) {
   const timer = metadataRetryTimers.get(path);
@@ -1014,12 +1053,26 @@ function scheduleMetadataRetry(path: string, attempt: number) {
     try {
       const res = await VideoIPC.getMetadata(path);
       if (res.success && res.metadata) {
-        useVideoStore.setState({ meta: res.metadata, metaPath: path });
+        useVideoStore.setState({
+          meta: res.metadata,
+          metaPath: path,
+          metaError: null,
+        });
         return;
       }
       if (res.code === 'icloud-placeholder') {
         scheduleMetadataRetry(path, attempt + 1);
+        return;
       }
+      // A file still being written can fail a probe once; a damaged or
+      // unsupported one fails every time.
+      if (attempt < UNREADABLE_PROBE_ATTEMPTS) {
+        scheduleMetadataRetry(path, attempt + 1);
+        return;
+      }
+      useVideoStore.setState({
+        metaError: { path, code: res.code || 'probe-error' },
+      });
     } catch (err) {
       console.error('[video-store] metadata retry error', err);
       scheduleMetadataRetry(path, attempt + 1);

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { esmDirname } from '@shared/esm-paths';
 import { getFocusedOrMainWindow } from '../utils/window.js';
+import { getUiT } from '../utils/ui-language.js';
 
 const SETTINGS_FILE_NAME = 'save-settings.json';
 let settingsFilePath: string | null = null;
@@ -167,14 +168,25 @@ export class SaveFileService {
           `[saveFile] Using dialog default path: ${dialogDefaultPath}`
         );
 
+        const t = await getUiT();
         const dialogResult = await dialog.showSaveDialog(window, {
           defaultPath: dialogDefaultPath,
           filters: filters || [
-            { name: 'SRT Files', extensions: ['srt'] },
-            { name: 'Text Files', extensions: ['txt'] },
-            { name: 'All Files', extensions: ['*'] },
+            {
+              name: t('common.fileFilters.srtFiles', undefined, 'SRT Files'),
+              extensions: ['srt'],
+            },
+            {
+              name: t('common.fileFilters.textFiles', undefined, 'Text Files'),
+              extensions: ['txt'],
+            },
+            {
+              name: t('common.fileFilters.allFiles', undefined, 'All Files'),
+              extensions: ['*'],
+            },
           ],
-          title: options.title || 'Save File',
+          // No default title: the OS supplies its own, in the system language.
+          title: options.title,
         });
 
         console.log('[saveFile] Dialog result:', dialogResult);

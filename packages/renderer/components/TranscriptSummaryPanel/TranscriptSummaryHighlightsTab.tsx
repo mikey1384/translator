@@ -1,5 +1,6 @@
 import type { DragEvent } from 'react';
 import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import type {
   HighlightAspectMode,
   TranscriptHighlight,
@@ -9,12 +10,14 @@ import { Scissors } from 'lucide-react';
 import Button from '../Button';
 import HighlightEditorialEditor from './HighlightEditorialEditor';
 import {
-  formatRange,
+  formatClipLength,
+  formatClockRange,
   getHighlightKey,
   toFileUrl,
   type HighlightClipCutState,
 } from './TranscriptSummaryPanel.helpers';
 import {
+  clipStaleNoteStyles,
   aspectModeButtonStyles,
   aspectModeIconStyles,
   aspectModeLabelStyles,
@@ -65,6 +68,7 @@ type TranscriptSummaryHighlightsTabProps = {
   combineAspectMode: HighlightAspectMode;
   combineCutState: CombineCutState;
   combineMode: boolean;
+  combinedClipStale: boolean;
   downloadStatus: Record<string, 'idle' | 'saving' | 'saved' | 'error'>;
   getHighlightAspectMode: (
     highlight: TranscriptHighlight
@@ -77,6 +81,7 @@ type TranscriptSummaryHighlightsTabProps = {
   highlights: TranscriptHighlight[];
   isGenerating: boolean;
   isHighlightCutting: (highlight: TranscriptHighlight) => boolean;
+  isHighlightClipStale: (highlight: TranscriptHighlight) => boolean;
   onCutCombined: () => void;
   onCutHighlightClip: (highlight: TranscriptHighlight) => void;
   onDownloadCombined: (outputPath: string) => void;
@@ -131,6 +136,58 @@ function getAspectModeDescription(
   return t(
     'summary.verticalFormatDesc',
     'Crop and reframe for YouTube Shorts, TikTok, Reels (9:16)'
+  );
+}
+
+/** Clock times stay left-to-right in RTL; the length uses the UI's units. */
+function ClipTime({
+  start,
+  end,
+  locale,
+}: {
+  start: number;
+  end: number;
+  locale: string;
+}) {
+  return (
+    <>
+      <bdi dir="ltr">{formatClockRange(start, end)}</bdi>
+      {' · '}
+      <bdi>{formatClipLength(start, end, locale)}</bdi>
+    </>
+  );
+}
+
+/** A clip cut before its own lines or the caption look changed. */
+function StaleClipNote({
+  disabled,
+  onRecut,
+  t,
+}: {
+  disabled: boolean;
+  onRecut?: () => void;
+  t: TFunction;
+}) {
+  return (
+    <div className={clipStaleNoteStyles} role="status">
+      <span>
+        {t(
+          'summary.clipCaptionsChanged',
+          'The subtitles changed since this clip was cut.'
+        )}
+      </span>
+      {onRecut ? (
+        <Button
+          variant="secondary"
+          size="sm"
+          leftIcon={<Scissors size={15} aria-hidden="true" />}
+          onClick={onRecut}
+          disabled={disabled}
+        >
+          {t('summary.recutClip', 'Cut again')}
+        </Button>
+      ) : null}
+    </div>
   );
 }
 
@@ -249,6 +306,7 @@ export default function TranscriptSummaryHighlightsTab({
   combineAspectMode,
   combineCutState,
   combineMode,
+  combinedClipStale,
   downloadStatus,
   getHighlightAspectMode,
   getHighlightStateKey,
@@ -259,6 +317,7 @@ export default function TranscriptSummaryHighlightsTab({
   highlights,
   isGenerating,
   isHighlightCutting,
+  isHighlightClipStale,
   onCutCombined,
   onCutHighlightClip,
   onDownloadCombined,
@@ -274,6 +333,8 @@ export default function TranscriptSummaryHighlightsTab({
   t,
   videoAvailableForHighlights,
 }: TranscriptSummaryHighlightsTabProps) {
+  const { i18n } = useTranslation();
+  const locale = i18n.language || 'en';
   const combineSelectionLocked = combineCutState.status === 'cutting';
 
   return (
@@ -332,11 +393,14 @@ export default function TranscriptSummaryHighlightsTab({
                 >
                   <span className={reorderIndexStyles}>{index + 1}.</span>
                   <span className={reorderTitleStyles}>
-                    {highlight.title ||
-                      formatRange(highlight.start, highlight.end)}
+                    {highlight.title || t('summary.highlight', 'Highlight')}
                   </span>
                   <span className={reorderTimeStyles}>
-                    {formatRange(highlight.start, highlight.end)}
+                    <ClipTime
+                      start={highlight.start}
+                      end={highlight.end}
+                      locale={locale}
+                    />
                   </span>
                 </div>
               ))}
@@ -356,10 +420,10 @@ export default function TranscriptSummaryHighlightsTab({
               >
                 {combineCutState.status === 'cutting'
                   ? t('summary.cuttingCombined', 'Cutting...')
-                  : t(
-                      'summary.cutCombined',
-                      `Cut ${orderedSelection.length} Combined`
-                    )}
+                  : t('summary.cutCombinedCount', {
+                      defaultValue: 'Cut {{count}} together',
+                      count: orderedSelection.length,
+                    })}
               </Button>
 
               {combineCutState.status === 'cutting' ? (
@@ -380,6 +444,13 @@ export default function TranscriptSummaryHighlightsTab({
           <h4>
             {t('summary.combinedHighlightReady', 'Combined Highlight Ready')}
           </h4>
+          {combinedClipStale ? (
+            <StaleClipNote
+              disabled={!videoAvailableForHighlights}
+              onRecut={orderedSelection.length >= 2 ? onCutCombined : undefined}
+              t={t}
+            />
+          ) : null}
           <video
             className={highlightVideo}
             controls
@@ -473,7 +544,11 @@ export default function TranscriptSummaryHighlightsTab({
                     {highlight.title || t('summary.highlight', 'Highlight')}
                   </div>
                   <div className={highlightTime}>
-                    {formatRange(highlight.start, highlight.end)}
+                    <ClipTime
+                      start={highlight.start}
+                      end={highlight.end}
+                      locale={locale}
+                    />
                   </div>
                 </div>
 
@@ -500,11 +575,31 @@ export default function TranscriptSummaryHighlightsTab({
                 />
 
                 {highlight.videoPath ? (
-                  <video
-                    className={highlightVideo}
-                    controls
-                    src={toFileUrl(highlight.videoPath)}
-                  />
+                  <>
+                    {isHighlightClipStale(highlight) ? (
+                      <StaleClipNote
+                        disabled={cutDisabled}
+                        onRecut={() => onCutHighlightClip(highlight)}
+                        t={t}
+                      />
+                    ) : null}
+                    {cutStatus === 'cutting' ? (
+                      <div className={highlightCutProgressTrack}>
+                        <div
+                          className={highlightCutProgressFill}
+                          style={{ width: `${cutPercent}%` }}
+                        />
+                      </div>
+                    ) : null}
+                    {cutError ? (
+                      <span className={highlightStatusError}>{cutError}</span>
+                    ) : null}
+                    <video
+                      className={highlightVideo}
+                      controls
+                      src={toFileUrl(highlight.videoPath)}
+                    />
+                  </>
                 ) : (
                   <div className={highlightPlaceholder}>
                     <p className={highlightPlaceholderText}>

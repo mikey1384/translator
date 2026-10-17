@@ -3,6 +3,7 @@ import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import Button from './Button';
 import { breakpoints, colors, gradients, shadows } from '../styles';
+import { localizeErrorOr } from '../utils/userFacingError';
 import {
   borderRadius,
   fontSize,
@@ -208,9 +209,18 @@ export default function ApiKeyInput({
     // Validate first
     const validation = await onValidate();
     if (!validation.ok) {
+      // Provider text ("401 Incorrect API key…") is English; show the
+      // reason in the UI language and keep the detail in the console.
+      if (validation.error) {
+        console.warn('[ApiKeyInput] Key validation failed:', validation.error);
+      }
       setStatusError(
-        validation.error ||
-          t('settings.apiKey.invalid', 'API key validation failed.')
+        /missing api key/i.test(validation.error || '')
+          ? t('settings.apiKey.missing', 'Paste an API key first.')
+          : localizeErrorOr(validation.error, t as any, {
+              key: 'settings.apiKey.invalid',
+              defaultText: 'API key validation failed.',
+            })
       );
       return;
     }
@@ -220,7 +230,12 @@ export default function ApiKeyInput({
     if (result.success) {
       setStatusMessage(t('settings.apiKey.saved', 'API key saved.'));
     } else if (result.error) {
-      setStatusError(result.error);
+      setStatusError(
+        localizeErrorOr(result.error, t as any, {
+          key: 'errors.unexpectedSave',
+          defaultText: 'An unexpected error occurred while saving.',
+        })
+      );
     }
   };
 
@@ -231,7 +246,12 @@ export default function ApiKeyInput({
     if (result.success) {
       setStatusMessage(t('settings.apiKey.cleared', 'API key cleared.'));
     } else if (result.error) {
-      setStatusError(result.error);
+      setStatusError(
+        localizeErrorOr(result.error, t as any, {
+          key: 'errors.unexpectedRemove',
+          defaultText: 'An unexpected error occurred while removing the key.',
+        })
+      );
     }
   };
 

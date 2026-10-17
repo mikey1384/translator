@@ -200,8 +200,11 @@ export function onAgentControlChanged(
   return window.electron.onAgentControlChanged(callback);
 }
 
-export function showMessage(message: string): Promise<void> {
-  return window.electron.showMessage(message);
+export function showMessage(
+  message: string,
+  options?: { type?: 'info' | 'warning' | 'error' }
+): Promise<void> {
+  return window.electron.showMessage(message, options);
 }
 
 export function getLocaleUrl(lang: string): Promise<string> {

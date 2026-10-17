@@ -120,3 +120,18 @@ export function getTempDiskSpace(): Promise<{
 }> {
   return window.electron.getTempDiskSpace();
 }
+
+/** Where the export sheet would save this video's export by default. */
+export function getDefaultExportVideoPath(
+  sourcePath: string
+): Promise<{ path: string }> {
+  return window.electron.getDefaultExportVideoPath(sourcePath);
+}
+
+/** The system save dialog for a video export; remembered by main. */
+export function chooseExportVideoPath(options: {
+  sourcePath: string;
+  currentPath?: string;
+}): Promise<{ path?: string; canceled?: boolean }> {
+  return window.electron.chooseExportVideoPath(options);
+}

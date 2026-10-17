@@ -31,6 +31,7 @@ export default function LogsModal({
   const [mainContextError, setMainContextError] = useState<string | null>(null);
   const [loadingContext, setLoadingContext] = useState(false);
   const [busyAction, setBusyAction] = useState<'copy' | 'send' | null>(null);
+  const [attachDiagnostics, setAttachDiagnostics] = useState(true);
   const logs = useLogsStore(s => s.logs);
   const last30 = useMemo(() => {
     const copy = logs.slice();
@@ -58,6 +59,7 @@ export default function LogsModal({
   useEffect(() => {
     if (!open) {
       setUserMessage('');
+      setAttachDiagnostics(true);
       setMainContext(null);
       setMainContextError(null);
       setLoadingContext(false);
@@ -142,11 +144,36 @@ export default function LogsModal({
     }
   };
 
+  const openMailto = async (subjectText: string, bodyText: string) => {
+    const mailto = `mailto:mikey@stage5.tools?subject=${encodeURIComponent(
+      subjectText
+    )}&body=${encodeURIComponent(bodyText)}`;
+    if (window.appShell?.openExternal) {
+      await window.appShell.openExternal(mailto);
+    } else {
+      window.location.href = mailto;
+    }
+  };
+
   const emailToDev = async () => {
+    if (!attachDiagnostics) {
+      // Feedback only: the user's words plus the app version, nothing else.
+      setBusyAction('send');
+      try {
+        const version = window.env?.appVersion;
+        await openMailto(
+          t('logs.feedbackEmailSubject', 'Translator feedback'),
+          `${userMessage.trim()}\n\n—\nTranslator${version ? ` v${version}` : ''}`
+        );
+      } catch (err) {
+        console.error('[LogsModal] send feedback failed', err);
+      } finally {
+        setBusyAction(null);
+      }
+      return;
+    }
     setBusyAction('send');
-    const subject = encodeURIComponent(
-      t('logs.emailSubject', 'Stage5 Debug Logs')
-    );
+    const subject = t('logs.emailSubject', 'Stage5 Debug Logs');
     const intro = `${resolvedPrompt || defaultIntro}\n\n${t(
       'logs.emailBodyPrefix',
       'Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n'
@@ -169,19 +196,14 @@ export default function LogsModal({
         copied = false;
       }
 
-      const body = encodeURIComponent(
+      await openMailto(
+        subject,
         buildMailtoBody({
           intro,
           bundle: report,
           fullBundleCopiedToClipboard: copied,
         })
       );
-      const mailto = `mailto:mikey@stage5.tools?subject=${subject}&body=${body}`;
-      if (window.appShell?.openExternal) {
-        await window.appShell.openExternal(mailto);
-      } else {
-        window.location.href = mailto;
-      }
     } catch (err) {
       console.error('[LogsModal] send report failed', err);
       alert(t('logs.copyFailed', 'Copy failed'));
@@ -193,73 +215,167 @@ export default function LogsModal({
   return (
     <Modal
       open={open}
-      title={t('logs.title', 'Recent Logs')}
+      title={t('logs.feedbackTitle', 'Send feedback or report a problem')}
       onClose={onClose}
       contentClassName={css`
-        width: min(820px, 95vw);
-        max-height: 85vh;
+        width: min(640px, 95vw);
+        max-height: 88vh;
       `}
       bodyClassName={css`
-        overflow: hidden;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
       `}
       actions={
-        <Button variant="secondary" onClick={onClose}>
-          {t('logs.close', 'Close')}
-        </Button>
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            {t('logs.close', 'Close')}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => void emailToDev()}
+            disabled={
+              busyAction !== null ||
+              (!attachDiagnostics && userMessage.trim().length === 0)
+            }
+          >
+            {t('common.send', 'Send')}
+          </Button>
+        </>
       }
       closeLabel={t('logs.close', 'Close')}
     >
-      {reportPrompt ? (
-        <Alert
-          variant="error"
+      {reportPrompt ? <Alert variant="error">{resolvedPrompt}</Alert> : null}
+      <label
+        className={css`
+          display: grid;
+          gap: 8px;
+          color: ${colors.text};
+          font-size: 0.92rem;
+        `}
+      >
+        {t(
+          'logs.whatHappened',
+          'What happened, or what would you like to tell us?'
+        )}
+        <textarea
+          value={userMessage}
+          onChange={e => setUserMessage(e.target.value)}
+          placeholder={t(
+            'logs.optionalMessagePlaceholder',
+            'What were you trying to do?'
+          )}
+          autoFocus
           className={css`
-            margin-bottom: 12px;
+            min-height: 140px;
+            resize: vertical;
+            border: 1px solid ${colors.border};
+            border-radius: 10px;
+            padding: 10px 12px;
+            font: inherit;
+            font-size: 0.92rem;
+            background: ${colors.bg};
+            color: ${colors.text};
+            caret-color: ${colors.text};
+
+            &::placeholder {
+              color: ${colors.textDim};
+              opacity: 1;
+            }
+
+            &:focus-visible {
+              outline: 2px solid ${colors.primaryLight};
+              outline-offset: 1px;
+            }
           `}
-        >
-          {resolvedPrompt}
-        </Alert>
-      ) : null}
-      {mainContextError ? (
-        <Alert
-          variant="error"
+        />
+      </label>
+      <label
+        className={css`
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          color: ${colors.text};
+          font-size: 0.88rem;
+          cursor: pointer;
+        `}
+      >
+        <input
+          type="checkbox"
+          checked={attachDiagnostics}
+          onChange={e => setAttachDiagnostics(e.target.checked)}
           className={css`
-            margin-bottom: 12px;
+            margin-top: 3px;
           `}
-        >
+        />
+        <span>
+          {t(
+            'logs.attachDiagnostics',
+            'Attach diagnostic details (recommended for problems)'
+          )}
+          <span
+            className={css`
+              display: block;
+              color: ${colors.textDim};
+              font-size: 0.8rem;
+              margin-top: 2px;
+            `}
+          >
+            {t(
+              'logs.attachDiagnosticsHint',
+              'Recent app logs, app version and system info. No videos or subtitles.'
+            )}
+          </span>
+        </span>
+      </label>
+      {attachDiagnostics && mainContextError ? (
+        <Alert variant="warning">
           {t(
             'logs.reportContextWarning',
             'Some diagnostic context could not be loaded. The report will still include renderer-side details.'
           )}
         </Alert>
       ) : null}
-      <div
-        className={css`
-          display: grid;
-          grid-template-columns: 1fr 160px;
-          gap: 0;
-          min-height: min(60vh, 520px);
-
-          @media (max-width: 760px) {
-            grid-template-columns: 1fr;
-          }
-        `}
-      >
-        <div
+      {attachDiagnostics ? (
+        <details
           className={css`
-            overflow: auto;
-            padding: 12px;
-            background: ${colors.surface};
             border: 1px solid ${colors.border};
-            border-radius: 10px 0 0 10px;
+            border-radius: 10px;
+            background: ${colors.surface};
+            padding: 8px 12px;
 
-            @media (max-width: 760px) {
-              border-radius: 10px 10px 0 0;
+            & > summary {
+              cursor: pointer;
+              color: ${colors.textDim};
+              font-size: 0.85rem;
             }
           `}
         >
+          <summary>{t('logs.showDetails', 'Show what will be sent')}</summary>
+          <div
+            className={css`
+              display: flex;
+              justify-content: flex-end;
+              margin: 8px 0;
+            `}
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={copyToClipboard}
+              disabled={busyAction !== null}
+            >
+              {t('logs.copy', 'Copy')}
+            </Button>
+          </div>
           <pre
+            dir="ltr"
+            lang="en"
             className={css`
               margin: 0;
+              max-height: 40vh;
+              overflow: auto;
               white-space: pre-wrap;
               word-break: break-word;
               font-family:
@@ -271,77 +387,8 @@ export default function LogsModal({
           >
             {previewText || t('logs.empty', 'No logs yet.')}
           </pre>
-        </div>
-        <div
-          className={css`
-            border: 1px solid ${colors.border};
-            border-inline-start: none;
-            border-radius: 0 10px 10px 0;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: ${colors.surface};
-
-            @media (max-width: 760px) {
-              border-inline-start: 1px solid ${colors.border};
-              border-top: none;
-              border-radius: 0 0 10px 10px;
-            }
-          `}
-        >
-          <label
-            className={css`
-              display: grid;
-              gap: 6px;
-              font-size: 0.8rem;
-              color: ${colors.gray};
-            `}
-          >
-            {t('logs.optionalMessage', 'Optional message')}
-            <textarea
-              value={userMessage}
-              onChange={e => setUserMessage(e.target.value)}
-              placeholder={t(
-                'logs.optionalMessagePlaceholder',
-                'What were you trying to do?'
-              )}
-              className={css`
-                min-height: 90px;
-                resize: vertical;
-                border: 1px solid ${colors.border};
-                border-radius: 6px;
-                padding: 8px;
-                font-size: 0.82rem;
-                background: ${colors.bg};
-                color: ${colors.text};
-                caret-color: ${colors.text};
-
-                &::placeholder {
-                  color: ${colors.textDim};
-                  opacity: 1;
-                }
-              `}
-            />
-          </label>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={copyToClipboard}
-            disabled={busyAction !== null}
-          >
-            {t('logs.copy', 'Copy')}
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => void emailToDev()}
-            disabled={busyAction !== null}
-          >
-            {t('logs.sendReport', 'Send report')}
-          </Button>
-        </div>
-      </div>
+        </details>
+      ) : null}
     </Modal>
   );
 }

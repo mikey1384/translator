@@ -24,7 +24,7 @@ export default function EditHeaderTranslateBar({
 }: EditHeaderTranslateBarProps) {
   const { t } = useTranslation();
   const targetLanguage = useUIStore(s => s.targetLanguage);
-  const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
+  const setTargetLanguage = useUIStore(s => s.chooseTargetLanguage);
 
   return (
     <div className={editorTranslateBarStyles}>

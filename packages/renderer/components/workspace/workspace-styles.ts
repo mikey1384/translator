@@ -284,7 +284,7 @@ export const moreMenuAnchorStyles = css`
 
 export const moreMenuStyles = css`
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   bottom: calc(100% + 8px);
   z-index: 200;
   min-width: 240px;

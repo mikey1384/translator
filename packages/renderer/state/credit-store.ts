@@ -14,6 +14,7 @@ interface CreditState {
   monthlyFree: MonthlyFreeCreditsInfo | null;
   authoritative: boolean;
   loading: boolean;
+  // An i18n key (rendered with t()); never English text.
   error?: string;
   checkoutPending: boolean;
   checkoutUnresolved: boolean;
@@ -22,12 +23,16 @@ interface CreditState {
   // the ledger has been read, or when it could not be.
   history: CreditHistorySummary | null;
   refreshHistory: () => void;
+  /** Try loading the balance again after a failed first load. */
+  retryLoad: () => void;
   beginCheckoutPending: () => void;
   clearCheckoutPending: () => void;
   dismissUnresolvedCheckout: () => void;
   cleanup: () => void;
   unsub?: () => void;
 }
+
+export const CREDITS_LOAD_FAILED = 'credits.loadFailed';
 
 const CHECKOUT_UNRESOLVED_REFRESH_INTERVAL_MS = 2_500;
 const CHECKOUT_UNRESOLVED_REFRESH_MAX_MS = 10 * 60_000;
@@ -343,7 +348,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
       if (!snapshot) {
         set({
           loading: false,
-          error: 'Unable to load credits.',
+          error: CREDITS_LOAD_FAILED,
         });
         startInitialAuthoritativeRefreshLoop();
         return;
@@ -360,7 +365,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
       );
       set({
         loading: false,
-        error: 'Unable to load credits.',
+        error: CREDITS_LOAD_FAILED,
       });
       startInitialAuthoritativeRefreshLoop();
     });
@@ -423,6 +428,21 @@ export const useCreditStore = create<CreditState>((set, get) => {
     checkoutBaselineCredits: null,
     history: null,
     refreshHistory,
+    retryLoad: () => {
+      set({ loading: true, error: undefined });
+      void SystemIPC.refreshCreditSnapshot(true)
+        .then(snapshot => {
+          if (snapshot) applyCreditSnapshot(snapshot);
+          else set({ loading: false, error: CREDITS_LOAD_FAILED });
+        })
+        .catch(error => {
+          console.warn(
+            '[credit-store] Retrying the credit load failed:',
+            error
+          );
+          set({ loading: false, error: CREDITS_LOAD_FAILED });
+        });
+    },
     error: undefined,
     unsub: unsubCredits, // Return for external disposal (deprecated)
     beginCheckoutPending,

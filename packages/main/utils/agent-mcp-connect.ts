@@ -25,9 +25,18 @@ export type AgentMcpConnectResult =
   | {
       status: 'failed';
       client: AgentMcpClient;
+      // Why, for the UI to explain in the user's language; `message` is the
+      // English/CLI detail shown only under "Details".
+      reason: AgentMcpConnectFailureReason;
       message: string;
       command?: string;
     };
+
+export type AgentMcpConnectFailureReason =
+  | 'cli_failed'
+  | 'config_invalid'
+  | 'write_failed'
+  | 'launcher_missing';
 
 export const TRANSLATOR_MCP_SERVER_NAME = 'translator';
 
@@ -242,6 +251,7 @@ export async function connectAgentCli({
     return {
       status: 'failed',
       client,
+      reason: 'cli_failed',
       message: detail.slice(0, 600),
       command,
     };
@@ -394,6 +404,10 @@ export function connectClaudeDesktop({
     return {
       status: 'failed',
       client: 'claude-desktop',
+      reason:
+        error instanceof ClaudeDesktopConfigError
+          ? 'config_invalid'
+          : 'write_failed',
       message: String(error?.message || error),
     };
   }
@@ -410,6 +424,7 @@ export async function connectAgentMcpClient({
     return {
       status: 'failed',
       client,
+      reason: 'launcher_missing',
       message:
         'The MCP launcher is only available in the installed Translator app.',
     };

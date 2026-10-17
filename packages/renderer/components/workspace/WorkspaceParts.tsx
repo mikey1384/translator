@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { css } from '@emotion/css';
+import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Button from '../Button';
 import SideMenu from '../../containers/VideoPlayer/SideMenu';
@@ -7,6 +9,7 @@ import { useSubStore, useUIStore, useVideoStore } from '../../state';
 import { useWorkspaceActions } from '../../state/workspace-actions';
 import { logButton } from '../../utils/logger';
 import ReadOnlySubtitleList from './ReadOnlySubtitleList';
+import { colors } from '../../styles';
 import {
   noVideoStyles,
   noVideoTitleStyles,
@@ -18,6 +21,36 @@ import {
   workspaceToolsVideoAreaStyles,
   workspaceSubsTitleCountStyles,
 } from './workspace-styles';
+
+const subsHeadToolsStyles = css`
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+`;
+
+const findButtonStyles = css`
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid ${colors.border};
+  background: transparent;
+  color: ${colors.textDim};
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: ${colors.text};
+    border-color: ${colors.borderStrong};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
 
 export function WorkspaceSubtitlesHead() {
   const { t } = useTranslation();
@@ -31,22 +64,37 @@ export function WorkspaceSubtitlesHead() {
           <span className={workspaceSubsTitleCountStyles}>{count}</span>
         ) : null}
       </h2>
-      <label className={workspaceEditSwitchStyles}>
-        <input
-          type="checkbox"
-          role="switch"
-          checked={editMode}
-          onChange={event => {
-            logButton(
-              event.target.checked
-                ? 'workspace_edit_mode_on'
-                : 'workspace_edit_mode_off'
-            );
-            useUIStore.getState().setSubtitleEditMode(event.target.checked);
+      <div className={subsHeadToolsStyles}>
+        <button
+          type="button"
+          className={findButtonStyles}
+          disabled={count === 0}
+          title={t('workspace.findReplace', 'Find and replace')}
+          aria-label={t('workspace.findReplace', 'Find and replace')}
+          onClick={() => {
+            logButton('workspace_find');
+            useUIStore.getState().setFindBarVisible(true);
           }}
-        />
-        {t('workspace.editToggle', 'Edit subtitles')}
-      </label>
+        >
+          <Search size={16} aria-hidden="true" />
+        </button>
+        <label className={workspaceEditSwitchStyles}>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={editMode}
+            onChange={event => {
+              logButton(
+                event.target.checked
+                  ? 'workspace_edit_mode_on'
+                  : 'workspace_edit_mode_off'
+              );
+              useUIStore.getState().setSubtitleEditMode(event.target.checked);
+            }}
+          />
+          {t('workspace.editToggle', 'Edit subtitles')}
+        </label>
+      </div>
     </div>
   );
 }

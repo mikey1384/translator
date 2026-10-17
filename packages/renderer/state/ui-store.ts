@@ -1,4 +1,5 @@
 import { createWithEqualityFn } from 'zustand/traditional';
+import i18next from 'i18next';
 import { immer } from 'zustand/middleware/immer';
 import { Draft, enableMapSet } from 'immer';
 import { subscribeWithSelector } from 'zustand/middleware';
@@ -23,6 +24,7 @@ import type {
   SummaryEffortLevel,
 } from '@shared-types/app';
 import { TRANSLATION_LANGUAGES } from '../constants/translation-languages';
+import { readRecentTargetLanguages } from '../constants/translation-language-native-names';
 import type { GenerateSubtitlesWorkspaceTab } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import {
   readGenerateSubtitlesWorkspaceTab,
@@ -37,6 +39,9 @@ interface State {
   matchedIndices: number[];
   inputMode: 'file' | 'url';
   targetLanguage: string;
+  // True once the user picked an output language themselves. Until then the
+  // default follows the UI language.
+  targetLanguageExplicit: boolean;
   summaryLanguage: string;
   summaryEffortLevel: SummaryEffortLevel;
   subtitleDisplayMode: SubtitleDisplayMode;
@@ -104,7 +109,8 @@ function writeSubtitleEditMode(on: boolean): void {
 
 export type HomeRunRequestInput =
   | { kind: 'url'; url: string }
-  | { kind: 'mounted'; path: string };
+  // target: stop after transcription instead of translating (default).
+  | { kind: 'mounted'; path: string; target?: 'transcribe' | 'translate' };
 export type HomeRunRequest = HomeRunRequestInput & { id: number };
 let homeRunRequestSeq = 0;
 
@@ -123,6 +129,10 @@ interface Actions {
   handleReplaceAll(): void;
   setInputMode(mode: 'file' | 'url'): void;
   setTargetLanguage(lang: string): void;
+  /** The user picked this output language; it no longer follows the UI. */
+  chooseTargetLanguage(lang: string): void;
+  /** Move an unpicked default output language to the new UI language. */
+  followUiLanguage(uiLanguage: string): void;
   setSummaryLanguage(lang: string): void;
   setSummaryEffortLevel(level: SummaryEffortLevel): void;
   setSubtitleDisplayMode(mode: SubtitleDisplayMode): void;
@@ -157,6 +167,7 @@ interface Actions {
 }
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
+const TARGET_LANG_EXPLICIT_KEY = 'savedTargetLanguageExplicit';
 const SUMMARY_LANG_KEY = 'savedSummaryLanguage';
 const SUMMARY_EFFORT_KEY = 'savedSummaryEffortLevel';
 const SUBTITLE_DISPLAY_MODE_KEY = 'savedSubtitleDisplayMode';
@@ -255,6 +266,19 @@ function resolveInitialTargetLanguage(): string {
   );
 }
 
+function resolveInitialTargetLanguageExplicit(): boolean {
+  const raw = localStorage.getItem(TARGET_LANG_EXPLICIT_KEY);
+  if (raw === '1') return true;
+  if (raw === '0') return false;
+  const stored = normalizeTargetLanguageValue(
+    localStorage.getItem(TARGET_LANG_KEY)
+  );
+  if (!stored) return false;
+  // Older versions saved the automatic default as well, so a saved language
+  // only counts as the user's choice if they picked it on the home screen.
+  return readRecentTargetLanguages().includes(stored);
+}
+
 /** Safely parse a boolean from localStorage with fallback */
 function parseStoredBool(key: string, fallback: boolean): boolean {
   const raw = localStorage.getItem(key);
@@ -309,7 +333,13 @@ const initial: State = {
   navTick: 0,
   inputMode: 'file',
   targetLanguage: resolveInitialTargetLanguage(),
-  summaryLanguage: localStorage.getItem(SUMMARY_LANG_KEY) ?? 'english',
+  targetLanguageExplicit: resolveInitialTargetLanguageExplicit(),
+  // Until the user picks one, summaries come in the UI language.
+  summaryLanguage:
+    localStorage.getItem(SUMMARY_LANG_KEY) ??
+    mapUiLanguageToTargetLanguage(
+      localStorage.getItem(APP_LANGUAGE_PREFERENCE_KEY) || navigator.language
+    ),
   summaryEffortLevel:
     (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ??
     'standard',
@@ -452,6 +482,21 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           set({ targetLanguage: next });
         },
 
+        chooseTargetLanguage(lang) {
+          get().setTargetLanguage(lang);
+          localStorage.setItem(TARGET_LANG_EXPLICIT_KEY, '1');
+          set({ targetLanguageExplicit: true });
+        },
+
+        followUiLanguage(uiLanguage) {
+          if (!localStorage.getItem(SUMMARY_LANG_KEY)) {
+            set({ summaryLanguage: mapUiLanguageToTargetLanguage(uiLanguage) });
+          }
+          if (get().targetLanguageExplicit) return;
+          const next = mapUiLanguageToTargetLanguage(uiLanguage);
+          if (next !== get().targetLanguage) get().setTargetLanguage(next);
+        },
+
         setSummaryLanguage(lang) {
           localStorage.setItem(SUMMARY_LANG_KEY, lang);
           set({ summaryLanguage: lang });
@@ -590,6 +635,14 @@ useUIStore.subscribe(s => {
   localStorage.setItem('savedMergeStylePreset', s.subtitleStyle);
   localStorage.setItem('savedSubtitleTypeface', s.subtitleTypeface);
 });
+
+// Until the user picks an output language, it follows the UI language.
+i18next.on('languageChanged', language =>
+  useUIStore.getState().followUiLanguage(language)
+);
+if (i18next.isInitialized && i18next.language) {
+  useUIStore.getState().followUiLanguage(i18next.language);
+}
 
 export const useSubtitlePrefs = () => {
   const baseFontSize = useUIStore(s => s.baseFontSize);

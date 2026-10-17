@@ -26,6 +26,7 @@ import {
   setVideoSuggestionTargetCountry,
 } from '../../../../ipc/system.js';
 import { useAiStore } from '../../../../state/ai-store';
+import { useVideoSuggestionStore } from '../../../../state/video-suggestion-store.js';
 import {
   isVideoSuggestionRecency,
   sanitizeVideoSuggestionCountry,
@@ -278,6 +279,7 @@ export default function VideoSuggestionPanel({
     showLiveActivity,
     streamingPreview,
     runQuickStartSearch,
+    runFreeSearch,
   } = useVideoSuggestionFlow({
     modelPreference,
     onCapturePreferences: applyCapturedPreferences,
@@ -658,6 +660,26 @@ export default function VideoSuggestionPanel({
     }
   }, [hideToggle]);
 
+  // Home "Find videos": open this panel where the user can see it, start the
+  // free search for their words, and put the cursor in the chat box.
+  const homeSearchRequest = useVideoSuggestionStore(s => s.homeSearchRequest);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!homeSearchRequest) return;
+    const { id, query } = homeSearchRequest;
+    useVideoSuggestionStore.getState().clearHomeSearchRequest(id);
+    setOpen(true);
+    if (query) void runFreeSearch(query);
+    const timer = window.setTimeout(() => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      panel.querySelector<HTMLTextAreaElement>('textarea')?.focus();
+    }, 80);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeSearchRequest]);
+
   useEffect(() => {
     if (hideToggle || restoredSessionRef.current) return;
     restoredSessionRef.current = true;
@@ -684,7 +706,11 @@ export default function VideoSuggestionPanel({
   ]);
 
   return (
-    <div className={wrapperStyles} data-translator-destination="video-search">
+    <div
+      ref={panelRef}
+      className={wrapperStyles}
+      data-translator-destination="video-search"
+    >
       {!hideToggle ? (
         <button
           type="button"

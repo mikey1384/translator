@@ -1240,7 +1240,6 @@ test('failure diagnostics omit subtitle text and raw yt-dlp metadata', () => {
   );
 
   assert.doesNotMatch(parserContent, /JSON\.stringify\(segment\)/);
-  assert.match(parserContent, /const segmentTiming/);
   assert.doesNotMatch(downloadContent, /Final buffer content:/);
   assert.doesNotMatch(downloadContent, /Final JSON attempted:/);
   assert.doesNotMatch(downloadContent, /yt-dlp STDERR:', error\.stderr/);

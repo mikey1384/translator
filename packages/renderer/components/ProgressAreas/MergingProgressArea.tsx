@@ -119,7 +119,7 @@ export default function MergingProgressArea({
   return (
     <ProgressArea
       isVisible={inProgress}
-      title={t('progress.mergingTitle', 'Merging Video & Subtitles')}
+      title={t('export.progressTitle', 'Exporting video')}
       progress={percent}
       stage={renderPreparationStageLabel(stage, t)}
       progressBarColor={progressBarColor}

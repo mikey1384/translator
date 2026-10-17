@@ -1,6 +1,11 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  buildFindRegex,
+  useFindOptions,
+} from '../../../../../utils/subtitleFind.js';
+import { registerPendingEdit } from '../../../../../utils/pending-edits.js';
+import {
   editorTextareaHighlightMatchStyles,
   editorTextareaHighlightStyles,
   editorTextareaInputStyles,
@@ -19,10 +24,6 @@ interface SubtitleEditTextareaProps {
   readOnly?: boolean;
 }
 
-function escapeRegExp(text: string) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 export default function SubtitleEditTextarea({
   value,
   searchTerm,
@@ -32,6 +33,9 @@ export default function SubtitleEditTextarea({
   readOnly = false,
 }: SubtitleEditTextareaProps) {
   const { t } = useTranslation();
+  const matchCase = useFindOptions(s => s.matchCase);
+  const wholeWord = useFindOptions(s => s.wholeWord);
+  const findOptions = { matchCase, wholeWord };
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const idleTimer = useRef<NodeJS.Timeout | null>(null);
@@ -49,28 +53,49 @@ export default function SubtitleEditTextarea({
     highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
   }, [localValue, searchTerm]);
 
-  const commit = useCallback((text: string) => onChange(text), [onChange]);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  // The typed text not yet committed to the store, and its flush registration
+  // (so Save, export and closing the tab commit it first).
+  const pendingRef = useRef<{ text: string; unregister: () => void } | null>(
+    null
+  );
+
+  const flushPending = useCallback(() => {
+    if (idleTimer.current) {
+      clearTimeout(idleTimer.current);
+      idleTimer.current = null;
+    }
+    const pending = pendingRef.current;
+    if (!pending) return;
+    pendingRef.current = null;
+    pending.unregister();
+    onChangeRef.current(pending.text);
+  }, []);
 
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       if (readOnly) return;
       const next = e.target.value;
       setLocalValue(next);
+      if (pendingRef.current) {
+        pendingRef.current.text = next;
+      } else {
+        pendingRef.current = {
+          text: next,
+          unregister: registerPendingEdit(flushPending),
+        };
+      }
       if (idleTimer.current) clearTimeout(idleTimer.current);
-      idleTimer.current = setTimeout(() => {
-        commit(next);
-      }, 200);
+      idleTimer.current = setTimeout(flushPending, 200);
     },
-    [commit, readOnly]
+    [flushPending, readOnly]
   );
 
   const handleBlur = useCallback(() => {
-    if (idleTimer.current) {
-      clearTimeout(idleTimer.current);
-    }
     // Final commit on blur so parent store stays in sync
-    commit(localValue);
-  }, [commit, localValue]);
+    flushPending();
+  }, [flushPending]);
 
   const handleScroll = useCallback(() => {
     if (!highlightRef?.current || !textareaRef?.current) return;
@@ -94,15 +119,15 @@ export default function SubtitleEditTextarea({
 
   useEffect(() => {
     return () => {
-      if (idleTimer.current) {
-        clearTimeout(idleTimer.current);
-      }
+      // A row can unmount (list virtualization, closing the editor) with a
+      // keystroke still pending; commit it rather than drop it.
+      flushPending();
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;
       }
     };
-  }, []);
+  }, [flushPending]);
 
   return (
     <div className={editorTextareaShellStyles(rows, readOnly)}>
@@ -129,17 +154,7 @@ export default function SubtitleEditTextarea({
       >
         {(() => {
           const raw = localValue ?? '';
-          const buildRegex = (rawTerm: string): RegExp | null => {
-            const trimmed = rawTerm.trim();
-            if (!trimmed) return null;
-            try {
-              const pattern = escapeRegExp(trimmed).replace(/\s+/g, '\\s+');
-              return new RegExp(pattern, 'gi');
-            } catch {
-              return null;
-            }
-          };
-          const re = buildRegex(searchTerm);
+          const re = buildFindRegex(searchTerm, findOptions);
           if (!raw && placeholder && !readOnly) {
             return (
               <span className={editorTextareaPlaceholderStyles}>

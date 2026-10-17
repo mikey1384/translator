@@ -1,6 +1,9 @@
 import axios from 'axios';
-import Store from 'electron-store';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  createSafeStore,
+  getPersistentDeviceId,
+  noteSalvagedDeviceId,
+} from '../store/safe-store.js';
 import { decryptString, encryptString, isEncrypted } from './secure-storage.js';
 import { STAGE5_API_URL } from './endpoints.js';
 import {
@@ -8,15 +11,10 @@ import {
   throwIfStage5UpdateRequiredError,
 } from './stage5-version-gate.js';
 
-const store = new Store<{
+const store = createSafeStore<{
   stage5ApiToken?: string;
   stage5ApiRecoveryToken?: string;
-}>({
-  name: 'stage5-auth',
-});
-const deviceIdStore = new Store<{ deviceId?: string }>({
-  name: 'device-config',
-});
+}>({ name: 'stage5-auth' }, { onQuarantined: noteSalvagedDeviceId });
 
 let ensureTokenPromise: Promise<string> | null = null;
 let unauthorizedRecoveryPromise: Promise<string> | null = null;
@@ -62,12 +60,7 @@ function isManualRecoveryRequiredResponse(error: any): boolean {
 }
 
 function getDeviceId(): string {
-  let id = deviceIdStore.get('deviceId');
-  if (!id) {
-    id = uuidv4();
-    deviceIdStore.set('deviceId', id);
-  }
-  return id;
+  return getPersistentDeviceId();
 }
 
 function readStoredToken(): string | null {

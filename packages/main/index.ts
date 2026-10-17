@@ -10,20 +10,13 @@ dotenv.config({ path: envPath });
 
 import log from 'electron-log';
 
-import {
-  app,
-  BrowserWindow,
-  screen,
-  ipcMain,
-  Menu,
-  dialog,
-  MenuItemConstructorOptions,
-} from 'electron';
+import { app, BrowserWindow, screen, ipcMain, Menu, dialog } from 'electron';
 import * as fsPromises from 'fs/promises';
 import * as fs from 'fs';
 import nodeProcess from 'process';
 import os from 'os';
 import * as renderWindowHandlers from './handlers/render-window-handlers/index.js';
+import { cleanupLiveRenderTempDirsSync } from './handlers/render-window-handlers/temp-utils.js';
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
 import { buildSettingsHandlers } from './handlers/settings-handlers.js';
@@ -117,6 +110,16 @@ import {
   getActiveAppWebContents,
 } from './utils/window.js';
 import * as tabManager from './tab-manager.js';
+import {
+  buildAppMenuTemplate,
+  buildContextMenuLabels,
+  type MenuT,
+} from './app-menu.js';
+import {
+  getUiT,
+  notifyUiLanguageChanged,
+  onUiLanguageChanged,
+} from './utils/ui-language.js';
 import { suggestVideosViaChat } from './services/video-suggestions.js';
 import { runYoutubeYtDlpSearch } from './services/video-suggestions/retrieval.js';
 import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-gate.js';
@@ -617,10 +620,16 @@ try {
     'get-language-preference',
     settingsHandlers.getLanguagePreference
   );
-  ipcMain.handle(
-    'set-language-preference',
-    settingsHandlers.setLanguagePreference
-  );
+  ipcMain.handle('set-language-preference', async (event, lang: string) => {
+    const result = await settingsHandlers.setLanguagePreference(event, lang);
+    if (result.success) notifyUiLanguageChanged(lang);
+    return result;
+  });
+  // Menus, the tab strip and native dialogs speak the UI language too.
+  onUiLanguageChanged(() => {
+    void createApplicationMenu();
+    void tabManager.refreshShellStrings();
+  });
   ipcMain.handle(
     'get-subtitle-target-language',
     settingsHandlers.getSubtitleTargetLanguage
@@ -1754,6 +1763,9 @@ try {
   ipcMain.on('is-packaged', event => {
     event.returnValue = app.isPackaged;
   });
+  ipcMain.on('app-version', event => {
+    event.returnValue = app.getVersion();
+  });
   ipcMain.handle('update:get-required-notice', () =>
     getPendingStage5UpdateRequiredNotice()
   );
@@ -1793,6 +1805,10 @@ async function prepareToQuit(reason: 'normal' | 'update'): Promise<void> {
   quitCleanupPromise = (async () => {
     log.info(`[main.ts] Starting cleanup before ${reason} quit...`);
     try {
+      // Renders still in flight leave frames (and maybe a merged video) in
+      // their temp dirs; nothing will resume them after the quit.
+      cleanupLiveRenderTempDirsSync();
+
       if (agentSocketServer) {
         log.info('[main.ts] Stopping agent socket server...');
         await agentSocketServerState.shutdown(false);
@@ -1815,6 +1831,21 @@ async function prepareToQuit(reason: 'normal' | 'update'): Promise<void> {
 
   await quitCleanupPromise;
 }
+
+// Quitting while a tab has a running job or unsaved subtitle edits asks
+// first (Cmd+Q, the app menu, the Dock). Update installs and quits that
+// already passed the prompt go straight through.
+let quitGuardPassed = false;
+app.on('before-quit', event => {
+  if (isQuitting || quitGuardPassed) return;
+  if (!tabManager.hasTabsNeedingCloseGuard()) return;
+  event.preventDefault();
+  void tabManager.confirmCloseAllTabs('quit').then(ok => {
+    if (!ok) return;
+    quitGuardPassed = true;
+    app.quit();
+  });
+});
 
 app.on('will-quit', event => {
   log.info(`[main.ts] 'will-quit' event triggered. isQuitting: ${isQuitting}`);
@@ -1981,6 +2012,7 @@ async function createWindow(): Promise<BrowserWindow> {
         filePathTargetWebContentsId = active?.id ?? null;
       }
     },
+    bypassCloseGuard: () => isQuitting || quitGuardPassed,
     onCriticalFailure: processReason => {
       if (isQuitting) return;
       recordCriticalFailure(
@@ -2095,7 +2127,7 @@ async function createWindow(): Promise<BrowserWindow> {
     }
   });
 
-  createApplicationMenu();
+  void createApplicationMenu();
 
   syncEntitlements({ window, silent: true }).catch(err => {
     log.warn('[main.ts] Initial entitlements sync failed:', err);
@@ -2104,147 +2136,50 @@ async function createWindow(): Promise<BrowserWindow> {
   return window;
 }
 
-function createApplicationMenu() {
-  const template: MenuItemConstructorOptions[] = [
-    ...((nodeProcess.platform === 'darwin'
-      ? [
-          {
-            label: app.getName(),
-            submenu: [
-              { role: 'about' },
-              { type: 'separator' },
-              { role: 'services' },
-              { type: 'separator' },
-              { role: 'hide' },
-              { role: 'hideOthers' },
-              { role: 'unhide' },
-              { type: 'separator' },
-              { role: 'quit' },
-            ],
-          },
-        ]
-      : []) as MenuItemConstructorOptions[]),
-    {
-      label: 'File',
-      submenu: [
-        {
-          label: 'New Tab',
-          accelerator: 'CmdOrCtrl+T',
-          click: () => {
-            // On macOS the app outlives the window (closing the last tab
-            // closes it); Cmd+T must bring the window back.
-            if (!mainWindow || mainWindow.isDestroyed()) {
-              ensureMainWindow().catch(err =>
-                log.error('[main.ts] Error recreating window for New Tab:', err)
-              );
-              return;
-            }
-            tabManager.newTab();
-          },
-        },
-        {
-          label: 'Close Tab',
-          accelerator: 'CmdOrCtrl+W',
-          click: () => tabManager.closeActiveTab(),
-        },
-        { type: 'separator' },
-        {
-          label: 'Next Tab',
-          accelerator: 'Ctrl+Tab',
-          click: () => tabManager.selectRelativeTab(1),
-        },
-        {
-          label: 'Previous Tab',
-          accelerator: 'Ctrl+Shift+Tab',
-          click: () => tabManager.selectRelativeTab(-1),
-        },
-        { type: 'separator' },
-        // Cmd+W belongs to Close Tab; the window close gets Shift+Cmd+W
-        // (browser convention) so the accelerators never collide.
-        nodeProcess.platform === 'darwin'
-          ? ({
-              role: 'close',
-              accelerator: 'Shift+CmdOrCtrl+W',
-            } as MenuItemConstructorOptions)
-          : { role: 'quit' },
-      ],
-    },
-    {
-      label: 'Edit',
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        ...((nodeProcess.platform === 'darwin'
-          ? [
-              { role: 'pasteAndMatchStyle' },
-              { role: 'delete' },
-              { role: 'selectAll' },
-              { type: 'separator' },
-              {
-                label: 'Speech',
-                submenu: [{ role: 'startSpeaking' }, { role: 'stopSpeaking' }],
-              },
-            ]
-          : [
-              { role: 'delete' },
-              { type: 'separator' },
-              { role: 'selectAll' },
-            ]) as MenuItemConstructorOptions[]),
-        { type: 'separator' },
-        {
-          label: 'Find',
-          accelerator: 'CmdOrCtrl+F',
-          click: () => getActiveAppWebContents()?.send('show-find-bar'),
-        },
-      ],
-    },
-    {
-      label: 'View',
-      submenu: [
-        ...((isDev
-          ? [{ role: 'toggleDevTools' }]
-          : []) as MenuItemConstructorOptions[]),
-        { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-      ],
-    },
-    {
-      label: 'Window',
-      submenu: [
-        ...(Array.from({ length: 9 }, (_, i) => ({
-          label: `Select Tab ${i + 1}`,
-          accelerator: `CmdOrCtrl+${i + 1}`,
-          visible: false,
-          acceleratorWorksWhenHidden: true,
-          click: () => tabManager.selectTabAtIndex(i === 8 ? -1 : i),
-        })) as MenuItemConstructorOptions[]),
-        { role: 'minimize' },
-        { role: 'zoom' },
-        ...((nodeProcess.platform === 'darwin'
-          ? [
-              { type: 'separator' },
-              { role: 'front' },
-              { type: 'separator' },
-              { role: 'window' },
-            ]
-          : [
-              // Ctrl+W belongs to Close Tab; see the File menu note.
-              { role: 'close', accelerator: 'Shift+CmdOrCtrl+W' },
-            ]) as MenuItemConstructorOptions[]),
-      ],
-    },
-  ];
+let applicationMenuBuild = 0;
 
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
+/** Build (or rebuild, after a UI-language change) the native menu. */
+async function createApplicationMenu(): Promise<void> {
+  const build = ++applicationMenuBuild;
+  let t: MenuT;
+  try {
+    t = await getUiT();
+  } catch (err) {
+    log.warn('[main.ts] Menu translations unavailable; using English:', err);
+    t = (_key, vars, fallback) =>
+      String(fallback ?? '').replace(/\{\{(\w+)\}\}/g, (_m, k) =>
+        String(vars?.[k] ?? '')
+      );
+  }
+  // A newer language change finished first; don't overwrite it.
+  if (build !== applicationMenuBuild) return;
+
+  const template = buildAppMenuTemplate({
+    platform: nodeProcess.platform,
+    isDev,
+    appName: app.getName(),
+    t,
+    actions: {
+      newTab: () => {
+        // On macOS the app outlives the window (closing the last tab
+        // closes it); Cmd+T must bring the window back.
+        if (!mainWindow || mainWindow.isDestroyed()) {
+          ensureMainWindow().catch(err =>
+            log.error('[main.ts] Error recreating window for New Tab:', err)
+          );
+          return;
+        }
+        tabManager.newTab();
+      },
+      closeTab: () => tabManager.closeActiveTab(),
+      selectRelativeTab: delta => tabManager.selectRelativeTab(delta),
+      selectTabAtIndex: index => tabManager.selectTabAtIndex(index),
+      showFindBar: () => getActiveAppWebContents()?.send('show-find-bar'),
+    },
+  });
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  tabManager.setContextMenuLabels(buildContextMenuLabels(t));
   log.info('[main.ts] Application menu created.');
 }
 

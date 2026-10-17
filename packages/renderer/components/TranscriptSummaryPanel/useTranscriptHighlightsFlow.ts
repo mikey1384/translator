@@ -5,6 +5,7 @@ import {
 } from '../../utils/render-highlight';
 import {
   highlightCaptionSignature,
+  highlightClipCaptionSignature,
   highlightClipArtifactKey,
   highlightClipSelectionSignature,
   highlightClipSourceIdentity,
@@ -44,6 +45,7 @@ import {
 } from '../../utils/sourceVideoErrors';
 import {
   buildHighlightFilename,
+  describeClipCutError,
   getHighlightKey,
   type HighlightClipCutState,
 } from './TranscriptSummaryPanel.helpers';
@@ -90,6 +92,10 @@ type UseTranscriptHighlightsFlowResult = {
   ) => void;
   highlights: TranscriptHighlight[];
   highlightCutState: Record<string, HighlightClipCutState>;
+  /** The cut clip shown for this highlight has older captions than now. */
+  isHighlightClipStale: (highlight: TranscriptHighlight) => boolean;
+  /** Same for the ready combined clip. */
+  combinedClipStale: boolean;
   mergeHighlightUpdates: (incoming?: TranscriptHighlight[] | null) => void;
   orderedSelection: TranscriptHighlight[];
   replaceHighlights: (incoming?: TranscriptHighlight[] | null) => void;
@@ -108,6 +114,8 @@ type UseTranscriptHighlightsFlowResult = {
 type CombinedRuntimeArtifact = {
   outputPath: string | null;
   selectionSignature: string | null;
+  /** Captions burned into outputPath; null when unknown (older clips). */
+  captionSignature: string | null;
 };
 
 type SourceRuntimeArtifacts = {
@@ -116,6 +124,11 @@ type SourceRuntimeArtifacts = {
   >;
   highlightPreferredModesByArtifactKey: Record<string, HighlightClipAspectMode>;
   highlightVideoPaths: Record<
+    string,
+    Partial<Record<HighlightClipAspectMode, string>>
+  >;
+  /** Captions each clip file was cut with, by artifact key and format. */
+  highlightCaptionSignatures: Record<
     string,
     Partial<Record<HighlightClipAspectMode, string>>
   >;
@@ -179,6 +192,17 @@ function withoutVideoPath(highlight: TranscriptHighlight): TranscriptHighlight {
 
 function buildHighlightArtifactKey(highlight: TranscriptHighlight): string {
   return highlightClipArtifactKey(highlight);
+}
+
+/** The interval a single clip's artifact key ("1000-5000|…") was cut from. */
+function parseArtifactKeyRange(
+  artifactKey: string
+): { start: number; end: number } | null {
+  const match = /^(\d+)-(\d+)\|/.exec(artifactKey);
+  if (!match) return null;
+  const start = Number(match[1]) / 1000;
+  const end = Number(match[2]) / 1000;
+  return end > start ? { start, end } : null;
 }
 
 function buildHighlightUiKey(highlight: TranscriptHighlight): string {
@@ -386,22 +410,46 @@ export default function useTranscriptHighlightsFlow({
   const subtitleStyle = useUIStore(state => state.subtitleStyle);
   const subtitleFontSize = useUIStore(state => state.baseFontSize);
   const subtitleTypeface = useUIStore(state => state.subtitleTypeface);
-  const captionSignature = useMemo(
+  const currentSegments = useMemo(
+    () => subtitleOrder.map(id => subtitleSegments[id]).filter(Boolean),
+    [subtitleOrder, subtitleSegments]
+  );
+  // Clips used to be keyed by the whole transcript's captions; this finds the
+  // ones recorded that way (they are current only if nothing changed since).
+  const legacyCaptionSignature = useMemo(
     () =>
       highlightCaptionSignature(
-        subtitleOrder.map(id => subtitleSegments[id]),
+        currentSegments,
         displayMode,
         subtitleStyle,
         subtitleFontSize,
         subtitleTypeface
       ),
     [
+      currentSegments,
       displayMode,
       subtitleStyle,
       subtitleFontSize,
       subtitleTypeface,
-      subtitleOrder,
-      subtitleSegments,
+    ]
+  );
+  /** The captions a clip over these intervals would burn in right now. */
+  const clipCaptionSignatureOf = useCallback(
+    (ranges: readonly { start: number; end: number }[]) =>
+      highlightClipCaptionSignature(
+        currentSegments,
+        ranges,
+        displayMode,
+        subtitleStyle,
+        subtitleFontSize,
+        subtitleTypeface
+      ),
+    [
+      currentSegments,
+      displayMode,
+      subtitleStyle,
+      subtitleFontSize,
+      subtitleTypeface,
     ]
   );
   const captionInput = useCallback(() => {
@@ -427,6 +475,8 @@ export default function useTranscriptHighlightsFlow({
       }),
     [fallbackVideoPath, libraryEntryId, originalVideoPath, sourceUrl]
   );
+  // Keyed by the source only: changing the caption look or editing a cue
+  // must not hide clips that were already cut (they are marked stale).
   const artifactSourceIdentity = useMemo(
     () =>
       highlightClipSourceIdentity({
@@ -436,9 +486,8 @@ export default function useTranscriptHighlightsFlow({
         sourceAssetIdentity,
         sourceUrl,
         libraryEntryId,
-      }) + captionSignature,
+      }),
     [
-      captionSignature,
       fallbackVideoAssetIdentity,
       fallbackVideoPath,
       libraryEntryId,
@@ -456,6 +505,7 @@ export default function useTranscriptHighlightsFlow({
         combinedOutputsByMode: {},
         highlightPreferredModesByArtifactKey: {},
         highlightVideoPaths: {},
+        highlightCaptionSignatures: {},
       };
       runtimeArtifactsBySourceRef.current[identity] = created;
       return created;
@@ -473,6 +523,7 @@ export default function useTranscriptHighlightsFlow({
       const created: CombinedRuntimeArtifact = {
         outputPath: null,
         selectionSignature: null,
+        captionSignature: null,
       };
       sourceArtifacts.combinedOutputsByMode[aspectMode] = created;
       return created;
@@ -510,11 +561,14 @@ export default function useTranscriptHighlightsFlow({
   const setHighlightVideoPathForSource = useCallback(
     ({
       aspectMode,
+      captionSignature,
       highlight,
       identity,
       videoPath,
     }: {
       aspectMode: HighlightClipAspectMode;
+      /** Captions the file was cut with; omit when unknown. */
+      captionSignature?: string | null;
       highlight: TranscriptHighlight;
       identity: string;
       videoPath: string;
@@ -524,10 +578,20 @@ export default function useTranscriptHighlightsFlow({
       const artifactKey = buildHighlightArtifactKey(
         withoutVideoPath(highlight)
       );
+      const previousPath =
+        sourceArtifacts.highlightVideoPaths[artifactKey]?.[aspectMode];
       sourceArtifacts.highlightVideoPaths[artifactKey] = {
         ...(sourceArtifacts.highlightVideoPaths[artifactKey] || {}),
         [aspectMode]: videoPath,
       };
+      if (captionSignature !== undefined || previousPath !== videoPath) {
+        const signatures = {
+          ...(sourceArtifacts.highlightCaptionSignatures[artifactKey] || {}),
+        };
+        if (captionSignature) signatures[aspectMode] = captionSignature;
+        else delete signatures[aspectMode];
+        sourceArtifacts.highlightCaptionSignatures[artifactKey] = signatures;
+      }
     },
     [ensureSourceArtifacts]
   );
@@ -757,18 +821,43 @@ export default function useTranscriptHighlightsFlow({
     viewSourceIdentity,
   ]);
 
-  // Clips rendered in an earlier session for this source and these exact
-  // captions are listed by the main process; files that are gone are not.
+  // Clips rendered in an earlier session for this source are listed by the
+  // main process; files that are gone are not. Each carries the captions it
+  // was cut with, so one whose own lines changed shows as stale, not missing.
+  // The legacy lookup is only read once per source, when the panel opens.
+  const legacyCaptionSignatureRef = useRef(legacyCaptionSignature);
+  const clipCaptionSignatureOfRef = useRef(clipCaptionSignatureOf);
+  useLayoutEffect(() => {
+    legacyCaptionSignatureRef.current = legacyCaptionSignature;
+    clipCaptionSignatureOfRef.current = clipCaptionSignatureOf;
+  }, [clipCaptionSignatureOf, legacyCaptionSignature]);
   useEffect(() => {
     const identity = artifactSourceIdentity;
     let disposed = false;
-    void listHighlightClips({ sourceIdentity: identity })
+    const legacyIdentity = identity + legacyCaptionSignatureRef.current;
+    void Promise.all([
+      listHighlightClips({ sourceIdentity: identity }),
+      listHighlightClips({ sourceIdentity: legacyIdentity }).catch(() => null),
+    ])
+      .then(([current, legacy]) => {
+        const clips = [
+          ...(current?.success ? (current.clips ?? []) : []),
+          // Found under the old whole-transcript key, so nothing changed
+          // since they were cut: they match the captions shown now.
+          ...(legacy?.success ? (legacy.clips ?? []) : []).map(clip => ({
+            ...clip,
+            legacyCurrent: true,
+          })),
+        ];
+        return { success: true, clips };
+      })
       .then(result => {
         if (disposed || !result?.success || !result.clips?.length) return;
         if (currentArtifactSourceIdentityRef.current !== identity) return;
         const artifacts = ensureSourceArtifacts(identity);
         const restoredKeys = new Set<string>();
         let restoredCombined = false;
+        const signatureOf = clipCaptionSignatureOfRef.current;
         // Newest first, so a clip this session already knows always wins.
         for (const clip of result.clips) {
           const aspectMode = resolveHighlightAspectMode(clip.aspectMode);
@@ -777,6 +866,7 @@ export default function useTranscriptHighlightsFlow({
             if (combined.outputPath) continue;
             combined.outputPath = clip.videoPath;
             combined.selectionSignature = clip.artifactKey;
+            combined.captionSignature = clip.captionSignature ?? null;
             restoredCombined = true;
             continue;
           }
@@ -786,6 +876,16 @@ export default function useTranscriptHighlightsFlow({
             ...(modePaths || {}),
             [aspectMode]: clip.videoPath,
           };
+          const range = parseArtifactKeyRange(clip.artifactKey);
+          const signature =
+            clip.captionSignature ??
+            ('legacyCurrent' in clip && range ? signatureOf([range]) : null);
+          if (signature) {
+            artifacts.highlightCaptionSignatures[clip.artifactKey] = {
+              ...(artifacts.highlightCaptionSignatures[clip.artifactKey] || {}),
+              [aspectMode]: signature,
+            };
+          }
           restoredKeys.add(clip.artifactKey);
         }
         if (!restoredKeys.size && !restoredCombined) return;
@@ -1163,11 +1263,10 @@ export default function useTranscriptHighlightsFlow({
           });
           setError(t('summary.insufficientCredits'));
         } else {
-          const friendlyError =
-            getSourceVideoErrorMessage(progress.error) || progress.error;
           setError(
-            t('summary.downloadHighlightFailed', {
-              message: friendlyError,
+            t('summary.cutHighlightFailed', {
+              defaultValue: "Couldn't cut the clip: {{message}}",
+              message: describeClipCutError(new Error(progress.error), t),
             })
           );
         }
@@ -1212,7 +1311,12 @@ export default function useTranscriptHighlightsFlow({
         const result = await saveFile({
           sourcePath: highlight.videoPath,
           defaultPath: defaultName,
-          filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
+          filters: [
+            {
+              name: t('common.fileFilters.videoFiles', 'Video Files'),
+              extensions: ['mp4'],
+            },
+          ],
           title: t('summary.saveHighlightDialogTitle', 'Save highlight clip'),
         });
 
@@ -1278,6 +1382,14 @@ export default function useTranscriptHighlightsFlow({
         return;
       }
       const captions = captionInput();
+      const cutCaptionSignature = highlightClipCaptionSignature(
+        captions.segments,
+        [highlight],
+        captions.displayMode,
+        captions.style,
+        captions.fontSize,
+        captions.typeface
+      );
       const capturedSourceIdentity = resolveCurrentArtifactSourceIdentity();
       if (!(await isSourceVideoPathAccessible(videoPath))) {
         setError(getSourceVideoUnavailableMessage());
@@ -1345,6 +1457,7 @@ export default function useTranscriptHighlightsFlow({
           if (updated.videoPath) {
             setHighlightVideoPathForSource({
               aspectMode,
+              captionSignature: cutCaptionSignature,
               highlight: updated,
               identity: operationSourceIdentity,
               videoPath: updated.videoPath,
@@ -1367,8 +1480,7 @@ export default function useTranscriptHighlightsFlow({
         }
       } catch (err: any) {
         console.error('[TranscriptSummaryPanel] cut highlight failed', err);
-        const message = err?.message || String(err);
-        const friendlyMessage = getSourceVideoErrorMessage(message) || message;
+        const friendlyMessage = describeClipCutError(err, t);
         if (
           currentArtifactSourceIdentityRef.current === operationSourceIdentity
         ) {
@@ -1377,7 +1489,8 @@ export default function useTranscriptHighlightsFlow({
             [stateKey]: { status: 'error', percent: 0, error: friendlyMessage },
           }));
           setError(
-            t('summary.downloadHighlightFailed', {
+            t('summary.cutHighlightFailed', {
+              defaultValue: "Couldn't cut the clip: {{message}}",
               message: friendlyMessage,
             })
           );
@@ -1510,6 +1623,14 @@ export default function useTranscriptHighlightsFlow({
       return;
     }
     const captions = captionInput();
+    const cutCaptionSignature = highlightClipCaptionSignature(
+      captions.segments,
+      orderedSelection,
+      captions.displayMode,
+      captions.style,
+      captions.fontSize,
+      captions.typeface
+    );
     const capturedSourceIdentity = resolveCurrentArtifactSourceIdentity();
     if (!(await isSourceVideoPathAccessible(videoPath))) {
       setError(getSourceVideoUnavailableMessage());
@@ -1570,6 +1691,7 @@ export default function useTranscriptHighlightsFlow({
         if (selectionSignature) {
           combinedArtifact.outputPath = result.videoPath;
           combinedArtifact.selectionSignature = selectionSignature;
+          combinedArtifact.captionSignature = cutCaptionSignature;
           if (
             combineCutStateRef.current.operationId === operationId &&
             currentArtifactSourceIdentityRef.current === operationSourceIdentity
@@ -1579,6 +1701,7 @@ export default function useTranscriptHighlightsFlow({
         } else {
           combinedArtifact.outputPath = null;
           combinedArtifact.selectionSignature = null;
+          combinedArtifact.captionSignature = null;
           if (
             combineCutStateRef.current.operationId === operationId &&
             currentArtifactSourceIdentityRef.current === operationSourceIdentity
@@ -1602,8 +1725,7 @@ export default function useTranscriptHighlightsFlow({
       }
     } catch (err: any) {
       console.error('[TranscriptSummaryPanel] cut combined failed', err);
-      const message = err?.message || String(err);
-      const friendlyMessage = getSourceVideoErrorMessage(message) || message;
+      const friendlyMessage = describeClipCutError(err, t);
       if (
         combineCutStateRef.current.operationId === operationId &&
         currentArtifactSourceIdentityRef.current === operationSourceIdentity
@@ -1643,8 +1765,7 @@ export default function useTranscriptHighlightsFlow({
       const result = (event as CustomEvent<HighlightRenderCompletion>).detail;
       if (
         !result ||
-        result.sourceVideoPath !== (originalVideoPath || fallbackVideoPath) ||
-        result.captionSignature !== captionSignature
+        result.sourceVideoPath !== (originalVideoPath || fallbackVideoPath)
       )
         return;
       // The initiating UI callback owns its own completion. This path makes
@@ -1661,6 +1782,7 @@ export default function useTranscriptHighlightsFlow({
         const highlight = result.highlights[0];
         setHighlightVideoPathForSource({
           aspectMode,
+          captionSignature: result.captionSignature,
           highlight,
           identity,
           videoPath: result.videoPath,
@@ -1683,6 +1805,7 @@ export default function useTranscriptHighlightsFlow({
         artifact.selectionSignature = buildOrderedSelectionSignature(
           result.highlights
         );
+        artifact.captionSignature = result.captionSignature;
         combineAspectModeRef.current = aspectMode;
         setCombineAspectModeState(aspectMode);
         setCombineMode(true);
@@ -1696,7 +1819,6 @@ export default function useTranscriptHighlightsFlow({
       window.removeEventListener(HIGHLIGHT_RENDER_COMPLETED, receive);
   }, [
     applySourceArtifacts,
-    captionSignature,
     ensureCombinedArtifact,
     ensureSourceArtifacts,
     fallbackVideoPath,
@@ -1716,7 +1838,12 @@ export default function useTranscriptHighlightsFlow({
         const result = await saveFile({
           sourcePath: outputPath,
           defaultPath: defaultName,
-          filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
+          filters: [
+            {
+              name: t('common.fileFilters.videoFiles', 'Video Files'),
+              extensions: ['mp4'],
+            },
+          ],
           title: t(
             'summary.saveCombinedDialogTitle',
             'Save combined highlight clip'
@@ -1801,8 +1928,10 @@ export default function useTranscriptHighlightsFlow({
       }
 
       if (progress.error) {
-        const friendlyError =
-          getSourceVideoErrorMessage(progress.error) || progress.error;
+        const friendlyError = describeClipCutError(
+          new Error(progress.error),
+          t
+        );
         setError(
           t('summary.combinedCutFailed', {
             defaultValue: 'Failed to cut combined highlights: {{message}}',
@@ -1846,10 +1975,40 @@ export default function useTranscriptHighlightsFlow({
     }
   }, [combineMode]);
 
+  const isHighlightClipStale = (highlight: TranscriptHighlight): boolean => {
+    if (!highlight.videoPath) return false;
+    const artifacts = ensureSourceArtifacts(
+      resolveCurrentArtifactSourceIdentity()
+    );
+    const mode = getHighlightPreferredMode(
+      highlight,
+      highlightAspectModes,
+      artifacts.highlightPreferredModesByArtifactKey
+    );
+    const recorded =
+      artifacts.highlightCaptionSignatures[
+        buildHighlightArtifactKey(withoutVideoPath(highlight))
+      ]?.[mode];
+    return (
+      Boolean(recorded) && recorded !== clipCaptionSignatureOf([highlight])
+    );
+  };
+  const combinedRecordedSignature =
+    combineCutState.status === 'ready' && combineCutState.outputPath
+      ? (ensureSourceArtifacts(resolveCurrentArtifactSourceIdentity())
+          .combinedOutputsByMode[combineAspectMode]?.captionSignature ?? null)
+      : null;
+  const combinedClipStale = Boolean(
+    combinedRecordedSignature &&
+    orderedSelection.length > 1 &&
+    combinedRecordedSignature !== clipCaptionSignatureOf(orderedSelection)
+  );
+
   return {
     combineAspectMode,
     combineCutState,
     combineMode,
+    combinedClipStale,
     downloadStatus,
     getHighlightAspectMode: highlight =>
       getHighlightPreferredMode(
@@ -1877,6 +2036,7 @@ export default function useTranscriptHighlightsFlow({
     handleToggleHighlightSelect,
     highlights,
     highlightCutState,
+    isHighlightClipStale,
     mergeHighlightUpdates,
     orderedSelection,
     replaceHighlights,

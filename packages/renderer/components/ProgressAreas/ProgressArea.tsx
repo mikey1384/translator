@@ -94,7 +94,8 @@ export default function ProgressArea({
   notice,
   verticalOffsetPx,
 }: ProgressAreaProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
   const stageText = localizeLegacyStage(stage, t);
   const presentation = useProgressPresentation();
   const credits = useCreditStore(s => s.credits);
@@ -197,7 +198,7 @@ export default function ProgressArea({
         return undefined;
       }
       const hours = estimateTranscriptionHours(credits);
-      return hours != null ? `(~${formatHours(hours)})` : undefined;
+      return hours != null ? `(~${formatHours(hours, locale)})` : undefined;
     }
 
     if (operationType === 'translation') {
@@ -214,8 +215,10 @@ export default function ProgressArea({
         reviewModel
       );
       if (hours == null) return undefined;
-      const time = formatHours(hours);
-      return qualityTranslation ? `(hq mode: ~${time})` : `(~${time})`;
+      const time = formatHours(hours, locale);
+      return qualityTranslation
+        ? t('progress.hqModeEstimate', '(high quality: ~{{time}})', { time })
+        : `(~${time})`;
     }
 
     if (operationType === 'dubbing') {
@@ -224,12 +227,13 @@ export default function ProgressArea({
       }
       return `(${formatDubbingTime(
         credits,
-        resolveDubbingCreditProvider(runtimeState)
+        resolveDubbingCreditProvider(runtimeState),
+        locale
       )})`;
     }
 
     return undefined;
-  }, [operationType, credits, runtimeState, qualityTranslation]);
+  }, [operationType, credits, runtimeState, qualityTranslation, locale, t]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;

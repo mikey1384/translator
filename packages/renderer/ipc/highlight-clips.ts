@@ -10,6 +10,7 @@ export function recordHighlightClip(options: {
   artifactKey: string;
   aspectMode: StoredHighlightClipAspectMode;
   videoPath: string;
+  captionSignature?: string;
 }): Promise<{
   success: boolean;
   clip?: StoredHighlightClip;

@@ -13,6 +13,7 @@ import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
 import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
 import { secondsToSrtTime } from '../../shared/helpers';
+import { replaceMatches, type FindOptions } from '../utils/subtitleFind.js';
 import {
   applySegmentPatchWithWordTimings,
   sanitizeRelativeWordTimings,
@@ -49,6 +50,14 @@ interface State {
   transcriptionEngine: 'elevenlabs' | 'whisper' | null;
   libraryEntryId: string | null;
   libraryKind: StoredSubtitleKind | null;
+  /** True once the user changes the mounted subtitles; cleared by load/save. */
+  dirty: boolean;
+  /** Bumped on every user edit, so a save only clears edits it captured. */
+  editRevision: number;
+  /** Number of structural edits that `undo` can take back. */
+  undoDepth: number;
+  /** What the most recent undoable edit was, for the Undo prompt. */
+  lastUndoable: { kind: UndoableEditKind; at: number } | null;
   gapsCache: Array<{
     start: number;
     end: number;
@@ -64,7 +73,19 @@ interface State {
   }>;
 }
 
+export type UndoableEditKind =
+  | 'remove'
+  | 'insert'
+  | 'replaceAll'
+  | 'shift'
+  | 'shiftAll'
+  | 'improve';
+
 interface Actions {
+  /** Clears `dirty` when no edit happened after `revision` was read. */
+  markSaved: (revision: number) => void;
+  /** Takes back the last structural edit. Returns false when none is left. */
+  undo: () => boolean;
   load: (
     segs: SrtSegment[],
     srcPath?: string | null,
@@ -109,7 +130,7 @@ interface Actions {
   play: (id: string) => void;
   pause: () => void;
   incSourceId: () => void;
-  replaceAll: (find: string, replace: string) => void;
+  replaceAll: (find: string, replace: string, options?: FindOptions) => void;
   replaceWithSegments: (
     id: string,
     segs: Array<{ start: number; end: number; original: string }>
@@ -162,9 +183,43 @@ const initialState: State = {
   transcriptionEngine: null,
   libraryEntryId: null,
   libraryKind: null,
+  dirty: false,
+  editRevision: 0,
+  undoDepth: 0,
+  lastUndoable: null,
   gapsCache: [],
   lcRangesCache: [],
 };
+
+// Snapshots of (immutable, structurally shared) segments/order taken before
+// structural edits. Kept outside the store so Immer never drafts them.
+const UNDO_LIMIT = 30;
+let undoStack: Array<{ segments: SegmentMap; order: string[] }> = [];
+
+/** Forget undo history (subtitles unmounted outside `load`). */
+export function clearSubtitleUndoHistory(): void {
+  undoStack = [];
+}
+
+function rememberForUndo(kind: UndoableEditKind): void {
+  const { segments, order } = useSubStore.getState();
+  undoStack.push({ segments, order });
+  if (undoStack.length > UNDO_LIMIT) undoStack = undoStack.slice(-UNDO_LIMIT);
+  useSubStore.setState({
+    undoDepth: undoStack.length,
+    lastUndoable: { kind, at: Date.now() },
+  });
+}
+
+function markEdited(s: { dirty: boolean; editRevision: number }): void {
+  s.dirty = true;
+  s.editRevision += 1;
+}
+
+/** Patches that only carry transient UI fields (e.g. `_oldText`) aren't edits. */
+function isUserContentPatch(patch: Partial<SrtSegment>): boolean {
+  return Object.keys(patch).some(key => !key.startsWith('_'));
+}
 
 function areEquivalentSubtitleDocs(
   previousOrder: string[],
@@ -195,19 +250,43 @@ function areEquivalentSubtitleDocs(
 }
 
 /**
- * Replace every occurrence of `find` (plain text, case-insensitive) with
- * `replace` (plain text: "$" is just a dollar sign; empty deletes).
+ * Replace every occurrence of `find` (plain text, case-insensitive unless
+ * `options.matchCase`) with `replace` (plain text: "$" is just a dollar sign;
+ * empty deletes).
  */
-export function replaceLiteral(text: string, find: string, replace: string) {
+export function replaceLiteral(
+  text: string,
+  find: string,
+  replace: string,
+  options: FindOptions = {}
+) {
   if (!find) return text;
-  const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return text.replace(new RegExp(escaped, 'gi'), () => replace);
+  return replaceMatches(text, find, replace, options);
 }
 
 export const useSubStore = createWithEqualityFn<State & Actions>()(
   subscribeWithSelector(
     immer((set, get) => ({
       ...initialState,
+      markSaved: revision =>
+        set(s => {
+          if (s.editRevision === revision) s.dirty = false;
+        }),
+
+      undo: () => {
+        const snapshot = undoStack.pop();
+        if (!snapshot) return false;
+        set(s => {
+          s.segments = snapshot.segments;
+          s.order = snapshot.order;
+          s.sourceId += 1;
+          s.undoDepth = undoStack.length;
+          s.lastUndoable = null;
+          markEdited(s);
+        });
+        return true;
+      },
+
       load: (
         segs,
         srcPath = null,
@@ -383,7 +462,12 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           // Do not auto-regenerate caches here; generated during transcription flows
           s.gapsCache = [];
           s.lcRangesCache = [];
+          // A freshly loaded document matches what is stored.
+          s.dirty = false;
+          s.undoDepth = 0;
+          s.lastUndoable = null;
         });
+        undoStack = [];
       },
 
       setDocumentMeta: documentMeta =>
@@ -543,10 +627,13 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           if (!cue) return;
 
           state.segments[id] = applySegmentPatchWithWordTimings(cue, patch);
+          if (isUserContentPatch(patch)) markEdited(state);
         }),
 
       insertAfter: (id: string) => {
         let newCueId: string | null = null;
+        if (!get().segments[id]) return null;
+        rememberForUndo('insert');
         set(s => {
           const i = s.order.findIndex(cueId => cueId === id);
           if (i === -1) return;
@@ -574,11 +661,14 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             s.segments[s.order[j]].index = j + 1;
           }
           newCueId = newCue.id;
+          markEdited(s);
         });
         return newCueId;
       },
 
-      remove: id =>
+      remove: id => {
+        if (!get().segments[id]) return;
+        rememberForUndo('remove');
         set(s => {
           const i = s.order.findIndex(cueId => cueId === id);
           if (i === -1) return;
@@ -590,9 +680,13 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           for (let j = i; j < s.order.length; j++) {
             s.segments[s.order[j]].index = j + 1;
           }
-        }),
+          markEdited(s);
+        });
+      },
 
-      shift: (id, secs) =>
+      shift: (id, secs) => {
+        if (!get().segments[id]) return;
+        rememberForUndo('shift');
         set(s => {
           const cue = s.segments[id];
           if (!cue) return;
@@ -601,9 +695,13 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           cue.start = newStart;
           cue.end = newStart + dur;
           cue.words = sanitizeRelativeWordTimings(cue.words, dur);
-        }),
+          markEdited(s);
+        });
+      },
 
-      shiftAll: offsetSeconds =>
+      shiftAll: offsetSeconds => {
+        if (get().order.length === 0) return;
+        rememberForUndo('shiftAll');
         set(s => {
           Object.values(s.segments).forEach(cue => {
             const dur = cue.end - cue.start;
@@ -612,7 +710,9 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             cue.end = newStart + dur;
             cue.words = sanitizeRelativeWordTimings(cue.words, dur);
           });
-        }),
+          markEdited(s);
+        });
+      },
 
       scrollToCurrent() {
         const { activeId, playingId, order, segments } = get();
@@ -697,24 +797,40 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         set({ playingId: null });
       },
 
-      replaceAll: (find, replace) => {
+      replaceAll: (find, replace, options = {}) => {
         if (!find.trim()) return;
+        rememberForUndo('replaceAll');
         set(s => {
           Object.values(s.segments).forEach(cue => {
-            const nextOriginal = replaceLiteral(cue.original, find, replace);
+            const nextOriginal = replaceLiteral(
+              cue.original,
+              find,
+              replace,
+              options
+            );
             if (nextOriginal !== cue.original) {
               cue.original = nextOriginal;
               cue.words = undefined;
             }
             if (cue.translation) {
-              cue.translation = replaceLiteral(cue.translation, find, replace);
+              cue.translation = replaceLiteral(
+                cue.translation,
+                find,
+                replace,
+                options
+              );
             }
           });
           s.sourceId += 1;
+          markEdited(s);
         });
       },
 
-      replaceWithSegments: (id, segs) =>
+      replaceWithSegments: (id, segs) => {
+        if (!Array.isArray(segs) || segs.length === 0 || !get().segments[id]) {
+          return;
+        }
+        rememberForUndo('improve');
         set(s => {
           if (!Array.isArray(segs) || segs.length === 0) return;
           const i = s.order.findIndex(cueId => cueId === id);
@@ -818,7 +934,9 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.lcRangesCache = shouldUseWhisperReviewHints(s.transcriptionEngine)
             ? groupWhisperReviewRanges(order, segments as any)
             : [];
-        }),
+          markEdited(s);
+        });
+      },
 
       appendSegments: segs =>
         set(s => {

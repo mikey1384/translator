@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import * as UpdateIPC from '@ipc/update';
 
+export type UpdateCheckStatus =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'none'
+  | 'error';
+
 interface UpdateState {
   available: boolean;
   downloading: boolean;
@@ -9,7 +16,9 @@ interface UpdateState {
   installing: boolean;
   error?: string;
   updateInfo?: any;
-  check: () => Promise<void>;
+  /** Result of the latest check, for screens that report it to the user. */
+  checkStatus: UpdateCheckStatus;
+  check: () => Promise<UpdateCheckStatus>;
   download: () => Promise<void>;
   install: () => Promise<void>;
   cleanup: () => void;
@@ -17,7 +26,12 @@ interface UpdateState {
 
 export const useUpdateStore = create<UpdateState>(set => {
   const unsubAvailable = UpdateIPC.onUpdateAvailable(info => {
-    set({ available: true, updateInfo: info, error: undefined });
+    set({
+      available: true,
+      updateInfo: info,
+      error: undefined,
+      checkStatus: 'available',
+    });
   });
 
   const unsubProgress = UpdateIPC.onUpdateProgress(percent => {
@@ -50,15 +64,27 @@ export const useUpdateStore = create<UpdateState>(set => {
     installing: false,
     error: undefined,
     updateInfo: undefined,
+    checkStatus: 'idle',
 
-    check: async () => {
+    check: async (): Promise<UpdateCheckStatus> => {
+      // Avoid re-checking while a download is in progress or already downloaded
+      const s = useUpdateStore.getState();
+      if (s.downloading || s.downloaded) return 'available';
+      set({ checkStatus: 'checking' });
       try {
-        // Avoid re-checking while a download is in progress or already downloaded
-        const s = useUpdateStore.getState();
-        if (s.downloading || s.downloaded) return;
-        await UpdateIPC.checkForUpdates();
+        const result = await UpdateIPC.checkForUpdates();
+        const status: UpdateCheckStatus =
+          result?.available || useUpdateStore.getState().available
+            ? 'available'
+            : 'none';
+        set({ checkStatus: status });
+        return status;
       } catch (err: any) {
-        set({ error: err.message || 'Failed to check for updates' });
+        set({
+          error: err?.message || 'Failed to check for updates',
+          checkStatus: 'error',
+        });
+        return 'error';
       }
     },
 

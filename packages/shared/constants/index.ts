@@ -190,6 +190,12 @@ export const ERROR_CODES = {
   TRANSLATION_JOB_NOT_FOUND: 'translation-job-not-found',
 } as const;
 
+export {
+  URL_DOWNLOAD_ERROR_CODES,
+  isUrlDownloadErrorCode,
+  type UrlDownloadErrorCode,
+} from './url-download-errors';
+
 export const colors = {
   primary: '#4361ee',
   primaryLight: '#4895ef',

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { i18n } from '../../../i18n';
 import * as SystemIPC from '../../../ipc/system';
 import { useVideoStore } from '../../../state/video-store';
 
@@ -31,8 +32,23 @@ function shouldRetryForCode(code?: string): boolean {
   }
 }
 
+/** Shown wherever a mounted file turns out to be unreadable. */
+export function unreadableFileMessage(): string {
+  return i18n.t(
+    'videoPlayer.unreadableFile',
+    "Translator can't read this file. It may be damaged or in a format it doesn't support."
+  );
+}
+
 export function useVideoMetadata(videoFilePath: string | null) {
   const [metaState, setMetaState] = useState<MetadataState>(initialState);
+  // The video store gives up on a file that fails every probe; once it has,
+  // stop waiting here too so "Make it speak" reports it instead of spinning.
+  const storeMetaErrorCode = useVideoStore(s =>
+    videoFilePath && s.metaError?.path === videoFilePath
+      ? s.metaError.code
+      : null
+  );
   const storeDurationSecs = useVideoStore(s =>
     s.metaPath === videoFilePath &&
     typeof s.meta?.duration === 'number' &&
@@ -93,8 +109,11 @@ export function useVideoMetadata(videoFilePath: string | null) {
 
         const code = res.code;
         const message = res.error;
+        const storeGaveUp =
+          useVideoStore.getState().metaError?.path === videoFilePath;
         const shouldRetry =
           !cancelled &&
+          !storeGaveUp &&
           attempts < MAX_METADATA_ATTEMPTS &&
           shouldRetryForCode(code);
 
@@ -141,9 +160,22 @@ export function useVideoMetadata(videoFilePath: string | null) {
   const effectiveDurationSecs = durationSecs ?? storeDurationSecs;
   const hasDuration =
     effectiveDurationSecs !== null && Number.isFinite(effectiveDurationSecs);
-  const effectiveStatus: MetadataStatus = hasDuration ? 'success' : status;
-  const effectiveCode = hasDuration ? undefined : code;
-  const effectiveMessage = hasDuration ? undefined : message;
+  const unreadable = !hasDuration && storeMetaErrorCode !== null;
+  const effectiveStatus: MetadataStatus = hasDuration
+    ? 'success'
+    : unreadable
+      ? 'failed'
+      : status;
+  const effectiveCode = hasDuration
+    ? undefined
+    : unreadable
+      ? (storeMetaErrorCode ?? undefined)
+      : code;
+  const effectiveMessage = hasDuration
+    ? undefined
+    : unreadable || code === 'probe-error'
+      ? unreadableFileMessage()
+      : message;
 
   const hoursNeeded = useMemo(() => {
     if (effectiveDurationSecs !== null && effectiveDurationSecs > 0) {
@@ -163,6 +195,8 @@ export function useVideoMetadata(videoFilePath: string | null) {
     metadataErrorCode: effectiveCode,
     metadataErrorMessage: effectiveMessage,
     isMetadataPending:
-      !hasDuration && (status === 'fetching' || status === 'waiting'),
+      !hasDuration &&
+      !unreadable &&
+      (status === 'fetching' || status === 'waiting'),
   };
 }

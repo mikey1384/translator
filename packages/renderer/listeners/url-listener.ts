@@ -1,5 +1,6 @@
 import { useUrlStore } from '../state/url-store';
 import * as UrlIPC from '../ipc/url';
+import { describeDownloadFailure } from '../utils/taskFailure';
 
 UrlIPC.onProgress(p => {
   const { percent = 0, stage = '', operationId: opId } = p;
@@ -15,7 +16,11 @@ UrlIPC.onProgress(p => {
   if (p.stage === 'NeedCookies' || p.stage === 'Cancelled') {
     useUrlStore.getState().clearError();
   } else if (p.error) {
-    useUrlStore.getState().setOperationError(p.error as string);
+    useUrlStore
+      .getState()
+      .setOperationError(
+        describeDownloadFailure({ error: p.error, errorCode: p.errorCode })
+      );
   } else {
     useUrlStore.getState().clearError();
   }

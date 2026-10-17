@@ -2,6 +2,10 @@ import type { SrtSegment, TranscriptHighlight } from '@shared-types/app';
 
 export type ClipRange = { start: number; end: number };
 
+/**
+ * Whole-transcript signature. Clips used to be keyed by it, so any edit hid
+ * every clip; it is now only used to find clips recorded that way.
+ */
 export function highlightCaptionSignature(
   segments: readonly SrtSegment[],
   displayMode: string,
@@ -25,6 +29,58 @@ export function highlightCaptionSignature(
     : JSON.stringify([displayMode, style, fontSize, typeface, cues]);
 }
 
+/** Small stable string hash (cyrb53); signatures are compared, not secret. */
+function hashSignature(value: string): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < value.length; i++) {
+    const ch = value.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (
+    (h2 >>> 0).toString(16).padStart(8, '0') +
+    (h1 >>> 0).toString(16).padStart(8, '0')
+  );
+}
+
+/**
+ * The captions burned into one clip: the look plus only the cues that overlap
+ * the clip's own intervals. Editing a cue elsewhere in the transcript, or
+ * translating other lines, leaves the clip current.
+ */
+export function highlightClipCaptionSignature(
+  segments: readonly SrtSegment[],
+  ranges: readonly ClipRange[],
+  displayMode: string,
+  style: string,
+  fontSize: number,
+  typeface = 'sans'
+): string {
+  const cues = segments
+    .filter(segment =>
+      ranges.some(
+        range =>
+          Math.min(segment.end, range.end) >
+          Math.max(segment.start, range.start)
+      )
+    )
+    .map(segment => [
+      segment.start,
+      segment.end,
+      segment.original,
+      segment.translation ?? '',
+      segment.words ?? null,
+    ]);
+  return `clip1:${hashSignature(
+    JSON.stringify([displayMode, style, fontSize, typeface, cues])
+  )}`;
+}
+
 export function normalizeHighlightSourcePath(
   value: string | null | undefined
 ): string {
@@ -37,8 +93,8 @@ export function normalizeHighlightSourcePath(
 
 /**
  * Which source a rendered clip belongs to: the verified asset first, then the
- * path, then URL/library metadata. Append the caption signature to get the key
- * under which a clip is current.
+ * path, then URL/library metadata. Clips are keyed by this alone; each one
+ * carries its own caption signature to tell whether it is still current.
  */
 export function highlightClipSourceIdentity({
   fallbackVideoAssetIdentity,

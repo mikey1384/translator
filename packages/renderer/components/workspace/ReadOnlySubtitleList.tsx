@@ -1,6 +1,10 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSubStore } from '../../state';
+import { css } from '@emotion/css';
+import { useSubStore, useUIStore } from '../../state';
+import { splitByMatches, useFindOptions } from '../../utils/subtitleFind';
+import type { FindOptions } from '../../utils/subtitleFind';
+import { colors } from '../../styles';
 import { getNativePlayerInstance } from '../../native-player';
 import {
   readEmptyStyles,
@@ -15,6 +19,49 @@ import {
 // once; beyond this the rest appear without delay.
 const CASCADE_LIMIT = 40;
 const CASCADE_STEP_MS = 28;
+
+const findMarkStyles = css`
+  background: rgba(255, 216, 77, 0.28);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+`;
+
+const findActiveMarkStyles = css`
+  background: ${colors.primary};
+  color: ${colors.onPrimary};
+`;
+
+/** The text with every find match wrapped in a <mark>. */
+function Highlighted({
+  text,
+  find,
+}: {
+  text: string;
+  find: { term: string; options: FindOptions; active: boolean } | null;
+}) {
+  if (!find) return <>{text}</>;
+  return (
+    <>
+      {splitByMatches(text, find.term, find.options).map((part, i) =>
+        part.match ? (
+          <mark
+            key={i}
+            className={
+              find.active
+                ? `${findMarkStyles} ${findActiveMarkStyles}`
+                : findMarkStyles
+            }
+          >
+            {part.text}
+          </mark>
+        ) : (
+          part.text
+        )
+      )}
+    </>
+  );
+}
 
 function formatCueTime(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -59,6 +106,7 @@ interface RowProps {
   reveal: boolean;
   revealDelayMs: number;
   onSelect: (id: string) => void;
+  find: { term: string; options: FindOptions; active: boolean } | null;
 }
 
 const ReadRow = memo(function ReadRow({
@@ -71,6 +119,7 @@ const ReadRow = memo(function ReadRow({
   reveal,
   revealDelayMs,
   onSelect,
+  find,
 }: RowProps) {
   const hasTranslation = translation.trim().length > 0;
   return (
@@ -82,12 +131,17 @@ const ReadRow = memo(function ReadRow({
       data-reveal={reveal ? 'true' : 'false'}
       style={reveal ? { animationDelay: `${revealDelayMs}ms` } : undefined}
       onClick={() => onSelect(id)}
+      // Space plays/pauses (the player's window shortcut) instead of
+      // clicking the line again, which would seek back to its start.
+      onKeyUp={event => {
+        if (event.key === ' ') event.preventDefault();
+      }}
       aria-current={active ? 'true' : undefined}
     >
       <span className={readTimeStyles}>{formatCueTime(start)}</span>
       <span>
         <span className={readOriginalStyles(hasTranslation)} dir="auto">
-          {original}
+          <Highlighted text={original} find={find} />
         </span>
         {hasTranslation ? (
           <span
@@ -98,7 +152,7 @@ const ReadRow = memo(function ReadRow({
             data-fresh={fresh ? 'true' : 'false'}
             style={{ display: 'block' }}
           >
-            {translation}
+            <Highlighted text={translation} find={find} />
           </span>
         ) : null}
       </span>
@@ -114,6 +168,25 @@ export default function ReadOnlySubtitleList() {
   const listRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
   const userScrolledAt = useRef(0);
+  const findVisible = useUIStore(s => s.isFindBarVisible);
+  const searchText = useUIStore(s => s.searchText);
+  const matchedIndices = useUIStore(s => s.matchedIndices);
+  const activeMatchIndex = useUIStore(s => s.activeMatchIndex);
+  const navTick = useUIStore(s => s.navTick);
+  const matchCase = useFindOptions(s => s.matchCase);
+  const wholeWord = useFindOptions(s => s.wholeWord);
+  const findTerm = findVisible && searchText.trim() ? searchText : '';
+  const findOptions = useMemo(
+    () => ({ matchCase, wholeWord }),
+    [matchCase, wholeWord]
+  );
+  const matchedSet = useMemo(
+    () => new Set(findTerm ? matchedIndices : []),
+    [findTerm, matchedIndices]
+  );
+  const activeMatchRow = findTerm
+    ? (matchedIndices[activeMatchIndex] ?? -1)
+    : -1;
 
   const rows = useMemo(
     () =>
@@ -235,6 +308,34 @@ export default function ReadOnlySubtitleList() {
     }
   }, [activeIndex, rows]);
 
+  // Find next/previous brings the current match to the middle of the list
+  // and holds off playback-following so it stays there while reading.
+  useEffect(() => {
+    if (activeMatchRow < 0) return;
+    const id = rows[activeMatchRow]?.id;
+    const list = listRef.current;
+    const row = id
+      ? list?.querySelector<HTMLElement>(`[data-cue-id="${id}"]`)
+      : null;
+    if (!list || !row) return;
+    const listRect = list.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    const target = Math.max(
+      0,
+      Math.min(
+        list.scrollHeight - list.clientHeight,
+        list.scrollTop +
+          rowRect.top -
+          listRect.top -
+          (list.clientHeight - rowRect.height) / 2
+      )
+    );
+    followTarget.current = null;
+    userScrolledAt.current = Date.now();
+    list.scrollTo({ top: target });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMatchRow, navTick]);
+
   // Any scroll the list didn't make itself (wheel, scrollbar, keys,
   // find-in-page) means the user is reading.
   const onScroll = () => {
@@ -313,6 +414,15 @@ export default function ReadOnlySubtitleList() {
           reveal={revealBatch && index < CASCADE_LIMIT}
           revealDelayMs={index * CASCADE_STEP_MS}
           onSelect={select}
+          find={
+            matchedSet.has(index)
+              ? {
+                  term: findTerm,
+                  options: findOptions,
+                  active: index === activeMatchRow,
+                }
+              : null
+          }
         />
       ))}
     </div>

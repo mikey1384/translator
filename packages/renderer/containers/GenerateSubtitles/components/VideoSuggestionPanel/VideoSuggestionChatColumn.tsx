@@ -35,6 +35,7 @@ import {
   userBubbleStyles,
 } from './VideoSuggestionPanel.styles.js';
 import type { VideoSuggestionMessage } from '@shared-types/app';
+import { formatDurationSeconds } from '../../../../utils/formatUnits';
 
 type VideoSuggestionChatColumnProps = {
   cancelling: boolean;
@@ -271,7 +272,7 @@ export default function VideoSuggestionChatColumn({
             ) : loadingElapsedSec >= 8 ? (
               <div className={loadingMetaStyles}>
                 {t('input.videoSuggestion.stillRunning', 'Still running')}
-                {` • ${loadingElapsedSec}s`}
+                {` • ${formatDurationSeconds(loadingElapsedSec)}`}
               </div>
             ) : null}
           </div>

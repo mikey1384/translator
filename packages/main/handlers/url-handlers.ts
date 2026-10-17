@@ -1,11 +1,18 @@
 import { IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
 import { processVideoUrl } from '../services/url-processor/index.js';
+import { UrlSourceRejectedError } from '../services/url-processor/source-guard.js';
+import { normalizeVideoUrlInput } from '../../shared/helpers/video-url.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
 import { FileManager } from '../services/file-manager.js';
 import type { FFmpegContext } from '../services/ffmpeg-runner.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
+import {
+  isUrlDownloadErrorCode,
+  type UrlDownloadErrorCode,
+} from '../../shared/constants/index.js';
+import { urlDownloadErrorMessage } from '../services/url-processor/error-map.js';
 import type {
   ProcessUrlOptions,
   ProcessUrlResult,
@@ -156,6 +163,7 @@ export async function handleProcessUrl(
     percent: number;
     stage: string;
     error?: string | null;
+    errorCode?: UrlDownloadErrorCode;
   }) => {
     if (!event.sender.isDestroyed()) {
       event.sender.send('url-processing-progress', {
@@ -168,15 +176,38 @@ export async function handleProcessUrl(
   if (!options || typeof options.url !== 'string' || !options.url.trim()) {
     log.warn('[url-handler] Invalid URL received');
     // Use sendProgress to report error to UI
-    sendProgress({ percent: 0, stage: 'Error', error: 'Invalid URL provided' });
-    return { success: false, error: 'Invalid URL provided', operationId };
+    const message = urlDownloadErrorMessage('invalid_url');
+    sendProgress({
+      percent: 0,
+      stage: 'Error',
+      error: message,
+      errorCode: 'invalid_url',
+    });
+    return {
+      success: false,
+      error: message,
+      errorCode: 'invalid_url',
+      operationId,
+    };
   }
 
-  const url = options.url.trim();
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    log.warn(`[url-handler] URL does not start with http/https: ${url}`);
-    sendProgress({ percent: 0, stage: 'Error', error: 'Invalid URL format' });
-    return { success: false, error: 'Invalid URL format', operationId };
+  // Accept what people paste: bare domains and links inside shared text.
+  const url = normalizeVideoUrlInput(options.url);
+  if (!url) {
+    log.warn(`[url-handler] No http(s) link found in input: ${options.url}`);
+    const message = urlDownloadErrorMessage('invalid_url');
+    sendProgress({
+      percent: 0,
+      stage: 'Error',
+      error: message,
+      errorCode: 'invalid_url',
+    });
+    return {
+      success: false,
+      error: message,
+      errorCode: 'invalid_url',
+      operationId,
+    };
   }
 
   const sourceType = classifyUrlSourceType(url);
@@ -214,6 +245,7 @@ export async function handleProcessUrl(
       {},
       {
         signal: controller.signal,
+        allowLongVideo: options.allowLongVideo === true,
       }
     );
 
@@ -293,6 +325,24 @@ export async function handleProcessUrl(
       });
     }
 
+    // Refused before any media was fetched (channel/playlist, live, or a long
+    // video awaiting confirmation). Not a failure: no error progress event,
+    // the renderer explains or asks from `rejection`.
+    if (error instanceof UrlSourceRejectedError) {
+      await discardPendingUrlResult(operationId);
+      registryFinish(operationId);
+      return {
+        success: false,
+        error: error.message,
+        rejection: {
+          code: error.code,
+          durationSec: error.durationSec,
+          estimatedBytes: error.estimatedBytes,
+        },
+        operationId,
+      };
+    }
+
     if (typeof error === 'string') {
       log.error(`[url-handler] Error is string: ${error}`);
     } else if (typeof error === 'object' && error !== null) {
@@ -341,13 +391,24 @@ export async function handleProcessUrl(
       sourceType,
       failureCategory: classifyUrlDownloadFailure(error),
     });
-    sendProgress({ percent: 0, stage: 'Error', error: userFriendlyMessage });
+    const errorCode: UrlDownloadErrorCode = isUrlDownloadErrorCode(
+      (error as any)?.userFacingCode
+    )
+      ? (error as any).userFacingCode
+      : 'downloader_failed';
+    sendProgress({
+      percent: 0,
+      stage: 'Error',
+      error: userFriendlyMessage,
+      errorCode,
+    });
 
     await discardPendingUrlResult(operationId);
     registryFinish(operationId);
     return {
       success: false,
       error: userFriendlyMessage,
+      errorCode,
       operationId,
     };
   }

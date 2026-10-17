@@ -48,6 +48,8 @@ export type AppSettingsSchema = {
   pendingUrlDownloadLibraryReclaims: string[];
   pendingVideoSuggestionFileDeletions: PendingVideoSuggestionFileDeletionIntent[];
   app_language_preference: string;
+  /** Folder of the last video export, offered first next time. */
+  lastExportVideoDirectory: string | null;
   subtitleTargetLanguage: string;
   apiKey: string | null;
   anthropicApiKey: string | null;
@@ -90,6 +92,7 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   pendingUrlDownloadLibraryReclaims: [],
   pendingVideoSuggestionFileDeletions: [],
   app_language_preference: 'en',
+  lastExportVideoDirectory: null,
   subtitleTargetLanguage: 'original',
   apiKey: null,
   anthropicApiKey: null,

@@ -17,6 +17,8 @@ import {
   type NeedCookiesCause,
 } from '../url-download-funnel.js';
 import { loadDevelopmentCaptionRecoveryFixture } from './development-caption-recovery-fixture.js';
+import { UrlSourceRejectedError } from './source-guard.js';
+import { classifyVideoCollectionUrl } from '../../../shared/helpers/video-url.js';
 
 const require = createRequire(import.meta.url);
 
@@ -151,6 +153,8 @@ export async function processVideoUrl(
   dependencies: ProcessVideoUrlDependencies = {},
   options: {
     signal?: AbortSignal;
+    /** The user confirmed a video over the long-video threshold. */
+    allowLongVideo?: boolean;
   } = {}
 ): Promise<ProcessVideoUrlResult> {
   log.info(`[URLprocessor] processVideoUrl CALLED (Op ID: ${operationId})`);
@@ -198,6 +202,12 @@ export async function processVideoUrl(
     new URL(url);
   } catch {
     throw new Error('Invalid URL provided.');
+  }
+
+  // A channel or playlist link would download every entry; refuse it before
+  // yt-dlp starts.
+  if (classifyVideoCollectionUrl(url)) {
+    throw new UrlSourceRejectedError('collection_url');
   }
 
   const normalizeMetadataText = (value: unknown): string | undefined => {
@@ -303,7 +313,9 @@ export async function processVideoUrl(
       operationId,
       { ffmpeg },
       extraArgs,
-      signal
+      signal,
+      undefined,
+      { allowLongVideo: options.allowLongVideo }
     );
     if (downloadResult.kind === 'automatic_captions') {
       const metadata = extractDownloadMetadata(
@@ -373,7 +385,10 @@ export async function processVideoUrl(
     return await run([]);
   } catch (err: any) {
     const host = new URL(url).hostname;
-    if (err instanceof CancelledError) {
+    if (
+      err instanceof CancelledError ||
+      err instanceof UrlSourceRejectedError
+    ) {
       throw err;
     }
     throwIfOperationCancelled({

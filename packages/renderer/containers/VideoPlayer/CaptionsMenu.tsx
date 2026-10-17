@@ -7,6 +7,7 @@ import {
   SubtitleSizeStepper,
 } from '../../components/SubtitleViewControls';
 import { colors } from '../../styles';
+import VolumeControl from './VolumeControl';
 
 const menuStyles = css`
   position: absolute;
@@ -27,7 +28,7 @@ const menuStyles = css`
 `;
 
 /**
- * Which lines show and how big, from the player's own controls, so it works
+ * Which lines show, how big, and how loud, from the player's own controls, so it works
  * in full screen where the line under the video is hidden. Kept inside the
  * player box at any width or language.
  */
@@ -83,6 +84,7 @@ export default function CaptionsMenu({ onClose }: { onClose: () => void }) {
     >
       <SubtitleDisplaySwitch />
       <SubtitleSizeStepper />
+      <VolumeControl alwaysShowSlider />
     </div>
   );
 }

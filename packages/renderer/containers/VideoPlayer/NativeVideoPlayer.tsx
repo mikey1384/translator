@@ -43,6 +43,7 @@ import { resolveSubtitleOutputFontSize } from '../../../shared/helpers/subtitle-
 import type { SubtitleDisplayMode } from '@shared-types/app';
 
 import { cueText } from '../../../shared/helpers';
+import { findActiveCueIndex } from '../../../shared/helpers/subtitle-cue-timeline';
 
 declare global {
   interface Window {
@@ -53,6 +54,14 @@ declare global {
 interface IconProps {
   size?: string;
   color?: string;
+}
+
+/** The cue on screen at `t`, by the rule the burned-in export uses too. */
+function activeSegmentAt(t: number) {
+  const { segments, order } = useSubStore.getState();
+  const list = order.map(id => segments[id]).filter(Boolean);
+  const index = findActiveCueIndex(list, t);
+  return index >= 0 ? list[index] : undefined;
 }
 
 const PlayIcon = ({ size = '64px', color = '#fff' }: IconProps) => (
@@ -313,26 +322,7 @@ export default function NativeVideoPlayer({
     const onTime = () => {
       const t = v.currentTime;
       // Resolve current segment via a quick search using current store state
-      const state = useSubStore.getState();
-      const { segments, order } = state;
-      // Binary search over sorted order (by start time)
-      let lo = 0,
-        hi = order.length - 1,
-        foundIdx = -1;
-      while (lo <= hi) {
-        const mid = (lo + hi) >> 1;
-        const s = segments[order[mid]];
-        if (!s) break;
-        if (t < s.start) {
-          hi = mid - 1;
-        } else if (t > s.end) {
-          lo = mid + 1;
-        } else {
-          foundIdx = mid;
-          break;
-        }
-      }
-      const seg = foundIdx >= 0 ? segments[order[foundIdx]] : undefined;
+      const seg = activeSegmentAt(t);
       const txt = seg ? cueText(seg, subtitleDisplayMode) : '';
       if (txt !== activeSubtitle) {
         if (activeSubtitle) setSubtitleVisible(false);
@@ -349,25 +339,7 @@ export default function NativeVideoPlayer({
     const v = videoRef.current;
     if (!v) return;
     const t = v.currentTime;
-    const state = useSubStore.getState();
-    const { segments, order } = state;
-    let lo = 0,
-      hi = order.length - 1,
-      foundIdx = -1;
-    while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      const s = segments[order[mid]];
-      if (!s) break;
-      if (t < s.start) {
-        hi = mid - 1;
-      } else if (t > s.end) {
-        lo = mid + 1;
-      } else {
-        foundIdx = mid;
-        break;
-      }
-    }
-    const seg = foundIdx >= 0 ? segments[order[foundIdx]] : undefined;
+    const seg = activeSegmentAt(t);
     const nextText = seg ? cueText(seg, subtitleDisplayMode) : '';
     if (nextText !== activeSubtitle) {
       if (activeSubtitle) setSubtitleVisible(false);

@@ -8,7 +8,10 @@ export interface WorkspaceEditorActions {
   saveAs: () => Promise<void>;
   merge: () => void;
   translateAll: () => void;
-  loadSrt: () => void;
+  /** Transcribe from the last line to the end of the video. */
+  continueTranscribing: () => void;
+  /** Opens an .srt: the file dialog, or `filePath` when one was dropped. */
+  loadSrt: (filePath?: string) => void;
   mountVideo: () => void;
 }
 

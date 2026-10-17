@@ -1,5 +1,5 @@
 import { isFreshProductEvent } from './product-event-retention.js';
-import Store from 'electron-store';
+import { createSafeStore } from '../store/safe-store.js';
 import log from 'electron-log';
 import type { TranslationFunnelEvent } from './translation-funnel.js';
 import type { TranscriptionFunnelEvent } from './transcription-funnel.js';
@@ -53,7 +53,7 @@ type ProductEventQueueStore = {
 
 const MAX_QUEUE_SIZE = 100;
 
-const eventQueue = new Store<ProductEventQueueStore>({
+const eventQueue = createSafeStore<ProductEventQueueStore>({
   name: 'product-event-queue',
 });
 

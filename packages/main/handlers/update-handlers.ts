@@ -323,8 +323,26 @@ export function buildUpdateHandlers(opts: {
     }
   }
 
+  // The renderer gets a plain answer: the raw UpdateCheckResult carries a
+  // download promise that IPC can't clone, so returning it made every check
+  // reject, and the required-update dialog couldn't tell "nothing found".
+  async function checkForUpdatesSummary(
+    evt: any
+  ): Promise<{ available: boolean; version?: string }> {
+    const result = await checkForUpdates(evt);
+    const version =
+      typeof result?.updateInfo?.version === 'string'
+        ? result.updateInfo.version
+        : undefined;
+    const available =
+      typeof result?.isUpdateAvailable === 'boolean'
+        ? result.isUpdateAvailable
+        : Boolean(version && version !== app.getVersion());
+    return { available, version };
+  }
+
   // Register IPC handlers
-  ipcMain.handle('update:check', checkForUpdates);
+  ipcMain.handle('update:check', checkForUpdatesSummary);
   ipcMain.handle('update:download', downloadUpdate);
   ipcMain.handle('update:install', installUpdate);
   ipcMain.handle('update:get-post-install-notice', () =>

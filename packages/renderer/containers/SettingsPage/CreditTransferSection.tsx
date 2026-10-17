@@ -11,6 +11,10 @@ import { colors } from '../../styles';
 import * as SystemIPC from '../../ipc/system';
 import { useCreditStore } from '../../state';
 import { settingsCenterColumnStyles } from './styles';
+import {
+  creditTransferErrorMessage,
+  creditTransferThrownMessage,
+} from '../../utils/creditTransferErrors';
 
 const mutedText = css`
   margin: 0;
@@ -111,9 +115,9 @@ export default function CreditTransferSection() {
     try {
       const result = await SystemIPC.createCreditTransferCode();
       if (result.success) setIssued(result);
-      else setError(result.message);
+      else setError(creditTransferErrorMessage(result, t));
     } catch (err: any) {
-      setError(String(err?.message || err));
+      setError(creditTransferThrownMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -144,10 +148,10 @@ export default function CreditTransferSection() {
         // so welcome-only messaging stops once paid credits arrive.
         useCreditStore.getState().refreshHistory();
       } else {
-        setError(result.message);
+        setError(creditTransferErrorMessage(result, t));
       }
     } catch (err: any) {
-      setError(String(err?.message || err));
+      setError(creditTransferThrownMessage(err, t));
     } finally {
       setBusy(false);
     }

@@ -19,18 +19,19 @@ import {
   getExactAiModelDisplayName,
 } from '../../../shared/constants/index.js';
 import { scaleProgress, Stage } from './pipeline/progress.js';
+import { describeTaskFailure } from '../../utils/task-failure.js';
 import { reviewTranslationBatch, getReviewModel } from './translator.js';
 import { createStageTimer, runWithConcurrencySerialFallback } from './utils.js';
 import {
   isTranslationAdmissionLimitError,
   isProviderRateLimitError,
+  shouldRetrySerialBatch,
 } from './errors.js';
 import {
   REVIEW_CONCURRENCY,
   ADMISSION_RETRY_DELAY_MS,
   ADMISSION_RETRY_MAX_ATTEMPTS,
   ADMISSION_RETRY_MAX_TOTAL_MS,
-  CREDIT_PRESSURE_RETRY_MAX_ATTEMPTS,
 } from './constants.js';
 
 export async function extractSubtitlesFromMedia({
@@ -115,30 +116,16 @@ export async function extractSubtitlesFromMedia({
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
 
-    const errorMsg = String(error?.message || '');
-    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
-    const isCancel =
-      error.name === 'AbortError' ||
-      (error instanceof Error && error.message === 'Operation cancelled') ||
-      creditCancel ||
-      signal.aborted;
-
-    if (isCancel) {
-      progressCallback?.({
-        percent: 100,
-        stage: '__i18n__:process_cancelled',
-      });
+    // A credit refusal is a failure with its own stage, never "cancelled".
+    const failure = describeTaskFailure(error, { aborted: signal.aborted });
+    progressCallback?.({
+      percent: 100,
+      stage: failure.stage,
+      error: failure.error,
+      cancelled: failure.cancelled,
+    });
+    if (failure.cancelled) {
       log.info(`[${operationId}] Process cancelled by user.`);
-    } else {
-      progressCallback?.({
-        percent: 100,
-        stage: '__i18n__:error',
-        error: creditCancel
-          ? ERROR_CODES.INSUFFICIENT_CREDITS
-          : !isCancel
-            ? error?.message || String(error)
-            : undefined,
-      });
     }
 
     throw error;
@@ -280,21 +267,8 @@ export async function translateSubtitlesFromSrt({
             isProviderRateLimitError(err)) &&
           !signal?.aborted,
         serialRetry: {
-          shouldRetry: (err, attemptsSoFar) => {
-            if (signal?.aborted) return false;
-            if (
-              isTranslationAdmissionLimitError(err) ||
-              isProviderRateLimitError(err)
-            ) {
-              return true;
-            }
-            // Transient cross-tab credit pressure gets a brief retry window.
-            return (
-              String((err as any)?.message || err || '').includes(
-                ERROR_CODES.INSUFFICIENT_CREDITS
-              ) && attemptsSoFar < CREDIT_PRESSURE_RETRY_MAX_ATTEMPTS
-            );
-          },
+          // A serial-phase 402 is final; only admission and rate limits wait.
+          shouldRetry: err => shouldRetrySerialBatch(err, signal),
           delayMs: ADMISSION_RETRY_DELAY_MS,
           delayMsFor: err => {
             const retryAfterSec = (err as any)?.retryAfterSec;

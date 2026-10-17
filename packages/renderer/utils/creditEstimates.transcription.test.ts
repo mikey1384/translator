@@ -29,8 +29,8 @@ test('packs are described in transcription time', () => {
 
 test('balances are shown compactly without the estimate marker', () => {
   assert.equal(formatCreditBalance(850), '850');
-  assert.equal(formatCreditBalance(4614), '4.6k');
-  assert.equal(formatCreditBalance(167506), '168k');
+  assert.equal(formatCreditBalance(4614), '4.6K');
+  assert.equal(formatCreditBalance(167506), '168K');
   assert.equal(formatCreditBalance(-5), '0');
 });
 

@@ -1,6 +1,8 @@
 import { executeSrtTranslation } from '../containers/GenerateSubtitles/utils/subtitleGeneration';
 import { useSubStore, useUIStore } from '../state';
 import { useUrlStore } from '../state/url-store';
+import { i18n } from '../i18n';
+import { planDubText } from './dubPlan';
 
 type TranslateAllOptions = {
   /** Optional callback fired when there are no subtitles mounted. */
@@ -20,7 +22,12 @@ export async function runFullSrtTranslation(options: TranslateAllOptions = {}) {
       try {
         useUrlStore
           .getState()
-          .setValidationError('No SRT file available for translation');
+          .setValidationError(
+            i18n.t(
+              'subtitles.noSubtitlesToTranslate',
+              'Open or make subtitles first, then translate them.'
+            )
+          );
       } catch (err) {
         // URL store may not be available in all contexts (e.g., direct API calls)
         console.debug(
@@ -47,49 +54,39 @@ export type RunFullTranslationResult = Awaited<
 >;
 
 /**
- * Make sure the mounted subtitles carry translations in the currently selected
- * output language before dubbing. Without this, dubbing falls back to the
+ * Make sure the mounted subtitles carry text in the currently selected output
+ * language before dubbing. Without this, dubbing falls back to the
  * original-language text (the dubber prefers `translation` but silently uses
  * `original` when it is empty), so pressing Dub right after transcribing — or
  * after switching the output language — voices the wrong language.
  *
- * Returns `{ ok: true }` when the subtitles are ready to dub; runs the full
- * translation flow first when they are not. Translation failures/cancellations
- * are surfaced by the translation flow itself; callers should just stop.
+ * Returns `{ ok: true }` when the subtitles are ready to dub, with
+ * `useOriginal` when the originals are already in the selected language (dub
+ * them via `segmentsForDub`, no translation is paid for). Runs the full
+ * translation flow first when needed. Translation failures/cancellations are
+ * surfaced by the translation flow itself; callers should just stop.
  */
 export async function ensureSubtitlesTranslatedForDubbing(options?: {
   operationPrefix?: string;
-}): Promise<{ ok: boolean }> {
+}): Promise<{ ok: boolean; useOriginal?: boolean }> {
   const subStore = useSubStore.getState();
   const segments = subStore.order.map(id => subStore.segments[id]);
   if (!segments.length) {
     return { ok: true };
   }
 
-  const hasUntranslated = segments.some(
-    seg => (seg.original || '').trim() && !(seg.translation || '').trim()
+  const plan = planDubText(
+    segments,
+    useUIStore.getState().targetLanguage,
+    subStore.targetLanguage
   );
-  const translatedLanguage = String(subStore.targetLanguage || '')
-    .trim()
-    .toLowerCase();
-  const selectedLanguage = String(useUIStore.getState().targetLanguage || '')
-    .trim()
-    .toLowerCase();
-  // Only force a re-translation when we know what language the current
-  // translations are in and it differs from the selected output language.
-  // Mounted SRTs with translations of unknown language dub as-is.
-  const translatedToOtherLanguage = Boolean(
-    translatedLanguage &&
-    selectedLanguage &&
-    translatedLanguage !== selectedLanguage
-  );
-
-  if (!hasUntranslated && !translatedToOtherLanguage) {
-    return { ok: true };
-  }
+  if (plan === 'use-original') return { ok: true, useOriginal: true };
+  if (plan === 'ready') return { ok: true };
 
   const result = await runFullSrtTranslation({
-    operationPrefix: options?.operationPrefix ?? 'dub-translate',
+    // A translate- id so its progress shows; the dub- part words any
+    // credits refusal as dubbing (userFacingError.taskForOperationId).
+    operationPrefix: options?.operationPrefix ?? 'translate-dub',
   });
   return { ok: Boolean(result?.success) };
 }

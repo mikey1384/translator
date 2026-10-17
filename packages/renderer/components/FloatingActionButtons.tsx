@@ -19,7 +19,7 @@ interface FloatingActionButtonsProps {
 const buttonContainerStyles = css`
   position: fixed;
   bottom: 30px;
-  right: 30px;
+  inset-inline-end: 30px;
   z-index: 1000;
   display: flex;
   gap: 10px;
@@ -238,7 +238,9 @@ export default function FloatingActionButtons({
     }
   };
 
-  const handleReloadClick = async () => {
+  const handleReloadClick = async ({
+    plainReload = false,
+  }: { plainReload?: boolean } = {}) => {
     if (installing) return;
 
     const blockSavePhaseReload = () => {
@@ -296,7 +298,7 @@ export default function FloatingActionButtons({
     };
 
     // If update is downloaded, install it immediately
-    if (downloaded) {
+    if (downloaded && !plainReload) {
       if (
         !window.confirm(
           t('common.confirmInstallUpdate', 'Install update and restart?')
@@ -309,12 +311,12 @@ export default function FloatingActionButtons({
     }
 
     // If update is downloading, do nothing (let it finish in background)
-    if (downloading) {
+    if (downloading && !plainReload) {
       return;
     }
 
     // If an update is available but not yet downloaded, kick off download
-    if (available && !downloaded) {
+    if (available && !downloaded && !plainReload) {
       try {
         await doDownload();
       } catch {
@@ -533,7 +535,12 @@ export default function FloatingActionButtons({
   const reloadRef = useRef(handleReloadClick);
   reloadRef.current = handleReloadClick;
   useEffect(() => {
-    const onRequest = () => void reloadRef.current();
+    const onRequest = (event: Event) =>
+      void reloadRef.current({
+        plainReload: Boolean(
+          (event as CustomEvent<{ plainReload?: boolean }>).detail?.plainReload
+        ),
+      });
     window.addEventListener(RELOAD_REQUEST_EVENT, onRequest);
     return () => window.removeEventListener(RELOAD_REQUEST_EVENT, onRequest);
   }, []);
@@ -544,7 +551,7 @@ export default function FloatingActionButtons({
       {buttonProps &&
         (buttonProps.kind === 'update' ? (
           <button
-            onClick={handleReloadClick}
+            onClick={() => void handleReloadClick()}
             title={buttonProps.title}
             aria-label={buttonProps['aria-label'] ?? buttonProps.title}
             aria-live={buttonProps['aria-live'] ?? undefined}

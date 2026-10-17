@@ -21,6 +21,83 @@ interface DirectMergeOptions {
   }) => void;
   registerProcess?: (c: ChildProcess) => void;
   signal?: AbortSignal;
+  /** Codec of the audio that ends up in the output (null: none/unknown). */
+  sourceAudioCodec?: string | null;
+  /** Source video bit rate in bits/s, used to size hardware encodes. */
+  sourceVideoBitRate?: number | null;
+  frameRate?: number;
+}
+
+/** Audio codecs Apple devices and social uploaders play inside .mp4. */
+const MP4_SAFE_AUDIO_CODECS = new Set(['aac', 'mp3', 'ac3', 'eac3', 'alac']);
+
+export function mergeAudioCodecArgs(codec?: string | null): string[] {
+  if (codec && MP4_SAFE_AUDIO_CODECS.has(codec.toLowerCase())) {
+    return ['-c:a', 'copy'];
+  }
+  // Vorbis, Opus, DTS, PCM… (or unknown): transcode so every player can
+  // decode the export.
+  return ['-c:a', 'aac', '-b:a', '192k'];
+}
+
+const MIN_HW_BITRATE = 1_000_000;
+const MAX_HW_BITRATE = 40_000_000;
+
+/**
+ * VideoToolbox ignores -crf/-preset and picks a bitrate 3–5× the source's,
+ * so size it from the source (a little headroom for the subtitle edges), or
+ * from the frame size when the source doesn't say.
+ */
+export function hardwareTargetBitRate({
+  width,
+  height,
+  frameRate,
+  sourceVideoBitRate,
+}: {
+  width: number;
+  height: number;
+  frameRate?: number;
+  sourceVideoBitRate?: number | null;
+}): number {
+  const fps = frameRate && frameRate > 0 ? Math.min(frameRate, 120) : 30;
+  const estimate = width * height * fps * 0.1;
+  const target =
+    sourceVideoBitRate && sourceVideoBitRate > 0
+      ? sourceVideoBitRate * 1.15
+      : estimate;
+  return Math.round(Math.min(MAX_HW_BITRATE, Math.max(MIN_HW_BITRATE, target)));
+}
+
+export function mergeVideoCodecArgs({
+  platform,
+  width,
+  height,
+  frameRate,
+  sourceVideoBitRate,
+}: {
+  platform: NodeJS.Platform;
+  width: number;
+  height: number;
+  frameRate?: number;
+  sourceVideoBitRate?: number | null;
+}): string[] {
+  if (platform === 'darwin') {
+    const bitRate = hardwareTargetBitRate({
+      width,
+      height,
+      frameRate,
+      sourceVideoBitRate,
+    });
+    return [
+      '-c:v',
+      'h264_videotoolbox',
+      '-b:v',
+      String(bitRate),
+      '-maxrate',
+      String(Math.round(bitRate * 1.5)),
+    ];
+  }
+  return ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '22'];
 }
 
 export async function directMerge(
@@ -39,23 +116,31 @@ export async function directMerge(
     operationId,
     signal,
     ffmpegPath,
+    sourceAudioCodec,
+    sourceVideoBitRate,
+    frameRate,
   } = opts;
 
   log.info(`[ffmpeg-direct-merge ${operationId}] Starting direct merge...`);
 
-  const VIDEO_START = 40;
+  const VIDEO_START = 12;
   const FINAL_START = 90;
   // Keep below 100 so the renderer stays "in progress" until the user picks
   // a save location and the main process replies with the final result.
   const FINAL_END = 95;
   const VIDEO_RANGE = FINAL_START - VIDEO_START;
 
-  const platform = os.platform();
-  let vcodec = 'libx264';
-  if (platform === 'darwin') {
-    vcodec = 'h264_videotoolbox';
-  }
-  log.info(`[ffmpeg-direct-merge ${operationId}] Using video codec: ${vcodec}`);
+  const videoCodecArgs = mergeVideoCodecArgs({
+    platform: os.platform(),
+    width: videoWidth,
+    height: videoHeight,
+    frameRate,
+    sourceVideoBitRate,
+  });
+  const audioCodecArgs = mergeAudioCodecArgs(sourceAudioCodec);
+  log.info(
+    `[ffmpeg-direct-merge ${operationId}] Video: ${videoCodecArgs.join(' ')}; audio (${sourceAudioCodec ?? 'unknown'}): ${audioCodecArgs.join(' ')}`
+  );
 
   const overlayInput = audioPath ? 2 : 1;
   const audioMap = audioPath ? ['-map', '1:a:0'] : ['-map', '0:a?'];
@@ -77,14 +162,8 @@ export async function directMerge(
     '-map',
     '[out]',
     ...audioMap,
-    '-c:a',
-    'copy',
-    '-c:v',
-    vcodec,
-    '-preset',
-    'veryfast',
-    '-crf',
-    '22',
+    ...audioCodecArgs,
+    ...videoCodecArgs,
     '-pix_fmt',
     'yuv420p',
     '-progress',

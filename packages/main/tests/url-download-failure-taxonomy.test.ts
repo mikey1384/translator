@@ -5,7 +5,10 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { classifyUrlDownloadFailureDetail } from '../services/url-processor/failure-taxonomy.js';
-import { mapErrorToUserFriendly } from '../services/url-processor/error-map.js';
+import {
+  mapDownloadError,
+  mapErrorToUserFriendly,
+} from '../services/url-processor/error-map.js';
 
 const fixtureDir = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -126,4 +129,61 @@ test('Instagram audience restrictions remain source failures and explain account
   assert.match(message, /If your account can view it/);
   assert.match(message, /Settings/);
   assert.doesNotMatch(message, /must-not-escape|DIYC3Z9T6q5|--socket/);
+});
+
+// Real yt-dlp --verbose output: the argv echo carries "--socket-timeout",
+// which once made every failure look like a network error.
+const VERBOSE_UNAVAILABLE_STDERR = [
+  "[debug] Command-line config: ['--verbose', '--no-playlist', '--socket-timeout', '30', '--retries', '3', 'https://www.youtube.com/watch?v=zzzzzzzzzz0']",
+  '[debug] Encodings: locale UTF-8, fs utf-8, pref UTF-8',
+  '[debug] yt-dlp version stable@2026.09.01',
+  '[youtube] Extracting URL: https://www.youtube.com/watch?v=zzzzzzzzzz0',
+  '[youtube] zzzzzzzzzz0: Downloading webpage',
+  'ERROR: [youtube] zzzzzzzzzz0: This video is unavailable',
+].join('\n');
+
+test('an unavailable video maps to its own code, not network or generic', () => {
+  const mapped = mapDownloadError({
+    rawErrorMessage: 'Command failed with exit code 1',
+    stderrContent: VERBOSE_UNAVAILABLE_STDERR,
+  });
+  assert.equal(mapped.code, 'unavailable');
+  assert.equal(
+    classifyUrlDownloadFailureDetail({ stderr: VERBOSE_UNAVAILABLE_STDERR })
+      .code,
+    'private_or_restricted'
+  );
+});
+
+test('the verbose argv echo alone is not a network failure', () => {
+  const echoOnly = VERBOSE_UNAVAILABLE_STDERR.split('\n')
+    .slice(0, 3)
+    .join('\n');
+  assert.equal(
+    classifyUrlDownloadFailureDetail({ stderr: echoOnly }).code,
+    'unknown'
+  );
+  assert.equal(
+    classifyUrlDownloadFailureDetail({
+      stderr: 'ERROR: Unable to download webpage: <urlopen error timed out>',
+    }).code,
+    'network'
+  );
+});
+
+test('region locks and removed videos get their own codes', () => {
+  assert.equal(
+    mapDownloadError({
+      rawErrorMessage:
+        'ERROR: [youtube] abc: The uploader has not made this video available in your country',
+    }).code,
+    'region_locked'
+  );
+  assert.equal(
+    mapDownloadError({
+      rawErrorMessage:
+        'ERROR: [youtube] abc: This video has been removed by the uploader',
+    }).code,
+    'unavailable'
+  );
 });

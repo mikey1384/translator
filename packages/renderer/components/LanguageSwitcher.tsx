@@ -1,252 +1,327 @@
 import { useState, useEffect, useRef } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '../i18n.js';
-import { selectStyles, colors } from '../styles.js';
+import { colors } from '../styles.js';
 
-interface LanguageOption {
-  value: string;
-  label: string;
-  countryCode: string;
-}
-
-interface LanguageGroup {
-  label: string;
-  options: LanguageOption[];
-}
-
-const languageGroups: LanguageGroup[] = [
-  {
-    label: 'regions.eastAsia',
-    options: [
-      { value: 'ko', label: 'languages.korean', countryCode: 'KR' },
-      { value: 'ja', label: 'languages.japanese', countryCode: 'JP' },
-      {
-        value: 'zh-CN',
-        label: 'languages.chinese_simplified',
-        countryCode: 'CN',
-      },
-      {
-        value: 'zh-TW',
-        label: 'languages.chinese_traditional',
-        countryCode: 'TW',
-      },
-      { value: 'vi', label: 'languages.vietnamese', countryCode: 'VN' },
-    ],
-  },
-  {
-    label: 'regions.europe',
-    options: [
-      { value: 'es', label: 'languages.spanish', countryCode: 'ES' },
-      { value: 'fr', label: 'languages.french', countryCode: 'FR' },
-      { value: 'de', label: 'languages.german', countryCode: 'DE' },
-      { value: 'it', label: 'languages.italian', countryCode: 'IT' },
-      { value: 'pt', label: 'languages.portuguese', countryCode: 'PT' },
-      { value: 'ru', label: 'languages.russian', countryCode: 'RU' },
-      { value: 'nl', label: 'languages.dutch', countryCode: 'NL' },
-      { value: 'pl', label: 'languages.polish', countryCode: 'PL' },
-      { value: 'sv', label: 'languages.swedish', countryCode: 'SE' },
-      { value: 'tr', label: 'languages.turkish', countryCode: 'TR' },
-      { value: 'no', label: 'languages.norwegian', countryCode: 'NO' },
-      { value: 'da', label: 'languages.danish', countryCode: 'DK' },
-      { value: 'fi', label: 'languages.finnish', countryCode: 'FI' },
-      { value: 'el', label: 'languages.greek', countryCode: 'GR' },
-      { value: 'cs', label: 'languages.czech', countryCode: 'CZ' },
-      { value: 'hu', label: 'languages.hungarian', countryCode: 'HU' },
-      { value: 'ro', label: 'languages.romanian', countryCode: 'RO' },
-      { value: 'uk', label: 'languages.ukrainian', countryCode: 'UA' },
-    ],
-  },
-  {
-    label: 'regions.southSoutheastAsia',
-    options: [
-      { value: 'hi', label: 'languages.hindi', countryCode: 'IN' },
-      { value: 'id', label: 'languages.indonesian', countryCode: 'ID' },
-      { value: 'th', label: 'languages.thai', countryCode: 'TH' },
-      { value: 'ms', label: 'languages.malay', countryCode: 'MY' },
-      { value: 'tl', label: 'languages.tagalog', countryCode: 'PH' },
-      { value: 'bn', label: 'languages.bengali', countryCode: 'BD' },
-      { value: 'ta', label: 'languages.tamil', countryCode: 'LK' },
-      { value: 'te', label: 'languages.telugu', countryCode: 'IN' },
-      { value: 'mr', label: 'languages.marathi', countryCode: 'IN' },
-      { value: 'ur', label: 'languages.urdu', countryCode: 'PK' },
-    ],
-  },
-  {
-    label: 'regions.middleEastAfrica',
-    options: [
-      { value: 'ar', label: 'languages.arabic', countryCode: 'SA' },
-      { value: 'he', label: 'languages.hebrew', countryCode: 'IL' },
-      { value: 'fa', label: 'languages.farsi', countryCode: 'IR' },
-      { value: 'sw', label: 'languages.swahili', countryCode: 'KE' },
-      { value: 'af', label: 'languages.afrikaans', countryCode: 'ZA' },
-    ],
-  },
-];
-
-const baseLanguageOptions: LanguageOption[] = [
-  { value: 'en', label: 'languages.english', countryCode: 'US' },
-];
+import {
+  allUiLanguageOptions,
+  baseLanguageOptions,
+  languageGroups,
+  uiLanguageEndonym,
+  type LanguageOption,
+} from '../constants/ui-languages.js';
 
 const languageSwitcherContainer = css`
-  margin: 10px 0;
   position: relative;
-  width: 70px;
 `;
 
-const selectedValueStyles = css`
-  ${selectStyles}
-  display: flex;
+const triggerStyles = css`
+  height: 40px;
+  max-width: 180px;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 20px;
+  border: 1px solid ${colors.border};
+  background: transparent;
+  color: ${colors.text};
+  font: inherit;
+  font-size: 0.88rem;
   cursor: pointer;
-  user-select: none;
-  width: 100%;
-  padding: 8px 10px;
-  background-image: none;
+
+  &:hover {
+    border-color: ${colors.borderStrong};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.primaryLight};
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 720px) {
+    padding: 0 10px;
+  }
+`;
+
+const triggerNameStyles = css`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 720px) {
+    display: none;
+  }
 `;
 
 const dropdownListStyles = css`
   position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  background-color: ${colors.surface};
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
-  max-height: 300px;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  background-color: ${colors.surfaceRaised};
+  border: 1px solid ${colors.borderStrong};
+  border-radius: 12px;
+  max-height: min(420px, 70vh);
   overflow-y: auto;
-  z-index: 10;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1100;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
   color: ${colors.text};
-  width: 160px;
+  width: 220px;
+  padding: 4px;
   box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+  }
 `;
 
 const dropdownOptionStyles = css`
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 8px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
   cursor: pointer;
-  &:hover {
+  font-size: 0.9rem;
+
+  &:hover,
+  &[data-active='true'] {
     background-color: ${colors.grayLight};
   }
 `;
 
 const selectedOptionStyle = css`
-  background-color: ${colors.primary};
-  color: ${colors.onPrimary};
-  &:hover {
-    background-color: ${colors.primary};
-  }
+  color: ${colors.primary};
+  font-weight: 600;
+`;
+
+const optionSecondaryStyles = css`
+  color: ${colors.textDim};
+  font-size: 0.78rem;
+  font-weight: 400;
+  white-space: nowrap;
 `;
 
 const dropdownGroupLabelStyles = css`
-  padding: 8px;
-  font-weight: bold;
-  font-size: 0.8rem;
-  text-align: center;
-  background-color: ${colors.grayLight};
-  color: ${colors.gray};
-  border-top: 1px solid ${colors.border};
-  border-bottom: 1px solid ${colors.border};
+  padding: 10px 10px 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: ${colors.textDim};
   cursor: default;
 `;
 
-const arrowStyles = css`
-  margin-inline-start: 6px;
-  color: ${colors.gray};
-  font-size: 10px;
-`;
+function GlobeIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" />
+    </svg>
+  );
+}
 
-const flagStyleObject = {
-  width: '24px',
-  height: 'auto',
-  borderRadius: '2px',
-};
-
+/**
+ * UI-language picker. Each language is shown by its own name (flags can't
+ * tell Hindi, Marathi and Telugu apart, and needed the network), and it is a
+ * real button + listbox so keyboard and screen-reader users can switch.
+ */
 export default function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'en');
-  const [currentCountryCode, setCurrentCountryCode] = useState('US'); // Default to US
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const getAllOptions = () => [
-    ...baseLanguageOptions,
-    ...languageGroups.flatMap(group => group.options),
-  ];
+  const [activeValue, setActiveValue] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const options = allUiLanguageOptions();
+  const currentOption =
+    options.find(opt => opt.value === currentLanguage) ?? options[0];
+  const listId = 'ui-language-listbox';
+  const label = t('common.uiLanguage', 'Interface language');
 
   useEffect(() => {
-    const selectedOption = getAllOptions().find(
-      opt => opt.value === i18n.language
-    );
     setCurrentLanguage(i18n.language);
-    setCurrentCountryCode(selectedOption?.countryCode || 'US');
   }, [i18n.language]);
 
   useEffect(() => {
+    if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef?.current &&
-        !dropdownRef?.current.contains(event.target as Node)
-      ) {
+      if (!containerRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    document.addEventListener('mousedown', handleClickOutside);
+    listRef.current?.focus();
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  return (
-    <div className={languageSwitcherContainer} ref={dropdownRef}>
-      <div className={selectedValueStyles} onClick={() => setIsOpen(!isOpen)}>
-        <CountryFlag countryCode={currentCountryCode} style={flagStyleObject} />
-        <span className={arrowStyles}>▼</span>
+  useEffect(() => {
+    if (!isOpen || !activeValue) return;
+    listRef.current
+      ?.querySelector<HTMLElement>(`[data-value="${activeValue}"]`)
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [isOpen, activeValue]);
+
+  const openList = () => {
+    setActiveValue(currentOption.value);
+    setIsOpen(true);
+  };
+
+  const closeList = (restoreFocus: boolean) => {
+    setIsOpen(false);
+    if (restoreFocus) triggerRef.current?.focus();
+  };
+
+  const moveActive = (delta: number | 'first' | 'last') => {
+    const index = options.findIndex(opt => opt.value === activeValue);
+    let next: number;
+    if (delta === 'first') next = 0;
+    else if (delta === 'last') next = options.length - 1;
+    else next = Math.min(options.length - 1, Math.max(0, index + delta));
+    setActiveValue(options[next].value);
+  };
+
+  const handleListKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        moveActive(1);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        moveActive(-1);
+        break;
+      case 'Home':
+        event.preventDefault();
+        moveActive('first');
+        break;
+      case 'End':
+        event.preventDefault();
+        moveActive('last');
+        break;
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        if (activeValue) void handleLanguageChange(activeValue);
+        break;
+      case 'Escape':
+        event.preventDefault();
+        closeList(true);
+        break;
+      case 'Tab':
+        closeList(false);
+        break;
+      default:
+        // Type-ahead on the language's own name.
+        if (event.key.length === 1) {
+          const key = event.key.toLocaleLowerCase();
+          const match = options.find(opt =>
+            uiLanguageEndonym(opt).toLocaleLowerCase().startsWith(key)
+          );
+          if (match) setActiveValue(match.value);
+        }
+    }
+  };
+
+  const renderOption = (lang: LanguageOption) => {
+    const selected = currentLanguage === lang.value;
+    const endonym = uiLanguageEndonym(lang);
+    const localized = t(lang.label, endonym);
+    return (
+      <div
+        key={lang.value}
+        id={`ui-language-option-${lang.value}`}
+        data-value={lang.value}
+        role="option"
+        aria-selected={selected}
+        data-active={activeValue === lang.value}
+        lang={lang.value}
+        className={cx(dropdownOptionStyles, selected && selectedOptionStyle)}
+        onMouseEnter={() => setActiveValue(lang.value)}
+        onClick={() => void handleLanguageChange(lang.value)}
+      >
+        <span>{endonym}</span>
+        {localized !== endonym ? (
+          <span
+            className={optionSecondaryStyles}
+            lang={i18n.language}
+            aria-hidden="true"
+          >
+            {localized}
+          </span>
+        ) : null}
       </div>
+    );
+  };
+
+  return (
+    <div className={languageSwitcherContainer} ref={containerRef}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className={triggerStyles}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? listId : undefined}
+        aria-label={`${label}: ${uiLanguageEndonym(currentOption)}`}
+        title={label}
+        onClick={() => (isOpen ? closeList(false) : openList())}
+        onKeyDown={event => {
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            openList();
+          }
+        }}
+      >
+        <GlobeIcon />
+        <span className={triggerNameStyles} lang={currentOption.value}>
+          {uiLanguageEndonym(currentOption)}
+        </span>
+      </button>
 
       {isOpen && (
-        <div className={dropdownListStyles}>
-          {baseLanguageOptions.map(lang => (
-            <div
-              key={lang.value}
-              className={cx(
-                dropdownOptionStyles,
-                currentLanguage === lang.value && selectedOptionStyle
-              )}
-              onClick={() => handleLanguageChange(lang.value)}
-            >
-              <CountryFlag
-                countryCode={lang.countryCode}
-                style={flagStyleObject}
-              />
-            </div>
-          ))}
-
+        <div
+          ref={listRef}
+          id={listId}
+          className={dropdownListStyles}
+          role="listbox"
+          aria-label={label}
+          tabIndex={-1}
+          aria-activedescendant={
+            activeValue ? `ui-language-option-${activeValue}` : undefined
+          }
+          onKeyDown={handleListKeyDown}
+        >
+          {baseLanguageOptions.map(renderOption)}
           {languageGroups.map(group => (
-            <div key={group.label}>
-              <div className={dropdownGroupLabelStyles}>{t(group.label)}</div>
-              {group.options.map(lang => (
-                <div
-                  key={lang.value}
-                  className={cx(
-                    dropdownOptionStyles,
-                    currentLanguage === lang.value && selectedOptionStyle
-                  )}
-                  onClick={() => handleLanguageChange(lang.value)}
-                >
-                  <CountryFlag
-                    countryCode={lang.countryCode}
-                    style={flagStyleObject}
-                  />
-                </div>
-              ))}
+            <div
+              key={group.label}
+              role="group"
+              aria-labelledby={`ui-language-group-${group.label}`}
+            >
+              <div
+                id={`ui-language-group-${group.label}`}
+                className={dropdownGroupLabelStyles}
+                role="presentation"
+              >
+                {t(group.label)}
+              </div>
+              {group.options.map(renderOption)}
             </div>
           ))}
         </div>
@@ -255,44 +330,13 @@ export default function LanguageSwitcher() {
   );
 
   async function handleLanguageChange(languageValue: string) {
-    const selectedOption = getAllOptions().find(
-      opt => opt.value === languageValue
-    );
-
     try {
       setCurrentLanguage(languageValue);
-      setCurrentCountryCode(selectedOption?.countryCode || 'US');
-      setIsOpen(false);
-
+      closeList(true);
       await changeLanguage(languageValue);
     } catch (error) {
       console.error(`[LanguageSwitcher] Error changing language:`, error);
       setCurrentLanguage(i18n.language);
-      const revertOption = getAllOptions().find(
-        opt => opt.value === i18n.language
-      );
-      setCurrentCountryCode(revertOption?.countryCode || 'US');
     }
   }
-}
-
-function CountryFlag({
-  countryCode,
-  style,
-}: {
-  countryCode: string;
-  style?: React.CSSProperties;
-}) {
-  const url = `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/${countryCode.toLowerCase()}.svg`;
-  return (
-    <img
-      src={url}
-      alt={`${countryCode} flag`}
-      style={{
-        display: 'inline-block',
-        verticalAlign: 'middle',
-        ...style,
-      }}
-    />
-  );
 }

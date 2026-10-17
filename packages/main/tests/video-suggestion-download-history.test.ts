@@ -1158,3 +1158,34 @@ test('an uncommitted promoted file is reclaimed once its grace expires', async (
   assert.deepEqual(harness.reclaimed, [promotedPath]);
   assert.deepEqual(harness.getPendingReclaims(), []);
 });
+
+test('downloading the same video again keeps one entry and reclaims the older copy', async () => {
+  const harness = createHarness({ commitGraceMs: 0 });
+  const olderPath = '/app/downloaded-media/download_1_jNQXAC9IVRw.mp4';
+  const newerPath = '/app/downloaded-media/download_2_jNQXAC9IVRw.mp4';
+  const older = {
+    ...historyItem('older', olderPath),
+    sourceUrl: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+  };
+  const newer = {
+    ...historyItem('newer', newerPath),
+    sourceUrl: 'https://youtu.be/jNQXAC9IVRw?si=share',
+  };
+  const other = historyItem('other', '/app/downloaded-media/other.mp4');
+
+  await harness.manager.mutate({
+    rendererId: 1,
+    mutation: { type: 'upsert', item: older },
+    seedItems: [other],
+  });
+  await harness.manager.mutate({
+    rendererId: 1,
+    mutation: { type: 'upsert', item: newer },
+  });
+
+  assert.deepEqual(
+    harness.getStoredHistory()?.map(item => item.id),
+    ['newer', 'other']
+  );
+  assert.deepEqual(harness.reclaimed, [olderPath]);
+});

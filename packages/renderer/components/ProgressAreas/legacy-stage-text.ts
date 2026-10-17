@@ -165,6 +165,34 @@ const LITERALS: Record<string, Literal> = Object.fromEntries(
         'Transcription complete',
       ],
       ['Uploading', 'uploading', 'Uploading…'],
+      // Bare status words from main and the renderer itself.
+      ['Starting', 'starting', 'Starting…'],
+      ['Completed', 'completed', 'Done'],
+      ['Cancelled', 'cancelled', 'Cancelled'],
+      ['Canceled', 'cancelled', 'Cancelled'],
+      ['Process cancelled', 'cancelled', 'Cancelled'],
+      ['Cancelling', 'cancelling', 'Cancelling…'],
+      ['Failed', 'failed', 'Something went wrong'],
+      ['Error', 'failed', 'Something went wrong'],
+      ['Downloading', 'downloading', 'Downloading…'],
+      ['Downloading audio', 'downloadingAudio', 'Downloading audio…'],
+      [
+        'Transcribing subtitle cue',
+        'transcribingLine',
+        'Transcribing the line…',
+      ],
+      ['Starting merge', 'startingExport', 'Starting the video…'],
+      ['yt-dlp ready', 'checkingDownloader', 'Checking the downloader…'],
+      [
+        'Video blocked; automatic captions available',
+        'captionsAvailable',
+        'The video couldn’t be downloaded, but YouTube captions are available',
+      ],
+      [
+        'Automatic captions ready; not opened',
+        'captionsNotOpened',
+        'YouTube captions are ready but weren’t opened',
+      ],
     ] as const
   ).map(([text, key, en]) => [norm(text), { key, en }])
 );
@@ -269,14 +297,36 @@ const PATTERNS: Pattern[] = [
   },
 ];
 
+// Final-state tokens any task can end with. Task-specific tokens are left
+// to the stage-label helpers.
+const FINAL_TOKENS: Record<string, Literal> = {
+  completed: { key: 'completed', en: 'Done' },
+  process_cancelled: { key: 'cancelled', en: 'Cancelled' },
+  error: { key: 'failed', en: 'Something went wrong' },
+  insufficient_credits: {
+    key: 'insufficientCredits',
+    en: 'Not enough credits',
+  },
+  starting: { key: 'starting', en: 'Starting…' },
+};
+
 /** English source strings, for en.json and the locale tests. */
 export const LEGACY_STAGE_EN: Record<string, string> = Object.fromEntries([
   ...Object.values(LITERALS).map(l => [l.key, l.en]),
+  ...Object.values(FINAL_TOKENS).map(l => [l.key, l.en]),
   ...PATTERNS.map(p => [p.key, p.en]),
 ]);
 
 export function localizeLegacyStage(stage: string, t: TFunction): string {
-  if (!stage || stage.startsWith('__i18n__:')) return stage;
+  if (!stage) return stage;
+  if (stage.startsWith('__i18n__:')) {
+    const token = FINAL_TOKENS[stage.slice(9)];
+    return token ? t(`progress.legacy.${token.key}`, token.en) : stage;
+  }
+  // "Error: <English detail>" from older main code: the detail stays in logs.
+  if (/^error:\s/i.test(stage.trim())) {
+    return t('progress.legacy.failed', 'Something went wrong');
+  }
   const literal = LITERALS[norm(stage)];
   if (literal) return t(`progress.legacy.${literal.key}`, literal.en);
   for (const p of PATTERNS) {

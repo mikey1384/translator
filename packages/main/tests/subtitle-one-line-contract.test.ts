@@ -25,7 +25,10 @@ test('single-cue translation failures cannot report success or complete the edit
 
   assert.ok(handlerStart >= 0 && handlerEnd > handlerStart);
   assert.doesNotMatch(handler, /success:\s*!isCancel/);
-  assert.match(handler, /success:\s*false,[\s\S]*cancelled:\s*isCancel/);
+  assert.match(
+    handler,
+    /success:\s*false,[\s\S]*cancelled:\s*failure\.cancelled/
+  );
 
   const editorSource = fs.readFileSync(
     path.join(

@@ -5,7 +5,12 @@ import {
   resolveMountedHighlightRender,
 } from './agent-highlights';
 import { renderHighlight } from '../utils/render-highlight';
-import { buildSrt, parseSrt } from '../../shared/helpers';
+import {
+  buildSrt,
+  parseSrt,
+  parseSrtOriginalOnly,
+  shapeImportedSrtSegments,
+} from '../../shared/helpers';
 import {
   CHECKOUT_ALREADY_PENDING,
   CREDIT_PACKS,
@@ -41,6 +46,7 @@ import {
   normalizeSubtitleBaseFontSize,
   resolveSubtitleRenderSpec,
   serializeSubtitleRenderSpec,
+  subtitleRenderGeometry,
 } from '../../shared/helpers/subtitle-render-spec';
 import { classifyTerminalProgress } from '../utils/progress-terminal';
 import { resolvePreferredLanguageName } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-helpers';
@@ -69,6 +75,7 @@ import {
   executeSubtitleGeneration,
 } from '../containers/GenerateSubtitles/utils/subtitleGeneration';
 import { ensureSubtitlesTranslatedForDubbing } from '../utils/runFullTranslation';
+import { segmentsForDub } from '../utils/dubPlan';
 import {
   didSaveSubtitleFile,
   saveCurrentSubtitles,
@@ -1206,6 +1213,8 @@ async function runSuggestedVideoBatch(
     urlState.setDownloadQuality(quality);
     const result = await urlState.downloadMedia({
       url: item.url,
+      // The agent asked for this video; no one is there to confirm length.
+      allowLongVideo: true,
       preserveSubtitles: false,
       mountOnComplete: false,
     });
@@ -2073,7 +2082,6 @@ async function runHistoryMerge(
       displayWidthPx: videoMeta.displayWidth ?? videoMeta.width,
       displayHeightPx: videoMeta.displayHeight ?? videoMeta.height,
     });
-    const fontSizePx = subtitleRenderSpec.outputFontSizePx;
     historyJobs.update(historyId, operationId, { stage: 'merging' });
     const options: RenderSubtitlesOptions = {
       operationId,
@@ -2087,18 +2095,11 @@ async function runHistoryMerge(
       outputSavePath: outputPath,
       outputOverwrite: input.overwrite === true,
       videoDuration: videoMeta.duration,
-      videoWidth: videoMeta.width ?? 1280,
-      videoHeight: videoMeta.height ?? 720,
-      displayWidth: videoMeta.displayWidth ?? videoMeta.width ?? 1280,
-      displayHeight: videoMeta.displayHeight ?? videoMeta.height ?? 720,
       videoRotationDeg: videoMeta.rotation ?? 0,
       frameRate: Number(videoMeta.frameRate ?? 30),
       originalVideoPath: videoPath,
-      fontSizePx,
-      stylePreset: ui.subtitleStyle,
+      ...subtitleRenderGeometry(subtitleRenderSpec),
       subtitleRenderSpec: serializeSubtitleRenderSpec(subtitleRenderSpec),
-      outputMode: ui.subtitleDisplayMode,
-      overlayMode: 'overlayOnVideo',
     };
     const result = await subtitleRendererClient.renderSubtitles(options);
     if (!result.success || !result.outputPath) {
@@ -2232,6 +2233,7 @@ async function runAgentDubbing(
   if (!DUB_VOICES.has(voice)) throw new Error('Unsupported dubbing voice.');
   throwIfAgentCancelled();
   useUIStore.getState().setTargetLanguage(targetLanguage);
+  let useOriginal = false;
   if (input.translateIfNeeded !== false) {
     agentProcessingState = {
       ...agentProcessingState,
@@ -2242,10 +2244,15 @@ async function runAgentDubbing(
     });
     if (!ready.ok)
       throw new Error('Subtitles could not be prepared for dubbing.');
+    useOriginal = Boolean(ready.useOriginal);
     throwIfAgentCancelled();
   }
   const subtitles = useSubStore.getState();
-  const segments = subtitles.order.map(id => subtitles.segments[id]);
+  // Subtitles already in the target language are voiced as they are.
+  const segments = segmentsForDub(
+    subtitles.order.map(id => subtitles.segments[id]),
+    useOriginal ? 'use-original' : 'ready'
+  );
   if (!segments.length) throw new Error('Subtitles are required for dubbing.');
   if (
     input.translateIfNeeded === false &&
@@ -2744,18 +2751,12 @@ async function runAgentMerge(
     outputSavePath: outputPath,
     outputOverwrite: input.overwrite === true,
     videoDuration: video.meta?.duration ?? 0,
-    videoWidth: video.meta?.width ?? 1280,
-    videoHeight: video.meta?.height ?? 720,
-    displayWidth: video.meta?.displayWidth ?? video.meta?.width ?? 1280,
-    displayHeight: video.meta?.displayHeight ?? video.meta?.height ?? 720,
     videoRotationDeg: video.meta?.rotation ?? 0,
     frameRate: Number(video.meta?.frameRate ?? 30),
     originalVideoPath: videoPath,
-    fontSizePx,
-    stylePreset: subtitleStyle,
+    // Geometry from the spec, so audio-only files (no frame size) match it.
+    ...subtitleRenderGeometry(subtitleRenderSpec),
     subtitleRenderSpec: serializeSubtitleRenderSpec(subtitleRenderSpec),
-    outputMode: displayMode,
-    overlayMode: video.isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
   };
   useTaskStore.getState().setMerge({
     id: operationId,
@@ -3360,6 +3361,8 @@ async function downloadAndMountAgentSource(input: {
     url: input.url,
     preserveSubtitles: true,
     mountOnComplete: false,
+    // The agent asked for this video; no one is there to confirm length.
+    allowLongVideo: true,
   });
   const finalDownload = useUrlStore.getState();
   const completedResult = result?.success ? result : null;
@@ -4871,7 +4874,8 @@ function installAgentBridge() {
         throw new Error(`Subtitle file does not exist: ${filePath}`);
       }
       const content = await window.fileApi.readText(filePath);
-      const segments = parseSrt(content);
+      // Same reading as File → Open: lines 2+ of a cue are not a translation.
+      const segments = shapeImportedSrtSegments(parseSrtOriginalOnly(content));
       if (!segments.length) {
         throw new Error(`Subtitle file contains no readable cues: ${filePath}`);
       }

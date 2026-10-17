@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { TFunction } from 'i18next';
 import { shallow } from 'zustand/shallow';
-import { suggestVideos } from '../../../../ipc/video-suggestions.js';
+import {
+  suggestVideos,
+  youtubeQuickSearch,
+} from '../../../../ipc/video-suggestions.js';
 import * as OperationIPC from '../../../../ipc/operation.js';
 import {
   ensureVideoSuggestionStoreRuntime,
@@ -23,6 +26,7 @@ import {
   resolveAssistantMessage,
   resolveErrorText,
 } from './video-suggestion-helpers.js';
+import { notifyIfCreditsRefused } from '../../../../utils/taskFailure';
 
 type UseVideoSuggestionFlowParams = {
   modelPreference: VideoSuggestionModelPreference;
@@ -72,7 +76,12 @@ type UseVideoSuggestionFlowResult = {
   showLiveActivity: boolean;
   streamingPreview: string;
   runQuickStartSearch: () => Promise<void>;
+  runFreeSearch: (query: string) => Promise<void>;
 };
+
+// Free searches run in this renderer's yt-dlp call, not a cancellable main
+// operation; cancelling one only drops its result.
+const FREE_SEARCH_OPERATION_PREFIX = 'video-quick-search-';
 
 function compactText(value: unknown): string {
   return String(value ?? '')
@@ -411,6 +420,7 @@ export default function useVideoSuggestionFlow({
         }
 
         if (typeof res?.error === 'string' && res.error.trim()) {
+          notifyIfCreditsRefused(res.error, 'videoSearch');
           setError(
             resolveErrorText(
               res.error,
@@ -441,6 +451,7 @@ export default function useVideoSuggestionFlow({
             ),
           },
         ]);
+        notifyIfCreditsRefused(err?.message, 'videoSearch');
         setError(
           resolveErrorText(
             err?.message,
@@ -536,6 +547,109 @@ export default function useVideoSuggestionFlow({
 
     await runSearch(nextHistory, savedPreferences);
   }, [savedPreferenceSummary, savedPreferences, runSearch, t]);
+
+  // The free first step from home: a plain YouTube search (no model, no
+  // credits). The query shows as the user's message; typing more refines it
+  // with AI.
+  const runFreeSearch = useCallback(
+    async (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed || useVideoSuggestionStore.getState().loading) return;
+
+      const id = useVideoSuggestionStore.getState().nextRequestId();
+      const operationId = `${FREE_SEARCH_OPERATION_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      setInput('');
+      setMessages(prev => [
+        ...normalizeMessagesForPlanner(prev, t),
+        { role: 'user' as const, content: trimmed },
+      ]);
+      setShowQuickStartAction(false);
+      setError(null);
+      setContinuationId(null);
+      setSearchQuery('');
+      startOperation(operationId, 'chat');
+      useVideoSuggestionStore.setState({
+        streamingStatus: t(
+          'input.videoSuggestion.freeSearchRunning',
+          'Searching YouTube…'
+        ),
+      });
+
+      try {
+        const res = await youtubeQuickSearch({
+          query: trimmed,
+          maxResults: 12,
+          recency: preferredRecency,
+        });
+        if (!isLatestRequest(id)) return;
+        const found = Array.isArray(res?.results) ? res.results : [];
+        if (!res?.success) {
+          notifyIfCreditsRefused(res?.error, 'videoSearch');
+          setError(
+            resolveErrorText(
+              res?.error,
+              t(
+                'input.videoSuggestion.searchFailed',
+                'I could not search right now. Try again in a moment.'
+              ),
+              t
+            )
+          );
+          return;
+        }
+        setResults(found);
+        setMessages(prev => [
+          ...normalizeMessagesForPlanner(prev, t),
+          {
+            role: 'assistant' as const,
+            content:
+              found.length > 0
+                ? t(
+                    'input.videoSuggestion.freeSearchResults',
+                    'Here are YouTube results for “{{query}}”. This search was free. Tell me more about what you want and I will refine it with AI.',
+                    { query: trimmed }
+                  )
+                : t(
+                    'input.videoSuggestion.freeSearchEmpty',
+                    'YouTube found nothing for “{{query}}”. Describe what you want and I will search with AI.',
+                    { query: trimmed }
+                  ),
+          },
+        ]);
+        if (found.length > 0) onResultsReady();
+      } catch (err: any) {
+        if (!isLatestRequest(id)) return;
+        notifyIfCreditsRefused(err?.message, 'videoSearch');
+        setError(
+          resolveErrorText(
+            err?.message,
+            t(
+              'input.videoSuggestion.searchFailed',
+              'I could not search right now. Try again in a moment.'
+            ),
+            t
+          )
+        );
+      } finally {
+        if (isLatestRequest(id)) finishOperation(operationId);
+      }
+    },
+    [
+      finishOperation,
+      isLatestRequest,
+      onResultsReady,
+      preferredRecency,
+      setContinuationId,
+      setError,
+      setInput,
+      setMessages,
+      setResults,
+      setSearchQuery,
+      setShowQuickStartAction,
+      startOperation,
+      t,
+    ]
+  );
 
   const searchMore = useCallback(async () => {
     const currentState = useVideoSuggestionStore.getState();
@@ -645,6 +759,7 @@ export default function useVideoSuggestionFlow({
       }
 
       if (typeof res?.error === 'string' && res.error.trim()) {
+        notifyIfCreditsRefused(res.error, 'videoSearch');
         setError(
           resolveErrorText(
             res.error,
@@ -663,6 +778,7 @@ export default function useVideoSuggestionFlow({
         return;
       }
       if (!isLatestRequest(id)) return;
+      notifyIfCreditsRefused(err?.message, 'videoSearch');
       setError(
         resolveErrorText(
           err?.message,
@@ -709,6 +825,12 @@ export default function useVideoSuggestionFlow({
   const cancelSearch = useCallback(async () => {
     const operationId = useVideoSuggestionStore.getState().activeOperationId;
     if (!operationId || useVideoSuggestionStore.getState().cancelling) return;
+    if (operationId.startsWith(FREE_SEARCH_OPERATION_PREFIX)) {
+      useVideoSuggestionStore.getState().nextRequestId();
+      useVideoSuggestionStore.getState().clearActiveOperation(operationId);
+      useVideoSuggestionStore.getState().resetLiveActivityState();
+      return;
+    }
 
     setCancellingOperation(operationId);
     try {
@@ -728,6 +850,7 @@ export default function useVideoSuggestionFlow({
       useVideoSuggestionStore.getState().resetLiveActivityState();
       setError(null);
     } catch (err: any) {
+      notifyIfCreditsRefused(err?.message, 'videoSearch');
       setError(
         resolveErrorText(
           err?.message,
@@ -780,5 +903,6 @@ export default function useVideoSuggestionFlow({
     showLiveActivity,
     streamingPreview,
     runQuickStartSearch,
+    runFreeSearch,
   };
 }

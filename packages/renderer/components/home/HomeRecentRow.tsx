@@ -11,6 +11,7 @@ import {
 import type { VideoSuggestionDownloadHistoryItem } from '../../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import * as FileIPC from '../../ipc/file';
 import { colors } from '../../styles';
+import { isLocalRecentItem } from './home-recent';
 
 const section = css`
   width: 100%;
@@ -238,6 +239,12 @@ export default function HomeRecentRow({
         text: t('input.videoSuggestion.downloadAgain', 'Download again'),
       };
     }
+    if (subtitles?.missing && isLocalRecentItem(item)) {
+      return {
+        ready: false,
+        text: t('home.recentLocalMissing', 'File moved or deleted'),
+      };
+    }
     if (
       subtitles?.ready &&
       subtitles.language &&
@@ -267,7 +274,12 @@ export default function HomeRecentRow({
         text: t('home.recentSubtitlesReadyGeneric', 'Subtitles ready'),
       };
     }
-    return { ready: false, text: t('home.recentDownloaded', 'Downloaded') };
+    return {
+      ready: false,
+      text: isLocalRecentItem(item)
+        ? t('home.recentLocalFile', 'On this computer')
+        : t('home.recentDownloaded', 'Downloaded'),
+    };
   };
 
   return (

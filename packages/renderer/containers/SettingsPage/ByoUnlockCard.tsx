@@ -20,6 +20,7 @@ import {
   hasAnyByoEntitlementUnlocked,
   hasFullByoBundleUnlocked,
 } from '../../state/byo-runtime';
+import { localizeErrorOr } from '../../utils/userFacingError';
 import * as SystemIPC from '../../ipc/system';
 
 const BYO_UNLOCK_USD_PRICE_LABEL = 'US$10';
@@ -142,7 +143,13 @@ export default function ByoUnlockCard() {
 
       {entitlementsError && (
         <div className={settingsDangerCalloutStyles}>
-          <span className={settingsDangerTextStyles}>{entitlementsError}</span>
+          <span className={settingsDangerTextStyles}>
+            {localizeErrorOr(entitlementsError, t as any, {
+              key: 'settings.byoOpenAi.entitlementsLoadFailed',
+              defaultText:
+                'Your unlock status couldn’t be checked. Check your connection and retry.',
+            })}
+          </span>
           <button
             onClick={() => refreshEntitlements()}
             className={settingsInlineLinkButtonStyles}
@@ -183,7 +190,13 @@ export default function ByoUnlockCard() {
       )}
 
       {unlockError && (
-        <p className={settingsStatusErrorStyles}>{unlockError}</p>
+        <p className={settingsStatusErrorStyles}>
+          {localizeErrorOr(unlockError, t as any, {
+            key: 'settings.byoOpenAi.unlockFailed',
+            defaultText:
+              'Checkout couldn’t start. Check your connection and try again.',
+          })}
+        </p>
       )}
       <ApiKeyGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
     </section>

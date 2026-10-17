@@ -8,13 +8,13 @@ import { runWithConcurrencySerialFallback, throwIfAborted } from '../utils.js';
 import {
   isTranslationAdmissionLimitError,
   isProviderRateLimitError,
+  shouldRetrySerialBatch,
 } from '../errors.js';
 import {
   TRANSLATION_CONCURRENCY,
   ADMISSION_RETRY_DELAY_MS,
   ADMISSION_RETRY_MAX_ATTEMPTS,
   ADMISSION_RETRY_MAX_TOTAL_MS,
-  CREDIT_PRESSURE_RETRY_MAX_ATTEMPTS,
 } from '../constants.js';
 
 export async function translatePass({
@@ -93,24 +93,11 @@ export async function translatePass({
         isTranslationAdmissionLimitError(err) ||
         isProviderRateLimitError(err)) &&
       !signal?.aborted,
-    // Admission 429s and provider rate limits clear with time. A serial
-    // 402 gets a few retries too — another tab's in-flight reservations can
-    // cause transient pressure — before failing as genuine exhaustion.
+    // Admission 429s and provider rate limits clear with time. A 402 in the
+    // serial phase is final: retrying it only keeps the user waiting before
+    // the credits dialog.
     serialRetry: {
-      shouldRetry: (err, attemptsSoFar) => {
-        if (signal?.aborted) return false;
-        if (
-          isTranslationAdmissionLimitError(err) ||
-          isProviderRateLimitError(err)
-        ) {
-          return true;
-        }
-        return (
-          String((err as any)?.message || err || '').includes(
-            ERROR_CODES.INSUFFICIENT_CREDITS
-          ) && attemptsSoFar < CREDIT_PRESSURE_RETRY_MAX_ATTEMPTS
-        );
-      },
+      shouldRetry: err => shouldRetrySerialBatch(err, signal),
       delayMs: ADMISSION_RETRY_DELAY_MS,
       // Honor a server-advertised Retry-After when present.
       delayMsFor: err => {

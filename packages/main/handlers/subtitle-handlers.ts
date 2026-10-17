@@ -63,6 +63,7 @@ import {
 import { transcribePass } from '../services/subtitle-processing/pipeline/transcribe-pass.js';
 import { generateTranscriptSummary } from '../services/subtitle-processing/summarizer.js';
 import { generateDubbedMedia } from '../services/dubber.js';
+import { describeTaskFailure } from '../utils/task-failure.js';
 import { synthesizeDub as synthesizeDubAi } from '../services/ai-provider.js';
 import {
   buildVerticalReframeFilter,
@@ -447,35 +448,27 @@ export async function handleGenerateSubtitles(
   } catch (error: any) {
     log.error(`[${operationId}] Error generating subtitles:`, error);
 
-    const errorMsg = String(error?.message || '');
-    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
-    const isCancel =
-      controller.signal.aborted ||
-      error.name === 'AbortError' ||
-      error.message === 'Operation cancelled' ||
-      creditCancel;
-    if (tempVideoPath && !isCancel) {
+    const failure = describeTaskFailure(error, {
+      aborted: controller.signal.aborted,
+    });
+    if (tempVideoPath && !failure.cancelled) {
       await cleanupTempFile(tempVideoPath);
     }
 
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
-      stage: isCancel ? 'Process cancelled' : `Error: ${error.message}`,
-      error: creditCancel
-        ? ERROR_CODES.INSUFFICIENT_CREDITS
-        : isCancel
-          ? undefined
-          : error.message || String(error),
-      cancelled: isCancel,
+      stage: failure.stage,
+      error: failure.error,
+      cancelled: failure.cancelled,
       operationId,
     });
     const errorResult = {
       success: false,
-      cancelled: isCancel,
-      blockedReason: creditCancel
+      cancelled: failure.cancelled,
+      blockedReason: failure.insufficientCredits
         ? ('insufficient_credits' as const)
         : undefined,
-      error: !isCancel ? error.message || String(error) : undefined,
+      error: failure.error,
       operationId,
     };
     void trackTranscriptionFunnelEvent(
@@ -590,24 +583,14 @@ export async function handleTranslateSubtitles(
       operationId,
     };
   } catch (error: any) {
-    const errorMsg = String(error?.message || '');
-    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
-    const isCancel =
-      error?.name === 'AbortError' ||
-      error?.message === 'Operation cancelled' ||
-      creditCancel;
+    const failure = describeTaskFailure(error);
     // Emit a final progress event so renderer updates status appropriately
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
-        stage: isCancel
-          ? 'Process cancelled'
-          : `Error: ${error?.message || String(error)}`,
-        error: creditCancel
-          ? ERROR_CODES.INSUFFICIENT_CREDITS
-          : isCancel
-            ? undefined
-            : error?.message || String(error),
+        stage: failure.stage,
+        error: failure.error,
+        cancelled: failure.cancelled,
         operationId,
       });
     } catch (cbErr: any) {
@@ -617,9 +600,11 @@ export async function handleTranslateSubtitles(
     }
     return {
       success: false,
-      cancelled: isCancel,
-      blockedReason: creditCancel ? 'insufficient_credits' : undefined,
-      error: isCancel ? undefined : error?.message || String(error),
+      cancelled: failure.cancelled,
+      blockedReason: failure.insufficientCredits
+        ? 'insufficient_credits'
+        : undefined,
+      error: failure.error,
       operationId,
     };
   } finally {
@@ -745,35 +730,22 @@ export async function handleDubSubtitles(
     void trackDubbingFunnelEvent(classifyDubbingOutcome(successResult));
     return successResult;
   } catch (error: any) {
-    const errorMsg = String(error?.message || '');
-    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
-    const isCancel =
-      controller.signal.aborted ||
-      error?.name === 'AbortError' ||
-      error?.message === 'Operation cancelled' ||
-      creditCancel;
+    const failure = describeTaskFailure(error, {
+      aborted: controller.signal.aborted,
+    });
 
     progressCallback({
       percent: 100,
-      stage: isCancel
-        ? 'Process cancelled'
-        : `Error: ${error?.message || String(error)}`,
+      stage: failure.stage,
       operationId,
-      error: creditCancel
-        ? ERROR_CODES.INSUFFICIENT_CREDITS
-        : isCancel
-          ? undefined
-          : error?.message || String(error),
+      error: failure.error,
+      cancelled: failure.cancelled,
     });
 
     const errorResult = {
       success: false,
-      cancelled: isCancel,
-      error: creditCancel
-        ? ERROR_CODES.INSUFFICIENT_CREDITS
-        : isCancel
-          ? undefined
-          : error?.message || String(error),
+      cancelled: failure.cancelled,
+      error: failure.error,
       operationId,
     };
     void trackDubbingFunnelEvent(classifyDubbingOutcome(errorResult));
@@ -1912,21 +1884,13 @@ export async function handleTranslateOneLine(
 
     return { success: true, translation, operationId };
   } catch (error: any) {
-    const errorMsg = String(error?.message || '');
-    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
-    const isCancel =
-      error?.name === 'AbortError' ||
-      error?.message === 'Operation cancelled' ||
-      creditCancel;
+    const failure = describeTaskFailure(error);
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
-        stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
-        error: creditCancel
-          ? ERROR_CODES.INSUFFICIENT_CREDITS
-          : isCancel
-            ? undefined
-            : error?.message || String(error),
+        stage: failure.stage,
+        error: failure.error,
+        cancelled: failure.cancelled,
         operationId,
       });
     } catch (cbErr: any) {
@@ -1936,8 +1900,8 @@ export async function handleTranslateOneLine(
     }
     return {
       success: false,
-      cancelled: isCancel,
-      error: isCancel ? undefined : error?.message || String(error),
+      cancelled: failure.cancelled,
+      error: failure.error,
       operationId,
     };
   } finally {
@@ -2025,8 +1989,11 @@ export async function handleTranscribeOneLine(
         const mapped = Math.min(95, Math.max(35, p.percent));
         // Do NOT forward partialResult for one-line transcribe to avoid replacing the entire store
         event.sender.send('generate-subtitles-progress', {
-          percent: mapped,
+          // Terminal failures keep their reason so the renderer can say why.
+          percent: p.error || p.cancelled ? p.percent : mapped,
           stage: p.stage,
+          error: p.error,
+          cancelled: p.cancelled,
           current: p.current,
           total: p.total,
           operationId,
@@ -2060,21 +2027,13 @@ export async function handleTranscribeOneLine(
       operationId,
     };
   } catch (error: any) {
-    const errorMsg = String(error?.message || '');
-    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
-    const isCancel =
-      error?.name === 'AbortError' ||
-      error?.message === 'Operation cancelled' ||
-      creditCancel;
+    const failure = describeTaskFailure(error);
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
-        stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
-        error: creditCancel
-          ? ERROR_CODES.INSUFFICIENT_CREDITS
-          : isCancel
-            ? undefined
-            : error?.message || String(error),
+        stage: failure.stage,
+        error: failure.error,
+        cancelled: failure.cancelled,
         operationId,
       });
     } catch (cbErr: any) {
@@ -2084,8 +2043,8 @@ export async function handleTranscribeOneLine(
     }
     return {
       success: false,
-      cancelled: isCancel,
-      error: isCancel ? undefined : error?.message || String(error),
+      cancelled: failure.cancelled,
+      error: failure.error,
       operationId,
     };
   } finally {
@@ -2180,8 +2139,11 @@ export async function handleTranscribeRemaining(
         const mapped = Math.min(95, Math.max(35, p.percent));
         // Forward partialResult with an absolute time offset so renderer can append tail incrementally
         event.sender.send('generate-subtitles-progress', {
-          percent: mapped,
+          // Terminal failures keep their reason so the renderer can say why.
+          percent: p.error || p.cancelled ? p.percent : mapped,
           stage: p.stage,
+          error: p.error,
+          cancelled: p.cancelled,
           current: p.current,
           total: p.total,
           partialResult: (p as any).partialResult,
@@ -2202,28 +2164,20 @@ export async function handleTranscribeRemaining(
 
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
-      stage: 'Completed',
+      stage: '__i18n__:completed',
       operationId,
     });
     return { success: true, segments: segsOut, operationId };
   } catch (error: any) {
-    const errorMsg = String(error?.message || '');
-    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
-    const isCancel =
-      error?.name === 'AbortError' ||
-      error?.message === 'Operation cancelled' ||
-      creditCancel;
+    const failure = describeTaskFailure(error, {
+      aborted: controller.signal.aborted,
+    });
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
-        stage: isCancel
-          ? 'Process cancelled'
-          : `Error: ${error?.message || String(error)}`,
-        error: creditCancel
-          ? ERROR_CODES.INSUFFICIENT_CREDITS
-          : isCancel
-            ? undefined
-            : error?.message || String(error),
+        stage: failure.stage,
+        error: failure.error,
+        cancelled: failure.cancelled,
         operationId,
       });
     } catch (cbErr: any) {
@@ -2233,8 +2187,8 @@ export async function handleTranscribeRemaining(
     }
     return {
       success: false,
-      cancelled: isCancel,
-      error: isCancel ? undefined : error?.message || String(error),
+      cancelled: failure.cancelled,
+      error: failure.error,
       operationId,
     };
   } finally {

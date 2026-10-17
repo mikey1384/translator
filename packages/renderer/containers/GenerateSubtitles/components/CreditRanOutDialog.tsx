@@ -24,7 +24,7 @@ export default function CreditRanOutDialog({
 }: Props) {
   const { t, i18n } = useTranslation();
   // "Ran out" only makes sense to someone who had credits. Unknown history
-  // keeps the original wording.
+  // keeps the original wording for refusals with no known task.
   const neverHadCredits = useCreditStore(
     s => s.history?.everHadCredits === false
   );
@@ -45,14 +45,89 @@ export default function CreditRanOutDialog({
   );
   const formatCredits = (value: number) => numberFormat.format(value);
 
-  const title = shortfall
-    ? t(
-        'dialogs.creditRanOut.notEnoughTitle',
-        'Not enough credits for this video'
-      )
-    : neverHadCredits
-      ? t('dialogs.creditRanOut.neverHadTitle', 'Transcription needs credits')
-      : t('dialogs.creditRanOut.title', 'Credits ran out');
+  // Worded for what the user started; a refusal is never "transcription"
+  // when they asked for a translation or a dub.
+  const task = refusal?.kind ?? 'other';
+  const taskTitle = (): string => {
+    switch (task) {
+      case 'transcription':
+        return t(
+          'dialogs.creditRanOut.task.transcription.title',
+          'Transcribing needs credits'
+        );
+      case 'translation':
+        return t(
+          'dialogs.creditRanOut.task.translation.title',
+          'Translating needs credits'
+        );
+      case 'dubbing':
+        return t(
+          'dialogs.creditRanOut.task.dubbing.title',
+          'Dubbing needs credits'
+        );
+      case 'summary':
+        return t(
+          'dialogs.creditRanOut.task.summary.title',
+          'The summary needs credits'
+        );
+      case 'videoSearch':
+        return t(
+          'dialogs.creditRanOut.task.videoSearch.title',
+          'AI video search needs credits'
+        );
+      default:
+        return neverHadCredits
+          ? t('dialogs.creditRanOut.task.other.title', 'This needs credits')
+          : t('dialogs.creditRanOut.title', 'Credits ran out');
+    }
+  };
+  const taskMessage = (): string => {
+    switch (task) {
+      case 'transcription':
+        return neverHadCredits
+          ? t(
+              'dialogs.creditRanOut.neverHadMessage',
+              'Transcription needs credits or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.'
+            )
+          : t(
+              'dialogs.creditRanOut.task.transcription.message',
+              'Your balance doesn’t cover transcribing this. Add credits, then start again. Lines already transcribed are kept.'
+            );
+      case 'translation':
+        return t(
+          'dialogs.creditRanOut.task.translation.message',
+          'Your balance doesn’t cover translating this. Add credits, then try again. Lines already translated are kept. Translating with your own Claude or Codex through Agent Control is free.'
+        );
+      case 'dubbing':
+        return t(
+          'dialogs.creditRanOut.task.dubbing.message',
+          'Your balance doesn’t cover dubbing this video. Add credits, then try again.'
+        );
+      case 'summary':
+        return t(
+          'dialogs.creditRanOut.task.summary.message',
+          'Your balance doesn’t cover the summary and highlights. Add credits, then try again.'
+        );
+      case 'videoSearch':
+        return t(
+          'dialogs.creditRanOut.task.videoSearch.message',
+          'Your balance doesn’t cover an AI video search. Add credits, then search again.'
+        );
+      default:
+        return t(
+          'dialogs.creditRanOut.message',
+          'Your AI credits have run out. Recharge in Settings, then resume where you left off.'
+        );
+    }
+  };
+
+  const title =
+    shortfall && task === 'transcription' && shortfall.requiredCredits !== null
+      ? t(
+          'dialogs.creditRanOut.notEnoughTitle',
+          'Not enough credits for this video'
+        )
+      : taskTitle();
 
   const message = shortfall
     ? shortfall.requiredCredits !== null
@@ -70,15 +145,7 @@ export default function CreditRanOutDialog({
           'This task needs more credits than your balance of {{available}}. Add credits to continue.',
           { available: formatCredits(shortfall.availableCredits) }
         )
-    : neverHadCredits
-      ? t(
-          'dialogs.creditRanOut.neverHadMessage',
-          'Transcription needs credits or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.'
-        )
-      : t(
-          'dialogs.creditRanOut.message',
-          'Your AI credits have run out. Recharge in Settings, then resume where you left off.'
-        );
+    : taskMessage();
 
   return (
     <Modal

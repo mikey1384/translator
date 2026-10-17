@@ -1,16 +1,12 @@
 import { parseSrt } from '../../shared/helpers';
-import { ERROR_CODES } from '../../shared/constants';
 import * as SubtitlesIPC from '@ipc/subtitles';
 import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
 import { useUIStore } from '../state/ui-store';
-import { useAiStore } from '../state/ai-store';
 import * as SystemIPC from '@ipc/system';
 import { i18n } from '../i18n';
 import { logTask, logPhase } from '../utils/logger';
-import { openCreditRanOut } from '../state/modal-store';
-import { creditRefusalForOperation } from '../utils/creditShortfall';
-import { hasApiKeyModeActiveCoverage } from '../state/byo-runtime';
+import { handleTaskFailure } from '../utils/taskFailure';
 import {
   isCreditRefreshableOperation,
   shouldRefreshStage5CreditsForOperation,
@@ -199,17 +195,13 @@ function flush() {
       return;
     }
 
-    // If we detect credits exhaustion, trigger the global modal once
-    if (
-      typeof error === 'string' &&
-      error.includes(ERROR_CODES.INSUFFICIENT_CREDITS)
-    ) {
+    // A failed job's final packet: credit refusals open the credits dialog
+    // for the task, genuinely unexpected failures the report dialog.
+    if (terminalKind === 'failed') {
       try {
-        const s = useAiStore.getState();
-        const usingApiKey = hasApiKeyModeActiveCoverage(s);
-        if (!usingApiKey) {
-          openCreditRanOut(creditRefusalForOperation(operationId));
-        }
+        handleTaskFailure(typeof error === 'string' ? error : null, {
+          operationId,
+        });
       } catch {
         // Do nothing
       }
@@ -561,12 +553,12 @@ SubtitlesIPC.onDubProgress(progress => {
       return;
     }
 
-    if (
-      typeof error === 'string' &&
-      error.includes(ERROR_CODES.INSUFFICIENT_CREDITS)
-    ) {
+    if (terminalKind === 'failed') {
       try {
-        openCreditRanOut({ kind: 'other', transcriptionSeconds: null });
+        handleTaskFailure(typeof error === 'string' ? error : null, {
+          task: 'dubbing',
+          operationId,
+        });
       } catch {
         // Do nothing
       }

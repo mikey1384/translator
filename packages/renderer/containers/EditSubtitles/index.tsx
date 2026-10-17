@@ -21,13 +21,23 @@ import {
 } from './edit-subtitles-helpers';
 
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
+import { useFindOptions } from '../../utils/subtitleFind.js';
+import { flushPendingEdits } from '../../utils/pending-edits.js';
+import SubtitleUndoBar from './SubtitleUndoBar.js';
+import { confirmReplaceUnsavedSubtitles } from '../../utils/unsaved-subtitles.js';
+import { transcriptStopsEarlyAt } from '../../utils/transcriptCoverage.js';
 import { flashReviewedSegment, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
-import { ERROR_CODES } from '../../../shared/constants';
 import {
   resolveSubtitleRenderSpec,
   serializeSubtitleRenderSpec,
+  subtitleRenderGeometry,
 } from '../../../shared/helpers/subtitle-render-spec';
+import { exportErrorMessage } from './export-error';
+import {
+  resetExportDestination,
+  useExportStore,
+} from '../../state/export-store';
 import {
   editorEmptyActionsStyles,
   editorEmptyPrimaryButtonStyles,
@@ -56,6 +66,7 @@ import {
   useHighlightWorkflowStore,
 } from '../../state';
 import { useUrlStore } from '../../state/url-store';
+import { reportUnreadableCues } from '../../utils/subtitleImportNotice';
 
 import {
   RenderSubtitlesOptions,
@@ -74,13 +85,12 @@ import {
   saveSubtitlesAs,
 } from '../../utils/saveSubtitles';
 import { logButton, logTask, logError } from '../../utils/logger.js';
-import { getByoErrorMessage, isByoError } from '../../utils/byoErrors';
+import { resolveTaskFailure } from '../../utils/taskFailure';
 import {
   CancelledError,
   isExplicitCancellation,
 } from '../../../shared/cancelled-error';
 import {
-  getSourceVideoErrorMessage,
   getSourceVideoUnavailableMessage,
   isSourceVideoPathAccessible,
   isSourceVideoUnavailableError,
@@ -89,9 +99,12 @@ import {
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
   onSetMergeOperationId: (id: string | null) => void;
-  onStartPngRenderRequest: (
-    opts: RenderSubtitlesOptions
-  ) => Promise<{ success: boolean; error?: string; cancelled?: boolean }>;
+  onStartPngRenderRequest: (opts: RenderSubtitlesOptions) => Promise<{
+    success: boolean;
+    error?: string;
+    cancelled?: boolean;
+    outputPath?: string;
+  }>;
   editorRef?: React.RefObject<{
     scrollToCurrentSubtitle: () => void;
     scrollToSubtitleIndex: (idx: number) => void;
@@ -111,6 +124,8 @@ export default function EditSubtitles({
   inWorkspace = false,
 }: EditSubtitlesProps) {
   const searchText = useUIStore(s => s.searchText);
+  const findMatchCase = useFindOptions(s => s.matchCase);
+  const findWholeWord = useFindOptions(s => s.wholeWord);
   const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
   const navTick = useUIStore(s => s.navTick);
   const videoPath = useVideoStore(s => s.path);
@@ -207,11 +222,20 @@ export default function EditSubtitles({
   }, [editorRef, scrollToCurrentSubtitle, scrollToSubtitleIndex]);
 
   useEffect(() => {
-    const local = collectMatchIndices(subtitles, searchText);
+    const local = collectMatchIndices(subtitles, searchText, {
+      matchCase: findMatchCase,
+      wholeWord: findWholeWord,
+    });
     if (!sameArray(useUIStore.getState().matchedIndices, local)) {
       useUIStore.getState().setMatchedIndices(local);
     }
-  }, [searchText, subtitleDisplayMode, subtitles]);
+  }, [
+    searchText,
+    subtitleDisplayMode,
+    subtitles,
+    findMatchCase,
+    findWholeWord,
+  ]);
 
   useEffect(() => {
     const { matchedIndices, activeMatchIndex } = useUIStore.getState();
@@ -281,8 +305,10 @@ export default function EditSubtitles({
   const canContinueTranscribing =
     Boolean(videoPath) &&
     hasSubtitles &&
-    typeof videoDuration === 'number' &&
-    videoDuration - (subtitles[subtitles.length - 1]?.end ?? 0) >= 60;
+    transcriptStopsEarlyAt({
+      durationSecs: videoDuration,
+      lastEndSecs: subtitles[subtitles.length - 1]?.end ?? 0,
+    }) !== null;
   const workspaceModeLabel =
     subtitleDisplayMode === 'original'
       ? t('editSubtitles.workspace.originalLabel', 'Original')
@@ -312,6 +338,7 @@ export default function EditSubtitles({
     handleSaveEditedSrtAs,
     handleMerge,
     handleTranslateAll,
+    handleContinueTranscribing,
     handleLoadSrtLocal,
     handleMountVideoForSubs,
   });
@@ -320,6 +347,7 @@ export default function EditSubtitles({
     handleSaveEditedSrtAs,
     handleMerge,
     handleTranslateAll,
+    handleContinueTranscribing,
     handleLoadSrtLocal,
     handleMountVideoForSubs,
   };
@@ -329,7 +357,10 @@ export default function EditSubtitles({
       saveAs: () => latestHandlers.current.handleSaveEditedSrtAs(),
       merge: () => void latestHandlers.current.handleMerge(),
       translateAll: () => void latestHandlers.current.handleTranslateAll(),
-      loadSrt: () => void latestHandlers.current.handleLoadSrtLocal(),
+      continueTranscribing: () =>
+        void latestHandlers.current.handleContinueTranscribing(),
+      loadSrt: filePath =>
+        void latestHandlers.current.handleLoadSrtLocal(filePath),
       mountVideo: () => void latestHandlers.current.handleMountVideoForSubs(),
     });
     return () => useWorkspaceActions.getState().registerEditor(null);
@@ -545,6 +576,7 @@ export default function EditSubtitles({
               searchText={searchText}
               affectedRows={affectedRows}
             />
+            <SubtitleUndoBar />
           </div>
         </>
       )}
@@ -654,24 +686,21 @@ export default function EditSubtitles({
       const didFail =
         cancelled || result?.success === false || errorMsg.length > 0;
       if (didFail) {
-        const sourceVideoError = getSourceVideoErrorMessage(errorMsg);
-        const byoError = isByoError(errorMsg)
-          ? getByoErrorMessage(errorMsg)
-          : '';
-        const friendlyError = cancelled
-          ? t('generateSubtitles.status.cancelled', 'Cancelled')
-          : sourceVideoError ||
-            byoError ||
-            errorMsg ||
-            t('generateSubtitles.status.error', 'Error');
+        // Credits refused: the credits dialog, never the report dialog.
+        const failure = resolveTaskFailure({
+          error: errorMsg,
+          cancelled,
+          operationId,
+          task: 'transcription',
+        });
         useTaskStore.getState().setTranscription({
-          stage: friendlyError,
-          percent: cancelled ? 0 : 100,
+          stage: failure.stage,
+          percent: failure.cancelled ? 0 : 100,
           inProgress: false,
           isCompleted: false,
         });
-        if (!cancelled) {
-          useUrlStore.getState().setOperationError(friendlyError);
+        if (failure.banner) {
+          useUrlStore.getState().setOperationError(failure.banner);
         }
         return;
       }
@@ -694,21 +723,21 @@ export default function EditSubtitles({
       }
     } catch (err) {
       console.error('[EditSubtitles] continue transcribing error:', err);
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      const friendlyError = isSourceVideoUnavailableError(errorMsg)
-        ? getSourceVideoUnavailableMessage()
-        : isByoError(errorMsg)
-          ? getByoErrorMessage(errorMsg)
-          : errorMsg || t('generateSubtitles.status.error', 'Error');
+      const failure = resolveTaskFailure({
+        error: err,
+        task: 'transcription',
+      });
       // Surface error state to progress UI
       try {
         useTaskStore.getState().setTranscription({
-          stage: friendlyError,
+          stage: failure.stage,
           percent: 100,
           inProgress: false,
           isCompleted: false,
         });
-        useUrlStore.getState().setOperationError(friendlyError);
+        if (failure.banner) {
+          useUrlStore.getState().setOperationError(failure.banner);
+        }
       } catch {
         // Do nothing
       }
@@ -736,6 +765,13 @@ export default function EditSubtitles({
 
   async function handleMerge() {
     if (isExportLocked) return;
+    // Export exactly what the editor shows, including a keystroke that is
+    // still waiting for its debounce.
+    flushPendingEdits();
+    const subtitles = (() => {
+      const { order, segments } = useSubStore.getState();
+      return order.map(id => segments[id]);
+    })();
     // Guard against double-clicks / re-entrancy. The merge button is disabled
     // using merge state, but we also do an async disk-space preflight before
     // `startMerge()` runs, so we need a synchronous lock too.
@@ -744,11 +780,17 @@ export default function EditSubtitles({
 
     let opId: string | null = null;
     let ok = false;
+    // Errors show in the workspace too: the editor list is often hidden.
+    const showExportError = (message: string) => {
+      setSaveError(message);
+      useExportStore.getState().setOutcome({ status: 'error', message });
+    };
     try {
       logButton('merge_start');
       setSaveError('');
+      useExportStore.getState().setOutcome({ status: 'idle' });
       if (!videoPath) {
-        setSaveError(t('common.error.noSourceVideo'));
+        showExportError(t('common.error.noSourceVideo'));
         try {
           logError('merge', 'no_source_video');
         } catch {
@@ -758,13 +800,13 @@ export default function EditSubtitles({
       }
       if (!(await isSourceVideoPathAccessible(videoPath))) {
         const message = getSourceVideoUnavailableMessage();
-        setSaveError(message);
+        showExportError(message);
         setMergeStage(message);
         useUrlStore.getState().setOperationError(message);
         return;
       }
       if (subtitles.length === 0) {
-        setSaveError(t('common.error.noSubtitlesLoaded'));
+        showExportError(t('common.error.noSubtitlesLoaded'));
         try {
           logError('merge', 'no_subtitles_loaded');
         } catch {
@@ -779,7 +821,7 @@ export default function EditSubtitles({
         if (!meta?.height) missing.push('height');
         if (!meta?.frameRate) missing.push('frame rate');
         if (missing.length) {
-          setSaveError(
+          showExportError(
             t('common.error.missingVideoMetadata', {
               missing: missing.join(', '),
             })
@@ -864,30 +906,33 @@ export default function EditSubtitles({
         displayHeightPx: meta?.displayHeight ?? meta?.height,
         isAudioOnly,
       });
-      const fontSizePx = subtitleRenderSpec.outputFontSizePx;
-
+      const exportState = useExportStore.getState();
       const opts: RenderSubtitlesOptions = {
         operationId: opId,
         srtContent,
         subtitleSegments: subtitles,
-        outputMode: subtitleDisplayMode,
         outputDir: '/placeholder/output/dir',
         videoDuration: meta?.duration ?? 0,
-        videoWidth: meta?.width ?? 1280,
-        videoHeight: meta?.height ?? 720,
-        displayWidth: meta?.displayWidth ?? meta?.width ?? 1280,
-        displayHeight: meta?.displayHeight ?? meta?.height ?? 720,
+        // Geometry comes from the spec so the request always matches it.
+        ...subtitleRenderGeometry(subtitleRenderSpec),
         videoRotationDeg: meta?.rotation ?? 0,
         frameRate: Number(meta?.frameRate ?? 30),
         originalVideoPath: videoPath,
-        fontSizePx,
-        stylePreset: subtitleStyle,
         subtitleRenderSpec: serializeSubtitleRenderSpec(subtitleRenderSpec),
-        overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
+        exportDestination:
+          exportState.forVideo === videoPath
+            ? exportState.destination
+            : { mode: 'default' },
       };
 
       const res = await onStartPngRenderRequest(opts);
       ok = !!res?.success;
+      if (ok && res.outputPath) {
+        resetExportDestination();
+        useExportStore
+          .getState()
+          .setOutcome({ status: 'success', outputPath: res.outputPath });
+      }
 
       // Defensive: some callers may return {success:false} instead of throwing.
       if (!ok) {
@@ -899,20 +944,18 @@ export default function EditSubtitles({
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       const cancelled = isExplicitCancellation(err);
-      const isDiskFull =
-        errorMsg === ERROR_CODES.INSUFFICIENT_DISK_SPACE ||
-        /\bENOSPC\b/i.test(errorMsg) ||
-        /no space left on device/i.test(errorMsg) ||
-        /disk quota exceeded/i.test(errorMsg);
       const friendlyError = cancelled
         ? t('generateSubtitles.status.cancelled', 'Cancelled')
-        : isDiskFull
-          ? t('common.error.insufficientDiskSpace')
-          : isSourceVideoUnavailableError(errorMsg)
-            ? getSourceVideoUnavailableMessage()
-            : errorMsg || t('generateSubtitles.status.error', 'Error');
+        : exportErrorMessage(errorMsg, t, {
+            isUnavailable: isSourceVideoUnavailableError,
+            message: getSourceVideoUnavailableMessage,
+          });
 
-      setSaveError(friendlyError);
+      if (cancelled) {
+        setSaveError('');
+      } else {
+        showExportError(friendlyError);
+      }
       setMergeStage(friendlyError);
       try {
         logError('merge', err as any, { operationId: opId || undefined });
@@ -935,15 +978,17 @@ export default function EditSubtitles({
     }
   }
 
-  async function handleLoadSrtLocal() {
+  async function handleLoadSrtLocal(droppedPath?: unknown) {
     if (isSourceContextLocked) return;
+    // Also bound to buttons, which pass a click event, not a path.
+    const filePath = typeof droppedPath === 'string' ? droppedPath : undefined;
     try {
       logButton('choose_srt_from_device');
     } catch {
       // Do nothing
     }
     setSaveError('');
-    const res = await openSubtitleWithElectron();
+    const res = await openSubtitleWithElectron({ filePath });
     if (res.error && !res.cancelled) {
       setSaveError(res.error);
       try {
@@ -953,6 +998,7 @@ export default function EditSubtitles({
       }
       return;
     }
+    if (res.segments && !(await confirmReplaceUnsavedSubtitles())) return;
     if (res.segments) {
       useSubStore
         .getState()
@@ -971,6 +1017,7 @@ export default function EditSubtitles({
         mode: res.fileMode ?? null,
         role: res.fileRole ?? 'import',
       });
+      reportUnreadableCues(res.unreadableCues);
       // Reset the 'Transcription Complete' state when user mounts a different SRT from disk
       try {
         useTaskStore.getState().setTranscription({

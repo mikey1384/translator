@@ -49,6 +49,11 @@ export function translateTranscriptionStageLabel(
       const total = parseInt(parts[4], 10) || end;
       return t('progress.reviewingRange', { start, end, total });
     }
+    case 'reviewing_slow': {
+      const done = parseInt(parts[2], 10) || 0;
+      const total = parseInt(parts[3], 10) || 0;
+      return t('progress.reviewingSlow', { done, total });
+    }
     case 'beginning_review':
       return t('progress.beginningReview');
     case 'starting':
@@ -98,6 +103,8 @@ export function translateTranscriptionStageLabel(
       return t('progress.listening', 'Listening to the video…');
     case 'error':
       return t('progress.error');
+    case 'insufficient_credits':
+      return t('progress.legacy.insufficientCredits', 'Not enough credits');
     default:
       return stage;
   }

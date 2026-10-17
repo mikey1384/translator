@@ -7,7 +7,12 @@ import {
   resolveSubtitleRenderTheme,
   subtitleLineBoxStyleToCssText,
 } from './subtitle-style-util.js';
-import { resolveSubtitleRenderSpec } from './subtitle-render-spec.js';
+import {
+  parseSubtitleRenderSpec,
+  resolveSubtitleRenderSpec,
+  serializeSubtitleRenderSpec,
+  subtitleRenderGeometry,
+} from './subtitle-render-spec.js';
 
 for (const isMultiLine of [false, true]) {
   test(`preview and master share LineBox semantics (multiline=${isMultiLine})`, () => {
@@ -107,4 +112,45 @@ test('portrait short-form tuning is untouched by landscape tuning', () => {
   assert.equal(theme.lineBoxBackgroundColor, 'rgba(12, 14, 18, 0.88)');
   assert.equal(theme.lineBoxPadding, '4px 14px 5px 14px');
   assert.match(theme.fontFamily, /^'Pretendard Variable'/);
+});
+
+test('audio-only render geometry matches its own spec', () => {
+  const spec = resolveSubtitleRenderSpec({
+    displayMode: 'original',
+    stylePreset: 'Default',
+    baseFontSizePx: 32,
+    videoWidthPx: 0,
+    videoHeightPx: 0,
+    isAudioOnly: true,
+  });
+  const geometry = subtitleRenderGeometry(spec);
+  const parsed = parseSubtitleRenderSpec(serializeSubtitleRenderSpec(spec));
+  assert.equal(geometry.videoWidth, parsed.videoWidthPx);
+  assert.equal(geometry.videoHeight, parsed.videoHeightPx);
+  assert.equal(geometry.displayWidth, parsed.displayWidthPx);
+  assert.equal(geometry.displayHeight, parsed.displayHeightPx);
+  assert.equal(geometry.fontSizePx, parsed.outputFontSizePx);
+  assert.equal(geometry.overlayMode, 'blackVideo');
+  assert.equal(geometry.displayWidth, 1280);
+  assert.equal(geometry.displayHeight, 720);
+});
+
+test('portrait text is smaller than the raw height-scaled size', () => {
+  const spec = resolveSubtitleRenderSpec({
+    displayMode: 'dual',
+    stylePreset: 'Cinema',
+    baseFontSizePx: 38,
+    videoWidthPx: 720,
+    videoHeightPx: 1280,
+  });
+  const theme = resolveSubtitleRenderTheme({
+    displayFontSize: spec.outputFontSizePx,
+    stylePreset: 'Cinema',
+    isMultiLine: true,
+    videoWidthPx: 720,
+    videoHeightPx: 1280,
+  });
+  assert.equal(spec.outputFontSizePx, 68);
+  // 68 × 1.08 × 0.72 ≈ 53px on a 720px-wide frame (was 73px).
+  assert.ok(Math.abs(theme.fontSizePx - 52.88) < 0.01, `${theme.fontSizePx}`);
 });

@@ -1,13 +1,22 @@
 import {
+  app,
   BrowserWindow,
   WebContentsView,
   WebContents,
+  dialog,
   ipcMain,
   powerMonitor,
 } from 'electron';
 import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import { registerAppTabProviders } from './utils/window.js';
+import { newTabShortcutLabel } from './app-menu.js';
+import { getUiLanguage, getUiT, isRtlLanguage } from './utils/ui-language.js';
+import {
+  buildCloseGuardPrompt,
+  needsCloseGuard,
+  type CloseGuardScope,
+} from './close-guard.js';
 
 export const TAB_BAR_HEIGHT = 40;
 
@@ -16,6 +25,10 @@ interface TabStatus {
   percent: number | null;
   running: boolean;
   badge: 'done' | 'error' | null;
+  /** Subtitle edits no save has captured yet. */
+  unsaved: boolean;
+  /** What the running job is ('translation', 'export', …), for the prompt. */
+  job: string | null;
 }
 
 interface Tab {
@@ -37,6 +50,8 @@ interface TabManagerOptions {
   onTabClosed?: (closedWebContentsId: number) => void;
   /** Called for a renderer termination before the failed tab is closed. */
   onCriticalFailure?: (reason: string) => void;
+  /** True while the app is already quitting past the close guard (update install, confirmed quit). */
+  bypassCloseGuard?: () => boolean;
 }
 
 let win: BrowserWindow | null = null;
@@ -60,6 +75,52 @@ function shellWebContents(): WebContents | null {
   return win && !win.isDestroyed() && !win.webContents.isDestroyed()
     ? win.webContents
     : null;
+}
+
+// Read by electron-context-menu each time a menu opens, so updating the
+// object in place relabels every tab's right-click menu.
+const contextMenuLabels: Record<string, string> = {};
+
+export function setContextMenuLabels(labels: Record<string, string>): void {
+  Object.assign(contextMenuLabels, labels);
+}
+
+interface ShellStrings {
+  lang: string;
+  dir: 'ltr' | 'rtl';
+  newTab: string;
+  newTabButton: string;
+  closeTab: string;
+}
+
+let shellStrings: ShellStrings | null = null;
+
+function pushStringsToShell(): void {
+  const wc = shellWebContents();
+  if (!wc || !shellStrings) return;
+  wc.send('tabs:i18n', shellStrings);
+}
+
+/** Translate the tab strip (a separate page) into the current UI language. */
+export async function refreshShellStrings(): Promise<void> {
+  try {
+    const lang = getUiLanguage();
+    const t = await getUiT();
+    shellStrings = {
+      lang,
+      dir: isRtlLanguage(lang) ? 'rtl' : 'ltr',
+      newTab: t('tabs.newTab', undefined, 'New Tab'),
+      newTabButton: t(
+        'tabs.newTabWithShortcut',
+        { shortcut: newTabShortcutLabel(process.platform) },
+        'New tab ({{shortcut}})'
+      ),
+      closeTab: t('tabs.closeTab', undefined, 'Close tab'),
+    };
+    pushStringsToShell();
+  } catch (err) {
+    log.warn('[tab-manager] Could not translate the tab strip:', err);
+  }
 }
 
 function pushStateToShell(): void {
@@ -265,7 +326,15 @@ export async function createTab({
   const tab: Tab = {
     id: nextTabId++,
     view,
-    status: { title: 'New Tab', percent: null, running: false, badge: null },
+    // An empty title shows the shell's translated "New Tab".
+    status: {
+      title: '',
+      percent: null,
+      running: false,
+      badge: null,
+      unsaved: false,
+      job: null,
+    },
     mediaPlaying: false,
     lastSurfaceRefreshAt: Date.now(),
   };
@@ -277,6 +346,7 @@ export async function createTab({
   electronContextMenu({
     window: view.webContents,
     showInspectElement: opts.isDev,
+    labels: contextMenuLabels,
   });
 
   // A file dropped outside the home drop zone must not replace the app with
@@ -378,7 +448,157 @@ export function closeTab(id: number): void {
 }
 
 export function closeActiveTab(): void {
-  if (activeTabId != null) closeTab(activeTabId);
+  if (activeTabId != null) void requestCloseTab(activeTabId);
+}
+
+// --- Close guard -----------------------------------------------------------
+// Closing a tab, the window or the app while a job runs or subtitle edits are
+// unsaved asks first, in the user's language. "Save" asks the tab's renderer
+// to save (like Cmd+S) and only closes once that worked.
+
+const tabsWithOpenPrompt = new Set<number>();
+let windowPromptOpen = false;
+let closeGuardPassed = false;
+
+function requestTabSave(tab: Tab): Promise<boolean> {
+  const wc = tab.view.webContents;
+  if (wc.isDestroyed()) return Promise.resolve(true);
+  const requestId = `${tab.id}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+  return new Promise(resolve => {
+    const cleanup = () => {
+      clearTimeout(timer);
+      ipcMain.removeListener('tab:save-before-close-result', listener);
+      wc.removeListener('destroyed', onDestroyed);
+    };
+    const listener = (
+      event: Electron.IpcMainEvent,
+      id: unknown,
+      ok: unknown
+    ) => {
+      if (event.sender.id !== wc.id || id !== requestId) return;
+      cleanup();
+      resolve(Boolean(ok));
+    };
+    const onDestroyed = () => {
+      cleanup();
+      resolve(false);
+    };
+    // Saving writes the linked .srt or the app library without a dialog, so a
+    // minute without an answer means the renderer is stuck.
+    const timer = setTimeout(() => {
+      cleanup();
+      log.warn(`[tab-manager] Tab ${tab.id} did not answer the save request.`);
+      resolve(false);
+    }, 60_000);
+    ipcMain.on('tab:save-before-close-result', listener);
+    wc.once('destroyed', onDestroyed);
+    wc.send('tab:save-before-close', requestId);
+  });
+}
+
+async function showMessage(
+  options: Electron.MessageBoxOptions
+): Promise<Electron.MessageBoxReturnValue> {
+  return win && !win.isDestroyed()
+    ? dialog.showMessageBox(win, options)
+    : dialog.showMessageBox(options);
+}
+
+async function confirmClose(
+  scope: CloseGuardScope,
+  targets: Tab[]
+): Promise<boolean> {
+  const pending = targets.filter(tab => needsCloseGuard(tab.status));
+  if (pending.length === 0) return true;
+  const t = await getUiT();
+  const untitled = t('tabs.newTab', undefined, 'New Tab');
+  const prompt = buildCloseGuardPrompt(
+    scope,
+    pending.map(tab => ({
+      ...tab.status,
+      title: tab.status.title || untitled,
+    })),
+    t,
+    app.getName()
+  );
+  if (!prompt) return true;
+  const { response } = await showMessage({
+    type: 'warning',
+    title: app.getName(),
+    message: prompt.message,
+    detail: prompt.detail,
+    buttons: prompt.buttons,
+    defaultId: prompt.defaultId,
+    cancelId: prompt.cancelId,
+    noLink: true,
+  });
+  const action = prompt.actions[response] ?? 'cancel';
+  if (action === 'cancel') return false;
+  if (action === 'close') return true;
+
+  for (const tab of pending.filter(p => p.status.unsaved)) {
+    if (await requestTabSave(tab)) continue;
+    if (tabs.includes(tab)) selectTab(tab.id);
+    await showMessage({
+      type: 'error',
+      title: app.getName(),
+      message: t(
+        'dialogs.closeGuard.saveFailed',
+        { title: tab.status.title || untitled },
+        "Couldn't save the subtitles in {{title}}, so nothing was closed. Save them from the editor, then try again."
+      ),
+      buttons: [t('dialogs.closeGuard.ok', undefined, 'OK')],
+      noLink: true,
+    });
+    return false;
+  }
+  return true;
+}
+
+/** Closes a tab after asking, when it has a running job or unsaved edits. */
+export async function requestCloseTab(id: number): Promise<void> {
+  const tab = tabs.find(t => t.id === id);
+  if (!tab || tabsWithOpenPrompt.has(id)) return;
+  if (!needsCloseGuard(tab.status)) {
+    closeTab(id);
+    return;
+  }
+  tabsWithOpenPrompt.add(id);
+  try {
+    if (tab.id !== activeTabId) selectTab(tab.id);
+    if (await confirmClose('tab', [tab])) closeTab(id);
+  } catch (err) {
+    log.error('[tab-manager] Close prompt failed; keeping the tab open:', err);
+  } finally {
+    tabsWithOpenPrompt.delete(id);
+  }
+}
+
+/** True when some tab has a running job or unsaved subtitle edits. */
+export function hasTabsNeedingCloseGuard(): boolean {
+  return tabs.some(tab => needsCloseGuard(tab.status));
+}
+
+/**
+ * Asks before the app quits or the window closes. Resolves true when it may
+ * go ahead; after that, closing doesn't ask again.
+ */
+export async function confirmCloseAllTabs(
+  scope: 'window' | 'quit'
+): Promise<boolean> {
+  if (closeGuardPassed) return true;
+  if (windowPromptOpen) return false;
+  windowPromptOpen = true;
+  try {
+    const ok = await confirmClose(scope, [...tabs]);
+    if (ok) closeGuardPassed = true;
+    return ok;
+  } catch (err) {
+    log.error('[tab-manager] Quit prompt failed; staying open:', err);
+    return false;
+  } finally {
+    windowPromptOpen = false;
+  }
 }
 
 /**
@@ -416,6 +636,8 @@ function handleStatusReport(
     percent?: unknown;
     running?: unknown;
     error?: unknown;
+    unsaved?: unknown;
+    job?: unknown;
   }
 ): void {
   const tab = tabs.find(t => t.view.webContents.id === sender.id);
@@ -425,8 +647,13 @@ function handleStatusReport(
   const title =
     typeof report.title === 'string' && report.title.trim()
       ? report.title.trim().slice(0, 80)
-      : 'New Tab';
+      : '';
   const running = Boolean(report.running);
+  const unsaved = Boolean(report.unsaved);
+  const job =
+    typeof report.job === 'string' && report.job.trim()
+      ? report.job.trim().slice(0, 32)
+      : null;
   const percent =
     running && typeof report.percent === 'number' && isFinite(report.percent)
       ? Math.max(0, Math.min(100, Math.round(report.percent)))
@@ -434,6 +661,8 @@ function handleStatusReport(
 
   tab.status.title = title;
   tab.status.running = running;
+  tab.status.unsaved = unsaved;
+  tab.status.job = running ? job : null;
   tab.status.percent = percent;
   applyBackgroundPolicy(tab);
 
@@ -465,6 +694,7 @@ export function initTabManager(options: TabManagerOptions): void {
   tabs = [];
   activeTabId = null;
   firstTabCreated = false;
+  closeGuardPassed = false;
   startWindowsSurfaceRecovery();
 
   registerAppTabProviders({
@@ -480,6 +710,17 @@ export function initTabManager(options: TabManagerOptions): void {
   win.on('focus', () => refreshActiveTabSurface('window-focus'));
   win.on('restore', () => refreshActiveTabSurface('window-restore'));
   win.on('show', () => refreshActiveTabSurface('window-show'));
+  win.on('close', event => {
+    if (closeGuardPassed || options.bypassCloseGuard?.()) return;
+    if (!hasTabsNeedingCloseGuard()) return;
+    event.preventDefault();
+    const closingWindow = win;
+    void confirmCloseAllTabs('window').then(ok => {
+      if (ok && closingWindow && !closingWindow.isDestroyed()) {
+        closingWindow.close();
+      }
+    });
+  });
   win.on('closed', () => {
     // Closing the window does NOT destroy child WebContentsView webContents —
     // without this, tab renderers (and their registered operations, whose
@@ -515,7 +756,7 @@ ipcMain.on('tabs:select', (event, id: number) => {
 
 ipcMain.on('tabs:close', (event, id: number) => {
   if (!shellOnly(event)) return;
-  closeTab(Number(id));
+  void requestCloseTab(Number(id));
 });
 
 ipcMain.on('tabs:reorder', (event, id: number, index: number) => {
@@ -525,6 +766,8 @@ ipcMain.on('tabs:reorder', (event, id: number, index: number) => {
 
 ipcMain.on('tabs:request-state', event => {
   if (!shellOnly(event)) return;
+  if (shellStrings) pushStringsToShell();
+  else void refreshShellStrings();
   pushStateToShell();
 });
 

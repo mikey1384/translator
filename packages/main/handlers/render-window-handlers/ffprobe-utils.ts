@@ -63,3 +63,63 @@ export async function probeFps(
     });
   });
 }
+
+export type MergeSourceStreams = {
+  /** First audio stream's codec, or null when there is none / unknown. */
+  audioCodec: string | null;
+  /** First video stream's bit rate (bits/s), falling back to the container's. */
+  videoBitRate: number | null;
+};
+
+/** Best effort: never throws; unknown values come back null. */
+export async function probeMergeSourceStreams(
+  file: string,
+  ffprobePath: string
+): Promise<MergeSourceStreams> {
+  const empty: MergeSourceStreams = { audioCodec: null, videoBitRate: null };
+  return await new Promise(resolve => {
+    let p: ReturnType<typeof spawn>;
+    try {
+      p = spawn(ffprobePath, [
+        '-v',
+        'error',
+        '-show_entries',
+        'stream=codec_type,codec_name,bit_rate:format=bit_rate',
+        '-of',
+        'json',
+        file,
+      ]);
+    } catch {
+      resolve(empty);
+      return;
+    }
+    let out = '';
+    p.stdout?.on('data', d => (out += d));
+    p.on('error', () => resolve(empty));
+    p.on('close', () => {
+      try {
+        const parsed = JSON.parse(out || '{}') as {
+          streams?: Array<{
+            codec_type?: string;
+            codec_name?: string;
+            bit_rate?: string;
+          }>;
+          format?: { bit_rate?: string };
+        };
+        const streams = parsed.streams ?? [];
+        const audio = streams.find(s => s.codec_type === 'audio');
+        const video = streams.find(s => s.codec_type === 'video');
+        const rate = (value?: string) => {
+          const n = Number(value);
+          return Number.isFinite(n) && n > 0 ? n : null;
+        };
+        resolve({
+          audioCodec: audio?.codec_name?.toLowerCase() ?? null,
+          videoBitRate: rate(video?.bit_rate) ?? rate(parsed.format?.bit_rate),
+        });
+      } catch {
+        resolve(empty);
+      }
+    });
+  });
+}

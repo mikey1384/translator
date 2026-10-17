@@ -23,6 +23,7 @@ import {
   runScribeWithRetries,
   transcriptionTooLargeError,
 } from './scribe-runner.js';
+import { describeTaskFailure } from '../../../utils/task-failure.js';
 
 /**
  * Transcribe one audio file with ElevenLabs Scribe. Transcription is
@@ -277,11 +278,13 @@ export async function transcribePass({
       error?.message || error
     );
     const isCancel = isCancellationError(error, signal);
+    const failure = describeTaskFailure(error, { aborted: isCancel });
 
     progressCallback?.({
       percent: 100,
-      stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
-      error: !isCancel ? error?.message || String(error) : undefined,
+      stage: failure.stage,
+      error: failure.error,
+      cancelled: failure.cancelled,
     });
 
     if (error instanceof SubtitleProcessingError || isCancel) {

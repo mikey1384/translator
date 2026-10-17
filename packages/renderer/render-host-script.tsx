@@ -13,14 +13,7 @@ import {
   subtitleStyleUsesLineBox,
   type SubtitleTypeface,
 } from '../shared/constants/subtitle-styles.js';
-import type {
-  SubtitleRenderPart,
-  SubtitleRenderState,
-} from '@shared-types/app';
-import {
-  getVisibleTimedSubtitleParts,
-  getVisibleTimedSubtitleText,
-} from './timed-subtitle-visibility.js';
+import type { SubtitleRenderState } from '@shared-types/app';
 
 const renderTarget = {
   width: undefined as number | undefined,
@@ -32,31 +25,6 @@ function escapeHtml(text: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-}
-
-function splitTimedPartsIntoLines(
-  parts: SubtitleRenderPart[]
-): SubtitleRenderPart[][] {
-  const lines: SubtitleRenderPart[][] = [[]];
-
-  for (const part of parts) {
-    if (part.kind === 'whitespace' && part.text.includes('\n')) {
-      const pieces = part.text.split('\n');
-      pieces.forEach((piece, index) => {
-        if (piece) {
-          lines.at(-1)!.push({ kind: 'whitespace', text: piece });
-        }
-        if (index < pieces.length - 1) {
-          lines.push([]);
-        }
-      });
-      continue;
-    }
-
-    lines.at(-1)!.push(part);
-  }
-
-  return lines;
 }
 
 function renderLineBoxLineHtml(
@@ -91,42 +59,6 @@ function renderPlainSubtitleHtml(
   }
 
   return escapeHtml(text);
-}
-
-function renderTimedPartHtml(part: SubtitleRenderPart): string {
-  if (part.kind === 'whitespace') {
-    return `<span style="white-space:pre-wrap;">${escapeHtml(part.text)}</span>`;
-  }
-
-  return `<span style="white-space:pre-wrap;font-weight:700;">${escapeHtml(part.text)}</span>`;
-}
-
-function renderTimedSubtitleHtml(
-  state: Extract<SubtitleRenderState, { mode: 'timed' }>,
-  stylePreset: SubtitleStylePresetKey,
-  renderTheme: ReturnType<typeof resolveSubtitleRenderTheme>
-): string {
-  if (!state.text.trim()) {
-    return '';
-  }
-
-  const visibleParts = getVisibleTimedSubtitleParts(state.parts);
-  if (visibleParts.length === 0) {
-    return '';
-  }
-
-  const lines = splitTimedPartsIntoLines(visibleParts);
-  const renderedLines = lines.map(line =>
-    line.map(part => renderTimedPartHtml(part)).join('')
-  );
-
-  if (subtitleStyleUsesLineBox(stylePreset)) {
-    return renderedLines
-      .map(line => renderLineBoxLineHtml(line, renderTheme))
-      .join('<br/>');
-  }
-
-  return renderedLines.join('<br/>');
 }
 
 function setSubtitleVisibility(el: HTMLElement, text: string) {
@@ -270,10 +202,11 @@ function initializeSubtitleDisplay() {
         typeface,
       });
 
-      el.innerHTML =
-        state.mode === 'timed'
-          ? renderTimedSubtitleHtml(state, stylePreset, renderTheme)
-          : renderPlainSubtitleHtml(state.text, stylePreset, renderTheme);
+      el.innerHTML = renderPlainSubtitleHtml(
+        state.text,
+        stylePreset,
+        renderTheme
+      );
 
       applyPresetStyles(el, {
         fontSizePx,
@@ -292,12 +225,7 @@ function initializeSubtitleDisplay() {
       renderWithLineState(isMultiLine);
     }
 
-    setSubtitleVisibility(
-      el,
-      state.mode === 'timed'
-        ? getVisibleTimedSubtitleText(state.parts)
-        : state.text
-    );
+    setSubtitleVisibility(el, state.text);
   };
 
   // @ts-expect-error...
@@ -313,19 +241,6 @@ function initializeSubtitleDisplay() {
     updateElementFromState({ mode: 'plain', text }, opts);
   };
 
-  // @ts-expect-error...
-  window.updateTimedSubtitle = (
-    state: Extract<SubtitleRenderState, { mode: 'timed' }>,
-    opts: {
-      stylePreset?: SubtitleStylePresetKey;
-      fontSizePx?: number;
-      videoWidthPx?: number;
-      videoHeightPx?: number;
-    } = {}
-  ) => {
-    updateElementFromState(state, opts);
-  };
-
   // @ts-expect-error provided by this isolated render host
   window.updateEditorialSubtitle = updateElementFromState;
 
@@ -333,7 +248,7 @@ function initializeSubtitleDisplay() {
   window.applySubtitlePreset = applySubtitlePreset;
 
   console.log(
-    '[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, updateTimedSubtitle, applySubtitlePreset'
+    '[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, applySubtitlePreset'
   );
 }
 

@@ -20,20 +20,28 @@ import {
   finish as registryFinish,
 } from '../../active-processes.js';
 
-import { createOperationTempDir, cleanupTempDir } from './temp-utils.js';
-import { initPuppeteer } from './puppeteer-setup.js';
 import {
-  generateSubtitleEvents,
-  generateTimedOriginalSubtitleEvents,
-  shouldUseTimedOriginalSubtitleRender,
-} from './srt-parser.js';
+  createOperationTempDir,
+  cleanupTempDir,
+  sweepStaleRenderTempDirsAtStartup,
+} from './temp-utils.js';
+import { initPuppeteer } from './puppeteer-setup.js';
+import { generateSubtitleEvents } from './srt-parser.js';
 import { parseSrt } from '../../../shared/helpers/index.js';
-import { normalizeSubtitleSegments } from '../../services/subtitle-processing/pipeline/finalize-pass.js';
-import { normalizeSegmentWordTimingsForRender } from '../../services/subtitle-processing/word-timing-normalization.js';
 import { parseSubtitleRenderSpec } from '../../../shared/helpers/subtitle-render-spec.js';
 import { generateStatePngs } from './state-generator.js';
 import { directMerge } from './ffmpeg-direct-merge.js';
-import { probeFps } from './ffprobe-utils.js';
+import { probeFps, probeMergeSourceStreams } from './ffprobe-utils.js';
+import {
+  exportBaseName,
+  forgetChosenExportPath,
+  isChosenExportPath,
+  registerChosenExportPath,
+  rememberExportDirectory,
+  resolveDefaultExportDirectory,
+  resolveDefaultExportPath,
+  uniqueExportPath,
+} from './export-destination.js';
 import { getFocusedOrMainWindow } from '../../utils/window.js';
 import { getMainT } from '../../utils/i18n.js';
 import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.js';
@@ -159,12 +167,6 @@ async function fileExists(p: string): Promise<boolean> {
   }
 }
 
-function isVerticalRender(options: RenderSubtitlesOptions): boolean {
-  const width = options.displayWidth ?? options.videoWidth;
-  const height = options.displayHeight ?? options.videoHeight;
-  return height > width;
-}
-
 async function assertOriginalVideoAccessible(
   videoPath: string,
   operationId: string
@@ -211,6 +213,25 @@ async function renameExistingFileToBackup(
   return backupPath;
 }
 
+// The user already confirmed "Replace" in the save dialog; the backup only
+// guards against a failed write, so drop it once the new file is in place.
+async function discardBackupAfterSave(
+  backupPath: string | null,
+  operationId: string
+): Promise<void> {
+  if (!backupPath) return;
+  try {
+    await fs.unlink(backupPath);
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') {
+      log.warn(
+        `[${operationId}] Could not remove replaced file backup ${backupPath}`,
+        err
+      );
+    }
+  }
+}
+
 async function restoreDestinationFromBackup({
   destinationPath,
   backupPath,
@@ -245,6 +266,7 @@ export function initializeRenderWindowHandlers({
   ffmpeg: FFmpegContext;
 }): void {
   log.info('[RenderWindowHandlers] Initialising …');
+  void sweepStaleRenderTempDirsAtStartup();
 
   async function makeBlackVideo({
     out,
@@ -432,6 +454,35 @@ export function initializeRenderWindowHandlers({
           }
         }
 
+        // The export sheet's destination is settled before rendering, so the
+        // user isn't asked at the end and a bad choice fails fast.
+        let plannedOutputPath = '';
+        if (
+          !explicitOutputPath &&
+          !options.outputToLibrary &&
+          options.exportDestination
+        ) {
+          const destination = options.exportDestination;
+          if (destination.mode === 'chosen') {
+            if (!isChosenExportPath(destination.path)) {
+              throw new Error(
+                'Export destination was not chosen in the save dialog.'
+              );
+            }
+            plannedOutputPath = path.resolve(destination.path);
+          } else {
+            plannedOutputPath = await resolveDefaultExportPath(
+              options.originalVideoPath
+            );
+          }
+          if (
+            path.resolve(plannedOutputPath) ===
+            path.resolve(options.originalVideoPath)
+          ) {
+            throw new Error('Merged output cannot overwrite the source video.');
+          }
+        }
+
         // Overlay frames are drawn in the picture's display orientation
         // (rotated phone clips are taller than their coded size).
         const { browser: br, page } = await initPuppeteer({
@@ -483,23 +534,13 @@ export function initializeRenderWindowHandlers({
         );
         options.frameRate = realFps;
 
-        // Finalize subtitles just before render: join <5s gaps and enforce >=3s per cue
-        sendProgress({ percent: 5, stage: 'Finalizing subtitles…' });
-        const parsedForFinalize =
+        // Burn in exactly what the player shows: the same cue times and the
+        // same overlap rule, no stretching or gap filling.
+        const renderSegs =
           Array.isArray(options.subtitleSegments) &&
           options.subtitleSegments.length > 0
             ? options.subtitleSegments
             : parseSrt(options.srtContent);
-        const normalizedSegs = normalizeSubtitleSegments(parsedForFinalize);
-        const renderReadySegs =
-          normalizeSegmentWordTimingsForRender(normalizedSegs);
-
-        const shouldUseTimedOriginalRender =
-          shouldUseTimedOriginalSubtitleRender({
-            segments: renderReadySegs,
-            outputMode: options.outputMode,
-            isVertical: isVerticalRender(options),
-          });
 
         const editorial = options.editorialCaptions
           ? validateHighlightEditorialPlan(
@@ -509,18 +550,12 @@ export function initializeRenderWindowHandlers({
           : undefined;
         const uniqueEventsMs = editorial
           ? editorialCaptionEvents(editorial, options.videoDuration)
-          : shouldUseTimedOriginalRender
-            ? generateTimedOriginalSubtitleEvents({
-                segments: renderReadySegs,
-                videoDuration: options.videoDuration,
-                operationId,
-              })
-            : generateSubtitleEvents({
-                segments: renderReadySegs,
-                outputMode: options.outputMode ?? 'dual',
-                videoDuration: options.videoDuration,
-                operationId,
-              });
+          : generateSubtitleEvents({
+              segments: renderSegs,
+              outputMode: options.outputMode ?? 'dual',
+              videoDuration: options.videoDuration,
+              operationId,
+            });
 
         const statePngs = await generateStatePngs({
           page,
@@ -557,7 +592,6 @@ export function initializeRenderWindowHandlers({
           `pngs_${operationPathToken}.txt`
         );
         await writeConcat({ frames: statePngs, listPath: concatListPath });
-        sendProgress({ percent: 40, stage: 'Overlay concat ready' });
 
         let videoForMerge = options.originalVideoPath;
         if (options.overlayMode === 'blackVideo') {
@@ -573,7 +607,12 @@ export function initializeRenderWindowHandlers({
             dur: options.videoDuration,
           });
         }
+        sendProgress({ percent: 12, stage: 'Overlay concat ready' });
 
+        const sourceStreams = await probeMergeSourceStreams(
+          options.originalVideoPath,
+          ffmpeg.ffprobePath
+        );
         const tempMerged = path.join(
           tempDirPath,
           `merged_${operationPathToken}.mp4`
@@ -594,6 +633,12 @@ export function initializeRenderWindowHandlers({
           progressCallback: sendProgress,
           registerProcess,
           signal: controller.signal,
+          sourceAudioCodec: sourceStreams.audioCodec,
+          sourceVideoBitRate:
+            options.overlayMode === 'blackVideo'
+              ? null
+              : sourceStreams.videoBitRate,
+          frameRate: realFps,
         });
 
         if (options.outputToLibrary === true) {
@@ -621,26 +666,94 @@ export function initializeRenderWindowHandlers({
             'Cannot show save dialog: No application window found.'
           );
         }
-        try {
-          if (win.isMinimized()) win.restore();
-          win.show();
-          win.focus();
-        } catch {
-          /* noop */
-        }
-        const baseName = path.basename(
-          options.originalVideoPath,
-          path.extname(options.originalVideoPath)
-        );
-        const suggestedName = `${baseName}-merged-${formatTimestampForFilename()}.mp4`;
+        const suggestedName = `${exportBaseName(options.originalVideoPath)}.mp4`;
+        const mainT = await getMainT(getLanguagePreference());
+
+        // The render is finished: never throw it away without asking.
+        const confirmKeepRender = async (): Promise<boolean> => {
+          const { response } = await dialog.showMessageBox(win, {
+            type: 'question',
+            title: app.getName(),
+            message: mainT(
+              'dialogs.exportDiscardConfirm',
+              undefined,
+              'Your video is ready but hasn’t been saved yet. Discard it?'
+            ),
+            buttons: [
+              mainT(
+                'dialogs.exportChooseLocationButton',
+                undefined,
+                'Choose where to save…'
+              ),
+              mainT('dialogs.exportDiscardButton', undefined, 'Discard video'),
+            ],
+            defaultId: 0,
+            cancelId: 0,
+            noLink: true,
+          });
+          return response === 0;
+        };
+        const showSaveFailed = async (target: string, error: unknown) => {
+          const code = String((error as { code?: unknown })?.code ?? '');
+          const detail =
+            code === 'EACCES' || code === 'EPERM' || code === 'EROFS'
+              ? mainT(
+                  'dialogs.exportSaveFailedPermission',
+                  undefined,
+                  'You don’t have permission to save in this folder.'
+                )
+              : code === 'ENOSPC' ||
+                  (error instanceof Error &&
+                    error.message === ERROR_CODES.INSUFFICIENT_DISK_SPACE)
+                ? mainT(
+                    'dialogs.exportSaveFailedDiskFull',
+                    undefined,
+                    'There isn’t enough free space on that drive.'
+                  )
+                : mainT(
+                    'dialogs.exportSaveFailedGeneric',
+                    undefined,
+                    'The file couldn’t be written there.'
+                  );
+          await dialog.showMessageBox(win, {
+            type: 'warning',
+            title: app.getName(),
+            message: mainT(
+              'dialogs.exportSaveFailed',
+              { folder: path.dirname(target) },
+              'Couldn’t save the video in {{folder}}.'
+            ),
+            detail,
+            buttons: [
+              mainT(
+                'common.chooseAnotherLocation',
+                undefined,
+                'Choose another location'
+              ),
+            ],
+            noLink: true,
+          });
+        };
 
         savePhaseOperations.add(operationId);
 
         let heartbeatPercent = 96;
-        let heartbeatStage = 'Waiting for save location…';
+        let heartbeatStage = 'Saving…';
         const saveHeartbeat = setInterval(() => {
           sendProgress({ percent: heartbeatPercent, stage: heartbeatStage });
         }, HEARTBEAT_INTERVAL_MS);
+
+        // Where to write without asking: the agent's explicit path, or the
+        // destination shown in the export sheet. Otherwise ask now.
+        let pendingTarget: { path: string; isDefault: boolean } | null =
+          explicitOutputPath
+            ? { path: explicitOutputPath, isDefault: false }
+            : plannedOutputPath
+              ? {
+                  path: plannedOutputPath,
+                  isDefault: options.exportDestination?.mode === 'default',
+                }
+              : null;
 
         let savedPath: string | null = null;
         try {
@@ -648,31 +761,76 @@ export function initializeRenderWindowHandlers({
           const mergedSizeBytes = srcStat.size;
           const srcDev = srcStat.dev;
 
-          sendProgress({
-            percent: 96,
-            stage: 'Choose where to save the video…',
-          });
-
           while (!savedPath) {
-            const saveDialogResult = explicitOutputPath
-              ? { canceled: false, filePath: explicitOutputPath }
-              : await dialog.showSaveDialog(win, {
-                  title: 'Save Merged Video As',
-                  defaultPath: suggestedName,
-                  filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
-                });
-            const selectedPath = saveDialogResult.filePath;
-
-            if (saveDialogResult.canceled || !selectedPath) {
-              log.warn(`[${operationId}] User cancelled "save" dialog`);
-              await fs.unlink(tempMerged).catch(() => void 0);
-              event.reply('render-subtitles-result', {
-                operationId,
-                success: false,
-                error: 'Cancelled',
-                cancelled: true,
+            let selectedPath: string;
+            if (pendingTarget) {
+              selectedPath = pendingTarget.path;
+              // A default name taken while rendering: never replace a file
+              // the user didn't pick.
+              if (pendingTarget.isDefault && (await fileExists(selectedPath))) {
+                selectedPath = await uniqueExportPath(
+                  path.dirname(selectedPath),
+                  path.basename(selectedPath, path.extname(selectedPath))
+                );
+              }
+              pendingTarget = null;
+            } else {
+              heartbeatPercent = 96;
+              heartbeatStage = 'Choose where to save the video…';
+              sendProgress({
+                percent: heartbeatPercent,
+                stage: heartbeatStage,
               });
-              return;
+              try {
+                if (win.isMinimized()) win.restore();
+                win.show();
+                win.focus();
+              } catch {
+                /* noop */
+              }
+              const saveDialogResult = await dialog.showSaveDialog(win, {
+                title: mainT(
+                  'dialogs.exportSaveDialogTitle',
+                  undefined,
+                  'Save video as'
+                ),
+                defaultPath: path.join(
+                  await resolveDefaultExportDirectory(
+                    options.originalVideoPath
+                  ),
+                  suggestedName
+                ),
+                filters: [
+                  {
+                    name: mainT(
+                      'dialogs.exportVideoFilterName',
+                      undefined,
+                      'MP4 video'
+                    ),
+                    extensions: ['mp4'],
+                  },
+                ],
+              });
+              if (saveDialogResult.canceled || !saveDialogResult.filePath) {
+                if (await confirmKeepRender()) continue;
+                log.warn(`[${operationId}] User discarded the finished render`);
+                await fs.unlink(tempMerged).catch(() => void 0);
+                event.reply('render-subtitles-result', {
+                  operationId,
+                  success: false,
+                  error: 'Cancelled',
+                  cancelled: true,
+                });
+                return;
+              }
+              selectedPath = saveDialogResult.filePath;
+              if (
+                path.resolve(selectedPath) ===
+                path.resolve(options.originalVideoPath)
+              ) {
+                await showSaveFailed(selectedPath, null);
+                continue;
+              }
             }
 
             // A long render leaves time for the kill switch, allowlist, or a
@@ -703,9 +861,9 @@ export function initializeRenderWindowHandlers({
               );
             }
 
-            sendProgress({ percent: 98, stage: 'Saving…' });
             heartbeatPercent = 98;
             heartbeatStage = 'Saving…';
+            sendProgress({ percent: heartbeatPercent, stage: heartbeatStage });
             const destDir = path.dirname(selectedPath);
             let sameDevice = false;
             try {
@@ -724,6 +882,7 @@ export function initializeRenderWindowHandlers({
                   operationId
                 );
                 await fs.rename(tempMerged, selectedPath);
+                await discardBackupAfterSave(backupPath, operationId);
                 savedPath = selectedPath;
                 continue;
               } catch (saveErr: any) {
@@ -737,13 +896,8 @@ export function initializeRenderWindowHandlers({
                   `[${operationId}] Failed to save merged video to ${selectedPath}`,
                   saveErr
                 );
-                heartbeatPercent = 96;
-                heartbeatStage = 'Waiting for save location…';
-                sendProgress({
-                  percent: heartbeatPercent,
-                  stage: heartbeatStage,
-                });
                 if (explicitOutputPath) throw saveErr;
+                await showSaveFailed(selectedPath, saveErr);
                 continue;
               }
             }
@@ -765,10 +919,7 @@ export function initializeRenderWindowHandlers({
                 if (explicitOutputPath) {
                   throw new Error(ERROR_CODES.INSUFFICIENT_DISK_SPACE);
                 }
-                const lang = getLanguagePreference();
-                const t = await getMainT(lang);
-
-                const message = t(
+                const message = mainT(
                   'dialogs.mergeLowDiskSpaceConfirm',
                   {
                     need: formatBytes(mergedSizeBytes),
@@ -782,13 +933,13 @@ export function initializeRenderWindowHandlers({
                   title: app.getName(),
                   message,
                   buttons: [
-                    t(
+                    mainT(
                       'common.chooseAnotherLocation',
                       undefined,
                       'Choose another location'
                     ),
-                    t('common.continue', undefined, 'Continue'),
-                    t('common.cancel', undefined, 'Cancel'),
+                    mainT('common.continue', undefined, 'Continue'),
+                    mainT('common.cancel', undefined, 'Cancel'),
                   ],
                   defaultId: 1,
                   cancelId: 2,
@@ -797,18 +948,12 @@ export function initializeRenderWindowHandlers({
 
                 if (response === 0) {
                   // Choose another location
-                  heartbeatPercent = 96;
-                  heartbeatStage = 'Waiting for save location…';
-                  sendProgress({
-                    percent: heartbeatPercent,
-                    stage: heartbeatStage,
-                  });
                   continue;
                 }
                 if (response === 2) {
-                  // Cancel (abort save)
+                  if (await confirmKeepRender()) continue;
                   log.warn(
-                    `[${operationId}] User cancelled due to low disk space warning`
+                    `[${operationId}] User discarded the render after the low disk space warning`
                   );
                   await fs.unlink(tempMerged).catch(() => void 0);
                   event.reply('render-subtitles-result', {
@@ -844,10 +989,9 @@ export function initializeRenderWindowHandlers({
                 operationId
               );
 
-              heartbeatStage = 'Copying to destination…';
-              sendProgress({ percent: 98, stage: heartbeatStage });
               await fs.copyFile(tempMerged, tempDest);
               await fs.rename(tempDest, selectedPath);
+              await discardBackupAfterSave(backupPath, operationId);
               await fs.unlink(tempMerged).catch(() => void 0);
               savedPath = selectedPath;
             } catch (copyErr: any) {
@@ -863,13 +1007,8 @@ export function initializeRenderWindowHandlers({
                 `[${operationId}] Failed to copy merged video to ${selectedPath}`,
                 copyErr
               );
-              heartbeatPercent = 96;
-              heartbeatStage = 'Waiting for save location…';
-              sendProgress({
-                percent: heartbeatPercent,
-                stage: heartbeatStage,
-              });
               if (explicitOutputPath) throw copyErr;
+              await showSaveFailed(selectedPath, copyErr);
               continue;
             }
           }
@@ -879,6 +1018,10 @@ export function initializeRenderWindowHandlers({
         if (!savedPath) {
           throw new Error('Merged video save did not produce an output path.');
         }
+        if (!explicitOutputPath) {
+          rememberExportDirectory(path.dirname(savedPath));
+        }
+        if (plannedOutputPath) forgetChosenExportPath(plannedOutputPath);
         sendProgress({ percent: 100, stage: 'Merge complete!' });
         event.reply('render-subtitles-result', {
           operationId,
@@ -969,6 +1112,66 @@ export function initializeRenderWindowHandlers({
         activeRenderJobs.has(operationId) ||
         jobControllers.has(operationId);
       return { active, savePhase };
+    }
+  );
+
+  ipcMain.handle(
+    'export-video-destination:default',
+    async (_event, payload): Promise<{ path: string }> => {
+      const sourcePath =
+        typeof payload?.sourcePath === 'string' ? payload.sourcePath : '';
+      return { path: await resolveDefaultExportPath(sourcePath || null) };
+    }
+  );
+
+  ipcMain.handle(
+    'export-video-destination:choose',
+    async (_event, payload): Promise<{ path?: string; canceled?: boolean }> => {
+      const sourcePath =
+        typeof payload?.sourcePath === 'string' ? payload.sourcePath : '';
+      const currentPath =
+        typeof payload?.currentPath === 'string' ? payload.currentPath : '';
+      const t = await getMainT(getLanguagePreference());
+      const win = getFocusedOrMainWindow();
+      let defaultPath =
+        currentPath || (await resolveDefaultExportPath(sourcePath || null));
+      for (;;) {
+        const dialogOptions = {
+          title: t('dialogs.exportSaveDialogTitle', undefined, 'Save video as'),
+          defaultPath,
+          filters: [
+            {
+              name: t('dialogs.exportVideoFilterName', undefined, 'MP4 video'),
+              extensions: ['mp4'],
+            },
+          ],
+        };
+        const result = win
+          ? await dialog.showSaveDialog(win, dialogOptions)
+          : await dialog.showSaveDialog(dialogOptions);
+        if (result.canceled || !result.filePath) return { canceled: true };
+        let chosen = result.filePath;
+        if (path.extname(chosen).toLowerCase() !== '.mp4') chosen += '.mp4';
+        if (sourcePath && path.resolve(chosen) === path.resolve(sourcePath)) {
+          const box = {
+            type: 'warning' as const,
+            title: app.getName(),
+            message: t(
+              'dialogs.exportSameAsSource',
+              undefined,
+              'That would replace the original video. Choose a different name.'
+            ),
+            buttons: [t('common.ok', undefined, 'OK')],
+            noLink: true,
+          };
+          if (win) await dialog.showMessageBox(win, box);
+          else await dialog.showMessageBox(box);
+          defaultPath = chosen;
+          continue;
+        }
+        registerChosenExportPath(chosen);
+        return { path: chosen };
+      }
     }
   );
 

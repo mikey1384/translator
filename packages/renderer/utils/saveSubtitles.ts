@@ -11,6 +11,7 @@ import { useUIStore } from '../state/ui-store';
 import { i18n } from '../i18n';
 import { buildSavedSubtitleSrt } from './canonical-subtitle-srt';
 import { saveMountedSubtitleDocument } from './subtitle-documents';
+import { flushPendingEdits } from './pending-edits';
 
 export type SubtitleSaveResult = {
   status: 'success' | 'warning' | 'cancelled' | 'error';
@@ -116,6 +117,7 @@ export async function saveSubtitleFilesToPath(
 ): Promise<SubtitleSaveResult> {
   const content = buildSavedSubtitleSrt(segments, mode);
   const subtitleState = useSubStore.getState();
+  const savedRevision = subtitleState.editRevision;
   const result = await FileIPC.saveSubtitleDocument({
     ...getExportContext(),
     filePath,
@@ -143,6 +145,7 @@ export async function saveSubtitleFilesToPath(
       role,
     });
     applyExportResult(result);
+    markSavedIfMounted(segments, savedRevision);
   }
   if (result.status === 'warning' && result.warning) {
     await showSaveWarning(result.warning);
@@ -150,9 +153,22 @@ export async function saveSubtitleFilesToPath(
   return result;
 }
 
+/** Clears the unsaved flag when what was written is the mounted document. */
+function markSavedIfMounted(segments: SrtSegment[], revision: number): void {
+  const state = useSubStore.getState();
+  const mounted = state.order.map(id => state.segments[id]);
+  if (
+    mounted.length === segments.length &&
+    mounted.every((cue, i) => cue === segments[i])
+  ) {
+    state.markSaved(revision);
+  }
+}
+
 export async function exportSubtitlesToPath(
   path: string
 ): Promise<SubtitleSaveResult> {
+  flushPendingEdits();
   const store = useSubStore.getState();
   const segments = store.order.map(id => store.segments[id]);
   return saveSubtitleFilesToPath(
@@ -163,7 +179,9 @@ export async function exportSubtitlesToPath(
 }
 
 export async function saveSubtitlesAs(): Promise<SubtitleSaveResult> {
+  flushPendingEdits();
   const store = useSubStore.getState();
+  const savedRevision = store.editRevision;
   const segments = store.order.map(id => store.segments[id]);
   const content = buildSavedSubtitleSrt(
     segments,
@@ -191,6 +209,7 @@ export async function saveSubtitlesAs(): Promise<SubtitleSaveResult> {
       role: 'export',
     });
     applyExportResult(result);
+    markSavedIfMounted(segments, savedRevision);
   }
   if (result.status === 'warning' && result.warning) {
     await showSaveWarning(result.warning);
@@ -203,6 +222,7 @@ export async function saveSubtitlesAs(): Promise<SubtitleSaveResult> {
  * canonical Stage5 subtitle document only.
  */
 export async function saveCurrentSubtitles(): Promise<SubtitleSaveResult> {
+  flushPendingEdits();
   const subtitleState = useSubStore.getState();
   const segments = subtitleState.order.map(id => subtitleState.segments[id]);
   const activeFileTarget = getCurrentSubtitleFileTarget();

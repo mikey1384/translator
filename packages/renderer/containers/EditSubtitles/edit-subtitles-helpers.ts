@@ -1,4 +1,5 @@
 import { SrtSegment } from '@shared-types/app';
+import { textMatches, type FindOptions } from '../../utils/subtitleFind.js';
 
 export function calcAffectedSubtitleRows(
   prev: SrtSegment[],
@@ -27,16 +28,16 @@ export function calcAffectedSubtitleRows(
 
 export function collectMatchIndices(
   subtitles: SrtSegment[],
-  term: string
+  term: string,
+  options: FindOptions = {}
 ): number[] {
   if (!term.trim()) return [];
-  const needle = term.toLowerCase();
   return subtitles
-    .map((segment, index) => {
-      const originalText = segment.original || '';
-      const translationText = segment.translation || '';
-      const haystack = `${originalText}\n${translationText}`.toLowerCase();
-      return haystack.includes(needle) ? index : -1;
-    })
+    .map((segment, index) =>
+      textMatches(segment.original || '', term, options) ||
+      textMatches(segment.translation || '', term, options)
+        ? index
+        : -1
+    )
     .filter(index => index !== -1);
 }

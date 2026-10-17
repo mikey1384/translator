@@ -15,18 +15,14 @@ import {
 } from '../../../shared/constants';
 import { colors } from '../../styles';
 import { useUIStore } from '../../state/ui-store';
-import { useCreditStore } from '../../state/credit-store';
 import { useAiStore } from '../../state/ai-store';
 import Switch from '../../components/Switch';
 import {
   CREDITS_PER_SUMMARY_AUDIO_HOUR,
   CREDITS_PER_SUMMARY_AUDIO_HOUR_HIGH,
-  estimateDubbingHours,
   estimateTranslationCreditsPerHour,
-  estimateSummaryHours,
-  estimateTranslatableHours,
-  formatCredits,
-  formatHours,
+  creditsToVideoMinutes,
+  formatTime,
 } from '../../utils/creditEstimates';
 import {
   getQualityTranslationOnLabel,
@@ -80,7 +76,6 @@ export default function QualityToggles() {
   const setQualityTranslation = useUIStore(s => s.setQualityTranslation);
   const summaryEffortLevel = useUIStore(s => s.summaryEffortLevel);
   const setSummaryEffortLevel = useUIStore(s => s.setSummaryEffortLevel);
-  const credits = useCreditStore(s => s.credits);
   const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
   const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const setPreferClaudeReview = useAiStore(s => s.setPreferClaudeReview);
@@ -122,29 +117,18 @@ export default function QualityToggles() {
     creditsPerHour: estimateTranslationCreditsPerHour(true, option.model),
   }));
 
-  // Calculate estimated video hours for translation (normal and HQ modes)
-  const translationNormalHours = estimateTranslatableHours(credits, false);
-  const translationHqHours = estimateTranslatableHours(
-    credits,
-    true,
-    selectedReviewOption.model
-  );
   const translationNormalCreditsPerHour = CREDITS_PER_AUDIO_HOUR;
   const translationHqCreditsPerHour = estimateTranslationCreditsPerHour(
     true,
     selectedReviewOption.model
   );
 
-  // Calculate estimated video hours for summary (normal and HQ modes)
-  const summaryNormalHours = estimateSummaryHours(credits, 'standard');
-  const summaryHqHours = estimateSummaryHours(credits, 'high');
   const summaryNormalCreditsPerHour = CREDITS_PER_SUMMARY_AUDIO_HOUR;
   const summaryHqCreditsPerHour = Math.ceil(
     CREDITS_PER_SUMMARY_AUDIO_HOUR_HIGH
   );
 
   // Dubbing is ElevenLabs-only (eleven_v4): one rate, shown up front.
-  const dubbingHours = estimateDubbingHours(credits);
   const dubbingCreditsPerMinute = TTS_CREDITS_PER_MINUTE.elevenlabs;
   // Stage5 credits run AI video search on Claude Sonnet 5.5 (standard) and
   // Opus 5.5 (quality); API-key mode uses the user's own models.
@@ -165,48 +149,50 @@ export default function QualityToggles() {
       USD_PER_CREDIT
   );
 
+  // Costs read in minutes of video, the unit the balance is bought and shown
+  // in, instead of raw credits and a second "balance" per row.
   const formatRate = (
     value: number,
     unit: 'perHour' | 'perMinute' | 'perSearch'
-  ) =>
-    t(`settings.performanceQuality.rate.${unit}`, {
-      credits: formatCredits(value).replace(/^~/, ''),
-      defaultValue:
-        unit === 'perHour'
-          ? '~{{credits}} credits/hour'
-          : unit === 'perMinute'
-            ? '~{{credits}} credits/min'
-            : '~{{credits}} credits/search',
-    });
-
-  const formatBalance = (hours: number) =>
-    t('settings.performanceQuality.rate.balance', {
-      time: formatHours(hours),
-      defaultValue: 'Balance: ~{{time}}',
-    });
+  ) => {
+    const time = formatTime(creditsToVideoMinutes(value), i18n.language);
+    if (unit === 'perHour') {
+      return t(
+        'settings.performanceQuality.rate.minutesPerHour',
+        '~{{time}} of your minutes per hour of video',
+        { time }
+      );
+    }
+    if (unit === 'perMinute') {
+      return t(
+        'settings.performanceQuality.rate.minutesPerDubMinute',
+        '~{{time}} of your minutes per minute of dubbing',
+        { time }
+      );
+    }
+    return t(
+      'settings.performanceQuality.rate.minutesPerSearch',
+      '~{{time}} of your minutes per search',
+      { time }
+    );
+  };
 
   const renderHelp = ({
     rate,
     unit,
     model,
-    estimateHours,
   }: {
     rate: number;
     unit: 'perHour' | 'perMinute' | 'perSearch';
     model: string;
-    estimateHours?: number | null;
   }) => {
     return (
       <>
-        <strong>{formatRate(rate, unit)}</strong>
+        <strong>
+          <bdi>{formatRate(rate, unit)}</bdi>
+        </strong>
         {' • '}
         {model}
-        {typeof estimateHours === 'number' ? (
-          <>
-            {' • '}
-            {formatBalance(estimateHours)}
-          </>
-        ) : null}
       </>
     );
   };
@@ -279,7 +265,6 @@ export default function QualityToggles() {
               rate: translationHqCreditsPerHour,
               unit: 'perHour',
               model: qualityTranslationModelOn,
-              estimateHours: translationHqHours,
             })
           : renderHelp({
               rate: translationNormalCreditsPerHour,
@@ -288,7 +273,6 @@ export default function QualityToggles() {
                 'settings.performanceQuality.qualityTranslation.modelOff',
                 'Claude Haiku 5.5 draft only'
               ),
-              estimateHours: translationNormalHours,
             })
       )}
       {qualityTranslation && useApiKeysMode ? (
@@ -335,7 +319,6 @@ export default function QualityToggles() {
                 'settings.performanceQuality.qualitySummary.modelOn',
                 'Claude Opus 5.5 deep analysis + highlight clips'
               ),
-              estimateHours: summaryHqHours,
             })
           : renderHelp({
               rate: summaryNormalCreditsPerHour,
@@ -344,7 +327,6 @@ export default function QualityToggles() {
                 'settings.performanceQuality.qualitySummary.modelOff',
                 'Claude Sonnet 5.5 standard analysis'
               ),
-              estimateHours: summaryNormalHours,
             })
       )}
       {row(
@@ -358,7 +340,6 @@ export default function QualityToggles() {
             'settings.performanceQuality.qualityDubbing.modelOn',
             'ElevenLabs TTS premium voices'
           ),
-          estimateHours: dubbingHours,
         })
       )}
       {row(

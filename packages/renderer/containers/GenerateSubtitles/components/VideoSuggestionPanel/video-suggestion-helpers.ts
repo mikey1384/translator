@@ -1,5 +1,8 @@
 import type { TFunction } from 'i18next';
-import { getTranslationFailureMessage } from '../../../../utils/translationFailure.js';
+import {
+  classifyError,
+  formatUserFacingError,
+} from '../../../../utils/userFacingError.js';
 import type {
   VideoSuggestionMessage,
   VideoSuggestionPreferenceSlots,
@@ -45,11 +48,11 @@ export function resolveErrorText(
       'Search confidence was low. Add one more detail and retry.'
     );
   }
-  const mapped = getTranslationFailureMessage({
-    error: text,
-    cancelled: false,
-  }).trim();
-  return mapped || fallback;
+  // Credits, API-key and network reasons in the UI language; anything
+  // unrecognized gets the caller's localized fallback, never raw text.
+  const classified = classifyError(text, { task: 'videoSearch' });
+  if (classified.kind === 'unexpected') return fallback;
+  return formatUserFacingError(classified, t as any) || fallback;
 }
 
 export function resolveAssistantMessage(

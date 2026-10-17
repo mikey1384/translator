@@ -58,161 +58,183 @@ export function inferSubtitleDisplayModeFromSrtContent(args: {
     : 'original';
 }
 
-export function parseSrt(srtString: string): SrtSegment[] {
-  if (!srtString?.trim()) return [];
+// A timing line: "00:01:02,345 --> 00:01:04,000". Hours may be any width,
+// minutes/seconds one or two digits, "," or "." before the milliseconds, and
+// the milliseconds any number of digits (see srtTimeToSeconds).
+const SRT_TIME = String.raw`\d+:\d{1,2}:\d{1,2}(?:[,.]\d+)?`;
+const SRT_TIMING_LINE_RE = new RegExp(
+  String.raw`(?<![\d:])(${SRT_TIME})\s*-->\s*(${SRT_TIME})`
+);
+// Starts like a timing line but can't be read as one ("00:05:28 -> 1",
+// "00:05:28,100 --> "). Never cue text: it would swallow the cue into the
+// previous line.
+const BROKEN_TIMING_LINE_RE = /^\s*[\d:,.]+\s*-+>/;
+const INDEX_LINE_RE = /^\s*\d+\s*$/;
 
-  const out: SrtSegment[] = [];
+interface RawSrtCue {
+  index: number;
+  start: number;
+  end: number;
+  textLines: string[];
+}
+
+/**
+ * Split SRT text into cues. A cue starts at each timing line (its number is
+ * the line just above, when present) and runs until the next cue starts.
+ * Cues whose timing can't be read are dropped and counted, never folded
+ * into the previous cue's text.
+ */
+function splitSrtCues(srtString: string): {
+  cues: RawSrtCue[];
+  unreadable: number;
+} {
+  const cues: RawSrtCue[] = [];
+  let unreadable = 0;
+  if (!srtString?.trim()) return { cues, unreadable };
 
   const lines = srtString
+    .replace(/^\uFEFF/, '')
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     .split('\n');
 
-  const timeRe = /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/;
-  let i = 0;
+  type Mark = { line: number; kind: 'cue' | 'broken'; tm?: RegExpMatchArray };
+  const marks: Mark[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const tm = lines[i].match(SRT_TIMING_LINE_RE);
+    if (tm) marks.push({ line: i, kind: 'cue', tm });
+    else if (BROKEN_TIMING_LINE_RE.test(lines[i]))
+      marks.push({ line: i, kind: 'broken' });
+  }
+
+  // Where each cue's block begins: its number line, if it sits right above.
+  const blockStart = (m: Mark, floor: number) =>
+    m.line - 1 >= floor && INDEX_LINE_RE.test(lines[m.line - 1])
+      ? m.line - 1
+      : m.line;
+
   let fallbackIdx = 0;
-
-  while (i < lines.length) {
-    // find index line
-    while (i < lines.length && !/^\s*\d+\s*$/.test(lines[i])) i++;
-    if (i >= lines.length) break;
-    const index = Number(lines[i].trim()) || ++fallbackIdx;
-    i++;
-
-    // find time line
-    if (i >= lines.length) break;
-    const tm = lines[i].match(timeRe);
-    if (!tm) {
-      // malformed block; skip to next blank
-      while (i < lines.length && lines[i].trim() !== '') i++;
-      i++;
+  for (let k = 0; k < marks.length; k++) {
+    const mark = marks[k];
+    const floor = k > 0 ? marks[k - 1].line + 1 : 0;
+    if (mark.kind === 'broken') {
+      unreadable++;
+      // Numbered blocks with no timing line that follow it are lost too.
+      const next = marks[k + 1];
+      const stop = next ? blockStart(next, mark.line + 1) : lines.length;
+      for (let j = mark.line + 2; j < stop; j++) {
+        if (lines[j - 1].trim() === '' && INDEX_LINE_RE.test(lines[j])) {
+          unreadable++;
+        }
+      }
       continue;
     }
-    const start = srtTimeToSeconds(tm[1]);
-    const end = srtTimeToSeconds(tm[2]);
-    i++;
-
-    // collect text lines until separator: a blank line followed by next numeric index+time, or EOF
-    const textLines: string[] = [];
-    while (i < lines.length) {
-      const line = lines[i];
-      const next = lines[i + 1];
-      const next2 = lines[i + 2];
-      const blank = line.trim() === '';
-      const looksLikeNextBlock =
-        blank &&
-        typeof next === 'string' &&
-        /^\s*\d+\s*$/.test(next) &&
-        typeof next2 === 'string' &&
-        timeRe.test(next2);
-      if (looksLikeNextBlock) {
-        // consume the blank separator and break
-        i++; // skip blank line
-        break;
-      }
-      // normal text line (including empty text lines inside the cue)
-      textLines.push(line.replace(/\\n/g, '\n').trim());
-      i++;
-      // stop if EOF or single blank followed by EOF
-      if (i >= lines.length) break;
-      if (lines[i].trim() === '' && i + 1 >= lines.length) {
-        i++;
+    const start = srtTimeToSeconds(mark.tm![1]);
+    const end = srtTimeToSeconds(mark.tm![2]);
+    const startLine = blockStart(mark, floor);
+    const numbered = startLine < mark.line;
+    const index = numbered
+      ? Number(lines[startLine].trim()) || ++fallbackIdx
+      : ++fallbackIdx;
+    const next = marks[k + 1];
+    const stop = next ? blockStart(next, mark.line + 1) : lines.length;
+    let textLines = lines.slice(mark.line + 1, stop);
+    // A numbered block with no timing line at all ("5" right after a blank,
+    // then text): it is a lost cue, not more of this one.
+    for (let j = 1; j < textLines.length; j++) {
+      if (
+        textLines[j - 1].trim() === '' &&
+        INDEX_LINE_RE.test(textLines[j]) &&
+        Number(textLines[j].trim()) === index + 1
+      ) {
+        textLines = textLines.slice(0, j - 1);
+        unreadable++;
         break;
       }
     }
+    // Drop the blank separator(s) before the next cue.
+    while (textLines.length && textLines[textLines.length - 1].trim() === '') {
+      textLines.pop();
+    }
+    if (isNaN(start) || isNaN(end)) {
+      unreadable++;
+      continue;
+    }
+    cues.push({ index, start, end, textLines });
+  }
+  return { cues, unreadable };
+}
 
+export function parseSrt(srtString: string): SrtSegment[] {
+  return parseSrtWithReport(srtString).segments;
+}
+
+/** parseSrt plus how many cues were left out because their timing was unreadable. */
+export function parseSrtWithReport(srtString: string): {
+  segments: SrtSegment[];
+  unreadableCues: number;
+} {
+  const { cues, unreadable } = splitSrtCues(srtString);
+  const segments = cues.map(cue => {
+    const textLines = cue.textLines.map(line =>
+      line.replace(/\\n/g, '\n').trim()
+    );
     const original = textLines[0] ?? '';
     const translation =
       textLines.length >= 2 ? textLines.slice(1).join('\n') : undefined;
-
-    if (!isNaN(start) && !isNaN(end)) {
-      out.push({
-        id: crypto.randomUUID(),
-        index,
-        start,
-        end,
-        original,
-        translation,
-      });
-    }
-  }
-
-  return out;
+    return {
+      id: crypto.randomUUID(),
+      index: cue.index,
+      start: cue.start,
+      end: cue.end,
+      original,
+      translation,
+    };
+  });
+  return { segments, unreadableCues: unreadable };
 }
 
 // Parse SRT but place the entire cue text (all lines) in `original` and leave `translation` undefined.
 // Use this when loading user-provided SRT files so we don't misinterpret line breaks as dual-language splits.
+/**
+ * How an external .srt with no app metadata becomes cues: bilingual cues are
+ * split into original + translation. Opening a file and an agent mounting
+ * one both go through here so they read cues the same way.
+ */
+export function shapeImportedSrtSegments(segments: SrtSegment[]): SrtSegment[] {
+  return autoSplitBilingualCues(segments).map(seg => ({
+    ...seg,
+    original: flattenCueText(seg.original),
+    translation:
+      typeof seg.translation === 'string'
+        ? flattenCueText(seg.translation)
+        : seg.translation,
+  }));
+}
+
 export function parseSrtOriginalOnly(srtString: string): SrtSegment[] {
-  if (!srtString?.trim()) return [];
+  return parseSrtOriginalOnlyWithReport(srtString).segments;
+}
 
-  const out: SrtSegment[] = [];
-  const lines = srtString
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .split('\n');
-
-  const timeRe = /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/;
-  let i = 0;
-  let fallbackIdx = 0;
-
-  while (i < lines.length) {
-    // find index line
-    while (i < lines.length && !/^\s*\d+\s*$/.test(lines[i])) i++;
-    if (i >= lines.length) break;
-    const index = Number(lines[i].trim()) || ++fallbackIdx;
-    i++;
-
-    // find time line
-    if (i >= lines.length) break;
-    const tm = lines[i].match(timeRe);
-    if (!tm) {
-      while (i < lines.length && lines[i].trim() !== '') i++;
-      i++;
-      continue;
-    }
-    const start = srtTimeToSeconds(tm[1]);
-    const end = srtTimeToSeconds(tm[2]);
-    i++;
-
-    // collect all text lines in the cue
-    const textLines: string[] = [];
-    while (i < lines.length) {
-      const line = lines[i];
-      const next = lines[i + 1];
-      const next2 = lines[i + 2];
-      const blank = line.trim() === '';
-      const looksLikeNextBlock =
-        blank &&
-        typeof next === 'string' &&
-        /^\s*\d+\s*$/.test(next) &&
-        typeof next2 === 'string' &&
-        timeRe.test(next2);
-      if (looksLikeNextBlock) {
-        i++; // skip blank separator
-        break;
-      }
-      textLines.push(line.replace(/\\n/g, '\n'));
-      i++;
-      if (i >= lines.length) break;
-      if (lines[i].trim() === '' && i + 1 >= lines.length) {
-        i++;
-        break;
-      }
-    }
-
-    const fullText = textLines.join('\n').trim();
-    if (!isNaN(start) && !isNaN(end)) {
-      out.push({
+export function parseSrtOriginalOnlyWithReport(srtString: string): {
+  segments: SrtSegment[];
+  unreadableCues: number;
+} {
+  const { cues, unreadable } = splitSrtCues(srtString);
+  const segments = cues.map(
+    cue =>
+      ({
         id: crypto.randomUUID(),
-        index,
-        start,
-        end,
-        original: fullText,
-      } as SrtSegment);
-    }
-  }
-
-  return out;
+        index: cue.index,
+        start: cue.start,
+        end: cue.end,
+        original: cue.textLines
+          .map(line => line.replace(/\\n/g, '\n'))
+          .join('\n')
+          .trim(),
+      }) as SrtSegment
+  );
+  return { segments, unreadableCues: unreadable };
 }
 
 export function buildSrt({
@@ -247,11 +269,10 @@ export function buildSrt({
     }
     if (splitIdx <= 0 || splitIdx >= clean.length)
       splitIdx = Math.min(MAX_LINE, clean.length);
+    // Two lines, never dropping words: a long cue keeps all its text.
     const left = clean.slice(0, splitIdx).trim();
     const right = clean.slice(splitIdx).trim();
-    const leftTrim = left.slice(0, MAX_LINE).trim();
-    const rightTrim = right.slice(0, MAX_LINE).trim();
-    return `${leftTrim}\n${rightTrim}`;
+    return right ? `${left}\n${right}` : left;
   };
 
   return segments
@@ -261,7 +282,7 @@ export function buildSrt({
       const end = secondsToSrtTime(seg.end);
       let cue = cueText(seg, mode);
       if (mode !== 'dual' && !noWrap) {
-        // Enforce <= 2 lines and <= 42 chars/line for single-language outputs
+        // Break single-language cues into two balanced lines
         cue = wrapSingle(cue);
       }
 
@@ -293,24 +314,28 @@ export function cueText(
   }
 }
 
+/**
+ * "hh:mm:ss,mmm" to seconds. Also reads "." before the milliseconds and
+ * off-spec millisecond widths: 1-3 digits are a decimal fraction (",5" is
+ * half a second, ",05" is 50 ms), 4+ digits are a millisecond count that
+ * carries into the seconds (",1000" is one second, as some tools write).
+ */
 export function srtTimeToSeconds(timeString: string): number {
   if (!timeString) return 0;
-  const parts = timeString.split(',');
-  if (parts.length !== 2) return 0;
-  const [time, msStr] = parts;
-  const timeParts = time.split(':');
-  if (timeParts.length !== 3) return 0;
-  const [hoursStr, minutesStr, secondsStr] = timeParts;
-
-  const hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
-  const seconds = parseInt(secondsStr, 10);
-  const ms = parseInt(msStr, 10);
-
-  if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || isNaN(ms)) {
-    return 0;
-  }
-
+  const m = String(timeString)
+    .trim()
+    .match(/^(\d+):(\d{1,2}):(\d{1,2})(?:[,.](\d+))?$/);
+  if (!m) return 0;
+  const hours = parseInt(m[1], 10);
+  const minutes = parseInt(m[2], 10);
+  const seconds = parseInt(m[3], 10);
+  const msDigits = m[4] ?? '';
+  const ms =
+    msDigits.length === 0
+      ? 0
+      : msDigits.length <= 3
+        ? parseInt(msDigits.padEnd(3, '0'), 10)
+        : parseInt(msDigits, 10);
   return hours * 3600 + minutes * 60 + seconds + ms / 1000;
 }
 
@@ -352,7 +377,13 @@ export function formatTimeForDisplay(seconds: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-export async function openSubtitleWithElectron(): Promise<{
+/**
+ * Opens an .srt: from the file dialog, or straight from `filePath` (a file
+ * dropped on the window).
+ */
+export async function openSubtitleWithElectron(
+  options: { filePath?: string } = {}
+): Promise<{
   file?: File;
   content?: string;
   segments?: SrtSegment[];
@@ -360,6 +391,8 @@ export async function openSubtitleWithElectron(): Promise<{
   filePath?: string;
   fileMode?: SubtitleDisplayMode;
   fileRole?: SubtitleDocumentLinkedFileRole | null;
+  /** Cues left out because their timing couldn't be read. */
+  unreadableCues?: number;
   cancelled?: boolean;
   error?: string;
 }> {
@@ -371,22 +404,33 @@ export async function openSubtitleWithElectron(): Promise<{
       readTextFileWithRetry,
       saveSubtitleDocumentRecordWithRetry,
     } = await import('./electron-ipc.js');
-    const result = await openFileIPC({
-      filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
-      title: 'Open Subtitle File',
-    });
+    let filePath: string;
+    let content: string;
+    if (options.filePath) {
+      const read = await readTextFileWithRetry(options.filePath);
+      if (read.content == null) {
+        throw new Error(read.error || 'Failed to read file content.');
+      }
+      filePath = options.filePath;
+      content = read.content;
+    } else {
+      const result = await openFileIPC({
+        filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
+        title: 'Open Subtitle File',
+      });
 
-    if (
-      result.canceled ||
-      !result.filePaths?.length ||
-      !result.fileContents?.length
-    ) {
-      return { cancelled: true };
+      if (
+        result.canceled ||
+        !result.filePaths?.length ||
+        !result.fileContents?.length
+      ) {
+        return { cancelled: true };
+      }
+
+      filePath = result.filePaths[0];
+      content = result.fileContents[0];
     }
-
-    const filePath = result.filePaths[0];
-    const content = result.fileContents[0];
-    const filename = filePath.split('/').pop() || 'subtitles.srt';
+    const filename = filePath.split(/[\\/]/).pop() || 'subtitles.srt';
     const file = new File([content], filename, { type: 'text/plain' });
 
     localStorage.setItem('loadedSrtFileName', filename);
@@ -411,6 +455,12 @@ export async function openSubtitleWithElectron(): Promise<{
           srtContent: content,
         });
 
+    let unreadableCues = 0;
+    const parsePlain = () => {
+      const report = parseSrtOriginalOnlyWithReport(content);
+      unreadableCues = report.unreadableCues;
+      return report.segments;
+    };
     // Prefer the canonical Stage5 document when it matches this file, then any
     // legacy adjacent sidecar, then the internal metadata cache, and only then
     // the plain heuristic parse for external SRTs that never had app metadata.
@@ -422,16 +472,7 @@ export async function openSubtitleWithElectron(): Promise<{
           : cachedMetadataResult.segments &&
               cachedMetadataResult.segments.length > 0
             ? cachedMetadataResult.segments
-            : autoSplitBilingualCues(parseSrtOriginalOnly(content)).map(
-                seg => ({
-                  ...seg,
-                  original: flattenCueText(seg.original),
-                  translation:
-                    typeof seg.translation === 'string'
-                      ? flattenCueText(seg.translation)
-                      : seg.translation,
-                })
-              );
+            : shapeImportedSrtSegments(parsePlain());
     const fileMode =
       documentResult.fileMode ??
       inferSubtitleDisplayModeFromSrtContent({
@@ -462,6 +503,7 @@ export async function openSubtitleWithElectron(): Promise<{
       filePath,
       fileMode,
       fileRole,
+      unreadableCues,
     };
   } catch (error: any) {
     const message = error.message || String(error);

@@ -23,6 +23,12 @@ import {
   STAGE5_CREDIT_MODELS,
   USD_PER_CREDIT,
 } from '../../shared/constants';
+import {
+  formatCreditAmount,
+  formatDurationHours,
+  formatDurationMinutes,
+  formatDurationSeconds,
+} from './formatUnits';
 
 export { PREVIEW_TTS_CREDITS };
 
@@ -188,36 +194,16 @@ export function estimateDubbingCreditsFromChars(
   });
 }
 
-/**
- * Format hours into a readable string (e.g., "2h 30m" or "45m")
- * Used in settings page for detailed display
- */
-export function formatHours(hours: number): string {
-  if (hours < 1) {
-    const mins = Math.round(hours * 60);
-    return mins > 0 ? `${mins}m` : '<1m';
-  }
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+/** Hours as "2h 30m" / "45m" in the UI language's units. */
+export function formatHours(hours: number, locale?: string): string {
+  return formatDurationHours(hours, locale);
 }
 
-/**
- * Format minutes into compact time string
- * < 60 min: "45m", >= 60 min: "2h 30m"
- */
-export function formatTime(minutes: number): string {
-  if (minutes < 60) {
-    return `${Math.round(minutes)}m`;
-  }
-  const h = Math.floor(minutes / 60);
-  const m = Math.round(minutes % 60);
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+/** Minutes as "45m" / "2h 30m" in the UI language's units. */
+export function formatTime(minutes: number, locale?: string): string {
+  return formatDurationMinutes(minutes, locale);
 }
 
-/**
- * Format credits into compact string (e.g., "~5k", "~134k")
- */
 /** Credits a transcription of `seconds` of audio costs (ElevenLabs Scribe). */
 export function estimateTranscriptionCreditsForSeconds(
   seconds: number
@@ -232,43 +218,39 @@ export function estimateTranscriptionCreditsForSeconds(
  * (subtitles, dubbing) starts with it, while translating with the user's own
  * Claude or Codex is free; translation hours overstated what credits buy.
  */
-export function formatTranscriptionTime(credits: number | null): string | null {
+export function formatTranscriptionTime(
+  credits: number | null,
+  locale?: string
+): string | null {
   const hours = estimateTranscriptionHours(credits);
-  return hours != null && hours > 0 ? formatHours(hours) : null;
+  return hours != null && hours > 0 ? formatHours(hours, locale) : null;
 }
 
-/** A balance without the "~" estimate marker: 850, 4.2k, 168k. */
-export function formatCreditBalance(credits: number): string {
-  const safe = Math.max(0, Math.floor(credits));
-  if (safe < 1000) return String(safe);
-  if (safe < 10000) return `${(safe / 1000).toFixed(1)}k`;
-  return `${Math.round(safe / 1000)}k`;
+/** Minutes of video a credit amount buys, the unit the balance is sold in. */
+export function creditsToVideoMinutes(credits: number): number {
+  if (!Number.isFinite(credits) || credits <= 0) return 0;
+  return (credits * 60) / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
 }
 
-export function formatCredits(credits: number): string {
-  if (credits < 1000) return `~${Math.ceil(credits)}`;
-  if (credits < 10000) return `~${(credits / 1000).toFixed(1)}k`;
-  return `~${Math.round(credits / 1000)}k`;
+/** A balance without the "~" estimate marker: 850, 4.6K, 168K. */
+export function formatCreditBalance(credits: number, locale?: string): string {
+  return formatCreditAmount(Math.floor(Math.max(0, credits)), locale);
+}
+
+/** An estimate with the "~" marker: ~850, ~4.6K, ~168K. */
+export function formatCredits(credits: number, locale?: string): string {
+  return `~${formatCreditAmount(credits, locale)}`;
 }
 
 export function formatDubbingTime(
   credits: number,
-  provider: TtsProvider = 'elevenlabs'
+  provider: TtsProvider = 'elevenlabs',
+  locale?: string
 ): string {
   const hours = estimateDubbingHours(credits, provider);
-  if (hours == null) return '~0s';
-  const minutes = hours * 60;
-  if (minutes < 1) {
-    const seconds = Math.floor(minutes * 60);
-    return `~${seconds}s`;
-  }
-  if (minutes < 60) {
-    return `~${Math.floor(minutes)}m`;
-  }
-  const wholeHours = Math.floor(minutes / 60);
-  const remainingMins = Math.floor(minutes % 60);
-  if (remainingMins === 0) return `~${wholeHours}h`;
-  return `~${wholeHours}h ${remainingMins}m`;
+  if (hours == null) return `~${formatDurationSeconds(0, locale)}`;
+  // Rounded down: never promise more dubbing than the credits buy.
+  return `~${formatDurationSeconds(hours * 3600, locale)}`;
 }
 
 /** Share of the balance at which starting a dub asks for confirmation. */

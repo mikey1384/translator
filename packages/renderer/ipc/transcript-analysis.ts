@@ -33,6 +33,7 @@ export function findStoredTranscriptAnalysis(options: {
   sourceVideoPath?: string | null;
   sourceUrl?: string | null;
   libraryEntryId?: string | null;
+  allowOtherVariant?: boolean;
 }): Promise<{
   success: boolean;
   entry?: StoredTranscriptAnalysisEntry | null;

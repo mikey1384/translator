@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { css } from '@emotion/css';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -206,6 +207,45 @@ const statusDotStyles = (active: boolean) => css`
   background: ${active ? colors.success : colors.gray};
 `;
 
+function connectFailureText(
+  result: { reason?: string; command?: string },
+  app: string,
+  t: TFunction
+): string {
+  switch (result.reason) {
+    case 'config_invalid':
+      return t(
+        'settings.agentControl.connection.failedConfigInvalid',
+        'Could not connect {{app}}: its settings file isn’t valid, so Translator left it unchanged. Fix or remove the file, then try again.',
+        { app }
+      );
+    case 'write_failed':
+      return t(
+        'settings.agentControl.connection.failedWrite',
+        'Could not connect {{app}}: Translator couldn’t write its settings file.',
+        { app }
+      );
+    case 'launcher_missing':
+      return t(
+        'settings.agentControl.connection.failedLauncher',
+        'Connecting {{app}} works only in the installed Translator app.',
+        { app }
+      );
+    default:
+      return result.command
+        ? t(
+            'settings.agentControl.connection.failedCli',
+            'Could not connect {{app}} automatically. Run this in a terminal:',
+            { app }
+          )
+        : t(
+            'settings.agentControl.connection.failedGeneric',
+            'Could not connect {{app}}. Try again.',
+            { app }
+          );
+  }
+}
+
 export default function AgentControlSection() {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(false);
@@ -333,18 +373,23 @@ export default function AgentControlSection() {
     }
     return (
       <div className={connectMessageStyles('error')}>
-        <p style={{ margin: 0 }}>
-          {t(
-            'settings.agentControl.connection.failed',
-            'Could not connect {{app}}: {{message}}',
-            { app, message: result.message || '' }
-          )}
-        </p>
+        <p style={{ margin: 0 }}>{connectFailureText(result, app, t)}</p>
         {result.command && (
           <code className={launcherPathStyles} dir="ltr">
             {result.command}
           </code>
         )}
+        {/* The CLI's own output is English; keep it out of the sentence. */}
+        {result.message ? (
+          <details>
+            <summary>
+              {t('settings.agentControl.connection.details', 'Details')}
+            </summary>
+            <code className={launcherPathStyles} dir="ltr">
+              {result.message}
+            </code>
+          </details>
+        ) : null}
       </div>
     );
   };

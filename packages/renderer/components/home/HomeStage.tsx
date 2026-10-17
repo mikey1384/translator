@@ -20,36 +20,13 @@ import {
 import { logButton } from '../../utils/logger';
 import HomeLanguagePicker from './HomeLanguagePicker';
 import HomeRecentRow from './HomeRecentRow';
-
-const MEDIA_EXTENSIONS = new Set([
-  'mp4',
-  'mov',
-  'm4v',
-  'mkv',
-  'webm',
-  'avi',
-  'wmv',
-  'flv',
-  'mpg',
-  'mpeg',
-  'ts',
-  'mts',
-  '3gp',
-  'mp3',
-  'wav',
-  'm4a',
-  'aac',
-  'flac',
-  'ogg',
-  'opus',
-]);
-
-function isMediaFile(file: File): boolean {
-  if (file.type.startsWith('video/') || file.type.startsWith('audio/'))
-    return true;
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-  return MEDIA_EXTENSIONS.has(extension);
-}
+import { pickDroppedFile } from '../../utils/droppedFiles';
+import {
+  dropBlockReason,
+  dropBlockedMessage,
+  handleWindowFileDrop,
+} from '../../utils/mediaDrop';
+import { isLocalRecentItem, mergeHomeRecentItems } from './home-recent';
 
 const page = css`
   width: 100%;
@@ -291,18 +268,6 @@ const visuallyHidden = css`
   white-space: nowrap;
 `;
 
-/** Focus the AI video search panel once it has rendered. */
-function focusVideoSearchPanel() {
-  window.setTimeout(() => {
-    const panel = document.querySelector<HTMLElement>(
-      '[data-translator-destination="video-search"]'
-    );
-    if (!panel) return;
-    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    panel.querySelector<HTMLTextAreaElement>('textarea')?.focus();
-  }, 60);
-}
-
 export default function HomeStage() {
   const { t, i18n } = useTranslation();
   const targetLanguage = useUIStore(s => s.targetLanguage);
@@ -313,6 +278,11 @@ export default function HomeStage() {
   const downloadInProgress = useUrlStore(s => s.download.inProgress);
   const library = useDownloadedVideoLibrary(
     i18n.resolvedLanguage || i18n.language || 'en'
+  );
+  const recentLocalMedia = useVideoStore(s => s.recentLocalMedia);
+  const recentItems = useMemo(
+    () => mergeHomeRecentItems(library.downloadHistory, recentLocalMedia),
+    [library.downloadHistory, recentLocalMedia]
   );
   const [dragging, setDragging] = useState(false);
   const [dropError, setDropError] = useState<string | null>(null);
@@ -346,7 +316,7 @@ export default function HomeStage() {
   );
 
   const chooseLanguage = (value: string) => {
-    useUIStore.getState().setTargetLanguage(value);
+    useUIStore.getState().chooseTargetLanguage(value);
     rememberRecentTargetLanguage(value);
     setRecentLanguages(readRecentTargetLanguages());
   };
@@ -388,10 +358,21 @@ export default function HomeStage() {
     dragDepth.current = 0;
     setDragging(false);
     setDropError(null);
-    const file = event.dataTransfer.files?.[0];
-    if (!file) return;
-    const path = window.fileApi.getPathForFile(file);
-    if (!path || !isMediaFile(file)) {
+    const picked = pickDroppedFile(Array.from(event.dataTransfer.files || []));
+    if (!picked) return;
+    const blocked = dropBlockReason();
+    if (blocked) {
+      setDropError(dropBlockedMessage(blocked));
+      return;
+    }
+    // "Edit an existing .srt" by dropping it: open it in the editor.
+    if (picked.kind === 'subtitle') {
+      logButton('home_drop_srt');
+      void handleWindowFileDrop([picked.file]);
+      return;
+    }
+    const path = window.fileApi.getPathForFile(picked.file);
+    if (!path || picked.kind !== 'media') {
       setDropError(
         t('home.dropNotMedia', 'Drop a video or audio file to translate it.')
       );
@@ -402,7 +383,12 @@ export default function HomeStage() {
       .getState()
       .openRecentLocalMedia(path, { preserveSubtitles: false });
     if (!opened.opened) {
-      setDropError(t('home.dropOpenFailed', 'That file could not be opened.'));
+      // Declined = the user kept their unsaved subtitle edits; not an error.
+      if (!opened.declined) {
+        setDropError(
+          t('home.dropOpenFailed', 'That file could not be opened.')
+        );
+      }
       return;
     }
     runMountedFile();
@@ -417,28 +403,28 @@ export default function HomeStage() {
 
   const findVideos = () => {
     logButton('home_find_videos');
-    const query = findQuery.trim();
-    if (query) useVideoSuggestionStore.getState().setInput(query);
     const ui = useUIStore.getState();
     ui.setGenerateSubtitlesWorkspaceTab('main');
     ui.setGeneratePanelOpen(true);
-    focusVideoSearchPanel();
+    // The panel opens itself, runs the free YouTube search for these words
+    // and focuses its chat box (VideoSuggestionPanel).
+    useVideoSuggestionStore.getState().requestHomeSearch(findQuery);
   };
 
   const openRecent = async (
     item: Parameters<typeof library.openDownloadedVideo>[0]
   ) => {
-    // A file that was moved or deleted downloads again, like Downloads does.
-    const exists = item.localPath
-      ? await window.fileApi.fileExists(item.localPath).catch(() => true)
-      : false;
-    if (!exists && item.sourceUrl) {
-      logButton('home_redownload_recent');
-      await library.redownloadHistoryItem(item);
+    if (isLocalRecentItem(item) && item.localPath) {
+      logButton('home_open_recent_local');
+      // Missing files drop out of the list; unsaved edits are asked about.
+      await useVideoStore
+        .getState()
+        .openRecentLocalMedia(item.localPath, { preserveSubtitles: false });
       return;
     }
+    // Opens any local copy of this video; downloads only when none is left.
     logButton('home_open_recent');
-    await library.openDownloadedVideo(item);
+    await library.openOrDownloadHistoryItem(item);
   };
 
   const seeAll = () => {
@@ -491,7 +477,10 @@ export default function HomeStage() {
             ref={linkRef}
             className={linkInput}
             value={urlInput}
-            onChange={event => setUrlInput(event.target.value)}
+            onChange={event => {
+              setUrlInput(event.target.value);
+              setDropError(null);
+            }}
             placeholder={
               dragging
                 ? t('home.dropHere', 'Drop it to make it speak {{language}}', {
@@ -634,10 +623,15 @@ export default function HomeStage() {
       </form>
 
       <HomeRecentRow
-        items={library.downloadHistory}
+        items={recentItems}
         onOpen={item => void openRecent(item)}
         onSeeAll={seeAll}
       />
+      {library.error ? (
+        <span className={dropMessage} role="alert">
+          {library.error}
+        </span>
+      ) : null}
     </div>
   );
 }

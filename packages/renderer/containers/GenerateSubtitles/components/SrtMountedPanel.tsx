@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import { cx } from '@emotion/css';
 import { FileCheck2 } from 'lucide-react';
 import type { SubtitleDisplayMode } from '@shared-types/app';
@@ -5,6 +6,8 @@ import { selectStyles } from '../../../styles.js';
 import { useTranslation } from 'react-i18next';
 import Button from '../../../components/Button.js';
 import { useUIStore } from '../../../state/ui-store';
+import { useSubStore } from '../../../state/subtitle-store';
+import { detectTextLanguage } from '../../../utils/detectTextLanguage';
 import {
   TRANSLATION_LANGUAGES_BASE,
   TRANSLATION_LANGUAGE_GROUPS,
@@ -12,6 +15,7 @@ import {
 import { useTaskStore } from '../../../state/task-store';
 import { useUrlStore } from '../../../state/url-store';
 import { useCreditCostEstimates } from '../../../hooks/useCreditCostEstimates';
+import { useDubEstimate } from '../../../hooks/useDubEstimate';
 import { TTS_CREDITS_PER_MINUTE } from '../../../../shared/constants';
 import {
   workflowPanelActionGroupStyles,
@@ -41,6 +45,11 @@ interface SrtMountedPanelProps {
   onTargetLanguageChange?: (lang: string) => void;
   disableDub?: boolean;
   className?: string;
+  /**
+   * Opened as "Translate to another language": the user picks a language
+   * the lines aren't already in before Translate is offered.
+   */
+  pickAnotherLanguage?: boolean;
 }
 
 export default function SrtMountedPanel({
@@ -54,8 +63,32 @@ export default function SrtMountedPanel({
   onTargetLanguageChange,
   disableDub = false,
   className,
+  pickAnotherLanguage = false,
 }: SrtMountedPanelProps) {
   const { t } = useTranslation();
+  const order = useSubStore(s => s.order);
+  const segments = useSubStore(s => s.segments);
+  // The languages the lines are already in: no point translating into them.
+  const presentLanguages = useMemo(() => {
+    if (!pickAnotherLanguage) return new Set<string>();
+    const originals: string[] = [];
+    const translations: string[] = [];
+    for (const id of order) {
+      const seg = segments[id];
+      if (seg?.original?.trim()) originals.push(seg.original);
+      if (seg?.translation?.trim()) translations.push(seg.translation);
+    }
+    return new Set(
+      [detectTextLanguage(originals), detectTextLanguage(translations)].filter(
+        (value): value is string => Boolean(value)
+      )
+    );
+  }, [pickAnotherLanguage, order, segments]);
+  const [pickedLanguage, setPickedLanguage] = useState('');
+  useEffect(() => {
+    if (!pickAnotherLanguage) setPickedLanguage('');
+  }, [pickAnotherLanguage]);
+  const languageNeeded = pickAnotherLanguage && !pickedLanguage;
   const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
   const setSubtitleDisplayMode = useUIStore(s => s.setSubtitleDisplayMode);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
@@ -70,6 +103,11 @@ export default function SrtMountedPanel({
     isTranscribing ||
     isMergeInProgress ||
     isSummaryInProgress;
+  // What Dub really costs, including the translation it runs first.
+  const { estimate: dubEstimate } = useDubEstimate();
+  const cannotAffordDub = Boolean(
+    dubEstimate && !dubEstimate.blocked && !dubEstimate.hasEnoughCredits
+  );
   const isDubDisabled =
     disabled ||
     disableDub ||
@@ -78,10 +116,18 @@ export default function SrtMountedPanel({
     isDubbing ||
     isMergeInProgress ||
     isSummaryInProgress ||
-    isDownloadInProgress;
+    isDownloadInProgress ||
+    cannotAffordDub;
 
   const { dubbingEstimate, translationEstimate, formatCostLabel } =
     useCreditCostEstimates();
+
+  const cannotAffordTranslation = Boolean(
+    translationEstimate &&
+    !translationEstimate.isByo &&
+    !translationEstimate.hasEnoughCredits &&
+    !isTranslating
+  );
 
   const translationCostClassName = cx(
     workflowPanelCostStyles,
@@ -92,7 +138,7 @@ export default function SrtMountedPanel({
 
   const dubbingCostClassName = cx(
     workflowPanelCostStyles,
-    dubbingEstimate && !dubbingEstimate.hasEnoughCredits
+    (dubbingEstimate && !dubbingEstimate.hasEnoughCredits) || cannotAffordDub
       ? workflowPanelCostWarningStyles
       : undefined
   );
@@ -113,7 +159,11 @@ export default function SrtMountedPanel({
         </div>
         <div className={workflowPanelTextBlockStyles}>
           <h3 className={workflowPanelTitleStyles}>
-            {t('input.srtLoaded', 'Transcription Complete')}
+            {pickAnotherLanguage
+              ? t('input.translateTheseSubtitles', 'Translate these subtitles')
+              : srtPath
+                ? t('input.subtitlesLoaded', 'Subtitles loaded')
+                : t('input.srtLoaded', 'Transcription Complete')}
           </h3>
           {srtPath && (
             <p className={workflowPanelMetaStyles}>
@@ -131,22 +181,34 @@ export default function SrtMountedPanel({
           <select
             id="output-language-select"
             className={selectStyles}
-            value={targetLanguage}
-            onChange={e => onTargetLanguageChange?.(e.target.value)}
+            value={pickAnotherLanguage ? pickedLanguage : targetLanguage}
+            onChange={e => {
+              setPickedLanguage(e.target.value);
+              onTargetLanguageChange?.(e.target.value);
+            }}
             disabled={isDisabled}
           >
-            {TRANSLATION_LANGUAGES_BASE.map(opt => (
+            {pickAnotherLanguage ? (
+              <option value="" disabled>
+                {t('input.chooseLanguage', 'Choose a language')}
+              </option>
+            ) : null}
+            {TRANSLATION_LANGUAGES_BASE.filter(
+              opt => !presentLanguages.has(opt.value)
+            ).map(opt => (
               <option key={opt.value} value={opt.value}>
                 {t(opt.labelKey)}
               </option>
             ))}
             {TRANSLATION_LANGUAGE_GROUPS.map(group => (
               <optgroup key={group.labelKey} label={t(group.labelKey)}>
-                {group.options.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(opt.labelKey)}
-                  </option>
-                ))}
+                {group.options
+                  .filter(opt => !presentLanguages.has(opt.value))
+                  .map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
+                    </option>
+                  ))}
               </optgroup>
             ))}
           </select>
@@ -181,15 +243,28 @@ export default function SrtMountedPanel({
         </div>
 
         <div className={workflowPanelActionGroupStyles}>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={onTranslate}
-            disabled={isDisabled}
-            isLoading={isTranslating}
-          >
-            {t('subtitles.translate', 'Translate')}
-          </Button>
+          {cannotAffordTranslation ? (
+            // Not enough credits: the next step is getting some, not a
+            // translation that would stop at once.
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => useUIStore.getState().toggleSettings(true)}
+              disabled={isDisabled}
+            >
+              {t('subtitles.addCreditsToTranslate', 'Add credits to translate')}
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={onTranslate}
+              disabled={isDisabled || languageNeeded}
+              isLoading={isTranslating}
+            >
+              {t('subtitles.translate', 'Translate')}
+            </Button>
+          )}
           {translationEstimate &&
             !isTranslating &&
             !translationEstimate.isByo && (
@@ -234,7 +309,12 @@ export default function SrtMountedPanel({
             >
               {dubbingEstimate.blockedInApiKeyMode
                 ? 'ElevenLabs'
-                : `${formatCostLabel(dubbingEstimate.estimatedCredits)} · ElevenLabs`}
+                : formatCostLabel(
+                    dubEstimate?.total ?? dubbingEstimate.estimatedCredits
+                  )}
+              {cannotAffordDub
+                ? ` ${t('subtitles.dubNotEnoughCredits', 'Not enough credits for this dub.')}`
+                : null}
             </span>
           )}
         </div>

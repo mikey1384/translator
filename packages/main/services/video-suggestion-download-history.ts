@@ -9,6 +9,7 @@ import {
   sanitizeVideoSuggestionHistoryPath,
   sanitizeVideoSuggestionWebUrl,
 } from '../../shared/helpers/video-suggestion-sanitize.js';
+import { canonicalVideoSourceKey } from '../../shared/helpers/video-url.js';
 
 const MAX_HISTORY_ITEMS = 40;
 
@@ -199,6 +200,7 @@ function mergeHistoryItem(
   const incoming = sanitizeHistoryItem(incomingValue);
   if (!incoming) return { items, displaced: [] };
   const incomingPath = normalizePath(incoming.localPath);
+  const incomingSource = canonicalVideoSourceKey(incoming.sourceUrl);
   const next = [incoming];
   const deduplicated: VideoSuggestionDownloadHistoryItem[] = [];
   for (const existing of items) {
@@ -207,9 +209,12 @@ function mergeHistoryItem(
       deduplicated.push(existing);
       continue;
     }
+    // One entry per video: downloading it again replaces the older entry
+    // (youtu.be vs watch?v=, share parameters and all), and the older
+    // managed copy is reclaimed unless it is open.
     if (
-      existing.sourceUrl === incoming.sourceUrl &&
-      (!existingPath || !incomingPath)
+      incomingSource &&
+      canonicalVideoSourceKey(existing.sourceUrl) === incomingSource
     ) {
       deduplicated.push(existing);
       continue;

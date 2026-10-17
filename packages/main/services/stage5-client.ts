@@ -6,7 +6,7 @@ import {
   WIRE_TRANSLATION_RATE_LIMIT,
   WIRE_TRANSLATION_QUEUE_OVERLOADED,
 } from '../../shared/constants/wire-protocol.js';
-import Store from 'electron-store';
+import { createSafeStore } from '../store/safe-store.js';
 import crypto from 'crypto';
 import fs from 'fs';
 import FormData from 'form-data';
@@ -86,7 +86,7 @@ const DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_CODES = new Set([
 const DURABLE_TRANSCRIPTION_TRANSIENT_DETACHABLE_MESSAGE_PATTERN =
   /(timeout|timed out|temporarily unavailable|connection reset|fetch failed|gateway|rate limit|socket hang up|network)/i;
 
-const durableTranscriptionStore = new Store<{
+const durableTranscriptionStore = createSafeStore<{
   jobs: Record<string, DurableTranscriptionResumeRecord>;
 }>({
   name: 'durable-transcription-jobs',

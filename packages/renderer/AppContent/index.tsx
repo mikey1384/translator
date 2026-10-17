@@ -22,6 +22,7 @@ import Header from './Header';
 
 import ProgressArea from '../components/ProgressAreas/ProgressArea';
 import MergingProgressArea from '../components/ProgressAreas/MergingProgressArea';
+import { ExportOutcomeNotice } from '../components/workspace/ExportResult';
 import TranslationProgressArea from '../components/ProgressAreas/TranslationProgressArea';
 import TranscriptionProgressArea from '../components/ProgressAreas/TranscriptionProgressArea';
 import DubbingProgressArea from '../components/ProgressAreas/DubbingProgressArea';
@@ -29,6 +30,8 @@ import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
 import Button from '../components/Button';
 import ErrorBanner from '../components/ErrorBanner';
+import UrlCookieBanner from '../containers/GenerateSubtitles/UrlCookieBanner';
+import { handleWindowFileDrop } from '../utils/mediaDrop';
 import { ProgressPresentationContext } from '../components/ProgressAreas/progress-presentation';
 import {
   WorkspaceActionBar,
@@ -60,10 +63,8 @@ import * as OperationIPC from '../ipc/operation';
 import { logProgress, logButton, logError } from '../utils/logger';
 import {
   isAbortLikeReason,
-  isDisruptiveDownloadFailure,
-  isDisruptiveGlobalError,
-  isDisruptiveTaskFailure,
   shouldIgnoreGlobalBrowserError,
+  shouldReportUnhandledRejection,
 } from '../utils/disruptiveErrors';
 import { useRef } from 'react';
 import {
@@ -175,17 +176,24 @@ export default function AppContent() {
     };
   }, []);
 
-  // Files dropped outside a drop zone must not navigate the app to them;
-  // drop zones (home) handle their own events before this.
+  // Files dropped outside a drop zone must not navigate the app to them.
+  // Drop zones (home's box) handle their own drops first and mark them
+  // handled; any other drop opens the file (utils/mediaDrop).
   useEffect(() => {
-    const block = (event: DragEvent) => {
+    const allow = (event: DragEvent) => {
       if (event.dataTransfer?.types?.includes('Files')) event.preventDefault();
     };
-    window.addEventListener('dragover', block);
-    window.addEventListener('drop', block);
+    const drop = (event: DragEvent) => {
+      if (!event.dataTransfer?.types?.includes('Files')) return;
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+      void handleWindowFileDrop(Array.from(event.dataTransfer.files || []));
+    };
+    window.addEventListener('dragover', allow);
+    window.addEventListener('drop', drop);
     return () => {
-      window.removeEventListener('dragover', block);
-      window.removeEventListener('drop', block);
+      window.removeEventListener('dragover', allow);
+      window.removeEventListener('drop', drop);
     };
   }, []);
 
@@ -212,7 +220,6 @@ export default function AppContent() {
   }, [showSettings]);
   const setDownload = useUrlStore(s => s.setDownload);
   const globalError = useUrlStore(s => s.error);
-  const globalErrorKind = useUrlStore(s => s.errorKind);
   const clearGlobalError = useUrlStore(s => s.clearError);
   const videoUrl = useVideoStore(s => s.url);
   const hasMountedSubtitles = useSubStore(s => s.order.length > 0);
@@ -236,11 +243,6 @@ export default function AppContent() {
   const isDubbing = useTaskStore(
     s => !!s.dubbing.inProgress && (s.dubbing.id?.startsWith('dub-') ?? false)
   );
-  const transcriptionStage = useTaskStore(s => s.transcription.stage);
-  const translationStage = useTaskStore(s => s.translation.stage);
-  const dubbingStage = useTaskStore(s => s.dubbing.stage);
-  const mergeStage = useTaskStore(s => s.merge.stage);
-  const summaryStage = useTaskStore(s => s.summary.stage);
   const transcriptionTask = useTaskStore(s => s.transcription);
   const summaryTask = useTaskStore(s => s.summary);
   const pendingHighlightRequests = useHighlightGenerationRequestStore(
@@ -355,57 +357,9 @@ export default function AppContent() {
     transcriptionTask,
   ]);
 
-  // Auto-surface a report flow for disruptive failures.
-  useEffect(() => {
-    if (isDisruptiveGlobalError(globalError, globalErrorKind)) {
-      openErrorReportPrompt();
-    }
-  }, [globalError, globalErrorKind]);
-
-  useEffect(() => {
-    if (isDisruptiveGlobalError(globalError, globalErrorKind)) return;
-    if (
-      isDisruptiveDownloadFailure({
-        stage: download.stage,
-        error: globalError,
-        kind: globalErrorKind,
-      })
-    ) {
-      openErrorReportPrompt();
-    }
-  }, [download.stage, globalError, globalErrorKind]);
-
-  useEffect(() => {
-    if (
-      isDisruptiveTaskFailure({
-        stage: transcriptionStage,
-        error: globalError,
-      }) ||
-      isDisruptiveTaskFailure({
-        stage: translationStage,
-        error: globalError,
-      }) ||
-      isDisruptiveTaskFailure({
-        stage: dubbingStage,
-        error: globalError,
-      }) ||
-      isDisruptiveTaskFailure({
-        stage: mergeStage,
-      }) ||
-      isDisruptiveTaskFailure({
-        stage: summaryStage,
-      })
-    ) {
-      openErrorReportPrompt();
-    }
-  }, [
-    globalError,
-    transcriptionStage,
-    translationStage,
-    dubbingStage,
-    mergeStage,
-    summaryStage,
-  ]);
+  // Task failures reach the user through utils/taskFailure.ts (credits
+  // dialog, localized message, or the report dialog naming the task), so no
+  // effect here guesses from stage or banner text.
 
   useEffect(() => {
     const onError = (event: Event) => {
@@ -419,11 +373,13 @@ export default function AppContent() {
       openErrorReportPrompt();
     };
     const onUnhandled = (event: PromiseRejectionEvent) => {
-      if (isAbortLikeReason((event as any)?.reason)) return;
-      logError('window.unhandledrejection', (event as any)?.reason, {
-        reasonType: typeof (event as any)?.reason,
+      const reason = (event as any)?.reason;
+      if (isAbortLikeReason(reason)) return;
+      logError('window.unhandledrejection', reason, {
+        reasonType: typeof reason,
       });
-      openErrorReportPrompt();
+      // A stray credits/network/API-key rejection is not a crash.
+      if (shouldReportUnhandledRejection(reason)) openErrorReportPrompt();
     };
     window.addEventListener('error', onError);
     window.addEventListener('unhandledrejection', onUnhandled);
@@ -517,6 +473,7 @@ export default function AppContent() {
       />
 
       {mergeInProgress && <MergingProgressArea />}
+      <ExportOutcomeNotice />
 
       {isTranscribing && <TranscriptionProgressArea />}
 
@@ -541,6 +498,10 @@ export default function AppContent() {
             />
           </div>
         )}
+
+        {/* Wherever a download started (home, workspace, Change Video), a
+            human check is answered here. */}
+        <UrlCookieBanner />
 
         {/* One wrapper in every layout so MainPanels never remounts when a
             video appears mid-job. */}

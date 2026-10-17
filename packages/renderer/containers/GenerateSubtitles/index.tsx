@@ -18,7 +18,6 @@ import {
   useSubStore,
 } from '../../state';
 import { useUrlStore } from '../../state/url-store';
-import UrlCookieBanner from './UrlCookieBanner';
 import MediaInputSection, {
   type AutoRunTarget,
 } from './components/MediaInputSection.js';
@@ -28,6 +27,7 @@ import AutoRunProgress, {
 } from './components/AutoRunProgress.js';
 import HighlightWorkflowProgress from './components/HighlightWorkflowProgress.js';
 import TranscribeOnlyPanel from './components/TranscribeOnlyPanel.js';
+import DubPanel from './components/DubPanel.js';
 import SrtMountedPanel from './components/SrtMountedPanel.js';
 import TranscriptSummaryPanel from '../../components/TranscriptSummaryPanel/index.js';
 import VideoSuggestionPanel from './components/VideoSuggestionPanel/index.js';
@@ -57,12 +57,9 @@ import useDownloadedVideoLibrary from './hooks/useDownloadedVideoLibrary.js';
 import {
   startTranscriptionFlow,
   executeSrtTranslation,
-  executeDubGeneration,
 } from './utils/subtitleGeneration';
-import {
-  ensureSubtitlesTranslatedForDubbing,
-  runFullSrtTranslation,
-} from '../../utils/runFullTranslation';
+import { runFullSrtTranslation } from '../../utils/runFullTranslation';
+import { runMountedDub } from '../../utils/runDub';
 import {
   buildSemanticSummarySourceIdentity,
   buildSummaryRequestOwnerKey,
@@ -176,6 +173,7 @@ export default function GenerateSubtitles() {
   const toolsFocus = useUIStore(s =>
     s.workspaceToolsOpen ? s.workspaceToolsFocus : null
   );
+  const workspaceToolsOpen = useUIStore(s => s.workspaceToolsOpen);
   const setActiveWorkspaceTab = useUIStore(
     s => s.setGenerateSubtitlesWorkspaceTab
   );
@@ -183,6 +181,7 @@ export default function GenerateSubtitles() {
   // UI State
   const targetLanguage = useUIStore(s => s.targetLanguage);
   const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
+  const chooseTargetLanguage = useUIStore(s => s.chooseTargetLanguage);
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
 
   // URL processing state
@@ -369,9 +368,16 @@ export default function GenerateSubtitles() {
     target: Exclude<AutoRunTarget, 'download'>;
     phase: AutoRunPhase;
     failedStep?: AutoRunFailedStep;
+    // A file already on disk: there was no download step.
+    fromLocalFile?: boolean;
   } | null>(null);
   // The continuation still owed once the download mounts ('download' = none).
   const pendingAutoRunTargetRef = useRef<AutoRunTarget>('download');
+  // The chain a download stopped by a human check would have continued.
+  const cookieRetryChainRef = useRef<{
+    target: AutoRunTarget;
+    language: string;
+  } | null>(null);
   // The source path the pending auto-run is bound to. Bound (as state, not a ref)
   // only once the download has actually mounted, so (a) the continuation can
   // never fire against the old/unrelated source while the download is in flight
@@ -467,10 +473,13 @@ export default function GenerateSubtitles() {
             : s
         );
       void runChain().then(
-        ok =>
-          ok
-            ? setAutoRunSession(s => (s ? { ...s, phase: 'done' } : s))
-            : markError(),
+        result =>
+          result === 'offer'
+            ? // Nothing ran: the free-preview offer card takes over.
+              setAutoRunSession(null)
+            : result
+              ? setAutoRunSession(s => (s ? { ...s, phase: 'done' } : s))
+              : markError(),
         () => markError()
       );
     }
@@ -751,6 +760,7 @@ export default function GenerateSubtitles() {
   ) {
     const target = override?.target ?? autoRunTarget;
     const chainLanguage = override?.language ?? autoRunLanguage;
+    cookieRetryChainRef.current = null;
     // Bind to a source only after the download mounts (below). Until then the
     // continuation is unbound and cannot fire against whatever is currently
     // mounted, even if that source's metadata becomes ready mid-download.
@@ -777,6 +787,11 @@ export default function GenerateSubtitles() {
     // Require the current source to be the downloaded file itself (its stored
     // path equals res.videoPath/filePath verbatim — see video-store setFile),
     // so the continuation can never bind to the old or an unrelated file.
+    // A human check stops the download; remember the chain so "Connect &
+    // retry" continues it instead of only downloading.
+    if (typedResult?.error === 'NeedCookies' && target !== 'download') {
+      cookieRetryChainRef.current = { target, language: chainLanguage };
+    }
     const downloadedPath =
       typedResult?.videoPath ?? typedResult?.filePath ?? null;
     const mountedSourcePath = useVideoStore.getState().path;
@@ -799,6 +814,24 @@ export default function GenerateSubtitles() {
     }
     return result;
   }
+
+  const cookieRetryRequest = useUrlStore(s => s.cookieRetryRequest);
+  useEffect(() => {
+    if (!cookieRetryRequest) return;
+    const { id, request } = cookieRetryRequest;
+    useUrlStore.getState().clearCookieRetryRequest(id);
+    const chain = cookieRetryChainRef.current;
+    void runDownloadWithAutoRun(
+      () =>
+        downloadMedia({
+          url: request.url,
+          mountOnComplete: request.mountOnComplete,
+          preserveSubtitles: request.preserveSubtitles,
+        }),
+      chain ?? { target: 'download', language: autoRunLanguage }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cookieRetryRequest]);
 
   async function handleProcessUrlDownload() {
     if (isSourceChangeBlocked) return;
@@ -826,9 +859,14 @@ export default function GenerateSubtitles() {
       });
       return;
     }
+    const runTarget = request.target ?? 'translate';
     setPreTranscriptProcessingLanguage(language);
-    pendingAutoRunTargetRef.current = 'translate';
-    setAutoRunSession({ target: 'translate', phase: 'transcribing' });
+    pendingAutoRunTargetRef.current = runTarget;
+    setAutoRunSession({
+      target: runTarget,
+      phase: 'transcribing',
+      fromLocalFile: true,
+    });
     // Bound to the exact file the home screen mounted; the auto-run effect
     // starts once that file's metadata is ready.
     setAutoRunBoundSource(request.path);
@@ -847,14 +885,27 @@ export default function GenerateSubtitles() {
   // everything stays mounted so running jobs and results are kept.
   const showsHighlightsOnly =
     toolsFocus === 'clips' || toolsFocus === 'summary';
-  const showsTranslateOnly = toolsFocus === 'dub' || toolsFocus === 'translate';
-  const focusedView = showsHighlightsOnly || showsTranslateOnly;
-  const hideStepTwoActions = showsHighlightsOnly && summarySegments.length > 0;
-  const hideHighlights = showsTranslateOnly;
+  const showsTranslateOnly = toolsFocus === 'translate';
+  // "Dub it" has its own card (voice, mix, cost, result) in place of Step 2.
+  const showsDubOnly = toolsFocus === 'dub';
+  const focusedView = showsHighlightsOnly || showsTranslateOnly || showsDubOnly;
+  const hideStepTwoActions =
+    (showsHighlightsOnly && summarySegments.length > 0) || showsDubOnly;
+  const hideHighlights = showsTranslateOnly || showsDubOnly;
   const tabShown = focusedView ? 'main' : activeWorkspaceTab;
 
   return (
-    <div style={toolsFocus === 'video' ? { display: 'none' } : undefined}>
+    <div
+      style={
+        toolsFocus === 'video'
+          ? { display: 'none' }
+          : workspaceToolsOpen
+            ? // Room for the floating scroll-to-top button, so the last
+              // line (a cost or a status) is never under it.
+              { paddingBottom: 96 }
+            : undefined
+      }
+    >
       <Section
         destination="generate"
         title={focusedView ? undefined : t('subtitles.generate')}
@@ -919,6 +970,7 @@ export default function GenerateSubtitles() {
               phase={autoRunSession.phase}
               language={autoRunLanguage}
               failedStep={autoRunSession.failedStep}
+              showDownloadStep={!autoRunSession.fromLocalFile}
               onDismiss={() => setAutoRunSession(null)}
             />
           ) : null}
@@ -944,7 +996,6 @@ export default function GenerateSubtitles() {
             <div className={workflowStageBodyStyles}>
               {!(videoFile || videoFilePath) ? (
                 <>
-                  <UrlCookieBanner />
                   <MediaInputSection
                     videoFile={videoFile}
                     recentMedia={recentLocalMedia}
@@ -1012,6 +1063,34 @@ export default function GenerateSubtitles() {
               </div>
 
               <div className={workflowStageBodyStyles}>
+                {showsDubOnly ? (
+                  <DubPanel
+                    onDub={() => void handleDub()}
+                    disabled={
+                      isButtonDisabled ||
+                      hoursNeeded == null ||
+                      isStepTwoMutationLocked
+                    }
+                    transcribeSlot={
+                      <TranscribeOnlyPanel
+                        className={workflowPanelFlushStyles}
+                        onTranscribe={handleTranscribeOnly}
+                        isTranscribing={isTranscribing}
+                        disabled={
+                          isButtonDisabled ||
+                          hoursNeeded == null ||
+                          isMetadataPending ||
+                          isStepTwoMutationLocked
+                        }
+                        statusMessage={metadataStatusMessage}
+                        transcriptionBlockedMessage={
+                          transcriptionBlockedMessage
+                        }
+                        costPreview={transcriptionCostPreview}
+                      />
+                    }
+                  />
+                ) : null}
                 {!showMountedTranscriptStep && !isTranslating ? (
                   <>
                     <div
@@ -1025,9 +1104,10 @@ export default function GenerateSubtitles() {
                         onTranslate={handleTranslateFromScratch}
                         onCreateHighlight={handleCreateHighlight}
                         processingLanguage={preTranscriptProcessingLanguage}
-                        onProcessingLanguageChange={
-                          setPreTranscriptProcessingLanguage
-                        }
+                        onProcessingLanguageChange={language => {
+                          setPreTranscriptProcessingLanguage(language);
+                          chooseTargetLanguage(language);
+                        }}
                         isTranscribing={
                           isTranscribing && !isPreTranscriptTranslateRunning
                         }
@@ -1096,7 +1176,8 @@ export default function GenerateSubtitles() {
                           isStepTwoMutationLocked
                         }
                         targetLanguage={targetLanguage}
-                        onTargetLanguageChange={setTargetLanguage}
+                        onTargetLanguageChange={chooseTargetLanguage}
+                        pickAnotherLanguage={toolsFocus === 'translate'}
                         onDub={handleDub}
                         isDubbing={isDubbing}
                         disableDub={
@@ -1136,6 +1217,7 @@ export default function GenerateSubtitles() {
                         <TranscriptSummaryPanel
                           generationLocked={isHighlightWorkflowTranscribing}
                           segments={summarySegments}
+                          view={toolsFocus === 'summary' ? 'summary' : 'clips'}
                         />
                       </div>
                     ) : null}
@@ -1550,7 +1632,9 @@ export default function GenerateSubtitles() {
     }
   }
 
-  async function handleTranslateFromScratch(): Promise<boolean> {
+  // 'offer': the balance covers none of the video, so nothing ran and the
+  // free-preview offer is showing instead.
+  async function handleTranslateFromScratch(): Promise<boolean | 'offer'> {
     if (
       highlightWorkflowRunning ||
       stepTwoWorkflowActive ||
@@ -1574,7 +1658,7 @@ export default function GenerateSubtitles() {
         language: requestedLanguage,
         status: 'offer',
       });
-      return true;
+      return 'offer';
     }
     const previewEndSec =
       previewPlan.kind === 'preview' ? previewPlan.previewSecs : undefined;
@@ -1701,44 +1785,9 @@ export default function GenerateSubtitles() {
 
   async function handleDub() {
     if (isStepTwoMutationLocked) return;
-    let subtitleState = useSubStore.getState();
-    let currentSegments = subtitleState.order.map(
-      id => subtitleState.segments[id]
-    );
-    if (currentSegments.length === 0) {
-      useUrlStore
-        .getState()
-        .setValidationError('No subtitles available for dubbing');
-      return;
-    }
-
-    // Dub the selected output language, not whatever text happens to be
-    // mounted: translate first when translations are missing or were made
-    // for a different language.
-    const ready = await ensureSubtitlesTranslatedForDubbing();
-    if (!ready.ok) {
-      return;
-    }
-    subtitleState = useSubStore.getState();
-    currentSegments = subtitleState.order.map(id => subtitleState.segments[id]);
-
-    const operationId = `dub-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    const videoStoreState = useVideoStore.getState();
-    const sourceVideoPath =
-      videoStoreState.originalPath ??
-      subtitleState.sourceVideoPath ??
-      videoFilePath ??
-      videoStoreState.path;
-
-    const dubVoice = useUIStore.getState().dubVoice;
-
-    await executeDubGeneration({
-      segments: currentSegments,
-      operationId,
-      videoPath: sourceVideoPath,
-      voice: dubVoice,
-      targetLanguage,
-      videoDurationSeconds: durationSecs ?? undefined,
+    await runMountedDub({
+      videoDurationSeconds: durationSecs,
+      fallbackVideoPath: videoFilePath,
     });
   }
 

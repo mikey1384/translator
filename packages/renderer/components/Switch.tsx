@@ -32,7 +32,7 @@ const trackOn = css`
 const thumb = css`
   position: absolute;
   top: 2px;
-  left: 2px;
+  inset-inline-start: 2px;
   width: 18px;
   height: 18px;
   background: ${colors.text};
@@ -42,6 +42,10 @@ const thumb = css`
 
 const thumbOn = css`
   transform: translateX(20px);
+
+  [dir='rtl'] & {
+    transform: translateX(-20px);
+  }
 `;
 
 export default function Switch({

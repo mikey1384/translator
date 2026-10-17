@@ -1,6 +1,14 @@
 import { CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR } from '../../shared/constants';
+import { taskForOperationId } from './userFacingError';
 
-export type CreditRefusalKind = 'transcription' | 'translation' | 'other';
+/** The task the user started; the credits dialog is worded for it. */
+export type CreditRefusalKind =
+  | 'transcription'
+  | 'translation'
+  | 'dubbing'
+  | 'summary'
+  | 'videoSearch'
+  | 'other';
 
 // What was refused. Kept separate from the balance so the dialog can read the
 // live, authoritative balance instead of a number frozen at refusal time.
@@ -49,12 +57,17 @@ export function registerFullTranscriptionSeconds(
 export function creditRefusalKindForOperation(
   operationId: string | null | undefined
 ): CreditRefusalKind {
-  const id = String(operationId || '');
-  if (id.startsWith('transcribe-') || id.endsWith('-transcribe')) {
-    return 'transcription';
+  const task = taskForOperationId(operationId);
+  switch (task) {
+    case 'transcription':
+    case 'translation':
+    case 'dubbing':
+    case 'summary':
+    case 'videoSearch':
+      return task;
+    default:
+      return 'other';
   }
-  if (id.startsWith('translate-')) return 'translation';
-  return 'other';
 }
 
 export function creditRefusalForOperation(

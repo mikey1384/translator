@@ -9,9 +9,7 @@ import { useUrlStore } from '../../state/url-store';
 function isYouTubeUrl(rawUrl: string): boolean {
   try {
     const u = new URL(rawUrl.trim());
-    return (
-      /(^|\\.)youtube\\.com$/.test(u.hostname) || u.hostname === 'youtu.be'
-    );
+    return /(^|\.)youtube\.com$/.test(u.hostname) || u.hostname === 'youtu.be';
   } catch {
     return false;
   }
@@ -20,15 +18,17 @@ function isYouTubeUrl(rawUrl: string): boolean {
 export default function UrlCookieBanner() {
   const { t } = useTranslation();
   const needCookies = useUrlStore(s => s.needCookies);
-  const urlInput = useUrlStore(s => s.urlInput);
+  // The link that asked for the check, not whatever the field shows now.
+  const retryUrl = useUrlStore(s => s.lastDownloadRequest?.url || s.urlInput);
   const setNeedCookies = useUrlStore(s => s.setNeedCookies);
+  const requestCookieRetry = useUrlStore(s => s.requestCookieRetry);
   const downloadMedia = useUrlStore(s => s.downloadMedia);
   const setError = useUrlStore(s => s.setError);
   const downloadInProgress = useUrlStore(s => s.download.inProgress);
   const downloadStage = useUrlStore(s => s.download.stage);
   const [connecting, setConnecting] = useState(false);
 
-  const isYouTube = isYouTubeUrl(urlInput);
+  const isYouTube = isYouTubeUrl(retryUrl);
 
   useEffect(() => {
     if (downloadInProgress) {
@@ -39,7 +39,7 @@ export default function UrlCookieBanner() {
   async function connectAndRetry() {
     if (connecting) return;
 
-    const url = urlInput.trim();
+    const url = retryUrl.trim();
     if (!url) return;
 
     setConnecting(true);
@@ -60,9 +60,11 @@ export default function UrlCookieBanner() {
         setError(res?.error || t('errors.connectFailed'));
         return;
       }
-      // Retry the download; yt-dlp will use the app-managed cookies automatically.
+      // Retry the same download; yt-dlp uses the app-managed cookies
+      // automatically. The workspace re-runs it so a "Make it speak" chain
+      // continues after the retry.
       setNeedCookies(false);
-      await downloadMedia();
+      if (!requestCookieRetry()) await downloadMedia({ url });
     } catch (e: any) {
       setError(e?.message || t('errors.connectFailed'));
     } finally {
@@ -80,6 +82,7 @@ export default function UrlCookieBanner() {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        margin-bottom: 12px;
       `}
     >
       <Alert variant="warning" onClose={() => setNeedCookies(false)}>

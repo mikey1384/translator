@@ -7,7 +7,7 @@ import { parseSrt } from '../../shared/helpers';
 import * as SubtitleLibraryIPC from '../ipc/subtitle-library';
 import * as FileIPC from '../ipc/file';
 import { takeLeftDocument } from './subtitle-documents';
-import { useSubStore } from '../state/subtitle-store';
+import { clearSubtitleUndoHistory, useSubStore } from '../state/subtitle-store';
 import { useUIStore } from '../state/ui-store';
 import { useVideoStore } from '../state/video-store';
 import { openUnsavedSrtConfirm } from '../state/modal-store';
@@ -152,6 +152,49 @@ export async function storeGeneratedSubtitleArtifact(args: {
   };
 }
 
+type SubtitleDocumentLookup = {
+  sourceVideoPath: string | null;
+  sourceVideoAssetIdentity: string | null;
+  sourceUrl: string | null;
+};
+
+function hasDocumentSegments(
+  result: Awaited<ReturnType<typeof FileIPC.findSubtitleDocumentForSource>>
+): boolean {
+  return Boolean(
+    result.success &&
+    result.document &&
+    Array.isArray(result.segments) &&
+    result.segments.length > 0
+  );
+}
+
+/**
+ * When nothing matches the requested language: the most recently saved
+ * document for the source, of any kind. The one exception is a translation
+ * into another language while the user has just asked for a specific one
+ * (home "Make it speak X"); then only the video's own transcript is used, so
+ * the requested run isn't preceded by an unrelated language.
+ */
+async function findFallbackDocumentForSource(
+  lookup: SubtitleDocumentLookup,
+  requestedTargetLanguage: string | null
+) {
+  const latest = await FileIPC.findSubtitleDocumentForSource(lookup);
+  if (!hasDocumentSegments(latest)) return latest;
+  const document = latest.document!;
+  const isOtherLanguage =
+    document.subtitleKind === 'translation' &&
+    normalizeComparableTargetLanguage(document.targetLanguage) !==
+      normalizeComparableTargetLanguage(requestedTargetLanguage);
+  const explicitTargetPending = Boolean(useUIStore.getState().homeRunRequest);
+  if (!isOtherLanguage || !explicitTargetPending) return latest;
+  return FileIPC.findSubtitleDocumentForSource({
+    ...lookup,
+    subtitleKind: 'transcription',
+  });
+}
+
 export async function maybeAutoMountStoredSubtitleForVideo(args: {
   sourceVideoPath?: string | null;
   sourceUrl?: string | null;
@@ -280,16 +323,17 @@ export async function maybeAutoMountStoredSubtitleForVideo(args: {
     (!result.content?.trim() &&
       (!Array.isArray(result.segments) || result.segments.length === 0))
   ) {
-    // Last resort: the video's own transcript. A transcript-only video used
-    // to open empty even though its Recent card said "subtitles ready".
-    // Another language's translation is never mounted in place of the
-    // requested one.
-    const fallbackDocumentResult = await FileIPC.findSubtitleDocumentForSource({
-      sourceVideoPath,
-      sourceVideoAssetIdentity,
-      sourceUrl: args.sourceUrl ?? null,
-      subtitleKind: 'transcription',
-    });
+    // Last resort: the most recent document for this video, whatever its
+    // kind (imported .srt, transcript, another language), so saved work
+    // always comes back. See findFallbackDocumentForSource.
+    const fallbackDocumentResult = await findFallbackDocumentForSource(
+      {
+        sourceVideoPath,
+        sourceVideoAssetIdentity,
+        sourceUrl: args.sourceUrl ?? null,
+      },
+      preferredVariant.targetLanguage ?? null
+    );
     if (
       fallbackDocumentResult.success &&
       fallbackDocumentResult.document &&
@@ -446,6 +490,7 @@ export async function rememberStoredSubtitleSourcePath(args: {
 export function unmountCurrentSubtitles(): void {
   const current = useSubStore.getState();
   current._abortPlayListener?.();
+  clearSubtitleUndoHistory();
   useSubStore.setState({
     segments: {},
     order: [],
@@ -472,6 +517,9 @@ export function unmountCurrentSubtitles(): void {
     lcRangesCache: [],
     libraryEntryId: null,
     libraryKind: null,
+    dirty: false,
+    undoDepth: 0,
+    lastUndoable: null,
   } as any);
 }
 

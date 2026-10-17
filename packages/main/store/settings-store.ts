@@ -1,11 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
-import Store from 'electron-store';
+import type Store from 'electron-store';
 import {
   APP_SETTINGS_DEFAULTS,
   type AppSettingsSchema,
 } from './settings-schema.js';
+import { createSafeStore } from './safe-store.js';
 import { migrateLegacyOpenAiDubbingSettings } from './dubbing-settings-migration.js';
 import { migrateLegacyOpenAiTranscriptionSettings } from './transcription-settings-migration.js';
 
@@ -25,10 +26,11 @@ const STORE_DEFAULTS: Partial<AppSettingsSchema> = {
 // legacy implicit-Claude behavior for existing profiles that never stored this key.
 delete (STORE_DEFAULTS as Partial<AppSettingsSchema>).preferClaudeReview;
 
-export const settingsStore: SettingsStoreType = new Store<AppSettingsSchema>({
-  name: 'app-settings',
-  defaults: STORE_DEFAULTS,
-});
+export const settingsStore: SettingsStoreType =
+  createSafeStore<AppSettingsSchema>({
+    name: 'app-settings',
+    defaults: STORE_DEFAULTS,
+  });
 
 if (!settingsStore.has('preferClaudeReview')) {
   settingsStore.set(

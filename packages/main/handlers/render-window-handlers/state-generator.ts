@@ -10,17 +10,7 @@ import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.
 
 function getRenderStateCacheKey(state: SubtitleRenderState): string {
   if (state.mode === 'editorial') return JSON.stringify(state);
-  if (state.mode === 'plain') {
-    return `plain:${state.text}`;
-  }
-
-  return `timed:${state.parts
-    .map(part =>
-      part.kind === 'whitespace'
-        ? `space:${part.text}`
-        : `word:${part.state}:${part.text}`
-    )
-    .join('|')}`;
+  return `plain:${state.text}`;
 }
 
 export async function generateStatePngs({
@@ -144,11 +134,6 @@ export async function generateStatePngs({
             if (state.mode === 'editorial') {
               // @ts-expect-error provided by render-host script
               window.updateEditorialSubtitle(state, options);
-              return;
-            }
-            if (state.mode === 'timed') {
-              // @ts-expect-error provided by render-host script
-              window.updateTimedSubtitle(state, options);
               return;
             }
 

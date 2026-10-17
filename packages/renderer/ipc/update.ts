@@ -13,7 +13,10 @@ export interface UpdateRequiredNotice {
   source?: 'stage5-api' | 'relay' | 'unknown';
 }
 
-export function checkForUpdates(): Promise<any> {
+export function checkForUpdates(): Promise<{
+  available: boolean;
+  version?: string;
+}> {
   return window.electron.updateCheck();
 }
 

@@ -13,6 +13,7 @@ import {
   freePreviewKey,
   useFreePreviewStore,
   type FreePreview,
+  type FreePreviewFailure,
 } from '../state/free-preview-store';
 import { i18n } from '../i18n';
 import {
@@ -25,6 +26,7 @@ import { translateMissingUntranslated } from './translateMissing';
 import { persistMountedTranslation } from '../containers/GenerateSubtitles/utils/subtitleGeneration';
 import { registerStage5CreditRefreshOperation } from './creditRefreshOperations';
 import { logTask } from './logger';
+import { resolveTaskFailure } from './taskFailure';
 
 const DEV_TEST_CREDITS_KEY = 'dev.freePreviewTestCredits';
 
@@ -111,6 +113,16 @@ export function clearFreePreviewForCurrentVideo(): void {
 
 let resumeInFlight = false;
 
+/** A dropped connection reads differently from any other stop. */
+export function classifyFreePreviewFailure(error: unknown): FreePreviewFailure {
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  return /network|offline|internet|timed? ?out|ENOTFOUND|ECONN|EAI_AGAIN|fetch failed|socket/i.test(
+    message
+  )
+    ? 'network'
+    : 'other';
+}
+
 /**
  * Finish a previewed video after a purchase: transcribe from the last
  * preview line (the cut may have clipped it) to the end, append, translate
@@ -180,10 +192,15 @@ export async function resumeFreePreview(key: string): Promise<boolean> {
       operationId,
     });
     if (!result?.success) {
+      // Opens the credits dialog when the balance ran short mid-finish.
+      const failure = resolveTaskFailure({
+        error: result?.error,
+        cancelled: result?.cancelled,
+        operationId,
+        task: 'transcription',
+      });
       useTaskStore.getState().setTranscription({
-        stage: result?.cancelled
-          ? i18n.t('generateSubtitles.status.cancelled', 'Cancelled')
-          : i18n.t('generateSubtitles.status.error', 'Error'),
+        stage: failure.stage,
         percent: 100,
         inProgress: false,
         isCompleted: false,
@@ -213,7 +230,9 @@ export async function resumeFreePreview(key: string): Promise<boolean> {
   } catch (error) {
     console.error('[freePreview] finishing the video failed:', error);
     if (useFreePreviewStore.getState().items[key]) {
-      useFreePreviewStore.getState().setStatus(key, 'failed');
+      useFreePreviewStore
+        .getState()
+        .setStatus(key, 'failed', classifyFreePreviewFailure(error));
     }
     void SystemIPC.trackPurchaseEvent('free_preview_failed', {
       placement: 'free-preview-offer',

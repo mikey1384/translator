@@ -2,6 +2,8 @@ import { dialog, BrowserWindow } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
 import log from 'electron-log';
+import { MEDIA_FILE_EXTENSIONS } from '../../shared/constants/media-extensions.js';
+import { getUiT } from '../utils/ui-language.js';
 
 export class FileManagerError extends Error {
   constructor(message: string) {
@@ -82,13 +84,20 @@ export class FileManager {
         throw new FileManagerError('No focused window found');
       }
 
+      const t = await getUiT();
       const { canceled, filePath: selectedPath } = await dialog.showSaveDialog(
         window,
         {
           defaultPath,
           filters: filters || [
-            { name: 'Text Files', extensions: ['txt', 'srt'] },
-            { name: 'All Files', extensions: ['*'] },
+            {
+              name: t('common.fileFilters.textFiles', undefined, 'Text Files'),
+              extensions: ['txt', 'srt'],
+            },
+            {
+              name: t('common.fileFilters.allFiles', undefined, 'All Files'),
+              extensions: ['*'],
+            },
           ],
         }
       );
@@ -140,12 +149,27 @@ export class FileManager {
         throw new FileManagerError('No focused window found for open dialog');
       }
 
+      const t = await getUiT();
+      // No default title: the OS supplies its own, in the system language.
       const result = await dialog.showOpenDialog(window, {
-        title: options.title || 'Open File',
+        title: options.title,
         filters: options.filters || [
-          { name: 'Media Files', extensions: ['mp4', 'avi', 'mkv', 'mov'] },
-          { name: 'Subtitle Files', extensions: ['srt', 'ass', 'vtt'] },
-          { name: 'All Files', extensions: ['*'] },
+          {
+            name: t('common.fileFilters.mediaFiles', undefined, 'Media Files'),
+            extensions: [...MEDIA_FILE_EXTENSIONS],
+          },
+          {
+            name: t(
+              'common.fileFilters.subtitleFiles',
+              undefined,
+              'Subtitle Files'
+            ),
+            extensions: ['srt', 'ass', 'vtt'],
+          },
+          {
+            name: t('common.fileFilters.allFiles', undefined, 'All Files'),
+            extensions: ['*'],
+          },
         ],
         properties: options.properties || ['openFile'],
         defaultPath: options.defaultPath,

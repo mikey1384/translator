@@ -38,7 +38,8 @@ function getRelayStatus(error: any): number | null {
 
 function isRetryableDubDirectError(error: any): boolean {
   const status = getRelayStatus(error);
-  if (status != null && status >= 200 && status < 400) {
+  // 2xx/3xx, and 402 (out of credits): a retry cannot succeed.
+  if (status != null && ((status >= 200 && status < 400) || status === 402)) {
     return false;
   }
   if (status != null && RETRYABLE_DUB_DIRECT_STATUSES.has(status)) {

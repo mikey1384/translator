@@ -14,7 +14,7 @@ import type {
 } from '../../shared/constants/subtitle-styles';
 import { buildSrt } from '../../shared/helpers';
 import {
-  highlightCaptionSignature,
+  highlightClipCaptionSignature,
   highlightClipArtifactKey,
   highlightClipSelectionSignature,
   highlightClipSourceIdentity,
@@ -34,6 +34,38 @@ import { useUIStore } from '../state/ui-store';
 import { useSubStore } from '../state/subtitle-store';
 import { useVideoStore } from '../state/video-store';
 import { CancelledError } from '../../shared/cancelled-error';
+import { i18n } from '../i18n';
+
+/**
+ * Why a clip could not be cut. The message stays English for agents and
+ * logs; the clips panel shows the translated text for `code` instead.
+ */
+export type HighlightRenderErrorCode =
+  | 'busy'
+  | 'no-highlight'
+  | 'editorial-single'
+  | 'editorial-stale'
+  | 'no-transcript'
+  | 'output-path'
+  | 'no-cues'
+  | 'untranslated'
+  | 'cut-failed'
+  | 'clip-unreadable'
+  | 'caption-render-failed'
+  | 'subtitles-not-saved';
+
+export class HighlightRenderError extends Error {
+  readonly code: HighlightRenderErrorCode;
+  constructor(code: HighlightRenderErrorCode, message: string) {
+    super(message);
+    this.name = 'HighlightRenderError';
+    this.code = code;
+  }
+}
+
+function fail(code: HighlightRenderErrorCode, message: string): never {
+  throw new HighlightRenderError(code, message);
+}
 
 export type HighlightRenderInput = {
   videoPath: string;
@@ -59,6 +91,7 @@ export type HighlightRenderCompletion = {
   videoPath: string;
   highlights: TranscriptHighlight[];
   aspectMode: HighlightAspectMode;
+  /** Captions inside this clip's intervals (highlightClipCaptionSignature). */
   captionSignature: string;
   operationId: string;
 };
@@ -89,7 +122,8 @@ async function rememberRenderedClip(
   if (!artifactKey) return;
   try {
     const result = await recordHighlightClip({
-      sourceIdentity: sourceIdentity + completion.captionSignature,
+      sourceIdentity,
+      captionSignature: completion.captionSignature,
       kind: single ? 'single' : 'combined',
       artifactKey,
       // The clips panel shows legacy 'vertical' renders as Shorts Reframe.
@@ -119,14 +153,14 @@ export async function renderHighlight(input: HighlightRenderInput) {
       tasks.summary,
     ].some(task => task.inProgress)
   ) {
-    throw new Error('Wait for the current operation before rendering a clip.');
+    fail('busy', 'Wait for the current operation before rendering a clip.');
   }
   tasks.setMerge({
     id: input.operationId,
     inProgress: true,
     isCompleted: false,
     percent: 0,
-    stage: 'Cutting highlight clip',
+    stage: i18n.t('summary.status.cuttingClip', 'Cutting the clip…'),
   });
   const reportCut = (progress: {
     operationId?: string;
@@ -161,12 +195,14 @@ async function runHighlightRender(
   sourceIdentity: string
 ) {
   const { operationId, videoPath, highlights, segments } = input;
-  if (!highlights.length) throw new Error('Choose at least one highlight.');
+  if (!highlights.length)
+    fail('no-highlight', 'Choose at least one highlight.');
   if (
     highlights.some(h => h.editorial) &&
     (highlights.length !== 1 || input.aspectMode !== 'vertical_reframe')
   )
-    throw new Error(
+    fail(
+      'editorial-single',
       'Render each editorial Short individually using Shorts Reframe.'
     );
   const editorial = highlights[0].editorial
@@ -180,32 +216,40 @@ async function runHighlightRender(
     highlights[0].editorialSourceSignature !==
       editorialSourceSignature(segments, highlights[0].start, highlights[0].end)
   )
-    throw new Error(
+    fail(
+      'editorial-stale',
       'The source captions changed. Review and save the Short edit before rendering again.'
     );
   if (!segments.length)
-    throw new Error('Open the saved transcript before cutting a highlight.');
+    fail(
+      'no-transcript',
+      'Open the saved transcript before cutting a highlight.'
+    );
   if (input.outputPath) {
     if (!/\.mp4$/i.test(input.outputPath))
-      throw new Error('Clip output must end in .mp4.');
+      fail('output-path', 'Clip output must end in .mp4.');
     if (
       window.env.isPackaged &&
       !(await SystemIPC.checkAgentPathAllowed(input.outputPath))
     ) {
-      throw new Error('Clip output is outside the agent allowed directories.');
+      fail(
+        'output-path',
+        'Clip output is outside the agent allowed directories.'
+      );
     }
     if (await window.fileApi.fileExists(input.outputPath))
-      throw new Error('Clip output already exists. Choose a new path.');
+      fail('output-path', 'Clip output already exists. Choose a new path.');
   }
   // Check the chosen language before any expensive local encode.
   const selectedCues = rebaseClipSubtitles(segments, highlights);
   if (!selectedCues.length)
-    throw new Error('The chosen interval contains no saved subtitles.');
+    fail('no-cues', 'The chosen interval contains no saved subtitles.');
   if (
     input.displayMode === 'translation' &&
     selectedCues.some(c => c.original.trim() && !c.translation?.trim())
   ) {
-    throw new Error(
+    fail(
+      'untranslated',
       'The selected clip has untranslated cues. Translate those saved cues first.'
     );
   }
@@ -226,7 +270,7 @@ async function runHighlightRender(
           aspectMode: input.aspectMode,
         });
   if (cut.cancelled) throw new CancelledError();
-  if (!cut.success) throw new Error(cut.error || 'Highlight cut failed.');
+  if (!cut.success) fail('cut-failed', cut.error || 'Highlight cut failed.');
   const cutPath =
     'highlight' in cut
       ? cut.highlight?.videoPath
@@ -234,7 +278,7 @@ async function runHighlightRender(
         ? cut.videoPath
         : undefined;
   if (!cutPath || !cut.sourceRanges)
-    throw new Error('The clip cutter did not return its verified timeline.');
+    fail('cut-failed', 'The clip cutter did not return its verified timeline.');
   const clipSegments = rebaseClipSubtitles(segments, cut.sourceRanges);
   input.checkCancelled?.();
   const metadataResult = await SystemIPC.getVideoMetadata(cutPath);
@@ -245,7 +289,8 @@ async function runHighlightRender(
     !meta.width ||
     !meta.height
   ) {
-    throw new Error(
+    fail(
+      'clip-unreadable',
       metadataResult.error || 'Cannot verify the cut video dimensions.'
     );
   }
@@ -265,7 +310,10 @@ async function runHighlightRender(
     inProgress: true,
     isCompleted: false,
     percent: 0,
-    stage: 'Rendering clip subtitles',
+    stage: i18n.t(
+      'summary.status.renderingClipSubtitles',
+      'Adding subtitles to the clip…'
+    ),
   });
   input.onStage?.('rendering-subtitles');
   let outputPath: string;
@@ -311,7 +359,10 @@ async function runHighlightRender(
     });
     if (rendered.cancelled) throw new CancelledError();
     if (!rendered.success || !rendered.outputPath)
-      throw new Error(rendered.error || 'Clip subtitle render failed.');
+      fail(
+        'caption-render-failed',
+        rendered.error || 'Clip subtitle render failed.'
+      );
     outputPath = rendered.outputPath;
   } finally {
     useTaskStore.getState().setMerge({ id: null, inProgress: false });
@@ -334,7 +385,8 @@ async function runHighlightRender(
         .join(' · ') || 'Highlight',
   });
   if (!saved.success || !saved.entry) {
-    throw new Error(
+    fail(
+      'subtitles-not-saved',
       `Video rendered at ${outputPath}, but saving its reusable subtitles failed: ${saved.error || 'unknown error'}`
     );
   }
@@ -344,8 +396,9 @@ async function runHighlightRender(
     highlights: input.highlights,
     aspectMode: input.aspectMode,
     operationId,
-    captionSignature: highlightCaptionSignature(
+    captionSignature: highlightClipCaptionSignature(
       input.segments,
+      input.highlights,
       input.displayMode,
       input.style,
       input.fontSize,

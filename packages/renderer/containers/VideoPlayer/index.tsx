@@ -3,7 +3,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  KeyboardEvent,
   ChangeEvent,
   useLayoutEffect,
   type CSSProperties,
@@ -15,6 +14,12 @@ import NativeVideoPlayer from './NativeVideoPlayer';
 import SpeedMenu from './SpeedMenu';
 import CaptionsMenu from './CaptionsMenu';
 import { Captions } from 'lucide-react';
+import VolumeControl from './VolumeControl';
+import { applyPlayerVolume, usePlayerVolume } from './player-volume';
+import {
+  resolvePlayerShortcut,
+  shouldHandlePlayerShortcut,
+} from './player-shortcuts';
 import SideMenu from './SideMenu';
 import {
   dockedVideoContainerStyles,
@@ -38,6 +43,7 @@ import {
   useVideoStore,
   useTaskStore,
   useSubtitlePrefs,
+  useUIStore,
 } from '../../state';
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
@@ -209,6 +215,7 @@ export default function VideoPlayer({
       onTime();
       onDur();
       onPlayPause();
+      applyPlayerVolume();
 
       useVideoStore.getState().startPositionSaving();
 
@@ -261,8 +268,9 @@ export default function VideoPlayer({
     });
   };
 
-  const onKeyDown = (e: KeyboardEvent) => {
-    // A focused control (captions menu, radios) already handled this key.
+  // Player keys work wherever focus is (a clicked subtitle line, the display
+  // switch, the page), not only on the player box; typing is never taken.
+  const onKeyDown = (e: globalThis.KeyboardEvent) => {
     if (e.defaultPrevented) return;
     // One Escape closes the captions menu first, then full screen.
     if (e.key === 'Escape' && showCaptionsMenu) {
@@ -276,34 +284,68 @@ export default function VideoPlayer({
       return;
     }
 
-    if (e.key === ' ' || e.key === 'Spacebar' || e.key.toLowerCase() === 'k') {
-      e.preventDefault();
-      togglePlay();
+    const modalOpen =
+      useUIStore.getState().showSettings ||
+      Boolean(document.querySelector('[aria-modal="true"], dialog[open]'));
+    if (
+      !shouldHandlePlayerShortcut(
+        {
+          key: e.key,
+          metaKey: e.metaKey,
+          ctrlKey: e.ctrlKey,
+          altKey: e.altKey,
+          defaultPrevented: e.defaultPrevented,
+          target: e.target instanceof Element ? e.target : null,
+        },
+        { modalOpen }
+      )
+    ) {
       return;
     }
 
-    if (e.key === '>' || e.key === '.') {
-      stepRate('up');
-      e.preventDefault();
-      return;
-    }
-    if (e.key === '<' || e.key === ',') {
-      stepRate('down');
-      e.preventDefault();
-      return;
-    }
-
+    const action = resolvePlayerShortcut(e.key);
     const v = getNativePlayerInstance();
-    if (!v) return;
-    if (e.key === 'ArrowRight') {
-      seek(Math.min(v.currentTime + 10, v.duration));
-      e.preventDefault();
+    switch (action) {
+      case 'toggle-play':
+        togglePlay();
+        break;
+      case 'speed-up':
+        stepRate('up');
+        break;
+      case 'speed-down':
+        stepRate('down');
+        break;
+      case 'toggle-mute':
+        usePlayerVolume.getState().toggleMute();
+        break;
+      case 'volume-up':
+        usePlayerVolume.getState().stepVolume(1);
+        break;
+      case 'volume-down':
+        usePlayerVolume.getState().stepVolume(-1);
+        break;
+      case 'seek-forward':
+        if (!v) return;
+        seek(Math.min(v.currentTime + 10, v.duration));
+        break;
+      case 'seek-back':
+        if (!v) return;
+        seek(Math.max(v.currentTime - 10, 0));
+        break;
+      default:
+        return;
     }
-    if (e.key === 'ArrowLeft') {
-      seek(Math.max(v.currentTime - 10, 0));
-      e.preventDefault();
-    }
+    e.preventDefault();
   };
+  const onKeyDownRef = useRef(onKeyDown);
+  onKeyDownRef.current = onKeyDown;
+
+  useEffect(() => {
+    if (!videoUrl) return;
+    const handler = (e: globalThis.KeyboardEvent) => onKeyDownRef.current(e);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [videoUrl]);
 
   useEffect(() => {
     document.documentElement.classList.toggle(
@@ -403,7 +445,6 @@ export default function VideoPlayer({
       <div
         ref={playerDivRef}
         tabIndex={0}
-        onKeyDown={onKeyDown}
         className={[
           'fixed-video-container',
           docked && !isFullScreen
@@ -494,6 +535,8 @@ export default function VideoPlayer({
             <span className={videoPlayerTimeStyles(isFullScreen)}>
               {fmt(duration)}
             </span>
+
+            <VolumeControl isFullScreen={isFullScreen} />
 
             <div className={videoPlayerAnchorStyles}>
               {hasCues ? (

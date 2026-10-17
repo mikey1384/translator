@@ -1,6 +1,8 @@
 import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
+import { formatDurationHours } from '../utils/formatUnits';
 import { useCreditStore } from '../state';
+import Button from './Button';
 import { useCreditCheckout } from './BuyCreditsButton';
 import { colors, fonts, surfaceCardStyles } from '../styles';
 import { CREDIT_PACKS } from '../../shared/constants';
@@ -109,7 +111,7 @@ const featuredPack = css`
 const badge = css`
   position: absolute;
   top: -10px;
-  left: 14px;
+  inset-inline-start: 14px;
   padding: 2px 9px;
   border-radius: 999px;
   font-size: 0.72rem;
@@ -184,27 +186,9 @@ const PACK_BADGES: Partial<Record<Pack['id'], 'popular' | 'value'>> = {
 const BASE_CREDITS_PER_DOLLAR =
   CREDIT_PACKS.MICRO.credits / CREDIT_PACKS.MICRO.price;
 
-/** "5h 21m" in the user's language and numerals, via Intl units. */
+/** "5h 21m" in the user's language and numerals. */
 function formatDuration(hours: number, locale: string): string {
-  const total = Math.max(0, Math.round(hours * 60));
-  const h = Math.floor(total / 60);
-  const m = total % 60;
-  // English reads best as "5h 21m"; elsewhere narrow units fall back to
-  // Latin letters (fa, ja) or bare initials (uk), so use the short form.
-  const unitDisplay = /^en\b/i.test(locale) ? 'narrow' : 'short';
-  const unit = (value: number, kind: 'hour' | 'minute') => {
-    try {
-      return new Intl.NumberFormat(locale, {
-        style: 'unit',
-        unit: kind,
-        unitDisplay,
-      }).format(value);
-    } catch {
-      return `${value}${kind === 'hour' ? 'h' : 'm'}`;
-    }
-  };
-  if (h === 0) return unit(Math.max(1, m), 'minute');
-  return m > 0 ? `${unit(h, 'hour')} ${unit(m, 'minute')}` : unit(h, 'hour');
+  return formatDurationHours(hours, locale);
 }
 
 function formatRefreshDate(isoDay: string, locale: string): string {
@@ -298,6 +282,7 @@ export default function CreditCard() {
   const credits = useCreditStore(s => s.credits);
   const loading = useCreditStore(s => s.loading);
   const error = useCreditStore(s => s.error);
+  const retryLoad = useCreditStore(s => s.retryLoad);
   const monthlyFree = useCreditStore(s => s.monthlyFree);
   const checkoutUnresolved = useCreditStore(s => s.checkoutUnresolved);
   const checkoutPending = useCreditStore(s => s.checkoutPending);
@@ -346,7 +331,20 @@ export default function CreditCard() {
       {loading && credits === null ? (
         <p className={footStyles}>{t('credits.loading')}</p>
       ) : error && credits === null ? (
-        <p style={{ color: colors.danger, margin: 0 }}>{error}</p>
+        <div
+          role="alert"
+          style={{ display: 'flex', alignItems: 'center', gap: 12 }}
+        >
+          <p style={{ color: colors.danger, margin: 0 }}>
+            {t(
+              error,
+              'Your balance couldn’t be loaded. Check your connection and try again.'
+            )}
+          </p>
+          <Button variant="secondary" size="sm" onClick={retryLoad}>
+            {t('common.retry', 'Retry')}
+          </Button>
+        </div>
       ) : (
         <>
           <div className={headRow}>

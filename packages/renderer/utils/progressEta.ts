@@ -1,3 +1,5 @@
+import { formatDurationMinutes, formatDurationSeconds } from './formatUnits';
+
 type EtaOperationType = 'transcription' | 'translation' | 'dubbing';
 type ProviderHint = 'stage5' | 'openai' | 'anthropic' | 'elevenlabs';
 
@@ -422,24 +424,6 @@ function roundEtaSeconds(seconds: number): number {
 
 export function formatEtaDuration(seconds: number): string {
   const rounded = roundEtaSeconds(Math.max(1, seconds));
-  if (rounded < 60) {
-    return `${rounded}s`;
-  }
-
-  const totalMinutes = Math.ceil(rounded / 60);
-  if (totalMinutes < 60) {
-    return `${totalMinutes}m`;
-  }
-
-  const totalHours = Math.floor(totalMinutes / 60);
-  const remainingMinutes = totalMinutes % 60;
-  if (totalHours < 24) {
-    return remainingMinutes > 0
-      ? `${totalHours}h ${remainingMinutes}m`
-      : `${totalHours}h`;
-  }
-
-  const days = Math.floor(totalHours / 24);
-  const remainingHours = totalHours % 24;
-  return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+  if (rounded < 60) return formatDurationSeconds(rounded);
+  return formatDurationMinutes(Math.ceil(rounded / 60));
 }

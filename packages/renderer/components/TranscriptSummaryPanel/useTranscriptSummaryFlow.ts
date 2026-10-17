@@ -37,6 +37,18 @@ import {
 import * as OperationIPC from '../../ipc/operation';
 import * as SystemIPC from '../../ipc/system';
 import { getByoErrorMessage, isByoError } from '../../utils/byoErrors';
+import { handleTaskFailure } from '../../utils/taskFailure';
+import {
+  classifyError,
+  formatUserFacingError,
+} from '../../utils/userFacingError';
+
+function classifyAndFormatSummaryError(message: string, t: TFunction): string {
+  return formatUserFacingError(
+    classifyError(message, { task: 'summary' }),
+    t as any
+  );
+}
 import { classifyTerminalProgress } from '../../utils/progress-terminal';
 import {
   estimateSummaryCredits,
@@ -86,10 +98,20 @@ type UseTranscriptSummaryFlowResult = {
   isGenerating: boolean;
   progressLabel: string;
   progressPercent: number;
+  /**
+   * Set when the shown analysis was saved for another language or quality
+   * (nothing is saved for the current ones yet); null when it matches.
+   */
+  restoredVariant: RestoredAnalysisVariant | null;
   sections: TranscriptSummarySection[];
   showProgressBar: boolean;
   summary: string;
   summaryEstimate: SummaryEstimate | null;
+};
+
+export type RestoredAnalysisVariant = {
+  summaryLanguage: string;
+  effortLevel: SummaryEffortLevel;
 };
 
 type ActiveSummaryRun = {
@@ -179,6 +201,8 @@ export default function useTranscriptSummaryFlow({
   t,
 }: UseTranscriptSummaryFlowParams): UseTranscriptSummaryFlowResult {
   const [summary, setSummary] = useState<string>('');
+  const [restoredVariant, setRestoredVariant] =
+    useState<RestoredAnalysisVariant | null>(null);
   const [sections, setSections] = useState<TranscriptSummarySection[]>([]);
   const [highlightStatus, setHighlightStatus] =
     useState<TranscriptHighlightStatus>('not_requested');
@@ -246,6 +270,7 @@ export default function useTranscriptSummaryFlow({
       activeRunRequestSignatureRef.current = null;
       setActiveOperationId(null);
       setSummary('');
+      setRestoredVariant(null);
       setSections([]);
       setHighlightStatus('not_requested');
       setHighlightWarningMessage(null);
@@ -521,11 +546,13 @@ export default function useTranscriptSummaryFlow({
               error
             );
           });
+          // The run's catch opens the credits dialog for the summary.
           setError(t('summary.insufficientCredits'));
         } else if (isByoError(message)) {
           setError(getByoErrorMessage(message));
         } else {
-          setError(t('summary.error', { message }));
+          // Localized reason; the English detail stays in the logs.
+          setError(classifyAndFormatSummaryError(message, t));
         }
       }
 
@@ -612,6 +639,7 @@ export default function useTranscriptSummaryFlow({
         restoreKeyRef.current = null;
         onResetHighlightsState();
         setSummary('');
+        setRestoredVariant(null);
         setSections([]);
         setHighlightStatus('not_requested');
         setCopyStatus('idle');
@@ -814,12 +842,13 @@ export default function useTranscriptSummaryFlow({
           preserveErrorOnRestoreRef.current = true;
           pendingRestoreRetryRef.current = true;
           restoreKeyRef.current = null;
-          const message = String(err?.message || err);
-          const friendlyMessage = isByoError(message)
-            ? getByoErrorMessage(message)
-            : String(message ?? '').includes(ERROR_CODES.INSUFFICIENT_CREDITS)
+          // Credits refused: the credits dialog for the summary; unexpected:
+          // the report dialog naming the summary. Never raw IPC text.
+          const handled = handleTaskFailure(err, { task: 'summary' });
+          const friendlyMessage =
+            handled.kind === 'insufficient-credits'
               ? t('summary.insufficientCredits')
-              : t('summary.error', { message });
+              : handled.message;
           setError(friendlyMessage);
           setHighlightWarningMessage(null);
           setProgressLabel(friendlyMessage);
@@ -1036,6 +1065,7 @@ export default function useTranscriptSummaryFlow({
           sourceVideoPath: originalVideoPath || fallbackVideoPath || null,
           sourceUrl,
           libraryEntryId,
+          allowOtherVariant: true,
         });
 
         if (disposed) return;
@@ -1071,6 +1101,17 @@ export default function useTranscriptSummaryFlow({
             ? []
             : sanitizeHighlightsForStorage(result.analysis.highlights);
 
+        const entryLanguage = String(result.entry?.summaryLanguage || '')
+          .trim()
+          .toLowerCase();
+        const entryEffort = result.entry?.effortLevel ?? summaryEffortLevel;
+        setRestoredVariant(
+          entryLanguage &&
+            (entryLanguage !== summaryLanguage.trim().toLowerCase() ||
+              entryEffort !== summaryEffortLevel)
+            ? { summaryLanguage: entryLanguage, effortLevel: entryEffort }
+            : null
+        );
         setSummary(restoredSummary);
         setSections(restoredSections);
         setHighlightStatus(restoredHighlightStatus);
@@ -1139,6 +1180,7 @@ export default function useTranscriptSummaryFlow({
     isGenerating,
     progressLabel,
     progressPercent,
+    restoredVariant,
     sections,
     showProgressBar,
     summary,

@@ -20,7 +20,7 @@ import {
 } from './binary-installer.js';
 import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
-import { mapErrorToUserFriendly } from './error-map.js';
+import { mapDownloadError } from './error-map.js';
 import { classifyUrlDownloadFailureDetail } from './failure-taxonomy.js';
 import {
   recoverPublicYouTubeAutomaticCaptions,
@@ -40,6 +40,12 @@ import {
 } from '../../utils/operation-cancellation.js';
 import { terminateProcess } from '../../utils/process-killer.js';
 import { classifyUrlSourceType } from '../url-download-funnel.js';
+import {
+  buildSourceGuardPrintArgs,
+  createSourceGuard,
+  SINGLE_VIDEO_ARGS,
+  UrlSourceRejectedError,
+} from './source-guard.js';
 
 type DownloadVideoFromPlatformDependencies = {
   ensureYtDlpBinaryImpl?: typeof ensureYtDlpBinary;
@@ -300,7 +306,8 @@ export async function downloadVideoFromPlatform(
   },
   extraArgs: string[] = [],
   signal?: AbortSignal,
-  dependencies: DownloadVideoFromPlatformDependencies = {}
+  dependencies: DownloadVideoFromPlatformDependencies = {},
+  options: { allowLongVideo?: boolean } = {}
 ): Promise<DownloadVideoFromPlatformResult> {
   log.info(`[URLprocessor] Starting download: ${url} (Op ID: ${operationId})`);
   const ensureYtDlpBinaryFn =
@@ -513,6 +520,10 @@ export async function downloadVideoFromPlatform(
     }
   })();
   let effectiveQuality = quality;
+  const sourceGuard = createSourceGuard({
+    isYouTube,
+    allowLongVideo: options.allowLongVideo,
+  });
 
   // If we have an app-managed session for this site, export cookies and use them by default.
   try {
@@ -711,7 +722,7 @@ export async function downloadVideoFromPlatform(
     return [
       url,
       '--ignore-config',
-      '--no-playlist',
+      ...SINGLE_VIDEO_ARGS,
       '--output',
       tempFilenamePattern,
       '--format',
@@ -745,6 +756,7 @@ export async function downloadVideoFromPlatform(
       '--newline',
       '--no-warnings',
       ...buildYtDlpMetadataPrintArgs(),
+      ...buildSourceGuardPrintArgs(),
       '--print',
       'after_move:%(filepath)s',
       '--ffmpeg-location',
@@ -982,6 +994,16 @@ export async function downloadVideoFromPlatform(
             }
           }, STARTUP_TIMEOUT_MS);
 
+          let guardStopped = false;
+          const stopIfSourceRejected = () => {
+            if (!sourceGuard.rejection || guardStopped) return;
+            guardStopped = true;
+            log.info(
+              `[URLprocessor] Stopping yt-dlp: source rejected (${sourceGuard.rejection.code}) (Op ID: ${operationId})`
+            );
+            hardKill(subprocess);
+          };
+
           subprocess.all.on('data', (chunk: Buffer) => {
             const chunkString = chunk.toString();
             if (!firstOutputSeen) {
@@ -999,6 +1021,13 @@ export async function downloadVideoFromPlatform(
               const rawLine = stdoutBuffer.substring(0, newlineIndex);
               const line = rawLine.trim();
               stdoutBuffer = stdoutBuffer.substring(newlineIndex + 1);
+
+              if (sourceGuard.applyLine(line)) {
+                stopIfSourceRejected();
+                continue;
+              }
+              sourceGuard.noteOutputLine(line);
+              stopIfSourceRejected();
 
               if (attempt === 1 && debugLines < 3 && line) {
                 log.debug(`[yt-dlp:first] ${line}`);
@@ -1195,6 +1224,9 @@ export async function downloadVideoFromPlatform(
         log.info(
           `[URLprocessor] yt-dlp process finished with code ${result.exitCode}`
         );
+        if (sourceGuard.rejection) {
+          throw sourceGuard.rejection;
+        }
         // Process any remaining data in the buffer
         if (
           stdoutBuffer.trim().startsWith('{') &&
@@ -1292,6 +1324,10 @@ export async function downloadVideoFromPlatform(
           proc: subprocess!,
         };
       } catch (error: any) {
+        // A refused source is final: no retry, fallback or caption recovery.
+        if (sourceGuard.rejection) {
+          throw sourceGuard.rejection;
+        }
         lastError = error;
         try {
           (error as any).all = diagnosticLog;
@@ -1461,6 +1497,16 @@ export async function downloadVideoFromPlatform(
       throw new CancelledError();
     }
 
+    if (error instanceof UrlSourceRejectedError) {
+      log.info(
+        `[URLprocessor] Download refused before fetching media: ${error.code} (Op ID: ${operationId})`
+      );
+      await cleanupPartialDownloads(outputDir, safeTimestamp, operationId, {
+        preserveFilepaths: committedFilepath ? [committedFilepath] : [],
+      });
+      throw error;
+    }
+
     // If it wasn't killed, it's a real error. NOW log details.
     log.error(
       `[URLprocessor] Handling non-cancellation error for Op ID ${operationId}`
@@ -1577,11 +1623,12 @@ export async function downloadVideoFromPlatform(
     }
 
     // Use mapErrorToUserFriendly for error mapping (prefer combined stream)
-    userFriendlyErrorMessage = mapErrorToUserFriendly({
+    const mappedError = mapDownloadError({
       rawErrorMessage,
       stderrContent:
         (error.all as string) || error.stderr || diagnosticLog || '',
     });
+    userFriendlyErrorMessage = mappedError.message;
 
     log.info(
       `[URLprocessor] Determined user-friendly error: "${userFriendlyErrorMessage}"`
@@ -1612,6 +1659,7 @@ export async function downloadVideoFromPlatform(
     }
     // Re-throw original ExecaError so upstream can inspect combined output
     error.userFriendly = userFriendlyErrorMessage;
+    error.userFacingCode = mappedError.code;
     try {
       (error as any).all = (error as any).all || diagnosticLog;
     } catch {

@@ -3,7 +3,7 @@ import path from 'node:path';
 import nodeProcess from 'node:process';
 import axios from 'axios';
 import { app } from 'electron';
-import Store from 'electron-store';
+import { createSafeStore } from '../store/safe-store.js';
 import log from 'electron-log';
 import { STAGE5_API_URL } from './endpoints.js';
 import { shouldSendProductAnalytics } from './product-analytics-policy.js';
@@ -26,7 +26,7 @@ type UsageCountStore = {
 
 const FLUSH_DELAY_MS = 5_000;
 
-const store = new Store<UsageCountStore>({
+const store = createSafeStore<UsageCountStore>({
   name: 'anonymous-usage-counts',
   defaults: { pending: {} },
 });

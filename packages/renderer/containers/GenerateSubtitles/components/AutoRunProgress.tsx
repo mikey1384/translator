@@ -39,6 +39,8 @@ interface AutoRunProgressProps {
   phase: AutoRunPhase;
   language: string;
   failedStep?: AutoRunFailedStep;
+  // False for a file that was already on disk: nothing was downloaded.
+  showDownloadStep?: boolean;
   onDismiss: () => void;
 }
 
@@ -185,6 +187,7 @@ export default function AutoRunProgress({
   phase,
   language,
   failedStep,
+  showDownloadStep = true,
   onDismiss,
 }: AutoRunProgressProps) {
   const { t, i18n } = useTranslation();
@@ -216,18 +219,19 @@ export default function AutoRunProgress({
     return 'pending';
   };
 
-  const steps: Array<{ key: string; label: string; status: StepStatus }> = [
-    {
+  const steps: Array<{ key: string; label: string; status: StepStatus }> = [];
+  if (showDownloadStep) {
+    steps.push({
       key: 'download',
       label: t('input.autoRunStepDownload', 'Download'),
       status: statusFor(0),
-    },
-    {
-      key: 'transcribe',
-      label: t('input.autoRunStepTranscribe', 'Transcribe'),
-      status: statusFor(1),
-    },
-  ];
+    });
+  }
+  steps.push({
+    key: 'transcribe',
+    label: t('input.autoRunStepTranscribe', 'Transcribe'),
+    status: statusFor(1),
+  });
   if (target === 'translate') {
     steps.push({
       key: 'translate',

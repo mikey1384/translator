@@ -3,10 +3,11 @@ import Button from '../../../../../components/Button.js';
 import SubtitleEditTextarea from './SubtitleEditTextarea.js';
 import { useTranslation } from 'react-i18next';
 import { useSubtitleRow } from '../../../../../state/subtitle-store.js';
+import { secondsToSrtTime } from '../../../../../../shared/helpers/index.js';
 import {
-  secondsToSrtTime,
-  srtStringToSeconds,
-} from '../../../../../../shared/helpers/index.js';
+  validateCueTimeEdit,
+  type TimecodeEditError,
+} from '../../../../../utils/timecode-input.js';
 import { useRowActions } from '../../../../../hooks/useRowActions.js';
 import * as SubtitlesIPC from '../../../../../ipc/subtitles';
 import {
@@ -43,12 +44,14 @@ import {
   subtitleRowIndexStyles,
   subtitleRowOldTextStyles,
   subtitleRowSideActionStyles,
+  subtitleRowTimeErrorStyles,
   subtitleRowTimeGroupStyles,
+  subtitleRowTimeInputInvalidStyles,
   subtitleRowTimeInputStyles,
 } from '../../../edit-workspace-styles';
+import { cx } from '@emotion/css';
 // Language dropdown for transcription removed
 
-const TIMECODE_RX = /^\d{2}:\d{2}:\d{2},\d{3}$/;
 const PARTIAL_RX = /^\d{0,2}(:\d{0,2}){0,2}[,.]?\d{0,3}$/;
 
 interface SubtitleEditorProps {
@@ -74,6 +77,10 @@ export default function SubtitleEditor({
   const [localEnd, setLocalEnd] = useState(
     subtitle ? secondsToSrtTime(subtitle.end) : '00:00:00,000'
   );
+  const [timeError, setTimeError] = useState<{
+    field: 'start' | 'end';
+    error: TimecodeEditError;
+  } | null>(null);
   const [isTranslatingOne, setIsTranslatingOne] = useState(false);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isTranslatingGlobal = useTaskStore(s => !!s.translation.inProgress);
@@ -104,16 +111,27 @@ export default function SubtitleEditor({
 
   const commitTimeChange = (field: 'start' | 'end', value: string) => {
     if (editingLocked) return;
-    const trimmedValue = value.trim();
-    if (TIMECODE_RX.test(trimmedValue)) {
-      const seconds = srtStringToSeconds(trimmedValue);
-      actions.update({ [field]: seconds });
-      if (field === 'start') {
-        setLocalStart(secondsToSrtTime(seconds));
-      } else {
-        setLocalEnd(secondsToSrtTime(seconds));
-      }
+    const setLocal = field === 'start' ? setLocalStart : setLocalEnd;
+    const stored = field === 'start' ? subtitle.start : subtitle.end;
+    if (value.trim() === secondsToSrtTime(stored)) {
+      setTimeError(null);
+      return;
     }
+    const result = validateCueTimeEdit({
+      field,
+      input: value,
+      start: subtitle.start,
+      end: subtitle.end,
+    });
+    if (!result.ok) {
+      // Show the time the cue really has, and say why the edit didn't apply.
+      setLocal(secondsToSrtTime(stored));
+      setTimeError({ field, error: result.error });
+      return;
+    }
+    setTimeError(null);
+    actions.update({ [field]: result.seconds });
+    setLocal(secondsToSrtTime(result.seconds));
   };
 
   const handleApplyShift = () => {
@@ -127,10 +145,8 @@ export default function SubtitleEditor({
 
   const handleRemove = () => {
     if (editingLocked) return;
-    const msg = t('editSubtitles.item.confirmRemove');
-    if (window.confirm(msg)) {
-      actions.remove();
-    }
+    // No confirm: the editor offers Undo right after a delete.
+    actions.remove();
   };
 
   const handleInsertAfter = () => {
@@ -138,7 +154,10 @@ export default function SubtitleEditor({
     actions.insertAfter();
   };
 
-  async function handleTranscribeThisLine(gapThresholdSec: number = 3) {
+  async function handleTranscribeThisLine(
+    gapThresholdSec: number = 3,
+    range?: { start: number; end: number }
+  ) {
     if (!videoPath || !subtitle || editingLocked || isMerging) return;
     try {
       setIsTranscribingOne(true);
@@ -177,10 +196,11 @@ export default function SubtitleEditor({
         promptParts.push(`${flattenText(pc.original)}`);
       const prompt = promptParts.join(' \n ');
 
-      // Always fetch latest times from the store (e.g., improve flow just expanded the window)
+      // Improve passes a wider window; the cue itself only changes once the
+      // paid call succeeds, so a failure leaves the line as it was.
       const currentSeg = useSubStore.getState().segments[id];
-      const segStart = currentSeg?.start ?? subtitle.start;
-      const segEnd = currentSeg?.end ?? subtitle.end;
+      const segStart = range?.start ?? currentSeg?.start ?? subtitle.start;
+      const segEnd = range?.end ?? currentSeg?.end ?? subtitle.end;
 
       if (!(await isSourceVideoPathAccessible(videoPath))) {
         useUrlStore
@@ -224,12 +244,23 @@ export default function SubtitleEditor({
 
         // Atomically replace current cue with segmented cues (including placeholders)
         useSubStore.getState().replaceWithSegments(id, withPlaceholders);
+        // The old translation belonged to the old text.
+        if (range) useSubStore.getState().update(id, { translation: '' });
         // Do not call bridgeGaps(3) here; it would remove sub-3s placeholders
         // that we intentionally added within the improve window.
       } else {
         const text = res.transcript?.trim();
         if (typeof text === 'string' && text.length > 0) {
-          actions.update({ original: text });
+          actions.update(
+            range
+              ? {
+                  start: segStart,
+                  end: segEnd,
+                  original: text,
+                  translation: '',
+                }
+              : { original: text }
+          );
         }
         // Even if only text was updated, run a quick bridge to ensure placeholders exist
         try {
@@ -252,8 +283,8 @@ export default function SubtitleEditor({
     }
   }
 
-  // Improve transcription by expanding this cue to bridge between its
-  // neighbors, clearing existing text, then running the same transcribe flow.
+  // Improve transcription by re-transcribing a window that bridges this cue's
+  // neighbors, then running the same transcribe flow.
   async function handleImproveTranscription() {
     if (!videoPath || !subtitle || editingLocked || isMerging) return;
     // Determine neighbor-aware window
@@ -275,16 +306,9 @@ export default function SubtitleEditor({
       return;
     }
 
-    // Clear current text and expand the cue window to bridge neighbors
-    actions.update({
-      start: newStart,
-      end: newEnd,
-      original: '',
-      translation: '',
-    });
-
-    // Reuse the same transcribe flow (now using expanded times and empty text)
-    await handleTranscribeThisLine(0.5);
+    // Transcribe the wider window; the current text and timing stay until a
+    // result arrives.
+    await handleTranscribeThisLine(0.5, { start: newStart, end: newEnd });
   }
 
   async function handleTranslateOneLine() {
@@ -382,8 +406,7 @@ export default function SubtitleEditor({
     if (!subtitle?.original?.trim()) return;
     if (useTaskStore.getState().transcription.inProgress) return;
     try {
-      // Clear current translation so user sees fresh result intent
-      actions.update({ translation: '' });
+      // The current translation stays until the new one arrives.
       await handleTranslateOneLine();
     } catch {
       // no-op, underlying handler logs
@@ -611,7 +634,15 @@ export default function SubtitleEditor({
               onKeyDown={e => {
                 if (e.key === 'Enter') commitTimeChange('start', localStart);
               }}
-              className={subtitleRowTimeInputStyles}
+              className={cx(
+                subtitleRowTimeInputStyles,
+                timeError?.field === 'start' &&
+                  subtitleRowTimeInputInvalidStyles
+              )}
+              aria-invalid={timeError?.field === 'start' || undefined}
+              aria-describedby={
+                timeError ? `subtitle-time-error-${id}` : undefined
+              }
               aria-label={`Start time for subtitle ${id}`}
               data-testid={`subtitle-start-${id}`}
               disabled={editingLocked}
@@ -628,7 +659,14 @@ export default function SubtitleEditor({
               onKeyDown={e => {
                 if (e.key === 'Enter') commitTimeChange('end', localEnd);
               }}
-              className={subtitleRowTimeInputStyles}
+              className={cx(
+                subtitleRowTimeInputStyles,
+                timeError?.field === 'end' && subtitleRowTimeInputInvalidStyles
+              )}
+              aria-invalid={timeError?.field === 'end' || undefined}
+              aria-describedby={
+                timeError ? `subtitle-time-error-${id}` : undefined
+              }
               aria-label={`End time for subtitle ${id}`}
               data-testid={`subtitle-end-${id}`}
               disabled={editingLocked}
@@ -654,6 +692,24 @@ export default function SubtitleEditor({
             >
               {t('editSubtitles.item.applyShift')}
             </Button>
+            {timeError && (
+              <p
+                id={`subtitle-time-error-${id}`}
+                className={subtitleRowTimeErrorStyles}
+                role="alert"
+                dir="auto"
+              >
+                {timeError.error === 'endBeforeStart'
+                  ? t(
+                      'editSubtitles.item.timeEndBeforeStart',
+                      'The end time must be after the start time. The line keeps its previous time.'
+                    )
+                  : t(
+                      'editSubtitles.item.timeUnreadable',
+                      'Type a time like 00:01:23,450 or 1:23.45. The line keeps its previous time.'
+                    )}
+              </p>
+            )}
           </div>
         </div>
       </div>

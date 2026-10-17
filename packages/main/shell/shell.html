@@ -1,288 +1,357 @@
 <!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>Stage5 Translator</title>
-<style>
-  :root {
-    --bg: #0f0e13;
-    --surface: #19171f;
-    --surface-raised: #201d27;
-    --text: #f4f1ea;
-    --text-dim: #a39fad;
-    --primary: #ffd84d;
-    --success: #7be0a5;
-    --danger: #ff7a6b;
-    --border: rgba(244, 241, 234, 0.1);
-  }
-  /* dist/shell/shell.html -> renderer's bundled fonts, same layout in dev and asar */
-  @font-face {
-    font-family: 'Instrument Sans';
-    src: url('../../../renderer/dist/assets/fonts/InstrumentSans-latin.woff2') format('woff2');
-    font-weight: 400 700;
-    font-display: swap;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    height: 100%;
-    overflow: hidden;
-    background: var(--bg);
-    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    user-select: none;
-  }
-  #strip {
-    display: flex;
-    align-items: flex-end;
-    height: 40px;
-    padding: 6px 8px 0 8px;
-    gap: 2px;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-  }
-  .tab {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    height: 33px;
-    min-width: 0;
-    max-width: 220px;
-    flex: 1 1 180px;
-    padding: 0 8px 0 12px;
-    border-radius: 8px 8px 0 0;
-    border: 1px solid transparent;
-    border-bottom: none;
-    color: var(--text-dim);
-    background: transparent;
-    cursor: default;
-    position: relative;
-  }
-  .tab:hover { background: rgba(244, 241, 234, 0.06); }
-  .tab.dragging { opacity: 0.4; }
-  .tab.active {
-    background: var(--surface);
-    border-color: var(--border);
-    color: var(--text);
-  }
-  /* mask the strip's bottom border under the active tab */
-  .tab.active::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0; bottom: -1px;
-    height: 1px;
-    background: var(--surface);
-  }
-  .tab .title {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12.5px;
-    line-height: 1;
-  }
-  .tab .pct {
-    font-size: 10.5px;
-    font-variant-numeric: tabular-nums;
-    color: var(--primary);
-    flex: none;
-  }
-  .ring {
-    flex: none;
-    width: 14px;
-    height: 14px;
-    transform: rotate(-90deg);
-  }
-  .ring .track { stroke: rgba(255, 216, 77, 0.22); }
-  .ring .bar {
-    stroke: var(--primary);
-    transition: stroke-dashoffset 0.35s ease;
-  }
-  .dot {
-    flex: none;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-  .dot.done { background: var(--success); box-shadow: 0 0 6px rgba(123, 224, 165, 0.7); }
-  .dot.error { background: var(--danger); box-shadow: 0 0 6px rgba(255, 122, 107, 0.7); }
-  .close {
-    flex: none;
-    width: 18px;
-    height: 18px;
-    border: none;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--text-dim);
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .close:hover { background: rgba(255, 122, 107, 0.2); color: var(--text); }
-  #new-tab {
-    flex: none;
-    width: 26px;
-    height: 26px;
-    margin: 0 0 3px 4px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-dim);
-    font-size: 17px;
-    line-height: 1;
-    cursor: pointer;
-  }
-  #new-tab:hover { background: rgba(244, 241, 234, 0.1); color: var(--text); }
-  #spacer { flex: 100 1 0; }
-</style>
-</head>
-<body>
-  <div id="strip">
-    <button id="new-tab" title="New tab (⌘T)">+</button>
-    <div id="spacer"></div>
-  </div>
-  <script>
-    const strip = document.getElementById('strip');
-    const newTabBtn = document.getElementById('new-tab');
-    const spacer = document.getElementById('spacer');
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stage5 Translator</title>
+    <style>
+      :root {
+        --bg: #0f0e13;
+        --surface: #19171f;
+        --surface-raised: #201d27;
+        --text: #f4f1ea;
+        --text-dim: #a39fad;
+        --primary: #ffd84d;
+        --success: #7be0a5;
+        --danger: #ff7a6b;
+        --border: rgba(244, 241, 234, 0.1);
+      }
+      /* dist/shell/shell.html -> renderer's bundled fonts, same layout in dev and asar */
+      @font-face {
+        font-family: 'Instrument Sans';
+        src: url('../../../renderer/dist/assets/fonts/InstrumentSans-latin.woff2')
+          format('woff2');
+        font-weight: 400 700;
+        font-display: swap;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        font-family:
+          'Instrument Sans',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        user-select: none;
+      }
+      #strip {
+        display: flex;
+        align-items: flex-end;
+        height: 40px;
+        padding: 6px 8px 0 8px;
+        gap: 2px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+      }
+      .tab {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        height: 33px;
+        min-width: 0;
+        max-width: 220px;
+        flex: 1 1 180px;
+        padding-block: 0;
+        padding-inline: 12px 8px;
+        border-radius: 8px 8px 0 0;
+        border: 1px solid transparent;
+        border-bottom: none;
+        color: var(--text-dim);
+        background: transparent;
+        cursor: default;
+        position: relative;
+      }
+      .tab:hover {
+        background: rgba(244, 241, 234, 0.06);
+      }
+      .tab.dragging {
+        opacity: 0.4;
+      }
+      .tab.active {
+        background: var(--surface);
+        border-color: var(--border);
+        color: var(--text);
+      }
+      /* mask the strip's bottom border under the active tab */
+      .tab.active::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 1px;
+        background: var(--surface);
+      }
+      .tab .title {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12.5px;
+        line-height: 1;
+      }
+      .tab .pct {
+        font-size: 10.5px;
+        font-variant-numeric: tabular-nums;
+        color: var(--primary);
+        flex: none;
+      }
+      .ring {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        transform: rotate(-90deg);
+      }
+      .ring .track {
+        stroke: rgba(255, 216, 77, 0.22);
+      }
+      .ring .bar {
+        stroke: var(--primary);
+        transition: stroke-dashoffset 0.35s ease;
+      }
+      .dot {
+        flex: none;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .dot.done {
+        background: var(--success);
+        box-shadow: 0 0 6px rgba(123, 224, 165, 0.7);
+      }
+      .dot.error {
+        background: var(--danger);
+        box-shadow: 0 0 6px rgba(255, 122, 107, 0.7);
+      }
+      .close {
+        flex: none;
+        width: 18px;
+        height: 18px;
+        border: none;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text-dim);
+        font-size: 13px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .close:hover {
+        background: rgba(255, 122, 107, 0.2);
+        color: var(--text);
+      }
+      #new-tab {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        margin-block: 0 3px;
+        margin-inline: 4px 0;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text-dim);
+        font-size: 17px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      #new-tab:hover {
+        background: rgba(244, 241, 234, 0.1);
+        color: var(--text);
+      }
+      #spacer {
+        flex: 100 1 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="strip">
+      <button id="new-tab" type="button">
+        <span aria-hidden="true">+</span>
+      </button>
+      <div id="spacer"></div>
+    </div>
+    <script>
+      const strip = document.getElementById('strip');
+      const newTabBtn = document.getElementById('new-tab');
+      const spacer = document.getElementById('spacer');
 
-    newTabBtn.addEventListener('click', () => window.tabs.create());
+      newTabBtn.addEventListener('click', () => window.tabs.create());
 
-    const R = 5.5;
-    const CIRC = 2 * Math.PI * R;
+      // Translated by the main process (this page loads apart from the app).
+      let strings = {
+        newTab: 'New Tab',
+        newTabButton: 'New tab',
+        closeTab: 'Close tab',
+      };
+      let lastState = null;
 
-    function ringSvg(percent) {
-      const filled = Math.max(0, Math.min(100, percent ?? 0)) / 100;
-      return (
-        '<svg class="ring" viewBox="0 0 14 14">' +
-        `<circle class="track" cx="7" cy="7" r="${R}" fill="none" stroke-width="2.4"/>` +
-        `<circle class="bar" cx="7" cy="7" r="${R}" fill="none" stroke-width="2.4" ` +
-        `stroke-linecap="round" stroke-dasharray="${CIRC.toFixed(2)}" ` +
-        `stroke-dashoffset="${(CIRC * (1 - filled)).toFixed(2)}"/>` +
-        '</svg>'
-      );
-    }
+      function applyStrings(next) {
+        strings = { ...strings, ...next };
+        if (next.lang) document.documentElement.lang = next.lang;
+        document.documentElement.dir = next.dir === 'rtl' ? 'rtl' : 'ltr';
+        newTabBtn.title = strings.newTabButton;
+        newTabBtn.setAttribute('aria-label', strings.newTabButton);
+        if (lastState) render(lastState);
+      }
+      applyStrings({});
 
-    // --- drag-to-reorder ---------------------------------------------
-    let draggedEl = null;
-    let draggedStartIndex = -1;
+      const R = 5.5;
+      const CIRC = 2 * Math.PI * R;
 
-    function tabAfterPoint(x) {
-      const others = [...strip.querySelectorAll('.tab:not(.dragging)')];
-      return (
-        others.find(el => {
-          const rect = el.getBoundingClientRect();
-          return x < rect.left + rect.width / 2;
-        }) ?? null
-      );
-    }
-
-    strip.addEventListener('dragover', e => {
-      if (!draggedEl) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      const after = tabAfterPoint(e.clientX);
-      strip.insertBefore(draggedEl, after ?? newTabBtn);
-    });
-
-    strip.addEventListener('drop', e => {
-      if (draggedEl) e.preventDefault();
-    });
-
-    function commitDrag(event) {
-      if (!draggedEl) return;
-      const el = draggedEl;
-      const startIndex = draggedStartIndex;
-      const cancelled = event?.dataTransfer?.dropEffect === 'none';
-      draggedEl = null;
-      draggedStartIndex = -1;
-      el.classList.remove('dragging');
-      if (cancelled) {
-        const siblings = [...strip.querySelectorAll('.tab')].filter(
-          candidate => candidate !== el
+      function ringSvg(percent) {
+        const filled = Math.max(0, Math.min(100, percent ?? 0)) / 100;
+        return (
+          '<svg class="ring" viewBox="0 0 14 14">' +
+          `<circle class="track" cx="7" cy="7" r="${R}" fill="none" stroke-width="2.4"/>` +
+          `<circle class="bar" cx="7" cy="7" r="${R}" fill="none" stroke-width="2.4" ` +
+          `stroke-linecap="round" stroke-dasharray="${CIRC.toFixed(2)}" ` +
+          `stroke-dashoffset="${(CIRC * (1 - filled)).toFixed(2)}"/>` +
+          '</svg>'
         );
-        strip.insertBefore(el, siblings[startIndex] ?? newTabBtn);
       }
-      const index = cancelled
-        ? startIndex
-        : [...strip.querySelectorAll('.tab')].indexOf(el);
-      if (index >= 0) {
-        // A cancelled drag sends the original index. The main process treats
-        // that as a no-op while still restoring focus to the active app view.
-        window.tabs.reorder(Number(el.dataset.tabId), index);
-      }
-      // Apply any state update deferred while the drag was in progress
-      // (the reorder above will also push fresh state right after).
-      if (pendingState) {
-        const state = pendingState;
-        pendingState = null;
-        render(state);
-      }
-    }
-    // -----------------------------------------------------------------
 
-    // Progress updates push tabs:state every ~250ms while any job runs; a
-    // re-render mid-drag would destroy the dragged element and silently
-    // cancel the reorder. Defer renders until the drag commits.
-    let pendingState = null;
+      // --- drag-to-reorder ---------------------------------------------
+      let draggedEl = null;
+      let draggedStartIndex = -1;
 
-    function render(state) {
-      if (draggedEl) {
-        pendingState = state;
-        return;
+      function tabAfterPoint(x) {
+        const others = [...strip.querySelectorAll('.tab:not(.dragging)')];
+        return (
+          others.find(el => {
+            const rect = el.getBoundingClientRect();
+            const middle = rect.left + rect.width / 2;
+            // Tabs run right to left in RTL, so "before" is the right half.
+            return isRtl() ? x > middle : x < middle;
+          }) ?? null
+        );
       }
-      strip.querySelectorAll('.tab').forEach(el => el.remove());
-      for (const t of state) {
-        const el = document.createElement('div');
-        el.className = 'tab' + (t.active ? ' active' : '');
-        el.title = t.title;
-        el.dataset.tabId = t.id;
-        el.draggable = true;
 
-        let indicator = '';
-        if (t.running) {
-          indicator =
-            ringSvg(t.percent) +
-            (t.percent != null ? `<span class="pct">${t.percent}%</span>` : '');
-        } else if (t.badge === 'done') {
-          indicator = '<span class="dot done"></span>';
-        } else if (t.badge === 'error') {
-          indicator = '<span class="dot error"></span>';
+      strip.addEventListener('dragover', e => {
+        if (!draggedEl) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const after = tabAfterPoint(e.clientX);
+        strip.insertBefore(draggedEl, after ?? newTabBtn);
+      });
+
+      strip.addEventListener('drop', e => {
+        if (draggedEl) e.preventDefault();
+      });
+
+      function commitDrag(event) {
+        if (!draggedEl) return;
+        const el = draggedEl;
+        const startIndex = draggedStartIndex;
+        const cancelled = event?.dataTransfer?.dropEffect === 'none';
+        draggedEl = null;
+        draggedStartIndex = -1;
+        el.classList.remove('dragging');
+        if (cancelled) {
+          const siblings = [...strip.querySelectorAll('.tab')].filter(
+            candidate => candidate !== el
+          );
+          strip.insertBefore(el, siblings[startIndex] ?? newTabBtn);
         }
-
-        el.innerHTML =
-          indicator +
-          `<span class="title"></span>` +
-          `<button class="close" title="Close tab">×</button>`;
-        el.querySelector('.title').textContent = t.title;
-
-        el.addEventListener('click', () => window.tabs.select(t.id));
-        el.querySelector('.close').addEventListener('click', e => {
-          e.stopPropagation();
-          window.tabs.close(t.id);
-        });
-        // middle-click closes, like a browser
-        el.addEventListener('auxclick', e => {
-          if (e.button === 1) window.tabs.close(t.id);
-        });
-
-        el.addEventListener('dragstart', e => {
-          draggedEl = el;
-          draggedStartIndex = [...strip.querySelectorAll('.tab')].indexOf(el);
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', String(t.id));
-          // defer so the drag image is the un-faded tab
-          setTimeout(() => el.classList.add('dragging'), 0);
-        });
-        el.addEventListener('dragend', commitDrag);
-
-        strip.insertBefore(el, newTabBtn);
+        const index = cancelled
+          ? startIndex
+          : [...strip.querySelectorAll('.tab')].indexOf(el);
+        if (index >= 0) {
+          // A cancelled drag sends the original index. The main process treats
+          // that as a no-op while still restoring focus to the active app view.
+          window.tabs.reorder(Number(el.dataset.tabId), index);
+        }
+        // Apply any state update deferred while the drag was in progress
+        // (the reorder above will also push fresh state right after).
+        if (pendingState) {
+          const state = pendingState;
+          pendingState = null;
+          render(state);
+        }
       }
-    }
+      // -----------------------------------------------------------------
 
-    window.tabs.onState(render);
-  </script>
-</body>
+      // Progress updates push tabs:state every ~250ms while any job runs; a
+      // re-render mid-drag would destroy the dragged element and silently
+      // cancel the reorder. Defer renders until the drag commits.
+      let pendingState = null;
+
+      function isRtl() {
+        return document.documentElement.dir === 'rtl';
+      }
+
+      function render(state) {
+        lastState = state;
+        if (draggedEl) {
+          pendingState = state;
+          return;
+        }
+        strip.querySelectorAll('.tab').forEach(el => el.remove());
+        for (const t of state) {
+          const el = document.createElement('div');
+          el.className = 'tab' + (t.active ? ' active' : '');
+          const title = t.title || strings.newTab;
+          el.title = title;
+          el.dataset.tabId = t.id;
+          el.draggable = true;
+
+          let indicator = '';
+          if (t.running) {
+            indicator =
+              ringSvg(t.percent) +
+              (t.percent != null
+                ? `<span class="pct">${t.percent}%</span>`
+                : '');
+          } else if (t.badge === 'done') {
+            indicator = '<span class="dot done"></span>';
+          } else if (t.badge === 'error') {
+            indicator = '<span class="dot error"></span>';
+          }
+
+          el.innerHTML =
+            indicator +
+            `<span class="title"></span>` +
+            `<button class="close" type="button"><span aria-hidden="true">×</span></button>`;
+          el.querySelector('.title').textContent = title;
+          const closeBtn = el.querySelector('.close');
+          closeBtn.title = strings.closeTab;
+          closeBtn.setAttribute('aria-label', `${strings.closeTab}: ${title}`);
+
+          el.addEventListener('click', () => window.tabs.select(t.id));
+          el.querySelector('.close').addEventListener('click', e => {
+            e.stopPropagation();
+            window.tabs.close(t.id);
+          });
+          // middle-click closes, like a browser
+          el.addEventListener('auxclick', e => {
+            if (e.button === 1) window.tabs.close(t.id);
+          });
+
+          el.addEventListener('dragstart', e => {
+            draggedEl = el;
+            draggedStartIndex = [...strip.querySelectorAll('.tab')].indexOf(el);
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(t.id));
+            // defer so the drag image is the un-faded tab
+            setTimeout(() => el.classList.add('dragging'), 0);
+          });
+          el.addEventListener('dragend', commitDrag);
+
+          strip.insertBefore(el, newTabBtn);
+        }
+      }
+
+      window.tabs.onI18n(applyStrings);
+      window.tabs.onState(render);
+    </script>
+  </body>
 </html>

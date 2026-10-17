@@ -4,6 +4,9 @@ import {
   estimateSummaryCreditsFromChars,
   formatCredits as formatEstimatedCredits,
 } from '../../utils/creditEstimates';
+import { HighlightRenderError } from '../../utils/render-highlight';
+import { getSourceVideoErrorMessage } from '../../utils/sourceVideoErrors';
+import { formatDurationMinSec } from '../../utils/formatUnits';
 
 export function estimateSummaryCredits(
   charCount: number,
@@ -12,8 +15,66 @@ export function estimateSummaryCredits(
   return estimateSummaryCreditsFromChars(charCount, effortLevel);
 }
 
-export function formatCredits(credits: number): string {
-  return formatEstimatedCredits(credits);
+export function formatCredits(credits: number, locale?: string): string {
+  return formatEstimatedCredits(credits, locale);
+}
+
+/**
+ * A cut failure in the UI language. Coded render errors get their own text;
+ * anything else (an encoder message from the main process) gets a plain
+ * "couldn't cut" line instead of raw English.
+ */
+export function describeClipCutError(error: unknown, t: TFunction): string {
+  if (error instanceof HighlightRenderError) {
+    switch (error.code) {
+      case 'busy':
+        return t(
+          'summary.clipError.busy',
+          'Wait for the current job to finish, then cut the clip.'
+        );
+      case 'no-highlight':
+        return t('summary.clipError.noHighlight', 'Choose a highlight first.');
+      case 'editorial-single':
+        return t(
+          'summary.clipError.editorialSingle',
+          'Cut each styled Short on its own, in Shorts Reframe.'
+        );
+      case 'editorial-stale':
+        return t(
+          'summary.clipError.editorialStale',
+          'The subtitles in this Short changed. Open "Style this Short", check it and save, then cut again.'
+        );
+      case 'no-transcript':
+        return t(
+          'summary.clipError.noTranscript',
+          'Open the subtitles for this video before cutting a clip.'
+        );
+      case 'no-cues':
+        return t(
+          'summary.clipError.noCues',
+          'This part of the video has no subtitles.'
+        );
+      case 'untranslated':
+        return t(
+          'summary.clipError.untranslated',
+          "Some lines in this clip aren't translated yet. Translate them, or set the subtitle display to show the original."
+        );
+      case 'subtitles-not-saved':
+        return t(
+          'summary.clipError.subtitlesNotSaved',
+          "The clip was cut, but its subtitles couldn't be saved."
+        );
+      default:
+        break;
+    }
+  }
+  const raw = error instanceof Error ? error.message : String(error ?? '');
+  const sourceMessage = getSourceVideoErrorMessage(raw);
+  if (sourceMessage) return sourceMessage;
+  return t(
+    'summary.clipError.generic',
+    "Couldn't cut this clip from the video. Try again."
+  );
 }
 
 export function getHighlightKey(h: TranscriptHighlight): string {
@@ -119,20 +180,33 @@ export function toFileUrl(p: string): string {
   return `file://${encodeURI(`/${normalized}`)}`;
 }
 
-/** "0:24–0:44 · 20s": where the clip sits and how long it runs. */
-export function formatRange(a: number, b: number): string {
+function formatClock(total: number): string {
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = String(total % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+}
+
+function clampRange(a: number, b: number): [number, number] {
   const s = Math.max(0, Math.floor(a || 0));
-  const e = Math.max(s, Math.floor(b || 0));
-  const clock = (total: number) => {
-    const h = Math.floor(total / 3600);
-    const m = Math.floor((total % 3600) / 60);
-    const sec = String(total % 60).padStart(2, '0');
-    return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
-  };
-  const len = e - s;
-  const length =
-    len >= 60 ? `${Math.floor(len / 60)}m ${len % 60}s` : `${len}s`;
-  return `${clock(s)}–${clock(e)} · ${length}`;
+  return [s, Math.max(s, Math.floor(b || 0))];
+}
+
+/** "0:24–0:44". Always left-to-right; wrap it in <bdi dir="ltr"> in RTL. */
+export function formatClockRange(a: number, b: number): string {
+  const [s, e] = clampRange(a, b);
+  return `${formatClock(s)}–${formatClock(e)}`;
+}
+
+/** How long the clip runs, in the UI language's units ("20s", "1m 5s"). */
+export function formatClipLength(a: number, b: number, locale = 'en'): string {
+  const [s, e] = clampRange(a, b);
+  return formatDurationMinSec(e - s, locale);
+}
+
+/** "0:24–0:44 · 20s": where the clip sits and how long it runs. */
+export function formatRange(a: number, b: number, locale = 'en'): string {
+  return `${formatClockRange(a, b)} · ${formatClipLength(a, b, locale)}`;
 }
 
 export function formatHHMMSS(total: number): string {

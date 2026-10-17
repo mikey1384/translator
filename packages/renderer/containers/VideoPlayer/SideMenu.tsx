@@ -20,7 +20,7 @@ import {
   useUIStore,
   useVideoStore,
 } from '../../state';
-import { useUrlStore } from '../../state/url-store';
+import { reportUnreadableCues } from '../../utils/subtitleImportNotice';
 import {
   openChangeVideo,
   openUnsavedSrtConfirm,
@@ -32,14 +32,9 @@ import {
   TRANSLATION_LANGUAGES_BASE,
   TRANSLATION_LANGUAGE_GROUPS,
 } from '../../constants/translation-languages';
-import {
-  ensureSubtitlesTranslatedForDubbing,
-  runFullSrtTranslation,
-} from '../../utils/runFullTranslation';
-import {
-  executeDubGeneration,
-  startTranscriptionFlow,
-} from '../GenerateSubtitles/utils/subtitleGeneration';
+import { runFullSrtTranslation } from '../../utils/runFullTranslation';
+import { runMountedDub } from '../../utils/runDub';
+import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
 import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
 import { useTranscriptionBlocker } from '../GenerateSubtitles/hooks/useTranscriptionBlocker';
 import { useCreditCostEstimates } from '../../hooks/useCreditCostEstimates';
@@ -55,6 +50,7 @@ import {
   unmountCurrentSubtitles,
 } from '../../utils/subtitle-library';
 import { saveCurrentSubtitles } from '../../utils/saveSubtitles';
+import { confirmReplaceUnsavedSubtitles } from '../../utils/unsaved-subtitles';
 import { didSaveSubtitleFile } from '../../utils/saveSubtitles';
 import {
   sidePanelButtonContentStyles,
@@ -92,7 +88,7 @@ export default function SideMenu({
   );
   const translationInProgress = useTaskStore(s => !!s.translation.inProgress);
   const targetLanguage = useUIStore(s => s.targetLanguage || 'english');
-  const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
+  const setTargetLanguage = useUIStore(s => s.chooseTargetLanguage);
 
   const videoFile = useVideoStore(s => s.file);
   const videoFilePath = useVideoStore(s => s.path);
@@ -188,6 +184,7 @@ export default function SideMenu({
   async function handleMountOrChangeSrt() {
     logButton('mount_or_change_srt');
     const res = await openSubtitleWithElectron();
+    if (res?.segments && !(await confirmReplaceUnsavedSubtitles())) return;
     if (res?.segments) {
       // SRT loaded from disk; mark origin accordingly
       useSubStore
@@ -207,6 +204,7 @@ export default function SideMenu({
         mode: res.fileMode ?? null,
         role: res.fileRole ?? 'import',
       });
+      reportUnreadableCues(res.unreadableCues);
       // Reset transcription completion state so Generate panel doesn't show stale 'Transcription Complete'
       try {
         useTaskStore.getState().setTranscription({
@@ -296,47 +294,10 @@ export default function SideMenu({
   }
 
   async function handleDub() {
-    let subtitleState = useSubStore.getState();
-    let currentSegments = subtitleState.order.map(
-      id => subtitleState.segments[id]
-    );
-    const hasSubtitleText = currentSegments.some(seg =>
-      String(seg?.translation || seg?.original || '').trim()
-    );
-    if (currentSegments.length === 0 || !hasSubtitleText) {
-      useUrlStore
-        .getState()
-        .setValidationError('No subtitles available for dubbing');
-      return;
-    }
-
     if (!(await confirmDubCost())) return;
-
-    // Dub the selected output language, not whatever text happens to be
-    // mounted: translate first when translations are missing or were made
-    // for a different language.
-    const ready = await ensureSubtitlesTranslatedForDubbing();
-    if (!ready.ok) {
-      return;
-    }
-    subtitleState = useSubStore.getState();
-    currentSegments = subtitleState.order.map(id => subtitleState.segments[id]);
-
-    const operationId = `dub-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    const videoStoreState = useVideoStore.getState();
-    const sourceVideoPath =
-      videoStoreState.originalPath ??
-      subtitleState.sourceVideoPath ??
-      videoFilePath ??
-      videoStoreState.path;
-
-    await executeDubGeneration({
-      segments: currentSegments,
-      operationId,
-      videoPath: sourceVideoPath,
-      voice: dubVoice,
-      targetLanguage,
-      videoDurationSeconds: derivedDurationSecs ?? undefined,
+    await runMountedDub({
+      videoDurationSeconds: derivedDurationSecs,
+      fallbackVideoPath: videoFilePath,
     });
   }
 
