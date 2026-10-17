@@ -2050,7 +2050,6 @@ function buildSoftShadow(softShadowColor, softShadowOffsetYPx, softShadowBlurPx)
 function resolveSubtitleRenderTheme(opts) {
   const {
     displayFontSize = BASELINE_FONT_SIZE,
-    isFullScreen = false,
     stylePreset = "Default",
     isMultiLine,
     videoWidthPx,
