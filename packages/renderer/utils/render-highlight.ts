@@ -15,6 +15,9 @@ import type {
 import { buildSrt } from '../../shared/helpers';
 import {
   highlightCaptionSignature,
+  highlightClipArtifactKey,
+  highlightClipSelectionSignature,
+  highlightClipSourceIdentity,
   rebaseClipSubtitles,
 } from '../../shared/helpers/highlight-clips';
 import {
@@ -24,9 +27,12 @@ import {
 import * as SubtitlesIPC from '../ipc/subtitles';
 import * as LibraryIPC from '../ipc/subtitle-library';
 import * as SystemIPC from '../ipc/system';
+import { recordHighlightClip } from '../ipc/highlight-clips';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import { useTaskStore } from '../state/task-store';
 import { useUIStore } from '../state/ui-store';
+import { useSubStore } from '../state/subtitle-store';
+import { useVideoStore } from '../state/video-store';
 import { CancelledError } from '../../shared/cancelled-error';
 
 export type HighlightRenderInput = {
@@ -57,8 +63,52 @@ export type HighlightRenderCompletion = {
   operationId: string;
 };
 
+/** The source a render belongs to, captured before any await can switch it. */
+function captureClipSourceIdentity(): string {
+  const video = useVideoStore.getState();
+  const subtitles = useSubStore.getState();
+  return highlightClipSourceIdentity({
+    fallbackVideoAssetIdentity: subtitles.sourceVideoAssetIdentity,
+    fallbackVideoPath: subtitles.sourceVideoPath,
+    originalVideoPath: video.originalPath,
+    sourceAssetIdentity: video.sourceAssetIdentity,
+    sourceUrl: video.sourceUrl,
+    libraryEntryId: subtitles.libraryEntryId,
+  });
+}
+
+/** Remember the finished clip so reopening this source brings it back. */
+async function rememberRenderedClip(
+  sourceIdentity: string,
+  completion: HighlightRenderCompletion
+) {
+  const single = completion.highlights.length === 1;
+  const artifactKey = single
+    ? highlightClipArtifactKey(completion.highlights[0])
+    : highlightClipSelectionSignature(completion.highlights);
+  if (!artifactKey) return;
+  try {
+    const result = await recordHighlightClip({
+      sourceIdentity: sourceIdentity + completion.captionSignature,
+      kind: single ? 'single' : 'combined',
+      artifactKey,
+      // The clips panel shows legacy 'vertical' renders as Shorts Reframe.
+      aspectMode:
+        completion.aspectMode === 'vertical'
+          ? 'vertical_reframe'
+          : completion.aspectMode,
+      videoPath: completion.videoPath,
+    });
+    if (!result?.success) throw new Error(result?.error || 'unknown error');
+  } catch (error) {
+    // The clip itself is fine; only reopening will not find it.
+    console.warn('[render-highlight] Could not remember rendered clip:', error);
+  }
+}
+
 /** The UI and MCP share this local-only cut, caption, and library workflow. */
 export async function renderHighlight(input: HighlightRenderInput) {
+  const sourceIdentity = captureClipSourceIdentity();
   const tasks = useTaskStore.getState();
   if (
     [
@@ -92,7 +142,7 @@ export async function renderHighlight(input: HighlightRenderInput) {
   const removeSingle = SubtitlesIPC.onHighlightCutProgress(reportCut);
   const removeCombined = SubtitlesIPC.onCombinedHighlightCutProgress(reportCut);
   try {
-    return await runHighlightRender(input);
+    return await runHighlightRender(input, sourceIdentity);
   } finally {
     removeSingle();
     removeCombined();
@@ -106,7 +156,10 @@ export async function renderHighlight(input: HighlightRenderInput) {
   }
 }
 
-async function runHighlightRender(input: HighlightRenderInput) {
+async function runHighlightRender(
+  input: HighlightRenderInput,
+  sourceIdentity: string
+) {
   const { operationId, videoPath, highlights, segments } = input;
   if (!highlights.length) throw new Error('Choose at least one highlight.');
   if (
@@ -299,6 +352,7 @@ async function runHighlightRender(input: HighlightRenderInput) {
       input.typeface ?? useUIStore.getState().subtitleTypeface
     ),
   };
+  await rememberRenderedClip(sourceIdentity, completion);
   window.dispatchEvent(
     new CustomEvent(HIGHLIGHT_RENDER_COMPLETED, { detail: completion })
   );

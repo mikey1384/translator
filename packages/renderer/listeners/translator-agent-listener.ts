@@ -4914,8 +4914,16 @@ function installAgentBridge() {
       ) {
         throw new Error('Subtitle base font size must be between 6 and 96.');
       }
+      const typeface = input?.typeface;
+      if (typeface !== undefined && !isSubtitleTypeface(typeface)) {
+        throw new Error(
+          'Subtitle typeface must be one of: sans, classic, serif, display.'
+        );
+      }
       useUIStore.getState().setSubtitleStyle(style);
       if (size !== undefined) useUIStore.getState().setBaseFontSize(size);
+      if (typeface !== undefined)
+        useUIStore.getState().setSubtitleTypeface(typeface);
       return currentStatus();
     },
 

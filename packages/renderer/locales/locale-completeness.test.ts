@@ -30,6 +30,7 @@ const placeholders = (text: string) =>
     .join(',');
 
 const en = flatten(JSON.parse(readFileSync(join(here, 'en.json'), 'utf8')));
+const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
 const locales = readdirSync(here).filter(
   f => /^[a-z]{2}(-[A-Z]{2})?\.json$/.test(f) && f !== 'en.json'
 );
@@ -45,6 +46,9 @@ test('every locale has every English key with the same placeholders', () => {
   for (const file of locales) {
     const map = flatten(JSON.parse(readFileSync(join(here, file), 'utf8')));
     for (const [key, source] of en) {
+      // Plural forms are per language: English's "_one" isn't required of
+      // a language without that category (checked separately below).
+      if (PLURAL_SUFFIX.test(key)) continue;
       const value = map.get(key);
       if (value === undefined || value.trim() === '') {
         problems.push(`${file}: missing ${key}`);
@@ -63,6 +67,40 @@ test('every locale has every English key with the same placeholders', () => {
     0,
     `${problems.length} locale gaps, first: ${problems.slice(0, 8).join('; ')}`
   );
+});
+
+test('plural forms match each language and keep their placeholders', () => {
+  const problems: string[] = [];
+  for (const file of ['en.json', ...locales]) {
+    const locale = file.replace(/\.json$/, '');
+    const categories = new Set(
+      new Intl.PluralRules(locale).resolvedOptions().pluralCategories
+    );
+    const map = flatten(JSON.parse(readFileSync(join(here, file), 'utf8')));
+    for (const [key, value] of map) {
+      const plural = key.match(PLURAL_SUFFIX);
+      if (!plural) continue;
+      const base = key.slice(0, -plural[0].length);
+      if (!categories.has(plural[1] as Intl.LDMLPluralRule)) {
+        problems.push(`${file}: ${key} is not a ${locale} plural category`);
+      }
+      const source = en.get(base);
+      if (source === undefined) {
+        problems.push(`${file}: ${key} has no English base key`);
+      } else {
+        // A singular or dual form may spell the number out ("one line").
+        const withoutCount = (text: string) =>
+          placeholders(text)
+            .split(',')
+            .filter(name => name && name !== 'count')
+            .join(',');
+        if (withoutCount(value) !== withoutCount(source)) {
+          problems.push(`${file}: placeholders differ in ${key}`);
+        }
+      }
+    }
+  }
+  assert.equal(problems.length, 0, problems.slice(0, 8).join('; '));
 });
 
 test('old English progress sentences are turned into translated keys', () => {

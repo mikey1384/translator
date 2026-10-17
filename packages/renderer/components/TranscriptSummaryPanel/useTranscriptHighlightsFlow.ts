@@ -3,10 +3,17 @@ import {
   HIGHLIGHT_RENDER_COMPLETED,
   type HighlightRenderCompletion,
 } from '../../utils/render-highlight';
-import { highlightCaptionSignature } from '../../../shared/helpers/highlight-clips';
+import {
+  highlightCaptionSignature,
+  highlightClipArtifactKey,
+  highlightClipSelectionSignature,
+  highlightClipSourceIdentity,
+  normalizeHighlightSourcePath,
+} from '../../../shared/helpers/highlight-clips';
 import { useSubStore } from '../../state/subtitle-store';
 import { useUIStore } from '../../state/ui-store';
 import { syncStoredSubtitleVideoPath } from '../../ipc/subtitle-library';
+import { listHighlightClips } from '../../ipc/highlight-clips';
 import {
   useCallback,
   useEffect,
@@ -135,14 +142,6 @@ const HIGHLIGHT_ASPECT_MODES: HighlightClipAspectMode[] = [
   'original',
 ];
 
-function normalizeSourcePathIdentity(value: string | null | undefined): string {
-  return String(value || '')
-    .trim()
-    .replace(/\\/g, '/')
-    .replace(/\/+$/g, '')
-    .toLowerCase();
-}
-
 function normalizeSourceValue(value: string | null | undefined): string {
   return String(value || '').trim();
 }
@@ -166,52 +165,11 @@ function buildHighlightViewSourceIdentity({
   sourceUrl: string | null;
   libraryEntryId: string | null;
 }): string {
-  const original = normalizeSourcePathIdentity(originalVideoPath);
-  const fallback = normalizeSourcePathIdentity(fallbackVideoPath);
+  const original = normalizeHighlightSourcePath(originalVideoPath);
+  const fallback = normalizeHighlightSourcePath(fallbackVideoPath);
   const url = normalizeSourceValue(sourceUrl);
   const library = normalizeSourceValue(libraryEntryId);
   return `${original}|${fallback}|${url}|${library}`;
-}
-
-function buildHighlightArtifactSourceIdentity({
-  fallbackVideoAssetIdentity,
-  fallbackVideoPath,
-  originalVideoPath,
-  sourceAssetIdentity,
-  sourceUrl,
-  libraryEntryId,
-}: {
-  fallbackVideoAssetIdentity: string | null;
-  fallbackVideoPath: string | null;
-  originalVideoPath: string | null;
-  sourceAssetIdentity: string | null;
-  sourceUrl: string | null;
-  libraryEntryId: string | null;
-}): string {
-  const currentAssetIdentity = normalizeSourceValue(sourceAssetIdentity);
-  if (currentAssetIdentity) {
-    return `asset:${currentAssetIdentity}`;
-  }
-  const currentVideoPath = normalizeSourcePathIdentity(originalVideoPath);
-  if (currentVideoPath) {
-    return `path:${currentVideoPath}`;
-  }
-  const fallbackAssetIdentity = normalizeSourceValue(
-    fallbackVideoAssetIdentity
-  );
-  if (fallbackAssetIdentity) {
-    return `asset:${fallbackAssetIdentity}`;
-  }
-  const fallbackPath = normalizeSourcePathIdentity(fallbackVideoPath);
-  if (fallbackPath) {
-    return `path:${fallbackPath}`;
-  }
-  const url = normalizeSourceValue(sourceUrl);
-  const library = normalizeSourceValue(libraryEntryId);
-  if (url || library) {
-    return `meta:${url}|${library}`;
-  }
-  return 'meta:|';
 }
 
 function withoutVideoPath(highlight: TranscriptHighlight): TranscriptHighlight {
@@ -220,13 +178,7 @@ function withoutVideoPath(highlight: TranscriptHighlight): TranscriptHighlight {
 }
 
 function buildHighlightArtifactKey(highlight: TranscriptHighlight): string {
-  const start = Number.isFinite(highlight.start)
-    ? Math.round(highlight.start * 1000)
-    : 0;
-  const end = Number.isFinite(highlight.end)
-    ? Math.round(highlight.end * 1000)
-    : start;
-  return `${start}-${end}|${JSON.stringify(highlight.editorial ?? null)}`;
+  return highlightClipArtifactKey(highlight);
 }
 
 function buildHighlightUiKey(highlight: TranscriptHighlight): string {
@@ -362,12 +314,7 @@ function extractHighlightVideoPaths(
 function buildOrderedSelectionSignature(
   orderedSelection: TranscriptHighlight[]
 ): string {
-  if (!Array.isArray(orderedSelection) || orderedSelection.length < 2) {
-    return '';
-  }
-  return orderedSelection
-    .map(highlight => buildHighlightArtifactKey(withoutVideoPath(highlight)))
-    .join('|');
+  return highlightClipSelectionSignature(orderedSelection);
 }
 
 export default function useTranscriptHighlightsFlow({
@@ -482,7 +429,7 @@ export default function useTranscriptHighlightsFlow({
   );
   const artifactSourceIdentity = useMemo(
     () =>
-      buildHighlightArtifactSourceIdentity({
+      highlightClipSourceIdentity({
         fallbackVideoAssetIdentity,
         fallbackVideoPath,
         originalVideoPath,
@@ -808,6 +755,103 @@ export default function useTranscriptHighlightsFlow({
     persistVisibleArtifactsForSource,
     syncCombinedCutStateForSource,
     viewSourceIdentity,
+  ]);
+
+  // Clips rendered in an earlier session for this source and these exact
+  // captions are listed by the main process; files that are gone are not.
+  useEffect(() => {
+    const identity = artifactSourceIdentity;
+    let disposed = false;
+    void listHighlightClips({ sourceIdentity: identity })
+      .then(result => {
+        if (disposed || !result?.success || !result.clips?.length) return;
+        if (currentArtifactSourceIdentityRef.current !== identity) return;
+        const artifacts = ensureSourceArtifacts(identity);
+        const restoredKeys = new Set<string>();
+        let restoredCombined = false;
+        // Newest first, so a clip this session already knows always wins.
+        for (const clip of result.clips) {
+          const aspectMode = resolveHighlightAspectMode(clip.aspectMode);
+          if (clip.kind === 'combined') {
+            const combined = ensureCombinedArtifact(artifacts, aspectMode);
+            if (combined.outputPath) continue;
+            combined.outputPath = clip.videoPath;
+            combined.selectionSignature = clip.artifactKey;
+            restoredCombined = true;
+            continue;
+          }
+          const modePaths = artifacts.highlightVideoPaths[clip.artifactKey];
+          if (modePaths?.[aspectMode]) continue;
+          artifacts.highlightVideoPaths[clip.artifactKey] = {
+            ...(modePaths || {}),
+            [aspectMode]: clip.videoPath,
+          };
+          restoredKeys.add(clip.artifactKey);
+        }
+        if (!restoredKeys.size && !restoredCombined) return;
+
+        // Show the newest restored clip when the visible mode has none.
+        const nextModes = { ...highlightAspectModesRef.current };
+        for (const highlight of highlightsRef.current) {
+          const artifactKey = buildHighlightArtifactKey(
+            withoutVideoPath(highlight)
+          );
+          if (!restoredKeys.has(artifactKey)) continue;
+          const modePaths = artifacts.highlightVideoPaths[artifactKey] || {};
+          const currentMode = getHighlightPreferredMode(
+            highlight,
+            nextModes,
+            artifacts.highlightPreferredModesByArtifactKey
+          );
+          if (modePaths[currentMode]) continue;
+          const newest = result.clips.find(
+            clip => clip.kind === 'single' && clip.artifactKey === artifactKey
+          );
+          if (!newest) continue;
+          const mode = resolveHighlightAspectMode(newest.aspectMode);
+          nextModes[buildHighlightUiKey(highlight)] = mode;
+          artifacts.highlightPreferredModesByArtifactKey[artifactKey] = mode;
+        }
+        for (const artifactKey of restoredKeys) {
+          if (artifacts.highlightPreferredModesByArtifactKey[artifactKey]) {
+            continue;
+          }
+          const modePaths = artifacts.highlightVideoPaths[artifactKey] || {};
+          if (modePaths[DEFAULT_HIGHLIGHT_ASPECT_MODE]) continue;
+          const newest = result.clips.find(
+            clip => clip.kind === 'single' && clip.artifactKey === artifactKey
+          );
+          if (newest) {
+            artifacts.highlightPreferredModesByArtifactKey[artifactKey] =
+              resolveHighlightAspectMode(newest.aspectMode);
+          }
+        }
+
+        highlightAspectModesRef.current = nextModes;
+        setHighlightAspectModes(nextModes);
+        setHighlights(previous =>
+          applySourceArtifacts(identity, previous, nextModes)
+        );
+        setOrderedSelection(previous =>
+          applySourceArtifacts(identity, previous, nextModes)
+        );
+        syncCombinedCutStateForSource(identity);
+      })
+      .catch(error => {
+        console.warn(
+          '[useTranscriptHighlightsFlow] Could not load saved clips:',
+          error
+        );
+      });
+    return () => {
+      disposed = true;
+    };
+  }, [
+    applySourceArtifacts,
+    artifactSourceIdentity,
+    ensureCombinedArtifact,
+    ensureSourceArtifacts,
+    syncCombinedCutStateForSource,
   ]);
 
   const mergeHighlightUpdates = useCallback(

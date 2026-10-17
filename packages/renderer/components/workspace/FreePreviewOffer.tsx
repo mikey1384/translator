@@ -329,10 +329,12 @@ export default function FreePreviewOffer() {
           {
             covered,
             total,
+            count: total,
           }
         )
       : t('freePreview.noneTitle', 'This video is {{total}} minutes.', {
           total,
+          count: total,
         });
 
   let detail: string;
@@ -345,19 +347,19 @@ export default function FreePreviewOffer() {
     detail = t(
       'freePreview.enoughBody',
       'You have enough minutes to finish the remaining {{remaining}} minutes now.',
-      { remaining }
+      { remaining, count: remaining }
     );
   } else if (preview.coveredSecs > 0) {
     detail = coversAll
       ? t(
           'freePreview.offerBody',
           'Finish the whole video for {{price}}. It covers the remaining {{remaining}} minutes, and what’s left over stays for your next video.',
-          { price, remaining }
+          { price, remaining, count: remaining }
         )
       : t(
           'freePreview.offerBodyLong',
           'The {{price}} pack covers most of the remaining {{remaining}} minutes.',
-          { price, remaining }
+          { price, remaining, count: remaining }
         );
   } else if (monthlyFree) {
     detail = t(

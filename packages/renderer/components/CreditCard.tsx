@@ -324,6 +324,7 @@ export default function CreditCard() {
       '{{minutes}} free minutes every month · next on {{date}}',
       {
         minutes: freeMinutes,
+        count: freeMinutes,
         date: formatRefreshDate(monthlyFree.refreshesOn, locale),
       }
     );

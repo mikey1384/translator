@@ -590,7 +590,7 @@ function buildServer() {
     'app_set_subtitle_style',
     {
       description:
-        'Choose subtitle style and optional base font size. These settings also control highlight renders; LineBox at 35 is a good Korean Shorts starting point.',
+        'Choose subtitle style, optional base font size and optional typeface (sans, classic, serif, display). These settings also control highlight renders; LineBox at 35 is a good Korean Shorts starting point.',
       inputSchema: z.object({
         style: z.enum([
           'Default',
@@ -602,6 +602,7 @@ function buildServer() {
           'Highlight',
         ]),
         base_font_size_px: z.number().min(6).max(96).optional(),
+        typeface: z.enum(['sans', 'classic', 'serif', 'display']).optional(),
       }),
     },
     async input =>
@@ -609,6 +610,7 @@ function buildServer() {
         await app.call('setSubtitleStyle', {
           style: input.style,
           baseFontSizePx: input.base_font_size_px,
+          typeface: input.typeface,
         })
       )
   );

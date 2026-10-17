@@ -217,6 +217,7 @@ export default function CreditTransferSection() {
                     '{{credits}} credits will move.',
                     {
                       credits: issued.transferableCredits.toLocaleString(),
+                      count: issued.transferableCredits,
                     }
                   )}{' '}
                 {issued.byoUnlock &&
@@ -229,7 +230,10 @@ export default function CreditTransferSection() {
                 {t(
                   'settings.creditTransfer.expires',
                   'This code works once and expires in {{minutes}} minutes.',
-                  { minutes: issued.expiresInMinutes }
+                  {
+                    minutes: issued.expiresInMinutes,
+                    count: issued.expiresInMinutes,
+                  }
                 )}
               </p>
               <p className={mutedText}>
@@ -290,6 +294,7 @@ export default function CreditTransferSection() {
                       'Received {{credits}} credits.',
                       {
                         credits: received.transferredCredits.toLocaleString(),
+                        count: received.transferredCredits,
                       }
                     )
                   : t(

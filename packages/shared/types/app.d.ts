@@ -363,6 +363,21 @@ declare module '@shared-types/app' {
     updatedAt: string;
   }
 
+  export type StoredHighlightClipKind = 'single' | 'combined';
+  export type StoredHighlightClipAspectMode =
+    | 'vertical_reframe'
+    | 'vertical_fit'
+    | 'original';
+
+  export interface StoredHighlightClip {
+    kind: StoredHighlightClipKind;
+    /** Single: the clip's interval key. Combined: the ordered selection key. */
+    artifactKey: string;
+    aspectMode: StoredHighlightClipAspectMode;
+    videoPath: string;
+    createdAt: string;
+  }
+
   export interface StoredTranscriptAnalysisArtifact {
     summary: string;
     sections: TranscriptSummarySection[];
@@ -1385,6 +1400,22 @@ declare module '@shared-types/app' {
       analysis?: StoredTranscriptAnalysisArtifact;
       error?: string;
     }>;
+    recordHighlightClip: (options: {
+      sourceIdentity: string;
+      kind: StoredHighlightClipKind;
+      artifactKey: string;
+      aspectMode: StoredHighlightClipAspectMode;
+      videoPath: string;
+    }) => Promise<{
+      success: boolean;
+      clip?: StoredHighlightClip;
+      error?: string;
+    }>;
+    listHighlightClips: (options: { sourceIdentity: string }) => Promise<{
+      success: boolean;
+      clips?: StoredHighlightClip[];
+      error?: string;
+    }>;
 
     hasVideoTrack: (filePath: string) => Promise<boolean>;
     getVideoMetadata: (filePath: string) => Promise<VideoMetadataResult>;
@@ -1954,6 +1985,7 @@ declare module '@shared-types/app' {
         setSubtitleStyle: (input?: {
           style?: string;
           baseFontSizePx?: number;
+          typeface?: 'sans' | 'classic' | 'serif' | 'display';
         }) => Promise<Record<string, unknown>>;
         showDownloadHistory: () => Promise<Record<string, unknown>>;
         listDownloadHistory: (input?: {

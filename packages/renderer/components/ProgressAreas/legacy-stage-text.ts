@@ -282,9 +282,12 @@ export function localizeLegacyStage(stage: string, t: TFunction): string {
   for (const p of PATTERNS) {
     const match = stage.match(p.re);
     if (!match) continue;
-    const values: Record<string, string> = {};
+    // Numbers stay numbers so they read in the UI language's digits and
+    // `count` picks the right plural form.
+    const values: Record<string, string | number> = {};
     p.vars.forEach((name, i) => {
-      values[name] = match[i + 1];
+      const raw = match[i + 1];
+      values[name] = /^\d+(\.\d+)?$/.test(raw) ? Number(raw) : raw;
     });
     return t(`progress.legacy.${p.key}`, { defaultValue: p.en, ...values });
   }

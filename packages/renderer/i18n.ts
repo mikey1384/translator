@@ -148,6 +148,27 @@ const getInitialLanguage = async (): Promise<string> => {
   return picked;
 };
 
+const numberFormats = new Map<string, Intl.NumberFormat>();
+export function formatUiNumber(value: number, lng?: string): string {
+  const locale = lng || 'en';
+  let format = numberFormats.get(locale);
+  if (!format) {
+    try {
+      format = new Intl.NumberFormat(locale, {
+        useGrouping: false,
+        maximumFractionDigits: 2,
+      });
+    } catch {
+      format = new Intl.NumberFormat('en', {
+        useGrouping: false,
+        maximumFractionDigits: 2,
+      });
+    }
+    numberFormats.set(locale, format);
+  }
+  return format.format(value);
+}
+
 const initI18nPromise = (async () => {
   const initialLanguage = await getInitialLanguage();
   console.log(`[i18n] Setting initial language to: ${initialLanguage}`);
@@ -196,7 +217,17 @@ const initI18nPromise = (async () => {
     },
     lng: initialLanguage,
     fallbackLng: 'en',
-    interpolation: { escapeValue: false },
+    interpolation: {
+      escapeValue: false,
+      // Numbers read in the UI language's own digits, like prices and dates
+      // already do (Persian ۳۸, Bengali ৩৮, Marathi ३८); no grouping, so ids
+      // and years stay intact.
+      alwaysFormat: true,
+      format: (value, _format, lng) =>
+        typeof value === 'number' && Number.isFinite(value)
+          ? formatUiNumber(value, lng)
+          : value,
+    },
     react: { useSuspense: true },
   });
 

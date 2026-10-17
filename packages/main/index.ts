@@ -102,6 +102,10 @@ import {
   findStoredTranscriptAnalysis,
   saveStoredTranscriptAnalysis,
 } from './services/transcript-analysis-library.js';
+import {
+  listHighlightClips,
+  recordHighlightClip,
+} from './services/highlight-clip-library.js';
 import type {
   VideoSuggestionModelPreference,
   VideoSuggestionRecency,
@@ -721,6 +725,22 @@ try {
     try {
       const result = await findStoredTranscriptAnalysis(options || {});
       return { success: true, ...result };
+    } catch (error: any) {
+      return { success: false, error: error?.message || String(error) };
+    }
+  });
+  ipcMain.handle('record-highlight-clip', async (_event, options) => {
+    try {
+      const clip = await recordHighlightClip(options || {});
+      return { success: true, clip };
+    } catch (error: any) {
+      return { success: false, error: error?.message || String(error) };
+    }
+  });
+  ipcMain.handle('list-highlight-clips', async (_event, options) => {
+    try {
+      const clips = await listHighlightClips(options || {});
+      return { success: true, clips };
     } catch (error: any) {
       return { success: false, error: error?.message || String(error) };
     }

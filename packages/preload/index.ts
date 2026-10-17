@@ -244,6 +244,10 @@ const electronAPI = {
     ipcRenderer.invoke('save-stored-transcript-analysis', options),
   findStoredTranscriptAnalysis: (options: any) =>
     ipcRenderer.invoke('find-stored-transcript-analysis', options),
+  recordHighlightClip: (options: any) =>
+    ipcRenderer.invoke('record-highlight-clip', options),
+  listHighlightClips: (options: any) =>
+    ipcRenderer.invoke('list-highlight-clips', options),
   syncStoredSubtitleVideoPath: (previousPath: string, savedPath: string) =>
     ipcRenderer.invoke(
       'sync-stored-subtitle-video-path',

@@ -182,7 +182,7 @@ export const LEGACY_TOOL_DESCRIPTIONS = Object.freeze({
   app_set_subtitle_display:
     'Show original text, translation, or both in the app. No credits.',
   app_set_subtitle_style:
-    'Set subtitle style and optional base_font_size_px (6–96). These settings also control saved-video Shorts; LineBox at 35 is a Korean Shorts starting point.',
+    'Set subtitle style, optional base_font_size_px (6–96) and optional typeface (sans, classic, serif, display). These settings also control saved-video Shorts; LineBox at 35 is a Korean Shorts starting point.',
   app_show_download_history:
     'Open the Downloads library in the app. No credits.',
   app_downloads_list:
@@ -343,6 +343,10 @@ export const TOOL_SCHEMAS = {
         ],
       },
       base_font_size_px: { type: 'number', minimum: 6, maximum: 96 },
+      typeface: {
+        type: 'string',
+        enum: ['sans', 'classic', 'serif', 'display'],
+      },
     },
     required: ['style'],
     additionalProperties: false,

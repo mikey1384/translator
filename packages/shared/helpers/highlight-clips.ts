@@ -9,10 +9,86 @@ export function highlightCaptionSignature(
   fontSize: number,
   typeface = 'sans'
 ): string {
+  // Only what reaches the burned-in captions counts. Cue ids are minted fresh
+  // each time an SRT is parsed, so they must not make a reopened video's
+  // clips look stale.
+  const cues = segments.map(segment => [
+    segment.start,
+    segment.end,
+    segment.original,
+    segment.translation ?? '',
+    segment.words ?? null,
+  ]);
   // Older signatures had no face; 'sans' keeps them matching.
   return typeface === 'sans'
-    ? JSON.stringify([displayMode, style, fontSize, segments])
-    : JSON.stringify([displayMode, style, fontSize, typeface, segments]);
+    ? JSON.stringify([displayMode, style, fontSize, cues])
+    : JSON.stringify([displayMode, style, fontSize, typeface, cues]);
+}
+
+export function normalizeHighlightSourcePath(
+  value: string | null | undefined
+): string {
+  return String(value || '')
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/\/+$/g, '')
+    .toLowerCase();
+}
+
+/**
+ * Which source a rendered clip belongs to: the verified asset first, then the
+ * path, then URL/library metadata. Append the caption signature to get the key
+ * under which a clip is current.
+ */
+export function highlightClipSourceIdentity({
+  fallbackVideoAssetIdentity,
+  fallbackVideoPath,
+  originalVideoPath,
+  sourceAssetIdentity,
+  sourceUrl,
+  libraryEntryId,
+}: {
+  fallbackVideoAssetIdentity: string | null | undefined;
+  fallbackVideoPath: string | null | undefined;
+  originalVideoPath: string | null | undefined;
+  sourceAssetIdentity: string | null | undefined;
+  sourceUrl: string | null | undefined;
+  libraryEntryId: string | null | undefined;
+}): string {
+  const asset = String(sourceAssetIdentity || '').trim();
+  if (asset) return `asset:${asset}`;
+  const original = normalizeHighlightSourcePath(originalVideoPath);
+  if (original) return `path:${original}`;
+  const fallbackAsset = String(fallbackVideoAssetIdentity || '').trim();
+  if (fallbackAsset) return `asset:${fallbackAsset}`;
+  const fallback = normalizeHighlightSourcePath(fallbackVideoPath);
+  if (fallback) return `path:${fallback}`;
+  const url = String(sourceUrl || '').trim();
+  const library = String(libraryEntryId || '').trim();
+  return `meta:${url}|${library}`;
+}
+
+/** One rendered interval and edit, independent of the highlight's id. */
+export function highlightClipArtifactKey(
+  highlight: TranscriptHighlight
+): string {
+  const start = Number.isFinite(highlight.start)
+    ? Math.round(highlight.start * 1000)
+    : 0;
+  const end = Number.isFinite(highlight.end)
+    ? Math.round(highlight.end * 1000)
+    : start;
+  return `${start}-${end}|${JSON.stringify(highlight.editorial ?? null)}`;
+}
+
+/** Combined clips are keyed by their ordered intervals; under two is none. */
+export function highlightClipSelectionSignature(
+  orderedSelection: readonly TranscriptHighlight[]
+): string {
+  if (!Array.isArray(orderedSelection) || orderedSelection.length < 2) {
+    return '';
+  }
+  return orderedSelection.map(highlightClipArtifactKey).join('|');
 }
 
 /** Fail closed instead of silently cutting an unrelated fallback interval. */

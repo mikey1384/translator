@@ -36,6 +36,7 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
 const ERROR_CODE_I18N_PARAMS: Record<string, Record<string, unknown>> = {
   [ERROR_CODES.TRANSCRIPTION_FILE_TOO_LARGE]: {
     hours: STAGE5_TRANSCRIPTION_MAX_AUDIO_HOURS,
+    count: STAGE5_TRANSCRIPTION_MAX_AUDIO_HOURS,
   },
 };
 
