@@ -11,8 +11,12 @@
     <style>
       body {
         font-family:
-          'Instrument Sans', 'Pretendard Variable', -apple-system,
-          BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          'Instrument Sans',
+          'Pretendard Variable',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
         margin: 0;
         padding: 0;
         background-color: #0f0e13;
@@ -31,11 +35,6 @@
         background-color: #0f0e13;
         z-index: 1000;
         transition: opacity 0.5s ease;
-      }
-      .loading-text {
-        margin-top: 20px;
-        font-size: 18px;
-        color: #f4f1ea;
       }
       .dots-spinner {
         display: flex;
@@ -83,13 +82,13 @@
     </style>
   </head>
   <body>
-    <div class="loading-container" id="loading">
+    <!-- No words here: this shows before the UI language is known. -->
+    <div class="loading-container" id="loading" aria-hidden="true">
       <div class="dots-spinner">
         <div class="dot1"></div>
         <div class="dot2"></div>
         <div class="dot3"></div>
       </div>
-      <div class="loading-text">Loading application...</div>
     </div>
     <div id="root"></div>
     <style id="highlight-style">
@@ -123,6 +122,9 @@
       window.addEventListener('load', () => {
         setTimeout(() => {
           document.body.classList.add('loaded');
+          const loader = document.getElementById('loading');
+          // Gone once faded, so it stays out of the accessibility tree.
+          setTimeout(() => loader?.remove(), 1100);
         }, 1000);
       });
     </script>

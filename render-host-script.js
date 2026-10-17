@@ -1833,6 +1833,7 @@ function subtitleTypefaceFontStack(typeface, isShortFormPortrait = false) {
   if (typeface !== "sans") return TYPEFACE_FONT_STACKS[typeface];
   return isShortFormPortrait ? SHORT_FORM_FONT_STACK : LANDSCAPE_FONT_STACK;
 }
+var PORTRAIT_FONT_FACTOR = 0.72;
 var SHORT_FORM_TUNING = {
   Default: {
     borderRadiusPx: 10,
@@ -2065,7 +2066,7 @@ function resolveSubtitleRenderTheme(opts) {
   const landscapeTuning = isShortFormPortrait ? null : LANDSCAPE_TUNING[stylePreset] ?? null;
   const finalFontSize = Math.max(
     MIN_SUBTITLE_FONT_SIZE,
-    displayFontSize * (shortFormTuning?.fontScale ?? 1)
+    displayFontSize * (shortFormTuning ? shortFormTuning.fontScale * PORTRAIT_FONT_FACTOR : 1)
   );
   const outlineRgba = assColorToRgba(style.outlineColor);
   const shadowRgba = assColorToRgba(style.backColor);
@@ -2303,28 +2304,6 @@ function getSubtitleStyles(opts) {
   `;
 }
 
-// timed-subtitle-visibility.ts
-function getVisibleTimedSubtitleParts(parts) {
-  const wordParts = parts.filter(
-    (part) => part.kind === "word"
-  );
-  const activeWords = wordParts.filter((part) => part.state === "active");
-  if (activeWords.length === 0) {
-    const hasUpcomingWord = wordParts.some((part) => part.state === "upcoming");
-    if (!hasUpcomingWord) {
-      return [];
-    }
-    const lastSpokenWord = [...wordParts].reverse().find((part) => part.state === "spoken");
-    return lastSpokenWord ? [lastSpokenWord] : [];
-  }
-  return activeWords.flatMap(
-    (part, index) => index === 0 ? [part] : [{ kind: "whitespace", text: " " }, part]
-  );
-}
-function getVisibleTimedSubtitleText(parts) {
-  return getVisibleTimedSubtitleParts(parts).map((part) => part.text).join("");
-}
-
 // render-host-script.tsx
 var renderTarget = {
   width: void 0,
@@ -2332,25 +2311,6 @@ var renderTarget = {
 };
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-function splitTimedPartsIntoLines(parts) {
-  const lines = [[]];
-  for (const part of parts) {
-    if (part.kind === "whitespace" && part.text.includes("\n")) {
-      const pieces = part.text.split("\n");
-      pieces.forEach((piece, index) => {
-        if (piece) {
-          lines.at(-1).push({ kind: "whitespace", text: piece });
-        }
-        if (index < pieces.length - 1) {
-          lines.push([]);
-        }
-      });
-      continue;
-    }
-    lines.at(-1).push(part);
-  }
-  return lines;
 }
 function renderLineBoxLineHtml(lineHtml, renderTheme) {
   const style = subtitleLineBoxStyleToCssText(
@@ -2371,29 +2331,6 @@ function renderPlainSubtitleHtml(text, stylePreset, renderTheme) {
     ).join("<br/>");
   }
   return escapeHtml(text);
-}
-function renderTimedPartHtml(part) {
-  if (part.kind === "whitespace") {
-    return `<span style="white-space:pre-wrap;">${escapeHtml(part.text)}</span>`;
-  }
-  return `<span style="white-space:pre-wrap;font-weight:700;">${escapeHtml(part.text)}</span>`;
-}
-function renderTimedSubtitleHtml(state, stylePreset, renderTheme) {
-  if (!state.text.trim()) {
-    return "";
-  }
-  const visibleParts = getVisibleTimedSubtitleParts(state.parts);
-  if (visibleParts.length === 0) {
-    return "";
-  }
-  const lines = splitTimedPartsIntoLines(visibleParts);
-  const renderedLines = lines.map(
-    (line2) => line2.map((part) => renderTimedPartHtml(part)).join("")
-  );
-  if (subtitleStyleUsesLineBox(stylePreset)) {
-    return renderedLines.map((line2) => renderLineBoxLineHtml(line2, renderTheme)).join("<br/>");
-  }
-  return renderedLines.join("<br/>");
 }
 function setSubtitleVisibility(el, text) {
   if (text.trim()) {
@@ -2507,7 +2444,11 @@ function initializeSubtitleDisplay() {
         videoHeightPx,
         typeface
       });
-      el.innerHTML = state.mode === "timed" ? renderTimedSubtitleHtml(state, stylePreset, renderTheme) : renderPlainSubtitleHtml(state.text, stylePreset, renderTheme);
+      el.innerHTML = renderPlainSubtitleHtml(
+        state.text,
+        stylePreset,
+        renderTheme
+      );
       applyPresetStyles(el, {
         fontSizePx,
         stylePreset,
@@ -2523,21 +2464,15 @@ function initializeSubtitleDisplay() {
       isMultiLine = true;
       renderWithLineState(isMultiLine);
     }
-    setSubtitleVisibility(
-      el,
-      state.mode === "timed" ? getVisibleTimedSubtitleText(state.parts) : state.text
-    );
+    setSubtitleVisibility(el, state.text);
   };
   window.updateSubtitle = (text, opts = {}) => {
     updateElementFromState({ mode: "plain", text }, opts);
   };
-  window.updateTimedSubtitle = (state, opts = {}) => {
-    updateElementFromState(state, opts);
-  };
   window.updateEditorialSubtitle = updateElementFromState;
   window.applySubtitlePreset = applySubtitlePreset;
   console.log(
-    "[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, updateTimedSubtitle, applySubtitlePreset"
+    "[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, applySubtitlePreset"
   );
 }
 initializeSubtitleDisplay();
