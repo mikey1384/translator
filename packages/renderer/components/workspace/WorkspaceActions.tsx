@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   intoLanguageName,
@@ -120,12 +121,12 @@ export function WorkspaceIdleStatus() {
           }
         );
   return (
-    <div className={idleStatusStyles} role="status">
+    <div className={idleStatusStyles}>
       <span
         className={idleDotStyles(done ? colors.success : colors.gray)}
         aria-hidden="true"
       />
-      <span>{text}</span>
+      <span role="status">{text}</span>
       {count > 0 ? <SubtitleStyleButton /> : null}
     </div>
   );
@@ -137,18 +138,78 @@ function SubtitleStyleButton() {
   const style = useUIStore(s => s.subtitleStyle);
   const setStyle = useUIStore(s => s.setSubtitleStyle);
   const [open, setOpen] = useState(false);
-  const anchorRef = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const label = t('editSubtitles.mergeControls.styleLabel', 'Style:')
     .replace(/[:：]\s*$/u, '')
     .trim();
 
+  // Fixed to the window and clamped inside it, so it never runs off-screen
+  // at narrow widths or under the sticky video column; opens upward when
+  // there's no room below.
+  useLayoutEffect(() => {
+    if (!open) {
+      setPlace(null);
+      return;
+    }
+    const measure = () => {
+      const anchor = buttonRef.current?.getBoundingClientRect();
+      if (!anchor) return;
+      const margin = 16;
+      const width = Math.min(560, window.innerWidth - margin * 2);
+      const rtl = document.documentElement.dir === 'rtl';
+      const left = Math.min(
+        Math.max(margin, rtl ? anchor.left : anchor.right - width),
+        window.innerWidth - margin - width
+      );
+      const height = popoverRef.current?.offsetHeight ?? 0;
+      const below = window.innerHeight - anchor.bottom - 10 - 8;
+      const above = anchor.top - 10 - 8;
+      // Prefer below the button: above would cover the subtitles on the video,
+      // which is where the live preview shows. Scroll inside when short.
+      const openBelow = height <= below || below >= 200 || below >= above;
+      const top = openBelow
+        ? anchor.bottom + 10
+        : Math.max(8, anchor.top - 10 - Math.min(height, above));
+      setPlace({
+        left,
+        top,
+        width,
+        maxHeight: Math.max(160, openBelow ? below : above),
+      });
+    };
+    measure();
+    // Measure again once the popover has its real height.
+    const frame = requestAnimationFrame(measure);
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const onDown = (event: MouseEvent) => {
-      if (!anchorRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (
+        !buttonRef.current?.contains(target) &&
+        !popoverRef.current?.contains(target)
+      )
+        setOpen(false);
     };
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      buttonRef.current?.focus();
     };
     window.addEventListener('mousedown', onDown);
     window.addEventListener('keydown', onKey);
@@ -159,13 +220,12 @@ function SubtitleStyleButton() {
   }, [open]);
 
   return (
-    <div
-      ref={anchorRef}
-      style={{ position: 'relative', marginInlineStart: 'auto' }}
-    >
+    <>
       <button
+        ref={buttonRef}
         type="button"
         className={styleButtonStyles}
+        style={{ marginInlineStart: 'auto' }}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`${label}: ${subtitleStyleLabel(t, style)}`}
@@ -177,18 +237,36 @@ function SubtitleStyleButton() {
         <Palette size={15} aria-hidden="true" />
         <span>{subtitleStyleLabel(t, style)}</span>
       </button>
-      {open ? (
-        <div className={stylePopoverStyles} role="dialog" aria-label={label}>
-          <SubtitleStylePicker
-            value={style}
-            onChange={preset => {
-              logButton('workspace_subtitle_style_pick', { preset });
-              setStyle(preset);
-            }}
-          />
-        </div>
-      ) : null}
-    </div>
+      {open
+        ? createPortal(
+            <div
+              ref={popoverRef}
+              className={stylePopoverStyles}
+              role="dialog"
+              aria-label={label}
+              style={
+                place
+                  ? {
+                      left: place.left,
+                      top: place.top,
+                      width: place.width,
+                      maxHeight: place.maxHeight,
+                    }
+                  : { visibility: 'hidden', left: 0, top: 0 }
+              }
+            >
+              <SubtitleStylePicker
+                value={style}
+                onChange={preset => {
+                  logButton('workspace_subtitle_style_pick', { preset });
+                  setStyle(preset);
+                }}
+              />
+            </div>,
+            document.body
+          )
+        : null}
+    </>
   );
 }
 

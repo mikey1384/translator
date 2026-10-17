@@ -137,7 +137,9 @@ export default function SubtitleStylePicker({
     <div
       className={gridStyles}
       role="radiogroup"
-      aria-label={t('editSubtitles.mergeControls.styleLabel')}
+      aria-label={t('editSubtitles.mergeControls.styleLabel')
+        .replace(/[:：]\s*$/u, '')
+        .trim()}
     >
       {SUBTITLE_STYLE_PRESET_ORDER.map(preset => {
         const selected = preset === value;

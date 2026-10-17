@@ -519,11 +519,11 @@ export const styleButtonStyles = css`
 `;
 
 export const stylePopoverStyles = css`
-  position: absolute;
-  inset-inline-end: 0;
-  top: calc(100% + 10px);
-  z-index: 200;
-  width: min(560px, calc(100vw - 32px));
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  max-width: calc(100vw - 32px);
+  overflow-y: auto;
   padding: 14px;
   border-radius: 16px;
   background: ${colors.surfaceRaised};

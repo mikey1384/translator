@@ -200,13 +200,20 @@ export default function ReadOnlySubtitleList() {
   }, [starts, ends]);
 
   // Keep the playing line in view unless the user is reading elsewhere.
+  // Only a new playing line moves the list: translations streaming into a
+  // paused video must not pull the reader back.
+  const followedId = useRef<string | null>(null);
+  const followTarget = useRef<{ top: number; until: number } | null>(null);
+  const pointerHeld = useRef(false);
   useEffect(() => {
     if (activeIndex < 0) return;
+    const id = rows[activeIndex]?.id ?? null;
+    if (!id || id === followedId.current) return;
+    followedId.current = id;
+    if (pointerHeld.current) return;
     if (Date.now() - userScrolledAt.current < 4000) return;
     const list = listRef.current;
-    const row = list?.querySelector<HTMLElement>(
-      `[data-cue-id="${rows[activeIndex]?.id}"]`
-    );
+    const row = list?.querySelector<HTMLElement>(`[data-cue-id="${id}"]`);
     if (!list || !row) return;
     // Measure against the list itself: offsetTop is relative to whichever
     // ancestor is positioned, which made every follow-scroll land off target.
@@ -216,11 +223,43 @@ export default function ReadOnlySubtitleList() {
     // Only move when the line leaves the comfortable middle of the list, then
     // bring it to the upper third so the next lines stay visible.
     if (top < 0 || top + rowRect.height > list.clientHeight * 0.8) {
-      list.scrollTo({
-        top: Math.max(0, list.scrollTop + top - list.clientHeight / 3),
-      });
+      const target = Math.max(
+        0,
+        Math.min(
+          list.scrollHeight - list.clientHeight,
+          list.scrollTop + top - list.clientHeight / 3
+        )
+      );
+      followTarget.current = { top: target, until: Date.now() + 1500 };
+      list.scrollTo({ top: target });
     }
   }, [activeIndex, rows]);
+
+  // Any scroll the list didn't make itself (wheel, scrollbar, keys,
+  // find-in-page) means the user is reading.
+  const onScroll = () => {
+    const list = listRef.current;
+    const ours = followTarget.current;
+    if (list && ours && Date.now() < ours.until) {
+      if (Math.abs(list.scrollTop - ours.top) <= 2) followTarget.current = null;
+      return;
+    }
+    followTarget.current = null;
+    userScrolledAt.current = Date.now();
+  };
+  useEffect(() => {
+    const release = () => {
+      if (!pointerHeld.current) return;
+      pointerHeld.current = false;
+      userScrolledAt.current = Date.now();
+    };
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    return () => {
+      window.removeEventListener('pointerup', release);
+      window.removeEventListener('pointercancel', release);
+    };
+  }, []);
 
   const select = useMemo(
     () => (id: string) => {
@@ -245,14 +284,20 @@ export default function ReadOnlySubtitleList() {
     <div
       ref={listRef}
       className={readListStyles}
-      onWheel={() => (userScrolledAt.current = Date.now())}
-      onTouchMove={() => (userScrolledAt.current = Date.now())}
-      // Dragging the scrollbar or using the keyboard is reading too.
-      onPointerDown={event => {
-        if (event.target === event.currentTarget)
-          userScrolledAt.current = Date.now();
+      onScroll={onScroll}
+      onWheel={() => {
+        followTarget.current = null;
+        userScrolledAt.current = Date.now();
       }}
-      onKeyDown={() => (userScrolledAt.current = Date.now())}
+      // Holding the scrollbar pauses following until it's released.
+      onPointerDown={event => {
+        // macOS overlay scrollbars have no width, so any press on the list
+        // background (not a row) counts as holding the scrollbar.
+        if (event.target === event.currentTarget) {
+          pointerHeld.current = true;
+          followTarget.current = null;
+        }
+      }}
       aria-label={t('workspace.subtitlesTitle', 'Subtitles')}
     >
       {rows.map((row, index) => (
