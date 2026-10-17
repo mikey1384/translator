@@ -161,6 +161,9 @@ export function buildAppMenuTemplate({
     },
     {
       label: t('menu.window', undefined, 'Window'),
+      // On macOS this role makes the menu the app's Windows menu, so the OS
+      // appends the open-window list under our translated items.
+      ...(isMac ? { role: 'window' as const } : {}),
       submenu: [
         ...Array.from(
           { length: 9 },
@@ -187,9 +190,6 @@ export function buildAppMenuTemplate({
           ? [
               separator,
               role('front', 'menu.bringAllToFront', 'Bring All to Front'),
-              separator,
-              // Electron's documented marker for the open-window list.
-              { role: 'window' } as MenuItemConstructorOptions,
             ]
           : [
               // Ctrl+W belongs to Close Tab; see the File menu note.

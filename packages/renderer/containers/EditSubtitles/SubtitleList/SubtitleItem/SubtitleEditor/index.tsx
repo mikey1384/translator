@@ -11,9 +11,11 @@ import { useTranslation } from 'react-i18next';
 import { useSubtitleRow } from '../../../../../state/subtitle-store.js';
 import { secondsToSrtTime } from '../../../../../../shared/helpers/index.js';
 import {
+  findCueOverlap,
   validateCueTimeEdit,
   type TimecodeEditError,
 } from '../../../../../utils/timecode-input.js';
+import { shallow } from 'zustand/shallow';
 import { useRowActions } from '../../../../../hooks/useRowActions.js';
 import * as SubtitlesIPC from '../../../../../ipc/subtitles';
 import {
@@ -52,6 +54,7 @@ import {
   subtitleRowSideActionStyles,
   subtitleRowTimeErrorStyles,
   subtitleRowTimeGroupStyles,
+  subtitleRowTimeWarningStyles,
   subtitleRowTimeInputInvalidStyles,
   subtitleRowTimeInputStyles,
 } from '../../../edit-workspace-styles';
@@ -87,6 +90,20 @@ export default function SubtitleEditor({
     field: 'start' | 'end';
     error: TimecodeEditError;
   } | null>(null);
+  // Set once this line's timing is edited here; only then do we compare it
+  // with its neighbours (imported files can overlap on purpose).
+  const [timingEdited, setTimingEdited] = useState(false);
+  const neighbourTimes = useSubStore(s => {
+    if (!timingEdited) return null;
+    const i = s.order.indexOf(id);
+    if (i === -1) return null;
+    const previous = i > 0 ? s.segments[s.order[i - 1]] : undefined;
+    const next = s.segments[s.order[i + 1]];
+    return {
+      previousEnd: previous ? previous.end : null,
+      nextStart: next ? next.start : null,
+    };
+  }, shallow);
   const [isTranslatingOne, setIsTranslatingOne] = useState(false);
   // Last caret position in either text field, for "Split at cursor".
   const caretRef = useRef<{
@@ -122,6 +139,33 @@ export default function SubtitleEditor({
     return null;
   }
 
+  const overlap =
+    neighbourTimes && !timeError
+      ? findCueOverlap({
+          start: subtitle.start,
+          end: subtitle.end,
+          ...neighbourTimes,
+        })
+      : null;
+  const overlapMessage =
+    overlap === 'previous'
+      ? t(
+          'editSubtitles.item.timeOverlapsPrevious',
+          'This line starts before the previous line ends, so both show at once.'
+        )
+      : overlap === 'next'
+        ? t(
+            'editSubtitles.item.timeOverlapsNext',
+            'This line ends after the next line starts, so both show at once.'
+          )
+        : overlap === 'both'
+          ? t(
+              'editSubtitles.item.timeOverlapsBoth',
+              'This line overlaps the lines before and after it, so they show at once.'
+            )
+          : null;
+  const timeNoteId = `subtitle-time-error-${id}`;
+
   const splitLabel = t(
     'editSubtitles.item.splitTitle',
     'Split this line at the cursor'
@@ -152,6 +196,7 @@ export default function SubtitleEditor({
       return;
     }
     setTimeError(null);
+    setTimingEdited(true);
     actions.update({ [field]: result.seconds });
     setLocal(secondsToSrtTime(result.seconds));
   };
@@ -161,6 +206,7 @@ export default function SubtitleEditor({
     const secs = Number(shiftAmount);
     if (Number.isFinite(secs) && secs !== 0) {
       actions.shift(secs);
+      setTimingEdited(true);
       setShiftAmount('0');
     }
   };
@@ -629,10 +675,10 @@ export default function SubtitleEditor({
                 isLoading={isTranscribingOne}
                 title={t(
                   'subtitles.improveTranscription',
-                  'Improve Transcription'
+                  'Improve transcription'
                 )}
               >
-                {t('subtitles.improveTranscription', 'Improve Transcription')}
+                {t('subtitles.improveTranscription', 'Improve transcription')}
               </Button>
 
               {/* Language selection removed */}
@@ -682,12 +728,12 @@ export default function SubtitleEditor({
                 isLoading={isTranslatingOne}
                 title={
                   (subtitle.translation ?? '').trim()
-                    ? t('subtitles.improveTranslation', 'Improve Translation')
+                    ? t('subtitles.improveTranslation', 'Improve translation')
                     : t('subtitles.translate', 'Translate')
                 }
               >
                 {(subtitle.translation ?? '').trim()
-                  ? t('subtitles.improveTranslation', 'Improve Translation')
+                  ? t('subtitles.improveTranslation', 'Improve translation')
                   : t('subtitles.translate', 'Translate')}
               </Button>
             </div>
@@ -714,7 +760,7 @@ export default function SubtitleEditor({
               )}
               aria-invalid={timeError?.field === 'start' || undefined}
               aria-describedby={
-                timeError ? `subtitle-time-error-${id}` : undefined
+                timeError || overlapMessage ? timeNoteId : undefined
               }
               aria-label={t(
                 'editSubtitles.item.startTimeAria',
@@ -742,7 +788,7 @@ export default function SubtitleEditor({
               )}
               aria-invalid={timeError?.field === 'end' || undefined}
               aria-describedby={
-                timeError ? `subtitle-time-error-${id}` : undefined
+                timeError || overlapMessage ? timeNoteId : undefined
               }
               aria-label={t(
                 'editSubtitles.item.endTimeAria',
@@ -776,7 +822,7 @@ export default function SubtitleEditor({
             </Button>
             {timeError && (
               <p
-                id={`subtitle-time-error-${id}`}
+                id={timeNoteId}
                 className={subtitleRowTimeErrorStyles}
                 role="alert"
                 dir="auto"
@@ -790,6 +836,16 @@ export default function SubtitleEditor({
                       'editSubtitles.item.timeUnreadable',
                       'Type a time like 00:01:23,450 or 1:23.45. The line keeps its previous time.'
                     )}
+                {overlapMessage && (
+                  <p
+                    id={timeNoteId}
+                    className={subtitleRowTimeWarningStyles}
+                    role="status"
+                    dir="auto"
+                  >
+                    {overlapMessage}
+                  </p>
+                )}
               </p>
             )}
           </div>

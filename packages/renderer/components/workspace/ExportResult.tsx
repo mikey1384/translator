@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { css } from '@emotion/css';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
@@ -29,6 +29,13 @@ const pathTextStyles = css`
   word-break: normal;
 `;
 
+// A folder name stays on one line ("verify-final" never breaks at its
+// hyphen); only a name too long for any line may break inside.
+const pathSegmentStyles = css`
+  white-space: nowrap;
+`;
+const LONG_PATH_SEGMENT_CHARS = 32;
+
 /**
  * A file path shown left to right in every UI language (an RTL layout would
  * otherwise move the leading "/" and reorder the folders), wrapping only
@@ -39,10 +46,18 @@ function PathText({ path }: { path: string }) {
   return (
     <bdi dir="ltr" className={pathTextStyles}>
       {parts.map((part, index) => (
-        <span key={index}>
-          {part}
+        <Fragment key={index}>
+          <span
+            className={
+              part.length <= LONG_PATH_SEGMENT_CHARS
+                ? pathSegmentStyles
+                : undefined
+            }
+          >
+            {part}
+          </span>
           {index < parts.length - 1 ? <wbr /> : null}
-        </span>
+        </Fragment>
       ))}
     </bdi>
   );

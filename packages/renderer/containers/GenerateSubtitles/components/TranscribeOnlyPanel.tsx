@@ -234,7 +234,7 @@ export default function TranscribeOnlyPanel({
                 )}
               >
                 <label htmlFor="transcribe-highlight-language-select">
-                  {t('subtitles.outputLanguage')}:
+                  {t('subtitles.outputLanguage')}
                 </label>
                 <select
                   id="transcribe-highlight-language-select"

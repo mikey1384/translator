@@ -1014,7 +1014,10 @@ async function analyse(path: string) {
     if (useVideoStore.getState().path !== path) {
       return;
     }
-    useVideoStore.setState({ isAudioOnly: !hasVideo });
+    // "No video stream" only means audio once the file could be read; a
+    // damaged file has no streams at all and must not look like audio.
+    const readable = Boolean(metaRes.success && metaRes.metadata);
+    useVideoStore.setState({ isAudioOnly: readable && !hasVideo });
     if (metaRes.success && metaRes.metadata) {
       useVideoStore.setState({
         meta: metaRes.metadata,
@@ -1064,10 +1067,13 @@ function scheduleMetadataRetry(path: string, attempt: number) {
     try {
       const res = await VideoIPC.getMetadata(path);
       if (res.success && res.metadata) {
+        const hasVideo = await VideoIPC.hasVideoTrack(path).catch(() => true);
+        if (useVideoStore.getState().path !== path) return;
         useVideoStore.setState({
           meta: res.metadata,
           metaPath: path,
           metaError: null,
+          isAudioOnly: !hasVideo,
         });
         return;
       }

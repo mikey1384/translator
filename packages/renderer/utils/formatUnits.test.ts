@@ -34,6 +34,16 @@ test('other UI languages get their own units and digits, not English letters', (
   assert.ok(!/[a-z]/i.test(formatDurationSeconds(30, 'ja')));
 });
 
+test('Japanese and Chinese write units right after the number', () => {
+  assert.equal(formatDurationMinutes(32, 'ja'), '32分');
+  assert.equal(formatDurationMinutes(0.2, 'ja'), '<1分');
+  assert.equal(formatDurationMinutes(125, 'ja'), '2時間5分');
+  assert.equal(formatDurationSeconds(12, 'ja'), '12秒');
+  assert.ok(!/\s/.test(formatDurationMinutes(125, 'zh-TW')));
+  // Languages that do space their units keep the space.
+  assert.equal(formatDurationMinutes(32, 'de'), '32 Min.');
+});
+
 test('credit amounts are compact and localized', () => {
   assert.equal(formatCreditAmount(850), '850');
   assert.equal(formatCreditAmount(4614), '4.6K');

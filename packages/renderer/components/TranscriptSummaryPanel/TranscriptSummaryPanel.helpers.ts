@@ -2,7 +2,11 @@ import type { TFunction } from 'i18next';
 import type { TranscriptHighlight } from '@shared-types/app';
 import { estimateSummaryCreditsFromChars } from '../../utils/creditEstimates';
 import { HighlightRenderError } from '../../utils/render-highlight';
-import { getSourceVideoErrorMessage } from '../../utils/sourceVideoErrors';
+import {
+  getSourceVideoErrorMessage,
+  isSourceVideoPathAccessible,
+  isSourceVideoUnavailableError,
+} from '../../utils/sourceVideoErrors';
 import { formatDurationMinSec } from '../../utils/formatUnits';
 
 export function estimateSummaryCredits(
@@ -17,7 +21,15 @@ export function estimateSummaryCredits(
  * anything else (an encoder message from the main process) gets a plain
  * "couldn't cut" line instead of raw English.
  */
-export function describeClipCutError(error: unknown, t: TFunction): string {
+export function describeClipCutError(
+  error: unknown,
+  t: TFunction,
+  {
+    // False when nobody checked the user's video: a lost intermediate file
+    // reports the same code, so it must not read as "the video was removed".
+    sourceMissingConfirmed = true,
+  }: { sourceMissingConfirmed?: boolean } = {}
+): string {
   if (error instanceof HighlightRenderError) {
     switch (error.code) {
       case 'busy':
@@ -62,12 +74,35 @@ export function describeClipCutError(error: unknown, t: TFunction): string {
     }
   }
   const raw = error instanceof Error ? error.message : String(error ?? '');
-  const sourceMessage = getSourceVideoErrorMessage(raw);
+  const sourceMessage = sourceMissingConfirmed
+    ? getSourceVideoErrorMessage(raw)
+    : '';
   if (sourceMessage) return sourceMessage;
   return t(
     'summary.clipError.generic',
     "Couldn't cut this clip from the video. Try again."
   );
+}
+
+/**
+ * Like describeClipCutError, but "the original video was removed" only when
+ * the user's video really is gone. A cut renders through intermediate files,
+ * and losing one of those is a retryable failure, not a missing source.
+ */
+export async function describeClipCutFailure(
+  error: unknown,
+  t: TFunction,
+  sourceVideoPath: string | null | undefined,
+  sourceExists: (
+    path: string | null | undefined
+  ) => Promise<boolean> = isSourceVideoPathAccessible
+): Promise<string> {
+  const raw = error instanceof Error ? error.message : String(error ?? '');
+  const sourceMissingConfirmed =
+    !isSourceVideoUnavailableError(raw) ||
+    !sourceVideoPath ||
+    !(await sourceExists(sourceVideoPath));
+  return describeClipCutError(error, t, { sourceMissingConfirmed });
 }
 
 export function getHighlightKey(h: TranscriptHighlight): string {
@@ -87,6 +122,8 @@ export type HighlightClipCutState = {
   status: 'idle' | 'cutting' | 'ready' | 'error' | 'cancelled';
   percent: number;
   error?: string;
+  // Set for coded failures the card offers a fix for ('untranslated').
+  errorCode?: string;
   operationId?: string | null;
 };
 

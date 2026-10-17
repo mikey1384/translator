@@ -1,4 +1,4 @@
-import { i18n } from '../i18n';
+import { i18n, restoreLanguageAfterSettingsReset } from '../i18n';
 import * as SystemIPC from '../ipc/system';
 import { openNotice, type AppNoticeButton } from '../state/modal-store';
 import { useUIStore } from '../state/ui-store';
@@ -72,6 +72,13 @@ export async function showStartupNotices(): Promise<void> {
   } catch (error) {
     console.warn('[startup-notices] Could not read startup notices:', error);
     return;
+  }
+  if (notices.includes('settingsReset')) {
+    try {
+      await restoreLanguageAfterSettingsReset();
+    } catch (error) {
+      console.warn('[startup-notices] Could not restore the language:', error);
+    }
   }
   const notice = buildStartupNotice(notices);
   if (!notice) return;

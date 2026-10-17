@@ -43,7 +43,7 @@ for (const platform of ['darwin', 'win32'] as const) {
       actions,
     });
     for (const item of walk(template)) {
-      if (item.type === 'separator' || item.role === 'window') continue;
+      if (item.type === 'separator') continue;
       if (item.label === 'Translator') continue; // the app's name
       assert.ok(
         typeof item.label === 'string' && item.label.startsWith('«menu.'),
@@ -52,6 +52,21 @@ for (const platform of ['darwin', 'win32'] as const) {
     }
   });
 }
+
+test('the macOS Window menu lists windows without a stray English item', () => {
+  const template = buildAppMenuTemplate({
+    platform: 'darwin',
+    isDev: false,
+    appName: 'Translator',
+    t,
+    actions,
+  });
+  const windowMenu = template.find(item => item.role === 'window');
+  assert.ok(windowMenu, 'the top-level Window menu carries role window');
+  assert.ok(String(windowMenu.label).startsWith('«menu.window»'));
+  const inner = walk(windowMenu.submenu as MenuItemConstructorOptions[]);
+  assert.ok(!inner.some(item => item.role === 'window'));
+});
 
 test('the app name fills the macOS About/Hide/Quit labels', () => {
   const [appMenu] = buildAppMenuTemplate({

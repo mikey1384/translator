@@ -237,6 +237,7 @@ function StyleSample({ preset }: { preset: SubtitleStylePresetKey }) {
   const boxed = theme.backgroundColor !== 'transparent';
   return (
     <span
+      data-subtitle-cue=""
       style={{
         color,
         fontFamily: theme.fontFamily,

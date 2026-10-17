@@ -508,7 +508,7 @@ export default function useTranscriptSummaryFlow({
             setHighlightWarningMessage(
               t(
                 'summary.highlightsInsufficientCredits',
-                'Summary generated, but highlight extraction stopped because credits ran out.'
+                'The summary is done, but finding highlights stopped because your minutes ran out.'
               )
             );
           } else if (isByoError(message)) {

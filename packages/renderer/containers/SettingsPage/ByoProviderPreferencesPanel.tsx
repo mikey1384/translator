@@ -212,7 +212,7 @@ function getProviderInfo(
   if (provider === 'stage5') {
     return {
       label: String(
-        translate('settings.byoPreferences.stage5Credits', 'Stage5 credits')
+        translate('settings.byoPreferences.stage5Credits', 'Stage5 minutes')
       ),
       price: '',
     };
@@ -222,7 +222,7 @@ function getProviderInfo(
   if (!option) {
     return {
       label: String(
-        translate('settings.byoPreferences.stage5Credits', 'Stage5 credits')
+        translate('settings.byoPreferences.stage5Credits', 'Stage5 minutes')
       ),
       price: '',
     };
@@ -415,14 +415,14 @@ export default function ByoProviderPreferencesPanel() {
       ? String(
           t(
             'settings.byoPreferences.videoSuggestionLegacyFollowDraft',
-            'Legacy BYO setting preserved: follows your draft translation model until you choose a direct model.'
+            'Your earlier setting is kept: this follows your draft translation model until you choose a model here.'
           )
         )
       : byoVideoSuggestionModel === 'follow-review'
         ? String(
             t(
               'settings.byoPreferences.videoSuggestionLegacyFollowReview',
-              'Legacy BYO setting preserved: follows your review translation model until you choose a direct model.'
+              'Your earlier setting is kept: this follows your review translation model until you choose a model here.'
             )
           )
         : null;
@@ -468,7 +468,7 @@ export default function ByoProviderPreferencesPanel() {
         disabled: !canUseOpenAiVideoSuggestionModel,
         disabledReason: t(
           'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
-          'Requires OpenAI BYO unlock, key, and toggle.'
+          'Needs the API-key unlock, your OpenAI key, and the OpenAI switch turned on.'
         ),
         onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.GPT),
       },
@@ -483,7 +483,7 @@ export default function ByoProviderPreferencesPanel() {
         disabled: !canUseOpenAiVideoSuggestionModel,
         disabledReason: t(
           'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
-          'Requires OpenAI BYO unlock, key, and toggle.'
+          'Needs the API-key unlock, your OpenAI key, and the OpenAI switch turned on.'
         ),
         onSelect: () =>
           handleVideoSuggestionModelChange(STAGE5_REVIEW_TRANSLATION_MODEL),
@@ -499,7 +499,7 @@ export default function ByoProviderPreferencesPanel() {
         disabled: !canUseAnthropicVideoSuggestionModel,
         disabledReason: t(
           'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
-          'Requires Anthropic BYO unlock, key, and toggle.'
+          'Needs the API-key unlock, your Anthropic key, and the Anthropic switch turned on.'
         ),
         onSelect: () =>
           handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_SONNET),
@@ -515,7 +515,7 @@ export default function ByoProviderPreferencesPanel() {
         disabled: !canUseAnthropicVideoSuggestionModel,
         disabledReason: t(
           'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
-          'Requires Anthropic BYO unlock, key, and toggle.'
+          'Needs the API-key unlock, your Anthropic key, and the Anthropic switch turned on.'
         ),
         onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_OPUS),
       },
@@ -619,7 +619,7 @@ export default function ByoProviderPreferencesPanel() {
               ? null
               : t(
                   'settings.byoPreferences.transcriptionRequiresElevenLabs',
-                  'Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses Stage5 credits, which are not used while your API keys are on. Your OpenAI key is still used for translation.'
+                  'Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses your Stage5 minutes, which aren’t used while your own keys are on. Your OpenAI key is still used for translation.'
                 )
           }
         />
@@ -683,7 +683,7 @@ export default function ByoProviderPreferencesPanel() {
               disabled: !hasOpenAiConfigured,
               disabledReason: t(
                 'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
-                'Requires OpenAI BYO unlock, key, and toggle.'
+                'Needs the API-key unlock, your OpenAI key, and the OpenAI switch turned on.'
               ),
               onSelect: () => void handleReviewModeChange('openai'),
             },
@@ -696,7 +696,7 @@ export default function ByoProviderPreferencesPanel() {
               disabled: !hasAnthropicConfigured,
               disabledReason: t(
                 'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
-                'Requires Anthropic BYO unlock, key, and toggle.'
+                'Needs the API-key unlock, your Anthropic key, and the Anthropic switch turned on.'
               ),
               onSelect: () => void handleReviewModeChange('anthropic'),
             },
@@ -721,7 +721,7 @@ export default function ByoProviderPreferencesPanel() {
               disabled: !hasOpenAiConfigured,
               disabledReason: t(
                 'settings.byoPreferences.summaryRequiresOpenAi',
-                'Requires OpenAI BYO unlock and key.'
+                'Needs the API-key unlock and your OpenAI key.'
               ),
               onSelect: () =>
                 void handleSummaryModeChange('openai', 'standard'),
@@ -737,7 +737,7 @@ export default function ByoProviderPreferencesPanel() {
               disabled: !hasAnthropicConfigured,
               disabledReason: t(
                 'settings.byoPreferences.summaryRequiresAnthropic',
-                'Requires Anthropic BYO unlock and key.'
+                'Needs the API-key unlock and your Anthropic key.'
               ),
               onSelect: () =>
                 void handleSummaryModeChange('anthropic', 'standard'),
@@ -753,7 +753,7 @@ export default function ByoProviderPreferencesPanel() {
               disabled: !hasOpenAiConfigured,
               disabledReason: t(
                 'settings.byoPreferences.summaryRequiresOpenAi',
-                'Requires OpenAI BYO unlock and key.'
+                'Needs the API-key unlock and your OpenAI key.'
               ),
               onSelect: () => void handleSummaryModeChange('openai', 'high'),
             },
@@ -768,7 +768,7 @@ export default function ByoProviderPreferencesPanel() {
               disabled: !hasAnthropicConfigured,
               disabledReason: t(
                 'settings.byoPreferences.summaryRequiresAnthropic',
-                'Requires Anthropic BYO unlock and key.'
+                'Needs the API-key unlock and your Anthropic key.'
               ),
               onSelect: () => void handleSummaryModeChange('anthropic', 'high'),
             },
@@ -800,7 +800,7 @@ export default function ByoProviderPreferencesPanel() {
               ? null
               : t(
                   'settings.byoPreferences.dubbingRequiresElevenLabs',
-                  'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
+                  'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses your Stage5 minutes, which aren’t used while your own keys are on.'
                 )
           }
         />
@@ -818,7 +818,7 @@ export default function ByoProviderPreferencesPanel() {
           infoProvider={{
             label: t(
               'settings.byoPreferences.videoSuggestionModelUnavailable',
-              'No BYO video recommendation model is currently available. Enable OpenAI or Anthropic BYO for this feature.'
+              'No video recommendation model is available with your own keys. Turn on your OpenAI or Anthropic key to use this.'
             ),
             price: '',
           }}

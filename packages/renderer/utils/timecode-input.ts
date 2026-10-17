@@ -43,3 +43,31 @@ export function validateCueTimeEdit(args: {
   if (!(nextEnd > nextStart)) return { ok: false, error: 'endBeforeStart' };
   return { ok: true, seconds };
 }
+
+export type CueOverlap = 'previous' | 'next' | 'both';
+
+// Times are kept to the millisecond; anything closer is touching, not overlap.
+const OVERLAP_EPSILON = 0.0005;
+
+/**
+ * Whether a cue's times run into its neighbours: it starts before the
+ * previous line ends, or ends after the next line starts. The edit still
+ * applies (overlaps can be deliberate); the editor only warns.
+ */
+export function findCueOverlap(args: {
+  start: number;
+  end: number;
+  previousEnd?: number | null;
+  nextStart?: number | null;
+}): CueOverlap | null {
+  const overlapsPrevious =
+    typeof args.previousEnd === 'number' &&
+    args.start < args.previousEnd - OVERLAP_EPSILON;
+  const overlapsNext =
+    typeof args.nextStart === 'number' &&
+    args.end > args.nextStart + OVERLAP_EPSILON;
+  if (overlapsPrevious && overlapsNext) return 'both';
+  if (overlapsPrevious) return 'previous';
+  if (overlapsNext) return 'next';
+  return null;
+}

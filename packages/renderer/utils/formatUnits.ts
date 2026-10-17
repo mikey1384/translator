@@ -19,6 +19,13 @@ type DurationUnit = 'hour' | 'minute' | 'second';
 
 const unitFormats = new Map<string, Intl.NumberFormat>();
 
+// Languages that write a unit right after the number, with no space.
+const NO_SPACE_BEFORE_UNIT = /^(ja|zh|yue)\b/i;
+
+/** Between "2h" and "5m": a space, or nothing in ja/zh ("2時間5分"). */
+const unitJoiner = (locale: string) =>
+  NO_SPACE_BEFORE_UNIT.test(locale) ? '' : ' ';
+
 function unitDisplayFor(locale: string): 'narrow' | 'short' {
   // English reads best as "5h 21m"; elsewhere narrow units fall back to
   // Latin letters (fa, ja) or bare initials (uk), so use the short form.
@@ -44,7 +51,14 @@ function formatUnit(value: number, unit: DurationUnit, locale: string): string {
     }
     unitFormats.set(key, format);
   }
-  return format.format(value);
+  if (!NO_SPACE_BEFORE_UNIT.test(locale)) return format.format(value);
+  // CLDR puts a space in "32 分" / "32 分鐘", but Japanese and Chinese write
+  // the unit straight after the number: "32分", "約32分".
+  return format
+    .formatToParts(value)
+    .filter(part => !(part.type === 'literal' && /^\s+$/u.test(part.value)))
+    .map(part => part.value)
+    .join('');
 }
 
 /** A bare minute count in the UI language's unit: "0m", "0분". */
@@ -68,7 +82,7 @@ export function formatDurationMinutes(
   const m = rounded % 60;
   if (h === 0) return formatUnit(m, 'minute', locale);
   return m > 0
-    ? `${formatUnit(h, 'hour', locale)} ${formatUnit(m, 'minute', locale)}`
+    ? `${formatUnit(h, 'hour', locale)}${unitJoiner(locale)}${formatUnit(m, 'minute', locale)}`
     : formatUnit(h, 'hour', locale);
 }
 
@@ -127,6 +141,6 @@ export function formatDurationMinSec(
   const m = Math.floor(safe / 60);
   const s = safe % 60;
   return s > 0
-    ? `${formatDurationMinutes(m, locale)} ${formatUnit(s, 'second', locale)}`
+    ? `${formatDurationMinutes(m, locale)}${unitJoiner(locale)}${formatUnit(s, 'second', locale)}`
     : formatDurationMinutes(m, locale);
 }

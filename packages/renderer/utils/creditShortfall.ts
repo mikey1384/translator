@@ -6,6 +6,8 @@ export type CreditRefusalKind =
   | 'transcription'
   | 'translation'
   | 'dubbing'
+  // A voice sample, not a dub: the dialog must not talk about the video.
+  | 'voicePreview'
   | 'summary'
   | 'videoSearch'
   | 'other';

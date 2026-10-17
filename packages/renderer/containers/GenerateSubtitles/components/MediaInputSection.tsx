@@ -637,7 +637,7 @@ export default function MediaInputSection({
               {autoRunTarget === 'translate' ? (
                 <div className={autoRunLanguageRowStyles}>
                   <label htmlFor="auto-run-language-select">
-                    {t('subtitles.outputLanguage', 'Output language')}:
+                    {t('subtitles.outputLanguage', 'Output language')}
                   </label>
                   <select
                     id="auto-run-language-select"

@@ -246,13 +246,15 @@ export function describeDownloadFailure({
  */
 export function notifyIfCreditsRefused(
   input: ErrorInput,
-  task: ErrorTask
+  task: ErrorTask,
+  // Words the dialog for something narrower than the task (a voice preview).
+  refusalKind?: CreditRefusalKind
 ): boolean {
   if (classifyError(input, { task }).kind !== 'insufficient-credits') {
     return false;
   }
   notifyInsufficientCredits({
-    kind: refusalKindForTask(task),
+    kind: refusalKind ?? refusalKindForTask(task),
     transcriptionSeconds: null,
   });
   return true;

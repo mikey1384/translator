@@ -1,5 +1,8 @@
 import { SrtSegment } from '@shared-types/app';
-import { textMatches, type FindOptions } from '../../utils/subtitleFind.js';
+import {
+  collectMatchRows,
+  type FindOptions,
+} from '../../utils/subtitleFind.js';
 
 export function calcAffectedSubtitleRows(
   prev: SrtSegment[],
@@ -26,18 +29,11 @@ export function calcAffectedSubtitleRows(
   return out;
 }
 
+/** Rows of every match, one entry per match (see collectMatchRows). */
 export function collectMatchIndices(
   subtitles: SrtSegment[],
   term: string,
   options: FindOptions = {}
 ): number[] {
-  if (!term.trim()) return [];
-  return subtitles
-    .map((segment, index) =>
-      textMatches(segment.original || '', term, options) ||
-      textMatches(segment.translation || '', term, options)
-        ? index
-        : -1
-    )
-    .filter(index => index !== -1);
+  return collectMatchRows(subtitles, term, options);
 }

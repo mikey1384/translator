@@ -21,7 +21,11 @@ import {
 
 import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
 import type { SubtitleTypeface } from '../../../shared/constants/subtitle-styles';
-import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
+import {
+  unreadableFileMessage,
+  useVideoMetadata,
+} from '../GenerateSubtitles/hooks/useVideoMetadata';
+import { fitPictureBox } from './picture-box';
 import {
   videoPlayerCenterStateBodyStyles,
   videoPlayerCenterStateCopyStyles,
@@ -157,8 +161,19 @@ export default function NativeVideoPlayer({
     showICloudWaitingState ||
     metadataStatus === 'fetching' ||
     metadataStatus === 'waiting';
-  const showPlaybackErrorState =
-    Boolean(errorMessage) && !suppressGenericPlaybackError;
+  // A file the probe could not read: the workspace status line already says
+  // so (with "Choose another file") while there are no subtitles; otherwise
+  // the player says it, in the same words, instead of a generic error.
+  const fileUnreadable = useVideoStore(s =>
+    Boolean(s.path && s.metaError && s.metaError.path === s.path)
+  );
+  const hasSubtitles = useSubStore(s => s.order.length > 0);
+  const showPlaybackErrorState = fileUnreadable
+    ? hasSubtitles
+    : Boolean(errorMessage) && !suppressGenericPlaybackError;
+  const playbackErrorText = fileUnreadable
+    ? unreadableFileMessage()
+    : errorMessage;
 
   // The export's own frame and font size (an audio-only file renders on a
   // 1280x720 black frame). The overlay is laid out on this frame and then
@@ -186,31 +201,23 @@ export default function NativeVideoPlayer({
     const v = videoRef.current;
     if (!v) return;
     const rect = v.getBoundingClientRect();
-    const cssWidth = Math.max(rect.width, 1);
-    const cssHeight = Math.max(rect.height, 1);
-
-    // Audio has no picture: the export's black frame is fitted instead.
-    const intrinsicWidth = isAudioOnly
-      ? subtitleCanvasWidth
-      : v.videoWidth || targetVideoWidth || cssWidth || 1;
-    const intrinsicHeight = isAudioOnly
-      ? subtitleCanvasHeight
-      : v.videoHeight || targetVideoHeight || cssHeight || 1;
-    const scaleFactor = Math.min(
-      cssWidth / intrinsicWidth,
-      cssHeight / intrinsicHeight
-    );
-    const contentHeight = Math.max(1, intrinsicHeight * scaleFactor);
-    const contentWidth = Math.max(1, intrinsicWidth * scaleFactor);
     // Relative to the positioned parent the overlay lives in; the <video>
     // itself can sit centered inside it.
     const parentRect = v.parentElement?.getBoundingClientRect() ?? rect;
-    setPictureBox({
-      left: rect.left - parentRect.left + (cssWidth - contentWidth) / 2,
-      top: rect.top - parentRect.top + (cssHeight - contentHeight) / 2,
-      width: contentWidth,
-      height: contentHeight,
+    // Audio has no picture: the export's black frame is fitted instead.
+    const box = fitPictureBox({
+      mediaRect: rect,
+      panelRect: parentRect,
+      intrinsicWidth: isAudioOnly
+        ? subtitleCanvasWidth
+        : v.videoWidth || targetVideoWidth || 0,
+      intrinsicHeight: isAudioOnly
+        ? subtitleCanvasHeight
+        : v.videoHeight || targetVideoHeight || 0,
+      isAudioOnly,
     });
+    setPictureBox(box);
+    const contentHeight = box.height;
 
     const rounded = Math.round(contentHeight);
     setDisplayHeightPx(rounded);
@@ -317,6 +324,9 @@ export default function NativeVideoPlayer({
     if (!v) return;
     const ro = new ResizeObserver(recomputeScale);
     ro.observe(v);
+    // An <audio> element has no box of its own; the panel's size is what
+    // the subtitles are fitted to.
+    if (v.parentElement) ro.observe(v.parentElement);
     return () => ro.disconnect();
   }, [recomputeScale]);
 
@@ -663,7 +673,7 @@ export default function NativeVideoPlayer({
             </div>
             <div className={videoPlayerCenterStateCopyStyles}>
               <div className={videoPlayerCenterStateTitleStyles}>
-                {errorMessage}
+                {playbackErrorText}
               </div>
             </div>
           </div>

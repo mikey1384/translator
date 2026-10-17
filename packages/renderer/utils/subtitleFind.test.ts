@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildFindRegex,
+  collectMatchRows,
+  countMatches,
   replaceMatches,
   splitByMatches,
   textMatches,
@@ -50,4 +52,17 @@ test('highlight pieces and match indices use the same rules', () => {
     collectMatchIndices(subs as any, 'it', { wholeWord: true }),
     [1]
   );
+});
+
+test('the find counter counts matches, not lines', () => {
+  assert.equal(countMatches('Why? Really?', '?'), 2);
+  assert.equal(countMatches('', '?'), 0);
+  const rows = [
+    { original: 'Why? Really?', translation: '왜?' },
+    { original: 'no', translation: '' },
+    { original: 'Ok?', translation: '' },
+  ];
+  // Row 0 has three matches (two in the original, one in the translation).
+  assert.deepEqual(collectMatchRows(rows, '?'), [0, 0, 0, 2]);
+  assert.deepEqual(collectMatchRows(rows, '   '), []);
 });

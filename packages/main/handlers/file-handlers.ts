@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import { IpcMainInvokeEvent } from 'electron';
+import { BrowserWindow, IpcMainInvokeEvent } from 'electron';
 import { app } from 'electron';
 import { FileManager } from '../services/file-manager.js';
 import {
@@ -283,12 +283,15 @@ export async function handleReadSavedSubtitleMetadata(
 }
 
 export async function handleOpenFile(
-  _event: IpcMainInvokeEvent,
+  event: IpcMainInvokeEvent,
   options: OpenFileOptions
 ): Promise<OpenFileResult> {
   try {
     const { fileManager } = checkServicesInitialized();
-    const result = await fileManager.openFile(options);
+    const result = await fileManager.openFile(
+      options,
+      BrowserWindow.fromWebContents(event.sender)
+    );
     return result;
   } catch (error: any) {
     console.error('[handleOpenFile] Error:', error);

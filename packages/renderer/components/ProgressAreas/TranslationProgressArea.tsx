@@ -196,8 +196,8 @@ export default function TranslationProgressArea({
         <p style={{ margin: 0 }}>
           {stopError ??
             t(
-              'dialogs.cancelTranslationConfirm',
-              "Cancel translation? Progress will be lost and you'll need to start again."
+              'dialogs.cancelTranslationBody',
+              'Lines translated so far are kept. You can translate the rest later.'
             )}
         </p>
       </Modal>

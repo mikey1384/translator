@@ -93,3 +93,28 @@ test('malformed stored records are dropped', () => {
   ]);
   assert.deepEqual(sanitizeRunningJobRecords('nope'), []);
 });
+
+test('a record keeps its language and origin through start and attach', () => {
+  // The workspace restores the target language and the notice wording from
+  // these after a crash.
+  const started = applyRunningJobOp(
+    [],
+    {
+      type: 'start',
+      record: record({ language: 'japanese', origin: 'subtitles' }),
+    },
+    'run-1'
+  );
+  const attached = applyRunningJobOp(started, {
+    type: 'attachDocument',
+    key: '/v.mp4',
+    owner: 'tab-a',
+    documentId: 'doc-1',
+  });
+  const [kept] = sanitizeRunningJobRecords(
+    JSON.parse(JSON.stringify(attached))
+  );
+  assert.equal(kept.language, 'japanese');
+  assert.equal(kept.origin, 'subtitles');
+  assert.equal(kept.documentId, 'doc-1');
+});

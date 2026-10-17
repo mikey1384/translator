@@ -5,6 +5,7 @@ import {
   formatPercent,
   formatUiDecimal,
   formatUiInteger,
+  localizeDigits,
 } from './formatNumbers';
 
 test('percentages use the UI language digits and sign', () => {
@@ -28,4 +29,12 @@ test('byte sizes pick a unit and localize it', () => {
   assert.equal(formatByteSize(12 * 1024 * 1024, 'en'), '12 MB');
   assert.equal(formatByteSize(1.4 * 1024 ** 3, 'en'), '1.4 GB');
   assert.doesNotMatch(formatByteSize(1.4 * 1024 ** 3, 'fa'), /[0-9]/);
+});
+
+test('clock times inside prose take the UI language digits', () => {
+  assert.equal(localizeDigits('0:30', 'en'), '0:30');
+  assert.equal(localizeDigits('0:30', 'de'), '0:30');
+  assert.equal(localizeDigits('1:02:05', 'fa'), '۱:۰۲:۰۵');
+  assert.equal(localizeDigits('0:30', 'bn'), '০:৩০');
+  assert.equal(localizeDigits('12', 'mr'), '१२');
 });

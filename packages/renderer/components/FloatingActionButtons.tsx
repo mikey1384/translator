@@ -213,7 +213,10 @@ export default function FloatingActionButtons({
   useEffect(() => {
     const syncScrollButtons = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const shouldShowTop = scrollTop > scrollThreshold;
+      // Only once a full screen has scrolled away: near the top there is
+      // nothing to go back to, and the button would sit on the first rows.
+      const shouldShowTop =
+        scrollTop > Math.max(scrollThreshold, window.innerHeight);
 
       if (showScrollToTopRef.current !== shouldShowTop) {
         showScrollToTopRef.current = shouldShowTop;

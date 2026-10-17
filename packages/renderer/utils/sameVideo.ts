@@ -23,3 +23,24 @@ export function durationsLookLikeSameVideo(
   }
   return Math.abs(current - next) <= SAME_VIDEO_DURATION_TOLERANCE_SEC;
 }
+
+/**
+ * Whether a finished link download keeps the subtitles the user opened from
+ * a file. Subtitles loaded with no video (or for a video they don't belong
+ * to) follow the first downloaded video, but when the Change Video dialog
+ * asked for the replacement its "Keep the current subtitles" choice is final.
+ */
+export function downloadKeepsFileOpenedSubtitles({
+  replaceCurrent,
+  subtitleCount,
+  origin,
+  libraryEntryId,
+}: {
+  replaceCurrent: boolean;
+  subtitleCount: number;
+  origin: string | null | undefined;
+  libraryEntryId: string | null | undefined;
+}): boolean {
+  if (replaceCurrent) return false;
+  return subtitleCount > 0 && origin === 'disk' && !libraryEntryId;
+}

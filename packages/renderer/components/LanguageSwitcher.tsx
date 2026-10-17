@@ -235,28 +235,35 @@ export default function LanguageSwitcher() {
       default:
         // Type-ahead on the language's own name, its name in the UI
         // language, or its English name; keystrokes accumulate ("deu").
+        // IME keystrokes ("Process") arrive later as a composition.
         if (
           event.key.length === 1 &&
+          !event.nativeEvent.isComposing &&
           !event.metaKey &&
           !event.ctrlKey &&
           !event.altKey
         ) {
-          const query = typeahead.current.push(event.key);
-          const match = findTypeaheadMatch(
-            options.map(opt => ({
-              value: opt.value,
-              names: [
-                uiLanguageEndonym(opt),
-                t(opt.label, uiLanguageEndonym(opt)),
-                t(opt.label, { lng: 'en', defaultValue: opt.value }),
-              ],
-            })),
-            query,
-            activeValue
-          );
-          if (match) setActiveValue(match);
+          typeToFind(event.key);
         }
     }
+  };
+
+  const typeToFind = (text: string) => {
+    if (!text) return;
+    const query = typeahead.current.push(text);
+    const match = findTypeaheadMatch(
+      options.map(opt => ({
+        value: opt.value,
+        names: [
+          uiLanguageEndonym(opt),
+          t(opt.label, uiLanguageEndonym(opt)),
+          t(opt.label, { lng: 'en', defaultValue: opt.value }),
+        ],
+      })),
+      query,
+      activeValue
+    );
+    if (match) setActiveValue(match);
   };
 
   const renderOption = (lang: LanguageOption) => {
@@ -327,6 +334,7 @@ export default function LanguageSwitcher() {
             activeValue ? `ui-language-option-${activeValue}` : undefined
           }
           onKeyDown={handleListKeyDown}
+          onCompositionEnd={event => typeToFind(event.data)}
         >
           {baseLanguageOptions.map(renderOption)}
           {languageGroups.map(group => (

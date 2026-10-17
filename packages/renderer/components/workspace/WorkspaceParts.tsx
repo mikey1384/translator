@@ -8,6 +8,7 @@ import GapList from '../../containers/VideoPlayer/GapList';
 import { useSubStore, useUIStore, useVideoStore } from '../../state';
 import { useWorkspaceActions } from '../../state/workspace-actions';
 import { logButton } from '../../utils/logger';
+import { formatUiInteger } from '../../utils/formatNumbers';
 import ReadOnlySubtitleList from './ReadOnlySubtitleList';
 import { colors } from '../../styles';
 import {
@@ -61,7 +62,9 @@ export function WorkspaceSubtitlesHead() {
       <h2 className={workspaceSubsTitleStyles}>
         {t('workspace.subtitlesTitle', 'Subtitles')}
         {count > 0 ? (
-          <span className={workspaceSubsTitleCountStyles}>{count}</span>
+          <span className={workspaceSubsTitleCountStyles}>
+            {formatUiInteger(count)}
+          </span>
         ) : null}
       </h2>
       <div className={subsHeadToolsStyles}>

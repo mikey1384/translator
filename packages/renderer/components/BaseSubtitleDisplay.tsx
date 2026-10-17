@@ -88,6 +88,7 @@ export default function BaseSubtitleDisplay({
     <div
       ref={subtitleRef}
       className={combinedClassName}
+      data-subtitle-cue=""
       // The export's markup, so line breaks, line boxes and each line's
       // reading direction match the burned-in video.
       dangerouslySetInnerHTML={{

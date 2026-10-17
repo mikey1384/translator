@@ -77,7 +77,7 @@ export default function DubbingProgressArea() {
       />
       <Modal
         open={confirmOpen}
-        title={t('dialogs.cancelDubbingConfirm', 'Cancel dubbing in progress?')}
+        title={t('dialogs.cancelDubbingTitle', 'Stop dubbing?')}
         titleId="confirm-cancel-dubbing-title"
         onClose={() => {
           if (!isStopping) setConfirmOpen(false);

@@ -25,6 +25,11 @@ const matchCountNoClipStyles = css`
   min-width: max-content;
 `;
 
+// Nothing searched yet: keep the slot (no layout jump), show no pill.
+const matchCountIdleStyles = css`
+  visibility: hidden;
+`;
+
 const toggleOnStyles = css`
   &[aria-pressed='true'] {
     border-color: ${colors.primary};
@@ -114,13 +119,17 @@ export default function FindBar() {
   }
 
   const hasMatches = matchCount > 0;
-  // Each number is bidi-isolated so "1 of 12" never reorders in RTL.
-  const showMatchInfo = t('findBar.matchCount', '{{current}} of {{total}}', {
-    current: isolateBidi(
-      searchText.length > 0 && hasMatches ? activeMatchIndex + 1 : 0
-    ),
-    total: isolateBidi(searchText.length > 0 ? matchCount : 0),
-  });
+  const hasSearch = searchText.trim().length > 0;
+  // Counts matches, not lines. Each number is bidi-isolated so "1 of 12"
+  // never reorders in RTL.
+  const showMatchInfo = !hasSearch
+    ? ''
+    : hasMatches
+      ? t('findBar.matchCount', '{{current}} of {{total}}', {
+          current: isolateBidi(activeMatchIndex + 1),
+          total: isolateBidi(matchCount),
+        })
+      : t('findBar.noMatches', 'No matches');
   const matchCaseLabel = t('findBar.matchCase', 'Match case');
   const wholeWordLabel = t('findBar.wholeWord', 'Whole word');
   const replaceToggleLabel = t('findBar.showReplace', 'Replace');
@@ -162,9 +171,8 @@ export default function FindBar() {
         className={cx(
           editorFindMatchCountStyles,
           matchCountNoClipStyles,
-          matchCount === 0 && searchText.length > 0
-            ? editorFindMatchCountErrorStyles
-            : ''
+          hasSearch && !hasMatches ? editorFindMatchCountErrorStyles : '',
+          !hasSearch && matchCountIdleStyles
         )}
       >
         {showMatchInfo}

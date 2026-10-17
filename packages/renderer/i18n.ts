@@ -281,5 +281,25 @@ export const changeLanguage = async (lng: string) => {
   }
 };
 
+/**
+ * The settings file was reset, so main no longer knows the UI language and
+ * the app started in the system language. The renderer's own copy of the
+ * choice survives; put it back (and save it to main again) before any reset
+ * notice is shown, so that notice is in the user's language too.
+ */
+export async function restoreLanguageAfterSettingsReset(): Promise<void> {
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(LS_KEY);
+  } catch {
+    return;
+  }
+  if (!saved) return;
+  const lng = normalizeBrowserLang(saved);
+  await initI18nPromise;
+  if (lng === i18n.language) return;
+  await changeLanguage(lng);
+}
+
 export { i18n };
 export default initI18nPromise;

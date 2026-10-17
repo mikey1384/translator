@@ -120,8 +120,12 @@ export const summaryEstimateStyles = css`
   text-align: center;
 `;
 
+// Doubled selector: wins over summaryEstimateStyles' grey whatever order the
+// two classes are inserted in.
 export const summaryEstimateWarningStyles = css`
-  color: ${colors.danger};
+  && {
+    color: ${colors.danger};
+  }
 `;
 
 export const progressWrapperStyles = css`

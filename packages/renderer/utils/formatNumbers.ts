@@ -102,3 +102,27 @@ export function formatByteSize(
     maximumFractionDigits: digits,
   }).format(value);
 }
+
+const digitMaps = new Map<string, string[] | null>();
+
+/**
+ * Rewrites the ASCII digits in an already built string ("0:30", "1:02:05")
+ * in the UI language's own digits ("۰:۳۰" in Persian, "০:৩০" in Bengali), for
+ * times and numbers that sit inside translated prose. Locales that write
+ * Latin digits get the string back unchanged.
+ */
+export function localizeDigits(
+  text: string,
+  locale = currentUiLocale()
+): string {
+  let digits = digitMaps.get(locale);
+  if (digits === undefined) {
+    const format = getFormat(locale, 'digit', { useGrouping: false });
+    const mapped = Array.from({ length: 10 }, (_, d) => format.format(d));
+    digits = mapped.every((d, i) => d === String(i)) ? null : mapped;
+    digitMaps.set(locale, digits);
+  }
+  if (!digits) return text;
+  const map = digits;
+  return text.replace(/[0-9]/g, d => map[Number(d)]);
+}

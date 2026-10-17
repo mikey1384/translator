@@ -44,6 +44,7 @@ import { translateMissingUntranslated } from '../../utils/translateMissing';
 import { currentVideoCost } from '../../utils/freePreviewRun';
 import { persistMountedTranslation } from '../../containers/GenerateSubtitles/utils/subtitleGeneration';
 import { formatUsd } from '../../utils/formatUsd';
+import { localizeDigits } from '../../utils/formatNumbers';
 import {
   isManagedTempOriginalVideoPath,
   saveOriginalVideoFile,
@@ -199,6 +200,7 @@ export function WorkspaceIdleStatus() {
   const summary = useSubtitleSummary();
   const { count, translated, missing } = summary;
   const videoPath = useVideoStore(s => s.path);
+  const isAudioOnly = useVideoStore(s => s.isAudioOnly);
   const duration = useVideoStore(s => s.meta?.duration ?? null);
   const editor = useWorkspaceActions(s => s.editor);
   const preview = useActiveFreePreview();
@@ -218,14 +220,18 @@ export function WorkspaceIdleStatus() {
   const alreadyInTarget =
     translated === 0 && summary.sourceLanguage === target.value;
 
-  // "In sync with the video" only once there is a video to be in sync with.
+  // "In sync with the video" only once there is a video (not an audio
+  // file) to be in sync with.
+  const inSyncWithVideo = Boolean(videoPath) && !isAudioOnly;
   const linesIn = (
     lines: number,
     language: { name: string; into: string }
   ): string =>
     t(
-      videoPath ? 'workspace.statusTranslated' : 'workspace.statusLinesIn',
-      videoPath
+      inSyncWithVideo
+        ? 'workspace.statusTranslated'
+        : 'workspace.statusLinesIn',
+      inSyncWithVideo
         ? '{{count}} lines in {{language}} · in sync with the video'
         : '{{count}} lines in {{language}}',
       { count: lines, language: language.name, languageInto: language.into }
@@ -307,7 +313,7 @@ export function WorkspaceIdleStatus() {
     done = true;
     text = translationLanguage
       ? linesIn(translated, translationLanguage)
-      : videoPath
+      : inSyncWithVideo
         ? t(
             'workspace.statusTranslatedUnknown',
             '{{count}} translated lines · in sync with the video',
@@ -343,7 +349,7 @@ export function WorkspaceIdleStatus() {
           <span className={stopsEarlyStyles}>
             <span>
               {t('workspace.stopsEarly', 'Subtitles stop at {{time}}', {
-                time: formatClockTime(stopsAt),
+                time: localizeDigits(formatClockTime(stopsAt)),
               })}
             </span>
             <Button
@@ -414,6 +420,22 @@ function InterruptedJobNotice() {
     sourceAssetIdentity,
   ]);
 
+  // The job's language comes back with it: after a crash the saved target
+  // can be lost, and the bar would judge the lines against the wrong one.
+  const resumeLanguage =
+    interrupted?.record.kind === 'translate'
+      ? interrupted.record.language
+      : null;
+  const restoredLanguageRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!resumeLanguage || !interrupted) return;
+    if (restoredLanguageRef.current === interrupted.key) return;
+    restoredLanguageRef.current = interrupted.key;
+    if (useUIStore.getState().targetLanguage !== resumeLanguage) {
+      useUIStore.getState().setTargetLanguage(resumeLanguage);
+    }
+  }, [resumeLanguage, interrupted]);
+
   if (!interrupted) return null;
   const { key, record } = interrupted;
 
@@ -476,16 +498,22 @@ function InterruptedJobNotice() {
     <div className={idleStatusStyles} role="status">
       <span className={idleDotStyles(colors.primary)} aria-hidden="true" />
       <span>
-        {record.kind === 'translate'
+        {record.kind === 'translate' && record.origin === 'subtitles'
           ? t(
-              'workspace.interruptedTranslate',
-              'Making this video speak {{language}} stopped when Translator closed.',
+              'workspace.interruptedTranslateSubtitles',
+              'Translating these subtitles into {{language}} stopped when Translator closed.',
               { language: language.name, languageInto: language.into }
             )
-          : t(
-              'workspace.interruptedTranscribe',
-              'Transcribing this video stopped when Translator closed.'
-            )}
+          : record.kind === 'translate'
+            ? t(
+                'workspace.interruptedTranslate',
+                'Making this video speak {{language}} stopped when Translator closed.',
+                { language: language.name, languageInto: language.into }
+              )
+            : t(
+                'workspace.interruptedTranscribe',
+                'Transcribing this video stopped when Translator closed.'
+              )}
       </span>
       <span className={stopsEarlyStyles}>
         <Button variant="primary" size="sm" onClick={resume}>
@@ -871,7 +899,7 @@ function MoreMenu({
             <FileUp aria-hidden="true" />
             {hasSubs
               ? t('workspace.moreReplaceSrt', 'Load another SRT')
-              : t('workspace.moreMountSrt', 'Mount SRT')}
+              : t('workspace.moreMountSrt', 'Load SRT')}
           </button>
           {canSaveOriginal ? (
             <button
@@ -1032,7 +1060,11 @@ export function WorkspaceActionBar() {
     <div className={actionBarStyles}>
       {primary ? (
         <Button
-          variant={offerShowing || toolsOpen ? 'secondary' : 'primary'}
+          // One yellow action at a time: the offer, the tools panel's, or
+          // the interrupted-job notice's "Pick up where it stopped".
+          variant={
+            offerShowing || toolsOpen || interrupted ? 'secondary' : 'primary'
+          }
           size="lg"
           className={actionPrimaryStyles}
           onClick={primary.run}

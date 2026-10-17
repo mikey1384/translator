@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
 import { estimateTranslatableHours } from '../utils/creditEstimates';
+import {
+  LATE_CHECKOUT_FOCUS_REFRESH_DEBOUNCE_MS,
+  createLateCheckoutWatch,
+  isLateCheckoutWatchActive,
+  lateCheckoutCreditsAdded,
+  type LateCheckoutWatch,
+} from '../utils/lateCheckoutWatch';
 import { CREDIT_PACKS } from '../../shared/constants';
 import type {
   CheckoutTransitionInfo,
@@ -44,6 +51,11 @@ interface CreditState {
   beginCheckoutPending: (packId?: CreditPackId | null) => void;
   clearCheckoutPending: () => void;
   dismissUnresolvedCheckout: () => void;
+  /**
+   * "Check now" on an unresolved checkout: read the balance right away and
+   * keep checking for another ten minutes.
+   */
+  checkPaymentNow: () => void;
   /** Mark the pack the user just clicked, before main confirms the session. */
   noteCheckoutPack: (packId: CreditPackId) => void;
   /**
@@ -65,12 +77,18 @@ const CHECKOUT_SUCCESS_VISIBLE_MS = 12_000;
 const INITIAL_AUTHORITATIVE_REFRESH_INTERVAL_MS = 5_000;
 const INITIAL_AUTHORITATIVE_REFRESH_MAX_MS = 60_000;
 const INITIAL_AUTHORITATIVE_REFRESH_MAX_ATTEMPTS = 12;
+// A balance read that hasn't answered by now is treated like an offline one,
+// so the pill and Settings say "can't check" instead of a bare "Minutes".
+const BALANCE_SLOW_LOAD_MS = 8_000;
 
 let checkoutSuccessTimer: ReturnType<typeof setTimeout> | null = null;
 let checkoutRefreshInterval: ReturnType<typeof setInterval> | null = null;
 let checkoutRefreshStartedAt: number | null = null;
 let checkoutRefreshInFlight = false;
 let lastCheckoutFocusRefreshAt = 0;
+let lateCheckoutWatch: LateCheckoutWatch | null = null;
+let lastLateCheckoutRefreshAt = 0;
+let lateCheckoutRefreshInFlight = false;
 let initialAuthoritativeRefreshInterval: ReturnType<typeof setInterval> | null =
   null;
 let initialAuthoritativeRefreshStartedAt: number | null = null;
@@ -102,6 +120,7 @@ function stopInitialAuthoritativeRefreshLoop() {
 
 export const useCreditStore = create<CreditState>((set, get) => {
   const showCheckoutSuccess = (creditsAdded: number | null) => {
+    lateCheckoutWatch = null;
     set({ checkoutSuccess: { creditsAdded, at: Date.now() } });
     if (checkoutSuccessTimer) clearTimeout(checkoutSuccessTimer);
     checkoutSuccessTimer = setTimeout(() => {
@@ -110,7 +129,23 @@ export const useCreditStore = create<CreditState>((set, get) => {
     }, CHECKOUT_SUCCESS_VISIBLE_MS);
   };
 
-  const stopWaitingOnCheckout = () => {
+  // `watchForLatePayment`: the user may still pay in the browser after the
+  // app stops waiting. The server credits the device either way, so keep
+  // re-reading the balance when they come back to the app.
+  const stopWaitingOnCheckout = ({
+    watchForLatePayment = false,
+  }: { watchForLatePayment?: boolean } = {}) => {
+    if (watchForLatePayment) {
+      const state = get();
+      const watch = createLateCheckoutWatch({
+        baselineCredits: state.checkoutBaselineCredits,
+        expectedCredits: state.checkoutPackId
+          ? CREDIT_PACKS[state.checkoutPackId].credits
+          : null,
+        now: Date.now(),
+      });
+      if (watch) lateCheckoutWatch = watch;
+    }
     set({
       checkoutPending: false,
       checkoutUnresolved: false,
@@ -135,8 +170,9 @@ export const useCreditStore = create<CreditState>((set, get) => {
     ) {
       // Ten minutes without a payment: treat it as abandoned instead of
       // telling the user to "finish paying" for the rest of the session.
-      // Main keeps reconciling, so a late payment still adds its minutes.
-      stopWaitingOnCheckout();
+      // Stripe's webhook still credits a late payment on the server; the
+      // late-payment watch re-reads the balance when the user returns.
+      stopWaitingOnCheckout({ watchForLatePayment: true });
       void SystemIPC.abandonCheckoutSession().catch(() => {});
       return;
     }
@@ -346,6 +382,8 @@ export const useCreditStore = create<CreditState>((set, get) => {
   };
 
   const beginCheckoutPending = (packId?: CreditPackId | null) => {
+    // A new checkout tracks the balance itself.
+    lateCheckoutWatch = null;
     const state = get();
     set({
       checkoutPackId: packId ?? state.checkoutPackId,
@@ -380,10 +418,48 @@ export const useCreditStore = create<CreditState>((set, get) => {
     startCheckoutRefreshLoop();
   };
 
-  const onWindowFocus = () => refreshUnresolvedCheckoutAfterReturn();
+  const refreshLateCheckoutAfterReturn = () => {
+    const now = Date.now();
+    if (!isLateCheckoutWatchActive(lateCheckoutWatch, now)) {
+      lateCheckoutWatch = null;
+      return;
+    }
+    if (
+      lateCheckoutRefreshInFlight ||
+      now - lastLateCheckoutRefreshAt < LATE_CHECKOUT_FOCUS_REFRESH_DEBOUNCE_MS
+    ) {
+      return;
+    }
+    lastLateCheckoutRefreshAt = now;
+    lateCheckoutRefreshInFlight = true;
+    void SystemIPC.refreshCreditSnapshot(true)
+      .then(snapshot => {
+        if (!snapshot) return;
+        applyCreditSnapshot(snapshot);
+        const watch = lateCheckoutWatch;
+        if (!watch || !snapshot.authoritative) return;
+        const added = lateCheckoutCreditsAdded(watch, snapshot.creditBalance);
+        if (added != null) showCheckoutSuccess(added);
+      })
+      .catch(error => {
+        console.warn('[credit-store] Late checkout refresh failed:', error);
+      })
+      .finally(() => {
+        lateCheckoutRefreshInFlight = false;
+      });
+  };
+
+  const refreshAfterReturn = () => {
+    refreshUnresolvedCheckoutAfterReturn();
+    if (!get().checkoutUnresolved && !get().checkoutPending) {
+      refreshLateCheckoutAfterReturn();
+    }
+  };
+
+  const onWindowFocus = () => refreshAfterReturn();
   const onVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
-      refreshUnresolvedCheckoutAfterReturn();
+      refreshAfterReturn();
     }
   };
 
@@ -405,6 +481,15 @@ export const useCreditStore = create<CreditState>((set, get) => {
     window.addEventListener('online', onBackOnline);
     document.addEventListener('visibilitychange', onVisibilityChange);
   }
+
+  // Server hung (no answer, no error): show the offline state until it does.
+  const markOfflineIfStillLoading = () => {
+    setTimeout(() => {
+      const state = get();
+      if (state.loading && state.credits === null) set({ offline: true });
+    }, BALANCE_SLOW_LOAD_MS);
+  };
+  markOfflineIfStillLoading();
 
   void SystemIPC.getCreditSnapshot()
     .then(snapshot => {
@@ -500,6 +585,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
     refreshHistory,
     retryLoad: () => {
       set({ loading: true, error: undefined });
+      markOfflineIfStillLoading();
       void SystemIPC.refreshCreditSnapshot(true)
         .then(snapshot => {
           if (snapshot) applyCreditSnapshot(snapshot);
@@ -518,13 +604,16 @@ export const useCreditStore = create<CreditState>((set, get) => {
     beginCheckoutPending,
     clearCheckoutPending,
     dismissUnresolvedCheckout: () => {
-      set({ checkoutUnresolved: false, checkoutBaselineCredits: null });
-      checkoutRefreshStartedAt = null;
-      stopCheckoutRefreshLoop();
+      stopWaitingOnCheckout({ watchForLatePayment: true });
+    },
+    checkPaymentNow: () => {
+      if (!get().checkoutUnresolved) return;
+      checkoutRefreshStartedAt = Date.now();
+      startCheckoutRefreshLoop();
     },
     noteCheckoutPack: packId => set({ checkoutPackId: packId }),
     chooseAnotherPack: () => {
-      stopWaitingOnCheckout();
+      stopWaitingOnCheckout({ watchForLatePayment: true });
       void SystemIPC.abandonCheckoutSession().catch(error => {
         console.warn('[credit-store] Abandoning the checkout failed:', error);
       });

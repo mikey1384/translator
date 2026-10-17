@@ -28,6 +28,7 @@ import {
 } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 import { mountedSubtitleMatchesVideoSource } from '../utils/subtitle-source-association';
 import { confirmReplaceUnsavedSubtitles } from '../utils/unsaved-subtitles';
+import { downloadKeepsFileOpenedSubtitles } from '../utils/sameVideo';
 import { handoffPromotedDownloadHistory } from '../../shared/helpers/url-download-history-handoff.js';
 import { parseSrt } from '../../shared/helpers';
 import {
@@ -685,10 +686,14 @@ async function downloadMediaInternal(
       origin: subsOrigin,
       libraryEntryId,
     } = useSubStore.getState();
-    const preserveMountedDiskSubs =
-      existingSubs.length > 0 && subsOrigin === 'disk' && !libraryEntryId;
-    const hasMountedSource = hasMountedVideo();
     const replaceCurrent = options?.replaceCurrent === true;
+    const preserveMountedDiskSubs = downloadKeepsFileOpenedSubtitles({
+      replaceCurrent,
+      subtitleCount: existingSubs.length,
+      origin: subsOrigin,
+      libraryEntryId,
+    });
+    const hasMountedSource = hasMountedVideo();
     // The Change Video dialog asked for this; close it so the unsaved-edits
     // question (if any) and the new video are not hidden behind it.
     if (replaceCurrent && mountOnComplete) closeChangeVideo();

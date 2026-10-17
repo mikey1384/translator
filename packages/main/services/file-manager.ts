@@ -4,6 +4,7 @@ import path from 'path';
 import log from 'electron-log';
 import { MEDIA_FILE_EXTENSIONS } from '../../shared/constants/media-extensions.js';
 import { getUiT } from '../utils/ui-language.js';
+import { getFocusedOrMainWindow } from '../utils/window.js';
 
 export class FileManagerError extends Error {
   constructor(message: string) {
@@ -79,9 +80,9 @@ export class FileManager {
         hasFilters: Boolean(filters),
       });
 
-      const window = BrowserWindow.getFocusedWindow();
+      const window = getFocusedOrMainWindow();
       if (!window) {
-        throw new FileManagerError('No focused window found');
+        throw new FileManagerError('No window found for save dialog');
       }
 
       const t = await getUiT();
@@ -118,25 +119,28 @@ export class FileManager {
     }
   }
 
-  async openFile(options: {
-    title?: string;
-    filters?: { name: string; extensions: string[] }[];
-    properties?: (
-      | 'openFile'
-      | 'openDirectory'
-      | 'multiSelections'
-      | 'showHiddenFiles'
-      | 'createDirectory'
-      | 'promptToCreate'
-      | 'noResolveAliases'
-      | 'treatPackageAsDirectory'
-      | 'dontAddToRecent'
-    )[];
-    defaultPath?: string;
-    buttonLabel?: string;
-    message?: string;
-    securityScopedBookmarks?: boolean;
-  }): Promise<{
+  async openFile(
+    options: {
+      title?: string;
+      filters?: { name: string; extensions: string[] }[];
+      properties?: (
+        | 'openFile'
+        | 'openDirectory'
+        | 'multiSelections'
+        | 'showHiddenFiles'
+        | 'createDirectory'
+        | 'promptToCreate'
+        | 'noResolveAliases'
+        | 'treatPackageAsDirectory'
+        | 'dontAddToRecent'
+      )[];
+      defaultPath?: string;
+      buttonLabel?: string;
+      message?: string;
+      securityScopedBookmarks?: boolean;
+    },
+    ownerWindow?: BrowserWindow | null
+  ): Promise<{
     canceled: boolean;
     filePaths: string[];
     bookmarks?: string[];
@@ -144,9 +148,13 @@ export class FileManager {
     error?: string;
   }> {
     try {
-      const window = BrowserWindow.getFocusedWindow();
+      // The asking window first: with no window focused (another app in
+      // front) the dialog still opens instead of failing silently.
+      const window =
+        (ownerWindow && !ownerWindow.isDestroyed() ? ownerWindow : null) ??
+        getFocusedOrMainWindow();
       if (!window) {
-        throw new FileManagerError('No focused window found for open dialog');
+        throw new FileManagerError('No window found for open dialog');
       }
 
       const t = await getUiT();

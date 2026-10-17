@@ -162,7 +162,7 @@ export default function CreditMinutesPill() {
       type="button"
       className={pill}
       onClick={openCreditsSettings}
-      title={t('credits.pill.title', 'Credits and plans')}
+      title={t('credits.pill.title', 'Your minutes and packs')}
     >
       <span className={dot(tone)} aria-hidden="true" />
       <span className={pillText}>

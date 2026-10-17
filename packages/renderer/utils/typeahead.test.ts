@@ -39,3 +39,19 @@ test('the buffer starts over after a pause', () => {
   assert.equal(buffer.push('u', 1400), 'deu');
   assert.equal(buffer.push('e', 2500), 'e');
 });
+
+test('native keyboards reach Arabic and Korean endonyms', () => {
+  const native = [
+    { value: 'en', names: ['English'] },
+    { value: 'ar', names: ['العربية', 'Arabic'] },
+    { value: 'ko', names: ['한국어', 'Korean'] },
+    { value: 'he', names: ['עברית', 'Hebrew'] },
+  ];
+  assert.equal(findTypeaheadMatch(native, 'ع', 'en'), 'ar');
+  assert.equal(findTypeaheadMatch(native, 'عر', 'en'), 'ar');
+  assert.equal(findTypeaheadMatch(native, 'ال', 'en'), 'ar');
+  assert.equal(findTypeaheadMatch(native, '한', 'en'), 'ko');
+  assert.equal(findTypeaheadMatch(native, 'ㅎ', 'en'), 'ko');
+  assert.equal(findTypeaheadMatch(native, '한국', 'en'), 'ko');
+  assert.equal(findTypeaheadMatch(native, 'ע', 'en'), 'he');
+});

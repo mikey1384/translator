@@ -66,6 +66,11 @@ export default function CreditRanOutDialog({
           'dialogs.creditRanOut.minutes.dubbing.title',
           'Dubbing needs minutes'
         );
+      case 'voicePreview':
+        return t(
+          'dialogs.creditRanOut.minutes.voicePreview.title',
+          'A voice preview needs minutes'
+        );
       case 'summary':
         return t(
           'dialogs.creditRanOut.minutes.summary.title',
@@ -114,6 +119,11 @@ export default function CreditRanOutDialog({
         return t(
           'dialogs.creditRanOut.minutes.dubbing.message',
           'Your minutes don’t cover dubbing this video. Add minutes, then try again.'
+        );
+      case 'voicePreview':
+        return t(
+          'dialogs.creditRanOut.minutes.voicePreview.message',
+          'Your minutes don’t cover a voice preview. Add minutes, then try again.'
         );
       case 'summary':
         return t(

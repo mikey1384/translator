@@ -100,6 +100,7 @@ import { useSubStore } from '../state/subtitle-store';
 import { useTaskStore } from '../state/task-store';
 import { useUIStore } from '../state/ui-store';
 import { useUrlStore } from '../state/url-store';
+import { i18n } from '../i18n';
 import { useVideoStore } from '../state/video-store';
 import {
   goHome,
@@ -933,13 +934,7 @@ async function redownloadHistoryItem(input?: {
     url: parsedUrl.toString(),
     quality,
     strategy: replacementStrategy,
-  }).catch(error => {
-    useUrlStore
-      .getState()
-      .setOperationError(
-        error instanceof Error ? error.message : String(error)
-      );
-  });
+  }).catch(showAgentDownloadFailure);
   return {
     redownloadingEntryId: item.id,
     redownloadingTitle: item.title,
@@ -3394,6 +3389,32 @@ function renderAgentPreview(
   return previewPromise;
 }
 
+/**
+ * A failed assistant-started download: `message` (English) goes back to the
+ * assistant, `userMessage` (UI language, or null for nothing extra) is what
+ * the app shows.
+ */
+class AgentDownloadError extends Error {
+  constructor(
+    message: string,
+    readonly userMessage: string | null
+  ) {
+    super(message);
+    this.name = 'AgentDownloadError';
+  }
+}
+
+/** Shows a background assistant download's failure in the UI language. */
+function showAgentDownloadFailure(error: unknown): void {
+  const message =
+    error instanceof AgentDownloadError
+      ? error.userMessage
+      : error instanceof Error
+        ? error.message
+        : String(error);
+  if (message) useUrlStore.getState().setOperationError(message);
+}
+
 async function downloadAndMountAgentSource(input: {
   url: string;
   quality: VideoQuality;
@@ -3430,8 +3451,12 @@ async function downloadAndMountAgentSource(input: {
       String(completedResult?.subtitles || '')
     );
     if (recoveredSegments.length === 0) {
-      throw new Error(
-        'Public automatic captions were found, but Translator could not read them.'
+      throw new AgentDownloadError(
+        'Public automatic captions were found, but Translator could not read them.',
+        i18n.t(
+          'errors.download.captions_unreadable',
+          'YouTube captions were found, but Translator couldn’t read them.'
+        )
       );
     }
     if (input.checkCancellation) throwIfAgentCancelled();
@@ -3464,14 +3489,27 @@ async function downloadAndMountAgentSource(input: {
   const videoPath = finalDownload.download.completedFilePath;
   if (!completedResult || !videoPath || finalDownload.error) {
     if (finalDownload.needCookies) {
-      throw new Error(
-        'The source requires the app-managed cookie connection or manual verification.'
+      // The cookie banner already asks the user; nothing more to show.
+      throw new AgentDownloadError(
+        'The source requires the app-managed cookie connection or manual verification.',
+        null
       );
     }
-    throw new Error(
-      String(
-        result?.error || finalDownload.error || 'Download did not complete.'
-      )
+    if (result && 'cancelled' in result && result.cancelled) {
+      throw new AgentDownloadError(
+        'The download was cancelled.',
+        i18n.t('home.downloadCancelled', 'Download cancelled.')
+      );
+    }
+    const storeError = String(result?.error || finalDownload.error || '');
+    // url-store errors are already in the UI language.
+    throw new AgentDownloadError(
+      storeError || 'Download did not complete.',
+      storeError ||
+        i18n.t(
+          'errors.download.generic',
+          'The video couldn’t be downloaded. Try again or use another link.'
+        )
     );
   }
   if (input.checkCancellation) throwIfAgentCancelled();
@@ -5074,13 +5112,7 @@ function installAgentBridge() {
         url: parsedUrl.toString(),
         quality,
         strategy: replacementStrategy,
-      }).catch(error => {
-        useUrlStore
-          .getState()
-          .setOperationError(
-            error instanceof Error ? error.message : String(error)
-          );
-      });
+      }).catch(showAgentDownloadFailure);
       return currentStatus();
     },
 

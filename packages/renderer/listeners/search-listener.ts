@@ -1,27 +1,22 @@
 import { useUIStore, useSubStore } from '../state';
+import {
+  collectMatchRows,
+  currentFindOptions,
+  useFindOptions,
+} from '../utils/subtitleFind';
 
 /* ------------------------------------------------------------ */
 /* 1️⃣  recompute                                               */
 /* ------------------------------------------------------------ */
 function recompute() {
   const { searchText } = useUIStore.getState();
-  const txt = searchText.trim().toLowerCase();
-
-  /* Clear matches when query is empty ------------------------ */
-  if (!txt) {
-    useUIStore.getState().setMatchedIndices([]);
-    return;
-  }
-
-  /* Build new match list ------------------------------------- */
+  /* Same rules as the editor's counter and highlights: one entry per match */
   const { order, segments } = useSubStore.getState();
-  const idxs: number[] = [];
-
-  order.forEach((id, i) => {
-    const s = segments[id];
-    const haystack = `${s.original}\n${s.translation ?? ''}`.toLowerCase();
-    if (haystack.includes(txt)) idxs.push(i);
-  });
+  const idxs = collectMatchRows(
+    order.map(id => segments[id]),
+    searchText,
+    currentFindOptions()
+  );
 
   /* Update UI store in **one** call -------------------------- */
   useUIStore.getState().setMatchedIndices(idxs);
@@ -42,6 +37,9 @@ useSubStore.subscribe(
   s => s.sourceId, // selector
   recompute // listener
 );
+
+/* Fire when Match case / Whole word change                    */
+useFindOptions.subscribe(recompute);
 
 /* Run once on load so the initial state is correct ----------- */
 recompute();

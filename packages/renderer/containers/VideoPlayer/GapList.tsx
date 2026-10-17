@@ -3,6 +3,7 @@ import { useSubStore } from '../../state/subtitle-store';
 import { useVideoStore, useUIStore } from '../../state';
 import { useTranslation } from 'react-i18next';
 import { nativeSeek } from '../../native-player';
+import { formatDurationSeconds } from '../../utils/formatUnits';
 import { shouldUseWhisperReviewHints } from '../../utils/subtitle-heuristics';
 import {
   sidePanelEmptyCopyStyles,
@@ -99,7 +100,7 @@ export default function GapList() {
               !
             </span>
           ) : null}
-          {Math.round(g.dur)}s
+          {formatDurationSeconds(Math.round(g.dur))}
         </span>
       </button>
     );

@@ -261,10 +261,13 @@ function PackCard({
   pack,
   locale,
   waiting,
+  unresolved,
 }: {
   pack: Pack;
   locale: string;
   waiting: boolean;
+  // The app stopped hearing back about this payment; it may already be paid.
+  unresolved: boolean;
 }) {
   const { t } = useTranslation();
   const { loading, start } = useCreditCheckout({
@@ -316,7 +319,11 @@ function PackCard({
         {loading ? (
           t('credits.redirectingToPayment')
         ) : waiting ? (
-          t('credits.waitingForPayment', 'Waiting for payment…')
+          unresolved ? (
+            t('credits.checkingPayment', 'Checking your payment…')
+          ) : (
+            t('credits.waitingForPayment', 'Waiting for payment…')
+          )
         ) : (
           <bdi dir="auto">≈ {time}</bdi>
         )}
@@ -358,6 +365,7 @@ export default function CreditCard() {
   const checkoutPackId = useCreditStore(s => s.checkoutPackId);
   const checkoutSuccess = useCreditStore(s => s.checkoutSuccess);
   const chooseAnotherPack = useCreditStore(s => s.chooseAnotherPack);
+  const checkPaymentNow = useCreditStore(s => s.checkPaymentNow);
   const history = useCreditStore(s => s.history);
   const offline = useCreditStore(s => s.offline);
   const waitingForPayment = checkoutPending || checkoutUnresolved;
@@ -432,7 +440,7 @@ export default function CreditCard() {
       data-translator-destination="settings-credits"
       aria-labelledby="settings-credits-title"
     >
-      {loading && credits === null ? (
+      {loading && credits === null && !offline ? (
         <p className={footStyles}>{t('credits.loading')}</p>
       ) : error && credits === null ? (
         <div
@@ -468,6 +476,7 @@ export default function CreditCard() {
                 pack={pack}
                 locale={locale}
                 waiting={waitingForPayment && checkoutPackId === pack.id}
+                unresolved={checkoutUnresolved}
               />
             ))}
           </div>
@@ -494,11 +503,25 @@ export default function CreditCard() {
             <p className={waitingRow} role="status">
               <span className={spinner} aria-hidden="true" />
               <span>
-                {t(
-                  'credits.checkoutWaiting',
-                  'Finish paying in your browser. Your minutes appear here on their own.'
-                )}
+                {checkoutUnresolved
+                  ? t(
+                      'credits.checkoutUnresolved',
+                      'If you already paid, your minutes will appear here shortly. Still paying? Finish in your browser.'
+                    )
+                  : t(
+                      'credits.checkoutWaiting',
+                      'Finish paying in your browser. Your minutes appear here on their own.'
+                    )}
               </span>
+              {checkoutUnresolved ? (
+                <button
+                  type="button"
+                  className={freeLink}
+                  onClick={checkPaymentNow}
+                >
+                  {t('credits.checkPaymentNow', 'Check now')}
+                </button>
+              ) : null}
               <button
                 type="button"
                 className={freeLink}
@@ -519,7 +542,7 @@ export default function CreditCard() {
             )}{' '}
             {t(
               'credits.dubbingNote',
-              'Translating with credits adds about 10% per minute; dubbing uses more.'
+              'Adding a translation uses about 10% more minutes; dubbing uses more.'
             )}{' '}
             <button
               type="button"

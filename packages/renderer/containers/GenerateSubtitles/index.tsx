@@ -920,7 +920,8 @@ export default function GenerateSubtitles() {
     >
       <Section
         destination="generate"
-        title={focusedView ? undefined : t('subtitles.generate')}
+        // The first tab below already reads "Generate Subtitles"; a section
+        // title with the same words would only repeat it.
         className={focusedView ? focusedFlatStyles : undefined}
         contentClassName={workflowStageStackStyles}
         noPadding={focusedView}
@@ -928,9 +929,10 @@ export default function GenerateSubtitles() {
       >
         {/* Global confirmations are rendered via <GlobalModals /> */}
 
-        <div
+        <nav
           className={workspaceTabsRowStyles}
           style={focusedView ? { display: 'none' } : undefined}
+          aria-label={t('subtitles.generate', 'Generate Subtitles')}
         >
           {workspaceTabs.map(tab => {
             const isDisabled =
@@ -949,12 +951,15 @@ export default function GenerateSubtitles() {
                   setActiveWorkspaceTab(tab.key);
                 }}
                 disabled={isDisabled}
+                aria-current={
+                  activeWorkspaceTab === tab.key ? 'page' : undefined
+                }
               >
                 {tab.label}
               </button>
             );
           })}
-        </div>
+        </nav>
 
         <div
           style={{
@@ -1245,16 +1250,6 @@ export default function GenerateSubtitles() {
             className={workflowStageShellStyles}
             data-translator-destination="downloads"
           >
-            <div className={workflowStageHeaderStyles}>
-              <div className={workflowStageHeaderRowStyles}>
-                <h3 className={workflowStageTitleStyles}>
-                  {t(
-                    'input.videoSuggestion.downloadHistoryTitle',
-                    'Download history'
-                  )}
-                </h3>
-              </div>
-            </div>
             <div className={workflowStageBodyStyles}>
               {downloadedVideoLibrary.error ? (
                 <ErrorBanner
@@ -1312,13 +1307,6 @@ export default function GenerateSubtitles() {
             className={workflowStageShellStyles}
             data-translator-destination="channels"
           >
-            <div className={workflowStageHeaderStyles}>
-              <div className={workflowStageHeaderRowStyles}>
-                <h3 className={workflowStageTitleStyles}>
-                  {t('input.videoSuggestion.tabChannels', 'Channels')}
-                </h3>
-              </div>
-            </div>
             <div className={workflowStageBodyStyles}>
               {downloadedVideoLibrary.error ? (
                 <ErrorBanner

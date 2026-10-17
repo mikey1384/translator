@@ -27,6 +27,6 @@ export function useTranscriptionBlocker(): string | null {
   if (state.kind !== 'blocked') return null;
   return t(
     'settings.byoPreferences.transcriptionRequiresElevenLabs',
-    'Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses Stage5 credits, which are not used while your API keys are on. Your OpenAI key is still used for translation.'
+    'Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses your Stage5 minutes, which aren’t used while your own keys are on. Your OpenAI key is still used for translation.'
   );
 }

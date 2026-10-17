@@ -26,6 +26,7 @@ import * as SystemIPC from '../../ipc/system';
 import { logButton } from '../../utils/logger';
 import { colors, fonts } from '../../styles';
 import { formatUsd } from '../../utils/formatUsd';
+import { localizeDigits } from '../../utils/formatNumbers';
 
 const card = css`
   display: flex;
@@ -318,7 +319,7 @@ export default function FreePreviewOffer() {
               'freePreview.resumingBody',
               'Picking up at {{time}} and making the rest speak {{language}}…',
               {
-                time: formatClock(preview.coveredSecs),
+                time: localizeDigits(formatClock(preview.coveredSecs)),
                 language: languageName,
                 languageInto,
               }

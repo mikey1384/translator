@@ -64,13 +64,42 @@ const keepSubtitlesStyles = css`
   color: ${colors.textDim};
   line-height: 1.4;
   cursor: pointer;
+  /* Same toggle as the workspace "Edit subtitles" switch, not a native box. */
   input {
+    appearance: none;
     flex: none;
+    position: relative;
+    width: 38px;
+    height: 22px;
+    margin: 0;
+    border-radius: 11px;
+    background: ${colors.grayMedium};
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  input::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    inset-inline-start: 3px;
     width: 16px;
     height: 16px;
-    margin: 2px 0 0;
-    accent-color: ${colors.primary};
-    cursor: pointer;
+    border-radius: 8px;
+    background: ${colors.text};
+    transition: transform 0.15s ease;
+  }
+  input:checked {
+    background: ${colors.primary};
+  }
+  input:checked::after {
+    transform: translateX(16px);
+    background: ${colors.onPrimary};
+  }
+  [dir='rtl'] & input:checked::after {
+    transform: translateX(-16px);
+  }
+  span {
+    padding-top: 1px;
   }
   input:focus-visible {
     outline: 2px solid ${colors.primary};
@@ -321,6 +350,7 @@ export default function GlobalModals() {
           <label className={keepSubtitlesStyles}>
             <input
               type="checkbox"
+              role="switch"
               checked={keepSubtitles}
               onChange={e => setKeepSubtitles(e.target.checked)}
             />

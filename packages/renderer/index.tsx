@@ -112,6 +112,17 @@ function ensureNotoSansLoaded(): void {
       font-family: ${fonts.display};
       letter-spacing: -0.015em;
     }
+    /* Tracking pulls apart scripts whose letters join or stack (Devanagari,
+       Bengali, Tamil, Telugu, Thai, Arabic) and does nothing good for CJK,
+       which also have no case to transform. Keyed on the UI language.
+       Subtitle cues keep their style's tracking so the player matches the
+       export. */
+    :root:is(:lang(hi), :lang(mr), :lang(bn), :lang(ta), :lang(te),
+      :lang(th), :lang(ar), :lang(fa), :lang(ur), :lang(ja), :lang(zh),
+      :lang(ko)) body *:not([data-subtitle-cue], [data-subtitle-cue] *) {
+      letter-spacing: 0 !important;
+      text-transform: none !important;
+    }
   `;
   document.head.appendChild(style);
 }

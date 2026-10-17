@@ -100,10 +100,7 @@ export default function ApiKeyModeToggle() {
             'settings.apiKeyMode.toggleOn',
             'Using your API keys for all AI operations. Stage5 credits will not be used.'
           )
-        : t(
-            'settings.apiKeyMode.toggleOff',
-            'Using Stage5 credits for all AI operations.'
-          )
+        : t('settings.apiKeyMode.toggleOff', 'Now using your Stage5 minutes.')
     );
   };
 
@@ -142,8 +139,14 @@ export default function ApiKeyModeToggle() {
           </span>
           <span className={settingsMetaTextStyles}>
             {useApiKeysMode
-              ? t('settings.apiKeyMode.usingApiKeys', 'Stage5 credits off')
-              : t('settings.apiKeyMode.usingCredits', 'Stage5 credits on')}
+              ? t(
+                  'settings.apiKeyMode.usingApiKeys',
+                  'Your Stage5 minutes aren’t used'
+                )
+              : t(
+                  'settings.apiKeyMode.usingCredits',
+                  'Using your Stage5 minutes'
+                )}
           </span>
         </div>
         <Switch

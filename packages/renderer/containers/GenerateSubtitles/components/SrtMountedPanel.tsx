@@ -94,6 +94,9 @@ export default function SrtMountedPanel({
     if (!pickAnotherLanguage) setPickedLanguage('');
   }, [pickAnotherLanguage]);
   const languageNeeded = pickAnotherLanguage && !pickedLanguage;
+  // The Translate view is about translating: no Dub button or dub warnings
+  // there (Dub has its own view).
+  const showDub = Boolean(onDub) && !pickAnotherLanguage;
   const subtitleDisplayMode = useUIStore(s => s.subtitleDisplayMode);
   const setSubtitleDisplayMode = useUIStore(s => s.setSubtitleDisplayMode);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
@@ -181,7 +184,7 @@ export default function SrtMountedPanel({
       <div className={workflowPanelControlsStyles}>
         <div className={workflowPanelInlineFieldStyles}>
           <label htmlFor="output-language-select">
-            {t('subtitles.outputLanguage')}:
+            {t('subtitles.outputLanguage')}
           </label>
           <select
             id="output-language-select"
@@ -286,57 +289,59 @@ export default function SrtMountedPanel({
             )}
         </div>
 
-        <div className={workflowPanelActionGroupStyles}>
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={onDub}
-            disabled={isDubDisabled}
-            isLoading={isDubbing}
-          >
-            {t('subtitles.dub', 'Dub Voice')}
-          </Button>
-          {dubbingEstimate && !isDubbing && !dubbingEstimate.isByo && (
-            <span
-              className={dubbingCostClassName}
-              title={
-                dubbingEstimate.blockedInApiKeyMode
-                  ? t(
-                      'settings.byoPreferences.dubbingRequiresElevenLabs',
-                      'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
-                    )
-                  : t(
-                      'subtitles.dubCostHintMinutes',
-                      'ElevenLabs voice: ~{{time}} of your minutes per minute of speech. This estimate is shown before dubbing starts.',
-                      {
-                        // The copy carries the "~"; exact avoids "~~".
-                        time: formatCostInMinutes(
-                          TTS_CREDITS_PER_MINUTE.elevenlabs,
-                          { kind: 'exact', locale: i18n.language }
-                        ),
-                      }
-                    )
-              }
+        {showDub ? (
+          <div className={workflowPanelActionGroupStyles}>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={onDub}
+              disabled={isDubDisabled}
+              isLoading={isDubbing}
             >
-              <bdi>
-                {dubbingEstimate.blockedInApiKeyMode
-                  ? 'ElevenLabs'
-                  : formatCostLabel(
-                      dubEstimate?.total ?? dubbingEstimate.estimatedCredits
+              {t('subtitles.dub', 'Dub Voice')}
+            </Button>
+            {dubbingEstimate && !isDubbing && !dubbingEstimate.isByo && (
+              <span
+                className={dubbingCostClassName}
+                title={
+                  dubbingEstimate.blockedInApiKeyMode
+                    ? t(
+                        'settings.byoPreferences.dubbingRequiresElevenLabs',
+                        'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses your Stage5 minutes, which aren’t used while your own keys are on.'
+                      )
+                    : t(
+                        'subtitles.dubCostHintMinutes',
+                        'ElevenLabs voice: ~{{time}} of your minutes per minute of speech. This estimate is shown before dubbing starts.',
+                        {
+                          // The copy carries the "~"; exact avoids "~~".
+                          time: formatCostInMinutes(
+                            TTS_CREDITS_PER_MINUTE.elevenlabs,
+                            { kind: 'exact', locale: i18n.language }
+                          ),
+                        }
+                      )
+                }
+              >
+                <bdi>
+                  {dubbingEstimate.blockedInApiKeyMode
+                    ? 'ElevenLabs'
+                    : formatCostLabel(
+                        dubEstimate?.total ?? dubbingEstimate.estimatedCredits
+                      )}
+                </bdi>
+                {cannotAffordDub ? (
+                  // Its own line, so cost and warning never run together.
+                  <span className={costWarningLineStyles}>
+                    {t(
+                      'subtitles.dubNotEnoughMinutes',
+                      'Not enough minutes left for this dub.'
                     )}
-              </bdi>
-              {cannotAffordDub ? (
-                // Its own line, so cost and warning never run together.
-                <span className={costWarningLineStyles}>
-                  {t(
-                    'subtitles.dubNotEnoughMinutes',
-                    'Not enough minutes left for this dub.'
-                  )}
-                </span>
-              ) : null}
-            </span>
-          )}
-        </div>
+                  </span>
+                ) : null}
+              </span>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );

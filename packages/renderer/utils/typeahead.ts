@@ -4,6 +4,8 @@
  * through the items that start with it ("e" English, "e" Español, …). Each
  * item can be matched by several names (its own name, the name in the UI
  * language, the English name) so a Latin keyboard reaches 日本語 by "ja".
+ * Native keyboards work too: "ع" finds العربية (the article ال is skipped)
+ * and a Korean jamo "ㅎ" or syllable "한" finds 한국어.
  */
 
 export const TYPEAHEAD_RESET_MS = 700;
@@ -13,12 +15,22 @@ export interface TypeaheadItem {
   names: string[];
 }
 
+// NFKD also turns a Korean keyboard's compatibility jamo (ㅎ) into the
+// leading jamo a decomposed syllable starts with (한 → ᄒ ᅡ ᆫ).
 function normalize(text: string): string {
-  return text.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();
+  return text.normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase();
 }
 
+// Arabic-script names usually start with the article: العربية is found by ع.
+const ARABIC_ARTICLE = /^\u0627\u0644(?=\p{L})/u;
+
 function matches(item: TypeaheadItem, prefix: string): boolean {
-  return item.names.some(name => normalize(name).startsWith(prefix));
+  return item.names.some(name => {
+    const text = normalize(name);
+    if (text.startsWith(prefix)) return true;
+    const withoutArticle = text.replace(ARABIC_ARTICLE, '');
+    return withoutArticle !== text && withoutArticle.startsWith(prefix);
+  });
 }
 
 /** The value to make active for `query`, or null when nothing matches. */

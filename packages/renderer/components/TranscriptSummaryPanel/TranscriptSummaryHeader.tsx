@@ -211,11 +211,10 @@ export default function TranscriptSummaryHeader({
             </Button>
           )}
           {summaryEstimate && !isGenerating ? (
-            <span
+            <div
               className={`${summaryEstimateStyles} ${
                 shortOfCredits ? summaryEstimateWarningStyles : ''
               }`}
-              role={shortOfCredits ? 'alert' : undefined}
             >
               {summaryEstimate.isByo ? (
                 t('summary.estimateOwnKey', 'Uses your API key')
@@ -229,7 +228,22 @@ export default function TranscriptSummaryHeader({
                   )}
                 </bdi>
               )}
-            </span>
+              {shortOfCredits ? (
+                // Same as Dub and Translate: the shortfall in words, on its
+                // own line, and only it is announced.
+                <div role="alert">
+                  {view === 'summary'
+                    ? t(
+                        'summary.notEnoughMinutesSummary',
+                        'Not enough minutes left for this summary.'
+                      )
+                    : t(
+                        'summary.notEnoughMinutesHighlights',
+                        'Not enough minutes left to find highlights.'
+                      )}
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>

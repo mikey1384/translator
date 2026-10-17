@@ -126,7 +126,7 @@ export default function ByoUnlockCard() {
       <p className={settingsBodyTextStyles}>
         {t(
           'settings.byoOpenAi.description',
-          'Unlock a one-time upgrade to use your own API keys. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your accounts instead of consuming Stage5 credits.'
+          'A one-time unlock to use your own API keys. Once unlocked, transcription, translation, dubbing and summaries run on your own AI accounts instead of using your Stage5 minutes.'
         )}{' '}
         <button
           onClick={() => {
@@ -146,7 +146,7 @@ export default function ByoUnlockCard() {
         <div className={settingsCalloutBodyStyles}>
           {t(
             'settings.byoOpenAi.economicsBody',
-            'Stage5 credits optimize for convenience (no setup). BYO pays providers directly—usually ~30–50% cheaper depending on your pack.'
+            'Stage5 minutes are the easy option: nothing to set up. With your own keys you pay the AI providers directly, usually about 30–50% less, depending on the pack.'
           )}
         </div>
       </div>
@@ -186,7 +186,7 @@ export default function ByoUnlockCard() {
           <div className={settingsCalloutBodyStyles}>
             {t(
               'settings.byoOpenAi.checkoutOpenHint',
-              'Complete checkout in your browser. We will unlock BYO automatically when payment settles.'
+              'Finish checkout in your browser. Your own keys unlock automatically once the payment goes through.'
             )}{' '}
             <button
               type="button"

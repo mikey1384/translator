@@ -171,6 +171,7 @@ const ALLOWLIST_PATTERNS = [
 
 // Values that are definitely intentional to keep in English
 const EXACT_ALLOWLIST = new Set([
+  'Translator v{{version}}',
   'App',
   'Video',
   'OK',
@@ -307,6 +308,19 @@ function getLocaleName(filename) {
   return localeMap[code] || code;
 }
 
+const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
+
+/** The CLDR plural categories i18next uses for a locale file's language. */
+function pluralCategoriesFor(code) {
+  try {
+    return new Set(
+      new Intl.PluralRules(code).resolvedOptions().pluralCategories
+    );
+  } catch {
+    return new Set(['one', 'other']);
+  }
+}
+
 function main() {
   // Load English (source of truth)
   const enPath = join(__dirname, 'en.json');
@@ -342,15 +356,40 @@ function main() {
     const untranslated = [];
     const tokenMismatches = [];
 
+    // Plural forms follow each language's CLDR categories, not English's:
+    // Japanese has only `_other`, Arabic adds `_zero/_two/_few/_many`.
+    const categories = pluralCategoriesFor(file.replace('.json', ''));
+    const pluralBase = key => {
+      const match = PLURAL_SUFFIX.exec(key);
+      return match ? { base: key.slice(0, match.index), form: match[1] } : null;
+    };
+    const enPluralBases = new Set(
+      [...enKeys.keys()].map(key => pluralBase(key)?.base).filter(Boolean)
+    );
+
     // Check for missing keys
     for (const [key, enValue] of enKeys) {
       if (!localeKeys.has(key)) {
+        const plural = pluralBase(key);
+        // i18next tries the locale's own count-neutral key before English.
+        if (
+          plural &&
+          (!categories.has(plural.form) || localeKeys.has(plural.base))
+        )
+          continue;
         missing.push({ key, enValue });
       }
     }
 
     for (const [key] of localeKeys) {
       if (!enKeys.has(key)) {
+        const plural = pluralBase(key);
+        if (
+          plural &&
+          categories.has(plural.form) &&
+          (enPluralBases.has(plural.base) || enKeys.has(plural.base))
+        )
+          continue;
         extra.push({ key });
       }
     }
@@ -364,11 +403,12 @@ function main() {
       if (!enValue) continue;
       const enTokens = extractTokens(enValue);
       const localeTokens = extractTokens(localeValue);
-      // The renderer passes `languageInto` (the language name in the form a
-      // sentence like "translate into X" needs) wherever it passes
-      // `language` (utils/languageName.ts), so either spelling is fine.
+      // The renderer passes `<name>Into` (a language name in the form a
+      // sentence like "translate into X" needs) wherever it passes a
+      // language `<name>` (`languageInto`, `currentInto`; see
+      // utils/languageName.ts), so either spelling is fine.
       const aliasedTokens = extractTokens(
-        localeValue.replace(/\{\{\s*languageInto\s*\}\}/g, '{{language}}')
+        localeValue.replace(/\{\{\s*(\w+)Into\s*\}\}/g, '{{$1}}')
       );
       // A singular plural form may say "one line" instead of "{{count}}
       // line(s)": dropping a variable there is fine, inventing one is not.

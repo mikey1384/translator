@@ -38,6 +38,48 @@ export function textMatches(
   return re.test(text);
 }
 
+/** How many separate matches `term` has in `text`. */
+export function countMatches(
+  text: string,
+  term: string,
+  options: FindOptions = {}
+): number {
+  const re = buildFindRegex(term, options);
+  if (!re || !text) return 0;
+  let count = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m[0].length === 0) {
+      re.lastIndex++;
+      continue;
+    }
+    count++;
+  }
+  return count;
+}
+
+/**
+ * One entry per match, holding the row it is in: a row with two matches is
+ * listed twice. The find bar counts matches ("2 of 5"), and Next/Previous
+ * step through them in order.
+ */
+export function collectMatchRows(
+  rows: ReadonlyArray<{ original?: string; translation?: string } | undefined>,
+  term: string,
+  options: FindOptions = {}
+): number[] {
+  if (!term.trim()) return [];
+  const out: number[] = [];
+  rows.forEach((row, index) => {
+    if (!row) return;
+    const count =
+      countMatches(row.original || '', term, options) +
+      countMatches(row.translation || '', term, options);
+    for (let i = 0; i < count; i++) out.push(index);
+  });
+  return out;
+}
+
 /** Replace every match (literal replacement: "$" is just a dollar sign). */
 export function replaceMatches(
   text: string,

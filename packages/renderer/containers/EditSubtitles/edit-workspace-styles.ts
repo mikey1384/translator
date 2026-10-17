@@ -92,6 +92,12 @@ export const editorEmptyPrimaryButtonStyles = css`
 export const editorListShellStyles = css`
   display: grid;
   gap: ${spacing.lg};
+
+  /* Narrow windows: the undo bar and scroll-to-top button share a bottom
+     strip; the last line can always scroll clear of it. */
+  @media (max-width: 576px) {
+    padding-bottom: 64px;
+  }
 `;
 
 export const editorListHeaderStyles = css`
@@ -641,6 +647,15 @@ export const subtitleRowTimeErrorStyles = css`
   line-height: ${lineHeight.normal};
 `;
 
+// Accepted but worth a look (e.g. a line overlapping its neighbour).
+export const subtitleRowTimeWarningStyles = css`
+  flex-basis: 100%;
+  margin: 0;
+  color: ${colors.warning};
+  font-size: ${fontSize.sm};
+  line-height: ${lineHeight.normal};
+`;
+
 export const subtitleUndoBarStyles = css`
   position: sticky;
   bottom: ${spacing.md};
@@ -659,4 +674,29 @@ export const subtitleUndoBarStyles = css`
   color: ${colors.text};
   font-size: ${fontSize.sm};
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  > span {
+    min-width: 0;
+  }
+
+  /* Narrow windows: one slim line in the bottom corner strip, beside (not
+     over) the scroll-to-top button, instead of a three-line card in the
+     middle of the text. */
+  @media (max-width: 576px) {
+    position: fixed;
+    bottom: 12px;
+    inset-inline-start: 12px;
+    inset-inline-end: 64px;
+    width: auto;
+    margin: 0;
+    padding-block: 4px;
+    padding-inline: ${spacing.md} 4px;
+    gap: ${spacing.sm};
+
+    > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
 `;

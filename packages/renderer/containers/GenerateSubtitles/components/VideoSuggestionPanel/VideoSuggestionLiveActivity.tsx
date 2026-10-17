@@ -16,6 +16,7 @@ import {
   liveActivityTraceMessageStyles,
   liveActivityTraceStyles,
 } from './VideoSuggestionPanel.styles.js';
+import { formatDurationSeconds } from '../../../../utils/formatUnits';
 
 type VideoSuggestionLiveActivityProps = {
   activeTraceLines: string[];
@@ -53,9 +54,11 @@ function parseTraceLine(line: string): ParsedTraceLine {
   let elapsedLabel: string | null = null;
   let phaseLabel: string | null = null;
 
-  const elapsedMatch = remaining.match(/^(\d+s)\s*·\s*/);
+  // Trace lines start with a machine "12s · " prefix; show it in the UI
+  // language's own unit ("12 秒").
+  const elapsedMatch = remaining.match(/^(\d+)s\s*·\s*/);
   if (elapsedMatch) {
-    elapsedLabel = elapsedMatch[1];
+    elapsedLabel = formatDurationSeconds(Number(elapsedMatch[1]));
     remaining = remaining.slice(elapsedMatch[0].length).trim();
   }
 

@@ -70,6 +70,7 @@ import VideoSuggestionLiveActivity from './VideoSuggestionLiveActivity.js';
 import VideoSuggestionPreferencesForm from './VideoSuggestionPreferencesForm.js';
 import VideoSuggestionResultsTab from './VideoSuggestionResultsTab.js';
 import useVideoSuggestionFlow from './useVideoSuggestionFlow.js';
+import { scrollIntoViewWhenVisible } from '../../../../utils/scrollWhenVisible.js';
 import {
   readLocalVideoSuggestionPrefs,
   writeLocalVideoSuggestionPrefs,
@@ -671,6 +672,8 @@ export default function VideoSuggestionPanel({
   const homeSearchRequest = useVideoSuggestionStore(s => s.homeSearchRequest);
   const panelRef = useRef<HTMLDivElement>(null);
   const focusChatAfterHomeSearchRef = useRef(false);
+  const cancelHomeSearchScrollRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => cancelHomeSearchScrollRef.current?.(), []);
   useEffect(() => {
     if (!homeSearchRequest) return;
     const { id, query } = homeSearchRequest;
@@ -678,22 +681,14 @@ export default function VideoSuggestionPanel({
     setOpen(true);
     focusChatAfterHomeSearchRef.current = true;
     if (query) void runFreeSearch(query);
-    // The workspace panel becomes visible a few frames after home hides;
-    // scroll once it has a layout box, or the scroll is a no-op.
-    let frame = 0;
-    let attempts = 0;
-    const scrollWhenVisible = () => {
-      const panel = panelRef.current;
-      if (panel && panel.getClientRects().length > 0) {
-        panel.scrollIntoView({ block: 'start' });
-        return;
-      }
-      attempts += 1;
-      if (attempts < 60)
-        frame = window.requestAnimationFrame(scrollWhenVisible);
-    };
-    frame = window.requestAnimationFrame(scrollWhenVisible);
-    return () => window.cancelAnimationFrame(frame);
+    // The workspace panel becomes visible some frames after home hides;
+    // scroll once it has a layout box. Clearing the request above re-runs
+    // this effect, so the pending scroll lives in a ref (cancelled only by
+    // the next request or unmount), not in this effect's cleanup.
+    cancelHomeSearchScrollRef.current?.();
+    cancelHomeSearchScrollRef.current = scrollIntoViewWhenVisible(
+      () => panelRef.current
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeSearchRequest]);
   // The chat box is disabled while the search runs; put the cursor there as

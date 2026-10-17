@@ -64,7 +64,7 @@ export default function DubbingVoiceSelector({
   );
   const blockedMessage = t(
     'settings.byoPreferences.dubbingRequiresElevenLabs',
-    'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
+    'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses your Stage5 minutes, which aren’t used while your own keys are on.'
   );
 
   const activeVoices = ELEVENLABS_VOICES;
@@ -111,7 +111,7 @@ export default function DubbingVoiceSelector({
     setPreviewError(null);
     if (previewShortOfCredits) {
       notifyInsufficientCredits({
-        kind: 'dubbing',
+        kind: 'voicePreview',
         transcriptionSeconds: null,
       });
       return;
@@ -157,14 +157,14 @@ export default function DubbingVoiceSelector({
         });
       } else if (result?.error) {
         console.warn('[SettingsPage] Voice preview error:', result.error);
-        if (!notifyIfCreditsRefused(result.error, 'dubbing')) {
+        if (!notifyIfCreditsRefused(result.error, 'dubbing', 'voicePreview')) {
           setPreviewError(previewFailedMessage);
         }
       }
     } catch (err) {
       if (previewTokenRef.current === token) {
         console.warn('[SettingsPage] Voice preview failed:', err);
-        if (!notifyIfCreditsRefused(err as any, 'dubbing')) {
+        if (!notifyIfCreditsRefused(err as any, 'dubbing', 'voicePreview')) {
           setPreviewError(previewFailedMessage);
         }
       }

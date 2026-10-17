@@ -156,7 +156,7 @@
     "transcription": {
       "providerUnavailable": "Transcription (ElevenLabs Scribe) is temporarily unavailable or could not be reached after several attempts. Please try again in a few minutes.",
       "fileTooLarge": "This audio is too long to transcribe in one job (more than about {{hours}} hours). Split the video into shorter parts and transcribe each part.",
-      "elevenLabsKeyRequired": "Transcription uses ElevenLabs Scribe and needs an ElevenLabs API key. Add one in Settings, or turn off API key mode to transcribe with Stage5 credits. Your OpenAI or Anthropic key is still used for translation.",
+      "elevenLabsKeyRequired": "Transcription uses ElevenLabs Scribe and needs an ElevenLabs API key. Add one in Settings, or turn off “Use my API keys” to transcribe with your Stage5 minutes. Your OpenAI or Anthropic key is still used for translation.",
       "fileTooLarge_one": "This audio is too long to transcribe in one job (more than about {{hours}} hour). Split the video into shorter parts and transcribe each part."
     },
     "credits": {
@@ -238,21 +238,21 @@
     "downloading": "Downloading...",
     "selectFile": "Select File",
     "selectVideoFile": "Select Video File",
-    "selectVideoAudioFile": "Select Video / Audio File",
-    "saveOriginalVideo": "Save Original Video",
+    "selectVideoAudioFile": "Select video or audio file",
+    "saveOriginalVideo": "Save original video",
     "localFileDescription": "Upload a video or audio file from your computer",
     "selectLocalFile": "Upload from computer",
     "downloadFromUrl": "Download from web",
     "recentMedia": "Recent files",
     "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
-    "chooseFile": "Choose File",
+    "chooseFile": "Choose file",
     "fileSelected": "File selected",
-    "transcribeOnly": "Transcribe Audio",
-    "srtLoaded": "Transcription Complete",
+    "transcribeOnly": "Transcribe audio",
+    "srtLoaded": "Transcription complete",
     "srtFileLoaded": "SRT Loaded",
     "featuresUnlockAfterTranscription": "Transcribe, translate, or generate highlights from this video.",
     "preSubtitleActionsHint": "Transcribe, translate, or generate highlights from this video.",
-    "saveDubbedVideo": "Save Dubbed Video",
+    "saveDubbedVideo": "Save dubbed video",
     "downloadFinishedSwitchTitle": "Watch downloaded video?",
     "downloadFinishedSwitchPrompt": "Your download is ready. Watch it now, or keep your current video and open it later from history.",
     "downloadFinishedWatchNow": "Watch now",
@@ -442,8 +442,8 @@
       "openOriginalPage": "Open original page",
       "modelPill": "Search AI: {{model}}"
     },
-    "downloadAndTranslate": "Download & Translate",
-    "downloadAndTranscribe": "Download & Transcribe",
+    "downloadAndTranslate": "Download & translate",
+    "downloadAndTranscribe": "Download & transcribe",
     "autoRunLabel": "After download, run to",
     "autoRunStopDownload": "Download",
     "autoRunStopTranscribe": "+ Subtitles",
@@ -471,19 +471,19 @@
     "batchDownloadRunning": "Translator is downloading several videos. Wait for them to finish, or cancel the download."
   },
   "subtitles": {
-    "outputLanguage": "Output Language",
+    "outputLanguage": "Output language",
     "showOriginalText": "Show original text",
-    "displayModeLabel": "Subtitle Display",
+    "displayModeLabel": "Subtitle display",
     "translate": "Translate",
     "continueTranscribing": "Continue transcribing",
-    "generate": "Generate Subtitles",
+    "generate": "Generate subtitles",
     "generating": "Generating...",
     "generateNow": "Generate Subtitles Now",
     "translation": "Translation",
-    "improveTranscription": "Improve Transcription",
-    "improveTranslation": "Improve Translation",
-    "chooseSrtFile": "Choose SRT File",
-    "dub": "Dub Voice",
+    "improveTranscription": "Improve transcription",
+    "improveTranslation": "Improve translation",
+    "chooseSrtFile": "Choose SRT file",
+    "dub": "Dub voice",
     "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
     "dubEstimateByo": "~{{minutes}}m audio",
     "voiceCloningRequiresTranslation": "Voice cloning requires a target language",
@@ -535,7 +535,7 @@
     "estimateByo": "BYO key",
     "highEffortBadge": "(deep)",
     "placeholder": "Your AI summary will appear here once generated.",
-    "insufficientCredits": "Not enough credits to generate highlights.",
+    "insufficientCredits": "Not enough minutes left to find highlights.",
     "error": "We couldn't generate highlights. {{message}}",
     "cancel": "Cancel",
     "copy": "Copy summary",
@@ -588,7 +588,7 @@
     "downloadCombined": "Download Combined Clip",
     "saveCombinedDialogTitle": "Save combined highlight clip",
     "combinedCutFailed": "Failed to cut combined highlights: {{message}}",
-    "highlightsInsufficientCredits": "Summary generated, but highlight extraction stopped because credits ran out.",
+    "highlightsInsufficientCredits": "The summary is done, but finding highlights stopped because your minutes ran out.",
     "highlightsPartialWarning": "Highlight extraction was partial. These highlights may be incomplete. Regenerate to refresh.",
     "highlightsPartialWithReason": "Summary generated, but highlight extraction was partial: {{message}}",
     "estimateOwnKey": "Uses your API key",
@@ -622,7 +622,10 @@
     "highlightCuesChanged": "You edited lines in this highlight after it was found. Check that it still fits.",
     "clipCaptionsChangedAny": "The captions changed since this clip was cut (their text, style or size).",
     "notEnoughForRun": "Not enough minutes left for the summary and highlights.",
-    "clipsUseOriginalAudio": "Clips use the original audio, not the dub."
+    "clipsUseOriginalAudio": "Clips use the original audio, not the dub.",
+    "notEnoughMinutesSummary": "Not enough minutes left for this summary.",
+    "notEnoughMinutesHighlights": "Not enough minutes left to find highlights.",
+    "translateMissingLines": "Translate these lines"
   },
   "panel": {
     "new": "new",
@@ -631,14 +634,14 @@
       "none": "No large gaps detected"
     },
     "confidence": {
-      "title": "Low Confidence",
+      "title": "Low confidence",
       "none": "No low-confidence lines detected",
       "count": "{{count}} lines",
       "count_one": "{{count}} line"
     }
   },
   "editSubtitles": {
-    "title": "Edit Subtitles",
+    "title": "Edit subtitles",
     "listTitle": "Subtitles ({{count}})",
     "workspace": {
       "editorStage": "Editor workspace",
@@ -666,15 +669,15 @@
       "rowsLoaded_one": "{{count}} row loaded"
     },
     "item": {
-      "seek": "Seek",
-      "seekTitle": "Seek video to start time",
+      "seek": "Go to",
+      "seekTitle": "Jump the video to where this line starts",
       "playSnippet": "Play snippet",
       "pauseSnippet": "Pause snippet",
       "insertTitle": "Insert new subtitle block after this one",
       "removeTitle": "Remove this subtitle block",
       "shiftPlaceholder": "Shift (-/+ sec)",
       "shiftTitle": "Shift this subtitle by seconds (+/-)",
-      "applyShift": "Apply Shift",
+      "applyShift": "Apply shift",
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Subtitle text",
       "confirmRemove": "Are you sure you want to remove this subtitle block? This action cannot be undone.",
@@ -684,11 +687,14 @@
       "startTimeAria": "Start time of line {{index}}",
       "endTimeAria": "End time of line {{index}}",
       "splitTitle": "Split this line at the cursor",
-      "mergeTitle": "Merge with the next line"
+      "mergeTitle": "Merge with the next line",
+      "timeOverlapsPrevious": "This line starts before the previous line ends, so both show at once.",
+      "timeOverlapsNext": "This line ends after the next line starts, so both show at once.",
+      "timeOverlapsBoth": "This line overlaps the lines before and after it, so they show at once."
     },
     "header": {
-      "save": "Save Subtitles",
-      "saveAs": "Save Subtitles As...",
+      "save": "Save subtitles",
+      "saveAs": "Save subtitles as...",
       "saveTooltip": "Save changes to original file",
       "saveAsTooltip": "Save As first to enable direct save"
     },
@@ -735,10 +741,10 @@
       "toggleLabel": "Use my API keys",
       "activeKeys": "{{count}} keys ready",
       "noKeys": "No keys configured",
-      "usingApiKeys": "Stage5 credits off",
-      "usingCredits": "Stage5 credits on",
+      "usingApiKeys": "Your Stage5 minutes aren’t used",
+      "usingCredits": "Using your Stage5 minutes",
       "toggleOn": "Now using your API keys.",
-      "toggleOff": "Now using Stage5 credits.",
+      "toggleOff": "Now using your Stage5 minutes.",
       "toggleError": "Failed to update preference.",
       "toggleAria": "Use my API keys",
       "requirementTranslation": "Needs an OpenAI or Anthropic key for translation",
@@ -834,7 +840,7 @@
     },
     "byoOpenAi": {
       "title": "Bring Your Own API Keys",
-      "description": "Unlock a one-time upgrade to use your own API keys. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your accounts instead of consuming Stage5 credits.",
+      "description": "A one-time unlock to use your own API keys. Once unlocked, transcription, translation, dubbing and summaries run on your own AI accounts instead of using your Stage5 minutes.",
       "unlocking": "Opening checkout…",
       "unlockCta": "Unlock for $10",
       "unlockHint": "Once unlocked, add your API keys here at any time to toggle direct billing on your accounts.",
@@ -861,16 +867,16 @@
       "option1Title": "Option 1: OpenAI",
       "option2Title": "Option 2: Anthropic + ElevenLabs",
       "economicsTitle": "Why it's worth it",
-      "economicsBody": "Stage5 credits optimize for convenience (no setup). BYO pays providers directly—usually ~30–50% cheaper depending on your pack.",
+      "economicsBody": "Stage5 minutes are the easy option: nothing to set up. With your own keys you pay the AI providers directly, usually about 30–50% less, depending on the pack.",
       "encryptionUnavailable": "Secure storage is not available on this system. API keys cannot be saved.",
       "checkoutOpen": "Checkout open in browser…",
-      "checkoutOpenHint": "Complete checkout in your browser. We will unlock BYO automatically when payment settles.",
+      "checkoutOpenHint": "Finish checkout in your browser. Your own keys unlock automatically once the payment goes through.",
       "entitlementsLoadFailed": "Your unlock status couldn’t be checked. Check your connection and retry.",
       "unlockFailed": "Checkout couldn’t start. Check your connection and try again."
     },
     "byoPreferences": {
       "title": "Provider Preferences",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Stage5 minutes",
       "pricingHint": "Estimated cost per 1 hour video",
       "pricingHintHeuristic": "Estimated cost using current app heuristics",
       "transcription": "Transcription",
@@ -892,17 +898,17 @@
       "summary": "Summary",
       "dubbing": "Dubbing",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "No BYO video recommendation model is currently available. Enable OpenAI or Anthropic BYO for this feature.",
-      "videoSuggestionModelRequiresOpenAi": "Requires OpenAI BYO unlock, key, and toggle.",
-      "videoSuggestionModelRequiresAnthropic": "Requires Anthropic BYO unlock, key, and toggle.",
-      "summaryRequiresOpenAi": "Requires OpenAI BYO access and API key.",
-      "summaryRequiresAnthropic": "Requires Anthropic BYO access and API key.",
+      "videoSuggestionModelUnavailable": "No video recommendation model is available with your own keys. Turn on your OpenAI or Anthropic key to use this.",
+      "videoSuggestionModelRequiresOpenAi": "Needs the API-key unlock, your OpenAI key, and the OpenAI switch turned on.",
+      "videoSuggestionModelRequiresAnthropic": "Needs the API-key unlock, your Anthropic key, and the Anthropic switch turned on.",
+      "summaryRequiresOpenAi": "Needs the API-key unlock and your OpenAI key.",
+      "summaryRequiresAnthropic": "Needs the API-key unlock and your Anthropic key.",
       "translationReview": "Translation (Review)",
-      "dubbingRequiresElevenLabs": "Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.",
-      "transcriptionRequiresElevenLabs": "Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses Stage5 credits, which are not used while your API keys are on. Your OpenAI key is still used for translation.",
+      "dubbingRequiresElevenLabs": "Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses your Stage5 minutes, which aren’t used while your own keys are on.",
+      "transcriptionRequiresElevenLabs": "Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses your Stage5 minutes, which aren’t used while your own keys are on. Your OpenAI key is still used for translation.",
       "runtimeFallback": "Runtime fallback in API key mode",
-      "videoSuggestionLegacyFollowDraft": "Legacy BYO setting preserved: follows your draft translation model until you choose a direct model.",
-      "videoSuggestionLegacyFollowReview": "Legacy BYO setting preserved: follows your review translation model until you choose a direct model."
+      "videoSuggestionLegacyFollowDraft": "Your earlier setting is kept: this follows your draft translation model until you choose a model here.",
+      "videoSuggestionLegacyFollowReview": "Your earlier setting is kept: this follows your review translation model until you choose a model here."
     },
     "apiKeyGuide": {
       "title": "How to Get API Keys",
@@ -947,7 +953,7 @@
         "step4": "Add a payment method in Subscription settings (required for API usage beyond free tier)",
         "step5": "Copy your API key and paste it in Stage5",
         "note": "Tip: ElevenLabs has a free tier with limited usage. For more, upgrade to a paid plan in your account settings.",
-        "audioDescription": "ElevenLabs powers all transcription (Scribe) and dubbing. Without your own ElevenLabs key, both use Stage5 credits, which are not used while your API keys are on."
+        "audioDescription": "ElevenLabs powers all transcription (Scribe) and dubbing. Without your own ElevenLabs key, both use your Stage5 minutes, which aren’t used while your own keys are on."
       }
     },
     "byoAnthropic": {
@@ -1130,7 +1136,7 @@
       "freeThisMonth": "{{count}} free min this month",
       "freeWelcome": "{{count}} free min",
       "minutes": "{{count}} min of transcription",
-      "title": "Credits and plans",
+      "title": "Your minutes and packs",
       "neutral": "Minutes",
       "welcomePending": "Free minutes on the way",
       "freeTimeThisMonth": "{{time}} free this month",
@@ -1148,7 +1154,7 @@
     "moreMinutesPerDollar": "{{multiplier}}× the minutes per dollar",
     "checkoutWaiting": "Finish paying in your browser. Your minutes appear here on their own.",
     "checkoutNote": "One-time payment through Stripe, in your browser. No account or subscription. Minutes arrive on their own.",
-    "dubbingNote": "Translating with credits adds about 10% per minute; dubbing uses more.",
+    "dubbingNote": "Adding a translation uses about 10% more minutes; dubbing uses more.",
     "iCancelledCheckout": "I cancelled checkout",
     "checkoutStartFailed": "Checkout couldn’t start. Check your connection and try again.",
     "monthlyFreeNote_one": "{{minutes}} free minute every month · next on {{date}}",
@@ -1169,7 +1175,10 @@
     "balanceOffline": "Can’t check your minutes right now",
     "offlineNote": "Translator can’t reach Stage5. Your balance shows again once you’re back online.",
     "microPackLabelNoTime": "Buy minutes — {{price}}",
-    "microPackLabel": "Buy minutes — {{price}} · ≈ {{time}} of video"
+    "microPackLabel": "Buy minutes — {{price}} · ≈ {{time}} of video",
+    "checkingPayment": "Checking your payment…",
+    "checkoutUnresolved": "If you already paid, your minutes will appear here shortly. Still paying? Finish in your browser.",
+    "checkPaymentNow": "Check now"
   },
   "cta": {
     "generate": {
@@ -1197,14 +1206,14 @@
     "mediaPlaybackError": "Media playback error",
     "sideActions": "Video side actions",
     "scrollToCurrentSubtitle": "Scroll to current subtitle",
-    "changeVideo": "Change Video",
+    "changeVideo": "Change video",
     "findVideoWithAi": "Find video with AI",
-    "mountSrt": "Mount SRT",
+    "mountSrt": "Load SRT",
     "changeSrt": "Change SRT",
     "useThisVideo": "Use this video",
     "useDownloadedVideo": "Use this video",
-    "useOriginalAudio": "Use Original Audio",
-    "useDubbedAudio": "Use Dubbed Audio",
+    "useOriginalAudio": "Use original audio",
+    "useDubbedAudio": "Use dubbed audio",
     "changeVideoKeepSubtitles": "Keep the current subtitles on the new video (for another copy of the same video). Uncheck for a different video.",
     "mute": "Mute (M)",
     "unmute": "Unmute (M)",
@@ -1284,7 +1293,7 @@
     "noCredits": "No credits.",
     "rechargeLink": "Recharge →",
     "creditWarning": {
-      "message": "Downloading, editing, exporting, and translating with your own Claude or Codex through Agent Control are free. Transcription needs credits or the API-key unlock in <settingsLink>{{settingsLinkText}}</settingsLink>.",
+      "message": "Downloading, editing, exporting, and translating with your own Claude or Codex through Agent Control are free. Transcription needs minutes or the API-key unlock in <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "Settings"
     },
     "validation": {
@@ -1308,16 +1317,16 @@
       "stepOne": "Step 1",
       "stepTwo": "Step 2",
       "stepThree": "Step 3",
-      "chooseSourceTitle": "Choose Source",
+      "chooseSourceTitle": "Choose source",
       "sourceLoading": "Fetching source",
       "sourceLoadingDescription": "The downloaded source is being prepared for transcription.",
       "localSourceReady": "Local file ready",
       "webSourceReady": "Web source ready",
       "sourceReadyDescription": "Your selected media is ready for the next step.",
       "transcribeTitle": "Process Video",
-      "processVideoTitle": "Process Video",
+      "processVideoTitle": "Process video",
       "transcribeDescription": "Turn the source media into an editable subtitle track before moving on to translation or dubbing.",
-      "translateDubTitle": "Translate Or Dub",
+      "translateDubTitle": "Translate or dub",
       "translateDubDescription": "Your transcript is mounted. Choose the output language, translation mode, or dubbing next.",
       "availableOutputs": "Available files",
       "availableOutputsDescription": "Downloaded and dubbed media remain available here until you save the versions you want to keep.",
@@ -1327,16 +1336,16 @@
     "calculatingCost": "Calculating cost...",
     "notEnoughCredits": "Not enough credits available",
     "welcomeCredits": {
-      "message": "You have free credits to try transcription and translation (about 20 minutes of video)."
+      "message": "You have free minutes to try transcription and translation (about 20 minutes of video)."
     }
   },
   "findBar": {
     "findPlaceholder": "Find in subtitles...",
     "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
+    "replaceAll": "Replace all",
+    "nextMatch": "Next match (Enter)",
+    "previousMatch": "Previous match (Shift+Enter)",
+    "replaceAllTitle": "Replace all matches",
     "closeTitle": "Close (Esc)",
     "nextMatchAria": "Next match",
     "previousMatchAria": "Previous match",
@@ -1345,7 +1354,8 @@
     "matchCount": "{{current}} of {{total}}",
     "matchCase": "Match case",
     "wholeWord": "Whole word",
-    "showReplace": "Replace"
+    "showReplace": "Replace",
+    "noMatches": "No matches"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1364,8 +1374,8 @@
     "unsavedSrtOnTranscribe": {
       "title": "Save current subtitles before transcribing?",
       "message": "You already have subtitles mounted. Transcribing will replace them. What would you like to do?",
-      "saveAndTranscribe": "Save and Transcribe",
-      "discardAndTranscribe": "Discard and Transcribe",
+      "saveAndTranscribe": "Save and transcribe",
+      "discardAndTranscribe": "Discard and transcribe",
       "cancel": "Cancel"
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1376,9 +1386,9 @@
     },
     "downloadInProgress": "Download in Progress",
     "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "transcriptionInProgress": "Transcription in Progress",
-    "translationInProgress": "Translation in Progress",
-    "dubbingInProgress": "Dubbing in Progress",
+    "transcriptionInProgress": "Transcription in progress",
+    "translationInProgress": "Translation in progress",
+    "dubbingInProgress": "Dubbing in progress",
     "dubbingWorking": "Generating dubbed audio…",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again.",
     "cancelSummaryConfirm": "Cancel summary generation?",
@@ -1399,8 +1409,8 @@
       "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
       "openSettings": "Open Settings",
       "ok": "OK",
-      "neverHadTitle": "Transcription needs credits",
-      "neverHadMessage": "Transcription needs credits or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.",
+      "neverHadTitle": "Transcription needs minutes",
+      "neverHadMessage": "Transcription needs minutes or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.",
       "notEnoughTitle": "Not enough credits for this video",
       "notEnoughTranscriptionMessage": "Transcribing this video takes about {{required}} credits. You have {{available}}, enough for about {{minutes}} minutes. Add credits, then start again.",
       "notEnoughMessage": "This task needs more credits than your balance of {{available}}. Add credits to continue.",
@@ -1462,7 +1472,11 @@
         "message": "You’ve used up your minutes. Add more in Settings, then pick up where you left off.",
         "notEnoughTitle": "Not enough minutes for this video",
         "notEnoughTranscriptionMessage": "Transcribing this video needs {{required}}, and you have {{available}} left. Add minutes, then start again.",
-        "notEnoughMessage": "This needs more than the {{available}} you have left. Add minutes to continue."
+        "notEnoughMessage": "This needs more than the {{available}} you have left. Add minutes to continue.",
+        "voicePreview": {
+          "title": "A voice preview needs minutes",
+          "message": "Your minutes don’t cover a voice preview. Add minutes, then try again."
+        }
       }
     },
     "dubCostConfirm": {
@@ -1536,7 +1550,9 @@
     "cancelSummaryTitle": "Stop the summary?",
     "keepSummarizing": "Keep going",
     "stopSummarizing": "Stop",
-    "cancelSummaryBody": "The summary and highlights made so far won't be kept."
+    "cancelSummaryBody": "The summary and highlights made so far won't be kept.",
+    "cancelTranslationBody": "Lines translated so far are kept. You can translate the rest later.",
+    "cancelDubbingTitle": "Stop dubbing?"
   },
   "progress": {
     "preparingVideoExport": "Preparing video export…",
@@ -1750,7 +1766,7 @@
     "moreSummary": "Summary",
     "moreTranslateOther": "Translate to another language",
     "moreChangeVideo": "Change video",
-    "moreMountSrt": "Mount SRT",
+    "moreMountSrt": "Load SRT",
     "moreReplaceSrt": "Load another SRT",
     "moreSaveOriginal": "Save original video",
     "moreAllTools": "All tools",
@@ -1789,7 +1805,8 @@
     "statusLines_one": "{{count}} subtitle line",
     "checkingFile": "Reading the file…",
     "statusLoaded": "{{count}} lines loaded",
-    "statusLoaded_one": "{{count}} line loaded"
+    "statusLoaded_one": "{{count}} line loaded",
+    "interruptedTranslateSubtitles": "Translating these subtitles into {{language}} stopped when Translator closed."
   },
   "subtitleStyles": {
     "Cinema": "Cinema yellow",

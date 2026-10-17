@@ -270,7 +270,7 @@ export default function DubPanel({
               {estimate.blocked ? (
                 t(
                   'settings.byoPreferences.dubbingRequiresElevenLabs',
-                  'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
+                  'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses your Stage5 minutes, which aren’t used while your own keys are on.'
                 )
               ) : estimate.free ? (
                 t('subtitles.dubUsesOwnKeys', 'Uses your own API keys.')

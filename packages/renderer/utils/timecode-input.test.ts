@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseTimecodeInput, validateCueTimeEdit } from './timecode-input';
+import {
+  findCueOverlap,
+  parseTimecodeInput,
+  validateCueTimeEdit,
+} from './timecode-input';
 
 test('parseTimecodeInput reads full SRT times and short forms', () => {
   assert.equal(parseTimecodeInput('00:01:02,500'), 62.5);
@@ -55,5 +59,28 @@ test('validateCueTimeEdit rejects end before start and unreadable input', () => 
   assert.deepEqual(
     validateCueTimeEdit({ field: 'end', input: '0:15', start: 10, end: 12 }),
     { ok: true, seconds: 15 }
+  );
+});
+
+test('findCueOverlap flags a line running into its neighbours', () => {
+  // Line 2 starts at 9 s while line 1 ends at 9.5 s.
+  assert.equal(
+    findCueOverlap({ start: 9, end: 12, previousEnd: 9.5 }),
+    'previous'
+  );
+  assert.equal(findCueOverlap({ start: 9, end: 12, nextStart: 11 }), 'next');
+  assert.equal(
+    findCueOverlap({ start: 9, end: 12, previousEnd: 10, nextStart: 11 }),
+    'both'
+  );
+  // Touching lines and missing neighbours are fine.
+  assert.equal(
+    findCueOverlap({ start: 9.5, end: 11, previousEnd: 9.5, nextStart: 11 }),
+    null
+  );
+  assert.equal(findCueOverlap({ start: 0, end: 1 }), null);
+  assert.equal(
+    findCueOverlap({ start: 9.4996, end: 11, previousEnd: 9.5 }),
+    null
   );
 });

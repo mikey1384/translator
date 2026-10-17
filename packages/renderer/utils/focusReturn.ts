@@ -8,9 +8,6 @@
 import { useLayoutEffect } from 'react';
 import type { RefObject } from 'react';
 
-let lastFocused: HTMLElement | null = null;
-let lastPopupTrigger: HTMLElement | null = null;
-
 const POPUP_SELECTOR = '[role="menu"], [role="listbox"]';
 const OPEN_TRIGGER_SELECTOR = '[aria-haspopup][aria-expanded="true"]';
 
@@ -28,13 +25,53 @@ export function popupTriggerFor(el: Element | null): HTMLElement | null {
   return document.querySelector<HTMLElement>(OPEN_TRIGGER_SELECTOR);
 }
 
+interface FocusRecord {
+  element: HTMLElement;
+  // Resolved when focus arrives, while the popup is still open and its
+  // trigger still reads aria-expanded="true".
+  fallback: HTMLElement | null;
+}
+
+// Most recent last. A few entries, because a dialog may already have pulled
+// focus inside itself (an autoFocus field) by the time it asks for its opener.
+const history: FocusRecord[] = [];
+const HISTORY_SIZE = 8;
+
+/** Exported for tests; the app records through the document listeners below. */
+export function recordFocus(el: HTMLElement): void {
+  const last = history[history.length - 1];
+  const fallback = popupTriggerFor(el);
+  if (last?.element === el) {
+    if (fallback) last.fallback = fallback;
+    return;
+  }
+  history.push({ element: el, fallback });
+  if (history.length > HISTORY_SIZE) history.shift();
+}
+
+/** Exported for tests. */
+export function clearFocusHistory(): void {
+  history.length = 0;
+}
+
 if (typeof document !== 'undefined') {
   document.addEventListener(
     'focusin',
     event => {
-      if (!(event.target instanceof HTMLElement)) return;
-      lastFocused = event.target;
-      lastPopupTrigger = popupTriggerFor(event.target);
+      if (event.target instanceof HTMLElement) recordFocus(event.target);
+    },
+    true
+  );
+  // A click doesn't always move focus (macOS buttons), so a menu item picked
+  // with the mouse is recorded as it is pressed, with its menu's trigger.
+  document.addEventListener(
+    'pointerdown',
+    event => {
+      const target = event.target instanceof Element ? event.target : null;
+      const item = target?.closest<HTMLElement>(
+        '[role="menuitem"], [role="option"], button, a[href]'
+      );
+      if (item) recordFocus(item);
     },
     true
   );
@@ -45,14 +82,35 @@ export interface FocusReturnTarget {
   fallback: HTMLElement | null;
 }
 
-/** Call as a dialog opens, before it moves focus inside itself. */
-export function captureFocusReturnTarget(): FocusReturnTarget {
+/**
+ * Call as a dialog opens. Pass the dialog's own node so focus that already
+ * moved inside it (autoFocus) isn't mistaken for the opener.
+ */
+export function captureFocusReturnTarget(
+  container?: HTMLElement | null
+): FocusReturnTarget {
+  const inside = (el: Element | null) =>
+    Boolean(el && container && container.contains(el));
   const active = document.activeElement;
-  if (active instanceof HTMLElement && active !== document.body) {
-    return { element: active, fallback: popupTriggerFor(active) };
+  if (
+    active instanceof HTMLElement &&
+    active !== document.body &&
+    !inside(active)
+  ) {
+    const last = history[history.length - 1];
+    const fallback =
+      popupTriggerFor(active) ??
+      (last?.element === active ? last.fallback : null);
+    return { element: active, fallback };
   }
-  // The opener already unmounted (a menu closed in the same click).
-  return { element: lastFocused, fallback: lastPopupTrigger };
+  // The opener already unmounted (a menu closed in the same click), or the
+  // dialog took focus first: use the latest focus from outside the dialog.
+  for (let i = history.length - 1; i >= 0; i -= 1) {
+    const record = history[i];
+    if (inside(record.element)) continue;
+    return { element: record.element, fallback: record.fallback };
+  }
+  return { element: null, fallback: null };
 }
 
 function focusable(el: HTMLElement | null): el is HTMLElement {
@@ -96,8 +154,8 @@ export function useReturnFocusWhenClosed(
 ): void {
   useLayoutEffect(() => {
     if (!open) return;
-    const returnTo = captureFocusReturnTarget();
     const container = containerRef?.current ?? null;
+    const returnTo = captureFocusReturnTarget(container);
     return () => {
       window.setTimeout(() => restoreFocus(returnTo, container), 0);
     };

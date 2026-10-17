@@ -1,5 +1,6 @@
 import {
   renderHighlight,
+  HighlightRenderError,
   HIGHLIGHT_RENDER_COMPLETED,
   type HighlightRenderCompletion,
 } from '../../utils/render-highlight';
@@ -46,6 +47,7 @@ import {
 import {
   buildHighlightFilename,
   describeClipCutError,
+  describeClipCutFailure,
   getHighlightKey,
   type HighlightClipCutState,
 } from './TranscriptSummaryPanel.helpers';
@@ -1225,7 +1227,9 @@ export default function useTranscriptHighlightsFlow({
               percent: status === 'ready' ? 100 : clampedPercent,
               // Shown in the clip's own card, in the UI language.
               error: progress.error
-                ? describeClipCutError(new Error(progress.error), t)
+                ? describeClipCutError(new Error(progress.error), t, {
+                    sourceMissingConfirmed: false,
+                  })
                 : undefined,
               operationId: progress.operationId,
             },
@@ -1271,7 +1275,9 @@ export default function useTranscriptHighlightsFlow({
           setError(
             t('summary.cutHighlightFailed', {
               defaultValue: "Couldn't cut the clip: {{message}}",
-              message: describeClipCutError(new Error(progress.error), t),
+              message: describeClipCutError(new Error(progress.error), t, {
+                sourceMissingConfirmed: false,
+              }),
             })
           );
         }
@@ -1485,14 +1491,20 @@ export default function useTranscriptHighlightsFlow({
         }
       } catch (err: any) {
         console.error('[TranscriptSummaryPanel] cut highlight failed', err);
-        const friendlyMessage = describeClipCutError(err, t);
+        const friendlyMessage = await describeClipCutFailure(err, t, videoPath);
         if (
           currentArtifactSourceIdentityRef.current === operationSourceIdentity
         ) {
           // Shown once, in the clip's card.
           setHighlightCutState(prev => ({
             ...prev,
-            [stateKey]: { status: 'error', percent: 0, error: friendlyMessage },
+            [stateKey]: {
+              status: 'error',
+              percent: 0,
+              error: friendlyMessage,
+              errorCode:
+                err instanceof HighlightRenderError ? err.code : undefined,
+            },
           }));
         }
       } finally {
@@ -1725,7 +1737,7 @@ export default function useTranscriptHighlightsFlow({
       }
     } catch (err: any) {
       console.error('[TranscriptSummaryPanel] cut combined failed', err);
-      const friendlyMessage = describeClipCutError(err, t);
+      const friendlyMessage = await describeClipCutFailure(err, t, videoPath);
       if (
         combineCutStateRef.current.operationId === operationId &&
         currentArtifactSourceIdentityRef.current === operationSourceIdentity
@@ -1930,7 +1942,8 @@ export default function useTranscriptHighlightsFlow({
       if (progress.error) {
         const friendlyError = describeClipCutError(
           new Error(progress.error),
-          t
+          t,
+          { sourceMissingConfirmed: false }
         );
         setError(
           t('summary.combinedCutFailed', {

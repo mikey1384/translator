@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { SubtitleDisplayMode } from '@shared-types/app';
 import { useSubStore, useUIStore } from '../state';
 import { logButton } from '../utils/logger';
+import { formatUiInteger } from '../utils/formatNumbers';
 import {
   lookSegmentStyles,
   lookValueStyles,
@@ -132,17 +133,21 @@ export function SubtitleSizeStepper() {
       <button
         type="button"
         aria-label={`${label} −`}
+        // "A−"/"A+" is a glyph, not text: keep its order in RTL UIs.
+        dir="ltr"
         disabled={size <= FONT_SIZE_RANGE.min}
         onClick={() => nudge(-1)}
       >
         <span style={{ fontSize: '0.78em' }}>A</span>−
       </button>
       <span className={lookValueStyles} aria-live="polite">
-        {size}
+        {formatUiInteger(size)}
       </span>
       <button
         type="button"
         aria-label={`${label} +`}
+        // "A−"/"A+" is a glyph, not text: keep its order in RTL UIs.
+        dir="ltr"
         disabled={size >= FONT_SIZE_RANGE.max}
         onClick={() => nudge(1)}
       >

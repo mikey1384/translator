@@ -8,7 +8,18 @@ import type {
 } from '@shared-types/app';
 import { Scissors } from 'lucide-react';
 import Button from '../Button';
-import { useVideoStore } from '../../state';
+import { formatUiInteger } from '../../utils/formatNumbers';
+import {
+  useSubStore,
+  useTaskStore,
+  useUIStore,
+  useVideoStore,
+} from '../../state';
+import { mapUiLanguageToTargetLanguage } from '../../state/ui-store';
+import { detectTextLanguage } from '../../utils/detectTextLanguage';
+import { translateMissingUntranslated } from '../../utils/translateMissing';
+import { persistMountedTranslation } from '../../containers/GenerateSubtitles/utils/subtitleGeneration';
+import { logButton } from '../../utils/logger';
 import HighlightEditorialEditor from './HighlightEditorialEditor';
 import {
   formatClipLength,
@@ -191,6 +202,70 @@ function StaleClipNote({
         </Button>
       ) : null}
     </div>
+  );
+}
+
+/** True while some line has text but no translation yet. */
+function useHasUntranslatedLines(): boolean {
+  return useSubStore(s =>
+    s.order.some(id => {
+      const seg = s.segments[id];
+      return Boolean(seg?.original?.trim()) && !seg?.translation?.trim();
+    })
+  );
+}
+
+/**
+ * Translate the lines that have none yet (the same run as the workspace's
+ * "Translate missing lines"), into the language the other lines are in.
+ */
+async function translateUntranslatedLines(uiLanguage: string): Promise<void> {
+  const { order, segments } = useSubStore.getState();
+  const translations = order
+    .map(id => segments[id]?.translation ?? '')
+    .filter(text => text.trim());
+  const target = useUIStore.getState().targetLanguage;
+  const language =
+    detectTextLanguage(translations) ??
+    (target && target !== 'original'
+      ? target
+      : mapUiLanguageToTargetLanguage(uiLanguage));
+  useUIStore.getState().setTargetLanguage(language);
+  const ok = await translateMissingUntranslated();
+  if (ok) await persistMountedTranslation(language);
+}
+
+/**
+ * A clip that couldn't be cut because some of its lines aren't translated:
+ * the error plus the fix, one click away. Both go once the lines are in.
+ */
+function UntranslatedClipError({
+  message,
+  t,
+}: {
+  message: string;
+  t: TFunction;
+}) {
+  const { i18n } = useTranslation();
+  const hasUntranslated = useHasUntranslatedLines();
+  const translating = useTaskStore(s => Boolean(s.translation.inProgress));
+  if (!hasUntranslated) return null;
+  return (
+    <>
+      <span className={highlightStatusError}>{message}</span>
+      <Button
+        variant="secondary"
+        size="sm"
+        isLoading={translating}
+        disabled={translating}
+        onClick={() => {
+          logButton('highlight_translate_missing_lines');
+          void translateUntranslatedLines(i18n.language);
+        }}
+      >
+        {t('summary.translateMissingLines', 'Translate these lines')}
+      </Button>
+    </>
   );
 }
 
@@ -405,7 +480,9 @@ export default function TranscriptSummaryHighlightsTab({
                   }}
                   className={reorderItemStyles}
                 >
-                  <span className={reorderIndexStyles}>{index + 1}.</span>
+                  <span className={reorderIndexStyles}>
+                    {formatUiInteger(index + 1)}.
+                  </span>
                   <span className={reorderTitleStyles}>
                     {highlight.title || t('summary.highlight', 'Highlight')}
                   </span>
@@ -531,6 +608,7 @@ export default function TranscriptSummaryHighlightsTab({
                   ? 100
                   : 0;
             const cutError = cutState?.error;
+            const cutErrorUntranslated = cutState?.errorCode === 'untranslated';
             const clipCutting = isHighlightCutting(highlight);
             const cutDisabled =
               clipCutting ||
@@ -565,6 +643,12 @@ export default function TranscriptSummaryHighlightsTab({
                     />
                   </div>
                 </div>
+
+                {/* Right under the title in every state, so cutting a clip
+                    doesn't move it. */}
+                {highlight.description ? (
+                  <div className={highlightDesc}>{highlight.description}</div>
+                ) : null}
 
                 <div className={highlightFormatRowStyles}>
                   <span className={aspectModeLabelStyles}>
@@ -606,7 +690,11 @@ export default function TranscriptSummaryHighlightsTab({
                       </div>
                     ) : null}
                     {cutError ? (
-                      <span className={highlightStatusError}>{cutError}</span>
+                      cutErrorUntranslated ? (
+                        <UntranslatedClipError message={cutError} t={t} />
+                      ) : (
+                        <span className={highlightStatusError}>{cutError}</span>
+                      )
                     ) : null}
                     <video
                       className={highlightVideo}
@@ -641,7 +729,11 @@ export default function TranscriptSummaryHighlightsTab({
                     ) : null}
 
                     {cutError ? (
-                      <span className={highlightStatusError}>{cutError}</span>
+                      cutErrorUntranslated ? (
+                        <UntranslatedClipError message={cutError} t={t} />
+                      ) : (
+                        <span className={highlightStatusError}>{cutError}</span>
+                      )
                     ) : null}
 
                     {!videoAvailableForHighlights ? (
@@ -654,10 +746,6 @@ export default function TranscriptSummaryHighlightsTab({
                     ) : null}
                   </div>
                 )}
-
-                {highlight.description ? (
-                  <div className={highlightDesc}>{highlight.description}</div>
-                ) : null}
 
                 {highlight.cuesChanged ? (
                   <p className={highlightCuesChangedStyles} role="note">

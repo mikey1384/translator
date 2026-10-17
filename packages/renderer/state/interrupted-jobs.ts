@@ -152,10 +152,26 @@ function jobStarted(kind: InterruptedJobKind): void {
   const language =
     (workflow.kind === 'translate' && workflow.language) ||
     useUIStore.getState().targetLanguage;
+  // "Make it speak" runs as a translate workflow from the video; any other
+  // translation works on the lines already on screen.
+  const origin =
+    kind === 'translate'
+      ? workflow.kind === 'translate'
+        ? 'video'
+        : 'subtitles'
+      : undefined;
   // A new run for this source replaces any leftover record and notice.
   apply({
     type: 'start',
-    record: { key, kind, language, startedAt: now, aliveAt: now, owner },
+    record: {
+      key,
+      kind,
+      language,
+      startedAt: now,
+      aliveAt: now,
+      owner,
+      ...(origin ? { origin } : {}),
+    },
   });
   useInterruptedJobsStore.getState().dismiss(key);
   syncHeartbeat();

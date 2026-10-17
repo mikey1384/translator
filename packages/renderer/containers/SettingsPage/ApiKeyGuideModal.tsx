@@ -237,7 +237,7 @@ export default function ApiKeyGuideModal({ open, onClose, provider }: Props) {
           title={t('settings.apiKeyGuide.providers.elevenlabs', 'ElevenLabs')}
           description={t(
             'settings.apiKeyGuide.elevenlabs.audioDescription',
-            'ElevenLabs powers all transcription (Scribe) and dubbing. Without your own ElevenLabs key, both use Stage5 credits, which are not used while your API keys are on.'
+            'ElevenLabs powers all transcription (Scribe) and dubbing. Without your own ElevenLabs key, both use your Stage5 minutes, which aren’t used while your own keys are on.'
           )}
         >
           <ol className={cx(modalGuideListStyles, listSpacingStyles)}>

@@ -18,6 +18,11 @@ export interface RunningJobRecord {
   session?: string;
   /** The subtitles that were on screen when a translation started. */
   documentId?: string | null;
+  /**
+   * What a translation started from: the video ("Make it speak", which
+   * transcribes first) or subtitles already on screen. Older records lack it.
+   */
+  origin?: 'video' | 'subtitles';
 }
 
 export type RunningJobOp =

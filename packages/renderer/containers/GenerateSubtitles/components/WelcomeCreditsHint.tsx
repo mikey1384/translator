@@ -32,7 +32,7 @@ export default function WelcomeCreditsHint() {
     >
       {t(
         'generateSubtitles.welcomeCredits.message',
-        'You have free credits to try transcription and translation (about 20 minutes of video).'
+        'You have free minutes to try transcription and translation (about 20 minutes of video).'
       )}
     </Alert>
   );

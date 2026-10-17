@@ -29,7 +29,7 @@ export default function EditHeaderTranslateBar({
   return (
     <div className={editorTranslateBarStyles}>
       <label className={editorTranslateLabelStyles}>
-        {t('subtitles.outputLanguage')}:
+        {t('subtitles.outputLanguage')}
       </label>
       <select
         className={editorTranslateSelectStyles}
