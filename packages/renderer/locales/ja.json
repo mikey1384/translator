@@ -3,8 +3,8 @@
     "cancel": "キャンセル",
     "save": "保存",
     "or": "または",
-    "saving": "保存中...",
-    "validating": "検証中...",
+    "saving": "保存中…",
+    "validating": "検証中…",
     "delete": "削除",
     "confirm": "確認",
     "apply": "適用",
@@ -16,14 +16,13 @@
     "done": "完了",
     "gotIt": "了解",
     "close": "閉じる",
-    "loading": "読み込み中...",
+    "loading": "読み込み中…",
     "error": {
       "unexpected": "予期しないエラーが発生しました。",
       "unexpectedRemove": "削除中に予期しないエラーが発生しました。",
       "unexpectedSave": "保存中に予期しないエラーが発生しました。",
       "unexpectedLoad": "読み込み中に予期しないエラーが発生しました。",
       "renderFailed": "レンダリングに失敗しました",
-      "creditReservationFailed": "クレジット予約に失敗しました",
       "invalidRenderOptions": "無効なレンダリングオプションが提供されました",
       "missingVideoMetadata": "動画メタデータが不足しています ({{missing}})",
       "insufficientDiskSpace": "動画の書き出しに必要なディスク容量が足りません。空き容量を確保してから、もう一度お試しください。",
@@ -63,7 +62,7 @@
     "checkForUpdateNow": "アップデートを確認",
     "clear": "クリア",
     "currentVersionLabel": "現在のバージョン",
-    "downloadingUpdate": "アップデートをダウンロード中...",
+    "downloadingUpdate": "アップデートをダウンロード中…",
     "downloadingUpdateProgress": "アップデートをダウンロード中 {{percent}}%",
     "downloadingUpdateShort": "ダウンロード中",
     "downloadUpdateNow": "アップデートをダウンロード",
@@ -98,7 +97,7 @@
     "send": "送信",
     "dismiss": "閉じる",
     "moreActions": "その他の操作",
-    "installingUpdate": "アップデートをインストール中...",
+    "installingUpdate": "アップデートをインストール中…",
     "installingUpdateShort": "インストール中",
     "ok": "OK",
     "minimumVersionValue": "最低対応バージョン：v{{version}}",
@@ -126,7 +125,6 @@
     "unexpectedSave": "保存中に予期しないエラーが発生しました。",
     "unexpectedLoad": "読み込み中に予期しないエラーが発生しました。",
     "renderFailed": "レンダリングに失敗しました",
-    "creditReservationFailed": "クレジットの予約に失敗しました",
     "invalidRenderOptions": "無効なレンダリングオプションが指定されました",
     "missingVideoMetadata": "動画メタデータがありません（{{missing}}）",
     "noSourceVideo": "ソース動画がありません",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "文字起こし（ElevenLabs Scribe）が一時的に利用できないか、数回試行しても接続できませんでした。数分後にもう一度お試しください。",
       "fileTooLarge": "この音声は長すぎるため、1回のジョブで文字起こしできません（約 {{hours}} 時間を超えています）。動画を短いパートに分割し、各パートを文字起こししてください。",
-      "elevenLabsKeyRequired": "文字起こしには ElevenLabs Scribe を使用するため、ElevenLabs の API キーが必要です。設定でキーを追加するか、API キーモードをオフにして Stage5 クレジットで文字起こししてください。OpenAI または Anthropic のキーは引き続き翻訳に使用されます。"
+      "elevenLabsKeyRequired": "文字起こしには ElevenLabs Scribe を使用するため、ElevenLabs の API キーが必要です。設定でキーを追加するか、「自分のAPIキーを使用」をオフにして、Stage5の時間で文字起こししてください。OpenAI または Anthropic のキーは引き続き翻訳に使用されます。"
     },
     "credits": {
       "transcription": "残り時間が足りないため、文字起こしできません。",
@@ -218,7 +216,7 @@
   },
   "input": {
     "connect": "接続",
-    "connecting": "接続中...",
+    "connecting": "接続中…",
     "connectTip": "ヒント：接続ウィンドウでサインインまたは認証を完了し、ウィンドウを閉じて続行してください。",
     "fromDevice": "デバイスから",
     "fromWeb": "ウェブから",
@@ -234,7 +232,7 @@
     "qualityHigh": "高画質",
     "qualityMedium": "中画質",
     "qualityLow": "低画質",
-    "downloading": "ダウンロード中...",
+    "downloading": "ダウンロード中…",
     "selectFile": "ファイルを選択",
     "selectVideoFile": "動画ファイルを選択",
     "selectVideoAudioFile": "動画/音声ファイルを選択",
@@ -271,7 +269,7 @@
       "composerHint": "どの言語でも可",
       "composerMeta": "Enterで検索",
       "placeholder": "例: 夜の静かな日本の街歩き",
-      "thinking": "考え中...",
+      "thinking": "考え中…",
       "resultsFor": "検索結果:",
       "downloadThis": "ダウンロード",
       "failedToStart": "提案を開始できませんでした",
@@ -346,11 +344,11 @@
       "activityComplete": "検索アクティビティが完了しました。",
       "nextActionHint": "動画を選んで、ダウンロードするか元リンクを開いてください。",
       "stagePending": "保留中",
-      "stageRunning": "実行中...",
+      "stageRunning": "実行中…",
       "stageCleared": "完了",
       "searchQueryLabel": "検索キーワード",
       "searchMore": "さらに検索",
-      "searchMoreLoading": "さらに検索中...",
+      "searchMoreLoading": "さらに検索中…",
       "resetChat": "チャットをリセット",
       "useLastSearch": "前回の設定を使う",
       "showFollowUps": "おすすめの続き",
@@ -411,7 +409,7 @@
       "savedPreferencesCount": "{{count}} 件の保存済み設定",
       "searchingLong": "まだ動画を検索しています…",
       "searchingVeryLong": "通常より時間がかかっていますが、まだ処理中です。",
-      "stillWorking": "まだ処理中...",
+      "stillWorking": "まだ処理中…",
       "toggleCopy": "ワークフローを離れずにYouTubeでソース動画を検索します。",
       "stage": {
         "answerer": "要望を整理",
@@ -475,23 +473,19 @@
     "translate": "翻訳",
     "continueTranscribing": "文字起こしを続行",
     "generate": "字幕を生成",
-    "generating": "生成中...",
+    "generating": "生成中…",
     "generateNow": "今すぐ字幕を生成",
     "translation": "翻訳",
     "improveTranscription": "文字起こしを改善",
     "improveTranslation": "翻訳を改善",
     "chooseSrtFile": "SRTファイルを選択",
     "dub": "吹き替え音声を生成",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}分)",
     "dubEstimateByo": "~{{minutes}}分の音声",
     "voiceCloningRequiresTranslation": "ボイスクローニングには翻訳先言語が必要です",
     "translateEstimateCredits": "~{{minutes}}分の動画",
-    "translateEstimateByo": "BYOキー",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "字幕翻訳プロセスをキャンセルしてもよろしいですか？進行状況は失われ、最初からやり直す必要があります。",
-    "dubCostHint": "ElevenLabsの音声：発話1分あたり約{{rate}}クレジット。この見積もりは吹き替え開始前に表示されます。",
     "unreadableCues": "このファイルの{{count}}行を読み取れなかったため、除外しました。タイムコードを確認してください。",
-    "addCreditsToTranslate": "クレジットを追加して翻訳",
     "dubInto": "{{language}}で吹き替え",
     "dubIntro": "選んだ言語の音声で字幕を読み上げ、元の背景音に重ねます。",
     "dubNeedsSubtitles": "吹き替えは字幕を読み上げるため、まずこの動画に字幕が必要です。文字起こししてから、ここで声を選んでください。",
@@ -500,8 +494,6 @@
     "dubTranslatesFirst": "字幕を{{language}}に翻訳してから、音声にします。",
     "dubCostWithTranslation": "翻訳と音声：{{cost}}",
     "dubUsesOwnKeys": "ご自身のAPIキーを使用します。",
-    "dubNotEnoughCredits": "この吹き替えにはクレジットが足りません。",
-    "addCreditsToDub": "クレジットを追加して吹き替え",
     "noSubtitlesToDub": "先にこの動画の字幕を作成するか開いてから、吹き替えてください。",
     "noSubtitlesToTranslate": "先に字幕を開くか作成してから、翻訳してください。",
     "dubVoiceHelp": "この吹き替えに使う声です。次回の吹き替えでもこの声が選ばれます。",
@@ -514,7 +506,7 @@
       "openPermission": "Translatorにはそのファイルを読み込む権限がありません。ファイルのアクセス権を確認するか、別のフォルダーにコピーしてから、もう一度お試しください。",
       "openMissing": "その字幕ファイルが見つかりません。移動または削除された可能性があります。",
       "openFailed": "Translatorでその字幕ファイルを開けませんでした。.srt ファイルであることを確認して、もう一度お試しください。",
-      "saveFailed": "Translatorで字幕を保存できませんでした。もう一度試すか、「字幕に名前を付けて保存...」で別のフォルダーを選んでください。"
+      "saveFailed": "Translatorで字幕を保存できませんでした。もう一度試すか、「字幕に名前を付けて保存…」で別のフォルダーを選んでください。"
     }
   },
   "summary": {
@@ -528,11 +520,9 @@
     },
     "generate": "ハイライトを作成",
     "regenerate": "ハイライトを作り直す",
-    "estimateCredits": "{{credits}} クレジット",
-    "estimateByo": "BYOキー",
     "highEffortBadge": "(詳細)",
     "placeholder": "生成が完了すると、AIによる要約がここに表示されます。",
-    "insufficientCredits": "残り時間が足りないため、ハイライトを作成できません。",
+    "insufficientCredits": "ハイライトを探すには残り時間が足りません。",
     "error": "ハイライトを作成できませんでした。{{message}}",
     "cancel": "キャンセル",
     "copy": "要約をコピー",
@@ -580,12 +570,12 @@
     "exitCombineMode": "結合を終了",
     "reorderHint": "ドラッグして並べ替え：",
     "cutCombined": "結合して切り出し",
-    "cuttingCombined": "切り出し中...",
+    "cuttingCombined": "切り出し中…",
     "combinedHighlightReady": "結合したハイライトの準備完了",
     "downloadCombined": "結合クリップをダウンロード",
     "saveCombinedDialogTitle": "結合したハイライトクリップを保存",
     "combinedCutFailed": "結合ハイライトの切り出しに失敗しました: {{message}}",
-    "highlightsInsufficientCredits": "要約はできましたが、残り時間が足りなくなったため、ハイライトの抽出が止まりました。",
+    "highlightsInsufficientCredits": "要約は完了しましたが、残り時間がなくなったため、ハイライト探しが途中で止まりました。",
     "highlightsPartialWarning": "ハイライトの抽出は一部のみでした。不完全な可能性があります。再生成して更新してください。",
     "highlightsPartialWithReason": "要約は生成されましたが、ハイライトの抽出は一部のみでした：{{message}}",
     "estimateOwnKey": "ご自身のAPIキーを使用",
@@ -619,7 +609,10 @@
     "highlightCuesChanged": "このハイライトが見つかった後に行が編集されています。内容がまだ合っているか確認してください。",
     "clipCaptionsChangedAny": "このクリップを切り出した後に、字幕（テキスト、スタイル、サイズ）が変更されています。",
     "notEnoughForRun": "要約とハイライトには残り時間が足りません。",
-    "clipsUseOriginalAudio": "クリップには吹き替えではなく、元の音声が使われます。"
+    "clipsUseOriginalAudio": "クリップには吹き替えではなく、元の音声が使われます。",
+    "notEnoughMinutesSummary": "この要約には残り時間が足りません。",
+    "notEnoughMinutesHighlights": "ハイライトを探すには残り時間が足りません。",
+    "translateMissingLines": "これらの行を翻訳"
   },
   "panel": {
     "new": "新規",
@@ -661,8 +654,8 @@
       "highlightEditingLocked": "ハイライト生成中のため編集はロックされています"
     },
     "item": {
-      "seek": "シーク",
-      "seekTitle": "動画を開始時間に移動",
+      "seek": "移動",
+      "seekTitle": "動画をこの行の開始位置に移動",
       "playSnippet": "部分再生",
       "pauseSnippet": "部分停止",
       "insertTitle": "この後に新しい字幕ブロックを挿入",
@@ -679,11 +672,14 @@
       "startTimeAria": "{{index}}行目の開始時間",
       "endTimeAria": "{{index}}行目の終了時間",
       "splitTitle": "カーソルの位置でこの行を分割",
-      "mergeTitle": "次の行と結合"
+      "mergeTitle": "次の行と結合",
+      "timeOverlapsPrevious": "この行は前の行が終わる前に始まるため、両方が同時に表示されます。",
+      "timeOverlapsNext": "この行は次の行が始まった後に終わるため、両方が同時に表示されます。",
+      "timeOverlapsBoth": "この行は前後の行と重なっているため、同時に表示されます。"
     },
     "header": {
       "save": "字幕を保存",
-      "saveAs": "字幕に名前を付けて保存...",
+      "saveAs": "字幕に名前を付けて保存…",
       "saveTooltip": "変更を元のファイルに保存",
       "saveAsTooltip": "直接保存を有効にするには、まず名前を付けて保存してください"
     },
@@ -691,7 +687,7 @@
       "fontSizeLabel": "フォントサイズ:",
       "styleLabel": "スタイル:",
       "mergeButton": "字幕を結合",
-      "mergingButton": "結合中..."
+      "mergingButton": "結合中…"
     },
     "undo": {
       "removed": "行を削除しました。",
@@ -730,15 +726,14 @@
       "toggleLabel": "自分のAPIキーを使用",
       "activeKeys": "{{count}}個のキーを利用可能",
       "noKeys": "キーが設定されていません",
-      "usingApiKeys": "Stage5クレジットオフ",
-      "usingCredits": "Stage5クレジット使用中",
+      "usingApiKeys": "Stage5の時間は使われません",
+      "usingCredits": "Stage5の時間を使用中",
       "toggleOn": "APIキーを使用中です。",
-      "toggleOff": "Stage5クレジットを使用中です。",
+      "toggleOff": "Stage5の時間を使用中です。",
       "toggleError": "設定の更新に失敗しました。",
       "toggleAria": "自分のAPIキーを使用",
       "requirementTranslation": "翻訳には OpenAI または Anthropic のキーが必要です"
     },
-    "creditsDescription": "クレジットを購入してください。表示される時間は、文字起こしまたは翻訳できる動画の合計再生時間の目安です。例：3時間の動画を文字起こしして翻訳すると、約6時間（約140,000クレジット）を消費します。",
     "performanceQuality": {
       "title": "パフォーマンスと品質",
       "qualityTranslation": {
@@ -748,32 +743,15 @@
         "modelOff": "Claude Haiku 5.5ドラフトのみ",
         "reviewProvider": "レビュー提供元",
         "openAiHighEnd": "OpenAI 上位レビュー",
-        "anthropicHighEnd": "Anthropic 上位レビュー",
-        "help": "<b>5×クレジット</b> • レビュー工程を加えて品質を高めます",
-        "helpWithEstimate": "<b>5×クレジット</b> • 残高：約{{normalTime}}（通常）/ 約{{hqTime}}（高品質）",
-        "helpOn": "<b>5×クレジット</b> • Claude Haiku 5.5 で下書き + Claude Opus 5.5 でレビュー",
-        "helpOff": "<b>1×クレジット</b> • Claude Haiku 5.5 の下書きのみ",
-        "helpWithEstimateOn": "<b>5×クレジット</b> • Claude Haiku 5.5 で下書き + Claude Opus 5.5 でレビュー • 残高：約{{time}}",
-        "helpWithEstimateOff": "<b>1×クレジット</b> • Claude Haiku 5.5 の下書きのみ • 残高：約{{time}}"
+        "anthropicHighEnd": "Anthropic 上位レビュー"
       },
       "qualitySummary": {
         "label": "高品質の要約",
         "modelOn": "Claude Opus 5.5詳細分析 + ハイライトクリップ",
-        "modelOff": "Claude Sonnet 5.5標準分析",
-        "help": "オン: Claude Opus 5.5で詳細分析+ハイライトクリップ（約4×クレジット）。オフ: Claude Sonnet 5.5で高速分析。",
-        "helpWithEstimate": "<b>4×クレジット</b> • 残高：約{{normalTime}}（通常）/ 約{{hqTime}}（高品質）",
-        "helpOn": "<b>4×クレジット</b> • Claude Opus 5.5 による詳細分析 + ハイライトクリップ",
-        "helpOff": "Claude Sonnet 5.5で高速分析",
-        "helpWithEstimateOn": "<b>4×クレジット</b> • Claude Opus 5.5 による詳細分析 + ハイライトクリップ • 残高：約{{time}}",
-        "helpWithEstimateOff": "Claude Sonnet 5.5で高速分析 • 残高: ~{{time}}"
+        "modelOff": "Claude Sonnet 5.5標準分析"
       },
       "qualityDubbing": {
-        "label": "高品質の吹き替え",
-        "modelOn": "ElevenLabs TTS プレミアム音声",
-        "help": "オン: ElevenLabs TTS（プレミアム音声、約12×クレジット）。オフ: OpenAI TTS（良好な品質）。",
-        "helpWithEstimate": "ElevenLabs TTS（約12×クレジット）。あなたのクレジット：~{{normalTime}}通常、~{{hqTime}}高品質。",
-        "helpOn": "<b>{{ratio}}×クレジット</b> • ElevenLabs TTS のプレミアム音声",
-        "helpWithEstimateOn": "<b>{{ratio}}×クレジット</b> • ElevenLabs TTS のプレミアム音声 • 残高: ~{{time}}"
+        "modelOn": "ElevenLabs TTS プレミアム音声"
       },
       "videoSuggestionModel": {
         "label": "動画提案モデル",
@@ -782,9 +760,6 @@
         "quality": "高品質（翻訳の高品質と同じ）"
       },
       "rate": {
-        "perHour": "~{{credits}} クレジット/時間",
-        "perMinute": "~{{credits}} クレジット/分",
-        "perSearch": "~{{credits}} クレジット/検索",
         "balance": "残高: ~{{time}}",
         "minutesPerHour": "動画1時間あたり残り時間を約{{time}}使用",
         "minutesPerDubMinute": "吹き替え1分あたり残り時間を約{{time}}使用",
@@ -805,30 +780,27 @@
         "brian": "Brian"
       },
       "previewTooltip": "この音声をプレビュー",
-      "previewing": "再生中...",
+      "previewing": "再生中…",
       "previewFree": "プレビュー",
-      "previewWithCost": "プレビュー（{{cost}}クレジット）",
       "mixLabel": "吹き替え音量 vs 元の動画の音量",
       "mixHelp": "吹き替え音声の下で再生する元のサウンドトラックの量を調整します。",
       "mixAmbient": "環境音を大きく",
       "mixVoice": "音声を大きく",
       "voiceCloning": "オリジナルの声をクローン",
       "voiceCloningDesc": "吹き替え音声で元の話者の声を保持",
-      "voiceCloningInsufficientCredits": "1分以上のクレジットが必要です",
       "voiceCloningEnabled": "ElevenLabsでボイスクローニングが有効です。元の話者の声が吹き替え音声で保持されます。",
       "voiceCloningInfo": "ボイスクローニングはElevenLabs吹き替えAPIを使用して、元の話者の声を分析・再現します。",
       "costPerMinute": "1分あたりのコスト",
-      "credits": "クレジット",
       "yourBalance": "残高",
       "canClone": "クローン可能",
       "upToMinutes": "最大{{minutes}}分",
-      "loading": "読み込み中...",
+      "loading": "読み込み中…",
       "previewWithMinutes": "プレビュー（{{cost}}）",
       "previewFailed": "声のプレビューを再生できませんでした。もう一度お試しください。"
     },
     "byoOpenAi": {
       "title": "自分のAPIキーを使用",
-      "description": "一度だけのアップグレードをアンロックすると、自分のAPIキーを使えます。アンロック後は、文字起こし、翻訳、吹き替え、要約がすべて自分のアカウントで直接実行され、Stage5クレジットは使われません。",
+      "description": "1回のお支払いでアンロックすると、自分のAPIキーを使えるようになります。アンロック後は、文字起こし、翻訳、吹き替え、要約が、Stage5の時間を使わずに自分のAIアカウントで実行されます。",
       "unlocking": "決済ページを開いています…",
       "unlockCta": "$10でアンロック",
       "unlockHint": "アンロック後は、いつでもここにAPIキーを追加して、アカウントへの直接請求を有効にできます。",
@@ -846,25 +818,23 @@
       "test": "キーをテスト",
       "lastSynced": "最終同期",
       "toggleLabel": "自分のOpenAIキーを使用",
-      "toggleHelp": "オフの場合、AIクレジットが使用されます。",
       "toggleAria": "OpenAIキーの使用を切り替え",
       "toggleOn": "AIタスクに自分のOpenAIキーを使用中。",
-      "toggleOff": "AIタスクにStage5クレジットを使用中。",
       "toggleError": "設定の更新に失敗しました。",
       "howToGetKeys": "APIキーの取得方法",
       "option1Title": "オプション1: OpenAI",
       "option2Title": "オプション2: Anthropic + ElevenLabs",
       "economicsTitle": "なぜ価値があるのか",
-      "economicsBody": "Stage5クレジットは利便性を重視しています（セットアップ不要）。BYOはプロバイダーに直接支払います—パックによって通常約30〜50%安くなります。",
+      "economicsBody": "Stage5の時間なら、設定不要ですぐに使えます。自分のキーを使うとAIプロバイダーに直接支払うため、パックにもよりますが、通常は30〜50%ほど安くなります。",
       "encryptionUnavailable": "このシステムでは安全な保存領域を利用できません。APIキーは保存できません。",
       "checkoutOpen": "ブラウザで決済画面を開いています…",
-      "checkoutOpenHint": "ブラウザで決済を完了してください。支払いが確定すると自動的にBYOのロックが解除されます。",
+      "checkoutOpenHint": "ブラウザで決済を完了してください。支払いが完了すると、自分のキーの利用が自動でアンロックされます。",
       "entitlementsLoadFailed": "アンロックの状態を確認できませんでした。接続を確認して、再試行してください。",
       "unlockFailed": "決済を開始できませんでした。接続を確認して、もう一度お試しください。"
     },
     "byoPreferences": {
       "title": "プロバイダー設定",
-      "stage5Credits": "Stage5 クレジット",
+      "stage5Credits": "Stage5の時間",
       "pricingHint": "1時間の動画あたりの推定費用",
       "pricingHintHeuristic": "現在のアプリ推定ロジックによる概算コスト",
       "transcription": "文字起こし",
@@ -886,17 +856,17 @@
       "summary": "要約",
       "dubbing": "吹き替え",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "利用可能なBYO動画推薦モデルは現在ありません。この機能を使うにはOpenAIまたはAnthropic BYOを有効にしてください。",
-      "videoSuggestionModelRequiresOpenAi": "OpenAI BYOのアンロック、キー、トグルが必要です。",
-      "videoSuggestionModelRequiresAnthropic": "Anthropic BYOのアンロック、キー、トグルが必要です。",
-      "summaryRequiresOpenAi": "OpenAI BYO の利用権限とAPIキーが必要です。",
-      "summaryRequiresAnthropic": "Anthropic BYO の利用権限とAPIキーが必要です。",
+      "videoSuggestionModelUnavailable": "自分のキーで使える動画提案モデルがありません。この機能を使うには、OpenAIまたはAnthropicのキーをオンにしてください。",
+      "videoSuggestionModelRequiresOpenAi": "APIキーのアンロック、OpenAIキー、OpenAIスイッチのオンが必要です。",
+      "videoSuggestionModelRequiresAnthropic": "APIキーのアンロック、Anthropicキー、Anthropicスイッチのオンが必要です。",
+      "summaryRequiresOpenAi": "APIキーのアンロックとOpenAIキーが必要です。",
+      "summaryRequiresAnthropic": "APIキーのアンロックとAnthropicキーが必要です。",
       "translationReview": "翻訳（レビュー）",
-      "transcriptionRequiresElevenLabs": "文字起こしには ElevenLabs Scribe のみを使用します。自分のキーで文字起こしするには、ElevenLabs の API キーを追加してください。キーがない場合、文字起こしには Stage5 クレジットが使われますが、自分の API キーを使用中は Stage5 クレジットは使われません。OpenAI キーは引き続き翻訳に使用されます。",
-      "dubbingRequiresElevenLabs": "吹き替えはElevenLabsのみを使用します。自分のキーで吹き替えるにはElevenLabsのAPIキーを追加してください。キーがない場合、吹き替えにはStage5クレジットが使われますが、APIキーがオンの間はクレジットは使われません。",
+      "transcriptionRequiresElevenLabs": "文字起こしには ElevenLabs Scribe のみを使用します。自分のキーで文字起こしするには、ElevenLabs の API キーを追加してください。キーがない場合は Stage5 の時間を使いますが、自分のキーがオンの間は Stage5 の時間は使われません。OpenAI キーは引き続き翻訳に使用されます。",
+      "dubbingRequiresElevenLabs": "吹き替えにはElevenLabsのみを使用します。自分のキーで吹き替えるには、ElevenLabsのAPIキーを追加してください。キーがない場合はStage5の時間を使いますが、自分のキーがオンの間はStage5の時間は使われません。",
       "runtimeFallback": "APIキーモードでの実行時フォールバック",
-      "videoSuggestionLegacyFollowDraft": "以前のBYO設定を保持しています：直接モデルを選ぶまでは、下書き翻訳モデルに従います。",
-      "videoSuggestionLegacyFollowReview": "以前のBYO設定を保持しています：直接モデルを選ぶまでは、レビュー翻訳モデルに従います。"
+      "videoSuggestionLegacyFollowDraft": "以前の設定を引き継いでいます。ここでモデルを選ぶまでは、下書き翻訳モデルに従います。",
+      "videoSuggestionLegacyFollowReview": "以前の設定を引き継いでいます。ここでモデルを選ぶまでは、レビュー翻訳モデルに従います。"
     },
     "apiKeyGuide": {
       "title": "APIキーの取得方法",
@@ -920,8 +890,7 @@
         "step3b": "に移動",
         "step4": "クリック：",
         "step5": "請求設定で支払い方法を追加（API使用に必須）",
-        "step6": "キー（sk-で始まる）をコピーしてStage5に貼り付け",
-        "note": "ヒント：新しいOpenAIアカウントには無料クレジットが付与されることが多いです。使用した分だけ支払います。"
+        "step6": "キー（sk-で始まる）をコピーしてStage5に貼り付け"
       },
       "anthropic": {
         "description": "Claudeはより高品質な翻訳レビューを提供します。これがない場合、GPTがすべての翻訳タスクを処理します。",
@@ -941,7 +910,7 @@
         "step4": "サブスクリプション設定で支払い方法を追加（無料プラン超過のAPI使用に必須）",
         "step5": "APIキーをコピーしてStage5に貼り付け",
         "note": "ヒント：ElevenLabsには使用制限付きの無料プランがあります。より多く使用するには、アカウント設定で有料プランにアップグレードしてください。",
-        "audioDescription": "文字起こし（Scribe）と吹き替えはすべて ElevenLabs で行います。自分の ElevenLabs キーがない場合はどちらも Stage5 クレジットを使用しますが、自分の API キーを使用中は Stage5 クレジットは使われません。"
+        "audioDescription": "文字起こし（Scribe）と吹き替えはすべて ElevenLabs で行います。自分の ElevenLabs キーがない場合はどちらも Stage5 の時間を使いますが、自分のキーがオンの間は Stage5 の時間は使われません。"
       }
     },
     "byoAnthropic": {
@@ -960,14 +929,11 @@
       "testing": "テスト中…",
       "test": "キーをテスト",
       "toggleLabel": "自分のAnthropicキーを使用",
-      "toggleHelp": "オフの場合、ClaudeリクエストはStage5クレジットを使用します。",
       "toggleAria": "Anthropicキーの使用を切り替え",
       "toggleOn": "Claudeモデルに自分のAnthropicキーを使用中。",
-      "toggleOff": "ClaudeモデルにStage5クレジットを使用中。",
       "toggleError": "Anthropic設定の更新に失敗しました。"
     },
     "stage5TtsProvider": {
-      "label": "TTS品質（Stage5クレジット）",
       "elevenlabs": "プレミアム（ElevenLabs）",
       "elevenlabsHint": "最高品質、高コスト（約12倍）",
       "elevenlabsHintWithBalance": "最高品質 · 残高: {{time}}の吹き替え可能"
@@ -1060,31 +1026,22 @@
       "freeTitle": "自分のAIで無料翻訳"
     },
     "creditTransfer": {
-      "title": "コンピューター間でクレジットを移行",
-      "description": "購入したクレジットとAPIキーのアンロックは別のコンピューターに移行できます。無料のウェルカムクレジットはこのコンピューターに残ります。",
-      "moveButton": "クレジットを別のコンピューターに移行",
-      "receiveButton": "クレジットを受け取る",
       "creating": "コードを作成中…",
       "copy": "コピー",
       "copied": "コピーしました",
-      "summaryCredits": "{{credits}}クレジットが移行されます。",
       "summaryByo": "APIキーのアンロックも一緒に移行されます。",
       "expires": "このコードは1回のみ使用でき、{{minutes}}分後に期限切れになります。",
-      "steps": "新しいコンピューターでTranslatorをインストールし、設定を開いて「クレジットを受け取る」を選び、このコードを入力してください。",
       "inputLabel": "別のコンピューターで表示されたコード",
       "redeem": "受け取る",
       "redeeming": "受け取り中…",
-      "received": "{{credits}}クレジットを受け取りました。",
       "receivedNoCredits": "コードが適用されました。",
       "receivedByo": "このコンピューターでAPIキーのアンロックが有効になりました。",
       "errors": {
-        "nothing_to_transfer": "まだ移せるものがありません。このコンピューターには購入した時間もAPIキーのアンロックもありません。別のコンピューターからここへ時間を移すには、「時間を受け取る」を選んでください。",
         "too_many_codes": "この1時間で作成した移行コードが多すぎます。しばらくしてからもう一度お試しください。",
         "jobs_running": "文字起こしまたは翻訳がまだ実行中です。終わってからもう一度お試しください。",
         "invalid_code": "コードが正しくないか、使用済みまたは期限切れです。もう一方のコンピューターで新しいコードを作成してください。",
         "same_device": "コードは、作成したコンピューターではなく、もう一方のコンピューターで入力してください。",
         "network_error": "Stage5のサーバーに接続できませんでした。接続を確認して、もう一度お試しください。",
-        "transfer_failed": "時間を移せませんでした。接続を確認して、もう一度お試しください。",
         "nothing_to_transfer_minutes": "まだ移せるものがありません。このコンピューターには購入した時間もAPIキーのアンロックもありません。別のコンピューターからここへ時間を移すには、「時間を受け取る」を選んでください。",
         "transfer_failed_minutes": "時間を移せませんでした。接続を確認して、もう一度お試しください。"
       },
@@ -1099,21 +1056,16 @@
   },
   "credits": {
     "title": "残り時間",
-    "loading": "読み込み中...",
-    "credits": "クレジット",
+    "loading": "読み込み中…",
     "usingApiKey": "APIキーを使用中",
     "usingOpenAi": "OpenAIを使用中",
     "usingAnthropic": "Claudeを使用中",
     "usingElevenLabs": "ElevenLabsを使用中",
     "hours": "時間",
     "translationHoursShort": "翻訳時間",
-    "buyCredits": "クレジットを購入",
     "redirectingToPayment": "安全な決済を開いています…",
-    "description": "${{packMicroPrice}}（{{packMicroHours}}時間）、${{pack1Price}}（{{pack1Hours}}時間）、${{pack2Price}}（{{pack2Hours}}時間）、または${{pack3Price}}（{{pack3Hours}}時間）のクレジットパックからお選びください",
-    "notEnough": "クレジットが不足しています。続行するにはクレジットを購入してください。",
     "transcriptionMinutesShort": "文字起こし{{minutes}}分",
     "transcriptionTimeShort": "文字起こし{{time}}",
-    "costOfBalance": "残り{{balance}}クレジットのうち{{cost}}",
     "pill": {
       "freeBack": "{{date}}に無料枠がリセット",
       "empty": "時間をチャージ",
@@ -1138,11 +1090,10 @@
     "moreMinutesPerDollar": "1ドルあたり{{multiplier}}倍の時間",
     "checkoutWaiting": "ブラウザでお支払いを完了してください。時間はここに自動で追加されます。",
     "checkoutNote": "Stripe でブラウザから1回払い。アカウント登録もサブスクも不要で、時間は自動で追加されます。",
-    "dubbingNote": "翻訳もすると、1分あたりの使用時間が約10%増えます。吹き替えはさらに多く使います。",
+    "dubbingNote": "翻訳も付けると、使う時間が約10%増えます。吹き替えはさらに多く使います。",
     "iCancelledCheckout": "決済をキャンセルしました",
     "checkoutStartFailed": "決済を開始できませんでした。接続を確認して、もう一度お試しください。",
     "loadFailed": "残り時間を読み込めませんでした。接続を確認して、もう一度お試しください。",
-    "estimateAmount": "{{credits}}クレジット",
     "costOfBalanceMinutes": "残り{{balance}}のうち{{cost}}",
     "timeLeft": "残り{{time}}",
     "success": {
@@ -1158,7 +1109,10 @@
     "balanceOffline": "今は残り時間を確認できません",
     "offlineNote": "TranslatorがStage5に接続できません。オンラインに戻ると、残り時間がまた表示されます。",
     "microPackLabelNoTime": "時間を購入 — {{price}}",
-    "microPackLabel": "時間を購入 — {{price}} · 動画 約{{time}}"
+    "microPackLabel": "時間を購入 — {{price}} · 動画 約{{time}}",
+    "checkingPayment": "お支払いを確認しています…",
+    "checkoutUnresolved": "お支払い済みの場合は、まもなくここに時間が追加されます。まだお支払い中の場合は、ブラウザで完了してください。",
+    "checkPaymentNow": "今すぐ確認"
   },
   "cta": {
     "generate": {
@@ -1188,7 +1142,7 @@
     "scrollToCurrentSubtitle": "現在の字幕へスクロール",
     "changeVideo": "動画を変更",
     "findVideoWithAi": "AIで動画を探す",
-    "mountSrt": "SRT を読み込む",
+    "mountSrt": "SRTを読み込む",
     "changeSrt": "SRT を変更",
     "useThisVideo": "この動画を使う",
     "useDownloadedVideo": "この動画を使う",
@@ -1214,9 +1168,9 @@
     "resetCreditsToZeroTitle": "管理者: クレジットを0にリセット",
     "toggleByoPreviewTitle": "管理者: BYOプレビューモード切替（BYO未購入時のUIを確認）",
     "addCredits": "35万クレジットを追加",
-    "adding": "追加中...",
+    "adding": "追加中…",
     "resetToZero": "0にリセット",
-    "resetting": "リセット中...",
+    "resetting": "リセット中…",
     "byoPreview": "BYOプレビュー",
     "byoPreviewOn": "BYOプレビュー ON",
     "confirmResetCreditsToZero": "クレジットを0にリセットしますか？この操作は元に戻せません。"
@@ -1270,7 +1224,6 @@
     "afrikaans": "アフリカーンス語"
   },
   "generateSubtitles": {
-    "noCredits": "クレジットがありません。",
     "rechargeLink": "チャージ →",
     "creditWarning": {
       "message": "ダウンロード、編集、書き出し、そしてエージェント制御を通じたご自身のClaudeまたはCodexによる翻訳は無料です。文字起こしには、時間または<settingsLink>{{settingsLinkText}}</settingsLink>でのAPIキーのアンロックが必要です。",
@@ -1280,18 +1233,16 @@
       "pleaseSelectVideo": "動画を選択してください",
       "processingDuration": "動画の長さを処理中です。しばらくしてから再度お試しください。",
       "icloudPlaceholder": "このファイルはiCloudに保存されています。Finderで「ダウンロード」をクリックし、クラウドアイコンが消えるまで待ってから、再度お試しください。",
-      "insufficientCreditsForVoiceCloning": "ボイスクローニングに必要なクレジットが不足しています。動画は{{duration}}分ですが、{{affordable}}分しか処理できません。クレジットを追加するか、ボイスクローニングを無効にしてください。",
       "fileTooLargeForVoiceCloning": "ボイスクローニングには動画ファイルが大きすぎます（{{size}}MB）。最大{{max}}MBまで対応しています。より短い動画を使用するか、ボイスクローニングを無効にしてください。"
     },
     "status": {
-      "starting": "開始中...",
+      "starting": "開始中…",
       "completed": "完了",
       "cancelled": "キャンセル済み",
       "error": "エラー"
     },
     "buttons": {
-      "buyCredits": "クレジットを購入",
-      "redirectingToPayment": "決済ページにリダイレクト中..."
+      "redirectingToPayment": "決済ページにリダイレクト中…"
     },
     "workflow": {
       "stepOne": "ステップ 1",
@@ -1313,15 +1264,14 @@
       "saveOutputsTitle": "ファイルを保存",
       "saveOutputsDescription": "残しておきたいソースまたは吹き替えメディアは、アプリの作業領域の外に保存してください。"
     },
-    "calculatingCost": "コストを計算中...",
-    "notEnoughCredits": "利用可能なクレジットが不足しています",
+    "calculatingCost": "コストを計算中…",
     "welcomeCredits": {
       "message": "動画約20分ぶんの無料の時間で、文字起こしと翻訳を試せます。"
     }
   },
   "findBar": {
-    "findPlaceholder": "字幕内を検索...",
-    "replacePlaceholder": "置換先...",
+    "findPlaceholder": "字幕内を検索…",
+    "replacePlaceholder": "置換先…",
     "replaceAll": "すべて置換",
     "nextMatch": "次の一致 (Enter)",
     "previousMatch": "前の一致 (Shift+Enter)",
@@ -1334,7 +1284,8 @@
     "matchCount": "{{current}}/{{total}}",
     "matchCase": "大文字と小文字を区別",
     "wholeWord": "単語単位で検索",
-    "showReplace": "置換"
+    "showReplace": "置換",
+    "noMatches": "一致なし"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1378,42 +1329,8 @@
       "description": "動画プラットフォームの変更や新しい保護対策が原因である可能性があります。新しい動画を処理するには、次のアプリバージョンをお待ちいただく必要があるかもしれません。"
     },
     "creditRanOut": {
-      "title": "クレジットがなくなりました",
-      "message": "AIクレジットがなくなりました。設定でチャージしてから、続きから再開してください。",
       "openSettings": "設定を開く",
       "ok": "OK",
-      "neverHadTitle": "文字起こしにはクレジットが必要です",
-      "neverHadMessage": "文字起こしには、クレジットまたはAPIキーのアンロックが必要です。どちらも設定から入手できます。エージェント制御を通じたご自身のClaudeまたはCodexによる翻訳は無料です。",
-      "notEnoughTitle": "この動画にはクレジットが足りません",
-      "notEnoughTranscriptionMessage": "この動画の文字起こしには約{{required}}クレジットが必要です。現在の残高は{{available}}で、約{{minutes}}分ぶんです。クレジットを追加してから、もう一度開始してください。",
-      "notEnoughMessage": "この処理には残高（{{available}}）を超えるクレジットが必要です。続けるにはクレジットを追加してください。",
-      "task": {
-        "transcription": {
-          "title": "文字起こしにはクレジットが必要です",
-          "message": "残高が足りないため、文字起こしできません。クレジットを追加してから、もう一度開始してください。文字起こし済みの行はそのまま残っています。",
-          "messageNothingYet": "残高が足りないため、文字起こしできません。時間を追加してから、もう一度開始してください。"
-        },
-        "translation": {
-          "title": "翻訳にはクレジットが必要です",
-          "message": "残高が足りないため、翻訳できません。クレジットを追加してから、もう一度お試しください。翻訳済みの行はそのまま残っています。エージェント制御を通じてご自身のClaudeまたはCodexで翻訳すれば無料です。",
-          "messageNothingYet": "残高が足りないため、翻訳できません。時間を追加してから、もう一度お試しください。エージェント制御を通じてご自身のClaudeまたはCodexで翻訳すれば無料です。"
-        },
-        "dubbing": {
-          "title": "吹き替えにはクレジットが必要です",
-          "message": "残高が足りないため、この動画を吹き替えできません。クレジットを追加してから、もう一度お試しください。"
-        },
-        "summary": {
-          "title": "要約にはクレジットが必要です",
-          "message": "残高が足りないため、要約とハイライトを作成できません。クレジットを追加してから、もう一度お試しください。"
-        },
-        "videoSearch": {
-          "title": "AI動画検索にはクレジットが必要です",
-          "message": "残高が足りないため、AI動画検索を実行できません。クレジットを追加してから、もう一度検索してください。"
-        },
-        "other": {
-          "title": "クレジットが必要です"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "文字起こしには時間の追加が必要です",
@@ -1445,12 +1362,15 @@
         "message": "残り時間を使い切りました。設定で時間を追加してから、止まったところから再開してください。",
         "notEnoughTitle": "この動画には残り時間が足りません",
         "notEnoughTranscriptionMessage": "この動画の文字起こしには{{required}}必要ですが、残りは{{available}}です。時間を追加してから、もう一度開始してください。",
-        "notEnoughMessage": "残りの{{available}}では足りません。続けるには時間を追加してください。"
+        "notEnoughMessage": "残りの{{available}}では足りません。続けるには時間を追加してください。",
+        "voicePreview": {
+          "title": "音声のプレビューには時間の追加が必要です",
+          "message": "残り時間が足りないため、音声をプレビューできません。時間を追加してから、もう一度お試しください。"
+        }
       }
     },
     "dubCostConfirm": {
       "title": "吹き替えを開始しますか？",
-      "message": "この吹き替えは、残り{{balance}}クレジットのうち約{{cost}}を使用します。音声の生成は翻訳よりはるかにコストがかかります。",
       "messageMinutes": "この吹き替えには{{cost}}を使います。音声の生成は、翻訳よりずっと多くの時間を使います。"
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1525,25 +1445,27 @@
     "cancelSummaryTitle": "要約を中止しますか？",
     "keepSummarizing": "続ける",
     "stopSummarizing": "中止",
-    "cancelSummaryBody": "ここまでに作成した要約とハイライトは破棄されます。"
+    "cancelSummaryBody": "ここまでに作成した要約とハイライトは破棄されます。",
+    "cancelTranslationBody": "ここまでに翻訳した行は残ります。残りはあとで翻訳できます。",
+    "cancelDubbingTitle": "吹き替えを中止しますか？"
   },
   "progress": {
     "preparingVideoExport": "動画の書き出しを準備中…",
     "downloadingVideoExportTools": "動画書き出しツールをダウンロード中… {{percent}}%",
-    "beginningReview": "レビューを開始しています...",
-    "starting": "開始中...",
+    "beginningReview": "レビューを開始しています…",
+    "starting": "開始中…",
     "completed": "完了",
     "processCancelled": "処理がキャンセルされました",
     "mergingTitle": "動画と字幕を結合中",
-    "extractingAudio": "音声を抽出中...",
+    "extractingAudio": "音声を抽出中…",
     "transcribingOf": "文字起こし {{done}}/{{total}}",
     "error": "エラー",
     "transcribedChunks": "{{done}}/{{total}} チャンクを文字起こし済み",
     "transcribingElevenLabs": "ElevenLabsで文字起こし中（残り約{{minutes}}分）",
     "transcribingElevenLabsHours": "ElevenLabsで文字起こし中（残り約{{hours}}時間{{minutes}}分）",
-    "transcribingElevenLabsFinishing": "ElevenLabsで文字起こし中...",
-    "transcriptionRetry": "接続に失敗しました。再試行中（{{attempt}}/{{maxAttempts}}）...",
-    "transcribingR2Upload": "音声をアップロード中...",
+    "transcribingElevenLabsFinishing": "ElevenLabsで文字起こし中…",
+    "transcriptionRetry": "接続に失敗しました。再試行中（{{attempt}}/{{maxAttempts}}）…",
+    "transcribingR2Upload": "音声をアップロード中…",
     "gapRepair": "ギャップ修復 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "欠損字幕の修復中（{{iteration}}/{{maxIterations}}回目）{{done}} / {{total}}",
     "scrubbingHallucinations": "字幕のクリーニング中 ({{done}}/{{total}})",
@@ -1655,7 +1577,7 @@
     "optionalMessagePlaceholder": "何をしようとしていましたか？",
     "sendReport": "レポートを送信",
     "reportPrompt": "問題が発生しました。迅速な修正のために開発者に報告してください。",
-    "preparingReport": "診断バンドルを準備しています...",
+    "preparingReport": "診断バンドルを準備しています…",
     "reportContextWarning": "一部の診断コンテキストを読み込めませんでした。レポートには引き続きこのアプリの詳細が含まれます。",
     "reportPromptTask": {
       "transcription": "予期しない問題で文字起こしが止まりました。問題を修正できるよう、このレポートを送信してください。",
@@ -1766,7 +1688,8 @@
     "statusTranslatedUnknownNoVideo": "翻訳済み {{count}}行",
     "statusLines": "字幕 {{count}}行",
     "checkingFile": "ファイルを読み込んでいます…",
-    "statusLoaded": "{{count}}行を読み込みました"
+    "statusLoaded": "{{count}}行を読み込みました",
+    "interruptedTranslateSubtitles": "Translatorが終了したため、この字幕の{{language}}への翻訳が途中で止まりました。"
   },
   "subtitleStyles": {
     "Cinema": "シネマイエロー",

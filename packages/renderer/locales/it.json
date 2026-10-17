@@ -23,7 +23,6 @@
       "unexpectedSave": "Si è verificato un errore imprevisto durante il salvataggio.",
       "unexpectedLoad": "Si è verificato un errore imprevisto durante il caricamento.",
       "renderFailed": "Rendering fallito",
-      "creditReservationFailed": "Prenotazione crediti fallita",
       "invalidRenderOptions": "Opzioni di rendering non valide fornite",
       "missingVideoMetadata": "Metadati video mancanti ({{missing}})",
       "insufficientDiskSpace": "Spazio su disco insufficiente per completare l'unione. Libera spazio e riprova.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "Si è verificato un errore imprevisto durante il salvataggio.",
     "unexpectedLoad": "Si è verificato un errore imprevisto durante il caricamento.",
     "renderFailed": "Rendering fallito",
-    "creditReservationFailed": "Prenotazione crediti fallita",
     "invalidRenderOptions": "Opzioni di rendering non valide fornite",
     "missingVideoMetadata": "Metadati video mancanti ({{missing}})",
     "noSourceVideo": "Nessun video sorgente",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "La trascrizione (ElevenLabs Scribe) è temporaneamente non disponibile o non è stato possibile raggiungerla dopo diversi tentativi. Riprova tra qualche minuto.",
       "fileTooLarge": "Questo audio è troppo lungo per essere trascritto in un unico lavoro (più di circa {{hours}} ore). Dividi il video in parti più brevi e trascrivi ciascuna parte.",
-      "elevenLabsKeyRequired": "La trascrizione usa ElevenLabs Scribe e richiede una chiave API di ElevenLabs. Aggiungine una nelle Impostazioni oppure disattiva la modalità chiavi API per trascrivere con i tuoi minuti Stage5. La tua chiave OpenAI o Anthropic continua a essere usata per la traduzione.",
+      "elevenLabsKeyRequired": "La trascrizione usa ElevenLabs Scribe e richiede una chiave API di ElevenLabs. Aggiungine una nelle Impostazioni oppure disattiva “Usa le mie chiavi API” per trascrivere con i tuoi minuti Stage5. La tua chiave OpenAI o Anthropic continua a essere usata per la traduzione.",
       "fileTooLarge_one": "Questo audio è troppo lungo per essere trascritto in un unico lavoro (più di circa {{hours}} ora). Dividi il video in parti più brevi e trascrivi ciascuna parte."
     },
     "credits": {
@@ -238,7 +236,7 @@
     "downloading": "Download in corso...",
     "selectFile": "Seleziona file",
     "selectVideoFile": "Seleziona file video",
-    "selectVideoAudioFile": "Seleziona file video / audio",
+    "selectVideoAudioFile": "Seleziona file video o audio",
     "saveOriginalVideo": "Salva video originale",
     "localFileDescription": "Carica un file video o audio dal tuo computer",
     "selectLocalFile": "Carica dal computer",
@@ -483,19 +481,15 @@
     "improveTranscription": "Migliora trascrizione",
     "improveTranslation": "Migliora traduzione",
     "chooseSrtFile": "Scegli file SRT",
-    "dub": "Doppiare voce",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
+    "dub": "Doppia voce",
     "dubEstimateByo": "~{{minutes}}m audio",
     "voiceCloningRequiresTranslation": "La clonazione vocale richiede una lingua di destinazione",
     "translateEstimateCredits": "~{{minutes}}m video",
-    "translateEstimateByo": "Chiave BYO",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "Sei sicuro di voler annullare il processo di traduzione dei sottotitoli? Qualsiasi progresso sarà perso e dovrai ricominciare.",
-    "dubCostHint": "Voce ElevenLabs: ~{{rate}} crediti per minuto di parlato. Questa stima viene mostrata prima dell’inizio del doppiaggio.",
     "unreadableCues_one": "{{count}} riga di questo file non è leggibile ed è stata esclusa. Controllane il timecode.",
     "unreadableCues_many": "{{count}} di righe di questo file non sono leggibili e sono state escluse. Controllane i timecode.",
     "unreadableCues": "{{count}} righe di questo file non sono leggibili e sono state escluse. Controllane i timecode.",
-    "addCreditsToTranslate": "Aggiungi crediti per tradurre",
     "dubInto": "Doppia in {{language}}",
     "dubIntro": "Una voce legge i sottotitoli nella lingua che scegli, sopra l’audio di sottofondo originale.",
     "dubNeedsSubtitles": "Il doppiaggio legge ad alta voce i sottotitoli, quindi questo video deve prima averli. Trascrivilo, poi scegli qui una voce.",
@@ -504,8 +498,6 @@
     "dubTranslatesFirst": "Prima i sottotitoli vengono tradotti in {{language}}, poi doppiati.",
     "dubCostWithTranslation": "Traduzione e voce: {{cost}}",
     "dubUsesOwnKeys": "Usa le tue chiavi API.",
-    "dubNotEnoughCredits": "Crediti insufficienti per questo doppiaggio.",
-    "addCreditsToDub": "Aggiungi crediti per doppiare",
     "noSubtitlesToDub": "Crea o apri i sottotitoli di questo video, poi doppialo.",
     "noSubtitlesToTranslate": "Apri o crea i sottotitoli, poi traducili.",
     "dubVoiceHelp": "La voce per questo doppiaggio. Resterà selezionata per i prossimi doppiaggi.",
@@ -532,11 +524,9 @@
     },
     "generate": "Crea momenti salienti",
     "regenerate": "Ricrea momenti salienti",
-    "estimateCredits": "{{credits}} crediti",
-    "estimateByo": "Chiave BYO",
     "highEffortBadge": "(approfondito)",
     "placeholder": "Il riepilogo IA apparirà qui una volta generato.",
-    "insufficientCredits": "Minuti insufficienti per creare i momenti salienti.",
+    "insufficientCredits": "Minuti insufficienti per trovare i momenti salienti.",
     "error": "Non siamo riusciti a creare i momenti salienti. {{message}}",
     "cancel": "Annulla",
     "copy": "Copia riassunto",
@@ -589,7 +579,7 @@
     "downloadCombined": "Scarica clip combinato",
     "saveCombinedDialogTitle": "Salva clip dei momenti salienti combinato",
     "combinedCutFailed": "Impossibile tagliare i momenti salienti combinati: {{message}}",
-    "highlightsInsufficientCredits": "Riassunto creato, ma l’estrazione dei momenti salienti si è interrotta perché i minuti sono finiti.",
+    "highlightsInsufficientCredits": "Il riassunto è pronto, ma la ricerca dei momenti salienti si è interrotta perché i minuti sono finiti.",
     "highlightsPartialWarning": "L’estrazione dei momenti salienti è stata parziale. Questi momenti salienti potrebbero essere incompleti. Rigenera per aggiornarli.",
     "highlightsPartialWithReason": "Riassunto creato, ma l’estrazione dei momenti salienti è stata parziale: {{message}}",
     "estimateOwnKey": "Usa la tua chiave API",
@@ -625,7 +615,10 @@
     "highlightCuesChanged": "Hai modificato alcune righe di questo momento saliente dopo che è stato trovato. Controlla che abbia ancora senso.",
     "clipCaptionsChangedAny": "I sottotitoli sono cambiati da quando questa clip è stata tagliata (testo, stile o dimensione).",
     "notEnoughForRun": "Minuti insufficienti per il riassunto e i momenti salienti.",
-    "clipsUseOriginalAudio": "Le clip usano l’audio originale, non il doppiaggio."
+    "clipsUseOriginalAudio": "Le clip usano l’audio originale, non il doppiaggio.",
+    "notEnoughMinutesSummary": "Minuti insufficienti per questo riassunto.",
+    "notEnoughMinutesHighlights": "Minuti insufficienti per trovare i momenti salienti.",
+    "translateMissingLines": "Traduci queste righe"
   },
   "panel": {
     "new": "nuovo",
@@ -634,8 +627,8 @@
       "none": "Nessun grande intervallo rilevato"
     },
     "confidence": {
-      "title": "Bassa confidenza",
-      "none": "Nessuna riga a bassa confidenza",
+      "title": "Bassa affidabilità",
+      "none": "Nessuna riga a bassa affidabilità",
       "count": "{{count}} righe",
       "count_one": "{{count}} riga"
     }
@@ -669,8 +662,8 @@
       "rowsLoaded_one": "{{count}} riga caricata"
     },
     "item": {
-      "seek": "Cerca",
-      "seekTitle": "Vai al tempo di inizio del video",
+      "seek": "Vai",
+      "seekTitle": "Porta il video all’inizio di questa riga",
       "playSnippet": "Riproduci frammento",
       "pauseSnippet": "Metti in pausa il frammento",
       "insertTitle": "Inserisci un nuovo blocco di sottotitoli dopo questo",
@@ -687,7 +680,10 @@
       "startTimeAria": "Inizio della riga {{index}}",
       "endTimeAria": "Fine della riga {{index}}",
       "splitTitle": "Dividi la riga nel punto del cursore",
-      "mergeTitle": "Unisci alla riga successiva"
+      "mergeTitle": "Unisci alla riga successiva",
+      "timeOverlapsPrevious": "Questa riga inizia prima che finisca la precedente, quindi compaiono entrambe insieme.",
+      "timeOverlapsNext": "Questa riga finisce dopo l’inizio della successiva, quindi compaiono entrambe insieme.",
+      "timeOverlapsBoth": "Questa riga si sovrappone alla precedente e alla successiva, quindi compaiono insieme."
     },
     "header": {
       "save": "Salva sottotitoli",
@@ -738,16 +734,15 @@
       "toggleLabel": "Usa le mie chiavi API",
       "activeKeys": "{{count}} chiavi pronte",
       "noKeys": "Nessuna chiave configurata",
-      "usingApiKeys": "Minuti Stage5 disattivati",
-      "usingCredits": "Minuti Stage5 attivi",
+      "usingApiKeys": "I tuoi minuti Stage5 non vengono usati",
+      "usingCredits": "Stai usando i tuoi minuti Stage5",
       "toggleOn": "Ora usa le tue chiavi API.",
-      "toggleOff": "Ora usa i tuoi minuti Stage5.",
+      "toggleOff": "Ora usi i tuoi minuti Stage5.",
       "toggleError": "Impossibile aggiornare la preferenza.",
       "toggleAria": "Usa le mie chiavi API",
       "requirementTranslation": "Richiede una chiave OpenAI o Anthropic per la traduzione",
       "activeKeys_one": "{{count}} chiave pronta"
     },
-    "creditsDescription": "Acquista crediti. Le ore mostrate sono una stima della durata totale dei video che puoi trascrivere o tradurre. Esempio: trascrivere e tradurre un video di 3 ore richiede circa 6 ore (≈140.000 crediti).",
     "performanceQuality": {
       "title": "Prestazioni e qualità",
       "qualityTranslation": {
@@ -757,32 +752,15 @@
         "modelOff": "Solo bozza Claude Haiku 5.5",
         "reviewProvider": "Fornitore di revisione",
         "openAiHighEnd": "Revisione avanzata di OpenAI",
-        "anthropicHighEnd": "Revisione avanzata di Anthropic",
-        "help": "<b>5× crediti</b> • Aggiunge fase di revisione per qualità superiore",
-        "helpWithEstimate": "<b>5× crediti</b> • Il tuo saldo: ~{{normalTime}} (normale) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>5× crediti</b> • Bozza con Claude Haiku 5.5 + revisione con Claude Opus 5.5",
-        "helpOff": "<b>1× crediti</b> • Solo bozza con Claude Haiku 5.5",
-        "helpWithEstimateOn": "<b>5× crediti</b> • Bozza con Claude Haiku 5.5 + revisione con Claude Opus 5.5 • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× crediti</b> • Solo bozza con Claude Haiku 5.5 • Saldo: ~{{time}}"
+        "anthropicHighEnd": "Revisione avanzata di Anthropic"
       },
       "qualitySummary": {
         "label": "Riassunto di qualità",
         "modelOn": "Analisi approfondita Claude Opus 5.5 + clip in evidenza",
-        "modelOff": "Analisi standard Claude Sonnet 5.5",
-        "help": "<b>4× crediti</b> • Analisi approfondita + clip in evidenza con Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× crediti</b> • Il tuo saldo: ~{{normalTime}} (normale) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>4× crediti</b> • Analisi approfondita con Claude Opus 5.5 + clip dei momenti salienti",
-        "helpOff": "Analisi rapida con Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× crediti</b> • Analisi approfondita con Claude Opus 5.5 + clip dei momenti salienti • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "Analisi rapida con Claude Sonnet 5.5 • Saldo: ~{{time}}"
+        "modelOff": "Analisi standard Claude Sonnet 5.5"
       },
       "qualityDubbing": {
-        "label": "Doppiaggio di qualità",
-        "modelOn": "Voci premium ElevenLabs TTS",
-        "help": "<b>12× crediti</b> • ElevenLabs TTS con voci premium",
-        "helpWithEstimate": "<b>12× crediti</b> • Il tuo saldo: ~{{normalTime}} (normale) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>{{ratio}}× crediti</b> • ElevenLabs TTS con voci premium",
-        "helpWithEstimateOn": "<b>{{ratio}}× crediti</b> • ElevenLabs TTS con voci premium • Saldo: ~{{time}}"
+        "modelOn": "Voci premium ElevenLabs TTS"
       },
       "videoSuggestionModel": {
         "label": "Modello suggerimenti video",
@@ -791,9 +769,6 @@
         "quality": "Qualità (uguale alla qualità della traduzione)"
       },
       "rate": {
-        "perHour": "~{{credits}} crediti/ora",
-        "perMinute": "~{{credits}} crediti/min",
-        "perSearch": "~{{credits}} crediti/ricerca",
         "balance": "Saldo: ~{{time}}",
         "minutesPerHour": "~{{time}} dei tuoi minuti per ogni ora di video",
         "minutesPerDubMinute": "~{{time}} dei tuoi minuti per ogni minuto di doppiaggio",
@@ -816,18 +791,15 @@
       "previewTooltip": "Anteprima di questa voce",
       "previewing": "Riproduzione in corso...",
       "previewFree": "Anteprima",
-      "previewWithCost": "Anteprima ({{cost}} crediti)",
       "mixLabel": "Volume del doppiaggio vs volume del video originale",
       "mixHelp": "Controlla quanto della colonna sonora originale suona sotto la voce doppiata.",
       "mixAmbient": "Più ambiente",
       "mixVoice": "Più voce",
       "voiceCloning": "Clona voce originale",
       "voiceCloningDesc": "Preserva la voce dell'oratore originale nell'audio doppiato",
-      "voiceCloningInsufficientCredits": "Richiede almeno 1 minuto di crediti",
       "voiceCloningEnabled": "La clonazione vocale è abilitata con ElevenLabs. La voce dell'oratore originale sarà preservata nell'audio doppiato.",
       "voiceCloningInfo": "La clonazione vocale utilizza l'API di doppiaggio ElevenLabs per analizzare e ricreare la voce dell'oratore originale.",
       "costPerMinute": "Costo per minuto",
-      "credits": "crediti",
       "yourBalance": "Il tuo saldo",
       "canClone": "Puoi clonare",
       "upToMinutes": "fino a {{minutes}} min",
@@ -837,7 +809,7 @@
     },
     "byoOpenAi": {
       "title": "Usa le tue chiavi API",
-      "description": "Sblocca con un pagamento unico l’uso delle tue chiavi API. Una volta sbloccato, trascrizioni, traduzioni, doppiaggi e riassunti vengono eseguiti direttamente sui tuoi account, senza consumare i tuoi minuti Stage5.",
+      "description": "Uno sblocco una tantum per usare le tue chiavi API. Una volta sbloccato, trascrizioni, traduzioni, doppiaggi e riassunti passano dai tuoi account IA invece di usare i tuoi minuti Stage5.",
       "unlocking": "Apertura pagamento…",
       "unlockCta": "Sblocca per $10",
       "unlockHint": "Una volta sbloccato, aggiungi le tue chiavi API qui in qualsiasi momento per attivare la fatturazione diretta sui tuoi account.",
@@ -855,19 +827,17 @@
       "test": "Testa chiave",
       "lastSynced": "Ultima sincronizzazione",
       "toggleLabel": "Usa la mia chiave OpenAI",
-      "toggleHelp": "Quando disattivato, vengono usati i crediti IA.",
       "toggleAria": "Attiva/disattiva uso della tua chiave OpenAI",
       "toggleOn": "Usando la tua chiave OpenAI per le attività IA.",
-      "toggleOff": "Usando crediti Stage5 per le attività IA.",
       "toggleError": "Aggiornamento preferenza fallito.",
       "howToGetKeys": "Come ottengo le chiavi API?",
       "option1Title": "Opzione 1: OpenAI",
       "option2Title": "Opzione 2: Anthropic + ElevenLabs",
       "economicsTitle": "Perché ne vale la pena",
-      "economicsBody": "I minuti Stage5 puntano sulla comodità (nessuna configurazione). Con le tue chiavi paghi direttamente i fornitori: di solito ~30–50% in meno, a seconda del pacchetto.",
+      "economicsBody": "I minuti Stage5 sono l’opzione più semplice: niente da configurare. Con le tue chiavi paghi direttamente i fornitori di IA, di solito il 30–50% in meno, a seconda del pacchetto.",
       "encryptionUnavailable": "L'archiviazione sicura non è disponibile su questo sistema. Le chiavi API non possono essere salvate.",
       "checkoutOpen": "Pagamento aperto nel browser…",
-      "checkoutOpenHint": "Completa il pagamento nel browser. Sbloccheremo le tue chiavi API automaticamente non appena il pagamento sarà confermato.",
+      "checkoutOpenHint": "Completa il pagamento nel browser. Le tue chiavi si sbloccano in automatico appena il pagamento va a buon fine.",
       "entitlementsLoadFailed": "Non è stato possibile verificare lo stato dello sblocco. Controlla la connessione e riprova.",
       "unlockFailed": "Non è stato possibile avviare il pagamento. Controlla la connessione e riprova."
     },
@@ -895,17 +865,17 @@
       "summary": "Riassunto",
       "dubbing": "Doppiaggio",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Al momento nessun modello per i consigli video è disponibile con le tue chiavi API. Attiva la tua chiave OpenAI o Anthropic per questa funzione.",
-      "videoSuggestionModelRequiresOpenAi": "Richiede lo sblocco delle chiavi API e una chiave OpenAI attiva.",
-      "videoSuggestionModelRequiresAnthropic": "Richiede lo sblocco delle chiavi API e una chiave Anthropic attiva.",
-      "summaryRequiresOpenAi": "Richiede lo sblocco delle chiavi API e una chiave OpenAI.",
-      "summaryRequiresAnthropic": "Richiede lo sblocco delle chiavi API e una chiave Anthropic.",
+      "videoSuggestionModelUnavailable": "Nessun modello per i consigli video è disponibile con le tue chiavi. Attiva la tua chiave OpenAI o Anthropic per usare questa funzione.",
+      "videoSuggestionModelRequiresOpenAi": "Richiede lo sblocco delle chiavi API, la tua chiave OpenAI e l’interruttore OpenAI attivo.",
+      "videoSuggestionModelRequiresAnthropic": "Richiede lo sblocco delle chiavi API, la tua chiave Anthropic e l’interruttore Anthropic attivo.",
+      "summaryRequiresOpenAi": "Richiede lo sblocco delle chiavi API e la tua chiave OpenAI.",
+      "summaryRequiresAnthropic": "Richiede lo sblocco delle chiavi API e la tua chiave Anthropic.",
       "translationReview": "Traduzione (Revisione)",
-      "transcriptionRequiresElevenLabs": "La trascrizione usa solo ElevenLabs Scribe. Aggiungi una chiave API di ElevenLabs per trascrivere con le tue chiavi. Senza di essa, la trascrizione usa i tuoi minuti Stage5, che non vengono utilizzati mentre le tue chiavi API sono attive. La tua chiave OpenAI continua a essere usata per la traduzione.",
-      "dubbingRequiresElevenLabs": "Il doppiaggio usa solo ElevenLabs. Aggiungi una chiave API di ElevenLabs per doppiare con le tue chiavi. Senza di essa, il doppiaggio usa i tuoi minuti Stage5, che non vengono usati mentre le tue chiavi API sono attive.",
+      "transcriptionRequiresElevenLabs": "La trascrizione usa solo ElevenLabs Scribe. Aggiungi una chiave API di ElevenLabs per trascrivere con le tue chiavi. Senza questa chiave, la trascrizione usa i tuoi minuti Stage5, che non vengono usati mentre le tue chiavi sono attive. La tua chiave OpenAI continua a essere usata per la traduzione.",
+      "dubbingRequiresElevenLabs": "Il doppiaggio usa solo ElevenLabs. Aggiungi una chiave API di ElevenLabs per doppiare con le tue chiavi. Senza questa chiave, il doppiaggio usa i tuoi minuti Stage5, che non vengono usati mentre le tue chiavi sono attive.",
       "runtimeFallback": "Fallback di runtime in modalità chiave API",
-      "videoSuggestionLegacyFollowDraft": "Impostazione precedente delle chiavi API mantenuta: segue il tuo modello di traduzione in bozza finché non scegli un modello specifico.",
-      "videoSuggestionLegacyFollowReview": "Impostazione precedente delle chiavi API mantenuta: segue il tuo modello di traduzione di revisione finché non scegli un modello specifico."
+      "videoSuggestionLegacyFollowDraft": "La tua impostazione precedente è stata mantenuta: segue il tuo modello di traduzione in bozza finché non scegli un modello qui.",
+      "videoSuggestionLegacyFollowReview": "La tua impostazione precedente è stata mantenuta: segue il tuo modello di traduzione di revisione finché non scegli un modello qui."
     },
     "apiKeyGuide": {
       "title": "Come ottenere le chiavi API",
@@ -929,8 +899,7 @@
         "step3b": "nella barra laterale sinistra",
         "step4": "Clicca su",
         "step5": "Aggiungi un metodo di pagamento nelle impostazioni di fatturazione (richiesto per usare l'API)",
-        "step6": "Copia la chiave (inizia con sk-) e incollala in Stage5",
-        "note": "Suggerimento: I nuovi account OpenAI spesso ricevono crediti gratuiti per iniziare. Paghi solo per quello che usi."
+        "step6": "Copia la chiave (inizia con sk-) e incollala in Stage5"
       },
       "anthropic": {
         "description": "Claude fornisce revisioni di traduzione di qualità superiore. Senza di esso, GPT gestisce tutte le attività di traduzione.",
@@ -950,7 +919,7 @@
         "step4": "Aggiungi un metodo di pagamento nelle impostazioni dell'abbonamento (richiesto per l'uso dell'API oltre il piano gratuito)",
         "step5": "Copia la tua chiave API e incollala in Stage5",
         "note": "Suggerimento: ElevenLabs ha un piano gratuito con utilizzo limitato. Per di più, passa a un piano a pagamento nelle impostazioni del tuo account.",
-        "audioDescription": "ElevenLabs gestisce tutta la trascrizione (Scribe) e il doppiaggio. Senza una tua chiave ElevenLabs, entrambi usano i tuoi minuti Stage5, che non vengono utilizzati mentre le tue chiavi API sono attive."
+        "audioDescription": "ElevenLabs gestisce tutta la trascrizione (Scribe) e il doppiaggio. Senza una tua chiave ElevenLabs, entrambi usano i tuoi minuti Stage5, che non vengono usati mentre le tue chiavi sono attive."
       }
     },
     "byoAnthropic": {
@@ -969,14 +938,11 @@
       "testing": "Test in corso…",
       "test": "Testa chiave",
       "toggleLabel": "Usa la mia chiave Anthropic",
-      "toggleHelp": "Quando disattivato, le richieste Claude usano crediti Stage5.",
       "toggleAria": "Attiva/disattiva uso della tua chiave Anthropic",
       "toggleOn": "Usando la tua chiave Anthropic per i modelli Claude.",
-      "toggleOff": "Usando crediti Stage5 per i modelli Claude.",
       "toggleError": "Aggiornamento preferenza Anthropic fallito."
     },
     "stage5TtsProvider": {
-      "label": "Qualità TTS (Crediti Stage5)",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Migliore qualità, costo superiore (~12×)",
       "elevenlabsHintWithBalance": "Migliore qualità · Il tuo saldo: {{time}} di doppiaggio"
@@ -1070,34 +1036,23 @@
       "freeTitle": "Traduci gratis con la tua IA"
     },
     "creditTransfer": {
-      "title": "Trasferisci crediti tra computer",
-      "description": "I crediti acquistati e lo sblocco chiave API possono essere trasferiti su un altro computer. I crediti di benvenuto gratuiti restano su questo.",
-      "moveButton": "Trasferisci crediti su un altro computer",
-      "receiveButton": "Ricevi crediti",
       "creating": "Creazione codice…",
       "copy": "Copia",
       "copied": "Copiato",
-      "summaryCredits": "Verranno trasferiti {{credits}} crediti.",
       "summaryByo": "Verrà trasferito anche lo sblocco chiave API.",
       "expires": "Questo codice funziona una sola volta e scade tra {{minutes}} minuti.",
-      "steps": "Sul nuovo computer: installa Translator, apri Impostazioni, scegli “Ricevi crediti” e inserisci questo codice.",
       "inputLabel": "Codice dall’altro computer",
       "redeem": "Ricevi",
       "redeeming": "Ricezione…",
-      "received": "Ricevuti {{credits}} crediti.",
       "receivedNoCredits": "Il codice ha funzionato.",
       "receivedByo": "Lo sblocco chiave API è attivo su questo computer.",
       "expires_one": "Questo codice funziona una sola volta e scade tra {{minutes}} minuto.",
-      "summaryCredits_one": "Verrà trasferito {{credits}} credito.",
-      "received_one": "Ricevuto {{credits}} credito.",
       "errors": {
-        "nothing_to_transfer": "Per ora non c’è nulla da trasferire: questo computer non ha minuti acquistati né lo sblocco delle chiavi API. Per portare qui i minuti da un altro computer, scegli “Ricevi minuti”.",
         "too_many_codes": "Troppi codici di trasferimento nell’ultima ora. Riprova tra un po’.",
         "jobs_running": "C’è una trascrizione o una traduzione in corso. Riprova quando è finita.",
         "invalid_code": "Il codice è errato, già usato o scaduto. Creane uno nuovo sull’altro computer.",
         "same_device": "Inserisci il codice sull’altro computer, non su quello che l’ha creato.",
         "network_error": "Impossibile raggiungere il server Stage5. Controlla la connessione e riprova.",
-        "transfer_failed": "Non è stato possibile trasferire i minuti. Controlla la connessione e riprova.",
         "nothing_to_transfer_minutes": "Per ora non c’è nulla da trasferire: questo computer non ha minuti acquistati né lo sblocco delle chiavi API. Per portare qui i minuti da un altro computer, scegli “Ricevi minuti”.",
         "transfer_failed_minutes": "Non è stato possibile trasferire i minuti. Controlla la connessione e riprova."
       },
@@ -1113,27 +1068,22 @@
   "credits": {
     "title": "I tuoi minuti",
     "loading": "Caricamento...",
-    "credits": "crediti",
     "usingApiKey": "Uso chiave API",
     "usingOpenAi": "Uso di OpenAI",
     "usingAnthropic": "Uso di Claude",
     "usingElevenLabs": "Uso di ElevenLabs",
     "hours": "ore",
     "translationHoursShort": "ore di traduzione",
-    "buyCredits": "Acquista crediti",
     "redirectingToPayment": "Apertura pagamento sicuro…",
-    "description": "Scegli tra i pacchetti da ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h) o ${{pack3Price}} ({{pack3Hours}}h)",
-    "notEnough": "Crediti insufficienti. Acquista altri crediti per continuare.",
     "transcriptionMinutesShort": "{{minutes}} min di trascrizione",
     "transcriptionTimeShort": "{{time}} di trascrizione",
-    "costOfBalance": "{{cost}} dei tuoi {{balance}} crediti",
     "pill": {
       "freeBack": "Nuovi minuti gratis il {{date}}",
       "empty": "Ricarica minuti",
       "freeThisMonth": "{{count}} min gratis questo mese",
       "freeWelcome": "{{count}} min gratis",
       "minutes": "{{count}} min rimasti",
-      "title": "Minuti e pacchetti",
+      "title": "I tuoi minuti e pacchetti",
       "minutes_one": "{{count}} min rimasto",
       "neutral": "Minuti",
       "welcomePending": "Minuti gratis in arrivo",
@@ -1152,12 +1102,11 @@
     "moreMinutesPerDollar": "{{multiplier}}× più minuti per dollaro",
     "checkoutWaiting": "Completa il pagamento nel browser. I minuti compariranno qui in automatico.",
     "checkoutNote": "Pagamento unico con Stripe, nel browser. Nessun account, nessun abbonamento. I minuti arrivano in automatico.",
-    "dubbingNote": "Tradurre con i tuoi minuti costa circa il 10% in più al minuto; il doppiaggio costa di più.",
+    "dubbingNote": "Aggiungere una traduzione usa circa il 10% di minuti in più; il doppiaggio ne usa di più.",
     "iCancelledCheckout": "Ho annullato il pagamento",
     "checkoutStartFailed": "Impossibile avviare il pagamento. Controlla la connessione e riprova.",
     "monthlyFreeNote_one": "{{minutes}} minuto gratis ogni mese · il prossimo il {{date}}",
     "loadFailed": "Non è stato possibile caricare il tuo saldo. Controlla la connessione e riprova.",
-    "estimateAmount": "{{credits}} crediti",
     "costOfBalanceMinutes": "{{cost}} dei tuoi {{balance}}",
     "timeLeft": "{{time}} rimasti",
     "success": {
@@ -1173,7 +1122,10 @@
     "balanceOffline": "Al momento non è possibile controllare i tuoi minuti",
     "offlineNote": "Translator non riesce a raggiungere Stage5. Il saldo ricomparirà quando tornerai online.",
     "microPackLabelNoTime": "Acquista minuti — {{price}}",
-    "microPackLabel": "Acquista minuti — {{price}} · ≈ {{time}} di video"
+    "microPackLabel": "Acquista minuti — {{price}} · ≈ {{time}} di video",
+    "checkingPayment": "Controllo del pagamento…",
+    "checkoutUnresolved": "Se hai già pagato, i tuoi minuti compariranno qui a breve. Stai ancora pagando? Completa il pagamento nel browser.",
+    "checkPaymentNow": "Controlla ora"
   },
   "cta": {
     "generate": {
@@ -1285,7 +1237,6 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "Nessun credito.",
     "rechargeLink": "Ricarica →",
     "creditWarning": {
       "message": "Scaricare, modificare, esportare e tradurre con il tuo Claude o Codex tramite Controllo agenti è gratuito. La trascrizione richiede minuti o lo sblocco delle chiavi API in <settingsLink>{{settingsLinkText}}</settingsLink>.",
@@ -1295,7 +1246,6 @@
       "pleaseSelectVideo": "Seleziona un video",
       "processingDuration": "La durata del video è in elaborazione. Riprova tra poco.",
       "icloudPlaceholder": "Questo file è archiviato in iCloud. Nel Finder, fai clic su \"Scarica\" e attendi che l'icona del cloud finisca il download, poi riprova.",
-      "insufficientCreditsForVoiceCloning": "Crediti insufficienti per la clonazione vocale. Il video dura {{duration}} min ma puoi permetterti solo {{affordable}} min. Aggiungi crediti o disabilita la clonazione vocale.",
       "fileTooLargeForVoiceCloning": "Il file video è troppo grande per la clonazione vocale ({{size}}MB). Il massimo consentito è {{max}}MB. Usa un video più corto o disabilita la clonazione vocale."
     },
     "status": {
@@ -1305,7 +1255,6 @@
       "error": "Errore"
     },
     "buttons": {
-      "buyCredits": "Acquista crediti",
       "redirectingToPayment": "Reindirizzamento al pagamento..."
     },
     "workflow": {
@@ -1329,7 +1278,6 @@
       "saveOutputsDescription": "Conserva fuori dall'area di lavoro dell'app tutti i media originali o doppiati che vuoi mantenere."
     },
     "calculatingCost": "Calcolo del costo...",
-    "notEnoughCredits": "Crediti insufficienti",
     "welcomeCredits": {
       "message": "Hai minuti gratuiti per provare trascrizione e traduzione (circa 20 minuti di video)."
     }
@@ -1340,7 +1288,7 @@
     "replaceAll": "Sostituisci tutto",
     "nextMatch": "Corrispondenza successiva (Enter)",
     "previousMatch": "Corrispondenza precedente (Shift+Enter)",
-    "replaceAllTitle": "Sostituisci tutte le occorrenze",
+    "replaceAllTitle": "Sostituisci tutte le corrispondenze",
     "closeTitle": "Chiudi (Esc)",
     "nextMatchAria": "Corrispondenza successiva",
     "previousMatchAria": "Corrispondenza precedente",
@@ -1349,7 +1297,8 @@
     "matchCount": "{{current}} di {{total}}",
     "matchCase": "Maiuscole/minuscole",
     "wholeWord": "Parola intera",
-    "showReplace": "Sostituisci"
+    "showReplace": "Sostituisci",
+    "noMatches": "Nessun risultato"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1393,42 +1342,8 @@
       "description": "Questo potrebbe essere dovuto a modifiche della piattaforma video o nuove misure di protezione. Potrebbe essere necessario attendere la prossima versione dell'app per gestire i video più recenti."
     },
     "creditRanOut": {
-      "title": "Crediti esauriti",
-      "message": "I tuoi crediti IA sono esauriti. Ricaricali in Impostazioni, quindi riprendi da dove avevi interrotto.",
       "openSettings": "Apri Impostazioni",
       "ok": "OK",
-      "neverHadTitle": "La trascrizione richiede crediti",
-      "neverHadMessage": "La trascrizione richiede crediti o lo sblocco chiave API. Puoi ottenere entrambi in Impostazioni. Tradurre con il tuo Claude o Codex tramite Controllo agenti è gratuito.",
-      "notEnoughTitle": "Crediti insufficienti per questo video",
-      "notEnoughTranscriptionMessage": "Trascrivere questo video richiede circa {{required}} crediti. Ne hai {{available}}, sufficienti per circa {{minutes}} minuti. Aggiungi crediti e ricomincia.",
-      "notEnoughMessage": "Questa attività richiede più crediti del tuo saldo di {{available}}. Aggiungi crediti per continuare.",
-      "task": {
-        "transcription": {
-          "title": "Per trascrivere servono crediti",
-          "message": "Il tuo saldo non basta per questa trascrizione. Aggiungi crediti e ricomincia. Le righe già trascritte restano salvate.",
-          "messageNothingYet": "Il tuo saldo non basta per questa trascrizione. Aggiungi minuti, poi ricomincia."
-        },
-        "translation": {
-          "title": "Per tradurre servono crediti",
-          "message": "Il tuo saldo non basta per questa traduzione. Aggiungi crediti e riprova. Le righe già tradotte restano salvate. Tradurre con il tuo Claude o Codex tramite Controllo agenti è gratuito.",
-          "messageNothingYet": "Il tuo saldo non basta per questa traduzione. Aggiungi minuti, poi riprova. Tradurre con il tuo Claude o Codex tramite Controllo agenti è gratis."
-        },
-        "dubbing": {
-          "title": "Per doppiare servono crediti",
-          "message": "Il tuo saldo non basta per doppiare questo video. Aggiungi crediti e riprova."
-        },
-        "summary": {
-          "title": "Per il riassunto servono crediti",
-          "message": "Il tuo saldo non basta per il riassunto e i momenti salienti. Aggiungi crediti e riprova."
-        },
-        "videoSearch": {
-          "title": "Per la ricerca video con IA servono crediti",
-          "message": "Il tuo saldo non basta per una ricerca video con IA. Aggiungi crediti e cerca di nuovo."
-        },
-        "other": {
-          "title": "Servono crediti"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "Per trascrivere servono minuti",
@@ -1460,12 +1375,15 @@
         "message": "Hai esaurito i minuti. Aggiungine altri nelle Impostazioni e riprendi da dove avevi lasciato.",
         "notEnoughTitle": "Minuti insufficienti per questo video",
         "notEnoughTranscriptionMessage": "Per trascrivere questo video servono {{required}} e te ne restano {{available}}. Aggiungi minuti, poi ricomincia.",
-        "notEnoughMessage": "Servono più dei {{available}} che ti restano. Aggiungi minuti per continuare."
+        "notEnoughMessage": "Servono più dei {{available}} che ti restano. Aggiungi minuti per continuare.",
+        "voicePreview": {
+          "title": "Per l’anteprima di una voce servono minuti",
+          "message": "I tuoi minuti non bastano per l’anteprima di una voce. Aggiungi minuti, poi riprova."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "Avviare il doppiaggio?",
-      "message": "Questo doppiaggio usa circa {{cost}} dei tuoi {{balance}} crediti. Generare voci costa molto più che tradurre.",
       "messageMinutes": "Questo doppiaggio usa {{cost}}. Generare voci costa molto più che tradurre."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1540,7 +1458,9 @@
     "cancelSummaryTitle": "Interrompere il riassunto?",
     "keepSummarizing": "Continua",
     "stopSummarizing": "Interrompi",
-    "cancelSummaryBody": "Il riassunto e i momenti salienti creati finora non verranno conservati."
+    "cancelSummaryBody": "Il riassunto e i momenti salienti creati finora non verranno conservati.",
+    "cancelTranslationBody": "Le righe già tradotte vengono conservate. Puoi tradurre il resto più tardi.",
+    "cancelDubbingTitle": "Interrompere il doppiaggio?"
   },
   "progress": {
     "preparingVideoExport": "Preparazione dell’esportazione video…",
@@ -1803,7 +1723,8 @@
     "checkingFile": "Lettura del file…",
     "statusLoaded": "{{count}} righe caricate",
     "statusLoaded_one": "{{count}} riga caricata",
-    "statusLoaded_many": "{{count}} di righe caricate"
+    "statusLoaded_many": "{{count}} di righe caricate",
+    "interruptedTranslateSubtitles": "La traduzione di questi sottotitoli in {{language}} si è interrotta alla chiusura di Translator."
   },
   "subtitleStyles": {
     "Cinema": "Giallo cinema",

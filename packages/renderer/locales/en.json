@@ -23,7 +23,6 @@
       "unexpectedSave": "An unexpected error occurred while saving.",
       "unexpectedLoad": "An unexpected error occurred while loading.",
       "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
       "invalidRenderOptions": "Invalid render options provided",
       "missingVideoMetadata": "Missing video metadata ({{missing}})",
       "insufficientDiskSpace": "Not enough disk space to complete the merge. Please free up space and try again.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "An unexpected error occurred while saving.",
     "unexpectedLoad": "An unexpected error occurred while loading.",
     "renderFailed": "Render failed",
-    "creditReservationFailed": "Credit reservation failed",
     "invalidRenderOptions": "Invalid render options provided",
     "missingVideoMetadata": "Missing video metadata ({{missing}})",
     "noSourceVideo": "No source video",
@@ -484,16 +482,12 @@
     "improveTranslation": "Improve translation",
     "chooseSrtFile": "Choose SRT file",
     "dub": "Dub voice",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
     "dubEstimateByo": "~{{minutes}}m audio",
     "voiceCloningRequiresTranslation": "Voice cloning requires a target language",
     "translateEstimateCredits": "~{{minutes}}m video",
-    "translateEstimateByo": "BYO key",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again.",
-    "dubCostHint": "ElevenLabs voice: ~{{rate}} credits per minute of speech. This estimate is shown before dubbing starts.",
     "unreadableCues_one": "{{count}} line in this file could not be read and was left out. Check its timecode.",
-    "addCreditsToTranslate": "Add credits to translate",
     "dubInto": "Dub into {{language}}",
     "dubIntro": "A voice reads the subtitles in the language you pick, over the original background sound.",
     "dubNeedsSubtitles": "Dubbing reads the subtitles aloud, so this video needs subtitles first. Transcribe it, then pick a voice here.",
@@ -502,8 +496,6 @@
     "dubTranslatesFirst": "The subtitles are translated into {{language}} first, then voiced.",
     "dubCostWithTranslation": "Translation and voice: {{cost}}",
     "dubUsesOwnKeys": "Uses your own API keys.",
-    "dubNotEnoughCredits": "Not enough credits for this dub.",
-    "addCreditsToDub": "Add credits to dub",
     "noSubtitlesToDub": "Make or open subtitles for this video first, then dub it.",
     "noSubtitlesToTranslate": "Open or make subtitles first, then translate them.",
     "unreadableCues": "{{count}} lines in this file could not be read and were left out. Check their timecodes.",
@@ -531,8 +523,6 @@
     },
     "generate": "Generate highlights",
     "regenerate": "Regenerate highlights",
-    "estimateCredits": "{{credits}} credits",
-    "estimateByo": "BYO key",
     "highEffortBadge": "(deep)",
     "placeholder": "Your AI summary will appear here once generated.",
     "insufficientCredits": "Not enough minutes left to find highlights.",
@@ -750,7 +740,6 @@
       "requirementTranslation": "Needs an OpenAI or Anthropic key for translation",
       "activeKeys_one": "{{count}} key ready"
     },
-    "creditsDescription": "Buy credits. The hours shown are an estimate of the total video duration you can transcribe or translate. Example: transcribing and translating a 3‑hour video uses about 6 hours (≈140,000 credits).",
     "performanceQuality": {
       "title": "Performance & Quality",
       "qualityTranslation": {
@@ -760,32 +749,15 @@
         "modelOff": "Claude Haiku 5.5 draft only",
         "reviewProvider": "Review Provider",
         "openAiHighEnd": "OpenAI high-end review",
-        "anthropicHighEnd": "Anthropic high-end review",
-        "help": "<b>5× credits</b> • Adds review phase for higher quality",
-        "helpWithEstimate": "<b>5× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>5× credits</b> • Claude Haiku 5.5 draft + Claude Opus 5.5 review",
-        "helpOff": "<b>1× credits</b> • Claude Haiku 5.5 draft only",
-        "helpWithEstimateOn": "<b>5× credits</b> • Claude Haiku 5.5 draft + Claude Opus 5.5 review • Balance: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× credits</b> • Claude Haiku 5.5 draft only • Balance: ~{{time}}"
+        "anthropicHighEnd": "Anthropic high-end review"
       },
       "qualitySummary": {
         "label": "Quality Summary",
         "modelOn": "Claude Opus 5.5 deep analysis + highlight clips",
-        "modelOff": "Claude Sonnet 5.5 standard analysis",
-        "help": "<b>4× credits</b> • Deep analysis + highlight clips with Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>4× credits</b> • Claude Opus 5.5 deep analysis + highlight clips",
-        "helpOff": "<b>1× credits</b> • Claude Sonnet 5.5 standard analysis",
-        "helpWithEstimateOn": "<b>4× credits</b> • Claude Opus 5.5 deep analysis + highlight clips • Balance: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× credits</b> • Claude Sonnet 5.5 standard analysis • Balance: ~{{time}}"
+        "modelOff": "Claude Sonnet 5.5 standard analysis"
       },
       "qualityDubbing": {
-        "label": "Quality Dubbing",
-        "modelOn": "ElevenLabs TTS premium voices",
-        "help": "<b>12× credits</b> • ElevenLabs TTS with premium voices",
-        "helpWithEstimate": "<b>12× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS with premium voices",
-        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS with premium voices • Balance: ~{{time}}"
+        "modelOn": "ElevenLabs TTS premium voices"
       },
       "videoSuggestionModel": {
         "label": "Video Recommendation Quality",
@@ -794,9 +766,6 @@
         "quality": "Quality (same as translation quality)"
       },
       "rate": {
-        "perHour": "~{{credits}} credits/hour",
-        "perMinute": "~{{credits}} credits/min",
-        "perSearch": "~{{credits}} credits/search",
         "balance": "Balance: ~{{time}}",
         "minutesPerHour": "~{{time}} of your minutes per hour of video",
         "minutesPerDubMinute": "~{{time}} of your minutes per minute of dubbing",
@@ -819,18 +788,15 @@
       "previewTooltip": "Preview this voice",
       "previewing": "Playing...",
       "previewFree": "Preview",
-      "previewWithCost": "Preview ({{cost}} credits)",
       "mixLabel": "Dubbing Volume vs Original Video Volume",
       "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
       "mixAmbient": "More ambient",
       "mixVoice": "More voice",
       "voiceCloning": "Clone Original Voice",
       "voiceCloningDesc": "Preserve the original speaker's voice in dubbed audio",
-      "voiceCloningInsufficientCredits": "Requires at least 1 minute of credits",
       "voiceCloningEnabled": "Voice cloning is enabled with ElevenLabs. The original speaker's voice will be preserved in the dubbed audio.",
       "voiceCloningInfo": "Voice cloning uses ElevenLabs Dubbing API to analyze and recreate the original speaker's voice.",
       "costPerMinute": "Cost per minute",
-      "credits": "credits",
       "yourBalance": "Your balance",
       "canClone": "You can clone",
       "upToMinutes": "up to {{minutes}} min",
@@ -858,10 +824,8 @@
       "test": "Test Key",
       "lastSynced": "Last synced",
       "toggleLabel": "Use my OpenAI key",
-      "toggleHelp": "When off, AI Credits are used.",
       "toggleAria": "Toggle using your OpenAI key",
       "toggleOn": "Using your OpenAI key for AI tasks.",
-      "toggleOff": "Using Stage5 credits for AI tasks.",
       "toggleError": "Failed to update preference.",
       "howToGetKeys": "How do I get API keys?",
       "option1Title": "Option 1: OpenAI",
@@ -932,8 +896,7 @@
         "step3b": "in the left sidebar",
         "step4": "Click",
         "step5": "Add a payment method in Billing settings (required to use the API)",
-        "step6": "Copy the key (starts with sk-) and paste it in Stage5",
-        "note": "Tip: New OpenAI accounts often get free credits to start. You only pay for what you use."
+        "step6": "Copy the key (starts with sk-) and paste it in Stage5"
       },
       "anthropic": {
         "description": "Claude provides higher-quality translation reviews. Without it, GPT handles all translation tasks.",
@@ -972,14 +935,11 @@
       "testing": "Testing…",
       "test": "Test Key",
       "toggleLabel": "Use my Anthropic key",
-      "toggleHelp": "When off, Claude requests use Stage5 credits.",
       "toggleAria": "Toggle using your Anthropic key",
       "toggleOn": "Using your Anthropic key for Claude models.",
-      "toggleOff": "Using Stage5 credits for Claude models.",
       "toggleError": "Failed to update Anthropic preference."
     },
     "stage5TtsProvider": {
-      "label": "TTS Quality (Stage5 Credits)",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Best quality, higher cost (~12x)",
       "elevenlabsHintWithBalance": "Best quality · Your balance: {{time}} of dubbing"
@@ -1073,34 +1033,23 @@
       "clearConfirm": "This will sign you out of {{site}} inside Translator. Continue?"
     },
     "creditTransfer": {
-      "title": "Move credits between computers",
-      "description": "Purchased credits and the API-key unlock can move to another computer. Free welcome credits stay on this one.",
-      "moveButton": "Move credits to another computer",
-      "receiveButton": "Receive credits",
       "creating": "Creating code…",
       "copy": "Copy",
       "copied": "Copied",
-      "summaryCredits": "{{credits}} credits will move.",
       "summaryByo": "The API-key unlock will move too.",
       "expires": "This code works once and expires in {{minutes}} minutes.",
-      "steps": "On the new computer: install Translator, open Settings, choose “Receive credits”, and enter this code.",
       "inputLabel": "Code from your other computer",
       "redeem": "Receive",
       "redeeming": "Receiving…",
-      "received": "Received {{credits}} credits.",
       "receivedNoCredits": "The code worked.",
       "receivedByo": "The API-key unlock is active on this computer.",
       "expires_one": "This code works once and expires in {{minutes}} minute.",
-      "summaryCredits_one": "{{credits}} credit will move.",
-      "received_one": "Received {{credits}} credit.",
       "errors": {
-        "nothing_to_transfer": "Nothing to move yet: this computer has no purchased credits or API-key unlock. To bring credits here from another computer, choose “Receive credits”.",
         "too_many_codes": "Too many transfer codes this hour. Try again in a little while.",
         "jobs_running": "A transcription or translation is still running. Try again when it finishes.",
         "invalid_code": "That code is wrong, already used or expired. Make a new one on the other computer.",
         "same_device": "Enter the code on the other computer, not the one that made it.",
         "network_error": "Couldn’t reach the Stage5 server. Check your connection and try again.",
-        "transfer_failed": "The credits couldn’t be moved. Check your connection and try again.",
         "nothing_to_transfer_minutes": "Nothing to move yet: this computer has no purchased minutes or API-key unlock. To bring minutes here from another computer, choose “Receive minutes”.",
         "transfer_failed_minutes": "The minutes couldn’t be moved. Check your connection and try again."
       },
@@ -1116,20 +1065,15 @@
   "credits": {
     "title": "Your minutes",
     "loading": "Loading...",
-    "credits": "credits",
     "usingApiKey": "Using API Key",
     "usingOpenAi": "Using OpenAI",
     "usingAnthropic": "Using Claude",
     "usingElevenLabs": "Using ElevenLabs",
     "hours": "hours",
     "translationHoursShort": "translation hrs",
-    "buyCredits": "Buy Credits",
     "redirectingToPayment": "Opening secure checkout…",
-    "description": "Choose from ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), or ${{pack3Price}} ({{pack3Hours}}h) credit packs",
-    "notEnough": "Insufficient credits. Please purchase more credits to continue.",
     "transcriptionMinutesShort": "{{minutes}} min of transcription",
     "transcriptionTimeShort": "{{time}} of transcription",
-    "costOfBalance": "{{cost}} of your {{balance}} credits",
     "pill": {
       "freeBack": "Free minutes back on {{date}}",
       "empty": "Get minutes",
@@ -1159,7 +1103,6 @@
     "checkoutStartFailed": "Checkout couldn’t start. Check your connection and try again.",
     "monthlyFreeNote_one": "{{minutes}} free minute every month · next on {{date}}",
     "loadFailed": "Your balance couldn’t be loaded. Check your connection and try again.",
-    "estimateAmount": "{{credits}} credits",
     "costOfBalanceMinutes": "{{cost}} of your {{balance}}",
     "timeLeft": "{{time}} left",
     "success": {
@@ -1290,7 +1233,6 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
     "rechargeLink": "Recharge →",
     "creditWarning": {
       "message": "Downloading, editing, exporting, and translating with your own Claude or Codex through Agent Control are free. Transcription needs minutes or the API-key unlock in <settingsLink>{{settingsLinkText}}</settingsLink>.",
@@ -1300,7 +1242,6 @@
       "pleaseSelectVideo": "Please select a video",
       "processingDuration": "Video duration is being processed. Please try again shortly.",
       "icloudPlaceholder": "This file is stored in iCloud. In Finder, click 'Download' and wait for the cloud icon to finish, then try again.",
-      "insufficientCreditsForVoiceCloning": "Insufficient credits for voice cloning. Video is {{duration}} min but you can only afford {{affordable}} min. Please add credits or disable voice cloning.",
       "fileTooLargeForVoiceCloning": "Video file is too large for voice cloning ({{size}}MB). Maximum allowed is {{max}}MB. Please use a shorter video or disable voice cloning."
     },
     "status": {
@@ -1310,7 +1251,6 @@
       "error": "Error"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
       "redirectingToPayment": "Redirecting to payment..."
     },
     "workflow": {
@@ -1334,7 +1274,6 @@
       "saveOutputsDescription": "Keep any source or dubbed media you want to preserve outside the app workspace."
     },
     "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available",
     "welcomeCredits": {
       "message": "You have free minutes to try transcription and translation (about 20 minutes of video)."
     }
@@ -1405,42 +1344,8 @@
       "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     },
     "creditRanOut": {
-      "title": "Credits ran out",
-      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
       "openSettings": "Open Settings",
       "ok": "OK",
-      "neverHadTitle": "Transcription needs minutes",
-      "neverHadMessage": "Transcription needs minutes or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.",
-      "notEnoughTitle": "Not enough credits for this video",
-      "notEnoughTranscriptionMessage": "Transcribing this video takes about {{required}} credits. You have {{available}}, enough for about {{minutes}} minutes. Add credits, then start again.",
-      "notEnoughMessage": "This task needs more credits than your balance of {{available}}. Add credits to continue.",
-      "task": {
-        "transcription": {
-          "title": "Transcribing needs credits",
-          "message": "Your balance doesn’t cover transcribing this. Add credits, then start again. Lines already transcribed are kept.",
-          "messageNothingYet": "Your minutes don’t cover transcribing this. Add minutes, then start again."
-        },
-        "translation": {
-          "title": "Translating needs credits",
-          "message": "Your balance doesn’t cover translating this. Add credits, then try again. Lines already translated are kept. Translating with your own Claude or Codex through Agent Control is free.",
-          "messageNothingYet": "Your minutes don’t cover translating this. Add minutes, then try again. Translating with your own Claude or Codex through Agent Control is free."
-        },
-        "dubbing": {
-          "title": "Dubbing needs credits",
-          "message": "Your balance doesn’t cover dubbing this video. Add credits, then try again."
-        },
-        "summary": {
-          "title": "The summary needs credits",
-          "message": "Your balance doesn’t cover the summary and highlights. Add credits, then try again."
-        },
-        "videoSearch": {
-          "title": "AI video search needs credits",
-          "message": "Your balance doesn’t cover an AI video search. Add credits, then search again."
-        },
-        "other": {
-          "title": "This needs credits"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "Transcribing needs minutes",
@@ -1481,7 +1386,6 @@
     },
     "dubCostConfirm": {
       "title": "Start dubbing?",
-      "message": "This dub uses about {{cost}} of your {{balance}} credits. Generating voices costs much more than translating.",
       "messageMinutes": "This dub uses {{cost}}. Generating voices costs much more than translating."
     },
     "unsavedSrtOnReplace": {

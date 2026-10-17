@@ -23,7 +23,6 @@
       "unexpectedSave": "Kaydedilirken beklenmeyen bir hata oluştu.",
       "unexpectedLoad": "Yüklenirken beklenmeyen bir hata oluştu.",
       "renderFailed": "Render işlemi başarısız",
-      "creditReservationFailed": "Kredi rezervasyonu başarısız",
       "invalidRenderOptions": "Geçersiz render seçenekleri verildi",
       "missingVideoMetadata": "Video metadatası eksik ({{missing}})",
       "insufficientDiskSpace": "Birleştirme işlemini tamamlamak için yeterli disk alanı yok. Lütfen alan açın ve tekrar deneyin.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "Kaydedilirken beklenmeyen bir hata oluştu.",
     "unexpectedLoad": "Yüklenirken beklenmeyen bir hata oluştu.",
     "renderFailed": "Render işlemi başarısız",
-    "creditReservationFailed": "Kredi rezervasyonu başarısız",
     "invalidRenderOptions": "Geçersiz render seçenekleri verildi",
     "missingVideoMetadata": "Video metadatası eksik ({{missing}})",
     "noSourceVideo": "Kaynak video yok",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "Yazıya dökme hizmeti (ElevenLabs Scribe) geçici olarak kullanılamıyor ya da birkaç denemeden sonra ulaşılamadı. Lütfen birkaç dakika sonra yeniden deneyin.",
       "fileTooLarge": "Bu ses tek seferde yazıya dökülemeyecek kadar uzun (yaklaşık {{hours}} saatten fazla). Videoyu daha kısa parçalara bölün ve her parçayı ayrı ayrı yazıya dökün.",
-      "elevenLabsKeyRequired": "Yazıya dökme ElevenLabs Scribe kullanır ve bir ElevenLabs API anahtarı gerektirir. Ayarlar’dan bir anahtar ekleyin ya da Stage5 kredileriyle yazıya dökmek için API anahtarı modunu kapatın. OpenAI veya Anthropic anahtarınız çeviri için kullanılmaya devam eder."
+      "elevenLabsKeyRequired": "Yazıya dökme ElevenLabs Scribe kullanır ve bir ElevenLabs API anahtarı gerektirir. Ayarlar’dan bir anahtar ekleyin ya da Stage5 dakikalarınızla yazıya dökmek için “Kendi API anahtarlarımı kullan” seçeneğini kapatın. OpenAI veya Anthropic anahtarınız çeviri için kullanılmaya devam eder."
     },
     "credits": {
       "transcription": "Yazıya dökmek için dakikanız yetmiyor.",
@@ -237,16 +235,16 @@
     "downloading": "İndiriliyor...",
     "selectFile": "Dosya Seç",
     "selectVideoFile": "Video Dosyası Seç",
-    "selectVideoAudioFile": "Video / Ses Dosyası Seç",
-    "saveOriginalVideo": "Orijinal Video Kaydet",
+    "selectVideoAudioFile": "Video veya ses dosyası seç",
+    "saveOriginalVideo": "Orijinal videoyu kaydet",
     "localFileDescription": "Bilgisayarınızdan bir video veya ses dosyası yükleyin",
     "selectLocalFile": "Bilgisayardan yükle",
     "downloadFromUrl": "Web'den indir",
     "recentMedia": "Son dosyalar",
     "webDescription": "YouTube, TikTok, Instagram video linklerini veya web sayfalarından doğrudan video dosyası URL'lerini yapıştırın",
-    "chooseFile": "Dosya Seç",
+    "chooseFile": "Dosya seç",
     "fileSelected": "Dosya seçildi",
-    "transcribeOnly": "Sesi Metne Dönüştür",
+    "transcribeOnly": "Sesi yazıya dök",
     "srtLoaded": "Yazıya dökme tamamlandı",
     "srtFileLoaded": "SRT Yüklendi",
     "featuresUnlockAfterTranscription": "Bu videoyu yazıya dökün, çevirin ya da öne çıkan anlarını bulun.",
@@ -469,30 +467,26 @@
     "batchDownloadRunning": "Translator birkaç video indiriyor. Bitmelerini bekleyin ya da indirmeyi iptal edin."
   },
   "subtitles": {
-    "outputLanguage": "Çıktı Dili",
+    "outputLanguage": "Çıktı dili",
     "showOriginalText": "Orijinal metni göster",
     "displayModeLabel": "Altyazı görünümü",
     "translate": "Çevir",
     "continueTranscribing": "Yazıya dökmeye devam et",
-    "generate": "Altyazı Oluştur",
+    "generate": "Altyazı oluştur",
     "generating": "Oluşturuluyor...",
     "generateNow": "Şimdi Altyazı Oluştur",
     "translation": "Çeviri",
     "improveTranscription": "Yazıya dökme kalitesini artır",
-    "improveTranslation": "Çeviri Kalitesini Artır",
-    "chooseSrtFile": "SRT Dosyası Seç",
-    "dub": "Seslendirme",
-    "dubEstimateCredits": "{{credits}} kr (~{{minutes}}d)",
+    "improveTranslation": "Çeviri kalitesini artır",
+    "chooseSrtFile": "SRT dosyası seç",
+    "dub": "Seslendir",
     "dubEstimateByo": "~{{minutes}}d ses",
     "voiceCloningRequiresTranslation": "Ses klonlama için hedef dil gereklidir",
     "translateEstimateCredits": "~{{minutes}}d video",
-    "translateEstimateByo": "Kendi anahtarı",
     "qualityBadge": "(yk)",
     "cancel_confirmation": "Altyazı çeviri işlemini iptal etmek istediğinizden emin misiniz? Tüm ilerleme kaybedilecek ve yeniden başlamanız gerekecek.",
-    "dubCostHint": "ElevenLabs sesi: konuşmanın dakikası başına ~{{rate}} kredi. Bu tahmin seslendirme başlamadan önce gösterilir.",
     "unreadableCues_one": "Bu dosyadaki {{count}} satır okunamadığı için alınmadı. Zaman kodunu kontrol edin.",
     "unreadableCues": "Bu dosyadaki {{count}} satır okunamadığı için alınmadı. Zaman kodlarını kontrol edin.",
-    "addCreditsToTranslate": "Çevirmek için dakika ekle",
     "dubInto": "{{language}} seslendir",
     "dubIntro": "Seçtiğiniz dilde bir ses, orijinal arka plan sesinin üzerine altyazıları okur.",
     "dubNeedsSubtitles": "Seslendirme altyazıları sesli okur, bu yüzden bu videonun önce altyazıya ihtiyacı var. Videoyu yazıya dökün, sonra buradan bir ses seçin.",
@@ -501,8 +495,6 @@
     "dubTranslatesFirst": "Altyazılar önce {{language}} diline çevrilir, sonra seslendirilir.",
     "dubCostWithTranslation": "Çeviri ve ses: {{cost}}",
     "dubUsesOwnKeys": "Kendi API anahtarlarınız kullanılır.",
-    "dubNotEnoughCredits": "Bu seslendirme için yeterli dakika kalmadı.",
-    "addCreditsToDub": "Seslendirmek için dakika ekle",
     "noSubtitlesToDub": "Önce bu video için altyazı oluşturun ya da açın, sonra seslendirin.",
     "noSubtitlesToTranslate": "Önce altyazı açın ya da oluşturun, sonra çevirin.",
     "dubVoiceHelp": "Bu seslendirmenin sesi. Sonraki seslendirmeler için de seçili kalır.",
@@ -529,11 +521,9 @@
     },
     "generate": "Öne çıkanları bul",
     "regenerate": "Öne çıkanları yeniden bul",
-    "estimateCredits": "{{credits}} kredi",
-    "estimateByo": "BYO anahtarı",
     "highEffortBadge": "(derin)",
     "placeholder": "Yapay zeka özetiniz oluşturulduktan sonra burada görünecek.",
-    "insufficientCredits": "Öne çıkanları bulmak için dakikanız yetmiyor.",
+    "insufficientCredits": "Öne çıkanları bulmak için yeterli dakika kalmadı.",
     "error": "Öne çıkanlar oluşturulamadı. {{message}}",
     "cancel": "İptal",
     "copy": "Özeti kopyala",
@@ -586,7 +576,7 @@
     "downloadCombined": "Birleştirilmiş Klibi İndir",
     "saveCombinedDialogTitle": "Birleştirilmiş öne çıkan klibi kaydet",
     "combinedCutFailed": "Birleştirilmiş öne çıkanlar kesilemedi: {{message}}",
-    "highlightsInsufficientCredits": "Özet oluşturuldu, ancak dakikalarınız bittiği için öne çıkanların bulunması durdu.",
+    "highlightsInsufficientCredits": "Özet hazır, ancak dakikalarınız bittiği için öne çıkanları bulma işlemi durdu.",
     "highlightsPartialWarning": "Öne çıkanlar kısmen çıkarıldı. Bu öne çıkanlar eksik olabilir. Yenilemek için yeniden oluşturun.",
     "highlightsPartialWithReason": "Özet oluşturuldu, ancak öne çıkanlar kısmen çıkarıldı: {{message}}",
     "estimateOwnKey": "Kendi API anahtarınız kullanılır",
@@ -621,7 +611,10 @@
     "highlightCuesChanged": "Bu öne çıkan bulunduktan sonra satırlarını düzenlediniz. Hâlâ uyup uymadığını kontrol edin.",
     "clipCaptionsChangedAny": "Bu klip kesildikten sonra altyazılar değişti (metin, stil veya boyut).",
     "notEnoughForRun": "Özet ve öne çıkanlar için yeterli dakika kalmadı.",
-    "clipsUseOriginalAudio": "Klipler seslendirmeyi değil, orijinal sesi kullanır."
+    "clipsUseOriginalAudio": "Klipler seslendirmeyi değil, orijinal sesi kullanır.",
+    "notEnoughMinutesSummary": "Bu özet için yeterli dakika kalmadı.",
+    "notEnoughMinutesHighlights": "Öne çıkanları bulmak için yeterli dakika kalmadı.",
+    "translateMissingLines": "Bu satırları çevir"
   },
   "panel": {
     "new": "yeni",
@@ -630,13 +623,13 @@
       "none": "Büyük boşluk tespit edilmedi"
     },
     "confidence": {
-      "title": "Düşük Güvenilirlik",
+      "title": "Düşük güvenilirlik",
       "none": "Düşük güvenilirlikli satır tespit edilmedi",
       "count": "{{count}} satır"
     }
   },
   "editSubtitles": {
-    "title": "Altyazıları Düzenle",
+    "title": "Altyazıları düzenle",
     "listTitle": "Altyazılar ({{count}})",
     "workspace": {
       "editorStage": "Düzenleyici çalışma alanı",
@@ -663,15 +656,15 @@
       "highlightEditingLocked": "Öne çıkanlar oluşturuluyor, düzenleme kilitli"
     },
     "item": {
-      "seek": "Atla",
-      "seekTitle": "Videoyu başlangıç zamanına atla",
+      "seek": "Git",
+      "seekTitle": "Videoyu bu satırın başladığı yere götür",
       "playSnippet": "Parçayı oynat",
       "pauseSnippet": "Parçayı duraklat",
       "insertTitle": "Bu altyazıdan sonra yeni altyazı bloğu ekle",
       "removeTitle": "Bu altyazı bloğunu kaldır",
       "shiftPlaceholder": "Kaydır (-/+ sn)",
       "shiftTitle": "Bu altyazıyı saniye cinsinden kaydır (+/-)",
-      "applyShift": "Kaydırmayı Uygula",
+      "applyShift": "Kaydırmayı uygula",
       "originalTextPrefix": "Orijinal:",
       "subtitlePlaceholder": "Altyazı metni",
       "confirmRemove": "Bu altyazı bloğunu kaldırmak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
@@ -681,7 +674,10 @@
       "startTimeAria": "{{index}}. satırın başlangıç zamanı",
       "endTimeAria": "{{index}}. satırın bitiş zamanı",
       "splitTitle": "Bu satırı imlecin olduğu yerden böl",
-      "mergeTitle": "Sonraki satırla birleştir"
+      "mergeTitle": "Sonraki satırla birleştir",
+      "timeOverlapsPrevious": "Bu satır önceki satır bitmeden başlıyor, bu yüzden ikisi aynı anda görünüyor.",
+      "timeOverlapsNext": "Bu satır sonraki satır başladıktan sonra bitiyor, bu yüzden ikisi aynı anda görünüyor.",
+      "timeOverlapsBoth": "Bu satır önceki ve sonraki satırlarla çakışıyor, bu yüzden hepsi aynı anda görünüyor."
     },
     "header": {
       "save": "Altyazıları kaydet",
@@ -732,16 +728,15 @@
       "toggleLabel": "Kendi API anahtarlarımı kullan",
       "activeKeys": "Anahtarlar hazır: {{count}}",
       "noKeys": "Yapılandırılmış anahtar yok",
-      "usingApiKeys": "Stage5 kredileri kapalı",
-      "usingCredits": "Stage5 kredileri kullanımda",
+      "usingApiKeys": "Stage5 dakikalarınız kullanılmıyor",
+      "usingCredits": "Stage5 dakikalarınız kullanılıyor",
       "toggleOn": "Artık API anahtarlarınızı kullanıyor.",
-      "toggleOff": "Artık Stage5 kredilerini kullanıyor.",
+      "toggleOff": "Artık Stage5 dakikalarınız kullanılıyor.",
       "toggleError": "Tercih güncellenemedi.",
       "toggleAria": "Kendi API anahtarlarımı kullan",
       "requirementTranslation": "Çeviri için OpenAI veya Anthropic anahtarı gerekir",
       "activeKeys_one": "Anahtarlar hazır: {{count}}"
     },
-    "creditsDescription": "Dakika satın alın. Görüntülenen saatler, yazıya dökebileceğiniz veya çevirebileceğiniz toplam video süresinin tahminidir. Örnek: 3 saatlik bir videoyu yazıya döküp çevirmek yaklaşık 6 saat (≈140.000 kredi) kullanır.",
     "performanceQuality": {
       "title": "Performans ve Kalite",
       "qualityTranslation": {
@@ -751,32 +746,15 @@
         "modelOff": "Yalnızca Claude Haiku 5.5 taslak",
         "reviewProvider": "İnceleme sağlayıcısı",
         "openAiHighEnd": "OpenAI üst düzey inceleme",
-        "anthropicHighEnd": "Anthropic üst düzey inceleme",
-        "help": "<b>5× kredi</b> • Daha yüksek kalite için inceleme aşaması ekler",
-        "helpWithEstimate": "<b>5× kredi</b> • Bakiyeniz: ~{{normalTime}} (normal) / ~{{hqTime}} (yk)",
-        "helpOn": "<b>5× kredi</b> • Claude Haiku 5.5 taslağı + Claude Opus 5.5 incelemesi",
-        "helpOff": "<b>1× kredi</b> • Yalnızca Claude Haiku 5.5 taslağı",
-        "helpWithEstimateOn": "<b>5× kredi</b> • Claude Haiku 5.5 taslağı + Claude Opus 5.5 incelemesi • Bakiye: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× kredi</b> • Yalnızca Claude Haiku 5.5 taslağı • Bakiye: ~{{time}}"
+        "anthropicHighEnd": "Anthropic üst düzey inceleme"
       },
       "qualitySummary": {
         "label": "Kaliteli Özet",
         "modelOn": "Claude Opus 5.5 derin analiz + öne çıkan klipler",
-        "modelOff": "Claude Sonnet 5.5 standart analiz",
-        "help": "<b>4× kredi</b> • Claude Opus 5.5 ile derin analiz ve öne çıkan klipler",
-        "helpWithEstimate": "<b>4× kredi</b> • Bakiyeniz: ~{{normalTime}} (normal) / ~{{hqTime}} (yk)",
-        "helpOn": "<b>4× kredi</b> • Claude Opus 5.5 ile derin analiz + öne çıkan klipler",
-        "helpOff": "Claude Sonnet 5.5 ile hızlı analiz",
-        "helpWithEstimateOn": "<b>4× kredi</b> • Claude Opus 5.5 ile derin analiz + öne çıkan klipler • Bakiye: ~{{time}}",
-        "helpWithEstimateOff": "Claude Sonnet 5.5 ile hızlı analiz • Bakiye: ~{{time}}"
+        "modelOff": "Claude Sonnet 5.5 standart analiz"
       },
       "qualityDubbing": {
-        "label": "Kaliteli Seslendirme",
-        "modelOn": "ElevenLabs TTS premium sesler",
-        "help": "<b>12× kredi</b> • Premium seslerle ElevenLabs TTS",
-        "helpWithEstimate": "<b>12× kredi</b> • Bakiyeniz: ~{{normalTime}} (normal) / ~{{hqTime}} (yk)",
-        "helpOn": "<b>{{ratio}}× kredi</b> • Premium seslerle ElevenLabs TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredi</b> • Premium seslerle ElevenLabs TTS • Bakiye: ~{{time}}"
+        "modelOn": "ElevenLabs TTS premium sesler"
       },
       "videoSuggestionModel": {
         "label": "Video Öneri Modeli",
@@ -785,9 +763,6 @@
         "quality": "Kalite (çeviri kalite modu ile aynı)"
       },
       "rate": {
-        "perHour": "~{{credits}} kredi/saat",
-        "perMinute": "~{{credits}} kredi/dk",
-        "perSearch": "~{{credits}} kredi/arama",
         "balance": "Bakiye: ~{{time}}",
         "minutesPerHour": "Videonun saati başına dakikalarınızdan ~{{time}}",
         "minutesPerDubMinute": "Seslendirmenin dakikası başına dakikalarınızdan ~{{time}}",
@@ -810,18 +785,15 @@
       "previewTooltip": "Bu sesi önizle",
       "previewing": "Oynatılıyor...",
       "previewFree": "Önizle",
-      "previewWithCost": "Önizle ({{cost}} kredi)",
       "mixLabel": "Seslendirme Ses Düzeyi / Orijinal Video Ses Düzeyi",
       "mixHelp": "Seslendirmenin altında ne kadar orijinal ses çalacağını kontrol edin.",
       "mixAmbient": "Daha fazla ortam sesi",
       "mixVoice": "Daha fazla ses",
       "voiceCloning": "Orijinal Sesi Klonla",
       "voiceCloningDesc": "Seslendirmede orijinal konuşmacının sesini koruyun",
-      "voiceCloningInsufficientCredits": "En az 1 dakikalık bakiye gerektirir",
       "voiceCloningEnabled": "ElevenLabs ile ses klonlama etkin. Orijinal konuşmacının sesi seslendirmede korunacak.",
       "voiceCloningInfo": "Ses klonlama, orijinal konuşmacının sesini analiz edip yeniden oluşturmak için ElevenLabs Seslendirme API'sini kullanır.",
       "costPerMinute": "Dakika başına maliyet",
-      "credits": "kredi",
       "yourBalance": "Bakiyeniz",
       "canClone": "Klonlayabilirsiniz",
       "upToMinutes": "{{minutes}} dakikaya kadar",
@@ -831,7 +803,7 @@
     },
     "byoOpenAi": {
       "title": "Kendi API Anahtarlarınızı Getirin",
-      "description": "Kendi API anahtarlarınızı kullanmak için tek seferlik yükseltmeyi açın. Açıldıktan sonra tüm yazıya dökme, çeviri, seslendirme ve özet işlemleri Stage5 kredilerini tüketmek yerine doğrudan kendi hesaplarınızda çalışır.",
+      "description": "Tek seferlik ödemeyle kendi API anahtarlarınızı kullanabilirsiniz. Kilit açıldıktan sonra yazıya dökme, çeviri, seslendirme ve özetler Stage5 dakikalarınızı kullanmak yerine kendi yapay zekâ hesaplarınızda çalışır.",
       "unlocking": "Ödeme açılıyor…",
       "unlockCta": "$10 ile Aç",
       "unlockHint": "Açıldıktan sonra, hesaplarınızda doğrudan faturalandırmayı açmak için istediğiniz zaman API anahtarlarınızı buraya ekleyin.",
@@ -849,25 +821,23 @@
       "test": "Anahtarı Test Et",
       "lastSynced": "Son senkronizasyon",
       "toggleLabel": "OpenAI anahtarımı kullan",
-      "toggleHelp": "Kapalıyken Stage5 dakikalarınız kullanılır.",
       "toggleAria": "OpenAI anahtarınızı kullanmayı aç/kapat",
       "toggleOn": "Yapay zeka görevleri için OpenAI anahtarınız kullanılıyor.",
-      "toggleOff": "Yapay zeka görevleri için Stage5 kredileri kullanılıyor.",
       "toggleError": "Tercih güncellenemedi.",
       "howToGetKeys": "API anahtarlarını nasıl edinebilirim?",
       "option1Title": "Seçenek 1: OpenAI",
       "option2Title": "Seçenek 2: Anthropic + ElevenLabs",
       "economicsTitle": "Neden değerli?",
-      "economicsBody": "Stage5 kredileri kolaylık için optimize edilmiştir (kurulum yok). Kendi anahtarınızı kullanmak sağlayıcılara doğrudan ödeme yapar—genellikle paketinize bağlı olarak ~%30–50 daha ucuz.",
+      "economicsBody": "Stage5 dakikaları en kolay seçenektir: hiçbir kurulum gerekmez. Kendi anahtarlarınızla yapay zekâ sağlayıcılarına doğrudan ödeme yaparsınız; pakete göre genellikle yaklaşık %30–50 daha ucuzdur.",
       "encryptionUnavailable": "Bu sistemde güvenli depolama kullanılamıyor. API anahtarları kaydedilemez.",
       "checkoutOpen": "Ödeme sayfası tarayıcıda açık…",
-      "checkoutOpenHint": "Ödemeyi tarayıcınızda tamamlayın. Ödeme onaylandığında BYO'yu otomatik olarak açacağız.",
+      "checkoutOpenHint": "Ödemeyi tarayıcınızda tamamlayın. Ödeme geçtiğinde kendi anahtarlarınızın kilidi otomatik olarak açılır.",
       "entitlementsLoadFailed": "Kilit durumunuz kontrol edilemedi. Bağlantınızı kontrol edip yeniden deneyin.",
       "unlockFailed": "Ödeme başlatılamadı. Bağlantınızı kontrol edip yeniden deneyin."
     },
     "byoPreferences": {
       "title": "Sağlayıcı Tercihleri",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Stage5 dakikaları",
       "pricingHint": "1 saatlik video başına tahmini maliyet",
       "pricingHintHeuristic": "Uygulamanın mevcut sezgisel tahminlerine göre maliyet",
       "transcription": "Yazıya dökme",
@@ -889,17 +859,17 @@
       "summary": "Özet",
       "dubbing": "Seslendirme",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Şu anda kullanılabilir bir BYO video öneri modeli yok. Bu özellik için OpenAI veya Anthropic BYO'yu etkinleştirin.",
-      "videoSuggestionModelRequiresOpenAi": "OpenAI BYO kilidi, anahtar ve açık geçiş gerekir.",
-      "videoSuggestionModelRequiresAnthropic": "Anthropic BYO kilidi, anahtar ve açık geçiş gerekir.",
-      "summaryRequiresOpenAi": "OpenAI BYO erişimi ve API anahtarı gerekir.",
-      "summaryRequiresAnthropic": "Anthropic BYO erişimi ve API anahtarı gerekir.",
+      "videoSuggestionModelUnavailable": "Kendi anahtarlarınızla kullanılabilecek bir video öneri modeli yok. Bunu kullanmak için OpenAI veya Anthropic anahtarınızı açın.",
+      "videoSuggestionModelRequiresOpenAi": "API anahtarı kilidinin açılmış olması, OpenAI anahtarınız ve OpenAI düğmesinin açık olması gerekir.",
+      "videoSuggestionModelRequiresAnthropic": "API anahtarı kilidinin açılmış olması, Anthropic anahtarınız ve Anthropic düğmesinin açık olması gerekir.",
+      "summaryRequiresOpenAi": "API anahtarı kilidinin açılmış olması ve OpenAI anahtarınız gerekir.",
+      "summaryRequiresAnthropic": "API anahtarı kilidinin açılmış olması ve Anthropic anahtarınız gerekir.",
       "translationReview": "Çeviri (İnceleme)",
-      "transcriptionRequiresElevenLabs": "Yazıya dökme yalnızca ElevenLabs Scribe kullanır. Kendi anahtarlarınızla yazıya dökmek için bir ElevenLabs API anahtarı ekleyin. Anahtar yoksa yazıya dökme Stage5 kredilerini kullanır; bu krediler API anahtarlarınız açıkken kullanılmaz. OpenAI anahtarınız çeviri için kullanılmaya devam eder.",
-      "dubbingRequiresElevenLabs": "Seslendirme yalnızca ElevenLabs kullanır. Kendi anahtarlarınızla seslendirmek için bir ElevenLabs API anahtarı ekleyin. Anahtar yoksa seslendirme Stage5 kredilerini kullanır; bu krediler API anahtarlarınız açıkken kullanılmaz.",
+      "transcriptionRequiresElevenLabs": "Yazıya dökme yalnızca ElevenLabs Scribe kullanır. Kendi anahtarlarınızla yazıya dökmek için bir ElevenLabs API anahtarı ekleyin. Anahtar yoksa yazıya dökme Stage5 dakikalarınızı kullanır; kendi anahtarlarınız açıkken bu dakikalar kullanılmaz. OpenAI anahtarınız çeviri için kullanılmaya devam eder.",
+      "dubbingRequiresElevenLabs": "Seslendirme yalnızca ElevenLabs kullanır. Kendi anahtarlarınızla seslendirmek için bir ElevenLabs API anahtarı ekleyin. Anahtar yoksa seslendirme Stage5 dakikalarınızı kullanır; kendi anahtarlarınız açıkken bu dakikalar kullanılmaz.",
       "runtimeFallback": "API anahtarı modunda çalışma zamanı yedeği",
-      "videoSuggestionLegacyFollowDraft": "Eski BYO ayarı korundu: siz doğrudan bir model seçene kadar taslak çeviri modelinizi izler.",
-      "videoSuggestionLegacyFollowReview": "Eski BYO ayarı korundu: siz doğrudan bir model seçene kadar inceleme çeviri modelinizi izler."
+      "videoSuggestionLegacyFollowDraft": "Önceki ayarınız korundu: siz burada bir model seçene kadar bu ayar taslak çeviri modelinizi izler.",
+      "videoSuggestionLegacyFollowReview": "Önceki ayarınız korundu: siz burada bir model seçene kadar bu ayar inceleme çeviri modelinizi izler."
     },
     "apiKeyGuide": {
       "title": "API Anahtarları Nasıl Alınır",
@@ -923,8 +893,7 @@
         "step3b": "bölümüne gidin",
         "step4": "Tıkla",
         "step5": "Fatura ayarlarına bir ödeme yöntemi ekleyin (API'yi kullanmak için gerekli)",
-        "step6": "Anahtarı kopyalayın (sk- ile başlar) ve Stage5'e yapıştırın",
-        "note": "İpucu: Yeni OpenAI hesapları genellikle başlamak için ücretsiz kredi alır. Sadece kullandığınız kadar ödersiniz."
+        "step6": "Anahtarı kopyalayın (sk- ile başlar) ve Stage5'e yapıştırın"
       },
       "anthropic": {
         "description": "Claude daha yüksek kaliteli çeviri incelemeleri sağlar. Olmadan, GPT tüm çeviri görevlerini üstlenir.",
@@ -944,7 +913,7 @@
         "step4": "Abonelik ayarlarına bir ödeme yöntemi ekleyin (ücretsiz seviyenin ötesinde API kullanımı için gerekli)",
         "step5": "API anahtarınızı kopyalayın ve Stage5'e yapıştırın",
         "note": "İpucu: ElevenLabs sınırlı kullanımlı ücretsiz bir seviye sunar. Daha fazlası için hesap ayarlarınızdan ücretli plana yükseltin.",
-        "audioDescription": "Tüm yazıya dökme (Scribe) ve seslendirme işlemleri ElevenLabs ile yapılır. Kendi ElevenLabs anahtarınız olmadan ikisi de Stage5 kredilerini kullanır; bu krediler API anahtarlarınız açıkken kullanılmaz."
+        "audioDescription": "Tüm yazıya dökme (Scribe) ve seslendirme işlemleri ElevenLabs ile yapılır. Kendi ElevenLabs anahtarınız olmadan ikisi de Stage5 dakikalarınızı kullanır; kendi anahtarlarınız açıkken bu dakikalar kullanılmaz."
       }
     },
     "byoAnthropic": {
@@ -963,14 +932,11 @@
       "testing": "Test ediliyor…",
       "test": "Anahtarı Test Et",
       "toggleLabel": "Anthropic anahtarımı kullan",
-      "toggleHelp": "Kapalıyken Claude istekleri Stage5 kredilerini kullanır.",
       "toggleAria": "Anthropic anahtarınızı kullanmayı aç/kapat",
       "toggleOn": "Claude modelleri için Anthropic anahtarınız kullanılıyor.",
-      "toggleOff": "Claude modelleri için Stage5 kredileri kullanılıyor.",
       "toggleError": "Anthropic tercihi güncellenemedi."
     },
     "stage5TtsProvider": {
-      "label": "TTS Kalitesi (Stage5 Kredileri)",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "En iyi kalite, yüksek maliyet (~12×)",
       "elevenlabsHintWithBalance": "En iyi kalite · Bakiyeniz: {{time}} seslendirme"
@@ -1063,31 +1029,22 @@
       "freeTitle": "Kendi yapay zekânızla ücretsiz çevirin"
     },
     "creditTransfer": {
-      "title": "Dakikaları bilgisayarlar arasında taşıyın",
-      "description": "Satın alınan dakikalar ve API anahtarı kilidi başka bir bilgisayara taşınabilir. Ücretsiz dakikalar bu bilgisayarda kalır.",
-      "moveButton": "Dakikaları başka bir bilgisayara taşı",
-      "receiveButton": "Dakikaları al",
       "creating": "Kod oluşturuluyor…",
       "copy": "Kopyala",
       "copied": "Kopyalandı",
-      "summaryCredits": "{{credits}} kredi taşınacak.",
       "summaryByo": "API anahtarı kilidi de taşınacak.",
       "expires": "Bu kod tek kullanımlıktır ve {{minutes}} dakika içinde geçerliliğini yitirir.",
-      "steps": "Yeni bilgisayarda: Translator’ı yükleyin, Ayarlar’ı açın, “Dakikaları al” seçeneğini seçin ve bu kodu girin.",
       "inputLabel": "Diğer bilgisayarınızdaki kod",
       "redeem": "Al",
       "redeeming": "Alınıyor…",
-      "received": "{{credits}} kredi alındı.",
       "receivedNoCredits": "Kod çalıştı.",
       "receivedByo": "API anahtarı kilidi bu bilgisayarda etkin.",
       "errors": {
-        "nothing_to_transfer": "Henüz taşınacak bir şey yok: bu bilgisayarda satın alınmış dakika ya da API anahtarı kilidi yok. Başka bir bilgisayardaki dakikaları buraya getirmek için “Dakikaları al”ı seçin.",
         "too_many_codes": "Bu saat içinde çok fazla aktarım kodu oluşturuldu. Biraz sonra yeniden deneyin.",
         "jobs_running": "Yazıya dökme veya çeviri hâlâ sürüyor. Bittiğinde yeniden deneyin.",
         "invalid_code": "Bu kod yanlış, kullanılmış ya da süresi dolmuş. Diğer bilgisayarda yeni bir kod oluşturun.",
         "same_device": "Kodu, oluşturduğunuz bilgisayara değil diğer bilgisayara girin.",
         "network_error": "Stage5 sunucusuna ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin.",
-        "transfer_failed": "Dakikalar taşınamadı. Bağlantınızı kontrol edip yeniden deneyin.",
         "nothing_to_transfer_minutes": "Henüz taşınacak bir şey yok: bu bilgisayarda satın alınmış dakika ya da API anahtarı kilidi yok. Başka bir bilgisayardaki dakikaları buraya getirmek için “Dakikaları al”ı seçin.",
         "transfer_failed_minutes": "Dakikalar taşınamadı. Bağlantınızı kontrol edip yeniden deneyin."
       },
@@ -1104,27 +1061,22 @@
   "credits": {
     "title": "Dakikalarınız",
     "loading": "Yükleniyor...",
-    "credits": "kredi",
     "usingApiKey": "API Anahtarı Kullanılıyor",
     "usingOpenAi": "OpenAI kullanılıyor",
     "usingAnthropic": "Claude kullanılıyor",
     "usingElevenLabs": "ElevenLabs kullanılıyor",
     "hours": "saat",
     "translationHoursShort": "çeviri sa.",
-    "buyCredits": "Dakika satın al",
     "redirectingToPayment": "Güvenli ödeme açılıyor…",
-    "description": "${{packMicroPrice}} ({{packMicroHours}} sa), ${{pack1Price}} ({{pack1Hours}} sa), ${{pack2Price}} ({{pack2Hours}} sa) veya ${{pack3Price}} ({{pack3Hours}} sa) paketlerinden birini seçin",
-    "notEnough": "Dakikanız yetmiyor. Devam etmek için dakika satın alın.",
     "transcriptionMinutesShort": "{{minutes}} dk yazıya dökme",
     "transcriptionTimeShort": "{{time}} yazıya dökme",
-    "costOfBalance": "{{balance}} kredinizin {{cost}} kadarı",
     "pill": {
       "freeBack": "Ücretsiz dakikalar {{date}} tarihinde yenilenir",
       "empty": "Dakika al",
       "freeThisMonth": "Bu ay {{count}} ücretsiz dk",
       "freeWelcome": "{{count}} ücretsiz dk",
       "minutes": "{{count}} dk kaldı",
-      "title": "Dakikalar ve paketler",
+      "title": "Dakikalarınız ve paketler",
       "neutral": "Dakikalar",
       "welcomePending": "Ücretsiz dakikalar yolda",
       "freeTimeThisMonth": "Bu ay {{time}} ücretsiz",
@@ -1142,11 +1094,10 @@
     "moreMinutesPerDollar": "Dolar başına {{multiplier}} kat fazla dakika",
     "checkoutWaiting": "Ödemeyi tarayıcınızda tamamlayın. Dakikalarınız burada kendiliğinden görünür.",
     "checkoutNote": "Tarayıcınızda Stripe ile tek seferlik ödeme. Hesap ya da abonelik yok. Dakikalar otomatik olarak yüklenir.",
-    "dubbingNote": "Çeviri dakika başına yaklaşık %10 ekler; seslendirmede bu oran daha yüksek.",
+    "dubbingNote": "Çeviri eklemek yaklaşık %10 daha fazla dakika kullanır; seslendirme daha fazlasını kullanır.",
     "iCancelledCheckout": "Ödemeyi iptal ettim",
     "checkoutStartFailed": "Ödeme başlatılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     "loadFailed": "Bakiyeniz yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin.",
-    "estimateAmount": "{{credits}} kredi",
     "costOfBalanceMinutes": "{{balance}} bakiyenizden {{cost}}",
     "timeLeft": "{{time}} kaldı",
     "success": {
@@ -1163,7 +1114,10 @@
     "offlineNote": "Translator, Stage5’e ulaşamıyor. Yeniden çevrimiçi olduğunuzda bakiyeniz tekrar görünür.",
     "microPackLabelNoTime": "Dakika satın al — {{price}}",
     "microPackLabel": "Dakika satın al — {{price}} · ≈ {{time}} video",
-    "monthlyFreeNote_one": "Her ay {{minutes}} ücretsiz dakika · sonraki: {{date}}"
+    "monthlyFreeNote_one": "Her ay {{minutes}} ücretsiz dakika · sonraki: {{date}}",
+    "checkingPayment": "Ödemeniz kontrol ediliyor…",
+    "checkoutUnresolved": "Ödemeyi yaptıysanız dakikalarınız birazdan burada görünür. Ödemeyi henüz bitirmediyseniz tarayıcınızda tamamlayın.",
+    "checkPaymentNow": "Şimdi kontrol et"
   },
   "cta": {
     "generate": {
@@ -1275,7 +1229,6 @@
     "afrikaans": "Afrikaanca"
   },
   "generateSubtitles": {
-    "noCredits": "Dakika yok.",
     "rechargeLink": "Yeniden Yükle →",
     "creditWarning": {
       "message": "Aracı Denetimi üzerinden kendi Claude veya Codex’inizle indirme, düzenleme, dışa aktarma ve çeviri ücretsizdir. Yazıya dökmek için dakika ya da <settingsLink>{{settingsLinkText}}</settingsLink> bölümündeki API anahtarı kilidinin açılması gerekir.",
@@ -1285,7 +1238,6 @@
       "pleaseSelectVideo": "Lütfen bir video seçin",
       "processingDuration": "Video süresi işleniyor. Lütfen kısa süre sonra tekrar deneyin.",
       "icloudPlaceholder": "Bu dosya iCloud'da depolanıyor. Finder'da 'İndir'e tıklayın ve bulut simgesinin tamamlanmasını bekleyin, ardından tekrar deneyin.",
-      "insufficientCreditsForVoiceCloning": "Ses klonlama için dakikanız yetmiyor. Video {{duration}} dakika, ancak bakiyeniz yalnızca {{affordable}} dakikaya yetiyor. Dakika ekleyin ya da ses klonlamayı kapatın.",
       "fileTooLargeForVoiceCloning": "Video dosyası ses klonlama için çok büyük ({{size}}MB). İzin verilen maksimum {{max}}MB. Lütfen daha kısa bir video kullanın veya ses klonlamayı devre dışı bırakın."
     },
     "status": {
@@ -1295,7 +1247,6 @@
       "error": "Hata"
     },
     "buttons": {
-      "buyCredits": "Dakika satın al",
       "redirectingToPayment": "Ödemeye yönlendiriliyor..."
     },
     "workflow": {
@@ -1319,7 +1270,6 @@
       "saveOutputsDescription": "Saklamak istediğiniz kaynak veya seslendirilmiş medyayı uygulama çalışma alanının dışına kaydedin."
     },
     "calculatingCost": "Maliyet hesaplanıyor...",
-    "notEnoughCredits": "Yeterli dakika yok",
     "welcomeCredits": {
       "message": "Yazıya dökme ve çeviriyi denemek için ücretsiz dakikalarınız var (yaklaşık 20 dakikalık video)."
     }
@@ -1327,10 +1277,10 @@
   "findBar": {
     "findPlaceholder": "Altyazılarda ara...",
     "replacePlaceholder": "Şununla değiştir...",
-    "replaceAll": "Tümünü Değiştir",
-    "nextMatch": "Sonraki Eşleşme (Enter)",
-    "previousMatch": "Önceki Eşleşme (Shift+Enter)",
-    "replaceAllTitle": "Tüm Oluşumları Değiştir",
+    "replaceAll": "Tümünü değiştir",
+    "nextMatch": "Sonraki eşleşme (Enter)",
+    "previousMatch": "Önceki eşleşme (Shift+Enter)",
+    "replaceAllTitle": "Tüm eşleşmeleri değiştir",
     "closeTitle": "Kapat (Esc)",
     "nextMatchAria": "Sonraki eşleşme",
     "previousMatchAria": "Önceki eşleşme",
@@ -1339,7 +1289,8 @@
     "matchCount": "{{current}}/{{total}}",
     "matchCase": "Büyük/küçük harf duyarlı",
     "wholeWord": "Tam sözcük",
-    "showReplace": "Değiştir"
+    "showReplace": "Değiştir",
+    "noMatches": "Eşleşme yok"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1365,8 +1316,8 @@
     "downloadInProgress": "İndirme Devam Ediyor",
     "saveDownloadedFile": "İndirilen dosyayı kaydet: {{path}}",
     "transcriptionInProgress": "Yazıya dökme sürüyor",
-    "translationInProgress": "Çeviri Devam Ediyor",
-    "dubbingInProgress": "Seslendirme Devam Ediyor",
+    "translationInProgress": "Çeviri sürüyor",
+    "dubbingInProgress": "Seslendirme sürüyor",
     "dubbingWorking": "Seslendirme oluşturuluyor…",
     "cancelTranslationConfirm": "Çeviri iptal edilsin mi? İlerleme kaybedilecek ve yeniden başlamanız gerekecek.",
     "cancelSummaryConfirm": "Özet oluşturma iptal edilsin mi?",
@@ -1383,42 +1334,8 @@
       "description": "Bu, video platformu değişiklikleri veya yeni koruma önlemlerinden kaynaklanıyor olabilir. Daha yeni videoları işlemek için bir sonraki uygulama sürümünü beklemeniz gerekebilir."
     },
     "creditRanOut": {
-      "title": "Dakikalarınız bitti",
-      "message": "Dakikalarınız bitti. Ayarlar’dan dakika ekleyin, sonra kaldığınız yerden devam edin.",
       "openSettings": "Ayarları Aç",
       "ok": "Tamam",
-      "neverHadTitle": "Yazıya dökmek için dakika gerekiyor",
-      "neverHadMessage": "Yazıya dökmek için dakika ya da API anahtarı kilidinin açılması gerekir. İkisini de Ayarlar’dan edinebilirsiniz. Aracı Denetimi üzerinden kendi Claude veya Codex’inizle çeviri ücretsizdir.",
-      "notEnoughTitle": "Bu video için yeterli dakika yok",
-      "notEnoughTranscriptionMessage": "Bu videoyu yazıya dökmek yaklaşık {{required}} kredi gerektirir. {{available}} krediniz var; bu yaklaşık {{minutes}} dakikaya yeter. Kredi ekleyip yeniden başlatın.",
-      "notEnoughMessage": "Bunun için {{available}} olan bakiyenizden fazlası gerekiyor. Devam etmek için dakika ekleyin.",
-      "task": {
-        "transcription": {
-          "title": "Yazıya dökmek için dakika gerekiyor",
-          "message": "Bakiyeniz bunu yazıya dökmeye yetmiyor. Dakika ekleyip yeniden başlatın. Yazıya dökülen satırlar korunur.",
-          "messageNothingYet": "Bakiyeniz bunu yazıya dökmeye yetmiyor. Dakika ekleyip yeniden başlatın."
-        },
-        "translation": {
-          "title": "Çeviri için dakika gerekiyor",
-          "message": "Bakiyeniz bunu çevirmeye yetmiyor. Dakika ekleyip yeniden deneyin. Çevrilen satırlar korunur. Aracı Denetimi üzerinden kendi Claude veya Codex’inizle çeviri ücretsizdir.",
-          "messageNothingYet": "Bakiyeniz bunu çevirmeye yetmiyor. Dakika ekleyip yeniden deneyin. Aracı Denetimi üzerinden kendi Claude veya Codex’inizle çeviri ücretsizdir."
-        },
-        "dubbing": {
-          "title": "Seslendirme için dakika gerekiyor",
-          "message": "Bakiyeniz bu videoyu seslendirmeye yetmiyor. Dakika ekleyip yeniden deneyin."
-        },
-        "summary": {
-          "title": "Özet için dakika gerekiyor",
-          "message": "Bakiyeniz özete ve öne çıkanlara yetmiyor. Dakika ekleyip yeniden deneyin."
-        },
-        "videoSearch": {
-          "title": "Yapay zekâ ile video arama için dakika gerekiyor",
-          "message": "Bakiyeniz yapay zekâ ile video aramaya yetmiyor. Dakika ekleyip yeniden arayın."
-        },
-        "other": {
-          "title": "Bunun için dakika gerekiyor"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "Yazıya dökmek için dakika gerekiyor",
@@ -1450,12 +1367,15 @@
         "message": "Dakikalarınız bitti. Ayarlar’dan dakika ekleyin, sonra kaldığınız yerden devam edin.",
         "notEnoughTitle": "Bu video için yeterli dakika yok",
         "notEnoughTranscriptionMessage": "Bu videoyu yazıya dökmek {{required}} gerektiriyor, sizde {{available}} kaldı. Dakika ekleyip yeniden başlatın.",
-        "notEnoughMessage": "Bunun için kalan {{available}} süreden fazlası gerekiyor. Devam etmek için dakika ekleyin."
+        "notEnoughMessage": "Bunun için kalan {{available}} süreden fazlası gerekiyor. Devam etmek için dakika ekleyin.",
+        "voicePreview": {
+          "title": "Ses önizlemesi için dakika gerekiyor",
+          "message": "Dakikalarınız bir ses önizlemesine yetmiyor. Dakika ekleyip yeniden deneyin."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "Seslendirme başlatılsın mı?",
-      "message": "Bu seslendirme {{balance}} kredinizin yaklaşık {{cost}} kadarını kullanır. Ses üretmek, çeviriden çok daha pahalıdır.",
       "messageMinutes": "Bu seslendirme {{cost}} kullanır. Ses üretmek, çeviriden çok daha pahalıdır."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1530,7 +1450,9 @@
     "cancelSummaryTitle": "Özet durdurulsun mu?",
     "keepSummarizing": "Devam et",
     "stopSummarizing": "Durdur",
-    "cancelSummaryBody": "Şimdiye kadar hazırlanan özet ve öne çıkanlar saklanmayacak."
+    "cancelSummaryBody": "Şimdiye kadar hazırlanan özet ve öne çıkanlar saklanmayacak.",
+    "cancelTranslationBody": "Şimdiye kadar çevrilen satırlar korunur. Kalanını daha sonra çevirebilirsiniz.",
+    "cancelDubbingTitle": "Seslendirme durdurulsun mu?"
   },
   "progress": {
     "preparingVideoExport": "Video dışa aktarma hazırlanıyor…",
@@ -1780,7 +1702,8 @@
     "statusLines_one": "{{count}} altyazı satırı",
     "checkingFile": "Dosya okunuyor…",
     "statusLoaded": "{{count}} satır yüklendi",
-    "statusLoaded_one": "{{count}} satır yüklendi"
+    "statusLoaded_one": "{{count}} satır yüklendi",
+    "interruptedTranslateSubtitles": "Bu altyazıların {{language}} diline çevirisi Translator kapandığında yarıda kaldı."
   },
   "subtitleStyles": {
     "Cinema": "Sinema sarısı",

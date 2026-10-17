@@ -23,7 +23,6 @@
       "unexpectedSave": "May naganap na hindi inaasahang error habang sine-save.",
       "unexpectedLoad": "May naganap na hindi inaasahang error habang naglo-load.",
       "renderFailed": "Nabigo ang pag-render",
-      "creditReservationFailed": "Nabigo ang pag-reserve ng credit",
       "invalidRenderOptions": "Hindi wastong render options ang binigay",
       "missingVideoMetadata": "Nawawalang metadata ng video ({{missing}})",
       "insufficientDiskSpace": "Hindi sapat ang disk space para makumpleto ang merge. Mangyaring mag-free up ng space at subukan ulit.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "May naganap na hindi inaasahang error habang sine-save.",
     "unexpectedLoad": "May naganap na hindi inaasahang error habang naglo-load.",
     "renderFailed": "Nabigo ang pag-render",
-    "creditReservationFailed": "Nabigo ang pag-reserve ng credit",
     "invalidRenderOptions": "Hindi wastong render options ang binigay",
     "missingVideoMetadata": "Nawawalang metadata ng video ({{missing}})",
     "noSourceVideo": "Walang source video",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "Pansamantalang hindi available ang transcription (ElevenLabs Scribe) o hindi ito ma-reach pagkatapos ng ilang pagsubok. Pakisubukang muli pagkalipas ng ilang minuto.",
       "fileTooLarge": "Masyadong mahaba ang audio na ito para ma-transcribe sa iisang job (higit sa mga {{hours}} oras). Hatiin ang video sa mas maiikling bahagi at i-transcribe ang bawat bahagi.",
-      "elevenLabsKeyRequired": "Gumagamit ang transcription ng ElevenLabs Scribe at nangangailangan ng ElevenLabs API key. Magdagdag ng isa sa Mga Setting, o i-off ang API key mode para mag-transcribe gamit ang Stage5 credits. Ginagamit pa rin ang iyong OpenAI o Anthropic key para sa pagsasalin."
+      "elevenLabsKeyRequired": "Gumagamit ang transcription ng ElevenLabs Scribe at kailangan nito ng ElevenLabs API key. Magdagdag ng isa sa Mga Setting, o i-off ang “Gamitin ang aking mga API key” para mag-transcribe gamit ang minuto mo sa Stage5. Ginagamit pa rin ang iyong OpenAI o Anthropic key para sa pagsasalin."
     },
     "credits": {
       "transcription": "Kulang ang minuto para i-transcribe ito.",
@@ -237,17 +235,17 @@
     "downloading": "Nagda-download...",
     "selectFile": "Pumili ng File",
     "selectVideoFile": "Pumili ng Video File",
-    "selectVideoAudioFile": "Pumili ng Video / Audio File",
+    "selectVideoAudioFile": "Pumili ng video o audio file",
     "saveOriginalVideo": "I-save ang orihinal na video",
     "localFileDescription": "Mag-upload ng video o audio file mula sa iyong computer",
     "selectLocalFile": "Mag-upload mula sa computer",
     "downloadFromUrl": "I-download mula sa web",
     "recentMedia": "Mga kamakailang file",
     "webDescription": "I-paste ang mga YouTube, TikTok, Instagram video link, o direktang video file URL mula sa mga web page",
-    "chooseFile": "Pumili ng File",
+    "chooseFile": "Pumili ng file",
     "fileSelected": "Napili ang file",
-    "transcribeOnly": "I-transcribe ang Audio",
-    "srtLoaded": "Tapos na ang Transcription",
+    "transcribeOnly": "I-transcribe ang audio",
+    "srtLoaded": "Tapos na ang transcription",
     "srtFileLoaded": "Na-load ang SRT",
     "featuresUnlockAfterTranscription": "I-transcribe, isalin, o gumawa ng mga highlight mula sa video na ito.",
     "preSubtitleActionsHint": "I-transcribe, isalin, o gumawa ng highlights mula sa video na ito.",
@@ -469,30 +467,26 @@
     "batchDownloadRunning": "Nagda-download ang Translator ng ilang video. Hintaying matapos ang mga ito, o i-cancel ang download."
   },
   "subtitles": {
-    "outputLanguage": "Wika ng Output",
+    "outputLanguage": "Wika ng output",
     "showOriginalText": "Ipakita ang orihinal na teksto",
-    "displayModeLabel": "Ipakita ang subtitle",
+    "displayModeLabel": "Pagpapakita ng subtitle",
     "translate": "Isalin",
     "continueTranscribing": "Ipagpatuloy ang pag-transcribe",
-    "generate": "Bumuo ng Subtitle",
+    "generate": "Gumawa ng subtitle",
     "generating": "Bumubuo...",
     "generateNow": "Bumuo ng Subtitle Ngayon",
     "translation": "Pagsasalin",
-    "improveTranscription": "Pagbutihin ang Transcription",
-    "improveTranslation": "Pagbutihin ang Pagsasalin",
-    "chooseSrtFile": "Pumili ng SRT File",
+    "improveTranscription": "Pagbutihin ang transcription",
+    "improveTranslation": "Pagbutihin ang pagsasalin",
+    "chooseSrtFile": "Pumili ng SRT file",
     "dub": "I-dub",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
     "dubEstimateByo": "~{{minutes}}m audio",
     "voiceCloningRequiresTranslation": "Kailangan ng target na wika para sa voice cloning",
     "translateEstimateCredits": "~{{minutes}}m video",
-    "translateEstimateByo": "Sariling key",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "Sigurado ka bang gusto mong kanselahin ang proseso ng pagsasalin ng subtitle? Mawawala ang anumang progress at kailangan mong magsimula ulit.",
-    "dubCostHint": "Boses ng ElevenLabs: ~{{rate}} credits kada minuto ng pagsasalita. Ipinapakita ang tantiyang ito bago magsimula ang dubbing.",
     "unreadableCues_one": "May {{count}} linya sa file na ito na hindi mabasa kaya hindi isinama. Tingnan ang timecode nito.",
     "unreadableCues": "May {{count}} linya sa file na ito na hindi mabasa kaya hindi isinama. Tingnan ang mga timecode nila.",
-    "addCreditsToTranslate": "Magdagdag ng minuto para makapagsalin",
     "dubInto": "I-dub sa {{language}}",
     "dubIntro": "Babasahin ng isang boses ang mga subtitle sa wikang pipiliin mo, kasabay ng orihinal na background sound.",
     "dubNeedsSubtitles": "Binabasa nang malakas ng dubbing ang mga subtitle, kaya kailangan munang may subtitle ang video na ito. I-transcribe ito, saka pumili ng boses dito.",
@@ -501,8 +495,6 @@
     "dubTranslatesFirst": "Isasalin muna sa {{language}} ang mga subtitle, saka ibo-voice.",
     "dubCostWithTranslation": "Pagsasalin at boses: {{cost}}",
     "dubUsesOwnKeys": "Gamit ang sarili mong API keys.",
-    "dubNotEnoughCredits": "Kulang ang minuto para sa dub na ito.",
-    "addCreditsToDub": "Magdagdag ng minuto para mag-dub",
     "noSubtitlesToDub": "Gumawa o magbukas muna ng subtitle para sa video na ito, saka i-dub.",
     "noSubtitlesToTranslate": "Magbukas o gumawa muna ng subtitle, saka isalin.",
     "dubVoiceHelp": "Ang boses para sa dub na ito. Mananatili itong napili sa susunod mong mga dub.",
@@ -529,11 +521,9 @@
     },
     "generate": "Gumawa ng mga highlight",
     "regenerate": "Gawin ulit ang mga highlight",
-    "estimateCredits": "{{credits}} credits",
-    "estimateByo": "Sariling BYO key",
     "highEffortBadge": "(malalim)",
     "placeholder": "Lalabas dito ang iyong AI summary kapag nabuo na.",
-    "insufficientCredits": "Kulang ang minuto para gumawa ng mga highlight.",
+    "insufficientCredits": "Kulang ang minuto para maghanap ng mga highlight.",
     "error": "Hindi namin magawa ang mga highlight. {{message}}",
     "cancel": "Kanselahin",
     "copy": "Kopyahin ang buod",
@@ -586,7 +576,7 @@
     "downloadCombined": "I-download ang Combined Clip",
     "saveCombinedDialogTitle": "I-save ang combined highlight clip",
     "combinedCutFailed": "Nabigo ang pagputol ng mga combined highlight: {{message}}",
-    "highlightsInsufficientCredits": "Nagawa ang buod, pero huminto ang pagkuha ng mga highlight dahil naubos ang minuto.",
+    "highlightsInsufficientCredits": "Tapos na ang buod, pero huminto ang paghahanap ng mga highlight dahil naubos ang minuto mo.",
     "highlightsPartialWarning": "Bahagya lang ang nakuhang highlights. Maaaring kulang ang mga ito. Gawin ulit para i-refresh.",
     "highlightsPartialWithReason": "Nagawa ang buod, pero bahagya lang ang nakuhang highlights: {{message}}",
     "estimateOwnKey": "Gamit ang API key mo",
@@ -621,7 +611,10 @@
     "highlightCuesChanged": "Inedit mo ang mga linya sa highlight na ito matapos itong mahanap. Tingnan kung swak pa rin ito.",
     "clipCaptionsChangedAny": "Nagbago ang subtitle mula nang i-cut ang clip na ito (ang text, style o laki nito).",
     "notEnoughForRun": "Kulang ang minuto para sa buod at mga highlight.",
-    "clipsUseOriginalAudio": "Orihinal na audio ang gamit ng mga clip, hindi ang dub."
+    "clipsUseOriginalAudio": "Orihinal na audio ang gamit ng mga clip, hindi ang dub.",
+    "notEnoughMinutesSummary": "Kulang ang minuto para sa buod na ito.",
+    "notEnoughMinutesHighlights": "Kulang ang minuto para maghanap ng mga highlight.",
+    "translateMissingLines": "Isalin ang mga linyang ito"
   },
   "panel": {
     "new": "bago",
@@ -630,13 +623,13 @@
       "none": "Walang nakitang malalaking gap"
     },
     "confidence": {
-      "title": "Mababang Confidence",
+      "title": "Hindi sigurado",
       "none": "Walang nakitang linya na may mababang confidence",
       "count": "{{count}} linya"
     }
   },
   "editSubtitles": {
-    "title": "I-edit ang mga Subtitle",
+    "title": "I-edit ang mga subtitle",
     "listTitle": "Mga Subtitle ({{count}})",
     "workspace": {
       "editorStage": "Workspace ng editor",
@@ -663,15 +656,15 @@
       "highlightEditingLocked": "Gumagawa ng highlights, naka-lock ang pag-edit"
     },
     "item": {
-      "seek": "Hanapin",
-      "seekTitle": "Hanapin ang video sa oras ng pagsisimula",
+      "seek": "Pumunta",
+      "seekTitle": "Ilipat ang video sa simula ng linyang ito",
       "playSnippet": "I-play ang snippet",
       "pauseSnippet": "I-pause ang snippet",
       "insertTitle": "Maglagay ng bagong subtitle block pagkatapos nito",
       "removeTitle": "Alisin ang subtitle block na ito",
       "shiftPlaceholder": "I-shift (-/+ seg)",
       "shiftTitle": "I-shift ang subtitle na ito ng ilang segundo (+/-)",
-      "applyShift": "I-apply ang Shift",
+      "applyShift": "I-apply ang shift",
       "originalTextPrefix": "Orihinal:",
       "subtitlePlaceholder": "Teksto ng subtitle",
       "confirmRemove": "Sigurado ka bang gusto mong alisin ang subtitle block na ito? Hindi na maaaring bawiin ang aksyon na ito.",
@@ -681,11 +674,14 @@
       "startTimeAria": "Oras ng simula ng linya {{index}}",
       "endTimeAria": "Oras ng dulo ng linya {{index}}",
       "splitTitle": "Hatiin ang linyang ito sa cursor",
-      "mergeTitle": "Isama sa kasunod na linya"
+      "mergeTitle": "Isama sa kasunod na linya",
+      "timeOverlapsPrevious": "Nagsisimula ang linyang ito bago matapos ang naunang linya, kaya sabay silang lumalabas.",
+      "timeOverlapsNext": "Natatapos ang linyang ito pagkatapos magsimula ang susunod na linya, kaya sabay silang lumalabas.",
+      "timeOverlapsBoth": "Nagsasapawan ang linyang ito at ang mga linya bago at pagkatapos nito, kaya sabay-sabay silang lumalabas."
     },
     "header": {
-      "save": "I-save ang subtitle",
-      "saveAs": "I-save ang subtitle bilang...",
+      "save": "I-save ang mga subtitle",
+      "saveAs": "I-save ang mga subtitle bilang...",
       "saveTooltip": "I-save ang mga pagbabago sa orihinal na file",
       "saveAsTooltip": "I-save Bilang muna para paganahin ang direktang pag-save"
     },
@@ -732,15 +728,14 @@
       "toggleLabel": "Gamitin ang aking mga API key",
       "activeKeys": "Handang key: {{count}}",
       "noKeys": "Walang naka-configure na key",
-      "usingApiKeys": "Naka-off ang Stage5 credits",
-      "usingCredits": "Gumagamit ng Stage5 credits",
+      "usingApiKeys": "Hindi ginagamit ang minuto mo sa Stage5",
+      "usingCredits": "Ginagamit ang minuto mo sa Stage5",
       "toggleOn": "Ginagamit na ngayon ang iyong API key.",
-      "toggleOff": "Ginagamit na ngayon ang Stage5 credits.",
+      "toggleOff": "Ginagamit na ngayon ang minuto mo sa Stage5.",
       "toggleError": "Hindi ma-update ang preference.",
       "toggleAria": "Gamitin ang aking mga API key",
       "requirementTranslation": "Nangangailangan ng OpenAI o Anthropic key para sa pagsasalin"
     },
-    "creditsDescription": "Bumili ng minuto. Ang ipinapakitang oras ay tantiya ng kabuuang haba ng video na puwede mong i-transcribe o isalin. Halimbawa: ang pag-transcribe at pagsasalin ng 3-oras na video ay gagamit ng humigit‑kumulang 6 na oras (≈140,000 credits).",
     "performanceQuality": {
       "title": "Performance at Kalidad",
       "qualityTranslation": {
@@ -750,32 +745,15 @@
         "modelOff": "Burador ng Claude Haiku 5.5 lang",
         "reviewProvider": "Provider ng review",
         "openAiHighEnd": "Premium review ng OpenAI",
-        "anthropicHighEnd": "Premium review ng Anthropic",
-        "help": "<b>5× credits</b> • Nagdadagdag ng yugto ng rebisyon para sa mas mataas na kalidad",
-        "helpWithEstimate": "<b>5× credits</b> • Iyong balanse: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>5× credits</b> • Draft ng Claude Haiku 5.5 + review ng Claude Opus 5.5",
-        "helpOff": "<b>1× credits</b> • Draft ng Claude Haiku 5.5 lang",
-        "helpWithEstimateOn": "<b>5× credits</b> • Draft ng Claude Haiku 5.5 + review ng Claude Opus 5.5 • Balanse: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× credits</b> • Draft ng Claude Haiku 5.5 lang • Balanse: ~{{time}}"
+        "anthropicHighEnd": "Premium review ng Anthropic"
       },
       "qualitySummary": {
         "label": "Kalidad na Buod",
         "modelOn": "Malalim na pagsusuri ng Claude Opus 5.5 + mga highlight clip",
-        "modelOff": "Karaniwang pagsusuri ng Claude Sonnet 5.5",
-        "help": "<b>4× credits</b> • Malalim na pagsusuri + mga highlight clip gamit ang Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× credits</b> • Iyong balanse: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>4× credits</b> • Malalim na pagsusuri ng Claude Opus 5.5 + mga highlight clip",
-        "helpOff": "Mabilis na pagsusuri gamit ang Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× credits</b> • Malalim na pagsusuri ng Claude Opus 5.5 + mga highlight clip • Balanse: ~{{time}}",
-        "helpWithEstimateOff": "Mabilis na pagsusuri gamit ang Claude Sonnet 5.5 • Balanse: ~{{time}}"
+        "modelOff": "Karaniwang pagsusuri ng Claude Sonnet 5.5"
       },
       "qualityDubbing": {
-        "label": "Kalidad na Dubbing",
-        "modelOn": "Mga premium na boses ng ElevenLabs TTS",
-        "help": "<b>12× credits</b> • ElevenLabs TTS na may premium voices",
-        "helpWithEstimate": "<b>12× credits</b> • Iyong balanse: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS na may premium na mga boses",
-        "helpWithEstimateOn": "<b>{{ratio}}× credits</b> • ElevenLabs TTS na may premium na mga boses • Balanse: ~{{time}}"
+        "modelOn": "Mga premium na boses ng ElevenLabs TTS"
       },
       "videoSuggestionModel": {
         "label": "Model ng Mungkahi ng Video",
@@ -784,9 +762,6 @@
         "quality": "Quality (kapareho ng translation quality)"
       },
       "rate": {
-        "perHour": "~{{credits}} credit/oras",
-        "perMinute": "~{{credits}} credit/min",
-        "perSearch": "~{{credits}} credit/paghahanap",
         "balance": "Balanse: ~{{time}}",
         "minutesPerHour": "~{{time}} ng minuto mo bawat oras ng video",
         "minutesPerDubMinute": "~{{time}} ng minuto mo bawat minuto ng dubbing",
@@ -809,18 +784,15 @@
       "previewTooltip": "I-preview ang boses na ito",
       "previewing": "Nagpe-play...",
       "previewFree": "I-preview",
-      "previewWithCost": "I-preview ({{cost}} credits)",
       "mixLabel": "Volume ng Dubbing vs Volume ng Orihinal na Video",
       "mixHelp": "Kontrolin kung gaano karami ng orihinal na soundtrack ang pape-play sa ilalim ng dubbed voice.",
       "mixAmbient": "Mas ambient",
       "mixVoice": "Mas voice",
       "voiceCloning": "I-clone ang Orihinal na Boses",
       "voiceCloningDesc": "Panatilihin ang boses ng orihinal na nagsasalita sa dubbed audio",
-      "voiceCloningInsufficientCredits": "Kailangan ng balance na hindi bababa sa 1 minuto",
       "voiceCloningEnabled": "Naka-enable ang voice cloning gamit ang ElevenLabs. Mananatili ang boses ng orihinal na nagsasalita sa dubbed audio.",
       "voiceCloningInfo": "Gumagamit ang voice cloning ng ElevenLabs Dubbing API para suriin at likhain muli ang boses ng orihinal na nagsasalita.",
       "costPerMinute": "Halaga bawat minuto",
-      "credits": "credits",
       "yourBalance": "Iyong balanse",
       "canClone": "Maaari mong i-clone",
       "upToMinutes": "hanggang {{minutes}} min",
@@ -830,7 +802,7 @@
     },
     "byoOpenAi": {
       "title": "Magdala ng Sariling API Keys",
-      "description": "I-unlock ang isang beses na upgrade para magamit ang sarili mong mga API key. Kapag na-unlock na, direktang tatakbo sa mga account mo ang anumang transcription, pagsasalin, dubbing, o buod imbes na gumastos ng Stage5 credits.",
+      "description": "Isang beses na unlock para magamit ang sarili mong mga API key. Kapag na-unlock na, tatakbo sa sarili mong mga AI account ang transcription, pagsasalin, dubbing, at buod sa halip na gumamit ng minuto mo sa Stage5.",
       "unlocking": "Binubuksan ang checkout…",
       "unlockCta": "I-unlock sa $10",
       "unlockHint": "Kapag na-unlock na, idagdag ang iyong mga API key dito anumang oras para i-toggle ang direktang billing sa iyong mga account.",
@@ -848,25 +820,23 @@
       "test": "I-test ang Key",
       "lastSynced": "Huling na-sync",
       "toggleLabel": "Gamitin ang aking OpenAI key",
-      "toggleHelp": "Kapag naka-off, ang Stage5 minuto mo ang ginagamit.",
       "toggleAria": "I-toggle ang paggamit ng iyong OpenAI key",
       "toggleOn": "Ginagamit ang iyong OpenAI key para sa mga AI task.",
-      "toggleOff": "Ginagamit ang Stage5 credits para sa mga AI task.",
       "toggleError": "Nabigong i-update ang preference.",
       "howToGetKeys": "Paano makakuha ng mga API key?",
       "option1Title": "Opsyon 1: OpenAI",
       "option2Title": "Opsyon 2: Anthropic + ElevenLabs",
       "economicsTitle": "Bakit sulit ito",
-      "economicsBody": "Ang Stage5 credits ay nag-o-optimize para sa kaginhawahan (walang setup). Ang BYO ay direktang nagbabayad sa mga provider—karaniwang ~30–50% na mas mura depende sa iyong pack.",
+      "economicsBody": "Pinakamadali ang minuto sa Stage5: walang kailangang i-set up. Sa sarili mong mga key, direkta kang nagbabayad sa mga AI provider, kadalasan mga 30–50% na mas mura, depende sa pack.",
       "encryptionUnavailable": "Hindi available ang secure storage sa system na ito. Hindi mase-save ang mga API key.",
       "checkoutOpen": "Bukas ang checkout sa browser…",
-      "checkoutOpenHint": "Tapusin ang checkout sa iyong browser. Awtomatiko naming ia-unlock ang BYO kapag pumasok na ang bayad.",
+      "checkoutOpenHint": "Tapusin ang checkout sa browser mo. Awtomatikong maa-unlock ang paggamit ng sarili mong mga key kapag pumasok na ang bayad.",
       "entitlementsLoadFailed": "Hindi ma-check ang unlock status mo. Tingnan ang connection mo at subukan ulit.",
       "unlockFailed": "Hindi masimulan ang checkout. Tingnan ang connection mo at subukan ulit."
     },
     "byoPreferences": {
       "title": "Mga Preference ng Provider",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Minuto sa Stage5",
       "pricingHint": "Tinatayang halaga bawat 1 oras na video",
       "pricingHintHeuristic": "Tinatayang gastos gamit ang kasalukuyang pagtatantiya ng app",
       "transcription": "Transcription",
@@ -888,17 +858,17 @@
       "summary": "Buod",
       "dubbing": "Dubbing",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Walang available na BYO video recommendation model sa ngayon. I-enable ang OpenAI o Anthropic BYO para sa feature na ito.",
-      "videoSuggestionModelRequiresOpenAi": "Kailangan ang OpenAI BYO unlock, key, at toggle.",
-      "videoSuggestionModelRequiresAnthropic": "Kailangan ang Anthropic BYO unlock, key, at toggle.",
-      "summaryRequiresOpenAi": "Kailangan ang pag-access sa OpenAI BYO at API key.",
-      "summaryRequiresAnthropic": "Kailangan ang pag-access sa Anthropic BYO at API key.",
+      "videoSuggestionModelUnavailable": "Walang available na video recommendation model para sa sarili mong mga key. I-on ang iyong OpenAI o Anthropic key para magamit ito.",
+      "videoSuggestionModelRequiresOpenAi": "Kailangan ang API-key unlock, ang iyong OpenAI key, at naka-on ang OpenAI switch.",
+      "videoSuggestionModelRequiresAnthropic": "Kailangan ang API-key unlock, ang iyong Anthropic key, at naka-on ang Anthropic switch.",
+      "summaryRequiresOpenAi": "Kailangan ang API-key unlock at ang iyong OpenAI key.",
+      "summaryRequiresAnthropic": "Kailangan ang API-key unlock at ang iyong Anthropic key.",
       "translationReview": "Translation (Review)",
-      "transcriptionRequiresElevenLabs": "ElevenLabs Scribe lang ang ginagamit sa transcription. Magdagdag ng ElevenLabs API key para mag-transcribe gamit ang sarili mong mga key. Kung wala nito, gagamit ang transcription ng Stage5 credits, na hindi ginagamit habang naka-on ang iyong mga API key. Ginagamit pa rin ang iyong OpenAI key para sa pagsasalin.",
-      "dubbingRequiresElevenLabs": "ElevenLabs lang ang ginagamit sa dubbing. Magdagdag ng ElevenLabs API key para mag-dub gamit ang sarili mong keys. Kung wala nito, gagamit ang dubbing ng Stage5 credits, na hindi ginagamit habang naka-on ang iyong API keys.",
+      "transcriptionRequiresElevenLabs": "ElevenLabs Scribe lang ang ginagamit sa transcription. Magdagdag ng ElevenLabs API key para mag-transcribe gamit ang sarili mong mga key. Kung wala nito, gagamitin ng transcription ang minuto mo sa Stage5, na hindi ginagamit habang naka-on ang sarili mong mga key. Ginagamit pa rin ang iyong OpenAI key para sa pagsasalin.",
+      "dubbingRequiresElevenLabs": "ElevenLabs lang ang ginagamit sa dubbing. Magdagdag ng ElevenLabs API key para mag-dub gamit ang sarili mong mga key. Kung wala nito, gagamitin ng dubbing ang minuto mo sa Stage5, na hindi ginagamit habang naka-on ang sarili mong mga key.",
       "runtimeFallback": "Runtime fallback sa API key mode",
-      "videoSuggestionLegacyFollowDraft": "Pinanatili ang lumang BYO setting: sinusunod ang iyong draft translation model hanggang pumili ka ng direktang model.",
-      "videoSuggestionLegacyFollowReview": "Pinanatili ang lumang BYO setting: sinusunod ang iyong review translation model hanggang pumili ka ng direktang model."
+      "videoSuggestionLegacyFollowDraft": "Pinanatili ang dati mong setting: sinusunod nito ang iyong draft translation model hanggang pumili ka ng model dito.",
+      "videoSuggestionLegacyFollowReview": "Pinanatili ang dati mong setting: sinusunod nito ang iyong review translation model hanggang pumili ka ng model dito."
     },
     "apiKeyGuide": {
       "title": "Paano Makakuha ng mga API Key",
@@ -922,8 +892,7 @@
         "step3b": "sa kaliwang sidebar",
         "step4": "I-click ang",
         "step5": "Magdagdag ng paraan ng pagbabayad sa Billing settings (kinakailangan para gamitin ang API)",
-        "step6": "Kopyahin ang key (nagsisimula sa sk-) at i-paste sa Stage5",
-        "note": "Tip: Ang mga bagong OpenAI account ay madalas nakakakuha ng libreng credits para magsimula. Magbabayad ka lang sa ginagamit mo."
+        "step6": "Kopyahin ang key (nagsisimula sa sk-) at i-paste sa Stage5"
       },
       "anthropic": {
         "description": "Nagbibigay ang Claude ng mas mataas na kalidad na mga rebisyon sa pagsasalin. Kung wala ito, hahawakan ng GPT ang lahat ng mga translation task.",
@@ -943,7 +912,7 @@
         "step4": "Magdagdag ng paraan ng pagbabayad sa Subscription settings (kinakailangan para sa API usage lampas sa free tier)",
         "step5": "Kopyahin ang iyong API key at i-paste sa Stage5",
         "note": "Tip: May free tier ang ElevenLabs na may limitadong paggamit. Para sa higit pa, mag-upgrade sa paid plan sa iyong account settings.",
-        "audioDescription": "Pinapagana ng ElevenLabs ang lahat ng transcription (Scribe) at dubbing. Kung wala kang sariling ElevenLabs key, parehong gagamit ng Stage5 credits, na hindi ginagamit habang naka-on ang iyong mga API key."
+        "audioDescription": "Pinapagana ng ElevenLabs ang lahat ng transcription (Scribe) at dubbing. Kung wala kang sariling ElevenLabs key, pareho silang gagamit ng minuto mo sa Stage5, na hindi ginagamit habang naka-on ang sarili mong mga key."
       }
     },
     "byoAnthropic": {
@@ -962,14 +931,11 @@
       "testing": "Tine-test…",
       "test": "I-test ang Key",
       "toggleLabel": "Gamitin ang aking Anthropic key",
-      "toggleHelp": "Kapag off, gumagamit ng Stage5 credits ang mga Claude request.",
       "toggleAria": "I-toggle ang paggamit ng iyong Anthropic key",
       "toggleOn": "Ginagamit ang iyong Anthropic key para sa mga Claude model.",
-      "toggleOff": "Ginagamit ang Stage5 credits para sa mga Claude model.",
       "toggleError": "Nabigong i-update ang Anthropic preference."
     },
     "stage5TtsProvider": {
-      "label": "TTS Quality (Stage5 Credits)",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Pinakamahusay na kalidad, mas mataas na halaga (~12x)",
       "elevenlabsHintWithBalance": "Pinakamahusay na kalidad · Iyong balanse: {{time}} ng dubbing"
@@ -1063,31 +1029,22 @@
       "freeTitle": "Libreng pagsasalin gamit ang sarili mong AI"
     },
     "creditTransfer": {
-      "title": "Ilipat ang minuto sa pagitan ng mga computer",
-      "description": "Puwedeng ilipat sa ibang computer ang mga biniling minuto at ang API-key unlock. Mananatili sa computer na ito ang libreng minuto.",
-      "moveButton": "Ilipat ang minuto sa ibang computer",
-      "receiveButton": "Tumanggap ng minuto",
       "creating": "Gumagawa ng code…",
       "copy": "Kopyahin",
       "copied": "Nakopya na",
-      "summaryCredits": "Ililipat ang {{credits}} na credit.",
       "summaryByo": "Ililipat din ang API-key unlock.",
       "expires": "Isang beses lang gagana ang code na ito at mag-e-expire ito sa loob ng {{minutes}} minuto.",
-      "steps": "Sa bagong computer: i-install ang Translator, buksan ang Mga Setting, piliin ang “Tumanggap ng minuto”, at ilagay ang code na ito.",
       "inputLabel": "Code mula sa iyong ibang computer",
       "redeem": "Tanggapin",
       "redeeming": "Tinatanggap…",
-      "received": "Natanggap ang {{credits}} na credit.",
       "receivedNoCredits": "Gumana ang code.",
       "receivedByo": "Aktibo na ang API-key unlock sa computer na ito.",
       "errors": {
-        "nothing_to_transfer": "Wala pang maililipat: walang biniling minuto o API-key unlock ang computer na ito. Para maglipat ng minuto dito mula sa ibang computer, piliin ang “Tumanggap ng minuto”.",
         "too_many_codes": "Masyadong maraming transfer code ngayong oras. Subukan ulit mamaya.",
         "jobs_running": "May transcription o pagsasalin pang tumatakbo. Subukan ulit kapag tapos na ito.",
         "invalid_code": "Mali, nagamit na, o expired na ang code na iyan. Gumawa ng bago sa kabilang computer.",
         "same_device": "Ilagay ang code sa kabilang computer, hindi sa computer na gumawa nito.",
         "network_error": "Hindi maabot ang Stage5 server. Tingnan ang connection mo at subukan ulit.",
-        "transfer_failed": "Hindi mailipat ang minuto. Tingnan ang connection mo at subukan ulit.",
         "nothing_to_transfer_minutes": "Wala pang maililipat: walang biniling minuto o API-key unlock ang computer na ito. Para maglipat ng minuto dito mula sa ibang computer, piliin ang “Tumanggap ng minuto”.",
         "transfer_failed_minutes": "Hindi mailipat ang minuto. Tingnan ang connection mo at subukan ulit."
       },
@@ -1103,27 +1060,22 @@
   "credits": {
     "title": "Mga minuto mo",
     "loading": "Naglo-load...",
-    "credits": "mga credit",
     "usingApiKey": "Gamit ang API key",
     "usingOpenAi": "Gamit ang OpenAI",
     "usingAnthropic": "Gamit ang Claude",
     "usingElevenLabs": "Gamit ang ElevenLabs",
     "hours": "mga oras",
     "translationHoursShort": "oras ng salin",
-    "buyCredits": "Bumili ng minuto",
     "redirectingToPayment": "Binubuksan ang secure checkout…",
-    "description": "Pumili ng pack na ${{packMicroPrice}} ({{packMicroHours}} oras), ${{pack1Price}} ({{pack1Hours}} oras), ${{pack2Price}} ({{pack2Hours}} oras), o ${{pack3Price}} ({{pack3Hours}} oras)",
-    "notEnough": "Kulang ang minuto. Bumili pa para magpatuloy.",
     "transcriptionMinutesShort": "{{minutes}} min ng transcription",
     "transcriptionTimeShort": "{{time}} ng transcription",
-    "costOfBalance": "{{cost}} sa iyong {{balance}} credit",
     "pill": {
       "freeBack": "Babalik ang libreng minuto sa {{date}}",
       "empty": "Mag-load ng minuto",
       "freeThisMonth": "{{count}} libreng min ngayong buwan",
       "freeWelcome": "{{count}} libreng min",
       "minutes": "{{count}} min na natitira",
-      "title": "Minuto at mga pack",
+      "title": "Ang minuto at mga pack mo",
       "neutral": "Minuto",
       "welcomePending": "Paparating na ang libreng minuto",
       "freeTimeThisMonth": "{{time}} libre ngayong buwan",
@@ -1141,11 +1093,10 @@
     "moreMinutesPerDollar": "{{multiplier}}× mas maraming minuto bawat dolyar",
     "checkoutWaiting": "Tapusin ang bayad sa browser mo. Kusang papasok dito ang minuto.",
     "checkoutNote": "Isang bayad lang sa Stripe, sa browser mo. Walang account o subscription. Kusang papasok ang minuto.",
-    "dubbingNote": "Nagdadagdag ng mga 10% bawat minuto ang pagsasalin; mas malaki pa sa dubbing.",
+    "dubbingNote": "Mga 10% pang minuto ang nagagamit kapag may pagsasalin; mas marami pa sa dubbing.",
     "iCancelledCheckout": "Kinansela ko ang checkout",
     "checkoutStartFailed": "Hindi mabuksan ang checkout. Tingnan ang internet mo at subukan ulit.",
     "loadFailed": "Hindi ma-load ang balance mo. Tingnan ang connection mo at subukan ulit.",
-    "estimateAmount": "{{credits}} credits",
     "costOfBalanceMinutes": "{{cost}} sa {{balance}} mo",
     "timeLeft": "{{time}} na natitira",
     "success": {
@@ -1161,7 +1112,10 @@
     "balanceOffline": "Hindi ma-check ang minuto mo ngayon",
     "offlineNote": "Hindi maabot ng Translator ang Stage5. Lalabas ulit ang balance mo kapag online ka na.",
     "microPackLabelNoTime": "Bumili ng minuto — {{price}}",
-    "microPackLabel": "Bumili ng minuto — {{price}} · ≈ {{time}} ng video"
+    "microPackLabel": "Bumili ng minuto — {{price}} · ≈ {{time}} ng video",
+    "checkingPayment": "Tinitingnan ang bayad mo…",
+    "checkoutUnresolved": "Kung nakapagbayad ka na, lalabas dito ang minuto mo maya-maya. Nagbabayad ka pa? Tapusin ito sa browser mo.",
+    "checkPaymentNow": "Tingnan ngayon"
   },
   "cta": {
     "generate": {
@@ -1191,12 +1145,12 @@
     "scrollToCurrentSubtitle": "Mag-scroll sa kasalukuyang subtitle",
     "changeVideo": "Palitan ang video",
     "findVideoWithAi": "Maghanap ng video gamit ang AI",
-    "mountSrt": "I-load ang SRT",
+    "mountSrt": "Mag-load ng SRT",
     "changeSrt": "Palitan ang SRT",
     "useThisVideo": "Gamitin ang video na ito",
     "useDownloadedVideo": "Gamitin ang video na ito",
-    "useOriginalAudio": "Gamitin ang Orihinal na Audio",
-    "useDubbedAudio": "Gamitin ang Dubbed Audio",
+    "useOriginalAudio": "Gamitin ang orihinal na audio",
+    "useDubbedAudio": "Gamitin ang na-dub na audio",
     "changeVideoKeepSubtitles": "Gamitin ang kasalukuyang subtitle sa bagong video (para sa ibang kopya ng parehong video). Alisin ang check kung ibang video ito.",
     "mute": "I-mute (M)",
     "unmute": "I-unmute (M)",
@@ -1206,7 +1160,7 @@
     "pause": "I-pause (Space)",
     "seekBar": "Posisyon sa video",
     "seekBarValue": "{{current}} sa {{total}}",
-    "enterFullscreenShortcut": "Full screen (F)",
+    "enterFullscreenShortcut": "Mag-full screen (F)",
     "exitFullscreenShortcut": "Lumabas sa full screen (F)",
     "changeVideoKeepSubtitlesSameVideo": "Panatilihin ang kasalukuyang subtitle. Para lang ito sa ibang kopya ng parehong video; walang subtitle ang ibang video.",
     "audioOnly": "Audio file"
@@ -1273,7 +1227,6 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "Walang minuto.",
     "rechargeLink": "I-recharge →",
     "creditWarning": {
       "message": "Libre ang pag-download, pag-edit, pag-export, at pagsasalin gamit ang sarili mong Claude o Codex sa pamamagitan ng Kontrol ng Agent. Kailangan ng transcription ng minuto o ng API-key unlock sa <settingsLink>{{settingsLinkText}}</settingsLink>.",
@@ -1283,7 +1236,6 @@
       "pleaseSelectVideo": "Mangyaring pumili ng video",
       "processingDuration": "Pinoproseso ang duration ng video. Subukan ulit mamaya.",
       "icloudPlaceholder": "Naka-store ang file na ito sa iCloud. Sa Finder, i-click ang 'Download' at hintaying matapos ang cloud icon, pagkatapos subukan ulit.",
-      "insufficientCreditsForVoiceCloning": "Kulang ang minuto para sa voice cloning. {{duration}} min ang video pero {{affordable}} min lang ang kaya ng balance mo. Magdagdag ng minuto o i-off ang voice cloning.",
       "fileTooLargeForVoiceCloning": "Masyadong malaki ang video file para sa voice cloning ({{size}}MB). Ang maximum na pinapayagan ay {{max}}MB. Mangyaring gumamit ng mas maikling video o i-disable ang voice cloning."
     },
     "status": {
@@ -1293,14 +1245,13 @@
       "error": "May Error"
     },
     "buttons": {
-      "buyCredits": "Bumili ng minuto",
       "redirectingToPayment": "Nagre-redirect sa payment..."
     },
     "workflow": {
       "stepOne": "Hakbang 1",
       "stepTwo": "Hakbang 2",
       "stepThree": "Hakbang 3",
-      "chooseSourceTitle": "Piliin ang Source",
+      "chooseSourceTitle": "Piliin ang source",
       "sourceLoading": "Kinukuha ang source",
       "sourceLoadingDescription": "Inihahanda ang na-download na source para sa transcription.",
       "localSourceReady": "Handa na ang lokal na file",
@@ -1309,7 +1260,7 @@
       "transcribeTitle": "I-process ang Video",
       "processVideoTitle": "Iproseso ang video",
       "transcribeDescription": "Gawing nae-edit na subtitle track ang source media bago magpatuloy sa translation o dubbing.",
-      "translateDubTitle": "Isalin o I-dub",
+      "translateDubTitle": "Isalin o i-dub",
       "translateDubDescription": "Handa na ang transcription mo. Susunod, piliin ang output language, translation mode, o dubbing.",
       "availableOutputs": "Mga available na output",
       "availableOutputsDescription": "Mananatiling available dito ang na-download at na-dub na media hanggang mai-save mo ang mga bersyong gusto mong itago.",
@@ -1317,7 +1268,6 @@
       "saveOutputsDescription": "I-save sa labas ng app workspace ang anumang source o dubbed media na gusto mong itago."
     },
     "calculatingCost": "Kinakalkula ang gastos...",
-    "notEnoughCredits": "Kulang ang minuto",
     "welcomeCredits": {
       "message": "May libre kang minuto para subukan ang transcription at pagsasalin (mga 20 minuto ng video)."
     }
@@ -1325,10 +1275,10 @@
   "findBar": {
     "findPlaceholder": "Hanapin sa mga subtitle...",
     "replacePlaceholder": "Palitan ng...",
-    "replaceAll": "Palitan Lahat",
-    "nextMatch": "Susunod na Tugma (Enter)",
-    "previousMatch": "Nakaraang Tugma (Shift+Enter)",
-    "replaceAllTitle": "Palitan Lahat ng Mga Nangyayari",
+    "replaceAll": "Palitan lahat",
+    "nextMatch": "Susunod na tugma (Enter)",
+    "previousMatch": "Nakaraang tugma (Shift+Enter)",
+    "replaceAllTitle": "Palitan ang lahat ng tugma",
     "closeTitle": "Isara (Esc)",
     "nextMatchAria": "Susunod na tugma",
     "previousMatchAria": "Nakaraang tugma",
@@ -1337,7 +1287,8 @@
     "matchCount": "{{current}} sa {{total}}",
     "matchCase": "Itugma ang malaki/maliit na titik",
     "wholeWord": "Buong salita",
-    "showReplace": "Palitan"
+    "showReplace": "Palitan",
+    "noMatches": "Walang tugma"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1357,14 +1308,14 @@
       "title": "I-save ang kasalukuyang subtitles bago mag-transcribe?",
       "message": "May naka-load ka nang mga subtitle. Papalitan ang mga ito kapag nag-transcribe. Ano ang gusto mong gawin?",
       "saveAndTranscribe": "I-save at i-transcribe",
-      "discardAndTranscribe": "Huwag i-save at i-transcribe",
+      "discardAndTranscribe": "Itapon at i-transcribe",
       "cancel": "Kanselahin"
     },
     "downloadInProgress": "May Kasalukuyang Download",
     "saveDownloadedFile": "I-save ang na-download na file: {{path}}",
-    "transcriptionInProgress": "May Kasalukuyang Transcription",
-    "translationInProgress": "May Kasalukuyang Translation",
-    "dubbingInProgress": "May Kasalukuyang Dubbing",
+    "transcriptionInProgress": "Kasalukuyang nagta-transcribe",
+    "translationInProgress": "Kasalukuyang nagsasalin",
+    "dubbingInProgress": "Kasalukuyang nagda-dub",
     "dubbingWorking": "Binubuo ang dubbed audio…",
     "cancelTranslationConfirm": "Kanselahin ang translation? Mawawala ang progress at kailangan mong magsimula ulit.",
     "cancelSummaryConfirm": "Kanselahin ang paggawa ng buod?",
@@ -1381,42 +1332,8 @@
       "description": "Maaaring dahil sa mga pagbabago sa video platform o bagong mga proteksyon. Maaaring kailangan mong maghintay ng susunod na bersyon ng app para maayos ang mga mas bagong video."
     },
     "creditRanOut": {
-      "title": "Ubos na ang minuto",
-      "message": "Naubos na ang minuto mo. Magdagdag pa sa Mga Setting, saka ituloy kung saan ka huminto.",
       "openSettings": "Buksan ang Mga Setting",
       "ok": "OK",
-      "neverHadTitle": "Kailangan ng minuto para sa transcription",
-      "neverHadMessage": "Kailangan ng transcription ng minuto o ng API-key unlock. Makukuha mo ang alinman sa Mga Setting. Libre ang pagsasalin gamit ang sarili mong Claude o Codex sa pamamagitan ng Kontrol ng Agent.",
-      "notEnoughTitle": "Kulang ang minuto para sa video na ito",
-      "notEnoughTranscriptionMessage": "Kailangan ng humigit-kumulang {{required}} credits para i-transcribe ang video na ito. Mayroon kang {{available}}, sapat para sa mga {{minutes}} minuto. Magdagdag ng credits, saka magsimula ulit.",
-      "notEnoughMessage": "Kailangan ng gawaing ito ng higit sa balanse mong {{available}}. Magdagdag ng minuto para magpatuloy.",
-      "task": {
-        "transcription": {
-          "title": "Kailangan ng minuto sa pag-transcribe",
-          "message": "Hindi sapat ang balance mo para i-transcribe ito. Magdagdag ng minuto, saka magsimula ulit. Naka-save ang mga linyang na-transcribe na.",
-          "messageNothingYet": "Hindi sapat ang balance mo para i-transcribe ito. Magdagdag ng minuto, saka magsimula ulit."
-        },
-        "translation": {
-          "title": "Kailangan ng minuto sa pagsasalin",
-          "message": "Hindi sapat ang balance mo para isalin ito. Magdagdag ng minuto, saka subukan ulit. Naka-save ang mga linyang naisalin na. Libre ang pagsasalin gamit ang sarili mong Claude o Codex sa pamamagitan ng Kontrol ng Agent.",
-          "messageNothingYet": "Hindi sapat ang balance mo para isalin ito. Magdagdag ng minuto, saka subukan ulit. Libre ang pagsasalin gamit ang sarili mong Claude o Codex sa pamamagitan ng Kontrol ng Agent."
-        },
-        "dubbing": {
-          "title": "Kailangan ng minuto sa dubbing",
-          "message": "Hindi sapat ang balance mo para i-dub ang video na ito. Magdagdag ng minuto, saka subukan ulit."
-        },
-        "summary": {
-          "title": "Kailangan ng minuto sa buod",
-          "message": "Hindi sapat ang balance mo para sa buod at mga highlight. Magdagdag ng minuto, saka subukan ulit."
-        },
-        "videoSearch": {
-          "title": "Kailangan ng minuto sa AI video search",
-          "message": "Hindi sapat ang balance mo para sa AI video search. Magdagdag ng minuto, saka maghanap ulit."
-        },
-        "other": {
-          "title": "Kailangan ng minuto dito"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "Kailangan ng minuto sa pag-transcribe",
@@ -1448,12 +1365,15 @@
         "message": "Naubos na ang minuto mo. Magdagdag pa sa Mga Setting, saka ituloy kung saan ka huminto.",
         "notEnoughTitle": "Kulang ang minuto para sa video na ito",
         "notEnoughTranscriptionMessage": "Kailangan ng {{required}} para i-transcribe ang video na ito, at {{available}} na lang ang natitira sa iyo. Magdagdag ng minuto, saka magsimula ulit.",
-        "notEnoughMessage": "Kailangan nito ng higit sa natitira mong {{available}}. Magdagdag ng minuto para magpatuloy."
+        "notEnoughMessage": "Kailangan nito ng higit sa natitira mong {{available}}. Magdagdag ng minuto para magpatuloy.",
+        "voicePreview": {
+          "title": "Kailangan ng minuto para sa voice preview",
+          "message": "Hindi sapat ang minuto mo para sa voice preview. Magdagdag ng minuto, saka subukan ulit."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "Simulan ang pag-dub?",
-      "message": "Gagamit ang dub na ito ng mga {{cost}} sa iyong {{balance}} credit. Mas mahal ang paggawa ng boses kaysa sa pagsasalin.",
       "messageMinutes": "Gagamit ang dub na ito ng {{cost}}. Mas mahal ang paggawa ng boses kaysa sa pagsasalin."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1528,7 +1448,9 @@
     "cancelSummaryTitle": "Ihinto ang buod?",
     "keepSummarizing": "Ituloy",
     "stopSummarizing": "Ihinto",
-    "cancelSummaryBody": "Hindi itatabi ang buod at mga highlight na nagawa na."
+    "cancelSummaryBody": "Hindi itatabi ang buod at mga highlight na nagawa na.",
+    "cancelTranslationBody": "Mananatili ang mga linyang naisalin na. Puwede mong isalin ang natitira mamaya.",
+    "cancelDubbingTitle": "Ihinto ang dubbing?"
   },
   "progress": {
     "preparingVideoExport": "Inihahanda ang pag-export ng video…",
@@ -1778,7 +1700,8 @@
     "statusLines_one": "{{count}} linya ng subtitle",
     "checkingFile": "Binabasa ang file…",
     "statusLoaded": "{{count}} linya ang na-load",
-    "statusLoaded_one": "{{count}} linya ang na-load"
+    "statusLoaded_one": "{{count}} linya ang na-load",
+    "interruptedTranslateSubtitles": "Naputol ang pagsasalin ng mga subtitle na ito sa {{language}} nang isara ang Translator."
   },
   "subtitleStyles": {
     "Cinema": "Dilaw na pang-sine",

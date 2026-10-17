@@ -23,7 +23,6 @@
       "unexpectedSave": "Tapahtui odottamaton virhe tallennettaessa.",
       "unexpectedLoad": "Tapahtui odottamaton virhe ladattaessa.",
       "renderFailed": "Renderöinti epäonnistui",
-      "creditReservationFailed": "Krediittien varaaminen epäonnistui",
       "invalidRenderOptions": "Virheelliset renderöintiasetukset annettu",
       "missingVideoMetadata": "Puuttuvat videometadatat ({{missing}})",
       "insufficientDiskSpace": "Levytila ei riitä yhdistämisen suorittamiseen. Vapauta tilaa ja yritä uudelleen.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "Tapahtui odottamaton virhe tallennettaessa.",
     "unexpectedLoad": "Tapahtui odottamaton virhe ladattaessa.",
     "renderFailed": "Renderöinti epäonnistui",
-    "creditReservationFailed": "Krediittien varaaminen epäonnistui",
     "invalidRenderOptions": "Virheelliset renderöintiasetukset annettu",
     "missingVideoMetadata": "Puuttuvat videometadatat ({{missing}})",
     "noSourceVideo": "Ei lähdettä videota",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "Litterointi (ElevenLabs Scribe) ei ole tilapäisesti käytettävissä, tai siihen ei saatu yhteyttä useista yrityksistä huolimatta. Yritä uudelleen muutaman minuutin kuluttua.",
       "fileTooLarge": "Tämä ääni on liian pitkä litteroitavaksi yhdessä työssä (yli noin {{hours}} tuntia). Jaa video lyhyempiin osiin ja litteroi jokainen osa erikseen.",
-      "elevenLabsKeyRequired": "Litterointi käyttää ElevenLabs Scribea ja vaatii ElevenLabs API-avaimen. Lisää avain Asetuksissa tai poista API-avaintila käytöstä litteroidaksesi Stage5-krediiteillä. OpenAI- tai Anthropic-avaintasi käytetään edelleen käännökseen.",
+      "elevenLabsKeyRequired": "Litterointi käyttää ElevenLabs Scribea ja vaatii ElevenLabs-API-avaimen. Lisää avain Asetuksissa tai poista ”Käytä omia API-avaimiani” käytöstä, niin litterointi käyttää Stage5-minuuttejasi. OpenAI- tai Anthropic-avaintasi käytetään edelleen kääntämiseen.",
       "fileTooLarge_one": "Tämä ääni on liian pitkä litteroitavaksi yhdessä työssä (yli noin {{hours}} tunnin). Jaa video lyhyempiin osiin ja litteroi jokainen osa erikseen."
     },
     "credits": {
@@ -238,7 +236,7 @@
     "downloading": "Ladataan...",
     "selectFile": "Valitse tiedosto",
     "selectVideoFile": "Valitse videotiedosto",
-    "selectVideoAudioFile": "Valitse video / äänitiedosto",
+    "selectVideoAudioFile": "Valitse video- tai äänitiedosto",
     "saveOriginalVideo": "Tallenna alkuperäinen video",
     "localFileDescription": "Lähetä video- tai äänitiedosto tietokoneeltasi",
     "selectLocalFile": "Lähetä tietokoneelta",
@@ -471,9 +469,9 @@
     "batchDownloadRunning": "Translator lataa useita videoita. Odota, että ne valmistuvat, tai peruuta lataus."
   },
   "subtitles": {
-    "outputLanguage": "Tulostuskieli",
+    "outputLanguage": "Kohdekieli",
     "showOriginalText": "Näytä alkuperäinen teksti",
-    "displayModeLabel": "Tekstityksen näyttö",
+    "displayModeLabel": "Tekstitysten näyttö",
     "translate": "Käännä",
     "continueTranscribing": "Jatka litterointia",
     "generate": "Luo tekstitykset",
@@ -484,17 +482,13 @@
     "improveTranslation": "Paranna käännöstä",
     "chooseSrtFile": "Valitse SRT-tiedosto",
     "dub": "Dubbaa",
-    "dubEstimateCredits": "{{credits}} kr (~{{minutes}}m)",
     "dubEstimateByo": "~{{minutes}}m ääntä",
     "voiceCloningRequiresTranslation": "Äänikloonaus vaatii kohdekielen",
     "translateEstimateCredits": "~{{minutes}}m video",
-    "translateEstimateByo": "BYO-avain",
     "qualityBadge": "(kl)",
     "cancel_confirmation": "Haluatko varmasti peruuttaa tekstitysten käännösprosessin? Kaikki edistyminen menetetään ja sinun on aloitettava uudelleen.",
-    "dubCostHint": "ElevenLabs-ääni: ~{{rate}} krediittiä puheminuuttia kohden. Tämä arvio näytetään ennen dubbauksen alkua.",
     "unreadableCues_one": "Tiedostosta jäi pois {{count}} rivi, jota ei voitu lukea. Tarkista sen aikakoodi.",
     "unreadableCues": "Tiedostosta jäi pois {{count}} riviä, joita ei voitu lukea. Tarkista niiden aikakoodit.",
-    "addCreditsToTranslate": "Lisää minuutteja kääntämiseen",
     "dubInto": "Dubbaa {{languageInto}}",
     "dubIntro": "Ääni lukee tekstityksen valitsemallasi kielellä alkuperäisten taustaäänten päälle.",
     "dubNeedsSubtitles": "Dubbaus lukee tekstityksen ääneen, joten video tarvitsee ensin tekstityksen. Litteroi video ja valitse sitten ääni täällä.",
@@ -503,8 +497,6 @@
     "dubTranslatesFirst": "Tekstitys käännetään ensin {{languageInto}} ja luetaan sitten ääneen.",
     "dubCostWithTranslation": "Käännös ja ääni: {{cost}}",
     "dubUsesOwnKeys": "Käyttää omia API-avaimiasi.",
-    "dubNotEnoughCredits": "Minuutit eivät riitä tähän dubbaukseen.",
-    "addCreditsToDub": "Lisää minuutteja dubbaukseen",
     "noSubtitlesToDub": "Tee tai avaa videolle ensin tekstitys ja dubbaa se sitten.",
     "noSubtitlesToTranslate": "Avaa tai tee ensin tekstitys ja käännä se sitten.",
     "dubVoiceHelp": "Tämän dubbauksen ääni. Valinta säilyy seuraaviin dubbauksiin.",
@@ -531,8 +523,6 @@
     },
     "generate": "Etsi kohokohdat",
     "regenerate": "Etsi kohokohdat uudelleen",
-    "estimateCredits": "{{credits}} krediittiä",
-    "estimateByo": "BYO-avain",
     "highEffortBadge": "(syvä)",
     "placeholder": "Tekoälyn yhteenvetosi näkyy tässä, kun se on luotu.",
     "insufficientCredits": "Minuutit eivät riitä kohokohtien etsimiseen.",
@@ -588,7 +578,7 @@
     "downloadCombined": "Lataa yhdistetty leike",
     "saveCombinedDialogTitle": "Tallenna yhdistetty kohokohtaleike",
     "combinedCutFailed": "Yhdistettyjen kohokohtien leikkaus epäonnistui: {{message}}",
-    "highlightsInsufficientCredits": "Yhteenveto tehtiin, mutta kohokohtien poiminta pysähtyi, koska minuutit loppuivat.",
+    "highlightsInsufficientCredits": "Yhteenveto on valmis, mutta kohokohtien etsiminen keskeytyi, koska minuuttisi loppuivat.",
     "highlightsPartialWarning": "Kohokohtien poiminta jäi osittaiseksi. Nämä kohokohdat voivat olla puutteellisia. Päivitä luomalla ne uudelleen.",
     "highlightsPartialWithReason": "Yhteenveto luotiin, mutta kohokohtien poiminta jäi osittaiseksi: {{message}}",
     "estimateOwnKey": "Käyttää omaa API-avaintasi",
@@ -623,7 +613,10 @@
     "highlightCuesChanged": "Muokkasit tämän kohokohdan rivejä sen löytymisen jälkeen. Tarkista, että se toimii yhä.",
     "clipCaptionsChangedAny": "Tekstitys on muuttunut leikkeen leikkaamisen jälkeen (teksti, tyyli tai koko).",
     "notEnoughForRun": "Minuutit eivät riitä yhteenvetoon ja kohokohtiin.",
-    "clipsUseOriginalAudio": "Leikkeissä on alkuperäinen ääni, ei dubbausta."
+    "clipsUseOriginalAudio": "Leikkeissä on alkuperäinen ääni, ei dubbausta.",
+    "notEnoughMinutesSummary": "Minuutit eivät riitä tähän yhteenvetoon.",
+    "notEnoughMinutesHighlights": "Minuutit eivät riitä kohokohtien etsimiseen.",
+    "translateMissingLines": "Käännä nämä rivit"
   },
   "panel": {
     "new": "uusi",
@@ -632,7 +625,7 @@
       "none": "Suuria aukkoja ei havaittu"
     },
     "confidence": {
-      "title": "Matala luotettavuus",
+      "title": "Epävarmat kohdat",
       "none": "Matalan luotettavuuden rivejä ei havaittu",
       "count": "{{count}} riviä",
       "count_one": "{{count}} rivi"
@@ -668,7 +661,7 @@
     },
     "item": {
       "seek": "Siirry",
-      "seekTitle": "Siirry videon alkuaikaan",
+      "seekTitle": "Siirrä video kohtaan, josta tämä rivi alkaa",
       "playSnippet": "Toista pätkä",
       "pauseSnippet": "Pysäytä pätkä",
       "insertTitle": "Lisää uusi tekstityslohko tämän jälkeen",
@@ -685,7 +678,10 @@
       "startTimeAria": "Rivin {{index}} alkuaika",
       "endTimeAria": "Rivin {{index}} loppuaika",
       "splitTitle": "Jaa rivi kursorin kohdalta",
-      "mergeTitle": "Yhdistä seuraavaan riviin"
+      "mergeTitle": "Yhdistä seuraavaan riviin",
+      "timeOverlapsPrevious": "Rivi alkaa ennen kuin edellinen rivi päättyy, joten molemmat näkyvät yhtä aikaa.",
+      "timeOverlapsNext": "Rivi päättyy vasta, kun seuraava rivi on jo alkanut, joten molemmat näkyvät yhtä aikaa.",
+      "timeOverlapsBoth": "Rivi menee päällekkäin edellisen ja seuraavan rivin kanssa, joten ne näkyvät yhtä aikaa."
     },
     "header": {
       "save": "Tallenna tekstitykset",
@@ -736,16 +732,15 @@
       "toggleLabel": "Käytä omia API-avaimiani",
       "activeKeys": "Valmiit avaimet: {{count}}",
       "noKeys": "Avaimia ei ole määritetty",
-      "usingApiKeys": "Stage5-krediitit pois",
-      "usingCredits": "Stage5-krediitit käytössä",
+      "usingApiKeys": "Stage5-minuuttejasi ei käytetä",
+      "usingCredits": "Käytössä Stage5-minuuttisi",
       "toggleOn": "Käyttää nyt API-avaimiasi.",
-      "toggleOff": "Käyttää nyt Stage5-krediittejä.",
+      "toggleOff": "Nyt käytetään Stage5-minuuttejasi.",
       "toggleError": "Asetuksen päivittäminen epäonnistui.",
       "toggleAria": "Käytä omia API-avaimiani",
       "requirementTranslation": "Vaatii OpenAI- tai Anthropic-avaimen käännökseen",
       "activeKeys_one": "Valmiit avaimet: {{count}}"
     },
-    "creditsDescription": "Osta minuutteja. Näytetyt tunnit ovat arvio siitä, kuinka paljon videota voit litteroida tai kääntää. Esimerkki: 3 tunnin videon litterointi ja kääntäminen kuluttaa noin 6 tuntia (≈140 000 krediittiä).",
     "performanceQuality": {
       "title": "Suorituskyky ja laatu",
       "qualityTranslation": {
@@ -755,32 +750,15 @@
         "modelOff": "Vain Claude Haiku 5.5 -luonnos",
         "reviewProvider": "Tarkistuksen tarjoaja",
         "openAiHighEnd": "OpenAI:n edistynyt tarkistus",
-        "anthropicHighEnd": "Anthropicin edistynyt tarkistus",
-        "help": "<b>5× krediittiä</b> • Lisää tarkistusvaiheen paremman laadun saavuttamiseksi",
-        "helpWithEstimate": "<b>5× krediittiä</b> • Saldosi: ~{{normalTime}} (normaali) / ~{{hqTime}} (kl)",
-        "helpOn": "<b>5× krediittiä</b> • Claude Haiku 5.5 -luonnos + Claude Opus 5.5 -tarkistus",
-        "helpOff": "<b>1× krediittiä</b> • Vain Claude Haiku 5.5 -luonnos",
-        "helpWithEstimateOn": "<b>5× krediittiä</b> • Claude Haiku 5.5 -luonnos + Claude Opus 5.5 -tarkistus • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× krediittiä</b> • Vain Claude Haiku 5.5 -luonnos • Saldo: ~{{time}}"
+        "anthropicHighEnd": "Anthropicin edistynyt tarkistus"
       },
       "qualitySummary": {
         "label": "Laadukas yhteenveto",
         "modelOn": "Claude Opus 5.5 -syväanalyysi + kohokohtaleikkeet",
-        "modelOff": "Claude Sonnet 5.5 -perusanalyysi",
-        "help": "<b>4× krediittiä</b> • Syvällinen analyysi + kohokohtaleikkeet Claude Opus 5.5 -mallilla",
-        "helpWithEstimate": "<b>4× krediittiä</b> • Saldosi: ~{{normalTime}} (normaali) / ~{{hqTime}} (kl)",
-        "helpOn": "<b>4× krediittiä</b> • Claude Opus 5.5 -syväanalyysi + kohokohtaleikkeet",
-        "helpOff": "Nopea analyysi Claude Sonnet 5.5 -mallilla",
-        "helpWithEstimateOn": "<b>4× krediittiä</b> • Claude Opus 5.5 -syväanalyysi + kohokohtaleikkeet • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "Nopea analyysi Claude Sonnet 5.5 -mallilla • Saldo: ~{{time}}"
+        "modelOff": "Claude Sonnet 5.5 -perusanalyysi"
       },
       "qualityDubbing": {
-        "label": "Laadukas dubbaus",
-        "modelOn": "ElevenLabs TTS -premiumäänet",
-        "help": "<b>12× krediittiä</b> • ElevenLabs TTS premium-äänillä",
-        "helpWithEstimate": "<b>12× krediittiä</b> • Saldosi: ~{{normalTime}} (normaali) / ~{{hqTime}} (kl)",
-        "helpOn": "<b>{{ratio}}× krediittiä</b> • ElevenLabs TTS premium-äänillä",
-        "helpWithEstimateOn": "<b>{{ratio}}× krediittiä</b> • ElevenLabs TTS premium-äänillä • Saldo: ~{{time}}"
+        "modelOn": "ElevenLabs TTS -premiumäänet"
       },
       "videoSuggestionModel": {
         "label": "Videoehdotusmalli",
@@ -789,9 +767,6 @@
         "quality": "Laatu (sama kuin käännöksen laatu)"
       },
       "rate": {
-        "perHour": "~{{credits}} krediittiä/tunti",
-        "perMinute": "~{{credits}} krediittiä/min",
-        "perSearch": "~{{credits}} krediittiä/haku",
         "balance": "Saldo: ~{{time}}",
         "minutesPerHour": "~{{time}} minuuteistasi tuntia videota kohden",
         "minutesPerDubMinute": "~{{time}} minuuteistasi dubbausminuuttia kohden",
@@ -814,18 +789,15 @@
       "previewTooltip": "Esikuuntele tämä ääni",
       "previewing": "Toistetaan...",
       "previewFree": "Esikuuntele",
-      "previewWithCost": "Esikuuntele ({{cost}} krediittiä)",
       "mixLabel": "Dubbauksen äänenvoimakkuus vs. alkuperäisen videon äänenvoimakkuus",
       "mixHelp": "Säädä kuinka paljon alkuperäistä ääniraitaa kuuluu dubatun äänen alla.",
       "mixAmbient": "Enemmän taustaa",
       "mixVoice": "Enemmän ääntä",
       "voiceCloning": "Kloonaa alkuperäinen ääni",
       "voiceCloningDesc": "Säilytä alkuperäisen puhujan ääni dubatussa äänessä",
-      "voiceCloningInsufficientCredits": "Vaatii vähintään 1 minuutin saldoa",
       "voiceCloningEnabled": "Äänikloonaus on käytössä ElevenLabsin kanssa. Alkuperäisen puhujan ääni säilytetään dubatussa äänessä.",
       "voiceCloningInfo": "Äänikloonaus käyttää ElevenLabs Dubbing API:a analysoimaan ja luomaan uudelleen alkuperäisen puhujan äänen.",
       "costPerMinute": "Hinta per minuutti",
-      "credits": "krediittiä",
       "yourBalance": "Saldosi",
       "canClone": "Voit kloonata",
       "upToMinutes": "enintään {{minutes}} min",
@@ -835,7 +807,7 @@
     },
     "byoOpenAi": {
       "title": "Tuo omat API-avaimet",
-      "description": "Avaa kertamaksullinen päivitys omien API-avainten käyttämiseksi. Avattuna kaikki litteroinnit, käännökset, dubbaukset ja yhteenvedot suoritetaan suoraan tileiltäsi Stage5-krediittien sijaan.",
+      "description": "Kertamaksulla avaat omien API-avainten käytön. Sen jälkeen litterointi, kääntäminen, dubbaus ja yhteenvedot toimivat omilla tekoälytileilläsi eivätkä kuluta Stage5-minuuttejasi.",
       "unlocking": "Avataan kassaa…",
       "unlockCta": "Avaa 10 dollarilla",
       "unlockHint": "Avattuna voit lisätä API-avaimesi tähän milloin tahansa vaihtaaksesi suoraan laskutukseen tileiltäsi.",
@@ -853,25 +825,23 @@
       "test": "Testaa avain",
       "lastSynced": "Viimeksi synkronoitu",
       "toggleLabel": "Käytä OpenAI-avaintani",
-      "toggleHelp": "Pois päältä käytetään Stage5-minuutteja.",
       "toggleAria": "Vaihda OpenAI-avaimen käyttöä",
       "toggleOn": "Käytetään OpenAI-avaintasi tekoälytehtäviin.",
-      "toggleOff": "Käytetään Stage5-krediittejä tekoälytehtäviin.",
       "toggleError": "Asetusten päivittäminen epäonnistui.",
       "howToGetKeys": "Miten saan API-avaimet?",
       "option1Title": "Vaihtoehto 1: OpenAI",
       "option2Title": "Vaihtoehto 2: Anthropic + ElevenLabs",
       "economicsTitle": "Miksi se kannattaa",
-      "economicsBody": "Stage5-krediitit optimoivat kätevyyden (ei asennusta). BYO maksaa suoraan palveluntarjoajille – yleensä ~30–50 % edullisempi paketistasi riippuen.",
+      "economicsBody": "Stage5-minuutit ovat helppo vaihtoehto: mitään ei tarvitse ottaa käyttöön. Omilla avaimilla maksat tekoälypalveluille suoraan, yleensä noin 30–50 % vähemmän paketista riippuen.",
       "encryptionUnavailable": "Suojattu tallennus ei ole saatavilla tässä järjestelmässä. API-avaimia ei voi tallentaa.",
       "checkoutOpen": "Maksu avattu selaimessa…",
-      "checkoutOpenHint": "Viimeistele maksu selaimessasi. Avaamme BYO:n automaattisesti, kun maksu on vahvistettu.",
+      "checkoutOpenHint": "Viimeistele maksu selaimessa. Omat avaimet avautuvat käyttöön automaattisesti, kun maksu on mennyt läpi.",
       "entitlementsLoadFailed": "Avauksen tilaa ei voitu tarkistaa. Tarkista yhteys ja yritä uudelleen.",
       "unlockFailed": "Maksua ei voitu aloittaa. Tarkista yhteys ja yritä uudelleen."
     },
     "byoPreferences": {
       "title": "Palveluntarjoajan asetukset",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Stage5-minuutit",
       "pricingHint": "Arvioitu hinta 1 tunnin videolta",
       "pricingHintHeuristic": "Arvioitu hinta sovelluksen nykyisellä heuristiikalla",
       "transcription": "Litterointi",
@@ -893,17 +863,17 @@
       "summary": "Yhteenveto",
       "dubbing": "Dubbaus",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "BYO-videosuositusmallia ei ole tällä hetkellä saatavilla. Ota OpenAI tai Anthropic BYO käyttöön tätä ominaisuutta varten.",
-      "videoSuggestionModelRequiresOpenAi": "Vaatii OpenAI BYO -avauksen, avaimen ja aktivoinnin.",
-      "videoSuggestionModelRequiresAnthropic": "Vaatii Anthropic BYO -avauksen, avaimen ja aktivoinnin.",
-      "summaryRequiresOpenAi": "Vaatii OpenAI BYO-käytön ja API-avaimen.",
-      "summaryRequiresAnthropic": "Vaatii Anthropic BYO-käytön ja API-avaimen.",
+      "videoSuggestionModelUnavailable": "Omilla avaimilla ei ole käytettävissä videosuositusmallia. Ota OpenAI- tai Anthropic-avaimesi käyttöön, niin voit käyttää tätä.",
+      "videoSuggestionModelRequiresOpenAi": "Tarvitaan API-avainten avaus, OpenAI-avaimesi ja OpenAI-kytkin päälle.",
+      "videoSuggestionModelRequiresAnthropic": "Tarvitaan API-avainten avaus, Anthropic-avaimesi ja Anthropic-kytkin päälle.",
+      "summaryRequiresOpenAi": "Tarvitaan API-avainten avaus ja OpenAI-avaimesi.",
+      "summaryRequiresAnthropic": "Tarvitaan API-avainten avaus ja Anthropic-avaimesi.",
       "translationReview": "Käännös (tarkistus)",
-      "transcriptionRequiresElevenLabs": "Litterointi käyttää vain ElevenLabs Scribea. Lisää ElevenLabs API-avain litteroidaksesi omilla avaimillasi. Ilman sitä litterointi käyttää Stage5-krediittejä, joita ei käytetä, kun API-avaimesi ovat käytössä. OpenAI-avaintasi käytetään edelleen käännökseen.",
-      "dubbingRequiresElevenLabs": "Dubbaus käyttää vain ElevenLabsia. Lisää ElevenLabs-API-avain, jotta voit dubata omilla avaimillasi. Ilman sitä dubbaus käyttää Stage5-krediittejä, joita ei käytetä, kun API-avaimesi ovat päällä.",
+      "transcriptionRequiresElevenLabs": "Litterointi käyttää vain ElevenLabs Scribea. Lisää ElevenLabs-API-avain, jotta voit litteroida omilla avaimillasi. Ilman sitä litterointi käyttää Stage5-minuuttejasi, joita ei käytetä, kun omat avaimesi ovat päällä. OpenAI-avaintasi käytetään edelleen kääntämiseen.",
+      "dubbingRequiresElevenLabs": "Dubbaus käyttää vain ElevenLabsia. Lisää ElevenLabs-API-avain, jotta voit dubata omilla avaimillasi. Ilman sitä dubbaus käyttää Stage5-minuuttejasi, joita ei käytetä, kun omat avaimesi ovat päällä.",
       "runtimeFallback": "Ajonaikainen varavaihtoehto API-avaintilassa",
-      "videoSuggestionLegacyFollowDraft": "Vanha BYO-asetus säilytetty: seuraa luonnoskäännösmalliasi, kunnes valitset suoran mallin.",
-      "videoSuggestionLegacyFollowReview": "Vanha BYO-asetus säilytetty: seuraa tarkistuskäännösmalliasi, kunnes valitset suoran mallin."
+      "videoSuggestionLegacyFollowDraft": "Aiempi asetuksesi on säilytetty: tämä seuraa luonnoskäännösmalliasi, kunnes valitset mallin tästä.",
+      "videoSuggestionLegacyFollowReview": "Aiempi asetuksesi on säilytetty: tämä seuraa tarkistuskäännösmalliasi, kunnes valitset mallin tästä."
     },
     "apiKeyGuide": {
       "title": "API-avainten hankkiminen",
@@ -927,8 +897,7 @@
         "step3b": "vasemmassa sivupalkissa",
         "step4": "Napsauta",
         "step5": "Lisää maksutapa laskutusasetuksissa (vaaditaan API:n käyttöön)",
-        "step6": "Kopioi avain (alkaa sk-) ja liitä se Stage5:een",
-        "note": "Vinkki: Uudet OpenAI-tilit saavat usein ilmaisia krediittejä aluksi. Maksat vain käyttämästäsi."
+        "step6": "Kopioi avain (alkaa sk-) ja liitä se Stage5:een"
       },
       "anthropic": {
         "description": "Claude tarjoaa laadukkaampia käännöstarkistuksia. Ilman sitä GPT hoitaa kaikki käännöstehtävät.",
@@ -948,7 +917,7 @@
         "step4": "Lisää maksutapa tilausasetuksissa (vaaditaan API-käyttöön ilmaistason yli)",
         "step5": "Kopioi API-avaimesi ja liitä se Stage5:een",
         "note": "Vinkki: ElevenLabsilla on ilmaistaso rajoitetulla käytöllä. Lisää käyttöön päivitä maksulliseen tiliin tiliasetuksissasi.",
-        "audioDescription": "ElevenLabs hoitaa kaiken litteroinnin (Scribe) ja dubbauksen. Ilman omaa ElevenLabs-avainta molemmat käyttävät Stage5-krediittejä, joita ei käytetä, kun API-avaimesi ovat käytössä."
+        "audioDescription": "ElevenLabs hoitaa kaiken litteroinnin (Scribe) ja dubbauksen. Ilman omaa ElevenLabs-avainta molemmat käyttävät Stage5-minuuttejasi, joita ei käytetä, kun omat avaimesi ovat päällä."
       }
     },
     "byoAnthropic": {
@@ -967,14 +936,11 @@
       "testing": "Testataan…",
       "test": "Testaa avain",
       "toggleLabel": "Käytä Anthropic-avaintani",
-      "toggleHelp": "Pois päältä Claude-pyynnöt käyttävät Stage5-krediittejä.",
       "toggleAria": "Vaihda Anthropic-avaimen käyttöä",
       "toggleOn": "Käytetään Anthropic-avaintasi Claude-malleihin.",
-      "toggleOff": "Käytetään Stage5-krediittejä Claude-malleihin.",
       "toggleError": "Anthropic-asetusten päivittäminen epäonnistui."
     },
     "stage5TtsProvider": {
-      "label": "TTS-laatu (Stage5-krediitit)",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Paras laatu, korkeampi hinta (~12×)",
       "elevenlabsHintWithBalance": "Paras laatu · Saldosi: {{time}} dubbausta"
@@ -1068,33 +1034,22 @@
       "freeTitle": "Käännä ilmaiseksi omalla tekoälylläsi"
     },
     "creditTransfer": {
-      "title": "Siirrä minuutteja tietokoneiden välillä",
-      "description": "Ostetut minuutit ja API-avainten avauksen voi siirtää toiselle tietokoneelle. Ilmaiset minuutit jäävät tälle koneelle.",
-      "moveButton": "Siirrä minuutit toiselle tietokoneelle",
-      "receiveButton": "Vastaanota minuutteja",
       "creating": "Luodaan koodia…",
       "copy": "Kopioi",
       "copied": "Kopioitu",
-      "summaryCredits": "{{credits}} krediittiä siirretään.",
       "summaryByo": "Myös API-avainten avaus siirretään.",
       "expires": "Tämä koodi toimii kerran ja vanhenee {{minutes}} minuutin kuluttua.",
-      "steps": "Uudella tietokoneella: asenna Translator, avaa Asetukset, valitse ”Vastaanota minuutteja” ja syötä tämä koodi.",
       "inputLabel": "Koodi toiselta tietokoneeltasi",
       "redeem": "Vastaanota",
       "redeeming": "Vastaanotetaan…",
-      "received": "Vastaanotettiin {{credits}} krediittiä.",
       "receivedNoCredits": "Koodi toimi.",
       "receivedByo": "API-avainten avaus on käytössä tällä tietokoneella.",
-      "summaryCredits_one": "{{credits}} krediitti siirretään.",
-      "received_one": "Vastaanotettiin {{credits}} krediitti.",
       "errors": {
-        "nothing_to_transfer": "Ei vielä siirrettävää: tällä tietokoneella ei ole ostettuja minuutteja eikä API-avainten avausta. Jos haluat tuoda minuutteja toiselta tietokoneelta, valitse ”Vastaanota minuutteja”.",
         "too_many_codes": "Liian monta siirtokoodia tämän tunnin aikana. Yritä hetken päästä uudelleen.",
         "jobs_running": "Litterointi tai käännös on vielä kesken. Yritä uudelleen, kun se on valmis.",
         "invalid_code": "Koodi on väärä, jo käytetty tai vanhentunut. Luo uusi koodi toisella tietokoneella.",
         "same_device": "Syötä koodi toisella tietokoneella, ei sillä, jolla se luotiin.",
         "network_error": "Stage5-palvelimeen ei saatu yhteyttä. Tarkista yhteys ja yritä uudelleen.",
-        "transfer_failed": "Minuutteja ei voitu siirtää. Tarkista yhteys ja yritä uudelleen.",
         "nothing_to_transfer_minutes": "Ei vielä siirrettävää: tällä tietokoneella ei ole ostettuja minuutteja eikä API-avainten avausta. Jos haluat tuoda minuutteja toiselta tietokoneelta, valitse ”Vastaanota minuutteja”.",
         "transfer_failed_minutes": "Minuutteja ei voitu siirtää. Tarkista yhteys ja yritä uudelleen."
       },
@@ -1111,27 +1066,22 @@
   "credits": {
     "title": "Minuuttisi",
     "loading": "Ladataan...",
-    "credits": "krediittiä",
     "usingApiKey": "Käytetään API-avainta",
     "usingOpenAi": "Käytössä OpenAI",
     "usingAnthropic": "Käytössä Claude",
     "usingElevenLabs": "Käytössä ElevenLabs",
     "hours": "tuntia",
     "translationHoursShort": "käännöstuntia",
-    "buyCredits": "Osta minuutteja",
     "redirectingToPayment": "Avataan turvallinen kassa...",
-    "description": "Valitse paketti: ${{packMicroPrice}} ({{packMicroHours}} h), ${{pack1Price}} ({{pack1Hours}} h), ${{pack2Price}} ({{pack2Hours}} h) tai ${{pack3Price}} ({{pack3Hours}} h)",
-    "notEnough": "Minuutit eivät riitä. Osta lisää jatkaaksesi.",
     "transcriptionMinutesShort": "{{minutes}} min litterointia",
     "transcriptionTimeShort": "{{time}} litterointia",
-    "costOfBalance": "{{cost}} {{balance}} krediitistäsi",
     "pill": {
       "freeBack": "Ilmaiset minuutit palaavat {{date}}",
       "empty": "Hanki minuutteja",
       "freeThisMonth": "{{count}} min ilmaiseksi tässä kuussa",
       "freeWelcome": "{{count}} min ilmaiseksi",
       "minutes": "{{count}} min jäljellä",
-      "title": "Minuutit ja paketit",
+      "title": "Minuuttisi ja paketit",
       "neutral": "Minuutit",
       "welcomePending": "Ilmaiset minuutit tulossa",
       "freeTimeThisMonth": "{{time}} ilmaiseksi tässä kuussa",
@@ -1149,11 +1099,10 @@
     "moreMinutesPerDollar": "{{multiplier}}× enemmän minuutteja dollarilla",
     "checkoutWaiting": "Viimeistele maksu selaimessa. Minuutit ilmestyvät tähän itsestään.",
     "checkoutNote": "Kertamaksu Stripen kautta selaimessa. Ei tiliä eikä tilausta. Minuutit lisätään automaattisesti.",
-    "dubbingNote": "Kääntäminen vie noin 10 % lisää minuuttia kohden; dubbaus kuluttaa enemmän.",
+    "dubbingNote": "Käännöksen lisääminen kuluttaa noin 10 % enemmän minuutteja; dubbaus kuluttaa enemmän.",
     "iCancelledCheckout": "Peruutin maksun",
     "checkoutStartFailed": "Maksua ei voitu aloittaa. Tarkista yhteys ja yritä uudelleen.",
     "loadFailed": "Saldoa ei voitu ladata. Tarkista yhteys ja yritä uudelleen.",
-    "estimateAmount": "{{credits}} krediittiä",
     "costOfBalanceMinutes": "{{cost}} (saldo {{balance}})",
     "timeLeft": "{{time}} jäljellä",
     "success": {
@@ -1170,7 +1119,10 @@
     "offlineNote": "Translator ei saa yhteyttä Stage5:een. Saldosi näkyy taas, kun olet verkossa.",
     "microPackLabelNoTime": "Osta minuutteja – {{price}}",
     "microPackLabel": "Osta minuutteja – {{price}} · ≈ {{time}} videota",
-    "monthlyFreeNote_one": "Joka kuukausi {{minutes}} min ilmaiseksi · seuraava {{date}}"
+    "monthlyFreeNote_one": "Joka kuukausi {{minutes}} min ilmaiseksi · seuraava {{date}}",
+    "checkingPayment": "Tarkistetaan maksuasi…",
+    "checkoutUnresolved": "Jos maksoit jo, minuutit näkyvät tässä pian. Maksu vielä kesken? Viimeistele se selaimessa.",
+    "checkPaymentNow": "Tarkista nyt"
   },
   "cta": {
     "generate": {
@@ -1200,7 +1152,7 @@
     "scrollToCurrentSubtitle": "Vieritä nykyiseen tekstitykseen",
     "changeVideo": "Vaihda video",
     "findVideoWithAi": "Etsi video AI:n avulla",
-    "mountSrt": "Lataa SRT",
+    "mountSrt": "Tuo SRT",
     "changeSrt": "Vaihda SRT",
     "useThisVideo": "Käytä tätä videota",
     "useDownloadedVideo": "Käytä tätä videota",
@@ -1282,7 +1234,6 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "Ei minuutteja.",
     "rechargeLink": "Lataa →",
     "creditWarning": {
       "message": "Lataaminen, muokkaaminen, vieminen ja kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista. Litterointiin tarvitaan minuutteja tai API-avainten avaus kohdassa <settingsLink>{{settingsLinkText}}</settingsLink>.",
@@ -1292,7 +1243,6 @@
       "pleaseSelectVideo": "Valitse video",
       "processingDuration": "Videon kestoa käsitellään. Yritä hetken kuluttua uudelleen.",
       "icloudPlaceholder": "Tämä tiedosto on tallennettu iCloudiin. Napsauta Finderissa \"Lataa\" ja odota pilvi-kuvakkeen valmistumista, sitten yritä uudelleen.",
-      "insufficientCreditsForVoiceCloning": "Minuutit eivät riitä äänikloonaukseen. Video kestää {{duration}} min, mutta saldosi riittää vain {{affordable}} minuuttiin. Lisää minuutteja tai poista äänikloonaus käytöstä.",
       "fileTooLargeForVoiceCloning": "Videotiedosto on liian suuri äänikloonaukseen ({{size}}MB). Suurin sallittu koko on {{max}}MB. Käytä lyhyempää videota tai poista äänikloonaus käytöstä."
     },
     "status": {
@@ -1302,7 +1252,6 @@
       "error": "Virhe"
     },
     "buttons": {
-      "buyCredits": "Osta minuutteja",
       "redirectingToPayment": "Ohjataan maksuun..."
     },
     "workflow": {
@@ -1326,7 +1275,6 @@
       "saveOutputsDescription": "Säilytä haluamasi lähde- tai dubattu media sovelluksen työtilan ulkopuolella."
     },
     "calculatingCost": "Lasketaan kustannuksia...",
-    "notEnoughCredits": "Minuutit eivät riitä",
     "welcomeCredits": {
       "message": "Sinulla on ilmaisia minuutteja litteroinnin ja kääntämisen kokeiluun (noin 20 minuuttia videota)."
     }
@@ -1337,7 +1285,7 @@
     "replaceAll": "Korvaa kaikki",
     "nextMatch": "Seuraava osuma (Enter)",
     "previousMatch": "Edellinen osuma (Shift+Enter)",
-    "replaceAllTitle": "Korvaa kaikki esiintymät",
+    "replaceAllTitle": "Korvaa kaikki osumat",
     "closeTitle": "Sulje (Esc)",
     "nextMatchAria": "Seuraava osuma",
     "previousMatchAria": "Edellinen osuma",
@@ -1346,7 +1294,8 @@
     "matchCount": "{{current}}/{{total}}",
     "matchCase": "Huomioi kirjainkoko",
     "wholeWord": "Koko sana",
-    "showReplace": "Korvaa"
+    "showReplace": "Korvaa",
+    "noMatches": "Ei osumia"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1371,9 +1320,9 @@
     },
     "downloadInProgress": "Lataus meneillään",
     "saveDownloadedFile": "Tallenna ladattu tiedosto: {{path}}",
-    "transcriptionInProgress": "Litterointi on käynnissä",
-    "translationInProgress": "Käännös meneillään",
-    "dubbingInProgress": "Dubbaus meneillään",
+    "transcriptionInProgress": "Litterointi käynnissä",
+    "translationInProgress": "Kääntäminen käynnissä",
+    "dubbingInProgress": "Dubbaus käynnissä",
     "dubbingWorking": "Luodaan dubattua ääntä…",
     "cancelTranslationConfirm": "Peruuta käännös? Edistyminen menetetään ja sinun täytyy aloittaa uudelleen.",
     "cancelSummaryConfirm": "Perutaanko yhteenvedon luonti?",
@@ -1390,42 +1339,8 @@
       "description": "Tämä voi johtua videopalvelun muutoksista tai uusista suojaustoimista. Saatat joutua odottamaan seuraavaa sovellusversiota uudempien videoiden käsittelyä varten."
     },
     "creditRanOut": {
-      "title": "Minuutit loppuivat",
-      "message": "Minuuttisi ovat loppuneet. Lisää niitä Asetuksissa ja jatka siitä, mihin jäit.",
       "openSettings": "Avaa asetukset",
       "ok": "OK",
-      "neverHadTitle": "Litterointiin tarvitaan minuutteja",
-      "neverHadMessage": "Litterointiin tarvitaan minuutteja tai API-avainten avaus. Saat kumman tahansa Asetuksista. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista.",
-      "notEnoughTitle": "Minuutit eivät riitä tähän videoon",
-      "notEnoughTranscriptionMessage": "Tämän videon litterointi vie noin {{required}} krediittiä. Sinulla on {{available}}, mikä riittää noin {{minutes}} minuuttiin. Lisää krediittejä ja aloita uudelleen.",
-      "notEnoughMessage": "Tähän tarvitaan enemmän kuin saldosi {{available}}. Lisää minuutteja jatkaaksesi.",
-      "task": {
-        "transcription": {
-          "title": "Litterointiin tarvitaan minuutteja",
-          "message": "Saldosi ei riitä tämän videon litterointiin. Lisää minuutteja ja aloita sitten uudelleen. Jo litteroidut rivit säilyvät.",
-          "messageNothingYet": "Saldosi ei riitä tämän videon litterointiin. Lisää minuutteja ja aloita sitten uudelleen."
-        },
-        "translation": {
-          "title": "Kääntämiseen tarvitaan minuutteja",
-          "message": "Saldosi ei riitä tämän videon kääntämiseen. Lisää minuutteja ja yritä uudelleen. Jo käännetyt rivit säilyvät. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista.",
-          "messageNothingYet": "Saldosi ei riitä tämän videon kääntämiseen. Lisää minuutteja ja yritä uudelleen. Kääntäminen omalla Claudella tai Codexilla Agenttiohjauksen kautta on ilmaista."
-        },
-        "dubbing": {
-          "title": "Dubbaukseen tarvitaan minuutteja",
-          "message": "Saldosi ei riitä tämän videon dubbaukseen. Lisää minuutteja ja yritä uudelleen."
-        },
-        "summary": {
-          "title": "Yhteenvetoon tarvitaan minuutteja",
-          "message": "Saldosi ei riitä yhteenvetoon ja kohokohtiin. Lisää minuutteja ja yritä uudelleen."
-        },
-        "videoSearch": {
-          "title": "Tekoälyhakuun tarvitaan minuutteja",
-          "message": "Saldosi ei riitä tekoälyhakuun. Lisää minuutteja ja hae sitten uudelleen."
-        },
-        "other": {
-          "title": "Tähän tarvitaan minuutteja"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "Litterointiin tarvitaan minuutteja",
@@ -1457,12 +1372,15 @@
         "message": "Minuuttisi ovat loppuneet. Lisää niitä Asetuksissa ja jatka siitä, mihin jäit.",
         "notEnoughTitle": "Minuutit eivät riitä tähän videoon",
         "notEnoughTranscriptionMessage": "Tämän videon litterointiin tarvitaan {{required}}, ja sinulla on jäljellä {{available}}. Lisää minuutteja ja aloita sitten uudelleen.",
-        "notEnoughMessage": "Tähän tarvitaan enemmän kuin jäljellä olevat {{available}}. Lisää minuutteja jatkaaksesi."
+        "notEnoughMessage": "Tähän tarvitaan enemmän kuin jäljellä olevat {{available}}. Lisää minuutteja jatkaaksesi.",
+        "voicePreview": {
+          "title": "Ääninäytteeseen tarvitaan minuutteja",
+          "message": "Minuuttisi eivät riitä ääninäytteeseen. Lisää minuutteja ja yritä uudelleen."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "Aloitetaanko dubbaus?",
-      "message": "Tämä dubbaus käyttää noin {{cost}} {{balance}} krediitistäsi. Äänten luominen maksaa paljon enemmän kuin kääntäminen.",
       "messageMinutes": "Tämä dubbaus käyttää {{cost}}. Äänten luominen maksaa paljon enemmän kuin kääntäminen."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1537,7 +1455,9 @@
     "cancelSummaryTitle": "Keskeytetäänkö yhteenveto?",
     "keepSummarizing": "Jatka",
     "stopSummarizing": "Keskeytä",
-    "cancelSummaryBody": "Tähän mennessä tehtyä yhteenvetoa ja kohokohtia ei säilytetä."
+    "cancelSummaryBody": "Tähän mennessä tehtyä yhteenvetoa ja kohokohtia ei säilytetä.",
+    "cancelTranslationBody": "Jo käännetyt rivit säilyvät. Voit kääntää loput myöhemmin.",
+    "cancelDubbingTitle": "Keskeytetäänkö dubbaus?"
   },
   "progress": {
     "preparingVideoExport": "Valmistellaan videon vientiä…",
@@ -1791,7 +1711,8 @@
     "statusLines_one": "{{count}} tekstitysrivi",
     "checkingFile": "Luetaan tiedostoa…",
     "statusLoaded": "{{count}} riviä ladattu",
-    "statusLoaded_one": "{{count}} rivi ladattu"
+    "statusLoaded_one": "{{count}} rivi ladattu",
+    "interruptedTranslateSubtitles": "Näiden tekstitysten kääntäminen {{languageInto}} keskeytyi, kun Translator suljettiin."
   },
   "subtitleStyles": {
     "Cinema": "Elokuvakeltainen",

@@ -23,7 +23,6 @@
       "unexpectedSave": "Ralat tidak dijangka telah berlaku semasa menyimpan.",
       "unexpectedLoad": "Ralat tidak dijangka telah berlaku semasa memuatkan.",
       "renderFailed": "Paparan gagal",
-      "creditReservationFailed": "Tempahan kredit gagal",
       "invalidRenderOptions": "Pilihan paparan tidak sah disediakan",
       "missingVideoMetadata": "Metadata video hilang ({{missing}})",
       "insufficientDiskSpace": "Ruang cakera tidak mencukupi untuk menyiapkan penggabungan. Sila kosongkan ruang dan cuba lagi.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "Ralat tidak dijangka telah berlaku semasa menyimpan.",
     "unexpectedLoad": "Ralat tidak dijangka telah berlaku semasa memuatkan.",
     "renderFailed": "Paparan gagal",
-    "creditReservationFailed": "Tempahan kredit gagal",
     "invalidRenderOptions": "Pilihan paparan tidak sah disediakan",
     "missingVideoMetadata": "Metadata video hilang ({{missing}})",
     "noSourceVideo": "Tiada video sumber",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "Transkripsi (ElevenLabs Scribe) tidak tersedia buat sementara waktu atau tidak dapat dihubungi selepas beberapa percubaan. Sila cuba lagi dalam beberapa minit.",
       "fileTooLarge": "Audio ini terlalu panjang untuk ditranskripsi dalam satu tugas (lebih daripada kira-kira {{hours}} jam). Bahagikan video kepada bahagian yang lebih pendek dan transkripsi setiap bahagian.",
-      "elevenLabsKeyRequired": "Transkripsi menggunakan ElevenLabs Scribe dan memerlukan kunci API ElevenLabs. Tambahkan satu dalam Tetapan, atau matikan mod kunci API untuk mentranskripsi dengan kredit Stage5. Kunci OpenAI atau Anthropic anda masih digunakan untuk terjemahan."
+      "elevenLabsKeyRequired": "Transkripsi menggunakan ElevenLabs Scribe dan memerlukan kunci API ElevenLabs. Tambahkan satu dalam Tetapan, atau matikan “Gunakan kunci API saya” untuk mentranskripsi dengan minit Stage5 anda. Kunci OpenAI atau Anthropic anda masih digunakan untuk terjemahan."
     },
     "credits": {
       "transcription": "Minit tidak mencukupi untuk transkripsi ini.",
@@ -237,21 +235,21 @@
     "downloading": "Memuat turun...",
     "selectFile": "Pilih Fail",
     "selectVideoFile": "Pilih Fail Video",
-    "selectVideoAudioFile": "Pilih Fail Video / Audio",
-    "saveOriginalVideo": "Simpan Video Asli",
+    "selectVideoAudioFile": "Pilih fail video atau audio",
+    "saveOriginalVideo": "Simpan video asal",
     "localFileDescription": "Muat naik fail video atau audio dari komputer anda",
     "selectLocalFile": "Muat naik dari komputer",
     "downloadFromUrl": "Muat turun dari web",
     "recentMedia": "Fail terkini",
     "webDescription": "Tampal pautan video YouTube, TikTok, Instagram, atau URL fail video terus dari laman web",
-    "chooseFile": "Pilih Fail",
+    "chooseFile": "Pilih fail",
     "fileSelected": "Fail dipilih",
-    "transcribeOnly": "Transkripsi Audio",
-    "srtLoaded": "Transkripsi Selesai",
+    "transcribeOnly": "Transkripsi audio",
+    "srtLoaded": "Transkripsi selesai",
     "srtFileLoaded": "SRT Dimuat",
     "featuresUnlockAfterTranscription": "Transkripsi, terjemah atau jana sorotan daripada video ini.",
     "preSubtitleActionsHint": "Transkripsikan, terjemahkan atau jana sorotan daripada video ini.",
-    "saveDubbedVideo": "Simpan Video Alih Suara",
+    "saveDubbedVideo": "Simpan video alih suara",
     "downloadFinishedSwitchTitle": "Tonton video yang dimuat turun?",
     "downloadFinishedSwitchPrompt": "Muat turun anda sudah siap. Tontonnya sekarang, atau kekalkan video semasa anda dan bukanya kemudian dari sejarah.",
     "downloadFinishedWatchNow": "Tonton sekarang",
@@ -469,29 +467,25 @@
     "batchDownloadRunning": "Translator sedang memuat turun beberapa video. Tunggu sehingga selesai, atau batalkan muat turun."
   },
   "subtitles": {
-    "outputLanguage": "Bahasa Output",
+    "outputLanguage": "Bahasa sasaran",
     "showOriginalText": "Tunjukkan teks asal",
     "displayModeLabel": "Paparan sari kata",
     "translate": "Terjemah",
     "continueTranscribing": "Teruskan transkripsi",
-    "generate": "Jana Sarikata",
+    "generate": "Jana sari kata",
     "generating": "Menjana...",
     "generateNow": "Jana Sarikata Sekarang",
     "translation": "Terjemahan",
-    "improveTranscription": "Perbaiki Transkripsi",
-    "improveTranslation": "Perbaiki Terjemahan",
-    "chooseSrtFile": "Pilih Fail SRT",
-    "dub": "Alih Suara",
-    "dubEstimateCredits": "{{credits}} kr (~{{minutes}}m)",
+    "improveTranscription": "Perbaiki transkripsi",
+    "improveTranslation": "Perbaiki terjemahan",
+    "chooseSrtFile": "Pilih fail SRT",
+    "dub": "Alih suara",
     "dubEstimateByo": "~{{minutes}}m audio",
     "voiceCloningRequiresTranslation": "Pengklonan suara memerlukan bahasa sasaran",
     "translateEstimateCredits": "~{{minutes}}m video",
-    "translateEstimateByo": "Kunci BYO",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "Adakah anda pasti mahu membatalkan proses terjemahan sarikata? Sebarang kemajuan akan hilang dan anda perlu bermula semula.",
-    "dubCostHint": "Suara ElevenLabs: ~{{rate}} kredit seminit pertuturan. Anggaran ini dipaparkan sebelum alih suara bermula.",
     "unreadableCues": "{{count}} baris dalam fail ini tidak dapat dibaca dan telah ditinggalkan. Semak kod masanya.",
-    "addCreditsToTranslate": "Tambah minit untuk menterjemah",
     "dubInto": "Alih suara ke {{language}}",
     "dubIntro": "Suara akan membacakan sari kata dalam bahasa pilihan anda, di atas bunyi latar asal.",
     "dubNeedsSubtitles": "Alih suara membacakan sari kata, jadi video ini perlukan sari kata dahulu. Transkripsikannya, kemudian pilih suara di sini.",
@@ -500,8 +494,6 @@
     "dubTranslatesFirst": "Sari kata diterjemah ke {{language}} dahulu, kemudian disuarakan.",
     "dubCostWithTranslation": "Terjemahan dan suara: {{cost}}",
     "dubUsesOwnKeys": "Menggunakan kunci API anda sendiri.",
-    "dubNotEnoughCredits": "Minit tidak mencukupi untuk alih suara ini.",
-    "addCreditsToDub": "Tambah minit untuk alih suara",
     "noSubtitlesToDub": "Buat atau buka sari kata untuk video ini dahulu, kemudian alih suara.",
     "noSubtitlesToTranslate": "Buka atau buat sari kata dahulu, kemudian terjemahkannya.",
     "dubVoiceHelp": "Suara untuk alih suara ini. Ia kekal dipilih untuk alih suara seterusnya.",
@@ -528,11 +520,9 @@
     },
     "generate": "Jana sorotan",
     "regenerate": "Jana semula sorotan",
-    "estimateCredits": "{{credits}} kredit",
-    "estimateByo": "Kunci BYO",
     "highEffortBadge": "(mendalam)",
     "placeholder": "Ringkasan AI anda akan muncul di sini setelah dijana.",
-    "insufficientCredits": "Minit tidak mencukupi untuk menjana sorotan.",
+    "insufficientCredits": "Minit tidak mencukupi untuk mencari sorotan.",
     "error": "Kami tidak dapat menjana sorotan. {{message}}",
     "cancel": "Batal",
     "copy": "Salin ringkasan",
@@ -585,7 +575,7 @@
     "downloadCombined": "Muat Turun Klip Gabungan",
     "saveCombinedDialogTitle": "Simpan klip sorotan gabungan",
     "combinedCutFailed": "Gagal memotong sorotan gabungan: {{message}}",
-    "highlightsInsufficientCredits": "Ringkasan dijana, tetapi pengekstrakan sorotan terhenti kerana minit habis.",
+    "highlightsInsufficientCredits": "Ringkasan sudah siap, tetapi pencarian sorotan terhenti kerana minit anda habis.",
     "highlightsPartialWarning": "Pengekstrakan sorotan tidak lengkap. Sorotan ini mungkin tidak lengkap. Jana semula untuk menyegarkan.",
     "highlightsPartialWithReason": "Ringkasan dijana, tetapi pengekstrakan sorotan tidak lengkap: {{message}}",
     "estimateOwnKey": "Menggunakan kunci API anda",
@@ -619,7 +609,10 @@
     "highlightCuesChanged": "Anda menyunting baris dalam sorotan ini selepas ia ditemui. Semak sama ada ia masih sesuai.",
     "clipCaptionsChangedAny": "Sari kata telah berubah sejak klip ini dipotong (teks, gaya atau saiznya).",
     "notEnoughForRun": "Minit tidak mencukupi untuk ringkasan dan sorotan.",
-    "clipsUseOriginalAudio": "Klip menggunakan audio asal, bukan alih suara."
+    "clipsUseOriginalAudio": "Klip menggunakan audio asal, bukan alih suara.",
+    "notEnoughMinutesSummary": "Minit tidak mencukupi untuk ringkasan ini.",
+    "notEnoughMinutesHighlights": "Minit tidak mencukupi untuk mencari sorotan.",
+    "translateMissingLines": "Terjemah baris-baris ini"
   },
   "panel": {
     "new": "baru",
@@ -628,13 +621,13 @@
       "none": "Tiada jurang besar dikesan"
     },
     "confidence": {
-      "title": "Keyakinan Rendah",
+      "title": "Kurang pasti",
       "none": "Tiada baris keyakinan rendah dikesan",
       "count": "{{count}} baris"
     }
   },
   "editSubtitles": {
-    "title": "Edit Sarikata",
+    "title": "Sunting sari kata",
     "listTitle": "Sarikata ({{count}})",
     "workspace": {
       "editorStage": "Ruang editor",
@@ -661,15 +654,15 @@
       "highlightEditingLocked": "Penjanaan sorotan sedang berjalan, pengeditan dikunci"
     },
     "item": {
-      "seek": "Cari",
-      "seekTitle": "Cari video ke masa mula",
+      "seek": "Lompat",
+      "seekTitle": "Lompatkan video ke permulaan baris ini",
       "playSnippet": "Main petikan",
       "pauseSnippet": "Jeda petikan",
       "insertTitle": "Masukkan blok sarikata baru selepas ini",
       "removeTitle": "Buang blok sarikata ini",
       "shiftPlaceholder": "Alih (-/+ saat)",
       "shiftTitle": "Alih sarikata ini mengikut saat (+/-)",
-      "applyShift": "Guna Pengalihan",
+      "applyShift": "Guna anjakan",
       "originalTextPrefix": "Asal:",
       "subtitlePlaceholder": "Teks sarikata",
       "confirmRemove": "Adakah anda pasti mahu membuang blok sarikata ini? Tindakan ini tidak boleh dibatalkan.",
@@ -679,7 +672,10 @@
       "startTimeAria": "Masa mula baris {{index}}",
       "endTimeAria": "Masa tamat baris {{index}}",
       "splitTitle": "Pisahkan baris ini pada kursor",
-      "mergeTitle": "Gabungkan dengan baris seterusnya"
+      "mergeTitle": "Gabungkan dengan baris seterusnya",
+      "timeOverlapsPrevious": "Baris ini bermula sebelum baris sebelumnya tamat, jadi kedua-duanya dipaparkan serentak.",
+      "timeOverlapsNext": "Baris ini tamat selepas baris seterusnya bermula, jadi kedua-duanya dipaparkan serentak.",
+      "timeOverlapsBoth": "Baris ini bertindih dengan baris sebelum dan selepasnya, jadi semuanya dipaparkan serentak."
     },
     "header": {
       "save": "Simpan sari kata",
@@ -730,15 +726,14 @@
       "toggleLabel": "Gunakan kunci API saya",
       "activeKeys": "Kunci sedia: {{count}}",
       "noKeys": "Tiada kunci dikonfigurasikan",
-      "usingApiKeys": "Kredit Stage5 dimatikan",
-      "usingCredits": "Kredit Stage5 digunakan",
+      "usingApiKeys": "Minit Stage5 anda tidak digunakan",
+      "usingCredits": "Menggunakan minit Stage5 anda",
       "toggleOn": "Kini menggunakan kunci API anda.",
-      "toggleOff": "Kini menggunakan kredit Stage5.",
+      "toggleOff": "Kini menggunakan minit Stage5 anda.",
       "toggleError": "Gagal mengemas kini keutamaan.",
       "toggleAria": "Gunakan kunci API saya",
       "requirementTranslation": "Memerlukan kunci OpenAI atau Anthropic untuk terjemahan"
     },
-    "creditsDescription": "Beli minit. Jam yang dipaparkan ialah anggaran jumlah durasi video yang anda boleh transkripsi atau terjemah. Contoh: mentranskripsi dan menterjemah video 3 jam menggunakan kira-kira 6 jam (≈140,000 kredit).",
     "performanceQuality": {
       "title": "Prestasi & Kualiti",
       "qualityTranslation": {
@@ -748,32 +743,15 @@
         "modelOff": "Draf Claude Haiku 5.5 sahaja",
         "reviewProvider": "Penyedia semakan",
         "openAiHighEnd": "Semakan premium daripada OpenAI",
-        "anthropicHighEnd": "Semakan premium daripada Anthropic",
-        "help": "<b>5× kredit</b> • Menambah fasa semakan untuk kualiti yang lebih tinggi",
-        "helpWithEstimate": "<b>5× kredit</b> • Baki anda: ~{{normalTime}} (biasa) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>5× kredit</b> • Draf Claude Haiku 5.5 + semakan Claude Opus 5.5",
-        "helpOff": "<b>1× kredit</b> • Draf Claude Haiku 5.5 sahaja",
-        "helpWithEstimateOn": "<b>5× kredit</b> • Draf Claude Haiku 5.5 + semakan Claude Opus 5.5 • Baki: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× kredit</b> • Draf Claude Haiku 5.5 sahaja • Baki: ~{{time}}"
+        "anthropicHighEnd": "Semakan premium daripada Anthropic"
       },
       "qualitySummary": {
         "label": "Ringkasan Berkualiti",
         "modelOn": "Analisis mendalam Claude Opus 5.5 + klip sorotan",
-        "modelOff": "Analisis standard Claude Sonnet 5.5",
-        "help": "<b>4× kredit</b> • Analisis mendalam + klip sorotan dengan Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× kredit</b> • Baki anda: ~{{normalTime}} (biasa) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>4× kredit</b> • Analisis mendalam Claude Opus 5.5 + klip sorotan",
-        "helpOff": "Analisis pantas dengan Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× kredit</b> • Analisis mendalam Claude Opus 5.5 + klip sorotan • Baki: ~{{time}}",
-        "helpWithEstimateOff": "Analisis pantas dengan Claude Sonnet 5.5 • Baki: ~{{time}}"
+        "modelOff": "Analisis standard Claude Sonnet 5.5"
       },
       "qualityDubbing": {
-        "label": "Alih Suara Berkualiti",
-        "modelOn": "Suara premium ElevenLabs TTS",
-        "help": "<b>12× kredit</b> • TTS ElevenLabs dengan suara premium",
-        "helpWithEstimate": "<b>12× kredit</b> • Baki anda: ~{{normalTime}} (biasa) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS dengan suara premium",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredit</b> • ElevenLabs TTS dengan suara premium • Baki: ~{{time}}"
+        "modelOn": "Suara premium ElevenLabs TTS"
       },
       "videoSuggestionModel": {
         "label": "Model Cadangan Video",
@@ -782,9 +760,6 @@
         "quality": "Kualiti (sama seperti kualiti terjemahan)"
       },
       "rate": {
-        "perHour": "~{{credits}} kredit/jam",
-        "perMinute": "~{{credits}} kredit/min",
-        "perSearch": "~{{credits}} kredit/carian",
         "balance": "Baki: ~{{time}}",
         "minutesPerHour": "~{{time}} daripada minit anda bagi setiap jam video",
         "minutesPerDubMinute": "~{{time}} daripada minit anda bagi setiap minit alih suara",
@@ -807,18 +782,15 @@
       "previewTooltip": "Pratonton suara ini",
       "previewing": "Memainkan...",
       "previewFree": "Pratonton",
-      "previewWithCost": "Pratonton ({{cost}} kredit)",
       "mixLabel": "Kelantangan Alih Suara vs Kelantangan Video Asal",
       "mixHelp": "Kawal berapa banyak trek bunyi asal dimainkan di bawah suara alih suara.",
       "mixAmbient": "Lebih ambien",
       "mixVoice": "Lebih suara",
       "voiceCloning": "Klon Suara Asal",
       "voiceCloningDesc": "Kekalkan suara penutur asal dalam audio alih suara",
-      "voiceCloningInsufficientCredits": "Memerlukan baki sekurang-kurangnya 1 minit",
       "voiceCloningEnabled": "Pengklonan suara diaktifkan dengan ElevenLabs. Suara penutur asal akan dikekalkan dalam audio alih suara.",
       "voiceCloningInfo": "Pengklonan suara menggunakan API Alih Suara ElevenLabs untuk menganalisis dan mencipta semula suara penutur asal.",
       "costPerMinute": "Kos per minit",
-      "credits": "kredit",
       "yourBalance": "Baki anda",
       "canClone": "Anda boleh klon",
       "upToMinutes": "sehingga {{minutes}} min",
@@ -828,7 +800,7 @@
     },
     "byoOpenAi": {
       "title": "Bawa Kunci API Sendiri",
-      "description": "Buka kunci naik taraf sekali sahaja untuk menggunakan kunci API anda sendiri. Setelah dibuka kunci, sebarang transkripsi, terjemahan, alih suara, atau ringkasan berjalan terus pada akaun anda dan bukannya menggunakan kredit Stage5.",
+      "description": "Buka kunci sekali bayar untuk menggunakan kunci API anda sendiri. Setelah dibuka, transkripsi, terjemahan, alih suara dan ringkasan berjalan pada akaun AI anda sendiri tanpa menggunakan minit Stage5 anda.",
       "unlocking": "Membuka pembayaran…",
       "unlockCta": "Buka kunci dengan $10",
       "unlockHint": "Setelah dibuka kunci, tambah kunci API anda di sini bila-bila masa untuk togol pengebilan langsung pada akaun anda.",
@@ -846,25 +818,23 @@
       "test": "Uji Kunci",
       "lastSynced": "Sinkron terakhir",
       "toggleLabel": "Gunakan kunci OpenAI saya",
-      "toggleHelp": "Apabila dimatikan, minit Stage5 anda digunakan.",
       "toggleAria": "Togol penggunaan kunci OpenAI anda",
       "toggleOn": "Menggunakan kunci OpenAI anda untuk tugas AI.",
-      "toggleOff": "Menggunakan kredit Stage5 untuk tugas AI.",
       "toggleError": "Gagal mengemas kini keutamaan.",
       "howToGetKeys": "Bagaimana untuk mendapatkan kunci API?",
       "option1Title": "Pilihan 1: OpenAI",
       "option2Title": "Pilihan 2: Anthropic + ElevenLabs",
       "economicsTitle": "Mengapa ia berbaloi",
-      "economicsBody": "Kredit Stage5 dioptimumkan untuk kemudahan (tanpa persediaan). BYO membayar pembekal secara langsung—biasanya ~30–50% lebih murah bergantung pada pakej anda.",
+      "economicsBody": "Minit Stage5 ialah pilihan paling mudah: tiada apa-apa untuk disediakan. Dengan kunci sendiri, anda membayar pembekal AI secara terus, biasanya kira-kira 30–50% lebih murah, bergantung pada pek.",
       "encryptionUnavailable": "Storan selamat tidak tersedia pada sistem ini. API key tidak boleh disimpan.",
       "checkoutOpen": "Pembayaran dibuka dalam pelayar…",
-      "checkoutOpenHint": "Selesaikan pembayaran dalam pelayar anda. Kami akan membuka kunci BYO secara automatik apabila pembayaran selesai.",
+      "checkoutOpenHint": "Selesaikan pembayaran dalam pelayar anda. Penggunaan kunci sendiri dibuka secara automatik sebaik sahaja pembayaran berjaya.",
       "entitlementsLoadFailed": "Status buka kunci anda tidak dapat disemak. Semak sambungan anda dan cuba lagi.",
       "unlockFailed": "Pembayaran tidak dapat dimulakan. Semak sambungan anda dan cuba lagi."
     },
     "byoPreferences": {
       "title": "Keutamaan Pembekal",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Minit Stage5",
       "pricingHint": "Anggaran kos per 1 jam video",
       "pricingHintHeuristic": "Anggaran kos berdasarkan heuristik aplikasi semasa",
       "transcription": "Transkripsi",
@@ -886,17 +856,17 @@
       "summary": "Ringkasan",
       "dubbing": "Alih Suara",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Tiada model cadangan video BYO yang tersedia buat masa ini. Aktifkan OpenAI atau Anthropic BYO untuk ciri ini.",
-      "videoSuggestionModelRequiresOpenAi": "Memerlukan unlock OpenAI BYO, key, dan toggle.",
-      "videoSuggestionModelRequiresAnthropic": "Memerlukan unlock Anthropic BYO, key, dan toggle.",
-      "summaryRequiresOpenAi": "Memerlukan akses OpenAI BYO dan kunci API.",
-      "summaryRequiresAnthropic": "Memerlukan akses Anthropic BYO dan kunci API.",
+      "videoSuggestionModelUnavailable": "Tiada model cadangan video yang tersedia dengan kunci anda sendiri. Hidupkan kunci OpenAI atau Anthropic anda untuk menggunakan ciri ini.",
+      "videoSuggestionModelRequiresOpenAi": "Memerlukan buka kunci API, kunci OpenAI anda dan suis OpenAI dihidupkan.",
+      "videoSuggestionModelRequiresAnthropic": "Memerlukan buka kunci API, kunci Anthropic anda dan suis Anthropic dihidupkan.",
+      "summaryRequiresOpenAi": "Memerlukan buka kunci API dan kunci OpenAI anda.",
+      "summaryRequiresAnthropic": "Memerlukan buka kunci API dan kunci Anthropic anda.",
       "translationReview": "Terjemahan (Semakan)",
-      "transcriptionRequiresElevenLabs": "Transkripsi hanya menggunakan ElevenLabs Scribe. Tambahkan kunci API ElevenLabs untuk mentranskripsi dengan kunci anda sendiri. Tanpanya, transkripsi menggunakan kredit Stage5, yang tidak digunakan semasa kunci API anda dihidupkan. Kunci OpenAI anda masih digunakan untuk terjemahan.",
-      "dubbingRequiresElevenLabs": "Alih suara hanya menggunakan ElevenLabs. Tambah kunci API ElevenLabs untuk alih suara dengan kunci anda sendiri. Tanpanya, alih suara menggunakan kredit Stage5, yang tidak digunakan semasa kunci API anda dihidupkan.",
+      "transcriptionRequiresElevenLabs": "Transkripsi hanya menggunakan ElevenLabs Scribe. Tambahkan kunci API ElevenLabs untuk mentranskripsi dengan kunci anda sendiri. Tanpanya, transkripsi menggunakan minit Stage5 anda, yang tidak digunakan semasa kunci anda sendiri dihidupkan. Kunci OpenAI anda masih digunakan untuk terjemahan.",
+      "dubbingRequiresElevenLabs": "Alih suara hanya menggunakan ElevenLabs. Tambah kunci API ElevenLabs untuk alih suara dengan kunci anda sendiri. Tanpanya, alih suara menggunakan minit Stage5 anda, yang tidak digunakan semasa kunci anda sendiri dihidupkan.",
       "runtimeFallback": "Sandaran masa jalan dalam mod kunci API",
-      "videoSuggestionLegacyFollowDraft": "Tetapan BYO lama dikekalkan: mengikut model terjemahan draf anda sehingga anda memilih model secara langsung.",
-      "videoSuggestionLegacyFollowReview": "Tetapan BYO lama dikekalkan: mengikut model terjemahan semakan anda sehingga anda memilih model secara langsung."
+      "videoSuggestionLegacyFollowDraft": "Tetapan anda sebelum ini dikekalkan: ini mengikut model terjemahan draf anda sehingga anda memilih model di sini.",
+      "videoSuggestionLegacyFollowReview": "Tetapan anda sebelum ini dikekalkan: ini mengikut model terjemahan semakan anda sehingga anda memilih model di sini."
     },
     "apiKeyGuide": {
       "title": "Cara Mendapatkan Kunci API",
@@ -920,8 +890,7 @@
         "step3b": "di bar sisi kiri",
         "step4": "Klik",
         "step5": "Tambah kaedah pembayaran dalam tetapan Pengebilan (diperlukan untuk menggunakan API)",
-        "step6": "Salin kunci (bermula dengan sk-) dan tampal dalam Stage5",
-        "note": "Petua: Akaun OpenAI baru sering mendapat kredit percuma untuk bermula. Anda hanya membayar untuk apa yang anda gunakan."
+        "step6": "Salin kunci (bermula dengan sk-) dan tampal dalam Stage5"
       },
       "anthropic": {
         "description": "Claude menyediakan semakan terjemahan berkualiti tinggi. Tanpanya, GPT mengendalikan semua tugas terjemahan.",
@@ -941,7 +910,7 @@
         "step4": "Tambah kaedah pembayaran dalam tetapan Langganan (diperlukan untuk penggunaan API melebihi peringkat percuma)",
         "step5": "Salin kunci API anda dan tampal dalam Stage5",
         "note": "Petua: ElevenLabs mempunyai peringkat percuma dengan penggunaan terhad. Untuk lebih, naik taraf ke pelan berbayar dalam tetapan akaun anda.",
-        "audioDescription": "ElevenLabs mengendalikan semua transkripsi (Scribe) dan alih suara. Tanpa kunci ElevenLabs anda sendiri, kedua-duanya menggunakan kredit Stage5, yang tidak digunakan semasa kunci API anda dihidupkan."
+        "audioDescription": "ElevenLabs mengendalikan semua transkripsi (Scribe) dan alih suara. Tanpa kunci ElevenLabs anda sendiri, kedua-duanya menggunakan minit Stage5 anda, yang tidak digunakan semasa kunci anda sendiri dihidupkan."
       }
     },
     "byoAnthropic": {
@@ -960,14 +929,11 @@
       "testing": "Menguji…",
       "test": "Uji Kunci",
       "toggleLabel": "Gunakan kunci Anthropic saya",
-      "toggleHelp": "Apabila dimatikan, permintaan Claude menggunakan kredit Stage5.",
       "toggleAria": "Togol penggunaan kunci Anthropic anda",
       "toggleOn": "Menggunakan kunci Anthropic anda untuk model Claude.",
-      "toggleOff": "Menggunakan kredit Stage5 untuk model Claude.",
       "toggleError": "Gagal mengemas kini keutamaan Anthropic."
     },
     "stage5TtsProvider": {
-      "label": "Kualiti TTS (Kredit Stage5)",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Kualiti terbaik, kos lebih tinggi (~12x)",
       "elevenlabsHintWithBalance": "Kualiti terbaik · Baki anda: {{time}} alih suara"
@@ -1060,31 +1026,22 @@
       "freeTitle": "Terjemah percuma dengan AI sendiri"
     },
     "creditTransfer": {
-      "title": "Pindahkan minit antara komputer",
-      "description": "Minit yang dibeli dan buka kunci API boleh dipindahkan ke komputer lain. Minit percuma kekal pada komputer ini.",
-      "moveButton": "Pindahkan minit ke komputer lain",
-      "receiveButton": "Terima minit",
       "creating": "Mencipta kod…",
       "copy": "Salin",
       "copied": "Disalin",
-      "summaryCredits": "{{credits}} kredit akan dipindahkan.",
       "summaryByo": "Buka kunci API juga akan turut dipindahkan.",
       "expires": "Kod ini hanya boleh digunakan sekali dan tamat tempoh dalam {{minutes}} minit.",
-      "steps": "Pada komputer baharu: pasang Translator, buka Tetapan, pilih “Terima minit” dan masukkan kod ini.",
       "inputLabel": "Kod daripada komputer anda yang lain",
       "redeem": "Terima",
       "redeeming": "Menerima…",
-      "received": "{{credits}} kredit diterima.",
       "receivedNoCredits": "Kod berjaya digunakan.",
       "receivedByo": "Buka kunci API kini aktif pada komputer ini.",
       "errors": {
-        "nothing_to_transfer": "Belum ada apa-apa untuk dipindahkan: komputer ini tiada minit yang dibeli atau buka kunci API. Untuk membawa minit dari komputer lain ke sini, pilih “Terima minit”.",
         "too_many_codes": "Terlalu banyak kod pemindahan dalam jam ini. Cuba lagi sebentar nanti.",
         "jobs_running": "Transkripsi atau terjemahan masih berjalan. Cuba lagi selepas ia selesai.",
         "invalid_code": "Kod itu salah, sudah digunakan atau sudah tamat tempoh. Buat kod baharu pada komputer yang satu lagi.",
         "same_device": "Masukkan kod pada komputer yang satu lagi, bukan komputer yang membuatnya.",
         "network_error": "Tidak dapat menghubungi pelayan Stage5. Semak sambungan anda dan cuba lagi.",
-        "transfer_failed": "Minit tidak dapat dipindahkan. Semak sambungan anda dan cuba lagi.",
         "nothing_to_transfer_minutes": "Belum ada apa-apa untuk dipindahkan: komputer ini tiada minit yang dibeli atau buka kunci API. Untuk membawa minit dari komputer lain ke sini, pilih “Terima minit”.",
         "transfer_failed_minutes": "Minit tidak dapat dipindahkan. Semak sambungan anda dan cuba lagi."
       },
@@ -1100,27 +1057,22 @@
   "credits": {
     "title": "Minit anda",
     "loading": "Memuatkan...",
-    "credits": "kredit",
     "usingApiKey": "Menggunakan Kunci API",
     "usingOpenAi": "Menggunakan OpenAI",
     "usingAnthropic": "Menggunakan Claude",
     "usingElevenLabs": "Menggunakan ElevenLabs",
     "hours": "jam",
     "translationHoursShort": "jam terjemahan",
-    "buyCredits": "Beli minit",
     "redirectingToPayment": "Membuka pembayaran selamat…",
-    "description": "Pilih dari pakej ${{packMicroPrice}} ({{packMicroHours}}j), ${{pack1Price}} ({{pack1Hours}}j), ${{pack2Price}} ({{pack2Hours}}j), atau ${{pack3Price}} ({{pack3Hours}}j)",
-    "notEnough": "Minit tidak mencukupi. Beli lagi untuk meneruskan.",
     "transcriptionMinutesShort": "{{minutes}} min transkripsi",
     "transcriptionTimeShort": "{{time}} transkripsi",
-    "costOfBalance": "{{cost}} daripada {{balance}} kredit anda",
     "pill": {
       "freeBack": "Minit percuma kembali pada {{date}}",
       "empty": "Tambah minit",
       "freeThisMonth": "{{count}} min percuma bulan ini",
       "freeWelcome": "{{count}} min percuma",
       "minutes": "Baki {{count}} min",
-      "title": "Minit dan pek",
+      "title": "Minit dan pek anda",
       "neutral": "Minit",
       "welcomePending": "Minit percuma dalam perjalanan",
       "freeTimeThisMonth": "{{time}} percuma bulan ini",
@@ -1138,11 +1090,10 @@
     "moreMinutesPerDollar": "{{multiplier}}× lebih banyak minit setiap dolar",
     "checkoutWaiting": "Selesaikan pembayaran dalam pelayar. Minit akan masuk dengan sendirinya.",
     "checkoutNote": "Bayar sekali melalui Stripe, dalam pelayar. Tiada akaun, tiada langganan. Minit masuk secara automatik.",
-    "dubbingNote": "Terjemahan menggunakan kira-kira 10% lebih setiap minit; alih suara lebih banyak lagi.",
+    "dubbingNote": "Menambah terjemahan menggunakan kira-kira 10% lebih banyak minit; alih suara menggunakan lebih banyak lagi.",
     "iCancelledCheckout": "Saya telah membatalkan pembayaran",
     "checkoutStartFailed": "Pembayaran tidak dapat dimulakan. Semak sambungan internet dan cuba lagi.",
     "loadFailed": "Baki anda tidak dapat dimuatkan. Semak sambungan anda dan cuba lagi.",
-    "estimateAmount": "{{credits}} kredit",
     "costOfBalanceMinutes": "{{cost}} daripada {{balance}} anda",
     "timeLeft": "Baki {{time}}",
     "success": {
@@ -1158,7 +1109,10 @@
     "balanceOffline": "Minit anda tidak dapat disemak sekarang",
     "offlineNote": "Translator tidak dapat menghubungi Stage5. Baki anda akan dipaparkan semula apabila anda kembali dalam talian.",
     "microPackLabelNoTime": "Beli minit — {{price}}",
-    "microPackLabel": "Beli minit — {{price}} · ≈ {{time}} video"
+    "microPackLabel": "Beli minit — {{price}} · ≈ {{time}} video",
+    "checkingPayment": "Menyemak pembayaran anda…",
+    "checkoutUnresolved": "Jika anda sudah membayar, minit anda akan muncul di sini sebentar lagi. Masih membayar? Selesaikan dalam pelayar anda.",
+    "checkPaymentNow": "Semak sekarang"
   },
   "cta": {
     "generate": {
@@ -1188,12 +1142,12 @@
     "scrollToCurrentSubtitle": "Tatal ke sari kata semasa",
     "changeVideo": "Tukar video",
     "findVideoWithAi": "Cari video dengan AI",
-    "mountSrt": "Muatkan SRT",
+    "mountSrt": "Buka SRT",
     "changeSrt": "Tukar SRT",
     "useThisVideo": "Guna video ini",
     "useDownloadedVideo": "Guna video ini",
-    "useOriginalAudio": "Guna Audio Asal",
-    "useDubbedAudio": "Guna Audio Alih Suara",
+    "useOriginalAudio": "Guna audio asal",
+    "useDubbedAudio": "Guna audio alih suara",
     "changeVideoKeepSubtitles": "Kekalkan sari kata semasa pada video baharu (untuk salinan lain video yang sama). Nyahtanda jika videonya berbeza.",
     "mute": "Senyapkan (M)",
     "unmute": "Nyahsenyap (M)",
@@ -1270,7 +1224,6 @@
     "afrikaans": "Bahasa Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "Tiada minit.",
     "rechargeLink": "Isi Semula →",
     "creditWarning": {
       "message": "Memuat turun, menyunting, mengeksport dan menterjemah dengan Claude atau Codex anda sendiri melalui Kawalan Ejen adalah percuma. Transkripsi memerlukan minit atau buka kunci API dalam <settingsLink>{{settingsLinkText}}</settingsLink>.",
@@ -1280,7 +1233,6 @@
       "pleaseSelectVideo": "Sila pilih video",
       "processingDuration": "Tempoh video sedang diproses. Sila cuba lagi sebentar.",
       "icloudPlaceholder": "Fail ini disimpan dalam iCloud. Di Finder, klik 'Muat Turun' dan tunggu ikon awan selesai, kemudian cuba lagi.",
-      "insufficientCreditsForVoiceCloning": "Minit tidak mencukupi untuk pengklonan suara. Video ini {{duration}} min tetapi baki anda hanya cukup untuk {{affordable}} min. Tambah minit atau matikan pengklonan suara.",
       "fileTooLargeForVoiceCloning": "Fail video terlalu besar untuk pengklonan suara ({{size}}MB). Maksimum yang dibenarkan ialah {{max}}MB. Sila gunakan video yang lebih pendek atau matikan pengklonan suara."
     },
     "status": {
@@ -1290,14 +1242,13 @@
       "error": "Ralat"
     },
     "buttons": {
-      "buyCredits": "Beli minit",
       "redirectingToPayment": "Mengalihkan ke pembayaran..."
     },
     "workflow": {
       "stepOne": "Langkah 1",
       "stepTwo": "Langkah 2",
       "stepThree": "Langkah 3",
-      "chooseSourceTitle": "Pilih Sumber",
+      "chooseSourceTitle": "Pilih sumber",
       "sourceLoading": "Mengambil sumber",
       "sourceLoadingDescription": "Sumber yang dimuat turun sedang disediakan untuk transkripsi.",
       "localSourceReady": "Fail tempatan sedia",
@@ -1306,7 +1257,7 @@
       "transcribeTitle": "Proses Video",
       "processVideoTitle": "Proses video",
       "transcribeDescription": "Tukar media sumber kepada trek sarikata yang boleh diedit sebelum beralih ke terjemahan atau alih suara.",
-      "translateDubTitle": "Terjemah atau Alih Suara",
+      "translateDubTitle": "Terjemah atau alih suara",
       "translateDubDescription": "Transkripsi anda sudah sedia. Seterusnya pilih bahasa output, mod terjemahan, atau alih suara.",
       "availableOutputs": "Output tersedia",
       "availableOutputsDescription": "Media yang dimuat turun dan dialih suara kekal tersedia di sini sehingga anda menyimpan versi yang mahu disimpan.",
@@ -1314,7 +1265,6 @@
       "saveOutputsDescription": "Simpan mana-mana media sumber atau media alih suara yang mahu anda kekalkan di luar ruang kerja aplikasi."
     },
     "calculatingCost": "Mengira kos...",
-    "notEnoughCredits": "Minit tidak mencukupi",
     "welcomeCredits": {
       "message": "Anda mempunyai minit percuma untuk mencuba transkripsi dan terjemahan (kira-kira 20 minit video)."
     }
@@ -1322,10 +1272,10 @@
   "findBar": {
     "findPlaceholder": "Cari dalam sarikata...",
     "replacePlaceholder": "Ganti dengan...",
-    "replaceAll": "Ganti Semua",
-    "nextMatch": "Padanan Seterusnya (Enter)",
-    "previousMatch": "Padanan Sebelumnya (Shift+Enter)",
-    "replaceAllTitle": "Ganti Semua Kejadian",
+    "replaceAll": "Ganti semua",
+    "nextMatch": "Padanan seterusnya (Enter)",
+    "previousMatch": "Padanan sebelumnya (Shift+Enter)",
+    "replaceAllTitle": "Ganti semua padanan",
     "closeTitle": "Tutup (Esc)",
     "nextMatchAria": "Padanan seterusnya",
     "previousMatchAria": "Padanan sebelumnya",
@@ -1334,7 +1284,8 @@
     "matchCount": "{{current}} daripada {{total}}",
     "matchCase": "Padankan huruf besar/kecil",
     "wholeWord": "Seluruh perkataan",
-    "showReplace": "Ganti"
+    "showReplace": "Ganti",
+    "noMatches": "Tiada padanan"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1353,15 +1304,15 @@
     "unsavedSrtOnTranscribe": {
       "title": "Simpan sari kata semasa sebelum transkripsi?",
       "message": "Anda sudah mempunyai sari kata dimuatkan. Transkripsi akan menggantikannya. Apa yang anda mahu lakukan?",
-      "saveAndTranscribe": "Simpan dan Transkripsi",
-      "discardAndTranscribe": "Abaikan dan Transkripsi",
+      "saveAndTranscribe": "Simpan dan transkripsi",
+      "discardAndTranscribe": "Buang dan transkripsi",
       "cancel": "Batal"
     },
     "downloadInProgress": "Muat Turun Sedang Berlangsung",
     "saveDownloadedFile": "Simpan fail yang dimuat turun: {{path}}",
-    "transcriptionInProgress": "Transkripsi Sedang Berlangsung",
-    "translationInProgress": "Terjemahan Sedang Berlangsung",
-    "dubbingInProgress": "Alih Suara Sedang Berlangsung",
+    "transcriptionInProgress": "Transkripsi sedang berlangsung",
+    "translationInProgress": "Terjemahan sedang berlangsung",
+    "dubbingInProgress": "Alih suara sedang berlangsung",
     "dubbingWorking": "Menjana audio alih suara…",
     "cancelTranslationConfirm": "Batalkan terjemahan? Kemajuan akan hilang dan anda perlu bermula semula.",
     "cancelSummaryConfirm": "Batalkan penjanaan ringkasan?",
@@ -1378,42 +1329,8 @@
       "description": "Ini mungkin disebabkan perubahan platform video atau langkah perlindungan baru. Anda mungkin perlu menunggu versi aplikasi seterusnya untuk mengendalikan video yang lebih baru."
     },
     "creditRanOut": {
-      "title": "Minit sudah habis",
-      "message": "Minit anda sudah habis. Tambah lagi dalam Tetapan, kemudian teruskan dari tempat anda berhenti.",
       "openSettings": "Buka Tetapan",
       "ok": "OK",
-      "neverHadTitle": "Transkripsi memerlukan minit",
-      "neverHadMessage": "Transkripsi memerlukan minit atau buka kunci API. Dapatkan salah satunya dalam Tetapan. Menterjemah dengan Claude atau Codex anda sendiri melalui Kawalan Ejen adalah percuma.",
-      "notEnoughTitle": "Minit tidak mencukupi untuk video ini",
-      "notEnoughTranscriptionMessage": "Mentranskripsi video ini memerlukan kira-kira {{required}} kredit. Anda ada {{available}}, cukup untuk kira-kira {{minutes}} minit. Tambah kredit, kemudian mulakan semula.",
-      "notEnoughMessage": "Tugas ini memerlukan lebih daripada baki anda sebanyak {{available}}. Tambah minit untuk meneruskan.",
-      "task": {
-        "transcription": {
-          "title": "Transkripsi memerlukan minit",
-          "message": "Baki anda tidak mencukupi untuk mentranskripsi ini. Tambah minit, kemudian mulakan semula. Baris yang sudah ditranskripsi dikekalkan.",
-          "messageNothingYet": "Baki anda tidak mencukupi untuk mentranskripsi ini. Tambah minit, kemudian mulakan semula."
-        },
-        "translation": {
-          "title": "Terjemahan memerlukan minit",
-          "message": "Baki anda tidak mencukupi untuk menterjemah ini. Tambah minit, kemudian cuba lagi. Baris yang sudah diterjemah dikekalkan. Menterjemah dengan Claude atau Codex anda sendiri melalui Kawalan Ejen adalah percuma.",
-          "messageNothingYet": "Baki anda tidak mencukupi untuk menterjemah ini. Tambah minit, kemudian cuba lagi. Menterjemah dengan Claude atau Codex anda sendiri melalui Kawalan Ejen adalah percuma."
-        },
-        "dubbing": {
-          "title": "Alih suara memerlukan minit",
-          "message": "Baki anda tidak mencukupi untuk alih suara video ini. Tambah minit, kemudian cuba lagi."
-        },
-        "summary": {
-          "title": "Ringkasan memerlukan minit",
-          "message": "Baki anda tidak mencukupi untuk ringkasan dan sorotan. Tambah minit, kemudian cuba lagi."
-        },
-        "videoSearch": {
-          "title": "Carian video AI memerlukan minit",
-          "message": "Baki anda tidak mencukupi untuk carian video AI. Tambah minit, kemudian cari lagi."
-        },
-        "other": {
-          "title": "Ini memerlukan minit"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "Transkripsi memerlukan minit",
@@ -1445,12 +1362,15 @@
         "message": "Minit anda sudah habis. Tambah lagi dalam Tetapan, kemudian teruskan dari tempat anda berhenti.",
         "notEnoughTitle": "Minit tidak mencukupi untuk video ini",
         "notEnoughTranscriptionMessage": "Mentranskripsi video ini memerlukan {{required}}, dan baki anda {{available}}. Tambah minit, kemudian mulakan semula.",
-        "notEnoughMessage": "Ini memerlukan lebih daripada baki {{available}} anda. Tambah minit untuk meneruskan."
+        "notEnoughMessage": "Ini memerlukan lebih daripada baki {{available}} anda. Tambah minit untuk meneruskan.",
+        "voicePreview": {
+          "title": "Pratonton suara memerlukan minit",
+          "message": "Minit anda tidak mencukupi untuk pratonton suara. Tambah minit, kemudian cuba lagi."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "Mulakan alih suara?",
-      "message": "Alih suara ini menggunakan kira-kira {{cost}} daripada {{balance}} kredit anda. Menjana suara jauh lebih mahal daripada menterjemah.",
       "messageMinutes": "Alih suara ini menggunakan {{cost}}. Menjana suara jauh lebih mahal daripada menterjemah."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1525,7 +1445,9 @@
     "cancelSummaryTitle": "Hentikan ringkasan?",
     "keepSummarizing": "Teruskan",
     "stopSummarizing": "Hentikan",
-    "cancelSummaryBody": "Ringkasan dan sorotan yang sudah dibuat tidak akan disimpan."
+    "cancelSummaryBody": "Ringkasan dan sorotan yang sudah dibuat tidak akan disimpan.",
+    "cancelTranslationBody": "Baris yang sudah diterjemah dikekalkan. Anda boleh menterjemah selebihnya kemudian.",
+    "cancelDubbingTitle": "Hentikan alih suara?"
   },
   "progress": {
     "preparingVideoExport": "Menyediakan eksport video…",
@@ -1766,7 +1688,8 @@
     "statusTranslatedUnknownNoVideo": "{{count}} baris terjemahan",
     "statusLines": "{{count}} baris sari kata",
     "checkingFile": "Membaca fail…",
-    "statusLoaded": "{{count}} baris dimuatkan"
+    "statusLoaded": "{{count}} baris dimuatkan",
+    "interruptedTranslateSubtitles": "Terjemahan sari kata ini ke {{language}} terhenti apabila Translator ditutup."
   },
   "subtitleStyles": {
     "Cinema": "Kuning pawagam",

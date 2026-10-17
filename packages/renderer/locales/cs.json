@@ -23,7 +23,6 @@
       "unexpectedSave": "Došlo k neočekávané chybě při ukládání.",
       "unexpectedLoad": "Došlo k neočekávané chybě při načítání.",
       "renderFailed": "Renderování selhalo",
-      "creditReservationFailed": "Rezervace kreditů selhala",
       "invalidRenderOptions": "Poskytnuty neplatné možnosti renderování",
       "missingVideoMetadata": "Chybějící metadata videa ({{missing}})",
       "insufficientDiskSpace": "Nedostatek místa na disku pro dokončení sloučení. Uvolněte prosím místo a zkuste to znovu.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "Došlo k neočekávané chybě při ukládání.",
     "unexpectedLoad": "Došlo k neočekávané chybě při načítání.",
     "renderFailed": "Renderování selhalo",
-    "creditReservationFailed": "Rezervace kreditů selhala",
     "invalidRenderOptions": "Poskytnuty neplatné možnosti renderování",
     "missingVideoMetadata": "Chybějící metadata videa ({{missing}})",
     "noSourceVideo": "Žádné zdrojové video",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "Přepis (ElevenLabs Scribe) je dočasně nedostupný nebo se ani po několika pokusech nepodařilo připojit. Zkuste to prosím znovu za několik minut.",
       "fileTooLarge": "Tento zvuk je příliš dlouhý na přepis v jedné úloze (více než přibližně {{hours}} h). Rozdělte video na kratší části a přepište každou zvlášť.",
-      "elevenLabsKeyRequired": "Přepis používá ElevenLabs Scribe a vyžaduje API klíč ElevenLabs. Přidejte ho v Nastavení, nebo vypněte režim API klíčů a přepisujte za minuty Stage5. Váš klíč OpenAI nebo Anthropic se pro překlad používá i nadále."
+      "elevenLabsKeyRequired": "Přepis používá ElevenLabs Scribe a potřebuje API klíč ElevenLabs. Přidejte ho v Nastavení, nebo vypněte „Použít mé API klíče“ a přepisujte za své minuty Stage5. Váš klíč OpenAI nebo Anthropic se pro překlad používá i nadále."
     },
     "credits": {
       "transcription": "Na přepis nemáte dost minut.",
@@ -237,7 +235,7 @@
     "downloading": "Stahování...",
     "selectFile": "Vybrat soubor",
     "selectVideoFile": "Vybrat video soubor",
-    "selectVideoAudioFile": "Vybrat video / audio soubor",
+    "selectVideoAudioFile": "Vybrat video nebo zvukový soubor",
     "saveOriginalVideo": "Uložit původní video",
     "localFileDescription": "Nahrajte video nebo audio soubor z vašeho počítače",
     "selectLocalFile": "Nahrát z počítače",
@@ -484,19 +482,15 @@
     "improveTranslation": "Zlepšit překlad",
     "chooseSrtFile": "Vybrat SRT soubor",
     "dub": "Nadabovat",
-    "dubEstimateCredits": "{{credits}} kr (~{{minutes}}m)",
     "dubEstimateByo": "~{{minutes}}m audia",
     "voiceCloningRequiresTranslation": "Klonování hlasu vyžaduje cílový jazyk",
     "translateEstimateCredits": "~{{minutes}}m videa",
-    "translateEstimateByo": "Vlastní klíč",
     "qualityBadge": "(vk)",
     "cancel_confirmation": "Opravdu chcete zrušit proces překladu titulků? Veškerý pokrok bude ztracen a budete muset začít znovu.",
-    "dubCostHint": "Hlas ElevenLabs: ~{{rate}} kreditů za minutu řeči. Tento odhad se zobrazí před zahájením dabingu.",
     "unreadableCues_one": "{{count}} řádek v tomto souboru se nepodařilo přečíst, a proto byl vynechán. Zkontrolujte jeho časový kód.",
     "unreadableCues_few": "{{count}} řádky v tomto souboru se nepodařilo přečíst, a proto byly vynechány. Zkontrolujte jejich časové kódy.",
     "unreadableCues_many": "Nečitelné řádky v tomto souboru ({{count}}) byly vynechány. Zkontrolujte jejich časové kódy.",
     "unreadableCues": "{{count}} řádků v tomto souboru se nepodařilo přečíst, a proto byly vynechány. Zkontrolujte jejich časové kódy.",
-    "addCreditsToTranslate": "Doplnit kredity na překlad",
     "dubInto": "Nadabovat do {{languageInto}}",
     "dubIntro": "Hlas přečte titulky ve zvoleném jazyce přes původní zvuk v pozadí.",
     "dubNeedsSubtitles": "Dabing čte titulky nahlas, takže video nejdřív potřebuje titulky. Přepište ho a pak tu vyberte hlas.",
@@ -505,8 +499,6 @@
     "dubTranslatesFirst": "Titulky se nejdřív přeloží do {{languageInto}} a pak namluví.",
     "dubCostWithTranslation": "Překlad a hlas: {{cost}}",
     "dubUsesOwnKeys": "Platí vaše vlastní API klíče.",
-    "dubNotEnoughCredits": "Na tento dabing nemáte dost kreditů.",
-    "addCreditsToDub": "Doplnit kredity na dabing",
     "noSubtitlesToDub": "Nejdřív vytvořte nebo otevřete titulky k tomuto videu a pak ho nadabujte.",
     "noSubtitlesToTranslate": "Nejdřív otevřete nebo vytvořte titulky a pak je přeložte.",
     "dubVoiceHelp": "Hlas pro tento dabing. Zůstane vybraný i pro další.",
@@ -533,8 +525,6 @@
     },
     "generate": "Najít nejlepší momenty",
     "regenerate": "Najít nejlepší momenty znovu",
-    "estimateCredits": "{{credits}} kreditů",
-    "estimateByo": "Klíč BYO",
     "highEffortBadge": "(hloubková)",
     "placeholder": "Váš AI souhrn se zde zobrazí po vygenerování.",
     "insufficientCredits": "Na hledání nejlepších momentů nemáte dost minut.",
@@ -590,7 +580,7 @@
     "downloadCombined": "Stáhnout kombinovaný klip",
     "saveCombinedDialogTitle": "Uložit spojený klip s nejlepšími momenty",
     "combinedCutFailed": "Spojené momenty se nepodařilo vystřihnout: {{message}}",
-    "highlightsInsufficientCredits": "Shrnutí je hotové, ale hledání nejlepších momentů se zastavilo, protože došly minuty.",
+    "highlightsInsufficientCredits": "Shrnutí je hotové, ale hledání nejlepších momentů se zastavilo, protože vám došly minuty.",
     "highlightsPartialWarning": "Nejlepší momenty se našly jen zčásti a nemusí být úplné. Pro obnovení je najděte znovu.",
     "highlightsPartialWithReason": "Shrnutí je hotové, ale nejlepší momenty se našly jen zčásti: {{message}}",
     "estimateOwnKey": "Platí váš API klíč",
@@ -627,7 +617,10 @@
     "highlightCuesChanged": "Řádky v tomto momentu jste upravili až po jeho nalezení. Zkontrolujte, jestli pořád sedí.",
     "clipCaptionsChangedAny": "Titulky se od vystřižení klipu změnily (text, styl nebo velikost).",
     "notEnoughForRun": "Na shrnutí a nejlepší momenty nemáte dost minut.",
-    "clipsUseOriginalAudio": "Klipy mají původní zvuk, ne dabing."
+    "clipsUseOriginalAudio": "Klipy mají původní zvuk, ne dabing.",
+    "notEnoughMinutesSummary": "Na toto shrnutí nemáte dost minut.",
+    "notEnoughMinutesHighlights": "Na hledání nejlepších momentů nemáte dost minut.",
+    "translateMissingLines": "Přeložit tyto řádky"
   },
   "panel": {
     "new": "nové",
@@ -674,7 +667,7 @@
     },
     "item": {
       "seek": "Přejít",
-      "seekTitle": "Přejít na začátek videa",
+      "seekTitle": "Přesunout video na začátek tohoto řádku",
       "playSnippet": "Přehrát úryvek",
       "pauseSnippet": "Pozastavit úryvek",
       "insertTitle": "Vložit nový blok titulků za tento",
@@ -691,7 +684,10 @@
       "startTimeAria": "Začátek řádku {{index}}",
       "endTimeAria": "Konec řádku {{index}}",
       "splitTitle": "Rozdělit řádek v místě kurzoru",
-      "mergeTitle": "Spojit s dalším řádkem"
+      "mergeTitle": "Spojit s dalším řádkem",
+      "timeOverlapsPrevious": "Řádek začíná dřív, než skončí předchozí, takže se zobrazí oba najednou.",
+      "timeOverlapsNext": "Řádek končí až po začátku dalšího, takže se zobrazí oba najednou.",
+      "timeOverlapsBoth": "Řádek se překrývá s předchozím i s dalším, takže se zobrazují současně."
     },
     "header": {
       "save": "Uložit titulky",
@@ -742,17 +738,16 @@
       "toggleLabel": "Použít mé API klíče",
       "activeKeys": "{{count}} připravených klíčů",
       "noKeys": "Nejsou nastaveny žádné klíče",
-      "usingApiKeys": "Minuty Stage5 vypnuté",
-      "usingCredits": "Minuty Stage5 zapnuté",
+      "usingApiKeys": "Minuty Stage5 se nečerpají",
+      "usingCredits": "Čerpají se vaše minuty Stage5",
       "toggleOn": "Nyní používá vaše API klíče.",
-      "toggleOff": "Nyní se používají minuty Stage5.",
+      "toggleOff": "Nyní se čerpají vaše minuty Stage5.",
       "toggleError": "Nepodařilo se aktualizovat předvolbu.",
       "toggleAria": "Použít mé API klíče",
       "requirementTranslation": "Vyžaduje klíč OpenAI nebo Anthropic pro překlad",
       "activeKeys_one": "{{count}} připravený klíč",
       "activeKeys_few": "{{count}} připravené klíče"
     },
-    "creditsDescription": "Kupte kredity. Zobrazené hodiny jsou odhad celkové délky videa, které můžete přepsat nebo přeložit. Příklad: přepis a překlad 3hodinového videa spotřebuje přibližně 6 hodin (≈140 000 kreditů).",
     "performanceQuality": {
       "title": "Výkon a kvalita",
       "qualityTranslation": {
@@ -762,32 +757,15 @@
         "modelOff": "Pouze návrh Claude Haiku 5.5",
         "reviewProvider": "Poskytovatel revize",
         "openAiHighEnd": "Pokročilá revize OpenAI",
-        "anthropicHighEnd": "Pokročilá revize Anthropic",
-        "help": "<b>5× kreditů</b> • Přidá fázi kontroly pro vyšší kvalitu",
-        "helpWithEstimate": "<b>5× kreditů</b> • Váš zůstatek: ~{{normalTime}} (normální) / ~{{hqTime}} (vk)",
-        "helpOn": "<b>5× kredity</b> • Koncept Claude Haiku 5.5 + kontrola Claude Opus 5.5",
-        "helpOff": "<b>1× kredity</b> • Jen koncept Claude Haiku 5.5",
-        "helpWithEstimateOn": "<b>5× kredity</b> • Koncept Claude Haiku 5.5 + kontrola Claude Opus 5.5 • Zůstatek: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× kredity</b> • Jen koncept Claude Haiku 5.5 • Zůstatek: ~{{time}}"
+        "anthropicHighEnd": "Pokročilá revize Anthropic"
       },
       "qualitySummary": {
         "label": "Hloubkové shrnutí",
         "modelOn": "Hloubková analýza Claude Opus 5.5 + klipy s nejlepšími momenty",
-        "modelOff": "Standardní analýza Claude Sonnet 5.5",
-        "help": "<b>4× kreditů</b> • Hloubková analýza + výběr klíčových momentů s Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× kreditů</b> • Váš zůstatek: ~{{normalTime}} (normální) / ~{{hqTime}} (vk)",
-        "helpOn": "<b>4× kredity</b> • Hloubková analýza Claude Opus 5.5 + klipy s nejlepšími momenty",
-        "helpOff": "Rychlá analýza s Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× kredity</b> • Hloubková analýza Claude Opus 5.5 + klipy s nejlepšími momenty • Zůstatek: ~{{time}}",
-        "helpWithEstimateOff": "Rychlá analýza s Claude Sonnet 5.5 • Zůstatek: ~{{time}}"
+        "modelOff": "Standardní analýza Claude Sonnet 5.5"
       },
       "qualityDubbing": {
-        "label": "Kvalitní dabing",
-        "modelOn": "Prémiové hlasy ElevenLabs TTS",
-        "help": "<b>12× kreditů</b> • ElevenLabs TTS s prémiovými hlasy",
-        "helpWithEstimate": "<b>12× kreditů</b> • Váš zůstatek: ~{{normalTime}} (normální) / ~{{hqTime}} (vk)",
-        "helpOn": "<b>{{ratio}}× kredity</b> • ElevenLabs TTS s prémiovými hlasy",
-        "helpWithEstimateOn": "<b>{{ratio}}× kredity</b> • ElevenLabs TTS s prémiovými hlasy • Zůstatek: ~{{time}}"
+        "modelOn": "Prémiové hlasy ElevenLabs TTS"
       },
       "videoSuggestionModel": {
         "label": "Model návrhů videí",
@@ -796,9 +774,6 @@
         "quality": "Kvalita (stejné jako kvalitní režim překladu)"
       },
       "rate": {
-        "perHour": "~{{credits}} kreditů/hod",
-        "perMinute": "~{{credits}} kreditů/min",
-        "perSearch": "~{{credits}} kreditů/hledání",
         "balance": "Zůstatek: ~{{time}}",
         "minutesPerHour": "~{{time}} ze zůstatku za hodinu videa",
         "minutesPerDubMinute": "~{{time}} ze zůstatku za minutu dabingu",
@@ -821,18 +796,15 @@
       "previewTooltip": "Náhled tohoto hlasu",
       "previewing": "Přehrávání...",
       "previewFree": "Náhled",
-      "previewWithCost": "Náhled ({{cost}} kreditů)",
       "mixLabel": "Hlasitost dabingu vs. hlasitost původního videa",
       "mixHelp": "Ovládejte, kolik z původní zvukové stopy se přehrává pod dabovaným hlasem.",
       "mixAmbient": "Více okolí",
       "mixVoice": "Více hlasu",
       "voiceCloning": "Klonovat původní hlas",
       "voiceCloningDesc": "Zachovat původní hlas mluvčího v dabovaném zvuku",
-      "voiceCloningInsufficientCredits": "Vyžaduje alespoň 1 minutu kreditů",
       "voiceCloningEnabled": "Klonování hlasu je povoleno s ElevenLabs. Původní hlas mluvčího bude zachován v dabovaném zvuku.",
       "voiceCloningInfo": "Klonování hlasu využívá ElevenLabs Dubbing API k analýze a vytvoření původního hlasu mluvčího.",
       "costPerMinute": "Cena za minutu",
-      "credits": "kreditů",
       "yourBalance": "Váš zůstatek",
       "canClone": "Můžete klonovat",
       "upToMinutes": "až {{minutes}} min",
@@ -842,7 +814,7 @@
     },
     "byoOpenAi": {
       "title": "Vlastní API klíče",
-      "description": "Jednorázové odemčení vám umožní používat vlastní API klíče. Potom přepis, překlad, dabing i shrnutí běží přímo přes vaše účty a nespotřebovávají minuty Stage5.",
+      "description": "Jednorázové odemčení vám umožní používat vlastní API klíče. Potom přepis, překlad, dabing i shrnutí běží přes vaše vlastní účty u AI služeb a minuty Stage5 se nečerpají.",
       "unlocking": "Otevírání pokladny…",
       "unlockCta": "Odemknout za $10",
       "unlockHint": "Po odemknutí sem kdykoli přidejte své API klíče pro přepnutí na přímou fakturaci na vašich účtech.",
@@ -860,25 +832,23 @@
       "test": "Otestovat klíč",
       "lastSynced": "Poslední synchronizace",
       "toggleLabel": "Použít můj OpenAI klíč",
-      "toggleHelp": "Při vypnutí se používají AI kredity.",
       "toggleAria": "Přepnout použití vašeho OpenAI klíče",
       "toggleOn": "Používá se váš OpenAI klíč pro AI úlohy.",
-      "toggleOff": "Používají se Stage5 kredity pro AI úlohy.",
       "toggleError": "Nepodařilo se aktualizovat předvolbu.",
       "howToGetKeys": "Jak získat API klíče?",
       "option1Title": "Možnost 1: OpenAI",
       "option2Title": "Možnost 2: Anthropic + ElevenLabs",
       "economicsTitle": "Proč se to vyplatí",
-      "economicsBody": "Minuty Stage5 jsou pohodlí bez nastavování. S vlastními klíči platíte poskytovatelům přímo — obvykle o ~30–50 % levněji, podle balíčku.",
+      "economicsBody": "Minuty Stage5 jsou nejjednodušší volba: nic nenastavujete. S vlastními klíči platíte poskytovatelům AI přímo, obvykle zhruba o 30–50 % méně, podle balíčku.",
       "encryptionUnavailable": "Zabezpečené úložiště není v tomto systému k dispozici. Klíče API nelze uložit.",
       "checkoutOpen": "Platba otevřena v prohlížeči…",
-      "checkoutOpenHint": "Dokončete platbu v prohlížeči. BYO odemkneme automaticky, jakmile platba projde.",
+      "checkoutOpenHint": "Dokončete platbu v prohlížeči. Vlastní klíče se odemknou automaticky, jakmile platba projde.",
       "entitlementsLoadFailed": "Stav odemčení se nepodařilo ověřit. Zkontrolujte připojení a zkuste to znovu.",
       "unlockFailed": "Platbu se nepodařilo spustit. Zkontrolujte připojení a zkuste to znovu."
     },
     "byoPreferences": {
       "title": "Předvolby poskytovatele",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Minuty Stage5",
       "pricingHint": "Odhadované náklady za 1 hodinu videa",
       "pricingHintHeuristic": "Odhadovaná cena podle aktuálních heuristik aplikace",
       "transcription": "Přepis",
@@ -900,17 +870,17 @@
       "summary": "Shrnutí",
       "dubbing": "Dabing",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Momentálně není k dispozici žádný model BYO pro doporučování videí. Pro tuto funkci povolte OpenAI nebo Anthropic BYO.",
-      "videoSuggestionModelRequiresOpenAi": "Vyžaduje odemčení OpenAI BYO, klíč a zapnutý přepínač.",
-      "videoSuggestionModelRequiresAnthropic": "Vyžaduje odemčení Anthropic BYO, klíč a zapnutý přepínač.",
-      "summaryRequiresOpenAi": "Vyžaduje přístup k OpenAI BYO a klíč API.",
-      "summaryRequiresAnthropic": "Vyžaduje přístup k Anthropic BYO a klíč API.",
+      "videoSuggestionModelUnavailable": "S vlastními klíči teď není k dispozici žádný model pro doporučování videí. Pokud to chcete používat, zapněte klíč OpenAI nebo Anthropic.",
+      "videoSuggestionModelRequiresOpenAi": "Vyžaduje odemčení API klíčů, váš klíč OpenAI a zapnutý přepínač OpenAI.",
+      "videoSuggestionModelRequiresAnthropic": "Vyžaduje odemčení API klíčů, váš klíč Anthropic a zapnutý přepínač Anthropic.",
+      "summaryRequiresOpenAi": "Vyžaduje odemčení API klíčů a váš klíč OpenAI.",
+      "summaryRequiresAnthropic": "Vyžaduje odemčení API klíčů a váš klíč Anthropic.",
       "translationReview": "Překlad (revize)",
-      "transcriptionRequiresElevenLabs": "Přepis používá pouze ElevenLabs Scribe. Chcete-li přepisovat s vlastními klíči, přidejte API klíč ElevenLabs. Bez něj přepis čerpá minuty Stage5, které se při zapnutých API klíčích neodečítají. Váš klíč OpenAI se pro překlad používá i nadále.",
-      "dubbingRequiresElevenLabs": "Dabing používá pouze ElevenLabs. Pro dabing s vlastními klíči přidejte API klíč ElevenLabs. Bez něj dabing čerpá minuty Stage5, které se při zapnutých API klíčích neodečítají.",
+      "transcriptionRequiresElevenLabs": "Přepis používá pouze ElevenLabs Scribe. Chcete-li přepisovat s vlastními klíči, přidejte API klíč ElevenLabs. Bez něj přepis čerpá vaše minuty Stage5, které se ale při zapnutých vlastních klíčích nepoužívají. Váš klíč OpenAI se pro překlad používá i nadále.",
+      "dubbingRequiresElevenLabs": "Dabing používá pouze ElevenLabs. Pro dabing s vlastními klíči přidejte API klíč ElevenLabs. Bez něj dabing čerpá vaše minuty Stage5, které se ale při zapnutých vlastních klíčích nepoužívají.",
       "runtimeFallback": "Záložní řešení za běhu v režimu API klíčů",
-      "videoSuggestionLegacyFollowDraft": "Zachováno starší nastavení BYO: řídí se vaším modelem pro koncept překladu, dokud nevyberete konkrétní model.",
-      "videoSuggestionLegacyFollowReview": "Zachováno starší nastavení BYO: řídí se vaším modelem pro kontrolu překladu, dokud nevyberete konkrétní model."
+      "videoSuggestionLegacyFollowDraft": "Vaše dřívější nastavení zůstává: řídí se modelem pro koncept překladu, dokud tady nevyberete model.",
+      "videoSuggestionLegacyFollowReview": "Vaše dřívější nastavení zůstává: řídí se modelem pro kontrolu překladu, dokud tady nevyberete model."
     },
     "apiKeyGuide": {
       "title": "Jak získat API klíče",
@@ -934,8 +904,7 @@
         "step3b": "v levém postranním panelu",
         "step4": "Klikněte na",
         "step5": "Přidejte platební metodu v nastavení fakturace (vyžadováno pro použití API)",
-        "step6": "Zkopírujte klíč (začíná sk-) a vložte ho do Stage5",
-        "note": "Tip: Nové OpenAI účty často dostávají kredity zdarma na začátek. Platíte pouze za to, co použijete."
+        "step6": "Zkopírujte klíč (začíná sk-) a vložte ho do Stage5"
       },
       "anthropic": {
         "description": "Claude poskytuje kvalitnější revize překladů. Bez něj GPT zpracovává všechny překladové úlohy.",
@@ -955,7 +924,7 @@
         "step4": "Přidejte platební metodu v nastavení předplatného (vyžadováno pro použití API nad rámec bezplatné úrovně)",
         "step5": "Zkopírujte svůj API klíč a vložte ho do Stage5",
         "note": "Tip: ElevenLabs má bezplatnou úroveň s omezeným používáním. Pro více upgradujte na placený plán v nastavení účtu.",
-        "audioDescription": "ElevenLabs zajišťuje veškerý přepis (Scribe) i dabing. Bez vlastního klíče ElevenLabs obojí čerpá minuty Stage5, které se při zapnutých API klíčích neodečítají."
+        "audioDescription": "ElevenLabs zajišťuje veškerý přepis (Scribe) i dabing. Bez vlastního klíče ElevenLabs obojí čerpá vaše minuty Stage5, které se ale při zapnutých vlastních klíčích nepoužívají."
       }
     },
     "byoAnthropic": {
@@ -974,14 +943,11 @@
       "testing": "Testování…",
       "test": "Otestovat klíč",
       "toggleLabel": "Použít můj Anthropic klíč",
-      "toggleHelp": "Při vypnutí Claude požadavky používají Stage5 kredity.",
       "toggleAria": "Přepnout použití vašeho Anthropic klíče",
       "toggleOn": "Používá se váš Anthropic klíč pro Claude modely.",
-      "toggleOff": "Používají se Stage5 kredity pro Claude modely.",
       "toggleError": "Nepodařilo se aktualizovat Anthropic předvolbu."
     },
     "stage5TtsProvider": {
-      "label": "Kvalita TTS (Stage5 kredity)",
       "elevenlabs": "Prémiová (ElevenLabs)",
       "elevenlabsHint": "Nejlepší kvalita, vyšší cena (~12×)",
       "elevenlabsHintWithBalance": "Nejlepší kvalita · Váš zůstatek: {{time}} dabingu"
@@ -1076,35 +1042,22 @@
       "freeTitle": "Překládejte zdarma s vlastní AI"
     },
     "creditTransfer": {
-      "title": "Přesun kreditů mezi počítači",
-      "description": "Zakoupené kredity a odemčení API klíčů lze přesunout na jiný počítač. Bezplatné uvítací kredity zůstávají na tomto počítači.",
-      "moveButton": "Přesunout kredity na jiný počítač",
-      "receiveButton": "Přijmout kredity",
       "creating": "Vytváření kódu…",
       "copy": "Kopírovat",
       "copied": "Zkopírováno",
-      "summaryCredits": "Přesune se {{credits}} kreditů.",
       "summaryByo": "Přesune se i odemčení API klíčů.",
       "expires": "Tento kód lze použít jednou a vyprší za {{minutes}} min.",
-      "steps": "Na novém počítači: nainstalujte Translator, otevřete Nastavení, zvolte „Přijmout kredity“ a zadejte tento kód.",
       "inputLabel": "Kód z vašeho druhého počítače",
       "redeem": "Přijmout",
       "redeeming": "Přijímání…",
-      "received": "Přijato {{credits}} kreditů.",
       "receivedNoCredits": "Kód fungoval.",
       "receivedByo": "Odemčení API klíčů je na tomto počítači aktivní.",
-      "summaryCredits_one": "Přesune se {{credits}} kredit.",
-      "summaryCredits_few": "Přesunou se {{credits}} kredity.",
-      "received_one": "Přijat {{credits}} kredit.",
-      "received_few": "Přijaty {{credits}} kredity.",
       "errors": {
-        "nothing_to_transfer": "Zatím není co přesouvat: tento počítač nemá zakoupené minuty ani odemčení API klíčů. Chcete-li sem převést minuty z jiného počítače, zvolte „Přijmout minuty“.",
         "too_many_codes": "Za tuto hodinu vzniklo příliš mnoho kódů pro přesun. Zkuste to za chvíli.",
         "jobs_running": "Ještě běží přepis nebo překlad. Zkuste to znovu, až skončí.",
         "invalid_code": "Kód je chybný, už použitý nebo mu vypršela platnost. Vytvořte nový na druhém počítači.",
         "same_device": "Kód zadejte na druhém počítači, ne na tom, který ho vytvořil.",
         "network_error": "Nepodařilo se spojit se serverem Stage5. Zkontrolujte připojení a zkuste to znovu.",
-        "transfer_failed": "Minuty se nepodařilo přesunout. Zkontrolujte připojení a zkuste to znovu.",
         "nothing_to_transfer_minutes": "Zatím není co přesouvat: tento počítač nemá zakoupené minuty ani odemčení API klíčů. Chcete-li sem převést minuty z jiného počítače, zvolte „Přijmout minuty“.",
         "transfer_failed_minutes": "Minuty se nepodařilo přesunout. Zkontrolujte připojení a zkuste to znovu."
       },
@@ -1118,29 +1071,24 @@
     }
   },
   "credits": {
-    "title": "Kredity AI",
+    "title": "Vaše minuty",
     "loading": "Načítání...",
-    "credits": "kredity",
     "usingApiKey": "Používá se API klíč",
     "usingOpenAi": "Používá se OpenAI",
     "usingAnthropic": "Používá se Claude",
     "usingElevenLabs": "Používá se ElevenLabs",
     "hours": "hodiny",
     "translationHoursShort": "h překladu",
-    "buyCredits": "Koupit kredity",
     "redirectingToPayment": "Otevírání zabezpečené pokladny…",
-    "description": "Vyberte z balíčků ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), nebo ${{pack3Price}} ({{pack3Hours}}h)",
-    "notEnough": "Nedostatek kreditů. Prosím zakupte více kreditů pro pokračování.",
     "transcriptionMinutesShort": "{{minutes}} min přepisu",
     "transcriptionTimeShort": "{{time}} přepisu",
-    "costOfBalance": "{{cost}} z vašich {{balance}} kreditů",
     "pill": {
       "freeBack": "Minuty zdarma znovu {{date}}",
       "empty": "Dobít minuty",
       "freeThisMonth": "{{count}} min zdarma tento měsíc",
       "freeWelcome": "{{count}} min zdarma",
       "minutes": "Zbývá {{count}} min",
-      "title": "Minuty a balíčky",
+      "title": "Vaše minuty a balíčky",
       "neutral": "Minuty",
       "welcomePending": "Minuty zdarma jsou na cestě",
       "freeTimeThisMonth": "{{time}} zdarma tento měsíc",
@@ -1158,11 +1106,10 @@
     "moreMinutesPerDollar": "{{multiplier}}× více minut za dolar",
     "checkoutWaiting": "Dokončete platbu v prohlížeči. Minuty se tu objeví samy.",
     "checkoutNote": "Jednorázová platba přes Stripe v prohlížeči. Bez účtu a bez předplatného. Minuty dorazí samy.",
-    "dubbingNote": "Překlad přidává ke každé minutě videa zhruba 10 %, dabing spotřebuje víc.",
+    "dubbingNote": "S překladem se spotřebuje zhruba o 10 % minut víc, dabing spotřebuje ještě víc.",
     "iCancelledCheckout": "Zrušil(a) jsem platbu",
     "checkoutStartFailed": "Platbu se nepodařilo spustit. Zkontrolujte připojení a zkuste to znovu.",
     "loadFailed": "Zůstatek se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.",
-    "estimateAmount": "{{credits}} kreditů",
     "costOfBalanceMinutes": "{{cost}} z vašich {{balance}}",
     "timeLeft": "Zbývá {{time}}",
     "success": {
@@ -1178,7 +1125,10 @@
     "balanceOffline": "Vaše minuty teď nejde zkontrolovat",
     "offlineNote": "Translator se nemůže spojit se Stage5. Zůstatek se znovu ukáže, až budete online.",
     "microPackLabelNoTime": "Koupit minuty — {{price}}",
-    "microPackLabel": "Koupit minuty — {{price}} · ≈ {{time}} videa"
+    "microPackLabel": "Koupit minuty — {{price}} · ≈ {{time}} videa",
+    "checkingPayment": "Ověřujeme platbu…",
+    "checkoutUnresolved": "Pokud už jste zaplatili, minuty se tu brzy objeví. Ještě platíte? Dokončete platbu v prohlížeči.",
+    "checkPaymentNow": "Zkontrolovat"
   },
   "cta": {
     "generate": {
@@ -1290,7 +1240,6 @@
     "afrikaans": "Afrikánština"
   },
   "generateSubtitles": {
-    "noCredits": "Žádné kredity.",
     "rechargeLink": "Dobít →",
     "creditWarning": {
       "message": "Stahování, úpravy, export a překlad s vlastním Claude nebo Codexem přes Ovládání agenty jsou zdarma. Přepis vyžaduje minuty nebo odemčení API klíčů v <settingsLink>{{settingsLinkText}}</settingsLink>.",
@@ -1300,7 +1249,6 @@
       "pleaseSelectVideo": "Prosím vyberte video",
       "processingDuration": "Zpracovává se délka videa. Zkuste to prosím znovu za chvíli.",
       "icloudPlaceholder": "Tento soubor je uložen v iCloudu. Ve Finderu klikněte na \"Stáhnout\" a počkejte, až se dokončí ikona cloudu, poté to zkuste znovu.",
-      "insufficientCreditsForVoiceCloning": "Nedostatek kreditů pro klonování hlasu. Video má {{duration}} min, ale můžete si dovolit pouze {{affordable}} min. Přidejte prosím kredity nebo vypněte klonování hlasu.",
       "fileTooLargeForVoiceCloning": "Video soubor je příliš velký pro klonování hlasu ({{size}}MB). Maximum je {{max}}MB. Použijte prosím kratší video nebo vypněte klonování hlasu."
     },
     "status": {
@@ -1310,14 +1258,13 @@
       "error": "Chyba"
     },
     "buttons": {
-      "buyCredits": "Koupit kredity",
       "redirectingToPayment": "Přesměrování na platbu..."
     },
     "workflow": {
       "stepOne": "Krok 1",
       "stepTwo": "Krok 2",
       "stepThree": "Krok 3",
-      "chooseSourceTitle": "Vyberte zdroj",
+      "chooseSourceTitle": "Vybrat zdroj",
       "sourceLoading": "Načítání zdroje",
       "sourceLoadingDescription": "Stažený zdroj se připravuje k přepisu.",
       "localSourceReady": "Místní soubor připraven",
@@ -1334,7 +1281,6 @@
       "saveOutputsDescription": "Uložte zdrojová nebo nadabovaná média mimo pracovní prostor aplikace, pokud je chcete zachovat."
     },
     "calculatingCost": "Výpočet nákladů...",
-    "notEnoughCredits": "Nedostatek kreditů",
     "welcomeCredits": {
       "message": "Máte minuty zdarma na vyzkoušení přepisu a překladu (asi 20 minut videa)."
     }
@@ -1345,7 +1291,7 @@
     "replaceAll": "Nahradit vše",
     "nextMatch": "Další shoda (Enter)",
     "previousMatch": "Předchozí shoda (Shift+Enter)",
-    "replaceAllTitle": "Nahradit všechny výskyty",
+    "replaceAllTitle": "Nahradit všechny shody",
     "closeTitle": "Zavřít (Esc)",
     "nextMatchAria": "Další shoda",
     "previousMatchAria": "Předchozí shoda",
@@ -1354,7 +1300,8 @@
     "matchCount": "{{current}} z {{total}}",
     "matchCase": "Rozlišovat velikost písmen",
     "wholeWord": "Celá slova",
-    "showReplace": "Nahradit"
+    "showReplace": "Nahradit",
+    "noMatches": "Žádné shody"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1373,8 +1320,8 @@
     "unsavedSrtOnTranscribe": {
       "title": "Uložit současné titulky před přepisem?",
       "message": "Titulky jsou již načtené. Přepis je nahradí. Co si přejete udělat?",
-      "saveAndTranscribe": "Uložit a přepsat",
-      "discardAndTranscribe": "Neukládat a přepsat",
+      "saveAndTranscribe": "Uložit a spustit přepis",
+      "discardAndTranscribe": "Neukládat a spustit přepis",
       "cancel": "Zrušit"
     },
     "downloadInProgress": "Probíhá stahování",
@@ -1398,42 +1345,8 @@
       "description": "To může být způsobeno změnami video platformy nebo novými ochrannými opatřeními. Možná budete muset počkat na další verzi aplikace pro zpracování novějších videí."
     },
     "creditRanOut": {
-      "title": "Kredity došly",
-      "message": "Vaše AI kredity došly. Dobijte v Nastavení a poté pokračujte tam, kde jste skončili.",
       "openSettings": "Otevřít nastavení",
       "ok": "OK",
-      "neverHadTitle": "Přepis vyžaduje kredity",
-      "neverHadMessage": "Přepis vyžaduje kredity nebo odemčení API klíčů. Obojí získáte v Nastavení. Překlad s vlastním Claude nebo Codexem přes Ovládání agenty je zdarma.",
-      "notEnoughTitle": "Na toto video nemáte dost kreditů",
-      "notEnoughTranscriptionMessage": "Přepis tohoto videa stojí přibližně {{required}} kreditů. Máte {{available}}, což stačí asi na {{minutes}} minut. Dobijte kredity a začněte znovu.",
-      "notEnoughMessage": "Tato úloha potřebuje více kreditů, než je váš zůstatek {{available}}. Pro pokračování dobijte kredity.",
-      "task": {
-        "transcription": {
-          "title": "Přepis vyžaduje kredity",
-          "message": "Váš zůstatek na tento přepis nestačí. Doplňte kredity a spusťte ho znovu. Už přepsané řádky zůstávají.",
-          "messageNothingYet": "Na tento přepis váš zůstatek nestačí. Doplňte minuty a spusťte ho znovu."
-        },
-        "translation": {
-          "title": "Překlad vyžaduje kredity",
-          "message": "Váš zůstatek na tento překlad nestačí. Doplňte kredity a zkuste to znovu. Už přeložené řádky zůstávají. Překlad s vlastním Claude nebo Codexem přes Ovládání agenty je zdarma.",
-          "messageNothingYet": "Na tento překlad váš zůstatek nestačí. Doplňte minuty a zkuste to znovu. Překlad s vlastním Claude nebo Codexem přes Ovládání agenty je zdarma."
-        },
-        "dubbing": {
-          "title": "Dabing vyžaduje kredity",
-          "message": "Váš zůstatek na dabing tohoto videa nestačí. Doplňte kredity a zkuste to znovu."
-        },
-        "summary": {
-          "title": "Shrnutí vyžaduje kredity",
-          "message": "Váš zůstatek na shrnutí a nejlepší momenty nestačí. Doplňte kredity a zkuste to znovu."
-        },
-        "videoSearch": {
-          "title": "Hledání videí s AI vyžaduje kredity",
-          "message": "Váš zůstatek na hledání videí s AI nestačí. Doplňte kredity a hledejte znovu."
-        },
-        "other": {
-          "title": "Tohle vyžaduje kredity"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "Přepis potřebuje minuty",
@@ -1465,12 +1378,15 @@
         "message": "Minuty vám došly. Doplňte je v Nastavení a pokračujte tam, kde jste skončili.",
         "notEnoughTitle": "Na toto video nemáte dost minut",
         "notEnoughTranscriptionMessage": "Přepis tohoto videa potřebuje {{required}} a vám zbývá {{available}}. Doplňte minuty a spusťte ho znovu.",
-        "notEnoughMessage": "Na tohle potřebujete víc, než kolik vám zbývá ({{available}}). Doplňte minuty a pokračujte."
+        "notEnoughMessage": "Na tohle potřebujete víc, než kolik vám zbývá ({{available}}). Doplňte minuty a pokračujte.",
+        "voicePreview": {
+          "title": "Ukázka hlasu potřebuje minuty",
+          "message": "Na ukázku hlasu vaše minuty nestačí. Doplňte minuty a zkuste to znovu."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "Spustit dabing?",
-      "message": "Tento dabing spotřebuje přibližně {{cost}} z vašich {{balance}} kreditů. Generování hlasů stojí mnohem víc než překlad.",
       "messageMinutes": "Tento dabing spotřebuje {{cost}}. Generování hlasu stojí mnohem víc než překlad."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1545,7 +1461,9 @@
     "cancelSummaryTitle": "Zastavit shrnutí?",
     "keepSummarizing": "Pokračovat",
     "stopSummarizing": "Zastavit",
-    "cancelSummaryBody": "Dosavadní shrnutí a nejlepší momenty se neuloží."
+    "cancelSummaryBody": "Dosavadní shrnutí a nejlepší momenty se neuloží.",
+    "cancelTranslationBody": "Už přeložené řádky zůstanou. Zbytek můžete přeložit později.",
+    "cancelDubbingTitle": "Zastavit dabing?"
   },
   "progress": {
     "preparingVideoExport": "Příprava exportu videa…",
@@ -1820,7 +1738,8 @@
     "statusLoaded_many": "Načteno {{count}} řádku",
     "statusTranslated_one": "{{count}} řádek · jazyk: {{language}} · synchronizováno s videem",
     "statusTranslated_few": "{{count}} řádky · jazyk: {{language}} · synchronizováno s videem",
-    "statusTranslated_many": "{{count}} řádku · jazyk: {{language}} · synchronizováno s videem"
+    "statusTranslated_many": "{{count}} řádku · jazyk: {{language}} · synchronizováno s videem",
+    "interruptedTranslateSubtitles": "Překlad těchto titulků do {{languageInto}} se přerušil, když se Translator zavřel."
   },
   "subtitleStyles": {
     "Cinema": "Filmová žlutá",

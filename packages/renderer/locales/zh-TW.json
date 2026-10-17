@@ -23,7 +23,6 @@
       "unexpectedSave": "儲存時發生了意外錯誤。",
       "unexpectedLoad": "載入時發生了意外錯誤。",
       "renderFailed": "算繪失敗",
-      "creditReservationFailed": "點數預留失敗",
       "invalidRenderOptions": "提供的算繪選項無效",
       "missingVideoMetadata": "影片中繼資料遺失 ({{missing}})",
       "insufficientDiskSpace": "磁碟空間不足，無法完成合併。請清出空間後再試。",
@@ -126,7 +125,6 @@
     "unexpectedSave": "儲存時發生意外錯誤。",
     "unexpectedLoad": "載入時發生意外錯誤。",
     "renderFailed": "渲染失敗",
-    "creditReservationFailed": "積分預留失敗",
     "invalidRenderOptions": "提供的渲染選項無效",
     "missingVideoMetadata": "缺少影片元數據（{{missing}}）",
     "noSourceVideo": "沒有來源影片",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "轉錄服務（ElevenLabs Scribe）暫時無法使用，或多次嘗試後仍無法連線。請於幾分鐘後再試一次。",
       "fileTooLarge": "此音訊過長，無法在單一工作中轉錄（超過約 {{hours}} 小時）。請將影片分割成較短的部分，並分別轉錄每個部分。",
-      "elevenLabsKeyRequired": "轉錄使用 ElevenLabs Scribe，需要 ElevenLabs API 金鑰。請在設定中新增，或關閉 API 金鑰模式，改用 Stage5 時數轉錄。你的 OpenAI 或 Anthropic 金鑰仍會用於翻譯。"
+      "elevenLabsKeyRequired": "轉錄使用 ElevenLabs Scribe，需要 ElevenLabs API 金鑰。請在設定中新增，或關閉「使用我的 API 金鑰」，改用你的 Stage5 時數轉錄。你的 OpenAI 或 Anthropic 金鑰仍會用於翻譯。"
     },
     "credits": {
       "transcription": "時數不足，無法轉錄。",
@@ -238,7 +236,7 @@
     "selectFile": "選擇檔案",
     "selectVideoFile": "選擇影片檔案",
     "selectVideoAudioFile": "選擇影片/音訊檔案",
-    "saveOriginalVideo": "保存原始影片",
+    "saveOriginalVideo": "儲存原始影片",
     "localFileDescription": "從您的電腦上傳影片或音訊檔案",
     "selectLocalFile": "從電腦上傳",
     "downloadFromUrl": "從網路下載",
@@ -474,7 +472,7 @@
     "displayModeLabel": "字幕顯示",
     "translate": "翻譯",
     "continueTranscribing": "繼續轉錄",
-    "generate": "生成字幕",
+    "generate": "產生字幕",
     "generating": "生成中...",
     "generateNow": "立即生成字幕",
     "translation": "翻譯",
@@ -482,16 +480,12 @@
     "improveTranslation": "改善翻譯",
     "chooseSrtFile": "選擇SRT檔案",
     "dub": "產生配音語音",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}分鐘)",
     "dubEstimateByo": "~{{minutes}}分鐘音訊",
     "voiceCloningRequiresTranslation": "語音複製需要目標語言",
     "translateEstimateCredits": "~{{minutes}}分鐘影片",
-    "translateEstimateByo": "BYO金鑰",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。",
-    "dubCostHint": "ElevenLabs 配音：每分鐘語音 ~{{rate}} 點數。此估算會在配音開始前顯示。",
     "unreadableCues": "這個檔案中有 {{count}} 行無法讀取，已略過。請檢查時間碼。",
-    "addCreditsToTranslate": "儲值後翻譯",
     "dubInto": "配成{{language}}",
     "dubIntro": "用你選的語言把字幕唸出來，並保留原本的背景音。",
     "dubNeedsSubtitles": "配音會朗讀字幕，所以這部影片要先有字幕。請先轉錄，再回來選擇聲音。",
@@ -500,8 +494,6 @@
     "dubTranslatesFirst": "字幕會先翻成{{language}}，再進行配音。",
     "dubCostWithTranslation": "翻譯和配音：{{cost}}",
     "dubUsesOwnKeys": "使用你自己的 API 金鑰。",
-    "dubNotEnoughCredits": "點數不足，無法配音。",
-    "addCreditsToDub": "儲值後配音",
     "noSubtitlesToDub": "請先為這部影片產生或開啟字幕，再進行配音。",
     "noSubtitlesToTranslate": "請先開啟或產生字幕，再進行翻譯。",
     "dubVoiceHelp": "這次配音使用的語音。之後配音也會沿用。",
@@ -528,11 +520,9 @@
     },
     "generate": "找出精華片段",
     "regenerate": "重新找出精華片段",
-    "estimateCredits": "{{credits}} 點數",
-    "estimateByo": "BYO 金鑰",
     "highEffortBadge": "(深度)",
     "placeholder": "AI 摘要產生後會顯示在此。",
-    "insufficientCredits": "時數不足，無法找出精華片段。",
+    "insufficientCredits": "剩餘時數不夠找出精華片段。",
     "error": "無法找出精華片段。{{message}}",
     "cancel": "取消",
     "copy": "複製摘要",
@@ -585,7 +575,7 @@
     "downloadCombined": "下載合併剪輯",
     "saveCombinedDialogTitle": "儲存合併的精華片段",
     "combinedCutFailed": "無法剪輯合併的精華片段：{{message}}",
-    "highlightsInsufficientCredits": "摘要已產生，但時數用完了，精華片段擷取已停止。",
+    "highlightsInsufficientCredits": "摘要已完成，但你的時數用完了，找出精華片段的作業已停止。",
     "highlightsPartialWarning": "精華片段僅部分擷取，可能不完整。請重新產生以更新。",
     "highlightsPartialWithReason": "摘要已產生，但精華片段僅部分擷取：{{message}}",
     "estimateOwnKey": "使用你的 API 金鑰",
@@ -619,7 +609,10 @@
     "highlightCuesChanged": "找出這個精華片段後，你修改了其中的字幕行。請確認它是否仍然合適。",
     "clipCaptionsChangedAny": "這段片段剪好後，字幕有變動（文字、樣式或大小）。",
     "notEnoughForRun": "剩餘時數不夠產生摘要和精華片段。",
-    "clipsUseOriginalAudio": "片段使用原始音軌，不含配音。"
+    "clipsUseOriginalAudio": "片段使用原始音軌，不含配音。",
+    "notEnoughMinutesSummary": "剩餘時數不夠產生這份摘要。",
+    "notEnoughMinutesHighlights": "剩餘時數不夠找出精華片段。",
+    "translateMissingLines": "翻譯這些行"
   },
   "panel": {
     "new": "新",
@@ -661,8 +654,8 @@
       "highlightEditingLocked": "正在產生精華片段，編輯已鎖定"
     },
     "item": {
-      "seek": "定位",
-      "seekTitle": "將影片定位到開始時間",
+      "seek": "跳至",
+      "seekTitle": "將影片跳到這行的開始位置",
       "playSnippet": "播放片段",
       "pauseSnippet": "暫停片段",
       "insertTitle": "在此後插入新字幕區塊",
@@ -679,7 +672,10 @@
       "startTimeAria": "第 {{index}} 行的開始時間",
       "endTimeAria": "第 {{index}} 行的結束時間",
       "splitTitle": "在游標處分割這行",
-      "mergeTitle": "與下一行合併"
+      "mergeTitle": "與下一行合併",
+      "timeOverlapsPrevious": "這行在上一行結束前就開始了，兩行會同時顯示。",
+      "timeOverlapsNext": "這行在下一行開始後才結束，兩行會同時顯示。",
+      "timeOverlapsBoth": "這行和前後兩行重疊，會同時顯示。"
     },
     "header": {
       "save": "儲存字幕",
@@ -730,15 +726,14 @@
       "toggleLabel": "使用我的 API 金鑰",
       "activeKeys": "{{count}} 個金鑰可用",
       "noKeys": "尚未設定金鑰",
-      "usingApiKeys": "未使用 Stage5 時數",
-      "usingCredits": "正在使用 Stage5 時數",
+      "usingApiKeys": "不會使用你的 Stage5 時數",
+      "usingCredits": "正在使用你的 Stage5 時數",
       "toggleOn": "現在使用你的 API 金鑰。",
-      "toggleOff": "現在使用 Stage5 時數。",
+      "toggleOff": "現在使用你的 Stage5 時數。",
       "toggleError": "更新偏好設定失敗。",
       "toggleAria": "使用我的 API 金鑰",
       "requirementTranslation": "翻譯需要 OpenAI 或 Anthropic 金鑰"
     },
-    "creditsDescription": "購買點數。顯示的時數是您可用於轉錄或翻譯之影片總時長的估算。範例：轉錄並翻譯一支 3 小時的影片，約需 6 小時（約 140,000 點數）。",
     "performanceQuality": {
       "title": "效能與品質",
       "qualityTranslation": {
@@ -748,32 +743,15 @@
         "modelOff": "僅 Claude Haiku 5.5 草稿",
         "reviewProvider": "複審提供方",
         "openAiHighEnd": "OpenAI 高階複審",
-        "anthropicHighEnd": "Anthropic 高階複審",
-        "help": "<b>5× 點數</b> · 增加複審階段以提升品質",
-        "helpWithEstimate": "<b>5× 點數</b> · 您的餘額：~{{normalTime}}（一般）/ ~{{hqTime}}（高品質）",
-        "helpOn": "<b>5× 點數</b> • Claude Haiku 5.5 初稿 + Claude Opus 5.5 審稿",
-        "helpOff": "<b>1× 點數</b> • 僅 Claude Haiku 5.5 初稿",
-        "helpWithEstimateOn": "<b>5× 點數</b> • Claude Haiku 5.5 初稿 + Claude Opus 5.5 審稿 • 餘額：約 {{time}}",
-        "helpWithEstimateOff": "<b>1× 點數</b> • 僅 Claude Haiku 5.5 初稿 • 餘額：約 {{time}}"
+        "anthropicHighEnd": "Anthropic 高階複審"
       },
       "qualitySummary": {
         "label": "高品質摘要",
         "modelOn": "Claude Opus 5.5 深度分析 + 精華片段",
-        "modelOff": "Claude Sonnet 5.5 標準分析",
-        "help": "<b>4× 點數</b> · 使用 Claude Opus 5.5 進行深度分析和精彩片段剪輯",
-        "helpWithEstimate": "<b>4× 點數</b> · 您的餘額：~{{normalTime}}（一般）/ ~{{hqTime}}（高品質）",
-        "helpOn": "<b>4× 點數</b> • Claude Opus 5.5 深度分析 + 精華片段",
-        "helpOff": "使用 Claude Sonnet 5.5 快速分析",
-        "helpWithEstimateOn": "<b>4× 點數</b> • Claude Opus 5.5 深度分析 + 精華片段 • 餘額：約 {{time}}",
-        "helpWithEstimateOff": "使用 Claude Sonnet 5.5 快速分析 • 餘額：~{{time}}"
+        "modelOff": "Claude Sonnet 5.5 標準分析"
       },
       "qualityDubbing": {
-        "label": "高品質配音",
-        "modelOn": "ElevenLabs TTS 高級音色",
-        "help": "<b>12× 點數</b> · 使用 ElevenLabs TTS 和優質語音",
-        "helpWithEstimate": "<b>12× 點數</b> · 您的餘額：~{{normalTime}}（一般）/ ~{{hqTime}}（高品質）",
-        "helpOn": "<b>{{ratio}}×點數</b> • ElevenLabs TTS 高級音色",
-        "helpWithEstimateOn": "<b>{{ratio}}×點數</b> • ElevenLabs TTS 高級音色 • 餘額：~{{time}}"
+        "modelOn": "ElevenLabs TTS 高級音色"
       },
       "videoSuggestionModel": {
         "label": "影片推薦模型",
@@ -782,9 +760,6 @@
         "quality": "品質（與翻譯品質相同）"
       },
       "rate": {
-        "perHour": "~{{credits}} 點數/小時",
-        "perMinute": "~{{credits}} 點數/分鐘",
-        "perSearch": "~{{credits}} 點數/次搜尋",
         "balance": "餘額：~{{time}}",
         "minutesPerHour": "每小時影片約扣 {{time}}",
         "minutesPerDubMinute": "每分鐘配音約扣 {{time}}",
@@ -807,18 +782,15 @@
       "previewTooltip": "預覽此語音",
       "previewing": "播放中...",
       "previewFree": "預覽",
-      "previewWithCost": "預覽（{{cost}} 點數）",
       "mixLabel": "配音音量 vs 原始影片音量",
       "mixHelp": "調整在配音語音下方播放的原始音軌比例。",
       "mixAmbient": "更多環境聲",
       "mixVoice": "更多人聲",
       "voiceCloning": "複製原聲",
       "voiceCloningDesc": "在配音音訊中保留原說話者的聲音",
-      "voiceCloningInsufficientCredits": "需要至少 1 分鐘的點數",
       "voiceCloningEnabled": "已啟用 ElevenLabs 語音複製。原說話者的聲音將保留在配音音訊中。",
       "voiceCloningInfo": "語音複製使用 ElevenLabs 配音 API 來分析和重現原說話者的聲音。",
       "costPerMinute": "每分鐘費用",
-      "credits": "點數",
       "yourBalance": "您的餘額",
       "canClone": "您可以複製",
       "upToMinutes": "最多 {{minutes}} 分鐘",
@@ -828,7 +800,7 @@
     },
     "byoOpenAi": {
       "title": "使用自己的 API 金鑰",
-      "description": "一次性解鎖，就能使用你自己的 API 金鑰。解鎖後，轉錄、翻譯、配音和摘要都會直接使用你的帳戶，不再扣除 Stage5 時數。",
+      "description": "一次性解鎖，就能使用你自己的 API 金鑰。解鎖後，轉錄、翻譯、配音和摘要都會透過你自己的 AI 帳戶執行，不會使用你的 Stage5 時數。",
       "unlocking": "正在開啟結帳頁面…",
       "unlockCta": "花費 $10 解鎖",
       "unlockHint": "解鎖後，您可以隨時在此添加 API 金鑰以啟用帳戶直接計費。",
@@ -846,19 +818,17 @@
       "test": "測試金鑰",
       "lastSynced": "上次同步",
       "toggleLabel": "使用我的 OpenAI 金鑰",
-      "toggleHelp": "關閉時，使用 AI 點數。",
       "toggleAria": "切換使用您的 OpenAI 金鑰",
       "toggleOn": "正在使用您的 OpenAI 金鑰執行 AI 任務。",
-      "toggleOff": "正在使用 Stage5 點數執行 AI 任務。",
       "toggleError": "更新設定失敗。",
       "howToGetKeys": "如何取得 API 金鑰？",
       "option1Title": "選項 1：OpenAI",
       "option2Title": "選項 2：Anthropic + ElevenLabs",
       "economicsTitle": "為什麼值得",
-      "economicsBody": "Stage5 時數主打方便（不用設定）。BYO 直接付費給服務提供商——依你購買的方案，通常便宜約 30–50%。",
+      "economicsBody": "Stage5 時數最方便：什麼都不用設定。使用自己的金鑰則是直接付費給 AI 服務提供商，依方案不同，通常便宜約 30–50%。",
       "encryptionUnavailable": "此系統不支援安全儲存，無法儲存 API 金鑰。",
       "checkoutOpen": "已在瀏覽器中開啟付款頁面…",
-      "checkoutOpenHint": "請在瀏覽器中完成付款。付款完成後，我們會自動解鎖 BYO。",
+      "checkoutOpenHint": "請在瀏覽器中完成付款。付款完成後，使用自己金鑰的功能會自動解鎖。",
       "entitlementsLoadFailed": "無法確認解鎖狀態，請檢查網路連線後重試。",
       "unlockFailed": "無法開始付款，請檢查網路連線後再試一次。"
     },
@@ -886,17 +856,17 @@
       "summary": "摘要",
       "dubbing": "配音",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "目前沒有可用的 BYO 影片推薦模型。請啟用 OpenAI 或 Anthropic BYO 以使用此功能。",
-      "videoSuggestionModelRequiresOpenAi": "需要 OpenAI BYO 解鎖、金鑰和開關。",
-      "videoSuggestionModelRequiresAnthropic": "需要 Anthropic BYO 解鎖、金鑰和開關。",
-      "summaryRequiresOpenAi": "需要 OpenAI BYO 存取權限和 API 金鑰。",
-      "summaryRequiresAnthropic": "需要 Anthropic BYO 存取權限和 API 金鑰。",
+      "videoSuggestionModelUnavailable": "使用你自己的金鑰時，沒有可用的影片推薦模型。請開啟你的 OpenAI 或 Anthropic 金鑰以使用此功能。",
+      "videoSuggestionModelRequiresOpenAi": "需要解鎖 API 金鑰功能、新增你的 OpenAI 金鑰，並開啟 OpenAI 開關。",
+      "videoSuggestionModelRequiresAnthropic": "需要解鎖 API 金鑰功能、新增你的 Anthropic 金鑰，並開啟 Anthropic 開關。",
+      "summaryRequiresOpenAi": "需要解鎖 API 金鑰功能，並新增你的 OpenAI 金鑰。",
+      "summaryRequiresAnthropic": "需要解鎖 API 金鑰功能，並新增你的 Anthropic 金鑰。",
       "translationReview": "翻譯（複審）",
-      "transcriptionRequiresElevenLabs": "轉錄只使用 ElevenLabs Scribe。新增 ElevenLabs API 金鑰，就能用你自己的金鑰轉錄。沒有金鑰時，轉錄會使用 Stage5 時數；API 金鑰開啟期間則不會扣除時數。你的 OpenAI 金鑰仍會用於翻譯。",
-      "dubbingRequiresElevenLabs": "配音只使用 ElevenLabs。新增 ElevenLabs API 金鑰，就能用你自己的金鑰配音。沒有金鑰時，配音會使用 Stage5 時數；API 金鑰開啟期間則不會扣除時數。",
+      "transcriptionRequiresElevenLabs": "轉錄只使用 ElevenLabs Scribe。新增 ElevenLabs API 金鑰，就能用你自己的金鑰轉錄。沒有金鑰時，轉錄會使用你的 Stage5 時數；開啟自己的金鑰期間則不會扣除時數。你的 OpenAI 金鑰仍會用於翻譯。",
+      "dubbingRequiresElevenLabs": "配音只使用 ElevenLabs。新增 ElevenLabs API 金鑰，就能用你自己的金鑰配音。沒有金鑰時，配音會使用你的 Stage5 時數；開啟自己的金鑰期間則不會扣除時數。",
       "runtimeFallback": "API 金鑰模式下的執行階段備援",
-      "videoSuggestionLegacyFollowDraft": "已保留舊版 BYO 設定：在你直接選擇模型之前，會沿用你的草稿翻譯模型。",
-      "videoSuggestionLegacyFollowReview": "已保留舊版 BYO 設定：在你直接選擇模型之前，會沿用你的審閱翻譯模型。"
+      "videoSuggestionLegacyFollowDraft": "已保留你之前的設定：在這裡選擇模型之前，會沿用你的草稿翻譯模型。",
+      "videoSuggestionLegacyFollowReview": "已保留你之前的設定：在這裡選擇模型之前，會沿用你的審閱翻譯模型。"
     },
     "apiKeyGuide": {
       "title": "如何取得 API 金鑰",
@@ -920,8 +890,7 @@
         "step3b": "頁面",
         "step4": "點擊",
         "step5": "在帳單設定中新增付款方式（使用 API 必要）",
-        "step6": "複製金鑰（以 sk- 開頭）並貼上到 Stage5 中",
-        "note": "提示：新的 OpenAI 帳戶通常會獲得免費額度。您只需為實際使用付費。"
+        "step6": "複製金鑰（以 sk- 開頭）並貼上到 Stage5 中"
       },
       "anthropic": {
         "description": "Claude 提供更高品質的翻譯複審。沒有它，GPT 將處理所有翻譯任務。",
@@ -941,7 +910,7 @@
         "step4": "在訂閱設定中新增付款方式（超出免費額度時需要）",
         "step5": "複製你的 API 金鑰並貼上到 Stage5 中",
         "note": "提示：ElevenLabs 有免費方案但使用量有限。如需更多，請在帳戶設定中升級到付費方案。",
-        "audioDescription": "所有轉錄（Scribe）和配音都由 ElevenLabs 提供。沒有你自己的 ElevenLabs 金鑰時，兩者都會使用 Stage5 時數；API 金鑰開啟期間則不會扣除時數。"
+        "audioDescription": "所有轉錄（Scribe）和配音都由 ElevenLabs 提供。沒有你自己的 ElevenLabs 金鑰時，兩者都會使用你的 Stage5 時數；開啟自己的金鑰期間則不會扣除時數。"
       }
     },
     "byoAnthropic": {
@@ -960,14 +929,11 @@
       "testing": "測試中…",
       "test": "測試金鑰",
       "toggleLabel": "使用我的 Anthropic 金鑰",
-      "toggleHelp": "關閉時，Claude 請求使用 Stage5 點數。",
       "toggleAria": "切換使用您的 Anthropic 金鑰",
       "toggleOn": "正在使用您的 Anthropic 金鑰執行 Claude 模型。",
-      "toggleOff": "正在使用 Stage5 點數執行 Claude 模型。",
       "toggleError": "更新 Anthropic 設定失敗。"
     },
     "stage5TtsProvider": {
-      "label": "TTS 品質（Stage5 點數）",
       "elevenlabs": "高級（ElevenLabs）",
       "elevenlabsHint": "最佳音質，較高成本（約 12 倍）",
       "elevenlabsHintWithBalance": "最佳音質 · 您的餘額：{{time}}配音時長"
@@ -1060,31 +1026,22 @@
       "freeTitle": "用你自己的 AI 免費翻譯"
     },
     "creditTransfer": {
-      "title": "在電腦之間轉移點數",
-      "description": "已購買的點數和 API 金鑰解鎖可以轉移到另一台電腦。免費的歡迎點數會保留在這台電腦上。",
-      "moveButton": "將點數轉移到另一台電腦",
-      "receiveButton": "接收點數",
       "creating": "正在產生代碼…",
       "copy": "複製",
       "copied": "已複製",
-      "summaryCredits": "將轉移 {{credits}} 點數。",
       "summaryByo": "API 金鑰解鎖也會一併轉移。",
       "expires": "此代碼僅能使用一次，將在 {{minutes}} 分鐘後失效。",
-      "steps": "在新電腦上：安裝 Translator，開啟設定，選擇「接收點數」，然後輸入此代碼。",
       "inputLabel": "來自另一台電腦的代碼",
       "redeem": "接收",
       "redeeming": "正在接收…",
-      "received": "已接收 {{credits}} 點數。",
       "receivedNoCredits": "代碼已生效。",
       "receivedByo": "API 金鑰解鎖已在這台電腦上啟用。",
       "errors": {
-        "nothing_to_transfer": "目前沒有可以轉移的項目：這台電腦沒有購買的時數，也沒有 API 金鑰解鎖。若要把其他電腦的時數轉到這裡，請選擇「接收時數」。",
         "too_many_codes": "這一小時內建立的轉移碼太多了，請稍後再試。",
         "jobs_running": "轉錄或翻譯還在進行中，請等完成後再試。",
         "invalid_code": "這組代碼有誤、已使用過或已過期。請在另一台電腦上重新產生。",
         "same_device": "請在另一台電腦上輸入代碼，不是產生代碼的這台。",
         "network_error": "無法連上 Stage5 伺服器，請檢查網路連線後再試一次。",
-        "transfer_failed": "無法轉移時數，請檢查網路連線後再試一次。",
         "nothing_to_transfer_minutes": "目前沒有可以轉移的項目：這台電腦沒有購買的時數，也沒有 API 金鑰解鎖。若要把其他電腦的時數轉到這裡，請選擇「接收時數」。",
         "transfer_failed_minutes": "無法轉移時數，請檢查網路連線後再試一次。"
       },
@@ -1098,29 +1055,24 @@
     }
   },
   "credits": {
-    "title": "AI 使用時數",
+    "title": "你的時數",
     "loading": "載入中...",
-    "credits": "點數",
     "usingApiKey": "正在使用 API 金鑰",
     "usingOpenAi": "使用OpenAI",
     "usingAnthropic": "使用Claude",
     "usingElevenLabs": "使用ElevenLabs",
     "hours": "小時",
     "translationHoursShort": "翻譯時數",
-    "buyCredits": "購買點數",
     "redirectingToPayment": "正在開啟安全結帳…",
-    "description": "可選擇 ${{packMicroPrice}}（{{packMicroHours}} 小時）、${{pack1Price}}（{{pack1Hours}} 小時）、${{pack2Price}}（{{pack2Hours}} 小時）或 ${{pack3Price}}（{{pack3Hours}} 小時）點數包",
-    "notEnough": "點數不足。請購買更多點數以繼續。",
     "transcriptionMinutesShort": "{{minutes}} 分鐘轉錄",
     "transcriptionTimeShort": "{{time}}轉錄",
-    "costOfBalance": "您 {{balance}} 積分中的 {{cost}}",
     "pill": {
       "freeBack": "{{date}}補回免費時數",
       "empty": "儲值時數",
       "freeThisMonth": "本月免費 {{count}} 分鐘",
       "freeWelcome": "免費 {{count}} 分鐘",
       "minutes": "剩餘 {{count}} 分鐘",
-      "title": "時數與方案",
+      "title": "你的時數與方案",
       "neutral": "時數",
       "welcomePending": "免費時數即將送達",
       "freeTimeThisMonth": "本月免費 {{time}}",
@@ -1138,11 +1090,10 @@
     "moreMinutesPerDollar": "每美元可用時數 {{multiplier}} 倍",
     "checkoutWaiting": "請在瀏覽器中完成付款。時數會自動入帳。",
     "checkoutNote": "透過 Stripe 在瀏覽器中一次付清，不用註冊帳號，也不是訂閱。時數會自動入帳。",
-    "dubbingNote": "翻譯每分鐘約多扣 10% 時數；配音扣得更多。",
+    "dubbingNote": "加上翻譯約多用 10% 時數；配音用得更多。",
     "iCancelledCheckout": "我已取消付款",
     "checkoutStartFailed": "無法開始付款。請檢查網路連線後再試一次。",
     "loadFailed": "無法載入餘額，請檢查網路連線後再試一次。",
-    "estimateAmount": "{{credits}} 點數",
     "costOfBalanceMinutes": "{{cost}}（目前有 {{balance}}）",
     "timeLeft": "剩餘 {{time}}",
     "success": {
@@ -1158,7 +1109,10 @@
     "balanceOffline": "目前無法查看你的時數",
     "offlineNote": "Translator 無法連上 Stage5。恢復連線後，就會再顯示你的餘額。",
     "microPackLabelNoTime": "購買時數 — {{price}}",
-    "microPackLabel": "購買時數 — {{price}} · 約 {{time}} 影片"
+    "microPackLabel": "購買時數 — {{price}} · 約 {{time}} 影片",
+    "checkingPayment": "正在確認你的付款…",
+    "checkoutUnresolved": "如果你已付款，時數很快就會出現在這裡。還在付款嗎？請在瀏覽器中完成。",
+    "checkPaymentNow": "立即檢查"
   },
   "cta": {
     "generate": {
@@ -1270,7 +1224,6 @@
     "afrikaans": "南非文"
   },
   "generateSubtitles": {
-    "noCredits": "沒有點數。",
     "rechargeLink": "充值 →",
     "creditWarning": {
       "message": "下載、編輯、匯出，以及透過代理程式控制用你自己的 Claude 或 Codex 翻譯，都是免費的。轉錄需要時數，或在<settingsLink>{{settingsLinkText}}</settingsLink>中解鎖 API 金鑰。",
@@ -1280,7 +1233,6 @@
       "pleaseSelectVideo": "請選擇影片",
       "processingDuration": "正在處理影片長度。請稍後再試。",
       "icloudPlaceholder": "這個檔案存放在 iCloud。請在 Finder 中按一下「下載」，等雲朵圖示跑完後再試一次。",
-      "insufficientCreditsForVoiceCloning": "語音複製的點數不足。影片長度為 {{duration}} 分鐘，但您只能負擔 {{affordable}} 分鐘。請增加點數或停用語音複製。",
       "fileTooLargeForVoiceCloning": "影片檔案過大，無法進行語音複製（{{size}}MB）。最大允許 {{max}}MB。請使用較短的影片或停用語音複製。"
     },
     "status": {
@@ -1290,7 +1242,6 @@
       "error": "錯誤"
     },
     "buttons": {
-      "buyCredits": "購買點數",
       "redirectingToPayment": "正在重新導向至付款..."
     },
     "workflow": {
@@ -1314,7 +1265,6 @@
       "saveOutputsDescription": "請將想保留的原始或配音媒體儲存到應用程式工作區之外。"
     },
     "calculatingCost": "計算費用中...",
-    "notEnoughCredits": "點數不足",
     "welcomeCredits": {
       "message": "你有免費時數，可以試用轉錄和翻譯（約 20 分鐘影片）。"
     }
@@ -1325,7 +1275,7 @@
     "replaceAll": "全部替換",
     "nextMatch": "下一個匹配 (Enter)",
     "previousMatch": "上一個匹配 (Shift+Enter)",
-    "replaceAllTitle": "替換所有出現項目",
+    "replaceAllTitle": "替換所有匹配項目",
     "closeTitle": "關閉 (Esc)",
     "nextMatchAria": "下一個匹配",
     "previousMatchAria": "上一個匹配",
@@ -1334,7 +1284,8 @@
     "matchCount": "{{current}}/{{total}}",
     "matchCase": "區分大小寫",
     "wholeWord": "全字相符",
-    "showReplace": "替換"
+    "showReplace": "替換",
+    "noMatches": "無相符項目"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1378,42 +1329,8 @@
       "description": "這可能是由於影片平台變更或新的保護措施造成的。您可能需要等待下一個應用程式版本來處理較新的影片。"
     },
     "creditRanOut": {
-      "title": "積分已用完",
-      "message": "您的 AI 積分已用完。請至「設定」中儲值，然後從中斷處繼續。",
       "openSettings": "開啟設定",
       "ok": "確定",
-      "neverHadTitle": "轉錄需要點數",
-      "neverHadMessage": "轉錄需要點數或 API 金鑰解鎖，兩者皆可在設定中取得。透過代理程式控制使用您自己的 Claude 或 Codex 進行翻譯是免費的。",
-      "notEnoughTitle": "點數不足，無法處理此影片",
-      "notEnoughTranscriptionMessage": "轉錄此影片約需 {{required}} 點數。您有 {{available}} 點數，約可轉錄 {{minutes}} 分鐘。請儲值後重新開始。",
-      "notEnoughMessage": "此任務所需點數超過您的餘額（{{available}}）。請儲值後繼續。",
-      "task": {
-        "transcription": {
-          "title": "轉錄需要點數",
-          "message": "目前的餘額不夠轉錄這部影片。儲值後請重新開始，已轉錄的部分都會保留。",
-          "messageNothingYet": "目前的餘額不夠轉錄這部影片。儲值後請重新開始。"
-        },
-        "translation": {
-          "title": "翻譯需要點數",
-          "message": "目前的餘額不夠翻譯這部影片。儲值後請再試一次，已翻好的部分都會保留。透過代理程式控制用你自己的 Claude 或 Codex 翻譯，完全免費。",
-          "messageNothingYet": "目前的餘額不夠翻譯這部影片。儲值後請再試一次。透過代理程式控制用你自己的 Claude 或 Codex 翻譯，完全免費。"
-        },
-        "dubbing": {
-          "title": "配音需要點數",
-          "message": "目前的餘額不夠為這部影片配音。儲值後請再試一次。"
-        },
-        "summary": {
-          "title": "摘要需要點數",
-          "message": "目前的餘額不夠產生摘要和精華片段。儲值後請再試一次。"
-        },
-        "videoSearch": {
-          "title": "AI 影片搜尋需要點數",
-          "message": "目前的餘額不夠進行 AI 影片搜尋。儲值後請再搜尋一次。"
-        },
-        "other": {
-          "title": "這項功能需要點數"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "轉錄需要時數",
@@ -1445,12 +1362,15 @@
         "message": "你的時數已經用完了。請到設定儲值，再從中斷的地方繼續。",
         "notEnoughTitle": "時數不夠處理這部影片",
         "notEnoughTranscriptionMessage": "轉錄這部影片需要 {{required}}，你目前剩 {{available}}。儲值時數後請重新開始。",
-        "notEnoughMessage": "這項操作需要的時數超過你剩下的 {{available}}。儲值時數後即可繼續。"
+        "notEnoughMessage": "這項操作需要的時數超過你剩下的 {{available}}。儲值時數後即可繼續。",
+        "voicePreview": {
+          "title": "試聽語音需要時數",
+          "message": "你的時數不夠試聽語音。儲值時數後再試一次。"
+        }
       }
     },
     "dubCostConfirm": {
       "title": "開始配音？",
-      "message": "此次配音將使用您 {{balance}} 積分中的約 {{cost}}。生成語音的費用遠高於翻譯。",
       "messageMinutes": "這次配音會用掉 {{cost}}。產生語音的花費比翻譯高得多。"
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1525,7 +1445,9 @@
     "cancelSummaryTitle": "要停止摘要嗎？",
     "keepSummarizing": "繼續",
     "stopSummarizing": "停止",
-    "cancelSummaryBody": "目前已完成的摘要和精華片段不會保留。"
+    "cancelSummaryBody": "目前已完成的摘要和精華片段不會保留。",
+    "cancelTranslationBody": "已翻譯的行會保留，其餘的可以稍後再翻譯。",
+    "cancelDubbingTitle": "要停止配音嗎？"
   },
   "progress": {
     "preparingVideoExport": "正在準備匯出影片…",
@@ -1766,7 +1688,8 @@
     "statusTranslatedUnknownNoVideo": "已翻譯 {{count}} 行",
     "statusLines": "字幕 {{count}} 行",
     "checkingFile": "正在讀取檔案…",
-    "statusLoaded": "已載入 {{count}} 行"
+    "statusLoaded": "已載入 {{count}} 行",
+    "interruptedTranslateSubtitles": "Translator 關閉時，這些字幕的{{language}}翻譯中斷了。"
   },
   "subtitleStyles": {
     "Cinema": "電影黃",

@@ -23,7 +23,6 @@
       "unexpectedSave": "אירעה שגיאה בלתי צפויה בעת השמירה.",
       "unexpectedLoad": "אירעה שגיאה בלתי צפויה בעת הטעינה.",
       "renderFailed": "העיבוד נכשל",
-      "creditReservationFailed": "הזמנת קרדיט נכשלה",
       "invalidRenderOptions": "אפשרויות עיבוד לא תקינות סופקו",
       "missingVideoMetadata": "נתוני וידאו חסרים ({{missing}})",
       "insufficientDiskSpace": "אין מספיק מקום בדיסק להשלמת המיזוג. אנא פנה מקום ונסה שוב.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "אירעה שגיאה בלתי צפויה בעת השמירה.",
     "unexpectedLoad": "אירעה שגיאה בלתי צפויה בעת הטעינה.",
     "renderFailed": "העיבוד נכשל",
-    "creditReservationFailed": "הזמנת קרדיט נכשלה",
     "invalidRenderOptions": "אפשרויות עיבוד לא תקינות סופקו",
     "missingVideoMetadata": "נתוני וידאו חסרים ({{missing}})",
     "noSourceVideo": "אין וידאו מקור",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "התמלול (ElevenLabs Scribe) לא זמין כרגע, או שלא הצלחנו להתחבר אליו אחרי כמה ניסיונות. נסו שוב בעוד כמה דקות.",
       "fileTooLarge": "השמע הזה ארוך מדי לתמלול במשימה אחת (יותר מכ-{{hours}} שעות). פצלו את הסרטון לחלקים קצרים יותר ותמללו כל חלק בנפרד.",
-      "elevenLabsKeyRequired": "התמלול משתמש ב-ElevenLabs Scribe ודורש מפתח API של ElevenLabs. הוסיפו מפתח בהגדרות, או כבו את מצב מפתחות ה-API כדי לתמלל עם הדקות של Stage5. מפתח ה-OpenAI או ה-Anthropic שלכם עדיין משמש לתרגום.",
+      "elevenLabsKeyRequired": "התמלול משתמש ב-ElevenLabs Scribe ודורש מפתח API של ElevenLabs. הוסיפו מפתח בהגדרות, או כבו את “שימוש במפתחות ה-API שלי” כדי לתמלל עם הדקות של Stage5. מפתח ה-OpenAI או ה-Anthropic שלכם ימשיך לשמש לתרגום.",
       "fileTooLarge_one": "השמע הזה ארוך מדי לתמלול במשימה אחת (יותר משעה בערך). פצלו את הסרטון לחלקים קצרים יותר ותמללו כל חלק בנפרד."
     },
     "credits": {
@@ -238,7 +236,7 @@
     "downloading": "מוריד...",
     "selectFile": "בחר קובץ",
     "selectVideoFile": "בחר קובץ וידאו",
-    "selectVideoAudioFile": "בחירת קובץ וידאו / אודיו",
+    "selectVideoAudioFile": "בחירת קובץ וידאו או אודיו",
     "saveOriginalVideo": "שמירת הסרטון המקורי",
     "localFileDescription": "העלה קובץ וידאו או אודיו מהמחשב שלך",
     "selectLocalFile": "העלאה מהמחשב",
@@ -480,22 +478,18 @@
     "generating": "יוצר כתוביות...",
     "generateNow": "צור כתוביות עכשיו",
     "translation": "תרגום",
-    "improveTranscription": "שפר תמלול",
-    "improveTranslation": "שפר תרגום",
+    "improveTranscription": "שיפור התמלול",
+    "improveTranslation": "שיפור התרגום",
     "chooseSrtFile": "בחירת קובץ SRT",
     "dub": "דיבוב קול",
-    "dubEstimateCredits": "{{credits}} קרדיט (~{{minutes}} דקות)",
     "dubEstimateByo": "~{{minutes}} דקות אודיו",
     "voiceCloningRequiresTranslation": "שכפול קול דורש שפת יעד",
     "translateEstimateCredits": "~{{minutes}} דקות וידאו",
-    "translateEstimateByo": "מפתח BYO",
     "qualityBadge": "(איכות גבוהה)",
     "cancel_confirmation": "האם אתה בטוח שברצונך לבטל את תהליך תרגום הכתוביות? כל התקדמות תאבד ותצטרך להתחיל מחדש.",
-    "dubCostHint": "קול ElevenLabs: ~{{rate}} קרדיטים לדקת דיבור. הערכה זו מוצגת לפני תחילת הדיבוב.",
     "unreadableCues_one": "לא ניתן היה לקרוא שורה אחת בקובץ, והיא הושמטה. בדקו את קוד הזמן שלה.",
     "unreadableCues_two": "לא ניתן היה לקרוא שתי שורות בקובץ, והן הושמטו. בדקו את קודי הזמן שלהן.",
     "unreadableCues": "לא ניתן היה לקרוא {{count}} שורות בקובץ, והן הושמטו. בדקו את קודי הזמן שלהן.",
-    "addCreditsToTranslate": "הוסיפו קרדיטים לתרגום",
     "dubInto": "דיבוב ל{{language}}",
     "dubIntro": "קול מקריא את הכתוביות בשפה שתבחרו, מעל צליל הרקע המקורי.",
     "dubNeedsSubtitles": "הדיבוב מקריא את הכתוביות, ולכן צריך קודם כתוביות לסרטון. תמללו אותו, ואז בחרו כאן קול.",
@@ -504,8 +498,6 @@
     "dubTranslatesFirst": "הכתוביות יתורגמו קודם ל{{language}}, ואז ידובבו.",
     "dubCostWithTranslation": "תרגום וקול: {{cost}}",
     "dubUsesOwnKeys": "משתמש במפתחות ה-API שלכם.",
-    "dubNotEnoughCredits": "אין מספיק קרדיטים לדיבוב הזה.",
-    "addCreditsToDub": "הוסיפו קרדיטים לדיבוב",
     "noSubtitlesToDub": "צרו או פתחו קודם כתוביות לסרטון, ואז דבבו אותו.",
     "noSubtitlesToTranslate": "פתחו או צרו קודם כתוביות, ואז תרגמו אותן.",
     "dubVoiceHelp": "הקול לדיבוב הזה. הוא יישאר נבחר גם לדיבובים הבאים.",
@@ -532,11 +524,9 @@
     },
     "generate": "מציאת רגעים בולטים",
     "regenerate": "מציאת רגעים בולטים מחדש",
-    "estimateCredits": "{{credits}} קרדיטים",
-    "estimateByo": "מפתח BYO",
     "highEffortBadge": "(מעמיק)",
     "placeholder": "סיכום ה-AI שלך יופיע כאן לאחר היצירה.",
-    "insufficientCredits": "אין מספיק דקות כדי למצוא רגעים בולטים.",
+    "insufficientCredits": "לא נשארו מספיק דקות כדי למצוא רגעים בולטים.",
     "error": "לא הצלחנו למצוא רגעים בולטים. {{message}}",
     "cancel": "ביטול",
     "copy": "העתקת הסיכום",
@@ -589,7 +579,7 @@
     "downloadCombined": "הורדת הקליפ המשולב",
     "saveCombinedDialogTitle": "שמירת קליפ משולב של רגעים בולטים",
     "combinedCutFailed": "חיתוך הרגעים הבולטים המשולבים נכשל: {{message}}",
-    "highlightsInsufficientCredits": "הסיכום נוצר, אבל מציאת הרגעים הבולטים נעצרה כי הדקות נגמרו.",
+    "highlightsInsufficientCredits": "הסיכום מוכן, אבל מציאת הרגעים הבולטים נעצרה כי הדקות שלכם נגמרו.",
     "highlightsPartialWarning": "מציאת הרגעים הבולטים הושלמה רק בחלקה, וייתכן שחסרים רגעים. צרו אותם מחדש כדי לרענן.",
     "highlightsPartialWithReason": "הסיכום נוצר, אבל חילוץ הנקודות המרכזיות היה חלקי: {{message}}",
     "estimateOwnKey": "משתמש במפתח ה-API שלכם",
@@ -625,7 +615,10 @@
     "highlightCuesChanged": "ערכתם שורות ברגע הבולט הזה אחרי שהוא נמצא. בדקו שהוא עדיין מתאים.",
     "clipCaptionsChangedAny": "הכתוביות השתנו מאז שהקליפ נחתך (הטקסט, הסגנון או הגודל).",
     "notEnoughForRun": "לא נשארו מספיק דקות לסיכום ולרגעים הבולטים.",
-    "clipsUseOriginalAudio": "הקליפים משתמשים באודיו המקורי, לא בדיבוב."
+    "clipsUseOriginalAudio": "הקליפים משתמשים באודיו המקורי, לא בדיבוב.",
+    "notEnoughMinutesSummary": "לא נשארו מספיק דקות לסיכום הזה.",
+    "notEnoughMinutesHighlights": "לא נשארו מספיק דקות כדי למצוא רגעים בולטים.",
+    "translateMissingLines": "תרגום השורות האלה"
   },
   "panel": {
     "new": "חדש",
@@ -670,14 +663,14 @@
     },
     "item": {
       "seek": "קפיצה",
-      "seekTitle": "קפיצה בסרטון לזמן ההתחלה",
+      "seekTitle": "מעבר בסרטון לתחילת השורה הזו",
       "playSnippet": "הפעלת הקטע",
       "pauseSnippet": "השהיית הקטע",
       "insertTitle": "הוספת בלוק כתוביות חדש אחרי זה",
       "removeTitle": "הסרת בלוק הכתוביות הזה",
       "shiftPlaceholder": "הזז (-/+ שניות)",
       "shiftTitle": "הזז כתובית זו בשניות (+/-)",
-      "applyShift": "החל הזזה",
+      "applyShift": "החלת ההזזה",
       "originalTextPrefix": "מקור:",
       "subtitlePlaceholder": "טקסט כתובית",
       "confirmRemove": "האם אתה בטוח שברצונך להסיר בלוק כתוביות זה? פעולה זו אינה ניתנת לביטול.",
@@ -687,7 +680,10 @@
       "startTimeAria": "זמן ההתחלה של שורה {{index}}",
       "endTimeAria": "זמן הסיום של שורה {{index}}",
       "splitTitle": "פיצול השורה במיקום הסמן",
-      "mergeTitle": "מיזוג עם השורה הבאה"
+      "mergeTitle": "מיזוג עם השורה הבאה",
+      "timeOverlapsPrevious": "השורה מתחילה לפני שהשורה הקודמת מסתיימת, ולכן שתיהן מוצגות יחד.",
+      "timeOverlapsNext": "השורה מסתיימת אחרי שהשורה הבאה מתחילה, ולכן שתיהן מוצגות יחד.",
+      "timeOverlapsBoth": "השורה חופפת לשורות שלפניה ואחריה, ולכן הן מוצגות יחד."
     },
     "header": {
       "save": "שמירת הכתוביות",
@@ -738,15 +734,14 @@
       "toggleLabel": "שימוש במפתחות ה-API שלי",
       "activeKeys": "מפתחות מוכנים: {{count}}",
       "noKeys": "לא הוגדרו מפתחות",
-      "usingApiKeys": "הדקות של Stage5 כבויות",
-      "usingCredits": "הדקות של Stage5 פעילות",
+      "usingApiKeys": "לא נעשה שימוש בדקות של Stage5",
+      "usingCredits": "נעשה שימוש בדקות של Stage5",
       "toggleOn": "עכשיו נעשה שימוש במפתחות ה-API שלכם.",
       "toggleOff": "עכשיו נעשה שימוש בדקות של Stage5.",
       "toggleError": "עדכון ההעדפה נכשל.",
       "toggleAria": "שימוש במפתחות ה-API שלי",
       "requirementTranslation": "נדרש מפתח OpenAI או Anthropic לתרגום"
     },
-    "creditsDescription": "קנו קרדיטים. השעות המוצגות הן הערכה של סך אורך הווידאו שניתן לתמלל או לתרגם. לדוגמה: תמלול ותרגום של וידאו באורך 3 שעות יעלה בערך 6 שעות (≈140,000 קרדיטים).",
     "performanceQuality": {
       "title": "ביצועים ואיכות",
       "qualityTranslation": {
@@ -756,32 +751,15 @@
         "modelOff": "טיוטת Claude Haiku 5.5 בלבד",
         "reviewProvider": "ספק הסקירה",
         "openAiHighEnd": "סקירה מתקדמת של OpenAI",
-        "anthropicHighEnd": "סקירה מתקדמת של Anthropic",
-        "help": "<b>5× קרדיטים</b> • מוסיף שלב ביקורת לאיכות גבוהה יותר",
-        "helpWithEstimate": "<b>5× קרדיטים</b> • היתרה שלך: ~{{normalTime}} (רגיל) / ~{{hqTime}} (איכות גבוהה)",
-        "helpOn": "<b>פי 5 קרדיטים</b> • טיוטה של Claude Haiku 5.5 + בדיקה של Claude Opus 5.5",
-        "helpOff": "<b>פי 1 קרדיטים</b> • טיוטה של Claude Haiku 5.5 בלבד",
-        "helpWithEstimateOn": "<b>פי 5 קרדיטים</b> • טיוטה של Claude Haiku 5.5 + בדיקה של Claude Opus 5.5 • יתרה: ~{{time}}",
-        "helpWithEstimateOff": "<b>פי 1 קרדיטים</b> • טיוטה של Claude Haiku 5.5 בלבד • יתרה: ~{{time}}"
+        "anthropicHighEnd": "סקירה מתקדמת של Anthropic"
       },
       "qualitySummary": {
         "label": "סיכום באיכות גבוהה",
         "modelOn": "ניתוח מעמיק ב-Claude Opus 5.5 + קליפים של רגעים בולטים",
-        "modelOff": "ניתוח רגיל ב-Claude Sonnet 5.5",
-        "help": "<b>4× קרדיטים</b> • ניתוח מעמיק + קליפים מודגשים עם Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× קרדיטים</b> • היתרה שלך: ~{{normalTime}} (רגיל) / ~{{hqTime}} (איכות גבוהה)",
-        "helpOn": "<b>פי 4 קרדיטים</b> • ניתוח מעמיק עם Claude Opus 5.5 + קליפים של רגעים בולטים",
-        "helpOff": "ניתוח מהיר עם Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>פי 4 קרדיטים</b> • ניתוח מעמיק עם Claude Opus 5.5 + קליפים של רגעים בולטים • יתרה: ~{{time}}",
-        "helpWithEstimateOff": "ניתוח מהיר עם Claude Sonnet 5.5 • יתרה: ~{{time}}"
+        "modelOff": "ניתוח רגיל ב-Claude Sonnet 5.5"
       },
       "qualityDubbing": {
-        "label": "דיבוב באיכות גבוהה",
-        "modelOn": "קולות פרימיום של ElevenLabs TTS",
-        "help": "<b>12× קרדיטים</b> • ElevenLabs TTS עם קולות פרימיום",
-        "helpWithEstimate": "<b>12× קרדיטים</b> • היתרה שלך: ~{{normalTime}} (רגיל) / ~{{hqTime}} (איכות גבוהה)",
-        "helpOn": "<b>{{ratio}}× קרדיטים</b> • ElevenLabs TTS עם קולות פרימיום",
-        "helpWithEstimateOn": "<b>{{ratio}}× קרדיטים</b> • ElevenLabs TTS עם קולות פרימיום • יתרה: ~{{time}}"
+        "modelOn": "קולות פרימיום של ElevenLabs TTS"
       },
       "videoSuggestionModel": {
         "label": "מודל הצעת סרטונים",
@@ -790,9 +768,6 @@
         "quality": "איכות (זהה למצב האיכות של התרגום)"
       },
       "rate": {
-        "perHour": "~{{credits}} קרדיטים/שעה",
-        "perMinute": "~{{credits}} קרדיטים/דקה",
-        "perSearch": "~{{credits}} קרדיטים/חיפוש",
         "balance": "יתרה: ~{{time}}",
         "minutesPerHour": "~{{time}} מהדקות שלכם לכל שעת וידאו",
         "minutesPerDubMinute": "~{{time}} מהדקות שלכם לכל דקת דיבוב",
@@ -815,18 +790,15 @@
       "previewTooltip": "האזנה לקול הזה",
       "previewing": "מנגן...",
       "previewFree": "האזנה",
-      "previewWithCost": "האזנה ({{cost}} קרדיטים)",
       "mixLabel": "עוצמת דיבוב לעומת עוצמת וידאו מקורי",
       "mixHelp": "שלוט כמה מפסקול הקול המקורי יישמע מתחת לקול המדובב.",
       "mixAmbient": "יותר רקע",
       "mixVoice": "יותר קול",
       "voiceCloning": "שכפול קול מקורי",
       "voiceCloningDesc": "שמור על קול הדובר המקורי באודיו המדובב",
-      "voiceCloningInsufficientCredits": "נדרשת לפחות דקה אחת של קרדיטים",
       "voiceCloningEnabled": "שכפול קול מופעל עם ElevenLabs. קול הדובר המקורי יישמר באודיו המדובב.",
       "voiceCloningInfo": "שכפול קול משתמש בשירות הדיבוב של ElevenLabs כדי לנתח את קול הדובר המקורי ולשחזר אותו.",
       "costPerMinute": "עלות לדקה",
-      "credits": "קרדיטים",
       "yourBalance": "היתרה שלך",
       "canClone": "ניתן לשכפל",
       "upToMinutes": "עד {{minutes}} דקות",
@@ -836,7 +808,7 @@
     },
     "byoOpenAi": {
       "title": "שימוש במפתחות API משלכם",
-      "description": "שדרוג חד-פעמי שמאפשר להשתמש במפתחות ה-API שלכם. אחרי הפתיחה, כל תמלול, תרגום, דיבוב או סיכום רץ ישירות על החשבונות שלכם במקום לצרוך דקות של Stage5.",
+      "description": "פתיחה חד-פעמית לשימוש במפתחות API משלכם. אחרי הפתיחה, תמלול, תרגום, דיבוב וסיכומים רצים על חשבונות הבינה המלאכותית שלכם במקום על הדקות של Stage5.",
       "unlocking": "פותח קופה...",
       "unlockCta": "פתיחה ב-$10",
       "unlockHint": "לאחר הפתיחה, הוסף את מפתחות ה-API שלך כאן בכל עת כדי להפעיל חיוב ישיר על החשבונות שלך.",
@@ -854,19 +826,17 @@
       "test": "בדוק מפתח",
       "lastSynced": "סונכרן לאחרונה",
       "toggleLabel": "השתמש במפתח ה-OpenAI שלי",
-      "toggleHelp": "כשכבוי, משתמשים בקרדיטים.",
       "toggleAria": "החלף לשימוש במפתח ה-OpenAI שלך",
       "toggleOn": "משתמש במפתח ה-OpenAI שלך למשימות AI.",
-      "toggleOff": "משתמש בקרדיטים של Stage5 למשימות AI.",
       "toggleError": "עדכון ההעדפה נכשל.",
       "howToGetKeys": "איך משיגים מפתחות API?",
       "option1Title": "אפשרות 1: OpenAI",
       "option2Title": "אפשרות 2: Anthropic + ElevenLabs",
       "economicsTitle": "למה זה משתלם",
-      "economicsBody": "הדקות של Stage5 נועדו לנוחות (בלי הגדרות). עם מפתחות משלכם משלמים ישירות לספקים – בדרך כלל זול בכ-30–50%, תלוי בחבילה.",
+      "economicsBody": "הדקות של Stage5 הן האפשרות הפשוטה: אין מה להגדיר. עם מפתחות משלכם משלמים ישירות לספקי הבינה המלאכותית, בדרך כלל כ-30–50% פחות, תלוי בחבילה.",
       "encryptionUnavailable": "אחסון מאובטח אינו זמין במערכת הזו. אי אפשר לשמור מפתחות API.",
       "checkoutOpen": "התשלום פתוח בדפדפן…",
-      "checkoutOpenHint": "השלימו את התשלום בדפדפן. נפתח את השימוש במפתחות שלכם אוטומטית כשהתשלום יאושר.",
+      "checkoutOpenHint": "השלימו את התשלום בדפדפן. המפתחות שלכם ייפתחו לשימוש אוטומטית ברגע שהתשלום יעבור.",
       "entitlementsLoadFailed": "לא הצלחנו לבדוק את מצב הפתיחה. בדקו את החיבור ונסו שוב.",
       "unlockFailed": "לא הצלחנו להתחיל את התשלום. בדקו את החיבור ונסו שוב."
     },
@@ -894,17 +864,17 @@
       "summary": "סיכום",
       "dubbing": "דיבוב",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "כרגע אין מודל זמין להמלצות סרטונים עם מפתחות משלכם. הפעילו מפתח OpenAI או Anthropic כדי להשתמש בתכונה הזו.",
-      "videoSuggestionModelRequiresOpenAi": "נדרשים פתיחת המפתחות שלכם, מפתח OpenAI והפעלה שלו.",
-      "videoSuggestionModelRequiresAnthropic": "נדרשים פתיחת המפתחות שלכם, מפתח Anthropic והפעלה שלו.",
-      "summaryRequiresOpenAi": "נדרשים פתיחת המפתחות שלכם ומפתח API של OpenAI.",
-      "summaryRequiresAnthropic": "נדרשים פתיחת המפתחות שלכם ומפתח API של Anthropic.",
+      "videoSuggestionModelUnavailable": "אין מודל להמלצות סרטונים שזמין עם המפתחות שלכם. הפעילו את מפתח ה-OpenAI או ה-Anthropic שלכם כדי להשתמש בזה.",
+      "videoSuggestionModelRequiresOpenAi": "נדרשים: פתיחת מפתחות ה-API, מפתח ה-OpenAI שלכם והפעלת המתג של OpenAI.",
+      "videoSuggestionModelRequiresAnthropic": "נדרשים: פתיחת מפתחות ה-API, מפתח ה-Anthropic שלכם והפעלת המתג של Anthropic.",
+      "summaryRequiresOpenAi": "נדרשים: פתיחת מפתחות ה-API ומפתח ה-OpenAI שלכם.",
+      "summaryRequiresAnthropic": "נדרשים: פתיחת מפתחות ה-API ומפתח ה-Anthropic שלכם.",
       "translationReview": "תרגום (ביקורת)",
-      "transcriptionRequiresElevenLabs": "התמלול משתמש ב-ElevenLabs Scribe בלבד. הוסיפו מפתח API של ElevenLabs כדי לתמלל עם המפתחות שלכם. בלעדיו, התמלול משתמש בדקות של Stage5, שאינן בשימוש כל עוד מפתחות ה-API שלכם מופעלים. מפתח ה-OpenAI שלכם עדיין משמש לתרגום.",
-      "dubbingRequiresElevenLabs": "הדיבוב משתמש ב-ElevenLabs בלבד. הוסיפו מפתח API של ElevenLabs כדי לדבב עם המפתחות שלכם. בלעדיו, הדיבוב משתמש בדקות של Stage5, שאינן בשימוש כל עוד מפתחות ה-API שלכם מופעלים.",
+      "transcriptionRequiresElevenLabs": "התמלול משתמש ב-ElevenLabs Scribe בלבד. הוסיפו מפתח API של ElevenLabs כדי לתמלל עם המפתחות שלכם. בלעדיו, התמלול משתמש בדקות של Stage5, שלא נעשה בהן שימוש כל עוד המפתחות שלכם מופעלים. מפתח ה-OpenAI שלכם ימשיך לשמש לתרגום.",
+      "dubbingRequiresElevenLabs": "הדיבוב משתמש ב-ElevenLabs בלבד. הוסיפו מפתח API של ElevenLabs כדי לדבב עם המפתחות שלכם. בלעדיו, הדיבוב משתמש בדקות של Stage5, שלא נעשה בהן שימוש כל עוד המפתחות שלכם מופעלים.",
       "runtimeFallback": "חלופת זמן ריצה במצב מפתח API",
-      "videoSuggestionLegacyFollowDraft": "נשמרה הגדרה ישנה של המפתחות שלכם: עוקבת אחרי מודל טיוטת התרגום עד שתבחרו מודל ישיר.",
-      "videoSuggestionLegacyFollowReview": "נשמרה הגדרה ישנה של המפתחות שלכם: עוקבת אחרי מודל בדיקת התרגום עד שתבחרו מודל ישיר."
+      "videoSuggestionLegacyFollowDraft": "ההגדרה הקודמת שלכם נשמרה: עד שתבחרו כאן מודל, ייעשה שימוש במודל טיוטת התרגום שלכם.",
+      "videoSuggestionLegacyFollowReview": "ההגדרה הקודמת שלכם נשמרה: עד שתבחרו כאן מודל, ייעשה שימוש במודל בדיקת התרגום שלכם."
     },
     "apiKeyGuide": {
       "title": "איך להשיג מפתחות API",
@@ -928,8 +898,7 @@
         "step3b": "בסרגל הצד השמאלי",
         "step4": "לחצו על",
         "step5": "הוסיפו אמצעי תשלום בהגדרות החיוב (נדרש לשימוש ב-API)",
-        "step6": "העתיקו את המפתח (מתחיל ב-sk-) והדביקו אותו ב-Stage5",
-        "note": "טיפ: חשבונות OpenAI חדשים מקבלים לעתים קרובות קרדיטים חינם להתחלה. אתה משלם רק על מה שאתה משתמש."
+        "step6": "העתיקו את המפתח (מתחיל ב-sk-) והדביקו אותו ב-Stage5"
       },
       "anthropic": {
         "description": "Claude מספק ביקורות תרגום באיכות גבוהה יותר. בלעדיו, GPT מטפל בכל משימות התרגום.",
@@ -949,7 +918,7 @@
         "step4": "הוסיפו אמצעי תשלום בהגדרות המנוי (נדרש לשימוש ב-API מעבר לשכבה החינמית)",
         "step5": "העתיקו את מפתח ה-API שלכם והדביקו אותו ב-Stage5",
         "note": "טיפ: ל-ElevenLabs יש שכבה חינמית עם שימוש מוגבל. לעוד, שדרג לתוכנית בתשלום בהגדרות החשבון שלך.",
-        "audioDescription": "‏ElevenLabs מפעיל את כל התמלול (Scribe) והדיבוב. בלי מפתח ElevenLabs משלכם, שניהם משתמשים בדקות של Stage5, שאינן בשימוש כל עוד מפתחות ה-API שלכם מופעלים."
+        "audioDescription": "‏ElevenLabs מפעיל את כל התמלול (Scribe) והדיבוב. בלי מפתח ElevenLabs משלכם, שניהם משתמשים בדקות של Stage5, שלא נעשה בהן שימוש כל עוד המפתחות שלכם מופעלים."
       }
     },
     "byoAnthropic": {
@@ -968,14 +937,11 @@
       "testing": "בודק...",
       "test": "בדוק מפתח",
       "toggleLabel": "השתמש במפתח ה-Anthropic שלי",
-      "toggleHelp": "כשכבוי, בקשות Claude משתמשות בקרדיטים של Stage5.",
       "toggleAria": "החלף לשימוש במפתח ה-Anthropic שלך",
       "toggleOn": "משתמש במפתח ה-Anthropic שלך למודלים של Claude.",
-      "toggleOff": "משתמש בקרדיטים של Stage5 למודלים של Claude.",
       "toggleError": "עדכון העדפת Anthropic נכשל."
     },
     "stage5TtsProvider": {
-      "label": "איכות TTS (קרדיטים של Stage5)",
       "elevenlabs": "פרימיום (ElevenLabs)",
       "elevenlabsHint": "האיכות הטובה ביותר, עלות גבוהה יותר (~12x)",
       "elevenlabsHintWithBalance": "האיכות הטובה ביותר · היתרה שלך: {{time}} של דיבוב"
@@ -1068,34 +1034,23 @@
       "freeTitle": "תרגמו בחינם עם הבינה המלאכותית שלכם"
     },
     "creditTransfer": {
-      "title": "העברת קרדיטים בין מחשבים",
-      "description": "קרדיטים שנרכשו ופתיחת מפתחות ה-API ניתנים להעברה למחשב אחר. קרדיטי הברכה החינמיים נשארים במחשב הזה.",
-      "moveButton": "העבר קרדיטים למחשב אחר",
-      "receiveButton": "קבל קרדיטים",
       "creating": "יוצר קוד…",
       "copy": "העתקה",
       "copied": "הועתק",
-      "summaryCredits": "{{credits}} קרדיטים יועברו.",
       "summaryByo": "גם פתיחת מפתחות ה-API תועבר.",
       "expires": "הקוד הזה פועל פעם אחת ותוקפו יפוג בעוד {{minutes}} דקות.",
-      "steps": "במחשב החדש: התקן את Translator, פתח את ההגדרות, בחר “קבל קרדיטים” והזן את הקוד הזה.",
       "inputLabel": "קוד מהמחשב השני שלכם",
       "redeem": "קבלה",
       "redeeming": "מקבל…",
-      "received": "התקבלו {{credits}} קרדיטים.",
       "receivedNoCredits": "הקוד עבד.",
       "receivedByo": "פתיחת מפתחות ה-API פעילה במחשב הזה.",
       "expires_one": "הקוד הזה פועל פעם אחת ותוקפו יפוג בעוד {{minutes}} דקה.",
-      "summaryCredits_one": "{{credits}} קרדיט יועבר.",
-      "received_one": "התקבל {{credits}} קרדיט.",
       "errors": {
-        "nothing_to_transfer": "עדיין אין מה להעביר: במחשב הזה אין דקות שנרכשו ואין פתיחת מפתחות API. כדי להביא לכאן דקות ממחשב אחר, בחרו “קבלת דקות”.",
         "too_many_codes": "נוצרו יותר מדי קודי העברה בשעה האחרונה. נסו שוב בעוד זמן קצר.",
         "jobs_running": "תמלול או תרגום עדיין רץ. נסו שוב כשהוא יסתיים.",
         "invalid_code": "הקוד שגוי, כבר נוצל או שפג תוקפו. צרו קוד חדש במחשב השני.",
         "same_device": "הזינו את הקוד במחשב השני, לא במחשב שיצר אותו.",
         "network_error": "אין גישה לשרת של Stage5. בדקו את החיבור ונסו שוב.",
-        "transfer_failed": "לא הצלחנו להעביר את הדקות. בדקו את החיבור ונסו שוב.",
         "nothing_to_transfer_minutes": "עדיין אין מה להעביר: במחשב הזה אין דקות שנרכשו ואין פתיחת מפתחות API. כדי להביא לכאן דקות ממחשב אחר, בחרו “קבלת דקות”.",
         "transfer_failed_minutes": "לא הצלחנו להעביר את הדקות. בדקו את החיבור ונסו שוב."
       },
@@ -1109,29 +1064,24 @@
     }
   },
   "credits": {
-    "title": "קרדיטים ל-AI",
+    "title": "הדקות שלכם",
     "loading": "טוען...",
-    "credits": "קרדיט",
     "usingApiKey": "משתמש במפתח API",
     "usingOpenAi": "משתמש ב-OpenAI",
     "usingAnthropic": "משתמש ב-Claude",
     "usingElevenLabs": "משתמש ב-ElevenLabs",
     "hours": "שעות",
     "translationHoursShort": "שעות תרגום",
-    "buyCredits": "קנה קרדיט",
     "redirectingToPayment": "פותח תשלום מאובטח...",
-    "description": "בחר מבין חבילות קרדיט של ${{packMicroPrice}} ({{packMicroHours}} שעות), ${{pack1Price}} ({{pack1Hours}} שעות), ${{pack2Price}} ({{pack2Hours}} שעות), או ${{pack3Price}} ({{pack3Hours}} שעות)",
-    "notEnough": "קרדיט לא מספיק. אנא רכוש קרדיט נוסף כדי להמשיך.",
     "transcriptionMinutesShort": "{{minutes}} דק׳ תמלול",
     "transcriptionTimeShort": "{{time}} תמלול",
-    "costOfBalance": "{{cost}} מתוך {{balance}} הקרדיטים שלך",
     "pill": {
       "freeBack": "הדקות החינמיות יתחדשו ב-{{date}}",
       "empty": "טעינת דקות",
       "freeThisMonth": "{{count}} דקות חינם החודש",
       "freeWelcome": "{{count}} דקות חינם",
       "minutes": "נותרו {{count}} דק׳",
-      "title": "דקות וחבילות",
+      "title": "הדקות והחבילות שלכם",
       "freeThisMonth_one": "{{count}} דקה חינם החודש",
       "freeWelcome_one": "{{count}} דקה חינם",
       "neutral": "דקות",
@@ -1151,12 +1101,11 @@
     "moreMinutesPerDollar": "פי {{multiplier}} יותר דקות לכל דולר",
     "checkoutWaiting": "השלימו את התשלום בדפדפן. הדקות יתווספו כאן מעצמן.",
     "checkoutNote": "תשלום חד-פעמי דרך Stripe, בדפדפן. בלי חשבון ובלי מנוי. הדקות מתווספות מעצמן.",
-    "dubbingNote": "תרגום על חשבון הדקות מוסיף כ-10% לכל דקה; דיבוב צורך יותר.",
+    "dubbingNote": "הוספת תרגום צורכת כ-10% יותר דקות; דיבוב צורך יותר.",
     "iCancelledCheckout": "ביטלתי את התשלום",
     "checkoutStartFailed": "לא הצלחנו להתחיל את התשלום. כדאי לבדוק את החיבור ולנסות שוב.",
     "monthlyFreeNote_one": "{{minutes}} דקה חינם בכל חודש · החידוש הבא ב-{{date}}",
     "loadFailed": "לא הצלחנו לטעון את היתרה שלכם. בדקו את החיבור ונסו שוב.",
-    "estimateAmount": "{{credits}} קרדיטים",
     "costOfBalanceMinutes": "{{cost}} מתוך {{balance}} שלכם",
     "timeLeft": "נותרו {{time}}",
     "success": {
@@ -1172,7 +1121,10 @@
     "balanceOffline": "אי אפשר לבדוק את הדקות שלכם כרגע",
     "offlineNote": "Translator לא מצליח להתחבר ל-Stage5. היתרה תופיע שוב כשתחזרו להיות מחוברים.",
     "microPackLabelNoTime": "קניית דקות — {{price}}",
-    "microPackLabel": "קניית דקות — {{price}} · ≈ {{time}} של סרטון"
+    "microPackLabel": "קניית דקות — {{price}} · ≈ {{time}} של סרטון",
+    "checkingPayment": "בודקים את התשלום…",
+    "checkoutUnresolved": "אם כבר שילמתם, הדקות יופיעו כאן בקרוב. עדיין באמצע התשלום? אפשר לסיים אותו בדפדפן.",
+    "checkPaymentNow": "בדיקה עכשיו"
   },
   "cta": {
     "generate": {
@@ -1200,9 +1152,9 @@
     "mediaPlaybackError": "שגיאת ניגון מדיה",
     "sideActions": "פעולות צד לווידאו",
     "scrollToCurrentSubtitle": "גלילה לכתובית הנוכחית",
-    "changeVideo": "החלף וידאו",
+    "changeVideo": "החלפת סרטון",
     "findVideoWithAi": "מצא וידאו עם AI",
-    "mountSrt": "טעינת SRT",
+    "mountSrt": "פתיחת קובץ SRT",
     "changeSrt": "החלף SRT",
     "useThisVideo": "השתמש בווידאו הזה",
     "useDownloadedVideo": "השתמש בווידאו הזה",
@@ -1284,7 +1236,6 @@
     "afrikaans": "אפריקאנס"
   },
   "generateSubtitles": {
-    "noCredits": "אין קרדיט.",
     "rechargeLink": "טען מחדש →",
     "creditWarning": {
       "message": "הורדה, עריכה, ייצוא ותרגום עם Claude או Codex שלכם דרך בקרת סוכנים הם בחינם. תמלול דורש דקות או את פתיחת מפתחות ה-API ב<settingsLink>{{settingsLinkText}}</settingsLink>.",
@@ -1294,7 +1245,6 @@
       "pleaseSelectVideo": "בחרו סרטון",
       "processingDuration": "משך הסרטון עדיין מחושב. נסו שוב בעוד רגע.",
       "icloudPlaceholder": "הקובץ הזה מאוחסן ב-iCloud. ב-Finder, לחצו על “הורדה” וחכו שסמל הענן ייעלם, ואז נסו שוב.",
-      "insufficientCreditsForVoiceCloning": "אין מספיק קרדיטים לשכפול קול. הוידאו הוא {{duration}} דקות אבל אתה יכול להרשות לעצמך רק {{affordable}} דקות. אנא הוסף קרדיטים או בטל שכפול קול.",
       "fileTooLargeForVoiceCloning": "קובץ הוידאו גדול מדי לשכפול קול ({{size}}MB). המקסימום המותר הוא {{max}}MB. אנא השתמש בוידאו קצר יותר או בטל שכפול קול."
     },
     "status": {
@@ -1304,7 +1254,6 @@
       "error": "שגיאה"
     },
     "buttons": {
-      "buyCredits": "קנה קרדיט",
       "redirectingToPayment": "מפנה לתשלום..."
     },
     "workflow": {
@@ -1328,7 +1277,6 @@
       "saveOutputsDescription": "שמור כל מדיית מקור או מדיה מדובבת שברצונך לשמור מחוץ לסביבת העבודה של האפליקציה."
     },
     "calculatingCost": "מחשב עלות...",
-    "notEnoughCredits": "אין מספיק קרדיט זמין",
     "welcomeCredits": {
       "message": "יש לכם דקות חינם לניסיון תמלול ותרגום (כ-20 דקות של סרטון)."
     }
@@ -1336,10 +1284,10 @@
   "findBar": {
     "findPlaceholder": "חיפוש בכתוביות...",
     "replacePlaceholder": "החלף ב...",
-    "replaceAll": "החלף הכל",
+    "replaceAll": "החלפת הכול",
     "nextMatch": "התאמה הבאה (Enter)",
     "previousMatch": "התאמה קודמת (Shift+Enter)",
-    "replaceAllTitle": "החלף את כל המופעים",
+    "replaceAllTitle": "החלפת כל ההתאמות",
     "closeTitle": "סגירה (Esc)",
     "nextMatchAria": "התאמה הבאה",
     "previousMatchAria": "התאמה קודמת",
@@ -1348,7 +1296,8 @@
     "matchCount": "{{current}} מתוך {{total}}",
     "matchCase": "התאמת אותיות רישיות",
     "wholeWord": "מילה שלמה",
-    "showReplace": "החלפה"
+    "showReplace": "החלפה",
+    "noMatches": "אין התאמות"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1368,7 +1317,7 @@
       "title": "לשמור את הכתוביות הנוכחיות לפני תמלול?",
       "message": "כבר נטענו כתוביות, והתמלול יחליף אותן. מה תרצו לעשות?",
       "saveAndTranscribe": "שמירה ותמלול",
-      "discardAndTranscribe": "אל תשמור ותמלל",
+      "discardAndTranscribe": "תמלול בלי שמירה",
       "cancel": "ביטול"
     },
     "downloadInProgress": "הורדה בתהליך",
@@ -1392,42 +1341,8 @@
       "description": "זה עשוי להיות בגלל שינויים בפלטפורמת הוידאו או אמצעי הגנה חדשים. ייתכן שתצטרך להמתין לגרסת האפליקציה הבאה כדי לטפל בוידאואים חדשים יותר."
     },
     "creditRanOut": {
-      "title": "הקרדיטים נגמרו",
-      "message": "קרדיטי ה-AI שלך נגמרו. טען מחדש בהגדרות, ואז המשך מאיפה שהפסקת.",
       "openSettings": "פתיחת ההגדרות",
       "ok": "אישור",
-      "neverHadTitle": "תמלול דורש קרדיטים",
-      "neverHadMessage": "תמלול דורש קרדיטים או את פתיחת מפתחות ה-API. אפשר להשיג כל אחד מהם בהגדרות. תרגום עם Claude או Codex שלך דרך בקרת סוכנים הוא בחינם.",
-      "notEnoughTitle": "אין מספיק קרדיטים לסרטון הזה",
-      "notEnoughTranscriptionMessage": "תמלול הסרטון הזה דורש כ-{{required}} קרדיטים. יש לך {{available}}, מספיק לכ-{{minutes}} דקות. הוסף קרדיטים ואז התחל שוב.",
-      "notEnoughMessage": "המשימה הזו דורשת יותר קרדיטים מהיתרה שלך ({{available}}). הוסף קרדיטים כדי להמשיך.",
-      "task": {
-        "transcription": {
-          "title": "תמלול דורש קרדיטים",
-          "message": "היתרה שלכם לא מספיקה כדי לתמלל את זה. הוסיפו קרדיטים והתחילו שוב. השורות שכבר תומללו נשמרו.",
-          "messageNothingYet": "הדקות שלכם לא מספיקות כדי לתמלל את זה. הוסיפו דקות והתחילו שוב."
-        },
-        "translation": {
-          "title": "תרגום דורש קרדיטים",
-          "message": "היתרה שלכם לא מספיקה כדי לתרגם את זה. הוסיפו קרדיטים ונסו שוב. השורות שכבר תורגמו נשמרו. תרגום עם Claude או Codex שלכם דרך בקרת סוכנים הוא בחינם.",
-          "messageNothingYet": "הדקות שלכם לא מספיקות כדי לתרגם את זה. הוסיפו דקות ונסו שוב. תרגום עם Claude או Codex שלכם דרך בקרת סוכנים הוא בחינם."
-        },
-        "dubbing": {
-          "title": "דיבוב דורש קרדיטים",
-          "message": "היתרה שלכם לא מספיקה כדי לדבב את הסרטון הזה. הוסיפו קרדיטים ונסו שוב."
-        },
-        "summary": {
-          "title": "הסיכום דורש קרדיטים",
-          "message": "היתרה שלכם לא מספיקה לסיכום ולרגעים הבולטים. הוסיפו קרדיטים ונסו שוב."
-        },
-        "videoSearch": {
-          "title": "חיפוש סרטונים עם AI דורש קרדיטים",
-          "message": "היתרה שלכם לא מספיקה לחיפוש סרטונים עם AI. הוסיפו קרדיטים וחפשו שוב."
-        },
-        "other": {
-          "title": "זה דורש קרדיטים"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "לתמלול צריך דקות",
@@ -1459,12 +1374,15 @@
         "message": "הדקות שלכם נגמרו. הוסיפו עוד בהגדרות והמשיכו מאיפה שעצרתם.",
         "notEnoughTitle": "אין מספיק דקות לסרטון הזה",
         "notEnoughTranscriptionMessage": "תמלול הסרטון הזה דורש {{required}}, ונשארו לכם {{available}}. הוסיפו דקות והתחילו שוב.",
-        "notEnoughMessage": "זה דורש יותר מ-{{available}} שנשארו לכם. הוסיפו דקות כדי להמשיך."
+        "notEnoughMessage": "זה דורש יותר מ-{{available}} שנשארו לכם. הוסיפו דקות כדי להמשיך.",
+        "voicePreview": {
+          "title": "להאזנה לדוגמת קול צריך דקות",
+          "message": "הדקות שלכם לא מספיקות להאזנה לדוגמת קול. הוסיפו דקות ונסו שוב."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "להתחיל דיבוב?",
-      "message": "הדיבוב הזה ישתמש בכ-{{cost}} מתוך {{balance}} הקרדיטים שלך. יצירת קולות עולה הרבה יותר מתרגום.",
       "messageMinutes": "הדיבוב הזה צורך {{cost}}. יצירת קולות עולה הרבה יותר מתרגום."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1539,7 +1457,9 @@
     "cancelSummaryTitle": "לעצור את הסיכום?",
     "keepSummarizing": "להמשיך",
     "stopSummarizing": "עצירה",
-    "cancelSummaryBody": "הסיכום והרגעים הבולטים שנוצרו עד עכשיו לא יישמרו."
+    "cancelSummaryBody": "הסיכום והרגעים הבולטים שנוצרו עד עכשיו לא יישמרו.",
+    "cancelTranslationBody": "השורות שכבר תורגמו נשמרות. אפשר לתרגם את השאר מאוחר יותר.",
+    "cancelDubbingTitle": "לעצור את הדיבוב?"
   },
   "progress": {
     "preparingVideoExport": "מכינים את ייצוא הסרטון…",
@@ -1802,7 +1722,8 @@
     "checkingFile": "קוראים את הקובץ…",
     "statusLoaded": "נטענו {{count}} שורות",
     "statusLoaded_one": "נטענה שורה אחת",
-    "statusLoaded_two": "נטענו שתי שורות"
+    "statusLoaded_two": "נטענו שתי שורות",
+    "interruptedTranslateSubtitles": "התרגום של הכתוביות האלה ל{{language}} נעצר כש-Translator נסגר."
   },
   "subtitleStyles": {
     "Cinema": "צהוב קולנוע",

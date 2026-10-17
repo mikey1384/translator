@@ -23,7 +23,6 @@
       "unexpectedSave": "محفوظ کرتے وقت ایک غیر متوقع خرابی آگئی ہے۔",
       "unexpectedLoad": "لوڈ کرتے وقت ایک غیر متوقع خرابی آگئی ہے۔",
       "renderFailed": "رینڈر ناکام ہو گیا",
-      "creditReservationFailed": "کریڈٹ بکنگ ناکام ہو گئی",
       "invalidRenderOptions": "غلط رینڈر آپشنز فراہم کیے گئے",
       "missingVideoMetadata": "ویڈیو میٹاڈیٹا غائب ہے ({{missing}})",
       "insufficientDiskSpace": "ضم مکمل کرنے کے لیے کافی ڈسک جگہ نہیں ہے۔ براہ کرم جگہ خالی کریں اور دوبارہ کوشش کریں۔",
@@ -126,7 +125,6 @@
     "unexpectedSave": "محفوظ کرتے وقت ایک غیر متوقع خرابی آگئی ہے۔",
     "unexpectedLoad": "لوڈ کرتے وقت ایک غیر متوقع خرابی آگئی ہے۔",
     "renderFailed": "رینڈر ناکام ہو گیا",
-    "creditReservationFailed": "کریڈٹ بکنگ ناکام ہو گئی",
     "invalidRenderOptions": "غلط رینڈر آپشنز فراہم کیے گئے",
     "missingVideoMetadata": "ویڈیو میٹاڈیٹا غائب ہے ({{missing}})",
     "noSourceVideo": "سورس ویڈیو موجود نہیں",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "ٹرانسکرپشن (ElevenLabs Scribe) عارضی طور پر دستیاب نہیں ہے یا کئی کوششوں کے بعد بھی اس سے رابطہ نہیں ہو سکا۔ براہ کرم چند منٹ بعد دوبارہ کوشش کریں۔",
       "fileTooLarge": "یہ آڈیو ایک ہی کام میں ٹرانسکرائب کرنے کے لیے بہت لمبی ہے (تقریباً {{hours}} گھنٹے سے زیادہ)۔ ویڈیو کو چھوٹے حصوں میں تقسیم کریں اور ہر حصے کو الگ سے ٹرانسکرائب کریں۔",
-      "elevenLabsKeyRequired": "ٹرانسکرپشن ElevenLabs Scribe استعمال کرتی ہے اور اس کے لیے ElevenLabs API کلید درکار ہے۔ ترتیبات میں ایک کلید شامل کریں، یا Stage5 منٹ سے ٹرانسکرائب کرنے کے لیے API کلید موڈ بند کریں۔ آپ کی OpenAI یا Anthropic کلید اب بھی ترجمے کے لیے استعمال ہوتی ہے۔"
+      "elevenLabsKeyRequired": "ٹرانسکرپشن ElevenLabs Scribe استعمال کرتی ہے اور اس کے لیے ElevenLabs API کلید درکار ہے۔ ترتیبات میں ایک کلید شامل کریں، یا Stage5 منٹ سے ٹرانسکرائب کرنے کے لیے “میری API کلیدیں استعمال کریں” بند کریں۔ آپ کی OpenAI یا Anthropic کلید اب بھی ترجمے کے لیے استعمال ہوتی ہے۔"
     },
     "credits": {
       "transcription": "آپ کے منٹ اسے ٹرانسکرائب کرنے کے لیے کافی نہیں۔",
@@ -237,7 +235,7 @@
     "downloading": "ڈاؤن لوڈ ہو رہا ہے...",
     "selectFile": "فائل منتخب کریں",
     "selectVideoFile": "ویڈیو فائل منتخب کریں",
-    "selectVideoAudioFile": "ویڈیو / آئوڈیو فائل منتخب کریں",
+    "selectVideoAudioFile": "ویڈیو یا آڈیو فائل منتخب کریں",
     "saveOriginalVideo": "اصل ویڈیو محفوظ کریں",
     "localFileDescription": "اپنے کمپیوٹر سے ویڈیو یا آڈیو فائل اپ لوڈ کریں",
     "selectLocalFile": "کمپیوٹر سے اپ لوڈ کریں",
@@ -247,7 +245,7 @@
     "chooseFile": "فائل منتخب کریں",
     "fileSelected": "فائل منتخب شدہ",
     "transcribeOnly": "آڈیو ٹرانسکرائب کریں",
-    "srtLoaded": "ٹرانسکرپشن مکمل",
+    "srtLoaded": "ٹرانسکرپشن مکمل ہو گئی",
     "srtFileLoaded": "SRT لوڈ ہو گئی",
     "featuresUnlockAfterTranscription": "اس ویڈیو کو ٹرانسکرائب کریں، اس کا ترجمہ کریں یا اس کے اہم لمحات نکالیں۔",
     "preSubtitleActionsHint": "اس ویڈیو کو ٹرانسکرائب کریں، اس کا ترجمہ کریں، یا اس کے اہم لمحات نکالیں۔",
@@ -475,7 +473,7 @@
     "displayModeLabel": "سب ٹائٹل ڈسپلے",
     "translate": "ترجمہ کریں",
     "continueTranscribing": "ٹرانسکرائبنگ جاری رکھیں",
-    "generate": "سب ٹائٹل تیار کریں",
+    "generate": "سب ٹائٹلز بنائیں",
     "generating": "تیار کر رہا ہے...",
     "generateNow": "ابھی سب ٹائٹل تیار کریں",
     "translation": "ترجمہ",
@@ -483,17 +481,13 @@
     "improveTranslation": "ترجمہ بہتر کریں",
     "chooseSrtFile": "SRT فائل منتخب کریں",
     "dub": "آواز ڈب کریں",
-    "dubEstimateCredits": "{{credits}} کر (~{{minutes}} م)",
     "dubEstimateByo": "~{{minutes}} م آڈیو",
     "voiceCloningRequiresTranslation": "وائس کلوننگ کے لیے ہدف زبان درکار ہے",
     "translateEstimateCredits": "~{{minutes}} م ویڈیو",
-    "translateEstimateByo": "BYO کلید",
     "qualityBadge": "(اعلیٰ معیار)",
     "cancel_confirmation": "کیا آپ واقعی سب ٹائٹل ترجمہ عمل منسوخ کرنا چاہتے ہیں؟ کوئی بھی پیشرفت ضائع ہو جائے گی اور آپ کو دوبارہ شروع کرنا ہوگا۔",
-    "dubCostHint": "ElevenLabs آواز: بولنے کے فی منٹ ~{{rate}} کریڈٹس۔ یہ اندازہ ڈبنگ شروع ہونے سے پہلے دکھایا جاتا ہے۔",
     "unreadableCues_one": "اس فائل کی {{count}} سطر پڑھی نہیں جا سکی اور چھوڑ دی گئی۔ اس کا ٹائم کوڈ چیک کریں۔",
     "unreadableCues": "اس فائل کی {{count}} سطریں پڑھی نہیں جا سکیں اور چھوڑ دی گئیں۔ ان کے ٹائم کوڈ چیک کریں۔",
-    "addCreditsToTranslate": "ترجمے کے لیے کریڈٹس شامل کریں",
     "dubInto": "{{language}} میں ڈب کریں",
     "dubIntro": "ایک آواز آپ کی چنی ہوئی زبان میں سب ٹائٹلز پڑھتی ہے، اصل پس منظر کی آواز کے اوپر۔",
     "dubNeedsSubtitles": "ڈبنگ سب ٹائٹلز کو بول کر پڑھتی ہے، اس لیے اس ویڈیو کے پہلے سب ٹائٹلز چاہییں۔ اسے ٹرانسکرائب کریں، پھر یہاں آواز چنیں۔",
@@ -502,8 +496,6 @@
     "dubTranslatesFirst": "سب ٹائٹلز پہلے {{language}} میں ترجمہ ہوں گے، پھر ان کی ڈبنگ ہوگی۔",
     "dubCostWithTranslation": "ترجمہ اور آواز: {{cost}}",
     "dubUsesOwnKeys": "آپ کی اپنی API کلیدیں استعمال ہوں گی۔",
-    "dubNotEnoughCredits": "اس ڈبنگ کے لیے کریڈٹس کافی نہیں ہیں۔",
-    "addCreditsToDub": "ڈبنگ کے لیے کریڈٹس شامل کریں",
     "noSubtitlesToDub": "پہلے اس ویڈیو کے سب ٹائٹلز بنائیں یا کھولیں، پھر ڈب کریں۔",
     "noSubtitlesToTranslate": "پہلے سب ٹائٹلز کھولیں یا بنائیں، پھر ان کا ترجمہ کریں۔",
     "dubVoiceHelp": "اس ڈب کی آواز۔ یہ اگلی ڈبنگ کے لیے بھی منتخب رہے گی۔",
@@ -530,11 +522,9 @@
     },
     "generate": "اہم لمحات نکالیں",
     "regenerate": "اہم لمحات دوبارہ نکالیں",
-    "estimateCredits": "{{credits}} کریڈٹس",
-    "estimateByo": "آپ کی اپنی API کلید",
     "highEffortBadge": "(گہرا)",
     "placeholder": "تیار ہونے کے بعد آپ کا AI خلاصہ یہاں ظاہر ہوگا۔",
-    "insufficientCredits": "آپ کے منٹ اہم لمحات نکالنے کے لیے کافی نہیں۔",
+    "insufficientCredits": "اہم لمحات ڈھونڈنے کے لیے کافی منٹ باقی نہیں۔",
     "error": "ہم اہم لمحات نہیں نکال سکے۔ {{message}}",
     "cancel": "منسوخ کریں",
     "copy": "خلاصہ کاپی کریں",
@@ -587,7 +577,7 @@
     "downloadCombined": "یکجا کلپ ڈاؤن لوڈ کریں",
     "saveCombinedDialogTitle": "اہم لمحات کا یکجا کلپ محفوظ کریں",
     "combinedCutFailed": "اہم لمحات کا یکجا کلپ نہیں کٹ سکا: {{message}}",
-    "highlightsInsufficientCredits": "خلاصہ بن گیا، لیکن منٹ ختم ہونے کی وجہ سے اہم لمحات نکالنا رک گیا۔",
+    "highlightsInsufficientCredits": "خلاصہ تیار ہے، لیکن آپ کے منٹ ختم ہونے کی وجہ سے اہم لمحات ڈھونڈنا رک گیا۔",
     "highlightsPartialWarning": "اہم لمحات پوری طرح نہیں نکل سکے، اس لیے یہ نامکمل ہو سکتے ہیں۔ تازہ کرنے کے لیے دوبارہ نکالیں۔",
     "highlightsPartialWithReason": "خلاصہ بن گیا، لیکن اہم لمحات پوری طرح نہیں نکل سکے: {{message}}",
     "estimateOwnKey": "آپ کی API کلید استعمال ہوگی",
@@ -622,7 +612,10 @@
     "highlightCuesChanged": "یہ اہم لمحہ ملنے کے بعد آپ نے اس کی سطروں میں ترمیم کی ہے۔ دیکھ لیں کہ یہ اب بھی ٹھیک ہے۔",
     "clipCaptionsChangedAny": "یہ کلپ کاٹنے کے بعد اس کے سب ٹائٹلز بدل گئے ہیں (متن، اسٹائل یا سائز)۔",
     "notEnoughForRun": "خلاصے اور اہم لمحات کے لیے کافی منٹ باقی نہیں۔",
-    "clipsUseOriginalAudio": "کلپس میں اصل آڈیو استعمال ہوتی ہے، ڈب نہیں۔"
+    "clipsUseOriginalAudio": "کلپس میں اصل آڈیو استعمال ہوتی ہے، ڈب نہیں۔",
+    "notEnoughMinutesSummary": "اس خلاصے کے لیے کافی منٹ باقی نہیں۔",
+    "notEnoughMinutesHighlights": "اہم لمحات ڈھونڈنے کے لیے کافی منٹ باقی نہیں۔",
+    "translateMissingLines": "ان سطروں کا ترجمہ کریں"
   },
   "panel": {
     "new": "نیا",
@@ -638,7 +631,7 @@
     }
   },
   "editSubtitles": {
-    "title": "سب ٹائٹل میں ترمیم کریں",
+    "title": "سب ٹائٹلز میں ترمیم",
     "listTitle": "سب ٹائٹل ({{count}})",
     "workspace": {
       "editorStage": "ایڈیٹر ورک اسپیس",
@@ -666,8 +659,8 @@
       "rowsLoaded_one": "{{count}} سطر لوڈ ہوئی"
     },
     "item": {
-      "seek": "تلاش کریں",
-      "seekTitle": "ویڈیو کو شروع کے وقت پر لے جائیں",
+      "seek": "یہاں جائیں",
+      "seekTitle": "ویڈیو کو اس سطر کے شروع پر لے جائیں",
       "playSnippet": "سنیپٹ چلائیں",
       "pauseSnippet": "سنیپٹ روکیں",
       "insertTitle": "اس کے بعد نیا سب ٹائٹل بلاک شامل کریں",
@@ -684,7 +677,10 @@
       "startTimeAria": "سطر {{index}} کا آغاز کا وقت",
       "endTimeAria": "سطر {{index}} کا اختتام کا وقت",
       "splitTitle": "کرسر کی جگہ سے یہ سطر دو حصوں میں بانٹیں",
-      "mergeTitle": "اگلی سطر کے ساتھ ملائیں"
+      "mergeTitle": "اگلی سطر کے ساتھ ملائیں",
+      "timeOverlapsPrevious": "یہ سطر پچھلی سطر ختم ہونے سے پہلے شروع ہوتی ہے، اس لیے دونوں ایک ساتھ دکھائی دیتی ہیں۔",
+      "timeOverlapsNext": "یہ سطر اگلی سطر شروع ہونے کے بعد ختم ہوتی ہے، اس لیے دونوں ایک ساتھ دکھائی دیتی ہیں۔",
+      "timeOverlapsBoth": "یہ سطر اپنے سے پہلے اور بعد والی سطروں سے اوورلیپ کرتی ہے، اس لیے یہ سب ایک ساتھ دکھائی دیتی ہیں۔"
     },
     "header": {
       "save": "سب ٹائٹلز محفوظ کریں",
@@ -735,15 +731,14 @@
       "toggleLabel": "میری API کلیدیں استعمال کریں",
       "activeKeys": "تیار کلیدیں: {{count}}",
       "noKeys": "کوئی کلید ترتیب نہیں دی گئی",
-      "usingApiKeys": "Stage5 منٹ بند",
-      "usingCredits": "Stage5 منٹ استعمال ہو رہے ہیں",
+      "usingApiKeys": "آپ کے Stage5 منٹ استعمال نہیں ہو رہے",
+      "usingCredits": "آپ کے Stage5 منٹ استعمال ہو رہے ہیں",
       "toggleOn": "اب آپ کی API کلیدیں استعمال ہو رہی ہیں۔",
-      "toggleOff": "اب Stage5 منٹ استعمال ہو رہے ہیں۔",
+      "toggleOff": "اب آپ کے Stage5 منٹ استعمال ہو رہے ہیں۔",
       "toggleError": "ترجیح اپڈیٹ نہیں ہو سکی۔",
       "toggleAria": "میری API کلیدیں استعمال کریں",
       "requirementTranslation": "ترجمے کے لیے OpenAI یا Anthropic کلید درکار ہے"
     },
-    "creditsDescription": "کریڈٹس خریدیں۔ دکھائے گئے گھنٹے اس ویڈیو کے کُل دورانیے کا اندازہ ہیں جسے آپ ٹرانسکرائب یا ترجمہ کر سکتے ہیں۔ مثال: 3 گھنٹے کی ویڈیو کو ٹرانسکرائب اور ترجمہ کرنا تقریباً 6 گھنٹے (≈140,000 کریڈٹس) استعمال کرے گا۔",
     "performanceQuality": {
       "title": "کارکردگی اور معیار",
       "qualityTranslation": {
@@ -753,32 +748,15 @@
         "modelOff": "صرف Claude Haiku 5.5 مسودہ",
         "reviewProvider": "ریویو فراہم کنندہ",
         "openAiHighEnd": "OpenAI پریمیم ریویو",
-        "anthropicHighEnd": "Anthropic پریمیم ریویو",
-        "help": "<b>5× کریڈٹس</b> • اعلیٰ معیار کے لیے جائزہ مرحلہ شامل کرتا ہے",
-        "helpWithEstimate": "<b>5× کریڈٹس</b> • آپ کا بیلنس: ~{{normalTime}} (عام) / ~{{hqTime}} (اعلیٰ معیار)",
-        "helpOn": "<b>5× کریڈٹس</b> • Claude Haiku 5.5 کا ڈرافٹ + Claude Opus 5.5 کا جائزہ",
-        "helpOff": "<b>1× کریڈٹس</b> • صرف Claude Haiku 5.5 کا ڈرافٹ",
-        "helpWithEstimateOn": "<b>5× کریڈٹس</b> • Claude Haiku 5.5 کا ڈرافٹ + Claude Opus 5.5 کا جائزہ • بیلنس: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× کریڈٹس</b> • صرف Claude Haiku 5.5 کا ڈرافٹ • بیلنس: ~{{time}}"
+        "anthropicHighEnd": "Anthropic پریمیم ریویو"
       },
       "qualitySummary": {
         "label": "معیاری خلاصہ",
         "modelOn": "Claude Opus 5.5 گہرا تجزیہ + اہم لمحات کے کلپس",
-        "modelOff": "Claude Sonnet 5.5 معیاری تجزیہ",
-        "help": "<b>4× کریڈٹس</b> • Claude Opus 5.5 کے ساتھ گہرا تجزیہ + ہائی لائٹ کلپس",
-        "helpWithEstimate": "<b>4× کریڈٹس</b> • آپ کا بیلنس: ~{{normalTime}} (عام) / ~{{hqTime}} (اعلیٰ معیار)",
-        "helpOn": "<b>4× کریڈٹس</b> • Claude Opus 5.5 سے گہرا تجزیہ + اہم لمحات کے کلپس",
-        "helpOff": "Claude Sonnet 5.5 کے ساتھ تیز تجزیہ",
-        "helpWithEstimateOn": "<b>4× کریڈٹس</b> • Claude Opus 5.5 سے گہرا تجزیہ + اہم لمحات کے کلپس • بیلنس: ~{{time}}",
-        "helpWithEstimateOff": "Claude Sonnet 5.5 کے ساتھ تیز تجزیہ • بیلنس: ~{{time}}"
+        "modelOff": "Claude Sonnet 5.5 معیاری تجزیہ"
       },
       "qualityDubbing": {
-        "label": "معیاری ڈبنگ",
-        "modelOn": "ElevenLabs TTS کی پریمیم آوازیں",
-        "help": "<b>12× کریڈٹس</b> • پریمیم آوازوں کے ساتھ ElevenLabs TTS",
-        "helpWithEstimate": "<b>12× کریڈٹس</b> • آپ کا بیلنس: ~{{normalTime}} (عام) / ~{{hqTime}} (اعلیٰ معیار)",
-        "helpOn": "<b>{{ratio}}× کریڈٹس</b> • پریمیم آوازوں کے ساتھ ElevenLabs TTS",
-        "helpWithEstimateOn": "<b>{{ratio}}× کریڈٹس</b> • پریمیم آوازوں کے ساتھ ElevenLabs TTS • بیلنس: ~{{time}}"
+        "modelOn": "ElevenLabs TTS کی پریمیم آوازیں"
       },
       "videoSuggestionModel": {
         "label": "ویڈیو تجویز ماڈل",
@@ -787,9 +765,6 @@
         "quality": "کوالٹی (ترجمے کی کوالٹی جیسی)"
       },
       "rate": {
-        "perHour": "~{{credits}} کریڈٹس/گھنٹہ",
-        "perMinute": "~{{credits}} کریڈٹس/منٹ",
-        "perSearch": "~{{credits}} کریڈٹس/تلاش",
         "balance": "بیلنس: ~{{time}}",
         "minutesPerHour": "ویڈیو کے ہر گھنٹے پر آپ کے منٹوں میں سے ~{{time}}",
         "minutesPerDubMinute": "ڈبنگ کے ہر منٹ پر آپ کے منٹوں میں سے ~{{time}}",
@@ -812,18 +787,15 @@
       "previewTooltip": "اس آواز کا پیش منظر",
       "previewing": "چل رہا ہے...",
       "previewFree": "پیش منظر",
-      "previewWithCost": "پیش منظر ({{cost}} کریڈٹس)",
       "mixLabel": "ڈبنگ والیوم بمقابلہ اصل ویڈیو والیوم",
       "mixHelp": "ڈب شدہ آواز کے نیچے اصل ساؤنڈ ٹریک کتنا چلے اس کو کنٹرول کریں۔",
       "mixAmbient": "زیادہ ماحولیاتی",
       "mixVoice": "زیادہ آواز",
       "voiceCloning": "اصل آواز کلون کریں",
       "voiceCloningDesc": "ڈب آڈیو میں اصل اسپیکر کی آواز محفوظ رکھیں",
-      "voiceCloningInsufficientCredits": "کم از کم 1 منٹ کے کریڈٹس درکار ہیں",
       "voiceCloningEnabled": "ElevenLabs کے ساتھ وائس کلوننگ فعال ہے۔ اصل اسپیکر کی آواز ڈب آڈیو میں محفوظ رہے گی۔",
       "voiceCloningInfo": "وائس کلوننگ ElevenLabs کی ڈبنگ سروس استعمال کرتی ہے تاکہ اصل بولنے والے کی آواز کا تجزیہ کر کے اسے دوبارہ بنایا جا سکے۔",
       "costPerMinute": "فی منٹ لاگت",
-      "credits": "کریڈٹس",
       "yourBalance": "آپ کا بیلنس",
       "canClone": "آپ کلون کر سکتے ہیں",
       "upToMinutes": "{{minutes}} منٹ تک",
@@ -833,7 +805,7 @@
     },
     "byoOpenAi": {
       "title": "اپنی API کلیدیں لائیں",
-      "description": "اپنی API کلیدیں استعمال کرنے کے لیے ایک بار کی اپگریڈ کھولیں۔ کھلنے کے بعد، کوئی بھی ٹرانسکرپشن، ترجمہ، ڈبنگ، یا خلاصہ Stage5 منٹ استعمال کرنے کی بجائے براہ راست آپ کے اکاؤنٹس پر چلتا ہے۔",
+      "description": "اپنی API کلیدیں استعمال کرنے کے لیے ایک بار کا ان لاک۔ ان لاک کے بعد ٹرانسکرپشن، ترجمہ، ڈبنگ اور خلاصے Stage5 منٹ کے بجائے آپ کے اپنے AI اکاؤنٹس پر چلتے ہیں۔",
       "unlocking": "چیک آؤٹ کھول رہا ہے…",
       "unlockCta": "$10 میں کھولیں",
       "unlockHint": "کھلنے کے بعد، کسی بھی وقت اپنی API کلیدیں یہاں شامل کریں تاکہ اپنے اکاؤنٹس پر براہ راست بلنگ ٹوگل کریں۔",
@@ -851,19 +823,17 @@
       "test": "کلید کی جانچ",
       "lastSynced": "آخری مطابقت پذیری",
       "toggleLabel": "میری OpenAI کلید استعمال کریں",
-      "toggleHelp": "جب آف ہو، AI کریڈٹس استعمال ہوتے ہیں۔",
       "toggleAria": "اپنی OpenAI کلید کا استعمال ٹوگل کریں",
       "toggleOn": "AI کاموں کے لیے آپ کی OpenAI کلید استعمال ہو رہی ہے۔",
-      "toggleOff": "AI کاموں کے لیے Stage5 کریڈٹس استعمال ہو رہے ہیں۔",
       "toggleError": "ترجیح اپڈیٹ کرنے میں ناکام۔",
       "howToGetKeys": "API کلیدیں کیسے حاصل کریں؟",
       "option1Title": "آپشن 1: OpenAI",
       "option2Title": "آپشن 2: Anthropic + ElevenLabs",
       "economicsTitle": "یہ کیوں قیمتی ہے",
-      "economicsBody": "Stage5 منٹ سہولت کے لیے ہیں (کوئی سیٹ اپ نہیں)۔ اپنی کلید سے آپ فراہم کنندگان کو براہ راست ادائیگی کرتے ہیں—عام طور پر آپ کے پیک کے لحاظ سے ~30-50% سستا۔",
+      "economicsBody": "Stage5 منٹ سب سے آسان راستہ ہیں: کچھ سیٹ اپ نہیں کرنا پڑتا۔ اپنی کلیدوں سے آپ AI فراہم کنندگان کو براہ راست ادائیگی کرتے ہیں، جو پیک کے لحاظ سے عموماً تقریباً 30–50% کم پڑتی ہے۔",
       "encryptionUnavailable": "اس سسٹم پر محفوظ اسٹوریج دستیاب نہیں ہے۔ API کلیدیں محفوظ نہیں کی جا سکتیں۔",
       "checkoutOpen": "ادائیگی براؤزر میں کھلی ہے…",
-      "checkoutOpenHint": "اپنے براؤزر میں ادائیگی مکمل کریں۔ ادائیگی کی تصدیق ہوتے ہی ہم اپنی کلید کا استعمال خود بخود ان لاک کر دیں گے۔",
+      "checkoutOpenHint": "اپنے براؤزر میں ادائیگی مکمل کریں۔ ادائیگی ہوتے ہی آپ کی اپنی کلیدیں خود بخود ان لاک ہو جائیں گی۔",
       "entitlementsLoadFailed": "آپ کے ان لاک کی حالت چیک نہیں ہو سکی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
       "unlockFailed": "ادائیگی شروع نہیں ہو سکی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔"
     },
@@ -891,17 +861,17 @@
       "summary": "خلاصہ",
       "dubbing": "ڈبنگ",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "فی الحال اپنی کلید کے ساتھ ویڈیو تجویز کرنے والا کوئی ماڈل دستیاب نہیں۔ اس فیچر کے لیے اپنی OpenAI یا Anthropic کلید آن کریں۔",
-      "videoSuggestionModelRequiresOpenAi": "اپنی کلید کا ان لاک، OpenAI کلید اور اس کا سوئچ آن ہونا درکار ہے۔",
-      "videoSuggestionModelRequiresAnthropic": "اپنی کلید کا ان لاک، Anthropic کلید اور اس کا سوئچ آن ہونا درکار ہے۔",
-      "summaryRequiresOpenAi": "OpenAI کی اپنی کلید تک رسائی اور API کلید درکار ہے۔",
-      "summaryRequiresAnthropic": "Anthropic کی اپنی کلید تک رسائی اور API کلید درکار ہے۔",
+      "videoSuggestionModelUnavailable": "آپ کی اپنی کلیدوں کے ساتھ ویڈیو تجویز کرنے والا کوئی ماڈل دستیاب نہیں۔ اسے استعمال کرنے کے لیے اپنی OpenAI یا Anthropic کلید آن کریں۔",
+      "videoSuggestionModelRequiresOpenAi": "API کلید ان لاک، آپ کی OpenAI کلید، اور OpenAI کا سوئچ آن ہونا درکار ہے۔",
+      "videoSuggestionModelRequiresAnthropic": "API کلید ان لاک، آپ کی Anthropic کلید، اور Anthropic کا سوئچ آن ہونا درکار ہے۔",
+      "summaryRequiresOpenAi": "API کلید ان لاک اور آپ کی OpenAI کلید درکار ہے۔",
+      "summaryRequiresAnthropic": "API کلید ان لاک اور آپ کی Anthropic کلید درکار ہے۔",
       "translationReview": "ترجمہ (جائزہ)",
-      "transcriptionRequiresElevenLabs": "ٹرانسکرپشن صرف ElevenLabs Scribe استعمال کرتی ہے۔ اپنی کلیدوں سے ٹرانسکرائب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر، ٹرانسکرپشن Stage5 منٹ استعمال کرتی ہے، جو آپ کی API کلیدیں آن ہونے کے دوران استعمال نہیں ہوتے۔ آپ کی OpenAI کلید اب بھی ترجمے کے لیے استعمال ہوتی ہے۔",
-      "dubbingRequiresElevenLabs": "ڈبنگ صرف ElevenLabs استعمال کرتی ہے۔ اپنی کلیدوں سے ڈب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر ڈبنگ Stage5 منٹ استعمال کرتی ہے، جو آپ کی API کلیدیں آن ہونے پر استعمال نہیں ہوتے۔",
+      "transcriptionRequiresElevenLabs": "ٹرانسکرپشن صرف ElevenLabs Scribe استعمال کرتی ہے۔ اپنی کلیدوں سے ٹرانسکرائب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر ٹرانسکرپشن آپ کے Stage5 منٹ استعمال کرتی ہے، جو آپ کی اپنی کلیدیں آن ہونے پر استعمال نہیں ہوتے۔ آپ کی OpenAI کلید اب بھی ترجمے کے لیے استعمال ہوتی ہے۔",
+      "dubbingRequiresElevenLabs": "ڈبنگ صرف ElevenLabs استعمال کرتی ہے۔ اپنی کلیدوں سے ڈب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر ڈبنگ آپ کے Stage5 منٹ استعمال کرتی ہے، جو آپ کی اپنی کلیدیں آن ہونے پر استعمال نہیں ہوتے۔",
       "runtimeFallback": "API کلید موڈ میں رن ٹائم متبادل",
-      "videoSuggestionLegacyFollowDraft": "اپنی کلید والی پرانی ترتیب برقرار ہے: جب تک آپ براہ راست کوئی ماڈل منتخب نہ کریں، یہ آپ کے ڈرافٹ ترجمہ ماڈل کی پیروی کرتی ہے۔",
-      "videoSuggestionLegacyFollowReview": "اپنی کلید والی پرانی ترتیب برقرار ہے: جب تک آپ براہ راست کوئی ماڈل منتخب نہ کریں، یہ آپ کے جائزہ ترجمہ ماڈل کی پیروی کرتی ہے۔"
+      "videoSuggestionLegacyFollowDraft": "آپ کی پچھلی ترتیب برقرار ہے: جب تک آپ یہاں کوئی ماڈل منتخب نہ کریں، یہ آپ کے ڈرافٹ ترجمہ ماڈل کی پیروی کرتی ہے۔",
+      "videoSuggestionLegacyFollowReview": "آپ کی پچھلی ترتیب برقرار ہے: جب تک آپ یہاں کوئی ماڈل منتخب نہ کریں، یہ آپ کے جائزہ ترجمہ ماڈل کی پیروی کرتی ہے۔"
     },
     "apiKeyGuide": {
       "title": "API کلیدیں کیسے حاصل کریں",
@@ -925,8 +895,7 @@
         "step3b": "بائیں سائیڈ بار میں",
         "step4": "کلک کریں",
         "step5": "بلنگ ترتیبات میں ادائیگی کا طریقہ شامل کریں (API استعمال کرنے کے لیے ضروری)",
-        "step6": "کلید کاپی کریں (sk- سے شروع ہوتی ہے) اور Stage5 میں پیسٹ کریں",
-        "note": "ٹپ: نئے OpenAI اکاؤنٹس کو اکثر شروع کرنے کے لیے مفت کریڈٹس ملتے ہیں۔ آپ صرف وہی ادا کرتے ہیں جو آپ استعمال کرتے ہیں۔"
+        "step6": "کلید کاپی کریں (sk- سے شروع ہوتی ہے) اور Stage5 میں پیسٹ کریں"
       },
       "anthropic": {
         "description": "Claude اعلیٰ معیار کے ترجمے کے جائزے فراہم کرتا ہے۔ اس کے بغیر، GPT تمام ترجمے کے کام سنبھالتا ہے۔",
@@ -946,7 +915,7 @@
         "step4": "سبسکرپشن ترتیبات میں ادائیگی کا طریقہ شامل کریں (مفت ٹیئر سے آگے API استعمال کے لیے ضروری)",
         "step5": "اپنی API کلید کاپی کریں اور Stage5 میں پیسٹ کریں",
         "note": "ٹپ: ElevenLabs کے پاس محدود استعمال کے ساتھ مفت ٹیئر ہے۔ مزید کے لیے، اپنے اکاؤنٹ کی ترتیبات میں پیڈ پلان میں اپگریڈ کریں۔",
-        "audioDescription": "تمام ٹرانسکرپشن (Scribe) اور ڈبنگ ElevenLabs کے ذریعے ہوتی ہے۔ اپنی ElevenLabs کلید کے بغیر، دونوں Stage5 منٹ استعمال کرتے ہیں، جو آپ کی API کلیدیں آن ہونے کے دوران استعمال نہیں ہوتے۔"
+        "audioDescription": "تمام ٹرانسکرپشن (Scribe) اور ڈبنگ ElevenLabs کے ذریعے ہوتی ہے۔ اپنی ElevenLabs کلید کے بغیر دونوں آپ کے Stage5 منٹ استعمال کرتے ہیں، جو آپ کی اپنی کلیدیں آن ہونے پر استعمال نہیں ہوتے۔"
       }
     },
     "byoAnthropic": {
@@ -965,14 +934,11 @@
       "testing": "جانچ ہو رہی ہے…",
       "test": "کلید کی جانچ",
       "toggleLabel": "میری Anthropic کلید استعمال کریں",
-      "toggleHelp": "جب آف ہو، Claude درخواستیں Stage5 کریڈٹس استعمال کرتی ہیں۔",
       "toggleAria": "اپنی Anthropic کلید کا استعمال ٹوگل کریں",
       "toggleOn": "Claude ماڈلز کے لیے آپ کی Anthropic کلید استعمال ہو رہی ہے۔",
-      "toggleOff": "Claude ماڈلز کے لیے Stage5 کریڈٹس استعمال ہو رہے ہیں۔",
       "toggleError": "Anthropic ترجیح اپڈیٹ کرنے میں ناکام۔"
     },
     "stage5TtsProvider": {
-      "label": "TTS معیار (Stage5 کریڈٹس)",
       "elevenlabs": "پریمیم (ElevenLabs)",
       "elevenlabsHint": "بہترین معیار، زیادہ لاگت (~12x)",
       "elevenlabsHintWithBalance": "بہترین معیار · آپ کا بیلنس: {{time}} ڈبنگ"
@@ -1065,33 +1031,22 @@
       "freeTitle": "اپنے AI سے مفت ترجمہ کریں"
     },
     "creditTransfer": {
-      "title": "کمپیوٹرز کے درمیان کریڈٹس منتقل کریں",
-      "description": "خریدے گئے کریڈٹس اور API کلید ان لاک دوسرے کمپیوٹر پر منتقل ہو سکتے ہیں۔ مفت خوش آمدیدی کریڈٹس اسی کمپیوٹر پر رہتے ہیں۔",
-      "moveButton": "کریڈٹس دوسرے کمپیوٹر پر منتقل کریں",
-      "receiveButton": "کریڈٹس وصول کریں",
       "creating": "کوڈ بنایا جا رہا ہے…",
       "copy": "کاپی کریں",
       "copied": "کاپی ہو گیا",
-      "summaryCredits": "{{credits}} کریڈٹس منتقل ہوں گے۔",
       "summaryByo": "API کلید ان لاک بھی منتقل ہو جائے گا۔",
       "expires": "یہ کوڈ صرف ایک بار کام کرتا ہے اور {{minutes}} منٹ میں ختم ہو جائے گا۔",
-      "steps": "نئے کمپیوٹر پر: Translator انسٹال کریں، ترتیبات کھولیں، “کریڈٹس وصول کریں” منتخب کریں، اور یہ کوڈ درج کریں۔",
       "inputLabel": "آپ کے دوسرے کمپیوٹر کا کوڈ",
       "redeem": "وصول کریں",
       "redeeming": "وصول کیا جا رہا ہے…",
-      "received": "{{credits}} کریڈٹس وصول ہو گئے۔",
       "receivedNoCredits": "کوڈ کام کر گیا۔",
       "receivedByo": "API کلید ان لاک اس کمپیوٹر پر فعال ہے۔",
-      "summaryCredits_one": "{{credits}} کریڈٹ منتقل ہوگا۔",
-      "received_one": "{{credits}} کریڈٹ وصول ہو گیا۔",
       "errors": {
-        "nothing_to_transfer": "ابھی منتقل کرنے کو کچھ نہیں: اس کمپیوٹر پر نہ خریدے گئے منٹ ہیں نہ API کلید ان لاک۔ کسی دوسرے کمپیوٹر سے منٹ یہاں لانے کے لیے “منٹ وصول کریں” منتخب کریں۔",
         "too_many_codes": "اس گھنٹے میں بہت زیادہ ٹرانسفر کوڈ بن چکے ہیں۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔",
         "jobs_running": "ٹرانسکرپشن یا ترجمہ ابھی جاری ہے۔ مکمل ہونے کے بعد دوبارہ کوشش کریں۔",
         "invalid_code": "یہ کوڈ غلط ہے، پہلے استعمال ہو چکا ہے یا اس کی میعاد ختم ہو گئی ہے۔ دوسرے کمپیوٹر پر نیا کوڈ بنائیں۔",
         "same_device": "کوڈ دوسرے کمپیوٹر پر درج کریں، اس پر نہیں جس نے اسے بنایا ہے۔",
         "network_error": "Stage5 سرور تک رسائی نہیں ہو سکی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
-        "transfer_failed": "منٹ منتقل نہیں ہو سکے۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
         "nothing_to_transfer_minutes": "ابھی منتقل کرنے کو کچھ نہیں: اس کمپیوٹر پر نہ خریدے گئے منٹ ہیں نہ API کلید ان لاک۔ کسی دوسرے کمپیوٹر سے منٹ یہاں لانے کے لیے “منٹ وصول کریں” منتخب کریں۔",
         "transfer_failed_minutes": "منٹ منتقل نہیں ہو سکے۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔"
       },
@@ -1105,29 +1060,24 @@
     }
   },
   "credits": {
-    "title": "AI کریڈٹس",
+    "title": "آپ کے منٹ",
     "loading": "لوڈ ہو رہا ہے...",
-    "credits": "کریڈٹس",
     "usingApiKey": "API کلید استعمال ہو رہی ہے",
     "usingOpenAi": "OpenAI استعمال میں",
     "usingAnthropic": "Claude استعمال میں",
     "usingElevenLabs": "ElevenLabs استعمال میں",
     "hours": "گھنٹے",
     "translationHoursShort": "ترجمہ گھنٹے",
-    "buyCredits": "کریڈٹس خریدیں",
     "redirectingToPayment": "محفوظ چیک آؤٹ کھولا جا رہا ہے…",
-    "description": "${{packMicroPrice}} ({{packMicroHours}} گھنٹے)، ${{pack1Price}} ({{pack1Hours}} گھنٹے)، ${{pack2Price}} ({{pack2Hours}} گھنٹے)، یا ${{pack3Price}} ({{pack3Hours}} گھنٹے) کریڈٹ پیک میں سے انتخاب کریں",
-    "notEnough": "ناکافی کریڈٹس۔ جاری رکھنے کے لیے براہ کرم مزید کریڈٹس خریدیں۔",
     "transcriptionMinutesShort": "{{minutes}} منٹ ٹرانسکرپشن",
     "transcriptionTimeShort": "{{time}} ٹرانسکرپشن",
-    "costOfBalance": "آپ کے {{balance}} کریڈٹس میں سے {{cost}}",
     "pill": {
       "freeBack": "مفت منٹ {{date}} کو دوبارہ ملیں گے",
       "empty": "منٹ خریدیں",
       "freeThisMonth": "اس مہینے {{count}} مفت منٹ",
       "freeWelcome": "{{count}} مفت منٹ",
       "minutes": "{{count}} منٹ باقی",
-      "title": "منٹ اور پیکس",
+      "title": "آپ کے منٹ اور پیکس",
       "neutral": "منٹ",
       "welcomePending": "مفت منٹ آ رہے ہیں",
       "freeTimeThisMonth": "اس مہینے {{time}} مفت",
@@ -1145,11 +1095,10 @@
     "moreMinutesPerDollar": "فی ڈالر {{multiplier}} گنا منٹ",
     "checkoutWaiting": "براؤزر میں ادائیگی مکمل کریں۔ منٹ خود بخود یہاں آ جائیں گے۔",
     "checkoutNote": "براؤزر میں Stripe کے ذریعے ایک بار کی ادائیگی۔ نہ اکاؤنٹ، نہ سبسکرپشن۔ منٹ خود بخود آ جاتے ہیں۔",
-    "dubbingNote": "Translator کے منٹوں سے ترجمہ کرنے پر فی منٹ تقریباً 10% زیادہ لگتا ہے؛ ڈبنگ میں اس سے بھی زیادہ۔",
+    "dubbingNote": "ترجمہ شامل کرنے پر تقریباً 10% زیادہ منٹ لگتے ہیں؛ ڈبنگ میں اس سے بھی زیادہ۔",
     "iCancelledCheckout": "میں نے ادائیگی منسوخ کر دی",
     "checkoutStartFailed": "ادائیگی شروع نہیں ہو سکی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
     "loadFailed": "آپ کا بیلنس لوڈ نہیں ہو سکا۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
-    "estimateAmount": "{{credits}} کریڈٹس",
     "costOfBalanceMinutes": "آپ کے {{balance}} میں سے {{cost}}",
     "timeLeft": "{{time}} باقی",
     "success": {
@@ -1165,7 +1114,10 @@
     "balanceOffline": "ابھی آپ کے منٹ چیک نہیں ہو سکتے",
     "offlineNote": "Translator کا Stage5 سے رابطہ نہیں ہو پا رہا۔ آن لائن ہوتے ہی آپ کا بیلنس دوبارہ نظر آئے گا۔",
     "microPackLabelNoTime": "منٹ خریدیں — {{price}}",
-    "microPackLabel": "منٹ خریدیں — {{price}} · ≈ {{time}} ویڈیو"
+    "microPackLabel": "منٹ خریدیں — {{price}} · ≈ {{time}} ویڈیو",
+    "checkingPayment": "آپ کی ادائیگی چیک ہو رہی ہے…",
+    "checkoutUnresolved": "اگر آپ ادائیگی کر چکے ہیں تو آپ کے منٹ جلد ہی یہاں نظر آئیں گے۔ ابھی ادائیگی کر رہے ہیں؟ اسے اپنے براؤزر میں مکمل کریں۔",
+    "checkPaymentNow": "ابھی چیک کریں"
   },
   "cta": {
     "generate": {
@@ -1193,9 +1145,9 @@
     "mediaPlaybackError": "میڈیا پلے بیک خرابی",
     "sideActions": "ویڈیو سائیڈ ایکشنز",
     "scrollToCurrentSubtitle": "موجودہ سب ٹائٹل تک اسکرول کریں",
-    "changeVideo": "ویڈیو تبدیل کریں",
+    "changeVideo": "ویڈیو بدلیں",
     "findVideoWithAi": "AI کے ساتھ ویڈیو تلاش کریں",
-    "mountSrt": "SRT لوڈ کریں",
+    "mountSrt": "SRT کھولیں",
     "changeSrt": "SRT تبدیل کریں",
     "useThisVideo": "یہ ویڈیو استعمال کریں",
     "useDownloadedVideo": "یہ ویڈیو استعمال کریں",
@@ -1277,17 +1229,15 @@
     "afrikaans": "افریقی"
   },
   "generateSubtitles": {
-    "noCredits": "کریڈٹس نہیں ہیں۔",
     "rechargeLink": "ری چارج →",
     "creditWarning": {
-      "message": "ایجنٹ کنٹرول کے ذریعے اپنے Claude یا Codex سے ڈاؤن لوڈ، ترمیم، ایکسپورٹ اور ترجمہ مفت ہیں۔ ٹرانسکرپشن کے لیے منٹ یا <settingsLink>{{settingsLinkText}}</settingsLink> میں API کلید ان لاک درکار ہے۔",
+      "message": "ڈاؤن لوڈ، ترمیم اور ایکسپورٹ مفت ہیں، اور ایجنٹ کنٹرول کے ذریعے اپنے Claude یا Codex سے ترجمہ بھی۔ ٹرانسکرپشن کے لیے منٹ یا <settingsLink>{{settingsLinkText}}</settingsLink> میں API کلید ان لاک درکار ہے۔",
       "settingsLinkText": "ترتیبات"
     },
     "validation": {
       "pleaseSelectVideo": "براہ کرم ویڈیو منتخب کریں",
       "processingDuration": "ویڈیو کی مدت پر کارروائی ہو رہی ہے۔ براہ کرم تھوڑی دیر بعد دوبارہ کوشش کریں۔",
       "icloudPlaceholder": "یہ فائل iCloud میں محفوظ ہے۔ Finder میں، 'ڈاؤن لوڈ' پر کلک کریں اور کلاؤڈ آئیکن کے مکمل ہونے کا انتظار کریں، پھر دوبارہ کوشش کریں۔",
-      "insufficientCreditsForVoiceCloning": "وائس کلوننگ کے لیے ناکافی کریڈٹس۔ ویڈیو {{duration}} منٹ کی ہے لیکن آپ صرف {{affordable}} منٹ برداشت کر سکتے ہیں۔ براہ کرم کریڈٹس شامل کریں یا وائس کلوننگ غیر فعال کریں۔",
       "fileTooLargeForVoiceCloning": "وائس کلوننگ کے لیے ویڈیو فائل بہت بڑی ہے ({{size}}MB)۔ زیادہ سے زیادہ {{max}}MB کی اجازت ہے۔ براہ کرم چھوٹی ویڈیو استعمال کریں یا وائس کلوننگ غیر فعال کریں۔"
     },
     "status": {
@@ -1297,7 +1247,6 @@
       "error": "خرابی"
     },
     "buttons": {
-      "buyCredits": "کریڈٹس خریدیں",
       "redirectingToPayment": "ادائیگی کی طرف بھیجا جا رہا ہے..."
     },
     "workflow": {
@@ -1313,7 +1262,7 @@
       "transcribeTitle": "ویڈیو پروسیس کریں",
       "processVideoTitle": "ویڈیو پروسیس کریں",
       "transcribeDescription": "ترجمے یا ڈبنگ سے پہلے سورس ویڈیو کو قابلِ ترمیم سب ٹائٹلز میں بدلیں۔",
-      "translateDubTitle": "ترجمہ یا ڈب",
+      "translateDubTitle": "ترجمہ یا ڈب کریں",
       "translateDubDescription": "آپ کا ٹرانسکرپٹ تیار ہے۔ اب آؤٹ پٹ زبان، ترجمے کا موڈ یا ڈبنگ منتخب کریں۔",
       "availableOutputs": "دستیاب آؤٹ پٹ",
       "availableOutputsDescription": "ڈاؤن لوڈ شدہ اور ڈب شدہ میڈیا یہاں دستیاب رہے گا جب تک آپ وہ ورژنز محفوظ نہ کر لیں جنہیں رکھنا چاہتے ہیں۔",
@@ -1321,7 +1270,6 @@
       "saveOutputsDescription": "جو سورس یا ڈب شدہ ویڈیو آپ رکھنا چاہتے ہیں، اسے ایپ کے ورک اسپیس سے باہر محفوظ کریں۔"
     },
     "calculatingCost": "لاگت کا حساب لگایا جا رہا ہے...",
-    "notEnoughCredits": "کافی کریڈٹس دستیاب نہیں ہیں",
     "welcomeCredits": {
       "message": "ٹرانسکرپشن اور ترجمہ آزمانے کے لیے آپ کے پاس مفت منٹ ہیں (تقریباً 20 منٹ کی ویڈیو)۔"
     }
@@ -1329,10 +1277,10 @@
   "findBar": {
     "findPlaceholder": "سب ٹائٹل میں تلاش کریں...",
     "replacePlaceholder": "اس سے بدلیں...",
-    "replaceAll": "سب کچھ بدل دیں",
+    "replaceAll": "سب بدلیں",
     "nextMatch": "اگلا میچ (Enter)",
     "previousMatch": "پچھلا میچ (Shift+Enter)",
-    "replaceAllTitle": "تمام واقعات بدل دیں",
+    "replaceAllTitle": "تمام میچ بدلیں",
     "closeTitle": "بند کریں (Esc)",
     "nextMatchAria": "اگلا میچ",
     "previousMatchAria": "پچھلا میچ",
@@ -1341,7 +1289,8 @@
     "matchCount": "{{total}} میں سے {{current}}",
     "matchCase": "حروف کی بڑائی چھوٹائی ملائیں",
     "wholeWord": "پورا لفظ",
-    "showReplace": "بدلیں"
+    "showReplace": "بدلیں",
+    "noMatches": "کوئی میچ نہیں ملا"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1385,42 +1334,8 @@
       "description": "یہ ویڈیو پلیٹ فارم کی تبدیلیوں یا نئے تحفظ کے اقدامات کی وجہ سے ہو سکتا ہے۔ نئی ویڈیوز کو سنبھالنے کے لیے آپ کو ایپ کے اگلے ورژن کا انتظار کرنا پڑ سکتا ہے۔"
     },
     "creditRanOut": {
-      "title": "کریڈٹس ختم ہو گئے",
-      "message": "آپ کے AI کریڈٹس ختم ہو گئے ہیں۔ ترتیبات میں ری چارج کریں، پھر جہاں سے رکے تھے وہاں سے دوبارہ شروع کریں۔",
       "openSettings": "ترتیبات کھولیں",
       "ok": "ٹھیک ہے",
-      "neverHadTitle": "ٹرانسکرپشن کے لیے کریڈٹس درکار ہیں",
-      "neverHadMessage": "ٹرانسکرپشن کے لیے کریڈٹس یا API کلید ان لاک درکار ہے۔ ان میں سے کوئی بھی ترتیبات میں حاصل کریں۔ ایجنٹ کنٹرول کے ذریعے اپنے Claude یا Codex سے ترجمہ مفت ہے۔",
-      "notEnoughTitle": "اس ویڈیو کے لیے کافی کریڈٹس نہیں ہیں",
-      "notEnoughTranscriptionMessage": "اس ویڈیو کی ٹرانسکرپشن کے لیے تقریباً {{required}} کریڈٹس درکار ہیں۔ آپ کے پاس {{available}} ہیں، جو تقریباً {{minutes}} منٹ کے لیے کافی ہیں۔ کریڈٹس شامل کریں، پھر دوبارہ شروع کریں۔",
-      "notEnoughMessage": "اس کام کے لیے آپ کے {{available}} بیلنس سے زیادہ کریڈٹس درکار ہیں۔ جاری رکھنے کے لیے کریڈٹس شامل کریں۔",
-      "task": {
-        "transcription": {
-          "title": "ٹرانسکرپشن کے لیے کریڈٹس درکار ہیں",
-          "message": "آپ کا بیلنس اسے ٹرانسکرائب کرنے کے لیے کافی نہیں۔ کریڈٹس شامل کریں، پھر دوبارہ شروع کریں۔ جو سطریں ٹرانسکرائب ہو چکی ہیں وہ محفوظ ہیں۔",
-          "messageNothingYet": "آپ کے منٹ اسے ٹرانسکرائب کرنے کے لیے کافی نہیں۔ منٹ شامل کریں، پھر دوبارہ شروع کریں۔"
-        },
-        "translation": {
-          "title": "ترجمے کے لیے کریڈٹس درکار ہیں",
-          "message": "آپ کا بیلنس اس کے ترجمے کے لیے کافی نہیں۔ کریڈٹس شامل کریں، پھر دوبارہ کوشش کریں۔ جو سطریں ترجمہ ہو چکی ہیں وہ محفوظ ہیں۔ ایجنٹ کنٹرول کے ذریعے اپنے Claude یا Codex سے ترجمہ مفت ہے۔",
-          "messageNothingYet": "آپ کے منٹ اس کا ترجمہ کرنے کے لیے کافی نہیں۔ منٹ شامل کریں، پھر دوبارہ کوشش کریں۔ ایجنٹ کنٹرول کے ذریعے اپنے Claude یا Codex سے ترجمہ مفت ہے۔"
-        },
-        "dubbing": {
-          "title": "ڈبنگ کے لیے کریڈٹس درکار ہیں",
-          "message": "آپ کا بیلنس اس ویڈیو کی ڈبنگ کے لیے کافی نہیں۔ کریڈٹس شامل کریں، پھر دوبارہ کوشش کریں۔"
-        },
-        "summary": {
-          "title": "خلاصے کے لیے کریڈٹس درکار ہیں",
-          "message": "آپ کا بیلنس خلاصے اور اہم لمحات کے لیے کافی نہیں۔ کریڈٹس شامل کریں، پھر دوبارہ کوشش کریں۔"
-        },
-        "videoSearch": {
-          "title": "AI ویڈیو تلاش کے لیے کریڈٹس درکار ہیں",
-          "message": "آپ کا بیلنس AI ویڈیو تلاش کے لیے کافی نہیں۔ کریڈٹس شامل کریں، پھر دوبارہ تلاش کریں۔"
-        },
-        "other": {
-          "title": "اس کے لیے کریڈٹس درکار ہیں"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "ٹرانسکرپشن کے لیے منٹ درکار ہیں",
@@ -1452,12 +1367,15 @@
         "message": "آپ کے منٹ ختم ہو گئے ہیں۔ ترتیبات میں مزید منٹ شامل کریں، پھر وہیں سے جاری رکھیں جہاں چھوڑا تھا۔",
         "notEnoughTitle": "اس ویڈیو کے لیے منٹ کافی نہیں",
         "notEnoughTranscriptionMessage": "اس ویڈیو کی ٹرانسکرپشن کے لیے {{required}} درکار ہیں، اور آپ کے پاس {{available}} باقی ہیں۔ منٹ شامل کریں، پھر دوبارہ شروع کریں۔",
-        "notEnoughMessage": "اس کے لیے آپ کے باقی {{available}} سے زیادہ درکار ہیں۔ جاری رکھنے کے لیے منٹ شامل کریں۔"
+        "notEnoughMessage": "اس کے لیے آپ کے باقی {{available}} سے زیادہ درکار ہیں۔ جاری رکھنے کے لیے منٹ شامل کریں۔",
+        "voicePreview": {
+          "title": "آواز کے پیش منظر کے لیے منٹ درکار ہیں",
+          "message": "آپ کے منٹ آواز کے پیش منظر کے لیے کافی نہیں۔ منٹ شامل کریں، پھر دوبارہ کوشش کریں۔"
+        }
       }
     },
     "dubCostConfirm": {
       "title": "ڈبنگ شروع کریں؟",
-      "message": "یہ ڈبنگ آپ کے {{balance}} کریڈٹس میں سے تقریباً {{cost}} استعمال کرے گی۔ آوازیں بنانا ترجمے سے کہیں زیادہ مہنگا ہے۔",
       "messageMinutes": "اس ڈب میں {{cost}} لگیں گے۔ آوازیں بنانا ترجمے سے کہیں مہنگا ہے۔"
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1532,7 +1450,9 @@
     "cancelSummaryTitle": "خلاصہ روک دیں؟",
     "keepSummarizing": "جاری رکھیں",
     "stopSummarizing": "روکیں",
-    "cancelSummaryBody": "اب تک بنا خلاصہ اور اہم لمحات محفوظ نہیں رہیں گے۔"
+    "cancelSummaryBody": "اب تک بنا خلاصہ اور اہم لمحات محفوظ نہیں رہیں گے۔",
+    "cancelTranslationBody": "اب تک ترجمہ ہونے والی سطریں محفوظ رہیں گی۔ باقی کا ترجمہ آپ بعد میں کر سکتے ہیں۔",
+    "cancelDubbingTitle": "ڈبنگ روک دیں؟"
   },
   "progress": {
     "preparingVideoExport": "ویڈیو ایکسپورٹ کی تیاری جاری ہے…",
@@ -1786,7 +1706,8 @@
     "statusLines_one": "سب ٹائٹل کی {{count}} سطر",
     "checkingFile": "فائل پڑھی جا رہی ہے…",
     "statusLoaded": "{{count}} سطریں لوڈ ہو گئیں",
-    "statusLoaded_one": "{{count}} سطر لوڈ ہو گئی"
+    "statusLoaded_one": "{{count}} سطر لوڈ ہو گئی",
+    "interruptedTranslateSubtitles": "Translator بند ہونے سے ان سب ٹائٹلز کا {{language}} میں ترجمہ رک گیا۔"
   },
   "subtitleStyles": {
     "Cinema": "سنیما پیلا",

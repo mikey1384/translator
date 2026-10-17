@@ -23,7 +23,6 @@
       "unexpectedSave": "A apărut o eroare neașteptată la salvare.",
       "unexpectedLoad": "A apărut o eroare neașteptată la încărcare.",
       "renderFailed": "Redarea a eșuat",
-      "creditReservationFailed": "Rezervarea creditelor a eșuat",
       "invalidRenderOptions": "Opțiuni de redare nevalide furnizate",
       "missingVideoMetadata": "Lipsesc metadatele video ({{missing}})",
       "insufficientDiskSpace": "Nu e destul spațiu pe disc pentru a finaliza îmbinarea. Eliberează spațiu și încearcă din nou.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "A apărut o eroare neașteptată la salvare.",
     "unexpectedLoad": "A apărut o eroare neașteptată la încărcare.",
     "renderFailed": "Redarea a eșuat",
-    "creditReservationFailed": "Rezervarea creditelor a eșuat",
     "invalidRenderOptions": "Opțiuni de redare nevalide furnizate",
     "missingVideoMetadata": "Lipsesc metadatele video ({{missing}})",
     "noSourceVideo": "Fără video sursă",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "Transcrierea (ElevenLabs Scribe) este temporar indisponibilă sau nu a putut fi accesată după mai multe încercări. Te rugăm să încerci din nou peste câteva minute.",
       "fileTooLarge": "Acest audio este prea lung pentru a fi transcris într-o singură sarcină (peste aproximativ {{hours}} de ore). Împarte videoclipul în părți mai scurte și transcrie fiecare parte.",
-      "elevenLabsKeyRequired": "Transcrierea folosește ElevenLabs Scribe și necesită o cheie API ElevenLabs. Adaug-o în Setări sau dezactivează modul chei API ca să transcrii cu minutele tale Stage5. Cheia ta OpenAI sau Anthropic este în continuare folosită pentru traducere.",
+      "elevenLabsKeyRequired": "Transcrierea folosește ElevenLabs Scribe și necesită o cheie API ElevenLabs. Adaugă una în Setări sau dezactivează „Folosește cheile mele API” ca să transcrii cu minutele tale Stage5. Cheia ta OpenAI sau Anthropic este folosită în continuare pentru traducere.",
       "fileTooLarge_one": "Acest audio este prea lung pentru a fi transcris într-o singură sarcină (peste aproximativ {{hours}} oră). Împarte videoclipul în părți mai scurte și transcrie fiecare parte.",
       "fileTooLarge_few": "Acest audio este prea lung pentru a fi transcris într-o singură sarcină (peste aproximativ {{hours}} ore). Împarte videoclipul în părți mai scurte și transcrie fiecare parte."
     },
@@ -239,21 +237,21 @@
     "downloading": "Se descarcă...",
     "selectFile": "Selectează Fișier",
     "selectVideoFile": "Selectează Fișier Video",
-    "selectVideoAudioFile": "Selectează Fișier Video / Audio",
-    "saveOriginalVideo": "Salvează Video Original",
+    "selectVideoAudioFile": "Selectează un fișier video sau audio",
+    "saveOriginalVideo": "Salvează videoclipul original",
     "localFileDescription": "Încărcați un fișier video sau audio de pe computer",
     "selectLocalFile": "Încarcă de pe computer",
     "downloadFromUrl": "Descarcă de pe web",
     "recentMedia": "Fișiere recente",
     "webDescription": "Lipiți link-uri YouTube, TikTok, Instagram sau URL-uri directe de fișiere video de pe pagini web",
-    "chooseFile": "Alege Fișier",
+    "chooseFile": "Alege fișierul",
     "fileSelected": "Fișier selectat",
-    "transcribeOnly": "Transcrie Audio",
-    "srtLoaded": "Transcriere Completă",
+    "transcribeOnly": "Transcrie audio",
+    "srtLoaded": "Transcriere finalizată",
     "srtFileLoaded": "SRT încărcat",
     "featuresUnlockAfterTranscription": "Transcrie, tradu sau creează momente importante din acest videoclip.",
     "preSubtitleActionsHint": "Transcrie, traduce sau generează momente importante din acest videoclip.",
-    "saveDubbedVideo": "Salvează Video Dublat",
+    "saveDubbedVideo": "Salvează videoclipul dublat",
     "downloadFinishedSwitchTitle": "Vrei să vezi videoclipul descărcat?",
     "downloadFinishedSwitchPrompt": "Descărcarea este gata. Urmărește-l acum sau păstrează videoclipul curent și deschide-l mai târziu din istoric.",
     "downloadFinishedWatchNow": "Urmărește acum",
@@ -478,26 +476,22 @@
     "displayModeLabel": "Mod de afișare a subtitrărilor",
     "translate": "Traduce",
     "continueTranscribing": "Continuă transcrierea",
-    "generate": "Generează Subtitrări",
+    "generate": "Generează subtitrări",
     "generating": "Se generează...",
     "generateNow": "Generează Subtitrări Acum",
     "translation": "Traducere",
-    "improveTranscription": "Îmbunătățește Transcrierea",
-    "improveTranslation": "Îmbunătățește Traducerea",
-    "chooseSrtFile": "Alege Fișier SRT",
-    "dub": "Dublare Voce",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
+    "improveTranscription": "Îmbunătățește transcrierea",
+    "improveTranslation": "Îmbunătățește traducerea",
+    "chooseSrtFile": "Alege fișierul SRT",
+    "dub": "Dublare voce",
     "dubEstimateByo": "~{{minutes}}m audio",
     "voiceCloningRequiresTranslation": "Clonarea vocii necesită o limbă țintă",
     "translateEstimateCredits": "~{{minutes}}m video",
-    "translateEstimateByo": "Cheie proprie",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "Sigur doriți să anulați procesul de traducere a subtitrărilor? Orice progres va fi pierdut și va trebui să începeți din nou.",
-    "dubCostHint": "Voce ElevenLabs: ~{{rate}} credite pe minut de vorbire. Această estimare este afișată înainte de începerea dublării.",
     "unreadableCues_one": "{{count}} rând din acest fișier nu a putut fi citit și a fost omis. Verifică-i marcajul de timp.",
     "unreadableCues_few": "{{count}} rânduri din acest fișier nu au putut fi citite și au fost omise. Verifică-le marcajele de timp.",
     "unreadableCues": "{{count}} de rânduri din acest fișier nu au putut fi citite și au fost omise. Verifică-le marcajele de timp.",
-    "addCreditsToTranslate": "Adaugă credite ca să traduci",
     "dubInto": "Dublează în {{language}}",
     "dubIntro": "O voce citește subtitrările în limba aleasă, peste sunetul de fundal original.",
     "dubNeedsSubtitles": "Dublarea citește subtitrările cu voce tare, așa că videoclipul are nevoie mai întâi de subtitrări. Transcrie-l, apoi alege aici o voce.",
@@ -506,8 +500,6 @@
     "dubTranslatesFirst": "Subtitrările sunt traduse mai întâi în {{language}}, apoi citite de voce.",
     "dubCostWithTranslation": "Traducere și voce: {{cost}}",
     "dubUsesOwnKeys": "Folosește propriile tale chei API.",
-    "dubNotEnoughCredits": "Nu ai suficiente credite pentru această dublare.",
-    "addCreditsToDub": "Adaugă credite ca să dublezi",
     "noSubtitlesToDub": "Creează sau deschide subtitrări pentru acest videoclip, apoi dublează-l.",
     "noSubtitlesToTranslate": "Deschide sau creează subtitrări, apoi tradu-le.",
     "dubVoiceHelp": "Vocea pentru această dublare. Rămâne aleasă și pentru următoarele dublări.",
@@ -534,11 +526,9 @@
     },
     "generate": "Creează momente importante",
     "regenerate": "Creează din nou momentele importante",
-    "estimateCredits": "{{credits}} credite",
-    "estimateByo": "Cheie BYO",
     "highEffortBadge": "(aprofundat)",
     "placeholder": "Rezumatul AI va apărea aici odată generat.",
-    "insufficientCredits": "Nu ai suficiente minute ca să creezi momente importante.",
+    "insufficientCredits": "Nu mai ai destule minute ca să găsești momentele importante.",
     "error": "Nu am putut crea momentele importante. {{message}}",
     "cancel": "Anulează",
     "copy": "Copiază rezumat",
@@ -591,7 +581,7 @@
     "downloadCombined": "Descarcă Clipul Combinat",
     "saveCombinedDialogTitle": "Salvează clipul combinat cu momente importante",
     "combinedCutFailed": "Tăierea momentelor importante combinate a eșuat: {{message}}",
-    "highlightsInsufficientCredits": "Rezumatul a fost generat, dar extragerea momentelor importante s-a oprit pentru că ți s-au terminat minutele.",
+    "highlightsInsufficientCredits": "Rezumatul este gata, dar căutarea momentelor importante s-a oprit pentru că ți s-au terminat minutele.",
     "highlightsPartialWarning": "Extragerea momentelor importante a fost parțială. Aceste momente pot fi incomplete. Generează din nou pentru a actualiza.",
     "highlightsPartialWithReason": "Rezumatul a fost generat, dar extragerea momentelor importante a fost parțială: {{message}}",
     "estimateOwnKey": "Folosește cheia ta API",
@@ -627,7 +617,10 @@
     "highlightCuesChanged": "Ai editat rânduri din acest moment important după ce a fost găsit. Verifică dacă se mai potrivește.",
     "clipCaptionsChangedAny": "Subtitrările s-au schimbat de când a fost tăiat acest clip (textul, stilul sau mărimea).",
     "notEnoughForRun": "Nu mai ai destule minute pentru rezumat și momentele importante.",
-    "clipsUseOriginalAudio": "Clipurile folosesc sunetul original, nu dublarea."
+    "clipsUseOriginalAudio": "Clipurile folosesc sunetul original, nu dublarea.",
+    "notEnoughMinutesSummary": "Nu mai ai destule minute pentru acest rezumat.",
+    "notEnoughMinutesHighlights": "Nu mai ai destule minute ca să găsești momentele importante.",
+    "translateMissingLines": "Tradu aceste rânduri"
   },
   "panel": {
     "new": "nou",
@@ -636,7 +629,7 @@
       "none": "Nu s-au detectat goluri mari"
     },
     "confidence": {
-      "title": "Încredere Scăzută",
+      "title": "Încredere scăzută",
       "none": "Nu s-au detectat rânduri cu încredere scăzută",
       "count": "{{count}} de rânduri",
       "count_one": "{{count}} rând",
@@ -644,7 +637,7 @@
     }
   },
   "editSubtitles": {
-    "title": "Editare Subtitrări",
+    "title": "Editare subtitrări",
     "listTitle": "Subtitrări ({{count}})",
     "workspace": {
       "editorStage": "Spațiul editorului",
@@ -673,15 +666,15 @@
       "rowsLoaded_few": "{{count}} rânduri încărcate"
     },
     "item": {
-      "seek": "Caută",
-      "seekTitle": "Caută video la timpul de start",
+      "seek": "Mergi la",
+      "seekTitle": "Du videoclipul la începutul acestui rând",
       "playSnippet": "Redă fragment",
       "pauseSnippet": "Pauză fragment",
       "insertTitle": "Inserează un nou bloc de subtitrare după acesta",
       "removeTitle": "Elimină acest bloc de subtitrare",
       "shiftPlaceholder": "Decalaj (-/+ sec)",
       "shiftTitle": "Decalează această subtitrare cu secunde (+/-)",
-      "applyShift": "Aplică Decalaj",
+      "applyShift": "Aplică decalajul",
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Text subtitrare",
       "confirmRemove": "Sigur doriți să eliminați acest bloc de subtitrare? Această acțiune nu poate fi anulată.",
@@ -691,7 +684,10 @@
       "startTimeAria": "Începutul rândului {{index}}",
       "endTimeAria": "Sfârșitul rândului {{index}}",
       "splitTitle": "Împarte rândul în dreptul cursorului",
-      "mergeTitle": "Unește cu rândul următor"
+      "mergeTitle": "Unește cu rândul următor",
+      "timeOverlapsPrevious": "Acest rând începe înainte să se termine cel anterior, așa că apar amândouă deodată.",
+      "timeOverlapsNext": "Acest rând se termină după ce începe următorul, așa că apar amândouă deodată.",
+      "timeOverlapsBoth": "Acest rând se suprapune cu cel anterior și cu cel următor, așa că apar deodată."
     },
     "header": {
       "save": "Salvează subtitrările",
@@ -742,15 +738,14 @@
       "toggleLabel": "Folosește cheile mele API",
       "activeKeys": "Chei pregătite: {{count}}",
       "noKeys": "Nicio cheie configurată",
-      "usingApiKeys": "Minutele Stage5 oprite",
-      "usingCredits": "Minutele Stage5 pornite",
+      "usingApiKeys": "Minutele tale Stage5 nu sunt folosite",
+      "usingCredits": "Se folosesc minutele tale Stage5",
       "toggleOn": "Acum folosește cheile tale API.",
-      "toggleOff": "Acum folosește minutele tale Stage5.",
+      "toggleOff": "Acum se folosesc minutele tale Stage5.",
       "toggleError": "Actualizarea preferinței a eșuat.",
       "toggleAria": "Folosește cheile mele API",
       "requirementTranslation": "Necesită o cheie OpenAI sau Anthropic pentru traducere"
     },
-    "creditsDescription": "Cumpărați credite. Orele afișate sunt o estimare a duratei totale de video pe care o puteți transcrie sau traduce. Exemplu: transcrierea și traducerea unui videoclip de 3 ore consumă aproximativ 6 ore (≈140.000 credite).",
     "performanceQuality": {
       "title": "Performanță și Calitate",
       "qualityTranslation": {
@@ -760,32 +755,15 @@
         "modelOff": "Doar schiță Claude Haiku 5.5",
         "reviewProvider": "Furnizor de revizie",
         "openAiHighEnd": "Revizie avansată OpenAI",
-        "anthropicHighEnd": "Revizie avansată Anthropic",
-        "help": "<b>5× credite</b> • Adaugă fază de revizuire pentru calitate superioară",
-        "helpWithEstimate": "<b>5× credite</b> • Soldul tău: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>5× credite</b> • Ciornă cu Claude Haiku 5.5 + revizuire cu Claude Opus 5.5",
-        "helpOff": "<b>1× credite</b> • Doar ciornă cu Claude Haiku 5.5",
-        "helpWithEstimateOn": "<b>5× credite</b> • Ciornă cu Claude Haiku 5.5 + revizuire cu Claude Opus 5.5 • Sold: ~{{time}}",
-        "helpWithEstimateOff": "<b>1× credite</b> • Doar ciornă cu Claude Haiku 5.5 • Sold: ~{{time}}"
+        "anthropicHighEnd": "Revizie avansată Anthropic"
       },
       "qualitySummary": {
         "label": "Rezumat de Calitate",
         "modelOn": "Analiză profundă Claude Opus 5.5 + clipuri cu momente importante",
-        "modelOff": "Analiză standard Claude Sonnet 5.5",
-        "help": "<b>4× credite</b> • Analiză aprofundată + clipuri evidențiate cu Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× credite</b> • Soldul tău: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>4× credite</b> • Analiză aprofundată cu Claude Opus 5.5 + clipuri cu momente importante",
-        "helpOff": "Analiză rapidă cu Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× credite</b> • Analiză aprofundată cu Claude Opus 5.5 + clipuri cu momente importante • Sold: ~{{time}}",
-        "helpWithEstimateOff": "Analiză rapidă cu Claude Sonnet 5.5 • Sold: ~{{time}}"
+        "modelOff": "Analiză standard Claude Sonnet 5.5"
       },
       "qualityDubbing": {
-        "label": "Dublare de Calitate",
-        "modelOn": "Voci premium ElevenLabs TTS",
-        "help": "<b>12× credite</b> • ElevenLabs TTS cu voci premium",
-        "helpWithEstimate": "<b>12× credite</b> • Soldul tău: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>{{ratio}}× credite</b> • ElevenLabs TTS cu voci premium",
-        "helpWithEstimateOn": "<b>{{ratio}}× credite</b> • ElevenLabs TTS cu voci premium • Sold: ~{{time}}"
+        "modelOn": "Voci premium ElevenLabs TTS"
       },
       "videoSuggestionModel": {
         "label": "Model sugestii video",
@@ -794,9 +772,6 @@
         "quality": "Calitate (la fel ca setarea de calitate a traducerii)"
       },
       "rate": {
-        "perHour": "~{{credits}} credite/oră",
-        "perMinute": "~{{credits}} credite/min",
-        "perSearch": "~{{credits}} credite/căutare",
         "balance": "Sold: ~{{time}}",
         "minutesPerHour": "~{{time}} din minutele tale pentru o oră de video",
         "minutesPerDubMinute": "~{{time}} din minutele tale pentru un minut de dublare",
@@ -819,18 +794,15 @@
       "previewTooltip": "Previzualizează această voce",
       "previewing": "Se redă...",
       "previewFree": "Previzualizare",
-      "previewWithCost": "Previzualizare ({{cost}} credite)",
       "mixLabel": "Volum Dublare vs Volum Video Original",
       "mixHelp": "Controlează cât din coloana sonoră originală se aude sub vocea dublată.",
       "mixAmbient": "Mai mult ambient",
       "mixVoice": "Mai multă voce",
       "voiceCloning": "Clonează Vocea Originală",
       "voiceCloningDesc": "Păstrează vocea vorbitorului original în audio-ul dublat",
-      "voiceCloningInsufficientCredits": "Necesită cel puțin 1 minut de credite",
       "voiceCloningEnabled": "Clonarea vocii este activată cu ElevenLabs. Vocea vorbitorului original va fi păstrată în audio-ul dublat.",
       "voiceCloningInfo": "Clonarea vocii folosește ElevenLabs Dubbing API pentru a analiza și recrea vocea vorbitorului original.",
       "costPerMinute": "Cost pe minut",
-      "credits": "credite",
       "yourBalance": "Soldul tău",
       "canClone": "Poți clona",
       "upToMinutes": "până la {{minutes}} min",
@@ -840,7 +812,7 @@
     },
     "byoOpenAi": {
       "title": "Folosește-ți Propriile Chei API",
-      "description": "Deblochează printr-o plată unică folosirea propriilor chei API. După deblocare, transcrierile, traducerile, dublările și rezumatele rulează direct pe conturile tale, fără să consume minutele Stage5.",
+      "description": "O deblocare unică pentru a folosi propriile chei API. După deblocare, transcrierea, traducerea, dublarea și rezumatele rulează pe propriile tale conturi AI, în loc să folosească minutele tale Stage5.",
       "unlocking": "Se deschide plata…",
       "unlockCta": "Deblochează pentru $10",
       "unlockHint": "Odată deblocat, adăugați cheile API aici oricând pentru a comuta facturarea directă pe conturile voastre.",
@@ -858,19 +830,17 @@
       "test": "Testează Cheia",
       "lastSynced": "Ultima sincronizare",
       "toggleLabel": "Folosește cheia mea OpenAI",
-      "toggleHelp": "Când este oprit, se folosesc Creditele AI.",
       "toggleAria": "Comutare folosire cheie OpenAI proprie",
       "toggleOn": "Se folosește cheia ta OpenAI pentru sarcinile AI.",
-      "toggleOff": "Se folosesc creditele Stage5 pentru sarcinile AI.",
       "toggleError": "Actualizarea preferinței a eșuat.",
       "howToGetKeys": "Cum obțin chei API?",
       "option1Title": "Opțiunea 1: OpenAI",
       "option2Title": "Opțiunea 2: Anthropic + ElevenLabs",
       "economicsTitle": "De ce merită",
-      "economicsBody": "Minutele Stage5 pun accent pe comoditate (fără configurare). Cu propriile chei plătești direct furnizorii — de obicei cu ~30–50% mai ieftin, în funcție de pachet.",
+      "economicsBody": "Minutele Stage5 sunt varianta simplă: nu ai nimic de configurat. Cu propriile chei plătești direct furnizorii de AI, de obicei cu aproximativ 30–50% mai puțin, în funcție de pachet.",
       "encryptionUnavailable": "Stocarea securizată nu este disponibilă pe acest sistem. Cheile API nu pot fi salvate.",
       "checkoutOpen": "Plata este deschisă în browser…",
-      "checkoutOpenHint": "Finalizează plata în browser. Vom debloca automat cheile tale API după confirmarea plății.",
+      "checkoutOpenHint": "Finalizează plata în browser. Propriile chei se deblochează automat imediat ce plata este confirmată.",
       "entitlementsLoadFailed": "Nu am putut verifica starea deblocării. Verifică-ți conexiunea și încearcă din nou.",
       "unlockFailed": "Plata nu a putut începe. Verifică-ți conexiunea și încearcă din nou."
     },
@@ -898,17 +868,17 @@
       "summary": "Rezumat",
       "dubbing": "Dublare",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "Momentan niciun model de recomandare video nu este disponibil cu cheile tale API. Activează cheia OpenAI sau Anthropic pentru această funcție.",
-      "videoSuggestionModelRequiresOpenAi": "Necesită deblocarea cheilor API și o cheie OpenAI activată.",
-      "videoSuggestionModelRequiresAnthropic": "Necesită deblocarea cheilor API și o cheie Anthropic activată.",
-      "summaryRequiresOpenAi": "Necesită deblocarea cheilor API și o cheie OpenAI.",
-      "summaryRequiresAnthropic": "Necesită deblocarea cheilor API și o cheie Anthropic.",
+      "videoSuggestionModelUnavailable": "Niciun model de recomandare video nu este disponibil cu propriile chei. Activează cheia OpenAI sau Anthropic ca să folosești această funcție.",
+      "videoSuggestionModelRequiresOpenAi": "Necesită deblocarea cheilor API, cheia ta OpenAI și comutatorul OpenAI activat.",
+      "videoSuggestionModelRequiresAnthropic": "Necesită deblocarea cheilor API, cheia ta Anthropic și comutatorul Anthropic activat.",
+      "summaryRequiresOpenAi": "Necesită deblocarea cheilor API și cheia ta OpenAI.",
+      "summaryRequiresAnthropic": "Necesită deblocarea cheilor API și cheia ta Anthropic.",
       "translationReview": "Traducere (Revizuire)",
-      "transcriptionRequiresElevenLabs": "Transcrierea folosește doar ElevenLabs Scribe. Adaugă o cheie API ElevenLabs pentru a transcrie cu propriile chei. Fără ea, transcrierea folosește minutele tale Stage5, care nu sunt utilizate cât timp cheile tale API sunt activate. Cheia ta OpenAI este în continuare folosită pentru traducere.",
-      "dubbingRequiresElevenLabs": "Dublarea folosește doar ElevenLabs. Adaugă o cheie API ElevenLabs pentru a dubla cu propriile chei. Fără ea, dublarea folosește minutele tale Stage5, care nu sunt folosite cât timp cheile tale API sunt activate.",
+      "transcriptionRequiresElevenLabs": "Transcrierea folosește doar ElevenLabs Scribe. Adaugă o cheie API ElevenLabs ca să transcrii cu propriile chei. Fără ea, transcrierea folosește minutele tale Stage5, care nu sunt folosite cât timp propriile chei sunt activate. Cheia ta OpenAI este folosită în continuare pentru traducere.",
+      "dubbingRequiresElevenLabs": "Dublarea folosește doar ElevenLabs. Adaugă o cheie API ElevenLabs ca să dublezi cu propriile chei. Fără ea, dublarea folosește minutele tale Stage5, care nu sunt folosite cât timp propriile chei sunt activate.",
       "runtimeFallback": "Rezervă la rulare în modul cheie API",
-      "videoSuggestionLegacyFollowDraft": "Setare veche pentru cheile API păstrată: urmează modelul tău de traducere ciornă până alegi un model anume.",
-      "videoSuggestionLegacyFollowReview": "Setare veche pentru cheile API păstrată: urmează modelul tău de traducere pentru revizuire până alegi un model anume."
+      "videoSuggestionLegacyFollowDraft": "Setarea ta anterioară s-a păstrat: urmează modelul tău de traducere ciornă până alegi un model aici.",
+      "videoSuggestionLegacyFollowReview": "Setarea ta anterioară s-a păstrat: urmează modelul tău de traducere pentru revizuire până alegi un model aici."
     },
     "apiKeyGuide": {
       "title": "Cum obții chei API",
@@ -932,8 +902,7 @@
         "step3b": "în bara laterală stângă",
         "step4": "Apasă pe",
         "step5": "Adaugă o metodă de plată în setările de facturare (necesar pentru a folosi API-ul)",
-        "step6": "Copiază cheia (începe cu sk-) și lipește-o în Stage5",
-        "note": "Sfat: Conturile OpenAI noi primesc adesea credite gratuite pentru început. Plătiți doar pentru ce folosiți."
+        "step6": "Copiază cheia (începe cu sk-) și lipește-o în Stage5"
       },
       "anthropic": {
         "description": "Claude oferă revizuiri de traducere de calitate superioară. Fără el, GPT gestionează toate sarcinile de traducere.",
@@ -953,7 +922,7 @@
         "step4": "Adaugă o metodă de plată în setările de abonament (necesar pentru utilizarea API peste nivelul gratuit)",
         "step5": "Copiază cheia API și lipește-o în Stage5",
         "note": "Sfat: ElevenLabs are un nivel gratuit cu utilizare limitată. Pentru mai mult, faceți upgrade la un plan plătit în setările contului.",
-        "audioDescription": "ElevenLabs asigură toată transcrierea (Scribe) și dublarea. Fără propria cheie ElevenLabs, ambele folosesc minutele tale Stage5, care nu sunt utilizate cât timp cheile tale API sunt activate."
+        "audioDescription": "ElevenLabs asigură toată transcrierea (Scribe) și dublarea. Fără propria cheie ElevenLabs, ambele folosesc minutele tale Stage5, care nu sunt folosite cât timp propriile chei sunt activate."
       }
     },
     "byoAnthropic": {
@@ -972,14 +941,11 @@
       "testing": "Se testează…",
       "test": "Testează Cheia",
       "toggleLabel": "Folosește cheia mea Anthropic",
-      "toggleHelp": "Când este oprit, cererile Claude folosesc credite Stage5.",
       "toggleAria": "Comutare folosire cheie Anthropic proprie",
       "toggleOn": "Se folosește cheia ta Anthropic pentru modelele Claude.",
-      "toggleOff": "Se folosesc creditele Stage5 pentru modelele Claude.",
       "toggleError": "Actualizarea preferinței Anthropic a eșuat."
     },
     "stage5TtsProvider": {
-      "label": "Calitate TTS (Credite Stage5)",
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Cea mai bună calitate, cost mai mare (~12x)",
       "elevenlabsHintWithBalance": "Cea mai bună calitate · Soldul tău: {{time}} de dublare"
@@ -1072,31 +1038,22 @@
       "freeTitle": "Tradu gratuit cu AI-ul tău"
     },
     "creditTransfer": {
-      "title": "Mută creditele între calculatoare",
-      "description": "Creditele cumpărate și deblocarea cheilor API pot fi mutate pe alt calculator. Creditele gratuite de bun venit rămân pe acesta.",
-      "moveButton": "Mută creditele pe alt calculator",
-      "receiveButton": "Primește credite",
       "creating": "Se creează codul…",
       "copy": "Copiază",
       "copied": "Copiat",
-      "summaryCredits": "Credite care vor fi mutate: {{credits}}.",
       "summaryByo": "Va fi mutată și deblocarea cheilor API.",
       "expires": "Acest cod funcționează o singură dată și expiră în {{minutes}} min.",
-      "steps": "Pe noul calculator: instalează Translator, deschide Setări, alege „Primește credite” și introdu acest cod.",
       "inputLabel": "Codul de pe celălalt calculator",
       "redeem": "Primește",
       "redeeming": "Se primesc…",
-      "received": "Credite primite: {{credits}}.",
       "receivedNoCredits": "Codul a funcționat.",
       "receivedByo": "Deblocarea cheilor API este activă pe acest calculator.",
       "errors": {
-        "nothing_to_transfer": "Deocamdată nu ai ce muta: acest calculator nu are minute cumpărate și nici deblocarea cheilor API. Ca să aduci aici minute de pe alt calculator, alege „Primește minute”.",
         "too_many_codes": "Prea multe coduri de transfer în ultima oră. Încearcă din nou puțin mai târziu.",
         "jobs_running": "O transcriere sau o traducere este încă în curs. Încearcă din nou după ce se termină.",
         "invalid_code": "Codul este greșit, a fost deja folosit sau a expirat. Generează unul nou pe celălalt calculator.",
         "same_device": "Introdu codul pe celălalt calculator, nu pe cel care l-a generat.",
         "network_error": "Serverul Stage5 nu a putut fi contactat. Verifică-ți conexiunea și încearcă din nou.",
-        "transfer_failed": "Minutele nu au putut fi mutate. Verifică-ți conexiunea și încearcă din nou.",
         "nothing_to_transfer_minutes": "Deocamdată nu ai ce muta: acest calculator nu are minute cumpărate și nici deblocarea cheilor API. Ca să aduci aici minute de pe alt calculator, alege „Primește minute”.",
         "transfer_failed_minutes": "Minutele nu au putut fi mutate. Verifică-ți conexiunea și încearcă din nou."
       },
@@ -1112,27 +1069,22 @@
   "credits": {
     "title": "Minutele tale",
     "loading": "Se încarcă...",
-    "credits": "credite",
     "usingApiKey": "Se folosește Cheia API",
     "usingOpenAi": "Se folosește OpenAI",
     "usingAnthropic": "Se folosește Claude",
     "usingElevenLabs": "Se folosește ElevenLabs",
     "hours": "ore",
     "translationHoursShort": "ore de traducere",
-    "buyCredits": "Cumpără Credite",
     "redirectingToPayment": "Se deschide plata securizată…",
-    "description": "Alegeți dintre pachetele ${{packMicroPrice}} ({{packMicroHours}}o), ${{pack1Price}} ({{pack1Hours}}o), ${{pack2Price}} ({{pack2Hours}}o), sau ${{pack3Price}} ({{pack3Hours}}o)",
-    "notEnough": "Credite insuficiente. Vă rugăm să cumpărați mai multe credite pentru a continua.",
     "transcriptionMinutesShort": "{{minutes}} min de transcriere",
     "transcriptionTimeShort": "{{time}} de transcriere",
-    "costOfBalance": "{{cost}} din cele {{balance}} credite ale tale",
     "pill": {
       "freeBack": "Minute gratuite noi pe {{date}}",
       "empty": "Reîncarcă minute",
       "freeThisMonth": "{{count}} min gratuite luna aceasta",
       "freeWelcome": "{{count}} min gratuite",
       "minutes": "{{count}} min rămase",
-      "title": "Minute și pachete",
+      "title": "Minutele și pachetele tale",
       "freeThisMonth_one": "{{count}} min gratuit luna aceasta",
       "freeWelcome_one": "{{count}} min gratuit",
       "minutes_one": "{{count}} min rămas",
@@ -1153,12 +1105,11 @@
     "moreMinutesPerDollar": "De {{multiplier}}× mai multe minute pe dolar",
     "checkoutWaiting": "Finalizează plata în browser. Minutele apar aici automat.",
     "checkoutNote": "Plată unică prin Stripe, în browser. Fără cont și fără abonament. Minutele apar automat.",
-    "dubbingNote": "Traducerea cu minutele tale costă cu aproximativ 10% mai mult pe minut; dublarea, mai mult.",
+    "dubbingNote": "Adăugarea unei traduceri folosește cu aproximativ 10% mai multe minute; dublarea folosește și mai multe.",
     "iCancelledCheckout": "Am anulat plata",
     "checkoutStartFailed": "Plata nu a putut începe. Verifică conexiunea și încearcă din nou.",
     "monthlyFreeNote_one": "{{minutes}} min gratuit în fiecare lună · următorul pe {{date}}",
     "loadFailed": "Soldul nu a putut fi încărcat. Verifică-ți conexiunea și încearcă din nou.",
-    "estimateAmount": "{{credits}} credite",
     "costOfBalanceMinutes": "{{cost}} din cele {{balance}} ale tale",
     "timeLeft": "{{time}} rămase",
     "success": {
@@ -1174,7 +1125,10 @@
     "balanceOffline": "Nu putem verifica minutele tale acum",
     "offlineNote": "Translator nu se poate conecta la Stage5. Soldul apare din nou când revii online.",
     "microPackLabelNoTime": "Cumpără minute — {{price}}",
-    "microPackLabel": "Cumpără minute — {{price}} · ≈ {{time}} de video"
+    "microPackLabel": "Cumpără minute — {{price}} · ≈ {{time}} de video",
+    "checkingPayment": "Verificăm plata…",
+    "checkoutUnresolved": "Dacă ai plătit deja, minutele tale vor apărea aici în curând. Încă plătești? Finalizează plata în browser.",
+    "checkPaymentNow": "Verifică acum"
   },
   "cta": {
     "generate": {
@@ -1286,7 +1240,6 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "Fără credite.",
     "rechargeLink": "Reîncarcă →",
     "creditWarning": {
       "message": "Descărcarea, editarea, exportul și traducerea cu propriul Claude sau Codex prin Controlul agenților sunt gratuite. Transcrierea necesită minute sau deblocarea cheilor API din <settingsLink>{{settingsLinkText}}</settingsLink>.",
@@ -1296,7 +1249,6 @@
       "pleaseSelectVideo": "Selectează un videoclip",
       "processingDuration": "Se procesează durata videoclipului. Încearcă din nou în câteva momente.",
       "icloudPlaceholder": "Acest fișier este stocat în iCloud. În Finder, apasă „Descarcă” și așteaptă să se termine descărcarea, apoi încearcă din nou.",
-      "insufficientCreditsForVoiceCloning": "Credite insuficiente pentru clonarea vocii. Videoclipul are {{duration}} min dar poți acoperi doar {{affordable}} min. Te rugăm să adaugi credite sau să dezactivezi clonarea vocii.",
       "fileTooLargeForVoiceCloning": "Fișierul video este prea mare pentru clonarea vocii ({{size}}MB). Maximul permis este {{max}}MB. Te rugăm să folosești un video mai scurt sau să dezactivezi clonarea vocii."
     },
     "status": {
@@ -1306,7 +1258,6 @@
       "error": "Eroare"
     },
     "buttons": {
-      "buyCredits": "Cumpără Credite",
       "redirectingToPayment": "Redirecționare către plată..."
     },
     "workflow": {
@@ -1330,7 +1281,6 @@
       "saveOutputsDescription": "Păstrează orice sursă sau material dublat pe care vrei să-l salvezi în afara spațiului de lucru al aplicației."
     },
     "calculatingCost": "Se calculează costul...",
-    "notEnoughCredits": "Credite insuficiente disponibile",
     "welcomeCredits": {
       "message": "Ai minute gratuite ca să încerci transcrierea și traducerea (aproximativ 20 de minute de video)."
     }
@@ -1338,10 +1288,10 @@
   "findBar": {
     "findPlaceholder": "Găsește în subtitrări...",
     "replacePlaceholder": "Înlocuiește cu...",
-    "replaceAll": "Înlocuiește Tot",
-    "nextMatch": "Următoarea Potrivire (Enter)",
-    "previousMatch": "Potrivirea Anterioară (Shift+Enter)",
-    "replaceAllTitle": "Înlocuiește Toate Aparițiile",
+    "replaceAll": "Înlocuiește tot",
+    "nextMatch": "Următoarea potrivire (Enter)",
+    "previousMatch": "Potrivirea anterioară (Shift+Enter)",
+    "replaceAllTitle": "Înlocuiește toate potrivirile",
     "closeTitle": "Închide (Esc)",
     "nextMatchAria": "Următoarea potrivire",
     "previousMatchAria": "Potrivirea anterioară",
@@ -1350,7 +1300,8 @@
     "matchCount": "{{current}} din {{total}}",
     "matchCase": "Potrivește majusculele",
     "wholeWord": "Cuvânt întreg",
-    "showReplace": "Înlocuiește"
+    "showReplace": "Înlocuiește",
+    "noMatches": "Niciun rezultat"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1375,9 +1326,9 @@
     },
     "downloadInProgress": "Descărcare în Curs",
     "saveDownloadedFile": "Salvează fișierul descărcat: {{path}}",
-    "transcriptionInProgress": "Transcriere în Curs",
-    "translationInProgress": "Traducere în Curs",
-    "dubbingInProgress": "Dublare în Curs",
+    "transcriptionInProgress": "Transcriere în curs",
+    "translationInProgress": "Traducere în curs",
+    "dubbingInProgress": "Dublare în curs",
     "dubbingWorking": "Se generează audio-ul dublat…",
     "cancelTranslationConfirm": "Anulezi traducerea? Progresul va fi pierdut și va trebui să începi din nou.",
     "cancelSummaryConfirm": "Anulezi generarea rezumatului?",
@@ -1394,42 +1345,8 @@
       "description": "Aceasta poate fi din cauza schimbărilor platformei video sau a noilor măsuri de protecție. Este posibil să fie nevoie să așteptați următoarea versiune a aplicației pentru a gestiona videoclipuri mai noi."
     },
     "creditRanOut": {
-      "title": "Creditele s-au epuizat",
-      "message": "Creditele tale AI s-au epuizat. Reîncarcă în Setări, apoi reia de unde ai rămas.",
       "openSettings": "Deschide Setările",
       "ok": "OK",
-      "neverHadTitle": "Transcrierea necesită credite",
-      "neverHadMessage": "Transcrierea necesită credite sau deblocarea cheilor API. Le poți obține pe oricare din Setări. Traducerea cu propriul Claude sau Codex prin Controlul agenților este gratuită.",
-      "notEnoughTitle": "Nu ai suficiente credite pentru acest videoclip",
-      "notEnoughTranscriptionMessage": "Transcrierea acestui videoclip necesită aproximativ {{required}} credite. Ai {{available}}, suficiente pentru aproximativ {{minutes}} minute. Adaugă credite, apoi pornește din nou.",
-      "notEnoughMessage": "Această sarcină necesită mai multe credite decât soldul tău de {{available}}. Adaugă credite pentru a continua.",
-      "task": {
-        "transcription": {
-          "title": "Transcrierea necesită credite",
-          "message": "Soldul tău nu acoperă această transcriere. Adaugă credite, apoi pornește din nou. Rândurile deja transcrise se păstrează.",
-          "messageNothingYet": "Soldul tău nu acoperă această transcriere. Adaugă minute, apoi începe din nou."
-        },
-        "translation": {
-          "title": "Traducerea necesită credite",
-          "message": "Soldul tău nu acoperă această traducere. Adaugă credite, apoi încearcă din nou. Rândurile deja traduse se păstrează. Traducerea cu propriul Claude sau Codex prin Controlul agenților este gratuită.",
-          "messageNothingYet": "Soldul tău nu acoperă această traducere. Adaugă minute, apoi încearcă din nou. Traducerea cu propriul Claude sau Codex prin Controlul agenților este gratuită."
-        },
-        "dubbing": {
-          "title": "Dublarea necesită credite",
-          "message": "Soldul tău nu acoperă dublarea acestui videoclip. Adaugă credite, apoi încearcă din nou."
-        },
-        "summary": {
-          "title": "Rezumatul necesită credite",
-          "message": "Soldul tău nu acoperă rezumatul și momentele importante. Adaugă credite, apoi încearcă din nou."
-        },
-        "videoSearch": {
-          "title": "Căutarea video cu AI necesită credite",
-          "message": "Soldul tău nu acoperă o căutare video cu AI. Adaugă credite, apoi caută din nou."
-        },
-        "other": {
-          "title": "Este nevoie de credite"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "Transcrierea necesită minute",
@@ -1461,12 +1378,15 @@
         "message": "Ai folosit toate minutele. Adaugă altele din Setări, apoi continuă de unde ai rămas.",
         "notEnoughTitle": "Nu ai destule minute pentru acest videoclip",
         "notEnoughTranscriptionMessage": "Transcrierea acestui videoclip necesită {{required}}, iar tu mai ai {{available}}. Adaugă minute, apoi începe din nou.",
-        "notEnoughMessage": "E nevoie de mai mult decât cele {{available}} pe care le mai ai. Adaugă minute ca să continui."
+        "notEnoughMessage": "E nevoie de mai mult decât cele {{available}} pe care le mai ai. Adaugă minute ca să continui.",
+        "voicePreview": {
+          "title": "Previzualizarea unei voci necesită minute",
+          "message": "Minutele tale nu acoperă previzualizarea unei voci. Adaugă minute, apoi încearcă din nou."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "Începi dublarea?",
-      "message": "Acest dublaj folosește aproximativ {{cost}} din cele {{balance}} credite ale tale. Generarea vocilor costă mult mai mult decât traducerea.",
       "messageMinutes": "Această dublare folosește {{cost}}. Generarea vocilor costă mult mai mult decât traducerea."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1541,7 +1461,9 @@
     "cancelSummaryTitle": "Oprești rezumatul?",
     "keepSummarizing": "Continuă",
     "stopSummarizing": "Oprește",
-    "cancelSummaryBody": "Rezumatul și momentele importante create până acum nu vor fi păstrate."
+    "cancelSummaryBody": "Rezumatul și momentele importante create până acum nu vor fi păstrate.",
+    "cancelTranslationBody": "Rândurile traduse până acum se păstrează. Poți traduce restul mai târziu.",
+    "cancelDubbingTitle": "Oprești dublarea?"
   },
   "progress": {
     "preparingVideoExport": "Se pregătește exportul video…",
@@ -1806,7 +1728,8 @@
     "checkingFile": "Se citește fișierul…",
     "statusLoaded": "{{count}} de rânduri încărcate",
     "statusLoaded_one": "{{count}} rând încărcat",
-    "statusLoaded_few": "{{count}} rânduri încărcate"
+    "statusLoaded_few": "{{count}} rânduri încărcate",
+    "interruptedTranslateSubtitles": "Traducerea acestor subtitrări în {{language}} s-a oprit când s-a închis Translator."
   },
   "subtitleStyles": {
     "Cinema": "Galben cinema",

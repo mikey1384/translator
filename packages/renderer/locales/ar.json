@@ -23,7 +23,6 @@
       "unexpectedSave": "حدث خطأ غير متوقع أثناء الحفظ.",
       "unexpectedLoad": "حدث خطأ غير متوقع أثناء التحميل.",
       "renderFailed": "فشل في العرض",
-      "creditReservationFailed": "فشل في حجز النقاط",
       "invalidRenderOptions": "تم توفير خيارات عرض غير صالحة",
       "missingVideoMetadata": "بيانات الفيديو الوصفية مفقودة ({{missing}})",
       "insufficientDiskSpace": "لا توجد مساحة قرص كافية لإكمال الدمج. يرجى تحرير بعض المساحة والمحاولة مرة أخرى.",
@@ -126,7 +125,6 @@
     "unexpectedSave": "حدث خطأ غير متوقع أثناء الحفظ.",
     "unexpectedLoad": "حدث خطأ غير متوقع أثناء التحميل.",
     "renderFailed": "فشل في العرض",
-    "creditReservationFailed": "فشل في حجز النقاط",
     "invalidRenderOptions": "تم توفير خيارات عرض غير صالحة",
     "missingVideoMetadata": "بيانات الفيديو الوصفية مفقودة ({{missing}})",
     "noSourceVideo": "لا يوجد فيديو مصدر",
@@ -156,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "خدمة النسخ (ElevenLabs Scribe) غير متاحة مؤقتًا أو تعذّر الوصول إليها بعد عدة محاولات. يُرجى المحاولة مرة أخرى بعد بضع دقائق.",
       "fileTooLarge": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعة تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
-      "elevenLabsKeyRequired": "يستخدم النسخ ElevenLabs Scribe ويتطلب مفتاح API من ElevenLabs. أضف مفتاحًا في الإعدادات، أو أوقف وضع مفاتيح API للنسخ باستخدام دقائق Stage5. لا يزال مفتاح OpenAI أو Anthropic الخاص بك يُستخدم للترجمة.",
+      "elevenLabsKeyRequired": "يستخدم النسخ ElevenLabs Scribe ويحتاج إلى مفتاح API من ElevenLabs. أضف مفتاحًا في الإعدادات، أو أوقف “استخدام مفاتيح API الخاصة بي” لتنسخ بدقائق Stage5. سيبقى مفتاح OpenAI أو Anthropic مستخدمًا للترجمة.",
       "fileTooLarge_one": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من ساعة تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
       "fileTooLarge_two": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من ساعتين تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
       "fileTooLarge_few": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعات تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة."
@@ -240,14 +238,14 @@
     "downloading": "جارٍ التنزيل...",
     "selectFile": "اختر ملف",
     "selectVideoFile": "اختر ملف الفيديو",
-    "selectVideoAudioFile": "اختر ملف الفيديو / الصوت",
+    "selectVideoAudioFile": "اختر ملف فيديو أو صوت",
     "saveOriginalVideo": "حفظ الفيديو الأصلي",
     "localFileDescription": "ارفع ملف فيديو أو صوت من جهاز الكمبيوتر الخاص بك",
     "selectLocalFile": "رفع من الكمبيوتر",
     "downloadFromUrl": "تحميل من الويب",
     "recentMedia": "الملفات الأخيرة",
     "webDescription": "الصق روابط فيديو YouTube أو TikTok أو Instagram، أو روابط ملفات الفيديو المباشرة من صفحات الويب",
-    "chooseFile": "اختر ملف",
+    "chooseFile": "اختر ملفًا",
     "fileSelected": "تم اختيار الملف",
     "transcribeOnly": "نسخ الصوت",
     "srtLoaded": "اكتمل النسخ",
@@ -456,7 +454,7 @@
     "captionRecoveryOpenCaptions": "فتح الترجمات",
     "captionRecoverySwitchPrompt": "استرد Translator ترجمات YouTube التلقائية، لكن فيديو الرابط غير متاح. سيؤدي فتحها إلى إزالة الفيديو الحالي.",
     "captionRecoverySwitchTitle": "هل تريد فتح الترجمات بدون الفيديو الحالي؟",
-    "translateTheseSubtitles": "ترجمة إلى لغة أخرى",
+    "translateTheseSubtitles": "ترجمة هذه الأسطر",
     "subtitlesLoaded": "تم تحميل الترجمة",
     "chooseLanguage": "اختر لغة",
     "urlRejected": {
@@ -481,7 +479,7 @@
     "displayModeLabel": "عرض الترجمة",
     "translate": "ترجم",
     "continueTranscribing": "متابعة النسخ",
-    "generate": "إنشاء الترجمات",
+    "generate": "إنشاء الترجمة",
     "generating": "جارٍ الإنشاء...",
     "generateNow": "إنشاء الترجمات الآن",
     "translation": "الترجمة",
@@ -489,20 +487,16 @@
     "improveTranslation": "تحسين الترجمة",
     "chooseSrtFile": "اختر ملف SRT",
     "dub": "دبلجة الصوت",
-    "dubEstimateCredits": "{{credits}} نقطة (~{{minutes}}د)",
     "dubEstimateByo": "~{{minutes}}د صوت",
     "voiceCloningRequiresTranslation": "استنساخ الصوت يتطلب لغة مستهدفة",
     "translateEstimateCredits": "~{{minutes}}د فيديو",
-    "translateEstimateByo": "مفتاح BYO",
     "qualityBadge": "(جودة عالية)",
     "cancel_confirmation": "هل أنت متأكد أنك تريد إلغاء عملية ترجمة النص؟ ستفقد أي تقدم تم إحرازه وستحتاج إلى البدء من جديد.",
-    "dubCostHint": "صوت ElevenLabs: ~{{rate}} نقطة لكل دقيقة كلام. يظهر هذا التقدير قبل بدء الدبلجة.",
     "unreadableCues_one": "تعذّرت قراءة سطر واحد في هذا الملف فاستُبعد. تحقق من توقيته.",
     "unreadableCues_two": "تعذّرت قراءة سطرين في هذا الملف فاستُبعدا. تحقق من توقيتهما.",
     "unreadableCues_few": "تعذّرت قراءة {{count}} أسطر في هذا الملف فاستُبعدت. تحقق من توقيتاتها.",
     "unreadableCues_many": "تعذّرت قراءة {{count}} سطرًا في هذا الملف فاستُبعدت. تحقق من توقيتاتها.",
     "unreadableCues": "تعذّرت قراءة {{count}} سطر في هذا الملف فاستُبعدت. تحقق من توقيتاتها.",
-    "addCreditsToTranslate": "أضف نقاطًا للترجمة",
     "dubInto": "دبلجة إلى {{language}}",
     "dubIntro": "صوتٌ يقرأ الترجمة باللغة التي تختارها، فوق صوت الخلفية الأصلي.",
     "dubNeedsSubtitles": "الدبلجة تقرأ الترجمة بصوت مسموع، لذا يحتاج هذا الفيديو إلى ترجمة أولًا. انسخه، ثم اختر صوتًا هنا.",
@@ -511,8 +505,6 @@
     "dubTranslatesFirst": "تُترجم الأسطر إلى {{language}} أولًا، ثم تُدبلج.",
     "dubCostWithTranslation": "الترجمة والصوت: {{cost}}",
     "dubUsesOwnKeys": "يستخدم مفاتيح API الخاصة بك.",
-    "dubNotEnoughCredits": "رصيدك لا يكفي لهذه الدبلجة.",
-    "addCreditsToDub": "أضف نقاطًا للدبلجة",
     "noSubtitlesToDub": "أنشئ ترجمة لهذا الفيديو أو افتحها أولًا، ثم دبلجه.",
     "noSubtitlesToTranslate": "افتح ملف ترجمة أو أنشئ الترجمة أولًا، ثم ترجمها.",
     "dubVoiceHelp": "الصوت المستخدم في هذه الدبلجة، ويبقى مختارًا لدبلجاتك القادمة.",
@@ -539,8 +531,6 @@
     },
     "generate": "استخراج اللقطات المميزة",
     "regenerate": "استخراج اللقطات المميزة من جديد",
-    "estimateCredits": "{{credits}} نقطة",
-    "estimateByo": "مفتاح BYO",
     "highEffortBadge": "(معمّق)",
     "placeholder": "سيظهر ملخص الذكاء الاصطناعي هنا بمجرد إنشائه.",
     "insufficientCredits": "دقائقك لا تكفي لاستخراج اللقطات المميزة.",
@@ -561,7 +551,7 @@
     "originalFormatDesc": "الاحتفاظ بأبعاد الفيديو الأصلية",
     "verticalFormat": "إعادة تأطير Shorts",
     "verticalFormatDesc": "قصّ وإعادة تأطير لـ YouTube Shorts وTikTok وReels ‏(9:16)",
-    "verticalFitFormat": "ملاءمة الشورتات",
+    "verticalFitFormat": "ملاءمة Shorts",
     "verticalFitFormatDesc": "احتواء الإطار الأصلي داخل لوحة 9:16",
     "downloadHighlight": "تنزيل المقطع",
     "downloadingHighlight": "جارٍ الحفظ…",
@@ -596,7 +586,7 @@
     "downloadCombined": "تنزيل المقطع المدمج",
     "saveCombinedDialogTitle": "حفظ مقطع اللقطة المميزة المدمجة",
     "combinedCutFailed": "فشل قص اللقطات المميزة المدمجة: {{message}}",
-    "highlightsInsufficientCredits": "تم إنشاء الملخص، لكن استخراج اللقطات المميزة توقف بسبب نفاد الدقائق.",
+    "highlightsInsufficientCredits": "اكتمل الملخص، لكن استخراج اللقطات المميزة توقف لأن دقائقك نفدت.",
     "highlightsPartialWarning": "كان استخراج اللقطات المميزة جزئيًا. قد تكون هذه اللقطات غير مكتملة. أعد الإنشاء للتحديث.",
     "highlightsPartialWithReason": "تم إنشاء الملخص، لكن استخراج اللقطات المميزة كان جزئيًا: {{message}}",
     "estimateOwnKey": "يستخدم مفتاح API الخاص بك",
@@ -634,7 +624,10 @@
     "highlightCuesChanged": "عدّلت أسطرًا في هذه اللقطة بعد العثور عليها. تأكد أنها لا تزال مناسبة.",
     "clipCaptionsChangedAny": "تغيّرت ترجمة المقطع منذ قصّه (نصها أو نمطها أو حجمها).",
     "notEnoughForRun": "دقائقك لا تكفي للملخص واللقطات المميزة.",
-    "clipsUseOriginalAudio": "تستخدم المقاطع الصوت الأصلي، لا الدبلجة."
+    "clipsUseOriginalAudio": "تستخدم المقاطع الصوت الأصلي، لا الدبلجة.",
+    "notEnoughMinutesSummary": "دقائقك لا تكفي لهذا الملخص.",
+    "notEnoughMinutesHighlights": "دقائقك لا تكفي لاستخراج اللقطات المميزة.",
+    "translateMissingLines": "ترجمة هذه الأسطر"
   },
   "panel": {
     "new": "جديد",
@@ -653,7 +646,7 @@
     }
   },
   "editSubtitles": {
-    "title": "تعديل الترجمات",
+    "title": "تعديل الترجمة",
     "listTitle": "الترجمات ({{count}})",
     "workspace": {
       "editorStage": "مساحة المحرر",
@@ -666,7 +659,7 @@
       "readyCopy": "اضبط التوقيت وفواصل الأسطر والترجمات هنا قبل حفظ ملف SRT أو حرق الترجمة داخل الوسائط المصدر.",
       "emptyCopy": "افتح ملف SRT موجودًا لتحريره مباشرة. ستظهر هنا أيضًا النصوص المولدة من سير العمل الرئيسي عند جاهزيتها.",
       "rowsLoaded": "تم تحميل {{count}} سطر",
-      "loadAnotherSrt": "تحميل SRT آخر",
+      "loadAnotherSrt": "فتح ملف SRT آخر",
       "mountVideoTitle": "أرفق فيديو المصدر للمعاينة ولتصدير فيديو بترجمة مدمجة",
       "mountVideoCopy": "يمكنك متابعة التحرير بدون فيديو، لكن المعاينة والانتقال والدمج تعمل بأفضل شكل بعد إرفاق الوسائط المصدر.",
       "listCopy": "حرر النص المصدر والترجمة والتوقيت وإجراءات كل سطر مباشرة في مكانها.",
@@ -684,8 +677,8 @@
       "rowsLoaded_many": "تم تحميل {{count}} سطرًا"
     },
     "item": {
-      "seek": "بحث",
-      "seekTitle": "الانتقال إلى وقت البداية في الفيديو",
+      "seek": "انتقال",
+      "seekTitle": "الانتقال في الفيديو إلى بداية هذا السطر",
       "playSnippet": "تشغيل المقطع",
       "pauseSnippet": "إيقاف المقطع",
       "insertTitle": "إدراج كتلة ترجمة جديدة بعد هذه",
@@ -702,7 +695,10 @@
       "startTimeAria": "وقت بداية السطر {{index}}",
       "endTimeAria": "وقت نهاية السطر {{index}}",
       "splitTitle": "تقسيم هذا السطر عند المؤشر",
-      "mergeTitle": "دمج مع السطر التالي"
+      "mergeTitle": "دمج مع السطر التالي",
+      "timeOverlapsPrevious": "يبدأ هذا السطر قبل أن ينتهي السطر السابق، فيظهران معًا.",
+      "timeOverlapsNext": "ينتهي هذا السطر بعد أن يبدأ السطر التالي، فيظهران معًا.",
+      "timeOverlapsBoth": "يتداخل هذا السطر مع السطرين السابق والتالي، فتظهر الأسطر معًا."
     },
     "header": {
       "save": "حفظ الترجمة",
@@ -753,15 +749,14 @@
       "toggleLabel": "استخدام مفاتيح API الخاصة بي",
       "activeKeys": "المفاتيح الجاهزة: {{count}}",
       "noKeys": "لا توجد مفاتيح مُعدّة",
-      "usingApiKeys": "دقائق Stage5 متوقفة",
-      "usingCredits": "دقائق Stage5 قيد الاستخدام",
+      "usingApiKeys": "دقائق Stage5 غير مستخدمة",
+      "usingCredits": "تُستخدم دقائق Stage5",
       "toggleOn": "يتم الآن استخدام مفاتيح API الخاصة بك.",
       "toggleOff": "يتم الآن استخدام دقائق Stage5.",
       "toggleError": "فشل تحديث التفضيل.",
       "toggleAria": "استخدام مفاتيح API الخاصة بي",
       "requirementTranslation": "يتطلب مفتاح OpenAI أو Anthropic للترجمة"
     },
-    "creditsDescription": "اشترِ أرصدة. الساعات المعروضة هي تقدير لإجمالي مدة الفيديو التي يمكنك تفريغها أو ترجمتها. مثال: تفريغ وترجمة فيديو مدته 3 ساعات يستهلك حوالي 6 ساعات (≈ 140,000 رصيدًا).",
     "performanceQuality": {
       "title": "الأداء والجودة",
       "qualityTranslation": {
@@ -771,32 +766,15 @@
         "modelOff": "مسودة Claude Haiku 5.5 فقط",
         "reviewProvider": "موفر المراجعة",
         "openAiHighEnd": "مراجعة متقدمة من OpenAI",
-        "anthropicHighEnd": "مراجعة متقدمة من Anthropic",
-        "help": "<b>5× نقاط</b> • يضيف مرحلة مراجعة لجودة أعلى",
-        "helpWithEstimate": "<b>5× نقاط</b> • رصيدك: ~{{normalTime}} (عادي) / ~{{hqTime}} (جودة عالية)",
-        "helpOn": "<b>نقاط ×5</b> • مسودة Claude Haiku 5.5 + مراجعة Claude Opus 5.5",
-        "helpOff": "<b>نقاط ×1</b> • مسودة Claude Haiku 5.5 فقط",
-        "helpWithEstimateOn": "<b>نقاط ×5</b> • مسودة Claude Haiku 5.5 + مراجعة Claude Opus 5.5 • الرصيد: ~{{time}}",
-        "helpWithEstimateOff": "<b>نقاط ×1</b> • مسودة Claude Haiku 5.5 فقط • الرصيد: ~{{time}}"
+        "anthropicHighEnd": "مراجعة متقدمة من Anthropic"
       },
       "qualitySummary": {
         "label": "ملخص عالي الجودة",
         "modelOn": "تحليل عميق بـ Claude Opus 5.5 + مقاطع اللقطات المميزة",
-        "modelOff": "تحليل قياسي بـ Claude Sonnet 5.5",
-        "help": "<b>4× نقاط</b> • تحليل معمق + مقاطع مميزة مع Claude Opus 5.5",
-        "helpWithEstimate": "<b>4× نقاط</b> • رصيدك: ~{{normalTime}} (عادي) / ~{{hqTime}} (جودة عالية)",
-        "helpOn": "<b>نقاط ×4</b> • تحليل معمّق بـ Claude Opus 5.5 + مقاطع مميزة",
-        "helpOff": "تحليل سريع باستخدام Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>نقاط ×4</b> • تحليل معمّق بـ Claude Opus 5.5 + مقاطع مميزة • الرصيد: ~{{time}}",
-        "helpWithEstimateOff": "تحليل سريع باستخدام Claude Sonnet 5.5 • الرصيد: ~{{time}}"
+        "modelOff": "تحليل قياسي بـ Claude Sonnet 5.5"
       },
       "qualityDubbing": {
-        "label": "دبلجة عالية الجودة",
-        "modelOn": "أصوات ElevenLabs TTS المميزة",
-        "help": "<b>12× نقاط</b> • ElevenLabs TTS مع أصوات متميزة",
-        "helpWithEstimate": "<b>12× نقاط</b> • رصيدك: ~{{normalTime}} (عادي) / ~{{hqTime}} (جودة عالية)",
-        "helpOn": "<b>{{ratio}}× أرصدة</b> • ElevenLabs TTS بأصوات مميزة",
-        "helpWithEstimateOn": "<b>{{ratio}}× أرصدة</b> • ElevenLabs TTS بأصوات مميزة • الرصيد: ~{{time}}"
+        "modelOn": "أصوات ElevenLabs TTS المميزة"
       },
       "videoSuggestionModel": {
         "label": "نموذج اقتراح الفيديو",
@@ -805,9 +783,6 @@
         "quality": "جودة (مثل جودة الترجمة)"
       },
       "rate": {
-        "perHour": "~{{credits}} أرصدة/ساعة",
-        "perMinute": "~{{credits}} أرصدة/دقيقة",
-        "perSearch": "~{{credits}} أرصدة/بحث",
         "balance": "الرصيد: ~{{time}}",
         "minutesPerHour": "~{{time}} من دقائقك لكل ساعة فيديو",
         "minutesPerDubMinute": "~{{time}} من دقائقك لكل دقيقة دبلجة",
@@ -830,18 +805,15 @@
       "previewTooltip": "معاينة هذا الصوت",
       "previewing": "جارٍ التشغيل...",
       "previewFree": "معاينة",
-      "previewWithCost": "معاينة ({{cost}} نقطة)",
       "mixLabel": "مستوى صوت الدبلجة مقابل مستوى صوت الفيديو الأصلي",
       "mixHelp": "تحكّم في مقدار تشغيل المسار الصوتي الأصلي تحت الصوت المُدبلج.",
       "mixAmbient": "مزيد من الصوت المحيط",
       "mixVoice": "مزيد من الصوت",
       "voiceCloning": "استنساخ الصوت الأصلي",
       "voiceCloningDesc": "الحفاظ على صوت المتحدث الأصلي في الصوت المدبلج",
-      "voiceCloningInsufficientCredits": "يتطلب دقيقة واحدة على الأقل من النقاط",
       "voiceCloningEnabled": "تم تفعيل استنساخ الصوت مع ElevenLabs. سيتم الحفاظ على صوت المتحدث الأصلي في الصوت المدبلج.",
       "voiceCloningInfo": "يستخدم استنساخ الصوت خدمة الدبلجة من ElevenLabs لتحليل صوت المتحدث الأصلي وإعادة إنشائه.",
       "costPerMinute": "التكلفة لكل دقيقة",
-      "credits": "نقاط",
       "yourBalance": "رصيدك",
       "canClone": "يمكنك الاستنساخ",
       "upToMinutes": "حتى {{minutes}} دقيقة",
@@ -851,7 +823,7 @@
     },
     "byoOpenAi": {
       "title": "استخدم مفاتيح API الخاصة بك",
-      "description": "افتح ترقية لمرة واحدة لاستخدام مفاتيح API الخاصة بك. بعد الفتح، يعمل أي نسخ أو ترجمة أو دبلجة أو ملخص مباشرة على حساباتك بدلًا من استهلاك دقائق Stage5.",
+      "description": "فتحٌ لمرة واحدة لاستخدام مفاتيح API الخاصة بك. بعده يعمل النسخ والترجمة والدبلجة والملخصات على حساباتك في خدمات الذكاء الاصطناعي بدلًا من دقائق Stage5.",
       "unlocking": "جارٍ فتح صفحة الدفع…",
       "unlockCta": "فتح بـ $10",
       "unlockHint": "بمجرد الفتح، أضف مفاتيح API الخاصة بك هنا في أي وقت لتفعيل الفوترة المباشرة على حساباتك.",
@@ -869,19 +841,17 @@
       "test": "اختبار المفتاح",
       "lastSynced": "آخر مزامنة",
       "toggleLabel": "استخدام مفتاح OpenAI الخاص بي",
-      "toggleHelp": "عند الإيقاف، يتم استخدام نقاط الذكاء الاصطناعي.",
       "toggleAria": "تبديل استخدام مفتاح OpenAI الخاص بك",
       "toggleOn": "يتم استخدام مفتاح OpenAI الخاص بك لمهام الذكاء الاصطناعي.",
-      "toggleOff": "يتم استخدام نقاط Stage5 لمهام الذكاء الاصطناعي.",
       "toggleError": "فشل تحديث التفضيل.",
       "howToGetKeys": "كيف أحصل على مفاتيح API؟",
       "option1Title": "الخيار 1: OpenAI",
       "option2Title": "الخيار 2: Anthropic + ElevenLabs",
       "economicsTitle": "لماذا يستحق الأمر",
-      "economicsBody": "دقائق Stage5 مصممة للراحة (بلا إعداد). أما مفاتيحك الخاصة فتدفع للمزوّدين مباشرة، وهي عادةً أرخص بنحو 30–50% حسب الباقة.",
+      "economicsBody": "دقائق Stage5 هي الخيار الأسهل: لا شيء تحتاج إلى إعداده. ومع مفاتيحك الخاصة تدفع لمزوّدي الذكاء الاصطناعي مباشرة، وغالبًا بتكلفة أقل بنحو 30–50% حسب الباقة.",
       "encryptionUnavailable": "التخزين الآمن غير متاح على هذا النظام. لا يمكن حفظ مفاتيح API.",
       "checkoutOpen": "صفحة الدفع مفتوحة في المتصفح…",
-      "checkoutOpenHint": "أكمل الدفع في متصفحك. سنفتح استخدام مفاتيحك الخاصة تلقائيًا عند تأكيد الدفع.",
+      "checkoutOpenHint": "أكمل الدفع في متصفحك. سيُفتح استخدام مفاتيحك الخاصة تلقائيًا بمجرد إتمام الدفع.",
       "entitlementsLoadFailed": "تعذّر التحقق من حالة فتح المفاتيح. تحقق من اتصالك ثم أعد المحاولة.",
       "unlockFailed": "تعذّر بدء الدفع. تحقق من اتصالك ثم حاول مرة أخرى."
     },
@@ -909,17 +879,17 @@
       "summary": "الملخص",
       "dubbing": "الدبلجة",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "لا يتوفر حاليًا نموذج لتوصيات الفيديو بمفاتيحك الخاصة. فعّل مفتاح OpenAI أو Anthropic الخاص بك لهذه الميزة.",
-      "videoSuggestionModelRequiresOpenAi": "يتطلب فتح مفاتيحك الخاصة ومفتاح OpenAI وتفعيله.",
-      "videoSuggestionModelRequiresAnthropic": "يتطلب فتح مفاتيحك الخاصة ومفتاح Anthropic وتفعيله.",
-      "summaryRequiresOpenAi": "يتطلب فتح مفاتيحك الخاصة ومفتاح API من OpenAI.",
-      "summaryRequiresAnthropic": "يتطلب فتح مفاتيحك الخاصة ومفتاح API من Anthropic.",
+      "videoSuggestionModelUnavailable": "لا يتوفر نموذج لتوصيات الفيديو بمفاتيحك الخاصة. فعّل مفتاح OpenAI أو Anthropic لاستخدام هذه الميزة.",
+      "videoSuggestionModelRequiresOpenAi": "يحتاج إلى فتح مفاتيح API، ومفتاح OpenAI الخاص بك، وتفعيل خيار OpenAI.",
+      "videoSuggestionModelRequiresAnthropic": "يحتاج إلى فتح مفاتيح API، ومفتاح Anthropic الخاص بك، وتفعيل خيار Anthropic.",
+      "summaryRequiresOpenAi": "يحتاج إلى فتح مفاتيح API ومفتاح OpenAI الخاص بك.",
+      "summaryRequiresAnthropic": "يحتاج إلى فتح مفاتيح API ومفتاح Anthropic الخاص بك.",
       "translationReview": "الترجمة (مراجعة)",
-      "transcriptionRequiresElevenLabs": "يستخدم النسخ ElevenLabs Scribe فقط. أضف مفتاح API من ElevenLabs للنسخ باستخدام مفاتيحك الخاصة. بدونه، يستخدم النسخ دقائق Stage5، والتي لا تُستخدم أثناء تشغيل مفاتيح API الخاصة بك. لا يزال مفتاح OpenAI الخاص بك يُستخدم للترجمة.",
-      "dubbingRequiresElevenLabs": "تستخدم الدبلجة ElevenLabs فقط. أضف مفتاح API من ElevenLabs للدبلجة بمفاتيحك الخاصة. بدونه، تستخدم الدبلجة دقائق Stage5، والتي لا تُستخدم أثناء تفعيل مفاتيح API الخاصة بك.",
+      "transcriptionRequiresElevenLabs": "يستخدم النسخ ElevenLabs Scribe فقط. أضف مفتاح API من ElevenLabs لتنسخ بمفاتيحك الخاصة. بدونه يستخدم النسخ دقائق Stage5، وهي لا تُستخدم ما دامت مفاتيحك الخاصة مفعّلة. سيبقى مفتاح OpenAI مستخدمًا للترجمة.",
+      "dubbingRequiresElevenLabs": "تستخدم الدبلجة ElevenLabs فقط. أضف مفتاح API من ElevenLabs لتدبلج بمفاتيحك الخاصة. بدونه تستخدم الدبلجة دقائق Stage5، وهي لا تُستخدم ما دامت مفاتيحك الخاصة مفعّلة.",
       "runtimeFallback": "البديل الاحتياطي أثناء التشغيل في وضع مفتاح API",
-      "videoSuggestionLegacyFollowDraft": "أبقينا على إعداد قديم لمفاتيحك الخاصة: يتبع نموذج مسودة الترجمة حتى تختار نموذجًا مباشرًا.",
-      "videoSuggestionLegacyFollowReview": "أبقينا على إعداد قديم لمفاتيحك الخاصة: يتبع نموذج مراجعة الترجمة حتى تختار نموذجًا مباشرًا."
+      "videoSuggestionLegacyFollowDraft": "أبقينا على إعدادك السابق: يتبع هذا نموذج مسودة الترجمة حتى تختار نموذجًا هنا.",
+      "videoSuggestionLegacyFollowReview": "أبقينا على إعدادك السابق: يتبع هذا نموذج مراجعة الترجمة حتى تختار نموذجًا هنا."
     },
     "apiKeyGuide": {
       "title": "كيفية الحصول على مفاتيح API",
@@ -943,8 +913,7 @@
         "step3b": "في الشريط الجانبي الأيسر",
         "step4": "انقر",
         "step5": "أضف طريقة دفع في إعدادات الفوترة (مطلوب لاستخدام API)",
-        "step6": "انسخ المفتاح (يبدأ بـ sk-) والصقه في Stage5",
-        "note": "نصيحة: حسابات OpenAI الجديدة غالبًا تحصل على نقاط مجانية للبدء. تدفع فقط مقابل ما تستخدمه."
+        "step6": "انسخ المفتاح (يبدأ بـ sk-) والصقه في Stage5"
       },
       "anthropic": {
         "description": "يوفر Claude مراجعات ترجمة عالية الجودة. بدونه، يتولى GPT جميع مهام الترجمة.",
@@ -964,7 +933,7 @@
         "step4": "أضف طريقة دفع في إعدادات الاشتراك (مطلوب لاستخدام API بعد الطبقة المجانية)",
         "step5": "انسخ مفتاح API الخاص بك والصقه في Stage5",
         "note": "نصيحة: لدى ElevenLabs طبقة مجانية مع استخدام محدود. للمزيد، قم بالترقية إلى خطة مدفوعة في إعدادات حسابك.",
-        "audioDescription": "يشغّل ElevenLabs جميع عمليات النسخ (Scribe) والدبلجة. بدون مفتاح ElevenLabs الخاص بك، يستخدم كلاهما دقائق Stage5، والتي لا تُستخدم أثناء تشغيل مفاتيح API الخاصة بك."
+        "audioDescription": "يتولى ElevenLabs كل عمليات النسخ (Scribe) والدبلجة. بدون مفتاح ElevenLabs خاص بك، يستخدم كلاهما دقائق Stage5، وهي لا تُستخدم ما دامت مفاتيحك الخاصة مفعّلة."
       }
     },
     "byoAnthropic": {
@@ -983,14 +952,11 @@
       "testing": "جارٍ الاختبار…",
       "test": "اختبار المفتاح",
       "toggleLabel": "استخدام مفتاح Anthropic الخاص بي",
-      "toggleHelp": "عند الإيقاف، تستخدم طلبات Claude نقاط Stage5.",
       "toggleAria": "تبديل استخدام مفتاح Anthropic الخاص بك",
       "toggleOn": "يتم استخدام مفتاح Anthropic الخاص بك لنماذج Claude.",
-      "toggleOff": "يتم استخدام نقاط Stage5 لنماذج Claude.",
       "toggleError": "فشل تحديث تفضيل Anthropic."
     },
     "stage5TtsProvider": {
-      "label": "جودة TTS (نقاط Stage5)",
       "elevenlabs": "متميز (ElevenLabs)",
       "elevenlabsHint": "أفضل جودة، تكلفة أعلى (~12×)",
       "elevenlabsHintWithBalance": "أفضل جودة · رصيدك: {{time}} من الدبلجة"
@@ -1083,40 +1049,25 @@
       "freeTitle": "ترجم مجانًا بأداة الذكاء الاصطناعي الخاصة بك"
     },
     "creditTransfer": {
-      "title": "نقل النقاط بين أجهزة الكمبيوتر",
-      "description": "يمكن نقل النقاط المشتراة وفتح مفاتيح API إلى جهاز كمبيوتر آخر. تبقى نقاط الترحيب المجانية على هذا الجهاز.",
-      "moveButton": "نقل النقاط إلى جهاز كمبيوتر آخر",
-      "receiveButton": "استلام النقاط",
       "creating": "جارٍ إنشاء الرمز…",
       "copy": "نسخ",
       "copied": "تم النسخ",
-      "summaryCredits": "سيتم نقل {{credits}} نقطة.",
       "summaryByo": "سيتم نقل فتح مفاتيح API أيضًا.",
       "expires": "يعمل هذا الرمز مرة واحدة وتنتهي صلاحيته خلال {{minutes}} دقيقة.",
-      "steps": "على الكمبيوتر الجديد: ثبّت Translator، وافتح الإعدادات، واختر “استلام النقاط”، ثم أدخل هذا الرمز.",
       "inputLabel": "الرمز من جهاز الكمبيوتر الآخر",
       "redeem": "استلام",
       "redeeming": "جارٍ الاستلام…",
-      "received": "تم استلام {{credits}} نقطة.",
       "receivedNoCredits": "نجح الرمز.",
       "receivedByo": "فتح مفاتيح API مفعّل على هذا الكمبيوتر.",
       "expires_one": "يعمل هذا الرمز مرة واحدة وتنتهي صلاحيته خلال دقيقة واحدة.",
       "expires_two": "يعمل هذا الرمز مرة واحدة وتنتهي صلاحيته خلال دقيقتين.",
       "expires_few": "يعمل هذا الرمز مرة واحدة وتنتهي صلاحيته خلال {{minutes}} دقائق.",
-      "summaryCredits_one": "سيتم نقل نقطة واحدة.",
-      "summaryCredits_two": "سيتم نقل نقطتين.",
-      "summaryCredits_few": "سيتم نقل {{credits}} نقاط.",
-      "received_one": "تم استلام نقطة واحدة.",
-      "received_two": "تم استلام نقطتين.",
-      "received_few": "تم استلام {{credits}} نقاط.",
       "errors": {
-        "nothing_to_transfer": "لا شيء لنقله بعد: لا توجد على هذا الكمبيوتر دقائق مشتراة ولا فتح لمفاتيح API. لنقل الدقائق إلى هنا من كمبيوتر آخر، اختر “استلام الدقائق”.",
         "too_many_codes": "أنشأت رموز نقل كثيرة خلال هذه الساعة. حاول مرة أخرى بعد قليل.",
         "jobs_running": "لا يزال نسخ أو ترجمة قيد التشغيل. حاول مرة أخرى بعد انتهائه.",
         "invalid_code": "هذا الرمز غير صحيح أو استُخدم من قبل أو انتهت صلاحيته. أنشئ رمزًا جديدًا على الكمبيوتر الآخر.",
         "same_device": "أدخل الرمز على الكمبيوتر الآخر، لا على الكمبيوتر الذي أنشأه.",
         "network_error": "تعذّر الوصول إلى خادم Stage5. تحقق من اتصالك ثم حاول مرة أخرى.",
-        "transfer_failed": "تعذّر نقل الدقائق. تحقق من اتصالك ثم حاول مرة أخرى.",
         "nothing_to_transfer_minutes": "لا شيء لنقله بعد: لا توجد على هذا الكمبيوتر دقائق مشتراة ولا فتح لمفاتيح API. لنقل الدقائق إلى هنا من كمبيوتر آخر، اختر “استلام الدقائق”.",
         "transfer_failed_minutes": "تعذّر نقل الدقائق. تحقق من اتصالك ثم حاول مرة أخرى."
       },
@@ -1130,29 +1081,24 @@
     }
   },
   "credits": {
-    "title": "رصيد الذكاء الاصطناعي",
+    "title": "دقائقك",
     "loading": "جارٍ التحميل...",
-    "credits": "نقاط",
     "usingApiKey": "يتم استخدام مفتاح API",
     "usingOpenAi": "يتم استخدام OpenAI",
     "usingAnthropic": "يتم استخدام Claude",
     "usingElevenLabs": "يتم استخدام ElevenLabs",
     "hours": "ساعات",
     "translationHoursShort": "ساعات ترجمة",
-    "buyCredits": "شراء النقاط",
     "redirectingToPayment": "فتح الدفع الآمن…",
-    "description": "اختر من حزم ${{packMicroPrice}} ({{packMicroHours}}س)، ${{pack1Price}} ({{pack1Hours}}س)، ${{pack2Price}} ({{pack2Hours}}س)، أو ${{pack3Price}} ({{pack3Hours}}س) من النقاط",
-    "notEnough": "نقاط غير كافية. يرجى شراء المزيد من النقاط للمتابعة.",
     "transcriptionMinutesShort": "{{minutes}} دقيقة من النسخ",
     "transcriptionTimeShort": "{{time}} من النسخ",
-    "costOfBalance": "{{cost}} من رصيدك البالغ {{balance}}",
     "pill": {
       "freeBack": "تتجدد الدقائق المجانية في {{date}}",
       "empty": "شحن الدقائق",
       "freeThisMonth": "{{count}} د مجانًا هذا الشهر",
       "freeWelcome": "{{count}} د مجانًا",
       "minutes": "المتبقي: {{count}} د",
-      "title": "الدقائق والباقات",
+      "title": "دقائقك وباقاتك",
       "neutral": "الدقائق",
       "welcomePending": "دقائقك المجانية في الطريق",
       "freeTimeThisMonth": "{{time}} مجانًا هذا الشهر",
@@ -1170,11 +1116,10 @@
     "moreMinutesPerDollar": "{{multiplier}}× دقائق أكثر لكل دولار",
     "checkoutWaiting": "أكمل الدفع في المتصفح، وستُضاف دقائقك هنا تلقائيًا.",
     "checkoutNote": "دفعة واحدة عبر Stripe في المتصفح. بلا حساب ولا اشتراك، وتُضاف الدقائق تلقائيًا.",
-    "dubbingNote": "الترجمة بدقائقك تضيف نحو 10% لكل دقيقة، والدبلجة تستهلك أكثر.",
+    "dubbingNote": "إضافة ترجمة تستهلك دقائق أكثر بنحو 10%، والدبلجة تستهلك أكثر من ذلك.",
     "iCancelledCheckout": "لقد ألغيت عملية الدفع",
     "checkoutStartFailed": "تعذّر بدء الدفع. تحقّق من اتصالك وحاول مجددًا.",
     "loadFailed": "تعذّر تحميل رصيدك. تحقق من اتصالك ثم حاول مرة أخرى.",
-    "estimateAmount": "{{credits}} نقطة",
     "costOfBalanceMinutes": "{{cost}} من أصل {{balance}}",
     "timeLeft": "تبقّى {{time}}",
     "success": {
@@ -1190,7 +1135,10 @@
     "balanceOffline": "تعذّر التحقق من دقائقك الآن",
     "offlineNote": "لا يستطيع Translator الوصول إلى Stage5. سيظهر رصيدك مجددًا عند عودة الاتصال.",
     "microPackLabelNoTime": "شراء دقائق — {{price}}",
-    "microPackLabel": "شراء دقائق — {{price}} · ≈ {{time}} من الفيديو"
+    "microPackLabel": "شراء دقائق — {{price}} · ≈ {{time}} من الفيديو",
+    "checkingPayment": "جارٍ التحقق من دفعتك…",
+    "checkoutUnresolved": "إذا كنت قد دفعت، فستظهر دقائقك هنا قريبًا. لم تُكمل الدفع بعد؟ أكمله في متصفحك.",
+    "checkPaymentNow": "تحقّق الآن"
   },
   "cta": {
     "generate": {
@@ -1220,7 +1168,7 @@
     "scrollToCurrentSubtitle": "انتقل إلى الترجمة الحالية",
     "changeVideo": "تغيير الفيديو",
     "findVideoWithAi": "اعثر على فيديو باستخدام AI",
-    "mountSrt": "تحميل SRT",
+    "mountSrt": "فتح ملف SRT",
     "changeSrt": "تغيير SRT",
     "useThisVideo": "استخدم هذا الفيديو",
     "useDownloadedVideo": "استخدم هذا الفيديو",
@@ -1302,17 +1250,15 @@
     "afrikaans": "الأفريقانية"
   },
   "generateSubtitles": {
-    "noCredits": "لا توجد نقاط.",
     "rechargeLink": "إعادة الشحن ←",
     "creditWarning": {
-      "message": "التنزيل والتحرير والتصدير والترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية. يتطلب النسخ دقائق أو فتح مفاتيح API في <settingsLink>{{settingsLinkText}}</settingsLink>.",
+      "message": "التنزيل والتعديل والتصدير مجانية، وكذلك الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء. أما النسخ فيحتاج إلى دقائق أو فتح مفاتيح API من <settingsLink>{{settingsLinkText}}</settingsLink>.",
       "settingsLinkText": "الإعدادات"
     },
     "validation": {
       "pleaseSelectVideo": "يرجى اختيار فيديو",
       "processingDuration": "جارٍ معالجة مدة الفيديو. يرجى المحاولة مرة أخرى قريباً.",
       "icloudPlaceholder": "هذا الملف مخزّن في iCloud. في Finder، انقر على \"تنزيل\" وانتظر حتى تنتهي أيقونة السحابة، ثم حاول مرة أخرى.",
-      "insufficientCreditsForVoiceCloning": "نقاط غير كافية لاستنساخ الصوت. مدة الفيديو {{duration}} دقيقة لكن يمكنك تحمل {{affordable}} دقيقة فقط. يرجى إضافة نقاط أو تعطيل استنساخ الصوت.",
       "fileTooLargeForVoiceCloning": "ملف الفيديو كبير جدًا لاستنساخ الصوت ({{size}}MB). الحد الأقصى المسموح به {{max}}MB. يرجى استخدام فيديو أقصر أو تعطيل استنساخ الصوت."
     },
     "status": {
@@ -1322,7 +1268,6 @@
       "error": "خطأ"
     },
     "buttons": {
-      "buyCredits": "شراء النقاط",
       "redirectingToPayment": "إعادة التوجيه للدفع..."
     },
     "workflow": {
@@ -1346,9 +1291,8 @@
       "saveOutputsDescription": "احفظ أي وسائط أصلية أو مدبلجة تريد الاحتفاظ بها خارج مساحة عمل التطبيق."
     },
     "calculatingCost": "جارٍ حساب التكلفة...",
-    "notEnoughCredits": "لا توجد نقاط كافية متاحة",
     "welcomeCredits": {
-      "message": "لديك نحو 20 دقيقة مجانية من الفيديو لتجربة النسخ والترجمة."
+      "message": "لديك دقائق مجانية لتجربة النسخ والترجمة (نحو 20 دقيقة من الفيديو)."
     }
   },
   "findBar": {
@@ -1366,7 +1310,8 @@
     "matchCount": "{{current}} من {{total}}",
     "matchCase": "مطابقة حالة الأحرف",
     "wholeWord": "الكلمة كاملة",
-    "showReplace": "استبدال"
+    "showReplace": "استبدال",
+    "noMatches": "لا توجد تطابقات"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1385,8 +1330,8 @@
     "unsavedSrtOnTranscribe": {
       "title": "هل تريد حفظ الترجمات الحالية قبل النسخ؟",
       "message": "لديك بالفعل ترجمات محمّلة. سيؤدي النسخ إلى استبدالها. ماذا تريد أن تفعل؟",
-      "saveAndTranscribe": "حفظ والبدء بالنسخ",
-      "discardAndTranscribe": "تجاهل والبدء بالنسخ",
+      "saveAndTranscribe": "الحفظ ثم النسخ",
+      "discardAndTranscribe": "النسخ دون حفظ",
       "cancel": "إلغاء"
     },
     "downloadInProgress": "التنزيل قيد التقدم",
@@ -1410,42 +1355,8 @@
       "description": "قد يكون هذا بسبب تغييرات منصة الفيديو أو إجراءات حماية جديدة. قد تحتاج إلى انتظار إصدار التطبيق التالي للتعامل مع مقاطع الفيديو الأحدث."
     },
     "creditRanOut": {
-      "title": "نفدت النقاط",
-      "message": "لقد نفدت نقاط الذكاء الاصطناعي لديك. أعد الشحن من الإعدادات ثم تابع من حيث توقفت.",
       "openSettings": "فتح الإعدادات",
       "ok": "حسناً",
-      "neverHadTitle": "يتطلب النسخ نقاطًا",
-      "neverHadMessage": "يتطلب النسخ نقاطًا أو فتح مفاتيح API. احصل على أيٍّ منهما من الإعدادات. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية.",
-      "notEnoughTitle": "لا توجد أرصدة كافية لهذا الفيديو",
-      "notEnoughTranscriptionMessage": "يتطلب نسخ هذا الفيديو نحو {{required}} رصيدًا. لديك {{available}}، وهذا يكفي لنحو {{minutes}} دقيقة. أضف أرصدة ثم ابدأ من جديد.",
-      "notEnoughMessage": "تحتاج هذه المهمة إلى أرصدة أكثر من رصيدك البالغ {{available}}. أضف أرصدة للمتابعة.",
-      "task": {
-        "transcription": {
-          "title": "النسخ يحتاج إلى نقاط",
-          "message": "رصيدك لا يغطي نسخ هذا. أضف نقاطًا، ثم ابدأ من جديد. الأسطر التي نُسخت محفوظة.",
-          "messageNothingYet": "دقائقك لا تكفي لنسخ هذا. أضف دقائق، ثم ابدأ من جديد."
-        },
-        "translation": {
-          "title": "الترجمة تحتاج إلى نقاط",
-          "message": "رصيدك لا يغطي ترجمة هذا. أضف نقاطًا، ثم حاول مرة أخرى. الأسطر التي تُرجمت محفوظة. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية.",
-          "messageNothingYet": "دقائقك لا تكفي لترجمة هذا. أضف دقائق، ثم حاول مرة أخرى. الترجمة مجانية باشتراك Claude أو Codex الخاص بك عبر التحكم بالوكلاء."
-        },
-        "dubbing": {
-          "title": "الدبلجة تحتاج إلى نقاط",
-          "message": "رصيدك لا يغطي دبلجة هذا الفيديو. أضف نقاطًا، ثم حاول مرة أخرى."
-        },
-        "summary": {
-          "title": "الملخص يحتاج إلى نقاط",
-          "message": "رصيدك لا يغطي الملخص واللقطات المميزة. أضف نقاطًا، ثم حاول مرة أخرى."
-        },
-        "videoSearch": {
-          "title": "البحث بالذكاء الاصطناعي يحتاج إلى نقاط",
-          "message": "رصيدك لا يغطي البحث عن الفيديوهات بالذكاء الاصطناعي. أضف نقاطًا، ثم ابحث مجددًا."
-        },
-        "other": {
-          "title": "هذا يحتاج إلى نقاط"
-        }
-      },
       "minutes": {
         "transcription": {
           "title": "النسخ يحتاج إلى دقائق",
@@ -1477,12 +1388,15 @@
         "message": "نفدت دقائقك. أضف دقائق من الإعدادات، ثم تابع من حيث توقفت.",
         "notEnoughTitle": "دقائقك لا تكفي لهذا الفيديو",
         "notEnoughTranscriptionMessage": "نسخ هذا الفيديو يحتاج إلى {{required}}، والمتبقي لديك {{available}}. أضف دقائق، ثم ابدأ من جديد.",
-        "notEnoughMessage": "يحتاج هذا إلى أكثر من {{available}} المتبقية لديك. أضف دقائق للمتابعة."
+        "notEnoughMessage": "يحتاج هذا إلى أكثر من {{available}} المتبقية لديك. أضف دقائق للمتابعة.",
+        "voicePreview": {
+          "title": "معاينة الصوت تحتاج إلى دقائق",
+          "message": "دقائقك لا تكفي لمعاينة الصوت. أضف دقائق ثم حاول مجددًا."
+        }
       }
     },
     "dubCostConfirm": {
       "title": "بدء الدبلجة؟",
-      "message": "ستستخدم هذه الدبلجة نحو {{cost}} من رصيدك البالغ {{balance}}. توليد الأصوات يكلف أكثر بكثير من الترجمة.",
       "messageMinutes": "تستهلك هذه الدبلجة {{cost}}. توليد الأصوات أعلى تكلفة بكثير من الترجمة."
     },
     "unsavedSrtOnCaptionRecovery": {
@@ -1557,7 +1471,9 @@
     "cancelSummaryTitle": "إيقاف الملخص؟",
     "keepSummarizing": "متابعة",
     "stopSummarizing": "إيقاف",
-    "cancelSummaryBody": "لن يُحتفظ بالملخص واللقطات المميزة التي أُنشئت حتى الآن."
+    "cancelSummaryBody": "لن يُحتفظ بالملخص واللقطات المميزة التي أُنشئت حتى الآن.",
+    "cancelTranslationBody": "ستبقى الأسطر التي تُرجمت حتى الآن، ويمكنك ترجمة الباقي لاحقًا.",
+    "cancelDubbingTitle": "إيقاف الدبلجة؟"
   },
   "progress": {
     "preparingVideoExport": "جارٍ تجهيز تصدير الفيديو…",
@@ -1842,7 +1758,8 @@
     "statusLoaded_one": "تم تحميل سطر واحد",
     "statusLoaded_two": "تم تحميل سطرين",
     "statusLoaded_few": "تم تحميل {{count}} أسطر",
-    "statusLoaded_many": "تم تحميل {{count}} سطرًا"
+    "statusLoaded_many": "تم تحميل {{count}} سطرًا",
+    "interruptedTranslateSubtitles": "توقفت ترجمة هذه الأسطر إلى {{language}} عند إغلاق Translator."
   },
   "subtitleStyles": {
     "Cinema": "أصفر سينمائي",
