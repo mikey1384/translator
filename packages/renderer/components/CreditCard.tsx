@@ -4,10 +4,7 @@ import { useCreditStore } from '../state';
 import { useCreditCheckout } from './BuyCreditsButton';
 import { colors, fonts, surfaceCardStyles } from '../styles';
 import { CREDIT_PACKS } from '../../shared/constants';
-import {
-  estimateTranscriptionHours,
-  formatHours,
-} from '../utils/creditEstimates';
+import { estimateTranscriptionHours } from '../utils/creditEstimates';
 
 type Pack = (typeof CREDIT_PACKS)[keyof typeof CREDIT_PACKS];
 
@@ -50,10 +47,10 @@ const balanceMeta = css`
   margin: 0;
   font-size: 0.9rem;
   color: ${colors.textDim};
-  text-align: right;
+  text-align: end;
 
   @media (max-width: 640px) {
-    text-align: left;
+    text-align: start;
   }
 `;
 
@@ -80,7 +77,7 @@ const packCard = css`
   background: ${colors.surfaceSoft};
   color: ${colors.text};
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -188,14 +185,39 @@ const BASE_CREDITS_PER_DOLLAR =
 
 function formatUsd(price: number, locale: string): string {
   try {
+    // Prices are always US dollars: "$5" reads everywhere, and dropping the
+    // bidi marks keeps RTL text from splitting the symbol off the number.
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'USD',
+      currencyDisplay: 'narrowSymbol',
       maximumFractionDigits: 0,
-    }).format(price);
+    })
+      .format(price)
+      .replace(/[\u200e\u200f\u061c]/g, '');
   } catch {
     return `$${price}`;
   }
+}
+
+/** "5h 21m" in the user's language and numerals, via Intl units. */
+function formatDuration(hours: number, locale: string): string {
+  const total = Math.max(0, Math.round(hours * 60));
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  const unit = (value: number, kind: 'hour' | 'minute') => {
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: 'unit',
+        unit: kind,
+        unitDisplay: 'narrow',
+      }).format(value);
+    } catch {
+      return `${value}${kind === 'hour' ? 'h' : 'm'}`;
+    }
+  };
+  if (h === 0) return unit(Math.max(1, m), 'minute');
+  return m > 0 ? `${unit(h, 'hour')} ${unit(m, 'minute')}` : unit(h, 'hour');
 }
 
 function formatRefreshDate(isoDay: string, locale: string): string {
@@ -219,7 +241,10 @@ function PackCard({ pack, locale }: { pack: Pack; locale: string }) {
     placement: 'settings-credit-card',
   });
   const kind = PACK_BADGES[pack.id];
-  const time = formatHours(estimateTranscriptionHours(pack.credits) ?? 0);
+  const time = formatDuration(
+    estimateTranscriptionHours(pack.credits) ?? 0,
+    locale
+  );
   const multiplier =
     Math.round((pack.credits / pack.price / BASE_CREDITS_PER_DOLLAR) * 10) / 10;
 
@@ -245,9 +270,16 @@ function PackCard({ pack, locale }: { pack: Pack; locale: string }) {
             : t('credits.badgeValue', 'Best value')}
         </span>
       ) : null}
-      <span className={priceStyles}>{formatUsd(pack.price, locale)}</span>
+      {/* Isolated so prices and durations keep their order in RTL text. */}
+      <span className={priceStyles}>
+        <bdi dir="ltr">{formatUsd(pack.price, locale)}</bdi>
+      </span>
       <span className={amountStyles}>
-        {loading ? t('credits.redirectingToPayment') : `≈ ${time}`}
+        {loading ? (
+          t('credits.redirectingToPayment')
+        ) : (
+          <bdi dir="auto">≈ {time}</bdi>
+        )}
       </span>
       <span className={subStyles}>{t('credits.ofVideo', 'of video')}</span>
       {multiplier > 1 ? (
@@ -292,7 +324,7 @@ export default function CreditCard() {
     balanceMinutes < 1
       ? t('credits.balanceNone', 'No minutes left')
       : t('credits.balanceTime', '{{time}} of video', {
-          time: formatHours(balanceHours),
+          time: formatDuration(balanceHours, locale),
         });
 
   let meta: string | null = null;

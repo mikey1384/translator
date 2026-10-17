@@ -122,7 +122,11 @@ export default function SubtitleEditTextarea({
           <span>{t('common.locked', 'Locked')}</span>
         </div>
       )}
-      <div ref={highlightRef} className={editorTextareaHighlightStyles(rows)}>
+      <div
+        ref={highlightRef}
+        className={editorTextareaHighlightStyles(rows)}
+        dir="auto"
+      >
         {(() => {
           const raw = localValue ?? '';
           const buildRegex = (rawTerm: string): RegExp | null => {
@@ -168,6 +172,7 @@ export default function SubtitleEditTextarea({
       </div>
       <textarea
         ref={textareaRef}
+        dir="auto"
         className={editorTextareaInputStyles(rows, readOnly)}
         placeholder={placeholder}
         rows={rows}

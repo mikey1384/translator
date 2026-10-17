@@ -143,7 +143,7 @@ const dismissButtonStyles = css`
   width: 28px;
   height: 28px;
   border-radius: ${borderRadius.full};
-  margin-left: auto;
+  margin-inline-start: auto;
   flex-shrink: 0;
 
   &:hover {

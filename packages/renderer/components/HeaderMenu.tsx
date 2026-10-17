@@ -49,7 +49,7 @@ const menu = css`
 `;
 
 const item = css`
-  text-align: left;
+  text-align: start;
   padding: 10px 12px;
   border-radius: 10px;
   border: 0;

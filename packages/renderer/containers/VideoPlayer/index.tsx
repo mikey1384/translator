@@ -372,7 +372,8 @@ export default function VideoPlayer({
   };
 
   return (
-    <div className={videoPlayerRootStyles}>
+    // Time runs left to right on the seek bar and controls in every language.
+    <div className={videoPlayerRootStyles} dir="ltr">
       <div
         ref={playerDivRef}
         tabIndex={0}

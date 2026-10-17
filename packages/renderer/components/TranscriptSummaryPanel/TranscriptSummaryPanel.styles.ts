@@ -97,7 +97,7 @@ export const summarySelectStyles = css`
   ${selectStyles}
   min-width: 220px;
   min-height: 40px;
-  text-align: left;
+  text-align: start;
 `;
 
 export const summaryGenerateWrapStyles = css`
@@ -119,7 +119,7 @@ export const summaryEstimateWarningStyles = css`
 
 export const summaryEstimateBadgeStyles = css`
   color: ${colors.primaryLight};
-  margin-left: ${spacing.xs};
+  margin-inline-start: ${spacing.xs};
 `;
 
 export const progressWrapperStyles = css`
@@ -403,7 +403,7 @@ export const aspectModeButtonStyles = (active: boolean) => css`
   }
 
   & + & {
-    border-left: 1px solid ${colors.border};
+    border-inline-start: 1px solid ${colors.border};
   }
 
   &:disabled {

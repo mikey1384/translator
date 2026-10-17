@@ -23,8 +23,8 @@ export const settingsPageLayoutStyles = css`
     box-sizing: border-box;
     width: 100%;
     max-width: none;
-    margin-left: 0;
-    margin-right: 0;
+    margin-inline-start: 0;
+    margin-inline-end: 0;
   }
 `;
 
@@ -299,7 +299,7 @@ export const modalGuideCopyStyles = css`
 
 export const modalGuideListStyles = css`
   margin: 0;
-  padding-left: 20px;
+  padding-inline-start: 20px;
   color: ${colors.text};
   font-size: ${fontSize.md};
   line-height: 1.8;

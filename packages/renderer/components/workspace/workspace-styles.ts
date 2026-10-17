@@ -104,7 +104,7 @@ export const workspaceToolsVideoAreaStyles = css`
 `;
 
 export const workspaceSubsTitleCountStyles = css`
-  margin-left: 10px;
+  margin-inline-start: 10px;
   font-family: ${fonts.body};
   font-size: 0.9rem;
   font-weight: 500;
@@ -176,7 +176,7 @@ export const readListStyles = css`
   max-height: calc(100vh - 190px);
   min-height: 240px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-inline-end: 4px;
   scroll-behavior: smooth;
 
   @media (max-width: 980px) {
@@ -189,7 +189,7 @@ export const readRowStyles = css`
   grid-template-columns: 52px minmax(0, 1fr);
   column-gap: 10px;
   width: 100%;
-  text-align: left;
+  text-align: start;
   padding: 11px 14px;
   border-radius: 14px;
   background: ${colors.surfaceSoft};
@@ -309,7 +309,7 @@ export const moreMenuItemStyles = css`
   color: ${colors.text};
   font: inherit;
   font-size: 0.95rem;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 
   &:hover,

@@ -99,7 +99,7 @@ const dot = css`
   border-radius: 4px;
   background: ${colors.primary};
   flex: none;
-  margin-right: 10px;
+  margin-inline-end: 10px;
 `;
 
 function formatClock(seconds: number): string {
@@ -113,11 +113,16 @@ function formatClock(seconds: number): string {
 
 function formatUsd(price: number, locale: string): string {
   try {
+    // Prices are always US dollars: "$5" reads everywhere, and dropping the
+    // bidi marks keeps RTL text from splitting the symbol off the number.
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'USD',
+      currencyDisplay: 'narrowSymbol',
       maximumFractionDigits: 0,
-    }).format(price);
+    })
+      .format(price)
+      .replace(/[\u200e\u200f\u061c]/g, '');
   } catch {
     return `$${price}`;
   }

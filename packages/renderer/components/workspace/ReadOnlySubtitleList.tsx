@@ -86,12 +86,15 @@ const ReadRow = memo(function ReadRow({
     >
       <span className={readTimeStyles}>{formatCueTime(start)}</span>
       <span>
-        <span className={readOriginalStyles(hasTranslation)}>{original}</span>
+        <span className={readOriginalStyles(hasTranslation)} dir="auto">
+          {original}
+        </span>
         {hasTranslation ? (
           <span
             // A new key replays the flip when this line's translation changes.
             key={fresh ? `fresh-${translation}` : 'stable'}
             className={readTranslationStyles}
+            dir="auto"
             data-fresh={fresh ? 'true' : 'false'}
             style={{ display: 'block' }}
           >

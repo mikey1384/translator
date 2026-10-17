@@ -80,7 +80,7 @@ const radioLabelSelected = css`
 const infoText = css`
   font-size: 0.85rem;
   color: ${colors.textDim};
-  padding-left: 4px;
+  padding-inline-start: 4px;
 `;
 
 const radioInputStyles = css`
@@ -102,7 +102,7 @@ const optionLabelTextDisabledStyles = css`
 const priceText = css`
   display: inline-block;
   color: ${colors.textDim};
-  margin-left: 6px;
+  margin-inline-start: 6px;
   overflow-wrap: anywhere;
 `;
 

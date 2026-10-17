@@ -56,7 +56,7 @@ const card = css`
   display: flex;
   flex-direction: column;
   gap: 9px;
-  text-align: left;
+  text-align: start;
   font: inherit;
   color: ${colors.text};
   cursor: pointer;

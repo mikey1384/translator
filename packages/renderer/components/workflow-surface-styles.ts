@@ -394,7 +394,7 @@ export const workflowPanelHintStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.sm};
   line-height: ${lineHeight.relaxed};
-  text-align: left;
+  text-align: start;
 `;
 
 export const workflowPanelWarningBoxStyles = css`
@@ -426,7 +426,7 @@ export const workflowPanelWarningContentStyles = css`
   color: ${colors.text};
   font-size: ${fontSize.sm};
   line-height: ${lineHeight.relaxed};
-  text-align: left;
+  text-align: start;
 `;
 
 export const workflowPanelControlsStyles = css`
@@ -481,5 +481,5 @@ export const workflowPanelCostWarningStyles = css`
 
 export const workflowPanelBadgeStyles = css`
   color: ${colors.primaryLight};
-  margin-left: 2px;
+  margin-inline-start: 2px;
 `;

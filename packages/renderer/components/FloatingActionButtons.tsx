@@ -150,7 +150,7 @@ const updatePillMetaStyles = css`
 `;
 
 const updatePillProgressBadgeStyles = css`
-  margin-left: auto;
+  margin-inline-start: auto;
   padding: 4px 8px;
   border-radius: 999px;
   background: rgba(15, 14, 19, 0.18);

@@ -177,7 +177,7 @@ const connectMessageStyles = (tone: 'ok' | 'warn' | 'error') => css`
 `;
 
 const permissionListStyles = css`
-  padding-left: 20px;
+  padding-inline-start: 20px;
   margin: 8px 0;
 
   li {

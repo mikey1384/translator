@@ -27,7 +27,7 @@ const bodyStyles = css`
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-inline-end: 4px;
   padding-bottom: 8px;
 `;
 
@@ -99,7 +99,7 @@ const coverageLabelStyles = css`
 const coverageHintStyles = css`
   color: ${colors.textDim};
   font-size: 0.85rem;
-  padding-left: 30px;
+  padding-inline-start: 30px;
 `;
 
 const coverageStatusStyles = css`

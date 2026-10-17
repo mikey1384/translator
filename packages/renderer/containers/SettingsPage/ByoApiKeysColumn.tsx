@@ -86,7 +86,7 @@ const coverageLabelStyles = css`
 const coverageHintStyles = css`
   color: ${colors.textDim};
   font-size: 0.85rem;
-  padding-left: 30px;
+  padding-inline-start: 30px;
 `;
 
 function formatCoverageHint(providers: string[], fallback: string): string {

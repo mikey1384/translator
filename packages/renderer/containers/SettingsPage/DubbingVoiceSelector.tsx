@@ -142,7 +142,7 @@ export default function DubbingVoiceSelector() {
   const selectClass = css`
     flex: 1;
     min-width: 0;
-    text-align: left;
+    text-align: start;
   `;
 
   const previewButtonClass = css`

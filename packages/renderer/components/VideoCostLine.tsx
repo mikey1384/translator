@@ -23,11 +23,16 @@ const line = (accent: string) => css`
 
 function formatUsd(price: number, locale: string): string {
   try {
+    // Prices are always US dollars: "$5" reads everywhere, and dropping the
+    // bidi marks keeps RTL text from splitting the symbol off the number.
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'USD',
+      currencyDisplay: 'narrowSymbol',
       maximumFractionDigits: 0,
-    }).format(price);
+    })
+      .format(price)
+      .replace(/[\u200e\u200f\u061c]/g, '');
   } catch {
     return `$${price}`;
   }

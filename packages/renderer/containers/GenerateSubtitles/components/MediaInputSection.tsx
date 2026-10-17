@@ -261,7 +261,7 @@ const recentItemShellStyles = css`
 const recentItemButtonStyles = css`
   width: 100%;
   min-width: 0;
-  text-align: left;
+  text-align: start;
   display: grid;
   gap: 2px;
   padding: ${spacing.sm} ${spacing.xl} ${spacing.sm} ${spacing.md};

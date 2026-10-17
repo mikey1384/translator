@@ -154,7 +154,7 @@ const dropdownGroupLabelStyles = css`
 `;
 
 const arrowStyles = css`
-  margin-left: 6px;
+  margin-inline-start: 6px;
   color: ${colors.gray};
   font-size: 10px;
 `;

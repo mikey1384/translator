@@ -126,8 +126,8 @@ const buttonVariants: Record<ButtonVariant, string> = {
     color: ${colors.primaryLight};
     border-color: transparent;
     box-shadow: none;
-    padding-left: ${spacing.md};
-    padding-right: ${spacing.md};
+    padding-inline-start: ${spacing.md};
+    padding-inline-end: ${spacing.md};
 
     &:hover:not(:disabled) {
       background-color: rgba(255, 216, 77, 0.08);

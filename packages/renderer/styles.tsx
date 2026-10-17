@@ -131,7 +131,7 @@ export const selectStyles = css`
   vertical-align: middle;
   width: auto;
   line-height: 1.2;
-  text-align: left;
+  text-align: start;
   max-width: 320px;
 
   &:disabled {
@@ -535,7 +535,7 @@ export const statusIndicatorStyles = (status: boolean) => css`
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  margin-left: 12px;
+  margin-inline-start: 12px;
   vertical-align: middle;
   border: 1px solid ${status ? colors.success : colors.danger};
   background-color: ${status
@@ -552,7 +552,7 @@ export const statusLoadingStyles = css`
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  margin-left: 12px;
+  margin-inline-start: 12px;
   vertical-align: middle;
   border: 1px solid ${colors.gray};
   background-color: rgba(140, 135, 150, 0.1);

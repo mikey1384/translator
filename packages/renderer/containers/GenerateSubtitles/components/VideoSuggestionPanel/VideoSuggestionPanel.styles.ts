@@ -28,7 +28,7 @@ export const toggleButtonStyles = css`
   color: ${colors.text};
   width: 100%;
   padding: ${spacing.xl};
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -63,7 +63,7 @@ export const toggleCopyStyles = css`
   display: grid;
   gap: ${spacing.xs};
   justify-items: start;
-  text-align: left;
+  text-align: start;
 `;
 
 export const toggleEyebrowRowStyles = css`
@@ -387,7 +387,7 @@ export const assistantRichTextStyles = css`
   ul,
   ol {
     margin: 0;
-    padding-left: ${spacing.xl};
+    padding-inline-start: ${spacing.xl};
   }
 
   li + li {
@@ -521,7 +521,7 @@ export const suggestedFollowUpsGridStyles = css`
 export const suggestedFollowUpButtonStyles = css`
   width: 100%;
   display: block;
-  text-align: left;
+  text-align: start;
   padding: ${spacing.md} ${spacing.lg};
   border-radius: ${borderRadius.lg};
   border: 1px solid ${colors.border};
@@ -950,7 +950,7 @@ export const liveActivityDetailsBodyStyles = css`
   max-height: min(320px, 38vh);
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 2px;
+  padding-inline-end: 2px;
 `;
 
 export const moreActionsStyles = css`

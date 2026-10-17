@@ -43,13 +43,13 @@ const transcribeOnlyPanelControlsColumnStyles = css`
   gap: ${spacing.md};
   width: min(460px, 100%);
   flex: 0 1 460px;
-  margin-left: auto;
+  margin-inline-start: auto;
   align-items: stretch;
 
   @media (max-width: ${breakpoints.tabletMaxWidth}) {
     width: 100%;
     flex-basis: auto;
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 `;
 

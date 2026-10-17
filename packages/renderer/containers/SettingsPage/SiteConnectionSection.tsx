@@ -245,11 +245,15 @@ export default function SiteConnectionSection() {
             disabled={!canManage || busy}
             placeholder={DEFAULT_URL}
             className={css`
+              box-sizing: border-box;
               width: 100%;
+              min-height: 44px;
               padding: 10px 12px;
-              border: 1px solid ${colors.border};
+              border: 1px solid ${colors.borderStrong};
               border-radius: 10px;
-              background: #fff;
+              background: ${colors.bg};
+              color: ${colors.text};
+              font: inherit;
               font-size: 0.95rem;
 
               &:focus {

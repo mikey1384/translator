@@ -599,7 +599,7 @@ export default function SubtitleEditor({
         ) : null}
 
         <div className={subtitleRowFooterStyles}>
-          <div className={subtitleRowTimeGroupStyles}>
+          <div className={subtitleRowTimeGroupStyles} dir="ltr">
             <input
               type="text"
               value={localStart}

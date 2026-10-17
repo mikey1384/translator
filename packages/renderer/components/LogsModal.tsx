@@ -275,7 +275,7 @@ export default function LogsModal({
         <div
           className={css`
             border: 1px solid ${colors.border};
-            border-left: none;
+            border-inline-start: none;
             border-radius: 0 10px 10px 0;
             padding: 12px;
             display: flex;
@@ -284,7 +284,7 @@ export default function LogsModal({
             background: ${colors.surface};
 
             @media (max-width: 760px) {
-              border-left: 1px solid ${colors.border};
+              border-inline-start: 1px solid ${colors.border};
               border-top: none;
               border-radius: 0 0 10px 10px;
             }

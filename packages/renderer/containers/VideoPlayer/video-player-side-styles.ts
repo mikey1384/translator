@@ -113,7 +113,7 @@ export const sidePanelItemButtonStyles = css`
   cursor: pointer;
   font-size: ${fontSize.sm};
   width: 100%;
-  text-align: left;
+  text-align: start;
   border: 1px solid transparent;
   background: transparent;
   color: ${colors.text};
@@ -155,7 +155,7 @@ export const sidePanelSelectStyles = css`
   width: 100%;
   min-height: 44px;
   height: 44px;
-  text-align: left;
+  text-align: start;
 `;
 
 export const sidePanelFieldStackStyles = css`

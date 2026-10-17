@@ -80,8 +80,8 @@ export const editorEmptyActionsStyles = css`
 export const editorEmptyPrimaryButtonStyles = css`
   min-width: 280px;
   min-height: 56px;
-  padding-left: ${spacing['2xl']};
-  padding-right: ${spacing['2xl']};
+  padding-inline-start: ${spacing['2xl']};
+  padding-inline-end: ${spacing['2xl']};
   font-size: ${fontSize.lg};
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -266,7 +266,7 @@ export const editorToolbarSelectStyles = css`
   padding: 0 2.25rem 0 ${spacing.md};
   line-height: 1.2;
   background-position: right ${spacing.sm} center;
-  text-align: left;
+  text-align: start;
 `;
 
 export const editorToolbarCheckboxLabelStyles = css`
@@ -316,7 +316,7 @@ export const editorTranslateSelectStyles = css`
   min-width: 200px;
   min-height: 44px;
   height: 44px;
-  text-align: left;
+  text-align: start;
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     width: 100%;

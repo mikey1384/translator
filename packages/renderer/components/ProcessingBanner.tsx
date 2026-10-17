@@ -21,7 +21,7 @@ interface ProcessingBannerProps {
 }
 
 const noticeCloseButtonStyles = css`
-  margin-left: auto;
+  margin-inline-start: auto;
   width: 30px;
   height: 30px;
   font-size: 1rem;

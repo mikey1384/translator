@@ -119,7 +119,7 @@ const groupList = css`
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding-right: 4px;
+  padding-inline-end: 4px;
 `;
 
 const groupLabel = css`
@@ -140,7 +140,7 @@ const option = (active: boolean) => css`
   min-height: 52px;
   padding: 7px 12px;
   border-radius: 12px;
-  text-align: left;
+  text-align: start;
   font: inherit;
   cursor: pointer;
   display: flex;

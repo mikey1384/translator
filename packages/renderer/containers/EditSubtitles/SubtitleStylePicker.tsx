@@ -38,7 +38,7 @@ const tileStyles = css`
   border: none;
   background: none;
   cursor: pointer;
-  text-align: left;
+  text-align: start;
   color: ${colors.textDim};
   font: inherit;
   font-size: 0.8rem;

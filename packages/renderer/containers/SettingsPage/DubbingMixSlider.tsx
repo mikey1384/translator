@@ -64,7 +64,7 @@ export default function DubbingMixSlider() {
             color: ${colors.gray};
             font-size: 0.85rem;
             min-width: 80px;
-            text-align: right;
+            text-align: end;
           `}
         >
           {t('settings.dubbing.mixAmbient', 'More ambient')} ({percent}%)

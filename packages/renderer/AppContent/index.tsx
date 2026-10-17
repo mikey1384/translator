@@ -96,6 +96,12 @@ const settingsHeaderInner = css`
   }
 `;
 
+const flipInRtl = css`
+  [dir='rtl'] & {
+    transform: scaleX(-1);
+  }
+`;
+
 const settingsHeaderTitle = css`
   margin: 0;
   font-family: ${fonts.display};
@@ -453,7 +459,13 @@ export default function AppContent() {
               <Button
                 variant="secondary"
                 size="sm"
-                leftIcon={<ArrowLeft size={16} aria-hidden="true" />}
+                leftIcon={
+                  <ArrowLeft
+                    size={16}
+                    aria-hidden="true"
+                    className={flipInRtl}
+                  />
+                }
                 onClick={() => {
                   try {
                     logButton('close_settings');

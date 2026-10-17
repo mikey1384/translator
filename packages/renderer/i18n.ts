@@ -200,12 +200,30 @@ const initI18nPromise = (async () => {
     react: { useSuspense: true },
   });
 
+  applyDocumentDirection(i18n.language);
+  i18n.on('languageChanged', applyDocumentDirection);
   return i18n;
 })();
 
 initI18nPromise.catch(err => {
   console.error('[i18n] Failed to initialize i18n:', err);
 });
+
+const RTL_LANGUAGES = new Set(['ar', 'he', 'fa', 'ur']);
+
+/**
+ * Mirror the interface for right-to-left languages and tell the browser the
+ * page language (fonts, hyphenation, screen readers). Media surfaces opt
+ * back into left-to-right where time runs left to right.
+ */
+export function applyDocumentDirection(lng: string | undefined): void {
+  if (typeof document === 'undefined') return;
+  const base = String(lng || 'en')
+    .split('-')[0]
+    .toLowerCase();
+  document.documentElement.dir = RTL_LANGUAGES.has(base) ? 'rtl' : 'ltr';
+  document.documentElement.lang = lng || 'en';
+}
 
 export const changeLanguage = async (lng: string) => {
   console.log(`[i18n] changeLanguage called for: ${lng}`);
