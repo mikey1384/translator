@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
+import { sentenceLanguageName } from '../../utils/languageName';
 import Button from '../Button';
 import { useCreditCheckout } from '../BuyCreditsButton';
 import { useCreditStore, useUIStore, useVideoStore } from '../../state';
@@ -221,9 +222,10 @@ export default function FreePreviewOffer() {
   const total = wholeMinutes(preview.durationSecs);
   const remaining = wholeMinutes(remainingSecs);
   const price = formatUsd(pack.price, locale);
-  const languageName = t(`languages.${preview.language}`, {
-    defaultValue: preview.language,
-  });
+  const languageName = sentenceLanguageName(
+    t(`languages.${preview.language}`, { defaultValue: preview.language }),
+    locale
+  );
 
   const finishNow = () => {
     logButton('free_preview_finish_now');

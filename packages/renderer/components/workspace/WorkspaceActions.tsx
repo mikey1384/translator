@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { sentenceLanguageName } from '../../utils/languageName';
 import {
   AudioLines,
   Download,
@@ -48,7 +49,13 @@ export function useWorkspaceLanguage(): { value: string; name: string } {
     targetLanguage && targetLanguage !== 'original'
       ? targetLanguage
       : mapUiLanguageToTargetLanguage(i18n.language);
-  return { value, name: t(`languages.${value}`, { defaultValue: value }) };
+  return {
+    value,
+    name: sentenceLanguageName(
+      t(`languages.${value}`, { defaultValue: value }),
+      i18n.language
+    ),
+  };
 }
 
 export function useWorkspaceBusy(): boolean {

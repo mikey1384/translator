@@ -1,3 +1,4 @@
+import { sentenceLanguageName } from '../../utils/languageName';
 import { css, cx } from '@emotion/css';
 import { useMemo, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -324,7 +325,10 @@ export default function HomeStage() {
     targetLanguage && targetLanguage !== 'original'
       ? targetLanguage
       : mapUiLanguageToTargetLanguage(i18n.language);
-  const languageName = t(`languages.${language}`, { defaultValue: language });
+  const languageName = sentenceLanguageName(
+    t(`languages.${language}`, { defaultValue: language }),
+    i18n.language
+  );
   const quickPicks = useMemo(
     () =>
       quickPickTargetLanguages({
