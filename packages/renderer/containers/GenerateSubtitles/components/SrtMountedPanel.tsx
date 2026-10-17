@@ -224,7 +224,7 @@ export default function SrtMountedPanel({
 
         <div className={workflowPanelInlineFieldStyles}>
           <label htmlFor="subtitle-display-mode-select">
-            {t('subtitles.displayModeLabel', 'Subtitle display')}:
+            {t('subtitles.displayModeLabel', 'Subtitle display')}
           </label>
           <select
             id="subtitle-display-mode-select"

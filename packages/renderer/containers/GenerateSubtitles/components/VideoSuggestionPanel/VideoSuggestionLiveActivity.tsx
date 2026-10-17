@@ -144,7 +144,9 @@ export default function VideoSuggestionLiveActivity({
               )}
         </div>
         <div className={liveActivityHeaderActionsStyles}>
-          <div className={liveActivityMetaStyles}>{loadingElapsedSec}s</div>
+          <div className={liveActivityMetaStyles}>
+            {formatDurationSeconds(loadingElapsedSec)}
+          </div>
           <button
             type="button"
             className={liveActivityToggleButtonStyles}

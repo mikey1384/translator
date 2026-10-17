@@ -74,6 +74,7 @@ import {
   openUpdateNotes,
 } from '../state/modal-store';
 import { mapUiLanguageToTargetLanguage } from '../state/ui-store';
+import { isDubbingOperation } from '../utils/operationKind';
 
 const settingsHeader = css`
   position: sticky;
@@ -250,7 +251,7 @@ export default function AppContent() {
   );
   const mergeInProgress = useTaskStore(s => s.merge.inProgress);
   const isDubbing = useTaskStore(
-    s => !!s.dubbing.inProgress && (s.dubbing.id?.startsWith('dub-') ?? false)
+    s => !!s.dubbing.inProgress && isDubbingOperation(s.dubbing.id)
   );
   const transcriptionTask = useTaskStore(s => s.transcription);
   const summaryTask = useTaskStore(s => s.summary);

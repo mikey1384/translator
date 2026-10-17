@@ -258,6 +258,8 @@ export default function LanguageSwitcher() {
           uiLanguageEndonym(opt),
           t(opt.label, uiLanguageEndonym(opt)),
           t(opt.label, { lng: 'en', defaultValue: opt.value }),
+          // Both Chinese variants answer to the shared name a user types.
+          ...(opt.value.startsWith('zh') ? ['中文'] : []),
         ],
       })),
       query,

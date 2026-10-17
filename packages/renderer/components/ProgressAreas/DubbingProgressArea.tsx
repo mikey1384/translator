@@ -6,6 +6,7 @@ import Modal from '../Modal';
 import { colors } from '../../styles';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
+import { isDubbingOperation } from '../../utils/operationKind';
 
 export default function DubbingProgressArea() {
   const { t } = useTranslation();
@@ -58,7 +59,7 @@ export default function DubbingProgressArea() {
     return colors.progressDub;
   }, [percent]);
 
-  if (!inProgress || !(id && id.startsWith('dub-'))) {
+  if (!inProgress || !isDubbingOperation(id)) {
     return null;
   }
 

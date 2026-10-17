@@ -22,8 +22,8 @@ export function buildStartupNotice(notices: StartupNotice[]): {
   if (settingsReset) {
     parts.push(
       t(
-        'startupNotice.settingsReset',
-        "Translator's settings file was damaged, so your preferences were reset: interface and subtitle language, API keys, and other options. A copy of the damaged file was kept. Please check Settings."
+        'startupNotice.settingsResetKeptLanguage',
+        "Translator's settings file was damaged, so your preferences were reset: subtitle language, API keys, and other options. Your interface language was kept. A copy of the damaged file was kept. Please check Settings."
       )
     );
   }

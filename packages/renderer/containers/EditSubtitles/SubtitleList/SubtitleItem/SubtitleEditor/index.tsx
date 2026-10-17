@@ -836,16 +836,16 @@ export default function SubtitleEditor({
                       'editSubtitles.item.timeUnreadable',
                       'Type a time like 00:01:23,450 or 1:23.45. The line keeps its previous time.'
                     )}
-                {overlapMessage && (
-                  <p
-                    id={timeNoteId}
-                    className={subtitleRowTimeWarningStyles}
-                    role="status"
-                    dir="auto"
-                  >
-                    {overlapMessage}
-                  </p>
-                )}
+              </p>
+            )}
+            {overlapMessage && (
+              <p
+                id={timeNoteId}
+                className={subtitleRowTimeWarningStyles}
+                role="status"
+                dir="auto"
+              >
+                {overlapMessage}
               </p>
             )}
           </div>

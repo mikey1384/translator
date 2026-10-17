@@ -37,6 +37,7 @@ import {
   inlineStatusTrackStyles,
 } from '../workspace/workspace-styles';
 import { formatPercent } from '../../utils/formatNumbers';
+import { isDubbingOperation } from '../../utils/operationKind';
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -89,7 +90,7 @@ export default function ProgressArea({
       ? 'translation'
       : operationId.startsWith('transcribe-')
         ? 'transcription'
-        : operationId.startsWith('dub-')
+        : isDubbingOperation(operationId)
           ? 'dubbing'
           : 'general'
     : 'general';

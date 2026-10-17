@@ -508,6 +508,11 @@ export const editorTextareaInputStyles = (
   border: 1px solid transparent;
   color: transparent;
   caret-color: ${readOnly ? 'transparent' : colors.text};
+  /* The highlight layer draws the placeholder; the native one stays for
+     screen readers only, or RTL text shows it twice. */
+  &::placeholder {
+    color: transparent;
+  }
   z-index: 2;
   cursor: ${readOnly ? 'not-allowed' : 'text'};
 
@@ -694,9 +699,15 @@ export const subtitleUndoBarStyles = css`
     gap: ${spacing.sm};
 
     > span {
+      flex: 1 1 auto;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    > button {
+      flex: 0 0 auto;
+      width: auto;
     }
   }
 `;

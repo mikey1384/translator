@@ -2,6 +2,7 @@ import { useAiStore } from '../state/ai-store';
 import { hasApiKeyModeActiveCoverage } from '../state/byo-runtime';
 import * as SystemIPC from '../ipc/system';
 import { BoundedRecentMap } from './bounded-recent-map';
+import { isDubbingOperation } from './operationKind';
 
 const MAX_RECENT_CREDIT_REFRESH_OPERATIONS = 2048;
 const stage5CreditRefreshOperations = new BoundedRecentMap<string, boolean>(
@@ -12,7 +13,7 @@ export function isCreditRefreshableOperation(operationId: string): boolean {
   return (
     operationId.startsWith('translate-') ||
     operationId.startsWith('transcribe-') ||
-    operationId.startsWith('dub-')
+    isDubbingOperation(operationId)
   );
 }
 

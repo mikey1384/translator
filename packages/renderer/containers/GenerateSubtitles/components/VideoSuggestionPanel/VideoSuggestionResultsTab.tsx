@@ -24,6 +24,7 @@ import {
 } from './VideoSuggestionPanel.styles.js';
 import type { VideoSuggestionResultItem } from '@shared-types/app';
 import type { PipelineStageProgress } from './VideoSuggestionPanel.types.js';
+import { formatDurationSeconds } from '../../../../utils/formatUnits';
 
 const LOCAL_PROGRESS_MIN = 7;
 const LOCAL_PROGRESS_MAX = 95;
@@ -199,7 +200,7 @@ export default function VideoSuggestionResultsTab({
                         )}
                     </span>
                     <span className={liveActivityMetaStyles}>
-                      {loadingElapsedSec}s
+                      {formatDurationSeconds(loadingElapsedSec)}
                     </span>
                   </div>
                   <div className={stageProgressTrackStyles} aria-hidden="true">

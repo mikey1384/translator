@@ -351,7 +351,9 @@ export default function NativeVideoPlayer({
 
     v.addEventListener('timeupdate', onTime);
     return () => v.removeEventListener('timeupdate', onTime);
-  }, [subtitleDisplayMode, activeSubtitle]);
+    // isAudioOnly swaps <video> for <audio>: listen on the element that is
+    // actually mounted.
+  }, [subtitleDisplayMode, activeSubtitle, isAudioOnly]);
 
   // Refresh subtitle immediately when subtitle source changes (e.g., translation completed)
   useEffect(() => {
@@ -367,7 +369,7 @@ export default function NativeVideoPlayer({
       setSubtitleVisible(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subSourceId, subtitleDisplayMode]);
+  }, [subSourceId, subtitleDisplayMode, isAudioOnly]);
 
   useEffect(() => {
     if (!activeSubtitle) {

@@ -85,6 +85,7 @@ import {
   fontWeight,
   spacing,
 } from '../../components/design-system/tokens.js';
+import { isDubbingOperation } from '../../utils/operationKind';
 
 // Auto-run preferences (how far to chain after download).
 const AUTO_RUN_TARGET_KEY = 'autoRunTarget';
@@ -244,8 +245,7 @@ export default function GenerateSubtitles() {
     !!transcriptionInProgress &&
     (transcriptionId?.startsWith('transcribe-') ?? false);
   const isTranslating = !!translationInProgress;
-  const isDubbing =
-    !!dubbingInProgress && (dubbingId?.startsWith('dub-') ?? false);
+  const isDubbing = !!dubbingInProgress && isDubbingOperation(dubbingId);
   const isSourceChangeBlockedBase =
     !!translationInProgress ||
     !!transcriptionInProgress ||

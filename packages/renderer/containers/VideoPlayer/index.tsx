@@ -49,6 +49,7 @@ import {
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
 import { useUrlStore } from '../../state/url-store';
 import { getPlaybackPosition, savePlaybackPosition } from '../../ipc/video';
+import { isDubbingOperation } from '../../utils/operationKind';
 
 // Side menu removed; no separate controls column needed
 
@@ -95,7 +96,7 @@ export default function VideoPlayer({
   const translationInProgress = useTaskStore(s => s.translation.inProgress);
   const transcriptionInProgress = useTaskStore(s => s.transcription.inProgress);
   const dubbingInProgress = useTaskStore(
-    s => !!s.dubbing.inProgress && (s.dubbing.id?.startsWith('dub-') ?? false)
+    s => !!s.dubbing.inProgress && isDubbingOperation(s.dubbing.id)
   );
   const download = useUrlStore(s => s.download);
   const { baseFontSize, subtitleStyle, subtitleDisplayMode, subtitleTypeface } =

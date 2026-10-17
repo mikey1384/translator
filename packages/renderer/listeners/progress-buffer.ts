@@ -17,6 +17,7 @@ import {
   classifyTerminalProgress,
 } from '../utils/progress-terminal';
 import { agentBackgroundOperations } from './agent-background-operations';
+import { isDubbingOperation } from '../utils/operationKind';
 
 type ProgressPayload = Parameters<
   Parameters<typeof SubtitlesIPC.onGenerateProgress>[0]
@@ -64,7 +65,7 @@ function isOperationStillActive(operationId: string): boolean {
     );
   }
 
-  if (operationId.startsWith('dub-')) {
+  if (isDubbingOperation(operationId)) {
     return (
       state.dubbing.inProgress === true && state.dubbing.id === operationId
     );
