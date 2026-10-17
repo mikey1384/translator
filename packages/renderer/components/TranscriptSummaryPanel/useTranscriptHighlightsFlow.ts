@@ -438,18 +438,21 @@ export default function useTranscriptHighlightsFlow({
   const displayMode = useUIStore(state => state.subtitleDisplayMode);
   const subtitleStyle = useUIStore(state => state.subtitleStyle);
   const subtitleFontSize = useUIStore(state => state.baseFontSize);
+  const subtitleTypeface = useUIStore(state => state.subtitleTypeface);
   const captionSignature = useMemo(
     () =>
       highlightCaptionSignature(
         subtitleOrder.map(id => subtitleSegments[id]),
         displayMode,
         subtitleStyle,
-        subtitleFontSize
+        subtitleFontSize,
+        subtitleTypeface
       ),
     [
       displayMode,
       subtitleStyle,
       subtitleFontSize,
+      subtitleTypeface,
       subtitleOrder,
       subtitleSegments,
     ]
@@ -462,6 +465,7 @@ export default function useTranscriptHighlightsFlow({
       displayMode: ui.subtitleDisplayMode,
       style: ui.subtitleStyle,
       fontSize: ui.baseFontSize,
+      typeface: ui.subtitleTypeface,
       targetLanguage: document.targetLanguage || ui.targetLanguage,
     };
   }, []);

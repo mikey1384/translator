@@ -33,7 +33,8 @@ export type SubtitleRenderSelection = {
 export type SubtitleRenderSelectionField =
   | 'display_mode'
   | 'style'
-  | 'base_font_size_px';
+  | 'base_font_size_px'
+  | 'typeface';
 
 export type ResolvedSubtitleRenderSpec = SubtitleRenderSelection & {
   typeface: SubtitleTypeface;
@@ -215,7 +216,13 @@ export function findSubtitlePreviewSelectionDrift(
     display_mode: current.displayMode,
     style: current.stylePreset,
     base_font_size_px: normalizeSubtitleBaseFontSize(current.baseFontSizePx),
+    typeface: current.typeface ?? DEFAULT_SUBTITLE_TYPEFACE,
   };
+  // A planned spec omits the default face.
+  const planned = (field: SubtitleRenderSelectionField) =>
+    field === 'typeface'
+      ? (plannedSpec.typeface ?? DEFAULT_SUBTITLE_TYPEFACE)
+      : plannedSpec[field];
   const hasCurrentSelectionBinding =
     plannedSpec.selection_binding_version ===
     SUBTITLE_RENDER_SELECTION_BINDING_VERSION;
@@ -224,6 +231,6 @@ export function findSubtitlePreviewSelectionDrift(
     field =>
       (!hasCurrentSelectionBinding ||
         sources[field] === 'translator_preview') &&
-      plannedSpec[field] !== expected[field]
+      planned(field) !== expected[field]
   );
 }

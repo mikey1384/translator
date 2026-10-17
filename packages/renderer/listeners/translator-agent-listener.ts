@@ -2705,6 +2705,7 @@ async function runAgentMerge(
         displayMode: ui.subtitleDisplayMode,
         stylePreset: ui.subtitleStyle,
         baseFontSizePx: ui.baseFontSize,
+        typeface: ui.subtitleTypeface,
       }
     );
     if (changedPreviewFields.length > 0) {
@@ -2716,7 +2717,12 @@ async function runAgentMerge(
   const subtitleRenderSpec = resolveSubtitleRenderSpec({
     displayMode,
     stylePreset: subtitleStyle,
-    typeface: useUIStore.getState().subtitleTypeface,
+    // A planned job renders in the face it was planned with.
+    typeface: plannedSpec
+      ? isSubtitleTypeface(plannedSpec.typeface)
+        ? plannedSpec.typeface
+        : 'sans'
+      : ui.subtitleTypeface,
     baseFontSizePx: baseFontSize,
     videoWidthPx: video.meta?.width,
     videoHeightPx: video.meta?.height,
@@ -3988,6 +3994,7 @@ function currentSubtitleRenderSelection(): Record<string, unknown> {
     display_mode: ui.subtitleDisplayMode,
     style: ui.subtitleStyle,
     base_font_size_px: normalizeSubtitleBaseFontSize(ui.baseFontSize),
+    typeface: ui.subtitleTypeface,
     source: 'translator_preview_preferences',
   };
 }

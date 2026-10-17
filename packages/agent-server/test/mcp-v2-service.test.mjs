@@ -65,6 +65,30 @@ test('subtitle render planning snapshots Translator preview preferences', () => 
   });
 });
 
+test('subtitle render planning records the preview typeface', () => {
+  const plan = typeface =>
+    resolvePlannedSubtitleRenderSpec({
+      planning: {
+        subtitle_rendering: {
+          display_mode: 'translation',
+          style: 'Cinema',
+          base_font_size_px: 38,
+          typeface,
+        },
+      },
+      translationProvider: 'agent',
+      sourceMetadata: { width: 1920, height: 1080 },
+    });
+  const serif = plan('serif');
+  assert.equal(serif.typeface, 'serif');
+  assert.equal(serif.field_sources.typeface, 'translator_preview');
+  // The default face is omitted from the spec, like the app's canonical form.
+  const sans = plan('sans');
+  assert.equal('typeface' in sans, false);
+  assert.equal(sans.field_sources.typeface, 'translator_preview');
+  assert.equal('typeface' in plan('comic-sans'), false);
+});
+
 test('explicit subtitle render options override preview preferences field by field', () => {
   const spec = resolvePlannedSubtitleRenderSpec({
     requestedOutputs: {

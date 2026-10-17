@@ -145,6 +145,7 @@ const WINDOWS_RESERVED_BASENAME =
   /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 const MAX_OUTPUT_BASE_NAME_UTF8_BYTES = 160;
 const SUBTITLE_DISPLAY_MODES = new Set(['original', 'translation', 'dual']);
+const SUBTITLE_TYPEFACES = new Set(['sans', 'classic', 'serif', 'display']);
 const SUBTITLE_STYLE_PRESETS = new Set([
   'Default',
   'Classic',
@@ -252,6 +253,9 @@ export function resolvePlannedSubtitleRenderSpec({
   if (!SUBTITLE_STYLE_PRESETS.has(style)) {
     throw new Error('The resolved subtitle style is unsupported.');
   }
+  const previewTypeface = SUBTITLE_TYPEFACES.has(preview.typeface)
+    ? preview.typeface
+    : null;
   const width = Number(sourceMetadata?.width);
   const height = Number(sourceMetadata?.height);
   const displayWidth = Number(sourceMetadata?.display_width);
@@ -279,9 +283,14 @@ export function resolvePlannedSubtitleRenderSpec({
     font_family: SUBTITLE_FONT_FAMILY,
     font_asset: SUBTITLE_FONT_ASSET,
     scale_rule: 'height_ratio_720_clamped_0.5_2',
+    // The default face is omitted, matching the app's canonical spec.
+    ...(previewTypeface && previewTypeface !== 'sans'
+      ? { typeface: previewTypeface }
+      : {}),
     schema_version: SUBTITLE_RENDER_SPEC_VERSION,
     selection_binding_version: SUBTITLE_RENDER_SELECTION_BINDING_VERSION,
     field_sources: {
+      ...(previewTypeface ? { typeface: 'translator_preview' } : {}),
       display_mode:
         translationProvider === 'none'
           ? 'workflow'
@@ -1068,11 +1077,13 @@ function renderInvariantOutputSnapshot(
   }
   if (isObject(stable.subtitle_render_spec)) {
     delete stable.subtitle_render_spec.style;
+    delete stable.subtitle_render_spec.typeface;
     delete stable.subtitle_render_spec.base_font_size_px;
     delete stable.subtitle_render_spec.output_font_size_px;
     delete stable.subtitle_render_spec.selection_binding_version;
     if (isObject(stable.subtitle_render_spec.field_sources)) {
       delete stable.subtitle_render_spec.field_sources.style;
+      delete stable.subtitle_render_spec.field_sources.typeface;
       delete stable.subtitle_render_spec.field_sources.base_font_size_px;
     }
   }

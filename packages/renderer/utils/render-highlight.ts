@@ -8,7 +8,10 @@ import type {
   SubtitleDisplayMode,
   TranscriptHighlight,
 } from '@shared-types/app';
-import type { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
+import type {
+  SubtitleStylePresetKey,
+  SubtitleTypeface,
+} from '../../shared/constants/subtitle-styles';
 import { buildSrt } from '../../shared/helpers';
 import {
   highlightCaptionSignature,
@@ -35,6 +38,8 @@ export type HighlightRenderInput = {
   displayMode: SubtitleDisplayMode;
   style: SubtitleStylePresetKey;
   fontSize: number;
+  /** Captured when the clip is queued, so a later change can't mix faces. */
+  typeface?: SubtitleTypeface;
   targetLanguage: string | null;
   outputPath?: string;
   onStage?: (stage: string) => void;
@@ -194,7 +199,7 @@ async function runHighlightRender(input: HighlightRenderInput) {
   const spec = resolveSubtitleRenderSpec({
     displayMode: input.displayMode,
     stylePreset: input.style,
-    typeface: useUIStore.getState().subtitleTypeface,
+    typeface: input.typeface ?? useUIStore.getState().subtitleTypeface,
     baseFontSizePx: input.fontSize,
     videoWidthPx: meta.width,
     videoHeightPx: meta.height,
@@ -290,7 +295,8 @@ async function runHighlightRender(input: HighlightRenderInput) {
       input.segments,
       input.displayMode,
       input.style,
-      input.fontSize
+      input.fontSize,
+      input.typeface ?? useUIStore.getState().subtitleTypeface
     ),
   };
   window.dispatchEvent(

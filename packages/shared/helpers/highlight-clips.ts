@@ -6,9 +6,13 @@ export function highlightCaptionSignature(
   segments: readonly SrtSegment[],
   displayMode: string,
   style: string,
-  fontSize: number
+  fontSize: number,
+  typeface = 'sans'
 ): string {
-  return JSON.stringify([displayMode, style, fontSize, segments]);
+  // Older signatures had no face; 'sans' keeps them matching.
+  return typeface === 'sans'
+    ? JSON.stringify([displayMode, style, fontSize, segments])
+    : JSON.stringify([displayMode, style, fontSize, typeface, segments]);
 }
 
 /** Fail closed instead of silently cutting an unrelated fallback interval. */

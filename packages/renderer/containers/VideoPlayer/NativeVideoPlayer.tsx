@@ -238,24 +238,36 @@ export default function NativeVideoPlayer({
       const height = Number(v.videoHeight);
       const currentPath = useVideoStore.getState().path;
       if (Number.isFinite(duration) && duration > 0) {
-        useVideoStore.setState(state => ({
-          meta: {
-            duration,
-            width:
-              Number.isFinite(width) && width > 0
-                ? width
-                : (state.meta?.width ?? 0),
-            height:
-              Number.isFinite(height) && height > 0
-                ? height
-                : (state.meta?.height ?? 0),
-            frameRate: state.meta?.frameRate ?? 0,
-            rotation: state.meta?.rotation,
-            displayWidth: state.meta?.displayWidth,
-            displayHeight: state.meta?.displayHeight,
-          },
-          metaPath: currentPath,
-        }));
+        useVideoStore.setState(state => {
+          // The file probe's coded size drives subtitle sizing for the
+          // player and the export; the element reports the rotated size, so
+          // never let it overwrite a probe for the same file.
+          const probed =
+            state.metaPath === currentPath &&
+            !!state.meta &&
+            state.meta.rotation !== undefined &&
+            (state.meta.width ?? 0) > 0;
+          return {
+            meta: {
+              duration,
+              width: probed
+                ? state.meta!.width
+                : Number.isFinite(width) && width > 0
+                  ? width
+                  : (state.meta?.width ?? 0),
+              height: probed
+                ? state.meta!.height
+                : Number.isFinite(height) && height > 0
+                  ? height
+                  : (state.meta?.height ?? 0),
+              frameRate: state.meta?.frameRate ?? 0,
+              rotation: state.meta?.rotation,
+              displayWidth: state.meta?.displayWidth,
+              displayHeight: state.meta?.displayHeight,
+            },
+            metaPath: currentPath,
+          };
+        });
       }
       recomputeScale();
     };
@@ -397,7 +409,10 @@ export default function NativeVideoPlayer({
       ? {
           width: subtitleCanvasWidth,
           height: subtitleCanvasHeight,
-          scale: pictureBox.width / subtitleCanvasWidth,
+          // Per axis: a non-square-pixel source is shown wider than it is
+          // stored, and players stretch the burned-in frame the same way.
+          scaleX: pictureBox.width / subtitleCanvasWidth,
+          scaleY: pictureBox.height / subtitleCanvasHeight,
         }
       : null;
 
@@ -514,7 +529,7 @@ export default function NativeVideoPlayer({
               top: 0,
               width: exportLayer.width,
               height: exportLayer.height,
-              transform: `scale(${exportLayer.scale})`,
+              transform: `scale(${exportLayer.scaleX}, ${exportLayer.scaleY})`,
               transformOrigin: '0 0',
             }}
           >
