@@ -36,8 +36,7 @@ export const sidePanelLabelStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const sidePanelWarningStyles = css`

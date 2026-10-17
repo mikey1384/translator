@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "Hindi sapat ang disk space para makumpleto ang merge. Mangyaring mag-free up ng space at subukan ulit.",
       "noSourceVideo": "Walang source video",
       "noSubtitlesLoaded": "Walang na-load na subtitle",
-      "failedToLoadSRT": "Nabigo ang pag-load ng SRT file"
+      "failedToLoadSRT": "Nabigo ang pag-load ng SRT file",
+      "sourceVideoUnavailable": "Inalis na ang orihinal na video o hindi na ito ma-access. Buksan itong muli at subukan ulit.",
+      "unknown": "May nangyaring mali. Pakisubukan ulit."
     },
     "success": "Tagumpay",
     "settings": "Mga Setting",
@@ -92,7 +94,9 @@
     "continue": "Magpatuloy",
     "send": "Ipadala",
     "dismiss": "Isara",
-    "moreActions": "Iba pang aksyon"
+    "moreActions": "Iba pang aksyon",
+    "installingUpdate": "Ini-install ang update...",
+    "installingUpdateShort": "Ini-install"
   },
   "errors": {
     "needCookies": "Humiling ang YouTube ng human check. I-click ang Connect para magpatuloy.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "I-delete ang file at history",
       "deleteFileAndHistoryConfirm": "Permanenteng i-delete ang na-download na file na ito at ang entry nito sa history? Hindi ito maaaring i-undo.",
       "removeFromHistory": "Alisin sa history",
-      "removeFromHistoryConfirm": "Alisin ang item na ito sa download history? Mananatili sa device ang mga file na naka-save sa labas ng app library."
+      "removeFromHistoryConfirm": "Alisin ang item na ito sa download history? Mananatili sa device ang mga file na naka-save sa labas ng app library.",
+      "deleteLocalFileHistoryPending": "Nabura ang file, pero hindi natapos ng Translator ang pag-update ng download history. Awtomatiko itong susubok ulit.",
+      "removeHistoryFailed": "Hindi maalis ang download na ito sa history.",
+      "storedInAppLibrary": "Naka-save sa app library"
     },
     "downloadAndTranslate": "I-download at isalin",
     "downloadAndTranscribe": "I-download at i-transcribe",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ Isalin",
     "autoRunStepDownload": "I-download",
     "autoRunStepTranscribe": "I-transcribe",
-    "autoRunStepTranslate": "Isalin sa {{language}}"
+    "autoRunStepTranslate": "Isalin sa {{language}}",
+    "captionRecoveryKeepVideo": "Panatilihin ang kasalukuyang video",
+    "captionRecoveryOpenCaptions": "Buksan ang captions",
+    "captionRecoverySwitchPrompt": "Na-recover ng Translator ang automatic captions ng YouTube, pero hindi available ang video mula sa URL. Kapag binuksan ang mga ito, ma-u-unmount ang kasalukuyang video.",
+    "captionRecoverySwitchTitle": "Buksan ang captions nang wala ang kasalukuyang video?"
   },
   "subtitles": {
     "outputLanguage": "Wika ng Output",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "Sariling key",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "Sigurado ka bang gusto mong kanselahin ang proseso ng pagsasalin ng subtitle? Mawawala ang anumang progress at kailangan mong magsimula ulit."
+    "cancel_confirmation": "Sigurado ka bang gusto mong kanselahin ang proseso ng pagsasalin ng subtitle? Mawawala ang anumang progress at kailangan mong magsimula ulit.",
+    "dubCostHint": "Boses ng ElevenLabs: ~{{rate}} credits kada minuto ng pagsasalita. Ipinapakita ang tantiyang ito bago magsimula ang dubbing."
   },
   "summary": {
     "title": "Buod ng Transcript",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "Handa na ang Combined Highlight",
     "downloadCombined": "I-download ang Combined Clip",
     "saveCombinedDialogTitle": "I-save ang combined highlight clip",
-    "combinedCutFailed": "Nabigo ang pagputol ng mga combined highlight: {{message}}"
+    "combinedCutFailed": "Nabigo ang pagputol ng mga combined highlight: {{message}}",
+    "highlightsInsufficientCredits": "Nagawa ang buod, pero huminto ang pagkuha ng highlights dahil naubos ang credits.",
+    "highlightsPartialWarning": "Bahagya lang ang nakuhang highlights. Maaaring kulang ang mga ito. Gawin ulit para i-refresh.",
+    "highlightsPartialWithReason": "Nagawa ang buod, pero bahagya lang ang nakuhang highlights: {{message}}"
   },
   "panel": {
     "new": "bago",
@@ -481,7 +496,12 @@
       "listCopy": "I-edit nang direkta ang source text, salin, timing, at mga aksyon sa bawat line.",
       "originalLabel": "Orihinal",
       "translationLabel": "Salin",
-      "mergeNeedsVideoCopy": "I-mount ang source video bago simulan ang burn-in export."
+      "mergeNeedsVideoCopy": "I-mount ang source video bago simulan ang burn-in export.",
+      "automaticCaptionsCopy": "Na-block ang pag-download ng video (HTTP 403). Ito ay automatic captions ng YouTube—hindi bagong transcription. Puwede mo na itong i-edit, isalin, at i-export bilang SRT. Mag-mount ng media para mag-preview o mag-burn in ng subtitle.",
+      "automaticCaptionsCopyWithMedia": "Na-block ang pag-download ng video mula sa URL (HTTP 403). Ito ay automatic captions ng YouTube—hindi bagong transcription. Magagamit ang naka-mount na media para sa preview at burn-in.",
+      "automaticCaptionsPill": "Automatic captions ng YouTube",
+      "automaticCaptionsTitle": "Automatic captions ng YouTube",
+      "highlightEditingLocked": "Gumagawa ng highlights, naka-lock ang pag-edit"
     },
     "item": {
       "seek": "Hanapin",
@@ -655,7 +675,9 @@
       "option2Title": "Opsyon 2: Anthropic + ElevenLabs",
       "economicsTitle": "Bakit sulit ito",
       "economicsBody": "Ang Stage5 credits ay nag-o-optimize para sa kaginhawahan (walang setup). Ang BYO ay direktang nagbabayad sa mga provider—karaniwang ~30–50% na mas mura depende sa iyong pack.",
-      "encryptionUnavailable": "Hindi available ang secure storage sa system na ito. Hindi mase-save ang mga API key."
+      "encryptionUnavailable": "Hindi available ang secure storage sa system na ito. Hindi mase-save ang mga API key.",
+      "checkoutOpen": "Bukas ang checkout sa browser…",
+      "checkoutOpenHint": "Tapusin ang checkout sa iyong browser. Awtomatiko naming ia-unlock ang BYO kapag pumasok na ang bayad."
     },
     "byoPreferences": {
       "title": "Mga Preference ng Provider",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "Kailangan ang pag-access sa OpenAI BYO at API key.",
       "summaryRequiresAnthropic": "Kailangan ang pag-access sa Anthropic BYO at API key.",
       "translationReview": "Translation (Review)",
-      "transcriptionRequiresElevenLabs": "ElevenLabs Scribe lang ang ginagamit sa transcription. Magdagdag ng ElevenLabs API key para mag-transcribe gamit ang sarili mong mga key. Kung wala nito, gagamit ang transcription ng Stage5 credits, na hindi ginagamit habang naka-on ang iyong mga API key. Ginagamit pa rin ang iyong OpenAI key para sa pagsasalin."
+      "transcriptionRequiresElevenLabs": "ElevenLabs Scribe lang ang ginagamit sa transcription. Magdagdag ng ElevenLabs API key para mag-transcribe gamit ang sarili mong mga key. Kung wala nito, gagamit ang transcription ng Stage5 credits, na hindi ginagamit habang naka-on ang iyong mga API key. Ginagamit pa rin ang iyong OpenAI key para sa pagsasalin.",
+      "dubbingRequiresElevenLabs": "ElevenLabs lang ang ginagamit sa dubbing. Magdagdag ng ElevenLabs API key para mag-dub gamit ang sarili mong keys. Kung wala nito, gagamit ang dubbing ng Stage5 credits, na hindi ginagamit habang naka-on ang iyong API keys.",
+      "runtimeFallback": "Runtime fallback sa API key mode",
+      "videoSuggestionLegacyFollowDraft": "Pinanatili ang lumang BYO setting: sinusunod ang iyong draft translation model hanggang pumili ka ng direktang model.",
+      "videoSuggestionLegacyFollowReview": "Pinanatili ang lumang BYO setting: sinusunod ang iyong review translation model hanggang pumili ka ng direktang model."
     },
     "apiKeyGuide": {
       "title": "Paano Makakuha ng mga API Key",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× ang minuto bawat dolyar",
     "checkoutWaiting": "Tapusin ang pagbabayad sa iyong browser. Kusang lalabas dito ang iyong mga minuto.",
     "checkoutNote": "Isang beses na bayad sa pamamagitan ng Stripe, sa iyong browser. Walang account o subscription. Kusang darating ang mga minuto.",
-    "dubbingNote": "Ang pagsasalin gamit ang credits ay nagdadagdag ng mga 10% bawat minuto; mas marami ang nagagamit ng dubbing."
+    "dubbingNote": "Ang pagsasalin gamit ang credits ay nagdadagdag ng mga 10% bawat minuto; mas marami ang nagagamit ng dubbing.",
+    "iCancelledCheckout": "Kinansela ko ang checkout",
+    "checkoutStartFailed": "Hindi masimulan ang checkout. Suriin ang iyong koneksyon at subukan ulit."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "Simulan ang pag-dub?",
       "message": "Gagamit ang dub na ito ng mga {{cost}} sa iyong {{balance}} credit. Mas mahal ang paggawa ng boses kaysa sa pagsasalin."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "Itapon at buksan ang captions",
+      "message": "May bukas ka nang subtitle. I-save o itapon muna ang mga ito bago palitan ng automatic captions ng YouTube.",
+      "saveAndOpen": "I-save at buksan ang captions",
+      "title": "Buksan ang na-recover na automatic captions?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "Sinusuri ang mga caption ({{done}}/{{total}})",
     "translationCleanup": "Nililinis ang mga naisalin na caption ({{done}}/{{total}})",
     "reviewingSlow": "Rini-review (maaaring magtagal...) {{done}}/{{total}}",
-    "reviewingRange": "Rini-review {{start}}–{{end}} (sa {{total}})"
+    "reviewingRange": "Rini-review {{start}}–{{end}} (sa {{total}})",
+    "legacy": {
+      "aligningVoices": "Inaayos ang mga boses {{done}}/{{total}}…",
+      "analyzingSection": "Naghahanap ng highlights sa bahagi {{done}} ng {{total}}…",
+      "analyzingVideo": "Sinusuri ang video…",
+      "assemblingOverlay": "Inilalagay ang subtitle sa video…",
+      "audioExtracted": "Handa na ang audio",
+      "balancingAudio": "Binabalanse ang boses at background…",
+      "cannotCancelSave": "Malapit nang matapos. Hindi na makakansela ang huling pag-save na ito",
+      "captionsOnlyReady": "Handa na ang YouTube captions (hindi ma-download ang mismong video)",
+      "checkingDownloader": "Sinusuri ang downloader…",
+      "chooseSaveLocation": "Piliin kung saan ise-save ang video…",
+      "detectingSpeech": "Hinahanap kung saan may nagsasalita…",
+      "downloadCancelled": "Kinansela ang download",
+      "downloadComplete": "Tapos na ang download",
+      "downloadVerifying": "Na-download na, sinusuri ang file…",
+      "drawingFrames": "Iginuguhit ang mga subtitle frame {{done}}/{{total}}…",
+      "dubAudioReady": "Handa na ang voice track",
+      "dubComplete": "Tapos na ang dubbing",
+      "dubbedVideoReady": "Handa na ang na-dub na video",
+      "encodingComplete": "Handa na ang video",
+      "encodingVideo": "Ginagawa ang video…",
+      "errorRecovery": "Inaayos ang ilang linya…",
+      "extractingAudio": "Kinukuha ang audio…",
+      "extractingAudioPercent": "Kinukuha ang audio ({{percent}}%)…",
+      "fetchingInfo": "Kinukuha ang detalye ng video…",
+      "finalAdjustments": "Inilalagay ang mga huling ayos…",
+      "finalizingSubtitles": "Tinatapos ang subtitle…",
+      "finishingFile": "Tinatapos ang video file…",
+      "generatingVoices": "Gumagawa ng mga boses {{done}}/{{total}}…",
+      "mergeComplete": "Handa na ang video na may subtitle",
+      "mergeFailed": "Nabigo ang paggawa ng video",
+      "mergingFormats": "Pinagsasama ang video at audio…",
+      "postProcessing": "Tinatapos…",
+      "preparingAudioExtraction": "Inihahanda ang audio ({{minutes}} min ng video)…",
+      "preparingDownload": "Inihahanda ang download…",
+      "preparingDubLines": "Inihahanda ang {{count}} linya para sa dubbing…",
+      "preparingHighlights": "Naghahandang pumili ng highlights…",
+      "preparingOutput": "Inihahanda ang output folder…",
+      "preparingTranscript": "Binabasa ang transcript…",
+      "preparingVideoEngine": "Inihahanda ang mga video tool…",
+      "preparingVoiceClips": "Inihahanda ang {{count}} voice clip…",
+      "rateLimited": "Abala ngayon, sinusubukan ulit…",
+      "reusingSummary": "Ginagamit ang buod para pumili ng highlights…",
+      "saving": "Sine-save…",
+      "sectionAnalyzed": "Nasuri ang bahagi {{done}}",
+      "sectionHighlights": "May nakitang highlights sa bahagi {{done}}",
+      "sectionSummarized": "Nabuod ang bahagi {{done}} ng {{total}}",
+      "selectingHighlights": "Pumipili ng highlights sa bahagi {{done}} ng {{total}}…",
+      "settingUpDownloader": "Sine-set up ang downloader…",
+      "skippingSameLanguage": "Nasa wikang ito na, hindi na kailangang isalin",
+      "starting": "Nagsisimula…",
+      "startingDownload": "Sinisimulan ang download…",
+      "subtitleLayerReady": "Handa na ang subtitle layer",
+      "summarizingSection": "Binubuod ang bahagi {{done}} ng {{total}}…",
+      "summaryReady": "Handa na ang buod",
+      "transcribingParts": "Nagta-transcribe {{done}}/{{total}}…",
+      "transcriptionComplete": "Tapos na ang transcription",
+      "translatingLines": "Isinasalin {{done}}/{{total}}…",
+      "uploading": "Ina-upload…",
+      "validating": "Sinusuri…",
+      "videoBlockedCaptions": "Hindi ma-download ang video; naghahanap na lang ng YouTube captions…",
+      "voiceTrackAssembled": "Nabuo na ang voice track",
+      "voiceTrackReady": "Handa na ang voice track",
+      "writingSummary": "Isinusulat ang buod…"
+    },
+    "listening": "Pinakikinggan ang video…",
+    "mergeFinishSaveBeforeReload": "Tapusin muna ang pag-save ng pinagsamang video bago mag-reload.",
+    "mergeSavePhaseNoCancel": "Hindi na makakansela ang hakbang na ito ng pag-save.",
+    "mergeWaitForCancelBeforeReload": "Hintaying matapos ang pagkansela ng merge bago mag-reload.",
+    "preparingTranscription": "Naghahandang makinig…",
+    "restartingTranscription": "Sinisimulang muli ang transcription…",
+    "resumingTranscription": "Itinutuloy mula sa huling bahagi…"
   },
   "messages": {
     "fileSaved": "Na-save ang file:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "Sakop ng iyong mga minuto",
     "preview": "Libre ang unang {{minutes}} min · buong video {{price}}",
     "pack": "Buong video {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Framing at captions ng Shorts",
+    "intro": "I-frame ang bawat nagsasalita, hatiin sa bawat camera cut, at i-time ang maiikling caption phrase ayon sa pagsasalita. Ang mga oras sa ibaba ay mula sa simula ng clip na ito.",
+    "previewTime": "Oras ng preview ng Short",
+    "speakerLabel": "Label ng nagsasalita o paksa",
+    "splitShot": "Hatiin ang shot sa playhead",
+    "joinShot": "Isama sa naunang shot",
+    "preview": "I-preview",
+    "emphasize": "Bigyang-diin ang phrase na ito",
+    "splitPhrase": "Hatiin ang phrase",
+    "removePhrase": "Alisin ang phrase",
+    "addPhrase": "Magdagdag ng phrase",
+    "removeStyling": "Alisin ang styling",
+    "saveSelectionFirst": "I-save muna ang napiling highlight.",
+    "closeEdit": "Isara ang pag-edit",
+    "editFraming": "I-edit ang framing at captions",
+    "styleShort": "I-style ang Short na ito",
+    "horizontalFocus": "Pahalang na focus",
+    "verticalFocus": "Patayong focus",
+    "zoom": "Zoom",
+    "from": "Mula",
+    "to": "hanggang",
+    "saving": "Sine-save…",
+    "save": "I-save ang edit ng Short"
   }
 }

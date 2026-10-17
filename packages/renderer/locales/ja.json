@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "結合を完了するためのディスク容量が不足しています。空き容量を確保してから再試行してください。",
       "noSourceVideo": "ソース動画がありません",
       "noSubtitlesLoaded": "字幕が読み込まれていません",
-      "failedToLoadSRT": "SRTファイルの読み込みに失敗しました"
+      "failedToLoadSRT": "SRTファイルの読み込みに失敗しました",
+      "sourceVideoUnavailable": "元の動画は削除されたか、アクセスできなくなりました。もう一度開いてからお試しください。",
+      "unknown": "問題が発生しました。もう一度お試しください。"
     },
     "success": "成功",
     "settings": "設定",
@@ -92,7 +94,9 @@
     "continue": "続行",
     "send": "送信",
     "dismiss": "閉じる",
-    "moreActions": "その他の操作"
+    "moreActions": "その他の操作",
+    "installingUpdate": "アップデートをインストール中...",
+    "installingUpdateShort": "インストール中"
   },
   "errors": {
     "needCookies": "YouTubeが認証を求めています。「接続」をクリックして続行してください。",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "ファイルと履歴を削除",
       "deleteFileAndHistoryConfirm": "このダウンロード済みファイルと履歴項目を完全に削除しますか？この操作は元に戻せません。",
       "removeFromHistory": "履歴から削除",
-      "removeFromHistoryConfirm": "この項目をダウンロード履歴から削除しますか？アプリライブラリ外に保存したファイルはデバイスに残ります。"
+      "removeFromHistoryConfirm": "この項目をダウンロード履歴から削除しますか？アプリライブラリ外に保存したファイルはデバイスに残ります。",
+      "deleteLocalFileHistoryPending": "ファイルは削除されましたが、Translatorはダウンロード履歴の更新を完了できませんでした。自動的に再試行します。",
+      "removeHistoryFailed": "このダウンロードを履歴から削除できませんでした。",
+      "storedInAppLibrary": "アプリのライブラリに保存済み"
     },
     "downloadAndTranslate": "ダウンロードして翻訳",
     "downloadAndTranscribe": "ダウンロードして文字起こし",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ 翻訳",
     "autoRunStepDownload": "ダウンロード",
     "autoRunStepTranscribe": "文字起こし",
-    "autoRunStepTranslate": "{{language}}に翻訳"
+    "autoRunStepTranslate": "{{language}}に翻訳",
+    "captionRecoveryKeepVideo": "現在の動画を残す",
+    "captionRecoveryOpenCaptions": "字幕を開く",
+    "captionRecoverySwitchPrompt": "TranslatorはYouTubeの自動字幕を復元しましたが、URLの動画は利用できません。字幕を開くと現在の動画は取り外されます。",
+    "captionRecoverySwitchTitle": "現在の動画なしで字幕を開きますか？"
   },
   "subtitles": {
     "outputLanguage": "出力言語",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}分の動画",
     "translateEstimateByo": "BYOキー",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "字幕翻訳プロセスをキャンセルしてもよろしいですか？進行状況は失われ、最初からやり直す必要があります。"
+    "cancel_confirmation": "字幕翻訳プロセスをキャンセルしてもよろしいですか？進行状況は失われ、最初からやり直す必要があります。",
+    "dubCostHint": "ElevenLabsの音声：発話1分あたり約{{rate}}クレジット。この見積もりは吹き替え開始前に表示されます。"
   },
   "summary": {
     "title": "書き起こしの要約",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "結合したハイライトの準備完了",
     "downloadCombined": "結合クリップをダウンロード",
     "saveCombinedDialogTitle": "結合したハイライトクリップを保存",
-    "combinedCutFailed": "結合ハイライトの切り出しに失敗しました: {{message}}"
+    "combinedCutFailed": "結合ハイライトの切り出しに失敗しました: {{message}}",
+    "highlightsInsufficientCredits": "要約は生成されましたが、クレジットが不足したためハイライトの抽出が停止しました。",
+    "highlightsPartialWarning": "ハイライトの抽出は一部のみでした。不完全な可能性があります。再生成して更新してください。",
+    "highlightsPartialWithReason": "要約は生成されましたが、ハイライトの抽出は一部のみでした：{{message}}"
   },
   "panel": {
     "new": "新規",
@@ -481,7 +496,12 @@
       "listCopy": "原文、翻訳、タイミング、行ごとの操作をその場で編集できます。",
       "originalLabel": "原文",
       "translationLabel": "翻訳",
-      "mergeNeedsVideoCopy": "焼き込み書き出しを始める前に元動画を読み込んでください。"
+      "mergeNeedsVideoCopy": "焼き込み書き出しを始める前に元動画を読み込んでください。",
+      "automaticCaptionsCopy": "動画のダウンロードがブロックされました（HTTP 403）。これはYouTubeの自動字幕で、新たな文字起こしではありません。今すぐ編集・翻訳・SRT書き出しができます。プレビューや字幕の焼き込みにはメディアを読み込んでください。",
+      "automaticCaptionsCopyWithMedia": "URLの動画ダウンロードがブロックされました（HTTP 403）。これはYouTubeの自動字幕で、新たな文字起こしではありません。読み込んだメディアでプレビューと焼き込みができます。",
+      "automaticCaptionsPill": "YouTube自動字幕",
+      "automaticCaptionsTitle": "YouTube自動字幕",
+      "highlightEditingLocked": "ハイライト生成中のため編集はロックされています"
     },
     "item": {
       "seek": "シーク",
@@ -655,7 +675,9 @@
       "option2Title": "オプション2: Anthropic + ElevenLabs",
       "economicsTitle": "なぜ価値があるのか",
       "economicsBody": "Stage5クレジットは利便性を重視しています（セットアップ不要）。BYOはプロバイダーに直接支払います—パックによって通常約30〜50%安くなります。",
-      "encryptionUnavailable": "このシステムでは安全な保存領域を利用できません。APIキーは保存できません。"
+      "encryptionUnavailable": "このシステムでは安全な保存領域を利用できません。APIキーは保存できません。",
+      "checkoutOpen": "ブラウザで決済画面を開いています…",
+      "checkoutOpenHint": "ブラウザで決済を完了してください。支払いが確定すると自動的にBYOのロックが解除されます。"
     },
     "byoPreferences": {
       "title": "プロバイダー設定",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "OpenAI BYO の利用権限とAPIキーが必要です。",
       "summaryRequiresAnthropic": "Anthropic BYO の利用権限とAPIキーが必要です。",
       "translationReview": "翻訳（レビュー）",
-      "transcriptionRequiresElevenLabs": "文字起こしには ElevenLabs Scribe のみを使用します。自分のキーで文字起こしするには、ElevenLabs の API キーを追加してください。キーがない場合、文字起こしには Stage5 クレジットが使われますが、自分の API キーを使用中は Stage5 クレジットは使われません。OpenAI キーは引き続き翻訳に使用されます。"
+      "transcriptionRequiresElevenLabs": "文字起こしには ElevenLabs Scribe のみを使用します。自分のキーで文字起こしするには、ElevenLabs の API キーを追加してください。キーがない場合、文字起こしには Stage5 クレジットが使われますが、自分の API キーを使用中は Stage5 クレジットは使われません。OpenAI キーは引き続き翻訳に使用されます。",
+      "dubbingRequiresElevenLabs": "吹き替えはElevenLabsのみを使用します。自分のキーで吹き替えるにはElevenLabsのAPIキーを追加してください。キーがない場合、吹き替えにはStage5クレジットが使われますが、APIキーがオンの間はクレジットは使われません。",
+      "runtimeFallback": "APIキーモードでの実行時フォールバック",
+      "videoSuggestionLegacyFollowDraft": "以前のBYO設定を保持しています：直接モデルを選ぶまでは、下書き翻訳モデルに従います。",
+      "videoSuggestionLegacyFollowReview": "以前のBYO設定を保持しています：直接モデルを選ぶまでは、レビュー翻訳モデルに従います。"
     },
     "apiKeyGuide": {
       "title": "APIキーの取得方法",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "1ドルあたり {{multiplier}}× の時間",
     "checkoutWaiting": "ブラウザでお支払いを完了してください。時間は自動的にここに反映されます。",
     "checkoutNote": "ブラウザで Stripe による1回限りのお支払い。アカウントやサブスクリプションは不要です。時間は自動的に追加されます。",
-    "dubbingNote": "クレジットでの翻訳は1分あたり約10%追加されます。吹き替えはさらに多く使います。"
+    "dubbingNote": "クレジットでの翻訳は1分あたり約10%追加されます。吹き替えはさらに多く使います。",
+    "iCancelledCheckout": "決済をキャンセルしました",
+    "checkoutStartFailed": "決済を開始できませんでした。接続を確認して、もう一度お試しください。"
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "吹き替えを開始しますか？",
       "message": "この吹き替えは、残り{{balance}}クレジットのうち約{{cost}}を使用します。音声の生成は翻訳よりはるかにコストがかかります。"
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "破棄して字幕を開く",
+      "message": "すでに字幕を開いています。YouTubeの自動字幕に置き換える前に、保存するか破棄してください。",
+      "saveAndOpen": "保存して字幕を開く",
+      "title": "復元した自動字幕を開きますか？"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "字幕のクリーニング中 ({{done}}/{{total}})",
     "translationCleanup": "翻訳字幕のクリーンアップ中 ({{done}}/{{total}})",
     "reviewingSlow": "レビュー中（しばらく時間がかかる場合があります）{{done}}/{{total}}",
-    "reviewingRange": "{{start}}–{{end}} をレビュー中（{{total}} 件中）"
+    "reviewingRange": "{{start}}–{{end}} をレビュー中（{{total}} 件中）",
+    "legacy": {
+      "aligningVoices": "音声のタイミングを合わせています {{done}}/{{total}}…",
+      "analyzingSection": "パート {{done}}/{{total}} のハイライトを探しています…",
+      "analyzingVideo": "動画を確認しています…",
+      "assemblingOverlay": "動画に字幕を描画しています…",
+      "audioExtracted": "音声の準備完了",
+      "balancingAudio": "声と背景音のバランスを調整しています…",
+      "cannotCancelSave": "まもなく完了します。最後の保存はキャンセルできません",
+      "captionsOnlyReady": "YouTube字幕の準備完了（動画自体はダウンロードできませんでした）",
+      "checkingDownloader": "ダウンローダーを確認しています…",
+      "chooseSaveLocation": "動画の保存先を選んでください…",
+      "detectingSpeech": "話している箇所を探しています…",
+      "downloadCancelled": "ダウンロードをキャンセルしました",
+      "downloadComplete": "ダウンロード完了",
+      "downloadVerifying": "ダウンロード完了、ファイルを確認しています…",
+      "drawingFrames": "字幕フレームを描画しています {{done}}/{{total}}…",
+      "dubAudioReady": "音声トラックの準備完了",
+      "dubComplete": "吹き替え完了",
+      "dubbedVideoReady": "吹き替え動画の準備完了",
+      "encodingComplete": "動画の準備完了",
+      "encodingVideo": "動画を作成しています…",
+      "errorRecovery": "いくつかの行を修正しています…",
+      "extractingAudio": "音声を抽出中…",
+      "extractingAudioPercent": "音声を抽出中（{{percent}}%）…",
+      "fetchingInfo": "動画の情報を取得しています…",
+      "finalAdjustments": "最後の仕上げをしています…",
+      "finalizingSubtitles": "字幕を仕上げています…",
+      "finishingFile": "動画ファイルを仕上げています…",
+      "generatingVoices": "音声を生成しています {{done}}/{{total}}…",
+      "mergeComplete": "字幕付き動画の準備完了",
+      "mergeFailed": "動画の作成に失敗しました",
+      "mergingFormats": "映像と音声を結合しています…",
+      "postProcessing": "仕上げ中…",
+      "preparingAudioExtraction": "音声を準備しています（動画 {{minutes}} 分）…",
+      "preparingDownload": "ダウンロードを準備中…",
+      "preparingDubLines": "吹き替え用に {{count}} 行を準備しています…",
+      "preparingHighlights": "ハイライト選びの準備をしています…",
+      "preparingOutput": "出力フォルダを準備しています…",
+      "preparingTranscript": "文字起こしを読み込んでいます…",
+      "preparingVideoEngine": "動画ツールを準備しています…",
+      "preparingVoiceClips": "{{count}} 個の音声クリップを準備しています…",
+      "rateLimited": "混み合っています。再試行中…",
+      "reusingSummary": "要約を使ってハイライトを選んでいます…",
+      "saving": "保存中…",
+      "sectionAnalyzed": "パート {{done}} を確認しました",
+      "sectionHighlights": "パート {{done}} でハイライトが見つかりました",
+      "sectionSummarized": "パート {{done}}/{{total}} を要約しました",
+      "selectingHighlights": "パート {{done}}/{{total}} のハイライトを選んでいます…",
+      "settingUpDownloader": "ダウンローダーを準備しています…",
+      "skippingSameLanguage": "すでにこの言語のため、翻訳は不要です",
+      "starting": "開始中…",
+      "startingDownload": "ダウンロードを開始中…",
+      "subtitleLayerReady": "字幕レイヤーの準備完了",
+      "summarizingSection": "パート {{done}}/{{total}} を要約しています…",
+      "summaryReady": "要約の準備完了",
+      "transcribingParts": "文字起こし中 {{done}}/{{total}}…",
+      "transcriptionComplete": "文字起こし完了",
+      "translatingLines": "翻訳中 {{done}}/{{total}}…",
+      "uploading": "アップロード中…",
+      "validating": "確認中…",
+      "videoBlockedCaptions": "動画をダウンロードできなかったため、代わりにYouTube字幕を確認しています…",
+      "voiceTrackAssembled": "音声トラックを組み立てました",
+      "voiceTrackReady": "音声トラックの準備完了",
+      "writingSummary": "要約を書いています…"
+    },
+    "listening": "動画を聞いています…",
+    "mergeFinishSaveBeforeReload": "再読み込みの前に、結合した動画の保存を完了してください。",
+    "mergeSavePhaseNoCancel": "この保存ステップは今はキャンセルできません。",
+    "mergeWaitForCancelBeforeReload": "再読み込みの前に、結合のキャンセルが終わるまでお待ちください。",
+    "preparingTranscription": "聞き取りの準備をしています…",
+    "restartingTranscription": "文字起こしをやり直しています…",
+    "resumingTranscription": "中断したところから再開しています…"
   },
   "messages": {
     "fileSaved": "ファイルを保存しました:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "残りの分数で対応",
     "preview": "最初の{{minutes}}分は無料 · 動画全体 {{price}}",
     "pack": "動画全体 {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "ショーツのフレーミングと字幕",
+    "intro": "話者ごとにフレーミングし、カメラの切り替わりで分割し、短い字幕フレーズを発話に合わせてタイミング調整します。下の時間はこのクリップの先頭からの時間です。",
+    "previewTime": "ショートのプレビュー時間",
+    "speakerLabel": "話者またはトピックのラベル",
+    "splitShot": "再生位置でショットを分割",
+    "joinShot": "前のショットと結合",
+    "preview": "プレビュー",
+    "emphasize": "このフレーズを強調",
+    "splitPhrase": "フレーズを分割",
+    "removePhrase": "フレーズを削除",
+    "addPhrase": "フレーズを追加",
+    "removeStyling": "スタイルを削除",
+    "saveSelectionFirst": "先にハイライトの選択を保存してください。",
+    "closeEdit": "編集を閉じる",
+    "editFraming": "フレーミングと字幕を編集",
+    "styleShort": "このショートのスタイル",
+    "horizontalFocus": "水平方向のフォーカス",
+    "verticalFocus": "垂直方向のフォーカス",
+    "zoom": "ズーム",
+    "from": "開始",
+    "to": "終了",
+    "saving": "保存中…",
+    "save": "ショートの編集を保存"
   }
 }

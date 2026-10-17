@@ -89,8 +89,7 @@ export const labelStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   white-space: nowrap;
 `;
 
@@ -333,8 +332,7 @@ export const sectionIndexStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const sectionTitleStyles = css`
@@ -368,8 +366,7 @@ export const aspectModeLabelStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const aspectModeToggleStyles = css`
@@ -455,8 +452,7 @@ export const reorderLabelStyles = css`
   font-size: ${fontSize.xs};
   color: ${colors.textDim};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const reorderContainerStyles = css`

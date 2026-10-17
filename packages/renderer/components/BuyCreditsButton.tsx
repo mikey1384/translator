@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { i18n } from '../i18n';
 import * as SystemIPC from '@ipc/system';
 import { CHECKOUT_ALREADY_PENDING } from '../../shared/constants';
 import Button, { type ButtonSize, type ButtonVariant } from './Button';
@@ -114,7 +115,10 @@ export function useCreditCheckout({
           // Ignore tracking errors
         });
         await SystemIPC.showMessage(
-          'An error occurred while trying to start checkout. Please check your connection and try again.'
+          i18n.t(
+            'credits.checkoutStartFailed',
+            'Checkout couldn’t start. Check your connection and try again.'
+          )
         );
         return;
       }
@@ -133,7 +137,10 @@ export function useCreditCheckout({
         // Ignore tracking errors
       });
       await SystemIPC.showMessage(
-        'An error occurred while trying to start checkout. Please check your connection and try again.'
+        i18n.t(
+          'credits.checkoutStartFailed',
+          'Checkout couldn’t start. Check your connection and try again.'
+        )
       );
     } finally {
       setLoading(false);

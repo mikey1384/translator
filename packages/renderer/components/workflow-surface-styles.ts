@@ -264,8 +264,7 @@ export const workflowStageEyebrowStyles = css`
   color: ${colors.primaryLight};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const workflowStageEyebrowSecondaryStyles = css`

@@ -64,8 +64,7 @@ const codeInput = css`
   color: ${colors.text};
   font-family: monospace;
   font-size: 1.1rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 const errorText = css`

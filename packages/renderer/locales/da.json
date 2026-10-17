@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "Ikke nok diskplads til at fuldføre sammenfletningen. Frigør venligst plads og prøv igen.",
       "noSourceVideo": "Ingen kildevideo",
       "noSubtitlesLoaded": "Ingen undertekster indlæst",
-      "failedToLoadSRT": "Kunne ikke indlæse SRT-fil"
+      "failedToLoadSRT": "Kunne ikke indlæse SRT-fil",
+      "sourceVideoUnavailable": "Den originale video er fjernet eller ikke længere tilgængelig. Åbn den igen, og prøv igen.",
+      "unknown": "Noget gik galt. Prøv igen."
     },
     "success": "Succes",
     "settings": "Indstillinger",
@@ -92,7 +94,9 @@
     "continue": "Fortsæt",
     "send": "Afsend",
     "dismiss": "Luk",
-    "moreActions": "Flere handlinger"
+    "moreActions": "Flere handlinger",
+    "installingUpdate": "Installerer opdatering...",
+    "installingUpdateShort": "Installerer"
   },
   "errors": {
     "needCookies": "YouTube bad om menneskelig verifikation. Klik på Forbind for at fortsætte.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "Slet fil og historik",
       "deleteFileAndHistoryConfirm": "Vil du slette denne downloadede fil permanent og fjerne historikposten? Dette kan ikke fortrydes.",
       "removeFromHistory": "Fjern fra historik",
-      "removeFromHistoryConfirm": "Vil du fjerne dette element fra downloadhistorikken? Filer, der er gemt uden for appbiblioteket, bliver på enheden."
+      "removeFromHistoryConfirm": "Vil du fjerne dette element fra downloadhistorikken? Filer, der er gemt uden for appbiblioteket, bliver på enheden.",
+      "deleteLocalFileHistoryPending": "Filen blev slettet, men Translator kunne ikke opdatere downloadhistorikken færdig. Den prøver igen automatisk.",
+      "removeHistoryFailed": "Kunne ikke fjerne denne download fra historikken.",
+      "storedInAppLibrary": "Gemt i appbiblioteket"
     },
     "downloadAndTranslate": "Download og oversæt",
     "downloadAndTranscribe": "Download og transskriber",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ Oversæt",
     "autoRunStepDownload": "Download",
     "autoRunStepTranscribe": "Transskriber",
-    "autoRunStepTranslate": "Oversæt til {{language}}"
+    "autoRunStepTranslate": "Oversæt til {{language}}",
+    "captionRecoveryKeepVideo": "Behold nuværende video",
+    "captionRecoveryOpenCaptions": "Åbn undertekster",
+    "captionRecoverySwitchPrompt": "Translator har gendannet YouTubes automatiske undertekster, men videoen fra URL'en er ikke tilgængelig. Hvis du åbner dem, fjernes den nuværende video.",
+    "captionRecoverySwitchTitle": "Åbn undertekster uden den nuværende video?"
   },
   "subtitles": {
     "outputLanguage": "Outputsprog",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "BYO-nøgle",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "Er du sikker på, at du vil annullere undertekstoversættelsesprocessen? Ethvert fremskridt vil gå tabt, og du skal starte forfra."
+    "cancel_confirmation": "Er du sikker på, at du vil annullere undertekstoversættelsesprocessen? Ethvert fremskridt vil gå tabt, og du skal starte forfra.",
+    "dubCostHint": "ElevenLabs-stemme: ~{{rate}} kreditter pr. minut tale. Dette skøn vises, før dubbingen starter."
   },
   "summary": {
     "title": "Transkriptoversigt",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "Kombineret højdepunkt klar",
     "downloadCombined": "Download kombineret klip",
     "saveCombinedDialogTitle": "Gem kombineret højdepunktsklip",
-    "combinedCutFailed": "Kunne ikke klippe kombinerede højdepunkter: {{message}}"
+    "combinedCutFailed": "Kunne ikke klippe kombinerede højdepunkter: {{message}}",
+    "highlightsInsufficientCredits": "Oversigten blev genereret, men udtrækningen af højdepunkter stoppede, fordi kreditterne slap op.",
+    "highlightsPartialWarning": "Udtrækningen af højdepunkter var delvis. Disse højdepunkter kan være ufuldstændige. Generér igen for at opdatere.",
+    "highlightsPartialWithReason": "Oversigten blev genereret, men udtrækningen af højdepunkter var delvis: {{message}}"
   },
   "panel": {
     "new": "ny",
@@ -481,7 +496,12 @@
       "listCopy": "Redigér kildetekst, oversættelse, timing og linjehandlinger direkte på stedet.",
       "originalLabel": "Originaltekst",
       "translationLabel": "Oversættelse",
-      "mergeNeedsVideoCopy": "Montér en kildevideo, før du starter en burn-in-eksport."
+      "mergeNeedsVideoCopy": "Montér en kildevideo, før du starter en burn-in-eksport.",
+      "automaticCaptionsCopy": "Videodownloaden blev blokeret (HTTP 403). Dette er YouTubes automatiske undertekster – ikke en ny transskription. Du kan redigere, oversætte og eksportere SRT nu. Tilknyt medier for at se en forhåndsvisning eller brænde undertekster ind.",
+      "automaticCaptionsCopyWithMedia": "Download af videoen fra URL'en blev blokeret (HTTP 403). Dette er YouTubes automatiske undertekster – ikke en ny transskription. De tilknyttede medier kan bruges til forhåndsvisning og indbrænding.",
+      "automaticCaptionsPill": "YouTubes automatiske undertekster",
+      "automaticCaptionsTitle": "YouTubes automatiske undertekster",
+      "highlightEditingLocked": "Højdepunkter genereres, redigering låst"
     },
     "item": {
       "seek": "Søg",
@@ -655,7 +675,9 @@
       "option2Title": "Mulighed 2: Anthropic + ElevenLabs",
       "economicsTitle": "Hvorfor det er det værd",
       "economicsBody": "Stage5-kreditter optimerer for bekvemmelighed (ingen opsætning). BYO betaler udbydere direkte—normalt ~30–50% billigere afhængigt af din pakke.",
-      "encryptionUnavailable": "Sikker lagring er ikke tilgængelig på dette system. API-nøgler kan ikke gemmes."
+      "encryptionUnavailable": "Sikker lagring er ikke tilgængelig på dette system. API-nøgler kan ikke gemmes.",
+      "checkoutOpen": "Betaling åben i browseren…",
+      "checkoutOpenHint": "Gennemfør betalingen i din browser. Vi låser BYO op automatisk, når betalingen er gennemført."
     },
     "byoPreferences": {
       "title": "Udbyderpreferencer",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "Kræver OpenAI BYO-adgang og en API-nøgle.",
       "summaryRequiresAnthropic": "Kræver Anthropic BYO-adgang og en API-nøgle.",
       "translationReview": "Oversættelse (gennemgang)",
-      "transcriptionRequiresElevenLabs": "Transskription bruger kun ElevenLabs Scribe. Tilføj en ElevenLabs API-nøgle for at transskribere med dine egne nøgler. Uden en bruger transskription Stage5-kreditter, som ikke bruges, mens dine API-nøgler er slået til. Din OpenAI-nøgle bruges stadig til oversættelse."
+      "transcriptionRequiresElevenLabs": "Transskription bruger kun ElevenLabs Scribe. Tilføj en ElevenLabs API-nøgle for at transskribere med dine egne nøgler. Uden en bruger transskription Stage5-kreditter, som ikke bruges, mens dine API-nøgler er slået til. Din OpenAI-nøgle bruges stadig til oversættelse.",
+      "dubbingRequiresElevenLabs": "Dubbing bruger kun ElevenLabs. Tilføj en ElevenLabs-API-nøgle for at dubbe med dine egne nøgler. Uden en bruger dubbing Stage5-kreditter, som ikke bruges, mens dine API-nøgler er slået til.",
+      "runtimeFallback": "Runtime-fallback i API-nøgletilstand",
+      "videoSuggestionLegacyFollowDraft": "Ældre BYO-indstilling bevaret: følger din kladdeoversættelsesmodel, indtil du vælger en direkte model.",
+      "videoSuggestionLegacyFollowReview": "Ældre BYO-indstilling bevaret: følger din gennemgangsoversættelsesmodel, indtil du vælger en direkte model."
     },
     "apiKeyGuide": {
       "title": "Sådan får du API-nøgler",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× minutterne pr. dollar",
     "checkoutWaiting": "Gør betalingen færdig i din browser. Dine minutter dukker selv op her.",
     "checkoutNote": "Engangsbetaling via Stripe i din browser. Ingen konto eller abonnement. Minutterne kommer af sig selv.",
-    "dubbingNote": "Oversættelse med kreditter koster ca. 10 % ekstra pr. minut; dubbing bruger mere."
+    "dubbingNote": "Oversættelse med kreditter koster ca. 10 % ekstra pr. minut; dubbing bruger mere.",
+    "iCancelledCheckout": "Jeg annullerede betalingen",
+    "checkoutStartFailed": "Betalingen kunne ikke startes. Tjek din forbindelse, og prøv igen."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "Start dubbing?",
       "message": "Denne dubbing bruger cirka {{cost}} af dine {{balance}} kreditter. Det koster meget mere at generere stemmer end at oversætte."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "Kassér og åbn undertekster",
+      "message": "Du har allerede undertekster åbne. Gem eller kassér dem, før du erstatter dem med YouTubes automatiske undertekster.",
+      "saveAndOpen": "Gem og åbn undertekster",
+      "title": "Åbn gendannede automatiske undertekster?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "Renser undertekster ({{done}}/{{total}})",
     "translationCleanup": "Renser oversatte undertekster ({{done}}/{{total}})",
     "reviewingSlow": "Gennemgår (dette kan tage et stykke tid...) {{done}}/{{total}}",
-    "reviewingRange": "Gennemgår {{start}}–{{end}} (af {{total}})"
+    "reviewingRange": "Gennemgår {{start}}–{{end}} (af {{total}})",
+    "legacy": {
+      "aligningVoices": "Afstemmer stemmer {{done}}/{{total}}…",
+      "analyzingSection": "Leder efter højdepunkter i del {{done}} af {{total}}…",
+      "analyzingVideo": "Tjekker videoen…",
+      "assemblingOverlay": "Tegner underteksterne på videoen…",
+      "audioExtracted": "Lyd klar",
+      "balancingAudio": "Afbalancerer stemme og baggrund…",
+      "cannotCancelSave": "Næsten færdig. Denne sidste gemning kan ikke annulleres",
+      "captionsOnlyReady": "YouTube-undertekster klar (selve videoen kunne ikke downloades)",
+      "checkingDownloader": "Tjekker downloaderen…",
+      "chooseSaveLocation": "Vælg, hvor videoen skal gemmes…",
+      "detectingSpeech": "Finder ud af, hvor der tales…",
+      "downloadCancelled": "Download annulleret",
+      "downloadComplete": "Download fuldført",
+      "downloadVerifying": "Downloadet, tjekker filen…",
+      "drawingFrames": "Tegner undertekstbilleder {{done}}/{{total}}…",
+      "dubAudioReady": "Stemmespor klar",
+      "dubComplete": "Dubbing fuldført",
+      "dubbedVideoReady": "Dubbet video klar",
+      "encodingComplete": "Video klar",
+      "encodingVideo": "Laver videoen…",
+      "errorRecovery": "Retter nogle få linjer…",
+      "extractingAudio": "Udtrækker lyd…",
+      "extractingAudioPercent": "Udtrækker lyd ({{percent}} %)…",
+      "fetchingInfo": "Henter videooplysninger…",
+      "finalAdjustments": "Lægger sidste hånd på…",
+      "finalizingSubtitles": "Færdiggør underteksterne…",
+      "finishingFile": "Færdiggør videofilen…",
+      "generatingVoices": "Genererer stemmer {{done}}/{{total}}…",
+      "mergeComplete": "Video med undertekster er klar",
+      "mergeFailed": "Videoen kunne ikke laves",
+      "mergingFormats": "Samler video og lyd…",
+      "postProcessing": "Gør færdig…",
+      "preparingAudioExtraction": "Forbereder lyden ({{minutes}} min. video)…",
+      "preparingDownload": "Forbereder download…",
+      "preparingDubLines": "Forbereder {{count}} linjer til dubbing…",
+      "preparingHighlights": "Gør klar til at vælge højdepunkter…",
+      "preparingOutput": "Forbereder outputmappen…",
+      "preparingTranscript": "Læser transskriptionen…",
+      "preparingVideoEngine": "Gør videoværktøjerne klar…",
+      "preparingVoiceClips": "Forbereder {{count}} stemmeklip…",
+      "rateLimited": "Optaget lige nu, prøver igen…",
+      "reusingSummary": "Bruger oversigten til at vælge højdepunkter…",
+      "saving": "Gemmer…",
+      "sectionAnalyzed": "Del {{done}} tjekket",
+      "sectionHighlights": "Højdepunkter fundet i del {{done}}",
+      "sectionSummarized": "Del {{done}} af {{total}} opsummeret",
+      "selectingHighlights": "Vælger højdepunkter i del {{done}} af {{total}}…",
+      "settingUpDownloader": "Opsætter downloaderen…",
+      "skippingSameLanguage": "Allerede på dette sprog, ingen oversættelse nødvendig",
+      "starting": "Starter…",
+      "startingDownload": "Starter download…",
+      "subtitleLayerReady": "Undertekstlag klar",
+      "summarizingSection": "Opsummerer del {{done}} af {{total}}…",
+      "summaryReady": "Oversigt klar",
+      "transcribingParts": "Transskriberer {{done}}/{{total}}…",
+      "transcriptionComplete": "Transskription fuldført",
+      "translatingLines": "Oversætter {{done}}/{{total}}…",
+      "uploading": "Uploader…",
+      "validating": "Tjekker…",
+      "videoBlockedCaptions": "Videoen kunne ikke downloades; tjekker i stedet for YouTube-undertekster…",
+      "voiceTrackAssembled": "Stemmespor samlet",
+      "voiceTrackReady": "Stemmespor klar",
+      "writingSummary": "Skriver oversigten…"
+    },
+    "listening": "Lytter til videoen…",
+    "mergeFinishSaveBeforeReload": "Gør gemningen af den flettede video færdig, før du genindlæser.",
+    "mergeSavePhaseNoCancel": "Dette gemmetrin kan ikke annulleres nu.",
+    "mergeWaitForCancelBeforeReload": "Vent på, at annulleringen af fletningen bliver færdig, før du genindlæser.",
+    "preparingTranscription": "Gør klar til at lytte…",
+    "restartingTranscription": "Starter transskriptionen igen…",
+    "resumingTranscription": "Fortsætter, hvor den slap…"
   },
   "messages": {
     "fileSaved": "Fil gemt:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "Dækket af dine minutter",
     "preview": "Første {{minutes}} min gratis · hele videoen {{price}}",
     "pack": "Hele videoen {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Shorts-beskæring og undertekster",
+    "intro": "Indram hver taler, del ved kameraklip, og time korte undertekstfraser til talen. Tiderne nedenfor starter ved begyndelsen af dette klip.",
+    "previewTime": "Forhåndsvisningstid for Short",
+    "speakerLabel": "Etiket for taler eller emne",
+    "splitShot": "Del indstilling ved afspilningshovedet",
+    "joinShot": "Sammenføj med forrige indstilling",
+    "preview": "Forhåndsvisning",
+    "emphasize": "Fremhæv denne frase",
+    "splitPhrase": "Del frase",
+    "removePhrase": "Fjern frase",
+    "addPhrase": "Tilføj frase",
+    "removeStyling": "Fjern formatering",
+    "saveSelectionFirst": "Gem højdepunktsvalget først.",
+    "closeEdit": "Luk redigering",
+    "editFraming": "Rediger beskæring og undertekster",
+    "styleShort": "Style denne Short",
+    "horizontalFocus": "Vandret fokus",
+    "verticalFocus": "Lodret fokus",
+    "zoom": "Zoom",
+    "from": "Fra",
+    "to": "til",
+    "saving": "Gemmer…",
+    "save": "Gem Short-redigering"
   }
 }

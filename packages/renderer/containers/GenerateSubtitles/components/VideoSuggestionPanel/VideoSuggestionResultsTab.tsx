@@ -135,7 +135,7 @@ export default function VideoSuggestionResultsTab({
                         onClick={() => onDownloadFromSuggestion(item)}
                         disabled={disablePrimaryActions || isDownloadInProgress}
                         size="sm"
-                        variant="primary"
+                        variant="secondary"
                         fullWidth
                       >
                         {isDownloadInProgress

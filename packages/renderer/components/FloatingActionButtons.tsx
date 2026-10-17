@@ -341,7 +341,7 @@ export default function FloatingActionButtons({
         'aria-busy': true,
         kind: 'update' as const,
         className: updatePillDownloadingStyles,
-        label: t('common.installingUpdateShort', 'INSTALLING'),
+        label: t('common.installingUpdateShort', 'Installing'),
         meta: t('common.installingUpdate', 'Installing update...'),
         icon: (
           <svg

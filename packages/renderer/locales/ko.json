@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "병합을 완료하기에 저장 공간이 부족합니다. 저장 공간을 확보한 후 다시 시도해 주세요.",
       "noSourceVideo": "소스 비디오 없음",
       "noSubtitlesLoaded": "로드된 자막 없음",
-      "failedToLoadSRT": "SRT 파일 로드 실패"
+      "failedToLoadSRT": "SRT 파일 로드 실패",
+      "sourceVideoUnavailable": "원본 영상이 삭제되었거나 더 이상 접근할 수 없습니다. 다시 열어서 시도해 주세요.",
+      "unknown": "문제가 발생했습니다. 다시 시도해 주세요."
     },
     "success": "성공",
     "settings": "설정",
@@ -92,7 +94,9 @@
     "continue": "계속",
     "send": "보내기",
     "dismiss": "닫기",
-    "moreActions": "더 보기"
+    "moreActions": "더 보기",
+    "installingUpdate": "업데이트 설치 중...",
+    "installingUpdateShort": "설치 중"
   },
   "errors": {
     "needCookies": "YouTube에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요.",
@@ -353,7 +357,9 @@
       "deleteFileAndHistory": "파일 및 기록 삭제",
       "deleteFileAndHistoryConfirm": "이 다운로드 파일과 기록 항목을 영구적으로 삭제할까요? 이 작업은 취소할 수 없습니다.",
       "removeFromHistory": "기록에서 제거",
-      "removeFromHistoryConfirm": "이 항목을 다운로드 기록에서 제거할까요? 앱 라이브러리 외부에 저장된 파일은 기기에 남습니다."
+      "removeFromHistoryConfirm": "이 항목을 다운로드 기록에서 제거할까요? 앱 라이브러리 외부에 저장된 파일은 기기에 남습니다.",
+      "deleteLocalFileHistoryPending": "파일은 삭제되었지만 Translator가 다운로드 기록 업데이트를 마치지 못했습니다. 자동으로 다시 시도합니다.",
+      "removeHistoryFailed": "이 다운로드를 기록에서 제거하지 못했습니다."
     },
     "downloadAndTranslate": "다운로드 및 번역",
     "downloadAndTranscribe": "다운로드 및 전사",
@@ -453,7 +459,10 @@
     "combinedHighlightReady": "합쳐진 하이라이트 준비 완료",
     "downloadCombined": "합친 클립 다운로드",
     "saveCombinedDialogTitle": "합친 하이라이트 클립 저장",
-    "combinedCutFailed": "합친 하이라이트 자르기 실패: {{message}}"
+    "combinedCutFailed": "합친 하이라이트 자르기 실패: {{message}}",
+    "highlightsInsufficientCredits": "요약은 생성되었지만 크레딧이 부족해 하이라이트 추출이 중단되었습니다.",
+    "highlightsPartialWarning": "하이라이트 추출이 일부만 완료되었습니다. 하이라이트가 불완전할 수 있으니 다시 생성해 새로고침하세요.",
+    "highlightsPartialWithReason": "요약은 생성되었지만 하이라이트 추출이 일부만 완료되었습니다: {{message}}"
   },
   "panel": {
     "new": "신규",
@@ -491,7 +500,8 @@
       "automaticCaptionsTitle": "YouTube 자동 생성 자막",
       "automaticCaptionsPill": "YouTube 자동 생성 자막",
       "automaticCaptionsCopy": "영상 다운로드가 차단되었습니다(HTTP 403). 이 자막은 새로 전사한 결과가 아니라 YouTube 자동 생성 자막입니다. 지금 편집, 번역, SRT 내보내기를 할 수 있습니다. 미리보기나 자막 입히기를 하려면 미디어를 연결하세요.",
-      "automaticCaptionsCopyWithMedia": "URL 영상 다운로드가 차단되었습니다(HTTP 403). 이 자막은 새로 전사한 결과가 아니라 YouTube 자동 생성 자막입니다. 연결된 미디어로 미리보기와 자막 입히기를 할 수 있습니다."
+      "automaticCaptionsCopyWithMedia": "URL 영상 다운로드가 차단되었습니다(HTTP 403). 이 자막은 새로 전사한 결과가 아니라 YouTube 자동 생성 자막입니다. 연결된 미디어로 미리보기와 자막 입히기를 할 수 있습니다.",
+      "highlightEditingLocked": "하이라이트 생성 중에는 편집이 잠깁니다"
     },
     "item": {
       "seek": "탐색",
@@ -665,7 +675,9 @@
       "option2Title": "옵션 2: Anthropic + ElevenLabs",
       "economicsTitle": "왜 가치가 있을까요",
       "economicsBody": "Stage5 크레딧은 편의성을 최적화합니다(설정 불필요). BYO는 제공업체에 직접 지불하며—패키지에 따라 보통 ~30-50% 저렴합니다.",
-      "encryptionUnavailable": "이 시스템에서는 보안 저장소를 사용할 수 없습니다. API 키를 저장할 수 없습니다."
+      "encryptionUnavailable": "이 시스템에서는 보안 저장소를 사용할 수 없습니다. API 키를 저장할 수 없습니다.",
+      "checkoutOpen": "브라우저에서 결제 진행 중…",
+      "checkoutOpenHint": "브라우저에서 결제를 완료하세요. 결제가 처리되면 BYO가 자동으로 잠금 해제됩니다."
     },
     "byoPreferences": {
       "title": "제공자 설정",
@@ -698,7 +710,10 @@
       "summaryRequiresAnthropic": "Anthropic BYO 이용 권한과 API 키가 필요합니다.",
       "translationReview": "번역 (검토)",
       "dubbingRequiresElevenLabs": "더빙은 ElevenLabs만 사용합니다. 내 API 키로 더빙하려면 ElevenLabs API 키를 추가하세요. 키가 없으면 Stage5 크레딧으로 더빙하며, 내 API 키 사용 중에는 Stage5 크레딧을 쓰지 않습니다.",
-      "transcriptionRequiresElevenLabs": "전사는 ElevenLabs Scribe만 사용합니다. 내 API 키로 전사하려면 ElevenLabs API 키를 추가하세요. 키가 없으면 Stage5 크레딧으로 전사하며, 내 API 키 사용 중에는 Stage5 크레딧을 쓰지 않습니다. OpenAI 키는 계속 번역에 사용됩니다."
+      "transcriptionRequiresElevenLabs": "전사는 ElevenLabs Scribe만 사용합니다. 내 API 키로 전사하려면 ElevenLabs API 키를 추가하세요. 키가 없으면 Stage5 크레딧으로 전사하며, 내 API 키 사용 중에는 Stage5 크레딧을 쓰지 않습니다. OpenAI 키는 계속 번역에 사용됩니다.",
+      "runtimeFallback": "API 키 모드의 런타임 대체",
+      "videoSuggestionLegacyFollowDraft": "기존 BYO 설정 유지: 직접 모델을 선택할 때까지 초안 번역 모델을 따릅니다.",
+      "videoSuggestionLegacyFollowReview": "기존 BYO 설정 유지: 직접 모델을 선택할 때까지 검토 번역 모델을 따릅니다."
     },
     "apiKeyGuide": {
       "title": "API 키 받는 방법",
@@ -906,7 +921,9 @@
     "moreMinutesPerDollar": "1달러당 {{multiplier}}× 더 많은 시간",
     "checkoutWaiting": "브라우저에서 결제를 완료하세요. 시간은 자동으로 여기에 표시됩니다.",
     "checkoutNote": "브라우저에서 Stripe로 한 번만 결제합니다. 계정이나 구독이 필요 없습니다. 시간은 자동으로 충전됩니다.",
-    "dubbingNote": "크레딧으로 번역하면 분당 약 10%가 추가되며, 더빙은 더 많이 사용합니다."
+    "dubbingNote": "크레딧으로 번역하면 분당 약 10%가 추가되며, 더빙은 더 많이 사용합니다.",
+    "iCancelledCheckout": "결제를 취소했어요",
+    "checkoutStartFailed": "결제를 시작하지 못했습니다. 연결을 확인하고 다시 시도해 주세요."
   },
   "cta": {
     "generate": {
@@ -1152,7 +1169,79 @@
     "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
     "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})",
     "reviewingSlow": "검토 중(시간이 조금 걸릴 수 있습니다...) {{done}}/{{total}}",
-    "reviewingRange": "{{start}}–{{end}} 검토 중 ({{total}}개 중)"
+    "reviewingRange": "{{start}}–{{end}} 검토 중 ({{total}}개 중)",
+    "legacy": {
+      "aligningVoices": "음성 맞추는 중 {{done}}/{{total}}…",
+      "analyzingSection": "{{total}}개 중 {{done}}번째 구간에서 하이라이트 찾는 중…",
+      "analyzingVideo": "영상 확인 중…",
+      "assemblingOverlay": "영상에 자막 입히는 중…",
+      "audioExtracted": "오디오 준비 완료",
+      "balancingAudio": "음성과 배경음 균형 맞추는 중…",
+      "cannotCancelSave": "거의 다 됐어요. 마지막 저장은 취소할 수 없습니다",
+      "captionsOnlyReady": "YouTube 자막 준비 완료 (영상 자체는 다운로드하지 못했습니다)",
+      "checkingDownloader": "다운로더 확인 중…",
+      "chooseSaveLocation": "영상을 저장할 위치를 선택하세요…",
+      "detectingSpeech": "말하는 구간 찾는 중…",
+      "downloadCancelled": "다운로드 취소됨",
+      "downloadComplete": "다운로드 완료",
+      "downloadVerifying": "다운로드 완료, 파일 확인 중…",
+      "drawingFrames": "자막 프레임 그리는 중 {{done}}/{{total}}…",
+      "dubAudioReady": "음성 트랙 준비 완료",
+      "dubComplete": "더빙 완료",
+      "dubbedVideoReady": "더빙 영상 준비 완료",
+      "encodingComplete": "영상 준비 완료",
+      "encodingVideo": "영상 만드는 중…",
+      "errorRecovery": "몇 줄 고치는 중…",
+      "extractingAudio": "오디오 추출 중…",
+      "extractingAudioPercent": "오디오 추출 중 ({{percent}}%)…",
+      "fetchingInfo": "영상 정보 가져오는 중…",
+      "finalAdjustments": "마무리 손질 중…",
+      "finalizingSubtitles": "자막 마무리 중…",
+      "finishingFile": "영상 파일 마무리 중…",
+      "generatingVoices": "음성 생성 중 {{done}}/{{total}}…",
+      "mergeComplete": "자막이 입혀진 영상이 준비되었습니다",
+      "mergeFailed": "영상 만들기에 실패했습니다",
+      "mergingFormats": "영상과 오디오 합치는 중…",
+      "postProcessing": "마무리하는 중…",
+      "preparingAudioExtraction": "오디오 준비 중 (영상 {{minutes}}분)…",
+      "preparingDownload": "다운로드 준비 중…",
+      "preparingDubLines": "더빙할 {{count}}줄 준비 중…",
+      "preparingHighlights": "하이라이트 고를 준비 중…",
+      "preparingOutput": "출력 폴더 준비 중…",
+      "preparingTranscript": "전사 읽는 중…",
+      "preparingVideoEngine": "영상 도구 준비 중…",
+      "preparingVoiceClips": "음성 클립 {{count}}개 준비 중…",
+      "rateLimited": "지금 요청이 많아요, 다시 시도하는 중…",
+      "reusingSummary": "요약을 바탕으로 하이라이트 고르는 중…",
+      "saving": "저장 중…",
+      "sectionAnalyzed": "{{done}}번째 구간 확인 완료",
+      "sectionHighlights": "{{done}}번째 구간에서 하이라이트 찾음",
+      "sectionSummarized": "{{total}}개 중 {{done}}번째 구간 요약 완료",
+      "selectingHighlights": "{{total}}개 중 {{done}}번째 구간에서 하이라이트 고르는 중…",
+      "settingUpDownloader": "다운로더 설정 중…",
+      "skippingSameLanguage": "이미 이 언어라서 번역이 필요 없습니다",
+      "starting": "시작 중…",
+      "startingDownload": "다운로드 시작 중…",
+      "subtitleLayerReady": "자막 레이어 준비 완료",
+      "summarizingSection": "{{total}}개 중 {{done}}번째 구간 요약 중…",
+      "summaryReady": "요약 준비 완료",
+      "transcribingParts": "전사 중 {{done}}/{{total}}…",
+      "transcriptionComplete": "전사 완료",
+      "translatingLines": "번역 중 {{done}}/{{total}}…",
+      "uploading": "업로드 중…",
+      "validating": "확인 중…",
+      "videoBlockedCaptions": "영상을 다운로드하지 못해 대신 YouTube 자막을 확인하는 중…",
+      "voiceTrackAssembled": "음성 트랙 조립 완료",
+      "voiceTrackReady": "음성 트랙 준비 완료",
+      "writingSummary": "요약 작성 중…"
+    },
+    "listening": "영상 듣는 중…",
+    "mergeFinishSaveBeforeReload": "새로고침하기 전에 병합된 영상 저장을 마쳐 주세요.",
+    "mergeSavePhaseNoCancel": "이 저장 단계는 지금 취소할 수 없습니다.",
+    "mergeWaitForCancelBeforeReload": "새로고침하기 전에 병합 취소가 끝날 때까지 기다려 주세요.",
+    "preparingTranscription": "들을 준비 중…",
+    "restartingTranscription": "전사를 다시 시작하는 중…",
+    "resumingTranscription": "중단된 곳부터 이어서 하는 중…"
   },
   "messages": {
     "fileSaved": "파일 저장됨:\n{{path}}",
@@ -1273,5 +1362,30 @@
     "covered": "보유 시간으로 충분해요",
     "preview": "처음 {{minutes}}분 무료 · 영상 전체 {{price}}",
     "pack": "영상 전체 {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "쇼츠 프레이밍 및 자막",
+    "intro": "화자마다 프레임을 잡고, 카메라 전환 지점에서 나누고, 짧은 자막 구절을 말소리에 맞춰 타이밍을 조정하세요. 아래 시간은 이 클립의 시작 기준입니다.",
+    "previewTime": "쇼츠 미리보기 시간",
+    "speakerLabel": "화자 또는 주제 라벨",
+    "splitShot": "재생 위치에서 샷 나누기",
+    "joinShot": "이전 샷과 합치기",
+    "preview": "미리보기",
+    "emphasize": "이 구절 강조",
+    "splitPhrase": "구절 나누기",
+    "removePhrase": "구절 삭제",
+    "addPhrase": "구절 추가",
+    "removeStyling": "스타일 제거",
+    "saveSelectionFirst": "먼저 하이라이트 선택을 저장하세요.",
+    "closeEdit": "편집 닫기",
+    "editFraming": "프레이밍 및 자막 편집",
+    "styleShort": "이 쇼츠 꾸미기",
+    "horizontalFocus": "가로 초점",
+    "verticalFocus": "세로 초점",
+    "zoom": "확대",
+    "from": "시작",
+    "to": "끝",
+    "saving": "저장 중…",
+    "save": "쇼츠 편집 저장"
   }
 }

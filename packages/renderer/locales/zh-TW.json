@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "磁碟空間不足，無法完成合併。請清出空間後再試。",
       "noSourceVideo": "沒有來源影片",
       "noSubtitlesLoaded": "沒有載入字幕",
-      "failedToLoadSRT": "無法載入SRT檔案"
+      "failedToLoadSRT": "無法載入SRT檔案",
+      "sourceVideoUnavailable": "原始影片已被移除或無法存取。請重新開啟後再試一次。",
+      "unknown": "發生問題，請再試一次。"
     },
     "success": "成功",
     "settings": "設定",
@@ -92,7 +94,9 @@
     "continue": "繼續",
     "send": "傳送",
     "dismiss": "關閉",
-    "moreActions": "更多操作"
+    "moreActions": "更多操作",
+    "installingUpdate": "正在安裝更新...",
+    "installingUpdateShort": "正在安裝"
   },
   "errors": {
     "needCookies": "YouTube 要求進行人機驗證。點擊「連接」繼續。",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "刪除檔案和歷史記錄",
       "deleteFileAndHistoryConfirm": "要永久刪除這個已下載檔案及其歷史記錄嗎？此操作無法還原。",
       "removeFromHistory": "從歷史記錄中移除",
-      "removeFromHistoryConfirm": "要從下載歷史記錄中移除此項目嗎？儲存在應用程式媒體庫之外的檔案將保留在裝置上。"
+      "removeFromHistoryConfirm": "要從下載歷史記錄中移除此項目嗎？儲存在應用程式媒體庫之外的檔案將保留在裝置上。",
+      "deleteLocalFileHistoryPending": "檔案已刪除，但 Translator 無法完成下載歷史記錄的更新。它會自動重試。",
+      "removeHistoryFailed": "無法從歷史記錄中移除此下載。",
+      "storedInAppLibrary": "已儲存在應用程式媒體庫"
     },
     "downloadAndTranslate": "下載並翻譯",
     "downloadAndTranscribe": "下載並轉錄",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ 翻譯",
     "autoRunStepDownload": "下載",
     "autoRunStepTranscribe": "轉錄",
-    "autoRunStepTranslate": "翻譯為 {{language}}"
+    "autoRunStepTranslate": "翻譯為 {{language}}",
+    "captionRecoveryKeepVideo": "保留目前影片",
+    "captionRecoveryOpenCaptions": "開啟字幕",
+    "captionRecoverySwitchPrompt": "Translator 已復原 YouTube 自動字幕，但 URL 影片無法使用。開啟字幕會卸載目前的影片。",
+    "captionRecoverySwitchTitle": "要在沒有目前影片的情況下開啟字幕嗎？"
   },
   "subtitles": {
     "outputLanguage": "輸出語言",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}分鐘影片",
     "translateEstimateByo": "BYO金鑰",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。"
+    "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。",
+    "dubCostHint": "ElevenLabs 配音：每分鐘語音 ~{{rate}} 點數。此估算會在配音開始前顯示。"
   },
   "summary": {
     "title": "逐字稿摘要",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "合併精彩片段準備就緒",
     "downloadCombined": "下載合併剪輯",
     "saveCombinedDialogTitle": "儲存合併的精彩片段",
-    "combinedCutFailed": "合併精彩片段剪輯失敗：{{message}}"
+    "combinedCutFailed": "合併精彩片段剪輯失敗：{{message}}",
+    "highlightsInsufficientCredits": "摘要已產生，但由於點數用盡，精華片段擷取已停止。",
+    "highlightsPartialWarning": "精華片段僅部分擷取，可能不完整。請重新產生以更新。",
+    "highlightsPartialWithReason": "摘要已產生，但精華片段僅部分擷取：{{message}}"
   },
   "panel": {
     "new": "新",
@@ -481,7 +496,12 @@
       "listCopy": "可直接原地編輯原文、譯文、時間軸和行級操作。",
       "originalLabel": "原文",
       "translationLabel": "譯文",
-      "mergeNeedsVideoCopy": "開始匯出燒錄版前，請先載入來源影片。"
+      "mergeNeedsVideoCopy": "開始匯出燒錄版前，請先載入來源影片。",
+      "automaticCaptionsCopy": "影片下載遭到封鎖（HTTP 403）。這些是 YouTube 自動字幕，並非重新轉錄。你現在就能編輯、翻譯並匯出 SRT。載入媒體即可預覽或燒錄字幕。",
+      "automaticCaptionsCopyWithMedia": "URL 影片下載遭到封鎖（HTTP 403）。這些是 YouTube 自動字幕，並非重新轉錄。已載入的媒體可用於預覽和燒錄。",
+      "automaticCaptionsPill": "YouTube 自動字幕",
+      "automaticCaptionsTitle": "YouTube 自動字幕",
+      "highlightEditingLocked": "正在產生精華片段，編輯已鎖定"
     },
     "item": {
       "seek": "定位",
@@ -655,7 +675,9 @@
       "option2Title": "選項 2：Anthropic + ElevenLabs",
       "economicsTitle": "為什麼值得",
       "economicsBody": "Stage5 點數優化了便利性（無需設置）。BYO 直接支付給提供商——根據您的套餐，通常便宜約 30-50%。",
-      "encryptionUnavailable": "此系統不支援安全儲存，無法儲存 API 金鑰。"
+      "encryptionUnavailable": "此系統不支援安全儲存，無法儲存 API 金鑰。",
+      "checkoutOpen": "已在瀏覽器中開啟付款頁面…",
+      "checkoutOpenHint": "請在瀏覽器中完成付款。付款完成後，我們會自動解鎖 BYO。"
     },
     "byoPreferences": {
       "title": "服務提供商偏好設定",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "需要 OpenAI BYO 存取權限和 API 金鑰。",
       "summaryRequiresAnthropic": "需要 Anthropic BYO 存取權限和 API 金鑰。",
       "translationReview": "翻譯（複審）",
-      "transcriptionRequiresElevenLabs": "轉錄僅使用 ElevenLabs Scribe。新增 ElevenLabs API 金鑰即可使用您自己的金鑰進行轉錄。若沒有，轉錄將使用 Stage5 點數，而在使用您的 API 金鑰時不會消耗 Stage5 點數。您的 OpenAI 金鑰仍用於翻譯。"
+      "transcriptionRequiresElevenLabs": "轉錄僅使用 ElevenLabs Scribe。新增 ElevenLabs API 金鑰即可使用您自己的金鑰進行轉錄。若沒有，轉錄將使用 Stage5 點數，而在使用您的 API 金鑰時不會消耗 Stage5 點數。您的 OpenAI 金鑰仍用於翻譯。",
+      "dubbingRequiresElevenLabs": "配音僅使用 ElevenLabs。新增 ElevenLabs API 金鑰即可用你自己的金鑰配音。沒有金鑰時，配音會使用 Stage5 點數；而在 API 金鑰開啟期間不會使用點數。",
+      "runtimeFallback": "API 金鑰模式下的執行階段備援",
+      "videoSuggestionLegacyFollowDraft": "已保留舊版 BYO 設定：在你直接選擇模型之前，會沿用你的草稿翻譯模型。",
+      "videoSuggestionLegacyFollowReview": "已保留舊版 BYO 設定：在你直接選擇模型之前，會沿用你的審閱翻譯模型。"
     },
     "apiKeyGuide": {
       "title": "如何取得 API 金鑰",
@@ -708,7 +734,7 @@
         "step1": "前往",
         "step2": "註冊或登入您的帳戶",
         "step3": "在左側邊欄中導覽至",
-        "step3b": "",
+        "step3b": "頁面",
         "step4": "點擊",
         "step5": "在帳單設定中新增付款方式（使用 API 必要）",
         "step6": "複製金鑰（以 sk- 開頭）並貼上到 Stage5 中",
@@ -719,7 +745,7 @@
         "step1": "前往",
         "step2": "註冊或登入您的帳戶",
         "step3": "在設定中前往",
-        "step3b": "",
+        "step3b": "頁面",
         "step4": "點擊",
         "step5": "在方案和帳單中新增付款方式（使用 API 必要）",
         "step6": "複製金鑰（以 sk-ant- 開頭）並貼上到 Stage5 中",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "每美元 {{multiplier}}× 時數",
     "checkoutWaiting": "請在瀏覽器中完成付款。時數會自動顯示在這裡。",
     "checkoutNote": "透過 Stripe 在瀏覽器中一次性付款。無需帳號或訂閱。時數會自動入帳。",
-    "dubbingNote": "使用點數翻譯每分鐘約多耗用 10%；配音耗用更多。"
+    "dubbingNote": "使用點數翻譯每分鐘約多耗用 10%；配音耗用更多。",
+    "iCancelledCheckout": "我已取消付款",
+    "checkoutStartFailed": "無法開始付款。請檢查網路連線後再試一次。"
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "開始配音？",
       "message": "此次配音將使用您 {{balance}} 積分中的約 {{cost}}。生成語音的費用遠高於翻譯。"
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "捨棄並開啟字幕",
+      "message": "你已開啟字幕。以 YouTube 自動字幕取代前，請先儲存或捨棄目前的字幕。",
+      "saveAndOpen": "儲存並開啟字幕",
+      "title": "要開啟復原的自動字幕嗎？"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "清理字幕中 ({{done}}/{{total}})",
     "translationCleanup": "清理翻譯字幕中 ({{done}}/{{total}})",
     "reviewingSlow": "檢查中（可能需要一點時間…）{{done}}/{{total}}",
-    "reviewingRange": "審閱 {{start}}–{{end}}（共 {{total}} 條）"
+    "reviewingRange": "審閱 {{start}}–{{end}}（共 {{total}} 條）",
+    "legacy": {
+      "aligningVoices": "正在對齊配音 {{done}}/{{total}}…",
+      "analyzingSection": "正在第 {{done}}/{{total}} 部分中尋找精華片段…",
+      "analyzingVideo": "正在檢查影片…",
+      "assemblingOverlay": "正在將字幕繪製到影片上…",
+      "audioExtracted": "音訊已就緒",
+      "balancingAudio": "正在平衡人聲與背景音…",
+      "cannotCancelSave": "快完成了。最後這次儲存無法取消",
+      "captionsOnlyReady": "YouTube 字幕已就緒（影片本身無法下載）",
+      "checkingDownloader": "正在檢查下載器…",
+      "chooseSaveLocation": "請選擇影片的儲存位置…",
+      "detectingSpeech": "正在尋找說話的片段…",
+      "downloadCancelled": "下載已取消",
+      "downloadComplete": "下載完成",
+      "downloadVerifying": "已下載，正在檢查檔案…",
+      "drawingFrames": "正在繪製字幕影格 {{done}}/{{total}}…",
+      "dubAudioReady": "配音音軌已就緒",
+      "dubComplete": "配音完成",
+      "dubbedVideoReady": "配音影片已就緒",
+      "encodingComplete": "影片已就緒",
+      "encodingVideo": "正在製作影片…",
+      "errorRecovery": "正在修正幾行…",
+      "extractingAudio": "正在擷取音訊…",
+      "extractingAudioPercent": "正在擷取音訊（{{percent}}%）…",
+      "fetchingInfo": "正在取得影片資訊…",
+      "finalAdjustments": "正在進行最後調整…",
+      "finalizingSubtitles": "正在完成字幕…",
+      "finishingFile": "正在完成影片檔案…",
+      "generatingVoices": "正在產生配音 {{done}}/{{total}}…",
+      "mergeComplete": "含字幕的影片已就緒",
+      "mergeFailed": "影片製作失敗",
+      "mergingFormats": "正在合併影片和音訊…",
+      "postProcessing": "正在收尾…",
+      "preparingAudioExtraction": "正在準備音訊（{{minutes}} 分鐘影片）…",
+      "preparingDownload": "正在準備下載…",
+      "preparingDubLines": "正在準備 {{count}} 行配音…",
+      "preparingHighlights": "正在準備挑選精華片段…",
+      "preparingOutput": "正在準備輸出資料夾…",
+      "preparingTranscript": "正在讀取逐字稿…",
+      "preparingVideoEngine": "正在準備影片工具…",
+      "preparingVoiceClips": "正在準備 {{count}} 段配音片段…",
+      "rateLimited": "目前忙碌中，正在重試…",
+      "reusingSummary": "正在使用摘要挑選精華片段…",
+      "saving": "正在儲存…",
+      "sectionAnalyzed": "第 {{done}} 部分已檢查",
+      "sectionHighlights": "已在第 {{done}} 部分找到精華片段",
+      "sectionSummarized": "第 {{done}}/{{total}} 部分已摘要",
+      "selectingHighlights": "正在第 {{done}}/{{total}} 部分中挑選精華片段…",
+      "settingUpDownloader": "正在設定下載器…",
+      "skippingSameLanguage": "已是此語言，無需翻譯",
+      "starting": "正在開始…",
+      "startingDownload": "正在開始下載…",
+      "subtitleLayerReady": "字幕圖層已就緒",
+      "summarizingSection": "正在摘要第 {{done}}/{{total}} 部分…",
+      "summaryReady": "摘要已就緒",
+      "transcribingParts": "正在轉錄 {{done}}/{{total}}…",
+      "transcriptionComplete": "轉錄完成",
+      "translatingLines": "正在翻譯 {{done}}/{{total}}…",
+      "uploading": "正在上傳…",
+      "validating": "正在檢查…",
+      "videoBlockedCaptions": "影片無法下載，正在改為尋找 YouTube 字幕…",
+      "voiceTrackAssembled": "配音音軌已合成",
+      "voiceTrackReady": "配音音軌已就緒",
+      "writingSummary": "正在撰寫摘要…"
+    },
+    "listening": "正在聆聽影片…",
+    "mergeFinishSaveBeforeReload": "請先完成合併影片的儲存，再重新載入。",
+    "mergeSavePhaseNoCancel": "此儲存步驟現在無法取消。",
+    "mergeWaitForCancelBeforeReload": "請等待合併取消完成後再重新載入。",
+    "preparingTranscription": "正在準備聆聽…",
+    "restartingTranscription": "正在重新開始轉錄…",
+    "resumingTranscription": "正在從中斷處繼續…"
   },
   "messages": {
     "fileSaved": "檔案已儲存：\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "您的分鐘數已涵蓋",
     "preview": "前 {{minutes}} 分鐘免費 · 整部影片 {{price}}",
     "pack": "整部影片 {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Shorts 構圖與字幕",
+    "intro": "為每位說話者構圖，在鏡頭切換處分割，並讓簡短的字幕短語與語音對齊。下方時間從此片段開頭起算。",
+    "previewTime": "Short 預覽時間",
+    "speakerLabel": "說話者或主題標籤",
+    "splitShot": "在播放位置分割鏡頭",
+    "joinShot": "與上一個鏡頭合併",
+    "preview": "預覽",
+    "emphasize": "強調此短語",
+    "splitPhrase": "分割短語",
+    "removePhrase": "移除短語",
+    "addPhrase": "新增短語",
+    "removeStyling": "移除樣式",
+    "saveSelectionFirst": "請先儲存精華片段選擇。",
+    "closeEdit": "關閉編輯",
+    "editFraming": "編輯構圖與字幕",
+    "styleShort": "為此 Short 設定樣式",
+    "horizontalFocus": "水平焦點",
+    "verticalFocus": "垂直焦點",
+    "zoom": "縮放",
+    "from": "從",
+    "to": "到",
+    "saving": "正在儲存…",
+    "save": "儲存 Short 編輯"
   }
 }

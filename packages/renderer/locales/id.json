@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "Ruang disk tidak cukup untuk menyelesaikan penggabungan. Harap kosongkan ruang dan coba lagi.",
       "noSourceVideo": "Tidak ada video sumber",
       "noSubtitlesLoaded": "Tidak ada subtitle yang dimuat",
-      "failedToLoadSRT": "Gagal memuat berkas SRT"
+      "failedToLoadSRT": "Gagal memuat berkas SRT",
+      "sourceVideoUnavailable": "Video asli telah dihapus atau tidak dapat diakses lagi. Buka lagi lalu coba lagi.",
+      "unknown": "Terjadi kesalahan. Silakan coba lagi."
     },
     "success": "Berhasil",
     "settings": "Pengaturan",
@@ -92,7 +94,9 @@
     "continue": "Lanjutkan",
     "send": "Kirim",
     "dismiss": "Tutup",
-    "moreActions": "Tindakan lainnya"
+    "moreActions": "Tindakan lainnya",
+    "installingUpdate": "Memasang pembaruan...",
+    "installingUpdateShort": "Memasang"
   },
   "errors": {
     "needCookies": "YouTube meminta verifikasi manusia. Klik Hubungkan untuk melanjutkan.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "Hapus file dan riwayat",
       "deleteFileAndHistoryConfirm": "Hapus permanen file unduhan ini beserta entri riwayatnya? Tindakan ini tidak dapat dibatalkan.",
       "removeFromHistory": "Hapus dari riwayat",
-      "removeFromHistoryConfirm": "Hapus item ini dari riwayat unduhan? File yang disimpan di luar pustaka aplikasi akan tetap ada di perangkat."
+      "removeFromHistoryConfirm": "Hapus item ini dari riwayat unduhan? File yang disimpan di luar pustaka aplikasi akan tetap ada di perangkat.",
+      "deleteLocalFileHistoryPending": "File sudah dihapus, tetapi Translator belum selesai memperbarui riwayat unduhan. Ini akan dicoba lagi secara otomatis.",
+      "removeHistoryFailed": "Tidak dapat menghapus unduhan ini dari riwayat.",
+      "storedInAppLibrary": "Disimpan di pustaka aplikasi"
     },
     "downloadAndTranslate": "Unduh & terjemahkan",
     "downloadAndTranscribe": "Unduh & transkripsikan",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ Terjemahkan",
     "autoRunStepDownload": "Unduh",
     "autoRunStepTranscribe": "Transkripsikan",
-    "autoRunStepTranslate": "Terjemahkan ke {{language}}"
+    "autoRunStepTranslate": "Terjemahkan ke {{language}}",
+    "captionRecoveryKeepVideo": "Pertahankan video saat ini",
+    "captionRecoveryOpenCaptions": "Buka teks",
+    "captionRecoverySwitchPrompt": "Translator memulihkan teks otomatis YouTube, tetapi video dari URL tidak tersedia. Membukanya akan melepas video saat ini.",
+    "captionRecoverySwitchTitle": "Buka teks tanpa video saat ini?"
   },
   "subtitles": {
     "outputLanguage": "Bahasa Keluaran",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "Kunci BYO",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "Apakah Anda yakin ingin membatalkan proses terjemahan subtitle? Progres apa pun akan hilang dan Anda perlu memulai kembali."
+    "cancel_confirmation": "Apakah Anda yakin ingin membatalkan proses terjemahan subtitle? Progres apa pun akan hilang dan Anda perlu memulai kembali.",
+    "dubCostHint": "Suara ElevenLabs: ~{{rate}} kredit per menit ucapan. Perkiraan ini ditampilkan sebelum dubbing dimulai."
   },
   "summary": {
     "title": "Ringkasan Transkrip",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "Sorotan Gabungan Siap",
     "downloadCombined": "Unduh Klip Gabungan",
     "saveCombinedDialogTitle": "Simpan klip sorotan gabungan",
-    "combinedCutFailed": "Gagal memotong sorotan gabungan: {{message}}"
+    "combinedCutFailed": "Gagal memotong sorotan gabungan: {{message}}",
+    "highlightsInsufficientCredits": "Ringkasan sudah dibuat, tetapi ekstraksi sorotan berhenti karena kredit habis.",
+    "highlightsPartialWarning": "Ekstraksi sorotan hanya sebagian. Sorotan ini mungkin belum lengkap. Buat ulang untuk memperbarui.",
+    "highlightsPartialWithReason": "Ringkasan sudah dibuat, tetapi ekstraksi sorotan hanya sebagian: {{message}}"
   },
   "panel": {
     "new": "baru",
@@ -481,7 +496,12 @@
       "listCopy": "Edit teks sumber, terjemahan, timing, dan aksi per baris langsung di tempat.",
       "originalLabel": "Asli",
       "translationLabel": "Terjemahan",
-      "mergeNeedsVideoCopy": "Pasang video sumber sebelum memulai ekspor burn-in."
+      "mergeNeedsVideoCopy": "Pasang video sumber sebelum memulai ekspor burn-in.",
+      "automaticCaptionsCopy": "Unduhan video diblokir (HTTP 403). Ini adalah teks otomatis YouTube, bukan transkripsi baru. Anda bisa mengedit, menerjemahkan, dan mengekspor SRT sekarang. Pasang media untuk pratinjau atau burn-in subtitle.",
+      "automaticCaptionsCopyWithMedia": "Unduhan video dari URL diblokir (HTTP 403). Ini adalah teks otomatis YouTube, bukan transkripsi baru. Media yang terpasang tersedia untuk pratinjau dan burn-in.",
+      "automaticCaptionsPill": "Teks otomatis YouTube",
+      "automaticCaptionsTitle": "Teks otomatis YouTube",
+      "highlightEditingLocked": "Pembuatan sorotan sedang berjalan, pengeditan dikunci"
     },
     "item": {
       "seek": "Cari",
@@ -655,7 +675,9 @@
       "option2Title": "Opsi 2: Anthropic + ElevenLabs",
       "economicsTitle": "Mengapa ini sepadan",
       "economicsBody": "Kredit Stage5 dioptimalkan untuk kenyamanan (tanpa pengaturan). BYO membayar penyedia secara langsung—biasanya ~30–50% lebih murah tergantung paket Anda.",
-      "encryptionUnavailable": "Penyimpanan aman tidak tersedia di sistem ini. API key tidak dapat disimpan."
+      "encryptionUnavailable": "Penyimpanan aman tidak tersedia di sistem ini. API key tidak dapat disimpan.",
+      "checkoutOpen": "Checkout terbuka di browser…",
+      "checkoutOpenHint": "Selesaikan checkout di browser Anda. Kami akan membuka BYO secara otomatis setelah pembayaran selesai."
     },
     "byoPreferences": {
       "title": "Preferensi Penyedia",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "Memerlukan akses OpenAI BYO dan kunci API.",
       "summaryRequiresAnthropic": "Memerlukan akses Anthropic BYO dan kunci API.",
       "translationReview": "Terjemahan (Peninjauan)",
-      "transcriptionRequiresElevenLabs": "Transkripsi hanya menggunakan ElevenLabs Scribe. Tambahkan kunci API ElevenLabs untuk mentranskripsi dengan kunci Anda sendiri. Tanpa kunci tersebut, transkripsi menggunakan kredit Stage5, yang tidak digunakan selama kunci API Anda aktif. Kunci OpenAI Anda tetap digunakan untuk terjemahan."
+      "transcriptionRequiresElevenLabs": "Transkripsi hanya menggunakan ElevenLabs Scribe. Tambahkan kunci API ElevenLabs untuk mentranskripsi dengan kunci Anda sendiri. Tanpa kunci tersebut, transkripsi menggunakan kredit Stage5, yang tidak digunakan selama kunci API Anda aktif. Kunci OpenAI Anda tetap digunakan untuk terjemahan.",
+      "dubbingRequiresElevenLabs": "Dubbing hanya menggunakan ElevenLabs. Tambahkan kunci API ElevenLabs untuk dubbing dengan kunci Anda sendiri. Tanpa kunci itu, dubbing menggunakan kredit Stage5, yang tidak digunakan selama kunci API Anda aktif.",
+      "runtimeFallback": "Cadangan runtime dalam mode kunci API",
+      "videoSuggestionLegacyFollowDraft": "Pengaturan BYO lama dipertahankan: mengikuti model terjemahan draf Anda sampai Anda memilih model langsung.",
+      "videoSuggestionLegacyFollowReview": "Pengaturan BYO lama dipertahankan: mengikuti model terjemahan tinjauan Anda sampai Anda memilih model langsung."
     },
     "apiKeyGuide": {
       "title": "Cara Mendapatkan Kunci API",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× menit per dolar",
     "checkoutWaiting": "Selesaikan pembayaran di browser Anda. Menit Anda akan muncul di sini dengan sendirinya.",
     "checkoutNote": "Pembayaran sekali melalui Stripe, di browser Anda. Tanpa akun atau langganan. Menit masuk dengan sendirinya.",
-    "dubbingNote": "Menerjemahkan dengan kredit menambah sekitar 10% per menit; sulih suara memakai lebih banyak."
+    "dubbingNote": "Menerjemahkan dengan kredit menambah sekitar 10% per menit; sulih suara memakai lebih banyak.",
+    "iCancelledCheckout": "Saya membatalkan checkout",
+    "checkoutStartFailed": "Checkout tidak dapat dimulai. Periksa koneksi Anda dan coba lagi."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "Mulai sulih suara?",
       "message": "Sulih suara ini memakai sekitar {{cost}} dari {{balance}} kredit Anda. Membuat suara jauh lebih mahal daripada menerjemahkan."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "Buang dan buka teks",
+      "message": "Anda sudah membuka subtitle. Simpan atau buang dulu sebelum menggantinya dengan teks otomatis YouTube.",
+      "saveAndOpen": "Simpan dan buka teks",
+      "title": "Buka teks otomatis yang dipulihkan?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "Membersihkan teks ({{done}}/{{total}})",
     "translationCleanup": "Membersihkan teks terjemahan ({{done}}/{{total}})",
     "reviewingSlow": "Meninjau (ini mungkin memakan waktu...) {{done}}/{{total}}",
-    "reviewingRange": "Meninjau {{start}}–{{end}} (dari {{total}})"
+    "reviewingRange": "Meninjau {{start}}–{{end}} (dari {{total}})",
+    "legacy": {
+      "aligningVoices": "Menyelaraskan suara {{done}}/{{total}}…",
+      "analyzingSection": "Mencari sorotan di bagian {{done}} dari {{total}}…",
+      "analyzingVideo": "Memeriksa video…",
+      "assemblingOverlay": "Menggambar subtitle ke video…",
+      "audioExtracted": "Audio siap",
+      "balancingAudio": "Menyeimbangkan suara dan latar…",
+      "cannotCancelSave": "Hampir selesai. Penyimpanan terakhir ini tidak bisa dibatalkan",
+      "captionsOnlyReady": "Teks YouTube siap (videonya sendiri tidak bisa diunduh)",
+      "checkingDownloader": "Memeriksa pengunduh…",
+      "chooseSaveLocation": "Pilih tempat menyimpan video…",
+      "detectingSpeech": "Mencari bagian yang berisi ucapan…",
+      "downloadCancelled": "Unduhan dibatalkan",
+      "downloadComplete": "Unduhan selesai",
+      "downloadVerifying": "Sudah diunduh, memeriksa file…",
+      "drawingFrames": "Menggambar frame subtitle {{done}}/{{total}}…",
+      "dubAudioReady": "Trek suara siap",
+      "dubComplete": "Dubbing selesai",
+      "dubbedVideoReady": "Video dubbing siap",
+      "encodingComplete": "Video siap",
+      "encodingVideo": "Membuat video…",
+      "errorRecovery": "Memperbaiki beberapa baris…",
+      "extractingAudio": "Mengekstrak audio…",
+      "extractingAudioPercent": "Mengekstrak audio ({{percent}}%)…",
+      "fetchingInfo": "Mengambil detail video…",
+      "finalAdjustments": "Menerapkan sentuhan akhir…",
+      "finalizingSubtitles": "Menyelesaikan subtitle…",
+      "finishingFile": "Menyelesaikan file video…",
+      "generatingVoices": "Membuat suara {{done}}/{{total}}…",
+      "mergeComplete": "Video dengan subtitle sudah siap",
+      "mergeFailed": "Gagal membuat video",
+      "mergingFormats": "Menggabungkan video dan audio…",
+      "postProcessing": "Menyelesaikan…",
+      "preparingAudioExtraction": "Menyiapkan audio ({{minutes}} menit video)…",
+      "preparingDownload": "Menyiapkan unduhan…",
+      "preparingDubLines": "Menyiapkan {{count}} baris untuk dubbing…",
+      "preparingHighlights": "Bersiap memilih sorotan…",
+      "preparingOutput": "Menyiapkan folder output…",
+      "preparingTranscript": "Membaca transkrip…",
+      "preparingVideoEngine": "Menyiapkan alat video…",
+      "preparingVoiceClips": "Menyiapkan {{count}} klip suara…",
+      "rateLimited": "Sedang sibuk, mencoba lagi…",
+      "reusingSummary": "Memakai ringkasan untuk memilih sorotan…",
+      "saving": "Menyimpan…",
+      "sectionAnalyzed": "Bagian {{done}} sudah diperiksa",
+      "sectionHighlights": "Sorotan ditemukan di bagian {{done}}",
+      "sectionSummarized": "Bagian {{done}} dari {{total}} sudah diringkas",
+      "selectingHighlights": "Memilih sorotan di bagian {{done}} dari {{total}}…",
+      "settingUpDownloader": "Menyiapkan pengunduh…",
+      "skippingSameLanguage": "Sudah dalam bahasa ini, tidak perlu diterjemahkan",
+      "starting": "Memulai…",
+      "startingDownload": "Memulai unduhan…",
+      "subtitleLayerReady": "Lapisan subtitle siap",
+      "summarizingSection": "Meringkas bagian {{done}} dari {{total}}…",
+      "summaryReady": "Ringkasan siap",
+      "transcribingParts": "Mentranskripsi {{done}}/{{total}}…",
+      "transcriptionComplete": "Transkripsi selesai",
+      "translatingLines": "Menerjemahkan {{done}}/{{total}}…",
+      "uploading": "Mengunggah…",
+      "validating": "Memeriksa…",
+      "videoBlockedCaptions": "Video tidak bisa diunduh; mencari teks YouTube sebagai gantinya…",
+      "voiceTrackAssembled": "Trek suara sudah dirakit",
+      "voiceTrackReady": "Trek suara siap",
+      "writingSummary": "Menulis ringkasan…"
+    },
+    "listening": "Mendengarkan video…",
+    "mergeFinishSaveBeforeReload": "Selesaikan penyimpanan video gabungan sebelum memuat ulang.",
+    "mergeSavePhaseNoCancel": "Langkah penyimpanan ini tidak bisa dibatalkan sekarang.",
+    "mergeWaitForCancelBeforeReload": "Tunggu pembatalan penggabungan selesai sebelum memuat ulang.",
+    "preparingTranscription": "Bersiap mendengarkan…",
+    "restartingTranscription": "Memulai transkripsi lagi…",
+    "resumingTranscription": "Melanjutkan dari titik terakhir…"
   },
   "messages": {
     "fileSaved": "Berkas disimpan:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "Tercakup menit Anda",
     "preview": "{{minutes}} mnt pertama gratis · seluruh video {{price}}",
     "pack": "Seluruh video {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Pembingkaian & teks Shorts",
+    "intro": "Bingkai setiap pembicara, pisahkan di setiap pergantian kamera, dan atur waktu frasa teks pendek sesuai ucapan. Waktu di bawah dihitung dari awal klip ini.",
+    "previewTime": "Waktu pratinjau Short",
+    "speakerLabel": "Label pembicara atau topik",
+    "splitShot": "Pisahkan shot di playhead",
+    "joinShot": "Gabungkan dengan shot sebelumnya",
+    "preview": "Pratinjau",
+    "emphasize": "Tekankan frasa ini",
+    "splitPhrase": "Pisahkan frasa",
+    "removePhrase": "Hapus frasa",
+    "addPhrase": "Tambah frasa",
+    "removeStyling": "Hapus gaya",
+    "saveSelectionFirst": "Simpan pilihan sorotan terlebih dahulu.",
+    "closeEdit": "Tutup edit",
+    "editFraming": "Edit pembingkaian & teks",
+    "styleShort": "Atur gaya Short ini",
+    "horizontalFocus": "Fokus horizontal",
+    "verticalFocus": "Fokus vertikal",
+    "zoom": "Zoom",
+    "from": "Dari",
+    "to": "sampai",
+    "saving": "Menyimpan…",
+    "save": "Simpan edit Short"
   }
 }

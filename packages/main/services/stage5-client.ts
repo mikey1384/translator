@@ -520,7 +520,7 @@ async function resumeDurableTranscriptionJob({
   }
 
   if (jobStatus === 'pending_upload') {
-    onProgress?.('Restarting durable transcription...', 35);
+    onProgress?.('__i18n__:restarting_transcription', 35);
     const startResult = await startDurableTranscriptionJob({
       jobId,
       idempotencyKey,
@@ -658,9 +658,7 @@ async function pollDurableTranscriptionJob({
       95
     );
     onProgress?.(
-      resultData?.status === 'processing'
-        ? stage
-        : 'Waiting for durable transcription...',
+      resultData?.status === 'processing' ? stage : '__i18n__:listening',
       percent
     );
 
@@ -1327,11 +1325,11 @@ export async function transcribeViaR2({
   const existingResumeJob = getDurableTranscriptionResumeJob(recoveryKey);
   let durableJobIdForDetach: string | null = null;
 
-  onProgress?.('Preparing durable transcription...', 5);
+  onProgress?.('__i18n__:preparing_transcription', 5);
 
   try {
     if (existingResumeJob?.jobId) {
-      onProgress?.('Reconnecting to durable transcription...', 35);
+      onProgress?.('__i18n__:resuming_transcription', 35);
       try {
         durableJobIdForDetach = existingResumeJob.jobId;
         return await resumeDurableTranscriptionJob({
@@ -1428,7 +1426,7 @@ export async function transcribeViaR2({
     }
 
     if (uploadRequired) {
-      onProgress?.('Uploading audio to secure storage...', 10);
+      onProgress?.('__i18n__:transcribing_r2_upload', 10);
 
       let uploadStatus = 0;
       const { stream, cleanup } = createAbortableReadStream(filePath, signal);
@@ -1473,7 +1471,7 @@ export async function transcribeViaR2({
         }
       );
 
-      onProgress?.('Starting durable transcription...', 35);
+      onProgress?.('__i18n__:listening', 35);
       durableJobIdForDetach = jobId;
       setDurableTranscriptionResumeJob({ recoveryKey, jobId });
       await startDurableTranscriptionJob({
@@ -1484,7 +1482,7 @@ export async function transcribeViaR2({
     } else if (jobStatus === 'processing' || jobStatus === 'completed') {
       durableJobIdForDetach = jobId;
       setDurableTranscriptionResumeJob({ recoveryKey, jobId });
-      onProgress?.('Reconnecting to durable transcription...', 35);
+      onProgress?.('__i18n__:resuming_transcription', 35);
     }
 
     return await pollDurableTranscriptionJob({
@@ -1637,13 +1635,13 @@ export async function transcribeViaDirect({
     throw new DOMException('Operation cancelled', 'AbortError');
   }
 
-  onProgress?.('Preparing transcription...', 5);
+  onProgress?.('__i18n__:preparing_transcription', 5);
 
   // Get file size for progress estimation
   const stats = fs.statSync(filePath);
   const fileSizeMB = stats.size / (1024 * 1024);
 
-  onProgress?.('Uploading audio to relay...', 10);
+  onProgress?.('__i18n__:transcribing_r2_upload', 10);
 
   // Track upload completion to start transcription progress
   let uploadComplete = false;

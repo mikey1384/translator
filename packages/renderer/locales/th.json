@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "พื้นที่ดิสก์ไม่เพียงพอที่จะรวมไฟล์ กรุณาเพิ่มพื้นที่ว่างแล้วลองใหม่อีกครั้ง",
       "noSourceVideo": "ไม่มีวิดีโอต้นฉบับ",
       "noSubtitlesLoaded": "ไม่ได้โหลดคำบรรยาย",
-      "failedToLoadSRT": "โหลดไฟล์ SRT ล้มเหลว"
+      "failedToLoadSRT": "โหลดไฟล์ SRT ล้มเหลว",
+      "sourceVideoUnavailable": "วิดีโอต้นฉบับถูกลบหรือไม่สามารถเข้าถึงได้อีกต่อไป เปิดอีกครั้งแล้วลองใหม่",
+      "unknown": "เกิดข้อผิดพลาด โปรดลองอีกครั้ง"
     },
     "success": "สำเร็จ",
     "settings": "การตั้งค่า",
@@ -92,7 +94,9 @@
     "continue": "ดำเนินการต่อ",
     "send": "ส่ง",
     "dismiss": "ปิด",
-    "moreActions": "การดำเนินการอื่น"
+    "moreActions": "การดำเนินการอื่น",
+    "installingUpdate": "กำลังติดตั้งอัปเดต...",
+    "installingUpdateShort": "กำลังติดตั้ง"
   },
   "errors": {
     "needCookies": "YouTube ขอการยืนยันตัวตน คลิกเชื่อมต่อเพื่อดำเนินการต่อ",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "ลบไฟล์และประวัติ",
       "deleteFileAndHistoryConfirm": "ลบไฟล์ที่ดาวน์โหลดนี้และรายการประวัติอย่างถาวรหรือไม่ การดำเนินการนี้ย้อนกลับไม่ได้",
       "removeFromHistory": "นำออกจากประวัติ",
-      "removeFromHistoryConfirm": "นำรายการนี้ออกจากประวัติการดาวน์โหลดหรือไม่ ไฟล์ที่บันทึกไว้นอกคลังของแอปจะยังคงอยู่ในอุปกรณ์"
+      "removeFromHistoryConfirm": "นำรายการนี้ออกจากประวัติการดาวน์โหลดหรือไม่ ไฟล์ที่บันทึกไว้นอกคลังของแอปจะยังคงอยู่ในอุปกรณ์",
+      "deleteLocalFileHistoryPending": "ลบไฟล์แล้ว แต่ Translator อัปเดตประวัติการดาวน์โหลดไม่เสร็จ ระบบจะลองใหม่โดยอัตโนมัติ",
+      "removeHistoryFailed": "ไม่สามารถนำการดาวน์โหลดนี้ออกจากประวัติได้",
+      "storedInAppLibrary": "จัดเก็บในคลังของแอป"
     },
     "downloadAndTranslate": "ดาวน์โหลดและแปล",
     "downloadAndTranscribe": "ดาวน์โหลดและถอดเสียง",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ แปล",
     "autoRunStepDownload": "ดาวน์โหลด",
     "autoRunStepTranscribe": "ถอดเสียง",
-    "autoRunStepTranslate": "แปลเป็น {{language}}"
+    "autoRunStepTranslate": "แปลเป็น {{language}}",
+    "captionRecoveryKeepVideo": "เก็บวิดีโอปัจจุบันไว้",
+    "captionRecoveryOpenCaptions": "เปิดคำบรรยาย",
+    "captionRecoverySwitchPrompt": "Translator กู้คืนคำบรรยายอัตโนมัติของ YouTube ได้ แต่วิดีโอจาก URL ใช้ไม่ได้ การเปิดคำบรรยายจะยกเลิกการเชื่อมต่อวิดีโอปัจจุบัน",
+    "captionRecoverySwitchTitle": "เปิดคำบรรยายโดยไม่มีวิดีโอปัจจุบันหรือไม่"
   },
   "subtitles": {
     "outputLanguage": "ภาษาเอาต์พุต",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}} นาที วิดีโอ",
     "translateEstimateByo": "คีย์ BYO",
     "qualityBadge": "(คุณภาพสูง)",
-    "cancel_confirmation": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกกระบวนการแปลคำบรรยาย? ความคืบหน้าทั้งหมดจะสูญหายและคุณจะต้องเริ่มต้นใหม่"
+    "cancel_confirmation": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกกระบวนการแปลคำบรรยาย? ความคืบหน้าทั้งหมดจะสูญหายและคุณจะต้องเริ่มต้นใหม่",
+    "dubCostHint": "เสียง ElevenLabs: ~{{rate}} เครดิตต่อนาทีของเสียงพูด ประมาณการนี้จะแสดงก่อนเริ่มพากย์เสียง"
   },
   "summary": {
     "title": "สรุปการถอดความ",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "ไฮไลต์รวมพร้อมแล้ว",
     "downloadCombined": "ดาวน์โหลดคลิปรวม",
     "saveCombinedDialogTitle": "บันทึกคลิปไฮไลต์รวม",
-    "combinedCutFailed": "ไม่สามารถตัดไฮไลต์รวม: {{message}}"
+    "combinedCutFailed": "ไม่สามารถตัดไฮไลต์รวม: {{message}}",
+    "highlightsInsufficientCredits": "สร้างสรุปแล้ว แต่การดึงไฮไลต์หยุดลงเพราะเครดิตหมด",
+    "highlightsPartialWarning": "ดึงไฮไลต์ได้เพียงบางส่วน ไฮไลต์เหล่านี้อาจไม่ครบ สร้างใหม่เพื่อรีเฟรช",
+    "highlightsPartialWithReason": "สร้างสรุปแล้ว แต่ดึงไฮไลต์ได้เพียงบางส่วน: {{message}}"
   },
   "panel": {
     "new": "ใหม่",
@@ -481,7 +496,12 @@
       "listCopy": "แก้ไขข้อความต้นฉบับ คำแปล เวลา และคำสั่งระดับบรรทัดได้โดยตรง",
       "originalLabel": "ต้นฉบับ",
       "translationLabel": "คำแปล",
-      "mergeNeedsVideoCopy": "เชื่อมต่อวิดีโอต้นฉบับก่อนเริ่มส่งออกแบบเบิร์นซับ"
+      "mergeNeedsVideoCopy": "เชื่อมต่อวิดีโอต้นฉบับก่อนเริ่มส่งออกแบบเบิร์นซับ",
+      "automaticCaptionsCopy": "การดาวน์โหลดวิดีโอถูกบล็อก (HTTP 403) นี่คือคำบรรยายอัตโนมัติของ YouTube ไม่ใช่การถอดความใหม่ คุณแก้ไข แปล และส่งออก SRT ได้ทันที เชื่อมต่อสื่อเพื่อดูตัวอย่างหรือฝังคำบรรยาย",
+      "automaticCaptionsCopyWithMedia": "การดาวน์โหลดวิดีโอจาก URL ถูกบล็อก (HTTP 403) นี่คือคำบรรยายอัตโนมัติของ YouTube ไม่ใช่การถอดความใหม่ สื่อที่เชื่อมต่อไว้ใช้ดูตัวอย่างและฝังคำบรรยายได้",
+      "automaticCaptionsPill": "คำบรรยายอัตโนมัติของ YouTube",
+      "automaticCaptionsTitle": "คำบรรยายอัตโนมัติของ YouTube",
+      "highlightEditingLocked": "กำลังสร้างไฮไลต์ ล็อกการแก้ไขไว้"
     },
     "item": {
       "seek": "ค้นหา",
@@ -655,7 +675,9 @@
       "option2Title": "ตัวเลือก 2: Anthropic + ElevenLabs",
       "economicsTitle": "ทำไมมันคุ้มค่า",
       "economicsBody": "เครดิต Stage5 เหมาะสำหรับความสะดวกสบาย (ไม่ต้องตั้งค่า) BYO ชำระเงินให้ผู้ให้บริการโดยตรง ซึ่งมักจะถูกกว่าประมาณ 30-50% ขึ้นอยู่กับแพ็กของคุณ",
-      "encryptionUnavailable": "ระบบนี้ไม่รองรับการจัดเก็บแบบปลอดภัย จึงไม่สามารถบันทึกคีย์ API ได้"
+      "encryptionUnavailable": "ระบบนี้ไม่รองรับการจัดเก็บแบบปลอดภัย จึงไม่สามารถบันทึกคีย์ API ได้",
+      "checkoutOpen": "เปิดหน้าชำระเงินในเบราว์เซอร์แล้ว…",
+      "checkoutOpenHint": "ชำระเงินให้เสร็จในเบราว์เซอร์ของคุณ เราจะปลดล็อก BYO ให้อัตโนมัติเมื่อการชำระเงินเสร็จสมบูรณ์"
     },
     "byoPreferences": {
       "title": "การตั้งค่าผู้ให้บริการ",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "ต้องมีสิทธิ์เข้าถึง OpenAI BYO และคีย์ API",
       "summaryRequiresAnthropic": "ต้องมีสิทธิ์เข้าถึง Anthropic BYO และคีย์ API",
       "translationReview": "การแปล (ตรวจทาน)",
-      "transcriptionRequiresElevenLabs": "การถอดความใช้ ElevenLabs Scribe เท่านั้น เพิ่มคีย์ API ของ ElevenLabs เพื่อถอดความด้วยคีย์ของคุณเอง หากไม่มีคีย์ การถอดความจะใช้เครดิต Stage5 ซึ่งจะไม่ถูกใช้ขณะเปิดใช้คีย์ API ของคุณ คีย์ OpenAI ของคุณยังคงใช้สำหรับการแปล"
+      "transcriptionRequiresElevenLabs": "การถอดความใช้ ElevenLabs Scribe เท่านั้น เพิ่มคีย์ API ของ ElevenLabs เพื่อถอดความด้วยคีย์ของคุณเอง หากไม่มีคีย์ การถอดความจะใช้เครดิต Stage5 ซึ่งจะไม่ถูกใช้ขณะเปิดใช้คีย์ API ของคุณ คีย์ OpenAI ของคุณยังคงใช้สำหรับการแปล",
+      "dubbingRequiresElevenLabs": "การพากย์เสียงใช้ ElevenLabs เท่านั้น เพิ่มคีย์ API ของ ElevenLabs เพื่อพากย์ด้วยคีย์ของคุณเอง หากไม่มี การพากย์จะใช้เครดิต Stage5 ซึ่งจะไม่ถูกใช้ขณะเปิดคีย์ API ของคุณอยู่",
+      "runtimeFallback": "ตัวสำรองระหว่างทำงานในโหมดคีย์ API",
+      "videoSuggestionLegacyFollowDraft": "คงการตั้งค่า BYO แบบเดิมไว้: ใช้ตามโมเดลแปลฉบับร่างของคุณจนกว่าคุณจะเลือกโมเดลโดยตรง",
+      "videoSuggestionLegacyFollowReview": "คงการตั้งค่า BYO แบบเดิมไว้: ใช้ตามโมเดลแปลขั้นตรวจทานของคุณจนกว่าคุณจะเลือกโมเดลโดยตรง"
     },
     "apiKeyGuide": {
       "title": "วิธีรับคีย์ API",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "นาทีต่อดอลลาร์ {{multiplier}}×",
     "checkoutWaiting": "ชำระเงินให้เสร็จในเบราว์เซอร์ของคุณ นาทีของคุณจะแสดงที่นี่เอง",
     "checkoutNote": "ชำระครั้งเดียวผ่าน Stripe ในเบราว์เซอร์ของคุณ ไม่ต้องมีบัญชีหรือสมัครสมาชิก นาทีจะเข้ามาเอง",
-    "dubbingNote": "การแปลด้วยเครดิตจะเพิ่มประมาณ 10% ต่อนาที ส่วนการพากย์จะใช้มากกว่า"
+    "dubbingNote": "การแปลด้วยเครดิตจะเพิ่มประมาณ 10% ต่อนาที ส่วนการพากย์จะใช้มากกว่า",
+    "iCancelledCheckout": "ฉันยกเลิกการชำระเงินแล้ว",
+    "checkoutStartFailed": "เริ่มการชำระเงินไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง"
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "เริ่มพากย์เสียงไหม?",
       "message": "การพากย์นี้ใช้ประมาณ {{cost}} จากเครดิต {{balance}} ของคุณ การสร้างเสียงมีค่าใช้จ่ายสูงกว่าการแปลมาก"
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "ทิ้งและเปิดคำบรรยาย",
+      "message": "คุณเปิดคำบรรยายอยู่แล้ว บันทึกหรือทิ้งก่อนแทนที่ด้วยคำบรรยายอัตโนมัติของ YouTube",
+      "saveAndOpen": "บันทึกและเปิดคำบรรยาย",
+      "title": "เปิดคำบรรยายอัตโนมัติที่กู้คืนมาหรือไม่"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "กำลังตรวจสอบคำบรรยาย ({{done}}/{{total}})",
     "translationCleanup": "กำลังทำความสะอาดคำบรรยายที่แปล ({{done}}/{{total}})",
     "reviewingSlow": "กำลังตรวจทาน (อาจใช้เวลาสักครู่...) {{done}}/{{total}}",
-    "reviewingRange": "กำลังตรวจทาน {{start}}–{{end}} (จาก {{total}})"
+    "reviewingRange": "กำลังตรวจทาน {{start}}–{{end}} (จาก {{total}})",
+    "legacy": {
+      "aligningVoices": "กำลังจัดเสียงให้ตรงกัน {{done}}/{{total}}…",
+      "analyzingSection": "กำลังหาไฮไลต์ในส่วนที่ {{done}} จาก {{total}}…",
+      "analyzingVideo": "กำลังตรวจสอบวิดีโอ…",
+      "assemblingOverlay": "กำลังวาดคำบรรยายลงบนวิดีโอ…",
+      "audioExtracted": "เสียงพร้อมแล้ว",
+      "balancingAudio": "กำลังปรับสมดุลเสียงพูดและเสียงพื้นหลัง…",
+      "cannotCancelSave": "ใกล้เสร็จแล้ว การบันทึกขั้นสุดท้ายนี้ยกเลิกไม่ได้",
+      "captionsOnlyReady": "คำบรรยาย YouTube พร้อมแล้ว (ดาวน์โหลดตัววิดีโอไม่ได้)",
+      "checkingDownloader": "กำลังตรวจสอบตัวดาวน์โหลด…",
+      "chooseSaveLocation": "เลือกตำแหน่งที่จะบันทึกวิดีโอ…",
+      "detectingSpeech": "กำลังหาช่วงที่มีคนพูด…",
+      "downloadCancelled": "ยกเลิกการดาวน์โหลดแล้ว",
+      "downloadComplete": "ดาวน์โหลดเสร็จแล้ว",
+      "downloadVerifying": "ดาวน์โหลดแล้ว กำลังตรวจสอบไฟล์…",
+      "drawingFrames": "กำลังวาดเฟรมคำบรรยาย {{done}}/{{total}}…",
+      "dubAudioReady": "แทร็กเสียงพากย์พร้อมแล้ว",
+      "dubComplete": "พากย์เสียงเสร็จแล้ว",
+      "dubbedVideoReady": "วิดีโอพากย์เสียงพร้อมแล้ว",
+      "encodingComplete": "วิดีโอพร้อมแล้ว",
+      "encodingVideo": "กำลังสร้างวิดีโอ…",
+      "errorRecovery": "กำลังแก้ไขบางบรรทัด…",
+      "extractingAudio": "กำลังแยกเสียง…",
+      "extractingAudioPercent": "กำลังแยกเสียง ({{percent}}%)…",
+      "fetchingInfo": "กำลังดึงรายละเอียดวิดีโอ…",
+      "finalAdjustments": "กำลังเก็บรายละเอียดขั้นสุดท้าย…",
+      "finalizingSubtitles": "กำลังเตรียมคำบรรยายให้เสร็จ…",
+      "finishingFile": "กำลังทำไฟล์วิดีโอให้เสร็จ…",
+      "generatingVoices": "กำลังสร้างเสียง {{done}}/{{total}}…",
+      "mergeComplete": "วิดีโอพร้อมคำบรรยายพร้อมแล้ว",
+      "mergeFailed": "สร้างวิดีโอไม่สำเร็จ",
+      "mergingFormats": "กำลังรวมวิดีโอและเสียง…",
+      "postProcessing": "กำลังเสร็จสิ้น…",
+      "preparingAudioExtraction": "กำลังเตรียมเสียง (วิดีโอ {{minutes}} นาที)…",
+      "preparingDownload": "กำลังเตรียมดาวน์โหลด…",
+      "preparingDubLines": "กำลังเตรียม {{count}} บรรทัดสำหรับพากย์เสียง…",
+      "preparingHighlights": "กำลังเตรียมเลือกไฮไลต์…",
+      "preparingOutput": "กำลังเตรียมโฟลเดอร์ผลลัพธ์…",
+      "preparingTranscript": "กำลังอ่านข้อความถอดความ…",
+      "preparingVideoEngine": "กำลังเตรียมเครื่องมือวิดีโอ…",
+      "preparingVoiceClips": "กำลังเตรียมคลิปเสียง {{count}} คลิป…",
+      "rateLimited": "ระบบไม่ว่างในขณะนี้ กำลังลองใหม่…",
+      "reusingSummary": "กำลังใช้สรุปเพื่อเลือกไฮไลต์…",
+      "saving": "กำลังบันทึก…",
+      "sectionAnalyzed": "ตรวจสอบส่วนที่ {{done}} แล้ว",
+      "sectionHighlights": "พบไฮไลต์ในส่วนที่ {{done}}",
+      "sectionSummarized": "สรุปส่วนที่ {{done}} จาก {{total}} แล้ว",
+      "selectingHighlights": "กำลังเลือกไฮไลต์ในส่วนที่ {{done}} จาก {{total}}…",
+      "settingUpDownloader": "กำลังตั้งค่าตัวดาวน์โหลด…",
+      "skippingSameLanguage": "เป็นภาษานี้อยู่แล้ว ไม่ต้องแปล",
+      "starting": "กำลังเริ่ม…",
+      "startingDownload": "กำลังเริ่มดาวน์โหลด…",
+      "subtitleLayerReady": "เลเยอร์คำบรรยายพร้อมแล้ว",
+      "summarizingSection": "กำลังสรุปส่วนที่ {{done}} จาก {{total}}…",
+      "summaryReady": "สรุปพร้อมแล้ว",
+      "transcribingParts": "กำลังถอดความ {{done}}/{{total}}…",
+      "transcriptionComplete": "ถอดความเสร็จแล้ว",
+      "translatingLines": "กำลังแปล {{done}}/{{total}}…",
+      "uploading": "กำลังอัปโหลด…",
+      "validating": "กำลังตรวจสอบ…",
+      "videoBlockedCaptions": "ดาวน์โหลดวิดีโอไม่ได้ กำลังหาคำบรรยาย YouTube แทน…",
+      "voiceTrackAssembled": "ประกอบแทร็กเสียงแล้ว",
+      "voiceTrackReady": "แทร็กเสียงพร้อมแล้ว",
+      "writingSummary": "กำลังเขียนสรุป…"
+    },
+    "listening": "กำลังฟังวิดีโอ…",
+    "mergeFinishSaveBeforeReload": "บันทึกวิดีโอที่รวมแล้วให้เสร็จก่อนโหลดใหม่",
+    "mergeSavePhaseNoCancel": "ขั้นตอนการบันทึกนี้ยกเลิกไม่ได้ในตอนนี้",
+    "mergeWaitForCancelBeforeReload": "รอให้การยกเลิกการรวมเสร็จก่อนโหลดใหม่",
+    "preparingTranscription": "กำลังเตรียมฟัง…",
+    "restartingTranscription": "กำลังเริ่มถอดความใหม่…",
+    "resumingTranscription": "กำลังทำต่อจากจุดที่ค้างไว้…"
   },
   "messages": {
     "fileSaved": "บันทึกไฟล์แล้ว:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "ครอบคลุมด้วยนาทีของคุณ",
     "preview": "ฟรี {{minutes}} นาทีแรก · ทั้งวิดีโอ {{price}}",
     "pack": "ทั้งวิดีโอ {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "การจัดเฟรมและคำบรรยาย Shorts",
+    "intro": "จัดเฟรมผู้พูดแต่ละคน แบ่งตรงจุดเปลี่ยนกล้อง และตั้งเวลาวลีคำบรรยายสั้น ๆ ให้ตรงกับเสียงพูด เวลาด้านล่างนับจากต้นคลิปนี้",
+    "previewTime": "เวลาดูตัวอย่าง Short",
+    "speakerLabel": "ป้ายชื่อผู้พูดหรือหัวข้อ",
+    "splitShot": "แบ่งช็อตที่ตำแหน่งเล่นปัจจุบัน",
+    "joinShot": "รวมกับช็อตก่อนหน้า",
+    "preview": "ดูตัวอย่าง",
+    "emphasize": "เน้นวลีนี้",
+    "splitPhrase": "แบ่งวลี",
+    "removePhrase": "ลบวลี",
+    "addPhrase": "เพิ่มวลี",
+    "removeStyling": "ลบการจัดรูปแบบ",
+    "saveSelectionFirst": "บันทึกไฮไลต์ที่เลือกก่อน",
+    "closeEdit": "ปิดการแก้ไข",
+    "editFraming": "แก้ไขการจัดเฟรมและคำบรรยาย",
+    "styleShort": "จัดสไตล์ Short นี้",
+    "horizontalFocus": "โฟกัสแนวนอน",
+    "verticalFocus": "โฟกัสแนวตั้ง",
+    "zoom": "ซูม",
+    "from": "ตั้งแต่",
+    "to": "ถึง",
+    "saving": "กำลังบันทึก…",
+    "save": "บันทึกการแก้ไข Short"
   }
 }

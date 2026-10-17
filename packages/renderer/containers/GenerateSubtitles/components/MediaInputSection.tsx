@@ -63,8 +63,7 @@ const autoRunRowStyles = css`
 const autoRunLabelStyles = css`
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   color: ${colors.textDim};
 `;
 
@@ -247,8 +246,7 @@ const recentSectionTitleStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 const recentListStyles = css`

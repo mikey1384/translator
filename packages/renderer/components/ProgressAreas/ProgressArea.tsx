@@ -1,5 +1,6 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { localizeLegacyStage } from './legacy-stage-text';
 import { useCreditStore } from '../../state/credit-store';
 import { useUIStore } from '../../state/ui-store';
 import { useAiStore } from '../../state/ai-store';
@@ -94,6 +95,7 @@ export default function ProgressArea({
   verticalOffsetPx,
 }: ProgressAreaProps) {
   const { t } = useTranslation();
+  const stageText = localizeLegacyStage(stage, t);
   const presentation = useProgressPresentation();
   const credits = useCreditStore(s => s.credits);
   const qualityTranslation = useUIStore(s => s.qualityTranslation);
@@ -300,7 +302,7 @@ export default function ProgressArea({
           ) : null}
           <div className={inlineStatusMainStyles}>
             <span className={inlineStatusTitleStyles}>{title}</span>
-            <span className={inlineStatusStageStyles}>{stage}</span>
+            <span className={inlineStatusStageStyles}>{stageText}</span>
           </div>
           {progress > 0 ? (
             <span className={inlineStatusMetaStyles}>
@@ -373,7 +375,7 @@ export default function ProgressArea({
           <div className={workflowStatusBodyStyles}>
             {notice}
             <div className={workflowStatusStageRowStyles}>
-              <span className={workflowStatusStageTextStyles}>{stage}</span>
+              <span className={workflowStatusStageTextStyles}>{stageText}</span>
               {progress > 0 && (
                 <span className={workflowStatusPercentStyles}>
                   {progress.toFixed(1)}%

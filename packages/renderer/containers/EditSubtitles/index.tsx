@@ -338,8 +338,10 @@ export default function EditSubtitles({
 
   return (
     <Section
-      title={t('editSubtitles.title')}
-      headerRight={headerRight}
+      // In the video workspace the subtitles header, More menu and action
+      // bar already carry the title, language and translate controls.
+      title={inWorkspace ? undefined : t('editSubtitles.title')}
+      headerRight={inWorkspace ? undefined : headerRight}
       overflowVisible
       contentClassName={editorWorkspaceStackStyles}
     >
@@ -382,98 +384,146 @@ export default function EditSubtitles({
               )}
             </Alert>
           ) : null}
-          <div className={editorStatusShellStyles}>
-            <div className={editorStatusPillRowStyles}>
-              <span className={editorStatusPillStyles}>
-                {t(
-                  'editSubtitles.workspace.rowsLoaded',
-                  '{{count}} rows loaded',
-                  {
-                    count: subtitles.length,
-                  }
-                )}
-              </span>
-              <span className={editorStatusPillStyles}>
-                {workspaceModeLabel}
-              </span>
-              <span className={editorStatusPillStyles}>
-                {previewStatusLabel}
-              </span>
-              {hasYouTubeAutomaticCaptions ? (
-                <span className={editorStatusPillStyles}>
-                  {t(
-                    'editSubtitles.workspace.automaticCaptionsPill',
-                    'YouTube automatic captions'
-                  )}
-                </span>
-              ) : null}
-              {isHighlightWorkflowLocked ? (
-                <span className={editorStatusPillStyles}>
-                  {t(
-                    'editSubtitles.workspace.highlightEditingLocked',
-                    'Highlight generation active, editing locked'
-                  )}
-                </span>
-              ) : null}
-            </div>
-
-            {subtitleFileName || mountedVideoName ? (
-              <div className={editorStatusSourceListStyles}>
-                {subtitleFileName ? (
-                  <p className={editorStatusSourceItemStyles}>
-                    {subtitleFileName}
-                  </p>
+          {inWorkspace ? (
+            isHighlightWorkflowLocked ||
+            canContinueTranscribing ||
+            !videoPath ? (
+              <div className={editorStatusActionRowStyles}>
+                {isHighlightWorkflowLocked ? (
+                  <span className={editorStatusPillStyles}>
+                    {t(
+                      'editSubtitles.workspace.highlightEditingLocked',
+                      'Highlight generation active, editing locked'
+                    )}
+                  </span>
                 ) : null}
-                {mountedVideoName ? (
-                  <p className={editorStatusSourceItemStyles}>
-                    {mountedVideoName}
-                  </p>
+                {!videoPath ? (
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={handleMountVideoForSubs}
+                    title={t('input.selectVideoAudioFile')}
+                    disabled={isSourceContextLocked}
+                  >
+                    {t('input.selectVideoAudioFile')}
+                  </Button>
+                ) : null}
+                {canContinueTranscribing ? (
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={handleContinueTranscribing}
+                    disabled={isSubtitleMutationLocked}
+                  >
+                    {t(
+                      'subtitles.continueTranscribing',
+                      'Continue transcribing'
+                    )}
+                  </Button>
                 ) : null}
               </div>
-            ) : null}
+            ) : null
+          ) : (
+            <div className={editorStatusShellStyles}>
+              <div className={editorStatusPillRowStyles}>
+                <span className={editorStatusPillStyles}>
+                  {t(
+                    'editSubtitles.workspace.rowsLoaded',
+                    '{{count}} rows loaded',
+                    {
+                      count: subtitles.length,
+                    }
+                  )}
+                </span>
+                <span className={editorStatusPillStyles}>
+                  {workspaceModeLabel}
+                </span>
+                <span className={editorStatusPillStyles}>
+                  {previewStatusLabel}
+                </span>
+                {hasYouTubeAutomaticCaptions ? (
+                  <span className={editorStatusPillStyles}>
+                    {t(
+                      'editSubtitles.workspace.automaticCaptionsPill',
+                      'YouTube automatic captions'
+                    )}
+                  </span>
+                ) : null}
+                {isHighlightWorkflowLocked ? (
+                  <span className={editorStatusPillStyles}>
+                    {t(
+                      'editSubtitles.workspace.highlightEditingLocked',
+                      'Highlight generation active, editing locked'
+                    )}
+                  </span>
+                ) : null}
+              </div>
 
-            <div className={editorStatusActionRowStyles}>
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={handleLoadSrtLocal}
-                disabled={isSourceContextLocked}
-              >
-                {t(
-                  'editSubtitles.workspace.loadAnotherSrt',
-                  'Load another SRT'
-                )}
-              </Button>
-              {!videoPath ? (
+              {subtitleFileName || mountedVideoName ? (
+                <div className={editorStatusSourceListStyles}>
+                  {subtitleFileName ? (
+                    <p className={editorStatusSourceItemStyles}>
+                      {subtitleFileName}
+                    </p>
+                  ) : null}
+                  {mountedVideoName ? (
+                    <p className={editorStatusSourceItemStyles}>
+                      {mountedVideoName}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className={editorStatusActionRowStyles}>
                 <Button
                   variant="secondary"
                   size="md"
-                  onClick={handleMountVideoForSubs}
-                  title={t('input.selectVideoAudioFile')}
+                  onClick={handleLoadSrtLocal}
                   disabled={isSourceContextLocked}
                 >
-                  {t('input.selectVideoAudioFile')}
-                </Button>
-              ) : null}
-              {canContinueTranscribing ? (
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={handleContinueTranscribing}
-                  disabled={isSubtitleMutationLocked}
-                  title={t(
-                    'subtitles.continueTranscribing',
-                    'Continue transcribing'
+                  {t(
+                    'editSubtitles.workspace.loadAnotherSrt',
+                    'Load another SRT'
                   )}
-                >
-                  {t('subtitles.continueTranscribing', 'Continue transcribing')}
                 </Button>
-              ) : null}
+                {!videoPath ? (
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={handleMountVideoForSubs}
+                    title={t('input.selectVideoAudioFile')}
+                    disabled={isSourceContextLocked}
+                  >
+                    {t('input.selectVideoAudioFile')}
+                  </Button>
+                ) : null}
+                {canContinueTranscribing ? (
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={handleContinueTranscribing}
+                    disabled={isSubtitleMutationLocked}
+                    title={t(
+                      'subtitles.continueTranscribing',
+                      'Continue transcribing'
+                    )}
+                  >
+                    {t(
+                      'subtitles.continueTranscribing',
+                      'Continue transcribing'
+                    )}
+                  </Button>
+                ) : null}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className={editorListShellStyles}>
-            <div className={editorListHeaderStyles}>
+            <div
+              className={editorListHeaderStyles}
+              hidden={inWorkspace}
+              style={inWorkspace ? { display: 'none' } : undefined}
+            >
               <div className={editorListHeaderMainStyles}>
                 <h3 className={editorListTitleStyles}>
                   {t('editSubtitles.listTitle', {

@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "فضای دیسک کافی برای تکمیل ادغام وجود ندارد. لطفاً فضا را آزاد کنید و دوباره تلاش کنید.",
       "noSourceVideo": "ویدیو منبع موجود نیست",
       "noSubtitlesLoaded": "زیرنویس بارگذاری نشده",
-      "failedToLoadSRT": "بارگذاری فایل SRT ناموفق بود"
+      "failedToLoadSRT": "بارگذاری فایل SRT ناموفق بود",
+      "sourceVideoUnavailable": "ویدیوی اصلی حذف شده یا دیگر در دسترس نیست. دوباره آن را باز کنید و دوباره امتحان کنید.",
+      "unknown": "مشکلی پیش آمد. لطفاً دوباره امتحان کنید."
     },
     "success": "موفقیت",
     "settings": "تنظیمات",
@@ -92,7 +94,9 @@
     "continue": "ادامه",
     "send": "ارسال",
     "dismiss": "بستن",
-    "moreActions": "کارهای بیشتر"
+    "moreActions": "کارهای بیشتر",
+    "installingUpdate": "در حال نصب به‌روزرسانی...",
+    "installingUpdateShort": "در حال نصب"
   },
   "errors": {
     "needCookies": "YouTube درخواست تأیید انسانی کرد. برای ادامه روی اتصال کلیک کنید.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "حذف فایل و سابقه",
       "deleteFileAndHistoryConfirm": "این فایل دانلودشده و ورودی سابقه آن برای همیشه حذف شوند؟ این کار قابل بازگشت نیست.",
       "removeFromHistory": "حذف از سابقه",
-      "removeFromHistoryConfirm": "این مورد از سابقه دانلود حذف شود؟ فایل‌های ذخیره‌شده بیرون از کتابخانه برنامه روی دستگاه باقی می‌مانند."
+      "removeFromHistoryConfirm": "این مورد از سابقه دانلود حذف شود؟ فایل‌های ذخیره‌شده بیرون از کتابخانه برنامه روی دستگاه باقی می‌مانند.",
+      "deleteLocalFileHistoryPending": "فایل حذف شد، اما Translator نتوانست به‌روزرسانی تاریخچهٔ دانلود را کامل کند. به‌طور خودکار دوباره تلاش می‌کند.",
+      "removeHistoryFailed": "حذف این دانلود از تاریخچه ممکن نشد.",
+      "storedInAppLibrary": "ذخیره‌شده در کتابخانهٔ برنامه"
     },
     "downloadAndTranslate": "دانلود و ترجمه",
     "downloadAndTranscribe": "دانلود و رونویسی",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ ترجمه",
     "autoRunStepDownload": "دانلود",
     "autoRunStepTranscribe": "رونویسی",
-    "autoRunStepTranslate": "ترجمه به {{language}}"
+    "autoRunStepTranslate": "ترجمه به {{language}}",
+    "captionRecoveryKeepVideo": "نگه داشتن ویدیوی فعلی",
+    "captionRecoveryOpenCaptions": "باز کردن زیرنویس‌ها",
+    "captionRecoverySwitchPrompt": "Translator زیرنویس‌های خودکار YouTube را بازیابی کرد، اما ویدیوی URL در دسترس نیست. با باز کردن آن‌ها ویدیوی فعلی جدا می‌شود.",
+    "captionRecoverySwitchTitle": "زیرنویس‌ها بدون ویدیوی فعلی باز شوند؟"
   },
   "subtitles": {
     "outputLanguage": "زبان خروجی",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}} دقیقه ویدیو",
     "translateEstimateByo": "کلید BYO",
     "qualityBadge": "(باکیفیت)",
-    "cancel_confirmation": "آیا مطمئن هستید که می‌خواهید فرآیند ترجمه زیرنویس را لغو کنید؟ هر پیشرفتی از بین خواهد رفت و شما باید دوباره شروع کنید."
+    "cancel_confirmation": "آیا مطمئن هستید که می‌خواهید فرآیند ترجمه زیرنویس را لغو کنید؟ هر پیشرفتی از بین خواهد رفت و شما باید دوباره شروع کنید.",
+    "dubCostHint": "صدای ElevenLabs: ~{{rate}} اعتبار برای هر دقیقه گفتار. این برآورد پیش از شروع دوبله نشان داده می‌شود."
   },
   "summary": {
     "title": "خلاصه رونوشت",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "برجسته ترکیبی آماده است",
     "downloadCombined": "دانلود کلیپ ترکیبی",
     "saveCombinedDialogTitle": "ذخیره کلیپ برجسته ترکیبی",
-    "combinedCutFailed": "برش لحظات برجسته ترکیبی ناموفق بود: {{message}}"
+    "combinedCutFailed": "برش لحظات برجسته ترکیبی ناموفق بود: {{message}}",
+    "highlightsInsufficientCredits": "خلاصه تولید شد، اما استخراج لحظات برجسته به دلیل تمام شدن اعتبار متوقف شد.",
+    "highlightsPartialWarning": "استخراج لحظات برجسته ناقص بود. این لحظات برجسته ممکن است کامل نباشند. برای به‌روزرسانی دوباره تولید کنید.",
+    "highlightsPartialWithReason": "خلاصه تولید شد، اما استخراج لحظات برجسته ناقص بود: {{message}}"
   },
   "panel": {
     "new": "جدید",
@@ -481,7 +496,12 @@
       "listCopy": "متن منبع، ترجمه، زمان‌بندی و عملیات هر خط را مستقیم همین‌جا ویرایش کنید.",
       "originalLabel": "اصلی",
       "translationLabel": "ترجمه",
-      "mergeNeedsVideoCopy": "پیش از شروع خروجی burn-in، ویدیوی منبع را متصل کنید."
+      "mergeNeedsVideoCopy": "پیش از شروع خروجی burn-in، ویدیوی منبع را متصل کنید.",
+      "automaticCaptionsCopy": "دانلود ویدیو مسدود شد (HTTP 403). این‌ها زیرنویس‌های خودکار YouTube هستند، نه یک رونویسی تازه. اکنون می‌توانید آن‌ها را ویرایش، ترجمه و به SRT خروجی بگیرید. برای پیش‌نمایش یا چسباندن زیرنویس روی ویدیو، یک رسانه متصل کنید.",
+      "automaticCaptionsCopyWithMedia": "دانلود ویدیو از URL مسدود شد (HTTP 403). این‌ها زیرنویس‌های خودکار YouTube هستند، نه یک رونویسی تازه. رسانهٔ متصل‌شده برای پیش‌نمایش و چسباندن زیرنویس در دسترس است.",
+      "automaticCaptionsPill": "زیرنویس‌های خودکار YouTube",
+      "automaticCaptionsTitle": "زیرنویس‌های خودکار YouTube",
+      "highlightEditingLocked": "در حال تولید لحظات برجسته، ویرایش قفل است"
     },
     "item": {
       "seek": "جستجو",
@@ -655,7 +675,9 @@
       "option2Title": "گزینه ۲: Anthropic + ElevenLabs",
       "economicsTitle": "چرا ارزش دارد",
       "economicsBody": "اعتبارات Stage5 برای راحتی بهینه شده‌اند (بدون تنظیم). BYO مستقیماً به ارائه‌دهندگان پرداخت می‌کند—معمولاً ~۳۰–۵۰٪ ارزان‌تر بسته به بسته شما.",
-      "encryptionUnavailable": "ذخیره‌سازی امن روی این سیستم در دسترس نیست. API keys قابل ذخیره‌سازی نیستند."
+      "encryptionUnavailable": "ذخیره‌سازی امن روی این سیستم در دسترس نیست. API keys قابل ذخیره‌سازی نیستند.",
+      "checkoutOpen": "صفحهٔ پرداخت در مرورگر باز است…",
+      "checkoutOpenHint": "پرداخت را در مرورگر خود کامل کنید. پس از تأیید پرداخت، BYO را به‌طور خودکار باز می‌کنیم."
     },
     "byoPreferences": {
       "title": "ترجیحات ارائه‌دهنده",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "به دسترسی به OpenAI BYO و API key نیاز دارد.",
       "summaryRequiresAnthropic": "به دسترسی به Anthropic BYO و API key نیاز دارد.",
       "translationReview": "ترجمه (بازبینی)",
-      "transcriptionRequiresElevenLabs": "رونویسی فقط از ElevenLabs Scribe استفاده می‌کند. برای رونویسی با کلیدهای خودتان، یک کلید API از ElevenLabs اضافه کنید. بدون آن، رونویسی از اعتبارهای Stage5 استفاده می‌کند که تا زمانی که کلیدهای API شما روشن است استفاده نمی‌شوند. کلید OpenAI شما همچنان برای ترجمه استفاده می‌شود."
+      "transcriptionRequiresElevenLabs": "رونویسی فقط از ElevenLabs Scribe استفاده می‌کند. برای رونویسی با کلیدهای خودتان، یک کلید API از ElevenLabs اضافه کنید. بدون آن، رونویسی از اعتبارهای Stage5 استفاده می‌کند که تا زمانی که کلیدهای API شما روشن است استفاده نمی‌شوند. کلید OpenAI شما همچنان برای ترجمه استفاده می‌شود.",
+      "dubbingRequiresElevenLabs": "دوبله فقط از ElevenLabs استفاده می‌کند. برای دوبله با کلیدهای خودتان، یک کلید API ElevenLabs اضافه کنید. بدون آن، دوبله از اعتبارات Stage5 استفاده می‌کند که تا وقتی کلیدهای API شما روشن است مصرف نمی‌شوند.",
+      "runtimeFallback": "جایگزین زمان اجرا در حالت کلید API",
+      "videoSuggestionLegacyFollowDraft": "تنظیم قدیمی BYO حفظ شد: تا وقتی مدل مستقیمی انتخاب کنید، از مدل ترجمهٔ پیش‌نویس شما پیروی می‌کند.",
+      "videoSuggestionLegacyFollowReview": "تنظیم قدیمی BYO حفظ شد: تا وقتی مدل مستقیمی انتخاب کنید، از مدل ترجمهٔ بازبینی شما پیروی می‌کند."
     },
     "apiKeyGuide": {
       "title": "چگونه کلیدهای API بگیریم",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× دقیقه به ازای هر دلار",
     "checkoutWaiting": "پرداخت را در مرورگر خود تمام کنید. دقیقه‌های شما خودکار اینجا نمایش داده می‌شوند.",
     "checkoutNote": "پرداخت یک‌باره از طریق Stripe در مرورگر شما. بدون حساب یا اشتراک. دقیقه‌ها خودکار می‌رسند.",
-    "dubbingNote": "ترجمه با اعتبار حدود ۱۰٪ به هر دقیقه اضافه می‌کند؛ دوبله بیشتر مصرف می‌کند."
+    "dubbingNote": "ترجمه با اعتبار حدود ۱۰٪ به هر دقیقه اضافه می‌کند؛ دوبله بیشتر مصرف می‌کند.",
+    "iCancelledCheckout": "پرداخت را لغو کردم",
+    "checkoutStartFailed": "پرداخت شروع نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "دوبله شروع شود؟",
       "message": "این دوبله حدود {{cost}} از {{balance}} اعتبار شما را مصرف می‌کند. تولید صدا بسیار گران‌تر از ترجمه است."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "نادیده گرفتن و باز کردن زیرنویس‌ها",
+      "message": "از قبل زیرنویس‌هایی باز دارید. پیش از جایگزین کردن آن‌ها با زیرنویس‌های خودکار YouTube، آن‌ها را ذخیره کنید یا کنار بگذارید.",
+      "saveAndOpen": "ذخیره و باز کردن زیرنویس‌ها",
+      "title": "زیرنویس‌های خودکار بازیابی‌شده باز شوند؟"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "پاکسازی زیرنویس‌ها ({{done}}/{{total}})",
     "translationCleanup": "پاکسازی زیرنویس‌های ترجمه‌شده ({{done}}/{{total}})",
     "reviewingSlow": "بازبینی (این ممکن است کمی طول بکشد...) {{done}}/{{total}}",
-    "reviewingRange": "بازبینی {{start}}–{{end}} (از {{total}})"
+    "reviewingRange": "بازبینی {{start}}–{{end}} (از {{total}})",
+    "legacy": {
+      "aligningVoices": "در حال هم‌تراز کردن صداها {{done}}/{{total}}…",
+      "analyzingSection": "در حال یافتن لحظات برجسته در بخش {{done}} از {{total}}…",
+      "analyzingVideo": "در حال بررسی ویدیو…",
+      "assemblingOverlay": "در حال کشیدن زیرنویس‌ها روی ویدیو…",
+      "audioExtracted": "صدا آماده است",
+      "balancingAudio": "در حال متعادل کردن صدای گوینده و پس‌زمینه…",
+      "cannotCancelSave": "تقریباً تمام است. این ذخیرهٔ پایانی قابل لغو نیست",
+      "captionsOnlyReady": "زیرنویس‌های YouTube آماده است (خود ویدیو دانلود نشد)",
+      "checkingDownloader": "در حال بررسی ابزار دانلود…",
+      "chooseSaveLocation": "محل ذخیرهٔ ویدیو را انتخاب کنید…",
+      "detectingSpeech": "در حال یافتن بخش‌های گفتار…",
+      "downloadCancelled": "دانلود لغو شد",
+      "downloadComplete": "دانلود کامل شد",
+      "downloadVerifying": "دانلود شد، در حال بررسی فایل…",
+      "drawingFrames": "در حال کشیدن فریم‌های زیرنویس {{done}}/{{total}}…",
+      "dubAudioReady": "ترک صدا آماده است",
+      "dubComplete": "دوبله کامل شد",
+      "dubbedVideoReady": "ویدیوی دوبله‌شده آماده است",
+      "encodingComplete": "ویدیو آماده است",
+      "encodingVideo": "در حال ساخت ویدیو…",
+      "errorRecovery": "در حال اصلاح چند خط…",
+      "extractingAudio": "در حال استخراج صوت…",
+      "extractingAudioPercent": "در حال استخراج صوت ({{percent}}%)…",
+      "fetchingInfo": "در حال دریافت جزئیات ویدیو…",
+      "finalAdjustments": "در حال اعمال آخرین تغییرات…",
+      "finalizingSubtitles": "در حال نهایی کردن زیرنویس‌ها…",
+      "finishingFile": "در حال نهایی کردن فایل ویدیو…",
+      "generatingVoices": "در حال تولید صداها {{done}}/{{total}}…",
+      "mergeComplete": "ویدیو با زیرنویس آماده است",
+      "mergeFailed": "ساخت ویدیو ناموفق بود",
+      "mergingFormats": "در حال ترکیب ویدیو و صدا…",
+      "postProcessing": "در حال اتمام…",
+      "preparingAudioExtraction": "در حال آماده‌سازی صدا ({{minutes}} دقیقه ویدیو)…",
+      "preparingDownload": "در حال آماده‌سازی دانلود…",
+      "preparingDubLines": "در حال آماده‌سازی {{count}} خط برای دوبله…",
+      "preparingHighlights": "در حال آماده شدن برای انتخاب لحظات برجسته…",
+      "preparingOutput": "در حال آماده‌سازی پوشهٔ خروجی…",
+      "preparingTranscript": "در حال خواندن رونوشت…",
+      "preparingVideoEngine": "در حال آماده‌سازی ابزارهای ویدیو…",
+      "preparingVoiceClips": "در حال آماده‌سازی {{count}} کلیپ صوتی…",
+      "rateLimited": "فعلاً سرشلوغ است، در حال تلاش دوباره…",
+      "reusingSummary": "در حال استفاده از خلاصه برای انتخاب لحظات برجسته…",
+      "saving": "در حال ذخیره…",
+      "sectionAnalyzed": "بخش {{done}} بررسی شد",
+      "sectionHighlights": "لحظات برجسته در بخش {{done}} پیدا شد",
+      "sectionSummarized": "بخش {{done}} از {{total}} خلاصه شد",
+      "selectingHighlights": "در حال انتخاب لحظات برجسته در بخش {{done}} از {{total}}…",
+      "settingUpDownloader": "در حال راه‌اندازی ابزار دانلود…",
+      "skippingSameLanguage": "از قبل به این زبان است، ترجمه لازم نیست",
+      "starting": "در حال شروع…",
+      "startingDownload": "در حال شروع دانلود…",
+      "subtitleLayerReady": "لایهٔ زیرنویس آماده است",
+      "summarizingSection": "در حال خلاصه کردن بخش {{done}} از {{total}}…",
+      "summaryReady": "خلاصه آماده است",
+      "transcribingParts": "در حال رونویسی {{done}}/{{total}}…",
+      "transcriptionComplete": "رونویسی کامل شد",
+      "translatingLines": "در حال ترجمه {{done}}/{{total}}…",
+      "uploading": "در حال بارگذاری…",
+      "validating": "در حال بررسی…",
+      "videoBlockedCaptions": "ویدیو دانلود نشد؛ در عوض در حال جستجوی زیرنویس‌های YouTube…",
+      "voiceTrackAssembled": "ترک صدا سرهم شد",
+      "voiceTrackReady": "ترک صدا آماده است",
+      "writingSummary": "در حال نوشتن خلاصه…"
+    },
+    "listening": "در حال گوش دادن به ویدیو…",
+    "mergeFinishSaveBeforeReload": "پیش از بارگذاری دوباره، ذخیرهٔ ویدیوی ادغام‌شده را تمام کنید.",
+    "mergeSavePhaseNoCancel": "این مرحلهٔ ذخیره اکنون قابل لغو نیست.",
+    "mergeWaitForCancelBeforeReload": "پیش از بارگذاری دوباره، صبر کنید تا لغو ادغام تمام شود.",
+    "preparingTranscription": "در حال آماده شدن برای گوش دادن…",
+    "restartingTranscription": "در حال شروع دوبارهٔ رونویسی…",
+    "resumingTranscription": "در حال ادامه از جایی که متوقف شده بود…"
   },
   "messages": {
     "fileSaved": "فایل ذخیره شد:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "با دقیقه‌های شما پوشش داده می‌شود",
     "preview": "{{minutes}} دقیقهٔ اول رایگان · کل ویدیو {{price}}",
     "pack": "کل ویدیو {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "کادربندی و زیرنویس Shorts",
+    "intro": "هر گوینده را کادربندی کنید، در برش‌های دوربین تقسیم کنید و عبارت‌های کوتاه زیرنویس را با گفتار هم‌زمان کنید. زمان‌های زیر از ابتدای این کلیپ شروع می‌شوند.",
+    "previewTime": "زمان پیش‌نمایش Short",
+    "speakerLabel": "برچسب گوینده یا موضوع",
+    "splitShot": "تقسیم نما در محل پخش",
+    "joinShot": "پیوستن به نمای قبلی",
+    "preview": "پیش‌نمایش",
+    "emphasize": "برجسته کردن این عبارت",
+    "splitPhrase": "تقسیم عبارت",
+    "removePhrase": "حذف عبارت",
+    "addPhrase": "افزودن عبارت",
+    "removeStyling": "حذف سبک",
+    "saveSelectionFirst": "ابتدا انتخاب لحظات برجسته را ذخیره کنید.",
+    "closeEdit": "بستن ویرایش",
+    "editFraming": "ویرایش کادربندی و زیرنویس‌ها",
+    "styleShort": "سبک‌دهی به این Short",
+    "horizontalFocus": "تمرکز افقی",
+    "verticalFocus": "تمرکز عمودی",
+    "zoom": "بزرگ‌نمایی",
+    "from": "از",
+    "to": "تا",
+    "saving": "در حال ذخیره…",
+    "save": "ذخیرهٔ ویرایش Short"
   }
 }

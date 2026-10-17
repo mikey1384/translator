@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "אין מספיק מקום בדיסק להשלמת המיזוג. אנא פנה מקום ונסה שוב.",
       "noSourceVideo": "אין וידאו מקור",
       "noSubtitlesLoaded": "לא נטענו כתוביות",
-      "failedToLoadSRT": "נכשל בטעינת קובץ SRT"
+      "failedToLoadSRT": "נכשל בטעינת קובץ SRT",
+      "sourceVideoUnavailable": "הסרטון המקורי הוסר או שאינו נגיש עוד. פתח אותו שוב ונסה שוב.",
+      "unknown": "משהו השתבש. נסה שוב."
     },
     "success": "הצלחה",
     "settings": "הגדרות",
@@ -92,7 +94,9 @@
     "continue": "המשך",
     "send": "שלח",
     "dismiss": "סגור",
-    "moreActions": "פעולות נוספות"
+    "moreActions": "פעולות נוספות",
+    "installingUpdate": "מתקין עדכון...",
+    "installingUpdateShort": "מתקין"
   },
   "errors": {
     "needCookies": "YouTube ביקש אימות אנושי. לחץ על התחבר כדי להמשיך.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "מחיקת הקובץ וההיסטוריה",
       "deleteFileAndHistoryConfirm": "למחוק לצמיתות את הקובץ שהורד ואת רשומת ההיסטוריה שלו? לא ניתן לבטל פעולה זו.",
       "removeFromHistory": "הסרה מההיסטוריה",
-      "removeFromHistoryConfirm": "להסיר פריט זה מהיסטוריית ההורדות? קבצים שנשמרו מחוץ לספריית היישום יישארו במכשיר."
+      "removeFromHistoryConfirm": "להסיר פריט זה מהיסטוריית ההורדות? קבצים שנשמרו מחוץ לספריית היישום יישארו במכשיר.",
+      "deleteLocalFileHistoryPending": "הקובץ נמחק, אבל Translator לא הצליח לסיים לעדכן את היסטוריית ההורדות. הוא ינסה שוב אוטומטית.",
+      "removeHistoryFailed": "לא ניתן היה להסיר את ההורדה הזו מההיסטוריה.",
+      "storedInAppLibrary": "נשמר בספריית היישום"
     },
     "downloadAndTranslate": "הורד ותרגם",
     "downloadAndTranscribe": "הורד ותמלל",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ תרגם",
     "autoRunStepDownload": "הורד",
     "autoRunStepTranscribe": "תמלל",
-    "autoRunStepTranslate": "תרגם ל-{{language}}"
+    "autoRunStepTranslate": "תרגם ל-{{language}}",
+    "captionRecoveryKeepVideo": "השאר את הסרטון הנוכחי",
+    "captionRecoveryOpenCaptions": "פתח כתוביות",
+    "captionRecoverySwitchPrompt": "Translator שחזר את הכתוביות האוטומטיות של YouTube, אבל הסרטון מה-URL אינו זמין. פתיחתן תנתק את הסרטון הנוכחי.",
+    "captionRecoverySwitchTitle": "לפתוח כתוביות בלי הסרטון הנוכחי?"
   },
   "subtitles": {
     "outputLanguage": "שפת פלט",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}} דקות וידאו",
     "translateEstimateByo": "מפתח BYO",
     "qualityBadge": "(איכות גבוהה)",
-    "cancel_confirmation": "האם אתה בטוח שברצונך לבטל את תהליך תרגום הכתוביות? כל התקדמות תאבד ותצטרך להתחיל מחדש."
+    "cancel_confirmation": "האם אתה בטוח שברצונך לבטל את תהליך תרגום הכתוביות? כל התקדמות תאבד ותצטרך להתחיל מחדש.",
+    "dubCostHint": "קול ElevenLabs: ~{{rate}} קרדיטים לדקת דיבור. הערכה זו מוצגת לפני תחילת הדיבוב."
   },
   "summary": {
     "title": "סיכום התמליל",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "נקודה מרכזית משולבת מוכנה",
     "downloadCombined": "הורד קליפ משולב",
     "saveCombinedDialogTitle": "שמור קליפ נקודות מרכזיות משולב",
-    "combinedCutFailed": "נכשל בחיתוך נקודות מרכזיות משולבות: {{message}}"
+    "combinedCutFailed": "נכשל בחיתוך נקודות מרכזיות משולבות: {{message}}",
+    "highlightsInsufficientCredits": "הסיכום נוצר, אבל חילוץ הנקודות המרכזיות נעצר כי הקרדיטים אזלו.",
+    "highlightsPartialWarning": "חילוץ הנקודות המרכזיות היה חלקי. ייתכן שהנקודות המרכזיות האלה אינן שלמות. צור מחדש כדי לרענן.",
+    "highlightsPartialWithReason": "הסיכום נוצר, אבל חילוץ הנקודות המרכזיות היה חלקי: {{message}}"
   },
   "panel": {
     "new": "חדש",
@@ -481,7 +496,12 @@
       "listCopy": "ערוך ישירות במקום את טקסט המקור, התרגום, התזמון והפעולות לכל שורה.",
       "originalLabel": "מקור",
       "translationLabel": "תרגום",
-      "mergeNeedsVideoCopy": "טען וידאו מקור לפני שמתחילים ייצוא צרוב."
+      "mergeNeedsVideoCopy": "טען וידאו מקור לפני שמתחילים ייצוא צרוב.",
+      "automaticCaptionsCopy": "הורדת הסרטון נחסמה (HTTP 403). אלה הכתוביות האוטומטיות של YouTube, לא תמלול חדש. אפשר לערוך, לתרגם ולייצא SRT כבר עכשיו. חבר מדיה כדי לצפות בתצוגה מקדימה או לצרוב כתוביות.",
+      "automaticCaptionsCopyWithMedia": "הורדת הסרטון מה-URL נחסמה (HTTP 403). אלה הכתוביות האוטומטיות של YouTube, לא תמלול חדש. המדיה המחוברת זמינה לתצוגה מקדימה ולצריבה.",
+      "automaticCaptionsPill": "כתוביות אוטומטיות של YouTube",
+      "automaticCaptionsTitle": "כתוביות אוטומטיות של YouTube",
+      "highlightEditingLocked": "יצירת נקודות מרכזיות פעילה, העריכה נעולה"
     },
     "item": {
       "seek": "חפש",
@@ -655,7 +675,9 @@
       "option2Title": "אפשרות 2: Anthropic + ElevenLabs",
       "economicsTitle": "למה זה משתלם",
       "economicsBody": "קרדיטים של Stage5 מותאמים לנוחות (ללא הגדרה). BYO משלם ישירות לספקים - בדרך כלל ~30-50% זול יותר בהתאם לחבילה.",
-      "encryptionUnavailable": "אחסון מאובטח אינו זמין במערכת הזו. אי אפשר לשמור מפתחות API."
+      "encryptionUnavailable": "אחסון מאובטח אינו זמין במערכת הזו. אי אפשר לשמור מפתחות API.",
+      "checkoutOpen": "התשלום פתוח בדפדפן…",
+      "checkoutOpenHint": "השלם את התשלום בדפדפן. נבטל את נעילת BYO אוטומטית כשהתשלום יאושר."
     },
     "byoPreferences": {
       "title": "העדפות ספק",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "נדרשים גישה ל-OpenAI BYO ומפתח API.",
       "summaryRequiresAnthropic": "נדרשים גישה ל-Anthropic BYO ומפתח API.",
       "translationReview": "תרגום (ביקורת)",
-      "transcriptionRequiresElevenLabs": "התמלול משתמש ב-ElevenLabs Scribe בלבד. הוסף מפתח API של ElevenLabs כדי לתמלל עם המפתחות שלך. בלעדיו, התמלול משתמש בקרדיטי Stage5, שאינם בשימוש כל עוד מפתחות ה-API שלך מופעלים. מפתח ה-OpenAI שלך עדיין משמש לתרגום."
+      "transcriptionRequiresElevenLabs": "התמלול משתמש ב-ElevenLabs Scribe בלבד. הוסף מפתח API של ElevenLabs כדי לתמלל עם המפתחות שלך. בלעדיו, התמלול משתמש בקרדיטי Stage5, שאינם בשימוש כל עוד מפתחות ה-API שלך מופעלים. מפתח ה-OpenAI שלך עדיין משמש לתרגום.",
+      "dubbingRequiresElevenLabs": "דיבוב משתמש רק ב-ElevenLabs. הוסף מפתח API של ElevenLabs כדי לדבב עם המפתחות שלך. בלעדיו, הדיבוב משתמש בקרדיטים של Stage5, שאינם בשימוש כל עוד מפתחות ה-API שלך פעילים.",
+      "runtimeFallback": "חלופת זמן ריצה במצב מפתח API",
+      "videoSuggestionLegacyFollowDraft": "הגדרת BYO ישנה נשמרה: עוקבת אחר מודל טיוטת התרגום שלך עד שתבחר מודל ישיר.",
+      "videoSuggestionLegacyFollowReview": "הגדרת BYO ישנה נשמרה: עוקבת אחר מודל סקירת התרגום שלך עד שתבחר מודל ישיר."
     },
     "apiKeyGuide": {
       "title": "איך להשיג מפתחות API",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "פי {{multiplier}}× דקות לכל דולר",
     "checkoutWaiting": "השלימו את התשלום בדפדפן. הדקות יופיעו כאן מעצמן.",
     "checkoutNote": "תשלום חד-פעמי דרך Stripe בדפדפן. ללא חשבון או מנוי. הדקות מגיעות מעצמן.",
-    "dubbingNote": "תרגום עם קרדיטים מוסיף כ-10% לכל דקה; דיבוב צורך יותר."
+    "dubbingNote": "תרגום עם קרדיטים מוסיף כ-10% לכל דקה; דיבוב צורך יותר.",
+    "iCancelledCheckout": "ביטלתי את התשלום",
+    "checkoutStartFailed": "לא ניתן היה להתחיל את התשלום. בדוק את החיבור ונסה שוב."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "להתחיל דיבוב?",
       "message": "הדיבוב הזה ישתמש בכ-{{cost}} מתוך {{balance}} הקרדיטים שלך. יצירת קולות עולה הרבה יותר מתרגום."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "מחק ופתח כתוביות",
+      "message": "כבר יש כתוביות פתוחות. שמור או מחק אותן לפני שתחליף אותן בכתוביות האוטומטיות של YouTube.",
+      "saveAndOpen": "שמור ופתח כתוביות",
+      "title": "לפתוח את הכתוביות האוטומטיות ששוחזרו?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "מנקה כתוביות ({{done}}/{{total}})",
     "translationCleanup": "מנקה כתוביות מתורגמות ({{done}}/{{total}})",
     "reviewingSlow": "בודק (זה עשוי לקחת זמן...) {{done}}/{{total}}",
-    "reviewingRange": "בודק {{start}}-{{end}} (מתוך {{total}})"
+    "reviewingRange": "בודק {{start}}-{{end}} (מתוך {{total}})",
+    "legacy": {
+      "aligningVoices": "מיישר קולות {{done}}/{{total}}…",
+      "analyzingSection": "מחפש נקודות מרכזיות בחלק {{done}} מתוך {{total}}…",
+      "analyzingVideo": "בודק את הסרטון…",
+      "assemblingOverlay": "מצייר את הכתוביות על הסרטון…",
+      "audioExtracted": "האודיו מוכן",
+      "balancingAudio": "מאזן בין הקול לרקע…",
+      "cannotCancelSave": "כמעט סיימנו. אי אפשר לבטל את השמירה האחרונה הזו",
+      "captionsOnlyReady": "כתוביות YouTube מוכנות (את הסרטון עצמו לא ניתן היה להוריד)",
+      "checkingDownloader": "בודק את כלי ההורדה…",
+      "chooseSaveLocation": "בחר היכן לשמור את הסרטון…",
+      "detectingSpeech": "מאתר היכן מדברים…",
+      "downloadCancelled": "ההורדה בוטלה",
+      "downloadComplete": "ההורדה הושלמה",
+      "downloadVerifying": "הורד, בודק את הקובץ…",
+      "drawingFrames": "מצייר מסגרות כתוביות {{done}}/{{total}}…",
+      "dubAudioReady": "רצועת הקול מוכנה",
+      "dubComplete": "הדיבוב הושלם",
+      "dubbedVideoReady": "הסרטון המדובב מוכן",
+      "encodingComplete": "הסרטון מוכן",
+      "encodingVideo": "יוצר את הסרטון…",
+      "errorRecovery": "מתקן כמה שורות…",
+      "extractingAudio": "מחלץ אודיו…",
+      "extractingAudioPercent": "מחלץ אודיו ({{percent}}%)…",
+      "fetchingInfo": "מקבל פרטי סרטון…",
+      "finalAdjustments": "מוסיף נגיעות אחרונות…",
+      "finalizingSubtitles": "מסיים את הכתוביות…",
+      "finishingFile": "מסיים את קובץ הסרטון…",
+      "generatingVoices": "יוצר קולות {{done}}/{{total}}…",
+      "mergeComplete": "הסרטון עם הכתוביות מוכן",
+      "mergeFailed": "יצירת הסרטון נכשלה",
+      "mergingFormats": "מחבר וידאו ואודיו…",
+      "postProcessing": "מסיים…",
+      "preparingAudioExtraction": "מכין את האודיו ({{minutes}} דק׳ וידאו)…",
+      "preparingDownload": "מכין הורדה…",
+      "preparingDubLines": "מכין {{count}} שורות לדיבוב…",
+      "preparingHighlights": "מתכונן לבחירת נקודות מרכזיות…",
+      "preparingOutput": "מכין את תיקיית הפלט…",
+      "preparingTranscript": "קורא את התמליל…",
+      "preparingVideoEngine": "מכין את כלי הווידאו…",
+      "preparingVoiceClips": "מכין {{count}} קטעי קול…",
+      "rateLimited": "עמוס כרגע, מנסה שוב…",
+      "reusingSummary": "משתמש בסיכום לבחירת נקודות מרכזיות…",
+      "saving": "שומר…",
+      "sectionAnalyzed": "חלק {{done}} נבדק",
+      "sectionHighlights": "נמצאו נקודות מרכזיות בחלק {{done}}",
+      "sectionSummarized": "חלק {{done}} מתוך {{total}} סוכם",
+      "selectingHighlights": "בוחר נקודות מרכזיות בחלק {{done}} מתוך {{total}}…",
+      "settingUpDownloader": "מגדיר את כלי ההורדה…",
+      "skippingSameLanguage": "כבר בשפה הזו, אין צורך בתרגום",
+      "starting": "מתחיל…",
+      "startingDownload": "מתחיל הורדה…",
+      "subtitleLayerReady": "שכבת הכתוביות מוכנה",
+      "summarizingSection": "מסכם את חלק {{done}} מתוך {{total}}…",
+      "summaryReady": "הסיכום מוכן",
+      "transcribingParts": "מתמלל {{done}}/{{total}}…",
+      "transcriptionComplete": "התמלול הושלם",
+      "translatingLines": "מתרגם {{done}}/{{total}}…",
+      "uploading": "מעלה…",
+      "validating": "בודק…",
+      "videoBlockedCaptions": "לא ניתן היה להוריד את הסרטון; מחפש במקום זאת כתוביות YouTube…",
+      "voiceTrackAssembled": "רצועת הקול הורכבה",
+      "voiceTrackReady": "רצועת הקול מוכנה",
+      "writingSummary": "כותב את הסיכום…"
+    },
+    "listening": "מאזין לסרטון…",
+    "mergeFinishSaveBeforeReload": "סיים לשמור את הסרטון הממוזג לפני הטעינה מחדש.",
+    "mergeSavePhaseNoCancel": "אי אפשר לבטל את שלב השמירה הזה עכשיו.",
+    "mergeWaitForCancelBeforeReload": "המתן לסיום ביטול המיזוג לפני הטעינה מחדש.",
+    "preparingTranscription": "מתכונן להאזנה…",
+    "restartingTranscription": "מתחיל את התמלול מחדש…",
+    "resumingTranscription": "ממשיך מהמקום שבו הפסיק…"
   },
   "messages": {
     "fileSaved": "קובץ נשמר:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "מכוסה בדקות שלך",
     "preview": "{{minutes}} הדק׳ הראשונות חינם · כל הסרטון {{price}}",
     "pack": "כל הסרטון {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "מסגור וכתוביות ל-Shorts",
+    "intro": "מסגר כל דובר, פצל בחיתוכי מצלמה ותזמן ביטויי כתוביות קצרים לדיבור. הזמנים שלמטה מתחילים בתחילת הקליפ הזה.",
+    "previewTime": "זמן תצוגה מקדימה של Short",
+    "speakerLabel": "תווית דובר או נושא",
+    "splitShot": "פצל צילום במיקום ההפעלה",
+    "joinShot": "חבר לצילום הקודם",
+    "preview": "תצוגה מקדימה",
+    "emphasize": "הדגש ביטוי זה",
+    "splitPhrase": "פצל ביטוי",
+    "removePhrase": "הסר ביטוי",
+    "addPhrase": "הוסף ביטוי",
+    "removeStyling": "הסר עיצוב",
+    "saveSelectionFirst": "שמור קודם את בחירת הנקודות המרכזיות.",
+    "closeEdit": "סגור עריכה",
+    "editFraming": "ערוך מסגור וכתוביות",
+    "styleShort": "עצב את ה-Short הזה",
+    "horizontalFocus": "מיקוד אופקי",
+    "verticalFocus": "מיקוד אנכי",
+    "zoom": "זום",
+    "from": "מ-",
+    "to": "עד",
+    "saving": "שומר…",
+    "save": "שמור עריכת Short"
   }
 }

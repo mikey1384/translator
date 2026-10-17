@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "Nicht genügend Speicherplatz, um die Zusammenführung abzuschließen. Bitte geben Sie Speicherplatz frei und versuchen Sie es erneut.",
       "noSourceVideo": "Kein Quellvideo",
       "noSubtitlesLoaded": "Keine Untertitel geladen",
-      "failedToLoadSRT": "SRT-Datei konnte nicht geladen werden"
+      "failedToLoadSRT": "SRT-Datei konnte nicht geladen werden",
+      "sourceVideoUnavailable": "Das Originalvideo wurde entfernt oder ist nicht mehr verfügbar. Öffnen Sie es erneut und versuchen Sie es noch einmal.",
+      "unknown": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
     },
     "success": "Erfolg",
     "settings": "Einstellungen",
@@ -92,7 +94,9 @@
     "continue": "Weiter",
     "send": "Senden",
     "dismiss": "Schließen",
-    "moreActions": "Weitere Aktionen"
+    "moreActions": "Weitere Aktionen",
+    "installingUpdate": "Update wird installiert...",
+    "installingUpdateShort": "Wird installiert"
   },
   "errors": {
     "needCookies": "YouTube hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "Datei und Verlauf löschen",
       "deleteFileAndHistoryConfirm": "Diese heruntergeladene Datei und ihren Verlaufseintrag dauerhaft löschen? Dies kann nicht rückgängig gemacht werden.",
       "removeFromHistory": "Aus Verlauf entfernen",
-      "removeFromHistoryConfirm": "Diesen Eintrag aus dem Downloadverlauf entfernen? Außerhalb der App-Mediathek gespeicherte Dateien bleiben auf dem Gerät."
+      "removeFromHistoryConfirm": "Diesen Eintrag aus dem Downloadverlauf entfernen? Außerhalb der App-Mediathek gespeicherte Dateien bleiben auf dem Gerät.",
+      "deleteLocalFileHistoryPending": "Die Datei wurde gelöscht, aber Translator konnte den Download-Verlauf nicht vollständig aktualisieren. Es wird automatisch erneut versucht.",
+      "removeHistoryFailed": "Dieser Download konnte nicht aus dem Verlauf entfernt werden.",
+      "storedInAppLibrary": "In der App-Mediathek gespeichert"
     },
     "downloadAndTranslate": "Herunterladen & übersetzen",
     "downloadAndTranscribe": "Herunterladen & transkribieren",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ Übersetzen",
     "autoRunStepDownload": "Herunterladen",
     "autoRunStepTranscribe": "Transkribieren",
-    "autoRunStepTranslate": "Übersetzen nach {{language}}"
+    "autoRunStepTranslate": "Übersetzen nach {{language}}",
+    "captionRecoveryKeepVideo": "Aktuelles Video behalten",
+    "captionRecoveryOpenCaptions": "Untertitel öffnen",
+    "captionRecoverySwitchPrompt": "Translator hat automatische YouTube-Untertitel wiederhergestellt, aber das Video zur URL ist nicht verfügbar. Beim Öffnen wird das aktuelle Video entfernt.",
+    "captionRecoverySwitchTitle": "Untertitel ohne das aktuelle Video öffnen?"
   },
   "subtitles": {
     "outputLanguage": "Ausgabesprache",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}m Video",
     "translateEstimateByo": "BYO-Schlüssel",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "Sind Sie sicher, dass Sie den Untertitel-Übersetzungsprozess abbrechen möchten? Jeder Fortschritt geht verloren und Sie müssen neu beginnen."
+    "cancel_confirmation": "Sind Sie sicher, dass Sie den Untertitel-Übersetzungsprozess abbrechen möchten? Jeder Fortschritt geht verloren und Sie müssen neu beginnen.",
+    "dubCostHint": "ElevenLabs-Stimme: ~{{rate}} Credits pro Minute Sprache. Diese Schätzung wird vor Beginn der Synchronisation angezeigt."
   },
   "summary": {
     "title": "Transkript-Zusammenfassung",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "Kombiniertes Highlight bereit",
     "downloadCombined": "Kombinierten Clip herunterladen",
     "saveCombinedDialogTitle": "Kombinierten Highlight-Clip speichern",
-    "combinedCutFailed": "Fehler beim Schneiden kombinierter Highlights: {{message}}"
+    "combinedCutFailed": "Fehler beim Schneiden kombinierter Highlights: {{message}}",
+    "highlightsInsufficientCredits": "Zusammenfassung erstellt, aber die Highlight-Extraktion wurde gestoppt, weil die Credits aufgebraucht sind.",
+    "highlightsPartialWarning": "Die Highlight-Extraktion war unvollständig. Diese Highlights sind möglicherweise lückenhaft. Erneut generieren, um sie zu aktualisieren.",
+    "highlightsPartialWithReason": "Zusammenfassung erstellt, aber die Highlight-Extraktion war unvollständig: {{message}}"
   },
   "panel": {
     "new": "neu",
@@ -481,7 +496,12 @@
       "listCopy": "Bearbeite Quelltext, Übersetzung, Timing und Aktionen pro Zeile direkt an Ort und Stelle.",
       "originalLabel": "Originaltext",
       "translationLabel": "Übersetzung",
-      "mergeNeedsVideoCopy": "Binde ein Quellvideo ein, bevor du einen Burn-in-Export startest."
+      "mergeNeedsVideoCopy": "Binde ein Quellvideo ein, bevor du einen Burn-in-Export startest.",
+      "automaticCaptionsCopy": "Der Videodownload wurde blockiert (HTTP 403). Dies sind automatische YouTube-Untertitel – keine neue Transkription. Sie können sie jetzt bearbeiten, übersetzen und als SRT exportieren. Binden Sie Medien ein, um eine Vorschau zu sehen oder Untertitel einzubrennen.",
+      "automaticCaptionsCopyWithMedia": "Der Videodownload über die URL wurde blockiert (HTTP 403). Dies sind automatische YouTube-Untertitel – keine neue Transkription. Die eingebundenen Medien stehen für Vorschau und Einbrennen bereit.",
+      "automaticCaptionsPill": "Automatische YouTube-Untertitel",
+      "automaticCaptionsTitle": "Automatische YouTube-Untertitel",
+      "highlightEditingLocked": "Highlights werden erstellt, Bearbeitung gesperrt"
     },
     "item": {
       "seek": "Suchen",
@@ -655,7 +675,9 @@
       "option2Title": "Variante 2: Anthropic + ElevenLabs",
       "economicsTitle": "Warum es sich lohnt",
       "economicsBody": "Stage5-Credits optimieren den Komfort (keine Einrichtung). BYO zahlt direkt an die Anbieter—normalerweise ~30–50% günstiger je nach Paket.",
-      "encryptionUnavailable": "Sichere Speicherung ist auf diesem System nicht verfügbar. API-Schlüssel können nicht gespeichert werden."
+      "encryptionUnavailable": "Sichere Speicherung ist auf diesem System nicht verfügbar. API-Schlüssel können nicht gespeichert werden.",
+      "checkoutOpen": "Bezahlvorgang im Browser geöffnet…",
+      "checkoutOpenHint": "Schließen Sie den Bezahlvorgang im Browser ab. Wir schalten BYO automatisch frei, sobald die Zahlung eingegangen ist."
     },
     "byoPreferences": {
       "title": "Anbietereinstellungen",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "Erfordert OpenAI-BYO-Zugang und einen API-Schlüssel.",
       "summaryRequiresAnthropic": "Erfordert Anthropic-BYO-Zugang und einen API-Schlüssel.",
       "translationReview": "Übersetzung (Prüfung)",
-      "transcriptionRequiresElevenLabs": "Die Transkription verwendet ausschließlich ElevenLabs Scribe. Füge einen ElevenLabs-API-Schlüssel hinzu, um mit deinen eigenen Schlüsseln zu transkribieren. Ohne einen solchen nutzt die Transkription Stage5-Credits, die nicht verwendet werden, solange deine API-Schlüssel aktiv sind. Dein OpenAI-Schlüssel wird weiterhin für die Übersetzung verwendet."
+      "transcriptionRequiresElevenLabs": "Die Transkription verwendet ausschließlich ElevenLabs Scribe. Füge einen ElevenLabs-API-Schlüssel hinzu, um mit deinen eigenen Schlüsseln zu transkribieren. Ohne einen solchen nutzt die Transkription Stage5-Credits, die nicht verwendet werden, solange deine API-Schlüssel aktiv sind. Dein OpenAI-Schlüssel wird weiterhin für die Übersetzung verwendet.",
+      "dubbingRequiresElevenLabs": "Synchronisation nutzt nur ElevenLabs. Fügen Sie einen ElevenLabs-API-Schlüssel hinzu, um mit Ihren eigenen Schlüsseln zu synchronisieren. Ohne ihn nutzt die Synchronisation Stage5 Credits, die nicht verwendet werden, solange Ihre API-Schlüssel aktiv sind.",
+      "runtimeFallback": "Laufzeit-Fallback im API-Schlüssel-Modus",
+      "videoSuggestionLegacyFollowDraft": "Alte BYO-Einstellung beibehalten: folgt Ihrem Entwurfs-Übersetzungsmodell, bis Sie ein direktes Modell wählst.",
+      "videoSuggestionLegacyFollowReview": "Alte BYO-Einstellung beibehalten: folgt Ihrem Prüf-Übersetzungsmodell, bis Sie ein direktes Modell wählst."
     },
     "apiKeyGuide": {
       "title": "So erhalten Sie API-Schlüssel",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× so viele Minuten pro Dollar",
     "checkoutWaiting": "Schließe die Zahlung im Browser ab. Deine Minuten erscheinen hier automatisch.",
     "checkoutNote": "Einmalzahlung über Stripe im Browser. Kein Konto, kein Abo. Die Minuten kommen automatisch.",
-    "dubbingNote": "Übersetzen mit Credits kostet etwa 10 % mehr pro Minute; Synchronisation verbraucht mehr."
+    "dubbingNote": "Übersetzen mit Credits kostet etwa 10 % mehr pro Minute; Synchronisation verbraucht mehr.",
+    "iCancelledCheckout": "Ich habe den Bezahlvorgang abgebrochen",
+    "checkoutStartFailed": "Der Bezahlvorgang konnte nicht gestartet werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "Synchronisation starten?",
       "message": "Diese Synchronisation verbraucht etwa {{cost}} von Ihren {{balance}} Credits. Stimmen zu erzeugen kostet deutlich mehr als Übersetzen."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "Verwerfen und Untertitel öffnen",
+      "message": "Sie haben bereits Untertitel geöffnet. Speichern oder verwerfen Sie sie, bevor Sie sie durch automatische YouTube-Untertitel ersetzt.",
+      "saveAndOpen": "Speichern und Untertitel öffnen",
+      "title": "Wiederhergestellte automatische Untertitel öffnen?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "Untertitel bereinigen ({{done}}/{{total}})",
     "translationCleanup": "Übersetzte Untertitel bereinigen ({{done}}/{{total}})",
     "reviewingSlow": "Überprüfung (dies kann etwas dauern...) {{done}}/{{total}}",
-    "reviewingRange": "Überprüfung {{start}}–{{end}} (von {{total}})"
+    "reviewingRange": "Überprüfung {{start}}–{{end}} (von {{total}})",
+    "legacy": {
+      "aligningVoices": "Stimmen werden ausgerichtet {{done}}/{{total}}…",
+      "analyzingSection": "Suche nach Highlights in Teil {{done}} von {{total}}…",
+      "analyzingVideo": "Video wird geprüft…",
+      "assemblingOverlay": "Untertitel werden ins Video gezeichnet…",
+      "audioExtracted": "Audio bereit",
+      "balancingAudio": "Stimme und Hintergrund werden abgeglichen…",
+      "cannotCancelSave": "Fast fertig. Dieses letzte Speichern kann nicht abgebrochen werden",
+      "captionsOnlyReady": "YouTube-Untertitel bereit (das Video selbst konnte nicht heruntergeladen werden)",
+      "checkingDownloader": "Downloader wird geprüft…",
+      "chooseSaveLocation": "Wählen Sie, wo das Video gespeichert werden soll…",
+      "detectingSpeech": "Sprechstellen werden erkannt…",
+      "downloadCancelled": "Download abgebrochen",
+      "downloadComplete": "Download abgeschlossen",
+      "downloadVerifying": "Heruntergeladen, Datei wird geprüft…",
+      "drawingFrames": "Untertitelbilder werden gezeichnet {{done}}/{{total}}…",
+      "dubAudioReady": "Sprachspur bereit",
+      "dubComplete": "Synchronisation abgeschlossen",
+      "dubbedVideoReady": "Synchronisiertes Video bereit",
+      "encodingComplete": "Video bereit",
+      "encodingVideo": "Video wird erstellt…",
+      "errorRecovery": "Einige Zeilen werden korrigiert…",
+      "extractingAudio": "Audio wird extrahiert…",
+      "extractingAudioPercent": "Audio wird extrahiert ({{percent}} %)…",
+      "fetchingInfo": "Videodetails werden abgerufen…",
+      "finalAdjustments": "Letzter Feinschliff…",
+      "finalizingSubtitles": "Untertitel werden fertiggestellt…",
+      "finishingFile": "Videodatei wird fertiggestellt…",
+      "generatingVoices": "Stimmen werden erzeugt {{done}}/{{total}}…",
+      "mergeComplete": "Video mit Untertiteln ist fertig",
+      "mergeFailed": "Video konnte nicht erstellt werden",
+      "mergingFormats": "Video und Audio werden zusammengeführt…",
+      "postProcessing": "Wird abgeschlossen…",
+      "preparingAudioExtraction": "Audio wird vorbereitet ({{minutes}} Min. Video)…",
+      "preparingDownload": "Download wird vorbereitet…",
+      "preparingDubLines": "{{count}} Zeilen werden für die Synchronisation vorbereitet…",
+      "preparingHighlights": "Highlight-Auswahl wird vorbereitet…",
+      "preparingOutput": "Ausgabeordner wird vorbereitet…",
+      "preparingTranscript": "Transkript wird gelesen…",
+      "preparingVideoEngine": "Videowerkzeuge werden vorbereitet…",
+      "preparingVoiceClips": "{{count}} Sprachclips werden vorbereitet…",
+      "rateLimited": "Gerade ausgelastet, neuer Versuch…",
+      "reusingSummary": "Zusammenfassung wird für die Highlights genutzt…",
+      "saving": "Wird gespeichert…",
+      "sectionAnalyzed": "Teil {{done}} geprüft",
+      "sectionHighlights": "Highlights in Teil {{done}} gefunden",
+      "sectionSummarized": "Teil {{done}} von {{total}} zusammengefasst",
+      "selectingHighlights": "Highlights werden ausgewählt in Teil {{done}} von {{total}}…",
+      "settingUpDownloader": "Downloader wird eingerichtet…",
+      "skippingSameLanguage": "Bereits in dieser Sprache, keine Übersetzung nötig",
+      "starting": "Startet…",
+      "startingDownload": "Download wird gestartet…",
+      "subtitleLayerReady": "Untertitelebene bereit",
+      "summarizingSection": "Teil {{done}} von {{total}} wird zusammengefasst…",
+      "summaryReady": "Zusammenfassung bereit",
+      "transcribingParts": "Transkribiere {{done}}/{{total}}…",
+      "transcriptionComplete": "Transkription abgeschlossen",
+      "translatingLines": "Übersetze {{done}}/{{total}}…",
+      "uploading": "Wird hochgeladen…",
+      "validating": "Wird geprüft…",
+      "videoBlockedCaptions": "Das Video konnte nicht heruntergeladen werden; stattdessen wird nach YouTube-Untertiteln gesucht…",
+      "voiceTrackAssembled": "Sprachspur zusammengesetzt",
+      "voiceTrackReady": "Sprachspur bereit",
+      "writingSummary": "Zusammenfassung wird geschrieben…"
+    },
+    "listening": "Video wird angehört…",
+    "mergeFinishSaveBeforeReload": "Schließen Sie das Speichern des zusammengeführten Videos ab, bevor Sie neu laden.",
+    "mergeSavePhaseNoCancel": "Dieser Speicherschritt kann jetzt nicht abgebrochen werden.",
+    "mergeWaitForCancelBeforeReload": "Warten Sie, bis der Abbruch der Zusammenführung abgeschlossen ist, bevor Sie neu laden.",
+    "preparingTranscription": "Zuhören wird vorbereitet…",
+    "restartingTranscription": "Transkription wird neu gestartet…",
+    "resumingTranscription": "Es geht dort weiter, wo es aufgehört hat…"
   },
   "messages": {
     "fileSaved": "Datei gespeichert:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "Durch deine Minuten abgedeckt",
     "preview": "Erste {{minutes}} Min. gratis · ganzes Video {{price}}",
     "pack": "Ganzes Video {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Shorts-Bildausschnitt & Untertitel",
+    "intro": "Rahmen Sie jeden Sprecher ein, teilen Sie bei Schnitten und timen Sie kurze Untertitelphrasen passend zur Sprache. Die Zeiten unten beginnen am Anfang dieses Clips.",
+    "previewTime": "Vorschauzeit des Short",
+    "speakerLabel": "Sprecher- oder Themenbezeichnung",
+    "splitShot": "Einstellung am Abspielkopf teilen",
+    "joinShot": "Mit vorheriger Einstellung verbinden",
+    "preview": "Vorschau",
+    "emphasize": "Diese Phrase hervorheben",
+    "splitPhrase": "Phrase teilen",
+    "removePhrase": "Phrase entfernen",
+    "addPhrase": "Phrase hinzufügen",
+    "removeStyling": "Formatierung entfernen",
+    "saveSelectionFirst": "Speichern Sie zuerst die Highlight-Auswahl.",
+    "closeEdit": "Bearbeitung schließen",
+    "editFraming": "Bildausschnitt & Untertitel bearbeiten",
+    "styleShort": "Diesen Short gestalten",
+    "horizontalFocus": "Horizontaler Fokus",
+    "verticalFocus": "Vertikaler Fokus",
+    "zoom": "Zoom",
+    "from": "Von",
+    "to": "bis",
+    "saving": "Wird gespeichert…",
+    "save": "Short-Bearbeitung speichern"
   }
 }

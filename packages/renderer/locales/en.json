@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "Not enough disk space to complete the merge. Please free up space and try again.",
       "noSourceVideo": "No source video",
       "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "failedToLoadSRT": "Failed to load SRT file",
+      "sourceVideoUnavailable": "The original video was removed or is no longer accessible. Open it again and try again.",
+      "unknown": "Something went wrong. Please try again."
     },
     "success": "Success",
     "settings": "Settings",
@@ -92,7 +94,9 @@
     "continue": "Continue",
     "send": "Send",
     "dismiss": "Dismiss",
-    "moreActions": "More actions"
+    "moreActions": "More actions",
+    "installingUpdate": "Installing update...",
+    "installingUpdateShort": "Installing"
   },
   "errors": {
     "needCookies": "YouTube asked for a human check. Click Connect to continue.",
@@ -354,7 +358,8 @@
         "answerer": "Process query",
         "planner": "Form search",
         "retrieval": "Load results"
-      }
+      },
+      "removeHistoryFailed": "Could not remove this download from history."
     },
     "downloadAndTranslate": "Download & Translate",
     "downloadAndTranscribe": "Download & Transcribe",
@@ -454,7 +459,10 @@
     "combinedHighlightReady": "Combined Highlight Ready",
     "downloadCombined": "Download Combined Clip",
     "saveCombinedDialogTitle": "Save combined highlight clip",
-    "combinedCutFailed": "Failed to cut combined highlights: {{message}}"
+    "combinedCutFailed": "Failed to cut combined highlights: {{message}}",
+    "highlightsInsufficientCredits": "Summary generated, but highlight extraction stopped because credits ran out.",
+    "highlightsPartialWarning": "Highlight extraction was partial. These highlights may be incomplete. Regenerate to refresh.",
+    "highlightsPartialWithReason": "Summary generated, but highlight extraction was partial: {{message}}"
   },
   "panel": {
     "new": "new",
@@ -492,7 +500,8 @@
       "automaticCaptionsTitle": "YouTube automatic captions",
       "automaticCaptionsPill": "YouTube automatic captions",
       "automaticCaptionsCopy": "Video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. You can edit, translate, and export SRT now. Mount media to preview or burn in subtitles.",
-      "automaticCaptionsCopyWithMedia": "The URL video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. The mounted media is available for preview and burn-in."
+      "automaticCaptionsCopyWithMedia": "The URL video download was blocked (HTTP 403). These are YouTube automatic captions—not a fresh transcription. The mounted media is available for preview and burn-in.",
+      "highlightEditingLocked": "Highlight generation active, editing locked"
     },
     "item": {
       "seek": "Seek",
@@ -666,7 +675,9 @@
       "option2Title": "Option 2: Anthropic + ElevenLabs",
       "economicsTitle": "Why it's worth it",
       "economicsBody": "Stage5 credits optimize for convenience (no setup). BYO pays providers directly—usually ~30–50% cheaper depending on your pack.",
-      "encryptionUnavailable": "Secure storage is not available on this system. API keys cannot be saved."
+      "encryptionUnavailable": "Secure storage is not available on this system. API keys cannot be saved.",
+      "checkoutOpen": "Checkout open in browser…",
+      "checkoutOpenHint": "Complete checkout in your browser. We will unlock BYO automatically when payment settles."
     },
     "byoPreferences": {
       "title": "Provider Preferences",
@@ -699,7 +710,10 @@
       "summaryRequiresAnthropic": "Requires Anthropic BYO access and API key.",
       "translationReview": "Translation (Review)",
       "dubbingRequiresElevenLabs": "Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.",
-      "transcriptionRequiresElevenLabs": "Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses Stage5 credits, which are not used while your API keys are on. Your OpenAI key is still used for translation."
+      "transcriptionRequiresElevenLabs": "Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses Stage5 credits, which are not used while your API keys are on. Your OpenAI key is still used for translation.",
+      "runtimeFallback": "Runtime fallback in API key mode",
+      "videoSuggestionLegacyFollowDraft": "Legacy BYO setting preserved: follows your draft translation model until you choose a direct model.",
+      "videoSuggestionLegacyFollowReview": "Legacy BYO setting preserved: follows your review translation model until you choose a direct model."
     },
     "apiKeyGuide": {
       "title": "How to Get API Keys",
@@ -907,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× the minutes per dollar",
     "checkoutWaiting": "Finish paying in your browser. Your minutes appear here on their own.",
     "checkoutNote": "One-time payment through Stripe, in your browser. No account or subscription. Minutes arrive on their own.",
-    "dubbingNote": "Translating with credits adds about 10% per minute; dubbing uses more."
+    "dubbingNote": "Translating with credits adds about 10% per minute; dubbing uses more.",
+    "iCancelledCheckout": "I cancelled checkout",
+    "checkoutStartFailed": "Checkout couldn’t start. Check your connection and try again."
   },
   "cta": {
     "generate": {
@@ -1147,13 +1163,85 @@
     "transcribingElevenLabsHours": "Transcribing with ElevenLabs (~{{hours}}h {{minutes}}m remaining)",
     "transcribingElevenLabsFinishing": "Transcribing with ElevenLabs...",
     "transcriptionRetry": "Connection failed, retrying ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "Uploading audio for transcription...",
+    "transcribingR2Upload": "Uploading audio…",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
     "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
     "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})",
+    "preparingTranscription": "Getting ready to listen…",
+    "resumingTranscription": "Picking up where it left off…",
+    "restartingTranscription": "Starting the transcription again…",
+    "listening": "Listening to the video…",
+    "mergeFinishSaveBeforeReload": "Finish saving the merged video before reloading.",
+    "mergeSavePhaseNoCancel": "This save step can’t be cancelled now.",
+    "mergeWaitForCancelBeforeReload": "Wait for merge cancellation to finish before reloading.",
+    "legacy": {
+      "analyzingVideo": "Checking the video…",
+      "finalAdjustments": "Applying final touches…",
+      "assemblingOverlay": "Drawing the subtitles onto the video…",
+      "audioExtracted": "Audio ready",
+      "captionsOnlyReady": "YouTube captions ready (the video itself couldn’t be downloaded)",
+      "balancingAudio": "Balancing voice and background…",
+      "cannotCancelSave": "Almost done. This last save can’t be cancelled",
+      "checkingDownloader": "Checking the downloader…",
+      "chooseSaveLocation": "Choose where to save the video…",
+      "detectingSpeech": "Finding where people speak…",
+      "downloadCancelled": "Download cancelled",
+      "downloadVerifying": "Downloaded, checking the file…",
+      "downloadComplete": "Download complete",
+      "settingUpDownloader": "Setting up the downloader…",
+      "dubAudioReady": "Voice track ready",
+      "dubComplete": "Dubbing complete",
+      "dubbedVideoReady": "Dubbed video ready",
+      "encodingComplete": "Video ready",
+      "encodingVideo": "Making the video…",
+      "errorRecovery": "Fixing a few lines…",
+      "extractingAudio": "Extracting audio…",
+      "fetchingInfo": "Getting video details…",
+      "finishingFile": "Finishing the video file…",
+      "finalizingSubtitles": "Finishing the subtitles…",
+      "starting": "Starting…",
+      "startingDownload": "Starting download…",
+      "mergeComplete": "Video with subtitles is ready",
+      "mergeFailed": "Making the video failed",
+      "voiceTrackAssembled": "Voice track assembled",
+      "mergingFormats": "Joining video and audio…",
+      "subtitleLayerReady": "Subtitle layer ready",
+      "postProcessing": "Finishing up…",
+      "voiceTrackReady": "Voice track ready",
+      "preparingDownload": "Preparing download…",
+      "preparingHighlights": "Getting ready to pick highlights…",
+      "preparingOutput": "Preparing the output folder…",
+      "preparingTranscript": "Reading the transcript…",
+      "preparingVideoEngine": "Getting the video tools ready…",
+      "rateLimited": "Busy right now, trying again…",
+      "reusingSummary": "Using the summary to pick highlights…",
+      "saving": "Saving…",
+      "skippingSameLanguage": "Already in this language, no translation needed",
+      "summaryReady": "Summary ready",
+      "writingSummary": "Writing the summary…",
+      "validating": "Checking…",
+      "videoBlockedCaptions": "The video couldn’t be downloaded; checking for YouTube captions instead…",
+      "transcriptionComplete": "Transcription complete",
+      "uploading": "Uploading…",
+      "aligningVoices": "Lining up voices {{done}}/{{total}}…",
+      "analyzingSection": "Looking for highlights in part {{done}} of {{total}}…",
+      "drawingFrames": "Drawing subtitle frames {{done}}/{{total}}…",
+      "extractingAudioPercent": "Extracting audio ({{percent}}%)…",
+      "preparingDubLines": "Preparing {{count}} lines for dubbing…",
+      "preparingVoiceClips": "Preparing {{count}} voice clips…",
+      "preparingAudioExtraction": "Preparing the audio ({{minutes}} min of video)…",
+      "generatingVoices": "Generating voices {{done}}/{{total}}…",
+      "sectionAnalyzed": "Part {{done}} checked",
+      "sectionHighlights": "Highlights found in part {{done}}",
+      "sectionSummarized": "Part {{done}} of {{total}} summarized",
+      "selectingHighlights": "Picking highlights in part {{done}} of {{total}}…",
+      "summarizingSection": "Summarizing part {{done}} of {{total}}…",
+      "translatingLines": "Translating {{done}}/{{total}}…",
+      "transcribingParts": "Transcribing {{done}}/{{total}}…"
+    }
   },
   "messages": {
     "fileSaved": "File saved:\n{{path}}",
@@ -1274,5 +1362,30 @@
     "covered": "Covered by your minutes",
     "preview": "First {{minutes}} min free · whole video {{price}}",
     "pack": "Whole video {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Shorts framing & captions",
+    "intro": "Frame each speaker, split at camera cuts, and time short caption phrases to the speech. Times below start at the beginning of this clip.",
+    "previewTime": "Short preview time",
+    "speakerLabel": "Speaker or topic label",
+    "splitShot": "Split shot at playhead",
+    "joinShot": "Join previous shot",
+    "preview": "Preview",
+    "emphasize": "Emphasize this phrase",
+    "splitPhrase": "Split phrase",
+    "removePhrase": "Remove phrase",
+    "addPhrase": "Add phrase",
+    "removeStyling": "Remove styling",
+    "saveSelectionFirst": "Save the highlight selection first.",
+    "closeEdit": "Close edit",
+    "editFraming": "Edit framing & captions",
+    "styleShort": "Style this Short",
+    "horizontalFocus": "Horizontal focus",
+    "verticalFocus": "Vertical focus",
+    "zoom": "Zoom",
+    "from": "From",
+    "to": "to",
+    "saving": "Saving…",
+    "save": "Save Short edit"
   }
 }

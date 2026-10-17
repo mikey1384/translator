@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "Недостатньо місця на диску для завершення об'єднання. Звільніть місце та спробуйте ще раз.",
       "noSourceVideo": "Немає вихідного відео",
       "noSubtitlesLoaded": "Не завантажено субтитрів",
-      "failedToLoadSRT": "Не вдалося завантажити файл SRT"
+      "failedToLoadSRT": "Не вдалося завантажити файл SRT",
+      "sourceVideoUnavailable": "Оригінальне відео видалено або воно більше недоступне. Відкрийте його знову й повторіть спробу.",
+      "unknown": "Щось пішло не так. Спробуйте ще раз."
     },
     "success": "Успіх",
     "settings": "Налаштування",
@@ -92,7 +94,9 @@
     "continue": "Продовжити",
     "send": "Надіслати",
     "dismiss": "Закрити",
-    "moreActions": "Інші дії"
+    "moreActions": "Інші дії",
+    "installingUpdate": "Встановлення оновлення...",
+    "installingUpdateShort": "Встановлення"
   },
   "errors": {
     "needCookies": "YouTube запросив перевірку. Натисніть «Підключити», щоб продовжити.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "Видалити файл та історію",
       "deleteFileAndHistoryConfirm": "Назавжди видалити цей завантажений файл і запис про нього з історії? Цю дію не можна скасувати.",
       "removeFromHistory": "Видалити з історії",
-      "removeFromHistoryConfirm": "Видалити цей елемент з історії завантажень? Файли, збережені поза бібліотекою застосунку, залишаться на пристрої."
+      "removeFromHistoryConfirm": "Видалити цей елемент з історії завантажень? Файли, збережені поза бібліотекою застосунку, залишаться на пристрої.",
+      "deleteLocalFileHistoryPending": "Файл видалено, але Translator не вдалося завершити оновлення історії завантажень. Буде виконано повторну спробу автоматично.",
+      "removeHistoryFailed": "Не вдалося видалити це завантаження з історії.",
+      "storedInAppLibrary": "Збережено в бібліотеці застосунку"
     },
     "downloadAndTranslate": "Завантажити та перекласти",
     "downloadAndTranscribe": "Завантажити та транскрибувати",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ Перекласти",
     "autoRunStepDownload": "Завантажити",
     "autoRunStepTranscribe": "Транскрибування",
-    "autoRunStepTranslate": "Перекласти на {{language}}"
+    "autoRunStepTranslate": "Перекласти на {{language}}",
+    "captionRecoveryKeepVideo": "Залишити поточне відео",
+    "captionRecoveryOpenCaptions": "Відкрити субтитри",
+    "captionRecoverySwitchPrompt": "Translator відновив автоматичні субтитри YouTube, але відео за URL недоступне. Якщо відкрити їх, поточне відео буде від’єднано.",
+    "captionRecoverySwitchTitle": "Відкрити субтитри без поточного відео?"
   },
   "subtitles": {
     "outputLanguage": "Мова виведення",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}хв відео",
     "translateEstimateByo": "BYO ключ",
     "qualityBadge": "(вк)",
-    "cancel_confirmation": "Ви впевнені, що хочете скасувати процес перекладу субтитрів? Весь прогрес буде втрачено, і вам доведеться почати спочатку."
+    "cancel_confirmation": "Ви впевнені, що хочете скасувати процес перекладу субтитрів? Весь прогрес буде втрачено, і вам доведеться почати спочатку.",
+    "dubCostHint": "Голос ElevenLabs: ~{{rate}} кредитів за хвилину мовлення. Цю оцінку показано до початку дубляжу."
   },
   "summary": {
     "title": "Підсумок транскрипту",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "Об'єднаний момент готовий",
     "downloadCombined": "Завантажити об'єднаний кліп",
     "saveCombinedDialogTitle": "Зберегти об'єднаний кліп моментів",
-    "combinedCutFailed": "Не вдалося вирізати об'єднані моменти: {{message}}"
+    "combinedCutFailed": "Не вдалося вирізати об'єднані моменти: {{message}}",
+    "highlightsInsufficientCredits": "Підсумок створено, але видобування ключових моментів зупинилося, бо закінчилися кредити.",
+    "highlightsPartialWarning": "Ключові моменти видобуто частково. Вони можуть бути неповними. Створіть їх знову, щоб оновити.",
+    "highlightsPartialWithReason": "Підсумок створено, але ключові моменти видобуто частково: {{message}}"
   },
   "panel": {
     "new": "нове",
@@ -481,7 +496,12 @@
       "listCopy": "Редагуйте вихідний текст, переклад, таймінг і дії для кожного рядка прямо тут.",
       "originalLabel": "Оригінал",
       "translationLabel": "Переклад",
-      "mergeNeedsVideoCopy": "Підключіть вихідне відео перед запуском burn-in експорту."
+      "mergeNeedsVideoCopy": "Підключіть вихідне відео перед запуском burn-in експорту.",
+      "automaticCaptionsCopy": "Завантаження відео заблоковано (HTTP 403). Це автоматичні субтитри YouTube, а не нова транскрипція. Ви вже можете редагувати, перекладати й експортувати SRT. Підключіть медіа, щоб переглянути або вбудувати субтитри.",
+      "automaticCaptionsCopyWithMedia": "Завантаження відео за URL заблоковано (HTTP 403). Це автоматичні субтитри YouTube, а не нова транскрипція. Підключене медіа доступне для перегляду й вбудовування.",
+      "automaticCaptionsPill": "Автоматичні субтитри YouTube",
+      "automaticCaptionsTitle": "Автоматичні субтитри YouTube",
+      "highlightEditingLocked": "Створюються ключові моменти, редагування заблоковано"
     },
     "item": {
       "seek": "Перейти",
@@ -655,7 +675,9 @@
       "option2Title": "Варіант 2: Anthropic + ElevenLabs",
       "economicsTitle": "Чому це вигідно",
       "economicsBody": "Кредити Stage5 оптимізовані для зручності (без налаштування). BYO платить постачальникам напряму — зазвичай на ~30–50% дешевше залежно від пакету.",
-      "encryptionUnavailable": "Захищене сховище недоступне в цій системі. Ключі API неможливо зберегти."
+      "encryptionUnavailable": "Захищене сховище недоступне в цій системі. Ключі API неможливо зберегти.",
+      "checkoutOpen": "Оплату відкрито в браузері…",
+      "checkoutOpenHint": "Завершіть оплату в браузері. Ми автоматично розблокуємо BYO, щойно платіж пройде."
     },
     "byoPreferences": {
       "title": "Налаштування провайдерів",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "Потребує доступу до OpenAI BYO і ключа API.",
       "summaryRequiresAnthropic": "Потребує доступу до Anthropic BYO і ключа API.",
       "translationReview": "Переклад (перевірка)",
-      "transcriptionRequiresElevenLabs": "Для транскрипції використовується лише ElevenLabs Scribe. Додайте API-ключ ElevenLabs, щоб транскрибувати з власними ключами. Без нього транскрипція використовує кредити Stage5, які не витрачаються, поки ваші API-ключі увімкнено. Ваш ключ OpenAI і надалі використовується для перекладу."
+      "transcriptionRequiresElevenLabs": "Для транскрипції використовується лише ElevenLabs Scribe. Додайте API-ключ ElevenLabs, щоб транскрибувати з власними ключами. Без нього транскрипція використовує кредити Stage5, які не витрачаються, поки ваші API-ключі увімкнено. Ваш ключ OpenAI і надалі використовується для перекладу.",
+      "dubbingRequiresElevenLabs": "Дубляж використовує лише ElevenLabs. Додайте API-ключ ElevenLabs, щоб дублювати з власними ключами. Без нього дубляж використовує кредити Stage5, які не витрачаються, поки ваші API-ключі увімкнено.",
+      "runtimeFallback": "Резервний варіант під час роботи в режимі API-ключів",
+      "videoSuggestionLegacyFollowDraft": "Збережено застаріле налаштування BYO: використовується ваша модель чернеткового перекладу, доки ви не виберете модель напряму.",
+      "videoSuggestionLegacyFollowReview": "Збережено застаріле налаштування BYO: використовується ваша модель перевірки перекладу, доки ви не виберете модель напряму."
     },
     "apiKeyGuide": {
       "title": "Як отримати API-ключі",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× більше хвилин за долар",
     "checkoutWaiting": "Завершіть оплату в браузері. Хвилини з'являться тут самі.",
     "checkoutNote": "Разовий платіж через Stripe у браузері. Без акаунта й підписки. Хвилини надійдуть самі.",
-    "dubbingNote": "Переклад за кредити додає близько 10% за хвилину; озвучення витрачає більше."
+    "dubbingNote": "Переклад за кредити додає близько 10% за хвилину; озвучення витрачає більше.",
+    "iCancelledCheckout": "Я скасував оплату",
+    "checkoutStartFailed": "Не вдалося відкрити оплату. Перевірте з’єднання й спробуйте ще раз."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "Почати озвучення?",
       "message": "Це озвучення використає близько {{cost}} з ваших {{balance}} кредитів. Генерація голосу коштує значно більше, ніж переклад."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "Відкинути й відкрити субтитри",
+      "message": "У вас уже відкрито субтитри. Збережіть або відкиньте їх, перш ніж замінити автоматичними субтитрами YouTube.",
+      "saveAndOpen": "Зберегти й відкрити субтитри",
+      "title": "Відкрити відновлені автоматичні субтитри?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "Очищення субтитрів ({{done}}/{{total}})",
     "translationCleanup": "Очищення перекладених субтитрів ({{done}}/{{total}})",
     "reviewingSlow": "Перевірка (це може зайняти деякий час...) {{done}}/{{total}}",
-    "reviewingRange": "Перевірка {{start}}–{{end}} (з {{total}})"
+    "reviewingRange": "Перевірка {{start}}–{{end}} (з {{total}})",
+    "legacy": {
+      "aligningVoices": "Вирівнювання голосів {{done}}/{{total}}…",
+      "analyzingSection": "Пошук ключових моментів у частині {{done}} з {{total}}…",
+      "analyzingVideo": "Перевірка відео…",
+      "assemblingOverlay": "Накладання субтитрів на відео…",
+      "audioExtracted": "Аудіо готове",
+      "balancingAudio": "Балансування голосу й фону…",
+      "cannotCancelSave": "Майже готово. Останнє збереження не можна скасувати",
+      "captionsOnlyReady": "Субтитри YouTube готові (саме відео не вдалося завантажити)",
+      "checkingDownloader": "Перевірка завантажувача…",
+      "chooseSaveLocation": "Виберіть, куди зберегти відео…",
+      "detectingSpeech": "Пошук місць, де говорять…",
+      "downloadCancelled": "Завантаження скасовано",
+      "downloadComplete": "Завантаження завершено",
+      "downloadVerifying": "Завантажено, перевірка файлу…",
+      "drawingFrames": "Малювання кадрів субтитрів {{done}}/{{total}}…",
+      "dubAudioReady": "Голосова доріжка готова",
+      "dubComplete": "Дубляж завершено",
+      "dubbedVideoReady": "Дубльоване відео готове",
+      "encodingComplete": "Відео готове",
+      "encodingVideo": "Створення відео…",
+      "errorRecovery": "Виправлення кількох рядків…",
+      "extractingAudio": "Видобування аудіо…",
+      "extractingAudioPercent": "Видобування аудіо ({{percent}}%)…",
+      "fetchingInfo": "Отримання даних про відео…",
+      "finalAdjustments": "Останні штрихи…",
+      "finalizingSubtitles": "Завершення субтитрів…",
+      "finishingFile": "Завершення відеофайлу…",
+      "generatingVoices": "Створення голосів {{done}}/{{total}}…",
+      "mergeComplete": "Відео із субтитрами готове",
+      "mergeFailed": "Не вдалося створити відео",
+      "mergingFormats": "Об’єднання відео й аудіо…",
+      "postProcessing": "Завершення…",
+      "preparingAudioExtraction": "Підготовка аудіо ({{minutes}} хв відео)…",
+      "preparingDownload": "Підготовка завантаження…",
+      "preparingDubLines": "Підготовка {{count}} рядків для дубляжу…",
+      "preparingHighlights": "Підготовка до вибору ключових моментів…",
+      "preparingOutput": "Підготовка вихідної папки…",
+      "preparingTranscript": "Читання транскрипту…",
+      "preparingVideoEngine": "Підготовка відеоінструментів…",
+      "preparingVoiceClips": "Підготовка голосових кліпів: {{count}}…",
+      "rateLimited": "Зараз зайнято, повторна спроба…",
+      "reusingSummary": "Використання підсумку для вибору ключових моментів…",
+      "saving": "Збереження…",
+      "sectionAnalyzed": "Частину {{done}} перевірено",
+      "sectionHighlights": "У частині {{done}} знайдено ключові моменти",
+      "sectionSummarized": "Частину {{done}} з {{total}} підсумовано",
+      "selectingHighlights": "Вибір ключових моментів у частині {{done}} з {{total}}…",
+      "settingUpDownloader": "Налаштування завантажувача…",
+      "skippingSameLanguage": "Уже цією мовою, переклад не потрібен",
+      "starting": "Запуск…",
+      "startingDownload": "Початок завантаження…",
+      "subtitleLayerReady": "Шар субтитрів готовий",
+      "summarizingSection": "Підсумовування частини {{done}} з {{total}}…",
+      "summaryReady": "Підсумок готовий",
+      "transcribingParts": "Транскрибування {{done}}/{{total}}…",
+      "transcriptionComplete": "Транскрипцію завершено",
+      "translatingLines": "Переклад {{done}}/{{total}}…",
+      "uploading": "Вивантаження…",
+      "validating": "Перевірка…",
+      "videoBlockedCaptions": "Відео не вдалося завантажити; натомість шукаємо субтитри YouTube…",
+      "voiceTrackAssembled": "Голосову доріжку зібрано",
+      "voiceTrackReady": "Голосова доріжка готова",
+      "writingSummary": "Написання підсумку…"
+    },
+    "listening": "Прослуховування відео…",
+    "mergeFinishSaveBeforeReload": "Дочекайтеся збереження об’єднаного відео перед перезавантаженням.",
+    "mergeSavePhaseNoCancel": "Цей етап збереження зараз не можна скасувати.",
+    "mergeWaitForCancelBeforeReload": "Дочекайтеся завершення скасування об’єднання перед перезавантаженням.",
+    "preparingTranscription": "Підготовка до прослуховування…",
+    "restartingTranscription": "Повторний запуск транскрипції…",
+    "resumingTranscription": "Продовження з місця зупинки…"
   },
   "messages": {
     "fileSaved": "Файл збережено:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "Покрито вашими хвилинами",
     "preview": "Перші {{minutes}} хв безкоштовно · усе відео {{price}}",
     "pack": "Усе відео {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Кадрування й субтитри Shorts",
+    "intro": "Кадруйте кожного мовця, розділяйте на змінах кадру й синхронізуйте короткі фрази субтитрів із мовленням. Час нижче відраховується від початку цього кліпу.",
+    "previewTime": "Час попереднього перегляду Short",
+    "speakerLabel": "Мітка мовця або теми",
+    "splitShot": "Розділити кадр у позиції відтворення",
+    "joinShot": "Об’єднати з попереднім кадром",
+    "preview": "Попередній перегляд",
+    "emphasize": "Виділити цю фразу",
+    "splitPhrase": "Розділити фразу",
+    "removePhrase": "Видалити фразу",
+    "addPhrase": "Додати фразу",
+    "removeStyling": "Прибрати стилізацію",
+    "saveSelectionFirst": "Спочатку збережіть вибір ключових моментів.",
+    "closeEdit": "Закрити редагування",
+    "editFraming": "Редагувати кадрування й субтитри",
+    "styleShort": "Стилізувати цей Short",
+    "horizontalFocus": "Горизонтальний фокус",
+    "verticalFocus": "Вертикальний фокус",
+    "zoom": "Масштаб",
+    "from": "Від",
+    "to": "до",
+    "saving": "Збереження…",
+    "save": "Зберегти зміни Short"
   }
 }

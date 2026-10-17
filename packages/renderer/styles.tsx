@@ -293,8 +293,7 @@ export const shellEyebrowStyles = css`
   color: ${colors.primaryLight};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const shellTitleStyles = css`
@@ -340,8 +339,7 @@ export const metaPillStyles = css`
   padding: ${spacing.xs} ${spacing.md};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.medium};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 // Text Area Styles - Dark Theme
@@ -544,7 +542,6 @@ export const statusIndicatorStyles = (status: boolean) => css`
     ? 'rgba(76, 201, 176, 0.1)'
     : 'rgba(230, 94, 106, 0.1)'};
   color: ${status ? colors.success : colors.danger};
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 `;
 
@@ -560,7 +557,6 @@ export const statusLoadingStyles = css`
   border: 1px solid ${colors.gray};
   background-color: rgba(140, 135, 150, 0.1);
   color: ${colors.gray};
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 `;
 

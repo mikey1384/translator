@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "Недостаточно места на диске для завершения объединения. Освободите место и повторите попытку.",
       "noSourceVideo": "Нет исходного видео",
       "noSubtitlesLoaded": "Субтитры не загружены",
-      "failedToLoadSRT": "Не удалось загрузить SRT файл"
+      "failedToLoadSRT": "Не удалось загрузить SRT файл",
+      "sourceVideoUnavailable": "Исходное видео удалено или больше недоступно. Откройте его снова и повторите попытку.",
+      "unknown": "Что-то пошло не так. Попробуйте снова."
     },
     "success": "Успех",
     "settings": "Настройки",
@@ -92,7 +94,9 @@
     "continue": "Продолжить",
     "send": "Отправить",
     "dismiss": "Закрыть",
-    "moreActions": "Другие действия"
+    "moreActions": "Другие действия",
+    "installingUpdate": "Установка обновления...",
+    "installingUpdateShort": "Установка"
   },
   "errors": {
     "needCookies": "YouTube запросил проверку. Нажмите «Подключить», чтобы продолжить.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "Удалить файл и историю",
       "deleteFileAndHistoryConfirm": "Навсегда удалить этот загруженный файл и запись о нём из истории? Это действие нельзя отменить.",
       "removeFromHistory": "Удалить из истории",
-      "removeFromHistoryConfirm": "Удалить этот элемент из истории загрузок? Файлы, сохранённые вне библиотеки приложения, останутся на устройстве."
+      "removeFromHistoryConfirm": "Удалить этот элемент из истории загрузок? Файлы, сохранённые вне библиотеки приложения, останутся на устройстве.",
+      "deleteLocalFileHistoryPending": "Файл удалён, но Translator не смог до конца обновить историю загрузок. Повторная попытка будет выполнена автоматически.",
+      "removeHistoryFailed": "Не удалось удалить эту загрузку из истории.",
+      "storedInAppLibrary": "Хранится в библиотеке приложения"
     },
     "downloadAndTranslate": "Скачать и перевести",
     "downloadAndTranscribe": "Скачать и расшифровать",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ Перевести",
     "autoRunStepDownload": "Скачать",
     "autoRunStepTranscribe": "Расшифровка",
-    "autoRunStepTranslate": "Перевести на {{language}}"
+    "autoRunStepTranslate": "Перевести на {{language}}",
+    "captionRecoveryKeepVideo": "Оставить текущее видео",
+    "captionRecoveryOpenCaptions": "Открыть субтитры",
+    "captionRecoverySwitchPrompt": "Translator восстановил автоматические субтитры YouTube, но видео по URL недоступно. Если открыть их, текущее видео будет отключено.",
+    "captionRecoverySwitchTitle": "Открыть субтитры без текущего видео?"
   },
   "subtitles": {
     "outputLanguage": "Язык вывода",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}} мин видео",
     "translateEstimateByo": "Свой ключ",
     "qualityBadge": "(выс.)",
-    "cancel_confirmation": "Вы уверены, что хотите отменить процесс перевода субтитров? Весь прогресс будет потерян, и вам придется начать заново."
+    "cancel_confirmation": "Вы уверены, что хотите отменить процесс перевода субтитров? Весь прогресс будет потерян, и вам придется начать заново.",
+    "dubCostHint": "Голос ElevenLabs: ~{{rate}} кредитов за минуту речи. Эта оценка показывается до начала дубляжа."
   },
   "summary": {
     "title": "Сводка транскрипта",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "Объединённый момент готов",
     "downloadCombined": "Скачать объединённый клип",
     "saveCombinedDialogTitle": "Сохранить объединённый клип моментов",
-    "combinedCutFailed": "Не удалось вырезать объединённые моменты: {{message}}"
+    "combinedCutFailed": "Не удалось вырезать объединённые моменты: {{message}}",
+    "highlightsInsufficientCredits": "Сводка создана, но извлечение ярких моментов остановлено: закончились кредиты.",
+    "highlightsPartialWarning": "Яркие моменты извлечены частично и могут быть неполными. Создайте заново, чтобы обновить.",
+    "highlightsPartialWithReason": "Сводка создана, но яркие моменты извлечены частично: {{message}}"
   },
   "panel": {
     "new": "новое",
@@ -481,7 +496,12 @@
       "listCopy": "Редактируйте исходный текст, перевод, тайминг и действия по строкам прямо здесь.",
       "originalLabel": "Оригинал",
       "translationLabel": "Перевод",
-      "mergeNeedsVideoCopy": "Подключите исходное видео перед запуском экспорта с прожигом."
+      "mergeNeedsVideoCopy": "Подключите исходное видео перед запуском экспорта с прожигом.",
+      "automaticCaptionsCopy": "Загрузка видео заблокирована (HTTP 403). Это автоматические субтитры YouTube, а не новая транскрипция. Вы уже можете редактировать, переводить и экспортировать SRT. Подключите медиафайл для предпросмотра или прожига субтитров.",
+      "automaticCaptionsCopyWithMedia": "Загрузка видео по URL заблокирована (HTTP 403). Это автоматические субтитры YouTube, а не новая транскрипция. Подключённый медиафайл доступен для предпросмотра и прожига.",
+      "automaticCaptionsPill": "Автоматические субтитры YouTube",
+      "automaticCaptionsTitle": "Автоматические субтитры YouTube",
+      "highlightEditingLocked": "Идёт создание ярких моментов, редактирование заблокировано"
     },
     "item": {
       "seek": "Перейти",
@@ -655,7 +675,9 @@
       "option2Title": "Вариант 2: Anthropic + ElevenLabs",
       "economicsTitle": "Почему это того стоит",
       "economicsBody": "Кредиты Stage5 оптимизируют удобство (без настройки). BYO платит провайдерам напрямую—обычно на ~30–50% дешевле в зависимости от вашего пакета.",
-      "encryptionUnavailable": "Безопасное хранилище недоступно в этой системе. API-ключи нельзя сохранить."
+      "encryptionUnavailable": "Безопасное хранилище недоступно в этой системе. API-ключи нельзя сохранить.",
+      "checkoutOpen": "Оплата открыта в браузере…",
+      "checkoutOpenHint": "Завершите оплату в браузере. Мы автоматически разблокируем BYO, когда платёж пройдёт."
     },
     "byoPreferences": {
       "title": "Настройки провайдера",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "Требует доступа к OpenAI BYO и наличия ключа API.",
       "summaryRequiresAnthropic": "Требует доступа к Anthropic BYO и наличия ключа API.",
       "translationReview": "Перевод (Проверка)",
-      "transcriptionRequiresElevenLabs": "Для транскрипции используется только ElevenLabs Scribe. Добавьте API-ключ ElevenLabs, чтобы транскрибировать со своими ключами. Без него транскрипция использует кредиты Stage5, которые не расходуются, пока включены ваши API-ключи. Ваш ключ OpenAI по-прежнему используется для перевода."
+      "transcriptionRequiresElevenLabs": "Для транскрипции используется только ElevenLabs Scribe. Добавьте API-ключ ElevenLabs, чтобы транскрибировать со своими ключами. Без него транскрипция использует кредиты Stage5, которые не расходуются, пока включены ваши API-ключи. Ваш ключ OpenAI по-прежнему используется для перевода.",
+      "dubbingRequiresElevenLabs": "Дубляж использует только ElevenLabs. Добавьте API-ключ ElevenLabs, чтобы делать дубляж со своими ключами. Без него дубляж использует кредиты Stage5, которые не расходуются, пока включены ваши API-ключи.",
+      "runtimeFallback": "Резервный вариант во время работы в режиме API-ключей",
+      "videoSuggestionLegacyFollowDraft": "Сохранена прежняя настройка BYO: используется ваша модель черновика перевода, пока вы не выберете модель напрямую.",
+      "videoSuggestionLegacyFollowReview": "Сохранена прежняя настройка BYO: используется ваша модель проверки перевода, пока вы не выберете модель напрямую."
     },
     "apiKeyGuide": {
       "title": "Как получить API-ключи",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× больше минут за доллар",
     "checkoutWaiting": "Завершите оплату в браузере. Минуты появятся здесь сами.",
     "checkoutNote": "Разовый платёж через Stripe в браузере. Без аккаунта и подписки. Минуты зачислятся сами.",
-    "dubbingNote": "Перевод за кредиты добавляет около 10% за минуту; озвучка расходует больше."
+    "dubbingNote": "Перевод за кредиты добавляет около 10% за минуту; озвучка расходует больше.",
+    "iCancelledCheckout": "Я отменил оплату",
+    "checkoutStartFailed": "Не удалось начать оплату. Проверьте подключение и попробуйте снова."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "Начать озвучку?",
       "message": "Эта озвучка использует около {{cost}} из ваших {{balance}} кредитов. Генерация голоса стоит намного дороже перевода."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "Отменить и открыть субтитры",
+      "message": "У вас уже открыты субтитры. Сохраните их или отмените изменения, прежде чем заменить их автоматическими субтитрами YouTube.",
+      "saveAndOpen": "Сохранить и открыть субтитры",
+      "title": "Открыть восстановленные автоматические субтитры?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "Очистка субтитров ({{done}}/{{total}})",
     "translationCleanup": "Очистка переведённых субтитров ({{done}}/{{total}})",
     "reviewingSlow": "Проверка (это может занять время...) {{done}}/{{total}}",
-    "reviewingRange": "Проверка {{start}}–{{end}} (из {{total}})"
+    "reviewingRange": "Проверка {{start}}–{{end}} (из {{total}})",
+    "legacy": {
+      "aligningVoices": "Выравнивание голосов {{done}}/{{total}}…",
+      "analyzingSection": "Поиск ярких моментов в части {{done}} из {{total}}…",
+      "analyzingVideo": "Проверка видео…",
+      "assemblingOverlay": "Наложение субтитров на видео…",
+      "audioExtracted": "Аудио готово",
+      "balancingAudio": "Баланс голоса и фона…",
+      "cannotCancelSave": "Почти готово. Это последнее сохранение нельзя отменить",
+      "captionsOnlyReady": "Субтитры YouTube готовы (само видео загрузить не удалось)",
+      "checkingDownloader": "Проверка загрузчика…",
+      "chooseSaveLocation": "Выберите, куда сохранить видео…",
+      "detectingSpeech": "Поиск мест, где звучит речь…",
+      "downloadCancelled": "Загрузка отменена",
+      "downloadComplete": "Загрузка завершена",
+      "downloadVerifying": "Загружено, проверка файла…",
+      "drawingFrames": "Отрисовка кадров субтитров {{done}}/{{total}}…",
+      "dubAudioReady": "Голосовая дорожка готова",
+      "dubComplete": "Дубляж завершён",
+      "dubbedVideoReady": "Видео с дубляжом готово",
+      "encodingComplete": "Видео готово",
+      "encodingVideo": "Создание видео…",
+      "errorRecovery": "Исправление нескольких строк…",
+      "extractingAudio": "Извлечение аудио…",
+      "extractingAudioPercent": "Извлечение аудио ({{percent}}%)…",
+      "fetchingInfo": "Получение сведений о видео…",
+      "finalAdjustments": "Финальные штрихи…",
+      "finalizingSubtitles": "Завершение субтитров…",
+      "finishingFile": "Завершение видеофайла…",
+      "generatingVoices": "Создание голосов {{done}}/{{total}}…",
+      "mergeComplete": "Видео с субтитрами готово",
+      "mergeFailed": "Не удалось создать видео",
+      "mergingFormats": "Объединение видео и аудио…",
+      "postProcessing": "Завершение…",
+      "preparingAudioExtraction": "Подготовка аудио ({{minutes}} мин видео)…",
+      "preparingDownload": "Подготовка загрузки…",
+      "preparingDubLines": "Подготовка строк для дубляжа: {{count}}…",
+      "preparingHighlights": "Подготовка к выбору ярких моментов…",
+      "preparingOutput": "Подготовка папки для результата…",
+      "preparingTranscript": "Чтение транскрипции…",
+      "preparingVideoEngine": "Подготовка видеоинструментов…",
+      "preparingVoiceClips": "Подготовка голосовых фрагментов: {{count}}…",
+      "rateLimited": "Сервис занят, повторная попытка…",
+      "reusingSummary": "Выбор ярких моментов по сводке…",
+      "saving": "Сохранение…",
+      "sectionAnalyzed": "Часть {{done}} проверена",
+      "sectionHighlights": "Найдены яркие моменты в части {{done}}",
+      "sectionSummarized": "Часть {{done}} из {{total}} обработана для сводки",
+      "selectingHighlights": "Выбор ярких моментов в части {{done}} из {{total}}…",
+      "settingUpDownloader": "Настройка загрузчика…",
+      "skippingSameLanguage": "Уже на этом языке, перевод не нужен",
+      "starting": "Запуск…",
+      "startingDownload": "Начало загрузки…",
+      "subtitleLayerReady": "Слой субтитров готов",
+      "summarizingSection": "Сводка части {{done}} из {{total}}…",
+      "summaryReady": "Сводка готова",
+      "transcribingParts": "Транскрипция {{done}}/{{total}}…",
+      "transcriptionComplete": "Транскрипция завершена",
+      "translatingLines": "Перевод {{done}}/{{total}}…",
+      "uploading": "Отправка…",
+      "validating": "Проверка…",
+      "videoBlockedCaptions": "Видео загрузить не удалось; ищем субтитры YouTube…",
+      "voiceTrackAssembled": "Голосовая дорожка собрана",
+      "voiceTrackReady": "Голосовая дорожка готова",
+      "writingSummary": "Составление сводки…"
+    },
+    "listening": "Прослушивание видео…",
+    "mergeFinishSaveBeforeReload": "Дождитесь сохранения объединённого видео перед перезагрузкой.",
+    "mergeSavePhaseNoCancel": "Этот этап сохранения сейчас нельзя отменить.",
+    "mergeWaitForCancelBeforeReload": "Дождитесь завершения отмены объединения перед перезагрузкой.",
+    "preparingTranscription": "Подготовка к прослушиванию…",
+    "restartingTranscription": "Повторный запуск транскрипции…",
+    "resumingTranscription": "Продолжение с места остановки…"
   },
   "messages": {
     "fileSaved": "Файл сохранен:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "Покрыто вашими минутами",
     "preview": "Первые {{minutes}} мин бесплатно · всё видео {{price}}",
     "pack": "Всё видео {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Кадрирование и субтитры для Shorts",
+    "intro": "Кадрируйте каждого говорящего, разделяйте на сменах кадра и подгоняйте короткие фразы субтитров под речь. Время ниже отсчитывается от начала этого клипа.",
+    "previewTime": "Время превью Short",
+    "speakerLabel": "Метка говорящего или темы",
+    "splitShot": "Разделить кадр по точке воспроизведения",
+    "joinShot": "Объединить с предыдущим кадром",
+    "preview": "Превью",
+    "emphasize": "Выделить эту фразу",
+    "splitPhrase": "Разделить фразу",
+    "removePhrase": "Удалить фразу",
+    "addPhrase": "Добавить фразу",
+    "removeStyling": "Убрать оформление",
+    "saveSelectionFirst": "Сначала сохраните выбор момента.",
+    "closeEdit": "Закрыть редактирование",
+    "editFraming": "Изменить кадрирование и субтитры",
+    "styleShort": "Оформить этот Short",
+    "horizontalFocus": "Фокус по горизонтали",
+    "verticalFocus": "Фокус по вертикали",
+    "zoom": "Масштаб",
+    "from": "С",
+    "to": "до",
+    "saving": "Сохранение…",
+    "save": "Сохранить правку Short"
   }
 }

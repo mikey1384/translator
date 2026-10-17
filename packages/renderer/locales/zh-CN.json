@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "磁盘空间不足，无法完成合并。请释放空间后重试。",
       "noSourceVideo": "无源视频",
       "noSubtitlesLoaded": "未加载字幕",
-      "failedToLoadSRT": "加载SRT文件失败"
+      "failedToLoadSRT": "加载SRT文件失败",
+      "sourceVideoUnavailable": "原视频已被删除或无法访问。请重新打开后再试。",
+      "unknown": "出了点问题，请重试。"
     },
     "success": "成功",
     "settings": "设置",
@@ -92,7 +94,9 @@
     "continue": "继续",
     "send": "发送",
     "dismiss": "关闭",
-    "moreActions": "更多操作"
+    "moreActions": "更多操作",
+    "installingUpdate": "正在安装更新...",
+    "installingUpdateShort": "正在安装"
   },
   "errors": {
     "needCookies": "YouTube 要求进行人机验证。点击「连接」继续。",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "删除文件和历史记录",
       "deleteFileAndHistoryConfirm": "要永久删除这个已下载文件及其历史记录吗？此操作无法撤销。",
       "removeFromHistory": "从历史记录中移除",
-      "removeFromHistoryConfirm": "要从下载历史记录中移除此项目吗？保存在应用媒体库之外的文件将留在设备上。"
+      "removeFromHistoryConfirm": "要从下载历史记录中移除此项目吗？保存在应用媒体库之外的文件将留在设备上。",
+      "deleteLocalFileHistoryPending": "文件已删除，但 Translator 未能完成下载历史记录的更新。它会自动重试。",
+      "removeHistoryFailed": "无法从历史记录中移除此下载。",
+      "storedInAppLibrary": "已存储在应用媒体库"
     },
     "downloadAndTranslate": "下载并翻译",
     "downloadAndTranscribe": "下载并转录",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ 翻译",
     "autoRunStepDownload": "下载",
     "autoRunStepTranscribe": "转录",
-    "autoRunStepTranslate": "翻译为 {{language}}"
+    "autoRunStepTranslate": "翻译为 {{language}}",
+    "captionRecoveryKeepVideo": "保留当前视频",
+    "captionRecoveryOpenCaptions": "打开字幕",
+    "captionRecoverySwitchPrompt": "Translator 已恢复 YouTube 自动字幕，但 URL 视频不可用。打开字幕将卸载当前视频。",
+    "captionRecoverySwitchTitle": "不带当前视频打开字幕？"
   },
   "subtitles": {
     "outputLanguage": "输出语言",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}分钟视频",
     "translateEstimateByo": "BYO密钥",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "确定要取消字幕翻译过程吗？所有进度将丢失，您需要重新开始。"
+    "cancel_confirmation": "确定要取消字幕翻译过程吗？所有进度将丢失，您需要重新开始。",
+    "dubCostHint": "ElevenLabs 配音：每分钟语音 ~{{rate}} 积分。此估算会在配音开始前显示。"
   },
   "summary": {
     "title": "转录摘要",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "合并精彩片段准备就绪",
     "downloadCombined": "下载合并剪辑",
     "saveCombinedDialogTitle": "保存合并的精彩片段",
-    "combinedCutFailed": "合并精彩片段剪辑失败：{{message}}"
+    "combinedCutFailed": "合并精彩片段剪辑失败：{{message}}",
+    "highlightsInsufficientCredits": "摘要已生成，但由于积分用尽，高光片段提取已停止。",
+    "highlightsPartialWarning": "高光片段仅部分提取，可能不完整。请重新生成以刷新。",
+    "highlightsPartialWithReason": "摘要已生成，但高光片段仅部分提取：{{message}}"
   },
   "panel": {
     "new": "新",
@@ -481,7 +496,12 @@
       "listCopy": "可直接原位编辑原文、译文、时间轴和行级操作。",
       "originalLabel": "原文",
       "translationLabel": "译文",
-      "mergeNeedsVideoCopy": "开始导出烧录版前，请先加载源视频。"
+      "mergeNeedsVideoCopy": "开始导出烧录版前，请先加载源视频。",
+      "automaticCaptionsCopy": "视频下载被阻止（HTTP 403）。这些是 YouTube 自动字幕，并非重新转录。你现在可以编辑、翻译并导出 SRT。加载媒体即可预览或烧录字幕。",
+      "automaticCaptionsCopyWithMedia": "URL 视频下载被阻止（HTTP 403）。这些是 YouTube 自动字幕，并非重新转录。已加载的媒体可用于预览和烧录。",
+      "automaticCaptionsPill": "YouTube 自动字幕",
+      "automaticCaptionsTitle": "YouTube 自动字幕",
+      "highlightEditingLocked": "正在生成高光片段，编辑已锁定"
     },
     "item": {
       "seek": "定位",
@@ -655,7 +675,9 @@
       "option2Title": "选项2：Anthropic + ElevenLabs",
       "economicsTitle": "为什么值得",
       "economicsBody": "Stage5积分优化了便利性（无需设置）。BYO直接支付给提供商——根据您的套餐，通常便宜约30-50%。",
-      "encryptionUnavailable": "此系统不支持安全存储，无法保存 API 密钥。"
+      "encryptionUnavailable": "此系统不支持安全存储，无法保存 API 密钥。",
+      "checkoutOpen": "已在浏览器中打开付款页面…",
+      "checkoutOpenHint": "请在浏览器中完成付款。付款到账后，我们会自动解锁 BYO。"
     },
     "byoPreferences": {
       "title": "提供商偏好",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "需要 OpenAI BYO 访问权限和 API 密钥。",
       "summaryRequiresAnthropic": "需要 Anthropic BYO 访问权限和 API 密钥。",
       "translationReview": "翻译（审核）",
-      "transcriptionRequiresElevenLabs": "转录仅使用 ElevenLabs Scribe。添加 ElevenLabs API 密钥即可使用您自己的密钥进行转录。如果没有，转录将使用 Stage5 积分，而在使用您的 API 密钥时不会消耗 Stage5 积分。您的 OpenAI 密钥仍用于翻译。"
+      "transcriptionRequiresElevenLabs": "转录仅使用 ElevenLabs Scribe。添加 ElevenLabs API 密钥即可使用您自己的密钥进行转录。如果没有，转录将使用 Stage5 积分，而在使用您的 API 密钥时不会消耗 Stage5 积分。您的 OpenAI 密钥仍用于翻译。",
+      "dubbingRequiresElevenLabs": "配音仅使用 ElevenLabs。添加 ElevenLabs API 密钥即可用你自己的密钥配音。没有密钥时，配音会使用 Stage5 积分；而在 API 密钥开启期间不会使用积分。",
+      "runtimeFallback": "API 密钥模式下的运行时备用方案",
+      "videoSuggestionLegacyFollowDraft": "已保留旧版 BYO 设置：在你直接选择模型之前，将沿用你的草稿翻译模型。",
+      "videoSuggestionLegacyFollowReview": "已保留旧版 BYO 设置：在你直接选择模型之前，将沿用你的审阅翻译模型。"
     },
     "apiKeyGuide": {
       "title": "如何获取API密钥",
@@ -708,7 +734,7 @@
         "step1": "访问",
         "step2": "注册或登录您的账户",
         "step3": "在左侧边栏中导航到",
-        "step3b": "",
+        "step3b": "页面",
         "step4": "点击",
         "step5": "在账单设置中添加付款方式（使用API必需）",
         "step6": "复制密钥（以sk-开头）并粘贴到Stage5中",
@@ -719,7 +745,7 @@
         "step1": "访问",
         "step2": "注册或登录您的账户",
         "step3": "在设置中前往",
-        "step3b": "",
+        "step3b": "页面",
         "step4": "点击",
         "step5": "在计划和账单中添加付款方式（使用API必需）",
         "step6": "复制密钥（以sk-ant-开头）并粘贴到Stage5中",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "每美元 {{multiplier}}× 时长",
     "checkoutWaiting": "请在浏览器中完成付款。时长会自动显示在这里。",
     "checkoutNote": "通过 Stripe 在浏览器中一次性付款。无需账户或订阅。时长会自动到账。",
-    "dubbingNote": "使用额度翻译每分钟约多消耗 10%；配音消耗更多。"
+    "dubbingNote": "使用额度翻译每分钟约多消耗 10%；配音消耗更多。",
+    "iCancelledCheckout": "我已取消付款",
+    "checkoutStartFailed": "无法开始付款。请检查网络连接后重试。"
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "开始配音？",
       "message": "此次配音将使用您 {{balance}} 积分中的约 {{cost}}。生成语音的费用远高于翻译。"
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "放弃并打开字幕",
+      "message": "你已打开字幕。用 YouTube 自动字幕替换前，请先保存或放弃当前字幕。",
+      "saveAndOpen": "保存并打开字幕",
+      "title": "打开恢复的自动字幕？"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "清理字幕中 ({{done}}/{{total}})",
     "translationCleanup": "清理翻译字幕中 ({{done}}/{{total}})",
     "reviewingSlow": "检查中（可能需要一些时间…）{{done}}/{{total}}",
-    "reviewingRange": "审阅 {{start}}–{{end}}（共 {{total}} 条）"
+    "reviewingRange": "审阅 {{start}}–{{end}}（共 {{total}} 条）",
+    "legacy": {
+      "aligningVoices": "正在对齐配音 {{done}}/{{total}}…",
+      "analyzingSection": "正在第 {{done}}/{{total}} 部分中寻找高光片段…",
+      "analyzingVideo": "正在检查视频…",
+      "assemblingOverlay": "正在将字幕绘制到视频上…",
+      "audioExtracted": "音频已就绪",
+      "balancingAudio": "正在平衡人声与背景音…",
+      "cannotCancelSave": "即将完成。最后这次保存无法取消",
+      "captionsOnlyReady": "YouTube 字幕已就绪（视频本身无法下载）",
+      "checkingDownloader": "正在检查下载器…",
+      "chooseSaveLocation": "请选择视频的保存位置…",
+      "detectingSpeech": "正在查找说话的片段…",
+      "downloadCancelled": "下载已取消",
+      "downloadComplete": "下载完成",
+      "downloadVerifying": "已下载，正在检查文件…",
+      "drawingFrames": "正在绘制字幕帧 {{done}}/{{total}}…",
+      "dubAudioReady": "配音音轨已就绪",
+      "dubComplete": "配音完成",
+      "dubbedVideoReady": "配音视频已就绪",
+      "encodingComplete": "视频已就绪",
+      "encodingVideo": "正在生成视频…",
+      "errorRecovery": "正在修正几行…",
+      "extractingAudio": "正在提取音频…",
+      "extractingAudioPercent": "正在提取音频（{{percent}}%）…",
+      "fetchingInfo": "正在获取视频信息…",
+      "finalAdjustments": "正在进行最后调整…",
+      "finalizingSubtitles": "正在完成字幕…",
+      "finishingFile": "正在完成视频文件…",
+      "generatingVoices": "正在生成配音 {{done}}/{{total}}…",
+      "mergeComplete": "带字幕的视频已就绪",
+      "mergeFailed": "视频生成失败",
+      "mergingFormats": "正在合并视频和音频…",
+      "postProcessing": "正在收尾…",
+      "preparingAudioExtraction": "正在准备音频（{{minutes}} 分钟视频）…",
+      "preparingDownload": "正在准备下载…",
+      "preparingDubLines": "正在准备 {{count}} 行配音…",
+      "preparingHighlights": "正在准备挑选高光片段…",
+      "preparingOutput": "正在准备输出文件夹…",
+      "preparingTranscript": "正在读取转录内容…",
+      "preparingVideoEngine": "正在准备视频工具…",
+      "preparingVoiceClips": "正在准备 {{count}} 段配音片段…",
+      "rateLimited": "当前繁忙，正在重试…",
+      "reusingSummary": "正在使用摘要挑选高光片段…",
+      "saving": "正在保存…",
+      "sectionAnalyzed": "第 {{done}} 部分已检查",
+      "sectionHighlights": "已在第 {{done}} 部分找到高光片段",
+      "sectionSummarized": "第 {{done}}/{{total}} 部分已摘要",
+      "selectingHighlights": "正在第 {{done}}/{{total}} 部分中挑选高光片段…",
+      "settingUpDownloader": "正在设置下载器…",
+      "skippingSameLanguage": "已是该语言，无需翻译",
+      "starting": "正在开始…",
+      "startingDownload": "正在开始下载…",
+      "subtitleLayerReady": "字幕图层已就绪",
+      "summarizingSection": "正在摘要第 {{done}}/{{total}} 部分…",
+      "summaryReady": "摘要已就绪",
+      "transcribingParts": "正在转录 {{done}}/{{total}}…",
+      "transcriptionComplete": "转录完成",
+      "translatingLines": "正在翻译 {{done}}/{{total}}…",
+      "uploading": "正在上传…",
+      "validating": "正在检查…",
+      "videoBlockedCaptions": "视频无法下载，正在改为查找 YouTube 字幕…",
+      "voiceTrackAssembled": "配音音轨已合成",
+      "voiceTrackReady": "配音音轨已就绪",
+      "writingSummary": "正在撰写摘要…"
+    },
+    "listening": "正在聆听视频…",
+    "mergeFinishSaveBeforeReload": "请先完成合并视频的保存，再重新加载。",
+    "mergeSavePhaseNoCancel": "此保存步骤现在无法取消。",
+    "mergeWaitForCancelBeforeReload": "请等待合并取消完成后再重新加载。",
+    "preparingTranscription": "正在准备聆听…",
+    "restartingTranscription": "正在重新开始转录…",
+    "resumingTranscription": "正在从中断处继续…"
   },
   "messages": {
     "fileSaved": "文件已保存：\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "您的分钟数已涵盖",
     "preview": "前 {{minutes}} 分钟免费 · 整个视频 {{price}}",
     "pack": "整个视频 {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Shorts 构图与字幕",
+    "intro": "为每位说话者构图，在镜头切换处拆分，并让简短的字幕短语与语音对齐。下方时间从此片段开头算起。",
+    "previewTime": "Short 预览时间",
+    "speakerLabel": "说话者或主题标签",
+    "splitShot": "在播放位置拆分镜头",
+    "joinShot": "与上一个镜头合并",
+    "preview": "预览",
+    "emphasize": "强调此短语",
+    "splitPhrase": "拆分短语",
+    "removePhrase": "删除短语",
+    "addPhrase": "添加短语",
+    "removeStyling": "移除样式",
+    "saveSelectionFirst": "请先保存高光片段选择。",
+    "closeEdit": "关闭编辑",
+    "editFraming": "编辑构图与字幕",
+    "styleShort": "为此 Short 设置样式",
+    "horizontalFocus": "水平焦点",
+    "verticalFocus": "垂直焦点",
+    "zoom": "缩放",
+    "from": "从",
+    "to": "到",
+    "saving": "正在保存…",
+    "save": "保存 Short 编辑"
   }
 }

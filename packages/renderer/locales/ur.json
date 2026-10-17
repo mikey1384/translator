@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "ضم مکمل کرنے کے لیے کافی ڈسک جگہ نہیں ہے۔ براہ کرم جگہ خالی کریں اور دوبارہ کوشش کریں۔",
       "noSourceVideo": "سورس ویڈیو موجود نہیں",
       "noSubtitlesLoaded": "سب ٹائٹل لوڈ نہیں ہوئے",
-      "failedToLoadSRT": "SRT فائل لوڈ کرنے میں ناکام"
+      "failedToLoadSRT": "SRT فائل لوڈ کرنے میں ناکام",
+      "sourceVideoUnavailable": "اصل ویڈیو ہٹا دی گئی ہے یا اب دستیاب نہیں ہے۔ اسے دوبارہ کھولیں اور پھر کوشش کریں۔",
+      "unknown": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔"
     },
     "success": "کامیابی",
     "settings": "ترتیبات",
@@ -92,7 +94,9 @@
     "continue": "جاری رکھیں",
     "send": "بھیجیں",
     "dismiss": "بند کریں",
-    "moreActions": "مزید اقدامات"
+    "moreActions": "مزید اقدامات",
+    "installingUpdate": "اپ ڈیٹ انسٹال ہو رہی ہے...",
+    "installingUpdateShort": "انسٹال ہو رہی ہے"
   },
   "errors": {
     "needCookies": "YouTube نے انسانی تصدیق کی درخواست کی۔ جاری رکھنے کے لیے کنیکٹ پر کلک کریں۔",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "فائل اور تاریخ حذف کریں",
       "deleteFileAndHistoryConfirm": "اس ڈاؤن لوڈ شدہ فائل اور اس کے تاریخی اندراج کو مستقل طور پر حذف کریں؟ یہ عمل واپس نہیں ہو سکتا۔",
       "removeFromHistory": "تاریخ سے ہٹائیں",
-      "removeFromHistoryConfirm": "اس آئٹم کو ڈاؤن لوڈ تاریخ سے ہٹائیں؟ ایپ لائبریری سے باہر محفوظ فائلیں ڈیوائس پر رہیں گی۔"
+      "removeFromHistoryConfirm": "اس آئٹم کو ڈاؤن لوڈ تاریخ سے ہٹائیں؟ ایپ لائبریری سے باہر محفوظ فائلیں ڈیوائس پر رہیں گی۔",
+      "deleteLocalFileHistoryPending": "فائل حذف ہو گئی، لیکن Translator ڈاؤن لوڈ تاریخ کو اپ ڈیٹ کرنا مکمل نہ کر سکا۔ یہ خود بخود دوبارہ کوشش کرے گا۔",
+      "removeHistoryFailed": "اس ڈاؤن لوڈ کو تاریخ سے ہٹایا نہیں جا سکا۔",
+      "storedInAppLibrary": "ایپ لائبریری میں محفوظ"
     },
     "downloadAndTranslate": "ڈاؤن لوڈ اور ترجمہ کریں",
     "downloadAndTranscribe": "ڈاؤن لوڈ اور نقل کریں",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ ترجمہ",
     "autoRunStepDownload": "ڈاؤن لوڈ",
     "autoRunStepTranscribe": "نقل کریں",
-    "autoRunStepTranslate": "{{language}} میں ترجمہ کریں"
+    "autoRunStepTranslate": "{{language}} میں ترجمہ کریں",
+    "captionRecoveryKeepVideo": "موجودہ ویڈیو رکھیں",
+    "captionRecoveryOpenCaptions": "کیپشنز کھولیں",
+    "captionRecoverySwitchPrompt": "Translator نے YouTube کے خودکار کیپشنز بحال کر لیے، لیکن URL والی ویڈیو دستیاب نہیں ہے۔ انہیں کھولنے سے موجودہ ویڈیو ان ماؤنٹ ہو جائے گی۔",
+    "captionRecoverySwitchTitle": "موجودہ ویڈیو کے بغیر کیپشنز کھولیں؟"
   },
   "subtitles": {
     "outputLanguage": "آؤٹ پٹ زبان",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}} م ویڈیو",
     "translateEstimateByo": "BYO کلید",
     "qualityBadge": "(اعلیٰ معیار)",
-    "cancel_confirmation": "کیا آپ واقعی سب ٹائٹل ترجمہ عمل منسوخ کرنا چاہتے ہیں؟ کوئی بھی پیشرفت ضائع ہو جائے گی اور آپ کو دوبارہ شروع کرنا ہوگا۔"
+    "cancel_confirmation": "کیا آپ واقعی سب ٹائٹل ترجمہ عمل منسوخ کرنا چاہتے ہیں؟ کوئی بھی پیشرفت ضائع ہو جائے گی اور آپ کو دوبارہ شروع کرنا ہوگا۔",
+    "dubCostHint": "ElevenLabs آواز: بولنے کے فی منٹ ~{{rate}} کریڈٹس۔ یہ اندازہ ڈبنگ شروع ہونے سے پہلے دکھایا جاتا ہے۔"
   },
   "summary": {
     "title": "ٹرانسکرپٹ کا خلاصہ",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "یکجا ہائی لائٹ تیار ہے",
     "downloadCombined": "یکجا کلپ ڈاؤن لوڈ کریں",
     "saveCombinedDialogTitle": "یکجا ہائی لائٹ کلپ محفوظ کریں",
-    "combinedCutFailed": "یکجا ہائی لائٹس کاٹنے میں ناکام: {{message}}"
+    "combinedCutFailed": "یکجا ہائی لائٹس کاٹنے میں ناکام: {{message}}",
+    "highlightsInsufficientCredits": "خلاصہ بن گیا، لیکن کریڈٹس ختم ہونے کی وجہ سے ہائی لائٹس نکالنا رک گیا۔",
+    "highlightsPartialWarning": "ہائی لائٹس جزوی طور پر نکالی گئیں۔ یہ ہائی لائٹس نامکمل ہو سکتی ہیں۔ تازہ کرنے کے لیے دوبارہ بنائیں۔",
+    "highlightsPartialWithReason": "خلاصہ بن گیا، لیکن ہائی لائٹس جزوی طور پر نکالی گئیں: {{message}}"
   },
   "panel": {
     "new": "نیا",
@@ -481,7 +496,12 @@
       "listCopy": "سورس متن، ترجمہ، ٹائمنگ اور ہر سطر کی کارروائیاں یہیں براہ راست ترمیم کریں۔",
       "originalLabel": "اصل",
       "translationLabel": "ترجمہ",
-      "mergeNeedsVideoCopy": "burn-in ایکسپورٹ شروع کرنے سے پہلے سورس ویڈیو منسلک کریں۔"
+      "mergeNeedsVideoCopy": "burn-in ایکسپورٹ شروع کرنے سے پہلے سورس ویڈیو منسلک کریں۔",
+      "automaticCaptionsCopy": "ویڈیو ڈاؤن لوڈ روک دیا گیا (HTTP 403)۔ یہ YouTube کے خودکار کیپشنز ہیں—نئی ٹرانسکرپشن نہیں۔ آپ ابھی ترمیم، ترجمہ اور SRT ایکسپورٹ کر سکتے ہیں۔ پیش نظارہ یا سب ٹائٹل برن کرنے کے لیے میڈیا ماؤنٹ کریں۔",
+      "automaticCaptionsCopyWithMedia": "URL والی ویڈیو کا ڈاؤن لوڈ روک دیا گیا (HTTP 403)۔ یہ YouTube کے خودکار کیپشنز ہیں—نئی ٹرانسکرپشن نہیں۔ ماؤنٹ شدہ میڈیا پیش نظارہ اور برن اِن کے لیے دستیاب ہے۔",
+      "automaticCaptionsPill": "YouTube کے خودکار کیپشنز",
+      "automaticCaptionsTitle": "YouTube کے خودکار کیپشنز",
+      "highlightEditingLocked": "ہائی لائٹس بن رہی ہیں، ترمیم مقفل ہے"
     },
     "item": {
       "seek": "تلاش کریں",
@@ -655,7 +675,9 @@
       "option2Title": "آپشن 2: Anthropic + ElevenLabs",
       "economicsTitle": "یہ کیوں قیمتی ہے",
       "economicsBody": "Stage5 کریڈٹس سہولت کے لیے بہتر بنائے گئے ہیں (کوئی سیٹ اپ نہیں)۔ BYO فراہم کنندگان کو براہ راست ادائیگی کرتا ہے—عام طور پر آپ کے پیک کے لحاظ سے ~30-50% سستا۔",
-      "encryptionUnavailable": "اس سسٹم پر محفوظ اسٹوریج دستیاب نہیں ہے۔ API keys محفوظ نہیں کی جا سکتیں۔"
+      "encryptionUnavailable": "اس سسٹم پر محفوظ اسٹوریج دستیاب نہیں ہے۔ API keys محفوظ نہیں کی جا سکتیں۔",
+      "checkoutOpen": "ادائیگی براؤزر میں کھلی ہے…",
+      "checkoutOpenHint": "اپنے براؤزر میں ادائیگی مکمل کریں۔ ادائیگی کی تصدیق ہوتے ہی ہم BYO خود بخود ان لاک کر دیں گے۔"
     },
     "byoPreferences": {
       "title": "فراہم کنندہ کی ترجیحات",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "OpenAI BYO تک رسائی اور API key درکار ہیں۔",
       "summaryRequiresAnthropic": "Anthropic BYO تک رسائی اور API key درکار ہیں۔",
       "translationReview": "ترجمہ (جائزہ)",
-      "transcriptionRequiresElevenLabs": "ٹرانسکرپشن صرف ElevenLabs Scribe استعمال کرتی ہے۔ اپنی کلیدوں سے ٹرانسکرائب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر، ٹرانسکرپشن Stage5 کریڈٹس استعمال کرتی ہے، جو آپ کی API کلیدیں آن ہونے کے دوران استعمال نہیں ہوتے۔ آپ کی OpenAI کلید اب بھی ترجمے کے لیے استعمال ہوتی ہے۔"
+      "transcriptionRequiresElevenLabs": "ٹرانسکرپشن صرف ElevenLabs Scribe استعمال کرتی ہے۔ اپنی کلیدوں سے ٹرانسکرائب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر، ٹرانسکرپشن Stage5 کریڈٹس استعمال کرتی ہے، جو آپ کی API کلیدیں آن ہونے کے دوران استعمال نہیں ہوتے۔ آپ کی OpenAI کلید اب بھی ترجمے کے لیے استعمال ہوتی ہے۔",
+      "dubbingRequiresElevenLabs": "ڈبنگ صرف ElevenLabs استعمال کرتی ہے۔ اپنی کلیدوں سے ڈب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر ڈبنگ Stage5 کریڈٹس استعمال کرتی ہے، جو آپ کی API کلیدیں آن ہونے پر استعمال نہیں ہوتے۔",
+      "runtimeFallback": "API کلید موڈ میں رن ٹائم متبادل",
+      "videoSuggestionLegacyFollowDraft": "پرانی BYO ترتیب برقرار ہے: جب تک آپ براہ راست کوئی ماڈل منتخب نہ کریں، یہ آپ کے ڈرافٹ ترجمہ ماڈل کی پیروی کرتی ہے۔",
+      "videoSuggestionLegacyFollowReview": "پرانی BYO ترتیب برقرار ہے: جب تک آپ براہ راست کوئی ماڈل منتخب نہ کریں، یہ آپ کے جائزہ ترجمہ ماڈل کی پیروی کرتی ہے۔"
     },
     "apiKeyGuide": {
       "title": "API کلیدیں کیسے حاصل کریں",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "فی ڈالر {{multiplier}}× منٹ",
     "checkoutWaiting": "اپنے براؤزر میں ادائیگی مکمل کریں۔ آپ کے منٹ خود بخود یہاں ظاہر ہو جائیں گے۔",
     "checkoutNote": "آپ کے براؤزر میں Stripe کے ذریعے ایک بار کی ادائیگی۔ کوئی اکاؤنٹ یا سبسکرپشن نہیں۔ منٹ خود بخود آ جاتے ہیں۔",
-    "dubbingNote": "کریڈٹس سے ترجمہ کرنے پر فی منٹ تقریباً 10% اضافی لگتا ہے؛ ڈبنگ زیادہ استعمال کرتی ہے۔"
+    "dubbingNote": "کریڈٹس سے ترجمہ کرنے پر فی منٹ تقریباً 10% اضافی لگتا ہے؛ ڈبنگ زیادہ استعمال کرتی ہے۔",
+    "iCancelledCheckout": "میں نے ادائیگی منسوخ کر دی",
+    "checkoutStartFailed": "ادائیگی شروع نہیں ہو سکی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔"
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "ڈبنگ شروع کریں؟",
       "message": "یہ ڈبنگ آپ کے {{balance}} کریڈٹس میں سے تقریباً {{cost}} استعمال کرے گی۔ آوازیں بنانا ترجمے سے کہیں زیادہ مہنگا ہے۔"
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "رد کریں اور کیپشنز کھولیں",
+      "message": "آپ کے سب ٹائٹل پہلے سے کھلے ہیں۔ انہیں YouTube کے خودکار کیپشنز سے بدلنے سے پہلے محفوظ کریں یا رد کریں۔",
+      "saveAndOpen": "محفوظ کریں اور کیپشنز کھولیں",
+      "title": "بحال شدہ خودکار کیپشنز کھولیں؟"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "کیپشنز صاف ہو رہے ہیں ({{done}}/{{total}})",
     "translationCleanup": "ترجمہ شدہ کیپشنز صاف ہو رہے ہیں ({{done}}/{{total}})",
     "reviewingSlow": "جائزہ ہو رہا ہے (اس میں تھوڑا وقت لگ سکتا ہے...) {{done}}/{{total}}",
-    "reviewingRange": "جائزہ ہو رہا ہے {{start}}–{{end}} (مجموعی {{total}})"
+    "reviewingRange": "جائزہ ہو رہا ہے {{start}}–{{end}} (مجموعی {{total}})",
+    "legacy": {
+      "aligningVoices": "آوازیں ہم آہنگ کی جا رہی ہیں {{done}}/{{total}}…",
+      "analyzingSection": "حصہ {{done}} از {{total}} میں ہائی لائٹس تلاش کی جا رہی ہیں…",
+      "analyzingVideo": "ویڈیو کی جانچ ہو رہی ہے…",
+      "assemblingOverlay": "ویڈیو پر سب ٹائٹل بنائے جا رہے ہیں…",
+      "audioExtracted": "آڈیو تیار ہے",
+      "balancingAudio": "آواز اور پس منظر کو متوازن کیا جا رہا ہے…",
+      "cannotCancelSave": "تقریباً مکمل۔ یہ آخری محفوظ کاری منسوخ نہیں ہو سکتی",
+      "captionsOnlyReady": "YouTube کیپشنز تیار ہیں (ویڈیو خود ڈاؤن لوڈ نہیں ہو سکی)",
+      "checkingDownloader": "ڈاؤن لوڈر کی جانچ ہو رہی ہے…",
+      "chooseSaveLocation": "ویڈیو محفوظ کرنے کی جگہ منتخب کریں…",
+      "detectingSpeech": "بولنے والے حصے تلاش کیے جا رہے ہیں…",
+      "downloadCancelled": "ڈاؤن لوڈ منسوخ",
+      "downloadComplete": "ڈاؤن لوڈ مکمل",
+      "downloadVerifying": "ڈاؤن لوڈ ہو گیا، فائل کی جانچ ہو رہی ہے…",
+      "drawingFrames": "سب ٹائٹل فریمز بنائے جا رہے ہیں {{done}}/{{total}}…",
+      "dubAudioReady": "آواز کا ٹریک تیار ہے",
+      "dubComplete": "ڈبنگ مکمل",
+      "dubbedVideoReady": "ڈب شدہ ویڈیو تیار ہے",
+      "encodingComplete": "ویڈیو تیار ہے",
+      "encodingVideo": "ویڈیو بنائی جا رہی ہے…",
+      "errorRecovery": "چند لائنیں درست کی جا رہی ہیں…",
+      "extractingAudio": "آڈیو نکالی جا رہی ہے…",
+      "extractingAudioPercent": "آڈیو نکالی جا رہی ہے ({{percent}}%)…",
+      "fetchingInfo": "ویڈیو کی تفصیلات حاصل کی جا رہی ہیں…",
+      "finalAdjustments": "آخری تبدیلیاں کی جا رہی ہیں…",
+      "finalizingSubtitles": "سب ٹائٹل مکمل کیے جا رہے ہیں…",
+      "finishingFile": "ویڈیو فائل مکمل کی جا رہی ہے…",
+      "generatingVoices": "آوازیں بنائی جا رہی ہیں {{done}}/{{total}}…",
+      "mergeComplete": "سب ٹائٹل والی ویڈیو تیار ہے",
+      "mergeFailed": "ویڈیو بنانا ناکام رہا",
+      "mergingFormats": "ویڈیو اور آڈیو کو جوڑا جا رہا ہے…",
+      "postProcessing": "مکمل کیا جا رہا ہے…",
+      "preparingAudioExtraction": "آڈیو تیار کی جا رہی ہے ({{minutes}} منٹ کی ویڈیو)…",
+      "preparingDownload": "ڈاؤن لوڈ کی تیاری ہو رہی ہے…",
+      "preparingDubLines": "ڈبنگ کے لیے {{count}} لائنیں تیار کی جا رہی ہیں…",
+      "preparingHighlights": "ہائی لائٹس چننے کی تیاری ہو رہی ہے…",
+      "preparingOutput": "آؤٹ پٹ فولڈر تیار کیا جا رہا ہے…",
+      "preparingTranscript": "ٹرانسکرپٹ پڑھا جا رہا ہے…",
+      "preparingVideoEngine": "ویڈیو ٹولز تیار کیے جا رہے ہیں…",
+      "preparingVoiceClips": "{{count}} آواز کلپس تیار کیے جا رہے ہیں…",
+      "rateLimited": "ابھی مصروف ہے، دوبارہ کوشش کی جا رہی ہے…",
+      "reusingSummary": "ہائی لائٹس چننے کے لیے خلاصہ استعمال کیا جا رہا ہے…",
+      "saving": "محفوظ کیا جا رہا ہے…",
+      "sectionAnalyzed": "حصہ {{done}} کی جانچ ہو گئی",
+      "sectionHighlights": "حصہ {{done}} میں ہائی لائٹس مل گئیں",
+      "sectionSummarized": "حصہ {{done}} از {{total}} کا خلاصہ ہو گیا",
+      "selectingHighlights": "حصہ {{done}} از {{total}} میں ہائی لائٹس چنی جا رہی ہیں…",
+      "settingUpDownloader": "ڈاؤن لوڈر سیٹ اپ کیا جا رہا ہے…",
+      "skippingSameLanguage": "پہلے سے اسی زبان میں ہے، ترجمے کی ضرورت نہیں",
+      "starting": "شروع ہو رہا ہے…",
+      "startingDownload": "ڈاؤن لوڈ شروع ہو رہا ہے…",
+      "subtitleLayerReady": "سب ٹائٹل لیئر تیار ہے",
+      "summarizingSection": "حصہ {{done}} از {{total}} کا خلاصہ کیا جا رہا ہے…",
+      "summaryReady": "خلاصہ تیار ہے",
+      "transcribingParts": "ٹرانسکرائب ہو رہا ہے {{done}}/{{total}}…",
+      "transcriptionComplete": "ٹرانسکرپشن مکمل",
+      "translatingLines": "ترجمہ ہو رہا ہے {{done}}/{{total}}…",
+      "uploading": "اپ لوڈ ہو رہا ہے…",
+      "validating": "جانچ ہو رہی ہے…",
+      "videoBlockedCaptions": "ویڈیو ڈاؤن لوڈ نہیں ہو سکی؛ اس کے بجائے YouTube کیپشنز تلاش کیے جا رہے ہیں…",
+      "voiceTrackAssembled": "آواز کا ٹریک جوڑ دیا گیا",
+      "voiceTrackReady": "آواز کا ٹریک تیار ہے",
+      "writingSummary": "خلاصہ لکھا جا رہا ہے…"
+    },
+    "listening": "ویڈیو سنی جا رہی ہے…",
+    "mergeFinishSaveBeforeReload": "دوبارہ لوڈ کرنے سے پہلے ضم شدہ ویڈیو کو محفوظ ہونے دیں۔",
+    "mergeSavePhaseNoCancel": "محفوظ کرنے کا یہ مرحلہ اب منسوخ نہیں ہو سکتا۔",
+    "mergeWaitForCancelBeforeReload": "دوبارہ لوڈ کرنے سے پہلے انضمام کی منسوخی مکمل ہونے کا انتظار کریں۔",
+    "preparingTranscription": "سننے کی تیاری ہو رہی ہے…",
+    "restartingTranscription": "ٹرانسکرپشن دوبارہ شروع کی جا رہی ہے…",
+    "resumingTranscription": "جہاں رکا تھا وہیں سے جاری ہے…"
   },
   "messages": {
     "fileSaved": "فائل محفوظ ہو گئی:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "آپ کے منٹوں میں شامل",
     "preview": "پہلے {{minutes}} منٹ مفت · پوری ویڈیو {{price}}",
     "pack": "پوری ویڈیو {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "شارٹس فریمنگ اور کیپشنز",
+    "intro": "ہر بولنے والے کو فریم کریں، کیمرا کٹ پر تقسیم کریں، اور مختصر کیپشن فقروں کا وقت بولنے کے مطابق رکھیں۔ نیچے دیے گئے اوقات اس کلپ کے آغاز سے شروع ہوتے ہیں۔",
+    "previewTime": "شارٹ پیش نظارہ کا وقت",
+    "speakerLabel": "بولنے والے یا موضوع کا لیبل",
+    "splitShot": "پلے ہیڈ پر شاٹ تقسیم کریں",
+    "joinShot": "پچھلے شاٹ سے جوڑیں",
+    "preview": "پیش نظارہ",
+    "emphasize": "اس فقرے پر زور دیں",
+    "splitPhrase": "فقرہ تقسیم کریں",
+    "removePhrase": "فقرہ ہٹائیں",
+    "addPhrase": "فقرہ شامل کریں",
+    "removeStyling": "اسٹائلنگ ہٹائیں",
+    "saveSelectionFirst": "پہلے ہائی لائٹ کا انتخاب محفوظ کریں۔",
+    "closeEdit": "ترمیم بند کریں",
+    "editFraming": "فریمنگ اور کیپشنز میں ترمیم کریں",
+    "styleShort": "اس شارٹ کو اسٹائل کریں",
+    "horizontalFocus": "افقی فوکس",
+    "verticalFocus": "عمودی فوکس",
+    "zoom": "زوم",
+    "from": "سے",
+    "to": "تک",
+    "saving": "محفوظ کیا جا رہا ہے…",
+    "save": "شارٹ کی ترمیم محفوظ کریں"
   }
 }

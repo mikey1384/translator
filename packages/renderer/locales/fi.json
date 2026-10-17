@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "Levytila ei riitä yhdistämisen suorittamiseen. Vapauta tilaa ja yritä uudelleen.",
       "noSourceVideo": "Ei lähdettä videota",
       "noSubtitlesLoaded": "Ei ladattuja tekstityksiä",
-      "failedToLoadSRT": "SRT-tiedoston lataaminen epäonnistui"
+      "failedToLoadSRT": "SRT-tiedoston lataaminen epäonnistui",
+      "sourceVideoUnavailable": "Alkuperäinen video on poistettu tai se ei ole enää saatavilla. Avaa se uudelleen ja yritä uudelleen.",
+      "unknown": "Jokin meni pieleen. Yritä uudelleen."
     },
     "success": "Onnistui",
     "settings": "Asetukset",
@@ -92,7 +94,9 @@
     "continue": "Jatka",
     "send": "Lähetä",
     "dismiss": "Sulje",
-    "moreActions": "Lisää toimintoja"
+    "moreActions": "Lisää toimintoja",
+    "installingUpdate": "Asennetaan päivitystä...",
+    "installingUpdateShort": "Asennetaan"
   },
   "errors": {
     "needCookies": "YouTube pyysi ihmisen vahvistusta. Jatka napsauttamalla Yhdistä.",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "Poista tiedosto ja historia",
       "deleteFileAndHistoryConfirm": "Poistetaanko tämä ladattu tiedosto ja sen historiatieto pysyvästi? Toimintoa ei voi kumota.",
       "removeFromHistory": "Poista historiasta",
-      "removeFromHistoryConfirm": "Poistetaanko tämä kohde lataushistoriasta? Sovelluskirjaston ulkopuolelle tallennetut tiedostot säilyvät laitteella."
+      "removeFromHistoryConfirm": "Poistetaanko tämä kohde lataushistoriasta? Sovelluskirjaston ulkopuolelle tallennetut tiedostot säilyvät laitteella.",
+      "deleteLocalFileHistoryPending": "Tiedosto poistettiin, mutta Translator ei saanut lataushistorian päivitystä valmiiksi. Se yrittää automaattisesti uudelleen.",
+      "removeHistoryFailed": "Tätä latausta ei voitu poistaa historiasta.",
+      "storedInAppLibrary": "Tallennettu sovelluskirjastoon"
     },
     "downloadAndTranslate": "Lataa ja käännä",
     "downloadAndTranscribe": "Lataa ja litteroi",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ Käännä",
     "autoRunStepDownload": "Lataa",
     "autoRunStepTranscribe": "Litteroi",
-    "autoRunStepTranslate": "Käännä kielelle {{language}}"
+    "autoRunStepTranslate": "Käännä kielelle {{language}}",
+    "captionRecoveryKeepVideo": "Säilytä nykyinen video",
+    "captionRecoveryOpenCaptions": "Avaa tekstitykset",
+    "captionRecoverySwitchPrompt": "Translator palautti YouTuben automaattiset tekstitykset, mutta URL-osoitteen video ei ole saatavilla. Niiden avaaminen irrottaa nykyisen videon.",
+    "captionRecoverySwitchTitle": "Avataanko tekstitykset ilman nykyistä videota?"
   },
   "subtitles": {
     "outputLanguage": "Tulostuskieli",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "BYO-avain",
     "qualityBadge": "(kl)",
-    "cancel_confirmation": "Haluatko varmasti peruuttaa tekstitysten käännösprosessin? Kaikki edistyminen menetetään ja sinun on aloitettava uudelleen."
+    "cancel_confirmation": "Haluatko varmasti peruuttaa tekstitysten käännösprosessin? Kaikki edistyminen menetetään ja sinun on aloitettava uudelleen.",
+    "dubCostHint": "ElevenLabs-ääni: ~{{rate}} krediittiä puheminuuttia kohden. Tämä arvio näytetään ennen dubbauksen alkua."
   },
   "summary": {
     "title": "Transkription yhteenveto",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "Yhdistetty kohokohta valmis",
     "downloadCombined": "Lataa yhdistetty leike",
     "saveCombinedDialogTitle": "Tallenna yhdistetty kohokohtaleike",
-    "combinedCutFailed": "Yhdistettyjen kohokohtien leikkaus epäonnistui: {{message}}"
+    "combinedCutFailed": "Yhdistettyjen kohokohtien leikkaus epäonnistui: {{message}}",
+    "highlightsInsufficientCredits": "Yhteenveto luotiin, mutta kohokohtien poiminta pysähtyi, koska krediitit loppuivat.",
+    "highlightsPartialWarning": "Kohokohtien poiminta jäi osittaiseksi. Nämä kohokohdat voivat olla puutteellisia. Päivitä luomalla ne uudelleen.",
+    "highlightsPartialWithReason": "Yhteenveto luotiin, mutta kohokohtien poiminta jäi osittaiseksi: {{message}}"
   },
   "panel": {
     "new": "uusi",
@@ -481,7 +496,12 @@
       "listCopy": "Muokkaa lähdetekstiä, käännöstä, ajoitusta ja rivikohtaisia toimintoja suoraan paikallaan.",
       "originalLabel": "Alkuperäinen",
       "translationLabel": "Käännös",
-      "mergeNeedsVideoCopy": "Liitä lähdevideo ennen kuin aloitat poltetun viennin."
+      "mergeNeedsVideoCopy": "Liitä lähdevideo ennen kuin aloitat poltetun viennin.",
+      "automaticCaptionsCopy": "Videon lataus estettiin (HTTP 403). Nämä ovat YouTuben automaattiset tekstitykset – eivät uusi litterointi. Voit nyt muokata, kääntää ja viedä SRT:n. Liitä media esikatselua tai tekstitysten polttamista varten.",
+      "automaticCaptionsCopyWithMedia": "URL-osoitteen videon lataus estettiin (HTTP 403). Nämä ovat YouTuben automaattiset tekstitykset – eivät uusi litterointi. Liitetty media on käytettävissä esikatseluun ja polttamiseen.",
+      "automaticCaptionsPill": "YouTuben automaattiset tekstitykset",
+      "automaticCaptionsTitle": "YouTuben automaattiset tekstitykset",
+      "highlightEditingLocked": "Kohokohtia luodaan, muokkaus lukittu"
     },
     "item": {
       "seek": "Siirry",
@@ -655,7 +675,9 @@
       "option2Title": "Vaihtoehto 2: Anthropic + ElevenLabs",
       "economicsTitle": "Miksi se kannattaa",
       "economicsBody": "Stage5-krediitit optimoivat kätevyyden (ei asennusta). BYO maksaa suoraan palveluntarjoajille – yleensä ~30–50 % edullisempi paketistasi riippuen.",
-      "encryptionUnavailable": "Suojattu tallennus ei ole saatavilla tässä järjestelmässä. API-avaimia ei voi tallentaa."
+      "encryptionUnavailable": "Suojattu tallennus ei ole saatavilla tässä järjestelmässä. API-avaimia ei voi tallentaa.",
+      "checkoutOpen": "Maksu avattu selaimessa…",
+      "checkoutOpenHint": "Viimeistele maksu selaimessasi. Avaamme BYO:n automaattisesti, kun maksu on vahvistettu."
     },
     "byoPreferences": {
       "title": "Palveluntarjoajan asetukset",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "Vaatii OpenAI BYO-käytön ja API-avaimen.",
       "summaryRequiresAnthropic": "Vaatii Anthropic BYO-käytön ja API-avaimen.",
       "translationReview": "Käännös (tarkistus)",
-      "transcriptionRequiresElevenLabs": "Litterointi käyttää vain ElevenLabs Scribea. Lisää ElevenLabs API-avain litteroidaksesi omilla avaimillasi. Ilman sitä litterointi käyttää Stage5-krediittejä, joita ei käytetä, kun API-avaimesi ovat käytössä. OpenAI-avaintasi käytetään edelleen käännökseen."
+      "transcriptionRequiresElevenLabs": "Litterointi käyttää vain ElevenLabs Scribea. Lisää ElevenLabs API-avain litteroidaksesi omilla avaimillasi. Ilman sitä litterointi käyttää Stage5-krediittejä, joita ei käytetä, kun API-avaimesi ovat käytössä. OpenAI-avaintasi käytetään edelleen käännökseen.",
+      "dubbingRequiresElevenLabs": "Dubbaus käyttää vain ElevenLabsia. Lisää ElevenLabs-API-avain, jotta voit dubata omilla avaimillasi. Ilman sitä dubbaus käyttää Stage5-krediittejä, joita ei käytetä, kun API-avaimesi ovat päällä.",
+      "runtimeFallback": "Ajonaikainen varavaihtoehto API-avaintilassa",
+      "videoSuggestionLegacyFollowDraft": "Vanha BYO-asetus säilytetty: seuraa luonnoskäännösmalliasi, kunnes valitset suoran mallin.",
+      "videoSuggestionLegacyFollowReview": "Vanha BYO-asetus säilytetty: seuraa tarkistuskäännösmalliasi, kunnes valitset suoran mallin."
     },
     "apiKeyGuide": {
       "title": "API-avainten hankkiminen",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "{{multiplier}}× minuutteja dollarilla",
     "checkoutWaiting": "Viimeistele maksu selaimessa. Minuuttisi ilmestyvät tähän itsestään.",
     "checkoutNote": "Kertamaksu Stripen kautta selaimessa. Ei tiliä eikä tilausta. Minuutit tulevat itsestään.",
-    "dubbingNote": "Kääntäminen krediiteillä lisää noin 10 % minuuttia kohden; jälkiäänitys kuluttaa enemmän."
+    "dubbingNote": "Kääntäminen krediiteillä lisää noin 10 % minuuttia kohden; jälkiäänitys kuluttaa enemmän.",
+    "iCancelledCheckout": "Peruutin maksun",
+    "checkoutStartFailed": "Maksun aloittaminen epäonnistui. Tarkista yhteys ja yritä uudelleen."
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "Aloitetaanko dubbaus?",
       "message": "Tämä dubbaus käyttää noin {{cost}} {{balance}} krediitistäsi. Äänten luominen maksaa paljon enemmän kuin kääntäminen."
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "Hylkää ja avaa tekstitykset",
+      "message": "Sinulla on jo tekstityksiä auki. Tallenna tai hylkää ne ennen kuin korvaat ne YouTuben automaattisilla tekstityksillä.",
+      "saveAndOpen": "Tallenna ja avaa tekstitykset",
+      "title": "Avataanko palautetut automaattiset tekstitykset?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "Siivotaan tekstityksiä ({{done}}/{{total}})",
     "translationCleanup": "Siivotaan käännettyjä tekstityksiä ({{done}}/{{total}})",
     "reviewingSlow": "Tarkistetaan (tämä voi kestää hetken...) {{done}}/{{total}}",
-    "reviewingRange": "Tarkistetaan {{start}}–{{end}} (yhteensä {{total}})"
+    "reviewingRange": "Tarkistetaan {{start}}–{{end}} (yhteensä {{total}})",
+    "legacy": {
+      "aligningVoices": "Kohdistetaan ääniä {{done}}/{{total}}…",
+      "analyzingSection": "Etsitään kohokohtia osasta {{done}}/{{total}}…",
+      "analyzingVideo": "Tarkistetaan videota…",
+      "assemblingOverlay": "Piirretään tekstityksiä videoon…",
+      "audioExtracted": "Ääni valmis",
+      "balancingAudio": "Tasapainotetaan puhetta ja taustaa…",
+      "cannotCancelSave": "Melkein valmista. Tätä viimeistä tallennusta ei voi peruuttaa",
+      "captionsOnlyReady": "YouTube-tekstitykset valmiina (itse videota ei voitu ladata)",
+      "checkingDownloader": "Tarkistetaan latausohjelmaa…",
+      "chooseSaveLocation": "Valitse, minne video tallennetaan…",
+      "detectingSpeech": "Etsitään kohtia, joissa puhutaan…",
+      "downloadCancelled": "Lataus peruutettu",
+      "downloadComplete": "Lataus valmis",
+      "downloadVerifying": "Ladattu, tarkistetaan tiedostoa…",
+      "drawingFrames": "Piirretään tekstityskuvia {{done}}/{{total}}…",
+      "dubAudioReady": "Ääniraita valmis",
+      "dubComplete": "Dubbaus valmis",
+      "dubbedVideoReady": "Dubattu video valmis",
+      "encodingComplete": "Video valmis",
+      "encodingVideo": "Tehdään videota…",
+      "errorRecovery": "Korjataan muutamaa riviä…",
+      "extractingAudio": "Puretaan ääntä…",
+      "extractingAudioPercent": "Puretaan ääntä ({{percent}} %)…",
+      "fetchingInfo": "Haetaan videon tietoja…",
+      "finalAdjustments": "Viimeistellään…",
+      "finalizingSubtitles": "Viimeistellään tekstityksiä…",
+      "finishingFile": "Viimeistellään videotiedostoa…",
+      "generatingVoices": "Luodaan ääniä {{done}}/{{total}}…",
+      "mergeComplete": "Tekstitetty video on valmis",
+      "mergeFailed": "Videon tekeminen epäonnistui",
+      "mergingFormats": "Yhdistetään videota ja ääntä…",
+      "postProcessing": "Viimeistellään…",
+      "preparingAudioExtraction": "Valmistellaan ääntä ({{minutes}} min videota)…",
+      "preparingDownload": "Valmistellaan latausta…",
+      "preparingDubLines": "Valmistellaan {{count}} riviä dubbausta varten…",
+      "preparingHighlights": "Valmistaudutaan valitsemaan kohokohtia…",
+      "preparingOutput": "Valmistellaan tulostekansiota…",
+      "preparingTranscript": "Luetaan litterointia…",
+      "preparingVideoEngine": "Valmistellaan videotyökaluja…",
+      "preparingVoiceClips": "Valmistellaan {{count}} ääniklippiä…",
+      "rateLimited": "Ruuhkaa juuri nyt, yritetään uudelleen…",
+      "reusingSummary": "Käytetään yhteenvetoa kohokohtien valintaan…",
+      "saving": "Tallennetaan…",
+      "sectionAnalyzed": "Osa {{done}} tarkistettu",
+      "sectionHighlights": "Kohokohtia löytyi osasta {{done}}",
+      "sectionSummarized": "Osa {{done}}/{{total}} tiivistetty",
+      "selectingHighlights": "Valitaan kohokohtia osasta {{done}}/{{total}}…",
+      "settingUpDownloader": "Määritetään latausohjelmaa…",
+      "skippingSameLanguage": "Jo tällä kielellä, käännöstä ei tarvita",
+      "starting": "Aloitetaan…",
+      "startingDownload": "Aloitetaan latausta…",
+      "subtitleLayerReady": "Tekstityskerros valmis",
+      "summarizingSection": "Tiivistetään osaa {{done}}/{{total}}…",
+      "summaryReady": "Yhteenveto valmis",
+      "transcribingParts": "Litteroidaan {{done}}/{{total}}…",
+      "transcriptionComplete": "Litterointi valmis",
+      "translatingLines": "Käännetään {{done}}/{{total}}…",
+      "uploading": "Lähetetään…",
+      "validating": "Tarkistetaan…",
+      "videoBlockedCaptions": "Videota ei voitu ladata; etsitään sen sijaan YouTube-tekstityksiä…",
+      "voiceTrackAssembled": "Ääniraita koottu",
+      "voiceTrackReady": "Ääniraita valmis",
+      "writingSummary": "Kirjoitetaan yhteenvetoa…"
+    },
+    "listening": "Kuunnellaan videota…",
+    "mergeFinishSaveBeforeReload": "Viimeistele yhdistetyn videon tallennus ennen uudelleenlatausta.",
+    "mergeSavePhaseNoCancel": "Tätä tallennusvaihetta ei voi enää peruuttaa.",
+    "mergeWaitForCancelBeforeReload": "Odota, että yhdistämisen peruutus valmistuu, ennen uudelleenlatausta.",
+    "preparingTranscription": "Valmistaudutaan kuuntelemaan…",
+    "restartingTranscription": "Aloitetaan litterointi uudelleen…",
+    "resumingTranscription": "Jatketaan siitä, mihin jäätiin…"
   },
   "messages": {
     "fileSaved": "Tiedosto tallennettu:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "Kuuluu minuutteihisi",
     "preview": "Ensimmäiset {{minutes}} min ilmaiseksi · koko video {{price}}",
     "pack": "Koko video {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Shorts-rajaus ja tekstitykset",
+    "intro": "Rajaa jokainen puhuja, jaa kuvaleikkausten kohdalta ja ajoita lyhyet tekstitysfraasit puheen mukaan. Alla olevat ajat alkavat tämän leikkeen alusta.",
+    "previewTime": "Shortin esikatseluaika",
+    "speakerLabel": "Puhujan tai aiheen nimi",
+    "splitShot": "Jaa otos toistokohdasta",
+    "joinShot": "Yhdistä edelliseen otokseen",
+    "preview": "Esikatselu",
+    "emphasize": "Korosta tämä fraasi",
+    "splitPhrase": "Jaa fraasi",
+    "removePhrase": "Poista fraasi",
+    "addPhrase": "Lisää fraasi",
+    "removeStyling": "Poista muotoilu",
+    "saveSelectionFirst": "Tallenna ensin kohokohtien valinta.",
+    "closeEdit": "Sulje muokkaus",
+    "editFraming": "Muokkaa rajausta ja tekstityksiä",
+    "styleShort": "Muotoile tämä Short",
+    "horizontalFocus": "Vaakasuuntainen kohdistus",
+    "verticalFocus": "Pystysuuntainen kohdistus",
+    "zoom": "Zoomaus",
+    "from": "Alku",
+    "to": "loppu",
+    "saving": "Tallennetaan…",
+    "save": "Tallenna Shortin muokkaus"
   }
 }

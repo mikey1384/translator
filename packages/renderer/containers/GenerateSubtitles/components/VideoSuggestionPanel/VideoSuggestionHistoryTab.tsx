@@ -22,9 +22,6 @@ import {
   historyActionsStyles,
   historyCardsStyles,
   historySectionStyles,
-  historyStatusPillStyles,
-  historyStatusSavedPillStyles,
-  historyStatusTempPillStyles,
   historyTitleStyles,
   metaStyles,
   thumbnailStyles,
@@ -161,38 +158,30 @@ export default function VideoSuggestionHistoryTab({
                 </div>
                 {storageKind !== 'unknown' && canPlay ? (
                   <div className={cardMetaRowStyles}>
-                    {storageKind === 'saved' ? (
-                      <span className={historyStatusSavedPillStyles}>
-                        {t(
-                          'input.videoSuggestion.savedToFolder',
-                          'Saved to your folder'
-                        )}
-                      </span>
-                    ) : null}
-                    {storageKind === 'library' ? (
-                      <span className={historyStatusSavedPillStyles}>
-                        {t(
-                          'input.videoSuggestion.storedInAppLibrary',
-                          'Stored in app library'
-                        )}
-                      </span>
-                    ) : null}
-                    {storageKind === 'temp' ? (
-                      <span className={historyStatusTempPillStyles}>
-                        {t(
-                          'input.videoSuggestion.tempFileAvailable',
-                          'Temp copy still available'
-                        )}
-                      </span>
-                    ) : null}
-                    {canPlay ? (
-                      <span className={historyStatusPillStyles}>
-                        {t(
-                          'input.videoSuggestion.localFileAvailable',
-                          'File available'
-                        )}
-                      </span>
-                    ) : null}
+                    {[
+                      storageKind === 'saved'
+                        ? t(
+                            'input.videoSuggestion.savedToFolder',
+                            'Saved to your folder'
+                          )
+                        : storageKind === 'library'
+                          ? t(
+                              'input.videoSuggestion.storedInAppLibrary',
+                              'Stored in app library'
+                            )
+                          : storageKind === 'temp'
+                            ? t(
+                                'input.videoSuggestion.tempFileAvailable',
+                                'Temp copy still available'
+                              )
+                            : null,
+                      t(
+                        'input.videoSuggestion.localFileAvailable',
+                        'File available'
+                      ),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </div>
                 ) : null}
                 {historyMeta.length > 0 ? (
@@ -207,7 +196,8 @@ export default function VideoSuggestionHistoryTab({
                       onClick={() => onOpenDownloadedVideo(item)}
                       disabled={isTranslationInProgress || !canPlay}
                       size="sm"
-                      variant="primary"
+                      variant="secondary"
+                      leftIcon={<Play size={15} aria-hidden="true" />}
                       fullWidth
                     >
                       {localPrimaryActionLabel}
@@ -217,7 +207,8 @@ export default function VideoSuggestionHistoryTab({
                       onClick={() => onRedownloadHistoryItem(item)}
                       disabled={disabled || isDownloadInProgress}
                       size="sm"
-                      variant="primary"
+                      variant="secondary"
+                      leftIcon={<Download size={15} aria-hidden="true" />}
                       fullWidth
                     >
                       {isDownloadInProgress

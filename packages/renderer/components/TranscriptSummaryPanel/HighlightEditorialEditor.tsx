@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type {
   HighlightEditorialPlan,
   TranscriptHighlight,
@@ -21,6 +22,7 @@ export default function HighlightEditorialEditor({
   disabled: boolean;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const [plan, setPlan] = useState<HighlightEditorialPlan | null>(null);
   const [source, setSource] = useState('');
   const [snapshot, setSnapshot] = useState('');
@@ -96,7 +98,12 @@ export default function HighlightEditorialEditor({
   }
   async function save(remove = false) {
     if (!highlight.id) {
-      setError('Save the highlight selection first.');
+      setError(
+        t(
+          'highlightEditor.saveSelectionFirst',
+          'Save the highlight selection first.'
+        )
+      );
       return;
     }
     setSaving(true);
@@ -125,10 +132,10 @@ export default function HighlightEditorialEditor({
         onClick={() => (plan ? setPlan(null) : void open())}
       >
         {plan
-          ? 'Close edit'
+          ? t('highlightEditor.closeEdit', 'Close edit')
           : highlight.editorial
-            ? 'Edit framing & captions'
-            : 'Style this Short'}
+            ? t('highlightEditor.editFraming', 'Edit framing & captions')
+            : t('highlightEditor.styleShort', 'Style this Short')}
       </Button>
       {error && <p role="alert">{error}</p>}
       {plan && (
@@ -141,11 +148,14 @@ export default function HighlightEditorialEditor({
             marginTop: 12,
           }}
         >
-          <legend>Shorts framing & captions</legend>
+          <legend>
+            {t('highlightEditor.legend', 'Shorts framing & captions')}
+          </legend>
           <p>
-            Frame each speaker, split at camera cuts, and time short caption
-            phrases to the speech. Times below start at the beginning of this
-            clip.
+            {t(
+              'highlightEditor.intro',
+              'Frame each speaker, split at camera cuts, and time short caption phrases to the speech. Times below start at the beginning of this clip.'
+            )}
           </p>
           <div
             style={{
@@ -191,7 +201,10 @@ export default function HighlightEditorialEditor({
           <label>
             Preview · {time.toFixed(2)}s
             <input
-              aria-label="Short preview time"
+              aria-label={t(
+                'highlightEditor.previewTime',
+                'Short preview time'
+              )}
               type="range"
               min={0}
               max={Math.max(0, duration - 0.05)}
@@ -204,7 +217,10 @@ export default function HighlightEditorialEditor({
           <label>
             Speaker / topic
             <input
-              aria-label="Speaker or topic label"
+              aria-label={t(
+                'highlightEditor.speakerLabel',
+                'Speaker or topic label'
+              )}
               value={plan.label || ''}
               maxLength={60}
               onChange={e => setPlan({ ...plan, label: e.target.value })}
@@ -220,9 +236,15 @@ export default function HighlightEditorialEditor({
               <label key={key} style={{ display: 'block' }}>
                 {
                   {
-                    centerX: 'Horizontal focus',
-                    centerY: 'Vertical focus',
-                    zoom: 'Zoom',
+                    centerX: t(
+                      'highlightEditor.horizontalFocus',
+                      'Horizontal focus'
+                    ),
+                    centerY: t(
+                      'highlightEditor.verticalFocus',
+                      'Vertical focus'
+                    ),
+                    zoom: t('highlightEditor.zoom', 'Zoom'),
                   }[key]
                 }{' '}
                 · {shot[key].toFixed(2)}
@@ -271,7 +293,7 @@ export default function HighlightEditorialEditor({
                 });
             }}
           >
-            Split shot at playhead
+            {t('highlightEditor.splitShot', 'Split shot at playhead')}
           </Button>
           <Button
             size="sm"
@@ -290,7 +312,7 @@ export default function HighlightEditorialEditor({
               })
             }
           >
-            Join previous shot
+            {t('highlightEditor.joinShot', 'Join previous shot')}
           </Button>
           <p>
             Caption phrases · emphasize an exact word or phrase from the text.
@@ -309,7 +331,9 @@ export default function HighlightEditorialEditor({
                 <div>
                   {(['start', 'end'] as const).map(key => (
                     <label key={key}>
-                      {key === 'start' ? 'From ' : ' to '}
+                      {key === 'start'
+                        ? t('highlightEditor.from', 'From') + ' '
+                        : ' ' + t('highlightEditor.to', 'to') + ' '}
                       <input
                         aria-label={`Caption ${i + 1} ${key}`}
                         type="number"
@@ -333,7 +357,7 @@ export default function HighlightEditorialEditor({
                   ))}{' '}
                   s{' '}
                   <button type="button" onClick={() => setTime(c.start)}>
-                    Preview
+                    {t('highlightEditor.preview', 'Preview')}
                   </button>
                 </div>
                 <textarea
@@ -351,7 +375,10 @@ export default function HighlightEditorialEditor({
                 />
                 <input
                   aria-label={`Caption ${i + 1} emphasis`}
-                  placeholder="Emphasize this phrase"
+                  placeholder={t(
+                    'highlightEditor.emphasize',
+                    'Emphasize this phrase'
+                  )}
                   value={c.emphasis || ''}
                   onChange={e =>
                     setPlan({
@@ -391,7 +418,7 @@ export default function HighlightEditorialEditor({
                       });
                     }}
                   >
-                    Split phrase
+                    {t('highlightEditor.splitPhrase', 'Split phrase')}
                   </button>{' '}
                   <button
                     type="button"
@@ -402,7 +429,7 @@ export default function HighlightEditorialEditor({
                       })
                     }
                   >
-                    Remove phrase
+                    {t('highlightEditor.removePhrase', 'Remove phrase')}
                   </button>
                 </div>
               </div>
@@ -422,11 +449,13 @@ export default function HighlightEditorialEditor({
               })
             }
           >
-            Add phrase
+            {t('highlightEditor.addPhrase', 'Add phrase')}
           </Button>
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
             <Button size="sm" variant="primary" onClick={() => void save()}>
-              {saving ? 'Saving…' : 'Save Short edit'}
+              {saving
+                ? t('highlightEditor.saving', 'Saving…')
+                : t('highlightEditor.save', 'Save Short edit')}
             </Button>
             {highlight.editorial && (
               <Button
@@ -434,7 +463,7 @@ export default function HighlightEditorialEditor({
                 variant="secondary"
                 onClick={() => void save(true)}
               >
-                Remove styling
+                {t('highlightEditor.removeStyling', 'Remove styling')}
               </Button>
             )}
           </div>

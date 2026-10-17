@@ -29,7 +29,9 @@
       "insufficientDiskSpace": "मर्ज पूरा करने के लिए पर्याप्त डिस्क स्पेस नहीं है। कृपया जगह खाली करें और फिर से कोशिश करें।",
       "noSourceVideo": "कोई स्रोत वीडियो नहीं",
       "noSubtitlesLoaded": "कोई सबटाइटल लोड नहीं",
-      "failedToLoadSRT": "SRT फ़ाइल लोड करने में असफल"
+      "failedToLoadSRT": "SRT फ़ाइल लोड करने में असफल",
+      "sourceVideoUnavailable": "मूल वीडियो हटा दिया गया है या अब उपलब्ध नहीं है। इसे फिर से खोलें और दोबारा कोशिश करें।",
+      "unknown": "कुछ गलत हो गया। कृपया फिर से कोशिश करें।"
     },
     "success": "सफलता",
     "settings": "सेटिंग्स",
@@ -92,7 +94,9 @@
     "continue": "जारी रखें",
     "send": "भेजें",
     "dismiss": "खारिज करें",
-    "moreActions": "और कार्रवाइयाँ"
+    "moreActions": "और कार्रवाइयाँ",
+    "installingUpdate": "अपडेट इंस्टॉल हो रहा है...",
+    "installingUpdateShort": "इंस्टॉल हो रहा है"
   },
   "errors": {
     "needCookies": "YouTube ने मानव जाँच का अनुरोध किया है। जारी रखने के लिए कनेक्ट पर क्लिक करें।",
@@ -348,7 +352,10 @@
       "deleteFileAndHistory": "फ़ाइल और इतिहास मिटाएँ",
       "deleteFileAndHistoryConfirm": "डाउनलोड की गई फ़ाइल और उसकी इतिहास प्रविष्टि को हमेशा के लिए मिटाएँ? इसे वापस नहीं किया जा सकता।",
       "removeFromHistory": "इतिहास से हटाएँ",
-      "removeFromHistoryConfirm": "इस आइटम को डाउनलोड इतिहास से हटाएँ? ऐप लाइब्रेरी के बाहर सहेजी गई फ़ाइलें आपके डिवाइस पर रहेंगी।"
+      "removeFromHistoryConfirm": "इस आइटम को डाउनलोड इतिहास से हटाएँ? ऐप लाइब्रेरी के बाहर सहेजी गई फ़ाइलें आपके डिवाइस पर रहेंगी।",
+      "deleteLocalFileHistoryPending": "फ़ाइल हटा दी गई, लेकिन Translator डाउनलोड इतिहास का अपडेट पूरा नहीं कर सका। यह अपने आप फिर से कोशिश करेगा।",
+      "removeHistoryFailed": "इस डाउनलोड को इतिहास से हटाया नहीं जा सका।",
+      "storedInAppLibrary": "ऐप लाइब्रेरी में सहेजा गया"
     },
     "downloadAndTranslate": "डाउनलोड और अनुवाद करें",
     "downloadAndTranscribe": "डाउनलोड और ट्रांसक्राइब करें",
@@ -358,7 +365,11 @@
     "autoRunStopTranslate": "+ अनुवाद",
     "autoRunStepDownload": "डाउनलोड",
     "autoRunStepTranscribe": "ट्रांसक्राइब",
-    "autoRunStepTranslate": "{{language}} में अनुवाद करें"
+    "autoRunStepTranslate": "{{language}} में अनुवाद करें",
+    "captionRecoveryKeepVideo": "मौजूदा वीडियो रखें",
+    "captionRecoveryOpenCaptions": "कैप्शन खोलें",
+    "captionRecoverySwitchPrompt": "Translator ने YouTube के स्वचालित कैप्शन पुनर्प्राप्त किए, लेकिन URL वाला वीडियो उपलब्ध नहीं है। इन्हें खोलने से मौजूदा वीडियो अनमाउंट हो जाएगा।",
+    "captionRecoverySwitchTitle": "मौजूदा वीडियो के बिना कैप्शन खोलें?"
   },
   "subtitles": {
     "outputLanguage": "आउटपुट भाषा",
@@ -380,7 +391,8 @@
     "translateEstimateCredits": "~{{minutes}}मि वीडियो",
     "translateEstimateByo": "BYO कुंजी",
     "qualityBadge": "(hq)",
-    "cancel_confirmation": "क्या आप वाकई सबटाइटल अनुवाद प्रक्रिया को रद्द करना चाहते हैं? कोई भी प्रगति खो जाएगी और आपको फिर से शुरू करना होगा।"
+    "cancel_confirmation": "क्या आप वाकई सबटाइटल अनुवाद प्रक्रिया को रद्द करना चाहते हैं? कोई भी प्रगति खो जाएगी और आपको फिर से शुरू करना होगा।",
+    "dubCostHint": "ElevenLabs आवाज़: बोलने के प्रति मिनट ~{{rate}} क्रेडिट। यह अनुमान डबिंग शुरू होने से पहले दिखाया जाता है।"
   },
   "summary": {
     "title": "ट्रांसक्रिप्ट सारांश",
@@ -447,7 +459,10 @@
     "combinedHighlightReady": "संयुक्त हाइलाइट तैयार",
     "downloadCombined": "संयुक्त क्लिप डाउनलोड करें",
     "saveCombinedDialogTitle": "संयुक्त हाइलाइट क्लिप सहेजें",
-    "combinedCutFailed": "संयुक्त हाइलाइट काटने में असफल: {{message}}"
+    "combinedCutFailed": "संयुक्त हाइलाइट काटने में असफल: {{message}}",
+    "highlightsInsufficientCredits": "सारांश बन गया, लेकिन क्रेडिट खत्म होने के कारण हाइलाइट निकालना रुक गया।",
+    "highlightsPartialWarning": "हाइलाइट आंशिक रूप से ही निकाले गए। ये हाइलाइट अधूरे हो सकते हैं। ताज़ा करने के लिए फिर से जनरेट करें।",
+    "highlightsPartialWithReason": "सारांश बन गया, लेकिन हाइलाइट आंशिक रूप से ही निकाले गए: {{message}}"
   },
   "panel": {
     "new": "नया",
@@ -481,7 +496,12 @@
       "listCopy": "स्रोत टेक्स्ट, अनुवाद, टाइमिंग और पंक्ति-स्तरीय कार्रवाइयाँ यहीं सीधे संपादित करें।",
       "originalLabel": "मूल",
       "translationLabel": "अनुवाद",
-      "mergeNeedsVideoCopy": "burn-in एक्सपोर्ट शुरू करने से पहले स्रोत वीडियो माउंट करें।"
+      "mergeNeedsVideoCopy": "burn-in एक्सपोर्ट शुरू करने से पहले स्रोत वीडियो माउंट करें।",
+      "automaticCaptionsCopy": "वीडियो डाउनलोड ब्लॉक हो गया (HTTP 403)। ये YouTube के स्वचालित कैप्शन हैं, नया ट्रांसक्रिप्शन नहीं। आप अभी इन्हें संपादित, अनुवाद और SRT में एक्सपोर्ट कर सकते हैं। प्रीव्यू करने या सबटाइटल बर्न-इन करने के लिए मीडिया माउंट करें।",
+      "automaticCaptionsCopyWithMedia": "URL से वीडियो डाउनलोड ब्लॉक हो गया (HTTP 403)। ये YouTube के स्वचालित कैप्शन हैं, नया ट्रांसक्रिप्शन नहीं। माउंट किया गया मीडिया प्रीव्यू और बर्न-इन के लिए उपलब्ध है।",
+      "automaticCaptionsPill": "YouTube स्वचालित कैप्शन",
+      "automaticCaptionsTitle": "YouTube स्वचालित कैप्शन",
+      "highlightEditingLocked": "हाइलाइट बनाए जा रहे हैं, संपादन लॉक है"
     },
     "item": {
       "seek": "खोजें",
@@ -655,7 +675,9 @@
       "option2Title": "विकल्प 2: Anthropic + ElevenLabs",
       "economicsTitle": "यह क्यों सार्थक है",
       "economicsBody": "Stage5 क्रेडिट सुविधा के लिए अनुकूलित हैं (कोई सेटअप नहीं)। BYO प्रदाताओं को सीधे भुगतान करता है—आमतौर पर आपके पैक के आधार पर ~30-50% सस्ता।",
-      "encryptionUnavailable": "इस सिस्टम पर सुरक्षित स्टोरेज उपलब्ध नहीं है। API keys सहेजी नहीं जा सकतीं।"
+      "encryptionUnavailable": "इस सिस्टम पर सुरक्षित स्टोरेज उपलब्ध नहीं है। API keys सहेजी नहीं जा सकतीं।",
+      "checkoutOpen": "चेकआउट ब्राउज़र में खुला है…",
+      "checkoutOpenHint": "अपने ब्राउज़र में चेकआउट पूरा करें। भुगतान पूरा होते ही हम BYO अपने आप अनलॉक कर देंगे।"
     },
     "byoPreferences": {
       "title": "प्रदाता प्राथमिकताएं",
@@ -687,7 +709,11 @@
       "summaryRequiresOpenAi": "OpenAI BYO तक पहुंच और API key आवश्यक हैं।",
       "summaryRequiresAnthropic": "Anthropic BYO तक पहुंच और API key आवश्यक हैं।",
       "translationReview": "अनुवाद (समीक्षा)",
-      "transcriptionRequiresElevenLabs": "ट्रांसक्रिप्शन केवल ElevenLabs Scribe का उपयोग करता है। अपनी कुंजियों से ट्रांसक्राइब करने के लिए ElevenLabs API कुंजी जोड़ें। इसके बिना, ट्रांसक्रिप्शन Stage5 क्रेडिट का उपयोग करता है, जो आपकी API कुंजियाँ चालू रहने पर उपयोग नहीं होते। आपकी OpenAI कुंजी अनुवाद के लिए अब भी उपयोग होती है।"
+      "transcriptionRequiresElevenLabs": "ट्रांसक्रिप्शन केवल ElevenLabs Scribe का उपयोग करता है। अपनी कुंजियों से ट्रांसक्राइब करने के लिए ElevenLabs API कुंजी जोड़ें। इसके बिना, ट्रांसक्रिप्शन Stage5 क्रेडिट का उपयोग करता है, जो आपकी API कुंजियाँ चालू रहने पर उपयोग नहीं होते। आपकी OpenAI कुंजी अनुवाद के लिए अब भी उपयोग होती है।",
+      "dubbingRequiresElevenLabs": "डबिंग केवल ElevenLabs का उपयोग करती है। अपनी कुंजियों से डब करने के लिए ElevenLabs API कुंजी जोड़ें। इसके बिना डबिंग Stage5 क्रेडिट का उपयोग करती है, जो आपकी API कुंजियाँ चालू रहने तक उपयोग नहीं होते।",
+      "runtimeFallback": "API कुंजी मोड में रनटाइम फ़ॉलबैक",
+      "videoSuggestionLegacyFollowDraft": "पुरानी BYO सेटिंग सुरक्षित रखी गई: जब तक आप कोई सीधा मॉडल नहीं चुनते, यह आपके ड्राफ़्ट अनुवाद मॉडल का पालन करती है।",
+      "videoSuggestionLegacyFollowReview": "पुरानी BYO सेटिंग सुरक्षित रखी गई: जब तक आप कोई सीधा मॉडल नहीं चुनते, यह आपके समीक्षा अनुवाद मॉडल का पालन करती है।"
     },
     "apiKeyGuide": {
       "title": "API कुंजियाँ कैसे प्राप्त करें",
@@ -895,7 +921,9 @@
     "moreMinutesPerDollar": "प्रति डॉलर {{multiplier}}× मिनट",
     "checkoutWaiting": "अपने ब्राउज़र में भुगतान पूरा करें। आपके मिनट अपने-आप यहाँ दिखेंगे।",
     "checkoutNote": "आपके ब्राउज़र में Stripe के ज़रिए एक बार का भुगतान। कोई खाता या सदस्यता नहीं। मिनट अपने-आप आ जाते हैं।",
-    "dubbingNote": "क्रेडिट से अनुवाद करने पर प्रति मिनट लगभग 10% अतिरिक्त लगता है; डबिंग में इससे ज़्यादा लगता है।"
+    "dubbingNote": "क्रेडिट से अनुवाद करने पर प्रति मिनट लगभग 10% अतिरिक्त लगता है; डबिंग में इससे ज़्यादा लगता है।",
+    "iCancelledCheckout": "मैंने भुगतान रद्द कर दिया",
+    "checkoutStartFailed": "चेकआउट शुरू नहीं हो सका। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"
   },
   "cta": {
     "generate": {
@@ -1111,6 +1139,12 @@
     "dubCostConfirm": {
       "title": "डबिंग शुरू करें?",
       "message": "यह डबिंग आपके {{balance}} क्रेडिट में से लगभग {{cost}} इस्तेमाल करेगी। आवाज़ें बनाना अनुवाद से कहीं ज़्यादा महंगा है।"
+    },
+    "unsavedSrtOnCaptionRecovery": {
+      "discardAndOpen": "छोड़ें और कैप्शन खोलें",
+      "message": "आपके पास पहले से सबटाइटल खुले हैं। उन्हें YouTube के स्वचालित कैप्शन से बदलने से पहले सहेजें या छोड़ दें।",
+      "saveAndOpen": "सहेजें और कैप्शन खोलें",
+      "title": "पुनर्प्राप्त स्वचालित कैप्शन खोलें?"
     }
   },
   "progress": {
@@ -1135,7 +1169,79 @@
     "scrubbingHallucinations": "कैप्शन साफ़ हो रहे हैं ({{done}}/{{total}})",
     "translationCleanup": "अनुवादित कैप्शन साफ़ हो रहे हैं ({{done}}/{{total}})",
     "reviewingSlow": "समीक्षा हो रही है (इसमें कुछ समय लग सकता है...) {{done}}/{{total}}",
-    "reviewingRange": "समीक्षा हो रही है {{start}}–{{end}} ({{total}} में से)"
+    "reviewingRange": "समीक्षा हो रही है {{start}}–{{end}} ({{total}} में से)",
+    "legacy": {
+      "aligningVoices": "आवाज़ें मिलाई जा रही हैं {{done}}/{{total}}…",
+      "analyzingSection": "भाग {{done}} / {{total}} में हाइलाइट खोजे जा रहे हैं…",
+      "analyzingVideo": "वीडियो जाँचा जा रहा है…",
+      "assemblingOverlay": "सबटाइटल वीडियो पर बनाए जा रहे हैं…",
+      "audioExtracted": "ऑडियो तैयार",
+      "balancingAudio": "आवाज़ और बैकग्राउंड का संतुलन किया जा रहा है…",
+      "cannotCancelSave": "लगभग हो गया। यह आख़िरी सेव रद्द नहीं किया जा सकता",
+      "captionsOnlyReady": "YouTube कैप्शन तैयार (वीडियो खुद डाउनलोड नहीं हो सका)",
+      "checkingDownloader": "डाउनलोडर जाँचा जा रहा है…",
+      "chooseSaveLocation": "चुनें कि वीडियो कहाँ सहेजना है…",
+      "detectingSpeech": "बोलने वाले हिस्से खोजे जा रहे हैं…",
+      "downloadCancelled": "डाउनलोड रद्द किया गया",
+      "downloadComplete": "डाउनलोड पूरा हुआ",
+      "downloadVerifying": "डाउनलोड हो गया, फ़ाइल जाँची जा रही है…",
+      "drawingFrames": "सबटाइटल फ़्रेम बनाए जा रहे हैं {{done}}/{{total}}…",
+      "dubAudioReady": "वॉइस ट्रैक तैयार",
+      "dubComplete": "डबिंग पूरी हुई",
+      "dubbedVideoReady": "डब किया गया वीडियो तैयार",
+      "encodingComplete": "वीडियो तैयार",
+      "encodingVideo": "वीडियो बनाया जा रहा है…",
+      "errorRecovery": "कुछ पंक्तियाँ ठीक की जा रही हैं…",
+      "extractingAudio": "ऑडियो निकाला जा रहा है…",
+      "extractingAudioPercent": "ऑडियो निकाला जा रहा है ({{percent}}%)…",
+      "fetchingInfo": "वीडियो की जानकारी ली जा रही है…",
+      "finalAdjustments": "आख़िरी बदलाव किए जा रहे हैं…",
+      "finalizingSubtitles": "सबटाइटल पूरे किए जा रहे हैं…",
+      "finishingFile": "वीडियो फ़ाइल पूरी की जा रही है…",
+      "generatingVoices": "आवाज़ें बनाई जा रही हैं {{done}}/{{total}}…",
+      "mergeComplete": "सबटाइटल वाला वीडियो तैयार है",
+      "mergeFailed": "वीडियो बनाना विफल रहा",
+      "mergingFormats": "वीडियो और ऑडियो जोड़े जा रहे हैं…",
+      "postProcessing": "पूरा किया जा रहा है…",
+      "preparingAudioExtraction": "ऑडियो तैयार किया जा रहा है ({{minutes}} मिनट वीडियो)…",
+      "preparingDownload": "डाउनलोड तैयार किया जा रहा है…",
+      "preparingDubLines": "डबिंग के लिए {{count}} पंक्तियाँ तैयार की जा रही हैं…",
+      "preparingHighlights": "हाइलाइट चुनने की तैयारी हो रही है…",
+      "preparingOutput": "आउटपुट फ़ोल्डर तैयार किया जा रहा है…",
+      "preparingTranscript": "ट्रांसक्रिप्ट पढ़ा जा रहा है…",
+      "preparingVideoEngine": "वीडियो टूल तैयार किए जा रहे हैं…",
+      "preparingVoiceClips": "{{count}} वॉइस क्लिप तैयार की जा रही हैं…",
+      "rateLimited": "अभी व्यस्त है, फिर से कोशिश की जा रही है…",
+      "reusingSummary": "हाइलाइट चुनने के लिए सारांश का उपयोग किया जा रहा है…",
+      "saving": "सहेजा जा रहा है…",
+      "sectionAnalyzed": "भाग {{done}} जाँचा गया",
+      "sectionHighlights": "भाग {{done}} में हाइलाइट मिले",
+      "sectionSummarized": "भाग {{done}} / {{total}} का सारांश बना",
+      "selectingHighlights": "भाग {{done}} / {{total}} में हाइलाइट चुने जा रहे हैं…",
+      "settingUpDownloader": "डाउनलोडर सेट किया जा रहा है…",
+      "skippingSameLanguage": "पहले से इसी भाषा में है, अनुवाद की ज़रूरत नहीं",
+      "starting": "शुरू हो रहा है…",
+      "startingDownload": "डाउनलोड शुरू हो रहा है…",
+      "subtitleLayerReady": "सबटाइटल लेयर तैयार",
+      "summarizingSection": "भाग {{done}} / {{total}} का सारांश बनाया जा रहा है…",
+      "summaryReady": "सारांश तैयार",
+      "transcribingParts": "ट्रांसक्राइब हो रहा है {{done}}/{{total}}…",
+      "transcriptionComplete": "ट्रांसक्रिप्शन पूरा हुआ",
+      "translatingLines": "अनुवाद हो रहा है {{done}}/{{total}}…",
+      "uploading": "अपलोड हो रहा है…",
+      "validating": "जाँच हो रही है…",
+      "videoBlockedCaptions": "वीडियो डाउनलोड नहीं हो सका; इसके बजाय YouTube कैप्शन खोजे जा रहे हैं…",
+      "voiceTrackAssembled": "वॉइस ट्रैक जोड़ा गया",
+      "voiceTrackReady": "वॉइस ट्रैक तैयार",
+      "writingSummary": "सारांश लिखा जा रहा है…"
+    },
+    "listening": "वीडियो सुना जा रहा है…",
+    "mergeFinishSaveBeforeReload": "रीलोड करने से पहले मर्ज किया गया वीडियो सहेजना पूरा करें।",
+    "mergeSavePhaseNoCancel": "सेव का यह चरण अब रद्द नहीं किया जा सकता।",
+    "mergeWaitForCancelBeforeReload": "रीलोड करने से पहले मर्ज रद्द होने तक प्रतीक्षा करें।",
+    "preparingTranscription": "सुनने की तैयारी हो रही है…",
+    "restartingTranscription": "ट्रांसक्रिप्शन फिर से शुरू किया जा रहा है…",
+    "resumingTranscription": "जहाँ रुका था वहीं से जारी है…"
   },
   "messages": {
     "fileSaved": "फ़ाइल सहेजी गई:\n{{path}}",
@@ -1256,5 +1362,30 @@
     "covered": "आपके मिनटों में शामिल",
     "preview": "पहले {{minutes}} मिनट मुफ़्त · पूरा वीडियो {{price}}",
     "pack": "पूरा वीडियो {{price}}"
+  },
+  "highlightEditor": {
+    "legend": "Shorts फ़्रेमिंग और कैप्शन",
+    "intro": "हर वक्ता को फ़्रेम करें, कैमरा कट पर विभाजित करें, और छोटे कैप्शन वाक्यांशों को बोली के साथ टाइम करें। नीचे दिए समय इस क्लिप की शुरुआत से गिने जाते हैं।",
+    "previewTime": "Short प्रीव्यू समय",
+    "speakerLabel": "वक्ता या विषय लेबल",
+    "splitShot": "प्लेहेड पर शॉट विभाजित करें",
+    "joinShot": "पिछले शॉट से जोड़ें",
+    "preview": "प्रीव्यू",
+    "emphasize": "इस वाक्यांश पर ज़ोर दें",
+    "splitPhrase": "वाक्यांश विभाजित करें",
+    "removePhrase": "वाक्यांश हटाएँ",
+    "addPhrase": "वाक्यांश जोड़ें",
+    "removeStyling": "स्टाइलिंग हटाएँ",
+    "saveSelectionFirst": "पहले हाइलाइट चयन सहेजें।",
+    "closeEdit": "संपादन बंद करें",
+    "editFraming": "फ़्रेमिंग और कैप्शन संपादित करें",
+    "styleShort": "इस Short को स्टाइल करें",
+    "horizontalFocus": "क्षैतिज फ़ोकस",
+    "verticalFocus": "ऊर्ध्वाधर फ़ोकस",
+    "zoom": "ज़ूम",
+    "from": "से",
+    "to": "तक",
+    "saving": "सहेजा जा रहा है…",
+    "save": "Short संपादन सहेजें"
   }
 }

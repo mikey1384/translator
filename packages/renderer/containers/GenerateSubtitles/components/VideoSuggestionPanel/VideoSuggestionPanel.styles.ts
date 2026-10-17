@@ -85,8 +85,7 @@ export const toggleEyebrowStyles = css`
   color: ${colors.primary};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const toggleTitleStyles = css`
@@ -195,8 +194,7 @@ export const technicalDetailsSummaryStyles = css`
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
   color: ${colors.textDim};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   user-select: none;
   outline: none;
   padding: 2px 0;
@@ -333,8 +331,7 @@ export const chatEmptyEyebrowStyles = css`
   color: ${colors.primaryLight};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const chatEmptyTitleStyles = css`
@@ -642,8 +639,7 @@ export const countryLabelStyles = css`
   font-size: ${fontSize.xs};
   color: ${colors.textDim};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const countryHintStyles = css`
@@ -673,8 +669,7 @@ export const detailsSummaryStyles = css`
   font-size: ${fontSize.xs};
   color: ${colors.textDim};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   user-select: none;
   outline: none;
   padding: 3px 0;

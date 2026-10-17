@@ -82,6 +82,20 @@ export function translateTranscriptionStageLabel(
     }
     case 'transcribing_r2_upload':
       return t('progress.transcribingR2Upload');
+    case 'preparing_transcription':
+      return t('progress.preparingTranscription', 'Getting ready to listen…');
+    case 'resuming_transcription':
+      return t(
+        'progress.resumingTranscription',
+        'Picking up where it left off…'
+      );
+    case 'restarting_transcription':
+      return t(
+        'progress.restartingTranscription',
+        'Starting the transcription again…'
+      );
+    case 'listening':
+      return t('progress.listening', 'Listening to the video…');
     case 'error':
       return t('progress.error');
     default:

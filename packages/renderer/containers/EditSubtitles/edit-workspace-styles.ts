@@ -229,8 +229,7 @@ export const editorToolbarLabelStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   white-space: nowrap;
 `;
 
@@ -308,8 +307,7 @@ export const editorTranslateLabelStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const editorTranslateSelectStyles = css`
@@ -351,8 +349,7 @@ export const subtitleRowIndexStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const subtitleRowHeaderActionsStyles = css`
@@ -388,8 +385,7 @@ export const subtitleRowFieldLabelStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   font-weight: ${fontWeight.semibold};
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 `;
 
 export const subtitleRowSideActionStyles = css`
