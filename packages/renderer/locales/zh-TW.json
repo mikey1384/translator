@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "SRT檔案",
       "mediaFiles": "媒體檔案",
-      "videoFiles": "影片檔案"
+      "videoFiles": "影片檔案",
+      "textFiles": "文字檔",
+      "allFiles": "所有檔案",
+      "subtitleFiles": "字幕檔"
     },
     "chooseAnotherLocation": "選擇其他位置",
     "continue": "繼續",
@@ -96,7 +99,20 @@
     "dismiss": "關閉",
     "moreActions": "更多操作",
     "installingUpdate": "正在安裝更新...",
-    "installingUpdateShort": "正在安裝"
+    "installingUpdateShort": "正在安裝",
+    "ok": "確定",
+    "minimumVersionValue": "最低支援版本：v{{version}}",
+    "currentVersionValue": "目前版本：v{{version}}",
+    "updateNotFoundUseDownloadPage": "無法在這裡下載更新，請到下載頁面取得最新版本。",
+    "whatsNewLead": "Translator 已更新至 v{{version}}。",
+    "whatsNewNotesInEnglish": "版本資訊（英文）",
+    "checkForUpdates": "檢查更新",
+    "checkingForUpdates": "正在檢查更新…",
+    "upToDate": "已是最新版本。",
+    "updateAvailableDownloading": "發現新版本，正在背景下載。",
+    "updateReadyToInstall": "更新已下載，重新啟動即可安裝。",
+    "updateCheckFailed": "無法檢查更新，請稍後再試。",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube 要求進行人機驗證。點擊「連接」繼續。",
@@ -140,7 +156,60 @@
       "providerUnavailable": "轉錄服務（ElevenLabs Scribe）暫時無法使用，或多次嘗試後仍無法連線。請於幾分鐘後再試一次。",
       "fileTooLarge": "此音訊過長，無法在單一工作中轉錄（超過約 {{hours}} 小時）。請將影片分割成較短的部分，並分別轉錄每個部分。",
       "elevenLabsKeyRequired": "轉錄使用 ElevenLabs Scribe，需要 ElevenLabs API 金鑰。請在設定中新增，或關閉 API 金鑰模式以使用 Stage5 點數進行轉錄。您的 OpenAI 或 Anthropic 金鑰仍用於翻譯。"
-    }
+    },
+    "credits": {
+      "transcription": "點數不足，無法轉錄。",
+      "translation": "點數不足，無法翻譯。",
+      "dubbing": "點數不足，無法配音。",
+      "summary": "點數不足，無法產生摘要。",
+      "videoSearch": "點數不足，無法搜尋影片。",
+      "download": "點數不足。",
+      "export": "點數不足。",
+      "other": "點數不足。"
+    },
+    "failed": {
+      "transcription": "轉錄因意外問題中斷，已轉錄的部分都會保留。",
+      "translation": "翻譯因意外問題中斷，已翻好的部分都會保留。",
+      "dubbing": "配音因意外問題中斷。",
+      "summary": "摘要因意外問題中斷。",
+      "videoSearch": "影片搜尋因意外問題中斷。",
+      "export": "影片製作因意外問題中斷。",
+      "other": "出了點問題，請再試一次。"
+    },
+    "server": {
+      "transcription": "伺服器出了點問題，請稍等一分鐘再試。",
+      "translation": "伺服器出了點問題，翻譯已中斷。已翻好的部分都會保留，請稍等一分鐘再試。",
+      "dubbing": "伺服器出了點問題，請稍等一分鐘再試。",
+      "summary": "伺服器出了點問題，請稍等一分鐘再試。",
+      "videoSearch": "伺服器出了點問題，請稍等一分鐘再試。",
+      "export": "伺服器出了點問題，請稍等一分鐘再試。",
+      "other": "伺服器出了點問題，請稍等一分鐘再試。"
+    },
+    "download": {
+      "invalid_url": "這看起來不是影片連結，請貼上完整的連結。",
+      "unsupported_site": "Translator 無法從這個網站下載影片。",
+      "unavailable": "無法觀看這部影片，可能已被移除。",
+      "private": "這是私人影片。",
+      "not_found": "這個連結找不到影片。",
+      "region_locked": "這部影片在你所在的國家或地區無法觀看。",
+      "audience_restricted": "這部影片只開放給部分觀眾。如果你的帳號可以觀看，請在設定中連接這個網站後再試一次。",
+      "login_required": "這部影片需要登入才能觀看。請在設定中連接這個網站後再試一次。",
+      "media_blocked": "網站封鎖了影片下載，也沒能取得任何字幕。",
+      "access_refused": "這個網站拒絕提供影片給 Translator。",
+      "video_data_failed": "無法下載這部影片，可能有地區限制或需要登入。",
+      "rate_limited": "YouTube 目前限制了你這個網路的下載，請等幾分鐘再試。",
+      "network": "無法連線，請檢查網路連線後再試一次。",
+      "captions_unreadable": "找到了 YouTube 字幕，但 Translator 無法讀取。",
+      "save_failed": "影片已下載，但無法儲存，請再試一次。",
+      "downloader_failed": "影片下載工具無法啟動，請重新開啟 Translator 後再試一次。",
+      "generic": "無法下載這部影片，請再試一次或改用其他連結。",
+      "subtitlesNotSaved": "目前的字幕無法儲存，所以沒有開啟 YouTube 字幕。",
+      "openFailed": "影片已下載，但無法開啟。請從下載紀錄開啟。"
+    },
+    "network": "無法連上伺服器，請檢查網路連線後再試一次。",
+    "busy": "服務目前忙碌中，請稍等一分鐘再試。",
+    "diskFull": "磁碟空間已滿，請清出一些空間後再試一次。",
+    "cancelDubbingFailedPlain": "無法停止配音，請再試一次。"
   },
   "input": {
     "connect": "連接",
@@ -175,7 +244,7 @@
     "transcribeOnly": "轉錄音訊",
     "srtLoaded": "轉錄完成",
     "srtFileLoaded": "已載入 SRT",
-    "featuresUnlockAfterTranscription": "轉錄完成後將顯示翻譯和其他選單。",
+    "featuresUnlockAfterTranscription": "可以轉錄、翻譯這部影片，或找出精華片段。",
     "preSubtitleActionsHint": "可從這支影片產生轉錄、翻譯或精華片段。",
     "saveDubbedVideo": "儲存配音影片",
     "downloadFinishedSwitchTitle": "觀看已下載的影片？",
@@ -291,13 +360,13 @@
       "defaultSearchUserMessage": "現在幫我找影片。",
       "followUp": {
         "moreLikeQuery": "查找更多像 \"{{query}}\" 這樣的影片",
-        "differentCreator": "來自其他創作者或頻道的 \"{{query}}\"",
+        "differentCreator": "其他人或頻道的「{{query}}」",
         "interviews": "與 {{query}} 相關的訪談或對談",
         "clips": "{{query}} 的精華片段或亮眼剪輯",
-        "creatorAppearances": "{{creator}} 的訪談、電視露面或現場片段",
-        "similarCreators": "與 {{creator}} 類似的創作者或藝人",
+        "creatorAppearances": "{{creator}} 的訪談、節目露面或相關片段",
+        "similarCreators": "與 {{creator}} 相似的人物、藝人或頻道",
         "topicAngle": "從不同角度講解 {{topic}}",
-        "topicCreator": "{{creator}} 和相關的 {{topic}} 影片",
+        "topicCreator": "{{creator}} 或相關的{{topic}}影片",
         "channelStyle": "風格感覺與 {{channel}} 相似的影片",
         "moreFromHistory": "更多像 \"{{title}}\" 這樣的影片",
         "channelFromHistory": "來自像 {{channel}} 這樣頻道的影片"
@@ -307,12 +376,12 @@
       "moreActions": "更多操作",
       "recentEvents": "近期事件",
       "cancelFailed": "無法取消目前的搜尋。",
-      "countryGlobal": "全球結果",
-      "countryHint": "留空即可查看全球結果。",
+      "countryGlobal": "目標國家/地區：預設（英文）",
+      "countryHint": "留空則預設以英文搜尋。",
       "countryHintDefaultEnglish": "留空則預設以英文搜尋.",
       "countryLabel": "目標國家 / 地區",
       "countryPlaceholder": "例如：美國、日本、西班牙、巴西",
-      "countryScope": "國家/地區：{{country}}",
+      "countryScope": "目標國家/地區：{{country}}",
       "countryDefaultEnglish": "目標國家: 預設為英文",
       "emptyCopy": "說說你想找的影片主題、受眾、創作者風格或氛圍。只有在必要時才加上國家或時效。",
       "emptyEyebrow": "助理引導式探索",
@@ -335,7 +404,7 @@
       "savedDownloads": "已儲存下載",
       "savedDownloadsCount": "{{count}} 個已儲存下載",
       "savedPreferencesCount": "{{count}} 個已儲存偏好",
-      "searchingLong": "仍在搜尋並排序影片...",
+      "searchingLong": "還在搜尋影片…",
       "searchingVeryLong": "比平常更久，但仍在執行中。",
       "stillWorking": "仍在處理...",
       "toggleCopy": "不離開目前流程，直接在 YouTube 搜尋來源影片。",
@@ -355,7 +424,11 @@
       "removeFromHistoryConfirm": "要從下載歷史記錄中移除此項目嗎？儲存在應用程式媒體庫之外的檔案將保留在裝置上。",
       "deleteLocalFileHistoryPending": "檔案已刪除，但 Translator 無法完成下載歷史記錄的更新。它會自動重試。",
       "removeHistoryFailed": "無法從歷史記錄中移除此下載。",
-      "storedInAppLibrary": "已儲存在應用程式媒體庫"
+      "storedInAppLibrary": "已儲存在應用程式媒體庫",
+      "freeSearchRunning": "正在搜尋 YouTube…",
+      "freeSearchResults": "這是 YouTube 上「{{query}}」的搜尋結果，這次搜尋免費。再多說一點你想找的內容，我會用 AI 幫你找得更準。",
+      "freeSearchEmpty": "YouTube 上找不到「{{query}}」。描述一下你想看的內容，我會用 AI 幫你搜尋。",
+      "openOriginalPage": "開啟原始網頁"
     },
     "downloadAndTranslate": "下載並翻譯",
     "downloadAndTranscribe": "下載並轉錄",
@@ -369,7 +442,24 @@
     "captionRecoveryKeepVideo": "保留目前影片",
     "captionRecoveryOpenCaptions": "開啟字幕",
     "captionRecoverySwitchPrompt": "Translator 已復原 YouTube 自動字幕，但 URL 影片無法使用。開啟字幕會卸載目前的影片。",
-    "captionRecoverySwitchTitle": "要在沒有目前影片的情況下開啟字幕嗎？"
+    "captionRecoverySwitchTitle": "要在沒有目前影片的情況下開啟字幕嗎？",
+    "translateTheseSubtitles": "翻譯這份字幕",
+    "subtitlesLoaded": "已載入字幕",
+    "chooseLanguage": "選擇語言",
+    "urlRejected": {
+      "collection": "這是頻道或播放清單的連結。請貼上單一影片的連結，或使用「找影片」。",
+      "live": "這是直播。直播結束後，Translator 就能下載。"
+    },
+    "longDownload": {
+      "title": "要下載長影片嗎？",
+      "body": "這部影片比較長，下載可能要花一些時間，也會佔用不少磁碟空間。調低下載畫質會更快、檔案也更小。",
+      "duration": "長度：{{duration}}",
+      "size": "約 {{size}}",
+      "confirm": "下載"
+    },
+    "dropWhileDownloading": "正在下載中。下載完成後，請再拖入一次檔案。",
+    "dropWhileBusy": "Translator 正在處理這部影片。完成後，請再拖入一次檔案。",
+    "dropNotSupported": "請拖入影片、音訊檔或 .srt 字幕檔。"
   },
   "subtitles": {
     "outputLanguage": "輸出語言",
@@ -392,32 +482,46 @@
     "translateEstimateByo": "BYO金鑰",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。",
-    "dubCostHint": "ElevenLabs 配音：每分鐘語音 ~{{rate}} 點數。此估算會在配音開始前顯示。"
+    "dubCostHint": "ElevenLabs 配音：每分鐘語音 ~{{rate}} 點數。此估算會在配音開始前顯示。",
+    "unreadableCues": "這個檔案中有 {{count}} 行無法讀取，已略過。請檢查時間碼。",
+    "addCreditsToTranslate": "儲值後翻譯",
+    "dubInto": "配成{{language}}",
+    "dubIntro": "用你選的語言把字幕唸出來，並保留原本的背景音。",
+    "dubNeedsSubtitles": "配音會朗讀字幕，所以這部影片要先有字幕。請先轉錄，再回來選擇聲音。",
+    "dubLanguageLabel": "配音語言",
+    "dubSameLanguage": "字幕已經是{{language}}，會直接照原文朗讀。",
+    "dubTranslatesFirst": "字幕會先翻成{{language}}，再進行配音。",
+    "dubCostWithTranslation": "翻譯和配音：{{cost}}",
+    "dubUsesOwnKeys": "使用你自己的 API 金鑰。",
+    "dubNotEnoughCredits": "點數不足，無法配音。",
+    "addCreditsToDub": "儲值後配音",
+    "noSubtitlesToDub": "請先為這部影片產生或開啟字幕，再進行配音。",
+    "noSubtitlesToTranslate": "請先開啟或產生字幕，再進行翻譯。"
   },
   "summary": {
-    "title": "逐字稿摘要",
-    "ctaHelper": "產生深入的總覽。較長的影片可能需要一些時間。",
-    "languageLabel": "摘要語言",
+    "title": "精華片段",
+    "ctaHelper": "找出最精彩的片段。",
+    "languageLabel": "輸出語言",
     "tab": {
       "summary": "摘要",
-      "sections": "詳細筆記",
+      "sections": "筆記",
       "highlights": "精華片段"
     },
-    "generate": "產生摘要",
-    "regenerate": "重新產生摘要",
+    "generate": "找出精華片段",
+    "regenerate": "重新找出精華片段",
     "estimateCredits": "{{credits}} 點數",
     "estimateByo": "BYO 金鑰",
     "highEffortBadge": "(深度)",
     "placeholder": "AI 摘要產生後會顯示在此。",
-    "insufficientCredits": "點數不足，無法執行摘要。",
-    "error": "無法建立摘要。{{message}}",
+    "insufficientCredits": "點數不足，無法找出精華片段。",
+    "error": "無法找出精華片段。{{message}}",
     "cancel": "取消",
     "copy": "複製摘要",
     "copied": "已複製！",
     "copyError": "無法將摘要複製到剪貼簿。",
-    "noHighlights": "尚無精彩片段。點擊產生以偵測精彩時刻。",
+    "noHighlights": "還沒有精華片段。按「找出精華片段」，挑出最精彩的時刻。",
     "noVideoForHighlights": "請開啟來源影片以剪輯精彩片段。",
-    "summaryRequiredForHighlights": "裁剪精華片段前，請先產生轉錄摘要。",
+    "summaryRequiredForHighlights": "請先按「找出精華片段」來分析逐字稿。",
     "highlight": "精彩片段",
     "cutHighlightClip": "裁剪這段精華",
     "cuttingHighlightClip": "裁剪中…",
@@ -425,8 +529,8 @@
     "clipFormat": "片段格式：",
     "originalFormat": "原始",
     "originalFormatDesc": "保留原始影片尺寸",
-    "verticalFormat": "9:16 直式",
-    "verticalFormatDesc": "已針對 YouTube Shorts、TikTok、Reels（9:16）最佳化",
+    "verticalFormat": "Shorts 直式構圖",
+    "verticalFormatDesc": "裁切並重新構圖，適用於 YouTube Shorts、TikTok、Reels（9:16）",
     "verticalFitFormat": "Shorts 適配",
     "verticalFitFormatDesc": "將原始畫面適配到 9:16 畫布中",
     "downloadHighlight": "下載剪輯",
@@ -440,16 +544,18 @@
     "sectionHeading": "第 {{index}} 節",
     "highlightsInProgress": "正在準備重點剪輯…",
     "status": {
-      "preparing": "正在準備逐字稿…",
-      "chunk": "正在摘要第 {{current}}/{{total}} 段",
-      "selectingHighlights": "正在選擇精彩時刻…",
+      "preparing": "正在分析逐字稿…",
+      "chunk": "正在撰寫摘要 {{current}}/{{total}}",
+      "selectingHighlights": "正在挑選精華片段…",
       "cuttingHighlight": "正在剪輯精彩片段 {{current}}/{{total}}…",
       "cuttingHighlights": "正在剪輯精彩片段…",
-      "synthesizing": "正在綜合完整摘要…",
-      "ready": "摘要已就緒",
-      "error": "摘要失敗",
-      "cancelled": "摘要已取消",
-      "inProgress": "正在產生摘要…"
+      "synthesizing": "即將完成…",
+      "ready": "精華片段已備妥",
+      "error": "無法找出精華片段",
+      "cancelled": "已取消找出精華片段",
+      "inProgress": "正在找出精華片段…",
+      "cuttingClip": "正在剪輯片段…",
+      "renderingClipSubtitles": "正在為片段加上字幕…"
     },
     "combineMode": "合併",
     "exitCombineMode": "退出合併",
@@ -462,7 +568,29 @@
     "combinedCutFailed": "合併精彩片段剪輯失敗：{{message}}",
     "highlightsInsufficientCredits": "摘要已產生，但由於點數用盡，精華片段擷取已停止。",
     "highlightsPartialWarning": "精華片段僅部分擷取，可能不完整。請重新產生以更新。",
-    "highlightsPartialWithReason": "摘要已產生，但精華片段僅部分擷取：{{message}}"
+    "highlightsPartialWithReason": "摘要已產生，但精華片段僅部分擷取：{{message}}",
+    "estimateOwnKey": "使用你的 API 金鑰",
+    "generateSummary": "產生摘要",
+    "regenerateSummary": "重新產生摘要",
+    "showingSavedLanguage": "目前顯示的是已儲存的{{language}}版本。按下按鈕即可產生{{current}}版本。",
+    "showingSavedVariant": "目前顯示的是已儲存的{{language}}版本，摘要品質設定不同。按下按鈕即可重新產生。",
+    "noSummaryYet": "還沒有摘要。選好語言後按「產生摘要」，就能看到這部影片的重點。",
+    "noSummaryWithHighlights": "這些精華片段沒有附摘要。按「產生摘要」就能補上一份。",
+    "clipCaptionsChanged": "剪輯這段片段後，字幕有變動。",
+    "recutClip": "重新剪輯",
+    "cutCombinedCount": "合併剪輯 {{count}} 段",
+    "cutHighlightFailed": "無法剪輯片段：{{message}}",
+    "clipError": {
+      "busy": "請等目前的工作完成後，再剪輯片段。",
+      "noHighlight": "請先選擇一個精華片段。",
+      "editorialSingle": "已設定樣式的 Shorts 請在「Shorts 直式構圖」中逐一剪輯。",
+      "editorialStale": "這支 Shorts 的字幕有變動。請開啟「設計這支 Shorts」，確認並儲存後再重新剪輯。",
+      "noTranscript": "剪輯片段前，請先開啟這部影片的字幕。",
+      "noCues": "影片的這個段落沒有字幕。",
+      "untranslated": "這段片段中有些行還沒翻譯。請先翻譯，或把字幕顯示改成原文。",
+      "subtitlesNotSaved": "片段已剪好，但字幕無法儲存。",
+      "generic": "無法從影片剪出這段片段，請再試一次。"
+    }
   },
   "panel": {
     "new": "新",
@@ -516,7 +644,9 @@
       "originalTextPrefix": "原文:",
       "subtitlePlaceholder": "字幕文字",
       "confirmRemove": "確定要移除此字幕區塊嗎？此操作無法撤銷。",
-      "transcribeThisLine": "轉錄此行"
+      "transcribeThisLine": "轉錄此行",
+      "timeEndBeforeStart": "結束時間必須晚於開始時間，這行已保留原本的時間。",
+      "timeUnreadable": "請輸入像 00:01:23,450 或 1:23.45 這樣的時間，這行已保留原本的時間。"
     },
     "header": {
       "save": "儲存字幕",
@@ -529,6 +659,14 @@
       "styleLabel": "樣式:",
       "mergeButton": "合併字幕",
       "mergingButton": "合併中..."
+    },
+    "undo": {
+      "removed": "已刪除這行。",
+      "inserted": "已新增一行。",
+      "replaced": "已全部替換。",
+      "shifted": "已調整時間。",
+      "improved": "已重新轉錄這行。",
+      "action": "復原"
     }
   },
   "settings": {
@@ -552,7 +690,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "使用我的 API 金鑰",
-      "activeKeys": "已準備 {{count}} 個金鑰",
+      "activeKeys": "{{count}} 個金鑰可用",
       "noKeys": "尚未設定金鑰",
       "usingApiKeys": "Stage5 點數已關閉",
       "usingCredits": "正在使用 Stage5 點數",
@@ -575,10 +713,10 @@
         "anthropicHighEnd": "Anthropic 高階複審",
         "help": "<b>5× 點數</b> · 增加複審階段以提升品質",
         "helpWithEstimate": "<b>5× 點數</b> · 您的餘額：~{{normalTime}}（一般）/ ~{{hqTime}}（高品質）",
-        "helpOn": "<b>5×點數</b> • 包含複審流程",
-        "helpOff": "略過複審流程",
-        "helpWithEstimateOn": "<b>5×點數</b> • 包含複審流程 • 餘額：~{{time}}",
-        "helpWithEstimateOff": "略過複審流程 • 餘額：~{{time}}"
+        "helpOn": "<b>5× 點數</b> • Claude Haiku 5.5 初稿 + Claude Opus 5.5 審稿",
+        "helpOff": "<b>1× 點數</b> • 僅 Claude Haiku 5.5 初稿",
+        "helpWithEstimateOn": "<b>5× 點數</b> • Claude Haiku 5.5 初稿 + Claude Opus 5.5 審稿 • 餘額：約 {{time}}",
+        "helpWithEstimateOff": "<b>1× 點數</b> • 僅 Claude Haiku 5.5 初稿 • 餘額：約 {{time}}"
       },
       "qualitySummary": {
         "label": "高品質摘要",
@@ -586,9 +724,9 @@
         "modelOff": "Claude Sonnet 5.5 標準分析",
         "help": "<b>4× 點數</b> · 使用 Claude Opus 5.5 進行深度分析和精彩片段剪輯",
         "helpWithEstimate": "<b>4× 點數</b> · 您的餘額：~{{normalTime}}（一般）/ ~{{hqTime}}（高品質）",
-        "helpOn": "<b>4×點數</b> • 深度分析 + 精華片段",
+        "helpOn": "<b>4× 點數</b> • Claude Opus 5.5 深度分析 + 精華片段",
         "helpOff": "使用 Claude Sonnet 5.5 快速分析",
-        "helpWithEstimateOn": "<b>4×點數</b> • 深度分析 + 精華片段 • 餘額：~{{time}}",
+        "helpWithEstimateOn": "<b>4× 點數</b> • Claude Opus 5.5 深度分析 + 精華片段 • 餘額：約 {{time}}",
         "helpWithEstimateOff": "使用 Claude Sonnet 5.5 快速分析 • 餘額：~{{time}}"
       },
       "qualityDubbing": {
@@ -609,7 +747,10 @@
         "perHour": "~{{credits}} 點數/小時",
         "perMinute": "~{{credits}} 點數/分鐘",
         "perSearch": "~{{credits}} 點數/次搜尋",
-        "balance": "餘額：~{{time}}"
+        "balance": "餘額：~{{time}}",
+        "minutesPerHour": "每小時影片約扣 {{time}}",
+        "minutesPerDubMinute": "每分鐘配音約扣 {{time}}",
+        "minutesPerSearch": "每次搜尋約扣 {{time}}"
       }
     },
     "dubbing": {
@@ -677,11 +818,13 @@
       "economicsBody": "Stage5 點數優化了便利性（無需設置）。BYO 直接支付給提供商——根據您的套餐，通常便宜約 30-50%。",
       "encryptionUnavailable": "此系統不支援安全儲存，無法儲存 API 金鑰。",
       "checkoutOpen": "已在瀏覽器中開啟付款頁面…",
-      "checkoutOpenHint": "請在瀏覽器中完成付款。付款完成後，我們會自動解鎖 BYO。"
+      "checkoutOpenHint": "請在瀏覽器中完成付款。付款完成後，我們會自動解鎖 BYO。",
+      "entitlementsLoadFailed": "無法確認解鎖狀態，請檢查網路連線後重試。",
+      "unlockFailed": "無法開始付款，請檢查網路連線後再試一次。"
     },
     "byoPreferences": {
       "title": "服務提供商偏好設定",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Stage5 點數",
       "pricingHint": "每 1 小時影片的預估費用",
       "pricingHintHeuristic": "依目前應用程式估算規則計算的預估成本",
       "transcription": "轉錄",
@@ -793,7 +936,8 @@
       "saved": "API 金鑰已儲存。",
       "cleared": "API 金鑰已清除。",
       "invalid": "API 金鑰驗證失敗。",
-      "howToGet": "如何取得這組金鑰"
+      "howToGet": "如何取得這組金鑰",
+      "missing": "請先貼上 API 金鑰。"
     },
     "byoStack": {
       "title": "你的 AI 堆疊"
@@ -829,12 +973,18 @@
         "desktopConnected": "已將 Translator 新增至 Claude Desktop。結束並重新開啟 Claude 即可載入。",
         "cliNotFound": "在這台電腦上找不到 {{app}} 指令。請在終端機中執行：",
         "cliNotFoundCopied": "在這台電腦上找不到 {{app}} 指令。設定指令已複製，請貼到終端機中：",
-        "failed": "無法連接 {{app}}：{{message}}"
+        "failed": "無法連接 {{app}}：{{message}}",
+        "details": "詳細資訊",
+        "failedConfigInvalid": "無法連接 {{app}}：它的設定檔格式有誤，Translator 沒有更動它。請修正或刪除該檔案後再試一次。",
+        "failedWrite": "無法連接 {{app}}：Translator 無法寫入它的設定檔。",
+        "failedLauncher": "只有在已安裝的 Translator 應用程式中才能連接 {{app}}。",
+        "failedCli": "無法自動連接 {{app}}。請在終端機中執行：",
+        "failedGeneric": "無法連接 {{app}}，請再試一次。"
       },
       "status": {
         "enabled": "已啟用",
         "disabled": "已停用",
-        "connected": "已連線用戶端：{{count}}"
+        "connected": "已連線 {{count}} 個用戶端"
       },
       "permissions": "代理程式可以執行：",
       "permission": {
@@ -882,7 +1032,16 @@
       "redeeming": "正在接收…",
       "received": "已接收 {{credits}} 點數。",
       "receivedNoCredits": "代碼已生效。",
-      "receivedByo": "API 金鑰解鎖已在這台電腦上啟用。"
+      "receivedByo": "API 金鑰解鎖已在這台電腦上啟用。",
+      "errors": {
+        "nothing_to_transfer": "目前沒有可以轉移的項目：這台電腦沒有購買的點數，也沒有 API 金鑰解鎖。若要把其他電腦的點數轉到這裡，請選擇「接收點數」。",
+        "too_many_codes": "這一小時內建立的轉移碼太多了，請稍後再試。",
+        "jobs_running": "轉錄或翻譯還在進行中，請等完成後再試。",
+        "invalid_code": "這組代碼有誤、已使用過或已過期。請在另一台電腦上重新產生。",
+        "same_device": "請在另一台電腦上輸入代碼，不是產生代碼的這台。",
+        "network_error": "無法連上 Stage5 伺服器，請檢查網路連線後再試一次。",
+        "transfer_failed": "無法轉移點數，請檢查網路連線後再試一次。"
+      }
     }
   },
   "credits": {
@@ -923,7 +1082,9 @@
     "checkoutNote": "透過 Stripe 在瀏覽器中一次付清，不用註冊帳號，也不是訂閱。時數會自動入帳。",
     "dubbingNote": "使用點數翻譯每分鐘約多耗用 10%；配音耗用更多。",
     "iCancelledCheckout": "我已取消付款",
-    "checkoutStartFailed": "無法開始付款。請檢查網路連線後再試一次。"
+    "checkoutStartFailed": "無法開始付款。請檢查網路連線後再試一次。",
+    "loadFailed": "無法載入餘額，請檢查網路連線後再試一次。",
+    "estimateAmount": "{{credits}} 點數"
   },
   "cta": {
     "generate": {
@@ -958,7 +1119,12 @@
     "useThisVideo": "使用這部影片",
     "useDownloadedVideo": "使用這部影片",
     "useOriginalAudio": "使用原始音軌",
-    "useDubbedAudio": "使用配音音軌"
+    "useDubbedAudio": "使用配音音軌",
+    "changeVideoKeepSubtitles": "把目前的字幕套用到新影片（適用於同一部影片的另一個檔案）。若是不同的影片，請取消勾選。",
+    "mute": "靜音 (M)",
+    "unmute": "取消靜音 (M)",
+    "volume": "音量",
+    "unreadableFile": "Translator 無法讀取這個檔案，檔案可能已損毀或格式不受支援。"
   },
   "admin": {
     "title": "管理員",
@@ -1031,7 +1197,7 @@
     "validation": {
       "pleaseSelectVideo": "請選擇影片",
       "processingDuration": "正在處理影片長度。請稍後再試。",
-      "icloudPlaceholder": "此檔案儲存在 iCloud 中。請在 Finder 中點選「下載」，等待雲朵圖示消失後再試。",
+      "icloudPlaceholder": "這個檔案存放在 iCloud。請在 Finder 中按一下「下載」，等雲朵圖示跑完後再試一次。",
       "insufficientCreditsForVoiceCloning": "語音複製的點數不足。影片長度為 {{duration}} 分鐘，但您只能負擔 {{affordable}} 分鐘。請增加點數或停用語音複製。",
       "fileTooLargeForVoiceCloning": "影片檔案過大，無法進行語音複製（{{size}}MB）。最大允許 {{max}}MB。請使用較短的影片或停用語音複製。"
     },
@@ -1055,7 +1221,7 @@
       "localSourceReady": "本機檔案已就緒",
       "webSourceReady": "網頁來源已就緒",
       "sourceReadyDescription": "你選擇的媒體已可進行下一步。",
-      "transcribeTitle": "建立轉錄",
+      "transcribeTitle": "處理影片",
       "processVideoTitle": "處理影片",
       "transcribeDescription": "先將來源媒體轉成可編輯的字幕軌，再繼續翻譯或配音。",
       "translateDubTitle": "翻譯或配音",
@@ -1082,7 +1248,11 @@
     "nextMatchAria": "下一個匹配",
     "previousMatchAria": "上一個匹配",
     "replaceAllAria": "全部替換",
-    "closeAria": "關閉查找列"
+    "closeAria": "關閉查找列",
+    "matchCount": "{{current}}/{{total}}",
+    "matchCase": "區分大小寫",
+    "wholeWord": "全字相符",
+    "showReplace": "替換"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1134,7 +1304,32 @@
       "neverHadMessage": "轉錄需要點數或 API 金鑰解鎖，兩者皆可在設定中取得。透過代理程式控制使用您自己的 Claude 或 Codex 進行翻譯是免費的。",
       "notEnoughTitle": "點數不足，無法處理此影片",
       "notEnoughTranscriptionMessage": "轉錄此影片約需 {{required}} 點數。您有 {{available}} 點數，約可轉錄 {{minutes}} 分鐘。請儲值後重新開始。",
-      "notEnoughMessage": "此任務所需點數超過您的餘額（{{available}}）。請儲值後繼續。"
+      "notEnoughMessage": "此任務所需點數超過您的餘額（{{available}}）。請儲值後繼續。",
+      "task": {
+        "transcription": {
+          "title": "轉錄需要點數",
+          "message": "目前的餘額不夠轉錄這部影片。儲值後請重新開始，已轉錄的部分都會保留。"
+        },
+        "translation": {
+          "title": "翻譯需要點數",
+          "message": "目前的餘額不夠翻譯這部影片。儲值後請再試一次，已翻好的部分都會保留。透過代理程式控制用你自己的 Claude 或 Codex 翻譯，完全免費。"
+        },
+        "dubbing": {
+          "title": "配音需要點數",
+          "message": "目前的餘額不夠為這部影片配音。儲值後請再試一次。"
+        },
+        "summary": {
+          "title": "摘要需要點數",
+          "message": "目前的餘額不夠產生摘要和精華片段。儲值後請再試一次。"
+        },
+        "videoSearch": {
+          "title": "AI 影片搜尋需要點數",
+          "message": "目前的餘額不夠進行 AI 影片搜尋。儲值後請再搜尋一次。"
+        },
+        "other": {
+          "title": "這項功能需要點數"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "開始配音？",
@@ -1145,7 +1340,58 @@
       "message": "你已開啟字幕。以 YouTube 自動字幕取代前，請先儲存或捨棄目前的字幕。",
       "saveAndOpen": "儲存並開啟字幕",
       "title": "要開啟復原的自動字幕嗎？"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "要先儲存字幕修改嗎？",
+      "message": "這份字幕在上次儲存後有修改過。要先儲存，再替換嗎？",
+      "saveAndContinue": "儲存並繼續",
+      "discardAndContinue": "放棄修改並繼續"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "轉錄還在進行中。",
+        "translation": "翻譯還在進行中。",
+        "dubbing": "配音還在進行中。",
+        "export": "影片還在匯出中。",
+        "summary": "摘要還在撰寫中。",
+        "download": "還在下載中。",
+        "highlight": "精華片段還在剪輯中。",
+        "search": "影片搜尋還在進行中。",
+        "generic": "還有工作在進行中。"
+      },
+      "unsavedLine": "字幕修改尚未儲存。",
+      "unsavedMessage": "這份字幕有尚未儲存的修改。",
+      "tabUnsavedDetail": "要在關閉分頁前儲存嗎？",
+      "tabUnsavedWithJobDetail": "關閉分頁會停止目前的工作。要先儲存字幕修改嗎？",
+      "tabJobDetail": "關閉分頁會中止這項工作，目前的進度也會遺失。",
+      "quitMessage": "要結束 {{app}} 嗎？還有工作沒完成。",
+      "windowMessage": "要關閉視窗嗎？還有工作沒完成。",
+      "tabLine": "{{title}}：{{status}}",
+      "unsavedWithJobsDetail": "進行中的工作會停止。要先儲存字幕修改嗎？",
+      "jobsDetail": "進行中的工作會停止，目前的進度也會遺失。",
+      "saveAndClose": "儲存並關閉",
+      "saveAndQuit": "儲存並結束",
+      "closeWithoutSaving": "不儲存就關閉",
+      "quitWithoutSaving": "不儲存就結束",
+      "stopAndClose": "停止並關閉",
+      "quitAnyway": "仍要結束",
+      "closeAnyway": "仍要關閉",
+      "saveFailed": "無法儲存「{{title}}」的字幕，因此沒有關閉。請先在編輯器中儲存，再試一次。",
+      "ok": "確定"
+    },
+    "exportSaveDialogTitle": "將影片另存為",
+    "exportVideoFilterName": "MP4 影片",
+    "exportDiscardConfirm": "影片已經做好，但還沒儲存。要放棄嗎？",
+    "exportChooseLocationButton": "選擇儲存位置…",
+    "exportDiscardButton": "放棄影片",
+    "exportSaveFailed": "無法將影片儲存到 {{folder}}。",
+    "exportSaveFailedPermission": "你沒有權限儲存到這個資料夾。",
+    "exportSaveFailedDiskFull": "該磁碟的可用空間不足。",
+    "exportSaveFailedGeneric": "無法在該位置寫入檔案。",
+    "exportSameAsSource": "這樣會覆蓋原始影片，請換一個檔名。",
+    "keepDubbing": "繼續配音",
+    "stopDubbing": "停止配音",
+    "cancelDubbingBody": "目前已完成的配音會被捨棄。"
   },
   "progress": {
     "preparingVideoExport": "正在準備匯出影片…",
@@ -1158,12 +1404,12 @@
     "extractingAudio": "正在擷取音訊...",
     "transcribingOf": "轉錄 {{done}}/{{total}}",
     "error": "錯誤",
-    "transcribedChunks": "已轉錄並清理 {{done}}/{{total}} 個片段",
+    "transcribedChunks": "已轉錄 {{done}}/{{total}} 個片段",
     "transcribingElevenLabs": "使用 ElevenLabs 轉錄中（約剩餘 {{minutes}} 分鐘）",
     "transcribingElevenLabsHours": "使用 ElevenLabs 轉錄中（約剩餘 {{hours}} 小時 {{minutes}} 分鐘）",
     "transcribingElevenLabsFinishing": "使用 ElevenLabs 轉錄中...",
     "transcriptionRetry": "連線失敗，正在重試（{{attempt}}/{{maxAttempts}}）...",
-    "transcribingR2Upload": "正在上傳音訊以進行轉錄...",
+    "transcribingR2Upload": "正在上傳音訊…",
     "gapRepair": "間隙修復 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "修復遺失的字幕 (第{{iteration}}/{{maxIterations}}次迭代) {{done}} / {{total}}",
     "scrubbingHallucinations": "清理字幕中 ({{done}}/{{total}})",
@@ -1233,7 +1479,18 @@
       "videoBlockedCaptions": "影片無法下載，正在改為尋找 YouTube 字幕…",
       "voiceTrackAssembled": "配音音軌已合成",
       "voiceTrackReady": "配音音軌已就緒",
-      "writingSummary": "正在撰寫摘要…"
+      "writingSummary": "正在撰寫摘要…",
+      "completed": "完成",
+      "cancelled": "已取消",
+      "cancelling": "正在取消…",
+      "failed": "出了點問題",
+      "downloading": "下載中…",
+      "downloadingAudio": "正在下載音訊…",
+      "transcribingLine": "正在轉錄這行…",
+      "startingExport": "正在開始製作影片…",
+      "captionsAvailable": "影片無法下載，但可以使用 YouTube 字幕",
+      "captionsNotOpened": "YouTube 字幕已備妥，但尚未開啟",
+      "insufficientCredits": "點數不足"
     },
     "listening": "正在聆聽影片…",
     "mergeFinishSaveBeforeReload": "請先完成合併影片的儲存，再重新載入。",
@@ -1241,7 +1498,8 @@
     "mergeWaitForCancelBeforeReload": "請等待合併取消完成後再重新載入。",
     "preparingTranscription": "正在準備聆聽…",
     "restartingTranscription": "正在重新開始轉錄…",
-    "resumingTranscription": "正在從中斷處繼續…"
+    "resumingTranscription": "正在從中斷處繼續…",
+    "hqModeEstimate": "（高品質：約 {{time}}）"
   },
   "messages": {
     "fileSaved": "檔案已儲存：\n{{path}}",
@@ -1264,7 +1522,23 @@
     "sendReport": "傳送報告",
     "reportPrompt": "發生錯誤。請向開發者回報以便快速修復。",
     "preparingReport": "正在準備診斷包...",
-    "reportContextWarning": "部分診斷內容無法載入。報告仍會包含此應用程式的詳細資訊。"
+    "reportContextWarning": "部分診斷內容無法載入。報告仍會包含此應用程式的詳細資訊。",
+    "reportPromptTask": {
+      "transcription": "轉錄因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "translation": "翻譯因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "dubbing": "配音因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "summary": "摘要因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "videoSearch": "影片搜尋因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "download": "影片下載失敗，原因不明。請傳送這份報告，讓我們修正問題。",
+      "export": "影片製作因意外問題中斷。請傳送這份報告，讓我們修正問題。",
+      "other": "出了點問題。請傳送這份報告，讓我們修正問題。"
+    },
+    "feedbackTitle": "意見回饋或回報問題",
+    "whatHappened": "發生了什麼事，或有什麼想告訴我們的？",
+    "attachDiagnostics": "附上診斷資訊（回報問題時建議勾選）",
+    "attachDiagnosticsHint": "包含最近的應用程式記錄、版本和系統資訊，不含任何影片或字幕。",
+    "showDetails": "查看將傳送的內容",
+    "feedbackEmailSubject": "Translator 意見回饋"
   },
   "home": {
     "headline": "任何影片，都能用<lang>{{language}}</lang>看懂。",
@@ -1284,7 +1558,7 @@
     "editSrt": "編輯現有的 .srt",
     "burnSubtitles": "幫影片加上字幕",
     "findLabel": "找影片",
-    "findPlaceholder": "不知道要看什麼？說說你想看的 — 例如：韓國街頭小吃 Vlog",
+    "findPlaceholder": "不知道要看什麼？說說你想看的——例如：韓國街頭小吃探店",
     "findButton": "找影片",
     "goHome": "首頁",
     "allLanguages": "全部 {{count}} 種語言",
@@ -1297,7 +1571,9 @@
     "seeAll": "查看全部",
     "recentSubtitlesReady": "{{language}}字幕已完成",
     "recentSubtitlesReadyGeneric": "字幕已完成",
-    "recentDownloaded": "已下載"
+    "recentDownloaded": "已下載",
+    "recentLocalFile": "在這台電腦上",
+    "recentLocalMissing": "檔案已移動或刪除"
   },
   "workspace": {
     "subtitlesTitle": "字幕",
@@ -1327,7 +1603,20 @@
     "showTranslation": "譯文",
     "showOriginal": "原文",
     "showBoth": "雙語",
-    "textSize": "字體大小"
+    "textSize": "字體大小",
+    "findReplace": "尋找與替換",
+    "statusReadyPrice": "準備好了——這部影片的{{language}}字幕：{{price}}",
+    "statusReadyPreview": "準備好了——剩餘時數可先翻前 {{minutes}} 分鐘的{{language}}字幕",
+    "statusPartlyTranslated": "{{language}}字幕 {{translated}}/{{count}} 行 · {{missing}} 行未翻譯",
+    "statusPartlyTranslatedUnknown": "已翻譯 {{translated}}/{{count}} 行 · {{missing}} 行未翻譯",
+    "statusTranslatedUnknown": "已翻譯 {{count}} 行 · 已與影片對齊",
+    "stopsEarly": "字幕只到 {{time}}",
+    "interruptedTranslate": "Translator 關閉時，這部影片的{{language}}翻譯中斷了。",
+    "interruptedTranscribe": "Translator 關閉時，這部影片的轉錄中斷了。",
+    "interruptedResume": "從中斷處繼續",
+    "translateMissing": "把缺少的 {{count}} 行翻成{{language}}",
+    "moreRevealVideo": "顯示影片檔案",
+    "chooseAnotherFile": "選擇其他檔案"
   },
   "subtitleStyles": {
     "Cinema": "電影黃",
@@ -1361,7 +1650,9 @@
     "retry": "再試一次",
     "finishCta": "翻完整部影片 · {{price}}",
     "noneCta": "翻成{{language}} · {{price}}",
-    "notNow": "下次再說"
+    "notNow": "下次再說",
+    "failedNeedMinutes": "已完成的部分都會保留。要翻完剩下的 {{remaining}} 分鐘，需要更多時數。",
+    "failedNetwork": "網路連線中斷了。已完成的部分都會保留，恢復連線後再試一次。"
   },
   "videoCost": {
     "covered": "剩餘時數就夠用",
@@ -1371,7 +1662,7 @@
   "highlightEditor": {
     "legend": "Shorts 構圖與字幕",
     "intro": "為每位說話者構圖，在鏡頭切換處分割，並讓簡短的字幕短語與語音對齊。下方時間從此片段開頭起算。",
-    "previewTime": "Short 預覽時間",
+    "previewTime": "Shorts 預覽時間",
     "speakerLabel": "說話者或主題標籤",
     "splitShot": "在播放位置分割鏡頭",
     "joinShot": "與上一個鏡頭合併",
@@ -1384,14 +1675,24 @@
     "saveSelectionFirst": "請先儲存精華片段選擇。",
     "closeEdit": "關閉編輯",
     "editFraming": "編輯構圖與字幕",
-    "styleShort": "為此 Short 設定樣式",
+    "styleShort": "設計這支 Shorts",
     "horizontalFocus": "水平焦點",
     "verticalFocus": "垂直焦點",
     "zoom": "縮放",
     "from": "從",
     "to": "到",
     "saving": "正在儲存…",
-    "save": "儲存 Short 編輯"
+    "save": "儲存 Shorts 編輯",
+    "openFailed": "無法開啟這段片段進行設計。請確認影片和字幕都已開啟。",
+    "saveFailed": "無法儲存 Shorts 編輯。請確認每個短句都有文字，且時間都在片段範圍內。",
+    "previewAt": "預覽位置：{{seconds}} 秒",
+    "shotPosition": "第 {{current}}/{{total}} 個鏡頭",
+    "phrasesHint": "字幕短句：若要強調某個字詞，請在欄位中輸入內文裡完全相同的字詞或句子。",
+    "phraseStart": "短句 {{index}} 開始（秒）",
+    "phraseEnd": "短句 {{index}} 結束（秒）",
+    "phraseText": "短句 {{index}} 文字",
+    "phraseEmphasis": "短句 {{index}} 強調",
+    "saveNote": "儲存後，這段片段會改用「Shorts 直式構圖」，並以這些短句字幕取代你的字幕樣式。"
   },
   "subtitleFonts": {
     "label": "字型",
@@ -1399,5 +1700,80 @@
     "classic": "經典",
     "serif": "明體",
     "display": "粗體"
+  },
+  "export": {
+    "exportButton": "匯出影片",
+    "exportingButton": "匯出中…",
+    "progressTitle": "正在匯出影片",
+    "savedTitle": "影片已儲存",
+    "savedIn": "{{file}}，位於 {{folder}}",
+    "showInFinder": "在 Finder 中顯示",
+    "showInFolder": "在資料夾中顯示",
+    "openVideo": "開啟影片",
+    "failedTitle": "影片沒有匯出成功",
+    "saveTo": "儲存到",
+    "changeDestination": "變更…",
+    "displayNeedsTranslation": "先翻譯字幕，才能顯示譯文或雙語。",
+    "error": {
+      "permission": "Translator 無法寫入影片的暫存檔。請確認你的帳號可以寫入暫存資料夾，然後再試一次。",
+      "tools": "無法安裝影片匯出工具，請檢查網路連線後再試一次。",
+      "generic": "製作影片時出了點問題，請再試一次。"
+    }
+  },
+  "tabs": {
+    "newTab": "新分頁",
+    "newTabWithShortcut": "新分頁 ({{shortcut}})",
+    "closeTab": "關閉分頁"
+  },
+  "menu": {
+    "about": "關於 {{app}}",
+    "services": "服務",
+    "hide": "隱藏 {{app}}",
+    "hideOthers": "隱藏其他",
+    "showAll": "顯示全部",
+    "quit": "結束 {{app}}",
+    "exit": "結束",
+    "file": "檔案",
+    "newTab": "新增分頁",
+    "closeTab": "關閉分頁",
+    "nextTab": "下一個分頁",
+    "previousTab": "上一個分頁",
+    "closeWindow": "關閉視窗",
+    "edit": "編輯",
+    "undo": "復原",
+    "redo": "重做",
+    "cut": "剪下",
+    "copy": "複製",
+    "paste": "貼上",
+    "pasteAndMatchStyle": "貼上並符合樣式",
+    "delete": "刪除",
+    "selectAll": "全選",
+    "speech": "語音",
+    "startSpeaking": "開始朗讀",
+    "stopSpeaking": "停止朗讀",
+    "find": "尋找",
+    "view": "顯示方式",
+    "actualSize": "實際大小",
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "toggleFullScreen": "切換全螢幕",
+    "window": "視窗",
+    "minimize": "縮到最小",
+    "zoom": "縮放",
+    "bringAllToFront": "將全部移至最前",
+    "selectTab": "選擇第 {{n}} 個分頁",
+    "learnSpelling": "學習拼字",
+    "lookUpSelection": "查詢「{selection}」",
+    "searchWithGoogle": "使用 Google 搜尋",
+    "saveImage": "儲存圖片",
+    "saveImageAs": "圖片另存為…",
+    "saveVideo": "儲存影片",
+    "saveVideoAs": "影片另存為…",
+    "copyLink": "複製連結",
+    "saveLinkAs": "連結另存為…",
+    "copyImage": "複製圖片",
+    "copyImageAddress": "複製圖片網址",
+    "copyVideoAddress": "複製影片網址",
+    "inspect": "檢查元素"
   }
 }

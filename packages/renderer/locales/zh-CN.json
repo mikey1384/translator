@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "SRT文件",
       "mediaFiles": "媒体文件",
-      "videoFiles": "视频文件"
+      "videoFiles": "视频文件",
+      "textFiles": "文本文件",
+      "allFiles": "所有文件",
+      "subtitleFiles": "字幕文件"
     },
     "chooseAnotherLocation": "选择其他位置",
     "continue": "继续",
@@ -96,7 +99,20 @@
     "dismiss": "关闭",
     "moreActions": "更多操作",
     "installingUpdate": "正在安装更新...",
-    "installingUpdateShort": "正在安装"
+    "installingUpdateShort": "正在安装",
+    "ok": "确定",
+    "minimumVersionValue": "最低支持版本：v{{version}}",
+    "currentVersionValue": "当前版本：v{{version}}",
+    "updateNotFoundUseDownloadPage": "无法在应用内下载更新。请前往下载页面获取最新版本。",
+    "whatsNewLead": "Translator 已更新到 v{{version}}。",
+    "whatsNewNotesInEnglish": "更新说明（英文）",
+    "checkForUpdates": "检查更新",
+    "checkingForUpdates": "正在检查更新…",
+    "upToDate": "已是最新版本。",
+    "updateAvailableDownloading": "发现新版本，正在后台下载。",
+    "updateReadyToInstall": "更新已下载，重启即可安装。",
+    "updateCheckFailed": "无法检查更新，请稍后再试。",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube 要求进行人机验证。点击「连接」继续。",
@@ -140,7 +156,60 @@
       "providerUnavailable": "转录服务（ElevenLabs Scribe）暂时不可用，或多次尝试后仍无法连接。请几分钟后重试。",
       "fileTooLarge": "此音频过长，无法在一个任务中转录（超过约 {{hours}} 小时）。请将视频拆分为较短的部分，并分别转录每个部分。",
       "elevenLabsKeyRequired": "转录使用 ElevenLabs Scribe，需要 ElevenLabs API 密钥。请在设置中添加，或关闭 API 密钥模式以使用 Stage5 积分进行转录。您的 OpenAI 或 Anthropic 密钥仍用于翻译。"
-    }
+    },
+    "credits": {
+      "transcription": "余额不足，无法转录。",
+      "translation": "余额不足，无法翻译。",
+      "dubbing": "余额不足，无法配音。",
+      "summary": "余额不足，无法生成摘要。",
+      "videoSearch": "余额不足，无法搜索视频。",
+      "download": "余额不足。",
+      "export": "余额不足。",
+      "other": "余额不足。"
+    },
+    "failed": {
+      "transcription": "转录因意外问题中断。已转录的行都会保留。",
+      "translation": "翻译因意外问题中断。已翻译的行都会保留。",
+      "dubbing": "配音因意外问题中断。",
+      "summary": "摘要生成因意外问题中断。",
+      "videoSearch": "视频搜索因意外问题中断。",
+      "export": "视频生成因意外问题中断。",
+      "other": "出了点问题，请重试。"
+    },
+    "server": {
+      "transcription": "我们的服务器出了点问题，请稍等片刻再试。",
+      "translation": "服务器出了点问题，翻译已中断。已翻译的行都会保留，请稍等片刻再试。",
+      "dubbing": "我们的服务器出了点问题，请稍等片刻再试。",
+      "summary": "我们的服务器出了点问题，请稍等片刻再试。",
+      "videoSearch": "我们的服务器出了点问题，请稍等片刻再试。",
+      "export": "我们的服务器出了点问题，请稍等片刻再试。",
+      "other": "我们的服务器出了点问题，请稍等片刻再试。"
+    },
+    "download": {
+      "invalid_url": "这似乎不是视频链接。请粘贴完整的链接。",
+      "unsupported_site": "Translator 无法从这个网站下载视频。",
+      "unavailable": "无法访问该视频，它可能已被删除。",
+      "private": "该视频为私密视频。",
+      "not_found": "这个链接里没有找到视频。",
+      "region_locked": "该视频在你所在的国家或地区无法观看。",
+      "audience_restricted": "该视频仅对部分观众开放。如果你的账号可以观看，请在设置中连接这个网站后重试。",
+      "login_required": "观看该视频需要登录。请在设置中连接这个网站后重试。",
+      "media_blocked": "网站阻止了视频下载，也没能获取到字幕。",
+      "access_refused": "该网站拒绝向 Translator 提供视频。",
+      "video_data_failed": "视频无法下载，可能有地区限制或需要登录。",
+      "rate_limited": "YouTube 目前正在限制你所在网络的下载。请等几分钟再试。",
+      "network": "无法连接。请检查网络后重试。",
+      "captions_unreadable": "找到了 YouTube 字幕，但 Translator 无法读取。",
+      "save_failed": "视频已下载，但无法保存。请重试。",
+      "downloader_failed": "视频下载器无法启动。请重启 Translator 后重试。",
+      "generic": "视频无法下载。请重试，或换一个链接。",
+      "subtitlesNotSaved": "当前字幕无法保存，因此没有打开 YouTube 字幕。",
+      "openFailed": "视频已下载，但无法打开。请从下载历史中打开。"
+    },
+    "network": "无法连接服务器。请检查网络后重试。",
+    "busy": "服务当前繁忙。请稍等片刻再试。",
+    "diskFull": "磁盘空间已满。请清理出一些空间后重试。",
+    "cancelDubbingFailedPlain": "无法停止配音。请重试。"
   },
   "input": {
     "connect": "连接",
@@ -175,7 +244,7 @@
     "transcribeOnly": "转录音频",
     "srtLoaded": "转录完成",
     "srtFileLoaded": "已加载 SRT",
-    "featuresUnlockAfterTranscription": "转录完成后将显示翻译和其他菜单。",
+    "featuresUnlockAfterTranscription": "转录、翻译，或为这个视频生成精彩片段。",
     "preSubtitleActionsHint": "可从此视频生成转录、翻译或精彩片段。",
     "saveDubbedVideo": "保存配音视频",
     "downloadFinishedSwitchTitle": "观看已下载的视频？",
@@ -291,13 +360,13 @@
       "defaultSearchUserMessage": "现在帮我找视频。",
       "followUp": {
         "moreLikeQuery": "查找更多像 \"{{query}}\" 这样的视频",
-        "differentCreator": "来自其他创作者或频道的 \"{{query}}\"",
+        "differentCreator": "其他名字或频道的“{{query}}”",
         "interviews": "与 {{query}} 相关的采访或对谈",
         "clips": "{{query}} 的高光片段或精彩剪辑",
-        "creatorAppearances": "{{creator}} 的采访、电视露面或现场片段",
-        "similarCreators": "与 {{creator}} 相似的创作者或艺人",
+        "creatorAppearances": "{{creator}} 的采访、露面或相关片段",
+        "similarCreators": "与 {{creator}} 类似的人物、艺人或频道",
         "topicAngle": "从不同角度讲解 {{topic}}",
-        "topicCreator": "{{creator}} 和相关的 {{topic}} 视频",
+        "topicCreator": "{{creator}} 或相关的{{topic}}视频",
         "channelStyle": "风格感觉与 {{channel}} 相似的视频",
         "moreFromHistory": "更多像 \"{{title}}\" 这样的视频",
         "channelFromHistory": "来自像 {{channel}} 这样频道的视频"
@@ -307,12 +376,12 @@
       "moreActions": "更多操作",
       "recentEvents": "近期事件",
       "cancelFailed": "取消当前搜索失败。",
-      "countryGlobal": "全球结果",
-      "countryHint": "留空即可查看全球结果。",
+      "countryGlobal": "目标国家/地区：默认英语",
+      "countryHint": "留空则默认以英语搜索。",
       "countryHintDefaultEnglish": "留空则默认以英语搜索.",
       "countryLabel": "目标国家 / 地区",
       "countryPlaceholder": "例如：美国、日本、西班牙、巴西",
-      "countryScope": "国家/地区：{{country}}",
+      "countryScope": "目标国家/地区：{{country}}",
       "countryDefaultEnglish": "目标国家: 默认为英语",
       "emptyCopy": "说说你想找的视频主题、受众、创作者风格或氛围。只有在必要时再加国家或时效。",
       "emptyEyebrow": "助手引导式探索",
@@ -335,7 +404,7 @@
       "savedDownloads": "已保存下载",
       "savedDownloadsCount": "{{count}} 个已保存下载",
       "savedPreferencesCount": "{{count}} 个已保存偏好",
-      "searchingLong": "仍在搜索并排序视频...",
+      "searchingLong": "仍在搜索视频…",
       "searchingVeryLong": "比平时更久，但仍在处理中。",
       "stillWorking": "仍在处理中...",
       "toggleCopy": "无需离开当前流程，直接在 YouTube 搜索来源视频。",
@@ -355,7 +424,11 @@
       "removeFromHistoryConfirm": "要从下载历史记录中移除此项目吗？保存在应用媒体库之外的文件将留在设备上。",
       "deleteLocalFileHistoryPending": "文件已删除，但 Translator 未能完成下载历史记录的更新。它会自动重试。",
       "removeHistoryFailed": "无法从历史记录中移除此下载。",
-      "storedInAppLibrary": "已存储在应用媒体库"
+      "storedInAppLibrary": "已存储在应用媒体库",
+      "freeSearchRunning": "正在搜索 YouTube…",
+      "freeSearchResults": "这是“{{query}}”的 YouTube 搜索结果，本次搜索免费。再多说说你想看什么，我会用 AI 帮你进一步筛选。",
+      "freeSearchEmpty": "YouTube 没有找到“{{query}}”的结果。描述一下你想看的内容，我会用 AI 帮你搜索。",
+      "openOriginalPage": "打开原始页面"
     },
     "downloadAndTranslate": "下载并翻译",
     "downloadAndTranscribe": "下载并转录",
@@ -369,7 +442,24 @@
     "captionRecoveryKeepVideo": "保留当前视频",
     "captionRecoveryOpenCaptions": "打开字幕",
     "captionRecoverySwitchPrompt": "Translator 已恢复 YouTube 自动字幕，但 URL 视频不可用。打开字幕将卸载当前视频。",
-    "captionRecoverySwitchTitle": "不带当前视频打开字幕？"
+    "captionRecoverySwitchTitle": "不带当前视频打开字幕？",
+    "translateTheseSubtitles": "翻译这些字幕",
+    "subtitlesLoaded": "字幕已载入",
+    "chooseLanguage": "选择语言",
+    "urlRejected": {
+      "collection": "这是频道或播放列表链接。请粘贴单个视频的链接，或使用“找视频”。",
+      "live": "这是直播。直播结束后，Translator 才能下载。"
+    },
+    "longDownload": {
+      "title": "要下载这个长视频吗？",
+      "body": "这个视频较长，下载可能需要一段时间，并占用较多磁盘空间。选择较低的下载画质会更快，文件也更小。",
+      "duration": "时长：{{duration}}",
+      "size": "约 {{size}}",
+      "confirm": "下载"
+    },
+    "dropWhileDownloading": "正在下载中。下载完成后再拖入文件。",
+    "dropWhileBusy": "Translator 正在处理这个视频。完成后再拖入文件。",
+    "dropNotSupported": "请拖入视频、音频或 .srt 字幕文件。"
   },
   "subtitles": {
     "outputLanguage": "输出语言",
@@ -392,32 +482,46 @@
     "translateEstimateByo": "BYO密钥",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "确定要取消字幕翻译过程吗？所有进度将丢失，您需要重新开始。",
-    "dubCostHint": "ElevenLabs 配音：每分钟语音 ~{{rate}} 积分。此估算会在配音开始前显示。"
+    "dubCostHint": "ElevenLabs 配音：每分钟语音 ~{{rate}} 积分。此估算会在配音开始前显示。",
+    "unreadableCues": "此文件中有 {{count}} 行无法读取，已被跳过。请检查它们的时间码。",
+    "addCreditsToTranslate": "充值后翻译",
+    "dubInto": "用{{language}}配音",
+    "dubIntro": "用你选择的语言朗读字幕，同时保留原视频的背景声。",
+    "dubNeedsSubtitles": "配音会朗读字幕，所以这个视频需要先有字幕。请先转录，再到这里选择声音。",
+    "dubLanguageLabel": "配音语言",
+    "dubSameLanguage": "字幕已经是{{language}}，配音会直接朗读。",
+    "dubTranslatesFirst": "字幕会先翻译成{{language}}，再进行配音。",
+    "dubCostWithTranslation": "翻译和配音：{{cost}}",
+    "dubUsesOwnKeys": "使用你自己的 API 密钥。",
+    "dubNotEnoughCredits": "余额不足，无法完成这次配音。",
+    "addCreditsToDub": "充值后配音",
+    "noSubtitlesToDub": "请先为这个视频生成或打开字幕，再进行配音。",
+    "noSubtitlesToTranslate": "请先打开或生成字幕，再进行翻译。"
   },
   "summary": {
-    "title": "转录摘要",
-    "ctaHelper": "生成深入的概述。较长的视频可能需要一些时间。",
-    "languageLabel": "摘要语言",
+    "title": "精彩片段",
+    "ctaHelper": "找出视频中最精彩的时刻。",
+    "languageLabel": "输出语言",
     "tab": {
       "summary": "摘要",
-      "sections": "详细笔记",
+      "sections": "笔记",
       "highlights": "精彩片段"
     },
-    "generate": "生成摘要",
-    "regenerate": "重新生成摘要",
+    "generate": "生成精彩片段",
+    "regenerate": "重新生成精彩片段",
     "estimateCredits": "{{credits}} 积分",
     "estimateByo": "BYO 密钥",
     "highEffortBadge": "(深度)",
     "placeholder": "生成后，AI 摘要会显示在这里。",
-    "insufficientCredits": "积分不足，无法运行摘要。",
-    "error": "无法创建摘要。{{message}}",
+    "insufficientCredits": "积分不足，无法生成精彩片段。",
+    "error": "无法生成精彩片段。{{message}}",
     "cancel": "取消",
     "copy": "复制摘要",
     "copied": "已复制！",
     "copyError": "无法将摘要复制到剪贴板。",
-    "noHighlights": "暂无精彩片段。点击生成以检测精彩时刻。",
+    "noHighlights": "还没有精彩片段。生成精彩片段，找出视频中最精彩的时刻。",
     "noVideoForHighlights": "请打开源视频以剪辑精彩片段。",
-    "summaryRequiredForHighlights": "裁剪高光片段前，请先生成转录摘要。",
+    "summaryRequiredForHighlights": "请先生成精彩片段，以便分析转录内容。",
     "highlight": "精彩片段",
     "cutHighlightClip": "裁剪此高光片段",
     "cuttingHighlightClip": "裁剪中…",
@@ -425,8 +529,8 @@
     "clipFormat": "片段格式：",
     "originalFormat": "原始",
     "originalFormatDesc": "保持原始视频尺寸",
-    "verticalFormat": "9:16 竖版",
-    "verticalFormatDesc": "已针对 YouTube Shorts、TikTok、Reels（9:16）优化",
+    "verticalFormat": "Shorts 裁切",
+    "verticalFormatDesc": "裁切并重新构图，适用于 YouTube Shorts、TikTok、Reels（9:16）",
     "verticalFitFormat": "Shorts 适配",
     "verticalFitFormatDesc": "将原始画面适配到 9:16 画布中",
     "downloadHighlight": "下载剪辑",
@@ -440,16 +544,18 @@
     "sectionHeading": "第 {{index}} 节",
     "highlightsInProgress": "正在准备高光剪辑…",
     "status": {
-      "preparing": "准备转录…",
-      "chunk": "正在总结第 {{current}}/{{total}} 部分",
+      "preparing": "正在分析转录内容…",
+      "chunk": "正在撰写摘要 {{current}}/{{total}}",
       "selectingHighlights": "正在选择精彩时刻…",
       "cuttingHighlight": "正在剪辑精彩片段 {{current}}/{{total}}…",
       "cuttingHighlights": "正在剪辑精彩片段…",
-      "synthesizing": "正在整合完整摘要…",
-      "ready": "摘要已就绪",
-      "error": "摘要生成失败",
-      "cancelled": "摘要已取消",
-      "inProgress": "正在生成摘要…"
+      "synthesizing": "即将完成…",
+      "ready": "精彩片段已就绪",
+      "error": "精彩片段生成失败",
+      "cancelled": "已取消生成精彩片段",
+      "inProgress": "正在生成精彩片段…",
+      "cuttingClip": "正在剪辑片段…",
+      "renderingClipSubtitles": "正在为片段添加字幕…"
     },
     "combineMode": "合并",
     "exitCombineMode": "退出合并",
@@ -462,7 +568,29 @@
     "combinedCutFailed": "合并精彩片段剪辑失败：{{message}}",
     "highlightsInsufficientCredits": "摘要已生成，但由于积分用尽，高光片段提取已停止。",
     "highlightsPartialWarning": "高光片段仅部分提取，可能不完整。请重新生成以刷新。",
-    "highlightsPartialWithReason": "摘要已生成，但高光片段仅部分提取：{{message}}"
+    "highlightsPartialWithReason": "摘要已生成，但高光片段仅部分提取：{{message}}",
+    "estimateOwnKey": "使用你的 API 密钥",
+    "generateSummary": "生成摘要",
+    "regenerateSummary": "重新生成摘要",
+    "showingSavedLanguage": "当前显示的是已保存的{{language}}结果。点击按钮可生成{{current}}版本。",
+    "showingSavedVariant": "当前显示的是已保存的{{language}}结果，摘要质量与当前设置不同。点击按钮可重新生成。",
+    "noSummaryYet": "还没有摘要。选择语言后点击“生成摘要”，快速了解这个视频的要点。",
+    "noSummaryWithHighlights": "这些精彩片段没有附带摘要。点击“生成摘要”即可补上一份。",
+    "clipCaptionsChanged": "剪辑此片段后，字幕有了改动。",
+    "recutClip": "重新剪辑",
+    "cutCombinedCount": "合并剪辑 {{count}} 段",
+    "cutHighlightFailed": "无法剪辑片段：{{message}}",
+    "clipError": {
+      "busy": "请等当前任务完成后再剪辑片段。",
+      "noHighlight": "请先选择一个精彩片段。",
+      "editorialSingle": "已设置样式的短视频需要在“Shorts 裁切”中单独剪辑。",
+      "editorialStale": "这条短视频中的字幕已更改。请打开“为短视频设置样式”，检查并保存后再重新剪辑。",
+      "noTranscript": "剪辑片段前，请先打开这个视频的字幕。",
+      "noCues": "视频的这一段没有字幕。",
+      "untranslated": "此片段中有些行还没有翻译。请先翻译，或将字幕显示设为原文。",
+      "subtitlesNotSaved": "片段已剪辑，但它的字幕无法保存。",
+      "generic": "无法从视频中剪辑此片段。请重试。"
+    }
   },
   "panel": {
     "new": "新",
@@ -516,7 +644,9 @@
       "originalTextPrefix": "原文:",
       "subtitlePlaceholder": "字幕文本",
       "confirmRemove": "确定要移除此字幕块吗？此操作无法撤销。",
-      "transcribeThisLine": "转录此行"
+      "transcribeThisLine": "转录此行",
+      "timeEndBeforeStart": "结束时间必须晚于开始时间。这一行的时间保持不变。",
+      "timeUnreadable": "请输入类似 00:01:23,450 或 1:23.45 的时间。这一行的时间保持不变。"
     },
     "header": {
       "save": "保存字幕",
@@ -529,6 +659,14 @@
       "styleLabel": "样式:",
       "mergeButton": "合并字幕",
       "mergingButton": "合并中..."
+    },
+    "undo": {
+      "removed": "已删除该行。",
+      "inserted": "已添加一行。",
+      "replaced": "已全部替换。",
+      "shifted": "时间已调整。",
+      "improved": "已重新转录该行。",
+      "action": "撤销"
     }
   },
   "settings": {
@@ -552,7 +690,7 @@
     },
     "apiKeyMode": {
       "toggleLabel": "使用我的 API 密钥",
-      "activeKeys": "已准备 {{count}} 个密钥",
+      "activeKeys": "{{count}} 个密钥已就绪",
       "noKeys": "未配置密钥",
       "usingApiKeys": "Stage5 积分已关闭",
       "usingCredits": "正在使用 Stage5 积分",
@@ -573,22 +711,22 @@
         "reviewProvider": "复审提供方",
         "openAiHighEnd": "OpenAI 高阶复审",
         "anthropicHighEnd": "Anthropic 高阶复审",
-        "help": "开启：包含复审阶段（约5×积分/时间）。关闭：跳过复审。",
-        "helpWithEstimate": "复审使用约5×积分。您的积分可翻译：~{{normalTime}}普通，~{{hqTime}}高质量。",
-        "helpOn": "<b>5×积分</b> • 包含复审流程",
-        "helpOff": "跳过复审流程",
-        "helpWithEstimateOn": "<b>5×积分</b> • 包含复审流程 • 余额：~{{time}}",
-        "helpWithEstimateOff": "跳过复审流程 • 余额：~{{time}}"
+        "help": "<b>5×积分</b> • 增加复审环节，翻译质量更高",
+        "helpWithEstimate": "<b>5×积分</b> • 你的余额：~{{normalTime}}（普通）/ ~{{hqTime}}（高质量）",
+        "helpOn": "<b>5×积分</b> • Claude Haiku 5.5 初稿 + Claude Opus 5.5 复审",
+        "helpOff": "<b>1×积分</b> • 仅 Claude Haiku 5.5 初稿",
+        "helpWithEstimateOn": "<b>5×积分</b> • Claude Haiku 5.5 初稿 + Claude Opus 5.5 复审 • 余额：~{{time}}",
+        "helpWithEstimateOff": "<b>1×积分</b> • 仅 Claude Haiku 5.5 初稿 • 余额：~{{time}}"
       },
       "qualitySummary": {
         "label": "高质量摘要",
         "modelOn": "Claude Opus 5.5 深度分析 + 高亮片段",
         "modelOff": "Claude Sonnet 5.5 标准分析",
         "help": "开启：Claude Opus 5.5深度分析+精彩片段（约4×积分）。关闭：Claude Sonnet 5.5快速分析。",
-        "helpWithEstimate": "深度分析+精彩片段（约4×积分）。您的积分可分析：~{{normalTime}}普通，~{{hqTime}}高质量。",
-        "helpOn": "<b>4×积分</b> • 深度分析 + 高亮片段",
+        "helpWithEstimate": "<b>4×积分</b> • 你的余额：~{{normalTime}}（普通）/ ~{{hqTime}}（高质量）",
+        "helpOn": "<b>4×积分</b> • Claude Opus 5.5 深度分析 + 精彩片段",
         "helpOff": "使用 Claude Sonnet 5.5 快速分析",
-        "helpWithEstimateOn": "<b>4×积分</b> • 深度分析 + 高亮片段 • 余额：~{{time}}",
+        "helpWithEstimateOn": "<b>4×积分</b> • Claude Opus 5.5 深度分析 + 精彩片段 • 余额：~{{time}}",
         "helpWithEstimateOff": "使用 Claude Sonnet 5.5 快速分析 • 余额：~{{time}}"
       },
       "qualityDubbing": {
@@ -609,7 +747,10 @@
         "perHour": "~{{credits}} 积分/小时",
         "perMinute": "~{{credits}} 积分/分钟",
         "perSearch": "~{{credits}} 积分/次搜索",
-        "balance": "余额：~{{time}}"
+        "balance": "余额：~{{time}}",
+        "minutesPerHour": "每小时视频约消耗 {{time}} 时长",
+        "minutesPerDubMinute": "每分钟配音约消耗 {{time}} 时长",
+        "minutesPerSearch": "每次搜索约消耗 {{time}} 时长"
       }
     },
     "dubbing": {
@@ -677,11 +818,13 @@
       "economicsBody": "Stage5积分优化了便利性（无需设置）。BYO直接支付给提供商——根据您的套餐，通常便宜约30-50%。",
       "encryptionUnavailable": "此系统不支持安全存储，无法保存 API 密钥。",
       "checkoutOpen": "已在浏览器中打开付款页面…",
-      "checkoutOpenHint": "请在浏览器中完成付款。付款到账后，我们会自动解锁 BYO。"
+      "checkoutOpenHint": "请在浏览器中完成付款。付款到账后，我们会自动解锁 BYO。",
+      "entitlementsLoadFailed": "无法确认解锁状态。请检查网络后重试。",
+      "unlockFailed": "无法开始付款。请检查网络后重试。"
     },
     "byoPreferences": {
       "title": "提供商偏好",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "Stage5 积分",
       "pricingHint": "每小时视频的预估费用",
       "pricingHintHeuristic": "基于当前应用估算规则的预计成本",
       "transcription": "转录",
@@ -793,7 +936,8 @@
       "saved": "API 密钥已保存。",
       "cleared": "API 密钥已清除。",
       "invalid": "API 密钥验证失败。",
-      "howToGet": "如何获取此密钥"
+      "howToGet": "如何获取此密钥",
+      "missing": "请先粘贴 API 密钥。"
     },
     "byoStack": {
       "title": "你的 AI 栈"
@@ -829,12 +973,18 @@
         "desktopConnected": "已将 Translator 添加到 Claude Desktop。退出并重新打开 Claude 即可加载。",
         "cliNotFound": "在这台电脑上找不到 {{app}} 命令。请在终端中运行：",
         "cliNotFoundCopied": "在这台电脑上找不到 {{app}} 命令。设置命令已复制，请粘贴到终端中：",
-        "failed": "无法连接 {{app}}：{{message}}"
+        "failed": "无法连接 {{app}}：{{message}}",
+        "details": "详细信息",
+        "failedConfigInvalid": "无法连接 {{app}}：它的设置文件无效，Translator 没有改动该文件。请修复或删除该文件后重试。",
+        "failedWrite": "无法连接 {{app}}：Translator 无法写入它的设置文件。",
+        "failedLauncher": "只有在已安装的 Translator 应用中才能连接 {{app}}。",
+        "failedCli": "无法自动连接 {{app}}。请在终端中运行：",
+        "failedGeneric": "无法连接 {{app}}。请重试。"
       },
       "status": {
         "enabled": "已启用",
         "disabled": "已禁用",
-        "connected": "已连接客户端：{{count}}"
+        "connected": "已连接 {{count}} 个客户端"
       },
       "permissions": "智能体可以执行：",
       "permission": {
@@ -882,7 +1032,16 @@
       "redeeming": "正在接收…",
       "received": "已接收 {{credits}} 点数。",
       "receivedNoCredits": "代码已生效。",
-      "receivedByo": "API 密钥解锁已在这台电脑上启用。"
+      "receivedByo": "API 密钥解锁已在这台电脑上启用。",
+      "errors": {
+        "nothing_to_transfer": "暂时没有可转移的内容：这台电脑上没有已购买的点数，也没有 API 密钥解锁。如需把另一台电脑上的点数转到这里，请选择“接收点数”。",
+        "too_many_codes": "这一小时内生成的转移代码太多了。请稍后再试。",
+        "jobs_running": "转录或翻译仍在进行中。请等它完成后再试。",
+        "invalid_code": "代码有误、已被使用或已过期。请在另一台电脑上重新生成。",
+        "same_device": "请在另一台电脑上输入代码，而不是生成代码的这台。",
+        "network_error": "无法连接 Stage5 服务器。请检查网络后重试。",
+        "transfer_failed": "点数转移失败。请检查网络后重试。"
+      }
     }
   },
   "credits": {
@@ -923,7 +1082,9 @@
     "checkoutNote": "通过 Stripe 在浏览器中一次性付款，无需注册账号，也不是订阅。时长会自动到账。",
     "dubbingNote": "使用额度翻译每分钟约多消耗 10%；配音消耗更多。",
     "iCancelledCheckout": "我已取消付款",
-    "checkoutStartFailed": "无法开始付款。请检查网络连接后重试。"
+    "checkoutStartFailed": "无法开始付款。请检查网络连接后重试。",
+    "loadFailed": "无法加载余额。请检查网络后重试。",
+    "estimateAmount": "{{credits}} 积分"
   },
   "cta": {
     "generate": {
@@ -958,7 +1119,12 @@
     "useThisVideo": "使用此视频",
     "useDownloadedVideo": "使用此视频",
     "useOriginalAudio": "使用原始音轨",
-    "useDubbedAudio": "使用配音音轨"
+    "useDubbedAudio": "使用配音音轨",
+    "changeVideoKeepSubtitles": "在新视频上沿用当前字幕（适用于同一视频的另一份文件）。如果换的是其他视频，请取消勾选。",
+    "mute": "静音 (M)",
+    "unmute": "取消静音 (M)",
+    "volume": "音量",
+    "unreadableFile": "Translator 无法读取此文件。文件可能已损坏，或格式不受支持。"
   },
   "admin": {
     "title": "管理员",
@@ -1055,7 +1221,7 @@
       "localSourceReady": "本地文件已就绪",
       "webSourceReady": "网络来源已就绪",
       "sourceReadyDescription": "你选择的媒体已可进行下一步。",
-      "transcribeTitle": "创建转录",
+      "transcribeTitle": "处理视频",
       "processVideoTitle": "处理视频",
       "transcribeDescription": "先将来源媒体转成可编辑的字幕轨，再继续翻译或配音。",
       "translateDubTitle": "翻译或配音",
@@ -1082,7 +1248,11 @@
     "nextMatchAria": "下一个匹配",
     "previousMatchAria": "上一个匹配",
     "replaceAllAria": "全部替换",
-    "closeAria": "关闭查找栏"
+    "closeAria": "关闭查找栏",
+    "matchCount": "{{current}}/{{total}}",
+    "matchCase": "区分大小写",
+    "wholeWord": "全字匹配",
+    "showReplace": "替换"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1134,7 +1304,32 @@
       "neverHadMessage": "转录需要点数或 API 密钥解锁，两者均可在设置中获取。通过智能体控制使用您自己的 Claude 或 Codex 进行翻译是免费的。",
       "notEnoughTitle": "积分不足，无法处理此视频",
       "notEnoughTranscriptionMessage": "转写此视频大约需要 {{required}} 积分。您有 {{available}} 积分，约可转写 {{minutes}} 分钟。请充值后重新开始。",
-      "notEnoughMessage": "此任务所需积分超过您的余额（{{available}}）。请充值后继续。"
+      "notEnoughMessage": "此任务所需积分超过您的余额（{{available}}）。请充值后继续。",
+      "task": {
+        "transcription": {
+          "title": "转录需要积分",
+          "message": "你的余额不足以完成这次转录。请充值后重新开始，已转录的行会保留。"
+        },
+        "translation": {
+          "title": "翻译需要积分",
+          "message": "你的余额不足以完成这次翻译。请充值后重试，已翻译的行会保留。通过智能体控制使用你自己的 Claude 或 Codex 翻译是免费的。"
+        },
+        "dubbing": {
+          "title": "配音需要积分",
+          "message": "你的余额不足以为这个视频配音。请充值后重试。"
+        },
+        "summary": {
+          "title": "生成摘要需要积分",
+          "message": "你的余额不足以生成摘要和精彩片段。请充值后重试。"
+        },
+        "videoSearch": {
+          "title": "AI 视频搜索需要积分",
+          "message": "你的余额不足以进行 AI 视频搜索。请充值后再搜索。"
+        },
+        "other": {
+          "title": "此操作需要积分"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "开始配音？",
@@ -1145,7 +1340,58 @@
       "message": "你已打开字幕。用 YouTube 自动字幕替换前，请先保存或放弃当前字幕。",
       "saveAndOpen": "保存并打开字幕",
       "title": "打开恢复的自动字幕？"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "先保存字幕修改吗？",
+      "message": "这些字幕在上次保存后有改动。替换之前要先保存吗？",
+      "saveAndContinue": "保存并继续",
+      "discardAndContinue": "放弃修改并继续"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "转录仍在进行中。",
+        "translation": "翻译仍在进行中。",
+        "dubbing": "配音仍在进行中。",
+        "export": "视频仍在导出中。",
+        "summary": "摘要仍在生成中。",
+        "download": "下载仍在进行中。",
+        "highlight": "精彩片段仍在剪辑中。",
+        "search": "视频搜索仍在进行中。",
+        "generic": "有任务仍在进行中。"
+      },
+      "unsavedLine": "字幕修改尚未保存。",
+      "unsavedMessage": "这些字幕有尚未保存的修改。",
+      "tabUnsavedDetail": "关闭标签页前要先保存吗？",
+      "tabUnsavedWithJobDetail": "关闭标签页会停止当前任务。要先保存字幕修改吗？",
+      "tabJobDetail": "关闭标签页会停止该任务，目前已完成的进度将会丢失。",
+      "quitMessage": "要退出 {{app}} 吗？还有未完成的工作。",
+      "windowMessage": "要关闭窗口吗？还有未完成的工作。",
+      "tabLine": "{{title}}：{{status}}",
+      "unsavedWithJobsDetail": "正在进行的任务会停止。要先保存字幕修改吗？",
+      "jobsDetail": "正在进行的任务会停止，目前已完成的进度将会丢失。",
+      "saveAndClose": "保存并关闭",
+      "saveAndQuit": "保存并退出",
+      "closeWithoutSaving": "不保存并关闭",
+      "quitWithoutSaving": "不保存并退出",
+      "stopAndClose": "停止并关闭",
+      "quitAnyway": "仍然退出",
+      "closeAnyway": "仍然关闭",
+      "saveFailed": "无法保存 {{title}} 中的字幕，因此没有关闭任何内容。请在编辑器中保存后重试。",
+      "ok": "确定"
+    },
+    "exportSaveDialogTitle": "将视频另存为",
+    "exportVideoFilterName": "MP4 视频",
+    "exportDiscardConfirm": "视频已经生成，但还没有保存。要丢弃吗？",
+    "exportChooseLocationButton": "选择保存位置…",
+    "exportDiscardButton": "丢弃视频",
+    "exportSaveFailed": "无法将视频保存到 {{folder}}。",
+    "exportSaveFailedPermission": "你没有在此文件夹中保存文件的权限。",
+    "exportSaveFailedDiskFull": "该磁盘的可用空间不足。",
+    "exportSaveFailedGeneric": "无法在此位置写入文件。",
+    "exportSameAsSource": "这样会覆盖原视频。请换一个文件名。",
+    "keepDubbing": "继续配音",
+    "stopDubbing": "停止配音",
+    "cancelDubbingBody": "目前已生成的配音将被丢弃。"
   },
   "progress": {
     "preparingVideoExport": "正在准备导出视频…",
@@ -1158,12 +1404,12 @@
     "extractingAudio": "正在提取音频...",
     "transcribingOf": "转录 {{done}}/{{total}}",
     "error": "错误",
-    "transcribedChunks": "已转录和清理 {{done}}/{{total}} 片段",
+    "transcribedChunks": "已转录 {{done}}/{{total}} 个片段",
     "transcribingElevenLabs": "使用 ElevenLabs 转录中（约剩余 {{minutes}} 分钟）",
     "transcribingElevenLabsHours": "使用 ElevenLabs 转录中（约剩余 {{hours}} 小时 {{minutes}} 分钟）",
     "transcribingElevenLabsFinishing": "使用 ElevenLabs 转录中...",
     "transcriptionRetry": "连接失败，正在重试（{{attempt}}/{{maxAttempts}}）...",
-    "transcribingR2Upload": "正在上传音频以进行转录...",
+    "transcribingR2Upload": "正在上传音频…",
     "gapRepair": "间隙修复 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "修复缺失字幕（第{{iteration}}/{{maxIterations}}次迭代）{{done}} / {{total}}",
     "scrubbingHallucinations": "清理字幕中 ({{done}}/{{total}})",
@@ -1233,7 +1479,18 @@
       "videoBlockedCaptions": "视频无法下载，正在改为查找 YouTube 字幕…",
       "voiceTrackAssembled": "配音音轨已合成",
       "voiceTrackReady": "配音音轨已就绪",
-      "writingSummary": "正在撰写摘要…"
+      "writingSummary": "正在撰写摘要…",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "cancelling": "正在取消…",
+      "failed": "出了点问题",
+      "downloading": "正在下载…",
+      "downloadingAudio": "正在下载音频…",
+      "transcribingLine": "正在转录这一行…",
+      "startingExport": "正在开始生成视频…",
+      "captionsAvailable": "视频无法下载，但可以使用 YouTube 字幕",
+      "captionsNotOpened": "YouTube 字幕已就绪，但未打开",
+      "insufficientCredits": "余额不足"
     },
     "listening": "正在聆听视频…",
     "mergeFinishSaveBeforeReload": "请先完成合并视频的保存，再重新加载。",
@@ -1241,7 +1498,8 @@
     "mergeWaitForCancelBeforeReload": "请等待合并取消完成后再重新加载。",
     "preparingTranscription": "正在准备聆听…",
     "restartingTranscription": "正在重新开始转录…",
-    "resumingTranscription": "正在从中断处继续…"
+    "resumingTranscription": "正在从中断处继续…",
+    "hqModeEstimate": "（高质量：约 {{time}}）"
   },
   "messages": {
     "fileSaved": "文件已保存：\n{{path}}",
@@ -1264,7 +1522,23 @@
     "sendReport": "发送报告",
     "reportPrompt": "出了点问题。请向开发者报告以便快速修复。",
     "preparingReport": "正在准备诊断包...",
-    "reportContextWarning": "部分诊断上下文无法加载。报告仍将包含此应用中的详细信息。"
+    "reportContextWarning": "部分诊断上下文无法加载。报告仍将包含此应用中的详细信息。",
+    "reportPromptTask": {
+      "transcription": "转录因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "translation": "翻译因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "dubbing": "配音因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "summary": "摘要生成因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "videoSearch": "视频搜索因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "download": "视频下载因未知原因失败。请发送这份报告，帮助我们修复问题。",
+      "export": "视频生成因意外问题中断。请发送这份报告，帮助我们修复问题。",
+      "other": "出了点问题。请发送这份报告，帮助我们修复问题。"
+    },
+    "feedbackTitle": "发送反馈或报告问题",
+    "whatHappened": "发生了什么？或者有什么想告诉我们的？",
+    "attachDiagnostics": "附上诊断信息（遇到问题时建议勾选）",
+    "attachDiagnosticsHint": "包括最近的应用日志、应用版本和系统信息，不含视频或字幕。",
+    "showDetails": "查看将发送的内容",
+    "feedbackEmailSubject": "Translator 反馈"
   },
   "home": {
     "headline": "任何视频，都能用<lang>{{language}}</lang>看懂。",
@@ -1297,7 +1571,9 @@
     "seeAll": "查看全部",
     "recentSubtitlesReady": "{{language}}字幕已完成",
     "recentSubtitlesReadyGeneric": "字幕已完成",
-    "recentDownloaded": "已下载"
+    "recentDownloaded": "已下载",
+    "recentLocalFile": "本地文件",
+    "recentLocalMissing": "文件已被移动或删除"
   },
   "workspace": {
     "subtitlesTitle": "字幕",
@@ -1327,7 +1603,20 @@
     "showTranslation": "译文",
     "showOriginal": "原文",
     "showBoth": "双语",
-    "textSize": "字号"
+    "textSize": "字号",
+    "findReplace": "查找和替换",
+    "statusReadyPrice": "准备就绪——此视频的{{language}}字幕：{{price}}",
+    "statusReadyPreview": "准备就绪——你的时长可将前 {{minutes}} 分钟译成{{language}}",
+    "statusPartlyTranslated": "已译成{{language}} {{translated}}/{{count}} 行 · {{missing}} 行未翻译",
+    "statusPartlyTranslatedUnknown": "已翻译 {{translated}}/{{count}} 行 · {{missing}} 行未翻译",
+    "statusTranslatedUnknown": "已翻译 {{count}} 行 · 已与视频对齐",
+    "stopsEarly": "字幕在 {{time}} 处结束",
+    "interruptedTranslate": "Translator 关闭时，翻译成{{language}}的任务中断了。",
+    "interruptedTranscribe": "Translator 关闭时，这个视频的转录中断了。",
+    "interruptedResume": "从中断处继续",
+    "translateMissing": "把未翻译的 {{count}} 行译成{{language}}",
+    "moreRevealVideo": "显示视频文件",
+    "chooseAnotherFile": "选择其他文件"
   },
   "subtitleStyles": {
     "Cinema": "影院黄",
@@ -1361,7 +1650,9 @@
     "retry": "重试",
     "finishCta": "翻译完整视频 · {{price}}",
     "noneCta": "翻译成{{language}} · {{price}}",
-    "notNow": "以后再说"
+    "notNow": "以后再说",
+    "failedNeedMinutes": "已翻译的部分都保留着。要翻译完剩下的 {{remaining}} 分钟，还需要更多时长。",
+    "failedNetwork": "网络连接中断了。已翻译的部分都保留着，恢复联网后重试即可。"
   },
   "videoCost": {
     "covered": "剩余时长够用",
@@ -1371,7 +1662,7 @@
   "highlightEditor": {
     "legend": "Shorts 构图与字幕",
     "intro": "为每位说话者构图，在镜头切换处拆分，并让简短的字幕短语与语音对齐。下方时间从此片段开头算起。",
-    "previewTime": "Short 预览时间",
+    "previewTime": "短视频预览时间",
     "speakerLabel": "说话者或主题标签",
     "splitShot": "在播放位置拆分镜头",
     "joinShot": "与上一个镜头合并",
@@ -1384,14 +1675,24 @@
     "saveSelectionFirst": "请先保存高光片段选择。",
     "closeEdit": "关闭编辑",
     "editFraming": "编辑构图与字幕",
-    "styleShort": "为此 Short 设置样式",
+    "styleShort": "为短视频设置样式",
     "horizontalFocus": "水平焦点",
     "verticalFocus": "垂直焦点",
     "zoom": "缩放",
     "from": "从",
     "to": "到",
     "saving": "正在保存…",
-    "save": "保存 Short 编辑"
+    "save": "保存短视频编辑",
+    "openFailed": "无法打开此片段进行样式编辑。请确认视频及其字幕都已打开。",
+    "saveFailed": "无法保存短视频编辑。请检查每个短语都有文字，且时间都在片段范围内。",
+    "previewAt": "预览位置：{{seconds}} 秒",
+    "shotPosition": "第 {{current}}/{{total}} 个镜头",
+    "phrasesHint": "字幕短语：要突出某个词，请在对应的框中输入文本里的原词或原句。",
+    "phraseStart": "短语 {{index}} 开始（秒）",
+    "phraseEnd": "短语 {{index}} 结束（秒）",
+    "phraseText": "短语 {{index}} 文字",
+    "phraseEmphasis": "短语 {{index}} 强调",
+    "saveNote": "保存后，此片段会切换为“Shorts 裁切”，并使用这些短语字幕，而不是你的字幕样式。"
   },
   "subtitleFonts": {
     "label": "字体",
@@ -1399,5 +1700,80 @@
     "classic": "经典",
     "serif": "宋体",
     "display": "粗体"
+  },
+  "export": {
+    "exportButton": "导出视频",
+    "exportingButton": "正在导出…",
+    "progressTitle": "正在导出视频",
+    "savedTitle": "视频已保存",
+    "savedIn": "{{file}}（位于 {{folder}}）",
+    "showInFinder": "在访达中显示",
+    "showInFolder": "在文件夹中显示",
+    "openVideo": "打开视频",
+    "failedTitle": "视频导出失败",
+    "saveTo": "保存到",
+    "changeDestination": "更改…",
+    "displayNeedsTranslation": "翻译字幕后，才能显示译文或双语。",
+    "error": {
+      "permission": "Translator 无法写入视频的临时文件。请确认你的账户有权限写入临时文件夹，然后重试。",
+      "tools": "视频导出工具未能准备好。请检查网络后重试。",
+      "generic": "生成视频时出了点问题。请重试。"
+    }
+  },
+  "tabs": {
+    "newTab": "新标签页",
+    "newTabWithShortcut": "新标签页（{{shortcut}}）",
+    "closeTab": "关闭标签页"
+  },
+  "menu": {
+    "about": "关于 {{app}}",
+    "services": "服务",
+    "hide": "隐藏 {{app}}",
+    "hideOthers": "隐藏其他",
+    "showAll": "全部显示",
+    "quit": "退出 {{app}}",
+    "exit": "退出",
+    "file": "文件",
+    "newTab": "新建标签页",
+    "closeTab": "关闭标签页",
+    "nextTab": "下一个标签页",
+    "previousTab": "上一个标签页",
+    "closeWindow": "关闭窗口",
+    "edit": "编辑",
+    "undo": "撤销",
+    "redo": "重做",
+    "cut": "剪切",
+    "copy": "复制",
+    "paste": "粘贴",
+    "pasteAndMatchStyle": "粘贴并匹配样式",
+    "delete": "删除",
+    "selectAll": "全选",
+    "speech": "语音",
+    "startSpeaking": "开始朗读",
+    "stopSpeaking": "停止朗读",
+    "find": "查找",
+    "view": "视图",
+    "actualSize": "实际大小",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "toggleFullScreen": "切换全屏",
+    "window": "窗口",
+    "minimize": "最小化",
+    "zoom": "缩放",
+    "bringAllToFront": "前置全部窗口",
+    "selectTab": "切换到标签页 {{n}}",
+    "learnSpelling": "学习拼写",
+    "lookUpSelection": "查询“{selection}”",
+    "searchWithGoogle": "使用 Google 搜索",
+    "saveImage": "保存图片",
+    "saveImageAs": "图片另存为…",
+    "saveVideo": "保存视频",
+    "saveVideoAs": "视频另存为…",
+    "copyLink": "复制链接",
+    "saveLinkAs": "链接另存为…",
+    "copyImage": "复制图片",
+    "copyImageAddress": "复制图片地址",
+    "copyVideoAddress": "复制视频地址",
+    "inspect": "检查元素"
   }
 }

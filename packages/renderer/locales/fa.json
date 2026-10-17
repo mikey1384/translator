@@ -80,7 +80,7 @@
     "openDownloadPage": "باز کردن صفحه دانلود",
     "show": "نمایش",
     "splitScrollButtonAria": "به بالا (نیمه بالایی) یا پایین (نیمه پایینی) اسکرول کنید",
-    "updateRequiredBody": "این نسخه از Translator دیگر توسط backend پشتیبانی نمی‌شود. برای ادامه، برنامه را به‌روزرسانی کنید.",
+    "updateRequiredBody": "سرور دیگر از این نسخهٔ Translator پشتیبانی نمی‌کند. برای ادامه، برنامه را به‌روزرسانی کنید.",
     "updateRequiredTitle": "به‌روزرسانی لازم است",
     "wait": "صبر کنید…",
     "whatsNewTitle": "چه چیز جدید است",
@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "فایل‌های SRT",
       "mediaFiles": "فایل‌های رسانه",
-      "videoFiles": "فایل‌های ویدیو"
+      "videoFiles": "فایل‌های ویدیو",
+      "textFiles": "فایل‌های متنی",
+      "allFiles": "همهٔ فایل‌ها",
+      "subtitleFiles": "فایل‌های زیرنویس"
     },
     "chooseAnotherLocation": "مکان دیگری را انتخاب کنید",
     "continue": "ادامه",
@@ -96,7 +99,20 @@
     "dismiss": "بستن",
     "moreActions": "کارهای بیشتر",
     "installingUpdate": "در حال نصب به‌روزرسانی...",
-    "installingUpdateShort": "در حال نصب"
+    "installingUpdateShort": "در حال نصب",
+    "ok": "باشه",
+    "minimumVersionValue": "حداقل نسخهٔ پشتیبانی‌شده: v{{version}}",
+    "currentVersionValue": "نسخهٔ فعلی: v{{version}}",
+    "updateNotFoundUseDownloadPage": "به‌روزرسانی از اینجا دانلود نشد. آخرین نسخه را از صفحهٔ دانلود بگیرید.",
+    "whatsNewLead": "Translator به نسخهٔ v{{version}} به‌روز شد.",
+    "whatsNewNotesInEnglish": "یادداشت‌های انتشار (انگلیسی)",
+    "checkForUpdates": "بررسی به‌روزرسانی",
+    "checkingForUpdates": "در حال بررسی به‌روزرسانی…",
+    "upToDate": "آخرین نسخه را دارید.",
+    "updateAvailableDownloading": "به‌روزرسانی پیدا شد. در پس‌زمینه دانلود می‌شود.",
+    "updateReadyToInstall": "به‌روزرسانی دانلود شد. برای نصب، برنامه را دوباره باز کنید.",
+    "updateCheckFailed": "بررسی به‌روزرسانی انجام نشد. بعداً دوباره امتحان کنید.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube درخواست تأیید انسانی کرد. برای ادامه روی اتصال کلیک کنید.",
@@ -140,7 +156,60 @@
       "providerUnavailable": "رونویسی (ElevenLabs Scribe) موقتاً در دسترس نیست یا پس از چند تلاش امکان اتصال به آن وجود نداشت. لطفاً چند دقیقه دیگر دوباره امتحان کنید.",
       "fileTooLarge": "این صدا برای رونویسی در یک کار بیش از حد طولانی است (بیش از حدود {{hours}} ساعت). ویدیو را به بخش‌های کوتاه‌تر تقسیم کنید و هر بخش را جداگانه رونویسی کنید.",
       "elevenLabsKeyRequired": "رونویسی از ElevenLabs Scribe استفاده می‌کند و به یک کلید API از ElevenLabs نیاز دارد. یکی را در تنظیمات اضافه کنید، یا حالت کلید API را خاموش کنید تا با اعتبارهای Stage5 رونویسی شود. کلید OpenAI یا Anthropic شما همچنان برای ترجمه استفاده می‌شود."
-    }
+    },
+    "credits": {
+      "transcription": "اعتبار برای رونویسی این ویدیو کافی نیست.",
+      "translation": "اعتبار برای ترجمهٔ این ویدیو کافی نیست.",
+      "dubbing": "اعتبار برای دوبلهٔ این ویدیو کافی نیست.",
+      "summary": "اعتبار برای خلاصه کافی نیست.",
+      "videoSearch": "اعتبار برای جستجوی ویدیو کافی نیست.",
+      "download": "اعتبار کافی نیست.",
+      "export": "اعتبار کافی نیست.",
+      "other": "اعتبار کافی نیست."
+    },
+    "failed": {
+      "transcription": "رونویسی به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. خط‌هایی که رونویسی شده‌اند حفظ شده‌اند.",
+      "translation": "ترجمه به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. خط‌هایی که ترجمه شده‌اند حفظ شده‌اند.",
+      "dubbing": "دوبله به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد.",
+      "summary": "خلاصه به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد.",
+      "videoSearch": "جستجوی ویدیو به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد.",
+      "export": "ساخت ویدیو به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد.",
+      "other": "مشکلی پیش آمد. لطفاً دوباره امتحان کنید."
+    },
+    "server": {
+      "transcription": "سرور ما به مشکل خورد. یک دقیقهٔ دیگر دوباره امتحان کنید.",
+      "translation": "ترجمه به‌خاطر مشکل سرور ما متوقف شد. خط‌هایی که ترجمه شده‌اند حفظ شده‌اند. یک دقیقهٔ دیگر دوباره امتحان کنید.",
+      "dubbing": "سرور ما به مشکل خورد. یک دقیقهٔ دیگر دوباره امتحان کنید.",
+      "summary": "سرور ما به مشکل خورد. یک دقیقهٔ دیگر دوباره امتحان کنید.",
+      "videoSearch": "سرور ما به مشکل خورد. یک دقیقهٔ دیگر دوباره امتحان کنید.",
+      "export": "سرور ما به مشکل خورد. یک دقیقهٔ دیگر دوباره امتحان کنید.",
+      "other": "سرور ما به مشکل خورد. یک دقیقهٔ دیگر دوباره امتحان کنید."
+    },
+    "download": {
+      "invalid_url": "این به لینک ویدیو شبیه نیست. لینک کامل را جای‌گذاری کنید.",
+      "unsupported_site": "Translator نمی‌تواند از این وب‌سایت ویدیو دانلود کند.",
+      "unavailable": "این ویدیو در دسترس نیست. شاید حذف شده باشد.",
+      "private": "این ویدیو خصوصی است.",
+      "not_found": "در این لینک ویدیویی پیدا نشد.",
+      "region_locked": "این ویدیو در کشور شما در دسترس نیست.",
+      "audience_restricted": "این ویدیو فقط به بعضی بینندگان نشان داده می‌شود. اگر حساب شما اجازهٔ تماشای آن را دارد، در تنظیمات به این وب‌سایت وصل شوید و دوباره امتحان کنید.",
+      "login_required": "برای این ویدیو باید وارد حساب شوید. در تنظیمات به این وب‌سایت وصل شوید و دوباره امتحان کنید.",
+      "media_blocked": "وب‌سایت جلوی دانلود ویدیو را گرفت و هیچ زیرنویسی هم بازیابی نشد.",
+      "access_refused": "این وب‌سایت ویدیو را در اختیار Translator نگذاشت.",
+      "video_data_failed": "ویدیو دانلود نشد. شاید در منطقهٔ شما محدود باشد یا ورود به حساب لازم داشته باشد.",
+      "rate_limited": "‏YouTube فعلاً دانلود از شبکهٔ شما را محدود کرده است. چند دقیقه صبر کنید و دوباره امتحان کنید.",
+      "network": "اتصال برقرار نشد. اینترنت خود را بررسی کنید و دوباره امتحان کنید.",
+      "captions_unreadable": "زیرنویس YouTube پیدا شد، اما Translator نتوانست آن را بخواند.",
+      "save_failed": "ویدیو دانلود شد اما ذخیره نشد. دوباره امتحان کنید.",
+      "downloader_failed": "ابزار دانلود ویدیو اجرا نشد. Translator را دوباره باز کنید و دوباره امتحان کنید.",
+      "generic": "ویدیو دانلود نشد. دوباره امتحان کنید یا لینک دیگری بدهید.",
+      "subtitlesNotSaved": "زیرنویس فعلی شما ذخیره نشد، برای همین زیرنویس YouTube باز نشد.",
+      "openFailed": "ویدیو دانلود شد اما باز نشد. آن را از تاریخچهٔ دانلود باز کنید."
+    },
+    "network": "به سرور دسترسی نداریم. اینترنت خود را بررسی کنید و دوباره امتحان کنید.",
+    "busy": "سرویس الان شلوغ است. یک دقیقه صبر کنید و دوباره امتحان کنید.",
+    "diskFull": "دیسک پر است. کمی فضا خالی کنید و دوباره امتحان کنید.",
+    "cancelDubbingFailedPlain": "دوبله متوقف نشد. دوباره امتحان کنید."
   },
   "input": {
     "connect": "اتصال",
@@ -175,7 +244,7 @@
     "transcribeOnly": "رونویسی صوت",
     "srtLoaded": "رونویسی کامل شد",
     "srtFileLoaded": "SRT بارگذاری شد",
-    "featuresUnlockAfterTranscription": "ترجمه و سایر منوها پس از تکمیل رونویسی ظاهر می‌شوند.",
+    "featuresUnlockAfterTranscription": "این ویدیو را رونویسی یا ترجمه کنید، یا لحظات برجسته‌اش را پیدا کنید.",
     "preSubtitleActionsHint": "از این ویدیو رونویسی کنید، ترجمه بسازید یا هایلایت تولید کنید.",
     "saveDubbedVideo": "ذخیره ویدیو دوبله شده",
     "downloadFinishedSwitchTitle": "ویدیوی دانلودشده را تماشا کنید؟",
@@ -291,13 +360,13 @@
       "defaultSearchUserMessage": "الان برایم ویدیو پیدا کن.",
       "followUp": {
         "moreLikeQuery": "ویدیوهای بیشتری شبیه \"{{query}}\" پیدا کن",
-        "differentCreator": "\"{{query}}\" از یک سازنده یا کانال دیگر",
+        "differentCreator": "\"{{query}}\" از یک نام یا کانال دیگر",
         "interviews": "مصاحبه‌ها یا گفتگوهای دربارهٔ {{query}}",
         "clips": "بخش‌های برجسته یا کلیپ‌های شاخص از {{query}}",
-        "creatorAppearances": "مصاحبه‌ها، حضورهای تلویزیونی یا کلیپ‌های زندهٔ {{creator}}",
-        "similarCreators": "سازندگان یا هنرمندان شبیه {{creator}}",
+        "creatorAppearances": "مصاحبه‌ها، حضورها یا کلیپ‌های مرتبط با {{creator}}",
+        "similarCreators": "نام‌ها، هنرمندان یا کانال‌های شبیه {{creator}}",
         "topicAngle": "{{topic}} از زاویه‌ای دیگر توضیح داده شده",
-        "topicCreator": "{{creator}} و ویدیوهای مرتبط با {{topic}}",
+        "topicCreator": "{{creator}} یا ویدیوهای مرتبط با {{topic}}",
         "channelStyle": "ویدیوهایی با حال‌وهوایی شبیه {{channel}}",
         "moreFromHistory": "ویدیوهای بیشتری مثل \"{{title}}\"",
         "channelFromHistory": "ویدیوهایی از کانال‌هایی مثل {{channel}}"
@@ -307,12 +376,12 @@
       "moreActions": "اقدام‌های بیشتر",
       "recentEvents": "رویدادهای اخیر",
       "cancelFailed": "لغو جستجوی فعلی انجام نشد.",
-      "countryGlobal": "نتایج جهانی",
-      "countryHint": "برای نتایج جهانی خالی بگذارید.",
+      "countryGlobal": "کشور هدف: پیش‌فرض انگلیسی",
+      "countryHint": "اگر خالی بماند، زبان جستجو به‌طور پیش‌فرض انگلیسی است.",
       "countryHintDefaultEnglish": "خالی بگذارید تا زبان جستجو به طور پیش فرض انگلیسی باشد.",
-      "countryLabel": "کشور / منطقه هدف",
-      "countryPlaceholder": "مثلاً US, Japan, Spain, Brazil",
-      "countryScope": "کشور: {{country}}",
+      "countryLabel": "کشور هدف",
+      "countryPlaceholder": "مثلاً آمریکا، ژاپن، اسپانیا، برزیل",
+      "countryScope": "کشور هدف: {{country}}",
       "countryDefaultEnglish": "کشور هدف: انگلیسی به طور پیش فرض",
       "emptyCopy": "موضوع، مخاطب، سبک سازنده یا حال‌وهوای ویدیویی را که می‌خواهید پیدا کنید بگویید. کشور یا بازه زمانی را فقط وقتی اضافه کنید که مهم باشد.",
       "emptyEyebrow": "جست‌وجو با کمک دستیار",
@@ -335,10 +404,10 @@
       "savedDownloads": "دانلودهای ذخیره‌شده",
       "savedDownloadsCount": "{{count}} دانلود ذخیره‌شده",
       "savedPreferencesCount": "{{count}} ترجیح ذخیره‌شده",
-      "searchingLong": "هنوز در حال جستجو و رتبه‌بندی ویدیوهاست...",
+      "searchingLong": "هنوز در حال جستجوی ویدیوها...",
       "searchingVeryLong": "بیشتر از حالت معمول طول کشیده، اما هنوز در حال اجراست.",
       "stillWorking": "هنوز در حال کار است...",
-      "toggleCopy": "بدون خروج از workflow، در YouTube برای source video جستجو کنید.",
+      "toggleCopy": "به زبان خودتان بپرسید؛ هوش مصنوعی ویدیوهای مناسب YouTube را پیدا می‌کند.",
       "stage": {
         "answerer": "پردازش پرس و جو",
         "planner": "ساخت جستجو",
@@ -355,7 +424,11 @@
       "removeFromHistoryConfirm": "این مورد از سابقه دانلود حذف شود؟ فایل‌های ذخیره‌شده بیرون از کتابخانه برنامه روی دستگاه باقی می‌مانند.",
       "deleteLocalFileHistoryPending": "فایل حذف شد، اما Translator نتوانست به‌روزرسانی تاریخچهٔ دانلود را کامل کند. به‌طور خودکار دوباره تلاش می‌کند.",
       "removeHistoryFailed": "حذف این دانلود از تاریخچه ممکن نشد.",
-      "storedInAppLibrary": "ذخیره‌شده در کتابخانهٔ برنامه"
+      "storedInAppLibrary": "ذخیره‌شده در کتابخانهٔ برنامه",
+      "freeSearchRunning": "در حال جستجو در YouTube…",
+      "freeSearchResults": "این‌ها نتایج YouTube برای «{{query}}» است. این جستجو رایگان بود. بیشتر بگویید دنبال چه هستید تا با هوش مصنوعی دقیق‌ترش کنم.",
+      "freeSearchEmpty": "‏YouTube برای «{{query}}» چیزی پیدا نکرد. بگویید دنبال چه هستید تا با هوش مصنوعی جستجو کنم.",
+      "openOriginalPage": "باز کردن صفحهٔ اصلی"
     },
     "downloadAndTranslate": "دانلود و ترجمه",
     "downloadAndTranscribe": "دانلود و رونویسی",
@@ -369,7 +442,24 @@
     "captionRecoveryKeepVideo": "نگه داشتن ویدیوی فعلی",
     "captionRecoveryOpenCaptions": "باز کردن زیرنویس‌ها",
     "captionRecoverySwitchPrompt": "Translator زیرنویس‌های خودکار YouTube را بازیابی کرد، اما ویدیوی URL در دسترس نیست. با باز کردن آن‌ها ویدیوی فعلی جدا می‌شود.",
-    "captionRecoverySwitchTitle": "زیرنویس‌ها بدون ویدیوی فعلی باز شوند؟"
+    "captionRecoverySwitchTitle": "زیرنویس‌ها بدون ویدیوی فعلی باز شوند؟",
+    "translateTheseSubtitles": "ترجمهٔ این زیرنویس",
+    "subtitlesLoaded": "زیرنویس بارگذاری شد",
+    "chooseLanguage": "یک زبان انتخاب کنید",
+    "urlRejected": {
+      "collection": "این لینک یک کانال یا فهرست پخش است. لینک یک ویدیو را جای‌گذاری کنید، یا از «پیدا کردن ویدیو» استفاده کنید.",
+      "live": "این یک پخش زنده است. Translator بعد از پایان پخش می‌تواند آن را دانلود کند."
+    },
+    "longDownload": {
+      "title": "ویدیوی طولانی دانلود شود؟",
+      "body": "این ویدیو طولانی است، پس دانلودش ممکن است زمان ببرد و فضای زیادی از دیسک بگیرد. کیفیت دانلود پایین‌تر آن را سریع‌تر و کم‌حجم‌تر می‌کند.",
+      "duration": "مدت: {{duration}}",
+      "size": "حدود {{size}}",
+      "confirm": "دانلود"
+    },
+    "dropWhileDownloading": "یک دانلود در جریان است. وقتی تمام شد، فایل را دوباره رها کنید.",
+    "dropWhileBusy": "Translator مشغول کار روی این ویدیو است. وقتی تمام شد، فایل را دوباره رها کنید.",
+    "dropNotSupported": "یک ویدیو، فایل صوتی یا فایل زیرنویس ‎.srt رها کنید."
   },
   "subtitles": {
     "outputLanguage": "زبان خروجی",
@@ -392,41 +482,56 @@
     "translateEstimateByo": "کلید BYO",
     "qualityBadge": "(باکیفیت)",
     "cancel_confirmation": "آیا مطمئن هستید که می‌خواهید فرآیند ترجمه زیرنویس را لغو کنید؟ هر پیشرفتی از بین خواهد رفت و شما باید دوباره شروع کنید.",
-    "dubCostHint": "صدای ElevenLabs: ~{{rate}} اعتبار برای هر دقیقه گفتار. این برآورد پیش از شروع دوبله نشان داده می‌شود."
+    "dubCostHint": "صدای ElevenLabs: ~{{rate}} اعتبار برای هر دقیقه گفتار. این برآورد پیش از شروع دوبله نشان داده می‌شود.",
+    "unreadableCues_one": "یک خط از این فایل خوانده نشد و کنار گذاشته شد. زمان‌بندی‌اش را بررسی کنید.",
+    "unreadableCues": "{{count}} خط از این فایل خوانده نشد و کنار گذاشته شد. زمان‌بندی‌شان را بررسی کنید.",
+    "addCreditsToTranslate": "برای ترجمه اعتبار اضافه کنید",
+    "dubInto": "دوبله به {{language}}",
+    "dubIntro": "صدایی زیرنویس را به زبانی که انتخاب می‌کنید روی صدای پس‌زمینهٔ اصلی می‌خواند.",
+    "dubNeedsSubtitles": "دوبله زیرنویس را بلند می‌خواند، پس این ویدیو اول زیرنویس لازم دارد. آن را رونویسی کنید، بعد اینجا صدا را انتخاب کنید.",
+    "dubLanguageLabel": "زبان صدا",
+    "dubSameLanguage": "زیرنویس از قبل به {{language}} است، پس صدا همان را می‌خواند.",
+    "dubTranslatesFirst": "زیرنویس اول به {{language}} ترجمه می‌شود، بعد صداگذاری.",
+    "dubCostWithTranslation": "ترجمه و صدا: {{cost}}",
+    "dubUsesOwnKeys": "با کلیدهای API خودتان.",
+    "dubNotEnoughCredits": "اعتبار برای این دوبله کافی نیست.",
+    "addCreditsToDub": "برای دوبله اعتبار اضافه کنید",
+    "noSubtitlesToDub": "اول برای این ویدیو زیرنویس بسازید یا باز کنید، بعد دوبله کنید.",
+    "noSubtitlesToTranslate": "اول زیرنویس را باز کنید یا بسازید، بعد ترجمه کنید."
   },
   "summary": {
-    "title": "خلاصه رونوشت",
-    "ctaHelper": "یک مرور عمیق تولید کنید. ویدیوهای طولانی ممکن است کمی زمان ببرند.",
-    "languageLabel": "زبان خلاصه",
+    "title": "لحظات برجسته",
+    "ctaHelper": "بهترین لحظه‌ها را پیدا کنید.",
+    "languageLabel": "زبان خروجی",
     "tab": {
       "summary": "خلاصه",
-      "sections": "یادداشت‌های تفصیلی",
+      "sections": "یادداشت‌ها",
       "highlights": "لحظات برجسته"
     },
-    "generate": "تولید خلاصه",
-    "regenerate": "تولید مجدد خلاصه",
+    "generate": "پیدا کردن لحظات برجسته",
+    "regenerate": "پیدا کردن دوبارهٔ لحظات برجسته",
     "estimateCredits": "{{credits}} اعتبار",
     "estimateByo": "کلید BYO",
     "highEffortBadge": "(عمیق)",
     "placeholder": "خلاصه هوش مصنوعی شما پس از تولید اینجا ظاهر می‌شود.",
-    "insufficientCredits": "اعتبار کافی برای اجرای خلاصه موجود نیست.",
-    "error": "نتوانستیم خلاصه‌ای ایجاد کنیم. {{message}}",
+    "insufficientCredits": "اعتبار برای پیدا کردن لحظات برجسته کافی نیست.",
+    "error": "نتوانستیم لحظات برجسته را پیدا کنیم. {{message}}",
     "cancel": "لغو",
     "copy": "کپی خلاصه",
     "copied": "کپی شد!",
     "copyError": "نتوانستیم خلاصه را در کلیپ‌بورد کپی کنیم.",
-    "noHighlights": "هنوز لحظه برجسته‌ای نیست. برای شناسایی نقاط کلیدی تولید کنید.",
+    "noHighlights": "هنوز لحظهٔ برجسته‌ای نیست. «پیدا کردن لحظات برجسته» را بزنید تا بهترین لحظه‌ها پیدا شوند.",
     "noVideoForHighlights": "برای برش کلیپ‌های برجسته، ویدیو منبع را باز کنید.",
-    "summaryRequiredForHighlights": "پیش از برش highlight clipها، یک transcript summary بسازید.",
+    "summaryRequiredForHighlights": "اول «پیدا کردن لحظات برجسته» را بزنید تا رونوشت تحلیل شود.",
     "highlight": "لحظه برجسته",
-    "cutHighlightClip": "این highlight را برش بده",
+    "cutHighlightClip": "بریدن این لحظهٔ برجسته",
     "cuttingHighlightClip": "در حال برش…",
     "highlightPlaceholder": "کلیپ هنوز برش نخورده است.",
     "clipFormat": "فرمت کلیپ:",
     "originalFormat": "اصلی",
     "originalFormatDesc": "ابعاد اصلی ویدیو حفظ شود",
-    "verticalFormat": "9:16 عمودی",
-    "verticalFormatDesc": "بهینه‌شده برای YouTube Shorts، TikTok، Reels (9:16)",
+    "verticalFormat": "کادربندی دوباره برای Shorts",
+    "verticalFormatDesc": "برش و کادربندی دوباره برای YouTube Shorts،‏ TikTok و Reels ‏(9:16)",
     "verticalFitFormat": "متناسب با Shorts",
     "verticalFitFormatDesc": "فریم اصلی را داخل یک بوم 9:16 جا بدهید",
     "downloadHighlight": "دانلود کلیپ",
@@ -434,22 +539,24 @@
     "highlightSaved": "ذخیره شد!",
     "highlightSaveError": "ذخیره ناموفق بود",
     "downloadHighlightFailed": "ذخیره کلیپ برجسته ناموفق بود: {{message}}",
-    "highlightsSelectionFailed": "انتخاب لحظه‌های highlight ناموفق بود: {{message}}",
+    "highlightsSelectionFailed": "انتخاب لحظات برجسته ناموفق بود: {{message}}",
     "saveHighlightDialogTitle": "ذخیره کلیپ برجسته",
     "noSections": "هنوز یادداشت بخشی موجود نیست.",
     "sectionHeading": "بخش {{index}}",
     "highlightsInProgress": "در حال آماده‌سازی کلیپ‌های برجسته…",
     "status": {
-      "preparing": "در حال آماده‌سازی رونوشت…",
-      "chunk": "خلاصه‌سازی بخش {{current}}/{{total}}",
-      "selectingHighlights": "انتخاب لحظات برجسته…",
+      "preparing": "در حال تحلیل رونوشت…",
+      "chunk": "در حال نوشتن خلاصه {{current}}/{{total}}",
+      "selectingHighlights": "در حال انتخاب لحظات برجسته…",
       "cuttingHighlight": "برش لحظه برجسته {{current}}/{{total}}…",
       "cuttingHighlights": "برش کلیپ‌های برجسته…",
-      "synthesizing": "ترکیب خلاصه جامع…",
-      "ready": "خلاصه آماده است",
-      "error": "خلاصه‌سازی ناموفق بود",
-      "cancelled": "خلاصه‌سازی لغو شد",
-      "inProgress": "در حال تولید خلاصه…"
+      "synthesizing": "در حال پایان کار…",
+      "ready": "لحظات برجسته آماده است",
+      "error": "پیدا کردن لحظات برجسته ناموفق بود",
+      "cancelled": "پیدا کردن لحظات برجسته لغو شد",
+      "inProgress": "در حال پیدا کردن لحظات برجسته…",
+      "cuttingClip": "در حال بریدن کلیپ…",
+      "renderingClipSubtitles": "در حال افزودن زیرنویس به کلیپ…"
     },
     "combineMode": "ترکیب",
     "exitCombineMode": "خروج از ترکیب",
@@ -462,7 +569,30 @@
     "combinedCutFailed": "برش لحظات برجسته ترکیبی ناموفق بود: {{message}}",
     "highlightsInsufficientCredits": "خلاصه تولید شد، اما استخراج لحظات برجسته به دلیل تمام شدن اعتبار متوقف شد.",
     "highlightsPartialWarning": "استخراج لحظات برجسته ناقص بود. این لحظات برجسته ممکن است کامل نباشند. برای به‌روزرسانی دوباره تولید کنید.",
-    "highlightsPartialWithReason": "خلاصه تولید شد، اما استخراج لحظات برجسته ناقص بود: {{message}}"
+    "highlightsPartialWithReason": "خلاصه تولید شد، اما استخراج لحظات برجسته ناقص بود: {{message}}",
+    "estimateOwnKey": "با کلید API خودتان",
+    "generateSummary": "خلاصه‌سازی",
+    "regenerateSummary": "خلاصه‌سازی دوباره",
+    "showingSavedLanguage": "نتیجهٔ ذخیره‌شده به {{language}} نمایش داده می‌شود. برای ساختن نتیجه‌ای به {{current}}، دکمه را بزنید.",
+    "showingSavedVariant": "نتیجهٔ ذخیره‌شده به {{language}} نمایش داده می‌شود که با کیفیت خلاصهٔ دیگری ساخته شده است. برای ساختن نتیجهٔ تازه، دکمه را بزنید.",
+    "noSummaryYet": "هنوز خلاصه‌ای نیست. زبان را انتخاب کنید و «خلاصه‌سازی» را بزنید تا نکته‌های اصلی این ویدیو را ببینید.",
+    "noSummaryWithHighlights": "این لحظات برجسته بدون خلاصه آمده‌اند. برای نوشتن خلاصه، «خلاصه‌سازی» را بزنید.",
+    "clipCaptionsChanged": "زیرنویس از وقتی این کلیپ بریده شد تغییر کرده است.",
+    "recutClip": "برش دوباره",
+    "cutCombinedCount": "برش {{count}} لحظه با هم",
+    "cutCombinedCount_one": "برش یک لحظه",
+    "cutHighlightFailed": "کلیپ بریده نشد: {{message}}",
+    "clipError": {
+      "busy": "صبر کنید کار فعلی تمام شود، بعد کلیپ را ببرید.",
+      "noHighlight": "اول یک لحظهٔ برجسته انتخاب کنید.",
+      "editorialSingle": "هر ویدیوی کوتاه سبک‌دهی‌شده را جداگانه و در حالت «کادربندی دوباره برای Shorts» ببرید.",
+      "editorialStale": "زیرنویس این ویدیوی کوتاه تغییر کرده است. «سبک‌دهی به این ویدیوی کوتاه» را باز کنید، بررسی و ذخیره کنید، بعد دوباره ببرید.",
+      "noTranscript": "پیش از بریدن کلیپ، زیرنویس این ویدیو را باز کنید.",
+      "noCues": "این بخش از ویدیو زیرنویس ندارد.",
+      "untranslated": "بعضی خط‌های این کلیپ هنوز ترجمه نشده‌اند. آن‌ها را ترجمه کنید، یا نمایش زیرنویس را روی متن اصلی بگذارید.",
+      "subtitlesNotSaved": "کلیپ بریده شد، اما زیرنویسش ذخیره نشد.",
+      "generic": "این کلیپ از ویدیو بریده نشد. دوباره امتحان کنید."
+    }
   },
   "panel": {
     "new": "جدید",
@@ -491,12 +621,12 @@
       "emptyCopy": "برای ویرایش مستقیم، یک SRT موجود را باز کنید. رونویسی‌های تولیدشده از جریان اصلی هم پس از آماده شدن اینجا ظاهر می‌شوند.",
       "rowsLoaded": "{{count}} ردیف بارگذاری شد",
       "loadAnotherSrt": "بارگذاری یک SRT دیگر",
-      "mountVideoTitle": "ویدیوی منبع را برای پیش‌نمایش و خروجی burn-in متصل کنید",
+      "mountVideoTitle": "ویدیوی منبع را برای پیش‌نمایش و خروجی با زیرنویس چسبیده باز کنید",
       "mountVideoCopy": "می‌توانید بدون ویدیو هم به ویرایش ادامه دهید، اما پیش‌نمایش، جست‌وجوی موقعیت و ادغام زمانی بهترین عملکرد را دارند که رسانه منبع متصل باشد.",
       "listCopy": "متن منبع، ترجمه، زمان‌بندی و عملیات هر خط را مستقیم همین‌جا ویرایش کنید.",
       "originalLabel": "اصلی",
       "translationLabel": "ترجمه",
-      "mergeNeedsVideoCopy": "پیش از شروع خروجی burn-in، ویدیوی منبع را متصل کنید.",
+      "mergeNeedsVideoCopy": "پیش از گرفتن خروجی ویدیو با زیرنویس چسبیده، ویدیوی منبع را باز کنید.",
       "automaticCaptionsCopy": "دانلود ویدیو مسدود شد (HTTP 403). این‌ها زیرنویس‌های خودکار YouTube هستند، نه یک رونویسی تازه. اکنون می‌توانید آن‌ها را ویرایش، ترجمه و به SRT خروجی بگیرید. برای پیش‌نمایش یا چسباندن زیرنویس روی ویدیو، یک رسانه متصل کنید.",
       "automaticCaptionsCopyWithMedia": "دانلود ویدیو از URL مسدود شد (HTTP 403). این‌ها زیرنویس‌های خودکار YouTube هستند، نه یک رونویسی تازه. رسانهٔ متصل‌شده برای پیش‌نمایش و چسباندن زیرنویس در دسترس است.",
       "automaticCaptionsPill": "زیرنویس‌های خودکار YouTube",
@@ -516,7 +646,9 @@
       "originalTextPrefix": "اصلی:",
       "subtitlePlaceholder": "متن زیرنویس",
       "confirmRemove": "آیا مطمئن هستید که می‌خواهید این بلوک زیرنویس را حذف کنید؟ این عمل قابل برگشت نیست.",
-      "transcribeThisLine": "رونویسی خط"
+      "transcribeThisLine": "رونویسی خط",
+      "timeEndBeforeStart": "زمان پایان باید بعد از زمان شروع باشد. زمان قبلی این خط حفظ شد.",
+      "timeUnreadable": "زمان را به شکل 00:01:23,450 یا 1:23.45 بنویسید. زمان قبلی این خط حفظ شد."
     },
     "header": {
       "save": "ذخیره زیرنویس‌ها",
@@ -529,6 +661,14 @@
       "styleLabel": "سبک:",
       "mergeButton": "ادغام زیرنویس‌ها",
       "mergingButton": "در حال ادغام..."
+    },
+    "undo": {
+      "removed": "خط حذف شد.",
+      "inserted": "خط اضافه شد.",
+      "replaced": "در همهٔ خط‌ها جایگزین شد.",
+      "shifted": "زمان‌بندی جابه‌جا شد.",
+      "improved": "خط دوباره رونویسی شد.",
+      "action": "واگرد"
     }
   },
   "settings": {
@@ -575,10 +715,10 @@
         "anthropicHighEnd": "بازبینی پیشرفته Anthropic",
         "help": "<b>۵× اعتبار</b> • شامل مرحله بازبینی برای کیفیت بالاتر",
         "helpWithEstimate": "<b>۵× اعتبار</b> • موجودی شما: ~{{normalTime}} (معمولی) / ~{{hqTime}} (باکیفیت)",
-        "helpOn": "<b>5× اعتبار</b> • شامل مرحله بازبینی است",
-        "helpOff": "مرحله بازبینی را رد می‌کند",
-        "helpWithEstimateOn": "<b>5× اعتبار</b> • شامل مرحله بازبینی است • موجودی: ~{{time}}",
-        "helpWithEstimateOff": "مرحله بازبینی را رد می‌کند • موجودی: ~{{time}}"
+        "helpOn": "<b>۵× اعتبار</b> • پیش‌نویس Claude Haiku 5.5 + بازبینی Claude Opus 5.5",
+        "helpOff": "<b>۱× اعتبار</b> • فقط پیش‌نویس Claude Haiku 5.5",
+        "helpWithEstimateOn": "<b>۵× اعتبار</b> • پیش‌نویس Claude Haiku 5.5 + بازبینی Claude Opus 5.5 • موجودی: ~{{time}}",
+        "helpWithEstimateOff": "<b>۱× اعتبار</b> • فقط پیش‌نویس Claude Haiku 5.5 • موجودی: ~{{time}}"
       },
       "qualitySummary": {
         "label": "خلاصه باکیفیت",
@@ -586,22 +726,22 @@
         "modelOff": "تحلیل استاندارد Claude Sonnet 5.5",
         "help": "<b>۴× اعتبار</b> • تحلیل عمیق + کلیپ‌های برجسته با Claude Opus 5.5",
         "helpWithEstimate": "<b>۴× اعتبار</b> • موجودی شما: ~{{normalTime}} (معمولی) / ~{{hqTime}} (باکیفیت)",
-        "helpOn": "<b>4× اعتبار</b> • تحلیل عمیق + کلیپ‌های هایلایت",
+        "helpOn": "<b>۴× اعتبار</b> • تحلیل عمیق با Claude Opus 5.5 + کلیپ‌های لحظات برجسته",
         "helpOff": "تحلیل سریع با Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× اعتبار</b> • تحلیل عمیق + کلیپ‌های هایلایت • موجودی: ~{{time}}",
+        "helpWithEstimateOn": "<b>۴× اعتبار</b> • تحلیل عمیق با Claude Opus 5.5 + کلیپ‌های لحظات برجسته • موجودی: ~{{time}}",
         "helpWithEstimateOff": "تحلیل سریع با Claude Sonnet 5.5 • موجودی: ~{{time}}"
       },
       "qualityDubbing": {
         "label": "دوبله باکیفیت",
         "modelOn": "صداهای پریمیوم ElevenLabs TTS",
-        "help": "<b>۱۳× اعتبار</b> • TTS ElevenLabs با صداهای ممتاز",
-        "helpWithEstimate": "<b>۱۳× اعتبار</b> • موجودی شما: ~{{normalTime}} (معمولی) / ~{{hqTime}} (باکیفیت)",
+        "help": "<b>۱۲× اعتبار</b> • صداهای ممتاز ElevenLabs",
+        "helpWithEstimate": "<b>۱۲× اعتبار</b> • موجودی شما: ~{{normalTime}} (معمولی) / ~{{hqTime}} (باکیفیت)",
         "helpOn": "<b>{{ratio}}× اعتبار</b> • ElevenLabs TTS با صداهای پریمیوم",
         "helpWithEstimateOn": "<b>{{ratio}}× اعتبار</b> • ElevenLabs TTS با صداهای پریمیوم • موجودی: ~{{time}}"
       },
       "videoSuggestionModel": {
         "label": "مدل پیشنهاد ویدیو",
-        "help": "Auto = همان مدل پیش‌نویس ترجمه عادی",
+        "help": "از همان سطح مدلِ ترجمه استفاده می‌کند.",
         "default": "پیش‌فرض (همان پیش‌فرض ترجمه)",
         "quality": "کیفیت (همان کیفیت ترجمه)"
       },
@@ -609,7 +749,10 @@
         "perHour": "~{{credits}} اعتبار/ساعت",
         "perMinute": "~{{credits}} اعتبار/دقیقه",
         "perSearch": "~{{credits}} اعتبار/جستجو",
-        "balance": "موجودی: ~{{time}}"
+        "balance": "موجودی: ~{{time}}",
+        "minutesPerHour": "~{{time}} از دقیقه‌های شما برای هر ساعت ویدیو",
+        "minutesPerDubMinute": "~{{time}} از دقیقه‌های شما برای هر دقیقه دوبله",
+        "minutesPerSearch": "~{{time}} از دقیقه‌های شما برای هر جستجو"
       }
     },
     "dubbing": {
@@ -675,15 +818,17 @@
       "option2Title": "گزینه ۲: Anthropic + ElevenLabs",
       "economicsTitle": "چرا ارزش دارد",
       "economicsBody": "اعتبارات Stage5 برای راحتی بهینه شده‌اند (بدون تنظیم). BYO مستقیماً به ارائه‌دهندگان پرداخت می‌کند—معمولاً ~۳۰–۵۰٪ ارزان‌تر بسته به بسته شما.",
-      "encryptionUnavailable": "ذخیره‌سازی امن روی این سیستم در دسترس نیست. API keys قابل ذخیره‌سازی نیستند.",
+      "encryptionUnavailable": "ذخیره‌سازی امن روی این سیستم در دسترس نیست. کلیدهای API ذخیره نمی‌شوند.",
       "checkoutOpen": "صفحهٔ پرداخت در مرورگر باز است…",
-      "checkoutOpenHint": "پرداخت را در مرورگر خود کامل کنید. پس از تأیید پرداخت، BYO را به‌طور خودکار باز می‌کنیم."
+      "checkoutOpenHint": "پرداخت را در مرورگر خود کامل کنید. پس از تأیید پرداخت، BYO را به‌طور خودکار باز می‌کنیم.",
+      "entitlementsLoadFailed": "وضعیت بازشدن قفل بررسی نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید.",
+      "unlockFailed": "پرداخت شروع نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید."
     },
     "byoPreferences": {
       "title": "ترجیحات ارائه‌دهنده",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "اعتبار Stage5",
       "pricingHint": "هزینه تخمینی برای هر ۱ ساعت ویدیو",
-      "pricingHintHeuristic": "هزینه تخمینی بر اساس heuristics فعلی برنامه",
+      "pricingHintHeuristic": "هزینهٔ تخمینی بر اساس برآوردهای فعلی برنامه",
       "transcription": "رونویسی",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "ترجمه (پیش‌نویس)",
@@ -703,11 +848,11 @@
       "summary": "خلاصه",
       "dubbing": "دوبله",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "در حال حاضر هیچ BYO video recommendation modelای در دسترس نیست. برای این قابلیت OpenAI یا Anthropic BYO را فعال کنید.",
-      "videoSuggestionModelRequiresOpenAi": "به OpenAI BYO unlock، key و toggle نیاز دارد.",
-      "videoSuggestionModelRequiresAnthropic": "به Anthropic BYO unlock، key و toggle نیاز دارد.",
-      "summaryRequiresOpenAi": "به دسترسی به OpenAI BYO و API key نیاز دارد.",
-      "summaryRequiresAnthropic": "به دسترسی به Anthropic BYO و API key نیاز دارد.",
+      "videoSuggestionModelUnavailable": "فعلاً هیچ مدلی برای پیشنهاد ویدیو با کلید شخصی در دسترس نیست. برای این قابلیت، کلید شخصی OpenAI یا Anthropic را فعال کنید.",
+      "videoSuggestionModelRequiresOpenAi": "باز بودن قفل کلید شخصی، کلید OpenAI و روشن بودن گزینه‌اش لازم است.",
+      "videoSuggestionModelRequiresAnthropic": "باز بودن قفل کلید شخصی، کلید Anthropic و روشن بودن گزینه‌اش لازم است.",
+      "summaryRequiresOpenAi": "به دسترسی OpenAI با کلید شخصی و کلید API نیاز دارد.",
+      "summaryRequiresAnthropic": "به دسترسی Anthropic با کلید شخصی و کلید API نیاز دارد.",
       "translationReview": "ترجمه (بازبینی)",
       "transcriptionRequiresElevenLabs": "رونویسی فقط از ElevenLabs Scribe استفاده می‌کند. برای رونویسی با کلیدهای خودتان، یک کلید API از ElevenLabs اضافه کنید. بدون آن، رونویسی از اعتبارهای Stage5 استفاده می‌کند که تا زمانی که کلیدهای API شما روشن است استفاده نمی‌شوند. کلید OpenAI شما همچنان برای ترجمه استفاده می‌شود.",
       "dubbingRequiresElevenLabs": "دوبله فقط از ElevenLabs استفاده می‌کند. برای دوبله با کلیدهای خودتان، یک کلید API ElevenLabs اضافه کنید. بدون آن، دوبله از اعتبارات Stage5 استفاده می‌کند که تا وقتی کلیدهای API شما روشن است مصرف نمی‌شوند.",
@@ -786,17 +931,18 @@
     "stage5TtsProvider": {
       "label": "کیفیت TTS (اعتبارات Stage5)",
       "elevenlabs": "ممتاز (ElevenLabs)",
-      "elevenlabsHint": "بهترین کیفیت، هزینه بالاتر (~۱۳ برابر)",
+      "elevenlabsHint": "بهترین کیفیت، هزینهٔ بیشتر (~۱۲ برابر)",
       "elevenlabsHintWithBalance": "بهترین کیفیت · موجودی شما: {{time}} دوبله"
     },
     "apiKey": {
-      "saved": "API key ذخیره شد.",
-      "cleared": "API key پاک شد.",
-      "invalid": "اعتبارسنجی API key ناموفق بود.",
-      "howToGet": "چطور این key را بگیرم"
+      "saved": "کلید API ذخیره شد.",
+      "cleared": "کلید API پاک شد.",
+      "invalid": "اعتبارسنجی کلید API ناموفق بود.",
+      "howToGet": "چطور این کلید را بگیرم",
+      "missing": "اول یک کلید API جای‌گذاری کنید."
     },
     "byoStack": {
-      "title": "AI Stack شما"
+      "title": "ابزارهای هوش مصنوعی شما"
     },
     "siteConnection": {
       "title": "اتصال وب‌سایت",
@@ -829,7 +975,13 @@
         "desktopConnected": "Translator به Claude Desktop اضافه شد. برای بارگذاری آن، Claude را ببندید و دوباره باز کنید.",
         "cliNotFound": "فرمان {{app}} روی این رایانه پیدا نشد. این را در ترمینال اجرا کنید:",
         "cliNotFoundCopied": "فرمان {{app}} روی این رایانه پیدا نشد. فرمان راه‌اندازی کپی شد؛ آن را در ترمینال جای‌گذاری کنید:",
-        "failed": "اتصال {{app}} ممکن نشد: {{message}}"
+        "failed": "اتصال {{app}} ممکن نشد: {{message}}",
+        "details": "جزئیات",
+        "failedConfigInvalid": "{{app}} وصل نشد: فایل تنظیماتش معتبر نیست، برای همین Translator به آن دست نزد. فایل را درست یا حذف کنید و دوباره امتحان کنید.",
+        "failedWrite": "{{app}} وصل نشد: Translator نتوانست در فایل تنظیماتش بنویسد.",
+        "failedLauncher": "وصل کردن {{app}} فقط در نسخهٔ نصب‌شدهٔ Translator کار می‌کند.",
+        "failedCli": "{{app}} خودکار وصل نشد. این را در ترمینال اجرا کنید:",
+        "failedGeneric": "{{app}} وصل نشد. دوباره امتحان کنید."
       },
       "status": {
         "enabled": "فعال",
@@ -882,7 +1034,16 @@
       "redeeming": "در حال دریافت…",
       "received": "{{credits}} اعتبار دریافت شد.",
       "receivedNoCredits": "کد کار کرد.",
-      "receivedByo": "باز کردن قفل کلید API روی این رایانه فعال است."
+      "receivedByo": "باز کردن قفل کلید API روی این رایانه فعال است.",
+      "errors": {
+        "nothing_to_transfer": "فعلاً چیزی برای انتقال نیست: این رایانه نه اعتبار خریداری‌شده دارد و نه قفل کلید API باز شده‌ای. برای آوردن اعتبار از رایانهٔ دیگری به اینجا، «دریافت اعتبار» را انتخاب کنید.",
+        "too_many_codes": "در این ساعت کد انتقال زیادی ساخته شده است. کمی بعد دوباره امتحان کنید.",
+        "jobs_running": "یک رونویسی یا ترجمه هنوز در جریان است. وقتی تمام شد دوباره امتحان کنید.",
+        "invalid_code": "این کد اشتباه است، قبلاً استفاده شده یا منقضی شده. روی رایانهٔ دیگر کد تازه‌ای بسازید.",
+        "same_device": "کد را روی رایانهٔ دیگر وارد کنید، نه روی رایانه‌ای که آن را ساخته است.",
+        "network_error": "به سرور Stage5 دسترسی نداریم. اتصال خود را بررسی کنید و دوباره امتحان کنید.",
+        "transfer_failed": "اعتبار منتقل نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید."
+      }
     }
   },
   "credits": {
@@ -923,7 +1084,9 @@
     "checkoutNote": "پرداخت یک‌باره با Stripe در مرورگر. بدون حساب کاربری و بدون اشتراک. دقیقه‌ها خودکار اضافه می‌شوند.",
     "dubbingNote": "ترجمه با دقیقه‌های Translator حدود ۱۰٪ به هر دقیقه اضافه می‌کند؛ دوبله بیشتر مصرف می‌کند.",
     "iCancelledCheckout": "پرداخت را لغو کردم",
-    "checkoutStartFailed": "پرداخت شروع نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید."
+    "checkoutStartFailed": "پرداخت شروع نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید.",
+    "loadFailed": "موجودی شما بارگیری نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید.",
+    "estimateAmount": "{{credits}} اعتبار"
   },
   "cta": {
     "generate": {
@@ -958,7 +1121,12 @@
     "useThisVideo": "از این ویدیو استفاده کن",
     "useDownloadedVideo": "از این ویدیو استفاده کن",
     "useOriginalAudio": "استفاده از صدای اصلی",
-    "useDubbedAudio": "استفاده از صدای دوبله‌شده"
+    "useDubbedAudio": "استفاده از صدای دوبله‌شده",
+    "changeVideoKeepSubtitles": "زیرنویس فعلی روی ویدیوی جدید بماند (اگر نسخهٔ دیگری از همین ویدیو است). اگر ویدیوی دیگری است، تیک را بردارید.",
+    "mute": "بی‌صدا کردن (M)",
+    "unmute": "صدادار کردن (M)",
+    "volume": "صدا",
+    "unreadableFile": "Translator نمی‌تواند این فایل را بخواند. شاید خراب باشد یا قالبش پشتیبانی نشود."
   },
   "admin": {
     "title": "مدیر",
@@ -1051,19 +1219,19 @@
       "stepThree": "مرحله 3",
       "chooseSourceTitle": "انتخاب منبع",
       "sourceLoading": "در حال دریافت منبع",
-      "sourceLoadingDescription": "منبع دانلودشده برای transcription آماده می‌شود.",
+      "sourceLoadingDescription": "ویدیوی دانلودشده برای رونویسی آماده می‌شود.",
       "localSourceReady": "فایل محلی آماده است",
       "webSourceReady": "منبع وب آماده است",
       "sourceReadyDescription": "رسانه انتخابی شما برای مرحله بعد آماده است.",
-      "transcribeTitle": "ایجاد transcript",
+      "transcribeTitle": "پردازش ویدیو",
       "processVideoTitle": "پردازش ویدیو",
-      "transcribeDescription": "پیش از ترجمه یا dubbing، رسانه منبع را به یک subtitle track قابل‌ویرایش تبدیل کنید.",
+      "transcribeDescription": "پیش از ترجمه یا دوبله، صدای ویدیو را به زیرنویسی قابل‌ویرایش تبدیل کنید.",
       "translateDubTitle": "ترجمه یا دوبله",
-      "translateDubDescription": "transcript شما mount شده است. حالا زبان خروجی، حالت ترجمه یا dubbing را انتخاب کنید.",
+      "translateDubDescription": "رونوشت شما آماده است. حالا زبان خروجی، حالت ترجمه یا دوبله را انتخاب کنید.",
       "availableOutputs": "خروجی‌های موجود",
       "availableOutputsDescription": "رسانه‌های دانلودشده و دوبله‌شده تا وقتی نسخه‌های موردنظر را ذخیره نکنید اینجا در دسترس می‌مانند.",
       "saveOutputsTitle": "ذخیره خروجی‌ها",
-      "saveOutputsDescription": "هر منبع یا رسانه دوبله‌شده‌ای را که می‌خواهید نگه دارید، خارج از workspace برنامه ذخیره کنید."
+      "saveOutputsDescription": "هر ویدیوی منبع یا دوبله‌شده‌ای را که می‌خواهید نگه دارید، بیرون از فضای کاری برنامه ذخیره کنید."
     },
     "calculatingCost": "در حال محاسبه هزینه...",
     "notEnoughCredits": "اعتبار کافی در دسترس نیست",
@@ -1082,7 +1250,11 @@
     "nextMatchAria": "تطبیق بعدی",
     "previousMatchAria": "تطبیق قبلی",
     "replaceAllAria": "جایگزینی همه",
-    "closeAria": "بستن نوار جستجو"
+    "closeAria": "بستن نوار جستجو",
+    "matchCount": "{{current}} از {{total}}",
+    "matchCase": "تطبیق حروف بزرگ و کوچک",
+    "wholeWord": "کل کلمه",
+    "showReplace": "جایگزینی"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1134,7 +1306,32 @@
       "neverHadMessage": "رونویسی به اعتبار یا باز کردن قفل کلید API نیاز دارد. هر کدام را می‌توانید در تنظیمات تهیه کنید. ترجمه با Claude یا Codex خودتان از طریق کنترل عامل‌ها رایگان است.",
       "notEnoughTitle": "اعتبار کافی برای این ویدیو ندارید",
       "notEnoughTranscriptionMessage": "رونویسی این ویدیو حدود {{required}} اعتبار لازم دارد. شما {{available}} اعتبار دارید که برای حدود {{minutes}} دقیقه کافی است. اعتبار اضافه کنید و دوباره شروع کنید.",
-      "notEnoughMessage": "این کار به اعتباری بیشتر از موجودی شما ({{available}}) نیاز دارد. برای ادامه، اعتبار اضافه کنید."
+      "notEnoughMessage": "این کار به اعتباری بیشتر از موجودی شما ({{available}}) نیاز دارد. برای ادامه، اعتبار اضافه کنید.",
+      "task": {
+        "transcription": {
+          "title": "رونویسی به اعتبار نیاز دارد",
+          "message": "موجودی شما برای رونویسی این ویدیو کافی نیست. اعتبار اضافه کنید و دوباره شروع کنید. خط‌هایی که رونویسی شده‌اند حفظ شده‌اند."
+        },
+        "translation": {
+          "title": "ترجمه به اعتبار نیاز دارد",
+          "message": "موجودی شما برای ترجمهٔ این ویدیو کافی نیست. اعتبار اضافه کنید و دوباره امتحان کنید. خط‌هایی که ترجمه شده‌اند حفظ شده‌اند. ترجمه با Claude یا Codex خودتان از طریق کنترل عامل‌ها رایگان است."
+        },
+        "dubbing": {
+          "title": "دوبله به اعتبار نیاز دارد",
+          "message": "موجودی شما برای دوبلهٔ این ویدیو کافی نیست. اعتبار اضافه کنید و دوباره امتحان کنید."
+        },
+        "summary": {
+          "title": "خلاصه به اعتبار نیاز دارد",
+          "message": "موجودی شما برای خلاصه و لحظات برجسته کافی نیست. اعتبار اضافه کنید و دوباره امتحان کنید."
+        },
+        "videoSearch": {
+          "title": "جستجوی ویدیو با هوش مصنوعی به اعتبار نیاز دارد",
+          "message": "موجودی شما برای جستجوی ویدیو با هوش مصنوعی کافی نیست. اعتبار اضافه کنید و دوباره جستجو کنید."
+        },
+        "other": {
+          "title": "این کار به اعتبار نیاز دارد"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "دوبله شروع شود؟",
@@ -1145,7 +1342,58 @@
       "message": "از قبل زیرنویس‌هایی باز دارید. پیش از جایگزین کردن آن‌ها با زیرنویس‌های خودکار YouTube، آن‌ها را ذخیره کنید یا کنار بگذارید.",
       "saveAndOpen": "ذخیره و باز کردن زیرنویس‌ها",
       "title": "زیرنویس‌های خودکار بازیابی‌شده باز شوند؟"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "اول ویرایش‌های زیرنویس ذخیره شود؟",
+      "message": "از آخرین ذخیره، این زیرنویس را تغییر داده‌اید. پیش از جایگزینی، ویرایش‌ها ذخیره شوند؟",
+      "saveAndContinue": "ذخیره و ادامه",
+      "discardAndContinue": "دور ریختن ویرایش‌ها و ادامه"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "رونویسی هنوز در جریان است.",
+        "translation": "ترجمه هنوز در جریان است.",
+        "dubbing": "دوبله هنوز در جریان است.",
+        "export": "خروجی گرفتن از ویدیو هنوز در جریان است.",
+        "summary": "خلاصه هنوز در حال نوشته شدن است.",
+        "download": "دانلود هنوز در جریان است.",
+        "highlight": "کلیپ‌های لحظات برجسته هنوز در حال ساخت‌اند.",
+        "search": "جستجوی ویدیو هنوز در جریان است.",
+        "generic": "یک کار هنوز در جریان است."
+      },
+      "unsavedLine": "ویرایش‌های زیرنویس ذخیره نشده‌اند.",
+      "unsavedMessage": "این زیرنویس تغییراتی دارد که ذخیره نشده‌اند.",
+      "tabUnsavedDetail": "پیش از بستن زبانه ذخیره شوند؟",
+      "tabUnsavedWithJobDetail": "با بستن زبانه، کار متوقف می‌شود. اول ویرایش‌های زیرنویس ذخیره شوند؟",
+      "tabJobDetail": "با بستن زبانه، این کار متوقف می‌شود و هرچه تا اینجا انجام شده از دست می‌رود.",
+      "quitMessage": "از {{app}} خارج می‌شوید؟ بعضی کارها تمام نشده‌اند.",
+      "windowMessage": "پنجره بسته شود؟ بعضی کارها تمام نشده‌اند.",
+      "tabLine": "‏{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "کارهای در جریان متوقف می‌شوند. اول ویرایش‌های زیرنویس ذخیره شوند؟",
+      "jobsDetail": "کارهای در جریان متوقف می‌شوند و هرچه تا اینجا انجام شده از دست می‌رود.",
+      "saveAndClose": "ذخیره و بستن",
+      "saveAndQuit": "ذخیره و خروج",
+      "closeWithoutSaving": "بستن بدون ذخیره",
+      "quitWithoutSaving": "خروج بدون ذخیره",
+      "stopAndClose": "توقف و بستن",
+      "quitAnyway": "خروج در هر صورت",
+      "closeAnyway": "بستن در هر صورت",
+      "saveFailed": "زیرنویس {{title}} ذخیره نشد، برای همین چیزی بسته نشد. آن را از ویرایشگر ذخیره کنید و دوباره امتحان کنید.",
+      "ok": "باشه"
+    },
+    "exportSaveDialogTitle": "ذخیرهٔ ویدیو با نام",
+    "exportVideoFilterName": "ویدیوی MP4",
+    "exportDiscardConfirm": "ویدیوی شما آماده است اما هنوز ذخیره نشده. دور ریخته شود؟",
+    "exportChooseLocationButton": "انتخاب محل ذخیره…",
+    "exportDiscardButton": "دور ریختن ویدیو",
+    "exportSaveFailed": "ویدیو در {{folder}} ذخیره نشد.",
+    "exportSaveFailedPermission": "اجازهٔ ذخیره در این پوشه را ندارید.",
+    "exportSaveFailedDiskFull": "روی آن درایو فضای خالی کافی نیست.",
+    "exportSaveFailedGeneric": "فایل در آنجا نوشته نشد.",
+    "exportSameAsSource": "این کار ویدیوی اصلی را جایگزین می‌کند. نام دیگری انتخاب کنید.",
+    "keepDubbing": "ادامهٔ دوبله",
+    "stopDubbing": "توقف دوبله",
+    "cancelDubbingBody": "صدای دوبله‌ای که تا اینجا ساخته شده دور ریخته می‌شود."
   },
   "progress": {
     "preparingVideoExport": "در حال آماده‌سازی خروجی ویدیو…",
@@ -1163,7 +1411,7 @@
     "transcribingElevenLabsHours": "رونویسی با ElevenLabs (~{{hours}} ساعت {{minutes}} دقیقه باقیمانده)",
     "transcribingElevenLabsFinishing": "رونویسی با ElevenLabs...",
     "transcriptionRetry": "اتصال ناموفق بود، تلاش مجدد ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "آپلود صوت برای رونویسی...",
+    "transcribingR2Upload": "در حال آپلود صدا…",
     "gapRepair": "تعمیر شکاف #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "تعمیر زیرنویس‌های گمشده (تکرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "پاکسازی زیرنویس‌ها ({{done}}/{{total}})",
@@ -1233,7 +1481,18 @@
       "videoBlockedCaptions": "ویدیو دانلود نشد؛ در عوض در حال جستجوی زیرنویس‌های YouTube…",
       "voiceTrackAssembled": "ترک صدا سرهم شد",
       "voiceTrackReady": "ترک صدا آماده است",
-      "writingSummary": "در حال نوشتن خلاصه…"
+      "writingSummary": "در حال نوشتن خلاصه…",
+      "completed": "انجام شد",
+      "cancelled": "لغو شد",
+      "cancelling": "در حال لغو…",
+      "failed": "مشکلی پیش آمد",
+      "downloading": "در حال دانلود…",
+      "downloadingAudio": "در حال دانلود صدا…",
+      "transcribingLine": "در حال رونویسی خط…",
+      "startingExport": "در حال شروع ساخت ویدیو…",
+      "captionsAvailable": "ویدیو دانلود نشد، اما زیرنویس YouTube در دسترس است",
+      "captionsNotOpened": "زیرنویس YouTube آماده است اما باز نشد",
+      "insufficientCredits": "اعتبار کافی نیست"
     },
     "listening": "در حال گوش دادن به ویدیو…",
     "mergeFinishSaveBeforeReload": "پیش از بارگذاری دوباره، ذخیرهٔ ویدیوی ادغام‌شده را تمام کنید.",
@@ -1241,7 +1500,8 @@
     "mergeWaitForCancelBeforeReload": "پیش از بارگذاری دوباره، صبر کنید تا لغو ادغام تمام شود.",
     "preparingTranscription": "در حال آماده شدن برای گوش دادن…",
     "restartingTranscription": "در حال شروع دوبارهٔ رونویسی…",
-    "resumingTranscription": "در حال ادامه از جایی که متوقف شده بود…"
+    "resumingTranscription": "در حال ادامه از جایی که متوقف شده بود…",
+    "hqModeEstimate": "(کیفیت بالا: ~{{time}})"
   },
   "messages": {
     "fileSaved": "فایل ذخیره شد:\n{{path}}",
@@ -1264,7 +1524,23 @@
     "sendReport": "ارسال گزارش",
     "reportPrompt": "مشکلی پیش آمد. برای رفع سریع به سازنده گزارش دهید.",
     "preparingReport": "در حال آماده‌سازی بستهٔ تشخیصی...",
-    "reportContextWarning": "بارگیری بخشی از زمینهٔ عیب‌یابی ممکن نشد. گزارش همچنان جزئیات این برنامه را شامل می‌شود."
+    "reportContextWarning": "بارگیری بخشی از زمینهٔ عیب‌یابی ممکن نشد. گزارش همچنان جزئیات این برنامه را شامل می‌شود.",
+    "reportPromptTask": {
+      "transcription": "رونویسی به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. این گزارش را بفرستید تا مشکل را رفع کنیم.",
+      "translation": "ترجمه به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. این گزارش را بفرستید تا مشکل را رفع کنیم.",
+      "dubbing": "دوبله به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. این گزارش را بفرستید تا مشکل را رفع کنیم.",
+      "summary": "خلاصه به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. این گزارش را بفرستید تا مشکل را رفع کنیم.",
+      "videoSearch": "جستجوی ویدیو به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. این گزارش را بفرستید تا مشکل را رفع کنیم.",
+      "download": "دانلود ویدیو به دلیلی ناشناخته ناموفق بود. این گزارش را بفرستید تا مشکل را رفع کنیم.",
+      "export": "ساخت ویدیو به‌خاطر یک مشکل پیش‌بینی‌نشده متوقف شد. این گزارش را بفرستید تا مشکل را رفع کنیم.",
+      "other": "مشکلی پیش آمد. این گزارش را بفرستید تا مشکل را رفع کنیم."
+    },
+    "feedbackTitle": "ارسال بازخورد یا گزارش مشکل",
+    "whatHappened": "چه اتفاقی افتاد، یا چه چیزی می‌خواهید به ما بگویید؟",
+    "attachDiagnostics": "پیوست جزئیات عیب‌یابی (برای گزارش مشکل توصیه می‌شود)",
+    "attachDiagnosticsHint": "گزارش‌های اخیر برنامه، نسخهٔ برنامه و اطلاعات سیستم. بدون ویدیو یا زیرنویس.",
+    "showDetails": "نمایش آنچه فرستاده می‌شود",
+    "feedbackEmailSubject": "بازخورد دربارهٔ Translator"
   },
   "home": {
     "headline": "هر ویدیویی، به <lang>{{language}}</lang>.",
@@ -1297,7 +1573,9 @@
     "seeAll": "دیدن همه",
     "recentSubtitlesReady": "زیرنویس {{language}} آماده است",
     "recentSubtitlesReadyGeneric": "زیرنویس آماده است",
-    "recentDownloaded": "دانلود شد"
+    "recentDownloaded": "دانلود شد",
+    "recentLocalFile": "روی همین رایانه",
+    "recentLocalMissing": "فایل جابه‌جا یا حذف شده"
   },
   "workspace": {
     "subtitlesTitle": "زیرنویس",
@@ -1327,7 +1605,25 @@
     "showTranslation": "ترجمه",
     "showOriginal": "اصلی",
     "showBoth": "هر دو",
-    "textSize": "اندازه متن"
+    "textSize": "اندازه متن",
+    "findReplace": "جستجو و جایگزینی",
+    "statusReadyPrice": "آماده — زیرنویس {{language}} این ویدیو: {{price}}",
+    "statusReadyPreview": "آماده — دقیقه‌هایتان برای {{minutes}} دقیقهٔ اول به {{language}} کافی است",
+    "statusReadyPreview_one": "آماده — دقیقه‌هایتان برای دقیقهٔ اول به {{language}} کافی است",
+    "statusPartlyTranslated": "{{translated}} از {{count}} خط به {{language}} · {{missing}} خط ترجمه نشده",
+    "statusPartlyTranslated_one": "{{translated}} از {{count}} خط به {{language}} · {{missing}} خط ترجمه نشده",
+    "statusPartlyTranslatedUnknown": "{{translated}} از {{count}} خط ترجمه شده · {{missing}} خط ترجمه نشده",
+    "statusPartlyTranslatedUnknown_one": "{{translated}} از {{count}} خط ترجمه شده · {{missing}} خط ترجمه نشده",
+    "statusTranslatedUnknown": "{{count}} خط ترجمه‌شده · هم‌زمان با ویدیو",
+    "statusTranslatedUnknown_one": "یک خط ترجمه‌شده · هم‌زمان با ویدیو",
+    "stopsEarly": "زیرنویس در {{time}} تمام می‌شود",
+    "interruptedTranslate": "ترجمهٔ این ویدیو به {{language}} با بسته شدن Translator متوقف شد.",
+    "interruptedTranscribe": "رونویسی این ویدیو با بسته شدن Translator متوقف شد.",
+    "interruptedResume": "ادامه از همان‌جا",
+    "translateMissing": "ترجمهٔ {{count}} خط باقی‌مانده به {{language}}",
+    "translateMissing_one": "ترجمهٔ خط باقی‌مانده به {{language}}",
+    "moreRevealVideo": "نمایش فایل ویدیو",
+    "chooseAnotherFile": "انتخاب فایل دیگر"
   },
   "subtitleStyles": {
     "Cinema": "زرد سینمایی",
@@ -1361,7 +1657,10 @@
     "retry": "تلاش دوباره",
     "finishCta": "ترجمه تا آخر · {{price}}",
     "noneCta": "ترجمه به {{language}} · {{price}}",
-    "notNow": "فعلاً نه"
+    "notNow": "فعلاً نه",
+    "failedNeedMinutes": "هرچه تا اینجا ترجمه شده سر جایش است. برای ترجمهٔ {{remaining}} دقیقهٔ باقی‌مانده، دقیقهٔ بیشتری لازم دارید.",
+    "failedNeedMinutes_one": "هرچه تا اینجا ترجمه شده سر جایش است. برای ترجمهٔ دقیقهٔ باقی‌مانده، دقیقهٔ بیشتری لازم دارید.",
+    "failedNetwork": "اتصال قطع شد. هرچه تا اینجا ترجمه شده سر جایش است. وقتی دوباره آنلاین شدید، دوباره امتحان کنید."
   },
   "videoCost": {
     "covered": "دقیقه‌هایتان کافی است",
@@ -1371,7 +1670,7 @@
   "highlightEditor": {
     "legend": "کادربندی و زیرنویس Shorts",
     "intro": "هر گوینده را کادربندی کنید، در برش‌های دوربین تقسیم کنید و عبارت‌های کوتاه زیرنویس را با گفتار هم‌زمان کنید. زمان‌های زیر از ابتدای این کلیپ شروع می‌شوند.",
-    "previewTime": "زمان پیش‌نمایش Short",
+    "previewTime": "زمان پیش‌نمایش ویدیوی کوتاه",
     "speakerLabel": "برچسب گوینده یا موضوع",
     "splitShot": "تقسیم نما در محل پخش",
     "joinShot": "پیوستن به نمای قبلی",
@@ -1384,14 +1683,24 @@
     "saveSelectionFirst": "ابتدا انتخاب لحظات برجسته را ذخیره کنید.",
     "closeEdit": "بستن ویرایش",
     "editFraming": "ویرایش کادربندی و زیرنویس‌ها",
-    "styleShort": "سبک‌دهی به این Short",
+    "styleShort": "سبک‌دهی به این ویدیوی کوتاه",
     "horizontalFocus": "تمرکز افقی",
     "verticalFocus": "تمرکز عمودی",
     "zoom": "بزرگ‌نمایی",
     "from": "از",
     "to": "تا",
     "saving": "در حال ذخیره…",
-    "save": "ذخیرهٔ ویرایش Short"
+    "save": "ذخیرهٔ ویرایش ویدیوی کوتاه",
+    "openFailed": "این کلیپ برای سبک‌دهی باز نشد. مطمئن شوید ویدیو و زیرنویسش باز هستند.",
+    "saveFailed": "ویرایش ویدیوی کوتاه ذخیره نشد. بررسی کنید هر عبارت متن داشته باشد و زمان‌هایش داخل کلیپ باشد.",
+    "previewAt": "پیش‌نمایش در {{seconds}} ثانیه",
+    "shotPosition": "نمای {{current}} از {{total}}",
+    "phrasesHint": "عبارت‌های زیرنویس: برای برجسته کردن یک کلمه، همان کلمه یا عبارت را دقیقاً مثل متن در کادرش بنویسید.",
+    "phraseStart": "شروع عبارت {{index}} (ثانیه)",
+    "phraseEnd": "پایان عبارت {{index}} (ثانیه)",
+    "phraseText": "متن عبارت {{index}}",
+    "phraseEmphasis": "تأکید عبارت {{index}}",
+    "saveNote": "با ذخیره، این کلیپ به‌جای سبک زیرنویس شما، با همین عبارت‌ها به حالت «کادربندی دوباره برای Shorts» می‌رود."
   },
   "subtitleFonts": {
     "label": "فونت",
@@ -1399,5 +1708,80 @@
     "classic": "کلاسیک",
     "serif": "سریف",
     "display": "پررنگ"
+  },
+  "export": {
+    "exportButton": "خروجی ویدیو",
+    "exportingButton": "در حال خروجی گرفتن…",
+    "progressTitle": "در حال خروجی گرفتن از ویدیو",
+    "savedTitle": "ویدیو ذخیره شد",
+    "savedIn": "{{file}} در {{folder}}",
+    "showInFinder": "نمایش در Finder",
+    "showInFolder": "نمایش در پوشه",
+    "openVideo": "باز کردن ویدیو",
+    "failedTitle": "از ویدیو خروجی گرفته نشد",
+    "saveTo": "ذخیره در",
+    "changeDestination": "تغییر…",
+    "displayNeedsTranslation": "برای نمایش ترجمه یا هر دو، اول زیرنویس را ترجمه کنید.",
+    "error": {
+      "permission": "Translator نتوانست فایل‌های کاری ویدیو را بنویسد. مطمئن شوید حساب کاربری شما اجازهٔ نوشتن در پوشهٔ موقت را دارد و دوباره امتحان کنید.",
+      "tools": "ابزارهای خروجی ویدیو آماده نشدند. اینترنت خود را بررسی کنید و دوباره امتحان کنید.",
+      "generic": "هنگام ساخت ویدیو مشکلی پیش آمد. لطفاً دوباره امتحان کنید."
+    }
+  },
+  "tabs": {
+    "newTab": "زبانهٔ جدید",
+    "newTabWithShortcut": "زبانهٔ جدید ({{shortcut}})",
+    "closeTab": "بستن زبانه"
+  },
+  "menu": {
+    "about": "دربارهٔ {{app}}",
+    "services": "سرویس‌ها",
+    "hide": "پنهان کردن {{app}}",
+    "hideOthers": "پنهان کردن بقیه",
+    "showAll": "نمایش همه",
+    "quit": "خروج از {{app}}",
+    "exit": "خروج",
+    "file": "فایل",
+    "newTab": "زبانهٔ جدید",
+    "closeTab": "بستن زبانه",
+    "nextTab": "زبانهٔ بعدی",
+    "previousTab": "زبانهٔ قبلی",
+    "closeWindow": "بستن پنجره",
+    "edit": "ویرایش",
+    "undo": "واگرد",
+    "redo": "ازنو",
+    "cut": "برش",
+    "copy": "کپی",
+    "paste": "چسباندن",
+    "pasteAndMatchStyle": "چسباندن با سبک همسان",
+    "delete": "حذف",
+    "selectAll": "انتخاب همه",
+    "speech": "گفتار",
+    "startSpeaking": "شروع خواندن",
+    "stopSpeaking": "توقف خواندن",
+    "find": "جستجو",
+    "view": "نما",
+    "actualSize": "اندازهٔ واقعی",
+    "zoomIn": "بزرگ‌نمایی",
+    "zoomOut": "کوچک‌نمایی",
+    "toggleFullScreen": "تمام‌صفحه روشن/خاموش",
+    "window": "پنجره",
+    "minimize": "کوچک کردن",
+    "zoom": "بزرگ کردن پنجره",
+    "bringAllToFront": "آوردن همه به جلو",
+    "selectTab": "انتخاب زبانهٔ {{n}}",
+    "learnSpelling": "یادگیری املا",
+    "lookUpSelection": "جستجوی «{selection}»",
+    "searchWithGoogle": "جستجو با Google",
+    "saveImage": "ذخیرهٔ تصویر",
+    "saveImageAs": "ذخیرهٔ تصویر با نام…",
+    "saveVideo": "ذخیرهٔ ویدیو",
+    "saveVideoAs": "ذخیرهٔ ویدیو با نام…",
+    "copyLink": "کپی پیوند",
+    "saveLinkAs": "ذخیرهٔ پیوند با نام…",
+    "copyImage": "کپی تصویر",
+    "copyImageAddress": "کپی نشانی تصویر",
+    "copyVideoAddress": "کپی نشانی ویدیو",
+    "inspect": "بازرسی عنصر"
   }
 }

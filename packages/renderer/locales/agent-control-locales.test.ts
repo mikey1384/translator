@@ -68,7 +68,7 @@ test('Agent Control is completely translated in every bundled locale', () => {
   const english = getAgentControl(readLocale('en.json'));
   assert.ok(english, 'en.json is missing settings.agentControl');
   const englishStrings = flattenStrings(english);
-  assert.equal(englishStrings.size, 41, 'unexpected Agent Control key count');
+  assert.equal(englishStrings.size, 47, 'unexpected Agent Control key count');
 
   for (const fileName of localeFiles) {
     const agentControl = getAgentControl(readLocale(fileName));
@@ -92,7 +92,11 @@ test('Agent Control is completely translated in every bundled locale', () => {
         `${fileName}: settings.agentControl.${key} has mismatched interpolation tokens`
       );
 
-      if (fileName !== 'en.json') {
+      // Real cognates that are spelled the same in English.
+      const sameWordAllowed =
+        key === 'connection.details' &&
+        ['de.json', 'nl.json'].includes(fileName);
+      if (fileName !== 'en.json' && !sameWordAllowed) {
         assert.notEqual(
           translatedValue,
           englishValue,

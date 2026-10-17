@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "Faili za SRT",
       "mediaFiles": "Faili za Vyombo vya Habari",
-      "videoFiles": "Faili za Video"
+      "videoFiles": "Faili za Video",
+      "textFiles": "Faili za Maandishi",
+      "allFiles": "Faili Zote",
+      "subtitleFiles": "Faili za Manukuu"
     },
     "chooseAnotherLocation": "Chagua eneo jingine",
     "continue": "Endelea",
@@ -96,7 +99,20 @@
     "dismiss": "Funga",
     "moreActions": "Vitendo zaidi",
     "installingUpdate": "Inasakinisha sasisho...",
-    "installingUpdateShort": "Inasakinisha"
+    "installingUpdateShort": "Inasakinisha",
+    "ok": "Sawa",
+    "minimumVersionValue": "Toleo la chini linalotumika: v{{version}}",
+    "currentVersionValue": "Toleo la sasa: v{{version}}",
+    "updateNotFoundUseDownloadPage": "Sasisho halikuweza kupakuliwa hapa. Pata toleo jipya zaidi kwenye ukurasa wa kupakua.",
+    "whatsNewLead": "Translator imesasishwa hadi v{{version}}.",
+    "whatsNewNotesInEnglish": "Maelezo ya toleo (Kiingereza)",
+    "checkForUpdates": "Angalia masasisho",
+    "checkingForUpdates": "Inaangalia masasisho…",
+    "upToDate": "Unatumia toleo jipya zaidi.",
+    "updateAvailableDownloading": "Sasisho limepatikana. Linapakuliwa chinichini.",
+    "updateReadyToInstall": "Sasisho limepakuliwa. Zima na uwashe upya ili kulisakinisha.",
+    "updateCheckFailed": "Imeshindwa kuangalia masasisho. Jaribu tena baadaye.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube iliomba uthibitisho wa binadamu. Bofya Unganisha kuendelea.",
@@ -140,7 +156,60 @@
       "providerUnavailable": "Unakili (ElevenLabs Scribe) haupatikani kwa muda au haukuweza kufikiwa baada ya majaribio kadhaa. Tafadhali jaribu tena baada ya dakika chache.",
       "fileTooLarge": "Sauti hii ni ndefu mno kunakiliwa katika kazi moja (zaidi ya takriban saa {{hours}}). Gawanya video katika sehemu fupi zaidi kisha unakili kila sehemu.",
       "elevenLabsKeyRequired": "Unakili hutumia ElevenLabs Scribe na unahitaji ufunguo wa API wa ElevenLabs. Ongeza mmoja kwenye Mipangilio, au zima hali ya funguo za API ili kunakili kwa krediti za Stage5. Ufunguo wako wa OpenAI au Anthropic bado unatumika kwa tafsiri."
-    }
+    },
+    "credits": {
+      "transcription": "Salio halitoshi kunakili video hii.",
+      "translation": "Salio halitoshi kutafsiri video hii.",
+      "dubbing": "Salio halitoshi kuweka sauti kwenye video hii.",
+      "summary": "Salio halitoshi kwa muhtasari.",
+      "videoSearch": "Salio halitoshi kutafuta video.",
+      "download": "Salio halitoshi.",
+      "export": "Salio halitoshi.",
+      "other": "Salio halitoshi."
+    },
+    "failed": {
+      "transcription": "Unakili umesimama kwa sababu ya tatizo lisilotarajiwa. Mistari iliyokwisha nakiliwa imehifadhiwa.",
+      "translation": "Tafsiri imesimama kwa sababu ya tatizo lisilotarajiwa. Mistari iliyokwisha tafsiriwa imehifadhiwa.",
+      "dubbing": "Uwekaji sauti umesimama kwa sababu ya tatizo lisilotarajiwa.",
+      "summary": "Muhtasari umesimama kwa sababu ya tatizo lisilotarajiwa.",
+      "videoSearch": "Utafutaji wa video umesimama kwa sababu ya tatizo lisilotarajiwa.",
+      "export": "Utengenezaji wa video umesimama kwa sababu ya tatizo lisilotarajiwa.",
+      "other": "Hitilafu fulani imetokea. Tafadhali jaribu tena."
+    },
+    "server": {
+      "transcription": "Seva yetu imepata tatizo. Jaribu tena baada ya dakika moja.",
+      "translation": "Tafsiri imesimama kwa sababu seva yetu imepata tatizo. Mistari iliyokwisha tafsiriwa imehifadhiwa. Jaribu tena baada ya dakika moja.",
+      "dubbing": "Seva yetu imepata tatizo. Jaribu tena baada ya dakika moja.",
+      "summary": "Seva yetu imepata tatizo. Jaribu tena baada ya dakika moja.",
+      "videoSearch": "Seva yetu imepata tatizo. Jaribu tena baada ya dakika moja.",
+      "export": "Seva yetu imepata tatizo. Jaribu tena baada ya dakika moja.",
+      "other": "Seva yetu imepata tatizo. Jaribu tena baada ya dakika moja."
+    },
+    "download": {
+      "invalid_url": "Hiki hakionekani kuwa kiungo cha video. Bandika kiungo kizima.",
+      "unsupported_site": "Translator haiwezi kupakua video kutoka tovuti hii.",
+      "unavailable": "Video hii haipatikani. Huenda imeondolewa.",
+      "private": "Video hii ni ya faragha.",
+      "not_found": "Hakuna video iliyopatikana kwenye kiungo hiki.",
+      "region_locked": "Video hii haipatikani katika nchi yako.",
+      "audience_restricted": "Video hii inaonyeshwa kwa baadhi ya watazamaji tu. Ikiwa akaunti yako inaweza kuitazama, unganisha tovuti hii katika Mipangilio kisha ujaribu tena.",
+      "login_required": "Video hii inahitaji uingie kwenye akaunti. Unganisha tovuti hii katika Mipangilio kisha ujaribu tena.",
+      "media_blocked": "Tovuti imezuia upakuaji wa video, na hakuna manukuu yaliyoweza kurejeshwa.",
+      "access_refused": "Tovuti hii imekataa kuipa Translator video.",
+      "video_data_failed": "Video haikuweza kupakuliwa. Huenda imezuiwa katika eneo lako au inahitaji kuingia kwenye akaunti.",
+      "rate_limited": "YouTube inazuia upakuaji kutoka mtandao wako kwa sasa. Subiri dakika chache kisha ujaribu tena.",
+      "network": "Imeshindwa kuunganisha. Kagua muunganisho wako wa intaneti kisha ujaribu tena.",
+      "captions_unreadable": "Manukuu ya YouTube yamepatikana, lakini Translator haikuweza kuyasoma.",
+      "save_failed": "Video imepakuliwa lakini haikuweza kuhifadhiwa. Jaribu tena.",
+      "downloader_failed": "Kipakuzi cha video hakikuweza kuanza. Zima na uwashe Translator upya, kisha ujaribu tena.",
+      "generic": "Video haikuweza kupakuliwa. Jaribu tena au tumia kiungo kingine.",
+      "subtitlesNotSaved": "Manukuu yako ya sasa hayakuweza kuhifadhiwa, kwa hivyo manukuu ya YouTube hayakufunguliwa.",
+      "openFailed": "Video imepakuliwa lakini haikuweza kufunguliwa. Ifungue kutoka Historia ya vipakuliwa."
+    },
+    "network": "Imeshindwa kufikia seva. Kagua muunganisho wako wa intaneti kisha ujaribu tena.",
+    "busy": "Huduma ina shughuli nyingi kwa sasa. Subiri dakika moja kisha ujaribu tena.",
+    "diskFull": "Diski yako imejaa. Ongeza nafasi kisha ujaribu tena.",
+    "cancelDubbingFailedPlain": "Imeshindwa kusimamisha uwekaji sauti. Jaribu tena."
   },
   "input": {
     "connect": "Unganisha",
@@ -175,7 +244,7 @@
     "transcribeOnly": "Nakili Sauti",
     "srtLoaded": "Unakili Umekamilika",
     "srtFileLoaded": "SRT Imepakiwa",
-    "featuresUnlockAfterTranscription": "Tafsiri na menyu nyingine zitaonekana baada ya unakili kukamilika.",
+    "featuresUnlockAfterTranscription": "Nakili, tafsiri au tengeneza sehemu muhimu kutoka kwenye video hii.",
     "preSubtitleActionsHint": "Nakili, tafsiri au tengeneza vivutio kutoka kwenye video hii.",
     "saveDubbedVideo": "Hifadhi Video Iliyorekodiwa",
     "downloadFinishedSwitchTitle": "Tazama video iliyopakuliwa?",
@@ -291,13 +360,13 @@
       "defaultSearchUserMessage": "Nitafutie video sasa.",
       "followUp": {
         "moreLikeQuery": "Tafuta video zaidi kama \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" kutoka kwa mtayarishi au chaneli nyingine",
+        "differentCreator": "\"{{query}}\" kutoka kwa jina au chaneli nyingine",
         "interviews": "Mahojiano au mazungumzo kuhusu {{query}}",
         "clips": "Mambo muhimu au klipu zilizojitokeza za {{query}}",
-        "creatorAppearances": "Mahojiano ya {{creator}}, kuonekana TV, au klipu za moja kwa moja",
-        "similarCreators": "Watayarishi au wasanii wanaofanana na {{creator}}",
+        "creatorAppearances": "Mahojiano ya {{creator}}, alipoonekana, au klipu zinazohusiana",
+        "similarCreators": "Majina, wasanii au chaneli zinazofanana na {{creator}}",
         "topicAngle": "{{topic}} imeelezewa kwa mtazamo mwingine",
-        "topicCreator": "{{creator}} na video zinazohusiana na {{topic}}",
+        "topicCreator": "{{creator}} au video zinazohusiana za {{topic}}",
         "channelStyle": "Video zenye hisia zinazofanana na {{channel}}",
         "moreFromHistory": "Video zaidi kama \"{{title}}\"",
         "channelFromHistory": "Video kutoka vituo kama {{channel}}"
@@ -307,12 +376,12 @@
       "moreActions": "Vitendo zaidi",
       "recentEvents": "Matukio ya hivi karibuni",
       "cancelFailed": "Imeshindikana kughairi utafutaji wa sasa.",
-      "countryGlobal": "Matokeo ya kimataifa",
-      "countryHint": "Acha wazi kwa matokeo ya kimataifa.",
+      "countryGlobal": "Nchi lengwa: Kiingereza kwa chaguo-msingi",
+      "countryHint": "Acha wazi ili utafutaji ufanyike kwa Kiingereza.",
       "countryHintDefaultEnglish": "Acha wazi ili lugha ya utafutaji iwe Kiingereza kwa chaguo-msingi.",
-      "countryLabel": "Nchi / eneo lengwa",
+      "countryLabel": "Nchi lengwa",
       "countryPlaceholder": "kwa mfano Marekani, Japan, Spain, Brazil",
-      "countryScope": "Nchi: {{country}}",
+      "countryScope": "Nchi lengwa: {{country}}",
       "countryDefaultEnglish": "Nchi lengwa: Kiingereza kwa chaguo-msingi",
       "emptyCopy": "Taja mada, hadhira, mtindo wa mtayarishaji au hali ya video unayotaka kupata. Ongeza nchi au muda wa karibuni tu inapohitajika.",
       "emptyEyebrow": "Utafutaji kwa msaada wa msaidizi",
@@ -335,7 +404,7 @@
       "savedDownloads": "Faili zilizopakuliwa zilizohifadhiwa",
       "savedDownloadsCount": "Faili zilizopakuliwa zilizohifadhiwa {{count}}",
       "savedPreferencesCount": "Mapendeleo yaliyohifadhiwa {{count}}",
-      "searchingLong": "Bado inatafuta na kupanga video...",
+      "searchingLong": "Bado inatafuta video...",
       "searchingVeryLong": "Inachukua muda mrefu kuliko kawaida, lakini bado inaendelea.",
       "stillWorking": "Bado inafanya kazi...",
       "toggleCopy": "Tafuta video ya chanzo kwenye YouTube bila kuondoka kwenye mtiririko huu.",
@@ -356,7 +425,11 @@
       "deleteLocalFileHistoryPending": "Faili imefutwa, lakini Translator haikuweza kumaliza kusasisha historia ya vipakuliwa. Itajaribu tena kiotomatiki.",
       "removeHistoryFailed": "Imeshindikana kuondoa kipakuliwa hiki kwenye historia.",
       "storedInAppLibrary": "Imehifadhiwa kwenye maktaba ya programu",
-      "savedPreferencesCount_one": "Pendeleo {{count}} lililohifadhiwa"
+      "savedPreferencesCount_one": "Pendeleo {{count}} lililohifadhiwa",
+      "freeSearchRunning": "Inatafuta kwenye YouTube…",
+      "freeSearchResults": "Haya ni matokeo ya YouTube ya “{{query}}”. Utafutaji huu ulikuwa bure. Niambie zaidi unachotaka nami nitauboresha kwa AI.",
+      "freeSearchEmpty": "YouTube haikupata chochote kwa “{{query}}”. Eleza unachotaka nami nitatafuta kwa AI.",
+      "openOriginalPage": "Fungua ukurasa asili"
     },
     "downloadAndTranslate": "Pakua na utafsiri",
     "downloadAndTranscribe": "Pakua na unukuu",
@@ -370,7 +443,24 @@
     "captionRecoveryKeepVideo": "Baki na video ya sasa",
     "captionRecoveryOpenCaptions": "Fungua manukuu",
     "captionRecoverySwitchPrompt": "Translator imerejesha manukuu ya kiotomatiki ya YouTube, lakini video ya URL haipatikani. Kuyafungua kutaondoa video ya sasa.",
-    "captionRecoverySwitchTitle": "Ungependa kufungua manukuu bila video ya sasa?"
+    "captionRecoverySwitchTitle": "Ungependa kufungua manukuu bila video ya sasa?",
+    "translateTheseSubtitles": "Tafsiri manukuu haya",
+    "subtitlesLoaded": "Manukuu yamepakiwa",
+    "chooseLanguage": "Chagua lugha",
+    "urlRejected": {
+      "collection": "Hiki ni kiungo cha chaneli au orodha ya kucheza. Bandika kiungo cha video moja, au tumia Tafuta video.",
+      "live": "Haya ni matangazo ya moja kwa moja. Translator inaweza kuyapakua baada ya matangazo kuisha."
+    },
+    "longDownload": {
+      "title": "Upakue video ndefu?",
+      "body": "Video hii ni ndefu, kwa hivyo upakuaji unaweza kuchukua muda na kutumia nafasi kubwa ya diski. Ubora wa chini wa upakuaji huifanya iwe ya haraka zaidi na ndogo zaidi.",
+      "duration": "Urefu: {{duration}}",
+      "size": "Takriban {{size}}",
+      "confirm": "Pakua"
+    },
+    "dropWhileDownloading": "Upakuaji unaendelea. Dondosha faili tena ukikamilika.",
+    "dropWhileBusy": "Translator inashughulikia video hii. Dondosha faili tena kazi ikikamilika.",
+    "dropNotSupported": "Dondosha video, faili la sauti au faili la manukuu la .srt."
   },
   "subtitles": {
     "outputLanguage": "Lugha ya Matokeo",
@@ -393,32 +483,47 @@
     "translateEstimateByo": "Ufunguo wa BYO",
     "qualityBadge": "(ubora)",
     "cancel_confirmation": "Je, una uhakika unataka kughairi mchakato wa kutafsiri manukuu? Maendeleo yoyote yatapotea na utahitaji kuanza tena.",
-    "dubCostHint": "Sauti ya ElevenLabs: ~{{rate}} krediti kwa kila dakika ya mazungumzo. Makadirio haya huonyeshwa kabla ya dubbing kuanza."
+    "dubCostHint": "Sauti ya ElevenLabs: ~{{rate}} krediti kwa kila dakika ya mazungumzo. Makadirio haya huonyeshwa kabla ya dubbing kuanza.",
+    "unreadableCues_one": "Mstari {{count}} katika faili hili haukuweza kusomwa na umeachwa. Kagua msimbo wake wa muda.",
+    "unreadableCues": "Mistari {{count}} katika faili hili haikuweza kusomwa na imeachwa. Kagua misimbo yake ya muda.",
+    "addCreditsToTranslate": "Ongeza salio ili kutafsiri",
+    "dubInto": "Weka sauti kwa {{language}}",
+    "dubIntro": "Sauti husoma manukuu kwa lugha unayochagua, juu ya sauti asili ya mandharinyuma.",
+    "dubNeedsSubtitles": "Kuweka sauti husoma manukuu kwa sauti, kwa hivyo video hii inahitaji manukuu kwanza. Inakili, kisha uchague sauti hapa.",
+    "dubLanguageLabel": "Lugha ya sauti",
+    "dubSameLanguage": "Manukuu tayari yako kwa {{language}}, kwa hivyo sauti itayasoma kama yalivyo.",
+    "dubTranslatesFirst": "Manukuu yatatafsiriwa kwa {{language}} kwanza, kisha yasomwe kwa sauti.",
+    "dubCostWithTranslation": "Tafsiri na sauti: {{cost}}",
+    "dubUsesOwnKeys": "Inatumia funguo zako za API.",
+    "dubNotEnoughCredits": "Salio halitoshi kwa uwekaji sauti huu.",
+    "addCreditsToDub": "Ongeza salio ili kuweka sauti",
+    "noSubtitlesToDub": "Tengeneza au fungua manukuu ya video hii kwanza, kisha uweke sauti.",
+    "noSubtitlesToTranslate": "Fungua au tengeneza manukuu kwanza, kisha uyatafsiri."
   },
   "summary": {
-    "title": "Muhtasari wa Nakili",
-    "ctaHelper": "Tengeneza muhtasari wa kina. Video ndefu zinaweza kuchukua muda kusindika.",
-    "languageLabel": "Lugha ya muhtasari",
+    "title": "Sehemu muhimu",
+    "ctaHelper": "Pata matukio bora zaidi.",
+    "languageLabel": "Lugha ya matokeo",
     "tab": {
       "summary": "Muhtasari",
-      "sections": "Maelezo ya kina",
+      "sections": "Madokezo",
       "highlights": "Sehemu muhimu"
     },
-    "generate": "Tengeneza muhtasari",
-    "regenerate": "Tengeneza muhtasari upya",
+    "generate": "Tengeneza sehemu muhimu",
+    "regenerate": "Tengeneza sehemu muhimu upya",
     "estimateCredits": "{{credits}} mikopo",
     "estimateByo": "Ufunguo wa BYO",
     "highEffortBadge": "(kina)",
     "placeholder": "Muhtasari wako wa AI utaonekana hapa ukishaundwa.",
-    "insufficientCredits": "Hakuna mikopo ya kutosha kuendesha muhtasari.",
-    "error": "Hatukuweza kuunda muhtasari. {{message}}",
+    "insufficientCredits": "Salio halitoshi kutengeneza sehemu muhimu.",
+    "error": "Hatukuweza kutengeneza sehemu muhimu. {{message}}",
     "cancel": "Ghairi",
     "copy": "Nakili muhtasari",
     "copied": "Imenakiliwa!",
     "copyError": "Imeshindikana kunakili muhtasari kwenye clipboard.",
-    "noHighlights": "Hakuna sehemu muhimu bado. Tengeneza ili kugundua maneno muhimu.",
+    "noHighlights": "Bado hakuna sehemu muhimu. Zitengeneze ili kupata matukio bora zaidi.",
     "noVideoForHighlights": "Fungua video ya chanzo ili kukata klipu za sehemu muhimu.",
-    "summaryRequiredForHighlights": "Tengeneza muhtasari wa unakili kabla ya kukata klipu za highlight.",
+    "summaryRequiredForHighlights": "Tengeneza sehemu muhimu kwanza ili nakala ya maandishi ichambuliwe.",
     "highlight": "Sehemu muhimu",
     "cutHighlightClip": "Kata highlight hii",
     "cuttingHighlightClip": "Inakata…",
@@ -426,8 +531,8 @@
     "clipFormat": "Muundo wa klipu:",
     "originalFormat": "Asili",
     "originalFormatDesc": "Dumisha vipimo vya video ya asili",
-    "verticalFormat": "Wima 9:16",
-    "verticalFormatDesc": "Imeboreshwa kwa YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFormat": "Panga upya kwa Shorts",
+    "verticalFormatDesc": "Kata na upange upya kwa YouTube Shorts, TikTok, Reels (9:16)",
     "verticalFitFormat": "Fit ya Shorts",
     "verticalFitFormatDesc": "Weka fremu ya asili ndani ya turuba ya 9:16",
     "downloadHighlight": "Pakua klipu",
@@ -441,16 +546,18 @@
     "sectionHeading": "Sehemu {{index}}",
     "highlightsInProgress": "Inaandaa klipu za sehemu muhimu…",
     "status": {
-      "preparing": "Inaandaa nakili…",
-      "chunk": "Inafanya muhtasari wa sehemu {{current}}/{{total}}",
-      "selectingHighlights": "Inachagua wakati muhimu…",
+      "preparing": "Inachambua nakala ya maandishi…",
+      "chunk": "Inaandika muhtasari {{current}}/{{total}}",
+      "selectingHighlights": "Inachagua sehemu muhimu…",
       "cuttingHighlight": "Inakata sehemu muhimu {{current}}/{{total}}…",
       "cuttingHighlights": "Inakata klipu za sehemu muhimu…",
-      "synthesizing": "Inaunganisha muhtasari kamili…",
-      "ready": "Muhtasari uko tayari",
-      "error": "Muhtasari umeshindikana",
-      "cancelled": "Muhtasari umeghairiwa",
-      "inProgress": "Inatengeneza muhtasari…"
+      "synthesizing": "Inamalizia…",
+      "ready": "Sehemu muhimu ziko tayari",
+      "error": "Sehemu muhimu zimeshindikana",
+      "cancelled": "Sehemu muhimu zimeghairiwa",
+      "inProgress": "Inatengeneza sehemu muhimu…",
+      "cuttingClip": "Inakata klipu…",
+      "renderingClipSubtitles": "Inaongeza manukuu kwenye klipu…"
     },
     "combineMode": "Unganisha",
     "exitCombineMode": "Toka Unganisha",
@@ -463,7 +570,30 @@
     "combinedCutFailed": "Imeshindikana kukata sehemu zilizounganishwa: {{message}}",
     "highlightsInsufficientCredits": "Muhtasari umetengenezwa, lakini utoaji wa vivutio ulisimama kwa sababu krediti zimeisha.",
     "highlightsPartialWarning": "Utoaji wa vivutio haukukamilika. Vivutio hivi huenda havijakamilika. Tengeneza upya ili kusasisha.",
-    "highlightsPartialWithReason": "Muhtasari umetengenezwa, lakini utoaji wa vivutio haukukamilika: {{message}}"
+    "highlightsPartialWithReason": "Muhtasari umetengenezwa, lakini utoaji wa vivutio haukukamilika: {{message}}",
+    "estimateOwnKey": "Inatumia ufunguo wako wa API",
+    "generateSummary": "Fupisha",
+    "regenerateSummary": "Fupisha tena",
+    "showingSavedLanguage": "Inaonyesha matokeo yaliyohifadhiwa kwa {{language}}. Bonyeza kitufe ili kupata mapya kwa {{current}}.",
+    "showingSavedVariant": "Inaonyesha matokeo yaliyohifadhiwa kwa {{language}}, yaliyotengenezwa kwa kiwango tofauti cha muhtasari. Bonyeza kitufe ili kupata mapya.",
+    "noSummaryYet": "Bado hakuna muhtasari. Chagua lugha kisha ubonyeze Fupisha ili kupata mambo makuu ya video hii.",
+    "noSummaryWithHighlights": "Sehemu hizi muhimu zimekuja bila muhtasari. Bonyeza Fupisha ili kuuandika.",
+    "clipCaptionsChanged": "Manukuu yamebadilika tangu klipu hii ilipokatwa.",
+    "recutClip": "Kata tena",
+    "cutCombinedCount": "Kata {{count}} kuwa klipu moja",
+    "cutCombinedCount_one": "Kata {{count}} kuwa klipu moja",
+    "cutHighlightFailed": "Imeshindwa kukata klipu: {{message}}",
+    "clipError": {
+      "busy": "Subiri kazi inayoendelea iishe, kisha ukate klipu.",
+      "noHighlight": "Chagua sehemu muhimu kwanza.",
+      "editorialSingle": "Kata kila Short iliyopambwa peke yake, katika Panga upya kwa Shorts.",
+      "editorialStale": "Manukuu katika Short hii yamebadilika. Fungua \"Pamba Short hii\", ikague na uihifadhi, kisha ukate tena.",
+      "noTranscript": "Fungua manukuu ya video hii kabla ya kukata klipu.",
+      "noCues": "Sehemu hii ya video haina manukuu.",
+      "untranslated": "Baadhi ya mistari katika klipu hii bado haijatafsiriwa. Itafsiri, au weka onyesho la manukuu lionyeshe asili.",
+      "subtitlesNotSaved": "Klipu imekatwa, lakini manukuu yake hayakuweza kuhifadhiwa.",
+      "generic": "Imeshindwa kukata klipu hii kutoka kwenye video. Jaribu tena."
+    }
   },
   "panel": {
     "new": "mpya",
@@ -519,7 +649,9 @@
       "originalTextPrefix": "Asili:",
       "subtitlePlaceholder": "Maandishi ya manukuu",
       "confirmRemove": "Je, una uhakika unataka kuondoa bloku hii ya manukuu? Kitendo hiki hakiwezi kutenduliwa.",
-      "transcribeThisLine": "Nakili mstari"
+      "transcribeThisLine": "Nakili mstari",
+      "timeEndBeforeStart": "Muda wa kuisha lazima uwe baada ya muda wa kuanza. Mstari unabaki na muda wake wa awali.",
+      "timeUnreadable": "Andika muda kama 00:01:23,450 au 1:23.45. Mstari unabaki na muda wake wa awali."
     },
     "header": {
       "save": "Hifadhi manukuu",
@@ -532,6 +664,14 @@
       "styleLabel": "Mtindo:",
       "mergeButton": "Unganisha Manukuu",
       "mergingButton": "Inaunganisha..."
+    },
+    "undo": {
+      "removed": "Mstari umefutwa.",
+      "inserted": "Mstari umeongezwa.",
+      "replaced": "Imebadilishwa katika mistari yote.",
+      "shifted": "Muda umesogezwa.",
+      "improved": "Mstari umenakiliwa upya.",
+      "action": "Tendua"
     }
   },
   "settings": {
@@ -578,10 +718,10 @@
         "anthropicHighEnd": "Uhakiki wa hali ya juu wa Anthropic",
         "help": "<b>5× mikopo</b> • Inaongeza awamu ya uhakiki kwa ubora wa juu",
         "helpWithEstimate": "<b>5× mikopo</b> • Salio lako: ~{{normalTime}} (kawaida) / ~{{hqTime}} (ubora)",
-        "helpOn": "<b>5× krediti</b> • Inajumuisha hatua ya ukaguzi",
-        "helpOff": "Huruka hatua ya ukaguzi",
-        "helpWithEstimateOn": "<b>5× krediti</b> • Inajumuisha hatua ya ukaguzi • Salio: ~{{time}}",
-        "helpWithEstimateOff": "Huruka hatua ya ukaguzi • Salio: ~{{time}}"
+        "helpOn": "<b>5× krediti</b> • Rasimu ya Claude Haiku 5.5 + ukaguzi wa Claude Opus 5.5",
+        "helpOff": "<b>1× krediti</b> • Rasimu ya Claude Haiku 5.5 pekee",
+        "helpWithEstimateOn": "<b>5× krediti</b> • Rasimu ya Claude Haiku 5.5 + ukaguzi wa Claude Opus 5.5 • Salio: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× krediti</b> • Rasimu ya Claude Haiku 5.5 pekee • Salio: ~{{time}}"
       },
       "qualitySummary": {
         "label": "Muhtasari wa Ubora",
@@ -589,9 +729,9 @@
         "modelOff": "Uchambuzi wa kawaida wa Claude Sonnet 5.5",
         "help": "<b>4× mikopo</b> • Uchambuzi wa kina + klipu za sehemu muhimu na Claude Opus 5.5",
         "helpWithEstimate": "<b>4× mikopo</b> • Salio lako: ~{{normalTime}} (kawaida) / ~{{hqTime}} (ubora)",
-        "helpOn": "<b>4× krediti</b> • Uchambuzi wa kina + klipu za vivutio",
+        "helpOn": "<b>4× krediti</b> • Uchambuzi wa kina wa Claude Opus 5.5 + klipu za sehemu muhimu",
         "helpOff": "Uchambuzi wa haraka kwa Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× krediti</b> • Uchambuzi wa kina + klipu za vivutio • Salio: ~{{time}}",
+        "helpWithEstimateOn": "<b>4× krediti</b> • Uchambuzi wa kina wa Claude Opus 5.5 + klipu za sehemu muhimu • Salio: ~{{time}}",
         "helpWithEstimateOff": "Uchambuzi wa haraka kwa Claude Sonnet 5.5 • Salio: ~{{time}}"
       },
       "qualityDubbing": {
@@ -612,7 +752,10 @@
         "perHour": "~{{credits}} krediti/saa",
         "perMinute": "~{{credits}} krediti/dakika",
         "perSearch": "~{{credits}} krediti/utafutaji",
-        "balance": "Salio: ~{{time}}"
+        "balance": "Salio: ~{{time}}",
+        "minutesPerHour": "~{{time}} ya dakika zako kwa kila saa ya video",
+        "minutesPerDubMinute": "~{{time}} ya dakika zako kwa kila dakika ya kuweka sauti",
+        "minutesPerSearch": "~{{time}} ya dakika zako kwa kila utafutaji"
       }
     },
     "dubbing": {
@@ -680,7 +823,9 @@
       "economicsBody": "Mikopo ya Stage5 inaboresha urahisi (hakuna usanidi). BYO inalipa watoa huduma moja kwa moja—kwa kawaida ~30–50% nafuu kulingana na paketi yako.",
       "encryptionUnavailable": "Hifadhi salama haipatikani kwenye mfumo huu. API key haziwezi kuhifadhiwa.",
       "checkoutOpen": "Malipo yamefunguliwa kwenye kivinjari…",
-      "checkoutOpenHint": "Kamilisha malipo kwenye kivinjari chako. Tutafungua BYO kiotomatiki malipo yakikamilika."
+      "checkoutOpenHint": "Kamilisha malipo kwenye kivinjari chako. Tutafungua BYO kiotomatiki malipo yakikamilika.",
+      "entitlementsLoadFailed": "Hali ya ufunguaji wako haikuweza kukaguliwa. Kagua muunganisho wako kisha ujaribu tena.",
+      "unlockFailed": "Malipo hayakuweza kuanza. Kagua muunganisho wako kisha ujaribu tena."
     },
     "byoPreferences": {
       "title": "Mapendeleo ya Mtoa Huduma",
@@ -796,7 +941,8 @@
       "saved": "API key imehifadhiwa.",
       "cleared": "API key imefutwa.",
       "invalid": "Uthibitishaji wa API key umeshindikana.",
-      "howToGet": "Jinsi ya kupata key hii"
+      "howToGet": "Jinsi ya kupata key hii",
+      "missing": "Bandika ufunguo wa API kwanza."
     },
     "byoStack": {
       "title": "AI Stack Yako"
@@ -832,7 +978,13 @@
         "desktopConnected": "Translator imeongezwa kwenye Claude Desktop. Funga Claude kabisa kisha uifungue tena ili kuipakia.",
         "cliNotFound": "Haikuweza kupata amri ya {{app}} kwenye kompyuta hii. Endesha hii kwenye terminal:",
         "cliNotFoundCopied": "Haikuweza kupata amri ya {{app}} kwenye kompyuta hii. Amri ya usanidi imenakiliwa; ibandike kwenye terminal:",
-        "failed": "Haikuweza kuunganisha {{app}}: {{message}}"
+        "failed": "Haikuweza kuunganisha {{app}}: {{message}}",
+        "details": "Maelezo",
+        "failedConfigInvalid": "Imeshindwa kuunganisha {{app}}: faili lake la mipangilio si sahihi, kwa hivyo Translator imeliacha bila kulibadilisha. Rekebisha au ondoa faili hilo, kisha ujaribu tena.",
+        "failedWrite": "Imeshindwa kuunganisha {{app}}: Translator haikuweza kuandika faili lake la mipangilio.",
+        "failedLauncher": "Kuunganisha {{app}} kunafanya kazi tu kwenye programu ya Translator iliyosakinishwa.",
+        "failedCli": "Imeshindwa kuunganisha {{app}} kiotomatiki. Endesha hii kwenye terminal:",
+        "failedGeneric": "Imeshindwa kuunganisha {{app}}. Jaribu tena."
       },
       "status": {
         "enabled": "Imewashwa",
@@ -887,11 +1039,20 @@
       "receivedNoCredits": "Msimbo umefanya kazi.",
       "receivedByo": "Ufunguaji wa funguo za API umewashwa kwenye kompyuta hii.",
       "summaryCredits_one": "Krediti {{credits}} itahamishwa.",
-      "received_one": "Krediti {{credits}} imepokelewa."
+      "received_one": "Krediti {{credits}} imepokelewa.",
+      "errors": {
+        "nothing_to_transfer": "Hakuna cha kuhamisha bado: kompyuta hii haina salio lililonunuliwa wala ufunguaji wa funguo za API. Ili kuleta salio hapa kutoka kompyuta nyingine, chagua “Pokea mikopo”.",
+        "too_many_codes": "Misimbo mingi mno ya uhamisho katika saa hii. Jaribu tena baada ya muda mfupi.",
+        "jobs_running": "Unakili au tafsiri bado inaendelea. Jaribu tena ikikamilika.",
+        "invalid_code": "Msimbo huo si sahihi, umeshatumika au umeisha muda. Tengeneza mpya kwenye kompyuta nyingine.",
+        "same_device": "Weka msimbo kwenye kompyuta nyingine, si ile iliyoutengeneza.",
+        "network_error": "Imeshindwa kufikia seva ya Stage5. Kagua muunganisho wako kisha ujaribu tena.",
+        "transfer_failed": "Salio halikuweza kuhamishwa. Kagua muunganisho wako kisha ujaribu tena."
+      }
     }
   },
   "credits": {
-    "title": "Masaa ya Matumizi ya AI",
+    "title": "Krediti za AI",
     "loading": "Inapakia...",
     "credits": "mikopo",
     "usingApiKey": "Inatumia Ufunguo wa API",
@@ -932,7 +1093,9 @@
     "dubbingNote": "Kutafsiri kwa salio kunaongeza takriban 10% kwa dakika; kuweka sauti kunatumia zaidi.",
     "iCancelledCheckout": "Nimeghairi malipo",
     "checkoutStartFailed": "Malipo hayakuweza kuanza. Angalia muunganisho wako kisha ujaribu tena.",
-    "monthlyFreeNote_one": "Dakika {{minutes}} ya bure kila mwezi · inayofuata {{date}}"
+    "monthlyFreeNote_one": "Dakika {{minutes}} ya bure kila mwezi · inayofuata {{date}}",
+    "loadFailed": "Salio lako halikuweza kupakiwa. Kagua muunganisho wako kisha ujaribu tena.",
+    "estimateAmount": "Krediti {{credits}}"
   },
   "cta": {
     "generate": {
@@ -967,7 +1130,12 @@
     "useThisVideo": "Tumia video hii",
     "useDownloadedVideo": "Tumia video hii",
     "useOriginalAudio": "Tumia Sauti ya Asili",
-    "useDubbedAudio": "Tumia Sauti Iliyodubiwa"
+    "useDubbedAudio": "Tumia Sauti Iliyodubiwa",
+    "changeVideoKeepSubtitles": "Tumia manukuu ya sasa kwenye video mpya (kwa nakala nyingine ya video ileile). Ondoa alama ikiwa ni video tofauti.",
+    "mute": "Zima sauti (M)",
+    "unmute": "Washa sauti (M)",
+    "volume": "Sauti",
+    "unreadableFile": "Translator haiwezi kusoma faili hili. Huenda limeharibika au liko katika muundo usiotumika."
   },
   "admin": {
     "title": "Msimamizi",
@@ -1064,7 +1232,7 @@
       "localSourceReady": "Faili ya ndani iko tayari",
       "webSourceReady": "Chanzo cha wavuti kiko tayari",
       "sourceReadyDescription": "Media uliyochagua iko tayari kwa hatua inayofuata.",
-      "transcribeTitle": "Unda Unakili",
+      "transcribeTitle": "Chakata Video",
       "processVideoTitle": "Chakata video",
       "transcribeDescription": "Badilisha media ya chanzo iwe track ya manukuu inayoweza kuhaririwa kabla ya kuendelea na tafsiri au dubbing.",
       "translateDubTitle": "Tafsiri au Dubbing",
@@ -1091,7 +1259,11 @@
     "nextMatchAria": "Mechi ijayo",
     "previousMatchAria": "Mechi iliyopita",
     "replaceAllAria": "Badilisha yote",
-    "closeAria": "Funga upau wa kutafuta"
+    "closeAria": "Funga upau wa kutafuta",
+    "matchCount": "{{current}} kati ya {{total}}",
+    "matchCase": "Linganisha herufi kubwa/ndogo",
+    "wholeWord": "Neno zima",
+    "showReplace": "Badilisha"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1143,7 +1315,32 @@
       "neverHadMessage": "Unakili unahitaji mikopo au ufunguaji wa funguo za API. Pata chochote kati ya hivyo katika Mipangilio. Kutafsiri kwa kutumia Claude au Codex yako mwenyewe kupitia Udhibiti wa Mawakala ni bure.",
       "notEnoughTitle": "Hakuna mikopo ya kutosha kwa video hii",
       "notEnoughTranscriptionMessage": "Kunakili video hii kunahitaji takriban mikopo {{required}}. Una {{available}}, inayotosha kwa takriban dakika {{minutes}}. Ongeza mikopo, kisha anza tena.",
-      "notEnoughMessage": "Kazi hii inahitaji mikopo zaidi ya salio lako la {{available}}. Ongeza mikopo ili kuendelea."
+      "notEnoughMessage": "Kazi hii inahitaji mikopo zaidi ya salio lako la {{available}}. Ongeza mikopo ili kuendelea.",
+      "task": {
+        "transcription": {
+          "title": "Kunakili kunahitaji salio",
+          "message": "Salio lako halitoshi kunakili video hii. Ongeza salio, kisha uanze tena. Mistari iliyokwisha nakiliwa imehifadhiwa."
+        },
+        "translation": {
+          "title": "Kutafsiri kunahitaji salio",
+          "message": "Salio lako halitoshi kutafsiri video hii. Ongeza salio, kisha ujaribu tena. Mistari iliyokwisha tafsiriwa imehifadhiwa. Kutafsiri kwa Claude au Codex yako mwenyewe kupitia Udhibiti wa Mawakala ni bure."
+        },
+        "dubbing": {
+          "title": "Kuweka sauti kunahitaji salio",
+          "message": "Salio lako halitoshi kuweka sauti kwenye video hii. Ongeza salio, kisha ujaribu tena."
+        },
+        "summary": {
+          "title": "Muhtasari unahitaji salio",
+          "message": "Salio lako halitoshi kwa muhtasari na sehemu muhimu. Ongeza salio, kisha ujaribu tena."
+        },
+        "videoSearch": {
+          "title": "Utafutaji wa video kwa AI unahitaji salio",
+          "message": "Salio lako halitoshi kwa utafutaji wa video kwa AI. Ongeza salio, kisha utafute tena."
+        },
+        "other": {
+          "title": "Hii inahitaji salio"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "Anza kuweka sauti?",
@@ -1154,7 +1351,58 @@
       "message": "Tayari una manukuu yaliyofunguliwa. Yahifadhi au uyatupe kabla ya kuyabadilisha na manukuu ya kiotomatiki ya YouTube.",
       "saveAndOpen": "Hifadhi na ufungue manukuu",
       "title": "Ungependa kufungua manukuu ya kiotomatiki yaliyorejeshwa?"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "Hifadhi mabadiliko ya manukuu kwanza?",
+      "message": "Umebadilisha manukuu haya tangu yalipohifadhiwa mara ya mwisho. Ungependa kuhifadhi mabadiliko kabla hayajabadilishwa?",
+      "saveAndContinue": "Hifadhi na uendelee",
+      "discardAndContinue": "Tupa mabadiliko na uendelee"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "Unakili bado unaendelea.",
+        "translation": "Tafsiri bado inaendelea.",
+        "dubbing": "Uwekaji sauti bado unaendelea.",
+        "export": "Uhamishaji wa video bado unaendelea.",
+        "summary": "Muhtasari bado unaandikwa.",
+        "download": "Upakuaji bado unaendelea.",
+        "highlight": "Klipu za sehemu muhimu bado zinatengenezwa.",
+        "search": "Utafutaji wa video bado unaendelea.",
+        "generic": "Kazi bado inaendelea."
+      },
+      "unsavedLine": "Mabadiliko ya manukuu hayajahifadhiwa.",
+      "unsavedMessage": "Manukuu haya yana mabadiliko ambayo hayajahifadhiwa.",
+      "tabUnsavedDetail": "Uyahifadhi kabla ya kufunga kichupo?",
+      "tabUnsavedWithJobDetail": "Kufunga kichupo kunasimamisha kazi. Hifadhi mabadiliko ya manukuu kwanza?",
+      "tabJobDetail": "Kufunga kichupo kunaisimamisha, na kazi iliyofanyika hadi sasa itapotea.",
+      "quitMessage": "Ufunge {{app}}? Baadhi ya kazi bado hazijaisha.",
+      "windowMessage": "Ufunge dirisha? Baadhi ya kazi bado hazijaisha.",
+      "tabLine": "{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "Kazi zinazoendelea zitasimama. Hifadhi mabadiliko ya manukuu kwanza?",
+      "jobsDetail": "Kazi zinazoendelea zitasimama, na kazi iliyofanyika hadi sasa itapotea.",
+      "saveAndClose": "Hifadhi na ufunge",
+      "saveAndQuit": "Hifadhi na uondoke",
+      "closeWithoutSaving": "Funga bila kuhifadhi",
+      "quitWithoutSaving": "Ondoka bila kuhifadhi",
+      "stopAndClose": "Simamisha na ufunge",
+      "quitAnyway": "Ondoka hata hivyo",
+      "closeAnyway": "Funga hata hivyo",
+      "saveFailed": "Manukuu katika {{title}} hayakuweza kuhifadhiwa, kwa hivyo hakuna kilichofungwa. Yahifadhi kutoka kwenye kihariri, kisha ujaribu tena.",
+      "ok": "Sawa"
+    },
+    "exportSaveDialogTitle": "Hifadhi video kama",
+    "exportVideoFilterName": "Video ya MP4",
+    "exportDiscardConfirm": "Video yako iko tayari lakini bado haijahifadhiwa. Uitupe?",
+    "exportChooseLocationButton": "Chagua mahali pa kuhifadhi…",
+    "exportDiscardButton": "Tupa video",
+    "exportSaveFailed": "Video haikuweza kuhifadhiwa katika {{folder}}.",
+    "exportSaveFailedPermission": "Huna ruhusa ya kuhifadhi kwenye folda hii.",
+    "exportSaveFailedDiskFull": "Hakuna nafasi ya kutosha kwenye hifadhi hiyo.",
+    "exportSaveFailedGeneric": "Faili halikuweza kuandikwa hapo.",
+    "exportSameAsSource": "Hii ingebadilisha video asili. Chagua jina lingine.",
+    "keepDubbing": "Endelea kuweka sauti",
+    "stopDubbing": "Acha kuweka sauti",
+    "cancelDubbingBody": "Sauti iliyotengenezwa hadi sasa itatupwa."
   },
   "progress": {
     "preparingVideoExport": "Inaandaa uhamishaji wa video…",
@@ -1172,7 +1420,7 @@
     "transcribingElevenLabsHours": "Inanakili na ElevenLabs (~saa {{hours}} dakika {{minutes}} zimesalia)",
     "transcribingElevenLabsFinishing": "Inanakili na ElevenLabs...",
     "transcriptionRetry": "Muunganisho umeshindikana, inajaribu tena ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "Inapakia sauti kwa unakili...",
+    "transcribingR2Upload": "Inapakia sauti…",
     "gapRepair": "Ukarabati wa pengo #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Inarekebisha manukuu yanayokosekana (Mzunguko {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Inasafisha manukuu ({{done}}/{{total}})",
@@ -1244,7 +1492,18 @@
       "voiceTrackReady": "Wimbo wa sauti uko tayari",
       "writingSummary": "Inaandika muhtasari…",
       "preparingDubLines_one": "Inaandaa mstari {{count}} kwa dubbing…",
-      "preparingVoiceClips_one": "Inaandaa kipande {{count}} cha sauti…"
+      "preparingVoiceClips_one": "Inaandaa kipande {{count}} cha sauti…",
+      "completed": "Imekamilika",
+      "cancelled": "Imeghairiwa",
+      "cancelling": "Inaghairi…",
+      "failed": "Hitilafu fulani imetokea",
+      "downloading": "Inapakua…",
+      "downloadingAudio": "Inapakua sauti…",
+      "transcribingLine": "Inanakili mstari…",
+      "startingExport": "Inaanza kutengeneza video…",
+      "captionsAvailable": "Video haikuweza kupakuliwa, lakini manukuu ya YouTube yanapatikana",
+      "captionsNotOpened": "Manukuu ya YouTube yako tayari lakini hayakufunguliwa",
+      "insufficientCredits": "Salio halitoshi"
     },
     "listening": "Inasikiliza video…",
     "mergeFinishSaveBeforeReload": "Maliza kuhifadhi video iliyounganishwa kabla ya kupakia upya.",
@@ -1252,7 +1511,8 @@
     "mergeWaitForCancelBeforeReload": "Subiri kughairiwa kwa uunganishaji kukamilike kabla ya kupakia upya.",
     "preparingTranscription": "Inajiandaa kusikiliza…",
     "restartingTranscription": "Inaanzisha unakili upya…",
-    "resumingTranscription": "Inaendelea pale ilipoishia…"
+    "resumingTranscription": "Inaendelea pale ilipoishia…",
+    "hqModeEstimate": "(ubora wa juu: ~{{time}})"
   },
   "messages": {
     "fileSaved": "Faili imehifadhiwa:\n{{path}}",
@@ -1275,7 +1535,23 @@
     "sendReport": "Tuma ripoti",
     "reportPrompt": "Kuna tatizo. Ripoti kwa muundaji kwa marekebisho ya haraka.",
     "preparingReport": "Kifurushi cha uchunguzi kinaandaliwa...",
-    "reportContextWarning": "Baadhi ya muktadha wa uchunguzi haukuweza kupakiwa. Ripoti bado itajumuisha maelezo kutoka kwenye programu hii."
+    "reportContextWarning": "Baadhi ya muktadha wa uchunguzi haukuweza kupakiwa. Ripoti bado itajumuisha maelezo kutoka kwenye programu hii.",
+    "reportPromptTask": {
+      "transcription": "Unakili umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "translation": "Tafsiri imesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "dubbing": "Uwekaji sauti umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "summary": "Muhtasari umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "videoSearch": "Utafutaji wa video umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "download": "Upakuaji wa video umeshindwa kwa sababu tusiyoitambua. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "export": "Utengenezaji wa video umesimama kwa sababu ya tatizo lisilotarajiwa. Tuma ripoti hii ili tuweze kulirekebisha.",
+      "other": "Hitilafu fulani imetokea. Tuma ripoti hii ili tuweze kuirekebisha."
+    },
+    "feedbackTitle": "Tuma maoni au ripoti tatizo",
+    "whatHappened": "Nini kilitokea, au ungependa kutuambia nini?",
+    "attachDiagnostics": "Ambatisha maelezo ya uchunguzi (inapendekezwa kwa matatizo)",
+    "attachDiagnosticsHint": "Kumbukumbu za karibuni za programu, toleo la programu na maelezo ya mfumo. Hakuna video wala manukuu.",
+    "showDetails": "Onyesha kitakachotumwa",
+    "feedbackEmailSubject": "Maoni kuhusu Translator"
   },
   "home": {
     "headline": "Kila video, kwa <lang>{{language}}</lang>.",
@@ -1308,7 +1584,9 @@
     "seeAll": "Tazama zote",
     "recentSubtitlesReady": "Manukuu ya {{language}} yako tayari",
     "recentSubtitlesReadyGeneric": "Manukuu yako tayari",
-    "recentDownloaded": "Imepakuliwa"
+    "recentDownloaded": "Imepakuliwa",
+    "recentLocalFile": "Kwenye kompyuta hii",
+    "recentLocalMissing": "Faili limehamishwa au kufutwa"
   },
   "workspace": {
     "subtitlesTitle": "Manukuu",
@@ -1340,7 +1618,25 @@
     "showBoth": "Zote mbili",
     "textSize": "Ukubwa wa maandishi",
     "statusTranscribed_one": "Mstari {{count}} umeandikwa",
-    "statusTranslated_one": "Mstari {{count}} kwa {{language}} · unaendana na video"
+    "statusTranslated_one": "Mstari {{count}} kwa {{language}} · unaendana na video",
+    "findReplace": "Tafuta na ubadilishe",
+    "statusReadyPrice": "Tayari — manukuu ya {{language}} kwa video hii: {{price}}",
+    "statusReadyPreview": "Tayari — dakika zako zinatosha dakika {{minutes}} za kwanza kwa {{language}}",
+    "statusReadyPreview_one": "Tayari — dakika zako zinatosha dakika {{minutes}} ya kwanza kwa {{language}}",
+    "statusPartlyTranslated": "{{translated}} kati ya mistari {{count}} kwa {{language}} · {{missing}} haijatafsiriwa",
+    "statusPartlyTranslated_one": "{{translated}} kati ya mstari {{count}} kwa {{language}} · {{missing}} haujatafsiriwa",
+    "statusPartlyTranslatedUnknown": "{{translated}} kati ya mistari {{count}} imetafsiriwa · {{missing}} haijatafsiriwa",
+    "statusPartlyTranslatedUnknown_one": "{{translated}} kati ya mstari {{count}} umetafsiriwa · {{missing}} haujatafsiriwa",
+    "statusTranslatedUnknown": "Mistari {{count}} iliyotafsiriwa · inaendana na video",
+    "statusTranslatedUnknown_one": "Mstari {{count}} uliotafsiriwa · unaendana na video",
+    "stopsEarly": "Manukuu yanaishia kwenye {{time}}",
+    "interruptedTranslate": "Kutafsiri video hii kwa {{language}} kulisimama Translator ilipofungwa.",
+    "interruptedTranscribe": "Kunakili video hii kulisimama Translator ilipofungwa.",
+    "interruptedResume": "Endelea ilipoishia",
+    "translateMissing": "Tafsiri mistari {{count}} iliyokosekana kwa {{language}}",
+    "translateMissing_one": "Tafsiri mstari {{count}} uliokosekana kwa {{language}}",
+    "moreRevealVideo": "Onyesha faili la video",
+    "chooseAnotherFile": "Chagua faili lingine"
   },
   "subtitleStyles": {
     "Cinema": "Njano ya sinema",
@@ -1377,7 +1673,10 @@
     "notNow": "Baadaye",
     "enoughBody_one": "Una dakika za kutosha kutafsiri dakika {{remaining}} iliyobaki sasa hivi.",
     "offerBody_one": "Tafsiri video nzima kwa {{price}}. Inatosha dakika {{remaining}} iliyobaki, na dakika za ziada zitakusubiri kwa video yako ijayo.",
-    "offerBodyLong_one": "Kifurushi cha {{price}} kinatosha sehemu kubwa ya dakika {{remaining}} iliyobaki."
+    "offerBodyLong_one": "Kifurushi cha {{price}} kinatosha sehemu kubwa ya dakika {{remaining}} iliyobaki.",
+    "failedNeedMinutes": "Kila kilichokamilika hadi sasa kimehifadhiwa. Unahitaji dakika zaidi ili kumaliza dakika {{remaining}} zilizobaki.",
+    "failedNeedMinutes_one": "Kila kilichokamilika hadi sasa kimehifadhiwa. Unahitaji dakika zaidi ili kumaliza dakika {{remaining}} iliyobaki.",
+    "failedNetwork": "Muunganisho umekatika. Kila kilichokamilika hadi sasa kimehifadhiwa. Jaribu tena ukirudi mtandaoni."
   },
   "videoCost": {
     "covered": "Dakika zako zinatosha",
@@ -1407,7 +1706,17 @@
     "from": "Kuanzia",
     "to": "hadi",
     "saving": "Inahifadhi…",
-    "save": "Hifadhi uhariri wa Short"
+    "save": "Hifadhi uhariri wa Short",
+    "openFailed": "Imeshindwa kufungua klipu hii ili kuipamba. Hakikisha video na manukuu yake yamefunguliwa.",
+    "saveFailed": "Imeshindwa kuhifadhi uhariri wa Short. Hakikisha kila kifungu kina maandishi na muda wake uko ndani ya klipu.",
+    "previewAt": "Onyesho la kukagua kwenye sekunde {{seconds}}",
+    "shotPosition": "Picha {{current}} kati ya {{total}}",
+    "phrasesHint": "Vifungu vya manukuu: ili kuangazia neno, andika neno au kifungu hasa kutoka kwenye maandishi katika kisanduku chake.",
+    "phraseStart": "Mwanzo wa kifungu {{index}} (s)",
+    "phraseEnd": "Mwisho wa kifungu {{index}} (s)",
+    "phraseText": "Maandishi ya kifungu {{index}}",
+    "phraseEmphasis": "Msisitizo wa kifungu {{index}}",
+    "saveNote": "Kuhifadhi kunabadilisha klipu hii kuwa Panga upya kwa Shorts ikiwa na vifungu hivi badala ya mtindo wako wa manukuu."
   },
   "subtitleFonts": {
     "label": "Fonti",
@@ -1415,5 +1724,80 @@
     "classic": "Klasiki",
     "serif": "Serif",
     "display": "Nzito"
+  },
+  "export": {
+    "exportButton": "Hamisha video",
+    "exportingButton": "Inahamisha…",
+    "progressTitle": "Inahamisha video",
+    "savedTitle": "Video imehifadhiwa",
+    "savedIn": "{{file}} katika {{folder}}",
+    "showInFinder": "Onyesha kwenye Finder",
+    "showInFolder": "Onyesha kwenye folda",
+    "openVideo": "Fungua video",
+    "failedTitle": "Video haikuhamishwa",
+    "saveTo": "Hifadhi kwenye",
+    "changeDestination": "Badilisha…",
+    "displayNeedsTranslation": "Tafsiri manukuu ili kuonyesha tafsiri au zote mbili.",
+    "error": {
+      "permission": "Translator haikuweza kuandika faili za kazi za video. Hakikisha akaunti yako inaweza kuandika kwenye folda ya muda, kisha ujaribu tena.",
+      "tools": "Zana za kuhamisha video hazikuweza kuwekwa. Kagua muunganisho wako wa intaneti kisha ujaribu tena.",
+      "generic": "Hitilafu fulani imetokea wakati wa kutengeneza video. Tafadhali jaribu tena."
+    }
+  },
+  "tabs": {
+    "newTab": "Kichupo Kipya",
+    "newTabWithShortcut": "Kichupo kipya ({{shortcut}})",
+    "closeTab": "Funga kichupo"
+  },
+  "menu": {
+    "about": "Kuhusu {{app}}",
+    "services": "Huduma",
+    "hide": "Ficha {{app}}",
+    "hideOthers": "Ficha Zingine",
+    "showAll": "Onyesha Zote",
+    "quit": "Ondoka kwenye {{app}}",
+    "exit": "Ondoka",
+    "file": "Faili",
+    "newTab": "Kichupo Kipya",
+    "closeTab": "Funga Kichupo",
+    "nextTab": "Kichupo Kinachofuata",
+    "previousTab": "Kichupo Kilichotangulia",
+    "closeWindow": "Funga Dirisha",
+    "edit": "Hariri",
+    "undo": "Tendua",
+    "redo": "Rudia",
+    "cut": "Kata",
+    "copy": "Nakili",
+    "paste": "Bandika",
+    "pasteAndMatchStyle": "Bandika na Ulinganishe Mtindo",
+    "delete": "Futa",
+    "selectAll": "Chagua Zote",
+    "speech": "Matamshi",
+    "startSpeaking": "Anza Kuzungumza",
+    "stopSpeaking": "Acha Kuzungumza",
+    "find": "Tafuta",
+    "view": "Mwonekano",
+    "actualSize": "Ukubwa Halisi",
+    "zoomIn": "Vuta Karibu",
+    "zoomOut": "Vuta Mbali",
+    "toggleFullScreen": "Washa/Zima Skrini Nzima",
+    "window": "Dirisha",
+    "minimize": "Punguza",
+    "zoom": "Kuza",
+    "bringAllToFront": "Leta Zote Mbele",
+    "selectTab": "Chagua Kichupo {{n}}",
+    "learnSpelling": "Jifunze Tahajia",
+    "lookUpSelection": "Tafuta Maana ya “{selection}”",
+    "searchWithGoogle": "Tafuta kwa Google",
+    "saveImage": "Hifadhi Picha",
+    "saveImageAs": "Hifadhi Picha Kama…",
+    "saveVideo": "Hifadhi Video",
+    "saveVideoAs": "Hifadhi Video Kama…",
+    "copyLink": "Nakili Kiungo",
+    "saveLinkAs": "Hifadhi Kiungo Kama…",
+    "copyImage": "Nakili Picha",
+    "copyImageAddress": "Nakili Anwani ya Picha",
+    "copyVideoAddress": "Nakili Anwani ya Video",
+    "inspect": "Kagua Kipengele"
   }
 }

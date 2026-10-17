@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "SRT-filer",
       "mediaFiles": "Mediefiler",
-      "videoFiles": "Videofiler"
+      "videoFiles": "Videofiler",
+      "textFiles": "Textfiler",
+      "allFiles": "Alla filer",
+      "subtitleFiles": "Undertextfiler"
     },
     "chooseAnotherLocation": "Välj en annan plats",
     "continue": "Fortsätt",
@@ -96,7 +99,20 @@
     "dismiss": "Stäng",
     "moreActions": "Fler åtgärder",
     "installingUpdate": "Installerar uppdatering...",
-    "installingUpdateShort": "Installerar"
+    "installingUpdateShort": "Installerar",
+    "ok": "OK",
+    "minimumVersionValue": "Lägsta version som stöds: v{{version}}",
+    "currentVersionValue": "Nuvarande version: v{{version}}",
+    "updateNotFoundUseDownloadPage": "Uppdateringen kunde inte laddas ner här. Hämta den senaste versionen från nedladdningssidan.",
+    "whatsNewLead": "Translator har uppdaterats till v{{version}}.",
+    "whatsNewNotesInEnglish": "Versionsinformation (engelska)",
+    "checkForUpdates": "Sök efter uppdateringar",
+    "checkingForUpdates": "Söker efter uppdateringar…",
+    "upToDate": "Du har den senaste versionen.",
+    "updateAvailableDownloading": "En uppdatering hittades. Den laddas ner i bakgrunden.",
+    "updateReadyToInstall": "Uppdateringen har laddats ner. Starta om för att installera.",
+    "updateCheckFailed": "Det gick inte att söka efter uppdateringar. Försök igen senare.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube begärde en mänsklig verifiering. Klicka på Anslut för att fortsätta.",
@@ -141,7 +157,60 @@
       "fileTooLarge": "Det här ljudet är för långt för att transkriberas i ett enda jobb (mer än cirka {{hours}} timmar). Dela upp videon i kortare delar och transkribera varje del.",
       "elevenLabsKeyRequired": "Transkribering använder ElevenLabs Scribe och kräver en ElevenLabs API-nyckel. Lägg till en i Inställningar, eller stäng av API-nyckelläget för att transkribera med Stage5-krediter. Din OpenAI- eller Anthropic-nyckel används fortfarande för översättning.",
       "fileTooLarge_one": "Det här ljudet är för långt för att transkriberas i ett enda jobb (mer än cirka {{hours}} timme). Dela upp videon i kortare delar och transkribera varje del."
-    }
+    },
+    "credits": {
+      "transcription": "Inte tillräckligt med krediter för att transkribera.",
+      "translation": "Inte tillräckligt med krediter för att översätta.",
+      "dubbing": "Inte tillräckligt med krediter för att dubba.",
+      "summary": "Inte tillräckligt med krediter för sammanfattningen.",
+      "videoSearch": "Inte tillräckligt med krediter för att söka efter videor.",
+      "download": "Inte tillräckligt med krediter.",
+      "export": "Inte tillräckligt med krediter.",
+      "other": "Inte tillräckligt med krediter."
+    },
+    "failed": {
+      "transcription": "Transkriberingen avbröts på grund av ett oväntat problem. Rader som redan transkriberats sparas.",
+      "translation": "Översättningen avbröts på grund av ett oväntat problem. Rader som redan översatts sparas.",
+      "dubbing": "Dubbningen avbröts på grund av ett oväntat problem.",
+      "summary": "Sammanfattningen avbröts på grund av ett oväntat problem.",
+      "videoSearch": "Videosökningen avbröts på grund av ett oväntat problem.",
+      "export": "Det gick inte att skapa videon på grund av ett oväntat problem.",
+      "other": "Något gick fel. Försök igen."
+    },
+    "server": {
+      "transcription": "Vår server fick problem. Försök igen om en minut.",
+      "translation": "Översättningen avbröts eftersom vår server fick problem. Rader som redan översatts sparas. Försök igen om en minut.",
+      "dubbing": "Vår server fick problem. Försök igen om en minut.",
+      "summary": "Vår server fick problem. Försök igen om en minut.",
+      "videoSearch": "Vår server fick problem. Försök igen om en minut.",
+      "export": "Vår server fick problem. Försök igen om en minut.",
+      "other": "Vår server fick problem. Försök igen om en minut."
+    },
+    "download": {
+      "invalid_url": "Det där ser inte ut som en videolänk. Klistra in hela länken.",
+      "unsupported_site": "Translator kan inte ladda ner videor från den här webbplatsen.",
+      "unavailable": "Videon är inte tillgänglig. Den kan ha tagits bort.",
+      "private": "Videon är privat.",
+      "not_found": "Ingen video hittades på den här länken.",
+      "region_locked": "Videon är inte tillgänglig i ditt land.",
+      "audience_restricted": "Videon visas bara för vissa tittare. Om ditt konto kan se den, anslut till webbplatsen i Inställningar och försök igen.",
+      "login_required": "Du måste vara inloggad för att se videon. Anslut till webbplatsen i Inställningar och försök igen.",
+      "media_blocked": "Webbplatsen blockerade nedladdningen, och inga undertexter kunde räddas.",
+      "access_refused": "Webbplatsen vägrade ge Translator videon.",
+      "video_data_failed": "Videon kunde inte laddas ner. Den kan vara regionspärrad eller kräva inloggning.",
+      "rate_limited": "YouTube begränsar just nu nedladdningar från ditt nätverk. Vänta några minuter och försök igen.",
+      "network": "Det gick inte att ansluta. Kontrollera internetanslutningen och försök igen.",
+      "captions_unreadable": "YouTube-undertexter hittades, men Translator kunde inte läsa dem.",
+      "save_failed": "Videon laddades ner men kunde inte sparas. Försök igen.",
+      "downloader_failed": "Videonedladdaren kunde inte starta. Starta om Translator och försök igen.",
+      "generic": "Videon kunde inte laddas ner. Försök igen eller använd en annan länk.",
+      "subtitlesNotSaved": "Dina nuvarande undertexter kunde inte sparas, så YouTube-undertexterna öppnades inte.",
+      "openFailed": "Videon laddades ner men kunde inte öppnas. Öppna den från nedladdningshistoriken."
+    },
+    "network": "Det gick inte att nå servern. Kontrollera internetanslutningen och försök igen.",
+    "busy": "Tjänsten är upptagen just nu. Vänta en minut och försök igen.",
+    "diskFull": "Disken är full. Frigör lite utrymme och försök igen.",
+    "cancelDubbingFailedPlain": "Det gick inte att avbryta dubbningen. Försök igen."
   },
   "input": {
     "connect": "Anslut",
@@ -176,7 +245,7 @@
     "transcribeOnly": "Transkribera ljud",
     "srtLoaded": "Transkribering klar",
     "srtFileLoaded": "SRT inläst",
-    "featuresUnlockAfterTranscription": "Översättning och andra menyer visas efter att transkriberingen är klar.",
+    "featuresUnlockAfterTranscription": "Transkribera eller översätt videon, eller ta fram dess höjdpunkter.",
     "preSubtitleActionsHint": "Transkribera, översätt eller skapa höjdpunkter från den här videon.",
     "saveDubbedVideo": "Spara dubbad video",
     "downloadFinishedSwitchTitle": "Titta på den nedladdade videon?",
@@ -292,13 +361,13 @@
       "defaultSearchUserMessage": "Hitta videor åt mig nu.",
       "followUp": {
         "moreLikeQuery": "Hitta fler videor som \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" från en annan skapare eller kanal",
+        "differentCreator": "”{{query}}” från ett annat namn eller en annan kanal",
         "interviews": "Intervjuer eller samtal om {{query}}",
         "clips": "Höjdpunkter eller starka klipp om {{query}}",
-        "creatorAppearances": "Intervjuer, tv-framträdanden eller liveklipp med {{creator}}",
-        "similarCreators": "Skapare eller artister som liknar {{creator}}",
+        "creatorAppearances": "Intervjuer, framträdanden eller relaterade klipp med {{creator}}",
+        "similarCreators": "Namn, artister eller kanaler som liknar {{creator}}",
         "topicAngle": "{{topic}} förklarat från en annan vinkel",
-        "topicCreator": "{{creator}} och relaterade videor om {{topic}}",
+        "topicCreator": "{{creator}} eller relaterade videor om {{topic}}",
         "channelStyle": "Videor med en liknande känsla som {{channel}}",
         "moreFromHistory": "Fler videor som \"{{title}}\"",
         "channelFromHistory": "Videor från kanaler som {{channel}}"
@@ -308,12 +377,12 @@
       "moreActions": "Fler åtgärder",
       "recentEvents": "Nyliga händelser",
       "cancelFailed": "Det gick inte att avbryta den aktuella sökningen.",
-      "countryGlobal": "Globala resultat",
-      "countryHint": "Lämna tomt för globala resultat.",
+      "countryGlobal": "Målland: engelska som standard",
+      "countryHint": "Lämna tomt för att söka på engelska.",
       "countryHintDefaultEnglish": "Lämna tomt för att använda engelska som standardspråk för sökning.",
-      "countryLabel": "Målland / region",
+      "countryLabel": "Målland",
       "countryPlaceholder": "t.ex. USA, Japan, Spanien, Brasilien",
-      "countryScope": "Land: {{country}}",
+      "countryScope": "Målland: {{country}}",
       "countryDefaultEnglish": "Målland: engelska som standard",
       "emptyCopy": "Nämn ämnet, målgruppen, kreatörens stil eller känslan i videon du vill hitta. Lägg till land eller aktualitet bara när det spelar roll.",
       "emptyEyebrow": "Sök med hjälp av assistenten",
@@ -336,7 +405,7 @@
       "savedDownloads": "Sparade nedladdningar",
       "savedDownloadsCount": "{{count}} sparade nedladdningar",
       "savedPreferencesCount": "{{count}} sparade preferenser",
-      "searchingLong": "Söker och rangordnar videor fortfarande...",
+      "searchingLong": "Söker fortfarande efter videor…",
       "searchingVeryLong": "Det tar längre tid än vanligt, men kör fortfarande.",
       "stillWorking": "Jobbar fortfarande...",
       "toggleCopy": "Sök på YouTube efter en källvideo utan att lämna arbetsflödet.",
@@ -357,7 +426,11 @@
       "deleteLocalFileHistoryPending": "Filen togs bort, men Translator kunde inte uppdatera nedladdningshistoriken. Det görs ett nytt försök automatiskt.",
       "removeHistoryFailed": "Det gick inte att ta bort nedladdningen från historiken.",
       "storedInAppLibrary": "Sparad i appbiblioteket",
-      "savedPreferencesCount_one": "{{count}} sparad preferens"
+      "savedPreferencesCount_one": "{{count}} sparad preferens",
+      "freeSearchRunning": "Söker på YouTube…",
+      "freeSearchResults": "Här är YouTube-resultat för ”{{query}}”. Sökningen var gratis. Berätta mer om vad du vill ha, så förfinar jag den med AI.",
+      "freeSearchEmpty": "YouTube hittade inget för ”{{query}}”. Beskriv vad du vill ha, så söker jag med AI.",
+      "openOriginalPage": "Öppna originalsidan"
     },
     "downloadAndTranslate": "Ladda ner och översätt",
     "downloadAndTranscribe": "Ladda ner och transkribera",
@@ -371,7 +444,24 @@
     "captionRecoveryKeepVideo": "Behåll nuvarande video",
     "captionRecoveryOpenCaptions": "Öppna textningen",
     "captionRecoverySwitchPrompt": "Translator återställde YouTubes automatiska textning, men videon från URL:en är inte tillgänglig. Om du öppnar textningen avmonteras den nuvarande videon.",
-    "captionRecoverySwitchTitle": "Öppna textningen utan den nuvarande videon?"
+    "captionRecoverySwitchTitle": "Öppna textningen utan den nuvarande videon?",
+    "translateTheseSubtitles": "Översätt de här undertexterna",
+    "subtitlesLoaded": "Undertexter inlästa",
+    "chooseLanguage": "Välj ett språk",
+    "urlRejected": {
+      "collection": "Det här är en länk till en kanal eller spellista. Klistra in en länk till en enskild video, eller använd Hitta videor.",
+      "live": "Det här är en livesändning. Translator kan ladda ner den när sändningen är slut."
+    },
+    "longDownload": {
+      "title": "Ladda ner en lång video?",
+      "body": "Videon är lång, så nedladdningen kan ta en stund och kräva mycket diskutrymme. Med lägre nedladdningskvalitet går det snabbare och filen blir mindre.",
+      "duration": "Längd: {{duration}}",
+      "size": "Cirka {{size}}",
+      "confirm": "Ladda ner"
+    },
+    "dropWhileDownloading": "En nedladdning pågår. Släpp filen igen när den är klar.",
+    "dropWhileBusy": "Translator arbetar med den här videon. Släpp filen igen när den är klar.",
+    "dropNotSupported": "Släpp en video, en ljudfil eller en .srt-undertextfil."
   },
   "subtitles": {
     "outputLanguage": "Utmatningsspråk",
@@ -394,32 +484,47 @@
     "translateEstimateByo": "BYO-nyckel",
     "qualityBadge": "(hk)",
     "cancel_confirmation": "Är du säker på att du vill avbryta översättningen av undertexterna? All framsteg kommer att gå förlorad och du måste börja om.",
-    "dubCostHint": "ElevenLabs-röst: ~{{rate}} krediter per minut tal. Den här uppskattningen visas innan dubbningen startar."
+    "dubCostHint": "ElevenLabs-röst: ~{{rate}} krediter per minut tal. Den här uppskattningen visas innan dubbningen startar.",
+    "unreadableCues_one": "{{count}} rad i filen kunde inte läsas och hoppades över. Kontrollera dess tidskod.",
+    "unreadableCues": "{{count}} rader i filen kunde inte läsas och hoppades över. Kontrollera deras tidskoder.",
+    "addCreditsToTranslate": "Fyll på krediter för att översätta",
+    "dubInto": "Dubba till {{language}}",
+    "dubIntro": "En röst läser upp undertexterna på det språk du väljer, ovanpå det ursprungliga bakgrundsljudet.",
+    "dubNeedsSubtitles": "Dubbningen läser upp undertexterna, så videon behöver undertexter först. Transkribera den och välj sedan en röst här.",
+    "dubLanguageLabel": "Röstens språk",
+    "dubSameLanguage": "Undertexterna är redan på {{language}}, så rösten läser upp dem som de är.",
+    "dubTranslatesFirst": "Undertexterna översätts först till {{language}} och läses sedan upp.",
+    "dubCostWithTranslation": "Översättning och röst: {{cost}}",
+    "dubUsesOwnKeys": "Använder dina egna API-nycklar.",
+    "dubNotEnoughCredits": "Inte tillräckligt med krediter för den här dubbningen.",
+    "addCreditsToDub": "Fyll på krediter för att dubba",
+    "noSubtitlesToDub": "Skapa eller öppna undertexter för videon först och dubba den sedan.",
+    "noSubtitlesToTranslate": "Öppna eller skapa undertexter först och översätt dem sedan."
   },
   "summary": {
-    "title": "Transkriptsammanfattning",
-    "ctaHelper": "Generera en djupgående översikt. Långa videor kan ta en stund att bearbeta.",
-    "languageLabel": "Sammanfattningsspråk",
+    "title": "Höjdpunkter",
+    "ctaHelper": "Hitta de bästa stunderna.",
+    "languageLabel": "Utdataspråk",
     "tab": {
       "summary": "Sammanfattning",
-      "sections": "Detaljerade anteckningar",
+      "sections": "Anteckningar",
       "highlights": "Höjdpunkter"
     },
-    "generate": "Generera sammanfattning",
-    "regenerate": "Regenerera sammanfattning",
+    "generate": "Ta fram höjdpunkter",
+    "regenerate": "Ta fram höjdpunkter igen",
     "estimateCredits": "{{credits}} krediter",
     "estimateByo": "BYO-nyckel",
     "highEffortBadge": "(djup)",
     "placeholder": "Din AI-sammanfattning visas här när den genererats.",
-    "insufficientCredits": "Inte tillräckligt med krediter för att köra sammanfattningen.",
-    "error": "Vi kunde inte skapa en sammanfattning. {{message}}",
+    "insufficientCredits": "Inte tillräckligt med krediter för att ta fram höjdpunkter.",
+    "error": "Vi kunde inte ta fram höjdpunkter. {{message}}",
     "cancel": "Avbryt",
     "copy": "Kopiera sammanfattning",
     "copied": "Kopierad!",
     "copyError": "Kunde inte kopiera sammanfattningen till urklipp.",
-    "noHighlights": "Inga höjdpunkter ännu. Generera för att upptäcka höjdpunkter.",
+    "noHighlights": "Inga höjdpunkter än. Ta fram höjdpunkter för att hitta de bästa stunderna.",
     "noVideoForHighlights": "Öppna källvideon för att klippa höjdpunktsklipp.",
-    "summaryRequiredForHighlights": "Skapa en transkriptsammanfattning innan du klipper highlight-klipp.",
+    "summaryRequiredForHighlights": "Ta fram höjdpunkter först, så analyseras transkriptet.",
     "highlight": "Höjdpunkt",
     "cutHighlightClip": "Klipp det här highlight-klippet",
     "cuttingHighlightClip": "Klipper…",
@@ -427,8 +532,8 @@
     "clipFormat": "Klippformat:",
     "originalFormat": "Originalformat",
     "originalFormatDesc": "Behåll videons originalmått",
-    "verticalFormat": "9:16 vertikal",
-    "verticalFormatDesc": "Optimerad för YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFormat": "Shorts-beskärning",
+    "verticalFormatDesc": "Beskär och rama om för YouTube Shorts, TikTok och Reels (9:16)",
     "verticalFitFormat": "Shorts-passning",
     "verticalFitFormatDesc": "Anpassa den ursprungliga bilden i en 9:16-duk",
     "downloadHighlight": "Ladda ner klipp",
@@ -442,16 +547,18 @@
     "sectionHeading": "Sektion {{index}}",
     "highlightsInProgress": "Förbereder höjdpunktsklipp...",
     "status": {
-      "preparing": "Förbereder transkript...",
-      "chunk": "Sammanfattar sektion {{current}}/{{total}}",
-      "selectingHighlights": "Väljer höjdpunktsögonblick...",
+      "preparing": "Analyserar transkriptet…",
+      "chunk": "Skriver sammanfattning {{current}}/{{total}}",
+      "selectingHighlights": "Väljer höjdpunkter…",
       "cuttingHighlight": "Klipper höjdpunkt {{current}}/{{total}}...",
       "cuttingHighlights": "Klipper höjdpunktsklipp...",
-      "synthesizing": "Syntetiserar omfattande sammanfattning...",
-      "ready": "Sammanfattning klar",
-      "error": "Sammanfattning misslyckades",
-      "cancelled": "Sammanfattning avbruten",
-      "inProgress": "Genererar sammanfattning..."
+      "synthesizing": "Gör klart…",
+      "ready": "Höjdpunkterna är klara",
+      "error": "Höjdpunkterna misslyckades",
+      "cancelled": "Höjdpunkter avbrutna",
+      "inProgress": "Tar fram höjdpunkter…",
+      "cuttingClip": "Klipper ut klippet…",
+      "renderingClipSubtitles": "Lägger till undertexter i klippet…"
     },
     "combineMode": "Kombinera",
     "exitCombineMode": "Avsluta kombinera",
@@ -464,7 +571,30 @@
     "combinedCutFailed": "Misslyckades att klippa kombinerade höjdpunkter: {{message}}",
     "highlightsInsufficientCredits": "Sammanfattningen skapades, men utdragningen av höjdpunkter stoppades eftersom krediterna tog slut.",
     "highlightsPartialWarning": "Höjdpunkterna togs bara fram delvis och kan vara ofullständiga. Skapa dem igen för att uppdatera.",
-    "highlightsPartialWithReason": "Sammanfattningen skapades, men höjdpunkterna togs bara fram delvis: {{message}}"
+    "highlightsPartialWithReason": "Sammanfattningen skapades, men höjdpunkterna togs bara fram delvis: {{message}}",
+    "estimateOwnKey": "Använder din API-nyckel",
+    "generateSummary": "Sammanfatta",
+    "regenerateSummary": "Sammanfatta igen",
+    "showingSavedLanguage": "Visar det sparade resultatet på {{language}}. Tryck på knappen för att göra ett på {{current}}.",
+    "showingSavedVariant": "Visar det sparade resultatet på {{language}}, gjort med en annan kvalitet. Tryck på knappen för att göra ett nytt.",
+    "noSummaryYet": "Ingen sammanfattning än. Välj språk och tryck på Sammanfatta för att få fram det viktigaste i videon.",
+    "noSummaryWithHighlights": "De här höjdpunkterna kom utan sammanfattning. Tryck på Sammanfatta för att skriva en.",
+    "clipCaptionsChanged": "Undertexterna har ändrats sedan klippet skapades.",
+    "recutClip": "Klipp igen",
+    "cutCombinedCount": "Klipp ihop {{count}}",
+    "cutHighlightFailed": "Det gick inte att klippa ut klippet: {{message}}",
+    "clipError": {
+      "busy": "Vänta tills det pågående jobbet är klart och klipp sedan ut klippet.",
+      "noHighlight": "Välj en höjdpunkt först.",
+      "editorialSingle": "Klipp varje stylad Short för sig, i Shorts-beskärning.",
+      "editorialStale": "Undertexterna i den här Shorten har ändrats. Öppna ”Styla den här Shorten”, kontrollera och spara, och klipp sedan igen.",
+      "noTranscript": "Öppna undertexterna för videon innan du klipper ut ett klipp.",
+      "noCues": "Den här delen av videon har inga undertexter.",
+      "untranslated": "Några rader i klippet är inte översatta än. Översätt dem, eller ställ in undertextvisningen på originalet.",
+      "subtitlesNotSaved": "Klippet skapades, men dess undertexter kunde inte sparas.",
+      "generic": "Det gick inte att klippa ut klippet ur videon. Försök igen."
+    },
+    "cutCombinedCount_one": "Klipp ihop {{count}}"
   },
   "panel": {
     "new": "ny",
@@ -520,7 +650,9 @@
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Undertexttext",
       "confirmRemove": "Är du säker på att du vill ta bort detta undertextblock? Denna åtgärd kan inte ångras.",
-      "transcribeThisLine": "Transkribera rad"
+      "transcribeThisLine": "Transkribera rad",
+      "timeEndBeforeStart": "Sluttiden måste ligga efter starttiden. Raden behåller sin tidigare tid.",
+      "timeUnreadable": "Skriv en tid som 00:01:23,450 eller 1:23.45. Raden behåller sin tidigare tid."
     },
     "header": {
       "save": "Spara undertexter",
@@ -533,6 +665,14 @@
       "styleLabel": "Stil:",
       "mergeButton": "Sammanfoga undertexter",
       "mergingButton": "Sammanfogar..."
+    },
+    "undo": {
+      "removed": "Raden har tagits bort.",
+      "inserted": "Raden har lagts till.",
+      "replaced": "Ersatt på alla rader.",
+      "shifted": "Tiderna har flyttats.",
+      "improved": "Raden har transkriberats om.",
+      "action": "Ångra"
     }
   },
   "settings": {
@@ -580,10 +720,10 @@
         "anthropicHighEnd": "Avancerad granskning med Anthropic",
         "help": "<b>5x krediter</b> - Lägger till granskningsfas för högre kvalitet",
         "helpWithEstimate": "<b>5x krediter</b> - Ditt saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hk)",
-        "helpOn": "<b>5× credits</b> • Inkluderar granskningspass",
-        "helpOff": "Hoppar över granskningspass",
-        "helpWithEstimateOn": "<b>5× credits</b> • Inkluderar granskningspass • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "Hoppar över granskningspass • Saldo: ~{{time}}"
+        "helpOn": "<b>5× krediter</b> • Utkast med Claude Haiku 5.5 + granskning med Claude Opus 5.5",
+        "helpOff": "<b>1× krediter</b> • Bara utkast med Claude Haiku 5.5",
+        "helpWithEstimateOn": "<b>5× krediter</b> • Utkast med Claude Haiku 5.5 + granskning med Claude Opus 5.5 • Saldo: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× krediter</b> • Bara utkast med Claude Haiku 5.5 • Saldo: ~{{time}}"
       },
       "qualitySummary": {
         "label": "Kvalitetssammanfattning",
@@ -591,9 +731,9 @@
         "modelOff": "Standardanalys med Claude Sonnet 5.5",
         "help": "<b>4x krediter</b> - Djupanalys + höjdpunktsklipp med Claude Opus 5.5",
         "helpWithEstimate": "<b>4x krediter</b> - Ditt saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (hk)",
-        "helpOn": "<b>4× credits</b> • Djupanalys + highlightklipp",
+        "helpOn": "<b>4× krediter</b> • Djupanalys med Claude Opus 5.5 + höjdpunktsklipp",
         "helpOff": "Snabb analys med Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× credits</b> • Djupanalys + highlightklipp • Saldo: ~{{time}}",
+        "helpWithEstimateOn": "<b>4× krediter</b> • Djupanalys med Claude Opus 5.5 + höjdpunktsklipp • Saldo: ~{{time}}",
         "helpWithEstimateOff": "Snabb analys med Claude Sonnet 5.5 • Saldo: ~{{time}}"
       },
       "qualityDubbing": {
@@ -614,7 +754,10 @@
         "perHour": "~{{credits}} krediter/timme",
         "perMinute": "~{{credits}} krediter/min",
         "perSearch": "~{{credits}} krediter/sökning",
-        "balance": "Saldo: ~{{time}}"
+        "balance": "Saldo: ~{{time}}",
+        "minutesPerHour": "~{{time}} av dina minuter per timme video",
+        "minutesPerDubMinute": "~{{time}} av dina minuter per minut dubbning",
+        "minutesPerSearch": "~{{time}} av dina minuter per sökning"
       }
     },
     "dubbing": {
@@ -682,7 +825,9 @@
       "economicsBody": "Stage5-krediter optimerar för bekvämlighet (ingen installation). BYO betalar leverantörer direkt—vanligtvis ~30–50% billigare beroende på ditt paket.",
       "encryptionUnavailable": "Säker lagring är inte tillgänglig på det här systemet. API-nycklar kan inte sparas.",
       "checkoutOpen": "Betalningen är öppen i webbläsaren…",
-      "checkoutOpenHint": "Slutför betalningen i webbläsaren. Vi låser upp BYO automatiskt när betalningen har gått igenom."
+      "checkoutOpenHint": "Slutför betalningen i webbläsaren. Vi låser upp BYO automatiskt när betalningen har gått igenom.",
+      "entitlementsLoadFailed": "Det gick inte att kontrollera din upplåsning. Kontrollera anslutningen och försök igen.",
+      "unlockFailed": "Betalningen kunde inte startas. Kontrollera anslutningen och försök igen."
     },
     "byoPreferences": {
       "title": "Leverantörspreferenser",
@@ -798,7 +943,8 @@
       "saved": "API-nyckel sparad.",
       "cleared": "API-nyckel borttagen.",
       "invalid": "Validering av API-nyckel misslyckades.",
-      "howToGet": "Så får du den här nyckeln"
+      "howToGet": "Så får du den här nyckeln",
+      "missing": "Klistra in en API-nyckel först."
     },
     "byoStack": {
       "title": "Din AI-stack"
@@ -834,7 +980,13 @@
         "desktopConnected": "Translator har lagts till i Claude Desktop. Avsluta och öppna Claude igen för att läsa in det.",
         "cliNotFound": "Kunde inte hitta kommandot {{app}} på den här datorn. Kör detta i en terminal:",
         "cliNotFoundCopied": "Kunde inte hitta kommandot {{app}} på den här datorn. Installationskommandot har kopierats; klistra in det i en terminal:",
-        "failed": "Kunde inte ansluta {{app}}: {{message}}"
+        "failed": "Kunde inte ansluta {{app}}: {{message}}",
+        "details": "Detaljer",
+        "failedConfigInvalid": "Det gick inte att ansluta {{app}}: inställningsfilen är ogiltig, så Translator lät den vara orörd. Rätta till eller ta bort filen och försök sedan igen.",
+        "failedWrite": "Det gick inte att ansluta {{app}}: Translator kunde inte skriva till inställningsfilen.",
+        "failedLauncher": "Det går bara att ansluta {{app}} i den installerade Translator-appen.",
+        "failedCli": "Det gick inte att ansluta {{app}} automatiskt. Kör det här i en terminal:",
+        "failedGeneric": "Det gick inte att ansluta {{app}}. Försök igen."
       },
       "status": {
         "enabled": "Aktiverad",
@@ -891,7 +1043,16 @@
       "receivedByo": "API-nyckelupplåsningen är aktiv på den här datorn.",
       "expires_one": "Koden fungerar en gång och upphör att gälla om {{minutes}} minut.",
       "summaryCredits_one": "{{credits}} kredit flyttas.",
-      "received_one": "Tog emot {{credits}} kredit."
+      "received_one": "Tog emot {{credits}} kredit.",
+      "errors": {
+        "nothing_to_transfer": "Inget att flytta än: den här datorn har inga köpta krediter eller API-nyckelupplåsning. Välj ”Ta emot krediter” om du vill hämta krediter hit från en annan dator.",
+        "too_many_codes": "För många överföringskoder den här timmen. Försök igen om en stund.",
+        "jobs_running": "En transkribering eller översättning pågår fortfarande. Försök igen när den är klar.",
+        "invalid_code": "Koden är fel, redan använd eller har gått ut. Skapa en ny på den andra datorn.",
+        "same_device": "Ange koden på den andra datorn, inte på den som skapade den.",
+        "network_error": "Det gick inte att nå Stage5-servern. Kontrollera anslutningen och försök igen.",
+        "transfer_failed": "Krediterna kunde inte flyttas. Kontrollera anslutningen och försök igen."
+      }
     }
   },
   "credits": {
@@ -933,7 +1094,9 @@
     "dubbingNote": "Översättning med minuter kostar ungefär 10 % extra per minut; dubbning drar mer.",
     "iCancelledCheckout": "Jag avbröt betalningen",
     "checkoutStartFailed": "Betalningen kunde inte startas. Kontrollera anslutningen och försök igen.",
-    "monthlyFreeNote_one": "{{minutes}} gratisminut varje månad · nästa gång {{date}}"
+    "monthlyFreeNote_one": "{{minutes}} gratisminut varje månad · nästa gång {{date}}",
+    "loadFailed": "Ditt saldo kunde inte läsas in. Kontrollera anslutningen och försök igen.",
+    "estimateAmount": "{{credits}} krediter"
   },
   "cta": {
     "generate": {
@@ -968,7 +1131,12 @@
     "useThisVideo": "Använd den här videon",
     "useDownloadedVideo": "Använd den här videon",
     "useOriginalAudio": "Använd originalljud",
-    "useDubbedAudio": "Använd dubbat ljud"
+    "useDubbedAudio": "Använd dubbat ljud",
+    "changeVideoKeepSubtitles": "Behåll de nuvarande undertexterna på den nya videon (för en annan kopia av samma video). Avmarkera för en annan video.",
+    "mute": "Ljud av (M)",
+    "unmute": "Ljud på (M)",
+    "volume": "Volym",
+    "unreadableFile": "Translator kan inte läsa filen. Den kan vara skadad eller i ett format som inte stöds."
   },
   "admin": {
     "title": "Administratör",
@@ -1065,7 +1233,7 @@
       "localSourceReady": "Lokal fil klar",
       "webSourceReady": "Webbkälla klar",
       "sourceReadyDescription": "Det valda mediet är klart för nästa steg.",
-      "transcribeTitle": "Skapa transkript",
+      "transcribeTitle": "Bearbeta video",
       "processVideoTitle": "Bearbeta video",
       "transcribeDescription": "Gör om källmediet till ett redigerbart undertextspår innan du går vidare till översättning eller dubbning.",
       "translateDubTitle": "Översätt eller dubba",
@@ -1092,7 +1260,11 @@
     "nextMatchAria": "Nästa träff",
     "previousMatchAria": "Föregående träff",
     "replaceAllAria": "Ersätt alla",
-    "closeAria": "Stäng sökfältet"
+    "closeAria": "Stäng sökfältet",
+    "matchCount": "{{current}} av {{total}}",
+    "matchCase": "Matcha skiftläge",
+    "wholeWord": "Hela ord",
+    "showReplace": "Ersätt"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1144,7 +1316,32 @@
       "neverHadMessage": "Transkribering kräver krediter eller API-nyckelupplåsningen. Du kan skaffa båda i Inställningar. Att översätta med din egen Claude eller Codex via Agentstyrning är gratis.",
       "notEnoughTitle": "Inte tillräckligt med krediter för den här videon",
       "notEnoughTranscriptionMessage": "Att transkribera den här videon kräver ungefär {{required}} krediter. Du har {{available}}, vilket räcker till ungefär {{minutes}} minuter. Fyll på krediter och starta igen.",
-      "notEnoughMessage": "Den här uppgiften kräver fler krediter än ditt saldo på {{available}}. Fyll på krediter för att fortsätta."
+      "notEnoughMessage": "Den här uppgiften kräver fler krediter än ditt saldo på {{available}}. Fyll på krediter för att fortsätta.",
+      "task": {
+        "transcription": {
+          "title": "Transkribering kräver krediter",
+          "message": "Ditt saldo räcker inte för att transkribera det här. Fyll på krediter och starta igen. Rader som redan transkriberats sparas."
+        },
+        "translation": {
+          "title": "Översättning kräver krediter",
+          "message": "Ditt saldo räcker inte för att översätta det här. Fyll på krediter och försök igen. Rader som redan översatts sparas. Att översätta med din egen Claude eller Codex via Agentstyrning är gratis."
+        },
+        "dubbing": {
+          "title": "Dubbning kräver krediter",
+          "message": "Ditt saldo räcker inte för att dubba den här videon. Fyll på krediter och försök igen."
+        },
+        "summary": {
+          "title": "Sammanfattningen kräver krediter",
+          "message": "Ditt saldo räcker inte för sammanfattningen och höjdpunkterna. Fyll på krediter och försök igen."
+        },
+        "videoSearch": {
+          "title": "AI-videosökning kräver krediter",
+          "message": "Ditt saldo räcker inte för en AI-videosökning. Fyll på krediter och sök igen."
+        },
+        "other": {
+          "title": "Det här kräver krediter"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "Starta dubbning?",
@@ -1155,7 +1352,58 @@
       "message": "Du har redan undertexter öppna. Spara eller släng dem innan du ersätter dem med YouTubes automatiska textning.",
       "saveAndOpen": "Spara och öppna textningen",
       "title": "Öppna återställd automatisk textning?"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "Spara ändringarna i undertexterna först?",
+      "message": "Du har ändrat undertexterna sedan de sparades senast. Vill du spara ändringarna innan de ersätts?",
+      "saveAndContinue": "Spara och fortsätt",
+      "discardAndContinue": "Släng ändringarna och fortsätt"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "En transkribering pågår fortfarande.",
+        "translation": "En översättning pågår fortfarande.",
+        "dubbing": "Dubbningen pågår fortfarande.",
+        "export": "En videoexport pågår fortfarande.",
+        "summary": "En sammanfattning håller fortfarande på att skrivas.",
+        "download": "En nedladdning pågår fortfarande.",
+        "highlight": "Höjdpunktsklipp håller fortfarande på att skapas.",
+        "search": "En videosökning pågår fortfarande.",
+        "generic": "Ett jobb pågår fortfarande."
+      },
+      "unsavedLine": "Ändringar i undertexterna är inte sparade.",
+      "unsavedMessage": "Undertexterna har ändringar som inte är sparade.",
+      "tabUnsavedDetail": "Vill du spara dem innan fliken stängs?",
+      "tabUnsavedWithJobDetail": "Om du stänger fliken avbryts jobbet. Spara ändringarna i undertexterna först?",
+      "tabJobDetail": "Om du stänger fliken avbryts det, och allt som gjorts hittills går förlorat.",
+      "quitMessage": "Avsluta {{app}}? Allt är inte klart än.",
+      "windowMessage": "Stänga fönstret? Allt är inte klart än.",
+      "tabLine": "{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "Pågående jobb avbryts. Spara ändringarna i undertexterna först?",
+      "jobsDetail": "Pågående jobb avbryts, och allt som gjorts hittills går förlorat.",
+      "saveAndClose": "Spara och stäng",
+      "saveAndQuit": "Spara och avsluta",
+      "closeWithoutSaving": "Stäng utan att spara",
+      "quitWithoutSaving": "Avsluta utan att spara",
+      "stopAndClose": "Avbryt och stäng",
+      "quitAnyway": "Avsluta ändå",
+      "closeAnyway": "Stäng ändå",
+      "saveFailed": "Undertexterna i {{title}} kunde inte sparas, så inget stängdes. Spara dem i redigeraren och försök sedan igen.",
+      "ok": "OK"
+    },
+    "exportSaveDialogTitle": "Spara video som",
+    "exportVideoFilterName": "MP4-video",
+    "exportDiscardConfirm": "Videon är klar men har inte sparats än. Vill du slänga den?",
+    "exportChooseLocationButton": "Välj var du vill spara…",
+    "exportDiscardButton": "Släng videon",
+    "exportSaveFailed": "Det gick inte att spara videon i {{folder}}.",
+    "exportSaveFailedPermission": "Du har inte behörighet att spara i den här mappen.",
+    "exportSaveFailedDiskFull": "Det finns inte tillräckligt med ledigt utrymme på den enheten.",
+    "exportSaveFailedGeneric": "Filen kunde inte skrivas där.",
+    "exportSameAsSource": "Då skulle originalvideon ersättas. Välj ett annat namn.",
+    "keepDubbing": "Fortsätt dubba",
+    "stopDubbing": "Avbryt dubbningen",
+    "cancelDubbingBody": "Det dubbade ljud som gjorts hittills slängs."
   },
   "progress": {
     "preparingVideoExport": "Förbereder videoexport…",
@@ -1173,7 +1421,7 @@
     "transcribingElevenLabsHours": "Transkriberar med ElevenLabs (~{{hours}}h {{minutes}}m kvar)",
     "transcribingElevenLabsFinishing": "Transkriberar med ElevenLabs...",
     "transcriptionRetry": "Anslutningen misslyckades, försöker igen ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "Laddar upp ljud för transkribering...",
+    "transcribingR2Upload": "Laddar upp ljud…",
     "gapRepair": "Luckreparation #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparerar saknade undertexter (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Rensar undertexter ({{done}}/{{total}})",
@@ -1244,7 +1492,18 @@
       "voiceTrackAssembled": "Röstspåret är sammansatt",
       "voiceTrackReady": "Röstspåret är klart",
       "writingSummary": "Skriver sammanfattningen…",
-      "preparingDubLines_one": "Förbereder {{count}} rad för dubbning…"
+      "preparingDubLines_one": "Förbereder {{count}} rad för dubbning…",
+      "completed": "Klart",
+      "cancelled": "Avbrutet",
+      "cancelling": "Avbryter…",
+      "failed": "Något gick fel",
+      "downloading": "Laddar ner…",
+      "downloadingAudio": "Laddar ner ljud…",
+      "transcribingLine": "Transkriberar raden…",
+      "startingExport": "Förbereder videon…",
+      "captionsAvailable": "Videon kunde inte laddas ner, men YouTube-undertexter finns",
+      "captionsNotOpened": "YouTube-undertexterna är klara men öppnades inte",
+      "insufficientCredits": "Inte tillräckligt med krediter"
     },
     "listening": "Lyssnar på videon…",
     "mergeFinishSaveBeforeReload": "Vänta tills den sammanfogade videon har sparats innan du laddar om.",
@@ -1252,7 +1511,8 @@
     "mergeWaitForCancelBeforeReload": "Vänta tills sammanfogningen har avbrutits innan du laddar om.",
     "preparingTranscription": "Gör klart för att lyssna…",
     "restartingTranscription": "Startar transkriberingen igen…",
-    "resumingTranscription": "Fortsätter där den slutade…"
+    "resumingTranscription": "Fortsätter där den slutade…",
+    "hqModeEstimate": "(hög kvalitet: ~{{time}})"
   },
   "messages": {
     "fileSaved": "Fil sparad:\n{{path}}",
@@ -1275,7 +1535,23 @@
     "sendReport": "Skicka rapport",
     "reportPrompt": "Något gick fel. Rapportera detta till skaparen för en snabb fix.",
     "preparingReport": "Förbereder diagnostikpaket...",
-    "reportContextWarning": "Viss diagnostisk kontext kunde inte läsas in. Rapporten kommer fortfarande att innehålla detaljer från den här appen."
+    "reportContextWarning": "Viss diagnostisk kontext kunde inte läsas in. Rapporten kommer fortfarande att innehålla detaljer från den här appen.",
+    "reportPromptTask": {
+      "transcription": "Transkriberingen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "translation": "Översättningen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "dubbing": "Dubbningen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "summary": "Sammanfattningen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "videoSearch": "Videosökningen avbröts på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "download": "Nedladdningen misslyckades av en anledning vi inte känner igen. Skicka den här rapporten så att vi kan åtgärda det.",
+      "export": "Det gick inte att skapa videon på grund av ett oväntat problem. Skicka den här rapporten så att vi kan åtgärda det.",
+      "other": "Något gick fel. Skicka den här rapporten så att vi kan åtgärda det."
+    },
+    "feedbackTitle": "Skicka feedback eller rapportera ett problem",
+    "whatHappened": "Vad hände, eller vad vill du berätta för oss?",
+    "attachDiagnostics": "Bifoga diagnostikinformation (rekommenderas vid problem)",
+    "attachDiagnosticsHint": "Senaste apploggar, appversion och systeminformation. Inga videor eller undertexter.",
+    "showDetails": "Visa vad som skickas",
+    "feedbackEmailSubject": "Feedback om Translator"
   },
   "home": {
     "headline": "Vilken video som helst, på <lang>{{language}}</lang>.",
@@ -1308,7 +1584,9 @@
     "seeAll": "Visa alla",
     "recentSubtitlesReady": "Undertexter på {{language}} klara",
     "recentSubtitlesReadyGeneric": "Undertexter klara",
-    "recentDownloaded": "Nedladdad"
+    "recentDownloaded": "Nedladdad",
+    "recentLocalFile": "På den här datorn",
+    "recentLocalMissing": "Filen har flyttats eller raderats"
   },
   "workspace": {
     "subtitlesTitle": "Undertexter",
@@ -1340,7 +1618,25 @@
     "showBoth": "Båda",
     "textSize": "Textstorlek",
     "statusTranscribed_one": "{{count}} rad nedskriven",
-    "statusTranslated_one": "{{count}} rad på {{language}} · i synk med videon"
+    "statusTranslated_one": "{{count}} rad på {{language}} · i synk med videon",
+    "findReplace": "Sök och ersätt",
+    "statusReadyPrice": "Klart – undertexter på {{language}} för den här videon: {{price}}",
+    "statusReadyPreview": "Klart – dina minuter räcker till de första {{minutes}} min på {{language}}",
+    "statusPartlyTranslated": "{{translated}} av {{count}} rader på {{language}} · {{missing}} inte översatta",
+    "statusPartlyTranslatedUnknown": "{{translated}} av {{count}} rader översatta · {{missing}} inte översatta",
+    "statusTranslatedUnknown": "{{count}} översatta rader · i synk med videon",
+    "stopsEarly": "Undertexterna slutar vid {{time}}",
+    "interruptedTranslate": "Översättningen av videon till {{language}} avbröts när Translator stängdes.",
+    "interruptedTranscribe": "Transkriberingen av videon avbröts när Translator stängdes.",
+    "interruptedResume": "Fortsätt där det slutade",
+    "translateMissing": "Översätt {{count}} saknade rader till {{language}}",
+    "moreRevealVideo": "Visa videofilen",
+    "chooseAnotherFile": "Välj en annan fil",
+    "statusReadyPreview_one": "Klart – dina minuter räcker till den första {{minutes}} minuten på {{language}}",
+    "statusPartlyTranslated_one": "{{translated}} av {{count}} rad på {{language}} · {{missing}} inte översatt",
+    "statusPartlyTranslatedUnknown_one": "{{translated}} av {{count}} rad översatt · {{missing}} inte översatt",
+    "statusTranslatedUnknown_one": "{{count}} översatt rad · i synk med videon",
+    "translateMissing_one": "Översätt {{count}} saknad rad till {{language}}"
   },
   "subtitleStyles": {
     "Cinema": "Biogul",
@@ -1378,7 +1674,10 @@
     "noneTitle_one": "Den här videon är {{total}} minut lång.",
     "enoughBody_one": "Du har tillräckligt med minuter för att översätta resten ({{remaining}} minut) nu.",
     "offerBody_one": "Översätt hela videon för {{price}}. Det täcker resten ({{remaining}} minut), och det som blir över sparas till nästa video.",
-    "offerBodyLong_one": "Paketet på {{price}} täcker det mesta av resten ({{remaining}} minut)."
+    "offerBodyLong_one": "Paketet på {{price}} täcker det mesta av resten ({{remaining}} minut).",
+    "failedNeedMinutes": "Allt som redan är översatt sparas. Du behöver fler minuter för de återstående {{remaining}} minuterna.",
+    "failedNetwork": "Anslutningen bröts. Allt som redan är översatt sparas. Försök igen när du är online igen.",
+    "failedNeedMinutes_one": "Allt som redan är översatt sparas. Du behöver fler minuter för den återstående {{remaining}} minuten."
   },
   "videoCost": {
     "covered": "Ryms i dina minuter",
@@ -1408,7 +1707,17 @@
     "from": "Från",
     "to": "till",
     "saving": "Sparar…",
-    "save": "Spara Short-redigering"
+    "save": "Spara Short-redigering",
+    "openFailed": "Det gick inte att öppna klippet för styling. Se till att videon och dess undertexter är öppna.",
+    "saveFailed": "Det gick inte att spara Short-redigeringen. Kontrollera att varje fras har text och att tiderna ligger inom klippet.",
+    "previewAt": "Förhandsvisning vid {{seconds}} s",
+    "shotPosition": "Bild {{current}} av {{total}}",
+    "phrasesHint": "Undertextfraser: för att framhäva ett ord skriver du exakt det ordet eller den frasen från texten i dess ruta.",
+    "phraseStart": "Fras {{index}} start (s)",
+    "phraseEnd": "Fras {{index}} slut (s)",
+    "phraseText": "Fras {{index}} text",
+    "phraseEmphasis": "Fras {{index}} betoning",
+    "saveNote": "När du sparar byter klippet till Shorts-beskärning med de här fraserna som undertexter i stället för din undertextstil."
   },
   "subtitleFonts": {
     "label": "Typsnitt",
@@ -1416,5 +1725,80 @@
     "classic": "Klassisk",
     "serif": "Serif",
     "display": "Fet"
+  },
+  "export": {
+    "exportButton": "Exportera video",
+    "exportingButton": "Exporterar…",
+    "progressTitle": "Exporterar video",
+    "savedTitle": "Videon har sparats",
+    "savedIn": "{{file}} i {{folder}}",
+    "showInFinder": "Visa i Finder",
+    "showInFolder": "Visa i mapp",
+    "openVideo": "Öppna video",
+    "failedTitle": "Videon exporterades inte",
+    "saveTo": "Spara i",
+    "changeDestination": "Ändra…",
+    "displayNeedsTranslation": "Översätt undertexterna för att visa översättningen eller båda.",
+    "error": {
+      "permission": "Translator kunde inte skriva videons arbetsfiler. Kontrollera att ditt konto får skriva till den tillfälliga mappen och försök sedan igen.",
+      "tools": "Verktygen för videoexport kunde inte installeras. Kontrollera internetanslutningen och försök igen.",
+      "generic": "Något gick fel när videon skapades. Försök igen."
+    }
+  },
+  "tabs": {
+    "newTab": "Ny flik",
+    "newTabWithShortcut": "Ny flik ({{shortcut}})",
+    "closeTab": "Stäng flik"
+  },
+  "menu": {
+    "about": "Om {{app}}",
+    "services": "Tjänster",
+    "hide": "Göm {{app}}",
+    "hideOthers": "Göm övriga",
+    "showAll": "Visa alla",
+    "quit": "Avsluta {{app}}",
+    "exit": "Avsluta",
+    "file": "Arkiv",
+    "newTab": "Ny flik",
+    "closeTab": "Stäng flik",
+    "nextTab": "Nästa flik",
+    "previousTab": "Föregående flik",
+    "closeWindow": "Stäng fönster",
+    "edit": "Redigera",
+    "undo": "Ångra",
+    "redo": "Gör om",
+    "cut": "Klipp ut",
+    "copy": "Kopiera",
+    "paste": "Klistra in",
+    "pasteAndMatchStyle": "Klistra in och matcha stil",
+    "delete": "Radera",
+    "selectAll": "Markera alla",
+    "speech": "Tal",
+    "startSpeaking": "Börja tala",
+    "stopSpeaking": "Sluta tala",
+    "find": "Sök",
+    "view": "Visa",
+    "actualSize": "Verklig storlek",
+    "zoomIn": "Zooma in",
+    "zoomOut": "Zooma ut",
+    "toggleFullScreen": "Helskärm av/på",
+    "window": "Fönster",
+    "minimize": "Minimera",
+    "zoom": "Zooma",
+    "bringAllToFront": "Lägg alla överst",
+    "selectTab": "Välj flik {{n}}",
+    "learnSpelling": "Lär in stavning",
+    "lookUpSelection": "Slå upp ”{selection}”",
+    "searchWithGoogle": "Sök med Google",
+    "saveImage": "Spara bild",
+    "saveImageAs": "Spara bild som…",
+    "saveVideo": "Spara video",
+    "saveVideoAs": "Spara video som…",
+    "copyLink": "Kopiera länk",
+    "saveLinkAs": "Spara länk som…",
+    "copyImage": "Kopiera bild",
+    "copyImageAddress": "Kopiera bildadress",
+    "copyVideoAddress": "Kopiera videoadress",
+    "inspect": "Inspektera element"
   }
 }

@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "SRT soubory",
       "mediaFiles": "Mediální soubory",
-      "videoFiles": "Video soubory"
+      "videoFiles": "Video soubory",
+      "textFiles": "Textové soubory",
+      "allFiles": "Všechny soubory",
+      "subtitleFiles": "Soubory titulků"
     },
     "chooseAnotherLocation": "Vybrat jiné umístění",
     "continue": "Pokračovat",
@@ -96,7 +99,20 @@
     "dismiss": "Zavřít",
     "moreActions": "Další akce",
     "installingUpdate": "Instalace aktualizace...",
-    "installingUpdateShort": "Instalace"
+    "installingUpdateShort": "Instalace",
+    "ok": "OK",
+    "minimumVersionValue": "Minimální podporovaná verze: v{{version}}",
+    "currentVersionValue": "Aktuální verze: v{{version}}",
+    "updateNotFoundUseDownloadPage": "Aktualizaci se tu nepodařilo stáhnout. Nejnovější verzi si stáhněte ze stránky ke stažení.",
+    "whatsNewLead": "Translator byl aktualizován na verzi {{version}}.",
+    "whatsNewNotesInEnglish": "Poznámky k vydání (anglicky)",
+    "checkForUpdates": "Zkontrolovat aktualizace",
+    "checkingForUpdates": "Hledají se aktualizace…",
+    "upToDate": "Máte nejnovější verzi.",
+    "updateAvailableDownloading": "Našla se aktualizace. Stahuje se na pozadí.",
+    "updateReadyToInstall": "Aktualizace je stažená. Po restartu se nainstaluje.",
+    "updateCheckFailed": "Aktualizace se nepodařilo zkontrolovat. Zkuste to později.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube požádal o ověření člověka. Klikněte na Připojit pro pokračování.",
@@ -140,7 +156,60 @@
       "providerUnavailable": "Přepis (ElevenLabs Scribe) je dočasně nedostupný nebo se ani po několika pokusech nepodařilo připojit. Zkuste to prosím znovu za několik minut.",
       "fileTooLarge": "Tento zvuk je příliš dlouhý na přepis v jedné úloze (více než přibližně {{hours}} h). Rozdělte video na kratší části a přepište každou zvlášť.",
       "elevenLabsKeyRequired": "Přepis používá ElevenLabs Scribe a vyžaduje API klíč ElevenLabs. Přidejte jej v Nastavení, nebo vypněte režim API klíčů a přepisujte s kredity Stage5. Váš klíč OpenAI nebo Anthropic se pro překlad používá i nadále."
-    }
+    },
+    "credits": {
+      "transcription": "Na přepis nemáte dost kreditů.",
+      "translation": "Na překlad nemáte dost kreditů.",
+      "dubbing": "Na dabing nemáte dost kreditů.",
+      "summary": "Na shrnutí nemáte dost kreditů.",
+      "videoSearch": "Na hledání videí nemáte dost kreditů.",
+      "download": "Nemáte dost kreditů.",
+      "export": "Nemáte dost kreditů.",
+      "other": "Nemáte dost kreditů."
+    },
+    "failed": {
+      "transcription": "Přepis se zastavil kvůli neočekávanému problému. Už přepsané řádky zůstávají.",
+      "translation": "Překlad se zastavil kvůli neočekávanému problému. Už přeložené řádky zůstávají.",
+      "dubbing": "Dabing se zastavil kvůli neočekávanému problému.",
+      "summary": "Shrnutí se zastavilo kvůli neočekávanému problému.",
+      "videoSearch": "Hledání videí se zastavilo kvůli neočekávanému problému.",
+      "export": "Vytváření videa se zastavilo kvůli neočekávanému problému.",
+      "other": "Něco se pokazilo. Zkuste to prosím znovu."
+    },
+    "server": {
+      "transcription": "Na našem serveru došlo k chybě. Zkuste to za minutu znovu.",
+      "translation": "Překlad se zastavil kvůli chybě na našem serveru. Už přeložené řádky zůstávají. Zkuste to za minutu znovu.",
+      "dubbing": "Na našem serveru došlo k chybě. Zkuste to za minutu znovu.",
+      "summary": "Na našem serveru došlo k chybě. Zkuste to za minutu znovu.",
+      "videoSearch": "Na našem serveru došlo k chybě. Zkuste to za minutu znovu.",
+      "export": "Na našem serveru došlo k chybě. Zkuste to za minutu znovu.",
+      "other": "Na našem serveru došlo k chybě. Zkuste to za minutu znovu."
+    },
+    "download": {
+      "invalid_url": "Tohle nevypadá jako odkaz na video. Vložte celý odkaz.",
+      "unsupported_site": "Translator z tohoto webu videa stahovat neumí.",
+      "unavailable": "Toto video není dostupné. Možná bylo odstraněno.",
+      "private": "Toto video je soukromé.",
+      "not_found": "Na tomto odkazu se žádné video nenašlo.",
+      "region_locked": "Toto video není ve vaší zemi dostupné.",
+      "audience_restricted": "Toto video se zobrazuje jen některým divákům. Pokud se na něj váš účet může dívat, připojte se k tomuto webu v Nastavení a zkuste to znovu.",
+      "login_required": "K tomuto videu musíte být přihlášeni. Připojte se k tomuto webu v Nastavení a zkuste to znovu.",
+      "media_blocked": "Web stažení videa zablokoval a titulky se nepodařilo získat.",
+      "access_refused": "Tento web odmítl aplikaci Translator video vydat.",
+      "video_data_failed": "Video se nepodařilo stáhnout. Může být regionálně omezené nebo vyžadovat přihlášení.",
+      "rate_limited": "YouTube teď omezuje stahování z vaší sítě. Počkejte pár minut a zkuste to znovu.",
+      "network": "Nepodařilo se připojit. Zkontrolujte připojení k internetu a zkuste to znovu.",
+      "captions_unreadable": "Titulky z YouTube se našly, ale Translator je nedokázal přečíst.",
+      "save_failed": "Video se stáhlo, ale nepodařilo se ho uložit. Zkuste to znovu.",
+      "downloader_failed": "Stahovač videí se nepodařilo spustit. Restartujte Translator a zkuste to znovu.",
+      "generic": "Video se nepodařilo stáhnout. Zkuste to znovu nebo použijte jiný odkaz.",
+      "subtitlesNotSaved": "Vaše současné titulky se nepodařilo uložit, takže se titulky z YouTube neotevřely.",
+      "openFailed": "Video se stáhlo, ale nepodařilo se ho otevřít. Otevřete ho z historie stahování."
+    },
+    "network": "Nepodařilo se spojit se serverem. Zkontrolujte připojení k internetu a zkuste to znovu.",
+    "busy": "Služba je teď vytížená. Počkejte minutu a zkuste to znovu.",
+    "diskFull": "Disk je plný. Uvolněte trochu místa a zkuste to znovu.",
+    "cancelDubbingFailedPlain": "Dabing se nepodařilo zastavit. Zkuste to znovu."
   },
   "input": {
     "connect": "Připojit",
@@ -175,7 +244,7 @@
     "transcribeOnly": "Přepsat audio",
     "srtLoaded": "Přepis dokončen",
     "srtFileLoaded": "SRT načteno",
-    "featuresUnlockAfterTranscription": "Překlad a další nabídky se zobrazí po dokončení přepisu.",
+    "featuresUnlockAfterTranscription": "Přepište nebo přeložte toto video, případně v něm najděte nejlepší momenty.",
     "preSubtitleActionsHint": "Přepište, přeložte nebo vytvořte zajímavosti z tohoto videa.",
     "saveDubbedVideo": "Uložit dabované video",
     "downloadFinishedSwitchTitle": "Přehrát stažené video?",
@@ -294,10 +363,10 @@
         "differentCreator": "\"{{query}}\" od jiného tvůrce nebo kanálu",
         "interviews": "Rozhovory nebo interview o {{query}}",
         "clips": "Nejzajímavější momenty nebo výrazné klipy o {{query}}",
-        "creatorAppearances": "Rozhovory, TV vystoupení nebo živé klipy s {{creator}}",
-        "similarCreators": "Tvůrci nebo umělci podobní {{creator}}",
+        "creatorAppearances": "{{creator}}: rozhovory, vystoupení nebo související klipy",
+        "similarCreators": "Tvůrci, umělci nebo kanály podobné {{creator}}",
         "topicAngle": "{{topic}} vysvětlené z jiného úhlu",
-        "topicCreator": "{{creator}} a související videa o {{topic}}",
+        "topicCreator": "{{creator}} nebo související videa o {{topic}}",
         "channelStyle": "Videa s podobnou atmosférou jako {{channel}}",
         "moreFromHistory": "Další videa jako \"{{title}}\"",
         "channelFromHistory": "Videa z kanálů jako {{channel}}"
@@ -307,8 +376,8 @@
       "moreActions": "Další akce",
       "recentEvents": "Nedávné události",
       "cancelFailed": "Nepodařilo se zrušit aktuální hledání.",
-      "countryGlobal": "Globální výsledky",
-      "countryHint": "Nechte prázdné pro globální výsledky.",
+      "countryGlobal": "Cílová země: výchozí je angličtina",
+      "countryHint": "Když pole necháte prázdné, bude se hledat v angličtině.",
       "countryHintDefaultEnglish": "Nechte prázdné, výchozím jazykem vyhledávání bude angličtina.",
       "countryLabel": "Cílová země / oblast",
       "countryPlaceholder": "např. USA, Japonsko, Španělsko, Brazílie",
@@ -335,7 +404,7 @@
       "savedDownloads": "Uložená stažení",
       "savedDownloadsCount": "{{count}} uložených stažení",
       "savedPreferencesCount": "{{count}} uložených předvoleb",
-      "searchingLong": "Pořád probíhá hledání a řazení videí...",
+      "searchingLong": "Videa se pořád hledají…",
       "searchingVeryLong": "Trvá to déle než obvykle, ale stále běží.",
       "stillWorking": "Stále pracuje...",
       "toggleCopy": "Vyhledejte zdrojové video na YouTube bez opuštění tohoto postupu.",
@@ -357,7 +426,11 @@
       "removeHistoryFailed": "Toto stažení se nepodařilo odebrat z historie.",
       "storedInAppLibrary": "Uloženo v knihovně aplikace",
       "savedPreferencesCount_one": "{{count}} uložená předvolba",
-      "savedPreferencesCount_few": "{{count}} uložené předvolby"
+      "savedPreferencesCount_few": "{{count}} uložené předvolby",
+      "freeSearchRunning": "Hledám na YouTube…",
+      "freeSearchResults": "Tady jsou výsledky z YouTube pro „{{query}}“. Toto hledání bylo zdarma. Napište mi víc o tom, co hledáte, a upřesním to pomocí AI.",
+      "freeSearchEmpty": "YouTube pro „{{query}}“ nic nenašel. Popište, co hledáte, a vyhledám to pomocí AI.",
+      "openOriginalPage": "Otevřít původní stránku"
     },
     "downloadAndTranslate": "Stáhnout a přeložit",
     "downloadAndTranscribe": "Stáhnout a přepsat",
@@ -371,7 +444,24 @@
     "captionRecoveryKeepVideo": "Ponechat aktuální video",
     "captionRecoveryOpenCaptions": "Otevřít titulky",
     "captionRecoverySwitchPrompt": "Translator obnovil automatické titulky YouTube, ale video z URL není dostupné. Jejich otevřením se aktuální video odpojí.",
-    "captionRecoverySwitchTitle": "Otevřít titulky bez aktuálního videa?"
+    "captionRecoverySwitchTitle": "Otevřít titulky bez aktuálního videa?",
+    "translateTheseSubtitles": "Přeložit tyto titulky",
+    "subtitlesLoaded": "Titulky načteny",
+    "chooseLanguage": "Vyberte jazyk",
+    "urlRejected": {
+      "collection": "Tohle je odkaz na kanál nebo playlist. Vložte odkaz na jedno video, nebo použijte „Najít videa“.",
+      "live": "Tohle je živé vysílání. Translator ho může stáhnout, až vysílání skončí."
+    },
+    "longDownload": {
+      "title": "Stáhnout dlouhé video?",
+      "body": "Video je dlouhé, takže stahování může chvíli trvat a zabrat hodně místa na disku. S nižší kvalitou stahování to bude rychlejší a soubor menší.",
+      "duration": "Délka: {{duration}}",
+      "size": "Asi {{size}}",
+      "confirm": "Stáhnout"
+    },
+    "dropWhileDownloading": "Probíhá stahování. Až skončí, přetáhněte soubor znovu.",
+    "dropWhileBusy": "Translator na tomto videu pracuje. Až skončí, přetáhněte soubor znovu.",
+    "dropNotSupported": "Přetáhněte sem video, zvukový soubor nebo titulky .srt."
   },
   "subtitles": {
     "outputLanguage": "Výstupní jazyk",
@@ -394,32 +484,49 @@
     "translateEstimateByo": "Vlastní klíč",
     "qualityBadge": "(vk)",
     "cancel_confirmation": "Opravdu chcete zrušit proces překladu titulků? Veškerý pokrok bude ztracen a budete muset začít znovu.",
-    "dubCostHint": "Hlas ElevenLabs: ~{{rate}} kreditů za minutu řeči. Tento odhad se zobrazí před zahájením dabingu."
+    "dubCostHint": "Hlas ElevenLabs: ~{{rate}} kreditů za minutu řeči. Tento odhad se zobrazí před zahájením dabingu.",
+    "unreadableCues_one": "{{count}} řádek v tomto souboru se nepodařilo přečíst, a proto byl vynechán. Zkontrolujte jeho časový kód.",
+    "unreadableCues_few": "{{count}} řádky v tomto souboru se nepodařilo přečíst, a proto byly vynechány. Zkontrolujte jejich časové kódy.",
+    "unreadableCues_many": "Nečitelné řádky v tomto souboru ({{count}}) byly vynechány. Zkontrolujte jejich časové kódy.",
+    "unreadableCues": "{{count}} řádků v tomto souboru se nepodařilo přečíst, a proto byly vynechány. Zkontrolujte jejich časové kódy.",
+    "addCreditsToTranslate": "Doplnit kredity na překlad",
+    "dubInto": "Nadabovat: {{language}}",
+    "dubIntro": "Hlas přečte titulky ve zvoleném jazyce přes původní zvuk v pozadí.",
+    "dubNeedsSubtitles": "Dabing čte titulky nahlas, takže video nejdřív potřebuje titulky. Přepište ho a pak tu vyberte hlas.",
+    "dubLanguageLabel": "Jazyk hlasu",
+    "dubSameLanguage": "Titulky už jsou v tomto jazyce ({{language}}), takže je hlas přečte tak, jak jsou.",
+    "dubTranslatesFirst": "Titulky se nejdřív přeloží (jazyk: {{language}}) a pak namluví.",
+    "dubCostWithTranslation": "Překlad a hlas: {{cost}}",
+    "dubUsesOwnKeys": "Platí vaše vlastní API klíče.",
+    "dubNotEnoughCredits": "Na tento dabing nemáte dost kreditů.",
+    "addCreditsToDub": "Doplnit kredity na dabing",
+    "noSubtitlesToDub": "Nejdřív vytvořte nebo otevřete titulky k tomuto videu a pak ho nadabujte.",
+    "noSubtitlesToTranslate": "Nejdřív otevřete nebo vytvořte titulky a pak je přeložte."
   },
   "summary": {
-    "title": "Souhrn přepisu",
-    "ctaHelper": "Vygenerujte podrobný přehled. Zpracování dlouhých videí může chvíli trvat.",
-    "languageLabel": "Jazyk souhrnu",
+    "title": "Nejlepší momenty",
+    "ctaHelper": "Najdeme nejlepší momenty.",
+    "languageLabel": "Jazyk výstupu",
     "tab": {
       "summary": "Souhrn",
-      "sections": "Podrobné poznámky",
+      "sections": "Poznámky",
       "highlights": "Výběry"
     },
-    "generate": "Generovat souhrn",
-    "regenerate": "Přegenerovat souhrn",
+    "generate": "Najít nejlepší momenty",
+    "regenerate": "Najít nejlepší momenty znovu",
     "estimateCredits": "{{credits}} kreditů",
     "estimateByo": "Klíč BYO",
     "highEffortBadge": "(hloubková)",
     "placeholder": "Váš AI souhrn se zde zobrazí po vygenerování.",
-    "insufficientCredits": "Nedostatek kreditů pro spuštění souhrnu.",
-    "error": "Nepodařilo se vytvořit souhrn. {{message}}",
+    "insufficientCredits": "Na hledání nejlepších momentů nemáte dost kreditů.",
+    "error": "Nejlepší momenty se nepodařilo najít. {{message}}",
     "cancel": "Zrušit",
     "copy": "Kopírovat souhrn",
     "copied": "Zkopírováno!",
     "copyError": "Nepodařilo se zkopírovat souhrn do schránky.",
-    "noHighlights": "Zatím žádné výběry. Generujte pro detekci klíčových momentů.",
+    "noHighlights": "Zatím tu nejsou žádné momenty. Nechte je vyhledat a uvidíte to nejlepší z videa.",
     "noVideoForHighlights": "Otevřete zdrojové video pro vystřižení klipů s výběry.",
-    "summaryRequiredForHighlights": "Před vystřižením highlight klipů nejprve vygenerujte shrnutí přepisu.",
+    "summaryRequiredForHighlights": "Nejdřív nechte najít nejlepší momenty, aby se přepis zanalyzoval.",
     "highlight": "Výběr",
     "cutHighlightClip": "Vystřihnout tento highlight",
     "cuttingHighlightClip": "Vystřihování…",
@@ -427,8 +534,8 @@
     "clipFormat": "Formát klipu:",
     "originalFormat": "Původní",
     "originalFormatDesc": "Zachovat původní rozměry videa",
-    "verticalFormat": "9:16 na výšku",
-    "verticalFormatDesc": "Optimalizováno pro YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFormat": "Rámování pro Shorts",
+    "verticalFormatDesc": "Oříznutí a přerámování pro YouTube Shorts, TikTok, Reels (9:16)",
     "verticalFitFormat": "Shorts na míru",
     "verticalFitFormatDesc": "Přizpůsobí původní snímek do plátna 9:16",
     "downloadHighlight": "Stáhnout klip",
@@ -442,16 +549,18 @@
     "sectionHeading": "Sekce {{index}}",
     "highlightsInProgress": "Příprava klipů s výběry…",
     "status": {
-      "preparing": "Příprava přepisu…",
-      "chunk": "Sumarizace sekce {{current}}/{{total}}",
-      "selectingHighlights": "Výběr klíčových momentů…",
+      "preparing": "Analyzuje se přepis…",
+      "chunk": "Píše se shrnutí {{current}}/{{total}}",
+      "selectingHighlights": "Vybírají se nejlepší momenty…",
       "cuttingHighlight": "Stříhání výběru {{current}}/{{total}}…",
       "cuttingHighlights": "Stříhání klipů s výběry…",
-      "synthesizing": "Syntetizování komplexního souhrnu…",
-      "ready": "Souhrn připraven",
-      "error": "Souhrn selhal",
-      "cancelled": "Souhrn zrušen",
-      "inProgress": "Generování souhrnu…"
+      "synthesizing": "Dokončuje se…",
+      "ready": "Nejlepší momenty jsou připravené",
+      "error": "Hledání momentů selhalo",
+      "cancelled": "Hledání momentů zrušeno",
+      "inProgress": "Hledají se nejlepší momenty…",
+      "cuttingClip": "Vystřihuje se klip…",
+      "renderingClipSubtitles": "Do klipu se přidávají titulky…"
     },
     "combineMode": "Kombinovat",
     "exitCombineMode": "Ukončit kombinování",
@@ -464,7 +573,32 @@
     "combinedCutFailed": "Nepodařilo se vystřihnout kombinované výběry: {{message}}",
     "highlightsInsufficientCredits": "Souhrn byl vygenerován, ale výběr klíčových momentů se zastavil, protože došly kredity.",
     "highlightsPartialWarning": "Výběr klíčových momentů byl jen částečný. Tyto výběry mohou být neúplné. Pro obnovení je vygenerujte znovu.",
-    "highlightsPartialWithReason": "Souhrn byl vygenerován, ale výběr klíčových momentů byl jen částečný: {{message}}"
+    "highlightsPartialWithReason": "Souhrn byl vygenerován, ale výběr klíčových momentů byl jen částečný: {{message}}",
+    "estimateOwnKey": "Platí váš API klíč",
+    "generateSummary": "Shrnout",
+    "regenerateSummary": "Shrnout znovu",
+    "showingSavedLanguage": "Zobrazuje se uložený výsledek (jazyk: {{language}}). Tlačítkem vytvoříte nový (jazyk: {{current}}).",
+    "showingSavedVariant": "Zobrazuje se uložený výsledek (jazyk: {{language}}) vytvořený v jiné kvalitě shrnutí. Tlačítkem vytvoříte nový.",
+    "noSummaryYet": "Shrnutí zatím není. Vyberte jazyk a stiskněte „Shrnout“ — dostanete to hlavní z tohoto videa.",
+    "noSummaryWithHighlights": "K těmto nejlepším momentům chybí shrnutí. Stiskněte „Shrnout“ a vytvoříme ho.",
+    "clipCaptionsChanged": "Titulky se od vystřižení tohoto klipu změnily.",
+    "recutClip": "Vystřihnout znovu",
+    "cutCombinedCount": "Spojit {{count}} momentů",
+    "cutCombinedCount_one": "Spojit {{count}} moment",
+    "cutCombinedCount_few": "Spojit {{count}} momenty",
+    "cutCombinedCount_many": "Spojit {{count}} momentu",
+    "cutHighlightFailed": "Klip se nepodařilo vystřihnout: {{message}}",
+    "clipError": {
+      "busy": "Počkejte, až skončí aktuální úloha, a pak klip vystřihněte.",
+      "noHighlight": "Nejdřív vyberte moment.",
+      "editorialSingle": "Každý upravený Short vystřihněte samostatně, v režimu „Rámování pro Shorts“.",
+      "editorialStale": "Titulky v tomto Shortu se změnily. Otevřete „Upravit styl tohoto Short“, zkontrolujte ho, uložte a pak vystřihněte znovu.",
+      "noTranscript": "Než vystřihnete klip, otevřete titulky k tomuto videu.",
+      "noCues": "Tato část videa nemá titulky.",
+      "untranslated": "Některé řádky v tomto klipu ještě nejsou přeložené. Přeložte je, nebo nastavte zobrazení titulků na originál.",
+      "subtitlesNotSaved": "Klip je vystřižený, ale jeho titulky se nepodařilo uložit.",
+      "generic": "Tento klip se z videa nepodařilo vystřihnout. Zkuste to znovu."
+    }
   },
   "panel": {
     "new": "nové",
@@ -522,7 +656,9 @@
       "originalTextPrefix": "Originál:",
       "subtitlePlaceholder": "Text titulku",
       "confirmRemove": "Opravdu chcete odstranit tento blok titulků? Tuto akci nelze vrátit zpět.",
-      "transcribeThisLine": "Přepsat řádek"
+      "transcribeThisLine": "Přepsat řádek",
+      "timeEndBeforeStart": "Konec musí být později než začátek. Řádek si ponechá původní čas.",
+      "timeUnreadable": "Zadejte čas ve tvaru 00:01:23,450 nebo 1:23.45. Řádek si ponechá původní čas."
     },
     "header": {
       "save": "Uložit titulky",
@@ -535,6 +671,14 @@
       "styleLabel": "Styl:",
       "mergeButton": "Sloučit titulky",
       "mergingButton": "Slučování..."
+    },
+    "undo": {
+      "removed": "Řádek smazán.",
+      "inserted": "Řádek přidán.",
+      "replaced": "Nahrazeno ve všech řádcích.",
+      "shifted": "Časování posunuto.",
+      "improved": "Řádek znovu přepsán.",
+      "action": "Zpět"
     }
   },
   "settings": {
@@ -583,10 +727,10 @@
         "anthropicHighEnd": "Pokročilá revize Anthropic",
         "help": "<b>5× kreditů</b> • Přidá fázi kontroly pro vyšší kvalitu",
         "helpWithEstimate": "<b>5× kreditů</b> • Váš zůstatek: ~{{normalTime}} (normální) / ~{{hqTime}} (vk)",
-        "helpOn": "<b>5× kredity</b> • Zahrnuje kontrolní průchod",
-        "helpOff": "Přeskočí kontrolní průchod",
-        "helpWithEstimateOn": "<b>5× kredity</b> • Zahrnuje kontrolní průchod • Zůstatek: ~{{time}}",
-        "helpWithEstimateOff": "Přeskočí kontrolní průchod • Zůstatek: ~{{time}}"
+        "helpOn": "<b>5× kredity</b> • Koncept Claude Haiku 5.5 + kontrola Claude Opus 5.5",
+        "helpOff": "<b>1× kredity</b> • Jen koncept Claude Haiku 5.5",
+        "helpWithEstimateOn": "<b>5× kredity</b> • Koncept Claude Haiku 5.5 + kontrola Claude Opus 5.5 • Zůstatek: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× kredity</b> • Jen koncept Claude Haiku 5.5 • Zůstatek: ~{{time}}"
       },
       "qualitySummary": {
         "label": "Kvalitní souhrn",
@@ -594,9 +738,9 @@
         "modelOff": "Standardní analýza Claude Sonnet 5.5",
         "help": "<b>4× kreditů</b> • Hloubková analýza + výběr klíčových momentů s Claude Opus 5.5",
         "helpWithEstimate": "<b>4× kreditů</b> • Váš zůstatek: ~{{normalTime}} (normální) / ~{{hqTime}} (vk)",
-        "helpOn": "<b>4× kredity</b> • Hloubková analýza + highlight klipy",
+        "helpOn": "<b>4× kredity</b> • Hloubková analýza Claude Opus 5.5 + klipy s nejlepšími momenty",
         "helpOff": "Rychlá analýza s Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× kredity</b> • Hloubková analýza + highlight klipy • Zůstatek: ~{{time}}",
+        "helpWithEstimateOn": "<b>4× kredity</b> • Hloubková analýza Claude Opus 5.5 + klipy s nejlepšími momenty • Zůstatek: ~{{time}}",
         "helpWithEstimateOff": "Rychlá analýza s Claude Sonnet 5.5 • Zůstatek: ~{{time}}"
       },
       "qualityDubbing": {
@@ -617,7 +761,10 @@
         "perHour": "~{{credits}} kreditů/hod",
         "perMinute": "~{{credits}} kreditů/min",
         "perSearch": "~{{credits}} kreditů/hledání",
-        "balance": "Zůstatek: ~{{time}}"
+        "balance": "Zůstatek: ~{{time}}",
+        "minutesPerHour": "~{{time}} ze zůstatku za hodinu videa",
+        "minutesPerDubMinute": "~{{time}} ze zůstatku za minutu dabingu",
+        "minutesPerSearch": "~{{time}} ze zůstatku za jedno hledání"
       }
     },
     "dubbing": {
@@ -685,7 +832,9 @@
       "economicsBody": "Stage5 kredity optimalizují pohodlí (bez nastavení). Vlastní klíče platí poskytovatele přímo – obvykle ~30–50% levnější v závislosti na balíčku.",
       "encryptionUnavailable": "Zabezpečené úložiště není v tomto systému k dispozici. Klíče API nelze uložit.",
       "checkoutOpen": "Platba otevřena v prohlížeči…",
-      "checkoutOpenHint": "Dokončete platbu v prohlížeči. BYO odemkneme automaticky, jakmile platba projde."
+      "checkoutOpenHint": "Dokončete platbu v prohlížeči. BYO odemkneme automaticky, jakmile platba projde.",
+      "entitlementsLoadFailed": "Stav odemčení se nepodařilo ověřit. Zkontrolujte připojení a zkuste to znovu.",
+      "unlockFailed": "Platbu se nepodařilo spustit. Zkontrolujte připojení a zkuste to znovu."
     },
     "byoPreferences": {
       "title": "Předvolby poskytovatele",
@@ -801,7 +950,8 @@
       "saved": "Klíč API byl uložen.",
       "cleared": "Klíč API byl vymazán.",
       "invalid": "Ověření klíče API selhalo.",
-      "howToGet": "Jak získat tento klíč"
+      "howToGet": "Jak získat tento klíč",
+      "missing": "Nejdřív vložte API klíč."
     },
     "byoStack": {
       "title": "Váš AI stack"
@@ -837,7 +987,13 @@
         "desktopConnected": "Translator byl přidán do Claude Desktop. Ukončete Claude a znovu ho otevřete, aby se načetl.",
         "cliNotFound": "Příkaz {{app}} nebyl na tomto počítači nalezen. Spusťte v terminálu:",
         "cliNotFoundCopied": "Příkaz {{app}} nebyl na tomto počítači nalezen. Instalační příkaz byl zkopírován; vložte ho do terminálu:",
-        "failed": "Nepodařilo se připojit {{app}}: {{message}}"
+        "failed": "Nepodařilo se připojit {{app}}: {{message}}",
+        "details": "Podrobnosti",
+        "failedConfigInvalid": "{{app}} se nepodařilo připojit: jeho soubor s nastavením není platný, a tak ho Translator nechal beze změny. Opravte nebo odstraňte soubor a zkuste to znovu.",
+        "failedWrite": "{{app}} se nepodařilo připojit: Translator nedokázal zapsat jeho soubor s nastavením.",
+        "failedLauncher": "Připojení {{app}} funguje jen v nainstalované aplikaci Translator.",
+        "failedCli": "{{app}} se nepodařilo připojit automaticky. Spusťte v terminálu:",
+        "failedGeneric": "{{app}} se nepodařilo připojit. Zkuste to znovu."
       },
       "status": {
         "enabled": "Zapnuto",
@@ -896,11 +1052,20 @@
       "summaryCredits_one": "Přesune se {{credits}} kredit.",
       "summaryCredits_few": "Přesunou se {{credits}} kredity.",
       "received_one": "Přijat {{credits}} kredit.",
-      "received_few": "Přijaty {{credits}} kredity."
+      "received_few": "Přijaty {{credits}} kredity.",
+      "errors": {
+        "nothing_to_transfer": "Zatím není co přesouvat: tento počítač nemá zakoupené kredity ani odemčení API klíčů. Chcete-li sem převést kredity z jiného počítače, zvolte „Přijmout kredity“.",
+        "too_many_codes": "Za tuto hodinu vzniklo příliš mnoho kódů pro přesun. Zkuste to za chvíli.",
+        "jobs_running": "Ještě běží přepis nebo překlad. Zkuste to znovu, až skončí.",
+        "invalid_code": "Kód je chybný, už použitý nebo mu vypršela platnost. Vytvořte nový na druhém počítači.",
+        "same_device": "Kód zadejte na druhém počítači, ne na tom, který ho vytvořil.",
+        "network_error": "Nepodařilo se spojit se serverem Stage5. Zkontrolujte připojení a zkuste to znovu.",
+        "transfer_failed": "Kredity se nepodařilo přesunout. Zkontrolujte připojení a zkuste to znovu."
+      }
     }
   },
   "credits": {
-    "title": "Hodiny používání AI",
+    "title": "Kredity AI",
     "loading": "Načítání...",
     "credits": "kredity",
     "usingApiKey": "Používá se API klíč",
@@ -937,7 +1102,9 @@
     "checkoutNote": "Jednorázová platba přes Stripe v prohlížeči. Bez účtu a bez předplatného. Minuty dorazí samy.",
     "dubbingNote": "Překlad za kredity stojí zhruba o 10 % víc za minutu, dabing ještě víc.",
     "iCancelledCheckout": "Zrušil(a) jsem platbu",
-    "checkoutStartFailed": "Platbu se nepodařilo spustit. Zkontrolujte připojení a zkuste to znovu."
+    "checkoutStartFailed": "Platbu se nepodařilo spustit. Zkontrolujte připojení a zkuste to znovu.",
+    "loadFailed": "Zůstatek se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.",
+    "estimateAmount": "{{credits}} kreditů"
   },
   "cta": {
     "generate": {
@@ -972,7 +1139,12 @@
     "useThisVideo": "Použít toto video",
     "useDownloadedVideo": "Použít toto video",
     "useOriginalAudio": "Použít původní zvuk",
-    "useDubbedAudio": "Použít dabovaný zvuk"
+    "useDubbedAudio": "Použít dabovaný zvuk",
+    "changeVideoKeepSubtitles": "Ponechat současné titulky i pro nové video (pro jinou kopii téhož videa). U jiného videa zaškrtnutí zrušte.",
+    "mute": "Ztlumit (M)",
+    "unmute": "Zrušit ztlumení (M)",
+    "volume": "Hlasitost",
+    "unreadableFile": "Translator tento soubor nedokáže přečíst. Může být poškozený nebo v nepodporovaném formátu."
   },
   "admin": {
     "title": "Administrátor",
@@ -1069,7 +1241,7 @@
       "localSourceReady": "Místní soubor připraven",
       "webSourceReady": "Webový zdroj připraven",
       "sourceReadyDescription": "Vybraná média jsou připravena na další krok.",
-      "transcribeTitle": "Vytvořit přepis",
+      "transcribeTitle": "Zpracovat video",
       "processVideoTitle": "Zpracovat video",
       "transcribeDescription": "Převeďte zdrojová média na upravitelnou stopu titulků, než přejdete k překladu nebo dabingu.",
       "translateDubTitle": "Přeložit nebo dabovat",
@@ -1096,7 +1268,11 @@
     "nextMatchAria": "Další shoda",
     "previousMatchAria": "Předchozí shoda",
     "replaceAllAria": "Nahradit vše",
-    "closeAria": "Zavřít vyhledávací panel"
+    "closeAria": "Zavřít vyhledávací panel",
+    "matchCount": "{{current}} z {{total}}",
+    "matchCase": "Rozlišovat velikost písmen",
+    "wholeWord": "Celá slova",
+    "showReplace": "Nahradit"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1148,7 +1324,32 @@
       "neverHadMessage": "Přepis vyžaduje kredity nebo odemčení API klíčů. Obojí získáte v Nastavení. Překlad s vlastním Claude nebo Codexem přes Ovládání agenty je zdarma.",
       "notEnoughTitle": "Na toto video nemáte dost kreditů",
       "notEnoughTranscriptionMessage": "Přepis tohoto videa stojí přibližně {{required}} kreditů. Máte {{available}}, což stačí asi na {{minutes}} minut. Dobijte kredity a začněte znovu.",
-      "notEnoughMessage": "Tato úloha potřebuje více kreditů, než je váš zůstatek {{available}}. Pro pokračování dobijte kredity."
+      "notEnoughMessage": "Tato úloha potřebuje více kreditů, než je váš zůstatek {{available}}. Pro pokračování dobijte kredity.",
+      "task": {
+        "transcription": {
+          "title": "Přepis vyžaduje kredity",
+          "message": "Váš zůstatek na tento přepis nestačí. Doplňte kredity a spusťte ho znovu. Už přepsané řádky zůstávají."
+        },
+        "translation": {
+          "title": "Překlad vyžaduje kredity",
+          "message": "Váš zůstatek na tento překlad nestačí. Doplňte kredity a zkuste to znovu. Už přeložené řádky zůstávají. Překlad s vlastním Claude nebo Codexem přes Ovládání agenty je zdarma."
+        },
+        "dubbing": {
+          "title": "Dabing vyžaduje kredity",
+          "message": "Váš zůstatek na dabing tohoto videa nestačí. Doplňte kredity a zkuste to znovu."
+        },
+        "summary": {
+          "title": "Shrnutí vyžaduje kredity",
+          "message": "Váš zůstatek na shrnutí a nejlepší momenty nestačí. Doplňte kredity a zkuste to znovu."
+        },
+        "videoSearch": {
+          "title": "Hledání videí s AI vyžaduje kredity",
+          "message": "Váš zůstatek na hledání videí s AI nestačí. Doplňte kredity a hledejte znovu."
+        },
+        "other": {
+          "title": "Tohle vyžaduje kredity"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "Spustit dabing?",
@@ -1159,7 +1360,58 @@
       "message": "Už máte otevřené titulky. Před jejich nahrazením automatickými titulky YouTube je uložte nebo zahoďte.",
       "saveAndOpen": "Uložit a otevřít titulky",
       "title": "Otevřít obnovené automatické titulky?"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "Uložit nejdřív úpravy titulků?",
+      "message": "Tyto titulky jste od posledního uložení změnili. Uložit úpravy, než je nahradíte?",
+      "saveAndContinue": "Uložit a pokračovat",
+      "discardAndContinue": "Zahodit úpravy a pokračovat"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "Přepis ještě běží.",
+        "translation": "Překlad ještě běží.",
+        "dubbing": "Dabing ještě běží.",
+        "export": "Video s titulky se ještě ukládá.",
+        "summary": "Shrnutí se ještě píše.",
+        "download": "Stahování ještě běží.",
+        "highlight": "Klipy s nejlepšími momenty se ještě vytvářejí.",
+        "search": "Hledání videí ještě běží.",
+        "generic": "Úloha ještě běží."
+      },
+      "unsavedLine": "Úpravy titulků nejsou uložené.",
+      "unsavedMessage": "Tyto titulky mají neuložené změny.",
+      "tabUnsavedDetail": "Uložit je před zavřením karty?",
+      "tabUnsavedWithJobDetail": "Zavřením karty se úloha zastaví. Uložit nejdřív úpravy titulků?",
+      "tabJobDetail": "Zavřením karty se úloha zastaví a dosavadní práce se ztratí.",
+      "quitMessage": "Ukončit {{app}}? Některá práce není dokončená.",
+      "windowMessage": "Zavřít okno? Některá práce není dokončená.",
+      "tabLine": "{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "Běžící úlohy se zastaví. Uložit nejdřív úpravy titulků?",
+      "jobsDetail": "Běžící úlohy se zastaví a dosavadní práce se ztratí.",
+      "saveAndClose": "Uložit a zavřít",
+      "saveAndQuit": "Uložit a ukončit",
+      "closeWithoutSaving": "Zavřít bez uložení",
+      "quitWithoutSaving": "Ukončit bez uložení",
+      "stopAndClose": "Zastavit a zavřít",
+      "quitAnyway": "Přesto ukončit",
+      "closeAnyway": "Přesto zavřít",
+      "saveFailed": "Titulky v kartě {{title}} se nepodařilo uložit, takže se nic nezavřelo. Uložte je v editoru a zkuste to znovu.",
+      "ok": "OK"
+    },
+    "exportSaveDialogTitle": "Uložit video jako",
+    "exportVideoFilterName": "Video MP4",
+    "exportDiscardConfirm": "Video je hotové, ale ještě není uložené. Zahodit ho?",
+    "exportChooseLocationButton": "Vybrat, kam uložit…",
+    "exportDiscardButton": "Zahodit video",
+    "exportSaveFailed": "Video se nepodařilo uložit do složky {{folder}}.",
+    "exportSaveFailedPermission": "Do této složky nemáte oprávnění ukládat.",
+    "exportSaveFailedDiskFull": "Na tomto disku není dost volného místa.",
+    "exportSaveFailedGeneric": "Soubor se tam nepodařilo zapsat.",
+    "exportSameAsSource": "Tím byste přepsali původní video. Zvolte jiný název.",
+    "keepDubbing": "Pokračovat v dabingu",
+    "stopDubbing": "Zastavit dabing",
+    "cancelDubbingBody": "Dosud vytvořený dabing se zahodí."
   },
   "progress": {
     "preparingVideoExport": "Příprava exportu videa…",
@@ -1172,12 +1424,12 @@
     "extractingAudio": "Extrahování zvuku...",
     "transcribingOf": "Přepisování {{done}}/{{total}}",
     "error": "Chyba",
-    "transcribedChunks": "Přepsáno a vyčištěno {{done}}/{{total}} úseků",
+    "transcribedChunks": "Přepsáno {{done}}/{{total}} úseků",
     "transcribingElevenLabs": "Přepisování s ElevenLabs (~{{minutes}} min zbývá)",
     "transcribingElevenLabsHours": "Přepisování s ElevenLabs (~{{hours}}h {{minutes}}m zbývá)",
     "transcribingElevenLabsFinishing": "Přepisování s ElevenLabs...",
     "transcriptionRetry": "Připojení selhalo, opakování ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "Nahrávání zvuku pro přepis...",
+    "transcribingR2Upload": "Nahrávání zvuku…",
     "gapRepair": "Oprava mezer #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Oprava chybějících titulků (Iterace {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Čištění titulků ({{done}}/{{total}})",
@@ -1249,7 +1501,18 @@
       "voiceTrackReady": "Hlasová stopa připravena",
       "writingSummary": "Psaní souhrnu…",
       "preparingDubLines_one": "Příprava {{count}} řádku pro dabing…",
-      "preparingVoiceClips_one": "Příprava {{count}} hlasového klipu…"
+      "preparingVoiceClips_one": "Příprava {{count}} hlasového klipu…",
+      "completed": "Hotovo",
+      "cancelled": "Zrušeno",
+      "cancelling": "Ruší se…",
+      "failed": "Něco se pokazilo",
+      "downloading": "Stahování…",
+      "downloadingAudio": "Stahování zvuku…",
+      "transcribingLine": "Přepisuje se řádek…",
+      "startingExport": "Spouští se vytváření videa…",
+      "captionsAvailable": "Video se nepodařilo stáhnout, ale jsou k dispozici titulky z YouTube",
+      "captionsNotOpened": "Titulky z YouTube jsou připravené, ale neotevřely se",
+      "insufficientCredits": "Nedostatek kreditů"
     },
     "listening": "Poslech videa…",
     "mergeFinishSaveBeforeReload": "Před opětovným načtením dokončete ukládání sloučeného videa.",
@@ -1257,7 +1520,8 @@
     "mergeWaitForCancelBeforeReload": "Před opětovným načtením počkejte, až se dokončí zrušení slučování.",
     "preparingTranscription": "Příprava na poslech…",
     "restartingTranscription": "Opětovné spuštění přepisu…",
-    "resumingTranscription": "Pokračování tam, kde se skončilo…"
+    "resumingTranscription": "Pokračování tam, kde se skončilo…",
+    "hqModeEstimate": "(vysoká kvalita: ~{{time}})"
   },
   "messages": {
     "fileSaved": "Soubor uložen:\n{{path}}",
@@ -1280,7 +1544,23 @@
     "sendReport": "Odeslat hlášení",
     "reportPrompt": "Něco se pokazilo. Nahlaste to vývojáři pro rychlou opravu.",
     "preparingReport": "Příprava diagnostického balíčku...",
-    "reportContextWarning": "Část diagnostického kontextu se nepodařilo načíst. Zpráva bude stále obsahovat podrobnosti z této aplikace."
+    "reportContextWarning": "Část diagnostického kontextu se nepodařilo načíst. Zpráva bude stále obsahovat podrobnosti z této aplikace.",
+    "reportPromptTask": {
+      "transcription": "Přepis se zastavil kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "translation": "Překlad se zastavil kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "dubbing": "Dabing se zastavil kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "summary": "Shrnutí se zastavilo kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "videoSearch": "Hledání videí se zastavilo kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "download": "Stažení videa selhalo z důvodu, který neznáme. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "export": "Vytváření videa se zastavilo kvůli neočekávanému problému. Pošlete nám tuto zprávu, ať to můžeme opravit.",
+      "other": "Něco se pokazilo. Pošlete nám tuto zprávu, ať to můžeme opravit."
+    },
+    "feedbackTitle": "Poslat zpětnou vazbu nebo nahlásit problém",
+    "whatHappened": "Co se stalo, nebo co nám chcete sdělit?",
+    "attachDiagnostics": "Přiložit diagnostické údaje (doporučeno při problémech)",
+    "attachDiagnosticsHint": "Nedávné protokoly aplikace, její verze a informace o systému. Žádná videa ani titulky.",
+    "showDetails": "Zobrazit, co se odešle",
+    "feedbackEmailSubject": "Zpětná vazba k aplikaci Translator"
   },
   "home": {
     "headline": "Přeložíme jakékoli video do <lang>{{languageInto}}</lang>.",
@@ -1313,7 +1593,9 @@
     "seeAll": "Zobrazit vše",
     "recentSubtitlesReady": "Přeloženo do {{languageInto}}",
     "recentSubtitlesReadyGeneric": "Titulky hotové",
-    "recentDownloaded": "Staženo"
+    "recentDownloaded": "Staženo",
+    "recentLocalFile": "Na tomto počítači",
+    "recentLocalMissing": "Soubor byl přesunut nebo smazán"
   },
   "workspace": {
     "subtitlesTitle": "Titulky",
@@ -1345,7 +1627,35 @@
     "showBoth": "Obojí",
     "textSize": "Velikost textu",
     "statusTranscribed_one": "Přepsán {{count}} řádek",
-    "statusTranscribed_few": "Přepsány {{count}} řádky"
+    "statusTranscribed_few": "Přepsány {{count}} řádky",
+    "findReplace": "Najít a nahradit",
+    "statusReadyPrice": "Vše připraveno — překlad tohoto videa do {{languageInto}}: {{price}}",
+    "statusReadyPreview": "Vše připraveno — vaše minuty pokryjí prvních {{minutes}} min překladu do {{languageInto}}",
+    "statusReadyPreview_one": "Vše připraveno — vaše minuty pokryjí první {{minutes}} min překladu do {{languageInto}}",
+    "statusReadyPreview_few": "Vše připraveno — vaše minuty pokryjí první {{minutes}} min překladu do {{languageInto}}",
+    "statusReadyPreview_many": "Vše připraveno — vaše minuty pokryjí prvních {{minutes}} min překladu do {{languageInto}}",
+    "statusPartlyTranslated": "Přeloženo do {{languageInto}}: {{translated}} z {{count}} řádků · bez překladu: {{missing}}",
+    "statusPartlyTranslated_one": "Přeloženo do {{languageInto}}: {{translated}} z {{count}} řádku · bez překladu: {{missing}}",
+    "statusPartlyTranslated_few": "Přeloženo do {{languageInto}}: {{translated}} z {{count}} řádků · bez překladu: {{missing}}",
+    "statusPartlyTranslated_many": "Přeloženo do {{languageInto}}: {{translated}} z {{count}} řádku · bez překladu: {{missing}}",
+    "statusPartlyTranslatedUnknown": "Přeloženo {{translated}} z {{count}} řádků · bez překladu: {{missing}}",
+    "statusPartlyTranslatedUnknown_one": "Přeloženo {{translated}} z {{count}} řádku · bez překladu: {{missing}}",
+    "statusPartlyTranslatedUnknown_few": "Přeloženo {{translated}} z {{count}} řádků · bez překladu: {{missing}}",
+    "statusPartlyTranslatedUnknown_many": "Přeloženo {{translated}} z {{count}} řádku · bez překladu: {{missing}}",
+    "statusTranslatedUnknown": "Přeložených řádků: {{count}} · synchronizováno s videem",
+    "statusTranslatedUnknown_one": "Přeložen {{count}} řádek · synchronizováno s videem",
+    "statusTranslatedUnknown_few": "Přeloženy {{count}} řádky · synchronizováno s videem",
+    "statusTranslatedUnknown_many": "Přeložených řádků: {{count}} · synchronizováno s videem",
+    "stopsEarly": "Titulky končí v {{time}}",
+    "interruptedTranslate": "Překlad tohoto videa do {{languageInto}} se přerušil, když se Translator zavřel.",
+    "interruptedTranscribe": "Přepis tohoto videa se přerušil, když se Translator zavřel.",
+    "interruptedResume": "Pokračovat tam, kde se to zastavilo",
+    "translateMissing": "Přeložit {{count}} chybějících řádků do {{languageInto}}",
+    "translateMissing_one": "Přeložit {{count}} chybějící řádek do {{languageInto}}",
+    "translateMissing_few": "Přeložit {{count}} chybějící řádky do {{languageInto}}",
+    "translateMissing_many": "Přeložit chybějící řádky ({{count}}) do {{languageInto}}",
+    "moreRevealVideo": "Zobrazit soubor videa",
+    "chooseAnotherFile": "Vybrat jiný soubor"
   },
   "subtitleStyles": {
     "Cinema": "Filmová žlutá",
@@ -1379,7 +1689,12 @@
     "retry": "Zkusit znovu",
     "finishCta": "Přeložit do konce · {{price}}",
     "noneCta": "Přeložit do {{languageInto}} · {{price}}",
-    "notNow": "Teď ne"
+    "notNow": "Teď ne",
+    "failedNeedMinutes": "Všechno, co už je přeložené, zůstává. Na zbytek videa ({{remaining}} min) vám minuty nestačí.",
+    "failedNeedMinutes_one": "Všechno, co už je přeložené, zůstává. Na zbytek videa ({{remaining}} min) vám minuty nestačí.",
+    "failedNeedMinutes_few": "Všechno, co už je přeložené, zůstává. Na zbytek videa ({{remaining}} min) vám minuty nestačí.",
+    "failedNeedMinutes_many": "Všechno, co už je přeložené, zůstává. Na zbytek videa ({{remaining}} min) vám minuty nestačí.",
+    "failedNetwork": "Spojení se přerušilo. Všechno, co už je přeložené, zůstává. Zkuste to znovu, až budete online."
   },
   "videoCost": {
     "covered": "Stačí vaše minuty",
@@ -1409,7 +1724,17 @@
     "from": "Od",
     "to": "do",
     "saving": "Ukládání…",
-    "save": "Uložit úpravy Short"
+    "save": "Uložit úpravy Short",
+    "openFailed": "Tento klip se nepodařilo otevřít k úpravě stylu. Ujistěte se, že je otevřené video i jeho titulky.",
+    "saveFailed": "Úpravu Shortu se nepodařilo uložit. Zkontrolujte, že každá fráze má text a její časy leží uvnitř klipu.",
+    "previewAt": "Náhled v {{seconds}} s",
+    "shotPosition": "Záběr {{current}} z {{total}}",
+    "phrasesHint": "Fráze titulků: chcete-li zvýraznit slovo, napište do pole zvýraznění přesně to slovo nebo frázi z textu.",
+    "phraseStart": "Začátek fráze {{index}} (s)",
+    "phraseEnd": "Konec fráze {{index}} (s)",
+    "phraseText": "Text fráze {{index}}",
+    "phraseEmphasis": "Zvýraznění fráze {{index}}",
+    "saveNote": "Uložením se tento klip přepne do režimu „Rámování pro Shorts“ s těmito frázemi místo vašeho stylu titulků."
   },
   "subtitleFonts": {
     "label": "Písmo",
@@ -1417,5 +1742,80 @@
     "classic": "Klasické",
     "serif": "Patkové",
     "display": "Tučné"
+  },
+  "export": {
+    "exportButton": "Uložit video",
+    "exportingButton": "Ukládání…",
+    "progressTitle": "Ukládání videa",
+    "savedTitle": "Video uloženo",
+    "savedIn": "{{file}} ve složce {{folder}}",
+    "showInFinder": "Zobrazit ve Finderu",
+    "showInFolder": "Zobrazit ve složce",
+    "openVideo": "Otevřít video",
+    "failedTitle": "Video se neuložilo",
+    "saveTo": "Uložit do",
+    "changeDestination": "Změnit…",
+    "displayNeedsTranslation": "Přeložte titulky, abyste mohli zobrazit překlad nebo obojí.",
+    "error": {
+      "permission": "Translator nemohl zapsat pracovní soubory videa. Zkontrolujte, že váš účet může zapisovat do dočasné složky, a zkuste to znovu.",
+      "tools": "Nástroje pro vytvoření videa se nepodařilo připravit. Zkontrolujte připojení k internetu a zkuste to znovu.",
+      "generic": "Při vytváření videa se něco pokazilo. Zkuste to prosím znovu."
+    }
+  },
+  "tabs": {
+    "newTab": "Nová karta",
+    "newTabWithShortcut": "Nová karta ({{shortcut}})",
+    "closeTab": "Zavřít kartu"
+  },
+  "menu": {
+    "about": "O aplikaci {{app}}",
+    "services": "Služby",
+    "hide": "Skrýt {{app}}",
+    "hideOthers": "Skrýt ostatní",
+    "showAll": "Zobrazit vše",
+    "quit": "Ukončit {{app}}",
+    "exit": "Konec",
+    "file": "Soubor",
+    "newTab": "Nová karta",
+    "closeTab": "Zavřít kartu",
+    "nextTab": "Další karta",
+    "previousTab": "Předchozí karta",
+    "closeWindow": "Zavřít okno",
+    "edit": "Úpravy",
+    "undo": "Zpět",
+    "redo": "Znovu",
+    "cut": "Vyjmout",
+    "copy": "Kopírovat",
+    "paste": "Vložit",
+    "pasteAndMatchStyle": "Vložit a přizpůsobit styl",
+    "delete": "Smazat",
+    "selectAll": "Vybrat vše",
+    "speech": "Řeč",
+    "startSpeaking": "Začít předčítat",
+    "stopSpeaking": "Přestat předčítat",
+    "find": "Najít",
+    "view": "Zobrazení",
+    "actualSize": "Skutečná velikost",
+    "zoomIn": "Zvětšit",
+    "zoomOut": "Zmenšit",
+    "toggleFullScreen": "Celá obrazovka",
+    "window": "Okno",
+    "minimize": "Minimalizovat",
+    "zoom": "Změnit velikost",
+    "bringAllToFront": "Převést vše do popředí",
+    "selectTab": "Karta {{n}}",
+    "learnSpelling": "Naučit se pravopis",
+    "lookUpSelection": "Vyhledat „{selection}“",
+    "searchWithGoogle": "Hledat v Googlu",
+    "saveImage": "Uložit obrázek",
+    "saveImageAs": "Uložit obrázek jako…",
+    "saveVideo": "Uložit video",
+    "saveVideoAs": "Uložit video jako…",
+    "copyLink": "Kopírovat odkaz",
+    "saveLinkAs": "Uložit odkaz jako…",
+    "copyImage": "Kopírovat obrázek",
+    "copyImageAddress": "Kopírovat adresu obrázku",
+    "copyVideoAddress": "Kopírovat adresu videa",
+    "inspect": "Prozkoumat prvek"
   }
 }

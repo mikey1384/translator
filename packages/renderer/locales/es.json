@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "Archivos SRT",
       "mediaFiles": "Archivos de medios",
-      "videoFiles": "Archivos de video"
+      "videoFiles": "Archivos de video",
+      "textFiles": "Archivos de texto",
+      "allFiles": "Todos los archivos",
+      "subtitleFiles": "Archivos de subtítulos"
     },
     "chooseAnotherLocation": "Elegir otra ubicación",
     "continue": "Continuar",
@@ -96,7 +99,20 @@
     "dismiss": "Descartar",
     "moreActions": "Más acciones",
     "installingUpdate": "Instalando actualización...",
-    "installingUpdateShort": "Instalando"
+    "installingUpdateShort": "Instalando",
+    "ok": "Aceptar",
+    "minimumVersionValue": "Versión mínima compatible: v{{version}}",
+    "currentVersionValue": "Versión actual: v{{version}}",
+    "updateNotFoundUseDownloadPage": "No se pudo descargar la actualización desde aquí. Descarga la última versión en la página de descargas.",
+    "whatsNewLead": "Translator se actualizó a la v{{version}}.",
+    "whatsNewNotesInEnglish": "Notas de la versión (en inglés)",
+    "checkForUpdates": "Buscar actualizaciones",
+    "checkingForUpdates": "Buscando actualizaciones…",
+    "upToDate": "Ya tienes la última versión.",
+    "updateAvailableDownloading": "Hay una actualización. Se está descargando en segundo plano.",
+    "updateReadyToInstall": "Actualización descargada. Reinicia para instalarla.",
+    "updateCheckFailed": "No se pudo buscar actualizaciones. Vuelve a intentarlo más tarde.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube solicitó una verificación humana. Haz clic en Conectar para continuar.",
@@ -141,7 +157,60 @@
       "fileTooLarge": "Este audio es demasiado largo para transcribirlo en un solo trabajo (más de unas {{hours}} horas). Divide el video en partes más cortas y transcribe cada una.",
       "elevenLabsKeyRequired": "La transcripción usa ElevenLabs Scribe y necesita una clave API de ElevenLabs. Agrega una en Configuración o desactiva el modo de claves API para transcribir con créditos de Stage5. Tu clave de OpenAI o Anthropic se sigue usando para la traducción.",
       "fileTooLarge_one": "Este audio es demasiado largo para transcribirlo en un solo trabajo (más de {{hours}} hora, aproximadamente). Divide el video en partes más cortas y transcribe cada una."
-    }
+    },
+    "credits": {
+      "transcription": "No hay créditos suficientes para transcribir esto.",
+      "translation": "No hay créditos suficientes para traducir esto.",
+      "dubbing": "No hay créditos suficientes para doblar esto.",
+      "summary": "No hay créditos suficientes para el resumen.",
+      "videoSearch": "No hay créditos suficientes para buscar videos.",
+      "download": "No hay créditos suficientes.",
+      "export": "No hay créditos suficientes.",
+      "other": "No hay créditos suficientes."
+    },
+    "failed": {
+      "transcription": "La transcripción se detuvo por un problema inesperado. Las líneas ya transcritas se conservan.",
+      "translation": "La traducción se detuvo por un problema inesperado. Las líneas ya traducidas se conservan.",
+      "dubbing": "El doblaje se detuvo por un problema inesperado.",
+      "summary": "El resumen se detuvo por un problema inesperado.",
+      "videoSearch": "La búsqueda de videos se detuvo por un problema inesperado.",
+      "export": "La creación del video se detuvo por un problema inesperado.",
+      "other": "Algo salió mal. Vuelve a intentarlo."
+    },
+    "server": {
+      "transcription": "Nuestro servidor tuvo un problema. Vuelve a intentarlo en un minuto.",
+      "translation": "La traducción se detuvo por un problema en nuestro servidor. Las líneas ya traducidas se conservan. Vuelve a intentarlo en un minuto.",
+      "dubbing": "Nuestro servidor tuvo un problema. Vuelve a intentarlo en un minuto.",
+      "summary": "Nuestro servidor tuvo un problema. Vuelve a intentarlo en un minuto.",
+      "videoSearch": "Nuestro servidor tuvo un problema. Vuelve a intentarlo en un minuto.",
+      "export": "Nuestro servidor tuvo un problema. Vuelve a intentarlo en un minuto.",
+      "other": "Nuestro servidor tuvo un problema. Vuelve a intentarlo en un minuto."
+    },
+    "download": {
+      "invalid_url": "Eso no parece un enlace de video. Pega el enlace completo.",
+      "unsupported_site": "Translator no puede descargar videos de este sitio.",
+      "unavailable": "Este video no está disponible. Puede que lo hayan eliminado.",
+      "private": "Este video es privado.",
+      "not_found": "No se encontró ningún video en este enlace.",
+      "region_locked": "Este video no está disponible en tu país.",
+      "audience_restricted": "Este video solo se muestra a algunos usuarios. Si tu cuenta puede verlo, conéctate a este sitio en Configuración y vuelve a intentarlo.",
+      "login_required": "Para ver este video hay que iniciar sesión. Conéctate a este sitio en Configuración y vuelve a intentarlo.",
+      "media_blocked": "El sitio bloqueó la descarga del video y no se pudo recuperar ningún subtítulo.",
+      "access_refused": "Este sitio se negó a entregarle el video a Translator.",
+      "video_data_failed": "No se pudo descargar el video. Puede que esté bloqueado en tu región o que haya que iniciar sesión.",
+      "rate_limited": "YouTube está limitando las descargas desde tu red en este momento. Espera unos minutos y vuelve a intentarlo.",
+      "network": "No se pudo conectar. Revisa tu conexión a internet y vuelve a intentarlo.",
+      "captions_unreadable": "Se encontraron subtítulos de YouTube, pero Translator no pudo leerlos.",
+      "save_failed": "El video se descargó, pero no se pudo guardar. Vuelve a intentarlo.",
+      "downloader_failed": "El descargador de videos no pudo iniciarse. Reinicia Translator y vuelve a intentarlo.",
+      "generic": "No se pudo descargar el video. Vuelve a intentarlo o usa otro enlace.",
+      "subtitlesNotSaved": "No se pudieron guardar tus subtítulos actuales, así que no se abrieron los subtítulos de YouTube.",
+      "openFailed": "El video se descargó, pero no se pudo abrir. Ábrelo desde el historial de descargas."
+    },
+    "network": "No se pudo conectar con el servidor. Revisa tu conexión a internet y vuelve a intentarlo.",
+    "busy": "El servicio está saturado en este momento. Espera un minuto y vuelve a intentarlo.",
+    "diskFull": "Tu disco está lleno. Libera espacio y vuelve a intentarlo.",
+    "cancelDubbingFailedPlain": "No se pudo detener el doblaje. Vuelve a intentarlo."
   },
   "input": {
     "connect": "Conectar",
@@ -176,7 +245,7 @@
     "transcribeOnly": "Transcribir audio",
     "srtLoaded": "Transcripción completada",
     "srtFileLoaded": "SRT cargado",
-    "featuresUnlockAfterTranscription": "Los menús de traducción y otras opciones aparecerán después de que se complete la transcripción.",
+    "featuresUnlockAfterTranscription": "Transcribe, traduce o crea momentos destacados de este video.",
     "preSubtitleActionsHint": "Transcribe, traduce o genera momentos destacados de este video.",
     "saveDubbedVideo": "Guardar video doblado",
     "downloadFinishedSwitchTitle": "¿Ver el video descargado?",
@@ -292,13 +361,13 @@
       "defaultSearchUserMessage": "Encuentra videos para mí ahora.",
       "followUp": {
         "moreLikeQuery": "Encuentra más videos como \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" de otro creador o canal",
+        "differentCreator": "\"{{query}}\" de otro nombre o canal",
         "interviews": "Entrevistas o conversaciones sobre {{query}}",
         "clips": "Lo mejor o clips destacados de {{query}}",
-        "creatorAppearances": "Entrevistas, apariciones en TV o clips en vivo de {{creator}}",
-        "similarCreators": "Creadores o artistas parecidos a {{creator}}",
+        "creatorAppearances": "Entrevistas, apariciones o clips relacionados de {{creator}}",
+        "similarCreators": "Nombres, artistas o canales parecidos a {{creator}}",
         "topicAngle": "{{topic}} explicado desde otro ángulo",
-        "topicCreator": "{{creator}} y videos relacionados con {{topic}}",
+        "topicCreator": "{{creator}} o videos relacionados con {{topic}}",
         "channelStyle": "Videos con un estilo parecido a {{channel}}",
         "moreFromHistory": "Más videos como \"{{title}}\"",
         "channelFromHistory": "Videos de canales como {{channel}}"
@@ -308,12 +377,12 @@
       "moreActions": "Más acciones",
       "recentEvents": "Eventos recientes",
       "cancelFailed": "No se pudo cancelar la búsqueda actual.",
-      "countryGlobal": "Resultados globales",
-      "countryHint": "Déjalo en blanco para resultados globales.",
+      "countryGlobal": "País de destino: inglés por defecto",
+      "countryHint": "Déjalo en blanco para buscar en inglés por defecto.",
       "countryHintDefaultEnglish": "Déjalo en blanco para usar inglés como idioma de búsqueda predeterminado.",
-      "countryLabel": "País / región de destino",
+      "countryLabel": "País de destino",
       "countryPlaceholder": "p. ej. EE. UU., Japón, España, Brasil",
-      "countryScope": "País: {{country}}",
+      "countryScope": "País de destino: {{country}}",
       "countryDefaultEnglish": "País de destino: inglés por defecto",
       "emptyCopy": "Menciona el tema, la audiencia, el estilo del creador o el ambiente del video que buscas. Añade país o recencia solo si hace falta.",
       "emptyEyebrow": "Búsqueda guiada por el asistente",
@@ -336,7 +405,7 @@
       "savedDownloads": "Descargas guardadas",
       "savedDownloadsCount": "{{count}} descargas guardadas",
       "savedPreferencesCount": "{{count}} preferencias guardadas",
-      "searchingLong": "Todavía buscando y clasificando videos...",
+      "searchingLong": "Seguimos buscando videos...",
       "searchingVeryLong": "Está tardando más de lo normal, pero sigue en marcha.",
       "stillWorking": "Todavía trabajando...",
       "toggleCopy": "Busca en YouTube un video fuente sin salir del flujo.",
@@ -357,7 +426,11 @@
       "deleteLocalFileHistoryPending": "El archivo se eliminó, pero Translator no pudo terminar de actualizar el historial de descargas. Lo volverá a intentar automáticamente.",
       "removeHistoryFailed": "No se pudo quitar esta descarga del historial.",
       "storedInAppLibrary": "Guardado en la biblioteca de la aplicación",
-      "savedPreferencesCount_one": "{{count}} preferencia guardada"
+      "savedPreferencesCount_one": "{{count}} preferencia guardada",
+      "freeSearchRunning": "Buscando en YouTube…",
+      "freeSearchResults": "Estos son los resultados de YouTube para “{{query}}”. Esta búsqueda fue gratis. Cuéntame más sobre lo que buscas y la afinaré con IA.",
+      "freeSearchEmpty": "YouTube no encontró nada para “{{query}}”. Describe lo que buscas y buscaré con IA.",
+      "openOriginalPage": "Abrir página original"
     },
     "downloadAndTranslate": "Descargar y traducir",
     "downloadAndTranscribe": "Descargar y transcribir",
@@ -371,7 +444,24 @@
     "captionRecoveryKeepVideo": "Conservar el video actual",
     "captionRecoveryOpenCaptions": "Abrir subtítulos",
     "captionRecoverySwitchPrompt": "Translator recuperó los subtítulos automáticos de YouTube, pero el video de la URL no está disponible. Al abrirlos se desmontará el video actual.",
-    "captionRecoverySwitchTitle": "¿Abrir los subtítulos sin el video actual?"
+    "captionRecoverySwitchTitle": "¿Abrir los subtítulos sin el video actual?",
+    "translateTheseSubtitles": "Traducir estos subtítulos",
+    "subtitlesLoaded": "Subtítulos cargados",
+    "chooseLanguage": "Elige un idioma",
+    "urlRejected": {
+      "collection": "Es un enlace a un canal o una lista de reproducción. Pega el enlace de un solo video o usa Buscar videos.",
+      "live": "Es una transmisión en vivo. Translator podrá descargarla cuando termine."
+    },
+    "longDownload": {
+      "title": "¿Descargar un video largo?",
+      "body": "Este video es largo, así que la descarga puede tardar y ocupar mucho espacio en disco. Con una calidad de descarga más baja, será más rápida y ocupará menos.",
+      "duration": "Duración: {{duration}}",
+      "size": "Aprox. {{size}}",
+      "confirm": "Descargar"
+    },
+    "dropWhileDownloading": "Hay una descarga en curso. Suelta el archivo de nuevo cuando termine.",
+    "dropWhileBusy": "Translator está trabajando en este video. Suelta el archivo de nuevo cuando termine.",
+    "dropNotSupported": "Suelta un video, un archivo de audio o un archivo de subtítulos .srt."
   },
   "subtitles": {
     "outputLanguage": "Idioma de salida",
@@ -394,32 +484,48 @@
     "translateEstimateByo": "Clave BYO",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "¿Estás seguro de que quieres cancelar el proceso de traducción de subtítulos? Se perderá todo el progreso y tendrás que empezar de nuevo.",
-    "dubCostHint": "Voz de ElevenLabs: ~{{rate}} créditos por minuto de voz. Esta estimación se muestra antes de empezar el doblaje."
+    "dubCostHint": "Voz de ElevenLabs: ~{{rate}} créditos por minuto de voz. Esta estimación se muestra antes de empezar el doblaje.",
+    "unreadableCues_one": "No se pudo leer {{count}} línea de este archivo y se omitió. Revisa su código de tiempo.",
+    "unreadableCues_many": "No se pudieron leer {{count}} de líneas de este archivo y se omitieron. Revisa sus códigos de tiempo.",
+    "unreadableCues": "No se pudieron leer {{count}} líneas de este archivo y se omitieron. Revisa sus códigos de tiempo.",
+    "addCreditsToTranslate": "Añadir créditos para traducir",
+    "dubInto": "Doblar al {{language}}",
+    "dubIntro": "Una voz lee los subtítulos en el idioma que elijas, sobre el sonido de fondo original.",
+    "dubNeedsSubtitles": "El doblaje lee los subtítulos en voz alta, así que este video necesita subtítulos primero. Transcríbelo y luego elige una voz aquí.",
+    "dubLanguageLabel": "Idioma de la voz",
+    "dubSameLanguage": "Los subtítulos ya están en {{language}}, así que la voz los lee tal cual.",
+    "dubTranslatesFirst": "Primero se traducen los subtítulos al {{language}} y luego se les pone voz.",
+    "dubCostWithTranslation": "Traducción y voz: {{cost}}",
+    "dubUsesOwnKeys": "Usa tus propias claves de API.",
+    "dubNotEnoughCredits": "No hay créditos suficientes para este doblaje.",
+    "addCreditsToDub": "Añadir créditos para doblar",
+    "noSubtitlesToDub": "Crea o abre subtítulos para este video y luego dóblalo.",
+    "noSubtitlesToTranslate": "Abre o crea subtítulos y luego tradúcelos."
   },
   "summary": {
-    "title": "Resumen de la transcripción",
-    "ctaHelper": "Genera una vista general detallada. Los videos largos pueden tardar un momento.",
-    "languageLabel": "Idioma del resumen",
+    "title": "Momentos destacados",
+    "ctaHelper": "Encuentra los mejores momentos.",
+    "languageLabel": "Idioma del resultado",
     "tab": {
       "summary": "Resumen",
-      "sections": "Notas detalladas",
+      "sections": "Notas",
       "highlights": "Momentos destacados"
     },
-    "generate": "Generar resumen",
-    "regenerate": "Regenerar resumen",
+    "generate": "Crear momentos destacados",
+    "regenerate": "Volver a crear destacados",
     "estimateCredits": "{{credits}} créditos",
     "estimateByo": "Clave BYO",
     "highEffortBadge": "(profundo)",
     "placeholder": "Tu resumen con IA aparecerá aquí cuando se genere.",
-    "insufficientCredits": "No hay créditos suficientes para ejecutar el resumen.",
-    "error": "No pudimos crear el resumen. {{message}}",
+    "insufficientCredits": "No hay créditos suficientes para crear momentos destacados.",
+    "error": "No pudimos crear los momentos destacados. {{message}}",
     "cancel": "Cancelar",
     "copy": "Copiar resumen",
     "copied": "¡Copiado!",
     "copyError": "No se pudo copiar el resumen al portapapeles.",
-    "noHighlights": "Aún no hay destacados. Genera para detectar momentos clave.",
+    "noHighlights": "Aún no hay destacados. Créalos para encontrar los mejores momentos.",
     "noVideoForHighlights": "Abre el video original para recortar clips destacados.",
-    "summaryRequiredForHighlights": "Genera un resumen de la transcripción antes de cortar clips destacados.",
+    "summaryRequiredForHighlights": "Crea los destacados para analizar primero la transcripción.",
     "highlight": "Destacado",
     "cutHighlightClip": "Cortar este clip destacado",
     "cuttingHighlightClip": "Cortando…",
@@ -427,8 +533,8 @@
     "clipFormat": "Formato del clip:",
     "originalFormat": "Formato original",
     "originalFormatDesc": "Mantener las dimensiones originales del video",
-    "verticalFormat": "Vertical 9:16",
-    "verticalFormatDesc": "Optimizado para YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFormat": "Reencuadre para Shorts",
+    "verticalFormatDesc": "Recorta y reencuadra para YouTube Shorts, TikTok y Reels (9:16)",
     "verticalFitFormat": "Ajuste para Shorts",
     "verticalFitFormatDesc": "Ajusta el marco original dentro de un lienzo 9:16",
     "downloadHighlight": "Descargar clip",
@@ -442,16 +548,18 @@
     "sectionHeading": "Sección {{index}}",
     "highlightsInProgress": "Preparando clips destacados…",
     "status": {
-      "preparing": "Preparando transcripción…",
-      "chunk": "Resumiendo sección {{current}}/{{total}}",
-      "selectingHighlights": "Seleccionando momentos destacados…",
+      "preparing": "Analizando la transcripción…",
+      "chunk": "Escribiendo resumen {{current}}/{{total}}",
+      "selectingHighlights": "Eligiendo momentos destacados…",
       "cuttingHighlight": "Recortando destacado {{current}}/{{total}}…",
       "cuttingHighlights": "Recortando clips destacados…",
-      "synthesizing": "Sintetizando resumen completo…",
-      "ready": "Resumen listo",
-      "error": "Error en el resumen",
-      "cancelled": "Resumen cancelado",
-      "inProgress": "Generando resumen…"
+      "synthesizing": "Terminando…",
+      "ready": "Destacados listos",
+      "error": "Error en los destacados",
+      "cancelled": "Destacados cancelados",
+      "inProgress": "Creando momentos destacados…",
+      "cuttingClip": "Cortando el clip…",
+      "renderingClipSubtitles": "Añadiendo subtítulos al clip…"
     },
     "combineMode": "Combinar",
     "exitCombineMode": "Salir de combinar",
@@ -464,7 +572,31 @@
     "combinedCutFailed": "Error al cortar destacados combinados: {{message}}",
     "highlightsInsufficientCredits": "Resumen generado, pero la extracción de momentos destacados se detuvo porque se agotaron los créditos.",
     "highlightsPartialWarning": "La extracción de momentos destacados fue parcial. Estos momentos pueden estar incompletos. Vuelve a generarlos para actualizarlos.",
-    "highlightsPartialWithReason": "Resumen generado, pero la extracción de momentos destacados fue parcial: {{message}}"
+    "highlightsPartialWithReason": "Resumen generado, pero la extracción de momentos destacados fue parcial: {{message}}",
+    "estimateOwnKey": "Usa tu clave de API",
+    "generateSummary": "Resumir",
+    "regenerateSummary": "Resumir de nuevo",
+    "showingSavedLanguage": "Se muestra el resultado guardado en {{language}}. Haz clic en el botón para crear uno en {{current}}.",
+    "showingSavedVariant": "Se muestra el resultado guardado en {{language}}, hecho con otra calidad de resumen. Haz clic en el botón para crear uno nuevo.",
+    "noSummaryYet": "Aún no hay resumen. Elige el idioma y haz clic en Resumir para ver las ideas principales de este video.",
+    "noSummaryWithHighlights": "Estos momentos destacados llegaron sin resumen. Haz clic en Resumir para crear uno.",
+    "clipCaptionsChanged": "Los subtítulos cambiaron desde que se cortó este clip.",
+    "recutClip": "Volver a cortar",
+    "cutCombinedCount": "Cortar {{count}} juntos",
+    "cutCombinedCount_one": "Cortar {{count}}",
+    "cutCombinedCount_many": "Cortar {{count}} juntos",
+    "cutHighlightFailed": "No se pudo cortar el clip: {{message}}",
+    "clipError": {
+      "busy": "Espera a que termine la tarea actual y luego corta el clip.",
+      "noHighlight": "Primero elige un momento destacado.",
+      "editorialSingle": "Corta cada Short con estilo por separado, en Reencuadre para Shorts.",
+      "editorialStale": "Los subtítulos de este Short cambiaron. Abre “Dar estilo a este Short”, revísalo y guárdalo; luego vuelve a cortar.",
+      "noTranscript": "Abre los subtítulos de este video antes de cortar un clip.",
+      "noCues": "Esta parte del video no tiene subtítulos.",
+      "untranslated": "Algunas líneas de este clip aún no están traducidas. Tradúcelas o cambia la visualización de subtítulos para mostrar el original.",
+      "subtitlesNotSaved": "El clip se cortó, pero no se pudieron guardar sus subtítulos.",
+      "generic": "No se pudo cortar este clip del video. Vuelve a intentarlo."
+    }
   },
   "panel": {
     "new": "nuevo",
@@ -520,7 +652,9 @@
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Texto del subtítulo",
       "confirmRemove": "¿Estás seguro de que quieres eliminar este bloque de subtítulos? Esta acción no se puede deshacer.",
-      "transcribeThisLine": "Transcribir esta línea"
+      "transcribeThisLine": "Transcribir esta línea",
+      "timeEndBeforeStart": "El final tiene que ir después del inicio. La línea mantiene su tiempo anterior.",
+      "timeUnreadable": "Escribe un tiempo como 00:01:23,450 o 1:23.45. La línea mantiene su tiempo anterior."
     },
     "header": {
       "save": "Guardar subtítulos",
@@ -533,6 +667,14 @@
       "styleLabel": "Estilo:",
       "mergeButton": "Fusionar subtítulos",
       "mergingButton": "Fusionando..."
+    },
+    "undo": {
+      "removed": "Línea eliminada.",
+      "inserted": "Línea añadida.",
+      "replaced": "Reemplazado en todas las líneas.",
+      "shifted": "Tiempos desplazados.",
+      "improved": "Línea transcrita de nuevo.",
+      "action": "Deshacer"
     }
   },
   "settings": {
@@ -578,22 +720,22 @@
         "reviewProvider": "Proveedor de revisión",
         "openAiHighEnd": "Revisión avanzada de OpenAI",
         "anthropicHighEnd": "Revisión avanzada de Anthropic",
-        "help": "Activado: incluye fase de revisión (~5× más créditos/tiempo). Desactivado: omite la revisión.",
-        "helpWithEstimate": "La revisión usa ~5× más créditos. Tus créditos: ~{{normalTime}} normal, ~{{hqTime}} HQ.",
-        "helpOn": "<b>5× créditos</b> • Incluye pase de revisión",
-        "helpOff": "Omite el pase de revisión",
-        "helpWithEstimateOn": "<b>5× créditos</b> • Incluye pase de revisión • Saldo: ~{{time}}",
-        "helpWithEstimateOff": "Omite el pase de revisión • Saldo: ~{{time}}"
+        "help": "<b>5× créditos</b> • Añade una fase de revisión para más calidad",
+        "helpWithEstimate": "<b>5× créditos</b> • Tu saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (HQ)",
+        "helpOn": "<b>5× créditos</b> • Borrador con Claude Haiku 5.5 + revisión con Claude Opus 5.5",
+        "helpOff": "<b>1× créditos</b> • Solo borrador con Claude Haiku 5.5",
+        "helpWithEstimateOn": "<b>5× créditos</b> • Borrador con Claude Haiku 5.5 + revisión con Claude Opus 5.5 • Saldo: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× créditos</b> • Solo borrador con Claude Haiku 5.5 • Saldo: ~{{time}}"
       },
       "qualitySummary": {
         "label": "Resumen de alta calidad",
         "modelOn": "Análisis profundo con Claude Opus 5.5 + clips destacados",
         "modelOff": "Análisis estándar con Claude Sonnet 5.5",
         "help": "Activado: análisis profundo + clips destacados con Claude Opus 5.5 (~4× créditos). Desactivado: rápido con Claude Sonnet 5.5.",
-        "helpWithEstimate": "Análisis profundo + clips destacados (~4× créditos). Tus créditos: ~{{normalTime}} normal, ~{{hqTime}} HQ.",
-        "helpOn": "<b>4× créditos</b> • Análisis profundo + clips destacados",
+        "helpWithEstimate": "<b>4× créditos</b> • Tu saldo: ~{{normalTime}} (normal) / ~{{hqTime}} (HQ)",
+        "helpOn": "<b>4× créditos</b> • Análisis profundo con Claude Opus 5.5 + clips destacados",
         "helpOff": "Análisis rápido con Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× créditos</b> • Análisis profundo + clips destacados • Saldo: ~{{time}}",
+        "helpWithEstimateOn": "<b>4× créditos</b> • Análisis profundo con Claude Opus 5.5 + clips destacados • Saldo: ~{{time}}",
         "helpWithEstimateOff": "Análisis rápido con Claude Sonnet 5.5 • Saldo: ~{{time}}"
       },
       "qualityDubbing": {
@@ -614,7 +756,10 @@
         "perHour": "~{{credits}} créditos/hora",
         "perMinute": "~{{credits}} créditos/min",
         "perSearch": "~{{credits}} créditos/búsqueda",
-        "balance": "Saldo: ~{{time}}"
+        "balance": "Saldo: ~{{time}}",
+        "minutesPerHour": "~{{time}} de tus minutos por hora de video",
+        "minutesPerDubMinute": "~{{time}} de tus minutos por minuto de doblaje",
+        "minutesPerSearch": "~{{time}} de tus minutos por búsqueda"
       }
     },
     "dubbing": {
@@ -682,7 +827,9 @@
       "economicsBody": "Los créditos de Stage5 priorizan la conveniencia (sin configuración). BYO paga directamente a los proveedores—generalmente ~30–50% más barato según tu paquete.",
       "encryptionUnavailable": "El almacenamiento seguro no está disponible en este sistema. No se pueden guardar claves API.",
       "checkoutOpen": "Pago abierto en el navegador…",
-      "checkoutOpenHint": "Completa el pago en tu navegador. Desbloquearemos BYO automáticamente cuando se confirme el pago."
+      "checkoutOpenHint": "Completa el pago en tu navegador. Desbloquearemos BYO automáticamente cuando se confirme el pago.",
+      "entitlementsLoadFailed": "No se pudo comprobar el estado de tu desbloqueo. Revisa tu conexión y vuelve a intentarlo.",
+      "unlockFailed": "No se pudo iniciar el pago. Revisa tu conexión y vuelve a intentarlo."
     },
     "byoPreferences": {
       "title": "Preferencias de proveedor",
@@ -798,7 +945,8 @@
       "saved": "Clave API guardada.",
       "cleared": "Clave API borrada.",
       "invalid": "La validación de la clave API falló.",
-      "howToGet": "Cómo obtener esta clave"
+      "howToGet": "Cómo obtener esta clave",
+      "missing": "Primero pega una clave de API."
     },
     "byoStack": {
       "title": "Tu stack de IA"
@@ -834,7 +982,13 @@
         "desktopConnected": "Translator se añadió a Claude Desktop. Cierra Claude y vuelve a abrirlo para cargarlo.",
         "cliNotFound": "No se encontró el comando {{app}} en este ordenador. Ejecuta esto en una terminal:",
         "cliNotFoundCopied": "No se encontró el comando {{app}} en este ordenador. Se copió el comando de configuración; pégalo en una terminal:",
-        "failed": "No se pudo conectar {{app}}: {{message}}"
+        "failed": "No se pudo conectar {{app}}: {{message}}",
+        "details": "Detalles",
+        "failedConfigInvalid": "No se pudo conectar {{app}}: su archivo de configuración no es válido, así que Translator no lo tocó. Corrige o elimina el archivo y vuelve a intentarlo.",
+        "failedWrite": "No se pudo conectar {{app}}: Translator no pudo escribir su archivo de configuración.",
+        "failedLauncher": "Conectar {{app}} solo funciona en la app Translator instalada.",
+        "failedCli": "No se pudo conectar {{app}} automáticamente. Ejecuta esto en una terminal:",
+        "failedGeneric": "No se pudo conectar {{app}}. Vuelve a intentarlo."
       },
       "status": {
         "enabled": "Activado",
@@ -891,11 +1045,20 @@
       "receivedByo": "El desbloqueo de clave de API está activo en este ordenador.",
       "expires_one": "Este código funciona una sola vez y caduca en {{minutes}} minuto.",
       "summaryCredits_one": "Se moverá {{credits}} crédito.",
-      "received_one": "Se recibió {{credits}} crédito."
+      "received_one": "Se recibió {{credits}} crédito.",
+      "errors": {
+        "nothing_to_transfer": "Todavía no hay nada que mover: este ordenador no tiene créditos comprados ni desbloqueo de clave de API. Para traer créditos desde otro ordenador, elige “Recibir créditos”.",
+        "too_many_codes": "Se generaron demasiados códigos de transferencia en la última hora. Vuelve a intentarlo dentro de un rato.",
+        "jobs_running": "Hay una transcripción o traducción en curso. Vuelve a intentarlo cuando termine.",
+        "invalid_code": "Ese código no es válido, ya se usó o caducó. Genera uno nuevo en el otro ordenador.",
+        "same_device": "Escribe el código en el otro ordenador, no en el que lo generó.",
+        "network_error": "No se pudo conectar con el servidor de Stage5. Revisa tu conexión y vuelve a intentarlo.",
+        "transfer_failed": "No se pudieron mover los créditos. Revisa tu conexión y vuelve a intentarlo."
+      }
     }
   },
   "credits": {
-    "title": "Horas de uso de IA",
+    "title": "Créditos de IA",
     "loading": "Cargando...",
     "credits": "créditos",
     "usingApiKey": "Usando clave de API",
@@ -934,7 +1097,9 @@
     "dubbingNote": "Traducir con tus minutos cuesta cerca de un 10 % más por minuto; el doblaje, más.",
     "iCancelledCheckout": "Cancelé el pago",
     "checkoutStartFailed": "No se pudo iniciar el pago. Revisa tu conexión y vuelve a intentarlo.",
-    "monthlyFreeNote_one": "{{minutes}} minuto gratis cada mes · el próximo, el {{date}}"
+    "monthlyFreeNote_one": "{{minutes}} minuto gratis cada mes · el próximo, el {{date}}",
+    "loadFailed": "No se pudo cargar tu saldo. Revisa tu conexión y vuelve a intentarlo.",
+    "estimateAmount": "{{credits}} créditos"
   },
   "cta": {
     "generate": {
@@ -969,7 +1134,12 @@
     "useThisVideo": "Usar este video",
     "useDownloadedVideo": "Usar este video",
     "useOriginalAudio": "Usar audio original",
-    "useDubbedAudio": "Usar audio doblado"
+    "useDubbedAudio": "Usar audio doblado",
+    "changeVideoKeepSubtitles": "Mantener los subtítulos actuales en el nuevo video (si es otra copia del mismo video). Desmárcalo si es un video distinto.",
+    "mute": "Silenciar (M)",
+    "unmute": "Activar sonido (M)",
+    "volume": "Volumen",
+    "unreadableFile": "Translator no puede leer este archivo. Puede que esté dañado o en un formato no compatible."
   },
   "admin": {
     "title": "Administrador",
@@ -1066,7 +1236,7 @@
       "localSourceReady": "Archivo local listo",
       "webSourceReady": "Fuente web lista",
       "sourceReadyDescription": "Tu contenido seleccionado está listo para el siguiente paso.",
-      "transcribeTitle": "Crear transcripción",
+      "transcribeTitle": "Procesar video",
       "processVideoTitle": "Procesar video",
       "transcribeDescription": "Convierte el contenido fuente en una pista de subtítulos editable antes de pasar a traducción o doblaje.",
       "translateDubTitle": "Traducir o doblar",
@@ -1093,7 +1263,11 @@
     "nextMatchAria": "Siguiente coincidencia",
     "previousMatchAria": "Coincidencia anterior",
     "replaceAllAria": "Reemplazar todo",
-    "closeAria": "Cerrar barra de búsqueda"
+    "closeAria": "Cerrar barra de búsqueda",
+    "matchCount": "{{current}} de {{total}}",
+    "matchCase": "Distinguir mayúsculas",
+    "wholeWord": "Palabra completa",
+    "showReplace": "Reemplazar"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1145,7 +1319,32 @@
       "neverHadMessage": "La transcripción requiere créditos o el desbloqueo de clave de API. Consigue cualquiera de los dos en Configuración. Traducir con tu propio Claude o Codex mediante Control de agentes es gratis.",
       "notEnoughTitle": "No tienes suficientes créditos para este video",
       "notEnoughTranscriptionMessage": "Transcribir este video requiere unos {{required}} créditos. Tienes {{available}}, suficientes para unos {{minutes}} minutos. Añade créditos y vuelve a empezar.",
-      "notEnoughMessage": "Esta tarea necesita más créditos que tu saldo de {{available}}. Añade créditos para continuar."
+      "notEnoughMessage": "Esta tarea necesita más créditos que tu saldo de {{available}}. Añade créditos para continuar.",
+      "task": {
+        "transcription": {
+          "title": "Transcribir requiere créditos",
+          "message": "Tu saldo no alcanza para transcribir esto. Añade créditos y vuelve a empezar. Las líneas ya transcritas se conservan."
+        },
+        "translation": {
+          "title": "Traducir requiere créditos",
+          "message": "Tu saldo no alcanza para traducir esto. Añade créditos y vuelve a intentarlo. Las líneas ya traducidas se conservan. Traducir con tu propio Claude o Codex mediante Control de agentes es gratis."
+        },
+        "dubbing": {
+          "title": "Doblar requiere créditos",
+          "message": "Tu saldo no alcanza para doblar este video. Añade créditos y vuelve a intentarlo."
+        },
+        "summary": {
+          "title": "El resumen requiere créditos",
+          "message": "Tu saldo no alcanza para el resumen y los momentos destacados. Añade créditos y vuelve a intentarlo."
+        },
+        "videoSearch": {
+          "title": "La búsqueda de videos con IA requiere créditos",
+          "message": "Tu saldo no alcanza para una búsqueda de videos con IA. Añade créditos y vuelve a buscar."
+        },
+        "other": {
+          "title": "Esto requiere créditos"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "¿Empezar el doblaje?",
@@ -1156,7 +1355,58 @@
       "message": "Ya tienes subtítulos abiertos. Guárdalos o descártalos antes de reemplazarlos por los subtítulos automáticos de YouTube.",
       "saveAndOpen": "Guardar y abrir subtítulos",
       "title": "¿Abrir los subtítulos automáticos recuperados?"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "¿Guardar primero los cambios en los subtítulos?",
+      "message": "Cambiaste estos subtítulos desde la última vez que los guardaste. ¿Quieres guardar los cambios antes de reemplazarlos?",
+      "saveAndContinue": "Guardar y continuar",
+      "discardAndContinue": "Descartar cambios y continuar"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "Hay una transcripción en curso.",
+        "translation": "Hay una traducción en curso.",
+        "dubbing": "Hay un doblaje en curso.",
+        "export": "Hay una exportación de video en curso.",
+        "summary": "Se está escribiendo un resumen.",
+        "download": "Hay una descarga en curso.",
+        "highlight": "Se están creando clips destacados.",
+        "search": "Hay una búsqueda de videos en curso.",
+        "generic": "Hay una tarea en curso."
+      },
+      "unsavedLine": "Hay cambios sin guardar en los subtítulos.",
+      "unsavedMessage": "Estos subtítulos tienen cambios sin guardar.",
+      "tabUnsavedDetail": "¿Guardarlos antes de cerrar la pestaña?",
+      "tabUnsavedWithJobDetail": "Si cierras la pestaña, la tarea se detiene. ¿Guardar antes los cambios en los subtítulos?",
+      "tabJobDetail": "Si cierras la pestaña, se detiene y se pierde lo hecho hasta ahora.",
+      "quitMessage": "¿Salir de {{app}}? Hay trabajo sin terminar.",
+      "windowMessage": "¿Cerrar la ventana? Hay trabajo sin terminar.",
+      "tabLine": "{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "Las tareas en curso se detendrán. ¿Guardar antes los cambios en los subtítulos?",
+      "jobsDetail": "Las tareas en curso se detendrán y se perderá lo hecho hasta ahora.",
+      "saveAndClose": "Guardar y cerrar",
+      "saveAndQuit": "Guardar y salir",
+      "closeWithoutSaving": "Cerrar sin guardar",
+      "quitWithoutSaving": "Salir sin guardar",
+      "stopAndClose": "Detener y cerrar",
+      "quitAnyway": "Salir de todos modos",
+      "closeAnyway": "Cerrar de todos modos",
+      "saveFailed": "No se pudieron guardar los subtítulos de {{title}}, así que no se cerró nada. Guárdalos desde el editor y vuelve a intentarlo.",
+      "ok": "Aceptar"
+    },
+    "exportSaveDialogTitle": "Guardar video como",
+    "exportVideoFilterName": "Video MP4",
+    "exportDiscardConfirm": "Tu video está listo, pero todavía no se guardó. ¿Descartarlo?",
+    "exportChooseLocationButton": "Elegir dónde guardarlo…",
+    "exportDiscardButton": "Descartar video",
+    "exportSaveFailed": "No se pudo guardar el video en {{folder}}.",
+    "exportSaveFailedPermission": "No tienes permiso para guardar en esta carpeta.",
+    "exportSaveFailedDiskFull": "No hay suficiente espacio libre en esa unidad.",
+    "exportSaveFailedGeneric": "No se pudo escribir el archivo en esa ubicación.",
+    "exportSameAsSource": "Eso reemplazaría el video original. Elige otro nombre.",
+    "keepDubbing": "Seguir doblando",
+    "stopDubbing": "Detener el doblaje",
+    "cancelDubbingBody": "Se descartará el audio doblado hasta ahora."
   },
   "progress": {
     "preparingVideoExport": "Preparando la exportación de vídeo…",
@@ -1169,12 +1419,12 @@
     "extractingAudio": "Extrayendo audio...",
     "transcribingOf": "Transcribiendo {{done}}/{{total}}",
     "error": "Error",
-    "transcribedChunks": "Transcrito y limpiado {{done}}/{{total}} fragmentos",
+    "transcribedChunks": "Transcritos {{done}}/{{total}} fragmentos",
     "transcribingElevenLabs": "Transcribiendo con ElevenLabs (~{{minutes}} min restantes)",
     "transcribingElevenLabsHours": "Transcribiendo con ElevenLabs (~{{hours}}h {{minutes}}m restantes)",
     "transcribingElevenLabsFinishing": "Transcribiendo con ElevenLabs...",
     "transcriptionRetry": "Conexión fallida, reintentando ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "Subiendo audio para transcripción...",
+    "transcribingR2Upload": "Subiendo audio…",
     "gapRepair": "Reparación de huecos #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparando subtítulos faltantes (Iteración {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Limpiando subtítulos ({{done}}/{{total}})",
@@ -1246,7 +1496,18 @@
       "voiceTrackReady": "Pista de voz lista",
       "writingSummary": "Escribiendo el resumen…",
       "preparingDubLines_one": "Preparando {{count}} línea para el doblaje…",
-      "preparingVoiceClips_one": "Preparando {{count}} clip de voz…"
+      "preparingVoiceClips_one": "Preparando {{count}} clip de voz…",
+      "completed": "Listo",
+      "cancelled": "Cancelado",
+      "cancelling": "Cancelando…",
+      "failed": "Algo salió mal",
+      "downloading": "Descargando…",
+      "downloadingAudio": "Descargando audio…",
+      "transcribingLine": "Transcribiendo la línea…",
+      "startingExport": "Preparando el video…",
+      "captionsAvailable": "No se pudo descargar el video, pero hay subtítulos de YouTube disponibles",
+      "captionsNotOpened": "Los subtítulos de YouTube están listos, pero no se abrieron",
+      "insufficientCredits": "Créditos insuficientes"
     },
     "listening": "Escuchando el video…",
     "mergeFinishSaveBeforeReload": "Termina de guardar el video combinado antes de recargar.",
@@ -1254,7 +1515,8 @@
     "mergeWaitForCancelBeforeReload": "Espera a que termine la cancelación de la combinación antes de recargar.",
     "preparingTranscription": "Preparándose para escuchar…",
     "restartingTranscription": "Reiniciando la transcripción…",
-    "resumingTranscription": "Retomando desde donde se quedó…"
+    "resumingTranscription": "Retomando desde donde se quedó…",
+    "hqModeEstimate": "(alta calidad: ~{{time}})"
   },
   "messages": {
     "fileSaved": "Archivo guardado:\n{{path}}",
@@ -1277,7 +1539,23 @@
     "sendReport": "Enviar informe",
     "reportPrompt": "Algo salió mal. Reporta esto al creador para una solución rápida.",
     "preparingReport": "Preparando paquete de diagnóstico...",
-    "reportContextWarning": "No se pudo cargar parte del contexto de diagnóstico. El informe seguirá incluyendo detalles de esta aplicación."
+    "reportContextWarning": "No se pudo cargar parte del contexto de diagnóstico. El informe seguirá incluyendo detalles de esta aplicación.",
+    "reportPromptTask": {
+      "transcription": "La transcripción se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "translation": "La traducción se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "dubbing": "El doblaje se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "summary": "El resumen se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "videoSearch": "La búsqueda de videos se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "download": "La descarga del video falló por un motivo que no reconocemos. Envía este informe para que podamos solucionarlo.",
+      "export": "La creación del video se detuvo por un problema inesperado. Envía este informe para que podamos solucionarlo.",
+      "other": "Algo salió mal. Envía este informe para que podamos solucionarlo."
+    },
+    "feedbackTitle": "Enviar comentarios o reportar un problema",
+    "whatHappened": "¿Qué pasó o qué te gustaría contarnos?",
+    "attachDiagnostics": "Adjuntar datos de diagnóstico (recomendado si hay un problema)",
+    "attachDiagnosticsHint": "Registros recientes, versión de la app e información del sistema. Sin videos ni subtítulos.",
+    "showDetails": "Ver qué se enviará",
+    "feedbackEmailSubject": "Comentarios sobre Translator"
   },
   "home": {
     "headline": "Cualquier video, en <lang>{{language}}</lang>.",
@@ -1310,7 +1588,9 @@
     "seeAll": "Ver todo",
     "recentSubtitlesReady": "Subtítulos en {{language}} listos",
     "recentSubtitlesReadyGeneric": "Subtítulos listos",
-    "recentDownloaded": "Descargado"
+    "recentDownloaded": "Descargado",
+    "recentLocalFile": "En este equipo",
+    "recentLocalMissing": "Archivo movido o eliminado"
   },
   "workspace": {
     "subtitlesTitle": "Subtítulos",
@@ -1342,7 +1622,30 @@
     "showBoth": "Ambos",
     "textSize": "Tamaño del texto",
     "statusTranscribed_one": "{{count}} línea transcrita",
-    "statusTranslated_one": "{{count}} línea en {{language}} · sincronizada con el video"
+    "statusTranslated_one": "{{count}} línea en {{language}} · sincronizada con el video",
+    "findReplace": "Buscar y reemplazar",
+    "statusReadyPrice": "Listo: subtítulos en {{language}} para este video por {{price}}",
+    "statusReadyPreview": "Listo: tus minutos cubren los primeros {{minutes}} min en {{language}}",
+    "statusReadyPreview_one": "Listo: tus minutos cubren el primer minuto en {{language}}",
+    "statusReadyPreview_many": "Listo: tus minutos cubren los primeros {{minutes}} min en {{language}}",
+    "statusPartlyTranslated": "{{translated}} de {{count}} líneas en {{language}} · {{missing}} sin traducir",
+    "statusPartlyTranslated_one": "{{translated}} de {{count}} línea en {{language}} · {{missing}} sin traducir",
+    "statusPartlyTranslated_many": "{{translated}} de {{count}} de líneas en {{language}} · {{missing}} sin traducir",
+    "statusPartlyTranslatedUnknown": "{{translated}} de {{count}} líneas traducidas · {{missing}} sin traducir",
+    "statusPartlyTranslatedUnknown_one": "{{translated}} de {{count}} línea traducida · {{missing}} sin traducir",
+    "statusPartlyTranslatedUnknown_many": "{{translated}} de {{count}} de líneas traducidas · {{missing}} sin traducir",
+    "statusTranslatedUnknown": "{{count}} líneas traducidas · sincronizadas con el video",
+    "statusTranslatedUnknown_one": "{{count}} línea traducida · sincronizada con el video",
+    "statusTranslatedUnknown_many": "{{count}} de líneas traducidas · sincronizadas con el video",
+    "stopsEarly": "Los subtítulos terminan en {{time}}",
+    "interruptedTranslate": "La traducción de este video al {{language}} se detuvo al cerrarse Translator.",
+    "interruptedTranscribe": "La transcripción de este video se detuvo al cerrarse Translator.",
+    "interruptedResume": "Seguir donde se quedó",
+    "translateMissing": "Traducir al {{language}} las {{count}} líneas que faltan",
+    "translateMissing_one": "Traducir al {{language}} la línea que falta",
+    "translateMissing_many": "Traducir al {{language}} las {{count}} de líneas que faltan",
+    "moreRevealVideo": "Mostrar archivo de video",
+    "chooseAnotherFile": "Elegir otro archivo"
   },
   "subtitleStyles": {
     "Cinema": "Amarillo cine",
@@ -1380,7 +1683,11 @@
     "noneTitle_one": "Este video dura {{total}} minuto.",
     "enoughBody_one": "Tienes minutos suficientes para traducir ya lo que falta ({{remaining}} minuto).",
     "offerBody_one": "Traduce el video completo por {{price}}. Cubre lo que falta ({{remaining}} minuto), y lo que sobre te queda para el próximo video.",
-    "offerBodyLong_one": "El paquete de {{price}} cubre la mayor parte de lo que falta ({{remaining}} minuto)."
+    "offerBodyLong_one": "El paquete de {{price}} cubre la mayor parte de lo que falta ({{remaining}} minuto).",
+    "failedNeedMinutes": "Lo que ya está traducido se conserva. Necesitas más minutos para traducir los {{remaining}} minutos que faltan.",
+    "failedNeedMinutes_one": "Lo que ya está traducido se conserva. Necesitas más minutos para traducir lo que falta ({{remaining}} minuto).",
+    "failedNeedMinutes_many": "Lo que ya está traducido se conserva. Necesitas más minutos para traducir los {{remaining}} de minutos que faltan.",
+    "failedNetwork": "Se cortó la conexión. Lo que ya está traducido se conserva. Vuelve a intentarlo cuando tengas conexión."
   },
   "videoCost": {
     "covered": "Incluido en tus minutos",
@@ -1410,7 +1717,17 @@
     "from": "Desde",
     "to": "hasta",
     "saving": "Guardando…",
-    "save": "Guardar edición del Short"
+    "save": "Guardar edición del Short",
+    "openFailed": "No se pudo abrir este clip para darle estilo. Asegúrate de que el video y sus subtítulos estén abiertos.",
+    "saveFailed": "No se pudo guardar la edición del Short. Comprueba que cada frase tenga texto y que sus tiempos estén dentro del clip.",
+    "previewAt": "Vista previa en {{seconds}} s",
+    "shotPosition": "Toma {{current}} de {{total}}",
+    "phrasesHint": "Frases de subtítulos: para resaltar una palabra, escribe en su casilla la palabra o frase exacta del texto.",
+    "phraseStart": "Inicio de la frase {{index}} (s)",
+    "phraseEnd": "Fin de la frase {{index}} (s)",
+    "phraseText": "Texto de la frase {{index}}",
+    "phraseEmphasis": "Énfasis de la frase {{index}}",
+    "saveNote": "Al guardar, este clip pasa a Reencuadre para Shorts con estas frases como subtítulos, en lugar de tu estilo de subtítulos."
   },
   "subtitleFonts": {
     "label": "Fuente",
@@ -1418,5 +1735,80 @@
     "classic": "Clásica",
     "serif": "Serif",
     "display": "Negrita"
+  },
+  "export": {
+    "exportButton": "Exportar video",
+    "exportingButton": "Exportando…",
+    "progressTitle": "Exportando video",
+    "savedTitle": "Video guardado",
+    "savedIn": "{{file}} en {{folder}}",
+    "showInFinder": "Mostrar en Finder",
+    "showInFolder": "Mostrar en la carpeta",
+    "openVideo": "Abrir video",
+    "failedTitle": "No se pudo exportar el video",
+    "saveTo": "Guardar en",
+    "changeDestination": "Cambiar…",
+    "displayNeedsTranslation": "Traduce los subtítulos para poder mostrar la traducción o ambos.",
+    "error": {
+      "permission": "Translator no pudo escribir los archivos de trabajo del video. Comprueba que tu cuenta pueda escribir en la carpeta temporal y vuelve a intentarlo.",
+      "tools": "No se pudieron preparar las herramientas de exportación de video. Revisa tu conexión a internet y vuelve a intentarlo.",
+      "generic": "Algo salió mal al crear el video. Vuelve a intentarlo."
+    }
+  },
+  "tabs": {
+    "newTab": "Nueva pestaña",
+    "newTabWithShortcut": "Nueva pestaña ({{shortcut}})",
+    "closeTab": "Cerrar pestaña"
+  },
+  "menu": {
+    "about": "Acerca de {{app}}",
+    "services": "Servicios",
+    "hide": "Ocultar {{app}}",
+    "hideOthers": "Ocultar otros",
+    "showAll": "Mostrar todo",
+    "quit": "Salir de {{app}}",
+    "exit": "Salir",
+    "file": "Archivo",
+    "newTab": "Nueva pestaña",
+    "closeTab": "Cerrar pestaña",
+    "nextTab": "Pestaña siguiente",
+    "previousTab": "Pestaña anterior",
+    "closeWindow": "Cerrar ventana",
+    "edit": "Edición",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "cut": "Cortar",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "pasteAndMatchStyle": "Pegar con el mismo estilo",
+    "delete": "Eliminar",
+    "selectAll": "Seleccionar todo",
+    "speech": "Voz",
+    "startSpeaking": "Iniciar locución",
+    "stopSpeaking": "Detener locución",
+    "find": "Buscar",
+    "view": "Visualización",
+    "actualSize": "Tamaño real",
+    "zoomIn": "Ampliar",
+    "zoomOut": "Reducir",
+    "toggleFullScreen": "Activar/desactivar pantalla completa",
+    "window": "Ventana",
+    "minimize": "Minimizar",
+    "zoom": "Zoom",
+    "bringAllToFront": "Traer todo al frente",
+    "selectTab": "Seleccionar pestaña {{n}}",
+    "learnSpelling": "Aprender ortografía",
+    "lookUpSelection": "Consultar “{selection}”",
+    "searchWithGoogle": "Buscar con Google",
+    "saveImage": "Guardar imagen",
+    "saveImageAs": "Guardar imagen como…",
+    "saveVideo": "Guardar video",
+    "saveVideoAs": "Guardar video como…",
+    "copyLink": "Copiar enlace",
+    "saveLinkAs": "Guardar enlace como…",
+    "copyImage": "Copiar imagen",
+    "copyImageAddress": "Copiar dirección de la imagen",
+    "copyVideoAddress": "Copiar dirección del video",
+    "inspect": "Inspeccionar elemento"
   }
 }

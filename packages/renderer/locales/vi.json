@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "Tệp SRT",
       "mediaFiles": "Tệp Media",
-      "videoFiles": "Tệp Video"
+      "videoFiles": "Tệp Video",
+      "textFiles": "Tệp văn bản",
+      "allFiles": "Tất cả tệp",
+      "subtitleFiles": "Tệp phụ đề"
     },
     "chooseAnotherLocation": "Chọn vị trí khác",
     "continue": "Tiếp tục",
@@ -96,7 +99,20 @@
     "dismiss": "Đóng",
     "moreActions": "Thao tác khác",
     "installingUpdate": "Đang cài đặt bản cập nhật...",
-    "installingUpdateShort": "Đang cài đặt"
+    "installingUpdateShort": "Đang cài đặt",
+    "ok": "OK",
+    "minimumVersionValue": "Phiên bản tối thiểu được hỗ trợ: v{{version}}",
+    "currentVersionValue": "Phiên bản hiện tại: v{{version}}",
+    "updateNotFoundUseDownloadPage": "Không thể tải bản cập nhật tại đây. Hãy tải phiên bản mới nhất từ trang tải xuống.",
+    "whatsNewLead": "Translator đã được cập nhật lên v{{version}}.",
+    "whatsNewNotesInEnglish": "Ghi chú phát hành (tiếng Anh)",
+    "checkForUpdates": "Kiểm tra cập nhật",
+    "checkingForUpdates": "Đang kiểm tra cập nhật…",
+    "upToDate": "Bạn đang dùng phiên bản mới nhất.",
+    "updateAvailableDownloading": "Đã có bản cập nhật. Đang tải xuống ở chế độ nền.",
+    "updateReadyToInstall": "Đã tải xong bản cập nhật. Khởi động lại để cài đặt.",
+    "updateCheckFailed": "Không kiểm tra được bản cập nhật. Hãy thử lại sau.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
@@ -140,7 +156,60 @@
       "providerUnavailable": "Chép lời (ElevenLabs Scribe) tạm thời không khả dụng hoặc không thể kết nối sau nhiều lần thử. Vui lòng thử lại sau vài phút.",
       "fileTooLarge": "Âm thanh này quá dài để chép lời trong một lần (hơn khoảng {{hours}} giờ). Hãy chia video thành các phần ngắn hơn và chép lời từng phần.",
       "elevenLabsKeyRequired": "Chép lời dùng ElevenLabs Scribe và cần API key ElevenLabs. Hãy thêm key trong Cài đặt, hoặc tắt chế độ API key để chép lời bằng tín dụng Stage5. API key OpenAI hoặc Anthropic của bạn vẫn được dùng để dịch."
-    }
+    },
+    "credits": {
+      "transcription": "Không đủ tín dụng để chép lời.",
+      "translation": "Không đủ tín dụng để dịch.",
+      "dubbing": "Không đủ tín dụng để lồng tiếng.",
+      "summary": "Không đủ tín dụng để tạo bản tóm tắt.",
+      "videoSearch": "Không đủ tín dụng để tìm video.",
+      "download": "Không đủ tín dụng.",
+      "export": "Không đủ tín dụng.",
+      "other": "Không đủ tín dụng."
+    },
+    "failed": {
+      "transcription": "Quá trình chép lời bị dừng do sự cố ngoài dự kiến. Những dòng đã chép lời vẫn được giữ lại.",
+      "translation": "Quá trình dịch bị dừng do sự cố ngoài dự kiến. Những dòng đã dịch vẫn được giữ lại.",
+      "dubbing": "Quá trình lồng tiếng bị dừng do sự cố ngoài dự kiến.",
+      "summary": "Việc tạo bản tóm tắt bị dừng do sự cố ngoài dự kiến.",
+      "videoSearch": "Việc tìm video bị dừng do sự cố ngoài dự kiến.",
+      "export": "Việc tạo video bị dừng do sự cố ngoài dự kiến.",
+      "other": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
+    "server": {
+      "transcription": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
+      "translation": "Quá trình dịch bị dừng do máy chủ của chúng tôi gặp sự cố. Những dòng đã dịch vẫn được giữ lại. Hãy thử lại sau ít phút.",
+      "dubbing": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
+      "summary": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
+      "videoSearch": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
+      "export": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút.",
+      "other": "Máy chủ của chúng tôi đang gặp sự cố. Hãy thử lại sau ít phút."
+    },
+    "download": {
+      "invalid_url": "Đây có vẻ không phải liên kết video. Hãy dán liên kết đầy đủ.",
+      "unsupported_site": "Translator không tải được video từ trang web này.",
+      "unavailable": "Video này không còn khả dụng. Có thể video đã bị gỡ.",
+      "private": "Video này đang ở chế độ riêng tư.",
+      "not_found": "Không tìm thấy video nào ở liên kết này.",
+      "region_locked": "Video này không khả dụng ở quốc gia của bạn.",
+      "audience_restricted": "Video này chỉ hiển thị với một số người xem. Nếu tài khoản của bạn xem được, hãy kết nối với trang này trong Cài đặt rồi thử lại.",
+      "login_required": "Cần đăng nhập để xem video này. Hãy kết nối với trang này trong Cài đặt rồi thử lại.",
+      "media_blocked": "Trang web đã chặn tải video và không lấy lại được phụ đề nào.",
+      "access_refused": "Trang web này từ chối cung cấp video cho Translator.",
+      "video_data_failed": "Không tải được video. Có thể video bị giới hạn theo khu vực hoặc cần đăng nhập.",
+      "rate_limited": "YouTube đang giới hạn lượt tải từ mạng của bạn. Hãy đợi vài phút rồi thử lại.",
+      "network": "Không kết nối được. Hãy kiểm tra kết nối internet rồi thử lại.",
+      "captions_unreadable": "Đã tìm thấy phụ đề YouTube nhưng Translator không đọc được.",
+      "save_failed": "Đã tải video xong nhưng không lưu được. Hãy thử lại.",
+      "downloader_failed": "Không khởi động được trình tải video. Hãy khởi động lại Translator rồi thử lại.",
+      "generic": "Không tải được video. Hãy thử lại hoặc dùng liên kết khác.",
+      "subtitlesNotSaved": "Không lưu được phụ đề hiện tại nên phụ đề YouTube chưa được mở.",
+      "openFailed": "Đã tải video xong nhưng không mở được. Hãy mở video từ Lịch sử tải xuống."
+    },
+    "network": "Không kết nối được tới máy chủ. Hãy kiểm tra kết nối internet rồi thử lại.",
+    "busy": "Dịch vụ đang bận. Hãy đợi một phút rồi thử lại.",
+    "diskFull": "Ổ đĩa đã đầy. Hãy giải phóng bớt dung lượng rồi thử lại.",
+    "cancelDubbingFailedPlain": "Không dừng được lồng tiếng. Hãy thử lại."
   },
   "input": {
     "connect": "Kết nối",
@@ -175,7 +244,7 @@
     "transcribeOnly": "Chép lời âm thanh",
     "srtLoaded": "Chép lời hoàn tất",
     "srtFileLoaded": "Đã tải SRT",
-    "featuresUnlockAfterTranscription": "Menu dịch và các tùy chọn khác sẽ xuất hiện sau khi chép lời hoàn tất.",
+    "featuresUnlockAfterTranscription": "Chép lời, dịch hoặc tạo điểm nổi bật từ video này.",
     "preSubtitleActionsHint": "Chép lời, dịch hoặc tạo các đoạn nổi bật từ video này.",
     "saveDubbedVideo": "Lưu video lồng tiếng",
     "downloadFinishedSwitchTitle": "Xem video đã tải xuống?",
@@ -291,13 +360,13 @@
       "defaultSearchUserMessage": "Tìm video cho tôi ngay bây giờ.",
       "followUp": {
         "moreLikeQuery": "Tìm thêm video giống \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" từ một nhà sáng tạo hoặc kênh khác",
+        "differentCreator": "\"{{query}}\" từ tên tuổi hoặc kênh khác",
         "interviews": "Phỏng vấn hoặc trò chuyện về {{query}}",
         "clips": "Những đoạn nổi bật hoặc clip đáng chú ý về {{query}}",
-        "creatorAppearances": "Phỏng vấn, lần xuất hiện trên TV hoặc clip trực tiếp của {{creator}}",
-        "similarCreators": "Nhà sáng tạo hoặc nghệ sĩ giống {{creator}}",
+        "creatorAppearances": "Phỏng vấn, lần xuất hiện hoặc clip liên quan của {{creator}}",
+        "similarCreators": "Tên tuổi, nghệ sĩ hoặc kênh tương tự {{creator}}",
         "topicAngle": "{{topic}} được giải thích từ một góc nhìn khác",
-        "topicCreator": "{{creator}} và các video liên quan đến {{topic}}",
+        "topicCreator": "{{creator}} hoặc các video {{topic}} liên quan",
         "channelStyle": "Video có cảm giác tương tự {{channel}}",
         "moreFromHistory": "Thêm video giống \"{{title}}\"",
         "channelFromHistory": "Video từ các kênh như {{channel}}"
@@ -307,12 +376,12 @@
       "moreActions": "Thao tác khác",
       "recentEvents": "Sự kiện gần đây",
       "cancelFailed": "Không thể hủy lần tìm kiếm hiện tại.",
-      "countryGlobal": "Kết quả toàn cầu",
-      "countryHint": "Để trống để xem kết quả toàn cầu.",
+      "countryGlobal": "Quốc gia mục tiêu: mặc định tiếng Anh",
+      "countryHint": "Để trống thì ngôn ngữ tìm kiếm mặc định là tiếng Anh.",
       "countryHintDefaultEnglish": "Để trống để mặc định ngôn ngữ tìm kiếm là tiếng Anh.",
       "countryLabel": "Quốc gia / khu vực mục tiêu",
       "countryPlaceholder": "ví dụ: Mỹ, Nhật Bản, Tây Ban Nha, Brazil",
-      "countryScope": "Quốc gia: {{country}}",
+      "countryScope": "Quốc gia mục tiêu: {{country}}",
       "countryDefaultEnglish": "Quốc gia mục tiêu: mặc định là tiếng Anh",
       "emptyCopy": "Nêu chủ đề, đối tượng, phong cách nhà sáng tạo hoặc sắc thái của video bạn muốn tìm. Chỉ thêm quốc gia hay thời gian khi thật sự cần.",
       "emptyEyebrow": "Khám phá có trợ lý dẫn dắt",
@@ -335,7 +404,7 @@
       "savedDownloads": "Bản tải xuống đã lưu",
       "savedDownloadsCount": "{{count}} bản tải xuống đã lưu",
       "savedPreferencesCount": "{{count}} tùy chọn đã lưu",
-      "searchingLong": "Vẫn đang tìm và xếp hạng video...",
+      "searchingLong": "Vẫn đang tìm video...",
       "searchingVeryLong": "Mất lâu hơn bình thường, nhưng vẫn đang chạy.",
       "stillWorking": "Vẫn đang xử lý...",
       "toggleCopy": "Tìm video nguồn trên YouTube mà không rời khỏi quy trình này.",
@@ -355,7 +424,11 @@
       "removeFromHistoryConfirm": "Xóa mục này khỏi lịch sử tải xuống? Các tệp lưu ngoài thư viện ứng dụng sẽ vẫn còn trên thiết bị.",
       "deleteLocalFileHistoryPending": "Đã xóa tệp, nhưng Translator chưa cập nhật xong lịch sử tải xuống. Ứng dụng sẽ tự động thử lại.",
       "removeHistoryFailed": "Không thể xóa lượt tải này khỏi lịch sử.",
-      "storedInAppLibrary": "Đã lưu trong thư viện ứng dụng"
+      "storedInAppLibrary": "Đã lưu trong thư viện ứng dụng",
+      "freeSearchRunning": "Đang tìm trên YouTube…",
+      "freeSearchResults": "Đây là kết quả YouTube cho “{{query}}”. Lượt tìm này miễn phí. Hãy cho tôi biết thêm bạn muốn gì, tôi sẽ dùng AI để tìm sát hơn.",
+      "freeSearchEmpty": "YouTube không tìm thấy gì cho “{{query}}”. Hãy mô tả điều bạn muốn, tôi sẽ tìm bằng AI.",
+      "openOriginalPage": "Mở trang gốc"
     },
     "downloadAndTranslate": "Tải xuống & dịch",
     "downloadAndTranscribe": "Tải xuống & chép lời",
@@ -369,7 +442,24 @@
     "captionRecoveryKeepVideo": "Giữ video hiện tại",
     "captionRecoveryOpenCaptions": "Mở phụ đề",
     "captionRecoverySwitchPrompt": "Translator đã khôi phục phụ đề tự động của YouTube, nhưng video từ URL không khả dụng. Mở phụ đề sẽ gỡ video hiện tại.",
-    "captionRecoverySwitchTitle": "Mở phụ đề mà không có video hiện tại?"
+    "captionRecoverySwitchTitle": "Mở phụ đề mà không có video hiện tại?",
+    "translateTheseSubtitles": "Dịch phụ đề này",
+    "subtitlesLoaded": "Đã tải phụ đề",
+    "chooseLanguage": "Chọn ngôn ngữ",
+    "urlRejected": {
+      "collection": "Đây là liên kết kênh hoặc danh sách phát. Hãy dán liên kết của một video, hoặc dùng Tìm video.",
+      "live": "Đây là buổi phát trực tiếp. Translator có thể tải về sau khi buổi phát kết thúc."
+    },
+    "longDownload": {
+      "title": "Tải video dài?",
+      "body": "Video này dài nên việc tải có thể mất khá lâu và tốn nhiều dung lượng. Chọn chất lượng tải thấp hơn sẽ nhanh hơn và nhẹ hơn.",
+      "duration": "Thời lượng: {{duration}}",
+      "size": "Khoảng {{size}}",
+      "confirm": "Tải về"
+    },
+    "dropWhileDownloading": "Đang có video được tải xuống. Hãy thả lại tệp khi tải xong.",
+    "dropWhileBusy": "Translator đang xử lý video này. Hãy thả lại tệp khi xử lý xong.",
+    "dropNotSupported": "Hãy thả tệp video, tệp âm thanh hoặc tệp phụ đề .srt."
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
@@ -392,32 +482,46 @@
     "translateEstimateByo": "Khóa BYO",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "Bạn có chắc chắn muốn hủy quá trình dịch phụ đề không? Mọi tiến trình sẽ bị mất và bạn sẽ cần bắt đầu lại.",
-    "dubCostHint": "Giọng ElevenLabs: ~{{rate}} tín dụng mỗi phút lời nói. Ước tính này được hiển thị trước khi bắt đầu lồng tiếng."
+    "dubCostHint": "Giọng ElevenLabs: ~{{rate}} tín dụng mỗi phút lời nói. Ước tính này được hiển thị trước khi bắt đầu lồng tiếng.",
+    "unreadableCues": "Không đọc được {{count}} dòng trong tệp này nên đã bỏ qua. Hãy kiểm tra mã thời gian.",
+    "addCreditsToTranslate": "Nạp tín dụng để dịch",
+    "dubInto": "Lồng tiếng sang {{language}}",
+    "dubIntro": "Một giọng đọc sẽ đọc phụ đề bằng ngôn ngữ bạn chọn, trên nền âm thanh gốc.",
+    "dubNeedsSubtitles": "Lồng tiếng là đọc to phụ đề, nên video này cần có phụ đề trước. Hãy chép lời video rồi chọn giọng tại đây.",
+    "dubLanguageLabel": "Ngôn ngữ giọng đọc",
+    "dubSameLanguage": "Phụ đề đã là {{language}} nên giọng đọc sẽ đọc nguyên văn.",
+    "dubTranslatesFirst": "Phụ đề sẽ được dịch sang {{language}} trước, rồi mới lồng tiếng.",
+    "dubCostWithTranslation": "Dịch và lồng tiếng: {{cost}}",
+    "dubUsesOwnKeys": "Dùng API key của riêng bạn.",
+    "dubNotEnoughCredits": "Không đủ tín dụng để lồng tiếng.",
+    "addCreditsToDub": "Nạp tín dụng để lồng tiếng",
+    "noSubtitlesToDub": "Hãy tạo hoặc mở phụ đề cho video này trước, rồi lồng tiếng.",
+    "noSubtitlesToTranslate": "Hãy mở hoặc tạo phụ đề trước, rồi dịch."
   },
   "summary": {
-    "title": "Tóm tắt bản chép",
-    "ctaHelper": "Tạo tổng quan chi tiết. Video dài có thể mất một lúc để xử lý.",
-    "languageLabel": "Ngôn ngữ tóm tắt",
+    "title": "Điểm nổi bật",
+    "ctaHelper": "Tìm những khoảnh khắc hay nhất.",
+    "languageLabel": "Ngôn ngữ kết quả",
     "tab": {
       "summary": "Tóm tắt",
-      "sections": "Ghi chú chi tiết",
+      "sections": "Ghi chú",
       "highlights": "Điểm nổi bật"
     },
-    "generate": "Tạo tóm tắt",
-    "regenerate": "Tạo lại tóm tắt",
+    "generate": "Tạo điểm nổi bật",
+    "regenerate": "Tạo lại điểm nổi bật",
     "estimateCredits": "{{credits}} tín dụng",
     "estimateByo": "Khóa BYO",
     "highEffortBadge": "(chi tiết)",
     "placeholder": "Tóm tắt AI của bạn sẽ xuất hiện ở đây sau khi được tạo.",
-    "insufficientCredits": "Không đủ tín dụng để chạy tóm tắt.",
-    "error": "Không thể tạo tóm tắt. {{message}}",
+    "insufficientCredits": "Không đủ tín dụng để tạo điểm nổi bật.",
+    "error": "Không thể tạo điểm nổi bật. {{message}}",
     "cancel": "Hủy",
     "copy": "Sao chép tóm tắt",
     "copied": "Đã sao chép!",
     "copyError": "Không thể sao chép tóm tắt vào clipboard.",
-    "noHighlights": "Chưa có highlight. Tạo để phát hiện những khoảnh khắc đáng chú ý.",
+    "noHighlights": "Chưa có điểm nổi bật. Hãy tạo để tìm những khoảnh khắc hay nhất.",
     "noVideoForHighlights": "Mở video nguồn để cắt các clip highlight.",
-    "summaryRequiredForHighlights": "Hãy tạo tóm tắt bản chép lời trước khi cắt clip nổi bật.",
+    "summaryRequiredForHighlights": "Hãy tạo điểm nổi bật để phân tích bản chép lời trước.",
     "highlight": "Highlight",
     "cutHighlightClip": "Cắt đoạn nổi bật này",
     "cuttingHighlightClip": "Đang cắt…",
@@ -425,8 +529,8 @@
     "clipFormat": "Định dạng clip:",
     "originalFormat": "Gốc",
     "originalFormatDesc": "Giữ nguyên kích thước video gốc",
-    "verticalFormat": "Dọc 9:16",
-    "verticalFormatDesc": "Tối ưu cho YouTube Shorts, TikTok, Reels (9:16)",
+    "verticalFormat": "Căn khung Shorts",
+    "verticalFormatDesc": "Cắt và căn lại khung hình cho YouTube Shorts, TikTok, Reels (9:16)",
     "verticalFitFormat": "Vừa Shorts",
     "verticalFitFormatDesc": "Đặt khung hình gốc vừa trong khung 9:16",
     "downloadHighlight": "Tải clip",
@@ -440,16 +544,18 @@
     "sectionHeading": "Phần {{index}}",
     "highlightsInProgress": "Đang chuẩn bị các clip highlight…",
     "status": {
-      "preparing": "Đang chuẩn bị bản chép…",
-      "chunk": "Đang tóm tắt phần {{current}}/{{total}}",
-      "selectingHighlights": "Đang chọn những khoảnh khắc nổi bật…",
+      "preparing": "Đang phân tích bản chép lời…",
+      "chunk": "Đang viết tóm tắt {{current}}/{{total}}",
+      "selectingHighlights": "Đang chọn điểm nổi bật…",
       "cuttingHighlight": "Đang cắt highlight {{current}}/{{total}}…",
       "cuttingHighlights": "Đang cắt các clip highlight…",
-      "synthesizing": "Đang tổng hợp tóm tắt toàn diện…",
-      "ready": "Tóm tắt sẵn sàng",
-      "error": "Tóm tắt thất bại",
-      "cancelled": "Tóm tắt đã hủy",
-      "inProgress": "Đang tạo tóm tắt…"
+      "synthesizing": "Đang hoàn tất…",
+      "ready": "Điểm nổi bật đã sẵn sàng",
+      "error": "Tạo điểm nổi bật thất bại",
+      "cancelled": "Đã hủy tạo điểm nổi bật",
+      "inProgress": "Đang tạo điểm nổi bật…",
+      "cuttingClip": "Đang cắt clip…",
+      "renderingClipSubtitles": "Đang thêm phụ đề vào clip…"
     },
     "combineMode": "Kết hợp",
     "exitCombineMode": "Thoát kết hợp",
@@ -462,7 +568,29 @@
     "combinedCutFailed": "Không thể cắt các highlight kết hợp: {{message}}",
     "highlightsInsufficientCredits": "Đã tạo bản tóm tắt, nhưng việc trích xuất điểm nổi bật dừng lại vì hết tín dụng.",
     "highlightsPartialWarning": "Chỉ trích xuất được một phần điểm nổi bật. Các điểm nổi bật này có thể chưa đầy đủ. Hãy tạo lại để làm mới.",
-    "highlightsPartialWithReason": "Đã tạo bản tóm tắt, nhưng chỉ trích xuất được một phần điểm nổi bật: {{message}}"
+    "highlightsPartialWithReason": "Đã tạo bản tóm tắt, nhưng chỉ trích xuất được một phần điểm nổi bật: {{message}}",
+    "estimateOwnKey": "Dùng API key của bạn",
+    "generateSummary": "Tóm tắt",
+    "regenerateSummary": "Tóm tắt lại",
+    "showingSavedLanguage": "Đang hiện kết quả đã lưu bằng {{language}}. Nhấn nút để tạo bản bằng {{current}}.",
+    "showingSavedVariant": "Đang hiện kết quả đã lưu bằng {{language}}, được tạo ở mức chất lượng tóm tắt khác. Nhấn nút để tạo bản mới.",
+    "noSummaryYet": "Chưa có bản tóm tắt. Chọn ngôn ngữ rồi nhấn Tóm tắt để nắm ý chính của video này.",
+    "noSummaryWithHighlights": "Các điểm nổi bật này chưa có bản tóm tắt đi kèm. Nhấn Tóm tắt để tạo.",
+    "clipCaptionsChanged": "Phụ đề đã thay đổi kể từ khi cắt clip này.",
+    "recutClip": "Cắt lại",
+    "cutCombinedCount": "Cắt gộp {{count}} đoạn",
+    "cutHighlightFailed": "Không cắt được clip: {{message}}",
+    "clipError": {
+      "busy": "Hãy đợi tác vụ hiện tại xong rồi cắt clip.",
+      "noHighlight": "Hãy chọn một điểm nổi bật trước.",
+      "editorialSingle": "Mỗi Short đã tạo kiểu cần được cắt riêng, ở chế độ Căn khung Shorts.",
+      "editorialStale": "Phụ đề trong Short này đã thay đổi. Hãy mở “Tạo kiểu cho Short này”, kiểm tra và lưu, rồi cắt lại.",
+      "noTranscript": "Hãy mở phụ đề của video này trước khi cắt clip.",
+      "noCues": "Đoạn này của video không có phụ đề.",
+      "untranslated": "Một số dòng trong clip này chưa được dịch. Hãy dịch các dòng đó, hoặc chuyển chế độ hiển thị phụ đề sang bản gốc.",
+      "subtitlesNotSaved": "Đã cắt xong clip nhưng không lưu được phụ đề của clip.",
+      "generic": "Không cắt được clip này từ video. Hãy thử lại."
+    }
   },
   "panel": {
     "new": "mới",
@@ -516,7 +644,9 @@
       "originalTextPrefix": "Gốc:",
       "subtitlePlaceholder": "Văn bản phụ đề",
       "confirmRemove": "Bạn có chắc chắn muốn xóa khối phụ đề này không? Hành động này không thể hoàn tác.",
-      "transcribeThisLine": "Chép lời dòng này"
+      "transcribeThisLine": "Chép lời dòng này",
+      "timeEndBeforeStart": "Thời gian kết thúc phải sau thời gian bắt đầu. Dòng này giữ nguyên thời gian cũ.",
+      "timeUnreadable": "Hãy nhập thời gian dạng 00:01:23,450 hoặc 1:23.45. Dòng này giữ nguyên thời gian cũ."
     },
     "header": {
       "save": "Lưu phụ đề",
@@ -529,6 +659,14 @@
       "styleLabel": "Kiểu:",
       "mergeButton": "Gộp Phụ đề",
       "mergingButton": "Đang gộp..."
+    },
+    "undo": {
+      "removed": "Đã xóa dòng.",
+      "inserted": "Đã thêm dòng.",
+      "replaced": "Đã thay thế ở tất cả các dòng.",
+      "shifted": "Đã dời thời gian.",
+      "improved": "Đã chép lời lại dòng này.",
+      "action": "Hoàn tác"
     }
   },
   "settings": {
@@ -575,10 +713,10 @@
         "anthropicHighEnd": "Rà soát cao cấp của Anthropic",
         "help": "<b>5× tín dụng</b> • Thêm giai đoạn rà soát để chất lượng cao hơn",
         "helpWithEstimate": "<b>5× tín dụng</b> • Số dư của bạn: ~{{normalTime}} (thường) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>5× tín dụng</b> • Bao gồm lượt rà soát",
-        "helpOff": "Bỏ qua lượt rà soát",
-        "helpWithEstimateOn": "<b>5× tín dụng</b> • Bao gồm lượt rà soát • Số dư: ~{{time}}",
-        "helpWithEstimateOff": "Bỏ qua lượt rà soát • Số dư: ~{{time}}"
+        "helpOn": "<b>5× tín dụng</b> • Bản nháp Claude Haiku 5.5 + rà soát bằng Claude Opus 5.5",
+        "helpOff": "<b>1× tín dụng</b> • Chỉ bản nháp Claude Haiku 5.5",
+        "helpWithEstimateOn": "<b>5× tín dụng</b> • Bản nháp Claude Haiku 5.5 + rà soát bằng Claude Opus 5.5 • Số dư: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× tín dụng</b> • Chỉ bản nháp Claude Haiku 5.5 • Số dư: ~{{time}}"
       },
       "qualitySummary": {
         "label": "Tóm tắt chất lượng cao",
@@ -586,9 +724,9 @@
         "modelOff": "Phân tích tiêu chuẩn Claude Sonnet 5.5",
         "help": "<b>4× tín dụng</b> • Phân tích sâu + clip nổi bật với Claude Opus 5.5",
         "helpWithEstimate": "<b>4× tín dụng</b> • Số dư của bạn: ~{{normalTime}} (thường) / ~{{hqTime}} (hq)",
-        "helpOn": "<b>4× tín dụng</b> • Phân tích sâu + clip nổi bật",
+        "helpOn": "<b>4× tín dụng</b> • Phân tích sâu bằng Claude Opus 5.5 + clip nổi bật",
         "helpOff": "Phân tích nhanh với Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× tín dụng</b> • Phân tích sâu + clip nổi bật • Số dư: ~{{time}}",
+        "helpWithEstimateOn": "<b>4× tín dụng</b> • Phân tích sâu bằng Claude Opus 5.5 + clip nổi bật • Số dư: ~{{time}}",
         "helpWithEstimateOff": "Phân tích nhanh với Claude Sonnet 5.5 • Số dư: ~{{time}}"
       },
       "qualityDubbing": {
@@ -609,7 +747,10 @@
         "perHour": "~{{credits}} tín dụng/giờ",
         "perMinute": "~{{credits}} tín dụng/phút",
         "perSearch": "~{{credits}} tín dụng/lượt tìm kiếm",
-        "balance": "Số dư: ~{{time}}"
+        "balance": "Số dư: ~{{time}}",
+        "minutesPerHour": "Trừ ~{{time}} cho mỗi giờ video",
+        "minutesPerDubMinute": "Trừ ~{{time}} cho mỗi phút lồng tiếng",
+        "minutesPerSearch": "Trừ ~{{time}} cho mỗi lượt tìm"
       }
     },
     "dubbing": {
@@ -677,7 +818,9 @@
       "economicsBody": "Tín dụng Stage5 tối ưu hóa sự tiện lợi (không cần cài đặt). BYO thanh toán trực tiếp cho nhà cung cấp—thường rẻ hơn ~30–50% tùy thuộc vào gói của bạn.",
       "encryptionUnavailable": "Hệ thống này không có lưu trữ bảo mật. Không thể lưu API key.",
       "checkoutOpen": "Trang thanh toán đang mở trong trình duyệt…",
-      "checkoutOpenHint": "Hoàn tất thanh toán trong trình duyệt. Chúng tôi sẽ tự động mở khóa BYO khi thanh toán được xác nhận."
+      "checkoutOpenHint": "Hoàn tất thanh toán trong trình duyệt. Chúng tôi sẽ tự động mở khóa BYO khi thanh toán được xác nhận.",
+      "entitlementsLoadFailed": "Không kiểm tra được trạng thái mở khóa. Hãy kiểm tra kết nối rồi thử lại.",
+      "unlockFailed": "Không thể bắt đầu thanh toán. Hãy kiểm tra kết nối rồi thử lại."
     },
     "byoPreferences": {
       "title": "Tùy chọn Nhà cung cấp",
@@ -793,7 +936,8 @@
       "saved": "Đã lưu API key.",
       "cleared": "Đã xóa API key.",
       "invalid": "Xác thực API key thất bại.",
-      "howToGet": "Cách lấy key này"
+      "howToGet": "Cách lấy key này",
+      "missing": "Hãy dán API key trước."
     },
     "byoStack": {
       "title": "AI Stack của bạn"
@@ -829,7 +973,13 @@
         "desktopConnected": "Đã thêm Translator vào Claude Desktop. Thoát và mở lại Claude để tải.",
         "cliNotFound": "Không tìm thấy lệnh {{app}} trên máy tính này. Hãy chạy lệnh sau trong terminal:",
         "cliNotFoundCopied": "Không tìm thấy lệnh {{app}} trên máy tính này. Lệnh thiết lập đã được sao chép; hãy dán vào terminal:",
-        "failed": "Không thể kết nối {{app}}: {{message}}"
+        "failed": "Không thể kết nối {{app}}: {{message}}",
+        "details": "Chi tiết",
+        "failedConfigInvalid": "Không thể kết nối {{app}}: tệp cài đặt của ứng dụng này không hợp lệ nên Translator để nguyên. Hãy sửa hoặc xóa tệp đó rồi thử lại.",
+        "failedWrite": "Không thể kết nối {{app}}: Translator không ghi được tệp cài đặt của ứng dụng này.",
+        "failedLauncher": "Chỉ có thể kết nối {{app}} từ ứng dụng Translator đã cài đặt.",
+        "failedCli": "Không thể tự động kết nối {{app}}. Hãy chạy lệnh này trong Terminal:",
+        "failedGeneric": "Không thể kết nối {{app}}. Hãy thử lại."
       },
       "status": {
         "enabled": "Đã bật",
@@ -882,11 +1032,20 @@
       "redeeming": "Đang nhận…",
       "received": "Đã nhận {{credits}} tín dụng.",
       "receivedNoCredits": "Mã đã được áp dụng.",
-      "receivedByo": "Mở khóa API key đã được kích hoạt trên máy tính này."
+      "receivedByo": "Mở khóa API key đã được kích hoạt trên máy tính này.",
+      "errors": {
+        "nothing_to_transfer": "Chưa có gì để chuyển: máy tính này chưa có tín dụng đã mua hay mở khóa API key. Để chuyển tín dụng từ máy tính khác sang đây, hãy chọn “Nhận tín dụng”.",
+        "too_many_codes": "Bạn đã tạo quá nhiều mã chuyển trong giờ này. Hãy thử lại sau một lúc.",
+        "jobs_running": "Đang có tác vụ chép lời hoặc dịch chạy. Hãy thử lại khi tác vụ xong.",
+        "invalid_code": "Mã này sai, đã được dùng hoặc đã hết hạn. Hãy tạo mã mới trên máy tính kia.",
+        "same_device": "Hãy nhập mã trên máy tính kia, không phải máy đã tạo ra mã.",
+        "network_error": "Không kết nối được tới máy chủ Stage5. Hãy kiểm tra kết nối rồi thử lại.",
+        "transfer_failed": "Không chuyển được tín dụng. Hãy kiểm tra kết nối rồi thử lại."
+      }
     }
   },
   "credits": {
-    "title": "Giờ Sử dụng AI",
+    "title": "Tín dụng AI",
     "loading": "Đang tải...",
     "credits": "tín dụng",
     "usingApiKey": "Đang sử dụng API Key",
@@ -923,7 +1082,9 @@
     "checkoutNote": "Thanh toán một lần qua Stripe trên trình duyệt. Không cần tài khoản, không thu phí định kỳ. Số phút sẽ tự được cộng.",
     "dubbingNote": "Dịch bằng tín dụng tốn thêm khoảng 10% mỗi phút; lồng tiếng tốn nhiều hơn.",
     "iCancelledCheckout": "Tôi đã hủy thanh toán",
-    "checkoutStartFailed": "Không thể bắt đầu thanh toán. Hãy kiểm tra kết nối và thử lại."
+    "checkoutStartFailed": "Không thể bắt đầu thanh toán. Hãy kiểm tra kết nối và thử lại.",
+    "loadFailed": "Không tải được số dư. Hãy kiểm tra kết nối rồi thử lại.",
+    "estimateAmount": "{{credits}} tín dụng"
   },
   "cta": {
     "generate": {
@@ -958,7 +1119,12 @@
     "useThisVideo": "Dùng video này",
     "useDownloadedVideo": "Dùng video này",
     "useOriginalAudio": "Dùng âm thanh gốc",
-    "useDubbedAudio": "Dùng âm thanh lồng tiếng"
+    "useDubbedAudio": "Dùng âm thanh lồng tiếng",
+    "changeVideoKeepSubtitles": "Giữ phụ đề hiện tại cho video mới (khi đó là một bản khác của cùng video). Bỏ chọn nếu là video khác.",
+    "mute": "Tắt tiếng (M)",
+    "unmute": "Bật tiếng (M)",
+    "volume": "Âm lượng",
+    "unreadableFile": "Translator không đọc được tệp này. Tệp có thể bị hỏng hoặc ở định dạng chưa được hỗ trợ."
   },
   "admin": {
     "title": "Quản trị viên",
@@ -1055,7 +1221,7 @@
       "localSourceReady": "Tệp cục bộ đã sẵn sàng",
       "webSourceReady": "Nguồn web đã sẵn sàng",
       "sourceReadyDescription": "Media bạn chọn đã sẵn sàng cho bước tiếp theo.",
-      "transcribeTitle": "Tạo bản chép lời",
+      "transcribeTitle": "Xử lý video",
       "processVideoTitle": "Xử lý video",
       "transcribeDescription": "Chuyển media nguồn thành một track phụ đề có thể chỉnh sửa trước khi sang bước dịch hoặc lồng tiếng.",
       "translateDubTitle": "Dịch hoặc lồng tiếng",
@@ -1082,7 +1248,11 @@
     "nextMatchAria": "Kết quả tiếp theo",
     "previousMatchAria": "Kết quả trước",
     "replaceAllAria": "Thay thế tất cả",
-    "closeAria": "Đóng thanh tìm kiếm"
+    "closeAria": "Đóng thanh tìm kiếm",
+    "matchCount": "{{current}}/{{total}}",
+    "matchCase": "Phân biệt hoa thường",
+    "wholeWord": "Khớp nguyên từ",
+    "showReplace": "Thay thế"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1134,7 +1304,32 @@
       "neverHadMessage": "Phiên âm cần tín dụng hoặc mở khóa API key. Bạn có thể nhận một trong hai trong Cài đặt. Dịch bằng Claude hoặc Codex của riêng bạn thông qua Điều khiển tác nhân là miễn phí.",
       "notEnoughTitle": "Không đủ tín dụng cho video này",
       "notEnoughTranscriptionMessage": "Chép lời video này cần khoảng {{required}} tín dụng. Bạn có {{available}}, đủ cho khoảng {{minutes}} phút. Hãy nạp thêm tín dụng rồi bắt đầu lại.",
-      "notEnoughMessage": "Tác vụ này cần nhiều tín dụng hơn số dư {{available}} của bạn. Hãy nạp thêm tín dụng để tiếp tục."
+      "notEnoughMessage": "Tác vụ này cần nhiều tín dụng hơn số dư {{available}} của bạn. Hãy nạp thêm tín dụng để tiếp tục.",
+      "task": {
+        "transcription": {
+          "title": "Cần tín dụng để chép lời",
+          "message": "Số dư không đủ để chép lời phần này. Hãy nạp thêm tín dụng rồi bắt đầu lại. Những dòng đã chép lời vẫn được giữ lại."
+        },
+        "translation": {
+          "title": "Cần tín dụng để dịch",
+          "message": "Số dư không đủ để dịch phần này. Hãy nạp thêm tín dụng rồi thử lại. Những dòng đã dịch vẫn được giữ lại. Dịch bằng Claude hoặc Codex của riêng bạn qua Điều khiển tác nhân thì miễn phí."
+        },
+        "dubbing": {
+          "title": "Cần tín dụng để lồng tiếng",
+          "message": "Số dư không đủ để lồng tiếng video này. Hãy nạp thêm tín dụng rồi thử lại."
+        },
+        "summary": {
+          "title": "Cần tín dụng để tóm tắt",
+          "message": "Số dư không đủ để tạo bản tóm tắt và điểm nổi bật. Hãy nạp thêm tín dụng rồi thử lại."
+        },
+        "videoSearch": {
+          "title": "Cần tín dụng để tìm video bằng AI",
+          "message": "Số dư không đủ cho một lượt tìm video bằng AI. Hãy nạp thêm tín dụng rồi tìm lại."
+        },
+        "other": {
+          "title": "Tác vụ này cần tín dụng"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "Bắt đầu lồng tiếng?",
@@ -1145,7 +1340,58 @@
       "message": "Bạn đang mở phụ đề. Hãy lưu hoặc bỏ chúng trước khi thay bằng phụ đề tự động của YouTube.",
       "saveAndOpen": "Lưu và mở phụ đề",
       "title": "Mở phụ đề tự động đã khôi phục?"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "Lưu chỉnh sửa phụ đề trước?",
+      "message": "Bạn đã sửa phụ đề này kể từ lần lưu gần nhất. Lưu các chỉnh sửa trước khi thay thế?",
+      "saveAndContinue": "Lưu và tiếp tục",
+      "discardAndContinue": "Bỏ chỉnh sửa và tiếp tục"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "Vẫn đang chép lời.",
+        "translation": "Vẫn đang dịch.",
+        "dubbing": "Vẫn đang lồng tiếng.",
+        "export": "Vẫn đang xuất video.",
+        "summary": "Vẫn đang viết bản tóm tắt.",
+        "download": "Vẫn đang tải xuống.",
+        "highlight": "Vẫn đang tạo clip nổi bật.",
+        "search": "Vẫn đang tìm video.",
+        "generic": "Vẫn còn tác vụ đang chạy."
+      },
+      "unsavedLine": "Chỉnh sửa phụ đề chưa được lưu.",
+      "unsavedMessage": "Phụ đề này có thay đổi chưa được lưu.",
+      "tabUnsavedDetail": "Lưu lại trước khi đóng tab?",
+      "tabUnsavedWithJobDetail": "Đóng tab sẽ dừng tác vụ. Lưu chỉnh sửa phụ đề trước?",
+      "tabJobDetail": "Đóng tab sẽ dừng tác vụ này và phần việc đã làm sẽ mất.",
+      "quitMessage": "Thoát {{app}}? Vẫn còn việc chưa xong.",
+      "windowMessage": "Đóng cửa sổ? Vẫn còn việc chưa xong.",
+      "tabLine": "{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "Các tác vụ đang chạy sẽ dừng. Lưu chỉnh sửa phụ đề trước?",
+      "jobsDetail": "Các tác vụ đang chạy sẽ dừng và phần việc đã làm sẽ mất.",
+      "saveAndClose": "Lưu và đóng",
+      "saveAndQuit": "Lưu và thoát",
+      "closeWithoutSaving": "Đóng mà không lưu",
+      "quitWithoutSaving": "Thoát mà không lưu",
+      "stopAndClose": "Dừng và đóng",
+      "quitAnyway": "Vẫn thoát",
+      "closeAnyway": "Vẫn đóng",
+      "saveFailed": "Không lưu được phụ đề trong {{title}} nên chưa có gì bị đóng. Hãy lưu từ trình chỉnh sửa rồi thử lại.",
+      "ok": "OK"
+    },
+    "exportSaveDialogTitle": "Lưu video thành",
+    "exportVideoFilterName": "Video MP4",
+    "exportDiscardConfirm": "Video đã sẵn sàng nhưng chưa được lưu. Bỏ video này?",
+    "exportChooseLocationButton": "Chọn nơi lưu…",
+    "exportDiscardButton": "Bỏ video",
+    "exportSaveFailed": "Không lưu được video vào {{folder}}.",
+    "exportSaveFailedPermission": "Bạn không có quyền lưu vào thư mục này.",
+    "exportSaveFailedDiskFull": "Ổ đĩa đó không còn đủ dung lượng trống.",
+    "exportSaveFailedGeneric": "Không ghi được tệp vào đó.",
+    "exportSameAsSource": "Làm vậy sẽ ghi đè video gốc. Hãy chọn tên khác.",
+    "keepDubbing": "Tiếp tục lồng tiếng",
+    "stopDubbing": "Dừng lồng tiếng",
+    "cancelDubbingBody": "Phần âm thanh lồng tiếng đã tạo sẽ bị bỏ."
   },
   "progress": {
     "preparingVideoExport": "Đang chuẩn bị xuất video…",
@@ -1158,12 +1404,12 @@
     "extractingAudio": "Đang trích xuất âm thanh...",
     "transcribingOf": "Đang chép lời {{done}}/{{total}}",
     "error": "Lỗi",
-    "transcribedChunks": "Đã phiên âm & làm sạch {{done}}/{{total}} đoạn",
+    "transcribedChunks": "Đã chép lời {{done}}/{{total}} đoạn",
     "transcribingElevenLabs": "Đang phiên âm với ElevenLabs (~{{minutes}} phút còn lại)",
     "transcribingElevenLabsHours": "Đang phiên âm với ElevenLabs (~{{hours}}h {{minutes}}m còn lại)",
     "transcribingElevenLabsFinishing": "Đang phiên âm với ElevenLabs...",
     "transcriptionRetry": "Kết nối thất bại, đang thử lại ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "Đang tải lên âm thanh để phiên âm...",
+    "transcribingR2Upload": "Đang tải âm thanh lên…",
     "gapRepair": "Sửa chỗ trống #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Đang sửa phụ đề bị thiếu (Lần {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Đang làm sạch phụ đề ({{done}}/{{total}})",
@@ -1233,7 +1479,18 @@
       "videoBlockedCaptions": "Không tải được video; đang tìm phụ đề YouTube thay thế…",
       "voiceTrackAssembled": "Đã ghép xong bản giọng",
       "voiceTrackReady": "Bản giọng đã sẵn sàng",
-      "writingSummary": "Đang viết bản tóm tắt…"
+      "writingSummary": "Đang viết bản tóm tắt…",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy",
+      "cancelling": "Đang hủy…",
+      "failed": "Đã xảy ra lỗi",
+      "downloading": "Đang tải xuống…",
+      "downloadingAudio": "Đang tải âm thanh…",
+      "transcribingLine": "Đang chép lời dòng này…",
+      "startingExport": "Đang bắt đầu tạo video…",
+      "captionsAvailable": "Không tải được video, nhưng đã có sẵn phụ đề YouTube",
+      "captionsNotOpened": "Phụ đề YouTube đã sẵn sàng nhưng chưa được mở",
+      "insufficientCredits": "Không đủ tín dụng"
     },
     "listening": "Đang nghe video…",
     "mergeFinishSaveBeforeReload": "Hãy lưu xong video đã ghép trước khi tải lại.",
@@ -1241,7 +1498,8 @@
     "mergeWaitForCancelBeforeReload": "Hãy chờ hủy ghép xong rồi mới tải lại.",
     "preparingTranscription": "Đang chuẩn bị nghe…",
     "restartingTranscription": "Đang bắt đầu chép lời lại…",
-    "resumingTranscription": "Đang tiếp tục từ chỗ đã dừng…"
+    "resumingTranscription": "Đang tiếp tục từ chỗ đã dừng…",
+    "hqModeEstimate": "(chất lượng cao: ~{{time}})"
   },
   "messages": {
     "fileSaved": "Tệp đã được lưu:\n{{path}}",
@@ -1264,7 +1522,23 @@
     "sendReport": "Gửi báo cáo",
     "reportPrompt": "Đã xảy ra lỗi. Báo cáo cho nhà phát triển để sửa nhanh.",
     "preparingReport": "Đang chuẩn bị gói chẩn đoán...",
-    "reportContextWarning": "Không thể tải một phần ngữ cảnh chẩn đoán. Báo cáo vẫn sẽ bao gồm chi tiết từ ứng dụng này."
+    "reportContextWarning": "Không thể tải một phần ngữ cảnh chẩn đoán. Báo cáo vẫn sẽ bao gồm chi tiết từ ứng dụng này.",
+    "reportPromptTask": {
+      "transcription": "Quá trình chép lời bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "translation": "Quá trình dịch bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "dubbing": "Quá trình lồng tiếng bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "summary": "Việc tạo bản tóm tắt bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "videoSearch": "Việc tìm video bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "download": "Không tải được video vì một lỗi chúng tôi chưa nhận diện được. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "export": "Việc tạo video bị dừng do sự cố ngoài dự kiến. Hãy gửi báo cáo này để chúng tôi khắc phục.",
+      "other": "Đã xảy ra lỗi. Hãy gửi báo cáo này để chúng tôi khắc phục."
+    },
+    "feedbackTitle": "Gửi góp ý hoặc báo lỗi",
+    "whatHappened": "Đã xảy ra chuyện gì, hoặc bạn muốn góp ý điều gì?",
+    "attachDiagnostics": "Đính kèm thông tin chẩn đoán (nên bật khi báo lỗi)",
+    "attachDiagnosticsHint": "Nhật ký gần đây, phiên bản ứng dụng và thông tin hệ thống. Không gồm video hay phụ đề.",
+    "showDetails": "Xem nội dung sẽ gửi",
+    "feedbackEmailSubject": "Góp ý về Translator"
   },
   "home": {
     "headline": "Xem mọi video bằng <lang>{{language}}</lang>.",
@@ -1297,7 +1571,9 @@
     "seeAll": "Xem tất cả",
     "recentSubtitlesReady": "Phụ đề {{language}} đã xong",
     "recentSubtitlesReadyGeneric": "Phụ đề đã xong",
-    "recentDownloaded": "Đã tải về"
+    "recentDownloaded": "Đã tải về",
+    "recentLocalFile": "Trên máy tính này",
+    "recentLocalMissing": "Tệp đã bị di chuyển hoặc xóa"
   },
   "workspace": {
     "subtitlesTitle": "Phụ đề",
@@ -1327,7 +1603,20 @@
     "showTranslation": "Bản dịch",
     "showOriginal": "Bản gốc",
     "showBoth": "Cả hai",
-    "textSize": "Cỡ chữ"
+    "textSize": "Cỡ chữ",
+    "findReplace": "Tìm và thay thế",
+    "statusReadyPrice": "Sẵn sàng — phụ đề {{language}} cho video này: {{price}}",
+    "statusReadyPreview": "Sẵn sàng — số phút hiện có đủ dịch {{minutes}} phút đầu sang {{language}}",
+    "statusPartlyTranslated": "{{translated}}/{{count}} dòng đã dịch sang {{language}} · {{missing}} dòng chưa dịch",
+    "statusPartlyTranslatedUnknown": "Đã dịch {{translated}}/{{count}} dòng · {{missing}} dòng chưa dịch",
+    "statusTranslatedUnknown": "{{count}} dòng đã dịch · khớp với video",
+    "stopsEarly": "Phụ đề dừng ở {{time}}",
+    "interruptedTranslate": "Việc chuyển video này sang {{language}} đã dừng vì Translator bị đóng.",
+    "interruptedTranscribe": "Việc chép lời video này đã dừng vì Translator bị đóng.",
+    "interruptedResume": "Tiếp tục từ chỗ đã dừng",
+    "translateMissing": "Dịch {{count}} dòng còn thiếu sang {{language}}",
+    "moreRevealVideo": "Hiện tệp video",
+    "chooseAnotherFile": "Chọn tệp khác"
   },
   "subtitleStyles": {
     "Cinema": "Vàng điện ảnh",
@@ -1361,7 +1650,9 @@
     "retry": "Thử lại",
     "finishCta": "Dịch hết video · {{price}}",
     "noneCta": "Chuyển sang {{language}} · {{price}}",
-    "notNow": "Để sau"
+    "notNow": "Để sau",
+    "failedNeedMinutes": "Phần đã xong vẫn được giữ lại. Bạn cần thêm phút để dịch nốt {{remaining}} phút còn lại.",
+    "failedNetwork": "Mất kết nối. Phần đã xong vẫn được giữ lại. Hãy thử lại khi có mạng."
   },
   "videoCost": {
     "covered": "Đủ phút để dịch",
@@ -1391,7 +1682,17 @@
     "from": "Từ",
     "to": "đến",
     "saving": "Đang lưu…",
-    "save": "Lưu chỉnh sửa Short"
+    "save": "Lưu chỉnh sửa Short",
+    "openFailed": "Không mở được clip này để tạo kiểu. Hãy đảm bảo video và phụ đề của nó đang mở.",
+    "saveFailed": "Không lưu được chỉnh sửa Short. Hãy kiểm tra để mỗi cụm đều có chữ và thời gian nằm trong clip.",
+    "previewAt": "Xem trước tại {{seconds}} giây",
+    "shotPosition": "Cảnh {{current}}/{{total}}",
+    "phrasesHint": "Cụm phụ đề: muốn làm nổi bật một từ, hãy gõ chính xác từ hoặc cụm từ đó (có trong văn bản) vào ô nhấn mạnh.",
+    "phraseStart": "Bắt đầu cụm {{index}} (giây)",
+    "phraseEnd": "Kết thúc cụm {{index}} (giây)",
+    "phraseText": "Nội dung cụm {{index}}",
+    "phraseEmphasis": "Nhấn mạnh cụm {{index}}",
+    "saveNote": "Khi lưu, clip này sẽ chuyển sang Căn khung Shorts với các cụm phụ đề này thay cho kiểu phụ đề của bạn."
   },
   "subtitleFonts": {
     "label": "Phông chữ",
@@ -1399,5 +1700,80 @@
     "classic": "Cổ điển",
     "serif": "Có chân",
     "display": "Đậm"
+  },
+  "export": {
+    "exportButton": "Xuất video",
+    "exportingButton": "Đang xuất…",
+    "progressTitle": "Đang xuất video",
+    "savedTitle": "Đã lưu video",
+    "savedIn": "{{file}} trong {{folder}}",
+    "showInFinder": "Hiện trong Finder",
+    "showInFolder": "Hiện trong thư mục",
+    "openVideo": "Mở video",
+    "failedTitle": "Không xuất được video",
+    "saveTo": "Lưu vào",
+    "changeDestination": "Đổi…",
+    "displayNeedsTranslation": "Hãy dịch phụ đề để hiện bản dịch hoặc cả hai.",
+    "error": {
+      "permission": "Translator không ghi được các tệp tạm của video. Hãy kiểm tra tài khoản của bạn có quyền ghi vào thư mục tạm rồi thử lại.",
+      "tools": "Không thiết lập được công cụ xuất video. Hãy kiểm tra kết nối internet rồi thử lại.",
+      "generic": "Đã xảy ra lỗi khi tạo video. Vui lòng thử lại."
+    }
+  },
+  "tabs": {
+    "newTab": "Tab mới",
+    "newTabWithShortcut": "Tab mới ({{shortcut}})",
+    "closeTab": "Đóng tab"
+  },
+  "menu": {
+    "about": "Giới thiệu về {{app}}",
+    "services": "Dịch vụ",
+    "hide": "Ẩn {{app}}",
+    "hideOthers": "Ẩn các mục khác",
+    "showAll": "Hiện tất cả",
+    "quit": "Thoát {{app}}",
+    "exit": "Thoát",
+    "file": "Tệp",
+    "newTab": "Tab mới",
+    "closeTab": "Đóng tab",
+    "nextTab": "Tab tiếp theo",
+    "previousTab": "Tab trước",
+    "closeWindow": "Đóng cửa sổ",
+    "edit": "Sửa",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "cut": "Cắt",
+    "copy": "Sao chép",
+    "paste": "Dán",
+    "pasteAndMatchStyle": "Dán và khớp kiểu",
+    "delete": "Xóa",
+    "selectAll": "Chọn tất cả",
+    "speech": "Giọng nói",
+    "startSpeaking": "Bắt đầu đọc",
+    "stopSpeaking": "Dừng đọc",
+    "find": "Tìm",
+    "view": "Xem",
+    "actualSize": "Kích thước thực",
+    "zoomIn": "Phóng to",
+    "zoomOut": "Thu nhỏ",
+    "toggleFullScreen": "Bật/tắt toàn màn hình",
+    "window": "Cửa sổ",
+    "minimize": "Thu nhỏ cửa sổ",
+    "zoom": "Thu phóng",
+    "bringAllToFront": "Đưa tất cả ra trước",
+    "selectTab": "Chọn tab {{n}}",
+    "learnSpelling": "Học chính tả",
+    "lookUpSelection": "Tra cứu “{selection}”",
+    "searchWithGoogle": "Tìm kiếm với Google",
+    "saveImage": "Lưu hình ảnh",
+    "saveImageAs": "Lưu hình ảnh thành…",
+    "saveVideo": "Lưu video",
+    "saveVideoAs": "Lưu video thành…",
+    "copyLink": "Sao chép liên kết",
+    "saveLinkAs": "Lưu liên kết thành…",
+    "copyImage": "Sao chép hình ảnh",
+    "copyImageAddress": "Sao chép địa chỉ hình ảnh",
+    "copyVideoAddress": "Sao chép địa chỉ video",
+    "inspect": "Kiểm tra phần tử"
   }
 }

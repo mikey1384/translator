@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "ملفات SRT",
       "mediaFiles": "ملفات الوسائط",
-      "videoFiles": "ملفات الفيديو"
+      "videoFiles": "ملفات الفيديو",
+      "textFiles": "ملفات نصية",
+      "allFiles": "كل الملفات",
+      "subtitleFiles": "ملفات الترجمة"
     },
     "chooseAnotherLocation": "اختر موقعًا آخر",
     "continue": "متابعة",
@@ -96,7 +99,20 @@
     "dismiss": "إغلاق",
     "moreActions": "إجراءات أخرى",
     "installingUpdate": "جارٍ تثبيت التحديث...",
-    "installingUpdateShort": "جارٍ التثبيت"
+    "installingUpdateShort": "جارٍ التثبيت",
+    "ok": "حسنًا",
+    "minimumVersionValue": "أدنى إصدار مدعوم: v{{version}}",
+    "currentVersionValue": "الإصدار الحالي: v{{version}}",
+    "updateNotFoundUseDownloadPage": "تعذّر تنزيل التحديث من هنا. نزّل أحدث إصدار من صفحة التنزيل.",
+    "whatsNewLead": "تم تحديث Translator إلى v{{version}}.",
+    "whatsNewNotesInEnglish": "ملاحظات الإصدار (بالإنجليزية)",
+    "checkForUpdates": "التحقق من وجود تحديثات",
+    "checkingForUpdates": "جارٍ التحقق من وجود تحديثات…",
+    "upToDate": "لديك أحدث إصدار.",
+    "updateAvailableDownloading": "يتوفر تحديث. جارٍ تنزيله في الخلفية.",
+    "updateReadyToInstall": "نُزّل التحديث. أعد التشغيل لتثبيته.",
+    "updateCheckFailed": "تعذّر التحقق من وجود تحديثات. حاول لاحقًا.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "طلب YouTube التحقق البشري. انقر على اتصال للمتابعة.",
@@ -143,7 +159,60 @@
       "fileTooLarge_one": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من ساعة تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
       "fileTooLarge_two": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من ساعتين تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة.",
       "fileTooLarge_few": "هذا الصوت طويل جدًا بحيث لا يمكن نسخه في مهمة واحدة (أكثر من {{hours}} ساعات تقريبًا). قسّم الفيديو إلى أجزاء أقصر وانسخ كل جزء على حدة."
-    }
+    },
+    "credits": {
+      "transcription": "رصيدك لا يكفي لنسخ هذا.",
+      "translation": "رصيدك لا يكفي لترجمة هذا.",
+      "dubbing": "رصيدك لا يكفي لدبلجة هذا.",
+      "summary": "رصيدك لا يكفي للملخص.",
+      "videoSearch": "رصيدك لا يكفي للبحث عن فيديوهات.",
+      "download": "رصيدك لا يكفي.",
+      "export": "رصيدك لا يكفي.",
+      "other": "رصيدك لا يكفي."
+    },
+    "failed": {
+      "transcription": "توقف النسخ بسبب مشكلة غير متوقعة. الأسطر التي نُسخت محفوظة.",
+      "translation": "توقفت الترجمة بسبب مشكلة غير متوقعة. الأسطر التي تُرجمت محفوظة.",
+      "dubbing": "توقفت الدبلجة بسبب مشكلة غير متوقعة.",
+      "summary": "توقف الملخص بسبب مشكلة غير متوقعة.",
+      "videoSearch": "توقف البحث عن الفيديوهات بسبب مشكلة غير متوقعة.",
+      "export": "توقف إنشاء الفيديو بسبب مشكلة غير متوقعة.",
+      "other": "حدث خطأ ما. حاول مرة أخرى."
+    },
+    "server": {
+      "transcription": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
+      "translation": "توقفت الترجمة بسبب مشكلة في خادمنا. الأسطر التي تُرجمت محفوظة. حاول مرة أخرى بعد دقيقة.",
+      "dubbing": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
+      "summary": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
+      "videoSearch": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
+      "export": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة.",
+      "other": "حدثت مشكلة في خادمنا. حاول مرة أخرى بعد دقيقة."
+    },
+    "download": {
+      "invalid_url": "لا يبدو هذا رابط فيديو. الصق الرابط كاملًا.",
+      "unsupported_site": "لا يستطيع Translator تنزيل الفيديوهات من هذا الموقع.",
+      "unavailable": "هذا الفيديو غير متاح، وربما حُذف.",
+      "private": "هذا الفيديو خاص.",
+      "not_found": "لا يوجد فيديو على هذا الرابط.",
+      "region_locked": "هذا الفيديو غير متاح في بلدك.",
+      "audience_restricted": "هذا الفيديو يظهر لبعض المشاهدين فقط. إن كان حسابك يستطيع مشاهدته، ففعّل اتصال الموقع من الإعدادات ثم حاول مرة أخرى.",
+      "login_required": "يتطلب هذا الفيديو تسجيل الدخول. فعّل اتصال الموقع من الإعدادات ثم حاول مرة أخرى.",
+      "media_blocked": "منع الموقع تنزيل الفيديو، ولم نتمكن من استرجاع أي ترجمة مصاحبة.",
+      "access_refused": "رفض هذا الموقع تسليم الفيديو إلى Translator.",
+      "video_data_failed": "تعذّر تنزيل الفيديو. ربما يكون مقيّدًا ببلدان معيّنة أو يتطلب تسجيل الدخول.",
+      "rate_limited": "يحدّ YouTube الآن من التنزيلات من شبكتك. انتظر بضع دقائق ثم حاول مرة أخرى.",
+      "network": "تعذّر الاتصال. تحقق من اتصالك بالإنترنت ثم حاول مرة أخرى.",
+      "captions_unreadable": "وجدنا ترجمة YouTube المصاحبة، لكن Translator لم يتمكن من قراءتها.",
+      "save_failed": "نُزّل الفيديو لكن تعذّر حفظه. حاول مرة أخرى.",
+      "downloader_failed": "تعذّر تشغيل أداة تنزيل الفيديو. أعد تشغيل Translator ثم حاول مرة أخرى.",
+      "generic": "تعذّر تنزيل الفيديو. حاول مرة أخرى أو استخدم رابطًا آخر.",
+      "subtitlesNotSaved": "تعذّر حفظ ترجمتك الحالية، لذا لم تُفتح ترجمة YouTube المصاحبة.",
+      "openFailed": "نُزّل الفيديو لكن تعذّر فتحه. افتحه من سجل التنزيلات."
+    },
+    "network": "تعذّر الوصول إلى الخادم. تحقق من اتصالك بالإنترنت ثم حاول مرة أخرى.",
+    "busy": "الخدمة مشغولة الآن. انتظر دقيقة ثم حاول مرة أخرى.",
+    "diskFull": "القرص ممتلئ. أفرغ بعض المساحة ثم حاول مرة أخرى.",
+    "cancelDubbingFailedPlain": "تعذّر إيقاف الدبلجة. حاول مرة أخرى."
   },
   "input": {
     "connect": "اتصال",
@@ -178,7 +247,7 @@
     "transcribeOnly": "نسخ الصوت",
     "srtLoaded": "اكتمل النسخ",
     "srtFileLoaded": "تم تحميل SRT",
-    "featuresUnlockAfterTranscription": "ستظهر الترجمة والقوائم الأخرى بعد اكتمال النسخ.",
+    "featuresUnlockAfterTranscription": "انسخ هذا الفيديو أو ترجمه أو استخرج لقطاته المميزة.",
     "preSubtitleActionsHint": "انسخ الفيديو أو ترجمه أو أنشئ لقطات مميزة منه.",
     "saveDubbedVideo": "حفظ الفيديو المدبلج",
     "downloadFinishedSwitchTitle": "مشاهدة الفيديو الذي تم تنزيله؟",
@@ -294,13 +363,13 @@
       "defaultSearchUserMessage": "ابحث لي عن فيديوهات الآن.",
       "followUp": {
         "moreLikeQuery": "اعثر على المزيد من الفيديوهات المشابهة لـ \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" من صانع محتوى أو قناة أخرى",
+        "differentCreator": "\"{{query}}\" من اسم أو قناة أخرى",
         "interviews": "مقابلات أو حوارات حول {{query}}",
         "clips": "أبرز اللقطات أو المقاطع المميزة حول {{query}}",
-        "creatorAppearances": "مقابلات {{creator}} أو ظهوره التلفزيوني أو مقاطع مباشرة",
-        "similarCreators": "صناع محتوى أو فنانون مشابهون لـ {{creator}}",
+        "creatorAppearances": "مقابلات {{creator}} أو ظهوره أو مقاطع ذات صلة",
+        "similarCreators": "أسماء أو فنانون أو قنوات تشبه {{creator}}",
         "topicAngle": "شرح {{topic}} من زاوية مختلفة",
-        "topicCreator": "{{creator}} وفيديوهات مرتبطة بـ {{topic}}",
+        "topicCreator": "{{creator}} أو فيديوهات {{topic}} ذات صلة",
         "channelStyle": "فيديوهات بإحساس مشابه لـ {{channel}}",
         "moreFromHistory": "المزيد من الفيديوهات مثل \"{{title}}\"",
         "channelFromHistory": "فيديوهات من قنوات مثل {{channel}}"
@@ -310,12 +379,12 @@
       "moreActions": "إجراءات إضافية",
       "recentEvents": "الأحداث الأخيرة",
       "cancelFailed": "تعذّر إلغاء البحث الحالي.",
-      "countryGlobal": "نتائج عالمية",
-      "countryHint": "اتركه فارغًا للحصول على نتائج عالمية.",
+      "countryGlobal": "البلد المستهدف: الإنجليزية افتراضيًا",
+      "countryHint": "اتركه فارغًا ليكون البحث بالإنجليزية افتراضيًا.",
       "countryHintDefaultEnglish": "اتركه فارغا لتكون لغة البحث الإنجليزية افتراضيا.",
-      "countryLabel": "البلد / المنطقة المستهدفة",
+      "countryLabel": "البلد المستهدف",
       "countryPlaceholder": "مثل: الولايات المتحدة، اليابان، إسبانيا، البرازيل",
-      "countryScope": "البلد: {{country}}",
+      "countryScope": "البلد المستهدف: {{country}}",
       "countryDefaultEnglish": "البلد المستهدف: الإنجليزية افتراضيا",
       "emptyCopy": "اذكر موضوع الفيديو الذي تبحث عنه، أو جمهوره، أو أسلوب صانعه، أو أجواءه. أضف البلد أو حداثة المحتوى فقط عند الحاجة.",
       "emptyEyebrow": "بحث بمساعدة المساعد",
@@ -338,10 +407,10 @@
       "savedDownloads": "التنزيلات المحفوظة",
       "savedDownloadsCount": "{{count}} تنزيلات محفوظة",
       "savedPreferencesCount": "{{count}} تفضيل محفوظ",
-      "searchingLong": "ما زال يتم البحث عن الفيديوهات وترتيبها...",
+      "searchingLong": "ما زلنا نبحث عن الفيديوهات...",
       "searchingVeryLong": "يستغرق وقتًا أطول من المعتاد، لكنه ما زال يعمل.",
       "stillWorking": "ما زال يعمل...",
-      "toggleCopy": "ابحث عن فيديو مصدر على YouTube دون مغادرة سير العمل.",
+      "toggleCopy": "اسأل بلغتك، ويجد الذكاء الاصطناعي فيديوهات YouTube المناسبة.",
       "stage": {
         "answerer": "معالجة الاستعلام",
         "planner": "صياغة البحث",
@@ -362,7 +431,11 @@
       "savedPreferencesCount_one": "تفضيل واحد محفوظ",
       "savedPreferencesCount_two": "تفضيلان محفوظان",
       "savedPreferencesCount_few": "{{count}} تفضيلات محفوظة",
-      "savedPreferencesCount_many": "{{count}} تفضيلًا محفوظًا"
+      "savedPreferencesCount_many": "{{count}} تفضيلًا محفوظًا",
+      "freeSearchRunning": "جارٍ البحث في YouTube…",
+      "freeSearchResults": "هذه نتائج YouTube لـ “{{query}}”. كان هذا البحث مجانيًا. أخبرني أكثر عمّا تريده وسأحسّن النتائج بالذكاء الاصطناعي.",
+      "freeSearchEmpty": "لم يجد YouTube شيئًا لـ “{{query}}”. صف ما تريده وسأبحث لك بالذكاء الاصطناعي.",
+      "openOriginalPage": "فتح الصفحة الأصلية"
     },
     "downloadAndTranslate": "تنزيل وترجمة",
     "downloadAndTranscribe": "تنزيل ونسخ",
@@ -376,7 +449,24 @@
     "captionRecoveryKeepVideo": "الاحتفاظ بالفيديو الحالي",
     "captionRecoveryOpenCaptions": "فتح الترجمات",
     "captionRecoverySwitchPrompt": "استرد Translator ترجمات YouTube التلقائية، لكن فيديو الرابط غير متاح. سيؤدي فتحها إلى إزالة الفيديو الحالي.",
-    "captionRecoverySwitchTitle": "هل تريد فتح الترجمات بدون الفيديو الحالي؟"
+    "captionRecoverySwitchTitle": "هل تريد فتح الترجمات بدون الفيديو الحالي؟",
+    "translateTheseSubtitles": "ترجمة إلى لغة أخرى",
+    "subtitlesLoaded": "تم تحميل الترجمة",
+    "chooseLanguage": "اختر لغة",
+    "urlRejected": {
+      "collection": "هذا رابط قناة أو قائمة تشغيل. الصق رابط فيديو واحد، أو استخدم “ابحث عن فيديوهات”.",
+      "live": "هذا بث مباشر. يمكن لـ Translator تنزيله بعد انتهاء البث."
+    },
+    "longDownload": {
+      "title": "هل تريد تنزيل فيديو طويل؟",
+      "body": "هذا الفيديو طويل، لذا قد يستغرق تنزيله وقتًا ويشغل مساحة كبيرة من القرص. اختيار جودة تنزيل أقل يجعله أسرع وأصغر حجمًا.",
+      "duration": "المدة: {{duration}}",
+      "size": "نحو {{size}}",
+      "confirm": "تنزيل"
+    },
+    "dropWhileDownloading": "هناك تنزيل جارٍ. أفلت الملف مرة أخرى بعد انتهائه.",
+    "dropWhileBusy": "يعمل Translator على هذا الفيديو. أفلت الملف مرة أخرى بعد انتهائه.",
+    "dropNotSupported": "أفلت فيديو أو ملفًا صوتيًا أو ملف ترجمة ‎.srt."
   },
   "subtitles": {
     "outputLanguage": "لغة الإخراج",
@@ -399,32 +489,50 @@
     "translateEstimateByo": "مفتاح BYO",
     "qualityBadge": "(جودة عالية)",
     "cancel_confirmation": "هل أنت متأكد أنك تريد إلغاء عملية ترجمة النص؟ ستفقد أي تقدم تم إحرازه وستحتاج إلى البدء من جديد.",
-    "dubCostHint": "صوت ElevenLabs: ~{{rate}} نقطة لكل دقيقة كلام. يظهر هذا التقدير قبل بدء الدبلجة."
+    "dubCostHint": "صوت ElevenLabs: ~{{rate}} نقطة لكل دقيقة كلام. يظهر هذا التقدير قبل بدء الدبلجة.",
+    "unreadableCues_one": "تعذّرت قراءة سطر واحد في هذا الملف فاستُبعد. تحقق من توقيته.",
+    "unreadableCues_two": "تعذّرت قراءة سطرين في هذا الملف فاستُبعدا. تحقق من توقيتهما.",
+    "unreadableCues_few": "تعذّرت قراءة {{count}} أسطر في هذا الملف فاستُبعدت. تحقق من توقيتاتها.",
+    "unreadableCues_many": "تعذّرت قراءة {{count}} سطرًا في هذا الملف فاستُبعدت. تحقق من توقيتاتها.",
+    "unreadableCues": "تعذّرت قراءة {{count}} سطر في هذا الملف فاستُبعدت. تحقق من توقيتاتها.",
+    "addCreditsToTranslate": "أضف نقاطًا للترجمة",
+    "dubInto": "دبلجة إلى {{language}}",
+    "dubIntro": "صوتٌ يقرأ الترجمة باللغة التي تختارها، فوق صوت الخلفية الأصلي.",
+    "dubNeedsSubtitles": "الدبلجة تقرأ الترجمة بصوت مسموع، لذا يحتاج هذا الفيديو إلى ترجمة أولًا. انسخه، ثم اختر صوتًا هنا.",
+    "dubLanguageLabel": "لغة الصوت",
+    "dubSameLanguage": "الترجمة باللغة {{language}} أصلًا، لذا يقرؤها الصوت كما هي.",
+    "dubTranslatesFirst": "تُترجم الأسطر إلى {{language}} أولًا، ثم تُدبلج.",
+    "dubCostWithTranslation": "الترجمة والصوت: {{cost}}",
+    "dubUsesOwnKeys": "يستخدم مفاتيح API الخاصة بك.",
+    "dubNotEnoughCredits": "رصيدك لا يكفي لهذه الدبلجة.",
+    "addCreditsToDub": "أضف نقاطًا للدبلجة",
+    "noSubtitlesToDub": "أنشئ ترجمة لهذا الفيديو أو افتحها أولًا، ثم دبلجه.",
+    "noSubtitlesToTranslate": "افتح ملف ترجمة أو أنشئ الترجمة أولًا، ثم ترجمها."
   },
   "summary": {
-    "title": "ملخص النص",
-    "ctaHelper": "أنشئ نظرة عامة معمقة. قد تستغرق مقاطع الفيديو الطويلة بعض الوقت للمعالجة.",
-    "languageLabel": "لغة الملخص",
+    "title": "اللقطات المميزة",
+    "ctaHelper": "اعثر على أفضل اللحظات.",
+    "languageLabel": "لغة النتيجة",
     "tab": {
       "summary": "الملخص",
-      "sections": "ملاحظات مفصلة",
+      "sections": "ملاحظات",
       "highlights": "اللقطات المميزة"
     },
-    "generate": "إنشاء ملخص",
-    "regenerate": "إعادة إنشاء الملخص",
+    "generate": "استخراج اللقطات المميزة",
+    "regenerate": "استخراج اللقطات المميزة من جديد",
     "estimateCredits": "{{credits}} نقطة",
     "estimateByo": "مفتاح BYO",
     "highEffortBadge": "(معمّق)",
     "placeholder": "سيظهر ملخص الذكاء الاصطناعي هنا بمجرد إنشائه.",
-    "insufficientCredits": "لا توجد نقاط كافية لتشغيل الملخص.",
-    "error": "لم نتمكن من إنشاء ملخص. {{message}}",
+    "insufficientCredits": "رصيدك لا يكفي لاستخراج اللقطات المميزة.",
+    "error": "تعذّر استخراج اللقطات المميزة. {{message}}",
     "cancel": "إلغاء",
     "copy": "نسخ الملخص",
     "copied": "تم النسخ!",
     "copyError": "تعذر نسخ الملخص إلى الحافظة.",
-    "noHighlights": "لا توجد لقطات مميزة بعد. أنشئ لاكتشاف اللحظات البارزة.",
+    "noHighlights": "لا توجد لقطات مميزة بعد. استخرجها لتجد أفضل اللحظات.",
     "noVideoForHighlights": "افتح الفيديو المصدر لقص مقاطع اللقطات المميزة.",
-    "summaryRequiredForHighlights": "أنشئ ملخصًا للتفريغ قبل قص مقاطع اللقطات البارزة.",
+    "summaryRequiredForHighlights": "استخرج اللقطات المميزة أولًا لتحليل النص.",
     "highlight": "لقطة مميزة",
     "cutHighlightClip": "قص هذا المقطع البارز",
     "cuttingHighlightClip": "جارٍ القص…",
@@ -432,8 +540,8 @@
     "clipFormat": "تنسيق المقطع:",
     "originalFormat": "الأصلي",
     "originalFormatDesc": "الاحتفاظ بأبعاد الفيديو الأصلية",
-    "verticalFormat": "9:16 عمودي",
-    "verticalFormatDesc": "مُحسَّن لـ YouTube Shorts وTikTok وReels ‏(9:16)",
+    "verticalFormat": "إعادة تأطير Shorts",
+    "verticalFormatDesc": "قصّ وإعادة تأطير لـ YouTube Shorts وTikTok وReels ‏(9:16)",
     "verticalFitFormat": "ملاءمة الشورتات",
     "verticalFitFormatDesc": "احتواء الإطار الأصلي داخل لوحة 9:16",
     "downloadHighlight": "تنزيل المقطع",
@@ -447,16 +555,18 @@
     "sectionHeading": "القسم {{index}}",
     "highlightsInProgress": "جارٍ تحضير مقاطع اللقطات المميزة…",
     "status": {
-      "preparing": "جارٍ تحضير النص…",
-      "chunk": "جارٍ تلخيص القسم {{current}}/{{total}}",
-      "selectingHighlights": "جارٍ اختيار اللحظات المميزة…",
+      "preparing": "جارٍ تحليل النص…",
+      "chunk": "جارٍ كتابة الملخص {{current}}/{{total}}",
+      "selectingHighlights": "جارٍ اختيار اللقطات المميزة…",
       "cuttingHighlight": "جارٍ قص اللقطة المميزة {{current}}/{{total}}…",
       "cuttingHighlights": "جارٍ قص مقاطع اللقطات المميزة…",
-      "synthesizing": "جارٍ تجميع الملخص الشامل…",
-      "ready": "الملخص جاهز",
-      "error": "فشل الملخص",
-      "cancelled": "تم إلغاء الملخص",
-      "inProgress": "جارٍ إنشاء الملخص…"
+      "synthesizing": "جارٍ الإنهاء…",
+      "ready": "اللقطات المميزة جاهزة",
+      "error": "تعذّر استخراج اللقطات المميزة",
+      "cancelled": "أُلغي استخراج اللقطات المميزة",
+      "inProgress": "جارٍ استخراج اللقطات المميزة…",
+      "cuttingClip": "جارٍ قصّ المقطع…",
+      "renderingClipSubtitles": "جارٍ إضافة الترجمة إلى المقطع…"
     },
     "combineMode": "دمج",
     "exitCombineMode": "الخروج من الدمج",
@@ -469,7 +579,33 @@
     "combinedCutFailed": "فشل قص اللقطات المميزة المدمجة: {{message}}",
     "highlightsInsufficientCredits": "تم إنشاء الملخص، لكن استخراج اللقطات المميزة توقف بسبب نفاد النقاط.",
     "highlightsPartialWarning": "كان استخراج اللقطات المميزة جزئيًا. قد تكون هذه اللقطات غير مكتملة. أعد الإنشاء للتحديث.",
-    "highlightsPartialWithReason": "تم إنشاء الملخص، لكن استخراج اللقطات المميزة كان جزئيًا: {{message}}"
+    "highlightsPartialWithReason": "تم إنشاء الملخص، لكن استخراج اللقطات المميزة كان جزئيًا: {{message}}",
+    "estimateOwnKey": "يستخدم مفتاح API الخاص بك",
+    "generateSummary": "تلخيص",
+    "regenerateSummary": "تلخيص من جديد",
+    "showingSavedLanguage": "نعرض النتيجة المحفوظة باللغة {{language}}. اضغط الزر لإنشاء نتيجة باللغة {{current}}.",
+    "showingSavedVariant": "نعرض النتيجة المحفوظة باللغة {{language}}، وقد أُنشئت بمستوى تلخيص مختلف. اضغط الزر لإنشاء نتيجة جديدة.",
+    "noSummaryYet": "لا يوجد ملخص بعد. اختر اللغة واضغط “تلخيص” لتحصل على أبرز ما في هذا الفيديو.",
+    "noSummaryWithHighlights": "جاءت هذه اللقطات المميزة بلا ملخص. اضغط “تلخيص” لكتابة ملخص لها.",
+    "clipCaptionsChanged": "تغيّرت الترجمة منذ قصّ هذا المقطع.",
+    "recutClip": "القص من جديد",
+    "cutCombinedCount": "قصّ {{count}} مقطع معًا",
+    "cutCombinedCount_one": "قصّ مقطع واحد",
+    "cutCombinedCount_two": "قصّ المقطعين معًا",
+    "cutCombinedCount_few": "قصّ {{count}} مقاطع معًا",
+    "cutCombinedCount_many": "قصّ {{count}} مقطعًا معًا",
+    "cutHighlightFailed": "تعذّر قصّ المقطع: {{message}}",
+    "clipError": {
+      "busy": "انتظر حتى تنتهي المهمة الحالية، ثم قصّ المقطع.",
+      "noHighlight": "اختر لقطة مميزة أولًا.",
+      "editorialSingle": "قصّ كل مقطع قصير منسَّق وحده، بنمط “إعادة تأطير Shorts”.",
+      "editorialStale": "تغيّرت الترجمة في هذا المقطع القصير. افتح “تنسيق هذا المقطع القصير” وراجعه واحفظه، ثم قصّه من جديد.",
+      "noTranscript": "افتح ترجمة هذا الفيديو قبل قصّ أي مقطع.",
+      "noCues": "لا توجد ترجمة في هذا الجزء من الفيديو.",
+      "untranslated": "بعض الأسطر في هذا المقطع لم تُترجم بعد. ترجمها، أو اجعل عرض الترجمة يُظهر النص الأصلي.",
+      "subtitlesNotSaved": "قُصّ المقطع، لكن تعذّر حفظ ترجمته.",
+      "generic": "تعذّر قصّ هذا المقطع من الفيديو. حاول مرة أخرى."
+    }
   },
   "panel": {
     "new": "جديد",
@@ -502,12 +638,12 @@
       "emptyCopy": "افتح ملف SRT موجودًا لتحريره مباشرة. ستظهر هنا أيضًا النصوص المولدة من سير العمل الرئيسي عند جاهزيتها.",
       "rowsLoaded": "تم تحميل {{count}} سطر",
       "loadAnotherSrt": "تحميل SRT آخر",
-      "mountVideoTitle": "أرفق فيديو المصدر للمعاينة وتصدير burn-in",
+      "mountVideoTitle": "أرفق فيديو المصدر للمعاينة ولتصدير فيديو بترجمة مدمجة",
       "mountVideoCopy": "يمكنك متابعة التحرير بدون فيديو، لكن المعاينة والانتقال والدمج تعمل بأفضل شكل بعد إرفاق الوسائط المصدر.",
       "listCopy": "حرر النص المصدر والترجمة والتوقيت وإجراءات كل سطر مباشرة في مكانها.",
       "originalLabel": "الأصل",
       "translationLabel": "الترجمة",
-      "mergeNeedsVideoCopy": "أرفق فيديو المصدر قبل بدء تصدير burn-in.",
+      "mergeNeedsVideoCopy": "أرفق فيديو المصدر قبل تصدير فيديو بترجمة مدمجة.",
       "automaticCaptionsCopy": "تم حظر تنزيل الفيديو (HTTP 403). هذه ترجمات YouTube التلقائية، وليست نسخًا صوتيًا جديدًا. يمكنك الآن تعديلها وترجمتها وتصديرها بصيغة SRT. أرفق ملف وسائط للمعاينة أو لدمج الترجمات في الفيديو.",
       "automaticCaptionsCopyWithMedia": "تم حظر تنزيل الفيديو من الرابط (HTTP 403). هذه ترجمات YouTube التلقائية، وليست نسخًا صوتيًا جديدًا. الوسائط المرفقة متاحة للمعاينة والدمج.",
       "automaticCaptionsPill": "ترجمات YouTube التلقائية",
@@ -531,7 +667,9 @@
       "originalTextPrefix": "الأصل:",
       "subtitlePlaceholder": "نص الترجمة",
       "confirmRemove": "هل أنت متأكد أنك تريد إزالة كتلة الترجمة هذه؟ لا يمكن التراجع عن هذا الإجراء.",
-      "transcribeThisLine": "نسخ هذا السطر"
+      "transcribeThisLine": "نسخ هذا السطر",
+      "timeEndBeforeStart": "يجب أن يأتي وقت النهاية بعد وقت البداية. أبقينا السطر على وقته السابق.",
+      "timeUnreadable": "اكتب الوقت بهذا الشكل: 00:01:23,450 أو 1:23.45. أبقينا السطر على وقته السابق."
     },
     "header": {
       "save": "حفظ الترجمة",
@@ -544,6 +682,14 @@
       "styleLabel": "النمط:",
       "mergeButton": "دمج الترجمات",
       "mergingButton": "جارٍ الدمج..."
+    },
+    "undo": {
+      "removed": "حُذف السطر.",
+      "inserted": "أُضيف السطر.",
+      "replaced": "تم الاستبدال في كل الأسطر.",
+      "shifted": "تم تحريك التوقيت.",
+      "improved": "أُعيد نسخ السطر.",
+      "action": "تراجع"
     }
   },
   "settings": {
@@ -590,10 +736,10 @@
         "anthropicHighEnd": "مراجعة متقدمة من Anthropic",
         "help": "<b>5× نقاط</b> • يضيف مرحلة مراجعة لجودة أعلى",
         "helpWithEstimate": "<b>5× نقاط</b> • رصيدك: ~{{normalTime}} (عادي) / ~{{hqTime}} (جودة عالية)",
-        "helpOn": "<b>5× أرصدة</b> • يتضمن مرحلة المراجعة",
-        "helpOff": "يتجاوز مرحلة المراجعة",
-        "helpWithEstimateOn": "<b>5× أرصدة</b> • يتضمن مرحلة المراجعة • الرصيد: ~{{time}}",
-        "helpWithEstimateOff": "يتجاوز مرحلة المراجعة • الرصيد: ~{{time}}"
+        "helpOn": "<b>نقاط ×5</b> • مسودة Claude Haiku 5.5 + مراجعة Claude Opus 5.5",
+        "helpOff": "<b>نقاط ×1</b> • مسودة Claude Haiku 5.5 فقط",
+        "helpWithEstimateOn": "<b>نقاط ×5</b> • مسودة Claude Haiku 5.5 + مراجعة Claude Opus 5.5 • الرصيد: ~{{time}}",
+        "helpWithEstimateOff": "<b>نقاط ×1</b> • مسودة Claude Haiku 5.5 فقط • الرصيد: ~{{time}}"
       },
       "qualitySummary": {
         "label": "ملخص عالي الجودة",
@@ -601,9 +747,9 @@
         "modelOff": "تحليل قياسي بـ Claude Sonnet 5.5",
         "help": "<b>4× نقاط</b> • تحليل معمق + مقاطع مميزة مع Claude Opus 5.5",
         "helpWithEstimate": "<b>4× نقاط</b> • رصيدك: ~{{normalTime}} (عادي) / ~{{hqTime}} (جودة عالية)",
-        "helpOn": "<b>4× أرصدة</b> • تحليل عميق + مقاطع مميزة",
+        "helpOn": "<b>نقاط ×4</b> • تحليل معمّق بـ Claude Opus 5.5 + مقاطع مميزة",
         "helpOff": "تحليل سريع باستخدام Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× أرصدة</b> • تحليل عميق + مقاطع مميزة • الرصيد: ~{{time}}",
+        "helpWithEstimateOn": "<b>نقاط ×4</b> • تحليل معمّق بـ Claude Opus 5.5 + مقاطع مميزة • الرصيد: ~{{time}}",
         "helpWithEstimateOff": "تحليل سريع باستخدام Claude Sonnet 5.5 • الرصيد: ~{{time}}"
       },
       "qualityDubbing": {
@@ -616,7 +762,7 @@
       },
       "videoSuggestionModel": {
         "label": "نموذج اقتراح الفيديو",
-        "help": "Auto = نفس نموذج مسودة الترجمة العادية",
+        "help": "يستخدم مستوى النموذج نفسه المستخدم في الترجمة.",
         "default": "افتراضي (مثل افتراضي الترجمة)",
         "quality": "جودة (مثل جودة الترجمة)"
       },
@@ -624,7 +770,10 @@
         "perHour": "~{{credits}} أرصدة/ساعة",
         "perMinute": "~{{credits}} أرصدة/دقيقة",
         "perSearch": "~{{credits}} أرصدة/بحث",
-        "balance": "الرصيد: ~{{time}}"
+        "balance": "الرصيد: ~{{time}}",
+        "minutesPerHour": "~{{time}} من دقائقك لكل ساعة فيديو",
+        "minutesPerDubMinute": "~{{time}} من دقائقك لكل دقيقة دبلجة",
+        "minutesPerSearch": "~{{time}} من دقائقك لكل بحث"
       }
     },
     "dubbing": {
@@ -652,7 +801,7 @@
       "voiceCloningDesc": "الحفاظ على صوت المتحدث الأصلي في الصوت المدبلج",
       "voiceCloningInsufficientCredits": "يتطلب دقيقة واحدة على الأقل من النقاط",
       "voiceCloningEnabled": "تم تفعيل استنساخ الصوت مع ElevenLabs. سيتم الحفاظ على صوت المتحدث الأصلي في الصوت المدبلج.",
-      "voiceCloningInfo": "يستخدم استنساخ الصوت واجهة ElevenLabs Dubbing API لتحليل وإعادة إنشاء صوت المتحدث الأصلي.",
+      "voiceCloningInfo": "يستخدم استنساخ الصوت خدمة الدبلجة من ElevenLabs لتحليل صوت المتحدث الأصلي وإعادة إنشائه.",
       "costPerMinute": "التكلفة لكل دقيقة",
       "credits": "نقاط",
       "yourBalance": "رصيدك",
@@ -692,11 +841,13 @@
       "economicsBody": "نقاط Stage5 مُحسّنة للراحة (بدون إعداد). BYO يدفع للمزودين مباشرة—عادة أرخص بـ ~30–50% حسب الحزمة.",
       "encryptionUnavailable": "التخزين الآمن غير متاح على هذا النظام. لا يمكن حفظ مفاتيح API.",
       "checkoutOpen": "صفحة الدفع مفتوحة في المتصفح…",
-      "checkoutOpenHint": "أكمل الدفع في متصفحك. سنفتح BYO تلقائيًا عند تأكيد الدفع."
+      "checkoutOpenHint": "أكمل الدفع في متصفحك. سنفتح BYO تلقائيًا عند تأكيد الدفع.",
+      "entitlementsLoadFailed": "تعذّر التحقق من حالة فتح المفاتيح. تحقق من اتصالك ثم أعد المحاولة.",
+      "unlockFailed": "تعذّر بدء الدفع. تحقق من اتصالك ثم حاول مرة أخرى."
     },
     "byoPreferences": {
       "title": "تفضيلات المزود",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "نقاط Stage5",
       "pricingHint": "التكلفة المقدرة لكل ساعة فيديو",
       "pricingHintHeuristic": "تكلفة تقديرية باستخدام الإرشادات الحالية للتطبيق",
       "transcription": "النسخ",
@@ -808,7 +959,8 @@
       "saved": "تم حفظ مفتاح API.",
       "cleared": "تم مسح مفتاح API.",
       "invalid": "فشل التحقق من مفتاح API.",
-      "howToGet": "كيفية الحصول على هذا المفتاح"
+      "howToGet": "كيفية الحصول على هذا المفتاح",
+      "missing": "الصق مفتاح API أولًا."
     },
     "byoStack": {
       "title": "حزمة الذكاء الاصطناعي الخاصة بك"
@@ -844,7 +996,13 @@
         "desktopConnected": "تمت إضافة Translator إلى Claude Desktop. أغلق Claude وأعد فتحه لتحميله.",
         "cliNotFound": "تعذّر العثور على الأمر {{app}} على هذا الكمبيوتر. شغّل هذا في الطرفية:",
         "cliNotFoundCopied": "تعذّر العثور على الأمر {{app}} على هذا الكمبيوتر. تم نسخ أمر الإعداد؛ الصقه في الطرفية:",
-        "failed": "تعذّر ربط {{app}}: {{message}}"
+        "failed": "تعذّر ربط {{app}}: {{message}}",
+        "details": "التفاصيل",
+        "failedConfigInvalid": "تعذّر ربط {{app}}: ملف إعداداته غير صالح، لذا تركه Translator دون تغيير. أصلح الملف أو احذفه، ثم حاول مرة أخرى.",
+        "failedWrite": "تعذّر ربط {{app}}: لم يتمكن Translator من الكتابة في ملف إعداداته.",
+        "failedLauncher": "ربط {{app}} متاح فقط في تطبيق Translator المثبّت.",
+        "failedCli": "تعذّر ربط {{app}} تلقائيًا. شغّل هذا الأمر في الطرفية:",
+        "failedGeneric": "تعذّر ربط {{app}}. حاول مرة أخرى."
       },
       "status": {
         "enabled": "مفعّل",
@@ -906,11 +1064,20 @@
       "summaryCredits_few": "سيتم نقل {{credits}} نقاط.",
       "received_one": "تم استلام نقطة واحدة.",
       "received_two": "تم استلام نقطتين.",
-      "received_few": "تم استلام {{credits}} نقاط."
+      "received_few": "تم استلام {{credits}} نقاط.",
+      "errors": {
+        "nothing_to_transfer": "لا شيء لنقله بعد: لا توجد على هذا الكمبيوتر نقاط مشتراة ولا فتح لمفاتيح API. لنقل النقاط إلى هنا من كمبيوتر آخر، اختر “استلام النقاط”.",
+        "too_many_codes": "أنشأت رموز نقل كثيرة خلال هذه الساعة. حاول مرة أخرى بعد قليل.",
+        "jobs_running": "لا يزال نسخ أو ترجمة قيد التشغيل. حاول مرة أخرى بعد انتهائه.",
+        "invalid_code": "هذا الرمز غير صحيح أو استُخدم من قبل أو انتهت صلاحيته. أنشئ رمزًا جديدًا على الكمبيوتر الآخر.",
+        "same_device": "أدخل الرمز على الكمبيوتر الآخر، لا على الكمبيوتر الذي أنشأه.",
+        "network_error": "تعذّر الوصول إلى خادم Stage5. تحقق من اتصالك ثم حاول مرة أخرى.",
+        "transfer_failed": "تعذّر نقل النقاط. تحقق من اتصالك ثم حاول مرة أخرى."
+      }
     }
   },
   "credits": {
-    "title": "ساعات استخدام الذكاء الاصطناعي",
+    "title": "رصيد الذكاء الاصطناعي",
     "loading": "جارٍ التحميل...",
     "credits": "نقاط",
     "usingApiKey": "يتم استخدام مفتاح API",
@@ -947,7 +1114,9 @@
     "checkoutNote": "دفعة واحدة عبر Stripe في المتصفح. بلا حساب ولا اشتراك، وتُضاف الدقائق تلقائيًا.",
     "dubbingNote": "الترجمة من رصيدك تستهلك نحو 10% إضافية لكل دقيقة، والدبلجة تستهلك أكثر.",
     "iCancelledCheckout": "لقد ألغيت عملية الدفع",
-    "checkoutStartFailed": "تعذّر بدء الدفع. تحقّق من اتصالك وحاول مجددًا."
+    "checkoutStartFailed": "تعذّر بدء الدفع. تحقّق من اتصالك وحاول مجددًا.",
+    "loadFailed": "تعذّر تحميل رصيدك. تحقق من اتصالك ثم حاول مرة أخرى.",
+    "estimateAmount": "{{credits}} نقطة"
   },
   "cta": {
     "generate": {
@@ -982,7 +1151,12 @@
     "useThisVideo": "استخدم هذا الفيديو",
     "useDownloadedVideo": "استخدم هذا الفيديو",
     "useOriginalAudio": "استخدام الصوت الأصلي",
-    "useDubbedAudio": "استخدام الصوت المدبلج"
+    "useDubbedAudio": "استخدام الصوت المدبلج",
+    "changeVideoKeepSubtitles": "إبقاء الترجمة الحالية على الفيديو الجديد (إن كان نسخة أخرى من الفيديو نفسه). ألغِ التحديد إن كان فيديو مختلفًا.",
+    "mute": "كتم الصوت (M)",
+    "unmute": "إلغاء الكتم (M)",
+    "volume": "مستوى الصوت",
+    "unreadableFile": "لا يستطيع Translator قراءة هذا الملف. ربما يكون تالفًا أو بتنسيق غير مدعوم."
   },
   "admin": {
     "title": "المسؤول",
@@ -1079,7 +1253,7 @@
       "localSourceReady": "الملف المحلي جاهز",
       "webSourceReady": "مصدر الويب جاهز",
       "sourceReadyDescription": "الوسائط التي اخترتها جاهزة للخطوة التالية.",
-      "transcribeTitle": "إنشاء تفريغ",
+      "transcribeTitle": "معالجة الفيديو",
       "processVideoTitle": "معالجة الفيديو",
       "transcribeDescription": "حوّل الوسائط المصدر إلى مسار ترجمة قابل للتحرير قبل الانتقال إلى الترجمة أو الدبلجة.",
       "translateDubTitle": "ترجمة أو دبلجة",
@@ -1106,7 +1280,11 @@
     "nextMatchAria": "التطابق التالي",
     "previousMatchAria": "التطابق السابق",
     "replaceAllAria": "استبدال الكل",
-    "closeAria": "إغلاق شريط البحث"
+    "closeAria": "إغلاق شريط البحث",
+    "matchCount": "{{current}} من {{total}}",
+    "matchCase": "مطابقة حالة الأحرف",
+    "wholeWord": "الكلمة كاملة",
+    "showReplace": "استبدال"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1158,7 +1336,32 @@
       "neverHadMessage": "يتطلب النسخ نقاطًا أو فتح مفاتيح API. احصل على أيٍّ منهما من الإعدادات. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية.",
       "notEnoughTitle": "لا توجد أرصدة كافية لهذا الفيديو",
       "notEnoughTranscriptionMessage": "يتطلب نسخ هذا الفيديو نحو {{required}} رصيدًا. لديك {{available}}، وهذا يكفي لنحو {{minutes}} دقيقة. أضف أرصدة ثم ابدأ من جديد.",
-      "notEnoughMessage": "تحتاج هذه المهمة إلى أرصدة أكثر من رصيدك البالغ {{available}}. أضف أرصدة للمتابعة."
+      "notEnoughMessage": "تحتاج هذه المهمة إلى أرصدة أكثر من رصيدك البالغ {{available}}. أضف أرصدة للمتابعة.",
+      "task": {
+        "transcription": {
+          "title": "النسخ يحتاج إلى نقاط",
+          "message": "رصيدك لا يغطي نسخ هذا. أضف نقاطًا، ثم ابدأ من جديد. الأسطر التي نُسخت محفوظة."
+        },
+        "translation": {
+          "title": "الترجمة تحتاج إلى نقاط",
+          "message": "رصيدك لا يغطي ترجمة هذا. أضف نقاطًا، ثم حاول مرة أخرى. الأسطر التي تُرجمت محفوظة. الترجمة باستخدام Claude أو Codex الخاص بك عبر التحكم بالوكلاء مجانية."
+        },
+        "dubbing": {
+          "title": "الدبلجة تحتاج إلى نقاط",
+          "message": "رصيدك لا يغطي دبلجة هذا الفيديو. أضف نقاطًا، ثم حاول مرة أخرى."
+        },
+        "summary": {
+          "title": "الملخص يحتاج إلى نقاط",
+          "message": "رصيدك لا يغطي الملخص واللقطات المميزة. أضف نقاطًا، ثم حاول مرة أخرى."
+        },
+        "videoSearch": {
+          "title": "البحث بالذكاء الاصطناعي يحتاج إلى نقاط",
+          "message": "رصيدك لا يغطي البحث عن الفيديوهات بالذكاء الاصطناعي. أضف نقاطًا، ثم ابحث مجددًا."
+        },
+        "other": {
+          "title": "هذا يحتاج إلى نقاط"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "بدء الدبلجة؟",
@@ -1169,7 +1372,58 @@
       "message": "لديك ترجمات مفتوحة بالفعل. احفظها أو تجاهلها قبل استبدالها بالترجمات التلقائية من YouTube.",
       "saveAndOpen": "حفظ وفتح الترجمات",
       "title": "هل تريد فتح الترجمات التلقائية المستردة؟"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "هل تريد حفظ تعديلاتك على الترجمة أولًا؟",
+      "message": "عدّلت هذه الترجمة منذ آخر حفظ. هل تريد حفظ تعديلاتك قبل استبدالها؟",
+      "saveAndContinue": "حفظ ومتابعة",
+      "discardAndContinue": "تجاهل التعديلات والمتابعة"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "لا يزال النسخ جاريًا.",
+        "translation": "لا تزال الترجمة جارية.",
+        "dubbing": "لا تزال الدبلجة جارية.",
+        "export": "لا يزال تصدير الفيديو جاريًا.",
+        "summary": "لا يزال الملخص قيد الكتابة.",
+        "download": "لا يزال التنزيل جاريًا.",
+        "highlight": "لا يزال إنشاء المقاطع المميزة جاريًا.",
+        "search": "لا يزال البحث عن الفيديوهات جاريًا.",
+        "generic": "لا تزال هناك مهمة جارية."
+      },
+      "unsavedLine": "تعديلات الترجمة غير محفوظة.",
+      "unsavedMessage": "في هذه الترجمة تغييرات لم تُحفظ.",
+      "tabUnsavedDetail": "هل تريد حفظها قبل إغلاق علامة التبويب؟",
+      "tabUnsavedWithJobDetail": "إغلاق علامة التبويب يوقف المهمة. هل تريد حفظ تعديلات الترجمة أولًا؟",
+      "tabJobDetail": "إغلاق علامة التبويب يوقفها، ويضيع ما أُنجز حتى الآن.",
+      "quitMessage": "هل تريد إنهاء {{app}}؟ بعض العمل لم يكتمل.",
+      "windowMessage": "هل تريد إغلاق النافذة؟ بعض العمل لم يكتمل.",
+      "tabLine": "‏{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "ستتوقف المهام الجارية. هل تريد حفظ تعديلات الترجمة أولًا؟",
+      "jobsDetail": "ستتوقف المهام الجارية، ويضيع ما أُنجز حتى الآن.",
+      "saveAndClose": "حفظ وإغلاق",
+      "saveAndQuit": "حفظ وإنهاء",
+      "closeWithoutSaving": "إغلاق دون حفظ",
+      "quitWithoutSaving": "إنهاء دون حفظ",
+      "stopAndClose": "إيقاف وإغلاق",
+      "quitAnyway": "إنهاء على أي حال",
+      "closeAnyway": "إغلاق على أي حال",
+      "saveFailed": "تعذّر حفظ الترجمة في {{title}}، لذا لم يُغلق شيء. احفظها من المحرر، ثم حاول مرة أخرى.",
+      "ok": "حسنًا"
+    },
+    "exportSaveDialogTitle": "حفظ الفيديو باسم",
+    "exportVideoFilterName": "فيديو MP4",
+    "exportDiscardConfirm": "الفيديو جاهز لكنه لم يُحفظ بعد. هل تريد تجاهله؟",
+    "exportChooseLocationButton": "اختيار مكان الحفظ…",
+    "exportDiscardButton": "تجاهل الفيديو",
+    "exportSaveFailed": "تعذّر حفظ الفيديو في {{folder}}.",
+    "exportSaveFailedPermission": "ليست لديك صلاحية الحفظ في هذا المجلد.",
+    "exportSaveFailedDiskFull": "لا توجد مساحة فارغة كافية على ذلك القرص.",
+    "exportSaveFailedGeneric": "تعذّرت كتابة الملف هناك.",
+    "exportSameAsSource": "سيؤدي هذا إلى استبدال الفيديو الأصلي. اختر اسمًا آخر.",
+    "keepDubbing": "متابعة الدبلجة",
+    "stopDubbing": "إيقاف الدبلجة",
+    "cancelDubbingBody": "سيُحذف الصوت المدبلج الذي أُنشئ حتى الآن."
   },
   "progress": {
     "preparingVideoExport": "جارٍ تجهيز تصدير الفيديو…",
@@ -1187,7 +1441,7 @@
     "transcribingElevenLabsHours": "جارٍ النسخ مع ElevenLabs (~{{hours}}س {{minutes}}د متبقية)",
     "transcribingElevenLabsFinishing": "جارٍ النسخ مع ElevenLabs...",
     "transcriptionRetry": "فشل الاتصال، إعادة المحاولة ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "جارٍ رفع الصوت للنسخ...",
+    "transcribingR2Upload": "جارٍ رفع الصوت…",
     "gapRepair": "إصلاح الفجوات #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "إصلاح الترجمات المفقودة (التكرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "تنظيف التعليقات ({{done}}/{{total}})",
@@ -1265,7 +1519,18 @@
       "preparingVoiceClips_one": "جارٍ تحضير مقطع صوتي واحد…",
       "preparingVoiceClips_two": "جارٍ تحضير مقطعين صوتيين…",
       "preparingVoiceClips_few": "جارٍ تحضير {{count}} مقاطع صوتية…",
-      "preparingVoiceClips_many": "جارٍ تحضير {{count}} مقطعًا صوتيًا…"
+      "preparingVoiceClips_many": "جارٍ تحضير {{count}} مقطعًا صوتيًا…",
+      "completed": "تم",
+      "cancelled": "أُلغي",
+      "cancelling": "جارٍ الإلغاء…",
+      "failed": "حدث خطأ ما",
+      "downloading": "جارٍ التنزيل…",
+      "downloadingAudio": "جارٍ تنزيل الصوت…",
+      "transcribingLine": "جارٍ نسخ السطر…",
+      "startingExport": "جارٍ بدء إنشاء الفيديو…",
+      "captionsAvailable": "تعذّر تنزيل الفيديو، لكن ترجمة YouTube المصاحبة متاحة",
+      "captionsNotOpened": "ترجمة YouTube المصاحبة جاهزة لكنها لم تُفتح",
+      "insufficientCredits": "الرصيد لا يكفي"
     },
     "listening": "جارٍ الاستماع إلى الفيديو…",
     "mergeFinishSaveBeforeReload": "أكمل حفظ الفيديو المدمج قبل إعادة التحميل.",
@@ -1273,7 +1538,8 @@
     "mergeWaitForCancelBeforeReload": "انتظر حتى يكتمل إلغاء الدمج قبل إعادة التحميل.",
     "preparingTranscription": "جارٍ الاستعداد للاستماع…",
     "restartingTranscription": "جارٍ إعادة بدء النسخ…",
-    "resumingTranscription": "جارٍ المتابعة من حيث توقف…"
+    "resumingTranscription": "جارٍ المتابعة من حيث توقف…",
+    "hqModeEstimate": "(جودة عالية: ~{{time}})"
   },
   "messages": {
     "fileSaved": "تم حفظ الملف:\n{{path}}",
@@ -1296,7 +1562,23 @@
     "sendReport": "إرسال تقرير",
     "reportPrompt": "حدث خطأ ما. أبلغ المطوّر لإصلاح سريع.",
     "preparingReport": "جارٍ إعداد حزمة التشخيص...",
-    "reportContextWarning": "تعذر تحميل بعض سياق التشخيص. سيظل التقرير يتضمن تفاصيل من هذا التطبيق."
+    "reportContextWarning": "تعذر تحميل بعض سياق التشخيص. سيظل التقرير يتضمن تفاصيل من هذا التطبيق.",
+    "reportPromptTask": {
+      "transcription": "توقف النسخ بسبب مشكلة غير متوقعة. أرسل هذا التقرير لنتمكن من إصلاحها.",
+      "translation": "توقفت الترجمة بسبب مشكلة غير متوقعة. أرسل هذا التقرير لنتمكن من إصلاحها.",
+      "dubbing": "توقفت الدبلجة بسبب مشكلة غير متوقعة. أرسل هذا التقرير لنتمكن من إصلاحها.",
+      "summary": "توقف الملخص بسبب مشكلة غير متوقعة. أرسل هذا التقرير لنتمكن من إصلاحها.",
+      "videoSearch": "توقف البحث عن الفيديوهات بسبب مشكلة غير متوقعة. أرسل هذا التقرير لنتمكن من إصلاحها.",
+      "download": "فشل تنزيل الفيديو لسبب لا نعرفه. أرسل هذا التقرير لنتمكن من إصلاحه.",
+      "export": "توقف إنشاء الفيديو بسبب مشكلة غير متوقعة. أرسل هذا التقرير لنتمكن من إصلاحها.",
+      "other": "حدث خطأ ما. أرسل هذا التقرير لنتمكن من إصلاحه."
+    },
+    "feedbackTitle": "أرسل ملاحظاتك أو أبلغ عن مشكلة",
+    "whatHappened": "ماذا حدث، أو بماذا تودّ أن تخبرنا؟",
+    "attachDiagnostics": "إرفاق تفاصيل التشخيص (يُنصح به عند حدوث مشكلة)",
+    "attachDiagnosticsHint": "سجلات التطبيق الأخيرة وإصداره ومعلومات النظام. لا فيديوهات ولا ترجمات.",
+    "showDetails": "عرض ما سيُرسَل",
+    "feedbackEmailSubject": "ملاحظات حول Translator"
   },
   "home": {
     "headline": "أي فيديو، باللغة <lang>{{language}}</lang>.",
@@ -1329,7 +1611,9 @@
     "seeAll": "عرض الكل",
     "recentSubtitlesReady": "الترجمة {{language}} جاهزة",
     "recentSubtitlesReadyGeneric": "الترجمة جاهزة",
-    "recentDownloaded": "تم التنزيل"
+    "recentDownloaded": "تم التنزيل",
+    "recentLocalFile": "على هذا الكمبيوتر",
+    "recentLocalMissing": "نُقل الملف أو حُذف"
   },
   "workspace": {
     "subtitlesTitle": "الترجمة",
@@ -1359,7 +1643,40 @@
     "showTranslation": "الترجمة",
     "showOriginal": "الأصل",
     "showBoth": "كلاهما",
-    "textSize": "حجم الخط"
+    "textSize": "حجم الخط",
+    "findReplace": "بحث واستبدال",
+    "statusReadyPrice": "جاهز — الترجمة {{language}} لهذا الفيديو مقابل {{price}}",
+    "statusReadyPreview": "جاهز — دقائقك تكفي لترجمة أول {{minutes}} دقيقة إلى {{language}}",
+    "statusReadyPreview_one": "جاهز — دقائقك تكفي لترجمة الدقيقة الأولى إلى {{language}}",
+    "statusReadyPreview_two": "جاهز — دقائقك تكفي لترجمة أول دقيقتين إلى {{language}}",
+    "statusReadyPreview_few": "جاهز — دقائقك تكفي لترجمة أول {{minutes}} دقائق إلى {{language}}",
+    "statusReadyPreview_many": "جاهز — دقائقك تكفي لترجمة أول {{minutes}} دقيقة إلى {{language}}",
+    "statusPartlyTranslated": "مترجمة إلى {{language}}: {{translated}} من {{count}} سطر · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslated_one": "مترجمة إلى {{language}}: {{translated}} من سطر واحد · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslated_two": "مترجمة إلى {{language}}: {{translated}} من سطرين · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslated_few": "مترجمة إلى {{language}}: {{translated}} من {{count}} أسطر · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslated_many": "مترجمة إلى {{language}}: {{translated}} من {{count}} سطرًا · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslatedUnknown": "مترجمة: {{translated}} من {{count}} سطر · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslatedUnknown_one": "مترجمة: {{translated}} من سطر واحد · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslatedUnknown_two": "مترجمة: {{translated}} من سطرين · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslatedUnknown_few": "مترجمة: {{translated}} من {{count}} أسطر · بلا ترجمة: {{missing}}",
+    "statusPartlyTranslatedUnknown_many": "مترجمة: {{translated}} من {{count}} سطرًا · بلا ترجمة: {{missing}}",
+    "statusTranslatedUnknown": "الأسطر المترجمة: {{count}} · متزامنة مع الفيديو",
+    "statusTranslatedUnknown_one": "سطر واحد مترجم · متزامن مع الفيديو",
+    "statusTranslatedUnknown_two": "سطران مترجمان · متزامنان مع الفيديو",
+    "statusTranslatedUnknown_few": "{{count}} أسطر مترجمة · متزامنة مع الفيديو",
+    "statusTranslatedUnknown_many": "الأسطر المترجمة: {{count}} · متزامنة مع الفيديو",
+    "stopsEarly": "تتوقف الترجمة عند {{time}}",
+    "interruptedTranslate": "توقفت ترجمة هذا الفيديو إلى {{language}} عند إغلاق Translator.",
+    "interruptedTranscribe": "توقف نسخ هذا الفيديو عند إغلاق Translator.",
+    "interruptedResume": "المتابعة من حيث توقف",
+    "translateMissing": "ترجمة الأسطر المتبقية ({{count}}) إلى {{language}}",
+    "translateMissing_one": "ترجمة السطر المتبقي إلى {{language}}",
+    "translateMissing_two": "ترجمة السطرين المتبقيين إلى {{language}}",
+    "translateMissing_few": "ترجمة الأسطر المتبقية ({{count}}) إلى {{language}}",
+    "translateMissing_many": "ترجمة الأسطر المتبقية ({{count}}) إلى {{language}}",
+    "moreRevealVideo": "إظهار ملف الفيديو",
+    "chooseAnotherFile": "اختيار ملف آخر"
   },
   "subtitleStyles": {
     "Cinema": "أصفر سينمائي",
@@ -1396,7 +1713,13 @@
     "notNow": "ليس الآن",
     "noneTitle_one": "مدة هذا الفيديو دقيقة واحدة.",
     "noneTitle_two": "مدة هذا الفيديو دقيقتان.",
-    "noneTitle_few": "مدة هذا الفيديو {{total}} دقائق."
+    "noneTitle_few": "مدة هذا الفيديو {{total}} دقائق.",
+    "failedNeedMinutes": "كل ما تُرجم حتى الآن محفوظ. تحتاج إلى دقائق إضافية لترجمة ما تبقى ({{remaining}} د).",
+    "failedNeedMinutes_one": "كل ما تُرجم حتى الآن محفوظ. تحتاج إلى دقائق إضافية لترجمة الدقيقة المتبقية.",
+    "failedNeedMinutes_two": "كل ما تُرجم حتى الآن محفوظ. تحتاج إلى دقائق إضافية لترجمة الدقيقتين المتبقيتين.",
+    "failedNeedMinutes_few": "كل ما تُرجم حتى الآن محفوظ. تحتاج إلى دقائق إضافية لترجمة ما تبقى ({{remaining}} د).",
+    "failedNeedMinutes_many": "كل ما تُرجم حتى الآن محفوظ. تحتاج إلى دقائق إضافية لترجمة ما تبقى ({{remaining}} د).",
+    "failedNetwork": "انقطع الاتصال. كل ما تُرجم حتى الآن محفوظ. حاول مرة أخرى عند عودة الاتصال."
   },
   "videoCost": {
     "covered": "تكفيه دقائقك",
@@ -1406,7 +1729,7 @@
   "highlightEditor": {
     "legend": "تأطير وترجمات Shorts",
     "intro": "أطّر كل متحدث، وقسّم عند تغيّر اللقطات، ووقّت عبارات الترجمة القصيرة مع الكلام. تبدأ الأوقات أدناه من بداية هذا المقطع.",
-    "previewTime": "وقت معاينة Short",
+    "previewTime": "وقت معاينة المقطع القصير",
     "speakerLabel": "تسمية المتحدث أو الموضوع",
     "splitShot": "تقسيم اللقطة عند موضع التشغيل",
     "joinShot": "الدمج مع اللقطة السابقة",
@@ -1419,14 +1742,24 @@
     "saveSelectionFirst": "احفظ اختيار اللقطات المميزة أولًا.",
     "closeEdit": "إغلاق التعديل",
     "editFraming": "تعديل التأطير والترجمات",
-    "styleShort": "تنسيق هذا الـ Short",
+    "styleShort": "تنسيق هذا المقطع القصير",
     "horizontalFocus": "التركيز الأفقي",
     "verticalFocus": "التركيز العمودي",
     "zoom": "تكبير",
     "from": "من",
     "to": "إلى",
     "saving": "جارٍ الحفظ…",
-    "save": "حفظ تعديل Short"
+    "save": "حفظ تعديل المقطع القصير",
+    "openFailed": "تعذّر فتح هذا المقطع لتنسيقه. تأكد من أن الفيديو وترجمته مفتوحان.",
+    "saveFailed": "تعذّر حفظ تعديل المقطع القصير. تأكد من أن لكل عبارة نصًا وأن أوقاتها داخل حدود المقطع.",
+    "previewAt": "معاينة عند {{seconds}} ث",
+    "shotPosition": "اللقطة {{current}} من {{total}}",
+    "phrasesHint": "عبارات الترجمة: لإبراز كلمة، اكتب الكلمة أو العبارة كما وردت في النص داخل خانتها.",
+    "phraseStart": "بداية العبارة {{index}} (ث)",
+    "phraseEnd": "نهاية العبارة {{index}} (ث)",
+    "phraseText": "نص العبارة {{index}}",
+    "phraseEmphasis": "إبراز العبارة {{index}}",
+    "saveNote": "عند الحفظ يتحوّل هذا المقطع إلى نمط “إعادة تأطير Shorts” بعبارات الترجمة هذه بدلًا من نمط ترجمتك."
   },
   "subtitleFonts": {
     "label": "الخط",
@@ -1434,5 +1767,80 @@
     "classic": "كلاسيكي",
     "serif": "مذيّل",
     "display": "عريض"
+  },
+  "export": {
+    "exportButton": "تصدير الفيديو",
+    "exportingButton": "جارٍ التصدير…",
+    "progressTitle": "جارٍ تصدير الفيديو",
+    "savedTitle": "حُفظ الفيديو",
+    "savedIn": "{{file}} في {{folder}}",
+    "showInFinder": "إظهار في Finder",
+    "showInFolder": "إظهار في المجلد",
+    "openVideo": "فتح الفيديو",
+    "failedTitle": "لم يُصدَّر الفيديو",
+    "saveTo": "الحفظ في",
+    "changeDestination": "تغيير…",
+    "displayNeedsTranslation": "ترجم الأسطر أولًا لعرض الترجمة أو الاثنين معًا.",
+    "error": {
+      "permission": "لم يتمكن Translator من كتابة ملفات العمل الخاصة بالفيديو. تأكد من أن حسابك يملك صلاحية الكتابة في المجلد المؤقت، ثم حاول مرة أخرى.",
+      "tools": "تعذّر تجهيز أدوات تصدير الفيديو. تحقق من اتصالك بالإنترنت ثم حاول مرة أخرى.",
+      "generic": "حدث خطأ أثناء إنشاء الفيديو. حاول مرة أخرى."
+    }
+  },
+  "tabs": {
+    "newTab": "علامة تبويب جديدة",
+    "newTabWithShortcut": "علامة تبويب جديدة ({{shortcut}})",
+    "closeTab": "إغلاق علامة التبويب"
+  },
+  "menu": {
+    "about": "حول {{app}}",
+    "services": "الخدمات",
+    "hide": "إخفاء {{app}}",
+    "hideOthers": "إخفاء الآخرين",
+    "showAll": "إظهار الكل",
+    "quit": "إنهاء {{app}}",
+    "exit": "خروج",
+    "file": "ملف",
+    "newTab": "علامة تبويب جديدة",
+    "closeTab": "إغلاق علامة التبويب",
+    "nextTab": "علامة التبويب التالية",
+    "previousTab": "علامة التبويب السابقة",
+    "closeWindow": "إغلاق النافذة",
+    "edit": "تحرير",
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "cut": "قص",
+    "copy": "نسخ",
+    "paste": "لصق",
+    "pasteAndMatchStyle": "لصق ومطابقة النمط",
+    "delete": "حذف",
+    "selectAll": "تحديد الكل",
+    "speech": "الكلام",
+    "startSpeaking": "بدء التحدث",
+    "stopSpeaking": "إيقاف التحدث",
+    "find": "بحث",
+    "view": "عرض",
+    "actualSize": "الحجم الفعلي",
+    "zoomIn": "تكبير",
+    "zoomOut": "تصغير",
+    "toggleFullScreen": "تبديل ملء الشاشة",
+    "window": "نافذة",
+    "minimize": "تصغير النافذة",
+    "zoom": "تكبير/تصغير النافذة",
+    "bringAllToFront": "إحضار الكل إلى المقدمة",
+    "selectTab": "اختيار علامة التبويب {{n}}",
+    "learnSpelling": "تعلّم التهجئة",
+    "lookUpSelection": "البحث عن “{selection}”",
+    "searchWithGoogle": "البحث باستخدام Google",
+    "saveImage": "حفظ الصورة",
+    "saveImageAs": "حفظ الصورة باسم…",
+    "saveVideo": "حفظ الفيديو",
+    "saveVideoAs": "حفظ الفيديو باسم…",
+    "copyLink": "نسخ الرابط",
+    "saveLinkAs": "حفظ الرابط باسم…",
+    "copyImage": "نسخ الصورة",
+    "copyImageAddress": "نسخ عنوان الصورة",
+    "copyVideoAddress": "نسخ عنوان الفيديو",
+    "inspect": "فحص العنصر"
   }
 }

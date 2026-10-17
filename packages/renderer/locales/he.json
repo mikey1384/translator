@@ -80,7 +80,7 @@
     "openDownloadPage": "פתח את דף ההורדה",
     "show": "הצג",
     "splitScrollButtonAria": "גלול למעלה (החצי העליון) או למטה (החצי התחתון)",
-    "updateRequiredBody": "גרסה זו של Translator כבר לא נתמכת על ידי ה-backend. עדכן את האפליקציה כדי להמשיך.",
+    "updateRequiredBody": "השרת כבר לא תומך בגרסה הזו של Translator. עדכנו את האפליקציה כדי להמשיך.",
     "updateRequiredTitle": "נדרש עדכון",
     "wait": "המתן…",
     "whatsNewTitle": "מה חדש",
@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "קבצי SRT",
       "mediaFiles": "קבצי מדיה",
-      "videoFiles": "קבצי וידאו"
+      "videoFiles": "קבצי וידאו",
+      "textFiles": "קובצי טקסט",
+      "allFiles": "כל הקבצים",
+      "subtitleFiles": "קובצי כתוביות"
     },
     "chooseAnotherLocation": "בחר מיקום אחר",
     "continue": "המשך",
@@ -96,7 +99,20 @@
     "dismiss": "סגור",
     "moreActions": "פעולות נוספות",
     "installingUpdate": "מתקין עדכון...",
-    "installingUpdateShort": "מתקין"
+    "installingUpdateShort": "מתקין",
+    "ok": "אישור",
+    "minimumVersionValue": "הגרסה המינימלית הנתמכת: v{{version}}",
+    "currentVersionValue": "הגרסה הנוכחית: v{{version}}",
+    "updateNotFoundUseDownloadPage": "לא הצלחנו להוריד את העדכון כאן. הורידו את הגרסה העדכנית מדף ההורדה.",
+    "whatsNewLead": "Translator עודכן לגרסה v{{version}}.",
+    "whatsNewNotesInEnglish": "הערות גרסה (באנגלית)",
+    "checkForUpdates": "בדיקת עדכונים",
+    "checkingForUpdates": "בודקים אם יש עדכונים…",
+    "upToDate": "יש לכם את הגרסה העדכנית.",
+    "updateAvailableDownloading": "נמצא עדכון. מורידים אותו ברקע.",
+    "updateReadyToInstall": "העדכון ירד. הפעילו מחדש כדי להתקין.",
+    "updateCheckFailed": "לא הצלחנו לבדוק אם יש עדכונים. נסו שוב מאוחר יותר.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube ביקש אימות אנושי. לחץ על התחבר כדי להמשיך.",
@@ -141,7 +157,60 @@
       "fileTooLarge": "השמע הזה ארוך מדי לתמלול במשימה אחת (יותר מכ-{{hours}} שעות). פצל את הסרטון לחלקים קצרים יותר ותמלל כל חלק בנפרד.",
       "elevenLabsKeyRequired": "התמלול משתמש ב-ElevenLabs Scribe ודורש מפתח API של ElevenLabs. הוסף מפתח בהגדרות, או כבה את מצב מפתחות ה-API כדי לתמלל עם קרדיטי Stage5. מפתח ה-OpenAI או ה-Anthropic שלך עדיין משמש לתרגום.",
       "fileTooLarge_one": "השמע הזה ארוך מדי לתמלול במשימה אחת (יותר מכ-{{hours}} שעה). פצל את הסרטון לחלקים קצרים יותר ותמלל כל חלק בנפרד."
-    }
+    },
+    "credits": {
+      "transcription": "אין מספיק קרדיטים כדי לתמלל את זה.",
+      "translation": "אין מספיק קרדיטים כדי לתרגם את זה.",
+      "dubbing": "אין מספיק קרדיטים כדי לדבב את זה.",
+      "summary": "אין מספיק קרדיטים לסיכום.",
+      "videoSearch": "אין מספיק קרדיטים כדי לחפש סרטונים.",
+      "download": "אין מספיק קרדיטים.",
+      "export": "אין מספיק קרדיטים.",
+      "other": "אין מספיק קרדיטים."
+    },
+    "failed": {
+      "transcription": "התמלול נעצר בגלל תקלה לא צפויה. השורות שכבר תומללו נשמרו.",
+      "translation": "התרגום נעצר בגלל תקלה לא צפויה. השורות שכבר תורגמו נשמרו.",
+      "dubbing": "הדיבוב נעצר בגלל תקלה לא צפויה.",
+      "summary": "הסיכום נעצר בגלל תקלה לא צפויה.",
+      "videoSearch": "חיפוש הסרטונים נעצר בגלל תקלה לא צפויה.",
+      "export": "יצירת הסרטון נעצרה בגלל תקלה לא צפויה.",
+      "other": "משהו השתבש. נסו שוב."
+    },
+    "server": {
+      "transcription": "הייתה תקלה בשרת שלנו. נסו שוב בעוד דקה.",
+      "translation": "התרגום נעצר בגלל תקלה בשרת שלנו. השורות שכבר תורגמו נשמרו. נסו שוב בעוד דקה.",
+      "dubbing": "הייתה תקלה בשרת שלנו. נסו שוב בעוד דקה.",
+      "summary": "הייתה תקלה בשרת שלנו. נסו שוב בעוד דקה.",
+      "videoSearch": "הייתה תקלה בשרת שלנו. נסו שוב בעוד דקה.",
+      "export": "הייתה תקלה בשרת שלנו. נסו שוב בעוד דקה.",
+      "other": "הייתה תקלה בשרת שלנו. נסו שוב בעוד דקה."
+    },
+    "download": {
+      "invalid_url": "זה לא נראה כמו קישור לסרטון. הדביקו את הקישור המלא.",
+      "unsupported_site": "Translator לא יכול להוריד סרטונים מהאתר הזה.",
+      "unavailable": "הסרטון לא זמין. ייתכן שהוא הוסר.",
+      "private": "הסרטון הזה פרטי.",
+      "not_found": "לא נמצא סרטון בקישור הזה.",
+      "region_locked": "הסרטון הזה לא זמין במדינה שלכם.",
+      "audience_restricted": "הסרטון הזה מוצג רק לחלק מהצופים. אם החשבון שלכם יכול לצפות בו, התחברו לאתר בהגדרות ונסו שוב.",
+      "login_required": "כדי לצפות בסרטון הזה צריך להתחבר. התחברו לאתר בהגדרות ונסו שוב.",
+      "media_blocked": "האתר חסם את הורדת הסרטון, ולא הצלחנו לשחזר כתוביות.",
+      "access_refused": "האתר סירב למסור את הסרטון ל-Translator.",
+      "video_data_failed": "לא הצלחנו להוריד את הסרטון. ייתכן שהוא חסום באזור שלכם או דורש התחברות.",
+      "rate_limited": "‏YouTube מגביל כרגע הורדות מהרשת שלכם. חכו כמה דקות ונסו שוב.",
+      "network": "אין חיבור. בדקו את החיבור לאינטרנט ונסו שוב.",
+      "captions_unreadable": "נמצאו כתוביות של YouTube, אבל Translator לא הצליח לקרוא אותן.",
+      "save_failed": "הסרטון ירד, אבל לא הצלחנו לשמור אותו. נסו שוב.",
+      "downloader_failed": "כלי ההורדה לא הצליח לפעול. הפעילו מחדש את Translator ונסו שוב.",
+      "generic": "לא הצלחנו להוריד את הסרטון. נסו שוב או השתמשו בקישור אחר.",
+      "subtitlesNotSaved": "לא הצלחנו לשמור את הכתוביות הנוכחיות שלכם, ולכן הכתוביות של YouTube לא נפתחו.",
+      "openFailed": "הסרטון ירד, אבל לא הצלחנו לפתוח אותו. פתחו אותו מהיסטוריית ההורדות."
+    },
+    "network": "אין גישה לשרת. בדקו את החיבור לאינטרנט ונסו שוב.",
+    "busy": "השירות עמוס כרגע. חכו דקה ונסו שוב.",
+    "diskFull": "הדיסק מלא. פנו קצת מקום ונסו שוב.",
+    "cancelDubbingFailedPlain": "לא הצלחנו לעצור את הדיבוב. נסו שוב."
   },
   "input": {
     "connect": "התחבר",
@@ -176,7 +245,7 @@
     "transcribeOnly": "תמלל אודיו",
     "srtLoaded": "התמלול הושלם",
     "srtFileLoaded": "SRT נטען",
-    "featuresUnlockAfterTranscription": "תרגום ותפריטים נוספים יופיעו לאחר השלמת התמלול.",
+    "featuresUnlockAfterTranscription": "תמללו את הסרטון, תרגמו אותו או מצאו בו את הרגעים הבולטים.",
     "preSubtitleActionsHint": "תמלל, תרגם או צור היילייטים מהווידאו הזה.",
     "saveDubbedVideo": "שמור וידאו מדובב",
     "downloadFinishedSwitchTitle": "לצפות בסרטון שהורד?",
@@ -292,13 +361,13 @@
       "defaultSearchUserMessage": "חפש לי סרטונים עכשיו.",
       "followUp": {
         "moreLikeQuery": "מצא עוד סרטונים כמו \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" מיוצר אחר או ערוץ אחר",
+        "differentCreator": "\"{{query}}\" משם אחר או מערוץ אחר",
         "interviews": "ראיונות או שיחות על {{query}}",
         "clips": "תקצירי שיא או קליפים בולטים של {{query}}",
-        "creatorAppearances": "ראיונות, הופעות טלוויזיה או קליפים חיים של {{creator}}",
-        "similarCreators": "יוצרים או אמנים דומים ל-{{creator}}",
+        "creatorAppearances": "ראיונות, הופעות או קליפים קשורים של {{creator}}",
+        "similarCreators": "שמות, אמנים או ערוצים שדומים ל-{{creator}}",
         "topicAngle": "{{topic}} מוסבר מזווית אחרת",
-        "topicCreator": "{{creator}} וסרטונים קשורים על {{topic}}",
+        "topicCreator": "{{creator}} או סרטונים קשורים על {{topic}}",
         "channelStyle": "סרטונים עם תחושה דומה ל-{{channel}}",
         "moreFromHistory": "עוד סרטונים כמו \"{{title}}\"",
         "channelFromHistory": "סרטונים מערוצים כמו {{channel}}"
@@ -308,12 +377,12 @@
       "moreActions": "פעולות נוספות",
       "recentEvents": "אירועים אחרונים",
       "cancelFailed": "לא ניתן היה לבטל את החיפוש הנוכחי.",
-      "countryGlobal": "תוצאות גלובליות",
-      "countryHint": "השאר ריק לתוצאות גלובליות.",
+      "countryGlobal": "מדינת יעד: ברירת מחדל באנגלית",
+      "countryHint": "השאירו ריק כדי לחפש באנגלית כברירת מחדל.",
       "countryHintDefaultEnglish": "השאר ריק כדי ששפת החיפוש תהיה אנגלית כברירת מחדל.",
-      "countryLabel": "מדינת / אזור יעד",
+      "countryLabel": "מדינת יעד",
       "countryPlaceholder": "לדוגמה: ארה״ב, יפן, ספרד, ברזיל",
-      "countryScope": "מדינה: {{country}}",
+      "countryScope": "מדינת יעד: {{country}}",
       "countryDefaultEnglish": "מדינת יעד: אנגלית כברירת מחדל",
       "emptyCopy": "ציין את הנושא, הקהל, סגנון היוצר או האווירה של הווידאו שברצונך למצוא. הוסף מדינה או עדכניות רק כשזה חשוב.",
       "emptyEyebrow": "חיפוש בעזרת העוזר",
@@ -336,7 +405,7 @@
       "savedDownloads": "הורדות שמורות",
       "savedDownloadsCount": "{{count}} הורדות שמורות",
       "savedPreferencesCount": "{{count}} העדפות שמורות",
-      "searchingLong": "עדיין מחפש ומדרג סרטונים...",
+      "searchingLong": "עדיין מחפשים סרטונים...",
       "searchingVeryLong": "זה לוקח יותר זמן מהרגיל, אבל עדיין פועל.",
       "stillWorking": "עדיין עובד...",
       "toggleCopy": "חפש סרטון מקור ב-YouTube בלי לצאת מתהליך העבודה.",
@@ -357,7 +426,11 @@
       "deleteLocalFileHistoryPending": "הקובץ נמחק, אבל Translator לא הצליח לסיים לעדכן את היסטוריית ההורדות. הוא ינסה שוב אוטומטית.",
       "removeHistoryFailed": "לא ניתן היה להסיר את ההורדה הזו מההיסטוריה.",
       "storedInAppLibrary": "נשמר בספריית היישום",
-      "savedPreferencesCount_one": "{{count}} העדפה שמורה"
+      "savedPreferencesCount_one": "{{count}} העדפה שמורה",
+      "freeSearchRunning": "מחפשים ב-YouTube…",
+      "freeSearchResults": "הנה תוצאות מ-YouTube עבור “{{query}}”. החיפוש הזה היה בחינם. ספרו לי עוד על מה שאתם מחפשים, ואחדד את החיפוש עם AI.",
+      "freeSearchEmpty": "‏YouTube לא מצא כלום עבור “{{query}}”. תארו מה אתם מחפשים, ואחפש עם AI.",
+      "openOriginalPage": "פתיחת הדף המקורי"
     },
     "downloadAndTranslate": "הורד ותרגם",
     "downloadAndTranscribe": "הורד ותמלל",
@@ -371,7 +444,24 @@
     "captionRecoveryKeepVideo": "השאר את הסרטון הנוכחי",
     "captionRecoveryOpenCaptions": "פתח כתוביות",
     "captionRecoverySwitchPrompt": "Translator שחזר את הכתוביות האוטומטיות של YouTube, אבל הסרטון מה-URL אינו זמין. פתיחתן תנתק את הסרטון הנוכחי.",
-    "captionRecoverySwitchTitle": "לפתוח כתוביות בלי הסרטון הנוכחי?"
+    "captionRecoverySwitchTitle": "לפתוח כתוביות בלי הסרטון הנוכחי?",
+    "translateTheseSubtitles": "תרגום הכתוביות",
+    "subtitlesLoaded": "הכתוביות נטענו",
+    "chooseLanguage": "בחרו שפה",
+    "urlRejected": {
+      "collection": "זה קישור לערוץ או לפלייליסט. הדביקו קישור לסרטון אחד, או השתמשו ב“חיפוש סרטונים”.",
+      "live": "זה שידור חי. Translator יוכל להוריד אותו אחרי שהשידור יסתיים."
+    },
+    "longDownload": {
+      "title": "להוריד סרטון ארוך?",
+      "body": "הסרטון הזה ארוך, ולכן ההורדה עלולה להימשך זמן מה ולתפוס הרבה מקום בדיסק. איכות הורדה נמוכה יותר תהיה מהירה וקטנה יותר.",
+      "duration": "אורך: {{duration}}",
+      "size": "בערך {{size}}",
+      "confirm": "הורדה"
+    },
+    "dropWhileDownloading": "הורדה רצה כרגע. שחררו את הקובץ כאן שוב כשהיא תסתיים.",
+    "dropWhileBusy": "Translator עובד על הסרטון הזה. שחררו את הקובץ כאן שוב כשהוא יסיים.",
+    "dropNotSupported": "שחררו כאן סרטון, קובץ אודיו או קובץ כתוביות ‎.srt."
   },
   "subtitles": {
     "outputLanguage": "שפת פלט",
@@ -394,32 +484,48 @@
     "translateEstimateByo": "מפתח BYO",
     "qualityBadge": "(איכות גבוהה)",
     "cancel_confirmation": "האם אתה בטוח שברצונך לבטל את תהליך תרגום הכתוביות? כל התקדמות תאבד ותצטרך להתחיל מחדש.",
-    "dubCostHint": "קול ElevenLabs: ~{{rate}} קרדיטים לדקת דיבור. הערכה זו מוצגת לפני תחילת הדיבוב."
+    "dubCostHint": "קול ElevenLabs: ~{{rate}} קרדיטים לדקת דיבור. הערכה זו מוצגת לפני תחילת הדיבוב.",
+    "unreadableCues_one": "לא ניתן היה לקרוא שורה אחת בקובץ, והיא הושמטה. בדקו את קוד הזמן שלה.",
+    "unreadableCues_two": "לא ניתן היה לקרוא שתי שורות בקובץ, והן הושמטו. בדקו את קודי הזמן שלהן.",
+    "unreadableCues": "לא ניתן היה לקרוא {{count}} שורות בקובץ, והן הושמטו. בדקו את קודי הזמן שלהן.",
+    "addCreditsToTranslate": "הוסיפו קרדיטים לתרגום",
+    "dubInto": "דיבוב ל{{language}}",
+    "dubIntro": "קול מקריא את הכתוביות בשפה שתבחרו, מעל צליל הרקע המקורי.",
+    "dubNeedsSubtitles": "הדיבוב מקריא את הכתוביות, ולכן צריך קודם כתוביות לסרטון. תמללו אותו, ואז בחרו כאן קול.",
+    "dubLanguageLabel": "שפת הקול",
+    "dubSameLanguage": "הכתוביות כבר ב{{language}}, ולכן הקול מקריא אותן כמו שהן.",
+    "dubTranslatesFirst": "הכתוביות יתורגמו קודם ל{{language}}, ואז ידובבו.",
+    "dubCostWithTranslation": "תרגום וקול: {{cost}}",
+    "dubUsesOwnKeys": "משתמש במפתחות ה-API שלכם.",
+    "dubNotEnoughCredits": "אין מספיק קרדיטים לדיבוב הזה.",
+    "addCreditsToDub": "הוסיפו קרדיטים לדיבוב",
+    "noSubtitlesToDub": "צרו או פתחו קודם כתוביות לסרטון, ואז דבבו אותו.",
+    "noSubtitlesToTranslate": "פתחו או צרו קודם כתוביות, ואז תרגמו אותן."
   },
   "summary": {
-    "title": "סיכום התמליל",
-    "ctaHelper": "צור סקירה מעמיקה. וידאואים ארוכים עשויים לקחת זמן לעיבוד.",
-    "languageLabel": "שפת הסיכום",
+    "title": "רגעים בולטים",
+    "ctaHelper": "מוצאים את הרגעים הטובים ביותר.",
+    "languageLabel": "שפת התוצאה",
     "tab": {
       "summary": "סיכום",
-      "sections": "הערות מפורטות",
+      "sections": "הערות",
       "highlights": "נקודות מרכזיות"
     },
-    "generate": "צור סיכום",
-    "regenerate": "צור סיכום מחדש",
+    "generate": "מציאת רגעים בולטים",
+    "regenerate": "מציאת רגעים בולטים מחדש",
     "estimateCredits": "{{credits}} קרדיטים",
     "estimateByo": "מפתח BYO",
     "highEffortBadge": "(מעמיק)",
     "placeholder": "סיכום ה-AI שלך יופיע כאן לאחר היצירה.",
-    "insufficientCredits": "אין מספיק קרדיטים להרצת הסיכום.",
-    "error": "לא יכולנו ליצור סיכום. {{message}}",
+    "insufficientCredits": "אין מספיק קרדיטים כדי למצוא רגעים בולטים.",
+    "error": "לא הצלחנו למצוא רגעים בולטים. {{message}}",
     "cancel": "בטל",
     "copy": "העתק סיכום",
     "copied": "הועתק!",
     "copyError": "לא ניתן להעתיק את הסיכום ללוח.",
-    "noHighlights": "אין עדיין נקודות מרכזיות. צור כדי לזהות רגעים בולטים.",
+    "noHighlights": "עדיין אין רגעים בולטים. לחצו על “מציאת רגעים בולטים” כדי למצוא את הרגעים הטובים ביותר.",
     "noVideoForHighlights": "פתח את וידאו המקור כדי לחתוך קליפים של נקודות מרכזיות.",
-    "summaryRequiredForHighlights": "צור סיכום תמלול לפני חיתוך קטעי היילייט.",
+    "summaryRequiredForHighlights": "כדי לנתח קודם את התמליל, לחצו על “מציאת רגעים בולטים”.",
     "highlight": "נקודה מרכזית",
     "cutHighlightClip": "חתוך את ההיילייט הזה",
     "cuttingHighlightClip": "חותך…",
@@ -427,8 +533,8 @@
     "clipFormat": "פורמט הקליפ:",
     "originalFormat": "מקורי",
     "originalFormatDesc": "שמור על ממדי הווידאו המקוריים",
-    "verticalFormat": "9:16 אנכי",
-    "verticalFormatDesc": "מותאם ל-YouTube Shorts, TikTok, Reels ‏(9:16)",
+    "verticalFormat": "מסגור מחדש ל-Shorts",
+    "verticalFormatDesc": "חיתוך ומסגור מחדש ל-YouTube Shorts,‏ TikTok ו-Reels ‏(9:16)",
     "verticalFitFormat": "התאמה לשורטס",
     "verticalFitFormatDesc": "התאם את הפריים המקורי בתוך קנבס 9:16",
     "downloadHighlight": "הורד קליפ",
@@ -442,16 +548,18 @@
     "sectionHeading": "סעיף {{index}}",
     "highlightsInProgress": "מכין קליפים של נקודות מרכזיות...",
     "status": {
-      "preparing": "מכין תמליל...",
-      "chunk": "מסכם סעיף {{current}}/{{total}}",
-      "selectingHighlights": "בוחר רגעים מרכזיים...",
+      "preparing": "מנתחים את התמליל…",
+      "chunk": "כותבים סיכום {{current}}/{{total}}",
+      "selectingHighlights": "בוחרים רגעים בולטים…",
       "cuttingHighlight": "חותך נקודה מרכזית {{current}}/{{total}}...",
       "cuttingHighlights": "חותך קליפים של נקודות מרכזיות...",
-      "synthesizing": "מסנתז סיכום מקיף...",
-      "ready": "הסיכום מוכן",
-      "error": "הסיכום נכשל",
-      "cancelled": "הסיכום בוטל",
-      "inProgress": "יוצר סיכום..."
+      "synthesizing": "מסיימים…",
+      "ready": "הרגעים הבולטים מוכנים",
+      "error": "מציאת הרגעים הבולטים נכשלה",
+      "cancelled": "חיפוש הרגעים הבולטים בוטל",
+      "inProgress": "מחפשים רגעים בולטים…",
+      "cuttingClip": "חותכים את הקליפ…",
+      "renderingClipSubtitles": "מוסיפים כתוביות לקליפ…"
     },
     "combineMode": "שלב",
     "exitCombineMode": "צא משילוב",
@@ -464,7 +572,31 @@
     "combinedCutFailed": "נכשל בחיתוך נקודות מרכזיות משולבות: {{message}}",
     "highlightsInsufficientCredits": "הסיכום נוצר, אבל חילוץ הנקודות המרכזיות נעצר כי הקרדיטים אזלו.",
     "highlightsPartialWarning": "חילוץ הנקודות המרכזיות היה חלקי. ייתכן שהנקודות המרכזיות האלה אינן שלמות. צור מחדש כדי לרענן.",
-    "highlightsPartialWithReason": "הסיכום נוצר, אבל חילוץ הנקודות המרכזיות היה חלקי: {{message}}"
+    "highlightsPartialWithReason": "הסיכום נוצר, אבל חילוץ הנקודות המרכזיות היה חלקי: {{message}}",
+    "estimateOwnKey": "משתמש במפתח ה-API שלכם",
+    "generateSummary": "סיכום",
+    "regenerateSummary": "סיכום מחדש",
+    "showingSavedLanguage": "מוצגת התוצאה השמורה ב{{language}}. לחצו על הכפתור כדי ליצור תוצאה ב{{current}}.",
+    "showingSavedVariant": "מוצגת התוצאה השמורה ב{{language}}, שנוצרה ברמת סיכום אחרת. לחצו על הכפתור כדי ליצור תוצאה חדשה.",
+    "noSummaryYet": "עדיין אין סיכום. בחרו שפה ולחצו על “סיכום” כדי לקבל את עיקרי הסרטון.",
+    "noSummaryWithHighlights": "הרגעים הבולטים האלה הגיעו בלי סיכום. לחצו על “סיכום” כדי לכתוב אחד.",
+    "clipCaptionsChanged": "הכתוביות השתנו מאז שהקליפ נחתך.",
+    "recutClip": "חיתוך מחדש",
+    "cutCombinedCount": "חיתוך {{count}} יחד",
+    "cutCombinedCount_one": "חיתוך קליפ אחד",
+    "cutCombinedCount_two": "חיתוך שניים יחד",
+    "cutHighlightFailed": "לא הצלחנו לחתוך את הקליפ: {{message}}",
+    "clipError": {
+      "busy": "חכו שהמשימה הנוכחית תסתיים, ואז חתכו את הקליפ.",
+      "noHighlight": "בחרו קודם רגע בולט.",
+      "editorialSingle": "חתכו כל סרטון קצר מעוצב בנפרד, במצב “מסגור מחדש ל-Shorts”.",
+      "editorialStale": "הכתוביות בסרטון הקצר הזה השתנו. פתחו את “עיצוב הסרטון הקצר”, בדקו ושמרו, ואז חתכו שוב.",
+      "noTranscript": "פתחו את הכתוביות של הסרטון לפני חיתוך קליפ.",
+      "noCues": "בחלק הזה של הסרטון אין כתוביות.",
+      "untranslated": "חלק מהשורות בקליפ עוד לא תורגמו. תרגמו אותן, או הגדירו את תצוגת הכתוביות להצגת המקור.",
+      "subtitlesNotSaved": "הקליפ נחתך, אבל לא הצלחנו לשמור את הכתוביות שלו.",
+      "generic": "לא הצלחנו לחתוך את הקליפ מהסרטון. נסו שוב."
+    }
   },
   "panel": {
     "new": "חדש",
@@ -520,7 +652,9 @@
       "originalTextPrefix": "מקור:",
       "subtitlePlaceholder": "טקסט כתובית",
       "confirmRemove": "האם אתה בטוח שברצונך להסיר בלוק כתוביות זה? פעולה זו אינה ניתנת לביטול.",
-      "transcribeThisLine": "תמלל שורה"
+      "transcribeThisLine": "תמלל שורה",
+      "timeEndBeforeStart": "זמן הסיום חייב להיות אחרי זמן ההתחלה. השורה נשארת עם הזמן הקודם שלה.",
+      "timeUnreadable": "הקלידו זמן כמו 00:01:23,450 או 1:23.45. השורה נשארת עם הזמן הקודם שלה."
     },
     "header": {
       "save": "שמור כתוביות",
@@ -533,6 +667,14 @@
       "styleLabel": "סגנון:",
       "mergeButton": "מזג כתוביות",
       "mergingButton": "ממזג..."
+    },
+    "undo": {
+      "removed": "השורה נמחקה.",
+      "inserted": "השורה נוספה.",
+      "replaced": "הוחלף בכל השורות.",
+      "shifted": "התזמון הוזז.",
+      "improved": "השורה תומללה מחדש.",
+      "action": "ביטול"
     }
   },
   "settings": {
@@ -579,10 +721,10 @@
         "anthropicHighEnd": "סקירה מתקדמת של Anthropic",
         "help": "<b>5× קרדיטים</b> • מוסיף שלב ביקורת לאיכות גבוהה יותר",
         "helpWithEstimate": "<b>5× קרדיטים</b> • היתרה שלך: ~{{normalTime}} (רגיל) / ~{{hqTime}} (איכות גבוהה)",
-        "helpOn": "<b>5× קרדיטים</b> • כולל מעבר ביקורת",
-        "helpOff": "מדלג על מעבר הביקורת",
-        "helpWithEstimateOn": "<b>5× קרדיטים</b> • כולל מעבר ביקורת • יתרה: ~{{time}}",
-        "helpWithEstimateOff": "מדלג על מעבר הביקורת • יתרה: ~{{time}}"
+        "helpOn": "<b>פי 5 קרדיטים</b> • טיוטה של Claude Haiku 5.5 + בדיקה של Claude Opus 5.5",
+        "helpOff": "<b>פי 1 קרדיטים</b> • טיוטה של Claude Haiku 5.5 בלבד",
+        "helpWithEstimateOn": "<b>פי 5 קרדיטים</b> • טיוטה של Claude Haiku 5.5 + בדיקה של Claude Opus 5.5 • יתרה: ~{{time}}",
+        "helpWithEstimateOff": "<b>פי 1 קרדיטים</b> • טיוטה של Claude Haiku 5.5 בלבד • יתרה: ~{{time}}"
       },
       "qualitySummary": {
         "label": "סיכום באיכות גבוהה",
@@ -590,9 +732,9 @@
         "modelOff": "ניתוח רגיל ב-Claude Sonnet 5.5",
         "help": "<b>4× קרדיטים</b> • ניתוח מעמיק + קליפים מודגשים עם Claude Opus 5.5",
         "helpWithEstimate": "<b>4× קרדיטים</b> • היתרה שלך: ~{{normalTime}} (רגיל) / ~{{hqTime}} (איכות גבוהה)",
-        "helpOn": "<b>4× קרדיטים</b> • ניתוח מעמיק + קטעי הדגשה",
+        "helpOn": "<b>פי 4 קרדיטים</b> • ניתוח מעמיק עם Claude Opus 5.5 + קליפים של רגעים בולטים",
         "helpOff": "ניתוח מהיר עם Claude Sonnet 5.5",
-        "helpWithEstimateOn": "<b>4× קרדיטים</b> • ניתוח מעמיק + קטעי הדגשה • יתרה: ~{{time}}",
+        "helpWithEstimateOn": "<b>פי 4 קרדיטים</b> • ניתוח מעמיק עם Claude Opus 5.5 + קליפים של רגעים בולטים • יתרה: ~{{time}}",
         "helpWithEstimateOff": "ניתוח מהיר עם Claude Sonnet 5.5 • יתרה: ~{{time}}"
       },
       "qualityDubbing": {
@@ -605,7 +747,7 @@
       },
       "videoSuggestionModel": {
         "label": "מודל הצעת סרטונים",
-        "help": "Auto = אותו מודל כמו טיוטת תרגום רגילה",
+        "help": "משתמש באותה רמת מודל כמו התרגום.",
         "default": "ברירת מחדל (זהה לברירת המחדל של התרגום)",
         "quality": "איכות (זהה למצב האיכות של התרגום)"
       },
@@ -613,7 +755,10 @@
         "perHour": "~{{credits}} קרדיטים/שעה",
         "perMinute": "~{{credits}} קרדיטים/דקה",
         "perSearch": "~{{credits}} קרדיטים/חיפוש",
-        "balance": "יתרה: ~{{time}}"
+        "balance": "יתרה: ~{{time}}",
+        "minutesPerHour": "~{{time}} מהדקות שלכם לכל שעת וידאו",
+        "minutesPerDubMinute": "~{{time}} מהדקות שלכם לכל דקת דיבוב",
+        "minutesPerSearch": "~{{time}} מהדקות שלכם לכל חיפוש"
       }
     },
     "dubbing": {
@@ -641,7 +786,7 @@
       "voiceCloningDesc": "שמור על קול הדובר המקורי באודיו המדובב",
       "voiceCloningInsufficientCredits": "נדרשת לפחות דקה אחת של קרדיטים",
       "voiceCloningEnabled": "שכפול קול מופעל עם ElevenLabs. קול הדובר המקורי יישמר באודיו המדובב.",
-      "voiceCloningInfo": "שכפול קול משתמש ב-ElevenLabs Dubbing API לניתוח ושחזור קול הדובר המקורי.",
+      "voiceCloningInfo": "שכפול קול משתמש בשירות הדיבוב של ElevenLabs כדי לנתח את קול הדובר המקורי ולשחזר אותו.",
       "costPerMinute": "עלות לדקה",
       "credits": "קרדיטים",
       "yourBalance": "היתרה שלך",
@@ -681,11 +826,13 @@
       "economicsBody": "קרדיטים של Stage5 מותאמים לנוחות (ללא הגדרה). BYO משלם ישירות לספקים - בדרך כלל ~30-50% זול יותר בהתאם לחבילה.",
       "encryptionUnavailable": "אחסון מאובטח אינו זמין במערכת הזו. אי אפשר לשמור מפתחות API.",
       "checkoutOpen": "התשלום פתוח בדפדפן…",
-      "checkoutOpenHint": "השלם את התשלום בדפדפן. נבטל את נעילת BYO אוטומטית כשהתשלום יאושר."
+      "checkoutOpenHint": "השלם את התשלום בדפדפן. נבטל את נעילת BYO אוטומטית כשהתשלום יאושר.",
+      "entitlementsLoadFailed": "לא הצלחנו לבדוק את מצב הפתיחה. בדקו את החיבור ונסו שוב.",
+      "unlockFailed": "לא הצלחנו להתחיל את התשלום. בדקו את החיבור ונסו שוב."
     },
     "byoPreferences": {
       "title": "העדפות ספק",
-      "stage5Credits": "Stage5 credits",
+      "stage5Credits": "קרדיטים של Stage5",
       "pricingHint": "עלות משוערת לשעת וידאו",
       "pricingHintHeuristic": "עלות משוערת לפי ההיוריסטיקות הנוכחיות של האפליקציה",
       "transcription": "תמלול",
@@ -797,7 +944,8 @@
       "saved": "מפתח ה-API נשמר.",
       "cleared": "מפתח ה-API נוקה.",
       "invalid": "אימות מפתח ה-API נכשל.",
-      "howToGet": "איך לקבל את המפתח הזה"
+      "howToGet": "איך לקבל את המפתח הזה",
+      "missing": "הדביקו קודם מפתח API."
     },
     "byoStack": {
       "title": "מחסנית ה-AI שלך"
@@ -833,7 +981,13 @@
         "desktopConnected": "Translator נוסף ל-Claude Desktop. צא מ-Claude ופתח אותו מחדש כדי לטעון אותו.",
         "cliNotFound": "הפקודה {{app}} לא נמצאה במחשב הזה. הרץ את זה בטרמינל:",
         "cliNotFoundCopied": "הפקודה {{app}} לא נמצאה במחשב הזה. פקודת ההגדרה הועתקה; הדבק אותה בטרמינל:",
-        "failed": "לא ניתן לחבר את {{app}}: {{message}}"
+        "failed": "לא ניתן לחבר את {{app}}: {{message}}",
+        "details": "פרטים",
+        "failedConfigInvalid": "לא הצלחנו לחבר את {{app}}: קובץ ההגדרות שלו לא תקין, ולכן Translator לא שינה אותו. תקנו או מחקו את הקובץ ונסו שוב.",
+        "failedWrite": "לא הצלחנו לחבר את {{app}}: Translator לא הצליח לכתוב לקובץ ההגדרות שלו.",
+        "failedLauncher": "חיבור {{app}} עובד רק באפליקציית Translator המותקנת.",
+        "failedCli": "לא הצלחנו לחבר את {{app}} אוטומטית. הריצו את זה בטרמינל:",
+        "failedGeneric": "לא הצלחנו לחבר את {{app}}. נסו שוב."
       },
       "status": {
         "enabled": "מופעל",
@@ -889,11 +1043,20 @@
       "receivedByo": "פתיחת מפתחות ה-API פעילה במחשב הזה.",
       "expires_one": "הקוד הזה פועל פעם אחת ותוקפו יפוג בעוד {{minutes}} דקה.",
       "summaryCredits_one": "{{credits}} קרדיט יועבר.",
-      "received_one": "התקבל {{credits}} קרדיט."
+      "received_one": "התקבל {{credits}} קרדיט.",
+      "errors": {
+        "nothing_to_transfer": "עדיין אין מה להעביר: במחשב הזה אין קרדיטים שנרכשו ואין פתיחת מפתחות API. כדי להביא לכאן קרדיטים ממחשב אחר, בחרו “קבל קרדיטים”.",
+        "too_many_codes": "נוצרו יותר מדי קודי העברה בשעה האחרונה. נסו שוב בעוד זמן קצר.",
+        "jobs_running": "תמלול או תרגום עדיין רץ. נסו שוב כשהוא יסתיים.",
+        "invalid_code": "הקוד שגוי, כבר נוצל או שפג תוקפו. צרו קוד חדש במחשב השני.",
+        "same_device": "הזינו את הקוד במחשב השני, לא במחשב שיצר אותו.",
+        "network_error": "אין גישה לשרת של Stage5. בדקו את החיבור ונסו שוב.",
+        "transfer_failed": "לא הצלחנו להעביר את הקרדיטים. בדקו את החיבור ונסו שוב."
+      }
     }
   },
   "credits": {
-    "title": "שעות שימוש בבינה מלאכותית",
+    "title": "קרדיטים ל-AI",
     "loading": "טוען...",
     "credits": "קרדיט",
     "usingApiKey": "משתמש במפתח API",
@@ -933,7 +1096,9 @@
     "dubbingNote": "תרגום על חשבון הדקות מוסיף כ-10% לכל דקה; דיבוב צורך יותר.",
     "iCancelledCheckout": "ביטלתי את התשלום",
     "checkoutStartFailed": "לא הצלחנו להתחיל את התשלום. כדאי לבדוק את החיבור ולנסות שוב.",
-    "monthlyFreeNote_one": "{{minutes}} דקה חינם בכל חודש · החידוש הבא ב-{{date}}"
+    "monthlyFreeNote_one": "{{minutes}} דקה חינם בכל חודש · החידוש הבא ב-{{date}}",
+    "loadFailed": "לא הצלחנו לטעון את היתרה שלכם. בדקו את החיבור ונסו שוב.",
+    "estimateAmount": "{{credits}} קרדיטים"
   },
   "cta": {
     "generate": {
@@ -956,7 +1121,7 @@
     "exitFullscreen": "צא ממסך מלא",
     "playbackSpeed": "מהירות ניגון",
     "icloudWaitingTitle": "מוריד מ-iCloud",
-    "icloudWaitingBody": "הקובץ הזה עדיין לא נשמר מקומית. ב-Finder לחץ על \"Download\" והמתן עד שסמל הענן ייעלם.",
+    "icloudWaitingBody": "הקובץ הזה עדיין לא שמור במחשב. ב-Finder, לחצו על “הורדה” וחכו שסמל הענן ייעלם.",
     "icloudWaitingHint": "הווידאו ייטען אוטומטית כשההורדה תסתיים.",
     "mediaPlaybackError": "שגיאת ניגון מדיה",
     "sideActions": "פעולות צד לווידאו",
@@ -968,7 +1133,12 @@
     "useThisVideo": "השתמש בווידאו הזה",
     "useDownloadedVideo": "השתמש בווידאו הזה",
     "useOriginalAudio": "השתמש באודיו המקורי",
-    "useDubbedAudio": "השתמש באודיו מדובב"
+    "useDubbedAudio": "השתמש באודיו מדובב",
+    "changeVideoKeepSubtitles": "להשאיר את הכתוביות הנוכחיות על הסרטון החדש (אם זה עותק אחר של אותו סרטון). בטלו את הסימון אם זה סרטון אחר.",
+    "mute": "השתקה (M)",
+    "unmute": "ביטול השתקה (M)",
+    "volume": "עוצמת קול",
+    "unreadableFile": "Translator לא יכול לקרוא את הקובץ הזה. ייתכן שהוא פגום או בפורמט שלא נתמך."
   },
   "admin": {
     "title": "מנהל מערכת",
@@ -1065,7 +1235,7 @@
       "localSourceReady": "קובץ מקומי מוכן",
       "webSourceReady": "מקור אינטרנטי מוכן",
       "sourceReadyDescription": "המדיה שבחרת מוכנה לשלב הבא.",
-      "transcribeTitle": "צור תמלול",
+      "transcribeTitle": "עיבוד הסרטון",
       "processVideoTitle": "עיבוד וידאו",
       "transcribeDescription": "הפוך את מדיית המקור למסלול כתוביות ניתן לעריכה לפני המעבר לתרגום או דיבוב.",
       "translateDubTitle": "תרגום או דיבוב",
@@ -1092,7 +1262,11 @@
     "nextMatchAria": "התאמה הבאה",
     "previousMatchAria": "התאמה קודמת",
     "replaceAllAria": "החלף הכל",
-    "closeAria": "סגור שורת חיפוש"
+    "closeAria": "סגור שורת חיפוש",
+    "matchCount": "{{current}} מתוך {{total}}",
+    "matchCase": "התאמת אותיות רישיות",
+    "wholeWord": "מילה שלמה",
+    "showReplace": "החלפה"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1144,7 +1318,32 @@
       "neverHadMessage": "תמלול דורש קרדיטים או את פתיחת מפתחות ה-API. אפשר להשיג כל אחד מהם בהגדרות. תרגום עם Claude או Codex שלך דרך בקרת סוכנים הוא בחינם.",
       "notEnoughTitle": "אין מספיק קרדיטים לסרטון הזה",
       "notEnoughTranscriptionMessage": "תמלול הסרטון הזה דורש כ-{{required}} קרדיטים. יש לך {{available}}, מספיק לכ-{{minutes}} דקות. הוסף קרדיטים ואז התחל שוב.",
-      "notEnoughMessage": "המשימה הזו דורשת יותר קרדיטים מהיתרה שלך ({{available}}). הוסף קרדיטים כדי להמשיך."
+      "notEnoughMessage": "המשימה הזו דורשת יותר קרדיטים מהיתרה שלך ({{available}}). הוסף קרדיטים כדי להמשיך.",
+      "task": {
+        "transcription": {
+          "title": "תמלול דורש קרדיטים",
+          "message": "היתרה שלכם לא מספיקה כדי לתמלל את זה. הוסיפו קרדיטים והתחילו שוב. השורות שכבר תומללו נשמרו."
+        },
+        "translation": {
+          "title": "תרגום דורש קרדיטים",
+          "message": "היתרה שלכם לא מספיקה כדי לתרגם את זה. הוסיפו קרדיטים ונסו שוב. השורות שכבר תורגמו נשמרו. תרגום עם Claude או Codex שלכם דרך בקרת סוכנים הוא בחינם."
+        },
+        "dubbing": {
+          "title": "דיבוב דורש קרדיטים",
+          "message": "היתרה שלכם לא מספיקה כדי לדבב את הסרטון הזה. הוסיפו קרדיטים ונסו שוב."
+        },
+        "summary": {
+          "title": "הסיכום דורש קרדיטים",
+          "message": "היתרה שלכם לא מספיקה לסיכום ולרגעים הבולטים. הוסיפו קרדיטים ונסו שוב."
+        },
+        "videoSearch": {
+          "title": "חיפוש סרטונים עם AI דורש קרדיטים",
+          "message": "היתרה שלכם לא מספיקה לחיפוש סרטונים עם AI. הוסיפו קרדיטים וחפשו שוב."
+        },
+        "other": {
+          "title": "זה דורש קרדיטים"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "להתחיל דיבוב?",
@@ -1155,7 +1354,58 @@
       "message": "כבר יש כתוביות פתוחות. שמור או מחק אותן לפני שתחליף אותן בכתוביות האוטומטיות של YouTube.",
       "saveAndOpen": "שמור ופתח כתוביות",
       "title": "לפתוח את הכתוביות האוטומטיות ששוחזרו?"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "לשמור קודם את השינויים בכתוביות?",
+      "message": "שיניתם את הכתוביות האלה מאז השמירה האחרונה. לשמור את השינויים לפני שהן יוחלפו?",
+      "saveAndContinue": "שמירה והמשך",
+      "discardAndContinue": "ביטול השינויים והמשך"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "תמלול עדיין רץ.",
+        "translation": "תרגום עדיין רץ.",
+        "dubbing": "הדיבוב עדיין רץ.",
+        "export": "ייצוא סרטון עדיין רץ.",
+        "summary": "הסיכום עדיין נכתב.",
+        "download": "הורדה עדיין רצה.",
+        "highlight": "קליפי הרגעים הבולטים עדיין נוצרים.",
+        "search": "חיפוש סרטונים עדיין רץ.",
+        "generic": "משימה עדיין רצה."
+      },
+      "unsavedLine": "השינויים בכתוביות לא נשמרו.",
+      "unsavedMessage": "בכתוביות האלה יש שינויים שלא נשמרו.",
+      "tabUnsavedDetail": "לשמור אותם לפני סגירת הכרטיסייה?",
+      "tabUnsavedWithJobDetail": "סגירת הכרטיסייה תעצור את המשימה. לשמור קודם את השינויים בכתוביות?",
+      "tabJobDetail": "סגירת הכרטיסייה תעצור אותה, והעבודה שנעשתה עד עכשיו תאבד.",
+      "quitMessage": "לצאת מ-{{app}}? חלק מהעבודה עוד לא הסתיים.",
+      "windowMessage": "לסגור את החלון? חלק מהעבודה עוד לא הסתיים.",
+      "tabLine": "‏{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "משימות שרצות ייעצרו. לשמור קודם את השינויים בכתוביות?",
+      "jobsDetail": "משימות שרצות ייעצרו, והעבודה שנעשתה עד עכשיו תאבד.",
+      "saveAndClose": "שמירה וסגירה",
+      "saveAndQuit": "שמירה ויציאה",
+      "closeWithoutSaving": "סגירה בלי לשמור",
+      "quitWithoutSaving": "יציאה בלי לשמור",
+      "stopAndClose": "עצירה וסגירה",
+      "quitAnyway": "לצאת בכל זאת",
+      "closeAnyway": "לסגור בכל זאת",
+      "saveFailed": "לא הצלחנו לשמור את הכתוביות ב-{{title}}, ולכן שום דבר לא נסגר. שמרו אותן מהעורך ונסו שוב.",
+      "ok": "אישור"
+    },
+    "exportSaveDialogTitle": "שמירת הסרטון בשם",
+    "exportVideoFilterName": "סרטון MP4",
+    "exportDiscardConfirm": "הסרטון מוכן אבל עוד לא נשמר. למחוק אותו?",
+    "exportChooseLocationButton": "בחירת מקום לשמירה…",
+    "exportDiscardButton": "מחיקת הסרטון",
+    "exportSaveFailed": "לא הצלחנו לשמור את הסרטון ב-{{folder}}.",
+    "exportSaveFailedPermission": "אין לכם הרשאה לשמור בתיקייה הזו.",
+    "exportSaveFailedDiskFull": "אין מספיק מקום פנוי בכונן הזה.",
+    "exportSaveFailedGeneric": "לא ניתן היה לכתוב את הקובץ לשם.",
+    "exportSameAsSource": "זה יחליף את הסרטון המקורי. בחרו שם אחר.",
+    "keepDubbing": "להמשיך בדיבוב",
+    "stopDubbing": "עצירת הדיבוב",
+    "cancelDubbingBody": "האודיו המדובב שנוצר עד עכשיו יימחק."
   },
   "progress": {
     "preparingVideoExport": "מכין ייצוא וידאו…",
@@ -1173,7 +1423,7 @@
     "transcribingElevenLabsHours": "מתמלל עם ElevenLabs (~{{hours}} שעות {{minutes}} דקות נותרו)",
     "transcribingElevenLabsFinishing": "מתמלל עם ElevenLabs...",
     "transcriptionRetry": "החיבור נכשל, מנסה שוב ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "מעלה אודיו לתמלול...",
+    "transcribingR2Upload": "מעלים את האודיו…",
     "gapRepair": "תיקון פערים #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "מתקן כתוביות חסרות (איטרציה {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "מנקה כתוביות ({{done}}/{{total}})",
@@ -1245,7 +1495,18 @@
       "voiceTrackReady": "רצועת הקול מוכנה",
       "writingSummary": "כותב את הסיכום…",
       "preparingDubLines_one": "מכין {{count}} שורה לדיבוב…",
-      "preparingVoiceClips_one": "מכין {{count}} קטע קול…"
+      "preparingVoiceClips_one": "מכין {{count}} קטע קול…",
+      "completed": "הסתיים",
+      "cancelled": "בוטל",
+      "cancelling": "מבטלים…",
+      "failed": "משהו השתבש",
+      "downloading": "מורידים…",
+      "downloadingAudio": "מורידים את האודיו…",
+      "transcribingLine": "מתמללים את השורה…",
+      "startingExport": "מתחילים ליצור את הסרטון…",
+      "captionsAvailable": "לא הצלחנו להוריד את הסרטון, אבל יש לו כתוביות ב-YouTube",
+      "captionsNotOpened": "הכתוביות של YouTube מוכנות, אבל לא נפתחו",
+      "insufficientCredits": "אין מספיק קרדיטים"
     },
     "listening": "מאזין לסרטון…",
     "mergeFinishSaveBeforeReload": "סיים לשמור את הסרטון הממוזג לפני הטעינה מחדש.",
@@ -1253,7 +1514,8 @@
     "mergeWaitForCancelBeforeReload": "המתן לסיום ביטול המיזוג לפני הטעינה מחדש.",
     "preparingTranscription": "מתכונן להאזנה…",
     "restartingTranscription": "מתחיל את התמלול מחדש…",
-    "resumingTranscription": "ממשיך מהמקום שבו הפסיק…"
+    "resumingTranscription": "ממשיך מהמקום שבו הפסיק…",
+    "hqModeEstimate": "(איכות גבוהה: ~{{time}})"
   },
   "messages": {
     "fileSaved": "קובץ נשמר:\n{{path}}",
@@ -1276,7 +1538,23 @@
     "sendReport": "שלח דוח",
     "reportPrompt": "משהו השתבש. דווח ליוצר לתיקון מהיר.",
     "preparingReport": "חבילת האבחון בהכנה...",
-    "reportContextWarning": "לא ניתן היה לטעון חלק מהקשר האבחון. הדוח עדיין יכלול פרטים מהיישום הזה."
+    "reportContextWarning": "לא ניתן היה לטעון חלק מהקשר האבחון. הדוח עדיין יכלול פרטים מהיישום הזה.",
+    "reportPromptTask": {
+      "transcription": "התמלול נעצר בגלל תקלה לא צפויה. שלחו את הדוח הזה כדי שנוכל לתקן אותה.",
+      "translation": "התרגום נעצר בגלל תקלה לא צפויה. שלחו את הדוח הזה כדי שנוכל לתקן אותה.",
+      "dubbing": "הדיבוב נעצר בגלל תקלה לא צפויה. שלחו את הדוח הזה כדי שנוכל לתקן אותה.",
+      "summary": "הסיכום נעצר בגלל תקלה לא צפויה. שלחו את הדוח הזה כדי שנוכל לתקן אותה.",
+      "videoSearch": "חיפוש הסרטונים נעצר בגלל תקלה לא צפויה. שלחו את הדוח הזה כדי שנוכל לתקן אותה.",
+      "download": "הורדת הסרטון נכשלה מסיבה שאנחנו לא מזהים. שלחו את הדוח הזה כדי שנוכל לתקן את זה.",
+      "export": "יצירת הסרטון נעצרה בגלל תקלה לא צפויה. שלחו את הדוח הזה כדי שנוכל לתקן אותה.",
+      "other": "משהו השתבש. שלחו את הדוח הזה כדי שנוכל לתקן את זה."
+    },
+    "feedbackTitle": "שליחת משוב או דיווח על בעיה",
+    "whatHappened": "מה קרה, או מה תרצו לספר לנו?",
+    "attachDiagnostics": "צירוף פרטי אבחון (מומלץ כשיש בעיה)",
+    "attachDiagnosticsHint": "יומנים אחרונים של האפליקציה, הגרסה ופרטי המערכת. בלי סרטונים ובלי כתוביות.",
+    "showDetails": "הצגת מה שיישלח",
+    "feedbackEmailSubject": "משוב על Translator"
   },
   "home": {
     "headline": "כל סרטון, ב<lang>{{language}}</lang>.",
@@ -1309,7 +1587,9 @@
     "seeAll": "הצגת הכול",
     "recentSubtitlesReady": "כתוביות ב{{language}} מוכנות",
     "recentSubtitlesReadyGeneric": "הכתוביות מוכנות",
-    "recentDownloaded": "הורדה הושלמה"
+    "recentDownloaded": "הורדה הושלמה",
+    "recentLocalFile": "במחשב הזה",
+    "recentLocalMissing": "הקובץ הועבר או נמחק"
   },
   "workspace": {
     "subtitlesTitle": "כתוביות",
@@ -1341,7 +1621,30 @@
     "showBoth": "שניהם",
     "textSize": "גודל טקסט",
     "statusTranscribed_one": "{{count}} שורה תומללה",
-    "statusTranslated_one": "{{count}} שורה ב{{language}} · מסונכרנת לסרטון"
+    "statusTranslated_one": "{{count}} שורה ב{{language}} · מסונכרנת לסרטון",
+    "findReplace": "חיפוש והחלפה",
+    "statusReadyPrice": "מוכן — כתוביות ב{{language}} לסרטון הזה: {{price}}",
+    "statusReadyPreview": "מוכן — הדקות שלכם מכסות את {{minutes}} הדקות הראשונות ב{{language}}",
+    "statusReadyPreview_one": "מוכן — הדקות שלכם מכסות את הדקה הראשונה ב{{language}}",
+    "statusReadyPreview_two": "מוכן — הדקות שלכם מכסות את שתי הדקות הראשונות ב{{language}}",
+    "statusPartlyTranslated": "{{translated}} מתוך {{count}} שורות ב{{language}} · {{missing}} לא תורגמו",
+    "statusPartlyTranslated_one": "{{translated}} מתוך שורה אחת ב{{language}} · {{missing}} לא תורגמו",
+    "statusPartlyTranslated_two": "{{translated}} מתוך שתי שורות ב{{language}} · {{missing}} לא תורגמו",
+    "statusPartlyTranslatedUnknown": "{{translated}} מתוך {{count}} שורות תורגמו · {{missing}} לא תורגמו",
+    "statusPartlyTranslatedUnknown_one": "{{translated}} מתוך שורה אחת תורגמו · {{missing}} לא תורגמו",
+    "statusPartlyTranslatedUnknown_two": "{{translated}} מתוך שתי שורות תורגמו · {{missing}} לא תורגמו",
+    "statusTranslatedUnknown": "{{count}} שורות מתורגמות · מסונכרנות לסרטון",
+    "statusTranslatedUnknown_one": "שורה מתורגמת אחת · מסונכרנת לסרטון",
+    "statusTranslatedUnknown_two": "שתי שורות מתורגמות · מסונכרנות לסרטון",
+    "stopsEarly": "הכתוביות נעצרות ב-{{time}}",
+    "interruptedTranslate": "התרגום של הסרטון ל{{language}} נעצר כש-Translator נסגר.",
+    "interruptedTranscribe": "התמלול של הסרטון נעצר כש-Translator נסגר.",
+    "interruptedResume": "להמשיך מאיפה שנעצר",
+    "translateMissing": "תרגום {{count}} השורות החסרות ל{{language}}",
+    "translateMissing_one": "תרגום השורה החסרה ל{{language}}",
+    "translateMissing_two": "תרגום שתי השורות החסרות ל{{language}}",
+    "moreRevealVideo": "הצגת קובץ הסרטון",
+    "chooseAnotherFile": "בחירת קובץ אחר"
   },
   "subtitleStyles": {
     "Cinema": "צהוב קולנוע",
@@ -1379,7 +1682,11 @@
     "noneTitle_one": "הסרטון הזה באורך {{total}} דקה.",
     "enoughBody_one": "יש לכם מספיק דקות כדי לתרגם עכשיו גם את מה שנותר ({{remaining}} דקה).",
     "offerBody_one": "ב-{{price}} מתרגמים גם את מה שנותר ({{remaining}} דקה), ומה שיישאר מהחבילה נשמר לסרטון הבא.",
-    "offerBodyLong_one": "החבילה של {{price}} מספיקה לרוב מה שנותר ({{remaining}} דקה)."
+    "offerBodyLong_one": "החבילה של {{price}} מספיקה לרוב מה שנותר ({{remaining}} דקה).",
+    "failedNeedMinutes": "כל מה שתורגם עד עכשיו נשמר. כדי לתרגם את {{remaining}} הדקות שנותרו צריך עוד דקות.",
+    "failedNeedMinutes_one": "כל מה שתורגם עד עכשיו נשמר. כדי לתרגם את הדקה שנותרה צריך עוד דקות.",
+    "failedNeedMinutes_two": "כל מה שתורגם עד עכשיו נשמר. כדי לתרגם את שתי הדקות שנותרו צריך עוד דקות.",
+    "failedNetwork": "החיבור נותק. כל מה שתורגם עד עכשיו נשמר. נסו שוב כשתחזרו לרשת."
   },
   "videoCost": {
     "covered": "מכוסה בדקות שלכם",
@@ -1389,7 +1696,7 @@
   "highlightEditor": {
     "legend": "מסגור וכתוביות ל-Shorts",
     "intro": "מסגר כל דובר, פצל בחיתוכי מצלמה ותזמן ביטויי כתוביות קצרים לדיבור. הזמנים שלמטה מתחילים בתחילת הקליפ הזה.",
-    "previewTime": "זמן תצוגה מקדימה של Short",
+    "previewTime": "זמן התצוגה המקדימה של הסרטון הקצר",
     "speakerLabel": "תווית דובר או נושא",
     "splitShot": "פצל צילום במיקום ההפעלה",
     "joinShot": "חבר לצילום הקודם",
@@ -1402,14 +1709,24 @@
     "saveSelectionFirst": "שמור קודם את בחירת הנקודות המרכזיות.",
     "closeEdit": "סגור עריכה",
     "editFraming": "ערוך מסגור וכתוביות",
-    "styleShort": "עצב את ה-Short הזה",
+    "styleShort": "עיצוב הסרטון הקצר",
     "horizontalFocus": "מיקוד אופקי",
     "verticalFocus": "מיקוד אנכי",
     "zoom": "זום",
     "from": "מ-",
     "to": "עד",
     "saving": "שומר…",
-    "save": "שמור עריכת Short"
+    "save": "שמירת עריכת הסרטון הקצר",
+    "openFailed": "לא הצלחנו לפתוח את הקליפ לעיצוב. ודאו שהסרטון והכתוביות שלו פתוחים.",
+    "saveFailed": "לא הצלחנו לשמור את עריכת הסרטון הקצר. ודאו שלכל ביטוי יש טקסט ושהזמנים שלו בתוך הקליפ.",
+    "previewAt": "תצוגה מקדימה ב-{{seconds}} שנ׳",
+    "shotPosition": "שוט {{current}} מתוך {{total}}",
+    "phrasesHint": "ביטויי כתוביות: כדי להדגיש מילה, הקלידו בתיבה שלה את המילה או הביטוי בדיוק כמו בטקסט.",
+    "phraseStart": "התחלת ביטוי {{index}} (שנ׳)",
+    "phraseEnd": "סיום ביטוי {{index}} (שנ׳)",
+    "phraseText": "טקסט ביטוי {{index}}",
+    "phraseEmphasis": "הדגשה בביטוי {{index}}",
+    "saveNote": "השמירה מעבירה את הקליפ למצב “מסגור מחדש ל-Shorts” עם ביטויי הכתוביות האלה, במקום סגנון הכתוביות שלכם."
   },
   "subtitleFonts": {
     "label": "גופן",
@@ -1417,5 +1734,80 @@
     "classic": "קלאסי",
     "serif": "סריף",
     "display": "מודגש"
+  },
+  "export": {
+    "exportButton": "ייצוא סרטון",
+    "exportingButton": "מייצאים…",
+    "progressTitle": "מייצאים את הסרטון",
+    "savedTitle": "הסרטון נשמר",
+    "savedIn": "{{file}} בתיקייה {{folder}}",
+    "showInFinder": "הצגה ב-Finder",
+    "showInFolder": "הצגה בתיקייה",
+    "openVideo": "פתיחת הסרטון",
+    "failedTitle": "הסרטון לא יוצא",
+    "saveTo": "שמירה אל",
+    "changeDestination": "שינוי…",
+    "displayNeedsTranslation": "תרגמו את הכתוביות כדי להציג את התרגום או את שניהם.",
+    "error": {
+      "permission": "Translator לא הצליח לכתוב את קובצי העבודה של הסרטון. ודאו שלחשבון שלכם יש הרשאת כתיבה לתיקייה הזמנית, ונסו שוב.",
+      "tools": "לא הצלחנו להכין את כלי ייצוא הסרטון. בדקו את החיבור לאינטרנט ונסו שוב.",
+      "generic": "משהו השתבש ביצירת הסרטון. נסו שוב."
+    }
+  },
+  "tabs": {
+    "newTab": "כרטיסייה חדשה",
+    "newTabWithShortcut": "כרטיסייה חדשה ({{shortcut}})",
+    "closeTab": "סגירת הכרטיסייה"
+  },
+  "menu": {
+    "about": "אודות {{app}}",
+    "services": "שירותים",
+    "hide": "הסתר את {{app}}",
+    "hideOthers": "הסתר אחרים",
+    "showAll": "הצג הכל",
+    "quit": "צא מ-{{app}}",
+    "exit": "יציאה",
+    "file": "קובץ",
+    "newTab": "כרטיסייה חדשה",
+    "closeTab": "סגור כרטיסייה",
+    "nextTab": "הכרטיסייה הבאה",
+    "previousTab": "הכרטיסייה הקודמת",
+    "closeWindow": "סגור חלון",
+    "edit": "עריכה",
+    "undo": "בטל",
+    "redo": "בצע שוב",
+    "cut": "גזור",
+    "copy": "העתק",
+    "paste": "הדבק",
+    "pasteAndMatchStyle": "הדבק והתאם סגנון",
+    "delete": "מחק",
+    "selectAll": "בחר הכל",
+    "speech": "דיבור",
+    "startSpeaking": "התחל לדבר",
+    "stopSpeaking": "הפסק לדבר",
+    "find": "חיפוש",
+    "view": "תצוגה",
+    "actualSize": "גודל אמיתי",
+    "zoomIn": "הגדל",
+    "zoomOut": "הקטן",
+    "toggleFullScreen": "מסך מלא",
+    "window": "חלון",
+    "minimize": "מזער",
+    "zoom": "הגדל/הקטן חלון",
+    "bringAllToFront": "הבא הכל לחזית",
+    "selectTab": "בחר כרטיסייה {{n}}",
+    "learnSpelling": "למד איות",
+    "lookUpSelection": "חפש את “{selection}”",
+    "searchWithGoogle": "חפש ב-Google",
+    "saveImage": "שמור תמונה",
+    "saveImageAs": "שמור תמונה בשם…",
+    "saveVideo": "שמור סרטון",
+    "saveVideoAs": "שמור סרטון בשם…",
+    "copyLink": "העתק קישור",
+    "saveLinkAs": "שמור קישור בשם…",
+    "copyImage": "העתק תמונה",
+    "copyImageAddress": "העתק כתובת תמונה",
+    "copyVideoAddress": "העתק כתובת סרטון",
+    "inspect": "בדוק רכיב"
   }
 }

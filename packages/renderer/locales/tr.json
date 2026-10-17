@@ -88,7 +88,10 @@
     "fileFilters": {
       "srtFiles": "SRT Dosyaları",
       "mediaFiles": "Medya Dosyaları",
-      "videoFiles": "Video Dosyaları"
+      "videoFiles": "Video Dosyaları",
+      "textFiles": "Metin Dosyaları",
+      "allFiles": "Tüm Dosyalar",
+      "subtitleFiles": "Altyazı Dosyaları"
     },
     "chooseAnotherLocation": "Başka bir konum seç",
     "continue": "Devam et",
@@ -96,7 +99,20 @@
     "dismiss": "Kapat",
     "moreActions": "Diğer işlemler",
     "installingUpdate": "Güncelleme yükleniyor...",
-    "installingUpdateShort": "Yükleniyor"
+    "installingUpdateShort": "Yükleniyor",
+    "ok": "Tamam",
+    "minimumVersionValue": "Desteklenen en düşük sürüm: v{{version}}",
+    "currentVersionValue": "Mevcut sürüm: v{{version}}",
+    "updateNotFoundUseDownloadPage": "Güncelleme buradan indirilemedi. En son sürümü indirme sayfasından alın.",
+    "whatsNewLead": "Translator v{{version}} sürümüne güncellendi.",
+    "whatsNewNotesInEnglish": "Sürüm notları (İngilizce)",
+    "checkForUpdates": "Güncellemeleri denetle",
+    "checkingForUpdates": "Güncellemeler denetleniyor…",
+    "upToDate": "En son sürümü kullanıyorsunuz.",
+    "updateAvailableDownloading": "Güncelleme bulundu. Arka planda indiriliyor.",
+    "updateReadyToInstall": "Güncelleme indirildi. Yüklemek için yeniden başlatın.",
+    "updateCheckFailed": "Güncellemeler denetlenemedi. Daha sonra yeniden deneyin.",
+    "aboutVersion": "Translator v{{version}}"
   },
   "errors": {
     "needCookies": "YouTube insan doğrulaması istedi. Devam etmek için Bağlan'a tıklayın.",
@@ -140,7 +156,60 @@
       "providerUnavailable": "Transkripsiyon (ElevenLabs Scribe) geçici olarak kullanılamıyor veya birkaç denemeden sonra ulaşılamadı. Lütfen birkaç dakika sonra tekrar deneyin.",
       "fileTooLarge": "Bu ses tek bir işte transkripsiyonu yapılamayacak kadar uzun (yaklaşık {{hours}} saatten fazla). Videoyu daha kısa parçalara bölün ve her parçanın transkripsiyonunu ayrı yapın.",
       "elevenLabsKeyRequired": "Transkripsiyon ElevenLabs Scribe kullanır ve bir ElevenLabs API anahtarı gerektirir. Ayarlar'dan bir anahtar ekleyin veya Stage5 kredileriyle transkripsiyon yapmak için API anahtarı modunu kapatın. OpenAI veya Anthropic anahtarınız çeviri için kullanılmaya devam eder."
-    }
+    },
+    "credits": {
+      "transcription": "Yazıya dökmek için krediniz yetmiyor.",
+      "translation": "Çeviri için krediniz yetmiyor.",
+      "dubbing": "Seslendirme için krediniz yetmiyor.",
+      "summary": "Özet için krediniz yetmiyor.",
+      "videoSearch": "Video aramak için krediniz yetmiyor.",
+      "download": "Krediniz yetmiyor.",
+      "export": "Krediniz yetmiyor.",
+      "other": "Krediniz yetmiyor."
+    },
+    "failed": {
+      "transcription": "Yazıya dökme beklenmedik bir sorun nedeniyle durdu. Yazıya dökülen satırlar korunur.",
+      "translation": "Çeviri beklenmedik bir sorun nedeniyle durdu. Çevrilen satırlar korunur.",
+      "dubbing": "Seslendirme beklenmedik bir sorun nedeniyle durdu.",
+      "summary": "Özet beklenmedik bir sorun nedeniyle durdu.",
+      "videoSearch": "Video araması beklenmedik bir sorun nedeniyle durdu.",
+      "export": "Video hazırlanırken beklenmedik bir sorun oluştu ve işlem durdu.",
+      "other": "Bir sorun oluştu. Lütfen yeniden deneyin."
+    },
+    "server": {
+      "transcription": "Sunucumuzda bir sorun oluştu. Bir dakika sonra yeniden deneyin.",
+      "translation": "Sunucumuzda bir sorun oluştuğu için çeviri durdu. Çevrilen satırlar korunur. Bir dakika sonra yeniden deneyin.",
+      "dubbing": "Sunucumuzda bir sorun oluştu. Bir dakika sonra yeniden deneyin.",
+      "summary": "Sunucumuzda bir sorun oluştu. Bir dakika sonra yeniden deneyin.",
+      "videoSearch": "Sunucumuzda bir sorun oluştu. Bir dakika sonra yeniden deneyin.",
+      "export": "Sunucumuzda bir sorun oluştu. Bir dakika sonra yeniden deneyin.",
+      "other": "Sunucumuzda bir sorun oluştu. Bir dakika sonra yeniden deneyin."
+    },
+    "download": {
+      "invalid_url": "Bu bir video bağlantısına benzemiyor. Bağlantının tamamını yapıştırın.",
+      "unsupported_site": "Translator bu siteden video indiremiyor.",
+      "unavailable": "Bu video kullanılamıyor. Kaldırılmış olabilir.",
+      "private": "Bu video gizli.",
+      "not_found": "Bu bağlantıda video bulunamadı.",
+      "region_locked": "Bu video ülkenizde kullanılamıyor.",
+      "audience_restricted": "Bu video yalnızca bazı izleyicilere gösteriliyor. Hesabınızla izleyebiliyorsanız Ayarlar’dan bu siteye bağlanıp yeniden deneyin.",
+      "login_required": "Bu videoyu izlemek için oturum açmanız gerekiyor. Ayarlar’dan bu siteye bağlanıp yeniden deneyin.",
+      "media_blocked": "Site video indirmeyi engelledi ve altyazılar da kurtarılamadı.",
+      "access_refused": "Bu site videoyu Translator’a vermeyi reddetti.",
+      "video_data_failed": "Video indirilemedi. Bölgeye kısıtlı olabilir ya da oturum açmayı gerektiriyor olabilir.",
+      "rate_limited": "YouTube şu anda ağınızdan yapılan indirmeleri sınırlıyor. Birkaç dakika bekleyip yeniden deneyin.",
+      "network": "Bağlanılamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.",
+      "captions_unreadable": "YouTube altyazıları bulundu ama Translator bunları okuyamadı.",
+      "save_failed": "Video indirildi ama kaydedilemedi. Yeniden deneyin.",
+      "downloader_failed": "Video indirici başlatılamadı. Translator’ı yeniden başlatıp tekrar deneyin.",
+      "generic": "Video indirilemedi. Yeniden deneyin ya da başka bir bağlantı kullanın.",
+      "subtitlesNotSaved": "Mevcut altyazılarınız kaydedilemediği için YouTube altyazıları açılmadı.",
+      "openFailed": "Video indirildi ama açılamadı. İndirme geçmişinden açın."
+    },
+    "network": "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.",
+    "busy": "Hizmet şu anda yoğun. Bir dakika bekleyip yeniden deneyin.",
+    "diskFull": "Diskiniz dolu. Biraz yer açıp yeniden deneyin.",
+    "cancelDubbingFailedPlain": "Seslendirme durdurulamadı. Yeniden deneyin."
   },
   "input": {
     "connect": "Bağlan",
@@ -175,7 +244,7 @@
     "transcribeOnly": "Sesi Metne Dönüştür",
     "srtLoaded": "Transkripsiyon Tamamlandı",
     "srtFileLoaded": "SRT Yüklendi",
-    "featuresUnlockAfterTranscription": "Transkripsiyon tamamlandıktan sonra çeviri ve diğer menüler görünecektir.",
+    "featuresUnlockAfterTranscription": "Bu videoyu yazıya dökün, çevirin ya da öne çıkan anlarını bulun.",
     "preSubtitleActionsHint": "Bu videodan döküm çıkar, çevir veya öne çıkanları oluştur.",
     "saveDubbedVideo": "Dublajlı Videoyu Kaydet",
     "downloadFinishedSwitchTitle": "İndirilen video izlensin mi?",
@@ -291,13 +360,13 @@
       "defaultSearchUserMessage": "Benim için şimdi videolar bul.",
       "followUp": {
         "moreLikeQuery": "\"{{query}}\" gibi daha fazla video bul",
-        "differentCreator": "\"{{query}}\" için başka bir üretici veya kanaldan sonuçlar",
+        "differentCreator": "Başka bir isim veya kanaldan \"{{query}}\"",
         "interviews": "{{query}} hakkında röportajlar veya sohbetler",
         "clips": "{{query}} öne çıkan anlar veya dikkat çeken klipler",
-        "creatorAppearances": "{{creator}} röportajları, TV görünümleri veya canlı klipleri",
-        "similarCreators": "{{creator}} benzeri üreticiler veya sanatçılar",
+        "creatorAppearances": "{{creator}}: röportajlar, konuk olduğu yayınlar veya ilgili klipler",
+        "similarCreators": "{{creator}} benzeri isimler, sanatçılar veya kanallar",
         "topicAngle": "{{topic}} farklı bir açıdan anlatılıyor",
-        "topicCreator": "{{creator}} ve ilgili {{topic}} videoları",
+        "topicCreator": "{{creator}} ya da ilgili {{topic}} videoları",
         "channelStyle": "{{channel}} ile benzer his taşıyan videolar",
         "moreFromHistory": "\"{{title}}\" gibi daha fazla video",
         "channelFromHistory": "{{channel}} gibi kanallardan videolar"
@@ -307,12 +376,12 @@
       "moreActions": "Daha fazla işlem",
       "recentEvents": "Son olaylar",
       "cancelFailed": "Geçerli arama iptal edilemedi.",
-      "countryGlobal": "Küresel sonuçlar",
-      "countryHint": "Küresel sonuçlar için boş bırakın.",
+      "countryGlobal": "Hedef ülke: varsayılan olarak İngilizce",
+      "countryHint": "Boş bırakırsanız arama İngilizce yapılır.",
       "countryHintDefaultEnglish": "Boş bırakırsanız arama dili varsayılan olarak İngilizce olur.",
-      "countryLabel": "Hedef ülke / bölge",
+      "countryLabel": "Hedef ülke",
       "countryPlaceholder": "ör. ABD, Japonya, İspanya, Brezilya",
-      "countryScope": "Ülke: {{country}}",
+      "countryScope": "Hedef ülke: {{country}}",
       "countryDefaultEnglish": "Hedef ülke: varsayılan İngilizce",
       "emptyCopy": "Aradığınız videonun konusunu, hedef kitlesini, içerik üreticisinin tarzını veya ruh halini belirtin. Ülke ya da zaman filtresini yalnızca önemliyse ekleyin.",
       "emptyEyebrow": "Asistan yardımıyla arama",
@@ -335,7 +404,7 @@
       "savedDownloads": "Kaydedilen indirmeler",
       "savedDownloadsCount": "{{count}} kaydedilen indirme",
       "savedPreferencesCount": "{{count}} kaydedilen tercih",
-      "searchingLong": "Videolar hâlâ aranıyor ve sıralanıyor...",
+      "searchingLong": "Videolar hâlâ aranıyor...",
       "searchingVeryLong": "Her zamankinden uzun sürüyor ama hâlâ çalışıyor.",
       "stillWorking": "Hâlâ çalışıyor...",
       "toggleCopy": "İş akışından çıkmadan YouTube'da kaynak video arayın.",
@@ -355,7 +424,11 @@
       "removeFromHistoryConfirm": "Bu öğe indirme geçmişinden kaldırılsın mı? Uygulama kitaplığı dışında kaydedilen dosyalar cihazda kalır.",
       "deleteLocalFileHistoryPending": "Dosya silindi, ancak Translator indirme geçmişini güncellemeyi tamamlayamadı. Otomatik olarak yeniden denenecek.",
       "removeHistoryFailed": "Bu indirme geçmişten kaldırılamadı.",
-      "storedInAppLibrary": "Uygulama kitaplığında saklanıyor"
+      "storedInAppLibrary": "Uygulama kitaplığında saklanıyor",
+      "freeSearchRunning": "YouTube’da aranıyor…",
+      "freeSearchResults": "“{{query}}” için YouTube sonuçları burada. Bu arama ücretsizdi. Ne aradığınızı biraz daha anlatırsanız yapay zekâ ile aramayı daraltırım.",
+      "freeSearchEmpty": "YouTube’da “{{query}}” için hiçbir şey bulunamadı. Ne istediğinizi anlatın, yapay zekâ ile arayayım.",
+      "openOriginalPage": "Orijinal sayfayı aç"
     },
     "downloadAndTranslate": "İndir ve çevir",
     "downloadAndTranscribe": "İndir ve deşifre et",
@@ -369,7 +442,24 @@
     "captionRecoveryKeepVideo": "Mevcut videoyu koru",
     "captionRecoveryOpenCaptions": "Altyazıları aç",
     "captionRecoverySwitchPrompt": "Translator YouTube otomatik altyazılarını kurtardı, ancak URL'deki video kullanılamıyor. Altyazıları açmak mevcut videonun bağlantısını kaldıracak.",
-    "captionRecoverySwitchTitle": "Altyazılar mevcut video olmadan açılsın mı?"
+    "captionRecoverySwitchTitle": "Altyazılar mevcut video olmadan açılsın mı?",
+    "translateTheseSubtitles": "Bu altyazıları çevir",
+    "subtitlesLoaded": "Altyazılar yüklendi",
+    "chooseLanguage": "Bir dil seçin",
+    "urlRejected": {
+      "collection": "Bu bir kanal veya oynatma listesi bağlantısı. Tek bir videonun bağlantısını yapıştırın ya da Video bul’u kullanın.",
+      "live": "Bu bir canlı yayın. Translator yayın bittikten sonra indirebilir."
+    },
+    "longDownload": {
+      "title": "Uzun bir video indirilsin mi?",
+      "body": "Bu video uzun; indirme biraz sürebilir ve diskte çok yer kaplayabilir. Daha düşük bir indirme kalitesi, işlemi hızlandırır ve dosyayı küçültür.",
+      "duration": "Süre: {{duration}}",
+      "size": "Yaklaşık {{size}}",
+      "confirm": "İndir"
+    },
+    "dropWhileDownloading": "Bir indirme sürüyor. Bittiğinde dosyayı yeniden bırakın.",
+    "dropWhileBusy": "Translator bu video üzerinde çalışıyor. İşlem bittiğinde dosyayı yeniden bırakın.",
+    "dropNotSupported": "Bir video, ses dosyası veya .srt altyazı dosyası bırakın."
   },
   "subtitles": {
     "outputLanguage": "Çıktı Dili",
@@ -392,32 +482,47 @@
     "translateEstimateByo": "Kendi anahtarı",
     "qualityBadge": "(yk)",
     "cancel_confirmation": "Altyazı çeviri işlemini iptal etmek istediğinizden emin misiniz? Tüm ilerleme kaybedilecek ve yeniden başlamanız gerekecek.",
-    "dubCostHint": "ElevenLabs sesi: konuşmanın dakikası başına ~{{rate}} kredi. Bu tahmin dublaj başlamadan önce gösterilir."
+    "dubCostHint": "ElevenLabs sesi: konuşmanın dakikası başına ~{{rate}} kredi. Bu tahmin dublaj başlamadan önce gösterilir.",
+    "unreadableCues_one": "Bu dosyadaki {{count}} satır okunamadığı için alınmadı. Zaman kodunu kontrol edin.",
+    "unreadableCues": "Bu dosyadaki {{count}} satır okunamadığı için alınmadı. Zaman kodlarını kontrol edin.",
+    "addCreditsToTranslate": "Çeviri için kredi ekle",
+    "dubInto": "{{language}} seslendir",
+    "dubIntro": "Seçtiğiniz dilde bir ses, orijinal arka plan sesinin üzerine altyazıları okur.",
+    "dubNeedsSubtitles": "Seslendirme altyazıları sesli okur, bu yüzden bu videonun önce altyazıya ihtiyacı var. Videoyu yazıya dökün, sonra buradan bir ses seçin.",
+    "dubLanguageLabel": "Seslendirme dili",
+    "dubSameLanguage": "Altyazılar zaten {{language}}, bu yüzden ses onları olduğu gibi okur.",
+    "dubTranslatesFirst": "Altyazılar önce {{language}} diline çevrilir, sonra seslendirilir.",
+    "dubCostWithTranslation": "Çeviri ve ses: {{cost}}",
+    "dubUsesOwnKeys": "Kendi API anahtarlarınız kullanılır.",
+    "dubNotEnoughCredits": "Bu seslendirme için krediniz yetmiyor.",
+    "addCreditsToDub": "Seslendirme için kredi ekle",
+    "noSubtitlesToDub": "Önce bu video için altyazı oluşturun ya da açın, sonra seslendirin.",
+    "noSubtitlesToTranslate": "Önce altyazı açın ya da oluşturun, sonra çevirin."
   },
   "summary": {
-    "title": "Transkript Özeti",
-    "ctaHelper": "Derinlemesine bir genel bakış oluşturun. Uzun videolar biraz zaman alabilir.",
-    "languageLabel": "Özet dili",
+    "title": "Öne Çıkanlar",
+    "ctaHelper": "En iyi anları bulun.",
+    "languageLabel": "Çıktı dili",
     "tab": {
       "summary": "Özet",
-      "sections": "Detaylı notlar",
+      "sections": "Notlar",
       "highlights": "Öne Çıkanlar"
     },
-    "generate": "Özet oluştur",
-    "regenerate": "Özeti yeniden oluştur",
+    "generate": "Öne çıkanları bul",
+    "regenerate": "Öne çıkanları yeniden bul",
     "estimateCredits": "{{credits}} kredi",
     "estimateByo": "BYO anahtarı",
     "highEffortBadge": "(derin)",
     "placeholder": "Yapay zeka özetiniz oluşturulduktan sonra burada görünecek.",
-    "insufficientCredits": "Özet oluşturmak için yeterli kredi yok.",
-    "error": "Özet oluşturulamadı. {{message}}",
+    "insufficientCredits": "Öne çıkanları bulmak için krediniz yetmiyor.",
+    "error": "Öne çıkanlar oluşturulamadı. {{message}}",
     "cancel": "İptal",
     "copy": "Özeti kopyala",
     "copied": "Kopyalandı!",
     "copyError": "Özet panoya kopyalanamadı.",
-    "noHighlights": "Henüz öne çıkan yok. Kilit anları tespit etmek için oluşturun.",
+    "noHighlights": "Henüz öne çıkan yok. En iyi anları bulmak için öne çıkanları oluşturun.",
     "noVideoForHighlights": "Öne çıkan klipleri kesmek için kaynak videoyu açın.",
-    "summaryRequiredForHighlights": "Öne çıkan klipleri kesmeden önce bir transkript özeti oluşturun.",
+    "summaryRequiredForHighlights": "Metnin incelenmesi için önce öne çıkanları oluşturun.",
     "highlight": "Öne Çıkan",
     "cutHighlightClip": "Bu öne çıkan kısmı kes",
     "cuttingHighlightClip": "Kesiliyor…",
@@ -425,8 +530,8 @@
     "clipFormat": "Klip biçimi:",
     "originalFormat": "Orijinal",
     "originalFormatDesc": "Orijinal video boyutlarını koru",
-    "verticalFormat": "9:16 Dikey",
-    "verticalFormatDesc": "YouTube Shorts, TikTok, Reels için optimize edildi (9:16)",
+    "verticalFormat": "Shorts kadrajı",
+    "verticalFormatDesc": "YouTube Shorts, TikTok ve Reels için kırpıp yeniden kadrajla (9:16)",
     "verticalFitFormat": "Shorts'a sığdırma",
     "verticalFitFormatDesc": "Orijinal çerçeveyi 9:16 tuvale sığdırır",
     "downloadHighlight": "Klibi indir",
@@ -440,16 +545,18 @@
     "sectionHeading": "Bölüm {{index}}",
     "highlightsInProgress": "Öne çıkan klipler hazırlanıyor…",
     "status": {
-      "preparing": "Transkript hazırlanıyor…",
-      "chunk": "Bölüm özetleniyor {{current}}/{{total}}",
-      "selectingHighlights": "Öne çıkan anlar seçiliyor…",
+      "preparing": "Metin inceleniyor…",
+      "chunk": "Özet yazılıyor {{current}}/{{total}}",
+      "selectingHighlights": "Öne çıkanlar seçiliyor…",
       "cuttingHighlight": "Öne çıkan kesiliyor {{current}}/{{total}}…",
       "cuttingHighlights": "Öne çıkan klipler kesiliyor…",
-      "synthesizing": "Kapsamlı özet oluşturuluyor…",
-      "ready": "Özet hazır",
-      "error": "Özet başarısız",
-      "cancelled": "Özet iptal edildi",
-      "inProgress": "Özet oluşturuluyor…"
+      "synthesizing": "Son dokunuşlar…",
+      "ready": "Öne çıkanlar hazır",
+      "error": "Öne çıkanlar oluşturulamadı",
+      "cancelled": "Öne çıkanlar iptal edildi",
+      "inProgress": "Öne çıkanlar bulunuyor…",
+      "cuttingClip": "Klip kesiliyor…",
+      "renderingClipSubtitles": "Klibe altyazılar ekleniyor…"
     },
     "combineMode": "Birleştir",
     "exitCombineMode": "Birleştirmeden Çık",
@@ -462,7 +569,30 @@
     "combinedCutFailed": "Birleştirilmiş öne çıkanlar kesilemedi: {{message}}",
     "highlightsInsufficientCredits": "Özet oluşturuldu, ancak krediler bittiği için öne çıkanların çıkarılması durdu.",
     "highlightsPartialWarning": "Öne çıkanlar kısmen çıkarıldı. Bu öne çıkanlar eksik olabilir. Yenilemek için yeniden oluşturun.",
-    "highlightsPartialWithReason": "Özet oluşturuldu, ancak öne çıkanlar kısmen çıkarıldı: {{message}}"
+    "highlightsPartialWithReason": "Özet oluşturuldu, ancak öne çıkanlar kısmen çıkarıldı: {{message}}",
+    "estimateOwnKey": "Kendi API anahtarınız kullanılır",
+    "generateSummary": "Özetle",
+    "regenerateSummary": "Yeniden özetle",
+    "showingSavedLanguage": "Kayıtlı sonuç gösteriliyor (dil: {{language}}). {{current}} dilinde yeni bir sonuç için düğmeye basın.",
+    "showingSavedVariant": "Farklı bir özet kalitesiyle hazırlanmış kayıtlı sonuç gösteriliyor (dil: {{language}}). Yenisini almak için düğmeye basın.",
+    "noSummaryYet": "Henüz özet yok. Bu videonun ana noktalarını görmek için dili seçip Özetle’ye basın.",
+    "noSummaryWithHighlights": "Bu öne çıkanlar bir özetle birlikte gelmedi. Özet yazmak için Özetle’ye basın.",
+    "clipCaptionsChanged": "Bu klip kesildikten sonra altyazılar değişti.",
+    "recutClip": "Yeniden kes",
+    "cutCombinedCount": "{{count}} klibi birleştirip kes",
+    "cutCombinedCount_one": "{{count}} klibi birleştirip kes",
+    "cutHighlightFailed": "Klip kesilemedi: {{message}}",
+    "clipError": {
+      "busy": "Önce mevcut işlemin bitmesini bekleyin, sonra klibi kesin.",
+      "noHighlight": "Önce öne çıkan bir an seçin.",
+      "editorialSingle": "Stil verilmiş her Short’u Shorts kadrajında ayrı ayrı kesin.",
+      "editorialStale": "Bu Short’taki altyazılar değişti. “Bu Short’a stil ver”i açın, kontrol edip kaydedin, sonra yeniden kesin.",
+      "noTranscript": "Klip kesmeden önce bu videonun altyazılarını açın.",
+      "noCues": "Videonun bu bölümünde altyazı yok.",
+      "untranslated": "Bu klipteki bazı satırlar henüz çevrilmedi. Onları çevirin ya da altyazı görünümünü orijinali gösterecek şekilde ayarlayın.",
+      "subtitlesNotSaved": "Klip kesildi ama altyazıları kaydedilemedi.",
+      "generic": "Bu klip videodan kesilemedi. Yeniden deneyin."
+    }
   },
   "panel": {
     "new": "yeni",
@@ -516,7 +646,9 @@
       "originalTextPrefix": "Orijinal:",
       "subtitlePlaceholder": "Altyazı metni",
       "confirmRemove": "Bu altyazı bloğunu kaldırmak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-      "transcribeThisLine": "Satırı transkribe et"
+      "transcribeThisLine": "Satırı transkribe et",
+      "timeEndBeforeStart": "Bitiş zamanı başlangıçtan sonra olmalı. Satır önceki zamanını korur.",
+      "timeUnreadable": "Zamanı 00:01:23,450 veya 1:23.45 biçiminde yazın. Satır önceki zamanını korur."
     },
     "header": {
       "save": "Altyazıları kaydet",
@@ -529,6 +661,14 @@
       "styleLabel": "Stil:",
       "mergeButton": "Altyazıları Birleştir",
       "mergingButton": "Birleştiriliyor..."
+    },
+    "undo": {
+      "removed": "Satır silindi.",
+      "inserted": "Satır eklendi.",
+      "replaced": "Tüm satırlarda değiştirildi.",
+      "shifted": "Zamanlama kaydırıldı.",
+      "improved": "Satır yeniden yazıya döküldü.",
+      "action": "Geri al"
     }
   },
   "settings": {
@@ -575,10 +715,10 @@
         "anthropicHighEnd": "Anthropic üst düzey inceleme",
         "help": "<b>5× kredi</b> • Daha yüksek kalite için inceleme aşaması ekler",
         "helpWithEstimate": "<b>5× kredi</b> • Bakiyeniz: ~{{normalTime}} (normal) / ~{{hqTime}} (yk)",
-        "helpOn": "<b>5× kredi</b> • İnceleme aşaması dahil",
-        "helpOff": "İnceleme aşamasını atlar",
-        "helpWithEstimateOn": "<b>5× kredi</b> • İnceleme aşaması dahil • Bakiye: ~{{time}}",
-        "helpWithEstimateOff": "İnceleme aşamasını atlar • Bakiye: ~{{time}}"
+        "helpOn": "<b>5× kredi</b> • Claude Haiku 5.5 taslağı + Claude Opus 5.5 incelemesi",
+        "helpOff": "<b>1× kredi</b> • Yalnızca Claude Haiku 5.5 taslağı",
+        "helpWithEstimateOn": "<b>5× kredi</b> • Claude Haiku 5.5 taslağı + Claude Opus 5.5 incelemesi • Bakiye: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× kredi</b> • Yalnızca Claude Haiku 5.5 taslağı • Bakiye: ~{{time}}"
       },
       "qualitySummary": {
         "label": "Kaliteli Özet",
@@ -586,9 +726,9 @@
         "modelOff": "Claude Sonnet 5.5 standart analiz",
         "help": "<b>4× kredi</b> • Claude Opus 5.5 ile derin analiz ve öne çıkan klipler",
         "helpWithEstimate": "<b>4× kredi</b> • Bakiyeniz: ~{{normalTime}} (normal) / ~{{hqTime}} (yk)",
-        "helpOn": "<b>4× kredi</b> • Derin analiz + öne çıkan klipler",
+        "helpOn": "<b>4× kredi</b> • Claude Opus 5.5 ile derin analiz + öne çıkan klipler",
         "helpOff": "Claude Sonnet 5.5 ile hızlı analiz",
-        "helpWithEstimateOn": "<b>4× kredi</b> • Derin analiz + öne çıkan klipler • Bakiye: ~{{time}}",
+        "helpWithEstimateOn": "<b>4× kredi</b> • Claude Opus 5.5 ile derin analiz + öne çıkan klipler • Bakiye: ~{{time}}",
         "helpWithEstimateOff": "Claude Sonnet 5.5 ile hızlı analiz • Bakiye: ~{{time}}"
       },
       "qualityDubbing": {
@@ -609,7 +749,10 @@
         "perHour": "~{{credits}} kredi/saat",
         "perMinute": "~{{credits}} kredi/dk",
         "perSearch": "~{{credits}} kredi/arama",
-        "balance": "Bakiye: ~{{time}}"
+        "balance": "Bakiye: ~{{time}}",
+        "minutesPerHour": "Videonun saati başına dakikalarınızdan ~{{time}}",
+        "minutesPerDubMinute": "Seslendirmenin dakikası başına dakikalarınızdan ~{{time}}",
+        "minutesPerSearch": "Arama başına dakikalarınızdan ~{{time}}"
       }
     },
     "dubbing": {
@@ -677,7 +820,9 @@
       "economicsBody": "Stage5 kredileri kolaylık için optimize edilmiştir (kurulum yok). Kendi anahtarınızı kullanmak sağlayıcılara doğrudan ödeme yapar—genellikle paketinize bağlı olarak ~%30–50 daha ucuz.",
       "encryptionUnavailable": "Bu sistemde güvenli depolama kullanılamıyor. API anahtarları kaydedilemez.",
       "checkoutOpen": "Ödeme sayfası tarayıcıda açık…",
-      "checkoutOpenHint": "Ödemeyi tarayıcınızda tamamlayın. Ödeme onaylandığında BYO'yu otomatik olarak açacağız."
+      "checkoutOpenHint": "Ödemeyi tarayıcınızda tamamlayın. Ödeme onaylandığında BYO'yu otomatik olarak açacağız.",
+      "entitlementsLoadFailed": "Kilit durumunuz kontrol edilemedi. Bağlantınızı kontrol edip yeniden deneyin.",
+      "unlockFailed": "Ödeme başlatılamadı. Bağlantınızı kontrol edip yeniden deneyin."
     },
     "byoPreferences": {
       "title": "Sağlayıcı Tercihleri",
@@ -793,7 +938,8 @@
       "saved": "API anahtarı kaydedildi.",
       "cleared": "API anahtarı temizlendi.",
       "invalid": "API anahtarı doğrulanamadı.",
-      "howToGet": "Bu anahtar nasıl alınır"
+      "howToGet": "Bu anahtar nasıl alınır",
+      "missing": "Önce bir API anahtarı yapıştırın."
     },
     "byoStack": {
       "title": "AI yığınınız"
@@ -829,7 +975,13 @@
         "desktopConnected": "Translator, Claude Desktop’a eklendi. Yüklemek için Claude’dan çıkıp yeniden açın.",
         "cliNotFound": "{{app}} komutu bu bilgisayarda bulunamadı. Bunu bir terminalde çalıştırın:",
         "cliNotFoundCopied": "{{app}} komutu bu bilgisayarda bulunamadı. Kurulum komutu kopyalandı; bir terminale yapıştırın:",
-        "failed": "{{app}} bağlanamadı: {{message}}"
+        "failed": "{{app}} bağlanamadı: {{message}}",
+        "details": "Ayrıntılar",
+        "failedConfigInvalid": "{{app}} bağlanamadı: ayar dosyası geçerli olmadığı için Translator dosyaya dokunmadı. Dosyayı düzeltin ya da kaldırın, sonra yeniden deneyin.",
+        "failedWrite": "{{app}} bağlanamadı: Translator ayar dosyasını yazamadı.",
+        "failedLauncher": "{{app}} bağlantısı yalnızca yüklü Translator uygulamasında çalışır.",
+        "failedCli": "{{app}} otomatik olarak bağlanamadı. Bunu bir terminalde çalıştırın:",
+        "failedGeneric": "{{app}} bağlanamadı. Yeniden deneyin."
       },
       "status": {
         "enabled": "Etkin",
@@ -882,7 +1034,16 @@
       "redeeming": "Alınıyor…",
       "received": "{{credits}} kredi alındı.",
       "receivedNoCredits": "Kod çalıştı.",
-      "receivedByo": "API anahtarı kilidi bu bilgisayarda etkin."
+      "receivedByo": "API anahtarı kilidi bu bilgisayarda etkin.",
+      "errors": {
+        "nothing_to_transfer": "Henüz taşınacak bir şey yok: bu bilgisayarda satın alınmış kredi ya da API anahtarı kilidi yok. Başka bir bilgisayardaki kredileri buraya getirmek için “Kredileri al”ı seçin.",
+        "too_many_codes": "Bu saat içinde çok fazla aktarım kodu oluşturuldu. Biraz sonra yeniden deneyin.",
+        "jobs_running": "Yazıya dökme veya çeviri hâlâ sürüyor. Bittiğinde yeniden deneyin.",
+        "invalid_code": "Bu kod yanlış, kullanılmış ya da süresi dolmuş. Diğer bilgisayarda yeni bir kod oluşturun.",
+        "same_device": "Kodu, oluşturduğunuz bilgisayara değil diğer bilgisayara girin.",
+        "network_error": "Stage5 sunucusuna ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin.",
+        "transfer_failed": "Krediler taşınamadı. Bağlantınızı kontrol edip yeniden deneyin."
+      }
     }
   },
   "credits": {
@@ -923,7 +1084,9 @@
     "checkoutNote": "Tarayıcınızda Stripe ile tek seferlik ödeme. Hesap ya da abonelik yok. Dakikalar otomatik olarak yüklenir.",
     "dubbingNote": "Krediyle çeviri dakika başına yaklaşık %10 ekler; seslendirmede bu oran daha yüksek.",
     "iCancelledCheckout": "Ödemeyi iptal ettim",
-    "checkoutStartFailed": "Ödeme başlatılamadı. Bağlantınızı kontrol edip tekrar deneyin."
+    "checkoutStartFailed": "Ödeme başlatılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
+    "loadFailed": "Bakiyeniz yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin.",
+    "estimateAmount": "{{credits}} kredi"
   },
   "cta": {
     "generate": {
@@ -958,7 +1121,12 @@
     "useThisVideo": "Bu videoyu kullan",
     "useDownloadedVideo": "Bu videoyu kullan",
     "useOriginalAudio": "Orijinal sesi kullan",
-    "useDubbedAudio": "Dublajlı sesi kullan"
+    "useDubbedAudio": "Dublajlı sesi kullan",
+    "changeVideoKeepSubtitles": "Mevcut altyazıları yeni videoda kullan (aynı videonun başka bir kopyası için). Farklı bir videoysa işareti kaldırın.",
+    "mute": "Sesi kapat (M)",
+    "unmute": "Sesi aç (M)",
+    "volume": "Ses düzeyi",
+    "unreadableFile": "Translator bu dosyayı okuyamıyor. Dosya bozuk olabilir ya da desteklenmeyen bir biçimde olabilir."
   },
   "admin": {
     "title": "Yönetici",
@@ -1055,7 +1223,7 @@
       "localSourceReady": "Yerel dosya hazır",
       "webSourceReady": "Web kaynağı hazır",
       "sourceReadyDescription": "Seçtiğiniz medya bir sonraki adım için hazır.",
-      "transcribeTitle": "Döküm oluştur",
+      "transcribeTitle": "Videoyu işle",
       "processVideoTitle": "Videoyu işle",
       "transcribeDescription": "Çeviri veya dublaja geçmeden önce kaynak medyayı düzenlenebilir bir altyazı parçasına dönüştürün.",
       "translateDubTitle": "Çevir veya dublaj yap",
@@ -1082,7 +1250,11 @@
     "nextMatchAria": "Sonraki eşleşme",
     "previousMatchAria": "Önceki eşleşme",
     "replaceAllAria": "Tümünü değiştir",
-    "closeAria": "Arama çubuğunu kapat"
+    "closeAria": "Arama çubuğunu kapat",
+    "matchCount": "{{current}}/{{total}}",
+    "matchCase": "Büyük/küçük harf duyarlı",
+    "wholeWord": "Tam sözcük",
+    "showReplace": "Değiştir"
   },
   "dialogs": {
     "apiKeysRequired": {
@@ -1134,7 +1306,32 @@
       "neverHadMessage": "Transkripsiyon için kredi veya API anahtarı kilidinin açılması gerekir. İkisini de Ayarlar’dan edinebilirsiniz. Aracı Denetimi üzerinden kendi Claude veya Codex’inizle çeviri ücretsizdir.",
       "notEnoughTitle": "Bu video için yeterli kredi yok",
       "notEnoughTranscriptionMessage": "Bu videoyu yazıya dökmek yaklaşık {{required}} kredi gerektirir. {{available}} krediniz var; bu yaklaşık {{minutes}} dakikaya yeter. Kredi ekleyip yeniden başlatın.",
-      "notEnoughMessage": "Bu görev, {{available}} olan bakiyenizden daha fazla kredi gerektiriyor. Devam etmek için kredi ekleyin."
+      "notEnoughMessage": "Bu görev, {{available}} olan bakiyenizden daha fazla kredi gerektiriyor. Devam etmek için kredi ekleyin.",
+      "task": {
+        "transcription": {
+          "title": "Yazıya dökmek için kredi gerekiyor",
+          "message": "Bakiyeniz bunu yazıya dökmeye yetmiyor. Kredi ekleyip yeniden başlatın. Yazıya dökülen satırlar korunur."
+        },
+        "translation": {
+          "title": "Çeviri için kredi gerekiyor",
+          "message": "Bakiyeniz bunu çevirmeye yetmiyor. Kredi ekleyip yeniden deneyin. Çevrilen satırlar korunur. Aracı Denetimi üzerinden kendi Claude veya Codex’inizle çeviri ücretsizdir."
+        },
+        "dubbing": {
+          "title": "Seslendirme için kredi gerekiyor",
+          "message": "Bakiyeniz bu videoyu seslendirmeye yetmiyor. Kredi ekleyip yeniden deneyin."
+        },
+        "summary": {
+          "title": "Özet için kredi gerekiyor",
+          "message": "Bakiyeniz özete ve öne çıkanlara yetmiyor. Kredi ekleyip yeniden deneyin."
+        },
+        "videoSearch": {
+          "title": "Yapay zekâ ile video arama için kredi gerekiyor",
+          "message": "Bakiyeniz yapay zekâ ile video aramaya yetmiyor. Kredi ekleyip yeniden arayın."
+        },
+        "other": {
+          "title": "Bunun için kredi gerekiyor"
+        }
+      }
     },
     "dubCostConfirm": {
       "title": "Seslendirme başlatılsın mı?",
@@ -1145,7 +1342,58 @@
       "message": "Zaten açık altyazılarınız var. YouTube otomatik altyazılarıyla değiştirmeden önce bunları kaydedin veya silin.",
       "saveAndOpen": "Kaydet ve altyazıları aç",
       "title": "Kurtarılan otomatik altyazılar açılsın mı?"
-    }
+    },
+    "unsavedSrtOnReplace": {
+      "title": "Altyazı değişiklikleri önce kaydedilsin mi?",
+      "message": "Bu altyazılar son kayıttan sonra değişti. Yerlerine yenisi gelmeden önce değişiklikleriniz kaydedilsin mi?",
+      "saveAndContinue": "Kaydet ve devam et",
+      "discardAndContinue": "Değişiklikleri at ve devam et"
+    },
+    "closeGuard": {
+      "job": {
+        "transcription": "Yazıya dökme işlemi hâlâ sürüyor.",
+        "translation": "Çeviri hâlâ sürüyor.",
+        "dubbing": "Seslendirme hâlâ sürüyor.",
+        "export": "Video dışa aktarımı hâlâ sürüyor.",
+        "summary": "Özet hâlâ yazılıyor.",
+        "download": "İndirme hâlâ sürüyor.",
+        "highlight": "Öne çıkan klipler hâlâ hazırlanıyor.",
+        "search": "Video araması hâlâ sürüyor.",
+        "generic": "Bir işlem hâlâ sürüyor."
+      },
+      "unsavedLine": "Altyazı değişiklikleri kaydedilmedi.",
+      "unsavedMessage": "Bu altyazılarda kaydedilmemiş değişiklikler var.",
+      "tabUnsavedDetail": "Sekme kapanmadan önce kaydedilsin mi?",
+      "tabUnsavedWithJobDetail": "Sekmeyi kapatmak işlemi durdurur. Altyazı değişiklikleri önce kaydedilsin mi?",
+      "tabJobDetail": "Sekmeyi kapatırsanız işlem durur ve şimdiye kadar yapılanlar kaybolur.",
+      "quitMessage": "{{app}} kapatılsın mı? Bazı işler henüz bitmedi.",
+      "windowMessage": "Pencere kapatılsın mı? Bazı işler henüz bitmedi.",
+      "tabLine": "{{title}}: {{status}}",
+      "unsavedWithJobsDetail": "Süren işlemler durur. Altyazı değişiklikleri önce kaydedilsin mi?",
+      "jobsDetail": "Süren işlemler durur ve şimdiye kadar yapılanlar kaybolur.",
+      "saveAndClose": "Kaydet ve kapat",
+      "saveAndQuit": "Kaydet ve çık",
+      "closeWithoutSaving": "Kaydetmeden kapat",
+      "quitWithoutSaving": "Kaydetmeden çık",
+      "stopAndClose": "Durdur ve kapat",
+      "quitAnyway": "Yine de çık",
+      "closeAnyway": "Yine de kapat",
+      "saveFailed": "{{title}} sekmesindeki altyazılar kaydedilemediği için hiçbir şey kapatılmadı. Altyazıları düzenleyiciden kaydedip yeniden deneyin.",
+      "ok": "Tamam"
+    },
+    "exportSaveDialogTitle": "Videoyu farklı kaydet",
+    "exportVideoFilterName": "MP4 videosu",
+    "exportDiscardConfirm": "Videonuz hazır ama henüz kaydedilmedi. Silinsin mi?",
+    "exportChooseLocationButton": "Kayıt yerini seç…",
+    "exportDiscardButton": "Videoyu sil",
+    "exportSaveFailed": "Video şu klasöre kaydedilemedi: {{folder}}",
+    "exportSaveFailedPermission": "Bu klasöre kaydetme izniniz yok.",
+    "exportSaveFailedDiskFull": "Bu sürücüde yeterli boş alan yok.",
+    "exportSaveFailedGeneric": "Dosya oraya yazılamadı.",
+    "exportSameAsSource": "Bu, orijinal videonun yerine geçer. Farklı bir ad seçin.",
+    "keepDubbing": "Seslendirmeye devam et",
+    "stopDubbing": "Seslendirmeyi durdur",
+    "cancelDubbingBody": "Şimdiye kadar hazırlanan seslendirme silinecek."
   },
   "progress": {
     "preparingVideoExport": "Video dışa aktarma hazırlanıyor…",
@@ -1163,7 +1411,7 @@
     "transcribingElevenLabsHours": "ElevenLabs ile transkribe ediliyor (~{{hours}}s {{minutes}}d kaldı)",
     "transcribingElevenLabsFinishing": "ElevenLabs ile transkribe ediliyor...",
     "transcriptionRetry": "Bağlantı başarısız, yeniden deneniyor ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "Transkripsiyon için ses yükleniyor...",
+    "transcribingR2Upload": "Ses yükleniyor…",
     "gapRepair": "Boşluk onarımı #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Eksik altyazılar onarılıyor (Tekrar {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Altyazılar temizleniyor ({{done}}/{{total}})",
@@ -1233,7 +1481,18 @@
       "videoBlockedCaptions": "Video indirilemedi; bunun yerine YouTube altyazılarına bakılıyor…",
       "voiceTrackAssembled": "Ses kaydı birleştirildi",
       "voiceTrackReady": "Ses kaydı hazır",
-      "writingSummary": "Özet yazılıyor…"
+      "writingSummary": "Özet yazılıyor…",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi",
+      "cancelling": "İptal ediliyor…",
+      "failed": "Bir sorun oluştu",
+      "downloading": "İndiriliyor…",
+      "downloadingAudio": "Ses indiriliyor…",
+      "transcribingLine": "Satır yazıya dökülüyor…",
+      "startingExport": "Video hazırlanmaya başlıyor…",
+      "captionsAvailable": "Video indirilemedi ama YouTube altyazıları mevcut",
+      "captionsNotOpened": "YouTube altyazıları hazır ama açılmadı",
+      "insufficientCredits": "Krediniz yetmiyor"
     },
     "listening": "Video dinleniyor…",
     "mergeFinishSaveBeforeReload": "Yeniden yüklemeden önce birleştirilmiş videonun kaydedilmesini bekleyin.",
@@ -1241,7 +1500,8 @@
     "mergeWaitForCancelBeforeReload": "Yeniden yüklemeden önce birleştirme iptalinin tamamlanmasını bekleyin.",
     "preparingTranscription": "Dinlemeye hazırlanıyor…",
     "restartingTranscription": "Transkripsiyon yeniden başlatılıyor…",
-    "resumingTranscription": "Kaldığı yerden devam ediyor…"
+    "resumingTranscription": "Kaldığı yerden devam ediyor…",
+    "hqModeEstimate": "(yüksek kalite: ~{{time}})"
   },
   "messages": {
     "fileSaved": "Dosya kaydedildi:\n{{path}}",
@@ -1264,7 +1524,23 @@
     "sendReport": "Rapor gönder",
     "reportPrompt": "Bir şeyler ters gitti. Hızlı düzeltme için bunu geliştiriciye bildirin.",
     "preparingReport": "Tanılama paketi hazırlanıyor...",
-    "reportContextWarning": "Tanılama bağlamının bir kısmı yüklenemedi. Rapor yine de bu uygulamaya ait ayrıntıları içerecek."
+    "reportContextWarning": "Tanılama bağlamının bir kısmı yüklenemedi. Rapor yine de bu uygulamaya ait ayrıntıları içerecek.",
+    "reportPromptTask": {
+      "transcription": "Yazıya dökme beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "translation": "Çeviri beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "dubbing": "Seslendirme beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "summary": "Özet beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "videoSearch": "Video araması beklenmedik bir sorun nedeniyle durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "download": "Video indirme, tanımadığımız bir nedenle başarısız oldu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "export": "Video hazırlanırken beklenmedik bir sorun oluştu ve işlem durdu. Sorunu düzeltebilmemiz için bu raporu gönderin.",
+      "other": "Bir sorun oluştu. Düzeltebilmemiz için bu raporu gönderin."
+    },
+    "feedbackTitle": "Geri bildirim gönderin veya sorun bildirin",
+    "whatHappened": "Ne oldu ya da bize ne söylemek istersiniz?",
+    "attachDiagnostics": "Tanılama bilgilerini ekle (sorunlar için önerilir)",
+    "attachDiagnosticsHint": "Son uygulama günlükleri, uygulama sürümü ve sistem bilgileri. Video veya altyazı içermez.",
+    "showDetails": "Neyin gönderileceğini göster",
+    "feedbackEmailSubject": "Translator geri bildirimi"
   },
   "home": {
     "headline": "Her videoyu <lang>{{language}}</lang> izleyin.",
@@ -1297,7 +1573,9 @@
     "seeAll": "Tümünü gör",
     "recentSubtitlesReady": "{{language}} altyazı hazır",
     "recentSubtitlesReadyGeneric": "Altyazı hazır",
-    "recentDownloaded": "İndirildi"
+    "recentDownloaded": "İndirildi",
+    "recentLocalFile": "Bu bilgisayarda",
+    "recentLocalMissing": "Dosya taşınmış ya da silinmiş"
   },
   "workspace": {
     "subtitlesTitle": "Altyazılar",
@@ -1327,7 +1605,25 @@
     "showTranslation": "Çeviri",
     "showOriginal": "Orijinal",
     "showBoth": "İkisi de",
-    "textSize": "Yazı boyutu"
+    "textSize": "Yazı boyutu",
+    "findReplace": "Bul ve değiştir",
+    "statusReadyPrice": "Hazır — bu video için {{language}} altyazı: {{price}}",
+    "statusReadyPreview": "Hazır — dakikalarınız videonun ilk {{minutes}} dakikasını {{language}} diline çevirmeye yetiyor",
+    "statusReadyPreview_one": "Hazır — dakikalarınız videonun ilk {{minutes}} dakikasını {{language}} diline çevirmeye yetiyor",
+    "statusPartlyTranslated": "{{language}}: {{count}} satırın {{translated}} tanesi çevrildi · {{missing}} satır çevrilmedi",
+    "statusPartlyTranslated_one": "{{language}}: {{count}} satırın {{translated}} tanesi çevrildi · {{missing}} satır çevrilmedi",
+    "statusPartlyTranslatedUnknown": "{{count}} satırın {{translated}} tanesi çevrildi · {{missing}} satır çevrilmedi",
+    "statusPartlyTranslatedUnknown_one": "{{count}} satırın {{translated}} tanesi çevrildi · {{missing}} satır çevrilmedi",
+    "statusTranslatedUnknown": "{{count}} çevrilmiş satır · videoyla eş zamanlı",
+    "statusTranslatedUnknown_one": "{{count}} çevrilmiş satır · videoyla eş zamanlı",
+    "stopsEarly": "Altyazılar şu noktada bitiyor: {{time}}",
+    "interruptedTranslate": "Bu videonun {{language}} diline çevirisi Translator kapandığında yarıda kaldı.",
+    "interruptedTranscribe": "Bu videonun yazıya dökülmesi Translator kapandığında yarıda kaldı.",
+    "interruptedResume": "Kaldığı yerden devam et",
+    "translateMissing": "Eksik {{count}} satırı {{language}} diline çevir",
+    "translateMissing_one": "Eksik {{count}} satırı {{language}} diline çevir",
+    "moreRevealVideo": "Video dosyasını göster",
+    "chooseAnotherFile": "Başka bir dosya seç"
   },
   "subtitleStyles": {
     "Cinema": "Sinema sarısı",
@@ -1361,7 +1657,10 @@
     "retry": "Tekrar dene",
     "finishCta": "Sonuna kadar çevir · {{price}}",
     "noneCta": "{{language}} diline çevir · {{price}}",
-    "notNow": "Şimdi değil"
+    "notNow": "Şimdi değil",
+    "failedNeedMinutes": "Şimdiye kadar biten her şey korunur. Kalan {{remaining}} dakikayı tamamlamak için daha fazla dakikaya ihtiyacınız var.",
+    "failedNeedMinutes_one": "Şimdiye kadar biten her şey korunur. Kalan {{remaining}} dakikayı tamamlamak için daha fazla dakikaya ihtiyacınız var.",
+    "failedNetwork": "Bağlantı koptu. Şimdiye kadar biten her şey korunur. İnternete yeniden bağlandığınızda tekrar deneyin."
   },
   "videoCost": {
     "covered": "Dakikalarınız yetiyor",
@@ -1391,7 +1690,17 @@
     "from": "Başlangıç",
     "to": "bitiş",
     "saving": "Kaydediliyor…",
-    "save": "Short düzenlemesini kaydet"
+    "save": "Short düzenlemesini kaydet",
+    "openFailed": "Bu klip stil vermek için açılamadı. Videonun ve altyazılarının açık olduğundan emin olun.",
+    "saveFailed": "Short düzenlemesi kaydedilemedi. Her ifadede metin olduğunu ve zamanlarının klibin içinde kaldığını kontrol edin.",
+    "previewAt": "{{seconds}}. saniyede önizleme",
+    "shotPosition": "Çekim {{current}}/{{total}}",
+    "phrasesHint": "Altyazı ifadeleri: bir sözcüğü vurgulamak için metindeki sözcüğü veya ifadeyi kendi kutusuna aynen yazın.",
+    "phraseStart": "{{index}}. ifadenin başlangıcı (sn)",
+    "phraseEnd": "{{index}}. ifadenin bitişi (sn)",
+    "phraseText": "{{index}}. ifadenin metni",
+    "phraseEmphasis": "{{index}}. ifadenin vurgusu",
+    "saveNote": "Kaydettiğinizde bu klip, altyazı stiliniz yerine bu ifade altyazılarıyla Shorts kadrajına geçer."
   },
   "subtitleFonts": {
     "label": "Yazı tipi",
@@ -1399,5 +1708,80 @@
     "classic": "Klasik",
     "serif": "Serifli",
     "display": "Kalın"
+  },
+  "export": {
+    "exportButton": "Videoyu dışa aktar",
+    "exportingButton": "Dışa aktarılıyor…",
+    "progressTitle": "Video dışa aktarılıyor",
+    "savedTitle": "Video kaydedildi",
+    "savedIn": "{{file}}, {{folder}} klasöründe",
+    "showInFinder": "Finder’da göster",
+    "showInFolder": "Klasörde göster",
+    "openVideo": "Videoyu aç",
+    "failedTitle": "Video dışa aktarılamadı",
+    "saveTo": "Kayıt yeri",
+    "changeDestination": "Değiştir…",
+    "displayNeedsTranslation": "Çeviriyi veya ikisini birden göstermek için önce altyazıları çevirin.",
+    "error": {
+      "permission": "Translator videonun çalışma dosyalarını yazamadı. Hesabınızın geçici klasöre yazma izni olduğunu kontrol edip yeniden deneyin.",
+      "tools": "Video dışa aktarma araçları kurulamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.",
+      "generic": "Video hazırlanırken bir sorun oluştu. Lütfen yeniden deneyin."
+    }
+  },
+  "tabs": {
+    "newTab": "Yeni Sekme",
+    "newTabWithShortcut": "Yeni sekme ({{shortcut}})",
+    "closeTab": "Sekmeyi kapat"
+  },
+  "menu": {
+    "about": "{{app}} Hakkında",
+    "services": "Servisler",
+    "hide": "{{app}} Uygulamasını Gizle",
+    "hideOthers": "Diğerlerini Gizle",
+    "showAll": "Tümünü Göster",
+    "quit": "{{app}} Uygulamasından Çık",
+    "exit": "Çıkış",
+    "file": "Dosya",
+    "newTab": "Yeni Sekme",
+    "closeTab": "Sekmeyi Kapat",
+    "nextTab": "Sonraki Sekme",
+    "previousTab": "Önceki Sekme",
+    "closeWindow": "Pencereyi Kapat",
+    "edit": "Düzen",
+    "undo": "Geri Al",
+    "redo": "Yinele",
+    "cut": "Kes",
+    "copy": "Kopyala",
+    "paste": "Yapıştır",
+    "pasteAndMatchStyle": "Yapıştır ve Stili Eşleştir",
+    "delete": "Sil",
+    "selectAll": "Tümünü Seç",
+    "speech": "Konuşma",
+    "startSpeaking": "Konuşmayı Başlat",
+    "stopSpeaking": "Konuşmayı Durdur",
+    "find": "Bul",
+    "view": "Görüntü",
+    "actualSize": "Gerçek Boyut",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "toggleFullScreen": "Tam Ekranı Aç/Kapat",
+    "window": "Pencere",
+    "minimize": "Simge Durumuna Küçült",
+    "zoom": "Büyüt/Küçült",
+    "bringAllToFront": "Tümünü Öne Getir",
+    "selectTab": "{{n}}. Sekmeyi Seç",
+    "learnSpelling": "Yazımı Öğren",
+    "lookUpSelection": "“{selection}” İfadesini Araştır",
+    "searchWithGoogle": "Google’da Ara",
+    "saveImage": "Görüntüyü Kaydet",
+    "saveImageAs": "Görüntüyü Farklı Kaydet…",
+    "saveVideo": "Videoyu Kaydet",
+    "saveVideoAs": "Videoyu Farklı Kaydet…",
+    "copyLink": "Bağlantıyı Kopyala",
+    "saveLinkAs": "Bağlantıyı Farklı Kaydet…",
+    "copyImage": "Görüntüyü Kopyala",
+    "copyImageAddress": "Görüntü Adresini Kopyala",
+    "copyVideoAddress": "Video Adresini Kopyala",
+    "inspect": "Öğeyi İncele"
   }
 }
