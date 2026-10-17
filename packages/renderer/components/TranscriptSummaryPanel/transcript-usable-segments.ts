@@ -99,6 +99,23 @@ export function buildSemanticSummarySourceIdentity({
   return 'none';
 }
 
+/**
+ * What a running summary is for, minus the subtitle text: language, quality
+ * and video. Editing a line keeps this the same, so a paid run already under
+ * way finishes and its result is shown as made from the earlier subtitles.
+ */
+export function buildSummaryRunAttachmentSignature({
+  summaryLanguage,
+  effortLevel,
+  semanticSourceIdentity,
+}: {
+  summaryLanguage: string;
+  effortLevel: SummaryEffortLevel;
+  semanticSourceIdentity: string;
+}): string {
+  return `${summaryLanguage.toLowerCase()}|${effortLevel}|${semanticSourceIdentity}`;
+}
+
 export function buildSummaryRequestOwnerKey({
   semanticSourceIdentity,
   segments,

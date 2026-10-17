@@ -1,9 +1,6 @@
 import type { TFunction } from 'i18next';
 import type { TranscriptHighlight } from '@shared-types/app';
-import {
-  estimateSummaryCreditsFromChars,
-  formatCredits as formatEstimatedCredits,
-} from '../../utils/creditEstimates';
+import { estimateSummaryCreditsFromChars } from '../../utils/creditEstimates';
 import { HighlightRenderError } from '../../utils/render-highlight';
 import { getSourceVideoErrorMessage } from '../../utils/sourceVideoErrors';
 import { formatDurationMinSec } from '../../utils/formatUnits';
@@ -13,10 +10,6 @@ export function estimateSummaryCredits(
   effortLevel: 'standard' | 'high'
 ): number {
   return estimateSummaryCreditsFromChars(charCount, effortLevel);
-}
-
-export function formatCredits(credits: number, locale?: string): string {
-  return formatEstimatedCredits(credits, locale);
 }
 
 /**

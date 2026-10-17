@@ -62,9 +62,11 @@ import {
   buildTranscriptHash,
   buildSemanticSummarySourceIdentity,
   buildSummaryInputSignature,
+  buildSummaryRunAttachmentSignature,
   normalizeSourcePathSignature,
   normalizeSourceValueSignature,
   toUsableTranscriptSegments,
+  type UsableTranscriptSegment,
 } from './transcript-usable-segments.js';
 import type { SummaryEstimate } from './TranscriptSummaryLogic.types';
 
@@ -118,11 +120,6 @@ export type RestoredAnalysisVariant = {
   effortLevel: SummaryEffortLevel;
   /** Made before the subtitles were edited; see highlight.cuesChanged. */
   transcriptChanged: boolean;
-};
-
-type ActiveSummaryRun = {
-  operationId: string;
-  settled: Promise<void>;
 };
 
 function buildRestoreLookupKey({
@@ -236,13 +233,13 @@ export default function useTranscriptSummaryFlow({
   const restoreKeyRef = useRef<string | null>(null);
   const runEpochRef = useRef(0);
   const activeOperationIdRef = useRef<string | null>(null);
-  const activeRunRef = useRef<ActiveSummaryRun | null>(null);
-  const activeRunRequestSignatureRef = useRef<string | null>(null);
   const latestGenerateRequestSignatureRef = useRef<string>('');
+  const latestRunAttachmentSignatureRef = useRef<string>('');
+  const activeRunAttachmentSignatureRef = useRef<string | null>(null);
+  const latestUsableSegmentsRef = useRef<UsableTranscriptSegment[]>([]);
   const pendingRestoreRetryRef = useRef(false);
   const preserveErrorOnRestoreRef = useRef(false);
   const previousGenerateRequestSignatureRef = useRef<string | null>(null);
-  const pendingTeardownRef = useRef<Promise<void> | null>(null);
   const pendingPersistByLookupKeyRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -265,72 +262,36 @@ export default function useTranscriptSummaryFlow({
     return runEpochRef.current === epoch;
   }, []);
 
-  const invalidateSummaryRun = useCallback(
-    ({ cancelActiveOperation }: { cancelActiveOperation: boolean }): number => {
-      const activeRun = activeRunRef.current;
-      const currentOperationId =
-        activeRun?.operationId ?? activeOperationIdRef.current;
+  // Stops showing the current run without cancelling it: a run already
+  // being paid for finishes and saves its result in the background.
+  const invalidateSummaryRun = useCallback((): number => {
+    const nextEpoch = beginRunEpoch();
 
-      const nextEpoch = beginRunEpoch();
-      const operationIdToCancel = currentOperationId;
+    setIsGenerating(false);
+    setIsCancelling(false);
+    activeOperationIdRef.current = null;
+    activeRunAttachmentSignatureRef.current = null;
+    setActiveOperationId(null);
+    setSummary('');
+    setRestoredVariant(null);
+    setSections([]);
+    setHighlightStatus('not_requested');
+    setHighlightWarningMessage(null);
+    setCopyStatus('idle');
+    setProgressLabel('');
+    setProgressPercent(0);
+    setError(null);
+    onResetHighlightsState();
+    useTaskStore.getState().setSummary({
+      id: null,
+      stage: '',
+      percent: 0,
+      inProgress: false,
+      isCompleted: false,
+    });
 
-      setIsGenerating(false);
-      setIsCancelling(false);
-      activeOperationIdRef.current = null;
-      activeRunRequestSignatureRef.current = null;
-      setActiveOperationId(null);
-      setSummary('');
-      setRestoredVariant(null);
-      setSections([]);
-      setHighlightStatus('not_requested');
-      setHighlightWarningMessage(null);
-      setCopyStatus('idle');
-      setProgressLabel('');
-      setProgressPercent(0);
-      setError(null);
-      onResetHighlightsState();
-      useTaskStore.getState().setSummary({
-        id: null,
-        stage: '',
-        percent: 0,
-        inProgress: false,
-        isCompleted: false,
-      });
-
-      if (
-        cancelActiveOperation &&
-        operationIdToCancel &&
-        !pendingTeardownRef.current
-      ) {
-        const settledPromise =
-          activeRun?.operationId === operationIdToCancel
-            ? activeRun.settled
-            : Promise.resolve();
-
-        const teardownPromise = (async () => {
-          try {
-            await OperationIPC.cancel(operationIdToCancel);
-          } catch (cancelError) {
-            console.warn(
-              '[TranscriptSummaryPanel] failed to cancel stale summary operation',
-              cancelError
-            );
-          }
-          try {
-            await settledPromise;
-          } catch {
-            // Ignore errors while waiting for stale run teardown.
-          }
-        })().finally(() => {
-          pendingTeardownRef.current = null;
-        });
-        pendingTeardownRef.current = teardownPromise;
-      }
-
-      return nextEpoch;
-    },
-    [beginRunEpoch, onResetHighlightsState, setError]
-  );
+    return nextEpoch;
+  }, [beginRunEpoch, onResetHighlightsState, setError]);
 
   const usableSegments = useMemo(
     () => toUsableTranscriptSegments(segments),
@@ -397,6 +358,17 @@ export default function useTranscriptSummaryFlow({
     ]
   );
   latestGenerateRequestSignatureRef.current = summaryRequestSignature;
+  const runAttachmentSignature = useMemo(
+    () =>
+      buildSummaryRunAttachmentSignature({
+        summaryLanguage,
+        effortLevel: summaryEffortLevel,
+        semanticSourceIdentity,
+      }),
+    [semanticSourceIdentity, summaryEffortLevel, summaryLanguage]
+  );
+  latestRunAttachmentSignatureRef.current = runAttachmentSignature;
+  latestUsableSegmentsRef.current = usableSegments;
 
   const credits = useCreditStore(state => state.credits);
   const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
@@ -466,10 +438,13 @@ export default function useTranscriptSummaryFlow({
       if (!currentOperationId || progress.operationId !== currentOperationId) {
         return;
       }
-      const activeRunRequestSignature = activeRunRequestSignatureRef.current;
+      // A line edited mid-run keeps the run attached (same language, quality
+      // and video), so its progress keeps showing.
+      const activeRunAttachmentSignature =
+        activeRunAttachmentSignatureRef.current;
       if (
-        !activeRunRequestSignature ||
-        latestGenerateRequestSignatureRef.current !== activeRunRequestSignature
+        !activeRunAttachmentSignature ||
+        latestRunAttachmentSignatureRef.current !== activeRunAttachmentSignature
       ) {
         return;
       }
@@ -600,22 +575,7 @@ export default function useTranscriptSummaryFlow({
         if (!isClaimedRequestActive()) return;
 
         const requestedGenerateRequestSignature = summaryRequestSignature;
-        const pendingTeardown = pendingTeardownRef.current;
-        if (pendingTeardown) {
-          try {
-            await pendingTeardown;
-          } catch {
-            // Ignore stale teardown errors and continue with fresh generation.
-          }
-        }
-        if (!isClaimedRequestActive()) return;
-        if (
-          latestGenerateRequestSignatureRef.current !==
-          requestedGenerateRequestSignature
-        ) {
-          return;
-        }
-
+        const requestedRunAttachmentSignature = runAttachmentSignature;
         if (!hasTranscript) return;
 
         const requestedSegments = usableSegments.map(segment => ({
@@ -644,8 +604,8 @@ export default function useTranscriptSummaryFlow({
         const runEpoch = beginRunEpoch();
         setIsGenerating(true);
         activeOperationIdRef.current = operationId;
-        activeRunRequestSignatureRef.current =
-          requestedGenerateRequestSignature;
+        activeRunAttachmentSignatureRef.current =
+          requestedRunAttachmentSignature;
         setActiveOperationId(operationId);
         setError(null);
         setHighlightWarningMessage(null);
@@ -672,13 +632,6 @@ export default function useTranscriptSummaryFlow({
             includeHighlights: true,
             effortLevel: requestedEffortLevel,
           });
-          activeRunRef.current = {
-            operationId,
-            settled: summaryPromise.then(
-              () => undefined,
-              () => undefined
-            ),
-          };
           const transcriptHashPromise = buildTranscriptHash(
             requestedSegments
           ).catch(hashError => {
@@ -691,19 +644,21 @@ export default function useTranscriptSummaryFlow({
 
           const result = await summaryPromise;
 
-          if (!isRunEpochActive(runEpoch)) return;
-          if (
-            latestGenerateRequestSignatureRef.current !==
-            requestedGenerateRequestSignature
-          ) {
-            return;
-          }
+          // Still the run this panel shows? Editing a line keeps it attached;
+          // another video (or language/quality) detaches it. A detached run is
+          // still saved below so the paid result is never thrown away.
+          const isRunAttached = () =>
+            isRunEpochActive(runEpoch) &&
+            latestRunAttachmentSignatureRef.current ===
+              requestedRunAttachmentSignature;
 
           if (result?.error) {
+            if (!isRunAttached()) return;
             throw new Error(result.error);
           }
 
           if (result?.cancelled || result?.success === false) {
+            if (!isRunAttached()) return;
             preserveErrorOnRestoreRef.current = false;
             pendingRestoreRetryRef.current = true;
             restoreKeyRef.current = null;
@@ -719,13 +674,6 @@ export default function useTranscriptSummaryFlow({
             return;
           }
 
-          if (result?.summary) {
-            setSummary(result.summary.trim());
-          }
-          if (Array.isArray(result?.sections)) {
-            setSections(result.sections as TranscriptSummarySection[]);
-          }
-
           const persistedSections = Array.isArray(result?.sections)
             ? (result.sections as TranscriptSummarySection[])
             : [];
@@ -737,13 +685,6 @@ export default function useTranscriptSummaryFlow({
           );
 
           const transcriptHash = await transcriptHashPromise;
-          if (!isRunEpochActive(runEpoch)) return;
-          if (
-            latestGenerateRequestSignatureRef.current !==
-            requestedGenerateRequestSignature
-          ) {
-            return;
-          }
 
           const rawHighlightStatus = normalizeHighlightStatus(
             result?.highlightStatus
@@ -765,13 +706,6 @@ export default function useTranscriptSummaryFlow({
                   sourceUrl: requestedSourceUrl,
                   libraryEntryId: requestedLibraryEntryId,
                 });
-                if (!isRunEpochActive(runEpoch)) return;
-                if (
-                  latestGenerateRequestSignatureRef.current !==
-                  requestedGenerateRequestSignature
-                ) {
-                  return;
-                }
                 const existingAnalysis = existingStored?.analysis;
                 const existingHighlightStatus = existingAnalysis
                   ? normalizeHighlightStatus(existingAnalysis.highlightStatus)
@@ -795,24 +729,14 @@ export default function useTranscriptSummaryFlow({
             }
           }
 
-          setHighlightStatus(displayHighlightStatus);
-          onReplaceHighlights(
-            markHighlightCueChanges(displayHighlights, requestedSegments)
-          );
-          setError(null);
-          if (displayHighlightStatus === 'complete') {
-            setHighlightWarningMessage(null);
-          }
-          preserveErrorOnRestoreRef.current = false;
-          pendingRestoreRetryRef.current = false;
-
-          if (transcriptHash) {
-            const restoreLookupKey = buildRestoreLookupKey({
-              transcriptHash,
-              summaryLanguage: requestedSummaryLanguage,
-              effortLevel: requestedEffortLevel,
-            });
-            restoreKeyRef.current = restoreLookupKey;
+          const restoreLookupKey = transcriptHash
+            ? buildRestoreLookupKey({
+                transcriptHash,
+                summaryLanguage: requestedSummaryLanguage,
+                effortLevel: requestedEffortLevel,
+              })
+            : null;
+          if (transcriptHash && restoreLookupKey) {
             const pendingPersistCounts = pendingPersistByLookupKeyRef.current;
             pendingPersistCounts.set(
               restoreLookupKey,
@@ -847,6 +771,44 @@ export default function useTranscriptSummaryFlow({
                 setPersistCompletionTick(previous => previous + 1);
               });
           }
+
+          if (!isRunAttached()) return;
+
+          if (result?.summary) {
+            setSummary(result.summary.trim());
+          }
+          setSections(persistedSections);
+          // Lines edited while it ran: show it as made from the earlier
+          // subtitles and mark the highlights whose lines changed.
+          const transcriptChangedDuringRun =
+            latestGenerateRequestSignatureRef.current !==
+            requestedGenerateRequestSignature;
+          setRestoredVariant(
+            transcriptChangedDuringRun
+              ? {
+                  summaryLanguage: requestedSummaryLanguage
+                    .trim()
+                    .toLowerCase(),
+                  effortLevel: requestedEffortLevel,
+                  transcriptChanged: true,
+                }
+              : null
+          );
+          if (restoreLookupKey) restoreKeyRef.current = restoreLookupKey;
+
+          setHighlightStatus(displayHighlightStatus);
+          onReplaceHighlights(
+            markHighlightCueChanges(
+              displayHighlights,
+              latestUsableSegmentsRef.current
+            )
+          );
+          setError(null);
+          if (displayHighlightStatus === 'complete') {
+            setHighlightWarningMessage(null);
+          }
+          preserveErrorOnRestoreRef.current = false;
+          pendingRestoreRetryRef.current = false;
 
           setProgressLabel(t('summary.status.ready'));
           setProgressPercent(100);
@@ -883,14 +845,11 @@ export default function useTranscriptSummaryFlow({
             id: null,
           });
         } finally {
-          if (activeRunRef.current?.operationId === operationId) {
-            activeRunRef.current = null;
-          }
           if (isRunEpochActive(runEpoch)) {
             setIsGenerating(false);
             setIsCancelling(false);
             activeOperationIdRef.current = null;
-            activeRunRequestSignatureRef.current = null;
+            activeRunAttachmentSignatureRef.current = null;
             setActiveOperationId(null);
             setCopyStatus('idle');
           }
@@ -918,11 +877,14 @@ export default function useTranscriptSummaryFlow({
       summaryEffortLevel,
       summaryLanguage,
       t,
+      runAttachmentSignature,
       summaryRequestSignature,
       usableSegments,
     ]
   );
 
+  // Asked first in the panel's own dialog; throws when the stop fails so the
+  // dialog can say so and the run keeps going.
   const handleCancel = useCallback(async () => {
     const operationIdToCancel =
       activeOperationId ?? activeOperationIdRef.current;
@@ -933,30 +895,16 @@ export default function useTranscriptSummaryFlow({
       return;
     }
 
-    if (
-      !window.confirm(
-        t('dialogs.cancelSummaryConfirm', 'Cancel summary generation?')
-      )
-    ) {
-      return;
-    }
-
     setIsCancelling(true);
-
     try {
       await OperationIPC.cancel(operationIdToCancel);
-    } catch (err: any) {
+    } catch (err) {
       console.error('[TranscriptSummaryPanel] cancel failed', err);
-      alert(
-        t('errors.cancelSummaryFailed', {
-          defaultValue: 'Failed to cancel summary generation: {{message}}',
-          message: err?.message || String(err),
-        })
-      );
+      throw err;
     } finally {
       setIsCancelling(false);
     }
-  }, [activeOperationId, t]);
+  }, [activeOperationId]);
 
   const handleCopy = useCallback(async () => {
     if (!summary) return;
@@ -1006,11 +954,24 @@ export default function useTranscriptSummaryFlow({
       return;
     }
 
+    const activeRunAttachmentSignature =
+      activeRunAttachmentSignatureRef.current;
+    if (
+      activeRunAttachmentSignature &&
+      activeRunAttachmentSignature === runAttachmentSignature
+    ) {
+      // Only the subtitle text changed: the paid run keeps going and its
+      // result is marked as made from the earlier subtitles when it lands.
+      return;
+    }
+
     preserveErrorOnRestoreRef.current = false;
     pendingRestoreRetryRef.current = false;
     restoreKeyRef.current = null;
-    invalidateSummaryRun({ cancelActiveOperation: true });
-  }, [summaryRequestSignature, invalidateSummaryRun]);
+    // Another video: stop showing the run, but let it finish and save rather
+    // than cancel a run that is already being paid for.
+    invalidateSummaryRun();
+  }, [summaryRequestSignature, runAttachmentSignature, invalidateSummaryRun]);
 
   useLayoutEffect(() => {
     if (!hasTranscript) {

@@ -38,6 +38,7 @@ import {
   subtitleRenderGeometry,
 } from '../../../shared/helpers/subtitle-render-spec';
 import { exportErrorMessage } from './export-error';
+import { subtitleFileErrorMessage } from './subtitle-file-error';
 import {
   resetExportDestination,
   useExportStore,
@@ -638,7 +639,8 @@ export default function EditSubtitles({
       ? await saveCurrentSubtitles()
       : await saveSubtitlesAs();
     if (result.status === 'error') {
-      setSaveError(result.error || t('common.error.unknown'));
+      console.error('[EditSubtitles] save failed:', result.error);
+      setSaveError(subtitleFileErrorMessage(result.error, t, 'save'));
       return;
     }
     if (didSaveSubtitleFile(result)) {
@@ -786,7 +788,8 @@ export default function EditSubtitles({
     }
     const result = await saveSubtitlesAs();
     if (result.status === 'error') {
-      setSaveError(result.error || t('common.error.unknown'));
+      console.error('[EditSubtitles] save failed:', result.error);
+      setSaveError(subtitleFileErrorMessage(result.error, t, 'save'));
       return;
     }
     if (!didSaveSubtitleFile(result) || !result.filePath) {
@@ -1022,7 +1025,8 @@ export default function EditSubtitles({
     setSaveError('');
     const res = await openSubtitleFileIntoStore({ filePath });
     if (res.status === 'error') {
-      setSaveError(res.error);
+      console.error('[EditSubtitles] open .srt failed:', res.error);
+      setSaveError(subtitleFileErrorMessage(res.error, t, 'open'));
       try {
         logError('open_srt', res.error as any);
       } catch {

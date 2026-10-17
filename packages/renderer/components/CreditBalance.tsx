@@ -15,7 +15,7 @@ import {
   resolveTranslationReviewProvider,
   type ByoRuntimeState,
 } from '../state/byo-runtime';
-import { formatUiInteger } from '../utils/formatNumbers';
+import { formatCostInMinutes } from '../utils/formatCostInMinutes';
 
 const creditBalanceContainer = css`
   display: flex;
@@ -181,7 +181,7 @@ export default function CreditBalance({
   suffixText,
   operationType = 'general',
 }: CreditBalanceProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const credits = useCreditStore(s => s.credits);
   const hours = useCreditStore(s => s.hours);
   const loading = useCreditStore(s => s.loading);
@@ -281,7 +281,15 @@ export default function CreditBalance({
         >
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
-        <span className={creditText}>{formatUiInteger(credits)}</span>
+        {/* Minutes of video, the unit users buy, not raw credits. */}
+        <span className={creditText}>
+          {t('credits.timeLeft', '{{time}} left', {
+            time: formatCostInMinutes(credits, {
+              kind: 'balance',
+              locale: i18n.language,
+            }),
+          })}
+        </span>
         {suffixText && (
           <span
             className={css`

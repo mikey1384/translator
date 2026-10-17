@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import Button from './Button';
 import Modal from './Modal';
-import { formatCreditBalance } from '../utils/creditEstimates';
+import { formatCostOfBalanceInMinutes } from '../utils/formatCostInMinutes';
 
 interface Props {
   open: boolean;
@@ -39,11 +39,16 @@ export default function ConfirmDubCostDialog({
     >
       <p style={{ margin: 0 }}>
         {t(
-          'dialogs.dubCostConfirm.message',
-          'This dub uses about {{cost}} of your {{balance}} credits. Generating voices costs much more than translating.',
+          'dialogs.dubCostConfirm.messageMinutes',
+          'This dub uses {{cost}}. Generating voices costs much more than translating.',
           {
-            cost: formatCreditBalance(estimatedCredits, i18n.language),
-            balance: formatCreditBalance(balance, i18n.language),
+            // In minutes of video, the unit users buy: "~6m of your 4h 17m".
+            cost: formatCostOfBalanceInMinutes(
+              t,
+              estimatedCredits,
+              balance,
+              i18n.language
+            ),
           }
         )}
       </p>

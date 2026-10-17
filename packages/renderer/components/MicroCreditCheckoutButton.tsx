@@ -1,18 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { CREDIT_PACKS } from '../../shared/constants';
-import { estimateTranslatableHours } from '../utils/creditEstimates';
-import { transcriptionMinutesForCredits } from '../utils/creditShortfall';
 import BuyCreditsButton from './BuyCreditsButton';
 import { formatUsd } from '../utils/formatUsd';
+import { formatCostInMinutes } from '../utils/formatCostInMinutes';
 
 type MicroOfferPlacement = 'zero-credit-banner' | 'credit-ran-out-dialog';
 
 interface MicroCreditCheckoutButtonProps {
   placement: MicroOfferPlacement;
   onCheckoutCreated?: () => void;
-  // What the pack is described in. Defaults to transcription time, which every
-  // credit-paid path starts with; translation hours (shown only for a
-  // translation refusal) overstate what the pack buys otherwise.
+  // Whether to say how much video the pack covers. It is quoted in minutes of
+  // video, the unit the balance and the packs use; 'none' leaves it out.
   basis?: 'translation' | 'transcription' | 'none';
 }
 
@@ -23,38 +21,29 @@ export default function MicroCreditCheckoutButton({
 }: MicroCreditCheckoutButtonProps) {
   const { t, i18n } = useTranslation();
   const pack = CREDIT_PACKS.MICRO;
-  const translationHours = estimateTranslatableHours(pack.credits, false);
-  const formattedHours =
-    typeof translationHours === 'number'
-      ? translationHours.toLocaleString(i18n.language, {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        })
-      : '';
-  const translationHoursLabel = t(
-    'credits.translationHoursShort',
-    'translation hrs'
-  );
+  const price = formatUsd(pack.price, i18n.language);
 
-  const coverageLabel =
-    basis === 'transcription'
-      ? t(
-          'credits.transcriptionMinutesShort',
-          '{{minutes}} min of transcription',
+  const label =
+    basis === 'none'
+      ? t('credits.microPackLabelNoTime', 'Buy minutes — {{price}}', {
+          price,
+        })
+      : t(
+          'credits.microPackLabel',
+          'Buy minutes — {{price}} · ≈ {{time}} of video',
           {
-            minutes: transcriptionMinutesForCredits(pack.credits),
+            price,
+            time: formatCostInMinutes(pack.credits, {
+              kind: 'exact',
+              locale: i18n.language,
+            }),
           }
-        )
-      : basis === 'translation'
-        ? `${formattedHours} ${translationHoursLabel}`
-        : null;
+        );
 
   return (
     <BuyCreditsButton
       packId="MICRO"
-      label={`${t('credits.buyCredits', 'Buy Credits')} — ${formatUsd(pack.price, i18n.language)}${
-        coverageLabel ? ` · ${coverageLabel}` : ''
-      }`}
+      label={label}
       variant="primary"
       size="sm"
       dataLog={`${placement}-buy-micro-credits`}

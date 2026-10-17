@@ -1,25 +1,7 @@
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { localizeLegacyStage } from './legacy-stage-text';
-import { useCreditStore } from '../../state/credit-store';
-import { useUIStore } from '../../state/ui-store';
-import { useAiStore } from '../../state/ai-store';
 import { logButton, logTask } from '../../utils/logger.js';
-import {
-  estimateTranscriptionHours,
-  estimateTranslatableHours,
-  formatDubbingTime,
-  formatHours,
-} from '../../utils/creditEstimates';
-import {
-  resolveDubbingCreditProvider,
-  resolveDubbingProvider,
-  resolveEffectiveTranslationReviewModel,
-  resolveTranscriptionProvider,
-  resolveTranslationDraftProvider,
-  resolveTranslationReviewProvider,
-  type ByoRuntimeState,
-} from '../../state/byo-runtime';
 import CreditBalance, { type OperationType } from '../CreditBalance';
 import {
   workflowStatusBodyStyles,
@@ -94,77 +76,12 @@ export default function ProgressArea({
   notice,
   verticalOffsetPx,
 }: ProgressAreaProps) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language;
+  const { t } = useTranslation();
   const stageText = localizeLegacyStage(stage, t);
   const presentation = useProgressPresentation();
-  const credits = useCreditStore(s => s.credits);
-  const qualityTranslation = useUIStore(s => s.qualityTranslation);
-  const byoUnlocked = useAiStore(s => s.byoUnlocked);
-  const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
-  const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
-  const stage5AnthropicReviewAvailable = useAiStore(
-    s => s.stage5AnthropicReviewAvailable
-  );
-  const preferredTranscriptionProvider = useAiStore(
-    s => s.preferredTranscriptionProvider
-  );
-  const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
-  const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
-  const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
-  const useByo = useAiStore(s => s.useByo);
-  const keyPresent = useAiStore(s => s.keyPresent);
-  const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
-  const useByoAnthropic = useAiStore(s => s.useByoAnthropic);
-  const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
-  const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
-  const preferClaudeTranslation = useAiStore(s => s.preferClaudeTranslation);
-  const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
-  const preferClaudeSummary = useAiStore(s => s.preferClaudeSummary);
   const isOperationComplete = resolveProgressOperationComplete(
     progress,
     operationComplete
-  );
-
-  const runtimeState = useMemo<ByoRuntimeState>(
-    () => ({
-      useApiKeysMode,
-      byoUnlocked,
-      byoAnthropicUnlocked,
-      byoElevenLabsUnlocked,
-      stage5AnthropicReviewAvailable,
-      useByo,
-      useByoAnthropic,
-      useByoElevenLabs,
-      keyPresent,
-      anthropicKeyPresent,
-      elevenLabsKeyPresent,
-      preferClaudeTranslation,
-      preferClaudeReview,
-      preferClaudeSummary,
-      preferredTranscriptionProvider,
-      preferredDubbingProvider,
-      stage5DubbingTtsProvider,
-    }),
-    [
-      useApiKeysMode,
-      byoUnlocked,
-      byoAnthropicUnlocked,
-      byoElevenLabsUnlocked,
-      stage5AnthropicReviewAvailable,
-      useByo,
-      useByoAnthropic,
-      useByoElevenLabs,
-      keyPresent,
-      anthropicKeyPresent,
-      elevenLabsKeyPresent,
-      preferClaudeTranslation,
-      preferClaudeReview,
-      preferClaudeSummary,
-      preferredTranscriptionProvider,
-      preferredDubbingProvider,
-      stage5DubbingTtsProvider,
-    ]
   );
 
   const operationType: OperationType = operationId
@@ -176,64 +93,6 @@ export default function ProgressArea({
           ? 'dubbing'
           : 'general'
     : 'general';
-
-  const coverageText = useMemo(() => {
-    if (
-      operationType === 'general' ||
-      typeof credits !== 'number' ||
-      credits <= 0
-    ) {
-      return undefined;
-    }
-
-    const translationDraftProvider =
-      resolveTranslationDraftProvider(runtimeState);
-    const translationReviewProvider =
-      resolveTranslationReviewProvider(runtimeState);
-    const resolvedTranscriptionProvider =
-      resolveTranscriptionProvider(runtimeState);
-    const resolvedDubbingProvider = resolveDubbingProvider(runtimeState);
-    if (operationType === 'transcription') {
-      if (resolvedTranscriptionProvider !== 'stage5') {
-        return undefined;
-      }
-      const hours = estimateTranscriptionHours(credits);
-      return hours != null ? `(~${formatHours(hours, locale)})` : undefined;
-    }
-
-    if (operationType === 'translation') {
-      if (
-        translationDraftProvider !== 'stage5' ||
-        translationReviewProvider !== 'stage5'
-      ) {
-        return undefined;
-      }
-      const reviewModel = resolveEffectiveTranslationReviewModel(runtimeState);
-      const hours = estimateTranslatableHours(
-        credits,
-        qualityTranslation,
-        reviewModel
-      );
-      if (hours == null) return undefined;
-      const time = formatHours(hours, locale);
-      return qualityTranslation
-        ? t('progress.hqModeEstimate', '(high quality: ~{{time}})', { time })
-        : `(~${time})`;
-    }
-
-    if (operationType === 'dubbing') {
-      if (resolvedDubbingProvider !== 'stage5') {
-        return undefined;
-      }
-      return `(${formatDubbingTime(
-        credits,
-        resolveDubbingCreditProvider(runtimeState),
-        locale
-      )})`;
-    }
-
-    return undefined;
-  }, [operationType, credits, runtimeState, qualityTranslation, locale, t]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -354,10 +213,9 @@ export default function ProgressArea({
                 <h3 className={workflowStatusTitleStyles}>{title}</h3>
               </div>
               <div className={workflowStatusUtilityRowStyles}>
-                <CreditBalance
-                  operationType={operationType}
-                  suffixText={coverageText}
-                />
+                {/* The balance in minutes of video, like the header pill; a
+                    second per-task "hours left" figure only contradicted it. */}
+                <CreditBalance operationType={operationType} />
               </div>
             </div>
             <button

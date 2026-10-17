@@ -342,9 +342,7 @@ export function TranscriptSummaryPanel({
 
       <TranscriptSummaryProgress
         isCancelling={isCancelling}
-        onCancel={() => {
-          void handleCancel();
-        }}
+        onCancel={handleCancel}
         progressLabel={progressLabel}
         progressPercent={progressPercent}
         show={showProgressBar}

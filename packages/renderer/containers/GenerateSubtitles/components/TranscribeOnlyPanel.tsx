@@ -21,10 +21,7 @@ import {
   workflowPanelCostStyles,
   workflowPanelCostWarningStyles,
 } from '../../../components/workflow-surface-styles';
-import {
-  formatCreditBalance,
-  formatCredits,
-} from '../../../utils/creditEstimates';
+import { formatCostOfBalanceInMinutes } from '../../../utils/formatCostInMinutes';
 import type { TranscriptionCostPreview } from '../hooks/useTranscriptionCostPreview';
 import { spacing } from '../../../components/design-system/tokens.js';
 
@@ -216,21 +213,15 @@ export default function TranscribeOnlyPanel({
             )}
             data-transcription-cost={costPreview.requiredCredits}
           >
-            {costPreview.availableCredits != null
-              ? t(
-                  'credits.costOfBalance',
-                  '{{cost}} of your {{balance}} credits',
-                  {
-                    cost: formatCredits(costPreview.requiredCredits, locale),
-                    balance: formatCreditBalance(
-                      costPreview.availableCredits,
-                      locale
-                    ),
-                  }
-                )
-              : t('credits.estimateAmount', '{{credits}} credits', {
-                  credits: formatCredits(costPreview.requiredCredits, locale),
-                })}
+            {/* Minutes of video, the unit users buy, like every other cost. */}
+            <bdi>
+              {formatCostOfBalanceInMinutes(
+                t,
+                costPreview.requiredCredits,
+                costPreview.availableCredits,
+                locale
+              )}
+            </bdi>
           </span>
         )}
         {onTranslate || onCreateHighlight ? (

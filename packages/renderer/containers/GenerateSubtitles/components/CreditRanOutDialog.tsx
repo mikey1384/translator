@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '../../../components/Modal';
 import Button from '../../../components/Button';
@@ -8,8 +7,8 @@ import { useModalStore } from '../../../state/modal-store';
 import {
   creditOfferBasis,
   describeCreditShortfall,
-  transcriptionMinutesForCredits,
 } from '../../../utils/creditShortfall';
+import { formatCostInMinutes } from '../../../utils/formatCostInMinutes';
 
 interface Props {
   open: boolean;
@@ -39,11 +38,8 @@ export default function CreditRanOutDialog({
         transcriptionSeconds: refusal.transcriptionSeconds,
       })
     : null;
-  const numberFormat = useMemo(
-    () => new Intl.NumberFormat(i18n.language),
-    [i18n.language]
-  );
-  const formatCredits = (value: number) => numberFormat.format(value);
+  // Amounts in minutes of video, the unit users buy and see on the balance.
+  const locale = i18n.language;
 
   const hasLines = useSubStore(s => s.order.length > 0);
   const hasTranslatedLines = useSubStore(s =>
@@ -57,33 +53,33 @@ export default function CreditRanOutDialog({
     switch (task) {
       case 'transcription':
         return t(
-          'dialogs.creditRanOut.task.transcription.title',
-          'Transcribing needs credits'
+          'dialogs.creditRanOut.minutes.transcription.title',
+          'Transcribing needs minutes'
         );
       case 'translation':
         return t(
-          'dialogs.creditRanOut.task.translation.title',
-          'Translating needs credits'
+          'dialogs.creditRanOut.minutes.translation.title',
+          'Translating needs minutes'
         );
       case 'dubbing':
         return t(
-          'dialogs.creditRanOut.task.dubbing.title',
-          'Dubbing needs credits'
+          'dialogs.creditRanOut.minutes.dubbing.title',
+          'Dubbing needs minutes'
         );
       case 'summary':
         return t(
-          'dialogs.creditRanOut.task.summary.title',
-          'The summary needs credits'
+          'dialogs.creditRanOut.minutes.summary.title',
+          'The summary needs minutes'
         );
       case 'videoSearch':
         return t(
-          'dialogs.creditRanOut.task.videoSearch.title',
-          'AI video search needs credits'
+          'dialogs.creditRanOut.minutes.videoSearch.title',
+          'AI video search needs minutes'
         );
       default:
         return neverHadCredits
-          ? t('dialogs.creditRanOut.task.other.title', 'This needs credits')
-          : t('dialogs.creditRanOut.title', 'Credits ran out');
+          ? t('dialogs.creditRanOut.minutes.other.title', 'This needs minutes')
+          : t('dialogs.creditRanOut.minutes.title', 'Out of minutes');
     }
   };
   const taskMessage = (): string => {
@@ -91,48 +87,48 @@ export default function CreditRanOutDialog({
       case 'transcription':
         return neverHadCredits
           ? t(
-              'dialogs.creditRanOut.neverHadMessage',
-              'Transcription needs credits or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.'
+              'dialogs.creditRanOut.minutes.neverHadMessage',
+              'Transcription needs minutes or the API-key unlock. Get either in Settings. Translating with your own Claude or Codex through Agent Control is free.'
             )
           : hasLines
             ? t(
-                'dialogs.creditRanOut.task.transcription.message',
-                'Your balance doesn’t cover transcribing this. Add credits, then start again. Lines already transcribed are kept.'
+                'dialogs.creditRanOut.minutes.transcription.message',
+                'Your minutes don’t cover transcribing this. Add minutes, then start again. Lines already transcribed are kept.'
               )
             : t(
-                'dialogs.creditRanOut.task.transcription.messageNothingYet',
-                'Your balance doesn’t cover transcribing this. Add credits, then start again.'
+                'dialogs.creditRanOut.minutes.transcription.messageNothingYet',
+                'Your minutes don’t cover transcribing this. Add minutes, then start again.'
               );
       case 'translation':
         // Only promise kept lines when some exist.
         return hasTranslatedLines
           ? t(
-              'dialogs.creditRanOut.task.translation.message',
-              'Your balance doesn’t cover translating this. Add credits, then try again. Lines already translated are kept. Translating with your own Claude or Codex through Agent Control is free.'
+              'dialogs.creditRanOut.minutes.translation.message',
+              'Your minutes don’t cover translating this. Add minutes, then try again. Lines already translated are kept. Translating with your own Claude or Codex through Agent Control is free.'
             )
           : t(
-              'dialogs.creditRanOut.task.translation.messageNothingYet',
-              'Your balance doesn’t cover translating this. Add credits, then try again. Translating with your own Claude or Codex through Agent Control is free.'
+              'dialogs.creditRanOut.minutes.translation.messageNothingYet',
+              'Your minutes don’t cover translating this. Add minutes, then try again. Translating with your own Claude or Codex through Agent Control is free.'
             );
       case 'dubbing':
         return t(
-          'dialogs.creditRanOut.task.dubbing.message',
-          'Your balance doesn’t cover dubbing this video. Add credits, then try again.'
+          'dialogs.creditRanOut.minutes.dubbing.message',
+          'Your minutes don’t cover dubbing this video. Add minutes, then try again.'
         );
       case 'summary':
         return t(
-          'dialogs.creditRanOut.task.summary.message',
-          'Your balance doesn’t cover the summary and highlights. Add credits, then try again.'
+          'dialogs.creditRanOut.minutes.summary.message',
+          'Your minutes don’t cover the summary and highlights. Add minutes, then try again.'
         );
       case 'videoSearch':
         return t(
-          'dialogs.creditRanOut.task.videoSearch.message',
-          'Your balance doesn’t cover an AI video search. Add credits, then search again.'
+          'dialogs.creditRanOut.minutes.videoSearch.message',
+          'Your minutes don’t cover an AI video search. Add minutes, then search again.'
         );
       default:
         return t(
-          'dialogs.creditRanOut.message',
-          'Your AI credits have run out. Recharge in Settings, then resume where you left off.'
+          'dialogs.creditRanOut.minutes.message',
+          'You’ve used up your minutes. Add more in Settings, then pick up where you left off.'
         );
     }
   };
@@ -140,26 +136,34 @@ export default function CreditRanOutDialog({
   const title =
     shortfall && task === 'transcription' && shortfall.requiredCredits !== null
       ? t(
-          'dialogs.creditRanOut.notEnoughTitle',
-          'Not enough credits for this video'
+          'dialogs.creditRanOut.minutes.notEnoughTitle',
+          'Not enough minutes for this video'
         )
       : taskTitle();
 
+  const available = shortfall
+    ? formatCostInMinutes(shortfall.availableCredits, {
+        kind: 'balance',
+        locale,
+      })
+    : '';
   const message = shortfall
     ? shortfall.requiredCredits !== null
       ? t(
-          'dialogs.creditRanOut.notEnoughTranscriptionMessage',
-          'Transcribing this video takes about {{required}} credits. You have {{available}}, enough for about {{minutes}} minutes. Add credits, then start again.',
+          'dialogs.creditRanOut.minutes.notEnoughTranscriptionMessage',
+          'Transcribing this video needs {{required}}, and you have {{available}} left. Add minutes, then start again.',
           {
-            required: formatCredits(shortfall.requiredCredits),
-            available: formatCredits(shortfall.availableCredits),
-            minutes: transcriptionMinutesForCredits(shortfall.availableCredits),
+            required: formatCostInMinutes(shortfall.requiredCredits, {
+              kind: 'estimate',
+              locale,
+            }),
+            available,
           }
         )
       : t(
-          'dialogs.creditRanOut.notEnoughMessage',
-          'This task needs more credits than your balance of {{available}}. Add credits to continue.',
-          { available: formatCredits(shortfall.availableCredits) }
+          'dialogs.creditRanOut.minutes.notEnoughMessage',
+          'This needs more than the {{available}} you have left. Add minutes to continue.',
+          { available }
         )
     : taskMessage();
 

@@ -15,6 +15,7 @@ import {
 import { useTaskStore } from '../../../state/task-store';
 import { useUrlStore } from '../../../state/url-store';
 import { useCreditCostEstimates } from '../../../hooks/useCreditCostEstimates';
+import { formatCostInMinutes } from '../../../utils/formatCostInMinutes';
 import { useDubEstimate } from '../../../hooks/useDubEstimate';
 import { TTS_CREDITS_PER_MINUTE } from '../../../../shared/constants';
 import {
@@ -69,7 +70,7 @@ export default function SrtMountedPanel({
   className,
   pickAnotherLanguage = false,
 }: SrtMountedPanelProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const order = useSubStore(s => s.order);
   const segments = useSubStore(s => s.segments);
   // The languages the lines are already in: no point translating into them.
@@ -305,10 +306,14 @@ export default function SrtMountedPanel({
                       'Dubbing uses ElevenLabs only. Add an ElevenLabs API key to dub with your own keys. Without one, dubbing uses Stage5 credits, which are not used while your API keys are on.'
                     )
                   : t(
-                      'subtitles.dubCostHint',
-                      'ElevenLabs voice: ~{{rate}} credits per minute of speech. This estimate is shown before dubbing starts.',
+                      'subtitles.dubCostHintMinutes',
+                      'ElevenLabs voice: ~{{time}} of your minutes per minute of speech. This estimate is shown before dubbing starts.',
                       {
-                        rate: Math.round(TTS_CREDITS_PER_MINUTE.elevenlabs),
+                        // The copy carries the "~"; exact avoids "~~".
+                        time: formatCostInMinutes(
+                          TTS_CREDITS_PER_MINUTE.elevenlabs,
+                          { kind: 'exact', locale: i18n.language }
+                        ),
                       }
                     )
               }
