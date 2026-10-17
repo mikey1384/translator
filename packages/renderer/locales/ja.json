@@ -1322,7 +1322,8 @@
     "moreAllTools": "すべてのツール",
     "hideTools": "ツールを隠す",
     "noVideoTitle": "動画を追加",
-    "noVideoBody": "この字幕の動画を開くと、その場で確認して焼き込めます。"
+    "noVideoBody": "この字幕の動画を開くと、その場で確認して焼き込めます。",
+    "showAllTools": "すべてのツールを表示"
   },
   "subtitleStyles": {
     "Cinema": "シネマイエロー",

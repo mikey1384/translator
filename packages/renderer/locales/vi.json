@@ -1322,7 +1322,8 @@
     "moreAllTools": "Tất cả công cụ",
     "hideTools": "Ẩn công cụ",
     "noVideoTitle": "Thêm video",
-    "noVideoBody": "Mở video của phụ đề này để xem ngay tại chỗ và ghép vào video."
+    "noVideoBody": "Mở video của phụ đề này để xem ngay tại chỗ và ghép vào video.",
+    "showAllTools": "Hiện tất cả công cụ"
   },
   "subtitleStyles": {
     "Cinema": "Vàng điện ảnh",

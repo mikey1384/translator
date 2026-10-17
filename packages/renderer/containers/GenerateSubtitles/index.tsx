@@ -163,9 +163,19 @@ type SubtitleDocumentSnapshot = {
   } | null;
 };
 
+// A focused task view drops the outer cards; the task's own panel is the card.
+const focusedFlatStyles = css`
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+`;
+
 export default function GenerateSubtitles() {
   const { t, i18n } = useTranslation();
   const activeWorkspaceTab = useUIStore(s => s.generateSubtitlesWorkspaceTab);
+  const toolsFocus = useUIStore(s =>
+    s.workspaceToolsOpen ? s.workspaceToolsFocus : null
+  );
   const setActiveWorkspaceTab = useUIStore(
     s => s.setGenerateSubtitlesWorkspaceTab
   );
@@ -833,362 +843,415 @@ export default function GenerateSubtitles() {
     ? t('generateSubtitles.workflow.translateDubTitle', 'Translate Or Dub')
     : t('generateSubtitles.workflow.processVideoTitle', 'Process Video');
 
+  // Focused task views from the workspace More menu show only their slice;
+  // everything stays mounted so running jobs and results are kept.
+  const showsHighlightsOnly =
+    toolsFocus === 'clips' || toolsFocus === 'summary';
+  const showsTranslateOnly = toolsFocus === 'dub' || toolsFocus === 'translate';
+  const focusedView = showsHighlightsOnly || showsTranslateOnly;
+  const hideStepTwoActions = showsHighlightsOnly && summarySegments.length > 0;
+  const hideHighlights = showsTranslateOnly;
+  const tabShown = focusedView ? 'main' : activeWorkspaceTab;
+
   return (
-    <Section
-      destination="generate"
-      title={t('subtitles.generate')}
-      contentClassName={workflowStageStackStyles}
-    >
-      {/* Global confirmations are rendered via <GlobalModals /> */}
-
-      <div className={workspaceTabsRowStyles}>
-        {workspaceTabs.map(tab => {
-          const isDisabled =
-            isWorkspaceTabNavigationLocked && tab.key !== 'main';
-
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              className={workspaceTabButtonStyles(
-                activeWorkspaceTab === tab.key,
-                isDisabled
-              )}
-              onClick={() => {
-                if (isDisabled) return;
-                setActiveWorkspaceTab(tab.key);
-              }}
-              disabled={isDisabled}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div
-        style={{
-          display: activeWorkspaceTab === 'main' ? 'block' : 'none',
-        }}
+    <div style={toolsFocus === 'video' ? { display: 'none' } : undefined}>
+      <Section
+        destination="generate"
+        title={focusedView ? undefined : t('subtitles.generate')}
+        className={focusedView ? focusedFlatStyles : undefined}
+        contentClassName={workflowStageStackStyles}
+        noPadding={focusedView}
+        noShadow={focusedView}
       >
-        {/* Credit context belongs where paid work starts, not on home. */}
-        {showCreditWarning ? (
-          <div style={{ marginBottom: '12px' }}>
-            <CreditWarningBanner
-              onSettingsClick={() => useUIStore.getState().toggleSettings(true)}
-            />
-          </div>
-        ) : showWelcomeHint ? (
-          <div style={{ marginBottom: '12px' }}>
-            <WelcomeCreditsHint />
-          </div>
-        ) : null}
+        {/* Global confirmations are rendered via <GlobalModals /> */}
 
-        {autoRunSession ? (
-          <AutoRunProgress
-            target={autoRunSession.target}
-            phase={autoRunSession.phase}
-            language={autoRunLanguage}
-            failedStep={autoRunSession.failedStep}
-            onDismiss={() => setAutoRunSession(null)}
-          />
-        ) : null}
+        <div
+          className={workspaceTabsRowStyles}
+          style={focusedView ? { display: 'none' } : undefined}
+        >
+          {workspaceTabs.map(tab => {
+            const isDisabled =
+              isWorkspaceTabNavigationLocked && tab.key !== 'main';
 
-        <div className={workflowStageShellStyles}>
-          <div className={workflowStageHeaderStyles}>
-            <div className={workflowStageHeaderRowStyles}>
-              <span className={workflowStageEyebrowStyles}>
-                {t('generateSubtitles.workflow.stepOne', 'Step 1')}
-              </span>
-              <h3 className={workflowStageTitleStyles}>
-                {t(
-                  'generateSubtitles.workflow.chooseSourceTitle',
-                  'Choose Source'
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                className={workspaceTabButtonStyles(
+                  activeWorkspaceTab === tab.key,
+                  isDisabled
                 )}
-              </h3>
-            </div>
-          </div>
-
-          <div className={workflowStageBodyStyles}>
-            {!(videoFile || videoFilePath) ? (
-              <>
-                <UrlCookieBanner />
-                <MediaInputSection
-                  videoFile={videoFile}
-                  recentMedia={recentLocalMedia}
-                  onOpenFileDialog={handleOpenLocalMedia}
-                  onOpenRecentFile={handleOpenRecentMedia}
-                  onRemoveRecentFile={handleRemoveRecentMedia}
-                  isDownloadInProgress={download.inProgress}
-                  isTranslationInProgress={isSourceChangeBlocked}
-                  urlInput={urlInput}
-                  setUrlInput={setUrlInput}
-                  downloadQuality={downloadQuality}
-                  setDownloadQuality={setDownloadQuality}
-                  handleProcessUrl={handleProcessUrlDownload}
-                  autoRunTarget={autoRunTarget}
-                  setAutoRunTarget={setAutoRunTarget}
-                  autoRunLanguage={autoRunLanguage}
-                  setAutoRunLanguage={setAutoRunLanguage}
-                />
-              </>
-            ) : null}
-
-            <VideoSuggestionPanel
-              disabled={false}
-              disablePrimaryActions={isSourceChangeBlocked}
-              isDownloadInProgress={download.inProgress}
-              onDownload={handleSuggestedVideoDownload}
-              recentDownloadTitles={downloadedVideoLibrary.downloadHistory
-                .map(item => String(item.title || '').trim())
-                .filter(Boolean)
-                .slice(0, 8)}
-              recentChannelNames={downloadedVideoLibrary.recentDownloadedChannels
-                .map(item => String(item.name || '').trim())
-                .filter(Boolean)
-                .slice(0, 8)}
-            />
-          </div>
+                onClick={() => {
+                  if (isDisabled) return;
+                  setActiveWorkspaceTab(tab.key);
+                }}
+                disabled={isDisabled}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {hasSourceSelection || hasTranscriptSummaryPanel ? (
+        <div
+          style={{
+            display: tabShown === 'main' ? 'block' : 'none',
+          }}
+        >
+          {/* Credit context belongs where paid work starts, not on home. */}
+          {showCreditWarning && !focusedView ? (
+            <div style={{ marginBottom: '12px' }}>
+              <CreditWarningBanner
+                onSettingsClick={() =>
+                  useUIStore.getState().toggleSettings(true)
+                }
+              />
+            </div>
+          ) : showWelcomeHint && !focusedView ? (
+            <div style={{ marginBottom: '12px' }}>
+              <WelcomeCreditsHint />
+            </div>
+          ) : null}
+
+          {autoRunSession && !focusedView ? (
+            <AutoRunProgress
+              target={autoRunSession.target}
+              phase={autoRunSession.phase}
+              language={autoRunLanguage}
+              failedStep={autoRunSession.failedStep}
+              onDismiss={() => setAutoRunSession(null)}
+            />
+          ) : null}
+
           <div
             className={workflowStageShellStyles}
-            style={{ marginTop: spacing.lg }}
+            style={focusedView ? { display: 'none' } : undefined}
           >
             <div className={workflowStageHeaderStyles}>
               <div className={workflowStageHeaderRowStyles}>
                 <span className={workflowStageEyebrowStyles}>
-                  {t('generateSubtitles.workflow.stepTwo', 'Step 2')}
+                  {t('generateSubtitles.workflow.stepOne', 'Step 1')}
                 </span>
                 <h3 className={workflowStageTitleStyles}>
-                  {stepTwoStageTitle}
+                  {t(
+                    'generateSubtitles.workflow.chooseSourceTitle',
+                    'Choose Source'
+                  )}
                 </h3>
               </div>
             </div>
 
             <div className={workflowStageBodyStyles}>
-              {!showMountedTranscriptStep && !isTranslating ? (
+              {!(videoFile || videoFilePath) ? (
                 <>
-                  <TranscribeOnlyPanel
-                    className={workflowPanelFlushStyles}
-                    onTranscribe={handleTranscribeOnly}
-                    onTranslate={handleTranslateFromScratch}
-                    onCreateHighlight={handleCreateHighlight}
-                    processingLanguage={preTranscriptProcessingLanguage}
-                    onProcessingLanguageChange={
-                      setPreTranscriptProcessingLanguage
-                    }
-                    isTranscribing={
-                      isTranscribing && !isPreTranscriptTranslateRunning
-                    }
-                    isTranslating={isPreTranscriptTranslateRunning}
-                    isCreatingHighlight={isStepTwoMutationLocked}
-                    disabled={
-                      isButtonDisabled ||
-                      hoursNeeded == null ||
-                      isMetadataPending ||
-                      isStepTwoMutationLocked ||
-                      isPreTranscriptTranslateRunning
-                    }
-                    createHighlightDisabled={
-                      !canCreateHighlight ||
-                      isPreTranscriptTranslateRunning ||
-                      // Highlights from scratch transcribe first.
-                      (Boolean(transcriptionBlockedMessage) &&
-                        !isTranscriptionDone)
-                    }
-                    statusMessage={metadataStatusMessage}
-                    transcriptionBlockedMessage={transcriptionBlockedMessage}
-                    costPreview={transcriptionCostPreview}
+                  <UrlCookieBanner />
+                  <MediaInputSection
+                    videoFile={videoFile}
+                    recentMedia={recentLocalMedia}
+                    onOpenFileDialog={handleOpenLocalMedia}
+                    onOpenRecentFile={handleOpenRecentMedia}
+                    onRemoveRecentFile={handleRemoveRecentMedia}
+                    isDownloadInProgress={download.inProgress}
+                    isTranslationInProgress={isSourceChangeBlocked}
+                    urlInput={urlInput}
+                    setUrlInput={setUrlInput}
+                    downloadQuality={downloadQuality}
+                    setDownloadQuality={setDownloadQuality}
+                    handleProcessUrl={handleProcessUrlDownload}
+                    autoRunTarget={autoRunTarget}
+                    setAutoRunTarget={setAutoRunTarget}
+                    autoRunLanguage={autoRunLanguage}
+                    setAutoRunLanguage={setAutoRunLanguage}
                   />
-                  {preTranscriptTranslateProgress ? (
-                    <HighlightWorkflowProgress
-                      className={workflowPanelFlushStyles}
-                      title={preTranscriptTranslateProgress.title}
-                      stage={preTranscriptTranslateProgress.stage}
-                      progress={preTranscriptTranslateProgress.percent}
-                    />
-                  ) : null}
-                  {shouldShowHighlightWorkflowProgress ? (
-                    <HighlightWorkflowProgress
-                      className={workflowPanelFlushStyles}
-                      title={t('summary.generate', 'Generate highlights')}
-                      stage={
-                        highlightProgress.stage ||
-                        t('summary.status.inProgress')
-                      }
-                      progress={highlightProgress.percent}
-                      onCancel={() => {
-                        void handleCancelHighlightWorkflow();
-                      }}
-                      isCancelling={isCancellingHighlightWorkflow}
-                    />
-                  ) : null}
                 </>
-              ) : (
-                <>
-                  <SrtMountedPanel
-                    className={workflowPanelFlushStyles}
-                    srtPath={mountedSrtPath}
-                    onTranslate={handleTranslate}
-                    isTranslating={isTranslating}
-                    disabled={
-                      isButtonDisabled ||
-                      hoursNeeded == null ||
-                      isStepTwoMutationLocked
+              ) : null}
+
+              <VideoSuggestionPanel
+                disabled={false}
+                disablePrimaryActions={isSourceChangeBlocked}
+                isDownloadInProgress={download.inProgress}
+                onDownload={handleSuggestedVideoDownload}
+                recentDownloadTitles={downloadedVideoLibrary.downloadHistory
+                  .map(item => String(item.title || '').trim())
+                  .filter(Boolean)
+                  .slice(0, 8)}
+                recentChannelNames={downloadedVideoLibrary.recentDownloadedChannels
+                  .map(item => String(item.name || '').trim())
+                  .filter(Boolean)
+                  .slice(0, 8)}
+              />
+            </div>
+          </div>
+
+          {hasSourceSelection || hasTranscriptSummaryPanel ? (
+            <div
+              className={workflowStageShellStyles}
+              style={
+                focusedView
+                  ? {
+                      marginTop: 0,
+                      border: 'none',
+                      background: 'none',
+                      padding: 0,
                     }
-                    targetLanguage={targetLanguage}
-                    onTargetLanguageChange={setTargetLanguage}
-                    onDub={handleDub}
-                    isDubbing={isDubbing}
-                    disableDub={
-                      isButtonDisabled ||
-                      hoursNeeded == null ||
-                      isStepTwoMutationLocked
-                    }
-                  />
-                  {preTranscriptTranslateProgress ? (
-                    <HighlightWorkflowProgress
-                      className={workflowPanelFlushStyles}
-                      title={preTranscriptTranslateProgress.title}
-                      stage={preTranscriptTranslateProgress.stage}
-                      progress={preTranscriptTranslateProgress.percent}
-                    />
-                  ) : null}
-                  {shouldShowHighlightWorkflowProgress ? (
-                    <HighlightWorkflowProgress
-                      className={workflowPanelFlushStyles}
-                      title={t('summary.generate', 'Generate highlights')}
-                      stage={
-                        highlightProgress.stage ||
-                        t('summary.status.inProgress')
+                  : { marginTop: spacing.lg }
+              }
+            >
+              <div
+                className={workflowStageHeaderStyles}
+                style={focusedView ? { display: 'none' } : undefined}
+              >
+                <div className={workflowStageHeaderRowStyles}>
+                  <span className={workflowStageEyebrowStyles}>
+                    {t('generateSubtitles.workflow.stepTwo', 'Step 2')}
+                  </span>
+                  <h3 className={workflowStageTitleStyles}>
+                    {stepTwoStageTitle}
+                  </h3>
+                </div>
+              </div>
+
+              <div className={workflowStageBodyStyles}>
+                {!showMountedTranscriptStep && !isTranslating ? (
+                  <>
+                    <div
+                      style={
+                        hideStepTwoActions ? { display: 'none' } : undefined
                       }
-                      progress={highlightProgress.percent}
-                      onCancel={() => {
-                        void handleCancelHighlightWorkflow();
-                      }}
-                      isCancelling={isCancellingHighlightWorkflow}
-                    />
-                  ) : null}
-                  {summarySegments.length > 0 ? (
-                    <TranscriptSummaryPanel
-                      generationLocked={isHighlightWorkflowTranscribing}
-                      segments={summarySegments}
-                    />
-                  ) : null}
-                </>
-              )}
+                    >
+                      <TranscribeOnlyPanel
+                        className={workflowPanelFlushStyles}
+                        onTranscribe={handleTranscribeOnly}
+                        onTranslate={handleTranslateFromScratch}
+                        onCreateHighlight={handleCreateHighlight}
+                        processingLanguage={preTranscriptProcessingLanguage}
+                        onProcessingLanguageChange={
+                          setPreTranscriptProcessingLanguage
+                        }
+                        isTranscribing={
+                          isTranscribing && !isPreTranscriptTranslateRunning
+                        }
+                        isTranslating={isPreTranscriptTranslateRunning}
+                        isCreatingHighlight={isStepTwoMutationLocked}
+                        disabled={
+                          isButtonDisabled ||
+                          hoursNeeded == null ||
+                          isMetadataPending ||
+                          isStepTwoMutationLocked ||
+                          isPreTranscriptTranslateRunning
+                        }
+                        createHighlightDisabled={
+                          !canCreateHighlight ||
+                          isPreTranscriptTranslateRunning ||
+                          // Highlights from scratch transcribe first.
+                          (Boolean(transcriptionBlockedMessage) &&
+                            !isTranscriptionDone)
+                        }
+                        statusMessage={metadataStatusMessage}
+                        transcriptionBlockedMessage={
+                          transcriptionBlockedMessage
+                        }
+                        costPreview={transcriptionCostPreview}
+                      />
+                    </div>
+                    {preTranscriptTranslateProgress ? (
+                      <HighlightWorkflowProgress
+                        className={workflowPanelFlushStyles}
+                        title={preTranscriptTranslateProgress.title}
+                        stage={preTranscriptTranslateProgress.stage}
+                        progress={preTranscriptTranslateProgress.percent}
+                      />
+                    ) : null}
+                    {shouldShowHighlightWorkflowProgress && !hideHighlights ? (
+                      <HighlightWorkflowProgress
+                        className={workflowPanelFlushStyles}
+                        title={t('summary.generate', 'Generate highlights')}
+                        stage={
+                          highlightProgress.stage ||
+                          t('summary.status.inProgress')
+                        }
+                        progress={highlightProgress.percent}
+                        onCancel={() => {
+                          void handleCancelHighlightWorkflow();
+                        }}
+                        isCancelling={isCancellingHighlightWorkflow}
+                      />
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <div
+                      style={
+                        hideStepTwoActions ? { display: 'none' } : undefined
+                      }
+                    >
+                      <SrtMountedPanel
+                        className={workflowPanelFlushStyles}
+                        srtPath={mountedSrtPath}
+                        onTranslate={handleTranslate}
+                        isTranslating={isTranslating}
+                        disabled={
+                          isButtonDisabled ||
+                          hoursNeeded == null ||
+                          isStepTwoMutationLocked
+                        }
+                        targetLanguage={targetLanguage}
+                        onTargetLanguageChange={setTargetLanguage}
+                        onDub={handleDub}
+                        isDubbing={isDubbing}
+                        disableDub={
+                          isButtonDisabled ||
+                          hoursNeeded == null ||
+                          isStepTwoMutationLocked
+                        }
+                      />
+                    </div>
+                    {preTranscriptTranslateProgress ? (
+                      <HighlightWorkflowProgress
+                        className={workflowPanelFlushStyles}
+                        title={preTranscriptTranslateProgress.title}
+                        stage={preTranscriptTranslateProgress.stage}
+                        progress={preTranscriptTranslateProgress.percent}
+                      />
+                    ) : null}
+                    {shouldShowHighlightWorkflowProgress && !hideHighlights ? (
+                      <HighlightWorkflowProgress
+                        className={workflowPanelFlushStyles}
+                        title={t('summary.generate', 'Generate highlights')}
+                        stage={
+                          highlightProgress.stage ||
+                          t('summary.status.inProgress')
+                        }
+                        progress={highlightProgress.percent}
+                        onCancel={() => {
+                          void handleCancelHighlightWorkflow();
+                        }}
+                        isCancelling={isCancellingHighlightWorkflow}
+                      />
+                    ) : null}
+                    {summarySegments.length > 0 ? (
+                      <div
+                        style={hideHighlights ? { display: 'none' } : undefined}
+                      >
+                        <TranscriptSummaryPanel
+                          generationLocked={isHighlightWorkflowTranscribing}
+                          segments={summarySegments}
+                        />
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {activeWorkspaceTab === 'history' ? (
+          <div
+            className={workflowStageShellStyles}
+            data-translator-destination="downloads"
+          >
+            <div className={workflowStageHeaderStyles}>
+              <div className={workflowStageHeaderRowStyles}>
+                <h3 className={workflowStageTitleStyles}>
+                  {t(
+                    'input.videoSuggestion.downloadHistoryTitle',
+                    'Download history'
+                  )}
+                </h3>
+              </div>
+            </div>
+            <div className={workflowStageBodyStyles}>
+              {downloadedVideoLibrary.error ? (
+                <ErrorBanner
+                  message={downloadedVideoLibrary.error}
+                  onClose={() => downloadedVideoLibrary.setError(null)}
+                />
+              ) : null}
+              <VideoSuggestionHistoryTab
+                disabled={isSourceChangeBlocked}
+                downloadHistory={downloadedVideoLibrary.downloadHistory}
+                isDownloadInProgress={download.inProgress}
+                isTranslationInProgress={isSourceChangeBlocked}
+                localPrimaryActionLabel={
+                  downloadedVideoLibrary.localPrimaryActionLabel
+                }
+                playablePathMap={downloadedVideoLibrary.playablePathMap}
+                t={t}
+                buildVideoMetaDetails={
+                  downloadedVideoLibrary.buildHistoryMetaDetails
+                }
+                formatHistoryTimestamp={
+                  downloadedVideoLibrary.formatHistoryTimestamp
+                }
+                onOpenChannelExternally={(channelUrl, channelName) => {
+                  void downloadedVideoLibrary.openChannelExternally(
+                    channelUrl,
+                    channelName
+                  );
+                }}
+                onOpenDownloadedVideo={item => {
+                  void downloadedVideoLibrary.openDownloadedVideo(item);
+                }}
+                onOpenVideoExternally={url => {
+                  void downloadedVideoLibrary.openVideoExternally(url);
+                }}
+                onRedownloadHistoryItem={item => {
+                  void downloadedVideoLibrary.redownloadHistoryItem(item);
+                }}
+                onDeleteHistoryFile={item => {
+                  void downloadedVideoLibrary.deleteHistoryFile(item);
+                }}
+                onDeleteHistoryFileAndHistory={item => {
+                  void downloadedVideoLibrary.deleteHistoryFileAndHistory(item);
+                }}
+                onRemoveHistoryItem={id => {
+                  downloadedVideoLibrary.removeHistoryItem(id);
+                }}
+              />
             </div>
           </div>
         ) : null}
-      </div>
 
-      {activeWorkspaceTab === 'history' ? (
-        <div
-          className={workflowStageShellStyles}
-          data-translator-destination="downloads"
-        >
-          <div className={workflowStageHeaderStyles}>
-            <div className={workflowStageHeaderRowStyles}>
-              <h3 className={workflowStageTitleStyles}>
-                {t(
-                  'input.videoSuggestion.downloadHistoryTitle',
-                  'Download history'
-                )}
-              </h3>
+        {activeWorkspaceTab === 'channels' ? (
+          <div
+            className={workflowStageShellStyles}
+            data-translator-destination="channels"
+          >
+            <div className={workflowStageHeaderStyles}>
+              <div className={workflowStageHeaderRowStyles}>
+                <h3 className={workflowStageTitleStyles}>
+                  {t('input.videoSuggestion.tabChannels', 'Channels')}
+                </h3>
+              </div>
+            </div>
+            <div className={workflowStageBodyStyles}>
+              {downloadedVideoLibrary.error ? (
+                <ErrorBanner
+                  message={downloadedVideoLibrary.error}
+                  onClose={() => downloadedVideoLibrary.setError(null)}
+                />
+              ) : null}
+              <VideoSuggestionChannelsTab
+                recentDownloadedChannels={
+                  downloadedVideoLibrary.recentDownloadedChannels
+                }
+                t={t}
+                onOpenChannelExternally={(channelUrl, channelName) => {
+                  void downloadedVideoLibrary.openChannelExternally(
+                    channelUrl,
+                    channelName
+                  );
+                }}
+                onRemoveChannelItem={key => {
+                  downloadedVideoLibrary.removeChannelHistoryItem(key);
+                }}
+              />
             </div>
           </div>
-          <div className={workflowStageBodyStyles}>
-            {downloadedVideoLibrary.error ? (
-              <ErrorBanner
-                message={downloadedVideoLibrary.error}
-                onClose={() => downloadedVideoLibrary.setError(null)}
-              />
-            ) : null}
-            <VideoSuggestionHistoryTab
-              disabled={isSourceChangeBlocked}
-              downloadHistory={downloadedVideoLibrary.downloadHistory}
-              isDownloadInProgress={download.inProgress}
-              isTranslationInProgress={isSourceChangeBlocked}
-              localPrimaryActionLabel={
-                downloadedVideoLibrary.localPrimaryActionLabel
-              }
-              playablePathMap={downloadedVideoLibrary.playablePathMap}
-              t={t}
-              buildVideoMetaDetails={
-                downloadedVideoLibrary.buildHistoryMetaDetails
-              }
-              formatHistoryTimestamp={
-                downloadedVideoLibrary.formatHistoryTimestamp
-              }
-              onOpenChannelExternally={(channelUrl, channelName) => {
-                void downloadedVideoLibrary.openChannelExternally(
-                  channelUrl,
-                  channelName
-                );
-              }}
-              onOpenDownloadedVideo={item => {
-                void downloadedVideoLibrary.openDownloadedVideo(item);
-              }}
-              onOpenVideoExternally={url => {
-                void downloadedVideoLibrary.openVideoExternally(url);
-              }}
-              onRedownloadHistoryItem={item => {
-                void downloadedVideoLibrary.redownloadHistoryItem(item);
-              }}
-              onDeleteHistoryFile={item => {
-                void downloadedVideoLibrary.deleteHistoryFile(item);
-              }}
-              onDeleteHistoryFileAndHistory={item => {
-                void downloadedVideoLibrary.deleteHistoryFileAndHistory(item);
-              }}
-              onRemoveHistoryItem={id => {
-                downloadedVideoLibrary.removeHistoryItem(id);
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {activeWorkspaceTab === 'channels' ? (
-        <div
-          className={workflowStageShellStyles}
-          data-translator-destination="channels"
-        >
-          <div className={workflowStageHeaderStyles}>
-            <div className={workflowStageHeaderRowStyles}>
-              <h3 className={workflowStageTitleStyles}>
-                {t('input.videoSuggestion.tabChannels', 'Channels')}
-              </h3>
-            </div>
-          </div>
-          <div className={workflowStageBodyStyles}>
-            {downloadedVideoLibrary.error ? (
-              <ErrorBanner
-                message={downloadedVideoLibrary.error}
-                onClose={() => downloadedVideoLibrary.setError(null)}
-              />
-            ) : null}
-            <VideoSuggestionChannelsTab
-              recentDownloadedChannels={
-                downloadedVideoLibrary.recentDownloadedChannels
-              }
-              t={t}
-              onOpenChannelExternally={(channelUrl, channelName) => {
-                void downloadedVideoLibrary.openChannelExternally(
-                  channelUrl,
-                  channelName
-                );
-              }}
-              onRemoveChannelItem={key => {
-                downloadedVideoLibrary.removeChannelHistoryItem(key);
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
-    </Section>
+        ) : null}
+      </Section>
+    </div>
   );
 
   function resetHighlightWorkflowState() {

@@ -1322,7 +1322,8 @@
     "moreAllTools": "Tutti gli strumenti",
     "hideTools": "Nascondi strumenti",
     "noVideoTitle": "Aggiungi il video",
-    "noVideoBody": "Apri il video di questi sottotitoli per vederli sul posto e imprimerli."
+    "noVideoBody": "Apri il video di questi sottotitoli per vederli sul posto e imprimerli.",
+    "showAllTools": "Mostra tutti gli strumenti"
   },
   "subtitleStyles": {
     "Cinema": "Giallo cinema",

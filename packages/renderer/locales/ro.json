@@ -1322,7 +1322,8 @@
     "moreAllTools": "Toate instrumentele",
     "hideTools": "Ascunde instrumentele",
     "noVideoTitle": "Adaugă videoclipul",
-    "noVideoBody": "Deschide videoclipul acestor subtitrări pentru a le vedea pe loc și a le încorpora."
+    "noVideoBody": "Deschide videoclipul acestor subtitrări pentru a le vedea pe loc și a le încorpora.",
+    "showAllTools": "Arată toate instrumentele"
   },
   "subtitleStyles": {
     "Cinema": "Galben cinema",

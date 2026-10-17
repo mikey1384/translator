@@ -1322,7 +1322,8 @@
     "moreAllTools": "Lahat ng tool",
     "hideTools": "Itago ang mga tool",
     "noVideoTitle": "Idagdag ang video",
-    "noVideoBody": "Buksan ang video ng mga subtitle na ito para mapanood sa lugar at maisama sa video."
+    "noVideoBody": "Buksan ang video ng mga subtitle na ito para mapanood sa lugar at maisama sa video.",
+    "showAllTools": "Ipakita ang lahat ng tool"
   },
   "subtitleStyles": {
     "Cinema": "Dilaw na pang-sinehan",

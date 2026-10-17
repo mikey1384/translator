@@ -68,7 +68,17 @@ interface State {
   previewVideoHeightPx: number;
 }
 
-export type WorkspaceToolsFocus = 'video' | 'process';
+/**
+ * Which slice of the old tools the workspace shows. 'clips', 'summary',
+ * 'dub' and 'translate' are focused views of one task; null shows them all.
+ */
+export type WorkspaceToolsFocus =
+  | 'video'
+  | 'process'
+  | 'clips'
+  | 'summary'
+  | 'dub'
+  | 'translate';
 
 const SUBTITLE_EDIT_MODE_KEY = 'translator.subtitleEditMode';
 

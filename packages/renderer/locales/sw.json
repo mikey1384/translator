@@ -1322,7 +1322,8 @@
     "moreAllTools": "Zana zote",
     "hideTools": "Ficha zana",
     "noVideoTitle": "Ongeza video",
-    "noVideoBody": "Fungua video ya manukuu haya ili uyaone mahali pake na kuyaweka kwenye video."
+    "noVideoBody": "Fungua video ya manukuu haya ili uyaone mahali pake na kuyaweka kwenye video.",
+    "showAllTools": "Onyesha zana zote"
   },
   "subtitleStyles": {
     "Cinema": "Njano ya sinema",

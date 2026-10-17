@@ -1322,7 +1322,8 @@
     "moreAllTools": "Todas las herramientas",
     "hideTools": "Ocultar herramientas",
     "noVideoTitle": "Añade el video",
-    "noVideoBody": "Abre el video de estos subtítulos para verlos en su sitio e incrustarlos."
+    "noVideoBody": "Abre el video de estos subtítulos para verlos en su sitio e incrustarlos.",
+    "showAllTools": "Mostrar todas las herramientas"
   },
   "subtitleStyles": {
     "Cinema": "Amarillo cine",

@@ -119,10 +119,20 @@ export function toFileUrl(p: string): string {
   return `file://${encodeURI(`/${normalized}`)}`;
 }
 
+/** "0:24–0:44 · 20s": where the clip sits and how long it runs. */
 export function formatRange(a: number, b: number): string {
   const s = Math.max(0, Math.floor(a || 0));
-  const e = Math.max(0, Math.floor(b || 0));
-  return `${formatHHMMSS(s)} – ${formatHHMMSS(e)}`;
+  const e = Math.max(s, Math.floor(b || 0));
+  const clock = (total: number) => {
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const sec = String(total % 60).padStart(2, '0');
+    return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+  };
+  const len = e - s;
+  const length =
+    len >= 60 ? `${Math.floor(len / 60)}m ${len % 60}s` : `${len}s`;
+  return `${clock(s)}–${clock(e)} · ${length}`;
 }
 
 export function formatHHMMSS(total: number): string {

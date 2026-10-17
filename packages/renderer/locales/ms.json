@@ -1322,7 +1322,8 @@
     "moreAllTools": "Semua alat",
     "hideTools": "Sembunyikan alat",
     "noVideoTitle": "Tambah video",
-    "noVideoBody": "Buka video sari kata ini untuk menontonnya di tempat dan membenamkannya."
+    "noVideoBody": "Buka video sari kata ini untuk menontonnya di tempat dan membenamkannya.",
+    "showAllTools": "Tunjukkan semua alat"
   },
   "subtitleStyles": {
     "Cinema": "Kuning pawagam",

@@ -1322,7 +1322,8 @@
     "moreAllTools": "Tous les outils",
     "hideTools": "Masquer les outils",
     "noVideoTitle": "Ajoutez la vidéo",
-    "noVideoBody": "Ouvrez la vidéo de ces sous-titres pour les voir en place et les incruster."
+    "noVideoBody": "Ouvrez la vidéo de ces sous-titres pour les voir en place et les incruster.",
+    "showAllTools": "Afficher tous les outils"
   },
   "subtitleStyles": {
     "Cinema": "Jaune cinéma",

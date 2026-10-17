@@ -1322,7 +1322,8 @@
     "moreAllTools": "全部工具",
     "hideTools": "隐藏工具",
     "noVideoTitle": "添加视频",
-    "noVideoBody": "打开这些字幕对应的视频，即可原地观看并压制字幕。"
+    "noVideoBody": "打开这些字幕对应的视频，即可原地观看并压制字幕。",
+    "showAllTools": "显示所有工具"
   },
   "subtitleStyles": {
     "Cinema": "影院黄",

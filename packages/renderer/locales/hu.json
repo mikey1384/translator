@@ -1322,7 +1322,8 @@
     "moreAllTools": "Minden eszköz",
     "hideTools": "Eszközök elrejtése",
     "noVideoTitle": "Add hozzá a videót",
-    "noVideoBody": "Nyisd meg a feliratokhoz tartozó videót, hogy a helyükön lásd és beégethesd őket."
+    "noVideoBody": "Nyisd meg a feliratokhoz tartozó videót, hogy a helyükön lásd és beégethesd őket.",
+    "showAllTools": "Összes eszköz megjelenítése"
   },
   "subtitleStyles": {
     "Cinema": "Mozisárga",

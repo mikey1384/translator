@@ -95,15 +95,31 @@ export function WorkspaceToolsVideo() {
   const focus = useUIStore(s => s.workspaceToolsFocus);
   const videoPath = useVideoStore(s => s.path);
   const videoUrl = useVideoStore(s => s.url);
+  // Task views from the More menu: a title for the task and only its tools.
+  const focusedTask =
+    focus === 'clips' ||
+    focus === 'summary' ||
+    focus === 'dub' ||
+    focus === 'translate';
+  const title =
+    focus === 'clips'
+      ? t('workspace.moreClips', 'Make clips')
+      : focus === 'summary'
+        ? t('workspace.moreSummary', 'Summary')
+        : focus === 'dub'
+          ? t('workspace.moreDub', 'Dub it')
+          : focus === 'translate'
+            ? t('workspace.moreTranslateOther', 'Translate to another language')
+            : t('workspace.moreAllTools', 'All tools');
 
   useEffect(() => {
     if (!focus) return;
     const target =
-      focus === 'video'
-        ? document.getElementById('workspace-tools-video')
-        : document.querySelector<HTMLElement>(
+      focus === 'process'
+        ? document.querySelector<HTMLElement>(
             '[data-translator-destination="create"]'
-          );
+          )
+        : document.getElementById('workspace-tools-video');
     requestAnimationFrame(() =>
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     );
@@ -112,18 +128,31 @@ export function WorkspaceToolsVideo() {
   return (
     <div className={workspaceToolsVideoAreaStyles} id="workspace-tools-video">
       <div className={workspaceToolsHeaderStyles}>
-        <h2 className={workspaceSubsTitleStyles}>
-          {t('workspace.moreAllTools', 'All tools')}
-        </h2>
-        <Button
-          variant="text"
-          size="sm"
-          onClick={() => useUIStore.getState().setWorkspaceToolsOpen(false)}
-        >
-          {t('workspace.hideTools', 'Hide tools')}
-        </Button>
+        <h2 className={workspaceSubsTitleStyles}>{title}</h2>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {focusedTask ? (
+            <Button
+              variant="text"
+              size="sm"
+              onClick={() =>
+                useUIStore.getState().setWorkspaceToolsOpen(true, null)
+              }
+            >
+              {t('workspace.showAllTools', 'Show all tools')}
+            </Button>
+          ) : null}
+          <Button
+            variant="text"
+            size="sm"
+            onClick={() => useUIStore.getState().setWorkspaceToolsOpen(false)}
+          >
+            {focusedTask
+              ? t('common.close', 'Close')
+              : t('workspace.hideTools', 'Hide tools')}
+          </Button>
+        </div>
       </div>
-      {videoUrl ? (
+      {videoUrl && !focusedTask ? (
         <div className="workspace-tools-video-grid">
           <GapList key={(videoPath || videoUrl || 'none').toString()} />
           <SideMenu />

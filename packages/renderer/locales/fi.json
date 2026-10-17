@@ -1322,7 +1322,8 @@
     "moreAllTools": "Kaikki työkalut",
     "hideTools": "Piilota työkalut",
     "noVideoTitle": "Lisää video",
-    "noVideoBody": "Avaa näiden tekstitysten video, niin näet ne paikallaan ja voit polttaa ne kuvaan."
+    "noVideoBody": "Avaa näiden tekstitysten video, niin näet ne paikallaan ja voit polttaa ne kuvaan.",
+    "showAllTools": "Näytä kaikki työkalut"
   },
   "subtitleStyles": {
     "Cinema": "Elokuvakeltainen",

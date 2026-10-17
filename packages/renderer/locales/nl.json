@@ -1322,7 +1322,8 @@
     "moreAllTools": "Alle hulpmiddelen",
     "hideTools": "Hulpmiddelen verbergen",
     "noVideoTitle": "Voeg de video toe",
-    "noVideoBody": "Open de video bij deze ondertitels om ze ter plekke te bekijken en in te branden."
+    "noVideoBody": "Open de video bij deze ondertitels om ze ter plekke te bekijken en in te branden.",
+    "showAllTools": "Alle tools tonen"
   },
   "subtitleStyles": {
     "Cinema": "Bioscoopgeel",

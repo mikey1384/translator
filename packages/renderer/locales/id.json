@@ -1322,7 +1322,8 @@
     "moreAllTools": "Semua alat",
     "hideTools": "Sembunyikan alat",
     "noVideoTitle": "Tambahkan videonya",
-    "noVideoBody": "Buka video untuk subtitle ini agar bisa ditonton langsung dan ditanamkan."
+    "noVideoBody": "Buka video untuk subtitle ini agar bisa ditonton langsung dan ditanamkan.",
+    "showAllTools": "Tampilkan semua alat"
   },
   "subtitleStyles": {
     "Cinema": "Kuning bioskop",

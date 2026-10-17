@@ -1322,7 +1322,8 @@
     "moreAllTools": "Alle værktøjer",
     "hideTools": "Skjul værktøjer",
     "noVideoTitle": "Tilføj videoen",
-    "noVideoBody": "Åbn videoen, som underteksterne hører til, for at se dem på plads og brænde dem ind."
+    "noVideoBody": "Åbn videoen, som underteksterne hører til, for at se dem på plads og brænde dem ind.",
+    "showAllTools": "Vis alle værktøjer"
   },
   "subtitleStyles": {
     "Cinema": "Biografgul",

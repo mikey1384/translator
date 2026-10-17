@@ -209,7 +209,7 @@ function MoreMenu({
             type="button"
             role="menuitem"
             className={moreMenuItemStyles}
-            onClick={() => openTools('video', 'dub')}
+            onClick={() => openTools('dub', 'dub')}
           >
             <AudioLines aria-hidden="true" />
             {t('workspace.moreDub', 'Dub it')}
@@ -218,7 +218,7 @@ function MoreMenu({
             type="button"
             role="menuitem"
             className={moreMenuItemStyles}
-            onClick={() => openTools('process', 'clips')}
+            onClick={() => openTools('clips', 'clips')}
           >
             <Scissors aria-hidden="true" />
             {t('workspace.moreClips', 'Make clips')}
@@ -227,7 +227,7 @@ function MoreMenu({
             type="button"
             role="menuitem"
             className={moreMenuItemStyles}
-            onClick={() => openTools('process', 'summary')}
+            onClick={() => openTools('summary', 'summary')}
           >
             <FileText aria-hidden="true" />
             {t('workspace.moreSummary', 'Summary')}
@@ -236,7 +236,7 @@ function MoreMenu({
             type="button"
             role="menuitem"
             className={moreMenuItemStyles}
-            onClick={() => openTools('video', 'translate_other')}
+            onClick={() => openTools('translate', 'translate_other')}
           >
             <Languages aria-hidden="true" />
             {t('workspace.moreTranslateOther', 'Translate to another language')}

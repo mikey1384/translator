@@ -1322,7 +1322,8 @@
     "moreAllTools": "Tüm araçlar",
     "hideTools": "Araçları gizle",
     "noVideoTitle": "Videoyu ekleyin",
-    "noVideoBody": "Bu altyazıların videosunu açarak onları yerinde izleyin ve videoya gömün."
+    "noVideoBody": "Bu altyazıların videosunu açarak onları yerinde izleyin ve videoya gömün.",
+    "showAllTools": "Tüm araçları göster"
   },
   "subtitleStyles": {
     "Cinema": "Sinema sarısı",

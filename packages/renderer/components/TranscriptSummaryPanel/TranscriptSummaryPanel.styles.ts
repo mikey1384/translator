@@ -204,7 +204,7 @@ export const errorWrapperStyles = css`
 
 export const highlightsGridStyles = css`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: ${spacing.md};
 `;
 
@@ -239,10 +239,19 @@ export const highlightTitle = css`
 export const highlightTime = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
+  white-space: nowrap;
+  flex: none;
 `;
 
 export const highlightVideo = css`
-  width: 100%;
+  display: block;
+  /* The box takes the clip's own shape: a phone-sized Short, or a wide
+     clip, never a vertical strip inside a wide black frame. */
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 420px;
+  margin: 0 auto;
   border-radius: ${borderRadius.lg};
   background: #000;
 `;

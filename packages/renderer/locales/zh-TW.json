@@ -1322,7 +1322,8 @@
     "moreAllTools": "所有工具",
     "hideTools": "隱藏工具",
     "noVideoTitle": "加入影片",
-    "noVideoBody": "開啟這些字幕對應的影片，即可在原處觀看並燒錄字幕。"
+    "noVideoBody": "開啟這些字幕對應的影片，即可在原處觀看並燒錄字幕。",
+    "showAllTools": "顯示所有工具"
   },
   "subtitleStyles": {
     "Cinema": "影院黃",

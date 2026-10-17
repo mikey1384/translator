@@ -1322,7 +1322,8 @@
     "moreAllTools": "Alle Werkzeuge",
     "hideTools": "Werkzeuge ausblenden",
     "noVideoTitle": "Video hinzufügen",
-    "noVideoBody": "Öffne das Video zu diesen Untertiteln, um sie direkt anzusehen und einzubrennen."
+    "noVideoBody": "Öffne das Video zu diesen Untertiteln, um sie direkt anzusehen und einzubrennen.",
+    "showAllTools": "Alle Werkzeuge anzeigen"
   },
   "subtitleStyles": {
     "Cinema": "Kino-Gelb",

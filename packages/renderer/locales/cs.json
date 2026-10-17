@@ -1322,7 +1322,8 @@
     "moreAllTools": "Všechny nástroje",
     "hideTools": "Skrýt nástroje",
     "noVideoTitle": "Přidejte video",
-    "noVideoBody": "Otevřete video k těmto titulkům a sledujte je přímo na místě nebo je vypalte do obrazu."
+    "noVideoBody": "Otevřete video k těmto titulkům a sledujte je přímo na místě nebo je vypalte do obrazu.",
+    "showAllTools": "Zobrazit všechny nástroje"
   },
   "subtitleStyles": {
     "Cinema": "Kino žlutá",

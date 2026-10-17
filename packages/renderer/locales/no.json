@@ -1322,7 +1322,8 @@
     "moreAllTools": "Alle verktøy",
     "hideTools": "Skjul verktøy",
     "noVideoTitle": "Legg til videoen",
-    "noVideoBody": "Åpne videoen undertekstene hører til for å se dem på plass og brenne dem inn."
+    "noVideoBody": "Åpne videoen undertekstene hører til for å se dem på plass og brenne dem inn.",
+    "showAllTools": "Vis alle verktøy"
   },
   "subtitleStyles": {
     "Cinema": "Kinogul",

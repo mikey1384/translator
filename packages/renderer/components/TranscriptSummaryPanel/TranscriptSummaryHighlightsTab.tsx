@@ -5,6 +5,7 @@ import type {
   TranscriptHighlight,
   TranscriptHighlightStatus,
 } from '@shared-types/app';
+import { Scissors } from 'lucide-react';
 import Button from '../Button';
 import HighlightEditorialEditor from './HighlightEditorialEditor';
 import {
@@ -510,8 +511,9 @@ export default function TranscriptSummaryHighlightsTab({
                       {t('summary.highlightPlaceholder', 'Clip not yet cut.')}
                     </p>
                     <Button
-                      variant="primary"
+                      variant="secondary"
                       size="sm"
+                      leftIcon={<Scissors size={15} aria-hidden="true" />}
                       onClick={() => onCutHighlightClip(highlight)}
                       disabled={cutDisabled}
                     >

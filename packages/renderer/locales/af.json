@@ -1322,7 +1322,8 @@
     "moreAllTools": "Alle gereedskap",
     "hideTools": "Versteek gereedskap",
     "noVideoTitle": "Voeg die video by",
-    "noVideoBody": "Maak die video van hierdie onderskrifte oop om hulle in plek te sien en in te brand."
+    "noVideoBody": "Maak die video van hierdie onderskrifte oop om hulle in plek te sien en in te brand.",
+    "showAllTools": "Wys alle gereedskap"
   },
   "subtitleStyles": {
     "Cinema": "Bioskoopgeel",

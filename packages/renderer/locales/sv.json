@@ -1322,7 +1322,8 @@
     "moreAllTools": "Alla verktyg",
     "hideTools": "Dölj verktyg",
     "noVideoTitle": "Lägg till videon",
-    "noVideoBody": "Öppna videon som undertexterna hör till för att se dem på plats och bränna in dem."
+    "noVideoBody": "Öppna videon som undertexterna hör till för att se dem på plats och bränna in dem.",
+    "showAllTools": "Visa alla verktyg"
   },
   "subtitleStyles": {
     "Cinema": "Biogul",

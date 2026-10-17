@@ -1322,7 +1322,8 @@
     "moreAllTools": "Wszystkie narzędzia",
     "hideTools": "Ukryj narzędzia",
     "noVideoTitle": "Dodaj wideo",
-    "noVideoBody": "Otwórz wideo do tych napisów, aby obejrzeć je na miejscu i wtopić w obraz."
+    "noVideoBody": "Otwórz wideo do tych napisów, aby obejrzeć je na miejscu i wtopić w obraz.",
+    "showAllTools": "Pokaż wszystkie narzędzia"
   },
   "subtitleStyles": {
     "Cinema": "Kinowy żółty",

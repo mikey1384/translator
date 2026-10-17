@@ -96,7 +96,8 @@ export default function TranscriptSummaryHeader({
         </select>
         <div className={summaryGenerateWrapStyles}>
           <Button
-            variant="primary"
+            // Once there are highlights, regenerating is the quiet option.
+            variant={summary.trim() ? 'secondary' : 'primary'}
             size="sm"
             onClick={onGenerate}
             disabled={areControlsLocked}
