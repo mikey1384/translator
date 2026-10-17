@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Button from '../../components/Button';
 import { colors } from '../../styles';
 import { useUrlStore } from '../../state/url-store';
+import { confirmInApp } from '../../utils/confirmInApp';
 
 const DEFAULT_URL = 'https://www.youtube.com/';
 
@@ -169,16 +170,21 @@ export default function SiteConnectionSection() {
     } catch {
       isYouTube = false;
     }
-    const siteLabel = isYouTube
-      ? 'YouTube'
-      : t('settings.siteConnection.thisSite', 'this site');
-    const ok = window.confirm(
-      t('settings.siteConnection.clearConfirm', {
-        site: siteLabel,
-        defaultValue:
-          'This will sign you out of {{site}} inside Translator. Continue?',
-      })
-    );
+    // Whole sentences per case: inflected languages can't slot a name in.
+    const ok = await confirmInApp({
+      title: t('settings.siteConnection.clearTitle', 'Sign out?'),
+      message: isYouTube
+        ? t(
+            'settings.siteConnection.clearConfirmYouTube',
+            'This signs you out of YouTube inside Translator.'
+          )
+        : t(
+            'settings.siteConnection.clearConfirmThisSite',
+            'This signs you out of this site inside Translator.'
+          ),
+      confirmLabel: t('settings.siteConnection.signOut', 'Sign out'),
+      danger: true,
+    });
     if (!ok) return;
 
     setBusy(true);

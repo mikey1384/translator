@@ -100,6 +100,7 @@ import {
   isSourceVideoPathAccessible,
   isSourceVideoUnavailableError,
 } from '../../utils/sourceVideoErrors';
+import { confirmInApp } from '../../utils/confirmInApp';
 
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
@@ -899,14 +900,16 @@ export default function EditSubtitles({
           };
 
           if (freeBytes <= warnBelowBytes) {
-            const proceed = window.confirm(
-              t('dialogs.mergeLowDiskSpaceConfirm', {
+            const proceed = await confirmInApp({
+              title: t('dialogs.mergeLowDiskSpaceTitle', 'Low disk space'),
+              message: t('dialogs.mergeLowDiskSpaceConfirm', {
                 defaultValue:
-                  'Low disk space detected. This merge may need ~{{need}} free space, but only ~{{free}} is available. Continue anyway?',
+                  'Saving the video with subtitles may need about {{need}} of free space, but only about {{free}} is available. Continue anyway?',
                 need: fmt(estimatedBytes),
                 free: fmt(freeBytes),
-              })
-            );
+              }),
+              confirmLabel: t('dialogs.continueAnyway', 'Continue anyway'),
+            });
             if (!proceed) return;
           }
         }

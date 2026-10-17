@@ -8,6 +8,7 @@ import subtitleRendererClient from '../clients/subtitle-renderer-client.js';
 import { useUrlStore } from '../state/url-store';
 import { colors } from '../styles.js';
 import { formatPercent } from '../utils/formatNumbers';
+import { confirmInApp } from '../utils/confirmInApp';
 
 /** Dispatched on window by the header menu's Reload item. */
 export const RELOAD_REQUEST_EVENT = 'translator:request-reload';
@@ -326,12 +327,15 @@ export default function FloatingActionButtons({
 
     // If update is downloaded, install it immediately
     if (downloaded && !plainReload) {
-      if (
-        !window.confirm(
-          t('common.confirmInstallUpdate', 'Install update and restart?')
-        )
-      )
-        return;
+      const installConfirmed = await confirmInApp({
+        title: t('common.confirmInstallUpdate', 'Install update and restart?'),
+        message: t(
+          'common.installUpdateBody',
+          'Translator closes and opens again on the new version.'
+        ),
+        confirmLabel: t('common.installUpdateNow', 'Install update'),
+      });
+      if (!installConfirmed) return;
       if (!(await prepareForReload())) return;
       await install();
       return;
@@ -353,7 +357,12 @@ export default function FloatingActionButtons({
     }
 
     // Otherwise, regular reload
-    if (!window.confirm(t('common.confirmReload'))) return;
+    const reloadConfirmed = await confirmInApp({
+      title: t('common.reloadPage', 'Reload page'),
+      message: t('common.confirmReload'),
+      confirmLabel: t('common.reloadPage', 'Reload page'),
+    });
+    if (!reloadConfirmed) return;
 
     if (!(await prepareForReload())) return;
 
