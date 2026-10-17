@@ -117,6 +117,14 @@ export default function NativeVideoPlayer({
   const videoRef = useRef<HTMLVideoElement & HTMLAudioElement>(null!);
   const [scale, setScale] = useState(1);
   const [displayHeightPx, setDisplayHeightPx] = useState(0);
+  // The picture's box inside the letterboxed <video>, so subtitle offsets
+  // ("8.5% from the bottom") mean the same thing here as in the export.
+  const [pictureBox, setPictureBox] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   const [activeSubtitle, setActiveSubtitle] = useState('');
   const [subtitleVisible, setSubtitleVisible] = useState(false);
@@ -173,6 +181,16 @@ export default function NativeVideoPlayer({
         cssHeight / intrinsicHeight
       );
       contentHeight = Math.max(1, intrinsicHeight * scaleFactor);
+      const contentWidth = Math.max(1, intrinsicWidth * scaleFactor);
+      // Relative to the positioned parent the overlay lives in; the <video>
+      // itself can sit centered inside it.
+      const parentRect = v.parentElement?.getBoundingClientRect() ?? rect;
+      setPictureBox({
+        left: rect.left - parentRect.left + (cssWidth - contentWidth) / 2,
+        top: rect.top - parentRect.top + (cssHeight - contentHeight) / 2,
+        width: contentWidth,
+        height: contentHeight,
+      });
     } else if (rect.height === 0) {
       contentHeight = 180;
     }
@@ -453,15 +471,34 @@ export default function NativeVideoPlayer({
         }}
       />
 
-      <BaseSubtitleDisplay
-        text={activeSubtitle}
-        isVisible={subtitleVisible}
-        displayFontSize={effFontSize}
-        isFullScreen={isFullyExpanded}
-        stylePreset={stylePreset}
-        videoWidthPx={subtitleCanvasWidth}
-        videoHeightPx={subtitleCanvasHeight}
-      />
+      <div
+        className={css`
+          position: absolute;
+          pointer-events: none;
+          /* Contain fixed-position subtitles (full screen) in this box too. */
+          transform: translateZ(0);
+        `}
+        style={
+          pictureBox && !isAudioOnly
+            ? {
+                left: pictureBox.left,
+                top: pictureBox.top,
+                width: pictureBox.width,
+                height: pictureBox.height,
+              }
+            : { inset: 0 }
+        }
+      >
+        <BaseSubtitleDisplay
+          text={activeSubtitle}
+          isVisible={subtitleVisible}
+          displayFontSize={effFontSize}
+          isFullScreen={isFullyExpanded}
+          stylePreset={stylePreset}
+          videoWidthPx={subtitleCanvasWidth}
+          videoHeightPx={subtitleCanvasHeight}
+        />
+      </div>
 
       {showInd && (
         <div
