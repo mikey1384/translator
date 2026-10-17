@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFreePreviewStore } from '../../state/free-preview-store';
 import { wholeMinutes } from '../../utils/freePreview';
+import {
+  intoLanguageName,
+  sentenceLanguageName,
+} from '../../utils/languageName';
 import type { VideoSuggestionDownloadHistoryItem } from '../../containers/GenerateSubtitles/components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import * as FileIPC from '../../ipc/file';
 import { colors } from '../../styles';
@@ -140,7 +144,7 @@ export default function HomeRecentRow({
   onOpen,
   onSeeAll,
 }: HomeRecentRowProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const recent = items.slice(0, 3);
   const previews = useFreePreviewStore(s => s.items);
   const [subtitleStates, setSubtitleStates] = useState<
@@ -204,14 +208,26 @@ export default function HomeRecentRow({
       };
     }
     const subtitles = subtitleStates[item.id];
-    if (subtitles?.ready && subtitles.language) {
-      const languageName = t(`languages.${subtitles.language}`, {
-        defaultValue: subtitles.language,
-      });
+    if (
+      subtitles?.ready &&
+      subtitles.language &&
+      subtitles.language !== 'original'
+    ) {
+      const languageName = sentenceLanguageName(
+        t(`languages.${subtitles.language}`, {
+          defaultValue: subtitles.language,
+        }),
+        i18n.language
+      );
       return {
         ready: true,
         text: t('home.recentSubtitlesReady', '{{language}} subtitles ready', {
           language: languageName,
+          languageInto: intoLanguageName(
+            subtitles.language,
+            languageName,
+            i18n.language
+          ),
         }),
       };
     }

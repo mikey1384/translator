@@ -13,6 +13,10 @@ import {
   TRANSLATION_LANGUAGES_BASE,
 } from '../../../constants/translation-languages';
 import type { AutoRunTarget } from './MediaInputSection.js';
+import {
+  intoLanguageName,
+  sentenceLanguageName,
+} from '../../../utils/languageName.js';
 
 // Where the running auto-run pipeline currently is. Phases move strictly
 // forward: downloading → transcribing → translating → done (or → error).
@@ -183,7 +187,7 @@ export default function AutoRunProgress({
   failedStep,
   onDismiss,
 }: AutoRunProgressProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const phaseRank: Record<AutoRunPhase, number> = {
     downloading: 0,
@@ -228,7 +232,18 @@ export default function AutoRunProgress({
     steps.push({
       key: 'translate',
       label: t('input.autoRunStepTranslate', 'Translate to {{language}}', {
-        language: resolveLanguageLabel(language, t),
+        language: sentenceLanguageName(
+          resolveLanguageLabel(language, t),
+          i18n.language
+        ),
+        languageInto: intoLanguageName(
+          language,
+          sentenceLanguageName(
+            resolveLanguageLabel(language, t),
+            i18n.language
+          ),
+          i18n.language
+        ),
       }),
       status: statusFor(2),
     });

@@ -1,7 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import { sentenceLanguageName } from '../../utils/languageName';
+import {
+  intoLanguageName,
+  sentenceLanguageName,
+} from '../../utils/languageName';
 import Button from '../Button';
 import { useCreditCheckout } from '../BuyCreditsButton';
 import { useCreditStore, useUIStore, useVideoStore } from '../../state';
@@ -22,6 +25,7 @@ import {
 import * as SystemIPC from '../../ipc/system';
 import { logButton } from '../../utils/logger';
 import { colors, fonts } from '../../styles';
+import { formatUsd } from '../../utils/formatUsd';
 
 const card = css`
   display: flex;
@@ -110,23 +114,6 @@ function formatClock(seconds: number): string {
   const sec = s % 60;
   const mm = h > 0 ? String(m).padStart(2, '0') : String(m);
   return `${h > 0 ? `${h}:` : ''}${mm}:${String(sec).padStart(2, '0')}`;
-}
-
-function formatUsd(price: number, locale: string): string {
-  try {
-    // Prices are always US dollars: "$5" reads everywhere, and dropping the
-    // bidi marks keeps RTL text from splitting the symbol off the number.
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: 'USD',
-      currencyDisplay: 'narrowSymbol',
-      maximumFractionDigits: 0,
-    })
-      .format(price)
-      .replace(/[\u200e\u200f\u061c]/g, '');
-  } catch {
-    return `$${price}`;
-  }
 }
 
 function formatRefreshDate(isoDay: string, locale: string): string {
@@ -226,6 +213,7 @@ export default function FreePreviewOffer() {
     t(`languages.${preview.language}`, { defaultValue: preview.language }),
     locale
   );
+  const languageInto = intoLanguageName(preview.language, languageName, locale);
 
   const finishNow = () => {
     logButton('free_preview_finish_now');
@@ -319,7 +307,11 @@ export default function FreePreviewOffer() {
             {t(
               'freePreview.resumingBody',
               'Picking up at {{time}} and making the rest speak {{language}}…',
-              { time: formatClock(preview.coveredSecs), language: languageName }
+              {
+                time: formatClock(preview.coveredSecs),
+                language: languageName,
+                languageInto,
+              }
             )}
           </p>
         </div>
@@ -374,6 +366,7 @@ export default function FreePreviewOffer() {
       {
         date: formatRefreshDate(monthlyFree.refreshesOn, locale),
         language: languageName,
+        languageInto,
         price,
       }
     );
@@ -381,7 +374,7 @@ export default function FreePreviewOffer() {
     detail = t(
       'freePreview.noneBody',
       'Make the whole video speak {{language}} for {{price}}.',
-      { language: languageName, price }
+      { language: languageName, languageInto, price }
     );
   }
 
@@ -393,6 +386,7 @@ export default function FreePreviewOffer() {
       ? t('freePreview.finishCta', 'Finish the video · {{price}}', { price })
       : t('freePreview.noneCta', 'Make it speak {{language}} · {{price}}', {
           language: languageName,
+          languageInto,
           price,
         });
 

@@ -1,6 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { sentenceLanguageName } from '../../utils/languageName';
+import {
+  intoLanguageName,
+  sentenceLanguageName,
+} from '../../utils/languageName';
 import {
   AudioLines,
   Download,
@@ -42,20 +45,22 @@ import {
   moreMenuStyles,
 } from './workspace-styles';
 
-export function useWorkspaceLanguage(): { value: string; name: string } {
+export function useWorkspaceLanguage(): {
+  value: string;
+  name: string;
+  into: string;
+} {
   const { t, i18n } = useTranslation();
   const targetLanguage = useUIStore(s => s.targetLanguage);
   const value =
     targetLanguage && targetLanguage !== 'original'
       ? targetLanguage
       : mapUiLanguageToTargetLanguage(i18n.language);
-  return {
-    value,
-    name: sentenceLanguageName(
-      t(`languages.${value}`, { defaultValue: value }),
-      i18n.language
-    ),
-  };
+  const name = sentenceLanguageName(
+    t(`languages.${value}`, { defaultValue: value }),
+    i18n.language
+  );
+  return { value, name, into: intoLanguageName(value, name, i18n.language) };
 }
 
 export function useWorkspaceBusy(): boolean {
@@ -93,6 +98,7 @@ export function WorkspaceIdleStatus() {
         {
           count: translated,
           language: language.name,
+          languageInto: language.into,
         }
       )
     : count > 0
@@ -104,6 +110,7 @@ export function WorkspaceIdleStatus() {
           'Ready — {{language}} subtitles are one click away',
           {
             language: language.name,
+            languageInto: language.into,
           }
         );
   return (
@@ -324,6 +331,7 @@ export function WorkspaceActionBar() {
       primary = {
         label: t('home.makeItSpeak', 'Make it speak {{language}}', {
           language: language.name,
+          languageInto: language.into,
         }),
         run: () => {
           logButton('workspace_make_it_speak');
@@ -337,6 +345,7 @@ export function WorkspaceActionBar() {
       primary = {
         label: t('workspace.translateTo', 'Translate to {{language}}', {
           language: language.name,
+          languageInto: language.into,
         }),
         run: () => {
           logButton('workspace_translate_all');

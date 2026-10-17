@@ -1,4 +1,7 @@
-import { sentenceLanguageName } from '../../utils/languageName';
+import {
+  intoLanguageName,
+  sentenceLanguageName,
+} from '../../utils/languageName';
 import { css, cx } from '@emotion/css';
 import { useMemo, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -329,6 +332,7 @@ export default function HomeStage() {
     t(`languages.${language}`, { defaultValue: language }),
     i18n.language
   );
+  const languageInto = intoLanguageName(language, languageName, i18n.language);
   const quickPicks = useMemo(
     () =>
       quickPickTargetLanguages({
@@ -440,7 +444,7 @@ export default function HomeStage() {
         <Trans
           i18nKey="home.headline"
           defaults="Every video can speak <lang>{{language}}</lang>."
-          values={{ language: languageName }}
+          values={{ language: languageName, languageInto }}
           components={{ lang: <span className={headlineLanguage} /> }}
         />
       </h1>
@@ -483,6 +487,7 @@ export default function HomeStage() {
               dragging
                 ? t('home.dropHere', 'Drop it to make it speak {{language}}', {
                     language: languageName,
+                    languageInto,
                   })
                 : t('home.linkPlaceholder', 'Paste a video link')
             }
@@ -495,6 +500,7 @@ export default function HomeStage() {
           >
             {t('home.makeItSpeak', 'Make it speak {{language}}', {
               language: languageName,
+              languageInto,
             })}
           </button>
         </form>

@@ -5,6 +5,7 @@ import { useCreditCheckout } from './BuyCreditsButton';
 import { colors, fonts, surfaceCardStyles } from '../styles';
 import { CREDIT_PACKS } from '../../shared/constants';
 import { estimateTranscriptionHours } from '../utils/creditEstimates';
+import { formatUsd } from '../utils/formatUsd';
 
 type Pack = (typeof CREDIT_PACKS)[keyof typeof CREDIT_PACKS];
 
@@ -183,34 +184,20 @@ const PACK_BADGES: Partial<Record<Pack['id'], 'popular' | 'value'>> = {
 const BASE_CREDITS_PER_DOLLAR =
   CREDIT_PACKS.MICRO.credits / CREDIT_PACKS.MICRO.price;
 
-function formatUsd(price: number, locale: string): string {
-  try {
-    // Prices are always US dollars: "$5" reads everywhere, and dropping the
-    // bidi marks keeps RTL text from splitting the symbol off the number.
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: 'USD',
-      currencyDisplay: 'narrowSymbol',
-      maximumFractionDigits: 0,
-    })
-      .format(price)
-      .replace(/[\u200e\u200f\u061c]/g, '');
-  } catch {
-    return `$${price}`;
-  }
-}
-
 /** "5h 21m" in the user's language and numerals, via Intl units. */
 function formatDuration(hours: number, locale: string): string {
   const total = Math.max(0, Math.round(hours * 60));
   const h = Math.floor(total / 60);
   const m = total % 60;
+  // English reads best as "5h 21m"; elsewhere narrow units fall back to
+  // Latin letters (fa, ja) or bare initials (uk), so use the short form.
+  const unitDisplay = /^en\b/i.test(locale) ? 'narrow' : 'short';
   const unit = (value: number, kind: 'hour' | 'minute') => {
     try {
       return new Intl.NumberFormat(locale, {
         style: 'unit',
         unit: kind,
-        unitDisplay: 'narrow',
+        unitDisplay,
       }).format(value);
     } catch {
       return `${value}${kind === 'hour' ? 'h' : 'm'}`;

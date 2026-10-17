@@ -48,7 +48,12 @@ test('every locale has every English key with the same placeholders', () => {
       const value = map.get(key);
       if (value === undefined || value.trim() === '') {
         problems.push(`${file}: missing ${key}`);
-      } else if (placeholders(value) !== placeholders(source)) {
+      } else if (
+        placeholders(
+          value.replace(/\{\{\s*languageInto\s*\}\}/g, '{{language}}')
+        ) !== placeholders(source) &&
+        placeholders(value) !== placeholders(source)
+      ) {
         problems.push(`${file}: placeholders differ in ${key}`);
       }
     }
