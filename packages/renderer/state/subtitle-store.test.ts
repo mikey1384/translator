@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { useSubStore } from './subtitle-store';
+import { replaceLiteral, useSubStore } from './subtitle-store';
 
 test('clearConfidence preserves word timings while clearing Whisper review hints', () => {
   const words = [
@@ -283,4 +283,13 @@ test('a numbered subset of translations never lands on other rows by index', () 
   const s = useSubStore.getState();
   assert.equal(s.segments.a.translation, '하나');
   assert.equal(s.segments.c.translation, '셋');
+});
+
+test('replace all treats the search and replacement as plain text', () => {
+  assert.equal(replaceLiteral('Keep going?', '?', '!'), 'Keep going!');
+  assert.equal(replaceLiteral('Hi Mr. Smith', 'Mr.', 'Dr.'), 'Hi Dr. Smith');
+  assert.equal(replaceLiteral('(laughs) ok', '(laughs)', ''), ' ok');
+  assert.equal(replaceLiteral('going go?', 'go?', 'x'), 'going x');
+  assert.equal(replaceLiteral('cost 5', '5', '$&$1'), 'cost $&$1');
+  assert.equal(replaceLiteral('a\\b', '\\', '/'), 'a/b');
 });

@@ -486,7 +486,9 @@ export default function useTranscriptSummaryFlow({
           stageText.includes('highlight') || stageText.includes('punchline');
 
         if (highlightStage) {
-          if (message === ERROR_CODES.INSUFFICIENT_CREDITS) {
+          if (
+            String(message ?? '').includes(ERROR_CODES.INSUFFICIENT_CREDITS)
+          ) {
             void SystemIPC.refreshCreditSnapshot(true).catch(error => {
               console.warn(
                 '[useTranscriptSummaryFlow] Failed to refresh credits after insufficient-credit highlight extraction:',
@@ -510,7 +512,9 @@ export default function useTranscriptSummaryFlow({
               })
             );
           }
-        } else if (message === ERROR_CODES.INSUFFICIENT_CREDITS) {
+        } else if (
+          String(message ?? '').includes(ERROR_CODES.INSUFFICIENT_CREDITS)
+        ) {
           void SystemIPC.refreshCreditSnapshot(true).catch(error => {
             console.warn(
               '[useTranscriptSummaryFlow] Failed to refresh credits after insufficient-credit summary generation:',
@@ -813,7 +817,7 @@ export default function useTranscriptSummaryFlow({
           const message = String(err?.message || err);
           const friendlyMessage = isByoError(message)
             ? getByoErrorMessage(message)
-            : message === ERROR_CODES.INSUFFICIENT_CREDITS
+            : String(message ?? '').includes(ERROR_CODES.INSUFFICIENT_CREDITS)
               ? t('summary.insufficientCredits')
               : t('summary.error', { message });
           setError(friendlyMessage);

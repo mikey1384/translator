@@ -155,7 +155,7 @@ export default function FindBar() {
           }
           useSubStore.getState().replaceAll(searchText, replaceText);
         }}
-        disabled={!searchText || !replaceText}
+        disabled={!searchText.trim()}
         title={t('findBar.replaceAllTitle')}
       >
         <span className={editorButtonContentStyles}>

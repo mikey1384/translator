@@ -73,6 +73,10 @@ function applyExportResult(result: SaveSubtitleDocumentResult): void {
   }
 }
 
+export function hasSubtitleFileTarget(): boolean {
+  return getCurrentSubtitleFileTarget() !== null;
+}
+
 function getCurrentSubtitleFileTarget(): {
   path: string;
   mode: SubtitleDisplayMode;

@@ -70,6 +70,7 @@ import { useWorkspaceActions } from '../../state/workspace-actions';
 import {
   didSaveSubtitleFile,
   saveCurrentSubtitles,
+  hasSubtitleFileTarget,
   saveSubtitlesAs,
 } from '../../utils/saveSubtitles';
 import { logButton, logTask, logError } from '../../utils/logger.js';
@@ -575,7 +576,11 @@ export default function EditSubtitles({
     } catch {
       // Do nothing
     }
-    const result = await saveCurrentSubtitles();
+    // "Save .srt" always produces a file: with no linked .srt yet (generated
+    // or translated subtitles), ask where to save it.
+    const result = hasSubtitleFileTarget()
+      ? await saveCurrentSubtitles()
+      : await saveSubtitlesAs();
     if (result.status === 'error') {
       setSaveError(result.error || t('common.error.unknown'));
       return;

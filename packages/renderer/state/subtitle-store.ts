@@ -194,6 +194,16 @@ function areEquivalentSubtitleDocs(
   return true;
 }
 
+/**
+ * Replace every occurrence of `find` (plain text, case-insensitive) with
+ * `replace` (plain text: "$" is just a dollar sign; empty deletes).
+ */
+export function replaceLiteral(text: string, find: string, replace: string) {
+  if (!find) return text;
+  const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(escaped, 'gi'), () => replace);
+}
+
 export const useSubStore = createWithEqualityFn<State & Actions>()(
   subscribeWithSelector(
     immer((set, get) => ({
@@ -688,18 +698,16 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
       },
 
       replaceAll: (find, replace) => {
-        if (!find.trim() || !replace) return;
-        const escaped = find.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&');
-        const re = new RegExp(escaped, 'gi');
+        if (!find.trim()) return;
         set(s => {
           Object.values(s.segments).forEach(cue => {
-            const nextOriginal = cue.original.replace(re, replace);
+            const nextOriginal = replaceLiteral(cue.original, find, replace);
             if (nextOriginal !== cue.original) {
               cue.original = nextOriginal;
               cue.words = undefined;
             }
             if (cue.translation) {
-              cue.translation = cue.translation.replace(re, replace);
+              cue.translation = replaceLiteral(cue.translation, find, replace);
             }
           });
           s.sourceId += 1;
