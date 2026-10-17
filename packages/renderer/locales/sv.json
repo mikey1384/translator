@@ -256,14 +256,14 @@
     "downloadFinishedWatchNow": "Titta nu",
     "downloadFinishedWatchLater": "Titta senare",
     "videoSuggestion": {
-      "show": "Föreslå en video",
+      "show": "Hitta videor med AI",
       "hide": "Dölj videoförslag",
       "modelHint": "Aktuell modell",
       "sourceHint": "Sökkälla",
       "searchDetails": "Sökdetaljer",
       "introTitle": "Beskriv vilken typ av video du vill ha.",
-      "introCopy": "Börja med ett ämne, en stämning, en skapare eller en målgrupp. Lägg till land eller hur nytt det ska vara bara om det spelar roll.",
-      "starterQuestion": "Vilken typ av videor letar du efter?",
+      "introCopy": "Börja med ett ämne, en stämning eller en målgrupp. Lägg till land eller hur nytt det ska vara bara om det spelar roll.",
+      "starterQuestion": "Beskriv vilken sorts video du vill ha. Du kan nämna ämne, stämning, målgrupp eller målland.",
       "defaultFollowUp": "Berätta lite mer så förfinar jag sökningen.",
       "errorMessage": "Något gick fel. Försök igen.",
       "composerTitle": "Berätta för AI vad den ska hitta",
@@ -319,8 +319,8 @@
         }
       },
       "searchFailed": "Jag kan inte söka just nu. Försök igen om en stund.",
-      "noMatches": "Inga bra träffar ännu. Lägg till ämne, stämning eller skapare så försöker jag igen.",
-      "lowConfidenceNoScoredResults": "Inga tillförlitliga träffar klarade rankningen. Prova ett bredare ämne, lägg till en ledtråd om skaparen eller ändra hur nytt det ska vara.",
+      "noMatches": "Inga bra träffar ännu. Lägg till ämne, stämning eller en detalj till så försöker jag igen.",
+      "lowConfidenceNoScoredResults": "Inga tillförlitliga träffar fanns kvar efter sökningen. Prova ett bredare ämne, lägg till en detalj till eller ändra hur nytt det ska vara.",
       "lowConfidenceGeneric": "Sökningen hade låg träffsäkerhet. Lägg till en detalj till och försök igen.",
       "genericError": "Något gick fel. Försök igen.",
       "platformLabel": "Sökplattform",
@@ -387,7 +387,7 @@
       "countryPlaceholder": "t.ex. USA, Japan, Spanien, Brasilien",
       "countryScope": "Målland: {{country}}",
       "countryDefaultEnglish": "Målland: engelska som standard",
-      "emptyCopy": "Nämn ämnet, målgruppen, kreatörens stil eller känslan i videon du vill hitta. Lägg till land eller aktualitet bara när det spelar roll.",
+      "emptyCopy": "Nämn ett ämne, en målgrupp eller en stämning. Lägg till land eller hur nytt det ska vara bara när det spelar roll.",
       "emptyEyebrow": "Sök med hjälp av assistenten",
       "emptyTitle": "Beskriv videon du vill hitta",
       "languageHint": "Målspråk",
@@ -411,7 +411,7 @@
       "searchingLong": "Söker fortfarande efter videor…",
       "searchingVeryLong": "Det tar längre tid än vanligt, men kör fortfarande.",
       "stillWorking": "Jobbar fortfarande…",
-      "toggleCopy": "Sök på YouTube efter en källvideo utan att lämna arbetsflödet.",
+      "toggleCopy": "Fråga på ditt eget språk. AI hittar rätt YouTube-videor.",
       "stage": {
         "answerer": "Bearbeta sökfråga",
         "planner": "Skapa sökning",
@@ -761,8 +761,8 @@
         "modelOn": "ElevenLabs TTS-premiumröster"
       },
       "videoSuggestionModel": {
-        "label": "Videoförslagsmodell",
-        "help": "Auto = samma modell som vanligt översättningsutkast",
+        "label": "Kvalitet på videorekommendationer",
+        "help": "Använder samma modellnivå som översättningen.",
         "default": "Standard (samma som översättningens standard)",
         "quality": "Kvalitet (samma som översättningens kvalitet)"
       },
@@ -922,7 +922,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API-nyckel (valfri)",
-      "description": "Lägg till din Anthropic API-nyckel för att använda Claude-modeller direkt i översättningsgranskningsfasen. Utan denna nyckel hanterar GPT-5.5 granskningspasset i stället.",
+      "description": "Lägg till din Anthropic API-nyckel för att använda Anthropics avancerade granskningsmodell direkt i översättningsgranskningen. Utan nyckeln sköter OpenAIs avancerade granskningsmodell granskningen i stället.",
       "apiKeyLabel": "Anthropic API-nyckel",
       "hide": "Dölj",
       "show": "Visa",
@@ -1065,7 +1065,7 @@
     }
   },
   "credits": {
-    "title": "Minuter",
+    "title": "Dina minuter",
     "loading": "Laddar…",
     "usingApiKey": "Använder API-nyckel",
     "usingOpenAi": "Använder OpenAI",

@@ -256,14 +256,14 @@
     "downloadFinishedWatchNow": "Se nu",
     "downloadFinishedWatchLater": "Se senere",
     "videoSuggestion": {
-      "show": "Foreslå mig en video",
+      "show": "Find videoer med AI",
       "hide": "Skjul videoforslag",
       "modelHint": "Nuværende model",
       "sourceHint": "Søgekilde",
       "searchDetails": "Søgedetaljer",
       "introTitle": "Beskriv den type video, du vil have.",
-      "introCopy": "Start med et emne, en stemning, en skaber eller et publikum. Tilføj kun land eller tidsperiode, hvis det er vigtigt.",
-      "starterQuestion": "Hvilken type videoer leder du efter?",
+      "introCopy": "Start med et emne, en stemning eller en målgruppe. Tilføj kun land eller tidsperiode, hvis det er vigtigt.",
+      "starterQuestion": "Beskriv den slags video, du vil have. Du kan nævne et emne, en stemning, en målgruppe eller et målland.",
       "defaultFollowUp": "Fortæl mig lidt mere, så forfiner jeg søgningen.",
       "errorMessage": "Noget gik galt. Prøv venligst igen.",
       "composerTitle": "Fortæl AI, hvad den skal finde",
@@ -319,8 +319,8 @@
         }
       },
       "searchFailed": "Jeg kan ikke søge lige nu. Prøv igen om et øjeblik.",
-      "noMatches": "Ingen gode resultater endnu. Tilføj emne, stemning eller skaber, så prøver jeg igen.",
-      "lowConfidenceNoScoredResults": "Ingen pålidelige resultater overlevede rangeringen. Prøv et bredere emne, tilføj et hint om skaberen, eller skift tidsperiode.",
+      "noMatches": "Ingen gode resultater endnu. Tilføj emne, stemning eller én detalje mere, så prøver jeg igen.",
+      "lowConfidenceNoScoredResults": "Ingen pålidelige resultater kom igennem søgningen. Prøv et bredere emne, tilføj én detalje mere, eller skift tidsperiode.",
       "lowConfidenceGeneric": "Søgningen havde lav træfsikkerhed. Tilføj én detalje mere, og prøv igen.",
       "genericError": "Noget gik galt. Prøv igen.",
       "platformLabel": "Søgeplatform",
@@ -387,7 +387,7 @@
       "countryPlaceholder": "fx USA, Japan, Spanien, Brasilien",
       "countryScope": "Målland: {{country}}",
       "countryDefaultEnglish": "Målland: engelsk som standard",
-      "emptyCopy": "Nævn emnet, målgruppen, creator-stilen eller stemningen i den video, du vil finde. Tilføj kun land eller aktualitet, når det betyder noget.",
+      "emptyCopy": "Nævn et emne, en målgruppe eller en stemning. Tilføj kun land eller tidsperiode, når det betyder noget.",
       "emptyEyebrow": "Søg med hjælp fra assistenten",
       "emptyTitle": "Beskriv videoen, du vil finde",
       "languageHint": "Outputsprog",
@@ -411,7 +411,7 @@
       "searchingLong": "Søger stadig efter videoer…",
       "searchingVeryLong": "Det tager længere tid end normalt, men kører stadig.",
       "stillWorking": "Arbejder stadig…",
-      "toggleCopy": "Søg på YouTube efter en kildevideo uden at forlade workflowet.",
+      "toggleCopy": "Spørg på dit eget sprog. AI finder de rigtige YouTube-videoer.",
       "stage": {
         "answerer": "Behandl forespørgsel",
         "planner": "Opret søgning",
@@ -761,8 +761,8 @@
         "modelOn": "ElevenLabs TTS-premiumstemmer"
       },
       "videoSuggestionModel": {
-        "label": "Videoforslagsmodel",
-        "help": "Auto = samme model som normalt oversættelsesudkast",
+        "label": "Kvalitet for videoanbefalinger",
+        "help": "Bruger samme modelniveau på serveren som oversættelse.",
         "default": "Standard (samme som oversættelsens standard)",
         "quality": "Kvalitet (samme som oversættelseskvalitet)"
       },
@@ -922,7 +922,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API-nøgle (valgfri)",
-      "description": "Tilføj din Anthropic API-nøgle for at bruge Claude-modeller direkte til oversættelsesgennemgang. Uden denne nøgle håndterer GPT-5.5 gennemgangsfasen i stedet.",
+      "description": "Tilføj din Anthropic API-nøgle for at bruge Anthropics avancerede gennemgangsmodel direkte til gennemgangen af oversættelsen. Uden nøglen står OpenAIs avancerede gennemgangsmodel for gennemgangen i stedet.",
       "apiKeyLabel": "Anthropic API-nøgle",
       "hide": "Skjul",
       "show": "Vis",
@@ -1065,7 +1065,7 @@
     }
   },
   "credits": {
-    "title": "AI-minutter",
+    "title": "Dine minutter",
     "loading": "Indlæser…",
     "usingApiKey": "Bruger API-nøgle",
     "usingOpenAi": "Bruger OpenAI",

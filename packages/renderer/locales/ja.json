@@ -261,8 +261,8 @@
       "sourceHint": "検索元",
       "searchDetails": "検索の詳細",
       "introTitle": "欲しい動画の内容を説明してください。",
-      "introCopy": "トピック、雰囲気、クリエイター、または対象視聴者から始めてください。国や期間は必要な場合だけ追加してください。",
-      "starterQuestion": "どんな動画をお探しですか？",
+      "introCopy": "トピック、雰囲気、対象視聴者から始めてください。国や期間は必要な場合だけ追加してください。",
+      "starterQuestion": "どんな動画をお探しですか？トピック、雰囲気、対象視聴者、対象国などを入力できます。",
       "defaultFollowUp": "もう少し教えていただければ、検索を絞り込みます。",
       "errorMessage": "エラーが発生しました。もう一度お試しください。",
       "composerTitle": "AIに探したい内容を伝えてください",
@@ -318,8 +318,8 @@
         }
       },
       "searchFailed": "現在検索できません。しばらくしてからもう一度お試しください。",
-      "noMatches": "まだ適切な結果がありません。トピック、雰囲気、クリエイター名を追加すると再検索します。",
-      "lowConfidenceNoScoredResults": "信頼できる一致候補がランキング後に残りませんでした。より広いトピックにするか、クリエイターのヒントを追加するか、期間設定を切り替えてください。",
+      "noMatches": "まだぴったりの結果がありません。トピックや雰囲気、または条件をもう一つ追加すると再検索します。",
+      "lowConfidenceNoScoredResults": "検索で信頼できる候補が見つかりませんでした。トピックを広げるか、条件をもう一つ追加するか、期間設定を変えてみてください。",
       "lowConfidenceGeneric": "検索の確度が低めでした。詳細をもう1つ追加して再試行してください。",
       "genericError": "エラーが発生しました。もう一度お試しください。",
       "platformLabel": "検索プラットフォーム",
@@ -382,11 +382,11 @@
       "countryGlobal": "対象国：既定は英語",
       "countryHint": "空欄のままにすると、英語で検索します。",
       "countryHintDefaultEnglish": "空欄のままにすると、検索言語は英語になります。",
-      "countryLabel": "対象の国 / 地域",
+      "countryLabel": "対象国",
       "countryPlaceholder": "例: 米国、日本、スペイン、ブラジル",
       "countryScope": "対象国：{{country}}",
       "countryDefaultEnglish": "対象国: 既定は英語",
-      "emptyCopy": "探したい動画のテーマ、対象、クリエイターのスタイル、または雰囲気を入力してください。国や新しさは必要なときだけ追加してください。",
+      "emptyCopy": "探したい動画のテーマ、対象視聴者、雰囲気を入力してください。国や新しさは必要なときだけ追加してください。",
       "emptyEyebrow": "アシスタントと探す",
       "emptyTitle": "探したい動画を説明してください",
       "languageHint": "出力言語",
@@ -755,7 +755,7 @@
       },
       "videoSuggestionModel": {
         "label": "動画提案の品質",
-        "help": "自動 = 通常の翻訳下書きと同じモデル",
+        "help": "翻訳と同じランクのモデルを使います。",
         "default": "デフォルト（翻訳のデフォルトと同じ）",
         "quality": "高品質（翻訳の高品質と同じ）"
       },
@@ -915,7 +915,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic APIキー（オプション）",
-      "description": "Anthropic APIキーを追加すると、翻訳レビューフェーズでClaudeモデルを直接使用できます。このキーがない場合は、GPT-5.5がレビューパスを担当します。",
+      "description": "Anthropic APIキーを追加すると、翻訳のレビュー段階でAnthropicの上位レビューモデルを直接使えます。キーがない場合は、OpenAIの上位レビューモデルがレビューを担当します。",
       "apiKeyLabel": "Anthropic APIキー",
       "hide": "非表示",
       "show": "表示",
@@ -1227,7 +1227,7 @@
   "generateSubtitles": {
     "rechargeLink": "チャージ →",
     "creditWarning": {
-      "message": "ダウンロード、編集、書き出し、そしてエージェント制御を通じたご自身のClaudeまたはCodexによる翻訳は無料です。文字起こしには、時間または<settingsLink>{{settingsLinkText}}</settingsLink>でのAPIキーのアンロックが必要です。",
+      "message": "ダウンロード、編集、書き出し、そしてエージェント制御を通じたご自身のClaudeまたはCodexによる翻訳は無料です。文字起こしには、残り時間か、<settingsLink>{{settingsLinkText}}</settingsLink>でのAPIキーのアンロックが必要です。",
       "settingsLinkText": "設定"
     },
     "validation": {

@@ -255,14 +255,14 @@
     "downloadFinishedWatchNow": "Panoorin ngayon",
     "downloadFinishedWatchLater": "Panoorin mamaya",
     "videoSuggestion": {
-      "show": "Magmungkahi ng video",
+      "show": "Maghanap ng video gamit ang AI",
       "hide": "Itago ang mga mungkahi ng video",
       "modelHint": "Kasalukuyang model",
       "sourceHint": "Pinagmulan ng paghahanap",
       "searchDetails": "Mga detalye ng paghahanap",
       "introTitle": "Ilarawan ang uri ng video na gusto mo.",
-      "introCopy": "Magsimula sa paksa, mood, creator, o audience. Idagdag lang ang bansa o saklaw ng panahon kung mahalaga talaga.",
-      "starterQuestion": "Anong uri ng mga video ang hinahanap mo?",
+      "introCopy": "Magsimula sa paksa, mood, o audience. Idagdag lang ang bansa o pagkakabago kung mahalaga talaga.",
+      "starterQuestion": "Ilarawan ang uri ng video na gusto mo. Puwede mong banggitin ang paksa, mood, audience, o target na bansa.",
       "defaultFollowUp": "Magbigay pa ng detalye at papagandahin ko ang paghahanap.",
       "errorMessage": "May nangyaring mali. Pakisubukan muli.",
       "composerTitle": "Sabihin sa AI kung ano ang hahanapin",
@@ -318,8 +318,8 @@
         }
       },
       "searchFailed": "Hindi makapaghanap ngayon. Subukan muli mamaya.",
-      "noMatches": "Wala pang magandang tugma. Magdagdag ng paksa, mood, o creator at susubukan ko ulit.",
-      "lowConfidenceNoScoredResults": "Walang maaasahang tugma na natira pagkatapos ng pagraranggo. Subukan ang mas malawak na paksa, magdagdag ng pahiwatig tungkol sa creator, o palitan ang saklaw ng panahon.",
+      "noMatches": "Wala pang magandang tugma. Magdagdag ng paksa, mood, o isa pang detalye at susubukan ko ulit.",
+      "lowConfidenceNoScoredResults": "Walang maaasahang tugma na natira sa paghahanap. Subukan ang mas malawak na paksa, magdagdag ng isa pang detalye, o palitan ang pagkakabago.",
       "lowConfidenceGeneric": "Mababa ang kumpiyansa ng paghahanap. Magdagdag ng isa pang detalye at subukang muli.",
       "genericError": "May nangyaring mali. Subukan muli.",
       "platformLabel": "Platform ng paghahanap",
@@ -363,7 +363,7 @@
       "defaultSearchUserMessage": "Maghanap ka ng mga video para sa akin ngayon.",
       "followUp": {
         "moreLikeQuery": "Maghanap ng higit pang video na tulad ng \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" mula sa ibang creator o channel",
+        "differentCreator": "\"{{query}}\" mula sa ibang pangalan o channel",
         "interviews": "Mga interview o usapan tungkol sa {{query}}",
         "clips": "Mga highlight o kapansin-pansing clip ng {{query}}",
         "creatorAppearances": "Mga interview, guesting, o kaugnay na clip ni {{creator}}",
@@ -386,7 +386,7 @@
       "countryPlaceholder": "hal. US, Japan, Spain, Brazil",
       "countryScope": "Target na bansa: {{country}}",
       "countryDefaultEnglish": "Target na bansa: English ang default",
-      "emptyCopy": "Banggitin ang paksa, audience, istilo ng creator, o mood ng video na gusto mo. Idagdag lang ang bansa o kung gaano kabago kapag kailangan.",
+      "emptyCopy": "Banggitin ang paksa, audience, o mood. Idagdag lang ang bansa o pagkakabago kapag mahalaga.",
       "emptyEyebrow": "Pagtuklas na may gabay ng assistant",
       "emptyTitle": "Ilarawan ang video na gusto mong hanapin",
       "languageHint": "Wika ng output",
@@ -410,7 +410,7 @@
       "searchingLong": "Naghahanap pa rin ng video…",
       "searchingVeryLong": "Mas matagal kaysa karaniwan, pero tumatakbo pa rin.",
       "stillWorking": "Gumagana pa rin…",
-      "toggleCopy": "Maghanap ng source video sa YouTube nang hindi umaalis sa workflow.",
+      "toggleCopy": "Magtanong sa sarili mong wika. Hahanapin ng AI ang mga tamang YouTube video.",
       "stage": {
         "answerer": "Iproseso ang query",
         "planner": "Bumuo ng paghahanap",
@@ -757,7 +757,7 @@
       },
       "videoSuggestionModel": {
         "label": "Kalidad ng mga mungkahing video",
-        "help": "Auto = parehong model sa karaniwang draft ng pagsasalin",
+        "help": "Kapareho ng model tier na ginagamit sa pagsasalin.",
         "default": "Default (kapareho ng translation default)",
         "quality": "Quality (kapareho ng translation quality)"
       },
@@ -917,7 +917,7 @@
     },
     "byoAnthropic": {
       "title": "API key ng Anthropic (opsyonal)",
-      "description": "Idagdag ang iyong Anthropic API key para direktang gamitin ang mga Claude model para sa translation review phase. Kung wala ang key na ito, GPT-5.5 ang hahawak sa review pass.",
+      "description": "Idagdag ang iyong Anthropic API key para direktang magamit ang high-end reviewer ng Anthropic sa review ng pagsasalin. Kung wala ang key na ito, ang high-end reviewer ng OpenAI ang gagawa ng review.",
       "apiKeyLabel": "API key ng Anthropic",
       "hide": "Itago",
       "show": "Ipakita",

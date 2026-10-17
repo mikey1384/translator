@@ -154,7 +154,7 @@
     "transcription": {
       "providerUnavailable": "Az átírás (ElevenLabs Scribe) átmenetileg nem érhető el, vagy több próbálkozás után sem sikerült csatlakozni hozzá. Próbáld újra néhány perc múlva.",
       "fileTooLarge": "Ez a hanganyag túl hosszú egyetlen átíráshoz (több mint kb. {{hours}} óra). Oszd fel a videót rövidebb részekre, és írd át őket külön.",
-      "elevenLabsKeyRequired": "Az átírás az ElevenLabs Scribe-ot használja, ehhez ElevenLabs API-kulcs kell. Add meg a Beállításokban, vagy kapcsold ki a „Saját API kulcsaim használata” kapcsolót, és írj át a Stage5-perceiddel. Az OpenAI- vagy Anthropic-kulcsodat továbbra is a fordításhoz használjuk."
+      "elevenLabsKeyRequired": "Az átírás az ElevenLabs Scribe-ot használja, ehhez ElevenLabs API-kulcs kell. Add meg a Beállításokban, vagy kapcsold ki a „Saját API-kulcsaim használata” kapcsolót, és írj át a Stage5-perceiddel. Az OpenAI- vagy Anthropic-kulcsodat továbbra is a fordításhoz használjuk."
     },
     "credits": {
       "transcription": "Nincs elég perced az átíráshoz.",
@@ -255,14 +255,14 @@
     "downloadFinishedWatchNow": "Megnézem most",
     "downloadFinishedWatchLater": "Megnézem később",
     "videoSuggestion": {
-      "show": "Javasolj egy videót",
+      "show": "Videók keresése AI-jal",
       "hide": "Videójavaslatok elrejtése",
       "modelHint": "Jelenlegi modell",
       "sourceHint": "Keresési forrás",
       "searchDetails": "Keresési részletek",
       "introTitle": "Írd le, milyen videót szeretnél.",
-      "introCopy": "Kezdd egy témával, hangulattal, alkotóval vagy közönséggel. Országot vagy időszakot csak akkor adj meg, ha fontos.",
-      "starterQuestion": "Milyen videókat keresel?",
+      "introCopy": "Kezdd egy témával, hangulattal vagy közönséggel. Országot vagy időszakot csak akkor adj meg, ha fontos.",
+      "starterQuestion": "Írd le, milyen videót szeretnél. Megadhatsz témát, hangulatot, közönséget vagy célországot.",
       "defaultFollowUp": "Mondj egy kicsit többet, és finomítom a keresést.",
       "errorMessage": "Valami hiba történt. Próbáld újra.",
       "composerTitle": "Mondd meg az AI-nak, mit keressen",
@@ -318,8 +318,8 @@
         }
       },
       "searchFailed": "Most nem tudok keresni. Próbáld újra egy pillanat múlva.",
-      "noMatches": "Még nincs jó találat. Adj meg témát, hangulatot vagy készítőt, és újrapróbálom.",
-      "lowConfidenceNoScoredResults": "A rangsorolás után nem maradt megbízható találat. Próbálj tágabb témát, adj meg alkotói tippet, vagy válts időszakot.",
+      "noMatches": "Még nincs jó találat. Adj meg témát, hangulatot vagy még egy részletet, és újrapróbálom.",
+      "lowConfidenceNoScoredResults": "A keresés után nem maradt megbízható találat. Próbálj tágabb témát, adj meg még egy részletet, vagy válts időszakot.",
       "lowConfidenceGeneric": "A keresés bizonyossága alacsony volt. Adj hozzá még egy részletet, és próbáld újra.",
       "genericError": "Valami hiba történt. Próbáld újra.",
       "platformLabel": "Keresési platform",
@@ -363,11 +363,11 @@
       "defaultSearchUserMessage": "Keress nekem videókat most.",
       "followUp": {
         "moreLikeQuery": "Keress több videót ehhez: \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" másik alkotótól vagy csatornától",
+        "differentCreator": "\"{{query}}\" mástól vagy másik csatornától",
         "interviews": "Interjúk vagy beszélgetések {{query}} témában",
         "clips": "{{query}} kiemelt részei vagy emlékezetes klipjei",
         "creatorAppearances": "{{creator}}: interjúk, szereplések vagy kapcsolódó klipek",
-        "similarCreators": "{{creator}} stílusához hasonló alkotók, előadók vagy csatornák",
+        "similarCreators": "{{creator}} stílusához hasonló nevek, előadók vagy csatornák",
         "topicAngle": "{{topic}} más nézőpontból elmagyarázva",
         "topicCreator": "{{creator}} vagy kapcsolódó videók erről: {{topic}}",
         "channelStyle": "A {{channel}} hangulatához hasonló videók",
@@ -382,11 +382,11 @@
       "countryGlobal": "Célország: alapértelmezés szerint angol",
       "countryHint": "Ha üresen hagyod, a keresés nyelve angol lesz.",
       "countryHintDefaultEnglish": "Hagyd üresen, és a keresés nyelve alapértelmezetten angol lesz.",
-      "countryLabel": "Célország / régió",
+      "countryLabel": "Célország",
       "countryPlaceholder": "pl. USA, Japán, Spanyolország, Brazília",
-      "countryScope": "Ország: {{country}}",
+      "countryScope": "Célország: {{country}}",
       "countryDefaultEnglish": "Célország: alapértelmezett az angol",
-      "emptyCopy": "Írd le a keresett videó témáját, közönségét, alkotói stílusát vagy hangulatát. Országot vagy időbeliséget csak akkor adj meg, ha számít.",
+      "emptyCopy": "Írd le a keresett videó témáját, közönségét vagy hangulatát. Országot vagy időszakot csak akkor adj meg, ha számít.",
       "emptyEyebrow": "Keresés asszisztenssel",
       "emptyTitle": "Írd le, milyen videót keresel",
       "languageHint": "Kimeneti nyelv",
@@ -410,7 +410,7 @@
       "searchingLong": "Még keresem a videókat…",
       "searchingVeryLong": "A szokásosnál tovább tart, de még fut.",
       "stillWorking": "Még dolgozik…",
-      "toggleCopy": "Keressen forrásvideót a YouTube-on a folyamat elhagyása nélkül.",
+      "toggleCopy": "Kérdezz a saját nyelveden, és az AI megtalálja a megfelelő YouTube-videókat.",
       "stage": {
         "answerer": "Feldolgozás",
         "planner": "Keresés",
@@ -756,8 +756,8 @@
         "modelOn": "ElevenLabs TTS prémium hangok"
       },
       "videoSuggestionModel": {
-        "label": "Videójavaslat-modell",
-        "help": "Auto = ugyanaz a modell, mint a normál fordítási vázlat",
+        "label": "Videóajánlás minősége",
+        "help": "Ugyanazt a háttérmodell-szintet használja, mint a fordítás.",
         "default": "Alapértelmezett (ugyanaz, mint a fordítás alapértelmezettje)",
         "quality": "Minőség (ugyanaz, mint a fordítás minőségi módja)"
       },
@@ -805,7 +805,7 @@
       "description": "Egyszeri feloldással a saját API-kulcsaidat használhatod. Ezután az átírás, a fordítás, a szinkronizálás és az összefoglalók a saját AI-fiókjaidon futnak, és nem fogynak a Stage5-perceid.",
       "unlocking": "Fizetési oldal megnyitása…",
       "unlockCta": "Feloldás $10-ért",
-      "unlockHint": "A feloldás után bármikor hozzáadhatja API kulcsait itt, hogy közvetlenül a fiókjaira számlázzon.",
+      "unlockHint": "A feloldás után itt bármikor hozzáadhatod az API-kulcsaidat, és bekapcsolhatod a közvetlen számlázást a fiókjaidon.",
       "apiKeyLabel": "OpenAI API-kulcs",
       "hide": "Elrejtés",
       "show": "Megjelenítés",
@@ -917,7 +917,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API-kulcs (opcionális)",
-      "description": "Add meg Anthropic API-kulcsodat, hogy a Claude modelleket közvetlenül a fordításellenőrzési szakaszhoz használd. E kulcs nélkül a GPT-5.5 végzi a felülvizsgálati lépést.",
+      "description": "Add meg az Anthropic API-kulcsodat, hogy a fordítás ellenőrzési szakaszában közvetlenül az Anthropic csúcskategóriás ellenőrző modelljét használd. E kulcs nélkül az OpenAI csúcskategóriás ellenőrző modellje végzi az ellenőrzést.",
       "apiKeyLabel": "Anthropic API-kulcs",
       "hide": "Elrejtés",
       "show": "Megjelenítés",
@@ -1278,7 +1278,7 @@
     "replaceAll": "Összes cseréje",
     "nextMatch": "Következő egyezés (Enter)",
     "previousMatch": "Előző egyezés (Shift+Enter)",
-    "replaceAllTitle": "Összes előfordulás cseréje",
+    "replaceAllTitle": "Összes találat cseréje",
     "closeTitle": "Bezárás (Esc)",
     "nextMatchAria": "Következő egyezés",
     "previousMatchAria": "Előző egyezés",

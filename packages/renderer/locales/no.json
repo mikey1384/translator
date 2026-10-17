@@ -256,14 +256,14 @@
     "downloadFinishedWatchNow": "Se nå",
     "downloadFinishedWatchLater": "Se senere",
     "videoSuggestion": {
-      "show": "Foreslå en video",
+      "show": "Finn videoer med AI",
       "hide": "Skjul videoforslag",
       "modelHint": "Gjeldende modell",
       "sourceHint": "Søkekilde",
       "searchDetails": "Søkedetaljer",
       "introTitle": "Beskriv hva slags video du vil ha.",
-      "introCopy": "Start med et tema, en stemning, en skaper eller et publikum. Legg bare til land eller tidsperiode hvis det er viktig.",
-      "starterQuestion": "Hva slags videoer ser du etter?",
+      "introCopy": "Start med et tema, en stemning eller en målgruppe. Legg bare til land eller tidsperiode hvis det er viktig.",
+      "starterQuestion": "Beskriv hva slags video du vil ha. Du kan nevne et tema, en stemning, en målgruppe eller et målland.",
       "defaultFollowUp": "Fortell meg litt mer, så finjusterer jeg søket.",
       "errorMessage": "Noe gikk galt. Prøv igjen.",
       "composerTitle": "Fortell AI hva den skal finne",
@@ -319,8 +319,8 @@
         }
       },
       "searchFailed": "Jeg kan ikke søke akkurat nå. Prøv igjen om et øyeblikk.",
-      "noMatches": "Ingen gode treff ennå. Legg til emne, stemning eller skaper, så prøver jeg igjen.",
-      "lowConfidenceNoScoredResults": "Ingen pålitelige treff kom gjennom rangeringen. Prøv et bredere tema, legg til et hint om skaperen eller bytt tidsperiode.",
+      "noMatches": "Ingen gode treff ennå. Legg til tema, stemning eller én detalj til, så prøver jeg igjen.",
+      "lowConfidenceNoScoredResults": "Ingen pålitelige treff kom gjennom søket. Prøv et bredere tema, legg til én detalj til, eller bytt tidsperiode.",
       "lowConfidenceGeneric": "Søket hadde lav treffsikkerhet. Legg til én detalj til og prøv igjen.",
       "genericError": "Noe gikk galt. Prøv igjen.",
       "platformLabel": "Søkeplattform",
@@ -387,7 +387,7 @@
       "countryPlaceholder": "f.eks. USA, Japan, Spania, Brasil",
       "countryScope": "Målland: {{country}}",
       "countryDefaultEnglish": "Målland: engelsk som standard",
-      "emptyCopy": "Nevn temaet, målgruppen, skaperstilen eller stemningen i videoen du vil finne. Legg til land eller aktualitet bare når det er viktig.",
+      "emptyCopy": "Nevn et tema, en målgruppe eller en stemning. Legg bare til land eller tidsperiode når det er viktig.",
       "emptyEyebrow": "Søk med hjelp fra assistenten",
       "emptyTitle": "Beskriv videoen du vil finne",
       "languageHint": "Utdataspråk",
@@ -411,7 +411,7 @@
       "searchingLong": "Søker fortsatt etter videoer…",
       "searchingVeryLong": "Det tar lengre tid enn vanlig, men kjører fortsatt.",
       "stillWorking": "Jobber fortsatt…",
-      "toggleCopy": "Søk på YouTube etter en kildevideo uten å forlate arbeidsflyten.",
+      "toggleCopy": "Spør på ditt eget språk. AI finner de riktige YouTube-videoene.",
       "stage": {
         "answerer": "Behandle forespørsel",
         "planner": "Lag søk",
@@ -761,8 +761,8 @@
         "modelOn": "ElevenLabs TTS premiumstemmer"
       },
       "videoSuggestionModel": {
-        "label": "Videoforslagsmodell",
-        "help": "Auto = samme modell som vanlig oversettelseskladd",
+        "label": "Kvalitet for videoanbefalinger",
+        "help": "Bruker samme modellnivå på serveren som oversettelse.",
         "default": "Standard (samme som oversettelsens standard)",
         "quality": "Kvalitet (samme som oversettelseskvalitet)"
       },
@@ -922,7 +922,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API-nøkkel (valgfritt)",
-      "description": "Legg til Anthropic API-nøkkelen din for å bruke Claude-modeller direkte i oversettelsesgjennomgangen. Uten denne nøkkelen håndterer GPT-5.5 gjennomgangssteget i stedet.",
+      "description": "Legg til Anthropic API-nøkkelen din for å bruke Anthropics avanserte gjennomgangsmodell direkte i gjennomgangen av oversettelsen. Uten denne nøkkelen tar OpenAIs avanserte gjennomgangsmodell seg av gjennomgangen i stedet.",
       "apiKeyLabel": "Anthropic API-nøkkel",
       "hide": "Skjul",
       "show": "Vis",
@@ -1065,7 +1065,7 @@
     }
   },
   "credits": {
-    "title": "Minutter",
+    "title": "Dine minutter",
     "loading": "Laster…",
     "usingApiKey": "Bruker API-nøkkel",
     "usingOpenAi": "Bruker OpenAI",

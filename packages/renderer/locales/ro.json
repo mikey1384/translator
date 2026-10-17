@@ -115,7 +115,7 @@
     "updateVersionAvailable": "v{{version}} disponibilă"
   },
   "errors": {
-    "needCookies": "YouTube a solicitat verificare umană. Faceți clic pe Conectare pentru a continua.",
+    "needCookies": "YouTube a cerut o verificare umană. Apasă Conectare ca să continui.",
     "needCookiesYouTube": "YouTube a cerut o verificare umană. Apasă Conectare ca să continui.",
     "needCookiesGeneric": "Acest site a cerut o verificare umană. Apasă Conectare ca să continui.",
     "connectFailed": "Nu s-a putut face conexiunea. Încearcă din nou.",
@@ -257,14 +257,14 @@
     "downloadFinishedWatchNow": "Urmărește acum",
     "downloadFinishedWatchLater": "Urmărește mai târziu",
     "videoSuggestion": {
-      "show": "Sugerează-mi un videoclip",
+      "show": "Găsește videoclipuri cu AI",
       "hide": "Ascunde sugestiile video",
       "modelHint": "Modelul curent",
       "sourceHint": "Sursa căutării",
       "searchDetails": "Detalii căutare",
       "introTitle": "Descrie ce fel de videoclip vrei.",
-      "introCopy": "Începe cu un subiect, o stare, un creator sau un public. Adaugă țara sau perioada doar dacă este important.",
-      "starterQuestion": "Ce fel de videoclipuri cauți?",
+      "introCopy": "Începe cu un subiect, o stare sau un public. Adaugă țara sau cât de recent să fie doar dacă este important.",
+      "starterQuestion": "Descrie ce fel de videoclip vrei. Poți menționa un subiect, o stare, un public sau o țară țintă.",
       "defaultFollowUp": "Spune-mi mai multe și voi rafina căutarea.",
       "errorMessage": "Ceva nu a funcționat. Te rugăm să încerci din nou.",
       "composerTitle": "Spune AI ce să găsească",
@@ -320,8 +320,8 @@
         }
       },
       "searchFailed": "Nu am putut căuta acum. Încearcă din nou într-un moment.",
-      "noMatches": "Nicio potrivire clară încă. Adaugă subiect, dispoziție sau creator și voi reîncerca.",
-      "lowConfidenceNoScoredResults": "Nicio potrivire de încredere nu a rămas după clasificare. Încearcă un subiect mai larg, adaugă un indiciu despre creator sau schimbă perioada.",
+      "noMatches": "Nicio potrivire clară încă. Adaugă subiectul, starea sau încă un detaliu și reîncerc.",
+      "lowConfidenceNoScoredResults": "După căutare nu a rămas nicio potrivire de încredere. Încearcă un subiect mai larg, adaugă încă un detaliu sau schimbă perioada.",
       "lowConfidenceGeneric": "Încrederea căutării a fost scăzută. Adaugă încă un detaliu și încearcă din nou.",
       "genericError": "Ceva nu a funcționat. Încearcă din nou.",
       "platformLabel": "Platformă de căutare",
@@ -371,7 +371,7 @@
         "creatorAppearances": "Interviuri, apariții sau clipuri legate de {{creator}}",
         "similarCreators": "Nume, artiști sau canale asemănătoare cu {{creator}}",
         "topicAngle": "{{topic}} explicat dintr-un alt unghi",
-        "topicCreator": "{{creator}} sau videoclipuri despre {{topic}}",
+        "topicCreator": "{{creator}} sau videoclipuri înrudite despre {{topic}}",
         "channelStyle": "Videoclipuri cu un stil asemănător cu {{channel}}",
         "moreFromHistory": "Mai multe videoclipuri precum \"{{title}}\"",
         "channelFromHistory": "Videoclipuri de la canale precum {{channel}}"
@@ -388,7 +388,7 @@
       "countryPlaceholder": "ex. SUA, Japonia, Spania, Brazilia",
       "countryScope": "Țara țintă: {{country}}",
       "countryDefaultEnglish": "Țara țintă: engleză implicită",
-      "emptyCopy": "Menționează subiectul, publicul, stilul creatorului sau atmosfera videoclipului pe care vrei să-l găsești. Adaugă țara sau recența doar când contează.",
+      "emptyCopy": "Menționează un subiect, un public sau o stare. Adaugă țara sau cât de recent să fie doar când contează.",
       "emptyEyebrow": "Căutare ghidată de asistent",
       "emptyTitle": "Descrie videoclipul pe care vrei să-l găsești",
       "languageHint": "Limba de ieșire",
@@ -412,7 +412,7 @@
       "searchingLong": "Încă se caută videoclipuri…",
       "searchingVeryLong": "Durează mai mult decât de obicei, dar încă rulează.",
       "stillWorking": "Încă lucrează…",
-      "toggleCopy": "Caută un videoclip sursă pe YouTube fără să părăsești fluxul.",
+      "toggleCopy": "Întreabă în limba ta. AI-ul găsește videoclipurile potrivite de pe YouTube.",
       "stage": {
         "answerer": "Procesare",
         "planner": "Căutare",
@@ -766,8 +766,8 @@
         "modelOn": "Voci premium ElevenLabs TTS"
       },
       "videoSuggestionModel": {
-        "label": "Model sugestii video",
-        "help": "Auto = același model ca la traducerea normală",
+        "label": "Calitatea recomandărilor video",
+        "help": "Folosește același nivel de model ca traducerea.",
         "default": "Implicit (la fel ca implicitul traducerii)",
         "quality": "Calitate (la fel ca setarea de calitate a traducerii)"
       },
@@ -815,7 +815,7 @@
       "description": "O deblocare unică pentru a folosi propriile chei API. După deblocare, transcrierea, traducerea, dublarea și rezumatele rulează pe propriile tale conturi AI, în loc să folosească minutele tale Stage5.",
       "unlocking": "Se deschide plata…",
       "unlockCta": "Deblochează pentru $10",
-      "unlockHint": "Odată deblocat, adăugați cheile API aici oricând pentru a comuta facturarea directă pe conturile voastre.",
+      "unlockHint": "După deblocare, poți adăuga oricând aici cheile tale API ca să activezi facturarea directă pe conturile tale.",
       "apiKeyLabel": "Cheie API OpenAI",
       "hide": "Ascunde",
       "show": "Arată",
@@ -927,7 +927,7 @@
     },
     "byoAnthropic": {
       "title": "Cheie API Anthropic (opțională)",
-      "description": "Adăugați cheia API Anthropic pentru a folosi direct modelele Claude în faza de revizuire a traducerii. Fără această cheie, GPT-5.5 va gestiona etapa de revizuire.",
+      "description": "Adaugă cheia ta API Anthropic ca să folosești direct modelul de revizuire avansat de la Anthropic în etapa de revizuire a traducerii. Fără această cheie, revizuirea este făcută de modelul de revizuire avansat de la OpenAI.",
       "apiKeyLabel": "Cheie API Anthropic",
       "hide": "Ascunde",
       "show": "Arată",

@@ -255,14 +255,14 @@
     "downloadFinishedWatchNow": "Tonton sekarang",
     "downloadFinishedWatchLater": "Tonton nanti",
     "videoSuggestion": {
-      "show": "Sarankan video",
+      "show": "Cari video dengan AI",
       "hide": "Sembunyikan saran video",
       "modelHint": "Model saat ini",
       "sourceHint": "Sumber pencarian",
       "searchDetails": "Detail pencarian",
       "introTitle": "Jelaskan jenis video yang Anda inginkan.",
-      "introCopy": "Mulailah dengan topik, suasana, kreator, atau audiens. Tambahkan negara atau rentang waktu hanya jika memang penting.",
-      "starterQuestion": "Video seperti apa yang Anda cari?",
+      "introCopy": "Mulailah dengan topik, suasana, atau audiens. Tambahkan negara atau rentang waktu hanya jika memang penting.",
+      "starterQuestion": "Ceritakan video seperti apa yang Anda cari. Anda bisa menyebut topik, suasana, audiens, atau negara tujuan.",
       "defaultFollowUp": "Ceritakan lebih detail dan saya akan mempersempit pencarian.",
       "errorMessage": "Terjadi kesalahan. Silakan coba lagi.",
       "composerTitle": "Beri tahu AI apa yang harus dicari",
@@ -318,8 +318,8 @@
         }
       },
       "searchFailed": "Tidak bisa mencari sekarang. Coba lagi sebentar.",
-      "noMatches": "Belum ada kecocokan yang kuat. Tambahkan topik, suasana, atau kreator dan saya akan coba lagi.",
-      "lowConfidenceNoScoredResults": "Tidak ada kecocokan tepercaya yang tersisa setelah pemeringkatan. Coba topik yang lebih luas, tambahkan petunjuk kreator, atau ganti rentang waktu.",
+      "noMatches": "Belum ada yang benar-benar cocok. Tambahkan topik, suasana, atau satu detail lagi, nanti saya coba lagi.",
+      "lowConfidenceNoScoredResults": "Tidak ada hasil tepercaya yang lolos dari pencarian. Coba topik yang lebih luas, tambahkan satu detail lagi, atau ganti rentang waktu.",
       "lowConfidenceGeneric": "Tingkat keyakinan pencarian rendah. Tambahkan satu detail lagi lalu coba lagi.",
       "genericError": "Terjadi kesalahan. Coba lagi.",
       "platformLabel": "Platform pencarian",
@@ -363,7 +363,7 @@
       "defaultSearchUserMessage": "Cari video untuk saya sekarang.",
       "followUp": {
         "moreLikeQuery": "Temukan lebih banyak video seperti \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" dari kreator atau channel lain",
+        "differentCreator": "\"{{query}}\" dari nama atau channel lain",
         "interviews": "Wawancara atau percakapan tentang {{query}}",
         "clips": "Sorotan atau klip menonjol dari {{query}}",
         "creatorAppearances": "Wawancara, penampilan, atau klip terkait {{creator}}",
@@ -386,7 +386,7 @@
       "countryPlaceholder": "mis. AS, Jepang, Spanyol, Brasil",
       "countryScope": "Negara tujuan: {{country}}",
       "countryDefaultEnglish": "Negara target: default ke bahasa Inggris",
-      "emptyCopy": "Sebutkan topik, audiens, gaya kreator, atau suasana video yang Anda cari. Tambahkan negara atau rentang waktu hanya saat perlu.",
+      "emptyCopy": "Sebutkan topik, audiens, atau suasana. Tambahkan negara atau rentang waktu hanya jika perlu.",
       "emptyEyebrow": "Penelusuran dengan bantuan asisten",
       "emptyTitle": "Jelaskan video yang ingin Anda cari sebagai sumber",
       "languageHint": "Bahasa output",
@@ -410,7 +410,7 @@
       "searchingLong": "Masih mencari video…",
       "searchingVeryLong": "Lebih lama dari biasanya, tapi masih berjalan.",
       "stillWorking": "Masih bekerja…",
-      "toggleCopy": "Cari video sumber di YouTube tanpa keluar dari alur ini.",
+      "toggleCopy": "Tanyakan dalam bahasa Anda. AI akan menemukan video YouTube yang pas.",
       "stage": {
         "answerer": "Proses kueri",
         "planner": "Susun pencarian",
@@ -755,7 +755,7 @@
       },
       "videoSuggestionModel": {
         "label": "Kualitas rekomendasi video",
-        "help": "Otomatis = model yang sama dengan draf terjemahan biasa",
+        "help": "Memakai tingkat model yang sama dengan terjemahan.",
         "default": "Default (sama seperti default terjemahan)",
         "quality": "Kualitas (sama seperti kualitas terjemahan)"
       },
@@ -915,7 +915,7 @@
     },
     "byoAnthropic": {
       "title": "Kunci API Anthropic (opsional)",
-      "description": "Tambahkan kunci API Anthropic Anda untuk menggunakan model Claude secara langsung pada fase peninjauan terjemahan. Tanpa kunci ini, GPT-5.5 akan menangani tahap peninjauan.",
+      "description": "Tambahkan kunci API Anthropic Anda untuk memakai peninjau kelas atas Anthropic secara langsung pada tahap peninjauan terjemahan. Tanpa kunci ini, peninjauan ditangani oleh peninjau kelas atas OpenAI.",
       "apiKeyLabel": "Kunci API Anthropic",
       "hide": "Sembunyikan",
       "show": "Tampilkan",
@@ -965,7 +965,7 @@
     },
     "agentControl": {
       "title": "Kontrol Agen",
-      "description": "Izinkan Claude Code, Claude Desktop, Codex, atau agen MCP lain mengontrol Translator di komputer ini. Jika diaktifkan, agen dapat mengunduh video, mengelola pustaka Anda, mengedit dan menerjemahkan subtitel, serta mengekspor file ke direktori yang diizinkan.",
+      "description": "Izinkan Claude Code, Claude Desktop, Codex, atau agen MCP lain mengontrol Translator di komputer ini. Jika diaktifkan, agen dapat mengunduh video, mengelola pustaka Anda, mengedit dan menerjemahkan subtitle, serta mengekspor file ke direktori yang diizinkan.",
       "enableLabel": "Izinkan agen mengontrol aplikasi ini",
       "enableAria": "Aktifkan kontrol agen",
       "connection": {

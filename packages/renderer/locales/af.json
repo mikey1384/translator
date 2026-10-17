@@ -255,14 +255,14 @@
     "downloadFinishedWatchNow": "Kyk nou",
     "downloadFinishedWatchLater": "Kyk later",
     "videoSuggestion": {
-      "show": "Stel 'n video voor",
+      "show": "Vind video’s met KI",
       "hide": "Versteek videovoorstelle",
       "modelHint": "Huidige model",
       "sourceHint": "Soekbron",
       "searchDetails": "Soekbesonderhede",
       "introTitle": "Beskryf watter soort video jy wil hê.",
-      "introCopy": "Begin met 'n onderwerp, stemming, skepper of gehoor. Voeg land of tydperk net by as dit saak maak.",
-      "starterQuestion": "Watter tipe video's soek jy?",
+      "introCopy": "Begin met ’n onderwerp, stemming of gehoor. Voeg land of tyd net by as dit saak maak.",
+      "starterQuestion": "Beskryf die soort video wat jy soek. Jy kan ’n onderwerp, stemming, gehoor of teikenland noem.",
       "defaultFollowUp": "Vertel my bietjie meer en ek sal die soektog verfyn.",
       "errorMessage": "Iets het fout gegaan. Probeer asseblief weer.",
       "composerTitle": "Sê vir KI wat om te vind",
@@ -318,8 +318,8 @@
         }
       },
       "searchFailed": "Kon nie nou soek nie. Probeer oor 'n oomblik weer.",
-      "noMatches": "Nog geen sterk resultate nie. Voeg onderwerp, stemming of skepper by en ek sal weer probeer.",
-      "lowConfidenceNoScoredResults": "Geen betroubare treffers het die rangorde oorleef nie. Probeer 'n breër onderwerp, voeg 'n skepperwenk by, of verander die tydperk.",
+      "noMatches": "Nog geen sterk resultate nie. Voeg ’n onderwerp, stemming of nog ’n detail by, dan probeer ek weer.",
+      "lowConfidenceNoScoredResults": "Geen betroubare treffers het die soektog oorleef nie. Probeer ’n breër onderwerp, voeg nog ’n detail by, of verander die tyd.",
       "lowConfidenceGeneric": "Soekvertroue was laag. Voeg nog een detail by en probeer weer.",
       "genericError": "Iets het fout gegaan. Probeer weer.",
       "platformLabel": "Soekplatform",
@@ -386,7 +386,7 @@
       "countryPlaceholder": "bv. US, Japan, Spain, Brazil",
       "countryScope": "Teikenland: {{country}}",
       "countryDefaultEnglish": "Teikenland: Engels by verstek",
-      "emptyCopy": "Noem die onderwerp, gehoor, skepperstyl of stemming van die video wat jy soek. Voeg land of tyd net by wanneer dit saak maak.",
+      "emptyCopy": "Noem ’n onderwerp, gehoor of stemming. Voeg land of tyd net by wanneer dit saak maak.",
       "emptyEyebrow": "Soek met hulp van die assistent",
       "emptyTitle": "Beskryf die video wat jy wil vind",
       "languageHint": "Uitvoertaal",
@@ -410,7 +410,7 @@
       "searchingLong": "Soek steeds video’s…",
       "searchingVeryLong": "Dit neem langer as gewoonlik, maar dit loop nog.",
       "stillWorking": "Werk nog…",
-      "toggleCopy": "Soek YouTube vir 'n bronvideo sonder om die werkvloei te verlaat.",
+      "toggleCopy": "Vra in jou eie taal. KI vind die regte YouTube-video’s.",
       "stage": {
         "answerer": "Verwerk navraag",
         "planner": "Bou soektog",
@@ -532,7 +532,7 @@
     "copyError": "Kon nie opsomming na knipbord kopieer nie.",
     "noHighlights": "Nog geen hoogtepunte nie. Vind hoogtepunte om die beste oomblikke raak te sien.",
     "noVideoForHighlights": "Maak die bronvideo oop om hoogtepuntsnitte te sny.",
-    "summaryRequiredForHighlights": "Vind eers hoogtepunte; dan word die transkripsie ontleed.",
+    "summaryRequiredForHighlights": "Vind eers hoogtepunte om die transkripsie te ontleed.",
     "highlight": "Hoogtepunt",
     "cutHighlightClip": "Sny hierdie hoogtepunt",
     "cuttingHighlightClip": "Sny…",
@@ -761,7 +761,7 @@
       },
       "videoSuggestionModel": {
         "label": "Gehalte van videoaanbevelings",
-        "help": "Auto = dieselfde model as normale vertalingkonsep",
+        "help": "Gebruik dieselfde modelvlak as vertaling.",
         "default": "Verstek (dieselfde as vertaling se verstek)",
         "quality": "Gehalte (dieselfde as vertaling se gehalte)"
       },
@@ -921,7 +921,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API-sleutel (opsioneel)",
-      "description": "Voeg jou Anthropic API-sleutel by om Claude-modelle direk vir die vertalingshersienfase te gebruik. Sonder hierdie sleutel hanteer GPT-5.5 eerder die hersieningsfase.",
+      "description": "Voeg jou Anthropic API-sleutel by om Anthropic se hoëvlak-hersiener direk vir die hersieningsfase van vertalings te gebruik. Sonder hierdie sleutel doen OpenAI se hoëvlak-hersiener eerder die hersiening.",
       "apiKeyLabel": "Anthropic API-sleutel",
       "hide": "Versteek",
       "show": "Wys",
@@ -1064,7 +1064,7 @@
     }
   },
   "credits": {
-    "title": "KI-minute",
+    "title": "Jou minute",
     "loading": "Laai…",
     "usingApiKey": "Gebruik API-sleutel",
     "usingOpenAi": "Gebruik OpenAI",

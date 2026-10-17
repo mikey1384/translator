@@ -256,14 +256,14 @@
     "downloadFinishedWatchNow": "Jetzt ansehen",
     "downloadFinishedWatchLater": "Später ansehen",
     "videoSuggestion": {
-      "show": "Video vorschlagen",
+      "show": "Videos mit KI finden",
       "hide": "Videovorschläge ausblenden",
       "modelHint": "Aktuelles Modell",
       "sourceHint": "Suchquelle",
       "searchDetails": "Suchdetails",
       "introTitle": "Beschreibe die Art von Video, die du möchtest.",
-      "introCopy": "Starte mit einem Thema, einer Stimmung, einem Creator oder einer Zielgruppe. Füge ein Land oder wie aktuell es sein soll nur hinzu, wenn es wichtig ist.",
-      "starterQuestion": "Nach welchen Videos suchst du?",
+      "introCopy": "Starte mit einem Thema, einer Stimmung oder einer Zielgruppe. Gib Land oder Aktualität nur an, wenn es wichtig ist.",
+      "starterQuestion": "Beschreib, was für ein Video du suchst. Du kannst Thema, Stimmung, Zielgruppe oder Zielland nennen.",
       "defaultFollowUp": "Erzähl mir etwas mehr und ich verfeinere die Suche.",
       "errorMessage": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
       "composerTitle": "Der KI sagen, was sie finden soll",
@@ -319,8 +319,8 @@
         }
       },
       "searchFailed": "Suche momentan nicht möglich. Versuche es gleich nochmal.",
-      "noMatches": "Noch keine passenden Ergebnisse. Füge Thema, Stimmung oder Creator hinzu und ich suche erneut.",
-      "lowConfidenceNoScoredResults": "Keine verlässlichen Treffer haben das Ranking überstanden. Versuche ein breiteres Thema, füge einen Hinweis zum Creator hinzu oder ändere den Aktualitätsfilter.",
+      "noMatches": "Noch keine passenden Treffer. Nenne Thema, Stimmung oder ein weiteres Detail, dann suche ich erneut.",
+      "lowConfidenceNoScoredResults": "Bei der Suche ist kein verlässlicher Treffer übrig geblieben. Versuch ein breiteres Thema, nenne ein weiteres Detail oder ändere die Aktualität.",
       "lowConfidenceGeneric": "Die Suche war wenig treffsicher. Füge noch ein Detail hinzu und versuche es erneut.",
       "genericError": "Etwas ist schiefgelaufen. Versuche es erneut.",
       "platformLabel": "Suchplattform",
@@ -387,7 +387,7 @@
       "countryPlaceholder": "z. B. USA, Japan, Spanien, Brasilien",
       "countryScope": "Zielland: {{country}}",
       "countryDefaultEnglish": "Zielland: Englisch als Standard",
-      "emptyCopy": "Nenne Thema, Zielgruppe, Creator-Stil oder Stimmung des gesuchten Videos. Land oder Aktualität nur angeben, wenn es wichtig ist.",
+      "emptyCopy": "Nenne Thema, Zielgruppe oder Stimmung. Gib Land oder Aktualität nur an, wenn es wichtig ist.",
       "emptyEyebrow": "Assistentengestützte Suche",
       "emptyTitle": "Beschreibe das Video, das du finden möchtest",
       "languageHint": "Ausgabesprache",
@@ -411,7 +411,7 @@
       "searchingLong": "Videos werden noch gesucht…",
       "searchingVeryLong": "Dauert länger als gewöhnlich, läuft aber noch.",
       "stillWorking": "Noch in Arbeit…",
-      "toggleCopy": "Durchsuche YouTube nach einem Quellvideo, ohne den Workflow zu verlassen.",
+      "toggleCopy": "Frag in deiner Sprache. Die KI findet passende YouTube-Videos.",
       "stage": {
         "answerer": "Anfrage verarbeiten",
         "planner": "Suche erstellen",
@@ -760,8 +760,8 @@
         "modelOn": "ElevenLabs TTS mit Premium-Stimmen"
       },
       "videoSuggestionModel": {
-        "label": "Videovorschlag-Modell",
-        "help": "Auto = gleiches Modell wie der normale Übersetzungsentwurf",
+        "label": "Qualität der Videoempfehlungen",
+        "help": "Nutzt dieselbe Modellstufe wie die Übersetzung.",
         "default": "Standard (wie Übersetzungsstandard)",
         "quality": "Qualität (wie Übersetzungsqualität)"
       },
@@ -921,7 +921,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic-API-Schlüssel (optional)",
-      "description": "Füge deinen Anthropic-API-Schlüssel hinzu, um Claude-Modelle direkt für die Übersetzungsprüfung zu verwenden. Ohne diesen Schlüssel übernimmt GPT-5.5 die Prüfung.",
+      "description": "Füge deinen Anthropic-API-Schlüssel hinzu, um das High-End-Prüfmodell von Anthropic direkt für die Übersetzungsprüfung zu nutzen. Ohne diesen Schlüssel übernimmt stattdessen das High-End-Prüfmodell von OpenAI die Prüfung.",
       "apiKeyLabel": "Anthropic-API-Schlüssel",
       "hide": "Verbergen",
       "show": "Anzeigen",

@@ -255,14 +255,14 @@
     "downloadFinishedWatchNow": "Tonton sekarang",
     "downloadFinishedWatchLater": "Tonton kemudian",
     "videoSuggestion": {
-      "show": "Cadangkan video untuk saya",
+      "show": "Cari video dengan AI",
       "hide": "Sembunyikan cadangan video",
       "modelHint": "Model semasa",
       "sourceHint": "Sumber carian",
       "searchDetails": "Butiran carian",
       "introTitle": "Terangkan jenis video yang anda mahu.",
-      "introCopy": "Mulakan dengan topik, suasana, pencipta, atau penonton. Tambah negara atau julat masa hanya jika benar-benar penting.",
-      "starterQuestion": "Apa jenis video yang anda cari?",
+      "introCopy": "Mulakan dengan topik, suasana atau penonton. Tambah negara atau tempoh masa hanya jika benar-benar penting.",
+      "starterQuestion": "Terangkan jenis video yang anda mahu. Anda boleh nyatakan topik, suasana, penonton atau negara sasaran.",
       "defaultFollowUp": "Beritahu lebih lanjut dan saya akan perhalusi carian.",
       "errorMessage": "Sesuatu tidak kena. Sila cuba lagi.",
       "composerTitle": "Beritahu AI apa yang perlu dicari",
@@ -318,8 +318,8 @@
         }
       },
       "searchFailed": "Tidak dapat mencari sekarang. Cuba lagi sebentar.",
-      "noMatches": "Belum ada padanan yang kukuh. Tambah topik, suasana, atau pencipta dan saya akan cuba semula.",
-      "lowConfidenceNoScoredResults": "Tiada padanan yang boleh dipercayai kekal selepas pemeringkatan. Cuba topik yang lebih luas, tambah petunjuk pencipta, atau tukar julat masa.",
+      "noMatches": "Belum ada padanan yang kukuh. Tambah topik, suasana atau satu butiran lagi dan saya akan cuba semula.",
+      "lowConfidenceNoScoredResults": "Tiada padanan yang boleh dipercayai selepas carian. Cuba topik yang lebih luas, tambah satu butiran lagi atau tukar tempoh masa.",
       "lowConfidenceGeneric": "Keyakinan carian rendah. Tambah satu lagi butiran dan cuba semula.",
       "genericError": "Sesuatu tidak kena. Cuba lagi.",
       "platformLabel": "Platform carian",
@@ -363,7 +363,7 @@
       "defaultSearchUserMessage": "Cari video untuk saya sekarang.",
       "followUp": {
         "moreLikeQuery": "Cari lebih banyak video seperti \"{{query}}\"",
-        "differentCreator": "\"{{query}}\" daripada pencipta atau saluran lain",
+        "differentCreator": "\"{{query}}\" daripada nama atau saluran lain",
         "interviews": "Temu bual atau perbualan tentang {{query}}",
         "clips": "Sorotan atau klip menonjol tentang {{query}}",
         "creatorAppearances": "Temu bual, penampilan atau klip berkaitan {{creator}}",
@@ -386,7 +386,7 @@
       "countryPlaceholder": "cth. AS, Jepun, Sepanyol, Brazil",
       "countryScope": "Negara sasaran: {{country}}",
       "countryDefaultEnglish": "Negara sasaran: lalai ialah bahasa Inggeris",
-      "emptyCopy": "Nyatakan topik, audiens, gaya pencipta, atau suasana video yang anda cari. Tambah negara atau tempoh masa hanya apabila perlu.",
+      "emptyCopy": "Nyatakan topik, penonton atau suasana. Tambah negara atau tempoh masa hanya apabila perlu.",
       "emptyEyebrow": "Penerokaan dengan bantuan pembantu",
       "emptyTitle": "Huraikan video yang anda mahu cari sebagai sumber",
       "languageHint": "Bahasa output",
@@ -410,7 +410,7 @@
       "searchingLong": "Masih mencari video…",
       "searchingVeryLong": "Mengambil masa lebih lama daripada biasa, tetapi masih berjalan.",
       "stillWorking": "Masih berjalan…",
-      "toggleCopy": "Cari video sumber di YouTube tanpa meninggalkan aliran kerja ini.",
+      "toggleCopy": "Tanya dalam bahasa anda. AI akan mencari video YouTube yang sesuai.",
       "stage": {
         "answerer": "Proses kueri",
         "planner": "Bina carian",
@@ -755,7 +755,7 @@
       },
       "videoSuggestionModel": {
         "label": "Kualiti cadangan video",
-        "help": "Auto = model sama seperti draf terjemahan biasa",
+        "help": "Menggunakan peringkat model yang sama seperti terjemahan.",
         "default": "Lalai (sama seperti lalai terjemahan)",
         "quality": "Kualiti (sama seperti kualiti terjemahan)"
       },
@@ -915,7 +915,7 @@
     },
     "byoAnthropic": {
       "title": "Kunci API Anthropic (pilihan)",
-      "description": "Tambah kunci API Anthropic anda untuk menggunakan model Claude secara langsung bagi fasa semakan terjemahan. Tanpa kunci ini, GPT-5.5 akan mengendalikan laluan semakan.",
+      "description": "Tambah kunci API Anthropic anda untuk menggunakan penyemak peringkat tinggi Anthropic secara terus bagi fasa semakan terjemahan. Tanpa kunci ini, semakan dikendalikan oleh penyemak peringkat tinggi OpenAI.",
       "apiKeyLabel": "Kunci API Anthropic",
       "hide": "Sembunyi",
       "show": "Tunjuk",

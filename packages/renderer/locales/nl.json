@@ -256,14 +256,14 @@
     "downloadFinishedWatchNow": "Nu bekijken",
     "downloadFinishedWatchLater": "Later bekijken",
     "videoSuggestion": {
-      "show": "Stel een video voor",
+      "show": "Video’s zoeken met AI",
       "hide": "Videosuggesties verbergen",
       "modelHint": "Huidig model",
       "sourceHint": "Zoekbron",
       "searchDetails": "Zoekdetails",
       "introTitle": "Beschrijf het soort video dat je wilt.",
-      "introCopy": "Begin met een onderwerp, sfeer, maker of doelgroep. Voeg land of hoe recent het moet zijn alleen toe als dat belangrijk is.",
-      "starterQuestion": "Wat voor soort video's zoek je?",
+      "introCopy": "Begin met een onderwerp, sfeer of doelgroep. Voeg land of hoe recent alleen toe als dat belangrijk is.",
+      "starterQuestion": "Beschrijf wat voor video je zoekt. Je kunt een onderwerp, sfeer, doelgroep of doelland noemen.",
       "defaultFollowUp": "Vertel me wat meer en ik verfijn de zoekopdracht.",
       "errorMessage": "Er is iets misgegaan. Probeer het opnieuw.",
       "composerTitle": "Vertel AI wat het moet vinden",
@@ -319,8 +319,8 @@
         }
       },
       "searchFailed": "Ik kan momenteel niet zoeken. Probeer het zo opnieuw.",
-      "noMatches": "Nog geen goede resultaten. Voeg onderwerp, sfeer of maker toe en ik probeer opnieuw.",
-      "lowConfidenceNoScoredResults": "Geen betrouwbare treffers kwamen door de rangschikking. Probeer een breder onderwerp, voeg een hint over de maker toe of wijzig hoe recent het moet zijn.",
+      "noMatches": "Nog geen goede resultaten. Voeg een onderwerp, sfeer of nog een detail toe en ik probeer het opnieuw.",
+      "lowConfidenceNoScoredResults": "Na het zoeken bleven er geen betrouwbare treffers over. Probeer een breder onderwerp, voeg nog een detail toe of wijzig hoe recent het moet zijn.",
       "lowConfidenceGeneric": "Het vertrouwen in de zoekopdracht was laag. Voeg nog een detail toe en probeer het opnieuw.",
       "genericError": "Er is iets misgegaan. Probeer het opnieuw.",
       "platformLabel": "Zoekplatform",
@@ -387,7 +387,7 @@
       "countryPlaceholder": "bijv. VS, Japan, Spanje, Brazilië",
       "countryScope": "Doelland: {{country}}",
       "countryDefaultEnglish": "Doelland: Engels als standaard",
-      "emptyCopy": "Noem het onderwerp, de doelgroep, de stijl van de maker of de sfeer van de video die je zoekt. Voeg land of recentheid alleen toe als het belangrijk is.",
+      "emptyCopy": "Noem een onderwerp, doelgroep of sfeer. Voeg land of hoe recent alleen toe als het belangrijk is.",
       "emptyEyebrow": "Zoeken met hulp van de assistent",
       "emptyTitle": "Beschrijf de video die je wilt vinden",
       "languageHint": "Uitvoertaal",
@@ -411,7 +411,7 @@
       "searchingLong": "Nog steeds video’s aan het zoeken…",
       "searchingVeryLong": "Het duurt langer dan normaal, maar het loopt nog.",
       "stillWorking": "Nog bezig…",
-      "toggleCopy": "Zoek op YouTube naar een bronvideo zonder de workflow te verlaten.",
+      "toggleCopy": "Vraag het in je eigen taal. AI vindt de juiste YouTube-video’s.",
       "stage": {
         "answerer": "Zoekvraag verwerken",
         "planner": "Zoekopdracht maken",
@@ -761,10 +761,10 @@
         "modelOn": "ElevenLabs TTS-premiumstemmen"
       },
       "videoSuggestionModel": {
-        "label": "Videosuggestiemodel",
-        "help": "Auto = hetzelfde model als de normale vertaalconcept",
-        "default": "Standaard (gelijk aan vertaling standaard)",
-        "quality": "Kwaliteit (gelijk aan vertaling kwaliteit)"
+        "label": "Kwaliteit van videoaanbevelingen",
+        "help": "Gebruikt hetzelfde modelniveau als vertalen.",
+        "default": "Standaard (zelfde als standaard bij vertalen)",
+        "quality": "Kwaliteit (zelfde als kwaliteit bij vertalen)"
       },
       "rate": {
         "balance": "Saldo: ~{{time}}",
@@ -922,7 +922,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API-sleutel (optioneel)",
-      "description": "Voeg je Anthropic API-sleutel toe om Claude-modellen rechtstreeks te gebruiken voor de vertaalcontrolefase. Zonder deze sleutel verzorgt GPT-5.5 de controlepassage.",
+      "description": "Voeg je Anthropic API-sleutel toe om het geavanceerde controlemodel van Anthropic rechtstreeks te gebruiken voor de vertaalcontrole. Zonder deze sleutel doet het geavanceerde controlemodel van OpenAI de controle.",
       "apiKeyLabel": "Anthropic API-sleutel",
       "hide": "Verbergen",
       "show": "Tonen",

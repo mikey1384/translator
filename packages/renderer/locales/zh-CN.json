@@ -157,14 +157,14 @@
       "elevenLabsKeyRequired": "转录使用 ElevenLabs Scribe，需要 ElevenLabs API 密钥。请在设置中添加；或关闭“使用我的 API 密钥”，改用你的 Stage5 时长转录。你的 OpenAI 或 Anthropic 密钥仍用于翻译。"
     },
     "credits": {
-      "transcription": "余额不足，无法转录。",
-      "translation": "余额不足，无法翻译。",
-      "dubbing": "余额不足，无法配音。",
-      "summary": "余额不足，无法生成摘要。",
-      "videoSearch": "余额不足，无法搜索视频。",
-      "download": "余额不足。",
-      "export": "余额不足。",
-      "other": "余额不足。"
+      "transcription": "时长不足，无法转录。",
+      "translation": "时长不足，无法翻译。",
+      "dubbing": "时长不足，无法配音。",
+      "summary": "时长不足，无法生成摘要。",
+      "videoSearch": "时长不足，无法搜索视频。",
+      "download": "时长不足。",
+      "export": "时长不足。",
+      "other": "时长不足。"
     },
     "failed": {
       "transcription": "转录因意外问题中断。已转录的行都会保留。",
@@ -261,8 +261,8 @@
       "sourceHint": "搜索来源",
       "searchDetails": "搜索详情",
       "introTitle": "请描述你想要的视频类型。",
-      "introCopy": "先从主题、氛围、创作者或受众开始。只有在确实重要时再加上国家或时间范围。",
-      "starterQuestion": "你想找什么类型的视频？",
+      "introCopy": "先说说主题、氛围或受众。只有确实需要时，再加上国家或时间范围。",
+      "starterQuestion": "描述一下你想找的视频。可以提主题、氛围、受众或目标国家。",
       "defaultFollowUp": "再多告诉我一些，我会优化搜索结果。",
       "errorMessage": "出了点问题，请重试。",
       "composerTitle": "告诉 AI 要找什么",
@@ -318,8 +318,8 @@
         }
       },
       "searchFailed": "暂时无法搜索，请稍后重试。",
-      "noMatches": "暂无匹配结果。添加主题、风格或创作者，我会重新搜索。",
-      "lowConfidenceNoScoredResults": "排序后没有保留下可靠的匹配结果。请尝试更宽泛的主题、加入创作者提示，或切换时间范围。",
+      "noMatches": "暂时没有很匹配的结果。补充主题、氛围或再多一个细节，我会重新搜索。",
+      "lowConfidenceNoScoredResults": "检索后没有可靠的匹配结果。试试更宽泛的主题、再补充一个细节，或切换时间范围。",
       "lowConfidenceGeneric": "搜索置信度较低。请再补充一个细节后重试。",
       "genericError": "出了点问题，请重试。",
       "platformLabel": "搜索平台",
@@ -386,7 +386,7 @@
       "countryPlaceholder": "例如：美国、日本、西班牙、巴西",
       "countryScope": "目标国家/地区：{{country}}",
       "countryDefaultEnglish": "目标国家: 默认为英语",
-      "emptyCopy": "说说你想找的视频主题、受众、创作者风格或氛围。只有在必要时再加国家或时效。",
+      "emptyCopy": "说说视频的主题、受众或氛围。只有必要时再加上国家或时间范围。",
       "emptyEyebrow": "助手引导式探索",
       "emptyTitle": "描述你想找来作为素材的视频",
       "languageHint": "输出语言",
@@ -755,7 +755,7 @@
       },
       "videoSuggestionModel": {
         "label": "视频推荐质量",
-        "help": "自动 = 与普通翻译草稿相同的模型",
+        "help": "与翻译使用同一档位的后端模型。",
         "default": "默认（与翻译默认一致）",
         "quality": "质量（与翻译质量一致）"
       },
@@ -1547,7 +1547,7 @@
       "startingExport": "正在开始生成视频…",
       "captionsAvailable": "视频无法下载，但可以使用 YouTube 字幕",
       "captionsNotOpened": "YouTube 字幕已就绪，但未打开",
-      "insufficientCredits": "余额不足"
+      "insufficientCredits": "时长不足"
     },
     "listening": "正在聆听视频…",
     "mergeFinishSaveBeforeReload": "请先完成合并视频的保存，再重新加载。",
