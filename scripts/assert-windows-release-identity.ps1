@@ -125,6 +125,69 @@ function Assert-WindowsReleaseIdentity {
   }
 }
 
+function Get-NewestRemoteReleaseTag {
+  # Highest vMAJOR.MINOR.PATCH tag on origin (prerelease tags ignored).
+  $lines = @(Get-ReleaseGitLines -Arguments @('ls-remote', '--tags', '--refs', 'origin', 'refs/tags/v*'))
+  $best = $null
+  foreach ($line in $lines) {
+    if ($line -match 'refs/tags/v(\d+)\.(\d+)\.(\d+)$') {
+      $candidate = [version]::new([int]$Matches[1], [int]$Matches[2], [int]$Matches[3])
+      if ($null -eq $best -or $candidate -gt $best) { $best = $candidate }
+    }
+  }
+  if ($null -eq $best) { throw 'No release tags found on origin.' }
+  return "v$best"
+}
+
+function Assert-WindowsReleaseIsNewest {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Version,
+
+    [Parameter(Mandatory = $false)]
+    [string]$Repository = 'mikey1384/translator'
+  )
+
+  # Releasing an older checkout re-uploads an old installer to R2 before the
+  # GitHub step can refuse it, so stop before anything is built or uploaded.
+  $newest = Get-NewestRemoteReleaseTag
+  if ($newest -cne "v$Version") {
+    throw ("This checkout is v$Version, but the newest release is $newest. " +
+      'Run Sync-Windows-Release.bat first, then run this again.')
+  }
+
+  # The Mac Action publishes the GitHub release the Windows assets attach to.
+  $latestTag = (& gh api "repos/$Repository/releases/latest" --jq '.tag_name' 2>$null)
+  if ($LASTEXITCODE -ne 0) { throw 'Could not read the latest GitHub release (gh api failed).' }
+  $latestTag = ([string]$latestTag).Trim()
+  if ($latestTag -cne "v$Version") {
+    throw ("GitHub's latest published release is '$latestTag', not v$Version. " +
+      'Wait for the macOS release Action to publish v' + $Version + ', then run this again.')
+  }
+}
+
+function Assert-WindowsDependenciesInstalled {
+  param(
+    [Parameter(Mandatory = $false)]
+    [string]$RepoRoot = (Get-Location).Path
+  )
+
+  # node_modules must match the lockfile, or the installer ships stale
+  # packages (an old Electron, for one).
+  $lockPath = Join-Path -Path $RepoRoot -ChildPath 'package-lock.json'
+  $installedPath = Join-Path -Path $RepoRoot -ChildPath 'node_modules\electron\package.json'
+  if (-not (Test-Path -LiteralPath $installedPath)) {
+    throw 'Dependencies are not installed. Run Sync-Windows-Release.bat (or npm ci) first.'
+  }
+  $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
+  $expected = [string]$lock.packages.'node_modules/electron'.version
+  $installed = [string]((Get-Content -LiteralPath $installedPath -Raw | ConvertFrom-Json).version)
+  if ($expected -cne $installed) {
+    throw ("Installed Electron is $installed, but package-lock.json needs $expected. " +
+      'Run Sync-Windows-Release.bat (or npm ci) first.')
+  }
+}
+
 function Enter-WindowsReleaseMutex {
   $mutex = [System.Threading.Mutex]::new(
     $false,

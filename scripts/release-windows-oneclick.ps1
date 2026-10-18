@@ -123,6 +123,8 @@ try {
   $version = Get-AppVersion
   Write-Host "Version: $version"
   Assert-WindowsReleaseIdentity -Version $version -RepoRoot $repo
+  Assert-WindowsReleaseIsNewest -Version $version
+  Assert-WindowsDependenciesInstalled -RepoRoot $repo
 
   if (-not $SkipBuild) {
     Write-Stage 'Building & signing (npm run package:win)'

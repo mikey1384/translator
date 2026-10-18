@@ -1571,3 +1571,51 @@ process.stdout.write(JSON.stringify(release));
     }
   }
 );
+
+test('Windows release refuses an old checkout before building or uploading', () => {
+  const oneClick = read('scripts/release-windows-oneclick.ps1');
+  const newest = oneClick.indexOf(
+    'Assert-WindowsReleaseIsNewest -Version $version'
+  );
+  const deps = oneClick.indexOf(
+    'Assert-WindowsDependenciesInstalled -RepoRoot $repo'
+  );
+  const build = oneClick.indexOf('& npm run package:win');
+  const upload = oneClick.indexOf('upload-to-r2-win.ps1" @uploadParams');
+  assert.ok(newest > 0 && deps > 0, 'one-click release must run both guards');
+  assert.ok(newest < build && deps < build, 'guards must run before the build');
+  assert.ok(build < upload, 'build must precede the R2 upload');
+
+  const identity = read('scripts/assert-windows-release-identity.ps1');
+  assert.match(identity, /function Assert-WindowsReleaseIsNewest/);
+  assert.match(
+    identity,
+    /releases\/latest/,
+    'must require the Mac release published'
+  );
+  assert.match(
+    identity,
+    /node_modules\/electron/,
+    'must compare Electron to the lockfile'
+  );
+});
+
+test('Windows sync launcher survives checking out an older tag', () => {
+  // cmd.exe reads batch files line by line; the tag being checked out may not
+  // contain this file, so everything after @echo off must be one command line.
+  const lines = read('Sync-Windows-Release.bat')
+    .split(/\r?\n/)
+    .filter(line => line.trim() && !/^\s*(@echo off|rem\b)/i.test(line));
+  assert.equal(lines.length, 1);
+  assert.match(lines[0], /sync-windows-release\.ps1/);
+
+  const sync = read('scripts/sync-windows-release.ps1');
+  for (const step of [
+    "'fetch', '--force', '--tags', 'origin'",
+    "'pull', '--ff-only'",
+    "'checkout', '--detach'",
+    "npm @('ci')",
+  ]) {
+    assert.ok(sync.includes(step), `sync script must run ${step}`);
+  }
+});
