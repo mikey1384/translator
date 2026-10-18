@@ -153,7 +153,7 @@ function Assert-WindowsReleaseIsNewest {
   $newest = Get-NewestRemoteReleaseTag
   if ($newest -cne "v$Version") {
     throw ("This checkout is v$Version, but the newest release is $newest. " +
-      'Run Sync-Windows-Release.bat first, then run this again.')
+      'Run Release-Windows-OneClick.bat (it syncs to the newest release first).')
   }
 
   # The Mac Action publishes the GitHub release the Windows assets attach to.
@@ -177,14 +177,14 @@ function Assert-WindowsDependenciesInstalled {
   $lockPath = Join-Path -Path $RepoRoot -ChildPath 'package-lock.json'
   $installedPath = Join-Path -Path $RepoRoot -ChildPath 'node_modules\electron\package.json'
   if (-not (Test-Path -LiteralPath $installedPath)) {
-    throw 'Dependencies are not installed. Run Sync-Windows-Release.bat (or npm ci) first.'
+    throw 'Dependencies are not installed. Run Release-Windows-OneClick.bat, or npm ci.'
   }
   $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
   $expected = [string]$lock.packages.'node_modules/electron'.version
   $installed = [string]((Get-Content -LiteralPath $installedPath -Raw | ConvertFrom-Json).version)
   if ($expected -cne $installed) {
     throw ("Installed Electron is $installed, but package-lock.json needs $expected. " +
-      'Run Sync-Windows-Release.bat (or npm ci) first.')
+      'Run Release-Windows-OneClick.bat, or npm ci.')
   }
 }
 

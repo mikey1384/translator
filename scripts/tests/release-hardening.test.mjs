@@ -566,8 +566,9 @@ test('Windows release wrappers propagate package and upload failures', () => {
     structuredClone(preflightConfig),
   ]);
 
-  assert.match(batch, /set "RELEASE_EXIT=%ERRORLEVEL%"/i);
-  assert.match(batch, /endlocal & exit \/b %RELEASE_EXIT%/i);
+  // One-line launcher: "call" expands the exit code after PowerShell returns.
+  assert.match(batch, /call set "RELEASE_EXIT=%%ERRORLEVEL%%"/i);
+  assert.match(batch, /call cmd \/c exit %%RELEASE_EXIT%% & exit \/b/i);
   assert.match(legacyBatch, /set "LEGACY_RELEASE_EXIT=%ERRORLEVEL%"/i);
   assert.match(legacyBatch, /inform-windows-legacy\.ps1" -NoPause/i);
   assert.match(legacyBatch, /endlocal & exit \/b %LEGACY_RELEASE_EXIT%/i);
@@ -1600,22 +1601,29 @@ test('Windows release refuses an old checkout before building or uploading', () 
   );
 });
 
-test('Windows sync launcher survives checking out an older tag', () => {
-  // cmd.exe reads batch files line by line; the tag being checked out may not
-  // contain this file, so everything after @echo off must be one command line.
-  const lines = read('Sync-Windows-Release.bat')
+test('Windows one-click launcher syncs to the newest tag, then releases', () => {
+  // cmd.exe reads batch files line by line; checking out the release tag can
+  // replace this file, so everything after the comments must be one line.
+  const lines = read('Release-Windows-OneClick.bat')
     .split(/\r?\n/)
     .filter(line => line.trim() && !/^\s*(@echo off|rem\b)/i.test(line));
   assert.equal(lines.length, 1);
-  assert.match(lines[0], /sync-windows-release\.ps1/);
+  assert.match(lines[0], /scripts\\release-windows\.ps1/);
+  assert.match(lines[0], /set "PSModulePath="/);
+  assert.match(lines[0], /exit \/b$/);
 
-  const sync = read('scripts/sync-windows-release.ps1');
-  for (const step of [
+  const launcher = read('scripts/release-windows.ps1');
+  const steps = [
     "'fetch', '--force', '--tags', 'origin'",
     "'pull', '--ff-only'",
     "'checkout', '--detach'",
     "npm @('ci')",
-  ]) {
-    assert.ok(sync.includes(step), `sync script must run ${step}`);
+    "'scripts\\release-windows-oneclick.ps1'",
+  ];
+  let last = -1;
+  for (const step of steps) {
+    const at = launcher.indexOf(step);
+    assert.ok(at > last, `launcher must run ${step} in order`);
+    last = at;
   }
 });
