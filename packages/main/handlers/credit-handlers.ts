@@ -48,6 +48,7 @@ import {
   parseRedeemTransferResponse,
   summarizeCreditLedger,
 } from '../utils/credit-transfer.js';
+import { appBuildHeaders } from '../utils/app-build-kind.js';
 
 // Generate or retrieve device ID using proper UUID v4
 export function getDeviceId(): string {
@@ -660,7 +661,8 @@ async function syncCreditBalanceFromServer(
   );
   const response = await withStage5AuthRetry(authHeaders =>
     axios.get(url, {
-      headers: authHeaders,
+      // The build kind keeps dev/test launches out of funnel numbers.
+      headers: { ...authHeaders, ...appBuildHeaders(app.isPackaged) },
       // A hung server must not leave the balance blank forever; on timeout
       // the cached, offline-marked snapshot is shown instead.
       timeout: CREDIT_HYDRATION_TIMEOUT_MS,
