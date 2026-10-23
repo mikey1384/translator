@@ -5,6 +5,28 @@ const lock = JSON.parse(
 );
 const packages = lock.packages ?? {};
 
+const followRedirectsPackages = Object.entries(packages).filter(
+  ([packagePath]) => /(^|\/)node_modules\/follow-redirects$/.test(packagePath)
+);
+const unsafeFollowRedirectsPaths = followRedirectsPackages
+  .filter(([, entry]) => {
+    const [major, minor, patch] = entry.version.split('.').map(Number);
+    // GHSA-8r9p-f939-6h3c and GHSA-q3jh-wrc6-jgq8: credential stripping.
+    return (
+      !/^1\.\d+\.\d+$/.test(entry.version) ||
+      major !== 1 ||
+      minor < 16 ||
+      (minor === 16 && patch < 1)
+    );
+  })
+  .map(([packagePath]) => packagePath);
+
+if (unsafeFollowRedirectsPaths.length > 0) {
+  throw new Error(
+    `follow-redirects requires 1.16.1 or newer within v1: ${unsafeFollowRedirectsPaths.join(', ')}`
+  );
+}
+
 const jsYamlPackages = Object.entries(packages).filter(([packagePath]) =>
   /(^|\/)node_modules\/js-yaml$/.test(packagePath)
 );
@@ -130,6 +152,7 @@ if (sprintfPaths.length > 0) {
 console.log(
   `Security dependency check passed: Electron ${electronPackage.version}, ` +
     `@puppeteer/browsers ${browserPackage.version}, no extract-zip or sprintf-js package; ` +
+    `${followRedirectsPackages.length} follow-redirects entries meet the v1 security floor; ` +
     `${fastUriPackages.length} fast-uri entries meet the v3 security floor; ` +
     `${jsYamlPackages.length} js-yaml entries meet the v4 security floor`
 );
