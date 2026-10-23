@@ -2,7 +2,7 @@
   Windows release, start to finish (Release-Windows-OneClick.bat runs this).
   1. Pulls master, so these scripts are current.
   2. Checks out the newest release tag (vX.Y.Z on origin).
-  3. Installs exactly the locked dependencies (npm ci).
+  3. Selects the verified build Node, then installs locked dependencies (npm ci).
   4. Runs that tag's scripts/release-windows-oneclick.ps1 (build, sign,
      upload to R2, attach to the GitHub release, purge the cache).
 #>
@@ -30,6 +30,7 @@ $generatedFiles = @('render-host-script.js')
 $repo = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $repo
 $exitCode = 0
+$releaseNode = $null
 
 try {
   . (Join-Path -Path $repo -ChildPath 'scripts\assert-windows-release-identity.ps1')
@@ -63,6 +64,10 @@ try {
   }
   Write-Host "Releasing: $tag ($tagCommit)"
 
+  # Load the helper after checkout so its pin belongs to the release tag.
+  . (Join-Path $repo 'scripts\windows-release-node.ps1')
+  $releaseNode = Use-WindowsReleaseNode -RepoRoot $repo
+
   Write-Stage 'Installing locked dependencies (npm ci)'
   Invoke-Checked npm @('ci')
 
@@ -75,6 +80,9 @@ try {
   Write-Host "`nRelease stopped: $($_.Exception.Message)" -ForegroundColor Red
   $exitCode = 1
 } finally {
+  if ($null -ne $releaseNode) {
+    Restore-WindowsReleaseNode -Context $releaseNode
+  }
   # Leave the folder on master, so the next double-click runs the newest
   # version of this launcher rather than the one inside an old tag.
   & git checkout --quiet -- @generatedFiles 2>$null

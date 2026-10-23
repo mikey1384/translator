@@ -49,7 +49,11 @@ function check(executable, label) {
   });
   assert.equal(result.error, undefined,
     `${label} security check could not run (${result.error?.code || 'launch failure'})`);
-  assert.equal(result.status, 0, `${label} failed the Brotli security regression check`);
+  assert.equal(result.status, 0,
+    `${label} failed the Brotli security regression check` +
+    (label === 'Build Node'
+      ? ` (Node ${process.versions.node}). Use the release launcher to select the patched build runtime.`
+      : ''));
   const proof = JSON.parse(result.stdout.trim());
   assert.equal(proof.patched, true);
   if (label === 'Electron') assert.equal(proof.electron, expectedElectron);
@@ -57,7 +61,10 @@ function check(executable, label) {
 }
 
 const args = process.argv.slice(2);
-assert(args.length === 0 || (args.length === 2 && args[0] === '--electron'),
-  'Usage: node scripts/check-security-runtime.mjs [--electron executable]');
+const nodeOnly = args.length === 1 && args[0] === '--node-only';
+assert(nodeOnly || args.length === 0 || (args.length === 2 && args[0] === '--electron'),
+  'Usage: node scripts/check-security-runtime.mjs [--node-only | --electron executable]');
 check(process.execPath, 'Build Node');
-check(args.length ? path.resolve(args[1]) : require('electron'), 'Electron');
+if (!nodeOnly) {
+  check(args.length ? path.resolve(args[1]) : require('electron'), 'Electron');
+}

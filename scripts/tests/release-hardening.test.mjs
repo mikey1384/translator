@@ -757,6 +757,8 @@ test(
       'scripts/assert-windows-release-identity.ps1',
       'scripts/test-windows-release-worktree.ps1',
       'scripts/test-windows-updater-metadata.ps1',
+      'scripts/windows-release-node.ps1',
+      'scripts/release-windows.ps1',
       'scripts/release-windows-oneclick.ps1',
       'scripts/upload-to-r2-win.ps1',
       'scripts/purge-cloudflare-cache.ps1',
@@ -1665,9 +1667,14 @@ test('Windows release refuses an old checkout before building or uploading', () 
   const deps = oneClick.indexOf(
     'Assert-WindowsDependenciesInstalled -RepoRoot $repo'
   );
+  const runtime = oneClick.indexOf('Use-WindowsReleaseNode -RepoRoot $repo');
   const build = oneClick.indexOf('& npm run package:win');
   const upload = oneClick.indexOf('upload-to-r2-win.ps1" @uploadParams');
   assert.ok(newest > 0 && deps > 0, 'one-click release must run both guards');
+  assert.ok(
+    runtime > 0 && runtime < deps,
+    'select a verified Node before dependency checks'
+  );
   assert.ok(newest < build && deps < build, 'guards must run before the build');
   assert.ok(build < upload, 'build must precede the R2 upload');
 
@@ -1701,6 +1708,7 @@ test('Windows one-click launcher syncs to the newest tag, then releases', () => 
     "'fetch', '--force', '--tags', 'origin'",
     "'pull', '--ff-only'",
     "'checkout', '--detach'",
+    'Use-WindowsReleaseNode -RepoRoot $repo',
     "npm @('ci')",
     "'scripts\\release-windows-oneclick.ps1'",
   ];

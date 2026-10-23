@@ -96,6 +96,7 @@ $repo = Get-RepoRoot
 Set-Location -LiteralPath $repo
 $exitCode = 0
 $releaseMutex = $null
+$releaseNode = $null
 
 $releaseIdentityScript = Join-Path -Path $repo -ChildPath 'scripts\assert-windows-release-identity.ps1'
 $releaseArtifactsScript = Join-Path -Path $repo -ChildPath 'scripts\windows-release-artifacts.ps1'
@@ -112,6 +113,10 @@ try {
   $releaseMutex = Enter-WindowsReleaseMutex
 
   Write-Stage 'Preflight checks'
+  # Also cover direct launches and an older outer launcher already in memory
+  # when it fetched this release. Check Node before the build and signing PINs.
+  . (Join-Path $repo 'scripts\windows-release-node.ps1')
+  $releaseNode = Use-WindowsReleaseNode -RepoRoot $repo
   Ensure-Tool -tool 'npm' -hint 'Install Node.js / npm.'
   Ensure-Tool -tool 'rclone' -hint 'Install rclone and configure your R2 remote (e.g., r2-upload).'
   Ensure-Tool -tool 'gh' -hint 'Install GitHub CLI and run gh auth login.'
@@ -188,6 +193,9 @@ try {
   $exitCode = 1
   Write-Host ("ERROR: " + $_.Exception.Message) -ForegroundColor Red
 } finally {
+  if ($null -ne $releaseNode) {
+    Restore-WindowsReleaseNode -Context $releaseNode
+  }
   if ($null -ne $releaseMutex) {
     Exit-WindowsReleaseMutex -Mutex $releaseMutex
   }
