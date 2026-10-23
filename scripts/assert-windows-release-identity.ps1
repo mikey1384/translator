@@ -179,9 +179,32 @@ function Assert-WindowsDependenciesInstalled {
   if (-not (Test-Path -LiteralPath $installedPath)) {
     throw 'Dependencies are not installed. Run Release-Windows-OneClick.bat, or npm ci.'
   }
-  $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
-  $expected = [string]$lock.packages.'node_modules/electron'.version
-  $installed = [string]((Get-Content -LiteralPath $installedPath -Raw | ConvertFrom-Json).version)
+  # npm lockfiles contain packages[""]. ConvertFrom-Json cannot represent that
+  # empty property name, and Windows PowerShell 5.1 has no -AsHashtable switch.
+  # Let the already-required Node runtime parse both manifests; PowerShell only
+  # receives a flat object with non-empty property names.
+  $readVersions = @'
+const fs = require('node:fs');
+try {
+  const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
+  const expected = read(process.argv[1]).packages?.['node_modules/electron']?.version;
+  const installed = read(process.argv[2]).version;
+  if ([expected, installed].some(value => typeof value !== 'string' || !value.trim())) {
+    throw new Error('Missing Electron version');
+  }
+  process.stdout.write(JSON.stringify({ expected, installed }));
+} catch {
+  console.error('Could not read valid Electron versions from the lockfile and installed package. Run npm ci.');
+  process.exit(1);
+}
+'@
+  $versionJson = & node -e $readVersions $lockPath $installedPath
+  if ($LASTEXITCODE -ne 0) {
+    throw 'Windows dependency validation failed. Check package-lock.json and run npm ci.'
+  }
+  $versions = $versionJson | ConvertFrom-Json
+  $expected = [string]$versions.expected
+  $installed = [string]$versions.installed
   if ($expected -cne $installed) {
     throw ("Installed Electron is $installed, but package-lock.json needs $expected. " +
       'Run Release-Windows-OneClick.bat, or npm ci.')

@@ -789,6 +789,90 @@ test(
 );
 
 test(
+  'Windows dependency preflight accepts npm empty keys and rejects missing or stale Electron',
+  { skip: process.platform !== 'win32' },
+  () => {
+    const tempRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'translator-windows-dependencies-')
+    );
+    const fixtureRepo = path.join(tempRoot, "release [fixture] O'Brien");
+    const electronDir = path.join(fixtureRepo, 'node_modules', 'electron');
+    const installedPath = path.join(electronDir, 'package.json');
+    const lockPath = path.join(fixtureRepo, 'package-lock.json');
+    const helperPath = path
+      .join(repoRoot, 'scripts/assert-windows-release-identity.ps1')
+      .replaceAll("'", "''");
+    const check = () =>
+      spawnSync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          [
+            'Set-StrictMode -Version Latest',
+            "$ErrorActionPreference = 'Stop'",
+            `. '${helperPath}'`,
+            `Assert-WindowsDependenciesInstalled -RepoRoot '${fixtureRepo.replaceAll("'", "''")}'`,
+          ].join('; '),
+        ],
+        { encoding: 'utf8' }
+      );
+    const output = result => `${result.stdout || ''}\n${result.stderr || ''}`;
+    const writeInstalled = version =>
+      fs.writeFileSync(
+        installedPath,
+        JSON.stringify({ name: 'electron', version })
+      );
+    const lock = {
+      lockfileVersion: 3,
+      packages: {
+        '': { name: 'translator', version: '1.0.0' },
+        'node_modules/electron': { version: '43.8.3' },
+      },
+    };
+
+    try {
+      fs.mkdirSync(electronDir, { recursive: true });
+      fs.writeFileSync(lockPath, JSON.stringify(lock));
+      writeInstalled('43.8.3');
+      const matching = check();
+      assert.equal(matching.status, 0, output(matching));
+
+      writeInstalled('41.10.7');
+      const stale = check();
+      assert.notEqual(stale.status, 0);
+      assert.match(output(stale), /Installed Electron is 41\.10\.7/);
+      assert.match(output(stale), /package-lock\.json needs 43\.8\.3/);
+
+      writeInstalled('43.8.3');
+      delete lock.packages['node_modules/electron'];
+      fs.writeFileSync(lockPath, JSON.stringify(lock));
+      const missingVersion = check();
+      assert.notEqual(missingVersion.status, 0);
+      assert.match(
+        output(missingVersion),
+        /Could not read valid Electron versions/
+      );
+
+      fs.writeFileSync(lockPath, '{ invalid json');
+      const invalid = check();
+      assert.notEqual(invalid.status, 0);
+      assert.match(output(invalid), /Could not read valid Electron versions/);
+
+      fs.rmSync(installedPath);
+      const missingInstall = check();
+      assert.notEqual(missingInstall.status, 0);
+      assert.match(output(missingInstall), /Dependencies are not installed/);
+    } finally {
+      fs.rmSync(tempRoot, { recursive: true, force: true });
+    }
+  }
+);
+
+test(
   'Windows release worktree check accepts normalized line endings and reports real drift',
   { skip: process.platform !== 'win32' },
   () => {
