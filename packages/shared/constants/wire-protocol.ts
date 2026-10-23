@@ -32,3 +32,8 @@ export const WIRE_INSUFFICIENT_CREDITS = 'insufficient-credits';
 export const WIRE_STATUS_UPDATE_REQUIRED = 426;
 export const WIRE_UPDATE_REQUIRED = 'update-required';
 export const WIRE_APP_VERSION_HEADER = 'X-Stage5-App-Version';
+
+// --- Build kind (measurement only) -----------------------------------------
+// Sent by unpackaged ("dev") and scripted ("test") app launches so their
+// welcome grants can be left out of funnel numbers. Never grants anything.
+export const WIRE_APP_BUILD_HEADER = 'X-Stage5-App-Build';
