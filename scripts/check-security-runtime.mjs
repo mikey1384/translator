@@ -41,10 +41,14 @@ function check(executable, label) {
   const result = spawnSync(executable, ['-e', `(${verifyBrotli})().catch(() => process.exit(1))`], {
     env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
     encoding: 'utf8',
-    timeout: 15_000,
+    // A cold Intel launch under Rosetta took 32 seconds during verification.
+    // Keep a bound while allowing first-launch translation and signature checks.
+    timeout: 90_000,
     maxBuffer: 64 * 1024,
     windowsHide: true,
   });
+  assert.equal(result.error, undefined,
+    `${label} security check could not run (${result.error?.code || 'launch failure'})`);
   assert.equal(result.status, 0, `${label} failed the Brotli security regression check`);
   const proof = JSON.parse(result.stdout.trim());
   assert.equal(proof.patched, true);
