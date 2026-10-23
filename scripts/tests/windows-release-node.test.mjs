@@ -125,7 +125,7 @@ try {
 if ($env:Path -cne $unsuitablePath -or (Test-Path -LiteralPath $context.Root)) { throw 'Bootstrap cleanup did not restore the process' }
 
 # A verified archive can be reused without any network access.
-function Invoke-WebRequest { throw 'Unexpected network access for a valid cache' }
+function Save-WindowsReleaseNodeArchive { throw 'Unexpected network access for a valid cache' }
 $context = Use-WindowsReleaseNode -RepoRoot $repo
 Restore-WindowsReleaseNode -Context $context
 
@@ -139,12 +139,12 @@ try { Use-WindowsReleaseNode -RepoRoot $repo | Out-Null } catch {
 if (-not $rejected -or $env:Path -cne $unsuitablePath) { throw 'A failed security check changed PATH' }
 
 # Corrupt cached/downloaded bytes must be rejected before extraction/execution.
-$archive = Join-Path $repo ${quoted(`.local\\windows-release-node\\node-v${pin.version}-win-x64.zip`)}
+$archive = Join-Path $repo ${quoted(`.local\\release-node\\node-v${pin.version}-win-x64.zip`)}
 [IO.File]::WriteAllText($archive, 'corrupt cache')
-function Invoke-WebRequest {
-  param($Uri, $OutFile, [switch]$UseBasicParsing, $TimeoutSec)
+function Save-WindowsReleaseNodeArchive {
+  param($Uri, $LiteralPath)
   if ($Uri -cne ${quoted(`https://nodejs.org/dist/v${pin.version}/node-v${pin.version}-win-x64.zip`)}) { throw 'Unexpected download destination' }
-  [IO.File]::WriteAllText($OutFile, 'corrupt download')
+  [IO.File]::WriteAllText($LiteralPath, 'corrupt download')
 }
 $rejected = $false
 try { Use-WindowsReleaseNode -RepoRoot $repo | Out-Null } catch {
@@ -152,7 +152,7 @@ try { Use-WindowsReleaseNode -RepoRoot $repo | Out-Null } catch {
   $rejected = $true
 }
 if (-not $rejected -or $env:Path -cne $unsuitablePath) { throw 'A checksum failure changed PATH' }
-$leftovers = @(Get-ChildItem -LiteralPath (Join-Path $repo '.local\\windows-release-node') -Directory)
+$leftovers = @(Get-ChildItem -LiteralPath (Join-Path $repo '.local\\release-node') -Directory)
 if ($leftovers.Count -ne 0) { throw 'Bootstrap left an executable directory behind' }
 Write-Output 'Windows pinned Node bootstrap behavioral checks passed.'
 `;

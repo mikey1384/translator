@@ -1,5 +1,20 @@
 # A private, verified build runtime. Never changes the machine's Node install
 # or persistent PATH. The ZIP checksum comes from Node's official SHASUMS256.txt.
+function Save-WindowsReleaseNodeArchive {
+  param([string]$Uri, [string]$LiteralPath)
+  # Windows PowerShell's Invoke-WebRequest -OutFile expands wildcard characters
+  # in directory names. Use literal .NET file I/O for repositories such as [work].
+  Add-Type -AssemblyName System.Net.Http
+  $client = New-Object System.Net.Http.HttpClient
+  $client.Timeout = [TimeSpan]::FromSeconds(180)
+  try {
+    $bytes = $client.GetByteArrayAsync([Uri]$Uri).GetAwaiter().GetResult()
+    [IO.File]::WriteAllBytes($LiteralPath, $bytes)
+  } finally {
+    $client.Dispose()
+  }
+}
+
 function Use-WindowsReleaseNode {
   param([Parameter(Mandatory = $true)][string]$RepoRoot)
 
@@ -14,11 +29,12 @@ function Use-WindowsReleaseNode {
     throw 'Windows releases require a 64-bit Windows machine.'
   }
 
-  $cacheRoot = Join-Path $RepoRoot '.local\windows-release-node'
+  $cacheRoot = Join-Path $RepoRoot '.local\release-node'
   [IO.Directory]::CreateDirectory($cacheRoot) | Out-Null
   $archiveName = "node-v$version-win-x64.zip"
   $archivePath = Join-Path $cacheRoot $archiveName
-  $runRoot = Join-Path $cacheRoot ([Guid]::NewGuid().ToString('N'))
+  # Keep npm's nested paths within older Windows path-length limits.
+  $runRoot = Join-Path $cacheRoot ([Guid]::NewGuid().ToString('N').Substring(0, 16))
   $downloadPath = "$runRoot.zip"
   $previousPath = $env:Path
 
@@ -28,15 +44,12 @@ function Use-WindowsReleaseNode {
       ((Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash -ieq $expectedHash)
     if (-not $cacheValid) {
       $previousProtocol = [Net.ServicePointManager]::SecurityProtocol
-      $previousProgress = $ProgressPreference
       try {
         [Net.ServicePointManager]::SecurityProtocol = $previousProtocol -bor [Net.SecurityProtocolType]::Tls12
-        $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 `
-          -Uri "https://nodejs.org/dist/v$version/$archiveName" -OutFile $downloadPath
+        Save-WindowsReleaseNodeArchive `
+          -Uri "https://nodejs.org/dist/v$version/$archiveName" -LiteralPath $downloadPath
       } finally {
         [Net.ServicePointManager]::SecurityProtocol = $previousProtocol
-        $ProgressPreference = $previousProgress
       }
       if ((Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash -ine $expectedHash) {
         throw 'Downloaded release Node archive failed its SHA256 checksum. Nothing was executed.'
@@ -46,7 +59,8 @@ function Use-WindowsReleaseNode {
 
     # Extract afresh from the checked archive; never trust a previously expanded
     # npm tree. Each invocation owns its directory, including nested launchers.
-    Expand-Archive -LiteralPath $archivePath -DestinationPath $runRoot
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [IO.Compression.ZipFile]::ExtractToDirectory($archivePath, $runRoot)
     $nodeRoot = Join-Path $runRoot "node-v$version-win-x64"
     $nodePath = Join-Path $nodeRoot 'node.exe'
     $npmPath = Join-Path $nodeRoot 'npm.cmd'
