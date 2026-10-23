@@ -33,7 +33,7 @@ jobs:
 
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: '22.16.0'
+          node-version: '22.23.4'
           cache: 'npm'
 
       - name: Install JavaScript dependencies without package side effects
@@ -76,7 +76,7 @@ jobs:
       # ---------- Node (no Bun) ----------
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: '22.16.0'
+          node-version: '22.23.4'
           cache: 'npm'
 
       - name: Validate release identity and extract notes
@@ -134,6 +134,7 @@ jobs:
           npm run lint
           npm test
           npm run security:dependencies
+          npm run security:runtime
 
       # ---------- Rebuild native modules for both architectures ----------
       - name: Rebuild native modules for x64
@@ -170,6 +171,7 @@ jobs:
             codesign --verify --deep --strict --verbose=4 "$app_path" || return $?
             xcrun stapler validate "$app_path" || return $?
             spctl --assess --type execute --verbose=4 "$app_path" || return $?
+            node scripts/check-security-runtime.mjs --electron "$app_path/Contents/MacOS/Translator" || return $?
           }
 
           verify_zip() {

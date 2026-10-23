@@ -64,6 +64,9 @@ if not "!TEST_EXIT!"=="0" exit /b !TEST_EXIT!
 node "%SCRIPT_DIR%verify-packaged-runtime.cjs" "%APP_DIR%" win32 x64
 if errorlevel 1 exit /b !errorlevel!
 
+node "%SCRIPT_DIR%check-security-runtime.mjs" --electron "%APP_DIR%\Translator.exe"
+if errorlevel 1 exit /b !errorlevel!
+
 node "%SCRIPT_DIR%verify-windows-media.cjs" "%APP_DIR%"
 if errorlevel 1 exit /b !errorlevel!
 

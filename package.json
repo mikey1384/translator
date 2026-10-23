@@ -1,7 +1,7 @@
 {
   "name": "translator",
   "private": true,
-  "version": "1.28.2",
+  "version": "1.28.3",
   "type": "module",
   "description": "Open-source desktop video discovery, subtitle translation, editing, dubbing, and export workstation",
   "author": "Mikey Lee",
@@ -41,7 +41,7 @@
     "dev:init:win": "npm run build:dev:win && wait-on packages/main/dist/main/main.cjs packages/main/dist/preload/preload.cjs packages/renderer/dist/index.js render-host-script.js",
     "dev": "npm run dev:init && npx concurrently -k -n electron,main,preload,renderer,hostRenderer \"npx electron .\" \"npm run --prefix packages/main build:watch\" \"npm run --prefix packages/preload dev\" \"npm run --prefix packages/renderer dev\" \"cd packages/renderer && npx esbuild render-host-script.tsx --bundle --platform=browser --format=esm --target=es2022 --external:electron --outfile=../../render-host-script.js --watch\"",
     "dev:win": "npm run dev:init:win && npx concurrently -k -n electron,main,preload,renderer,hostRenderer \"npx electron .\" \"npm run --prefix packages/main build:watch\" \"npm run --prefix packages/preload dev\" \"npm run --prefix packages/renderer dev:win\" \"cd packages/renderer && npx esbuild render-host-script.tsx --bundle --platform=browser --format=esm --target=es2022 --external:electron --outfile=../../render-host-script.js --watch\"",
-    "postinstall": "node scripts/build-owner-supervisor.mjs && electron-builder install-app-deps",
+    "postinstall": "node node_modules/electron/install.js && node scripts/build-owner-supervisor.mjs && electron-builder install-app-deps",
     "build:owner-supervisor": "node scripts/build-owner-supervisor.mjs",
     "package": "npm run package:arm && npm run package:intel",
     "package:win": "npm ci --no-audit --fund=false && npm run clean:win && npm run create:icon-win && npm run build:owner-supervisor && cross-env ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true npm run build:all:win && node scripts/verify-headless-distribution.mjs win64 && npx electron-builder --config electron-builder.win.json --win --x64 --publish never",
@@ -63,7 +63,8 @@
     "agent:test": "npm run --workspace @translator/agent-server test",
     "distribution:check": "node scripts/update-distribution-manifests.mjs --check",
     "distribution:update": "node scripts/update-distribution-manifests.mjs --write",
-    "security:dependencies": "node scripts/check-security-dependencies.mjs"
+    "security:dependencies": "node scripts/check-security-dependencies.mjs",
+    "security:runtime": "node scripts/check-security-runtime.mjs"
   },
   "devDependencies": {
     "@electron/osx-sign": "^2.0.0",
@@ -83,7 +84,7 @@
     "chokidar-cli": "^3.0.0",
     "concurrently": "^9.2.5",
     "cross-env": "^7.0.3",
-    "electron": "^41.10.7",
+    "electron": "43.8.3",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.25.5",
     "eslint": "^8.57.0",
