@@ -40,31 +40,40 @@ async function saveVideoCopy(options: {
   successMessage: string;
   errorLabel: string;
 }): Promise<string | null> {
+  let savedPath: string;
   try {
-    const { filePath, error } = await FileIPC.save({
+    const { success, canceled, filePath, error } = await FileIPC.save({
       title: options.title,
       defaultPath: options.defaultPath,
-      content: '',
+      // Copy in the save operation itself. Creating an empty destination first
+      // would truncate the source if the user chooses its existing path.
+      sourcePath: options.sourcePath,
       filters: getVideoFilters(options.extensions),
     });
 
-    if (error || !filePath) {
-      return null;
+    if (canceled) return null;
+    if (!success || error || !filePath) {
+      throw new Error(error || 'The save operation did not return a file.');
     }
-
-    const copyRes = await FileIPC.copy(options.sourcePath, filePath);
-    if (copyRes.error) {
-      throw new Error(copyRes.error);
-    }
-
-    await SystemIPC.showMessage(
-      options.successMessage.replace('{{path}}', filePath)
-    );
-    return filePath;
+    savedPath = filePath;
   } catch (err) {
     console.error(`[save-video] ${options.errorLabel}:`, err);
+    await SystemIPC.showMessage(i18n.t('errors.unexpectedSave'), {
+      type: 'error',
+    }).catch(messageError => {
+      console.error('[save-video] Failed to show save error:', messageError);
+    });
     return null;
   }
+
+  // The saved file is authoritative even if the confirmation cannot be shown.
+  // Keep history and the mounted source pointed at the completed save.
+  await SystemIPC.showMessage(
+    options.successMessage.replace('{{path}}', savedPath)
+  ).catch(error => {
+    console.error('[save-video] Failed to show save confirmation:', error);
+  });
+  return savedPath;
 }
 
 export function pathsMatch(a: string | null, b: string | null): boolean {

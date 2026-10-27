@@ -476,13 +476,14 @@ export function validateSubtitleSegments(
   );
   const mediaDuration = Number(mediaDurationSeconds);
   if (Number.isFinite(mediaDuration) && mediaDuration > 0) {
-    if (lastEnd - mediaDuration > 2) {
+    if (lastEnd - mediaDuration > 0.001) {
       recordIssue({
         severity: 'error',
         code: 'subtitle_exceeds_media_duration',
         segment_id: null,
         segment_index: null,
-        message: 'Subtitle cues extend beyond the planned media duration.',
+        message:
+          'Subtitle cues extend beyond the media duration. Apply a reviewed subtitle revision or explicitly trim to the media end.',
         subtitle_end_seconds: Number(lastEnd.toFixed(3)),
         media_duration_seconds: Number(mediaDuration.toFixed(3)),
         delta_seconds: Number((lastEnd - mediaDuration).toFixed(3)),

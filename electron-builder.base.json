@@ -91,6 +91,10 @@
       "to": "srt.mjs"
     },
     {
+      "from": "packages/agent-server/src/subtitle-revisions.mjs",
+      "to": "subtitle-revisions.mjs"
+    },
+    {
       "from": "packages/agent-server/src/subtitle-quality.mjs",
       "to": "subtitle-quality.mjs"
     },

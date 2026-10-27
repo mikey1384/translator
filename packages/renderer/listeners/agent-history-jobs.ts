@@ -327,6 +327,7 @@ export function createAgentSubtitleBatchSnapshot(
       end: cue.end,
       original: cue.original,
       translation: cue.translation || '',
+      ...(cue.sourceCueIds ? { source_ids: cue.sourceCueIds } : {}),
     })),
   };
 }

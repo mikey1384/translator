@@ -723,6 +723,67 @@ export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
     },
     billing: 'none',
   },
+  get_subtitle_revision: {
+    description:
+      'Read the selected subtitle revision, available revisions and source-cue provenance. revision_id=original reads the recoverable original transcript. Never spends credit.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        job_id: jobIdProperty,
+        revision_id: { type: 'string', minLength: 1, maxLength: 120 },
+        offset: { type: 'integer', minimum: 0, default: 0 },
+        limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+      },
+      required: ['job_id'],
+      additionalProperties: false,
+    },
+    billing: 'none',
+  },
+  apply_subtitle_revision: {
+    description:
+      'Save and select reviewed subtitle timing, merges, deletions and text without retranscription. Supply cues_path (JSON array with id, start, end, original/source, translation, source_ids), use_app_subtitles=true for editor changes, or repair the current revision. Original cues remain recoverable. Preview, validation and exports use this selection. Requires an idle validation/render checkpoint; never starts a paid stage or an encode. Review repairs with dry_run=true first.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        job_id: jobIdProperty,
+        expected_revision_id: { type: 'string', minLength: 1, maxLength: 120 },
+        cues_path: { type: 'string', minLength: 1, maxLength: 4096 },
+        use_app_subtitles: { type: 'boolean' },
+        label: { type: 'string', minLength: 1, maxLength: 200 },
+        trim_to_media: { type: 'boolean', default: false },
+        join_gaps_up_to_seconds: {
+          type: 'number',
+          minimum: 0,
+          maximum: 0.5,
+          default: 0,
+        },
+        preserve_gap_after_ids: {
+          type: 'array',
+          maxItems: 100000,
+          items: { type: 'string', minLength: 1, maxLength: 200 },
+        },
+        dry_run: { type: 'boolean', default: false },
+      },
+      required: ['job_id', 'expected_revision_id'],
+      additionalProperties: false,
+    },
+    billing: 'none',
+  },
+  select_subtitle_revision: {
+    description:
+      'Explicitly select an existing reviewed revision or original transcript, mount it in the editor, and invalidate previous validation/preview authorization. Never retranscribes, translates, or renders.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        job_id: jobIdProperty,
+        revision_id: { type: 'string', minLength: 1, maxLength: 120 },
+        expected_revision_id: { type: 'string', minLength: 1, maxLength: 120 },
+      },
+      required: ['job_id', 'revision_id', 'expected_revision_id'],
+      additionalProperties: false,
+    },
+    billing: 'none',
+  },
   validate_translation: {
     description:
       'Run deterministic subtitle timing, readability, completeness, glossary, character-encoding, duplication, and duration checks without spending credit. Use render_preview for visual font/glyph verification.',

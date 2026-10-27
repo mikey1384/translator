@@ -290,7 +290,7 @@ export default function HomeLanguagePicker({
           >
             <div className={dialogHeader}>
               <h2 id="home-language-picker-title" className={dialogTitle}>
-                {t('home.languagePickerTitle', 'Make it speak…')}
+                {t('home.languagePickerTitle', 'Translate to…')}
               </h2>
               <button
                 type="button"

@@ -56,8 +56,8 @@ interface State {
   // Panel open states (session-only; not persisted)
   showGeneratePanel: boolean;
   showEditPanel: boolean;
-  // Home "Make it speak X" request, consumed by GenerateSubtitles, which owns
-  // the download → transcribe → translate chain (session-only).
+  // Home download/translation request, consumed by GenerateSubtitles, which
+  // owns the download → transcribe → translate chain (session-only).
   homeRunRequest: HomeRunRequest | null;
   // Video workspace: manual subtitle editing (persisted), the collapsed
   // "All tools" area and the export sheet (session-only).
@@ -108,7 +108,7 @@ function writeSubtitleEditMode(on: boolean): void {
 }
 
 export type HomeRunRequestInput =
-  | { kind: 'url'; url: string }
+  | { kind: 'url'; url: string; target?: 'download' | 'translate' }
   // target: stop after transcription instead of translating (default).
   | { kind: 'mounted'; path: string; target?: 'transcribe' | 'translate' };
 export type HomeRunRequest = HomeRunRequestInput & { id: number };

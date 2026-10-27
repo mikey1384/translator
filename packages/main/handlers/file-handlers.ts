@@ -11,6 +11,7 @@ import {
 import {
   OpenFileResult,
   OpenFileOptions,
+  SaveFileResult,
   ReadSavedSubtitleMetadataOptions,
   ReadSavedSubtitleMetadataResult,
   SaveSubtitleDocumentOptions,
@@ -59,12 +60,15 @@ function checkServicesInitialized(): {
 export async function handleSaveFile(
   _event: IpcMainInvokeEvent,
   options: SaveFileOptions
-): Promise<{ success: boolean; filePath?: string; error?: string }> {
+): Promise<SaveFileResult> {
   try {
     const { saveFileService } = checkServicesInitialized();
     const filePath = await saveFileService.saveFile(options);
     return { success: true, filePath };
   } catch (error: any) {
+    if (error instanceof SaveFileCancelledError) {
+      return { success: false, canceled: true, error: error.message };
+    }
     console.error('[handleSaveFile] Error:', error);
     return { success: false, error: error.message || String(error) };
   }

@@ -1355,6 +1355,7 @@
     "linkPlaceholder": "粘贴视频链接",
     "dropHere": "松手，就翻译成{{language}}",
     "makeItSpeak": "翻译成{{language}}",
+    "downloadOnly": "仅下载",
     "helper": "粘贴 YouTube、TikTok、Instagram 或 X 链接，或把视频文件拖到这里",
     "chooseFile": "选择文件",
     "into": "译成",

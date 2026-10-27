@@ -31,6 +31,7 @@ import { parseSrt } from '../../../shared/helpers/index.js';
 import { parseSubtitleRenderSpec } from '../../../shared/helpers/subtitle-render-spec.js';
 import { generateStatePngs } from './state-generator.js';
 import { directMerge } from './ffmpeg-direct-merge.js';
+import { subtitleTimingIssues } from '../../../agent-server/src/subtitle-revisions.mjs';
 import { probeFps, probeMergeSourceStreams } from './ffprobe-utils.js';
 import {
   exportBaseName,
@@ -484,6 +485,29 @@ export function initializeRenderWindowHandlers({
           }
         }
 
+        // Both UI and MCP exports validate against the file, not a caller's
+        // cached duration. Fail before PNG generation or encoding; never trim
+        // the user's document silently.
+        const sourceStreams = await probeMergeSourceStreams(
+          options.originalVideoPath,
+          ffmpeg.ffprobePath
+        );
+        if (!sourceStreams.duration)
+          throw new Error(
+            'Could not read the media duration. Reopen the media before exporting.'
+          );
+        options.videoDuration = sourceStreams.duration;
+        const timingIssues = subtitleTimingIssues(
+          options.subtitleSegments ?? parseSrt(options.srtContent),
+          sourceStreams.duration
+        );
+        if (timingIssues.length) {
+          const first = timingIssues[0];
+          throw new Error(
+            `Subtitle timing needs review (cue ${first.index}: ${first.code}). Correct the cue in the subtitle editor or apply an explicit subtitle timing repair before exporting.`
+          );
+        }
+
         // Overlay frames are drawn in the picture's display orientation
         // (rotated phone clips are taller than their coded size).
         const { browser: br, page } = await initPuppeteer({
@@ -610,15 +634,11 @@ export function initializeRenderWindowHandlers({
         }
         sendProgress({ percent: 12, stage: 'Overlay concat ready' });
 
-        const sourceStreams = await probeMergeSourceStreams(
-          options.originalVideoPath,
-          ffmpeg.ffprobePath
-        );
         const tempMerged = path.join(
           tempDirPath,
           `merged_${operationPathToken}.mp4`
         );
-        await directMerge({
+        const mergeResult = await directMerge({
           concatListPath,
           baseVideoPath: videoForMerge,
           audioPath:
@@ -635,6 +655,7 @@ export function initializeRenderWindowHandlers({
           registerProcess,
           signal: controller.signal,
           sourceAudioCodec: sourceStreams.audioCodec,
+          sourceVideoCodec: sourceStreams.videoCodec,
           sourceVideoBitRate:
             options.overlayMode === 'blackVideo'
               ? null
@@ -657,6 +678,7 @@ export function initializeRenderWindowHandlers({
             operationId,
             success: true,
             outputPath: libraryPath,
+            exportDiagnostics: mergeResult.diagnostics,
           });
           return;
         }
@@ -1033,6 +1055,7 @@ export function initializeRenderWindowHandlers({
           operationId,
           success: true,
           outputPath: savedPath,
+          exportDiagnostics: mergeResult.diagnostics,
         });
       } catch (err: any) {
         log.error(`[RenderWindowHandlers ${operationId}]`, err);

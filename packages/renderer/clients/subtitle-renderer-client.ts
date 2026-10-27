@@ -1,4 +1,7 @@
-import { RenderSubtitlesOptions } from '@shared-types/app'; // Import types
+import {
+  RenderSubtitlesOptions,
+  SubtitleExportDiagnostics,
+} from '@shared-types/app'; // Import types
 import * as SubtitleIPC from '@ipc/subtitles';
 import type { RenderCancelRequestResult } from '@ipc/subtitles';
 import { useTaskStore } from '../state';
@@ -6,6 +9,8 @@ import { SUBTITLE_RENDER_TIMEOUT } from '../../shared/constants/runtime-config';
 import { agentBackgroundOperations } from '../listeners/agent-background-operations';
 import { CancelledError } from '../../shared/cancelled-error';
 import { assertRenderOperationAvailable } from '../utils/render-operation-reservation';
+import { assertSelectedSubtitleRevisionUnchanged } from '../utils/subtitle-revision-selection';
+import { useSubStore } from '../state/subtitle-store';
 
 type PngRenderResult = {
   operationId: string;
@@ -13,6 +18,7 @@ type PngRenderResult = {
   outputPath?: string;
   error?: string;
   cancelled?: boolean;
+  exportDiagnostics?: SubtitleExportDiagnostics;
 };
 
 export const WINDOW_CHANNELS = {
@@ -141,7 +147,12 @@ class SubtitleRendererClient {
               console.info(
                 `[SubtitleRendererClient ${operationId}] Received SUCCESS result from main.`
               );
-              promiseCallbacks.resolve({ operationId, success, outputPath });
+              promiseCallbacks.resolve({
+                operationId,
+                success,
+                outputPath,
+                exportDiagnostics: result.exportDiagnostics,
+              });
             } else {
               console.error(
                 `[SubtitleRendererClient ${operationId}] Received FAILURE result from main:`,
@@ -178,6 +189,7 @@ class SubtitleRendererClient {
   async renderSubtitles(
     options: RenderSubtitlesOptions & { timeoutMs?: number }
   ): Promise<PngRenderResult> {
+    assertSelectedSubtitleRevisionUnchanged(useSubStore.getState());
     const DEFAULT_TIMEOUT_MS = SUBTITLE_RENDER_TIMEOUT;
     const { operationId, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
     assertRenderOperationAvailable(this.renderPromises, operationId);

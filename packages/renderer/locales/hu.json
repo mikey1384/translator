@@ -1357,6 +1357,7 @@
     "linkPlaceholder": "Illessz be egy videólinket",
     "dropHere": "Engedd el, és {{language}} nyelvre fordítjuk",
     "makeItSpeak": "Fordítás {{language}} nyelvre",
+    "downloadOnly": "Csak letöltés",
     "helper": "Illessz be egy YouTube-, TikTok-, Instagram- vagy X-linket – vagy húzz ide egy videófájlt",
     "chooseFile": "Fájl kiválasztása",
     "into": "Nyelv",

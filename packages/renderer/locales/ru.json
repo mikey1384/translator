@@ -1380,6 +1380,7 @@
     "linkPlaceholder": "Вставьте ссылку на видео",
     "dropHere": "Отпустите — переведём на {{language}}",
     "makeItSpeak": "Перевести на {{language}}",
+    "downloadOnly": "Только скачать",
     "helper": "Вставьте ссылку с YouTube, TikTok, Instagram или X — или перетащите сюда видеофайл",
     "chooseFile": "Выбрать файл",
     "into": "На",

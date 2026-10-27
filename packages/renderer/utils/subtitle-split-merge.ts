@@ -85,6 +85,7 @@ export function splitCue(
   const hasTranslation = typeof cue.translation === 'string';
   const first: SrtSegment = {
     ...cue,
+    sourceCueIds: cue.sourceCueIds ?? [cue.id],
     end: splitAt,
     original: parts.original[0],
     // Word timings belonged to the whole line's text.
@@ -92,6 +93,7 @@ export function splitCue(
   };
   const second: SrtSegment = {
     ...cue,
+    sourceCueIds: cue.sourceCueIds ?? [cue.id],
     id: newId,
     start: splitAt,
     original: parts.original[1],
@@ -120,6 +122,12 @@ export function joinCueText(a: string, b: string): string {
 export function mergeCues(a: SrtSegment, b: SrtSegment): SrtSegment {
   const merged: SrtSegment = {
     ...a,
+    sourceCueIds: [
+      ...new Set([
+        ...(a.sourceCueIds ?? [a.id]),
+        ...(b.sourceCueIds ?? [b.id]),
+      ]),
+    ],
     start: Math.min(a.start, b.start),
     end: Math.max(a.end, b.end),
     original: joinCueText(a.original, b.original),

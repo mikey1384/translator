@@ -1367,6 +1367,7 @@
     "linkPlaceholder": "Liitä videolinkki",
     "dropHere": "Pudota tähän – käännetään {{languageInto}}",
     "makeItSpeak": "Käännä {{languageInto}}",
+    "downloadOnly": "Lataa vain",
     "helper": "Liitä linkki YouTubesta, TikTokista, Instagramista tai X:stä – tai pudota videotiedosto tähän",
     "chooseFile": "Valitse tiedosto",
     "into": "Kieli",

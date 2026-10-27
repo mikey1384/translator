@@ -1367,6 +1367,7 @@
     "linkPlaceholder": "Video bağlantısı yapıştırın",
     "dropHere": "Bırakın, {{language}} diline çevirelim",
     "makeItSpeak": "{{language}} diline çevir",
+    "downloadOnly": "Yalnızca indir",
     "helper": "YouTube, TikTok, Instagram veya X bağlantısı yapıştırın — ya da bir video dosyasını buraya bırakın",
     "chooseFile": "Dosya seç",
     "into": "Dil",

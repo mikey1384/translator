@@ -31,7 +31,21 @@ interface SubtitleSidecarV2 {
   }>;
 }
 
-type SubtitleSidecarPayload = SubtitleSidecarV1 | SubtitleSidecarV2;
+interface SubtitleSidecarV3 {
+  version: 3;
+  srtFingerprint: string;
+  segments: Array<
+    SubtitleSidecarV2['segments'][number] & {
+      id: string;
+      sourceCueIds?: string[];
+    }
+  >;
+}
+
+type SubtitleSidecarPayload =
+  | SubtitleSidecarV1
+  | SubtitleSidecarV2
+  | SubtitleSidecarV3;
 type SidecarSegmentPayload =
   | SubtitleSidecarV1['segments'][number]
   | SubtitleSidecarV2['segments'][number];
@@ -58,10 +72,12 @@ export function buildSubtitleSidecarContent(args: {
   segments: SrtSegment[];
   srtContent: string;
 }): string {
-  const payload: SubtitleSidecarV2 = {
-    version: 2,
+  const payload: SubtitleSidecarV3 = {
+    version: 3,
     srtFingerprint: fingerprintSubtitleText(args.srtContent),
     segments: args.segments.map(segment => ({
+      id: segment.id,
+      sourceCueIds: segment.sourceCueIds,
       index: segment.index,
       start: segment.start,
       end: segment.end,
@@ -129,7 +145,7 @@ export function restoreSegmentsFromSubtitleSidecar(args: {
 
   if (
     !parsed ||
-    (parsed.version !== 1 && parsed.version !== 2) ||
+    ![1, 2, 3].includes(parsed.version) ||
     parsed.srtFingerprint !== fingerprintSubtitleText(args.srtContent) ||
     !Array.isArray(parsed.segments)
   ) {
@@ -137,6 +153,7 @@ export function restoreSegmentsFromSubtitleSidecar(args: {
   }
 
   const restored: SrtSegment[] = [];
+  const ids = new Set<string>();
   for (const segment of parsed.segments) {
     if (
       typeof segment?.start !== 'number' ||
@@ -147,7 +164,7 @@ export function restoreSegmentsFromSubtitleSidecar(args: {
     }
 
     const restoredWords =
-      parsed.version === 2
+      parsed.version >= 2
         ? restoreSegmentWords(
             (
               segment as SidecarSegmentPayload & {
@@ -160,8 +177,31 @@ export function restoreSegmentsFromSubtitleSidecar(args: {
       return null;
     }
 
+    const provenance = segment as SubtitleSidecarV3['segments'][number];
+    const id = parsed.version === 3 ? provenance.id : crypto.randomUUID();
+    if (
+      typeof id !== 'string' ||
+      !id ||
+      id === 'prototype' ||
+      Object.hasOwn(Object.prototype, id) ||
+      ids.has(id)
+    )
+      return null;
+    if (
+      parsed.version === 3 &&
+      provenance.sourceCueIds !== undefined &&
+      (!Array.isArray(provenance.sourceCueIds) ||
+        provenance.sourceCueIds.some(
+          sourceId => typeof sourceId !== 'string' || !sourceId
+        ))
+    )
+      return null;
+    ids.add(id);
     restored.push({
-      id: crypto.randomUUID(),
+      id,
+      ...(parsed.version === 3 && provenance.sourceCueIds
+        ? { sourceCueIds: [...provenance.sourceCueIds] }
+        : {}),
       index:
         typeof segment.index === 'number' ? segment.index : restored.length + 1,
       start: segment.start,

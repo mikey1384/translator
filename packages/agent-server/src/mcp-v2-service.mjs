@@ -5,6 +5,11 @@ import path from 'node:path';
 import { canonicalJson, canonicalJsonHash } from './canonical-json.mjs';
 import { buildSrt, parseSrtWithDiagnostics } from './srt.mjs';
 import {
+  normalizeSubtitleRevision,
+  repairSubtitleTimings,
+  subtitleTimingIssues,
+} from './subtitle-revisions.mjs';
+import {
   DEFAULT_SUBTITLE_ISSUE_DETAIL_LIMIT,
   validateSubtitleSegments,
 } from './subtitle-quality.mjs';
@@ -627,12 +632,22 @@ function plannedInputPaths(plan, additionalPaths = []) {
   ].filter(Boolean);
 }
 
+function subtitleRevisionOutputPaths(plan) {
+  const directory = plan?.outputs?.output_directory;
+  if (!directory) return [];
+  const base = plan.outputs.base_name || 'translator-output';
+  return ['original-transcript.srt', 'subtitle-revision.json'].map(suffix =>
+    path.join(directory, `${base}-${suffix}`)
+  );
+}
+
 function plannedOutputPaths(plan) {
   const outputDirectory = String(plan?.outputs?.output_directory || '').trim();
   if (!outputDirectory) return [];
   const baseName = String(plan?.outputs?.base_name || 'translator-output');
   const presets = plan?.outputs?.presets || [];
   return [
+    ...subtitleRevisionOutputPaths(plan),
     ...(plan?.translation?.provider !== 'none'
       ? [path.join(outputDirectory, `${baseName}-source.srt`)]
       : []),
@@ -927,6 +942,12 @@ function operationId(job, stage) {
   return stage.operation_id || `mcp-v2:${job.job_id}:${stage.id}`;
 }
 
+function previewOperationId(job) {
+  // Preview receipts already bind the full SRT, style and source fingerprint.
+  // Keep ownership stable so a new revision can replace this job's old frames.
+  return `mcp-v2:${job.job_id}:preview`;
+}
+
 function usesLibraryHistoryStage(plan, stage) {
   return plan?.source?.kind === 'library_item' && stage?.id === 'transcription';
 }
@@ -1047,7 +1068,9 @@ function translationAcceptanceSummary(session) {
 function renderRecoveryStateSnapshot(store, jobId) {
   const job = store.requireJob(jobId);
   const plan = store.getPlan(job.plan_hash);
-  const session = store.getTranslationSession(jobId);
+  const session = job.subtitle_revision_id
+    ? store.getSelectedSubtitleSession(jobId)
+    : store.getTranslationSession(jobId);
   return {
     job,
     plan,
@@ -2100,6 +2123,11 @@ export class McpV2Service {
         return this.submitTranslationBatch(args);
       case 'validate_translation':
         return this.validateTranslation(args.job_id);
+      case 'get_subtitle_revision':
+        return this.getSubtitleRevision(args);
+      case 'apply_subtitle_revision':
+      case 'select_subtitle_revision':
+        return this.applySubtitleRevision(args);
       case 'get_project_profile':
         return this.getProjectProfile(args.name);
       case 'save_project_profile':
@@ -3023,6 +3051,8 @@ export class McpV2Service {
         probe.metadata?.title || 'translator-output'
       );
       const plannedFileNames = [
+        `${baseName}-original-transcript.srt`,
+        `${baseName}-subtitle-revision.json`,
         ...(translationProvider !== 'none' ? [`${baseName}-source.srt`] : []),
         ...subtitleFormats.map(format => `${baseName}.${format}`),
         ...presets.map(preset => `${baseName}-${preset}.mp4`),
@@ -3738,9 +3768,9 @@ export class McpV2Service {
       sourceCheckpoint,
     });
     const persistedSource = this.store.requireJob(args.source_job_id);
-    const persistedSession = this.store.getTranslationSession(
-      created.job.job_id
-    );
+    const persistedSession = created.job.subtitle_revision_id
+      ? this.store.getSelectedSubtitleSession(created.job.job_id)
+      : this.store.getTranslationSession(created.job.job_id);
     const persistedPlan = this.store.getPlan(created.job.plan_hash);
     if (
       persistentJobCheckpointSha256(persistedSource) !==
@@ -4587,9 +4617,9 @@ export class McpV2Service {
               job.job_id,
               {
                 code: 'IMMUTABLE_SUBTITLE_TIMING_INVALID',
-                message: `${immutableTimingErrorCount} subtitle timing error(s) cannot be corrected through translation batches because timestamps are immutable. Create a new plan with a corrected transcript or rerun transcription intentionally.`,
+                message: `${immutableTimingErrorCount} subtitle timing error(s) need a reviewed subtitle revision. Use apply_subtitle_revision to correct timing or cue structure without retranscription; the original stays recoverable.`,
                 validation,
-                suggested_action: 'plan_job',
+                suggested_action: 'apply_subtitle_revision',
               },
               stage
             );
@@ -4614,7 +4644,8 @@ export class McpV2Service {
           );
           return 'blocked';
         }
-        this.store.clearTranslationCorrectionMarkers(job.job_id);
+        if (!job.subtitle_revision_id)
+          this.store.clearTranslationCorrectionMarkers(job.job_id);
         this.completeStage(job.job_id, validation, stage);
         return 'complete';
       }
@@ -5820,13 +5851,14 @@ export class McpV2Service {
     job,
     plan,
     expectedStage = null,
-    { videoPath = null } = {}
+    {
+      videoPath = null,
+      replaceSubtitleRevision = false,
+      expectedEditorDocumentRevision = null,
+    } = {}
   ) {
-    const session = await this.ensureTranslationSession(
-      job,
-      plan,
-      expectedStage
-    );
+    await this.ensureTranslationSession(job, plan, expectedStage);
+    const session = this.store.getSelectedSubtitleSession(job.job_id);
     if (!session) {
       throw new Error('Persistent translation session is unavailable.');
     }
@@ -5840,12 +5872,20 @@ export class McpV2Service {
       videoPath: videoPath || plannedVideoPath(job, plan),
       targetLanguage: plan.target_language,
       segments: session.segments,
+      subtitleRevisionId: session.subtitle_revision_id,
+      replaceSubtitleRevision,
+      expectedEditorDocumentRevision,
     });
     return result;
   }
 
-  async readAllAppSubtitles(source, mcpJobId = null) {
+  async readAllAppSubtitles(
+    source,
+    mcpJobId = null,
+    expectedSubtitleRevisionId = null
+  ) {
     const segments = [];
+    let documentRevision = null;
     let moreRemain = false;
     for (
       let offset = 0;
@@ -5856,11 +5896,25 @@ export class McpV2Service {
         ...(mcpJobId ? { mcpJobId } : {}),
         offset,
         limit: 100,
+        ...(expectedSubtitleRevisionId ? { expectedSubtitleRevisionId } : {}),
         ...(source?.kind === 'library_item'
           ? { historyId: source.history_id }
           : {}),
       });
       const cues = Array.isArray(page?.cues) ? page.cues : [];
+      if (expectedSubtitleRevisionId) {
+        if (
+          page.subtitle_revision_id !== expectedSubtitleRevisionId ||
+          typeof page.document_revision !== 'string' ||
+          !page.document_revision ||
+          (documentRevision !== null &&
+            page.document_revision !== documentRevision)
+        )
+          throw new Error(
+            'The editor changed while its reviewed revision was being read. Retry after finishing edits.'
+          );
+        documentRevision = page.document_revision;
+      }
       segments.push(
         ...cues.map((cue, index) => ({
           id: cue.id || `seg_${String(offset + index + 1).padStart(5, '0')}`,
@@ -5869,6 +5923,7 @@ export class McpV2Service {
           end: Number(cue.end),
           source: String(cue.source ?? cue.original ?? ''),
           translation: String(cue.translation || ''),
+          ...(cue.source_ids ? { source_ids: cue.source_ids } : {}),
           speaker: cue.speaker || null,
           topic: cue.topic || null,
         }))
@@ -5879,7 +5934,10 @@ export class McpV2Service {
         );
       }
       moreRemain = page?.hasMore === true;
-      if (!moreRemain) return segments;
+      if (!moreRemain)
+        return expectedSubtitleRevisionId
+          ? { segments, documentRevision }
+          : segments;
     }
     if (moreRemain) {
       throw new Error(
@@ -6372,28 +6430,188 @@ export class McpV2Service {
     return { ...accepted, job: this.store.requireJob(jobId) };
   }
 
+  getSubtitleRevision({
+    job_id: jobId,
+    revision_id: revisionId,
+    offset = 0,
+    limit = 50,
+  }) {
+    const revision = this.store.getSubtitleRevision(jobId, revisionId);
+    const { session, ...metadata } = revision;
+    return {
+      ...metadata,
+      repairs: revision.repairs?.slice(0, 100),
+      repair_count: revision.repairs?.length || 0,
+      selected_revision_id: this.store.getSubtitleRevision(jobId).revision_id,
+      revisions: this.store.listSubtitleRevisions(jobId).map(item => ({
+        revision_id: item.revision_id,
+        label: item.label,
+        original: item.original,
+        cue_count: item.cue_count,
+      })),
+      media_duration_seconds: session.media_duration_seconds,
+      total: session.segments.length,
+      offset,
+      has_more: offset + limit < session.segments.length,
+      cues: session.segments
+        .slice(offset, offset + limit)
+        .map(cue => ({ ...cue, source_ids: cue.source_ids || [cue.id] })),
+    };
+  }
+
+  async applySubtitleRevision(args) {
+    const jobId = args.job_id;
+    return this.withJobActivity(jobId, 'subtitle_revision', async () => {
+      const job = this.store.requireJob(jobId);
+      const plan = this.store.getPlan(job.plan_hash);
+      const current = this.store.getSubtitleRevision(jobId);
+      if (current.revision_id !== args.expected_revision_id)
+        throw new Error(
+          'The selected subtitle revision changed. Read get_subtitle_revision again.'
+        );
+      if (args.cues_path && args.use_app_subtitles)
+        throw new Error(
+          'Choose a reviewed cue file or editor subtitles, not both.'
+        );
+      let cues = current.session.segments;
+      let editorDocumentRevision = null;
+      if (args.cues_path) {
+        const file = path.resolve(args.cues_path);
+        const stat = await fs.stat(file);
+        if (!stat.isFile() || stat.size > 32 * 1024 * 1024)
+          throw new Error(
+            'Reviewed cues must be a regular JSON file smaller than 32 MiB.'
+          );
+        const parsed = JSON.parse(await fs.readFile(file, 'utf8'));
+        cues = Array.isArray(parsed)
+          ? parsed
+          : (parsed.cues ?? parsed.segments);
+      } else if (args.use_app_subtitles) {
+        const editor = await this.readAllAppSubtitles(
+          null,
+          jobId,
+          current.revision_id
+        );
+        cues = editor.segments;
+        editorDocumentRevision = editor.documentRevision;
+      }
+      const videoPath = await this.requireCurrentPlannedVideo(job, plan);
+      const probe = await this.callApp('probeSource', {
+        mcpJobId: jobId,
+        source: { path: videoPath },
+      });
+      const duration = Number(probe?.metadata?.duration_seconds);
+      if (!(Number.isFinite(duration) && duration > 0))
+        throw new Error(
+          'Could not probe the actual media duration; no subtitle revision was changed.'
+        );
+      const repair = {
+        trimToMedia: args.trim_to_media === true,
+        joinGapsUpToSeconds: args.join_gaps_up_to_seconds || 0,
+        preserveGapAfterIds: args.preserve_gap_after_ids || [],
+      };
+      if (args.dry_run) {
+        const repaired = repairSubtitleTimings(cues, {
+          ...repair,
+          mediaDurationSeconds: duration,
+        });
+        const normalized = normalizeSubtitleRevision(
+          repaired.segments,
+          this.store.getTranslationSession(jobId).segments
+        );
+        const issues = subtitleTimingIssues(normalized.segments, duration);
+        return {
+          dry_run: true,
+          selected_revision_id: current.revision_id,
+          cue_count: normalized.segments.length,
+          deleted_source_ids: normalized.deleted_source_ids,
+          repairs: repaired.changes,
+          timing_issues: issues,
+          media_duration_seconds: duration,
+          consumes_stage5_credits: false,
+        };
+      }
+      await assertPlannedOutputIsolation(plan, [videoPath, args.cues_path]);
+      if (plan.outputs?.overwrite !== true) {
+        for (const outputPath of subtitleRevisionOutputPaths(plan)) {
+          const exists = await fs.lstat(outputPath).then(
+            () => true,
+            error => {
+              if (error.code === 'ENOENT') return false;
+              throw error;
+            }
+          );
+          if (exists)
+            throw new Error(
+              'A reviewed-revision output already exists. Choose a new output base name or explicitly plan overwrite before selecting the revision.'
+            );
+        }
+      }
+      const revision = this.store.applySubtitleRevision(jobId, {
+        expectedRevisionId: args.expected_revision_id,
+        cues,
+        revisionId: args.revision_id,
+        mediaDurationSeconds: duration,
+        repair,
+        label: args.label,
+      });
+      // Persist first. A disconnected app cannot erase an accepted revision.
+      let mountError = null;
+      try {
+        await this.applySessionToApp(this.store.requireJob(jobId), plan, null, {
+          videoPath,
+          replaceSubtitleRevision: true,
+          expectedEditorDocumentRevision: editorDocumentRevision,
+        });
+      } catch (error) {
+        mountError = String(error?.message || error);
+      }
+      const validation = await this.validateTranslation(jobId);
+      this.notify(jobId);
+      return {
+        revision_id: revision.revision_id,
+        cue_count: revision.session.segments.length,
+        deleted_source_cue_count: revision.deleted_source_ids.length,
+        repair_count: revision.repairs.length,
+        validation,
+        mounted: !mountError,
+        mount_error: mountError,
+        consumes_stage5_credits: false,
+        next_action:
+          'Inspect the selected revision, then retry_stage for translation_validation. Rendering still requires render_outputs authorization.',
+      };
+    });
+  }
+
   async runValidation(jobId) {
     const job = this.store.requireJob(jobId);
     const plan = this.store.getPlan(job.plan_hash);
-    const session = this.store.getTranslationSession(jobId);
+    const session = this.store.getSelectedSubtitleSession(jobId);
     if (!session)
       throw new Error('No persistent translation session exists for this job.');
     const profile = this.profileForPlan(plan);
     const style = profile.translation_style || {};
-    return validateSubtitleSegments(session.segments, {
-      mode: plan.translation?.provider === 'none' ? 'source' : 'translation',
-      targetLanguage: session.target_language,
-      glossary: session.glossary,
-      mediaDurationSeconds: session.media_duration_seconds,
-      maxLines: style.max_lines || 2,
-      maxCharactersPerLine: style.max_characters_per_line || 42,
-      preferredCharactersPerSecond: style.preferred_characters_per_second || 20,
-    });
+    return {
+      ...validateSubtitleSegments(session.segments, {
+        mode: plan.translation?.provider === 'none' ? 'source' : 'translation',
+        targetLanguage: session.target_language,
+        glossary: session.glossary,
+        mediaDurationSeconds: session.media_duration_seconds,
+        maxLines: style.max_lines || 2,
+        maxCharactersPerLine: style.max_characters_per_line || 42,
+        preferredCharactersPerSecond:
+          style.preferred_characters_per_second || 20,
+      }),
+      subtitle_revision_id: session.subtitle_revision_id,
+    };
   }
 
   async validateTranslation(jobId) {
     const validation = await this.runValidation(jobId);
-    if (validation.passed) {
+    if (
+      validation.passed &&
+      !this.store.requireJob(jobId).subtitle_revision_id
+    ) {
       this.store.clearTranslationCorrectionMarkers(jobId);
     }
     const currentJob = this.store.requireJob(jobId);
@@ -6418,6 +6636,7 @@ export class McpV2Service {
     );
     if (
       !validation.passed &&
+      !updated.subtitle_revision_id &&
       Number(updated.revision) > Number(currentJob.revision)
     ) {
       this.store.markTranslationSegmentsForCorrection(
@@ -6483,7 +6702,7 @@ export class McpV2Service {
     });
     const result = await this.callApp('renderPreview', {
       mcpJobId: jobId,
-      operationId: `mcp-v2:${jobId}:preview`,
+      operationId: previewOperationId(job),
       source: plan.source,
       sourceVideoPath: previewVideoPath,
       protectedInputPaths: plannedInputPaths(plan, [previewVideoPath]),
@@ -6559,7 +6778,11 @@ export class McpV2Service {
         'The render checkpoint changed while preview artifacts were being verified. The preview result was not attached to the job.'
       );
     }
-    return { ...result, artifacts: previewArtifacts };
+    return {
+      ...result,
+      subtitle_revision_id: validation.subtitle_revision_id,
+      artifacts: previewArtifacts,
+    };
   }
 
   async renderOutputs(jobId, allowWarnings) {
@@ -6589,14 +6812,14 @@ export class McpV2Service {
       ) {
         return current;
       }
-      const previewOperationId = `mcp-v2:${jobId}:preview`;
+      const previewId = previewOperationId(current);
       const previewStatus = await this.callApp('processingStatus', {
         mcpJobId: jobId,
-        operationId: previewOperationId,
+        operationId: previewId,
       });
       if (
-        (previewStatus?.id === previewOperationId ||
-          previewStatus?.operationId === previewOperationId) &&
+        (previewStatus?.id === previewId ||
+          previewStatus?.operationId === previewId) &&
         ['running', 'cancelling'].includes(appResultStatus(previewStatus))
       ) {
         throw new Error(
@@ -6902,7 +7125,10 @@ export class McpV2Service {
   ) {
     const job = this.store.requireJob(jobId);
     const plan = this.store.getPlan(job.plan_hash);
-    const session = this.store.getTranslationSession(jobId);
+    const rawSession = this.store.getTranslationSession(jobId);
+    const session = rawSession
+      ? this.store.getSelectedSubtitleSession(jobId)
+      : null;
     await assertPlannedOutputIsolation(plan, [plannedVideoPath(job, plan)]);
     const artifacts = [];
     for (const artifact of job.artifacts) {
@@ -6983,6 +7209,28 @@ export class McpV2Service {
           });
         }
       };
+      if (job.subtitle_revision_id) {
+        await writeSubtitleArtifact({
+          outputPath: path.join(
+            plan.outputs.output_directory,
+            `${plan.outputs.base_name}-original-transcript.srt`
+          ),
+          content: buildSrt(rawSession.segments, 'source'),
+          kind: 'original_transcript_srt',
+        });
+        await writeSubtitleArtifact({
+          outputPath: path.join(
+            plan.outputs.output_directory,
+            `${plan.outputs.base_name}-subtitle-revision.json`
+          ),
+          content: JSON.stringify(
+            this.store.getSubtitleRevision(jobId),
+            null,
+            2
+          ),
+          kind: 'subtitle_revision_json',
+        });
+      }
       const translated = plan.translation?.provider !== 'none';
       if (translated) {
         const sourcePath = path.join(
@@ -7051,6 +7299,7 @@ export class McpV2Service {
     );
     const manifest = {
       schema_version: MCP_V2_SCHEMA_VERSION,
+      subtitle_revision_id: session?.subtitle_revision_id || null,
       job_id: jobId,
       environment: this.environment,
       created_at: job.created_at,

@@ -10,6 +10,52 @@ import {
   fingerprintSubtitleText,
   restoreSegmentsFromSubtitleSidecar,
 } from './subtitle-sidecar';
+import { mergeCues, splitCue } from '../../renderer/utils/subtitle-split-merge';
+
+test('edited cue identity and provenance survive merging, splitting, save and reload', () => {
+  const a = {
+    id: 'a',
+    index: 1,
+    start: 0,
+    end: 1,
+    original: 'First',
+    translation: '첫',
+  };
+  const b = {
+    id: 'b',
+    index: 2,
+    start: 1.1,
+    end: 2,
+    original: 'thought',
+    translation: '문장',
+  };
+  const merged = mergeCues(a, b);
+  assert.deepEqual(merged.sourceCueIds, ['a', 'b']);
+  const parts = splitCue(merged, { newId: 'split' })!;
+  const srtContent = buildCanonicalSubtitleSrt(parts);
+  const restored = restoreSegmentsFromSubtitleSidecar({
+    srtContent,
+    sidecarContent: buildSubtitleSidecarContent({
+      segments: parts,
+      srtContent,
+    }),
+  })!;
+  assert.deepEqual(
+    restored.map(s => s.id),
+    ['a', 'split']
+  );
+  assert.deepEqual(
+    restored.map(s => s.sourceCueIds),
+    [
+      ['a', 'b'],
+      ['a', 'b'],
+    ]
+  );
+  assert.deepEqual(
+    restored.map(s => [s.start, s.end, s.translation]),
+    parts.map(s => [s.start, s.end, s.translation])
+  );
+});
 
 test('subtitle sidecar restores same-script bilingual subtitles losslessly from translation-only export', () => {
   const segments = [
@@ -190,6 +236,21 @@ Bonjour`;
     fingerprintSubtitleText(lfContent),
     fingerprintSubtitleText(crlfContent)
   );
+});
+
+test('restoring persistent cue IDs rejects object-prototype property names', () => {
+  for (const id of ['__proto__', 'constructor', 'prototype', 'toString']) {
+    const segments = [{ id, index: 1, start: 0, end: 2, original: 'Text' }];
+    const srtContent = buildCanonicalSubtitleSrt(segments);
+    const sidecarContent = buildSubtitleSidecarContent({
+      segments,
+      srtContent,
+    });
+    assert.equal(
+      restoreSegmentsFromSubtitleSidecar({ srtContent, sidecarContent }),
+      null
+    );
+  }
 });
 
 test('subtitle sidecar still restores when equivalent SRT content only differs by line endings', () => {

@@ -1355,6 +1355,7 @@
     "linkPlaceholder": "วางลิงก์วิดีโอ",
     "dropHere": "ปล่อยไฟล์ที่นี่ เพื่อแปลเป็นภาษา{{language}}",
     "makeItSpeak": "แปลเป็นภาษา{{language}}",
+    "downloadOnly": "ดาวน์โหลดเท่านั้น",
     "helper": "วางลิงก์จาก YouTube, TikTok, Instagram หรือ X — หรือลากไฟล์วิดีโอมาวางที่นี่",
     "chooseFile": "เลือกไฟล์",
     "into": "แปลเป็น",

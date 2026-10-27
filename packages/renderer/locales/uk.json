@@ -1374,6 +1374,7 @@
     "linkPlaceholder": "Вставте посилання на відео",
     "dropHere": "Відпустіть — перекладемо на {{languageInto}}",
     "makeItSpeak": "Перекласти на {{languageInto}}",
+    "downloadOnly": "Лише завантажити",
     "helper": "Вставте посилання з YouTube, TikTok, Instagram чи X — або перетягніть сюди відеофайл",
     "chooseFile": "Вибрати файл",
     "into": "Мова",

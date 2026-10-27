@@ -40,6 +40,7 @@ async function recoveryFixture(
     terminalCancelledRender = false,
     sourceMetadataOverrides = {},
     subtitleDisplayMode = 'translation',
+    reviewedRevision = false,
   } = {}
 ) {
   const root = await fs.mkdtemp(
@@ -223,6 +224,33 @@ async function recoveryFixture(
       revision_count: 1,
     })),
   });
+  if (reviewedRevision) {
+    store.mutateJob(created.job_id, job => {
+      job.status = 'blocked';
+      job.stage_index = 2;
+      job.stages[0].status = 'completed';
+      job.stages[1].status = 'completed';
+      job.stages[2].status = 'blocked';
+      return job;
+    });
+    const raw = store.getTranslationSession(created.job_id).segments;
+    store.applySubtitleRevision(created.job_id, {
+      expectedRevisionId: store.getSubtitleRevision(created.job_id).revision_id,
+      mediaDurationSeconds: durationSeconds,
+      cues: [
+        {
+          ...raw[0],
+          end: raw[1].end,
+          source: `${raw[0].source} ${raw[1].source}`,
+          translation: `${raw[0].translation} ${raw[1].translation}`,
+          source_ids: [raw[0].id, raw[1].id],
+        },
+        ...raw
+          .slice(3)
+          .map(cue => ({ ...cue, end: cue.end + 0.1, source_ids: [cue.id] })),
+      ],
+    });
+  }
   const validation = await service.runValidation(created.job_id);
   assert.equal(validation.passed, true);
   store.mutateJob(
@@ -284,13 +312,13 @@ async function recoveryFixture(
   );
 
   const sourceJob = store.requireJob(created.job_id);
-  const session = store.getTranslationSession(created.job_id);
+  const session = store.getSelectedSubtitleSession(created.job_id);
   const expected = {
     source_key: sourceKey,
     source_checkpoint_sha256: sourceSha256,
     source_checkpoint_bytes: sourceContent.byteLength,
     translation_session_sha256: translationSessionCheckpointSha256(session),
-    accepted_segment_count: segmentCount,
+    accepted_segment_count: session.segments.length,
     target_language: 'Korean',
     validation_sha256: validationCheckpointSha256(sourceJob.validation),
     credit_ledger_sha256: creditLedgerCheckpointSha256(sourceJob.credit_usage),
@@ -312,6 +340,50 @@ async function recoveryFixture(
     },
   };
 }
+
+test('render recovery retains the selected reviewed timing and provenance separately from the raw transcript', async t => {
+  const fixture = await recoveryFixture(t, {
+    segmentCount: 5,
+    reviewedRevision: true,
+  });
+  const original = fixture.store.getTranslationSession(fixture.sourceJobId);
+  const selected = fixture.store.getSubtitleRevision(fixture.sourceJobId);
+  const preflight = await fixture.service.preflightRenderCheckpointFork(
+    fixture.preflightArgs
+  );
+  assert.equal(preflight.eligible, true, JSON.stringify(preflight.blockers));
+  const created = await fixture.service.createRenderCheckpointFork({
+    ...fixture.preflightArgs,
+    preflight_digest: preflight.preflight_digest,
+    idempotency_key: 'reviewed-recovery',
+  });
+  assert.equal(created.job.subtitle_revision_id, selected.revision_id);
+  assert.deepEqual(
+    fixture.store.getSubtitleRevision(created.job.job_id),
+    selected
+  );
+  assert.equal(
+    fixture.store.getSelectedSubtitleSession(created.job.job_id).segments
+      .length,
+    3
+  );
+  assert.deepEqual(
+    fixture.store.getTranslationSession(created.job.job_id).segments,
+    original.segments
+  );
+  assert.equal(
+    validationCheckpointSha256(
+      await fixture.service.runValidation(created.job.job_id)
+    ),
+    validationCheckpointSha256(created.job.validation)
+  );
+  assert.deepEqual(
+    fixture.store.getTranslationSession(fixture.sourceJobId),
+    original
+  );
+  assert.equal(created.stage5_credits_consumed, 0);
+  assert.equal(created.render_started, false);
+});
 
 test('pure preflight preserves 5,700 accepted translations and the exact ledger without writes', async t => {
   const fixture = await recoveryFixture(t);

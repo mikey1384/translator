@@ -67,8 +67,10 @@ export async function probeFps(
 export type MergeSourceStreams = {
   /** First audio stream's codec, or null when there is none / unknown. */
   audioCodec: string | null;
-  /** First video stream's bit rate (bits/s), falling back to the container's. */
+  /** First video stream's bit rate (bits/s); never includes audio bitrate. */
   videoBitRate: number | null;
+  videoCodec: string | null;
+  duration: number | null;
 };
 
 /** Best effort: never throws; unknown values come back null. */
@@ -76,7 +78,12 @@ export async function probeMergeSourceStreams(
   file: string,
   ffprobePath: string
 ): Promise<MergeSourceStreams> {
-  const empty: MergeSourceStreams = { audioCodec: null, videoBitRate: null };
+  const empty: MergeSourceStreams = {
+    audioCodec: null,
+    videoBitRate: null,
+    videoCodec: null,
+    duration: null,
+  };
   return await new Promise(resolve => {
     let p: ReturnType<typeof spawn>;
     try {
@@ -84,7 +91,7 @@ export async function probeMergeSourceStreams(
         '-v',
         'error',
         '-show_entries',
-        'stream=codec_type,codec_name,bit_rate:format=bit_rate',
+        'stream=codec_type,codec_name,bit_rate:format=duration',
         '-of',
         'json',
         file,
@@ -104,7 +111,7 @@ export async function probeMergeSourceStreams(
             codec_name?: string;
             bit_rate?: string;
           }>;
-          format?: { bit_rate?: string };
+          format?: { duration?: string };
         };
         const streams = parsed.streams ?? [];
         const audio = streams.find(s => s.codec_type === 'audio');
@@ -115,7 +122,9 @@ export async function probeMergeSourceStreams(
         };
         resolve({
           audioCodec: audio?.codec_name?.toLowerCase() ?? null,
-          videoBitRate: rate(video?.bit_rate) ?? rate(parsed.format?.bit_rate),
+          videoBitRate: rate(video?.bit_rate),
+          videoCodec: video?.codec_name?.toLowerCase() ?? null,
+          duration: rate(parsed.format?.duration),
         });
       } catch {
         resolve(empty);

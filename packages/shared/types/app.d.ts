@@ -167,6 +167,7 @@ declare module '@shared-types/app' {
 
   export interface SaveFileResult {
     success: boolean;
+    canceled?: boolean;
     filePath?: string;
     error?: string;
   }
@@ -720,6 +721,8 @@ declare module '@shared-types/app' {
 
   export interface SrtSegment {
     id: string;
+    /** Original transcript cue identities, retained across merges/splits. */
+    sourceCueIds?: string[];
     index: number;
     start: number;
     end: number;
@@ -1175,12 +1178,29 @@ declare module '@shared-types/app' {
     videoRotationDeg?: number;
   }
 
+  export interface SubtitleExportDiagnostics {
+    policy: string;
+    sourceVideoCodec: string | null;
+    sourceVideoBitRate: number | null;
+    width: number;
+    height: number;
+    frameRate: number;
+    videoCodecArgs: string[];
+    audioCodecArgs: string[];
+    rateControl: 'bitrate-with-resolution-floor' | 'constant-quality';
+    targetBitRate: number | null;
+    softwareFallback: boolean;
+    fastStart: boolean;
+    overlayFormat: string;
+  }
+
   export interface ExposedRenderResult {
     success: boolean;
     outputPath?: string;
     error?: string;
     cancelled?: boolean;
     operationId: string;
+    exportDiagnostics?: SubtitleExportDiagnostics;
   }
 
   // =========================================

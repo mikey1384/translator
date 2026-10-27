@@ -271,13 +271,13 @@ export default function FreePreviewOffer() {
                 })
             : // Nothing was started, so there is nothing to "finish".
               canFinishNow
-              ? t('home.makeItSpeak', 'Make it speak {{language}}', {
+              ? t('home.makeItSpeak', 'Translate to {{language}}', {
                   language: languageName,
                   languageInto,
                 })
               : t(
                   'freePreview.noneCta',
-                  'Make it speak {{language}} · {{price}}',
+                  'Translate to {{language}} · {{price}}',
                   { language: languageName, languageInto, price }
                 )}
         </Button>
@@ -322,7 +322,7 @@ export default function FreePreviewOffer() {
           <p className={body}>
             {t(
               'freePreview.resumingBody',
-              'Picking up at {{time}} and making the rest speak {{language}}…',
+              'Resuming at {{time}} and translating the rest into {{language}}…',
               {
                 time: localizeDigits(formatClock(preview.coveredSecs)),
                 language: languageName,
@@ -410,7 +410,7 @@ export default function FreePreviewOffer() {
     // never have had this month's top-up. A low balance does get the next one.
     detail = t(
       'freePreview.noneBodyNextFree',
-      'Free minutes top up again on {{date}}, or make it speak {{language}} now for {{price}}.',
+      'Free minutes renew on {{date}}, or translate to {{language}} now for {{price}}.',
       {
         date: formatRefreshDate(monthlyFree.refreshesOn, locale),
         language: languageName,
@@ -421,7 +421,7 @@ export default function FreePreviewOffer() {
   } else {
     detail = t(
       'freePreview.noneBody',
-      'Make the whole video speak {{language}} for {{price}}.',
+      'Translate the whole video to {{language}} for {{price}}.',
       { language: languageName, languageInto, price }
     );
   }
@@ -432,7 +432,7 @@ export default function FreePreviewOffer() {
       : t('freePreview.finishShort', 'Finish the video')
     : preview.coveredSecs > 0
       ? t('freePreview.finishCta', 'Finish the video · {{price}}', { price })
-      : t('freePreview.noneCta', 'Make it speak {{language}} · {{price}}', {
+      : t('freePreview.noneCta', 'Translate to {{language}} · {{price}}', {
           language: languageName,
           languageInto,
           price,

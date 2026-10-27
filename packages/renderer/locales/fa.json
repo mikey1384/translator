@@ -1357,6 +1357,7 @@
     "linkPlaceholder": "لینک ویدیو را اینجا بچسبانید",
     "dropHere": "رها کنید تا به {{language}} ترجمه شود",
     "makeItSpeak": "ترجمه به {{language}}",
+    "downloadOnly": "فقط دانلود",
     "helper": "لینکی از YouTube، TikTok، Instagram یا X بچسبانید — یا فایل ویدیو را اینجا رها کنید",
     "chooseFile": "انتخاب فایل",
     "into": "زبان",

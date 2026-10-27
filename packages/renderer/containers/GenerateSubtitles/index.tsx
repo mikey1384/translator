@@ -59,6 +59,7 @@ import {
   executeSrtTranslation,
 } from './utils/subtitleGeneration';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
+import { saveOriginalVideoFile } from '../../utils/saveVideo';
 import { useConfirmedDub } from '../../hooks/useConfirmedDub';
 import {
   buildSemanticSummarySourceIdentity,
@@ -92,6 +93,12 @@ const AUTO_RUN_TARGET_KEY = 'autoRunTarget';
 const AUTO_RUN_LANGUAGE_KEY = 'autoRunLanguage';
 // Legacy phase-1 boolean key, migrated into AUTO_RUN_TARGET_KEY on first load.
 const LEGACY_AUTO_RUN_BOOL_KEY = 'autoRunAfterDownload';
+
+type DownloadRunOptions = {
+  target: AutoRunTarget;
+  language: string;
+  saveOnComplete?: boolean;
+};
 
 function getInitialAutoRunTarget(): AutoRunTarget {
   const stored = localStorage.getItem(AUTO_RUN_TARGET_KEY);
@@ -376,10 +383,7 @@ export default function GenerateSubtitles() {
   // The continuation still owed once the download mounts ('download' = none).
   const pendingAutoRunTargetRef = useRef<AutoRunTarget>('download');
   // The chain a download stopped by a human check would have continued.
-  const cookieRetryChainRef = useRef<{
-    target: AutoRunTarget;
-    language: string;
-  } | null>(null);
+  const cookieRetryChainRef = useRef<DownloadRunOptions | null>(null);
   // The source path the pending auto-run is bound to. Bound (as state, not a ref)
   // only once the download has actually mounted, so (a) the continuation can
   // never fire against the old/unrelated source while the download is in flight
@@ -758,10 +762,11 @@ export default function GenerateSubtitles() {
   // so the effect never fires stale and the strip stops spinning.
   async function runDownloadWithAutoRun(
     downloadFn: () => Promise<ProcessUrlResult | void>,
-    override?: { target: AutoRunTarget; language: string }
+    override?: DownloadRunOptions
   ) {
     const target = override?.target ?? autoRunTarget;
     const chainLanguage = override?.language ?? autoRunLanguage;
+    const saveOnComplete = target === 'download' && override?.saveOnComplete;
     cookieRetryChainRef.current = null;
     // Bind to a source only after the download mounts (below). Until then the
     // continuation is unbound and cannot fire against whatever is currently
@@ -791,8 +796,12 @@ export default function GenerateSubtitles() {
     // so the continuation can never bind to the old or an unrelated file.
     // A human check stops the download; remember the chain so "Connect &
     // retry" continues it instead of only downloading.
-    if (typedResult?.error === 'NeedCookies' && target !== 'download') {
-      cookieRetryChainRef.current = { target, language: chainLanguage };
+    if (typedResult?.error === 'NeedCookies') {
+      cookieRetryChainRef.current = {
+        target,
+        language: chainLanguage,
+        saveOnComplete,
+      };
     }
     const downloadedPath =
       typedResult?.videoPath ?? typedResult?.filePath ?? null;
@@ -813,6 +822,14 @@ export default function GenerateSubtitles() {
         setAutoRunBoundSource(null);
         setAutoRunSession(null);
       }
+    }
+    if (
+      saveOnComplete &&
+      typedResult?.success &&
+      !typedResult.cancelled &&
+      downloadedPath
+    ) {
+      await saveOriginalVideoFile(downloadedPath);
     }
     return result;
   }
@@ -841,9 +858,9 @@ export default function GenerateSubtitles() {
     await runDownloadWithAutoRun(() => downloadMedia());
   }
 
-  // Home "Make it speak X": the same chain as the auto-run option, always to
-  // translation, in the home screen's language. A URL downloads first; a file
-  // the home screen already mounted continues straight to transcription.
+  // Home actions use the same chain as the auto-run option, with an explicit
+  // stop so "Download only" cannot inherit a saved translation preference.
+  // A mounted file continues straight to transcription.
   const homeRunRequest = useUIStore(s => s.homeRunRequest);
   useEffect(() => {
     if (!homeRunRequest) return;
@@ -864,15 +881,18 @@ export default function GenerateSubtitles() {
       return;
     }
     const language = ui.targetLanguage;
-    setAutoRunLanguage(language);
     if (request.kind === 'url') {
+      const target = request.target ?? 'translate';
+      if (target === 'translate') setAutoRunLanguage(language);
       setUrlInput(request.url);
       void runDownloadWithAutoRun(() => downloadMedia({ url: request.url }), {
-        target: 'translate',
+        target,
         language,
+        saveOnComplete: target === 'download',
       });
       return;
     }
+    setAutoRunLanguage(language);
     const runTarget = request.target ?? 'translate';
     setPreTranscriptProcessingLanguage(language);
     pendingAutoRunTargetRef.current = runTarget;

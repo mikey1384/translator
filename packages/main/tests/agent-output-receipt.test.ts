@@ -153,12 +153,13 @@ test('output fingerprints accept ctime-only churn only after a stable second has
     const stat = await originalLstat(args[0], args[1]);
     if (String(args[0]) !== outputPath) return stat;
     outputLstatCalls += 1;
-    if (outputLstatCalls !== 2 || typeof stat.ctimeNs !== 'bigint') {
+    const ctimeNs = 'ctimeNs' in stat ? stat.ctimeNs : undefined;
+    if (outputLstatCalls !== 2 || typeof ctimeNs !== 'bigint') {
       return stat;
     }
     return new Proxy(stat, {
       get(target, property, receiver) {
-        if (property === 'ctimeNs') return target.ctimeNs + 1n;
+        if (property === 'ctimeNs') return ctimeNs + 1n;
         return Reflect.get(target, property, receiver);
       },
     });

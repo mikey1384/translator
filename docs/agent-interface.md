@@ -34,6 +34,8 @@ recoverable, plan-first workflow. Its tools are:
 - External translation: `get_transcript_batch`,
   `submit_translation_batch`, `validate_translation`, `get_project_profile`,
   and `save_project_profile`
+- Reviewed cues: `get_subtitle_revision`, `apply_subtitle_revision`, and
+  `select_subtitle_revision`
 - Outputs: `render_preview`, `render_outputs`, `verify_outputs`, and
   `get_job_manifest`
 - Human-gated publishing handoff: `prepare_youtube_upload` and `prepare_x_post`
@@ -155,6 +157,47 @@ Character validation detects invalid/control Unicode data; it does not claim to
 prove that every installed font contains every glyph. Use `render_preview` and
 inspect its frames for that visual guarantee before authorizing the full encode.
 
+### Reviewed subtitle revisions
+
+Timing and cue structure are separate from text-only translation batches. At an
+idle validation/render checkpoint, use `get_subtitle_revision` to read the
+selected revision ID, then `apply_subtitle_revision` with that
+`expected_revision_id`. Supply either `cues_path` (a local JSON array, or an
+object with `cues`/`segments`) or `use_app_subtitles=true` to save the bound
+editor's reviewed document. Each cue has `id`, `start`, `end`, `source` (or
+`original`), `translation`, and `source_ids` pointing to original cue IDs.
+Merged and split cues retain those roots; omitted roots are recorded as deletions.
+The editor's merge/split and saved-document paths preserve this provenance.
+
+The operation probes the bound media file's actual duration and rejects invalid,
+overlapping, or out-of-media timings. `dry_run=true` reports proposed repairs
+without selecting or saving a revision. Repairs are explicit:
+
+- `trim_to_media=true` trims cue ends and removes wholly out-of-media cues.
+- `join_gaps_up_to_seconds` (0–0.5, default 0) extends the preceding caption's
+  end across short gaps; it never moves a speech start. Use
+  `preserve_gap_after_ids` for intentional pauses, even within that threshold.
+
+Applying a revision saves an immutable snapshot, selects it, mounts it in the
+editor, invalidates old validation/previews/render authorization, and leaves the
+job at validation. It performs no transcription, translation, or full encode.
+Inspect the response's `mounted` and `mount_error` fields; a failed editor mount
+does not erase the saved revision. `retry_stage` resumes validation, then
+`render_preview` and explicit `render_outputs` authorization follow normally.
+Preview, validation, subtitle exports, and burn-in consume the selected revision.
+Edits made afterward must be applied as another revision before a job-bound
+export; an independently opened SRT remains an ordinary editable document.
+
+`select_subtitle_revision` with `revision_id` and `expected_revision_id` restores
+an earlier snapshot. The original transcript and completed translation remain
+recoverable. Reviewed manifests also save `*-original-transcript.srt` and
+`*-subtitle-revision.json` (text, timings, provenance, and repairs). Completed jobs
+and jobs with completed or partial downstream outputs stay immutable; start a new job from
+their saved subtitles to make another delivery without retranscription.
+Render-only recovery forks preserve the selected revision and its original
+transcript separately. The two revision artifact names are reserved during
+output preflight, so existing files cannot be discovered only after an encode.
+
 ### Rendering, verification, and manifest
 
 A job can render representative beginning/middle/end previews before encoding.
@@ -167,6 +210,17 @@ planned, every preview and finished-verification frame name participates in the
 same preflight collision check, planned outputs are forbidden from overlapping
 any media or transcript input even when overwrite is enabled, and one
 subtitle-burned intermediate is reused across presets.
+
+UI and MCP subtitle burn-in share the `h264-subtitles-v2` export policy. macOS
+H.264 VideoToolbox uses at least 0.10 bits per output pixel per frame (6.21 Mbps
+at 1080p/29.97), with a 1 Mbps minimum; a higher source bitrate can raise this
+budget but an efficient source codec cannot lower it. Known VideoToolbox startup
+failures retry once with libx264 CRF 20. Cancellation and storage errors do not
+trigger a retry. MP4 delivery includes `+faststart`, and success is emitted only
+after FFmpeg exits and the final output is saved. Export responses and logs expose
+the effective encoder, rate control, dimensions, frame rate, audio handling,
+fast-start flag, and software fallback through `export_diagnostics` (MCP) or
+`exportDiagnostics` (renderer). The RGBA subtitle composition remains unchanged.
 
 Local and library video bytes are hashed during planning and rechecked before
 media-consuming stages. Downloaded, transcribed, dubbed, and rendered app

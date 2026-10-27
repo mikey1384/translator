@@ -516,6 +516,219 @@ function executionError(execution) {
   return execution.value.error;
 }
 
+test('reviewed editor import requires one stable document version across every page', async t => {
+  let version = 'document:1';
+  const { service } = await setup(t, 'development', {
+    handlers: {
+      subtitlesBatch: async ({ offset }) => ({
+        subtitle_revision_id: 'reviewed:one',
+        document_revision: offset ? version : 'document:1',
+        cues: [
+          {
+            id: `cue-${offset}`,
+            start: offset,
+            end: offset + 1,
+            source: 'Text',
+          },
+        ],
+        hasMore: offset === 0,
+      }),
+    },
+  });
+  const stable = await service.readAllAppSubtitles(null, 'job', 'reviewed:one');
+  assert.equal(stable.segments.length, 2);
+  assert.equal(stable.documentRevision, 'document:1');
+  for (version of ['document:2', undefined, '']) {
+    await assert.rejects(
+      service.readAllAppSubtitles(null, 'job', 'reviewed:one'),
+      /editor changed/
+    );
+  }
+});
+
+test('reviewed subtitles drive validation, mounted preview and saved exports without paid stages', async t => {
+  let mounted = null;
+  const fixture = await setup(t, 'development', {
+    handlers: {
+      applyTranslationSession: async input => {
+        mounted = input;
+        return { applied: true };
+      },
+      writeAgentOutputText: async input => {
+        await fs.writeFile(input.path, input.content);
+        return {
+          path: input.path,
+          bytes: Buffer.byteLength(input.content),
+          sha256: createHash('sha256').update(input.content).digest('hex'),
+        };
+      },
+      renderPreview: async () => {
+        const file = path.join(fixture.store.root, 'preview.png');
+        await fs.writeFile(file, 'preview-fixture');
+        return { frames: [file] };
+      },
+    },
+  });
+  const { store, service, app } = fixture;
+  const video = path.join(store.root, 'source.mp4');
+  await fs.writeFile(video, 'fixture-source');
+  const source = {
+    kind: 'local_file',
+    path: video,
+    bytes: 14,
+    sha256: createHash('sha256').update('fixture-source').digest('hex'),
+  };
+  const plan = store.putPlan({
+    request: { source: { path: video } },
+    plan: {
+      source,
+      source_metadata: { duration_seconds: 99 },
+      project_profile: 'stage5_korean',
+      translation: { provider: 'agent' },
+      target_language: 'Korean',
+      outputs: {
+        output_directory: store.root,
+        base_name: 'reviewed',
+        subtitle_formats: ['srt'],
+        presets: [],
+      },
+      credit_usage: { total_stage5_credits: 0 },
+      stages: [
+        { id: 'translation_validation' },
+        { id: 'render_outputs' },
+        { id: 'manifest' },
+      ],
+    },
+  });
+  const job = store.createJob({
+    planHash: plan.plan_hash,
+    idempotencyKey: 'reviewed-subtitle-flow',
+    request: {},
+  }).job;
+  const raw = [
+    { id: 'a', start: 0, end: 1, source: 'A', translation: '첫' },
+    { id: 'b', start: 1, end: 2, source: 'B', translation: '문장' },
+    { id: 'c', start: 10, end: 14.6, source: 'C', translation: '끝' },
+  ];
+  store.initializeTranslationSession(job.job_id, {
+    segments: raw,
+    targetLanguage: 'Korean',
+    mediaDurationSeconds: 99,
+  });
+  store.mutateJob(job.job_id, next => {
+    next.status = 'blocked';
+    next.stages[0].status = 'blocked';
+    return next;
+  });
+  const expected = store.getSubtitleRevision(job.job_id).revision_id;
+  const file = path.join(store.root, 'reviewed.json');
+  await fs.writeFile(
+    file,
+    JSON.stringify([
+      {
+        id: 'merged',
+        start: 0,
+        end: 2,
+        original: 'A B',
+        translation: '첫 문장',
+        source_ids: ['a', 'b'],
+      },
+      { ...raw[2], source_ids: ['c'] },
+    ])
+  );
+  const dry = data(
+    await service.execute('apply_subtitle_revision', {
+      job_id: job.job_id,
+      expected_revision_id: expected,
+      cues_path: file,
+      trim_to_media: true,
+      dry_run: true,
+    })
+  );
+  assert.equal(
+    dry.media_duration_seconds,
+    12,
+    'actual file probe wins over stale 99-second planned duration'
+  );
+  assert.equal(dry.repairs[0].after, 12);
+  assert.equal(store.getSubtitleRevision(job.job_id).revision_id, expected);
+  const protectedOutput = path.join(
+    store.root,
+    'reviewed-original-transcript.srt'
+  );
+  await fs.writeFile(protectedOutput, 'Existing delivery');
+  await assert.rejects(
+    service.applySubtitleRevision({
+      job_id: job.job_id,
+      expected_revision_id: expected,
+      cues_path: file,
+      trim_to_media: true,
+    }),
+    /revision output already exists/
+  );
+  assert.equal(await fs.readFile(protectedOutput, 'utf8'), 'Existing delivery');
+  assert.equal(store.getSubtitleRevision(job.job_id).revision_id, expected);
+  await fs.unlink(protectedOutput);
+  const applied = data(
+    await service.execute('apply_subtitle_revision', {
+      job_id: job.job_id,
+      expected_revision_id: expected,
+      cues_path: file,
+      trim_to_media: true,
+    })
+  );
+  assert.equal(applied.validation.passed, true);
+  assert.equal(applied.mounted, true);
+  assert.equal(mounted.subtitleRevisionId, applied.revision_id);
+  assert.equal(mounted.segments.length, 2);
+  assert.equal(mounted.segments.at(-1).end, 12);
+  assert.deepEqual(
+    store.getTranslationSession(job.job_id).segments.map(c => c.end),
+    [1, 2, 14.6]
+  );
+  assert.equal(
+    data(await service.execute('validate_translation', { job_id: job.job_id }))
+      .subtitle_revision_id,
+    applied.revision_id
+  );
+  store.mutateJob(job.job_id, next => {
+    next.stage_index = 1;
+    next.stage = 'render_outputs';
+    next.stages[0].status = 'completed';
+    next.stages[1].status = 'blocked';
+    return next;
+  });
+  const preview = data(
+    await service.execute('render_preview', { job_id: job.job_id })
+  );
+  assert.equal(preview.subtitle_revision_id, applied.revision_id);
+  const manifest = await service.buildManifest(job.job_id);
+  assert.equal(manifest.subtitle_revision_id, applied.revision_id);
+  assert.match(
+    await fs.readFile(path.join(store.root, 'reviewed.srt'), 'utf8'),
+    /00:00:10,000 --> 00:00:12,000/
+  );
+  assert.match(
+    await fs.readFile(
+      path.join(store.root, 'reviewed-original-transcript.srt'),
+      'utf8'
+    ),
+    /00:00:14,600/
+  );
+  assert.ok(
+    app.calls.every(
+      call =>
+        ![
+          'startTranscription',
+          'startTranslation',
+          'startDubbing',
+          'startSummary',
+          'startPresetRender',
+        ].includes(call.method)
+    )
+  );
+});
+
 async function createRunningLocalJob(t, appHandlers = {}) {
   let activeOperationId = null;
   const handlers = {
@@ -2452,7 +2665,7 @@ test('validation failures issue correction-only review batches', async t => {
   assert.equal(renderStarts, 1);
 });
 
-test('immutable timing failures direct callers to a corrected plan instead of an ineffective text review', async t => {
+test('timing failures direct callers to a reviewed revision without retranscription', async t => {
   const { service, store } = await setup(t);
   const plan = store.putPlan({
     request: { source: { mock: true } },
@@ -2501,7 +2714,7 @@ test('immutable timing failures direct callers to a corrected plan instead of an
   const blocked = await service.advanceJob(job.job_id);
   assert.equal(blocked.status, 'blocked');
   assert.equal(blocked.error.code, 'IMMUTABLE_SUBTITLE_TIMING_INVALID');
-  assert.equal(blocked.error.suggested_action, 'plan_job');
+  assert.equal(blocked.error.suggested_action, 'apply_subtitle_revision');
   const review = await service.execute('get_transcript_batch', {
     job_id: job.job_id,
     mode: 'review',
@@ -5223,11 +5436,22 @@ test('legacy video search billing follows the video-suggestion provider slot', (
 });
 
 test('legacy paid tools are unmistakably labeled as lacking v2 safeguards', () => {
-  for (const tool of ['app_highlights_get', 'app_highlights_set', 'app_start_highlight_render']) {
-    const billing = legacyToolBilling(tool, {}, {providers:{translation:{kind:'stage5'}}});
+  for (const tool of [
+    'app_highlights_get',
+    'app_highlights_set',
+    'app_start_highlight_render',
+  ]) {
+    const billing = legacyToolBilling(
+      tool,
+      {},
+      { providers: { translation: { kind: 'stage5' } } }
+    );
     assert.equal(billing.may_consume_stage5_credits, false);
     assert.equal(billing.will_consume_stage5_credits, false);
-    assert.equal(legacyToolDescription(tool, 'Local saved-video workflow.'), 'Local saved-video workflow.');
+    assert.equal(
+      legacyToolDescription(tool, 'Local saved-video workflow.'),
+      'Local saved-video workflow.'
+    );
   }
   assert.match(
     legacyToolDescription(

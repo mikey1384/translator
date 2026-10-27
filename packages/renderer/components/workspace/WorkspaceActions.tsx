@@ -507,7 +507,7 @@ function InterruptedJobNotice() {
           : record.kind === 'translate'
             ? t(
                 'workspace.interruptedTranslate',
-                'Making this video speak {{language}} stopped when Translator closed.',
+                'Translating this video into {{language}} stopped when Translator closed.',
                 { language: language.name, languageInto: language.into }
               )
             : t(
@@ -996,7 +996,7 @@ export function WorkspaceActionBar() {
   let primary: { label: string; run: () => void } | null = null;
   if (kind === 'makeItSpeak' && videoPath) {
     primary = {
-      label: t('home.makeItSpeak', 'Make it speak {{language}}', {
+      label: t('home.makeItSpeak', 'Translate to {{language}}', {
         language: language.name,
         languageInto: language.into,
       }),

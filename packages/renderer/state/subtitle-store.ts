@@ -37,6 +37,8 @@ interface State {
   playingId: string | null;
   _abortPlayListener?: () => void;
   sourceId: number;
+  /** Changes only on document load, unlike sourceId's edit/refresh counter. */
+  documentGeneration: number;
   documentId: string | null;
   documentTitle: string | null;
   originalPath: string | null;
@@ -180,6 +182,7 @@ const initialState: State = {
   playingId: null,
   _abortPlayListener: undefined,
   sourceId: 0,
+  documentGeneration: 0,
   documentId: null,
   documentTitle: null,
   originalPath: null,
@@ -460,6 +463,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           }, {});
           s.order = segs.map(cue => cue.id);
           s.sourceId += 1;
+          s.documentGeneration += 1;
           s.documentId = nextDocumentId;
           s.documentTitle = nextDocumentTitle;
           s.originalPath = nextOriginalPath;

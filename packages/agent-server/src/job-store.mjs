@@ -24,6 +24,11 @@ import {
   validationCheckpointSha256,
 } from './render-checkpoint-recovery.mjs';
 import { isSemanticBoundary } from './subtitle-quality.mjs';
+import {
+  normalizeSubtitleRevision,
+  repairSubtitleTimings,
+  subtitleTimingIssues,
+} from './subtitle-revisions.mjs';
 
 const TERMINAL_JOB_STATUSES = new Set(['cancelled', 'failed', 'completed']);
 const VALID_JOB_STATUSES = new Set(JOB_STATUSES);
@@ -617,6 +622,14 @@ export class PersistentJobStore {
         response_hash TEXT,
         FOREIGN KEY(job_id) REFERENCES jobs(job_id) ON DELETE CASCADE
       );
+      CREATE TABLE IF NOT EXISTS subtitle_revisions (
+        job_id TEXT NOT NULL,
+        revision_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        revision_json TEXT NOT NULL,
+        PRIMARY KEY(job_id, revision_id),
+        FOREIGN KEY(job_id) REFERENCES jobs(job_id) ON DELETE CASCADE
+      );
       CREATE INDEX IF NOT EXISTS translation_batches_pending
         ON translation_batches(job_id, mode, accepted_at, created_at DESC);
       CREATE TABLE IF NOT EXISTS job_control_requests (
@@ -918,7 +931,10 @@ export class PersistentJobStore {
 
     return this.transaction(() => {
       const sourceJob = this.requireJob(sourceId);
-      const sourceSession = this.getTranslationSession(sourceId);
+      const rawSourceSession = this.getTranslationSession(sourceId);
+      const sourceSession = sourceJob.subtitle_revision_id
+        ? this.getSelectedSubtitleSession(sourceId)
+        : rawSourceSession;
       const sourcePlan = this.getPlan(sourceJob.plan_hash);
       if (sourceJob.status !== 'cancelled') {
         throw new IdempotencyConflictError(
@@ -1220,6 +1236,13 @@ export class PersistentJobStore {
         stages,
         artifacts: [sourceArtifact],
         validation: clone(sourceJob.validation),
+        ...(sourceJob.subtitle_revision_id
+          ? {
+              subtitle_revision_id: sourceJob.subtitle_revision_id,
+              subtitle_revision_generation:
+                sourceJob.subtitle_revision_generation,
+            }
+          : {}),
         manifest: null,
         request: requestPayload,
         recovery: {
@@ -1257,7 +1280,7 @@ export class PersistentJobStore {
         );
 
       const forkSession = {
-        ...clone(sourceSession),
+        ...clone(rawSourceSession),
         job_id: jobId,
         created_at: now,
         updated_at: now,
@@ -1277,6 +1300,14 @@ export class PersistentJobStore {
           now,
           canonicalJson(forkSession)
         );
+      // Preserve the selected reviewed snapshot and its lineage, while the raw
+      // transcript remains separate and recoverable in the fork.
+      this.database
+        .prepare(
+          `INSERT INTO subtitle_revisions(job_id, revision_id, created_at, revision_json)
+         SELECT ?, revision_id, created_at, revision_json FROM subtitle_revisions WHERE job_id = ?`
+        )
+        .run(jobId, sourceId);
       this.insertEvent(
         jobId,
         1,
@@ -1962,7 +1993,204 @@ export class PersistentJobStore {
     return row ? parseJson(row.session_json) : null;
   }
 
+  getSubtitleRevision(jobId, revisionId = null) {
+    const job = this.requireJob(jobId);
+    const raw = this.getTranslationSession(jobId);
+    if (!raw) throw new Error('No persistent subtitle session exists.');
+    const id = revisionId || job.subtitle_revision_id || 'original';
+    const originalId = `original:${translationSessionCheckpointSha256(raw)}`;
+    if (id === 'original' || id === originalId) {
+      return {
+        revision_id: originalId,
+        label: 'Original transcript',
+        original: true,
+        session: raw,
+        deleted_source_ids: [],
+        repairs: [],
+      };
+    }
+    const row = this.database
+      .prepare(
+        'SELECT revision_json FROM subtitle_revisions WHERE job_id = ? AND revision_id = ?'
+      )
+      .get(jobId, id);
+    if (!row) throw new Error('Subtitle revision does not belong to this job.');
+    return parseJson(row.revision_json);
+  }
+
+  getSelectedSubtitleSession(jobId) {
+    const revision = this.getSubtitleRevision(jobId);
+    return { ...revision.session, subtitle_revision_id: revision.revision_id };
+  }
+
+  listSubtitleRevisions(jobId) {
+    const original = this.getSubtitleRevision(jobId, 'original');
+    const stored = this.database
+      .prepare(
+        'SELECT revision_json FROM subtitle_revisions WHERE job_id = ? ORDER BY created_at'
+      )
+      .all(jobId)
+      .map(row => parseJson(row.revision_json));
+    return [
+      original,
+      ...stored.filter(
+        revision => revision.revision_id !== original.revision_id
+      ),
+    ].map(({ session, ...revision }) => ({
+      ...revision,
+      cue_count: session.segments.length,
+      media_duration_seconds: session.media_duration_seconds,
+    }));
+  }
+
+  /** One SQLite transaction selects the revision and invalidates derived work. */
+  applySubtitleRevision(
+    jobId,
+    {
+      expectedRevisionId,
+      cues,
+      revisionId,
+      mediaDurationSeconds,
+      repair = {},
+      label = 'Reviewed subtitles',
+    }
+  ) {
+    let selected;
+    this.mutateJob(
+      jobId,
+      job => {
+        const current = this.getSubtitleRevision(jobId);
+        if (current.revision_id !== expectedRevisionId) {
+          throw new IdempotencyConflictError(
+            'The selected subtitle revision changed. Read it again before applying edits.'
+          );
+        }
+        const validationIndex = job.stages.findIndex(
+          stage => stage.id === 'translation_validation'
+        );
+        const downstreamStages = new Set(
+          job.stages.slice(validationIndex + 1).map(stage => stage.id)
+        );
+        if (
+          validationIndex < 0 ||
+          job.stage_index < validationIndex ||
+          ['completed', 'cancelled'].includes(job.status) ||
+          job.stages.some(stage =>
+            ['starting', 'running'].includes(stage.status)
+          ) ||
+          job.stages
+            .slice(validationIndex + 1)
+            .some(stage => stage.status === 'completed') ||
+          job.artifacts.some(artifact => downstreamStages.has(artifact.stage))
+        ) {
+          throw new Error(
+            'Subtitle revisions require an idle validation/render checkpoint with no completed or partial derived outputs. Preserve existing deliveries and start a new job from the saved subtitles.'
+          );
+        }
+        const raw = this.getSubtitleRevision(jobId, 'original');
+        if (revisionId) {
+          selected = this.getSubtitleRevision(jobId, revisionId);
+        } else {
+          if (
+            !(Number.isFinite(mediaDurationSeconds) && mediaDurationSeconds > 0)
+          )
+            throw new Error(
+              'A probed media duration is required for a reviewed revision.'
+            );
+          const repaired = repairSubtitleTimings(
+            cues || current.session.segments,
+            { ...repair, mediaDurationSeconds }
+          );
+          const normalized = normalizeSubtitleRevision(
+            repaired.segments,
+            raw.session.segments
+          );
+          const issues = subtitleTimingIssues(
+            normalized.segments,
+            mediaDurationSeconds
+          );
+          if (issues.length) {
+            const error = new Error(
+              `Reviewed subtitle timing is invalid (${issues[0].code}, cue ${issues[0].index}). Edit the cues or explicitly request trim_to_media / join_gaps_up_to_seconds.`
+            );
+            error.code = 'SUBTITLE_TIMING_INVALID';
+            error.details = {
+              issues: issues.slice(0, 100),
+              issue_count: issues.length,
+            };
+            throw error;
+          }
+          selected = {
+            revision_id: `reviewed:${randomUUID()}`,
+            parent_revision_id: current.revision_id,
+            original_revision_id: raw.revision_id,
+            label: String(label).slice(0, 200),
+            original: false,
+            created_at: this.timestamp(),
+            session: {
+              ...raw.session,
+              segments: normalized.segments,
+              media_duration_seconds: mediaDurationSeconds,
+            },
+            deleted_source_ids: normalized.deleted_source_ids,
+            repairs: repaired.changes,
+          };
+          for (const revision of [raw, selected]) {
+            this.database
+              .prepare(
+                'INSERT OR IGNORE INTO subtitle_revisions(job_id, revision_id, created_at, revision_json) VALUES(?, ?, ?, ?)'
+              )
+              .run(
+                jobId,
+                revision.revision_id,
+                this.timestamp(),
+                canonicalJson(revision)
+              );
+          }
+        }
+        job.subtitle_revision_id = selected.revision_id;
+        job.subtitle_revision_generation =
+          Number(job.subtitle_revision_generation || 0) + 1;
+        job.validation = null;
+        job.preview = null;
+        job.manifest = null;
+        job.render_authorized = false;
+        job.render_warnings_authorized = false;
+        job.error = null;
+        job.stage_index = validationIndex;
+        job.stage = 'translation_validation';
+        job.status = 'blocked';
+        job.pause_requested = false;
+        job.cancel_requested = false;
+        job.human_status =
+          'Subtitle revision selected; validate and retry the validation stage to continue.';
+        job.stages.slice(validationIndex).forEach((stage, index) => {
+          Object.assign(stage, {
+            status: index === 0 ? 'blocked' : 'pending',
+            percent: 0,
+            result: null,
+            error: null,
+            operation_id: `mcp-v2:${jobId}:${stage.id}:subtitles-${job.subtitle_revision_generation}`,
+            claim_owner: null,
+            started_at: null,
+            finished_at: null,
+          });
+        });
+        job.artifacts = job.artifacts.filter(
+          artifact => artifact.kind !== 'preview_frame'
+        );
+        return job;
+      },
+      { eventType: 'subtitle_revision_selected' }
+    );
+    return selected;
+  }
+
   synchronizeTranslationSession(jobId, segments) {
+    if (this.requireJob(jobId).subtitle_revision_id)
+      throw new Error(
+        'Apply a new subtitle revision instead of changing the original translation session.'
+      );
     if (!Array.isArray(segments) || !segments.length) {
       throw new TypeError('segments must contain at least one subtitle cue.');
     }
@@ -2070,6 +2298,10 @@ export class PersistentJobStore {
       maxSegments = TRANSLATION_BATCH_DEFAULT_SEGMENTS,
     } = {}
   ) {
+    if (this.requireJob(jobId).subtitle_revision_id)
+      throw new Error(
+        'Use apply_subtitle_revision to edit the selected reviewed subtitles. Translation batches cannot modify a saved revision.'
+      );
     if (!['translate', 'review'].includes(mode)) {
       throw new TypeError('mode must be translate or review.');
     }
@@ -2242,6 +2474,10 @@ export class PersistentJobStore {
   }
 
   submitTranslationBatch(jobId, batchIdValue, translations) {
+    if (this.requireJob(jobId).subtitle_revision_id)
+      throw new Error(
+        'Use apply_subtitle_revision to edit the selected reviewed subtitles.'
+      );
     const batchId = String(batchIdValue || '').trim();
     if (!batchId) throw new TypeError('batch_id is required.');
     if (!Array.isArray(translations) || !translations.length) {

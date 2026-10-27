@@ -1,3 +1,8 @@
+import {
+  appliedSubtitleSelection,
+  setAppliedSubtitleSelection,
+  subtitleSelectionFingerprint,
+} from '../utils/subtitle-revision-selection';
 import { currentVideoCost } from '../utils/freePreviewRun';
 import {
   getMountedHighlights,
@@ -8,8 +13,7 @@ import { renderHighlight } from '../utils/render-highlight';
 import {
   buildSrt,
   parseSrt,
-  parseSrtOriginalOnly,
-  shapeImportedSrtSegments,
+  openSubtitleWithElectron,
 } from '../../shared/helpers';
 import {
   CHECKOUT_ALREADY_PENDING,
@@ -2829,6 +2833,7 @@ async function runAgentMerge(
     return {
       operationId,
       outputPath: result.outputPath,
+      export_diagnostics: result.exportDiagnostics,
       mode: displayMode,
       style: subtitleStyle,
       fontSizePx,
@@ -3002,6 +3007,7 @@ async function runAgentPresetRender(
   let renderError: unknown = null;
   let cleanupError: unknown = null;
   let renderResult: Record<string, unknown> | null = null;
+  let masterExportDiagnostics: unknown = null;
   try {
     if (burnSubtitles) {
       if (await window.fileApi.fileExists(temporaryMaster)) {
@@ -3045,7 +3051,7 @@ async function runAgentPresetRender(
           path: temporaryMaster,
           operationId: agentOperationId,
         });
-        await runAgentMerge(agentOperationId, {
+        const mergedMaster = await runAgentMerge(agentOperationId, {
           outputPath: temporaryMaster,
           overwrite: false,
           sourceVideoPath: input?.sourceVideoPath,
@@ -3054,6 +3060,7 @@ async function runAgentPresetRender(
           subtitleFontSize: outputs.subtitle_font_size,
           subtitleRenderSpec: outputs.subtitle_render_spec,
         });
+        masterExportDiagnostics = mergedMaster.export_diagnostics;
         const claimedMaster = await SystemIPC.agentV2ClaimTemporaryOutput({
           path: temporaryMaster,
           operationId: agentOperationId,
@@ -3203,6 +3210,7 @@ async function runAgentPresetRender(
       outputs: completedOutputs(),
       incomplete: false,
       reused_intermediate_master: reusedIntermediateMaster,
+      subtitle_master_export_diagnostics: masterExportDiagnostics,
       shared_intermediate_master_across_presets:
         burnSubtitles && presets.length > 1,
       burned_subtitles: burnSubtitles,
@@ -3815,6 +3823,7 @@ async function subtitleBatchSnapshot(input?: {
   offset?: number;
   limit?: number;
   historyId?: string;
+  expectedSubtitleRevisionId?: string;
 }): Promise<Record<string, unknown>> {
   if (input?.historyId) {
     const loaded = await loadSubtitlesFromHistory(input.historyId);
@@ -3826,14 +3835,33 @@ async function subtitleBatchSnapshot(input?: {
   }
 
   const subtitles = useSubStore.getState();
-  return createAgentSubtitleBatchSnapshot(
-    subtitles.order.map(id => subtitles.segments[id]),
-    {
-      offset: input?.offset,
-      limit: input?.limit,
-      sourceNote: 'Loaded from currently mounted subtitles',
-    }
-  );
+  if (
+    input?.expectedSubtitleRevisionId &&
+    (appliedSubtitleSelection?.revisionId !==
+      input.expectedSubtitleRevisionId ||
+      appliedSubtitleSelection.documentGeneration !==
+        subtitles.documentGeneration)
+  ) {
+    throw new Error(
+      'The editor is not mounted on the expected subtitle revision. Select the job revision before editing it.'
+    );
+  }
+  return {
+    subtitle_revision_id:
+      appliedSubtitleSelection?.documentGeneration ===
+      subtitles.documentGeneration
+        ? appliedSubtitleSelection.revisionId
+        : null,
+    document_revision: `${subtitles.sourceId}:${subtitles.editRevision}`,
+    ...createAgentSubtitleBatchSnapshot(
+      subtitles.order.map(id => subtitles.segments[id]),
+      {
+        offset: input?.offset,
+        limit: input?.limit,
+        sourceNote: 'Loaded from currently mounted subtitles',
+      }
+    ),
+  };
 }
 
 function updateSubtitleBatch(input?: {
@@ -4463,11 +4491,35 @@ async function applyTranslationSession(input?: {
   segments?: Array<Record<string, unknown>>;
   sourceBinding?: unknown;
   mcpJobId?: string;
+  subtitleRevisionId?: string;
+  replaceSubtitleRevision?: boolean;
+  expectedEditorDocumentRevision?: string | null;
 }): Promise<Record<string, unknown>> {
   if (hasActiveAppProcessing()) {
     throw new Error('Translator is busy with another processing operation.');
   }
   const mcpJobId = getInternalMcpJobId(input);
+  const currentDocument = useSubStore.getState();
+  if (
+    input?.expectedEditorDocumentRevision &&
+    `${currentDocument.sourceId}:${currentDocument.editRevision}` !==
+      input.expectedEditorDocumentRevision
+  ) {
+    throw new Error(
+      'The editor changed while saving the reviewed revision. The saved revision is safe; the current document was left untouched.'
+    );
+  }
+  if (
+    appliedSubtitleSelection?.jobId === mcpJobId &&
+    !input?.replaceSubtitleRevision &&
+    subtitleSelectionFingerprint(
+      currentDocument.order.map(id => currentDocument.segments[id])
+    ) !== appliedSubtitleSelection.fingerprint
+  ) {
+    throw new Error(
+      'The editor has subtitle changes outside the selected job revision. Use apply_subtitle_revision with use_app_subtitles=true to preserve them, or explicitly select a saved revision.'
+    );
+  }
   const sourceBinding =
     input?.sourceBinding === undefined
       ? null
@@ -4513,6 +4565,9 @@ async function applyTranslationSession(input?: {
       end,
       original,
       translation,
+      sourceCueIds: Array.isArray(raw.source_ids)
+        ? raw.source_ids.map(String)
+        : [id],
     };
   });
 
@@ -4534,6 +4589,14 @@ async function applyTranslationSession(input?: {
     }
     const video = useVideoStore.getState();
     const currentVideoPath = video.originalPath ?? video.path ?? null;
+    if (
+      input?.expectedEditorDocumentRevision &&
+      currentVideoPath !== videoPath
+    ) {
+      throw new Error(
+        'The editor media changed while saving the reviewed revision. Reopen the job before selecting its saved revision.'
+      );
+    }
     if (currentVideoPath !== videoPath) {
       await useVideoStore.getState().setFile(
         {
@@ -4552,6 +4615,15 @@ async function applyTranslationSession(input?: {
   // Word timings live on the document this job transcribed for the same video,
   // not in the job session, so capture them before the session replaces it.
   const previousSubtitles = useSubStore.getState();
+  if (
+    input?.expectedEditorDocumentRevision &&
+    `${previousSubtitles.sourceId}:${previousSubtitles.editRevision}` !==
+      input.expectedEditorDocumentRevision
+  ) {
+    throw new Error(
+      'New editor changes arrived while saving the reviewed revision. The saved revision is safe; the newer editor changes were left untouched.'
+    );
+  }
   const previousSegments =
     videoPath && previousSubtitles.sourceVideoPath === videoPath
       ? previousSubtitles.order
@@ -4567,6 +4639,16 @@ async function applyTranslationSession(input?: {
       sourceProvenance: 'mcp_persistent_job',
       targetLanguage: String(input?.targetLanguage || '').trim() || null,
     });
+  setAppliedSubtitleSelection(
+    mcpJobId && input?.subtitleRevisionId
+      ? {
+          jobId: mcpJobId,
+          revisionId: input.subtitleRevisionId,
+          documentGeneration: useSubStore.getState().documentGeneration,
+          fingerprint: subtitleSelectionFingerprint(segments),
+        }
+      : null
+  );
   useUIStore.getState().setEditPanelOpen(true);
   // Agent-authored translations otherwise exist only in the job store, so the
   // video would reopen from the library as untranslated.
@@ -4619,6 +4701,7 @@ async function applyTranslationSession(input?: {
       : null;
   return {
     applied: true,
+    subtitle_revision_id: input?.subtitleRevisionId || null,
     cueCount: segments.length,
     translatedCueCount: segments.filter(segment =>
       Boolean(segment.translation?.trim())
@@ -4965,9 +5048,11 @@ function installAgentBridge() {
       if (!(await window.fileApi.fileExists(filePath))) {
         throw new Error(`Subtitle file does not exist: ${filePath}`);
       }
-      const content = await window.fileApi.readText(filePath);
-      // Same reading as File → Open: lines 2+ of a cue are not a translation.
-      const segments = shapeImportedSrtSegments(parseSrtOriginalOnly(content));
+      // Use File → Open's document/fingerprint-aware restore. Parsing just
+      // the SRT would lose bilingual text, stable IDs and reviewed provenance.
+      const opened = await openSubtitleWithElectron({ filePath });
+      if (opened.error) throw new Error(opened.error);
+      const segments = opened.segments || [];
       if (!segments.length) {
         throw new Error(`Subtitle file contains no readable cues: ${filePath}`);
       }
@@ -4977,11 +5062,20 @@ function installAgentBridge() {
       const sourceVideoPath = useVideoStore.getState().path;
       useSubStore
         .getState()
-        .load(segments, filePath, 'disk', sourceVideoPath, null);
+        .load(
+          segments,
+          filePath,
+          'disk',
+          opened.document?.sourceVideoPath ?? sourceVideoPath,
+          opened.document?.transcriptionEngine,
+          null,
+          opened.document?.sourceVideoAssetIdentity,
+          opened.document ?? null
+        );
       useSubStore.getState().setActiveFileTarget({
         filePath,
-        mode: null,
-        role: 'import',
+        mode: opened.fileMode ?? null,
+        role: opened.fileRole ?? 'import',
       });
       useUIStore.getState().setEditPanelOpen(true);
       return currentStatus();

@@ -139,6 +139,34 @@ const primaryButton = css`
   }
 `;
 
+const linkActions = css`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 100%;
+
+  button {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: auto;
+    min-height: 56px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    overflow-wrap: anywhere;
+  }
+`;
+
+const downloadButton = css`
+  border: 1px solid ${colors.borderStrong};
+  background: ${colors.surfaceRaised};
+  color: ${colors.text};
+
+  &:hover:not(:disabled) {
+    border-color: ${colors.gray};
+    background: ${colors.surfaceRaised};
+  }
+`;
+
 const secondaryButton = css`
   height: 40px;
   padding: 0 16px;
@@ -347,15 +375,17 @@ export default function HomeStage() {
     else rememberRecentTargetLanguage(language);
   };
 
-  const runUrl = () => {
+  const runUrl = (target: 'download' | 'translate' = 'translate') => {
     const url = urlInput.trim();
     if (!url) {
       linkRef.current?.focus();
       return;
     }
-    logButton('home_make_it_speak_url');
-    ensureLanguage();
-    useUIStore.getState().requestHomeRun({ kind: 'url', url });
+    logButton(
+      target === 'download' ? 'home_download_only' : 'home_make_it_speak_url'
+    );
+    if (target === 'translate') ensureLanguage();
+    useUIStore.getState().requestHomeRun({ kind: 'url', url, target });
   };
 
   const runMountedFile = () => {
@@ -486,7 +516,7 @@ export default function HomeStage() {
       <h1 className={headline}>
         <Trans
           i18nKey="home.headline"
-          defaults="Every video can speak <lang>{{language}}</lang>."
+          defaults="Translate videos to <lang>{{language}}</lang>."
           values={{ language: languageName, languageInto }}
           components={{ lang: <span className={headlineLanguage} /> }}
         />
@@ -531,24 +561,38 @@ export default function HomeStage() {
             }}
             placeholder={
               dragging
-                ? t('home.dropHere', 'Drop it to make it speak {{language}}', {
-                    language: languageName,
-                    languageInto,
-                  })
+                ? t(
+                    'home.dropHere',
+                    'Drop a video here to translate it to {{language}}',
+                    {
+                      language: languageName,
+                      languageInto,
+                    }
+                  )
                 : t('home.linkPlaceholder', 'Paste a video link')
             }
             disabled={downloadInProgress}
           />
-          <button
-            type="submit"
-            className={primaryButton}
-            disabled={downloadInProgress}
-          >
-            {t('home.makeItSpeak', 'Make it speak {{language}}', {
-              language: languageName,
-              languageInto,
-            })}
-          </button>
+          <div className={linkActions}>
+            <button
+              type="submit"
+              className={primaryButton}
+              disabled={downloadInProgress}
+            >
+              {t('home.makeItSpeak', 'Translate to {{language}}', {
+                language: languageName,
+                languageInto,
+              })}
+            </button>
+            <button
+              type="button"
+              className={cx(primaryButton, downloadButton)}
+              onClick={() => runUrl('download')}
+              disabled={downloadInProgress}
+            >
+              {t('home.downloadOnly', 'Download only')}
+            </button>
+          </div>
         </form>
 
         <div className={stageFooter}>

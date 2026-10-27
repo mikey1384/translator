@@ -1373,6 +1373,7 @@
     "linkPlaceholder": "Vložte odkaz na video",
     "dropHere": "Pusťte — přeložíme do {{languageInto}}",
     "makeItSpeak": "Přeložit do {{languageInto}}",
+    "downloadOnly": "Pouze stáhnout",
     "helper": "Vložte odkaz z YouTube, TikToku, Instagramu nebo X — nebo sem přetáhněte videosoubor",
     "chooseFile": "Vybrat soubor",
     "into": "Jazyk",
