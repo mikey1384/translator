@@ -173,7 +173,8 @@
     "diskFull": "Diski yako imejaa. Ongeza nafasi kisha ujaribu tena.",
     "cancelDubbingFailedPlain": "Imeshindwa kusimamisha uwekaji sauti. Jaribu tena.",
     "cancelTranslationFailedPlain": "Imeshindwa kusimamisha tafsiri. Jaribu tena.",
-    "cancelSummaryFailedPlain": "Imeshindwa kusimamisha muhtasari. Jaribu tena."
+    "cancelSummaryFailedPlain": "Imeshindwa kusimamisha muhtasari. Jaribu tena.",
+    "translationIncomplete": "Baadhi ya mistari haikuweza kutafsiriwa. Tafsiri haijakamilika. Jaribu tena."
   },
   "input": {
     "connect": "Unganisha",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator inashughulikia video hii. Dondosha faili tena kazi ikikamilika.",
     "dropNotSupported": "Dondosha video, faili la sauti au faili la manukuu la .srt.",
     "batchDownloadRunning": "Translator inapakua video kadhaa. Subiri zimalizike, au ughairi upakuaji.",
-    "quality": "Ubora"
+    "quality": "Ubora",
+    "webVideo": {
+      "finding": "Inatafuta video…",
+      "choose": "Chagua video",
+      "instruction": "Cheza video unayotaka kupakua.",
+      "protected": "Video hii imelindwa na haiwezi kupakuliwa.",
+      "noVideo": "Hakuna video inayoweza kupakuliwa iliyopatikana kwenye ukurasa huu.",
+      "openInApp": "Fungua ukurasa huu katika Translator ili uchague video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Lugha ya matokeo",
@@ -1368,7 +1378,7 @@
     "dropHere": "Dondosha hapa ili itafsiriwe kwa {{language}}",
     "makeItSpeak": "Tafsiri kwa {{language}}",
     "downloadOnly": "Pakua tu",
-    "helper": "Bandika kiungo kutoka YouTube, TikTok, Instagram au X — au dondosha faili la video hapa",
+    "helper": "Bandika kiungo cha video au ukurasa wa wavuti, au buruta faili ya video hapa",
     "chooseFile": "Chagua faili",
     "into": "Lugha",
     "dropNotMedia": "Dondosha faili la video au sauti ili kulitafsiri.",
@@ -1465,7 +1475,8 @@
     "checkingFile": "Inasoma faili…",
     "statusLoaded": "Mistari {{count}} imepakiwa",
     "statusLoaded_one": "Mstari {{count}} umepakiwa",
-    "interruptedTranslateSubtitles": "Kutafsiri manukuu haya kwa {{language}} kulisimama Translator ilipofungwa."
+    "interruptedTranslateSubtitles": "Kutafsiri manukuu haya kwa {{language}} kulisimama Translator ilipofungwa.",
+    "currentSubtitle": "Manukuu ya sasa"
   },
   "subtitleStyles": {
     "Cinema": "Njano ya sinema",
@@ -1639,5 +1650,47 @@
     "openSettings": "Fungua Mipangilio",
     "supportSubject": "Dakika zangu zimepotea baada ya Translator kuweka upya kompyuta hii",
     "settingsResetKeptLanguage": "Faili la mipangilio la Translator liliharibika, kwa hivyo mapendeleo yako yamerudishwa mwanzo: lugha ya manukuu, funguo za API na chaguo nyingine. Lugha yako ya kiolesura imebaki ileile. Nakala ya faili lililoharibika imehifadhiwa. Tafadhali kagua Mipangilio."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Imeshindikana kukamilisha. Nakala iliyosimbwa huhifadhiwa ikiwa uhamisho haujakamilika. Jaribu tena.",
+      "in_use": "Funga video kwenye vichupo vyote na ukamilishe au uhifadhi kazi inayoendelea, kisha ujaribu tena.",
+      "managed_only": "Video zilizohifadhiwa kwenye maktaba ya Translator pekee ndizo zinaweza kuhamishwa kwenye folda ya faragha.",
+      "unsupported_file": "Faili hii inashirikiwa au iko nje ya maktaba ya Translator, hivyo haiwezi kuhamishwa salama.",
+      "password_length": "Tumia nenosiri lenye angalau vibambo 8.",
+      "password_mismatch": "Manenosiri hayalingani.",
+      "incorrect_password": "Nenosiri si sahihi.",
+      "locked": "Fungua folda kwanza.",
+      "not_empty": "Hamisha au ufute video kabla ya kufuta folda.",
+      "source_changed": "Video au manukuu yamebadilika wakati wa uhamisho. Nakala iliyosimbwa imehifadhiwa. Fungua folda ili ujaribu tena.",
+      "pending": "Uhamisho huu haujakamilika. Fungua folda ili ujaribu tena.",
+      "corrupt": "Folda au faili hii iliyosimbwa imeharibika. Irejeshe kutoka kwenye nakala rudufu.",
+      "full": "Maktaba imejaa. Ondoa kwanza folda au video zisizotumika.",
+      "invalid_name": "Weka jina la folda lenye vibambo 1 hadi 80.",
+      "not_found": "Folda au video hii haipatikani tena."
+    },
+    "folders": "Folda",
+    "allVideos": "Video zote",
+    "unfiled": "Bila folda",
+    "newFolder": "Folda mpya",
+    "privateFolder": "Folda ya faragha",
+    "rename": "Badili jina",
+    "move": "Hamisha kwenye folda",
+    "lock": "Funga",
+    "unlock": "Fungua",
+    "name": "Jina la folda",
+    "password": "Nenosiri",
+    "confirmPassword": "Thibitisha nenosiri",
+    "watch": "Tazama",
+    "empty": "Folda hii haina video.",
+    "lockedHint": "Fungua folda ili kuona video zake.",
+    "pending": "Ulinzi haujakamilika — fungua ili ujaribu tena",
+    "protecting": "Tunasimba kwa njia fiche na kukagua video na manukuu yako…",
+    "protectionHint": "Video na manukuu yaliyohifadhiwa na Translator huhamishwa kwenye hifadhi iliyosimbwa kwa njia fiche. Funga video kwanza. Nakala zilizohamishwa, nafasi za kazi za mawakala na nakala rudufu hazilindwi.",
+    "passwordHint": "Tumia angalau vibambo 8. Translator haiwezi kurejesha nenosiri lililosahaulika. Folda hufungwa unapofunga kichupo, kufunga kompyuta au usipozitumia kwa dakika 15.",
+    "deleteVideoConfirm": "Ufute kabisa video hii ya faragha na manukuu yake? Huwezi kutengua hatua hii.",
+    "deleteFolderConfirm": "Ufute folda hii tupu?",
+    "saveCopy": "Hifadhi nakala",
+    "exportConfirm": "Uhifadhi nakala ya video na manukuu bila usimbaji fiche? Yeyote mwenye ufikiaji wa mahali pa kuhifadhi anaweza kuifungua. Nakala asili iliyosimbwa itabaki kwenye folda hii."
   }
 }

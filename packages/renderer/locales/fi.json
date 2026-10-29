@@ -173,7 +173,8 @@
     "diskFull": "Levy on täynnä. Vapauta tilaa ja yritä uudelleen.",
     "cancelDubbingFailedPlain": "Dubbausta ei voitu keskeyttää. Yritä uudelleen.",
     "cancelTranslationFailedPlain": "Kääntämistä ei voitu keskeyttää. Yritä uudelleen.",
-    "cancelSummaryFailedPlain": "Yhteenvetoa ei voitu keskeyttää. Yritä uudelleen."
+    "cancelSummaryFailedPlain": "Yhteenvetoa ei voitu keskeyttää. Yritä uudelleen.",
+    "translationIncomplete": "Joitakin rivejä ei voitu kääntää. Käännös on keskeneräinen. Yritä uudelleen."
   },
   "input": {
     "connect": "Yhdistä",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator työstää tätä videota. Pudota tiedosto uudelleen, kun työ on valmis.",
     "dropNotSupported": "Pudota video, äänitiedosto tai .srt-tekstitystiedosto.",
     "batchDownloadRunning": "Translator lataa useita videoita. Odota, että ne valmistuvat, tai peruuta lataus.",
-    "quality": "Laatu"
+    "quality": "Laatu",
+    "webVideo": {
+      "finding": "Etsitään videoita…",
+      "choose": "Valitse video",
+      "instruction": "Toista video, jonka haluat ladata.",
+      "protected": "Tämä video on suojattu, eikä sitä voi ladata.",
+      "noVideo": "Sivulta ei löytynyt ladattavaa videota.",
+      "openInApp": "Avaa tämä sivu Translatorissa ja valitse video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Kohdekieli",
@@ -1368,7 +1378,7 @@
     "dropHere": "Pudota tähän – käännetään {{languageInto}}",
     "makeItSpeak": "Käännä {{languageInto}}",
     "downloadOnly": "Lataa vain",
-    "helper": "Liitä linkki YouTubesta, TikTokista, Instagramista tai X:stä – tai pudota videotiedosto tähän",
+    "helper": "Liitä videon tai verkkosivun linkki tai pudota videotiedosto tähän",
     "chooseFile": "Valitse tiedosto",
     "into": "Kieli",
     "dropNotMedia": "Pudota video- tai äänitiedosto, niin se käännetään.",
@@ -1465,7 +1475,8 @@
     "checkingFile": "Luetaan tiedostoa…",
     "statusLoaded": "{{count}} riviä ladattu",
     "statusLoaded_one": "{{count}} rivi ladattu",
-    "interruptedTranslateSubtitles": "Näiden tekstitysten kääntäminen {{languageInto}} keskeytyi, kun Translator suljettiin."
+    "interruptedTranslateSubtitles": "Näiden tekstitysten kääntäminen {{languageInto}} keskeytyi, kun Translator suljettiin.",
+    "currentSubtitle": "Nykyinen tekstitys"
   },
   "subtitleStyles": {
     "Cinema": "Elokuvakeltainen",
@@ -1639,5 +1650,47 @@
     "openSettings": "Avaa Asetukset",
     "supportSubject": "Minuuttini katosivat, kun Translator nollasi tämän tietokoneen",
     "settingsResetKeptLanguage": "Translatorin asetustiedosto oli vioittunut, joten asetuksesi palautettiin oletuksiin: tekstityksen kieli, API-avaimet ja muut valinnat. Käyttöliittymän kieli säilyi ennallaan. Vioittuneesta tiedostosta jäi talteen kopio. Tarkista Asetukset."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Toimintoa ei voitu viimeistellä. Salattu kopio säilytetään, jos siirto on kesken. Yritä uudelleen.",
+      "in_use": "Sulje video kaikissa välilehdissä ja viimeistele tai tallenna keskeneräiset työt. Yritä sitten uudelleen.",
+      "managed_only": "Vain Translatorin kirjastoon tallennetut videot voidaan siirtää yksityiseen kansioon.",
+      "unsupported_file": "Tiedosto on jaettu tai sijaitsee Translatorin kirjaston ulkopuolella, eikä sitä voida siirtää turvallisesti.",
+      "password_length": "Käytä vähintään 8 merkin salasanaa.",
+      "password_mismatch": "Salasanat eivät täsmää.",
+      "incorrect_password": "Väärä salasana.",
+      "locked": "Avaa ensin kansion lukitus.",
+      "not_empty": "Siirrä tai poista videot ennen kansion poistamista.",
+      "source_changed": "Video tai tekstitykset muuttuivat siirron aikana. Salattu kopio säilytettiin. Avaa kansion lukitus ja yritä uudelleen.",
+      "pending": "Siirto on kesken. Avaa kansion lukitus ja yritä uudelleen.",
+      "corrupt": "Salattu kansio tai tiedosto on vioittunut. Palauta se varmuuskopiosta.",
+      "full": "Kirjasto on täynnä. Poista ensin tarpeettomia kansioita tai videoita.",
+      "invalid_name": "Anna kansiolle 1–80 merkin nimi.",
+      "not_found": "Tämä kansio tai video ei ole enää saatavilla."
+    },
+    "folders": "Kansiot",
+    "allVideos": "Kaikki videot",
+    "unfiled": "Ilman kansiota",
+    "newFolder": "Uusi kansio",
+    "privateFolder": "Yksityinen kansio",
+    "rename": "Nimeä uudelleen",
+    "move": "Siirrä kansioon",
+    "lock": "Lukitse",
+    "unlock": "Avaa lukitus",
+    "name": "Kansion nimi",
+    "password": "Salasana",
+    "confirmPassword": "Vahvista salasana",
+    "watch": "Toista",
+    "empty": "Tämä kansio on tyhjä.",
+    "lockedHint": "Avaa kansion lukitus nähdäksesi videot.",
+    "pending": "Suojaus on kesken — avaa lukitus ja yritä uudelleen",
+    "protecting": "Salataan ja tarkistetaan videota ja tekstityksiä…",
+    "protectionHint": "Translatorin tallentamat videot ja tekstitykset siirretään salattuun tallennustilaan. Sulje video ensin. Vietyjä kopioita, agenttien työtiloja ja varmuuskopioita ei suojata.",
+    "passwordHint": "Käytä vähintään 8 merkkiä. Translator ei voi palauttaa unohtunutta salasanaa. Kansiot lukitaan, kun suljet välilehden, lukitset tietokoneen tai et käytä niitä 15 minuuttiin.",
+    "deleteVideoConfirm": "Poistetaanko tämä yksityinen video ja sen tekstitykset pysyvästi? Tätä ei voi kumota.",
+    "deleteFolderConfirm": "Poistetaanko tämä tyhjä kansio?",
+    "saveCopy": "Tallenna kopio",
+    "exportConfirm": "Tallennetaanko salaamaton kopio videosta ja tekstityksistä? Kaikki, joilla on pääsy kohteeseen, voivat avata kopion. Salattu alkuperäinen säilyy tässä kansiossa."
   }
 }

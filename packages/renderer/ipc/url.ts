@@ -7,6 +7,8 @@ import type {
   VideoSuggestionDownloadHistoryMutationResult,
   UrlProgressCallback,
   ProcessUrlResult,
+  DiscoverWebVideoOptions,
+  DiscoverWebVideoResult,
 } from '@shared-types/app';
 
 export function download<T extends ProcessUrlOptions>(
@@ -16,6 +18,16 @@ export function download<T extends ProcessUrlOptions>(
 }
 
 export const downloadUrl = (o: ProcessUrlOptions) => download(o);
+
+export function discoverWebVideo(
+  options: DiscoverWebVideoOptions
+): Promise<DiscoverWebVideoResult> {
+  return window.electron.discoverWebVideo(options);
+}
+
+export function releaseWebVideoDiscovery(id: string): Promise<void> {
+  return window.electron.releaseWebVideoDiscovery(id);
+}
 
 export function acceptProcessedUrl(
   operationId: string

@@ -6,6 +6,7 @@ type HistoryEntry = {
   localPath?: string;
   downloadedAtIso?: string;
   title?: string;
+  webVideoId?: string;
 };
 
 /**
@@ -15,7 +16,8 @@ type HistoryEntry = {
  */
 export function historyCopiesForUrl<T extends HistoryEntry>(
   history: readonly T[],
-  url: string
+  url: string,
+  webVideoId?: string
 ): Array<T & { localPath: string }> {
   const key = canonicalVideoSourceKey(url);
   if (!key) return [];
@@ -23,7 +25,8 @@ export function historyCopiesForUrl<T extends HistoryEntry>(
     .filter(
       (item): item is T & { localPath: string } =>
         Boolean(sanitizeVideoSuggestionHistoryPath(item.localPath)) &&
-        canonicalVideoSourceKey(item.sourceUrl) === key
+        canonicalVideoSourceKey(item.sourceUrl) === key &&
+        item.webVideoId === webVideoId
     )
     .sort(
       (a, b) =>

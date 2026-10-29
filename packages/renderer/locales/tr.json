@@ -173,7 +173,8 @@
     "diskFull": "Diskiniz dolu. Biraz yer açıp yeniden deneyin.",
     "cancelDubbingFailedPlain": "Seslendirme durdurulamadı. Yeniden deneyin.",
     "cancelTranslationFailedPlain": "Çeviri durdurulamadı. Yeniden deneyin.",
-    "cancelSummaryFailedPlain": "Özet durdurulamadı. Yeniden deneyin."
+    "cancelSummaryFailedPlain": "Özet durdurulamadı. Yeniden deneyin.",
+    "translationIncomplete": "Bazı satırlar çevrilemedi. Çeviri tamamlanmadı. Yeniden deneyin."
   },
   "input": {
     "connect": "Bağlan",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator bu video üzerinde çalışıyor. İşlem bittiğinde dosyayı yeniden bırakın.",
     "dropNotSupported": "Bir video, ses dosyası veya .srt altyazı dosyası bırakın.",
     "batchDownloadRunning": "Translator birkaç video indiriyor. Bitmelerini bekleyin ya da indirmeyi iptal edin.",
-    "quality": "Kalite"
+    "quality": "Kalite",
+    "webVideo": {
+      "finding": "Videolar aranıyor…",
+      "choose": "Video seç",
+      "instruction": "İndirmek istediğin videoyu oynat.",
+      "protected": "Bu video korumalı olduğu için indirilemiyor.",
+      "noVideo": "Bu sayfada indirilebilir video bulunamadı.",
+      "openInApp": "Video seçmek için bu sayfayı Translator’da aç.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Çıktı dili",
@@ -1368,7 +1378,7 @@
     "dropHere": "Bırakın, {{language}} diline çevirelim",
     "makeItSpeak": "{{language}} diline çevir",
     "downloadOnly": "Yalnızca indir",
-    "helper": "YouTube, TikTok, Instagram veya X bağlantısı yapıştırın — ya da bir video dosyasını buraya bırakın",
+    "helper": "Video veya web sayfası bağlantısını yapıştır ya da video dosyasını buraya bırak",
     "chooseFile": "Dosya seç",
     "into": "Dil",
     "dropNotMedia": "Çevirmek için bir video ya da ses dosyası bırakın.",
@@ -1465,7 +1475,8 @@
     "statusLoaded_one": "{{count}} satır yüklendi",
     "interruptedTranslateSubtitles": "Bu altyazıların {{language}} diline çevirisi Translator kapandığında yarıda kaldı.",
     "statusTranscribed_one": "{{count}} satır yazıya döküldü",
-    "statusTranslated_one": "{{language}} {{count}} satır · videoyla eş zamanlı"
+    "statusTranslated_one": "{{language}} {{count}} satır · videoyla eş zamanlı",
+    "currentSubtitle": "Geçerli altyazı"
   },
   "subtitleStyles": {
     "Cinema": "Sinema sarısı",
@@ -1639,5 +1650,47 @@
     "openSettings": "Ayarlar’ı aç",
     "supportSubject": "Translator bu bilgisayarı sıfırladıktan sonra dakikalarım kayboldu",
     "settingsResetKeptLanguage": "Translator’ın ayar dosyası bozulduğu için tercihleriniz sıfırlandı: altyazı dili, API anahtarları ve diğer seçenekler. Arayüz diliniz korundu. Bozuk dosyanın bir kopyası saklandı. Lütfen Ayarlar’ı kontrol edin."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "İşlem tamamlanamadı. Taşıma bekliyorsa şifreli kopya korunur. Yeniden deneyin.",
+      "in_use": "Videoyu tüm sekmelerde kapatıp devam eden işleri tamamlayın veya kaydedin, ardından yeniden deneyin.",
+      "managed_only": "Yalnızca Translator kitaplığında saklanan videolar özel klasöre taşınabilir.",
+      "unsupported_file": "Bu dosya paylaşılıyor veya Translator kitaplığının dışında bulunuyor; güvenle taşınamaz.",
+      "password_length": "En az 8 karakterli bir parola kullanın.",
+      "password_mismatch": "Parolalar eşleşmiyor.",
+      "incorrect_password": "Yanlış parola.",
+      "locked": "Önce klasörün kilidini açın.",
+      "not_empty": "Klasörü silmeden önce videoları taşıyın veya silin.",
+      "source_changed": "Taşıma sırasında video veya altyazılar değişti. Şifreli kopya korundu. Yeniden denemek için klasörün kilidini açın.",
+      "pending": "Taşıma tamamlanmadı. Yeniden denemek için klasörün kilidini açın.",
+      "corrupt": "Bu şifreli klasör veya dosya hasarlı. Yedekten geri yükleyin.",
+      "full": "Kitaplık dolu. Önce kullanılmayan klasörleri veya videoları kaldırın.",
+      "invalid_name": "1–80 karakterlik bir klasör adı girin.",
+      "not_found": "Bu klasör veya video artık kullanılamıyor."
+    },
+    "folders": "Klasörler",
+    "allVideos": "Tüm videolar",
+    "unfiled": "Klasörsüz",
+    "newFolder": "Yeni klasör",
+    "privateFolder": "Özel klasör",
+    "rename": "Yeniden adlandır",
+    "move": "Klasöre taşı",
+    "lock": "Kilitle",
+    "unlock": "Kilidi aç",
+    "name": "Klasör adı",
+    "password": "Parola",
+    "confirmPassword": "Parolayı doğrula",
+    "watch": "İzle",
+    "empty": "Bu klasör boş.",
+    "lockedHint": "Videoları görmek için klasörün kilidini açın.",
+    "pending": "Koruma tamamlanmadı — yeniden denemek için kilidi açın",
+    "protecting": "Videonuz ve altyazılarınız şifrelenip doğrulanıyor…",
+    "protectionHint": "Translator tarafından saklanan videolar ve altyazılar şifreli depolamaya taşınır. Önce videoyu kapatın. Dışa aktarılan kopyalar, aracı çalışma alanları ve yedekler korunmaz.",
+    "passwordHint": "En az 8 karakter kullanın. Translator unutulan parolayı kurtaramaz. Sekmeyi kapattığınızda, bilgisayarı kilitlediğinizde veya 15 dakika kullanmadığınızda klasörler kilitlenir.",
+    "deleteVideoConfirm": "Bu özel video ve altyazıları kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
+    "deleteFolderConfirm": "Bu boş klasör silinsin mi?",
+    "saveCopy": "Kopyasını kaydet",
+    "exportConfirm": "Video ve altyazıların şifrelenmemiş bir kopyası kaydedilsin mi? Hedef konuma erişebilen herkes kopyayı açabilir. Şifreli asıl dosya bu klasörde kalır."
   }
 }

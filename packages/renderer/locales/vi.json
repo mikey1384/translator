@@ -172,7 +172,8 @@
     "diskFull": "Ổ đĩa đã đầy. Hãy giải phóng bớt dung lượng rồi thử lại.",
     "cancelDubbingFailedPlain": "Không dừng được lồng tiếng. Hãy thử lại.",
     "cancelTranslationFailedPlain": "Không dừng được việc dịch. Hãy thử lại.",
-    "cancelSummaryFailedPlain": "Không dừng được việc tóm tắt. Hãy thử lại."
+    "cancelSummaryFailedPlain": "Không dừng được việc tóm tắt. Hãy thử lại.",
+    "translationIncomplete": "Một số dòng chưa được dịch. Bản dịch chưa hoàn tất. Hãy thử lại."
   },
   "input": {
     "connect": "Kết nối",
@@ -374,7 +375,16 @@
     "dropWhileBusy": "Translator đang xử lý video này. Hãy thả lại tệp khi xử lý xong.",
     "dropNotSupported": "Hãy thả tệp video, tệp âm thanh hoặc tệp phụ đề .srt.",
     "batchDownloadRunning": "Translator đang tải nhiều video cùng lúc. Hãy đợi tải xong, hoặc hủy lượt tải.",
-    "quality": "Chất lượng"
+    "quality": "Chất lượng",
+    "webVideo": {
+      "finding": "Đang tìm video…",
+      "choose": "Chọn video",
+      "instruction": "Phát video bạn muốn tải xuống.",
+      "protected": "Video này được bảo vệ nên không thể tải xuống.",
+      "noVideo": "Không tìm thấy video có thể tải xuống trên trang này.",
+      "openInApp": "Mở trang này trong Translator để chọn video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
@@ -1356,7 +1366,7 @@
     "dropHere": "Thả video vào đây để dịch sang {{language}}",
     "makeItSpeak": "Dịch sang {{language}}",
     "downloadOnly": "Chỉ tải xuống",
-    "helper": "Dán liên kết YouTube, TikTok, Instagram hoặc X — hoặc thả tệp video vào đây",
+    "helper": "Dán liên kết video hoặc trang web, hoặc thả tệp video vào đây",
     "chooseFile": "Chọn tệp",
     "into": "Dịch sang",
     "dropNotMedia": "Hãy thả tệp video hoặc âm thanh để dịch.",
@@ -1442,7 +1452,8 @@
     "statusLines": "{{count}} dòng phụ đề",
     "checkingFile": "Đang đọc tệp…",
     "statusLoaded": "Đã tải {{count}} dòng",
-    "interruptedTranslateSubtitles": "Việc dịch phụ đề này sang {{language}} đã dừng vì Translator bị đóng."
+    "interruptedTranslateSubtitles": "Việc dịch phụ đề này sang {{language}} đã dừng vì Translator bị đóng.",
+    "currentSubtitle": "Phụ đề hiện tại"
   },
   "subtitleStyles": {
     "Cinema": "Vàng điện ảnh",
@@ -1611,5 +1622,47 @@
     "openSettings": "Mở Cài đặt",
     "supportSubject": "Số phút của tôi bị mất sau khi Translator đặt lại máy tính này",
     "settingsResetKeptLanguage": "Tệp cài đặt của Translator bị hỏng nên các tùy chọn của bạn đã được đặt lại: ngôn ngữ phụ đề, API key và các tùy chọn khác. Ngôn ngữ giao diện không thay đổi. Bản sao của tệp bị hỏng vẫn được giữ lại. Hãy kiểm tra lại trong Cài đặt."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Không thể hoàn tất. Nếu quá trình chuyển chưa xong, bản đã mã hóa vẫn được giữ lại. Hãy thử lại.",
+      "in_use": "Đóng video này ở mọi thẻ rồi hoàn tất hoặc lưu công việc đang làm.",
+      "managed_only": "Chỉ video được lưu trong thư viện Translator mới chuyển được vào thư mục riêng tư.",
+      "unsupported_file": "Tệp này được dùng chung hoặc nằm ngoài thư viện Translator nên không thể chuyển an toàn.",
+      "password_length": "Dùng mật khẩu có ít nhất 8 ký tự.",
+      "password_mismatch": "Mật khẩu không khớp.",
+      "incorrect_password": "Mật khẩu không đúng.",
+      "locked": "Hãy mở khóa thư mục trước.",
+      "not_empty": "Chuyển hoặc xóa các video trước khi xóa thư mục.",
+      "source_changed": "Video hoặc phụ đề đã thay đổi trong lúc chuyển. Bản đã mã hóa vẫn được giữ lại. Mở khóa thư mục để thử lại.",
+      "pending": "Chưa chuyển xong. Mở khóa thư mục để thử lại.",
+      "corrupt": "Thư mục hoặc tệp đã mã hóa bị hỏng. Hãy khôi phục từ bản sao lưu.",
+      "full": "Thư viện đã đầy. Hãy xóa thư mục hoặc video không còn dùng.",
+      "invalid_name": "Nhập tên thư mục từ 1 đến 80 ký tự.",
+      "not_found": "Thư mục hoặc video này không còn khả dụng."
+    },
+    "folders": "Thư mục",
+    "allVideos": "Tất cả video",
+    "unfiled": "Chưa xếp thư mục",
+    "newFolder": "Thư mục mới",
+    "privateFolder": "Thư mục riêng tư",
+    "rename": "Đổi tên",
+    "move": "Chuyển vào thư mục",
+    "lock": "Khóa",
+    "unlock": "Mở khóa",
+    "name": "Tên thư mục",
+    "password": "Mật khẩu",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "watch": "Xem",
+    "empty": "Thư mục này trống.",
+    "lockedHint": "Mở khóa thư mục để xem các video bên trong.",
+    "pending": "Chưa bảo vệ xong — mở khóa để thử lại",
+    "protecting": "Đang mã hóa và kiểm tra video cùng phụ đề…",
+    "protectionHint": "Video và phụ đề do Translator lưu sẽ được chuyển vào nơi lưu trữ đã mã hóa. Hãy đóng video trước. Bản đã xuất, không gian làm việc của tác nhân và bản sao lưu không được bảo vệ.",
+    "passwordHint": "Dùng ít nhất 8 ký tự. Translator không thể khôi phục mật khẩu đã quên. Thư mục tự khóa khi bạn đóng thẻ, khóa máy tính hoặc không sử dụng trong 15 phút.",
+    "deleteVideoConfirm": "Xóa vĩnh viễn video riêng tư này cùng phụ đề? Bạn không thể hoàn tác.",
+    "deleteFolderConfirm": "Xóa thư mục trống này?",
+    "saveCopy": "Lưu bản sao",
+    "exportConfirm": "Lưu bản sao không mã hóa của video và phụ đề? Bất kỳ ai truy cập được nơi lưu đều có thể mở bản sao. Bản gốc đã mã hóa vẫn nằm trong thư mục này."
   }
 }

@@ -938,6 +938,7 @@ async function redownloadHistoryItem(input?: {
     url: parsedUrl.toString(),
     quality,
     strategy: replacementStrategy,
+    webVideoId: item.webVideoId,
   }).catch(showAgentDownloadFailure);
   return {
     redownloadingEntryId: item.id,
@@ -1260,6 +1261,7 @@ async function runSuggestedVideoBatchItems(
       preserveSubtitles: false,
       mountOnComplete: false,
       fromBatch: true,
+      interactive: false,
     });
     // The user's × on the progress card stops the whole batch, not only
     // this video.
@@ -2043,12 +2045,28 @@ async function runHistoryTranslation(
     const srtContent = buildSrt({ segments, mode: 'dual' });
     const qualityTranslation = useUIStore.getState().qualityTranslation;
     const res = await SubtitlesIPC.translateSubtitles({
+      segments,
       subtitles: srtContent,
       targetLanguage: language,
       operationId,
       qualityTranslation,
     });
     if (!res?.success || !res.translatedSubtitles) {
+      if (res?.partialSegments?.some(s => s.translation?.trim())) {
+        await storeGeneratedSubtitleArtifact({
+          content: buildSrt({
+            segments: res.partialSegments,
+            mode: 'dual',
+            noWrap: true,
+          }),
+          segments: res.partialSegments,
+          kind: 'translation',
+          targetLanguage: language,
+          sourceVideoPath: loaded.videoPath,
+          sourceUrl: loaded.item.sourceUrl,
+          titleHint: loaded.item.title,
+        });
+      }
       if (res?.cancelled) {
         throw new AgentHistoryCancellationError('Translation cancelled.');
       }
@@ -2056,7 +2074,8 @@ async function runHistoryTranslation(
     }
 
     throwIfHistoryJobCancelled(historyId, operationId);
-    const translatedSegments = parseSrt(res.translatedSubtitles);
+    const translatedSegments =
+      res.translatedSegments ?? parseSrt(res.translatedSubtitles);
     if (!translatedSegments.length) {
       throw new Error('Translation returned no subtitle cues.');
     }
@@ -3428,6 +3447,7 @@ async function downloadAndMountAgentSource(input: {
   quality: VideoQuality;
   strategy: MountedSubtitleStrategy;
   checkCancellation?: boolean;
+  webVideoId?: string;
 }): Promise<{
   videoPath: string | null;
   filename: string;
@@ -3446,6 +3466,8 @@ async function downloadAndMountAgentSource(input: {
     mountOnComplete: false,
     // The agent asked for this video; no one is there to confirm length.
     allowLongVideo: true,
+    interactive: false,
+    webVideoId: input.webVideoId,
   });
   const finalDownload = useUrlStore.getState();
   const completedResult = result?.success ? result : null;

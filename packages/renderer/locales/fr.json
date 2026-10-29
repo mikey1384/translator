@@ -173,7 +173,8 @@
     "diskFull": "Votre disque est plein. Libérez de l’espace, puis réessayez.",
     "cancelDubbingFailedPlain": "Impossible d’arrêter le doublage. Réessayez.",
     "cancelTranslationFailedPlain": "Impossible d’arrêter la traduction. Réessayez.",
-    "cancelSummaryFailedPlain": "Impossible d’arrêter le résumé. Réessayez."
+    "cancelSummaryFailedPlain": "Impossible d’arrêter le résumé. Réessayez.",
+    "translationIncomplete": "Certaines lignes n’ont pas pu être traduites. La traduction est incomplète. Réessayez."
   },
   "input": {
     "connect": "Connecter",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator travaille sur cette vidéo. Déposez à nouveau le fichier quand ce sera terminé.",
     "dropNotSupported": "Déposez une vidéo, un fichier audio ou un fichier de sous-titres .srt.",
     "batchDownloadRunning": "Translator télécharge plusieurs vidéos. Attendez qu’elles soient terminées, ou annulez le téléchargement.",
-    "quality": "Qualité"
+    "quality": "Qualité",
+    "webVideo": {
+      "finding": "Recherche de vidéos…",
+      "choose": "Choisir une vidéo",
+      "instruction": "Lancez la vidéo que vous souhaitez télécharger.",
+      "protected": "Cette vidéo est protégée et ne peut pas être téléchargée.",
+      "noVideo": "Aucune vidéo téléchargeable trouvée sur cette page.",
+      "openInApp": "Ouvrez cette page dans Translator pour choisir une vidéo.",
+      "video": "Vidéo {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Langue de sortie",
@@ -1370,7 +1380,7 @@
     "dropHere": "Déposez la vidéo ici pour la traduire en {{language}}",
     "makeItSpeak": "Traduire en {{language}}",
     "downloadOnly": "Télécharger uniquement",
-    "helper": "Collez un lien YouTube, TikTok, Instagram ou X — ou déposez un fichier vidéo ici",
+    "helper": "Collez le lien d’une vidéo ou d’une page web, ou déposez un fichier vidéo ici",
     "chooseFile": "Choisir un fichier",
     "into": "En",
     "dropNotMedia": "Déposez un fichier vidéo ou audio pour le traduire.",
@@ -1476,7 +1486,8 @@
     "statusLoaded": "{{count}} lignes chargées",
     "statusLoaded_one": "{{count}} ligne chargée",
     "statusLoaded_many": "{{count}} de lignes chargées",
-    "interruptedTranslateSubtitles": "La traduction de ces sous-titres en {{language}} s’est arrêtée à la fermeture de Translator."
+    "interruptedTranslateSubtitles": "La traduction de ces sous-titres en {{language}} s’est arrêtée à la fermeture de Translator.",
+    "currentSubtitle": "Sous-titre actuel"
   },
   "subtitleStyles": {
     "Cinema": "Jaune cinéma",
@@ -1651,5 +1662,47 @@
     "openSettings": "Ouvrir les paramètres",
     "supportSubject": "Mes minutes ont disparu après la réinitialisation de cet ordinateur par Translator",
     "settingsResetKeptLanguage": "Le fichier de paramètres de Translator était endommagé : vos préférences ont donc été réinitialisées (langue des sous-titres, clés API et autres options). La langue de l’interface a été conservée, ainsi qu’une copie du fichier endommagé. Vérifiez les Paramètres."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Impossible de terminer. La copie chiffrée est conservée si un déplacement est en cours. Réessayez.",
+      "in_use": "Fermez cette vidéo dans tous les onglets, puis terminez ou enregistrez le travail en cours.",
+      "managed_only": "Seules les vidéos stockées dans la bibliothèque de Translator peuvent être déplacées vers un dossier privé.",
+      "unsupported_file": "Ce fichier est partagé ou stocké hors de la bibliothèque de Translator. Il ne peut pas être déplacé en toute sécurité.",
+      "password_length": "Utilisez un mot de passe d’au moins 8 caractères.",
+      "password_mismatch": "Les mots de passe ne correspondent pas.",
+      "incorrect_password": "Mot de passe incorrect.",
+      "locked": "Déverrouillez d’abord le dossier.",
+      "not_empty": "Déplacez ou supprimez les vidéos avant de supprimer le dossier.",
+      "source_changed": "La vidéo ou les sous-titres ont changé pendant le déplacement. La copie chiffrée est conservée. Déverrouillez le dossier pour réessayer.",
+      "pending": "Le déplacement est inachevé. Déverrouillez le dossier pour réessayer.",
+      "corrupt": "Ce dossier ou fichier chiffré est endommagé. Restaurez-le depuis une sauvegarde.",
+      "full": "La bibliothèque est pleine. Supprimez des dossiers ou vidéos inutilisés.",
+      "invalid_name": "Saisissez un nom de dossier de 1 à 80 caractères.",
+      "not_found": "Ce dossier ou cette vidéo n’est plus disponible."
+    },
+    "folders": "Dossiers",
+    "allVideos": "Toutes les vidéos",
+    "unfiled": "Sans dossier",
+    "newFolder": "Nouveau dossier",
+    "privateFolder": "Dossier privé",
+    "rename": "Renommer",
+    "move": "Déplacer dans un dossier",
+    "lock": "Verrouiller",
+    "unlock": "Déverrouiller",
+    "name": "Nom du dossier",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "watch": "Regarder",
+    "empty": "Ce dossier est vide.",
+    "lockedHint": "Déverrouillez le dossier pour voir ses vidéos.",
+    "pending": "Protection inachevée : déverrouillez pour réessayer",
+    "protecting": "Chiffrement et vérification de la vidéo et des sous-titres…",
+    "protectionHint": "Les vidéos et sous-titres stockés par Translator sont déplacés vers un stockage chiffré. Fermez d’abord la vidéo. Les copies exportées, les espaces de travail des agents et les sauvegardes ne sont pas protégés.",
+    "passwordHint": "Utilisez au moins 8 caractères. Translator ne peut pas récupérer un mot de passe oublié. Les dossiers se verrouillent à la fermeture de l’onglet, au verrouillage de l’ordinateur ou après 15 minutes d’inactivité.",
+    "deleteVideoConfirm": "Supprimer définitivement cette vidéo privée et ses sous-titres ? Cette action est irréversible.",
+    "deleteFolderConfirm": "Supprimer ce dossier vide ?",
+    "saveCopy": "Enregistrer une copie",
+    "exportConfirm": "Enregistrer une copie non chiffrée de la vidéo et de ses sous-titres ? Toute personne ayant accès à la destination pourra l’ouvrir. L’original chiffré reste dans ce dossier."
   }
 }

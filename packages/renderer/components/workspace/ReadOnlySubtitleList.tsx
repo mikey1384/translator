@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { css } from '@emotion/css';
 import { useSubStore, useUIStore } from '../../state';
@@ -6,6 +6,9 @@ import { splitByMatches, useFindOptions } from '../../utils/subtitleFind';
 import type { FindOptions } from '../../utils/subtitleFind';
 import { colors } from '../../styles';
 import { getNativePlayerInstance } from '../../native-player';
+import { useWorkspaceActions } from '../../state/workspace-actions';
+import { currentSubtitleIndex } from '../../utils/currentSubtitle';
+import { flashSubtitle } from '../../utils/scroll';
 import {
   readEmptyStyles,
   readListStyles,
@@ -278,6 +281,38 @@ export default function ReadOnlySubtitleList() {
   const followedId = useRef<string | null>(null);
   const followTarget = useRef<{ top: number; until: number } | null>(null);
   const pointerHeld = useRef(false);
+  const navigateToCurrent = useCallback(() => {
+    const video = getNativePlayerInstance();
+    if (!video) return;
+    const index = currentSubtitleIndex(rows, video.currentTime);
+    const list = listRef.current;
+    const row = list?.children.item(index) as HTMLElement | null;
+    if (!list || !row) return;
+    useUIStore.getState().setFindBarVisible(false);
+    userScrolledAt.current = 0;
+    pointerHeld.current = false;
+    followedId.current = rows[index]?.id ?? null;
+    const target = Math.max(
+      0,
+      Math.min(
+        list.scrollHeight - list.clientHeight,
+        list.scrollTop +
+          row.getBoundingClientRect().top -
+          list.getBoundingClientRect().top -
+          list.clientHeight / 3
+      )
+    );
+    followTarget.current = { top: target, until: Date.now() + 1500 };
+    list.scrollTo({ top: target, behavior: 'instant' });
+    flashSubtitle(row);
+  }, [rows]);
+  useEffect(() => {
+    useWorkspaceActions
+      .getState()
+      .registerSubtitleNavigation(navigateToCurrent);
+    return () =>
+      useWorkspaceActions.getState().registerSubtitleNavigation(null);
+  }, [navigateToCurrent]);
   useEffect(() => {
     if (activeIndex < 0) return;
     const id = rows[activeIndex]?.id ?? null;

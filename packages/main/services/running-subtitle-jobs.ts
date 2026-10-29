@@ -72,3 +72,10 @@ export function registerRunningSubtitleJobHandlers(): void {
     event.returnValue = { records: read(), session: SESSION };
   });
 }
+
+/** Remove only the source that the user moved to encrypted storage. */
+export function purgeRunningSubtitleJobs(keys: string[]): void {
+  const next = read().filter(record => !keys.includes(record.key));
+  getStore()?.set('records', next);
+  memory = next;
+}

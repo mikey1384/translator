@@ -5,6 +5,7 @@ import type {
   ProcessUrlResult,
   VideoQuality,
   VideoSuggestionDownloadHistoryItem,
+  WebVideoSelection,
 } from '@shared-types/app';
 import * as UrlIPC from '@ipc/url';
 import { i18n } from '../i18n';
@@ -38,6 +39,8 @@ import {
 import { describeDownloadFailure } from '../utils/taskFailure';
 import { historyCopiesForUrl } from '../utils/localDownloadCopy';
 import { acquireProvisionalUrlDownloadLibraryPath } from '../listeners/mounted-download-leases.js';
+import { shouldDiscoverWebVideo } from '../../shared/helpers/web-video.js';
+import { chooseWebVideo } from './web-video-store';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -76,6 +79,10 @@ export type DownloadRequest = {
   mountOnComplete: boolean;
   preserveSubtitles: boolean;
   replaceCurrent?: boolean;
+  webVideo?: WebVideoSelection;
+  webVideoId?: string;
+  allowLongVideo?: boolean;
+  interactive?: boolean;
 };
 
 /** Why a link was refused before downloading, in the UI language. */
@@ -162,6 +169,11 @@ type DownloadMediaOptions = {
   replaceCurrent?: boolean;
   /** One video of an agent batch; the batch lock does not apply to it. */
   fromBatch?: boolean;
+  /** Automated requests return an actionable failure instead of opening a browser or picker. */
+  interactive?: boolean;
+  webVideo?: WebVideoSelection;
+  /** Re-download the same video from a saved multi-video page. */
+  webVideoId?: string;
 };
 
 let cookieRetryRequestSeq = 0;
@@ -265,6 +277,9 @@ async function downloadMediaInternal(
   const preserveSubtitles = Boolean(options?.preserveSubtitles);
   const fromBatch = options?.fromBatch === true;
   const mountOnComplete = options?.mountOnComplete !== false;
+  const discoverPage = shouldDiscoverWebVideo(requestedUrl);
+  let webVideo = options?.webVideo;
+  let retainDiscovery = false;
   const opId = `download-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   let shouldDiscardPendingResult = false;
   const cancelledResult = (): ProcessUrlResult => ({
@@ -272,6 +287,16 @@ async function downloadMediaInternal(
     cancelled: true,
     operationId: opId,
   });
+  const discoveryFailure = (message: string): ProcessUrlResult => {
+    set((state: UrlState) => {
+      state.error = message;
+      state.errorKind = 'operation';
+      state.download.inProgress = false;
+      state.download.stage = 'Error';
+      state.download.percent = 100;
+    });
+    return { success: false, error: message, operationId: opId };
+  };
   const discardProcessedUrl = async (): Promise<void> => {
     try {
       await UrlIPC.discardProcessedUrl(opId);
@@ -373,12 +398,13 @@ async function downloadMediaInternal(
   }
   // Never fetch a video again while a copy of it is on this device: a
   // re-pasted link opens that copy (no second file, no orphaned download).
-  if (mountOnComplete) {
+  if (mountOnComplete && !discoverPage) {
     const reused = await openExistingLocalCopy({
       requestedUrl,
       operationId: opId,
       preserveSubtitles,
       replaceCurrent: options?.replaceCurrent === true,
+      webVideoId: options?.webVideoId,
       hasMountedSource: hasMountedVideo(),
     });
     if (reused) {
@@ -397,6 +423,10 @@ async function downloadMediaInternal(
       mountOnComplete,
       preserveSubtitles,
       replaceCurrent: options?.replaceCurrent === true,
+      webVideoId: options?.webVideoId,
+      webVideo,
+      allowLongVideo: options?.allowLongVideo,
+      interactive: options?.interactive,
     };
   });
   set((state: UrlState) => {
@@ -459,11 +489,145 @@ async function downloadMediaInternal(
   });
 
   try {
+    if (discoverPage && !webVideo) {
+      set((state: UrlState) => {
+        state.download.stage = i18n.t(
+          'input.webVideo.finding',
+          'Finding videos…'
+        );
+      });
+      const discovery = await UrlIPC.discoverWebVideo({
+        url: requestedUrl,
+        operationId: opId,
+        interactive: options?.interactive !== false,
+        labels: {
+          title: i18n.t('input.webVideo.choose', 'Choose a video'),
+          instruction: i18n.t(
+            'input.webVideo.instruction',
+            'Play the video you want to download.'
+          ),
+          starting: i18n.t(
+            'progress.legacy.startingDownload',
+            'Starting download…'
+          ),
+          choose: i18n.t('input.webVideo.choose', 'Choose a video'),
+          cancel: i18n.t('common.cancel', 'Cancel'),
+          live: sourceRejectionMessage('live_stream'),
+          direction: i18n.dir() === 'rtl' ? 'rtl' : 'ltr',
+          protected: i18n.t(
+            'input.webVideo.protected',
+            'This video is protected and cannot be downloaded.'
+          ),
+        },
+      });
+      if (isCurrentDownloadCancelledOrStale() || discovery.cancelled) {
+        if (discovery.discoveryId)
+          void UrlIPC.releaseWebVideoDiscovery(discovery.discoveryId);
+        if (!isCurrentDownloadCancelledOrStale())
+          set((state: UrlState) => {
+            state.download.inProgress = false;
+            state.download.stage = 'Cancelled';
+            state.download.percent = 100;
+          });
+        return cancelledResult();
+      }
+      if (
+        !discovery.success ||
+        !discovery.discoveryId ||
+        !discovery.candidates?.length
+      ) {
+        const code = discovery.errorCode || 'no_video';
+        return discoveryFailure(
+          i18n.t(
+            `input.webVideo.${code === 'protected_video' ? 'protected' : code === 'browser_required' ? 'openInApp' : 'noVideo'}`,
+            code === 'protected_video'
+              ? 'This video is protected and cannot be downloaded.'
+              : code === 'browser_required'
+                ? 'Open this page in Translator to choose a video.'
+                : 'No downloadable video was found on this page.'
+          )
+        );
+      }
+      const preferred = options?.webVideoId
+        ? discovery.candidates.find(video => video.id === options.webVideoId)
+        : undefined;
+      if (options?.webVideoId && !preferred) {
+        void UrlIPC.releaseWebVideoDiscovery(discovery.discoveryId).catch(
+          () => {}
+        );
+        return discoveryFailure(
+          i18n.t(
+            'input.webVideo.noVideo',
+            'No downloadable video was found on this page.'
+          )
+        );
+      }
+      if (
+        !preferred &&
+        discovery.candidates.length > 1 &&
+        options?.interactive === false
+      ) {
+        void UrlIPC.releaseWebVideoDiscovery(discovery.discoveryId);
+        return discoveryFailure(
+          i18n.t(
+            'input.webVideo.openInApp',
+            'Open this page in Translator to choose a video.'
+          )
+        );
+      }
+      set((state: UrlState) => {
+        state.download.stage = i18n.t(
+          'input.webVideo.choose',
+          'Choose a video'
+        );
+      });
+      const candidateId = preferred
+        ? preferred.id
+        : discovery.candidates.length === 1
+          ? discovery.candidates[0].id
+          : await chooseWebVideo(opId, discovery.candidates);
+      if (!candidateId || isCurrentDownloadCancelledOrStale()) {
+        void UrlIPC.releaseWebVideoDiscovery(discovery.discoveryId);
+        if (!isCurrentDownloadCancelledOrStale())
+          set((state: UrlState) => {
+            state.download.inProgress = false;
+            state.download.stage = 'Cancelled';
+            state.download.percent = 100;
+          });
+        return cancelledResult();
+      }
+      webVideo = { discoveryId: discovery.discoveryId, candidateId };
+      set((state: UrlState) => {
+        if (state.lastDownloadRequest)
+          state.lastDownloadRequest.webVideo = webVideo;
+      });
+    }
+    if (webVideo && mountOnComplete) {
+      const reused = await openExistingLocalCopy({
+        requestedUrl,
+        operationId: opId,
+        preserveSubtitles,
+        replaceCurrent: options?.replaceCurrent === true,
+        hasMountedSource: hasMountedVideo(),
+        webVideoId: webVideo.candidateId,
+      });
+      if (isCurrentDownloadCancelledOrStale()) return cancelledResult();
+      if (reused) {
+        set((state: UrlState) => {
+          state.download.inProgress = false;
+          state.download.stage = reused.success ? 'Completed' : 'Cancelled';
+          state.download.percent = 100;
+          if (reused.success) state.urlInput = '';
+        });
+        return reused;
+      }
+    }
     const res = await UrlIPC.download({
       url: requestedUrl,
       quality: downloadQuality,
       operationId: opId,
       allowLongVideo: options?.allowLongVideo === true,
+      webVideo,
     });
 
     // User cancellation should always win, even if the backend eventually
@@ -497,10 +661,14 @@ async function downloadMediaInternal(
           });
           return cancelledResult();
         }
-        return downloadMediaInternal(set, get, {
+        // The continued request owns the selection now, including a possible
+        // sign-in retry. The outer finally must not release its capability.
+        retainDiscovery = true;
+        return await downloadMediaInternal(set, get, {
           ...options,
           url: requestedUrl,
           allowLongVideo: true,
+          webVideo,
         });
       }
       const message = sourceRejectionMessage(rejection.code);
@@ -650,6 +818,7 @@ async function downloadMediaInternal(
     const filename = res.filename;
 
     if (res.cancelled || !finalPath || !filename) {
+      retainDiscovery = res.error === 'NeedCookies';
       // One report per failure: the progress event only formats the text.
       const downloadFailureMessage =
         res.cancelled || res.error === 'NeedCookies'
@@ -766,6 +935,7 @@ async function downloadMediaInternal(
     const historyItem: VideoSuggestionDownloadHistoryItem = {
       id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       sourceUrl: requestedUrl,
+      webVideoId: res.webVideoId,
       title: derivedTitle,
       thumbnailUrl: String(res.thumbnailUrl || '').trim() || undefined,
       channel: String(res.channel || '').trim() || undefined,
@@ -922,6 +1092,10 @@ async function downloadMediaInternal(
     });
   } finally {
     offProgress();
+    if (webVideo && !retainDiscovery)
+      void UrlIPC.releaseWebVideoDiscovery(webVideo.discoveryId).catch(
+        () => {}
+      );
   }
 }
 
@@ -931,18 +1105,21 @@ async function openExistingLocalCopy({
   preserveSubtitles,
   replaceCurrent,
   hasMountedSource,
+  webVideoId,
 }: {
   requestedUrl: string;
   operationId: string;
   preserveSubtitles: boolean;
   replaceCurrent: boolean;
   hasMountedSource: boolean;
+  webVideoId?: string;
 }): Promise<ProcessUrlResult | null> {
   let copy: { localPath: string; sourceUrl?: string; title?: string } | null =
     null;
   for (const candidate of historyCopiesForUrl(
     readLocalVideoSuggestionHistory(),
-    requestedUrl
+    requestedUrl,
+    webVideoId
   )) {
     try {
       if (await window.fileApi.fileExists(candidate.localPath)) {
@@ -963,6 +1140,7 @@ async function openExistingLocalCopy({
     filePath,
     filename,
     title: copy.title,
+    webVideoId,
     operationId,
   };
   const declined: ProcessUrlResult = {

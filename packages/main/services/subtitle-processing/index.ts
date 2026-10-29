@@ -1,6 +1,7 @@
 import {
   GenerateSubtitlesOptions,
   GenerateProgressCallback,
+  SrtSegment,
 } from '@shared-types/app';
 import log from 'electron-log';
 import { FileManager } from '../file-manager.js';
@@ -11,6 +12,8 @@ import { prepareAudio } from './pipeline/prepare-audio.js';
 import { transcribePass } from './pipeline/transcribe-pass.js';
 import { assertTranscriptionAvailable } from '../ai-provider.js';
 import { translatePass } from './pipeline/translate-pass.js';
+import { planTranslationWindows } from './translation-batches.js';
+import { attachPartialTranslation } from './translation-coverage.js';
 import { finalizePass } from './pipeline/finalize-pass.js';
 import { parseSrt } from '../../../shared/helpers/index.js';
 import { buildSrt } from '../../../shared/helpers/index.js';
@@ -144,6 +147,7 @@ export async function extractSubtitlesFromMedia({
 }
 
 export async function translateSubtitlesFromSrt({
+  inputSegments,
   srtContent,
   targetLanguage,
   operationId,
@@ -152,6 +156,7 @@ export async function translateSubtitlesFromSrt({
   fileManager,
   qualityTranslation,
 }: {
+  inputSegments?: SrtSegment[];
   srtContent: string;
   targetLanguage: string;
   operationId: string;
@@ -159,8 +164,26 @@ export async function translateSubtitlesFromSrt({
   progressCallback?: GenerateProgressCallback;
   fileManager: FileManager;
   qualityTranslation?: boolean;
-}): Promise<{ subtitles: string }> {
-  const segments = parseSrt(srtContent);
+}): Promise<{ subtitles: string; segments: SrtSegment[] }> {
+  if (
+    inputSegments !== undefined &&
+    (!Array.isArray(inputSegments) ||
+      inputSegments.some(
+        s =>
+          !s ||
+          typeof s.id !== 'string' ||
+          !s.id ||
+          typeof s.original !== 'string' ||
+          !Number.isFinite(s.start) ||
+          !Number.isFinite(s.end) ||
+          s.start < 0 ||
+          s.end < s.start
+      ) ||
+      new Set(inputSegments.map(s => s.id)).size !== inputSegments.length)
+  ) {
+    throw new Error('Invalid subtitle segments');
+  }
+  const segments = inputSegments?.map(s => ({ ...s })) ?? parseSrt(srtContent);
 
   const adaptedProgress: GenerateProgressCallback | undefined = progressCallback
     ? p => {
@@ -187,12 +210,10 @@ export async function translateSubtitlesFromSrt({
   if (targetLanguage !== 'original' && (qualityTranslation ?? false)) {
     try {
       const total = translatedSegments.length;
-      // Review window design:
-      // - 30 target lines to review per request
-      // - 15 lines of context before and 15 after (not counted toward progress)
-      const BATCH = 30; // target lines per review call
-      const BEFORE_CTX = 15;
-      const AFTER_CTX = 15;
+      const windows = planTranslationWindows(translatedSegments, 'review');
+      log.info(
+        `[${operationId}] translation plan: phase=review cues=${total} requests=${windows.length} maxConcurrent=${REVIEW_CONCURRENCY}`
+      );
       let done = 0;
 
       // Determine which model will be used for review and get display name.
@@ -234,6 +255,7 @@ export async function translateSubtitlesFromSrt({
           model: reviewModelName,
         };
         if (includePartial) {
+          payload.partialSegments = reviewedSegments.map(s => ({ ...s }));
           payload.partialResult = buildSrt({
             segments: reviewedSegments,
             mode: 'dual',
@@ -243,18 +265,13 @@ export async function translateSubtitlesFromSrt({
       };
 
       if (total > 0) {
-        emitRangeStage(0, Math.min(BATCH, total), done, false);
+        emitRangeStage(0, windows[0].end, done, false);
       }
 
       // Review batches run concurrently; before-context for a batch whose
       // predecessor is still in flight falls back to the draft translation.
-      const batchStarts: number[] = [];
-      for (let start = 0; start < total; start += BATCH) {
-        batchStarts.push(start);
-      }
-
       await runWithConcurrencySerialFallback({
-        taskCount: batchStarts.length,
+        taskCount: windows.length,
         concurrency: REVIEW_CONCURRENCY,
         // Review reservations are large (~34k credits each); a balance that
         // funds one review call must still complete, just sequentially. The
@@ -285,17 +302,10 @@ export async function translateSubtitlesFromSrt({
             `[${operationId}] concurrency backpressure (credits/admission); retrying ${count} review batches sequentially`
           ),
         runTask: async taskIndex => {
-          const start = batchStarts[taskIndex];
-          const end = Math.min(start + BATCH, total);
+          const { start, end, contextStart, contextEnd } = windows[taskIndex];
           emitRangeStage(start, end, done, false);
-          const contextBefore = reviewedSegments.slice(
-            Math.max(0, start - BEFORE_CTX),
-            start
-          );
-          const contextAfter = translatedSegments.slice(
-            end,
-            Math.min(end + AFTER_CTX, total)
-          );
+          const contextBefore = reviewedSegments.slice(contextStart, start);
+          const contextAfter = translatedSegments.slice(end, contextEnd);
           const batch = {
             segments: translatedSegments.slice(start, end),
             startIndex: start,
@@ -338,13 +348,15 @@ export async function translateSubtitlesFromSrt({
               throw err;
             }
           }
-          done += Math.min(BATCH, end - start);
-          const nextStart = done;
-          const nextEnd = Math.min(done + BATCH, total);
-          emitRangeStage(nextStart, nextEnd, done, true);
+          done += end - start;
+          emitRangeStage(start, end, done, true);
         },
       });
     } catch (reviewErr: any) {
+      if (signal?.aborted || reviewErr?.name === 'AbortError') {
+        attachPartialTranslation(reviewErr, reviewedSegments);
+        throw reviewErr;
+      }
       log.warn(
         `[translateSubtitles] Review pass failed, continuing with base translation: ${reviewErr?.message || reviewErr}`
       );
@@ -361,5 +373,5 @@ export async function translateSubtitlesFromSrt({
   });
   markStage('finalize');
 
-  return { subtitles: finalized.subtitles };
+  return { subtitles: finalized.subtitles, segments: finalized.segments };
 }

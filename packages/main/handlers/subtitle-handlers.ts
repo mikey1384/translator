@@ -340,6 +340,8 @@ export async function handleGenerateSubtitles(
   options: GenerateSubtitlesOptions,
   operationId: string
 ): Promise<{
+  transcriptionCoverage?: import('@shared-types/app').TranscriptionCoverage;
+  partialSegments?: SrtSegment[];
   success: boolean;
   subtitles?: string;
   segments?: SrtSegment[];
@@ -382,6 +384,10 @@ export async function handleGenerateSubtitles(
       finalOptions.sourceMediaPath = finalOptions.videoPath;
     }
     await assertSourceVideoAccessible(finalOptions.videoPath, operationId);
+    const sourceDurationSec = await ffmpeg.getMediaDuration(
+      finalOptions.videoPath,
+      controller.signal
+    );
 
     const progressCallback: GenerateProgressCallback = progress => {
       event.sender.send('generate-subtitles-progress', {
@@ -436,6 +442,13 @@ export async function handleGenerateSubtitles(
 
     const successResult = {
       success: true,
+      transcriptionCoverage: {
+        durationSec: sourceDurationSec,
+        endSec:
+          Number.isFinite(previewEndSec) && previewEndSec > 0
+            ? Math.min(previewEndSec, sourceDurationSec)
+            : sourceDurationSec,
+      },
       subtitles: result.subtitles,
       segments: result.segments,
       transcriptionEngine: result.transcriptionEngine ?? null,
@@ -463,6 +476,9 @@ export async function handleGenerateSubtitles(
       operationId,
     });
     const errorResult = {
+      partialSegments: Array.isArray(error?.partialSegments)
+        ? error.partialSegments
+        : undefined,
       success: false,
       cancelled: failure.cancelled,
       blockedReason: failure.insufficientCredits
@@ -539,6 +555,7 @@ export async function handleGenerateSubtitles(
 export async function handleTranslateSubtitles(
   event: IpcMainInvokeEvent,
   options: {
+    segments?: SrtSegment[];
     subtitles: string;
     sourceLanguage?: string;
     targetLanguage: string;
@@ -548,6 +565,8 @@ export async function handleTranslateSubtitles(
 ): Promise<{
   success: boolean;
   translatedSubtitles?: string;
+  translatedSegments?: SrtSegment[];
+  partialSegments?: SrtSegment[];
   cancelled?: boolean;
   blockedReason?: 'insufficient_credits';
   error?: string;
@@ -563,6 +582,7 @@ export async function handleTranslateSubtitles(
     addSubtitle(operationId, controller);
 
     const result = await translateSubtitlesFromSrt({
+      inputSegments: options.segments,
       srtContent: options.subtitles,
       targetLanguage: options.targetLanguage,
       operationId,
@@ -580,6 +600,7 @@ export async function handleTranslateSubtitles(
     return {
       success: true,
       translatedSubtitles: result.subtitles,
+      translatedSegments: result.segments,
       operationId,
     };
   } catch (error: any) {
@@ -605,6 +626,9 @@ export async function handleTranslateSubtitles(
         ? 'insufficient_credits'
         : undefined,
       error: failure.error,
+      partialSegments: Array.isArray(error?.partialSegments)
+        ? error.partialSegments
+        : undefined,
       operationId,
     };
   } finally {
@@ -2065,6 +2089,7 @@ export async function handleTranscribeRemaining(
   },
   operationId: string
 ): Promise<{
+  transcriptionCoverage?: import('@shared-types/app').TranscriptionCoverage;
   success: boolean;
   segments?: import('@shared-types/app').SrtSegment[];
   cancelled?: boolean;
@@ -2097,7 +2122,12 @@ export async function handleTranscribeRemaining(
       typeof end === 'number' ? Math.min(end, durationFull) : durationFull;
     const sliceDur = Math.max(0, sliceEnd - sliceStart);
     if (sliceDur <= 0.05) {
-      return { success: true, segments: [], operationId };
+      return {
+        success: true,
+        segments: [],
+        operationId,
+        transcriptionCoverage: { endSec: sliceEnd, durationSec: durationFull },
+      };
     }
 
     const baseName = mkTempAudioName(`${operationId}_tail`);
@@ -2167,7 +2197,12 @@ export async function handleTranscribeRemaining(
       stage: '__i18n__:completed',
       operationId,
     });
-    return { success: true, segments: segsOut, operationId };
+    return {
+      success: true,
+      segments: segsOut,
+      operationId,
+      transcriptionCoverage: { endSec: sliceEnd, durationSec: durationFull },
+    };
   } catch (error: any) {
     const failure = describeTaskFailure(error, {
       aborted: controller.signal.aborted,

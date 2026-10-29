@@ -155,6 +155,10 @@ export async function processVideoUrl(
     signal?: AbortSignal;
     /** The user confirmed a video over the long-video threshold. */
     allowLongVideo?: boolean;
+    infoJsonPath?: string;
+    referer?: string;
+    userAgent?: string;
+    cookieSourceUrl?: string;
   } = {}
 ): Promise<ProcessVideoUrlResult> {
   log.info(`[URLprocessor] processVideoUrl CALLED (Op ID: ${operationId})`);
@@ -312,10 +316,18 @@ export async function processVideoUrl(
       progressCallback,
       operationId,
       { ffmpeg },
-      extraArgs,
+      [
+        ...extraArgs,
+        ...(options.referer ? ['--referer', options.referer] : []),
+        ...(options.userAgent ? ['--user-agent', options.userAgent] : []),
+      ],
       signal,
       undefined,
-      { allowLongVideo: options.allowLongVideo }
+      {
+        allowLongVideo: options.allowLongVideo,
+        infoJsonPath: options.infoJsonPath,
+        cookieSourceUrl: options.cookieSourceUrl,
+      }
     );
     if (downloadResult.kind === 'automatic_captions') {
       const metadata = extractDownloadMetadata(
@@ -455,12 +467,15 @@ export async function processVideoUrl(
     };
     const getCookieCountForGating = async (): Promise<number | null> => {
       try {
-        const exported = await raceOperationCancellation(exportCookies(url), {
-          signal,
-          operationId,
-          context: 'checking app cookies for NeedCookies gating',
-          log,
-        });
+        const exported = await raceOperationCancellation(
+          exportCookies(options.cookieSourceUrl || url),
+          {
+            signal,
+            operationId,
+            context: 'checking app cookies for NeedCookies gating',
+            log,
+          }
+        );
         return exported.count;
       } catch (cookieErr) {
         // If we can't determine cookie availability, do not mask the real error.

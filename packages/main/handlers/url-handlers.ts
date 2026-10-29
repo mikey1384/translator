@@ -1,5 +1,8 @@
 import { IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
+import fsp from 'node:fs/promises';
+import { webVideoDiscoveries } from './web-video-handlers.js';
+import type { WebVideoBrowserLease } from '../services/web-video-model.js';
 import { processVideoUrl } from '../services/url-processor/index.js';
 import { UrlSourceRejectedError } from '../services/url-processor/source-guard.js';
 import { normalizeVideoUrlInput } from '../../shared/helpers/video-url.js';
@@ -112,6 +115,10 @@ export function initializeUrlHandler(services: UrlHandlerServices): void {
   downloadLibraryDir = services.downloadLibraryDir;
   downloadHistoryManager = new VideoSuggestionDownloadHistoryManager({
     persistence: {
+      loadPrivateTombstones: () =>
+        settingsStore.get('privateDownloadHistoryTombstones', []),
+      savePrivateTombstones: hashes =>
+        settingsStore.set('privateDownloadHistoryTombstones', hashes),
       loadHistory: () => settingsStore.get('videoSuggestionDownloadHistory'),
       saveHistory: items =>
         settingsStore.set('videoSuggestionDownloadHistory', items),
@@ -153,10 +160,10 @@ export async function handleProcessUrl(
   event: IpcMainInvokeEvent,
   options: ProcessUrlOptions
 ): Promise<ProcessUrlResult> {
-  const operationId = options.operationId || uuidv4();
-  log.info(
-    `[url-handler] Starting process for URL: ${options.url}, Effective Operation ID used: ${operationId}`
-  );
+  const operationId = options?.operationId || uuidv4();
+  let infoJsonPath: string | undefined;
+  let browser: WebVideoBrowserLease | undefined;
+  log.info(`[url-handler] Starting URL operation: ${operationId}`);
 
   // Progress goes to the tab that started the operation.
   const sendProgress = (progressData: {
@@ -194,7 +201,7 @@ export async function handleProcessUrl(
   // Accept what people paste: bare domains and links inside shared text.
   const url = normalizeVideoUrlInput(options.url);
   if (!url) {
-    log.warn(`[url-handler] No http(s) link found in input: ${options.url}`);
+    log.warn('[url-handler] No http(s) link found in input.');
     const message = urlDownloadErrorMessage('invalid_url');
     sendProgress({
       percent: 0,
@@ -228,10 +235,33 @@ export async function handleProcessUrl(
       log.info(`[url-handler] Cancel triggered for ${operationId}`);
     });
 
+    const selected = options.webVideo
+      ? webVideoDiscoveries.get(event.sender.id, url, options.webVideo)
+      : undefined;
+    browser = selected?.browser;
+    if (browser?.cancelled || controller.signal.aborted)
+      throw new CancelledError();
+    if (selected?.info) {
+      infoJsonPath = path.join(
+        fileManager.getTempDir(),
+        `web-video-${uuidv4()}.json`
+      );
+      await fsp.mkdir(path.dirname(infoJsonPath), { recursive: true });
+      await fsp.writeFile(infoJsonPath, JSON.stringify(selected.info), {
+        mode: 0o600,
+      });
+    }
+    if (controller.signal.aborted) throw new CancelledError();
+
     const result = await processVideoUrl(
-      url,
+      selected?.url || url,
       options.quality || 'mid',
       (progress: { percent: number; stage: string; error?: string | null }) => {
+        if (
+          /^Downloading(?: audio)?\.\.\.$/.test(progress.stage) &&
+          progress.percent > 0
+        )
+          browser?.close('transfer_started');
         log.info(
           `[url-handler] Progress update: ${progress.stage} - ${progress.percent}%`
         );
@@ -246,6 +276,10 @@ export async function handleProcessUrl(
       {
         signal: controller.signal,
         allowLongVideo: options.allowLongVideo === true,
+        infoJsonPath,
+        referer: selected?.referer,
+        userAgent: selected?.userAgent,
+        cookieSourceUrl: selected ? url : undefined,
       }
     );
 
@@ -289,7 +323,10 @@ export async function handleProcessUrl(
     void trackUrlDownloadFunnelEvent('url_download_completed', { sourceType });
 
     registerPendingUrlResult(operationId, event.sender, result.videoPath);
-    rememberPendingUrlTitle(operationId, result.title);
+    rememberPendingUrlTitle(
+      operationId,
+      selected?.candidate.title || result.title
+    );
     if (controller.signal.aborted) {
       return await finalizeCancelledUrlOperation({
         operationId,
@@ -302,7 +339,8 @@ export async function handleProcessUrl(
       success: true,
       filePath: result.videoPath,
       filename: result.filename,
-      title: result.title,
+      title: selected?.candidate.title || result.title,
+      webVideoId: selected?.candidate.id,
       thumbnailUrl: result.thumbnailUrl,
       channel: result.channel,
       channelUrl: result.channelUrl,
@@ -412,6 +450,10 @@ export async function handleProcessUrl(
       errorCode,
       operationId,
     };
+  } finally {
+    browser?.close('released');
+    if (infoJsonPath)
+      await fsp.rm(infoJsonPath, { force: true }).catch(() => {});
   }
 }
 
@@ -651,4 +693,9 @@ export async function handleSetMountedUrlDownloadLibraryPaths(
           : 'Mounted download leases could not be updated',
     };
   }
+}
+
+export function getDownloadHistoryManager(): VideoSuggestionDownloadHistoryManager {
+  if (!downloadHistoryManager) throw new Error('storage_failed');
+  return downloadHistoryManager;
 }

@@ -172,7 +172,8 @@
     "diskFull": "Disk je plný. Uvolněte trochu místa a zkuste to znovu.",
     "cancelDubbingFailedPlain": "Dabing se nepodařilo zastavit. Zkuste to znovu.",
     "cancelTranslationFailedPlain": "Překlad se nepodařilo zastavit. Zkuste to znovu.",
-    "cancelSummaryFailedPlain": "Shrnutí se nepodařilo zastavit. Zkuste to znovu."
+    "cancelSummaryFailedPlain": "Shrnutí se nepodařilo zastavit. Zkuste to znovu.",
+    "translationIncomplete": "Některé řádky se nepodařilo přeložit. Překlad není úplný. Zkuste to znovu."
   },
   "input": {
     "connect": "Připojit",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator na tomto videu pracuje. Až skončí, přetáhněte soubor znovu.",
     "dropNotSupported": "Přetáhněte sem video, zvukový soubor nebo titulky .srt.",
     "batchDownloadRunning": "Translator stahuje několik videí. Počkejte, až skončí, nebo stahování zrušte.",
-    "quality": "Kvalita"
+    "quality": "Kvalita",
+    "webVideo": {
+      "finding": "Hledání videí…",
+      "choose": "Vyberte video",
+      "instruction": "Přehrajte video, které chcete stáhnout.",
+      "protected": "Toto video je chráněné a nelze ho stáhnout.",
+      "noVideo": "Na této stránce nebylo nalezeno žádné video ke stažení.",
+      "openInApp": "Otevřete tuto stránku v Translatoru a vyberte video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Výstupní jazyk",
@@ -1374,7 +1384,7 @@
     "dropHere": "Pusťte — přeložíme do {{languageInto}}",
     "makeItSpeak": "Přeložit do {{languageInto}}",
     "downloadOnly": "Pouze stáhnout",
-    "helper": "Vložte odkaz z YouTube, TikToku, Instagramu nebo X — nebo sem přetáhněte videosoubor",
+    "helper": "Vložte odkaz na video či webovou stránku nebo sem přetáhněte videosoubor",
     "chooseFile": "Vybrat soubor",
     "into": "Jazyk",
     "dropNotMedia": "Přetáhněte sem video nebo zvuk a přeložíme ho.",
@@ -1492,7 +1502,8 @@
     "statusTranslated_one": "{{count}} řádek · jazyk: {{language}} · synchronizováno s videem",
     "statusTranslated_few": "{{count}} řádky · jazyk: {{language}} · synchronizováno s videem",
     "statusTranslated_many": "{{count}} řádku · jazyk: {{language}} · synchronizováno s videem",
-    "interruptedTranslateSubtitles": "Překlad těchto titulků do {{languageInto}} se přerušil, když se Translator zavřel."
+    "interruptedTranslateSubtitles": "Překlad těchto titulků do {{languageInto}} se přerušil, když se Translator zavřel.",
+    "currentSubtitle": "Aktuální titulek"
   },
   "subtitleStyles": {
     "Cinema": "Filmová žlutá",
@@ -1664,5 +1675,47 @@
     "openSettings": "Otevřít Nastavení",
     "supportSubject": "Po obnovení tohoto počítače v Translatoru mi chybí minuty",
     "settingsResetKeptLanguage": "Soubor s nastavením Translatoru byl poškozený, a tak se vaše předvolby vrátily na výchozí: jazyk titulků, API klíče a další volby. Jazyk rozhraní se nezměnil. Kopie poškozeného souboru zůstala zachována. Zkontrolujte prosím Nastavení."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Operaci se nepodařilo dokončit. Pokud přesun ještě probíhá, šifrovaná kopie zůstává zachována. Zkuste to znovu.",
+      "in_use": "Zavřete video ve všech kartách a dokončete nebo uložte rozpracované úlohy. Poté to zkuste znovu.",
+      "managed_only": "Do soukromé složky lze přesunout jen videa uložená v knihovně aplikace Translator.",
+      "unsupported_file": "Soubor je sdílený nebo uložený mimo knihovnu aplikace Translator a nelze jej bezpečně přesunout.",
+      "password_length": "Použijte heslo o délce alespoň 8 znaků.",
+      "password_mismatch": "Hesla se neshodují.",
+      "incorrect_password": "Nesprávné heslo.",
+      "locked": "Nejprve složku odemkněte.",
+      "not_empty": "Před smazáním složky přesuňte nebo smažte její videa.",
+      "source_changed": "Video nebo titulky se během přesunu změnily. Šifrovaná kopie zůstala zachována. Odemkněte složku a zkuste to znovu.",
+      "pending": "Přesun není dokončen. Odemkněte složku a zkuste to znovu.",
+      "corrupt": "Šifrovaná složka nebo soubor jsou poškozené. Obnovte je ze zálohy.",
+      "full": "Knihovna je plná. Nejprve odstraňte nepotřebné složky nebo videa.",
+      "invalid_name": "Zadejte název složky o délce 1 až 80 znaků.",
+      "not_found": "Tato složka nebo video již nejsou k dispozici."
+    },
+    "folders": "Složky",
+    "allVideos": "Všechna videa",
+    "unfiled": "Nezařazené",
+    "newFolder": "Nová složka",
+    "privateFolder": "Soukromá složka",
+    "rename": "Přejmenovat",
+    "move": "Přesunout do složky",
+    "lock": "Zamknout",
+    "unlock": "Odemknout",
+    "name": "Název složky",
+    "password": "Heslo",
+    "confirmPassword": "Potvrdit heslo",
+    "watch": "Přehrát",
+    "empty": "Tato složka je prázdná.",
+    "lockedHint": "Odemkněte složku a zobrazte její videa.",
+    "pending": "Ochrana nedokončena — odemkněte a zkuste to znovu",
+    "protecting": "Šifrujeme a ověřujeme video a titulky…",
+    "protectionHint": "Videa a titulky uložené aplikací Translator se přesunou do šifrovaného úložiště. Nejprve video zavřete. Exportované kopie, pracovní prostory agentů a zálohy chráněny nejsou.",
+    "passwordHint": "Použijte alespoň 8 znaků. Zapomenuté heslo nelze obnovit. Složky se zamknou po zavření karty, zamknutí počítače nebo 15 minutách nečinnosti.",
+    "deleteVideoConfirm": "Trvale smazat toto soukromé video a jeho titulky? Tuto akci nelze vrátit zpět.",
+    "deleteFolderConfirm": "Smazat tuto prázdnou složku?",
+    "saveCopy": "Uložit kopii",
+    "exportConfirm": "Uložit nešifrovanou kopii videa a titulků? Kdokoli s přístupem k cílovému umístění ji může otevřít. Šifrovaný originál zůstane v této složce."
   }
 }

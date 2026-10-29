@@ -115,10 +115,20 @@ export const useFreePreviewStore = createWithEqualityFn<FreePreviewState>()(
       }),
     clear: key =>
       set(state => {
-        if (!state.items[key]) return state;
         const items = { ...state.items };
         delete items[key];
-        write(items);
+        // Another tab may have saved a preview since this store was loaded.
+        // Remove the source from disk even when this tab never cached it, and
+        // preserve unrelated tabs' records and their active status.
+        try {
+          const disk = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+          if (disk && typeof disk === 'object' && !Array.isArray(disk)) {
+            delete disk[key];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(disk));
+          }
+        } catch {
+          write(items);
+        }
         return { items };
       }),
   })

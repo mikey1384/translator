@@ -173,7 +173,8 @@
     "diskFull": "Puno na ang disk mo. Magbakante ng espasyo at subukan ulit.",
     "cancelDubbingFailedPlain": "Hindi maihinto ang dubbing. Subukan ulit.",
     "cancelTranslationFailedPlain": "Hindi mahinto ang pagsasalin. Subukan ulit.",
-    "cancelSummaryFailedPlain": "Hindi mahinto ang buod. Subukan ulit."
+    "cancelSummaryFailedPlain": "Hindi mahinto ang buod. Subukan ulit.",
+    "translationIncomplete": "May mga linyang hindi naisalin. Hindi kumpleto ang salin. Subukan muli."
   },
   "input": {
     "connect": "Kumonekta",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "May ginagawa ang Translator sa video na ito. I-drop ulit ang file kapag tapos na.",
     "dropNotSupported": "Mag-drop ng video, audio file, o .srt na subtitle file.",
     "batchDownloadRunning": "Nagda-download ang Translator ng ilang video. Hintaying matapos ang mga ito, o i-cancel ang download.",
-    "quality": "Kalidad"
+    "quality": "Kalidad",
+    "webVideo": {
+      "finding": "Naghahanap ng mga video…",
+      "choose": "Pumili ng video",
+      "instruction": "I-play ang video na gusto mong i-download.",
+      "protected": "Protektado ang video na ito at hindi ito mada-download.",
+      "noVideo": "Walang nakitang video na puwedeng i-download sa page na ito.",
+      "openInApp": "Buksan ang page na ito sa Translator para pumili ng video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Wika ng output",
@@ -1368,7 +1378,7 @@
     "dropHere": "I-drop ang video dito para isalin sa {{language}}",
     "makeItSpeak": "Isalin sa {{language}}",
     "downloadOnly": "I-download lang",
-    "helper": "Mag-paste ng link mula sa YouTube, TikTok, Instagram o X — o i-drag dito ang video file",
+    "helper": "Mag-paste ng link ng video o webpage, o mag-drop ng video file dito",
     "chooseFile": "Pumili ng file",
     "into": "Sa",
     "dropNotMedia": "Video o audio file lang ang puwedeng isalin.",
@@ -1465,7 +1475,8 @@
     "statusLoaded_one": "{{count}} linya ang na-load",
     "interruptedTranslateSubtitles": "Naputol ang pagsasalin ng mga subtitle na ito sa {{language}} nang isara ang Translator.",
     "statusTranscribed_one": "Naisulat na ang {{count}} linya",
-    "statusTranslated_one": "{{count}} linya sa {{language}} · sabay sa video"
+    "statusTranslated_one": "{{count}} linya sa {{language}} · sabay sa video",
+    "currentSubtitle": "Kasalukuyang subtitle"
   },
   "subtitleStyles": {
     "Cinema": "Dilaw na pang-sine",
@@ -1639,5 +1650,47 @@
     "openSettings": "Buksan ang Mga Setting",
     "supportSubject": "Nawala ang mga minuto ko matapos i-reset ng Translator ang computer na ito",
     "settingsResetKeptLanguage": "Nasira ang settings file ng Translator, kaya na-reset ang mga preference mo: wika ng subtitle, mga API key, at iba pang opsyon. Napanatili ang wika ng app. May naitabing kopya ng sirang file. Pakitingnan ang Mga Setting."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Hindi natapos. Mananatili ang naka-encrypt na kopya kung hindi pa tapos ang paglipat. Subukan muli.",
+      "in_use": "Isara ang video sa lahat ng tab at tapusin o i-save ang kasalukuyang ginagawa, saka subukan muli.",
+      "managed_only": "Mga video lang sa library ng Translator ang maaaring ilipat sa pribadong folder.",
+      "unsupported_file": "Ginagamit din sa iba o nasa labas ng library ng Translator ang file na ito kaya hindi ito ligtas na maililipat.",
+      "password_length": "Gumamit ng password na may hindi bababa sa 8 character.",
+      "password_mismatch": "Hindi magkatugma ang mga password.",
+      "incorrect_password": "Mali ang password.",
+      "locked": "I-unlock muna ang folder.",
+      "not_empty": "Ilipat o burahin muna ang mga video bago burahin ang folder.",
+      "source_changed": "Nagbago ang video o mga subtitle habang inililipat. Napanatili ang naka-encrypt na kopya. I-unlock ang folder para subukan muli.",
+      "pending": "Hindi pa tapos ang paglipat. I-unlock ang folder para subukan muli.",
+      "corrupt": "Sira ang naka-encrypt na folder o file na ito. Ibalik ito mula sa backup.",
+      "full": "Puno na ang library. Alisin muna ang mga folder o video na hindi ginagamit.",
+      "invalid_name": "Maglagay ng pangalan ng folder na may 1 hanggang 80 character.",
+      "not_found": "Hindi na available ang folder o video na ito."
+    },
+    "folders": "Mga folder",
+    "allVideos": "Lahat ng video",
+    "unfiled": "Walang folder",
+    "newFolder": "Bagong folder",
+    "privateFolder": "Pribadong folder",
+    "rename": "Palitan ang pangalan",
+    "move": "Ilipat sa folder",
+    "lock": "I-lock",
+    "unlock": "I-unlock",
+    "name": "Pangalan ng folder",
+    "password": "Password",
+    "confirmPassword": "Kumpirmahin ang password",
+    "watch": "Panoorin",
+    "empty": "Walang laman ang folder na ito.",
+    "lockedHint": "I-unlock ang folder para makita ang mga video.",
+    "pending": "Hindi pa tapos ang pagprotekta — i-unlock para subukan muli",
+    "protecting": "Ini-encrypt at sinusuri ang video at mga subtitle…",
+    "protectionHint": "Ililipat sa naka-encrypt na storage ang mga video at subtitle na naka-save sa Translator. Isara muna ang video. Hindi protektado ang mga na-export na kopya, workspace ng agent at backup.",
+    "passwordHint": "Gumamit ng hindi bababa sa 8 character. Hindi mababawi ng Translator ang nakalimutang password. Mala-lock ang mga folder kapag isinara ang tab, ni-lock ang computer o hindi ginamit nang 15 minuto.",
+    "deleteVideoConfirm": "Permanenteng burahin ang pribadong video na ito at ang mga subtitle nito? Hindi na ito maibabalik.",
+    "deleteFolderConfirm": "Burahin ang walang-lamang folder na ito?",
+    "saveCopy": "Mag-save ng kopya",
+    "exportConfirm": "Mag-save ng hindi naka-encrypt na kopya ng video at mga subtitle? Mabubuksan ito ng sinumang may access sa destinasyon. Mananatili sa folder na ito ang naka-encrypt na orihinal."
   }
 }

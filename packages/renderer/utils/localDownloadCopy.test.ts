@@ -2,6 +2,20 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { historyCopiesForUrl } from './localDownloadCopy.js';
 
+test('a page never reuses a different embedded video or an ambiguous legacy download', () => {
+  const url = 'https://example.com/page';
+  const history = [
+    { sourceUrl: url, localPath: '/a.mp4', webVideoId: 'a' },
+    { sourceUrl: url, localPath: '/b.mp4', webVideoId: 'b' },
+    { sourceUrl: url, localPath: '/legacy.mp4' },
+  ];
+  assert.deepEqual(
+    historyCopiesForUrl(history, url, 'b').map(v => v.localPath),
+    ['/b.mp4']
+  );
+  assert.deepEqual(historyCopiesForUrl(history, url, 'unknown'), []);
+});
+
 test('a pasted link finds earlier downloads of the same video, newest first', () => {
   const history = [
     {

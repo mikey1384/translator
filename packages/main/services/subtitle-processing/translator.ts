@@ -1,3 +1,7 @@
+import {
+  completeTranslationCoverage,
+  parseTranslationLines,
+} from './translation-coverage.js';
 import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
@@ -5,7 +9,7 @@ import {
   isTranslationAdmissionLimitError,
   isProviderRateLimitError,
 } from './errors.js';
-import { TranslateBatchArgs } from '@shared-types/app';
+import { TranslateBatchArgs, SrtSegment } from '@shared-types/app';
 import {
   ERROR_CODES,
   STAGE5_REVIEW_TRANSLATION_MODEL,
@@ -141,125 +145,6 @@ async function waitForNetworkRetry(
   await delayWithAbort(delay, signal);
 }
 
-function parseTranslatedResponse(translation: string, batch: any): any[] {
-  log.info(`[parseTranslatedResponse] Parsing translation response`);
-
-  // Split into non-empty trimmed lines
-  const lines = (translation || '')
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .split('\n')
-    .map(l => l.trim())
-    .filter(Boolean);
-
-  // Accept several common formats for safety
-  const matchers: Array<(s: string) => { id: number; text: string } | null> = [
-    // @@SUB_LINE@@ 123: text
-    (s: string) => {
-      const m = s.match(/^@@SUB_LINE@@\s*(\d+)\s*:\s*([\s\S]*)$/);
-      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
-    },
-    // Line 123: text
-    (s: string) => {
-      const m = s.match(/^Line\s*(\d+)\s*[:-]\s*([\s\S]*)$/i);
-      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
-    },
-    // 123: text
-    (s: string) => {
-      const m = s.match(/^(\d+)\s*[:-]\s*([\s\S]*)$/);
-      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
-    },
-  ];
-
-  const ordered: string[] = [];
-  const byId = new Map<number, string>();
-  for (const raw of lines) {
-    let hit: { id: number; text: string } | null = null;
-    for (const fn of matchers) {
-      hit = fn(raw);
-      if (hit) break;
-    }
-    if (hit) {
-      const clean = hit.text.replace(/[\uFEFF\u200B]/g, '').trim();
-      if (!byId.has(hit.id)) byId.set(hit.id, clean);
-      ordered.push(clean);
-    } else {
-      // Fallback: treat plain line as next ordered entry
-      ordered.push(raw);
-    }
-  }
-
-  // Map each incoming segment to the best-available text
-  const out = batch.segments.map((segment: any, idx: number) => {
-    const absoluteIndex = batch.startIndex + idx + 1; // 1-based absolute index
-    let txt: string | undefined = undefined;
-
-    if (byId.has(absoluteIndex)) {
-      txt = byId.get(absoluteIndex)!;
-    } else if (ordered.length >= batch.segments.length) {
-      // If counts align, take the entry at the same relative position
-      txt = ordered[idx];
-    }
-
-    // Do NOT substitute original when missing; keep blanks so we can repair/fill later
-    const cleanTxt = (txt ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
-    const finalText = cleanTxt; // may be '' if missing
-
-    return {
-      ...segment,
-      translation: finalText,
-    };
-  });
-
-  return out;
-}
-
-// Helper: parse an LLM response into both an id->text map and an ordered list
-function parseIdAndOrdered(translation: string): {
-  byId: Map<number, string>;
-  ordered: string[];
-} {
-  const lines = (translation || '')
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .split('\n')
-    .map(l => l.trim())
-    .filter(Boolean);
-
-  const matchers: Array<(s: string) => { id: number; text: string } | null> = [
-    (s: string) => {
-      const m = s.match(/^@@SUB_LINE@@\s*(\d+)\s*:\s*([\s\S]*)$/);
-      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
-    },
-    (s: string) => {
-      const m = s.match(/^Line\s*(\d+)\s*[:-]\s*([\s\S]*)$/i);
-      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
-    },
-    (s: string) => {
-      const m = s.match(/^(\d+)\s*[:-]\s*([\s\S]*)$/);
-      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
-    },
-  ];
-
-  const ordered: string[] = [];
-  const byId = new Map<number, string>();
-  for (const raw of lines) {
-    let hit: { id: number; text: string } | null = null;
-    for (const fn of matchers) {
-      hit = fn(raw);
-      if (hit) break;
-    }
-    if (hit) {
-      const clean = hit.text.replace(/[\uFEFF\u200B]/g, '').trim();
-      if (!byId.has(hit.id)) byId.set(hit.id, clean);
-      ordered.push(clean);
-    } else {
-      ordered.push(raw);
-    }
-  }
-  return { byId, ordered };
-}
-
 export async function translateBatch({
   batch,
   targetLang,
@@ -345,34 +230,25 @@ Output format (exactly ${batch.segments.length} lines):
         operationId,
         retryAttempts: MAX_RETRIES,
       });
-      let translatedBatch = parseTranslatedResponse(res, batch);
-
-      // Repair pass: if any translations are missing (''), request only those IDs
-      const missing = translatedBatch
-        .map((s, i) => ({ idx: i, abs: batch.startIndex + i + 1, seg: s }))
-        .filter(x => !x.seg.translation || x.seg.translation.trim() === '');
-
-      if (missing.length > 0) {
-        const repairSystem = `You are a subtitle translator. Output exactly ${missing.length} lines, each formatted as @@SUB_LINE@@ <ABS_NUMBER>: <text>. No commentary or extra text.`;
-        const missingList = missing
-          .map(m => formatLine(m.abs, batch.segments[m.idx].original ?? ''))
-          .join('\n');
-        const repairPrompt = `
-Translate ONLY the following lines into natural, fluent ${targetLang}. Do not include any other lines.
-
-LINES TO TRANSLATE:
-${missingList}
-
-Output format (exactly ${missing.length} lines):
-@@SUB_LINE@@ <ABS_NUMBER>: <translation>
-Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
-`;
-
-        try {
-          const repairRes = await callAIModel({
+      return await completeTranslationCoverage({
+        segments: batch.segments,
+        startIndex: batch.startIndex,
+        draft: res,
+        signal,
+        repair: async missing => {
+          log.info(
+            `[${operationId}] Repairing ${missing.length} missing translation cues`
+          );
+          return callAIModel({
             messages: [
-              { role: 'system', content: repairSystem },
-              { role: 'user', content: repairPrompt },
+              {
+                role: 'system',
+                content: `You are a subtitle translator. Output exactly ${missing.length} lines in the format @@SUB_LINE@@ <ABS_NUMBER>: <translation>. Use every given number exactly once. No commentary.`,
+              },
+              {
+                role: 'user',
+                content: `Translate ONLY these lines into natural ${targetLang}. Do not omit or merge lines.\n${missing.map(m => formatLine(m.id, m.original)).join('\n')}`,
+              },
             ],
             model: draftConfig.model,
             translationPhase: 'draft',
@@ -381,44 +257,8 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
             operationId,
             retryAttempts: 2,
           });
-          // Parse repair results by ABS ids with ordered fallback
-          const { byId: repairMap, ordered: repairOrdered } =
-            parseIdAndOrdered(repairRes);
-          translatedBatch = translatedBatch.map((s, i) => {
-            const abs = batch.startIndex + i + 1;
-            if (!s.translation || s.translation.trim() === '') {
-              let fix = repairMap.get(abs);
-              if (!fix) {
-                const missingPos = missing.findIndex(m => m.idx === i);
-                if (missingPos >= 0 && missingPos < repairOrdered.length) {
-                  fix = (repairOrdered[missingPos] || '').trim();
-                }
-              }
-              if (fix && fix.trim()) return { ...s, translation: fix.trim() };
-            }
-            return s;
-          });
-        } catch {
-          log.warn(`[${operationId}] Repair pass failed or skipped.`);
-        }
-      }
-
-      // Validate batch has some successful translations
-      const emptyCount = translatedBatch.filter(
-        (s: any) => !s.translation || s.translation.trim() === ''
-      ).length;
-      if (emptyCount === translatedBatch.length && translatedBatch.length > 0) {
-        log.error(
-          `[${operationId}] Translation batch returned all empty translations (${emptyCount}/${translatedBatch.length})`
-        );
-        throw new Error('Translation batch failed: all translations empty');
-      } else if (emptyCount > translatedBatch.length * 0.5) {
-        log.warn(
-          `[${operationId}] Translation batch has many empty translations: ${emptyCount}/${translatedBatch.length}`
-        );
-      }
-
-      return translatedBatch;
+        },
+      });
     } catch (err: any) {
       log.error(
         `[${operationId}] Error during translation batch (Attempt ${retryCount + 1}):`,
@@ -433,6 +273,11 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
         );
         throw err; // Re-throw cancellation errors immediately
       }
+
+      // Do not pay for the completed draft again after a repair request fails.
+      // The caller preserves it and retries only missing cues.
+      if (err?.partialSegments?.some((s: SrtSegment) => s.translation?.trim()))
+        throw err;
 
       const msg = String(err?.message || '');
       const lowerMsg = msg.toLowerCase();
@@ -504,24 +349,10 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
         continue;
       }
 
-      log.error(
-        `[${operationId}] Unhandled error or retries exhausted in translateBatch. Falling back.`
-      );
-      return batch.segments.map(segment => ({
-        ...segment,
-        translation: segment.original,
-      }));
+      throw err;
     }
   }
-
-  log.warn(
-    `[${operationId}] Translation failed after ${MAX_RETRIES} retries, using original text`
-  );
-
-  return batch.segments.map(segment => ({
-    ...segment,
-    translation: segment.original,
-  }));
+  throw new Error('__i18n__:errors.translationIncomplete');
 }
 
 export async function reviewTranslationBatch({
@@ -694,48 +525,14 @@ OUTPUT ${batch.segments.length} lines:
         return batch.segments;
       }
 
-      const parts = reviewedContent.split('@@SUB_LINE@@').slice(1);
-      const rawMap = new Map<number, string>();
-      const lineRE = /^\s*(\d+)\s*:\s*([\s\S]*)$/;
-
-      for (const raw of parts) {
-        const m = raw.match(lineRE);
-        if (!m) continue;
-        const id = Number(m[1]);
-        const txt = (m[2] ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
-        rawMap.set(id, txt);
-      }
-
-      const expectedIds = new Set(batchItemsWithContext.map(i => i.index));
-      const map = new Map<number, string>();
-      for (const id of expectedIds) {
-        if (rawMap.has(id)) map.set(id, rawMap.get(id)!);
-      }
-
-      const hasDupes = map.size !== new Set(map.keys()).size; // unlikely now, but keep
-      const coverageOk = map.size / batch.segments.length >= 0.9;
-
-      if (hasDupes || !coverageOk) {
-        log.warn(
-          `[Review] Duplicate or missing IDs in review batch – falling back.`
-        );
-        return batch.segments;
-      }
-
-      const reviewedSegments = batch.segments.map((seg, idx) => {
-        const id =
-          typeof seg.index === 'number'
-            ? seg.index
-            : batch.startIndex + idx + 1;
-        return {
-          ...seg,
-          translation: map.has(id)
-            ? map.get(id)!
-            : (seg.translation ?? seg.original ?? ''),
-        };
-      });
-
-      return reviewedSegments;
+      const ids = batchItemsWithContext.map(item => item.index);
+      const map = parseTranslationLines(reviewedContent, ids);
+      // Review can improve a draft; an empty, omitted or duplicate review line
+      // must never erase a valid translation or substitute untranslated source.
+      return batch.segments.map((segment, index) => ({
+        ...segment,
+        translation: map.get(ids[index]) || segment.translation || '',
+      }));
     } catch (error: any) {
       log.error(
         `[Review] Error during review batch attempt ${attempt} (${operationId}):`,

@@ -44,6 +44,7 @@ function createHarness(
   } = {}
 ) {
   let storedHistory: VideoSuggestionDownloadHistoryItem[] | null = null;
+  let privateTombstones: string[] = [];
   let pendingReclaims: string[] = options.initialPendingReclaims ?? [];
   let pendingFileDeletions =
     options.initialPendingFileDeletions?.map(intent => ({ ...intent })) ?? [];
@@ -59,6 +60,10 @@ function createHarness(
   const createManager = () =>
     new VideoSuggestionDownloadHistoryManager({
       persistence: {
+        loadPrivateTombstones: () => privateTombstones,
+        savePrivateTombstones: hashes => {
+          privateTombstones = hashes;
+        },
         loadHistory: () => storedHistory,
         saveHistory: items => {
           if (options.saveHistory) {
@@ -107,6 +112,31 @@ function createHarness(
     getPendingFileDeletions: () => pendingFileDeletions,
   };
 }
+
+test('separate videos on the same page survive history persistence and deduplication', async () => {
+  const harness = createHarness();
+  for (const id of ['a', 'b'])
+    await harness.manager.mutate({
+      rendererId: 1,
+      mutation: {
+        type: 'upsert',
+        item: {
+          ...historyItem(id, `/app/downloaded-media/${id}.mp4`),
+          sourceUrl: 'https://example.com/page',
+          webVideoId: id.repeat(32),
+        },
+      },
+    });
+  assert.equal(harness.getStoredHistory()?.length, 2);
+  assert.deepEqual(
+    harness
+      .getStoredHistory()
+      ?.map(item => item.webVideoId)
+      .sort(),
+    ['a'.repeat(32), 'b'.repeat(32)]
+  );
+  assert.deepEqual(harness.reclaimed, []);
+});
 
 test('serialized concurrent upserts retain both newly downloaded files', async () => {
   const harness = createHarness();
@@ -1188,4 +1218,94 @@ test('downloading the same video again keeps one entry and reclaims the older co
     ['newer', 'other']
   );
   assert.deepEqual(harness.reclaimed, [olderPath]);
+});
+
+test('filed downloads survive recent-history eviction, reload and re-download', async () => {
+  const { manager, createManager, reclaimed } = createHarness();
+  const item = historyItem('filed', '/app/downloaded-media/filed.mp4');
+  await manager.mutate({ rendererId: 1, mutation: { type: 'upsert', item } });
+  await manager.assignFolder(item.id, 'a1234567-1234-1234-1234-123456789abc');
+  for (let i = 0; i < 45; i++)
+    await manager.mutate({
+      rendererId: 1,
+      mutation: {
+        type: 'upsert',
+        item: historyItem(
+          `recent-${i}`,
+          `/app/downloaded-media/recent-${i}.mp4`
+        ),
+      },
+    });
+  const restored = createManager();
+  const items = await restored.mutate({
+    rendererId: 1,
+    mutation: { type: 'get' },
+  });
+  assert.equal(items.length, 41);
+  assert.equal(
+    items.find(i => i.id === 'filed')?.folderId,
+    'a1234567-1234-1234-1234-123456789abc'
+  );
+  assert.equal(reclaimed.includes(item.localPath!), false);
+  const downloaded = await restored.mutate({
+    rendererId: 1,
+    mutation: {
+      type: 'upsert',
+      item: {
+        ...item,
+        id: 'redownload',
+        localPath: '/app/downloaded-media/new.mp4',
+      },
+    },
+  });
+  assert.equal(
+    downloaded.find(i => i.id === 'redownload')?.folderId,
+    'a1234567-1234-1234-1234-123456789abc'
+  );
+  await restored.assignFolder('redownload');
+  assert.equal(
+    (await restored.mutate({ rendererId: 1, mutation: { type: 'get' } }))
+      .length,
+    40
+  );
+});
+
+test('private transfer refuses mounted media and tombstones prevent a stale tab or rollback resurrecting it', async () => {
+  const { manager, createManager } = createHarness();
+  const item = historyItem(
+    'private-history',
+    '/app/downloaded-media/private.mp4'
+  );
+  await manager.mutate({
+    rendererId: 1,
+    mutation: { type: 'upsert', item },
+    mountedPaths: [item.localPath!],
+  });
+  await assert.rejects(
+    manager.transferToPrivate(item.id, async () =>
+      assert.fail('must not transfer mounted media')
+    ),
+    /in_use/
+  );
+  await manager.setMountedPaths(1, []);
+  await manager.transferToPrivate(item.id, async (_item, remove) => remove());
+  assert.deepEqual(
+    await manager.mutate({ rendererId: 2, mutation: { type: 'upsert', item } }),
+    []
+  );
+  assert.deepEqual(
+    await manager.mutate({
+      rendererId: 2,
+      mutation: { type: 'rollback-upsert', id: item.id },
+    }),
+    []
+  );
+  assert.deepEqual(
+    await createManager().mutate({
+      rendererId: 3,
+      seedItems: [item],
+      mutation: { type: 'upsert', item },
+    }),
+    []
+  );
 });

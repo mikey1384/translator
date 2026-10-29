@@ -22,6 +22,7 @@ import { useSubStore } from '../state/subtitle-store';
 import { useWorkspaceBusy } from './workspace/WorkspaceActions';
 import LogsModal from './LogsModal';
 import LongDownloadConfirmDialog from './LongDownloadConfirmDialog';
+import WebVideoPicker from './WebVideoPicker';
 import UrlCookieBanner from '../containers/GenerateSubtitles/UrlCookieBanner';
 import Modal from './Modal';
 import Button from './Button';
@@ -327,6 +328,7 @@ export default function GlobalModals() {
         </div>
       </Modal>
       <LongDownloadConfirmDialog />
+      <WebVideoPicker />
       <CreditRanOutDialog
         open={creditOpen}
         onOk={() => resolveCreditRanOut('ok')}

@@ -17,6 +17,8 @@ export interface WorkspaceEditorActions {
 
 interface WorkspaceActionsState {
   editor: WorkspaceEditorActions | null;
+  subtitleNavigation: (() => void) | null;
+  registerSubtitleNavigation(navigate: (() => void) | null): void;
   /** Save/export are blocked (a job or the export preflight is running). */
   exportLocked: boolean;
   registerEditor(actions: WorkspaceEditorActions | null): void;
@@ -25,6 +27,10 @@ interface WorkspaceActionsState {
 
 export const useWorkspaceActions = create<WorkspaceActionsState>(set => ({
   editor: null,
+  subtitleNavigation: null,
+  registerSubtitleNavigation(subtitleNavigation) {
+    set({ subtitleNavigation });
+  },
   exportLocked: false,
   registerEditor(actions) {
     set({ editor: actions });

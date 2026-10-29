@@ -14,6 +14,7 @@ import type {
   SrtSegment,
 } from '@shared-types/app';
 import { fingerprintSubtitleText } from '../../shared/helpers/subtitle-sidecar.js';
+import { normalizeTranscriptionCoverage } from '../../shared/helpers/transcription-coverage.js';
 import { writeTextFileAtomically } from './saved-subtitle-metadata.js';
 import { withLock } from './async-lock.js';
 import { normalizeYoutubeWatchUrl } from './video-suggestions/shared.js';
@@ -34,6 +35,9 @@ type SubtitleDocumentLinkedFile = {
 };
 
 type SubtitleDocumentRecord = {
+  transcriptionCoverage?:
+    | import('@shared-types/app').TranscriptionCoverage
+    | null;
   version: typeof DOCUMENT_SCHEMA_VERSION;
   id: string;
   title: string | null;
@@ -183,6 +187,9 @@ function buildDocumentMeta(
 
   const sourceProvenance = normalizeSourceProvenance(record.sourceProvenance);
   return {
+    transcriptionCoverage: normalizeTranscriptionCoverage(
+      record.transcriptionCoverage
+    ),
     id: record.id,
     title: record.title,
     sourceVideoPath: record.sourceVideoPath,
@@ -328,6 +335,9 @@ function sanitizeDocumentRecord(input: unknown): SubtitleDocumentRecord | null {
 
   const sourceProvenance = normalizeSourceProvenance(raw.sourceProvenance);
   return {
+    transcriptionCoverage: normalizeTranscriptionCoverage(
+      raw.transcriptionCoverage
+    ),
     version: DOCUMENT_SCHEMA_VERSION,
     id,
     title: String(raw.title || '').trim() || null,
@@ -573,6 +583,11 @@ async function saveSubtitleDocumentRecordUnlocked(
       : (existing?.sourceProvenance ?? null);
 
   const record: SubtitleDocumentRecord = {
+    transcriptionCoverage: normalizeTranscriptionCoverage(
+      options.transcriptionCoverage === undefined
+        ? existing?.transcriptionCoverage
+        : options.transcriptionCoverage
+    ),
     version: DOCUMENT_SCHEMA_VERSION,
     id: existing?.id || crypto.randomUUID(),
     title:

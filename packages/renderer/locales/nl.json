@@ -173,7 +173,8 @@
     "diskFull": "Je schijf is vol. Maak wat ruimte vrij en probeer het opnieuw.",
     "cancelDubbingFailedPlain": "Kan de nasynchronisatie niet stoppen. Probeer het opnieuw.",
     "cancelTranslationFailedPlain": "Kan het vertalen niet stoppen. Probeer het opnieuw.",
-    "cancelSummaryFailedPlain": "Kan de samenvatting niet stoppen. Probeer het opnieuw."
+    "cancelSummaryFailedPlain": "Kan de samenvatting niet stoppen. Probeer het opnieuw.",
+    "translationIncomplete": "Sommige regels konden niet worden vertaald. De vertaling is onvolledig. Probeer het opnieuw."
   },
   "input": {
     "connect": "Verbinden",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator is bezig met deze video. Sleep het bestand opnieuw hierheen als het klaar is.",
     "dropNotSupported": "Sleep een video, een audiobestand of een .srt-ondertitelbestand hierheen.",
     "batchDownloadRunning": "Translator is meerdere video’s aan het downloaden. Wacht tot die klaar zijn, of annuleer de download.",
-    "quality": "Kwaliteit"
+    "quality": "Kwaliteit",
+    "webVideo": {
+      "finding": "Video’s zoeken…",
+      "choose": "Kies een video",
+      "instruction": "Speel de video af die je wilt downloaden.",
+      "protected": "Deze video is beveiligd en kan niet worden gedownload.",
+      "noVideo": "Op deze pagina is geen downloadbare video gevonden.",
+      "openInApp": "Open deze pagina in Translator om een video te kiezen.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Uitvoertaal",
@@ -1368,7 +1378,7 @@
     "dropHere": "Laat los om naar het {{language}} te vertalen",
     "makeItSpeak": "Vertalen naar het {{language}}",
     "downloadOnly": "Alleen downloaden",
-    "helper": "Plak een link van YouTube, TikTok, Instagram of X — of sleep een videobestand hierheen",
+    "helper": "Plak een link naar een video of webpagina, of sleep hier een videobestand naartoe",
     "chooseFile": "Bestand kiezen",
     "into": "Naar",
     "dropNotMedia": "Sleep een video- of audiobestand hierheen om het te vertalen.",
@@ -1465,7 +1475,8 @@
     "checkingFile": "Bestand lezen…",
     "statusLoaded": "{{count}} regels geladen",
     "statusLoaded_one": "{{count}} regel geladen",
-    "interruptedTranslateSubtitles": "Het vertalen van deze ondertitels naar het {{language}} is gestopt toen Translator werd gesloten."
+    "interruptedTranslateSubtitles": "Het vertalen van deze ondertitels naar het {{language}} is gestopt toen Translator werd gesloten.",
+    "currentSubtitle": "Huidige ondertitel"
   },
   "subtitleStyles": {
     "Cinema": "Bioscoopgeel",
@@ -1639,5 +1650,47 @@
     "openSettings": "Instellingen openen",
     "supportSubject": "Mijn minuten zijn weg na een reset van Translator op deze computer",
     "settingsResetKeptLanguage": "Het instellingenbestand van Translator was beschadigd, dus je voorkeuren zijn teruggezet: de taal van de ondertitels, API-sleutels en andere opties. De taal van de app is behouden. Er is een kopie van het beschadigde bestand bewaard. Kijk even in Instellingen."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Kon niet worden voltooid. Als een verplaatsing nog loopt, blijft de versleutelde kopie bewaard. Probeer het opnieuw.",
+      "in_use": "Sluit de video in alle tabbladen en voltooi of bewaar je lopende werk. Probeer het daarna opnieuw.",
+      "managed_only": "Alleen video’s in de bibliotheek van Translator kunnen naar een privémap worden verplaatst.",
+      "unsupported_file": "Dit bestand wordt gedeeld of staat buiten de bibliotheek van Translator en kan niet veilig worden verplaatst.",
+      "password_length": "Gebruik een wachtwoord met minimaal 8 tekens.",
+      "password_mismatch": "De wachtwoorden komen niet overeen.",
+      "incorrect_password": "Onjuist wachtwoord.",
+      "locked": "Ontgrendel eerst de map.",
+      "not_empty": "Verplaats of verwijder de video’s voordat je de map verwijdert.",
+      "source_changed": "De video of ondertitels zijn tijdens het verplaatsen gewijzigd. De versleutelde kopie is bewaard. Ontgrendel de map om opnieuw te proberen.",
+      "pending": "Deze verplaatsing is niet voltooid. Ontgrendel de map om opnieuw te proberen.",
+      "corrupt": "Deze versleutelde map of dit bestand is beschadigd. Herstel vanuit een back-up.",
+      "full": "De bibliotheek is vol. Verwijder eerst ongebruikte mappen of video’s.",
+      "invalid_name": "Voer een mapnaam van 1 tot 80 tekens in.",
+      "not_found": "Deze map of video is niet meer beschikbaar."
+    },
+    "folders": "Mappen",
+    "allVideos": "Alle video’s",
+    "unfiled": "Zonder map",
+    "newFolder": "Nieuwe map",
+    "privateFolder": "Privémap",
+    "rename": "Naam wijzigen",
+    "move": "Verplaatsen naar map",
+    "lock": "Vergrendelen",
+    "unlock": "Ontgrendelen",
+    "name": "Mapnaam",
+    "password": "Wachtwoord",
+    "confirmPassword": "Wachtwoord bevestigen",
+    "watch": "Afspelen",
+    "empty": "Deze map is leeg.",
+    "lockedHint": "Ontgrendel de map om de video’s te bekijken.",
+    "pending": "Beveiliging niet voltooid — ontgrendel om opnieuw te proberen",
+    "protecting": "Je video en ondertitels worden versleuteld en gecontroleerd…",
+    "protectionHint": "Video’s en ondertitels die Translator bewaart, worden naar versleutelde opslag verplaatst. Sluit eerst de video. Geëxporteerde kopieën, werkruimten van agents en back-ups zijn niet beschermd.",
+    "passwordHint": "Gebruik minimaal 8 tekens. Translator kan een vergeten wachtwoord niet herstellen. Mappen worden vergrendeld wanneer je het tabblad sluit, je computer vergrendelt of ze 15 minuten niet gebruikt.",
+    "deleteVideoConfirm": "Deze privévideo en de bijbehorende ondertitels definitief verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "deleteFolderConfirm": "Deze lege map verwijderen?",
+    "saveCopy": "Kopie opslaan",
+    "exportConfirm": "Een onversleutelde kopie van de video en ondertitels opslaan? Iedereen met toegang tot de bestemming kan de kopie openen. Het versleutelde origineel blijft in deze map."
   }
 }

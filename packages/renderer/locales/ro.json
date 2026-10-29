@@ -174,7 +174,8 @@
     "diskFull": "Discul este plin. Eliberează puțin spațiu și încearcă din nou.",
     "cancelDubbingFailedPlain": "Dublarea nu a putut fi oprită. Încearcă din nou.",
     "cancelTranslationFailedPlain": "Traducerea nu a putut fi oprită. Încearcă din nou.",
-    "cancelSummaryFailedPlain": "Rezumatul nu a putut fi oprit. Încearcă din nou."
+    "cancelSummaryFailedPlain": "Rezumatul nu a putut fi oprit. Încearcă din nou.",
+    "translationIncomplete": "Unele rânduri nu au putut fi traduse. Traducerea este incompletă. Încearcă din nou."
   },
   "input": {
     "connect": "Conectare",
@@ -378,7 +379,16 @@
     "dropWhileBusy": "Translator lucrează la acest videoclip. Trage din nou fișierul după ce termină.",
     "dropNotSupported": "Trage un videoclip, un fișier audio sau un fișier de subtitrare .srt.",
     "batchDownloadRunning": "Translator descarcă mai multe videoclipuri. Așteaptă să se termine sau anulează descărcarea.",
-    "quality": "Calitate"
+    "quality": "Calitate",
+    "webVideo": {
+      "finding": "Se caută videoclipuri…",
+      "choose": "Alege un videoclip",
+      "instruction": "Redă videoclipul pe care vrei să îl descarci.",
+      "protected": "Acest videoclip este protejat și nu poate fi descărcat.",
+      "noVideo": "Nu s-a găsit niciun videoclip descărcabil pe această pagină.",
+      "openInApp": "Deschide această pagină în Translator pentru a alege un videoclip.",
+      "video": "Videoclip {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Limba de ieșire",
@@ -1376,7 +1386,7 @@
     "dropHere": "Trage videoclipul aici pentru a-l traduce în {{language}}",
     "makeItSpeak": "Tradu în {{language}}",
     "downloadOnly": "Doar descarcă",
-    "helper": "Lipește un link de pe YouTube, TikTok, Instagram sau X — sau trage aici un fișier video",
+    "helper": "Lipește linkul unui videoclip sau al unei pagini web ori trage un fișier video aici",
     "chooseFile": "Alege un fișier",
     "into": "În",
     "dropNotMedia": "Trage un fișier video sau audio pentru a-l traduce.",
@@ -1483,7 +1493,8 @@
     "statusLoaded_one": "{{count}} rând încărcat",
     "statusLoaded_few": "{{count}} rânduri încărcate",
     "interruptedTranslateSubtitles": "Traducerea acestor subtitrări în {{language}} s-a oprit când s-a închis Translator.",
-    "statusTranslated_one": "{{count}} rând în {{language}} · sincronizat cu videoclipul"
+    "statusTranslated_one": "{{count}} rând în {{language}} · sincronizat cu videoclipul",
+    "currentSubtitle": "Subtitrarea curentă"
   },
   "subtitleStyles": {
     "Cinema": "Galben cinema",
@@ -1658,5 +1669,47 @@
     "openSettings": "Deschide Setările",
     "supportSubject": "Minutele mele au dispărut după ce Translator a resetat acest calculator",
     "settingsResetKeptLanguage": "Fișierul de setări al Translator era deteriorat, așa că preferințele tale au fost resetate: limba subtitrărilor, cheile API și alte opțiuni. Limba interfeței a rămas neschimbată. Am păstrat o copie a fișierului deteriorat. Verifică Setările."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Operațiunea nu s-a putut încheia. Copia criptată este păstrată dacă mutarea este în curs. Încearcă din nou.",
+      "in_use": "Închide videoclipul în toate filele și finalizează sau salvează lucrul în curs, apoi încearcă din nou.",
+      "managed_only": "Doar videoclipurile din biblioteca Translator pot fi mutate într-un folder privat.",
+      "unsupported_file": "Fișierul este partajat sau se află în afara bibliotecii Translator și nu poate fi mutat în siguranță.",
+      "password_length": "Folosește o parolă de cel puțin 8 caractere.",
+      "password_mismatch": "Parolele nu coincid.",
+      "incorrect_password": "Parolă incorectă.",
+      "locked": "Deblochează mai întâi folderul.",
+      "not_empty": "Mută sau șterge videoclipurile înainte de a șterge folderul.",
+      "source_changed": "Videoclipul sau subtitrările s-au modificat în timpul mutării. Copia criptată a fost păstrată. Deblochează folderul și încearcă din nou.",
+      "pending": "Mutarea nu este completă. Deblochează folderul și încearcă din nou.",
+      "corrupt": "Acest folder sau fișier criptat este deteriorat. Restaurează-l dintr-o copie de rezervă.",
+      "full": "Biblioteca este plină. Elimină mai întâi folderele sau videoclipurile nefolosite.",
+      "invalid_name": "Introdu un nume de folder cu 1 până la 80 de caractere.",
+      "not_found": "Acest folder sau videoclip nu mai este disponibil."
+    },
+    "folders": "Foldere",
+    "allVideos": "Toate videoclipurile",
+    "unfiled": "Fără folder",
+    "newFolder": "Folder nou",
+    "privateFolder": "Folder privat",
+    "rename": "Redenumește",
+    "move": "Mută în folder",
+    "lock": "Blochează",
+    "unlock": "Deblochează",
+    "name": "Numele folderului",
+    "password": "Parolă",
+    "confirmPassword": "Confirmă parola",
+    "watch": "Redă",
+    "empty": "Acest folder este gol.",
+    "lockedHint": "Deblochează folderul pentru a vedea videoclipurile.",
+    "pending": "Protecție incompletă — deblochează pentru a reîncerca",
+    "protecting": "Se criptează și se verifică videoclipul și subtitrările…",
+    "protectionHint": "Videoclipurile și subtitrările salvate de Translator sunt mutate într-un spațiu criptat. Închide mai întâi videoclipul. Copiile exportate, spațiile de lucru ale agenților și copiile de rezervă nu sunt protejate.",
+    "passwordHint": "Folosește cel puțin 8 caractere. Translator nu poate recupera o parolă uitată. Folderele se blochează când închizi fila, blochezi computerul sau după 15 minute de inactivitate.",
+    "deleteVideoConfirm": "Ștergi definitiv acest videoclip privat și subtitrările sale? Acțiunea nu poate fi anulată.",
+    "deleteFolderConfirm": "Ștergi acest folder gol?",
+    "saveCopy": "Salvează o copie",
+    "exportConfirm": "Salvezi o copie necriptată a videoclipului și subtitrărilor? Oricine are acces la destinație o poate deschide. Originalul criptat rămâne în acest folder."
   }
 }

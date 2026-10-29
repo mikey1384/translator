@@ -172,7 +172,8 @@
     "diskFull": "Dysk jest pełny. Zwolnij trochę miejsca i spróbuj ponownie.",
     "cancelDubbingFailedPlain": "Nie udało się zatrzymać dubbingu. Spróbuj ponownie.",
     "cancelTranslationFailedPlain": "Nie udało się zatrzymać tłumaczenia. Spróbuj ponownie.",
-    "cancelSummaryFailedPlain": "Nie udało się zatrzymać podsumowania. Spróbuj ponownie."
+    "cancelSummaryFailedPlain": "Nie udało się zatrzymać podsumowania. Spróbuj ponownie.",
+    "translationIncomplete": "Nie udało się przetłumaczyć niektórych wierszy. Tłumaczenie jest niekompletne. Spróbuj ponownie."
   },
   "input": {
     "connect": "Połącz",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator pracuje nad tym filmem. Upuść plik ponownie, gdy skończy.",
     "dropNotSupported": "Upuść film, plik audio lub plik napisów .srt.",
     "batchDownloadRunning": "Translator pobiera kilka filmów. Poczekaj, aż skończy, albo anuluj pobieranie.",
-    "quality": "Jakość"
+    "quality": "Jakość",
+    "webVideo": {
+      "finding": "Wyszukiwanie filmów…",
+      "choose": "Wybierz film",
+      "instruction": "Odtwórz film, który chcesz pobrać.",
+      "protected": "Ten film jest chroniony i nie można go pobrać.",
+      "noVideo": "Na tej stronie nie znaleziono filmu, który można pobrać.",
+      "openInApp": "Otwórz tę stronę w Translator, aby wybrać film.",
+      "video": "Film {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Język wyjściowy",
@@ -1374,7 +1384,7 @@
     "dropHere": "Upuść, a przetłumaczymy na {{language}}",
     "makeItSpeak": "Przetłumacz na {{language}}",
     "downloadOnly": "Tylko pobierz",
-    "helper": "Wklej link z YouTube’a, TikToka, Instagrama lub X albo upuść tu plik wideo",
+    "helper": "Wklej link do filmu lub strony internetowej albo przeciągnij tutaj plik wideo",
     "chooseFile": "Wybierz plik",
     "into": "Na",
     "dropNotMedia": "Upuść plik wideo lub audio, aby go przetłumaczyć.",
@@ -1493,7 +1503,8 @@
     "statusTranslated_one": "{{count}} wiersz · język: {{language}} · zgrane z filmem",
     "statusTranslated_few": "{{count}} wiersze · język: {{language}} · zgrane z filmem",
     "statusTranslated_many": "{{count}} wierszy · język: {{language}} · zgrane z filmem",
-    "interruptedTranslateSubtitles": "Tłumaczenie tych napisów na {{language}} przerwało się, gdy Translator został zamknięty."
+    "interruptedTranslateSubtitles": "Tłumaczenie tych napisów na {{language}} przerwało się, gdy Translator został zamknięty.",
+    "currentSubtitle": "Bieżący napis"
   },
   "subtitleStyles": {
     "Cinema": "Kinowy żółty",
@@ -1670,5 +1681,47 @@
     "openSettings": "Otwórz Ustawienia",
     "supportSubject": "Zniknęły moje minuty po tym, jak Translator zresetował ten komputer",
     "settingsResetKeptLanguage": "Plik ustawień Translatora był uszkodzony, więc ustawienia wróciły do domyślnych: język napisów, klucze API i inne opcje. Język interfejsu pozostał bez zmian. Kopia uszkodzonego pliku została zachowana. Sprawdź Ustawienia."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Nie udało się ukończyć operacji. Jeśli przenoszenie jest w toku, zaszyfrowana kopia zostaje zachowana. Spróbuj ponownie.",
+      "in_use": "Zamknij film we wszystkich kartach i zakończ lub zapisz bieżącą pracę, a następnie spróbuj ponownie.",
+      "managed_only": "Do folderu prywatnego można przenosić tylko filmy zapisane w bibliotece Translatora.",
+      "unsupported_file": "Ten plik jest współdzielony lub znajduje się poza biblioteką Translatora i nie można go bezpiecznie przenieść.",
+      "password_length": "Użyj hasła zawierającego co najmniej 8 znaków.",
+      "password_mismatch": "Hasła nie są zgodne.",
+      "incorrect_password": "Nieprawidłowe hasło.",
+      "locked": "Najpierw odblokuj folder.",
+      "not_empty": "Przenieś lub usuń filmy przed usunięciem folderu.",
+      "source_changed": "Film lub napisy zmieniły się podczas przenoszenia. Zaszyfrowana kopia została zachowana. Odblokuj folder i spróbuj ponownie.",
+      "pending": "Przenoszenie nie zostało ukończone. Odblokuj folder i spróbuj ponownie.",
+      "corrupt": "Zaszyfrowany folder lub plik jest uszkodzony. Przywróć go z kopii zapasowej.",
+      "full": "Biblioteka jest pełna. Najpierw usuń nieużywane foldery lub filmy.",
+      "invalid_name": "Wpisz nazwę folderu zawierającą od 1 do 80 znaków.",
+      "not_found": "Ten folder lub film nie jest już dostępny."
+    },
+    "folders": "Foldery",
+    "allVideos": "Wszystkie filmy",
+    "unfiled": "Bez folderu",
+    "newFolder": "Nowy folder",
+    "privateFolder": "Folder prywatny",
+    "rename": "Zmień nazwę",
+    "move": "Przenieś do folderu",
+    "lock": "Zablokuj",
+    "unlock": "Odblokuj",
+    "name": "Nazwa folderu",
+    "password": "Hasło",
+    "confirmPassword": "Potwierdź hasło",
+    "watch": "Odtwórz",
+    "empty": "Ten folder jest pusty.",
+    "lockedHint": "Odblokuj folder, aby zobaczyć filmy.",
+    "pending": "Ochrona nie została ukończona — odblokuj, aby ponowić próbę",
+    "protecting": "Szyfrowanie i sprawdzanie filmu oraz napisów…",
+    "protectionHint": "Filmy i napisy zapisane przez Translator zostaną przeniesione do zaszyfrowanego magazynu. Najpierw zamknij film. Wyeksportowane kopie, obszary robocze agentów i kopie zapasowe nie są chronione.",
+    "passwordHint": "Użyj co najmniej 8 znaków. Translator nie może odzyskać zapomnianego hasła. Foldery blokują się po zamknięciu karty, zablokowaniu komputera lub 15 minutach bezczynności.",
+    "deleteVideoConfirm": "Trwale usunąć ten prywatny film i jego napisy? Tej czynności nie można cofnąć.",
+    "deleteFolderConfirm": "Usunąć ten pusty folder?",
+    "saveCopy": "Zapisz kopię",
+    "exportConfirm": "Zapisać niezaszyfrowaną kopię filmu i napisów? Każdy, kto ma dostęp do miejsca docelowego, będzie mógł ją otworzyć. Zaszyfrowany oryginał pozostanie w tym folderze."
   }
 }

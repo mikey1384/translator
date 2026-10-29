@@ -569,6 +569,7 @@ export default function VideoPlayer({
             <div className={videoPlayerGrowStyles}>
               <input
                 type="range"
+                data-player-seekbar="true"
                 min={0}
                 max={duration || 1}
                 step="0.1"

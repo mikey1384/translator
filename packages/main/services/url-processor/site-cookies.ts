@@ -80,6 +80,11 @@ function partitionForKey(key: string): string {
   return `persist:stage5-cookies-${safeId(key)}`;
 }
 
+/** App-owned site session, separate from Translator's privileged renderer. */
+export function webSessionForUrl(rawUrl: string) {
+  return session.fromPartition(partitionForKey(cookieKeyForUrl(rawUrl).key));
+}
+
 export function cookiesFilePathForUrl(rawUrl: string): string {
   const { key } = cookieKeyForUrl(rawUrl);
   if (key === 'youtube') {

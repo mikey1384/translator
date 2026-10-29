@@ -2,6 +2,33 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { formatClockTime, transcriptStopsEarlyAt } from './transcriptCoverage';
 
+test('actual audio coverage takes precedence over the last spoken subtitle', () => {
+  assert.equal(
+    transcriptStopsEarlyAt({
+      durationSecs: 7593.5,
+      lastEndSecs: 6537,
+      coverage: { durationSec: 7593.5, endSec: 7593.5 },
+    }),
+    null
+  );
+  assert.equal(
+    transcriptStopsEarlyAt({
+      durationSecs: 7593.5,
+      lastEndSecs: 6300,
+      coverage: { durationSec: 7593.5, endSec: 6405 },
+    }),
+    6405
+  );
+  assert.equal(
+    transcriptStopsEarlyAt({
+      durationSecs: 7593.5,
+      lastEndSecs: 6537,
+      coverage: { durationSec: 8000, endSec: 8000 },
+    }),
+    6537
+  );
+});
+
 test('subtitles that stop a minute or more early can be continued', () => {
   assert.equal(
     transcriptStopsEarlyAt({ durationSecs: 720, lastEndSecs: 30 }),

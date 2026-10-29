@@ -172,6 +172,7 @@ function flush() {
       phaseKey,
       etaSeconds,
       partialResult,
+      partialSegments,
       error,
       cancelled,
       model,
@@ -216,13 +217,13 @@ function flush() {
 
     // Apply translation deltas as early as possible to avoid being
     // short-circuited by completion guards or racey progress ordering.
-    if (partialResult?.trim()) {
+    if (partialSegments?.length || partialResult?.trim()) {
       const isTranslateRelated =
         isTranslate || isTranslateMissing || looksLikeReview;
       if (isTranslateRelated) {
         if (percent >= 100 || Date.now() - lastParsed > 1000) {
           try {
-            const partSegs = parseSrt(partialResult);
+            const partSegs = partialSegments ?? parseSrt(partialResult);
             if (partSegs.length) {
               // A missing-lines pass is a numbered subset: match by time only.
               useSubStore.getState().applyTranslations(partSegs, {

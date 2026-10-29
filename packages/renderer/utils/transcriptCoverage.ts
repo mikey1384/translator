@@ -1,4 +1,7 @@
-/** Gap after the last line that counts as "transcription stopped early". */
+import type { TranscriptionCoverage } from '@shared-types/app';
+import { normalizeTranscriptionCoverage } from '../../shared/helpers/transcription-coverage';
+
+/** Gap worth offering to transcribe when processed coverage is unknown. */
 export const CONTINUE_TRANSCRIBING_MIN_GAP_SEC = 60;
 
 /**
@@ -8,17 +11,22 @@ export const CONTINUE_TRANSCRIBING_MIN_GAP_SEC = 60;
 export function transcriptStopsEarlyAt({
   durationSecs,
   lastEndSecs,
+  coverage,
 }: {
   durationSecs: number | null | undefined;
   lastEndSecs: number | null | undefined;
+  coverage?: TranscriptionCoverage | null;
 }): number | null {
   if (typeof durationSecs !== 'number' || !Number.isFinite(durationSecs))
     return null;
   if (typeof lastEndSecs !== 'number' || !Number.isFinite(lastEndSecs))
     return null;
-  return durationSecs - lastEndSecs >= CONTINUE_TRANSCRIBING_MIN_GAP_SEC
-    ? lastEndSecs
-    : null;
+  const known = normalizeTranscriptionCoverage(coverage);
+  const end =
+    known && Math.abs(known.durationSec - durationSecs) <= 1
+      ? known.endSec
+      : lastEndSecs;
+  return durationSecs - end >= CONTINUE_TRANSCRIBING_MIN_GAP_SEC ? end : null;
 }
 
 /** 75 → "1:15", 3725 → "1:02:05". */

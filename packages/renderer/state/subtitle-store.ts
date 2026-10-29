@@ -13,6 +13,7 @@ import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
 import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
 import { secondsToSrtTime } from '../../shared/helpers';
+import { normalizeTranscriptionCoverage } from '../../shared/helpers/transcription-coverage';
 import { replaceMatches, type FindOptions } from '../utils/subtitleFind.js';
 import {
   mergeCues,
@@ -31,6 +32,9 @@ import {
 type SegmentMap = Record<string, SrtSegment>;
 
 interface State {
+  transcriptionCoverage:
+    | import('@shared-types/app').TranscriptionCoverage
+    | null;
   segments: SegmentMap;
   order: string[];
   activeId: string | null;
@@ -91,6 +95,9 @@ export type UndoableEditKind =
   | 'merge';
 
 interface Actions {
+  setTranscriptionCoverage: (
+    coverage: import('@shared-types/app').TranscriptionCoverage | null
+  ) => void;
   /** Clears `dirty` when no edit happened after `revision` was read. */
   markSaved: (revision: number) => void;
   /** Takes back the last structural edit. Returns false when none is left. */
@@ -157,6 +164,7 @@ interface Actions {
   // Efficiently patch many translations at once by matching segments via timecodes
   applyTranslations: (
     segs: Array<{
+      id?: string;
       start: number;
       end: number;
       translation?: string | undefined;
@@ -166,7 +174,7 @@ interface Actions {
      * Match by line number when times differ. Only safe when the update
      * covers the whole list; a subset numbered 1..N would hit the wrong rows.
      */
-    options?: { matchByIndex?: boolean }
+    options?: { matchByIndex?: boolean; markDirty?: boolean }
   ) => void;
   // Append-only progress for transcription partials (no full reloads)
   applyTranscriptionProgress: (segs: SrtSegment[]) => void;
@@ -198,6 +206,7 @@ const initialState: State = {
   subtitleKind: null,
   targetLanguage: null,
   transcriptionEngine: null,
+  transcriptionCoverage: null,
   libraryEntryId: null,
   libraryKind: null,
   dirty: false,
@@ -312,6 +321,11 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         });
         return true;
       },
+
+      setTranscriptionCoverage: coverage =>
+        set(s => {
+          s.transcriptionCoverage = normalizeTranscriptionCoverage(coverage);
+        }),
 
       load: (
         segs,
@@ -484,6 +498,14 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           // Replacing the subtitle set should clear engine-specific UI state
           // unless the caller explicitly carries the engine forward.
           s.transcriptionEngine = nextTranscriptionEngine;
+          s.transcriptionCoverage =
+            documentMeta?.transcriptionCoverage !== undefined
+              ? normalizeTranscriptionCoverage(
+                  documentMeta.transcriptionCoverage
+                )
+              : !isDiskBackedLoad && preserveExistingDocumentMeta
+                ? s.transcriptionCoverage
+                : null;
           s.libraryEntryId = nextLibraryEntryId;
           s.libraryKind = nextLibraryKind;
           // Do not auto-regenerate caches here; generated during transcription flows
@@ -502,10 +524,16 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.documentId = documentMeta?.id ?? null;
           s.documentTitle = documentMeta?.title ?? null;
           if (documentMeta == null) {
+            s.transcriptionCoverage = null;
             s.subtitleKind = null;
             s.targetLanguage = null;
             s.sourceProvenance = null;
           } else {
+            if (documentMeta.transcriptionCoverage !== undefined) {
+              s.transcriptionCoverage = normalizeTranscriptionCoverage(
+                documentMeta.transcriptionCoverage
+              );
+            }
             if (documentMeta.subtitleKind !== undefined) {
               s.subtitleKind = documentMeta.subtitleKind ?? null;
             }
@@ -1042,9 +1070,14 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           // Build quick lookups for incoming translations by time key and by index
           const byTime = new Map<string, string>();
           const byIndex = new Map<number, string>();
+          const byId = new Map<string, string>();
+          const hasStableIds = segs.some(seg =>
+            Boolean(seg.id && s.segments[seg.id])
+          );
           for (const seg of segs) {
             const t = (seg.translation ?? '').trim();
             if (!t) continue;
+            if (seg.id) byId.set(seg.id, t);
             const timeKey = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
             if (!byTime.has(timeKey)) byTime.set(timeKey, t);
             if (typeof seg.index === 'number' && seg.index > 0) {
@@ -1052,15 +1085,17 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             }
           }
           if (byTime.size === 0 && byIndex.size === 0) return;
+          if (options?.markDirty) markEdited(s);
 
           // Walk current order once; update only changed entries
           for (const id of s.order) {
             const cue = s.segments[id];
             if (!cue) continue;
             const key = `${secondsToSrtTime(cue.start)}-->${secondsToSrtTime(cue.end)}`;
-            let next = byTime.get(key);
+            let next = hasStableIds ? byId.get(id) : byTime.get(key);
             if (
               !next &&
+              !hasStableIds &&
               matchByIndex &&
               typeof cue.index === 'number' &&
               cue.index > 0

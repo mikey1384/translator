@@ -172,7 +172,8 @@
     "diskFull": "ディスクがいっぱいです。空き容量を確保してから、もう一度お試しください。",
     "cancelDubbingFailedPlain": "吹き替えを中止できませんでした。もう一度お試しください。",
     "cancelTranslationFailedPlain": "翻訳を中止できませんでした。もう一度お試しください。",
-    "cancelSummaryFailedPlain": "要約を中止できませんでした。もう一度お試しください。"
+    "cancelSummaryFailedPlain": "要約を中止できませんでした。もう一度お試しください。",
+    "translationIncomplete": "翻訳できなかった行があります。翻訳は未完了です。もう一度お試しください。"
   },
   "input": {
     "connect": "接続",
@@ -374,7 +375,16 @@
     "dropWhileBusy": "Translatorがこの動画を処理中です。終わってから、もう一度ファイルをドロップしてください。",
     "dropNotSupported": "動画、音声ファイル、または .srt 字幕ファイルをドロップしてください。",
     "batchDownloadRunning": "Translatorが複数の動画をダウンロード中です。完了を待つか、ダウンロードをキャンセルしてください。",
-    "quality": "品質"
+    "quality": "品質",
+    "webVideo": {
+      "finding": "動画を探しています…",
+      "choose": "動画を選択",
+      "instruction": "ダウンロードしたい動画を再生してください。",
+      "protected": "この動画は保護されているためダウンロードできません。",
+      "noVideo": "このページにダウンロードできる動画が見つかりませんでした。",
+      "openInApp": "Translatorでこのページを開いて動画を選んでください。",
+      "video": "動画 {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "出力言語",
@@ -1356,7 +1366,7 @@
     "dropHere": "{{language}}に翻訳する動画をここにドロップ",
     "makeItSpeak": "{{language}}に翻訳",
     "downloadOnly": "ダウンロードのみ",
-    "helper": "YouTube・TikTok・Instagram・X のリンクを貼り付けるか、動画ファイルをここにドロップ",
+    "helper": "動画やウェブページのリンクを貼り付けるか、動画ファイルをここにドロップ",
     "chooseFile": "ファイルを選択",
     "into": "言語",
     "dropNotMedia": "翻訳する動画または音声ファイルをドロップしてください。",
@@ -1442,7 +1452,8 @@
     "statusLines": "字幕 {{count}}行",
     "checkingFile": "ファイルを読み込んでいます…",
     "statusLoaded": "{{count}}行を読み込みました",
-    "interruptedTranslateSubtitles": "Translatorが終了したため、この字幕の{{language}}への翻訳が途中で止まりました。"
+    "interruptedTranslateSubtitles": "Translatorが終了したため、この字幕の{{language}}への翻訳が途中で止まりました。",
+    "currentSubtitle": "現在の字幕"
   },
   "subtitleStyles": {
     "Cinema": "シネマイエロー",
@@ -1611,5 +1622,47 @@
     "openSettings": "設定を開く",
     "supportSubject": "Translatorのリセット後、購入した時間が見当たりません",
     "settingsResetKeptLanguage": "Translatorの設定ファイルが破損していたため、設定をリセットしました（字幕の言語、APIキー、その他のオプション）。表示言語はそのままです。破損したファイルのコピーは残してあります。設定をご確認ください。"
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "完了できませんでした。移動が未完了の場合も暗号化されたコピーは保持されます。もう一度お試しください。",
+      "in_use": "すべてのタブでこの動画を閉じ、進行中の作業を完了するか保存してください。",
+      "managed_only": "Translatorのライブラリに保存した動画のみプライベートフォルダに移動できます。",
+      "unsupported_file": "このファイルは共有されているかTranslatorのライブラリ外にあるため、安全に移動できません。",
+      "password_length": "8文字以上のパスワードを設定してください。",
+      "password_mismatch": "パスワードが一致しません。",
+      "incorrect_password": "パスワードが違います。",
+      "locked": "先にフォルダのロックを解除してください。",
+      "not_empty": "フォルダを削除する前に、中の動画を移動または削除してください。",
+      "source_changed": "移動中に動画または字幕が変更されました。暗号化されたコピーは保持されています。ロックを解除して再試行してください。",
+      "pending": "移動が完了していません。フォルダのロックを解除して再試行してください。",
+      "corrupt": "暗号化されたフォルダまたはファイルが破損しています。バックアップから復元してください。",
+      "full": "ライブラリがいっぱいです。不要なフォルダや動画を削除してください。",
+      "invalid_name": "フォルダ名は1〜80文字で入力してください。",
+      "not_found": "このフォルダまたは動画は利用できなくなりました。"
+    },
+    "folders": "フォルダ",
+    "allVideos": "すべての動画",
+    "unfiled": "未分類",
+    "newFolder": "新しいフォルダ",
+    "privateFolder": "プライベートフォルダ",
+    "rename": "名前を変更",
+    "move": "フォルダに移動",
+    "lock": "ロック",
+    "unlock": "ロック解除",
+    "name": "フォルダ名",
+    "password": "パスワード",
+    "confirmPassword": "パスワードの確認",
+    "watch": "見る",
+    "empty": "このフォルダは空です。",
+    "lockedHint": "動画を見るにはフォルダのロックを解除してください。",
+    "pending": "保護が未完了です。ロックを解除して再試行してください",
+    "protecting": "動画と字幕を暗号化して検証しています…",
+    "protectionHint": "Translatorが保存した動画と字幕を暗号化ストレージに移動します。先に動画を閉じてください。書き出したコピー、エージェントの作業領域、バックアップは保護の対象外です。",
+    "passwordHint": "8文字以上で設定してください。忘れたパスワードは復元できません。タブを閉じたとき、コンピュータをロックしたとき、または15分間操作しなかったときにフォルダがロックされます。",
+    "deleteVideoConfirm": "このプライベート動画と字幕を完全に削除しますか？元には戻せません。",
+    "deleteFolderConfirm": "この空のフォルダを削除しますか？",
+    "saveCopy": "コピーを保存",
+    "exportConfirm": "動画と字幕を暗号化せずにコピーしますか？保存先にアクセスできる人は誰でもコピーを開けます。暗号化された元のファイルはこのフォルダに残ります。"
   }
 }

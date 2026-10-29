@@ -173,7 +173,8 @@
     "diskFull": "Your disk is full. Free up some space and try again.",
     "cancelDubbingFailedPlain": "Couldn't stop dubbing. Try again.",
     "cancelTranslationFailedPlain": "Couldn't stop translating. Try again.",
-    "cancelSummaryFailedPlain": "Couldn't stop the summary. Try again."
+    "cancelSummaryFailedPlain": "Couldn't stop the summary. Try again.",
+    "translationIncomplete": "Some lines could not be translated. The translation is incomplete. Try again."
   },
   "input": {
     "connect": "Connect",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator is working on this video. Drop the file again when it finishes.",
     "dropNotSupported": "Drop a video, an audio file or an .srt subtitle file.",
     "batchDownloadRunning": "Translator is downloading several videos. Wait for them to finish, or cancel the download.",
-    "quality": "Quality"
+    "quality": "Quality",
+    "webVideo": {
+      "finding": "Finding videos…",
+      "choose": "Choose a video",
+      "instruction": "Play the video you want to download.",
+      "protected": "This video is protected and cannot be downloaded.",
+      "noVideo": "No downloadable video was found on this page.",
+      "openInApp": "Open this page in Translator to choose a video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Output language",
@@ -1368,7 +1378,7 @@
     "dropHere": "Drop a video here to translate it to {{language}}",
     "makeItSpeak": "Translate to {{language}}",
     "downloadOnly": "Download only",
-    "helper": "Paste a link from YouTube, TikTok, Instagram or X — or drop a video file here",
+    "helper": "Paste a video or webpage link, or drop a video file here",
     "chooseFile": "Choose file",
     "into": "Into",
     "dropNotMedia": "Drop a video or audio file to translate it.",
@@ -1464,7 +1474,8 @@
     "checkingFile": "Reading the file…",
     "statusLoaded": "{{count}} lines loaded",
     "statusLoaded_one": "{{count}} line loaded",
-    "interruptedTranslateSubtitles": "Translating these subtitles into {{language}} stopped when Translator closed."
+    "interruptedTranslateSubtitles": "Translating these subtitles into {{language}} stopped when Translator closed.",
+    "currentSubtitle": "Current subtitle"
   },
   "subtitleStyles": {
     "Cinema": "Cinema yellow",
@@ -1638,5 +1649,47 @@
     "openSettings": "Open Settings",
     "supportSubject": "My minutes are missing after Translator reset this computer",
     "settingsResetKeptLanguage": "Translator's settings file was damaged, so your preferences were reset: subtitle language, API keys, and other options. Your interface language was kept. A copy of the damaged file was kept. Please check Settings."
+  },
+  "libraryFolders": {
+    "folders": "Folders",
+    "allVideos": "All videos",
+    "unfiled": "Unfiled",
+    "newFolder": "New folder",
+    "privateFolder": "Private folder",
+    "rename": "Rename",
+    "move": "Move to folder",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "name": "Folder name",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "watch": "Watch",
+    "empty": "This folder is empty.",
+    "lockedHint": "Unlock this folder to see its videos.",
+    "pending": "Protection unfinished — unlock to retry",
+    "protecting": "Encrypting and verifying your video and subtitles…",
+    "protectionHint": "Videos and subtitles stored by Translator move into encrypted storage. Close the video first. Exported copies, agent workspaces and backups are not protected.",
+    "passwordHint": "Use at least 8 characters. Translator cannot recover a forgotten password. Folders lock when you close the tab, lock your computer, or leave them idle for 15 minutes.",
+    "deleteVideoConfirm": "Permanently delete this private video and its subtitles? This cannot be undone.",
+    "deleteFolderConfirm": "Delete this empty folder?",
+    "errors": {
+      "storage_failed": "Couldn’t finish. Your encrypted copy is kept if a transfer is pending. Try again.",
+      "in_use": "Close this video in every tab and finish or save any active work, then try again.",
+      "managed_only": "Only videos stored in Translator’s app library can move into a private folder.",
+      "unsupported_file": "This file is shared or stored outside Translator’s library and cannot be moved safely.",
+      "password_length": "Use a password with at least 8 characters.",
+      "password_mismatch": "The passwords don’t match.",
+      "incorrect_password": "Incorrect password.",
+      "locked": "Unlock the folder first.",
+      "not_empty": "Move or delete the videos before deleting this folder.",
+      "source_changed": "The video or subtitles changed during the move. Your encrypted copy is kept. Unlock the folder to retry.",
+      "pending": "This move is unfinished. Unlock the folder to retry.",
+      "corrupt": "This encrypted folder or file is damaged. Restore it from a backup.",
+      "full": "The library is full. Remove unused folders or videos first.",
+      "invalid_name": "Enter a folder name between 1 and 80 characters.",
+      "not_found": "This folder or video is no longer available."
+    },
+    "saveCopy": "Save a copy",
+    "exportConfirm": "Save an unencrypted copy of this video and its subtitles? Anyone with access to the destination can open the copy. The encrypted original stays in this folder."
   }
 }

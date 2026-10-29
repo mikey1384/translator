@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 import { SrtSegment } from '@shared-types/app';
 import { scrollPrecisely, flashSubtitle } from '../../../utils/scroll.js';
+import { currentSubtitleIndex } from '../../../utils/currentSubtitle.js';
+import { getNativePlayerInstance } from '../../../native-player.js';
 
 export function flashReviewedSegment({
   id,
@@ -32,12 +34,9 @@ export const useSubtitleNavigation = (
     if (subtitles.length === 0) {
       return;
     }
-    if (!videoPlayerRef) {
-      return;
-    }
-
     let currentTime = 0;
-    const playerInstance = videoPlayerRef;
+    const playerInstance = getNativePlayerInstance() ?? videoPlayerRef;
+    if (!playerInstance) return;
 
     if (playerInstance && typeof playerInstance.currentTime === 'number') {
       currentTime = playerInstance.currentTime;
@@ -52,25 +51,32 @@ export const useSubtitleNavigation = (
       }
     }
 
-    const indexInRange = subtitles.findIndex(
-      sub => currentTime >= sub.start && currentTime <= sub.end
-    );
-
-    let currentSubtitleIndex = indexInRange;
-
-    if (currentSubtitleIndex === -1) {
-      const nextIndex = subtitles.findIndex(sub => currentTime < sub.start);
-      currentSubtitleIndex = nextIndex;
-    }
-
-    if (currentSubtitleIndex === -1) {
+    const index = currentSubtitleIndex(subtitles, currentTime);
+    if (index === -1) {
       return;
     }
 
-    const el = subtitleRefs.current[subtitles[currentSubtitleIndex].id];
+    const el = subtitleRefs.current[subtitles[index].id];
     if (el) {
       // Default scroll behavior for navigation should be instant ('auto')
-      scrollPrecisely(el, false);
+      // The workspace list scrolls independently from the window.
+      let scroller = el.parentElement;
+      while (
+        scroller &&
+        !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)
+      ) {
+        scroller = scroller.parentElement;
+      }
+      if (scroller) {
+        scroller.scrollTo({
+          top:
+            scroller.scrollTop +
+            el.getBoundingClientRect().top -
+            scroller.getBoundingClientRect().top -
+            scroller.clientHeight / 3,
+          behavior: 'instant',
+        });
+      } else scrollPrecisely(el, false);
       // Flash on every scroll, including 'Go to current subtitle'
       requestAnimationFrame(() => flashSubtitle(el));
     }

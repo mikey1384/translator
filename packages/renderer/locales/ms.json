@@ -172,7 +172,8 @@
     "diskFull": "Cakera anda penuh. Kosongkan sedikit ruang dan cuba lagi.",
     "cancelDubbingFailedPlain": "Alih suara tidak dapat dihentikan. Cuba lagi.",
     "cancelTranslationFailedPlain": "Terjemahan tidak dapat dihentikan. Cuba lagi.",
-    "cancelSummaryFailedPlain": "Ringkasan tidak dapat dihentikan. Cuba lagi."
+    "cancelSummaryFailedPlain": "Ringkasan tidak dapat dihentikan. Cuba lagi.",
+    "translationIncomplete": "Sesetengah baris tidak dapat diterjemahkan. Terjemahan belum lengkap. Cuba lagi."
   },
   "input": {
     "connect": "Sambung",
@@ -374,7 +375,16 @@
     "dropWhileBusy": "Translator sedang memproses video ini. Lepaskan fail sekali lagi selepas ia selesai.",
     "dropNotSupported": "Lepaskan video, fail audio atau fail sari kata .srt.",
     "batchDownloadRunning": "Translator sedang memuat turun beberapa video. Tunggu sehingga selesai, atau batalkan muat turun.",
-    "quality": "Kualiti"
+    "quality": "Kualiti",
+    "webVideo": {
+      "finding": "Mencari video…",
+      "choose": "Pilih video",
+      "instruction": "Mainkan video yang ingin dimuat turun.",
+      "protected": "Video ini dilindungi dan tidak boleh dimuat turun.",
+      "noVideo": "Tiada video yang boleh dimuat turun ditemukan pada halaman ini.",
+      "openInApp": "Buka halaman ini dalam Translator untuk memilih video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Bahasa sasaran",
@@ -1356,7 +1366,7 @@
     "dropHere": "Lepaskan untuk diterjemah ke {{language}}",
     "makeItSpeak": "Terjemah ke {{language}}",
     "downloadOnly": "Muat turun sahaja",
-    "helper": "Tampal pautan YouTube, TikTok, Instagram atau X — atau seret fail video ke sini",
+    "helper": "Tampal pautan video atau halaman web, atau seret fail video ke sini",
     "chooseFile": "Pilih fail",
     "into": "Ke",
     "dropNotMedia": "Hanya fail video atau audio yang boleh diterjemah.",
@@ -1442,7 +1452,8 @@
     "statusLines": "{{count}} baris sari kata",
     "checkingFile": "Membaca fail…",
     "statusLoaded": "{{count}} baris dimuatkan",
-    "interruptedTranslateSubtitles": "Terjemahan sari kata ini ke {{language}} terhenti apabila Translator ditutup."
+    "interruptedTranslateSubtitles": "Terjemahan sari kata ini ke {{language}} terhenti apabila Translator ditutup.",
+    "currentSubtitle": "Sari kata semasa"
   },
   "subtitleStyles": {
     "Cinema": "Kuning pawagam",
@@ -1611,5 +1622,47 @@
     "openSettings": "Buka Tetapan",
     "supportSubject": "Minit saya hilang selepas Translator menetapkan semula komputer ini",
     "settingsResetKeptLanguage": "Fail tetapan Translator telah rosak, jadi pilihan anda ditetapkan semula: bahasa sari kata, kunci API dan pilihan lain. Bahasa antara muka anda dikekalkan. Salinan fail yang rosak telah disimpan. Sila semak Tetapan."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Tidak dapat diselesaikan. Salinan disulitkan dikekalkan jika pemindahan belum selesai. Cuba lagi.",
+      "in_use": "Tutup video dalam semua tab dan selesaikan atau simpan kerja yang sedang berjalan, kemudian cuba lagi.",
+      "managed_only": "Hanya video dalam pustaka Translator boleh dipindahkan ke folder peribadi.",
+      "unsupported_file": "Fail ini dikongsi atau disimpan di luar pustaka Translator dan tidak boleh dipindahkan dengan selamat.",
+      "password_length": "Gunakan kata laluan dengan sekurang-kurangnya 8 aksara.",
+      "password_mismatch": "Kata laluan tidak sepadan.",
+      "incorrect_password": "Kata laluan salah.",
+      "locked": "Buka kunci folder dahulu.",
+      "not_empty": "Pindahkan atau padam video sebelum memadam folder.",
+      "source_changed": "Video atau sari kata berubah semasa pemindahan. Salinan disulitkan dikekalkan. Buka kunci folder untuk cuba lagi.",
+      "pending": "Pemindahan belum selesai. Buka kunci folder untuk cuba lagi.",
+      "corrupt": "Folder atau fail disulitkan ini rosak. Pulihkan daripada sandaran.",
+      "full": "Pustaka penuh. Buang folder atau video yang tidak digunakan dahulu.",
+      "invalid_name": "Masukkan nama folder sepanjang 1 hingga 80 aksara.",
+      "not_found": "Folder atau video ini tidak lagi tersedia."
+    },
+    "folders": "Folder",
+    "allVideos": "Semua video",
+    "unfiled": "Tanpa folder",
+    "newFolder": "Folder baharu",
+    "privateFolder": "Folder peribadi",
+    "rename": "Namakan semula",
+    "move": "Pindah ke folder",
+    "lock": "Kunci",
+    "unlock": "Buka kunci",
+    "name": "Nama folder",
+    "password": "Kata laluan",
+    "confirmPassword": "Sahkan kata laluan",
+    "watch": "Tonton",
+    "empty": "Folder ini kosong.",
+    "lockedHint": "Buka kunci folder untuk melihat videonya.",
+    "pending": "Perlindungan belum selesai — buka kunci untuk cuba lagi",
+    "protecting": "Menyulitkan dan menyemak video serta sari kata…",
+    "protectionHint": "Video dan sari kata yang disimpan oleh Translator dipindahkan ke storan disulitkan. Tutup video dahulu. Salinan eksport, ruang kerja ejen dan sandaran tidak dilindungi.",
+    "passwordHint": "Gunakan sekurang-kurangnya 8 aksara. Translator tidak dapat memulihkan kata laluan yang terlupa. Folder dikunci apabila tab ditutup, komputer dikunci atau tidak digunakan selama 15 minit.",
+    "deleteVideoConfirm": "Padam video peribadi ini dan sari katanya secara kekal? Tindakan ini tidak boleh dibuat asal.",
+    "deleteFolderConfirm": "Padam folder kosong ini?",
+    "saveCopy": "Simpan salinan",
+    "exportConfirm": "Simpan salinan video dan sari kata tanpa penyulitan? Sesiapa yang boleh mengakses lokasi destinasi boleh membuka salinan itu. Versi asal yang disulitkan kekal dalam folder ini."
   }
 }

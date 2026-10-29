@@ -141,6 +141,7 @@ function useSubtitleSummary() {
   const order = useSubStore(s => s.order);
   const segments = useSubStore(s => s.segments);
   const recordedLanguage = useSubStore(s => s.targetLanguage);
+  const coverage = useSubStore(s => s.transcriptionCoverage);
   return useMemo(() => {
     let translated = 0;
     let missing = 0;
@@ -165,6 +166,7 @@ function useSubtitleSummary() {
     const lastId = order[order.length - 1];
     return {
       count: order.length,
+      coverage,
       translated,
       missing,
       lastEnd: lastId ? (segments[lastId]?.end ?? null) : null,
@@ -172,7 +174,7 @@ function useSubtitleSummary() {
       translationLanguage:
         translated > 0 ? (detectTextLanguage(translations) ?? recorded) : null,
     };
-  }, [order, segments, recordedLanguage]);
+  }, [order, segments, recordedLanguage, coverage]);
 }
 
 /** Translate the lines that have none yet, then save like a normal run. */
@@ -333,6 +335,7 @@ export function WorkspaceIdleStatus() {
       ? transcriptStopsEarlyAt({
           durationSecs: duration,
           lastEndSecs: summary.lastEnd,
+          coverage: summary.coverage,
         })
       : null;
 
@@ -479,6 +482,7 @@ function InterruptedJobNotice() {
     const stopsAt = transcriptStopsEarlyAt({
       durationSecs: duration,
       lastEndSecs: summary.lastEnd,
+      coverage: summary.coverage,
     });
     // Loaded subtitles may end before the video does; that's not a stop.
     if (stopsAt !== null && editor && !record.documentId) {

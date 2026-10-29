@@ -177,7 +177,13 @@ declare module '@shared-types/app' {
     | 'youtube_automatic_captions'
     | 'mcp_persistent_job';
 
+  export interface TranscriptionCoverage {
+    endSec: number;
+    durationSec: number;
+  }
+
   export interface SubtitleDocumentMeta {
+    transcriptionCoverage?: TranscriptionCoverage | null;
     id: string;
     title: string | null;
     sourceVideoPath?: string | null;
@@ -198,6 +204,7 @@ declare module '@shared-types/app' {
   }
 
   export interface SaveSubtitleDocumentRecordOptions {
+    transcriptionCoverage?: TranscriptionCoverage | null;
     documentId?: string | null;
     title?: string | null;
     segments: SrtSegment[];
@@ -428,6 +435,7 @@ declare module '@shared-types/app' {
     unit?: string;
     etaSeconds?: number;
     partialResult?: string;
+    partialSegments?: SrtSegment[];
     error?: string;
     cancelled?: boolean;
     warning?: string;
@@ -450,6 +458,50 @@ declare module '@shared-types/app' {
     operationId?: string;
     /** The user confirmed downloading a video over the long-video limit. */
     allowLongVideo?: boolean;
+    webVideo?: WebVideoSelection;
+  }
+
+  /** Opaque, tab-owned references. Media URLs and request headers stay in main. */
+  export interface WebVideoSelection {
+    discoveryId: string;
+    candidateId: string;
+  }
+
+  export interface WebVideoCandidate {
+    id: string;
+    title: string;
+    durationSec?: number;
+    width?: number;
+    height?: number;
+    thumbnailUrl?: string;
+  }
+
+  export interface DiscoverWebVideoOptions {
+    url: string;
+    operationId: string;
+    interactive?: boolean;
+    labels: {
+      title: string;
+      instruction: string;
+      starting?: string;
+      choose: string;
+      cancel: string;
+      protected: string;
+      live: string;
+      direction: 'ltr' | 'rtl';
+    };
+  }
+
+  export interface DiscoverWebVideoResult {
+    success: boolean;
+    discoveryId?: string;
+    candidates?: WebVideoCandidate[];
+    cancelled?: boolean;
+    errorCode?:
+      | 'no_video'
+      | 'protected_video'
+      | 'browser_required'
+      | 'discovery_failed';
   }
 
   /**
@@ -464,6 +516,7 @@ declare module '@shared-types/app' {
 
   export interface ProcessUrlResult {
     success: boolean;
+    webVideoId?: string;
     subtitles?: string;
     captionRecovery?: {
       kind: 'youtube_automatic_captions';
@@ -505,7 +558,10 @@ declare module '@shared-types/app' {
 
   export interface VideoSuggestionDownloadHistoryItem {
     id: string;
+    folderId?: string;
     sourceUrl: string;
+    /** Distinguishes separate videos embedded on the same page. */
+    webVideoId?: string;
     title: string;
     thumbnailUrl?: string;
     channel?: string;
@@ -554,6 +610,37 @@ declare module '@shared-types/app' {
       recovered?: boolean;
     };
     error?: string;
+  }
+
+  export type DownloadFolderRequest =
+    | { action: 'list' }
+    | { action: 'create'; name: string; private: boolean; password?: string }
+    | { action: 'rename'; folderId: string; name: string }
+    | { action: 'delete-folder' | 'lock' | 'entries'; folderId: string }
+    | { action: 'unlock'; folderId: string; password: string }
+    | { action: 'move'; folderId: string; itemId: string }
+    | { action: 'delete-entry'; folderId: string; entryId: string }
+    | { action: 'export'; folderId: string; entryId: string; title: string }
+    | {
+        action: 'open';
+        folderId: string;
+        entryId: string;
+        labels: { lock: string; privateFolder: string };
+      };
+  export interface DownloadFolderInfo {
+    id: string;
+    name?: string;
+    private: boolean;
+    locked: boolean;
+    count?: number;
+    pending?: boolean;
+  }
+  export interface DownloadFolderResult {
+    success: boolean;
+    error?: string;
+    folderId?: string;
+    folders?: DownloadFolderInfo[];
+    entries?: { id: string; title: string; ready: boolean }[];
   }
 
   export interface SetMountedUrlDownloadLibraryPathsOptions {
@@ -910,6 +997,7 @@ declare module '@shared-types/app' {
       /** Machine-readable phase key for ETA / progress logic. */
       phaseKey?: string;
       partialResult?: string;
+      partialSegments?: SrtSegment[];
       current?: number;
       total?: number;
       /** Unit for current/total counters (e.g. "chunks", "segments"). */
@@ -947,6 +1035,8 @@ declare module '@shared-types/app' {
   }
 
   export interface GenerateSubtitlesResult {
+    transcriptionCoverage?: TranscriptionCoverage;
+    partialSegments?: SrtSegment[];
     cancelled?: boolean;
     subtitles?: string;
     segments?: SrtSegment[];
@@ -960,6 +1050,8 @@ declare module '@shared-types/app' {
   // =========================================
 
   export interface TranslateSubtitlesOptions {
+    /** Preserve multiline source text and cue identity without an SRT round trip. */
+    segments?: SrtSegment[];
     subtitles: string;
     sourceLanguage?: string;
     targetLanguage: string;
@@ -968,6 +1060,9 @@ declare module '@shared-types/app' {
   }
 
   export interface TranslateSubtitlesResult {
+    translatedSegments?: SrtSegment[];
+    /** Completed work from a failed run; never implies a complete translation. */
+    partialSegments?: SrtSegment[];
     success: boolean;
     translatedSubtitles?: string;
     cancelled?: boolean;
@@ -1020,6 +1115,7 @@ declare module '@shared-types/app' {
   }
 
   export interface TranscribeRemainingResult {
+    transcriptionCoverage?: TranscriptionCoverage;
     success: boolean;
     segments?: SrtSegment[];
     cancelled?: boolean;
@@ -1527,6 +1623,10 @@ declare module '@shared-types/app' {
     ) => () => void;
 
     processUrl: (options: ProcessUrlOptions) => Promise<ProcessUrlResult>;
+    discoverWebVideo: (
+      options: DiscoverWebVideoOptions
+    ) => Promise<DiscoverWebVideoResult>;
+    releaseWebVideoDiscovery: (discoveryId: string) => Promise<void>;
     acceptProcessedUrl: (
       operationId: string
     ) => Promise<ProcessUrlPendingResultAction>;
@@ -1536,6 +1636,17 @@ declare module '@shared-types/app' {
     cleanupAcceptedProcessedUrl: (
       options: CleanupAcceptedProcessedUrlOptions
     ) => Promise<ProcessUrlPendingResultAction>;
+    downloadFolder: (
+      request: DownloadFolderRequest
+    ) => Promise<DownloadFolderResult>;
+    onDownloadFoldersChanged: (callback: () => void) => () => void;
+    onPrivateLibraryPurge: (
+      callback: (payload: {
+        id: string;
+        paths: string[];
+        sourceUrl?: string;
+      }) => Promise<void>
+    ) => () => void;
     mutateVideoSuggestionDownloadHistory: (
       request: VideoSuggestionDownloadHistoryMutationRequest
     ) => Promise<VideoSuggestionDownloadHistoryMutationResult>;

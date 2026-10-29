@@ -45,6 +45,7 @@ export type AppSettingsSchema = {
    * doesn't re-fire on the first download of every app launch). */
   ytDlpLastUpdateCheckAt: number;
   videoSuggestionDownloadHistory: VideoSuggestionDownloadHistoryItem[] | null;
+  privateDownloadHistoryTombstones: string[];
   pendingUrlDownloadLibraryReclaims: string[];
   pendingVideoSuggestionFileDeletions: PendingVideoSuggestionFileDeletionIntent[];
   app_language_preference: string;
@@ -89,6 +90,7 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   pendingPostInstallNotice: null,
   ytDlpLastUpdateCheckAt: 0,
   videoSuggestionDownloadHistory: null,
+  privateDownloadHistoryTombstones: [],
   pendingUrlDownloadLibraryReclaims: [],
   pendingVideoSuggestionFileDeletions: [],
   app_language_preference: 'en',

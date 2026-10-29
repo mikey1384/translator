@@ -1,3 +1,10 @@
+import { useSubStore } from '../../../../state/subtitle-store.js';
+import { removeRecentLocalMedia } from '../../../../state/recent-local-media.js';
+import { onPrivateLibraryPurge } from '../../../../ipc/download-folders.js';
+import {
+  limitDownloadHistory,
+  validDownloadFolderId,
+} from '../../../../../shared/helpers/download-history.js';
 import type {
   VideoSuggestionDownloadHistoryMutation,
   VideoSuggestionDownloadHistoryMutationResult,
@@ -297,7 +304,13 @@ function sanitizeHistoryItem(
     title: title.slice(0, 300),
     downloadedAtIso,
   };
+  if (validDownloadFolderId(raw.folderId)) out.folderId = raw.folderId;
   const thumbnailUrl = String(raw.thumbnailUrl || '').trim();
+  if (
+    typeof raw.webVideoId === 'string' &&
+    /^[a-f0-9]{32}$/.test(raw.webVideoId)
+  )
+    out.webVideoId = raw.webVideoId;
   const channel = String(raw.channel || '').trim();
   const channelUrl = sanitizeVideoSuggestionWebUrl(raw.channelUrl);
   const uploadedAt = String(raw.uploadedAt || '').trim();
@@ -330,7 +343,7 @@ let memoryHistoryFallback: VideoSuggestionDownloadHistoryItem[] | null = null;
 
 export function readLocalVideoSuggestionHistory(): VideoSuggestionDownloadHistoryItem[] {
   if (memoryHistoryFallback) {
-    return memoryHistoryFallback.slice(0, MAX_HISTORY_ITEMS);
+    return limitDownloadHistory(memoryHistoryFallback);
   }
   try {
     const raw = window.localStorage.getItem(LOCAL_VIDEO_SUGGESTION_HISTORY_KEY);
@@ -342,7 +355,7 @@ export function readLocalVideoSuggestionHistory(): VideoSuggestionDownloadHistor
       .filter((item): item is VideoSuggestionDownloadHistoryItem =>
         Boolean(item)
       );
-    return items.slice(0, MAX_HISTORY_ITEMS);
+    return limitDownloadHistory(items);
   } catch {
     return [];
   }
@@ -352,12 +365,13 @@ export function writeLocalVideoSuggestionHistory(
   items: VideoSuggestionDownloadHistoryItem[]
 ): boolean {
   try {
-    const sanitized = items
-      .map(item => sanitizeHistoryItem(item))
-      .filter((item): item is VideoSuggestionDownloadHistoryItem =>
-        Boolean(item)
-      )
-      .slice(0, MAX_HISTORY_ITEMS);
+    const sanitized = limitDownloadHistory(
+      items
+        .map(item => sanitizeHistoryItem(item))
+        .filter((item): item is VideoSuggestionDownloadHistoryItem =>
+          Boolean(item)
+        )
+    );
     window.localStorage.setItem(
       LOCAL_VIDEO_SUGGESTION_HISTORY_KEY,
       JSON.stringify(sanitized)
@@ -367,12 +381,13 @@ export function writeLocalVideoSuggestionHistory(
   } catch {
     // localStorage unavailable (private mode / quota / policy): keep the
     // authoritative items in memory so this tab's readers stay current.
-    memoryHistoryFallback = items
-      .map(item => sanitizeHistoryItem(item))
-      .filter((item): item is VideoSuggestionDownloadHistoryItem =>
-        Boolean(item)
-      )
-      .slice(0, MAX_HISTORY_ITEMS);
+    memoryHistoryFallback = limitDownloadHistory(
+      items
+        .map(item => sanitizeHistoryItem(item))
+        .filter((item): item is VideoSuggestionDownloadHistoryItem =>
+          Boolean(item)
+        )
+    );
     return false;
   }
 }
@@ -389,7 +404,13 @@ function getMountedVideoPaths(): string[] {
   return includeProvisionalUrlDownloadLibraryPaths(
     Array.from(
       new Set(
-        [state.path, state.originalPath, state.dubbedVideoPath, filePath]
+        [
+          state.path,
+          state.originalPath,
+          state.dubbedVideoPath,
+          filePath,
+          useSubStore.getState().sourceVideoPath,
+        ]
           .map(value => sanitizeVideoSuggestionHistoryPath(value))
           .filter(Boolean)
       )
@@ -524,12 +545,13 @@ export function mergeVideoSuggestionHistoryItems(
 ): VideoSuggestionDownloadHistoryItem[] {
   const sanitized = sanitizeHistoryItem(item);
   if (!sanitized) {
-    return items
-      .map(existing => sanitizeHistoryItem(existing))
-      .filter((existing): existing is VideoSuggestionDownloadHistoryItem =>
-        Boolean(existing)
-      )
-      .slice(0, MAX_HISTORY_ITEMS);
+    return limitDownloadHistory(
+      items
+        .map(existing => sanitizeHistoryItem(existing))
+        .filter((existing): existing is VideoSuggestionDownloadHistoryItem =>
+          Boolean(existing)
+        )
+    );
   }
 
   const incomingPathKey = normalizeHistoryPath(sanitized.localPath);
@@ -562,7 +584,7 @@ export function mergeVideoSuggestionHistoryItems(
     nextItems.push(existing);
   }
 
-  return nextItems.slice(0, MAX_HISTORY_ITEMS);
+  return limitDownloadHistory(nextItems);
 }
 
 export async function syncSavedVideoSuggestionHistoryPath(options: {
@@ -686,4 +708,41 @@ export function writeGenerateSubtitlesWorkspaceTab(
   } catch {
     // Ignore localStorage failures (private mode / quota / policy).
   }
+}
+
+// Private metadata never belongs in a renderer's persistent history cache.
+if (typeof window !== 'undefined') {
+  onPrivateLibraryPurge(async ({ id, paths, sourceUrl }) => {
+    const items = readLocalVideoSuggestionHistory().filter(
+      item => item.id !== id && !paths.includes(item.localPath || '')
+    );
+    if (!writeLocalVideoSuggestionHistory(items))
+      throw new Error('storage_failed');
+    for (const path of paths) removeRecentLocalMedia(path);
+    const [
+      { useFreePreviewStore },
+      { useInterruptedJobsStore },
+      { takeLeftDocument },
+    ] = await Promise.all([
+      import('../../../../state/free-preview-store.js'),
+      import('../../../../state/interrupted-jobs.js'),
+      import('../../../../utils/subtitle-documents.js'),
+    ]);
+    const keys = [...paths, sourceUrl || ''].filter(Boolean);
+    for (const key of keys) {
+      useFreePreviewStore.getState().clear(key);
+      takeLeftDocument({ path: key });
+    }
+    const raw = localStorage.getItem('runningSubtitleJobs.v1');
+    if (raw) {
+      const records = JSON.parse(raw);
+      if (Array.isArray(records))
+        localStorage.setItem(
+          'runningSubtitleJobs.v1',
+          JSON.stringify(records.filter(r => !keys.includes(r.key)))
+        );
+    }
+    useInterruptedJobsStore.getState().refresh();
+    dispatchVideoSuggestionHistorySync();
+  });
 }

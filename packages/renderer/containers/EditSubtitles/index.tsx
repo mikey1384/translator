@@ -101,6 +101,7 @@ import {
   isSourceVideoUnavailableError,
 } from '../../utils/sourceVideoErrors';
 import { confirmInApp } from '../../utils/confirmInApp';
+import { saveMountedSubtitleDocument } from '../../utils/subtitle-documents';
 
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
@@ -151,6 +152,7 @@ export default function EditSubtitles({
     [subtitleOrder, subtitleSegments]
   );
   const origin = useSubStore(s => s.origin);
+  const transcriptionCoverage = useSubStore(s => s.transcriptionCoverage);
   const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
   const sourceProvenance = useSubStore(s => s.sourceProvenance);
   const originalPath = useSubStore(s => s.originalPath);
@@ -194,6 +196,15 @@ export default function EditSubtitles({
     subtitleRefs,
     activePlayer
   );
+
+  useEffect(() => {
+    if (listHidden) return;
+    useWorkspaceActions
+      .getState()
+      .registerSubtitleNavigation(scrollToCurrentSubtitle);
+    return () =>
+      useWorkspaceActions.getState().registerSubtitleNavigation(null);
+  }, [listHidden, scrollToCurrentSubtitle]);
 
   const scrollToSubtitleIndex = useCallback(
     (index: number) => {
@@ -329,6 +340,7 @@ export default function EditSubtitles({
     transcriptStopsEarlyAt({
       durationSecs: videoDuration,
       lastEndSecs: subtitles[subtitles.length - 1]?.end ?? 0,
+      coverage: transcriptionCoverage,
     }) !== null;
   const workspaceModeLabel =
     subtitleDisplayMode === 'original'
@@ -681,7 +693,8 @@ export default function EditSubtitles({
         useUrlStore.getState().setOperationError(message);
         return;
       }
-      const start = subtitles[subtitles.length - 1].end;
+      const start =
+        transcriptionCoverage?.endSec ?? subtitles[subtitles.length - 1].end;
       // Say "needs credits" now, not after extracting and uploading audio.
       const duration = videoState.meta?.duration;
       if (
@@ -744,6 +757,14 @@ export default function EditSubtitles({
       if (result.segments?.length) {
         useSubStore.getState().appendSegments(result.segments);
       }
+      if (result.transcriptionCoverage) {
+        useSubStore
+          .getState()
+          .setTranscriptionCoverage(result.transcriptionCoverage);
+      }
+      const saved = await saveMountedSubtitleDocument({ keepDirty: true });
+      if (!saved.success)
+        throw new Error(saved.error || 'Failed to save transcription');
       // Mark completion explicitly (progress-buffer will also send final 100%)
       try {
         useTaskStore.getState().setTranscription({

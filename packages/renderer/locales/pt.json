@@ -173,7 +173,8 @@
     "diskFull": "Seu disco está cheio. Libere espaço e tente de novo.",
     "cancelDubbingFailedPlain": "Não foi possível parar a dublagem. Tente de novo.",
     "cancelTranslationFailedPlain": "Não foi possível parar a tradução. Tente de novo.",
-    "cancelSummaryFailedPlain": "Não foi possível parar o resumo. Tente de novo."
+    "cancelSummaryFailedPlain": "Não foi possível parar o resumo. Tente de novo.",
+    "translationIncomplete": "Algumas linhas não foram traduzidas. A tradução está incompleta. Tente de novo."
   },
   "input": {
     "connect": "Conectar",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "O Translator está trabalhando neste vídeo. Solte o arquivo de novo quando ele terminar.",
     "dropNotSupported": "Solte um vídeo, um arquivo de áudio ou um arquivo de legenda .srt.",
     "batchDownloadRunning": "O Translator está baixando vários vídeos. Espere terminarem ou cancele o download.",
-    "quality": "Qualidade"
+    "quality": "Qualidade",
+    "webVideo": {
+      "finding": "Buscando vídeos…",
+      "choose": "Escolha um vídeo",
+      "instruction": "Reproduza o vídeo que você quer baixar.",
+      "protected": "Este vídeo é protegido e não pode ser baixado.",
+      "noVideo": "Nenhum vídeo disponível para download foi encontrado nesta página.",
+      "openInApp": "Abra esta página no Translator para escolher um vídeo.",
+      "video": "Vídeo {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Idioma de saída",
@@ -1370,7 +1380,7 @@
     "dropHere": "Solte aqui para traduzir o vídeo para {{language}}",
     "makeItSpeak": "Traduzir para {{language}}",
     "downloadOnly": "Só baixar",
-    "helper": "Cole um link do YouTube, TikTok, Instagram ou X — ou solte um arquivo de vídeo aqui",
+    "helper": "Cole o link de um vídeo ou de uma página, ou arraste um arquivo de vídeo para cá",
     "chooseFile": "Escolher arquivo",
     "into": "Em",
     "dropNotMedia": "Solte um arquivo de vídeo ou áudio para traduzir.",
@@ -1476,7 +1486,8 @@
     "statusLoaded": "{{count}} linhas carregadas",
     "statusLoaded_one": "{{count}} linha carregada",
     "statusLoaded_many": "{{count}} de linhas carregadas",
-    "interruptedTranslateSubtitles": "A tradução destas legendas para {{language}} parou quando o Translator foi fechado."
+    "interruptedTranslateSubtitles": "A tradução destas legendas para {{language}} parou quando o Translator foi fechado.",
+    "currentSubtitle": "Legenda atual"
   },
   "subtitleStyles": {
     "Cinema": "Amarelo cinema",
@@ -1651,5 +1662,47 @@
     "openSettings": "Abrir Configurações",
     "supportSubject": "Meus minutos sumiram depois que o Translator redefiniu este computador",
     "settingsResetKeptLanguage": "O arquivo de configurações do Translator estava corrompido, então suas preferências foram redefinidas: idioma das legendas, chaves de API e outras opções. O idioma da interface foi mantido. Uma cópia do arquivo corrompido foi guardada. Confira as Configurações."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Não foi possível concluir. Se houver uma transferência pendente, a cópia criptografada será mantida. Tente de novo.",
+      "in_use": "Feche o vídeo em todas as abas e conclua ou salve o trabalho em andamento.",
+      "managed_only": "Só vídeos armazenados na biblioteca do Translator podem ser movidos para uma pasta privada.",
+      "unsupported_file": "Este arquivo é compartilhado ou está fora da biblioteca do Translator e não pode ser movido com segurança.",
+      "password_length": "Use uma senha com pelo menos 8 caracteres.",
+      "password_mismatch": "As senhas não coincidem.",
+      "incorrect_password": "Senha incorreta.",
+      "locked": "Desbloqueie a pasta primeiro.",
+      "not_empty": "Mova ou exclua os vídeos antes de excluir a pasta.",
+      "source_changed": "O vídeo ou as legendas mudaram durante a transferência. A cópia criptografada foi mantida. Desbloqueie a pasta para tentar de novo.",
+      "pending": "A transferência não foi concluída. Desbloqueie a pasta para tentar de novo.",
+      "corrupt": "A pasta ou o arquivo criptografado está danificado. Restaure a partir de um backup.",
+      "full": "A biblioteca está cheia. Remova pastas ou vídeos que não usa mais.",
+      "invalid_name": "Digite um nome de pasta com 1 a 80 caracteres.",
+      "not_found": "Esta pasta ou este vídeo não está mais disponível."
+    },
+    "folders": "Pastas",
+    "allVideos": "Todos os vídeos",
+    "unfiled": "Sem pasta",
+    "newFolder": "Nova pasta",
+    "privateFolder": "Pasta privada",
+    "rename": "Renomear",
+    "move": "Mover para pasta",
+    "lock": "Bloquear",
+    "unlock": "Desbloquear",
+    "name": "Nome da pasta",
+    "password": "Senha",
+    "confirmPassword": "Confirmar senha",
+    "watch": "Assistir",
+    "empty": "Esta pasta está vazia.",
+    "lockedHint": "Desbloqueie a pasta para ver os vídeos.",
+    "pending": "Proteção pendente: desbloqueie para tentar de novo",
+    "protecting": "Criptografando e verificando o vídeo e as legendas…",
+    "protectionHint": "Os vídeos e as legendas armazenados pelo Translator são movidos para um local criptografado. Feche o vídeo primeiro. Cópias exportadas, espaços de trabalho de agentes e backups não ficam protegidos.",
+    "passwordHint": "Use pelo menos 8 caracteres. O Translator não recupera senhas esquecidas. As pastas são bloqueadas ao fechar a aba, bloquear o computador ou após 15 minutos sem uso.",
+    "deleteVideoConfirm": "Excluir este vídeo privado e suas legendas permanentemente? Essa ação não pode ser desfeita.",
+    "deleteFolderConfirm": "Excluir esta pasta vazia?",
+    "saveCopy": "Salvar uma cópia",
+    "exportConfirm": "Salvar uma cópia sem criptografia do vídeo e das legendas? Qualquer pessoa com acesso ao destino poderá abrir a cópia. O original criptografado continua nesta pasta."
   }
 }

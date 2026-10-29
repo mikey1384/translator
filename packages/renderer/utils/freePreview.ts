@@ -50,6 +50,23 @@ export function creditsToFinish(
 }
 
 /**
+ * Admission to the audio run uses its known transcription cost, the draft
+ * estimate and the next call's hold. Quality review is billed by actual text;
+ * its per-hour estimate must not silently truncate the source audio.
+ */
+export function creditsToStart(
+  seconds: number,
+  qualityEnabled: boolean
+): number {
+  if (!(seconds > 0)) return 0;
+  const r = rates(qualityEnabled);
+  return Math.ceil(
+    (seconds + TRANSCRIPTION_HOLD_PAD_SEC) * r.transcribe +
+      Math.max(seconds * rates(false).translate, r.headroom)
+  );
+}
+
+/**
  * Whole video, the opening minutes the balance covers, or nothing at all.
  * Only for Stage5 credit mode with an authoritative balance.
  */
@@ -64,11 +81,11 @@ export function planFreePreview({
 }): FreePreviewPlan {
   if (!(durationSecs > 0)) return { kind: 'full' };
   const balance = Math.max(0, Math.floor(credits));
-  if (balance >= creditsToFinish(durationSecs, qualityEnabled)) {
+  if (balance >= creditsToStart(durationSecs, qualityEnabled)) {
     return { kind: 'full' };
   }
-  const r = rates(qualityEnabled);
-  // Invert creditsToFinish: short spans are bounded by the hold, long ones
+  const r = { ...rates(qualityEnabled), translate: rates(false).translate };
+  // Invert creditsToStart: short spans are bounded by the hold, long ones
   // by the real translation cost.
   const afterPad = balance - TRANSCRIPTION_HOLD_PAD_SEC * r.transcribe;
   const holdBound = (afterPad - r.headroom) / r.transcribe;
@@ -189,11 +206,16 @@ export function needsTailTranscription({
   transcribedToEnd,
   durationSecs,
   lastEndSecs,
+  coverage,
 }: {
   transcribedToEnd?: boolean;
   durationSecs: number;
   lastEndSecs: number | null;
+  coverage?: import('@shared-types/app').TranscriptionCoverage | null;
 }): boolean {
+  if (coverage && Math.abs(coverage.durationSec - durationSecs) <= 1) {
+    return coverage.endSec < durationSecs - 1;
+  }
   if (!transcribedToEnd) return true;
   return transcriptStopsEarlyAt({ durationSecs, lastEndSecs }) !== null;
 }

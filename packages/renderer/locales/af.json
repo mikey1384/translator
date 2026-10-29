@@ -173,7 +173,8 @@
     "diskFull": "Jou skyf is vol. Maak ’n bietjie spasie oop en probeer weer.",
     "cancelDubbingFailedPlain": "Kon nie die oorklanking stop nie. Probeer weer.",
     "cancelTranslationFailedPlain": "Kon nie die vertaling stop nie. Probeer weer.",
-    "cancelSummaryFailedPlain": "Kon nie die opsomming stop nie. Probeer weer."
+    "cancelSummaryFailedPlain": "Kon nie die opsomming stop nie. Probeer weer.",
+    "translationIncomplete": "Party reëls kon nie vertaal word nie. Die vertaling is onvolledig. Probeer weer."
   },
   "input": {
     "connect": "Verbind",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator werk aan hierdie video. Los die lêer weer wanneer dit klaar is.",
     "dropNotSupported": "Los ’n video, ’n klanklêer of ’n .srt-onderskriflêer.",
     "batchDownloadRunning": "Translator laai verskeie video’s af. Wag tot hulle klaar is, of kanselleer die aflaai.",
-    "quality": "Kwaliteit"
+    "quality": "Kwaliteit",
+    "webVideo": {
+      "finding": "Soek na video’s…",
+      "choose": "Kies ’n video",
+      "instruction": "Speel die video wat jy wil aflaai.",
+      "protected": "Hierdie video is beskerm en kan nie afgelaai word nie.",
+      "noVideo": "Geen aflaaibare video is op hierdie bladsy gevind nie.",
+      "openInApp": "Maak hierdie bladsy in Translator oop om ’n video te kies.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Uitvoertaal",
@@ -1368,7 +1378,7 @@
     "dropHere": "Los dit hier om na {{language}} te vertaal",
     "makeItSpeak": "Vertaal na {{language}}",
     "downloadOnly": "Net aflaai",
-    "helper": "Plak ’n skakel van YouTube, TikTok, Instagram of X — of los ’n videolêer hier",
+    "helper": "Plak ’n video- of webbladskakel, of sleep ’n videolêer hierheen",
     "chooseFile": "Kies lêer",
     "into": "Taal",
     "dropNotMedia": "Los ’n video- of klanklêer om dit te vertaal.",
@@ -1465,7 +1475,8 @@
     "checkingFile": "Lees die lêer…",
     "statusLoaded": "{{count}} reëls gelaai",
     "statusLoaded_one": "{{count}} reël gelaai",
-    "interruptedTranslateSubtitles": "Die vertaling van hierdie onderskrifte na {{language}} het gestop toe Translator toegemaak is."
+    "interruptedTranslateSubtitles": "Die vertaling van hierdie onderskrifte na {{language}} het gestop toe Translator toegemaak is.",
+    "currentSubtitle": "Huidige onderskrif"
   },
   "subtitleStyles": {
     "Cinema": "Bioskoopgeel",
@@ -1639,5 +1650,47 @@
     "openSettings": "Maak Instellings oop",
     "supportSubject": "My minute is weg nadat Translator hierdie rekenaar teruggestel het",
     "settingsResetKeptLanguage": "Translator se instellingslêer was beskadig, dus is jou voorkeure teruggestel: onderskriftaal, API-sleutels en ander opsies. Jou koppelvlaktaal is behou. ’n Kopie van die beskadigde lêer is gehou. Kyk gerus na jou Instellings."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Kon nie voltooi nie. Die geënkripteerde kopie word behou as ’n oordrag hangende is. Probeer weer.",
+      "in_use": "Maak hierdie video in elke oortjie toe en voltooi of stoor enige werk voordat jy weer probeer.",
+      "managed_only": "Slegs video’s in Translator se biblioteek kan na ’n privaat vouer geskuif word.",
+      "unsupported_file": "Hierdie lêer word gedeel of is buite Translator se biblioteek en kan nie veilig geskuif word nie.",
+      "password_length": "Gebruik ’n wagwoord met minstens 8 karakters.",
+      "password_mismatch": "Die wagwoorde stem nie ooreen nie.",
+      "incorrect_password": "Verkeerde wagwoord.",
+      "locked": "Ontsluit eers die vouer.",
+      "not_empty": "Skuif of vee die video’s uit voordat jy die vouer uitvee.",
+      "source_changed": "Die video of onderskrifte het tydens die skuif verander. Jou geënkripteerde kopie is behou. Ontsluit die vouer om weer te probeer.",
+      "pending": "Hierdie skuif is onvoltooid. Ontsluit die vouer om weer te probeer.",
+      "corrupt": "Hierdie geënkripteerde vouer of lêer is beskadig. Herstel dit vanaf ’n rugsteun.",
+      "full": "Die biblioteek is vol. Verwyder eers ongebruikte vouers of video’s.",
+      "invalid_name": "Voer ’n vouernaam van 1 tot 80 karakters in.",
+      "not_found": "Hierdie vouer of video is nie meer beskikbaar nie."
+    },
+    "folders": "Vouers",
+    "allVideos": "Alle video’s",
+    "unfiled": "Ongegroepeer",
+    "newFolder": "Nuwe vouer",
+    "privateFolder": "Privaat vouer",
+    "rename": "Hernoem",
+    "move": "Skuif na vouer",
+    "lock": "Sluit",
+    "unlock": "Ontsluit",
+    "name": "Vouernaam",
+    "password": "Wagwoord",
+    "confirmPassword": "Bevestig wagwoord",
+    "watch": "Kyk",
+    "empty": "Hierdie vouer is leeg.",
+    "lockedHint": "Ontsluit die vouer om die video’s te sien.",
+    "pending": "Beskerming onvoltooid — ontsluit om weer te probeer",
+    "protecting": "Jou video en onderskrifte word geënkripteer en nagegaan…",
+    "protectionHint": "Video’s en onderskrifte wat Translator stoor, word na geënkripteerde berging geskuif. Maak eers die video toe. Uitgevoerde kopieë, agentwerkruimtes en rugsteune word nie beskerm nie.",
+    "passwordHint": "Gebruik minstens 8 karakters. Translator kan nie ’n vergete wagwoord herstel nie. Vouers sluit wanneer jy die oortjie toemaak, jou rekenaar sluit, of hulle 15 minute lank nie gebruik nie.",
+    "deleteVideoConfirm": "Vee hierdie privaat video en sy onderskrifte permanent uit? Dit kan nie ongedaan gemaak word nie.",
+    "deleteFolderConfirm": "Vee hierdie leë vouer uit?",
+    "saveCopy": "Stoor ’n kopie",
+    "exportConfirm": "Stoor ’n ongeënkripteerde kopie van die video en onderskrifte? Enigiemand met toegang tot die bestemming kan die kopie oopmaak. Die geënkripteerde oorspronklike bly in hierdie vouer."
   }
 }

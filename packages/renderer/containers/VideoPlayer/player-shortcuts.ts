@@ -135,6 +135,15 @@ export function shouldHandlePlayerShortcut(
   const target = event.target ?? null;
   if (isTextEntryTarget(target)) return false;
   if (target?.closest?.(OWN_ALL_KEYS_SELECTOR)) return false;
+  // The timeline uses the player's ten-second seek, not the range input's
+  // 0.1-second native step. Other sliders (especially volume) keep their keys.
+  if (
+    inPlayer &&
+    (action === 'seek-back' || action === 'seek-forward') &&
+    target?.getAttribute?.('data-player-seekbar') === 'true'
+  ) {
+    return true;
+  }
   if (isArrow(event.key) && target?.closest?.(OWN_ARROWS_SELECTOR)) {
     return false;
   }

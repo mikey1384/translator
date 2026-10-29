@@ -172,7 +172,8 @@
     "diskFull": "磁盘空间已满。请清理出一些空间后重试。",
     "cancelDubbingFailedPlain": "无法停止配音。请重试。",
     "cancelTranslationFailedPlain": "无法停止翻译。请重试。",
-    "cancelSummaryFailedPlain": "无法停止生成摘要。请重试。"
+    "cancelSummaryFailedPlain": "无法停止生成摘要。请重试。",
+    "translationIncomplete": "部分字幕未能翻译，翻译尚未完成。请重试。"
   },
   "input": {
     "connect": "连接",
@@ -374,7 +375,16 @@
     "dropWhileBusy": "Translator 正在处理这个视频。完成后再拖入文件。",
     "dropNotSupported": "请拖入视频、音频或 .srt 字幕文件。",
     "batchDownloadRunning": "Translator 正在下载多个视频。请等待下载完成，或取消下载。",
-    "quality": "质量"
+    "quality": "质量",
+    "webVideo": {
+      "finding": "正在查找视频…",
+      "choose": "选择视频",
+      "instruction": "播放你想下载的视频。",
+      "protected": "此视频受保护，无法下载。",
+      "noVideo": "此页面上未找到可下载的视频。",
+      "openInApp": "在 Translator 中打开此页面并选择视频。",
+      "video": "视频 {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "输出语言",
@@ -1356,7 +1366,7 @@
     "dropHere": "松手，就翻译成{{language}}",
     "makeItSpeak": "翻译成{{language}}",
     "downloadOnly": "仅下载",
-    "helper": "粘贴 YouTube、TikTok、Instagram 或 X 链接，或把视频文件拖到这里",
+    "helper": "粘贴视频或网页链接，或将视频文件拖到这里",
     "chooseFile": "选择文件",
     "into": "译成",
     "dropNotMedia": "请拖入要翻译的视频或音频文件。",
@@ -1442,7 +1452,8 @@
     "statusLines": "字幕 {{count}} 行",
     "checkingFile": "正在读取文件…",
     "statusLoaded": "已加载 {{count}} 行",
-    "interruptedTranslateSubtitles": "Translator 关闭时，把这些字幕翻译成{{language}}的任务中断了。"
+    "interruptedTranslateSubtitles": "Translator 关闭时，把这些字幕翻译成{{language}}的任务中断了。",
+    "currentSubtitle": "当前字幕"
   },
   "subtitleStyles": {
     "Cinema": "影院黄",
@@ -1611,5 +1622,47 @@
     "openSettings": "打开设置",
     "supportSubject": "Translator 重置这台电脑后，我的时长不见了",
     "settingsResetKeptLanguage": "Translator 的设置文件已损坏，你的偏好设置已被重置，包括字幕语言、API 密钥和其他选项。界面语言保持不变。损坏的文件已保留一份副本。请到设置中检查一下。"
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "未能完成操作。如果移动尚未完成，加密副本仍会保留。请重试。",
+      "in_use": "请在所有标签页中关闭此视频，并完成或保存正在进行的工作。",
+      "managed_only": "只有存储在 Translator 资料库中的视频才能移至私密文件夹。",
+      "unsupported_file": "此文件由多处共享或位于 Translator 资料库之外，无法安全移动。",
+      "password_length": "请使用至少 8 个字符的密码。",
+      "password_mismatch": "两次输入的密码不一致。",
+      "incorrect_password": "密码错误。",
+      "locked": "请先解锁文件夹。",
+      "not_empty": "删除文件夹前，请先移走或删除其中的视频。",
+      "source_changed": "移动期间视频或字幕发生了变化。加密副本已保留，请解锁文件夹后重试。",
+      "pending": "移动尚未完成，请解锁文件夹后重试。",
+      "corrupt": "此加密文件夹或文件已损坏，请从备份恢复。",
+      "full": "资料库已满，请先移除不用的文件夹或视频。",
+      "invalid_name": "请输入 1 至 80 个字符的文件夹名称。",
+      "not_found": "此文件夹或视频已不可用。"
+    },
+    "folders": "文件夹",
+    "allVideos": "所有视频",
+    "unfiled": "未分类",
+    "newFolder": "新建文件夹",
+    "privateFolder": "私密文件夹",
+    "rename": "重命名",
+    "move": "移至文件夹",
+    "lock": "锁定",
+    "unlock": "解锁",
+    "name": "文件夹名称",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "watch": "观看",
+    "empty": "此文件夹为空。",
+    "lockedHint": "解锁文件夹后即可查看其中的视频。",
+    "pending": "保护尚未完成，请解锁后重试",
+    "protecting": "正在加密并校验视频和字幕…",
+    "protectionHint": "Translator 保存的视频和字幕将移至加密存储。请先关闭视频。导出的副本、代理工作区和备份不在保护范围内。",
+    "passwordHint": "密码至少需要 8 个字符。Translator 无法找回遗忘的密码。关闭标签页、锁定电脑或闲置 15 分钟后，文件夹会自动锁定。",
+    "deleteVideoConfirm": "永久删除此私密视频及其字幕？此操作无法撤销。",
+    "deleteFolderConfirm": "删除此空文件夹？",
+    "saveCopy": "保存副本",
+    "exportConfirm": "保存视频和字幕的未加密副本？任何有权访问保存位置的人都能打开副本。加密原件仍保留在此文件夹中。"
   }
 }

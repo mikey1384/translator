@@ -307,6 +307,11 @@ const electronAPI = {
 
   // ---------------------- URL Processing ----------------------
   processUrl: (options: any) => ipcRenderer.invoke('process-url', options),
+  discoverWebVideo: (
+    options: import('@shared-types/app').DiscoverWebVideoOptions
+  ) => ipcRenderer.invoke('web-video:discover', options),
+  releaseWebVideoDiscovery: (id: string) =>
+    ipcRenderer.invoke('web-video:release', id),
   acceptProcessedUrl: (operationId: string) =>
     ipcRenderer.invoke('process-url:accept', operationId),
   discardProcessedUrl: (operationId: string) =>
@@ -315,6 +320,41 @@ const electronAPI = {
     operationId: string;
     filePath: string;
   }) => ipcRenderer.invoke('process-url:cleanup-accepted', options),
+  downloadFolder: (request: any) =>
+    ipcRenderer.invoke('download-folders:request', request),
+  onDownloadFoldersChanged: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('download-folders:changed', handler);
+    return () =>
+      ipcRenderer.removeListener('download-folders:changed', handler);
+  },
+  onPrivateLibraryPurge: (
+    callback: (payload: {
+      id: string;
+      paths: string[];
+      sourceUrl?: string;
+    }) => Promise<void>
+  ) => {
+    const handler = async (
+      _event: Electron.IpcRendererEvent,
+      payload: {
+        id: string;
+        paths: string[];
+        sourceUrl?: string;
+        nonce: string;
+        ackChannel: string;
+      }
+    ) => {
+      try {
+        await callback(payload);
+        ipcRenderer.send(payload.ackChannel, payload.nonce);
+      } catch {
+        /* No acknowledgement: the transfer stays pending. */
+      }
+    };
+    ipcRenderer.on('download-folders:purge', handler);
+    return () => ipcRenderer.removeListener('download-folders:purge', handler);
+  },
   mutateVideoSuggestionDownloadHistory: (request: any) =>
     ipcRenderer.invoke('video-suggestion-download-history:mutate', request),
   setMountedUrlDownloadLibraryPaths: (options: { filePaths: string[] }) =>

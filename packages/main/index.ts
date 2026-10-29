@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { handleDownloadFolder } from './handlers/download-folder-handlers.js';
 import path from 'path';
 import { esmDirname } from '@shared/esm-paths';
 
@@ -44,6 +45,10 @@ import {
   handleSetMountedUrlDownloadLibraryPaths,
   initializeUrlHandler,
 } from './handlers/url-handlers.js';
+import {
+  handleDiscoverWebVideo,
+  handleReleaseWebVideoDiscovery,
+} from './handlers/web-video-handlers.js';
 import {
   clearCookiesForUrl,
   connectCookiesInteractive,
@@ -1093,6 +1098,9 @@ try {
   });
 
   ipcMain.handle('process-url', handleProcessUrl);
+  ipcMain.handle('web-video:discover', handleDiscoverWebVideo);
+  ipcMain.handle('web-video:release', handleReleaseWebVideoDiscovery);
+  ipcMain.handle('download-folders:request', handleDownloadFolder);
   ipcMain.handle('process-url:accept', async (event, operationId) => {
     const result = await handleAcceptProcessedUrl(event, operationId);
     if (result.success) {

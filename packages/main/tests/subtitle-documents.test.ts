@@ -61,6 +61,30 @@ test('subtitle document records persist and restore segments', async () => {
   });
 });
 
+test('processed audio coverage survives save/reload and subtitle edits independently of speech', async () => {
+  await withTempDir(async rootDir => {
+    const coverage = { endSec: 7593.5, durationSec: 7593.5 };
+    const doc = await saveSubtitleDocumentRecord({
+      segments: createSegments(),
+      transcriptionCoverage: coverage,
+      rootDir,
+    });
+    await saveSubtitleDocumentRecord({
+      documentId: doc.id,
+      segments: createSegments().map(s => ({ ...s, end: 1 })),
+      rootDir,
+    });
+    const loaded = await readSubtitleDocument({ documentId: doc.id, rootDir });
+    assert.deepEqual(loaded?.document.transcriptionCoverage, coverage);
+    assert.equal(loaded?.segments[0].end, 1);
+    const external = await saveSubtitleDocumentRecord({
+      segments: createSegments(),
+      rootDir,
+    });
+    assert.equal(external.transcriptionCoverage, null);
+  });
+});
+
 test('YouTube automatic-caption provenance persists without becoming transcription', async () => {
   await withTempDir(async rootDir => {
     const document = await saveSubtitleDocumentRecord({

@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import type {
   VideoSuggestionDownloadHistoryItem,
   VideoSuggestionDownloadHistoryMutation,
@@ -10,8 +10,11 @@ import {
   sanitizeVideoSuggestionWebUrl,
 } from '../../shared/helpers/video-suggestion-sanitize.js';
 import { canonicalVideoSourceKey } from '../../shared/helpers/video-url.js';
-
-const MAX_HISTORY_ITEMS = 40;
+import {
+  limitDownloadHistory,
+  validDownloadFolderId,
+  FILED_DOWNLOAD_LIMIT,
+} from '../../shared/helpers/download-history.js';
 
 // How long a freshly promoted file stays protected from reclamation while its
 // renderer commits the matching history upsert. Entries restored from disk
@@ -54,6 +57,8 @@ export type PendingVideoSuggestionFileDeletionIntent = {
 const MAX_DISPLACED_STASH = 8;
 
 export type DownloadHistoryPersistence = {
+  loadPrivateTombstones?: () => string[];
+  savePrivateTombstones?: (hashes: string[]) => void;
   loadHistory: () => unknown;
   saveHistory: (items: VideoSuggestionDownloadHistoryItem[]) => void;
   loadPendingReclaims: () => unknown;
@@ -105,6 +110,12 @@ function sanitizeHistoryItem(
     downloadedAtIso,
   };
   const thumbnailUrl = String(raw.thumbnailUrl || '').trim();
+  if (validDownloadFolderId(raw.folderId)) item.folderId = raw.folderId;
+  if (
+    typeof raw.webVideoId === 'string' &&
+    /^[a-f0-9]{32}$/.test(raw.webVideoId)
+  )
+    item.webVideoId = raw.webVideoId;
   const channel = String(raw.channel || '').trim();
   const channelUrl = sanitizeVideoSuggestionWebUrl(raw.channelUrl);
   const uploadedAt = String(raw.uploadedAt || '').trim();
@@ -126,10 +137,13 @@ function sanitizeHistoryItem(
 
 function sanitizeHistory(items: unknown): VideoSuggestionDownloadHistoryItem[] {
   if (!Array.isArray(items)) return [];
-  return items
-    .map(sanitizeHistoryItem)
-    .filter((item): item is VideoSuggestionDownloadHistoryItem => Boolean(item))
-    .slice(0, MAX_HISTORY_ITEMS);
+  return limitDownloadHistory(
+    items
+      .map(sanitizeHistoryItem)
+      .filter((item): item is VideoSuggestionDownloadHistoryItem =>
+        Boolean(item)
+      )
+  );
 }
 
 function historiesMatch(
@@ -199,6 +213,8 @@ function mergeHistoryItem(
 } {
   const incoming = sanitizeHistoryItem(incomingValue);
   if (!incoming) return { items, displaced: [] };
+  // Folder assignment is a main-process action, never an upsert claim.
+  delete incoming.folderId;
   const incomingPath = normalizePath(incoming.localPath);
   const incomingSource = canonicalVideoSourceKey(incoming.sourceUrl);
   const next = [incoming];
@@ -206,6 +222,7 @@ function mergeHistoryItem(
   for (const existing of items) {
     const existingPath = normalizePath(existing.localPath);
     if (incomingPath && existingPath === incomingPath) {
+      incoming.folderId ??= existing.folderId;
       deduplicated.push(existing);
       continue;
     }
@@ -214,8 +231,10 @@ function mergeHistoryItem(
     // managed copy is reclaimed unless it is open.
     if (
       incomingSource &&
-      canonicalVideoSourceKey(existing.sourceUrl) === incomingSource
+      canonicalVideoSourceKey(existing.sourceUrl) === incomingSource &&
+      existing.webVideoId === incoming.webVideoId
     ) {
+      incoming.folderId ??= existing.folderId;
       deduplicated.push(existing);
       continue;
     }
@@ -224,9 +243,13 @@ function mergeHistoryItem(
   // Both deduplicated entries and entries cut by the size cap were displaced
   // by this insert. A stale-operation rollback must be able to recover all of
   // them, even though a successful upsert intentionally replaces the former.
+  const retained = limitDownloadHistory(next);
   return {
-    items: next.slice(0, MAX_HISTORY_ITEMS),
-    displaced: [...deduplicated, ...next.slice(MAX_HISTORY_ITEMS)],
+    items: retained,
+    displaced: [
+      ...deduplicated,
+      ...next.filter(item => !retained.includes(item)),
+    ],
   };
 }
 
@@ -239,6 +262,7 @@ export class VideoSuggestionDownloadHistoryManager {
   ) => Promise<'deleted' | 'already_absent'>;
   private readonly onMaintenanceError?: (error: unknown) => void;
   private history: VideoSuggestionDownloadHistoryItem[] | null = null;
+  private privateTombstones = new Set<string>();
   private readonly commitGraceMs: number;
   private pendingReclaims = new Map<string, PendingReclaimEntry>();
   private pendingFileDeletions: PendingVideoSuggestionFileDeletionIntent[] = [];
@@ -348,6 +372,79 @@ export class VideoSuggestionDownloadHistoryManager {
     });
   }
 
+  /** The callback runs under the same queue as upserts, cleanup and leases.
+   * No renderer-supplied path can authorize a private-folder transfer. */
+  transferToPrivate<T>(
+    id: string,
+    work: (
+      item: VideoSuggestionDownloadHistoryItem,
+      remove: () => void
+    ) => Promise<T>,
+    recoveryItem?: VideoSuggestionDownloadHistoryItem
+  ): Promise<T> {
+    return this.serialized(async () => {
+      this.ensureLoaded();
+      const item = this.history!.find(entry => entry.id === id) || recoveryItem;
+      if (!item?.localPath || !this.isManagedLibraryPath(item.localPath))
+        throw new Error('managed_only');
+      if (this.isPathMounted(normalizePath(item.localPath)))
+        throw new Error('in_use');
+      return work({ ...item }, () => {
+        const tombstone = createHash('sha256').update(id).digest('hex');
+        const tombstones = new Set([...this.privateTombstones, tombstone]);
+        if (!this.persistence.savePrivateTombstones)
+          throw new Error('storage_failed');
+        this.persistence.savePrivateTombstones([...tombstones]);
+        this.privateTombstones = tombstones;
+        const next = this.history!.filter(entry => entry.id !== id);
+        if (!this.persistHistoryVerified(next))
+          throw new Error('storage_failed');
+        this.history = next;
+        // Do not let a delayed rollback resurrect the now-private record.
+        this.displacedByUpsertId.clear();
+        this.pendingReclaims.delete(normalizePath(item.localPath));
+        this.persistPendingReclaims();
+      });
+    });
+  }
+
+  assignFolder(id: string, folderId?: string): Promise<void> {
+    return this.serialized(async () => {
+      this.ensureLoaded();
+      const item = this.history!.find(entry => entry.id === id);
+      if (!item) throw new Error('not_found');
+      if (folderId && !validDownloadFolderId(folderId))
+        throw new Error('not_found');
+      if (
+        folderId &&
+        !item.folderId &&
+        this.history!.filter(entry => entry.folderId).length >=
+          FILED_DOWNLOAD_LIMIT
+      )
+        throw new Error('full');
+      // Returning an old filed video to Recent makes it the newest entry,
+      // rather than immediately evicting the item the user just moved.
+      const previous = this.history!;
+      const updated = { ...item, folderId };
+      const next = limitDownloadHistory([
+        updated,
+        ...previous.filter(entry => entry.id !== id),
+      ]);
+      if (this.rememberDroppedManagedPaths(previous, next, { type: 'get' }))
+        this.persistPendingReclaims();
+      if (!this.persistHistoryVerified(next)) throw new Error('storage_failed');
+      this.history = next;
+      await this.flushPendingReclaimsSafely();
+    });
+  }
+
+  hasFolderItems(folderId: string): Promise<boolean> {
+    return this.serialized(async () => {
+      this.ensureLoaded();
+      return this.history!.some(item => item.folderId === folderId);
+    });
+  }
+
   private serialized<T>(work: () => Promise<T>): Promise<T> {
     const result = this.queue.then(work, work);
     this.queue = result.then(
@@ -360,9 +457,19 @@ export class VideoSuggestionDownloadHistoryManager {
   private ensureLoaded(seedItems?: VideoSuggestionDownloadHistoryItem[]): void {
     if (this.history) return;
     const storedHistory = this.persistence.loadHistory();
-    const history = Array.isArray(storedHistory)
-      ? sanitizeHistory(storedHistory)
-      : sanitizeHistory(seedItems);
+    this.privateTombstones = new Set(
+      this.persistence.loadPrivateTombstones?.() || []
+    );
+    const history = (
+      Array.isArray(storedHistory)
+        ? sanitizeHistory(storedHistory)
+        : sanitizeHistory(seedItems)
+    ).filter(
+      item =>
+        !this.privateTombstones.has(
+          createHash('sha256').update(item.id).digest('hex')
+        )
+    );
     this.persistence.saveHistory(history);
     const pending = this.persistence.loadPendingReclaims();
     const loadedReclaims = new Map<string, PendingReclaimEntry>();
@@ -475,6 +582,14 @@ export class VideoSuggestionDownloadHistoryManager {
   ): VideoSuggestionDownloadHistoryItem[] {
     switch (mutation.type) {
       case 'upsert': {
+        if (
+          this.privateTombstones.has(
+            createHash('sha256')
+              .update(String(mutation.item?.id || ''))
+              .digest('hex')
+          )
+        )
+          return items;
         const merged = mergeHistoryItem(items, mutation.item);
         const insertedId = String(
           (mutation.item as { id?: unknown } | null)?.id || ''
@@ -519,7 +634,7 @@ export class VideoSuggestionDownloadHistoryManager {
           }
           next.push(item);
         }
-        return next.slice(0, MAX_HISTORY_ITEMS);
+        return limitDownloadHistory(next);
       }
       case 'replace-path': {
         const previousKey = normalizePath(mutation.previousPath);

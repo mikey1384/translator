@@ -174,13 +174,15 @@ export async function executeSrtTranslation({
   try {
     const { qualityTranslation } = useUIStore.getState();
     const res = await SubtitlesIPC.translateSubtitles({
+      segments,
       subtitles: srtContent,
       targetLanguage,
       operationId,
       qualityTranslation,
     });
     if (res?.success && res?.translatedSubtitles) {
-      const translatedSegments = parseSrt(res.translatedSubtitles);
+      const translatedSegments =
+        res.translatedSegments ?? parseSrt(res.translatedSubtitles);
       const finalSegments = preserveWordTimingsOnTranslatedSegments(
         segments,
         translatedSegments
@@ -191,6 +193,7 @@ export async function executeSrtTranslation({
       try {
         const documentSaveResult = await FileIPC.saveSubtitleDocumentRecord({
           segments: finalSegments,
+          transcriptionCoverage: useSubStore.getState().transcriptionCoverage,
           title: titleHint,
           sourceVideoPath: sourceVideoPath ?? null,
           sourceVideoAssetIdentity:
@@ -250,6 +253,11 @@ export async function executeSrtTranslation({
       });
       return { success: true, subtitles: res.translatedSubtitles };
     }
+
+    if (res?.partialSegments?.length)
+      useSubStore
+        .getState()
+        .applyTranslations(res.partialSegments, { markDirty: true });
 
     const cancelled = Boolean(res?.cancelled);
     const failure = resolveTranslationFailure({
@@ -493,23 +501,30 @@ export async function persistMountedTranslation(
   if (segments.length === 0) return;
   const { sourceVideoPath, sourceUrl, sourceProvenance, titleHint } =
     resolveTranslationSourceAssociation();
-  try {
-    await FileIPC.saveSubtitleDocumentRecord({
-      segments,
-      title: titleHint,
-      sourceVideoPath: sourceVideoPath ?? null,
-      sourceVideoAssetIdentity:
-        useVideoStore.getState().sourceAssetIdentity ?? null,
-      sourceUrl,
-      sourceProvenance,
-      subtitleKind: 'translation',
-      targetLanguage,
-    });
-  } catch (error) {
-    console.error(
-      '[subtitleGeneration] Failed to save finished preview:',
-      error
-    );
+  const saved = await FileIPC.saveSubtitleDocumentRecord({
+    ...(store.subtitleKind === 'translation' &&
+    store.targetLanguage === targetLanguage
+      ? { documentId: store.documentId }
+      : {}),
+    segments,
+    transcriptionCoverage: store.transcriptionCoverage,
+    title: titleHint,
+    sourceVideoPath: sourceVideoPath ?? null,
+    sourceVideoAssetIdentity:
+      useVideoStore.getState().sourceAssetIdentity ?? null,
+    sourceUrl,
+    sourceProvenance,
+    subtitleKind: 'translation',
+    targetLanguage,
+  });
+  if (!saved.success || !saved.document) {
+    throw new Error(saved.error || 'Failed to save finished translation');
+  }
+  if (
+    useSubStore.getState().editRevision === store.editRevision &&
+    useSubStore.getState().documentId === store.documentId
+  ) {
+    useSubStore.getState().setDocumentMeta(saved.document);
   }
   try {
     await storeGeneratedSubtitleArtifact({
@@ -592,6 +607,13 @@ export async function executeSubtitleGeneration({
     // Generate subtitles
     const result = await SubtitlesIPC.generate(opts);
 
+    if (!result.success && result.partialSegments?.length) {
+      useSubStore.getState().applyTranscriptionProgress(result.partialSegments);
+      useSubStore
+        .getState()
+        .applyTranslations(result.partialSegments, { markDirty: true });
+    }
+
     if (result.subtitles) {
       const finalSegments: SrtSegment[] =
         Array.isArray(result.segments) && result.segments.length > 0
@@ -624,6 +646,7 @@ export async function executeSubtitleGeneration({
           sourceUrl,
           subtitleKind: 'transcription',
           transcriptionEngine: result.transcriptionEngine ?? null,
+          transcriptionCoverage: result.transcriptionCoverage,
         });
         if (documentSaveResult.success && documentSaveResult.document) {
           documentMeta = documentSaveResult.document;
@@ -662,6 +685,9 @@ export async function executeSubtitleGeneration({
           undefined,
           documentMeta
         );
+      useSubStore
+        .getState()
+        .setTranscriptionCoverage(result.transcriptionCoverage ?? null);
 
       setTranscription({
         id: operationId,

@@ -311,9 +311,13 @@ export async function downloadVideoFromPlatform(
   extraArgs: string[] = [],
   signal?: AbortSignal,
   dependencies: DownloadVideoFromPlatformDependencies = {},
-  options: { allowLongVideo?: boolean } = {}
+  options: {
+    allowLongVideo?: boolean;
+    infoJsonPath?: string;
+    cookieSourceUrl?: string;
+  } = {}
 ): Promise<DownloadVideoFromPlatformResult> {
-  log.info(`[URLprocessor] Starting download: ${url} (Op ID: ${operationId})`);
+  log.info(`[URLprocessor] Starting download (Op ID: ${operationId})`);
   const ensureYtDlpBinaryFn =
     dependencies.ensureYtDlpBinaryImpl ?? ensureYtDlpBinary;
   const ensureJsRuntimeFn = dependencies.ensureJsRuntimeImpl ?? ensureJsRuntime;
@@ -534,7 +538,7 @@ export async function downloadVideoFromPlatform(
     const hasCookiesFlag = effectiveExtraArgs.includes('--cookies');
     if (!hasCookiesFlag) {
       const exported = await raceOperationCancellation(
-        exportCookiesToFileForUrlFn(url),
+        exportCookiesToFileForUrlFn(options.cookieSourceUrl || url),
         {
           signal,
           operationId,
@@ -724,7 +728,9 @@ export async function downloadVideoFromPlatform(
 
   function buildBaseArgs(): string[] {
     return [
-      url,
+      ...(options.infoJsonPath
+        ? ['--load-info-json', options.infoJsonPath]
+        : [url]),
       '--ignore-config',
       ...SINGLE_VIDEO_ARGS,
       '--output',
@@ -917,7 +923,7 @@ export async function downloadVideoFromPlatform(
       log.info(`[URLprocessor] Spawning yt-dlp with cwd=${outputDir}`);
 
       log.info(
-        `[URLprocessor] Executing yt-dlp (attempt ${attempt}, IP mode: ${ipMode}): ${ytDlpPath} ${args.join(' ')} (Op ID: ${operationId})`
+        `[URLprocessor] Executing yt-dlp (attempt ${attempt}, IP mode: ${ipMode}) (Op ID: ${operationId})`
       );
 
       try {
@@ -1034,7 +1040,7 @@ export async function downloadVideoFromPlatform(
               stopIfSourceRejected();
 
               if (attempt === 1 && debugLines < 3 && line) {
-                log.debug(`[yt-dlp:first] ${line}`);
+                log.debug('[yt-dlp:first] Output received.');
                 debugLines++;
               }
 

@@ -23,7 +23,7 @@ import {
 import type { VideoSuggestionDownloadHistoryItem } from '../components/VideoSuggestionPanel/VideoSuggestionPanel.types.js';
 import type { VideoSuggestionResultItem } from '@shared-types/app';
 import { acquireProvisionalUrlDownloadLibraryPath } from '../../../listeners/mounted-download-leases.js';
-import { canonicalVideoSourceKey } from '../../../../shared/helpers/video-url.js';
+import { historyCopiesForUrl } from '../../../utils/localDownloadCopy.js';
 import { confirmReplaceUnsavedSubtitles } from '../../../utils/unsaved-subtitles.js';
 
 type RecentDownloadedChannel = {
@@ -299,15 +299,13 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
     async (
       item: VideoSuggestionDownloadHistoryItem
     ): Promise<VideoSuggestionDownloadHistoryItem | null> => {
-      const sourceKey = canonicalVideoSourceKey(item.sourceUrl);
       const candidates = [
         item,
-        ...downloadHistory.filter(
-          other =>
-            other.id !== item.id &&
-            sourceKey !== null &&
-            canonicalVideoSourceKey(other.sourceUrl) === sourceKey
-        ),
+        ...historyCopiesForUrl(
+          downloadHistory,
+          item.sourceUrl,
+          item.webVideoId
+        ).filter(other => other.id !== item.id),
       ];
       for (const candidate of candidates) {
         const filePath = sanitizeVideoSuggestionHistoryPath(
@@ -346,6 +344,7 @@ export default function useDownloadedVideoLibrary(preferredLanguage: string) {
         setError(null);
         await useUrlStore.getState().downloadMedia({
           url: item.sourceUrl,
+          webVideoId: item.webVideoId,
         });
       } catch (err: any) {
         setError(

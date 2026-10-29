@@ -107,6 +107,43 @@ test('modifiers, handled events and open modals are left alone', () => {
   );
 });
 
+test('only the player timeline owns ten-second arrow seeking', () => {
+  const timeline = el('INPUT', {
+    type: 'range',
+    matches: ['input[type="range"]'],
+  });
+  const read = timeline.getAttribute;
+  timeline.getAttribute = key =>
+    key === 'data-player-seekbar' ? 'true' : (read?.(key) ?? null);
+  for (const key of ['ArrowLeft', 'ArrowRight']) {
+    assert.equal(
+      shouldHandlePlayerShortcut({ key, target: timeline }, { inPlayer: true }),
+      true
+    );
+    assert.equal(
+      shouldHandlePlayerShortcut(
+        { key, target: timeline, ctrlKey: true },
+        { inPlayer: true }
+      ),
+      false
+    );
+    assert.equal(
+      shouldHandlePlayerShortcut(
+        { key, target: timeline },
+        { inPlayer: true, modalOpen: true }
+      ),
+      false
+    );
+  }
+  assert.equal(
+    shouldHandlePlayerShortcut(
+      { key: 'ArrowUp', target: timeline },
+      { inPlayer: true }
+    ),
+    false
+  );
+});
+
 test('volume clamps, toggles and persists', () => {
   assert.equal(clampVolume(1.4), 1);
   assert.equal(clampVolume(-1), 0);

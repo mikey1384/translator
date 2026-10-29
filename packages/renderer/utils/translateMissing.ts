@@ -61,6 +61,7 @@ export async function translateMissingUntranslated(): Promise<boolean> {
 
   try {
     const res = await SubtitlesIPC.translateSubtitles({
+      segments: missing,
       subtitles: srtContent,
       targetLanguage,
       operationId,
@@ -68,21 +69,29 @@ export async function translateMissingUntranslated(): Promise<boolean> {
     });
 
     if (res?.success && res?.translatedSubtitles) {
-      const translatedSegs = parseSrt(res.translatedSubtitles);
-      // Build map by time key -> translated text
-      const byTimeKey = new Map<string, string | undefined>();
-      for (const seg of translatedSegs) {
-        const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-        byTimeKey.set(key, seg.translation);
-      }
+      const translatedSegs =
+        res.translatedSegments ?? parseSrt(res.translatedSubtitles);
+      if (res.translatedSegments) {
+        useSubStore.getState().applyTranslations(res.translatedSegments, {
+          markDirty: true,
+          matchByIndex: false,
+        });
+      } else {
+        // Build map by time key -> translated text
+        const byTimeKey = new Map<string, string | undefined>();
+        for (const seg of translatedSegs) {
+          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
+          byTimeKey.set(key, seg.translation);
+        }
 
-      // Apply translations back to store for only missing ones
-      const applyStore = useSubStore.getState();
-      for (const seg of missing) {
-        const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-        const translated = byTimeKey.get(key);
-        if (translated && translated.trim()) {
-          applyStore.update(seg.id, { translation: translated });
+        // Apply translations back to store for only missing ones
+        const applyStore = useSubStore.getState();
+        for (const seg of missing) {
+          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
+          const translated = byTimeKey.get(key);
+          if (translated && translated.trim()) {
+            applyStore.update(seg.id, { translation: translated });
+          }
         }
       }
 
@@ -94,6 +103,12 @@ export async function translateMissingUntranslated(): Promise<boolean> {
       });
       return true;
     }
+
+    if (res?.partialSegments?.length)
+      useSubStore.getState().applyTranslations(res.partialSegments, {
+        matchByIndex: false,
+        markDirty: true,
+      });
 
     const failure = resolveTranslationFailure({
       error: res?.error,

@@ -173,7 +173,8 @@
     "diskFull": "Din disk er fuld. Frigør lidt plads, og prøv igen.",
     "cancelDubbingFailedPlain": "Eftersynkroniseringen kunne ikke stoppes. Prøv igen.",
     "cancelTranslationFailedPlain": "Oversættelsen kunne ikke stoppes. Prøv igen.",
-    "cancelSummaryFailedPlain": "Resuméet kunne ikke stoppes. Prøv igen."
+    "cancelSummaryFailedPlain": "Resuméet kunne ikke stoppes. Prøv igen.",
+    "translationIncomplete": "Nogle linjer kunne ikke oversættes. Oversættelsen er ufuldstændig. Prøv igen."
   },
   "input": {
     "connect": "Forbind",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator arbejder på denne video. Slip filen igen, når den er færdig.",
     "dropNotSupported": "Slip en video, en lydfil eller en .srt-undertekstfil.",
     "batchDownloadRunning": "Translator downloader flere videoer. Vent, til de er færdige, eller annuller downloaden.",
-    "quality": "Kvalitet"
+    "quality": "Kvalitet",
+    "webVideo": {
+      "finding": "Søger efter videoer…",
+      "choose": "Vælg en video",
+      "instruction": "Afspil den video, du vil downloade.",
+      "protected": "Denne video er beskyttet og kan ikke downloades.",
+      "noVideo": "Der blev ikke fundet nogen videoer, der kan downloades, på denne side.",
+      "openInApp": "Åbn siden i Translator for at vælge en video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Outputsprog",
@@ -1368,7 +1378,7 @@
     "dropHere": "Slip for at oversætte til {{language}}",
     "makeItSpeak": "Oversæt til {{language}}",
     "downloadOnly": "Download kun",
-    "helper": "Indsæt et link fra YouTube, TikTok, Instagram eller X – eller slip en videofil her",
+    "helper": "Indsæt et link til en video eller webside, eller træk en videofil hertil",
     "chooseFile": "Vælg fil",
     "into": "Til",
     "dropNotMedia": "Slip en video- eller lydfil for at oversætte den.",
@@ -1465,7 +1475,8 @@
     "checkingFile": "Læser filen…",
     "statusLoaded": "{{count}} linjer indlæst",
     "statusLoaded_one": "{{count}} linje indlæst",
-    "interruptedTranslateSubtitles": "Oversættelsen af underteksterne til {{language}} stoppede, da Translator blev lukket."
+    "interruptedTranslateSubtitles": "Oversættelsen af underteksterne til {{language}} stoppede, da Translator blev lukket.",
+    "currentSubtitle": "Aktuel undertekst"
   },
   "subtitleStyles": {
     "Cinema": "Biografgul",
@@ -1639,5 +1650,47 @@
     "openSettings": "Åbn Indstillinger",
     "supportSubject": "Mine minutter mangler, efter Translator nulstillede denne computer",
     "settingsResetKeptLanguage": "Translators indstillingsfil var beskadiget, så dine valg er nulstillet: sprog for underteksterne, API-nøgler og andre indstillinger. Appens sprog er bevaret. Der er gemt en kopi af den beskadigede fil. Tjek Indstillinger."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Kunne ikke fuldføre. Den krypterede kopi bevares, hvis en flytning afventer. Prøv igen.",
+      "in_use": "Luk videoen i alle faner, og afslut eller gem igangværende arbejde. Prøv derefter igen.",
+      "managed_only": "Kun videoer i Translators bibliotek kan flyttes til en privat mappe.",
+      "unsupported_file": "Filen er delt eller ligger uden for Translators bibliotek og kan ikke flyttes sikkert.",
+      "password_length": "Brug en adgangskode med mindst 8 tegn.",
+      "password_mismatch": "Adgangskoderne er ikke ens.",
+      "incorrect_password": "Forkert adgangskode.",
+      "locked": "Lås mappen op først.",
+      "not_empty": "Flyt eller slet videoerne, før du sletter mappen.",
+      "source_changed": "Videoen eller underteksterne blev ændret under flytningen. Den krypterede kopi er bevaret. Lås mappen op for at prøve igen.",
+      "pending": "Flytningen er ikke færdig. Lås mappen op for at prøve igen.",
+      "corrupt": "Den krypterede mappe eller fil er beskadiget. Gendan den fra en sikkerhedskopi.",
+      "full": "Biblioteket er fuldt. Fjern først ubrugte mapper eller videoer.",
+      "invalid_name": "Indtast et mappenavn på 1 til 80 tegn.",
+      "not_found": "Mappen eller videoen er ikke længere tilgængelig."
+    },
+    "folders": "Mapper",
+    "allVideos": "Alle videoer",
+    "unfiled": "Uden mappe",
+    "newFolder": "Ny mappe",
+    "privateFolder": "Privat mappe",
+    "rename": "Omdøb",
+    "move": "Flyt til mappe",
+    "lock": "Lås",
+    "unlock": "Lås op",
+    "name": "Mappenavn",
+    "password": "Adgangskode",
+    "confirmPassword": "Bekræft adgangskode",
+    "watch": "Afspil",
+    "empty": "Denne mappe er tom.",
+    "lockedHint": "Lås mappen op for at se videoerne.",
+    "pending": "Beskyttelsen er ikke færdig — lås op for at prøve igen",
+    "protecting": "Krypterer og kontrollerer din video og undertekster…",
+    "protectionHint": "Videoer og undertekster gemt af Translator flyttes til krypteret lagring. Luk videoen først. Eksporterede kopier, agenters arbejdsområder og sikkerhedskopier er ikke beskyttet.",
+    "passwordHint": "Brug mindst 8 tegn. Translator kan ikke gendanne en glemt adgangskode. Mapper låses, når du lukker fanen, låser computeren eller ikke bruger dem i 15 minutter.",
+    "deleteVideoConfirm": "Slet denne private video og dens undertekster permanent? Det kan ikke fortrydes.",
+    "deleteFolderConfirm": "Slet denne tomme mappe?",
+    "saveCopy": "Gem en kopi",
+    "exportConfirm": "Gem en ukrypteret kopi af videoen og underteksterne? Alle med adgang til destinationen kan åbne kopien. Den krypterede original bliver i denne mappe."
   }
 }

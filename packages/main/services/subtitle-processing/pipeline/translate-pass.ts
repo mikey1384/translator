@@ -1,3 +1,5 @@
+import { attachPartialTranslation } from '../translation-coverage.js';
+import { planTranslationWindows } from '../translation-batches.js';
 import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
 import log from 'electron-log';
 import { scaleProgress, Stage } from './progress.js';
@@ -46,6 +48,7 @@ export async function translatePass({
         stage: 'Skipping translation (same language)',
         phaseKey: 'translate',
         partialResult: buildSrt({ segments, mode: 'dual' }),
+        partialSegments: segments,
         current: segments.length,
         total: segments.length,
         unit: 'segments',
@@ -61,32 +64,27 @@ export async function translatePass({
     index: i + 1,
   }));
   const totalSegments = segmentsInProcess.length;
-  const TRANSLATION_BATCH_SIZE = 10;
-  // Provide local textual context around each batch for correctness
-  const CONTEXT_BEFORE = 12;
-  const CONTEXT_AFTER = 12;
 
   // Batches are independent (context sends source text only), so run a few
   // concurrently. Progress counts completed segments, which stays monotonic
   // even when batches finish out of order.
-  const batchStarts: number[] = [];
-  for (
-    let batchStart = 0;
-    batchStart < totalSegments;
-    batchStart += TRANSLATION_BATCH_SIZE
-  ) {
-    batchStarts.push(batchStart);
-  }
+  const windows = planTranslationWindows(segmentsInProcess, 'draft');
+  log.info(
+    `[${operationId}] translation plan: phase=draft cues=${totalSegments} requests=${windows.length} maxConcurrent=${TRANSLATION_CONCURRENCY}`
+  );
   let translatedSoFar = 0;
 
   await runWithConcurrencySerialFallback({
-    taskCount: batchStarts.length,
+    taskCount: windows.length,
     concurrency: TRANSLATION_CONCURRENCY,
     // Concurrent batches transiently reserve N× credits, can trip the
     // server's per-device admission cap, and on BYO accounts can exceed the
     // provider's own request-rate tier; retry serially so a balance, slot,
     // or rate budget that funds one call at a time still completes.
     isDeferrable: err =>
+      !(err as any)?.partialSegments?.some((s: SrtSegment) =>
+        s.translation?.trim()
+      ) &&
       (String((err as any)?.message || err || '').includes(
         ERROR_CODES.INSUFFICIENT_CREDITS
       ) ||
@@ -117,22 +115,23 @@ export async function translatePass({
     runTask: async taskIndex => {
       throwIfAborted(signal);
 
-      const batchStart = batchStarts[taskIndex];
-      const batchEnd = Math.min(
-        batchStart + TRANSLATION_BATCH_SIZE,
-        totalSegments
-      );
+      const {
+        start: batchStart,
+        end: batchEnd,
+        contextStart,
+        contextEnd,
+      } = windows[taskIndex];
       const currentBatchOriginals = segmentsInProcess.slice(
         batchStart,
         batchEnd
       );
       const contextBefore: SrtSegment[] = segmentsInProcess.slice(
-        Math.max(0, batchStart - CONTEXT_BEFORE),
+        contextStart,
         batchStart
       );
       const contextAfter: SrtSegment[] = segmentsInProcess.slice(
         batchEnd,
-        Math.min(totalSegments, batchEnd + CONTEXT_AFTER)
+        contextEnd
       );
 
       try {
@@ -150,14 +149,25 @@ export async function translatePass({
           signal,
         });
 
-        if (signal?.aborted) {
-          throw new DOMException('Operation cancelled', 'AbortError');
-        }
-
         for (let i = 0; i < translatedBatch.length; i++) {
           segmentsInProcess[batchStart + i] = translatedBatch[i];
         }
+        if (signal?.aborted) {
+          throw new DOMException('Operation cancelled', 'AbortError');
+        }
       } catch (err: any) {
+        if (
+          Array.isArray(err?.partialSegments) &&
+          err.partialSegments.length === currentBatchOriginals.length
+        ) {
+          for (let i = 0; i < err.partialSegments.length; i++)
+            segmentsInProcess[batchStart + i] = {
+              ...err.partialSegments[i],
+              translation: err.partialSegments[i].translation?.trim()
+                ? err.partialSegments[i].translation
+                : segmentsInProcess[batchStart + i].translation,
+            };
+        }
         if (err?.name === 'AbortError' || signal?.aborted) {
           log.info(`[${operationId}] translate batch cancelled`);
           throw err;
@@ -195,12 +205,16 @@ export async function translatePass({
             segments: segmentsInProcess,
             mode: 'dual',
           }),
+          partialSegments: segmentsInProcess.map(s => ({ ...s })),
           current: translatedSoFar,
           total: totalSegments,
           unit: 'segments',
         });
       }
     },
+  }).catch(error => {
+    attachPartialTranslation(error, segmentsInProcess);
+    throw error;
   });
 
   if (signal?.aborted) {

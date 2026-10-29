@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   MIN_PREVIEW_SEC,
   creditsToFinish,
+  creditsToStart,
   needsTailTranscription,
   packToFinish,
   planFreePreview,
@@ -16,6 +17,46 @@ test('a balance that covers the video runs it whole', () => {
     qualityEnabled: false,
   });
   assert.deepEqual(plan, { kind: 'full' });
+});
+
+test('quality cost estimates never turn an affordable 127-minute transcription into 106 minutes', () => {
+  const durationSecs = 7593.5069;
+  const credits = 266143;
+  assert.ok(creditsToFinish(durationSecs, true) > credits);
+  assert.ok(creditsToStart(durationSecs, true) < credits);
+  assert.deepEqual(
+    planFreePreview({ durationSecs, credits, qualityEnabled: true }),
+    { kind: 'full' }
+  );
+});
+
+test('processed audio survives a silent ending without charging for the tail again', () => {
+  assert.equal(
+    needsTailTranscription({
+      transcribedToEnd: true,
+      durationSecs: 7600,
+      lastEndSecs: 6500,
+      coverage: { endSec: 7600, durationSec: 7600 },
+    }),
+    false
+  );
+  assert.equal(
+    needsTailTranscription({
+      durationSecs: 7600,
+      lastEndSecs: 6500,
+      coverage: { endSec: 6405, durationSec: 7600 },
+    }),
+    true
+  );
+  // Coverage from another media duration must never suppress recovery.
+  assert.equal(
+    needsTailTranscription({
+      durationSecs: 7600,
+      lastEndSecs: 6500,
+      coverage: { endSec: 7000, durationSec: 7000 },
+    }),
+    true
+  );
 });
 
 test('monthly free credits give a few-minute preview of a long video', () => {

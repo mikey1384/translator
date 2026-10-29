@@ -28,6 +28,7 @@ import { persistMountedTranslation } from '../containers/GenerateSubtitles/utils
 import { registerStage5CreditRefreshOperation } from './creditRefreshOperations';
 import { logTask } from './logger';
 import { resolveTaskFailure } from './taskFailure';
+import { saveMountedSubtitleDocument } from './subtitle-documents';
 
 const DEV_TEST_CREDITS_KEY = 'dev.freePreviewTestCredits';
 
@@ -62,12 +63,19 @@ export function currentFreePreviewKey(): string | null {
  * with a known balance runs whole, as before.
  */
 export function decideFreePreview(
-  durationSecs: number | null | undefined
+  durationSecs: number | null | undefined,
+  snapshot?: { creditBalance: number; authoritative: boolean } | null
 ): FreePreviewPlan {
   if (!durationSecs || durationSecs <= 0) return { kind: 'full' };
   const ai = useAiStore.getState() as any;
   if (resolveTranscriptionProvider(ai) !== 'stage5') return { kind: 'full' };
-  const { credits, authoritative } = useCreditStore.getState();
+  const { credits, authoritative } =
+    snapshot === undefined
+      ? useCreditStore.getState()
+      : {
+          credits: snapshot?.creditBalance,
+          authoritative: snapshot?.authoritative,
+        };
   if (!authoritative || typeof credits !== 'number') return { kind: 'full' };
   return planFreePreview({
     durationSecs,
@@ -190,6 +198,16 @@ async function transcribePreviewTail(
   const added = result.segments ?? [];
   if (replaceId && added.length > 0) useSubStore.getState().remove(replaceId);
   if (added.length > 0) useSubStore.getState().appendSegments(added);
+  if (result.transcriptionCoverage) {
+    useSubStore
+      .getState()
+      .setTranscriptionCoverage(result.transcriptionCoverage);
+  }
+  // Persist the paid result before marking the tail complete or translating.
+  // A retry/restart must not rely on the last speech time or lose the tail.
+  const saved = await saveMountedSubtitleDocument({ keepDirty: true });
+  if (!saved.success)
+    throw new Error(saved.error || 'Failed to save transcription');
   useTaskStore.getState().setTranscription({
     stage: i18n.t('generateSubtitles.status.completed', 'Completed'),
     percent: 100,
@@ -246,6 +264,7 @@ export async function resumeFreePreview(key: string): Promise<boolean> {
         transcribedToEnd: preview.transcribedToEnd,
         durationSecs: preview.durationSecs,
         lastEndSecs: lastId ? (subs.segments[lastId]?.end ?? null) : null,
+        coverage: subs.transcriptionCoverage,
       })
     ) {
       await transcribePreviewTail(key, preview, videoPath);

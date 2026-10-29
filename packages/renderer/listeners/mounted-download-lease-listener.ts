@@ -1,3 +1,4 @@
+import { useSubStore } from '../state/subtitle-store.js';
 import { useVideoStore } from '../state/video-store.js';
 import { sanitizeVideoSuggestionHistoryPath } from '../../shared/helpers/video-suggestion-sanitize.js';
 import { updateMountedUrlDownloadLibraryPaths } from './mounted-download-leases.js';
@@ -13,7 +14,13 @@ function collectMountedPaths(): string[] {
       : '';
   return Array.from(
     new Set(
-      [state.path, state.originalPath, state.dubbedVideoPath, filePath]
+      [
+        state.path,
+        state.originalPath,
+        state.dubbedVideoPath,
+        filePath,
+        useSubStore.getState().sourceVideoPath,
+      ]
         .map(value => sanitizeVideoSuggestionHistoryPath(value))
         .filter(Boolean)
     )
@@ -25,4 +32,5 @@ function reportMountedPaths(): void {
 }
 
 useVideoStore.subscribe(reportMountedPaths);
+useSubStore.subscribe(reportMountedPaths);
 reportMountedPaths();

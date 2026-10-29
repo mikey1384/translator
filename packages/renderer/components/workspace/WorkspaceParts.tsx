@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { css } from '@emotion/css';
-import { Search } from 'lucide-react';
+import { LocateFixed, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Button from '../Button';
 import SideMenu from '../../containers/VideoPlayer/SideMenu';
@@ -25,6 +25,7 @@ import {
 
 const subsHeadToolsStyles = css`
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 14px;
   min-width: 0;
@@ -57,6 +58,8 @@ export function WorkspaceSubtitlesHead() {
   const { t } = useTranslation();
   const editMode = useUIStore(s => s.subtitleEditMode);
   const count = useSubStore(s => s.order.length);
+  const navigate = useWorkspaceActions(s => s.subtitleNavigation);
+  const hasVideo = useVideoStore(s => Boolean(s.url));
   return (
     <div className={workspaceSubsHeadStyles}>
       <h2 className={workspaceSubsTitleStyles}>
@@ -68,6 +71,19 @@ export function WorkspaceSubtitlesHead() {
         ) : null}
       </h2>
       <div className={subsHeadToolsStyles}>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!count || !hasVideo || !navigate}
+          data-testid="current-subtitle"
+          onClick={() => {
+            logButton('workspace_current_subtitle');
+            navigate?.();
+          }}
+        >
+          <LocateFixed size={15} aria-hidden="true" />
+          {t('workspace.currentSubtitle', 'Current subtitle')}
+        </Button>
         <button
           type="button"
           className={findButtonStyles}

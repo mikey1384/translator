@@ -14,7 +14,7 @@ import {
   type FreePreview,
 } from '../../state/free-preview-store';
 import {
-  creditsToFinish,
+  creditsToStart,
   offerNoneBodyKind,
   packToFinish,
   previewMinuteSplit,
@@ -177,8 +177,7 @@ export default function FreePreviewOffer() {
     qualityEnabled: Boolean(quality),
   });
   const canFinishNow =
-    authoritative &&
-    balance >= creditsToFinish(remainingSecs, Boolean(quality));
+    authoritative && balance >= creditsToStart(remainingSecs, Boolean(quality));
 
   const { loading, start } = useCreditCheckout({
     packId: pack.id,

@@ -287,6 +287,18 @@ export function classifyError(
   const task = options.task ?? 'other';
   const text = textOf(input);
 
+  if (text === '__i18n__:errors.translationIncomplete') {
+    return build(task, text, {
+      kind: 'server',
+      code: 'translation-incomplete',
+      i18nKey: 'errors.translationIncomplete',
+      defaultText:
+        'Some lines could not be translated. The translation is incomplete. Try again.',
+      retryable: true,
+      report: 'none',
+    });
+  }
+
   if (isInsufficientCreditsError(input)) {
     return build(task, text, {
       kind: 'insufficient-credits',

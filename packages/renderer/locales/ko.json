@@ -172,7 +172,8 @@
     "diskFull": "디스크가 가득 찼어요. 공간을 확보한 뒤 다시 시도해 주세요.",
     "cancelDubbingFailedPlain": "더빙을 멈추지 못했어요. 다시 시도해 주세요.",
     "cancelTranslationFailedPlain": "번역을 멈추지 못했어요. 다시 시도해 주세요.",
-    "cancelSummaryFailedPlain": "요약을 멈추지 못했어요. 다시 시도해 주세요."
+    "cancelSummaryFailedPlain": "요약을 멈추지 못했어요. 다시 시도해 주세요.",
+    "translationIncomplete": "일부 문장을 번역하지 못해 번역이 끝나지 않았어요. 다시 시도해 주세요."
   },
   "input": {
     "connect": "연결",
@@ -374,7 +375,16 @@
     "dropWhileBusy": "Translator가 이 영상을 작업하고 있어요. 끝난 뒤 파일을 다시 놓아 주세요.",
     "dropNotSupported": "영상, 오디오 파일 또는 .srt 자막 파일을 놓아 주세요.",
     "batchDownloadRunning": "Translator가 여러 영상을 다운로드하고 있어요. 끝날 때까지 기다리거나 다운로드를 취소해 주세요.",
-    "quality": "품질"
+    "quality": "품질",
+    "webVideo": {
+      "finding": "영상을 찾는 중…",
+      "choose": "영상 선택",
+      "instruction": "다운로드할 영상을 재생하세요.",
+      "protected": "보호된 영상이라 다운로드할 수 없어요.",
+      "noVideo": "이 페이지에서 다운로드할 수 있는 영상을 찾지 못했어요.",
+      "openInApp": "Translator에서 이 페이지를 열고 영상을 선택하세요.",
+      "video": "영상 {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "출력 언어",
@@ -1356,7 +1366,7 @@
     "dropHere": "{{language}}로 번역할 영상을 여기에 놓으세요",
     "makeItSpeak": "{{language}}로 번역하기",
     "downloadOnly": "다운로드만",
-    "helper": "YouTube, TikTok, Instagram, X 링크를 붙여넣거나 영상 파일을 여기에 놓으세요",
+    "helper": "영상이나 웹페이지 링크를 붙여넣거나 영상 파일을 여기에 놓으세요",
     "chooseFile": "파일 선택",
     "into": "언어",
     "dropNotMedia": "번역할 영상이나 오디오 파일을 놓아 주세요.",
@@ -1442,7 +1452,8 @@
     "statusLines": "자막 {{count}}줄",
     "checkingFile": "파일 읽는 중…",
     "statusLoaded": "{{count}}줄 불러옴",
-    "interruptedTranslateSubtitles": "Translator가 종료되어 이 자막을 {{language}}로 번역하던 작업이 멈췄어요."
+    "interruptedTranslateSubtitles": "Translator가 종료되어 이 자막을 {{language}}로 번역하던 작업이 멈췄어요.",
+    "currentSubtitle": "현재 자막"
   },
   "subtitleStyles": {
     "Cinema": "시네마 옐로",
@@ -1611,5 +1622,47 @@
     "openSettings": "설정 열기",
     "supportSubject": "Translator가 이 컴퓨터를 초기화한 뒤 구매한 시간이 사라졌어요",
     "settingsResetKeptLanguage": "Translator 설정 파일이 손상돼서 환경설정을 초기화했어요. 자막 언어, API 키, 그 밖의 옵션이 기본값으로 돌아갔어요. 화면 언어는 그대로예요. 손상된 파일의 사본은 따로 보관해 두었어요. 설정을 확인해 주세요."
+  },
+  "libraryFolders": {
+    "folders": "폴더",
+    "allVideos": "모든 영상",
+    "unfiled": "폴더 미지정",
+    "newFolder": "새 폴더",
+    "privateFolder": "비공개 폴더",
+    "rename": "이름 변경",
+    "move": "폴더로 이동",
+    "lock": "잠그기",
+    "unlock": "잠금 해제",
+    "name": "폴더 이름",
+    "password": "비밀번호",
+    "confirmPassword": "비밀번호 확인",
+    "watch": "재생",
+    "empty": "폴더가 비어 있어요.",
+    "lockedHint": "영상을 보려면 폴더의 잠금을 해제하세요.",
+    "pending": "보호 미완료 — 잠금을 해제해 다시 시도하세요",
+    "protecting": "영상과 자막을 암호화하고 확인하고 있어요…",
+    "protectionHint": "Translator가 보관하는 영상과 자막을 암호화된 공간으로 옮겨요. 먼저 영상을 닫아 주세요. 따로 내보낸 파일, 에이전트 작업 공간, 백업은 보호되지 않아요.",
+    "passwordHint": "8자 이상으로 설정하세요. 비밀번호를 잊으면 복구할 수 없어요. 탭을 닫거나 컴퓨터를 잠그면 폴더도 잠겨요. 15분 동안 사용하지 않아도 자동으로 잠겨요.",
+    "deleteVideoConfirm": "이 비공개 영상과 자막을 영구 삭제할까요? 삭제 후에는 되돌릴 수 없어요.",
+    "deleteFolderConfirm": "이 빈 폴더를 삭제할까요?",
+    "errors": {
+      "storage_failed": "완료하지 못했어요. 이동 중이었다면 암호화된 사본은 보관돼요. 다시 시도해 주세요.",
+      "in_use": "모든 탭에서 이 영상을 닫고 진행 중인 작업을 마치거나 저장한 뒤 다시 시도하세요.",
+      "managed_only": "Translator 앱 보관함에 있는 영상만 비공개 폴더로 옮길 수 있어요.",
+      "unsupported_file": "다른 곳에서 함께 사용하거나 앱 보관함 밖에 있는 파일이라 안전하게 옮길 수 없어요.",
+      "password_length": "비밀번호를 8자 이상 입력하세요.",
+      "password_mismatch": "비밀번호가 일치하지 않아요.",
+      "incorrect_password": "비밀번호가 올바르지 않아요.",
+      "locked": "먼저 폴더의 잠금을 해제하세요.",
+      "not_empty": "안에 있는 영상을 옮기거나 삭제한 뒤 폴더를 삭제하세요.",
+      "source_changed": "이동 중 영상이나 자막이 변경됐어요. 암호화된 사본은 보관돼요. 폴더의 잠금을 해제해 다시 시도하세요.",
+      "pending": "이동이 아직 끝나지 않았어요. 잠금을 해제해 다시 시도하세요.",
+      "corrupt": "암호화된 폴더나 파일이 손상됐어요. 백업에서 복원해 주세요.",
+      "full": "보관함이 가득 찼어요. 사용하지 않는 폴더나 영상을 먼저 삭제하세요.",
+      "invalid_name": "폴더 이름을 1~80자로 입력하세요.",
+      "not_found": "이 폴더나 영상을 더 이상 찾을 수 없어요."
+    },
+    "saveCopy": "복사본 저장",
+    "exportConfirm": "영상과 자막을 암호화하지 않은 복사본으로 저장할까요? 저장 위치에 접근할 수 있는 사람은 누구나 복사본을 열 수 있어요. 암호화된 원본은 이 폴더에 그대로 남아요."
   }
 }

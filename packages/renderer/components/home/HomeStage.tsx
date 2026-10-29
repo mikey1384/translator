@@ -600,7 +600,7 @@ export default function HomeStage() {
             <span>
               {t(
                 'home.helper',
-                'Paste a link from YouTube, TikTok, Instagram or X — or drop a video file here'
+                'Paste a video or webpage link, or drop a video file here'
               )}
             </span>
             <button

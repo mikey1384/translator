@@ -1,4 +1,5 @@
 import { css } from '@emotion/css';
+import * as SystemIPC from '../../ipc/system';
 import {
   clearFreePreviewForCurrentVideo,
   decideFreePreview,
@@ -847,6 +848,10 @@ export default function GenerateSubtitles() {
           mountOnComplete: request.mountOnComplete,
           preserveSubtitles: request.preserveSubtitles,
           replaceCurrent: request.replaceCurrent,
+          webVideo: request.webVideo,
+          webVideoId: request.webVideoId,
+          allowLongVideo: request.allowLongVideo,
+          interactive: request.interactive,
         }),
       chain ?? { target: 'download', language: autoRunLanguage }
     );
@@ -1671,7 +1676,17 @@ export default function GenerateSubtitles() {
 
     // Free preview: when the balance doesn't cover the video, subtitle the
     // opening minutes it does cover (or none) and offer to finish in place.
-    const previewPlan = decideFreePreview(durationSecs);
+    // Refresh once before committing to a shorter paid run. A balance held
+    // during another tab's request must not become a stale preview cutoff.
+    const plannedSource = useVideoStore.getState().path;
+    const snapshot = await SystemIPC.refreshCreditSnapshot(true).catch(
+      () => null
+    );
+    if (useVideoStore.getState().path !== plannedSource) {
+      releaseStepTwoActionLaunchLock();
+      return false;
+    }
+    const previewPlan = decideFreePreview(durationSecs, snapshot);
     if (previewPlan.kind === 'none' && durationSecs) {
       releaseStepTwoActionLaunchLock();
       setTargetLanguage(requestedLanguage);
@@ -1716,6 +1731,17 @@ export default function GenerateSubtitles() {
 
       if (useStepTwoWorkflowStore.getState().runToken !== stepTwoRunToken) {
         return false;
+      }
+
+      // Record the paid audio coverage before translating. A translation
+      // failure must still offer a resume that reuses this transcript.
+      if (previewEndSec && durationSecs) {
+        recordFreePreview({
+          durationSecs,
+          coveredSecs: previewEndSec,
+          language: requestedLanguage,
+          status: 'offer',
+        });
       }
 
       transitionStepTwoWorkflowToHandoff({

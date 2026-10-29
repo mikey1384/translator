@@ -172,7 +172,8 @@
     "diskFull": "Megtelt a lemez. Szabadíts fel egy kis helyet, és próbáld újra.",
     "cancelDubbingFailedPlain": "Nem sikerült leállítani a szinkront. Próbáld újra.",
     "cancelTranslationFailedPlain": "Nem sikerült leállítani a fordítást. Próbáld újra.",
-    "cancelSummaryFailedPlain": "Nem sikerült leállítani az összefoglalót. Próbáld újra."
+    "cancelSummaryFailedPlain": "Nem sikerült leállítani az összefoglalót. Próbáld újra.",
+    "translationIncomplete": "Néhány sort nem sikerült lefordítani. A fordítás hiányos. Próbálja újra."
   },
   "input": {
     "connect": "Csatlakozás",
@@ -374,7 +375,16 @@
     "dropWhileBusy": "A Translator épp ezen a videón dolgozik. Ha végzett, húzd ide újra a fájlt.",
     "dropNotSupported": "Videót, hangfájlt vagy .srt feliratfájlt húzz ide.",
     "batchDownloadRunning": "A Translator több videót tölt le. Várd meg, amíg végez, vagy szakítsd meg a letöltést.",
-    "quality": "Minőség"
+    "quality": "Minőség",
+    "webVideo": {
+      "finding": "Videók keresése…",
+      "choose": "Válassz videót",
+      "instruction": "Indítsd el a letölteni kívánt videót.",
+      "protected": "Ez a videó védett, ezért nem tölthető le.",
+      "noVideo": "Ezen az oldalon nem található letölthető videó.",
+      "openInApp": "Nyisd meg ezt az oldalt a Translatorban a videó kiválasztásához.",
+      "video": "{{number}}. videó"
+    }
   },
   "subtitles": {
     "outputLanguage": "Kimeneti nyelv",
@@ -1358,7 +1368,7 @@
     "dropHere": "Engedd el, és {{language}} nyelvre fordítjuk",
     "makeItSpeak": "Fordítás {{language}} nyelvre",
     "downloadOnly": "Csak letöltés",
-    "helper": "Illessz be egy YouTube-, TikTok-, Instagram- vagy X-linket – vagy húzz ide egy videófájlt",
+    "helper": "Illeszd be egy videó vagy weboldal linkjét, vagy húzz ide egy videófájlt",
     "chooseFile": "Fájl kiválasztása",
     "into": "Nyelv",
     "dropNotMedia": "Videó- vagy hangfájlt húzz ide a fordításhoz.",
@@ -1453,7 +1463,8 @@
     "checkingFile": "A fájl beolvasása…",
     "statusLoaded": "{{count}} sor betöltve",
     "statusLoaded_one": "{{count}} sor betöltve",
-    "interruptedTranslateSubtitles": "A feliratok {{language}} nyelvre fordítása leállt, amikor a Translator bezárult."
+    "interruptedTranslateSubtitles": "A feliratok {{language}} nyelvre fordítása leállt, amikor a Translator bezárult.",
+    "currentSubtitle": "Jelenlegi felirat"
   },
   "subtitleStyles": {
     "Cinema": "Mozisárga",
@@ -1623,5 +1634,47 @@
     "openSettings": "Beállítások megnyitása",
     "supportSubject": "Eltűntek a perceim, miután a Translator visszaállította ezt a gépet",
     "settingsResetKeptLanguage": "A Translator beállításfájlja megsérült, ezért a beállításaid visszaálltak az alapértékekre: a feliratok nyelve, az API-kulcsok és más opciók. A felület nyelve nem változott. A sérült fájlról megmaradt egy másolat. Nézd át a Beállításokat."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Nem sikerült befejezni. Ha az áthelyezés függőben van, a titkosított másolat megmarad. Próbálja újra.",
+      "in_use": "Zárja be a videót minden lapon, és fejezze be vagy mentse a folyamatban lévő munkát. Ezután próbálja újra.",
+      "managed_only": "Csak a Translator könyvtárában tárolt videók helyezhetők át privát mappába.",
+      "unsupported_file": "A fájl megosztott vagy a Translator könyvtárán kívül található, ezért nem helyezhető át biztonságosan.",
+      "password_length": "Használjon legalább 8 karakteres jelszót.",
+      "password_mismatch": "A jelszavak nem egyeznek.",
+      "incorrect_password": "Helytelen jelszó.",
+      "locked": "Előbb oldja fel a mappát.",
+      "not_empty": "A mappa törlése előtt helyezze át vagy törölje a videókat.",
+      "source_changed": "A videó vagy a feliratok megváltoztak az áthelyezés közben. A titkosított másolat megmaradt. Oldja fel a mappát és próbálja újra.",
+      "pending": "Az áthelyezés félbemaradt. Oldja fel a mappát és próbálja újra.",
+      "corrupt": "A titkosított mappa vagy fájl sérült. Állítsa vissza biztonsági mentésből.",
+      "full": "A könyvtár megtelt. Előbb távolítsa el a nem használt mappákat vagy videókat.",
+      "invalid_name": "Adjon meg egy 1–80 karakteres mappanevet.",
+      "not_found": "Ez a mappa vagy videó már nem érhető el."
+    },
+    "folders": "Mappák",
+    "allVideos": "Összes videó",
+    "unfiled": "Mappán kívül",
+    "newFolder": "Új mappa",
+    "privateFolder": "Privát mappa",
+    "rename": "Átnevezés",
+    "move": "Áthelyezés mappába",
+    "lock": "Zárolás",
+    "unlock": "Feloldás",
+    "name": "Mappa neve",
+    "password": "Jelszó",
+    "confirmPassword": "Jelszó megerősítése",
+    "watch": "Lejátszás",
+    "empty": "Ez a mappa üres.",
+    "lockedHint": "A videók megtekintéséhez oldja fel a mappát.",
+    "pending": "A védelem beállítása félbemaradt — oldja fel és próbálja újra",
+    "protecting": "A videó és a feliratok titkosítása és ellenőrzése…",
+    "protectionHint": "A Translator által tárolt videók és feliratok titkosított tárhelyre kerülnek. Előbb zárja be a videót. Az exportált másolatok, az ügynökök munkaterületei és a biztonsági mentések nem kapnak védelmet.",
+    "passwordHint": "Használjon legalább 8 karaktert. Az elfelejtett jelszót a Translator nem tudja visszaállítani. A mappák a lap bezárásakor, a számítógép zárolásakor vagy 15 perc inaktivitás után zárolódnak.",
+    "deleteVideoConfirm": "Véglegesen törli ezt a privát videót és a feliratait? Ez nem vonható vissza.",
+    "deleteFolderConfirm": "Törli ezt az üres mappát?",
+    "saveCopy": "Másolat mentése",
+    "exportConfirm": "Menti a videó és a feliratok titkosítatlan másolatát? A másolatot bárki megnyithatja, aki hozzáfér a célmappához. A titkosított eredeti ebben a mappában marad."
   }
 }

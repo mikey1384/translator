@@ -1,5 +1,4 @@
 import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
-import log from 'electron-log';
 import { FileManager } from '../../file-manager.js';
 import { GenerateSubtitlesFullResult } from '../types.js';
 
@@ -180,9 +179,7 @@ export function normalizeSubtitleSegments(
 export async function finalizePass({
   segments,
   speechIntervals,
-  fileManager,
   progressCallback,
-  operationId,
 }: {
   segments: void | SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
@@ -200,37 +197,15 @@ export async function finalizePass({
 
   const finalSrtContent = buildSrt({ segments: items, mode: 'dual' });
 
-  let tempFilePath: string | undefined;
-  let tempFileError: string | undefined;
-  let tempFileSaved = false;
-  try {
-    tempFilePath = await fileManager.writeTempFile(finalSrtContent, '.srt');
-    tempFileSaved = true;
-  } catch (error) {
-    // Non-fatal: returning subtitle content to renderer is the primary output.
-    tempFileError = error instanceof Error ? error.message : String(error);
-    const opPrefix = operationId ? `[${operationId}] ` : '';
-    log.warn(
-      `${opPrefix}[finalizePass] Failed to persist temp SRT file: ${tempFileError}`,
-      error
-    );
-  }
-
-  progressCallback?.({
-    percent: scaleProgress(100, Stage.REVIEW, Stage.FINAL),
-    stage: tempFileSaved
-      ? 'Saved temporary subtitle file'
-      : 'Subtitles ready (temporary save unavailable)',
-    phaseKey: 'finalize',
-  });
-
+  // Both consumers return the SRT in their IPC result and persist it in the
+  // subtitle document library. An unowned scratch copy is unnecessary and
+  // would retain plaintext after a video moves into a private folder.
   progressCallback?.({
     percent: scaleProgress(100, Stage.FINAL, Stage.END),
-    stage: tempFileSaved
-      ? 'Processing complete!'
-      : 'Processing complete (temporary save unavailable)',
+    stage: 'Processing complete!',
     phaseKey: 'completed',
     partialResult: finalSrtContent,
+    partialSegments: items,
     current: items.length,
     total: items.length,
     unit: 'segments',
@@ -240,8 +215,6 @@ export async function finalizePass({
     subtitles: finalSrtContent,
     segments: items,
     speechIntervals: speechIntervals,
-    tempFileSaved,
-    tempFilePath,
-    tempFileError,
+    tempFileSaved: false,
   };
 }

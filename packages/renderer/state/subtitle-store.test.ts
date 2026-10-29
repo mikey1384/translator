@@ -3,6 +3,41 @@ import assert from 'node:assert/strict';
 
 import { replaceLiteral, useSubStore } from './subtitle-store';
 
+test('structured translations match stable cue IDs even with identical timestamps', () => {
+  const cues = ['a', 'b', 'c'].map((id, index) => ({
+    id,
+    index: index + 1,
+    start: 1,
+    end: 2,
+    original: 'Two\nsource lines',
+  }));
+  useSubStore.getState().load(cues);
+  useSubStore
+    .getState()
+    .applyTranslations([{ ...cues[1], translation: '두 줄' }], {
+      markDirty: true,
+      matchByIndex: false,
+    });
+  assert.equal(useSubStore.getState().segments.a.translation, undefined);
+  assert.equal(useSubStore.getState().segments.b.translation, '두 줄');
+  assert.equal(useSubStore.getState().segments.c.translation, undefined);
+  assert.equal(useSubStore.getState().dirty, true);
+  assert.equal(useSubStore.getState().segments.b.original, 'Two\nsource lines');
+});
+
+test('transcription coverage is restored from its document and cleared on another import', () => {
+  const cue = { id: 'coverage', index: 1, start: 0, end: 10, original: 'Done' };
+  const coverage = { endSec: 120, durationSec: 120 };
+  useSubStore.getState().load([cue], null, 'fresh', null, null, null, null, {
+    transcriptionCoverage: coverage,
+  });
+  assert.deepEqual(useSubStore.getState().transcriptionCoverage, coverage);
+  useSubStore
+    .getState()
+    .load([{ ...cue, id: 'other' }], '.local/other.srt', 'disk');
+  assert.equal(useSubStore.getState().transcriptionCoverage, null);
+});
+
 test('clearConfidence preserves word timings while clearing Whisper review hints', () => {
   const words = [
     { start: 0.1, end: 0.4, word: 'Hello' },

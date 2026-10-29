@@ -43,6 +43,7 @@ export async function saveMountedSubtitleDocument(
     activeLinkedFileMode: subtitleState.activeFileMode ?? null,
     activeLinkedFileRole: subtitleState.activeFileRole ?? null,
     transcriptionEngine: subtitleState.transcriptionEngine ?? null,
+    transcriptionCoverage: subtitleState.transcriptionCoverage,
   });
   if (!result.success || !result.document) {
     return {

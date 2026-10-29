@@ -172,7 +172,8 @@
     "diskFull": "Disk Anda penuh. Kosongkan sebagian ruang, lalu coba lagi.",
     "cancelDubbingFailedPlain": "Sulih suara tidak bisa dihentikan. Coba lagi.",
     "cancelTranslationFailedPlain": "Terjemahan tidak bisa dihentikan. Coba lagi.",
-    "cancelSummaryFailedPlain": "Ringkasan tidak bisa dihentikan. Coba lagi."
+    "cancelSummaryFailedPlain": "Ringkasan tidak bisa dihentikan. Coba lagi.",
+    "translationIncomplete": "Beberapa baris tidak berhasil diterjemahkan. Terjemahan belum lengkap. Coba lagi."
   },
   "input": {
     "connect": "Hubungkan",
@@ -374,7 +375,16 @@
     "dropWhileBusy": "Translator sedang memproses video ini. Lepaskan file lagi setelah selesai.",
     "dropNotSupported": "Lepaskan video, file audio, atau file subtitle .srt.",
     "batchDownloadRunning": "Translator sedang mengunduh beberapa video. Tunggu sampai selesai, atau batalkan unduhannya.",
-    "quality": "Kualitas"
+    "quality": "Kualitas",
+    "webVideo": {
+      "finding": "Mencari video…",
+      "choose": "Pilih video",
+      "instruction": "Putar video yang ingin diunduh.",
+      "protected": "Video ini dilindungi dan tidak dapat diunduh.",
+      "noVideo": "Tidak ditemukan video yang bisa diunduh di halaman ini.",
+      "openInApp": "Buka halaman ini di Translator untuk memilih video.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Bahasa tujuan",
@@ -1356,7 +1366,7 @@
     "dropHere": "Lepaskan untuk menerjemahkan ke {{language}}",
     "makeItSpeak": "Terjemahkan ke {{language}}",
     "downloadOnly": "Unduh saja",
-    "helper": "Tempel tautan YouTube, TikTok, Instagram, atau X — atau seret file video ke sini",
+    "helper": "Tempel tautan video atau halaman web, atau seret file video ke sini",
     "chooseFile": "Pilih file",
     "into": "Ke",
     "dropNotMedia": "Hanya file video atau audio yang bisa diterjemahkan.",
@@ -1442,7 +1452,8 @@
     "statusLines": "{{count}} baris subtitle",
     "checkingFile": "Membaca file…",
     "statusLoaded": "{{count}} baris dimuat",
-    "interruptedTranslateSubtitles": "Terjemahan subtitle ini ke {{language}} terhenti saat Translator ditutup."
+    "interruptedTranslateSubtitles": "Terjemahan subtitle ini ke {{language}} terhenti saat Translator ditutup.",
+    "currentSubtitle": "Subtitel saat ini"
   },
   "subtitleStyles": {
     "Cinema": "Kuning bioskop",
@@ -1611,5 +1622,47 @@
     "openSettings": "Buka Pengaturan",
     "supportSubject": "Menit saya hilang setelah Translator mereset komputer ini",
     "settingsResetKeptLanguage": "File pengaturan Translator rusak, jadi preferensi Anda direset: bahasa subtitle, kunci API, dan opsi lainnya. Bahasa antarmuka Anda tetap sama. Salinan file yang rusak sudah disimpan. Silakan periksa Pengaturan."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Tidak dapat menyelesaikan proses. Salinan terenkripsi tetap disimpan jika pemindahan belum selesai. Coba lagi.",
+      "in_use": "Tutup video di semua tab dan selesaikan atau simpan pekerjaan yang sedang berjalan, lalu coba lagi.",
+      "managed_only": "Hanya video yang disimpan di pustaka Translator yang dapat dipindahkan ke folder pribadi.",
+      "unsupported_file": "File ini digunakan bersama atau berada di luar pustaka Translator sehingga tidak dapat dipindahkan dengan aman.",
+      "password_length": "Gunakan kata sandi minimal 8 karakter.",
+      "password_mismatch": "Kata sandi tidak cocok.",
+      "incorrect_password": "Kata sandi salah.",
+      "locked": "Buka kunci folder terlebih dahulu.",
+      "not_empty": "Pindahkan atau hapus video sebelum menghapus folder.",
+      "source_changed": "Video atau subtitle berubah saat dipindahkan. Salinan terenkripsi tetap disimpan. Buka kunci folder untuk mencoba lagi.",
+      "pending": "Pemindahan belum selesai. Buka kunci folder untuk mencoba lagi.",
+      "corrupt": "Folder atau file terenkripsi ini rusak. Pulihkan dari cadangan.",
+      "full": "Pustaka penuh. Hapus folder atau video yang tidak digunakan terlebih dahulu.",
+      "invalid_name": "Masukkan nama folder sepanjang 1–80 karakter.",
+      "not_found": "Folder atau video ini sudah tidak tersedia."
+    },
+    "folders": "Folder",
+    "allVideos": "Semua video",
+    "unfiled": "Tanpa folder",
+    "newFolder": "Folder baru",
+    "privateFolder": "Folder pribadi",
+    "rename": "Ubah nama",
+    "move": "Pindahkan ke folder",
+    "lock": "Kunci",
+    "unlock": "Buka kunci",
+    "name": "Nama folder",
+    "password": "Kata sandi",
+    "confirmPassword": "Konfirmasi kata sandi",
+    "watch": "Tonton",
+    "empty": "Folder ini kosong.",
+    "lockedHint": "Buka kunci folder untuk melihat videonya.",
+    "pending": "Perlindungan belum selesai — buka kunci untuk mencoba lagi",
+    "protecting": "Mengenkripsi dan memeriksa video serta subtitle…",
+    "protectionHint": "Video dan subtitle yang disimpan Translator akan dipindahkan ke penyimpanan terenkripsi. Tutup video terlebih dahulu. Salinan ekspor, ruang kerja agen, dan cadangan tidak dilindungi.",
+    "passwordHint": "Gunakan minimal 8 karakter. Translator tidak dapat memulihkan kata sandi yang terlupa. Folder terkunci saat tab ditutup, komputer dikunci, atau tidak digunakan selama 15 menit.",
+    "deleteVideoConfirm": "Hapus permanen video pribadi ini beserta subtitlenya? Tindakan ini tidak dapat dibatalkan.",
+    "deleteFolderConfirm": "Hapus folder kosong ini?",
+    "saveCopy": "Simpan salinan",
+    "exportConfirm": "Simpan salinan video dan subtitle tanpa enkripsi? Siapa pun yang dapat mengakses lokasi tujuan bisa membuka salinan tersebut. Versi asli yang terenkripsi tetap ada di folder ini."
   }
 }

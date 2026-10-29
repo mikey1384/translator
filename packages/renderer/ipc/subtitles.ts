@@ -4,6 +4,8 @@ import type {
   ExposedRenderResult,
   ProgressEventCallback,
   GenerateSubtitlesResult,
+  TranslateSubtitlesOptions,
+  TranslateSubtitlesResult,
   DubSubtitlesOptions,
   DubSubtitlesResult,
   TranslateOneLineResult,
@@ -77,19 +79,9 @@ export function setTargetLanguage(
   return window.electron.setSubtitleTargetLanguage(lang);
 }
 
-export function translateSubtitles(options: {
-  subtitles: string;
-  sourceLanguage?: string;
-  targetLanguage: string;
-  operationId?: string;
-  qualityTranslation?: boolean;
-}): Promise<{
-  success: boolean;
-  translatedSubtitles?: string;
-  cancelled?: boolean;
-  error?: string;
-  operationId?: string;
-}> {
+export function translateSubtitles(
+  options: TranslateSubtitlesOptions
+): Promise<TranslateSubtitlesResult> {
   // Ensure sourceLanguage is a string for type contract if not provided
   const payload = {
     sourceLanguage: '',

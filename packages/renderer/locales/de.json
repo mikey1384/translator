@@ -173,7 +173,8 @@
     "diskFull": "Dein Speicher ist voll. Mach etwas Platz frei und versuch es noch mal.",
     "cancelDubbingFailedPlain": "Die Synchronfassung ließ sich nicht abbrechen. Versuch es noch mal.",
     "cancelTranslationFailedPlain": "Die Übersetzung ließ sich nicht abbrechen. Versuch es noch mal.",
-    "cancelSummaryFailedPlain": "Die Zusammenfassung ließ sich nicht abbrechen. Versuch es noch mal."
+    "cancelSummaryFailedPlain": "Die Zusammenfassung ließ sich nicht abbrechen. Versuch es noch mal.",
+    "translationIncomplete": "Einige Zeilen konnten nicht übersetzt werden. Die Übersetzung ist unvollständig. Versuche es erneut."
   },
   "input": {
     "connect": "Verbinden",
@@ -376,7 +377,16 @@
     "dropWhileBusy": "Translator arbeitet gerade an diesem Video. Leg die Datei noch mal ab, wenn es fertig ist.",
     "dropNotSupported": "Leg ein Video, eine Audiodatei oder eine .srt-Untertiteldatei ab.",
     "batchDownloadRunning": "Translator lädt gerade mehrere Videos herunter. Warte, bis sie fertig sind, oder brich den Download ab.",
-    "quality": "Qualität"
+    "quality": "Qualität",
+    "webVideo": {
+      "finding": "Videos werden gesucht…",
+      "choose": "Video auswählen",
+      "instruction": "Spiele das Video ab, das du herunterladen möchtest.",
+      "protected": "Dieses Video ist geschützt und kann nicht heruntergeladen werden.",
+      "noVideo": "Auf dieser Seite wurde kein herunterladbares Video gefunden.",
+      "openInApp": "Öffne diese Seite in Translator, um ein Video auszuwählen.",
+      "video": "Video {{number}}"
+    }
   },
   "subtitles": {
     "outputLanguage": "Ausgabesprache",
@@ -1368,7 +1378,7 @@
     "dropHere": "Hier ablegen, um das Video auf {{language}} zu übersetzen",
     "makeItSpeak": "Auf {{language}} übersetzen",
     "downloadOnly": "Nur herunterladen",
-    "helper": "Füge einen Link von YouTube, TikTok, Instagram oder X ein – oder lege hier eine Videodatei ab",
+    "helper": "Füge einen Video- oder Webseitenlink ein oder ziehe eine Videodatei hierher",
     "chooseFile": "Datei wählen",
     "into": "Auf",
     "dropNotMedia": "Lege eine Video- oder Audiodatei ab, um sie zu übersetzen.",
@@ -1465,7 +1475,8 @@
     "checkingFile": "Datei wird gelesen…",
     "statusLoaded": "{{count}} Zeilen geladen",
     "statusLoaded_one": "{{count}} Zeile geladen",
-    "interruptedTranslateSubtitles": "Translator wurde geschlossen, bevor diese Untertitel fertig auf {{language}} übersetzt waren."
+    "interruptedTranslateSubtitles": "Translator wurde geschlossen, bevor diese Untertitel fertig auf {{language}} übersetzt waren.",
+    "currentSubtitle": "Aktueller Untertitel"
   },
   "subtitleStyles": {
     "Cinema": "Kinogelb",
@@ -1639,5 +1650,47 @@
     "openSettings": "Einstellungen öffnen",
     "supportSubject": "Meine Minuten fehlen, seit Translator diesen Computer zurückgesetzt hat",
     "settingsResetKeptLanguage": "Die Einstellungsdatei von Translator war beschädigt, deshalb wurden deine Einstellungen zurückgesetzt: Untertitelsprache, API-Schlüssel und weitere Optionen. Die Sprache der Oberfläche wurde beibehalten. Eine Kopie der beschädigten Datei wurde aufbewahrt. Sieh bitte in den Einstellungen nach."
+  },
+  "libraryFolders": {
+    "errors": {
+      "storage_failed": "Der Vorgang konnte nicht abgeschlossen werden. Bei einer ausstehenden Übertragung bleibt die verschlüsselte Kopie erhalten. Versuche es erneut.",
+      "in_use": "Schließe das Video in allen Tabs und beende oder speichere laufende Arbeiten.",
+      "managed_only": "Nur Videos in der Translator-Bibliothek können in einen privaten Ordner verschoben werden.",
+      "unsupported_file": "Diese Datei wird gemeinsam verwendet oder liegt außerhalb der Translator-Bibliothek und kann nicht sicher verschoben werden.",
+      "password_length": "Verwende ein Passwort mit mindestens 8 Zeichen.",
+      "password_mismatch": "Die Passwörter stimmen nicht überein.",
+      "incorrect_password": "Falsches Passwort.",
+      "locked": "Entsperre zuerst den Ordner.",
+      "not_empty": "Verschiebe oder lösche die Videos, bevor du den Ordner löschst.",
+      "source_changed": "Video oder Untertitel wurden während des Verschiebens geändert. Die verschlüsselte Kopie bleibt erhalten. Entsperre den Ordner und versuche es erneut.",
+      "pending": "Das Verschieben ist noch nicht abgeschlossen. Entsperre den Ordner und versuche es erneut.",
+      "corrupt": "Dieser verschlüsselte Ordner oder diese Datei ist beschädigt. Stelle eine Sicherung wieder her.",
+      "full": "Die Bibliothek ist voll. Entferne ungenutzte Ordner oder Videos.",
+      "invalid_name": "Gib einen Ordnernamen mit 1 bis 80 Zeichen ein.",
+      "not_found": "Dieser Ordner oder dieses Video ist nicht mehr verfügbar."
+    },
+    "folders": "Ordner",
+    "allVideos": "Alle Videos",
+    "unfiled": "Ohne Ordner",
+    "newFolder": "Neuer Ordner",
+    "privateFolder": "Privater Ordner",
+    "rename": "Umbenennen",
+    "move": "In Ordner verschieben",
+    "lock": "Sperren",
+    "unlock": "Entsperren",
+    "name": "Ordnername",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "watch": "Ansehen",
+    "empty": "Dieser Ordner ist leer.",
+    "lockedHint": "Entsperre den Ordner, um seine Videos zu sehen.",
+    "pending": "Schutz unvollständig – zum Wiederholen entsperren",
+    "protecting": "Video und Untertitel werden verschlüsselt und geprüft…",
+    "protectionHint": "Von Translator gespeicherte Videos und Untertitel werden in einen verschlüsselten Speicher verschoben. Schließe zuerst das Video. Exportierte Kopien, Agent-Arbeitsbereiche und Sicherungen sind nicht geschützt.",
+    "passwordHint": "Verwende mindestens 8 Zeichen. Translator kann vergessene Passwörter nicht wiederherstellen. Ordner werden beim Schließen des Tabs, beim Sperren des Computers oder nach 15 Minuten Inaktivität gesperrt.",
+    "deleteVideoConfirm": "Dieses private Video und seine Untertitel endgültig löschen? Das lässt sich nicht rückgängig machen.",
+    "deleteFolderConfirm": "Diesen leeren Ordner löschen?",
+    "saveCopy": "Kopie speichern",
+    "exportConfirm": "Eine unverschlüsselte Kopie des Videos und der Untertitel speichern? Alle mit Zugriff auf den Zielordner können die Kopie öffnen. Das verschlüsselte Original bleibt in diesem Ordner."
   }
 }
