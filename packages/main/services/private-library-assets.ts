@@ -66,12 +66,45 @@ function hash(value: string): string {
 async function readJson(file: string): Promise<Row | null> {
   try {
     const stat = await fs.lstat(file);
-    if (!stat.isFile() || stat.size > 32 * 1024 ** 2)
-      throw new PrivateLibraryError('corrupt');
+    if (!stat.isFile()) throw new PrivateLibraryError('corrupt');
+    // These are the app's whole-library indexes, which can legitimately contain
+    // many linked subtitle snapshots. Match their owning services' readers;
+    // the encrypted per-entry JSON retains its separate bounded size check.
     return JSON.parse(await fs.readFile(file, 'utf8'));
   } catch (error: any) {
     if (error.code === 'ENOENT') return null;
     throw error;
+  }
+}
+async function assertOwnedAssetParent(
+  realUserData: string,
+  file: string,
+  error: 'unsupported_file' | 'source_changed'
+): Promise<void> {
+  // Resolve both sides. Electron's configured root can differ from the disk's
+  // spelling on case-insensitive volumes, or itself be an intentional alias.
+  // Keep case-sensitive containment of real paths so child links cannot escape.
+  const realParent = await fs.realpath(path.dirname(file));
+  if (realParent !== realUserData && !under(realUserData, realParent))
+    throw new PrivateLibraryError(error);
+}
+async function assertUnsharedSourcePaths(
+  row: Row,
+  videoPath: string | undefined,
+  error: 'unsupported_file' | 'source_changed'
+): Promise<void> {
+  for (const alias of list(row.sourceVideoPaths ?? row.sourceVideoPath)) {
+    if (normalized(alias) === normalized(videoPath)) continue;
+    try {
+      await fs.lstat(alias);
+    } catch (cause: any) {
+      // Catalogs retain previous locations after a move. Missing aliases are
+      // provenance, not another live owner. A dangling link still counts as an
+      // owner; permission and I/O failures must never be mistaken for absence.
+      if (cause.code === 'ENOENT' || cause.code === 'ENOTDIR') continue;
+      throw new PrivateLibraryError(error);
+    }
+    throw new PrivateLibraryError(error);
   }
 }
 export function withPrivateAssetLocks<T>(work: () => Promise<T>): Promise<T> {
@@ -93,6 +126,7 @@ export async function collectPrivateAssets(
     path.dirname(item.localPath) !== path.join(userData, 'downloaded-media')
   )
     throw new PrivateLibraryError('managed_only');
+  const realUserData = await fs.realpath(userData);
   const plan: PrivateTransferPlan = { files: [], indexes: [] };
   const paths = new Set<string>();
   const libraryIds = new Set<string>();
@@ -115,9 +149,7 @@ export async function collectPrivateAssets(
       throw new PrivateLibraryError('unsupported_file');
     // Resolve every parent too; a symlinked app subdirectory cannot escape.
     try {
-      const real = await fs.realpath(path.dirname(file));
-      if (real !== userData && !under(userData, real))
-        throw new PrivateLibraryError('unsupported_file');
+      await assertOwnedAssetParent(realUserData, file, 'unsupported_file');
       const identity = await fileIdentity(file);
       paths.add(file);
       plan.files.push({ sourcePath: file, kind, label, mime, identity });
@@ -179,15 +211,8 @@ export async function collectPrivateAssets(
     if (!rows.length) continue;
     plan.indexes.push({ path: indexPath, key: d.key, records: rows });
     for (const row of rows) {
-      // Never remove a document also associated with another source. The user
-      // must resolve the shared ownership before making this download private.
-      if (
-        list(row.sourceVideoPaths ?? row.sourceVideoPath).some(
-          p => normalized(p) !== normalized(item.localPath)
-        )
-      ) {
-        throw new PrivateLibraryError('unsupported_file');
-      }
+      // Never remove a document still associated with another existing source.
+      await assertUnsharedSourcePaths(row, item.localPath, 'unsupported_file');
       for (const identity of list(
         row.sourceVideoAssetIdentities ?? row.sourceVideoAssetIdentity
       ))
@@ -264,6 +289,7 @@ export async function cleanPrivateAssets(
   entry: PrivateEntry,
   removeHistory: () => void
 ): Promise<void> {
+  const realUserData = await fs.realpath(userData);
   const replacements: { path: string; index: Row }[] = [];
   for (const change of entry.plan.indexes) {
     const definition = definitions.find(
@@ -272,6 +298,14 @@ export async function cleanPrivateAssets(
         change.key === d.key
     );
     if (!definition) throw new PrivateLibraryError('corrupt');
+    // A previously missing alias may have been restored during encryption or
+    // a pending transfer. Check even if an earlier cleanup removed the index.
+    for (const saved of change.records)
+      await assertUnsharedSourcePaths(
+        saved,
+        entry.item.localPath,
+        'source_changed'
+      );
     const index = await readJson(change.path);
     if (!index) continue;
     const rows = index[change.key];
@@ -307,6 +341,11 @@ export async function cleanPrivateAssets(
     )
       throw new PrivateLibraryError('corrupt');
     try {
+      await assertOwnedAssetParent(
+        realUserData,
+        asset.sourcePath,
+        'source_changed'
+      );
       const s = await fs.lstat(asset.sourcePath);
       if (
         !s.isFile() ||
