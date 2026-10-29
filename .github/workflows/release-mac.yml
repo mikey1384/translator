@@ -135,6 +135,7 @@ jobs:
           npm test
           npm run security:dependencies
           npm run security:runtime
+          npm audit --omit=dev --audit-level=high
 
       # ---------- Rebuild native modules for both architectures ----------
       - name: Rebuild native modules for x64

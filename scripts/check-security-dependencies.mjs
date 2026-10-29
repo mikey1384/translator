@@ -60,15 +60,35 @@ const unsafeFastUriPaths = fastUriPackages
       !/^3\.\d+\.\d+$/.test(entry.version) ||
       major !== 3 ||
       minor < 1 ||
-      (minor === 1 && patch < 8)
+      (minor === 1 && patch < 9)
     );
   })
   .map(([packagePath]) => packagePath);
 
 if (unsafeFastUriPaths.length > 0) {
   throw new Error(
-    `fast-uri security fixes require 3.1.8 or newer within v3: ${unsafeFastUriPaths.join(', ')}`
+    `fast-uri security fixes require 3.1.9 or newer within v3: ${unsafeFastUriPaths.join(', ')}`
   );
+}
+
+for (const [name, floor] of [
+  ['zod', [4, 6, 6]],
+  ['puppeteer-core', [25, 13, 0]],
+]) {
+  const matches = Object.entries(packages).filter(
+    ([packagePath]) =>
+      packagePath.endsWith(`/node_modules/${name}`) ||
+      packagePath === `node_modules/${name}`
+  );
+  for (const [packagePath, entry] of matches) {
+    const version = entry.version.split('.').map(Number);
+    const difference = floor.map((n, i) => version[i] - n).find(n => n !== 0);
+    if (!/^\d+\.\d+\.\d+$/.test(entry.version) || difference < 0) {
+      throw new Error(
+        `${name} requires ${floor.join('.')} or newer: ${packagePath}`
+      );
+    }
+  }
 }
 
 const vulnerableExtractZipPaths = Object.keys(packages).filter(packagePath =>
