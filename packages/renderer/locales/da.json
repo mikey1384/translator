@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Vælg videoen",
     "burnChooseSubtitles": "Vælg de undertekster, der skal brændes ind",
     "runBlockedBusy": "Translator arbejder stadig på den nuværende video. Prøv igen, når den er færdig.",
-    "downloadCancelled": "Download annulleret."
+    "downloadCancelled": "Download annulleret.",
+    "examples": {
+      "title": "Prøv et eksempel",
+      "webpage": "Video på en webside",
+      "hint": "Vælg et eksempel for at indsætte linket, og klik derefter på {{download}}.",
+      "ready": "Linket er indsat ovenfor. Klik på {{download}}, når du er klar."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Undertekster",

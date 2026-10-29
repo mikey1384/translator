@@ -1405,7 +1405,13 @@
     "burnChooseVideo": "Válaszd ki a videót",
     "burnChooseSubtitles": "Válaszd ki a beégetendő feliratot",
     "runBlockedBusy": "A Translator még az aktuális videón dolgozik. Próbáld újra, ha végzett.",
-    "downloadCancelled": "Letöltés megszakítva."
+    "downloadCancelled": "Letöltés megszakítva.",
+    "examples": {
+      "title": "Példa kipróbálása",
+      "webpage": "Videó egy weboldalon",
+      "hint": "Válassz egy példát a hivatkozás beillesztéséhez, majd kattints a „{{download}}” gombra.",
+      "ready": "A hivatkozás bekerült a fenti mezőbe. Ha készen állsz, kattints a „{{download}}” gombra."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Feliratok",

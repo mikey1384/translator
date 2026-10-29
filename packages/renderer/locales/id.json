@@ -1403,7 +1403,13 @@
     "burnChooseVideo": "Pilih videonya",
     "burnChooseSubtitles": "Pilih subtitle yang akan digabungkan",
     "runBlockedBusy": "Translator masih memproses video saat ini. Coba lagi setelah selesai.",
-    "downloadCancelled": "Unduhan dibatalkan."
+    "downloadCancelled": "Unduhan dibatalkan.",
+    "examples": {
+      "title": "Coba contoh",
+      "webpage": "Video di halaman web",
+      "hint": "Pilih contoh untuk mengisi tautan, lalu klik {{download}}.",
+      "ready": "Tautan sudah diisi di atas. Klik {{download}} saat siap."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Subtitle",

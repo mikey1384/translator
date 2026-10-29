@@ -1417,7 +1417,13 @@
     "burnChooseVideo": "Escolha o vídeo",
     "burnChooseSubtitles": "Escolha as legendas para embutir",
     "runBlockedBusy": "O Translator ainda está trabalhando no vídeo atual. Tente de novo quando ele terminar.",
-    "downloadCancelled": "Download cancelado."
+    "downloadCancelled": "Download cancelado.",
+    "examples": {
+      "title": "Experimente um exemplo",
+      "webpage": "Vídeo em uma página da web",
+      "hint": "Escolha um exemplo para preencher o link. Depois, clique em {{download}}.",
+      "ready": "O link já está no campo acima. Quando quiser, clique em {{download}}."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Legendas",

@@ -1405,7 +1405,13 @@
     "burnChooseVideo": "انتخاب ویدیو",
     "burnChooseSubtitles": "انتخاب زیرنویسی که روی ویدیو چسبانده شود",
     "runBlockedBusy": "Translator هنوز روی ویدیوی فعلی کار می‌کند. وقتی تمام شد دوباره امتحان کنید.",
-    "downloadCancelled": "دانلود لغو شد."
+    "downloadCancelled": "دانلود لغو شد.",
+    "examples": {
+      "title": "یک نمونه را امتحان کنید",
+      "webpage": "ویدیو در یک صفحهٔ وب",
+      "hint": "نمونه‌ای را انتخاب کنید تا پیوندش وارد شود، سپس روی «{{download}}» بزنید.",
+      "ready": "پیوند در کادر بالا وارد شد. هر وقت آماده بودید، روی «{{download}}» بزنید."
+    }
   },
   "workspace": {
     "subtitlesTitle": "زیرنویس",

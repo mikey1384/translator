@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Valitse video",
     "burnChooseSubtitles": "Valitse upotettava tekstitys",
     "runBlockedBusy": "Translator käsittelee vielä nykyistä videota. Yritä uudelleen, kun se on valmis.",
-    "downloadCancelled": "Lataus peruttu."
+    "downloadCancelled": "Lataus peruttu.",
+    "examples": {
+      "title": "Kokeile esimerkkiä",
+      "webpage": "Video verkkosivulla",
+      "hint": "Valitse esimerkki, niin linkki täytetään kenttään. Napsauta sitten {{download}}.",
+      "ready": "Linkki on nyt yllä olevassa kentässä. Kun olet valmis, napsauta {{download}}."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Tekstitys",

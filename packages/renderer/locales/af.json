@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Kies die video",
     "burnChooseSubtitles": "Kies die onderskrifte om in te brand",
     "runBlockedBusy": "Translator werk nog aan die huidige video. Probeer weer wanneer dit klaar is.",
-    "downloadCancelled": "Aflaai gekanselleer."
+    "downloadCancelled": "Aflaai gekanselleer.",
+    "examples": {
+      "title": "Probeer ’n voorbeeld",
+      "webpage": "Video op ’n webblad",
+      "hint": "Kies ’n voorbeeld om die skakel in te vul en klik dan op {{download}}.",
+      "ready": "Die skakel is hier bo ingevul. Klik op {{download}} wanneer jy gereed is."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Onderskrifte",

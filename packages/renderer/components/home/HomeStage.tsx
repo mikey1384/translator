@@ -21,6 +21,9 @@ import { logButton } from '../../utils/logger';
 import { openSubtitleFileIntoStore } from '../../utils/open-subtitle-file';
 import HomeLanguagePicker from './HomeLanguagePicker';
 import HomeRecentRow from './HomeRecentRow';
+import HomeExamples from './HomeExamples';
+import type { HomeVideoExample } from './home-examples';
+import { focusExampleUrl } from './home-example-focus';
 import { pickDroppedFile } from '../../utils/droppedFiles';
 import {
   dropBlockReason,
@@ -375,6 +378,19 @@ export default function HomeStage() {
     else rememberRecentTargetLanguage(language);
   };
 
+  const chooseExample = (
+    example: HomeVideoExample,
+    pointerActivation: boolean
+  ) => {
+    if (useUrlStore.getState().download.inProgress) return;
+    setUrlInput(example.url);
+    setDropError(null);
+    logButton('home_example_selected', { example: example.id });
+    // Show the ordinary, editable URL field. Never submit, open a browser,
+    // resolve media, or change the user's saved translation preference here.
+    focusExampleUrl(linkRef.current, example.url, pointerActivation);
+  };
+
   const runUrl = (target: 'download' | 'translate' = 'translate') => {
     const url = urlInput.trim();
     if (!url) {
@@ -552,6 +568,7 @@ export default function HomeStage() {
           </label>
           <input
             id="home-link"
+            dir="ltr"
             ref={linkRef}
             className={linkInput}
             value={urlInput}
@@ -622,6 +639,13 @@ export default function HomeStage() {
             />
           </div>
         </div>
+
+        <HomeExamples
+          hasRecentVideos={recentItems.length > 0}
+          urlInput={urlInput}
+          disabled={downloadInProgress}
+          onChoose={chooseExample}
+        />
 
         {dropError || linkError ? (
           <span className={dropMessage} role="alert">

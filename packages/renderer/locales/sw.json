@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Chagua video",
     "burnChooseSubtitles": "Chagua manukuu ya kuweka ndani ya video",
     "runBlockedBusy": "Translator bado inashughulikia video ya sasa. Jaribu tena ikimaliza.",
-    "downloadCancelled": "Upakuaji umeghairiwa."
+    "downloadCancelled": "Upakuaji umeghairiwa.",
+    "examples": {
+      "title": "Jaribu mfano",
+      "webpage": "Video kwenye ukurasa wa wavuti",
+      "hint": "Chagua mfano ili kujaza kiungo, kisha ubofye {{download}}.",
+      "ready": "Kiungo kimewekwa hapo juu. Ukiwa tayari, bofya {{download}}."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Manukuu",

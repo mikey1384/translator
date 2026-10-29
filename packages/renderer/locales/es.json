@@ -1417,7 +1417,13 @@
     "burnChooseVideo": "Elige el video",
     "burnChooseSubtitles": "Elige los subtítulos que quieres incrustar",
     "runBlockedBusy": "Translator todavía está trabajando en el video actual. Vuelve a intentarlo cuando termine.",
-    "downloadCancelled": "Descarga cancelada."
+    "downloadCancelled": "Descarga cancelada.",
+    "examples": {
+      "title": "Prueba un ejemplo",
+      "webpage": "Video en una página web",
+      "hint": "Elige un ejemplo para rellenar el enlace y luego pulsa {{download}}.",
+      "ready": "El enlace ya está arriba. Pulsa {{download}} cuando quieras."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Subtítulos",

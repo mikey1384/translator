@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "בחירת הסרטון",
     "burnChooseSubtitles": "בחירת הכתוביות לצריבה",
     "runBlockedBusy": "Translator עדיין עובד על הסרטון הנוכחי. נסו שוב כשהוא יסיים.",
-    "downloadCancelled": "ההורדה בוטלה."
+    "downloadCancelled": "ההורדה בוטלה.",
+    "examples": {
+      "title": "נסו דוגמה",
+      "webpage": "סרטון בדף אינטרנט",
+      "hint": "בחרו דוגמה כדי למלא את הקישור, ואז לחצו על „{{download}}”.",
+      "ready": "הקישור נוסף לשדה למעלה. כשתהיו מוכנים, לחצו על „{{download}}”."
+    }
   },
   "workspace": {
     "subtitlesTitle": "כתוביות",

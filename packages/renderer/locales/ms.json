@@ -1403,7 +1403,13 @@
     "burnChooseVideo": "Pilih video",
     "burnChooseSubtitles": "Pilih sari kata untuk dilekatkan",
     "runBlockedBusy": "Translator masih memproses video semasa. Cuba lagi selepas ia selesai.",
-    "downloadCancelled": "Muat turun dibatalkan."
+    "downloadCancelled": "Muat turun dibatalkan.",
+    "examples": {
+      "title": "Cuba contoh",
+      "webpage": "Video pada halaman web",
+      "hint": "Pilih contoh untuk mengisi pautan, kemudian klik {{download}}.",
+      "ready": "Pautan sudah diisi di atas. Klik {{download}} apabila anda bersedia."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Sari kata",

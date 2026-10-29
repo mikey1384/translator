@@ -1412,7 +1412,13 @@
     "burnChooseVideo": "वीडियो चुनें",
     "burnChooseSubtitles": "वीडियो पर लगाने के लिए सबटाइटल चुनें",
     "runBlockedBusy": "Translator अभी मौजूदा वीडियो पर काम कर रहा है। उसके पूरा होने पर फिर कोशिश करें।",
-    "downloadCancelled": "डाउनलोड रद्द कर दिया गया।"
+    "downloadCancelled": "डाउनलोड रद्द कर दिया गया।",
+    "examples": {
+      "title": "एक उदाहरण आज़माएँ",
+      "webpage": "वेब पेज पर मौजूद वीडियो",
+      "hint": "लिंक भरने के लिए कोई उदाहरण चुनें, फिर {{download}} पर क्लिक करें।",
+      "ready": "लिंक ऊपर भर दिया गया है। तैयार होने पर {{download}} पर क्लिक करें।"
+    }
   },
   "workspace": {
     "subtitlesTitle": "सबटाइटल",

@@ -1405,7 +1405,13 @@
     "burnChooseVideo": "ভিডিও বেছে নিন",
     "burnChooseSubtitles": "কোন সাবটাইটেল বসাবেন, বেছে নিন",
     "runBlockedBusy": "Translator এখনও এই ভিডিওটির কাজ করছে। শেষ হলে আবার চেষ্টা করুন।",
-    "downloadCancelled": "ডাউনলোড বাতিল হয়েছে।"
+    "downloadCancelled": "ডাউনলোড বাতিল হয়েছে।",
+    "examples": {
+      "title": "একটি উদাহরণ দেখুন",
+      "webpage": "ওয়েব পেজের ভিডিও",
+      "hint": "লিংক বসাতে একটি উদাহরণ বেছে নিন, তারপর {{download}}-এ ক্লিক করুন।",
+      "ready": "উপরের ঘরে লিংক বসানো হয়েছে। প্রস্তুত হলে {{download}}-এ ক্লিক করুন।"
+    }
   },
   "workspace": {
     "subtitlesTitle": "সাবটাইটেল",

@@ -1403,7 +1403,13 @@
     "burnChooseVideo": "选择视频",
     "burnChooseSubtitles": "选择要加到视频上的字幕",
     "runBlockedBusy": "Translator 正在处理当前视频，请等它完成后再试。",
-    "downloadCancelled": "已取消下载。"
+    "downloadCancelled": "已取消下载。",
+    "examples": {
+      "title": "试试示例",
+      "webpage": "网页上的视频",
+      "hint": "选择示例后，链接会填入上方输入框，再点击“{{download}}”。",
+      "ready": "链接已填入上方输入框。准备好后，点击“{{download}}”。"
+    }
   },
   "workspace": {
     "subtitlesTitle": "字幕",

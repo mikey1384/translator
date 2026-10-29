@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Videoyu seçin",
     "burnChooseSubtitles": "Gömülecek altyazıları seçin",
     "runBlockedBusy": "Translator hâlâ mevcut video üzerinde çalışıyor. Bitince yeniden deneyin.",
-    "downloadCancelled": "İndirme iptal edildi."
+    "downloadCancelled": "İndirme iptal edildi.",
+    "examples": {
+      "title": "Bir örnek deneyin",
+      "webpage": "Web sayfasındaki video",
+      "hint": "Bağlantıyı doldurmak için bir örnek seçin, ardından {{download}} düğmesine tıklayın.",
+      "ready": "Bağlantı yukarıya eklendi. Hazır olduğunuzda {{download}} düğmesine tıklayın."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Altyazılar",

@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Video auswählen",
     "burnChooseSubtitles": "Untertitel zum Einbrennen auswählen",
     "runBlockedBusy": "Translator arbeitet noch am aktuellen Video. Versuch es noch mal, wenn es fertig ist.",
-    "downloadCancelled": "Download abgebrochen."
+    "downloadCancelled": "Download abgebrochen.",
+    "examples": {
+      "title": "Beispiel ausprobieren",
+      "webpage": "Video auf einer Webseite",
+      "hint": "Wähle ein Beispiel aus, um den Link einzufügen. Klicke danach auf „{{download}}“.",
+      "ready": "Der Link steht jetzt oben. Klicke auf „{{download}}“, wenn du bereit bist."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Untertitel",

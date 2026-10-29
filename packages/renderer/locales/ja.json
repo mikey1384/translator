@@ -1403,7 +1403,13 @@
     "burnChooseVideo": "動画を選択",
     "burnChooseSubtitles": "動画に入れる字幕を選択",
     "runBlockedBusy": "Translatorは今の動画を処理中です。終わってから、もう一度お試しください。",
-    "downloadCancelled": "ダウンロードをキャンセルしました。"
+    "downloadCancelled": "ダウンロードをキャンセルしました。",
+    "examples": {
+      "title": "サンプルを試す",
+      "webpage": "ウェブページの動画",
+      "hint": "サンプルを選ぶとリンクが入力されます。その後「{{download}}」を押してください。",
+      "ready": "上の欄にリンクを入力しました。準備ができたら「{{download}}」を押してください。"
+    }
   },
   "workspace": {
     "subtitlesTitle": "字幕",

@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Kies de video",
     "burnChooseSubtitles": "Kies de ondertitels om in te branden",
     "runBlockedBusy": "Translator is nog bezig met de huidige video. Probeer het opnieuw als die klaar is.",
-    "downloadCancelled": "Download geannuleerd."
+    "downloadCancelled": "Download geannuleerd.",
+    "examples": {
+      "title": "Probeer een voorbeeld",
+      "webpage": "Video op een webpagina",
+      "hint": "Kies een voorbeeld om de link in te vullen en klik daarna op {{download}}.",
+      "ready": "De link staat hierboven. Klik op {{download}} wanneer je klaar bent."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Ondertitels",

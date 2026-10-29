@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Choose the video",
     "burnChooseSubtitles": "Choose the subtitles to burn in",
     "runBlockedBusy": "Translator is still working on the current video. Try again when it finishes.",
-    "downloadCancelled": "Download cancelled."
+    "downloadCancelled": "Download cancelled.",
+    "examples": {
+      "title": "Try an example",
+      "webpage": "Video on a webpage",
+      "hint": "Choose an example to fill in the link, then click {{download}}.",
+      "ready": "Link added above. Click {{download}} when you’re ready."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Subtitles",

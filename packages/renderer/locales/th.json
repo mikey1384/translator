@@ -1403,7 +1403,13 @@
     "burnChooseVideo": "เลือกวิดีโอ",
     "burnChooseSubtitles": "เลือกซับที่จะฝังลงในวิดีโอ",
     "runBlockedBusy": "Translator ยังทำงานกับวิดีโอนี้อยู่ ลองอีกครั้งเมื่อเสร็จแล้ว",
-    "downloadCancelled": "ยกเลิกการดาวน์โหลดแล้ว"
+    "downloadCancelled": "ยกเลิกการดาวน์โหลดแล้ว",
+    "examples": {
+      "title": "ลองใช้ตัวอย่าง",
+      "webpage": "วิดีโอบนหน้าเว็บ",
+      "hint": "เลือกตัวอย่างเพื่อใส่ลิงก์ แล้วคลิก {{download}}",
+      "ready": "ใส่ลิงก์ในช่องด้านบนแล้ว เมื่อพร้อม ให้คลิก {{download}}"
+    }
   },
   "workspace": {
     "subtitlesTitle": "ซับ",

@@ -1421,7 +1421,13 @@
     "burnChooseVideo": "Wybierz film",
     "burnChooseSubtitles": "Wybierz napisy do wtopienia",
     "runBlockedBusy": "Translator wciąż pracuje nad bieżącym filmem. Spróbuj ponownie, gdy skończy.",
-    "downloadCancelled": "Pobieranie anulowane."
+    "downloadCancelled": "Pobieranie anulowane.",
+    "examples": {
+      "title": "Wypróbuj przykład",
+      "webpage": "Film na stronie internetowej",
+      "hint": "Wybierz przykład, aby wstawić link, a potem kliknij „{{download}}”.",
+      "ready": "Link jest już wpisany powyżej. Gdy będziesz gotowy, kliknij „{{download}}”."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Napisy",

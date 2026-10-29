@@ -1403,7 +1403,13 @@
     "burnChooseVideo": "Chọn video",
     "burnChooseSubtitles": "Chọn phụ đề để chèn vào video",
     "runBlockedBusy": "Translator vẫn đang xử lý video hiện tại. Hãy thử lại khi xong.",
-    "downloadCancelled": "Đã hủy tải xuống."
+    "downloadCancelled": "Đã hủy tải xuống.",
+    "examples": {
+      "title": "Thử video mẫu",
+      "webpage": "Video trên trang web",
+      "hint": "Chọn một video mẫu để điền liên kết, rồi nhấn {{download}}.",
+      "ready": "Đã điền liên kết ở trên. Khi sẵn sàng, hãy nhấn {{download}}."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Phụ đề",

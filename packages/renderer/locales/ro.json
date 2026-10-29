@@ -1423,7 +1423,13 @@
     "burnChooseVideo": "Alege videoclipul",
     "burnChooseSubtitles": "Alege subtitrările de încorporat",
     "runBlockedBusy": "Translator încă lucrează la videoclipul curent. Încearcă din nou după ce termină.",
-    "downloadCancelled": "Descărcare anulată."
+    "downloadCancelled": "Descărcare anulată.",
+    "examples": {
+      "title": "Încearcă un exemplu",
+      "webpage": "Video pe o pagină web",
+      "hint": "Alege un exemplu pentru a completa linkul, apoi apasă pe „{{download}}”.",
+      "ready": "Linkul a fost introdus mai sus. Când ești gata, apasă pe „{{download}}”."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Subtitrări",

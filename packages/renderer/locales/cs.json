@@ -1421,7 +1421,13 @@
     "burnChooseVideo": "Vyberte video",
     "burnChooseSubtitles": "Vyberte titulky k vypálení",
     "runBlockedBusy": "Translator ještě pracuje na aktuálním videu. Zkuste to znovu, až skončí.",
-    "downloadCancelled": "Stahování zrušeno."
+    "downloadCancelled": "Stahování zrušeno.",
+    "examples": {
+      "title": "Vyzkoušet ukázku",
+      "webpage": "Video na webové stránce",
+      "hint": "Vyberte ukázku, tím se vyplní odkaz. Potom klikněte na „{{download}}“.",
+      "ready": "Odkaz je vyplněný výše. Až budete připraveni, klikněte na „{{download}}“."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Titulky",

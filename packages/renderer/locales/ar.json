@@ -1438,7 +1438,13 @@
     "burnChooseVideo": "اختر الفيديو",
     "burnChooseSubtitles": "اختر الترجمة التي تريد دمجها",
     "runBlockedBusy": "لا يزال Translator يعمل على الفيديو الحالي. حاول مرة أخرى بعد انتهائه.",
-    "downloadCancelled": "أُلغي التنزيل."
+    "downloadCancelled": "أُلغي التنزيل.",
+    "examples": {
+      "title": "جرّب مثالًا",
+      "webpage": "فيديو على صفحة ويب",
+      "hint": "اختر مثالًا لإدراج رابطه، ثم اضغط على «{{download}}».",
+      "ready": "أُدرج الرابط في الحقل أعلاه. اضغط على «{{download}}» عندما تكون مستعدًا."
+    }
   },
   "workspace": {
     "subtitlesTitle": "الترجمة",

@@ -1415,7 +1415,13 @@
     "burnChooseVideo": "Piliin ang video",
     "burnChooseSubtitles": "Piliin ang subtitle na ibu-burn",
     "runBlockedBusy": "Abala pa ang Translator sa kasalukuyang video. Subukan ulit kapag tapos na ito.",
-    "downloadCancelled": "Kinansela ang download."
+    "downloadCancelled": "Kinansela ang download.",
+    "examples": {
+      "title": "Subukan ang halimbawa",
+      "webpage": "Video sa isang webpage",
+      "hint": "Pumili ng halimbawa para mailagay ang link, saka pindutin ang {{download}}.",
+      "ready": "Nailagay na ang link sa itaas. Pindutin ang {{download}} kapag handa ka na."
+    }
   },
   "workspace": {
     "subtitlesTitle": "Subtitle",
