@@ -107,6 +107,11 @@ const LITERALS: Record<string, Literal> = Object.fromEntries(
         'Voice track assembled',
       ],
       ['Merging formats', 'mergingFormats', 'Joining video and audio…'],
+      [
+        'Converting video for playback',
+        'convertingForPlayback',
+        'Making the video playable in Translator…',
+      ],
       ['Overlay concat ready', 'subtitleLayerReady', 'Subtitle layer ready'],
       ['Post-processing', 'postProcessing', 'Finishing up…'],
       ['Prepared dubbed audio track', 'voiceTrackReady', 'Voice track ready'],

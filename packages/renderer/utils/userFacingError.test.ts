@@ -188,3 +188,23 @@ test('credit transfer errors come from the code, never the server sentence', () 
     'errors.network'
   );
 });
+
+test('a sign-in-only post is explained, not reported, and not offered as a retry', () => {
+  const fromCode = classifyError({
+    error: 'whatever',
+    errorCode: 'sign_in_required',
+  } as any);
+  assert.equal(fromCode.code, 'sign_in_required');
+  assert.equal(fromCode.report, 'none');
+  assert.equal(fromCode.retryable, false);
+  // Without the link the copy cannot name the site.
+  assert.equal(fromCode.i18nKey, 'errors.download.sign_in_required_unnamed');
+  // Older callers that only kept main's English sentence.
+  assert.equal(
+    classifyError(
+      "This post needs you to sign in to Instagram. Translator can't download private or sign-in-only posts.",
+      { task: 'download' }
+    ).code,
+    'sign_in_required'
+  );
+});

@@ -1,4 +1,5 @@
 import log from 'electron-log';
+import { siteDisplayName } from '../../../shared/helpers/web-video.js';
 import type { UrlDownloadErrorCode } from '../../../shared/constants/index.js';
 import {
   REGION_LOCKED_RE,
@@ -27,6 +28,8 @@ const MESSAGES: Record<UrlDownloadErrorCode, string> = {
     'This video is restricted to certain audiences. If your account can view it, connect to this site in Settings and try again.',
   login_required:
     'This video requires signing in. Connect to this site in Settings and try again.',
+  sign_in_required:
+    "This post needs you to sign in to this site. Translator can't download private or sign-in-only posts.",
   media_blocked:
     'Video download was blocked (HTTP 403), and no public automatic captions could be recovered.',
   access_refused: 'This site refused access to the video (HTTP 403).',
@@ -47,12 +50,33 @@ export function urlDownloadErrorMessage(code: UrlDownloadErrorCode): string {
   return MESSAGES[code] ?? MESSAGES.generic;
 }
 
+const YOUTUBE_HOST_RE =
+  /(^|\.)(youtube\.com|youtube-nocookie\.com|youtu\.be)$/i;
+
+function isYouTubeLink(url: string | undefined): boolean {
+  try {
+    return Boolean(url) && YOUTUBE_HOST_RE.test(new URL(url!).hostname);
+  } catch {
+    return false;
+  }
+}
+
+function signInRequiredMessage(url: string | undefined): string {
+  const site = url ? siteDisplayName(url) : '';
+  return site
+    ? `This post needs you to sign in to ${site}. Translator can't download private or sign-in-only posts.`
+    : MESSAGES.sign_in_required;
+}
+
 export function mapDownloadError({
   rawErrorMessage,
   stderrContent = '',
+  url,
 }: {
   rawErrorMessage: string;
   stderrContent?: string;
+  /** The link being downloaded; names the site in sign-in messages. */
+  url?: string;
 }): UrlDownloadUserError {
   const combinedErrorText = stripYtDlpDiagnosticEcho(
     `${rawErrorMessage}\n${stderrContent}`
@@ -91,6 +115,15 @@ export function mapDownloadError({
   }
   if (combinedErrorText.includes('http error 404')) {
     return pick('not_found');
+  }
+  // Before the 403 and "video data" rules: a sign-in wall is the reason
+  // even when the site answered 403 or with an empty response. YouTube keeps
+  // its Connect-in-Settings advice (members-only, age checks).
+  if (failureDetail.code === 'login_required' && url && !isYouTubeLink(url)) {
+    return {
+      code: 'sign_in_required',
+      message: signInRequiredMessage(url),
+    };
   }
   if (failureDetail.code === 'http_403_media') {
     return pick('media_blocked');

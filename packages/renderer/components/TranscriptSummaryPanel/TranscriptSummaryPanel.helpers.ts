@@ -8,6 +8,9 @@ import {
   isSourceVideoUnavailableError,
 } from '../../utils/sourceVideoErrors';
 import { formatDurationMinSec } from '../../utils/formatUnits';
+import { toFileUrl } from '../../../shared/helpers/file-url.js';
+
+export { toFileUrl };
 
 export function estimateSummaryCredits(
   charCount: number,
@@ -191,23 +194,6 @@ export function translateStageLabel(stage: string, t: TFunction): string {
     return t('summary.status.error');
   }
   return stage;
-}
-
-export function toFileUrl(p: string): string {
-  if (!p) return p;
-  if (p.startsWith('file://')) return p;
-  const normalized = p.replace(/\\/g, '/');
-
-  if (/^[a-zA-Z]:\//.test(normalized)) {
-    // Windows absolute path -> ensure triple slash
-    return `file:///${encodeURI(normalized)}`;
-  }
-
-  if (normalized.startsWith('/')) {
-    return `file://${encodeURI(normalized)}`;
-  }
-
-  return `file://${encodeURI(`/${normalized}`)}`;
 }
 
 function formatClock(total: number): string {

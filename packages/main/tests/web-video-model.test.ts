@@ -6,6 +6,8 @@ import {
   WebVideoDiscoveries,
   inspectWebVideoManifest,
   isProtectedWebVideoError,
+  classifyWebVideoCandidate,
+  visibleWebVideoCandidates,
 } from '../services/web-video-model.js';
 
 const page = 'https://example.com/watch';
@@ -217,4 +219,72 @@ test('browser lifetime survives selection lookup and ends on owner release, expi
   assert.equal(closed.length, 3); // release + expiry + oldest-capability eviction
   store.remove(10);
   assert.equal(closed.length, 19);
+});
+
+test('picker candidates: ads and placeholders are dropped, short clips only when nothing longer', () => {
+  const kind = (
+    url: string,
+    extra: { title?: string; durationSec?: number } = {}
+  ) => classifyWebVideoCandidate({ url, ...extra });
+  // NDTV, 2026-10-31: IMA pre-roll titled "Advertisement" and the player's
+  // 1 s "blackvideo" placeholder while the ad plays.
+  assert.equal(
+    kind('https://cdn.example.com/g9hhsasy_5_9999.mp4', {
+      title: 'Advertisement',
+      durationSec: 30,
+    }),
+    'ad'
+  );
+  assert.equal(
+    kind('https://www.ndtv.com/static/blackvideo.mp4', {
+      title: 'India-EU Free Trade Agreement',
+    }),
+    'placeholder'
+  );
+  assert.equal(
+    kind('https://redirector.googlevideo.com/x', { title: 'Ad' }),
+    'ad'
+  );
+  assert.equal(kind('https://s0.2mdn.net/videoplayback/1/clip.mp4'), 'ad');
+  assert.equal(
+    kind('https://pubads.g.doubleclick.net/gampad/ads?iu=/1/x&correlator=1'),
+    'ad'
+  );
+  assert.equal(kind('https://cdn.example.com/vast/creative.mp4'), 'ad');
+  assert.equal(
+    kind('https://cdn.example.com/preview.mp4', { durationSec: 5 }),
+    'short'
+  );
+  assert.equal(
+    kind('https://cdn.example.com/interview.m3u8', {
+      title: 'Interview with the minister',
+      durationSec: 1200,
+    }),
+    'main'
+  );
+  // An article that merely mentions ads is still content.
+  assert.equal(
+    kind('https://cdn.example.com/videos/ad-industry-report.mp4', {
+      title: 'Why ads cost more',
+    }),
+    'main'
+  );
+
+  const items = [
+    { id: 'preview', kind: 'short' as const },
+    { id: 'interview', kind: 'main' as const },
+    { id: 'ad', kind: 'ad' as const },
+    { id: 'black', kind: 'placeholder' as const },
+  ];
+  assert.deepEqual(
+    visibleWebVideoCandidates(items).map(item => item.id),
+    ['interview']
+  );
+  // A hub page of 5 s previews still lists them.
+  assert.deepEqual(
+    visibleWebVideoCandidates(
+      items.filter(item => item.id !== 'interview')
+    ).map(item => item.id),
+    ['preview']
+  );
 });

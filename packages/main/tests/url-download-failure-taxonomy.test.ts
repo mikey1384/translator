@@ -226,3 +226,72 @@ test('premieres and scheduled streams are recognised as upcoming live', () => {
   );
   assert.ok(!UPCOMING_LIVE_RE.test('ERROR: This video is unavailable'));
 });
+
+// Real yt-dlp 2026.10.26 output for the public-URL checks of 2026-10-31.
+const INSTAGRAM_EMPTY_MEDIA =
+  'ERROR: [Instagram] C-aN3yTg7Uq: Instagram sent an empty media response. Check if this post is accessible in your browser without being logged-in. If it is not, then use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Otherwise, if the post is accessible in browser without being logged-in, please report this issue on  https://github.com/yt-dlp/yt-dlp/issues?q= , filling out the appropriate issue template. Confirm you are on the latest version using  yt-dlp -U';
+const REDDIT_AUTH =
+  'ERROR: [Reddit] 1xeaia1: Account authentication is required. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies';
+const INSTAGRAM_RATE_LIMIT_LOGIN =
+  'ERROR: [Instagram] abc: Requested content is not available, rate-limit reached or login required. Use --cookies, --cookies-from-browser, --username and --password, --netrc-cmd, or --netrc (instagram) to provide account credentials';
+
+test('sign-in-only posts name the site instead of an unexplained failure', () => {
+  const cases: Array<[string, string, string]> = [
+    [
+      INSTAGRAM_EMPTY_MEDIA,
+      'https://www.instagram.com/reel/C-aN3yTg7Uq/',
+      'Instagram',
+    ],
+    [
+      REDDIT_AUTH,
+      'https://www.reddit.com/r/a/comments/1xeaia1/title/',
+      'Reddit',
+    ],
+    [
+      INSTAGRAM_RATE_LIMIT_LOGIN,
+      'https://www.instagram.com/p/abc/',
+      'Instagram',
+    ],
+    [
+      'ERROR: [generic] This video requires login',
+      'https://videos.example.org/watch/1',
+      'videos.example.org',
+    ],
+  ];
+  for (const [stderr, url, site] of cases) {
+    assert.equal(
+      classifyUrlDownloadFailureDetail({ stderr }).code,
+      'login_required',
+      site
+    );
+    const mapped = mapDownloadError({
+      rawErrorMessage: 'yt-dlp exited 1',
+      stderrContent: stderr,
+      url,
+    });
+    assert.equal(mapped.code, 'sign_in_required', site);
+    assert.equal(
+      mapped.message,
+      `This post needs you to sign in to ${site}. Translator can't download private or sign-in-only posts.`
+    );
+  }
+});
+
+test('YouTube sign-in walls keep the Connect advice, and bot checks stay human checks', () => {
+  assert.equal(
+    mapDownloadError({
+      rawErrorMessage: 'yt-dlp exited 1',
+      stderrContent:
+        'ERROR: [youtube] abc: Join this channel to get access to members-only content like this video',
+      url: 'https://www.youtube.com/watch?v=abc',
+    }).code,
+    'login_required'
+  );
+  assert.equal(
+    classifyUrlDownloadFailureDetail({
+      stderr:
+        "ERROR: [youtube] abc: Sign in to confirm you're not a bot. Use --cookies-from-browser or --cookies for the authentication.",
+    }).code,
+    'human_verification'
+  );
+});

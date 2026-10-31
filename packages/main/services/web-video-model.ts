@@ -326,3 +326,72 @@ export class WebVideoDiscoveries {
       if (value.expires <= this.now()) this.drop(key);
   }
 }
+
+// Ad servers and ad-video CDNs (Google IMA/DoubleClick, common SSPs). A stream
+// from one of these is never the page's video.
+const AD_HOST_RE =
+  /(^|\.)(doubleclick\.net|googlesyndication\.com|googleadservices\.com|2mdn\.net|imasdk\.googleapis\.com|googletagservices\.com|adnxs\.com|amazon-adsystem\.com|springserve\.com|spotxchange\.com|spotx\.tv|innovid\.com|tremorhub\.com|teads\.tv|adsrvr\.org|serving-sys\.com|moatads\.com|flashtalking\.com|smartadserver\.com|pubmatic\.com|rubiconproject\.com|openx\.net|criteo\.com|yieldmo\.com|unrulymedia\.com|adform\.net|aniview\.com|vidoomy\.com|outbrain\.com|taboola\.com)$/i;
+const AD_PATH_RE =
+  /\/(?:vast|vpaid|vmap|preroll|pre-roll|midroll|adserver)(?:[/_.-]|$)|[?&](?:ad_type|adtag|ad_unit|correlator)=/i;
+// Players park a tiny black/blank clip in the <video> while an ad plays.
+const PLACEHOLDER_PATH_RE =
+  /\/(?:black|blank|empty|placeholder|dummy|silence|silent)[-_]?(?:video|clip)?\d*\.(?:mp4|webm|m4v|mov)$/i;
+const AD_TITLE_RE =
+  /^\s*(?:advertisement|advertising|ad|ads|sponsored|promoted|anzeige|werbung|publicité|publicidad|pubblicità|реклама|광고|広告|广告|廣告)\s*$/i;
+
+/** Shorter than this is a teaser, hover preview or ad bumper, not the video. */
+export const SHORT_WEB_VIDEO_SEC = 15;
+
+export type WebVideoCandidateKind = 'ad' | 'placeholder' | 'short' | 'main';
+
+/**
+ * Generic ad/placeholder detection for streams found in the in-app browser.
+ * `adContext` is the page's own signal (the <video> sits in an IMA/ad
+ * container or is labelled as an ad).
+ */
+export function classifyWebVideoCandidate({
+  url,
+  title,
+  durationSec,
+  adContext,
+}: {
+  url: string;
+  title?: string;
+  durationSec?: number;
+  adContext?: boolean;
+}): WebVideoCandidateKind {
+  let host = '';
+  let path = '';
+  try {
+    const parsed = new URL(url);
+    host = parsed.hostname;
+    path = `${parsed.pathname}${parsed.search}`;
+  } catch {
+    /* Unparseable URLs never reach here; treat as content. */
+  }
+  if (adContext || AD_HOST_RE.test(host) || AD_PATH_RE.test(path)) return 'ad';
+  if (title && AD_TITLE_RE.test(title)) return 'ad';
+  if (PLACEHOLDER_PATH_RE.test(path.split('?')[0])) return 'placeholder';
+  if (
+    typeof durationSec === 'number' &&
+    durationSec > 0 &&
+    durationSec < SHORT_WEB_VIDEO_SEC
+  )
+    return 'short';
+  return 'main';
+}
+
+/**
+ * What the picker lists: ads and placeholders never; short clips only when
+ * the page has nothing longer (a hub page of previews). Longest first among
+ * clips, page order otherwise.
+ */
+export function visibleWebVideoCandidates<
+  T extends { kind: WebVideoCandidateKind },
+>(items: T[]): T[] {
+  const content = items.filter(
+    item => item.kind === 'main' || item.kind === 'short'
+  );
+  const main = content.filter(item => item.kind === 'main');
+  return main.length ? main : content;
+}
