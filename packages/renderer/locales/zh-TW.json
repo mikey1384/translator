@@ -907,7 +907,6 @@
     "checkoutNote": "透過 Stripe 在瀏覽器中一次付清，不用註冊帳號，也不是訂閱。時數會自動入帳。",
     "dubbingNote": "加上翻譯約多用 10% 時數；配音用得更多。",
     "iCancelledCheckout": "我已取消付款",
-    "checkoutStartFailed": "無法開始付款。請檢查網路連線後再試一次。",
     "loadFailed": "無法載入餘額，請檢查網路連線後再試一次。",
     "costOfBalanceMinutes": "{{cost}}（目前有 {{balance}}）",
     "timeLeft": "剩餘 {{time}}",
@@ -926,8 +925,16 @@
     "microPackLabelNoTime": "購買時數 — {{price}}",
     "microPackLabel": "購買時數 — {{price}} · 約 {{time}} 影片",
     "checkingPayment": "正在確認你的付款…",
-    "checkoutUnresolved": "如果你已付款，時數很快就會出現在這裡。還在付款嗎？請在瀏覽器中完成。",
-    "checkPaymentNow": "立即檢查"
+    "checkPaymentNow": "立即檢查",
+    "localCurrencyNote": "價格以美元計。付款頁面會盡可能以你的當地貨幣顯示金額。",
+    "checkoutAwaitingConfirmation": "正在等待付款確認。部分付款方式需要幾分鐘，Translator 會持續檢查。確認後時數會立即入帳。",
+    "checkoutFailed": {
+      "title": "付款頁面沒有開啟",
+      "message": "Translator 無法連線到付款頁面。請檢查網路連線後再試一次。如果問題持續，請寫信到 {{email}}，我們會協助你購買時數。",
+      "contact": "聯絡客服",
+      "retry": "再試一次",
+      "supportSubject": "我無法在 Translator 購買時數"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1045,7 +1052,7 @@
     },
     "calculatingCost": "計算費用中…",
     "welcomeCredits": {
-      "message": "你有免費時數，可以試用轉錄和翻譯（約 20 分鐘影片）。"
+      "message": "你有免費時數，可以試用轉錄和翻譯（約 {{minutes}} 分鐘影片）。"
     }
   },
   "findBar": {
@@ -1495,7 +1502,9 @@
     "notNow": "下次再說",
     "failedNeedMinutes": "已完成的部分都會保留。要翻完剩下的 {{remaining}} 分鐘，需要更多時數。",
     "failedNetwork": "網路連線中斷了。已完成的部分都會保留，恢復連線後再試一次。",
-    "noneBodyNextFree": "{{date}} 會補回免費時數，也可以現在花 {{price}} 翻成{{language}}。"
+    "noneBodyNextFree": "{{date}} 會補回免費時數，也可以現在花 {{price}} 翻成{{language}}。",
+    "checkoutAwaitingTitle": "正在等待付款確認",
+    "checkoutAwaitingBody": "部分付款方式需要幾分鐘才能確認。Translator 會持續檢查，付款一經確認，就會從中斷的地方繼續。"
   },
   "videoCost": {
     "covered": "剩餘時數就夠用",

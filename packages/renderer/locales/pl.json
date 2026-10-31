@@ -922,7 +922,6 @@
     "checkoutNote": "Jednorazowa płatność przez Stripe w przeglądarce. Bez konta i subskrypcji. Minuty pojawią się same.",
     "dubbingNote": "Dodanie tłumaczenia zużywa ok. 10% więcej minut, a dubbing jeszcze więcej.",
     "iCancelledCheckout": "Anulowano płatność",
-    "checkoutStartFailed": "Nie udało się rozpocząć płatności. Sprawdź połączenie i spróbuj ponownie.",
     "loadFailed": "Nie udało się wczytać salda. Sprawdź połączenie i spróbuj ponownie.",
     "costOfBalanceMinutes": "{{cost}} z twoich {{balance}}",
     "timeLeft": "Zostało {{time}}",
@@ -941,8 +940,16 @@
     "microPackLabelNoTime": "Kup minuty — {{price}}",
     "microPackLabel": "Kup minuty — {{price}} · ≈ {{time}} filmu",
     "checkingPayment": "Sprawdzamy płatność…",
-    "checkoutUnresolved": "Jeśli płatność już przeszła, minuty wkrótce się tu pojawią. Płatność w toku? Dokończ ją w przeglądarce.",
-    "checkPaymentNow": "Sprawdź teraz"
+    "checkPaymentNow": "Sprawdź teraz",
+    "localCurrencyNote": "Ceny w dolarach amerykańskich. Strona płatności pokaże kwotę w Twojej lokalnej walucie, jeśli to możliwe.",
+    "checkoutAwaitingConfirmation": "Czekamy na potwierdzenie płatności. Niektóre metody płatności trwają kilka minut, a Translator stale to sprawdza. Minuty pojawią się tu zaraz po potwierdzeniu.",
+    "checkoutFailed": {
+      "title": "Nie udało się otworzyć płatności",
+      "message": "Translator nie mógł połączyć się ze stroną płatności. Sprawdź połączenie z internetem i spróbuj ponownie. Jeśli to się powtarza, napisz do nas na {{email}}, a pomożemy Ci kupić minuty.",
+      "contact": "Napisz do pomocy",
+      "retry": "Spróbuj ponownie",
+      "supportSubject": "Nie mogę kupić minut w Translatorze"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1060,7 +1067,7 @@
     },
     "calculatingCost": "Obliczanie kosztu…",
     "welcomeCredits": {
-      "message": "Masz darmowe minuty, aby wypróbować transkrypcję i tłumaczenie (około 20 minut filmu)."
+      "message": "Masz darmowe minuty, aby wypróbować transkrypcję i tłumaczenie (około {{minutes}} minut filmu)."
     }
   },
   "findBar": {
@@ -1554,7 +1561,9 @@
     "failedNeedMinutes_few": "Wszystko, co już przetłumaczone, zostaje. Na pozostałe {{remaining}} min brakuje ci minut.",
     "failedNeedMinutes_many": "Wszystko, co już przetłumaczone, zostaje. Na pozostałe {{remaining}} min brakuje ci minut.",
     "failedNetwork": "Połączenie zostało przerwane. Wszystko, co już przetłumaczone, zostaje. Spróbuj ponownie, gdy wrócisz do sieci.",
-    "noneBodyNextFree": "Darmowe minuty doładują się {{date}} — albo przetłumacz teraz na {{language}} za {{price}}."
+    "noneBodyNextFree": "Darmowe minuty doładują się {{date}} — albo przetłumacz teraz na {{language}} za {{price}}.",
+    "checkoutAwaitingTitle": "Czekamy na potwierdzenie płatności",
+    "checkoutAwaitingBody": "Potwierdzenie niektórych metod płatności trwa kilka minut. Translator stale to sprawdza i po potwierdzeniu płatności wróci do pracy tam, gdzie skończył."
   },
   "videoCost": {
     "covered": "Masz na to dość minut",

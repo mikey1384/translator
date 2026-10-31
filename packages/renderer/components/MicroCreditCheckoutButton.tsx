@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { CREDIT_PACKS } from '../../shared/constants';
 import BuyCreditsButton from './BuyCreditsButton';
 import { formatUsd } from '../utils/formatUsd';
-import { formatCostInMinutes } from '../utils/formatCostInMinutes';
+import { formatSubtitledVideoTime } from '../utils/creditEstimates';
 
 type MicroOfferPlacement = 'zero-credit-banner' | 'credit-ran-out-dialog';
 
@@ -33,10 +33,7 @@ export default function MicroCreditCheckoutButton({
           'Buy minutes — {{price}} · ≈ {{time}} of video',
           {
             price,
-            time: formatCostInMinutes(pack.credits, {
-              kind: 'exact',
-              locale: i18n.language,
-            }),
+            time: formatSubtitledVideoTime(pack.credits, i18n.language),
           }
         );
 

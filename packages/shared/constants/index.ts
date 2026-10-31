@@ -285,6 +285,17 @@ export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
 export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR =
   STAGE5_SCRIBE_CREDITS_PER_AUDIO_HOUR;
 
+// A subtitled video: Scribe transcription (US$0.40/h x2 margin = 28,000
+// credits/h, ~466.7/min) plus the draft translation (~2,780 credits/h,
+// ~46.3/min) = ~513 credits per minute of video. Every "about N minutes of
+// video" claim (packs, free minutes) uses this, rounded down, so the app and
+// translator.tools/pricing quote the same honest numbers.
+export const CREDITS_PER_SUBTITLED_AUDIO_HOUR =
+  CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR + CREDITS_PER_TRANSLATION_AUDIO_HOUR;
+
+// One-time welcome grant for a new device (stage5-api WELCOME_CREDITS).
+export const WELCOME_CREDITS = 6_300;
+
 const MICRO_CREDITS = 15_000; // $1 entry pack
 const STARTER_CREDITS = 150_000;
 const STANDARD_CREDITS = 350_000;

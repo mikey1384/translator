@@ -916,7 +916,6 @@
     "checkoutNote": "Einmalzahlung über Stripe im Browser. Kein Konto, kein Abo. Die Minuten kommen automatisch.",
     "dubbingNote": "Mit Übersetzung brauchst du etwa 10 % mehr Minuten; eine Synchronfassung braucht mehr.",
     "iCancelledCheckout": "Ich habe den Bezahlvorgang abgebrochen",
-    "checkoutStartFailed": "Der Bezahlvorgang konnte nicht starten. Prüf deine Verbindung und versuch es noch mal.",
     "monthlyFreeNote_one": "Jeden Monat {{minutes}} Freiminute · neue am {{date}}",
     "loadFailed": "Dein Guthaben konnte nicht geladen werden. Prüf deine Verbindung und versuch es noch mal.",
     "costOfBalanceMinutes": "{{cost}} von deinen {{balance}}",
@@ -936,8 +935,16 @@
     "microPackLabelNoTime": "Minuten kaufen – {{price}}",
     "microPackLabel": "Minuten kaufen – {{price}} · ≈ {{time}} Video",
     "checkingPayment": "Zahlung wird geprüft…",
-    "checkoutUnresolved": "Wenn du schon bezahlt hast, erscheinen deine Minuten gleich hier. Bezahlst du noch? Dann schließ die Zahlung im Browser ab.",
-    "checkPaymentNow": "Jetzt prüfen"
+    "checkPaymentNow": "Jetzt prüfen",
+    "localCurrencyNote": "Preise in US-Dollar. Beim Bezahlen siehst du den Betrag nach Möglichkeit in deiner Landeswährung.",
+    "checkoutAwaitingConfirmation": "Warte auf Zahlungsbestätigung. Manche Zahlungsarten brauchen ein paar Minuten, Translator prüft weiter. Deine Minuten erscheinen hier, sobald die Zahlung bestätigt ist.",
+    "checkoutFailed": {
+      "title": "Bezahlseite nicht geöffnet",
+      "message": "Translator konnte die Bezahlseite nicht erreichen. Prüf deine Internetverbindung und versuch es noch mal. Wenn das weiter passiert, schreib uns an {{email}} – wir helfen dir, deine Minuten zu kaufen.",
+      "contact": "Support kontaktieren",
+      "retry": "Erneut versuchen",
+      "supportSubject": "Ich kann in Translator keine Minuten kaufen"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Kosten werden berechnet…",
     "welcomeCredits": {
-      "message": "Du hast Freiminuten, um Transkription und Übersetzung auszuprobieren (etwa 20 Minuten Video)."
+      "message": "Du hast Freiminuten, um Transkription und Übersetzung auszuprobieren (etwa {{minutes}} Minuten Video)."
     }
   },
   "findBar": {
@@ -1523,7 +1530,9 @@
     "failedNeedMinutes": "Alles bisher Übersetzte bleibt erhalten. Für die restlichen {{remaining}} Minuten reicht dein Guthaben nicht.",
     "failedNetwork": "Die Verbindung ist abgebrochen. Alles bisher Übersetzte bleibt erhalten. Versuch es noch mal, sobald du wieder online bist.",
     "failedNeedMinutes_one": "Alles bisher Übersetzte bleibt erhalten. Für die restliche {{remaining}} Minute reicht dein Guthaben nicht.",
-    "noneBodyNextFree": "Am {{date}} gibt es neue Freiminuten – oder du übersetzt jetzt für {{price}} auf {{language}}."
+    "noneBodyNextFree": "Am {{date}} gibt es neue Freiminuten – oder du übersetzt jetzt für {{price}} auf {{language}}.",
+    "checkoutAwaitingTitle": "Warte auf Zahlungsbestätigung",
+    "checkoutAwaitingBody": "Manche Zahlungsarten brauchen ein paar Minuten für die Bestätigung. Translator prüft weiter und macht genau dort weiter, wo es aufgehört hat, sobald deine Zahlung bestätigt ist."
   },
   "videoCost": {
     "covered": "Deine Minuten reichen",

@@ -918,7 +918,6 @@
     "checkoutNote": "Pagamento unico con Stripe, nel browser. Nessun account, nessun abbonamento. I minuti arrivano in automatico.",
     "dubbingNote": "Aggiungere una traduzione usa circa il 10% di minuti in più; il doppiaggio ne usa di più.",
     "iCancelledCheckout": "Ho annullato il pagamento",
-    "checkoutStartFailed": "Impossibile avviare il pagamento. Controlla la connessione e riprova.",
     "monthlyFreeNote_one": "{{minutes}} minuto gratis ogni mese · il prossimo il {{date}}",
     "loadFailed": "Non è stato possibile caricare il tuo saldo. Controlla la connessione e riprova.",
     "costOfBalanceMinutes": "{{cost}} dei tuoi {{balance}}",
@@ -938,8 +937,16 @@
     "microPackLabelNoTime": "Acquista minuti — {{price}}",
     "microPackLabel": "Acquista minuti — {{price}} · ≈ {{time}} di video",
     "checkingPayment": "Controllo del pagamento…",
-    "checkoutUnresolved": "Se hai già pagato, i tuoi minuti compariranno qui a breve. Stai ancora pagando? Completa il pagamento nel browser.",
-    "checkPaymentNow": "Controlla ora"
+    "checkPaymentNow": "Controlla ora",
+    "localCurrencyNote": "Prezzi in dollari USA. La pagina di pagamento mostra l’importo nella tua valuta locale, se disponibile.",
+    "checkoutAwaitingConfirmation": "In attesa della conferma del pagamento. Alcuni metodi di pagamento richiedono qualche minuto e Translator continua a controllare. I minuti compariranno qui appena il pagamento sarà confermato.",
+    "checkoutFailed": {
+      "title": "Il pagamento non si è aperto",
+      "message": "Translator non è riuscito a raggiungere la pagina di pagamento. Controlla la connessione a internet e riprova. Se continua a succedere, scrivici a {{email}} e ti aiuteremo ad acquistare i tuoi minuti.",
+      "contact": "Contatta l’assistenza",
+      "retry": "Riprova",
+      "supportSubject": "Non riesco ad acquistare minuti in Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1057,7 +1064,7 @@
     },
     "calculatingCost": "Calcolo del costo…",
     "welcomeCredits": {
-      "message": "Hai minuti gratuiti per provare trascrizione e traduzione (circa 20 minuti di video)."
+      "message": "Hai minuti gratuiti per provare trascrizione e traduzione (circa {{minutes}} minuti di video)."
     }
   },
   "findBar": {
@@ -1535,7 +1542,9 @@
     "failedNeedMinutes_one": "Quello che è già stato tradotto resta salvato. Ti servono altri minuti per tradurre quello che manca ({{remaining}} minuto).",
     "failedNeedMinutes_many": "Quello che è già stato tradotto resta salvato. Ti servono altri minuti per tradurre i {{remaining}} di minuti che mancano.",
     "failedNetwork": "La connessione si è interrotta. Quello che è già stato tradotto resta salvato. Riprova quando sei di nuovo online.",
-    "noneBodyNextFree": "I minuti gratuiti si ricaricano il {{date}}, oppure guardalo subito in {{language}} per {{price}}."
+    "noneBodyNextFree": "I minuti gratuiti si ricaricano il {{date}}, oppure guardalo subito in {{language}} per {{price}}.",
+    "checkoutAwaitingTitle": "In attesa della conferma del pagamento",
+    "checkoutAwaitingBody": "Alcuni metodi di pagamento richiedono qualche minuto per la conferma. Translator continua a controllare e riprende da dove si era fermato appena il pagamento viene confermato."
   },
   "videoCost": {
     "covered": "Incluso nei tuoi minuti",

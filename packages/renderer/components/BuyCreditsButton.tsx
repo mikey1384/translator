@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { i18n } from '../i18n';
 import * as SystemIPC from '@ipc/system';
 import { CHECKOUT_ALREADY_PENDING } from '../../shared/constants';
 import Button, { type ButtonSize, type ButtonVariant } from './Button';
 import { useCreditStore } from '../state/credit-store';
+import { openNotice } from '../state/modal-store';
+import { showCheckoutFailedNotice } from '../utils/checkout-failure';
 
 interface BuyCreditsButtonProps {
   packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
@@ -72,6 +74,9 @@ export function useCreditCheckout({
   trackShown?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
+  // Synchronous guard: two clicks before React re-renders must not start two
+  // checkouts (main also refuses a second one while the first is created).
+  const inFlight = useRef(false);
 
   useEffect(() => {
     if (!trackShown) return;
@@ -84,10 +89,12 @@ export function useCreditCheckout({
     });
   }, [packId, placement, trackShown]);
 
-  async function handleClick() {
-    if (loading) {
+  async function handleClick(): Promise<void> {
+    if (loading || inFlight.current) {
       return;
     }
+    inFlight.current = true;
+    let failed = false;
 
     // Track button press
     void SystemIPC.trackPurchaseEvent('credit_checkout_button_clicked', {
@@ -123,16 +130,11 @@ export function useCreditCheckout({
         }).catch(() => {
           // Ignore tracking errors
         });
-        await SystemIPC.showMessage(
-          i18n.t(
-            'credits.checkoutStartFailed',
-            'Checkout couldn’t start. Check your connection and try again.'
-          ),
-          { type: 'error' }
-        );
-        return;
+        // No early return: the notice below runs after `finally`.
+        failed = true;
+      } else {
+        onCheckoutCreated?.();
       }
-      onCheckoutCreated?.();
     } catch (err: any) {
       console.error('Failed to start checkout:', err);
       // Track session creation failure
@@ -146,15 +148,20 @@ export function useCreditCheckout({
       }).catch(() => {
         // Ignore tracking errors
       });
-      await SystemIPC.showMessage(
-        i18n.t(
-          'credits.checkoutStartFailed',
-          'Checkout couldn’t start. Check your connection and try again.'
-        ),
-        { type: 'error' }
-      );
+      failed = true;
     } finally {
+      inFlight.current = false;
       setLoading(false);
+    }
+    if (failed) {
+      // Main gives up on the create request after a timeout, so this always
+      // comes back: say what happened, offer a retry and a contact.
+      const choice = await showCheckoutFailedNotice({
+        t: i18n.t.bind(i18n),
+        openNotice,
+        openExternal: url => window.appShell.openExternal(url),
+      });
+      if (choice === 'retry') await handleClick();
     }
   }
 

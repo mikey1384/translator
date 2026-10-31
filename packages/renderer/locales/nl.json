@@ -916,7 +916,6 @@
     "checkoutNote": "Eenmalige betaling via Stripe, in je browser. Geen account of abonnement. Minuten komen vanzelf binnen.",
     "dubbingNote": "Met een vertaling erbij gebruik je ongeveer 10% meer minuten; nasynchroniseren kost meer.",
     "iCancelledCheckout": "Ik heb de betaling geannuleerd",
-    "checkoutStartFailed": "De betaling kon niet worden gestart. Controleer je verbinding en probeer het opnieuw.",
     "monthlyFreeNote_one": "Elke maand {{minutes}} gratis minuut · volgende op {{date}}",
     "loadFailed": "Je saldo kon niet worden geladen. Controleer je verbinding en probeer het opnieuw.",
     "costOfBalanceMinutes": "{{cost}} van je {{balance}}",
@@ -936,8 +935,16 @@
     "microPackLabelNoTime": "Minuten kopen — {{price}}",
     "microPackLabel": "Minuten kopen — {{price}} · ≈ {{time}} video",
     "checkingPayment": "Betaling controleren…",
-    "checkoutUnresolved": "Al betaald? Dan verschijnen je minuten hier zo. Nog bezig met betalen? Rond het af in je browser.",
-    "checkPaymentNow": "Nu controleren"
+    "checkPaymentNow": "Nu controleren",
+    "localCurrencyNote": "Prijzen in Amerikaanse dollar. De betaalpagina toont het bedrag waar mogelijk in je eigen valuta.",
+    "checkoutAwaitingConfirmation": "Wachten op bevestiging van de betaling. Sommige betaalmethoden duren een paar minuten en Translator blijft controleren. Je minuten verschijnen hier zodra de betaling is bevestigd.",
+    "checkoutFailed": {
+      "title": "Betaalpagina niet geopend",
+      "message": "Translator kon de betaalpagina niet bereiken. Controleer je internetverbinding en probeer het opnieuw. Blijft het gebeuren? Mail ons via {{email}}, dan helpen we je je minuten te kopen.",
+      "contact": "Contact opnemen",
+      "retry": "Opnieuw proberen",
+      "supportSubject": "Ik kan geen minuten kopen in Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Kosten berekenen…",
     "welcomeCredits": {
-      "message": "Je hebt gratis minuten om uitschrijven en vertalen uit te proberen (ongeveer 20 minuten video)."
+      "message": "Je hebt gratis minuten om uitschrijven en vertalen uit te proberen (ongeveer {{minutes}} minuten video)."
     }
   },
   "findBar": {
@@ -1523,7 +1530,9 @@
     "failedNeedMinutes": "Alles wat al vertaald is, blijft bewaard. Je hebt meer minuten nodig voor de resterende {{remaining}} minuten.",
     "failedNetwork": "De verbinding is weggevallen. Alles wat al vertaald is, blijft bewaard. Probeer het opnieuw als je weer online bent.",
     "failedNeedMinutes_one": "Alles wat al vertaald is, blijft bewaard. Je hebt meer minuten nodig voor de resterende {{remaining}} minuut.",
-    "noneBodyNextFree": "Op {{date}} krijg je weer gratis minuten, of vertaal nu naar het {{language}} voor {{price}}."
+    "noneBodyNextFree": "Op {{date}} krijg je weer gratis minuten, of vertaal nu naar het {{language}} voor {{price}}.",
+    "checkoutAwaitingTitle": "Wachten op bevestiging van de betaling",
+    "checkoutAwaitingBody": "Sommige betaalmethoden hebben een paar minuten nodig voor de bevestiging. Translator blijft controleren en gaat verder waar het gebleven was zodra je betaling is bevestigd."
   },
   "videoCost": {
     "covered": "Past binnen je minuten",

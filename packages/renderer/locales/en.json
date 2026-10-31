@@ -916,7 +916,6 @@
     "checkoutNote": "One-time payment through Stripe, in your browser. No account or subscription. Minutes arrive on their own.",
     "dubbingNote": "Adding a translation uses about 10% more minutes; dubbing uses more.",
     "iCancelledCheckout": "I cancelled checkout",
-    "checkoutStartFailed": "Checkout couldn’t start. Check your connection and try again.",
     "monthlyFreeNote_one": "{{minutes}} free minute every month · next on {{date}}",
     "loadFailed": "Your balance couldn’t be loaded. Check your connection and try again.",
     "costOfBalanceMinutes": "{{cost}} of your {{balance}}",
@@ -936,8 +935,16 @@
     "microPackLabelNoTime": "Buy minutes — {{price}}",
     "microPackLabel": "Buy minutes — {{price}} · ≈ {{time}} of video",
     "checkingPayment": "Checking your payment…",
-    "checkoutUnresolved": "If you already paid, your minutes will appear here shortly. Still paying? Finish in your browser.",
-    "checkPaymentNow": "Check now"
+    "checkPaymentNow": "Check now",
+    "localCurrencyNote": "Prices in US dollars. Checkout shows your local currency where available.",
+    "checkoutAwaitingConfirmation": "Waiting for payment confirmation. Some payment methods take a few minutes, and Translator keeps checking. Your minutes appear here as soon as it’s confirmed.",
+    "checkoutFailed": {
+      "title": "Checkout didn’t open",
+      "message": "Translator couldn’t reach the payment page. Check your internet connection and try again. If it keeps happening, email us at {{email}} and we’ll help you buy your minutes.",
+      "contact": "Contact support",
+      "retry": "Try again",
+      "supportSubject": "I can’t buy minutes in Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Calculating cost…",
     "welcomeCredits": {
-      "message": "You have free minutes to try transcription and translation (about 20 minutes of video)."
+      "message": "You have free minutes to try transcription and translation (about {{minutes}} minutes of video)."
     }
   },
   "findBar": {
@@ -1522,7 +1529,9 @@
     "failedNeedMinutes": "Everything finished so far is kept. You need more minutes to finish the remaining {{remaining}} minutes.",
     "failedNetwork": "The connection dropped. Everything finished so far is kept. Try again when you’re back online.",
     "failedNeedMinutes_one": "Everything finished so far is kept. You need more minutes to finish the remaining {{remaining}} minute.",
-    "noneBodyNextFree": "Free minutes renew on {{date}}, or translate to {{language}} now for {{price}}."
+    "noneBodyNextFree": "Free minutes renew on {{date}}, or translate to {{language}} now for {{price}}.",
+    "checkoutAwaitingTitle": "Waiting for payment confirmation",
+    "checkoutAwaitingBody": "Some payment methods take a few minutes to confirm. Translator keeps checking and picks up right where it left off once your payment is confirmed."
   },
   "videoCost": {
     "covered": "Covered by your minutes",

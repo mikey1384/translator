@@ -907,7 +907,6 @@
     "checkoutNote": "Bayar sekali melalui Stripe, dalam pelayar. Tiada akaun, tiada langganan. Minit masuk secara automatik.",
     "dubbingNote": "Menambah terjemahan menggunakan kira-kira 10% lebih banyak minit; alih suara menggunakan lebih banyak lagi.",
     "iCancelledCheckout": "Saya telah membatalkan pembayaran",
-    "checkoutStartFailed": "Pembayaran tidak dapat dimulakan. Semak sambungan internet dan cuba lagi.",
     "loadFailed": "Baki anda tidak dapat dimuatkan. Semak sambungan anda dan cuba lagi.",
     "costOfBalanceMinutes": "{{cost}} daripada {{balance}} anda",
     "timeLeft": "Baki {{time}}",
@@ -926,8 +925,16 @@
     "microPackLabelNoTime": "Beli minit — {{price}}",
     "microPackLabel": "Beli minit — {{price}} · ≈ {{time}} video",
     "checkingPayment": "Menyemak pembayaran anda…",
-    "checkoutUnresolved": "Jika anda sudah membayar, minit anda akan muncul di sini sebentar lagi. Masih membayar? Selesaikan dalam pelayar anda.",
-    "checkPaymentNow": "Semak sekarang"
+    "checkPaymentNow": "Semak sekarang",
+    "localCurrencyNote": "Harga dalam dolar AS. Halaman pembayaran memaparkan jumlah dalam mata wang tempatan anda jika ada.",
+    "checkoutAwaitingConfirmation": "Menunggu pengesahan pembayaran. Sesetengah kaedah pembayaran mengambil masa beberapa minit, dan Translator terus menyemak. Minit anda akan masuk di sini sebaik sahaja disahkan.",
+    "checkoutFailed": {
+      "title": "Halaman pembayaran tidak dibuka",
+      "message": "Translator tidak dapat mencapai halaman pembayaran. Semak sambungan internet dan cuba lagi. Jika ia berulang, e-mel kami di {{email}} dan kami akan bantu anda membeli minit.",
+      "contact": "Hubungi sokongan",
+      "retry": "Cuba lagi",
+      "supportSubject": "Saya tidak dapat membeli minit dalam Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1045,7 +1052,7 @@
     },
     "calculatingCost": "Mengira kos…",
     "welcomeCredits": {
-      "message": "Anda mempunyai minit percuma untuk mencuba transkripsi dan terjemahan (kira-kira 20 minit video)."
+      "message": "Anda mempunyai minit percuma untuk mencuba transkripsi dan terjemahan (kira-kira {{minutes}} minit video)."
     }
   },
   "findBar": {
@@ -1495,7 +1502,9 @@
     "notNow": "Lain kali",
     "failedNeedMinutes": "Semua yang sudah siap dikekalkan. Anda perlukan lebih banyak minit untuk menyiapkan baki {{remaining}} minit.",
     "failedNetwork": "Sambungan terputus. Semua yang sudah siap dikekalkan. Cuba lagi apabila anda kembali dalam talian.",
-    "noneBodyNextFree": "Minit percuma akan diisi semula pada {{date}}. Atau, terjemah ke {{language}} sekarang dengan {{price}}."
+    "noneBodyNextFree": "Minit percuma akan diisi semula pada {{date}}. Atau, terjemah ke {{language}} sekarang dengan {{price}}.",
+    "checkoutAwaitingTitle": "Menunggu pengesahan pembayaran",
+    "checkoutAwaitingBody": "Sesetengah kaedah pembayaran mengambil masa beberapa minit untuk disahkan. Translator terus menyemak dan menyambung dari tempat ia berhenti sebaik sahaja pembayaran anda disahkan."
   },
   "videoCost": {
     "covered": "Minit anda mencukupi",

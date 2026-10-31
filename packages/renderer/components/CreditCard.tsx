@@ -2,19 +2,22 @@ import { css, cx } from '@emotion/css';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as SystemIPC from '@ipc/system';
-import { formatDurationHours } from '../utils/formatUnits';
 import { useCreditStore } from '../state';
 import Button from './Button';
 import { useCreditCheckout } from './BuyCreditsButton';
 import { colors, fonts, surfaceCardStyles } from '../styles';
 import { CREDIT_PACKS } from '../../shared/constants';
-import { estimateTranscriptionHours } from '../utils/creditEstimates';
+import {
+  formatSubtitledVideoTime,
+  subtitledVideoMinutes,
+} from '../utils/creditEstimates';
 import {
   creditsToWholeMinutes,
   formatCostInMinutes,
 } from '../utils/formatCostInMinutes';
 import { resolveCreditBalanceState } from '../utils/creditBalanceState';
 import { formatUsd } from '../utils/formatUsd';
+import CheckoutCurrencyNote from './CheckoutCurrencyNote';
 import { isPackCheckoutLocked } from '../utils/packCheckoutLock';
 
 type Pack = (typeof CREDIT_PACKS)[keyof typeof CREDIT_PACKS];
@@ -250,11 +253,6 @@ const PACK_BADGES: Partial<Record<Pack['id'], 'popular' | 'value'>> = {
 const BASE_CREDITS_PER_DOLLAR =
   CREDIT_PACKS.MICRO.credits / CREDIT_PACKS.MICRO.price;
 
-/** "5h 21m" in the user's language and numerals. */
-function formatDuration(hours: number, locale: string): string {
-  return formatDurationHours(hours, locale);
-}
-
 function formatRefreshDate(isoDay: string, locale: string): string {
   const date = new Date(`${isoDay}T00:00:00Z`);
   if (Number.isNaN(date.getTime())) return isoDay;
@@ -292,10 +290,9 @@ function PackCard({
     trackShown: false,
   });
   const kind = PACK_BADGES[pack.id];
-  const time = formatDuration(
-    estimateTranscriptionHours(pack.credits) ?? 0,
-    locale
-  );
+  // Minutes of video subtitled end to end, rounded down (the same numbers
+  // as translator.tools/pricing).
+  const time = formatSubtitledVideoTime(pack.credits, locale);
   const multiplier =
     Math.round((pack.credits / pack.price / BASE_CREDITS_PER_DOLLAR) * 10) / 10;
 
@@ -437,9 +434,7 @@ export default function CreditCard() {
       'Your free minutes are on the way. They usually arrive the next time you open Translator.'
     );
   } else if (monthlyFree) {
-    const freeMinutes = Math.floor(
-      (estimateTranscriptionHours(monthlyFree.credits) ?? 0) * 60
-    );
+    const freeMinutes = subtitledVideoMinutes(monthlyFree.credits);
     meta = t(
       'credits.monthlyFreeNote',
       '{{minutes}} free minutes every month · next on {{date}}',
@@ -505,6 +500,7 @@ export default function CreditCard() {
               />
             ))}
           </div>
+          <CheckoutCurrencyNote />
 
           {checkoutSuccess ? (
             <p className={successRow} role="status">
@@ -530,8 +526,8 @@ export default function CreditCard() {
               <span>
                 {checkoutUnresolved
                   ? t(
-                      'credits.checkoutUnresolved',
-                      'If you already paid, your minutes will appear here shortly. Still paying? Finish in your browser.'
+                      'credits.checkoutAwaitingConfirmation',
+                      'Waiting for payment confirmation. Some payment methods take a few minutes, and Translator keeps checking. Your minutes appear here as soon as it’s confirmed.'
                     )
                   : t(
                       'credits.checkoutWaiting',

@@ -907,7 +907,6 @@
     "checkoutNote": "Thanh toán một lần qua Stripe trên trình duyệt. Không cần tài khoản, không thu phí định kỳ. Số phút sẽ tự được cộng.",
     "dubbingNote": "Thêm bản dịch tốn thêm khoảng 10% số phút; lồng tiếng tốn nhiều hơn.",
     "iCancelledCheckout": "Tôi đã hủy thanh toán",
-    "checkoutStartFailed": "Không thể bắt đầu thanh toán. Hãy kiểm tra kết nối và thử lại.",
     "loadFailed": "Không tải được số dư. Hãy kiểm tra kết nối rồi thử lại.",
     "costOfBalanceMinutes": "{{cost}} trên {{balance}} của bạn",
     "timeLeft": "Còn {{time}}",
@@ -926,8 +925,16 @@
     "microPackLabelNoTime": "Mua phút — {{price}}",
     "microPackLabel": "Mua phút — {{price}} · ≈ {{time}} video",
     "checkingPayment": "Đang kiểm tra thanh toán của bạn…",
-    "checkoutUnresolved": "Nếu bạn đã thanh toán, số phút sẽ sớm hiện ở đây. Vẫn đang thanh toán? Hãy hoàn tất trên trình duyệt.",
-    "checkPaymentNow": "Kiểm tra ngay"
+    "checkPaymentNow": "Kiểm tra ngay",
+    "localCurrencyNote": "Giá tính bằng đô la Mỹ. Trang thanh toán sẽ hiển thị số tiền bằng tiền tệ địa phương của bạn khi có thể.",
+    "checkoutAwaitingConfirmation": "Đang chờ xác nhận thanh toán. Một số phương thức thanh toán mất vài phút, và Translator sẽ tiếp tục kiểm tra. Số phút sẽ hiện ở đây ngay khi thanh toán được xác nhận.",
+    "checkoutFailed": {
+      "title": "Không mở được trang thanh toán",
+      "message": "Translator không kết nối được tới trang thanh toán. Hãy kiểm tra kết nối internet và thử lại. Nếu vẫn tiếp tục xảy ra, hãy email cho chúng tôi tại {{email}}, chúng tôi sẽ giúp bạn mua phút.",
+      "contact": "Liên hệ hỗ trợ",
+      "retry": "Thử lại",
+      "supportSubject": "Tôi không mua được phút trong Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1045,7 +1052,7 @@
     },
     "calculatingCost": "Đang tính toán chi phí…",
     "welcomeCredits": {
-      "message": "Bạn có khoảng 20 phút miễn phí để dùng thử chép lời và dịch."
+      "message": "Bạn có khoảng {{minutes}} phút miễn phí để dùng thử chép lời và dịch."
     }
   },
   "findBar": {
@@ -1495,7 +1502,9 @@
     "notNow": "Để sau",
     "failedNeedMinutes": "Phần đã xong vẫn được giữ lại. Bạn cần thêm phút để dịch nốt {{remaining}} phút còn lại.",
     "failedNetwork": "Mất kết nối. Phần đã xong vẫn được giữ lại. Hãy thử lại khi có mạng.",
-    "noneBodyNextFree": "Phút miễn phí sẽ có lại vào ngày {{date}}, hoặc chuyển sang {{language}} ngay với giá {{price}}."
+    "noneBodyNextFree": "Phút miễn phí sẽ có lại vào ngày {{date}}, hoặc chuyển sang {{language}} ngay với giá {{price}}.",
+    "checkoutAwaitingTitle": "Đang chờ xác nhận thanh toán",
+    "checkoutAwaitingBody": "Một số phương thức thanh toán cần vài phút để xác nhận. Translator sẽ tiếp tục kiểm tra và làm tiếp từ chỗ đã dừng ngay khi thanh toán của bạn được xác nhận."
   },
   "videoCost": {
     "covered": "Đủ phút để dịch",

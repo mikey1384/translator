@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from '../../../components/design-system/index.js';
+import { WELCOME_CREDITS } from '../../../../shared/constants';
+import { subtitledVideoMinutes } from '../../../utils/creditEstimates';
 
 const DISMISSED_KEY = 'translator.welcomeCreditsHintDismissed';
+// 6,300 welcome credits subtitle about 12 minutes of video (rounded down).
+const WELCOME_SUBTITLED_MINUTES = subtitledVideoMinutes(WELCOME_CREDITS);
 
 function readDismissed(): boolean {
   try {
@@ -32,7 +36,8 @@ export default function WelcomeCreditsHint() {
     >
       {t(
         'generateSubtitles.welcomeCredits.message',
-        'You have free minutes to try transcription and translation (about 20 minutes of video).'
+        'You have free minutes to try transcription and translation (about {{minutes}} minutes of video).',
+        { minutes: WELCOME_SUBTITLED_MINUTES }
       )}
     </Alert>
   );

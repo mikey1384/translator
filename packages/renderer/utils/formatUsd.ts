@@ -1,25 +1,27 @@
 const RTL_UI = new Set(['ar', 'he', 'fa', 'ur']);
 
 /**
- * A whole-dollar price in the user's language: "$5", "5 $", "1 US$".
- * Prices are always US dollars. Bidi marks are dropped, and in RTL UIs the
- * price is wrapped in a left-to-right isolate so a sentence like
- * "إكمال الترجمة · 1 US$" can't flip it into "$US 1".
+ * A whole-dollar price in the user's language, always labelled as US
+ * dollars: "US$5" in every locale. A bare "$" reads as local money in Brazil
+ * and Spanish-speaking Latin America (R$, MX$, COL$…), so the currency is
+ * never left implicit. Digits follow the UI language. Bidi marks are dropped,
+ * and in RTL UIs the price is wrapped in a left-to-right isolate so a
+ * sentence like "إكمال الترجمة · US$1" can't flip it into "1$US".
  */
 export function formatUsd(price: number, locale: string): string {
-  let text: string;
+  let digits: string;
   try {
-    text = new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: 'USD',
-      currencyDisplay: 'narrowSymbol',
-      maximumFractionDigits: 0,
+    digits = new Intl.NumberFormat(locale, {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: Number.isInteger(price) ? 0 : 2,
+      useGrouping: true,
     })
       .format(price)
       .replace(/[‎‏؜]/g, '');
   } catch {
-    text = `$${price}`;
+    digits = String(price);
   }
+  const text = `US$${digits}`;
   const ui = String(locale || '')
     .split('-')[0]
     .toLowerCase();

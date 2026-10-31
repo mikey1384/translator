@@ -2,6 +2,7 @@ import {
   AI_MODELS,
   CHARS_PER_TOKEN,
   PREVIEW_TTS_CREDITS,
+  CREDITS_PER_SUBTITLED_AUDIO_HOUR,
   CREDITS_PER_TRANSLATION_AUDIO_HOUR,
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
   SUMMARY_OUTPUT_TOKEN_RATIO,
@@ -224,6 +225,25 @@ export function formatTranscriptionTime(
 ): string | null {
   const hours = estimateTranscriptionHours(credits);
   return hours != null && hours > 0 ? formatHours(hours, locale) : null;
+}
+
+/**
+ * Whole minutes of video a credit amount subtitles end to end (transcription
+ * plus draft translation), rounded down. This is what "about N minutes of
+ * video" claims say: packs, the welcome grant, the monthly free minutes.
+ */
+export function subtitledVideoMinutes(credits: number | null): number {
+  const safe = normalizeKnownCredits(credits);
+  if (safe === null || safe <= 0) return 0;
+  return Math.floor((safe * 60) / CREDITS_PER_SUBTITLED_AUDIO_HOUR);
+}
+
+/** subtitledVideoMinutes as "29m" / "4h 52m" in the UI language's units. */
+export function formatSubtitledVideoTime(
+  credits: number | null,
+  locale?: string
+): string {
+  return formatDurationMinutes(subtitledVideoMinutes(credits), locale);
 }
 
 /** Minutes of video a credit amount buys, the unit the balance is sold in. */

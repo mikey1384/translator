@@ -916,7 +916,6 @@
     "checkoutNote": "Malipo ya mara moja kupitia Stripe, kwenye kivinjari chako. Hakuna akaunti wala usajili. Dakika zinafika zenyewe.",
     "dubbingNote": "Kuongeza tafsiri hutumia takriban 10% zaidi ya dakika; kuweka sauti hutumia zaidi.",
     "iCancelledCheckout": "Nimeghairi malipo",
-    "checkoutStartFailed": "Malipo hayakuweza kuanza. Angalia muunganisho wako kisha ujaribu tena.",
     "monthlyFreeNote_one": "Dakika {{minutes}} ya bure kila mwezi · inayofuata {{date}}",
     "loadFailed": "Salio lako halikuweza kupakiwa. Kagua muunganisho wako kisha ujaribu tena.",
     "costOfBalanceMinutes": "{{cost}} kati ya {{balance}} zako",
@@ -936,8 +935,16 @@
     "microPackLabelNoTime": "Nunua dakika — {{price}}",
     "microPackLabel": "Nunua dakika — {{price}} · ≈ video ya {{time}}",
     "checkingPayment": "Tunakagua malipo yako…",
-    "checkoutUnresolved": "Ikiwa tayari umelipa, dakika zako zitaonekana hapa hivi punde. Bado unalipa? Maliza kwenye kivinjari chako.",
-    "checkPaymentNow": "Kagua sasa"
+    "checkPaymentNow": "Kagua sasa",
+    "localCurrencyNote": "Bei ziko kwa dola za Marekani. Ukurasa wa malipo huonyesha kiasi kwa sarafu ya nchi yako inapowezekana.",
+    "checkoutAwaitingConfirmation": "Tunasubiri malipo yathibitishwe. Baadhi ya njia za malipo huchukua dakika chache, na Translator inaendelea kukagua. Dakika zako zitaonekana hapa mara malipo yakithibitishwa.",
+    "checkoutFailed": {
+      "title": "Ukurasa wa malipo haukufunguka",
+      "message": "Translator haikuweza kufikia ukurasa wa malipo. Angalia muunganisho wako wa intaneti kisha ujaribu tena. Tatizo likiendelea, tutumie barua pepe kwa {{email}} na tutakusaidia kununua dakika.",
+      "contact": "Wasiliana na huduma kwa wateja",
+      "retry": "Jaribu tena",
+      "supportSubject": "Siwezi kununua dakika kwenye Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Inahesabu gharama…",
     "welcomeCredits": {
-      "message": "Una dakika za bure za kujaribu kunakili na kutafsiri (takriban dakika 20 za video)."
+      "message": "Una dakika za bure za kujaribu kunakili na kutafsiri (takriban dakika {{minutes}} za video)."
     }
   },
   "findBar": {
@@ -1523,7 +1530,9 @@
     "failedNeedMinutes_one": "Kila kilichokamilika hadi sasa kimehifadhiwa. Unahitaji dakika zaidi ili kumaliza dakika {{remaining}} iliyobaki.",
     "failedNetwork": "Muunganisho umekatika. Kila kilichokamilika hadi sasa kimehifadhiwa. Jaribu tena ukirudi mtandaoni.",
     "noneBodyNextFree": "Dakika za bure zitajazwa tena {{date}}, au itafsiri kwa {{language}} sasa hivi kwa {{price}}.",
-    "noneTitle_one": "Video hii ina dakika {{total}}."
+    "noneTitle_one": "Video hii ina dakika {{total}}.",
+    "checkoutAwaitingTitle": "Tunasubiri malipo yathibitishwe",
+    "checkoutAwaitingBody": "Baadhi ya njia za malipo huchukua dakika chache kuthibitishwa. Translator inaendelea kukagua na itaendelea pale ilipoishia mara malipo yako yakithibitishwa."
   },
   "videoCost": {
     "covered": "Dakika zako zinatosha",

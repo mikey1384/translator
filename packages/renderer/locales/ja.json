@@ -907,7 +907,6 @@
     "checkoutNote": "Stripe でブラウザから1回払い。アカウント登録もサブスクも不要で、時間は自動で追加されます。",
     "dubbingNote": "翻訳も付けると、使う時間が約10%増えます。吹き替えはさらに多く使います。",
     "iCancelledCheckout": "決済をキャンセルしました",
-    "checkoutStartFailed": "決済を開始できませんでした。接続を確認して、もう一度お試しください。",
     "loadFailed": "残り時間を読み込めませんでした。接続を確認して、もう一度お試しください。",
     "costOfBalanceMinutes": "残り{{balance}}のうち{{cost}}",
     "timeLeft": "残り{{time}}",
@@ -926,8 +925,16 @@
     "microPackLabelNoTime": "時間を購入 — {{price}}",
     "microPackLabel": "時間を購入 — {{price}} · 動画 約{{time}}",
     "checkingPayment": "お支払いを確認しています…",
-    "checkoutUnresolved": "お支払い済みの場合は、まもなくここに時間が追加されます。まだお支払い中の場合は、ブラウザで完了してください。",
-    "checkPaymentNow": "今すぐ確認"
+    "checkPaymentNow": "今すぐ確認",
+    "localCurrencyNote": "価格は米ドル表示です。決済ページでは、可能な場合は現地通貨で金額が表示されます。",
+    "checkoutAwaitingConfirmation": "お支払いの確認を待っています。支払い方法によっては数分かかることがありますが、Translatorが確認を続けます。確認され次第、時間がここに追加されます。",
+    "checkoutFailed": {
+      "title": "決済ページを開けませんでした",
+      "message": "Translatorが決済ページに接続できませんでした。インターネット接続を確認して、もう一度お試しください。何度も起きる場合は {{email}} までメールでご連絡ください。購入をお手伝いします。",
+      "contact": "サポートに連絡",
+      "retry": "もう一度試す",
+      "supportSubject": "Translatorで時間を購入できません"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1045,7 +1052,7 @@
     },
     "calculatingCost": "コストを計算中…",
     "welcomeCredits": {
-      "message": "動画約20分ぶんの無料の時間で、文字起こしと翻訳を試せます。"
+      "message": "動画約{{minutes}}分ぶんの無料の時間で、文字起こしと翻訳を試せます。"
     }
   },
   "findBar": {
@@ -1495,7 +1502,9 @@
     "notNow": "あとで",
     "failedNeedMinutes": "ここまで翻訳した分はそのまま残っています。残り{{remaining}}分を翻訳するには、時間の追加が必要です。",
     "failedNetwork": "接続が切れました。ここまで翻訳した分はそのまま残っています。オンラインに戻ったら、もう一度お試しください。",
-    "noneBodyNextFree": "{{date}}に無料の時間がまた追加されます。今すぐ{{price}}で{{language}}に翻訳することもできます。"
+    "noneBodyNextFree": "{{date}}に無料の時間がまた追加されます。今すぐ{{price}}で{{language}}に翻訳することもできます。",
+    "checkoutAwaitingTitle": "お支払いの確認を待っています",
+    "checkoutAwaitingBody": "支払い方法によっては、確認に数分かかることがあります。Translatorが確認を続け、お支払いが確認され次第、中断したところから再開します。"
   },
   "videoCost": {
     "covered": "残り時間で足ります",

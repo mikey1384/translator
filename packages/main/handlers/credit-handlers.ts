@@ -17,13 +17,23 @@ import {
 } from '../utils/payment-entitlements.js';
 import { resolveCheckoutCountryHintFromLocale } from '../utils/checkout-locale.js';
 import {
+  SLOW_CHECKOUT_POLL_INTERVAL_MS,
+  decideSlowCheckoutWatch,
+  normalizePendingCheckouts,
+  pendingCheckoutsToResume,
+  removePendingCheckout,
+  upsertPendingCheckout,
+  type CheckoutSessionStateLike,
+  type PendingCheckoutRecord,
+} from '../utils/pending-checkout-watch.js';
+import {
   CREDIT_PACKS,
   CREDITS_PER_AUDIO_HOUR,
   API_TIMEOUTS,
   CHECKOUT_ALREADY_PENDING,
 } from '../../shared/constants/index.js';
 import { getMainWindow, broadcastToApp } from '../utils/window.js';
-import { settingsStore } from '../store/settings-store.js';
+import { getUiLanguage } from '../utils/ui-language.js';
 import { createSafeStore, getPersistentDeviceId } from '../store/safe-store.js';
 import {
   getStage5VersionHeaders,
@@ -97,6 +107,10 @@ const CHECKOUT_SETTLEMENT_POLL_REQUEST_TIMEOUT_MS = 10_000;
 const CHECKOUT_SETTLEMENT_MAX_WAIT_MS = 5 * 60_000;
 const CHECKOUT_EXTERNAL_FOREGROUND_SETTLEMENT_MAX_WAIT_MS = 30_000;
 const CHECKOUT_CLOSE_RECONCILE_MAX_WAIT_MS = 45_000;
+// Creating a Stripe session normally takes 1-3 s. Without a limit a stalled
+// network or proxy black-hole kept Buy on "Redirecting to payment…" until
+// the app restarted; after this the renderer shows a retry instead.
+export const CHECKOUT_CREATE_REQUEST_TIMEOUT_MS = 20_000;
 const CHECKOUT_SYNC_RETRY_COUNT = Math.max(
   API_TIMEOUTS.CREDIT_REFRESH_MAX_RETRIES,
   30
@@ -156,6 +170,47 @@ function parseMonthlyFree(raw: unknown): MonthlyFreeCredits | null {
 }
 
 type CheckoutMode = 'credits' | 'byo';
+
+// Checkouts the app is still waiting on, kept across restarts so a payment
+// confirmed while the app was closed (or minutes after the browser opened)
+// is picked up on the next launch.
+const pendingCheckoutStore = createSafeStore<{
+  sessions: PendingCheckoutRecord[];
+}>({
+  name: 'pending-checkouts',
+  defaults: { sessions: [] },
+});
+
+function readPendingCheckouts(): PendingCheckoutRecord[] {
+  try {
+    return normalizePendingCheckouts(pendingCheckoutStore.get('sessions'));
+  } catch {
+    return [];
+  }
+}
+
+function writePendingCheckouts(sessions: PendingCheckoutRecord[]): void {
+  try {
+    pendingCheckoutStore.set('sessions', sessions);
+  } catch (error) {
+    log.warn('[credit-handler] Could not save pending checkouts:', error);
+  }
+}
+
+function rememberPendingCheckout(record: PendingCheckoutRecord): void {
+  writePendingCheckouts(upsertPendingCheckout(readPendingCheckouts(), record));
+}
+
+function forgetPendingCheckout(sessionId?: string | null): void {
+  if (!sessionId) return;
+  const current = readPendingCheckouts();
+  if (!current.some(r => r.sessionId === sessionId)) return;
+  writePendingCheckouts(removePendingCheckout(current, sessionId));
+}
+
+function isPendingCheckoutRemembered(sessionId: string): boolean {
+  return readPendingCheckouts().some(r => r.sessionId === sessionId);
+}
 
 const checkoutVisibilityFollowUps = new Set<string>();
 const checkoutSettlementFollowUps = new Set<string>();
@@ -429,6 +484,7 @@ function emitCheckoutCancelled(
   targetWindow?: BrowserWindow | null,
   sessionId?: string | null
 ): void {
+  forgetPendingCheckout(sessionId);
   if (!shouldEmitCheckoutUiTransition(mode, sessionId, 'cancelled')) {
     return;
   }
@@ -472,6 +528,7 @@ function emitCheckoutConfirmed(
   sessionId: string | null | undefined,
   targetWindow?: BrowserWindow | null
 ): void {
+  forgetPendingCheckout(sessionId);
   if (!shouldEmitCheckoutUiTransition('credits', sessionId, 'confirmed')) {
     return;
   }
@@ -497,6 +554,7 @@ function emitByoUnlockConfirmed(
     | ReturnType<typeof setByoUnlocked>,
   targetWindow?: BrowserWindow | null
 ): void {
+  forgetPendingCheckout(sessionId);
   if (!shouldEmitCheckoutUiTransition('byo', sessionId, 'confirmed')) {
     return;
   }
@@ -539,10 +597,9 @@ type CheckoutClientEventType =
   | 'open_external_failed';
 
 function getCheckoutLocaleHint(): string {
-  const raw = settingsStore.get('app_language_preference', 'en');
-  if (typeof raw !== 'string') return 'en';
-  const trimmed = raw.trim();
-  return trimmed.length > 0 ? trimmed : 'en';
+  // The language the app is showing (explicit choice or system language),
+  // so Stripe's page matches it instead of defaulting to English.
+  return getUiLanguage();
 }
 
 function getCheckoutCountryHint(): string | null {
@@ -760,7 +817,15 @@ function requestCreditBalanceHydration(
 export async function initializeCreditBalanceState(
   targetWindow?: BrowserWindow | null
 ): Promise<void> {
-  await requestCreditBalanceHydration(targetWindow);
+  try {
+    await requestCreditBalanceHydration(targetWindow);
+  } finally {
+    try {
+      resumePendingCheckouts(targetWindow);
+    } catch (error) {
+      log.warn('[credit-handler] Resuming pending checkouts failed:', error);
+    }
+  }
 }
 
 export async function handleGetCreditSnapshot(): Promise<CreditSnapshotPayload | null> {
@@ -1082,6 +1147,7 @@ export async function handleCreateCheckoutSession(
         },
         {
           headers: authHeaders,
+          timeout: CHECKOUT_CREATE_REQUEST_TIMEOUT_MS,
         }
       )
     );
@@ -1111,6 +1177,15 @@ export async function handleCreateCheckoutSession(
             url: response.data.url,
           }
         : null;
+      if (checkoutSessionId) {
+        rememberPendingCheckout({
+          mode: 'credits',
+          sessionId: checkoutSessionId,
+          packId,
+          url: response.data.url,
+          createdAt: Date.now(),
+        });
+      }
       markCheckoutTransition('credits', 'pending');
       broadcastToApp('checkout-pending', checkoutTransitionPayload('credits'));
 
@@ -1326,6 +1401,7 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
         },
         {
           headers: authHeaders,
+          timeout: CHECKOUT_CREATE_REQUEST_TIMEOUT_MS,
         }
       )
     );
@@ -1362,6 +1438,14 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
       `[credit-handler] BYO checkout session received (${getCheckoutLogLabel(checkoutSessionId)}).`
     );
     setActiveCheckoutSession('byo', checkoutSessionId);
+    if (checkoutSessionId) {
+      rememberPendingCheckout({
+        mode: 'byo',
+        sessionId: checkoutSessionId,
+        url: checkoutUrl,
+        createdAt: Date.now(),
+      });
+    }
 
     // Track BYO unlock session created
     void trackPurchaseFunnelEvent('byo_unlock_session_created');
@@ -2643,8 +2727,11 @@ function scheduleCheckoutSettlementFollowUp(
           });
         }
         log.warn(
-          `[credit-handler] Background ${opts.mode} settlement reconciliation still timed out for ${sessionId}.`
+          `[credit-handler] Background ${opts.mode} settlement reconciliation still timed out for ${sessionId}; watching it at a slower pace.`
         );
+        // Not abandoned: Pix, UPI and bank confirmations can land minutes
+        // later. Keep the "waiting for confirmation" state and keep checking.
+        scheduleSlowCheckoutWatch(sessionId, opts);
       }
     } catch (error: any) {
       if (isStage5UpdateRequiredError(error)) {
@@ -2654,10 +2741,138 @@ function scheduleCheckoutSettlementFollowUp(
         `[credit-handler] Background ${opts.mode} settlement reconciliation failed for ${sessionId}:`,
         error
       );
+      scheduleSlowCheckoutWatch(sessionId, opts);
     } finally {
       checkoutSettlementFollowUps.delete(key);
     }
   })();
+}
+
+const slowCheckoutWatches = new Set<string>();
+
+/**
+ * Check an open checkout once a minute until Stripe settles it, it expires,
+ * or it's past the session lifetime. Stops as soon as the app no longer
+ * waits on it (paid, cancelled, or the user chose another pack).
+ */
+function scheduleSlowCheckoutWatch(
+  sessionId: string,
+  opts: CheckoutFollowUpOptions & { createdAt?: number },
+  firstDelayMs = SLOW_CHECKOUT_POLL_INTERVAL_MS
+): void {
+  const key = buildCheckoutFollowUpKey(opts.mode, sessionId);
+  if (slowCheckoutWatches.has(key)) return;
+  slowCheckoutWatches.add(key);
+  const createdAt =
+    opts.createdAt ??
+    readPendingCheckouts().find(r => r.sessionId === sessionId)?.createdAt ??
+    Date.now();
+
+  const tick = async () => {
+    let keepWatching = false;
+    try {
+      if (!isPendingCheckoutRemembered(sessionId)) return;
+      let state: CheckoutSessionStateLike = null;
+      let nonRetryableStatus: number | null = null;
+      try {
+        const poll = await getCheckoutSessionState(sessionId);
+        state = poll.state;
+        nonRetryableStatus = poll.nonRetryableStatus ?? null;
+      } catch (error: any) {
+        if (isStage5UpdateRequiredError(error)) return;
+        log.warn(
+          `[credit-handler] Slow checkout check for ${sessionId} failed; trying again later: ${error?.message || error}`
+        );
+      }
+      const decision = decideSlowCheckoutWatch({
+        state,
+        createdAt,
+        now: Date.now(),
+        nonRetryableStatus,
+      });
+      if (decision === 'keep_waiting') {
+        keepWatching = true;
+        return;
+      }
+      if (decision === 'paid') {
+        log.info(
+          `[credit-handler] Slow ${opts.mode} checkout ${sessionId} was paid; refreshing.`
+        );
+        const result = await handleStripeSuccess(sessionId, {
+          mode: opts.mode,
+          window: opts.window,
+          baselineCredits: opts.baselineCredits,
+          expectedCredits: opts.expectedCredits,
+          packId: opts.packId,
+          settlementMaxWaitMs:
+            CHECKOUT_EXTERNAL_FOREGROUND_SETTLEMENT_MAX_WAIT_MS,
+        });
+        keepWatching = result.status === 'pending';
+        return;
+      }
+      log.info(
+        `[credit-handler] Slow ${opts.mode} checkout ${sessionId} ended unpaid (${decision}).`
+      );
+      forgetPendingCheckout(sessionId);
+      emitCheckoutCancelled(opts.mode, opts.window ?? null, sessionId);
+    } catch (error: any) {
+      if (isStage5UpdateRequiredError(error)) return;
+      log.warn(
+        `[credit-handler] Slow checkout watch for ${sessionId} hit an error; trying again later:`,
+        error
+      );
+      keepWatching = true;
+    } finally {
+      if (keepWatching) {
+        setTimeout(() => void tick(), SLOW_CHECKOUT_POLL_INTERVAL_MS);
+      } else {
+        slowCheckoutWatches.delete(key);
+      }
+    }
+  };
+
+  setTimeout(() => void tick(), firstDelayMs);
+}
+
+/**
+ * At launch: checkouts that were still open when the app last ran are shown
+ * as "waiting for payment confirmation" and checked right away, so a payment
+ * confirmed while the app was closed still shows its success and balance.
+ */
+export function resumePendingCheckouts(
+  targetWindow?: BrowserWindow | null
+): void {
+  const resumable = pendingCheckoutsToResume(
+    readPendingCheckouts(),
+    Date.now()
+  );
+  writePendingCheckouts(resumable);
+  for (const record of resumable) {
+    if (getActiveCheckoutSessionId(record.mode)) continue;
+    const packId = isCreditPackId(record.packId) ? record.packId : undefined;
+    log.info(
+      `[credit-handler] Re-checking ${record.mode} checkout ${record.sessionId} left open last time.`
+    );
+    setActiveCheckoutSession(record.mode, record.sessionId);
+    if (record.mode === 'credits' && packId && record.url) {
+      activeCreditCheckout = {
+        sessionId: record.sessionId,
+        packId,
+        url: record.url,
+      };
+    }
+    emitCheckoutUnresolved(record.mode, targetWindow ?? null, record.sessionId);
+    scheduleSlowCheckoutWatch(
+      record.sessionId,
+      {
+        mode: record.mode,
+        window: targetWindow,
+        packId,
+        createdAt: record.createdAt,
+      },
+      0
+    );
+  }
 }
 
 export async function handleStripeSuccess(

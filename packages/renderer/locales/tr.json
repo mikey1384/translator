@@ -916,7 +916,6 @@
     "checkoutNote": "Tarayıcınızda Stripe ile tek seferlik ödeme. Hesap ya da abonelik yok. Dakikalar otomatik olarak yüklenir.",
     "dubbingNote": "Çeviri eklemek yaklaşık %10 daha fazla dakika kullanır; seslendirme daha fazlasını kullanır.",
     "iCancelledCheckout": "Ödemeyi iptal ettim",
-    "checkoutStartFailed": "Ödeme başlatılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     "loadFailed": "Bakiyeniz yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin.",
     "costOfBalanceMinutes": "{{balance}} bakiyenizden {{cost}}",
     "timeLeft": "{{time}} kaldı",
@@ -936,8 +935,16 @@
     "microPackLabel": "Dakika satın al — {{price}} · ≈ {{time}} video",
     "monthlyFreeNote_one": "Her ay {{minutes}} ücretsiz dakika · sonraki: {{date}}",
     "checkingPayment": "Ödemeniz kontrol ediliyor…",
-    "checkoutUnresolved": "Ödemeyi yaptıysanız dakikalarınız birazdan burada görünür. Ödemeyi henüz bitirmediyseniz tarayıcınızda tamamlayın.",
-    "checkPaymentNow": "Şimdi kontrol et"
+    "checkPaymentNow": "Şimdi kontrol et",
+    "localCurrencyNote": "Fiyatlar ABD doları cinsindendir. Ödeme sayfası, mümkünse tutarı yerel para biriminizde gösterir.",
+    "checkoutAwaitingConfirmation": "Ödeme onayı bekleniyor. Bazı ödeme yöntemleri birkaç dakika sürer ve Translator kontrol etmeye devam eder. Onaylanır onaylanmaz dakikalarınız burada görünür.",
+    "checkoutFailed": {
+      "title": "Ödeme sayfası açılmadı",
+      "message": "Translator ödeme sayfasına ulaşamadı. İnternet bağlantınızı kontrol edip tekrar deneyin. Bu durum sürerse {{email}} adresinden bize yazın, dakika satın almanıza yardımcı olalım.",
+      "contact": "Destekle iletişime geç",
+      "retry": "Tekrar dene",
+      "supportSubject": "Translator'da dakika satın alamıyorum"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Maliyet hesaplanıyor…",
     "welcomeCredits": {
-      "message": "Yazıya dökme ve çeviriyi denemek için ücretsiz dakikalarınız var (yaklaşık 20 dakikalık video)."
+      "message": "Yazıya dökme ve çeviriyi denemek için ücretsiz dakikalarınız var (yaklaşık {{minutes}} dakikalık video)."
     }
   },
   "findBar": {
@@ -1523,7 +1530,9 @@
     "enoughBody_one": "Kalan {{remaining}} dakikayı hemen çevirmeye yetecek kadar dakikanız var.",
     "noneTitle_one": "Bu video {{total}} dakika.",
     "offerBody_one": "Videonun tamamını {{price}} ile çevirin. Kalan {{remaining}} dakikayı karşılar; artan dakikalar sonraki videonuz için kalır.",
-    "offerBodyLong_one": "{{price}} paketi kalan {{remaining}} dakikanın çoğunu karşılar."
+    "offerBodyLong_one": "{{price}} paketi kalan {{remaining}} dakikanın çoğunu karşılar.",
+    "checkoutAwaitingTitle": "Ödeme onayı bekleniyor",
+    "checkoutAwaitingBody": "Bazı ödeme yöntemlerinin onaylanması birkaç dakika sürer. Translator kontrol etmeye devam eder ve ödemeniz onaylanır onaylanmaz kaldığı yerden devam eder."
   },
   "videoCost": {
     "covered": "Dakikalarınız yetiyor",

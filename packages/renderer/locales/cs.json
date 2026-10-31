@@ -923,7 +923,6 @@
     "checkoutNote": "Jednorázová platba přes Stripe v prohlížeči. Bez účtu a bez předplatného. Minuty dorazí samy.",
     "dubbingNote": "S překladem se spotřebuje zhruba o 10 % minut víc, dabing spotřebuje ještě víc.",
     "iCancelledCheckout": "Platba zrušena",
-    "checkoutStartFailed": "Platbu se nepodařilo spustit. Zkontrolujte připojení a zkuste to znovu.",
     "loadFailed": "Zůstatek se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.",
     "costOfBalanceMinutes": "{{cost}} z vašich {{balance}}",
     "timeLeft": "Zbývá {{time}}",
@@ -942,8 +941,16 @@
     "microPackLabelNoTime": "Koupit minuty — {{price}}",
     "microPackLabel": "Koupit minuty — {{price}} · ≈ {{time}} videa",
     "checkingPayment": "Ověřujeme platbu…",
-    "checkoutUnresolved": "Pokud už jste zaplatili, minuty se tu brzy objeví. Ještě platíte? Dokončete platbu v prohlížeči.",
-    "checkPaymentNow": "Zkontrolovat"
+    "checkPaymentNow": "Zkontrolovat",
+    "localCurrencyNote": "Ceny jsou v amerických dolarech. Platební stránka ukáže částku ve vaší místní měně, pokud to jde.",
+    "checkoutAwaitingConfirmation": "Čekáme na potvrzení platby. Některé platební metody trvají pár minut a Translator to dál kontroluje. Minuty se tu objeví hned po potvrzení.",
+    "checkoutFailed": {
+      "title": "Platba se neotevřela",
+      "message": "Translator se nedostal na platební stránku. Zkontrolujte připojení k internetu a zkuste to znovu. Pokud se to opakuje, napište nám na {{email}} a pomůžeme vám minuty koupit.",
+      "contact": "Napsat podpoře",
+      "retry": "Zkusit znovu",
+      "supportSubject": "Nemůžu si v Translatoru koupit minuty"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1061,7 +1068,7 @@
     },
     "calculatingCost": "Výpočet nákladů…",
     "welcomeCredits": {
-      "message": "Máte minuty zdarma na vyzkoušení přepisu a překladu (asi 20 minut videa)."
+      "message": "Máte minuty zdarma na vyzkoušení přepisu a překladu (asi {{minutes}} minut videa)."
     }
   },
   "findBar": {
@@ -1548,7 +1555,9 @@
     "failedNeedMinutes_few": "Všechno, co už je přeložené, zůstává. Na zbytek videa ({{remaining}} min) vám minuty nestačí.",
     "failedNeedMinutes_many": "Všechno, co už je přeložené, zůstává. Na zbytek videa ({{remaining}} min) vám minuty nestačí.",
     "failedNetwork": "Spojení se přerušilo. Všechno, co už je přeložené, zůstává. Zkuste to znovu, až budete online.",
-    "noneBodyNextFree": "Minuty zdarma se znovu doplní {{date}} — nebo video přeložte do {{languageInto}} hned teď za {{price}}."
+    "noneBodyNextFree": "Minuty zdarma se znovu doplní {{date}} — nebo video přeložte do {{languageInto}} hned teď za {{price}}.",
+    "checkoutAwaitingTitle": "Čekáme na potvrzení platby",
+    "checkoutAwaitingBody": "Některé platební metody potřebují k potvrzení pár minut. Translator to dál kontroluje a po potvrzení platby naváže tam, kde skončil."
   },
   "videoCost": {
     "covered": "Stačí vaše minuty",

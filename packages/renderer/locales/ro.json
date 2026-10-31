@@ -922,7 +922,6 @@
     "checkoutNote": "Plată unică prin Stripe, în browser. Fără cont și fără abonament. Minutele apar automat.",
     "dubbingNote": "Adăugarea unei traduceri folosește cu aproximativ 10% mai multe minute; dublarea folosește și mai multe.",
     "iCancelledCheckout": "Am anulat plata",
-    "checkoutStartFailed": "Plata nu a putut începe. Verifică conexiunea și încearcă din nou.",
     "monthlyFreeNote_one": "{{minutes}} min gratuit în fiecare lună · următorul pe {{date}}",
     "loadFailed": "Soldul nu a putut fi încărcat. Verifică-ți conexiunea și încearcă din nou.",
     "costOfBalanceMinutes": "{{cost}} din cele {{balance}} ale tale",
@@ -942,8 +941,16 @@
     "microPackLabelNoTime": "Cumpără minute — {{price}}",
     "microPackLabel": "Cumpără minute — {{price}} · ≈ {{time}} de video",
     "checkingPayment": "Verificăm plata…",
-    "checkoutUnresolved": "Dacă ai plătit deja, minutele tale vor apărea aici în curând. Încă plătești? Finalizează plata în browser.",
-    "checkPaymentNow": "Verifică acum"
+    "checkPaymentNow": "Verifică acum",
+    "localCurrencyNote": "Prețuri în dolari americani. Pagina de plată afișează suma în moneda ta locală, când e posibil.",
+    "checkoutAwaitingConfirmation": "Așteptăm confirmarea plății. Unele metode de plată durează câteva minute, iar Translator verifică în continuare. Minutele apar aici imediat ce plata e confirmată.",
+    "checkoutFailed": {
+      "title": "Plata nu s-a deschis",
+      "message": "Translator nu a putut accesa pagina de plată. Verifică conexiunea la internet și încearcă din nou. Dacă se tot întâmplă, scrie-ne la {{email}} și te ajutăm să cumperi minutele.",
+      "contact": "Contactează asistența",
+      "retry": "Încearcă din nou",
+      "supportSubject": "Nu pot cumpăra minute în Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1061,7 +1068,7 @@
     },
     "calculatingCost": "Se calculează costul…",
     "welcomeCredits": {
-      "message": "Ai minute gratuite ca să încerci transcrierea și traducerea (aproximativ 20 de minute de video)."
+      "message": "Ai minute gratuite ca să încerci transcrierea și traducerea (aproximativ {{minutes}} minute de video)."
     }
   },
   "findBar": {
@@ -1542,7 +1549,9 @@
     "noneTitle_one": "Videoclipul durează {{total}} minut.",
     "enoughBody_one": "Ai destule minute ca să traduci acum restul de {{remaining}} minut.",
     "offerBody_one": "Tradu tot videoclipul cu {{price}}. Acoperă restul de {{remaining}} minut, iar minutele în plus rămân pentru următorul videoclip.",
-    "offerBodyLong_one": "Pachetul de {{price}} acoperă cea mai mare parte din restul de {{remaining}} minut."
+    "offerBodyLong_one": "Pachetul de {{price}} acoperă cea mai mare parte din restul de {{remaining}} minut.",
+    "checkoutAwaitingTitle": "Așteptăm confirmarea plății",
+    "checkoutAwaitingBody": "Unele metode de plată au nevoie de câteva minute pentru confirmare. Translator verifică în continuare și reia de unde a rămas imediat ce plata ta e confirmată."
   },
   "videoCost": {
     "covered": "Inclus în minutele tale",

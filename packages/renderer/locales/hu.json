@@ -909,7 +909,6 @@
     "checkoutNote": "Egyszeri fizetés a Stripe-on keresztül, a böngésződben. Nem kell fiók, sem előfizetés. A percek maguktól jóváíródnak.",
     "dubbingNote": "A fordítás hozzáadása kb. 10%-kal több percet használ, a szinkron ennél is többet.",
     "iCancelledCheckout": "Megszakítottam a fizetést",
-    "checkoutStartFailed": "A fizetést nem sikerült elindítani. Ellenőrizd a kapcsolatot, és próbáld újra.",
     "loadFailed": "Nem sikerült betölteni az egyenlegedet. Ellenőrizd a kapcsolatot, és próbáld újra.",
     "costOfBalanceMinutes": "{{cost}} a(z) {{balance}} egyenlegedből",
     "timeLeft": "{{time}} maradt",
@@ -928,8 +927,16 @@
     "microPackLabelNoTime": "Percek vásárlása – {{price}}",
     "microPackLabel": "Percek vásárlása – {{price}} · ≈ {{time}} videó",
     "checkingPayment": "Fizetés ellenőrzése…",
-    "checkoutUnresolved": "Ha már fizettél, a perceid hamarosan megjelennek itt. Még fizetsz? Fejezd be a böngészőben.",
-    "checkPaymentNow": "Ellenőrzés"
+    "checkPaymentNow": "Ellenőrzés",
+    "localCurrencyNote": "Az árak amerikai dollárban vannak. A fizetési oldal, ahol lehet, a helyi pénznemedben mutatja az összeget.",
+    "checkoutAwaitingConfirmation": "Várakozás a fizetés megerősítésére. Néhány fizetési mód pár percig tart, a Translator pedig folyamatosan ellenőrzi. A perceid itt jelennek meg, amint megerősítették.",
+    "checkoutFailed": {
+      "title": "Nem nyílt meg a fizetés",
+      "message": "A Translator nem érte el a fizetési oldalt. Ellenőrizd az internetkapcsolatot, és próbáld újra. Ha továbbra is előfordul, írj nekünk ide: {{email}}, és segítünk megvenni a perceidet.",
+      "contact": "Írok az ügyfélszolgálatnak",
+      "retry": "Próbáld újra",
+      "supportSubject": "Nem tudok perceket venni a Translatorban"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1047,7 +1054,7 @@
     },
     "calculatingCost": "Költség számítása…",
     "welcomeCredits": {
-      "message": "Vannak ingyenes perceid az átírás és a fordítás kipróbálásához (kb. 20 percnyi videóhoz)."
+      "message": "Vannak ingyenes perceid az átírás és a fordítás kipróbálásához (kb. {{minutes}} percnyi videóhoz)."
     }
   },
   "findBar": {
@@ -1507,7 +1514,9 @@
     "failedNeedMinutes": "Ami eddig elkészült, megmarad. A hátralévő {{remaining}} perchez több percre van szükséged.",
     "failedNeedMinutes_one": "Ami eddig elkészült, megmarad. A hátralévő {{remaining}} perchez több percre van szükséged.",
     "failedNetwork": "Megszakadt a kapcsolat. Ami eddig elkészült, megmarad. Próbáld újra, ha újra online vagy.",
-    "noneBodyNextFree": "Az ingyenes percek {{date}} újra feltöltődnek – vagy fordítsd le most {{language}} nyelvre {{price}} áron."
+    "noneBodyNextFree": "Az ingyenes percek {{date}} újra feltöltődnek – vagy fordítsd le most {{language}} nyelvre {{price}} áron.",
+    "checkoutAwaitingTitle": "Várakozás a fizetés megerősítésére",
+    "checkoutAwaitingBody": "Néhány fizetési mód megerősítése pár percig tart. A Translator folyamatosan ellenőrzi, és amint a fizetésed megerősítést kap, ott folytatja, ahol abbahagyta."
   },
   "videoCost": {
     "covered": "Van rá elég perced",

@@ -48,7 +48,11 @@ export type AppSettingsSchema = {
   privateDownloadHistoryTombstones: string[];
   pendingUrlDownloadLibraryReclaims: string[];
   pendingVideoSuggestionFileDeletions: PendingVideoSuggestionFileDeletionIntent[];
-  app_language_preference: string;
+  // Absent until the user picks a language; the system language is used.
+  app_language_preference?: string;
+  // True once the user picked the language in the app (it then wins over the
+  // system language). See migrateUntouchedLanguageDefault.
+  app_language_explicit: boolean;
   /** Folder of the last video export, offered first next time. */
   lastExportVideoDirectory: string | null;
   subtitleTargetLanguage: string;
@@ -93,7 +97,7 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   privateDownloadHistoryTombstones: [],
   pendingUrlDownloadLibraryReclaims: [],
   pendingVideoSuggestionFileDeletions: [],
-  app_language_preference: 'en',
+  app_language_explicit: false,
   lastExportVideoDirectory: null,
   subtitleTargetLanguage: 'original',
   apiKey: null,

@@ -907,7 +907,6 @@
     "checkoutNote": "通过 Stripe 在浏览器中一次性付款，无需注册账号，也不是订阅。时长会自动到账。",
     "dubbingNote": "加上翻译约多用 10% 时长；配音用得更多。",
     "iCancelledCheckout": "我已取消付款",
-    "checkoutStartFailed": "无法开始付款。请检查网络连接后重试。",
     "loadFailed": "无法加载余额。请检查网络后重试。",
     "costOfBalanceMinutes": "{{cost}}（你共有 {{balance}}）",
     "timeLeft": "剩余 {{time}}",
@@ -926,8 +925,16 @@
     "microPackLabelNoTime": "购买时长 — {{price}}",
     "microPackLabel": "购买时长 — {{price}} · 约 {{time}} 视频",
     "checkingPayment": "正在确认你的付款…",
-    "checkoutUnresolved": "如果你已付款，时长很快就会显示在这里。还在付款？请在浏览器中完成。",
-    "checkPaymentNow": "立即检查"
+    "checkPaymentNow": "立即检查",
+    "localCurrencyNote": "价格以美元计。付款页面会尽可能以你的当地货币显示金额。",
+    "checkoutAwaitingConfirmation": "正在等待付款确认。部分付款方式需要几分钟，Translator 会持续检查。确认后时长会立即到账。",
+    "checkoutFailed": {
+      "title": "付款页面没有打开",
+      "message": "Translator 无法连接到付款页面。请检查网络连接后重试。如果问题持续，请发邮件到 {{email}}，我们会帮你购买时长。",
+      "contact": "联系客服",
+      "retry": "重试",
+      "supportSubject": "我无法在 Translator 中购买时长"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1045,7 +1052,7 @@
     },
     "calculatingCost": "正在计算费用…",
     "welcomeCredits": {
-      "message": "你有免费时长，可以试试转录和翻译（约 20 分钟视频）。"
+      "message": "你有免费时长，可以试试转录和翻译（约 {{minutes}} 分钟视频）。"
     }
   },
   "findBar": {
@@ -1495,7 +1502,9 @@
     "notNow": "以后再说",
     "failedNeedMinutes": "已翻译的部分都保留着。要翻译完剩下的 {{remaining}} 分钟，还需要更多时长。",
     "failedNetwork": "网络连接中断了。已翻译的部分都保留着，恢复联网后重试即可。",
-    "noneBodyNextFree": "免费时长将于{{date}}恢复；也可以现在花 {{price}} 翻译成{{language}}。"
+    "noneBodyNextFree": "免费时长将于{{date}}恢复；也可以现在花 {{price}} 翻译成{{language}}。",
+    "checkoutAwaitingTitle": "正在等待付款确认",
+    "checkoutAwaitingBody": "部分付款方式需要几分钟才能确认。Translator 会持续检查，付款一经确认，就会从中断的地方继续。"
   },
   "videoCost": {
     "covered": "剩余时长够用",

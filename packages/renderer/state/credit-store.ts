@@ -71,7 +71,12 @@ interface CreditState {
 export const CREDITS_LOAD_FAILED = 'credits.loadFailed';
 
 const CHECKOUT_UNRESOLVED_REFRESH_INTERVAL_MS = 2_500;
-const CHECKOUT_UNRESOLVED_REFRESH_MAX_MS = 10 * 60_000;
+// After this the balance is re-read once a minute instead: slow methods (Pix,
+// UPI, a bank-app approval) can confirm much later. The checkout is never
+// called abandoned here; main ends the wait when Stripe says it expired or
+// failed (or after the session's 24-hour lifetime).
+export const CHECKOUT_UNRESOLVED_FAST_REFRESH_MS = 10 * 60_000;
+export const CHECKOUT_UNRESOLVED_SLOW_REFRESH_INTERVAL_MS = 60_000;
 const CHECKOUT_UNRESOLVED_FOCUS_REFRESH_DEBOUNCE_MS = 1_000;
 const CHECKOUT_SUCCESS_VISIBLE_MS = 12_000;
 const INITIAL_AUTHORITATIVE_REFRESH_INTERVAL_MS = 5_000;
@@ -83,6 +88,7 @@ const BALANCE_SLOW_LOAD_MS = 8_000;
 
 let checkoutSuccessTimer: ReturnType<typeof setTimeout> | null = null;
 let checkoutRefreshInterval: ReturnType<typeof setInterval> | null = null;
+let checkoutRefreshIntervalMs = 0;
 let checkoutRefreshStartedAt: number | null = null;
 let checkoutRefreshInFlight = false;
 let lastCheckoutFocusRefreshAt = 0;
@@ -100,6 +106,7 @@ function stopCheckoutRefreshLoop() {
     clearInterval(checkoutRefreshInterval);
     checkoutRefreshInterval = null;
   }
+  checkoutRefreshIntervalMs = 0;
   checkoutRefreshInFlight = false;
 }
 
@@ -166,15 +173,13 @@ export const useCreditStore = create<CreditState>((set, get) => {
 
     if (
       checkoutRefreshStartedAt &&
-      Date.now() - checkoutRefreshStartedAt > CHECKOUT_UNRESOLVED_REFRESH_MAX_MS
+      checkoutRefreshIntervalMs !==
+        CHECKOUT_UNRESOLVED_SLOW_REFRESH_INTERVAL_MS &&
+      Date.now() - checkoutRefreshStartedAt >
+        CHECKOUT_UNRESOLVED_FAST_REFRESH_MS
     ) {
-      // Ten minutes without a payment: treat it as abandoned instead of
-      // telling the user to "finish paying" for the rest of the session.
-      // Stripe's webhook still credits a late payment on the server; the
-      // late-payment watch re-reads the balance when the user returns.
-      stopWaitingOnCheckout({ watchForLatePayment: true });
-      void SystemIPC.abandonCheckoutSession().catch(() => {});
-      return;
+      // Still not confirmed after ten minutes: keep waiting, more slowly.
+      setRefreshInterval(CHECKOUT_UNRESOLVED_SLOW_REFRESH_INTERVAL_MS);
     }
 
     if (checkoutRefreshInFlight) {
@@ -212,6 +217,14 @@ export const useCreditStore = create<CreditState>((set, get) => {
       });
   };
 
+  function setRefreshInterval(ms: number) {
+    if (checkoutRefreshInterval) clearInterval(checkoutRefreshInterval);
+    checkoutRefreshIntervalMs = ms;
+    checkoutRefreshInterval = setInterval(() => {
+      refreshUnresolvedCheckout();
+    }, ms);
+  }
+
   const startCheckoutRefreshLoop = () => {
     if (!checkoutRefreshStartedAt) {
       checkoutRefreshStartedAt = Date.now();
@@ -219,13 +232,15 @@ export const useCreditStore = create<CreditState>((set, get) => {
 
     refreshUnresolvedCheckout();
 
-    if (checkoutRefreshInterval) {
+    if (
+      checkoutRefreshInterval &&
+      checkoutRefreshIntervalMs === CHECKOUT_UNRESOLVED_REFRESH_INTERVAL_MS
+    ) {
       return;
     }
 
-    checkoutRefreshInterval = setInterval(() => {
-      refreshUnresolvedCheckout();
-    }, CHECKOUT_UNRESOLVED_REFRESH_INTERVAL_MS);
+    // A fresh start (or "Check now") goes back to the quick pace.
+    setRefreshInterval(CHECKOUT_UNRESOLVED_REFRESH_INTERVAL_MS);
   };
 
   let historyInFlight = false;

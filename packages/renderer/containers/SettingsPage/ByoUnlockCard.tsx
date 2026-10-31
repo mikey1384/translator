@@ -22,18 +22,20 @@ import {
 } from '../../state/byo-runtime';
 import { localizeErrorOr } from '../../utils/userFacingError';
 import { formatUsd } from '../../utils/formatUsd';
+import CheckoutCurrencyNote from '../../components/CheckoutCurrencyNote';
+import { checkoutSupportMailto } from '../../utils/checkout-failure';
 import * as SystemIPC from '../../ipc/system';
 
 const BYO_UNLOCK_USD_PRICE = 10;
 
-// The copy carries the price as "$10" / "10$" (any digits); show it as a
-// US-dollar price in the UI language's own digits and symbol placement.
+// The copy carries the price as "$10" / "10$" (any digits); show it as an
+// explicit US-dollar price ("US$10") in the UI language's own digits.
 function preserveLocalizedUnlockCopyWithUsdPrice(
   copy: string,
   locale: string
 ): string {
   return copy.replace(
-    /\$\s?(?:10|۱۰|১০|१०|١٠)|(?:10|۱۰|১০|१०|١٠)\s?\$/g,
+    /(?:US)?\$\s?(?:10|۱۰|১০|१०|١٠)|(?:10|۱۰|১০|१०|١٠)\s?(?:US)?\$/g,
     formatUsd(BYO_UNLOCK_USD_PRICE, locale)
   );
 }
@@ -180,6 +182,7 @@ export default function ByoUnlockCard() {
             ? t('settings.byoOpenAi.checkoutOpen', 'Checkout open in browser…')
             : unlockPriceLabel}
       </Button>
+      <CheckoutCurrencyNote />
 
       {unlockUnresolved && (
         <div className={settingsCalloutStyles}>
@@ -205,7 +208,25 @@ export default function ByoUnlockCard() {
             key: 'settings.byoOpenAi.unlockFailed',
             defaultText:
               'Checkout couldn’t start. Check your connection and try again.',
-          })}
+          })}{' '}
+          <button
+            type="button"
+            onClick={() => void handleUnlock()}
+            className={settingsInlineLinkButtonStyles}
+          >
+            {t('credits.checkoutFailed.retry', 'Try again')}
+          </button>{' '}
+          <button
+            type="button"
+            onClick={() =>
+              void window.appShell
+                .openExternal(checkoutSupportMailto(t as any))
+                .catch(() => {})
+            }
+            className={settingsInlineLinkButtonStyles}
+          >
+            {t('credits.checkoutFailed.contact', 'Contact support')}
+          </button>
         </p>
       )}
       <ApiKeyGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />

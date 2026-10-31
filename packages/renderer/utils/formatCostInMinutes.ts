@@ -17,7 +17,7 @@ export type MinutesKind =
   | 'estimate'
   /** What is left: "4h 17m", "0m". Rounded down so it never overpromises. */
   | 'balance'
-  /** A known amount (a pack, a grant, a transfer): "32m". Rounded. */
+  /** A known amount (a pack, a grant, a transfer): "32m". Rounded down. */
   | 'exact';
 
 export type FormatCostInMinutesOptions = {
@@ -31,9 +31,9 @@ export function creditsToWholeMinutes(
   kind: MinutesKind = 'estimate'
 ): number {
   const minutes = creditsToVideoMinutes(Number(credits));
-  if (kind === 'balance') return Math.floor(minutes);
   if (kind === 'estimate') return Math.ceil(minutes);
-  return Math.round(minutes);
+  // Balances and known amounts never overpromise.
+  return Math.floor(minutes);
 }
 
 /**
@@ -53,7 +53,7 @@ export function formatCostInMinutes(
       : formatDurationMinutes(whole, locale);
   }
   if (kind === 'exact') {
-    return formatDurationMinutes(raw, locale);
+    return formatDurationMinutes(Math.floor(raw), locale);
   }
   // A cost above zero but under a minute still costs something: "<1m".
   if (raw > 0 && raw < 1) return formatDurationMinutes(0, locale);

@@ -46,9 +46,9 @@ import {
 } from './export-destination.js';
 import { getFocusedOrMainWindow } from '../../utils/window.js';
 import { getMainT } from '../../utils/i18n.js';
+import { getUiLanguage } from '../../utils/ui-language.js';
 import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.js';
 import { ERROR_CODES } from '../../../shared/constants/index.js';
-import { settingsStore } from '../../store/settings-store.js';
 import { assertAgentOutputPathAuthorized } from '../../utils/agent-output-authorization.js';
 import { normalizeRenderFailure } from '../../utils/render-failure.js';
 import {
@@ -78,38 +78,8 @@ type RenderOperationStatusResult = {
 const fontRegular = pathToFileURL(getAssetsPath('NotoSans-Regular.ttf')).href;
 
 function getLanguagePreference(): string {
-  // 1) Respect saved preference
-  if (settingsStore.has('app_language_preference')) {
-    return String(settingsStore.get('app_language_preference', 'en'));
-  }
-
-  // 2) Detect system locale (keep region)
-  const raw = (
-    app.getPreferredSystemLanguages?.()[0] ||
-    app.getLocale() ||
-    'en'
-  )
-    .replace('_', '-')
-    .trim();
-  const ln = raw.toLowerCase();
-
-  // 3) Special handling for Chinese so we don't lose the script/region
-  if (ln.startsWith('zh')) {
-    // Map traditional locales to zh-TW; default to zh-CN otherwise
-    if (
-      ln.includes('tw') ||
-      ln.includes('hk') ||
-      ln.includes('mo') ||
-      ln.includes('hant')
-    ) {
-      return 'zh-TW';
-    }
-    return 'zh-CN';
-  }
-
-  // 4) Fall back to base language (en, es, fr, etc.)
-  const base = ln.split('-')[0];
-  return base || 'en';
+  // The saved choice, else the system language (shared with menus/dialogs).
+  return getUiLanguage();
 }
 
 function assertSubtitleRenderSpecMatchesOptions(

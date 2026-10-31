@@ -42,84 +42,13 @@ import afTranslation from './locales/af.json';
 import viTranslation from './locales/vi.json';
 
 import * as SystemIPC from '@ipc/system';
+import { resolveSupportedUiLanguage } from '../shared/helpers/ui-language';
 
 const LS_KEY = 'app_language_preference';
 
-// Languages bundled in this build (keys must match resource keys below)
-const SUPPORTED_LANGS = new Set([
-  'en',
-  'ko',
-  'ja',
-  'ms',
-  'pl',
-  'zh-CN',
-  'zh-TW',
-  'es',
-  'fr',
-  'de',
-  'it',
-  'pt',
-  'ru',
-  'nl',
-  'sv',
-  'tr',
-  'no',
-  'da',
-  'fi',
-  'el',
-  'cs',
-  'hu',
-  'ro',
-  'uk',
-  'hi',
-  'id',
-  'th',
-  'tl',
-  'bn',
-  'ta',
-  'te',
-  'mr',
-  'ur',
-  'ar',
-  'he',
-  'fa',
-  'sw',
-  'af',
-  'vi',
-]);
-
 function normalizeBrowserLang(input: string | null | undefined): string {
-  const raw = (input || 'en').replace('_', '-').trim();
-  const ln = raw.toLowerCase();
-  // Prefer exact match when we have it (case-sensitive keys later)
-  const exactCandidates = [
-    raw, // keep original casing first
-    raw.toLowerCase(),
-    raw.toUpperCase(),
-    // common normalized case like en-US
-    raw
-      .split('-')
-      .map((p, i) => (i === 0 ? p.toLowerCase() : p.toUpperCase()))
-      .join('-'),
-  ];
-  for (const c of exactCandidates) {
-    if (SUPPORTED_LANGS.has(c as any)) return c;
-  }
-  // Special-case Chinese
-  if (ln.startsWith('zh')) {
-    if (
-      ln.includes('tw') ||
-      ln.includes('hk') ||
-      ln.includes('mo') ||
-      ln.includes('hant')
-    )
-      return 'zh-TW';
-    return 'zh-CN';
-  }
-  // Fallback to base language if supported
-  const base = ln.split('-')[0] || 'en';
-  if (SUPPORTED_LANGS.has(base)) return base;
-  return 'en';
+  // Same mapping as main (zh-Hant → zh-TW, pt-BR → pt, nb → no, else en).
+  return resolveSupportedUiLanguage(input);
 }
 
 const getInitialLanguage = async (): Promise<string> => {
@@ -280,6 +209,17 @@ export const changeLanguage = async (lng: string) => {
     return i18n.changeLanguage('en');
   }
 };
+
+/**
+ * Show a language main already has (another tab changed it, or main resolved
+ * the system language) without saving it as the user's own choice.
+ */
+export async function applyLanguageFromMain(lng: string): Promise<void> {
+  const next = normalizeBrowserLang(lng);
+  await initI18nPromise;
+  if (next === i18n.language) return;
+  await i18n.changeLanguage(next);
+}
 
 /**
  * The settings file was reset, so main no longer knows the UI language and

@@ -916,7 +916,6 @@
     "checkoutNote": "Kertamaksu Stripen kautta selaimessa. Ei tiliä eikä tilausta. Minuutit lisätään automaattisesti.",
     "dubbingNote": "Käännöksen lisääminen kuluttaa noin 10 % enemmän minuutteja; dubbaus kuluttaa enemmän.",
     "iCancelledCheckout": "Peruutin maksun",
-    "checkoutStartFailed": "Maksua ei voitu aloittaa. Tarkista yhteys ja yritä uudelleen.",
     "loadFailed": "Saldoa ei voitu ladata. Tarkista yhteys ja yritä uudelleen.",
     "costOfBalanceMinutes": "{{cost}} (saldo {{balance}})",
     "timeLeft": "{{time}} jäljellä",
@@ -936,8 +935,16 @@
     "microPackLabel": "Osta minuutteja – {{price}} · ≈ {{time}} videota",
     "monthlyFreeNote_one": "Joka kuukausi {{minutes}} min ilmaiseksi · seuraava {{date}}",
     "checkingPayment": "Tarkistetaan maksuasi…",
-    "checkoutUnresolved": "Jos maksoit jo, minuutit näkyvät tässä pian. Maksu vielä kesken? Viimeistele se selaimessa.",
-    "checkPaymentNow": "Tarkista nyt"
+    "checkPaymentNow": "Tarkista nyt",
+    "localCurrencyNote": "Hinnat Yhdysvaltain dollareina. Maksusivu näyttää summan paikallisessa valuutassasi, kun se on mahdollista.",
+    "checkoutAwaitingConfirmation": "Odotetaan maksun vahvistusta. Jotkin maksutavat vievät muutaman minuutin, ja Translator tarkistaa tilannetta jatkuvasti. Minuutit ilmestyvät tähän heti, kun maksu on vahvistettu.",
+    "checkoutFailed": {
+      "title": "Maksusivu ei avautunut",
+      "message": "Translator ei saanut yhteyttä maksusivuun. Tarkista internetyhteys ja yritä uudelleen. Jos ongelma toistuu, lähetä meille sähköpostia osoitteeseen {{email}}, niin autamme sinua ostamaan minuutit.",
+      "contact": "Ota yhteyttä tukeen",
+      "retry": "Yritä uudelleen",
+      "supportSubject": "En pysty ostamaan minuutteja Translatorissa"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Lasketaan kustannuksia…",
     "welcomeCredits": {
-      "message": "Sinulla on ilmaisia minuutteja litteroinnin ja kääntämisen kokeiluun (noin 20 minuuttia videota)."
+      "message": "Sinulla on ilmaisia minuutteja litteroinnin ja kääntämisen kokeiluun (noin {{minutes}} minuuttia videota)."
     }
   },
   "findBar": {
@@ -1523,7 +1530,9 @@
     "failedNeedMinutes_one": "Kaikki tähän asti valmistunut säilyy. Viimeiseen minuuttiin tarvitset lisää minuutteja.",
     "failedNetwork": "Yhteys katkesi. Kaikki tähän asti valmistunut säilyy. Yritä uudelleen, kun olet taas verkossa.",
     "noneBodyNextFree": "Ilmaiset minuutit täyttyvät taas {{date}} – tai käännä video heti {{languageInto}} hintaan {{price}}.",
-    "enoughBody_one": "Minuuttisi riittävät viimeisen minuutin kääntämiseen saman tien."
+    "enoughBody_one": "Minuuttisi riittävät viimeisen minuutin kääntämiseen saman tien.",
+    "checkoutAwaitingTitle": "Odotetaan maksun vahvistusta",
+    "checkoutAwaitingBody": "Joidenkin maksutapojen vahvistus vie muutaman minuutin. Translator tarkistaa tilannetta jatkuvasti ja jatkaa siitä, mihin jäi, heti kun maksusi on vahvistettu."
   },
   "videoCost": {
     "covered": "Minuuttisi riittävät",

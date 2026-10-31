@@ -916,7 +916,6 @@
     "checkoutNote": "Engangsbetaling via Stripe i nettleseren. Ingen konto eller abonnement. Minuttene kommer av seg selv.",
     "dubbingNote": "Med oversettelse går det med omtrent 10 % flere minutter; dubbing bruker mer.",
     "iCancelledCheckout": "Jeg avbrøt betalingen",
-    "checkoutStartFailed": "Betalingen kunne ikke startes. Sjekk tilkoblingen og prøv igjen.",
     "monthlyFreeNote_one": "{{minutes}} gratisminutt hver måned · neste gang {{date}}",
     "loadFailed": "Saldoen din kunne ikke lastes inn. Sjekk tilkoblingen, og prøv igjen.",
     "costOfBalanceMinutes": "{{cost}} av dine {{balance}}",
@@ -936,8 +935,16 @@
     "microPackLabelNoTime": "Kjøp minutter – {{price}}",
     "microPackLabel": "Kjøp minutter – {{price}} · ≈ {{time}} video",
     "checkingPayment": "Sjekker betalingen…",
-    "checkoutUnresolved": "Hvis du allerede har betalt, dukker minuttene opp her om litt. Betaler du fortsatt? Fullfør i nettleseren.",
-    "checkPaymentNow": "Sjekk nå"
+    "checkPaymentNow": "Sjekk nå",
+    "localCurrencyNote": "Prisene er i amerikanske dollar. Betalingssiden viser beløpet i din lokale valuta der det er mulig.",
+    "checkoutAwaitingConfirmation": "Venter på bekreftelse av betalingen. Noen betalingsmåter tar noen minutter, og Translator fortsetter å sjekke. Minuttene dine dukker opp her så snart den er bekreftet.",
+    "checkoutFailed": {
+      "title": "Betalingssiden åpnet seg ikke",
+      "message": "Translator fikk ikke kontakt med betalingssiden. Sjekk internettforbindelsen og prøv igjen. Hvis det fortsetter, send oss en e-post på {{email}}, så hjelper vi deg med å kjøpe minutter.",
+      "contact": "Kontakt kundestøtte",
+      "retry": "Prøv igjen",
+      "supportSubject": "Jeg får ikke kjøpt minutter i Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Beregner kostnad…",
     "welcomeCredits": {
-      "message": "Du har gratisminutter til å prøve transkribering og oversettelse (omtrent 20 minutter video)."
+      "message": "Du har gratisminutter til å prøve transkribering og oversettelse (omtrent {{minutes}} minutter video)."
     }
   },
   "findBar": {
@@ -1523,7 +1530,9 @@
     "failedNeedMinutes": "Alt som allerede er oversatt, beholdes. Du trenger flere minutter for de gjenstående {{remaining}} minuttene.",
     "failedNetwork": "Forbindelsen ble brutt. Alt som allerede er oversatt, beholdes. Prøv igjen når du er på nett igjen.",
     "failedNeedMinutes_one": "Alt som allerede er oversatt, beholdes. Du trenger flere minutter for det gjenstående {{remaining}} minuttet.",
-    "noneBodyNextFree": "Gratisminuttene fylles på igjen {{date}}, eller oversett til {{language}} nå for {{price}}."
+    "noneBodyNextFree": "Gratisminuttene fylles på igjen {{date}}, eller oversett til {{language}} nå for {{price}}.",
+    "checkoutAwaitingTitle": "Venter på bekreftelse av betalingen",
+    "checkoutAwaitingBody": "Noen betalingsmåter bruker noen minutter på å bli bekreftet. Translator sjekker videre og fortsetter der den slapp så snart betalingen din er bekreftet."
   },
   "videoCost": {
     "covered": "Dekket av minuttene dine",

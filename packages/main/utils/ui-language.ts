@@ -2,6 +2,7 @@ import { app } from 'electron';
 import log from 'electron-log';
 import { settingsStore } from '../store/settings-store.js';
 import { getMainT } from './i18n.js';
+import { resolveAppUiLanguage } from '../../shared/helpers/ui-language.js';
 
 export type MainT = Awaited<ReturnType<typeof getMainT>>;
 
@@ -21,24 +22,33 @@ export function isRtlLanguage(lang: string): boolean {
  * language, mapped the same way the renderer maps it.
  */
 export function getUiLanguage(): string {
+  let saved: unknown;
   try {
-    const saved = settingsStore.get('app_language_preference');
-    if (typeof saved === 'string' && saved.trim()) return saved.trim();
+    saved = settingsStore.get('app_language_preference');
   } catch {
     // fall through to the system language
   }
-  const raw = (
-    app.getPreferredSystemLanguages?.()[0] ||
-    app.getLocale?.() ||
-    'en'
-  )
-    .replace('_', '-')
-    .trim();
-  const ln = raw.toLowerCase();
-  if (ln.startsWith('zh')) {
-    return /tw|hk|mo|hant/.test(ln) ? 'zh-TW' : 'zh-CN';
+  return resolveAppUiLanguage({
+    stored: saved,
+    systemPreferred: getSystemPreferredLanguages(),
+  });
+}
+
+/** The OS's preferred languages, most preferred first. */
+export function getSystemPreferredLanguages(): string[] {
+  const out: string[] = [];
+  try {
+    out.push(...(app.getPreferredSystemLanguages?.() ?? []));
+  } catch {
+    // older Electron or no display: fall back to the app locale
   }
-  return ln.split('-')[0] || 'en';
+  try {
+    const locale = app.getLocale?.();
+    if (locale) out.push(locale);
+  } catch {
+    // ignore
+  }
+  return out;
 }
 
 let lastUiT: MainT | null = null;

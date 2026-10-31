@@ -916,7 +916,6 @@
     "checkoutNote": "Isang bayad lang sa Stripe, sa browser mo. Walang account o subscription. Kusang papasok ang minuto.",
     "dubbingNote": "Mga 10% pang minuto ang nagagamit kapag may pagsasalin; mas marami pa sa dubbing.",
     "iCancelledCheckout": "Kinansela ko ang checkout",
-    "checkoutStartFailed": "Hindi mabuksan ang checkout. Tingnan ang internet mo at subukan ulit.",
     "loadFailed": "Hindi ma-load ang balance mo. Tingnan ang connection mo at subukan ulit.",
     "costOfBalanceMinutes": "{{cost}} sa {{balance}} mo",
     "timeLeft": "{{time}} na natitira",
@@ -935,9 +934,17 @@
     "microPackLabelNoTime": "Bumili ng minuto — {{price}}",
     "microPackLabel": "Bumili ng minuto — {{price}} · ≈ {{time}} ng video",
     "checkingPayment": "Tinitingnan ang bayad mo…",
-    "checkoutUnresolved": "Kung nakapagbayad ka na, lalabas dito ang minuto mo maya-maya. Nagbabayad ka pa? Tapusin ito sa browser mo.",
     "checkPaymentNow": "Tingnan ngayon",
-    "monthlyFreeNote_one": "{{minutes}} libreng minuto bawat buwan · susunod sa {{date}}"
+    "monthlyFreeNote_one": "{{minutes}} libreng minuto bawat buwan · susunod sa {{date}}",
+    "localCurrencyNote": "Nasa US dollar ang presyo. Ipinapakita ng checkout ang halaga sa lokal mong pera kung puwede.",
+    "checkoutAwaitingConfirmation": "Hinihintay ang kumpirmasyon ng bayad. May mga paraan ng pagbabayad na ilang minuto bago makumpirma, at patuloy na nagche-check ang Translator. Lalabas dito ang minuto mo kapag nakumpirma na.",
+    "checkoutFailed": {
+      "title": "Hindi nabuksan ang checkout",
+      "message": "Hindi maabot ng Translator ang payment page. Tingnan ang internet mo at subukan ulit. Kung paulit-ulit itong nangyayari, i-email kami sa {{email}} at tutulungan ka naming bumili ng minuto.",
+      "contact": "Kontakin ang support",
+      "retry": "Subukan ulit",
+      "supportSubject": "Hindi ako makabili ng minuto sa Translator"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Kinakalkula ang gastos…",
     "welcomeCredits": {
-      "message": "May libre kang minuto para subukan ang transcription at pagsasalin (mga 20 minuto ng video)."
+      "message": "May libre kang minuto para subukan ang transcription at pagsasalin (mga {{minutes}} minuto ng video)."
     }
   },
   "findBar": {
@@ -1523,7 +1530,9 @@
     "noneTitle_one": "{{total}} minuto ang video na ito.",
     "enoughBody_one": "Sapat ang minuto mo para isalin na ngayon ang natitirang {{remaining}} minuto.",
     "offerBody_one": "Isalin ang buong video sa {{price}}. Sakop nito ang natitirang {{remaining}} minuto, at magagamit mo pa ang sobra sa susunod na video.",
-    "offerBodyLong_one": "Kaya ng {{price}} na pack ang karamihan ng natitirang {{remaining}} minuto."
+    "offerBodyLong_one": "Kaya ng {{price}} na pack ang karamihan ng natitirang {{remaining}} minuto.",
+    "checkoutAwaitingTitle": "Hinihintay ang kumpirmasyon ng bayad",
+    "checkoutAwaitingBody": "May mga paraan ng pagbabayad na ilang minuto bago makumpirma. Patuloy na nagche-check ang Translator at itutuloy nito kung saan huminto kapag nakumpirma na ang bayad mo."
   },
   "videoCost": {
     "covered": "Sapat ang minuto mo",

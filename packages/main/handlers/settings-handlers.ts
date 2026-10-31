@@ -34,6 +34,8 @@ import {
   sanitizeVideoSuggestionPreference,
 } from '../../shared/helpers/video-suggestion-sanitize.js';
 import { resolveVideoSuggestionPreferenceForMode } from '../services/video-suggestion-model-preference.js';
+import { resolveAppUiLanguage } from '../../shared/helpers/ui-language.js';
+import { getSystemPreferredLanguages } from '../utils/ui-language.js';
 
 /* ----------------------------------------------------------
  * Types
@@ -102,40 +104,12 @@ export function buildSettingsHandlers(opts: {
 
   /* ─────────── language preference ─────────── */
   function getLanguagePreference() {
-    // 1) Respect saved preference
-    if (store.has('app_language_preference')) {
-      return store.get('app_language_preference', 'en');
-    }
-
-    // 2) Detect system locale (keep region)
-    const raw = (
-      app.getPreferredSystemLanguages?.()[0] ||
-      app.getLocale() ||
-      'en'
-    )
-      .replace('_', '-')
-      .trim();
-    const ln = raw.toLowerCase();
-
-    // 3) Special handling for Chinese so we don't lose the script/region
-    if (ln.startsWith('zh')) {
-      // Map traditional locales to zh-TW; default to zh-CN otherwise
-      if (
-        ln.includes('tw') ||
-        ln.includes('hk') ||
-        ln.includes('mo') ||
-        ln.includes('hant')
-      ) {
-        return 'zh-TW';
-      }
-      return 'zh-CN';
-    }
-
-    // 4) Fall back to base language (en, es, fr, etc.)
-    const base = ln.split('-')[0];
-    // Capitalization for i18n keys isn't strictly needed here (renderer normalizes),
-    // but we keep the simple base code for non-Chinese languages.
-    return base || 'en';
+    // The user's explicit choice, else the system language mapped onto the
+    // bundled languages (a fresh install on a pt-BR Mac starts in Portuguese).
+    return resolveAppUiLanguage({
+      stored: store.get('app_language_preference'),
+      systemPreferred: getSystemPreferredLanguages(),
+    });
   }
 
   async function setLanguagePreference(
@@ -144,6 +118,8 @@ export function buildSettingsHandlers(opts: {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       store.set('app_language_preference', lang);
+      // Only a choice made in the app sticks over the system language.
+      store.set('app_language_explicit', true);
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };

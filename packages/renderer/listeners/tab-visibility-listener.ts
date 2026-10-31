@@ -7,7 +7,7 @@
 //   leave this tab stale while the main process already uses the new values.
 import { useAiStore } from '../state/ai-store';
 import { useVideoStore } from '../state/video-store';
-import { i18n, changeLanguage } from '../i18n';
+import { i18n, applyLanguageFromMain } from '../i18n';
 import * as SystemIPC from '@ipc/system';
 
 async function rehydrateLanguage(): Promise<void> {
@@ -18,7 +18,9 @@ async function rehydrateLanguage(): Promise<void> {
       preferred &&
       preferred !== i18n.language
     ) {
-      await changeLanguage(preferred);
+      // Not a new choice: just follow what main has, so following the
+      // system language never turns into a saved preference.
+      await applyLanguageFromMain(preferred);
     }
   } catch (err) {
     console.error('[tab-visibility] language rehydrate failed:', err);

@@ -28,6 +28,7 @@ import * as SystemIPC from '../../ipc/system';
 import { logButton } from '../../utils/logger';
 import { colors, fonts } from '../../styles';
 import { formatUsd } from '../../utils/formatUsd';
+import CheckoutCurrencyNote from '../CheckoutCurrencyNote';
 import { localizeDigits } from '../../utils/formatNumbers';
 
 const card = css`
@@ -163,6 +164,7 @@ export default function FreePreviewOffer() {
   const offline = useCreditStore(s => s.offline);
   const checkoutPending = useCreditStore(s => s.checkoutPending);
   const checkoutUnresolved = useCreditStore(s => s.checkoutUnresolved);
+  const checkPaymentNow = useCreditStore(s => s.checkPaymentNow);
   const quality = useUIStore(s => s.qualityTranslation);
   const setStatus = useFreePreviewStore(s => s.setStatus);
 
@@ -288,18 +290,46 @@ export default function FreePreviewOffer() {
     return (
       <div className={card} role="status" aria-live="polite">
         <div className={textCol}>
-          <p className={title}>
-            {t('freePreview.checkoutTitle', 'Finish paying in your browser')}
-          </p>
-          <p className={body}>
-            {t(
-              'freePreview.checkoutBody',
-              'We opened a secure Stripe checkout for the {{price}} pack. Translator picks up right where it left off as soon as it’s done. No need to click anything here.',
-              { price }
-            )}
-          </p>
+          {checkoutUnresolved ? (
+            <>
+              {/* Pix, UPI and bank confirmations can land minutes later. */}
+              <p className={title}>
+                {t(
+                  'freePreview.checkoutAwaitingTitle',
+                  'Waiting for payment confirmation'
+                )}
+              </p>
+              <p className={body}>
+                {t(
+                  'freePreview.checkoutAwaitingBody',
+                  'Some payment methods take a few minutes to confirm. Translator keeps checking and picks up right where it left off once your payment is confirmed.'
+                )}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className={title}>
+                {t(
+                  'freePreview.checkoutTitle',
+                  'Finish paying in your browser'
+                )}
+              </p>
+              <p className={body}>
+                {t(
+                  'freePreview.checkoutBody',
+                  'We opened a secure Stripe checkout for the {{price}} pack. Translator picks up right where it left off as soon as it’s done. No need to click anything here.',
+                  { price }
+                )}
+              </p>
+            </>
+          )}
         </div>
         <div className={actions}>
+          {checkoutUnresolved ? (
+            <Button variant="primary" onClick={checkPaymentNow}>
+              {t('credits.checkPaymentNow', 'Check now')}
+            </Button>
+          ) : null}
           <Button
             variant="secondary"
             onClick={() => setStatus(preview.key, 'offer')}
@@ -442,6 +472,7 @@ export default function FreePreviewOffer() {
       <div className={textCol}>
         <p className={title}>{headline}</p>
         <p className={body}>{detail}</p>
+        {canFinishNow ? null : <CheckoutCurrencyNote />}
       </div>
       <div className={actions}>
         <Button

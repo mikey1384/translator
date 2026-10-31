@@ -1,7 +1,9 @@
+import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import Modal from '../../../components/Modal';
 import Button from '../../../components/Button';
 import MicroCreditCheckoutButton from '../../../components/MicroCreditCheckoutButton';
+import CheckoutCurrencyNote from '../../../components/CheckoutCurrencyNote';
 import { useCreditStore, useSubStore } from '../../../state';
 import { useModalStore } from '../../../state/modal-store';
 import {
@@ -9,6 +11,10 @@ import {
   describeCreditShortfall,
 } from '../../../utils/creditShortfall';
 import { formatCostInMinutes } from '../../../utils/formatCostInMinutes';
+
+const currencyNoteGap = css`
+  margin-top: 10px;
+`;
 
 interface Props {
   open: boolean;
@@ -201,6 +207,7 @@ export default function CreditRanOutDialog({
       }
     >
       <p style={{ margin: 0 }}>{message}</p>
+      <CheckoutCurrencyNote className={currencyNoteGap} />
     </Modal>
   );
 }

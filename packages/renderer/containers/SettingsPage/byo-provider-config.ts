@@ -17,12 +17,12 @@ function formatUsd(usd: number): string {
 
 function formatUsdEstimate(value: number | UsdRange, unit: '/hr' | '/search') {
   if (typeof value === 'number') {
-    return `~$${formatUsd(value)}${unit}`;
+    return `~US$${formatUsd(value)}${unit}`;
   }
   if (value.minUsd === value.maxUsd) {
-    return `~$${formatUsd(value.minUsd)}${unit}`;
+    return `~US$${formatUsd(value.minUsd)}${unit}`;
   }
-  return `~$${formatUsd(value.minUsd)}-$${formatUsd(value.maxUsd)}${unit}`;
+  return `~US$${formatUsd(value.minUsd)}–${formatUsd(value.maxUsd)}${unit}`;
 }
 
 const OPENAI_SUMMARY_STANDARD_USD = estimateSummaryUsdPerHour(AI_MODELS.GPT);

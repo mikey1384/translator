@@ -2,6 +2,7 @@ import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Alert } from '../../../components/design-system/index.js';
 import MicroCreditCheckoutButton from '../../../components/MicroCreditCheckoutButton.js';
+import CheckoutCurrencyNote from '../../../components/CheckoutCurrencyNote.js';
 import { logButton } from '../../../utils/logger.js';
 
 interface CreditWarningBannerProps {
@@ -55,6 +56,7 @@ export default function CreditWarningBanner({
           />
         </p>
         <MicroCreditCheckoutButton placement="zero-credit-banner" />
+        <CheckoutCurrencyNote />
       </div>
     </Alert>
   );

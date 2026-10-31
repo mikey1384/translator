@@ -916,7 +916,6 @@
     "checkoutNote": "Eenmalige betaling deur Stripe, in jou blaaier. Geen rekening of intekening nie. Minute kom vanself by.",
     "dubbingNote": "Met ’n vertaling daarby gebruik jy sowat 10% meer minute; oorklanking gebruik meer.",
     "iCancelledCheckout": "Ek het die betaling gekanselleer",
-    "checkoutStartFailed": "Betaling kon nie begin nie. Kontroleer jou verbinding en probeer weer.",
     "monthlyFreeNote_one": "{{minutes}} gratis minuut elke maand · volgende op {{date}}",
     "loadFailed": "Jou saldo kon nie gelaai word nie. Kontroleer jou verbinding en probeer weer.",
     "costOfBalanceMinutes": "{{cost}} van jou {{balance}}",
@@ -936,8 +935,16 @@
     "microPackLabelNoTime": "Koop minute — {{price}}",
     "microPackLabel": "Koop minute — {{price}} · ≈ {{time}} video",
     "checkingPayment": "Kontroleer jou betaling…",
-    "checkoutUnresolved": "As jy reeds betaal het, verskyn jou minute binnekort hier. Nog besig om te betaal? Voltooi dit in jou blaaier.",
-    "checkPaymentNow": "Kontroleer nou"
+    "checkPaymentNow": "Kontroleer nou",
+    "localCurrencyNote": "Pryse in Amerikaanse dollar. By betaling sien jy die bedrag in jou plaaslike geldeenheid waar moontlik.",
+    "checkoutAwaitingConfirmation": "Wag vir betalingsbevestiging. Sommige betaalmetodes neem ’n paar minute, en Translator hou aan kyk. Jou minute verskyn hier sodra dit bevestig is.",
+    "checkoutFailed": {
+      "title": "Betaling het nie oopgemaak nie",
+      "message": "Translator kon nie die betaalblad bereik nie. Kontroleer jou internetverbinding en probeer weer. As dit aanhou gebeur, e-pos ons by {{email}} en ons help jou om jou minute te koop.",
+      "contact": "Kontak ondersteuning",
+      "retry": "Probeer weer",
+      "supportSubject": "Ek kan nie minute in Translator koop nie"
+    }
   },
   "branding": {
     "translator": "translator",
@@ -1055,7 +1062,7 @@
     },
     "calculatingCost": "Bereken koste…",
     "welcomeCredits": {
-      "message": "Jy het gratis minute om transkripsie en vertaling te probeer (sowat 20 minute video)."
+      "message": "Jy het gratis minute om transkripsie en vertaling te probeer (sowat {{minutes}} minute video)."
     }
   },
   "findBar": {
@@ -1523,7 +1530,9 @@
     "failedNeedMinutes": "Alles wat reeds vertaal is, bly behoue. Jy het meer minute nodig om die oorblywende {{remaining}} minute te vertaal.",
     "failedNetwork": "Die verbinding is verbreek. Alles wat reeds vertaal is, bly behoue. Probeer weer wanneer jy weer aanlyn is.",
     "failedNeedMinutes_one": "Alles wat reeds vertaal is, bly behoue. Jy het meer minute nodig om die oorblywende {{remaining}} minuut te vertaal.",
-    "noneBodyNextFree": "Jou gratis minute word op {{date}} weer aangevul, of vertaal dit nou na {{language}} vir {{price}}."
+    "noneBodyNextFree": "Jou gratis minute word op {{date}} weer aangevul, of vertaal dit nou na {{language}} vir {{price}}.",
+    "checkoutAwaitingTitle": "Wag vir betalingsbevestiging",
+    "checkoutAwaitingBody": "Sommige betaalmetodes neem ’n paar minute om te bevestig. Translator hou aan kyk en gaan voort waar dit opgehou het sodra jou betaling bevestig is."
   },
   "videoCost": {
     "covered": "Jou minute is genoeg",
