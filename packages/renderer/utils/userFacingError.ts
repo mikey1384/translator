@@ -189,6 +189,7 @@ const DOWNLOAD_TEXT_CODES: Array<[RegExp, UrlDownloadErrorCode]> = [
   [/this video is private/i, 'private'],
   [/video not found at this url|\(404 error\)/i, 'not_found'],
   [/requires signing in/i, 'login_required'],
+  [/needs you to sign in to/i, 'sign_in_required'],
   [/download was blocked \(http 403\)/i, 'media_blocked'],
   [/refused access to the video/i, 'access_refused'],
   [/failed to download video data/i, 'video_data_failed'],
@@ -213,6 +214,9 @@ const DOWNLOAD_DEFAULTS: Record<UrlDownloadErrorCode, string> = {
     'This video is only shown to some viewers. If your account can watch it, connect to this site in Settings and try again.',
   login_required:
     'This video needs you to be signed in. Connect to this site in Settings and try again.',
+  // Without the site name; describeDownloadFailure names it when it knows the link.
+  sign_in_required:
+    'This post needs you to sign in. Translator can’t download private or sign-in-only posts.',
   media_blocked:
     'The site blocked the video download, and no captions could be recovered.',
   access_refused: 'This site refused to give Translator the video.',
@@ -393,10 +397,15 @@ export function classifyError(
     return build('download', text, {
       kind: 'download',
       code: downloadCode,
-      i18nKey: `errors.download.${downloadCode}`,
+      i18nKey:
+        downloadCode === 'sign_in_required'
+          ? 'errors.download.sign_in_required_unnamed'
+          : `errors.download.${downloadCode}`,
       defaultText: DOWNLOAD_DEFAULTS[downloadCode],
       retryable:
-        downloadCode !== 'private' && downloadCode !== 'unsupported_site',
+        downloadCode !== 'private' &&
+        downloadCode !== 'unsupported_site' &&
+        downloadCode !== 'sign_in_required',
       report: unexplained ? 'auto' : 'none',
     });
   }

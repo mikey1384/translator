@@ -480,6 +480,11 @@ declare module '@shared-types/app' {
     url: string;
     operationId: string;
     interactive?: boolean;
+    /**
+     * The link's own download already failed (a platform link such as
+     * Reddit): open the in-app browser directly, without another page probe.
+     */
+    afterLinkFailure?: boolean;
     labels: {
       title: string;
       instruction: string;
@@ -488,6 +493,8 @@ declare module '@shared-types/app' {
       cancel: string;
       protected: string;
       live: string;
+      /** Shown when a video is chosen while an ad is playing. */
+      adPlaying?: string;
       direction: 'ltr' | 'rtl';
     };
   }

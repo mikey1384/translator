@@ -19,6 +19,12 @@ import {
 import { loadDevelopmentCaptionRecoveryFixture } from './development-caption-recovery-fixture.js';
 import { UrlSourceRejectedError } from './source-guard.js';
 import { classifyVideoCollectionUrl } from '../../../shared/helpers/video-url.js';
+import { canFallBackToWebVideoBrowser } from '../../../shared/helpers/web-video.js';
+import { toFileUrl } from '../../../shared/helpers/file-url.js';
+import {
+  SIGN_IN_WALL_RE,
+  stripYtDlpDiagnosticEcho,
+} from './failure-taxonomy.js';
 
 const require = createRequire(import.meta.url);
 
@@ -381,7 +387,7 @@ export async function processVideoUrl(
       durationSec: metadata.durationSec,
       uploadedAt: metadata.uploadedAt,
       size: stats.size,
-      fileUrl: `file://${downloadResult.filepath}`,
+      fileUrl: toFileUrl(downloadResult.filepath),
       originalVideoPath: downloadResult.filepath,
       proc: downloadResult.proc,
     };
@@ -489,6 +495,23 @@ export async function processVideoUrl(
         return null;
       }
     };
+
+    // A sign-in-only post (Instagram, Reddit…) is not a human check: no
+    // Connect prompt and no rate-limit retry. The error already carries the
+    // "sign in to <site>" reason; the renderer may try its in-app browser.
+    if (
+      canFallBackToWebVideoBrowser(url) &&
+      SIGN_IN_WALL_RE.test(
+        stripYtDlpDiagnosticEcho(
+          `${err?.message ?? ''}\n${err?.stderr ?? ''}\n${err?.all ?? ''}`
+        )
+      )
+    ) {
+      log.info(
+        `[URLprocessor] Sign-in wall on ${host}; reporting it instead of asking to Connect (op=${operationId}).`
+      );
+      throw err;
+    }
 
     const firstCheck = classify(err);
 

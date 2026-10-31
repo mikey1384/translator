@@ -67,6 +67,13 @@ export const UPCOMING_LIVE_RE =
 export const REGION_LOCKED_RE =
   /not made this video available in your country|not available in your (?:country|region)|geo[- ]?(?:restricted|blocked)|region[- ]locked/i;
 
+// Posts only signed-in viewers can open. yt-dlp's wording per site:
+// Reddit "Account authentication is required", Instagram "sent an empty media
+// response … without being logged-in" and "rate-limit reached or login
+// required", generic "This video requires login" / "you need to log in".
+export const SIGN_IN_WALL_RE =
+  /\b(?:account\s+)?authentication\s+is\s+required|requires?\s+(?:an?\s+)?(?:account|authentication|login|log[- ]in|sign[- ]in|signing in)\b|\blogin\s+required\b|\bempty media response\b|\bneed(?:s)?\s+to\s+(?:log|sign)\s*in\b|\bonly available (?:to|for) (?:logged[- ]in|registered|signed[- ]in) users\b/i;
+
 export function isAudienceRestrictedError(error: unknown): boolean {
   return /this content (?:isn['’]t|is not) available to everyone|can(?:not|['’]t) be seen by certain audiences|restricted to certain audiences/i.test(
     getUrlDownloadErrorText(error)
@@ -97,7 +104,7 @@ export function classifyUrlDownloadFailureDetail(
   const loginRequired =
     /login_required|authentication\s*required|sign\s*in\s*to\s*confirm|members[- ]only|age[- ]restricted/.test(
       text
-    );
+    ) || SIGN_IN_WALL_RE.test(text);
   const humanVerification =
     /captcha|recaptcha|verify\s*(?:you|you'?re).*(?:human|not\s+a\s+bot)|confirm\s*(?:you|you'?re).*not\s+a\s+bot|human\s*verification|challenge\s*required/.test(
       text

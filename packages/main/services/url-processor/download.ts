@@ -19,8 +19,14 @@ import {
   type BinarySetupProgress,
 } from './binary-installer.js';
 import { ProgressCallback, VideoQuality } from './types.js';
-import { PROGRESS, qualityFormatMap } from './constants.js';
+import {
+  NON_YOUTUBE_SORT,
+  PROGRESS,
+  qualityFormatMap,
+  withH264Preference,
+} from './constants.js';
 import { mapDownloadError } from './error-map.js';
+import { ensurePlayableDownload } from './playback-compat.js';
 import {
   UPCOMING_LIVE_RE,
   classifyUrlDownloadFailureDetail,
@@ -59,6 +65,7 @@ type DownloadVideoFromPlatformDependencies = {
   execaImpl?: typeof execa;
   warmupYtDlpImpl?: typeof warmupYtDlp;
   warmupFfmpegImpl?: typeof warmupFfmpeg;
+  ensurePlayableDownloadImpl?: typeof ensurePlayableDownload;
 };
 
 export type DownloadVideoFromPlatformResult =
@@ -327,6 +334,8 @@ export async function downloadVideoFromPlatform(
   const execaImpl = dependencies.execaImpl ?? execa;
   const warmupYtDlpFn = dependencies.warmupYtDlpImpl ?? warmupYtDlp;
   const warmupFfmpegFn = dependencies.warmupFfmpegImpl ?? warmupFfmpeg;
+  const ensurePlayableDownloadFn =
+    dependencies.ensurePlayableDownloadImpl ?? ensurePlayableDownload;
   const throwIfCancelled = (context: string, onCancel?: () => void) =>
     throwIfOperationCancelled({
       signal,
@@ -597,6 +606,12 @@ export async function downloadVideoFromPlatform(
   // respect it cross-site.
   if (isYouTube || isResolutionCap) {
     formatString = qualityFormatMap[effectiveQuality] || qualityFormatMap.mid;
+    if (!isYouTube) {
+      formatString = withH264Preference(
+        formatString,
+        Number.parseInt(effectiveQuality, 10)
+      );
+    }
     log.info(
       `[URLprocessor] Using format for effective quality '${effectiveQuality}' (isYouTube=${isYouTube}): ${formatString}`
     );
@@ -703,7 +718,9 @@ export async function downloadVideoFromPlatform(
   const defaultContainerArgs = [...containerArgs];
 
   // Prefer highest resolution/codec/fps explicitly for best/high and resolution-capped profiles
-  let sortArgs = allowNonMp4 ? ['-S', 'res,codec:av1:vp9:avc,fps'] : [];
+  let sortArgs = allowNonMp4
+    ? ['-S', isYouTube ? 'res,codec:av1:vp9:avc,fps' : NON_YOUTUBE_SORT]
+    : [];
   let extractorArgs: string[] = [];
   let extractorMode: 'web' | 'ios' | 'android' = 'web';
 
@@ -1303,6 +1320,23 @@ export async function downloadVideoFromPlatform(
         log.info(
           `[URLprocessor] File verified: ${finalFilepath}, Size: ${stats.size}`
         );
+
+        // The app's player is Chromium: an HEVC (or other non-web codec)
+        // download would mount as "Media playback error". Re-encode once.
+        const playable = await ensurePlayableDownloadFn({
+          filepath: finalFilepath,
+          ffmpeg: services.ffmpeg,
+          operationId,
+          signal,
+          onProgress: pct => {
+            progressCallback?.({
+              percent: Math.min(99, PROGRESS.FINAL_START + 4 + (pct / 100) * 5),
+              stage: 'Converting video for playback…',
+            });
+          },
+        });
+        throwIfCancelled('after playback compatibility check');
+        finalFilepath = playable.filepath;
         log.info(
           `[URLprocessor] Download successful, returning filepath: ${finalFilepath}`
         );
@@ -1645,6 +1679,7 @@ export async function downloadVideoFromPlatform(
 
     // Use mapErrorToUserFriendly for error mapping (prefer combined stream)
     const mappedError = mapDownloadError({
+      url,
       rawErrorMessage,
       stderrContent:
         (error.all as string) || error.stderr || diagnosticLog || '',

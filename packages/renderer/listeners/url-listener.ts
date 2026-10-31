@@ -16,11 +16,13 @@ UrlIPC.onProgress(p => {
   if (p.stage === 'NeedCookies' || p.stage === 'Cancelled') {
     useUrlStore.getState().clearError();
   } else if (p.error) {
-    useUrlStore
-      .getState()
-      .setOperationError(
-        describeDownloadFailure({ error: p.error, errorCode: p.errorCode })
-      );
+    useUrlStore.getState().setOperationError(
+      describeDownloadFailure({
+        error: p.error,
+        errorCode: p.errorCode,
+        url: useUrlStore.getState().lastDownloadRequest?.url,
+      })
+    );
   } else {
     useUrlStore.getState().clearError();
   }

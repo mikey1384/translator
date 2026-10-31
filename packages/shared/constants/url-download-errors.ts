@@ -12,6 +12,9 @@ export const URL_DOWNLOAD_ERROR_CODES = [
   'region_locked',
   'audience_restricted',
   'login_required',
+  // A post only signed-in viewers can see (Instagram, Reddit…). The renderer
+  // names the site; Translator does not download sign-in-only posts.
+  'sign_in_required',
   'media_blocked',
   'access_refused',
   'video_data_failed',

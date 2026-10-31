@@ -39,7 +39,10 @@ import {
 import { describeDownloadFailure } from '../utils/taskFailure';
 import { historyCopiesForUrl } from '../utils/localDownloadCopy';
 import { acquireProvisionalUrlDownloadLibraryPath } from '../listeners/mounted-download-leases.js';
-import { shouldDiscoverWebVideo } from '../../shared/helpers/web-video.js';
+import {
+  canFallBackToWebVideoBrowser,
+  shouldDiscoverWebVideo,
+} from '../../shared/helpers/web-video.js';
 import { chooseWebVideo } from './web-video-store';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
@@ -174,7 +177,24 @@ type DownloadMediaOptions = {
   webVideo?: WebVideoSelection;
   /** Re-download the same video from a saved multi-video page. */
   webVideoId?: string;
+  /**
+   * Internal: the link's own download failed with this reason, so its page is
+   * opened in the in-app browser instead. If no video comes of it, this
+   * failure is what the user sees.
+   */
+  afterLinkFailure?: { error?: string; errorCode?: string };
 };
+
+// Failures a public page in the in-app browser can get past. Not: network,
+// removed/private/region-locked videos, or the downloader itself failing.
+const BROWSER_FALLBACK_ERROR_CODES = new Set([
+  'sign_in_required',
+  'login_required',
+  'access_refused',
+  'video_data_failed',
+  'unsupported_site',
+  'generic',
+]);
 
 let cookieRetryRequestSeq = 0;
 
@@ -277,7 +297,9 @@ async function downloadMediaInternal(
   const preserveSubtitles = Boolean(options?.preserveSubtitles);
   const fromBatch = options?.fromBatch === true;
   const mountOnComplete = options?.mountOnComplete !== false;
-  const discoverPage = shouldDiscoverWebVideo(requestedUrl);
+  const afterLinkFailure = options?.afterLinkFailure;
+  const discoverPage =
+    shouldDiscoverWebVideo(requestedUrl) || Boolean(afterLinkFailure);
   let webVideo = options?.webVideo;
   let retainDiscovery = false;
   const opId = `download-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -288,6 +310,14 @@ async function downloadMediaInternal(
     operationId: opId,
   });
   const discoveryFailure = (message: string): ProcessUrlResult => {
+    // The browser found nothing after the link itself failed: the link's own
+    // reason (e.g. "sign in to Reddit") is the useful one.
+    if (afterLinkFailure)
+      message = describeDownloadFailure({
+        error: afterLinkFailure.error,
+        errorCode: afterLinkFailure.errorCode,
+        url: requestedUrl,
+      });
     set((state: UrlState) => {
       state.error = message;
       state.errorKind = 'operation';
@@ -483,6 +513,7 @@ async function downloadMediaInternal(
         state.error = describeDownloadFailure({
           error: p.error,
           errorCode: p.errorCode,
+          url: requestedUrl,
         });
         state.errorKind = 'operation';
       });
@@ -500,6 +531,7 @@ async function downloadMediaInternal(
         url: requestedUrl,
         operationId: opId,
         interactive: options?.interactive !== false,
+        afterLinkFailure: Boolean(afterLinkFailure),
         labels: {
           title: i18n.t('input.webVideo.choose', 'Choose a video'),
           instruction: i18n.t(
@@ -518,8 +550,23 @@ async function downloadMediaInternal(
             'input.webVideo.protected',
             'This video is protected and cannot be downloaded.'
           ),
+          adPlaying: i18n.t(
+            'input.webVideo.adPlaying',
+            'An ad is playing. Wait for the video to start, then choose it. Choose again to download anyway.'
+          ),
         },
       });
+      // Closing the browser after a failed link keeps that failure visible
+      // (main sends no "Cancelled" for it); the app's own Cancel still wins.
+      if (
+        afterLinkFailure &&
+        discovery.cancelled &&
+        !isCurrentDownloadCancelledOrStale()
+      ) {
+        if (discovery.discoveryId)
+          void UrlIPC.releaseWebVideoDiscovery(discovery.discoveryId);
+        return discoveryFailure('');
+      }
       if (isCurrentDownloadCancelledOrStale() || discovery.cancelled) {
         if (discovery.discoveryId)
           void UrlIPC.releaseWebVideoDiscovery(discovery.discoveryId);
@@ -817,6 +864,25 @@ async function downloadMediaInternal(
     let finalPath = res.videoPath ?? res.filePath;
     const filename = res.filename;
 
+    if (
+      !res.cancelled &&
+      !finalPath &&
+      !webVideo &&
+      !afterLinkFailure &&
+      !fromBatch &&
+      options?.interactive !== false &&
+      res.error !== 'NeedCookies' &&
+      BROWSER_FALLBACK_ERROR_CODES.has(String(res.errorCode || '')) &&
+      canFallBackToWebVideoBrowser(requestedUrl)
+    ) {
+      // e.g. Reddit: yt-dlp needs an account, the page itself does not.
+      return await downloadMediaInternal(set, get, {
+        ...options,
+        url: requestedUrl,
+        afterLinkFailure: { error: res.error, errorCode: res.errorCode },
+      });
+    }
+
     if (res.cancelled || !finalPath || !filename) {
       retainDiscovery = res.error === 'NeedCookies';
       // One report per failure: the progress event only formats the text.
@@ -827,6 +893,7 @@ async function downloadMediaInternal(
               error: res.error,
               errorCode: res.errorCode,
               report: true,
+              url: requestedUrl,
             });
       set((state: UrlState) => {
         state.needCookies = res.error === 'NeedCookies';
@@ -1080,6 +1147,7 @@ async function downloadMediaInternal(
         : describeDownloadFailure({
             error: err?.message || String(err),
             report: true,
+            url: requestedUrl,
           });
     set((state: UrlState) => {
       state.needCookies = err?.message === 'NeedCookies';

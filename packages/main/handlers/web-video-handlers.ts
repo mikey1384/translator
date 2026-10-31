@@ -8,7 +8,10 @@ import type {
   DiscoverWebVideoResult,
 } from '@shared-types/app';
 import { normalizeVideoUrlInput } from '../../shared/helpers/video-url.js';
-import { shouldDiscoverWebVideo } from '../../shared/helpers/web-video.js';
+import {
+  canFallBackToWebVideoBrowser,
+  shouldDiscoverWebVideo,
+} from '../../shared/helpers/web-video.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
 import {
   registerAutoCancel,
@@ -60,7 +63,14 @@ export async function handleDiscoverWebVideo(
     !safeWebVideoUrl(url, undefined, fixtureOrigin)
   )
     return { success: false, errorCode: 'discovery_failed' };
-  if (!shouldDiscoverWebVideo(url)) return { success: true, candidates: [] };
+  // A platform link whose own download failed may still be public in a
+  // browser (Reddit pages and v.redd.it streams need no account).
+  const afterLinkFailure =
+    options.afterLinkFailure === true &&
+    options.interactive !== false &&
+    canFallBackToWebVideoBrowser(url);
+  if (!afterLinkFailure && !shouldDiscoverWebVideo(url))
+    return { success: true, candidates: [] };
   const diagnostics = createWebVideoDiagnostics(entry =>
     log.info('[web-video]', JSON.stringify(entry))
   );
@@ -103,50 +113,52 @@ export async function handleDiscoverWebVideo(
       skipUpdate: shouldSkipYtDlpUpdateFromEnv(),
     });
     phase = 'page-probe';
-    const cookies = await exportCookiesToFileForUrl(url);
     let sources: ReturnType<typeof sourcesFromYtDlp> = [];
     let drm = false;
-    try {
-      const { stdout } = await execFileAsync(
-        binary,
-        [
-          url,
-          '--ignore-config',
-          '--dump-single-json',
-          '--skip-download',
-          '--flat-playlist',
-          '--playlist-end',
-          '20',
-          '--socket-timeout',
-          '8',
-          '--retries',
-          '0',
-          '--no-warnings',
-          '--no-cache-dir',
-          ...(cookies.count ? ['--cookies', cookies.path] : []),
-        ],
-        {
-          signal: controller.signal,
-          timeout: 20_000,
-          maxBuffer: 8 * 1024 * 1024,
-          windowsHide: true,
-          encoding: 'utf8',
-        }
-      );
-      const raw = JSON.parse(stdout);
-      sources = sourcesFromYtDlp(raw, url, fixtureOrigin);
-      diagnostics('page_probe_finished', {
-        outcome: 'ok',
-        count: sources.length,
-      });
-      drm = Boolean(raw.has_drm);
-    } catch (error: any) {
-      if (controller.signal.aborted) throw new CancelledError();
-      drm = isProtectedWebVideoError(String(error.stderr || ''));
-      diagnostics('page_probe_finished', {
-        outcome: drm ? 'protected' : 'failed',
-      });
-    }
+    // The download that just failed was this same yt-dlp extraction.
+    if (!afterLinkFailure)
+      try {
+        const cookies = await exportCookiesToFileForUrl(url);
+        const { stdout } = await execFileAsync(
+          binary,
+          [
+            url,
+            '--ignore-config',
+            '--dump-single-json',
+            '--skip-download',
+            '--flat-playlist',
+            '--playlist-end',
+            '20',
+            '--socket-timeout',
+            '8',
+            '--retries',
+            '0',
+            '--no-warnings',
+            '--no-cache-dir',
+            ...(cookies.count ? ['--cookies', cookies.path] : []),
+          ],
+          {
+            signal: controller.signal,
+            timeout: 20_000,
+            maxBuffer: 8 * 1024 * 1024,
+            windowsHide: true,
+            encoding: 'utf8',
+          }
+        );
+        const raw = JSON.parse(stdout);
+        sources = sourcesFromYtDlp(raw, url, fixtureOrigin);
+        diagnostics('page_probe_finished', {
+          outcome: 'ok',
+          count: sources.length,
+        });
+        drm = Boolean(raw.has_drm);
+      } catch (error: any) {
+        if (controller.signal.aborted) throw new CancelledError();
+        drm = isProtectedWebVideoError(String(error.stderr || ''));
+        diagnostics('page_probe_finished', {
+          outcome: drm ? 'protected' : 'failed',
+        });
+      }
     if (drm && !sources.length) {
       outcome = 'protected';
       return { success: false, errorCode: 'protected_video' };
@@ -175,7 +187,9 @@ export async function handleDiscoverWebVideo(
         onCancel: () => {
           controller.abort();
           void cancelSafely(operationId);
-          if (!event.sender.isDestroyed())
+          // After a failed link download, closing the browser leaves the
+          // original failure on screen; the renderer reports it.
+          if (!afterLinkFailure && !event.sender.isDestroyed())
             event.sender.send('url-processing-progress', {
               operationId,
               stage: 'Cancelled',

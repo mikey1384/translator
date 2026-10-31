@@ -1,4 +1,5 @@
 import { i18n } from '../i18n';
+import { siteDisplayName } from '../../shared/helpers/web-video.js';
 import { openCreditRanOut, openErrorReportPrompt } from '../state/modal-store';
 import { useModalStore } from '../state/modal-store';
 import {
@@ -225,19 +226,36 @@ export function describeDownloadFailure({
   error,
   errorCode,
   report = false,
+  url,
 }: {
   error?: string | null;
   errorCode?: string | null;
   report?: boolean;
+  /** The link that failed; names the site in sign-in messages. */
+  url?: string | null;
 }): string {
   const input = { error: error ?? '', errorCode: errorCode ?? undefined };
+  const classified = classifyError(input, { task: 'download' });
+  if (classified.code === 'sign_in_required') {
+    // Explained failure: never opens the report dialog.
+    const site = url ? siteDisplayName(url) : '';
+    return formatUserFacingError(
+      site
+        ? {
+            ...classified,
+            i18nKey: 'errors.download.sign_in_required',
+            defaultText:
+              'This post needs you to sign in to {{site}}. Translator can’t download private or sign-in-only posts.',
+            params: { ...(classified.params ?? {}), site },
+          }
+        : classified,
+      i18n.t.bind(i18n) as any
+    );
+  }
   if (report) {
     return handleTaskFailure(input, { task: 'download' }).message;
   }
-  return formatUserFacingError(
-    classifyError(input, { task: 'download' }),
-    i18n.t.bind(i18n) as any
-  );
+  return formatUserFacingError(classified, i18n.t.bind(i18n) as any);
 }
 
 /**

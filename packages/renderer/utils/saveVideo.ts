@@ -10,6 +10,7 @@ import {
   getSourceVideoUnavailableMessage,
   isSourceVideoPathAccessible,
 } from './sourceVideoErrors';
+import { toFileUrl } from '../../shared/helpers/file-url.js';
 
 const VIDEO_FILE_EXTENSIONS = ['mp4', 'mkv', 'webm', 'mov', 'avi'];
 
@@ -114,19 +115,6 @@ export function isManagedTempOriginalVideoPath(
       /\.[a-z0-9]+$/i.test(fileName));
 
   return isManagedTempDir && isManagedDownloadName;
-}
-
-function toFileUrl(path: string): string {
-  if (!path) return path;
-  if (path.startsWith('file://')) return path;
-  const normalized = path.replace(/\\/g, '/');
-  if (/^[a-zA-Z]:\//.test(normalized)) {
-    return `file:///${encodeURI(normalized)}`;
-  }
-  if (normalized.startsWith('/')) {
-    return `file://${encodeURI(normalized)}`;
-  }
-  return `file://${encodeURI(`/${normalized}`)}`;
 }
 
 export async function saveOriginalVideoFile(

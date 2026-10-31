@@ -9,6 +9,9 @@ import {
 } from './web-video-diagnostics.js';
 import { webVideoManifestRequest } from './web-video-request.js';
 import {
+  classifyWebVideoCandidate,
+  visibleWebVideoCandidates,
+  type WebVideoCandidateKind,
   safeWebVideoUrl,
   webVideoId,
   type WebVideoSource,
@@ -89,6 +92,20 @@ export async function discoverVideosInBrowser(options: {
   );
   siteSession.setPermissionCheckHandler(() => false);
   const sources = new Map<string, WebVideoSource>();
+  const kinds = new Map<string, WebVideoCandidateKind>();
+  // While an ad plays, the page's own <video> often holds a 1 s black
+  // placeholder; a pick then would download the ad or that placeholder.
+  let adPlayingAt = 0;
+  let adWarning: { id: string; at: number } | undefined;
+  const AD_PLAYING_GRACE_MS = 2500;
+  const adPlaying = () => Date.now() - adPlayingAt < AD_PLAYING_GRACE_MS;
+  const listed = () =>
+    visibleWebVideoCandidates(
+      [...sources.entries()].map(([media, source]) => ({
+        source,
+        kind: kinds.get(media) || 'main',
+      }))
+    ).map(item => item.source);
   const childManifests = new Set<string>();
   const checkedManifests = new Map<
     string,
@@ -126,8 +143,20 @@ export async function discoverVideosInBrowser(options: {
   };
   const refresh = () => {
     if (win.isDestroyed()) return;
-    const count = sources.size;
-    const rows = [...sources.values()]
+    const visible = listed();
+    const count = visible.length;
+    if (adWarning && !adPlaying() && Date.now() - adWarning.at > 4000)
+      adWarning = undefined;
+    const hint = selected
+      ? labels.starting || labels.instruction
+      : adWarning && labels.adPlaying
+        ? labels.adPlaying
+        : !count && protectedVideo
+          ? labels.protected
+          : !count && liveVideo
+            ? labels.live
+            : labels.instruction;
+    const rows = visible
       .map(({ candidate }, index) => {
         const seconds = Math.floor(candidate.durationSec || 0);
         const duration =
@@ -145,7 +174,7 @@ export async function discoverVideosInBrowser(options: {
       .join('');
     void win.webContents
       .executeJavaScript(
-        `(()=>{const a=document.getElementById('choose');a.textContent=${JSON.stringify(`${labels.choose}${count ? ` (${count})` : ''}`)};a.setAttribute('aria-disabled',${JSON.stringify(String(count === 0 || Boolean(selected)))});a.setAttribute('aria-expanded',${JSON.stringify(String(pickerOpen))});a.style.pointerEvents=${JSON.stringify(count && !selected ? 'auto' : 'none')};a.style.opacity=${JSON.stringify(count && !selected ? '1' : '.45')};document.getElementById('host').textContent=${JSON.stringify(new URL(currentPage).hostname)};document.getElementById('hint').textContent=${JSON.stringify(selected ? labels.starting || labels.instruction : !count && protectedVideo ? labels.protected : !count && liveVideo ? labels.live : labels.instruction)};const list=document.getElementById('videos');const rows=${JSON.stringify(rows)};if(list.innerHTML!==rows)list.innerHTML=rows;list.hidden=${JSON.stringify(!pickerOpen)}})()`
+        `(()=>{const a=document.getElementById('choose');a.textContent=${JSON.stringify(`${labels.choose}${count ? ` (${count})` : ''}`)};a.setAttribute('aria-disabled',${JSON.stringify(String(count === 0 || Boolean(selected)))});a.setAttribute('aria-expanded',${JSON.stringify(String(pickerOpen))});a.style.pointerEvents=${JSON.stringify(count && !selected ? 'auto' : 'none')};a.style.opacity=${JSON.stringify(count && !selected ? '1' : '.45')};document.getElementById('host').textContent=${JSON.stringify(new URL(currentPage).hostname)};document.getElementById('hint').textContent=${JSON.stringify(hint)};const list=document.getElementById('videos');const rows=${JSON.stringify(rows)};if(list.innerHTML!==rows)list.innerHTML=rows;list.hidden=${JSON.stringify(!pickerOpen)}})()`
       )
       .catch(() => {});
   };
@@ -156,8 +185,25 @@ export async function discoverVideosInBrowser(options: {
   ) => {
     if (finished || selected) return;
     const media = safeWebVideoUrl(raw, referer, fixtureOrigin);
-    if (!media || childManifests.has(media) || sources.size >= 20) return;
+    if (!media || childManifests.has(media)) return;
     const existing = sources.get(media);
+    const kind = classifyWebVideoCandidate({
+      url: media,
+      title: detail.title,
+      durationSec: detail.durationSec ?? existing?.candidate.durationSec,
+    });
+    // Ads and placeholders are never offered. A stream already listed as
+    // content keeps its place when an ad later plays in the same element.
+    if (kind === 'ad' || kind === 'placeholder') {
+      if (existing && kinds.get(media) !== 'main') {
+        sources.delete(media);
+        kinds.delete(media);
+        refresh();
+      }
+      return;
+    }
+    if (!existing && sources.size >= 20) return;
+    kinds.set(media, kind);
     const candidate = {
       id: webVideoId(`${url}\n${media}`),
       title: wc.getTitle().slice(0, 240) || new URL(currentPage).hostname,
@@ -244,6 +290,7 @@ export async function discoverVideosInBrowser(options: {
         if (manifest.kind === 'invalid') return false;
         if (manifest.kind === 'protected' || manifest.kind === 'live') {
           sources.delete(media);
+          kinds.delete(media);
           protectedVideo ||= manifest.kind === 'protected';
           liveVideo ||= manifest.kind === 'live';
           refresh();
@@ -256,6 +303,7 @@ export async function discoverVideosInBrowser(options: {
           for (const child of children) {
             childManifests.add(child);
             sources.delete(child);
+            kinds.delete(child);
           }
           // A master playlist alone does not say whether this is a recording or
           // a live broadcast. Validate a media playlist before offering it.
@@ -342,6 +390,9 @@ export async function discoverVideosInBrowser(options: {
     if (!selected) {
       pageGeneration++;
       sources.clear();
+      kinds.clear();
+      adPlayingAt = 0;
+      adWarning = undefined;
       checkedManifests.clear();
       childManifests.clear();
       observedBlobs.clear();
@@ -406,7 +457,7 @@ export async function discoverVideosInBrowser(options: {
   win.webContents.on('will-navigate', event => event.preventDefault());
   // Toolbar actions use denied popup requests, so its document never navigates.
   win.webContents.setWindowOpenHandler(({ url: action }) => {
-    if (action === 'stage5-web-video:choose' && sources.size && !selected) {
+    if (action === 'stage5-web-video:choose' && listed().length && !selected) {
       pickerOpen = !pickerOpen;
       if (pickerOpen) diagnostics('picker_opened', { count: sources.size });
       layout();
@@ -418,10 +469,15 @@ export async function discoverVideosInBrowser(options: {
       !selected
     ) {
       const id = action.slice('stage5-web-video:select/'.length);
-      const chosen = [...sources.values()].find(
-        source => source.candidate.id === id
-      );
-      if (chosen) {
+      const chosen = listed().find(source => source.candidate.id === id);
+      if (chosen && adPlaying() && adWarning?.id !== id) {
+        // First pick during an ad: say so and wait. Once the ad ends the
+        // real stream shows up in the list; choosing the same row again
+        // downloads it anyway.
+        adWarning = { id, at: Date.now() };
+        diagnostics('selection_deferred_ad', { count: sources.size });
+        refresh();
+      } else if (chosen) {
         diagnostics('selection_confirmed', { count: sources.size });
         finish(chosen);
       }
@@ -459,7 +515,7 @@ export async function discoverVideosInBrowser(options: {
         for (const frame of batch) {
           const rows = await frame
             .executeJavaScript(
-              `(()=>{const videos=[...document.querySelectorAll('video')].slice(0,20).map(v=>({url:v.currentSrc||v.src||v.querySelector('source')?.src,title:v.title||v.getAttribute('aria-label')||document.title,durationSec:Number.isFinite(v.duration)?v.duration:undefined,width:v.videoWidth||undefined,height:v.videoHeight||undefined,thumbnailUrl:v.poster||undefined,protected:Boolean(v.mediaKeys)})); const embeds=[...document.querySelectorAll('iframe')].filter(f=>/https?:\\/\\/(www\\.)?(youtube(-nocookie)?\\.com\\/embed\\/|player\\.vimeo\\.com\\/video\\/)/i.test(f.src)).map(f=>({url:f.src,title:f.title||document.title}));return [...videos,...embeds]})()`
+              `(()=>{const adRe=/(^|[\\s_-])(ima|ad|ads|advert[a-z]*|preroll|vast|vpaid)([\\s_-]|$)|adcontainer|ad-container|videoadui|jw-flag-ads/i;const adCtx=v=>{let el=v;for(let i=0;i<8&&el;i++,el=el.parentElement){const name=(el.id||'')+' '+(typeof el.className==='string'?el.className:'');if(adRe.test(name))return true}return false};const videos=[...document.querySelectorAll('video')].slice(0,20).map(v=>({url:v.currentSrc||v.src||v.querySelector('source')?.src,title:v.title||v.getAttribute('aria-label')||document.title,label:v.title||v.getAttribute('aria-label')||'',ad:adCtx(v),playing:!v.paused&&!v.ended&&v.currentTime>0,durationSec:Number.isFinite(v.duration)?v.duration:undefined,width:v.videoWidth||undefined,height:v.videoHeight||undefined,thumbnailUrl:v.poster||undefined,protected:Boolean(v.mediaKeys)})); const embeds=[...document.querySelectorAll('iframe')].filter(f=>/https?:\\/\\/(www\\.)?(youtube(-nocookie)?\\.com\\/embed\\/|player\\.vimeo\\.com\\/video\\/)/i.test(f.src)).map(f=>({url:f.src,title:f.title||document.title}));return [...videos,...embeds]})()`
             )
             .catch(() => []);
           if (!Array.isArray(rows)) continue;
@@ -489,6 +545,19 @@ export async function discoverVideosInBrowser(options: {
                 undefined,
             };
             const media = safeWebVideoUrl(row.url, frame.url, fixtureOrigin);
+            const isAd =
+              Boolean(row.ad) ||
+              (media
+                ? classifyWebVideoCandidate({
+                    url: media,
+                    title: String(row.label || ''),
+                  }) === 'ad'
+                : false);
+            if (isAd && row.playing) {
+              adPlayingAt = Date.now();
+              if (!adWarning) refresh();
+            }
+            if (isAd) continue;
             if (
               media &&
               (/\.(m3u8|mpd)(?:\?|$)/i.test(media) ||

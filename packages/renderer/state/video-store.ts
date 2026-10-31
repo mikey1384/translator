@@ -25,6 +25,7 @@ import throttle from 'lodash/throttle';
 import { MEDIA_FILE_EXTENSIONS } from '../../shared/constants/media-extensions.js';
 import { logButton, logVideo } from '../utils/logger';
 import { i18n } from '../i18n';
+import { toFileUrl } from '../../shared/helpers/file-url.js';
 
 // Opening a different video: restore the subtitles stored for it, and never
 // leave the previous video's subtitles showing over it (or burned into its
@@ -47,19 +48,6 @@ async function mountSubtitlesForNewSource(
       unmountCurrentSubtitles();
     }
   }
-}
-
-function toFileUrl(p: string): string {
-  if (!p) return p;
-  if (p.startsWith('file://')) return p;
-  const normalized = p.replace(/\\/g, '/');
-  if (/^[a-zA-Z]:\//.test(normalized)) {
-    return `file:///${encodeURI(normalized)}`;
-  }
-  if (normalized.startsWith('/')) {
-    return `file://${encodeURI(normalized)}`;
-  }
-  return `file://${encodeURI(`/${normalized}`)}`;
 }
 
 function normalizeSourceAssetPath(

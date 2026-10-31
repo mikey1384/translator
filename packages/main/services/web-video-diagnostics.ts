@@ -11,6 +11,7 @@ type Event =
   | 'candidate_added'
   | 'picker_opened'
   | 'selection_confirmed'
+  | 'selection_deferred_ad'
   | 'transfer_started'
   | 'browser_closed'
   | 'discovery_finished';
