@@ -567,7 +567,9 @@
       "mergeTitle": "Gabungkan dengan baris berikutnya",
       "timeOverlapsPrevious": "Baris ini mulai sebelum baris sebelumnya selesai, jadi keduanya tampil bersamaan.",
       "timeOverlapsNext": "Baris ini berakhir setelah baris berikutnya mulai, jadi keduanya tampil bersamaan.",
-      "timeOverlapsBoth": "Baris ini bertumpang tindih dengan baris sebelum dan sesudahnya, jadi semuanya tampil bersamaan."
+      "timeOverlapsBoth": "Baris ini bertumpang tindih dengan baris sebelum dan sesudahnya, jadi semuanya tampil bersamaan.",
+      "translateFromHere": "Terjemahkan dari sini",
+      "translateFromHereTitle": "Terjemahkan baris ini dan baris belum diterjemahkan sesudahnya, sampai baris terjemahan berikutnya"
     },
     "header": {
       "save": "Simpan subtitle",
@@ -1466,7 +1468,17 @@
     "checkingFile": "Membaca file…",
     "statusLoaded": "{{count}} baris dimuat",
     "interruptedTranslateSubtitles": "Terjemahan subtitle ini ke {{language}} terhenti saat Translator ditutup.",
-    "currentSubtitle": "Subtitel saat ini"
+    "currentSubtitle": "Subtitel saat ini",
+    "moreTranslateFromHere": "Terjemahkan baris yang tersisa mulai dari sini",
+    "translateGap": {
+      "title": "Terjemahkan baris yang tersisa ke {{language}}",
+      "fromHere": "Dari sini sampai baris terjemahan berikutnya",
+      "fromHereToEnd": "Dari sini sampai akhir",
+      "nothingFromHere": "Tidak ada lagi yang perlu diterjemahkan dari titik ini",
+      "all": "Semua baris yang tersisa",
+      "keepsTranslated": "Baris yang sudah diterjemahkan tetap seperti semula.",
+      "cost": "Memakai {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Kuning bioskop",

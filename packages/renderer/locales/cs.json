@@ -579,7 +579,9 @@
       "mergeTitle": "Spojit s dalším řádkem",
       "timeOverlapsPrevious": "Řádek začíná dřív, než skončí předchozí, takže se zobrazí oba najednou.",
       "timeOverlapsNext": "Řádek končí až po začátku dalšího, takže se zobrazí oba najednou.",
-      "timeOverlapsBoth": "Řádek se překrývá s předchozím i s dalším, takže se zobrazují současně."
+      "timeOverlapsBoth": "Řádek se překrývá s předchozím i s dalším, takže se zobrazují současně.",
+      "translateFromHere": "Přeložit odsud",
+      "translateFromHereTitle": "Přeloží tento řádek a nepřeložené řádky za ním až po další přeložený řádek"
     },
     "header": {
       "save": "Uložit titulky",
@@ -1516,7 +1518,17 @@
     "statusTranslated_few": "{{count}} řádky · jazyk: {{language}} · synchronizováno s videem",
     "statusTranslated_many": "{{count}} řádku · jazyk: {{language}} · synchronizováno s videem",
     "interruptedTranslateSubtitles": "Překlad těchto titulků do {{languageInto}} se přerušil, když se Translator zavřel.",
-    "currentSubtitle": "Aktuální titulek"
+    "currentSubtitle": "Aktuální titulek",
+    "moreTranslateFromHere": "Přeložit chybějící řádky odsud",
+    "translateGap": {
+      "title": "Přeložit chybějící řádky do {{languageInto}}",
+      "fromHere": "Odsud po další přeložený řádek",
+      "fromHereToEnd": "Odsud až do konce",
+      "nothingFromHere": "Odsud už není co překládat",
+      "all": "Všechny chybějící řádky",
+      "keepsTranslated": "Řádky, které už překlad mají, zůstanou beze změny.",
+      "cost": "Spotřebuje {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Filmová žlutá",

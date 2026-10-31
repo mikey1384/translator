@@ -575,7 +575,9 @@
       "mergeTitle": "Unir con la línea siguiente",
       "timeOverlapsPrevious": "Esta línea empieza antes de que termine la anterior, así que ambas se muestran a la vez.",
       "timeOverlapsNext": "Esta línea termina después de que empiece la siguiente, así que ambas se muestran a la vez.",
-      "timeOverlapsBoth": "Esta línea se superpone con la anterior y con la siguiente, así que se muestran a la vez."
+      "timeOverlapsBoth": "Esta línea se superpone con la anterior y con la siguiente, así que se muestran a la vez.",
+      "translateFromHere": "Traducir desde aquí",
+      "translateFromHereTitle": "Traduce esta línea y las líneas sin traducir que la siguen, hasta la siguiente línea traducida"
     },
     "header": {
       "save": "Guardar subtítulos",
@@ -1500,7 +1502,17 @@
     "statusLoaded_one": "{{count}} línea cargada",
     "statusLoaded_many": "{{count}} de líneas cargadas",
     "interruptedTranslateSubtitles": "La traducción de estos subtítulos al {{language}} se detuvo al cerrarse Translator.",
-    "currentSubtitle": "Subtítulo actual"
+    "currentSubtitle": "Subtítulo actual",
+    "moreTranslateFromHere": "Traducir las líneas que faltan desde aquí",
+    "translateGap": {
+      "title": "Traducir al {{language}} las líneas que faltan",
+      "fromHere": "Desde aquí hasta la siguiente línea traducida",
+      "fromHereToEnd": "Desde aquí hasta el final",
+      "nothingFromHere": "No queda nada por traducir desde este punto",
+      "all": "Todas las líneas que faltan",
+      "keepsTranslated": "Las líneas que ya tienen traducción se quedan como están.",
+      "cost": "Usa {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Amarillo cine",

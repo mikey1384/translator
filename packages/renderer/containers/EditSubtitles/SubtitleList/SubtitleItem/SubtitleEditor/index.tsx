@@ -26,6 +26,7 @@ import {
 } from '../../../../../state';
 import { transcribeOneLine } from '../../../../../ipc/subtitles';
 import { useSubStore } from '../../../../../state/subtitle-store';
+import { useTranslateRangeStore } from '../../../../../state/translate-range-store';
 import { useUrlStore } from '../../../../../state/url-store';
 import {
   flattenText,
@@ -59,6 +60,7 @@ import {
   subtitleRowTimeInputStyles,
 } from '../../../edit-workspace-styles';
 import { cx } from '@emotion/css';
+import { logButton } from '../../../../../utils/logger';
 // Language dropdown for transcription removed
 
 const PARTIAL_RX = /^\d{0,2}(:\d{0,2}){0,2}[,.]?\d{0,3}$/;
@@ -78,6 +80,7 @@ export default function SubtitleEditor({
   const { subtitle, isPlaying } = useSubtitleRow(id);
   const actions = useRowActions(id);
   const targetLanguage = useUIStore(s => s.targetLanguage);
+  const rangeAvailable = useTranslateRangeStore(s => s.available);
   const setTranslationState = useTaskStore(s => s.setTranslation);
   const [shiftAmount, setShiftAmount] = useState('0');
   const [localStart, setLocalStart] = useState(
@@ -736,6 +739,27 @@ export default function SubtitleEditor({
                   ? t('subtitles.improveTranslation', 'Improve translation')
                   : t('subtitles.translate', 'Translate')}
               </Button>
+              {(subtitle.translation ?? '').trim() || !rangeAvailable ? null : (
+                <Button
+                  variant="secondary"
+                  size="md"
+                  data-testid="translate-from-here"
+                  onClick={() => {
+                    logButton('editor_translate_from_here');
+                    useTranslateRangeStore.getState().open(id);
+                  }}
+                  disabled={editingLocked || isTranslatingOne || isMerging}
+                  title={t(
+                    'editSubtitles.item.translateFromHereTitle',
+                    'Translate this line and the untranslated lines after it, up to the next translated line'
+                  )}
+                >
+                  {t(
+                    'editSubtitles.item.translateFromHere',
+                    'Translate from here'
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         ) : null}

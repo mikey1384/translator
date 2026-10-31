@@ -567,7 +567,9 @@
       "mergeTitle": "与下一行合并",
       "timeOverlapsPrevious": "这一行在上一行结束前就开始了，两行会同时显示。",
       "timeOverlapsNext": "这一行在下一行开始后才结束，两行会同时显示。",
-      "timeOverlapsBoth": "这一行与前后两行重叠，它们会同时显示。"
+      "timeOverlapsBoth": "这一行与前后两行重叠，它们会同时显示。",
+      "translateFromHere": "从这里翻译",
+      "translateFromHereTitle": "翻译这一行及其后未翻译的行，直到下一行已翻译的字幕"
     },
     "header": {
       "save": "保存字幕",
@@ -1466,7 +1468,17 @@
     "checkingFile": "正在读取文件…",
     "statusLoaded": "已加载 {{count}} 行",
     "interruptedTranslateSubtitles": "Translator 关闭时，把这些字幕翻译成{{language}}的任务中断了。",
-    "currentSubtitle": "当前字幕"
+    "currentSubtitle": "当前字幕",
+    "moreTranslateFromHere": "从这里翻译未翻译的行",
+    "translateGap": {
+      "title": "把未翻译的行译成{{language}}",
+      "fromHere": "从这里到下一行已翻译的字幕",
+      "fromHereToEnd": "从这里到结尾",
+      "nothingFromHere": "从这里开始没有需要翻译的行了",
+      "all": "所有未翻译的行",
+      "keepsTranslated": "已有译文的行保持不变。",
+      "cost": "将使用 {{cost}}。"
+    }
   },
   "subtitleStyles": {
     "Cinema": "影院黄",

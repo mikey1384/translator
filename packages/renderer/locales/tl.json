@@ -573,7 +573,9 @@
       "mergeTitle": "Isama sa kasunod na linya",
       "timeOverlapsPrevious": "Nagsisimula ang linyang ito bago matapos ang naunang linya, kaya sabay silang lumalabas.",
       "timeOverlapsNext": "Natatapos ang linyang ito pagkatapos magsimula ang susunod na linya, kaya sabay silang lumalabas.",
-      "timeOverlapsBoth": "Nagsasapawan ang linyang ito at ang mga linya bago at pagkatapos nito, kaya sabay-sabay silang lumalabas."
+      "timeOverlapsBoth": "Nagsasapawan ang linyang ito at ang mga linya bago at pagkatapos nito, kaya sabay-sabay silang lumalabas.",
+      "translateFromHere": "Isalin mula rito",
+      "translateFromHereTitle": "Isalin ang linyang ito at ang mga hindi pa naisaling linya pagkatapos nito, hanggang sa susunod na naisaling linya"
     },
     "header": {
       "save": "I-save ang mga subtitle",
@@ -1489,7 +1491,17 @@
     "interruptedTranslateSubtitles": "Naputol ang pagsasalin ng mga subtitle na ito sa {{language}} nang isara ang Translator.",
     "statusTranscribed_one": "Naisulat na ang {{count}} linya",
     "statusTranslated_one": "{{count}} linya sa {{language}} · sabay sa video",
-    "currentSubtitle": "Kasalukuyang subtitle"
+    "currentSubtitle": "Kasalukuyang subtitle",
+    "moreTranslateFromHere": "Isalin ang mga kulang na linya mula rito",
+    "translateGap": {
+      "title": "Isalin sa {{language}} ang mga kulang na linya",
+      "fromHere": "Mula rito hanggang sa susunod na naisaling linya",
+      "fromHereToEnd": "Mula rito hanggang sa dulo",
+      "nothingFromHere": "Wala nang isasalin mula sa puntong ito",
+      "all": "Lahat ng kulang na linya",
+      "keepsTranslated": "Mananatili kung ano ang mga linyang may salin na.",
+      "cost": "Gagamit ng {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Dilaw na pang-sine",

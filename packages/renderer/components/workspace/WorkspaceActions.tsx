@@ -26,6 +26,7 @@ import {
   MoreHorizontal,
   Palette,
   Scissors,
+  SkipForward,
   Video,
 } from 'lucide-react';
 import Button from '../Button';
@@ -41,6 +42,8 @@ import {
   transcriptStopsEarlyAt,
 } from '../../utils/transcriptCoverage';
 import { translateMissingUntranslated } from '../../utils/translateMissing';
+import TranslateRangeDialog from './TranslateRangeDialog';
+import { useTranslateRangeStore } from '../../state/translate-range-store';
 import { currentVideoCost } from '../../utils/freePreviewRun';
 import { persistMountedTranslation } from '../../containers/GenerateSubtitles/utils/subtitleGeneration';
 import { formatUsd } from '../../utils/formatUsd';
@@ -177,10 +180,16 @@ function useSubtitleSummary() {
   }, [order, segments, recordedLanguage, coverage]);
 }
 
-/** Translate the lines that have none yet, then save like a normal run. */
-async function translateMissingLines(language: string): Promise<void> {
+/**
+ * Translate the lines that have none yet (only `ids` when given: a "from
+ * here" range), then save like a normal run.
+ */
+async function translateMissingLines(
+  language: string,
+  ids?: ReadonlyArray<string>
+): Promise<void> {
   useUIStore.getState().setTargetLanguage(language);
-  const ok = await translateMissingUntranslated();
+  const ok = await translateMissingUntranslated({ ids });
   if (ok) await persistMountedTranslation(language);
 }
 
@@ -704,9 +713,12 @@ function SubtitleStyleButton() {
 function MoreMenu({
   hasSubs,
   showExport,
+  showTranslateFromHere,
 }: {
   hasSubs: boolean;
   showExport: boolean;
+  /** Some lines have no translation yet. */
+  showTranslateFromHere: boolean;
 }) {
   const { t } = useTranslation();
   // Swapping the source mid-job would reset the job's state while main keeps
@@ -836,6 +848,25 @@ function MoreMenu({
             >
               <Film aria-hidden="true" />
               {t('workspace.exportVideo', 'Export video with subtitles')}
+            </button>
+          ) : null}
+          {showTranslateFromHere ? (
+            <button
+              type="button"
+              role="menuitem"
+              className={moreMenuItemStyles}
+              data-testid="more-translate-from-here"
+              onClick={() => {
+                logButton('workspace_more_translate_from_here');
+                setOpen(false);
+                useTranslateRangeStore.getState().open(null);
+              }}
+            >
+              <SkipForward aria-hidden="true" />
+              {t(
+                'workspace.moreTranslateFromHere',
+                'Translate missing lines from here'
+              )}
             </button>
           ) : null}
           <button
@@ -1086,8 +1117,19 @@ export function WorkspaceActionBar() {
           {t('workspace.saveSrt', 'Save .srt')}
         </Button>
       ) : null}
+      {/* Above the sticky video column and the editor rows. */}
+      {createPortal(
+        <TranslateRangeDialog
+          language={missingLanguage}
+          onTranslate={ids =>
+            void translateMissingLines(missingLanguage.value, ids)
+          }
+        />,
+        document.body
+      )}
       <MoreMenu
         hasSubs={hasSubs}
+        showTranslateFromHere={missing > 0 && !busy && !interrupted}
         showExport={
           hasSubs &&
           !!videoPath &&

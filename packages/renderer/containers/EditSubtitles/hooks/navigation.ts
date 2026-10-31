@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { SrtSegment } from '@shared-types/app';
-import { scrollPrecisely, flashSubtitle } from '../../../utils/scroll.js';
+import { flashSubtitle, settleIntoView } from '../../../utils/scroll.js';
 import { currentSubtitleIndex } from '../../../utils/currentSubtitle.js';
 import { getNativePlayerInstance } from '../../../native-player.js';
 
@@ -58,25 +58,7 @@ export const useSubtitleNavigation = (
 
     const el = subtitleRefs.current[subtitles[index].id];
     if (el) {
-      // Default scroll behavior for navigation should be instant ('auto')
-      // The workspace list scrolls independently from the window.
-      let scroller = el.parentElement;
-      while (
-        scroller &&
-        !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)
-      ) {
-        scroller = scroller.parentElement;
-      }
-      if (scroller) {
-        scroller.scrollTo({
-          top:
-            scroller.scrollTop +
-            el.getBoundingClientRect().top -
-            scroller.getBoundingClientRect().top -
-            scroller.clientHeight / 3,
-          behavior: 'instant',
-        });
-      } else scrollPrecisely(el, false);
+      settleIntoView(el);
       // Flash on every scroll, including 'Go to current subtitle'
       requestAnimationFrame(() => flashSubtitle(el));
     }

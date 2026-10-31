@@ -157,6 +157,26 @@ export function useCreditCostEstimates() {
     };
   }, [order, segments, credits, qualityTranslation, runtimeState]);
 
+  // The same estimate for a chosen set of lines (a "translate from here"
+  // range), so a partial run shows its own cost, not the whole file's.
+  const estimateTranslationOf = (
+    lines: ReadonlyArray<{ original?: string | null }>
+  ) => {
+    let charCount = 0;
+    for (const line of lines) charCount += (line.original || '').trim().length;
+    const isByo = isTranslationByo(runtimeState);
+    const estimatedCredits = estimateTranslationCreditsFromChars(
+      charCount,
+      qualityTranslation,
+      resolveEffectiveTranslationReviewModel(runtimeState)
+    );
+    return {
+      estimatedCredits,
+      isByo,
+      hasEnoughCredits: isByo || credits == null || credits >= estimatedCredits,
+    };
+  };
+
   // Cost next to the balance it comes out of, in minutes of video (what
   // users buy): a bare "~132k cr" did not tell anyone that a dub would use
   // most of what they had just bought.
@@ -168,6 +188,7 @@ export function useCreditCostEstimates() {
     runtimeState,
     dubbingEstimate,
     translationEstimate,
+    estimateTranslationOf,
     formatCostLabel,
   };
 }

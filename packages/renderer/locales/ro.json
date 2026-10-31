@@ -579,7 +579,9 @@
       "mergeTitle": "Unește cu rândul următor",
       "timeOverlapsPrevious": "Acest rând începe înainte să se termine cel anterior, așa că apar amândouă deodată.",
       "timeOverlapsNext": "Acest rând se termină după ce începe următorul, așa că apar amândouă deodată.",
-      "timeOverlapsBoth": "Acest rând se suprapune cu cel anterior și cu cel următor, așa că apar deodată."
+      "timeOverlapsBoth": "Acest rând se suprapune cu cel anterior și cu cel următor, așa că apar deodată.",
+      "translateFromHere": "Tradu de aici",
+      "translateFromHereTitle": "Traduce acest rând și rândurile netraduse de după el, până la următorul rând tradus"
     },
     "header": {
       "save": "Salvează subtitrările",
@@ -1507,7 +1509,17 @@
     "statusLoaded_few": "{{count}} rânduri încărcate",
     "interruptedTranslateSubtitles": "Traducerea acestor subtitrări în {{language}} s-a oprit când s-a închis Translator.",
     "statusTranslated_one": "{{count}} rând în {{language}} · sincronizat cu videoclipul",
-    "currentSubtitle": "Subtitrarea curentă"
+    "currentSubtitle": "Subtitrarea curentă",
+    "moreTranslateFromHere": "Tradu rândurile lipsă de aici",
+    "translateGap": {
+      "title": "Tradu în {{language}} rândurile lipsă",
+      "fromHere": "De aici până la următorul rând tradus",
+      "fromHereToEnd": "De aici până la sfârșit",
+      "nothingFromHere": "De aici nu mai e nimic de tradus",
+      "all": "Toate rândurile lipsă",
+      "keepsTranslated": "Rândurile care au deja traducere rămân cum sunt.",
+      "cost": "Folosește {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Galben cinema",

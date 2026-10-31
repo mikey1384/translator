@@ -575,7 +575,9 @@
       "mergeTitle": "מיזוג עם השורה הבאה",
       "timeOverlapsPrevious": "השורה מתחילה לפני שהשורה הקודמת מסתיימת, ולכן שתיהן מוצגות יחד.",
       "timeOverlapsNext": "השורה מסתיימת אחרי שהשורה הבאה מתחילה, ולכן שתיהן מוצגות יחד.",
-      "timeOverlapsBoth": "השורה חופפת לשורות שלפניה ואחריה, ולכן הן מוצגות יחד."
+      "timeOverlapsBoth": "השורה חופפת לשורות שלפניה ואחריה, ולכן הן מוצגות יחד.",
+      "translateFromHere": "תרגום מכאן",
+      "translateFromHereTitle": "תרגום השורה הזו והשורות הלא מתורגמות שאחריה, עד השורה המתורגמת הבאה"
     },
     "header": {
       "save": "שמירת הכתוביות",
@@ -1498,7 +1500,17 @@
     "statusLoaded_one": "נטענה שורה אחת",
     "statusLoaded_two": "נטענו שתי שורות",
     "interruptedTranslateSubtitles": "התרגום של הכתוביות האלה ל{{language}} נעצר כש-Translator נסגר.",
-    "currentSubtitle": "הכתובית הנוכחית"
+    "currentSubtitle": "הכתובית הנוכחית",
+    "moreTranslateFromHere": "תרגום השורות החסרות מכאן",
+    "translateGap": {
+      "title": "תרגום השורות החסרות ל{{language}}",
+      "fromHere": "מכאן ועד השורה המתורגמת הבאה",
+      "fromHereToEnd": "מכאן ועד הסוף",
+      "nothingFromHere": "אין עוד מה לתרגם מנקודה זו",
+      "all": "כל השורות החסרות",
+      "keepsTranslated": "שורות שכבר מתורגמות נשארות כמו שהן.",
+      "cost": "ינוצלו {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "צהוב קולנוע",

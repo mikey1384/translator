@@ -573,7 +573,9 @@
       "mergeTitle": "Unganisha na mstari unaofuata",
       "timeOverlapsPrevious": "Mstari huu unaanza kabla mstari uliotangulia haujaisha, kwa hiyo yote miwili inaonekana kwa wakati mmoja.",
       "timeOverlapsNext": "Mstari huu unaisha baada ya mstari unaofuata kuanza, kwa hiyo yote miwili inaonekana kwa wakati mmoja.",
-      "timeOverlapsBoth": "Mstari huu unaingiliana na mistari iliyo kabla na baada yake, kwa hiyo yote inaonekana kwa wakati mmoja."
+      "timeOverlapsBoth": "Mstari huu unaingiliana na mistari iliyo kabla na baada yake, kwa hiyo yote inaonekana kwa wakati mmoja.",
+      "translateFromHere": "Tafsiri kuanzia hapa",
+      "translateFromHereTitle": "Tafsiri mstari huu na mistari isiyotafsiriwa inayofuata, hadi mstari unaofuata uliotafsiriwa"
     },
     "header": {
       "save": "Hifadhi manukuu",
@@ -1489,7 +1491,17 @@
     "statusLoaded": "Mistari {{count}} imepakiwa",
     "statusLoaded_one": "Mstari {{count}} umepakiwa",
     "interruptedTranslateSubtitles": "Kutafsiri manukuu haya kwa {{language}} kulisimama Translator ilipofungwa.",
-    "currentSubtitle": "Manukuu ya sasa"
+    "currentSubtitle": "Manukuu ya sasa",
+    "moreTranslateFromHere": "Tafsiri mistari iliyokosekana kuanzia hapa",
+    "translateGap": {
+      "title": "Tafsiri mistari iliyokosekana kwa {{language}}",
+      "fromHere": "Kuanzia hapa hadi mstari unaofuata uliotafsiriwa",
+      "fromHereToEnd": "Kuanzia hapa hadi mwisho",
+      "nothingFromHere": "Hakuna kilichobaki kutafsiri kuanzia hapa",
+      "all": "Mistari yote iliyokosekana",
+      "keepsTranslated": "Mistari ambayo tayari ina tafsiri itabaki kama ilivyo.",
+      "cost": "Inatumia {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Njano ya sinema",

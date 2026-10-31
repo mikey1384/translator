@@ -573,7 +573,9 @@
       "mergeTitle": "Merge with the next line",
       "timeOverlapsPrevious": "This line starts before the previous line ends, so both show at once.",
       "timeOverlapsNext": "This line ends after the next line starts, so both show at once.",
-      "timeOverlapsBoth": "This line overlaps the lines before and after it, so they show at once."
+      "timeOverlapsBoth": "This line overlaps the lines before and after it, so they show at once.",
+      "translateFromHere": "Translate from here",
+      "translateFromHereTitle": "Translate this line and the untranslated lines after it, up to the next translated line"
     },
     "header": {
       "save": "Save subtitles",
@@ -1488,7 +1490,17 @@
     "statusLoaded": "{{count}} lines loaded",
     "statusLoaded_one": "{{count}} line loaded",
     "interruptedTranslateSubtitles": "Translating these subtitles into {{language}} stopped when Translator closed.",
-    "currentSubtitle": "Current subtitle"
+    "currentSubtitle": "Current subtitle",
+    "moreTranslateFromHere": "Translate missing lines from here",
+    "translateGap": {
+      "title": "Translate missing lines into {{language}}",
+      "fromHere": "From here to the next translated line",
+      "fromHereToEnd": "From here to the end",
+      "nothingFromHere": "Nothing left to translate from this point",
+      "all": "All missing lines",
+      "keepsTranslated": "Lines that already have a translation stay as they are.",
+      "cost": "Uses {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Cinema yellow",

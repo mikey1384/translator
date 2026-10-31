@@ -573,7 +573,9 @@
       "mergeTitle": "Slå sammen med neste linje",
       "timeOverlapsPrevious": "Denne linjen starter før forrige linje slutter, så begge vises samtidig.",
       "timeOverlapsNext": "Denne linjen slutter etter at neste linje har startet, så begge vises samtidig.",
-      "timeOverlapsBoth": "Denne linjen overlapper linjene før og etter, så de vises samtidig."
+      "timeOverlapsBoth": "Denne linjen overlapper linjene før og etter, så de vises samtidig.",
+      "translateFromHere": "Oversett herfra",
+      "translateFromHereTitle": "Oversetter denne linjen og de uoversatte linjene etter den, frem til neste oversatte linje"
     },
     "header": {
       "save": "Lagre undertekster",
@@ -1489,7 +1491,17 @@
     "statusLoaded": "{{count}} linjer lastet inn",
     "statusLoaded_one": "{{count}} linje lastet inn",
     "interruptedTranslateSubtitles": "Oversettelsen av undertekstene til {{language}} stoppet da Translator ble lukket.",
-    "currentSubtitle": "Gjeldende undertekst"
+    "currentSubtitle": "Gjeldende undertekst",
+    "moreTranslateFromHere": "Oversett manglende linjer herfra",
+    "translateGap": {
+      "title": "Oversett manglende linjer til {{language}}",
+      "fromHere": "Herfra til neste oversatte linje",
+      "fromHereToEnd": "Herfra til slutten",
+      "nothingFromHere": "Det er ingenting igjen å oversette herfra",
+      "all": "Alle manglende linjer",
+      "keepsTranslated": "Linjer som allerede er oversatt, blir som de er.",
+      "cost": "Bruker {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Kinogul",

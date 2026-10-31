@@ -575,7 +575,9 @@
       "mergeTitle": "Unisci alla riga successiva",
       "timeOverlapsPrevious": "Questa riga inizia prima che finisca la precedente, quindi compaiono entrambe insieme.",
       "timeOverlapsNext": "Questa riga finisce dopo l’inizio della successiva, quindi compaiono entrambe insieme.",
-      "timeOverlapsBoth": "Questa riga si sovrappone alla precedente e alla successiva, quindi compaiono insieme."
+      "timeOverlapsBoth": "Questa riga si sovrappone alla precedente e alla successiva, quindi compaiono insieme.",
+      "translateFromHere": "Traduci da qui",
+      "translateFromHereTitle": "Traduce questa riga e le righe non tradotte che seguono, fino alla prossima riga tradotta"
     },
     "header": {
       "save": "Salva sottotitoli",
@@ -1500,7 +1502,17 @@
     "statusLoaded_one": "{{count}} riga caricata",
     "statusLoaded_many": "{{count}} di righe caricate",
     "interruptedTranslateSubtitles": "La traduzione di questi sottotitoli in {{language}} si è interrotta alla chiusura di Translator.",
-    "currentSubtitle": "Sottotitolo attuale"
+    "currentSubtitle": "Sottotitolo attuale",
+    "moreTranslateFromHere": "Traduci le righe mancanti da qui",
+    "translateGap": {
+      "title": "Traduci in {{language}} le righe mancanti",
+      "fromHere": "Da qui alla prossima riga tradotta",
+      "fromHereToEnd": "Da qui alla fine",
+      "nothingFromHere": "Da questo punto non resta nulla da tradurre",
+      "all": "Tutte le righe mancanti",
+      "keepsTranslated": "Le righe già tradotte restano come sono.",
+      "cost": "Usa {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Giallo cinema",

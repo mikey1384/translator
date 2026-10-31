@@ -573,7 +573,9 @@
       "mergeTitle": "Samenvoegen met de volgende regel",
       "timeOverlapsPrevious": "Deze regel begint voordat de vorige regel eindigt, dus ze staan tegelijk in beeld.",
       "timeOverlapsNext": "Deze regel eindigt nadat de volgende regel begint, dus ze staan tegelijk in beeld.",
-      "timeOverlapsBoth": "Deze regel overlapt met de regels ervoor en erna, dus ze staan tegelijk in beeld."
+      "timeOverlapsBoth": "Deze regel overlapt met de regels ervoor en erna, dus ze staan tegelijk in beeld.",
+      "translateFromHere": "Vanaf hier vertalen",
+      "translateFromHereTitle": "Vertaalt deze regel en de onvertaalde regels erna, tot de volgende vertaalde regel"
     },
     "header": {
       "save": "Ondertitels opslaan",
@@ -1489,7 +1491,17 @@
     "statusLoaded": "{{count}} regels geladen",
     "statusLoaded_one": "{{count}} regel geladen",
     "interruptedTranslateSubtitles": "Het vertalen van deze ondertitels naar het {{language}} is gestopt toen Translator werd gesloten.",
-    "currentSubtitle": "Huidige ondertitel"
+    "currentSubtitle": "Huidige ondertitel",
+    "moreTranslateFromHere": "Ontbrekende regels vanaf hier vertalen",
+    "translateGap": {
+      "title": "Ontbrekende regels naar het {{language}} vertalen",
+      "fromHere": "Vanaf hier tot de volgende vertaalde regel",
+      "fromHereToEnd": "Vanaf hier tot het einde",
+      "nothingFromHere": "Vanaf hier valt er niets meer te vertalen",
+      "all": "Alle ontbrekende regels",
+      "keepsTranslated": "Regels die al vertaald zijn, blijven zoals ze zijn.",
+      "cost": "Gebruikt {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Bioscoopgeel",

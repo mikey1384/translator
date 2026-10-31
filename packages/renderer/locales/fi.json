@@ -573,7 +573,9 @@
       "mergeTitle": "Yhdistä seuraavaan riviin",
       "timeOverlapsPrevious": "Rivi alkaa ennen kuin edellinen rivi päättyy, joten molemmat näkyvät yhtä aikaa.",
       "timeOverlapsNext": "Rivi päättyy vasta, kun seuraava rivi on jo alkanut, joten molemmat näkyvät yhtä aikaa.",
-      "timeOverlapsBoth": "Rivi menee päällekkäin edellisen ja seuraavan rivin kanssa, joten ne näkyvät yhtä aikaa."
+      "timeOverlapsBoth": "Rivi menee päällekkäin edellisen ja seuraavan rivin kanssa, joten ne näkyvät yhtä aikaa.",
+      "translateFromHere": "Käännä tästä",
+      "translateFromHereTitle": "Kääntää tämän rivin ja sen jälkeiset kääntämättömät rivit seuraavaan käännettyyn riviin asti"
     },
     "header": {
       "save": "Tallenna tekstitykset",
@@ -1489,7 +1491,17 @@
     "statusLoaded": "{{count}} riviä ladattu",
     "statusLoaded_one": "{{count}} rivi ladattu",
     "interruptedTranslateSubtitles": "Näiden tekstitysten kääntäminen {{languageInto}} keskeytyi, kun Translator suljettiin.",
-    "currentSubtitle": "Nykyinen tekstitys"
+    "currentSubtitle": "Nykyinen tekstitys",
+    "moreTranslateFromHere": "Käännä puuttuvat rivit tästä eteenpäin",
+    "translateGap": {
+      "title": "Käännä puuttuvat rivit {{languageInto}}",
+      "fromHere": "Tästä seuraavaan käännettyyn riviin",
+      "fromHereToEnd": "Tästä loppuun asti",
+      "nothingFromHere": "Tästä eteenpäin ei ole enää käännettävää",
+      "all": "Kaikki puuttuvat rivit",
+      "keepsTranslated": "Jo käännetyt rivit pysyvät ennallaan.",
+      "cost": "Käyttää {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Elokuvakeltainen",

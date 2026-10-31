@@ -567,7 +567,9 @@
       "mergeTitle": "與下一行合併",
       "timeOverlapsPrevious": "這行在上一行結束前就開始了，兩行會同時顯示。",
       "timeOverlapsNext": "這行在下一行開始後才結束，兩行會同時顯示。",
-      "timeOverlapsBoth": "這行和前後兩行重疊，會同時顯示。"
+      "timeOverlapsBoth": "這行和前後兩行重疊，會同時顯示。",
+      "translateFromHere": "從這裡翻譯",
+      "translateFromHereTitle": "翻譯這一行及其後未翻譯的行，直到下一行已翻譯的字幕"
     },
     "header": {
       "save": "儲存字幕",
@@ -1466,7 +1468,17 @@
     "checkingFile": "正在讀取檔案…",
     "statusLoaded": "已載入 {{count}} 行",
     "interruptedTranslateSubtitles": "Translator 關閉時，這些字幕的{{language}}翻譯中斷了。",
-    "currentSubtitle": "目前字幕"
+    "currentSubtitle": "目前字幕",
+    "moreTranslateFromHere": "從這裡翻譯缺少的行",
+    "translateGap": {
+      "title": "把缺少的行翻成{{language}}",
+      "fromHere": "從這裡到下一行已翻譯的字幕",
+      "fromHereToEnd": "從這裡到結尾",
+      "nothingFromHere": "從這裡開始沒有需要翻譯的行了",
+      "all": "所有缺少的行",
+      "keepsTranslated": "已有譯文的行會保持原樣。",
+      "cost": "將使用 {{cost}}。"
+    }
   },
   "subtitleStyles": {
     "Cinema": "電影黃",

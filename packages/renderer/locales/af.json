@@ -573,7 +573,9 @@
       "mergeTitle": "Voeg saam met die volgende reël",
       "timeOverlapsPrevious": "Hierdie reël begin voordat die vorige reël eindig, so albei wys gelyktydig.",
       "timeOverlapsNext": "Hierdie reël eindig nadat die volgende reël begin het, so albei wys gelyktydig.",
-      "timeOverlapsBoth": "Hierdie reël oorvleuel met die reëls daarvoor en daarna, so hulle wys gelyktydig."
+      "timeOverlapsBoth": "Hierdie reël oorvleuel met die reëls daarvoor en daarna, so hulle wys gelyktydig.",
+      "translateFromHere": "Vertaal van hier af",
+      "translateFromHereTitle": "Vertaal hierdie reël en die onvertaalde reëls daarna, tot by die volgende vertaalde reël"
     },
     "header": {
       "save": "Stoor onderskrifte",
@@ -1489,7 +1491,17 @@
     "statusLoaded": "{{count}} reëls gelaai",
     "statusLoaded_one": "{{count}} reël gelaai",
     "interruptedTranslateSubtitles": "Die vertaling van hierdie onderskrifte na {{language}} het gestop toe Translator toegemaak is.",
-    "currentSubtitle": "Huidige onderskrif"
+    "currentSubtitle": "Huidige onderskrif",
+    "moreTranslateFromHere": "Vertaal ontbrekende reëls van hier af",
+    "translateGap": {
+      "title": "Vertaal ontbrekende reëls na {{language}}",
+      "fromHere": "Van hier tot by die volgende vertaalde reël",
+      "fromHereToEnd": "Van hier tot aan die einde",
+      "nothingFromHere": "Niks meer om van hier af te vertaal nie",
+      "all": "Alle ontbrekende reëls",
+      "keepsTranslated": "Reëls wat reeds vertaal is, bly soos hulle is.",
+      "cost": "Gebruik {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Bioskoopgeel",

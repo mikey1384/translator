@@ -579,7 +579,9 @@
       "mergeTitle": "Połącz z następnym wierszem",
       "timeOverlapsPrevious": "Ten wiersz zaczyna się, zanim skończy się poprzedni, więc oba widać naraz.",
       "timeOverlapsNext": "Ten wiersz kończy się później, niż zaczyna się następny, więc oba widać naraz.",
-      "timeOverlapsBoth": "Ten wiersz nachodzi na poprzedni i następny, więc widać je naraz."
+      "timeOverlapsBoth": "Ten wiersz nachodzi na poprzedni i następny, więc widać je naraz.",
+      "translateFromHere": "Tłumacz od tego miejsca",
+      "translateFromHereTitle": "Tłumaczy ten wiersz i nieprzetłumaczone wiersze po nim, aż do następnego przetłumaczonego wiersza"
     },
     "header": {
       "save": "Zapisz napisy",
@@ -1517,7 +1519,17 @@
     "statusTranslated_few": "{{count}} wiersze · język: {{language}} · zgrane z filmem",
     "statusTranslated_many": "{{count}} wierszy · język: {{language}} · zgrane z filmem",
     "interruptedTranslateSubtitles": "Tłumaczenie tych napisów na {{language}} przerwało się, gdy Translator został zamknięty.",
-    "currentSubtitle": "Bieżący napis"
+    "currentSubtitle": "Bieżący napis",
+    "moreTranslateFromHere": "Przetłumacz brakujące wiersze od tego miejsca",
+    "translateGap": {
+      "title": "Przetłumacz brakujące wiersze na {{language}}",
+      "fromHere": "Stąd do następnego przetłumaczonego wiersza",
+      "fromHereToEnd": "Stąd do końca",
+      "nothingFromHere": "Od tego miejsca nie ma już nic do przetłumaczenia",
+      "all": "Wszystkie brakujące wiersze",
+      "keepsTranslated": "Wiersze, które mają już tłumaczenie, zostają bez zmian.",
+      "cost": "Zużyje {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Kinowy żółty",

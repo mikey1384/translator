@@ -567,7 +567,9 @@
       "mergeTitle": "Gộp với dòng tiếp theo",
       "timeOverlapsPrevious": "Dòng này bắt đầu trước khi dòng trước kết thúc, nên cả hai hiện cùng lúc.",
       "timeOverlapsNext": "Dòng này kết thúc sau khi dòng sau bắt đầu, nên cả hai hiện cùng lúc.",
-      "timeOverlapsBoth": "Dòng này chồng lên dòng trước và dòng sau, nên chúng hiện cùng lúc."
+      "timeOverlapsBoth": "Dòng này chồng lên dòng trước và dòng sau, nên chúng hiện cùng lúc.",
+      "translateFromHere": "Dịch từ đây",
+      "translateFromHereTitle": "Dịch dòng này và các dòng chưa dịch phía sau, đến dòng đã dịch tiếp theo"
     },
     "header": {
       "save": "Lưu phụ đề",
@@ -1466,7 +1468,17 @@
     "checkingFile": "Đang đọc tệp…",
     "statusLoaded": "Đã tải {{count}} dòng",
     "interruptedTranslateSubtitles": "Việc dịch phụ đề này sang {{language}} đã dừng vì Translator bị đóng.",
-    "currentSubtitle": "Phụ đề hiện tại"
+    "currentSubtitle": "Phụ đề hiện tại",
+    "moreTranslateFromHere": "Dịch các dòng còn thiếu từ đây",
+    "translateGap": {
+      "title": "Dịch các dòng còn thiếu sang {{language}}",
+      "fromHere": "Từ đây đến dòng đã dịch tiếp theo",
+      "fromHereToEnd": "Từ đây đến hết",
+      "nothingFromHere": "Từ điểm này không còn gì để dịch",
+      "all": "Tất cả các dòng còn thiếu",
+      "keepsTranslated": "Các dòng đã có bản dịch được giữ nguyên.",
+      "cost": "Dùng {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Vàng điện ảnh",

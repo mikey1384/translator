@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { css } from '@emotion/css';
+import { css, cx } from '@emotion/css';
 import { LocateFixed, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Button from '../Button';
@@ -54,14 +54,32 @@ const findButtonStyles = css`
   }
 `;
 
+// While editing, the page itself scrolls through the long editor rows; keep
+// "Current subtitle", find and the edit switch reachable at the top. Not
+// while All tools is open below, where it would ride over the tools.
+const subsHeadPinnedStyles = css`
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding-block: 10px;
+  background: ${colors.bg};
+  box-shadow: 0 10px 14px -12px rgba(0, 0, 0, 0.6);
+`;
+
 export function WorkspaceSubtitlesHead() {
   const { t } = useTranslation();
   const editMode = useUIStore(s => s.subtitleEditMode);
   const count = useSubStore(s => s.order.length);
   const navigate = useWorkspaceActions(s => s.subtitleNavigation);
   const hasVideo = useVideoStore(s => Boolean(s.url));
+  const toolsOpen = useUIStore(s => s.workspaceToolsOpen);
   return (
-    <div className={workspaceSubsHeadStyles}>
+    <div
+      className={cx(
+        workspaceSubsHeadStyles,
+        editMode && !toolsOpen && subsHeadPinnedStyles
+      )}
+    >
       <h2 className={workspaceSubsTitleStyles}>
         {t('workspace.subtitlesTitle', 'Subtitles')}
         {count > 0 ? (

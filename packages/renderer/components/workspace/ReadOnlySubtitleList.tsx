@@ -66,7 +66,7 @@ function Highlighted({
   );
 }
 
-function formatCueTime(seconds: number): string {
+export function formatCueTime(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);

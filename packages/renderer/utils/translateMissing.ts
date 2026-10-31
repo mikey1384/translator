@@ -7,13 +7,19 @@ import { i18n } from '../i18n';
 import { registerStage5CreditRefreshOperation } from './creditRefreshOperations';
 import { isExplicitCancellation } from '../../shared/cancelled-error';
 import { isTextInLanguage } from './detectTextLanguage';
+import { selectMissingSegments } from './untranslatedRange';
 
 /**
  * Translates only untranslated subtitle items using the existing streaming pipeline.
  * Uses operationId starting with `translate-missing-` so progress-buffer applies
  * partial updates by timecode to the correct items during both translate and review phases.
  */
-export async function translateMissingUntranslated(): Promise<boolean> {
+export async function translateMissingUntranslated(
+  options: {
+    /** Only these lines (a "from here" range); default every missing line. */
+    ids?: ReadonlyArray<string>;
+  } = {}
+): Promise<boolean> {
   // Guard: do not allow translation while transcription is active
   if (useTaskStore.getState().transcription.inProgress) {
     return false;
@@ -22,9 +28,10 @@ export async function translateMissingUntranslated(): Promise<boolean> {
   const targetLanguage = useUIStore.getState().targetLanguage || 'english';
   const store = useSubStore.getState();
 
-  const missing = store.order
-    .map(id => store.segments[id])
-    .filter(s => (s.original || '').trim() && !(s.translation || '').trim());
+  const missing = selectMissingSegments(
+    store.order.map(id => store.segments[id]),
+    options.ids
+  );
 
   if (!missing.length) return true;
   // Lines already in the target language need no (paid) translation.

@@ -575,7 +575,9 @@
       "mergeTitle": "Fusionner avec la ligne suivante",
       "timeOverlapsPrevious": "Cette ligne commence avant la fin de la précédente : les deux s’affichent en même temps.",
       "timeOverlapsNext": "Cette ligne se termine après le début de la suivante : les deux s’affichent en même temps.",
-      "timeOverlapsBoth": "Cette ligne chevauche la précédente et la suivante : elles s’affichent en même temps."
+      "timeOverlapsBoth": "Cette ligne chevauche la précédente et la suivante : elles s’affichent en même temps.",
+      "translateFromHere": "Traduire à partir d’ici",
+      "translateFromHereTitle": "Traduit cette ligne et les lignes non traduites qui la suivent, jusqu’à la prochaine ligne traduite"
     },
     "header": {
       "save": "Enregistrer les sous-titres",
@@ -1500,7 +1502,17 @@
     "statusLoaded_one": "{{count}} ligne chargée",
     "statusLoaded_many": "{{count}} de lignes chargées",
     "interruptedTranslateSubtitles": "La traduction de ces sous-titres en {{language}} s’est arrêtée à la fermeture de Translator.",
-    "currentSubtitle": "Sous-titre actuel"
+    "currentSubtitle": "Sous-titre actuel",
+    "moreTranslateFromHere": "Traduire les lignes manquantes à partir d’ici",
+    "translateGap": {
+      "title": "Traduire les lignes manquantes en {{language}}",
+      "fromHere": "D’ici jusqu’à la prochaine ligne traduite",
+      "fromHereToEnd": "D’ici jusqu’à la fin",
+      "nothingFromHere": "Plus rien à traduire à partir d’ici",
+      "all": "Toutes les lignes manquantes",
+      "keepsTranslated": "Les lignes déjà traduites restent telles quelles.",
+      "cost": "Utilise {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Jaune cinéma",

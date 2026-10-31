@@ -567,7 +567,9 @@
       "mergeTitle": "다음 줄과 합치기",
       "timeOverlapsPrevious": "이 줄이 이전 줄이 끝나기 전에 시작해서 두 줄이 동시에 표시돼요.",
       "timeOverlapsNext": "이 줄이 다음 줄이 시작된 뒤에 끝나서 두 줄이 동시에 표시돼요.",
-      "timeOverlapsBoth": "이 줄이 앞뒤 줄과 겹쳐서 함께 표시돼요."
+      "timeOverlapsBoth": "이 줄이 앞뒤 줄과 겹쳐서 함께 표시돼요.",
+      "translateFromHere": "여기서부터 번역",
+      "translateFromHereTitle": "이 줄과 그 뒤로 이어지는 번역 안 된 줄을 다음 번역된 줄 전까지 번역해요"
     },
     "header": {
       "save": "자막 저장",
@@ -1466,7 +1468,17 @@
     "checkingFile": "파일 읽는 중…",
     "statusLoaded": "{{count}}줄 불러옴",
     "interruptedTranslateSubtitles": "Translator가 종료되어 이 자막을 {{language}}로 번역하던 작업이 멈췄어요.",
-    "currentSubtitle": "현재 자막"
+    "currentSubtitle": "현재 자막",
+    "moreTranslateFromHere": "여기서부터 빠진 줄 번역",
+    "translateGap": {
+      "title": "빠진 줄 {{language}}로 번역",
+      "fromHere": "여기서부터 다음 번역된 줄 전까지",
+      "fromHereToEnd": "여기서부터 끝까지",
+      "nothingFromHere": "이 지점부터는 번역할 줄이 없어요",
+      "all": "빠진 줄 전체",
+      "keepsTranslated": "이미 번역된 줄은 그대로 둬요.",
+      "cost": "{{cost}} 사용"
+    }
   },
   "subtitleStyles": {
     "Cinema": "시네마 옐로",

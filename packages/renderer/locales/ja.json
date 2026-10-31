@@ -567,7 +567,9 @@
       "mergeTitle": "次の行と結合",
       "timeOverlapsPrevious": "この行は前の行が終わる前に始まるため、両方が同時に表示されます。",
       "timeOverlapsNext": "この行は次の行が始まった後に終わるため、両方が同時に表示されます。",
-      "timeOverlapsBoth": "この行は前後の行と重なっているため、同時に表示されます。"
+      "timeOverlapsBoth": "この行は前後の行と重なっているため、同時に表示されます。",
+      "translateFromHere": "ここから翻訳",
+      "translateFromHereTitle": "この行と、その後に続く未翻訳の行を次の翻訳済みの行まで翻訳します"
     },
     "header": {
       "save": "字幕を保存",
@@ -1466,7 +1468,17 @@
     "checkingFile": "ファイルを読み込んでいます…",
     "statusLoaded": "{{count}}行を読み込みました",
     "interruptedTranslateSubtitles": "Translatorが終了したため、この字幕の{{language}}への翻訳が途中で止まりました。",
-    "currentSubtitle": "現在の字幕"
+    "currentSubtitle": "現在の字幕",
+    "moreTranslateFromHere": "ここから未翻訳の行を翻訳",
+    "translateGap": {
+      "title": "未翻訳の行を{{language}}に翻訳",
+      "fromHere": "ここから次の翻訳済みの行まで",
+      "fromHereToEnd": "ここから最後まで",
+      "nothingFromHere": "ここから先に翻訳する行はありません",
+      "all": "未翻訳のすべての行",
+      "keepsTranslated": "すでに翻訳がある行はそのまま残ります。",
+      "cost": "{{cost}}を使います。"
+    }
   },
   "subtitleStyles": {
     "Cinema": "シネマイエロー",

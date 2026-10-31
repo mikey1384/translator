@@ -573,7 +573,9 @@
       "mergeTitle": "Slå sammen med næste linje",
       "timeOverlapsPrevious": "Linjen starter, før den forrige linje slutter, så begge vises samtidig.",
       "timeOverlapsNext": "Linjen slutter, efter at den næste linje er startet, så begge vises samtidig.",
-      "timeOverlapsBoth": "Linjen overlapper linjerne før og efter, så de vises samtidig."
+      "timeOverlapsBoth": "Linjen overlapper linjerne før og efter, så de vises samtidig.",
+      "translateFromHere": "Oversæt herfra",
+      "translateFromHereTitle": "Oversæt denne linje og de uoversatte linjer efter den, frem til næste oversatte linje"
     },
     "header": {
       "save": "Gem undertekster",
@@ -1489,7 +1491,17 @@
     "statusLoaded": "{{count}} linjer indlæst",
     "statusLoaded_one": "{{count}} linje indlæst",
     "interruptedTranslateSubtitles": "Oversættelsen af underteksterne til {{language}} stoppede, da Translator blev lukket.",
-    "currentSubtitle": "Aktuel undertekst"
+    "currentSubtitle": "Aktuel undertekst",
+    "moreTranslateFromHere": "Oversæt manglende linjer herfra",
+    "translateGap": {
+      "title": "Oversæt manglende linjer til {{language}}",
+      "fromHere": "Herfra til næste oversatte linje",
+      "fromHereToEnd": "Herfra til slutningen",
+      "nothingFromHere": "Der er intet tilbage at oversætte herfra",
+      "all": "Alle manglende linjer",
+      "keepsTranslated": "Linjer, der allerede er oversat, forbliver som de er.",
+      "cost": "Bruger {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Biografgul",

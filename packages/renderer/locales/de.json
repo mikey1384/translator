@@ -573,7 +573,9 @@
       "mergeTitle": "Mit der nächsten Zeile zusammenführen",
       "timeOverlapsPrevious": "Diese Zeile beginnt, bevor die vorherige endet – beide werden gleichzeitig angezeigt.",
       "timeOverlapsNext": "Diese Zeile endet erst, nachdem die nächste begonnen hat – beide werden gleichzeitig angezeigt.",
-      "timeOverlapsBoth": "Diese Zeile überschneidet sich mit der vorherigen und der nächsten – sie werden gleichzeitig angezeigt."
+      "timeOverlapsBoth": "Diese Zeile überschneidet sich mit der vorherigen und der nächsten – sie werden gleichzeitig angezeigt.",
+      "translateFromHere": "Ab hier übersetzen",
+      "translateFromHereTitle": "Diese Zeile und die unübersetzten Zeilen danach übersetzen, bis zur nächsten übersetzten Zeile"
     },
     "header": {
       "save": "Untertitel speichern",
@@ -1489,7 +1491,17 @@
     "statusLoaded": "{{count}} Zeilen geladen",
     "statusLoaded_one": "{{count}} Zeile geladen",
     "interruptedTranslateSubtitles": "Translator wurde geschlossen, bevor diese Untertitel fertig auf {{language}} übersetzt waren.",
-    "currentSubtitle": "Aktueller Untertitel"
+    "currentSubtitle": "Aktueller Untertitel",
+    "moreTranslateFromHere": "Fehlende Zeilen ab hier übersetzen",
+    "translateGap": {
+      "title": "Fehlende Zeilen auf {{language}} übersetzen",
+      "fromHere": "Von hier bis zur nächsten übersetzten Zeile",
+      "fromHereToEnd": "Von hier bis zum Ende",
+      "nothingFromHere": "Ab hier gibt es nichts mehr zu übersetzen",
+      "all": "Alle fehlenden Zeilen",
+      "keepsTranslated": "Zeilen, die schon übersetzt sind, bleiben unverändert.",
+      "cost": "Verbraucht {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Kinogelb",

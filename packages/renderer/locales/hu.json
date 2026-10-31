@@ -569,7 +569,9 @@
       "mergeTitle": "Összevonás a következő sorral",
       "timeOverlapsPrevious": "Ez a sor még az előző vége előtt kezdődik, így a kettő egyszerre látszik.",
       "timeOverlapsNext": "Ez a sor csak a következő kezdete után ér véget, így a kettő egyszerre látszik.",
-      "timeOverlapsBoth": "Ez a sor az előtte és az utána lévő sorral is átfedésben van, így egyszerre látszanak."
+      "timeOverlapsBoth": "Ez a sor az előtte és az utána lévő sorral is átfedésben van, így egyszerre látszanak.",
+      "translateFromHere": "Fordítás innentől",
+      "translateFromHereTitle": "Lefordítja ezt a sort és az utána következő fordítatlan sorokat a következő lefordított sorig"
     },
     "header": {
       "save": "Feliratok mentése",
@@ -1477,7 +1479,17 @@
     "statusLoaded": "{{count}} sor betöltve",
     "statusLoaded_one": "{{count}} sor betöltve",
     "interruptedTranslateSubtitles": "A feliratok {{language}} nyelvre fordítása leállt, amikor a Translator bezárult.",
-    "currentSubtitle": "Jelenlegi felirat"
+    "currentSubtitle": "Jelenlegi felirat",
+    "moreTranslateFromHere": "Hiányzó sorok fordítása innentől",
+    "translateGap": {
+      "title": "Hiányzó sorok fordítása {{language}} nyelvre",
+      "fromHere": "Innen a következő lefordított sorig",
+      "fromHereToEnd": "Innen a végéig",
+      "nothingFromHere": "Innentől nincs több fordítanivaló",
+      "all": "Az összes hiányzó sor",
+      "keepsTranslated": "A már lefordított sorok változatlanok maradnak.",
+      "cost": "Felhasznál: {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Mozisárga",

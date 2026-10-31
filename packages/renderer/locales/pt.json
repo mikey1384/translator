@@ -575,7 +575,9 @@
       "mergeTitle": "Juntar com a próxima linha",
       "timeOverlapsPrevious": "Esta linha começa antes que a anterior termine, então as duas aparecem ao mesmo tempo.",
       "timeOverlapsNext": "Esta linha termina depois que a próxima começa, então as duas aparecem ao mesmo tempo.",
-      "timeOverlapsBoth": "Esta linha se sobrepõe à anterior e à próxima, então elas aparecem ao mesmo tempo."
+      "timeOverlapsBoth": "Esta linha se sobrepõe à anterior e à próxima, então elas aparecem ao mesmo tempo.",
+      "translateFromHere": "Traduzir a partir daqui",
+      "translateFromHereTitle": "Traduz esta linha e as linhas sem tradução que vêm depois, até a próxima linha traduzida"
     },
     "header": {
       "save": "Salvar legendas",
@@ -1500,7 +1502,17 @@
     "statusLoaded_one": "{{count}} linha carregada",
     "statusLoaded_many": "{{count}} de linhas carregadas",
     "interruptedTranslateSubtitles": "A tradução destas legendas para {{language}} parou quando o Translator foi fechado.",
-    "currentSubtitle": "Legenda atual"
+    "currentSubtitle": "Legenda atual",
+    "moreTranslateFromHere": "Traduzir as linhas que faltam a partir daqui",
+    "translateGap": {
+      "title": "Traduzir as linhas que faltam para {{language}}",
+      "fromHere": "Daqui até a próxima linha traduzida",
+      "fromHereToEnd": "Daqui até o fim",
+      "nothingFromHere": "Não há mais nada para traduzir a partir daqui",
+      "all": "Todas as linhas que faltam",
+      "keepsTranslated": "As linhas que já têm tradução ficam como estão.",
+      "cost": "Usa {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Amarelo cinema",

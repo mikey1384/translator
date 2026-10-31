@@ -573,7 +573,9 @@
       "mergeTitle": "Sonraki satırla birleştir",
       "timeOverlapsPrevious": "Bu satır önceki satır bitmeden başlıyor, bu yüzden ikisi aynı anda görünüyor.",
       "timeOverlapsNext": "Bu satır sonraki satır başladıktan sonra bitiyor, bu yüzden ikisi aynı anda görünüyor.",
-      "timeOverlapsBoth": "Bu satır önceki ve sonraki satırlarla çakışıyor, bu yüzden hepsi aynı anda görünüyor."
+      "timeOverlapsBoth": "Bu satır önceki ve sonraki satırlarla çakışıyor, bu yüzden hepsi aynı anda görünüyor.",
+      "translateFromHere": "Buradan itibaren çevir",
+      "translateFromHereTitle": "Bu satırı ve ardından gelen çevrilmemiş satırları bir sonraki çevrilmiş satıra kadar çevirir"
     },
     "header": {
       "save": "Altyazıları kaydet",
@@ -1489,7 +1491,17 @@
     "interruptedTranslateSubtitles": "Bu altyazıların {{language}} diline çevirisi Translator kapandığında yarıda kaldı.",
     "statusTranscribed_one": "{{count}} satır yazıya döküldü",
     "statusTranslated_one": "{{language}} {{count}} satır · videoyla eş zamanlı",
-    "currentSubtitle": "Geçerli altyazı"
+    "currentSubtitle": "Geçerli altyazı",
+    "moreTranslateFromHere": "Eksik satırları buradan itibaren çevir",
+    "translateGap": {
+      "title": "Eksik satırları {{language}} diline çevir",
+      "fromHere": "Buradan bir sonraki çevrilmiş satıra kadar",
+      "fromHereToEnd": "Buradan sona kadar",
+      "nothingFromHere": "Bu noktadan sonra çevrilecek bir şey yok",
+      "all": "Tüm eksik satırlar",
+      "keepsTranslated": "Çevirisi olan satırlar olduğu gibi kalır.",
+      "cost": "{{cost}} kullanır."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Sinema sarısı",

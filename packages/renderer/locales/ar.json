@@ -591,7 +591,9 @@
       "mergeTitle": "دمج مع السطر التالي",
       "timeOverlapsPrevious": "يبدأ هذا السطر قبل أن ينتهي السطر السابق، فيظهران معًا.",
       "timeOverlapsNext": "ينتهي هذا السطر بعد أن يبدأ السطر التالي، فيظهران معًا.",
-      "timeOverlapsBoth": "يتداخل هذا السطر مع السطرين السابق والتالي، فتظهر الأسطر معًا."
+      "timeOverlapsBoth": "يتداخل هذا السطر مع السطرين السابق والتالي، فتظهر الأسطر معًا.",
+      "translateFromHere": "ترجمة من هنا",
+      "translateFromHereTitle": "ترجمة هذا السطر والأسطر غير المترجمة بعده حتى السطر المترجم التالي"
     },
     "header": {
       "save": "حفظ الترجمة",
@@ -1537,7 +1539,17 @@
     "statusLoaded_few": "تم تحميل {{count}} أسطر",
     "statusLoaded_many": "تم تحميل {{count}} سطرًا",
     "interruptedTranslateSubtitles": "توقفت ترجمة هذه الأسطر إلى {{language}} عند إغلاق Translator.",
-    "currentSubtitle": "الترجمة الحالية"
+    "currentSubtitle": "الترجمة الحالية",
+    "moreTranslateFromHere": "ترجمة الأسطر المتبقية من هنا",
+    "translateGap": {
+      "title": "ترجمة الأسطر المتبقية إلى {{language}}",
+      "fromHere": "من هنا حتى السطر المترجم التالي",
+      "fromHereToEnd": "من هنا حتى النهاية",
+      "nothingFromHere": "لا شيء متبقٍ للترجمة من هذه النقطة",
+      "all": "كل الأسطر المتبقية",
+      "keepsTranslated": "الأسطر المترجمة من قبل تبقى كما هي.",
+      "cost": "يستهلك {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "أصفر سينمائي",

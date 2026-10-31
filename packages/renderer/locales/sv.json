@@ -573,7 +573,9 @@
       "mergeTitle": "Slå ihop med nästa rad",
       "timeOverlapsPrevious": "Raden börjar innan föregående rad slutar, så båda visas samtidigt.",
       "timeOverlapsNext": "Raden slutar efter att nästa rad har börjat, så båda visas samtidigt.",
-      "timeOverlapsBoth": "Raden överlappar raderna före och efter, så de visas samtidigt."
+      "timeOverlapsBoth": "Raden överlappar raderna före och efter, så de visas samtidigt.",
+      "translateFromHere": "Översätt härifrån",
+      "translateFromHereTitle": "Översätter den här raden och de oöversatta raderna efter den, fram till nästa översatta rad"
     },
     "header": {
       "save": "Spara undertexter",
@@ -1489,7 +1491,17 @@
     "statusLoaded": "{{count}} rader inlästa",
     "statusLoaded_one": "{{count}} rad inläst",
     "interruptedTranslateSubtitles": "Översättningen av undertexterna till {{language}} avbröts när Translator stängdes.",
-    "currentSubtitle": "Aktuell undertext"
+    "currentSubtitle": "Aktuell undertext",
+    "moreTranslateFromHere": "Översätt saknade rader härifrån",
+    "translateGap": {
+      "title": "Översätt saknade rader till {{language}}",
+      "fromHere": "Härifrån till nästa översatta rad",
+      "fromHereToEnd": "Härifrån till slutet",
+      "nothingFromHere": "Det finns inget mer att översätta härifrån",
+      "all": "Alla saknade rader",
+      "keepsTranslated": "Rader som redan är översatta lämnas som de är.",
+      "cost": "Använder {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Biogul",

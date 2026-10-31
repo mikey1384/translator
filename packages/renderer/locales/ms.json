@@ -567,7 +567,9 @@
       "mergeTitle": "Gabungkan dengan baris seterusnya",
       "timeOverlapsPrevious": "Baris ini bermula sebelum baris sebelumnya tamat, jadi kedua-duanya dipaparkan serentak.",
       "timeOverlapsNext": "Baris ini tamat selepas baris seterusnya bermula, jadi kedua-duanya dipaparkan serentak.",
-      "timeOverlapsBoth": "Baris ini bertindih dengan baris sebelum dan selepasnya, jadi semuanya dipaparkan serentak."
+      "timeOverlapsBoth": "Baris ini bertindih dengan baris sebelum dan selepasnya, jadi semuanya dipaparkan serentak.",
+      "translateFromHere": "Terjemah dari sini",
+      "translateFromHereTitle": "Terjemah baris ini dan baris belum diterjemah selepasnya, hingga baris terjemahan seterusnya"
     },
     "header": {
       "save": "Simpan sari kata",
@@ -1466,7 +1468,17 @@
     "checkingFile": "Membaca fail…",
     "statusLoaded": "{{count}} baris dimuatkan",
     "interruptedTranslateSubtitles": "Terjemahan sari kata ini ke {{language}} terhenti apabila Translator ditutup.",
-    "currentSubtitle": "Sari kata semasa"
+    "currentSubtitle": "Sari kata semasa",
+    "moreTranslateFromHere": "Terjemah baris yang tinggal dari sini",
+    "translateGap": {
+      "title": "Terjemah baris yang tinggal ke {{language}}",
+      "fromHere": "Dari sini hingga baris terjemahan seterusnya",
+      "fromHereToEnd": "Dari sini hingga akhir",
+      "nothingFromHere": "Tiada lagi yang perlu diterjemah dari titik ini",
+      "all": "Semua baris yang tinggal",
+      "keepsTranslated": "Baris yang sudah diterjemah kekal seperti asal.",
+      "cost": "Menggunakan {{cost}}."
+    }
   },
   "subtitleStyles": {
     "Cinema": "Kuning pawagam",

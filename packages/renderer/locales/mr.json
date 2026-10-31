@@ -573,7 +573,9 @@
       "mergeTitle": "पुढच्या ओळीशी एकत्र करा",
       "timeOverlapsPrevious": "ही ओळ आधीची ओळ संपण्यापूर्वीच सुरू होते, त्यामुळे दोन्ही एकाच वेळी दिसतील.",
       "timeOverlapsNext": "ही ओळ पुढची ओळ सुरू झाल्यानंतर संपते, त्यामुळे दोन्ही एकाच वेळी दिसतील.",
-      "timeOverlapsBoth": "ही ओळ आधीच्या आणि पुढच्या दोन्ही ओळींशी ओव्हरलॅप होते, त्यामुळे त्या एकाच वेळी दिसतील."
+      "timeOverlapsBoth": "ही ओळ आधीच्या आणि पुढच्या दोन्ही ओळींशी ओव्हरलॅप होते, त्यामुळे त्या एकाच वेळी दिसतील.",
+      "translateFromHere": "इथून भाषांतर करा",
+      "translateFromHereTitle": "ही ओळ आणि तिच्यानंतरच्या भाषांतर न झालेल्या ओळी, पुढच्या भाषांतरित ओळीपर्यंत भाषांतरित करा"
     },
     "header": {
       "save": "सबटायटल सेव्ह करा",
@@ -1489,7 +1491,17 @@
     "interruptedTranslateSubtitles": "Translator बंद झाल्यामुळे या सबटायटलचे {{language}}मध्ये भाषांतर थांबले.",
     "statusPartlyTranslated_one": "{{count}} पैकी {{translated}} ओळ {{language}}मध्ये · {{missing}} भाषांतरित नाही",
     "statusPartlyTranslatedUnknown_one": "{{count}} पैकी {{translated}} ओळीचे भाषांतर झाले · {{missing}} बाकी",
-    "currentSubtitle": "सध्याचे सबटायटल"
+    "currentSubtitle": "सध्याचे सबटायटल",
+    "moreTranslateFromHere": "इथून उरलेल्या ओळींचे भाषांतर करा",
+    "translateGap": {
+      "title": "उरलेल्या ओळींचे {{language}}मध्ये भाषांतर करा",
+      "fromHere": "इथून पुढच्या भाषांतरित ओळीपर्यंत",
+      "fromHereToEnd": "इथून शेवटपर्यंत",
+      "nothingFromHere": "इथून पुढे भाषांतरासाठी काही उरले नाही",
+      "all": "सर्व उरलेल्या ओळी",
+      "keepsTranslated": "ज्या ओळींचे भाषांतर आधीच झाले आहे त्या तशाच राहतील.",
+      "cost": "{{cost}} वापरले जातील."
+    }
   },
   "subtitleStyles": {
     "Cinema": "सिनेमा पिवळा",
