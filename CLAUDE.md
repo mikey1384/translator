@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Never commit, push, or tag without explicit user approval.** Always stage changes and wait for the user to confirm before running `git commit`, `git push`, or `git tag`.
 
+- **GitHub Actions cleanup and cost attribution:** Follow the [GitHub Actions housekeeping and storage](AGENTS.md#github-actions-housekeeping-and-storage) rules in this repository after verified releases and when investigating billing alerts.
+
 ## Overview
 
 Stage 5 Translator is an Electron desktop application for AI-powered video translation. It transcribes audio, translates subtitles, and generates dubbed audio using multiple AI providers.

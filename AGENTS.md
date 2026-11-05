@@ -118,6 +118,18 @@ The GitHub Action handles the macOS release from SemVer tags: it builds, signs, 
 
 **Why the tag annotation matters:** The updater popup is driven by `latest-mac.yml` / `latest.yml`, not by commit messages. The macOS workflow fails if the tag body is empty. The Windows release script resolves notes from `dist/release-notes.txt` or the annotated tag body (fetching the tag from origin if needed) and fails by default if both are missing. This keeps "What's New" text deterministic across platforms.
 
+## GitHub Actions housekeeping and storage
+
+Mikey clarified on November 5 that completed runs should never accumulate this way. Remove finished, unneeded runs promptly after use, and arrange routine cleanup rather than relying on a blanket multiday cutoff or someone remembering a manual sweep. Keep active releases and actual release or recovery evidence safe.
+
+Mikey wants completed workflow runs cleaned up once they are no longer needed. After verifying a release, remove unneeded completed run history and artifacts instead of leaving them to accumulate; inventory first because deleting a run also deletes its GitHub artifacts and logs. Preserve active or incomplete runs, any runs and artifacts needed for release recovery, and published GitHub Releases, tags and R2 release/update assets. Do not disturb another agent's active release. Verify the result; if a deletion response is ambiguous, inspect the run before retrying.
+
+For storage alerts, attribute the account, repository, SKU and dates in GitHub Billing before assigning costs to a project. Stage 5 Translator and Twinkle are separate products; Twinkle's AWS runner compute is separate from GitHub Actions artifact storage. Report gross and billed amounts separately. GitHub storage accrues in GB-hours and can appear with a reporting delay: current retained bytes are different from the already-accrued monthly total, and a previous billing cycle does not carry over as new usage. Logs and summaries do not count toward the artifact allowance; caches have a separate allowance, while Packages share a storage allowance and larger-runner custom images have their own billing rules. Fully paginate artifact inventories and inspect other applicable storage before deleting anything; do not erase caches or published release assets merely to reduce the graph. Compare any discrepancy against previous cleanup records, and do not claim a cause or a fix without evidence from the meter after its reporting lag or from GitHub.
+
+The repository-wide retention setting also controls checks and commit statuses, including third-party checks, as well as runs, artifacts and logs. A short setting can remove checks needed by an open pull request and applies only to new items. Inspect those effects and the release recovery window before changing it; it does not retroactively clear old runs.
+
+Use the supported CLI/API or the browser to carry out Mikey's authorized investigation directly instead of repeatedly asking him to transcribe data the agent can access. If access or a tool actually fails, explain the limitation and preserve evidence. Keep each project's costs and cleanup separate.
+
 ## Environment
 
 Uses `.env` file in project root. API keys stored encrypted via electron-store (AES-256-GCM).

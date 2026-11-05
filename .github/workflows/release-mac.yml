@@ -16,6 +16,7 @@ concurrency:
   # concurrently; the upload gate below also rejects the alternate tag form.
   group: mac-release
   cancel-in-progress: false
+  queue: max
 
 jobs:
   # Exercise the complete unsigned Windows packaging path before a Mac
