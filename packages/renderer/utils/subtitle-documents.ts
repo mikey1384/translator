@@ -14,7 +14,9 @@ function getMountedSegments() {
  * Saves what is on screen as the app's subtitle document. `keepDirty` keeps
  * the unsaved-changes state (a background snapshot, not a user save).
  */
-export async function saveMountedSubtitleDocument(
+let mountedSaveTail: Promise<unknown> = Promise.resolve();
+
+export function saveMountedSubtitleDocument(
   options: { keepDirty?: boolean } = {}
 ): Promise<{
   success: boolean;
@@ -22,6 +24,20 @@ export async function saveMountedSubtitleDocument(
   error?: string;
 }> {
   flushPendingEdits();
+  const generation = useSubStore.getState().documentGeneration;
+  const save = mountedSaveTail.then(() => {
+    if (useSubStore.getState().documentGeneration !== generation)
+      return {
+        success: false,
+        error: 'The mounted subtitle document changed.',
+      };
+    return saveCurrentMountedDocument(options);
+  });
+  mountedSaveTail = save.catch(() => {});
+  return save;
+}
+
+async function saveCurrentMountedDocument(options: { keepDirty?: boolean }) {
   const subtitleState = useSubStore.getState();
   const savedRevision = subtitleState.editRevision;
   if (subtitleState.order.length === 0) {
@@ -52,8 +68,19 @@ export async function saveMountedSubtitleDocument(
     };
   }
 
-  useSubStore.getState().setDocumentMeta(result.document);
-  if (!options.keepDirty) useSubStore.getState().markSaved(savedRevision);
+  const current = useSubStore.getState();
+  if (current.documentGeneration === subtitleState.documentGeneration) {
+    if (current.editRevision === savedRevision) {
+      current.setDocumentMeta(result.document);
+      if (!options.keepDirty) useSubStore.getState().markSaved(savedRevision);
+    } else if (!current.documentId) {
+      // Adopt the first identity without overwriting newer edits or metadata.
+      current.setDocumentMeta({
+        id: result.document.id,
+        title: current.documentTitle,
+      });
+    }
+  }
   return { success: true, documentId: result.document.id };
 }
 

@@ -1,4 +1,14 @@
-import { buildSrt, parseSrt, secondsToSrtTime } from '../../shared/helpers';
+import {
+  translationCompletionStage,
+  documentTranslationReview,
+} from './translationReview';
+import {
+  beginTranslationDocumentScope,
+  translationDocumentIsCurrent,
+  flushTranslationCheckpoints,
+  applyTranslationCheckpoint,
+} from './translation-document-scope';
+import { buildSrt, parseSrt } from '../../shared/helpers';
 import * as SubtitlesIPC from '../ipc/subtitles';
 import { useSubStore, useTaskStore, useUIStore } from '../state';
 import { useUrlStore } from '../state/url-store';
@@ -58,13 +68,17 @@ export async function translateMissingUntranslated(
   registerStage5CreditRefreshOperation(operationId);
 
   // Initialize translation task progress
-  useTaskStore.getState().setTranslation({
-    id: operationId,
-    stage: i18n.t('generateSubtitles.status.starting'),
-    percent: 0,
-    inProgress: true,
-    isCompleted: false,
-  });
+  if (
+    !useTaskStore
+      .getState()
+      .tryStartTranslation(
+        operationId,
+        i18n.t('generateSubtitles.status.starting')
+      )
+  )
+    return false;
+  const endScope = beginTranslationDocumentScope(operationId);
+  const qualityTranslation = useUIStore.getState().qualityTranslation;
 
   try {
     const res = await SubtitlesIPC.translateSubtitles({
@@ -72,50 +86,37 @@ export async function translateMissingUntranslated(
       subtitles: srtContent,
       targetLanguage,
       operationId,
-      qualityTranslation: useUIStore.getState().qualityTranslation,
+      qualityTranslation,
     });
 
+    await flushTranslationCheckpoints(operationId);
+    if (!translationDocumentIsCurrent(operationId)) return false;
     if (res?.success && res?.translatedSubtitles) {
       const translatedSegs =
         res.translatedSegments ?? parseSrt(res.translatedSubtitles);
-      if (res.translatedSegments) {
-        useSubStore.getState().applyTranslations(res.translatedSegments, {
-          markDirty: true,
-          matchByIndex: false,
-        });
-      } else {
-        // Build map by time key -> translated text
-        const byTimeKey = new Map<string, string | undefined>();
-        for (const seg of translatedSegs) {
-          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-          byTimeKey.set(key, seg.translation);
-        }
-
-        // Apply translations back to store for only missing ones
-        const applyStore = useSubStore.getState();
-        for (const seg of missing) {
-          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-          const translated = byTimeKey.get(key);
-          if (translated && translated.trim()) {
-            applyStore.update(seg.id, { translation: translated });
-          }
-        }
-      }
-
+      if (!(await applyTranslationCheckpoint(operationId, translatedSegs)))
+        return false;
+      const mounted = useSubStore.getState();
+      const review = qualityTranslation
+        ? documentTranslationReview(
+            mounted.order.map(id => mounted.segments[id]),
+            targetLanguage
+          )
+        : res.review;
       useTaskStore.getState().setTranslation({
-        stage: i18n.t('generateSubtitles.status.completed'),
+        stage: translationCompletionStage({ ...res, review }),
         percent: 100,
         inProgress: false,
-        isCompleted: true,
+        isCompleted: review?.status !== 'incomplete',
       });
       return true;
     }
 
-    if (res?.partialSegments?.length)
-      useSubStore.getState().applyTranslations(res.partialSegments, {
-        matchByIndex: false,
-        markDirty: true,
-      });
+    if (
+      res?.partialSegments?.length &&
+      !(await applyTranslationCheckpoint(operationId, res.partialSegments))
+    )
+      return false;
 
     const failure = resolveTranslationFailure({
       error: res?.error,
@@ -135,6 +136,7 @@ export async function translateMissingUntranslated(
     }
     return false;
   } catch (err: any) {
+    if (!translationDocumentIsCurrent(operationId)) return false;
     const failure = resolveTranslationFailure({
       error: err,
       cancelled: isExplicitCancellation(err),
@@ -152,5 +154,10 @@ export async function translateMissingUntranslated(
       useUrlStore.getState().setOperationError(failure.banner);
     }
     return false;
+  } finally {
+    if (useTaskStore.getState().translation.id === operationId)
+      useTaskStore.getState().setTranslation({ inProgress: false });
+    await flushTranslationCheckpoints(operationId);
+    endScope();
   }
 }

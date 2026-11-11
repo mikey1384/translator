@@ -1,3 +1,4 @@
+import { executeCueTranslation } from '../utils/translateCue';
 import {
   appliedSubtitleSelection,
   setAppliedSubtitleSelection,
@@ -67,7 +68,6 @@ import {
   generateTranscriptSummary,
   onTranscriptSummaryProgress,
   transcribeOneLine,
-  translateOneLine,
 } from '../ipc/subtitles';
 import {
   suggestVideos,
@@ -2101,7 +2101,11 @@ async function runHistoryTranslation(
       translatedCueCount: finalSegments.filter(segment =>
         Boolean(segment.translation?.trim())
       ).length,
-      sourceNote: 'Translation completed without remounting the active tab.',
+      review: res.review,
+      sourceNote:
+        res.review?.status === 'incomplete'
+          ? 'Translation completed; quality review is incomplete. Drafts and completed review checkpoints were saved.'
+          : 'Translation completed without remounting the active tab.',
     };
     return completed;
   } finally {
@@ -2279,6 +2283,13 @@ async function runAgentTranslation(
   return {
     operationId,
     targetLanguage: language,
+    review: result.review,
+    ...(result.review?.status === 'incomplete'
+      ? {
+          sourceNote:
+            'Translation is ready, but quality review is incomplete. Resume review or choose Keep draft before dubbing.',
+        }
+      : {}),
     cueCount: translated.order.length,
     translatedCueCount: translated.order.filter(id =>
       Boolean(translated.segments[id]?.translation?.trim())
@@ -2493,18 +2504,11 @@ async function runAgentCueTranslation(
   if (!targetLanguage) throw new Error('A target language is required.');
   throwIfAgentCancelled();
   const operationId = `${agentOperationId}-translate-cue`;
-  if (
-    !useTaskStore
-      .getState()
-      .tryStartTranslation(operationId, 'Translating subtitle cue')
-  ) {
-    throw new Error('Translator could not start cue translation.');
-  }
   agentProcessingState = {
     ...agentProcessingState,
     stage: 'translating-cue',
   };
-  try {
+  {
     const store = useSubStore.getState();
     const cueIndex = store.order.indexOf(cue.id);
     const contextBefore = store.order
@@ -2513,7 +2517,7 @@ async function runAgentCueTranslation(
     const contextAfter = store.order
       .slice(cueIndex + 1, cueIndex + 3)
       .map(id => store.segments[id]);
-    const result = await translateOneLine({
+    const result = await executeCueTranslation({
       segment: cue,
       contextBefore,
       contextAfter,
@@ -2527,18 +2531,13 @@ async function runAgentCueTranslation(
     if (result.error) throw new Error(result.error);
     const translation = String(result.translation || '').trim();
     if (!translation) throw new Error('Cue translation returned no text.');
-    useSubStore.getState().update(cue.id, { translation });
     return {
       operationId,
       id: cue.id,
       targetLanguage,
       translation,
+      review: result.review,
     };
-  } finally {
-    useTaskStore.getState().setTranslation({
-      id: null,
-      inProgress: false,
-    });
   }
 }
 

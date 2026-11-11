@@ -122,6 +122,7 @@ export function joinCueText(a: string, b: string): string {
 export function mergeCues(a: SrtSegment, b: SrtSegment): SrtSegment {
   const merged: SrtSegment = {
     ...a,
+    translationReview: a.translationReview ?? b.translationReview,
     sourceCueIds: [
       ...new Set([
         ...(a.sourceCueIds ?? [a.id]),

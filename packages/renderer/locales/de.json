@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Diesen leeren Ordner löschen?",
     "saveCopy": "Kopie speichern",
     "exportConfirm": "Eine unverschlüsselte Kopie des Videos und der Untertitel speichern? Alle mit Zugriff auf den Zielordner können die Kopie öffnen. Das verschlüsselte Original bleibt in diesem Ordner."
+  },
+  "translationReview": {
+    "incomplete": "Übersetzung fertig; Qualitätsprüfung unvollständig",
+    "pending": "Noch zu prüfende Zeilen: {{remaining}}. Die übersetzten Untertitel können bereits verwendet werden.",
+    "resume": "Prüfung fortsetzen",
+    "keepDraft": "Entwurf behalten"
   }
 }

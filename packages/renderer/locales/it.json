@@ -1735,5 +1735,11 @@
     "deleteFolderConfirm": "Eliminare questa cartella vuota?",
     "saveCopy": "Salva una copia",
     "exportConfirm": "Salvare una copia non cifrata del video e dei sottotitoli? Chiunque abbia accesso alla destinazione potrà aprirla. L’originale cifrato rimane in questa cartella."
+  },
+  "translationReview": {
+    "incomplete": "Traduzione completata; revisione qualità incompleta",
+    "pending": "Righe da rivedere: {{remaining}}. I sottotitoli tradotti sono pronti all’uso.",
+    "resume": "Riprendi revisione",
+    "keepDraft": "Mantieni la bozza"
   }
 }

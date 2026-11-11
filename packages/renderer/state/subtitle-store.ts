@@ -168,6 +168,7 @@ interface Actions {
       start: number;
       end: number;
       translation?: string | undefined;
+      translationReview?: SrtSegment['translationReview'];
       index?: number;
     }>,
     /**
@@ -270,7 +271,9 @@ function areEquivalentSubtitleDocs(
       previous.start !== next.start ||
       previous.end !== next.end ||
       (previous.original ?? '') !== (next.original ?? '') ||
-      (previous.translation ?? '') !== (next.translation ?? '')
+      (previous.translation ?? '') !== (next.translation ?? '') ||
+      JSON.stringify(previous.translationReview) !==
+        JSON.stringify(next.translationReview)
     ) {
       return false;
     }
@@ -1068,20 +1071,20 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           const matchByIndex = options?.matchByIndex !== false;
           if (!Array.isArray(segs) || segs.length === 0) return;
           // Build quick lookups for incoming translations by time key and by index
-          const byTime = new Map<string, string>();
-          const byIndex = new Map<number, string>();
-          const byId = new Map<string, string>();
+          const byTime = new Map<string, (typeof segs)[number]>();
+          const byIndex = new Map<number, (typeof segs)[number]>();
+          const byId = new Map<string, (typeof segs)[number]>();
           const hasStableIds = segs.some(seg =>
             Boolean(seg.id && s.segments[seg.id])
           );
           for (const seg of segs) {
             const t = (seg.translation ?? '').trim();
             if (!t) continue;
-            if (seg.id) byId.set(seg.id, t);
+            if (seg.id) byId.set(seg.id, seg);
             const timeKey = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-            if (!byTime.has(timeKey)) byTime.set(timeKey, t);
+            if (!byTime.has(timeKey)) byTime.set(timeKey, seg);
             if (typeof seg.index === 'number' && seg.index > 0) {
-              if (!byIndex.has(seg.index)) byIndex.set(seg.index, t);
+              if (!byIndex.has(seg.index)) byIndex.set(seg.index, seg);
             }
           }
           if (byTime.size === 0 && byIndex.size === 0) return;
@@ -1102,8 +1105,15 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             ) {
               next = byIndex.get(cue.index);
             }
-            if (next && (cue.translation ?? '').trim() !== next) {
-              cue.translation = next;
+            if (next) {
+              const changed =
+                (cue.translation ?? '').trim() !== next.translation?.trim();
+              cue.translation = next.translation;
+              if (changed || Object.hasOwn(next, 'translationReview')) {
+                cue.translationReview = next.translationReview
+                  ? { ...next.translationReview }
+                  : undefined;
+              }
             }
           }
         }),

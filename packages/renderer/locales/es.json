@@ -1735,5 +1735,11 @@
     "deleteFolderConfirm": "¿Eliminar esta carpeta vacía?",
     "saveCopy": "Guardar una copia",
     "exportConfirm": "¿Guardar una copia sin cifrar del vídeo y sus subtítulos? Cualquiera con acceso al destino podrá abrirla. El original cifrado permanecerá en esta carpeta."
+  },
+  "translationReview": {
+    "incomplete": "Traducción completa; revisión de calidad pendiente",
+    "pending": "Líneas pendientes de revisión: {{remaining}}. Los subtítulos traducidos ya se pueden usar.",
+    "resume": "Continuar revisión",
+    "keepDraft": "Conservar borrador"
   }
 }

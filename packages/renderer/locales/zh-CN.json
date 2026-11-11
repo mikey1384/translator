@@ -1695,5 +1695,11 @@
     "deleteFolderConfirm": "删除此空文件夹？",
     "saveCopy": "保存副本",
     "exportConfirm": "保存视频和字幕的未加密副本？任何有权访问保存位置的人都能打开副本。加密原件仍保留在此文件夹中。"
+  },
+  "translationReview": {
+    "incomplete": "翻译已完成，质量检查尚未完成",
+    "pending": "待检查字幕：{{remaining}}行。翻译后的字幕已可使用。",
+    "resume": "继续检查",
+    "keepDraft": "保留初稿"
   }
 }

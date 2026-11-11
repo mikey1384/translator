@@ -5,6 +5,7 @@ import {
 import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
+import { withTranslationReview } from '../../../shared/helpers/translation-review.js';
 import {
   isTranslationAdmissionLimitError,
   isProviderRateLimitError,
@@ -519,20 +520,24 @@ OUTPUT ${batch.segments.length} lines:
       }
 
       if (!reviewedContent) {
-        log.warn(
-          '[Review] Review response content was empty or null. Using original translations.'
-        );
-        return batch.segments;
+        throw new Error('Quality review returned no text');
       }
 
       const ids = batchItemsWithContext.map(item => item.index);
       const map = parseTranslationLines(reviewedContent, ids);
       // Review can improve a draft; an empty, omitted or duplicate review line
       // must never erase a valid translation or substitute untranslated source.
-      return batch.segments.map((segment, index) => ({
-        ...segment,
-        translation: map.get(ids[index]) || segment.translation || '',
-      }));
+      return batch.segments.map((segment, index) => {
+        const reviewed = map.get(ids[index]);
+        return withTranslationReview(
+          {
+            ...segment,
+            translation: reviewed || segment.translation || '',
+          },
+          batch.targetLang,
+          reviewed ? 'complete' : 'pending'
+        );
+      });
     } catch (error: any) {
       log.error(
         `[Review] Error during review batch attempt ${attempt} (${operationId}):`,
@@ -586,11 +591,11 @@ OUTPUT ${batch.segments.length} lines:
       log.error(
         `[Review] Unhandled error in reviewTranslationBatch (${operationId}): ${
           error?.message || String(error)
-        }. Falling back to original batch segments.`
+        }. Retaining the draft with review incomplete.`
       );
-      return batch.segments;
+      throw error;
     }
   }
 
-  return batch.segments;
+  throw new Error('Quality review did not complete');
 }

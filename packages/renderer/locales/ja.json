@@ -1695,5 +1695,11 @@
     "deleteFolderConfirm": "この空のフォルダを削除しますか？",
     "saveCopy": "コピーを保存",
     "exportConfirm": "動画と字幕を暗号化せずにコピーしますか？保存先にアクセスできる人は誰でもコピーを開けます。暗号化された元のファイルはこのフォルダに残ります。"
+  },
+  "translationReview": {
+    "incomplete": "翻訳完了・品質チェックは未完了",
+    "pending": "未確認の字幕：{{remaining}}行。翻訳済みの字幕はそのまま使えます。",
+    "resume": "チェックを再開",
+    "keepDraft": "下訳を使用"
   }
 }

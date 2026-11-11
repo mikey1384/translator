@@ -1748,5 +1748,11 @@
     "deleteFolderConfirm": "Smazat tuto prázdnou složku?",
     "saveCopy": "Uložit kopii",
     "exportConfirm": "Uložit nešifrovanou kopii videa a titulků? Kdokoli s přístupem k cílovému umístění ji může otevřít. Šifrovaný originál zůstane v této složce."
+  },
+  "translationReview": {
+    "incomplete": "Překlad dokončen; kontrola kvality nedokončena",
+    "pending": "Řádky čekající na kontrolu: {{remaining}}. Přeložené titulky jsou připravené k použití.",
+    "resume": "Pokračovat v kontrole",
+    "keepDraft": "Ponechat koncept"
   }
 }

@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Slet denne tomme mappe?",
     "saveCopy": "Gem en kopi",
     "exportConfirm": "Gem en ukrypteret kopi af videoen og underteksterne? Alle med adgang til destinationen kan åbne kopien. Den krypterede original bliver i denne mappe."
+  },
+  "translationReview": {
+    "incomplete": "Oversættelsen er færdig; kvalitetskontrollen er ikke afsluttet",
+    "pending": "Linjer, der afventer gennemgang: {{remaining}}. De oversatte undertekster er klar til brug.",
+    "resume": "Fortsæt gennemgangen",
+    "keepDraft": "Behold kladden"
   }
 }

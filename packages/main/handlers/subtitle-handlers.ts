@@ -1,4 +1,9 @@
 import {
+  withTranslationReview,
+  translationReviewStatus,
+} from '../../shared/helpers/translation-review.js';
+import { isInsufficientCreditsError } from '../services/subtitle-processing/errors.js';
+import {
   buildEditorialReframeGraph,
   validateHighlightEditorialPlan,
 } from '../../shared/helpers/highlight-editorial.js';
@@ -38,6 +43,7 @@ import {
   DubSegmentPayload,
   DubSubtitlesOptions,
   SrtSegment,
+  TranslationReviewOutcome,
   TranscriptHighlight,
   HighlightAspectMode,
   HighlightCutProgress,
@@ -560,12 +566,14 @@ export async function handleTranslateSubtitles(
     sourceLanguage?: string;
     targetLanguage: string;
     qualityTranslation?: boolean;
+    reviewOnly?: boolean;
   },
   operationId: string
 ): Promise<{
   success: boolean;
   translatedSubtitles?: string;
   translatedSegments?: SrtSegment[];
+  review?: TranslationReviewOutcome;
   partialSegments?: SrtSegment[];
   cancelled?: boolean;
   blockedReason?: 'insufficient_credits';
@@ -595,12 +603,14 @@ export async function handleTranslateSubtitles(
       },
       fileManager,
       qualityTranslation: options.qualityTranslation,
+      reviewOnly: options.reviewOnly,
     });
 
     return {
       success: true,
       translatedSubtitles: result.subtitles,
       translatedSegments: result.segments,
+      review: result.review,
       operationId,
     };
   } catch (error: any) {
@@ -1832,6 +1842,8 @@ export async function handleTranslateOneLine(
 ): Promise<{
   success: boolean;
   translation?: string;
+  translationReview?: SrtSegment['translationReview'];
+  review?: TranslationReviewOutcome;
   cancelled?: boolean;
   error?: string;
   operationId: string;
@@ -1839,9 +1851,14 @@ export async function handleTranslateOneLine(
   const controller = new AbortController();
   registerAutoCancel(operationId, event.sender, () => controller.abort());
   addSubtitle(operationId, controller);
+  let preserved: SrtSegment | undefined;
 
   try {
     const seg = options.segment;
+    const startIndex = Math.max(
+      0,
+      (Number.isSafeInteger(seg.index) ? seg.index : 1) - 1
+    );
     const ctxBefore = options.contextBefore ?? [];
     const ctxAfter = options.contextAfter ?? [];
 
@@ -1856,8 +1873,8 @@ export async function handleTranslateOneLine(
     const rough = await translateBatch({
       batch: {
         segments: [seg],
-        startIndex: 0,
-        endIndex: 1,
+        startIndex,
+        endIndex: startIndex + 1,
         contextBefore: [],
         contextAfter: [],
         targetLang: options.targetLanguage,
@@ -1866,6 +1883,9 @@ export async function handleTranslateOneLine(
       operationId,
       signal: controller.signal,
     });
+    preserved = rough[0]
+      ? withTranslationReview(rough[0], options.targetLanguage, 'pending')
+      : undefined;
 
     event.sender.send('generate-subtitles-progress', {
       percent: 40,
@@ -1885,29 +1905,73 @@ export async function handleTranslateOneLine(
 
     // 2) Review with context to improve quality
     const reviewBatch: ReviewBatch = {
-      segments: rough,
-      startIndex: 0,
-      endIndex: rough.length,
+      segments: preserved ? [preserved] : rough,
+      startIndex,
+      endIndex: startIndex + rough.length,
       targetLang: options.targetLanguage,
       contextBefore: ctxBefore,
       contextAfter: ctxAfter,
     };
-    const reviewed = await reviewTranslationBatch({
-      batch: reviewBatch,
-      operationId,
-      signal: controller.signal,
-    });
-
-    const translation = (reviewed[0]?.translation ?? '').trim();
+    let reason: TranslationReviewOutcome['reason'];
+    try {
+      const reviewed = await reviewTranslationBatch({
+        batch: reviewBatch,
+        operationId,
+        signal: controller.signal,
+      });
+      preserved = reviewed[0] ?? preserved;
+    } catch (error) {
+      if (controller.signal.aborted || (error as any)?.name === 'AbortError')
+        throw error;
+      reason = isInsufficientCreditsError(error)
+        ? 'insufficient_credits'
+        : 'provider_error';
+    }
+    if (controller.signal.aborted)
+      throw new DOMException('Operation cancelled', 'AbortError');
+    const translation = preserved?.translation?.trim();
+    if (!translation)
+      throw new Error('Subtitle cue translation returned no text.');
+    const complete =
+      translationReviewStatus(preserved!, options.targetLanguage) ===
+      'complete';
+    const review: TranslationReviewOutcome = {
+      status: complete ? 'complete' : 'incomplete',
+      total: 1,
+      completed: complete ? 1 : 0,
+      ...(!complete ? { reason: reason ?? 'provider_error' } : {}),
+    };
 
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
-      stage: '__i18n__:completed',
+      stage: complete
+        ? '__i18n__:completed'
+        : '__i18n__:translationReview.incomplete',
       operationId,
     });
 
-    return { success: true, translation, operationId };
+    return {
+      success: true,
+      translation,
+      translationReview: preserved?.translationReview,
+      review,
+      operationId,
+    };
   } catch (error: any) {
+    if (!preserved && Array.isArray(error?.partialSegments)) {
+      const partial = error.partialSegments.find(
+        (s: SrtSegment) =>
+          s?.id === options.segment.id &&
+          s.original === options.segment.original &&
+          s.translation?.trim()
+      );
+      if (partial)
+        preserved = withTranslationReview(
+          partial,
+          options.targetLanguage,
+          'pending'
+        );
+    }
     const failure = describeTaskFailure(error);
     try {
       event.sender.send('generate-subtitles-progress', {
@@ -1927,6 +1991,12 @@ export async function handleTranslateOneLine(
       cancelled: failure.cancelled,
       error: failure.error,
       operationId,
+      ...(preserved?.translation
+        ? {
+            translation: preserved.translation,
+            translationReview: preserved.translationReview,
+          }
+        : {}),
     };
   } finally {
     registryFinish(operationId);

@@ -17,6 +17,10 @@ import {
   classifyTerminalProgress,
 } from '../utils/progress-terminal';
 import { agentBackgroundOperations } from './agent-background-operations';
+import {
+  translationProgressIsCurrent,
+  queueTranslationCheckpoint,
+} from '../utils/translation-document-scope';
 import { isDubbingOperation } from '../utils/operationKind';
 
 type ProgressPayload = Parameters<
@@ -186,6 +190,31 @@ function flush() {
     const isComplete = terminalKind === 'completed';
     const isTerminal = terminalKind !== null;
 
+    const isTranscribe = operationId?.startsWith('transcribe-');
+    const isTranslate = operationId?.startsWith('translate-');
+    const looksLikeReview = /\breviewing\b/i.test(stage ?? '');
+    const isTranslateMissing = operationId?.startsWith('translate-missing-');
+    const activeTranslation = useTaskStore.getState().translation.id;
+    const isTranslateRelated =
+      isTranslate ||
+      looksLikeReview ||
+      phaseKey === 'review' ||
+      phaseKey === 'review_incomplete' ||
+      (operationId && operationId === activeTranslation);
+    // Canonical invoke results own terminal state after their scope closes.
+    // Late packets may refresh credits, but cannot change edits, task state,
+    // or open a stale failure dialog.
+    if (
+      isTranslateRelated &&
+      (!operationId ||
+        operationId !== activeTranslation ||
+        !translationProgressIsCurrent(operationId))
+    ) {
+      if (isTerminal) finishCreditRefresh(operationId);
+      queued = null;
+      return;
+    }
+
     if (
       !acceptProgressOperation(
         terminalProgressOperations,
@@ -209,18 +238,15 @@ function flush() {
       }
     }
 
-    // Route updates based on operationId prefix
-    const isTranscribe = operationId?.startsWith('transcribe-');
-    const isTranslate = operationId?.startsWith('translate-');
-    const looksLikeReview = /\breviewing\b/i.test(stage ?? '');
-    const isTranslateMissing = operationId?.startsWith('translate-missing-');
-
     // Apply translation deltas as early as possible to avoid being
     // short-circuited by completion guards or racey progress ordering.
     if (partialSegments?.length || partialResult?.trim()) {
-      const isTranslateRelated =
-        isTranslate || isTranslateMissing || looksLikeReview;
-      if (isTranslateRelated) {
+      if (
+        isTranslateRelated &&
+        operationId &&
+        useTaskStore.getState().translation.id === operationId &&
+        translationProgressIsCurrent(operationId)
+      ) {
         if (percent >= 100 || Date.now() - lastParsed > 1000) {
           try {
             const partSegs = partialSegments ?? parseSrt(partialResult);
@@ -229,6 +255,12 @@ function flush() {
               useSubStore.getState().applyTranslations(partSegs, {
                 matchByIndex: !isTranslateMissing,
               });
+              if (
+                (phaseKey === 'review' || phaseKey === 'review_incomplete') &&
+                partSegs.some((s: any) => s.translationReview)
+              ) {
+                queueTranslationCheckpoint(operationId);
+              }
             }
           } catch {
             // Ignore parse/apply errors for partial updates

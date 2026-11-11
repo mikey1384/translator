@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Poistetaanko tämä tyhjä kansio?",
     "saveCopy": "Tallenna kopio",
     "exportConfirm": "Tallennetaanko salaamaton kopio videosta ja tekstityksistä? Kaikki, joilla on pääsy kohteeseen, voivat avata kopion. Salattu alkuperäinen säilyy tässä kansiossa."
+  },
+  "translationReview": {
+    "incomplete": "Käännös valmis; laaduntarkistus kesken",
+    "pending": "Tarkistusta odottavia rivejä: {{remaining}}. Käännetyt tekstitykset ovat käyttövalmiita.",
+    "resume": "Jatka tarkistusta",
+    "keepDraft": "Säilytä luonnos"
   }
 }

@@ -1735,5 +1735,11 @@
     "deleteFolderConfirm": "Supprimer ce dossier vide ?",
     "saveCopy": "Enregistrer une copie",
     "exportConfirm": "Enregistrer une copie non chiffrée de la vidéo et de ses sous-titres ? Toute personne ayant accès à la destination pourra l’ouvrir. L’original chiffré reste dans ce dossier."
+  },
+  "translationReview": {
+    "incomplete": "Traduction terminée ; révision qualité incomplète",
+    "pending": "Lignes à réviser : {{remaining}}. Les sous-titres traduits sont prêts à être utilisés.",
+    "resume": "Reprendre la révision",
+    "keepDraft": "Garder le brouillon"
   }
 }

@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Deze lege map verwijderen?",
     "saveCopy": "Kopie opslaan",
     "exportConfirm": "Een onversleutelde kopie van de video en ondertitels opslaan? Iedereen met toegang tot de bestemming kan de kopie openen. Het versleutelde origineel blijft in deze map."
+  },
+  "translationReview": {
+    "incomplete": "Vertaling klaar; kwaliteitscontrole niet voltooid",
+    "pending": "Regels die nog gecontroleerd moeten worden: {{remaining}}. De vertaalde ondertitels zijn klaar voor gebruik.",
+    "resume": "Controle hervatten",
+    "keepDraft": "Concept behouden"
   }
 }

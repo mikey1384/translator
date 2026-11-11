@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { planTranslationWindows } from '../services/subtitle-processing/translation-batches.js';
+import {
+  planTranslationWindows,
+  planPendingReviewWindows,
+} from '../services/subtitle-processing/translation-batches.js';
+import { withTranslationReview } from '../../shared/helpers/translation-review.js';
 const cues = (
   count: number,
   text = 'A short caption that continues the conversation.'
@@ -55,4 +59,34 @@ test('long CJK captions shrink windows by bytes and never split a cue', () => {
     { start: 0, end: 1, contextStart: 0, contextEnd: 1 },
   ]);
   assert.deepEqual(planTranslationWindows([], 'draft'), []);
+});
+
+test('sparse pending review ranges obey their own cue and UTF-8 context bounds', () => {
+  for (const text of ['Short source', '日'.repeat(900)]) {
+    const input = cues(80, text).map((s, i) =>
+      withTranslationReview(s, 'Spanish', i % 2 ? 'pending' : 'complete')
+    );
+    const windows = planPendingReviewWindows(input, 'Spanish');
+    assert.deepEqual(
+      windows.flatMap(w => input.slice(w.start, w.end).map(s => s.id)),
+      input.filter((_, i) => i % 2).map(s => s.id)
+    );
+    const bytes = (start: number, end: number) =>
+      input
+        .slice(start, end)
+        .reduce(
+          (n, s) =>
+            n +
+            Buffer.byteLength(s.original) +
+            Buffer.byteLength(s.translation || ''),
+          0
+        );
+    for (const w of windows) {
+      assert.equal(w.end - w.start, 1);
+      assert(w.start - w.contextStart <= 15);
+      assert(w.contextEnd - w.end <= 15);
+      assert(bytes(w.contextStart, w.start) <= 6000);
+      assert(bytes(w.end, w.contextEnd) <= 6000);
+    }
+  }
 });

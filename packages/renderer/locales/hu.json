@@ -1707,5 +1707,11 @@
     "deleteFolderConfirm": "Törli ezt az üres mappát?",
     "saveCopy": "Másolat mentése",
     "exportConfirm": "Menti a videó és a feliratok titkosítatlan másolatát? A másolatot bárki megnyithatja, aki hozzáfér a célmappához. A titkosított eredeti ebben a mappában marad."
+  },
+  "translationReview": {
+    "incomplete": "A fordítás kész; a minőségellenőrzés még hiányos",
+    "pending": "Ellenőrzésre váró sorok: {{remaining}}. A lefordított feliratok már használhatók.",
+    "resume": "Ellenőrzés folytatása",
+    "keepDraft": "Piszkozat megtartása"
   }
 }

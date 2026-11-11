@@ -58,7 +58,8 @@ export async function runWithConcurrency({
  * deferred tasks are retried one at a time. Built for Stage5 credit
  * reservations — N concurrent LLM calls transiently reserve N× the credits,
  * so a 402 under concurrency may succeed once siblings settle and refund.
- * A deferrable error during the serial retry is genuine and propagates.
+ * Serial attempts are identified so a caller can shrink confirmed refused
+ * work after sibling reservations have settled. Unhandled errors propagate.
  */
 export async function runWithConcurrencySerialFallback({
   taskCount,
@@ -70,7 +71,7 @@ export async function runWithConcurrencySerialFallback({
 }: {
   taskCount: number;
   concurrency: number;
-  runTask: (index: number) => Promise<void>;
+  runTask: (index: number, phase: 'parallel' | 'serial') => Promise<void>;
   isDeferrable: (err: unknown) => boolean;
   onFallback?: (deferredCount: number) => void;
   /**
@@ -106,7 +107,7 @@ export async function runWithConcurrencySerialFallback({
         return;
       }
       try {
-        await runTask(index);
+        await runTask(index, 'parallel');
       } catch (err) {
         if (isDeferrable(err)) {
           fallbackMode = true;
@@ -126,7 +127,7 @@ export async function runWithConcurrencySerialFallback({
       let totalDelayMs = 0;
       for (;;) {
         try {
-          await runTask(index);
+          await runTask(index, 'serial');
           break;
         } catch (err) {
           if (

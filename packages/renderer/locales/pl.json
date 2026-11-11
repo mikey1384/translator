@@ -1754,5 +1754,11 @@
     "deleteFolderConfirm": "Usunąć ten pusty folder?",
     "saveCopy": "Zapisz kopię",
     "exportConfirm": "Zapisać niezaszyfrowaną kopię filmu i napisów? Każdy, kto ma dostęp do miejsca docelowego, będzie mógł ją otworzyć. Zaszyfrowany oryginał pozostanie w tym folderze."
+  },
+  "translationReview": {
+    "incomplete": "Tłumaczenie gotowe; kontrola jakości nieukończona",
+    "pending": "Wiersze oczekujące na sprawdzenie: {{remaining}}. Przetłumaczone napisy są gotowe do użycia.",
+    "resume": "Wznów sprawdzanie",
+    "keepDraft": "Zachowaj wersję roboczą"
   }
 }

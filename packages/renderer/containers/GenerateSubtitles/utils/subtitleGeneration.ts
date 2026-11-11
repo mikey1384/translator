@@ -1,8 +1,20 @@
+import { translationCompletionStage } from '../../../utils/translationReview';
+import {
+  beginTranslationDocumentScope,
+  translationDocumentIsCurrent,
+  flushTranslationCheckpoints,
+  applyTranslationCheckpoint,
+} from '../../../utils/translation-document-scope';
 import { useTaskStore } from '../../../state';
 import * as FileIPC from '../../../ipc/file';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
 import { parseSrt } from '../../../../shared/helpers';
-import type { SrtSegment, SubtitleSourceProvenance } from '@shared-types/app';
+import type {
+  SrtSegment,
+  SubtitleSourceProvenance,
+  TranslationReviewOutcome,
+} from '@shared-types/app';
+import { translationReviewNeedsDecision } from '../../../../shared/helpers/translation-review';
 import { i18n } from '../../../i18n';
 import { buildSrt } from '../../../../shared/helpers';
 import {
@@ -125,6 +137,7 @@ export async function executeSrtTranslation({
   error?: string;
   /** The lines were already in the target language; nothing was sent. */
   skipped?: boolean;
+  review?: TranslationReviewOutcome;
 }> {
   // Atomically check and start translation (prevents race condition)
   const started = useTaskStore
@@ -170,6 +183,7 @@ export async function executeSrtTranslation({
   useUrlStore.getState().clearError();
 
   const srtContent = buildSrt({ segments, mode: 'dual' });
+  const endScope = beginTranslationDocumentScope(operationId);
 
   try {
     const { qualityTranslation } = useUIStore.getState();
@@ -180,6 +194,9 @@ export async function executeSrtTranslation({
       operationId,
       qualityTranslation,
     });
+    await flushTranslationCheckpoints(operationId);
+    if (!translationDocumentIsCurrent(operationId))
+      return { success: false, cancelled: true };
     if (res?.success && res?.translatedSubtitles) {
       const translatedSegments =
         res.translatedSegments ?? parseSrt(res.translatedSubtitles);
@@ -232,6 +249,8 @@ export async function executeSrtTranslation({
       // Preserve source linkage and automatic-caption provenance, but
       // translated documents should not retain transcription-review engine
       // state from the source transcript.
+      if (!translationDocumentIsCurrent(operationId))
+        return { success: false, cancelled: true };
       useSubStore
         .getState()
         .load(
@@ -246,18 +265,23 @@ export async function executeSrtTranslation({
         );
       useUrlStore.getState().clearError();
       useTaskStore.getState().setTranslation({
-        stage: i18n.t('generateSubtitles.status.completed'),
+        stage: translationCompletionStage(res),
         percent: 100,
         inProgress: false,
-        isCompleted: true,
+        isCompleted: res.review?.status !== 'incomplete',
       });
-      return { success: true, subtitles: res.translatedSubtitles };
+      return {
+        success: true,
+        subtitles: res.translatedSubtitles,
+        review: res.review,
+      };
     }
 
-    if (res?.partialSegments?.length)
-      useSubStore
-        .getState()
-        .applyTranslations(res.partialSegments, { markDirty: true });
+    if (
+      res?.partialSegments?.length &&
+      !(await applyTranslationCheckpoint(operationId, res.partialSegments))
+    )
+      return { success: false, cancelled: true };
 
     const cancelled = Boolean(res?.cancelled);
     const failure = resolveTranslationFailure({
@@ -287,6 +311,8 @@ export async function executeSrtTranslation({
 
     return { success: false, cancelled, error: res?.error };
   } catch (err: any) {
+    if (!translationDocumentIsCurrent(operationId))
+      return { success: false, cancelled: true };
     logError('translate_full', err, {
       operationId,
       targetLanguage,
@@ -312,6 +338,11 @@ export async function executeSrtTranslation({
     }
 
     return { success: false, cancelled, error: errorMsg };
+  } finally {
+    if (useTaskStore.getState().translation.id === operationId)
+      useTaskStore.getState().setTranslation({ inProgress: false });
+    await flushTranslationCheckpoints(operationId);
+    endScope();
   }
 }
 
@@ -338,6 +369,13 @@ export async function executeDubGeneration({
   cancelled?: boolean;
 }> {
   if (!Array.isArray(segments) || segments.length === 0) {
+    return { success: false };
+  }
+
+  if (segments.some(translationReviewNeedsDecision)) {
+    useUrlStore
+      .getState()
+      .setOperationError(i18n.t('translationReview.incomplete'));
     return { success: false };
   }
 
@@ -521,6 +559,7 @@ export async function persistMountedTranslation(
     throw new Error(saved.error || 'Failed to save finished translation');
   }
   if (
+    useSubStore.getState().documentGeneration === store.documentGeneration &&
     useSubStore.getState().editRevision === store.editRevision &&
     useSubStore.getState().documentId === store.documentId
   ) {

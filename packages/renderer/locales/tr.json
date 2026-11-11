@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Bu boş klasör silinsin mi?",
     "saveCopy": "Kopyasını kaydet",
     "exportConfirm": "Video ve altyazıların şifrelenmemiş bir kopyası kaydedilsin mi? Hedef konuma erişebilen herkes kopyayı açabilir. Şifreli asıl dosya bu klasörde kalır."
+  },
+  "translationReview": {
+    "incomplete": "Çeviri tamamlandı; kalite incelemesi tamamlanmadı",
+    "pending": "İncelenmeyi bekleyen satır sayısı: {{remaining}}. Çevrilen altyazılar kullanıma hazır.",
+    "resume": "İncelemeye devam et",
+    "keepDraft": "Taslağı koru"
   }
 }

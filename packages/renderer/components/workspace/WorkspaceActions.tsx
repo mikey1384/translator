@@ -42,6 +42,7 @@ import {
   transcriptStopsEarlyAt,
 } from '../../utils/transcriptCoverage';
 import { translateMissingUntranslated } from '../../utils/translateMissing';
+import { resumeTranslationReview } from '../../utils/resumeTranslationReview';
 import TranslateRangeDialog from './TranslateRangeDialog';
 import { useTranslateRangeStore } from '../../state/translate-range-store';
 import { currentVideoCost } from '../../utils/freePreviewRun';
@@ -474,7 +475,15 @@ function InterruptedJobNotice() {
         useUIStore.getState().setTargetLanguage(record.language);
         const latestEditor = useWorkspaceActions.getState().editor;
         if (!anyTranslated && latestEditor) latestEditor.translateAll();
-        else void translateMissingLines(record.language);
+        else if (
+          subs.order.some(
+            id =>
+              subs.segments[id]?.original?.trim() &&
+              !subs.segments[id]?.translation?.trim()
+          )
+        )
+          void translateMissingLines(record.language);
+        else void resumeTranslationReview();
       })();
       return;
     }
@@ -504,6 +513,8 @@ function InterruptedJobNotice() {
       editor?.translateAll();
     } else if (summary.missing > 0) {
       void translateMissingLines(record.language);
+    } else {
+      void resumeTranslationReview();
     }
   };
 

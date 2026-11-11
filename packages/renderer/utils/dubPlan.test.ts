@@ -39,3 +39,21 @@ test('the dub estimate counts what the voice will read', () => {
   assert.equal(dubCharCount(cues, 'translate'), 3);
   assert.equal(planDubText([], 'english', null), 'ready');
 });
+
+test('original-language dubbing drops irrelevant review metadata on derived cues only', () => {
+  const input = [
+    {
+      original: 'Hello',
+      translation: 'Hola',
+      translationReview: {
+        status: 'pending' as const,
+        targetLanguage: 'Spanish',
+        contentFingerprint: 'old',
+      },
+    },
+  ];
+  const voiced = segmentsForDub(input, 'use-original');
+  assert.equal(voiced[0].translationReview, undefined);
+  assert.equal(voiced[0].translation, 'Hello');
+  assert.equal(input[0].translationReview.status, 'pending');
+});

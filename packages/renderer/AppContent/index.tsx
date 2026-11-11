@@ -60,6 +60,7 @@ import { ArrowLeft } from 'lucide-react';
 import FreePreviewOffer, {
   useFreePreviewOfferShowing,
 } from '../components/workspace/FreePreviewOffer';
+import TranslationReviewNotice from '../components/workspace/TranslationReviewNotice';
 import * as OperationIPC from '../ipc/operation';
 import { logProgress, logButton, logError } from '../utils/logger';
 import {
@@ -524,6 +525,7 @@ export default function AppContent() {
                 {progressAreas}
               </ProgressPresentationContext.Provider>
               <FreePreviewOffer />
+              <TranslationReviewNotice />
               {workspaceBusy || freePreviewOfferShowing ? null : (
                 <WorkspaceIdleStatus />
               )}

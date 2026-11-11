@@ -1,4 +1,8 @@
-export type TerminalProgressKind = 'completed' | 'cancelled' | 'failed';
+export type TerminalProgressKind =
+  | 'completed'
+  | 'cancelled'
+  | 'failed'
+  | 'incomplete';
 
 interface RecentTerminalOperations {
   has(operationId: string): boolean;
@@ -47,6 +51,9 @@ export function classifyTerminalProgress({
     FAILURE_STAGES.has(normalizedStage)
   ) {
     return 'failed';
+  }
+  if (normalizedStage === '__i18n__:translationreview.incomplete') {
+    return 'incomplete';
   }
   if (
     (typeof percent === 'number' &&

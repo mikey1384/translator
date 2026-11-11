@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Ufute folda hii tupu?",
     "saveCopy": "Hifadhi nakala",
     "exportConfirm": "Uhifadhi nakala ya video na manukuu bila usimbaji fiche? Yeyote mwenye ufikiaji wa mahali pa kuhifadhi anaweza kuifungua. Nakala asili iliyosimbwa itabaki kwenye folda hii."
+  },
+  "translationReview": {
+    "incomplete": "Tafsiri imekamilika; ukaguzi wa ubora haujakamilika",
+    "pending": "Mistari inayosubiri ukaguzi: {{remaining}}. Manukuu yaliyotafsiriwa yako tayari kutumiwa.",
+    "resume": "Endelea na ukaguzi",
+    "keepDraft": "Hifadhi rasimu"
   }
 }

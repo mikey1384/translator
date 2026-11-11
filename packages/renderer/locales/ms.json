@@ -1695,5 +1695,11 @@
     "deleteFolderConfirm": "Padam folder kosong ini?",
     "saveCopy": "Simpan salinan",
     "exportConfirm": "Simpan salinan video dan sari kata tanpa penyulitan? Sesiapa yang boleh mengakses lokasi destinasi boleh membuka salinan itu. Versi asal yang disulitkan kekal dalam folder ini."
+  },
+  "translationReview": {
+    "incomplete": "Terjemahan selesai; semakan kualiti belum lengkap",
+    "pending": "Baris yang menunggu semakan: {{remaining}}. Sari kata yang diterjemahkan sedia digunakan.",
+    "resume": "Sambung semakan",
+    "keepDraft": "Simpan draf"
   }
 }

@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Burahin ang walang-lamang folder na ito?",
     "saveCopy": "Mag-save ng kopya",
     "exportConfirm": "Mag-save ng hindi naka-encrypt na kopya ng video at mga subtitle? Mabubuksan ito ng sinumang may access sa destinasyon. Mananatili sa folder na ito ang naka-encrypt na orihinal."
+  },
+  "translationReview": {
+    "incomplete": "Tapos na ang pagsasalin; hindi pa tapos ang pagsusuri ng kalidad",
+    "pending": "Mga linyang naghihintay ng pagsusuri: {{remaining}}. Maaari nang gamitin ang mga isinaling subtitle.",
+    "resume": "Ipagpatuloy ang pagsusuri",
+    "keepDraft": "Panatilihin ang burador"
   }
 }

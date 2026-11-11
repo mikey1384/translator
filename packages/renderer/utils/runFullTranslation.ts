@@ -3,6 +3,7 @@ import { useSubStore, useUIStore } from '../state';
 import { useUrlStore } from '../state/url-store';
 import { i18n } from '../i18n';
 import { planDubText } from './dubPlan';
+import { translationReviewNeedsDecision } from '../../shared/helpers/translation-review';
 
 type TranslateAllOptions = {
   /** Optional callback fired when there are no subtitles mounted. */
@@ -81,12 +82,25 @@ export async function ensureSubtitlesTranslatedForDubbing(options?: {
     subStore.targetLanguage
   );
   if (plan === 'use-original') return { ok: true, useOriginal: true };
-  if (plan === 'ready') return { ok: true };
+  if (plan === 'ready') {
+    if (segments.some(translationReviewNeedsDecision)) {
+      useUrlStore
+        .getState()
+        .setOperationError(i18n.t('translationReview.incomplete'));
+      return { ok: false };
+    }
+    return { ok: true };
+  }
 
   const result = await runFullSrtTranslation({
     // A translate- id so its progress shows; the dub- part words any
     // credits refusal as dubbing (userFacingError.taskForOperationId).
     operationPrefix: options?.operationPrefix ?? 'translate-dub',
   });
-  return { ok: Boolean(result?.success) };
+  return {
+    ok: Boolean(
+      result?.success &&
+      !('review' in result && result.review?.status === 'incomplete')
+    ),
+  };
 }

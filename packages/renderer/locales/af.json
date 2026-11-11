@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Vee hierdie leë vouer uit?",
     "saveCopy": "Stoor ’n kopie",
     "exportConfirm": "Stoor ’n ongeënkripteerde kopie van die video en onderskrifte? Enigiemand met toegang tot die bestemming kan die kopie oopmaak. Die geënkripteerde oorspronklike bly in hierdie vouer."
+  },
+  "translationReview": {
+    "incomplete": "Vertaling voltooi; gehaltehersiening onvolledig",
+    "pending": "Reëls wat op hersiening wag: {{remaining}}. Die vertaalde onderskrifte is gereed om te gebruik.",
+    "resume": "Hervat hersiening",
+    "keepDraft": "Behou konsep"
   }
 }

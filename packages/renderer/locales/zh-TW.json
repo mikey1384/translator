@@ -1695,5 +1695,11 @@
     "deleteFolderConfirm": "刪除此空資料夾？",
     "saveCopy": "儲存副本",
     "exportConfirm": "儲存影片與字幕的未加密副本？任何能存取儲存位置的人都能開啟副本。加密原件仍會保留在此資料夾中。"
+  },
+  "translationReview": {
+    "incomplete": "翻譯已完成，品質檢查尚未完成",
+    "pending": "待檢查字幕：{{remaining}}行。翻譯後的字幕已可使用。",
+    "resume": "繼續檢查",
+    "keepDraft": "保留初稿"
   }
 }

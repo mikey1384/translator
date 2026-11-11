@@ -52,7 +52,11 @@ export function segmentsForDub<T extends DubCue>(
   plan: DubTextPlan
 ): T[] {
   if (plan !== 'use-original') return [...segments];
-  return segments.map(seg => ({ ...seg, translation: seg.original ?? '' }));
+  return segments.map(seg => ({
+    ...seg,
+    translation: seg.original ?? '',
+    translationReview: undefined,
+  }));
 }
 
 /** Characters the voice will read, for the cost estimate. */

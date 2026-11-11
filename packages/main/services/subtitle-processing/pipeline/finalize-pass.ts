@@ -23,6 +23,9 @@ export function mergeZeroDurationSubtitleSegments(
     group: SrtSegment[],
     strategy: 'prepend' | 'append'
   ) => {
+    target.translationReview ??= group.find(
+      segment => segment.translationReview
+    )?.translationReview;
     const groupOriginals = group.map(segment => segment.original);
     target.original =
       strategy === 'prepend'
@@ -180,12 +183,14 @@ export async function finalizePass({
   segments,
   speechIntervals,
   progressCallback,
+  preserveTimings = false,
 }: {
   segments: void | SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
   fileManager: FileManager;
   progressCallback?: GenerateProgressCallback;
   operationId?: string;
+  preserveTimings?: boolean;
 }): Promise<GenerateSubtitlesFullResult> {
   progressCallback?.({
     percent: scaleProgress(0, Stage.REVIEW, Stage.FINAL),
@@ -193,7 +198,9 @@ export async function finalizePass({
     phaseKey: 'finalize',
   });
 
-  const items = normalizeSubtitleSegments((segments ?? []) as SrtSegment[]);
+  const items = preserveTimings
+    ? ((segments ?? []) as SrtSegment[]).map(segment => ({ ...segment }))
+    : normalizeSubtitleSegments((segments ?? []) as SrtSegment[]);
 
   const finalSrtContent = buildSrt({ segments: items, mode: 'dual' });
 

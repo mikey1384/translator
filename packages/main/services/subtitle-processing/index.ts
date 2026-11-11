@@ -2,6 +2,7 @@ import {
   GenerateSubtitlesOptions,
   GenerateProgressCallback,
   SrtSegment,
+  TranslationReviewOutcome,
 } from '@shared-types/app';
 import log from 'electron-log';
 import { FileManager } from '../file-manager.js';
@@ -12,7 +13,11 @@ import { prepareAudio } from './pipeline/prepare-audio.js';
 import { transcribePass } from './pipeline/transcribe-pass.js';
 import { assertTranscriptionAvailable } from '../ai-provider.js';
 import { translatePass } from './pipeline/translate-pass.js';
-import { planTranslationWindows } from './translation-batches.js';
+import { planPendingReviewWindows } from './translation-batches.js';
+import {
+  translationReviewStatus,
+  withTranslationReview,
+} from '../../../shared/helpers/translation-review.js';
 import { attachPartialTranslation } from './translation-coverage.js';
 import { finalizePass } from './pipeline/finalize-pass.js';
 import { parseSrt } from '../../../shared/helpers/index.js';
@@ -26,6 +31,7 @@ import { describeTaskFailure } from '../../utils/task-failure.js';
 import { reviewTranslationBatch, getReviewModel } from './translator.js';
 import { createStageTimer, runWithConcurrencySerialFallback } from './utils.js';
 import {
+  isInsufficientCreditsError,
   isTranslationAdmissionLimitError,
   isProviderRateLimitError,
   shouldRetrySerialBatch,
@@ -155,6 +161,7 @@ export async function translateSubtitlesFromSrt({
   progressCallback,
   fileManager,
   qualityTranslation,
+  reviewOnly = false,
 }: {
   inputSegments?: SrtSegment[];
   srtContent: string;
@@ -164,7 +171,12 @@ export async function translateSubtitlesFromSrt({
   progressCallback?: GenerateProgressCallback;
   fileManager: FileManager;
   qualityTranslation?: boolean;
-}): Promise<{ subtitles: string; segments: SrtSegment[] }> {
+  reviewOnly?: boolean;
+}): Promise<{
+  subtitles: string;
+  segments: SrtSegment[];
+  review: TranslationReviewOutcome;
+}> {
   if (
     inputSegments !== undefined &&
     (!Array.isArray(inputSegments) ||
@@ -195,26 +207,55 @@ export async function translateSubtitlesFromSrt({
 
   const markStage = createStageTimer(operationId);
 
-  const translatedSegments = await translatePass({
-    segments,
-    targetLang: targetLanguage,
-    progressCallback: adaptedProgress ?? progressCallback,
-    operationId,
-    qualityTranslation: qualityTranslation ?? false,
-    signal,
-  });
+  if (
+    reviewOnly &&
+    (!inputSegments ||
+      !qualityTranslation ||
+      targetLanguage === 'original' ||
+      segments.some(
+        s =>
+          translationReviewStatus(s, targetLanguage) === 'pending' &&
+          !s.translation?.trim()
+      ))
+  ) {
+    throw new Error('Review resume requires translated subtitle segments');
+  }
+  const translatedSegments = reviewOnly
+    ? segments.map((segment, index) => ({ ...segment, index: index + 1 }))
+    : await translatePass({
+        segments,
+        targetLang: targetLanguage,
+        progressCallback: adaptedProgress ?? progressCallback,
+        operationId,
+        qualityTranslation: qualityTranslation ?? false,
+        signal,
+      });
   markStage('translate');
 
   // Optionally run review pass (skip when target is 'original')
-  const reviewedSegments = translatedSegments;
+  const reviewedSegments = translatedSegments.map(segment =>
+    !reviewOnly && qualityTranslation && targetLanguage !== 'original'
+      ? withTranslationReview(segment, targetLanguage, 'pending')
+      : reviewOnly
+        ? segment
+        : { ...segment, translationReview: undefined }
+  );
+  let reviewFailure: TranslationReviewOutcome['reason'];
   if (targetLanguage !== 'original' && (qualityTranslation ?? false)) {
     try {
-      const total = translatedSegments.length;
-      const windows = planTranslationWindows(translatedSegments, 'review');
+      const total = reviewedSegments.filter(
+        s => translationReviewStatus(s, targetLanguage) !== undefined
+      ).length;
+      const windows = planPendingReviewWindows(
+        reviewedSegments,
+        targetLanguage
+      );
       log.info(
         `[${operationId}] translation plan: phase=review cues=${total} requests=${windows.length} maxConcurrent=${REVIEW_CONCURRENCY}`
       );
-      let done = 0;
+      let done = reviewedSegments.filter(
+        s => translationReviewStatus(s, targetLanguage) === 'complete'
+      ).length;
 
       // Determine which model will be used for review and get display name.
       // This may be updated at runtime if we need to fall back (e.g., Anthropic unavailable).
@@ -264,8 +305,8 @@ export async function translateSubtitlesFromSrt({
         (adaptedProgress ?? progressCallback)?.(payload);
       };
 
-      if (total > 0) {
-        emitRangeStage(0, windows[0].end, done, false);
+      if (windows.length > 0) {
+        emitRangeStage(windows[0].start, windows[0].end, done, true);
       }
 
       // Review batches run concurrently; before-context for a batch whose
@@ -273,8 +314,7 @@ export async function translateSubtitlesFromSrt({
       await runWithConcurrencySerialFallback({
         taskCount: windows.length,
         concurrency: REVIEW_CONCURRENCY,
-        // Review reservations are large (~34k credits each); a balance that
-        // funds one review call must still complete, just sequentially. The
+        // A balance that funds one review call may succeed sequentially. The
         // same applies to server admission slots and BYO provider rate tiers.
         isDeferrable: err =>
           (String((err as any)?.message || err || '').includes(
@@ -305,9 +345,9 @@ export async function translateSubtitlesFromSrt({
           const { start, end, contextStart, contextEnd } = windows[taskIndex];
           emitRangeStage(start, end, done, false);
           const contextBefore = reviewedSegments.slice(contextStart, start);
-          const contextAfter = translatedSegments.slice(end, contextEnd);
+          const contextAfter = reviewedSegments.slice(end, contextEnd);
           const batch = {
-            segments: translatedSegments.slice(start, end),
+            segments: reviewedSegments.slice(start, end),
             startIndex: start,
             endIndex: end,
             targetLang: targetLanguage,
@@ -339,16 +379,15 @@ export async function translateSubtitlesFromSrt({
               reviewedSegments[start + i] = reviewed[i];
             }
           } catch (err: any) {
-            if (
-              err?.name === 'AbortError' ||
-              String(err?.message).includes(ERROR_CODES.INSUFFICIENT_CREDITS) ||
-              isTranslationAdmissionLimitError(err) ||
-              isProviderRateLimitError(err)
-            ) {
-              throw err;
-            }
+            // A failed review never counts as reviewed. The pool settles its
+            // active siblings before the outer handler preserves their work.
+            throw err;
           }
-          done += end - start;
+          if (signal.aborted)
+            throw new DOMException('Operation cancelled', 'AbortError');
+          done = reviewedSegments.filter(
+            s => translationReviewStatus(s, targetLanguage) === 'complete'
+          ).length;
           emitRangeStage(start, end, done, true);
         },
       });
@@ -357,8 +396,11 @@ export async function translateSubtitlesFromSrt({
         attachPartialTranslation(reviewErr, reviewedSegments);
         throw reviewErr;
       }
+      reviewFailure = isInsufficientCreditsError(reviewErr)
+        ? 'insufficient_credits'
+        : 'provider_error';
       log.warn(
-        `[translateSubtitles] Review pass failed, continuing with base translation: ${reviewErr?.message || reviewErr}`
+        `[translateSubtitles] Quality review incomplete: ${reviewErr?.message || reviewErr}`
       );
     }
     markStage('review');
@@ -368,10 +410,50 @@ export async function translateSubtitlesFromSrt({
     segments: reviewedSegments,
     speechIntervals: [],
     fileManager,
-    progressCallback: adaptedProgress ?? progressCallback,
+    preserveTimings: reviewOnly,
+    // The final review outcome is determined from the finalized cue state.
+    // Never send a generic success event for an incomplete quality review.
+    progressCallback: p => {
+      if (p.phaseKey !== 'completed')
+        (adaptedProgress ?? progressCallback)?.(p);
+    },
     operationId,
   });
   markStage('finalize');
-
-  return { subtitles: finalized.subtitles, segments: finalized.segments };
+  const statuses = finalized.segments.map(s =>
+    translationReviewStatus(s, targetLanguage)
+  );
+  const total = statuses.filter(Boolean).length;
+  const completed = statuses.filter(status => status === 'complete').length;
+  const review: TranslationReviewOutcome = {
+    status:
+      qualityTranslation && targetLanguage !== 'original'
+        ? completed === total
+          ? 'complete'
+          : 'incomplete'
+        : 'not_requested',
+    completed,
+    total,
+    ...(completed < total ? { reason: reviewFailure ?? 'provider_error' } : {}),
+  };
+  (adaptedProgress ?? progressCallback)?.({
+    percent: 100,
+    stage:
+      review.status === 'incomplete'
+        ? '__i18n__:translationReview.incomplete'
+        : 'Processing complete!',
+    phaseKey:
+      review.status === 'incomplete' ? 'review_incomplete' : 'completed',
+    partialResult: finalized.subtitles,
+    partialSegments: finalized.segments,
+    current:
+      review.status === 'incomplete' ? completed : finalized.segments.length,
+    total: review.status === 'incomplete' ? total : finalized.segments.length,
+    unit: 'segments',
+  });
+  return {
+    subtitles: finalized.subtitles,
+    segments: finalized.segments,
+    review,
+  };
 }

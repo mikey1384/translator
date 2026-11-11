@@ -1723,5 +1723,11 @@
     "deleteFolderConfirm": "Radera den här tomma mappen?",
     "saveCopy": "Spara en kopia",
     "exportConfirm": "Spara en okrypterad kopia av videon och undertexterna? Alla med tillgång till målplatsen kan öppna kopian. Det krypterade originalet finns kvar i den här mappen."
+  },
+  "translationReview": {
+    "incomplete": "Översättningen klar; kvalitetsgranskningen inte slutförd",
+    "pending": "Rader som väntar på granskning: {{remaining}}. De översatta undertexterna är klara att använda.",
+    "resume": "Fortsätt granskningen",
+    "keepDraft": "Behåll utkastet"
   }
 }

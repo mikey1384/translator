@@ -1695,5 +1695,11 @@
     "deleteFolderConfirm": "Xóa thư mục trống này?",
     "saveCopy": "Lưu bản sao",
     "exportConfirm": "Lưu bản sao không mã hóa của video và phụ đề? Bất kỳ ai truy cập được nơi lưu đều có thể mở bản sao. Bản gốc đã mã hóa vẫn nằm trong thư mục này."
+  },
+  "translationReview": {
+    "incomplete": "Đã dịch xong; chưa hoàn tất kiểm tra chất lượng",
+    "pending": "Số dòng đang chờ kiểm tra: {{remaining}}. Phụ đề đã dịch có thể sử dụng ngay.",
+    "resume": "Tiếp tục kiểm tra",
+    "keepDraft": "Giữ bản nháp"
   }
 }

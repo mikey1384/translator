@@ -1735,5 +1735,11 @@
     "deleteFolderConfirm": "Excluir esta pasta vazia?",
     "saveCopy": "Salvar uma cópia",
     "exportConfirm": "Salvar uma cópia sem criptografia do vídeo e das legendas? Qualquer pessoa com acesso ao destino poderá abrir a cópia. O original criptografado continua nesta pasta."
+  },
+  "translationReview": {
+    "incomplete": "Tradução concluída; revisão de qualidade incompleta",
+    "pending": "Linhas aguardando revisão: {{remaining}}. As legendas traduzidas já podem ser usadas.",
+    "resume": "Retomar revisão",
+    "keepDraft": "Manter rascunho"
   }
 }

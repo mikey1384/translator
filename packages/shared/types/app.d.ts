@@ -822,6 +822,14 @@ declare module '@shared-types/app' {
     end: number;
     original: string;
     translation?: string;
+    /** Durable checkpoint for the current source, translation and language. */
+    translationReview?: {
+      status: 'pending' | 'complete';
+      targetLanguage: string;
+      contentFingerprint: string;
+      /** Explicit Keep draft choice, invalidated when either text changes. */
+      acceptedFingerprint?: string;
+    };
     reviewedInBatch?: number;
     _oldText?: string;
     avg_logprob?: number;
@@ -1064,10 +1072,20 @@ declare module '@shared-types/app' {
     targetLanguage: string;
     operationId?: string;
     qualityTranslation?: boolean; // true = include review, false = skip review
+    /** Resume only pending review cues, without translating completed drafts. */
+    reviewOnly?: boolean;
+  }
+
+  export interface TranslationReviewOutcome {
+    status: 'complete' | 'incomplete' | 'not_requested';
+    completed: number;
+    total: number;
+    reason?: 'insufficient_credits' | 'provider_error';
   }
 
   export interface TranslateSubtitlesResult {
     translatedSegments?: SrtSegment[];
+    review?: TranslationReviewOutcome;
     /** Completed work from a failed run; never implies a complete translation. */
     partialSegments?: SrtSegment[];
     success: boolean;
@@ -1089,6 +1107,8 @@ declare module '@shared-types/app' {
   export interface TranslateOneLineResult {
     success: boolean;
     translation?: string;
+    translationReview?: SrtSegment['translationReview'];
+    review?: TranslationReviewOutcome;
     cancelled?: boolean;
     error?: string;
     operationId: string;

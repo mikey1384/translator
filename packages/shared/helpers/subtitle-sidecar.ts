@@ -38,6 +38,7 @@ interface SubtitleSidecarV3 {
     SubtitleSidecarV2['segments'][number] & {
       id: string;
       sourceCueIds?: string[];
+      translationReview?: SrtSegment['translationReview'];
     }
   >;
 }
@@ -78,6 +79,7 @@ export function buildSubtitleSidecarContent(args: {
     segments: args.segments.map(segment => ({
       id: segment.id,
       sourceCueIds: segment.sourceCueIds,
+      translationReview: segment.translationReview,
       index: segment.index,
       start: segment.start,
       end: segment.end,
@@ -197,6 +199,13 @@ export function restoreSegmentsFromSubtitleSidecar(args: {
     )
       return null;
     ids.add(id);
+    const review = provenance.translationReview;
+    const validReview =
+      review &&
+      (review.status === 'pending' || review.status === 'complete') &&
+      typeof review.targetLanguage === 'string' &&
+      review.targetLanguage.trim() &&
+      typeof review.contentFingerprint === 'string';
     restored.push({
       id,
       ...(parsed.version === 3 && provenance.sourceCueIds
@@ -212,6 +221,7 @@ export function restoreSegmentsFromSubtitleSidecar(args: {
           ? segment.translation
           : undefined,
       words: restoredWords,
+      ...(validReview ? { translationReview: { ...review } } : {}),
     });
   }
 

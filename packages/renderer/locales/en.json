@@ -1722,5 +1722,11 @@
     },
     "saveCopy": "Save a copy",
     "exportConfirm": "Save an unencrypted copy of this video and its subtitles? Anyone with access to the destination can open the copy. The encrypted original stays in this folder."
+  },
+  "translationReview": {
+    "incomplete": "Translation complete; quality review incomplete",
+    "pending": "Lines awaiting review: {{remaining}}. Your translated subtitles are ready to use.",
+    "resume": "Resume review",
+    "keepDraft": "Keep draft"
   }
 }

@@ -44,7 +44,7 @@ const output = await build({
             a.path === 'electron-log'
               ? 'export default {info(){},warn(){},error(){},debug(){}};'
               : a.path.endsWith('ai-provider.js')
-                ? 'export const resolveTranslationDraftModel=()=>"light-draft-model";export const resolveTranslationReviewModel=()=>({model:"review-model"});export const assertTranscriptionAvailable=()=>{throw new Error("No transcription in tests")};'
+                ? 'export const getActiveProvider=()=>"stage5";export const resolveTranslationDraftModel=()=>"light-draft-model";export const resolveTranslationReviewModel=()=>({model:"review-model"});export const assertTranscriptionAvailable=()=>{throw new Error("No transcription in tests")};'
                 : a.path.endsWith('ai-client.js')
                   ? 'export const callAIModel=o=>globalThis.__pipelineModel(o);'
                   : 'export const prepareAudio=()=>{throw new Error("No audio in tests")};export const transcribePass=prepareAudio;',

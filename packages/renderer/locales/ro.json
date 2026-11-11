@@ -1742,5 +1742,11 @@
     "deleteFolderConfirm": "Ștergi acest folder gol?",
     "saveCopy": "Salvează o copie",
     "exportConfirm": "Salvezi o copie necriptată a videoclipului și subtitrărilor? Oricine are acces la destinație o poate deschide. Originalul criptat rămâne în acest folder."
+  },
+  "translationReview": {
+    "incomplete": "Traducere finalizată; verificare de calitate incompletă",
+    "pending": "Rânduri care așteaptă verificarea: {{remaining}}. Subtitrările traduse sunt gata de utilizare.",
+    "resume": "Reia verificarea",
+    "keepDraft": "Păstrează ciorna"
   }
 }

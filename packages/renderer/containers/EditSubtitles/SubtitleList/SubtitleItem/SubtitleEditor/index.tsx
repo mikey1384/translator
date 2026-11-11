@@ -1,3 +1,4 @@
+import { executeCueTranslation } from '../../../../../utils/translateCue';
 import { useState, useEffect, useRef } from 'react';
 import { FoldVertical, Scissors } from 'lucide-react';
 import { flushPendingEdits } from '../../../../../utils/pending-edits.js';
@@ -406,13 +407,6 @@ export default function SubtitleEditor({
     try {
       setIsTranslatingOne(true);
       const operationId = `translate-missing-${Date.now()}-${id}`;
-      setTranslationState({
-        id: operationId,
-        stage: t('generateSubtitles.status.starting', 'Starting...'),
-        percent: 0,
-        inProgress: true,
-      });
-
       // Build context: take up to 2 previous and 2 next segments for context
       const store = useSubStore.getState();
       const order = store.order;
@@ -445,13 +439,13 @@ export default function SubtitleEditor({
         });
       }
 
-      const res = await SubtitlesIPC.translateOneLine({
+      const res = await executeCueTranslation({
         segment: {
           id: subtitle.id,
           index: subtitle.index,
           start: subtitle.start,
           end: subtitle.end,
-          original: flattenText(subtitle.original),
+          original: subtitle.original,
         } as any,
         contextBefore: ctxBefore as any,
         contextAfter: ctxAfter as any,
@@ -467,23 +461,8 @@ export default function SubtitleEditor({
       if (!translated) {
         throw new Error('Subtitle cue translation returned no text.');
       }
-      actions.update({ translation: translated });
-      setTranslationState({
-        stage: t('generateSubtitles.status.completed', 'Completed'),
-        percent: 100,
-        inProgress: false,
-      });
     } catch (err) {
       console.error('[SubtitleEditor] single-line translate error:', err);
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      const friendlyError = isByoError(errorMsg)
-        ? getByoErrorMessage(errorMsg)
-        : t('generateSubtitles.status.error', 'Error');
-      setTranslationState({
-        stage: friendlyError,
-        percent: 100,
-        inProgress: false,
-      });
     } finally {
       setIsTranslatingOne(false);
     }

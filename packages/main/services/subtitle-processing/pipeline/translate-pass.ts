@@ -1,13 +1,20 @@
 import { attachPartialTranslation } from '../translation-coverage.js';
-import { planTranslationWindows } from '../translation-batches.js';
+import { withTranslationReview } from '../../../../shared/helpers/translation-review.js';
+import {
+  creditRecoveryWindow,
+  planTranslationWindows,
+  type TranslationWindow,
+} from '../translation-batches.js';
 import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
 import log from 'electron-log';
 import { scaleProgress, Stage } from './progress.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { ERROR_CODES } from '../../../../shared/constants/index.js';
 import { translateBatch } from '../translator.js';
+import { getActiveProvider } from '../../ai-provider.js';
 import { runWithConcurrencySerialFallback, throwIfAborted } from '../utils.js';
 import {
+  isInsufficientCreditsError,
   isTranslationAdmissionLimitError,
   isProviderRateLimitError,
   shouldRetrySerialBatch,
@@ -72,7 +79,134 @@ export async function translatePass({
   log.info(
     `[${operationId}] translation plan: phase=draft cues=${totalSegments} requests=${windows.length} maxConcurrent=${TRANSLATION_CONCURRENCY}`
   );
-  let translatedSoFar = 0;
+  const completed = new Set<number>();
+  const emitProgress = () => {
+    if (signal.aborted) return;
+    progressCallback?.({
+      percent: scaleProgress(
+        (completed.size / totalSegments) * 100,
+        Stage.START,
+        qualityTranslation ? Stage.TRANSLATE : Stage.END
+      ),
+      stage: `Translating ${completed.size}/${totalSegments}`,
+      phaseKey: 'translate',
+      partialResult: buildSrt({ segments: segmentsInProcess, mode: 'dual' }),
+      partialSegments: segmentsInProcess.map(s => ({ ...s })),
+      current: completed.size,
+      total: totalSegments,
+      unit: 'segments',
+    });
+  };
+  const applyRange = (start: number, translated: SrtSegment[]) => {
+    for (let i = 0; i < translated.length; i++) {
+      if (!translated[i].translation?.trim()) continue;
+      const draft = {
+        ...translated[i],
+        translationReview: undefined,
+      };
+      segmentsInProcess[start + i] = qualityTranslation
+        ? withTranslationReview(draft, targetLang, 'pending')
+        : draft;
+      completed.add(start + i);
+    }
+    emitProgress();
+  };
+
+  const translateWindow = async (
+    window: TranslationWindow,
+    allowCreditSplit: boolean
+  ): Promise<void> => {
+    throwIfAborted(signal);
+    const { start, end, contextStart, contextEnd } = window;
+    // Admission/rate retries re-enter the original task. Its earlier split
+    // children may already be paid and complete, so resume only missing runs.
+    if (
+      Array.from({ length: end - start }, (_, i) => start + i).some(i =>
+        completed.has(i)
+      )
+    ) {
+      for (let next = start; next < end; ) {
+        if (completed.has(next)) {
+          next++;
+          continue;
+        }
+        let missingEnd = next + 1;
+        while (missingEnd < end && !completed.has(missingEnd)) missingEnd++;
+        await translateWindow(
+          creditRecoveryWindow(segmentsInProcess, next, missingEnd),
+          allowCreditSplit
+        );
+        next = missingEnd;
+      }
+      return;
+    }
+    try {
+      const translated = await translateBatch({
+        batch: {
+          segments: segmentsInProcess
+            .slice(start, end)
+            .map(seg => ({ ...seg })),
+          startIndex: start,
+          endIndex: end,
+          contextBefore: segmentsInProcess.slice(contextStart, start),
+          contextAfter: segmentsInProcess.slice(end, contextEnd),
+        },
+        targetLang,
+        qualityMode: qualityTranslation,
+        operationId,
+        signal,
+      });
+      applyRange(start, translated);
+      throwIfAborted(signal);
+    } catch (error: any) {
+      const partial =
+        Array.isArray(error?.partialSegments) &&
+        error.partialSegments.length === end - start
+          ? (error.partialSegments as SrtSegment[])
+          : undefined;
+      const hasPaidPartial = partial?.some(segment =>
+        segment.translation?.trim()
+      );
+      if (partial) applyRange(start, partial);
+      if (signal.aborted || error?.name === 'AbortError') throw error;
+      // A repair may fail after a paid draft completed. Preserve that work;
+      // never split/re-key an uncertain or partially paid parent request.
+      if (
+        !allowCreditSplit ||
+        hasPaidPartial ||
+        !isInsufficientCreditsError(error) ||
+        getActiveProvider() !== 'stage5'
+      )
+        throw error;
+
+      if (end - start > 1) {
+        const middle = start + Math.floor((end - start) / 2);
+        log.info(
+          `[${operationId}] Credit refusal: splitting draft cues ${start + 1}-${end}`
+        );
+        await translateWindow(
+          creditRecoveryWindow(segmentsInProcess, start, middle),
+          true
+        );
+        await translateWindow(
+          creditRecoveryWindow(segmentsInProcess, middle, end),
+          true
+        );
+        return;
+      }
+      // A single cue can still carry a large original context window. Try
+      // once with bounded context, then stop; never divide its text.
+      const smaller = creditRecoveryWindow(segmentsInProcess, start, end);
+      if (
+        smaller.contextStart > contextStart ||
+        smaller.contextEnd < contextEnd
+      ) {
+        await translateWindow(smaller, true);
+        return;
+      }
+      throw error;
+    }
+  };
 
   await runWithConcurrencySerialFallback({
     taskCount: windows.length,
@@ -91,9 +225,8 @@ export async function translatePass({
         isTranslationAdmissionLimitError(err) ||
         isProviderRateLimitError(err)) &&
       !signal?.aborted,
-    // Admission 429s and provider rate limits clear with time. A 402 in the
-    // serial phase is final: retrying it only keeps the user waiting before
-    // the credits dialog.
+    // Admission and rate limits can clear with time. Credit recovery shrinks
+    // only confirmed refused work inside the serial task below.
     serialRetry: {
       shouldRetry: err => shouldRetrySerialBatch(err, signal),
       delayMs: ADMISSION_RETRY_DELAY_MS,
@@ -112,106 +245,8 @@ export async function translatePass({
       log.info(
         `[${operationId}] concurrency backpressure (credits/admission); retrying ${count} translate batches sequentially`
       ),
-    runTask: async taskIndex => {
-      throwIfAborted(signal);
-
-      const {
-        start: batchStart,
-        end: batchEnd,
-        contextStart,
-        contextEnd,
-      } = windows[taskIndex];
-      const currentBatchOriginals = segmentsInProcess.slice(
-        batchStart,
-        batchEnd
-      );
-      const contextBefore: SrtSegment[] = segmentsInProcess.slice(
-        contextStart,
-        batchStart
-      );
-      const contextAfter: SrtSegment[] = segmentsInProcess.slice(
-        batchEnd,
-        contextEnd
-      );
-
-      try {
-        const translatedBatch = await translateBatch({
-          batch: {
-            segments: currentBatchOriginals.map(seg => ({ ...seg })),
-            startIndex: batchStart,
-            endIndex: batchEnd,
-            contextBefore,
-            contextAfter,
-          },
-          targetLang,
-          qualityMode: qualityTranslation,
-          operationId,
-          signal,
-        });
-
-        for (let i = 0; i < translatedBatch.length; i++) {
-          segmentsInProcess[batchStart + i] = translatedBatch[i];
-        }
-        if (signal?.aborted) {
-          throw new DOMException('Operation cancelled', 'AbortError');
-        }
-      } catch (err: any) {
-        if (
-          Array.isArray(err?.partialSegments) &&
-          err.partialSegments.length === currentBatchOriginals.length
-        ) {
-          for (let i = 0; i < err.partialSegments.length; i++)
-            segmentsInProcess[batchStart + i] = {
-              ...err.partialSegments[i],
-              translation: err.partialSegments[i].translation?.trim()
-                ? err.partialSegments[i].translation
-                : segmentsInProcess[batchStart + i].translation,
-            };
-        }
-        if (err?.name === 'AbortError' || signal?.aborted) {
-          log.info(`[${operationId}] translate batch cancelled`);
-          throw err;
-        }
-        const msg = String(err?.message || err || '');
-        if (msg.includes(ERROR_CODES.INSUFFICIENT_CREDITS)) {
-          log.info(`[${operationId}] translate batch aborted (credits)`);
-          throw err;
-        }
-        // Handle API key and rate limit errors for both OpenAI and Anthropic
-        if (
-          msg === ERROR_CODES.OPENAI_KEY_INVALID ||
-          msg === ERROR_CODES.OPENAI_RATE_LIMIT ||
-          msg === ERROR_CODES.ANTHROPIC_KEY_INVALID ||
-          msg === ERROR_CODES.ANTHROPIC_RATE_LIMIT
-        ) {
-          log.info(`[${operationId}] translate batch aborted (${msg})`);
-          throw err;
-        }
-        log.error(`[${operationId}] translate batch failed`, err);
-        throw err;
-      }
-
-      if (!signal?.aborted) {
-        translatedSoFar += batchEnd - batchStart;
-        progressCallback?.({
-          percent: scaleProgress(
-            (translatedSoFar / totalSegments) * 100,
-            Stage.START,
-            qualityTranslation ? Stage.TRANSLATE : Stage.END
-          ),
-          stage: `Translating ${translatedSoFar}/${totalSegments}`,
-          phaseKey: 'translate',
-          partialResult: buildSrt({
-            segments: segmentsInProcess,
-            mode: 'dual',
-          }),
-          partialSegments: segmentsInProcess.map(s => ({ ...s })),
-          current: translatedSoFar,
-          total: totalSegments,
-          unit: 'segments',
-        });
-      }
-    },
+    runTask: (taskIndex, phase) =>
+      translateWindow(windows[taskIndex], phase === 'serial'),
   }).catch(error => {
     attachPartialTranslation(error, segmentsInProcess);
     throw error;

@@ -1695,5 +1695,11 @@
     "deleteFolderConfirm": "Hapus folder kosong ini?",
     "saveCopy": "Simpan salinan",
     "exportConfirm": "Simpan salinan video dan subtitle tanpa enkripsi? Siapa pun yang dapat mengakses lokasi tujuan bisa membuka salinan tersebut. Versi asli yang terenkripsi tetap ada di folder ini."
+  },
+  "translationReview": {
+    "incomplete": "Terjemahan selesai; pemeriksaan kualitas belum lengkap",
+    "pending": "Baris yang menunggu pemeriksaan: {{remaining}}. Subtitle terjemahan sudah dapat digunakan.",
+    "resume": "Lanjutkan pemeriksaan",
+    "keepDraft": "Simpan draf"
   }
 }
