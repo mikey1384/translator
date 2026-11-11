@@ -358,30 +358,26 @@ export async function translateSubtitlesFromSrt({
           if (signal?.aborted)
             throw new DOMException('Operation cancelled', 'AbortError');
 
-          try {
-            const reviewed = await reviewTranslationBatch({
-              batch,
-              operationId,
-              signal,
-              initialReviewConfig: reviewConfigOverride ?? undefined,
-              onModelFallback: fallbackModel => {
-                reviewConfigOverride = { model: fallbackModel };
-                const fallbackName = formatReviewModelName(fallbackModel);
-                const displayName = `${fallbackName} (fallback)`;
-                if (displayName !== reviewModelName) {
-                  reviewModelName = displayName;
-                  emitRangeStage(start, end, done, false);
-                }
-              },
-            });
-            // splice results back in place
-            for (let i = 0; i < reviewed.length; i++) {
-              reviewedSegments[start + i] = reviewed[i];
-            }
-          } catch (err: any) {
-            // A failed review never counts as reviewed. The pool settles its
-            // active siblings before the outer handler preserves their work.
-            throw err;
+          // A failed review never counts as reviewed. The pool settles its
+          // active siblings before the outer handler preserves their work.
+          const reviewed = await reviewTranslationBatch({
+            batch,
+            operationId,
+            signal,
+            initialReviewConfig: reviewConfigOverride ?? undefined,
+            onModelFallback: fallbackModel => {
+              reviewConfigOverride = { model: fallbackModel };
+              const fallbackName = formatReviewModelName(fallbackModel);
+              const displayName = `${fallbackName} (fallback)`;
+              if (displayName !== reviewModelName) {
+                reviewModelName = displayName;
+                emitRangeStage(start, end, done, false);
+              }
+            },
+          });
+          // splice results back in place
+          for (let i = 0; i < reviewed.length; i++) {
+            reviewedSegments[start + i] = reviewed[i];
           }
           if (signal.aborted)
             throw new DOMException('Operation cancelled', 'AbortError');

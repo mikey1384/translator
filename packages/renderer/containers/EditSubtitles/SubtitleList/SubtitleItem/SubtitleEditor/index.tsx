@@ -18,7 +18,6 @@ import {
 } from '../../../../../utils/timecode-input.js';
 import { shallow } from 'zustand/shallow';
 import { useRowActions } from '../../../../../hooks/useRowActions.js';
-import * as SubtitlesIPC from '../../../../../ipc/subtitles';
 import {
   useUIStore,
   useTaskStore,
@@ -82,7 +81,6 @@ export default function SubtitleEditor({
   const actions = useRowActions(id);
   const targetLanguage = useUIStore(s => s.targetLanguage);
   const rangeAvailable = useTranslateRangeStore(s => s.available);
-  const setTranslationState = useTaskStore(s => s.setTranslation);
   const [shiftAmount, setShiftAmount] = useState('0');
   const [localStart, setLocalStart] = useState(
     subtitle ? secondsToSrtTime(subtitle.start) : '00:00:00,000'
