@@ -46,7 +46,7 @@ jobs:
   mac-build:
     needs: windows-preflight
     if: github.event_name == 'push' && github.ref_type == 'tag'
-    runs-on: macos-14 # Apple-silicon runner, Rosetta is available
+    runs-on: macos-15 # Apple-silicon runner, Rosetta is available
     timeout-minutes: 60
 
     env:
