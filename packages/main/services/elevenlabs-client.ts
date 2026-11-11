@@ -5,6 +5,7 @@ import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 import { normalizeDubVoice } from '../../shared/constants/dub-voices.js';
+import { ELEVENLABS_SCRIBE_MODEL_ID } from '../../shared/constants/model-catalog.js';
 
 const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
 const ELEVENLABS_TTS_MODEL_ID = 'eleven_v4';
@@ -218,7 +219,7 @@ export async function transcribeWithElevenLabs({
   const form = new FormData();
   const { stream, cleanup } = createAbortableReadStream(filePath, signal);
   form.append('file', stream);
-  form.append('model_id', 'scribe_v2');
+  form.append('model_id', ELEVENLABS_SCRIBE_MODEL_ID);
   if (languageCode && languageCode !== 'auto') {
     form.append('language_code', languageCode);
   }

@@ -3,7 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import axios from 'axios';
 
+import { transcribeWithElevenLabs } from '../services/elevenlabs-client.js';
+import { ELEVENLABS_SCRIBE_MODEL_ID } from '../../shared/constants/model-catalog.js';
 import { migrateLegacyOpenAiTranscriptionSettings } from '../store/transcription-settings-migration.js';
 import {
   APP_SETTINGS_DEFAULTS,
@@ -57,6 +60,59 @@ function fakeStore(initial: Record<string, unknown>) {
 }
 
 const noSleep = async () => {};
+
+test('BYO requests Scribe v3 with word timing, speakers, language and retry identity intact', async t => {
+  const localDir = path.join(repositoryRoot, '.local');
+  fs.mkdirSync(localDir, { recursive: true });
+  const fixtureDir = fs.mkdtempSync(path.join(localDir, 'scribe-v3-test-'));
+  const filePath = path.join(fixtureDir, 'audio.wav');
+  const audio = Buffer.from('test audio');
+  fs.writeFileSync(filePath, audio);
+  t.after(() => fs.rmSync(fixtureDir, { recursive: true, force: true }));
+
+  const signal = new AbortController().signal;
+  const transcript = {
+    text: 'Hello.',
+    language_code: 'en',
+    words: [
+      { text: 'Hello.', type: 'word', start: 0.1, end: 0.8, speaker_id: 's0' },
+    ],
+  };
+  const post = t.mock.method(axios, 'post', async (url, form, options) => {
+    assert.equal(url, 'https://api.elevenlabs.io/v1/speech-to-text');
+    assert.equal(options.signal, signal);
+    assert.equal(options.headers['Idempotency-Key'], 'byo-scribe-v3-test');
+    const chunks: Buffer[] = [];
+    await new Promise<void>((resolve, reject) => {
+      form.on('data', (chunk: Buffer | string) =>
+        chunks.push(Buffer.from(chunk))
+      );
+      form.on('end', resolve);
+      form.on('error', reject);
+      form.resume();
+    });
+    const fields = await new Response(Buffer.concat(chunks), {
+      headers: form.getHeaders(),
+    }).formData();
+    assert.equal(fields.get('model_id'), 'scribe_v3');
+    assert.equal(fields.get('language_code'), 'en');
+    assert.equal(fields.get('timestamps_granularity'), 'word');
+    assert.equal(fields.get('diarize'), 'true');
+    assert.equal(fields.get('tag_audio_events'), 'true');
+    assert.equal(await (fields.get('file') as File).text(), audio.toString());
+    return { data: transcript };
+  });
+
+  const result = await transcribeWithElevenLabs({
+    filePath,
+    apiKey: 'test-key',
+    languageCode: 'en',
+    idempotencyKey: 'byo-scribe-v3-test',
+    signal,
+  });
+  assert.deepEqual(result, transcript);
+  assert.equal(post.mock.callCount(), 1);
+});
 
 test('new profiles default transcription to ElevenLabs', () => {
   assert.equal(
@@ -420,7 +476,12 @@ test('no transcription code path can call OpenAI transcription or Whisper', () =
 
   const stage5Client = readSource('packages/main/services/stage5-client.ts');
   assert.doesNotMatch(stage5Client, /AI_MODELS\.WHISPER/);
-  assert.match(stage5Client, /STAGE5_SCRIBE_REQUEST_MODEL = 'scribe_v2'/);
+  assert.equal(ELEVENLABS_SCRIBE_MODEL_ID, 'scribe_v3');
+  assert.match(
+    stage5Client,
+    /STAGE5_SCRIBE_REQUEST_MODEL = ELEVENLABS_SCRIBE_MODEL_ID/
+  );
+  assert.match(stage5Client, /modelId = STAGE5_SCRIBE_REQUEST_MODEL/);
 
   for (const removed of [
     'packages/main/services/subtitle-processing/transcriber.ts',

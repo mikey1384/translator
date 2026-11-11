@@ -41,6 +41,9 @@ export function toStage5CreditModel(model: string): string {
   }
   return STAGE5_CREDIT_MODELS.DRAFT;
 }
+// Vendor model for both BYO and Stage5 requests. Keep the billing id stable
+// across Scribe versions so existing estimates and reservations still match.
+export const ELEVENLABS_SCRIBE_MODEL_ID = 'scribe_v3';
 export const STAGE5_ELEVENLABS_SCRIBE_MODEL = 'elevenlabs-scribe';
 export const STAGE5_TTS_MODEL_ELEVEN_V3 = 'eleven_v3';
 export const STAGE5_TTS_MODEL_ELEVEN_V4 = 'eleven_v4';

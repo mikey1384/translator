@@ -29,6 +29,7 @@ import {
   withStage5AuthRetryOnResponse,
 } from './stage5-auth.js';
 import { RELAY_URL, STAGE5_API_URL } from './endpoints.js';
+import { ELEVENLABS_SCRIBE_MODEL_ID } from '../../shared/constants/model-catalog.js';
 import {
   throwIfStage5UpdateRequiredError,
   throwIfStage5UpdateRequiredResponse,
@@ -54,7 +55,7 @@ type DurableTranscriptionResumeRecord = {
 
 // Match the current stage5-api durable job cleanup window.
 /** ElevenLabs Scribe model requested for Stage5 transcription. */
-export const STAGE5_SCRIBE_REQUEST_MODEL = 'scribe_v2';
+export const STAGE5_SCRIBE_REQUEST_MODEL = ELEVENLABS_SCRIBE_MODEL_ID;
 
 /** Error for a mapped transcription code, with a readable English message. */
 function transcriptionErrorFromCode(code: string): Error {
@@ -1610,7 +1611,7 @@ export async function transcribeViaDirect({
   filePath,
   language,
   durationSec,
-  modelId = 'scribe_v2',
+  modelId = STAGE5_SCRIBE_REQUEST_MODEL,
   qualityMode,
   idempotencyKey,
   signal,
